@@ -62,9 +62,9 @@ std::string FormatFullVersion()
 }
 
 /**
- * Format the subversion field according to BIP 14 spec (https://github.com/bitcoin/bips/blob/master/bip-0014.mediawiki)
+ * Format the user agent string according to BIP 14 spec (https://github.com/bitcoin/bips/blob/master/bip-0014.mediawiki)
  */
-std::string FormatSubVersion(const std::string& name, int nClientVersion, const std::vector<std::string>& comments)
+std::string FormatUserAgent(const std::string& name, int nClientVersion, const std::vector<std::string>& comments)
 {
     std::string comments_str;
     if (!comments.empty()) comments_str = strprintf("(%s)", Join(comments, "; "));

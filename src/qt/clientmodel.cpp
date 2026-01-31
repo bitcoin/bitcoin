@@ -198,9 +198,9 @@ QString ClientModel::formatFullVersion() const
     return QString::fromStdString(FormatFullVersion());
 }
 
-QString ClientModel::formatSubVersion() const
+QString ClientModel::formatUserAgent() const
 {
-    return QString::fromStdString(strSubVersion);
+    return QString::fromStdString(strUserAgent);
 }
 
 bool ClientModel::isReleaseVersion() const

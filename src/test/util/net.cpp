@@ -44,7 +44,7 @@ void ConnmanTestMsg::Handshake(CNode& node,
                 int64_t{},                                      // ignored service bits
                 CNetAddr::V1(CService{}),                       // ignored
                 uint64_t{1},                                    // dummy nonce
-                std::string{},                                  // dummy subver
+                std::string{},                                  // dummy user agent
                 int32_t{},                                      // dummy starting_height
                 relay_txs),
     };

@@ -117,7 +117,7 @@ bool fDiscover = true;
 bool fListen = true;
 GlobalMutex g_maplocalhost_mutex;
 std::map<CNetAddr, LocalServiceInfo> mapLocalHost GUARDED_BY(g_maplocalhost_mutex);
-std::string strSubVersion;
+std::string strUserAgent;
 
 size_t CSerializedNetMsg::GetMemoryUsage() const noexcept
 {
@@ -624,8 +624,8 @@ void CNode::CopyStats(CNodeStats& stats)
     X(m_addr_name);
     X(nVersion);
     {
-        LOCK(m_subver_mutex);
-        X(cleanSubVer);
+        LOCK(m_user_agent_mutex);
+        X(cleanUserAgent);
     }
     stats.fInbound = IsInboundConn();
     X(m_bip152_highbandwidth_to);

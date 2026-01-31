@@ -153,7 +153,7 @@ private:
     enum ColumnWidths
     {
         ADDRESS_COLUMN_WIDTH = 200,
-        SUBVERSION_COLUMN_WIDTH = 150,
+        USER_AGENT_COLUMN_WIDTH = 150,
         PING_COLUMN_WIDTH = 80,
         BANSUBNET_COLUMN_WIDTH = 200,
         BANTIME_COLUMN_WIDTH = 250

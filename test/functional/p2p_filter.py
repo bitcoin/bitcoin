@@ -24,7 +24,7 @@ from test_framework.messages import (
 from test_framework.p2p import (
     P2PInterface,
     P2P_SERVICES,
-    P2P_SUBVERSION,
+    P2P_USER_AGENT,
     P2P_VERSION,
     p2p_lock,
 )
@@ -239,7 +239,7 @@ class FilterTest(BitcoinTestFramework):
         # Send version with relay=False
         version_without_fRelay = msg_version()
         version_without_fRelay.nVersion = P2P_VERSION
-        version_without_fRelay.strSubVer = P2P_SUBVERSION
+        version_without_fRelay.user_agent = P2P_USER_AGENT
         version_without_fRelay.nServices = P2P_SERVICES
         version_without_fRelay.relay = 0
         filter_peer_without_nrelay.send_without_ping(version_without_fRelay)

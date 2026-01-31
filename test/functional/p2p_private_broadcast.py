@@ -294,7 +294,7 @@ class P2PPrivateBroadcast(BitcoinTestFramework):
             assert_equal(peer.last_message["version"].nTime, 0)
             assert_equal(peer.last_message["version"].addrTo, dummy_address)
             assert_equal(peer.last_message["version"].addrFrom, dummy_address)
-            assert_equal(peer.last_message["version"].strSubVer, "/pynode:0.0.1/")
+            assert_equal(peer.last_message["version"].user_agent, "/pynode:0.0.1/")
             assert_equal(peer.last_message["version"].nStartingHeight, 0)
             assert_equal(peer.last_message["version"].relay, 0)
             assert_equal(peer.last_message["tx"].tx.txid_hex, tx["txid"])

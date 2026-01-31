@@ -33,10 +33,10 @@ class IncludeConfTest(BitcoinTestFramework):
             f.write("uacomment=main\nincludeconf=relative.conf\n")
         self.restart_node(0)
 
-        self.log.info("-includeconf works from config file. subversion should end with 'main; relative)/'")
+        self.log.info("-includeconf works from config file. User agent should end with 'main; relative)/'")
 
-        subversion = self.nodes[0].getnetworkinfo()["subversion"]
-        assert subversion.endswith("main; relative)/")
+        user_agent = self.nodes[0].getnetworkinfo()["subversion"]
+        assert user_agent.endswith("main; relative)/")
 
         self.log.info("-includeconf cannot be used as command-line arg")
         self.stop_node(0)
@@ -49,13 +49,13 @@ class IncludeConfTest(BitcoinTestFramework):
             expected_msg='Error: Error parsing command line arguments: -includeconf cannot be used from commandline; -includeconf="relative2.conf"',
         )
 
-        self.log.info("-includeconf cannot be used recursively. subversion should end with 'main; relative)/'")
+        self.log.info("-includeconf cannot be used recursively. User agent should end with 'main; relative)/'")
         with open(self.nodes[0].datadir_path / "relative.conf", "a") as f:
             f.write("includeconf=relative2.conf\n")
         self.start_node(0)
 
-        subversion = self.nodes[0].getnetworkinfo()["subversion"]
-        assert subversion.endswith("main; relative)/")
+        user_agent = self.nodes[0].getnetworkinfo()["subversion"]
+        assert user_agent.endswith("main; relative)/")
         self.stop_node(0, expected_stderr="warning: -includeconf cannot be used from included files; ignoring -includeconf=relative2.conf")
 
         self.log.info("-includeconf cannot contain invalid arg")
@@ -69,7 +69,7 @@ class IncludeConfTest(BitcoinTestFramework):
         (self.nodes[0].datadir_path / "relative.conf").unlink()
         self.nodes[0].assert_start_raises_init_error(expected_msg="Error: Error reading configuration file: Failed to include configuration file relative.conf")
 
-        self.log.info("multiple -includeconf args can be used from the base config file. subversion should end with 'main; relative; relative2)/'")
+        self.log.info("multiple -includeconf args can be used from the base config file. User agent should end with 'main; relative; relative2)/'")
         with open(self.nodes[0].datadir_path / "relative.conf", "w") as f:
             # Restore initial file contents
             f.write("uacomment=relative\n")
@@ -79,8 +79,8 @@ class IncludeConfTest(BitcoinTestFramework):
 
         self.start_node(0)
 
-        subversion = self.nodes[0].getnetworkinfo()["subversion"]
-        assert subversion.endswith("main; relative; relative2)/")
+        user_agent = self.nodes[0].getnetworkinfo()["subversion"]
+        assert user_agent.endswith("main; relative; relative2)/")
 
 if __name__ == '__main__':
     IncludeConfTest(__file__).main()

@@ -40,8 +40,8 @@ bool PeerTableSortProxy::lessThan(const QModelIndex& left_index, const QModelInd
         return left_stats.nSendBytes < right_stats.nSendBytes;
     case PeerTableModel::Received:
         return left_stats.nRecvBytes < right_stats.nRecvBytes;
-    case PeerTableModel::Subversion:
-        return left_stats.cleanSubVer.compare(right_stats.cleanSubVer) < 0;
+    case PeerTableModel::UserAgent:
+        return left_stats.cleanUserAgent.compare(right_stats.cleanUserAgent) < 0;
     } // no default case, so the compiler can warn about missing cases
     assert(false);
 }
