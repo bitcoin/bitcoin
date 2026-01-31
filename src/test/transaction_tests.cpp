@@ -1155,6 +1155,15 @@ BOOST_AUTO_TEST_CASE(checktxinputs_invalid_transactions_test)
                   TxValidationResult::TX_PREMATURE_SPEND, /*expected_reason=*/"bad-txns-premature-spend-of-coinbase");
 }
 
+BOOST_AUTO_TEST_CASE(getvalueout_out_of_range_throws)
+{
+    CMutableTransaction mtx;
+    mtx.vout.emplace_back(MAX_MONEY + 1, CScript() << OP_TRUE);
+
+    const CTransaction tx{mtx};
+    BOOST_CHECK_EXCEPTION(tx.GetValueOut(), std::runtime_error, HasReason("GetValueOut: value out of range"));
+}
+
 /** Sanity check the return value of SpendsNonAnchorWitnessProg for various output types. */
 BOOST_AUTO_TEST_CASE(spends_witness_prog)
 {
