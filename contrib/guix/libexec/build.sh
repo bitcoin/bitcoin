@@ -310,6 +310,7 @@ mkdir -p "$DISTSRC"
                 ;;
             *linux*)
                 cp "${DISTSRC}/README.md" "${DISTNAME}/"
+                cp "${DISTSRC}/doc/INSTALL_linux.md" "${DISTNAME}/INSTALL.md"
                 ;;
         esac
 
