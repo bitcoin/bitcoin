@@ -164,7 +164,7 @@ def add_witness_commitment(block, nonce=0):
 def script_BIP34_coinbase_height(height):
     if height <= 16:
         res = CScriptOp.encode_op_n(height)
-        # Append dummy to increase scriptSig size to 2 (see bad-cb-length consensus rule)
+        # Append dummy extraNonce to increase scriptSig size to 2 (see bad-cb-length consensus rule)
         return CScript([res, OP_0])
     return CScript([CScriptNum(height)])
 

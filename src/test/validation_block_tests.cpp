@@ -68,6 +68,7 @@ std::shared_ptr<CBlock> MinerTestingSetup::Block(const uint256& prev_hash)
 
     BlockAssembler::Options options;
     options.coinbase_output_script = CScript{} << i++ << OP_TRUE;
+    options.include_dummy_extranonce = true;
     auto ptemplate = BlockAssembler{m_node.chainman->ActiveChainstate(), m_node.mempool.get(), options}.CreateNewBlock();
     auto pblock = std::make_shared<CBlock>(ptemplate->block);
     pblock->hashPrevBlock = prev_hash;
@@ -82,7 +83,7 @@ std::shared_ptr<CBlock> MinerTestingSetup::Block(const uint256& prev_hash)
     txCoinbase.vout[1].nValue = txCoinbase.vout[0].nValue;
     txCoinbase.vout[0].nValue = 0;
     txCoinbase.vin[0].scriptWitness.SetNull();
-    // Always pad with OP_0 at the end to avoid bad-cb-length error
+    // Always pad with OP_0 as dummy extraNonce (also avoids bad-cb-length error for block <=16)
     const int prev_height{WITH_LOCK(::cs_main, return m_node.chainman->m_blockman.LookupBlockIndex(prev_hash)->nHeight)};
     txCoinbase.vin[0].scriptSig = CScript{} << prev_height + 1 << OP_0;
     txCoinbase.nLockTime = static_cast<uint32_t>(prev_height);
@@ -336,6 +337,7 @@ BOOST_AUTO_TEST_CASE(witness_commitment_index)
     pubKey << 1 << OP_TRUE;
     BlockAssembler::Options options;
     options.coinbase_output_script = pubKey;
+    options.include_dummy_extranonce = true;
     auto ptemplate = BlockAssembler{m_node.chainman->ActiveChainstate(), m_node.mempool.get(), options}.CreateNewBlock();
     CBlock pblock = ptemplate->block;
 

@@ -177,11 +177,17 @@ std::unique_ptr<CBlockTemplate> BlockAssembler::CreateNewBlock()
     coinbase_tx.block_reward_remaining = block_reward;
 
     // Start the coinbase scriptSig with the block height as required by BIP34.
-    // The trailing OP_0 (historically an extranonce) is optional padding and
-    // could be removed without a consensus change. Mining clients are expected
-    // to append extra data to this prefix, so increasing its length would reduce
-    // the space they can use and may break existing clients.
-    coinbaseTx.vin[0].scriptSig = CScript() << nHeight << OP_0;
+    // Mining clients are expected to append extra data to this prefix, so
+    // increasing its length would reduce the space they can use and may break
+    // existing clients.
+    coinbaseTx.vin[0].scriptSig = CScript() << nHeight;
+    if (m_options.include_dummy_extranonce) {
+        // For blocks at heights <= 16, the BIP34-encoded height alone is only
+        // one byte. Consensus requires coinbase scriptSigs to be at least two
+        // bytes long (bad-cb-length), so tests and regtest include a dummy
+        // extraNonce (OP_0)
+        coinbaseTx.vin[0].scriptSig << OP_0;
+    }
     coinbase_tx.script_sig_prefix = coinbaseTx.vin[0].scriptSig;
     Assert(nHeight > 0);
     coinbaseTx.nLockTime = static_cast<uint32_t>(nHeight - 1);
@@ -212,6 +218,7 @@ std::unique_ptr<CBlockTemplate> BlockAssembler::CreateNewBlock()
     pblock->nNonce         = 0;
 
     if (m_options.test_block_validity) {
+        // if nHeight <= 16, and include_dummy_extranonce=false this will fail due to bad-cb-length.
         if (BlockValidationState state{TestBlockValidity(m_chainstate, *pblock, /*check_pow=*/false, /*check_merkle_root=*/false)}; !state.IsValid()) {
             throw std::runtime_error(strprintf("TestBlockValidity failed: %s", state.ToString()));
         }
