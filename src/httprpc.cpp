@@ -38,13 +38,15 @@ static std::vector<std::vector<std::string>> g_rpcauth;
 static std::map<std::string, std::set<std::string>> g_rpc_whitelist;
 static bool g_rpc_whitelist_default = false;
 
-static void JSONErrorReply(HTTPRequest* req, UniValue objError, const JSONRPCRequest& jreq)
+static UniValue JSONErrorReply(UniValue objError, const JSONRPCRequest& jreq, HTTPStatusCode& nStatus)
 {
-    // Sending HTTP errors is a legacy JSON-RPC behavior.
+    // HTTP errors should never be returned if JSON-RPC v2 was requested. This
+    // function should only be called when a v1 request fails or when a request
+    // cannot be parsed, so the version is unknown.
     Assume(jreq.m_json_version != JSONRPCVersion::V2);
 
     // Send error reply from json-rpc error object
-    int nStatus = HTTP_INTERNAL_SERVER_ERROR;
+    nStatus = HTTP_INTERNAL_SERVER_ERROR;
     int code = objError.find_value("code").getInt<int>();
 
     if (code == RPC_INVALID_REQUEST)
@@ -52,10 +54,7 @@ static void JSONErrorReply(HTTPRequest* req, UniValue objError, const JSONRPCReq
     else if (code == RPC_METHOD_NOT_FOUND)
         nStatus = HTTP_NOT_FOUND;
 
-    std::string strReply = JSONRPCReplyObj(NullUniValue, std::move(objError), jreq.id, jreq.m_json_version).write() + "\n";
-
-    req->WriteHeader("Content-Type", "application/json");
-    req->WriteReply(nStatus, strReply);
+    return JSONRPCReplyObj(NullUniValue, std::move(objError), jreq.id, jreq.m_json_version);
 }
 
 //This function checks username and password against -rpcauth
@@ -101,60 +100,23 @@ static bool RPCAuthorized(const std::string& strAuth, std::string& strAuthUserna
     return CheckUserAuthorized(user, pass);
 }
 
-static bool HTTPReq_JSONRPC(const std::any& context, HTTPRequest* req)
+UniValue ExecuteHTTPRPC(const UniValue& valRequest, JSONRPCRequest& jreq, HTTPStatusCode& status)
 {
-    // JSONRPC handles only POST
-    if (req->GetRequestMethod() != HTTPRequest::POST) {
-        req->WriteReply(HTTP_BAD_METHOD, "JSONRPC server handles only POST requests");
-        return false;
-    }
-    // Check authorization
-    std::pair<bool, std::string> authHeader = req->GetHeader("authorization");
-    if (!authHeader.first) {
-        req->WriteHeader("WWW-Authenticate", WWW_AUTH_HEADER_DATA);
-        req->WriteReply(HTTP_UNAUTHORIZED);
-        return false;
-    }
-
-    JSONRPCRequest jreq;
-    jreq.context = context;
-    jreq.peerAddr = req->GetPeer().ToStringAddrPort();
-    if (!RPCAuthorized(authHeader.second, jreq.authUser)) {
-        LogWarning("ThreadRPCServer incorrect password attempt from %s", jreq.peerAddr);
-
-        /* Deter brute-forcing
-           If this results in a DoS the user really
-           shouldn't have their RPC port exposed. */
-        UninterruptibleSleep(std::chrono::milliseconds{250});
-
-        req->WriteHeader("WWW-Authenticate", WWW_AUTH_HEADER_DATA);
-        req->WriteReply(HTTP_UNAUTHORIZED);
-        return false;
-    }
-
+    status = HTTP_OK;
     try {
-        // Parse request
-        UniValue valRequest;
-        if (!valRequest.read(req->ReadBody()))
-            throw JSONRPCError(RPC_PARSE_ERROR, "Parse error");
-
-        // Set the URI
-        jreq.URI = req->GetURI();
-
-        UniValue reply;
         bool user_has_whitelist = g_rpc_whitelist.contains(jreq.authUser);
         if (!user_has_whitelist && g_rpc_whitelist_default) {
             LogWarning("RPC User %s not allowed to call any methods", jreq.authUser);
-            req->WriteReply(HTTP_FORBIDDEN);
-            return false;
+            status = HTTP_FORBIDDEN;
+            return {};
 
         // singleton request
         } else if (valRequest.isObject()) {
             jreq.parse(valRequest);
             if (user_has_whitelist && !g_rpc_whitelist[jreq.authUser].contains(jreq.strMethod)) {
                 LogWarning("RPC User %s not allowed to call method %s", jreq.authUser, jreq.strMethod);
-                req->WriteReply(HTTP_FORBIDDEN);
-                return false;
+                status = HTTP_FORBIDDEN;
+                return {};
             }
 
             // Legacy 1.0/1.1 behavior is for failed requests to throw
@@ -162,14 +124,13 @@ static bool HTTPReq_JSONRPC(const std::any& context, HTTPRequest* req)
             // 2.0 behavior is to catch exceptions and return HTTP success with
             // RPC errors, as long as there is not an actual HTTP server error.
             const bool catch_errors{jreq.m_json_version == JSONRPCVersion::V2};
-            reply = JSONRPCExec(jreq, catch_errors);
-
+            UniValue reply{JSONRPCExec(jreq, catch_errors)};
             if (jreq.IsNotification()) {
                 // Even though we do execute notifications, we do not respond to them
-                req->WriteReply(HTTP_NO_CONTENT);
-                return true;
+                status = HTTP_NO_CONTENT;
+                return {};
             }
-
+            return reply;
         // array of requests
         } else if (valRequest.isArray()) {
             // Check authorization for each request's method
@@ -183,15 +144,15 @@ static bool HTTPReq_JSONRPC(const std::any& context, HTTPRequest* req)
                         std::string strMethod = request.find_value("method").get_str();
                         if (!g_rpc_whitelist[jreq.authUser].contains(strMethod)) {
                             LogWarning("RPC User %s not allowed to call method %s", jreq.authUser, strMethod);
-                            req->WriteReply(HTTP_FORBIDDEN);
-                            return false;
+                            status = HTTP_FORBIDDEN;
+                            return {};
                         }
                     }
                 }
             }
 
             // Execute each request
-            reply = UniValue::VARR;
+            UniValue reply = UniValue::VARR;
             for (size_t i{0}; i < valRequest.size(); ++i) {
                 // Batches never throw HTTP errors, they are always just included
                 // in "HTTP OK" responses. Notifications never get any response.
@@ -218,23 +179,70 @@ static bool HTTPReq_JSONRPC(const std::any& context, HTTPRequest* req)
             // empty response in this case to favor being backwards compatible
             // over complying with the JSON-RPC 2.0 spec in this case.
             if (reply.size() == 0 && valRequest.size() > 0) {
-                req->WriteReply(HTTP_NO_CONTENT);
-                return true;
+                status = HTTP_NO_CONTENT;
+                return {};
             }
+            return reply;
         }
         else
             throw JSONRPCError(RPC_PARSE_ERROR, "Top-level object parse error");
-
-        req->WriteHeader("Content-Type", "application/json");
-        req->WriteReply(HTTP_OK, reply.write() + "\n");
     } catch (UniValue& e) {
-        JSONErrorReply(req, std::move(e), jreq);
-        return false;
+        return JSONErrorReply(std::move(e), jreq, status);
     } catch (const std::exception& e) {
-        JSONErrorReply(req, JSONRPCError(RPC_PARSE_ERROR, e.what()), jreq);
-        return false;
+        return JSONErrorReply(JSONRPCError(RPC_PARSE_ERROR, e.what()), jreq, status);
     }
-    return true;
+}
+
+static void HTTPReq_JSONRPC(const std::any& context, HTTPRequest* req)
+{
+    // JSONRPC handles only POST
+    if (req->GetRequestMethod() != HTTPRequest::POST) {
+        req->WriteReply(HTTP_BAD_METHOD, "JSONRPC server handles only POST requests");
+        return;
+    }
+    // Check authorization
+    std::pair<bool, std::string> authHeader = req->GetHeader("authorization");
+    if (!authHeader.first) {
+        req->WriteHeader("WWW-Authenticate", WWW_AUTH_HEADER_DATA);
+        req->WriteReply(HTTP_UNAUTHORIZED);
+        return;
+    }
+
+    JSONRPCRequest jreq;
+    jreq.context = context;
+    jreq.peerAddr = req->GetPeer().ToStringAddrPort();
+    jreq.URI = req->GetURI();
+    if (!RPCAuthorized(authHeader.second, jreq.authUser)) {
+        LogWarning("ThreadRPCServer incorrect password attempt from %s", jreq.peerAddr);
+
+        /* Deter brute-forcing
+           If this results in a DoS the user really
+           shouldn't have their RPC port exposed. */
+        UninterruptibleSleep(std::chrono::milliseconds{250});
+
+        req->WriteHeader("WWW-Authenticate", WWW_AUTH_HEADER_DATA);
+        req->WriteReply(HTTP_UNAUTHORIZED);
+        return;
+    }
+
+    // Generate reply
+    HTTPStatusCode status;
+    UniValue reply;
+    UniValue request;
+    if (request.read(req->ReadBody())) {
+        reply = ExecuteHTTPRPC(request, jreq, status);
+    } else {
+        reply = JSONErrorReply(JSONRPCError(RPC_PARSE_ERROR, "Parse error"), jreq, status);
+    }
+
+    // Write reply
+    if (reply.isNull()) {
+        // Error case or no-content notification reply.
+        req->WriteReply(status);
+    } else {
+        req->WriteHeader("Content-Type", "application/json");
+        req->WriteReply(status, reply.write() + "\n");
+    }
 }
 
 static bool InitRPCAuthentication()

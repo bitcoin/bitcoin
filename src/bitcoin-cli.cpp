@@ -11,6 +11,9 @@
 #include <common/system.h>
 #include <compat/compat.h>
 #include <compat/stdin.h>
+#include <interfaces/init.h>
+#include <interfaces/ipc.h>
+#include <interfaces/rpc.h>
 #include <policy/feerate.h>
 #include <rpc/client.h>
 #include <rpc/mining.h>
@@ -108,6 +111,7 @@ static void SetupCliArgs(ArgsManager& argsman)
     argsman.AddArg("-stdin", "Read extra arguments from standard input, one per line until EOF/Ctrl-D (recommended for sensitive information such as passphrases). When combined with -stdinrpcpass, the first line from standard input is used for the RPC password.", ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
     argsman.AddArg("-stdinrpcpass", "Read RPC password from standard input as a single line. When combined with -stdin, the first line from standard input is used for the RPC password. When combined with -stdinwalletpassphrase, -stdinrpcpass consumes the first line, and -stdinwalletpassphrase consumes the second.", ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
     argsman.AddArg("-stdinwalletpassphrase", "Read wallet passphrase from standard input as a single line. When combined with -stdin, the first line from standard input is used for the wallet passphrase.", ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
+    argsman.AddArg("-ipcconnect=<address>", "Connect to bitcoin-node through IPC socket instead of TCP socket to execute requests. Valid <address> values are 'auto' to try to connect to default socket path at <datadir>/node.sock but fall back to TCP if it is not available, 'unix' to connect to the default socket and fail if it isn't available, or 'unix:<socket path>' to connect to a socket at a nonstandard path. -noipcconnect can be specified to avoid attempting to use IPC at all. Default value: auto", ArgsManager::ALLOW_ANY, OptionsCategory::IPC);
 }
 
 std::optional<std::string> RpcWalletName(const ArgsManager& args)
@@ -793,7 +797,40 @@ struct DefaultRequestHandler : BaseRequestHandler {
     }
 };
 
-static UniValue CallRPC(BaseRequestHandler* rh, const std::string& strMethod, const std::vector<std::string>& args, const std::optional<std::string>& rpcwallet = {})
+static std::optional<UniValue> CallIPC(BaseRequestHandler* rh, const std::string& strMethod, const std::vector<std::string>& args, const std::string& endpoint, const std::string& username)
+{
+    auto ipcconnect{gArgs.GetArg("-ipcconnect", "auto")};
+    if (ipcconnect == "0") return {}; // Do not attempt IPC if -ipcconnect is disabled.
+    if (gArgs.IsArgSet("-rpcconnect") && !gArgs.IsArgNegated("-rpcconnect")) {
+        if (ipcconnect == "auto") return {}; // Use HTTP if -ipcconnect=auto is set and -rpcconnect is enabled.
+        throw std::runtime_error("-rpcconnect and -ipcconnect options cannot both be enabled");
+    }
+
+    std::unique_ptr<interfaces::Init> local_init{interfaces::MakeBasicInit("bitcoin-cli")};
+    if (!local_init || !local_init->ipc()) {
+        if (ipcconnect == "auto") return {}; // Use HTTP if -ipcconnect=auto is set and there is no IPC support.
+        throw std::runtime_error("bitcoin-cli was not built with IPC support");
+    }
+
+    std::unique_ptr<interfaces::Init> node_init;
+    try {
+        node_init = local_init->ipc()->connectAddress(ipcconnect);
+        if (!node_init) return {}; // Fall back to HTTP if -ipcconnect=auto connect failed.
+    } catch (const std::exception& e) {
+        // Catch connect error if -ipcconnect=unix was specified
+        throw CConnectionFailed{strprintf("%s\n\n"
+            "Probably bitcoin-node is not running or not listening on a unix socket. Can be started with:\n\n"
+            "    bitcoin-node -chain=%s -ipcbind=unix", e.what(), gArgs.GetChainTypeString())};
+    }
+
+    std::unique_ptr<interfaces::Rpc> rpc{node_init->makeRpc()};
+    assert(rpc);
+    UniValue request{rh->PrepareRequest(strMethod, args)};
+    UniValue reply{rpc->executeRpc(std::move(request), endpoint, username)};
+    return rh->ProcessReply(reply);
+}
+
+static UniValue CallRPC(BaseRequestHandler* rh, const std::string& strMethod, const std::vector<std::string>& args, const std::string& endpoint, const std::string& username)
 {
     std::string host;
     // In preference order, we choose the following for the port:
@@ -874,7 +911,7 @@ static UniValue CallRPC(BaseRequestHandler* rh, const std::string& strMethod, co
             failedToGetAuthCookie = true;
         }
     } else {
-        strRPCUserColonPass = gArgs.GetArg("-rpcuser", "") + ":" + gArgs.GetArg("-rpcpassword", "");
+        strRPCUserColonPass = username + ":" + gArgs.GetArg("-rpcpassword", "");
     }
 
     struct evkeyvalq* output_headers = evhttp_request_get_output_headers(req.get());
@@ -890,17 +927,6 @@ static UniValue CallRPC(BaseRequestHandler* rh, const std::string& strMethod, co
     assert(output_buffer);
     evbuffer_add(output_buffer, strRequest.data(), strRequest.size());
 
-    // check if we should use a special wallet endpoint
-    std::string endpoint = "/";
-    if (rpcwallet) {
-        char* encodedURI = evhttp_uriencode(rpcwallet->data(), rpcwallet->size(), false);
-        if (encodedURI) {
-            endpoint = "/wallet/" + std::string(encodedURI);
-            free(encodedURI);
-        } else {
-            throw CConnectionFailed("uri-encode failed");
-        }
-    }
     int r = evhttp_make_request(evcon.get(), req.release(), EVHTTP_REQ_POST, endpoint.c_str());
     if (r != 0) {
         throw CConnectionFailed("send http request failed");
@@ -960,9 +986,26 @@ static UniValue ConnectAndCallRPC(BaseRequestHandler* rh, const std::string& str
     const int timeout = gArgs.GetIntArg("-rpcwaittimeout", DEFAULT_WAIT_CLIENT_TIMEOUT);
     const auto deadline{std::chrono::steady_clock::now() + 1s * timeout};
 
+    // check if we should use a special wallet endpoint
+    std::string endpoint = "/";
+    if (rpcwallet) {
+        char* encodedURI = evhttp_uriencode(rpcwallet->data(), rpcwallet->size(), false);
+        if (encodedURI) {
+            endpoint = "/wallet/" + std::string(encodedURI);
+            free(encodedURI);
+        } else {
+            throw CConnectionFailed("uri-encode failed");
+        }
+    }
+
+    std::string username{gArgs.GetArg("-rpcuser", "")};
     do {
         try {
-            response = CallRPC(rh, strMethod, args, rpcwallet);
+            if (auto ipc_response{CallIPC(rh, strMethod, args, endpoint, username)}) {
+                response = std::move(*ipc_response);
+            } else {
+                response = CallRPC(rh, strMethod, args, endpoint, username);
+            }
             if (fWait) {
                 const UniValue& error = response.find_value("error");
                 if (!error.isNull() && error["code"].getInt<int>() == RPC_IN_WARMUP) {
