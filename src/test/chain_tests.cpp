@@ -7,7 +7,10 @@
 #include <chain.h>
 #include <test/util/setup_common.h>
 
+#include <cmath>
 #include <memory>
+
+extern int GetSkipHeight(int height);
 
 BOOST_FIXTURE_TEST_SUITE(chain_tests, BasicTestingSetup)
 
@@ -40,6 +43,137 @@ const CBlockIndex* NaiveLastCommonAncestor(const CBlockIndex* a, const CBlockInd
 }
 
 } // namespace
+
+BOOST_AUTO_TEST_CASE(get_skip_height_test)
+{
+    // Even values: the rightmost set bit is zeroed
+    // Test with various even values with at least 2 bits set
+    BOOST_CHECK_EQUAL(GetSkipHeight(0b00010010),
+                                    0b00010000);
+    BOOST_CHECK_EQUAL(GetSkipHeight(0b00100010),
+                                    0b00100000);
+    BOOST_CHECK_EQUAL(GetSkipHeight(0b01000010),
+                                    0b01000000);
+    BOOST_CHECK_EQUAL(GetSkipHeight(0b00010100),
+                                    0b00010000);
+    BOOST_CHECK_EQUAL(GetSkipHeight(0b00011000),
+                                    0b00010000);
+    BOOST_CHECK_EQUAL(GetSkipHeight(0b10101010),
+                                    0b10101000);
+    // Odd values: the 2nd and 3rd set bits are zeroed
+    // Test with various odd values with at least 4 bits set
+    BOOST_CHECK_EQUAL(GetSkipHeight(0b10010011),
+                                    0b10000001);
+    BOOST_CHECK_EQUAL(GetSkipHeight(0b10100011),
+                                    0b10000001);
+    BOOST_CHECK_EQUAL(GetSkipHeight(0b11000011),
+                                    0b10000001);
+    BOOST_CHECK_EQUAL(GetSkipHeight(0b10010101),
+                                    0b10000001);
+    BOOST_CHECK_EQUAL(GetSkipHeight(0b10011001),
+                                    0b10000001);
+    BOOST_CHECK_EQUAL(GetSkipHeight(0b10101011),
+                                    0b10100001);
+    // Some longer random values (even and odd)
+    BOOST_CHECK_EQUAL(GetSkipHeight(0b0001011101101000),
+                                    0b0001011101100000);
+    BOOST_CHECK_EQUAL(GetSkipHeight(0b0001011101101001),
+                                    0b0001011101000001);
+    BOOST_CHECK_EQUAL(GetSkipHeight(0b0110101101011000),
+                                    0b0110101101010000);
+    BOOST_CHECK_EQUAL(GetSkipHeight(0b0110101101011001),
+                                    0b0110101101000001);
+    // All values 0-10
+    BOOST_CHECK_EQUAL(GetSkipHeight(0), 0);
+    BOOST_CHECK_EQUAL(GetSkipHeight(1), 0);
+    BOOST_CHECK_EQUAL(GetSkipHeight(2), 0);
+    BOOST_CHECK_EQUAL(GetSkipHeight(3), 1);
+    BOOST_CHECK_EQUAL(GetSkipHeight(4), 0);
+    BOOST_CHECK_EQUAL(GetSkipHeight(5), 1);
+    BOOST_CHECK_EQUAL(GetSkipHeight(6), 4);
+    BOOST_CHECK_EQUAL(GetSkipHeight(7), 1);
+    BOOST_CHECK_EQUAL(GetSkipHeight(8), 0);
+    BOOST_CHECK_EQUAL(GetSkipHeight(9), 1);
+    BOOST_CHECK_EQUAL(GetSkipHeight(10), 8);
+}
+
+BOOST_AUTO_TEST_CASE(skip_height_analysis)
+{
+    // This test case indirectly tests the `GetSkipHeight` function,
+    // and asserts that its properties are suitable for performant
+    // ancestor search.
+    // It does so by imitating the `CBlockIndex::GetAncestor()`
+    // function to look for an ancestor, and ensuring that an arbitrary
+    // ancestor is found in a number of steps that is much lower
+    // than simple linear traversal.
+    // This could be tested by a performance test as well, but here the
+    // number of iterations can be measured, that gives a more precice
+    // metric than CPU time.
+
+    // Build a chain
+    const int chain_size{1'000'000};
+    std::vector<std::unique_ptr<CBlockIndex>> block_index;
+    block_index.reserve(chain_size);
+    // Create genesis block
+    block_index.push_back(std::make_unique<CBlockIndex>());
+    for(auto i{1}; i < chain_size; ++i) {
+        auto new_index{std::make_unique<CBlockIndex>()};
+        new_index->pprev = block_index.back().get();
+        BOOST_CHECK(new_index->pprev);
+        new_index->nHeight = new_index->pprev->nHeight + 1;
+        new_index->BuildSkip();
+        block_index.push_back(std::move(new_index));
+    }
+
+    const auto min_distance{100};
+    FastRandomContext ctx(/*fDeterministic =*/true);
+    for (auto i{0}; i < 1'000; ++i) {
+        // pick a height in the second half of the chain
+        const int start_height{chain_size - 1 - ctx.randrange(chain_size * 9 / 10)};
+        // pick a target height, earlier by at least min_distance
+        const int delta{min_distance + ctx.randrange(start_height - min_distance)};
+        const int target_height{start_height - delta};
+        BOOST_REQUIRE(start_height > 0 && start_height < chain_size);
+        BOOST_REQUIRE(target_height > 0 && target_height < chain_size && target_height < start_height);
+
+        // Perform traversal from start to target, skipping, as implemented in `GetAncestor`
+        const auto& start_p{block_index[start_height]};
+        const CBlockIndex* walk_p{start_p.get()};
+        auto walk_height{start_height};
+        auto iteration_count{0};
+        while (walk_height > target_height) {
+            BOOST_REQUIRE(walk_p->pskip);
+            BOOST_REQUIRE(walk_p->pprev);
+            BOOST_REQUIRE(walk_p->pprev->pskip);
+            const int skip_height{walk_p->pskip->nHeight};
+            const int prev_skip_height{walk_p->pprev->pskip->nHeight};
+            // Only follow pskip if pprev->pskip isn't better than pskip->pprev.
+            if (skip_height == target_height ||
+                (skip_height > target_height &&
+                !(prev_skip_height < skip_height - 2 && prev_skip_height >= target_height)
+            )) {
+                BOOST_REQUIRE_LT(skip_height, walk_height);
+                walk_p = walk_p->pskip;
+                walk_height = skip_height;
+            } else {
+                walk_p = walk_p->pprev;
+                --walk_height;
+            }
+            ++iteration_count;
+        }
+
+        // Asserts on the number of iterations:
+        // Absolute value maximum (derived empirically)
+        BOOST_CHECK_LE(iteration_count, 115);
+        // Dynamic bound, function of distance. Formula derived empirically.
+        const auto bound_log_distance{std::ceil(8*std::log(delta)/std::log(2) - 40)};
+        BOOST_CHECK_LE(double(iteration_count), bound_log_distance);
+
+        // Also check that `GetAncestor` gives the same result
+        auto p_ancestor{start_p->GetAncestor(target_height)};
+        BOOST_CHECK_EQUAL(p_ancestor, block_index[target_height].get());
+    }
+}
 
 BOOST_AUTO_TEST_CASE(chain_test)
 {
