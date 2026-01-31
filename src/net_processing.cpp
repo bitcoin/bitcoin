@@ -3670,10 +3670,11 @@ void PeerManagerImpl::ProcessMessage(CNode& pfrom, const std::string& msg_type, 
         }
 
         const auto mapped_as{m_connman.GetMappedAS(pfrom.addr)};
-        LogDebug(BCLog::NET, "receive version message: %s: version %d, blocks=%d, us=%s, txrelay=%d, peer=%d%s%s\n",
+        LogDebug(BCLog::NET, "receive version message: %s: version %d, blocks=%d, us=%s, txrelay=%d, peer=%d%s%s%s\n",
                   cleanSubVer, pfrom.nVersion,
                   peer->m_starting_height, addrMe.ToStringAddrPort(), fRelay, pfrom.GetId(),
-                  pfrom.LogIP(fLogIPs), (mapped_as ? strprintf(", mapped_as=%d", mapped_as) : ""));
+                  fLogIPs ? "," : "", pfrom.LogIP(fLogIPs),
+                  (mapped_as ? strprintf(", mapped_as=%d", mapped_as) : ""));
 
         if (pfrom.IsPrivateBroadcastConn()) {
             if (fRelay) {
@@ -3800,11 +3801,12 @@ void PeerManagerImpl::ProcessMessage(CNode& pfrom, const std::string& msg_type, 
 
         auto new_peer_msg = [&]() {
             const auto mapped_as{m_connman.GetMappedAS(pfrom.addr)};
-            return strprintf("New %s peer connected: transport: %s, version: %d, blocks=%d peer=%d%s%s\n",
+            return strprintf("New %s peer connected: transport: %s, version: %d, blocks=%d peer=%d%s%s%s\n",
                 pfrom.ConnectionTypeAsString(),
                 TransportTypeAsString(pfrom.m_transport->GetInfo().transport_type),
                 pfrom.nVersion.load(), peer->m_starting_height,
-                pfrom.GetId(), pfrom.LogIP(fLogIPs),
+                pfrom.GetId(),
+                fLogIPs ? "," : "", pfrom.LogIP(fLogIPs),
                 (mapped_as ? strprintf(", mapped_as=%d", mapped_as) : ""));
         };
 
