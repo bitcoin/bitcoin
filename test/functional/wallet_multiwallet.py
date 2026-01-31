@@ -40,6 +40,15 @@ def test_load_unload(node, name):
                 got_loading_error = True
                 return
 
+def data_dir(node, *p):
+    return os.path.join(node.chain_path, *p)
+
+def wallet_dir(node, *p):
+    return data_dir(node, 'wallets', *p)
+
+def get_wallet(node, name):
+    return node.get_wallet_rpc(name)
+
 
 class MultiWalletTest(BitcoinTestFramework):
     def set_test_params(self):
@@ -51,60 +60,76 @@ class MultiWalletTest(BitcoinTestFramework):
     def skip_test_if_missing_module(self):
         self.skip_if_no_wallet()
 
-    def add_options(self, parser):
-        parser.add_argument(
-            '--data_wallets_dir',
-            default=os.path.join(os.path.dirname(os.path.realpath(__file__)), 'data/wallets/'),
-            help='Test data with wallet directories (default: %(default)s)',
-        )
+    def wallet_file(self, node, name):
+        if name == self.default_wallet_name:
+            return wallet_dir(node, self.default_wallet_name, self.wallet_data_filename)
+        if os.path.isdir(wallet_dir(node, name)):
+            return wallet_dir(node, name, "wallet.dat")
+        return wallet_dir(node, name)
 
     def run_test(self):
+        self.check_chmod = True
+        self.check_symlinks = True
+        if platform.system() == 'Windows':
+            # Additional context:
+            # - chmod: Posix has one user per file while Windows has an ACL approach
+            # - symlinks: GCC 13 has FIXME notes for symlinks under Windows:
+            #   https://gcc.gnu.org/git/?p=gcc.git;a=blob;f=libstdc%2B%2B-v3/src/filesystem/ops-common.h;h=ba377905a2e90f7baf30c900b090f1f732397e08;hb=refs/heads/releases/gcc-13#l124
+            self.log.warning('Skipping chmod+symlink checks on Windows: '
+                             'chmod works differently due to how access rights work and '
+                             'symlink behavior with regard to the standard library is non-standard on cross-built binaries.')
+            self.check_chmod = False
+            self.check_symlinks = False
+        elif os.geteuid() == 0:
+            self.log.warning('Skipping checks involving chmod as they require non-root permissions.')
+            self.check_chmod = False
+
         node = self.nodes[0]
 
-        data_dir = lambda *p: os.path.join(node.chain_path, *p)
-        wallet_dir = lambda *p: data_dir('wallets', *p)
-        wallet = lambda name: node.get_wallet_rpc(name)
-
-        def wallet_file(name):
-            if name == self.default_wallet_name:
-                return wallet_dir(self.default_wallet_name, self.wallet_data_filename)
-            if os.path.isdir(wallet_dir(name)):
-                return wallet_dir(name, "wallet.dat")
-            return wallet_dir(name)
-
-        assert_equal(self.nodes[0].listwalletdir(), {'wallets': [{'name': self.default_wallet_name, "warnings": []}]})
+        assert_equal(node.listwalletdir(), {'wallets': [{'name': self.default_wallet_name, "warnings": []}]})
 
         # check wallet.dat is created
         self.stop_nodes()
-        assert_equal(os.path.isfile(wallet_dir(self.default_wallet_name, self.wallet_data_filename)), True)
+        assert_equal(os.path.isfile(wallet_dir(node, self.default_wallet_name, self.wallet_data_filename)), True)
+
+        self.test_scanning_main_dir_access(node)
+        empty_wallet, empty_created_wallet, wallet_names, in_wallet_dir = self.test_mixed_wallets(node)
+        self.test_scanning_sub_dir(node, in_wallet_dir)
+        self.test_scanning_symlink_levels(node, in_wallet_dir)
+        self.test_init(node, wallet_names)
+        self.test_balances_and_fees(node, wallet_names, in_wallet_dir)
+        w1, w2 = self.test_loading(node, wallet_names)
+        self.test_creation(node, in_wallet_dir)
+        self.test_unloading(node, in_wallet_dir, w1, w2)
+        self.test_backup_and_restore(node, wallet_names, empty_wallet, empty_created_wallet)
+        self.test_lock_file_closed(node)
+
+    def test_scanning_main_dir_access(self, node):
+        if not self.check_chmod:
+            return
 
         self.log.info("Verify warning is emitted when failing to scan the wallets directory")
-        if platform.system() == 'Windows':
-            self.log.warning('Skipping test involving chmod as Windows does not support it.')
-        elif os.geteuid() == 0:
-            self.log.warning('Skipping test involving chmod as it requires a non-root user.')
-        else:
-            self.start_node(0)
-            with self.nodes[0].assert_debug_log(unexpected_msgs=['Error scanning directory entries under'], expected_msgs=[]):
-                result = self.nodes[0].listwalletdir()
-                assert_equal(result, {'wallets': [{'name': 'default_wallet', 'warnings': []}]})
-            os.chmod(data_dir('wallets'), 0)
-            with self.nodes[0].assert_debug_log(expected_msgs=['Error scanning directory entries under']):
-                result = self.nodes[0].listwalletdir()
-                assert_equal(result, {'wallets': []})
-            self.stop_node(0)
-            # Restore permissions
-            os.chmod(data_dir('wallets'), stat.S_IRUSR | stat.S_IWUSR | stat.S_IXUSR)
+        self.start_node(0)
+        with node.assert_debug_log(unexpected_msgs=['Error scanning directory entries under'], expected_msgs=[]):
+            result = node.listwalletdir()
+            assert_equal(result, {'wallets': [{'name': 'default_wallet', 'warnings': []}]})
+        os.chmod(data_dir(node, 'wallets'), 0)
+        with node.assert_debug_log(expected_msgs=['Error scanning directory entries under']):
+            result = node.listwalletdir()
+            assert_equal(result, {'wallets': []})
+        self.stop_node(0)
+        # Restore permissions
+        os.chmod(data_dir(node, 'wallets'), stat.S_IRUSR | stat.S_IWUSR | stat.S_IXUSR)
 
+    def test_mixed_wallets(self, node):
+        self.log.info("Test mixed wallets")
         # create symlink to verify wallet directory path can be referenced
         # through symlink
-        os.mkdir(wallet_dir('w7'))
-        os.symlink('w7', wallet_dir('w7_symlink'))
+        os.mkdir(wallet_dir(node, 'w7'))
+        os.symlink('w7', wallet_dir(node, 'w7_symlink'))
 
-        os.symlink('..', wallet_dir('recursive_dir_symlink'))
-
-        os.mkdir(wallet_dir('self_walletdat_symlink'))
-        os.symlink('wallet.dat', wallet_dir('self_walletdat_symlink/wallet.dat'))
+        if self.check_symlinks:
+            os.symlink('..', wallet_dir(node, 'recursive_dir_symlink'))
 
         # rename wallet.dat to make sure plain wallet file paths (as opposed to
         # directory paths) can be loaded
@@ -115,13 +140,13 @@ class MultiWalletTest(BitcoinTestFramework):
         node.createwallet("created")
         self.stop_nodes()
         empty_wallet = os.path.join(self.options.tmpdir, 'empty.dat')
-        os.rename(wallet_file("empty"), empty_wallet)
-        shutil.rmtree(wallet_dir("empty"))
+        os.rename(self.wallet_file(node, "empty"), empty_wallet)
+        shutil.rmtree(wallet_dir(node, "empty"))
         empty_created_wallet = os.path.join(self.options.tmpdir, 'empty.created.dat')
-        os.rename(wallet_dir("created", self.wallet_data_filename), empty_created_wallet)
-        shutil.rmtree(wallet_dir("created"))
-        os.rename(wallet_file("plain"), wallet_dir("w8"))
-        shutil.rmtree(wallet_dir("plain"))
+        os.rename(wallet_dir(node, "created", self.wallet_data_filename), empty_created_wallet)
+        shutil.rmtree(wallet_dir(node, "created"))
+        os.rename(self.wallet_file(node, "plain"), wallet_dir(node, "w8"))
+        shutil.rmtree(wallet_dir(node, "plain"))
 
         # restart node with a mix of wallet names:
         #   w1, w2, w3 - to verify new wallets created when non-existing paths specified
@@ -140,83 +165,109 @@ class MultiWalletTest(BitcoinTestFramework):
         in_wallet_dir += to_load  # The loaded wallets are also in the wallet dir
         self.start_node(0)
         for wallet_name in to_create:
-            self.nodes[0].createwallet(wallet_name)
+            node.createwallet(wallet_name)
         for wallet_name in to_load:
-            self.nodes[0].loadwallet(wallet_name)
+            node.loadwallet(wallet_name)
 
-        os.mkdir(wallet_dir('no_access'))
-        os.chmod(wallet_dir('no_access'), 0)
-        try:
-            with self.nodes[0].assert_debug_log(expected_msgs=["Error while scanning wallet dir"]):
-                walletlist = self.nodes[0].listwalletdir()['wallets']
-        finally:
-            # Need to ensure access is restored for cleanup
-            os.chmod(wallet_dir('no_access'), stat.S_IRUSR | stat.S_IWUSR | stat.S_IXUSR)
+        return empty_wallet, empty_created_wallet, wallet_names, in_wallet_dir
+
+    def test_scanning_sub_dir(self, node, in_wallet_dir):
+        if not self.check_chmod:
+            return
+
+        self.log.info("Test scanning for sub directories")
+        # Baseline, no errors.
+        with node.assert_debug_log(expected_msgs=[], unexpected_msgs=["Error while scanning wallet dir"]):
+            walletlist = node.listwalletdir()['wallets']
         assert_equal(sorted(map(lambda w: w['name'], walletlist)), sorted(in_wallet_dir))
 
+        # "Permission denied" error.
+        os.mkdir(wallet_dir(node, 'no_access'))
+        os.chmod(wallet_dir(node, 'no_access'), 0)
+        with node.assert_debug_log(expected_msgs=["Error while scanning wallet dir"]):
+            walletlist = node.listwalletdir()['wallets']
+        # Need to ensure access is restored for cleanup
+        os.chmod(wallet_dir(node, 'no_access'), stat.S_IRUSR | stat.S_IWUSR | stat.S_IXUSR)
+
+        # Verify that we no longer emit errors after restoring permissions
+        with node.assert_debug_log(expected_msgs=[], unexpected_msgs=["Error while scanning wallet dir"]):
+            walletlist = node.listwalletdir()['wallets']
+        assert_equal(sorted(map(lambda w: w['name'], walletlist)), sorted(in_wallet_dir))
+
+    def test_scanning_symlink_levels(self, node, in_wallet_dir):
+        if not self.check_symlinks:
+            return
+
+        self.log.info("Test for errors from too many levels of symbolic links")
+        os.mkdir(wallet_dir(node, 'self_walletdat_symlink'))
+        os.symlink('wallet.dat', wallet_dir(node, 'self_walletdat_symlink/wallet.dat'))
+        with node.assert_debug_log(expected_msgs=["Error while scanning wallet dir"]):
+            walletlist = node.listwalletdir()['wallets']
+        assert_equal(sorted(map(lambda w: w['name'], walletlist)), sorted(in_wallet_dir))
+
+    def test_init(self, node, wallet_names):
+        self.log.info("Test initialization")
         assert_equal(set(node.listwallets()), set(wallet_names))
-
-        # should raise rpc error if wallet path can't be created
-        err_code = -4
-        assert_raises_rpc_error(err_code, "filesystem error:" if platform.system() != 'Windows' else "create_directories:", self.nodes[0].createwallet, "w8/bad")
-
         # check that all requested wallets were created
         self.stop_node(0)
         for wallet_name in wallet_names:
-            assert_equal(os.path.isfile(wallet_file(wallet_name)), True)
+            assert_equal(os.path.isfile(self.wallet_file(node, wallet_name)), True)
 
-        self.nodes[0].assert_start_raises_init_error(['-walletdir=wallets'], 'Error: Specified -walletdir "wallets" does not exist')
-        self.nodes[0].assert_start_raises_init_error(['-walletdir=wallets'], 'Error: Specified -walletdir "wallets" is a relative path', cwd=data_dir())
-        self.nodes[0].assert_start_raises_init_error(['-walletdir=debug.log'], 'Error: Specified -walletdir "debug.log" is not a directory', cwd=data_dir())
+        node.assert_start_raises_init_error(['-walletdir=wallets'], 'Error: Specified -walletdir "wallets" does not exist')
+        node.assert_start_raises_init_error(['-walletdir=wallets'], 'Error: Specified -walletdir "wallets" is a relative path', cwd=data_dir(node))
+        node.assert_start_raises_init_error(['-walletdir=debug.log'], 'Error: Specified -walletdir "debug.log" is not a directory', cwd=data_dir(node))
 
         self.start_node(0, ['-wallet=w1', '-wallet=w1'])
         self.stop_node(0, 'Warning: Ignoring duplicate -wallet w1.')
 
         # should not initialize if wallet file is a symlink
-        os.symlink('w8', wallet_dir('w8_symlink'))
-        self.nodes[0].assert_start_raises_init_error(['-wallet=w8_symlink'], r'Error: Invalid -wallet path \'w8_symlink\'\. .*', match=ErrorMatch.FULL_REGEX)
+        if self.check_symlinks:
+            os.symlink('w8', wallet_dir(node, 'w8_symlink'))
+            node.assert_start_raises_init_error(['-wallet=w8_symlink'], r'Error: Invalid -wallet path \'w8_symlink\'\. .*', match=ErrorMatch.FULL_REGEX)
 
         # should not initialize if the specified walletdir does not exist
-        self.nodes[0].assert_start_raises_init_error(['-walletdir=bad'], 'Error: Specified -walletdir "bad" does not exist')
+        node.assert_start_raises_init_error(['-walletdir=bad'], 'Error: Specified -walletdir "bad" does not exist')
         # should not initialize if the specified walletdir is not a directory
-        not_a_dir = wallet_dir('notadir')
+        not_a_dir = wallet_dir(node, 'notadir')
         open(not_a_dir, 'a').close()
-        self.nodes[0].assert_start_raises_init_error(['-walletdir=' + not_a_dir], 'Error: Specified -walletdir "' + not_a_dir + '" is not a directory')
+        node.assert_start_raises_init_error(['-walletdir=' + not_a_dir], 'Error: Specified -walletdir "' + not_a_dir + '" is not a directory')
 
         # if wallets/ doesn't exist, datadir should be the default wallet dir
-        wallet_dir2 = data_dir('walletdir')
-        os.rename(wallet_dir(), wallet_dir2)
+        wallet_dir2 = data_dir(node, 'walletdir')
+        os.rename(wallet_dir(node), wallet_dir2)
         self.start_node(0)
-        self.nodes[0].createwallet("w4")
-        self.nodes[0].createwallet("w5")
+        node.createwallet("w4")
+        node.createwallet("w5")
         assert_equal(set(node.listwallets()), {"w4", "w5"})
-        w5 = wallet("w5")
+        w5 = get_wallet(node, "w5")
         self.generatetoaddress(node, nblocks=1, address=w5.getnewaddress(), sync_fun=self.no_op)
 
         # now if wallets/ exists again, but the rootdir is specified as the walletdir, w4 and w5 should still be loaded
-        os.rename(wallet_dir2, wallet_dir())
-        self.restart_node(0, ['-nowallet', '-walletdir=' + data_dir()])
-        self.nodes[0].loadwallet("w4")
-        self.nodes[0].loadwallet("w5")
+        os.rename(wallet_dir2, wallet_dir(node))
+        self.restart_node(0, ['-nowallet', '-walletdir=' + data_dir(node)])
+        node.loadwallet("w4")
+        node.loadwallet("w5")
         assert_equal(set(node.listwallets()), {"w4", "w5"})
-        w5 = wallet("w5")
+        w5 = get_wallet(node, "w5")
         assert_equal(w5.getbalances()["mine"]["immature"], 50)
 
         competing_wallet_dir = os.path.join(self.options.tmpdir, 'competing_walletdir')
         os.mkdir(competing_wallet_dir)
         self.restart_node(0, ['-nowallet', '-walletdir=' + competing_wallet_dir])
-        self.nodes[0].createwallet(self.default_wallet_name)
+        node.createwallet(self.default_wallet_name)
         exp_stderr = f"Error: SQLiteDatabase: Unable to obtain an exclusive lock on the database, is it being used by another instance of {self.config['environment']['CLIENT_NAME']}?"
         self.nodes[1].assert_start_raises_init_error(['-walletdir=' + competing_wallet_dir], exp_stderr, match=ErrorMatch.PARTIAL_REGEX)
 
+    def test_balances_and_fees(self, node, wallet_names, in_wallet_dir):
+        self.log.info("Test balances and fees")
         self.restart_node(0)
         for wallet_name in wallet_names:
-            self.nodes[0].loadwallet(wallet_name)
+            node.loadwallet(wallet_name)
 
-        assert_equal(sorted(map(lambda w: w['name'], self.nodes[0].listwalletdir()['wallets'])), sorted(in_wallet_dir))
+        assert_equal(sorted(map(lambda w: w['name'], node.listwalletdir()['wallets'])), sorted(in_wallet_dir))
 
-        wallets = [wallet(w) for w in wallet_names]
-        wallet_bad = wallet("bad")
+        wallets = [get_wallet(node, w) for w in wallet_names]
+        wallet_bad = get_wallet(node, "bad")
 
         # check wallet names and balances
         self.generatetoaddress(node, nblocks=1, address=wallets[0].getnewaddress(), sync_fun=self.no_op)
@@ -257,6 +308,7 @@ class MultiWalletTest(BitcoinTestFramework):
         assert_equal(w1.getwalletinfo()['paytxfee'], 0)
         assert_equal(w2.getwalletinfo()['paytxfee'], Decimal('0.00100000'))
 
+    def test_loading(self, node, wallet_names):
         self.log.info("Test dynamic wallet loading")
 
         self.restart_node(0, ['-nowallet'])
@@ -268,7 +320,7 @@ class MultiWalletTest(BitcoinTestFramework):
         assert_equal(loadwallet_name['name'], wallet_names[0])
         assert_equal(node.listwallets(), wallet_names[0:1])
         node.getwalletinfo()
-        w1 = node.get_wallet_rpc(wallet_names[0])
+        w1 = get_wallet(node, wallet_names[0])
         w1.getwalletinfo()
 
         self.log.info("Load second wallet")
@@ -276,7 +328,7 @@ class MultiWalletTest(BitcoinTestFramework):
         assert_equal(loadwallet_name['name'], wallet_names[1])
         assert_equal(node.listwallets(), wallet_names[0:2])
         assert_raises_rpc_error(-19, "Multiple wallets are loaded. Please select which wallet", node.getwalletinfo)
-        w2 = node.get_wallet_rpc(wallet_names[1])
+        w2 = get_wallet(node, wallet_names[1])
         w2.getwalletinfo()
 
         self.log.info("Concurrent wallet loading")
@@ -293,115 +345,125 @@ class MultiWalletTest(BitcoinTestFramework):
 
         self.log.info("Load remaining wallets")
         for wallet_name in wallet_names[2:]:
-            loadwallet_name = self.nodes[0].loadwallet(wallet_name)
+            loadwallet_name = node.loadwallet(wallet_name)
             assert_equal(loadwallet_name['name'], wallet_name)
 
-        assert_equal(set(self.nodes[0].listwallets()), set(wallet_names))
+        assert_equal(set(node.listwallets()), set(wallet_names))
 
         # Fail to load if wallet doesn't exist
-        path = wallet_dir("wallets")
-        assert_raises_rpc_error(-18, "Wallet file verification failed. Failed to load database path '{}'. Path does not exist.".format(path), self.nodes[0].loadwallet, 'wallets')
+        path = wallet_dir(node, "wallets")
+        assert_raises_rpc_error(-18, "Wallet file verification failed. Failed to load database path '{}'. Path does not exist.".format(path), node.loadwallet, 'wallets')
 
         # Fail to load duplicate wallets
-        assert_raises_rpc_error(-35, "Wallet \"w1\" is already loaded.", self.nodes[0].loadwallet, wallet_names[0])
+        assert_raises_rpc_error(-35, "Wallet \"w1\" is already loaded.", node.loadwallet, wallet_names[0])
         # Fail to load if wallet file is a symlink
-        assert_raises_rpc_error(-4, "Wallet file verification failed. Invalid -wallet path 'w8_symlink'", self.nodes[0].loadwallet, 'w8_symlink')
+        if self.check_symlinks:
+            assert_raises_rpc_error(-4, "Wallet file verification failed. Invalid -wallet path 'w8_symlink'", node.loadwallet, 'w8_symlink')
 
         # Fail to load if a directory is specified that doesn't contain a wallet
-        os.mkdir(wallet_dir('empty_wallet_dir'))
-        path = wallet_dir("empty_wallet_dir")
-        assert_raises_rpc_error(-18, "Wallet file verification failed. Failed to load database path '{}'. Data is not in recognized format.".format(path), self.nodes[0].loadwallet, 'empty_wallet_dir')
+        os.mkdir(wallet_dir(node, 'empty_wallet_dir'))
+        path = wallet_dir(node, "empty_wallet_dir")
+        assert_raises_rpc_error(-18, "Wallet file verification failed. Failed to load database path '{}'. Data is not in recognized format.".format(path), node.loadwallet, 'empty_wallet_dir')
 
-        self.log.info("Test dynamic wallet creation.")
+        return w1, w2
+
+    def test_creation(self, node, in_wallet_dir):
+        self.log.info("Test dynamic wallet creation")
+
+        # should raise rpc error if wallet path can't be created
+        err_code = -4
+        assert_raises_rpc_error(err_code, "Wallet file verification failed. ", node.createwallet, "w8/bad")
 
         # Fail to create a wallet if it already exists.
-        path = wallet_dir("w2")
-        assert_raises_rpc_error(-4, "Failed to create database path '{}'. Database already exists.".format(path), self.nodes[0].createwallet, 'w2')
+        path = wallet_dir(node, "w2")
+        assert_raises_rpc_error(-4, "Failed to create database path '{}'. Database already exists.".format(path), node.createwallet, 'w2')
 
         # Successfully create a wallet with a new name
-        loadwallet_name = self.nodes[0].createwallet('w9')
+        loadwallet_name = node.createwallet('w9')
         in_wallet_dir.append('w9')
         assert_equal(loadwallet_name['name'], 'w9')
-        w9 = node.get_wallet_rpc('w9')
+        w9 = get_wallet(node, 'w9')
         assert_equal(w9.getwalletinfo()['walletname'], 'w9')
 
-        assert 'w9' in self.nodes[0].listwallets()
+        assert 'w9' in node.listwallets()
 
         # Successfully create a wallet using a full path
         new_wallet_dir = os.path.join(self.options.tmpdir, 'new_walletdir')
         new_wallet_name = os.path.join(new_wallet_dir, 'w10')
-        loadwallet_name = self.nodes[0].createwallet(new_wallet_name)
+        loadwallet_name = node.createwallet(new_wallet_name)
         assert_equal(loadwallet_name['name'], new_wallet_name)
-        w10 = node.get_wallet_rpc(new_wallet_name)
+        w10 = get_wallet(node, new_wallet_name)
         assert_equal(w10.getwalletinfo()['walletname'], new_wallet_name)
 
-        assert new_wallet_name in self.nodes[0].listwallets()
+        assert new_wallet_name in node.listwallets()
 
+    def test_unloading(self, node, in_wallet_dir, w1, w2):
         self.log.info("Test dynamic wallet unloading")
 
         # Test `unloadwallet` errors
-        assert_raises_rpc_error(-8, "Either the RPC endpoint wallet or the wallet name parameter must be provided", self.nodes[0].unloadwallet)
-        assert_raises_rpc_error(-18, "Requested wallet does not exist or is not loaded", self.nodes[0].unloadwallet, "dummy")
-        assert_raises_rpc_error(-18, "Requested wallet does not exist or is not loaded", node.get_wallet_rpc("dummy").unloadwallet)
+        assert_raises_rpc_error(-8, "Either the RPC endpoint wallet or the wallet name parameter must be provided", node.unloadwallet)
+        assert_raises_rpc_error(-18, "Requested wallet does not exist or is not loaded", node.unloadwallet, "dummy")
+        assert_raises_rpc_error(-18, "Requested wallet does not exist or is not loaded", get_wallet(node, "dummy").unloadwallet)
         assert_raises_rpc_error(-8, "The RPC endpoint wallet and the wallet name parameter specify different wallets", w1.unloadwallet, "w2"),
 
         # Successfully unload the specified wallet name
-        self.nodes[0].unloadwallet("w1")
-        assert 'w1' not in self.nodes[0].listwallets()
+        node.unloadwallet("w1")
+        assert 'w1' not in node.listwallets()
 
         # Unload w1 again, this time providing the wallet name twice
-        self.nodes[0].loadwallet("w1")
-        assert 'w1' in self.nodes[0].listwallets()
+        node.loadwallet("w1")
+        assert 'w1' in node.listwallets()
         w1.unloadwallet("w1")
-        assert 'w1' not in self.nodes[0].listwallets()
+        assert 'w1' not in node.listwallets()
 
         # Successfully unload the wallet referenced by the request endpoint
         # Also ensure unload works during walletpassphrase timeout
         w2.encryptwallet('test')
         w2.walletpassphrase('test', 1)
         w2.unloadwallet()
-        ensure_for(duration=1.1, f=lambda: 'w2' not in self.nodes[0].listwallets())
+        ensure_for(duration=1.1, f=lambda: 'w2' not in node.listwallets())
 
         # Successfully unload all wallets
-        for wallet_name in self.nodes[0].listwallets():
-            self.nodes[0].unloadwallet(wallet_name)
-        assert_equal(self.nodes[0].listwallets(), [])
-        assert_raises_rpc_error(-18, "No wallet is loaded. Load a wallet using loadwallet or create a new one with createwallet. (Note: A default wallet is no longer automatically created)", self.nodes[0].getwalletinfo)
+        for wallet_name in node.listwallets():
+            node.unloadwallet(wallet_name)
+        assert_equal(node.listwallets(), [])
+        assert_raises_rpc_error(-18, "No wallet is loaded. Load a wallet using loadwallet or create a new one with createwallet. (Note: A default wallet is no longer automatically created)", node.getwalletinfo)
 
         # Successfully load a previously unloaded wallet
-        self.nodes[0].loadwallet('w1')
-        assert_equal(self.nodes[0].listwallets(), ['w1'])
+        node.loadwallet('w1')
+        assert_equal(node.listwallets(), ['w1'])
         assert_equal(w1.getwalletinfo()['walletname'], 'w1')
 
-        assert_equal(sorted(map(lambda w: w['name'], self.nodes[0].listwalletdir()['wallets'])), sorted(in_wallet_dir))
+        assert_equal(sorted(map(lambda w: w['name'], node.listwalletdir()['wallets'])), sorted(in_wallet_dir))
 
-        # Test backing up and restoring wallets
-        self.log.info("Test wallet backup")
+    def test_backup_and_restore(self, node, wallet_names, empty_wallet, empty_created_wallet):
+        self.log.info("Test wallet backup and restore")
         self.restart_node(0, ['-nowallet'])
         for wallet_name in wallet_names:
-            self.nodes[0].loadwallet(wallet_name)
+            node.loadwallet(wallet_name)
         for wallet_name in wallet_names:
-            rpc = self.nodes[0].get_wallet_rpc(wallet_name)
+            rpc = get_wallet(node, wallet_name)
             addr = rpc.getnewaddress()
             backup = os.path.join(self.options.tmpdir, 'backup.dat')
             if os.path.exists(backup):
                 os.unlink(backup)
             rpc.backupwallet(backup)
-            self.nodes[0].unloadwallet(wallet_name)
-            shutil.copyfile(empty_created_wallet if wallet_name == self.default_wallet_name else empty_wallet, wallet_file(wallet_name))
-            self.nodes[0].loadwallet(wallet_name)
+            node.unloadwallet(wallet_name)
+            shutil.copyfile(empty_created_wallet if wallet_name == self.default_wallet_name else empty_wallet, self.wallet_file(node, wallet_name))
+            node.loadwallet(wallet_name)
             assert_equal(rpc.getaddressinfo(addr)['ismine'], False)
-            self.nodes[0].unloadwallet(wallet_name)
-            shutil.copyfile(backup, wallet_file(wallet_name))
-            self.nodes[0].loadwallet(wallet_name)
+            node.unloadwallet(wallet_name)
+            shutil.copyfile(backup, self.wallet_file(node, wallet_name))
+            node.loadwallet(wallet_name)
             assert_equal(rpc.getaddressinfo(addr)['ismine'], True)
 
-        # Test .walletlock file is closed
+    def test_lock_file_closed(self, node):
+        self.log.info("Test wallet lock file is closed")
         self.start_node(1)
         wallet = os.path.join(self.options.tmpdir, 'my_wallet')
-        self.nodes[0].createwallet(wallet)
+        node.createwallet(wallet)
         assert_raises_rpc_error(-4, "Unable to obtain an exclusive lock", self.nodes[1].loadwallet, wallet)
-        self.nodes[0].unloadwallet(wallet)
+        node.unloadwallet(wallet)
         self.nodes[1].loadwallet(wallet)
 
 
