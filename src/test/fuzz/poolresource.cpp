@@ -9,6 +9,7 @@
 #include <test/fuzz/fuzz.h>
 #include <test/fuzz/util.h>
 #include <test/util/poolresourcetester.h>
+#include <util/byte_units.h>
 
 #include <cstdint>
 #include <tuple>
@@ -61,7 +62,7 @@ public:
     void
     Allocate()
     {
-        if (m_total_allocated > 0x1000000) return;
+        if (m_total_allocated > 16_MiB) return;
         size_t alignment_bits = m_provider.ConsumeIntegralInRange<size_t>(0, 7);
         size_t alignment = size_t{1} << alignment_bits;
         size_t size_bits = m_provider.ConsumeIntegralInRange<size_t>(0, 16 - alignment_bits);

@@ -7,6 +7,7 @@
 #include <crypto/chacha20.h>
 #include <crypto/chacha20poly1305.h>
 #include <span.h>
+#include <util/byte_units.h>
 
 #include <cstddef>
 #include <cstdint>
@@ -15,7 +16,7 @@
 /* Number of bytes to process per iteration */
 static const uint64_t BUFFER_SIZE_TINY  = 64;
 static const uint64_t BUFFER_SIZE_SMALL = 256;
-static const uint64_t BUFFER_SIZE_LARGE = 1024*1024;
+static const uint64_t BUFFER_SIZE_LARGE = 1_MiB;
 
 static void CHACHA20(benchmark::Bench& bench, size_t buffersize)
 {

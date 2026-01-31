@@ -49,6 +49,7 @@
 #include <txmempool.h>
 #include <uint256.h>
 #include <undo.h>
+#include <util/byte_units.h>
 #include <util/check.h>
 #include <util/fs.h>
 #include <util/fs_helpers.h>
@@ -90,7 +91,7 @@ using node::CBlockIndexWorkComparator;
 using node::SnapshotMetadata;
 
 /** Size threshold for warning about slow UTXO set flush to disk. */
-static constexpr size_t WARN_FLUSH_COINS_SIZE = 1 << 30; // 1 GiB
+static constexpr size_t WARN_FLUSH_COINS_SIZE{1_GiB};
 /** Time window to wait between writing blocks/block index and chainstate to disk.
  *  Randomize writing time inside the window to prevent a situation where the
  *  network over time settles into a few cohorts of synchronized writers.
@@ -2807,7 +2808,7 @@ bool Chainstate::FlushStateToDisk(
             }
 
             if (!CoinsTip().GetBestBlock().IsNull()) {
-                if (coins_mem_usage >= WARN_FLUSH_COINS_SIZE) LogWarning("Flushing large (%d GiB) UTXO set to disk, it may take several minutes", coins_mem_usage >> 30);
+                if (coins_mem_usage >= WARN_FLUSH_COINS_SIZE) LogWarning("Flushing large (%d GiB) UTXO set to disk, it may take several minutes", coins_mem_usage / 1_GiB);
                 LOG_TIME_MILLIS_WITH_CATEGORY(strprintf("write coins cache to disk (%d coins, %.2fKiB)",
                     coins_count, coins_mem_usage >> 10), BCLog::BENCH);
 
@@ -2881,7 +2882,7 @@ static void UpdateTipLog(
                    log(tip->nChainWork.getdouble()) / log(2.0), tip->m_chain_tx_count,
                    FormatISO8601DateTime(tip->GetBlockTime()),
                    chainman.GuessVerificationProgress(tip),
-                   coins_tip.DynamicMemoryUsage() * (1.0 / (1 << 20)),
+                   coins_tip.DynamicMemoryUsage() / double(1_MiB),
                    coins_tip.GetCacheSize(),
                    !warning_messages.empty() ? strprintf(" warning='%s'", warning_messages) : "");
 }
@@ -5521,9 +5522,9 @@ bool Chainstate::ResizeCoinsCaches(size_t coinstip_size, size_t coinsdb_size)
     CoinsDB().ResizeCache(coinsdb_size);
 
     LogInfo("[%s] resized coinsdb cache to %.1f MiB",
-        this->ToString(), coinsdb_size * (1.0 / 1024 / 1024));
+        this->ToString(), coinsdb_size / double(1_MiB));
     LogInfo("[%s] resized coinstip cache to %.1f MiB",
-        this->ToString(), coinstip_size * (1.0 / 1024 / 1024));
+        this->ToString(), coinstip_size / double(1_MiB));
 
     BlockValidationState state;
     bool ret;
