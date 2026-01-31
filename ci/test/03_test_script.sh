@@ -44,6 +44,19 @@ echo "=== BEGIN env ==="
 env
 echo "=== END env ==="
 
+# The CI framework should be flexible where it is run from. For example, from
+# a git-archive, a git-worktree, or a normal git repo.
+# The iwyu task requires a working git repo, which may not always be
+# available, so initialize one with force.
+if [[ "${RUN_IWYU}" == true ]]; then
+  mv .git .git_ci_backup || true
+  git init
+  git add ./src  # the git diff command used later for iwyu only cares about ./src
+  git config user.email "ci@ci"
+  git config user.name "CI"
+  git commit -m "dummy CI ./src init for IWYU"
+fi
+
 # Don't apply patches in the iwyu job, because it relies on the `git diff`
 # command to detect IWYU errors. It is safe to skip this patch in the iwyu job
 # because it doesn't run a UB detector.
