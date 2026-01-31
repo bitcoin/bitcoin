@@ -382,6 +382,9 @@ protected:
      */
     void Reset() noexcept;
 
+    /* Get the coin from base. Used for cache misses in FetchCoin. */
+    virtual std::optional<Coin> GetCoinFromBase(const COutPoint& outpoint) const;
+
 public:
     CCoinsViewCache(CCoinsView *baseIn, bool deterministic = false);
 
