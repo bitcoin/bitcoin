@@ -142,13 +142,13 @@ export GUIX_LD_WRAPPER_DISABLE_RPATH=yes
 
 # Determine the correct value for -Wl,--dynamic-linker for the current $HOST
 case "$HOST" in
+    x86_64-linux-gnu) ;;
+    aarch64-linux-gnu) ;;
+    riscv64-linux-gnu) ;;
     *linux*)
         glibc_dynamic_linker=$(
             case "$HOST" in
-                x86_64-linux-gnu)      echo /lib64/ld-linux-x86-64.so.2 ;;
                 arm-linux-gnueabihf)   echo /lib/ld-linux-armhf.so.3 ;;
-                aarch64-linux-gnu)     echo /lib/ld-linux-aarch64.so.1 ;;
-                riscv64-linux-gnu)     echo /lib/ld-linux-riscv64-lp64d.so.1 ;;
                 powerpc64-linux-gnu)   echo /lib64/ld64.so.1;;
                 powerpc64le-linux-gnu) echo /lib64/ld64.so.2;;
                 *)                     exit 1 ;;
@@ -178,7 +178,8 @@ make -C depends --jobs="$JOBS" HOST="$HOST" \
                                    x86_64_linux_AR=x86_64-linux-gnu-gcc-ar \
                                    x86_64_linux_RANLIB=x86_64-linux-gnu-gcc-ranlib \
                                    x86_64_linux_NM=x86_64-linux-gnu-gcc-nm \
-                                   x86_64_linux_STRIP=x86_64-linux-gnu-strip
+                                   x86_64_linux_STRIP=x86_64-linux-gnu-strip \
+                                   NO_QT=1
 
 case "$HOST" in
     *darwin*)
@@ -232,6 +233,9 @@ esac
 
 # EXE FLAGS
 case "$HOST" in
+    riscv64-linux-gnu) CMAKE_EXE_LINKER_FLAGS="-DCMAKE_EXE_LINKER_FLAGS=-static-pie -static-libgcc -Wl,-O2" ;;
+    aarch64-linux-gnu) CMAKE_EXE_LINKER_FLAGS="-DCMAKE_EXE_LINKER_FLAGS=-static-pie -static-libgcc -Wl,-O2" ;;
+    x86_64-linux-gnu) CMAKE_EXE_LINKER_FLAGS="-DCMAKE_EXE_LINKER_FLAGS=-static-pie -static-libgcc -Wl,-O2" ;;
     *linux*)  CMAKE_EXE_LINKER_FLAGS="-DCMAKE_EXE_LINKER_FLAGS=${HOST_LDFLAGS} -static-libstdc++ -static-libgcc" ;;
 esac
 
