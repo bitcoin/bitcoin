@@ -12,3 +12,8 @@ P2P and network changes
   2. If the originator sends two otherwise unrelated transactions, they
      will not be linkable. This is because a separate connection is used
      for broadcasting each transaction. (#29415)
+
+- New RPCs have been added to introspect and control private broadcast:
+  `getprivatebroadcastinfo` reports transactions currently being privately
+  broadcast, and `abortprivatebroadcast` removes matching
+  transactions from the private broadcast queue.

@@ -542,6 +542,8 @@ public:
     bool GetNodeStateStats(NodeId nodeid, CNodeStateStats& stats) const override EXCLUSIVE_LOCKS_REQUIRED(!m_peer_mutex);
     std::vector<node::TxOrphanage::OrphanInfo> GetOrphanTransactions() override EXCLUSIVE_LOCKS_REQUIRED(!m_tx_download_mutex);
     PeerManagerInfo GetInfo() const override EXCLUSIVE_LOCKS_REQUIRED(!m_peer_mutex);
+    std::vector<PrivateBroadcast::TxBroadcastInfo> GetPrivateBroadcastInfo() const override EXCLUSIVE_LOCKS_REQUIRED(!m_peer_mutex);
+    std::vector<CTransactionRef> AbortPrivateBroadcast(const uint256& id) override EXCLUSIVE_LOCKS_REQUIRED(!m_peer_mutex);
     void SendPings() override EXCLUSIVE_LOCKS_REQUIRED(!m_peer_mutex);
     void InitiateTxBroadcastToAll(const Txid& txid, const Wtxid& wtxid) override EXCLUSIVE_LOCKS_REQUIRED(!m_peer_mutex);
     void InitiateTxBroadcastPrivate(const CTransactionRef& tx) override EXCLUSIVE_LOCKS_REQUIRED(!m_peer_mutex);
@@ -1658,7 +1660,7 @@ void PeerManagerImpl::ReattemptPrivateBroadcast(CScheduler& scheduler)
                 LogDebug(BCLog::PRIVBROADCAST, "Giving up broadcast attempts for txid=%s wtxid=%s: %s",
                          stale_tx->GetHash().ToString(), stale_tx->GetWitnessHash().ToString(),
                          mempool_acceptable.m_state.ToString());
-                m_tx_for_private_broadcast.Remove(stale_tx);
+                m_tx_for_private_broadcast.StopBroadcasting(stale_tx, mempool_acceptable.m_state.ToString());
             }
         }
 
@@ -1852,6 +1854,38 @@ PeerManagerInfo PeerManagerImpl::GetInfo() const
         .median_outbound_time_offset = m_outbound_time_offsets.Median(),
         .ignores_incoming_txs = m_opts.ignore_incoming_txs,
     };
+}
+
+std::vector<PrivateBroadcast::TxBroadcastInfo> PeerManagerImpl::GetPrivateBroadcastInfo() const
+{
+    return m_tx_for_private_broadcast.GetBroadcastInfo();
+}
+
+std::vector<CTransactionRef> PeerManagerImpl::AbortPrivateBroadcast(const uint256& id)
+{
+    const auto snapshot{m_tx_for_private_broadcast.GetBroadcastInfo()};
+    std::vector<CTransactionRef> to_stop;
+    to_stop.reserve(snapshot.size());
+    for (const auto& entry : snapshot) {
+        if (entry.tx->GetHash().ToUint256() == id || entry.tx->GetWitnessHash().ToUint256() == id) {
+            to_stop.push_back(entry.tx);
+        }
+    }
+
+    size_t connections_cancelled{0};
+    for (const auto& tx : to_stop) {
+        const auto peer_acks{m_tx_for_private_broadcast.StopBroadcasting(tx, "Manually aborted via abortprivatebroadcast RPC")};
+        if (!peer_acks.has_value()) continue;
+        if (NUM_PRIVATE_BROADCAST_PER_TX > peer_acks.value()) {
+            connections_cancelled += (NUM_PRIVATE_BROADCAST_PER_TX - peer_acks.value());
+        }
+    }
+
+    if (connections_cancelled > 0) {
+        m_connman.m_private_broadcast.NumToOpenSub(connections_cancelled);
+    }
+
+    return to_stop;
 }
 
 void PeerManagerImpl::AddToCompactExtraTransactions(const CTransactionRef& tx)
@@ -3530,7 +3564,7 @@ void PeerManagerImpl::PushPrivateBroadcastTx(CNode& node)
 {
     Assume(node.IsPrivateBroadcastConn());
 
-    const auto opt_tx{m_tx_for_private_broadcast.PickTxForSend(node.GetId())};
+    const auto opt_tx{m_tx_for_private_broadcast.PickTxForSend(node.GetId(), CService{node.addr})};
     if (!opt_tx) {
         LogDebug(BCLog::PRIVBROADCAST, "Disconnecting: no more transactions for private broadcast (connected in vain), peer=%d%s", node.GetId(), node.LogIP(fLogIPs));
         node.fDisconnect = true;
@@ -4466,7 +4500,7 @@ void PeerManagerImpl::ProcessMessage(CNode& pfrom, const std::string& msg_type, 
         const uint256& hash = peer->m_wtxid_relay ? wtxid.ToUint256() : txid.ToUint256();
         AddKnownTx(*peer, hash);
 
-        if (const auto num_broadcasted{m_tx_for_private_broadcast.Remove(ptx)}) {
+        if (const auto num_broadcasted{m_tx_for_private_broadcast.StopBroadcasting(ptx, CService{pfrom.addr})}) {
             LogDebug(BCLog::PRIVBROADCAST, "Received our privately broadcast transaction (txid=%s) from the "
                                            "network from peer=%d%s; stopping private broadcast attempts",
                      txid.ToString(), pfrom.GetId(), pfrom.LogIP(fLogIPs));
