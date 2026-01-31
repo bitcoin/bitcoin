@@ -45,8 +45,5 @@ function(add_secp256k1 subdir)
     deduplicate_flags(CMAKE_C_FLAGS)
   endif()
 
-  add_subdirectory(${subdir})
-  set_target_properties(secp256k1 PROPERTIES
-    EXCLUDE_FROM_ALL TRUE
-  )
+  add_subdirectory(${subdir} EXCLUDE_FROM_ALL)
 endfunction()
