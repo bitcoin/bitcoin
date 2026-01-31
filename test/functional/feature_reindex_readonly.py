@@ -23,7 +23,7 @@ class BlockstoreReindexTest(BitcoinTestFramework):
         fastprune_blockfile_size = 0x10000
         opreturn = "6a"
         nulldata = fastprune_blockfile_size * "ff"
-        self.generateblock(self.nodes[0], output=f"raw({opreturn}{nulldata})", transactions=[])
+        self.generateblock(self.nodes[0], outputs=f"raw({opreturn}{nulldata})", transactions=[])
         block_count = self.nodes[0].getblockcount()
         self.stop_node(0)
 

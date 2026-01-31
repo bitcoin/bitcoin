@@ -80,14 +80,14 @@ class P2POutEvict(BitcoinTestFramework):
 
         self.log.info("Mine a block so our peer starts lagging")
         prev_prev_hash = tip_header.hashPrevBlock
-        best_block_hash = self.generateblock(node, output="raw(42)", transactions=[])["hash"]
+        best_block_hash = self.generateblock(node)["hash"]
         peer.sync_with_ping()
 
         self.log.info("The peer keeps catching up with the old tip; check that the node does not evict the peer")
         for i in range(10):
             # Generate an additional block so the peers is 2 blocks behind
             prev_header = from_hex(CBlockHeader(), node.getblockheader(best_block_hash, False))
-            best_block_hash = self.generateblock(node, output="raw(42)", transactions=[])["hash"]
+            best_block_hash = self.generateblock(node)["hash"]
             tip_header = from_hex(CBlockHeader(), node.getblockheader(best_block_hash, False))
             peer.sync_with_ping()
 
@@ -136,7 +136,7 @@ class P2POutEvict(BitcoinTestFramework):
         peer.send_and_ping(msg_headers([tip_header]))
 
         self.log.info("Mine a new block and sync with our peer")
-        self.generateblock(node, output="raw(42)", transactions=[])
+        self.generateblock(node)
         peer.sync_with_ping()
 
         self.log.info("Let enough time pass for the timeouts to go off")
@@ -190,8 +190,9 @@ class P2POutEvict(BitcoinTestFramework):
 
         self.log.info("Mine a new block and keep the unprotected honest peer on sync, all the rest off-sync")
         # Mine a block so all peers become outdated
+
         target_hash = prev_header.hash_int
-        tip_hash = self.generateblock(node, output="raw(42)", transactions=[])["hash"]
+        tip_hash = self.generateblock(node)["hash"]
         tip_header = from_hex(CBlockHeader(), node.getblockheader(tip_hash, False))
         tip_headers_message = msg_headers([tip_header])
 
@@ -227,7 +228,7 @@ class P2POutEvict(BitcoinTestFramework):
         peer.send_and_ping(msg_headers([tip_header]))
 
         self.log.info("Mine a new block and sync with our peer")
-        self.generateblock(node, output="raw(42)", transactions=[])
+        self.generateblock(node)
         peer.sync_with_ping()
 
         self.log.info("Let enough time pass for the timeouts to go off")

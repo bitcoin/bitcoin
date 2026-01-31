@@ -715,7 +715,7 @@ def test_unconfirmed_not_spendable(self, rbf_node, rbf_node_address):
     # then invalidate the block so the rbf tx will be put back in the mempool.
     # This makes it possible to check whether the rbf tx outputs are
     # spendable before the rbf tx is confirmed.
-    block = self.generateblock(rbf_node, output="raw(51)", transactions=[rbftx])
+    block = self.generateblock(rbf_node, transactions=[rbftx])
     # Can not abandon conflicted tx
     assert_raises_rpc_error(-5, 'Transaction not eligible for abandonment', lambda: rbf_node.abandontransaction(txid=bumpid))
     rbf_node.invalidateblock(block["hash"])
