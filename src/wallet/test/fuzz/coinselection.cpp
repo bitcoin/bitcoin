@@ -68,7 +68,7 @@ static CAmount CreateCoins(FuzzedDataProvider& fuzzed_data_provider, std::vector
 static SelectionResult ManualSelection(std::vector<COutput>& utxos, const CAmount& total_amount, const bool& subtract_fee_outputs)
 {
     SelectionResult result(total_amount, SelectionAlgorithm::MANUAL);
-    std::set<std::shared_ptr<COutput>> utxo_pool;
+    COutputSet utxo_pool;
     for (const auto& utxo : utxos) {
         utxo_pool.insert(std::make_shared<COutput>(utxo));
     }
@@ -319,7 +319,7 @@ void FuzzCoinSelectionAlgorithm(std::span<const uint8_t> buffer) {
     std::vector<COutput> utxos;
     CAmount new_total_balance{CreateCoins(fuzzed_data_provider, utxos, coin_params, next_locktime)};
     if (new_total_balance > 0) {
-        std::set<std::shared_ptr<COutput>> new_utxo_pool;
+        COutputSet new_utxo_pool;
         for (const auto& utxo : utxos) {
             new_utxo_pool.insert(std::make_shared<COutput>(utxo));
         }
@@ -336,7 +336,7 @@ void FuzzCoinSelectionAlgorithm(std::span<const uint8_t> buffer) {
     auto manual_selection{ManualSelection(manual_inputs, manual_balance, coin_params.m_subtract_fee_outputs)};
     if (result) {
         const CAmount old_target{result->GetTarget()};
-        const std::set<std::shared_ptr<COutput>> input_set{result->GetInputSet()};
+        const COutputSet input_set{result->GetInputSet()};
         const int old_weight{result->GetWeight()};
         result->Merge(manual_selection);
         assert(result->GetInputSet().size() == input_set.size() + manual_inputs.size());

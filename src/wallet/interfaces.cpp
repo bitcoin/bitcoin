@@ -411,12 +411,13 @@ public:
             CoinSelectionParams params(rng);
             // Note: for now, swallow any error.
             if (auto res = FetchSelectedInputs(*m_wallet, coin_control, params)) {
-                total_amount += res->total_amount;
+                total_amount += res->GetAppropriateTotal(params.m_subtract_fee_outputs).value_or(res->GetTotalAmount());
             }
         }
 
         // And fetch the wallet available coins
         if (coin_control.m_allow_other_inputs) {
+            // we don't have fee details here - so there's no effective value possible.
             total_amount += AvailableCoins(*m_wallet, &coin_control).GetTotalAmount();
         }
 
