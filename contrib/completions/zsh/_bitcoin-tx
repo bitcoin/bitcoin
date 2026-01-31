@@ -1,0 +1,56 @@
+#compdef bitcoin-tx
+# zsh completion for bitcoin-tx(1)
+# Copyright (c) 2025-present The Bitcoin Core developers
+# Distributed under the MIT software license, see the accompanying
+# file COPYING or http://www.opensource.org/licenses/mit-license.php.
+
+_bitcoin-tx() {
+    local context state line
+    local bitcoin_tx="$words[1]"
+
+    # Handle current word completions
+    case "$words[CURRENT]" in
+        load=*:*)
+            local load_path=${words[CURRENT]#load=*:}
+            _files -W ${load_path:h}
+            return 0
+            ;;
+        *=*)
+            # prevent attempts to complete other arguments
+            return 0
+            ;;
+    esac
+
+    # Check if we should show options or commands
+    if (( CURRENT == 2 )) || [[ "$words[CURRENT-1]" != "-create" && "$words[CURRENT-1]" == -* ]]; then
+        # only options (or an uncompletable hex-string) allowed
+        # parse bitcoin-tx -help for options
+        local helpopts
+        helpopts="$($bitcoin_tx -help | awk '/^  -/ { gsub(/^  /, ""); print $1 }')"
+        local -a opts
+        opts=(${(f)helpopts})
+
+        _describe 'bitcoin-tx options' opts
+    else
+        # only commands are allowed
+        # parse -help for commands
+        local helpcmds
+        helpcmds="$($bitcoin_tx -help | awk '/Commands:/,0 { if (/^  [a-z]/) { gsub(/^  /, ""); gsub(/=.*/, "="); print $1 } }')"
+        local -a cmds
+        cmds=(${(f)helpcmds})
+
+        _describe 'bitcoin-tx commands' cmds
+    fi
+
+    return 0
+}
+
+# Function is now defined and will be called by zsh completion system
+
+# Local variables:
+# mode: shell-script
+# sh-basic-offset: 4
+# sh-indent-comment: t
+# indent-tabs-mode: nil
+# End:
+# ex: ts=4 sw=4 et filetype=sh
