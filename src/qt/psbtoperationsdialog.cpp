@@ -180,15 +180,15 @@ QString PSBTOperationsDialog::renderTransaction(const PartiallySignedTransaction
     QString tx_description;
     QLatin1String bullet_point(" * ");
     CAmount totalAmount = 0;
-    for (const CTxOut& out : psbtx.tx->vout) {
+    for (const PSBTOutput& out : psbtx.outputs) {
         CTxDestination address;
-        ExtractDestination(out.scriptPubKey, address);
-        totalAmount += out.nValue;
+        ExtractDestination(*out.script, address);
+        totalAmount += *out.amount;
         tx_description.append(bullet_point).append(tr("Sends %1 to %2")
-            .arg(BitcoinUnits::formatWithUnit(BitcoinUnit::BTC, out.nValue))
+            .arg(BitcoinUnits::formatWithUnit(BitcoinUnit::BTC, *out.amount))
             .arg(QString::fromStdString(EncodeDestination(address))));
         // Check if the address is one of ours
-        if (m_wallet_model != nullptr && m_wallet_model->wallet().txoutIsMine(out)) tx_description.append(" (" + tr("own address") + ")");
+        if (m_wallet_model != nullptr && m_wallet_model->wallet().txoutIsMine(CTxOut(*out.amount, *out.script))) tx_description.append(" (" + tr("own address") + ")");
         tx_description.append("<br>");
     }
 
