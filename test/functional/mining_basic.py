@@ -418,6 +418,9 @@ class MiningTest(BitcoinTestFramework):
         self.log.info("getblocktemplate: Test capability advertised")
         assert 'proposal' in tmpl['capabilities']
         assert 'coinbasetxn' not in tmpl
+        assert_equal(tmpl["coinbase_version"], 2)
+        assert_equal(tmpl["coinbase_locktime"], int(tmpl["height"]) - 1)
+        assert_equal(tmpl["coinbase_sequence"], MAX_SEQUENCE_NONFINAL)
 
         next_height = int(tmpl["height"])
         coinbase_tx = create_coinbase(height=next_height)
