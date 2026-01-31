@@ -263,15 +263,19 @@ public:
         int& change_pos,
         CAmount& fee) override
     {
+        util::Result<CTransactionRef> result;
         LOCK(m_wallet->cs_wallet);
-        auto res = CreateTransaction(*m_wallet, recipients, change_pos == -1 ? std::nullopt : std::make_optional(change_pos),
-                                     coin_control, sign);
-        if (!res) return util::Error{util::ErrorString(res)};
-        const auto& txr = *res;
+        auto created{CreateTransaction(*m_wallet, recipients, change_pos == -1 ? std::nullopt : std::make_optional(change_pos),
+                                       coin_control, sign) >> result};
+        if (!created) {
+            result.update(util::Error{});
+            return result;
+        }
+        const auto& txr = *created;
         fee = txr.fee;
         change_pos = txr.change_pos ? int(*txr.change_pos) : -1;
-
-        return txr.tx;
+        result.update(txr.tx);
+        return result;
     }
     void commitTransaction(CTransactionRef tx,
         WalletValueMap value_map,
@@ -498,7 +502,7 @@ public:
     CAmount getDefaultMaxTxFee() override { return m_wallet->m_default_max_tx_fee; }
     void remove() override
     {
-        RemoveWallet(m_context, m_wallet, /*load_on_start=*/false);
+        Assume(RemoveWallet(m_context, m_wallet, /*load_on_start=*/false));
     }
     std::unique_ptr<Handler> handleUnload(UnloadFn fn) override
     {
@@ -567,57 +571,58 @@ public:
     void schedulerMockForward(std::chrono::seconds delta) override { Assert(m_context.scheduler)->MockForward(delta); }
 
     //! WalletLoader methods
-    util::Result<std::unique_ptr<Wallet>> createWallet(const std::string& name, const SecureString& passphrase, uint64_t wallet_creation_flags, std::vector<bilingual_str>& warnings) override
+    util::ResultPtr<std::unique_ptr<Wallet>> createWallet(const std::string& name, const SecureString& passphrase, uint64_t wallet_creation_flags) override
     {
+        util::ResultPtr<std::unique_ptr<Wallet>> result;
         DatabaseOptions options;
-        DatabaseStatus status;
         ReadDatabaseArgs(*m_context.args, options);
         options.require_create = true;
         options.create_flags = wallet_creation_flags;
         options.create_passphrase = passphrase;
-        bilingual_str error;
-        std::unique_ptr<Wallet> wallet{MakeWallet(m_context, CreateWallet(m_context, name, /*load_on_start=*/true, options, status, error, warnings))};
-        if (wallet) {
-            return wallet;
+        if (auto wallet{CreateWallet(m_context, name, true /* load_on_start */, options) >> result}) {
+            result.update(MakeWallet(m_context, wallet.value()));
         } else {
-            return util::Error{error};
+            result.update(util::Error{});
         }
+        return result;
     }
-    util::Result<std::unique_ptr<Wallet>> loadWallet(const std::string& name, std::vector<bilingual_str>& warnings) override
+    util::ResultPtr<std::unique_ptr<Wallet>> loadWallet(const std::string& name) override
     {
+        util::ResultPtr<std::unique_ptr<Wallet>> result;
         DatabaseOptions options;
-        DatabaseStatus status;
         ReadDatabaseArgs(*m_context.args, options);
         options.require_existing = true;
-        bilingual_str error;
-        std::unique_ptr<Wallet> wallet{MakeWallet(m_context, LoadWallet(m_context, name, /*load_on_start=*/true, options, status, error, warnings))};
-        if (wallet) {
-            return wallet;
+        if (auto wallet{LoadWallet(m_context, name, true /* load_on_start */, options) >> result}) {
+            result.update(MakeWallet(m_context, wallet.value()));
         } else {
-            return util::Error{error};
+            result.update(util::Error{});
         }
+        return result;
     }
-    util::Result<std::unique_ptr<Wallet>> restoreWallet(const fs::path& backup_file, const std::string& wallet_name, std::vector<bilingual_str>& warnings, bool load_after_restore) override
+    util::ResultPtr<std::unique_ptr<Wallet>> restoreWallet(const fs::path& backup_file, const std::string& wallet_name, bool load_after_restore) override
     {
-        DatabaseStatus status;
-        bilingual_str error;
-        std::unique_ptr<Wallet> wallet{MakeWallet(m_context, RestoreWallet(m_context, backup_file, wallet_name, /*load_on_start=*/true, status, error, warnings, load_after_restore))};
-        if (!error.empty()) {
-            return util::Error{error};
+        util::ResultPtr<std::unique_ptr<Wallet>> result;
+        if (auto wallet{RestoreWallet(m_context, backup_file, wallet_name, /*load_on_start=*/true, load_after_restore) >> result}) {
+            result.update(MakeWallet(m_context, wallet.value()));
+        } else {
+            result.update(util::Error{});
         }
-        return wallet;
+        return result;
     }
     util::Result<WalletMigrationResult> migrateWallet(const std::string& name, const SecureString& passphrase) override
     {
-        auto res = wallet::MigrateLegacyToDescriptor(name, passphrase, m_context);
-        if (!res) return util::Error{util::ErrorString(res)};
-        WalletMigrationResult out{
+        util::Result<WalletMigrationResult> result;
+        if (auto res{wallet::MigrateLegacyToDescriptor(name, passphrase, m_context) >> result}) {
+            result.update(WalletMigrationResult{
             .wallet = MakeWallet(m_context, res->wallet),
             .watchonly_wallet_name = res->watchonly_wallet ? std::make_optional(res->watchonly_wallet->GetName()) : std::nullopt,
             .solvables_wallet_name = res->solvables_wallet ? std::make_optional(res->solvables_wallet->GetName()) : std::nullopt,
             .backup_path = res->backup_path,
-        };
-        return out;
+            });
+        } else {
+            result.update(util::Error{});
+        }
+        return result;
     }
     bool isEncrypted(const std::string& wallet_name) override
     {
@@ -628,13 +633,7 @@ public:
         // Unloaded wallet, read db
         DatabaseOptions options;
         options.require_existing = true;
-        DatabaseStatus status;
-        bilingual_str error;
-        auto db = MakeWalletDatabase(wallet_name, options, status, error);
-        if (!db && status == wallet::DatabaseStatus::FAILED_LEGACY_DISABLED) {
-            options.require_format = wallet::DatabaseFormat::BERKELEY_RO;
-            db = MakeWalletDatabase(wallet_name, options, status, error);
-        }
+        auto db{MakeWalletDatabase(wallet_name, options)};
         if (!db) return false;
         return WalletBatch(*db).IsEncrypted();
     }

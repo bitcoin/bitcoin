@@ -243,7 +243,7 @@ public:
         WalletContext& context = *node.walletLoader().context();
         AddWallet(context, wallet);
         walletModel = std::make_unique<WalletModel>(interfaces::MakeWallet(context, wallet), *clientModel, platformStyle);
-        RemoveWallet(context, wallet, /* load_on_start= */ std::nullopt);
+        QVERIFY(RemoveWallet(context, wallet, /* load_on_start= */ std::nullopt));
         sendCoinsDialog.setModel(walletModel.get());
         transactionView.setModel(walletModel.get());
     }

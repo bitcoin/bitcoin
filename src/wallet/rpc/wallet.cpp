@@ -250,11 +250,8 @@ static RPCHelpMan loadwallet()
     const std::string name(request.params[0].get_str());
 
     DatabaseOptions options;
-    DatabaseStatus status;
     ReadDatabaseArgs(*context.args, options);
     options.require_existing = true;
-    bilingual_str error;
-    std::vector<bilingual_str> warnings;
     std::optional<bool> load_on_start = request.params[1].isNull() ? std::nullopt : std::optional<bool>(request.params[1].get_bool());
 
     {
@@ -264,13 +261,14 @@ static RPCHelpMan loadwallet()
         }
     }
 
-    std::shared_ptr<CWallet> const wallet = LoadWallet(context, name, load_on_start, options, status, error, warnings);
-
-    HandleWalletError(wallet, status, error);
+    auto wallet{LoadWallet(context, name, load_on_start, options)};
+    HandleWalletError(wallet);
 
     UniValue obj(UniValue::VOBJ);
     obj.pushKV("name", wallet->GetName());
-    PushWarnings(warnings, obj);
+    if (wallet.messages_ptr()) {
+        PushWarnings(wallet.messages_ptr()->warnings, obj);
+    }
 
     return obj;
 },
@@ -389,12 +387,12 @@ static RPCHelpMan createwallet()
     }
     SecureString passphrase;
     passphrase.reserve(100);
-    std::vector<bilingual_str> warnings;
+    util::Result<void> result;
     if (!request.params[3].isNull()) {
         passphrase = std::string_view{request.params[3].get_str()};
         if (passphrase.empty()) {
             // Empty string means unencrypted
-            warnings.emplace_back(Untranslated("Empty string given as passphrase, wallet will not be encrypted."));
+            result.messages().warnings.push_back(Untranslated("Empty string given as passphrase, wallet will not be encrypted."));
         }
     }
 
@@ -414,19 +412,20 @@ static RPCHelpMan createwallet()
     }
 
     DatabaseOptions options;
-    DatabaseStatus status;
     ReadDatabaseArgs(*context.args, options);
     options.require_create = true;
     options.create_flags = flags;
     options.create_passphrase = passphrase;
-    bilingual_str error;
     std::optional<bool> load_on_start = request.params[6].isNull() ? std::nullopt : std::optional<bool>(request.params[6].get_bool());
-    const std::shared_ptr<CWallet> wallet = CreateWallet(context, request.params[0].get_str(), load_on_start, options, status, error, warnings);
-    HandleWalletError(wallet, status, error);
+    auto wallet{CreateWallet(context, request.params[0].get_str(), load_on_start, options)};
+    HandleWalletError(wallet);
+    wallet >> result;
 
     UniValue obj(UniValue::VOBJ);
     obj.pushKV("name", wallet->GetName());
-    PushWarnings(warnings, obj);
+    if (result.messages_ptr()) {
+        PushWarnings(result.messages_ptr()->warnings, obj);
+    }
 
     return obj;
 },
@@ -462,7 +461,7 @@ static RPCHelpMan unloadwallet()
         throw JSONRPCError(RPC_WALLET_NOT_FOUND, "Requested wallet does not exist or is not loaded");
     }
 
-    std::vector<bilingual_str> warnings;
+    util::Result<void> result;
     {
         WalletRescanReserver reserver(*wallet);
         if (!reserver.reserve()) {
@@ -473,17 +472,19 @@ static RPCHelpMan unloadwallet()
         // Note that any attempt to load the same wallet would fail until the wallet
         // is destroyed (see CheckUniqueFileid).
         std::optional<bool> load_on_start{self.MaybeArg<bool>("load_on_startup")};
-        if (!RemoveWallet(context, wallet, load_on_start, warnings)) {
+        if (!(RemoveWallet(context, wallet, load_on_start) >> result)) {
             throw JSONRPCError(RPC_MISC_ERROR, "Requested wallet already unloaded");
         }
     }
 
     WaitForDeleteWallet(std::move(wallet));
 
-    UniValue result(UniValue::VOBJ);
-    PushWarnings(warnings, result);
+    UniValue ret(UniValue::VOBJ);
+    if (result.messages_ptr()) {
+        PushWarnings(result.messages_ptr()->warnings, ret);
+    }
 
-    return result;
+    return ret;
 },
     };
 }
