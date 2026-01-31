@@ -427,3 +427,16 @@ std::optional<uint64_t> ParseByteUnits(std::string_view str, ByteUnit default_mu
     }
     return *parsed_num * unit_amount;
 }
+
+bool CaseInsensitiveEqual(std::string_view s1, std::string_view s2)
+{
+    if (s1.size() != s2.size()) return false;
+    for (size_t i = 0; i < s1.size(); ++i) {
+        char c1 = s1[i];
+        if (c1 >= 'A' && c1 <= 'Z') c1 -= ('A' - 'a');
+        char c2 = s2[i];
+        if (c2 >= 'A' && c2 <= 'Z') c2 -= ('A' - 'a');
+        if (c1 != c2) return false;
+    }
+    return true;
+}
