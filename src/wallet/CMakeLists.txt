@@ -40,6 +40,7 @@ target_link_libraries(bitcoin_wallet
     bitcoin_common
     $<TARGET_NAME_IF_EXISTS:unofficial::sqlite3::sqlite3>
     $<TARGET_NAME_IF_EXISTS:SQLite::SQLite3>
+    bitcoin_kernel
     univalue
     Boost::headers
     $<TARGET_NAME_IF_EXISTS:USDT::headers>
