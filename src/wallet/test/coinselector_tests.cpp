@@ -1149,6 +1149,41 @@ BOOST_AUTO_TEST_CASE(coin_grinder_tests)
         size_t expected_attempts = 7;
         BOOST_CHECK_MESSAGE(res->GetSelectionsEvaluated() == expected_attempts, strprintf("Expected %i attempts, but got %i", expected_attempts, res->GetSelectionsEvaluated()));
     }
+
+    {
+        // #################################################################################################################
+        // 8) Test input set that has a solution will not find a solution before reaching the attempt limit
+        // #################################################################################################################
+        CAmount target = 8 * COIN;
+        int max_selection_weight = 3200; // WU
+        dummy_params.m_min_change_target = 0;
+        const auto& result_a = CoinGrinder(target, dummy_params, m_node, max_selection_weight, [&](CWallet& wallet) {
+            CoinsResult doppelgangers;
+            for (int i = 0; i < 18; ++i) {
+                add_coin(doppelgangers, wallet, CAmount(1 * COIN + i), CFeeRate(0), 144, false, 0, true, 96 + i);
+            }
+            return doppelgangers;
+        });
+        BOOST_CHECK(result_a);
+        SelectionResult expected_result(CAmount(0), SelectionAlgorithm::CG);
+        for (int i = 0; i < 8; ++i) {
+          add_coin(1 * COIN + i, 0, expected_result);
+        }
+        BOOST_CHECK(EquivalentResult(expected_result, *result_a));
+        // Demonstrate a solution is found before the attempts limit is reached.
+        size_t expected_attempts = 87'525;
+        BOOST_CHECK_MESSAGE(result_a->GetSelectionsEvaluated() == expected_attempts, strprintf("Expected %i attempts, but got %i", expected_attempts, result_a->GetSelectionsEvaluated()));
+
+        // Adding one more doppelganger causes the attempt limit to be reached before finding a solution.
+        const auto& result_b = CoinGrinder(target, dummy_params, m_node, max_selection_weight, [&](CWallet& wallet) {
+            CoinsResult doppelgangers;
+            for (int i = 0; i < 19; ++i) {
+                add_coin(doppelgangers, wallet, CAmount(1 * COIN + i), CFeeRate(0), 144, false, 0, true, 96 + i);
+            }
+            return doppelgangers;
+        });
+        BOOST_CHECK(!result_b);
+    }
 }
 
 static util::Result<SelectionResult> SelectCoinsSRD(const CAmount& target,
