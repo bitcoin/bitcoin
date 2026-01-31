@@ -93,7 +93,7 @@ public:
     bool m_allow_other_inputs = true;
     //! Override automatic min/max checks on fee, m_feerate must be set if true
     bool fOverrideFeeRate = false;
-    //! Override the wallet's m_pay_tx_fee if set
+    //! Override the wallet's fee rate if set
     std::optional<CFeeRate> m_feerate;
     //! Override the default confirmation target if set
     std::optional<unsigned int> m_confirm_target;

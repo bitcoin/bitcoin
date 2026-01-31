@@ -367,7 +367,6 @@ struct GetinfoRequestHandler : BaseRequestHandler {
             if (!batch[ID_WALLETINFO]["result"]["unlocked_until"].isNull()) {
                 result.pushKV("unlocked_until", batch[ID_WALLETINFO]["result"]["unlocked_until"]);
             }
-            result.pushKV("paytxfee", batch[ID_WALLETINFO]["result"]["paytxfee"]);
         }
         if (!batch[ID_BALANCES]["result"].isNull()) {
             result.pushKV("balance", batch[ID_BALANCES]["result"]["mine"]["trusted"]);
@@ -1152,7 +1151,6 @@ static void ParseGetInfoResult(UniValue& result)
         if (!result["unlocked_until"].isNull()) {
             result_string += strprintf("Unlocked until: %s\n", result["unlocked_until"].getValStr());
         }
-        result_string += strprintf("Transaction fee rate (-paytxfee) (%s/kvB): %s\n\n", CURRENCY_UNIT, result["paytxfee"].getValStr());
     }
     if (!result["balance"].isNull()) {
         result_string += strprintf("%sBalance:%s %s\n\n", CYAN, RESET, result["balance"].getValStr());
