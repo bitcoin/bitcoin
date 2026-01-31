@@ -101,8 +101,7 @@ void CCoinsViewCache::AddCoin(const COutPoint &outpoint, Coin&& coin, bool possi
         cachedCoinsUsage -= it->second.coin.DynamicMemoryUsage();
     }
     it->second.coin = std::move(coin);
-    CCoinsCacheEntry::SetDirty(*it, m_sentinel);
-    if (fresh) CCoinsCacheEntry::SetFresh(*it, m_sentinel);
+    CCoinsCacheEntry::SetDirty(*it, m_sentinel, fresh);
     cachedCoinsUsage += it->second.coin.DynamicMemoryUsage();
     TRACEPOINT(utxocache, add,
            outpoint.hash.data(),
@@ -208,11 +207,10 @@ void CCoinsViewCache::BatchWrite(CoinsViewCacheCursor& cursor, const uint256& ha
                     entry.coin = it->second.coin;
                 }
                 cachedCoinsUsage += entry.coin.DynamicMemoryUsage();
-                CCoinsCacheEntry::SetDirty(*itUs, m_sentinel);
                 // We can mark it FRESH in the parent if it was FRESH in the child
                 // Otherwise it might have just been flushed from the parent's cache
                 // and already exist in the grandparent
-                if (it->second.IsFresh()) CCoinsCacheEntry::SetFresh(*itUs, m_sentinel);
+                CCoinsCacheEntry::SetDirty(*itUs, m_sentinel, it->second.IsFresh());
             }
         } else {
             // Found the entry in the parent cache
@@ -267,8 +265,8 @@ void CCoinsViewCache::Sync()
     auto cursor{CoinsViewCacheCursor(m_sentinel, cacheCoins, /*will_erase=*/false)};
     base->BatchWrite(cursor, hashBlock);
     if (m_sentinel.second.Next() != &m_sentinel) {
-        /* BatchWrite must clear flags of all entries */
-        throw std::logic_error("Not all unspent flagged entries were cleared");
+        /* BatchWrite must clean all entries */
+        throw std::logic_error("Not all unspent dirty entries were cleared");
     }
 }
 
@@ -337,13 +335,13 @@ void CCoinsViewCache::SanityCheck() const
         // Count the number of entries we expect in the linked list.
         if (entry.IsDirty()) ++count_dirty;
     }
-    // Iterate over the linked list of flagged entries.
+    // Iterate over the linked list of dirty entries.
     size_t count_linked = 0;
     for (auto it = m_sentinel.second.Next(); it != &m_sentinel; it = it->second.Next()) {
         // Verify linked list integrity.
         assert(it->second.Next()->second.Prev() == it);
         assert(it->second.Prev()->second.Next() == it);
-        // Verify they are actually flagged.
+        // Verify they are actually dirty.
         assert(it->second.IsDirty());
         // Count the number of entries actually in the list.
         ++count_linked;
