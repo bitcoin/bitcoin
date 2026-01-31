@@ -90,7 +90,7 @@ void TestOptimalLinearization(const std::vector<uint8_t>& enc, const std::vector
             }
             std::tie(lin, opt, cost) = Linearize(depgraph, 1000000000000, rng.rand64(), lin, is_topological);
             BOOST_CHECK(opt);
-            BOOST_CHECK(cost <= MaxOptimalLinearizationIters(depgraph.TxCount()));
+            BOOST_CHECK(cost <= MaxOptimalLinearizationCost(depgraph.TxCount()));
             SanityCheck(depgraph, lin);
             auto chunking = ChunkLinearization(depgraph, lin);
             BOOST_CHECK(std::is_eq(CompareChunks(chunking, optimal_diagram)));
