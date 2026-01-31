@@ -5,11 +5,7 @@
 
 #include <univalue.h>
 
-#include <cerrno>
-#include <cstdint>
-#include <cstdlib>
 #include <cstring>
-#include <limits>
 #include <locale>
 #include <sstream>
 #include <stdexcept>
