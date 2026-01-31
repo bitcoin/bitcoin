@@ -7,6 +7,7 @@
 
 #include <blockfilter.h>
 #include <common/settings.h>
+#include <interfaces/types.h>
 #include <kernel/chain.h> // IWYU pragma: export
 #include <node/types.h>
 #include <primitives/transaction.h>
@@ -39,6 +40,7 @@ struct ChainstateRole;
 } // namespace kernel
 namespace node {
 struct NodeContext;
+struct PruneLockInfo;
 } // namespace node
 
 namespace interfaces {
@@ -130,6 +132,9 @@ public:
     //! Check that the block is available on disk (i.e. has not been
     //! pruned), and contains transactions.
     virtual bool haveBlockOnDisk(int height) = 0;
+
+    //! Get tip information.
+    virtual bool getTip(const FoundBlock& block={}) = 0;
 
     //! Return height of the highest block on chain in common with the locator,
     //! which will either be the original block used to create the locator,
@@ -274,6 +279,12 @@ public:
     //! Relay dust fee setting (-dustrelayfee), reflecting lowest rate it's economical to spend.
     virtual CFeeRate relayDustFee() = 0;
 
+    //! Set or remove a prune lock.
+    virtual void updatePruneLock(const std::string& name, const node::PruneLockInfo& lock_info) = 0;
+
+    //! Check if pruning is enabled.
+    virtual bool pruningEnabled() = 0;
+
     //! Check if any block has been pruned.
     virtual bool havePruned() = 0;
 
@@ -323,10 +334,24 @@ public:
         bool disconnect_data = false;
         //! Include undo data with block disconnected notifications.
         bool disconnect_undo_data = false;
+        //! Name to use for attachChain sync thread.
+        std::string thread_name;
     };
+
+    //! Register handler for notifications. This is similar to
+    //! handleNotifications below, but it sends block connected and disconnected
+    //! notifications starting at a specified block instead of the chain tip. If
+    //! a starting block is not provided, this sends block connected
+    //! notifications starting from genesis. This also more accepts more options
+    //! than handleNotifications and, if not synced, delays sending
+    //! notifications until connect() is called on the returned handler.
+    virtual std::unique_ptr<Handler> attachChain(std::shared_ptr<Notifications> notifications, std::optional<uint256> start_block, const NotifyOptions& options) = 0;
 
     //! Register handler for notifications.
     virtual std::unique_ptr<Handler> handleNotifications(std::shared_ptr<Notifications> notifications) = 0;
+
+    //! Wait for pending notifications.
+    virtual void waitForPendingNotifications() = 0;
 
     //! Wait for pending notifications to be processed unless block hash points to the current
     //! chain tip.

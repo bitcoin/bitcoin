@@ -17,6 +17,7 @@ public:
     explicit CleanupHandler(std::function<void()> cleanup) : m_cleanup(std::move(cleanup)) {}
     ~CleanupHandler() override { if (!m_cleanup) return; m_cleanup(); m_cleanup = nullptr; }
     void disconnect() override { if (!m_cleanup) return; m_cleanup(); m_cleanup = nullptr; }
+    bool connected() override { return bool{m_cleanup}; }
     std::function<void()> m_cleanup;
 };
 
@@ -24,9 +25,8 @@ class SignalHandler : public interfaces::Handler
 {
 public:
     explicit SignalHandler(boost::signals2::connection connection) : m_connection(std::move(connection)) {}
-
     void disconnect() override { m_connection.disconnect(); }
-
+    bool connected() override { return m_connection.connected(); }
     boost::signals2::scoped_connection m_connection;
 };
 
