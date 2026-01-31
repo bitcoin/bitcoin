@@ -47,11 +47,9 @@ bool TruncateFile(FILE* file, unsigned int length);
 int RaiseFileDescriptorLimit(int nMinFD);
 void AllocateFileRange(FILE* file, unsigned int offset, unsigned int length);
 
-/**
- * Rename src to dest.
- * @return true if the rename was successful.
- */
-[[nodiscard]] bool RenameOver(fs::path src, fs::path dest);
+[[nodiscard]] bool RenameOver(const fs::path& src, const fs::path& dest);
+
+[[nodiscard]] bool Remove(const fs::path& path);
 
 namespace util {
 enum class LockResult {
