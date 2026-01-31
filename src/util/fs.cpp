@@ -3,22 +3,20 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <util/fs.h>
+
 #include <util/syserror.h>
 
+#include <cassert>
+#include <cerrno>
+#include <string>
+
 #ifndef WIN32
-#include <cstring>
 #include <fcntl.h>
-#include <sys/file.h>
-#include <sys/utsname.h>
 #include <unistd.h>
 #else
 #include <limits>
 #include <windows.h>
 #endif
-
-#include <cassert>
-#include <cerrno>
-#include <string>
 
 namespace fsbridge {
 

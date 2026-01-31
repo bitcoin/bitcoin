@@ -5,12 +5,12 @@
 #ifndef BITCOIN_UTIL_FEEFRAC_H
 #define BITCOIN_UTIL_FEEFRAC_H
 
-#include <span.h>
 #include <util/check.h>
 
 #include <compare>
 #include <cstdint>
-#include <vector>
+#include <span>
+#include <utility>
 
 /** Data structure storing a fee and size, ordered by increasing fee/size.
  *

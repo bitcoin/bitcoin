@@ -4,8 +4,9 @@
 
 #include <bitcoin-build-config.h> // IWYU pragma: keep
 
-#include <tinyformat.h>
 #include <util/syserror.h>
+
+#include <tinyformat.h>
 
 #include <cstring>
 #include <string>

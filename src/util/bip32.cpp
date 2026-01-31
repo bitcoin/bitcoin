@@ -2,12 +2,14 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include <tinyformat.h>
 #include <util/bip32.h>
+
+#include <tinyformat.h>
 #include <util/strencodings.h>
 
 #include <cstdint>
 #include <cstdio>
+#include <optional>
 #include <sstream>
 
 bool ParseHDKeypath(const std::string& keypath_str, std::vector<uint32_t>& keypath)

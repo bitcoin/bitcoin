@@ -9,6 +9,8 @@
   # See: https://github.com/include-what-you-use/include-what-you-use/issues/1809.
   { "symbol": ["AT_HWCAP", "private", "<sys/auxv.h>", "public"] },
   { "symbol": ["AT_HWCAP2", "private", "<sys/auxv.h>", "public"] },
+  # See: https://github.com/include-what-you-use/include-what-you-use/pull/1918.
+  { "symbol": ["sched_param", "private", "<sched.h>", "public"] },
 
   # Workarounds for IWYU issues.
   # See: https://github.com/include-what-you-use/include-what-you-use/issues/1616.

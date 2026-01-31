@@ -4,6 +4,7 @@
 
 #include <bench/bench.h>
 #include <bench/data/block413567.raw.h>
+#include <crypto/hex_base.h>
 #include <span.h>
 #include <util/strencodings.h>
 

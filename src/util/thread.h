@@ -6,7 +6,7 @@
 #define BITCOIN_UTIL_THREAD_H
 
 #include <functional>
-#include <string>
+#include <string_view>
 
 namespace util {
 /**

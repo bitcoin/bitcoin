@@ -27,6 +27,7 @@
 #include <sys/mman.h>    // IWYU pragma: export
 #include <sys/select.h>  // IWYU pragma: export
 #include <sys/socket.h>  // IWYU pragma: export
+#include <sys/time.h>    // IWYU pragma: export
 #include <sys/types.h>   // IWYU pragma: export
 #include <unistd.h>      // IWYU pragma: export
 #endif

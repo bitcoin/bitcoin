@@ -3,9 +3,9 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <util/feefrac.h>
-#include <algorithm>
+
 #include <array>
-#include <vector>
+#include <cstddef>
 
 std::partial_ordering CompareChunks(std::span<const FeeFrac> chunks0, std::span<const FeeFrac> chunks1)
 {
