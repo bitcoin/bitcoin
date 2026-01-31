@@ -7,7 +7,6 @@
 #ifndef BITCOIN_KEY_H
 #define BITCOIN_KEY_H
 
-#include <musig.h>
 #include <pubkey.h>
 #include <serialize.h>
 #include <support/allocators/secure.h>
@@ -16,6 +15,8 @@
 #include <stdexcept>
 #include <vector>
 
+struct secp256k1_context_struct;
+typedef struct secp256k1_context_struct secp256k1_context;
 
 /**
  * CPrivKey is a serialized private key, with all parameters included
@@ -221,9 +222,6 @@ public:
      *                               Merkle root of the script tree).
      */
     KeyPair ComputeKeyPair(const uint256* merkle_root) const;
-
-    std::vector<uint8_t> CreateMuSig2Nonce(MuSig2SecNonce& secnonce, const uint256& sighash, const CPubKey& aggregate_pubkey, const std::vector<CPubKey>& pubkeys);
-    std::optional<uint256> CreateMuSig2PartialSig(const uint256& hash, const CPubKey& aggregate_pubkey, const std::vector<CPubKey>& pubkeys, const std::map<CPubKey, std::vector<uint8_t>>& pubnonces, MuSig2SecNonce& secnonce, const std::vector<std::pair<uint256, bool>>& tweaks);
 };
 
 CKey GenerateRandomKey(bool compressed = true) noexcept;
@@ -314,6 +312,9 @@ private:
 
 /** Check that required EC support is available at runtime. */
 bool ECC_InitSanityCheck();
+
+/** Access the secp256k1 context used for signing and MuSig2 nonce generation. */
+secp256k1_context* GetSecp256k1SignContext();
 
 /**
  * RAII class initializing and deinitializing global state for elliptic curve support.
