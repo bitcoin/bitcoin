@@ -597,7 +597,7 @@ public:
             return util::Error{error};
         }
     }
-    util::Result<std::unique_ptr<Wallet>> restoreWallet(const fs::path& backup_file, const std::string& wallet_name, std::vector<bilingual_str>& warnings, bool load_after_restore) override
+    util::Result<std::unique_ptr<Wallet>> restoreWallet(const fs::path& backup_file, const std::string& wallet_name, bool load_after_restore, std::vector<bilingual_str>& warnings) override
     {
         DatabaseStatus status;
         bilingual_str error;
