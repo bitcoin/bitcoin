@@ -3,6 +3,7 @@
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test utxo-to-sqlite conversion tool"""
+from itertools import product
 import os.path
 try:
     import sqlite3
@@ -15,6 +16,7 @@ from test_framework.key import ECKey
 from test_framework.messages import (
     COutPoint,
     CTxOut,
+    uint256_from_str,
 )
 from test_framework.crypto.muhash import MuHash3072
 from test_framework.script import (
@@ -38,15 +40,33 @@ from test_framework.util import (
 from test_framework.wallet import MiniWallet
 
 
-def calculate_muhash_from_sqlite_utxos(filename):
+def calculate_muhash_from_sqlite_utxos(filename, txid_format, spk_format):
     muhash = MuHash3072()
     con = sqlite3.connect(filename)
     cur = con.cursor()
-    for (txid_hex, vout, value, coinbase, height, spk_hex) in cur.execute("SELECT * FROM utxos"):
+    for (txid, vout, value, coinbase, height, spk) in cur.execute("SELECT * FROM utxos"):
+        match txid_format:
+            case "hex":
+                assert type(txid) is str
+                txid_bytes = bytes.fromhex(txid)[::-1]
+            case "raw":
+                assert type(txid) is bytes
+                txid_bytes = txid
+            case "rawle":
+                assert type(txid) is bytes
+                txid_bytes = txid[::-1]
+        match spk_format:
+            case "hex":
+                assert type(spk) is str
+                spk_bytes = bytes.fromhex(spk)
+            case "raw":
+                assert type(spk) is bytes
+                spk_bytes = spk
+
         # serialize UTXO for MuHash (see function `TxOutSer` in the  coinstats module)
-        utxo_ser = COutPoint(int(txid_hex, 16), vout).serialize()
+        utxo_ser = COutPoint(uint256_from_str(txid_bytes), vout).serialize()
         utxo_ser += (height * 2 + coinbase).to_bytes(4, 'little')
-        utxo_ser += CTxOut(value, bytes.fromhex(spk_hex)).serialize()
+        utxo_ser += CTxOut(value, spk_bytes).serialize()
         muhash.insert(utxo_ser)
     con.close()
     return muhash.digest()[::-1].hex()
@@ -100,17 +120,20 @@ class UtxoToSqliteTest(BitcoinTestFramework):
         input_filename = os.path.join(self.options.tmpdir, "utxos.dat")
         node.dumptxoutset(input_filename, "latest")
 
-        self.log.info('Convert UTXO set from compact-serialized format to sqlite format')
-        output_filename = os.path.join(self.options.tmpdir, "utxos.sqlite")
-        base_dir = self.config["environment"]["SRCDIR"]
-        utxo_to_sqlite_path = os.path.join(base_dir, "contrib", "utxo-tools", "utxo_to_sqlite.py")
-        subprocess.run([sys.executable, utxo_to_sqlite_path, input_filename, output_filename],
-                       check=True, stderr=subprocess.STDOUT)
+        for i, (txid_format, spk_format) in enumerate(product(["hex", "raw", "rawle"], ["hex", "raw"])):
+            self.log.info(f'Test utxo-to-sqlite script using txid format "{txid_format}" and spk format "{spk_format}" ({i+1})')
+            self.log.info('-> Convert UTXO set from compact-serialized format to sqlite format')
+            output_filename = os.path.join(self.options.tmpdir, f"utxos_{i+1}.sqlite")
+            base_dir = self.config["environment"]["SRCDIR"]
+            utxo_to_sqlite_path = os.path.join(base_dir, "contrib", "utxo-tools", "utxo_to_sqlite.py")
+            arguments = [input_filename, output_filename, f'--txid={txid_format}', f'--spk={spk_format}']
+            subprocess.run([sys.executable, utxo_to_sqlite_path] + arguments, check=True, stderr=subprocess.STDOUT)
 
-        self.log.info('Verify that both UTXO sets match by comparing their MuHash')
-        muhash_sqlite = calculate_muhash_from_sqlite_utxos(output_filename)
-        muhash_compact_serialized = node.gettxoutsetinfo('muhash')['muhash']
-        assert_equal(muhash_sqlite, muhash_compact_serialized)
+            self.log.info('-> Verify that both UTXO sets match by comparing their MuHash')
+            muhash_sqlite = calculate_muhash_from_sqlite_utxos(output_filename, txid_format, spk_format)
+            muhash_compact_serialized = node.gettxoutsetinfo('muhash')['muhash']
+            assert_equal(muhash_sqlite, muhash_compact_serialized)
+            self.log.info('')
 
 
 if __name__ == "__main__":

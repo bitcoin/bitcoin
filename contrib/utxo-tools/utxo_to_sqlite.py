@@ -9,6 +9,9 @@ $ bitcoin-cli dumptxoutset ~/utxos.dat latest
 
 The created database contains a table `utxos` with the following schema:
 (txid TEXT, vout INT, value INT, coinbase INT, height INT, scriptpubkey TEXT)
+
+If --txid=raw or --txid=rawle is specified, txid will be BLOB instead;
+if --spk=raw, then scriptpubkey will be BLOB instead.
 """
 import argparse
 import os
@@ -111,7 +114,9 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument('infile', help='filename of compact-serialized UTXO set (input)')
     parser.add_argument('outfile', help='filename of created SQLite3 database (output)')
-    parser.add_argument('-v', '--verbose', action='store_true', help='show details about each UTXO')
+    parser.add_argument('--verbose', action='store_true', help='show details about each UTXO')
+    parser.add_argument('--spk', choices=['hex', 'raw'], default='hex', help='encode scriptPubKey as hex or raw bytes')
+    parser.add_argument('--txid', choices=['hex', 'raw', 'rawle'], default='hex', help='encode txid as hex, raw bytes (sha256 byteorder), or reversed raw bytes (little endian)')
     args = parser.parse_args()
 
     if not os.path.exists(args.infile):
@@ -122,9 +127,15 @@ def main():
         print(f"Error: provided output file '{args.outfile}' already exists.")
         sys.exit(1)
 
+    spk_hex = (args.spk == 'hex')
+    txid_hex = (args.txid == 'hex')
+    txid_reverse = (args.txid != 'raw')
+
     # create database table
+    txid_fmt = "TEXT" if txid_hex else "BLOB"
+    spk_fmt = "TEXT" if spk_hex else "BLOB"
     con = sqlite3.connect(args.outfile)
-    con.execute("CREATE TABLE utxos(txid TEXT, vout INT, value INT, coinbase INT, height INT, scriptpubkey TEXT)")
+    con.execute(f"CREATE TABLE utxos(txid {txid_fmt}, vout INT, value INT, coinbase INT, height INT, scriptpubkey {spk_fmt})")
 
     # read metadata (magic bytes, version, network magic, block hash, UTXO count)
     f = open(args.infile, 'rb')
@@ -153,7 +164,7 @@ def main():
     for coin_idx in range(1, num_utxos+1):
         # read key (COutPoint)
         if coins_per_hash_left == 0:  # read next prevout hash
-            prevout_hash = f.read(32)[::-1].hex()
+            prevout_hash = f.read(32)
             coins_per_hash_left = read_compactsize(f)
         prevout_index = read_compactsize(f)
         # read value (Coin)
@@ -161,17 +172,21 @@ def main():
         height = code >> 1
         is_coinbase = code & 1
         amount = decompress_amount(read_varint(f))
-        scriptpubkey = decompress_script(f).hex()
-        write_batch.append((prevout_hash, prevout_index, amount, is_coinbase, height, scriptpubkey))
+        scriptpubkey = decompress_script(f)
+
+        scriptpubkey_write = scriptpubkey.hex() if spk_hex else scriptpubkey
+        txid_write = prevout_hash[::-1] if txid_reverse else prevout_hash
+        txid_write = txid_write.hex() if txid_hex else txid_write
+        write_batch.append((txid_write, prevout_index, amount, is_coinbase, height, scriptpubkey_write))
         if height > max_height:
             max_height = height
         coins_per_hash_left -= 1
 
         if args.verbose:
             print(f"Coin {coin_idx}/{num_utxos}:")
-            print(f"    prevout = {prevout_hash}:{prevout_index}")
+            print(f"    prevout = {prevout_hash[::-1].hex()}:{prevout_index}")
             print(f"    amount = {amount}, height = {height}, coinbase = {is_coinbase}")
-            print(f"    scriptPubKey = {scriptpubkey}\n")
+            print(f"    scriptPubKey = {scriptpubkey.hex()}\n")
 
         if coin_idx % (16*1024) == 0 or coin_idx == num_utxos:
             # write utxo batch to database
