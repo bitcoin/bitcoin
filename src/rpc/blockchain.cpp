@@ -1223,7 +1223,7 @@ static RPCHelpMan gettxout()
     UniValue o(UniValue::VOBJ);
     ScriptToUniv(coin->out.scriptPubKey, /*out=*/o, /*include_hex=*/true, /*include_address=*/true);
     ret.pushKV("scriptPubKey", std::move(o));
-    ret.pushKV("coinbase", static_cast<bool>(coin->fCoinBase));
+    ret.pushKV("coinbase", coin->IsCoinBase());
 
     return ret;
 },
@@ -1899,8 +1899,8 @@ static inline bool SetHasKeys(const std::set<T>& set, const Tk& key, const Args&
     return (set.contains(key)) || SetHasKeys(set, args...);
 }
 
-// outpoint (needed for the utxo index) + nHeight + fCoinBase
-static constexpr size_t PER_UTXO_OVERHEAD = sizeof(COutPoint) + sizeof(uint32_t) + sizeof(bool);
+// outpoint (needed for the utxo index) + nHeight|fCoinBase
+static constexpr size_t PER_UTXO_OVERHEAD = sizeof(COutPoint) + sizeof(uint32_t);
 
 static RPCHelpMan getblockstats()
 {
