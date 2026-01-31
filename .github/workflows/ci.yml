@@ -218,11 +218,17 @@ jobs:
         job-type: [standard, fuzz]
         include:
           - job-type: standard
+            env_vars: {}
             generate-options: '-DBUILD_BENCH=ON -DBUILD_KERNEL_LIB=ON -DBUILD_UTIL_CHAINSTATE=ON -DWERROR=ON'
-            job-name: 'Windows native, VS 2022'
+            job-name: 'Windows native, MSVC'
+          - job-type: clang-cl
+            env_vars: { CXXFLAGS: '-Wno-return-type -Wno-error=conditional-uninitialized' }
+            generate-options: '-T ClangCL -DBUILD_BENCH=ON -DBUILD_KERNEL_LIB=ON -DBUILD_UTIL_CHAINSTATE=ON -DWERROR=ON'
+            job-name: 'Windows native, clang-cl'
           - job-type: fuzz
+            env_vars: {}
             generate-options: '-DVCPKG_MANIFEST_NO_DEFAULT_FEATURES=ON -DVCPKG_MANIFEST_FEATURES="wallet" -DBUILD_GUI=OFF -DWITH_ZMQ=OFF -DBUILD_FOR_FUZZING=ON -DWERROR=ON'
-            job-name: 'Windows native, fuzz, VS 2022'
+            job-name: 'Windows native, fuzz, MSVC'
 
     steps:
       - *ANNOTATION_PR_NUMBER
@@ -271,6 +277,7 @@ jobs:
           key: ${{ github.job }}-vcpkg-binary-${{ hashFiles('cmake_version', 'msbuild_version', 'toolset_version', 'vcpkg.json') }}
 
       - name: Generate build system
+        env: ${{ matrix.env_vars }}
         run: |
           cmake -B build -Werror=dev --preset vs2022 -DCMAKE_TOOLCHAIN_FILE="${VCPKG_INSTALLATION_ROOT}/scripts/buildsystems/vcpkg.cmake" ${{ matrix.generate-options }}
 
@@ -308,13 +315,13 @@ jobs:
           }
 
       - name: Run test suite
-        if: matrix.job-type == 'standard'
+        if: matrix.job-type != 'fuzz'
         working-directory: build
         run: |
           ctest --output-on-failure --stop-on-failure -j $NUMBER_OF_PROCESSORS -C Release
 
       - name: Run functional tests
-        if: matrix.job-type == 'standard'
+        if: matrix.job-type != 'fuzz'
         working-directory: build
         env:
           BITCOIN_BIN: '${{ github.workspace }}\build\bin\Release\bitcoin.exe'
