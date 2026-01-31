@@ -6,15 +6,13 @@
   { "include": [ "<tmmintrin.h>", "private", "<immintrin.h>", "public" ] },
 
   # libc symbols.
+  # See: https://github.com/include-what-you-use/include-what-you-use/issues/1809.
   { "symbol": ["AT_HWCAP", "private", "<sys/auxv.h>", "public"] },
   { "symbol": ["AT_HWCAP2", "private", "<sys/auxv.h>", "public"] },
 
-  # Fixed in https://github.com/include-what-you-use/include-what-you-use/pull/1706.
-  { "symbol": ["SEEK_CUR", "private", "<cstdio>", "public"] },
-  { "symbol": ["SEEK_END", "private", "<cstdio>", "public"] },
-  { "symbol": ["SEEK_SET", "private", "<cstdio>", "public"] },
-
-  # IWYU bug.
+  # Workarounds for IWYU issues.
+  # See: https://github.com/include-what-you-use/include-what-you-use/issues/1616.
+  { "symbol": ["std::pair", "private", "<utility>", "public"] },
   # See: https://github.com/include-what-you-use/include-what-you-use/issues/1863.
   { "symbol": ["std::vector", "private", "<vector>", "public"] },
 ]
