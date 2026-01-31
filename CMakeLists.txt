@@ -133,6 +133,7 @@ if(WITH_USDT)
 endif()
 
 option(ENABLE_EXTERNAL_SIGNER "Enable external signer support." ON)
+option(ENABLE_WAIT_FOR_DEBUGGER "Support for waiting at startup until a debugger attaches (-waitfordebugger)." OFF)
 
 cmake_dependent_option(WITH_QRENCODE "Enable QR code support." ON "BUILD_GUI" OFF)
 if(WITH_QRENCODE)

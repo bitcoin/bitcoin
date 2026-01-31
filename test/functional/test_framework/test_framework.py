@@ -200,6 +200,10 @@ class BitcoinTestFramework(metaclass=BitcoinTestMetaClass):
                             help="Explicitly use v1 transport (can be used to overwrite global --v2transport option)")
         parser.add_argument("--test_methods", dest="test_methods", nargs='*',
                             help="Run specified test methods sequentially instead of the full test. Use only for methods that do not depend on any context set up in run_test or other methods.")
+        parser.add_argument("--debug_cmd", dest="debug_cmd",
+                            help="Debugger command to attach to nodes (can be specified using debug_runs).")
+        parser.add_argument("--debug_runs", dest="debug_runs", nargs="*", type=int, default=[],
+                            help="Indexes for node executions in the test to stall and wait for a native debugger, 0-based.")
 
         self.add_options(parser)
         # Running TestShell in a Jupyter notebook causes an additional -f argument
@@ -219,6 +223,9 @@ class BitcoinTestFramework(metaclass=BitcoinTestMetaClass):
             self.options.v2transport=False
 
         PortSeed.n = self.options.port_seed
+
+        TestNode.debug_runs = self.options.debug_runs
+        TestNode.debug_cmd = self.options.debug_cmd
 
     def get_binaries(self, bin_dir=None):
         return Binaries(self.binary_paths, bin_dir)
@@ -545,16 +552,16 @@ class BitcoinTestFramework(metaclass=BitcoinTestMetaClass):
             # Wait for nodes to stop
             node.wait_until_stopped()
 
-    def restart_node(self, i, extra_args=None, clear_addrman=False, *, expected_stderr=''):
+    def restart_node(self, i, extra_args=None, clear_addrman=False, *, expected_stderr='', **kwargs):
         """Stop and start a test node"""
         self.stop_node(i, expected_stderr=expected_stderr)
         if clear_addrman:
             peers_dat = self.nodes[i].chain_path / "peers.dat"
             os.remove(peers_dat)
             with self.nodes[i].assert_debug_log(expected_msgs=[f'Creating peers.dat because the file was not found ("{peers_dat}")']):
-                self.start_node(i, extra_args)
+                self.start_node(i, extra_args, **kwargs)
         else:
-            self.start_node(i, extra_args)
+            self.start_node(i, extra_args, **kwargs)
 
     def wait_for_node_exit(self, i, timeout):
         self.nodes[i].process.wait(timeout)
@@ -992,6 +999,10 @@ class BitcoinTestFramework(metaclass=BitcoinTestMetaClass):
     def is_external_signer_compiled(self):
         """Checks whether external signer support was compiled."""
         return self.config["components"].getboolean("ENABLE_EXTERNAL_SIGNER")
+
+    def is_wait_for_debugger_compiled(self):
+        """Checks whether wait for debugger support was compiled."""
+        return self.config["components"].getboolean("ENABLE_WAIT_FOR_DEBUGGER")
 
     def is_wallet_compiled(self):
         """Checks whether the wallet module was compiled."""
