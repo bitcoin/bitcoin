@@ -445,7 +445,39 @@ std::optional<BlockRef> GetTip(ChainstateManager& chainman)
     return BlockRef{tip->GetBlockHash(), tip->nHeight};
 }
 
-std::optional<BlockRef> WaitTipChanged(ChainstateManager& chainman, KernelNotifications& kernel_notifications, const uint256& current_tip, MillisecondsDouble& timeout)
+bool CooldownIfHeadersAhead(ChainstateManager& chainman, KernelNotifications& kernel_notifications, const BlockRef& last_tip, bool& interrupt)
+{
+    constexpr auto COOLDOWN{1s};
+    // Use a steady clock so cooldown is independent of mocktime.
+    auto cooldown_deadline{SteadyClock::now() + COOLDOWN};
+    uint256 last_tip_hash{last_tip.hash};
+    while (chainman.BestHeaderAheadOfCurrentTip()) {
+        WAIT_LOCK(kernel_notifications.m_tip_block_mutex, lock);
+        kernel_notifications.m_tip_block_cv.wait_until(lock, cooldown_deadline, [&]() EXCLUSIVE_LOCKS_REQUIRED(kernel_notifications.m_tip_block_mutex) {
+            const auto tip_block = kernel_notifications.TipBlock();
+            return chainman.m_interrupt || interrupt || (tip_block && *tip_block != last_tip_hash);
+        });
+        if (chainman.m_interrupt || interrupt) {
+            interrupt = false;
+            return false;
+        }
+
+        // If the tip changed during the wait, extend the deadline
+        const auto tip_block = kernel_notifications.TipBlock();
+        if (tip_block && *tip_block != last_tip_hash) {
+            last_tip_hash = *tip_block;
+            cooldown_deadline = SteadyClock::now() + COOLDOWN;
+            continue;
+        }
+
+        // No tip change and the cooldown window has expired.
+        if (SteadyClock::now() >= cooldown_deadline) break;
+    }
+
+    return true;
+}
+
+std::optional<BlockRef> WaitTipChanged(ChainstateManager& chainman, KernelNotifications& kernel_notifications, const uint256& current_tip, MillisecondsDouble& timeout, bool& interrupt)
 {
     Assume(timeout >= 0ms); // No internal callers should use a negative timeout
     if (timeout < 0ms) timeout = 0ms;
@@ -458,16 +490,22 @@ std::optional<BlockRef> WaitTipChanged(ChainstateManager& chainman, KernelNotifi
         // always returns valid tip information when possible and only
         // returns null when shutting down, not when timing out.
         kernel_notifications.m_tip_block_cv.wait(lock, [&]() EXCLUSIVE_LOCKS_REQUIRED(kernel_notifications.m_tip_block_mutex) {
-            return kernel_notifications.TipBlock() || chainman.m_interrupt;
+            return kernel_notifications.TipBlock() || chainman.m_interrupt || interrupt;
         });
-        if (chainman.m_interrupt) return {};
+        if (chainman.m_interrupt || interrupt) {
+            interrupt = false;
+            return {};
+        }
         // At this point TipBlock is set, so continue to wait until it is
         // different then `current_tip` provided by caller.
         kernel_notifications.m_tip_block_cv.wait_until(lock, deadline, [&]() EXCLUSIVE_LOCKS_REQUIRED(kernel_notifications.m_tip_block_mutex) {
-            return Assume(kernel_notifications.TipBlock()) != current_tip || chainman.m_interrupt;
+            return Assume(kernel_notifications.TipBlock()) != current_tip || chainman.m_interrupt || interrupt;
         });
+        if (chainman.m_interrupt || interrupt) {
+            interrupt = false;
+            return {};
+        }
     }
-    if (chainman.m_interrupt) return {};
 
     // Must release m_tip_block_mutex before getTip() locks cs_main, to
     // avoid deadlocks.

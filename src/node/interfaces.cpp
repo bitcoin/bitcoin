@@ -964,17 +964,28 @@ public:
 
     std::optional<BlockRef> waitTipChanged(uint256 current_tip, MillisecondsDouble timeout) override
     {
-        return WaitTipChanged(chainman(), notifications(), current_tip, timeout);
+        return WaitTipChanged(chainman(), notifications(), current_tip, timeout, m_interrupt);
     }
 
     std::unique_ptr<BlockTemplate> createNewBlock(const BlockCreateOptions& options) override
     {
         // Ensure m_tip_block is set so consumers of BlockTemplate can rely on that.
-        if (!waitTipChanged(uint256::ZERO, MillisecondsDouble::max())) return {};
+        const std::optional<BlockRef> maybe_tip{waitTipChanged(uint256::ZERO, MillisecondsDouble::max())};
+        if (!maybe_tip) return {};
+
+        // Avoid generating a new template immediately after connecting a block while
+        // our best known header chain still has more work. This prevents a burst of
+        // block templates during the final catch-up moments after IBD.
+        if (!CooldownIfHeadersAhead(chainman(), notifications(), *maybe_tip, m_interrupt)) return {};
 
         BlockAssembler::Options assemble_options{options};
         ApplyArgsManOptions(*Assert(m_node.args), assemble_options);
         return std::make_unique<BlockTemplateImpl>(assemble_options, BlockAssembler{chainman().ActiveChainstate(), context()->mempool.get(), assemble_options}.CreateNewBlock(), m_node);
+    }
+
+    void interrupt() override
+    {
+        InterruptWait(notifications(), m_interrupt);
     }
 
     bool checkBlock(const CBlock& block, const node::BlockCheckOptions& options, std::string& reason, std::string& debug) override
@@ -989,6 +1000,8 @@ public:
     NodeContext* context() override { return &m_node; }
     ChainstateManager& chainman() { return *Assert(m_node.chainman); }
     KernelNotifications& notifications() { return *Assert(m_node.notifications); }
+    // Treat as if guarded by notifications().m_tip_block_mutex
+    bool m_interrupt{false};
     NodeContext& m_node;
 };
 } // namespace
