@@ -22,6 +22,7 @@ import collections
 import shlex
 import shutil
 import sys
+from collections.abc import Iterable
 from pathlib import Path
 
 from .authproxy import (
@@ -477,12 +478,17 @@ class TestNode():
             return False
 
         # process has stopped. Assert that it didn't return an error code.
-        assert return_code == expected_ret_code, self._node_msg(
+        if not isinstance(expected_ret_code, Iterable):
+            expected_ret_code = (expected_ret_code,)
+        assert return_code in expected_ret_code, self._node_msg(
             f"Node returned unexpected exit code ({return_code}) vs ({expected_ret_code}) when stopping")
         # Check that stderr is as expected
         self.stderr.seek(0)
         stderr = self.stderr.read().decode('utf-8').strip()
-        if stderr != expected_stderr:
+        if isinstance(expected_stderr, re.Pattern):
+            if not expected_stderr.search(stderr):
+                raise AssertionError(f"Unexpected stderr {stderr!r} does not contain {expected_stderr.pattern!r}")
+        elif stderr != expected_stderr:
             raise AssertionError("Unexpected stderr {} != {}".format(stderr, expected_stderr))
 
         self.stdout.close()
