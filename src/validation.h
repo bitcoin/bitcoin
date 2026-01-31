@@ -24,6 +24,7 @@
 #include <script/script_error.h>
 #include <script/sigcache.h>
 #include <script/verify_flags.h>
+#include <swiftsync.h>
 #include <sync.h>
 #include <txdb.h>
 #include <txmempool.h>
@@ -563,6 +564,9 @@ protected:
     //! Manages the UTXO set, which is a reflection of the contents of `m_chain`.
     std::unique_ptr<CoinsViews> m_coins_views;
 
+    //! Manages the state of accelerated IBD with external hints.
+    swiftsync::Context m_swiftsync_ctx{};
+
     //! Cached result of LookupBlockIndex(*m_from_snapshot_blockhash)
     mutable const CBlockIndex* m_cached_snapshot_base GUARDED_BY(::cs_main){nullptr};
 
@@ -844,6 +848,9 @@ public:
     //!
     //! start > end is possible, meaning no blocks can be pruned.
     std::pair<int, int> GetPruneRange(int last_height_can_prune) const EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
+
+    /** Accelerate initial block download with external hints. */
+    void ApplyUtxoHints(swiftsync::HintsfileReader reader);
 
 protected:
     bool ActivateBestChainStep(BlockValidationState& state, CBlockIndex* pindexMostWork, const std::shared_ptr<const CBlock>& pblock, bool& fInvalidFound, ConnectTrace& connectTrace) EXCLUSIVE_LOCKS_REQUIRED(cs_main, m_mempool->cs);

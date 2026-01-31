@@ -44,6 +44,7 @@
 #include <script/script.h>
 #include <script/sigcache.h>
 #include <signet.h>
+#include <swiftsync.h>
 #include <tinyformat.h>
 #include <txdb.h>
 #include <txmempool.h>
@@ -2015,6 +2016,33 @@ void UpdateCoins(const CTransaction& tx, CCoinsViewCache& inputs, CTxUndo &txund
     AddCoins(inputs, tx, nHeight);
 }
 
+void UpdateCoinsWithHints(const CTransaction& tx, CCoinsViewCache& inputs, const CBlockIndex& pindex, swiftsync::Aggregate& agg, swiftsync::BlockHints& hints)
+{
+    const bool is_coinbase = tx.IsCoinBase();
+    if (is_coinbase && IsBIP30Unspendable(pindex.GetBlockHash(), pindex.nHeight)) {
+        for (uint64_t index = 0; index < tx.vout.size(); ++index) {
+            // No-op on the aggregator and TXO set. These coins will show up again.
+            hints.Next();
+        }
+        return;
+    }
+    if (!is_coinbase) {
+        for (const CTxIn& txin : tx.vin) {
+            agg.Spend(txin.prevout);
+        }
+    }
+    const Txid& txid{tx.GetHash()};
+    for (uint64_t index = 0; index < tx.vout.size(); ++index) {
+        COutPoint outpoint = COutPoint(txid, index);
+        if (!hints.IsCurrUnspent() && !tx.vout[index].scriptPubKey.IsUnspendable()) {
+            agg.Create(outpoint);
+        } else {
+            inputs.AddCoin(outpoint, Coin(tx.vout[index], pindex.nHeight, is_coinbase), is_coinbase);
+        }
+        hints.Next();
+    }
+}
+
 std::optional<std::pair<ScriptError, std::string>> CScriptCheck::operator()() {
     const CScript &scriptSig = ptxTo->vin[nIn].scriptSig;
     const CScriptWitness *witness = &ptxTo->vin[nIn].scriptWitness;
@@ -2341,11 +2369,13 @@ bool Chainstate::ConnectBlock(const CBlock& block, BlockValidationState& state, 
     // Special case for the genesis block, skipping connection of its transactions
     // (its coinbase is unspendable)
     if (block_hash == params.GetConsensus().hashGenesisBlock) {
+        m_swiftsync_ctx.StartFromGenesis();
         if (!fJustCheck)
             view.SetBestBlock(pindex->GetBlockHash());
         return true;
     }
 
+    const bool swiftsync_active = m_swiftsync_ctx.IsPossible();
     const char* script_check_reason;
     if (m_chainman.AssumedValidBlock().IsNull()) {
         script_check_reason = "assumevalid=0 (always verify)";
@@ -2525,6 +2555,10 @@ bool Chainstate::ConnectBlock(const CBlock& block, BlockValidationState& state, 
     int nInputs = 0;
     int64_t nSigOpsCost = 0;
     blockundo.vtxundo.reserve(block.vtx.size() - 1);
+    std::optional<swiftsync::BlockHints> hints;
+    if (swiftsync_active) {
+        hints.emplace(m_swiftsync_ctx.ReadBlockHints(pindex->nHeight));
+    }
     for (unsigned int i = 0; i < block.vtx.size(); i++)
     {
         if (!state.IsValid()) break;
@@ -2532,7 +2566,7 @@ bool Chainstate::ConnectBlock(const CBlock& block, BlockValidationState& state, 
 
         nInputs += tx.vin.size();
 
-        if (!tx.IsCoinBase())
+        if (!tx.IsCoinBase() && !swiftsync_active)
         {
             CAmount txfee = 0;
             TxValidationState tx_state;
@@ -2569,13 +2603,15 @@ bool Chainstate::ConnectBlock(const CBlock& block, BlockValidationState& state, 
         // * legacy (always)
         // * p2sh (when P2SH enabled in flags and excludes coinbase)
         // * witness (when witness enabled in flags and excludes coinbase)
-        nSigOpsCost += GetTransactionSigOpCost(tx, view, flags);
-        if (nSigOpsCost > MAX_BLOCK_SIGOPS_COST) {
-            state.Invalid(BlockValidationResult::BLOCK_CONSENSUS, "bad-blk-sigops", "too many sigops");
-            break;
+        if (!swiftsync_active) {
+            nSigOpsCost += GetTransactionSigOpCost(tx, view, flags);
+            if (nSigOpsCost > MAX_BLOCK_SIGOPS_COST) {
+                state.Invalid(BlockValidationResult::BLOCK_CONSENSUS, "bad-blk-sigops", "too many sigops");
+                break;
+            }
         }
 
-        if (!tx.IsCoinBase() && fScriptChecks)
+        if (!tx.IsCoinBase() && fScriptChecks && !swiftsync_active)
         {
             bool fCacheResults = fJustCheck; /* Don't cache results if we're actually connecting blocks (still consult the cache, though) */
             bool tx_ok;
@@ -2601,7 +2637,19 @@ bool Chainstate::ConnectBlock(const CBlock& block, BlockValidationState& state, 
         if (i > 0) {
             blockundo.vtxundo.emplace_back();
         }
-        UpdateCoins(tx, view, i == 0 ? undoDummy : blockundo.vtxundo.back(), pindex->nHeight);
+        if (swiftsync_active) {
+            UpdateCoinsWithHints(tx, view, *pindex, m_swiftsync_ctx.m_aggregate, hints.value());
+        } else {
+            UpdateCoins(tx, view, i == 0 ? undoDummy : blockundo.vtxundo.back(), pindex->nHeight);
+        }
+    }
+    if (swiftsync_active && m_swiftsync_ctx.StopHeight() == (uint32_t)pindex->nHeight) {
+        m_swiftsync_ctx.Complete();
+        if (m_swiftsync_ctx.m_aggregate.IsBalanced()) {
+            LogInfo("SwiftSync IBD succeeded.");
+        } else {
+            return FatalError(m_chainman.GetNotifications(), state, _("UTXO set check failed indicating a corrupt file. Restart with -reindex to recover."));
+        }
     }
     const auto time_3{SteadyClock::now()};
     m_chainman.time_connect += time_3 - time_2;
@@ -2611,10 +2659,12 @@ bool Chainstate::ConnectBlock(const CBlock& block, BlockValidationState& state, 
              Ticks<SecondsDouble>(m_chainman.time_connect),
              Ticks<MillisecondsDouble>(m_chainman.time_connect) / m_chainman.num_blocks_total);
 
-    CAmount blockReward = nFees + GetBlockSubsidy(pindex->nHeight, params.GetConsensus());
-    if (block.vtx[0]->GetValueOut() > blockReward && state.IsValid()) {
-        state.Invalid(BlockValidationResult::BLOCK_CONSENSUS, "bad-cb-amount",
+    if (!swiftsync_active) {
+        CAmount blockReward = nFees + GetBlockSubsidy(pindex->nHeight, params.GetConsensus());
+        if (block.vtx[0]->GetValueOut() > blockReward && state.IsValid()) {
+            state.Invalid(BlockValidationResult::BLOCK_CONSENSUS, "bad-cb-amount",
                       strprintf("coinbase pays too much (actual=%d vs limit=%d)", block.vtx[0]->GetValueOut(), blockReward));
+        }
     }
     if (control) {
         auto parallel_result = control->Complete();
@@ -2638,7 +2688,7 @@ bool Chainstate::ConnectBlock(const CBlock& block, BlockValidationState& state, 
         return true;
     }
 
-    if (!m_blockman.WriteBlockUndo(blockundo, state, *pindex)) {
+    if (!swiftsync_active && !m_blockman.WriteBlockUndo(blockundo, state, *pindex)) {
         return false;
     }
 
@@ -5496,6 +5546,11 @@ void ChainstateManager::CheckBlockIndex() const
 
     // Check that we actually traversed the entire block index.
     assert(nNodes == forward.size() + best_hdr_chain.Height() + 1);
+}
+
+void Chainstate::ApplyUtxoHints(swiftsync::HintsfileReader reader)
+{
+    m_swiftsync_ctx.ApplyHints(std::move(reader));
 }
 
 std::string Chainstate::ToString()

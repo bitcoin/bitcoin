@@ -69,6 +69,7 @@
 #include <rpc/util.h>
 #include <scheduler.h>
 #include <script/sigcache.h>
+#include <swiftsync.h>
 #include <sync.h>
 #include <torcontrol.h>
 #include <txdb.h>
@@ -478,6 +479,7 @@ void SetupServerArgs(ArgsManager& argsman, bool can_listen_ipc)
     argsman.AddArg("-alertnotify=<cmd>", "Execute command when an alert is raised (%s in cmd is replaced by message)", ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
 #endif
     argsman.AddArg("-assumevalid=<hex>", strprintf("If this block is in the chain assume that it and its ancestors are valid and potentially skip their script verification (0 to verify all, default: %s, testnet3: %s, testnet4: %s, signet: %s)", defaultChainParams->GetConsensus().defaultAssumeValid.GetHex(), testnetChainParams->GetConsensus().defaultAssumeValid.GetHex(), testnet4ChainParams->GetConsensus().defaultAssumeValid.GetHex(), signetChainParams->GetConsensus().defaultAssumeValid.GetHex()), ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
+    argsman.AddArg("-utxohints=<path>", "Accelerate initial block download with the assistance of a UTXO hint file.", ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS),
     argsman.AddArg("-blocksdir=<dir>", "Specify directory to hold blocks subdirectory for *.dat files (default: <datadir>)", ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
     argsman.AddArg("-blocksxor",
                    strprintf("Whether an XOR-key applies to blocksdir *.dat files. "
@@ -990,6 +992,10 @@ bool AppInitParameterInteraction(const ArgsManager& args)
         if (args.GetBoolArg("-reindex-chainstate", false)) {
             return InitError(_("Prune mode is incompatible with -reindex-chainstate. Use full -reindex instead."));
         }
+    } else {
+        if (args.IsArgSet("-utxohints")) {
+            return InitError(_("UTXO hints cannot be used without pruned mode."));
+        }
     }
 
     // If -forcednsseed is set to true, ensure -dnsseed has not been set to false
@@ -1284,6 +1290,7 @@ static ChainstateLoadResult InitAndLoadChainstate(
     NodeContext& node,
     bool do_reindex,
     const bool do_reindex_chainstate,
+    std::optional<swiftsync::HintsfileReader> utxo_hints,
     const kernel::CacheSizes& cache_sizes,
     const ArgsManager& args)
 {
@@ -1389,6 +1396,9 @@ static ChainstateLoadResult InitAndLoadChainstate(
         }
     };
     auto [status, error] = catch_exceptions([&] { return LoadChainstate(chainman, cache_sizes, options); });
+    if (utxo_hints.has_value()) {
+        chainman.ActiveChainstate().ApplyUtxoHints(std::move(utxo_hints.value()));
+    }
     if (status == node::ChainstateLoadStatus::SUCCESS) {
         uiInterface.InitMessage(_("Verifying blocks…"));
         if (chainman.m_blockman.m_have_pruned && options.check_blocks > MIN_BLOCKS_TO_KEEP) {
@@ -1806,11 +1816,35 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
     bool do_reindex{args.GetBoolArg("-reindex", false)};
     const bool do_reindex_chainstate{args.GetBoolArg("-reindex-chainstate", false)};
 
+    std::optional<swiftsync::HintsfileReader> utxo_hints;
+    if (args.IsArgSet("-utxohints")) {
+        fs::path path = fs::absolute(args.GetPathArg("-utxohints"));
+        if (!fs::exists(path)) {
+            LogError("Provided UTXO file does not exist: %s", path.utf8string());
+            return false;
+        }
+        FILE* file{fsbridge::fopen(path, "rb")};
+        AutoFile afile{file};
+        if (afile.IsNull()) {
+            LogError("Failed to open UTXO hint file.");
+            return false;
+        }
+        try {
+            swiftsync::HintsfileReader reader{afile};
+            LogInfo("Applying UTXO hints from file: %s", path.utf8string());
+            utxo_hints.emplace(std::move(reader));
+        } catch (const std::exception& e) {
+            LogError("Failed to parse UTXO hint file: %s", e.what());
+            return false;
+        }
+    }
+
     // Chainstate initialization and loading may be retried once with reindexing by GUI users
     auto [status, error] = InitAndLoadChainstate(
         node,
         do_reindex,
         do_reindex_chainstate,
+        std::move(utxo_hints),
         kernel_cache_sizes,
         args);
     if (status == ChainstateLoadStatus::FAILURE && !do_reindex && !ShutdownRequested(node)) {
@@ -1831,6 +1865,7 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
             node,
             do_reindex,
             do_reindex_chainstate,
+            {},
             kernel_cache_sizes,
             args);
     }
