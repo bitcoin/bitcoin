@@ -60,8 +60,10 @@ static void WalletTxToJSON(const CWallet& wallet, const CWalletTx& wtx, UniValue
     }
     entry.pushKV("bip125-replaceable", rbfStatus);
 
-    for (const std::pair<const std::string, std::string>& item : wtx.mapValue)
-        entry.pushKV(item.first, item.second);
+    if (wtx.m_comment) entry.pushKV("comment", *wtx.m_comment);
+    if (wtx.m_comment_to) entry.pushKV("to", *wtx.m_comment_to);
+    if (wtx.m_replaces_txid) entry.pushKV("replaces_txid", wtx.m_replaces_txid->ToString());
+    if (wtx.m_replaced_by_txid) entry.pushKV("replaced_by_txid", wtx.m_replaced_by_txid->ToString());
 }
 
 struct tallyitem

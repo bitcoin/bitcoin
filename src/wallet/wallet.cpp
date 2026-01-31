@@ -753,8 +753,12 @@ void CWallet::SyncMetaData(std::pair<TxSpends::iterator, TxSpends::iterator> ran
         if (copyFrom == copyTo) continue;
         assert(copyFrom && "Oldest wallet transaction in range assumed to have been found.");
         if (!copyFrom->IsEquivalentTo(*copyTo)) continue;
-        copyTo->mapValue = copyFrom->mapValue;
-        copyTo->vOrderForm = copyFrom->vOrderForm;
+        copyTo->m_comment = copyFrom->m_comment;
+        copyTo->m_comment_to = copyFrom->m_comment_to;
+        copyTo->m_replaces_txid = copyFrom->m_replaces_txid;
+        copyTo->m_replaced_by_txid = copyFrom->m_replaced_by_txid;
+        copyTo->m_messages = copyFrom->m_messages;
+        copyTo->m_payment_requests = copyFrom->m_payment_requests;
         // nTimeReceived not copied on purpose
         copyTo->nTimeSmart = copyFrom->nTimeSmart;
         // nOrderPos not copied on purpose
@@ -969,9 +973,9 @@ bool CWallet::MarkReplaced(const Txid& originalHash, const Txid& newHash)
     CWalletTx& wtx = (*mi).second;
 
     // Ensure for now that we're not overwriting data
-    assert(!wtx.mapValue.contains("replaced_by_txid"));
+    Assert(!wtx.m_replaced_by_txid);
 
-    wtx.mapValue["replaced_by_txid"] = newHash.ToString();
+    wtx.m_replaced_by_txid = newHash;
 
     // Refresh mempool status without waiting for transactionRemovedFromMempool or transactionAddedToMempool
     RefreshMempoolStatus(wtx, chain());
@@ -2310,7 +2314,14 @@ OutputType CWallet::TransactionChangeType(const std::optional<OutputType>& chang
     return m_default_address_type;
 }
 
-void CWallet::CommitTransaction(CTransactionRef tx, mapValue_t mapValue, std::vector<std::pair<std::string, std::string>> orderForm)
+void CWallet::CommitTransaction(
+    CTransactionRef tx,
+    std::optional<Txid> replaces_txid,
+    std::optional<std::string> comment,
+    std::optional<std::string> comment_to,
+    const std::vector<std::string>& messages,
+    const std::vector<std::string>& payment_requests
+)
 {
     LOCK(cs_wallet);
     WalletLogPrintf("CommitTransaction:\n%s\n", util::RemoveSuffixView(tx->ToString(), "\n"));
@@ -2318,10 +2329,11 @@ void CWallet::CommitTransaction(CTransactionRef tx, mapValue_t mapValue, std::ve
     // Add tx to wallet, because if it has change it's also ours,
     // otherwise just for transaction history.
     CWalletTx* wtx = AddToWallet(tx, TxStateInactive{}, [&](CWalletTx& wtx, bool new_tx) {
-        CHECK_NONFATAL(wtx.mapValue.empty());
-        CHECK_NONFATAL(wtx.vOrderForm.empty());
-        wtx.mapValue = std::move(mapValue);
-        wtx.vOrderForm = std::move(orderForm);
+        if (replaces_txid) wtx.m_replaces_txid = replaces_txid;
+        if (comment) wtx.m_comment = comment;
+        if (comment_to) wtx.m_comment_to = comment_to;
+        if (!messages.empty()) wtx.m_messages = messages;
+        if (!payment_requests.empty()) wtx.m_payment_requests = payment_requests;
         return true;
     });
 
