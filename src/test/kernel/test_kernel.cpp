@@ -6,9 +6,9 @@
 #include <kernel/bitcoinkernel_wrapper.h>
 
 #define BOOST_TEST_MODULE Bitcoin Kernel Test Suite
-#include <boost/test/included/unit_test.hpp>
-
 #include <test/kernel/block_data.h>
+
+#include <boost/test/included/unit_test.hpp>
 
 #include <charconv>
 #include <cstdint>
@@ -91,9 +91,13 @@ void check_equal(std::span<const std::byte> _actual, std::span<const std::byte> 
 class TestLog
 {
 public:
-    void LogMessage(std::string_view message)
+    void LogMessage(const LogEntry& entry)
     {
-        std::cout << "kernel: " << message;
+        // TODO: stream Timestamp() directly once minimum gcc version is bumped to 13.1 (required for std::format support)
+        std::cout << "kernel: " << entry.Timestamp().time_since_epoch().count()
+                  << " [" << log_category_get_name(entry.Category()) << ":"
+                  << log_level_get_name(entry.Level()) << "] "
+                  << entry.Message() << "\n";
     }
 };
 
@@ -611,28 +615,40 @@ BOOST_AUTO_TEST_CASE(btck_script_verify_tests)
 
 BOOST_AUTO_TEST_CASE(logging_tests)
 {
-    btck_LoggingOptions logging_options = {
-        .log_timestamps = true,
-        .log_time_micros = true,
-        .log_threadnames = false,
-        .log_sourcelocations = false,
-        .always_print_category_levels = true,
-    };
-
-    logging_set_options(logging_options);
-    logging_set_level_category(LogCategory::BENCH, LogLevel::TRACE_LEVEL);
-    logging_disable_category(LogCategory::BENCH);
-    logging_enable_category(LogCategory::VALIDATION);
-    logging_disable_category(LogCategory::VALIDATION);
+    logging_set_min_level(LogLevel::TRACE_LEVEL);
 
     // Check that connecting, connecting another, and then disconnecting and connecting a logger again works.
     {
-        logging_set_level_category(LogCategory::KERNEL, LogLevel::TRACE_LEVEL);
-        logging_enable_category(LogCategory::KERNEL);
         Logger logger{std::make_unique<TestLog>()};
         Logger logger_2{std::make_unique<TestLog>()};
     }
     Logger logger{std::make_unique<TestLog>()};
+}
+
+BOOST_AUTO_TEST_CASE(log_level_name_tests)
+{
+    BOOST_CHECK_EQUAL(log_level_get_name(LogLevel::TRACE_LEVEL), "trace");
+    BOOST_CHECK_EQUAL(log_level_get_name(LogLevel::DEBUG_LEVEL), "debug");
+    BOOST_CHECK_EQUAL(log_level_get_name(LogLevel::INFO_LEVEL), "info");
+    BOOST_CHECK_EQUAL(log_level_get_name(LogLevel::WARNING_LEVEL), "warning");
+    BOOST_CHECK_EQUAL(log_level_get_name(LogLevel::ERROR_LEVEL), "error");
+}
+
+BOOST_AUTO_TEST_CASE(log_category_name_tests)
+{
+    BOOST_CHECK_EQUAL(log_category_get_name(LogCategory::ALL), "all");
+    BOOST_CHECK_EQUAL(log_category_get_name(LogCategory::BENCH), "bench");
+    BOOST_CHECK_EQUAL(log_category_get_name(LogCategory::BLOCKSTORAGE), "blockstorage");
+    BOOST_CHECK_EQUAL(log_category_get_name(LogCategory::COINDB), "coindb");
+    BOOST_CHECK_EQUAL(log_category_get_name(LogCategory::ESTIMATEFEE), "estimatefee");
+    BOOST_CHECK_EQUAL(log_category_get_name(LogCategory::KERNEL), "kernel");
+    BOOST_CHECK_EQUAL(log_category_get_name(LogCategory::LEVELDB), "leveldb");
+    BOOST_CHECK_EQUAL(log_category_get_name(LogCategory::MEMPOOL), "mempool");
+    BOOST_CHECK_EQUAL(log_category_get_name(LogCategory::PRUNE), "prune");
+    BOOST_CHECK_EQUAL(log_category_get_name(LogCategory::RAND), "rand");
+    BOOST_CHECK_EQUAL(log_category_get_name(LogCategory::REINDEX), "reindex");
+    BOOST_CHECK_EQUAL(log_category_get_name(LogCategory::TXPACKAGES), "txpackages");
+    BOOST_CHECK_EQUAL(log_category_get_name(LogCategory::VALIDATION), "validation");
 }
 
 BOOST_AUTO_TEST_CASE(btck_context_tests)

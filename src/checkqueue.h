@@ -5,9 +5,9 @@
 #ifndef BITCOIN_CHECKQUEUE_H
 #define BITCOIN_CHECKQUEUE_H
 
-#include <logging.h>
 #include <sync.h>
 #include <tinyformat.h>
+#include <util/log.h>
 #include <util/threadnames.h>
 
 #include <algorithm>

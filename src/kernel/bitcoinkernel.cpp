@@ -16,7 +16,6 @@
 #include <kernel/context.h>
 #include <kernel/notifications_interface.h>
 #include <kernel/warning.h>
-#include <logging.h>
 #include <node/blockstorage.h>
 #include <node/chainstate.h>
 #include <primitives/block.h>
@@ -28,28 +27,56 @@
 #include <sync.h>
 #include <uint256.h>
 #include <undo.h>
-#include <util/check.h>
 #include <util/fs.h>
+#include <util/log.h>
 #include <util/result.h>
 #include <util/signalinterrupt.h>
+#include <util/string.h>
 #include <util/task_runner.h>
+#include <util/time.h>
 #include <util/translation.h>
 #include <validation.h>
 #include <validationinterface.h>
 
+#include <array>
+#include <atomic>
+#include <cassert>
 #include <cstddef>
 #include <cstring>
 #include <exception>
 #include <functional>
 #include <iterator>
-#include <list>
 #include <memory>
 #include <span>
 #include <stdexcept>
 #include <string>
+#include <string_view>
 #include <tuple>
 #include <utility>
 #include <vector>
+
+struct KernelLogger {
+    std::atomic<util::log::Level> min_level{util::log::Level::Info};
+    util::log::Dispatcher dispatcher{};
+};
+
+// Kernel logging state. Intentionally leaked to avoid use-after-destroy if logging occurs during
+// static destruction.
+static KernelLogger& g_kernel_logger()
+{
+    static KernelLogger* p{new KernelLogger{}};
+    return *p;
+}
+
+bool LogAcceptCategory(uint64_t category, util::log::Level level)
+{
+    return level >= g_kernel_logger().min_level.load(std::memory_order_relaxed);
+}
+
+util::log::Dispatcher& util::log::g_dispatcher()
+{
+    return g_kernel_logger().dispatcher;
+}
 
 using kernel::ChainstateRole;
 using util::ImmediateTaskRunner;
@@ -146,58 +173,64 @@ struct btck_BlockValidationState : Handle<btck_BlockValidationState, BlockValida
 
 namespace {
 
-BCLog::Level get_bclog_level(btck_LogLevel level)
+struct LogLevelMapping {
+    util::log::Level bclog;
+    std::string_view name;
+};
+
+// Single source of truth for log level mappings (indexed by btck_LogLevel)
+constexpr auto LOG_LEVELS = [] {
+    std::array<LogLevelMapping, 5> a{};
+    a[btck_LogLevel_TRACE] = {util::log::Level::Trace, "trace"};
+    a[btck_LogLevel_DEBUG] = {util::log::Level::Debug, "debug"};
+    a[btck_LogLevel_INFO] = {util::log::Level::Info, "info"};
+    a[btck_LogLevel_WARNING] = {util::log::Level::Warning, "warning"};
+    a[btck_LogLevel_ERROR] = {util::log::Level::Error, "error"};
+    return a;
+}();
+
+constexpr util::log::Level get_bclog_level(btck_LogLevel level)
 {
-    switch (level) {
-    case btck_LogLevel_INFO: {
-        return BCLog::Level::Info;
-    }
-    case btck_LogLevel_DEBUG: {
-        return BCLog::Level::Debug;
-    }
-    case btck_LogLevel_TRACE: {
-        return BCLog::Level::Trace;
-    }
+    assert(level < LOG_LEVELS.size());
+    return LOG_LEVELS[level].bclog;
+}
+
+btck_LogLevel get_btck_level(util::log::Level level)
+{
+    for (size_t i = 0; i < LOG_LEVELS.size(); ++i) {
+        if (LOG_LEVELS[i].bclog == level) return static_cast<btck_LogLevel>(i);
     }
     assert(false);
 }
 
-BCLog::LogFlags get_bclog_flag(btck_LogCategory category)
+struct LogCategoryMapping {
+    BCLog::LogFlags bclog;
+    std::string_view name;
+};
+
+// Single source of truth for log category mappings (indexed by btck_LogCategory)
+constexpr auto LOG_CATEGORIES = [] {
+    std::array<LogCategoryMapping, 13> a{};
+    a[btck_LogCategory_ALL] = {BCLog::LogFlags::ALL, "all"};
+    a[btck_LogCategory_BENCH] = {BCLog::LogFlags::BENCH, "bench"};
+    a[btck_LogCategory_BLOCKSTORAGE] = {BCLog::LogFlags::BLOCKSTORAGE, "blockstorage"};
+    a[btck_LogCategory_COINDB] = {BCLog::LogFlags::COINDB, "coindb"};
+    a[btck_LogCategory_ESTIMATEFEE] = {BCLog::LogFlags::ESTIMATEFEE, "estimatefee"};
+    a[btck_LogCategory_KERNEL] = {BCLog::LogFlags::KERNEL, "kernel"};
+    a[btck_LogCategory_LEVELDB] = {BCLog::LogFlags::LEVELDB, "leveldb"};
+    a[btck_LogCategory_MEMPOOL] = {BCLog::LogFlags::MEMPOOL, "mempool"};
+    a[btck_LogCategory_PRUNE] = {BCLog::LogFlags::PRUNE, "prune"};
+    a[btck_LogCategory_RAND] = {BCLog::LogFlags::RAND, "rand"};
+    a[btck_LogCategory_REINDEX] = {BCLog::LogFlags::REINDEX, "reindex"};
+    a[btck_LogCategory_TXPACKAGES] = {BCLog::LogFlags::TXPACKAGES, "txpackages"};
+    a[btck_LogCategory_VALIDATION] = {BCLog::LogFlags::VALIDATION, "validation"};
+    return a;
+}();
+
+btck_LogCategory get_btck_category(BCLog::LogFlags flag)
 {
-    switch (category) {
-    case btck_LogCategory_BENCH: {
-        return BCLog::LogFlags::BENCH;
-    }
-    case btck_LogCategory_BLOCKSTORAGE: {
-        return BCLog::LogFlags::BLOCKSTORAGE;
-    }
-    case btck_LogCategory_COINDB: {
-        return BCLog::LogFlags::COINDB;
-    }
-    case btck_LogCategory_LEVELDB: {
-        return BCLog::LogFlags::LEVELDB;
-    }
-    case btck_LogCategory_MEMPOOL: {
-        return BCLog::LogFlags::MEMPOOL;
-    }
-    case btck_LogCategory_PRUNE: {
-        return BCLog::LogFlags::PRUNE;
-    }
-    case btck_LogCategory_RAND: {
-        return BCLog::LogFlags::RAND;
-    }
-    case btck_LogCategory_REINDEX: {
-        return BCLog::LogFlags::REINDEX;
-    }
-    case btck_LogCategory_VALIDATION: {
-        return BCLog::LogFlags::VALIDATION;
-    }
-    case btck_LogCategory_KERNEL: {
-        return BCLog::LogFlags::KERNEL;
-    }
-    case btck_LogCategory_ALL: {
-        return BCLog::LogFlags::ALL;
-    }
+    for (size_t i = 0; i < LOG_CATEGORIES.size(); ++i) {
+        if (LOG_CATEGORIES[i].bclog == flag) return static_cast<btck_LogCategory>(i);
     }
     assert(false);
 }
@@ -227,47 +260,45 @@ btck_Warning cast_btck_warning(kernel::Warning warning)
 }
 
 struct LoggingConnection {
-    std::unique_ptr<std::list<std::function<void(const std::string&)>>::iterator> m_connection;
+    util::log::Dispatcher::CallbackHandle m_callback_handle;
     void* m_user_data;
     std::function<void(void* user_data)> m_deleter;
 
     LoggingConnection(btck_LogCallback callback, void* user_data, btck_DestroyCallback user_data_destroy_callback)
+        : m_user_data{user_data}, m_deleter{user_data_destroy_callback}
     {
-        LOCK(cs_main);
+        m_callback_handle = util::log::g_dispatcher().RegisterCallback([callback, user_data](const util::log::Entry& entry) {
+            const auto timestamp_ns{Ticks<std::chrono::nanoseconds>(entry.timestamp.time_since_epoch())};
+            std::string_view file_name{entry.source_loc.file_name()};
+            std::string_view function_name{entry.source_loc.function_name_short()};
+            // Some log statements are manually suffixed with a newline.
+            std::string_view message{util::RemoveSuffixView(entry.message, "\n")};
 
-        auto connection{LogInstance().PushBackCallback([callback, user_data](const std::string& str) { callback(user_data, str.c_str(), str.length()); })};
-
-        // Only start logging if we just added the connection.
-        if (LogInstance().NumConnections() == 1 && !LogInstance().StartLogging()) {
-            LogError("Logger start failed.");
-            LogInstance().DeleteCallback(connection);
-            if (user_data && user_data_destroy_callback) {
-                user_data_destroy_callback(user_data);
+            btck_LogEntry btck_entry{
+                .message = {message.data(), message.size()},
+                .file_name = {file_name.data(), file_name.size()},
+                .function_name = {function_name.data(), function_name.size()},
+                .thread_name = {entry.thread_name.data(), entry.thread_name.size()},
+                .timestamp_ns = timestamp_ns,
+                .line = entry.source_loc.line(),
+                .level = get_btck_level(entry.level),
+                .category = get_btck_category(static_cast<BCLog::LogFlags>(entry.category)),
+            };
+            try {
+                callback(user_data, &btck_entry);
+            } catch (const std::exception& e) {
+                LogError("Logging callback threw unexpected exception: %s", e.what());
             }
-            throw std::runtime_error("Failed to start logging");
-        }
-
-        m_connection = std::make_unique<std::list<std::function<void(const std::string&)>>::iterator>(connection);
-        m_user_data = user_data;
-        m_deleter = user_data_destroy_callback;
+        });
 
         LogDebug(BCLog::KERNEL, "Logger connected.");
     }
 
     ~LoggingConnection()
     {
-        LOCK(cs_main);
         LogDebug(BCLog::KERNEL, "Logger disconnecting.");
+        util::log::g_dispatcher().UnregisterCallback(m_callback_handle);
 
-        // Switch back to buffering by calling DisconnectTestLogger if the
-        // connection that we are about to remove is the last one.
-        if (LogInstance().NumConnections() == 1) {
-            LogInstance().DisconnectTestLogger();
-        } else {
-            LogInstance().DeleteCallback(*m_connection);
-        }
-
-        m_connection.reset();
         if (m_user_data && m_deleter) {
             m_deleter(m_user_data);
         }
@@ -738,43 +769,14 @@ void btck_txid_destroy(btck_Txid* txid)
     delete txid;
 }
 
-void btck_logging_set_options(const btck_LoggingOptions options)
+void btck_logging_set_min_level(btck_LogLevel level)
 {
-    LOCK(cs_main);
-    LogInstance().m_log_timestamps = options.log_timestamps;
-    LogInstance().m_log_time_micros = options.log_time_micros;
-    LogInstance().m_log_threadnames = options.log_threadnames;
-    LogInstance().m_log_sourcelocations = options.log_sourcelocations;
-    LogInstance().m_always_print_category_level = options.always_print_category_levels;
-}
-
-void btck_logging_set_level_category(btck_LogCategory category, btck_LogLevel level)
-{
-    LOCK(cs_main);
-    if (category == btck_LogCategory_ALL) {
-        LogInstance().SetLogLevel(get_bclog_level(level));
-    }
-
-    LogInstance().AddCategoryLogLevel(get_bclog_flag(category), get_bclog_level(level));
-}
-
-void btck_logging_enable_category(btck_LogCategory category)
-{
-    LogInstance().EnableCategory(get_bclog_flag(category));
-}
-
-void btck_logging_disable_category(btck_LogCategory category)
-{
-    LogInstance().DisableCategory(get_bclog_flag(category));
-}
-
-void btck_logging_disable()
-{
-    LogInstance().DisableLogging();
+    g_kernel_logger().min_level.store(get_bclog_level(level));
 }
 
 btck_LoggingConnection* btck_logging_connection_create(btck_LogCallback callback, void* user_data, btck_DestroyCallback user_data_destroy_callback)
 {
+    assert(callback);
     try {
         return btck_LoggingConnection::create(callback, user_data, user_data_destroy_callback);
     } catch (const std::exception&) {
@@ -785,6 +787,20 @@ btck_LoggingConnection* btck_logging_connection_create(btck_LogCallback callback
 void btck_logging_connection_destroy(btck_LoggingConnection* connection)
 {
     delete connection;
+}
+
+btck_StringView btck_log_level_get_name(btck_LogLevel level)
+{
+    assert(level < LOG_LEVELS.size());
+    const auto& name{LOG_LEVELS[level].name};
+    return {name.data(), name.size()};
+}
+
+btck_StringView btck_log_category_get_name(btck_LogCategory category)
+{
+    assert(category < LOG_CATEGORIES.size());
+    const auto& name{LOG_CATEGORIES[category].name};
+    return {name.data(), name.size()};
 }
 
 btck_ChainParameters* btck_chain_parameters_create(const btck_ChainType chain_type)

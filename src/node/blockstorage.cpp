@@ -16,7 +16,6 @@
 #include <kernel/messagestartchars.h>
 #include <kernel/notifications_interface.h>
 #include <kernel/types.h>
-#include <logging.h>
 #include <pow.h>
 #include <primitives/block.h>
 #include <primitives/transaction.h>
@@ -31,6 +30,7 @@
 #include <util/check.h>
 #include <util/expected.h>
 #include <util/fs.h>
+#include <util/log.h>
 #include <util/obfuscation.h>
 #include <util/overflow.h>
 #include <util/result.h>

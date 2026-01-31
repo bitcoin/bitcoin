@@ -5,8 +5,8 @@
 #include <kernel/context.h>
 
 #include <crypto/sha256.h>
-#include <logging.h>
 #include <random.h>
+#include <util/log.h>
 
 #include <mutex>
 #include <string>

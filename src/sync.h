@@ -7,7 +7,6 @@
 #define BITCOIN_SYNC_H
 
 #ifdef DEBUG_LOCKCONTENTION
-#include <logging.h>
 #include <logging/timer.h>
 #endif
 

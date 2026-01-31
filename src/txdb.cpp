@@ -7,11 +7,11 @@
 
 #include <coins.h>
 #include <dbwrapper.h>
-#include <logging.h>
 #include <primitives/transaction.h>
 #include <random.h>
 #include <serialize.h>
 #include <uint256.h>
+#include <util/log.h>
 #include <util/vector.h>
 
 #include <cassert>

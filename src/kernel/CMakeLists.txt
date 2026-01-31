@@ -30,7 +30,6 @@ add_library(bitcoinkernel
   ../deploymentstatus.cpp
   ../flatfile.cpp
   ../hash.cpp
-  ../logging.cpp
   ../node/blockstorage.cpp
   ../node/chainstate.cpp
   ../node/utxo_snapshot.cpp
@@ -67,6 +66,7 @@ add_library(bitcoinkernel
   ../util/fs.cpp
   ../util/fs_helpers.cpp
   ../util/hasher.cpp
+  ../util/log.cpp
   ../util/moneystr.cpp
   ../util/rbf.cpp
   ../util/serfloat.cpp
