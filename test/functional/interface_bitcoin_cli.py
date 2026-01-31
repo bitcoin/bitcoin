@@ -374,6 +374,7 @@ class TestBitcoinCli(BitcoinTestFramework):
             self.nodes[0].loadwallet(wallets[2])
             n3 = 4
             n4 = 10
+            n5 = 5
             blocks = self.nodes[0].getblockcount()
 
             self.log.info('Test -generate -rpcwallet=<filename> raise RPC error')
@@ -408,9 +409,25 @@ class TestBitcoinCli(BitcoinTestFramework):
             assert_raises_rpc_error(-19, WALLET_NOT_SPECIFIED, self.nodes[0].cli('-generate', 'foo').echo)
             assert_raises_rpc_error(-19, WALLET_NOT_SPECIFIED, self.nodes[0].cli('-generate', 0).echo)
             assert_raises_rpc_error(-19, WALLET_NOT_SPECIFIED, self.nodes[0].cli('-generate', 1, 2, 3).echo)
+
+            self.log.info('Test -generate passing -rpcwallet after the nblocks arg')
+            generate = self.nodes[0].cli('-generate', n5, rpcwallet2).send_cli()
+            assert_equal(set(generate.keys()), {'address', 'blocks'})
+            assert_equal(len(generate["blocks"]), n5)
+            assert_equal(self.nodes[0].getblockcount(), blocks + 1 + n3 + n4 + n5)
+
+            self.log.info("Test options before and after using an RPC parameter startig with '-'")
+            self.nodes[0].cli('-regtest', 'createwallet', '-regtest', '-xyz', '-regtest').send_cli()
+            wallet_name_begin_with_dash = self.nodes[0].get_wallet_rpc('-xyz').getwalletinfo()["walletname"]
+            assert_equal(wallet_name_begin_with_dash, '-xyz')
+
+            self.log.info("Test double dash option is treated as RPC named parameter")
+            self.nodes[0].cli('createwallet', 'someWalletName', '--load_on_startup=true').send_cli()
+            self.restart_node(0)
+            assert_equal("someWalletName" in self.nodes[0].listwallets(), True)
         else:
             self.log.info("*** Wallet not compiled; cli getwalletinfo and -getinfo wallet tests skipped")
-            self.generate(self.nodes[0], 25)  # maintain block parity with the wallet_compiled conditional branch
+            self.generate(self.nodes[0], 30)  # maintain block parity with the wallet_compiled conditional branch
 
         self.test_netinfo()
 
@@ -424,7 +441,7 @@ class TestBitcoinCli(BitcoinTestFramework):
         self.nodes[0].wait_for_cookie_credentials()  # ensure cookie file is available to avoid race condition
         blocks = self.nodes[0].cli('-rpcwait').send_cli('getblockcount')
         self.nodes[0].wait_for_rpc_connection()
-        assert_equal(blocks, BLOCKS + 25)
+        assert_equal(blocks, BLOCKS + 30)
 
         self.log.info("Test -rpcwait option waits at most -rpcwaittimeout seconds for startup")
         self.stop_node(0)  # stop the node so we time out

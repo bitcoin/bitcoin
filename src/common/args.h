@@ -446,6 +446,49 @@ private:
         const std::string& prefix,
         const std::string& section,
         const std::map<std::string, std::vector<common::SettingsValue>>& args) const;
+
+    bool ProcessOptionKey(
+        std::string& key,
+        std::optional<std::string>& val,
+        std::string& error,
+        const bool found_after_non_option = false);
+
+    bool HandleUnknownOption(
+        const std::string& original_input,
+        std::string& error,
+        bool found_after_non_option);
+
+    bool HandleKnownOption(
+        const KeyInfo& keyinfo,
+        const std::optional<std::string>& val,
+        const unsigned int flags,
+        std::string& error);
+
+    bool TryHandleNamedRPC(
+        const std::string& key,
+        const std::string& original_input,
+        std::string& error,
+        bool double_dash,
+        bool found_after_non_option);
+
+    void NormalizeKey(std::string& key, bool& double_dash);
+
+    bool ShouldSkipApplePlatformArg(const std::string& key);
+
+    void SplitKeyValue(std::string& key, std::optional<std::string>& val);
+
+    bool HandleGlobalOption(std::string& key,
+                            std::optional<std::string>& val,
+                            std::string& error);
+
+    bool HandleCommandOption(const char* const arg, std::string& error);
+
+    bool HandleCommand(const char* const argv[],
+                       int& i,
+                       int argc,
+                       std::string& error);
+
+    bool HandleIncludeConfError(std::string& error);
 };
 
 extern ArgsManager gArgs;
