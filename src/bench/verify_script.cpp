@@ -2,9 +2,10 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
+#include <addresstype.h>
 #include <bench/bench.h>
-#include <hash.h>
 #include <key.h>
+#include <policy/policy.h>
 #include <primitives/transaction.h>
 #include <pubkey.h>
 #include <script/interpreter.h>
@@ -12,6 +13,7 @@
 #include <span.h>
 #include <test/util/transaction_utils.h>
 #include <uint256.h>
+#include <util/translation.h>
 
 #include <array>
 #include <cassert>
@@ -24,32 +26,31 @@ static void VerifyScriptBench(benchmark::Bench& bench)
 {
     ECC_Context ecc_context{};
 
-    const script_verify_flags flags{SCRIPT_VERIFY_WITNESS | SCRIPT_VERIFY_P2SH};
-    const int witnessversion = 0;
+    // Create deterministic key material needed for output script creation / signing
+    FlatSigningProvider keystore;
+    CPubKey pubkey;
+    {
+        CKey privkey;
+        privkey.Set(uint256::ONE.begin(), uint256::ONE.end(), /*fCompressedIn=*/true);
+        pubkey = privkey.GetPubKey();
+        CKeyID key_id = pubkey.GetID();
+        keystore.keys.emplace(key_id, privkey);
+        keystore.pubkeys.emplace(key_id, pubkey);
+    }
 
-    // Key pair.
-    CKey key;
-    static const std::array<unsigned char, 32> vchKey = {
-        {
-            0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1
-        }
-    };
-    key.Set(vchKey.begin(), vchKey.end(), false);
-    CPubKey pubkey = key.GetPubKey();
-    uint160 pubkeyHash;
-    CHash160().Write(pubkey).Finalize(pubkeyHash);
-
-    // Script.
-    CScript scriptPubKey = CScript() << witnessversion << ToByteVector(pubkeyHash);
-    CScript scriptSig;
-    CScript witScriptPubkey = CScript() << OP_DUP << OP_HASH160 << ToByteVector(pubkeyHash) << OP_EQUALVERIFY << OP_CHECKSIG;
+    // Create crediting and spending transactions
+    CScript scriptPubKey = GetScriptForDestination(WitnessV0KeyHash(pubkey));
     const CMutableTransaction& txCredit = BuildCreditingTransaction(scriptPubKey, 1);
-    CMutableTransaction txSpend = BuildSpendingTransaction(scriptSig, CScriptWitness(), CTransaction(txCredit));
-    CScriptWitness& witness = txSpend.vin[0].scriptWitness;
-    witness.stack.emplace_back();
-    key.Sign(SignatureHash(witScriptPubkey, txSpend, 0, SIGHASH_ALL, txCredit.vout[0].nValue, SigVersion::WITNESS_V0), witness.stack.back());
-    witness.stack.back().push_back(static_cast<unsigned char>(SIGHASH_ALL));
-    witness.stack.push_back(ToByteVector(pubkey));
+    CMutableTransaction txSpend = BuildSpendingTransaction(/*scriptSig=*/{}, /*scriptWitness=*/{}, CTransaction(txCredit));
+
+    // Sign spending transaction
+    {
+        std::map<COutPoint, Coin> coins;
+        coins[txSpend.vin[0].prevout] = Coin(txCredit.vout[0], /*nHeightIn=*/100, /*fCoinBaseIn=*/false);
+        std::map<int, bilingual_str> input_errors;
+        bool complete = SignTransaction(txSpend, &keystore, coins, SIGHASH_ALL, input_errors);
+        assert(complete);
+    }
 
     // Benchmark.
     bench.run([&] {
@@ -58,7 +59,7 @@ static void VerifyScriptBench(benchmark::Bench& bench)
             txSpend.vin[0].scriptSig,
             txCredit.vout[0].scriptPubKey,
             &txSpend.vin[0].scriptWitness,
-            flags,
+            STANDARD_SCRIPT_VERIFY_FLAGS,
             MutableTransactionSignatureChecker(&txSpend, 0, txCredit.vout[0].nValue, MissingDataBehavior::ASSERT_FAIL),
             &err);
         assert(err == SCRIPT_ERR_OK);
