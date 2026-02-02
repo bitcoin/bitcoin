@@ -302,8 +302,8 @@ bool MnemonicVerificationDialog::validateWord(const QString& word, int position)
         return false;
     }
     // Convert SecureString to QString temporarily for comparison
-    QString secureWord = QString::fromStdString(std::string(words[position - 1].begin(), words[position - 1].end()));
-    bool result = word == secureWord.toLower();
+    QString secureWord{QString::fromUtf8(words[position - 1].data(), words[position - 1].size()).toLower()};
+    const bool result{word == secureWord.toLower()};
     // Clear temporary QString immediately
     secureWord.fill(QChar(0));
     secureWord.clear();
@@ -361,7 +361,7 @@ std::vector<SecureString> MnemonicVerificationDialog::parseWords()
     }
 
     // Parse words from secure mnemonic string
-    QString mnemonicStr = QString::fromStdString(std::string(m_mnemonic.begin(), m_mnemonic.end()));
+    QString mnemonicStr{QString::fromUtf8(m_mnemonic.data(), m_mnemonic.size())};
     QStringList wordList = mnemonicStr.split(QRegularExpression("\\s+"), Qt::SkipEmptyParts);
 
     // Convert to SecureString vector for secure storage
@@ -391,7 +391,7 @@ int MnemonicVerificationDialog::getWordCount() const
     // Count words without parsing them into vector
     // This avoids storing words in non-secure memory unnecessarily
     if (m_words.empty()) {
-        QString mnemonicStr = QString::fromStdString(std::string(m_mnemonic.begin(), m_mnemonic.end()));
+        QString mnemonicStr{QString::fromUtf8(m_mnemonic.data(), m_mnemonic.size())};
         QStringList words = mnemonicStr.split(QRegularExpression("\\s+"), Qt::SkipEmptyParts);
         int count = words.size();
         // Clear immediately
@@ -456,7 +456,7 @@ void MnemonicVerificationDialog::buildMnemonicGrid(bool reveal)
         for (int c = 0; c < columns; ++c) {
             int idx = r * columns + c; if (idx >= n) break;
             // Convert SecureString to QString temporarily for display
-            QString wordStr = QString::fromStdString(std::string(words[idx].begin(), words[idx].end()));
+            QString wordStr{QString::fromUtf8(words[idx].data(), words[idx].size())};
             const QString text = QString("%1. %2").arg(idx + 1, 2).arg(wordStr);
             QLabel* lbl = new QLabel(text);
             lbl->setTextInteractionFlags(Qt::TextSelectableByMouse);
