@@ -9,8 +9,6 @@
 
 #include <semaphore>
 
-#define BOOST_MINOR_VERSION ((BOOST_VERSION / 100) % 1000)
-
 namespace {
 
 
@@ -18,21 +16,9 @@ struct MoveOnlyData {
     MoveOnlyData(int data) : m_data(data) {}
     MoveOnlyData(MoveOnlyData&&) = default;
 
-#if BOOST_MINOR_VERSION <= 85
-    // Boost::signals2 <= 1.85 required copyable return types
-    MoveOnlyData(const MoveOnlyData&) = default;
-    MoveOnlyData& operator=(const MoveOnlyData&) = default;
-#elif BOOST_MINOR_VERSION <= 90
-    // Boost::signals2 <= 1.90 required move-assignable return types
-    MoveOnlyData& operator=(MoveOnlyData&&) = default;
-    MoveOnlyData(const MoveOnlyData&) = delete;
-    MoveOnlyData& operator=(const MoveOnlyData&) = delete;
-#else
-    // Boost::signals2 >= 1.91 requires only move-constructible return types
     MoveOnlyData& operator=(MoveOnlyData&&) = delete;
     MoveOnlyData(const MoveOnlyData&) = delete;
     MoveOnlyData& operator=(const MoveOnlyData&) = delete;
-#endif
 
     int m_data;
 };
