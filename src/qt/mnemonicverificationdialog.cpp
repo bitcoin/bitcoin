@@ -96,8 +96,6 @@ MnemonicVerificationDialog::MnemonicVerificationDialog(const SecureString& mnemo
 
 MnemonicVerificationDialog::~MnemonicVerificationDialog()
 {
-    clearWordsSecurely();
-    clearMnemonic();
     delete ui;
 }
 
@@ -278,16 +276,10 @@ void MnemonicVerificationDialog::onHideMnemonicClicked()
     ui->hideMnemonicButton->hide();
     ui->showMnemonicButton->show();
     m_mnemonic_revealed = false;
-    // Clear words from non-secure memory immediately when hiding
-    clearWordsSecurely();
 }
 
 void MnemonicVerificationDialog::reject()
 {
-    // Clear words when going back to step 1 (unless mnemonic is revealed)
-    if (!m_mnemonic_revealed) {
-        clearWordsSecurely();
-    }
     // close dialog for step-1; return back to step-1 for step-2
     if (ui->stackedWidget->currentIndex() == 0) {
         QDialog::reject();
@@ -361,12 +353,6 @@ void MnemonicVerificationDialog::accept()
     QDialog::accept();
 }
 
-void MnemonicVerificationDialog::clearMnemonic()
-{
-    clearWordsSecurely();
-    m_mnemonic.assign(m_mnemonic.size(), 0);
-}
-
 std::vector<SecureString> MnemonicVerificationDialog::parseWords()
 {
     // If words are already parsed, reuse them (for step 2 validation or step 1 display)
@@ -381,14 +367,15 @@ std::vector<SecureString> MnemonicVerificationDialog::parseWords()
     // Convert to SecureString vector for secure storage
     m_words.clear();
     m_words.reserve(wordList.size());
+    std::string wordStd;
     for (const QString& word : wordList) {
-        std::string wordStd = word.toStdString();
+        wordStd = word.toStdString();
         SecureString secureWord;
         secureWord.assign(std::string_view{wordStd});
         m_words.push_back(secureWord);
-        // Clear temporary std::string
-        wordStd.assign(wordStd.size(), 0);
     }
+    // Clear temporary std::string
+    wordStd.assign(wordStd.size(), 0);
 
     // Clear the temporary QString immediately after parsing
     mnemonicStr.fill(QChar(0));
@@ -397,17 +384,6 @@ std::vector<SecureString> MnemonicVerificationDialog::parseWords()
     wordList.clear();
 
     return m_words;
-}
-
-void MnemonicVerificationDialog::clearWordsSecurely()
-{
-    // Securely clear each word string by overwriting before clearing
-    for (SecureString& word : m_words) {
-        // Overwrite with zeros before clearing
-        word.assign(word.size(), 0);
-        word.clear();
-    }
-    m_words.clear();
 }
 
 int MnemonicVerificationDialog::getWordCount() const
