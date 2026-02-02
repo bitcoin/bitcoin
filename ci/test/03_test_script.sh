@@ -146,12 +146,16 @@ cmake --build "${BASE_BUILD_DIR}" "$MAKEJOBS" --target $GOAL || (
   cmake --build "${BASE_BUILD_DIR}" -j1 --target $GOAL --verbose
   false
 )
+bash -c "${PRINT_CCACHE_STATISTICS}"
+ccache --zero-stats
+rm -rf "${BASE_BUILD_DIR}"/*
+cmake -S "$BASE_ROOT_DIR" -B "$BASE_BUILD_DIR" "${CMAKE_ARGS[@]}"
+cmake --build "${BASE_BUILD_DIR}" "$MAKEJOBS" --target $GOAL
 
 bash -c "${PRINT_CCACHE_STATISTICS}"
 hit_rate=$(ccache --show-stats | grep "Hits:" | head -1 | sed 's/.*(\(.*\)%).*/\1/')
-if [ "${hit_rate%.*}" -lt 75 ]; then
-  echo "::notice title=low ccache hitrate::Ccache hit-rate in $CONTAINER_NAME was $hit_rate%"
-fi
+# Should print 100%
+echo "::notice title=ccache hitrate::Ccache hit-rate in $CONTAINER_NAME was $hit_rate%"
 du -sh "${DEPENDS_DIR}"/*/
 du -sh "${PREVIOUS_RELEASES_DIR}"
 
