@@ -157,6 +157,59 @@ class ImportPrunedFundsTest(BitcoinTestFramework):
         available_utxos = [u["txid"] for u in node.listunspent(minconf=0)]
         assert utxo["txid"] not in available_utxos, "UTXO should still be spent by conflicting tx"
 
+        self.log.info("Test importing a spending transaction where no outputs are mine")
+        # Fund a specific address
+        spend_addr = node.getnewaddress()
+        node.sendtoaddress(spend_addr, 0.5)
+        self.generate(node, 1)
+        
+        # Create a tx that spends from spend_addr to an external address (node 1)
+        # Use subtractfeefromamount to ensure no change output
+        w1 = self.nodes[1].get_wallet_rpc(self.default_wallet_name)
+        external_addr = w1.getnewaddress()
+        
+        # Let's create a new wallet for this test to isolate inputs
+        node.createwallet("spender")
+        w_spender = node.get_wallet_rpc("spender")
+        
+        # Just use the first wallet found that isn't 'spender'
+        default_wallet_name = [w for w in node.listwallets() if w != "spender"][0]
+        w_default = node.get_wallet_rpc(default_wallet_name)
+        
+        privkey_s, pubkey_s = generate_keypair(wif=True)
+        spend_addr_s = key_to_p2wpkh(pubkey_s)
+        
+        # Import to default wallet
+        wallet_importprivkey(w_default, privkey_s, "now")
+        
+        # Fund it
+        w_default.sendtoaddress(spend_addr_s, 0.5)
+        self.generate(node, 1)
+        
+        # Import to spender wallet
+        wallet_importprivkey(w_spender, privkey_s, "now")
+        
+        # Now w_spender has the key and balance (0.5)
+        # Send ALL funds to external address
+        tx_spend_id = w_spender.sendtoaddress(address=external_addr, amount=0.5, subtractfeefromamount=True)
+        self.generate(node, 1)
+        
+        # Get proofs
+        tx_spend_hex = w_spender.gettransaction(tx_spend_id)['hex']
+        tx_spend_proof = w_spender.gettxoutproof([tx_spend_id])
+        
+        # Remove the spending transaction
+        w_spender.removeprunedfunds(tx_spend_id)
+        
+        # Verify it's gone
+        assert tx_spend_id not in [tx['txid'] for tx in w_spender.listtransactions()]
+        
+        # Try to import it back. 
+        w_spender.importprunedfunds(tx_spend_hex, tx_spend_proof)
+        
+        # Verify it is back
+        assert tx_spend_id in [tx['txid'] for tx in w_spender.listtransactions()]
+
 
 if __name__ == '__main__':
     ImportPrunedFundsTest(__file__).main()
