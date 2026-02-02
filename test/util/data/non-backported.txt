@@ -33,6 +33,7 @@ src/qt/governancelist.*
 src/qt/guiutil_font.*
 src/qt/masternodelist.*
 src/qt/masternodemodel.*
+src/qt/mnemonicverificationdialog.*
 src/qt/proposalmodel.*
 src/qt/proposalwizard.*
 src/rpc/coinjoin.cpp
