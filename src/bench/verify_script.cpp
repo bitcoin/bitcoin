@@ -20,36 +20,45 @@
 #include <cstdint>
 #include <vector>
 
-// Microbenchmark for verification of a basic P2WPKH script. Can be easily
-// modified to measure performance of other types of scripts.
-static void VerifyScriptBench(benchmark::Bench& bench)
+enum class ScriptType {
+    P2WPKH, // segwitv0, witness-pubkey-hash (ECDSA signature)
+    P2TR,   // segwitv1, taproot key-path spend (Schnorr signature)
+};
+
+// Microbenchmark for verification of standard scripts.
+static void VerifyScriptBench(benchmark::Bench& bench, ScriptType script_type)
 {
     ECC_Context ecc_context{};
 
     // Create deterministic key material needed for output script creation / signing
-    FlatSigningProvider keystore;
-    CPubKey pubkey;
-    {
-        CKey privkey;
-        privkey.Set(uint256::ONE.begin(), uint256::ONE.end(), /*fCompressedIn=*/true);
-        pubkey = privkey.GetPubKey();
-        CKeyID key_id = pubkey.GetID();
-        keystore.keys.emplace(key_id, privkey);
-        keystore.pubkeys.emplace(key_id, pubkey);
-    }
+    CKey privkey;
+    privkey.Set(uint256::ONE.begin(), uint256::ONE.end(), /*fCompressedIn=*/true);
+    CPubKey pubkey = privkey.GetPubKey();
+    CKeyID key_id = pubkey.GetID();
 
-    // Create crediting and spending transactions
-    CScript scriptPubKey = GetScriptForDestination(WitnessV0KeyHash(pubkey));
-    const CMutableTransaction& txCredit = BuildCreditingTransaction(scriptPubKey, 1);
+    FlatSigningProvider keystore;
+    keystore.keys.emplace(key_id, privkey);
+    keystore.pubkeys.emplace(key_id, pubkey);
+
+    // Create crediting and spending transactions with provided input type
+    CTxDestination dest;
+    switch (script_type) {
+    case ScriptType::P2WPKH: dest = WitnessV0KeyHash(pubkey); break;
+    case ScriptType::P2TR:   dest = WitnessV1Taproot(XOnlyPubKey{pubkey}); break;
+    default: assert(false);
+    }
+    const CMutableTransaction& txCredit = BuildCreditingTransaction(GetScriptForDestination(dest), 1);
     CMutableTransaction txSpend = BuildSpendingTransaction(/*scriptSig=*/{}, /*scriptWitness=*/{}, CTransaction(txCredit));
 
-    // Sign spending transaction
+    // Sign spending transaction, precompute transaction data
+    PrecomputedTransactionData txdata;
     {
         std::map<COutPoint, Coin> coins;
         coins[txSpend.vin[0].prevout] = Coin(txCredit.vout[0], /*nHeightIn=*/100, /*fCoinBaseIn=*/false);
         std::map<int, bilingual_str> input_errors;
         bool complete = SignTransaction(txSpend, &keystore, coins, SIGHASH_ALL, input_errors);
         assert(complete);
+        txdata.Init(txSpend, /*spent_outputs=*/{txCredit.vout[0]});
     }
 
     // Benchmark.
@@ -60,12 +69,15 @@ static void VerifyScriptBench(benchmark::Bench& bench)
             txCredit.vout[0].scriptPubKey,
             &txSpend.vin[0].scriptWitness,
             STANDARD_SCRIPT_VERIFY_FLAGS,
-            MutableTransactionSignatureChecker(&txSpend, 0, txCredit.vout[0].nValue, MissingDataBehavior::ASSERT_FAIL),
+            MutableTransactionSignatureChecker(&txSpend, 0, txCredit.vout[0].nValue, txdata, MissingDataBehavior::ASSERT_FAIL),
             &err);
         assert(err == SCRIPT_ERR_OK);
         assert(success);
     });
 }
+
+static void VerifyScriptP2WPKH(benchmark::Bench& bench) { VerifyScriptBench(bench, ScriptType::P2WPKH); }
+static void VerifyScriptP2TR(benchmark::Bench& bench)   { VerifyScriptBench(bench, ScriptType::P2TR);   }
 
 static void VerifyNestedIfScript(benchmark::Bench& bench)
 {
@@ -88,5 +100,6 @@ static void VerifyNestedIfScript(benchmark::Bench& bench)
     });
 }
 
-BENCHMARK(VerifyScriptBench);
+BENCHMARK(VerifyScriptP2WPKH);
+BENCHMARK(VerifyScriptP2TR);
 BENCHMARK(VerifyNestedIfScript);
