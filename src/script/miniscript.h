@@ -607,7 +607,7 @@ private:
     // This is kept private as no valid fragment has all of these arguments.
     // Only used by Clone()
     Node(internal::NoDupCheck, MiniscriptContext script_ctx, enum Fragment nt, std::vector<Node> sub, std::vector<Key> key, std::vector<unsigned char> arg, uint32_t val)
-        : fragment(nt), k(val), keys(key), data(std::move(arg)), subs(std::move(sub)), m_script_ctx{script_ctx}, ops(CalcOps()), ss(CalcStackSize()), ws(CalcWitnessSize()), typ(CalcType()), scriptlen(CalcScriptLen()) {}
+        : fragment(nt), k(val), keys(std::move(key)), data(std::move(arg)), subs(std::move(sub)), m_script_ctx{script_ctx}, ops(CalcOps()), ss(CalcStackSize()), ws(CalcWitnessSize()), typ(CalcType()), scriptlen(CalcScriptLen()) {}
 
     //! Compute the length of the script for this miniscript (including children).
     size_t CalcScriptLen() const
