@@ -87,7 +87,6 @@ MnemonicVerificationDialog::MnemonicVerificationDialog(const SecureString& mnemo
         connect(ui->word1Edit, &QLineEdit::textChanged, this, &MnemonicVerificationDialog::onWord1Changed);
         connect(ui->word2Edit, &QLineEdit::textChanged, this, &MnemonicVerificationDialog::onWord2Changed);
         connect(ui->word3Edit, &QLineEdit::textChanged, this, &MnemonicVerificationDialog::onWord3Changed);
-        connect(ui->showMnemonicAgainButton, &QPushButton::clicked, this, &MnemonicVerificationDialog::onShowMnemonicAgainClicked);
     }
 
     // Button box
@@ -206,13 +205,9 @@ void MnemonicVerificationDialog::setupStep2()
 
     ui->buttonBox->show();
     if (QAbstractButton* cancel = ui->buttonBox->button(QDialogButtonBox::Cancel)) {
-        cancel->show();
         cancel->setText(tr("Back"));
-        disconnect(cancel, nullptr, nullptr, nullptr);
-        connect(cancel, &QAbstractButton::clicked, this, &MnemonicVerificationDialog::onShowMnemonicAgainClicked);
     }
     if (QAbstractButton* cont = ui->buttonBox->button(QDialogButtonBox::Ok)) cont->setEnabled(false);
-    if (ui->showMnemonicAgainButton) ui->showMnemonicAgainButton->hide();
 
     // Verification label styling is defined in general.css
 
@@ -290,7 +285,7 @@ void MnemonicVerificationDialog::onHideMnemonicClicked()
     clearWordsSecurely();
 }
 
-void MnemonicVerificationDialog::onShowMnemonicAgainClicked()
+void MnemonicVerificationDialog::reject()
 {
     // Clear words when going back to step 1 (unless mnemonic is revealed)
     if (!m_mnemonic_revealed) {
