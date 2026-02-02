@@ -48,7 +48,7 @@ export RUN_FUZZ_TESTS=${RUN_FUZZ_TESTS:-false}
 export BOOST_TEST_RANDOM=${BOOST_TEST_RANDOM:-1}
 # See man 7 debconf
 export DEBIAN_FRONTEND=noninteractive
-export CCACHE_MAXSIZE=${CCACHE_MAXSIZE:-500M}
+export CCACHE_MAXSIZE=${CCACHE_MAXSIZE:-2G}
 export CCACHE_TEMPDIR=${CCACHE_TEMPDIR:-/tmp/.ccache-temp}
 export CCACHE_COMPRESS=${CCACHE_COMPRESS:-1}
 # The cache dir.
