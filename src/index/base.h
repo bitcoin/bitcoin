@@ -110,7 +110,9 @@ private:
     std::any ProcessBlock(const CBlockIndex* pindex, const CBlock* block_data = nullptr);
 
     /// Processes blocks in the range [start, end]. Calling 'ProcessBlock'.
-    std::vector<std::any> ProcessBlocks(const CBlockIndex* start, const CBlockIndex* end);
+    /// If `process_in_order` is true, blocks are returned from `start` to `end`;
+    /// otherwise, they are returned in reverse order (from `end` to `start`).
+    std::vector<std::any> ProcessBlocks(bool process_in_order, const CBlockIndex* start, const CBlockIndex* end);
 
     virtual bool AllowPrune() const = 0;
 
@@ -197,6 +199,9 @@ public:
 
     /// Stops the instance from staying in sync with blockchain updates.
     void Stop();
+
+    /// True if the child class requires CustomProcess to be called in-order
+    virtual bool OrderingRequired() { return true; }
 
     /// Get a summary of the index and its state.
     IndexSummary GetSummary() const;

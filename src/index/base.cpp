@@ -199,11 +199,22 @@ std::any BaseIndex::ProcessBlock(const CBlockIndex* pindex, const CBlock* block_
     return any_obj;
 }
 
-std::vector<std::any> BaseIndex::ProcessBlocks(const CBlockIndex* start, const CBlockIndex* end)
+std::vector<std::any> BaseIndex::ProcessBlocks(bool process_in_order, const CBlockIndex* start, const CBlockIndex* end)
 {
     std::vector<std::any> results;
     results.reserve(end->nHeight - start->nHeight + 1);
-    // Collect all block indexes from [end...start] in order
+
+    if (!process_in_order) {
+        // If ordering is not required, process blocks directly from end to start
+        for (const CBlockIndex* block = end; block && start->pprev != block; block = block->pprev) {
+            auto op_res = ProcessBlock(block);
+            if (!op_res.has_value()) return {};
+            results.emplace_back(std::move(op_res));
+        }
+        return results;
+    }
+
+    // Ordering required. Collect all block indexes from [end...start] in order
     std::vector<const CBlockIndex*> ordered_blocks;
     for (const CBlockIndex* block = end; block && start->pprev != block; block = block->pprev) {
         ordered_blocks.emplace_back(block);
@@ -238,6 +249,7 @@ void BaseIndex::Sync()
     if (!m_synced) {
         auto last_log_time{NodeClock::now()};
         auto last_locator_write_time{last_log_time};
+        const bool process_in_order = OrderingRequired();
 
         // Post-Processing helper
         const auto fn_post_process = [this](auto begin, auto end) {
@@ -286,14 +298,16 @@ void BaseIndex::Sync()
             // 'CustomPostProcessBlocks' links to previous records (if needed) and batch-dumps to disk.
             // This will enable parallel data processing while keeping sequentiality when needed.
             Task task(/*start=*/pindex, /*end=*/pindex); // for now single block tasks
-            task.result = ProcessBlocks(task.start_index, task.end_index);
+            task.result = ProcessBlocks(process_in_order, task.start_index, task.end_index);
             if (task.result.empty()) {
                 // Empty result indicates an internal error (logged internally).
                 m_interrupt();
                 return;
             }
 
-            bool complete = fn_post_process(task.result.begin(), task.result.end());
+            bool complete = process_in_order ?
+                            fn_post_process(task.result.begin(), task.result.end()) :
+                            fn_post_process(task.result.rbegin(), task.result.rend());
             if (!complete) {
                 m_interrupt();
                 FatalErrorf("Index %s: Failed to post process blocks", GetName());
