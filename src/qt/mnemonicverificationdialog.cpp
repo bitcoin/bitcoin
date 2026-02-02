@@ -78,7 +78,7 @@ MnemonicVerificationDialog::MnemonicVerificationDialog(const SecureString& mnemo
 
     // Connections
     connect(ui->showMnemonicButton, &QPushButton::clicked, this, &MnemonicVerificationDialog::onShowMnemonicClicked);
-    connect(ui->hideMnemonicButton,  &QPushButton::clicked, this, &MnemonicVerificationDialog::onHideMnemonicClicked);
+    connect(ui->hideMnemonicButton, &QPushButton::clicked, this, &MnemonicVerificationDialog::onHideMnemonicClicked);
 
     if (!m_view_only) {
         connect(ui->writtenDownCheckbox, &QCheckBox::toggled, this, [this](bool checked) {
@@ -470,5 +470,3 @@ void MnemonicVerificationDialog::buildMnemonicGrid(bool reveal)
 
     m_gridLayout->setRowMinimumHeight(rows, 12);
 }
-
-

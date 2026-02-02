@@ -57,4 +57,3 @@ private:
 };
 
 #endif // BITCOIN_QT_MNEMONICVERIFICATIONDIALOG_H
-
