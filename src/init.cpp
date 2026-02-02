@@ -2141,7 +2141,25 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
         StartTorControl(onion_service_target);
     }
 
-    if (connOptions.bind_on_any) {
+    bool discover_on_any = connOptions.bind_on_any;
+    if (!discover_on_any) {
+        for (const auto& bind_addr : connOptions.vBinds) {
+            if (bind_addr.IsBindAny()) {
+                discover_on_any = true;
+                break;
+            }
+        }
+    }
+    if (!discover_on_any) {
+        for (const auto& white_bind : connOptions.vWhiteBinds) {
+            if (white_bind.m_service.IsBindAny()) {
+                discover_on_any = true;
+                break;
+            }
+        }
+    }
+
+    if (discover_on_any) {
         // Only add all IP addresses of the machine if we would be listening on
         // any address - 0.0.0.0 (IPv4) and :: (IPv6).
         Discover();
