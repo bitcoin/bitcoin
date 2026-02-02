@@ -1840,12 +1840,23 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
         StartTorControl(onion_service_target);
     }
 
-    if (connOptions.bind_on_any) {
-        // Only add all IP addresses of the machine if we would be listening on
+    // Discover() should run if we are listening on all addresses, either
+    // implicitly (no -bind/-whitebind given) or explicitly (-bind=0.0.0.0
+    // or -bind=::).
+    bool listening_on_any = connOptions.bind_on_any;
+    if (!listening_on_any) {
+        for (const auto& bind_addr : connOptions.vBinds) {
+            if (bind_addr.IsBindAny()) {
+                listening_on_any = true;
+                break;
+            }
+        }
+    }
+    if (listening_on_any) {
+        // Add all IP addresses of the machine if we are listening on
         // any address - 0.0.0.0 (IPv4) and :: (IPv6).
         Discover();
     }
-
     for (const auto& net : args.GetArgs("-whitelist")) {
         NetWhitelistPermissions subnet;
         bilingual_str error;
