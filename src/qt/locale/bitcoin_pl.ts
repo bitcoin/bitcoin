@@ -2300,7 +2300,7 @@ Jeśli otrzymujesz ten błąd, poproś sprzedawcę o udostępnienie URI zgodnego
     </message>
     <message>
         <source>Network addresses that your Bitcoin node is currently using to communicate with other nodes.</source>
-        <translation type="unfinished">Adresy sieciowe wykorzystywane przez twój węzeł Bitcin do komunikowania się z pozostałymi węzłami.</translation>
+        <translation type="unfinished">Adresy sieciowe wykorzystywane przez twój węzeł Bitcoin do komunikowania się z pozostałymi węzłami.</translation>
     </message>
     <message>
         <source>Block chain</source>
