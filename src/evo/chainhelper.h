@@ -20,9 +20,11 @@ class CSporkManager;
 class CTransaction;
 class uint256;
 
+namespace chainlock {
+class Chainlocks;
+}
 namespace Consensus { struct Params; }
 namespace llmq {
-class CChainLocksHandler;
 class CInstantSendManager;
 class CQuorumBlockProcessor;
 class CQuorumManager;
@@ -33,7 +35,9 @@ class CChainstateHelper
 {
 private:
     llmq::CInstantSendManager& isman;
-    const llmq::CChainLocksHandler& clhandler;
+
+public:
+    const chainlock::Chainlocks& m_chainlocks;
 
 public:
     CChainstateHelper() = delete;
@@ -44,10 +48,10 @@ public:
                                llmq::CQuorumBlockProcessor& qblockman, llmq::CQuorumSnapshotManager& qsnapman,
                                const ChainstateManager& chainman, const Consensus::Params& consensus_params,
                                const CMasternodeSync& mn_sync, const CSporkManager& sporkman,
-                               const llmq::CChainLocksHandler& clhandler, const llmq::CQuorumManager& qman);
+                               const chainlock::Chainlocks& chainlocks, const llmq::CQuorumManager& qman);
     ~CChainstateHelper();
 
-    /** Passthrough functions to CChainLocksHandler */
+    /** Passthrough functions to chainlock::Chainlocks*/
     bool HasConflictingChainLock(int nHeight, const uint256& blockHash) const;
     bool HasChainLock(int nHeight, const uint256& blockHash) const;
     int32_t GetBestChainLockHeight() const;

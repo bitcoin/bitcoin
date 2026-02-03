@@ -8,7 +8,6 @@
 #include <util/check.h>
 #include <validation.h>
 
-#include <chainlock/chainlock.h>
 #include <coinjoin/coinjoin.h>
 #include <evo/deterministicmns.h>
 #include <evo/mnauth.h>
@@ -47,7 +46,6 @@ void CDSNotificationInterface::InitializeCurrentBlockTip()
 
 void CDSNotificationInterface::AcceptedBlockHeader(const CBlockIndex *pindexNew)
 {
-    Assert(m_llmq_ctx)->clhandler->AcceptedBlockHeader(pindexNew);
     m_mn_sync.AcceptedBlockHeader(pindexNew);
 }
 
@@ -74,11 +72,11 @@ void CDSNotificationInterface::UpdatedBlockTip(const CBlockIndex *pindexNew, con
     if (fInitialDownload)
         return;
 
-    m_dstxman.UpdatedBlockTip(pindexNew, *Assert(m_llmq_ctx)->clhandler, m_mn_sync);
+    if (m_mn_sync.IsBlockchainSynced()) {
+        m_dstxman.UpdatedBlockTip(pindexNew);
+    }
 
     m_llmq_ctx->isman->UpdatedBlockTip(pindexNew);
-    m_llmq_ctx->clhandler->UpdatedBlockTip(*m_llmq_ctx->isman);
-
     if (m_govman.IsValid()) {
         m_govman.UpdatedBlockTip(pindexNew);
     }
@@ -88,7 +86,6 @@ void CDSNotificationInterface::TransactionAddedToMempool(const CTransactionRef& 
                                                          uint64_t mempool_sequence)
 {
     Assert(m_llmq_ctx)->isman->TransactionAddedToMempool(ptx);
-    m_llmq_ctx->clhandler->TransactionAddedToMempool(ptx, nAcceptTime);
     m_dstxman.TransactionAddedToMempool(ptx);
 }
 
@@ -101,14 +98,12 @@ void CDSNotificationInterface::TransactionRemovedFromMempool(const CTransactionR
 void CDSNotificationInterface::BlockConnected(const std::shared_ptr<const CBlock>& pblock, const CBlockIndex* pindex)
 {
     Assert(m_llmq_ctx)->isman->BlockConnected(pblock, pindex);
-    m_llmq_ctx->clhandler->BlockConnected(pblock, pindex);
     m_dstxman.BlockConnected(pblock, pindex);
 }
 
 void CDSNotificationInterface::BlockDisconnected(const std::shared_ptr<const CBlock>& pblock, const CBlockIndex* pindexDisconnected)
 {
     Assert(m_llmq_ctx)->isman->BlockDisconnected(pblock, pindexDisconnected);
-    m_llmq_ctx->clhandler->BlockDisconnected(pblock, pindexDisconnected);
     m_dstxman.BlockDisconnected(pblock, pindexDisconnected);
 }
 
@@ -124,7 +119,9 @@ void CDSNotificationInterface::NotifyChainLock(const CBlockIndex* pindex,
                                                const std::shared_ptr<const chainlock::ChainLockSig>& clsig)
 {
     Assert(m_llmq_ctx)->isman->NotifyChainLock(pindex);
-    m_dstxman.NotifyChainLock(pindex, *m_llmq_ctx->clhandler, m_mn_sync);
+    if (m_mn_sync.IsBlockchainSynced()) {
+        m_dstxman.NotifyChainLock(pindex);
+    }
 }
 
 std::unique_ptr<CDSNotificationInterface> g_ds_notification_interface;

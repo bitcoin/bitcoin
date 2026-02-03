@@ -29,13 +29,14 @@ class CTxMemPool;
 class GovernanceSigner;
 class PeerManager;
 namespace chainlock {
+class Chainlocks;
+class ChainlockHandler;
 class ChainLockSigner;
 } // namespace chainlock
 namespace instantsend {
 class InstantSendSigner;
 } // namespace instantsend
 namespace llmq {
-class CChainLocksHandler;
 class CDKGDebugManager;
 class CDKGSessionManager;
 class CEHFSignalsHandler;
@@ -53,7 +54,6 @@ struct DbWrapperParams;
 
 struct ActiveContext final : public CValidationInterface {
 private:
-    llmq::CChainLocksHandler& m_clhandler;
     llmq::CInstantSendManager& m_isman;
     llmq::CQuorumManager& m_qman;
 
@@ -63,13 +63,13 @@ public:
     ActiveContext& operator=(const ActiveContext&) = delete;
     explicit ActiveContext(CBLSWorker& bls_worker, ChainstateManager& chainman, CConnman& connman,
                            CDeterministicMNManager& dmnman, CGovernanceManager& govman, CMasternodeMetaMan& mn_metaman,
-                           CMNHFManager& mnhfman, CSporkManager& sporkman, CTxMemPool& mempool,
-                           llmq::CChainLocksHandler& clhandler, llmq::CInstantSendManager& isman,
-                           llmq::CQuorumBlockProcessor& qblockman, llmq::CQuorumManager& qman,
-                           llmq::CQuorumSnapshotManager& qsnapman, llmq::CSigningManager& sigman, PeerManager& peerman,
-                           const CMasternodeSync& mn_sync, const CBLSSecretKey& operator_sk,
-                           const llmq::QvvecSyncModeMap& sync_map, const util::DbWrapperParams& db_params,
-                           bool quorums_recovery, bool quorums_watch);
+                           CMNHFManager& mnhfman, CSporkManager& sporkman, const chainlock::Chainlocks& chainlocks,
+                           CTxMemPool& mempool, chainlock::ChainlockHandler& clhandler,
+                           llmq::CInstantSendManager& isman, llmq::CQuorumBlockProcessor& qblockman,
+                           llmq::CQuorumManager& qman, llmq::CQuorumSnapshotManager& qsnapman,
+                           llmq::CSigningManager& sigman, PeerManager& peerman, const CMasternodeSync& mn_sync,
+                           const CBLSSecretKey& operator_sk, const llmq::QvvecSyncModeMap& sync_map,
+                           const util::DbWrapperParams& db_params, bool quorums_recovery, bool quorums_watch);
     ~ActiveContext();
 
     void Interrupt();

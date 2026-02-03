@@ -16,7 +16,6 @@
 #include <bls/bls.h>
 #include <chainlock/chainlock.h>
 #include <instantsend/instantsend.h>
-#include <masternode/sync.h>
 
 #include <string>
 
@@ -79,14 +78,6 @@ bool CCoinJoinBroadcastTx::CheckSignature(const CBLSPublicKey& blsPubKey) const
     }
 
     return true;
-}
-
-bool CCoinJoinBroadcastTx::IsExpired(const CBlockIndex* pindex, const llmq::CChainLocksHandler& clhandler) const
-{
-    // expire confirmed DSTXes after ~1h since confirmation or chainlocked confirmation
-    if (!nConfirmedHeight.has_value() || pindex->nHeight < *nConfirmedHeight) return false; // not mined yet
-    if (pindex->nHeight - *nConfirmedHeight > 24) return true; // mined more than an hour ago
-    return clhandler.HasChainLock(pindex->nHeight, *pindex->phashBlock);
 }
 
 bool CCoinJoinBroadcastTx::IsValidStructure() const
@@ -398,8 +389,10 @@ bilingual_str CoinJoin::GetMessageByID(PoolMessage nMessageID)
     }
 }
 
-CDSTXManager::CDSTXManager() = default;
-
+CDSTXManager::CDSTXManager(const chainlock::Chainlocks& chainlocks) :
+    m_chainlocks{chainlocks}
+{
+}
 CDSTXManager::~CDSTXManager() = default;
 
 void CDSTXManager::AddDSTX(const CCoinJoinBroadcastTx& dstx)
@@ -417,13 +410,22 @@ CCoinJoinBroadcastTx CDSTXManager::GetDSTX(const uint256& hash)
     return (it == mapDSTX.end()) ? CCoinJoinBroadcastTx() : it->second;
 }
 
-void CDSTXManager::CheckDSTXes(const CBlockIndex* pindex, const llmq::CChainLocksHandler& clhandler)
+bool CDSTXManager::IsTxExpired(const CCoinJoinBroadcastTx& tx, const CBlockIndex* pindex) const
+{
+    // expire confirmed DSTXes after ~1h since confirmation or chainlocked
+    const auto& opt_confirmed_height = tx.GetConfirmedHeight();
+    if (!opt_confirmed_height.has_value() || pindex->nHeight < *opt_confirmed_height) return false; // not mined yet
+    return (pindex->nHeight - *opt_confirmed_height > 24) ||
+           m_chainlocks.HasChainLock(pindex->nHeight, *pindex->phashBlock); // mined more than an hour ago or chainlocked
+}
+
+void CDSTXManager::CheckDSTXes(const CBlockIndex* pindex)
 {
     AssertLockNotHeld(cs_mapdstx);
     LOCK(cs_mapdstx);
     auto it = mapDSTX.begin();
     while (it != mapDSTX.end()) {
-        if (it->second.IsExpired(pindex, clhandler)) {
+        if (IsTxExpired(it->second, pindex)) {
             mapDSTX.erase(it++);
         } else {
             ++it;
@@ -432,17 +434,17 @@ void CDSTXManager::CheckDSTXes(const CBlockIndex* pindex, const llmq::CChainLock
     LogPrint(BCLog::COINJOIN, "CoinJoin::CheckDSTXes -- mapDSTX.size()=%llu\n", mapDSTX.size());
 }
 
-void CDSTXManager::UpdatedBlockTip(const CBlockIndex* pindex, const llmq::CChainLocksHandler& clhandler, const CMasternodeSync& mn_sync)
+void CDSTXManager::UpdatedBlockTip(const CBlockIndex* pindex)
 {
-    if (pindex && mn_sync.IsBlockchainSynced()) {
-        CheckDSTXes(pindex, clhandler);
+    if (pindex) {
+        CheckDSTXes(pindex);
     }
 }
 
-void CDSTXManager::NotifyChainLock(const CBlockIndex* pindex, const llmq::CChainLocksHandler& clhandler, const CMasternodeSync& mn_sync)
+void CDSTXManager::NotifyChainLock(const CBlockIndex* pindex)
 {
-    if (pindex && mn_sync.IsBlockchainSynced()) {
-        CheckDSTXes(pindex, clhandler);
+    if (pindex) {
+        CheckDSTXes(pindex);
     }
 }
 

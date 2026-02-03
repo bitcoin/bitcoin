@@ -18,8 +18,10 @@ struct MessageProcessingResult;
 namespace Consensus {
 struct Params;
 } // namespace Consensus
+namespace chainlock {
+class Chainlocks;
+}
 namespace llmq {
-class CChainLocksHandler;
 class CInstantSendManager;
 class CSigningManager;
 class CSigSharesManager;
@@ -44,7 +46,7 @@ class InstantSendSigner final : public llmq::CRecoveredSigsListener
 {
 private:
     CChainState& m_chainstate;
-    llmq::CChainLocksHandler& m_clhandler;
+    const chainlock::Chainlocks& m_chainlocks;
     InstantSendSignerParent& m_isman;
     llmq::CSigningManager& m_sigman;
     llmq::CSigSharesManager& m_shareman;
@@ -76,7 +78,7 @@ public:
     InstantSendSigner() = delete;
     InstantSendSigner(const InstantSendSigner&) = delete;
     InstantSendSigner& operator=(const InstantSendSigner&) = delete;
-    explicit InstantSendSigner(CChainState& chainstate, llmq::CChainLocksHandler& clhandler,
+    explicit InstantSendSigner(CChainState& chainstate, const chainlock::Chainlocks& chainlocks,
                                InstantSendSignerParent& isman, llmq::CSigningManager& sigman,
                                llmq::CSigSharesManager& shareman, llmq::CQuorumManager& qman, CSporkManager& sporkman,
                                CTxMemPool& mempool, const CMasternodeSync& mn_sync);

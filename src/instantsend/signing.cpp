@@ -28,12 +28,12 @@ using node::fReindex;
 using node::GetTransaction;
 
 namespace instantsend {
-InstantSendSigner::InstantSendSigner(CChainState& chainstate, llmq::CChainLocksHandler& clhandler,
+InstantSendSigner::InstantSendSigner(CChainState& chainstate, const chainlock::Chainlocks& chainlocks,
                                      InstantSendSignerParent& isman, llmq::CSigningManager& sigman,
                                      llmq::CSigSharesManager& shareman, llmq::CQuorumManager& qman,
                                      CSporkManager& sporkman, CTxMemPool& mempool, const CMasternodeSync& mn_sync) :
     m_chainstate{chainstate},
-    m_clhandler{clhandler},
+    m_chainlocks{chainlocks},
     m_isman{isman},
     m_sigman{sigman},
     m_shareman{shareman},
@@ -225,7 +225,7 @@ bool InstantSendSigner::CheckCanLock(const COutPoint& outpoint, bool printDebug,
 
     const int nTxAge = tipHeight - *blockHeight + 1;
 
-    if (nTxAge < nInstantSendConfirmationsRequired && !m_clhandler.HasChainLock(*blockHeight, hashBlock)) {
+    if (nTxAge < nInstantSendConfirmationsRequired && !m_chainlocks.HasChainLock(*blockHeight, hashBlock)) {
         if (printDebug) {
             LogPrint(BCLog::INSTANTSEND, "%s -- txid=%s: outpoint %s too new and not ChainLocked. nTxAge=%d, nInstantSendConfirmationsRequired=%d\n", __func__,
                      txHash.ToString(), outpoint.ToStringShort(), nTxAge, nInstantSendConfirmationsRequired);

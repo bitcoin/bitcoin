@@ -174,6 +174,7 @@ BITCOIN_CORE_H = \
   blockfilter.h \
   chain.h \
   chainlock/chainlock.h \
+  chainlock/handler.h \
   chainlock/clsig.h \
   chainlock/signing.h \
   chainparams.h \
@@ -499,6 +500,7 @@ libbitcoin_node_a_SOURCES = \
   chain.cpp \
   chainlock/chainlock.cpp \
   chainlock/clsig.cpp \
+  chainlock/handler.cpp \
   chainlock/signing.cpp \
   coinjoin/coinjoin.cpp \
   coinjoin/server.cpp \

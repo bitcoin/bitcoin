@@ -48,11 +48,11 @@ Uint256HashSet GetIdsFromLockable(const std::vector<T>& vec)
 }
 } // anonymous namespace
 
-CInstantSendManager::CInstantSendManager(CChainLocksHandler& _clhandler, CChainState& chainstate,
+CInstantSendManager::CInstantSendManager(const chainlock::Chainlocks& chainlocks, CChainState& chainstate,
                                          CSigningManager& _sigman, CSporkManager& sporkman, CTxMemPool& _mempool,
                                          const CMasternodeSync& mn_sync, const util::DbWrapperParams& db_params) :
     db{db_params},
-    clhandler{_clhandler},
+    m_chainlocks{chainlocks},
     m_chainstate{chainstate},
     sigman{_sigman},
     spork_manager{sporkman},
@@ -158,7 +158,7 @@ std::variant<uint256, CTransactionRef, std::monostate> CInstantSendManager::Proc
         }
         // Let's see if the TX that was locked by this islock is already mined in a ChainLocked block. If yes,
         // we can simply ignore the islock, as the ChainLock implies locking of all TXs in that chain
-        if (minedHeight.has_value() && clhandler.HasChainLock(*minedHeight, hashBlock)) {
+        if (minedHeight.has_value() && m_chainlocks.HasChainLock(*minedHeight, hashBlock)) {
             LogPrint(BCLog::INSTANTSEND, /* Continued */
                      "CInstantSendManager::%s -- txlock=%s, islock=%s: dropping islock as it already got a "
                      "ChainLock in block %s, peer=%d\n",
@@ -261,7 +261,7 @@ void CInstantSendManager::BlockConnected(const std::shared_ptr<const CBlock>& pb
     CacheTipHeight(pindex);
 
     if (m_mn_sync.IsBlockchainSynced()) {
-        const bool has_chainlock = clhandler.HasChainLock(pindex->nHeight, pindex->GetBlockHash());
+        const bool has_chainlock = m_chainlocks.HasChainLock(pindex->nHeight, pindex->GetBlockHash());
         for (const auto& tx : pblock->vtx) {
             if (tx->IsCoinBase() || tx->vin.empty()) {
                 // coinbase and TXs with no inputs can't be locked
@@ -437,7 +437,7 @@ void CInstantSendManager::UpdatedBlockTip(const CBlockIndex* pindexNew)
 
     bool fDIP0008Active = pindexNew->pprev && pindexNew->pprev->nHeight >= Params().GetConsensus().DIP0008Height;
 
-    if (AreChainLocksEnabled(spork_manager) && fDIP0008Active) {
+    if (m_chainlocks.IsEnabled() && fDIP0008Active) {
         // Nothing to do here. We should keep all islocks and let chainlocks handle them.
         return;
     }
@@ -554,7 +554,7 @@ void CInstantSendManager::ResolveBlockConflicts(const uint256& islockHash, const
     bool hasChainLockedConflict = false;
     for (const auto& p : conflicts) {
         const auto* pindex = p.first;
-        if (clhandler.HasChainLock(pindex->nHeight, pindex->GetBlockHash())) {
+        if (m_chainlocks.HasChainLock(pindex->nHeight, pindex->GetBlockHash())) {
             hasChainLockedConflict = true;
             break;
         }
@@ -604,7 +604,7 @@ void CInstantSendManager::ResolveBlockConflicts(const uint256& islockHash, const
     if (activateBestChain) {
         BlockValidationState state;
         if (!m_chainstate.ActivateBestChain(state)) {
-            LogPrintf("CChainLocksHandler::%s -- ActivateBestChain failed: %s\n", __func__, state.ToString());
+            LogPrintf("CInstantSendManager::%s -- ActivateBestChain failed: %s\n", __func__, state.ToString());
             // This should not have happened and we are in a state were it's not safe to continue anymore
             assert(false);
         }

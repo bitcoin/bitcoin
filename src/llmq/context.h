@@ -19,8 +19,11 @@ class CSporkManager;
 class CTxMemPool;
 class PeerManager;
 
+namespace chainlock {
+class Chainlocks;
+}
+
 namespace llmq {
-class CChainLocksHandler;
 class CInstantSendManager;
 class CQuorumBlockProcessor;
 class CQuorumManager;
@@ -36,30 +39,23 @@ public:
     LLMQContext() = delete;
     LLMQContext(const LLMQContext&) = delete;
     LLMQContext& operator=(const LLMQContext&) = delete;
-    explicit LLMQContext(CDeterministicMNManager& dmnman, CEvoDB& evo_db, CSporkManager& sporkman, CTxMemPool& mempool,
-                         const ChainstateManager& chainman, const CMasternodeSync& mn_sync,
-                         const util::DbWrapperParams& db_params, int8_t bls_threads, int64_t max_recsigs_age);
+    explicit LLMQContext(CDeterministicMNManager& dmnman, CEvoDB& evo_db, CSporkManager& sporkman,
+                         chainlock::Chainlocks& chainlocks, CTxMemPool& mempool, ChainstateManager& chainman,
+                         const CMasternodeSync& mn_sync, const util::DbWrapperParams& db_params, int8_t bls_threads,
+                         int64_t max_recsigs_age);
     ~LLMQContext();
-
-    void Start();
-    void Stop();
 
     /** Guaranteed if LLMQContext is initialized then all members are valid too
      *
-     *  Please note, that members here should not be re-ordered, because initialization
-     *  some of them requires other member initialized.
+     *  Please note, that members here should not be re-ordered without careful consideration,
+     *  because initialization some of them requires other member initialized.
      *  For example, constructor `qman` requires `bls_worker`.
-     *
-     *  Some objects are still global variables and their de-globalization is not trivial
-     *  at this point. LLMQContext keeps just a pointer to them and doesn't own these objects,
-     *  but it still guarantees that objects are created and valid
      */
     const std::shared_ptr<CBLSWorker> bls_worker;
     const std::unique_ptr<llmq::CQuorumSnapshotManager> qsnapman;
     const std::unique_ptr<llmq::CQuorumBlockProcessor> quorum_block_processor;
     const std::unique_ptr<llmq::CQuorumManager> qman;
     const std::unique_ptr<llmq::CSigningManager> sigman;
-    const std::unique_ptr<llmq::CChainLocksHandler> clhandler;
     const std::unique_ptr<llmq::CInstantSendManager> isman;
 };
 

@@ -17,28 +17,28 @@ CChainstateHelper::CChainstateHelper(CCreditPoolManager& cpoolman, CDeterministi
                                      llmq::CQuorumBlockProcessor& qblockman, llmq::CQuorumSnapshotManager& qsnapman,
                                      const ChainstateManager& chainman, const Consensus::Params& consensus_params,
                                      const CMasternodeSync& mn_sync, const CSporkManager& sporkman,
-                                     const llmq::CChainLocksHandler& clhandler, const llmq::CQuorumManager& qman) :
+                                     const chainlock::Chainlocks& chainlocks, const llmq::CQuorumManager& qman) :
     isman{isman},
-    clhandler{clhandler},
+    m_chainlocks{chainlocks},
     mn_payments{std::make_unique<CMNPaymentsProcessor>(dmnman, govman, chainman, consensus_params, mn_sync, sporkman)},
     special_tx{std::make_unique<CSpecialTxProcessor>(cpoolman, dmnman, mnhfman, qblockman, qsnapman, chainman,
-                                                     consensus_params, clhandler, qman)}
+                                                     consensus_params, chainlocks, qman)}
 {}
 
 CChainstateHelper::~CChainstateHelper() = default;
 
-/** Passthrough functions to CChainLocksHandler */
+/** Passthrough functions to chainlock::Chainlocks */
 bool CChainstateHelper::HasConflictingChainLock(int nHeight, const uint256& blockHash) const
 {
-    return clhandler.HasConflictingChainLock(nHeight, blockHash);
+    return m_chainlocks.HasConflictingChainLock(nHeight, blockHash);
 }
 
 bool CChainstateHelper::HasChainLock(int nHeight, const uint256& blockHash) const
 {
-    return clhandler.HasChainLock(nHeight, blockHash);
+    return m_chainlocks.HasChainLock(nHeight, blockHash);
 }
 
-int32_t CChainstateHelper::GetBestChainLockHeight() const { return clhandler.GetBestChainLockHeight(); }
+int32_t CChainstateHelper::GetBestChainLockHeight() const { return m_chainlocks.GetBestChainLockHeight(); }
 
 /** Passthrough functions to CInstantSendManager */
 std::optional<std::pair</*islock_hash=*/uint256, /*txid=*/uint256>> CChainstateHelper::ConflictingISLockIfAny(

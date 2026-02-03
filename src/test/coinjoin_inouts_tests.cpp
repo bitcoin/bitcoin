@@ -10,10 +10,9 @@
 #include <vector>
 
 #include <chain.h>
-#include <chainlock/chainlock.h>
 #include <coinjoin/coinjoin.h>
 #include <coinjoin/common.h>
-#include <llmq/context.h>
+#include <evo/chainhelper.h>
 #include <script/script.h>
 #include <uint256.h>
 #include <util/check.h>
@@ -106,31 +105,4 @@ BOOST_AUTO_TEST_CASE(queue_timeout_bounds)
     // Reset mock time
     SetMockTime(0);
 }
-
-BOOST_AUTO_TEST_CASE(broadcasttx_expiry_height_logic)
-{
-    // Build a valid-looking CCoinJoinBroadcastTx with confirmed height
-    CCoinJoinBroadcastTx dstx;
-    {
-        CMutableTransaction mtx;
-        const int participants = std::max(3, CoinJoin::GetMinPoolParticipants());
-        for (int i = 0; i < participants; ++i) {
-            mtx.vin.emplace_back(COutPoint(uint256::TWO, i));
-            mtx.vout.emplace_back(CoinJoin::GetSmallestDenomination(), P2PKHScript(static_cast<uint8_t>(i)));
-        }
-        dstx.tx = MakeTransactionRef(mtx);
-        dstx.m_protxHash = uint256::ONE;
-        // mark as confirmed at height 100
-        dstx.SetConfirmedHeight(100);
-    }
-
-    // Minimal CBlockIndex with required fields
-    // Create a minimal block index to satisfy the interface
-    CBlockIndex index;
-    uint256 blk_hash = uint256S("03");
-    index.nHeight = 125; // 125 - 100 == 25 > 24 → expired by height
-    index.phashBlock = &blk_hash;
-    BOOST_CHECK(dstx.IsExpired(&index, *Assert(m_node.llmq_ctx->clhandler)));
-}
-
 BOOST_AUTO_TEST_SUITE_END()

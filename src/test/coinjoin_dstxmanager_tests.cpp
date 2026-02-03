@@ -49,6 +49,47 @@ BOOST_AUTO_TEST_CASE(add_get_dstx)
     BOOST_CHECK_EQUAL(got.tx->GetHash().ToString(), dstx.tx->GetHash().ToString());
 }
 
+BOOST_AUTO_TEST_CASE(broadcasttx_expiry_height_logic)
+{
+    // Build a valid-looking CCoinJoinBroadcastTx with confirmed height
+    CCoinJoinBroadcastTx dstx;
+    {
+        CMutableTransaction mtx;
+        const int participants = std::max(3, CoinJoin::GetMinPoolParticipants());
+        for (int i = 0; i < participants; ++i) {
+            mtx.vin.emplace_back(COutPoint(uint256::TWO, i));
+            CScript spk;
+            spk << OP_DUP << OP_HASH160 << std::vector<unsigned char>(20, i) << OP_EQUALVERIFY << OP_CHECKSIG;
+            mtx.vout.emplace_back(CoinJoin::GetSmallestDenomination(), spk);
+        }
+        dstx.tx = MakeTransactionRef(mtx);
+        dstx.m_protxHash = uint256::ONE;
+        // mark as confirmed at height 100
+        dstx.SetConfirmedHeight(100);
+    }
+
+    int expiry_height = 124; // 125 - 100 == 25 > 24 → expired by height
+
+    // Minimal CBlockIndex with required fields
+    // Create a minimal block index to satisfy the interface
+    CBlockIndex index;
+    uint256 blk_hash = uint256S("03");
+    index.nHeight = expiry_height;
+    index.phashBlock = &blk_hash;
+
+    auto& man = *Assert(m_node.dstxman);
+    auto& hash = dstx.tx->GetHash();
+    man.AddDSTX(dstx);
+    BOOST_CHECK(static_cast<bool>(man.GetDSTX(hash)));
+
+    man.UpdatedBlockTip(&index);
+    BOOST_CHECK(static_cast<bool>(man.GetDSTX(hash)));
+
+    index.nHeight = expiry_height + 1;
+    man.UpdatedBlockTip(&index);
+    BOOST_CHECK(!static_cast<bool>(man.GetDSTX(hash)));
+}
+
 BOOST_AUTO_TEST_CASE(update_heights_block_connect_disconnect)
 {
     CCoinJoinBroadcastTx dstx = MakeDSTX();

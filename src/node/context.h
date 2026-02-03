@@ -35,9 +35,11 @@ class NetGroupManager;
 class PeerManager;
 struct ActiveContext;
 struct LLMQContext;
-namespace llmq {
-struct ObserverContext;
-} // namespace llmq
+
+namespace chainlock {
+class Chainlocks;
+class ChainlockHandler;
+} // namespace chainlock
 
 namespace interfaces {
 class Chain;
@@ -48,6 +50,10 @@ namespace CoinJoin {
 class Loader;
 } // namspace CoinJoin
 } // namespace interfaces
+
+namespace llmq {
+struct ObserverContext;
+} // namespace llmq
 
 namespace node {
 //! NodeContext struct containing references to chain state and connection
@@ -94,6 +100,8 @@ struct NodeContext {
     std::unique_ptr<CMNHFManager> mnhf_manager;
     std::unique_ptr<CNetFulfilledRequestManager> netfulfilledman;
     std::unique_ptr<CSporkManager> sporkman;
+    std::unique_ptr<chainlock::Chainlocks> chainlocks;
+    std::unique_ptr<chainlock::ChainlockHandler> clhandler;
     //! Dash contexts
     std::unique_ptr<ActiveContext> active_ctx;
     std::unique_ptr<LLMQContext> llmq_ctx;

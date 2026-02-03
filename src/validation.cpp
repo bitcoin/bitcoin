@@ -4486,7 +4486,7 @@ MempoolAcceptResult ChainstateManager::ProcessTransaction(const CTransactionRef&
 }
 
 bool TestBlockValidity(BlockValidationState& state,
-                       llmq::CChainLocksHandler& clhandler,
+                       const chainlock::Chainlocks& chainlocks,
                        CEvoDB& evoDb,
                        const CChainParams& chainparams,
                        CChainState& chainstate,
@@ -4504,7 +4504,7 @@ bool TestBlockValidity(BlockValidationState& state,
     auto bls_legacy_scheme = bls::bls_legacy_scheme.load();
 
     uint256 hash = block.GetHash();
-    if (clhandler.HasConflictingChainLock(pindexPrev->nHeight + 1, hash)) {
+    if (chainlocks.HasConflictingChainLock(pindexPrev->nHeight + 1, hash)) {
         LogPrintf("ERROR: %s: conflicting with chainlock\n", __func__);
         return state.Invalid(BlockValidationResult::BLOCK_INVALID_PREV, "bad-chainlock");
     }
