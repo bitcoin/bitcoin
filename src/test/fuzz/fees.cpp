@@ -31,4 +31,7 @@ FUZZ_TARGET(fees)
     (void)StringForFeeReason(fee_reason);
     const BlockPolicyEstimateReason block_policy_fee_reason = fuzzed_data_provider.PickValueInArray({BlockPolicyEstimateReason::NONE, BlockPolicyEstimateReason::HALF_ESTIMATE, BlockPolicyEstimateReason::FULL_ESTIMATE, BlockPolicyEstimateReason::DOUBLE_ESTIMATE, BlockPolicyEstimateReason::CONSERVATIVE});
     (void)StringForBlockPolicyEstimateReason(block_policy_fee_reason);
+    const FeeRateEstimatorType feerate_estimator_type = fuzzed_data_provider.PickValueInArray({FeeRateEstimatorType::NONE, FeeRateEstimatorType::BLOCK_POLICY, FeeRateEstimatorType::MEMPOOL_POLICY});
+    (void)FeeRateEstimatorTypeToString(feerate_estimator_type);
+    (void)FeeRateEstimatorTypeFromString(fuzzed_data_provider.ConsumeRandomLengthString());
 }

@@ -18,7 +18,6 @@
 #include <univalue.h>
 #include <util/expected.h>
 #include <util/fees.h>
-#include <util/strencodings.h>
 #include <validationinterface.h>
 
 #include <algorithm>
@@ -31,13 +30,6 @@ using common::FeeModeFromString;
 using common::FeeModesDetail;
 using common::InvalidEstimateModeErrorMessage;
 using node::NodeContext;
-
-static FeeRateEstimatorType FeeRateEstimatorTypeFromString(std::string_view feerate_estimator_type)
-{
-    const auto normalized{ToLower(feerate_estimator_type)};
-    if (normalized == "block_policy") return FeeRateEstimatorType::BLOCK_POLICY;
-    return FeeRateEstimatorType::NONE;
-}
 
 static RPCMethod estimatesmartfee()
 {

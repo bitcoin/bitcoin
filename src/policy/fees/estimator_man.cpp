@@ -8,10 +8,14 @@
 #include <kernel/mempool_removal_reason.h>
 #include <policy/feerate.h>
 #include <policy/fees/block_policy_estimator.h>
+#include <policy/fees/mempool_estimator.h>
 #include <util/fees.h>
 
-FeeRateEstimatorManager::FeeRateEstimatorManager(const fs::path& block_policy_path, bool read_stale_estimates)
-    : m_block_policy_estimator(std::make_unique<CBlockPolicyEstimator>(block_policy_path, read_stale_estimates))
+FeeRateEstimatorManager::~FeeRateEstimatorManager() = default;
+
+FeeRateEstimatorManager::FeeRateEstimatorManager(const fs::path& block_policy_path, bool read_stale_estimates, const CTxMemPool* mempool, ChainstateManager* chainman)
+    : m_block_policy_estimator(std::make_unique<CBlockPolicyEstimator>(block_policy_path, read_stale_estimates)),
+      m_mempool_estimator(std::make_unique<MemPoolFeeRateEstimator>(mempool, chainman))
 {
 }
 
@@ -27,6 +31,8 @@ util::Expected<FeeRateEstimation, FeeRateEstimationError> FeeRateEstimatorManage
         return GetFeeRateEstimate(target, conservative);
     case FeeRateEstimatorType::BLOCK_POLICY:
         return m_block_policy_estimator->EstimateFeeRate(target, conservative);
+    case FeeRateEstimatorType::MEMPOOL_POLICY:
+        return m_mempool_estimator->EstimateFeeRate(conservative);
     } // no default case, so the compiler can warn about missing cases
     assert(false);
 }

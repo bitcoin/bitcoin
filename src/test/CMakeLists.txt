@@ -47,6 +47,7 @@ add_executable(test_bitcoin
   disconnected_transactions.cpp
   feefrac_tests.cpp
   feerounder_tests.cpp
+  fees_util_tests.cpp
   flatfile_tests.cpp
   fs_tests.cpp
   getarg_tests.cpp
@@ -59,6 +60,7 @@ add_executable(test_bitcoin
   key_tests.cpp
   logging_tests.cpp
   mempool_tests.cpp
+  mempool_fee_estimator_tests.cpp
   merkle_tests.cpp
   merkleblock_tests.cpp
   miner_tests.cpp

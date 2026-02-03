@@ -36,6 +36,7 @@ enum class FeeReason {
 enum class FeeRateEstimatorType {
     NONE,
     BLOCK_POLICY,
+    MEMPOOL_POLICY,
 };
 
 /**
@@ -78,5 +79,8 @@ inline const FeeRateEstimation& FeeRateEstimationRef(const util::Expected<FeeRat
 {
     return result ? *result : result.error().estimation;
 }
+
+std::string FeeRateEstimatorTypeToString(FeeRateEstimatorType feerate_estimator_type);
+FeeRateEstimatorType FeeRateEstimatorTypeFromString(std::string_view feerate_estimator_type);
 
 #endif // BITCOIN_UTIL_FEES_H
