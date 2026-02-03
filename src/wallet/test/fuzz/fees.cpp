@@ -46,7 +46,7 @@ class FuzzedFeeEstimatorMan : public FeeRateEstimatorManager
 
 public:
     FuzzedFeeEstimatorMan(FuzzedDataProvider& provider)
-        : FeeRateEstimatorManager(fs::path{}, false), fuzzed_data_provider(provider) {}
+        : FeeRateEstimatorManager(fs::path{}, false, *g_setup->m_node.mempool, *g_setup->m_node.chainman), fuzzed_data_provider(provider) {}
 
     util::Expected<FeeRateEstimation, FeeRateEstimationError> GetFeeRateEstimate(int confTarget, bool conservative) const override
     {
