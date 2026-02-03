@@ -283,6 +283,7 @@ BOOST_AUTO_TEST_CASE( comparison ) // <= >= < >
 
     BOOST_CHECK_LT(ZeroL,
                    OneL);
+    BOOST_CHECK_GT(OneL << 32, arith_uint256{0xffffffff}); // Guard against comparing low words first
 }
 
 BOOST_AUTO_TEST_CASE( plusMinus )
