@@ -5,10 +5,12 @@
 #ifndef BITCOIN_INTERFACES_HANDLER_H
 #define BITCOIN_INTERFACES_HANDLER_H
 
-#include <btcsignals.h>
-
 #include <functional>
 #include <memory>
+
+namespace btcsignals {
+    class connection;
+} // namespace btcsignals
 
 namespace interfaces {
 
