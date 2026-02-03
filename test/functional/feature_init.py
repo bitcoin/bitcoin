@@ -61,7 +61,12 @@ class InitTest(BitcoinTestFramework):
                 os.kill(node.process.pid, signal.CTRL_BREAK_EVENT)
             else:
                 node.process.terminate()
-            assert_equal(0, node.process.wait())
+            # Don't check exit code returned by wait(). Normally exit code will
+            # be 0, but if the process is killed early, before the bitcoind
+            # signal handler is installed, it will exit with other values like
+            # SIGTERM (-15) on linux or STATUS_DLL_INIT_FAILED (0xc0000142) on
+            # windows.
+            node.process.wait()
 
         reindex_log_line = b'Reindexing block file blk00000.dat'
         lines_to_terminate_after = [
@@ -90,9 +95,24 @@ class InitTest(BitcoinTestFramework):
             lines_to_terminate_after.append(b'Verifying wallet')
         lines_to_terminate_after.append(reindex_log_line)
 
+        index_threads = [
+            b'txidx thread start',
+            b'blkfltbscidx thread start',
+            b'coinstatsidx thread start',
+            b'txospenderidx thread start',
+        ]
+        log_start_byte = node.debug_log_size(mode="rb")
         for terminate_line in lines_to_terminate_after:
             self.log.info(f"Starting node and will terminate after line {terminate_line}")
-            with node.busy_wait_for_debug_log([terminate_line]):
+            # Index thread start messages are only printed if index is behind
+            # the current chain tip at startup and needs to sync. If the index
+            # is already in sync during startup no messages will be printed.
+            # Set `start_byte` below for this reason to look for the index
+            # thread start messages, starting earlier, from the begining of this
+            # test, in case the node was not killed quickly enough and an index
+            # was already synced by the time this test was looking for its
+            # thread start message.
+            with node.busy_wait_for_debug_log([terminate_line], start_byte=log_start_byte if terminate_line in index_threads else None):
                 extra_args = [*ALL_INDEX_ARGS]
                 if terminate_line == reindex_log_line:
                     extra_args += ['-reindex']
