@@ -327,7 +327,7 @@ public:
     bool AllowPrune() const override { return false; }
     BaseIndex::DB& GetDB() const override { return *m_db; }
 
-    bool CustomAppend(const interfaces::BlockInfo& block) override
+    bool CustomAppend(CDBBatch& db_batch, const interfaces::BlockInfo& block) override
     {
         // Simulate a delay so new blocks can get connected during the initial sync
         if (block.height == m_blocking_height) m_blocker.wait();

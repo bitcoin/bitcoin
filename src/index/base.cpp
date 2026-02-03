@@ -187,7 +187,7 @@ static std::optional<BlockRange> NextSyncRange(const CBlockIndex* pindex_prev, c
     return range;
 }
 
-bool BaseIndex::ProcessBlock(const CBlockIndex* pindex, const CBlock* block_data)
+bool BaseIndex::ProcessBlock(CDBBatch& db_batch, const CBlockIndex* pindex, const CBlock* block_data)
 {
     interfaces::BlockInfo block_info = kernel::MakeBlockInfo(pindex, block_data);
 
@@ -211,7 +211,7 @@ bool BaseIndex::ProcessBlock(const CBlockIndex* pindex, const CBlock* block_data
         block_info.undo_data = &block_undo;
     }
 
-    if (!CustomAppend(block_info)) {
+    if (!CustomAppend(db_batch, block_info)) {
         FatalErrorf("Failed to write block %s to index database",
                     pindex->GetBlockHash().ToString());
         return false;
@@ -220,7 +220,7 @@ bool BaseIndex::ProcessBlock(const CBlockIndex* pindex, const CBlock* block_data
     return true;
 }
 
-bool BaseIndex::ProcessBlocks(const CBlockIndex* start, const CBlockIndex* end)
+bool BaseIndex::ProcessBlocks(CDBBatch& db_batch, const CBlockIndex* start, const CBlockIndex* end)
 {
     // Collect all block indexes from [end...start] in order
     std::vector<const CBlockIndex*> ordered_blocks;
@@ -232,7 +232,7 @@ bool BaseIndex::ProcessBlocks(const CBlockIndex* start, const CBlockIndex* end)
     // And process blocks in forward order: from start to end
     for (auto it = ordered_blocks.rbegin(); it != ordered_blocks.rend(); ++it) {
         if (m_interrupt) return false;
-        if (!ProcessBlock(*it)) return false; // error logged internally
+        if (!ProcessBlock(db_batch, *it)) return false; // error logged internally
     }
 
     return true;
@@ -270,12 +270,14 @@ void BaseIndex::Sync()
                 return;
             }
 
-            if (!ProcessBlocks(block_range->first, block_range->last)) {
+            CDBBatch db_batch(GetDB());
+            if (!ProcessBlocks(db_batch, block_range->first, block_range->last)) {
                 // If failed due to an interruption, we haven't processed the block.
                 if (m_interrupt) break;
                 // Otherwise this is an unrecoverable error and we want to stop.
                 return; // error logged internally
             }
+            GetDB().WriteBatch(db_batch);
 
             // Update last processed block for next round
             pindex = block_range->last;
@@ -414,7 +416,9 @@ void BaseIndex::BlockConnected(const ChainstateRole& role, const std::shared_ptr
     }
 
     // Dispatch block to child class; errors are logged internally and abort the node.
-    if (ProcessBlock(pindex, block.get())) {
+    CDBBatch db_batch(GetDB());
+    if (ProcessBlock(db_batch, pindex, block.get())) {
+        GetDB().WriteBatch(db_batch);
         // Setting the best block index is intentionally the last step of this
         // function, so BlockUntilSyncedToCurrentChain callers waiting for the
         // best block index to be updated can rely on the block being fully

@@ -24,6 +24,7 @@
 class BlockFilter;
 class CBlockIndex;
 enum class BlockFilterType : uint8_t;
+class CDBBatch;
 
 static const char* const DEFAULT_BLOCKFILTERINDEX = "0";
 
@@ -58,7 +59,7 @@ private:
 
     bool AllowPrune() const override { return true; }
 
-    bool Write(const BlockFilter& filter, uint32_t block_height, const uint256& filter_header);
+    bool Write(CDBBatch& batch, const BlockFilter& filter, uint32_t block_height, const uint256& filter_header);
 
     std::optional<uint256> ReadFilterHeader(int height, const uint256& expected_block_hash);
 
@@ -67,7 +68,7 @@ protected:
 
     bool CustomCommit(CDBBatch& batch) override;
 
-    bool CustomAppend(const interfaces::BlockInfo& block) override;
+    bool CustomAppend(CDBBatch& batch, const interfaces::BlockInfo& block) override;
 
     bool CustomRemove(const interfaces::BlockInfo& block) override;
 

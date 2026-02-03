@@ -43,9 +43,6 @@ public:
     /// Read the disk location of the transaction data with the given hash. Returns false if the
     /// transaction hash is not indexed.
     bool ReadTxPos(const Txid& txid, CDiskTxPos& pos) const;
-
-    /// Write a batch of transaction positions to the DB.
-    void WriteTxs(const std::vector<std::pair<Txid, CDiskTxPos>>& v_pos);
 };
 
 TxIndex::DB::DB(size_t n_cache_size, bool f_memory, bool f_wipe) :
@@ -57,13 +54,11 @@ bool TxIndex::DB::ReadTxPos(const Txid& txid, CDiskTxPos& pos) const
     return Read(std::make_pair(DB_TXINDEX, txid.ToUint256()), pos);
 }
 
-void TxIndex::DB::WriteTxs(const std::vector<std::pair<Txid, CDiskTxPos>>& v_pos)
+static void WriteTxs(CDBBatch& batch, const std::vector<std::pair<Txid, CDiskTxPos>>& v_pos)
 {
-    CDBBatch batch(*this);
     for (const auto& [txid, pos] : v_pos) {
         batch.Write(std::make_pair(DB_TXINDEX, txid.ToUint256()), pos);
     }
-    WriteBatch(batch);
 }
 
 TxIndex::TxIndex(std::unique_ptr<interfaces::Chain> chain, size_t n_cache_size, bool f_memory, bool f_wipe)
@@ -72,7 +67,7 @@ TxIndex::TxIndex(std::unique_ptr<interfaces::Chain> chain, size_t n_cache_size, 
 
 TxIndex::~TxIndex() = default;
 
-bool TxIndex::CustomAppend(const interfaces::BlockInfo& block)
+bool TxIndex::CustomAppend(CDBBatch& batch, const interfaces::BlockInfo& block)
 {
     // Exclude genesis block transaction because outputs are not spendable.
     if (block.height == 0) return true;
@@ -85,7 +80,7 @@ bool TxIndex::CustomAppend(const interfaces::BlockInfo& block)
         vPos.emplace_back(tx->GetHash(), pos);
         pos.nTxOffset += ::GetSerializeSize(TX_WITH_WITNESS(*tx));
     }
-    m_db->WriteTxs(vPos);
+    WriteTxs(batch, vPos);
     return true;
 }
 
