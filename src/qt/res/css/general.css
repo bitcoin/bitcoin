@@ -1249,6 +1249,47 @@ MasternodeList QLabel#countLabelDIP3 {
 }
 
 /******************************************************
+MnemonicVerificationDialog
+******************************************************/
+
+QDialog#MnemonicVerificationDialog QLabel#warningLabel {
+    font-size: 17px;
+    font-weight: 700;
+}
+
+QDialog#MnemonicVerificationDialog QLabel#instructionLabel {
+    font-size: 14px;
+}
+
+QDialog#MnemonicVerificationDialog QLabel#verificationLabel {
+    margin-top: 0px;
+    margin-bottom: 4px;
+}
+
+QDialog#MnemonicVerificationDialog QLabel#word1Status,
+QDialog#MnemonicVerificationDialog QLabel#word2Status,
+QDialog#MnemonicVerificationDialog QLabel#word3Status {
+    font-weight: 700;
+    min-width: 18px;
+}
+
+QDialog#MnemonicVerificationDialog QScrollArea#mnemonicScroll {
+    border-radius: 8px;
+    border: 1px solid;
+}
+
+QDialog#MnemonicVerificationDialog QScrollArea#mnemonicScroll QWidget#mnemonicGridWidget QLabel {
+    font-family: monospace;
+    font-size: 13pt;
+}
+
+QDialog#MnemonicVerificationDialog QLineEdit#word1Edit,
+QDialog#MnemonicVerificationDialog QLineEdit#word2Edit,
+QDialog#MnemonicVerificationDialog QLineEdit#word3Edit {
+    max-width: 320px;
+}
+
+/******************************************************
 ModalOverlay
 ******************************************************/
 
@@ -2011,39 +2052,3 @@ QDialog#HelpMessageDialog QScrollBar:horizontal {
 }
 
 </os>
-/**
- * MnemonicVerificationDialog (Layout)
- */
-
-QDialog#MnemonicVerificationDialog QLabel#warningLabel {
-    font-size: 17px;
-    font-weight: 700;
-}
-
-QDialog#MnemonicVerificationDialog QLabel#instructionLabel {
-    font-size: 14px;
-}
-
-QDialog#MnemonicVerificationDialog QLabel#verificationLabel {
-    margin-top: 0px;
-    margin-bottom: 4px;
-}
-
-QDialog#MnemonicVerificationDialog QLabel#word1Status,
-QDialog#MnemonicVerificationDialog QLabel#word2Status,
-QDialog#MnemonicVerificationDialog QLabel#word3Status {
-    font-weight: 700;
-    min-width: 18px;
-}
-
-QDialog#MnemonicVerificationDialog QScrollArea#mnemonicScroll QWidget#mnemonicGridWidget QLabel {
-    font-family: monospace;
-    font-size: 13pt;
-}
-
-QDialog#MnemonicVerificationDialog QLineEdit#word1Edit,
-QDialog#MnemonicVerificationDialog QLineEdit#word2Edit,
-QDialog#MnemonicVerificationDialog QLineEdit#word3Edit {
-    max-width: 320px;
-}
-
