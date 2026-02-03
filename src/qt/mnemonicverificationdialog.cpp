@@ -91,9 +91,6 @@ MnemonicVerificationDialog::MnemonicVerificationDialog(const SecureString& mnemo
 
     // Button box
     ui->buttonBox->button(QDialogButtonBox::Ok)->setText(m_view_only ? tr("Close") : tr("Continue"));
-    connect(ui->buttonBox, &QDialogButtonBox::accepted, this, &MnemonicVerificationDialog::accept);
-    connect(ui->buttonBox, &QDialogButtonBox::rejected, this, &MnemonicVerificationDialog::reject);
-
     GUIUtil::handleCloseWindowShortcut(this);
 }
 
@@ -291,7 +288,12 @@ void MnemonicVerificationDialog::reject()
     if (!m_mnemonic_revealed) {
         clearWordsSecurely();
     }
-    setupStep1();
+    // close dialog for step-1; return back to step-1 for step-2
+    if (ui->stackedWidget->currentIndex() == 0) {
+        QDialog::reject();
+    } else {
+        setupStep1();
+    }
 }
 
 void MnemonicVerificationDialog::onWord1Changed() { updateWordValidation(); }
