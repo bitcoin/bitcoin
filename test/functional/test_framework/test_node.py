@@ -602,7 +602,7 @@ class TestNode():
                                     f'not found in log:\n\n{join_log(log)}\n\n')
 
     @contextlib.contextmanager
-    def busy_wait_for_debug_log(self, expected_msgs, timeout=60):
+    def busy_wait_for_debug_log(self, expected_msgs, timeout=60, *, start_byte=None):
         """
         Block until we see a particular debug log message fragment or until we exceed the timeout.
         """
@@ -614,7 +614,7 @@ class TestNode():
 
         while True:
             with open(self.debug_log_path, "rb") as dl:
-                dl.seek(prev_size)
+                dl.seek(start_byte if start_byte is not None else prev_size)
                 log = dl.read()
 
             while remaining_expected and remaining_expected[-1] in log:
