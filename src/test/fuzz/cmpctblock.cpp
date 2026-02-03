@@ -8,9 +8,11 @@
 #include <coins.h>
 #include <consensus/amount.h>
 #include <consensus/consensus.h>
+#include <consensus/merkle.h>
 #include <net.h>
 #include <net_processing.h>
 #include <netmessagemaker.h>
+#include <node/blockstorage.h>
 #include <node/miner.h>
 #include <policy/truc_policy.h>
 #include <primitives/block.h>
@@ -59,6 +61,14 @@ TestingSetup* g_setup;
 const CAmount AMOUNT_FEE{1000};
 //! Cached coinbases that each iteration can copy and use.
 std::vector<std::pair<COutPoint, CAmount>> g_mature_coinbase;
+//! Constant value used to create valid headers.
+uint32_t g_nBits;
+//! One for each block the fuzzer generates.
+struct BlockInfo {
+    std::shared_ptr<CBlock> block;
+    uint256 hash;
+    uint32_t height;
+};
 
 void ResetChainmanAndMempool(TestingSetup& setup)
 {
@@ -97,6 +107,7 @@ void initialize_cmpctblock()
 {
     static const auto testing_setup = MakeNoLogFileContext<TestingSetup>();
     g_setup = testing_setup.get();
+    g_nBits = Params().GenesisBlock().nBits;
     ResetChainmanAndMempool(*g_setup);
 }
 
@@ -112,6 +123,7 @@ FUZZ_TARGET(cmpctblock, .init = initialize_cmpctblock)
     auto& chainman = static_cast<TestChainstateManager&>(*setup->m_node.chainman);
     chainman.ResetIbd();
     chainman.DisableNextWrite();
+    const size_t initial_index_size{WITH_LOCK(chainman.GetMutex(), return chainman.BlockIndex().size())};
 
     AddrMan addrman{*setup->m_node.netgroupman, /*deterministic=*/true, /*consistency_check_ratio=*/0};
     auto& connman = *static_cast<ConnmanTestMsg*>(setup->m_node.connman.get());
@@ -136,6 +148,9 @@ FUZZ_TARGET(cmpctblock, .init = initialize_cmpctblock)
         connman.AddTestNode(p2p_node);
     }
 
+    // Stores blocks generated this iteration.
+    std::vector<BlockInfo> info;
+
     // Coinbase UTXOs for this iteration.
     std::vector<std::pair<COutPoint, CAmount>> mature_coinbase = g_mature_coinbase;
 
@@ -146,7 +161,7 @@ FUZZ_TARGET(cmpctblock, .init = initialize_cmpctblock)
         tx_mut.version = fuzzed_data_provider.ConsumeBool() ? CTransaction::CURRENT_VERSION : TRUC_VERSION;
         tx_mut.nLockTime = fuzzed_data_provider.ConsumeBool() ? 0 : fuzzed_data_provider.ConsumeIntegral<uint32_t>();
 
-        // If the mempool is non-empty, choose a mempool outpoint. Otherwise, choose a coinbase.
+        // Choose an outpoint from the mempool, created blocks, or coinbases.
         CAmount amount_in;
         COutPoint outpoint;
         unsigned long mempool_size = mempool.size();
@@ -155,6 +170,14 @@ FUZZ_TARGET(cmpctblock, .init = initialize_cmpctblock)
             CTransactionRef tx = WITH_LOCK(mempool.cs, return mempool.txns_randomized[random_idx].second->GetSharedTx(););
             outpoint = COutPoint(tx->GetHash(), 0);
             amount_in = tx->vout[0].nValue;
+        } else if (fuzzed_data_provider.ConsumeBool() && info.size() != 0) {
+            // These blocks (and txs) may be invalid or not in the main chain.
+            auto info_it = info.begin();
+            std::advance(info_it, fuzzed_data_provider.ConsumeIntegralInRange<size_t>(0, info.size() - 1));
+            auto tx_it = info_it->block->vtx.begin();
+            std::advance(tx_it, fuzzed_data_provider.ConsumeIntegralInRange<size_t>(0, info_it->block->vtx.size() - 1));
+            outpoint = COutPoint(tx_it->get()->GetHash(), 0);
+            amount_in = tx_it->get()->vout[0].nValue;
         } else {
             auto coinbase_it = mature_coinbase.begin();
             std::advance(coinbase_it, fuzzed_data_provider.ConsumeIntegralInRange<size_t>(0, mature_coinbase.size() - 1));
@@ -180,6 +203,78 @@ FUZZ_TARGET(cmpctblock, .init = initialize_cmpctblock)
         return tx;
     };
 
+    auto create_block = [&]() {
+        uint256 prev;
+        uint32_t height;
+
+        if (fuzzed_data_provider.ConsumeBool() || info.size() == 0) {
+            LOCK(cs_main);
+            prev = chainman.ActiveChain().Tip()->GetBlockHash();
+            height = chainman.ActiveChain().Height() + 1;
+        } else {
+            size_t index = fuzzed_data_provider.ConsumeIntegralInRange<size_t>(0, info.size() - 1);
+            prev = info[index].hash;
+            height = info[index].height + 1;
+        }
+
+        const auto new_time = WITH_LOCK(::cs_main, return chainman.ActiveChain().Tip()->GetMedianTimePast() + 1);
+
+        CBlockHeader header;
+        header.nNonce = 0;
+        header.hashPrevBlock = prev;
+        header.nBits = g_nBits;
+        header.nTime = new_time;
+        header.nVersion = fuzzed_data_provider.ConsumeIntegral<int32_t>();
+
+        std::shared_ptr<CBlock> block = std::make_shared<CBlock>();
+        *block = header;
+
+        CMutableTransaction coinbase_tx;
+        coinbase_tx.vin.resize(1);
+        coinbase_tx.vin[0].prevout.SetNull();
+        coinbase_tx.vin[0].scriptSig = CScript() << height << OP_0;
+        coinbase_tx.vout.resize(1);
+        coinbase_tx.vout[0].scriptPubKey = CScript() << OP_TRUE;
+        coinbase_tx.vout[0].nValue = COIN;
+        block->vtx.push_back(MakeTransactionRef(coinbase_tx));
+
+        const auto mempool_size = mempool.size();
+        if (fuzzed_data_provider.ConsumeBool() && mempool_size != 0) {
+            // Add txns from the mempool. Since we do not include parents, it may be an invalid block.
+            size_t num_txns = fuzzed_data_provider.ConsumeIntegralInRange<size_t>(1, mempool_size);
+            size_t random_idx = fuzzed_data_provider.ConsumeIntegralInRange<size_t>(0, mempool_size - 1);
+
+            LOCK(mempool.cs);
+            for (size_t i = random_idx; i < random_idx + num_txns; ++i) {
+                CTransactionRef mempool_tx = mempool.txns_randomized[i % mempool_size].second->GetSharedTx();
+                block->vtx.push_back(mempool_tx);
+            }
+        }
+
+        // Create and add (possibly invalid) txns that are not in the mempool.
+        if (fuzzed_data_provider.ConsumeBool()) {
+            size_t new_txns = fuzzed_data_provider.ConsumeIntegralInRange<size_t>(1, 10);
+            for (size_t i = 0; i < new_txns; ++i) {
+                CTransactionRef non_mempool_tx = create_tx();
+                block->vtx.push_back(non_mempool_tx);
+            }
+        }
+
+        CBlockIndex* pindexPrev{WITH_LOCK(::cs_main, return chainman.m_blockman.LookupBlockIndex(prev))};
+        chainman.GenerateCoinbaseCommitment(*block, pindexPrev);
+
+        bool mutated;
+        block->hashMerkleRoot = BlockMerkleRoot(*block, &mutated);
+        FinalizeHeader(*block, chainman);
+
+        BlockInfo block_info;
+        block_info.block = block;
+        block_info.hash = block->GetHash();
+        block_info.height = height;
+
+        return block_info;
+    };
+
     LIMITED_WHILE(fuzzed_data_provider.ConsumeBool(), 1000)
     {
         CSerializedNetMsg net_msg;
@@ -191,6 +286,23 @@ FUZZ_TARGET(cmpctblock, .init = initialize_cmpctblock)
         CallOneOf(
             fuzzed_data_provider,
             [&]() {
+                // Send a headers message for an existing block (if one exists).
+                size_t num_blocks = info.size();
+                if (num_blocks == 0) {
+                    sent_net_msg = false;
+                    return;
+                }
+
+                // Choose an existing block and send a HEADERS message for it.
+                size_t index = fuzzed_data_provider.ConsumeIntegralInRange<size_t>(0, num_blocks - 1);
+                CBlock block = *info[index].block;
+                block.vtx.clear(); // No tx in HEADERS.
+                std::vector<CBlock> headers;
+                headers.emplace_back(block);
+
+                net_msg = NetMsg::Make(NetMsgType::HEADERS, TX_WITH_WITNESS(headers));
+            },
+            [&]() {
                 // Send a sendcmpct message, optionally setting hb mode.
                 bool hb = fuzzed_data_provider.ConsumeBool();
                 uint64_t version{fuzzed_data_provider.ConsumeBool() ? CMPCTBLOCKS_VERSION : fuzzed_data_provider.ConsumeIntegral<uint64_t>()};
@@ -198,6 +310,12 @@ FUZZ_TARGET(cmpctblock, .init = initialize_cmpctblock)
                 requested_hb = hb;
                 sent_sendcmpct = true;
                 valid_sendcmpct = version == CMPCTBLOCKS_VERSION;
+            },
+            [&]() {
+                // Mine a block, but don't send it.
+                BlockInfo block_info = create_block();
+                info.push_back(block_info);
+                sent_net_msg = false;
             },
             [&]() {
                 // Send a transaction.
@@ -246,9 +364,10 @@ FUZZ_TARGET(cmpctblock, .init = initialize_cmpctblock)
     setup->m_node.validation_signals->UnregisterAllValidationInterfaces();
     connman.StopNodes();
 
+    const size_t end_index_size{WITH_LOCK(chainman.GetMutex(), return chainman.BlockIndex().size())};
     const uint64_t end_sequence{WITH_LOCK(mempool.cs, return mempool.GetSequence())};
 
-    if (initial_sequence != end_sequence) {
+    if (initial_index_size != end_index_size || initial_sequence != end_sequence) {
         MakeRandDeterministicDANGEROUS(uint256::ZERO);
         ResetChainmanAndMempool(*g_setup);
     }
