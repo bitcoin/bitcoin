@@ -48,6 +48,7 @@ static RPCMethod estimatesmartfee()
                      "Selects which fee rate estimator to use.\n"
                      "\"none\" lets the fee rate estimator manager choose.\n"
                      "\"block_policy\" uses only the block policy fee rate estimator.\n"
+                     "\"mempool_policy\" uses only the mempool fee rate estimator.\n"
                      "Unknown values are treated as \"none\"."},
                 },
             },

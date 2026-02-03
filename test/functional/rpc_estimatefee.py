@@ -50,6 +50,7 @@ class EstimateFeeTest(BitcoinTestFramework):
         self.nodes[0].estimatesmartfee(1, 'unset')
         self.nodes[0].estimatesmartfee(1, 'conservative')
         self.nodes[0].estimatesmartfee(1, 'ECONOMICAL', {"fee_rate_estimator": "block_policy"})
+        self.nodes[0].estimatesmartfee(1, 'ECONOMICAL', {"fee_rate_estimator": "mempool_policy"})
         self.nodes[0].estimatesmartfee(1, 'ECONOMICAL', {"fee_rate_estimator": "foo"})
 
         self.nodes[0].estimaterawfee(1)
