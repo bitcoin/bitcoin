@@ -25,6 +25,9 @@ FeeRateEstimatorResult FeeRateEstimatorManager::GetFeeRateEstimate(FeeRateEstima
     switch (type) {
     case FeeRateEstimatorType::BLOCK_POLICY:
         return m_block_policy_estimator->EstimateFeeRate(target, conservative);
+    case FeeRateEstimatorType::MEMPOOL_POLICY:
+        // FIXME: wire up mempool estimator
+        return {};
     } // no default case, so the compiler can warn about missing cases
     assert(false);
 }

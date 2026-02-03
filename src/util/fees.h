@@ -5,9 +5,12 @@
 #ifndef BITCOIN_UTIL_FEES_H
 #define BITCOIN_UTIL_FEES_H
 
+#include <uint256.h>
 #include <util/feefrac.h>
 
 #include <compare>
+#include <cstddef>
+#include <cstdint>
 #include <string>
 #include <vector>
 
@@ -33,7 +36,31 @@ enum class FeeSource {
  */
 enum class FeeRateEstimatorType {
     BLOCK_POLICY,
+    MEMPOOL_POLICY,
 };
+
+// Block percentiles fee rate (in sat/vB).
+struct Percentiles {
+    FeePerVSize p25;
+    FeePerVSize p50;
+    FeePerVSize p75;
+    FeePerVSize p95;
+    Percentiles() = default;
+    bool IsEmpty() const
+    {
+        return p25.IsEmpty() && p50.IsEmpty() && p75.IsEmpty() && p95.IsEmpty();
+    }
+};
+
+/**
+ * Calculate the 25th, 50th, 75th, and 95th percentile fee rates from block template chunks,
+ * sorted in descending mining-score order. Returns empty Percentiles if the 95th percentile
+ * cannot be reached.
+ *
+ * @param[in] chunk_feerates A vector of block template chunk fee rates sorted by descending mining score.
+ * @param[in] total_weight The total weight to use for percentile calculations.
+ */
+Percentiles CalculatePercentiles(const std::vector<FeePerVSize>& chunk_feerates, int32_t total_weight);
 
 /**
  * @struct FeeRateEstimatorResult
@@ -59,5 +86,7 @@ struct FeeRateEstimatorResult {
         return std::strong_ordering::equal;
     }
 };
+
+std::string FeeRateEstimatorTypeToString(FeeRateEstimatorType feerate_estimator_type);
 
 #endif // BITCOIN_UTIL_FEES_H
