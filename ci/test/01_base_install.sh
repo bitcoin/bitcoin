@@ -122,4 +122,23 @@ if [ -n "$FREEBSD_VERSION" ] && [ ! -d "${DEPENDS_DIR}/SDKs/${FREEBSD_SDK_BASENA
   tar -C "${DEPENDS_DIR}/SDKs/${FREEBSD_SDK_BASENAME}" -xf "$FREEBSD_SDK_PATH"
 fi
 
+if [ -n "$OPENBSD_VERSION" ] && [ ! -d "${DEPENDS_DIR}/SDKs/${OPENBSD_SDK_BASENAME}" ]; then
+  mkdir -p "${DEPENDS_DIR}/SDKs/${OPENBSD_SDK_BASENAME}"
+  for OPENBSD_SDK_FILENAME in base79.tgz comp79.tgz; do
+    OPENBSD_SDK_PATH="${DEPENDS_DIR}/sdk-sources/${OPENBSD_SDK_FILENAME}"
+    if [ ! -f "$OPENBSD_SDK_PATH" ]; then
+      ${CI_RETRY_EXE} curl --location --fail "https://cdn.openbsd.org/pub/OpenBSD/${OPENBSD_VERSION}/amd64/${OPENBSD_SDK_FILENAME}" -o "$OPENBSD_SDK_PATH"
+    fi
+    tar -C "${DEPENDS_DIR}/SDKs/${OPENBSD_SDK_BASENAME}" -xf "$OPENBSD_SDK_PATH"
+    (
+      # The SDK has versioned shared libs, but no unversioned libfoo.so symlink,
+      # which breaks linking the kernel with lld. Create the symlinks.
+      cd "${DEPENDS_DIR}/SDKs/${OPENBSD_SDK_BASENAME}/usr/lib"
+      ln -sf libc++abi.so.*.*  libc++abi.so
+      ln -sf libc++.so.*.*     libc++.so
+      ln -sf libpthread.so.*.* libpthread.so
+    )
+  done
+fi
+
 echo -n "done" > "${CFG_DONE}"
