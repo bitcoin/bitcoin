@@ -109,9 +109,8 @@ static void ApplyStats(CCoinsStats& stats, const std::map<uint32_t, Coin>& outpu
 
 //! Calculate statistics about the unspent transaction output set
 template <typename T>
-static bool ComputeUTXOStats(CCoinsView* view, CCoinsStats& stats, T hash_obj, const std::function<void()>& interruption_point)
+static bool ComputeUTXOStats(CCoinsView* view, CCoinsStats& stats, T hash_obj, const std::function<void()>& interruption_point, std::unique_ptr<CCoinsViewCursor> pcursor)
 {
-    std::unique_ptr<CCoinsViewCursor> pcursor(view->Cursor());
     assert(pcursor);
 
     Txid prevkey;
@@ -149,21 +148,27 @@ static bool ComputeUTXOStats(CCoinsView* view, CCoinsStats& stats, T hash_obj, c
 
 std::optional<CCoinsStats> ComputeUTXOStats(CoinStatsHashType hash_type, CCoinsView* view, node::BlockManager& blockman, const std::function<void()>& interruption_point)
 {
-    CBlockIndex* pindex = WITH_LOCK(::cs_main, return blockman.LookupBlockIndex(view->GetBestBlock()));
+    std::unique_ptr<CCoinsViewCursor> pcursor;
+    CBlockIndex* pindex;
+    {
+        LOCK(::cs_main);
+        pcursor = view->Cursor();
+        pindex = blockman.LookupBlockIndex(pcursor->GetBestBlock());
+    }
     CCoinsStats stats{Assert(pindex)->nHeight, pindex->GetBlockHash()};
 
     bool success = [&]() -> bool {
         switch (hash_type) {
         case(CoinStatsHashType::HASH_SERIALIZED): {
             HashWriter ss{};
-            return ComputeUTXOStats(view, stats, ss, interruption_point);
+            return ComputeUTXOStats(view, stats, ss, interruption_point, std::move(pcursor));
         }
         case(CoinStatsHashType::MUHASH): {
             MuHash3072 muhash;
-            return ComputeUTXOStats(view, stats, muhash, interruption_point);
+            return ComputeUTXOStats(view, stats, muhash, interruption_point, std::move(pcursor));
         }
         case(CoinStatsHashType::NONE): {
-            return ComputeUTXOStats(view, stats, nullptr, interruption_point);
+            return ComputeUTXOStats(view, stats, nullptr, interruption_point, std::move(pcursor));
         }
         } // no default case, so the compiler can warn about missing cases
         assert(false);
