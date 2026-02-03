@@ -1636,15 +1636,16 @@ static RPCHelpMan getchaintips()
     /* Construct the output array.  */
     UniValue res(UniValue::VARR);
     for (const CBlockIndex* block : setTips) {
+        CHECK_NONFATAL(block);
         UniValue obj(UniValue::VOBJ);
         obj.pushKV("height", block->nHeight);
         obj.pushKV("hash", block->phashBlock->GetHex());
 
-        const int branchLen = block->nHeight - active_chain.FindFork(block)->nHeight;
+        const int branchLen = block->nHeight - active_chain.FindFork(*block)->nHeight;
         obj.pushKV("branchlen", branchLen);
 
         std::string status;
-        if (block && active_chain.Contains(*block)) {
+        if (active_chain.Contains(*block)) {
             // This block is part of the currently active chain.
             status = "active";
         } else if (block->nStatus & BLOCK_FAILED_VALID) {

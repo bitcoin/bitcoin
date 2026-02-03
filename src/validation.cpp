@@ -3194,7 +3194,7 @@ bool Chainstate::ActivateBestChainStep(BlockValidationState& state, CBlockIndex*
     if (m_mempool) AssertLockHeld(m_mempool->cs);
 
     const CBlockIndex* pindexOldTip = m_chain.Tip();
-    const CBlockIndex* pindexFork = m_chain.FindFork(pindexMostWork);
+    const CBlockIndex* pindexFork = pindexMostWork ? m_chain.FindFork(*pindexMostWork) : nullptr;
 
     // Disconnect active blocks which are no longer in the best chain.
     bool fBlocksDisconnected = false;
@@ -3408,7 +3408,7 @@ bool Chainstate::ActivateBestChain(BlockValidationState& state, std::shared_ptr<
             } while (!m_chain.Tip() || (starting_tip && CBlockIndexWorkComparator()(m_chain.Tip(), starting_tip)));
             if (!blocks_connected) return true;
 
-            const CBlockIndex* pindexFork = m_chain.FindFork(starting_tip);
+            const CBlockIndex* pindexFork = starting_tip ? m_chain.FindFork(*starting_tip) : nullptr;
             bool still_in_ibd = m_chainman.IsInitialBlockDownload();
 
             if (was_in_ibd && !still_in_ibd) {

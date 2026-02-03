@@ -2351,7 +2351,7 @@ bool StartIndexBackgroundSync(NodeContext& node)
                 if (!pindex) {
                     LogWarning("Failed to find block manager entry for best block %s from %s", summary.best_block_hash.ToString(), summary.name);
                 } else if (!index_chain.Contains(*pindex)) {
-                    pindex = index_chain.FindFork(pindex);
+                    pindex = index_chain.FindFork(*pindex);
                 }
             }
             if (!pindex) {

@@ -440,7 +440,7 @@ public:
     void SetTip(CBlockIndex& block);
 
     /** Find the last common block between this chain and a block index entry. */
-    const CBlockIndex* FindFork(const CBlockIndex* pindex) const;
+    const CBlockIndex* FindFork(const CBlockIndex& pindex) const;
 
     /** Find the earliest block with timestamp equal or greater than the given time and height equal or greater than the given height. */
     CBlockIndex* FindEarliestAtLeast(int64_t nTime, int height) const;
