@@ -5,6 +5,7 @@
 #ifndef BITCOIN_NODE_BLOCKSTORAGE_H
 #define BITCOIN_NODE_BLOCKSTORAGE_H
 
+#include <arith_uint256.h>
 #include <attributes.h>
 #include <chain.h>
 #include <dbwrapper.h>
@@ -29,6 +30,7 @@
 #include <algorithm>
 #include <array>
 #include <atomic>
+#include <compare>
 #include <cstddef>
 #include <cstdint>
 #include <functional>
@@ -40,6 +42,7 @@
 #include <set>
 #include <span>
 #include <string>
+#include <tuple>
 #include <unordered_map>
 #include <utility>
 #include <vector>
@@ -138,13 +141,35 @@ inline constexpr uint32_t UNDO_DATA_DISK_OVERHEAD{STORAGE_HEADER_BYTES + uint256
 using BlockMap = std::unordered_map<uint256, CBlockIndex, BlockHasher>;
 
 struct CBlockIndexWorkComparator {
-    bool operator()(const CBlockIndex* pa, const CBlockIndex* pb) const;
+    bool operator()(const CBlockIndex* pa, const CBlockIndex* pb) const
+    {
+        // First sort by most total work, ...
+        if (pa->nChainWork > pb->nChainWork) return false;
+        if (pa->nChainWork < pb->nChainWork) return true;
+
+        // ... then by earliest activatable time, ...
+        if (pa->nSequenceId < pb->nSequenceId) return false;
+        if (pa->nSequenceId > pb->nSequenceId) return true;
+
+        // Use pointer address as tie breaker (should only happen with blocks
+        // loaded from disk, as those share the same id: 0 for blocks on the
+        // best chain, 1 for all others).
+        if (pa < pb) return false;
+        if (pa > pb) return true;
+
+        // Identical blocks.
+        return false;
+    }
+
     using is_transparent = void;
 };
 
 struct CBlockIndexHeightOnlyComparator {
-    /* Only compares the height of two block indices, doesn't try to tie-break */
-    bool operator()(const CBlockIndex* pa, const CBlockIndex* pb) const;
+    // Only compares the height of two block indices, doesn't try to tie-break
+    bool operator()(const CBlockIndex* pa, const CBlockIndex* pb) const
+    {
+        return pa->nHeight < pb->nHeight;
+    }
 };
 
 struct PruneLockInfo {
