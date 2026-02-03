@@ -5,7 +5,7 @@ AC_PREREQ([2.60])
 # backwards-compatible and therefore at most increase the minor version.
 define(_PKG_VERSION_MAJOR, 0)
 define(_PKG_VERSION_MINOR, 7)
-define(_PKG_VERSION_PATCH, 2)
+define(_PKG_VERSION_PATCH, 1)
 define(_PKG_VERSION_IS_RELEASE, false)
 
 # The library version is based on libtool versioning of the ABI. The set of
@@ -14,7 +14,7 @@ define(_PKG_VERSION_IS_RELEASE, false)
 # All changes in experimental modules are treated as if they don't affect the
 # interface and therefore only increase the revision.
 define(_LIB_VERSION_CURRENT, 6)
-define(_LIB_VERSION_REVISION, 2)
+define(_LIB_VERSION_REVISION, 1)
 define(_LIB_VERSION_AGE, 0)
 
 AC_INIT([libsecp256k1],m4_join([.], _PKG_VERSION_MAJOR, _PKG_VERSION_MINOR, _PKG_VERSION_PATCH)m4_if(_PKG_VERSION_IS_RELEASE, [true], [], [-dev]),[https://github.com/bitcoin-core/secp256k1/issues],[libsecp256k1],[https://github.com/bitcoin-core/secp256k1])
@@ -190,6 +190,10 @@ AC_ARG_ENABLE(module_musig,
 AC_ARG_ENABLE(module_ellswift,
     AS_HELP_STRING([--enable-module-ellswift],[enable ElligatorSwift module [default=yes]]), [],
     [SECP_SET_DEFAULT([enable_module_ellswift], [yes], [yes])])
+
+AC_ARG_ENABLE(module_batch,
+    AS_HELP_STRING([--enable-module-batch],[enable batch verification module [default=yes]]), [],
+    [SECP_SET_DEFAULT([enable_module_batch], [yes], [yes])])
 
 AC_ARG_ENABLE(external_default_callbacks,
     AS_HELP_STRING([--enable-external-default-callbacks],[enable external default callback functions [default=no]]), [],
@@ -397,6 +401,10 @@ SECP_CFLAGS="$SECP_CFLAGS $WERROR_CFLAGS"
 
 # Processing must be done in a reverse topological sorting of the dependency graph
 # (dependent module first).
+if test x"$enable_module_batch" = x"yes"; then
+  SECP_CONFIG_DEFINES="$SECP_CONFIG_DEFINES -DENABLE_MODULE_BATCH=1"
+fi
+
 if test x"$enable_module_ellswift" = x"yes"; then
   SECP_CONFIG_DEFINES="$SECP_CONFIG_DEFINES -DENABLE_MODULE_ELLSWIFT=1"
 fi
@@ -470,6 +478,7 @@ AM_CONDITIONAL([ENABLE_MODULE_EXTRAKEYS], [test x"$enable_module_extrakeys" = x"
 AM_CONDITIONAL([ENABLE_MODULE_SCHNORRSIG], [test x"$enable_module_schnorrsig" = x"yes"])
 AM_CONDITIONAL([ENABLE_MODULE_MUSIG], [test x"$enable_module_musig" = x"yes"])
 AM_CONDITIONAL([ENABLE_MODULE_ELLSWIFT], [test x"$enable_module_ellswift" = x"yes"])
+AM_CONDITIONAL([ENABLE_MODULE_BATCH], [test x"$enable_module_batch" = x"yes"])
 AM_CONDITIONAL([USE_EXTERNAL_ASM], [test x"$enable_external_asm" = x"yes"])
 AM_CONDITIONAL([USE_ASM_ARM], [test x"$set_asm" = x"arm32"])
 AM_CONDITIONAL([BUILD_WINDOWS], [test "$build_windows" = "yes"])
@@ -494,6 +503,7 @@ echo "  module extrakeys        = $enable_module_extrakeys"
 echo "  module schnorrsig       = $enable_module_schnorrsig"
 echo "  module musig            = $enable_module_musig"
 echo "  module ellswift         = $enable_module_ellswift"
+echo "  module batch            = $enable_module_batch"
 echo
 echo "  asm                     = $set_asm"
 echo "  ecmult window size      = $set_ecmult_window"

@@ -7,6 +7,11 @@ set_property(TARGET secp256k1 PROPERTY PUBLIC_HEADER
 
 # Processing must be done in a topological sorting of the dependency graph
 # (dependent module first).
+if(SECP256K1_ENABLE_MODULE_BATCH)
+  add_compile_definitions(ENABLE_MODULE_BATCH=1)
+  set_property(TARGET secp256k1 APPEND PROPERTY PUBLIC_HEADER ${PROJECT_SOURCE_DIR}/include/secp256k1_batch.h)
+endif()
+
 if(SECP256K1_ENABLE_MODULE_ELLSWIFT)
   add_compile_definitions(ENABLE_MODULE_ELLSWIFT=1)
   set_property(TARGET secp256k1 APPEND PROPERTY PUBLIC_HEADER ${PROJECT_SOURCE_DIR}/include/secp256k1_ellswift.h)
@@ -28,11 +33,17 @@ if(SECP256K1_ENABLE_MODULE_SCHNORRSIG)
   set(SECP256K1_ENABLE_MODULE_EXTRAKEYS ON)
   add_compile_definitions(ENABLE_MODULE_SCHNORRSIG=1)
   set_property(TARGET secp256k1 APPEND PROPERTY PUBLIC_HEADER ${PROJECT_SOURCE_DIR}/include/secp256k1_schnorrsig.h)
+  if(SECP256K1_ENABLE_MODULE_BATCH)
+    set_property(TARGET secp256k1 APPEND PROPERTY PUBLIC_HEADER ${PROJECT_SOURCE_DIR}/include/secp256k1_schnorrsig_batch.h)
+  endif()
 endif()
 
 if(SECP256K1_ENABLE_MODULE_EXTRAKEYS)
   add_compile_definitions(ENABLE_MODULE_EXTRAKEYS=1)
   set_property(TARGET secp256k1 APPEND PROPERTY PUBLIC_HEADER ${PROJECT_SOURCE_DIR}/include/secp256k1_extrakeys.h)
+  if(SECP256K1_ENABLE_MODULE_BATCH)
+    set_property(TARGET secp256k1 APPEND PROPERTY PUBLIC_HEADER ${PROJECT_SOURCE_DIR}/include/secp256k1_tweak_check_batch.h)
+  endif()
 endif()
 
 if(SECP256K1_ENABLE_MODULE_RECOVERY)
