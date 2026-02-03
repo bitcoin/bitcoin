@@ -102,7 +102,7 @@ FUZZ_TARGET(block_index_tree, .init = initialize_block_index_tree)
                     assert(best_tip);                   // Should at least return current tip
                     if (best_tip == chain.Tip()) break; // Nothing to do
                     // Rewind chain to forking point
-                    const CBlockIndex* fork = chain.FindFork(best_tip);
+                    const CBlockIndex* fork = chain.FindFork(*best_tip);
                     // If we can't go back to the fork point due to pruned data, abort this run. In reality, a pruned node would also currently just crash in this scenario.
                     // This is very unlikely to happen due to the minimum pruning threshold of 550MiB.
                     CBlockIndex* it = chain.Tip();

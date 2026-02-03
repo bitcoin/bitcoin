@@ -96,13 +96,13 @@ BOOST_AUTO_TEST_CASE(findfork_tests)
 
     const auto check_same{[](const CChain& chain, const auto& blocks) {
         for (const auto& block : blocks) {
-            BOOST_CHECK_EQUAL(chain.FindFork(&block), &block);
+            BOOST_CHECK_EQUAL(chain.FindFork(block), &block);
         }
     }};
 
     const auto check_fork_point{[](const CChain& chain, const auto& blocks, const CBlockIndex& fork_point) {
         for (const auto& block : blocks) {
-            BOOST_CHECK_EQUAL(chain.FindFork(&block), &fork_point);
+            BOOST_CHECK_EQUAL(chain.FindFork(block), &fork_point);
         }
     }};
 
@@ -139,7 +139,7 @@ BOOST_AUTO_TEST_CASE(findfork_tests)
 
     // Invalid test case. Mixing chains is not supported
     CBlockIndex block_on_unrelated_chain;
-    BOOST_CHECK_EQUAL(chain_long.FindFork(&block_on_unrelated_chain), nullptr);
+    BOOST_CHECK_EQUAL(chain_long.FindFork(block_on_unrelated_chain), nullptr);
 }
 
 BOOST_AUTO_TEST_CASE(chain_test)
