@@ -5,11 +5,14 @@
 #include <addrman.h>
 #include <chain.h>
 #include <chainparams.h>
+#include <coins.h>
+#include <consensus/amount.h>
 #include <consensus/consensus.h>
 #include <net.h>
 #include <net_processing.h>
 #include <netmessagemaker.h>
 #include <node/miner.h>
+#include <policy/truc_policy.h>
 #include <primitives/block.h>
 #include <primitives/transaction.h>
 #include <protocol.h>
@@ -27,14 +30,20 @@
 #include <test/util/txmempool.h>
 #include <test/util/validation.h>
 #include <txmempool.h>
+#include <uint256.h>
 #include <util/check.h>
 #include <util/time.h>
 #include <util/translation.h>
 #include <validation.h>
 #include <validationinterface.h>
 
+#include <boost/multi_index/detail/hash_index_iterator.hpp>
+#include <boost/operators.hpp>
+
+#include <cstddef>
 #include <cstdint>
 #include <functional>
+#include <iterator>
 #include <memory>
 #include <optional>
 #include <string>
@@ -45,6 +54,11 @@
 namespace {
 
 TestingSetup* g_setup;
+
+//! Fee each created tx will pay.
+const CAmount AMOUNT_FEE{1000};
+//! Cached coinbases that each iteration can copy and use.
+std::vector<std::pair<COutPoint, CAmount>> g_mature_coinbase;
 
 void ResetChainmanAndMempool(TestingSetup& setup)
 {
@@ -63,12 +77,21 @@ void ResetChainmanAndMempool(TestingSetup& setup)
     options.coinbase_output_script = P2WSH_OP_TRUE;
     options.include_dummy_extranonce = true;
 
+    g_mature_coinbase.clear();
+
     for (int i = 0; i < 2 * COINBASE_MATURITY; ++i) {
-        MineBlock(setup.m_node, options);
+        COutPoint prevout{MineBlock(setup.m_node, options)};
+        if (i < COINBASE_MATURITY) {
+            LOCK(cs_main);
+            CAmount subsidy{setup.m_node.chainman->ActiveChainstate().CoinsTip().GetCoin(prevout)->out.nValue};
+            g_mature_coinbase.emplace_back(prevout, subsidy);
+        }
     }
 }
 
 } // namespace
+
+extern void MakeRandDeterministicDANGEROUS(const uint256& seed) noexcept;
 
 void initialize_cmpctblock()
 {
@@ -113,6 +136,50 @@ FUZZ_TARGET(cmpctblock, .init = initialize_cmpctblock)
         connman.AddTestNode(p2p_node);
     }
 
+    // Coinbase UTXOs for this iteration.
+    std::vector<std::pair<COutPoint, CAmount>> mature_coinbase = g_mature_coinbase;
+
+    const uint64_t initial_sequence{WITH_LOCK(mempool.cs, return mempool.GetSequence())};
+
+    auto create_tx = [&]() -> CTransactionRef {
+        CMutableTransaction tx_mut;
+        tx_mut.version = fuzzed_data_provider.ConsumeBool() ? CTransaction::CURRENT_VERSION : TRUC_VERSION;
+        tx_mut.nLockTime = fuzzed_data_provider.ConsumeBool() ? 0 : fuzzed_data_provider.ConsumeIntegral<uint32_t>();
+
+        // If the mempool is non-empty, choose a mempool outpoint. Otherwise, choose a coinbase.
+        CAmount amount_in;
+        COutPoint outpoint;
+        unsigned long mempool_size = mempool.size();
+        if (fuzzed_data_provider.ConsumeBool() && mempool_size != 0) {
+            size_t random_idx = fuzzed_data_provider.ConsumeIntegralInRange<size_t>(0, mempool_size - 1);
+            CTransactionRef tx = WITH_LOCK(mempool.cs, return mempool.txns_randomized[random_idx].second->GetSharedTx(););
+            outpoint = COutPoint(tx->GetHash(), 0);
+            amount_in = tx->vout[0].nValue;
+        } else {
+            auto coinbase_it = mature_coinbase.begin();
+            std::advance(coinbase_it, fuzzed_data_provider.ConsumeIntegralInRange<size_t>(0, mature_coinbase.size() - 1));
+            outpoint = coinbase_it->first;
+            amount_in = coinbase_it->second;
+        }
+
+        const auto sequence = ConsumeSequence(fuzzed_data_provider);
+        const auto script_sig = CScript{};
+        const auto script_wit_stack = std::vector<std::vector<uint8_t>>{WITNESS_STACK_ELEM_OP_TRUE};
+
+        CTxIn in;
+        in.prevout = outpoint;
+        in.nSequence = sequence;
+        in.scriptSig = script_sig;
+        in.scriptWitness.stack = script_wit_stack;
+        tx_mut.vin.push_back(in);
+
+        const CAmount amount_out = amount_in - AMOUNT_FEE;
+        tx_mut.vout.emplace_back(amount_out, P2WSH_OP_TRUE);
+
+        auto tx = MakeTransactionRef(tx_mut);
+        return tx;
+    };
+
     LIMITED_WHILE(fuzzed_data_provider.ConsumeBool(), 1000)
     {
         CSerializedNetMsg net_msg;
@@ -131,6 +198,11 @@ FUZZ_TARGET(cmpctblock, .init = initialize_cmpctblock)
                 requested_hb = hb;
                 sent_sendcmpct = true;
                 valid_sendcmpct = version == CMPCTBLOCKS_VERSION;
+            },
+            [&]() {
+                // Send a transaction.
+                CTransactionRef tx = create_tx();
+                net_msg = NetMsg::Make(NetMsgType::TX, TX_WITH_WITNESS(*tx));
             },
             [&]() {
                 // Set mock time randomly or to tip's time.
@@ -173,4 +245,11 @@ FUZZ_TARGET(cmpctblock, .init = initialize_cmpctblock)
     setup->m_node.validation_signals->SyncWithValidationInterfaceQueue();
     setup->m_node.validation_signals->UnregisterAllValidationInterfaces();
     connman.StopNodes();
+
+    const uint64_t end_sequence{WITH_LOCK(mempool.cs, return mempool.GetSequence())};
+
+    if (initial_sequence != end_sequence) {
+        MakeRandDeterministicDANGEROUS(uint256::ZERO);
+        ResetChainmanAndMempool(*g_setup);
+    }
 }
