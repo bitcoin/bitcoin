@@ -3,6 +3,7 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <addrman.h>
+#include <blockencodings.h>
 #include <chain.h>
 #include <chainparams.h>
 #include <coins.h>
@@ -68,6 +69,40 @@ struct BlockInfo {
     std::shared_ptr<CBlock> block;
     uint256 hash;
     uint32_t height;
+};
+//! Used to access prefilledtxn and shorttxids.
+class FuzzedCBlockHeaderAndShortTxIDs : public CBlockHeaderAndShortTxIDs
+{
+    using CBlockHeaderAndShortTxIDs::CBlockHeaderAndShortTxIDs;
+
+public:
+    void AddPrefilledTx(PrefilledTransaction&& prefilledtx)
+    {
+        prefilledtxn.push_back(std::move(prefilledtx));
+    }
+
+    void RemoveCoinbasePrefill()
+    {
+        prefilledtxn.erase(prefilledtxn.begin());
+    }
+
+    void InsertCoinbaseShortTxID(uint64_t shorttxid)
+    {
+        shorttxids.insert(shorttxids.begin(), shorttxid);
+    }
+
+    void EraseShortTxIDs(size_t index)
+    {
+        shorttxids.erase(shorttxids.begin() + index);
+    }
+
+    size_t PrefilledTxCount() {
+        return prefilledtxn.size();
+    }
+
+    size_t ShortTxIDCount() {
+        return shorttxids.size();
+    }
 };
 
 void ResetChainmanAndMempool(TestingSetup& setup)
@@ -286,6 +321,64 @@ FUZZ_TARGET(cmpctblock, .init = initialize_cmpctblock)
         CallOneOf(
             fuzzed_data_provider,
             [&]() {
+                // Send a compact block.
+                std::shared_ptr<CBlock> cblock;
+
+                // Pick an existing block or create a new block.
+                if (fuzzed_data_provider.ConsumeBool() && info.size() != 0) {
+                    size_t index = fuzzed_data_provider.ConsumeIntegralInRange<size_t>(0, info.size() - 1);
+                    cblock = info[index].block;
+                } else {
+                    BlockInfo block_info = create_block();
+                    cblock = block_info.block;
+                    info.push_back(block_info);
+                }
+
+                uint64_t nonce = fuzzed_data_provider.ConsumeIntegral<uint64_t>();
+                FuzzedCBlockHeaderAndShortTxIDs cmpctblock(*cblock, nonce);
+
+                if (fuzzed_data_provider.ConsumeBool()) {
+                    CBlockHeaderAndShortTxIDs base_cmpctblock = cmpctblock;
+                    net_msg = NetMsg::Make(NetMsgType::CMPCTBLOCK, base_cmpctblock);
+                    return;
+                }
+
+                int prev_idx = 0;
+                size_t num_erased = 1;
+                size_t num_txs = cblock->vtx.size();
+
+                for (size_t i = 0; i < num_txs; ++i) {
+                    if (i == 0) {
+                        // Handle the coinbase specially. We either keep it prefilled or remove it.
+                        if (fuzzed_data_provider.ConsumeBool()) continue;
+
+                        // Remove the prefilled coinbase.
+                        num_erased = 0;
+                        uint64_t coinbase_shortid = cmpctblock.GetShortID(cblock->vtx[0]->GetWitnessHash());
+                        cmpctblock.RemoveCoinbasePrefill();
+                        cmpctblock.InsertCoinbaseShortTxID(coinbase_shortid);
+                        continue;
+                    }
+
+                    if (fuzzed_data_provider.ConsumeBool()) continue;
+
+                    uint16_t prefill_idx = num_erased == 0 ? i : i - prev_idx - 1;
+                    prev_idx = i;
+                    CTransactionRef txref = cblock->vtx[i];
+                    PrefilledTransaction prefilledtx = {/*index=*/prefill_idx, txref};
+                    cmpctblock.AddPrefilledTx(std::move(prefilledtx));
+
+                    // Remove from shorttxids since we've prefilled. Subtract however many txs have been prefilled.
+                    cmpctblock.EraseShortTxIDs(i - num_erased);
+                    ++num_erased;
+                }
+
+                assert(cmpctblock.PrefilledTxCount() + cmpctblock.ShortTxIDCount() == num_txs);
+
+                CBlockHeaderAndShortTxIDs base_cmpctblock = cmpctblock;
+                net_msg = NetMsg::Make(NetMsgType::CMPCTBLOCK, base_cmpctblock);
+            },
+            [&]() {
                 // Send a headers message for an existing block (if one exists).
                 size_t num_blocks = info.size();
                 if (num_blocks == 0) {
@@ -352,6 +445,18 @@ FUZZ_TARGET(cmpctblock, .init = initialize_cmpctblock)
 
         std::vector<CNodeStats> stats;
         connman.GetNodeStats(stats);
+
+        // We should have at maximum 3 HB peers.
+        int num_hb = 0;
+        for (const CNodeStats& stat : stats) {
+            if (stat.m_bip152_highbandwidth_to) {
+                // HB peers cannot be feelers or other "special" connections (besides addr-fetch).
+                CNode* hb_peer = peers[stat.nodeid];
+                if (!hb_peer->fDisconnect) num_hb += 1;
+                assert(hb_peer->IsInboundConn() || hb_peer->IsOutboundOrBlockRelayConn() || hb_peer->IsManualConn() || hb_peer->IsAddrFetchConn());
+            }
+        }
+        assert(num_hb <= 3);
 
         if (sent_sendcmpct && random_node.fSuccessfullyConnected && !random_node.fDisconnect) {
             // If the fuzzer sent SENDCMPCT with proper version, check the node's state matches what it sent.
