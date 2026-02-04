@@ -59,8 +59,8 @@ int64_t GetMinimumTime(const CBlockIndex* pindexPrev, const int64_t difficulty_a
     int64_t min_time{pindexPrev->GetMedianTimePast() + 1};
     // Height of block to be mined.
     const int height{pindexPrev->nHeight + 1};
-    // Account for BIP94 timewarp rule on all networks. This makes future
-    // activation safer.
+    // Account for BIP94 timewarp rule on all networks. This makes BIP54
+    // activation safer since BIP94 sets a tighter bound.
     if (height % difficulty_adjustment_interval == 0) {
         min_time = std::max<int64_t>(min_time, pindexPrev->GetBlockTime() - MAX_TIMEWARP_TESTNET4);
     }
