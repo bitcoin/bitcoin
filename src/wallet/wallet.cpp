@@ -563,7 +563,7 @@ const CWalletTx* CWallet::GetWalletTx(const Txid& hash) const
 
 void CWallet::UpgradeDescriptorCache()
 {
-    if (!IsWalletFlagSet(WALLET_FLAG_DESCRIPTORS) || IsLocked() || IsWalletFlagSet(WALLET_FLAG_LAST_HARDENED_XPUB_CACHED)) {
+    if (IsLocked() || IsWalletFlagSet(WALLET_FLAG_LAST_HARDENED_XPUB_CACHED)) {
         return;
     }
 
@@ -628,8 +628,10 @@ bool CWallet::Unlock(const SecureString& strWalletPassphrase)
                 continue; // try another master key
             }
             if (Unlock(plain_master_key)) {
-                // Now that we've unlocked, upgrade the descriptor cache
-                UpgradeDescriptorCache();
+                if (IsWalletFlagSet(WALLET_FLAG_DESCRIPTORS)) {
+                    // Now that we've unlocked, upgrade the descriptor cache
+                    UpgradeDescriptorCache();
+                }
                 return true;
             }
         }
