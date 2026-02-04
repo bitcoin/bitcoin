@@ -32,8 +32,7 @@ python3 --version
 uv pip install --python /python_env \
   lief==0.17.5 \
   mypy==1.19.1 \
-  pyzmq==27.1.0 \
-  ruff==0.15.5
+  pyzmq==27.1.0
 
 SHELLCHECK_VERSION=v0.11.0
 curl --fail -L "https://github.com/koalaman/shellcheck/releases/download/${SHELLCHECK_VERSION}/shellcheck-${SHELLCHECK_VERSION}.linux.$(uname --machine).tar.xz" | \
