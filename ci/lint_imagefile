@@ -6,9 +6,10 @@
 
 FROM mirror.gcr.io/ubuntu:24.04
 
-# Pin uv and ruff to minor version to avoid breaking changes
+# Pin uv and ruff to minor version and ty to a patch version to avoid breaking changes
 COPY --from=ghcr.io/astral-sh/uv:0.10 /uv /uvx /bin/
 COPY --from=ghcr.io/astral-sh/ruff:0.15 /ruff /bin/
+COPY --from=ghcr.io/astral-sh/ty:0.0.21 /ty /bin/
 
 COPY ./ci/retry/retry /ci_retry
 COPY ./.python-version /.python-version

@@ -50,7 +50,7 @@ or `--help`:
 | Lint test | Dependency |
 |-----------|:----------:|
 | [`lint-python.py`](/test/lint/lint-python.py) | [lief](https://github.com/lief-project/LIEF)
-| [`lint-python.py`](/test/lint/lint-python.py) | [mypy](https://github.com/python/mypy)
+| [`lint-python.py`](/test/lint/lint-python.py) | [ty](https://github.com/astral-sh/ty)
 | [`lint-python.py`](/test/lint/lint-python.py) | [pyzmq](https://github.com/zeromq/pyzmq)
 | [`lint-shell.py`](/test/lint/lint-shell.py) | [ShellCheck](https://github.com/koalaman/shellcheck)
 | `py_lint` | [ruff](https://github.com/astral-sh/ruff)

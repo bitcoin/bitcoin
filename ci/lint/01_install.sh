@@ -31,7 +31,6 @@ python3 --version
 
 uv pip install --python /python_env \
   lief==0.17.5 \
-  mypy==1.19.1 \
   pyzmq==27.1.0
 
 SHELLCHECK_VERSION=v0.11.0
