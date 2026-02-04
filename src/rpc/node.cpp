@@ -248,7 +248,7 @@ static RPCHelpMan setmocktime()
         },
         RPCResult{RPCResult::Type::NONE, "", ""},
         RPCExamples{""},
-    [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
+        [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
 {
 
     if (!Params().IsMockableChain()) {
@@ -890,36 +890,36 @@ static RPCHelpMan getmemoryinfo()
      * as users will undoubtedly confuse it with the other "memory pool"
      */
     return RPCHelpMan{"getmemoryinfo",
-        "Returns an object containing information about memory usage.\n",
-        {
-            {"mode", RPCArg::Type::STR, RPCArg::Default{"stats"}, "determines what kind of information is returned.\n"
-    "  - \"stats\" returns general statistics about memory usage in the daemon.\n"
-    "  - \"mallocinfo\" returns an XML string describing low-level heap state (only available if compiled with glibc)."},
-        },
-        {
-            RPCResult{"mode \"stats\"",
-                RPCResult::Type::OBJ, "", "",
+                "Returns an object containing information about memory usage.\n",
                 {
-                    {RPCResult::Type::OBJ, "locked", "Information about locked memory manager",
-                    {
-                        {RPCResult::Type::NUM, "used", "Number of bytes used"},
-                        {RPCResult::Type::NUM, "free", "Number of bytes available in current arenas"},
-                        {RPCResult::Type::NUM, "total", "Total number of bytes managed"},
-                        {RPCResult::Type::NUM, "locked", "Amount of bytes that succeeded locking. If this number is smaller than total, locking pages failed at some point and key data could be swapped to disk."},
-                        {RPCResult::Type::NUM, "chunks_used", "Number allocated chunks"},
-                        {RPCResult::Type::NUM, "chunks_free", "Number unused chunks"},
-                    }},
-                }
-            },
-            RPCResult{"mode \"mallocinfo\"",
-                RPCResult::Type::STR, "", "\"<malloc version=\"1\">...\""
-            },
-        },
-        RPCExamples{
-            HelpExampleCli("getmemoryinfo", "")
-    + HelpExampleRpc("getmemoryinfo", "")
-        },
-    [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
+                    {"mode", RPCArg::Type::STR, RPCArg::Default{"stats"}, "determines what kind of information is returned.\n"
+            "  - \"stats\" returns general statistics about memory usage in the daemon.\n"
+            "  - \"mallocinfo\" returns an XML string describing low-level heap state (only available if compiled with glibc)."},
+                },
+                {
+                    RPCResult{"mode \"stats\"",
+                        RPCResult::Type::OBJ, "", "",
+                        {
+                            {RPCResult::Type::OBJ, "locked", "Information about locked memory manager",
+                            {
+                                {RPCResult::Type::NUM, "used", "Number of bytes used"},
+                                {RPCResult::Type::NUM, "free", "Number of bytes available in current arenas"},
+                                {RPCResult::Type::NUM, "total", "Total number of bytes managed"},
+                                {RPCResult::Type::NUM, "locked", "Amount of bytes that succeeded locking. If this number is smaller than total, locking pages failed at some point and key data could be swapped to disk."},
+                                {RPCResult::Type::NUM, "chunks_used", "Number allocated chunks"},
+                                {RPCResult::Type::NUM, "chunks_free", "Number unused chunks"},
+                            }},
+                        }
+                    },
+                    RPCResult{"mode \"mallocinfo\"",
+                        RPCResult::Type::STR, "", "\"<malloc version=\"1\">...\""
+                    },
+                },
+                RPCExamples{
+                    HelpExampleCli("getmemoryinfo", "")
+            + HelpExampleRpc("getmemoryinfo", "")
+                },
+        [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
 {
 
     std::string mode = request.params[0].isNull() ? "stats" : request.params[0].get_str();
@@ -961,40 +961,40 @@ static void EnableOrDisableLogCategories(UniValue cats, bool enable) {
 static RPCHelpMan logging()
 {
     return RPCHelpMan{"logging",
-    "Gets and sets the logging configuration.\n"
-    "When called without an argument, returns the list of categories with status that are currently being debug logged or not.\n"
-    "When called with arguments, adds or removes categories from debug logging and return the lists above.\n"
-    "The arguments are evaluated in order \"include\", \"exclude\".\n"
-    "If an item is both included and excluded, it will thus end up being excluded.\n"
-    "The valid logging categories are: " + LogInstance().LogCategoriesString() + "\n"
-    "In addition, the following are available as category names with special meanings:\n"
-    "  - \"all\",  \"1\" : represent all logging categories.\n"
-    "  - \"dash\" activates all Dash-specific categories at once.\n"
-    "To deactivate all categories at once you can specify \"all\" in <exclude>.\n"
-    "  - \"none\", \"0\" : even if other logging categories are specified, ignore all of them.\n"
-    ,
-        {
-            {"include", RPCArg::Type::ARR, RPCArg::Optional::OMITTED_NAMED_ARG, "The of categories to add to debug logging",
+            "Gets and sets the logging configuration.\n"
+            "When called without an argument, returns the list of categories with status that are currently being debug logged or not.\n"
+            "When called with arguments, adds or removes categories from debug logging and return the lists above.\n"
+            "The arguments are evaluated in order \"include\", \"exclude\".\n"
+            "If an item is both included and excluded, it will thus end up being excluded.\n"
+            "The valid logging categories are: " + LogInstance().LogCategoriesString() + "\n"
+            "In addition, the following are available as category names with special meanings:\n"
+            "  - \"all\",  \"1\" : represent all logging categories.\n"
+            "  - \"dash\" activates all Dash-specific categories at once.\n"
+            "To deactivate all categories at once you can specify \"all\" in <exclude>.\n"
+            "  - \"none\", \"0\" : even if other logging categories are specified, ignore all of them.\n"
+            ,
                 {
-                    {"include_category", RPCArg::Type::STR, RPCArg::Optional::OMITTED, "the valid logging category"},
-                }},
-            {"exclude", RPCArg::Type::ARR, RPCArg::Optional::OMITTED_NAMED_ARG, "The categories to remove from debug logging",
-                {
-                    {"exclude_category", RPCArg::Type::STR, RPCArg::Optional::OMITTED, "the valid logging category"},
-                }},
-        },
-        RPCResult{
-            RPCResult::Type::OBJ_DYN, "", "keys are the logging categories, and values indicates its status",
-            {
-                {RPCResult::Type::BOOL, "category", "if being debug logged or not. false:inactive, true:active"},
+                    {"include", RPCArg::Type::ARR, RPCArg::Optional::OMITTED_NAMED_ARG, "The of categories to add to debug logging",
+                        {
+                            {"include_category", RPCArg::Type::STR, RPCArg::Optional::OMITTED, "the valid logging category"},
+                        }},
+                    {"exclude", RPCArg::Type::ARR, RPCArg::Optional::OMITTED_NAMED_ARG, "The categories to remove from debug logging",
+                        {
+                            {"exclude_category", RPCArg::Type::STR, RPCArg::Optional::OMITTED, "the valid logging category"},
+                        }},
+                },
+                RPCResult{
+                    RPCResult::Type::OBJ_DYN, "", "keys are the logging categories, and values indicates its status",
+                    {
+                        {RPCResult::Type::BOOL, "category", "if being debug logged or not. false:inactive, true:active"},
                     }
-        },
-        RPCExamples{
-            HelpExampleCli("logging", "\"[\\\"all\\\"]\" \"[\\\"http\\\"]\"")
-          + HelpExampleCli("logging", "'[\"dash\"]' '[\"llmq\",\"zmq\"]'")
-    + HelpExampleRpc("logging", "[\"all\"], \"[libevent]\"")
-        },
-    [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
+                },
+                RPCExamples{
+                    HelpExampleCli("logging", "\"[\\\"all\\\"]\" \"[\\\"http\\\"]\"")
+            + HelpExampleCli("logging", "'[\"dash\"]' '[\"llmq\",\"zmq\"]'")
+            + HelpExampleRpc("logging", "[\"all\"], \"[libevent]\"")
+                },
+        [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
 {
 
     uint64_t original_log_categories = LogInstance().GetCategoryMask();
@@ -1029,18 +1029,18 @@ static RPCHelpMan echo(const std::string& name)
                 "\nIt will return an internal bug report when arg9='trigger_internal_bug' is passed.\n"
                 "\nThe difference between echo and echojson is that echojson has argument conversion enabled in the client-side table in "
                 "dash-cli and the GUI. There is no server-side difference.",
-                {
-                    {"arg0", RPCArg::Type::STR, RPCArg::Optional::OMITTED_NAMED_ARG, ""},
-                    {"arg1", RPCArg::Type::STR, RPCArg::Optional::OMITTED_NAMED_ARG, ""},
-                    {"arg2", RPCArg::Type::STR, RPCArg::Optional::OMITTED_NAMED_ARG, ""},
-                    {"arg3", RPCArg::Type::STR, RPCArg::Optional::OMITTED_NAMED_ARG, ""},
-                    {"arg4", RPCArg::Type::STR, RPCArg::Optional::OMITTED_NAMED_ARG, ""},
-                    {"arg5", RPCArg::Type::STR, RPCArg::Optional::OMITTED_NAMED_ARG, ""},
-                    {"arg6", RPCArg::Type::STR, RPCArg::Optional::OMITTED_NAMED_ARG, ""},
-                    {"arg7", RPCArg::Type::STR, RPCArg::Optional::OMITTED_NAMED_ARG, ""},
-                    {"arg8", RPCArg::Type::STR, RPCArg::Optional::OMITTED_NAMED_ARG, ""},
-                    {"arg9", RPCArg::Type::STR, RPCArg::Optional::OMITTED_NAMED_ARG, ""},
-                },
+        {
+            {"arg0", RPCArg::Type::STR, RPCArg::Optional::OMITTED_NAMED_ARG, ""},
+            {"arg1", RPCArg::Type::STR, RPCArg::Optional::OMITTED_NAMED_ARG, ""},
+            {"arg2", RPCArg::Type::STR, RPCArg::Optional::OMITTED_NAMED_ARG, ""},
+            {"arg3", RPCArg::Type::STR, RPCArg::Optional::OMITTED_NAMED_ARG, ""},
+            {"arg4", RPCArg::Type::STR, RPCArg::Optional::OMITTED_NAMED_ARG, ""},
+            {"arg5", RPCArg::Type::STR, RPCArg::Optional::OMITTED_NAMED_ARG, ""},
+            {"arg6", RPCArg::Type::STR, RPCArg::Optional::OMITTED_NAMED_ARG, ""},
+            {"arg7", RPCArg::Type::STR, RPCArg::Optional::OMITTED_NAMED_ARG, ""},
+            {"arg8", RPCArg::Type::STR, RPCArg::Optional::OMITTED_NAMED_ARG, ""},
+            {"arg9", RPCArg::Type::STR, RPCArg::Optional::OMITTED_NAMED_ARG, ""},
+        },
                 RPCResult{RPCResult::Type::ANY, "", "Returns whatever was passed in"},
                 RPCExamples{""},
         [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue

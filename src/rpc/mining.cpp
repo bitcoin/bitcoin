@@ -101,19 +101,19 @@ static UniValue GetNetworkHashPS(int lookup, int height, const CChain& active_ch
 static RPCHelpMan getnetworkhashps()
 {
     return RPCHelpMan{"getnetworkhashps",
-        "\nReturns the estimated network hashes per second based on the last n blocks.\n"
-        "Pass in [blocks] to override # of blocks, -1 specifies since last difficulty change.\n"
-        "Pass in [height] to estimate the network speed at the time when a certain block was found.\n",
-        {
-            {"nblocks", RPCArg::Type::NUM, RPCArg::Default{120}, "The number of blocks, or -1 for blocks since last difficulty change."},
-            {"height", RPCArg::Type::NUM, RPCArg::Default{-1}, "To estimate at the time of the given height."},
-        },
-        RPCResult{
-            RPCResult::Type::NUM, "", "Hashes per second estimated"},
-        RPCExamples{
-            HelpExampleCli("getnetworkhashps", "")
-    + HelpExampleRpc("getnetworkhashps", "")
-        },
+                "\nReturns the estimated network hashes per second based on the last n blocks.\n"
+                "Pass in [blocks] to override # of blocks, -1 specifies since last difficulty change.\n"
+                "Pass in [height] to estimate the network speed at the time when a certain block was found.\n",
+                {
+                    {"nblocks", RPCArg::Type::NUM, RPCArg::Default{120}, "The number of blocks, or -1 for blocks since last difficulty change."},
+                    {"height", RPCArg::Type::NUM, RPCArg::Default{-1}, "To estimate at the time of the given height."},
+                },
+                RPCResult{
+                    RPCResult::Type::NUM, "", "Hashes per second estimated"},
+                RPCExamples{
+                    HelpExampleCli("getnetworkhashps", "")
+            + HelpExampleRpc("getnetworkhashps", "")
+                },
         [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
 {
 
@@ -253,21 +253,22 @@ static RPCHelpMan generatetoaddress()
 {
     return RPCHelpMan{"generatetoaddress",
         "\nMine to a specified address and return the block hashes.\n",
-        {
-            {"nblocks", RPCArg::Type::NUM, RPCArg::Optional::NO, "How many blocks are generated."},
-            {"address", RPCArg::Type::STR, RPCArg::Optional::NO, "The address to send the newly generated coins to."},
-            {"maxtries", RPCArg::Type::NUM, RPCArg::Default{DEFAULT_MAX_TRIES}, "How many iterations to try."},
-        },
-        RPCResult{
-            RPCResult::Type::ARR, "", "hashes of blocks generated",
-            {
-                {RPCResult::Type::STR_HEX, "", "blockhash"},
-            }},
-        RPCExamples{
-    "\nGenerate 11 blocks to myaddress\n"
-    + HelpExampleCli("generatetoaddress", "11 \"myaddress\"")
-        + "If you are using the " PACKAGE_NAME " wallet, you can get a new address to send the newly generated coins to with:\n"
-            + HelpExampleCli("getnewaddress", "")},
+         {
+             {"nblocks", RPCArg::Type::NUM, RPCArg::Optional::NO, "How many blocks are generated."},
+             {"address", RPCArg::Type::STR, RPCArg::Optional::NO, "The address to send the newly generated coins to."},
+             {"maxtries", RPCArg::Type::NUM, RPCArg::Default{DEFAULT_MAX_TRIES}, "How many iterations to try."},
+         },
+         RPCResult{
+             RPCResult::Type::ARR, "", "hashes of blocks generated",
+             {
+                 {RPCResult::Type::STR_HEX, "", "blockhash"},
+             }},
+         RPCExamples{
+            "\nGenerate 11 blocks to myaddress\n"
+            + HelpExampleCli("generatetoaddress", "11 \"myaddress\"")
+            + "If you are using the " PACKAGE_NAME " wallet, you can get a new address to send the newly generated coins to with:\n"
+            + HelpExampleCli("getnewaddress", "")
+                },
         [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
 {
     const int num_blocks{request.params[0].getInt<int>()};
@@ -575,13 +576,13 @@ static RPCHelpMan getblocktemplate()
                     }},
                 {RPCResult::Type::NUM, "version", "The preferred block version"},
                 {RPCResult::Type::ARR, "rules", "specific block rules that are to be enforced",
-                    {
-                        {RPCResult::Type::STR, "", "name of a rule the client must understand to some extent; see BIP 9 for format"},
-                    }},
+                {
+                    {RPCResult::Type::STR, "", "name of a rule the client must understand to some extent; see BIP 9 for format"},
+                }},
                 {RPCResult::Type::OBJ_DYN, "vbavailable", "set of pending, supported versionbit (BIP 9) softfork deployments",
-                    {
-                        {RPCResult::Type::NUM, "rulename", "identifies the bit number as indicating acceptance and readiness for the named softfork rule"},
-                    }},
+                {
+                    {RPCResult::Type::NUM, "rulename", "identifies the bit number as indicating acceptance and readiness for the named softfork rule"},
+                }},
                 {RPCResult::Type::ARR, "capabilities", "",
                 {
                     {RPCResult::Type::STR, "value", "A supported feature, for example 'proposal'"},
@@ -589,20 +590,20 @@ static RPCHelpMan getblocktemplate()
                 {RPCResult::Type::NUM, "vbrequired", "bit mask of versionbits the server requires set in submissions"},
                 {RPCResult::Type::STR, "previousblockhash", "The hash of current highest block"},
                 {RPCResult::Type::ARR, "transactions", "contents of non-coinbase transactions that should be included in the next block",
+                {
+                {RPCResult::Type::OBJ, "", "",
                     {
-                        {RPCResult::Type::OBJ, "", "",
-                            {
-                                {RPCResult::Type::STR_HEX, "data", "transaction data encoded in hexadecimal (byte-for-byte)"},
-                                {RPCResult::Type::STR_HEX, "txid", "transaction id encoded in little-endian hexadecimal"},
-                                {RPCResult::Type::STR_HEX, "hash", "hash encoded in little-endian hexadecimal"},
-                                {RPCResult::Type::ARR, "depends", "array of numbers",
-                                    {
-                                        {RPCResult::Type::NUM, "", "transactions before this one (by 1-based index in 'transactions' list) that must be present in the final block if this one is"},
-                                    }},
-                                {RPCResult::Type::NUM, "fee", "difference in value between transaction inputs and outputs (in duffs); for coinbase transactions, this is a negative Number of the total collected block fees (ie, not including the block subsidy); if key is not present, fee is unknown and clients MUST NOT assume there isn't one"},
-                                {RPCResult::Type::NUM, "sigops", "total number of SigOps, as counted for purposes of block limits; if key is not present, sigop count is unknown and clients MUST NOT assume there aren't any"},
-                            }},
+                        {RPCResult::Type::STR_HEX, "data", "transaction data encoded in hexadecimal (byte-for-byte)"},
+                        {RPCResult::Type::STR_HEX, "txid", "transaction id encoded in little-endian hexadecimal"},
+                        {RPCResult::Type::STR_HEX, "hash", "hash encoded in little-endian hexadecimal"},
+                        {RPCResult::Type::ARR, "depends", "array of numbers",
+                        {
+                            {RPCResult::Type::NUM, "", "transactions before this one (by 1-based index in 'transactions' list) that must be present in the final block if this one is"},
+                        }},
+                        {RPCResult::Type::NUM, "fee", "difference in value between transaction inputs and outputs (in duffs); for coinbase transactions, this is a negative Number of the total collected block fees (ie, not including the block subsidy); if key is not present, fee is unknown and clients MUST NOT assume there isn't one"},
+                        {RPCResult::Type::NUM, "sigops", "total number of SigOps, as counted for purposes of block limits; if key is not present, sigop count is unknown and clients MUST NOT assume there aren't any"},
                     }},
+                }},
                 {RPCResult::Type::OBJ_DYN, "coinbaseaux", "data that should be included in the coinbase's scriptSig content",
                 {
                     {RPCResult::Type::STR_HEX, "key", "values must be in the coinbase (keys may be ignored)"},
@@ -612,9 +613,9 @@ static RPCHelpMan getblocktemplate()
                 {RPCResult::Type::STR, "target", "The hash target"},
                 {RPCResult::Type::NUM_TIME, "mintime", "The minimum timestamp appropriate for the next block time, expressed in " + UNIX_EPOCH_TIME},
                 {RPCResult::Type::ARR, "mutable", "list of ways the block template may be changed",
-                    {
-                        {RPCResult::Type::STR, "value", "A way the block template may be changed, e.g. 'time', 'transactions', 'prevblock'"},
-                    }},
+                {
+                    {RPCResult::Type::STR, "value", "A way the block template may be changed, e.g. 'time', 'transactions', 'prevblock'"},
+                }},
                 {RPCResult::Type::STR_HEX, "noncerange", "A range of valid nonces"},
                 {RPCResult::Type::NUM, "sigoplimit", "limit of sigops in blocks"},
                 {RPCResult::Type::NUM, "sizelimit", "limit of block size"},
@@ -1053,17 +1054,17 @@ static RPCHelpMan submitblock()
 static RPCHelpMan submitheader()
 {
     return RPCHelpMan{"submitheader",
-        "\nDecode the given hexdata as a header and submit it as a candidate chain tip if valid."
-        "\nThrows when the header is invalid.\n",
-        {
-            {"hexdata", RPCArg::Type::STR_HEX, RPCArg::Optional::NO, "the hex-encoded block header data"},
-        },
-        RPCResult{
-            RPCResult::Type::NONE, "", "None"},
-        RPCExamples{
-            HelpExampleCli("submitheader", "\"aabbcc\"") +
-            HelpExampleRpc("submitheader", "\"aabbcc\"")
-        },
+                "\nDecode the given hexdata as a header and submit it as a candidate chain tip if valid."
+                "\nThrows when the header is invalid.\n",
+                {
+                    {"hexdata", RPCArg::Type::STR_HEX, RPCArg::Optional::NO, "the hex-encoded block header data"},
+                },
+                RPCResult{
+                    RPCResult::Type::NONE, "", "None"},
+                RPCExamples{
+                    HelpExampleCli("submitheader", "\"aabbcc\"") +
+                    HelpExampleRpc("submitheader", "\"aabbcc\"")
+                },
         [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
 {
     CBlockHeader h;

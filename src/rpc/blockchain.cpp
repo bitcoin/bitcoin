@@ -208,15 +208,15 @@ UniValue blockToJSON(BlockManager& blockman, const CBlock& block, const CBlockIn
 static RPCHelpMan getblockcount()
 {
     return RPCHelpMan{"getblockcount",
-        "\nReturns the height of the most-work fully-validated chain.\n"
-        "The genesis block has height 0.\n",
-        {},
-        RPCResult{
-            RPCResult::Type::NUM, "", "The current block count"},
-        RPCExamples{
-            HelpExampleCli("getblockcount", "")
-    + HelpExampleRpc("getblockcount", "")
-        },
+                "\nReturns the height of the most-work fully-validated chain.\n"
+                "The genesis block has height 0.\n",
+                {},
+                RPCResult{
+                    RPCResult::Type::NUM, "", "The current block count"},
+                RPCExamples{
+                    HelpExampleCli("getblockcount", "")
+            + HelpExampleRpc("getblockcount", "")
+                },
         [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
 {
     ChainstateManager& chainman = EnsureAnyChainman(request.context);
@@ -229,15 +229,15 @@ static RPCHelpMan getblockcount()
 static RPCHelpMan getbestblockhash()
 {
     return RPCHelpMan{"getbestblockhash",
-        "\nReturns the hash of the best (tip) block in the most-work fully-validated chain.\n",
-        {},
-        RPCResult{
-            RPCResult::Type::STR_HEX, "", "the block hash, hex-encoded"},
-        RPCExamples{
-            HelpExampleCli("getbestblockhash", "")
-    + HelpExampleRpc("getbestblockhash", "")
-        },
-    [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
+                "\nReturns the hash of the best (tip) block in the most-work fully-validated chain.\n",
+                {},
+                RPCResult{
+                    RPCResult::Type::STR_HEX, "", "the block hash, hex-encoded"},
+                RPCExamples{
+                    HelpExampleCli("getbestblockhash", "")
+            + HelpExampleRpc("getbestblockhash", "")
+                },
+        [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
 {
     ChainstateManager& chainman = EnsureAnyChainman(request.context);
     LOCK(cs_main);
@@ -308,21 +308,21 @@ void RPCNotifyBlockChange(const CBlockIndex* pindex)
 static RPCHelpMan waitfornewblock()
 {
     return RPCHelpMan{"waitfornewblock",
-        "\nWaits for a specific new block and returns useful info about it.\n"
-        "\nReturns the current block on timeout or exit.\n",
-        {
-            {"timeout", RPCArg::Type::NUM, RPCArg::Default{0}, "Time in milliseconds to wait for a response. 0 indicates no timeout."},
-        },
-        RPCResult{
-            RPCResult::Type::OBJ, "", "",
-            {
-                {RPCResult::Type::STR_HEX, "hash", "The blockhash"},
-                {RPCResult::Type::NUM, "height", "Block height"},
-            }},
-        RPCExamples{
-            HelpExampleCli("waitfornewblock", "1000")
-    + HelpExampleRpc("waitfornewblock", "1000")
-        },
+                "\nWaits for a specific new block and returns useful info about it.\n"
+                "\nReturns the current block on timeout or exit.\n",
+                {
+                    {"timeout", RPCArg::Type::NUM, RPCArg::Default{0}, "Time in milliseconds to wait for a response. 0 indicates no timeout."},
+                },
+                RPCResult{
+                    RPCResult::Type::OBJ, "", "",
+                    {
+                        {RPCResult::Type::STR_HEX, "hash", "The blockhash"},
+                        {RPCResult::Type::NUM, "height", "Block height"},
+                    }},
+                RPCExamples{
+                    HelpExampleCli("waitfornewblock", "1000")
+            + HelpExampleRpc("waitfornewblock", "1000")
+                },
         [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
 {
     int timeout = 0;
@@ -350,22 +350,22 @@ static RPCHelpMan waitfornewblock()
 static RPCHelpMan waitforblock()
 {
     return RPCHelpMan{"waitforblock",
-        "\nWaits for a specific new block and returns useful info about it.\n"
-        "\nReturns the current block on timeout or exit.\n",
-        {
-            {"blockhash", RPCArg::Type::STR_HEX, RPCArg::Optional::NO, "Block hash to wait for."},
-            {"timeout", RPCArg::Type::NUM, RPCArg::Default{0}, "Time in milliseconds to wait for a response. 0 indicates no timeout."},
-        },
-        RPCResult{
-            RPCResult::Type::OBJ, "", "",
-            {
-                {RPCResult::Type::STR_HEX, "hash", "The blockhash"},
-                {RPCResult::Type::NUM, "height", "Block height"},
-            }},
-        RPCExamples{
-            HelpExampleCli("waitforblock", "\"0000000000079f8ef3d2c688c244eb7a4570b24c9ed7b4a8c619eb02596f8862\" 1000")
-    + HelpExampleRpc("waitforblock", "\"0000000000079f8ef3d2c688c244eb7a4570b24c9ed7b4a8c619eb02596f8862\", 1000")
-        },
+                "\nWaits for a specific new block and returns useful info about it.\n"
+                "\nReturns the current block on timeout or exit.\n",
+                {
+                    {"blockhash", RPCArg::Type::STR_HEX, RPCArg::Optional::NO, "Block hash to wait for."},
+                    {"timeout", RPCArg::Type::NUM, RPCArg::Default{0}, "Time in milliseconds to wait for a response. 0 indicates no timeout."},
+                },
+                RPCResult{
+                    RPCResult::Type::OBJ, "", "",
+                    {
+                        {RPCResult::Type::STR_HEX, "hash", "The blockhash"},
+                        {RPCResult::Type::NUM, "height", "Block height"},
+                    }},
+                RPCExamples{
+                    HelpExampleCli("waitforblock", "\"0000000000079f8ef3d2c688c244eb7a4570b24c9ed7b4a8c619eb02596f8862\" 1000")
+            + HelpExampleRpc("waitforblock", "\"0000000000079f8ef3d2c688c244eb7a4570b24c9ed7b4a8c619eb02596f8862\", 1000")
+                },
         [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
 {
     int timeout = 0;
@@ -396,23 +396,23 @@ static RPCHelpMan waitforblock()
 static RPCHelpMan waitforblockheight()
 {
     return RPCHelpMan{"waitforblockheight",
-        "\nWaits for (at least) block height and returns the height and hash\n"
-        "of the current tip.\n"
-        "\nReturns the current block on timeout or exit.\n",
-        {
-            {"height", RPCArg::Type::NUM, RPCArg::Optional::NO, "Block height to wait for."},
-            {"timeout", RPCArg::Type::NUM, RPCArg::Default{0}, "Time in milliseconds to wait for a response. 0 indicates no timeout."},
-        },
-        RPCResult{
-            RPCResult::Type::OBJ, "", "",
-            {
-                {RPCResult::Type::STR_HEX, "hash", "The blockhash"},
-                {RPCResult::Type::NUM, "height", "Block height"},
-            }},
-        RPCExamples{
-            HelpExampleCli("waitforblockheight", "100 1000")
-    + HelpExampleRpc("waitforblockheight", "100, 1000")
-        },
+                "\nWaits for (at least) block height and returns the height and hash\n"
+                "of the current tip.\n"
+                "\nReturns the current block on timeout or exit.\n",
+                {
+                    {"height", RPCArg::Type::NUM, RPCArg::Optional::NO, "Block height to wait for."},
+                    {"timeout", RPCArg::Type::NUM, RPCArg::Default{0}, "Time in milliseconds to wait for a response. 0 indicates no timeout."},
+                },
+                RPCResult{
+                    RPCResult::Type::OBJ, "", "",
+                    {
+                        {RPCResult::Type::STR_HEX, "hash", "The blockhash"},
+                        {RPCResult::Type::NUM, "height", "Block height"},
+                    }},
+                RPCExamples{
+                    HelpExampleCli("waitforblockheight", "100 1000")
+            + HelpExampleRpc("waitforblockheight", "100, 1000")
+                },
         [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
 {
     int timeout = 0;
@@ -442,13 +442,13 @@ static RPCHelpMan waitforblockheight()
 static RPCHelpMan syncwithvalidationinterfacequeue()
 {
     return RPCHelpMan{"syncwithvalidationinterfacequeue",
-        "\nWaits for the validation interface queue to catch up on everything that was there when we entered this function.\n",
-        {},
-        RPCResult{RPCResult::Type::NONE, "", ""},
-        RPCExamples{
-            HelpExampleCli("syncwithvalidationinterfacequeue","")
-    + HelpExampleRpc("syncwithvalidationinterfacequeue","")
-        },
+                "\nWaits for the validation interface queue to catch up on everything that was there when we entered this function.\n",
+                {},
+                RPCResult{RPCResult::Type::NONE, "", ""},
+                RPCExamples{
+                    HelpExampleCli("syncwithvalidationinterfacequeue","")
+            + HelpExampleRpc("syncwithvalidationinterfacequeue","")
+                },
         [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
 {
     SyncWithValidationInterfaceQueue();
@@ -460,15 +460,15 @@ static RPCHelpMan syncwithvalidationinterfacequeue()
 static RPCHelpMan getdifficulty()
 {
     return RPCHelpMan{"getdifficulty",
-        "\nReturns the proof-of-work difficulty as a multiple of the minimum difficulty.\n",
-        {},
-        RPCResult{
-            RPCResult::Type::NUM, "", "the proof-of-work difficulty as a multiple of the minimum difficulty."},
-        RPCExamples{
-            HelpExampleCli("getdifficulty", "")
-    + HelpExampleRpc("getdifficulty", "")
-        },
-    [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
+                "\nReturns the proof-of-work difficulty as a multiple of the minimum difficulty.\n",
+                {},
+                RPCResult{
+                    RPCResult::Type::NUM, "", "the proof-of-work difficulty as a multiple of the minimum difficulty."},
+                RPCExamples{
+                    HelpExampleCli("getdifficulty", "")
+            + HelpExampleRpc("getdifficulty", "")
+                },
+        [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
 {
 
     ChainstateManager& chainman = EnsureAnyChainman(request.context);
@@ -574,17 +574,17 @@ static RPCHelpMan getblockhashes()
 static RPCHelpMan getblockhash()
 {
     return RPCHelpMan{"getblockhash",
-        "\nReturns hash of block in best-block-chain at height provided.\n",
-        {
-            {"height", RPCArg::Type::NUM, RPCArg::Optional::NO, "The height index"},
-        },
-        RPCResult{
-            RPCResult::Type::STR_HEX, "", "The block hash"},
-        RPCExamples{
-            HelpExampleCli("getblockhash", "1000")
-    + HelpExampleRpc("getblockhash", "1000")
-        },
-    [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
+                "\nReturns hash of block in best-block-chain at height provided.\n",
+                {
+                    {"height", RPCArg::Type::NUM, RPCArg::Optional::NO, "The height index"},
+                },
+                RPCResult{
+                    RPCResult::Type::STR_HEX, "", "The block hash"},
+                RPCExamples{
+                    HelpExampleCli("getblockhash", "1000")
+            + HelpExampleRpc("getblockhash", "1000")
+                },
+        [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
 {
     ChainstateManager& chainman = EnsureAnyChainman(request.context);
     LOCK(cs_main);
@@ -603,41 +603,41 @@ static RPCHelpMan getblockhash()
 static RPCHelpMan getblockheader()
 {
     return RPCHelpMan{"getblockheader",
-        "\nIf verbose is false, returns a string that is serialized, hex-encoded data for blockheader 'hash'.\n"
-        "If verbose is true, returns an Object with information about blockheader <hash>.\n",
-        {
-            {"blockhash", RPCArg::Type::STR_HEX, RPCArg::Optional::NO, "The block hash"},
-            {"verbose", RPCArg::Type::BOOL, RPCArg::Default{true}, "true for a json object, false for the hex-encoded data"},
-        },
-        {
-            RPCResult{"for verbose = true",
-                RPCResult::Type::OBJ, "", "",
+                "\nIf verbose is false, returns a string that is serialized, hex-encoded data for blockheader 'hash'.\n"
+                "If verbose is true, returns an Object with information about blockheader <hash>.\n",
                 {
-                    {RPCResult::Type::STR_HEX, "hash", "the block hash (same as provided)"},
-                    {RPCResult::Type::NUM, "confirmations", "The number of confirmations, or -1 if the block is not on the main chain"},
-                    {RPCResult::Type::NUM, "height", "The block height or index"},
-                    {RPCResult::Type::NUM, "version", "The block version"},
-                    {RPCResult::Type::STR_HEX, "versionHex", "The block version formatted in hexadecimal"},
-                    {RPCResult::Type::STR_HEX, "merkleroot", "The merkle root"},
-                    {RPCResult::Type::NUM_TIME, "time", "The block time expressed in " + UNIX_EPOCH_TIME},
-                    {RPCResult::Type::NUM_TIME, "mediantime", "The median block time expressed in " + UNIX_EPOCH_TIME},
-                    {RPCResult::Type::NUM, "nonce", "The nonce"},
-                    {RPCResult::Type::STR_HEX, "bits", "The bits"},
-                    {RPCResult::Type::NUM, "difficulty", "The difficulty"},
-                    {RPCResult::Type::STR_HEX, "chainwork", "Expected number of hashes required to produce the current chain"},
-                    {RPCResult::Type::NUM, "nTx", "The number of transactions in the block"},
-                    {RPCResult::Type::STR_HEX, "previousblockhash", /*optional=*/true, "The hash of the previous block (if available)"},
-                    {RPCResult::Type::STR_HEX, "nextblockhash", /*optional=*/true, "The hash of the next block (if available)"},
-                    {RPCResult::Type::BOOL, "chainlock", "The state of the block ChainLock"},
-                }},
-            RPCResult{"for verbose=false",
-                RPCResult::Type::STR_HEX, "", "A string that is serialized, hex-encoded data for block 'hash'"},
-        },
-        RPCExamples{
-            HelpExampleCli("getblockheader", "\"00000000c937983704a73af28acdec37b049d214adbda81d7e2a3dd146f6ed09\"")
-    + HelpExampleRpc("getblockheader", "\"00000000c937983704a73af28acdec37b049d214adbda81d7e2a3dd146f6ed09\"")
-        },
-    [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
+                    {"blockhash", RPCArg::Type::STR_HEX, RPCArg::Optional::NO, "The block hash"},
+                    {"verbose", RPCArg::Type::BOOL, RPCArg::Default{true}, "true for a json object, false for the hex-encoded data"},
+                },
+                {
+                    RPCResult{"for verbose = true",
+                        RPCResult::Type::OBJ, "", "",
+                        {
+                            {RPCResult::Type::STR_HEX, "hash", "the block hash (same as provided)"},
+                            {RPCResult::Type::NUM, "confirmations", "The number of confirmations, or -1 if the block is not on the main chain"},
+                            {RPCResult::Type::NUM, "height", "The block height or index"},
+                            {RPCResult::Type::NUM, "version", "The block version"},
+                            {RPCResult::Type::STR_HEX, "versionHex", "The block version formatted in hexadecimal"},
+                            {RPCResult::Type::STR_HEX, "merkleroot", "The merkle root"},
+                            {RPCResult::Type::NUM_TIME, "time", "The block time expressed in " + UNIX_EPOCH_TIME},
+                            {RPCResult::Type::NUM_TIME, "mediantime", "The median block time expressed in " + UNIX_EPOCH_TIME},
+                            {RPCResult::Type::NUM, "nonce", "The nonce"},
+                            {RPCResult::Type::STR_HEX, "bits", "The bits"},
+                            {RPCResult::Type::NUM, "difficulty", "The difficulty"},
+                            {RPCResult::Type::STR_HEX, "chainwork", "Expected number of hashes required to produce the current chain"},
+                            {RPCResult::Type::NUM, "nTx", "The number of transactions in the block"},
+                            {RPCResult::Type::STR_HEX, "previousblockhash", /*optional=*/true, "The hash of the previous block (if available)"},
+                            {RPCResult::Type::STR_HEX, "nextblockhash", /*optional=*/true, "The hash of the next block (if available)"},
+                            {RPCResult::Type::BOOL, "chainlock", "The state of the block ChainLock"},
+                        }},
+                    RPCResult{"for verbose=false",
+                        RPCResult::Type::STR_HEX, "", "A string that is serialized, hex-encoded data for block 'hash'"},
+                },
+                RPCExamples{
+                    HelpExampleCli("getblockheader", "\"00000000c937983704a73af28acdec37b049d214adbda81d7e2a3dd146f6ed09\"")
+            + HelpExampleRpc("getblockheader", "\"00000000c937983704a73af28acdec37b049d214adbda81d7e2a3dd146f6ed09\"")
+                },
+        [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
 {
     uint256 hash(ParseHashV(request.params[0], "hash"));
     const NodeContext& node = EnsureAnyNodeContext(request.context);
@@ -932,44 +932,44 @@ static RPCHelpMan getblock()
                 },
                 {
                     RPCResult{"for verbosity = 0",
-                        RPCResult::Type::STR_HEX, "", "A string that is serialized, hex-encoded data for block 'hash'"},
+                RPCResult::Type::STR_HEX, "", "A string that is serialized, hex-encoded data for block 'hash'"},
                     RPCResult{"for verbosity = 1",
-                        RPCResult::Type::OBJ, "", "",
-                            {
-                                {RPCResult::Type::STR_HEX, "hash", "the block hash (same as provided)"},
-                                {RPCResult::Type::NUM, "confirmations", "The number of confirmations, or -1 if the block is not on the main chain"},
-                                {RPCResult::Type::NUM, "height", "The block height or index"},
-                                {RPCResult::Type::NUM, "version", "The block version"},
-                                {RPCResult::Type::STR_HEX, "versionHex", "The block version formatted in hexadecimal"},
-                                {RPCResult::Type::STR_HEX, "merkleroot", "The merkle root"},
-                                {RPCResult::Type::NUM_TIME, "time", "The block time expressed in " + UNIX_EPOCH_TIME},
-                                {RPCResult::Type::NUM_TIME, "mediantime", "The median block time expressed in " + UNIX_EPOCH_TIME},
-                                {RPCResult::Type::NUM, "nonce", "The nonce"},
-                                {RPCResult::Type::STR_HEX, "bits", "The bits"},
-                                {RPCResult::Type::NUM, "difficulty", "The difficulty"},
-                                {RPCResult::Type::STR_HEX, "chainwork", "Expected number of hashes required to produce the current chain"},
-                                {RPCResult::Type::NUM, "nTx", "The number of transactions in the block"},
-                                {RPCResult::Type::STR_HEX, "previousblockhash", /*optional=*/true, "The hash of the previous block (if available)"},
-                                {RPCResult::Type::STR_HEX, "nextblockhash", /*optional=*/true, "The hash of the next block (if available)"},
-                                {RPCResult::Type::BOOL, "chainlock", "The state of the block ChainLock"},
-                                {RPCResult::Type::NUM, "size", "The block size"},
-                                {RPCResult::Type::ARR, "tx", "The transaction ids",
-                                    {{RPCResult::Type::STR_HEX, "", "The transaction id"}}},
-                                CCbTx::GetJsonHelp(/*key=*/"cbTx", /*optional=*/true),
-                            }},
+                RPCResult::Type::OBJ, "", "",
+                {
+                    {RPCResult::Type::STR_HEX, "hash", "the block hash (same as provided)"},
+                    {RPCResult::Type::NUM, "confirmations", "The number of confirmations, or -1 if the block is not on the main chain"},
+                    {RPCResult::Type::NUM, "height", "The block height or index"},
+                    {RPCResult::Type::NUM, "version", "The block version"},
+                    {RPCResult::Type::STR_HEX, "versionHex", "The block version formatted in hexadecimal"},
+                    {RPCResult::Type::STR_HEX, "merkleroot", "The merkle root"},
+                    {RPCResult::Type::NUM_TIME, "time", "The block time expressed in " + UNIX_EPOCH_TIME},
+                    {RPCResult::Type::NUM_TIME, "mediantime", "The median block time expressed in " + UNIX_EPOCH_TIME},
+                    {RPCResult::Type::NUM, "nonce", "The nonce"},
+                    {RPCResult::Type::STR_HEX, "bits", "The bits"},
+                    {RPCResult::Type::NUM, "difficulty", "The difficulty"},
+                    {RPCResult::Type::STR_HEX, "chainwork", "Expected number of hashes required to produce the current chain"},
+                    {RPCResult::Type::NUM, "nTx", "The number of transactions in the block"},
+                    {RPCResult::Type::STR_HEX, "previousblockhash", /*optional=*/true, "The hash of the previous block (if available)"},
+                    {RPCResult::Type::STR_HEX, "nextblockhash", /*optional=*/true, "The hash of the next block (if available)"},
+                    {RPCResult::Type::BOOL, "chainlock", "The state of the block ChainLock"},
+                    {RPCResult::Type::NUM, "size", "The block size"},
+                    {RPCResult::Type::ARR, "tx", "The transaction ids",
+                        {{RPCResult::Type::STR_HEX, "", "The transaction id"}}},
+                    CCbTx::GetJsonHelp(/*key=*/"cbTx", /*optional=*/true),
+                }},
                     RPCResult{"for verbosity = 2",
-                        RPCResult::Type::OBJ, "", "",
+                RPCResult::Type::OBJ, "", "",
+                {
+                    {RPCResult::Type::ELISION, "", "Same output as verbosity = 1"},
+                    {RPCResult::Type::ARR, "tx", "",
+                    {
+                        {RPCResult::Type::OBJ, "", "",
                         {
-                            {RPCResult::Type::ELISION, "", "Same output as verbosity = 1"},
-                            {RPCResult::Type::ARR, "tx", "",
-                            {
-                                {RPCResult::Type::OBJ, "", "",
-                                {
-                                    {RPCResult::Type::ELISION, "", "The transactions in the format of the getrawtransaction RPC. Different from verbosity = 1 \"tx\" result"},
-                                    {RPCResult::Type::NUM, "fee", "The transaction fee in " + CURRENCY_UNIT + ", omitted if block undo data is not available"},
-                                }},
-                            }},
+                            {RPCResult::Type::ELISION, "", "The transactions in the format of the getrawtransaction RPC. Different from verbosity = 1 \"tx\" result"},
+                            {RPCResult::Type::NUM, "fee", "The transaction fee in " + CURRENCY_UNIT + ", omitted if block undo data is not available"},
                         }},
+                    }},
+                }},
                     RPCResult{"for verbosity = 3",
                 RPCResult::Type::OBJ, "", "",
                 {
@@ -982,7 +982,7 @@ static RPCHelpMan getblock()
                         }},
                     }},
                 }},
-                },
+        },
                 RPCExamples{
                     HelpExampleCli("getblock", "\"00000000000fd08c2fb661d2fcb0d49abb3a91e5f27082ce64feed3b4dede2e2\"")
             + HelpExampleRpc("getblock", "\"00000000000fd08c2fb661d2fcb0d49abb3a91e5f27082ce64feed3b4dede2e2\"")
@@ -1044,16 +1044,16 @@ static RPCHelpMan getblock()
 static RPCHelpMan pruneblockchain()
 {
     return RPCHelpMan{"pruneblockchain", "",
-        {
-            {"height", RPCArg::Type::NUM, RPCArg::Optional::NO, "The block height to prune up to. May be set to a discrete height, or to a " + UNIX_EPOCH_TIME + "\n"
-    "                  to prune blocks whose block time is at least 2 hours older than the provided timestamp."},
-        },
-        RPCResult{
-            RPCResult::Type::NUM, "", "Height of the last block pruned"},
-        RPCExamples{
-            HelpExampleCli("pruneblockchain", "1000")
-    + HelpExampleRpc("pruneblockchain", "1000")
-        },
+                {
+                    {"height", RPCArg::Type::NUM, RPCArg::Optional::NO, "The block height to prune up to. May be set to a discrete height, or to a " + UNIX_EPOCH_TIME + "\n"
+            "                  to prune blocks whose block time is at least 2 hours older than the provided timestamp."},
+                },
+                RPCResult{
+                    RPCResult::Type::NUM, "", "Height of the last block pruned"},
+                RPCExamples{
+                    HelpExampleCli("pruneblockchain", "1000")
+            + HelpExampleRpc("pruneblockchain", "1000")
+                },
         [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
 {
     if (!node::fPruneMode)
@@ -1141,52 +1141,52 @@ std::optional<kernel::CCoinsStats> GetUTXOStats(CCoinsView* view, node::BlockMan
 static RPCHelpMan gettxoutsetinfo()
 {
     return RPCHelpMan{"gettxoutsetinfo",
-        "\nReturns statistics about the unspent transaction output set.\n"
-        "Note this call may take some time if you are not using coinstatsindex.\n",
-        {
-            {"hash_type", RPCArg::Type::STR, RPCArg::Default{"hash_serialized_2"}, "Which UTXO set hash should be calculated. Options: 'hash_serialized_2' (the legacy algorithm), 'muhash', 'none'."},
-            {"hash_or_height", RPCArg::Type::NUM, RPCArg::DefaultHint{"the current best block"}, "The block hash or height of the target height (only available with coinstatsindex).", "", {"", "string or numeric"}},
-            {"use_index", RPCArg::Type::BOOL, RPCArg::Default{true}, "Use coinstatsindex, if available."},
-        },
-        RPCResult{
-            RPCResult::Type::OBJ, "", "",
-            {
-                {RPCResult::Type::NUM, "height", "The block height (index) of the returned statistics"},
-                {RPCResult::Type::STR_HEX, "bestblock", "The hash of the block at which these statistics are calculated"},
-                {RPCResult::Type::NUM, "txouts", "The number of unspent transaction outputs"},
-                {RPCResult::Type::NUM, "bogosize", "Database-independent, meaningless metric indicating the UTXO set size"},
-                {RPCResult::Type::STR_HEX, "hash_serialized_2", /*optional=*/true, "The serialized hash (only present if 'hash_serialized_2' hash_type is chosen)"},
-                {RPCResult::Type::STR_HEX, "muhash", /*optional=*/true, "The serialized hash (only present if 'muhash' hash_type is chosen)"},
-                {RPCResult::Type::NUM, "transactions", /*optional=*/true, "The number of transactions with unspent outputs (not available when coinstatsindex is used)"},
-                {RPCResult::Type::NUM, "disk_size", /*optional=*/true, "The estimated size of the chainstate on disk (not available when coinstatsindex is used)"},
-                {RPCResult::Type::STR_AMOUNT, "total_amount", "The total amount of coins in the UTXO set"},
-                {RPCResult::Type::STR_AMOUNT, "total_unspendable_amount", /*optional=*/true, "The total amount of coins permanently excluded from the UTXO set (only available if coinstatsindex is used)"},
-                {RPCResult::Type::OBJ, "block_info", /*optional=*/true, "Info on amounts in the block at this block height (only available if coinstatsindex is used)",
+                "\nReturns statistics about the unspent transaction output set.\n"
+                "Note this call may take some time if you are not using coinstatsindex.\n",
                 {
-                    {RPCResult::Type::STR_AMOUNT, "prevout_spent", "Total amount of all prevouts spent in this block"},
-                    {RPCResult::Type::STR_AMOUNT, "coinbase", "Coinbase subsidy amount of this block"},
-                    {RPCResult::Type::STR_AMOUNT, "new_outputs_ex_coinbase", "Total amount of new outputs created by this block"},
-                    {RPCResult::Type::STR_AMOUNT, "unspendable", "Total amount of unspendable outputs created in this block"},
-                    {RPCResult::Type::OBJ, "unspendables", "Detailed view of the unspendable categories",
+                    {"hash_type", RPCArg::Type::STR, RPCArg::Default{"hash_serialized_2"}, "Which UTXO set hash should be calculated. Options: 'hash_serialized_2' (the legacy algorithm), 'muhash', 'none'."},
+                    {"hash_or_height", RPCArg::Type::NUM, RPCArg::DefaultHint{"the current best block"}, "The block hash or height of the target height (only available with coinstatsindex).", "", {"", "string or numeric"}},
+                    {"use_index", RPCArg::Type::BOOL, RPCArg::Default{true}, "Use coinstatsindex, if available."},
+                },
+                RPCResult{
+                    RPCResult::Type::OBJ, "", "",
                     {
-                        {RPCResult::Type::STR_AMOUNT, "genesis_block", "The unspendable amount of the Genesis block subsidy"},
-                        {RPCResult::Type::STR_AMOUNT, "bip30", "Transactions overridden by duplicates (no longer possible with BIP30)"},
-                        {RPCResult::Type::STR_AMOUNT, "scripts", "Amounts sent to scripts that are unspendable (for example OP_RETURN outputs)"},
-                        {RPCResult::Type::STR_AMOUNT, "unclaimed_rewards", "Fee rewards that miners did not claim in their coinbase transaction"},
-                    }}
-                }},
-            }},
-        RPCExamples{
-                HelpExampleCli("gettxoutsetinfo", "") +
-                HelpExampleCli("gettxoutsetinfo", R"("none")") +
-                HelpExampleCli("gettxoutsetinfo", R"("none" 1000)") +
-                HelpExampleCli("gettxoutsetinfo", R"("none" '"00000000c937983704a73af28acdec37b049d214adbda81d7e2a3dd146f6ed09"')") +
-                HelpExampleCli("-named gettxoutsetinfo", R"(hash_type='muhash' use_index='false')") +
-                HelpExampleRpc("gettxoutsetinfo", "") +
-                HelpExampleRpc("gettxoutsetinfo", R"("none")") +
-                HelpExampleRpc("gettxoutsetinfo", R"("none", 1000)") +
-                HelpExampleRpc("gettxoutsetinfo", R"("none", "00000000c937983704a73af28acdec37b049d214adbda81d7e2a3dd146f6ed09")")
-        },
+                        {RPCResult::Type::NUM, "height", "The block height (index) of the returned statistics"},
+                        {RPCResult::Type::STR_HEX, "bestblock", "The hash of the block at which these statistics are calculated"},
+                        {RPCResult::Type::NUM, "txouts", "The number of unspent transaction outputs"},
+                        {RPCResult::Type::NUM, "bogosize", "Database-independent, meaningless metric indicating the UTXO set size"},
+                        {RPCResult::Type::STR_HEX, "hash_serialized_2", /*optional=*/true, "The serialized hash (only present if 'hash_serialized_2' hash_type is chosen)"},
+                        {RPCResult::Type::STR_HEX, "muhash", /*optional=*/true, "The serialized hash (only present if 'muhash' hash_type is chosen)"},
+                        {RPCResult::Type::NUM, "transactions", /*optional=*/true, "The number of transactions with unspent outputs (not available when coinstatsindex is used)"},
+                        {RPCResult::Type::NUM, "disk_size", /*optional=*/true, "The estimated size of the chainstate on disk (not available when coinstatsindex is used)"},
+                        {RPCResult::Type::STR_AMOUNT, "total_amount", "The total amount of coins in the UTXO set"},
+                        {RPCResult::Type::STR_AMOUNT, "total_unspendable_amount", /*optional=*/true, "The total amount of coins permanently excluded from the UTXO set (only available if coinstatsindex is used)"},
+                        {RPCResult::Type::OBJ, "block_info", /*optional=*/true, "Info on amounts in the block at this block height (only available if coinstatsindex is used)",
+                        {
+                            {RPCResult::Type::STR_AMOUNT, "prevout_spent", "Total amount of all prevouts spent in this block"},
+                            {RPCResult::Type::STR_AMOUNT, "coinbase", "Coinbase subsidy amount of this block"},
+                            {RPCResult::Type::STR_AMOUNT, "new_outputs_ex_coinbase", "Total amount of new outputs created by this block"},
+                            {RPCResult::Type::STR_AMOUNT, "unspendable", "Total amount of unspendable outputs created in this block"},
+                            {RPCResult::Type::OBJ, "unspendables", "Detailed view of the unspendable categories",
+                            {
+                                {RPCResult::Type::STR_AMOUNT, "genesis_block", "The unspendable amount of the Genesis block subsidy"},
+                                {RPCResult::Type::STR_AMOUNT, "bip30", "Transactions overridden by duplicates (no longer possible with BIP30)"},
+                                {RPCResult::Type::STR_AMOUNT, "scripts", "Amounts sent to scripts that are unspendable (for example OP_RETURN outputs)"},
+                                {RPCResult::Type::STR_AMOUNT, "unclaimed_rewards", "Fee rewards that miners did not claim in their coinbase transaction"},
+                            }}
+                        }},
+                    }},
+                RPCExamples{
+                    HelpExampleCli("gettxoutsetinfo", "") +
+                    HelpExampleCli("gettxoutsetinfo", R"("none")") +
+                    HelpExampleCli("gettxoutsetinfo", R"("none" 1000)") +
+                    HelpExampleCli("gettxoutsetinfo", R"("none" '"00000000c937983704a73af28acdec37b049d214adbda81d7e2a3dd146f6ed09"')") +
+                    HelpExampleCli("-named gettxoutsetinfo", R"(hash_type='muhash' use_index='false')") +
+                    HelpExampleRpc("gettxoutsetinfo", "") +
+                    HelpExampleRpc("gettxoutsetinfo", R"("none")") +
+                    HelpExampleRpc("gettxoutsetinfo", R"("none", 1000)") +
+                    HelpExampleRpc("gettxoutsetinfo", R"("none", "00000000c937983704a73af28acdec37b049d214adbda81d7e2a3dd146f6ed09")")
+                },
         [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
 {
     UniValue ret(UniValue::VOBJ);
@@ -1304,25 +1304,24 @@ static RPCHelpMan gettxout()
                 {RPCResult::Type::STR_HEX, "bestblock", "The hash of the block at the tip of the chain"},
                 {RPCResult::Type::NUM, "confirmations", "The number of confirmations"},
                 {RPCResult::Type::STR_AMOUNT, "value", "The transaction value in " + CURRENCY_UNIT},
-                {RPCResult::Type::OBJ, "scriptPubKey", "",
-                    {
-                        {RPCResult::Type::STR, "asm", "Disassembly of the public key script"},
-                        {RPCResult::Type::STR, "desc", "Inferred descriptor for the output"},
-                        {RPCResult::Type::STR_HEX, "hex", "The raw public key script bytes, hex-encoded"},
-                        {RPCResult::Type::STR_HEX, "type", "The type, eg pubkeyhash"},
-                        {RPCResult::Type::STR, "address", /*optional=*/ true, "Dash address (only if a well-defined address exists)"},
-                    }},
+                {RPCResult::Type::OBJ, "scriptPubKey", "", {
+                    {RPCResult::Type::STR, "asm", "Disassembly of the public key script"},
+                    {RPCResult::Type::STR, "desc", "Inferred descriptor for the output"},
+                    {RPCResult::Type::STR_HEX, "hex", "The raw public key script bytes, hex-encoded"},
+                    {RPCResult::Type::STR_HEX, "type", "The type, eg pubkeyhash"},
+                    {RPCResult::Type::STR, "address", /*optional=*/ true, "Dash address (only if a well-defined address exists)"},
+                }},
                 {RPCResult::Type::BOOL, "coinbase", "Coinbase or not"},
             }},
         },
         RPCExamples{
-    "\nGet unspent transactions\n"
-    + HelpExampleCli("listunspent", "") +
-    "\nView the details\n"
-    + HelpExampleCli("gettxout", "\"txid\" 1") +
-    "\nAs a JSON-RPC call\n"
-    + HelpExampleRpc("gettxout", "\"txid\", 1")
-        },
+            "\nGet unspent transactions\n"
+            + HelpExampleCli("listunspent", "") +
+            "\nView the details\n"
+            + HelpExampleCli("gettxout", "\"txid\" 1") +
+            "\nAs a JSON-RPC call\n"
+            + HelpExampleRpc("gettxout", "\"txid\", 1")
+                },
         [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
 {
 
@@ -1378,18 +1377,18 @@ static RPCHelpMan gettxout()
 static RPCHelpMan verifychain()
 {
     return RPCHelpMan{"verifychain",
-        "\nVerifies blockchain database.\n",
-        {
-            {"checklevel", RPCArg::Type::NUM, RPCArg::DefaultHint{strprintf("%d, range=0-4", DEFAULT_CHECKLEVEL)},
+                "\nVerifies blockchain database.\n",
+                {
+                    {"checklevel", RPCArg::Type::NUM, RPCArg::DefaultHint{strprintf("%d, range=0-4", DEFAULT_CHECKLEVEL)},
                         strprintf("How thorough the block verification is:\n - %s", MakeUnorderedList(CHECKLEVEL_DOC))},
-            {"nblocks", RPCArg::Type::NUM, RPCArg::DefaultHint{strprintf("%d, 0=all", DEFAULT_CHECKBLOCKS)}, "The number of blocks to check."},
-        },
-        RPCResult{
-            RPCResult::Type::BOOL, "", "Verified or not"},
-        RPCExamples{
-            HelpExampleCli("verifychain", "")
-    + HelpExampleRpc("verifychain", "")
-        },
+                    {"nblocks", RPCArg::Type::NUM, RPCArg::DefaultHint{strprintf("%d, 0=all", DEFAULT_CHECKBLOCKS)}, "The number of blocks to check."},
+                },
+                RPCResult{
+                    RPCResult::Type::BOOL, "", "Verified or not"},
+                RPCExamples{
+                    HelpExampleCli("verifychain", "")
+            + HelpExampleRpc("verifychain", "")
+                },
         [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
 {
     const int check_level{request.params[0].isNull() ? DEFAULT_CHECKLEVEL : request.params[0].getInt<int>()};
@@ -1631,35 +1630,35 @@ struct CompareBlocksByHeight
 static RPCHelpMan getchaintips()
 {
     return RPCHelpMan{"getchaintips",
-        "Return information about all known tips in the block tree,"
-        " including the main chain as well as orphaned branches.\n",
-        {
-            {"count", RPCArg::Type::NUM, RPCArg::Default{INT_MAX}, "only show this much of latest tips"},
-            {"branchlen", RPCArg::Type::NUM, RPCArg::Default{-1}, "only show tips that have equal or greater length of branch"},
-        },
-        RPCResult{
-            RPCResult::Type::ARR, "", "",
-            {{RPCResult::Type::OBJ, "", "",
+                "Return information about all known tips in the block tree,"
+                " including the main chain as well as orphaned branches.\n",
                 {
-                    {RPCResult::Type::NUM, "height", "height of the chain tip"},
-                    {RPCResult::Type::STR_HEX, "hash", "block hash of the tip"},
-                    {RPCResult::Type::NUM, "difficulty", "The difficulty"},
-                    {RPCResult::Type::STR_HEX, "chainwork", "Expected number of hashes required to produce the current chain (in hex)"},
-                    {RPCResult::Type::NUM, "branchlen", "zero for main chain, otherwise length of branch connecting the tip to the main chain"},
-                    {RPCResult::Type::STR_HEX, "forkpoint", "same as \"hash\" for the main chain"},
-                    {RPCResult::Type::STR, "status", "status of the chain, \"active\" for the main chain\n"
-    "Possible values for status:\n"
-    "1.  \"invalid\"               This branch contains at least one invalid block\n"
-    "2.  \"headers-only\"          Not all blocks for this branch are available, but the headers are valid\n"
-    "3.  \"valid-headers\"         All blocks are available for this branch, but they were never fully validated\n"
-    "4.  \"valid-fork\"            This branch is not part of the active chain, but is fully validated\n"
-    "5.  \"active\"                This is the tip of the active main chain, which is certainly valid\n"
-    "6.  \"conflicting\"           This block or one of its ancestors is conflicting with ChainLocks."},
-                }}}},
-        RPCExamples{
-            HelpExampleCli("getchaintips", "")
-    + HelpExampleRpc("getchaintips", "")
-        },
+                    {"count", RPCArg::Type::NUM, RPCArg::Default{INT_MAX}, "only show this much of latest tips"},
+                    {"branchlen", RPCArg::Type::NUM, RPCArg::Default{-1}, "only show tips that have equal or greater length of branch"},
+                },
+                RPCResult{
+                    RPCResult::Type::ARR, "", "",
+                    {{RPCResult::Type::OBJ, "", "",
+                        {
+                            {RPCResult::Type::NUM, "height", "height of the chain tip"},
+                            {RPCResult::Type::STR_HEX, "hash", "block hash of the tip"},
+                            {RPCResult::Type::NUM, "difficulty", "The difficulty"},
+                            {RPCResult::Type::STR_HEX, "chainwork", "Expected number of hashes required to produce the current chain (in hex)"},
+                            {RPCResult::Type::NUM, "branchlen", "zero for main chain, otherwise length of branch connecting the tip to the main chain"},
+                            {RPCResult::Type::STR_HEX, "forkpoint", "same as \"hash\" for the main chain"},
+                            {RPCResult::Type::STR, "status", "status of the chain, \"active\" for the main chain\n"
+            "Possible values for status:\n"
+            "1.  \"invalid\"               This branch contains at least one invalid block\n"
+            "2.  \"headers-only\"          Not all blocks for this branch are available, but the headers are valid\n"
+            "3.  \"valid-headers\"         All blocks are available for this branch, but they were never fully validated\n"
+            "4.  \"valid-fork\"            This branch is not part of the active chain, but is fully validated\n"
+            "5.  \"active\"                This is the tip of the active main chain, which is certainly valid\n"
+            "6.  \"conflicting\"           This block or one of its ancestors is conflicting with ChainLocks."},
+                        }}}},
+                RPCExamples{
+                    HelpExampleCli("getchaintips", "")
+            + HelpExampleRpc("getchaintips", "")
+                },
         [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
 {
 
@@ -1751,17 +1750,17 @@ static RPCHelpMan getchaintips()
 static RPCHelpMan preciousblock()
 {
     return RPCHelpMan{"preciousblock",
-        "\nTreats a block as if it were received before others with the same work.\n"
-        "\nA later preciousblock call can override the effect of an earlier one.\n"
-        "\nThe effects of preciousblock are not retained across restarts.\n",
-        {
-            {"blockhash", RPCArg::Type::STR_HEX, RPCArg::Optional::NO, "the hash of the block to mark as precious"},
-        },
-        RPCResult{RPCResult::Type::NONE, "", ""},
-        RPCExamples{
-            HelpExampleCli("preciousblock", "\"blockhash\"")
-    + HelpExampleRpc("preciousblock", "\"blockhash\"")
-        },
+                "\nTreats a block as if it were received before others with the same work.\n"
+                "\nA later preciousblock call can override the effect of an earlier one.\n"
+                "\nThe effects of preciousblock are not retained across restarts.\n",
+                {
+                    {"blockhash", RPCArg::Type::STR_HEX, RPCArg::Optional::NO, "the hash of the block to mark as precious"},
+                },
+                RPCResult{RPCResult::Type::NONE, "", ""},
+                RPCExamples{
+                    HelpExampleCli("preciousblock", "\"blockhash\"")
+            + HelpExampleRpc("preciousblock", "\"blockhash\"")
+                },
         [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
 {
     uint256 hash(ParseHashV(request.params[0], "blockhash"));
@@ -1791,15 +1790,15 @@ static RPCHelpMan preciousblock()
 static RPCHelpMan invalidateblock()
 {
     return RPCHelpMan{"invalidateblock",
-        "\nPermanently marks a block as invalid, as if it violated a consensus rule.\n",
-        {
-            {"blockhash", RPCArg::Type::STR_HEX, RPCArg::Optional::NO, "the hash of the block to mark as invalid"},
-        },
-        RPCResult{RPCResult::Type::NONE, "", ""},
-        RPCExamples{
-            HelpExampleCli("invalidateblock", "\"blockhash\"")
-    + HelpExampleRpc("invalidateblock", "\"blockhash\"")
-        },
+                "\nPermanently marks a block as invalid, as if it violated a consensus rule.\n",
+                {
+                    {"blockhash", RPCArg::Type::STR_HEX, RPCArg::Optional::NO, "the hash of the block to mark as invalid"},
+                },
+                RPCResult{RPCResult::Type::NONE, "", ""},
+                RPCExamples{
+                    HelpExampleCli("invalidateblock", "\"blockhash\"")
+            + HelpExampleRpc("invalidateblock", "\"blockhash\"")
+                },
         [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
 {
     uint256 hash(ParseHashV(request.params[0], "blockhash"));
@@ -1834,17 +1833,17 @@ static RPCHelpMan invalidateblock()
 static RPCHelpMan reconsiderblock()
 {
     return RPCHelpMan{"reconsiderblock",
-        "\nRemoves invalidity status of a block, its ancestors and its descendants, reconsider them for activation.\n"
-        "This can be used to undo the effects of invalidateblock.\n",
-        {
-            {"blockhash", RPCArg::Type::STR_HEX, RPCArg::Optional::NO, "the hash of the block to reconsider"},
-            {"ignore_chainlocks", RPCArg::Type::BOOL, RPCArg::Default{false}, "if true, existing chainlocks will be ignored"},
-        },
-        RPCResult{RPCResult::Type::NONE, "", ""},
-        RPCExamples{
-            HelpExampleCli("reconsiderblock", "\"blockhash\"")
-    + HelpExampleRpc("reconsiderblock", "\"blockhash\"")
-        },
+                "\nRemoves invalidity status of a block, its ancestors and its descendants, reconsider them for activation.\n"
+                "This can be used to undo the effects of invalidateblock.\n",
+                {
+                    {"blockhash", RPCArg::Type::STR_HEX, RPCArg::Optional::NO, "the hash of the block to reconsider"},
+                    {"ignore_chainlocks", RPCArg::Type::BOOL, RPCArg::Default{false}, "if true, existing chainlocks will be ignored"},
+                },
+                RPCResult{RPCResult::Type::NONE, "", ""},
+                RPCExamples{
+                    HelpExampleCli("reconsiderblock", "\"blockhash\"")
+            + HelpExampleRpc("reconsiderblock", "\"blockhash\"")
+                },
         [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
 {
     ChainstateManager& chainman = EnsureAnyChainman(request.context);
@@ -2466,18 +2465,18 @@ static RPCHelpMan scantxoutset()
                 {RPCResult::Type::NUM, "height", "The current block height (index)"},
                 {RPCResult::Type::STR_HEX, "bestblock", "The hash of the block at the tip of the chain"},
                 {RPCResult::Type::ARR, "unspents", "",
+                {
+                    {RPCResult::Type::OBJ, "", "",
                     {
-                        {RPCResult::Type::OBJ, "", "",
-                            {
-                                {RPCResult::Type::STR_HEX, "txid", "The transaction id"},
-                                {RPCResult::Type::NUM, "vout", "The vout value"},
-                                {RPCResult::Type::STR_HEX, "scriptPubKey", "The script key"},
-                                {RPCResult::Type::STR, "desc", "A specialized descriptor for the matched scriptPubKey"},
-                                {RPCResult::Type::STR_AMOUNT, "amount", "The total amount in " + CURRENCY_UNIT + " of the unspent output"},
-                                {RPCResult::Type::BOOL, "coinbase", "Whether this is a coinbase output"},
-                                {RPCResult::Type::NUM, "height", "Height of the unspent transaction output"},
-                            }},
+                        {RPCResult::Type::STR_HEX, "txid", "The transaction id"},
+                        {RPCResult::Type::NUM, "vout", "The vout value"},
+                        {RPCResult::Type::STR_HEX, "scriptPubKey", "The script key"},
+                        {RPCResult::Type::STR, "desc", "A specialized descriptor for the matched scriptPubKey"},
+                        {RPCResult::Type::STR_AMOUNT, "amount", "The total amount in " + CURRENCY_UNIT + " of the unspent output"},
+                        {RPCResult::Type::BOOL, "coinbase", "Whether this is a coinbase output"},
+                        {RPCResult::Type::NUM, "height", "Height of the unspent transaction output"},
                     }},
+                }},
                 {RPCResult::Type::STR_AMOUNT, "total_amount", "The total amount of all found unspent outputs in " + CURRENCY_UNIT},
             }},
             RPCResult{"when action=='abort'", RPCResult::Type::BOOL, "success", "True if scan will be aborted (not necessarily before this RPC returns), or false if there is no scan to abort"},
@@ -2596,21 +2595,21 @@ static RPCHelpMan scantxoutset()
 static RPCHelpMan getblockfilter()
 {
     return RPCHelpMan{"getblockfilter",
-        "\nRetrieve a BIP 157 content filter for a particular block.\n",
-        {
-            {"blockhash", RPCArg::Type::STR, RPCArg::Optional::NO, "The hash of the block"},
-            {"filtertype", RPCArg::Type::STR, RPCArg::Default{BlockFilterTypeName(BlockFilterType::BASIC_FILTER)}, "The type name of the filter"},
-        },
-        RPCResult{
-            RPCResult::Type::OBJ, "", "",
-            {
-                {RPCResult::Type::STR_HEX, "filter", "the hex-encoded filter data"},
-                {RPCResult::Type::STR_HEX, "header", "the hex-encoded filter header"},
-            }},
-        RPCExamples{
-            HelpExampleCli("getblockfilter", "\"00000000c937983704a73af28acdec37b049d214adbda81d7e2a3dd146f6ed09\" \"basic\"")+
-            HelpExampleRpc("getblockfilter", "\"00000000c937983704a73af28acdec37b049d214adbda81d7e2a3dd146f6ed09\", \"basic\"")
-        },
+                "\nRetrieve a BIP 157 content filter for a particular block.\n",
+                {
+                    {"blockhash", RPCArg::Type::STR, RPCArg::Optional::NO, "The hash of the block"},
+                    {"filtertype", RPCArg::Type::STR, RPCArg::Default{BlockFilterTypeName(BlockFilterType::BASIC_FILTER)}, "The type name of the filter"},
+                },
+                RPCResult{
+                    RPCResult::Type::OBJ, "", "",
+                    {
+                        {RPCResult::Type::STR_HEX, "filter", "the hex-encoded filter data"},
+                        {RPCResult::Type::STR_HEX, "header", "the hex-encoded filter header"},
+                    }},
+                RPCExamples{
+                    HelpExampleCli("getblockfilter", "\"00000000c937983704a73af28acdec37b049d214adbda81d7e2a3dd146f6ed09\" \"basic\"")+
+                    HelpExampleRpc("getblockfilter", "\"00000000c937983704a73af28acdec37b049d214adbda81d7e2a3dd146f6ed09\", \"basic\"")
+                },
         [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
 {
     uint256 block_hash(ParseHashV(request.params[0], "blockhash"));

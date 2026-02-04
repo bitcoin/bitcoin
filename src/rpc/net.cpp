@@ -52,15 +52,15 @@ const std::vector<std::string> TRANSPORT_TYPE_DOC{
 static RPCHelpMan getconnectioncount()
 {
     return RPCHelpMan{"getconnectioncount",
-        "\nReturns the number of connections to other nodes.\n",
-        {},
-        RPCResult{
-            RPCResult::Type::NUM, "", "The connection count"
-        },
-        RPCExamples{
-            HelpExampleCli("getconnectioncount", "")
-    + HelpExampleRpc("getconnectioncount", "")
-        },
+                "\nReturns the number of connections to other nodes.\n",
+                {},
+                RPCResult{
+                    RPCResult::Type::NUM, "", "The connection count"
+                },
+                RPCExamples{
+                    HelpExampleCli("getconnectioncount", "")
+            + HelpExampleRpc("getconnectioncount", "")
+                },
         [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
 {
     const NodeContext& node = EnsureAnyNodeContext(request.context);
@@ -74,15 +74,15 @@ static RPCHelpMan getconnectioncount()
 static RPCHelpMan ping()
 {
     return RPCHelpMan{"ping",
-        "\nRequests that a ping be sent to all other nodes, to measure ping time.\n"
-        "Results provided in getpeerinfo, pingtime and pingwait fields are decimal seconds.\n"
-        "Ping command is handled in queue with all other commands, so it measures processing backlog, not just network ping.\n",
-        {},
-        RPCResult{RPCResult::Type::NONE, "", ""},
-        RPCExamples{
-            HelpExampleCli("ping", "")
-    + HelpExampleRpc("ping", "")
-        },
+                "\nRequests that a ping be sent to all other nodes, to measure ping time.\n"
+                "Results provided in getpeerinfo, pingtime and pingwait fields are decimal seconds.\n"
+                "Ping command is handled in queue with all other commands, so it measures processing backlog, not just network ping.\n",
+                {},
+                RPCResult{RPCResult::Type::NONE, "", ""},
+                RPCExamples{
+                    HelpExampleCli("ping", "")
+            + HelpExampleRpc("ping", "")
+                },
         [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
 {
     const NodeContext& node = EnsureAnyNodeContext(request.context);
@@ -303,22 +303,22 @@ static RPCHelpMan getpeerinfo()
 static RPCHelpMan addnode()
 {
     return RPCHelpMan{"addnode",
-        "\nAttempts to add or remove a node from the addnode list.\n"
-        "Or try a connection to a node once.\n"
-        "Nodes added using addnode (or -connect) are protected from DoS disconnection and are not required to be\n"
-        "full nodes as other outbound peers are (though such peers will not be synced from).\n" +
+                "\nAttempts to add or remove a node from the addnode list.\n"
+                "Or try a connection to a node once.\n"
+                "Nodes added using addnode (or -connect) are protected from DoS disconnection and are not required to be\n"
+                "full nodes as other outbound peers are (though such peers will not be synced from).\n" +
                 strprintf("Addnode connections are limited to %u at a time", MAX_ADDNODE_CONNECTIONS) +
                 " and are counted separately from the -maxconnections limit.\n",
-        {
-            {"node", RPCArg::Type::STR, RPCArg::Optional::NO, "The address of the peer to connect to"},
-            {"command", RPCArg::Type::STR, RPCArg::Optional::NO, "'add' to add a node to the list, 'remove' to remove a node from the list, 'onetry' to try a connection to the node once"},
-            {"v2transport", RPCArg::Type::BOOL, RPCArg::DefaultHint{"set by -v2transport"}, "Attempt to connect using BIP324 v2 transport protocol (ignored for 'remove' command)"},
-        },
-        RPCResult{RPCResult::Type::NONE, "", ""},
-        RPCExamples{
-            HelpExampleCli("addnode", "\"192.168.0.6:9999\" \"onetry\" true")
-    + HelpExampleRpc("addnode", "\"192.168.0.6:9999\", \"onetry\" true")
-        },
+                {
+                    {"node", RPCArg::Type::STR, RPCArg::Optional::NO, "The address of the peer to connect to"},
+                    {"command", RPCArg::Type::STR, RPCArg::Optional::NO, "'add' to add a node to the list, 'remove' to remove a node from the list, 'onetry' to try a connection to the node once"},
+                    {"v2transport", RPCArg::Type::BOOL, RPCArg::DefaultHint{"set by -v2transport"}, "Attempt to connect using BIP324 v2 transport protocol (ignored for 'remove' command)"},
+                },
+                RPCResult{RPCResult::Type::NONE, "", ""},
+                RPCExamples{
+                    HelpExampleCli("addnode", "\"192.168.0.6:9999\" \"onetry\" true")
+            + HelpExampleRpc("addnode", "\"192.168.0.6:9999\", \"onetry\" true")
+                },
         [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
 {
     const std::string command{request.params[1].get_str()};
@@ -429,20 +429,20 @@ static RPCHelpMan addconnection()
 static RPCHelpMan disconnectnode()
 {
     return RPCHelpMan{"disconnectnode",
-        "\nImmediately disconnects from the specified peer node.\n"
-        "\nStrictly one out of 'address' and 'nodeid' can be provided to identify the node.\n"
-        "\nTo disconnect by nodeid, either set 'address' to the empty string, or call using the named 'nodeid' argument only.\n",
-        {
-            {"address", RPCArg::Type::STR, RPCArg::DefaultHint{"fallback to nodeid"}, "The IP address/port of the node"},
-            {"nodeid", RPCArg::Type::NUM, RPCArg::DefaultHint{"fallback to address"}, "The node ID (see getpeerinfo for node IDs)"},
-        },
-        RPCResult{RPCResult::Type::NONE, "", ""},
-        RPCExamples{
-            HelpExampleCli("disconnectnode", "\"192.168.0.6:9999\"")
-    + HelpExampleCli("disconnectnode", "\"\" 1")
-    + HelpExampleRpc("disconnectnode", "\"192.168.0.6:9999\"")
-    + HelpExampleRpc("disconnectnode", "\"\", 1")
-        },
+                "\nImmediately disconnects from the specified peer node.\n"
+                "\nStrictly one out of 'address' and 'nodeid' can be provided to identify the node.\n"
+                "\nTo disconnect by nodeid, either set 'address' to the empty string, or call using the named 'nodeid' argument only.\n",
+                {
+                    {"address", RPCArg::Type::STR, RPCArg::DefaultHint{"fallback to nodeid"}, "The IP address/port of the node"},
+                    {"nodeid", RPCArg::Type::NUM, RPCArg::DefaultHint{"fallback to address"}, "The node ID (see getpeerinfo for node IDs)"},
+                },
+                RPCResult{RPCResult::Type::NONE, "", ""},
+                RPCExamples{
+                    HelpExampleCli("disconnectnode", "\"192.168.0.6:9999\"")
+            + HelpExampleCli("disconnectnode", "\"\" 1")
+            + HelpExampleRpc("disconnectnode", "\"192.168.0.6:9999\"")
+            + HelpExampleRpc("disconnectnode", "\"\", 1")
+                },
         [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
 {
 
@@ -550,30 +550,30 @@ static RPCHelpMan getaddednodeinfo()
 static RPCHelpMan getnettotals()
 {
     return RPCHelpMan{"getnettotals",
-        "Returns information about network traffic, including bytes in, bytes out,\n"
-        "and current system time.",
-        {},
-        RPCResult{
-           RPCResult::Type::OBJ, "", "",
-           {
-               {RPCResult::Type::NUM, "totalbytesrecv", "Total bytes received"},
-               {RPCResult::Type::NUM, "totalbytessent", "Total bytes sent"},
-               {RPCResult::Type::NUM_TIME, "timemillis", "Current system " + UNIX_EPOCH_TIME + " in milliseconds"},
-               {RPCResult::Type::OBJ, "uploadtarget", "",
-               {
-                   {RPCResult::Type::NUM, "timeframe", "Length of the measuring timeframe in seconds"},
-                   {RPCResult::Type::NUM, "target", "Target in bytes"},
-                   {RPCResult::Type::BOOL, "target_reached", "True if target is reached"},
-                   {RPCResult::Type::BOOL, "serve_historical_blocks", "True if serving historical blocks"},
-                   {RPCResult::Type::NUM, "bytes_left_in_cycle", "Bytes left in current time cycle"},
-                   {RPCResult::Type::NUM, "time_left_in_cycle", "Seconds left in current time cycle"},
-                }},
-           }
-        },
-        RPCExamples{
-            HelpExampleCli("getnettotals", "")
-    + HelpExampleRpc("getnettotals", "")
-        },
+                "Returns information about network traffic, including bytes in, bytes out,\n"
+                "and current system time.",
+                {},
+                RPCResult{
+                   RPCResult::Type::OBJ, "", "",
+                   {
+                       {RPCResult::Type::NUM, "totalbytesrecv", "Total bytes received"},
+                       {RPCResult::Type::NUM, "totalbytessent", "Total bytes sent"},
+                       {RPCResult::Type::NUM_TIME, "timemillis", "Current system " + UNIX_EPOCH_TIME + " in milliseconds"},
+                       {RPCResult::Type::OBJ, "uploadtarget", "",
+                       {
+                           {RPCResult::Type::NUM, "timeframe", "Length of the measuring timeframe in seconds"},
+                           {RPCResult::Type::NUM, "target", "Target in bytes"},
+                           {RPCResult::Type::BOOL, "target_reached", "True if target is reached"},
+                           {RPCResult::Type::BOOL, "serve_historical_blocks", "True if serving historical blocks"},
+                           {RPCResult::Type::NUM, "bytes_left_in_cycle", "Bytes left in current time cycle"},
+                           {RPCResult::Type::NUM, "time_left_in_cycle", "Seconds left in current time cycle"},
+                        }},
+                    }
+                },
+                RPCExamples{
+                    HelpExampleCli("getnettotals", "")
+            + HelpExampleRpc("getnettotals", "")
+                },
         [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
 {
     const NodeContext& node = EnsureAnyNodeContext(request.context);
@@ -827,10 +827,10 @@ static RPCHelpMan listbanned()
                         {RPCResult::Type::NUM_TIME, "time_remaining", "The time remaining until the ban expires, in seconds"},
                     }},
             }},
-        RPCExamples{
-            HelpExampleCli("listbanned", "")
-                    + HelpExampleRpc("listbanned", "")
-        },
+                RPCExamples{
+                    HelpExampleCli("listbanned", "")
+                            + HelpExampleRpc("listbanned", "")
+                },
         [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
 {
     BanMan& banman = EnsureAnyBanman(request.context);
@@ -861,13 +861,13 @@ static RPCHelpMan listbanned()
 static RPCHelpMan clearbanned()
 {
     return RPCHelpMan{"clearbanned",
-        "\nClear all banned IPs.\n",
-        {},
-        RPCResult{RPCResult::Type::NONE, "", ""},
-        RPCExamples{
-            HelpExampleCli("clearbanned", "")
-                    + HelpExampleRpc("clearbanned", "")
-        },
+                "\nClear all banned IPs.\n",
+                {},
+                RPCResult{RPCResult::Type::NONE, "", ""},
+                RPCExamples{
+                    HelpExampleCli("clearbanned", "")
+                            + HelpExampleRpc("clearbanned", "")
+                },
         [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
 {
     BanMan& banman = EnsureAnyBanman(request.context);
@@ -903,12 +903,12 @@ static RPCHelpMan cleardiscouraged()
 static RPCHelpMan setnetworkactive()
 {
     return RPCHelpMan{"setnetworkactive",
-        "\nDisable/enable all p2p network activity.\n",
-        {
-            {"state", RPCArg::Type::BOOL, RPCArg::Optional::NO, "true to enable networking, false to disable"},
-        },
-        RPCResult{RPCResult::Type::BOOL, "", "The value that was passed in"},
-        RPCExamples{""},
+                "\nDisable/enable all p2p network activity.\n",
+                {
+                    {"state", RPCArg::Type::BOOL, RPCArg::Optional::NO, "true to enable networking, false to disable"},
+                },
+                RPCResult{RPCResult::Type::BOOL, "", "The value that was passed in"},
+                RPCExamples{""},
         [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
 {
 

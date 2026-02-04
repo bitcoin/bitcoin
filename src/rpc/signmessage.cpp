@@ -37,28 +37,28 @@ static RPCHelpMan verifymessage()
             "\nAs a JSON-RPC call\n"
             + HelpExampleRpc("verifymessage", "\"" + EXAMPLE_ADDRESS[0] + "\", \"signature\", \"my message\"")
         },
-    [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
-{
-    std::string strAddress = request.params[0].get_str();
-    std::string strSign = request.params[1].get_str();
-    std::string strMessage = request.params[2].get_str();
+        [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
+        {
+            std::string strAddress = request.params[0].get_str();
+            std::string strSign = request.params[1].get_str();
+            std::string strMessage = request.params[2].get_str();
 
-    switch (MessageVerify(strAddress, strSign, strMessage)) {
-    case MessageVerificationResult::ERR_INVALID_ADDRESS:
-        throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Invalid address");
-    case MessageVerificationResult::ERR_ADDRESS_NO_KEY:
-        throw JSONRPCError(RPC_TYPE_ERROR, "Address does not refer to key");
-    case MessageVerificationResult::ERR_MALFORMED_SIGNATURE:
-        throw JSONRPCError(RPC_TYPE_ERROR, "Malformed base64 encoding");
-    case MessageVerificationResult::ERR_PUBKEY_NOT_RECOVERED:
-    case MessageVerificationResult::ERR_NOT_SIGNED:
-        return false;
-    case MessageVerificationResult::OK:
-        return true;
-    }
+            switch (MessageVerify(strAddress, strSign, strMessage)) {
+            case MessageVerificationResult::ERR_INVALID_ADDRESS:
+                throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Invalid address");
+            case MessageVerificationResult::ERR_ADDRESS_NO_KEY:
+                throw JSONRPCError(RPC_TYPE_ERROR, "Address does not refer to key");
+            case MessageVerificationResult::ERR_MALFORMED_SIGNATURE:
+                throw JSONRPCError(RPC_TYPE_ERROR, "Malformed base64 encoding");
+            case MessageVerificationResult::ERR_PUBKEY_NOT_RECOVERED:
+            case MessageVerificationResult::ERR_NOT_SIGNED:
+                return false;
+            case MessageVerificationResult::OK:
+                return true;
+            }
 
-    return false;
-},
+            return false;
+        },
     };
 }
 
@@ -81,25 +81,24 @@ static RPCHelpMan signmessagewithprivkey()
             "\nAs a JSON-RPC call\n"
             + HelpExampleRpc("signmessagewithprivkey", "\"privkey\", \"my message\"")
         },
-    [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
-{
+        [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
+        {
+            std::string strPrivkey = request.params[0].get_str();
+            std::string strMessage = request.params[1].get_str();
 
-    std::string strPrivkey = request.params[0].get_str();
-    std::string strMessage = request.params[1].get_str();
+            CKey key = DecodeSecret(strPrivkey);
+            if (!key.IsValid()) {
+                throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Invalid private key");
+            }
 
-    CKey key = DecodeSecret(strPrivkey);
-    if (!key.IsValid()) {
-        throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Invalid private key");
-    }
+            std::string signature;
 
-    std::string signature;
+            if (!MessageSign(key, strMessage, signature)) {
+                throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Sign failed");
+            }
 
-    if (!MessageSign(key, strMessage, signature)) {
-        throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Sign failed");
-    }
-
-    return signature;
-},
+            return signature;
+        },
     };
 }
 
