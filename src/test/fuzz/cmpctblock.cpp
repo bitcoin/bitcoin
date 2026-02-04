@@ -155,6 +155,8 @@ void initialize_cmpctblock()
     g_nBits = Params().GenesisBlock().nBits;
     // Replace validation_signals before creating chainman and mempool so they use it.
     testing_setup->m_node.validation_signals = std::make_unique<ValidationSignals>(std::make_unique<ImmediateBackgroundTaskRunner>());
+    // Initialize mock steady clock for deterministic fuzzing
+    MockableSteadyClock::SetMockTime(MockableSteadyClock::INITIAL_MOCK_TIME);
     ResetChainmanAndMempool(*g_setup);
 }
 

@@ -54,6 +54,13 @@ struct CBlockTemplate
      * miner code.
      */
     CoinbaseTx m_coinbase_tx;
+
+
+    /* Used to decide whether a cached template is eligible for reuse based on its age.
+     * Uses the steady clock because it is monotonic and unaffected by rare system clock changes.
+     * It uses the mockable version to allow for testing.
+     */
+    MockableSteadyClock::time_point m_creation_time;
 };
 
 /** Generate a new block, without valid proof-of-work */

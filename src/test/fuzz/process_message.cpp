@@ -70,6 +70,8 @@ void initialize_process_message()
             {}),
     };
     g_setup = testing_setup.get();
+    // Initialize mock steady clock for deterministic fuzzing
+    MockableSteadyClock::SetMockTime(MockableSteadyClock::INITIAL_MOCK_TIME);
     ResetChainman(*g_setup);
 }
 
