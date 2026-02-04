@@ -1048,8 +1048,50 @@ static RPCHelpMan echo(const std::string& name)
     if (request.params[9].isStr()) {
         CHECK_NONFATAL(request.params[9].get_str() != "trigger_internal_bug");
     }
+
     return request.params;
 },
+    };
+}
+
+static RPCHelpMan echo() { return echo("echo"); }
+static RPCHelpMan echojson() { return echo("echojson"); }
+
+static RPCHelpMan echoipc()
+{
+    return RPCHelpMan{
+        "echoipc",
+        "\nEcho back the input argument, passing it through a spawned process in a multiprocess build.\n"
+        "This command is for testing.\n",
+        {{"arg", RPCArg::Type::STR, RPCArg::Optional::NO, "The string to echo",}},
+        RPCResult{RPCResult::Type::STR, "echo", "The echoed string."},
+        RPCExamples{HelpExampleCli("echo", "\"Hello world\"") +
+                    HelpExampleRpc("echo", "\"Hello world\"")},
+        [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue {
+            interfaces::Init& local_init = *EnsureAnyNodeContext(request.context).init;
+            std::unique_ptr<interfaces::Echo> echo;
+            if (interfaces::Ipc* ipc = local_init.ipc()) {
+                // Spawn a new bitcoin-node process and call makeEcho to get a
+                // client pointer to a interfaces::Echo instance running in
+                // that process. This is just for testing. A slightly more
+                // realistic test spawning a different executable instead of
+                // the same executable would add a new bitcoin-echo executable,
+                // and spawn bitcoin-echo below instead of bitcoin-node. But
+                // using bitcoin-node avoids the need to build and install a
+                // new executable just for this one test.
+                auto init = ipc->spawnProcess("dash-node");
+                echo = init->makeEcho();
+                ipc->addCleanup(*echo, [init = init.release()] { delete init; });
+            } else {
+                // IPC support is not available because this is a bitcoind
+                // process not a bitcoind-node process, so just create a local
+                // interfaces::Echo object and return it so the `echoipc` RPC
+                // method will work, and the python test calling `echoipc`
+                // can expect the same result.
+                echo = local_init.makeEcho();
+            }
+            return echo->echo(request.params[0].get_str());
+        },
     };
 }
 
@@ -1107,48 +1149,7 @@ static RPCHelpMan getindexinfo()
     });
 
     return result;
-}
-    };
-}
-
-static RPCHelpMan echo() { return echo("echo"); }
-static RPCHelpMan echojson() { return echo("echojson"); }
-
-static RPCHelpMan echoipc()
-{
-    return RPCHelpMan{
-        "echoipc",
-        "\nEcho back the input argument, passing it through a spawned process in a multiprocess build.\n"
-        "This command is for testing.\n",
-        {{"arg", RPCArg::Type::STR, RPCArg::Optional::NO, "The string to echo",}},
-        RPCResult{RPCResult::Type::STR, "echo", "The echoed string."},
-        RPCExamples{HelpExampleCli("echo", "\"Hello world\"") +
-                    HelpExampleRpc("echo", "\"Hello world\"")},
-        [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue {
-            interfaces::Init& local_init = *EnsureAnyNodeContext(request.context).init;
-            std::unique_ptr<interfaces::Echo> echo;
-            if (interfaces::Ipc* ipc = local_init.ipc()) {
-                // Spawn a new bitcoin-node process and call makeEcho to get a
-                // client pointer to a interfaces::Echo instance running in
-                // that process. This is just for testing. A slightly more
-                // realistic test spawning a different executable instead of
-                // the same executable would add a new bitcoin-echo executable,
-                // and spawn bitcoin-echo below instead of bitcoin-node. But
-                // using bitcoin-node avoids the need to build and install a
-                // new executable just for this one test.
-                auto init = ipc->spawnProcess("dash-node");
-                echo = init->makeEcho();
-                ipc->addCleanup(*echo, [init = init.release()] { delete init; });
-            } else {
-                // IPC support is not available because this is a bitcoind
-                // process not a bitcoind-node process, so just create a local
-                // interfaces::Echo object and return it so the `echoipc` RPC
-                // method will work, and the python test calling `echoipc`
-                // can expect the same result.
-                echo = local_init.makeEcho();
-            }
-            return echo->echo(request.params[0].get_str());
-        },
+},
     };
 }
 
