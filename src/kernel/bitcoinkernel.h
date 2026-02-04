@@ -1117,13 +1117,11 @@ BITCOINKERNEL_API const btck_BlockTreeEntry* BITCOINKERNEL_WARN_UNUSED_RESULT bt
  *
  * @param[in] chainstate_manager        Non-null.
  * @param[in] header                    Non-null btck_BlockHeader to be validated.
- * @param[out] block_validation_state   The result of the btck_BlockHeader validation.
- * @return                              0 if btck_BlockHeader processing completed successfully, non-zero on error.
+ * @return                              The btck_BlockValidationState containing validation results, or null on error.
  */
-BITCOINKERNEL_API int BITCOINKERNEL_WARN_UNUSED_RESULT btck_chainstate_manager_process_block_header(
+BITCOINKERNEL_API btck_BlockValidationState* BITCOINKERNEL_WARN_UNUSED_RESULT btck_chainstate_manager_process_block_header(
     btck_ChainstateManager* chainstate_manager,
-    const btck_BlockHeader* header,
-    btck_BlockValidationState* block_validation_state) BITCOINKERNEL_ARG_NONNULL(1, 2, 3);
+    const btck_BlockHeader* header) BITCOINKERNEL_ARG_NONNULL(1, 2);
 
 /**
  * @brief Triggers the start of a reindex if the wipe options were previously
