@@ -169,7 +169,7 @@ void TxDownloadManagerImpl::DisconnectedPeer(NodeId nodeid)
 
 bool TxDownloadManagerImpl::AddTxAnnouncement(NodeId peer, const GenTxid& gtxid, std::chrono::microseconds now)
 {
-    // If this is an orphan we are trying to resolve, consider this peer as a orphan resolution candidate instead.
+    // If this is an orphan we are trying to resolve, consider this peer as an orphan resolution candidate instead.
     // - is wtxid matching something in orphanage
     // - exists in orphanage
     // - peer can be an orphan resolution candidate

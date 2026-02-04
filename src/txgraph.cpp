@@ -1784,7 +1784,7 @@ void TxGraphImpl::GroupClusters(int level) noexcept
         }
     }
 
-    // Construct a an_clusters entry for every parent and child in the to-be-applied dependencies,
+    // Construct an an_clusters entry for every parent and child in the to-be-applied dependencies,
     // and an an_deps entry for each dependency to be applied.
     an_deps.reserve(clusterset.m_deps_to_add.size());
     for (const auto& [par, chl] : clusterset.m_deps_to_add) {

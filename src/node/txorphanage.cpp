@@ -679,7 +679,7 @@ std::vector<TxOrphanage::OrphanInfo> TxOrphanageImpl::GetOrphanTransactions() co
     std::set<NodeId> this_orphan_announcers;
     while (it != index_by_wtxid.end()) {
         this_orphan_announcers.insert(it->m_announcer);
-        // If this is the last entry, or the next entry has a different wtxid, build a OrphanInfo.
+        // If this is the last entry, or the next entry has a different wtxid, build an OrphanInfo.
         if (std::next(it) == index_by_wtxid.end() || std::next(it)->m_tx->GetWitnessHash() != it->m_tx->GetWitnessHash()) {
             result.emplace_back(it->m_tx, std::move(this_orphan_announcers));
             this_orphan_announcers.clear();
