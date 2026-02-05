@@ -1164,7 +1164,7 @@ struct PartiallySignedTransaction
      * @param[in] input_index Index of the input to retrieve the UTXO of
      * @return Whether the UTXO for the specified input was found
      */
-    bool GetInputUTXO(CTxOut& utxo, int input_index) const;
+    [[nodiscard]] bool GetInputUTXO(CTxOut& utxo, int input_index) const;
 
     template <typename Stream>
     inline void Serialize(Stream& s) const {

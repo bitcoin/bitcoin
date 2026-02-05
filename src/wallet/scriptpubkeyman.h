@@ -134,7 +134,7 @@ public:
     virtual bool CanProvide(const CScript& script, SignatureData& sigdata) { return false; }
 
     /** Creates new signatures and adds them to the transaction. Returns whether all inputs were signed */
-    virtual bool SignTransaction(CMutableTransaction& tx, const std::map<COutPoint, Coin>& coins, int sighash, std::map<int, bilingual_str>& input_errors) const { return false; }
+    [[nodiscard]] virtual bool SignTransaction(CMutableTransaction& tx, const std::map<COutPoint, Coin>& coins, int sighash, std::map<int, bilingual_str>& input_errors) const { return false; }
     /** Sign a message with the given script */
     virtual SigningResult SignMessage(const std::string& message, const PKHash& pkhash, std::string& str_sig) const { return SigningResult::SIGNING_FAILED; };
     /** Adds script and derivation path information to a PSBT, and optionally signs it. */
@@ -214,9 +214,9 @@ public:
 
     // FillableSigningProvider overrides
     bool HaveKey(const CKeyID &address) const override;
-    bool GetKey(const CKeyID &address, CKey& keyOut) const override;
-    bool GetPubKey(const CKeyID &address, CPubKey& vchPubKeyOut) const override;
-    bool GetKeyOrigin(const CKeyID& keyid, KeyOriginInfo& info) const override;
+    [[nodiscard]] bool GetKey(const CKeyID& address, CKey& keyOut) const override;
+    [[nodiscard]] bool GetPubKey(const CKeyID& address, CPubKey& vchPubKeyOut) const override;
+    [[nodiscard]] bool GetKeyOrigin(const CKeyID& keyid, KeyOriginInfo& info) const override;
 
     //! Load metadata (used by LoadWallet)
     virtual void LoadKeyMetadata(const CKeyID& keyID, const CKeyMetadata &metadata);
@@ -238,7 +238,7 @@ public:
     const CHDChain& GetHDChain() const { return m_hd_chain; }
 
     //! Fetches a pubkey from mapWatchKeys if it exists there
-    bool GetWatchPubKey(const CKeyID &address, CPubKey &pubkey_out) const;
+    [[nodiscard]] bool GetWatchPubKey(const CKeyID& address, CPubKey& pubkey_out) const;
 
     /**
      * Retrieves scripts that were imported by bugs into the legacy spkm and are
@@ -261,12 +261,12 @@ private:
 public:
     explicit LegacySigningProvider(const LegacyDataSPKM& spk_man) : m_spk_man(spk_man) {}
 
-    bool GetCScript(const CScriptID &scriptid, CScript& script) const override { return m_spk_man.GetCScript(scriptid, script); }
+    [[nodiscard]] bool GetCScript(const CScriptID& scriptid, CScript& script) const override { return m_spk_man.GetCScript(scriptid, script); }
     bool HaveCScript(const CScriptID &scriptid) const override { return m_spk_man.HaveCScript(scriptid); }
-    bool GetPubKey(const CKeyID &address, CPubKey& pubkey) const override { return m_spk_man.GetPubKey(address, pubkey); }
-    bool GetKey(const CKeyID &address, CKey& key) const override { return false; }
+    [[nodiscard]] bool GetPubKey(const CKeyID& address, CPubKey& pubkey) const override { return m_spk_man.GetPubKey(address, pubkey); }
+    [[nodiscard]] bool GetKey(const CKeyID& address, CKey& key) const override { return false; }
     bool HaveKey(const CKeyID &address) const override { return false; }
-    bool GetKeyOrigin(const CKeyID& keyid, KeyOriginInfo& info) const override { return m_spk_man.GetKeyOrigin(keyid, info); }
+    [[nodiscard]] bool GetKeyOrigin(const CKeyID& keyid, KeyOriginInfo& info) const override { return m_spk_man.GetKeyOrigin(keyid, info); }
 };
 
 class DescriptorScriptPubKeyMan : public ScriptPubKeyMan
@@ -377,7 +377,7 @@ public:
     // Fetch the SigningProvider for the given pubkey and always include private keys. This should only be called by signing code.
     std::unique_ptr<FlatSigningProvider> GetSigningProvider(const CPubKey& pubkey) const;
 
-    bool SignTransaction(CMutableTransaction& tx, const std::map<COutPoint, Coin>& coins, int sighash, std::map<int, bilingual_str>& input_errors) const override;
+    [[nodiscard]] bool SignTransaction(CMutableTransaction& tx, const std::map<COutPoint, Coin>& coins, int sighash, std::map<int, bilingual_str>& input_errors) const override;
     SigningResult SignMessage(const std::string& message, const PKHash& pkhash, std::string& str_sig) const override;
     std::optional<common::PSBTError> FillPSBT(PartiallySignedTransaction& psbt, const PrecomputedTransactionData& txdata, std::optional<int> sighash_type = std::nullopt, bool sign = true, bool bip32derivs = false, int* n_signed = nullptr, bool finalize = true) const override;
 

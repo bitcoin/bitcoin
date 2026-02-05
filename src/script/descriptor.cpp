@@ -383,7 +383,7 @@ class BIP32PubkeyProvider final : public PubkeyProvider
     // Whether ' or h is used in harded derivation
     bool m_apostrophe;
 
-    bool GetExtKey(const SigningProvider& arg, CExtKey& ret) const
+    [[nodiscard]] bool GetExtKey(const SigningProvider& arg, CExtKey& ret) const
     {
         CKey key;
         if (!arg.GetKey(m_root_extkey.pubkey.GetID(), key)) return false;
@@ -396,7 +396,7 @@ class BIP32PubkeyProvider final : public PubkeyProvider
     }
 
     // Derives the last xprv
-    bool GetDerivedExtKey(const SigningProvider& arg, CExtKey& xprv, CExtKey& last_hardened) const
+    [[nodiscard]] bool GetDerivedExtKey(const SigningProvider& arg, CExtKey& xprv, CExtKey& last_hardened) const
     {
         if (!GetExtKey(arg, xprv)) return false;
         for (auto entry : m_path) {
