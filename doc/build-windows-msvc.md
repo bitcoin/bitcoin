@@ -14,7 +14,15 @@ Here are requirements for the Visual Studio installation:
 2. Installed components:
 - The "Desktop development with C++" workload.
 
-The commands in this guide should be executed in "Developer PowerShell for VS 2022" or "Developer Command Prompt for VS 2022".
+You can install Visual Studio 2022 Community edition together with the required workload using **winget**.
+Run the following command in an **elevated** PowerShell or Command Prompt:
+
+```powershell
+winget install --id Microsoft.VisualStudio.2022.Community `
+ --override "--wait --quiet --add Microsoft.VisualStudio.Workload.NativeDesktop --includeRecommended"
+```
+
+The commands in this guide should be executed in `Developer PowerShell for VS 2022` or `Developer Command Prompt for VS 2022`.
 The former is assumed hereinafter.
 
 ### 2. Git
