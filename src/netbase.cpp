@@ -706,13 +706,14 @@ bool SetProxy(enum Network net, const Proxy &addrProxy) {
     return true;
 }
 
-bool GetProxy(enum Network net, Proxy &proxyInfoOut) {
+std::optional<Proxy> GetProxy(enum Network net)
+{
     assert(net >= 0 && net < NET_MAX);
     LOCK(g_proxyinfo_mutex);
-    if (!proxyInfo[net].IsValid())
-        return false;
-    proxyInfoOut = proxyInfo[net];
-    return true;
+    if (!proxyInfo[net].IsValid()) {
+        return std::nullopt;
+    }
+    return proxyInfo[net];
 }
 
 bool SetNameProxy(const Proxy &addrProxy) {

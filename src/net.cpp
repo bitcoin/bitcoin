@@ -438,16 +438,11 @@ CNode* CConnman::ConnectNode(CAddress addrConnect,
     assert(!addr_bind.IsValid());
     std::unique_ptr<i2p::sam::Session> i2p_transient_session;
 
-    for (auto& target_addr: connect_to) {
+    for (auto& target_addr : connect_to) {
         if (target_addr.IsValid()) {
-            bool use_proxy;
-            Proxy proxy;
-            if (proxy_override.has_value()) {
-                use_proxy = true;
-                proxy = proxy_override.value();
-            } else {
-                use_proxy = GetProxy(target_addr.GetNetwork(), proxy);
-            }
+            const std::optional<Proxy> use_proxy{
+                proxy_override.has_value() ? proxy_override : GetProxy(target_addr.GetNetwork()),
+            };
             bool proxyConnectionFailed = false;
 
             if (target_addr.IsI2P() && use_proxy) {
@@ -464,7 +459,7 @@ CNode* CConnman::ConnectNode(CAddress addrConnect,
                         LOCK(m_unused_i2p_sessions_mutex);
                         if (m_unused_i2p_sessions.empty()) {
                             i2p_transient_session =
-                                std::make_unique<i2p::sam::Session>(proxy, m_interrupt_net);
+                                std::make_unique<i2p::sam::Session>(*use_proxy, m_interrupt_net);
                         } else {
                             i2p_transient_session.swap(m_unused_i2p_sessions.front());
                             m_unused_i2p_sessions.pop();
@@ -484,8 +479,8 @@ CNode* CConnman::ConnectNode(CAddress addrConnect,
                     addr_bind = conn.me;
                 }
             } else if (use_proxy) {
-                LogDebug(BCLog::PROXY, "Using proxy: %s to connect to %s\n", proxy.ToString(), target_addr.ToStringAddrPort());
-                sock = ConnectThroughProxy(proxy, target_addr.ToStringAddr(), target_addr.GetPort(), proxyConnectionFailed);
+                LogDebug(BCLog::PROXY, "Using proxy: %s to connect to %s\n", use_proxy->ToString(), target_addr.ToStringAddrPort());
+                sock = ConnectThroughProxy(*use_proxy, target_addr.ToStringAddr(), target_addr.GetPort(), proxyConnectionFailed);
             } else {
                 // no proxy needed (none set for target network)
                 sock = ConnectDirectly(target_addr, conn_type == ConnectionType::MANUAL);
@@ -3114,9 +3109,10 @@ void CConnman::PrivateBroadcast::NumToOpenWait() const
 
 std::optional<Proxy> CConnman::PrivateBroadcast::ProxyForIPv4or6() const
 {
-    Proxy tor_proxy;
-    if (m_outbound_tor_ok_at_least_once.load() && GetProxy(NET_ONION, tor_proxy)) {
-        return tor_proxy;
+    if (m_outbound_tor_ok_at_least_once.load()) {
+        if (const auto tor_proxy = GetProxy(NET_ONION)) {
+            return tor_proxy;
+        }
     }
     return std::nullopt;
 }
@@ -3472,10 +3468,11 @@ bool CConnman::Start(CScheduler& scheduler, const Options& connOptions)
         return false;
     }
 
-    Proxy i2p_sam;
-    if (GetProxy(NET_I2P, i2p_sam) && connOptions.m_i2p_accept_incoming) {
-        m_i2p_sam_session = std::make_unique<i2p::sam::Session>(gArgs.GetDataDirNet() / "i2p_private_key",
-                                                                i2p_sam, m_interrupt_net);
+    if (connOptions.m_i2p_accept_incoming) {
+        if (const auto i2p_sam = GetProxy(NET_I2P)) {
+            m_i2p_sam_session = std::make_unique<i2p::sam::Session>(gArgs.GetDataDirNet() / "i2p_private_key",
+                                                                    *i2p_sam, m_interrupt_net);
+        }
     }
 
     // Randomize the order in which we may query seednode to potentially prevent connecting to the same one every restart (and signal that we have restarted)
