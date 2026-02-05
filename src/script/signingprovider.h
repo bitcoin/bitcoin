@@ -157,21 +157,21 @@ class SigningProvider
 {
 public:
     virtual ~SigningProvider() = default;
-    virtual bool GetCScript(const CScriptID &scriptid, CScript& script) const { return false; }
+    [[nodiscard]] virtual bool GetCScript(const CScriptID& scriptid, CScript& script) const { return false; }
     virtual bool HaveCScript(const CScriptID &scriptid) const { return false; }
-    virtual bool GetPubKey(const CKeyID &address, CPubKey& pubkey) const { return false; }
-    virtual bool GetKey(const CKeyID &address, CKey& key) const { return false; }
+    [[nodiscard]] virtual bool GetPubKey(const CKeyID& address, CPubKey& pubkey) const { return false; }
+    [[nodiscard]] virtual bool GetKey(const CKeyID& address, CKey& key) const { return false; }
     virtual bool HaveKey(const CKeyID &address) const { return false; }
-    virtual bool GetKeyOrigin(const CKeyID& keyid, KeyOriginInfo& info) const { return false; }
-    virtual bool GetTaprootSpendData(const XOnlyPubKey& output_key, TaprootSpendData& spenddata) const { return false; }
-    virtual bool GetTaprootBuilder(const XOnlyPubKey& output_key, TaprootBuilder& builder) const { return false; }
+    [[nodiscard]] virtual bool GetKeyOrigin(const CKeyID& keyid, KeyOriginInfo& info) const { return false; }
+    [[nodiscard]] virtual bool GetTaprootSpendData(const XOnlyPubKey& output_key, TaprootSpendData& spenddata) const { return false; }
+    [[nodiscard]] virtual bool GetTaprootBuilder(const XOnlyPubKey& output_key, TaprootBuilder& builder) const { return false; }
     virtual std::vector<CPubKey> GetMuSig2ParticipantPubkeys(const CPubKey& pubkey) const { return {}; }
     virtual std::map<CPubKey, std::vector<CPubKey>> GetAllMuSig2ParticipantPubkeys() const {return {}; }
     virtual void SetMuSig2SecNonce(const uint256& id, MuSig2SecNonce&& nonce) const {}
     virtual std::optional<std::reference_wrapper<MuSig2SecNonce>> GetMuSig2SecNonce(const uint256& session_id) const { return std::nullopt; }
     virtual void DeleteMuSig2Session(const uint256& session_id) const {}
 
-    bool GetKeyByXOnly(const XOnlyPubKey& pubkey, CKey& key) const
+    [[nodiscard]] bool GetKeyByXOnly(const XOnlyPubKey& pubkey, CKey& key) const
     {
         for (const auto& id : pubkey.GetKeyIDs()) {
             if (GetKey(id, key)) return true;
@@ -179,7 +179,7 @@ public:
         return false;
     }
 
-    bool GetPubKeyByXOnly(const XOnlyPubKey& pubkey, CPubKey& out) const
+    [[nodiscard]] bool GetPubKeyByXOnly(const XOnlyPubKey& pubkey, CPubKey& out) const
     {
         for (const auto& id : pubkey.GetKeyIDs()) {
             if (GetPubKey(id, out)) return true;
@@ -187,7 +187,7 @@ public:
         return false;
     }
 
-    bool GetKeyOriginByXOnly(const XOnlyPubKey& pubkey, KeyOriginInfo& info) const
+    [[nodiscard]] bool GetKeyOriginByXOnly(const XOnlyPubKey& pubkey, KeyOriginInfo& info) const
     {
         for (const auto& id : pubkey.GetKeyIDs()) {
             if (GetKeyOrigin(id, info)) return true;
@@ -207,12 +207,12 @@ private:
 
 public:
     HidingSigningProvider(const SigningProvider* provider, bool hide_secret, bool hide_origin) : m_hide_secret(hide_secret), m_hide_origin(hide_origin), m_provider(provider) {}
-    bool GetCScript(const CScriptID& scriptid, CScript& script) const override;
-    bool GetPubKey(const CKeyID& keyid, CPubKey& pubkey) const override;
-    bool GetKey(const CKeyID& keyid, CKey& key) const override;
-    bool GetKeyOrigin(const CKeyID& keyid, KeyOriginInfo& info) const override;
-    bool GetTaprootSpendData(const XOnlyPubKey& output_key, TaprootSpendData& spenddata) const override;
-    bool GetTaprootBuilder(const XOnlyPubKey& output_key, TaprootBuilder& builder) const override;
+    [[nodiscard]] bool GetCScript(const CScriptID& scriptid, CScript& script) const override;
+    [[nodiscard]] bool GetPubKey(const CKeyID& keyid, CPubKey& pubkey) const override;
+    [[nodiscard]] bool GetKey(const CKeyID& keyid, CKey& key) const override;
+    [[nodiscard]] bool GetKeyOrigin(const CKeyID& keyid, KeyOriginInfo& info) const override;
+    [[nodiscard]] bool GetTaprootSpendData(const XOnlyPubKey& output_key, TaprootSpendData& spenddata) const override;
+    [[nodiscard]] bool GetTaprootBuilder(const XOnlyPubKey& output_key, TaprootBuilder& builder) const override;
     std::vector<CPubKey> GetMuSig2ParticipantPubkeys(const CPubKey& pubkey) const override;
     std::map<CPubKey, std::vector<CPubKey>> GetAllMuSig2ParticipantPubkeys() const override;
     void SetMuSig2SecNonce(const uint256& id, MuSig2SecNonce&& nonce) const override;
@@ -230,13 +230,13 @@ struct FlatSigningProvider final : public SigningProvider
     std::map<CPubKey, std::vector<CPubKey>> aggregate_pubkeys; /** MuSig2 aggregate pubkeys */
     std::map<uint256, MuSig2SecNonce>* musig2_secnonces{nullptr};
 
-    bool GetCScript(const CScriptID& scriptid, CScript& script) const override;
-    bool GetPubKey(const CKeyID& keyid, CPubKey& pubkey) const override;
-    bool GetKeyOrigin(const CKeyID& keyid, KeyOriginInfo& info) const override;
+    [[nodiscard]] bool GetCScript(const CScriptID& scriptid, CScript& script) const override;
+    [[nodiscard]] bool GetPubKey(const CKeyID& keyid, CPubKey& pubkey) const override;
+    [[nodiscard]] bool GetKeyOrigin(const CKeyID& keyid, KeyOriginInfo& info) const override;
     bool HaveKey(const CKeyID &keyid) const override;
-    bool GetKey(const CKeyID& keyid, CKey& key) const override;
-    bool GetTaprootSpendData(const XOnlyPubKey& output_key, TaprootSpendData& spenddata) const override;
-    bool GetTaprootBuilder(const XOnlyPubKey& output_key, TaprootBuilder& builder) const override;
+    [[nodiscard]] bool GetKey(const CKeyID& keyid, CKey& key) const override;
+    [[nodiscard]] bool GetTaprootSpendData(const XOnlyPubKey& output_key, TaprootSpendData& spenddata) const override;
+    [[nodiscard]] bool GetTaprootBuilder(const XOnlyPubKey& output_key, TaprootBuilder& builder) const override;
     std::vector<CPubKey> GetMuSig2ParticipantPubkeys(const CPubKey& pubkey) const override;
     std::map<CPubKey, std::vector<CPubKey>> GetAllMuSig2ParticipantPubkeys() const override;
     void SetMuSig2SecNonce(const uint256& id, MuSig2SecNonce&& nonce) const override;
@@ -309,14 +309,14 @@ public:
 
     virtual bool AddKeyPubKey(const CKey& key, const CPubKey &pubkey);
     virtual bool AddKey(const CKey &key) { return AddKeyPubKey(key, key.GetPubKey()); }
-    virtual bool GetPubKey(const CKeyID &address, CPubKey& vchPubKeyOut) const override;
+    [[nodiscard]] virtual bool GetPubKey(const CKeyID& address, CPubKey& vchPubKeyOut) const override;
     virtual bool HaveKey(const CKeyID &address) const override;
     virtual std::set<CKeyID> GetKeys() const;
-    virtual bool GetKey(const CKeyID &address, CKey &keyOut) const override;
+    [[nodiscard]] virtual bool GetKey(const CKeyID& address, CKey& keyOut) const override;
     virtual bool AddCScript(const CScript& redeemScript);
     virtual bool HaveCScript(const CScriptID &hash) const override;
     virtual std::set<CScriptID> GetCScripts() const;
-    virtual bool GetCScript(const CScriptID &hash, CScript& redeemScriptOut) const override;
+    [[nodiscard]] virtual bool GetCScript(const CScriptID& hash, CScript& redeemScriptOut) const override;
 };
 
 /** Return the CKeyID of the key involved in a script (if there is a unique one). */
@@ -329,12 +329,12 @@ class MultiSigningProvider: public SigningProvider {
 public:
     void AddProvider(std::unique_ptr<SigningProvider> provider);
 
-    bool GetCScript(const CScriptID& scriptid, CScript& script) const override;
-    bool GetPubKey(const CKeyID& keyid, CPubKey& pubkey) const override;
-    bool GetKeyOrigin(const CKeyID& keyid, KeyOriginInfo& info) const override;
-    bool GetKey(const CKeyID& keyid, CKey& key) const override;
-    bool GetTaprootSpendData(const XOnlyPubKey& output_key, TaprootSpendData& spenddata) const override;
-    bool GetTaprootBuilder(const XOnlyPubKey& output_key, TaprootBuilder& builder) const override;
+    [[nodiscard]] bool GetCScript(const CScriptID& scriptid, CScript& script) const override;
+    [[nodiscard]] bool GetPubKey(const CKeyID& keyid, CPubKey& pubkey) const override;
+    [[nodiscard]] bool GetKeyOrigin(const CKeyID& keyid, KeyOriginInfo& info) const override;
+    [[nodiscard]] bool GetKey(const CKeyID& keyid, CKey& key) const override;
+    [[nodiscard]] bool GetTaprootSpendData(const XOnlyPubKey& output_key, TaprootSpendData& spenddata) const override;
+    [[nodiscard]] bool GetTaprootBuilder(const XOnlyPubKey& output_key, TaprootBuilder& builder) const override;
 };
 
 #endif // BITCOIN_SCRIPT_SIGNINGPROVIDER_H
