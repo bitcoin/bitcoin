@@ -63,7 +63,7 @@ public:
      * @param[in] key_exp_pos Position of the key expression within the descriptor
      * @param[out] xpub The CExtPubKey to get from cache
      */
-    bool GetCachedLastHardenedExtPubKey(uint32_t key_exp_pos, CExtPubKey& xpub) const;
+    [[nodiscard]] bool GetCachedLastHardenedExtPubKey(uint32_t key_exp_pos, CExtPubKey& xpub) const;
 
     /** Retrieve all cached parent xpubs */
     ExtPubKeyMap GetCachedParentExtPubKeys() const;
