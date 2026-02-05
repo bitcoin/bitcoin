@@ -552,6 +552,9 @@ public:
         // Destroy the subexpressions iteratively after moving out their
         // subexpressions to avoid a stack-overflow due to recursive calls to
         // the subs' destructors.
+        // We move vectors in order to only update array-pointers inside them
+        // rather than moving individual Node instances which would involve
+        // moving/copying each Node field.
         std::vector<std::vector<Node>> queue;
         queue.push_back(std::move(subs));
         do {
