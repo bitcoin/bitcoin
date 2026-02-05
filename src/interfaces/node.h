@@ -167,7 +167,7 @@ public:
     virtual size_t getMempoolMaxUsage() = 0;
 
     //! Get header tip height and time.
-    virtual bool getHeaderTip(int& height, int64_t& block_time) = 0;
+    [[nodiscard]] virtual bool getHeaderTip(int& height, int64_t& block_time) = 0;
 
     //! Get num blocks.
     virtual int getNumBlocks() = 0;

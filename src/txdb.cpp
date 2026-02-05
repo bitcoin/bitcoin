@@ -178,8 +178,8 @@ public:
         CCoinsViewCursor(hashBlockIn), pcursor(pcursorIn) {}
     ~CCoinsViewDBCursor() = default;
 
-    bool GetKey(COutPoint &key) const override;
-    bool GetValue(Coin &coin) const override;
+    [[nodiscard]] bool GetKey(COutPoint& key) const override;
+    [[nodiscard]] bool GetValue(Coin& coin) const override;
 
     bool Valid() const override;
     void Next() override;
