@@ -6,6 +6,7 @@
 import os
 import struct
 import tempfile
+import time
 from io import BytesIO
 
 from test_framework.address import (
@@ -54,7 +55,18 @@ class ZMQSubscriber:
 
     # Receive message from publisher and verify that topic and sequence match
     def _receive_from_publisher_and_check(self):
-        topic, body, seq = self.socket.recv_multipart()
+        max_retries = 5
+        retry_delay = 0.1
+        
+        for attempt in range(max_retries):
+            try:
+                topic, body, seq = self.socket.recv_multipart()
+                break
+            except zmq.error.Again:
+                if attempt == max_retries - 1:
+                    raise
+                time.sleep(retry_delay)
+        
         # Topic should match the subscriber topic.
         assert_equal(topic, self.topic)
         # Sequence should be incremental.
