@@ -81,7 +81,7 @@ public:
     }
 
     double GetScaleSteps() const { return m_scale_steps; }
-    double GetScaledFontSize(int size) const { return std::round(size * (1 + (m_font_scale * m_scale_steps)) * 4) / 4.0; }
+    double GetScaledFontSize(double size) const { return std::round(size * (1 + (m_font_scale * m_scale_steps)) * 4) / 4.0; }
     QString GetFont() const { return m_font; }
     int GetFontScale() const { return m_font_scale; }
     int GetFontSize() const { return m_font_size; }
@@ -158,14 +158,14 @@ void updateFonts();
 /** Get list of all selectable fonts */
 std::vector<QString> getFonts(bool selectable_only);
 
-/** Get a properly weighted QFont object with the selected font. */
-QFont getFont(const FontAttrib& font_attrib);
+/** Get the default bold QFont */
+QFont getFontBold();
 
 /** Get the default normal QFont */
 QFont getFontNormal();
 
-/** Get the default bold QFont */
-QFont getFontBold();
+/** Get a scaled font with the specified base size, weight, and optional multiplier. */
+QFont getScaledFont(double baseSize, bool bold, double multiplier = 1);
 
 /** (Bitcoin) Return a monospace font */
 QFont fixedPitchFont(bool use_embedded_font = false);
