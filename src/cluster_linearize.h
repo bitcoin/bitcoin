@@ -477,19 +477,19 @@ class SFLDefaultCostModel
     uint64_t m_cost{0};
 
 public:
-    inline void InitializeEnd(int num_txns, int num_deps) noexcept {}
-    inline void MakeTopologicalEnd(int num_chunks, int num_steps) noexcept {}
-    inline void StartOptimizingEnd(int num_chunks) noexcept {}
-    inline void ActivateEnd(int num_deps) noexcept { m_cost += num_deps + 1; }
-    inline void DeactivateEnd(int num_deps) noexcept { m_cost += num_deps + 1; }
-    inline void MergeChunksMid(int num_txns) noexcept {}
-    inline void MergeChunksEnd(int num_steps) noexcept {}
-    inline void PickMergeCandidateEnd(int num_steps) noexcept {}
-    inline void PickChunkToOptimizeEnd(int num_steps) noexcept {}
-    inline void PickDependencyToSplitEnd(int num_txns) noexcept {}
-    inline void StartMinimizingEnd(int num_chunks) noexcept {}
-    inline void MinimizeStepMid(int num_txns) noexcept {}
-    inline void MinimizeStepEnd(bool split) noexcept {}
+    inline void InitializeEnd(int num_txns, int num_deps) noexcept { m_cost += 92 * num_txns; }
+    inline void MakeTopologicalEnd(int num_chunks, int num_steps) noexcept { m_cost += 3 * num_chunks + 38 * num_steps; }
+    inline void StartOptimizingEnd(int num_chunks) noexcept { m_cost += 11 * num_chunks; }
+    inline void ActivateEnd(int num_deps) noexcept { m_cost += 9 * num_deps; }
+    inline void DeactivateEnd(int num_deps) noexcept { m_cost += 9 * num_deps + 6; }
+    inline void MergeChunksMid(int num_txns) noexcept { m_cost += 2 * num_txns; }
+    inline void MergeChunksEnd(int num_steps) noexcept { m_cost += 2 * num_steps + 6; }
+    inline void PickMergeCandidateEnd(int num_steps) noexcept { m_cost += 7 * num_steps + 1; }
+    inline void PickChunkToOptimizeEnd(int num_steps) noexcept { m_cost += num_steps + 3; }
+    inline void PickDependencyToSplitEnd(int num_txns) noexcept { m_cost += 8 * num_txns + 7; }
+    inline void StartMinimizingEnd(int num_chunks) noexcept { m_cost += 15 * num_chunks; }
+    inline void MinimizeStepMid(int num_txns) noexcept { m_cost += 9 * num_txns + 12; }
+    inline void MinimizeStepEnd(bool split) noexcept { m_cost += 19 * split + 5; }
 
     inline uint64_t GetCost() const noexcept { return m_cost; }
 };
