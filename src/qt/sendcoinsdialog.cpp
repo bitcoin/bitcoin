@@ -359,7 +359,7 @@ bool SendCoinsDialog::send(const QList<SendCoinsRecipient>& recipients, QString&
         // generate amount string with wallet name in case of multiwallet
         QString amount = BitcoinUnits::formatWithUnit(model->getOptionsModel()->getDisplayUnit(), rcp.amount);
         if (model->isMultiwallet()) {
-            amount.append(tr(" from wallet '%1'").arg(model->getWalletName()));
+            amount = tr("%1 from wallet '%2'").arg(amount, model->getWalletName());
         }
 
         // generate address string

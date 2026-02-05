@@ -1472,6 +1472,7 @@ public:
     size_t GetMaxOutboundNodeCount();
     size_t GetMaxOutboundOnionNodeCount();
     void GetNodeStats(std::vector<CNodeStats>& vstats) const EXCLUSIVE_LOCKS_REQUIRED(!m_nodes_mutex);
+    uint32_t GetMappedAS(const CNetAddr& addr) const;
     bool DisconnectNode(const std::string& node) EXCLUSIVE_LOCKS_REQUIRED(!m_nodes_mutex);
     bool DisconnectNode(const CSubNet& subnet) EXCLUSIVE_LOCKS_REQUIRED(!m_nodes_mutex);
     bool DisconnectNode(const CNetAddr& addr) EXCLUSIVE_LOCKS_REQUIRED(!m_nodes_mutex);
