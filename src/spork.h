@@ -219,7 +219,7 @@ private:
     // TODO: drop mutex cs_cache completely so far as sporks are used on testnet only
     // and simplify IsSporkActive to avoid any mutex for better mainnet performance
     mutable Mutex cs_cache;
-    mutable std::unordered_map<const SporkId, bool> mapSporksCachedActive GUARDED_BY(cs_cache);
+    mutable std::unordered_map<SporkId, bool> mapSporksCachedActive GUARDED_BY(cs_cache);
     mutable std::unordered_map<SporkId, SporkValue> mapSporksCachedValues GUARDED_BY(cs_cache);
 
     std::set<CKeyID> setSporkPubKeyIDs GUARDED_BY(cs);
