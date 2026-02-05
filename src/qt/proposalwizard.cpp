@@ -44,7 +44,7 @@ ProposalWizard::ProposalWizard(interfaces::Node& node, WalletModel* walletModel,
 {
     m_ui->setupUi(this);
 
-    GUIUtil::setFont({m_ui->labelHeader}, {GUIUtil::g_font_registry.GetWeightBold(), 16});
+    GUIUtil::setFont({m_ui->labelHeader}, {GUIUtil::FontWeight::Bold, 16});
     GUIUtil::disableMacFocusRect(this);
     GUIUtil::updateFonts();
 

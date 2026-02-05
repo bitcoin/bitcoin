@@ -46,7 +46,7 @@ OptionsDialog::OptionsDialog(QWidget* parent, bool enableWallet)
 {
     ui->setupUi(this);
 
-    GUIUtil::setFont({ui->statusLabel}, {GUIUtil::g_font_registry.GetWeightBold(), 16});
+    GUIUtil::setFont({ui->statusLabel}, {GUIUtil::FontWeight::Bold, 16});
 
     GUIUtil::updateFonts();
 
@@ -389,8 +389,8 @@ void OptionsDialog::showPage(int index)
         }
     }
 
-    GUIUtil::setFont({btnActive}, {GUIUtil::g_font_registry.GetWeightBold(), 16});
-    GUIUtil::setFont(vecNormal, {GUIUtil::g_font_registry.GetWeightNormal(), 16});
+    GUIUtil::setFont({btnActive}, {GUIUtil::FontWeight::Bold, 16});
+    GUIUtil::setFont(vecNormal, {GUIUtil::FontWeight::Normal, 16});
     GUIUtil::updateFonts();
 
     ui->stackedWidgetOptions->setCurrentIndex(index);

@@ -162,8 +162,8 @@ void TrafficGraphWidget::paintEvent(QPaintEvent *)
     const QString strReceived = tr("Received");
     const QString strSent = tr("Sent");
     // Get a bold font for the title and a normal one for the rest
-    QFont fontTotal = GUIUtil::getFont({GUIUtil::g_font_registry.GetWeightBold(), 16, false});
-    QFont fontInOut = GUIUtil::getFont({GUIUtil::g_font_registry.GetWeightNormal(), 12, false});
+    QFont fontTotal = GUIUtil::getFont({GUIUtil::FontWeight::Bold, 16, false});
+    QFont fontInOut = GUIUtil::getFont({GUIUtil::FontWeight::Normal, 12, false});
     // Use font metrics to determine minimum rect sizes depending on the font scale
     QFontMetrics fmTotal(fontTotal);
     QFontMetrics fmInOut(fontInOut);

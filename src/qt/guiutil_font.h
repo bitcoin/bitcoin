@@ -123,13 +123,13 @@ extern FontRegistry g_font_registry;
 
 struct FontAttrib {
     QString m_font;
-    QFont::Weight m_weight;
+    FontWeight m_weight_type;
     double m_point_size{-1};
     bool m_is_italic{false};
 
-    FontAttrib(QString font, QFont::Weight weight, double point_size = -1, bool is_italic = false);
+    FontAttrib(QString font, FontWeight weight_type, double point_size = -1, bool is_italic = false);
     // cppcheck-suppress noExplicitConstructor
-    FontAttrib(QFont::Weight weight, double point_size = -1, bool is_italic = false);
+    FontAttrib(FontWeight weight_type, double point_size = -1, bool is_italic = false);
     ~FontAttrib();
 };
 

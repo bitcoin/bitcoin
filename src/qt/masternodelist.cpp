@@ -40,10 +40,8 @@ MasternodeList::MasternodeList(QWidget* parent) :
 {
     ui->setupUi(this);
 
-    GUIUtil::setFont({ui->label_count_2,
-                      ui->countLabelDIP3
-                     }, {GUIUtil::g_font_registry.GetWeightBold(), 14});
-    GUIUtil::setFont({ui->label_filter_2}, {GUIUtil::g_font_registry.GetWeightNormal(), 15});
+    GUIUtil::setFont({ui->label_count_2, ui->countLabelDIP3}, {GUIUtil::FontWeight::Bold, 14});
+    GUIUtil::setFont({ui->label_filter_2}, {GUIUtil::FontWeight::Normal, 15});
 
     int columnAddressWidth = 200;
     int columnTypeWidth = 160;
