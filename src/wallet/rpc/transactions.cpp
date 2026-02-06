@@ -212,43 +212,43 @@ static UniValue ListReceived(const CWallet& wallet, const UniValue& params, cons
 RPCHelpMan listreceivedbyaddress()
 {
     return RPCHelpMan{"listreceivedbyaddress",
-        "\nList balances by receiving address.\n",
-        {
-            {"minconf", RPCArg::Type::NUM, RPCArg::Default{1}, "The minimum number of confirmations before payments are included."},
-            {"addlocked", RPCArg::Type::BOOL, RPCArg::Default{false}, "Whether to include transactions locked via InstantSend."},
-            {"include_empty", RPCArg::Type::BOOL, RPCArg::Default{false}, "Whether to include addresses that haven't received any payments."},
-            {"include_watchonly", RPCArg::Type::BOOL, RPCArg::DefaultHint{"true for watch-only wallets, otherwise false"}, "Whether to include watch-only addresses (see 'importaddress')"},
-            {"address_filter", RPCArg::Type::STR, RPCArg::Optional::OMITTED_NAMED_ARG, "If present and non-empty, only return information on this address."},
-            {"include_immature_coinbase", RPCArg::Type::BOOL, RPCArg::Default{false}, "Include immature coinbase transactions."},
-        },
-        RPCResult{
-            RPCResult::Type::ARR, "", "",
-            {
-                {RPCResult::Type::OBJ, "", "",
-                 {
-                     {RPCResult::Type::BOOL, "involvesWatchonly", /*optional=*/true, "Only returns true if imported addresses were involved in transaction"},
-                     {RPCResult::Type::STR, "address", "The receiving address"},
-                     {RPCResult::Type::STR_AMOUNT, "amount", "The total amount in " + CURRENCY_UNIT + " received by the address"},
-                     {RPCResult::Type::NUM, "confirmations", "The number of confirmations of the most recent transaction included.\n"
-                                                             "If 'addlocked' is true, the number of confirmations can be less than\n"
-                                                             "configured for transactions locked via InstantSend"},
-                     {RPCResult::Type::STR, "label", "The label of the receiving address. The default label is \"\""},
-                     {RPCResult::Type::ARR, "txids", "",
-                      {
-                          {RPCResult::Type::STR_HEX, "txid", "The ids of transactions received with the address"},
-                      }},
-                 }},
-            }
-        },
-        RPCExamples{
-            HelpExampleCli("listreceivedbyaddress", "")
-    + HelpExampleCli("listreceivedbyaddress", "6 false true")
-    + HelpExampleCli("listreceivedbyaddress", "6 false true true \"\" true")
-    + HelpExampleRpc("listreceivedbyaddress", "6, false, true, true")
-    + HelpExampleRpc("listreceivedbyaddress", "6, false, true, true, \"" + EXAMPLE_ADDRESS[0] + "\"")
-    + HelpExampleRpc("listreceivedbyaddress", "6, false true, true, \"" + EXAMPLE_ADDRESS[0] + "\", true")
-        },
-        [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
+                "\nList balances by receiving address.\n",
+                {
+                    {"minconf", RPCArg::Type::NUM, RPCArg::Default{1}, "The minimum number of confirmations before payments are included."},
+                    {"addlocked", RPCArg::Type::BOOL, RPCArg::Default{false}, "Whether to include transactions locked via InstantSend."},
+                    {"include_empty", RPCArg::Type::BOOL, RPCArg::Default{false}, "Whether to include addresses that haven't received any payments."},
+                    {"include_watchonly", RPCArg::Type::BOOL, RPCArg::DefaultHint{"true for watch-only wallets, otherwise false"}, "Whether to include watch-only addresses (see 'importaddress')"},
+                    {"address_filter", RPCArg::Type::STR, RPCArg::Optional::OMITTED_NAMED_ARG, "If present and non-empty, only return information on this address."},
+                    {"include_immature_coinbase", RPCArg::Type::BOOL, RPCArg::Default{false}, "Include immature coinbase transactions."},
+                },
+                RPCResult{
+                    RPCResult::Type::ARR, "", "",
+                    {
+                        {RPCResult::Type::OBJ, "", "",
+                        {
+                            {RPCResult::Type::BOOL, "involvesWatchonly", /*optional=*/true, "Only returns true if imported addresses were involved in transaction"},
+                            {RPCResult::Type::STR, "address", "The receiving address"},
+                            {RPCResult::Type::STR_AMOUNT, "amount", "The total amount in " + CURRENCY_UNIT + " received by the address"},
+                            {RPCResult::Type::NUM, "confirmations", "The number of confirmations of the most recent transaction included.\n"
+                                                                    "If 'addlocked' is true, the number of confirmations can be less than\n"
+                                                                    "configured for transactions locked via InstantSend"},
+                            {RPCResult::Type::STR, "label", "The label of the receiving address. The default label is \"\""},
+                            {RPCResult::Type::ARR, "txids", "",
+                            {
+                                {RPCResult::Type::STR_HEX, "txid", "The ids of transactions received with the address"},
+                            }},
+                        }},
+                    }
+                },
+                RPCExamples{
+                    HelpExampleCli("listreceivedbyaddress", "")
+            + HelpExampleCli("listreceivedbyaddress", "6 false true")
+            + HelpExampleCli("listreceivedbyaddress", "6 false true true \"\" true")
+            + HelpExampleRpc("listreceivedbyaddress", "6, false, true, true")
+            + HelpExampleRpc("listreceivedbyaddress", "6, false, true, true, \"" + EXAMPLE_ADDRESS[0] + "\"")
+            + HelpExampleRpc("listreceivedbyaddress", "6, false true, true, \"" + EXAMPLE_ADDRESS[0] + "\", true")
+                },
+                [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
 {
     const std::shared_ptr<const CWallet> pwallet = GetWalletForJSONRPCRequest(request);
     if (!pwallet) return UniValue::VNULL;
@@ -269,32 +269,32 @@ RPCHelpMan listreceivedbyaddress()
 RPCHelpMan listreceivedbylabel()
 {
     return RPCHelpMan{"listreceivedbylabel",
-        "\nList received transactions by label.\n",
-        {
-            {"minconf", RPCArg::Type::NUM, RPCArg::Default{1}, "The minimum number of confirmations before payments are included."},
-            {"addlocked", RPCArg::Type::BOOL, RPCArg::Default{false}, "Whether to include transactions locked via InstantSend."},
-            {"include_empty", RPCArg::Type::BOOL, RPCArg::Default{false}, "Whether to include labels that haven't received any payments."},
-            {"include_watchonly", RPCArg::Type::BOOL, RPCArg::DefaultHint{"true for watch-only wallets, otherwise false"}, "Whether to include watch-only addresses (see 'importaddress')"},
-            {"include_immature_coinbase", RPCArg::Type::BOOL, RPCArg::Default{false}, "Include immature coinbase transactions."},
-        },
-        RPCResult{
-            RPCResult::Type::ARR, "", "",
-            {
-                {RPCResult::Type::OBJ, "", "",
-                 {
-                    {RPCResult::Type::BOOL, "involvesWatchonly", /*optional=*/true, "Only returns true if imported addresses were involved in transaction"},
-                     {RPCResult::Type::STR_AMOUNT, "amount", "The total amount received by addresses with this label"},
-                     {RPCResult::Type::NUM, "confirmations", "The number of confirmations of the most recent transaction included"},
-                     {RPCResult::Type::STR, "label", "The label of the receiving address. The default label is \"\""},
-                 }},
-            }
-        },
-        RPCExamples{
-            HelpExampleCli("listreceivedbylabel", "")
-    + HelpExampleCli("listreceivedbylabel", "6 true")
-    + HelpExampleRpc("listreceivedbylabel", "6, true, true")
-    + HelpExampleRpc("listreceivedbylabel", "6, true, true, true")
-        },
+                "\nList received transactions by label.\n",
+                {
+                    {"minconf", RPCArg::Type::NUM, RPCArg::Default{1}, "The minimum number of confirmations before payments are included."},
+                    {"addlocked", RPCArg::Type::BOOL, RPCArg::Default{false}, "Whether to include transactions locked via InstantSend."},
+                    {"include_empty", RPCArg::Type::BOOL, RPCArg::Default{false}, "Whether to include labels that haven't received any payments."},
+                    {"include_watchonly", RPCArg::Type::BOOL, RPCArg::DefaultHint{"true for watch-only wallets, otherwise false"}, "Whether to include watch-only addresses (see 'importaddress')"},
+                    {"include_immature_coinbase", RPCArg::Type::BOOL, RPCArg::Default{false}, "Include immature coinbase transactions."},
+                },
+                RPCResult{
+                    RPCResult::Type::ARR, "", "",
+                    {
+                        {RPCResult::Type::OBJ, "", "",
+                        {
+                            {RPCResult::Type::BOOL, "involvesWatchonly", /*optional=*/true, "Only returns true if imported addresses were involved in transaction"},
+                            {RPCResult::Type::STR_AMOUNT, "amount", "The total amount received by addresses with this label"},
+                            {RPCResult::Type::NUM, "confirmations", "The number of confirmations of the most recent transaction included"},
+                            {RPCResult::Type::STR, "label", "The label of the receiving address. The default label is \"\""},
+                        }},
+                    }
+                },
+                RPCExamples{
+                    HelpExampleCli("listreceivedbylabel", "")
+            + HelpExampleCli("listreceivedbylabel", "6 true")
+            + HelpExampleRpc("listreceivedbylabel", "6, true, true")
+            + HelpExampleRpc("listreceivedbylabel", "6, true, true, true")
+                },
         [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
 {
     const std::shared_ptr<const CWallet> pwallet = GetWalletForJSONRPCRequest(request);
@@ -417,77 +417,77 @@ static void ListTransactions(const CWallet& wallet, const CWalletTx& wtx, int nM
 
 static std::vector<RPCResult> TransactionDescriptionString()
 {
-    return  {{RPCResult::Type::NUM, "confirmations", "The number of blockchain confirmations for the transaction. Available for 'send' and\n"
-                                                    "'receive' category of transactions. Negative confirmations indicate the\n"
-                                                    "transaction conflicts with the block chain"},
-            {RPCResult::Type::BOOL, "instantlock", "Current transaction lock state. Available for 'send' and 'receive' category of transactions"},
-            {RPCResult::Type::BOOL, "instantlock-internal", "Current internal transaction lock state. Available for 'send' and 'receive' category of transactions"},
-            {RPCResult::Type::BOOL, "chainlock", "The state of the corresponding block ChainLock"},
-            {RPCResult::Type::BOOL, "generated", /*optional=*/true, "Only present if the transaction's only input is a coinbase one."},
-            {RPCResult::Type::BOOL, "trusted", /*optional=*/true, "Whether we consider the transaction to be trusted and safe to spend from.\n"
+    return{{RPCResult::Type::NUM, "confirmations", "The number of blockchain confirmations for the transaction. Available for 'send' and\n"
+               "'receive' category of transactions. Negative confirmations indicate the\n"
+               "transaction conflicts with the block chain"},
+           {RPCResult::Type::BOOL, "instantlock", "Current transaction lock state. Available for 'send' and 'receive' category of transactions"},
+           {RPCResult::Type::BOOL, "instantlock-internal", "Current internal transaction lock state. Available for 'send' and 'receive' category of transactions"},
+           {RPCResult::Type::BOOL, "chainlock", "The state of the corresponding block ChainLock"},
+           {RPCResult::Type::BOOL, "generated", /*optional=*/true, "Only present if the transaction's only input is a coinbase one."},
+           {RPCResult::Type::BOOL, "trusted", /*optional=*/true, "Whether we consider the transaction to be trusted and safe to spend from.\n"
                 "Only present when the transaction has 0 confirmations (or negative confirmations, if conflicted)."},
-            {RPCResult::Type::STR_HEX, "blockhash", /*optional=*/true, "The block hash containing the transaction. Available for 'send' and 'receive'\n"
-                                                   "category of transactions."},
-            {RPCResult::Type::STR_HEX, "blockheight", /*optional=*/true, "The block height containing the transaction."},
-            {RPCResult::Type::NUM, "blockindex", /*optional=*/true, "The index of the transaction in the block that includes it. Available for 'send' and 'receive'\n"
-                                                "category of transactions."},
-            {RPCResult::Type::NUM_TIME, "blocktime", /*optional=*/true, "The block time expressed in " + UNIX_EPOCH_TIME + "."},
-            {RPCResult::Type::STR_HEX, "txid", "The transaction id. Available for 'send' and 'receive' category of transactions."},
-            {RPCResult::Type::NUM_TIME, "time", "The transaction time expressed in " + UNIX_EPOCH_TIME + "."},
-            {RPCResult::Type::NUM_TIME, "timereceived", "The time received expressed in " + UNIX_EPOCH_TIME + ". Available \n"
-                                               "for 'send' and 'receive' category of transactions."},
-            {RPCResult::Type::STR, "comment", /*optional=*/true, "If a comment is associated with the transaction."}};
+           {RPCResult::Type::STR_HEX, "blockhash", /*optional=*/true, "The block hash containing the transaction. Available for 'send' and 'receive'\n"
+                                                  "category of transactions."},
+           {RPCResult::Type::STR_HEX, "blockheight", /*optional=*/true, "The block height containing the transaction."},
+           {RPCResult::Type::NUM, "blockindex", /*optional=*/true, "The index of the transaction in the block that includes it. Available for 'send' and 'receive'\n"
+                                               "category of transactions."},
+           {RPCResult::Type::NUM_TIME, "blocktime", /*optional=*/true, "The block time expressed in " + UNIX_EPOCH_TIME + "."},
+           {RPCResult::Type::STR_HEX, "txid", "The transaction id. Available for 'send' and 'receive' category of transactions."},
+           {RPCResult::Type::NUM_TIME, "time", "The transaction time expressed in " + UNIX_EPOCH_TIME + "."},
+           {RPCResult::Type::NUM_TIME, "timereceived", "The time received expressed in " + UNIX_EPOCH_TIME + ". Available \n"
+                                              "for 'send' and 'receive' category of transactions."},
+           {RPCResult::Type::STR, "comment", /*optional=*/true, "If a comment is associated with the transaction."}};
 }
 
 RPCHelpMan listtransactions()
 {
     return RPCHelpMan{"listtransactions",
-        "\nIf a label name is provided, this will return only incoming transactions paying to addresses with the specified label.\n"
-        "\nReturns up to 'count' most recent transactions skipping the first 'from' transactions.\n",
-        {
-            {"label|dummy", RPCArg::Type::STR, RPCArg::Optional::OMITTED_NAMED_ARG, "If set, should be a valid label name to return only incoming transactions\n"
-                  "with the specified label, or \"*\" to disable filtering and return all transactions."},
-            {"count", RPCArg::Type::NUM, RPCArg::Default{10}, "The number of transactions to return"},
-            {"skip", RPCArg::Type::NUM, RPCArg::Default{0}, "The number of transactions to skip"},
-            {"include_watchonly", RPCArg::Type::BOOL, RPCArg::DefaultHint{"true for watch-only wallets, otherwise false"}, "Include transactions to watch-only addresses (see 'importaddress')"},
-        },
-        RPCResult{
-            RPCResult::Type::ARR, "", "",
-            {
-                {RPCResult::Type::OBJ, "", "", Cat(Cat<std::vector<RPCResult>>(
+                "\nIf a label name is provided, this will return only incoming transactions paying to addresses with the specified label.\n"
+                "\nReturns up to 'count' most recent transactions skipping the first 'from' transactions.\n",
+                {
+                    {"label|dummy", RPCArg::Type::STR, RPCArg::Optional::OMITTED_NAMED_ARG, "If set, should be a valid label name to return only incoming transactions\n"
+                          "with the specified label, or \"*\" to disable filtering and return all transactions."},
+                    {"count", RPCArg::Type::NUM, RPCArg::Default{10}, "The number of transactions to return"},
+                    {"skip", RPCArg::Type::NUM, RPCArg::Default{0}, "The number of transactions to skip"},
+                    {"include_watchonly", RPCArg::Type::BOOL, RPCArg::DefaultHint{"true for watch-only wallets, otherwise false"}, "Include transactions to watch-only addresses (see 'importaddress')"},
+                },
+                RPCResult{
+                    RPCResult::Type::ARR, "", "",
                     {
-                        {RPCResult::Type::BOOL, "involvesWatchonly", /*optional=*/true, "Only returns true if imported addresses were involved in transaction"},
-                        {RPCResult::Type::STR, "address", "The Dash address of the transaction. Not present for\n"
-                              "move transactions (category = move)."},
-                        {RPCResult::Type::STR, "category", "The transaction category.\n"
-                            "\"send\"                  Transactions sent.\n"
-                            "\"coinjoin\"              Transactions sent using CoinJoin funds.\n"
-                            "\"receive\"               Non-coinbase transactions received.\n"
-                            "\"generate\"              Coinbase transactions received with more than 100 confirmations.\n"
-                            "\"immature\"              Coinbase transactions received with 100 or fewer confirmations.\n"
-                            "\"orphan\"                Orphaned coinbase transactions received.\n"
-                            "\"platform-transfer\"     Platform Transfer transactions received.\n"},
-                        {RPCResult::Type::STR_AMOUNT, "amount", "The amount in " + CURRENCY_UNIT + ". This is negative for the 'send' category, and is positive\n"
-                             "for all other categories"},
-                        {RPCResult::Type::STR, "label", /*optional=*/true, "A comment for the address/transaction, if any"},
-                        {RPCResult::Type::NUM, "vout", "the vout value"},
-                        {RPCResult::Type::STR_AMOUNT, "fee", /*optional=*/true, "The amount of the fee in " + CURRENCY_UNIT + ". This is negative and only available for the\n"
-                            "'send' category of transactions."},
-                    },
-                    TransactionDescriptionString()),
-                    {
-                       {RPCResult::Type::BOOL, "abandoned", "'true' if the transaction has been abandoned (inputs are respendable)."},
-                    })},
-            }
-        },
-        RPCExamples{
-    "\nList the most recent 10 transactions in the systems\n"
-    + HelpExampleCli("listtransactions", "") +
-    "\nList transactions 100 to 120\n"
-    + HelpExampleCli("listtransactions", "\"\" 20 100") +
-    "\nAs a json rpc call\n"
-    + HelpExampleRpc("listtransactions", "\"\", 20, 100")
-        },
+                        {RPCResult::Type::OBJ, "", "", Cat(Cat<std::vector<RPCResult>>(
+                        {
+                            {RPCResult::Type::BOOL, "involvesWatchonly", /*optional=*/true, "Only returns true if imported addresses were involved in transaction"},
+                            {RPCResult::Type::STR, "address", "The Dash address of the transaction. Not present for\n"
+                                  "move transactions (category = move)."},
+                            {RPCResult::Type::STR, "category", "The transaction category.\n"
+                                "\"send\"                  Transactions sent.\n"
+                                "\"coinjoin\"              Transactions sent using CoinJoin funds.\n"
+                                "\"receive\"               Non-coinbase transactions received.\n"
+                                "\"generate\"              Coinbase transactions received with more than 100 confirmations.\n"
+                                "\"immature\"              Coinbase transactions received with 100 or fewer confirmations.\n"
+                                "\"orphan\"                Orphaned coinbase transactions received.\n"
+                                "\"platform-transfer\"     Platform Transfer transactions received.\n"},
+                            {RPCResult::Type::STR_AMOUNT, "amount", "The amount in " + CURRENCY_UNIT + ". This is negative for the 'send' category, and is positive\n"
+                                "for all other categories"},
+                            {RPCResult::Type::STR, "label", /*optional=*/true, "A comment for the address/transaction, if any"},
+                            {RPCResult::Type::NUM, "vout", "the vout value"},
+                            {RPCResult::Type::STR_AMOUNT, "fee", /*optional=*/true, "The amount of the fee in " + CURRENCY_UNIT + ". This is negative and only available for the\n"
+                                 "'send' category of transactions."},
+                        },
+                        TransactionDescriptionString()),
+                        {
+                            {RPCResult::Type::BOOL, "abandoned", "'true' if the transaction has been abandoned (inputs are respendable)."},
+                        })},
+                    }
+                },
+                RPCExamples{
+            "\nList the most recent 10 transactions in the systems\n"
+            + HelpExampleCli("listtransactions", "") +
+            "\nList transactions 100 to 120\n"
+            + HelpExampleCli("listtransactions", "\"\" 20 100") +
+            "\nAs a json rpc call\n"
+            + HelpExampleRpc("listtransactions", "\"\", 20, 100")
+                },
         [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
 {
     const std::shared_ptr<const CWallet> pwallet = GetWalletForJSONRPCRequest(request);
@@ -554,56 +554,56 @@ RPCHelpMan listtransactions()
 RPCHelpMan listsinceblock()
 {
     return RPCHelpMan{"listsinceblock",
-        "\nGet all transactions in blocks since block [blockhash], or all transactions if omitted.\n"
-        "If \"blockhash\" is no longer a part of the main chain, transactions from the fork point onward are included.\n"
-        "Additionally, if include_removed is set, transactions affecting the wallet which were removed are returned in the \"removed\" array.\n",
-        {
-            {"blockhash", RPCArg::Type::STR, RPCArg::Optional::OMITTED_NAMED_ARG, "If set, the block hash to list transactions since, otherwise list all transactions."},
-            {"target_confirmations", RPCArg::Type::NUM, RPCArg::Default{1}, "Return the nth block hash from the main chain. e.g. 1 would mean the best block hash. Note: this is not used as a filter, but only affects [lastblock] in the return value"},
-            {"include_watchonly", RPCArg::Type::BOOL, RPCArg::DefaultHint{"true for watch-only wallets, otherwise false"}, "Include transactions to watch-only addresses (see 'importaddress')"},
-            {"include_removed", RPCArg::Type::BOOL, RPCArg::Default{true}, "Show transactions that were removed due to a reorg in the \"removed\" array\n"
-                "(not guaranteed to work on pruned nodes)"},
-        },
-        RPCResult{
-            RPCResult::Type::OBJ, "", "",
-            {
-                {RPCResult::Type::ARR, "transactions", "",
+                "\nGet all transactions in blocks since block [blockhash], or all transactions if omitted.\n"
+                "If \"blockhash\" is no longer a part of the main chain, transactions from the fork point onward are included.\n"
+                "Additionally, if include_removed is set, transactions affecting the wallet which were removed are returned in the \"removed\" array.\n",
                 {
-                    {RPCResult::Type::OBJ, "", "", Cat(Cat<std::vector<RPCResult>>(
+                    {"blockhash", RPCArg::Type::STR, RPCArg::Optional::OMITTED_NAMED_ARG, "If set, the block hash to list transactions since, otherwise list all transactions."},
+                    {"target_confirmations", RPCArg::Type::NUM, RPCArg::Default{1}, "Return the nth block hash from the main chain. e.g. 1 would mean the best block hash. Note: this is not used as a filter, but only affects [lastblock] in the return value"},
+                    {"include_watchonly", RPCArg::Type::BOOL, RPCArg::DefaultHint{"true for watch-only wallets, otherwise false"}, "Include transactions to watch-only addresses (see 'importaddress')"},
+                    {"include_removed", RPCArg::Type::BOOL, RPCArg::Default{true}, "Show transactions that were removed due to a reorg in the \"removed\" array\n"
+                                                                       "(not guaranteed to work on pruned nodes)"},
+                },
+                RPCResult{
+                    RPCResult::Type::OBJ, "", "",
                     {
-                        {RPCResult::Type::BOOL, "involvesWatchonly", /*optional=*/true, "Only returns true if imported addresses were involved in transaction"},
-                        {RPCResult::Type::STR, "address", "The Dash address of the transaction."},
-                        {RPCResult::Type::STR, "category", "The transaction category.\n"
-                            "\"send\"                  Transactions sent.\n"
-                            "\"coinjoin\"              Transactions sent using CoinJoin funds.\n"
-                            "\"receive\"               Non-coinbase transactions received.\n"
-                            "\"generate\"              Coinbase transactions received with more than 100 confirmations.\n"
-                            "\"immature\"              Coinbase transactions received with 100 or fewer confirmations.\n"
-                            "\"orphan\"                Orphaned coinbase transactions received.\n"
-                            "\"platform-transfer\"     Platform Transfer transactions received.\n"},
-                        {RPCResult::Type::STR_AMOUNT, "amount", "The amount in " + CURRENCY_UNIT + ". This is negative for the 'send' category, and is positive\n"
-                            "for all other categories"},
-                        {RPCResult::Type::NUM, "vout", "the vout value"},
-                        {RPCResult::Type::NUM, "fee", /*optional=*/true, "The amount of the fee in " + CURRENCY_UNIT + ". This is negative and only available for the 'send' category of transactions."},
-                    },
-                    TransactionDescriptionString()),
-                    {
-                        {RPCResult::Type::BOOL, "abandoned", "'true' if the transaction has been abandoned (inputs are respendable)."},
-                        {RPCResult::Type::STR, "label", /*optional=*/true, "A comment for the address/transaction, if any."},
-                        {RPCResult::Type::STR, "to", "If a comment to is associated with the transaction."},
-                    })},
-                }},
-                {RPCResult::Type::ARR, "removed", /*optional=*/true, "<structure is the same as \"transactions\" above, only present if include_removed=true>\n"
-                    "Note: transactions that were re-added in the active chain will appear as-is in this array, and may thus have a positive confirmation count."
-                , {{RPCResult::Type::ELISION, "", ""},}},
-                {RPCResult::Type::STR_HEX, "lastblockhash", "The hash of the block (target_confirmations-1) from the best block on the main chain, or the genesis hash if the referenced block does not exist yet. This is typically used to feed back into listsinceblock the next time you call it. So you would generally use a target_confirmations of say 6, so you will be continually re-notified of transactions until they've reached 6 confirmations plus any new ones."}
-            }
-        },
-        RPCExamples{
-            HelpExampleCli("listsinceblock", "")
-    + HelpExampleCli("listsinceblock", "\"000000000000000bacf66f7497b7dc45ef753ee9a7d38571037cdb1a57f663ad\" 6")
-    + HelpExampleRpc("listsinceblock", "\"000000000000000bacf66f7497b7dc45ef753ee9a7d38571037cdb1a57f663ad\", 6")
-        },
+                        {RPCResult::Type::ARR, "transactions", "",
+                        {
+                            {RPCResult::Type::OBJ, "", "", Cat(Cat<std::vector<RPCResult>>(
+                            {
+                                {RPCResult::Type::BOOL, "involvesWatchonly", /*optional=*/true, "Only returns true if imported addresses were involved in transaction"},
+                                {RPCResult::Type::STR, "address", "The Dash address of the transaction."},
+                                {RPCResult::Type::STR, "category", "The transaction category.\n"
+                                    "\"send\"                  Transactions sent.\n"
+                                    "\"coinjoin\"              Transactions sent using CoinJoin funds.\n"
+                                    "\"receive\"               Non-coinbase transactions received.\n"
+                                    "\"generate\"              Coinbase transactions received with more than 100 confirmations.\n"
+                                    "\"immature\"              Coinbase transactions received with 100 or fewer confirmations.\n"
+                                    "\"orphan\"                Orphaned coinbase transactions received.\n"
+                                    "\"platform-transfer\"     Platform Transfer transactions received.\n"},
+                                {RPCResult::Type::STR_AMOUNT, "amount", "The amount in " + CURRENCY_UNIT + ". This is negative for the 'send' category, and is positive\n"
+                                    "for all other categories"},
+                                {RPCResult::Type::NUM, "vout", "the vout value"},
+                                {RPCResult::Type::NUM, "fee", /*optional=*/true, "The amount of the fee in " + CURRENCY_UNIT + ". This is negative and only available for the 'send' category of transactions."},
+                            },
+                            TransactionDescriptionString()),
+                            {
+                                {RPCResult::Type::BOOL, "abandoned", "'true' if the transaction has been abandoned (inputs are respendable)."},
+                                {RPCResult::Type::STR, "label", /*optional=*/true, "A comment for the address/transaction, if any."},
+                                {RPCResult::Type::STR, "to", "If a comment to is associated with the transaction."},
+                            })},
+                        }},
+                        {RPCResult::Type::ARR, "removed", /*optional=*/true, "<structure is the same as \"transactions\" above, only present if include_removed=true>\n"
+                            "Note: transactions that were re-added in the active chain will appear as-is in this array, and may thus have a positive confirmation count."
+                        , {{RPCResult::Type::ELISION, "", ""},}},
+                        {RPCResult::Type::STR_HEX, "lastblockhash", "The hash of the block (target_confirmations-1) from the best block on the main chain, or the genesis hash if the referenced block does not exist yet. This is typically used to feed back into listsinceblock the next time you call it. So you would generally use a target_confirmations of say 6, so you will be continually re-notified of transactions until they've reached 6 confirmations plus any new ones."}
+                    }
+                },
+                RPCExamples{
+                    HelpExampleCli("listsinceblock", "")
+            + HelpExampleCli("listsinceblock", "\"000000000000000bacf66f7497b7dc45ef753ee9a7d38571037cdb1a57f663ad\" 6")
+            + HelpExampleRpc("listsinceblock", "\"000000000000000bacf66f7497b7dc45ef753ee9a7d38571037cdb1a57f663ad\", 6")
+                },
         [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
 {
     const std::shared_ptr<const CWallet> pwallet = GetWalletForJSONRPCRequest(request);
@@ -694,56 +694,56 @@ RPCHelpMan listsinceblock()
 RPCHelpMan gettransaction()
 {
     return RPCHelpMan{"gettransaction",
-        "\nGet detailed information about in-wallet transaction <txid>\n",
-        {
-            {"txid", RPCArg::Type::STR, RPCArg::Optional::NO, "The transaction id"},
-            {"include_watchonly", RPCArg::Type::BOOL, RPCArg::DefaultHint{"true for watch-only wallets, otherwise false"}, "Whether to include watch-only addresses in balance calculation and details[]"},
-            {"verbose", RPCArg::Type::BOOL, RPCArg::Default{false}, "Whether to include a `decoded` field containing the decoded transaction (equivalent to RPC decoderawtransaction)"},
-        },
-        RPCResult{
-            RPCResult::Type::OBJ, "", "", Cat(Cat<std::vector<RPCResult>>(
+                "\nGet detailed information about in-wallet transaction <txid>\n",
                 {
-                    {RPCResult::Type::STR_AMOUNT, "amount", "The amount in " + CURRENCY_UNIT},
-                    {RPCResult::Type::STR_AMOUNT, "fee", /*optional=*/true, "The amount of the fee in " + CURRENCY_UNIT + ". This is negative and only available for the\n"
-                                                                                                       "'send' category of transactions."},
+                    {"txid", RPCArg::Type::STR, RPCArg::Optional::NO, "The transaction id"},
+                    {"include_watchonly", RPCArg::Type::BOOL, RPCArg::DefaultHint{"true for watch-only wallets, otherwise false"}, "Whether to include watch-only addresses in balance calculation and details[]"},
+                    {"verbose", RPCArg::Type::BOOL, RPCArg::Default{false}, "Whether to include a `decoded` field containing the decoded transaction (equivalent to RPC decoderawtransaction)"},
                 },
-                TransactionDescriptionString()),
-                {
-                    {RPCResult::Type::ARR, "details", "",
+                RPCResult{
+                    RPCResult::Type::OBJ, "", "", Cat(Cat<std::vector<RPCResult>>(
+                    {
+                        {RPCResult::Type::STR_AMOUNT, "amount", "The amount in " + CURRENCY_UNIT},
+                        {RPCResult::Type::STR_AMOUNT, "fee", /*optional=*/true, "The amount of the fee in " + CURRENCY_UNIT + ". This is negative and only available for the\n"
+                                     "'send' category of transactions."},
+                    },
+                    TransactionDescriptionString()),
+                    {
+                        {RPCResult::Type::ARR, "details", "",
                         {
                             {RPCResult::Type::OBJ, "", "",
-                                {
-                                    {RPCResult::Type::BOOL, "involvesWatchonly", /*optional=*/true, "Only returns true if imported addresses were involved in transaction"},
-                                    {RPCResult::Type::STR, "address", /*optional=*/true, "The Dash address involved in the transaction."},
-                                    {RPCResult::Type::STR, "category", "The transaction category.\n"
-                                        "\"send\"                  Transactions sent.\n"
-                                        "\"coinjoin\"              Transactions sent using CoinJoin funds.\n"
-                                        "\"receive\"               Non-coinbase transactions received.\n"
-                                        "\"generate\"              Coinbase transactions received with more than 100 confirmations.\n"
-                                        "\"immature\"              Coinbase transactions received with 100 or fewer confirmations.\n"
-                                        "\"orphan\"                Orphaned coinbase transactions received.\n"
-                                        "\"platform-transfer\"     Platform Transfer transactions received.\n"},
-                                    {RPCResult::Type::STR_AMOUNT, "amount", "The amount in " + CURRENCY_UNIT},
-                                    {RPCResult::Type::STR, "label", /*optional=*/true, "A comment for the address/transaction, if any"},
-                                    {RPCResult::Type::NUM, "vout", "the vout value"},
-                                    {RPCResult::Type::STR_AMOUNT, "fee", /*optional=*/true, "The amount of the fee in " + CURRENCY_UNIT + ". This is negative and only available for the \n"
-                                                                                                                       "'send' category of transactions."},
-                                    {RPCResult::Type::BOOL, "abandoned", "'true' if the transaction has been abandoned (inputs are respendable)."},
+                            {
+                                {RPCResult::Type::BOOL, "involvesWatchonly", /*optional=*/true, "Only returns true if imported addresses were involved in transaction"},
+                                {RPCResult::Type::STR, "address", /*optional=*/true, "The Dash address involved in the transaction."},
+                                {RPCResult::Type::STR, "category", "The transaction category.\n"
+                                    "\"send\"                  Transactions sent.\n"
+                                    "\"coinjoin\"              Transactions sent using CoinJoin funds.\n"
+                                    "\"receive\"               Non-coinbase transactions received.\n"
+                                    "\"generate\"              Coinbase transactions received with more than 100 confirmations.\n"
+                                    "\"immature\"              Coinbase transactions received with 100 or fewer confirmations.\n"
+                                    "\"orphan\"                Orphaned coinbase transactions received.\n"
+                                    "\"platform-transfer\"     Platform Transfer transactions received.\n"},
+                                {RPCResult::Type::STR_AMOUNT, "amount", "The amount in " + CURRENCY_UNIT},
+                                {RPCResult::Type::STR, "label", /*optional=*/true, "A comment for the address/transaction, if any"},
+                                {RPCResult::Type::NUM, "vout", "the vout value"},
+                                {RPCResult::Type::STR_AMOUNT, "fee", /*optional=*/true, "The amount of the fee in " + CURRENCY_UNIT + ". This is negative and only available for the \n"
+                                     "'send' category of transactions."},
+                                {RPCResult::Type::BOOL, "abandoned", "'true' if the transaction has been abandoned (inputs are respendable)."},
                             }},
-                    }},
-                  {RPCResult::Type::STR_HEX, "hex", "Raw data for transaction"},
-                  {RPCResult::Type::OBJ, "decoded", /*optional=*/true, "the decoded transaction (only present when `verbose` is passed), equivalent to the",
-                  {
-                        {RPCResult::Type::ELISION, "", "RPC decoderawtransaction method, or the RPC getrawtransaction method when `verbose` is passed."},
-                  }},
-                  RESULT_LAST_PROCESSED_BLOCK,
-                }),
-        },
-        RPCExamples{
-            HelpExampleCli("gettransaction", "\"1075db55d416d3ca199f55b6084e2115b9345e16c5cf302fc80e9d5fbf5d48d\"")
-    + HelpExampleCli("gettransaction", "\"1075db55d416d3ca199f55b6084e2115b9345e16c5cf302fc80e9d5fbf5d48d\" true")
-    + HelpExampleRpc("gettransaction", "\"1075db55d416d3ca199f55b6084e2115b9345e16c5cf302fc80e9d5fbf5d48d\"")
-        },
+                        }},
+                        {RPCResult::Type::STR_HEX, "hex", "Raw data for transaction"},
+                        {RPCResult::Type::OBJ, "decoded", /*optional=*/true, "the decoded transaction (only present when `verbose` is passed), equivalent to the",
+                        {
+                            {RPCResult::Type::ELISION, "", "RPC decoderawtransaction method, or the RPC getrawtransaction method when `verbose` is passed."},
+                        }},
+                        RESULT_LAST_PROCESSED_BLOCK,
+                     }),
+                },
+                RPCExamples{
+                    HelpExampleCli("gettransaction", "\"1075db55d416d3ca199f55b6084e2115b9345e16c5cf302fc80e9d5fbf5d48d\"")
+            + HelpExampleCli("gettransaction", "\"1075db55d416d3ca199f55b6084e2115b9345e16c5cf302fc80e9d5fbf5d48d\" true")
+            + HelpExampleRpc("gettransaction", "\"1075db55d416d3ca199f55b6084e2115b9345e16c5cf302fc80e9d5fbf5d48d\"")
+                },
         [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
 {
     const std::shared_ptr<const CWallet> pwallet = GetWalletForJSONRPCRequest(request);
@@ -805,19 +805,19 @@ RPCHelpMan gettransaction()
 RPCHelpMan abandontransaction()
 {
     return RPCHelpMan{"abandontransaction",
-        "\nMark in-wallet transaction <txid> as abandoned\n"
-        "This will mark this transaction and all its in-wallet descendants as abandoned which will allow\n"
-        "for their inputs to be respent.  It can be used to replace \"stuck\" or evicted transactions.\n"
-        "It only works on transactions which are not included in a block and are not currently in the mempool.\n"
-        "It has no effect on transactions which are already abandoned.\n",
-        {
-            {"txid", RPCArg::Type::STR_HEX, RPCArg::Optional::NO, "The transaction id"},
-        },
-        RPCResult{RPCResult::Type::NONE, "", ""},
-        RPCExamples{
-            HelpExampleCli("abandontransaction", "\"1075db55d416d3ca199f55b6084e2115b9345e16c5cf302fc80e9d5fbf5d48d\"")
-    + HelpExampleRpc("abandontransaction", "\"1075db55d416d3ca199f55b6084e2115b9345e16c5cf302fc80e9d5fbf5d48d\"")
-        },
+                "\nMark in-wallet transaction <txid> as abandoned\n"
+                "This will mark this transaction and all its in-wallet descendants as abandoned which will allow\n"
+                "for their inputs to be respent.  It can be used to replace \"stuck\" or evicted transactions.\n"
+                "It only works on transactions which are not included in a block and are not currently in the mempool.\n"
+                "It has no effect on transactions which are already abandoned.\n",
+                {
+                    {"txid", RPCArg::Type::STR_HEX, RPCArg::Optional::NO, "The transaction id"},
+                },
+                RPCResult{RPCResult::Type::NONE, "", ""},
+                RPCExamples{
+                    HelpExampleCli("abandontransaction", "\"1075db55d416d3ca199f55b6084e2115b9345e16c5cf302fc80e9d5fbf5d48d\"")
+            + HelpExampleRpc("abandontransaction", "\"1075db55d416d3ca199f55b6084e2115b9345e16c5cf302fc80e9d5fbf5d48d\"")
+                },
         [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
 {
     std::shared_ptr<CWallet> const pwallet = GetWalletForJSONRPCRequest(request);
@@ -846,23 +846,23 @@ RPCHelpMan abandontransaction()
 RPCHelpMan rescanblockchain()
 {
     return RPCHelpMan{"rescanblockchain",
-        "\nRescan the local blockchain for wallet related transactions.\n"
-        "Note: Use \"getwalletinfo\" to query the scanning progress.\n",
-        {
-            {"start_height", RPCArg::Type::NUM, RPCArg::Default{0}, "block height where the rescan should start"},
-            {"stop_height", RPCArg::Type::NUM, RPCArg::Optional::OMITTED_NAMED_ARG, "the last block height that should be scanned. If none is provided it will rescan up to the tip at return time of this call."},
-        },
-        RPCResult{
-            RPCResult::Type::OBJ, "", "",
-            {
-                {RPCResult::Type::NUM, "start_height", "The block height where the rescan started (the requested height or 0)"},
-                {RPCResult::Type::NUM, "stop_height", "The height of the last rescanned block. May be null in rare cases if there was a reorg and the call didn't scan any blocks because they were already scanned in the background."},
-            }
-        },
-        RPCExamples{
-            HelpExampleCli("rescanblockchain", "100000 120000")
-    + HelpExampleRpc("rescanblockchain", "100000, 120000")
-        },
+                "\nRescan the local blockchain for wallet related transactions.\n"
+                "Note: Use \"getwalletinfo\" to query the scanning progress.\n",
+                {
+                    {"start_height", RPCArg::Type::NUM, RPCArg::Default{0}, "block height where the rescan should start"},
+                    {"stop_height", RPCArg::Type::NUM, RPCArg::Optional::OMITTED_NAMED_ARG, "the last block height that should be scanned. If none is provided it will rescan up to the tip at return time of this call."},
+                },
+                RPCResult{
+                    RPCResult::Type::OBJ, "", "",
+                    {
+                        {RPCResult::Type::NUM, "start_height", "The block height where the rescan started (the requested height or 0)"},
+                        {RPCResult::Type::NUM, "stop_height", "The height of the last rescanned block. May be null in rare cases if there was a reorg and the call didn't scan any blocks because they were already scanned in the background."},
+                    }
+                },
+                RPCExamples{
+                    HelpExampleCli("rescanblockchain", "100000 120000")
+            + HelpExampleRpc("rescanblockchain", "100000, 120000")
+                },
         [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
 {
     std::shared_ptr<CWallet> const pwallet = GetWalletForJSONRPCRequest(request);

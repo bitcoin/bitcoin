@@ -155,45 +155,45 @@ static RPCHelpMan getwalletinfo()
                 "Returns an object containing various wallet state info.\n",
                 {},
                 RPCResult{
-                        RPCResult::Type::OBJ, "", "",
-                        {
-                            {RPCResult::Type::STR, "walletname", "the wallet name"},
-                            {RPCResult::Type::NUM, "walletversion", "the wallet version"},
-                            {RPCResult::Type::STR, "format", "the database format (bdb or sqlite)"},
-                            {RPCResult::Type::NUM, "balance", "DEPRECATED. Identical to getbalances().mine.trusted"},
-                            {RPCResult::Type::NUM, "coinjoin_balance", "DEPRECATED. Identical to getbalances().mine.coinjoin"},
-                            {RPCResult::Type::NUM, "unconfirmed_balance", "DEPRECATED. Identical to getbalances().mine.untrusted_pending"},
-                            {RPCResult::Type::NUM, "immature_balance", "DEPRECATED. Identical to getbalances().mine.immature"},
-                            {RPCResult::Type::NUM, "txcount", "the total number of transactions in the wallet"},
-                            {RPCResult::Type::NUM_TIME, "timefirstkey", "the " + UNIX_EPOCH_TIME + " of the oldest known key in the wallet"},
-                            {RPCResult::Type::NUM_TIME, "keypoololdest", /*optional=*/true, "the " + UNIX_EPOCH_TIME + " of the oldest pre-generated key in the key pool. Legacy wallets only"},
-                            {RPCResult::Type::NUM, "keypoolsize", "how many new keys are pre-generated (only counts external keys)"},
-                            {RPCResult::Type::NUM, "keypoolsize_hd_internal", /*optional=*/ true, "how many new keys are pre-generated for internal use (used for change outputs and mobile coinjoin, only appears if the wallet is using this feature, otherwise external keys are used)"},
-                            {RPCResult::Type::NUM, "keys_left", "how many new keys are left since last automatic backup"},
-                            {RPCResult::Type::NUM_TIME, "unlocked_until", /*optional=*/true, "the " + UNIX_EPOCH_TIME + " until which the wallet is unlocked for transfers, or 0 if the wallet is locked (only present for passphrase-encrypted wallets)"},
-                            {RPCResult::Type::STR_AMOUNT, "paytxfee", "the transaction fee configuration, set in " + CURRENCY_UNIT + "/kB"},
-                            {RPCResult::Type::STR_HEX, "hdchainid", "the ID of the HD chain"},
-                            {RPCResult::Type::NUM, "hdaccountcount", "how many accounts of the HD chain are in this wallet"},
-                            {RPCResult::Type::ARR, "hdaccounts", "",
+                    RPCResult::Type::OBJ, "", "",
+                    {
+                        {RPCResult::Type::STR, "walletname", "the wallet name"},
+                        {RPCResult::Type::NUM, "walletversion", "the wallet version"},
+                        {RPCResult::Type::STR, "format", "the database format (bdb or sqlite)"},
+                        {RPCResult::Type::NUM, "balance", "DEPRECATED. Identical to getbalances().mine.trusted"},
+                        {RPCResult::Type::NUM, "coinjoin_balance", "DEPRECATED. Identical to getbalances().mine.coinjoin"},
+                        {RPCResult::Type::NUM, "unconfirmed_balance", "DEPRECATED. Identical to getbalances().mine.untrusted_pending"},
+                        {RPCResult::Type::NUM, "immature_balance", "DEPRECATED. Identical to getbalances().mine.immature"},
+                        {RPCResult::Type::NUM, "txcount", "the total number of transactions in the wallet"},
+                        {RPCResult::Type::NUM_TIME, "timefirstkey", "the " + UNIX_EPOCH_TIME + " of the oldest known key in the wallet"},
+                        {RPCResult::Type::NUM_TIME, "keypoololdest", /*optional=*/true, "the " + UNIX_EPOCH_TIME + " of the oldest pre-generated key in the key pool. Legacy wallets only"},
+                        {RPCResult::Type::NUM, "keypoolsize", "how many new keys are pre-generated (only counts external keys)"},
+                        {RPCResult::Type::NUM, "keypoolsize_hd_internal", /*optional=*/ true, "how many new keys are pre-generated for internal use (used for change outputs and mobile coinjoin, only appears if the wallet is using this feature, otherwise external keys are used)"},
+                        {RPCResult::Type::NUM, "keys_left", "how many new keys are left since last automatic backup"},
+                        {RPCResult::Type::NUM_TIME, "unlocked_until", /*optional=*/true, "the " + UNIX_EPOCH_TIME + " until which the wallet is unlocked for transfers, or 0 if the wallet is locked (only present for passphrase-encrypted wallets)"},
+                        {RPCResult::Type::STR_AMOUNT, "paytxfee", "the transaction fee configuration, set in " + CURRENCY_UNIT + "/kB"},
+                        {RPCResult::Type::STR_HEX, "hdchainid", "the ID of the HD chain"},
+                        {RPCResult::Type::NUM, "hdaccountcount", "how many accounts of the HD chain are in this wallet"},
+                        {RPCResult::Type::ARR, "hdaccounts", "",
+                            {
+                            {RPCResult::Type::OBJ, "", "",
                                 {
-                                {RPCResult::Type::OBJ, "", "",
-                                    {
-                                        {RPCResult::Type::NUM, "hdaccountindex", "the index of the account"},
-                                        {RPCResult::Type::NUM, "hdexternalkeyindex", "current external childkey index"},
-                                        {RPCResult::Type::NUM, "hdinternalkeyindex", "current internal childkey index"},
-                                }},
+                                    {RPCResult::Type::NUM, "hdaccountindex", "the index of the account"},
+                                    {RPCResult::Type::NUM, "hdexternalkeyindex", "current external childkey index"},
+                                    {RPCResult::Type::NUM, "hdinternalkeyindex", "current internal childkey index"},
                             }},
-                            {RPCResult::Type::BOOL, "private_keys_enabled", "false if privatekeys are disabled for this wallet (enforced watch-only wallet)"},
-                            {RPCResult::Type::BOOL, "avoid_reuse", "whether this wallet tracks clean/dirty coins in terms of reuse"},
-                            {RPCResult::Type::OBJ, "scanning", "current scanning details, or false if no scan is in progress",
-                                {
-                                     {RPCResult::Type::NUM, "duration", "elapsed seconds since scan start"},
-                                     {RPCResult::Type::NUM, "progress", "scanning progress percentage [0.0, 1.0]"},
-                                }},
-                            {RPCResult::Type::BOOL, "descriptors", "whether this wallet uses descriptors for scriptPubKey management"},
-                            {RPCResult::Type::BOOL, "external_signer", "whether this wallet is configured to use an external signer such as a hardware wallet"},
-                            RESULT_LAST_PROCESSED_BLOCK,
-                        },
+                        }},
+                        {RPCResult::Type::BOOL, "private_keys_enabled", "false if privatekeys are disabled for this wallet (enforced watch-only wallet)"},
+                        {RPCResult::Type::BOOL, "avoid_reuse", "whether this wallet tracks clean/dirty coins in terms of reuse"},
+                        {RPCResult::Type::OBJ, "scanning", "current scanning details, or false if no scan is in progress",
+                        {
+                            {RPCResult::Type::NUM, "duration", "elapsed seconds since scan start"},
+                            {RPCResult::Type::NUM, "progress", "scanning progress percentage [0.0, 1.0]"},
+                        }},
+                        {RPCResult::Type::BOOL, "descriptors", "whether this wallet uses descriptors for scriptPubKey management"},
+                        {RPCResult::Type::BOOL, "external_signer", "whether this wallet is configured to use an external signer such as a hardware wallet"},
+                        RESULT_LAST_PROCESSED_BLOCK,
+                    },
                 },
                 RPCExamples{
                     HelpExampleCli("getwalletinfo", "")
@@ -281,24 +281,24 @@ static RPCHelpMan getwalletinfo()
 static RPCHelpMan listwalletdir()
 {
     return RPCHelpMan{"listwalletdir",
-        "Returns a list of wallets in the wallet directory.\n",
-        {},
-        RPCResult{
-            RPCResult::Type::OBJ, "", "",
-            {
-                {RPCResult::Type::ARR, "wallets", "",
-                        {
-                    {RPCResult::Type::OBJ, "", "",
+                "Returns a list of wallets in the wallet directory.\n",
+                {},
+                RPCResult{
+                    RPCResult::Type::OBJ, "", "",
                     {
-                        {RPCResult::Type::STR, "name", "The wallet name"},
-                    }},
-                }},
-            }
-        },
-        RPCExamples{
-            HelpExampleCli("listwalletdir", "")
-    + HelpExampleRpc("listwalletdir", "")
-        },
+                        {RPCResult::Type::ARR, "wallets", "",
+                        {
+                            {RPCResult::Type::OBJ, "", "",
+                            {
+                                {RPCResult::Type::STR, "name", "The wallet name"},
+                            }},
+                        }},
+                    }
+                },
+                RPCExamples{
+                    HelpExampleCli("listwalletdir", "")
+            + HelpExampleRpc("listwalletdir", "")
+                },
         [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
 {
     UniValue wallets(UniValue::VARR);
@@ -318,19 +318,19 @@ static RPCHelpMan listwalletdir()
 static RPCHelpMan listwallets()
 {
     return RPCHelpMan{"listwallets",
-        "Returns a list of currently loaded wallets.\n"
-        "For full information on the wallet, use \"getwalletinfo\"\n",
-        {},
-        RPCResult{
-            RPCResult::Type::ARR, "", "",
-            {
-                {RPCResult::Type::STR, "walletname", "the wallet name"},
-            }
-        },
-        RPCExamples{
-            HelpExampleCli("listwallets", "")
-    + HelpExampleRpc("listwallets", "")
-        },
+                "Returns a list of currently loaded wallets.\n"
+                "For full information on the wallet, use \"getwalletinfo\"\n",
+                {},
+                RPCResult{
+                    RPCResult::Type::ARR, "", "",
+                    {
+                        {RPCResult::Type::STR, "walletname", "the wallet name"},
+                    }
+                },
+                RPCExamples{
+                    HelpExampleCli("listwallets", "")
+            + HelpExampleRpc("listwallets", "")
+                },
         [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
 {
     UniValue obj(UniValue::VARR);
@@ -504,24 +504,24 @@ static RPCHelpMan upgradetohd()
 static RPCHelpMan loadwallet()
 {
     return RPCHelpMan{"loadwallet",
-        "\nLoads a wallet from a wallet file or directory."
-        "\nNote that all wallet command-line options used when starting dashd will be"
-        "\napplied to the new wallet (eg, rescan, etc).\n",
-        {
-            {"filename", RPCArg::Type::STR, RPCArg::Optional::NO, "The wallet directory or .dat file."},
-            {"load_on_startup", RPCArg::Type::BOOL, RPCArg::Optional::OMITTED_NAMED_ARG, "Save wallet name to persistent settings and load on startup. True to add wallet to startup list, false to remove, null to leave unchanged."},
-        },
-        RPCResult{
-            RPCResult::Type::OBJ, "", "",
-            {
-                {RPCResult::Type::STR, "name", "The wallet name if loaded successfully."},
-                {RPCResult::Type::STR, "warning", "Warning message if wallet was not loaded cleanly."},
-            }
-        },
-        RPCExamples{
-            HelpExampleCli("loadwallet", "\"test.dat\"")
-    + HelpExampleRpc("loadwallet", "\"test.dat\"")
-        },
+                "\nLoads a wallet from a wallet file or directory."
+                "\nNote that all wallet command-line options used when starting dashd will be"
+                "\napplied to the new wallet (eg, rescan, etc).\n",
+                {
+                    {"filename", RPCArg::Type::STR, RPCArg::Optional::NO, "The wallet directory or .dat file."},
+                    {"load_on_startup", RPCArg::Type::BOOL, RPCArg::Optional::OMITTED_NAMED_ARG, "Save wallet name to persistent settings and load on startup. True to add wallet to startup list, false to remove, null to leave unchanged."},
+                },
+                RPCResult{
+                    RPCResult::Type::OBJ, "", "",
+                    {
+                        {RPCResult::Type::STR, "name", "The wallet name if loaded successfully."},
+                        {RPCResult::Type::STR, "warning", "Warning message if wallet was not loaded cleanly."},
+                    }
+                },
+                RPCExamples{
+                    HelpExampleCli("loadwallet", "\"test.dat\"")
+            + HelpExampleRpc("loadwallet", "\"test.dat\"")
+                },
         [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
 {
     WalletContext& context = EnsureWalletContext(request.context);
@@ -549,29 +549,29 @@ static RPCHelpMan loadwallet()
 
 static RPCHelpMan setwalletflag()
 {
-    std::string flags;
-    for (auto& it : WALLET_FLAG_MAP)
-        if (it.second & MUTABLE_WALLET_FLAGS)
-            flags += (flags == "" ? "" : ", ") + it.first;
+            std::string flags;
+            for (auto& it : WALLET_FLAG_MAP)
+                if (it.second & MUTABLE_WALLET_FLAGS)
+                    flags += (flags == "" ? "" : ", ") + it.first;
 
     return RPCHelpMan{"setwalletflag",
-        "\nChange the state of the given wallet flag for a wallet.\n",
-        {
-            {"flag", RPCArg::Type::STR, RPCArg::Optional::NO, "The name of the flag to change. Current available flags: " + flags},
-            {"value", RPCArg::Type::BOOL, RPCArg::Default{true}, "The new state."},
-        },
-        RPCResult{
-            RPCResult::Type::OBJ, "", "",
-            {
-                {RPCResult::Type::STR, "flag_name", "The name of the flag that was modified"},
-                {RPCResult::Type::BOOL, "flag_state", "The new state of the flag"},
-                {RPCResult::Type::STR, "warnings", /*optional=*/true, "Any warnings associated with the change"},
-            }
-        },
-        RPCExamples{
-            HelpExampleCli("setwalletflag", "avoid_reuse")
-      + HelpExampleRpc("setwalletflag", "\"avoid_reuse\"")
-        },
+                "\nChange the state of the given wallet flag for a wallet.\n",
+                {
+                    {"flag", RPCArg::Type::STR, RPCArg::Optional::NO, "The name of the flag to change. Current available flags: " + flags},
+                    {"value", RPCArg::Type::BOOL, RPCArg::Default{true}, "The new state."},
+                },
+                RPCResult{
+                    RPCResult::Type::OBJ, "", "",
+                    {
+                        {RPCResult::Type::STR, "flag_name", "The name of the flag that was modified"},
+                        {RPCResult::Type::BOOL, "flag_state", "The new state of the flag"},
+                        {RPCResult::Type::STR, "warnings", /*optional=*/true, "Any warnings associated with the change"},
+                    }
+                },
+                RPCExamples{
+                    HelpExampleCli("setwalletflag", "avoid_reuse")
+                  + HelpExampleRpc("setwalletflag", "\"avoid_reuse\"")
+                },
         [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
 {
     std::shared_ptr<CWallet> const pwallet = GetWalletForJSONRPCRequest(request);
@@ -717,19 +717,19 @@ static RPCHelpMan createwallet()
 static RPCHelpMan unloadwallet()
 {
     return RPCHelpMan{"unloadwallet",
-        "Unloads the wallet referenced by the request endpoint otherwise unloads the wallet specified in the argument.\n"
-        "Specifying the wallet name on a wallet endpoint is invalid.",
-        {
-            {"wallet_name", RPCArg::Type::STR, RPCArg::DefaultHint{"the wallet name from the RPC endpoint"}, "The name of the wallet to unload. If provided both here and in the RPC endpoint, the two must be identical."},
-            {"load_on_startup", RPCArg::Type::BOOL, RPCArg::Optional::OMITTED_NAMED_ARG, "Save wallet name to persistent settings and load on startup. True to add wallet to startup list, false to remove, null to leave unchanged."},
-        },
-        RPCResult{RPCResult::Type::OBJ, "", "", {
-            {RPCResult::Type::STR, "warning", "Warning message if wallet was not unloaded cleanly."},
-        }},
-        RPCExamples{
-            HelpExampleCli("unloadwallet", "wallet_name")
-    + HelpExampleRpc("unloadwallet", "wallet_name")
-        },
+                "Unloads the wallet referenced by the request endpoint otherwise unloads the wallet specified in the argument.\n"
+                "Specifying the wallet name on a wallet endpoint is invalid.",
+                {
+                    {"wallet_name", RPCArg::Type::STR, RPCArg::DefaultHint{"the wallet name from the RPC endpoint"}, "The name of the wallet to unload. If provided both here and in the RPC endpoint, the two must be identical."},
+                    {"load_on_startup", RPCArg::Type::BOOL, RPCArg::Optional::OMITTED_NAMED_ARG, "Save wallet name to persistent settings and load on startup. True to add wallet to startup list, false to remove, null to leave unchanged."},
+                },
+                RPCResult{RPCResult::Type::OBJ, "", "", {
+                    {RPCResult::Type::STR, "warning", "Warning message if wallet was not unloaded cleanly."},
+                }},
+                RPCExamples{
+                    HelpExampleCli("unloadwallet", "wallet_name")
+            + HelpExampleRpc("unloadwallet", "wallet_name")
+                },
         [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
 {
     std::string wallet_name;

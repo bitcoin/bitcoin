@@ -17,19 +17,19 @@ namespace wallet {
 RPCHelpMan getnewaddress()
 {
     return RPCHelpMan{"getnewaddress",
-        "\nReturns a new Dash address for receiving payments.\n"
-        "If 'label' is specified, it is added to the address book \n"
-        "so payments received with the address will be associated with 'label'.\n",
-        {
-            {"label", RPCArg::Type::STR, RPCArg::Default{""}, "The label name for the address to be linked to. It can also be set to the empty string \"\" to represent the default label. The label does not need to exist, it will be created if there is no label by the given name."},
-        },
-        RPCResult{
-    RPCResult::Type::STR, "address", "The new Dash address"
-        },
-        RPCExamples{
-            HelpExampleCli("getnewaddress", "")
-    + HelpExampleRpc("getnewaddress", "")
-        },
+                "\nReturns a new Dash address for receiving payments.\n"
+                "If 'label' is specified, it is added to the address book \n"
+                "so payments received with the address will be associated with 'label'.\n",
+                {
+                    {"label", RPCArg::Type::STR, RPCArg::Default{""}, "The label name for the address to be linked to. It can also be set to the empty string \"\" to represent the default label. The label does not need to exist, it will be created if there is no label by the given name."},
+                },
+                RPCResult{
+                    RPCResult::Type::STR, "address", "The new Dash address"
+                },
+                RPCExamples{
+                    HelpExampleCli("getnewaddress", "")
+            + HelpExampleRpc("getnewaddress", "")
+                },
         [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
 {
     std::shared_ptr<CWallet> const pwallet = GetWalletForJSONRPCRequest(request);
@@ -58,16 +58,16 @@ RPCHelpMan getnewaddress()
 RPCHelpMan getrawchangeaddress()
 {
     return RPCHelpMan{"getrawchangeaddress",
-        "\nReturns a new Dash address, for receiving change.\n"
-        "This is for use with raw transactions, NOT normal use.\n",
-        {},
-        RPCResult{
-            RPCResult::Type::STR, "address", "The address"
-        },
-        RPCExamples{
-            HelpExampleCli("getrawchangeaddress", "")
-    + HelpExampleRpc("getrawchangeaddress", "")
-        },
+                "\nReturns a new Dash address, for receiving change.\n"
+                "This is for use with raw transactions, NOT normal use.\n",
+                {},
+                RPCResult{
+                    RPCResult::Type::STR, "address", "The address"
+                },
+                RPCExamples{
+                    HelpExampleCli("getrawchangeaddress", "")
+            + HelpExampleRpc("getrawchangeaddress", "")
+                },
         [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
 {
     std::shared_ptr<CWallet> const pwallet = GetWalletForJSONRPCRequest(request);
@@ -91,16 +91,16 @@ RPCHelpMan getrawchangeaddress()
 RPCHelpMan setlabel()
 {
     return RPCHelpMan{"setlabel",
-        "\nSets the label associated with the given address.\n",
-        {
-            {"address", RPCArg::Type::STR, RPCArg::Optional::NO, "The Dash address to be associated with a label."},
-            {"label", RPCArg::Type::STR, RPCArg::Optional::NO, "The label to assign to the address."},
-        },
-        RPCResult{RPCResult::Type::NONE, "", ""},
-        RPCExamples{
-            HelpExampleCli("setlabel", "\"" + EXAMPLE_ADDRESS[0] + "\" \"tabby\"")
-    + HelpExampleRpc("setlabel", "\"" + EXAMPLE_ADDRESS[0] + "\", \"tabby\"")
-        },
+                "\nSets the label associated with the given address.\n",
+                {
+                    {"address", RPCArg::Type::STR, RPCArg::Optional::NO, "The Dash address to be associated with a label."},
+                    {"label", RPCArg::Type::STR, RPCArg::Optional::NO, "The label to assign to the address."},
+                },
+                RPCResult{RPCResult::Type::NONE, "", ""},
+                RPCExamples{
+                    HelpExampleCli("setlabel", "\"" + EXAMPLE_ADDRESS[0] + "\" \"tabby\"")
+            + HelpExampleRpc("setlabel", "\"" + EXAMPLE_ADDRESS[0] + "\", \"tabby\"")
+                },
         [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
 {
     std::shared_ptr<CWallet> const pwallet = GetWalletForJSONRPCRequest(request);
@@ -129,27 +129,28 @@ RPCHelpMan setlabel()
 RPCHelpMan listaddressgroupings()
 {
     return RPCHelpMan{"listaddressgroupings",
-        "\nLists groups of addresses which have had their common ownership\n"
-        "made public by common use as inputs or as the resulting change\n"
-        "in past transactions\n",
-        {},
-        RPCResult{
-            RPCResult::Type::ARR, "", "",
-            {
-                {RPCResult::Type::ARR, "", "",
-                {
-                    {RPCResult::Type::ARR_FIXED, "", "",
+                "\nLists groups of addresses which have had their common ownership\n"
+                "made public by common use as inputs or as the resulting change\n"
+                "in past transactions\n",
+                {},
+                RPCResult{
+                    RPCResult::Type::ARR, "", "",
                     {
-                        {RPCResult::Type::STR, "address", "The Dash address"},
-                        {RPCResult::Type::STR_AMOUNT, "amount", "The amount in " + CURRENCY_UNIT},
-                        {RPCResult::Type::STR, "label", /*optional=*/true, "The label"},
-                    }},
-                }},
-            }},
-        RPCExamples{
-            HelpExampleCli("listaddressgroupings", "")
-    + HelpExampleRpc("listaddressgroupings", "")
-        },
+                        {RPCResult::Type::ARR, "", "",
+                        {
+                            {RPCResult::Type::ARR_FIXED, "", "",
+                            {
+                                {RPCResult::Type::STR, "address", "The Dash address"},
+                                {RPCResult::Type::STR_AMOUNT, "amount", "The amount in " + CURRENCY_UNIT},
+                                {RPCResult::Type::STR, "label", /*optional=*/true, "The label"},
+                            }},
+                        }},
+                    }
+                },
+                RPCExamples{
+                    HelpExampleCli("listaddressgroupings", "")
+            + HelpExampleRpc("listaddressgroupings", "")
+                },
         [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
 {
     const std::shared_ptr<const CWallet> pwallet = GetWalletForJSONRPCRequest(request);
@@ -188,35 +189,35 @@ RPCHelpMan listaddressgroupings()
 RPCHelpMan addmultisigaddress()
 {
     return RPCHelpMan{"addmultisigaddress",
-        "\nAdd an nrequired-to-sign multisignature address to the wallet. Requires a new wallet backup.\n"
-        "Each key is a Dash address or hex-encoded public key.\n"
-        "This functionality is only intended for use with non-watchonly addresses.\n"
-        "See `importaddress` for watchonly p2sh address support.\n"
-        "If 'label' is specified, assign address to that label.\n"
-        "Note: This command is only compatible with legacy wallets.\n",
-        {
-            {"nrequired", RPCArg::Type::NUM, RPCArg::Optional::NO, "The number of required signatures out of the n keys or addresses."},
-            {"keys", RPCArg::Type::ARR, RPCArg::Optional::NO, "The Dash addresses or hex-encoded public keys",
+                "\nAdd an nrequired-to-sign multisignature address to the wallet. Requires a new wallet backup.\n"
+                "Each key is a Dash address or hex-encoded public key.\n"
+                "This functionality is only intended for use with non-watchonly addresses.\n"
+                "See `importaddress` for watchonly p2sh address support.\n"
+                "If 'label' is specified, assign address to that label.\n"
+                "Note: This command is only compatible with legacy wallets.\n",
                 {
-                    {"key", RPCArg::Type::STR, RPCArg::Optional::OMITTED, "Dash address or hex-encoded public key"},
+                    {"nrequired", RPCArg::Type::NUM, RPCArg::Optional::NO, "The number of required signatures out of the n keys or addresses."},
+                    {"keys", RPCArg::Type::ARR, RPCArg::Optional::NO, "The Dash addresses or hex-encoded public keys",
+                        {
+                            {"key", RPCArg::Type::STR, RPCArg::Optional::OMITTED, "Dash address or hex-encoded public key"},
+                        },
+                        },
+                    {"label", RPCArg::Type::STR, RPCArg::Optional::OMITTED_NAMED_ARG, "A label to assign the addresses to."},
                 },
+                RPCResult{
+                    RPCResult::Type::OBJ, "", "",
+                    {
+                        {RPCResult::Type::STR, "address", "The value of the new multisig address"},
+                        {RPCResult::Type::STR_HEX, "redeemScript", "The string value of the hex-encoded redemption script"},
+                        {RPCResult::Type::STR, "descriptor", "The descriptor for this multisig."},
+                    }
                 },
-            {"label", RPCArg::Type::STR, RPCArg::Optional::OMITTED_NAMED_ARG, "A label to assign the addresses to."},
-        },
-        RPCResult{
-            RPCResult::Type::OBJ, "", "",
-            {
-                {RPCResult::Type::STR, "address", "The value of the new multisig address"},
-                {RPCResult::Type::STR_HEX, "redeemScript", "The string value of the hex-encoded redemption script"},
-                {RPCResult::Type::STR, "descriptor", "The descriptor for this multisig."},
-            }
-        },
-        RPCExamples{
-    "\nAdd a multisig address from 2 addresses\n"
-    + HelpExampleCli("addmultisigaddress", "2 \"[\\\"" + EXAMPLE_ADDRESS[0] + "\\\",\\\"" + EXAMPLE_ADDRESS[1] + "\\\"]\"") +
-    "\nAs a JSON-RPC call\n"
-    + HelpExampleRpc("addmultisigaddress", "2, \"[\\\"" + EXAMPLE_ADDRESS[0] + "\\\",\\\"" + EXAMPLE_ADDRESS[1] + "\\\"]\"")
-        },
+                RPCExamples{
+            "\nAdd a multisig address from 2 addresses\n"
+            + HelpExampleCli("addmultisigaddress", "2 \"[\\\"" + EXAMPLE_ADDRESS[0] + "\\\",\\\"" + EXAMPLE_ADDRESS[1] + "\\\"]\"") +
+            "\nAs a JSON-RPC call\n"
+            + HelpExampleRpc("addmultisigaddress", "2, \"[\\\"" + EXAMPLE_ADDRESS[0] + "\\\",\\\"" + EXAMPLE_ADDRESS[1] + "\\\"]\"")
+                },
         [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
 {
     std::shared_ptr<CWallet> const pwallet = GetWalletForJSONRPCRequest(request);
@@ -418,56 +419,56 @@ static UniValue DescribeWalletAddress(const CWallet& wallet, const CTxDestinatio
 RPCHelpMan getaddressinfo()
 {
     return RPCHelpMan{"getaddressinfo",
-        "\nReturn information about the given Dash address.\n"
-        "Some of the information will only be present if the address is in the active wallet.\n",
-        {
-            {"address", RPCArg::Type::STR, RPCArg::Optional::NO, "The Dash address for which to get information."},
-        },
-        RPCResult{
-            RPCResult::Type::OBJ, "", "",
-            {
-                {RPCResult::Type::STR, "address", "The Dash address validated."},
-                {RPCResult::Type::STR_HEX, "scriptPubKey", "The hex-encoded scriptPubKey generated by the address."},
-                {RPCResult::Type::BOOL, "ismine", "If the address is yours."},
-                {RPCResult::Type::BOOL, "iswatchonly", "If the address is watchonly."},
-                {RPCResult::Type::BOOL, "solvable", "If we know how to spend coins sent to this address, ignoring the possible lack of private keys."},
-                {RPCResult::Type::STR, "desc", /*optional=*/true, "A descriptor for spending coins sent to this address (only when solvable)."},
-                {RPCResult::Type::STR, "parent_desc", /*optional=*/true, "The descriptor used to derive this address if this is a descriptor wallet"},
-                {RPCResult::Type::BOOL, "isscript", "If the key is a script."},
-                {RPCResult::Type::BOOL, "ischange", "If the address was used for change output."},
-                {RPCResult::Type::STR, "script", /*optional=*/true, "The output script type. Only if isscript is true and the redeemscript is known. Possible types: nonstandard, pubkey, pubkeyhash, scripthash, multisig, nulldata"},
-                {RPCResult::Type::STR_HEX, "hex", /*optional=*/true, "The redeemscript for the p2sh address."},
-                {RPCResult::Type::ARR, "pubkeys", /*optional=*/true, "Array of pubkeys associated with the known redeemscript (only if script is multisig).",
+                "\nReturn information about the given Dash address.\n"
+                "Some of the information will only be present if the address is in the active wallet.\n",
                 {
-                    {RPCResult::Type::STR, "pubkey", ""},
-                }},
-                {RPCResult::Type::ARR, "addresses", /*optional=*/true, "Array of addresses associated with the known redeemscript (only if script is multisig).",
-                {
-                    {RPCResult::Type::STR, "address", ""},
-                }},
-                {RPCResult::Type::NUM, "sigsrequired", /*optional=*/true, "The number of signatures required to spend multisig output (only if script is multisig)."},
-                {RPCResult::Type::STR_HEX, "pubkey", /*optional=*/true, "The hex value of the raw public key, for single-key addresses."},
-                {RPCResult::Type::OBJ, "embedded", /*optional=*/true, "Information about the address embedded in P2SH, if relevant and known.",
-                {
-                    {RPCResult::Type::ELISION, "", "Includes all getaddressinfo output fields for the embedded address, excluding metadata (timestamp, hdkeypath, hdseedid)\n"
-                    "and relation to the wallet (ismine, iswatchonly)."},
-                }},
-                {RPCResult::Type::BOOL, "iscompressed", /*optional=*/true, "If the pubkey is compressed."},
-                {RPCResult::Type::NUM_TIME, "timestamp", /*optional=*/true, "The creation time of the key, if available, expressed in " + UNIX_EPOCH_TIME + "."},
-                {RPCResult::Type::STR_HEX, "hdchainid", /*optional=*/true, "The ID of the HD chain."},
-                {RPCResult::Type::STR, "hdkeypath", /*optional=*/true, "The HD keypath, if the key is HD and available."},
-                {RPCResult::Type::STR_HEX, "hdseedid", /*optional=*/true, "The Hash160 of the HD seed."},
-                {RPCResult::Type::STR_HEX, "hdmasterfingerprint", /*optional=*/true, "The fingerprint of the master key."},
-                {RPCResult::Type::ARR, "labels", "An array of labels associated with the address. Currently limited to one label but returned as an array to keep the API stable if multiple labels are enabled in the future.",
-                {
-                    {RPCResult::Type::STR, "label name", "Label name (defaults to \"\")."},
-                }},
-            }
-        },
-        RPCExamples{
-            HelpExampleCli("getaddressinfo", EXAMPLE_ADDRESS[0])
-    + HelpExampleRpc("getaddressinfo", EXAMPLE_ADDRESS[0])
-        },
+                    {"address", RPCArg::Type::STR, RPCArg::Optional::NO, "The Dash address for which to get information."},
+                },
+                RPCResult{
+                    RPCResult::Type::OBJ, "", "",
+                    {
+                        {RPCResult::Type::STR, "address", "The Dash address validated."},
+                        {RPCResult::Type::STR_HEX, "scriptPubKey", "The hex-encoded scriptPubKey generated by the address."},
+                        {RPCResult::Type::BOOL, "ismine", "If the address is yours."},
+                        {RPCResult::Type::BOOL, "iswatchonly", "If the address is watchonly."},
+                        {RPCResult::Type::BOOL, "solvable", "If we know how to spend coins sent to this address, ignoring the possible lack of private keys."},
+                        {RPCResult::Type::STR, "desc", /*optional=*/true, "A descriptor for spending coins sent to this address (only when solvable)."},
+                        {RPCResult::Type::STR, "parent_desc", /*optional=*/true, "The descriptor used to derive this address if this is a descriptor wallet"},
+                        {RPCResult::Type::BOOL, "isscript", "If the key is a script."},
+                        {RPCResult::Type::BOOL, "ischange", "If the address was used for change output."},
+                        {RPCResult::Type::STR, "script", /*optional=*/true, "The output script type. Only if isscript is true and the redeemscript is known. Possible types: nonstandard, pubkey, pubkeyhash, scripthash, multisig, nulldata"},
+                        {RPCResult::Type::STR_HEX, "hex", /*optional=*/true, "The redeemscript for the p2sh address."},
+                        {RPCResult::Type::ARR, "pubkeys", /*optional=*/true, "Array of pubkeys associated with the known redeemscript (only if script is multisig).",
+                        {
+                            {RPCResult::Type::STR, "pubkey", ""},
+                        }},
+                        {RPCResult::Type::ARR, "addresses", /*optional=*/true, "Array of addresses associated with the known redeemscript (only if script is multisig).",
+                        {
+                            {RPCResult::Type::STR, "address", ""},
+                        }},
+                        {RPCResult::Type::NUM, "sigsrequired", /*optional=*/true, "The number of signatures required to spend multisig output (only if script is multisig)."},
+                        {RPCResult::Type::STR_HEX, "pubkey", /*optional=*/true, "The hex value of the raw public key, for single-key addresses."},
+                        {RPCResult::Type::OBJ, "embedded", /*optional=*/true, "Information about the address embedded in P2SH, if relevant and known.",
+                        {
+                            {RPCResult::Type::ELISION, "", "Includes all getaddressinfo output fields for the embedded address, excluding metadata (timestamp, hdkeypath, hdseedid)\n"
+                            "and relation to the wallet (ismine, iswatchonly)."},
+                        }},
+                        {RPCResult::Type::BOOL, "iscompressed", /*optional=*/true, "If the pubkey is compressed."},
+                        {RPCResult::Type::NUM_TIME, "timestamp", /*optional=*/true, "The creation time of the key, if available, expressed in " + UNIX_EPOCH_TIME + "."},
+                        {RPCResult::Type::STR_HEX, "hdchainid", /*optional=*/true, "The ID of the HD chain."},
+                        {RPCResult::Type::STR, "hdkeypath", /*optional=*/true, "The HD keypath, if the key is HD and available."},
+                        {RPCResult::Type::STR_HEX, "hdseedid", /*optional=*/true, "The Hash160 of the HD seed."},
+                        {RPCResult::Type::STR_HEX, "hdmasterfingerprint", /*optional=*/true, "The fingerprint of the master key."},
+                        {RPCResult::Type::ARR, "labels", "An array of labels associated with the address. Currently limited to one label but returned as an array to keep the API stable if multiple labels are enabled in the future.",
+                        {
+                            {RPCResult::Type::STR, "label name", "Label name (defaults to \"\")."},
+                        }},
+                    }
+                },
+                RPCExamples{
+                    HelpExampleCli("getaddressinfo", EXAMPLE_ADDRESS[0]) +
+                    HelpExampleRpc("getaddressinfo", EXAMPLE_ADDRESS[0])
+                },
         [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
 {
     const std::shared_ptr<const CWallet> pwallet = GetWalletForJSONRPCRequest(request);
@@ -565,23 +566,23 @@ RPCHelpMan getaddressinfo()
 RPCHelpMan getaddressesbylabel()
 {
     return RPCHelpMan{"getaddressesbylabel",
-        "\nReturns the list of addresses assigned the specified label.\n",
-        {
-            {"label", RPCArg::Type::STR, RPCArg::Optional::NO, "The label."},
-        },
-        RPCResult{
-            RPCResult::Type::OBJ_DYN, "", "json object with addresses as keys",
-            {
-                {RPCResult::Type::OBJ, "address", "json object with information about address",
+                "\nReturns the list of addresses assigned the specified label.\n",
                 {
-                    {RPCResult::Type::STR, "purpose", "Purpose of address (\"send\" for sending address, \"receive\" for receiving address)"},
-                }},
-            }
-        },
-        RPCExamples{
-            HelpExampleCli("getaddressesbylabel", "\"tabby\"")
-    + HelpExampleRpc("getaddressesbylabel", "\"tabby\"")
-        },
+                    {"label", RPCArg::Type::STR, RPCArg::Optional::NO, "The label."},
+                },
+                RPCResult{
+                    RPCResult::Type::OBJ_DYN, "", "json object with addresses as keys",
+                    {
+                        {RPCResult::Type::OBJ, "address", "json object with information about address",
+                        {
+                            {RPCResult::Type::STR, "purpose", "Purpose of address (\"send\" for sending address, \"receive\" for receiving address)"},
+                        }},
+                    }
+                },
+                RPCExamples{
+                    HelpExampleCli("getaddressesbylabel", "\"tabby\"")
+            + HelpExampleRpc("getaddressesbylabel", "\"tabby\"")
+                },
         [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
 {
     const std::shared_ptr<const CWallet> pwallet = GetWalletForJSONRPCRequest(request);
@@ -625,26 +626,26 @@ RPCHelpMan getaddressesbylabel()
 RPCHelpMan listlabels()
 {
     return RPCHelpMan{"listlabels",
-        "\nReturns the list of all labels, or labels that are assigned to addresses with a specific purpose.\n",
-        {
-            {"purpose", RPCArg::Type::STR, RPCArg::Optional::OMITTED_NAMED_ARG, "Address purpose to list labels for ('send','receive'). An empty string is the same as not providing this argument."},
-        },
-        RPCResult{
-            RPCResult::Type::ARR, "", "",
-            {
-                {RPCResult::Type::STR, "label", "Label name"},
-            }
-        },
-        RPCExamples{
-    "\nList all labels\n"
-    + HelpExampleCli("listlabels", "") +
-    "\nList labels that have receiving addresses\n"
-    + HelpExampleCli("listlabels", "receive") +
-    "\nList labels that have sending addresses\n"
-    + HelpExampleCli("listlabels", "send") +
-    "\nAs a JSON-RPC call\n"
-    + HelpExampleRpc("listlabels", "receive")
-        },
+                "\nReturns the list of all labels, or labels that are assigned to addresses with a specific purpose.\n",
+                {
+                    {"purpose", RPCArg::Type::STR, RPCArg::Optional::OMITTED_NAMED_ARG, "Address purpose to list labels for ('send','receive'). An empty string is the same as not providing this argument."},
+                },
+                RPCResult{
+                    RPCResult::Type::ARR, "", "",
+                    {
+                        {RPCResult::Type::STR, "label", "Label name"},
+                    }
+                },
+                RPCExamples{
+            "\nList all labels\n"
+            + HelpExampleCli("listlabels", "") +
+            "\nList labels that have receiving addresses\n"
+            + HelpExampleCli("listlabels", "receive") +
+            "\nList labels that have sending addresses\n"
+            + HelpExampleCli("listlabels", "send") +
+            "\nAs a JSON-RPC call\n"
+            + HelpExampleRpc("listlabels", "receive")
+                },
         [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
 {
     const std::shared_ptr<const CWallet> pwallet = GetWalletForJSONRPCRequest(request);
