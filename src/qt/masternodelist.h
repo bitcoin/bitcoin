@@ -5,11 +5,10 @@
 #ifndef BITCOIN_QT_MASTERNODELIST_H
 #define BITCOIN_QT_MASTERNODELIST_H
 
-#include <primitives/transaction.h>
+#include <qt/masternodemodel.h>
+
 #include <sync.h>
 #include <util/system.h>
-
-#include <evo/types.h>
 
 #include <QMenu>
 #include <QTimer>
@@ -29,10 +28,6 @@ class WalletModel;
 QT_BEGIN_NAMESPACE
 class QModelIndex;
 QT_END_NAMESPACE
-
-namespace interfaces {
-class MnEntry;
-}
 
 /** Masternode Manager page widget */
 class MasternodeList : public QWidget
@@ -83,7 +78,9 @@ private:
 
     bool mnListChanged{true};
 
-    std::unique_ptr<const interfaces::MnEntry> GetSelectedDIP3MN();
+    std::vector<std::unique_ptr<MasternodeEntry>> m_entries;
+
+    const MasternodeEntry* GetSelectedEntry();
 
     void updateDIP3List();
 
