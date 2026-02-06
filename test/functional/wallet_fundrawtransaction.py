@@ -43,6 +43,7 @@ class RawTransactionsTest(BitcoinTestFramework):
         self.skip_if_no_wallet()
 
     def add_options(self, parser):
+        self.add_wallet_options(parser)
         parser.add_argument("--nohd", dest="nohd", default=False, action="store_true",
                             help="Test with -nohd enabled")
 

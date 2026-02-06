@@ -129,7 +129,7 @@ class ECKey:
 
     def set(self, secret, compressed):
         """Construct a private key object with given 32-byte secret and compressed flag."""
-        assert(len(secret) == 32)
+        assert len(secret) == 32
         secret = int.from_bytes(secret, 'big')
         self.valid = (secret > 0 and secret < ORDER)
         if self.valid:
@@ -142,7 +142,7 @@ class ECKey:
 
     def get_bytes(self):
         """Retrieve the 32-byte representation of this key."""
-        assert(self.valid)
+        assert self.valid
         return self.secret.to_bytes(32, 'big')
 
     @property
@@ -155,7 +155,7 @@ class ECKey:
 
     def get_pubkey(self):
         """Compute an ECPubKey object for this secret key."""
-        assert(self.valid)
+        assert self.valid
         ret = ECPubKey()
         ret.p = self.secret * secp256k1.G
         ret.compressed = self.compressed
@@ -166,7 +166,7 @@ class ECKey:
 
         See https://en.wikipedia.org/wiki/Elliptic_Curve_Digital_Signature_Algorithm for the
         ECDSA signer algorithm."""
-        assert(self.valid)
+        assert self.valid
         z = int.from_bytes(msg, 'big')
         # Note: no RFC6979 by default, but a simple random nonce (some tests rely on distinct transactions for the same operation)
         if rfc6979:

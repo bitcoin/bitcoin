@@ -7,9 +7,6 @@
 Test various backwards compatibility scenarios. Requires previous releases binaries,
 see test/README.md.
 
-v0.15.0.0 is not required by this test, but it is used in wallet_upgradewallet.py.
-Due to a hardfork in regtest, it can't be used to sync nodes.
-
 Due to RPC changes introduced in various versions the below tests
 won't work for older versions without some patches or workarounds.
 
@@ -31,6 +28,9 @@ from test_framework.util import (
 
 
 class BackwardsCompatibilityTest(BitcoinTestFramework):
+    def add_options(self, parser):
+        self.add_wallet_options(parser)
+
     def set_test_params(self):
         self.setup_clean_chain = True
         self.num_nodes = 8

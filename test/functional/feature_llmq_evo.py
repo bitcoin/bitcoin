@@ -48,6 +48,9 @@ class TestP2PConn(P2PInterface):
         return self.last_mnlistdiff
 
 class LLMQEvoNodesTest(DashTestFramework):
+    def add_options(self, parser):
+        self.add_wallet_options(parser)
+
     def set_test_params(self):
         # we just need a couple of regular nodes to be ensured that they are not included in platform quorum, 2 is enough
         self.set_dash_test_params(3, 2, evo_count=4)

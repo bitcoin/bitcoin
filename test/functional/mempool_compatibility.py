@@ -7,7 +7,7 @@
 NOTE: The test is designed to prevent cases when compatibility is broken accidentally.
 In case we need to break mempool compatibility we can continue to use the test by just bumping the version number.
 
-The previous release v0.15.0.0 is required by this test, see test/README.md.
+Previous releases are required by this test, see test/README.md.
 """
 
 import os
@@ -18,6 +18,9 @@ from test_framework.wallet import MiniWallet
 
 
 class MempoolCompatibilityTest(BitcoinTestFramework):
+    def add_options(self, parser):
+        self.add_wallet_options(parser)
+
     def set_test_params(self):
         self.num_nodes = 2
 
@@ -26,7 +29,7 @@ class MempoolCompatibilityTest(BitcoinTestFramework):
 
     def setup_network(self):
         self.add_nodes(self.num_nodes, versions=[
-            18020200, # oldest version with getmempoolinfo.loaded (used to avoid intermittent issues)
+            19030000,  # Last release with previous mempool format
             None,
         ])
         self.extra_args = [
@@ -42,6 +45,7 @@ class MempoolCompatibilityTest(BitcoinTestFramework):
         self.log.info("Test that mempool.dat is compatible between versions")
 
         old_node, new_node = self.nodes
+        assert "unbroadcastcount" not in old_node.getmempoolinfo()
         new_wallet = MiniWallet(new_node)
         self.generate(new_wallet, 1, sync_fun=self.no_op)
         self.generate(new_node, 100, sync_fun=self.no_op)

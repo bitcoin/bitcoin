@@ -20,6 +20,9 @@ from test_framework.util import set_node_times
 
 
 class LLMQ_IS_RetroactiveSigning(DashTestFramework):
+    def add_options(self, parser):
+        self.add_wallet_options(parser)
+
     def set_test_params(self):
         # -whitelist is needed to avoid the trickling logic on node0
         self.set_dash_test_params(5, 4, [["-whitelist=127.0.0.1"], [], [], [], ["-minrelaytxfee=0.001"]])

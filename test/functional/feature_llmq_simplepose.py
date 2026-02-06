@@ -31,6 +31,7 @@ class LLMQSimplePoSeTest(DashTestFramework):
         self.delay_v20_and_mn_rr(height=9999)
 
     def add_options(self, parser):
+        self.add_wallet_options(parser)
         parser.add_argument("--disable-spork23", dest="disable_spork23", default=False, action="store_true",
                             help="Test with spork23 disabled")
 

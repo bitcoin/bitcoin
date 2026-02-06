@@ -27,6 +27,8 @@ import re
 import logging
 import unittest
 
+os.environ["REQUIRE_WALLET_TYPE_SET"] = "1"
+
 # Formatting. Default colors to empty strings.
 DEFAULT, BOLD, GREEN, RED = ("", ""), ("", ""), ("", ""), ("", "")
 try:
@@ -103,9 +105,9 @@ BASE_SCRIPTS = [
     'mining_getblocktemplate_longpoll.py', # FIXME: "socket.error: [Errno 54] Connection reset by peer" on my Mac, same as https://github.com/bitcoin/bitcoin/issues/6651
     'feature_maxuploadtarget.py',
     'feature_block.py', # NOTE: needs dash_hash to pass
-    'rpc_fundrawtransaction.py --legacy-wallet',
-    'rpc_fundrawtransaction.py --legacy-wallet --nohd',
-    'rpc_fundrawtransaction.py --descriptors',
+    'wallet_fundrawtransaction.py --legacy-wallet',
+    'wallet_fundrawtransaction.py --legacy-wallet --nohd',
+    'wallet_fundrawtransaction.py --descriptors',
     'p2p_quorum_data.py',
     # vv Tests less than 2m vv
     'p2p_instantsend.py',
@@ -185,7 +187,7 @@ BASE_SCRIPTS = [
     'wallet_avoidreuse.py --legacy-wallet',
     'wallet_avoidreuse.py --descriptors',
     'mempool_reorg.py',
-    'mempool_persist.py',
+    'mempool_persist.py --descriptors',
     'p2p_block_sync.py --v1transport',
     'p2p_block_sync.py --v2transport',
     'wallet_multiwallet.py --legacy-wallet',
@@ -266,10 +268,10 @@ BASE_SCRIPTS = [
     'feature_assumevalid.py',
     'example_test.py',
     'wallet_txn_doublespend.py --legacy-wallet',
-    'wallet_multisig_descriptor_psbt.py',
+    'wallet_multisig_descriptor_psbt.py --descriptors',
     'wallet_txn_doublespend.py --descriptors',
-    'feature_backwards_compatibility.py --legacy-wallet',
-    'feature_backwards_compatibility.py --descriptors',
+    'wallet_backwards_compatibility.py --legacy-wallet',
+    'wallet_backwards_compatibility.py --descriptors',
     'wallet_txn_clone.py --mineblock',
     'rpc_getblockfilter.py',
     'rpc_getblockfrompeer.py',

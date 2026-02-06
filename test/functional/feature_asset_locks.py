@@ -50,6 +50,9 @@ blocks_in_one_day = 100
 HEIGHT_DIFF_EXPIRING = 48
 
 class AssetLocksTest(DashTestFramework):
+    def add_options(self, parser):
+        self.add_wallet_options(parser)
+
     def set_test_params(self):
         self.set_dash_test_params(2, 0, [[
                 "-whitelist=127.0.0.1",

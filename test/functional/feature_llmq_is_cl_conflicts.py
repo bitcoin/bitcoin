@@ -48,6 +48,9 @@ class TestP2PConn(P2PInterface):
 
 
 class LLMQ_IS_CL_Conflicts(DashTestFramework):
+    def add_options(self, parser):
+        self.add_wallet_options(parser)
+
     def set_test_params(self):
         self.set_dash_test_params(5, 4)
         self.set_dash_llmq_test_params(4, 4)

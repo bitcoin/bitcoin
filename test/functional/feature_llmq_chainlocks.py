@@ -19,6 +19,9 @@ from test_framework.util import assert_equal, assert_raises_rpc_error, force_fin
 import time
 
 class LLMQChainLocksTest(DashTestFramework):
+    def add_options(self, parser):
+        self.add_wallet_options(parser)
+
     def set_test_params(self):
         self.set_dash_test_params(5, 4)
         self.delay_v20_and_mn_rr(height=200)

@@ -19,6 +19,9 @@ from test_framework.test_framework import (
 from test_framework.util import assert_greater_than_or_equal
 
 class LLMQConnections(DashTestFramework):
+    def add_options(self, parser):
+        self.add_wallet_options(parser)
+
     def set_test_params(self):
         self.set_dash_test_params(15, 14)
         self.set_dash_llmq_test_params(5, 3)
