@@ -8,6 +8,7 @@
 #include <QFont>
 #include <QString>
 #include <QStringView>
+#include <QTextEdit>
 #include <QWidget>
 
 #include <cmath>
@@ -81,7 +82,7 @@ public:
     }
 
     double GetScaleSteps() const { return m_scale_steps; }
-    double GetScaledFontSize(int size) const { return std::round(size * (1 + (m_font_scale * m_scale_steps)) * 4) / 4.0; }
+    double GetScaledFontSize(double size) const { return std::round(size * (1 + (m_font_scale * m_scale_steps)) * 4) / 4.0; }
     QString GetFont() const { return m_font; }
     int GetFontScale() const { return m_font_scale; }
     int GetFontSize() const { return m_font_size; }
@@ -135,13 +136,18 @@ struct FontAttrib {
 
 /** Convert weight value from args (0-8) to QFont::Weight */
 bool weightFromArg(int nArg, QFont::Weight& weight);
+
 /** Convert QFont::Weight to an arg value (0-8) */
 int weightToArg(const QFont::Weight weight);
 
 /** Load dash specific application fonts */
 bool loadFonts();
+
 /** Check if the fonts have been loaded successfully */
 bool fontsLoaded();
+
+/** Register a QTextEdit for font styling. Applies immediately and updates when fonts change. */
+void registerWidget(QTextEdit* widget, const QString& html);
 
 /** Set an application wide default font, depends on the selected theme */
 void setApplicationFont();
@@ -158,14 +164,14 @@ void updateFonts();
 /** Get list of all selectable fonts */
 std::vector<QString> getFonts(bool selectable_only);
 
-/** Get a properly weighted QFont object with the selected font. */
-QFont getFont(const FontAttrib& font_attrib);
+/** Get the default bold QFont */
+QFont getFontBold();
 
 /** Get the default normal QFont */
 QFont getFontNormal();
 
-/** Get the default bold QFont */
-QFont getFontBold();
+/** Get a scaled font with the specified base size, weight, and optional multiplier. */
+QFont getScaledFont(double baseSize, bool bold, double multiplier = 1);
 
 /** (Bitcoin) Return a monospace font */
 QFont fixedPitchFont(bool use_embedded_font = false);

@@ -729,30 +729,23 @@ void BitcoinGUI::createToolBars()
         coinJoinCoinsButton->setStatusTip(coinJoinCoinsAction->statusTip());
         tabGroup->addButton(coinJoinCoinsButton);
 
-        QSettings settings;
-        if (settings.value("fShowMasternodesTab").toBool()) {
-            masternodeButton = new QToolButton(this);
-            masternodeButton->setText(tr("&Masternodes"));
-            masternodeButton->setStatusTip(tr("Browse masternodes"));
-            tabGroup->addButton(masternodeButton);
-            connect(masternodeButton, &QToolButton::clicked, this, &BitcoinGUI::gotoMasternodePage);
-            masternodeButton->setEnabled(true);
-        }
+        masternodeButton = new QToolButton(this);
+        masternodeButton->setText(tr("&Masternodes"));
+        masternodeButton->setStatusTip(tr("Browse masternodes"));
+        tabGroup->addButton(masternodeButton);
 
-        if (settings.value("fShowGovernanceTab").toBool()) {
-            governanceButton = new QToolButton(this);
-            governanceButton->setText(tr("&Governance"));
-            governanceButton->setStatusTip(tr("View Governance Proposals"));
-            tabGroup->addButton(governanceButton);
-            connect(governanceButton, &QToolButton::clicked, this, &BitcoinGUI::gotoGovernancePage);
-            governanceButton->setEnabled(true);
-        }
+        governanceButton = new QToolButton(this);
+        governanceButton->setText(tr("&Governance"));
+        governanceButton->setStatusTip(tr("View Governance Proposals"));
+        tabGroup->addButton(governanceButton);
 
         connect(overviewButton, &QToolButton::clicked, this, &BitcoinGUI::gotoOverviewPage);
         connect(sendCoinsButton, &QToolButton::clicked, [this]{ gotoSendCoinsPage(); });
         connect(coinJoinCoinsButton, &QToolButton::clicked, [this]{ gotoCoinJoinCoinsPage(); });
         connect(receiveCoinsButton, &QToolButton::clicked, this, &BitcoinGUI::gotoReceiveCoinsPage);
         connect(historyButton, &QToolButton::clicked, this, &BitcoinGUI::gotoHistoryPage);
+        connect(governanceButton, &QToolButton::clicked, this, &BitcoinGUI::gotoGovernancePage);
+        connect(masternodeButton, &QToolButton::clicked, this, &BitcoinGUI::gotoMasternodePage);
 
         // Give the selected tab button a bolder font.
         connect(tabGroup, qOverload<QAbstractButton *, bool>(&QButtonGroup::buttonToggled), this, &BitcoinGUI::highlightTabButton);
@@ -762,7 +755,10 @@ void BitcoinGUI::createToolBars()
             button->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Preferred);
             button->setToolTip(button->statusTip());
             button->setCheckable(true);
-            toolbar->addWidget(button);
+            QAction* action = toolbar->addWidget(button);
+            if (button == coinJoinCoinsButton) { m_coinjoin_action = action; }
+            else if (button == governanceButton) { m_governance_action = action; }
+            else if (button == masternodeButton) { m_masternode_action = action; }
         }
 
         overviewButton->setChecked(true);
@@ -877,20 +873,24 @@ void BitcoinGUI::setClientModel(ClientModel *_clientModel, interfaces::BlockAndH
             walletFrame->setClientModel(_clientModel);
         }
 #endif // ENABLE_WALLET
-        unitDisplayControl->setOptionsModel(_clientModel->getOptionsModel());
 
         OptionsModel* optionsModel = _clientModel->getOptionsModel();
-        if (optionsModel && trayIcon) {
-            // be aware of the tray icon disable state change reported by the OptionsModel object.
-            connect(optionsModel, &OptionsModel::showTrayIconChanged, trayIcon, &QSystemTrayIcon::setVisible);
+        if (optionsModel) {
+            unitDisplayControl->setOptionsModel(optionsModel);
+            m_mask_values_action->setChecked(optionsModel->getOption(OptionsModel::OptionID::MaskValues).toBool());
 
-            // initialize the disable state of the tray icon with the current value in the model.
-            trayIcon->setVisible(optionsModel->getShowTrayIcon());
+            connect(optionsModel, &OptionsModel::showCoinJoinChanged, this, &BitcoinGUI::updateCoinJoinVisibility);
+            connect(optionsModel, &OptionsModel::showGovernanceChanged, this, &BitcoinGUI::updateGovernanceVisibility);
+            connect(optionsModel, &OptionsModel::showMasternodesChanged, this, &BitcoinGUI::updateMasternodesVisibility);
 
-            connect(optionsModel, &OptionsModel::coinJoinEnabledChanged, this, &BitcoinGUI::updateCoinJoinVisibility);
+            if (trayIcon) {
+                // be aware of the tray icon disable state change reported by the OptionsModel object.
+                connect(optionsModel, &OptionsModel::showTrayIconChanged, trayIcon, &QSystemTrayIcon::setVisible);
+
+                // initialize the disable state of the tray icon with the current value in the model.
+                trayIcon->setVisible(optionsModel->getShowTrayIcon());
+            }
         }
-
-        m_mask_values_action->setChecked(_clientModel->getOptionsModel()->getOption(OptionsModel::OptionID::MaskValues).toBool());
     } else {
         if(trayIconMenu)
         {
@@ -917,6 +917,8 @@ void BitcoinGUI::setClientModel(ClientModel *_clientModel, interfaces::BlockAndH
     }
 
     updateCoinJoinVisibility();
+    updateGovernanceVisibility();
+    updateMasternodesVisibility();
 }
 
 #ifdef ENABLE_WALLET
@@ -1248,8 +1250,7 @@ void BitcoinGUI::highlightTabButton(QAbstractButton *button, bool checked)
 
 void BitcoinGUI::gotoGovernancePage()
 {
-    QSettings settings;
-    if (settings.value("fShowGovernanceTab").toBool() && governanceButton) {
+    if (governanceButton) {
         governanceButton->setChecked(true);
         if (walletFrame) walletFrame->gotoGovernancePage();
     }
@@ -1269,8 +1270,7 @@ void BitcoinGUI::gotoHistoryPage()
 
 void BitcoinGUI::gotoMasternodePage()
 {
-    QSettings settings;
-    if (settings.value("fShowMasternodesTab").toBool() && masternodeButton) {
+    if (masternodeButton) {
         masternodeButton->setChecked(true);
         if (walletFrame) walletFrame->gotoMasternodePage();
     }
@@ -1449,21 +1449,50 @@ void BitcoinGUI::updateProgressBarVisibility()
 
 void BitcoinGUI::updateCoinJoinVisibility()
 {
+    const bool fEnabled{
 #ifdef ENABLE_WALLET
-    bool fEnabled = m_node.coinJoinOptions().isEnabled();
+        m_node.coinJoinOptions().isEnabled()
 #else
-    bool fEnabled = false;
-#endif
-    // CoinJoin button is the third QToolButton, show/hide the underlying QAction
-    // Hiding the QToolButton itself doesn't work for the GUI part
-    // but is still needed for shortcuts to work properly.
-    if (appToolBar != nullptr) {
-        appToolBar->actions()[4]->setVisible(fEnabled);
-        coinJoinCoinsButton->setVisible(fEnabled);
-        GUIUtil::updateButtonGroupShortcuts(tabGroup);
-    }
-    coinJoinCoinsAction->setVisible(fEnabled);
-    showCoinJoinHelpAction->setVisible(fEnabled);
+        false
+#endif // ENABLE_WALLET
+    };
+
+    // Show/hide the underlying QAction, hiding the QToolButton itself doesn't
+    // work for the GUI part but is still needed for shortcuts to work properly.
+    if (m_coinjoin_action) m_coinjoin_action->setVisible(fEnabled);
+    if (coinJoinCoinsButton) coinJoinCoinsButton->setVisible(fEnabled);
+    if (coinJoinCoinsAction) coinJoinCoinsAction->setVisible(fEnabled);
+    if (showCoinJoinHelpAction) showCoinJoinHelpAction->setVisible(fEnabled);
+
+    GUIUtil::updateButtonGroupShortcuts(tabGroup);
+    updateWidth();
+}
+
+void BitcoinGUI::updateGovernanceVisibility()
+{
+    if (!clientModel || !clientModel->getOptionsModel()) return;
+    const bool fShow = clientModel->getOptionsModel()->getShowGovernanceTab();
+
+    // Show/hide the underlying QAction, hiding the QToolButton itself doesn't
+    // work for the GUI part but is still needed for shortcuts to work properly.
+    if (m_governance_action) m_governance_action->setVisible(fShow);
+    if (governanceButton) governanceButton->setVisible(fShow);
+
+    GUIUtil::updateButtonGroupShortcuts(tabGroup);
+    updateWidth();
+}
+
+void BitcoinGUI::updateMasternodesVisibility()
+{
+    if (!clientModel || !clientModel->getOptionsModel()) return;
+    const bool fShow = clientModel->getOptionsModel()->getShowMasternodesTab();
+
+    // Show/hide the underlying QAction, hiding the QToolButton itself doesn't
+    // work for the GUI part but is still needed for shortcuts to work properly.
+    if (m_masternode_action) m_masternode_action->setVisible(fShow);
+    if (masternodeButton) masternodeButton->setVisible(fShow);
+
+    GUIUtil::updateButtonGroupShortcuts(tabGroup);
     updateWidth();
 }
 

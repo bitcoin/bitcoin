@@ -129,10 +129,11 @@ public:
     bool getSubFeeFromAmount() const { return m_sub_fee_from_amount; }
     bool getEnablePSBTControls() const { return m_enable_psbt_controls; }
     bool getKeepChangeAddress() const { return fKeepChangeAddress; }
+    bool getShowMasternodesTab() const { return m_enable_masternodes; }
+    bool getShowGovernanceTab() const { return m_enable_governance; }
     bool getShowAdvancedCJUI() { return fShowAdvancedCJUI; }
     const QString& getOverriddenByCommandLine() { return strOverriddenByCommandLine; }
     bool isOptionOverridden(const QString& option) const { return strOverriddenByCommandLine.contains(option); }
-    void emitCoinJoinEnabledChanged();
 
     /* Explicit setters */
     void SetPruneTargetGB(int prune_target_gb);
@@ -159,6 +160,8 @@ private:
     bool m_enable_psbt_controls;
     bool m_mask_values;
     bool fKeepChangeAddress;
+    bool m_enable_masternodes;
+    bool m_enable_governance;
     bool fShowAdvancedCJUI;
 
     /* settings that were overridden by command-line */
@@ -175,12 +178,14 @@ private:
 
 Q_SIGNALS:
     void displayUnitChanged(BitcoinUnit unit);
-    void coinJoinEnabledChanged();
     void coinJoinRoundsChanged();
     void coinJoinAmountChanged();
     void AdvancedCJUIChanged(bool);
     void coinControlFeaturesChanged(bool);
     void keepChangeAddressChanged(bool);
+    void showCoinJoinChanged();
+    void showGovernanceChanged();
+    void showMasternodesChanged();
     void showTrayIconChanged(bool);
     void fontForMoneyChanged(const QFont&);
 };

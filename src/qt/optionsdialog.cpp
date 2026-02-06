@@ -273,8 +273,6 @@ void OptionsDialog::setModel(OptionsModel *_model)
     connect(ui->externalSignerPath, &QLineEdit::textChanged, [this]{ showRestartWarning(); });
     connect(ui->threadsScriptVerif, qOverload<int>(&QSpinBox::valueChanged), this, &OptionsDialog::showRestartWarning);
     /* Wallet */
-    connect(ui->showMasternodesTab, &QCheckBox::clicked, this, &OptionsDialog::showRestartWarning);
-    connect(ui->showGovernanceTab, &QCheckBox::clicked, this, &OptionsDialog::showRestartWarning);
     connect(ui->spendZeroConfChange, &QCheckBox::clicked, this, &OptionsDialog::showRestartWarning);
     /* Network */
     connect(ui->allowIncoming, &QCheckBox::clicked, this, &OptionsDialog::showRestartWarning);
@@ -287,13 +285,8 @@ void OptionsDialog::setModel(OptionsModel *_model)
     connect(ui->thirdPartyTxUrls, &QLineEdit::textChanged, [this]{ showRestartWarning(); });
 
     connect(ui->coinJoinEnabled, &QCheckBox::clicked, [this](bool fChecked) {
-#ifdef ENABLE_WALLET
-        model->node().coinJoinOptions().setEnabled(fChecked);
-#endif
+        model->setOption(OptionsModel::CoinJoinEnabled, fChecked);
         updateCoinJoinVisibility();
-        if (this->model != nullptr) {
-            this->model->emitCoinJoinEnabledChanged();
-        }
         updateWidth();
     });
 
