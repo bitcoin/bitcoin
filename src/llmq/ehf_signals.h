@@ -12,7 +12,6 @@
 
 class CBlockIndex;
 class ChainstateManager;
-class CMNHFManager;
 
 namespace llmq {
 class CQuorumManager;
@@ -23,7 +22,6 @@ class CEHFSignalsHandler : public CRecoveredSigsListener
 {
 private:
     ChainstateManager& m_chainman;
-    CMNHFManager& mnhfman;
     CSigningManager& sigman;
     CSigSharesManager& shareman;
     const CQuorumManager& qman;
@@ -34,8 +32,8 @@ private:
     mutable Mutex cs;
     std::set<uint256> ids GUARDED_BY(cs);
 public:
-    explicit CEHFSignalsHandler(ChainstateManager& chainman, CMNHFManager& mnhfman, CSigningManager& sigman,
-                                CSigSharesManager& shareman, const CQuorumManager& qman);
+    explicit CEHFSignalsHandler(ChainstateManager& chainman, CSigningManager& sigman, CSigSharesManager& shareman,
+                                const CQuorumManager& qman);
 
     ~CEHFSignalsHandler();
 

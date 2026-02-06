@@ -30,8 +30,8 @@
 #include <evo/cbtx.h>
 #include <evo/chainhelper.h>
 #include <evo/creditpool.h>
-#include <evo/deterministicmns.h>
 #include <evo/mnhftx.h>
+#include <evo/deterministicmns.h>
 #include <evo/simplifiedmns.h>
 #include <evo/specialtxman.h>
 #include <governance/governance.h>
@@ -72,11 +72,9 @@ BlockAssembler::Options::Options()
 
 BlockAssembler::BlockAssembler(CChainState& chainstate, const NodeContext& node, const CTxMemPool* mempool, const CChainParams& params, const Options& options) :
       m_blockman(chainstate.m_blockman),
-      m_cpoolman(*Assert(node.cpoolman)),
       m_chain_helper(chainstate.ChainHelper()),
       m_chainstate(chainstate),
       m_evoDb(*Assert(node.evodb)),
-      m_mnhfman(*Assert(node.mnhf_manager)),
       m_chainlocks(*Assert(node.chainlocks)),
       m_clhandler(*Assert(node.clhandler)),
       m_isman(*Assert(Assert(node.llmq_ctx)->isman)),
@@ -308,7 +306,7 @@ std::unique_ptr<CBlockTemplate> BlockAssembler::CreateNewBlock(const CScript& sc
                     LogPrintf("CreateNewBlock() h[%d] CbTx failed to find best CL. Inserting null CL\n", nHeight);
                 }
                 BlockValidationState state;
-                const auto creditPoolDiff = GetCreditPoolDiffForBlock(m_cpoolman, m_blockman, m_qman, *pblock, pindexPrev, chainparams.GetConsensus(), blockSubsidy, state);
+                const auto creditPoolDiff = GetCreditPoolDiffForBlock(*m_chain_helper.credit_pool_manager, m_blockman, m_qman, *pblock, pindexPrev, chainparams.GetConsensus(), blockSubsidy, state);
                 if (creditPoolDiff == std::nullopt) {
                     throw std::runtime_error(strprintf("%s: GetCreditPoolDiffForBlock failed: %s", __func__, state.ToString()));
                 }
@@ -470,12 +468,12 @@ void BlockAssembler::addPackageTxs(const CTxMemPool& mempool, int& nPackagesSele
     // duplicates of indexes. There's used `BlockSubsidy` equaled to 0
     std::optional<CCreditPoolDiff> creditPoolDiff;
     if (DeploymentActiveAfter(pindexPrev, chainparams.GetConsensus(), Consensus::DEPLOYMENT_V20)) {
-        CCreditPool creditPool = m_cpoolman.GetCreditPool(pindexPrev);
+        CCreditPool creditPool = m_chain_helper.credit_pool_manager->GetCreditPool(pindexPrev);
         creditPoolDiff.emplace(std::move(creditPool), pindexPrev, chainparams.GetConsensus(), 0);
     }
 
     // This map with signals is used only to find duplicates
-    std::unordered_map<uint8_t, int> signals = m_mnhfman.GetSignalsStage(pindexPrev);
+    std::unordered_map<uint8_t, int> signals = m_chain_helper.ehf_manager->GetSignalsStage(pindexPrev);
 
     // mapModifiedTx will store sorted packages after they are modified
     // because some of their txs are already in the block

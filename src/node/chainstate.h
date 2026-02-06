@@ -11,16 +11,13 @@
 #include <optional>
 #include <string>
 
-class CActiveMasternodeManager;
 class CChainstateHelper;
-class CCreditPoolManager;
 class CDeterministicMNManager;
 class CEvoDB;
 class CGovernanceManager;
 class ChainstateManager;
 class CMasternodeMetaMan;
 class CMasternodeSync;
-class CMNHFManager;
 class CSporkManager;
 class CTxMemPool;
 struct LLMQContext;
@@ -87,10 +84,8 @@ std::optional<ChainstateLoadingError> LoadChainstate(bool fReset,
                                                      CSporkManager& sporkman,
                                                      chainlock::Chainlocks& chainlocks,
                                                      std::unique_ptr<CChainstateHelper>& chain_helper,
-                                                     std::unique_ptr<CCreditPoolManager>& cpoolman,
                                                      std::unique_ptr<CDeterministicMNManager>& dmnman,
                                                      std::unique_ptr<CEvoDB>& evodb,
-                                                     std::unique_ptr<CMNHFManager>& mnhf_manager,
                                                      std::unique_ptr<LLMQContext>& llmq_ctx,
                                                      CTxMemPool* mempool,
                                                      const fs::path& data_dir,
@@ -119,10 +114,8 @@ void DashChainstateSetup(ChainstateManager& chainman,
                          CSporkManager& sporkman,
                          chainlock::Chainlocks& chainlocks,
                          std::unique_ptr<CChainstateHelper>& chain_helper,
-                         std::unique_ptr<CCreditPoolManager>& cpoolman,
                          std::unique_ptr<CDeterministicMNManager>& dmnman,
-                         std::unique_ptr<CEvoDB>& evodb,
-                         std::unique_ptr<CMNHFManager>& mnhf_manager,
+                         CEvoDB& evodb,
                          std::unique_ptr<LLMQContext>& llmq_ctx,
                          CTxMemPool* mempool,
                          const fs::path& data_dir,
@@ -133,9 +126,7 @@ void DashChainstateSetup(ChainstateManager& chainman,
                          const Consensus::Params& consensus_params);
 
 void DashChainstateSetupClose(std::unique_ptr<CChainstateHelper>& chain_helper,
-                              std::unique_ptr<CCreditPoolManager>& cpoolman,
                               std::unique_ptr<CDeterministicMNManager>& dmnman,
-                              std::unique_ptr<CMNHFManager>& mnhf_manager,
                               std::unique_ptr<LLMQContext>& llmq_ctx,
                               CTxMemPool* mempool);
 

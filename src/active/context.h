@@ -63,13 +63,13 @@ public:
     ActiveContext& operator=(const ActiveContext&) = delete;
     explicit ActiveContext(CBLSWorker& bls_worker, ChainstateManager& chainman, CConnman& connman,
                            CDeterministicMNManager& dmnman, CGovernanceManager& govman, CMasternodeMetaMan& mn_metaman,
-                           CMNHFManager& mnhfman, CSporkManager& sporkman, const chainlock::Chainlocks& chainlocks,
-                           CTxMemPool& mempool, chainlock::ChainlockHandler& clhandler,
-                           llmq::CInstantSendManager& isman, llmq::CQuorumBlockProcessor& qblockman,
-                           llmq::CQuorumManager& qman, llmq::CQuorumSnapshotManager& qsnapman,
-                           llmq::CSigningManager& sigman, PeerManager& peerman, const CMasternodeSync& mn_sync,
-                           const CBLSSecretKey& operator_sk, const llmq::QvvecSyncModeMap& sync_map,
-                           const util::DbWrapperParams& db_params, bool quorums_recovery, bool quorums_watch);
+                           CSporkManager& sporkman, const chainlock::Chainlocks& chainlocks, CTxMemPool& mempool,
+                           chainlock::ChainlockHandler& clhandler, llmq::CInstantSendManager& isman,
+                           llmq::CQuorumBlockProcessor& qblockman, llmq::CQuorumManager& qman,
+                           llmq::CQuorumSnapshotManager& qsnapman, llmq::CSigningManager& sigman, PeerManager& peerman,
+                           const CMasternodeSync& mn_sync, const CBLSSecretKey& operator_sk,
+                           const llmq::QvvecSyncModeMap& sync_map, const util::DbWrapperParams& db_params,
+                           bool quorums_recovery, bool quorums_watch);
     ~ActiveContext();
 
     void Interrupt();

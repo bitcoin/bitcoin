@@ -92,4 +92,16 @@ private:
                                      BlockValidationState& state) EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
 };
 
+
+bool CheckProRegTx(const CTransaction& tx, gsl::not_null<const CBlockIndex*> pindexPrev,
+                   CDeterministicMNManager& dmnman, const CCoinsViewCache& view, const ChainstateManager& chainman,
+                   TxValidationState& state, bool check_sigs);
+bool CheckProUpServTx(const CTransaction& tx, gsl::not_null<const CBlockIndex*> pindexPrev, CDeterministicMNManager& dmnman,
+                      const ChainstateManager& chainman, TxValidationState& state, bool check_sigs);
+bool CheckProUpRegTx(const CTransaction& tx, gsl::not_null<const CBlockIndex*> pindexPrev,
+                     CDeterministicMNManager& dmnman, const CCoinsViewCache& view, const ChainstateManager& chainman,
+                     TxValidationState& state, bool check_sigs);
+bool CheckProUpRevTx(const CTransaction& tx, gsl::not_null<const CBlockIndex*> pindexPrev, CDeterministicMNManager& dmnman,
+                     const ChainstateManager& chainman, TxValidationState& state, bool check_sigs);
+
 #endif // BITCOIN_EVO_SPECIALTXMAN_H

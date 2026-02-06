@@ -35,9 +35,7 @@ class CEvoDB;
 class CSimplifiedMNList;
 class CSimplifiedMNListEntry;
 class CMasternodeMetaMan;
-class ChainstateManager;
 class CSpecialTxProcessor;
-class TxValidationState;
 struct RPCResult;
 
 extern RecursiveMutex cs_main; // NOLINT(readability-redundant-declaration)
@@ -766,16 +764,4 @@ private:
     void WriteRepairedDiffs(const std::vector<std::pair<uint256, CDeterministicMNListDiff>>& recalculated_diffs,
                             RecalcDiffsResult& result) EXCLUSIVE_LOCKS_REQUIRED(!cs);
 };
-
-bool CheckProRegTx(const CTransaction& tx, gsl::not_null<const CBlockIndex*> pindexPrev,
-                   CDeterministicMNManager& dmnman, const CCoinsViewCache& view, const ChainstateManager& chainman,
-                   TxValidationState& state, bool check_sigs);
-bool CheckProUpServTx(const CTransaction& tx, gsl::not_null<const CBlockIndex*> pindexPrev, CDeterministicMNManager& dmnman,
-                      const ChainstateManager& chainman, TxValidationState& state, bool check_sigs);
-bool CheckProUpRegTx(const CTransaction& tx, gsl::not_null<const CBlockIndex*> pindexPrev,
-                     CDeterministicMNManager& dmnman, const CCoinsViewCache& view, const ChainstateManager& chainman,
-                     TxValidationState& state, bool check_sigs);
-bool CheckProUpRevTx(const CTransaction& tx, gsl::not_null<const CBlockIndex*> pindexPrev, CDeterministicMNManager& dmnman,
-                     const ChainstateManager& chainman, TxValidationState& state, bool check_sigs);
-
 #endif // BITCOIN_EVO_DETERMINISTICMNS_H

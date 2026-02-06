@@ -16,7 +16,6 @@ class CActiveMasternodeManager;
 class AddrMan;
 class CBlockPolicyEstimator;
 class CConnman;
-class CCreditPoolManager;
 class CDeterministicMNManager;
 class CDSTXManager;
 class CChainstateHelper;
@@ -30,7 +29,6 @@ class CNetFulfilledRequestManager;
 class CScheduler;
 class CSporkManager;
 class CTxMemPool;
-class CMNHFManager;
 class NetGroupManager;
 class PeerManager;
 struct ActiveContext;
@@ -88,7 +86,6 @@ struct NodeContext {
     std::unique_ptr<CScheduler> scheduler;
     std::function<void()> rpc_interruption_point = [] {};
     //! Dash managers
-    std::unique_ptr<CCreditPoolManager> cpoolman;
     std::unique_ptr<CJWalletManager> cj_walletman;
     std::unique_ptr<CDSTXManager> dstxman;
     std::unique_ptr<CEvoDB> evodb;
@@ -97,7 +94,6 @@ struct NodeContext {
     std::unique_ptr<CGovernanceManager> govman;
     std::unique_ptr<CMasternodeMetaMan> mn_metaman;
     std::unique_ptr<CMasternodeSync> mn_sync;
-    std::unique_ptr<CMNHFManager> mnhf_manager;
     std::unique_ptr<CNetFulfilledRequestManager> netfulfilledman;
     std::unique_ptr<CSporkManager> sporkman;
     std::unique_ptr<chainlock::Chainlocks> chainlocks;
