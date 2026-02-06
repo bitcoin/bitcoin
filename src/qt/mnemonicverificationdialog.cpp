@@ -87,14 +87,10 @@ MnemonicVerificationDialog::MnemonicVerificationDialog(const SecureString& mnemo
         connect(ui->word1Edit, &QLineEdit::textChanged, this, &MnemonicVerificationDialog::onWord1Changed);
         connect(ui->word2Edit, &QLineEdit::textChanged, this, &MnemonicVerificationDialog::onWord2Changed);
         connect(ui->word3Edit, &QLineEdit::textChanged, this, &MnemonicVerificationDialog::onWord3Changed);
-        connect(ui->showMnemonicAgainButton, &QPushButton::clicked, this, &MnemonicVerificationDialog::onShowMnemonicAgainClicked);
     }
 
     // Button box
     ui->buttonBox->button(QDialogButtonBox::Ok)->setText(m_view_only ? tr("Close") : tr("Continue"));
-    connect(ui->buttonBox, &QDialogButtonBox::accepted, this, &MnemonicVerificationDialog::accept);
-    connect(ui->buttonBox, &QDialogButtonBox::rejected, this, &MnemonicVerificationDialog::reject);
-
     GUIUtil::handleCloseWindowShortcut(this);
 }
 
@@ -206,13 +202,9 @@ void MnemonicVerificationDialog::setupStep2()
 
     ui->buttonBox->show();
     if (QAbstractButton* cancel = ui->buttonBox->button(QDialogButtonBox::Cancel)) {
-        cancel->show();
         cancel->setText(tr("Back"));
-        disconnect(cancel, nullptr, nullptr, nullptr);
-        connect(cancel, &QAbstractButton::clicked, this, &MnemonicVerificationDialog::onShowMnemonicAgainClicked);
     }
     if (QAbstractButton* cont = ui->buttonBox->button(QDialogButtonBox::Ok)) cont->setEnabled(false);
-    if (ui->showMnemonicAgainButton) ui->showMnemonicAgainButton->hide();
 
     // Verification label styling is defined in general.css
 
@@ -290,13 +282,18 @@ void MnemonicVerificationDialog::onHideMnemonicClicked()
     clearWordsSecurely();
 }
 
-void MnemonicVerificationDialog::onShowMnemonicAgainClicked()
+void MnemonicVerificationDialog::reject()
 {
     // Clear words when going back to step 1 (unless mnemonic is revealed)
     if (!m_mnemonic_revealed) {
         clearWordsSecurely();
     }
-    setupStep1();
+    // close dialog for step-1; return back to step-1 for step-2
+    if (ui->stackedWidget->currentIndex() == 0) {
+        QDialog::reject();
+    } else {
+        setupStep1();
+    }
 }
 
 void MnemonicVerificationDialog::onWord1Changed() { updateWordValidation(); }

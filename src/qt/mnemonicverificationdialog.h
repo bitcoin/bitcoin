@@ -24,7 +24,9 @@ public:
     explicit MnemonicVerificationDialog(const SecureString& mnemonic, QWidget *parent = nullptr, bool viewOnly = false);
     ~MnemonicVerificationDialog();
 
+protected:
     void accept() override;
+    void reject() override;
 
 private Q_SLOTS:
     void onShowMnemonicClicked();
@@ -32,7 +34,6 @@ private Q_SLOTS:
     void onWord1Changed();
     void onWord2Changed();
     void onWord3Changed();
-    void onShowMnemonicAgainClicked();
 
 private:
     void setupStep1();
