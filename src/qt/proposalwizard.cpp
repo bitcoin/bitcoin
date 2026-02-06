@@ -36,9 +36,8 @@ namespace {
 static QString toHex(const QByteArray& bytes) { return QString(bytes.toHex()); }
 } // namespace
 
-ProposalWizard::ProposalWizard(interfaces::Node& node, WalletModel* walletModel, QWidget* parent) :
+ProposalWizard::ProposalWizard(WalletModel* walletModel, QWidget* parent) :
     QDialog(parent),
-    m_node(node),
     m_walletModel(walletModel),
     m_ui(new Ui::ProposalWizard)
 {

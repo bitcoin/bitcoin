@@ -156,7 +156,7 @@ void GovernanceList::showCreateProposalDialog()
         QMessageBox::warning(this, tr("Unavailable"), tr("A synced node and an unlocked wallet are required."));
         return;
     }
-    ProposalWizard* proposalWizard = new ProposalWizard(this->clientModel->node(), this->walletModel, this);
+    ProposalWizard* proposalWizard = new ProposalWizard(this->walletModel, this);
     // Ensure closing the dialog actually destroys it so a fresh flow starts next time
     proposalWizard->setAttribute(Qt::WA_DeleteOnClose, true);
     // Modeless window that does not block the parent

@@ -14,9 +14,6 @@
 
 class QTimer;
 
-namespace interfaces {
-class Node;
-}
 namespace Ui {
 class SendCoinsEntry;
 }
@@ -28,7 +25,7 @@ class ProposalWizard : public QDialog
 {
     Q_OBJECT
 public:
-    explicit ProposalWizard(interfaces::Node& node, WalletModel* walletModel, QWidget* parent = nullptr);
+    explicit ProposalWizard(WalletModel* walletModel, QWidget* parent = nullptr);
     ~ProposalWizard();
 
 private Q_SLOTS:
@@ -46,7 +43,6 @@ private Q_SLOTS:
     void updateDisplayUnit();
 
 private:
-    interfaces::Node& m_node;
     WalletModel* m_walletModel;
     Ui::ProposalWizard* m_ui;
 
