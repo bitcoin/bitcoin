@@ -9,6 +9,7 @@
 
 #include <QAbstractTableModel>
 #include <QByteArray>
+#include <QIcon>
 #include <QString>
 
 #include <memory>
@@ -62,6 +63,8 @@ public:
     int posePenalty() const { return m_pose_penalty; }
     int registeredHeight() const { return m_registered_height; }
     MnType type() const { return m_type; }
+    std::optional<int32_t> poseBanHeight() const { return m_pose_ban_height; }
+    std::optional<int32_t> poseRevivedHeight() const { return m_pose_revived_height; }
     uint16_t operatorRewardPct() const { return m_operator_reward_pct; }
 
     const QByteArray& serviceKey() const { return m_service_key; }
@@ -90,15 +93,18 @@ class MasternodeModel : public QAbstractTableModel
     Q_OBJECT
 
 private:
+    int m_current_height{0};
     MasternodeEntryList m_data;
+    QIcon m_icon_banned;
+    QIcon m_icon_enabled;
 
     bool isValidRow(int row) const { return row >= 0 && row < static_cast<int>(m_data.size()); }
 
 public:
     enum Column : uint8_t {
+        STATUS,
         SERVICE,
         TYPE,
-        STATUS,
         POSE,
         REGISTERED,
         LAST_PAYMENT,
@@ -115,6 +121,8 @@ public:
     explicit MasternodeModel(QObject* parent = nullptr);
     ~MasternodeModel();
 
+    void refreshIcons();
+
     int rowCount(const QModelIndex& parent = {}) const override;
     int columnCount(const QModelIndex& parent = {}) const override;
     QVariant data(const QModelIndex& index, int role = Qt::DisplayRole) const override;
@@ -125,6 +133,7 @@ public:
     void append(std::unique_ptr<MasternodeEntry>&& entry);
     void remove(int row);
     void reconcile(MasternodeEntryList&& entries);
+    void setCurrentHeight(int height) { m_current_height = height; }
     const MasternodeEntry* getEntryAt(const QModelIndex& index) const;
 };
 

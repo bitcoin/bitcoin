@@ -18,6 +18,7 @@
 
 #include <QApplication>
 #include <QClipboard>
+#include <QHeaderView>
 
 namespace {
 constexpr int MASTERNODELIST_UPDATE_SECONDS{3};
@@ -90,7 +91,11 @@ MasternodeList::MasternodeList(QWidget* parent) :
 
     // Set column widths
     for (int col = 0; col < MasternodeModel::COUNT; ++col) {
-        ui->tableViewMasternodes->setColumnWidth(col, MasternodeModel::columnWidth(col));
+        if (col == MasternodeModel::STATUS) {
+            ui->tableViewMasternodes->horizontalHeader()->setSectionResizeMode(col, QHeaderView::ResizeToContents);
+        } else {
+            ui->tableViewMasternodes->setColumnWidth(col, MasternodeModel::columnWidth(col));
+        }
     }
 
     // Hide ProTx Hash column (used for internal lookup)
@@ -122,6 +127,14 @@ MasternodeList::~MasternodeList()
 {
     timer->stop();
     delete ui;
+}
+
+void MasternodeList::changeEvent(QEvent* event)
+{
+    QWidget::changeEvent(event);
+    if (event->type() == QEvent::StyleChange) {
+        QTimer::singleShot(0, m_model, &MasternodeModel::refreshIcons);
+    }
 }
 
 void MasternodeList::setClientModel(ClientModel* model)
@@ -231,6 +244,7 @@ void MasternodeList::updateDIP3List()
     });
 
     // Update model
+    m_model->setCurrentHeight(mnList->getHeight());
     m_model->reconcile(std::move(entries));
 
     // Update filters

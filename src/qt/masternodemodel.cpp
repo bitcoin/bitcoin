@@ -4,11 +4,15 @@
 
 #include <qt/masternodemodel.h>
 
+#include <chainparams.h>
 #include <interfaces/node.h>
 #include <key_io.h>
 #include <pubkey.h>
 #include <script/script.h>
 #include <script/standard.h>
+
+#include <qt/clientmodel.h>
+#include <qt/guiutil.h>
 
 #include <QObject>
 #include <QStringList>
@@ -19,6 +23,8 @@
 #include <set>
 
 namespace {
+constexpr int64_t DAY_SECS{24 * 60 * 60};
+
 std::optional<QString> JoinArray(const UniValue& arr)
 {
     if (!arr.isArray() || arr.empty()) return std::nullopt;
@@ -166,6 +172,13 @@ QString MasternodeEntry::toHtml() const
 MasternodeModel::MasternodeModel(QObject* parent) :
     QAbstractTableModel(parent)
 {
+    refreshIcons();
+}
+
+void MasternodeModel::refreshIcons()
+{
+    m_icon_banned = GUIUtil::getIcon("warning", GUIUtil::ThemedColor::RED);
+    m_icon_enabled = GUIUtil::getIcon("synced", GUIUtil::ThemedColor::GREEN);
 }
 
 MasternodeModel::~MasternodeModel() = default;
@@ -192,7 +205,7 @@ QVariant MasternodeModel::data(const QModelIndex& index, int role) const
         return {};
     }
 
-    if (role != Qt::DisplayRole && role != Qt::EditRole && role != Qt::UserRole) {
+    if (role != Qt::DecorationRole && role != Qt::DisplayRole && role != Qt::EditRole && role != Qt::UserRole && role != Qt::ToolTipRole) {
         return {};
     }
 
@@ -201,7 +214,32 @@ QVariant MasternodeModel::data(const QModelIndex& index, int role) const
         return {};
     }
 
-    if (role == Qt::UserRole) {
+    if (role == Qt::ToolTipRole) {
+        if (index.column() == Column::STATUS && m_current_height > 0) {
+            const int32_t blocks_per_day = DAY_SECS / Params().GetConsensus().nPowTargetSpacing;
+            if (entry->isBanned()) {
+                if (auto ban_height = entry->poseBanHeight(); ban_height && *ban_height > 0) {
+                    const auto days{(m_current_height - *ban_height) / blocks_per_day};
+                    return days > 0 ? tr("Banned for %n day(s)", "", days) : tr("Banned for less than a day");
+                } else {
+                    return tr("Banned");
+                }
+            } else {
+                int32_t active_height = entry->registeredHeight();
+                if (auto revived_height = entry->poseRevivedHeight(); revived_height && *revived_height > 0) {
+                    active_height = *revived_height;
+                }
+                const auto days{(m_current_height - active_height) / blocks_per_day};
+                return days > 0 ? tr("Active for %n day(s)", "", days) : tr("Active for less than a day");
+            }
+        }
+        return {};
+    } else if (role == Qt::DecorationRole) {
+        if (index.column() == Column::STATUS) {
+            return entry->isBanned() ? m_icon_banned : m_icon_enabled;
+        }
+        return {};
+    } else if (role == Qt::UserRole) {
         return QString{
             entry->service() + " " +
             entry->typeDescription() + " " +
@@ -223,7 +261,7 @@ QVariant MasternodeModel::data(const QModelIndex& index, int role) const
         case Column::TYPE:
             return entry->typeDescription();
         case Column::STATUS:
-            return entry->isBanned() ? tr("POSE_BANNED") : tr("ENABLED");
+            return {};
         case Column::POSE:
             return QString::number(entry->posePenalty());
         case Column::REGISTERED:
@@ -295,7 +333,7 @@ QVariant MasternodeModel::headerData(int section, Qt::Orientation orientation, i
     case Column::TYPE:
         return tr("Type");
     case Column::STATUS:
-        return tr("Status");
+        return {};
     case Column::POSE:
         return tr("PoSe Score");
     case Column::REGISTERED:
@@ -329,6 +367,7 @@ int MasternodeModel::columnWidth(int section)
     case Column::TYPE:
         return 160;
     case Column::STATUS:
+        return 0;
     case Column::POSE:
     case Column::REGISTERED:
     case Column::LAST_PAYMENT:

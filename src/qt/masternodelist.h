@@ -71,6 +71,9 @@ public:
     void setClientModel(ClientModel* clientModel);
     void setWalletModel(WalletModel* walletModel);
 
+protected:
+    void changeEvent(QEvent* event) override;
+
 private:
     QMenu* contextMenuDIP3;
     int64_t nTimeUpdatedDIP3{0};
