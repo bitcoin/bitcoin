@@ -8,6 +8,7 @@
 #include <governance/governance.h>
 #include <governance/vote.h>
 
+#include <qt/descriptiondialog.h>
 #include <qt/governancelist.h>
 #include <qt/guiutil_font.h>
 #include <qt/proposalmodel.h>
@@ -269,19 +270,22 @@ void GovernanceList::showProposalContextMenu(const QPoint& pos)
 
 void GovernanceList::showAdditionalInfo(const QModelIndex& index)
 {
-    if (!index.isValid()) {
+    if (!index.isValid() || !clientModel) {
         return;
     }
 
     const auto proposal = proposalModel->getProposalAt(proposalModelProxy->mapToSource(index));
-    if (proposal == nullptr) {
+    if (!proposal) {
         return;
     }
 
-    const auto windowTitle = tr("Proposal Info: %1").arg(proposal->title());
-    const auto json = proposal->toJson();
-
-    QMessageBox::information(this, windowTitle, json);
+    DescriptionDialog* dialog = new DescriptionDialog(
+        tr("Details for %1").arg(proposal->title()),
+        proposal->toHtml(clientModel->getOptionsModel()->getDisplayUnit()),
+        /*parent=*/this);
+    dialog->resize(800, 380);
+    dialog->setAttribute(Qt::WA_DeleteOnClose);
+    dialog->show();
 }
 
 void GovernanceList::updateMasternodeCount() const

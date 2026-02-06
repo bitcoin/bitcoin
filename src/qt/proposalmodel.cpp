@@ -56,6 +56,24 @@ Proposal::Proposal(ClientModel* _clientModel, const CGovernanceObject& _govObj) 
     }
 }
 
+QString Proposal::toHtml(const BitcoinUnit& unit) const
+{
+    QString ret;
+    ret.reserve(4000);
+    ret += "<html>";
+    ret += "<b>" + QObject::tr("Title") + ":</b> " + GUIUtil::HtmlEscape(m_title) + "<br>";
+    if (!m_url.isEmpty()) {
+        ret += "<b>" + QObject::tr("URL") + ":</b> " + GUIUtil::HtmlEscape(m_url) + "<br>";
+    }
+    ret += "<b>" + QObject::tr("Payment Amount") + ":</b> " + BitcoinUnits::formatHtmlWithUnit(unit, m_paymentAmount) + "<br>";
+    ret += "<b>" + QObject::tr("Payment Start") + ":</b> " + GUIUtil::dateTimeStr(m_startDate) + "<br>";
+    ret += "<b>" + QObject::tr("Payment End") + ":</b> " + GUIUtil::dateTimeStr(m_endDate) + "<br>";
+    ret += "<b>" + QObject::tr("Object Hash") + ":</b> " + m_hash + "<br>";
+    ret += "<br>";
+    ret += "</html>";
+    return ret;
+}
+
 QString Proposal::toJson() const
 {
     const auto json = govObj.GetInnerJson();
