@@ -2070,7 +2070,6 @@ bool CWallet::SubmitTxMemoryPoolAndRelay(CWalletTx& wtx,
         what = "for private broadcast without adding to the mempool";
         break;
     }
-    WalletLogPrintf("Submitting wtx %s %s\n", wtx.GetHash().ToString(), what);
     // We must set TxStateInMempool here. Even though it will also be set later by the
     // entered-mempool callback, if we did not there would be a race where a
     // user could call sendmoney in a loop and hit spurious out of funds errors
@@ -2082,6 +2081,9 @@ bool CWallet::SubmitTxMemoryPoolAndRelay(CWalletTx& wtx,
     // TransactionRemovedFromMempool fires.
     bool ret = chain().broadcastTransaction(wtx.tx, m_default_max_tx_fee, broadcast_method, err_string);
     if (ret) wtx.m_state = TxStateInMempool{};
+    WalletLogPrintf("Submit of wallet transaction txid=%s wtxid=%s %s: %s\n",
+                    wtx.GetHash().ToString(), wtx.GetWitnessHash().ToString(), what,
+                    ret ? "ok" : err_string);
     return ret;
 }
 
