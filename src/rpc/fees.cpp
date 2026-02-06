@@ -63,40 +63,40 @@ static RPCHelpMan estimatesmartfee()
             HelpExampleRpc("estimatesmartfee", "6")
         },
         [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
-{
-    RPCTypeCheck(request.params, {UniValue::VNUM, UniValue::VSTR});
+        {
+            RPCTypeCheck(request.params, {UniValue::VNUM, UniValue::VSTR});
 
-    CBlockPolicyEstimator& fee_estimator = EnsureAnyFeeEstimator(request.context);
-    const NodeContext& node = EnsureAnyNodeContext(request.context);
-    const CTxMemPool& mempool = EnsureMemPool(node);
+            CBlockPolicyEstimator& fee_estimator = EnsureAnyFeeEstimator(request.context);
+            const NodeContext& node = EnsureAnyNodeContext(request.context);
+            const CTxMemPool& mempool = EnsureMemPool(node);
 
-    unsigned int max_target = fee_estimator.HighestTargetTracked(FeeEstimateHorizon::LONG_HALFLIFE);
-    unsigned int conf_target = ParseConfirmTarget(request.params[0], max_target);
-    bool conservative = true;
-    if (!request.params[1].isNull()) {
-        FeeEstimateMode fee_mode;
-        if (!FeeModeFromString(request.params[1].get_str(), fee_mode)) {
-            throw JSONRPCError(RPC_INVALID_PARAMETER, InvalidEstimateModeErrorMessage());
-        }
-        if (fee_mode == FeeEstimateMode::ECONOMICAL) conservative = false;
-    }
+            unsigned int max_target = fee_estimator.HighestTargetTracked(FeeEstimateHorizon::LONG_HALFLIFE);
+            unsigned int conf_target = ParseConfirmTarget(request.params[0], max_target);
+            bool conservative = true;
+            if (!request.params[1].isNull()) {
+                FeeEstimateMode fee_mode;
+                if (!FeeModeFromString(request.params[1].get_str(), fee_mode)) {
+                    throw JSONRPCError(RPC_INVALID_PARAMETER, InvalidEstimateModeErrorMessage());
+                }
+                if (fee_mode == FeeEstimateMode::ECONOMICAL) conservative = false;
+            }
 
-    UniValue result(UniValue::VOBJ);
-    UniValue errors(UniValue::VARR);
-    FeeCalculation feeCalc;
-    CFeeRate feeRate{fee_estimator.estimateSmartFee(conf_target, &feeCalc, conservative)};
-    if (feeRate != CFeeRate(0)) {
-        CFeeRate min_mempool_feerate{mempool.GetMinFee(gArgs.GetIntArg("-maxmempool", DEFAULT_MAX_MEMPOOL_SIZE) * 1000000)};
-        CFeeRate min_relay_feerate{::minRelayTxFee};
-        feeRate = std::max({feeRate, min_mempool_feerate, min_relay_feerate});
-        result.pushKV("feerate", ValueFromAmount(feeRate.GetFeePerK()));
-    } else {
-        errors.push_back("Insufficient data or no feerate found");
-        result.pushKV("errors", errors);
-    }
-    result.pushKV("blocks", feeCalc.returnedTarget);
-    return result;
-},
+            UniValue result(UniValue::VOBJ);
+            UniValue errors(UniValue::VARR);
+            FeeCalculation feeCalc;
+            CFeeRate feeRate{fee_estimator.estimateSmartFee(conf_target, &feeCalc, conservative)};
+            if (feeRate != CFeeRate(0)) {
+                CFeeRate min_mempool_feerate{mempool.GetMinFee(gArgs.GetIntArg("-maxmempool", DEFAULT_MAX_MEMPOOL_SIZE) * 1000000)};
+                CFeeRate min_relay_feerate{::minRelayTxFee};
+                feeRate = std::max({feeRate, min_mempool_feerate, min_relay_feerate});
+                result.pushKV("feerate", ValueFromAmount(feeRate.GetFeePerK()));
+            } else {
+                errors.push_back("Insufficient data or no feerate found");
+                result.pushKV("errors", errors);
+            }
+            result.pushKV("blocks", feeCalc.returnedTarget);
+            return result;
+        },
     };
 }
 
@@ -154,68 +154,68 @@ static RPCHelpMan estimaterawfee()
             HelpExampleCli("estimaterawfee", "6 0.9")
         },
         [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
-{
-    RPCTypeCheck(request.params, {UniValue::VNUM, UniValue::VNUM}, true);
+        {
+            RPCTypeCheck(request.params, {UniValue::VNUM, UniValue::VNUM}, true);
 
-    CBlockPolicyEstimator& fee_estimator = EnsureAnyFeeEstimator(request.context);
+            CBlockPolicyEstimator& fee_estimator = EnsureAnyFeeEstimator(request.context);
 
-    unsigned int max_target = fee_estimator.HighestTargetTracked(FeeEstimateHorizon::LONG_HALFLIFE);
-    unsigned int conf_target = ParseConfirmTarget(request.params[0], max_target);
-    double threshold = 0.95;
-    if (!request.params[1].isNull()) {
-        threshold = request.params[1].get_real();
-    }
-    if (threshold < 0 || threshold > 1) {
-        throw JSONRPCError(RPC_INVALID_PARAMETER, "Invalid threshold");
-    }
+            unsigned int max_target = fee_estimator.HighestTargetTracked(FeeEstimateHorizon::LONG_HALFLIFE);
+            unsigned int conf_target = ParseConfirmTarget(request.params[0], max_target);
+            double threshold = 0.95;
+            if (!request.params[1].isNull()) {
+                threshold = request.params[1].get_real();
+            }
+            if (threshold < 0 || threshold > 1) {
+                throw JSONRPCError(RPC_INVALID_PARAMETER, "Invalid threshold");
+            }
 
-    UniValue result(UniValue::VOBJ);
+            UniValue result(UniValue::VOBJ);
 
-    for (const FeeEstimateHorizon horizon : ALL_FEE_ESTIMATE_HORIZONS) {
-        CFeeRate feeRate;
-        EstimationResult buckets;
+            for (const FeeEstimateHorizon horizon : ALL_FEE_ESTIMATE_HORIZONS) {
+                CFeeRate feeRate;
+                EstimationResult buckets;
 
-        // Only output results for horizons which track the target
-        if (conf_target > fee_estimator.HighestTargetTracked(horizon)) continue;
+                // Only output results for horizons which track the target
+                if (conf_target > fee_estimator.HighestTargetTracked(horizon)) continue;
 
-        feeRate = fee_estimator.estimateRawFee(conf_target, threshold, horizon, &buckets);
-        UniValue horizon_result(UniValue::VOBJ);
-        UniValue errors(UniValue::VARR);
-        UniValue passbucket(UniValue::VOBJ);
-        passbucket.pushKV("startrange", round(buckets.pass.start));
-        passbucket.pushKV("endrange", round(buckets.pass.end));
-        passbucket.pushKV("withintarget", round(buckets.pass.withinTarget * 100.0) / 100.0);
-        passbucket.pushKV("totalconfirmed", round(buckets.pass.totalConfirmed * 100.0) / 100.0);
-        passbucket.pushKV("inmempool", round(buckets.pass.inMempool * 100.0) / 100.0);
-        passbucket.pushKV("leftmempool", round(buckets.pass.leftMempool * 100.0) / 100.0);
-        UniValue failbucket(UniValue::VOBJ);
-        failbucket.pushKV("startrange", round(buckets.fail.start));
-        failbucket.pushKV("endrange", round(buckets.fail.end));
-        failbucket.pushKV("withintarget", round(buckets.fail.withinTarget * 100.0) / 100.0);
-        failbucket.pushKV("totalconfirmed", round(buckets.fail.totalConfirmed * 100.0) / 100.0);
-        failbucket.pushKV("inmempool", round(buckets.fail.inMempool * 100.0) / 100.0);
-        failbucket.pushKV("leftmempool", round(buckets.fail.leftMempool * 100.0) / 100.0);
+                feeRate = fee_estimator.estimateRawFee(conf_target, threshold, horizon, &buckets);
+                UniValue horizon_result(UniValue::VOBJ);
+                UniValue errors(UniValue::VARR);
+                UniValue passbucket(UniValue::VOBJ);
+                passbucket.pushKV("startrange", round(buckets.pass.start));
+                passbucket.pushKV("endrange", round(buckets.pass.end));
+                passbucket.pushKV("withintarget", round(buckets.pass.withinTarget * 100.0) / 100.0);
+                passbucket.pushKV("totalconfirmed", round(buckets.pass.totalConfirmed * 100.0) / 100.0);
+                passbucket.pushKV("inmempool", round(buckets.pass.inMempool * 100.0) / 100.0);
+                passbucket.pushKV("leftmempool", round(buckets.pass.leftMempool * 100.0) / 100.0);
+                UniValue failbucket(UniValue::VOBJ);
+                failbucket.pushKV("startrange", round(buckets.fail.start));
+                failbucket.pushKV("endrange", round(buckets.fail.end));
+                failbucket.pushKV("withintarget", round(buckets.fail.withinTarget * 100.0) / 100.0);
+                failbucket.pushKV("totalconfirmed", round(buckets.fail.totalConfirmed * 100.0) / 100.0);
+                failbucket.pushKV("inmempool", round(buckets.fail.inMempool * 100.0) / 100.0);
+                failbucket.pushKV("leftmempool", round(buckets.fail.leftMempool * 100.0) / 100.0);
 
-        // CFeeRate(0) is used to indicate error as a return value from estimateRawFee
-        if (feeRate != CFeeRate(0)) {
-            horizon_result.pushKV("feerate", ValueFromAmount(feeRate.GetFeePerK()));
-            horizon_result.pushKV("decay", buckets.decay);
-            horizon_result.pushKV("scale", (int)buckets.scale);
-            horizon_result.pushKV("pass", passbucket);
-            // buckets.fail.start == -1 indicates that all buckets passed, there is no fail bucket to output
-            if (buckets.fail.start != -1) horizon_result.pushKV("fail", failbucket);
-        } else {
-            // Output only information that is still meaningful in the event of error
-            horizon_result.pushKV("decay", buckets.decay);
-            horizon_result.pushKV("scale", (int)buckets.scale);
-            horizon_result.pushKV("fail", failbucket);
-            errors.push_back("Insufficient data or no feerate found which meets threshold");
-            horizon_result.pushKV("errors", errors);
-        }
-        result.pushKV(StringForFeeEstimateHorizon(horizon), horizon_result);
-    }
-    return result;
-},
+                // CFeeRate(0) is used to indicate error as a return value from estimateRawFee
+                if (feeRate != CFeeRate(0)) {
+                    horizon_result.pushKV("feerate", ValueFromAmount(feeRate.GetFeePerK()));
+                    horizon_result.pushKV("decay", buckets.decay);
+                    horizon_result.pushKV("scale", (int)buckets.scale);
+                    horizon_result.pushKV("pass", passbucket);
+                    // buckets.fail.start == -1 indicates that all buckets passed, there is no fail bucket to output
+                    if (buckets.fail.start != -1) horizon_result.pushKV("fail", failbucket);
+                } else {
+                    // Output only information that is still meaningful in the event of error
+                    horizon_result.pushKV("decay", buckets.decay);
+                    horizon_result.pushKV("scale", (int)buckets.scale);
+                    horizon_result.pushKV("fail", failbucket);
+                    errors.push_back("Insufficient data or no feerate found which meets threshold");
+                    horizon_result.pushKV("errors", errors);
+                }
+                result.pushKV(StringForFeeEstimateHorizon(horizon), horizon_result);
+            }
+            return result;
+        },
     };
 }
 
