@@ -1022,7 +1022,11 @@ private:
 };
 
 /**
- * Interface for message handling
+ * Interface for message handling.
+ * For a given `CNode`, the methods will be called in the following order:
+ * 1. `InitializeNode()`
+ * 2. Any number of calls to `ProcessMessages()` or `SendMessages()`
+ * 3. `FinalizeNode()`
  */
 class NetEventsInterface
 {
@@ -1030,10 +1034,19 @@ public:
     /** Mutex for anything that is only accessed via the msg processing thread */
     static Mutex g_msgproc_mutex;
 
-    /** Initialize a peer (setup state) */
+    /**
+     * Initialize a peer (setup state). The caller is responsible for eventually
+     * calling `FinalizeNode()` on this node to avoid memory leaks.
+     * @param[in] node Peer to initialize.
+     * @param[in] our_services The services that we have advertised to the peer.
+     */
     virtual void InitializeNode(const CNode& node, ServiceFlags our_services) = 0;
 
-    /** Handle removal of a peer (clear state) */
+    /**
+     * Handle removal of a peer (clear state).
+     * When this is called all socket operations with the node must have completed.
+     * @param[in] node Peer whose state to clear.
+     */
     virtual void FinalizeNode(const CNode& node) = 0;
 
     /**
@@ -1043,22 +1056,25 @@ public:
     virtual bool HasAllDesirableServiceFlags(ServiceFlags services) const = 0;
 
     /**
-    * Process protocol messages received from a given node
-    *
-    * @param[in]   pnode           The node which we have received messages from.
-    * @param[in]   interrupt       Interrupt condition for processing threads
-    * @return                      True if there is more work to be done
-    */
+     * Process protocol messages received from a given node.
+     * The caller must make sure that `pnode` is not destroyed and `FinalizeNode()`
+     * is not called on it during the execution of this function.
+     *
+     * @param[in]   pnode           The node which we have received messages from.
+     * @param[in]   interrupt       Interrupt condition for processing threads
+     * @return                      True if there is more work to be done
+     */
     virtual bool ProcessMessages(CNode* pnode, std::atomic<bool>& interrupt) EXCLUSIVE_LOCKS_REQUIRED(g_msgproc_mutex) = 0;
 
     /**
-    * Send queued protocol messages to a given node.
-    *
-    * @param[in]   pnode           The node which we are sending messages to.
-    * @return                      True if there is more work to be done
-    */
+     * Send queued protocol messages to a given node.
+     * The caller must make sure that `pnode` is not destroyed and `FinalizeNode()`
+     * is not called on it during the execution of this function.
+     *
+     * @param[in]   pnode           The node which we are sending messages to.
+     * @return                      True if there is more work to be done
+     */
     virtual bool SendMessages(CNode* pnode) EXCLUSIVE_LOCKS_REQUIRED(g_msgproc_mutex) = 0;
-
 
 protected:
     /**
@@ -1601,9 +1617,48 @@ private:
     std::vector<AddedNodeParams> m_added_node_params GUARDED_BY(m_added_nodes_mutex);
 
     mutable Mutex m_added_nodes_mutex;
+
+    /**
+     * List of peers we are connected with.
+     * Before destroying objects from this list it must be ensured that
+     * all socket operations have completed. `m_msgproc` must be informed
+     * that the node is about to be destroyed by calling `m_msgproc->FinalizeNode()`.
+     * `m_msgproc->ProcessMessages()` and `m_msgproc->SendMessages()` must not be
+     * running on that node during the destruction.
+     *
+     * CNode objects keep a reference count that is used to avoid a destruction
+     * while the object is used. All users of elements from `m_nodes` must either
+     * use the element while holding `m_nodes_mutex` or by incrementing the
+     * reference before use and decrement it after use. To make sure that a new
+     * reference is not added to a no-referenced CNode just before it is
+     * destroyed, destroying objects from this list works as follows (see
+     * DisconnectNodes(), DeleteNode()):
+     * - We will close the socket, release locks, and reset global info relating
+     *   to the connection
+     * - The node will be moved from `m_nodes` to `m_nodes_disconnected`,
+     *   preventing future calls to `ProcessMessages()` and `SendMessages()` for
+     *   this node, and decrementing the reference count. We don't add new
+     *   references to objects in `m_nodes_disconnected`.
+     * - We will wait for `GetRefCount()` to return `<= 0` indicating there are
+     *   no other references to this node in use (and hence no current calls to
+     *   `ProcessMessages()` or `SendMessages()`)
+     * - The node will be removed from `m_nodes_disconnected`
+     * - `FinalizeNode()` will be called to indicate the node is about to be
+     *   destroyed
+     * - The `CNode` object is deleted
+     *
+     * So CNode destruction is: wait for no-references, `FinalizeNode()`, delete CNode.
+     */
     std::vector<CNode*> m_nodes GUARDED_BY(m_nodes_mutex);
-    std::list<CNode*> m_nodes_disconnected;
     mutable RecursiveMutex m_nodes_mutex;
+
+    /**
+     * List of nodes that might still be referenced but will not get new references,
+     * to be deleted when the reference count drops to zero. Concurrent access to
+     * this is prevented by only accessing it from the "net" thread (`ThreadSocketHandler()`)
+     * and by the "main" thread after the "net" thread has terminated.
+     */
+    std::list<CNode*> m_nodes_disconnected;
     std::atomic<NodeId> nLastNodeId{0};
     unsigned int nPrevNodeCount{0};
 
