@@ -48,6 +48,13 @@ static const unsigned int MAX_CMPCTBLOCKS_INFLIGHT_PER_BLOCK = 3;
  *  less than this number, we reached its tip. Changing this value is a protocol upgrade. */
 static const unsigned int MAX_HEADERS_RESULTS = 2000;
 
+/**
+ * Announce transactions via full wtxid to a limited number of inbound and outbound peers.
+ * Justification for these values are provided here:
+ * TODO: ADD link to justification based on simulation results */
+constexpr double INBOUND_FANOUT_DESTINATIONS_FRACTION = 0.1;
+constexpr uint32_t OUTBOUND_FANOUT_THRESHOLD = 4;
+
 struct CNodeStateStats {
     int nSyncHeight = -1;
     int nCommonHeight = -1;
@@ -92,6 +99,10 @@ public:
         uint32_t max_headers_result{MAX_HEADERS_RESULTS};
         //! Whether private broadcast is used for sending transactions.
         bool private_broadcast{DEFAULT_PRIVATE_BROADCAST};
+        //! Percentage of inbound peers to fanout to.
+        double inbound_fanout_destinations_fraction{INBOUND_FANOUT_DESTINATIONS_FRACTION};
+        //! Number of outbound peers to fanout to.
+        uint32_t outbound_fanout_threshold{OUTBOUND_FANOUT_THRESHOLD};
     };
 
     static std::unique_ptr<PeerManager> make(CConnman& connman, AddrMan& addrman,
@@ -131,6 +142,9 @@ public:
      * asynchronously via short-lived connections to peers on privacy networks.
      */
     virtual void InitiateTxBroadcastPrivate(const CTransactionRef& tx) = 0;
+
+    /** Get the amount of inbounds (first) and outbounds fanout peers (second). */
+    virtual std::pair<size_t, size_t> GetFanoutPeersCount() = 0;
 
     /** Send ping message to all peers */
     virtual void SendPings() = 0;
