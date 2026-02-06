@@ -236,7 +236,7 @@ struct RPCArg {
         std::string description,
         RPCArgOptions opts = {})
         : m_names{std::move(name)},
-          m_type{std::move(type)},
+          m_type{type},
           m_fallback{std::move(fallback)},
           m_description{std::move(description)},
           m_opts{std::move(opts)}
@@ -252,7 +252,7 @@ struct RPCArg {
         std::vector<RPCArg> inner,
         RPCArgOptions opts = {})
         : m_names{std::move(name)},
-          m_type{std::move(type)},
+          m_type{type},
           m_inner{std::move(inner)},
           m_fallback{std::move(fallback)},
           m_description{std::move(description)},
@@ -338,7 +338,7 @@ struct RPCResult {
         std::string description,
         std::vector<RPCResult> inner = {},
         RPCResultOptions opts = {})
-        : m_type{std::move(type)},
+        : m_type{type},
           m_key_name{std::move(m_key_name)},
           m_inner{std::move(inner)},
           m_optional{optional},
@@ -366,7 +366,7 @@ struct RPCResult {
         std::string description,
         std::vector<RPCResult> inner = {},
         RPCResultOptions opts = {})
-        : m_type{std::move(type)},
+        : m_type{type},
           m_key_name{std::move(m_key_name)},
           m_inner{std::move(inner)},
           m_optional{optional},
