@@ -82,7 +82,7 @@ public:
     void append(std::unique_ptr<Proposal>&& proposal);
     void remove(int row);
     void reconcile(ProposalList&& proposals);
-    void setDisplayUnit(const BitcoinUnit& display_unit) { m_display_unit = display_unit; }
+    void setDisplayUnit(const BitcoinUnit& display_unit);
     void setVotingParams(int nAbsVoteReq);
     const Proposal* getProposalAt(const QModelIndex& index) const;
 

@@ -258,6 +258,14 @@ void ProposalModel::reconcile(ProposalList&& proposals)
     }
 }
 
+void ProposalModel::setDisplayUnit(const BitcoinUnit& display_unit)
+{
+    m_display_unit = display_unit;
+    if (!m_data.empty()) {
+        Q_EMIT dataChanged(createIndex(0, Column::PAYMENT_AMOUNT), createIndex(rowCount() - 1, Column::PAYMENT_AMOUNT));
+    }
+}
+
 void ProposalModel::setVotingParams(int newAbsVoteReq)
 {
     if (this->nAbsVoteReq == newAbsVoteReq) {
