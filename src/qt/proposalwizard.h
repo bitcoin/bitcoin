@@ -8,19 +8,10 @@
 #include <qt/forms/ui_proposalwizard.h>
 
 #include <QByteArray>
-#include <QCloseEvent>
 #include <QDialog>
-#include <QObject>
 #include <QString>
 
-class QTimer;
-
-namespace Ui {
-class SendCoinsEntry;
-}
-
 class WalletModel;
-// The UI header is included above for complete type to satisfy unique_ptr deleter
 
 class ProposalWizard : public QDialog
 {
@@ -30,12 +21,7 @@ public:
     ~ProposalWizard();
 
 private Q_SLOTS:
-    void onNextFromDetails();
-    void onBackToDetails();
-    void onPrepare();
-    void onMaybeAdvanceAfterConfirmations();
-    void onSubmit();
-    void onGoToSubmit();
+    void onCreate();
     void onViewJson();
     void onViewPayload();
 
@@ -48,22 +34,14 @@ private:
     Ui::ProposalWizard* m_ui;
 
     // State
+    int m_relay_confs{0};
+    int64_t m_superblock_cycle{0};
+    int64_t m_target_spacing{0};
     QString m_fee_formatted;
     QString m_hex;
     QString m_json;
-    QString m_txid;
-    qint64 m_prepareTime{0};
-    int64_t m_superblock_cycle{0};
-    int64_t m_target_spacing{0};
-    int m_relayRequiredConfs{1};
-    int m_requiredConfs{6};
-    int m_lastConfs{-1};
-    bool m_submitted{false};
-    QTimer* m_confirmTimer{nullptr};
 
     void buildJsonAndHex();
-    int queryConfirmations(const QString& txid);
-    void closeEvent(QCloseEvent* event) override;
 };
 
 #endif // BITCOIN_QT_PROPOSALWIZARD_H

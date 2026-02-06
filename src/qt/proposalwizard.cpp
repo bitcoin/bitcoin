@@ -19,18 +19,13 @@
 #include <qt/guiutil.h>
 #include <qt/optionsmodel.h>
 #include <qt/qvalidatedlineedit.h>
-#include <qt/rpcconsole.h>
 #include <qt/sendcoinsdialog.h>
 #include <qt/walletmodel.h>
 
 #include <QDateTime>
-#include <QLabel>
 #include <QLineEdit>
 #include <QMessageBox>
 #include <QSpinBox>
-#include <QPushButton>
-#include <QStackedWidget>
-#include <QTimer>
 
 #include <univalue.h>
 
@@ -56,10 +51,9 @@ ProposalWizard::ProposalWizard(WalletModel* walletModel, QWidget* parent) :
     {
         // Load governance parameters
         const auto info = m_walletModel->node().gov().getGovernanceInfo();
+        m_relay_confs = info.relayRequiredConfs;
         m_superblock_cycle = info.superblockcycle;
         m_target_spacing = info.targetSpacing;
-        m_relayRequiredConfs = info.relayRequiredConfs;
-        m_requiredConfs = info.requiredConfs;
 
         // Populate first-payment options by default using governance info
         m_ui->comboFirstPayment->clear();
@@ -76,7 +70,6 @@ ProposalWizard::ProposalWizard(WalletModel* walletModel, QWidget* parent) :
     // Initialize total amount display (formatted with current unit)
     updateDisplayUnit();
 
-    // First payment options are populated on load. No separate suggest-times button.
     connect(m_ui->btnViewJson, &QPushButton::clicked, this, &ProposalWizard::onViewJson);
     connect(m_ui->btnViewPayload, &QPushButton::clicked, this, &ProposalWizard::onViewPayload);
     connect(m_ui->editName, &QLineEdit::textChanged, this, &ProposalWizard::validateFields);
@@ -85,24 +78,7 @@ ProposalWizard::ProposalWizard(WalletModel* walletModel, QWidget* parent) :
     connect(m_ui->spinPayments, QOverload<int>::of(&QSpinBox::valueChanged), this, &ProposalWizard::updateLabels);
     connect(m_ui->paymentAmount, &BitcoinAmountField::valueChanged, this, &ProposalWizard::updateLabels);
     connect(m_ui->paymentAmount, &BitcoinAmountField::valueChanged, this, &ProposalWizard::validateFields);
-    connect(m_ui->btnNext1, &QPushButton::clicked, this, &ProposalWizard::onNextFromDetails);
-    connect(m_ui->btnBack2, &QPushButton::clicked, this, &ProposalWizard::onBackToDetails);
-    connect(m_ui->btnPrepare, &QPushButton::clicked, this, &ProposalWizard::onPrepare);
-    connect(m_ui->btnCopyTxid, &QPushButton::clicked, this, [this]() {
-        if (m_ui->editTxid) {
-            m_ui->editTxid->selectAll();
-            m_ui->editTxid->copy();
-        }
-    });
-    connect(m_ui->btnNext3, &QPushButton::clicked, this, &ProposalWizard::onGoToSubmit);
-    connect(m_ui->btnSubmit, &QPushButton::clicked, this, &ProposalWizard::onSubmit);
-    connect(m_ui->btnCopyGovId, &QPushButton::clicked, this, [this]() {
-        if (m_ui->editGovObjId) {
-            m_ui->editGovObjId->selectAll();
-            m_ui->editGovObjId->copy();
-        }
-    });
-    connect(m_ui->btnClose, &QPushButton::clicked, this, &QDialog::accept);
+    connect(m_ui->btnCreate, &QPushButton::clicked, this, &ProposalWizard::onCreate);
 
     // Update fee labels on display unit change
     if (m_walletModel && m_walletModel->getOptionsModel()) {
@@ -117,7 +93,6 @@ ProposalWizard::ProposalWizard(WalletModel* walletModel, QWidget* parent) :
 
 ProposalWizard::~ProposalWizard()
 {
-    delete m_confirmTimer;
     delete m_ui;
 }
 
@@ -186,19 +161,7 @@ void ProposalWizard::onViewPayload()
     dlg->show();
 }
 
-int ProposalWizard::queryConfirmations(const QString& txid)
-{
-    if (!m_walletModel) return -1;
-    interfaces::WalletTxStatus tx_status;
-    int num_blocks{};
-    int64_t block_time{};
-    if (!m_walletModel->wallet().tryGetTxStatus(uint256S(txid.toStdString()), tx_status, num_blocks, block_time)) {
-        return -1;
-    }
-    return tx_status.depth_in_main_chain;
-}
-
-void ProposalWizard::onNextFromDetails()
+void ProposalWizard::onCreate()
 {
     // Validate fields first
     validateFields();
@@ -207,13 +170,7 @@ void ProposalWizard::onNextFromDetails()
     }
 
     buildJsonAndHex();
-    m_ui->stackedWidget->setCurrentIndex(1); // Go to pagePrepare
-}
 
-void ProposalWizard::onBackToDetails() { m_ui->stackedWidget->setCurrentIndex(0); }
-
-void ProposalWizard::onPrepare()
-{
     // Unlock wallet if necessary
     WalletModel::UnlockContext ctx(m_walletModel->requestUnlock());
     if (!ctx.isValid()) return;
@@ -235,107 +192,23 @@ void ProposalWizard::onPrepare()
     std::string error;
     COutPoint none; // null by default
 
-    // TODO: VALIDATE HERE IF blockchain synced
-    // instead
-    // do something like clientModel->masternodeSync().isBlockchainSynced()
     auto govobj = m_walletModel->node().gov().createProposal(1, now, m_hex.toStdString(), error);
-    if (!govobj) {
-        QMessageBox::critical(this, tr("Prepare failed"), QString::fromStdString(error));
+    if (!govobj || !m_walletModel->wallet().prepareProposal(govobj->GetHash(), govobj->GetMinCollateralFee(), 1, now,
+                                                            m_hex.toStdString(), none, txid_str, error))
+    {
+        QMessageBox::critical(this, tr("Creation failed"), QString::fromStdString(error));
         return;
     }
-    if (!m_walletModel->wallet().prepareProposal(govobj->GetHash(), govobj->GetMinCollateralFee(), 1, now,
-                                                 m_hex.toStdString(), none, txid_str, error)) {
-        QMessageBox::critical(this, tr("Prepare failed"), QString::fromStdString(error));
-        return;
-    }
-    m_txid = QString::fromStdString(txid_str);
-    m_ui->editTxid->setText(m_txid);
-    m_ui->btnPrepare->setEnabled(false);
-    m_prepareTime = now;
 
-    // Start polling confirmations every 10s
-    if (!m_confirmTimer) {
-        m_confirmTimer = new QTimer(this);
-        connect(m_confirmTimer, &QTimer::timeout, this, &ProposalWizard::onMaybeAdvanceAfterConfirmations);
-    }
-    m_confirmTimer->start(10000);
-    // Update labels right away too
-    onMaybeAdvanceAfterConfirmations();
-}
+    QMessageBox::information(this, tr("Proposal Created"),
+        tr("%1 successfully sent for your proposal \"%2\".\n\nIt takes %3 confirmation(s) before "
+           "you can broadcast your proposal to the network.\n\nThis may take some time, you can monitor "
+           "progress and continue with publishing your proposal by clicking \"Resume Proposal\".")
+            .arg(m_fee_formatted)
+            .arg(m_ui->editName->text())
+            .arg(m_relay_confs));
 
-void ProposalWizard::onMaybeAdvanceAfterConfirmations()
-{
-    if (m_txid.isEmpty()) return;
-    const int confs = queryConfirmations(m_txid);
-    if (confs >= 0 && confs != m_lastConfs) {
-        m_lastConfs = confs;
-        const int bounded = std::min(confs, m_requiredConfs);
-        m_ui->progressConfirmations->setMaximum(m_requiredConfs);
-        m_ui->progressConfirmations->setValue(bounded);
-        m_ui->labelConfStatus->setText(tr("Confirmations: %1 / %2 required").arg(bounded).arg(m_requiredConfs));
-        // Mirror to submit page
-        m_ui->progressConfirmations2->setMaximum(m_requiredConfs);
-        m_ui->progressConfirmations2->setValue(bounded);
-        m_ui->labelConfStatus2->setText(tr("Confirmations: %1 / %2 required").arg(bounded).arg(m_requiredConfs));
-        // Simple ETA: 2.5 min per block remaining
-        const int remaining = std::max(0, m_requiredConfs - bounded);
-        const int secs = remaining * 150;
-        if (remaining == 0) {
-            m_ui->labelEta->setText(tr("Estimated time remaining: Ready"));
-            m_ui->labelEta2->setText(tr("Estimated time remaining: Ready"));
-            if (m_confirmTimer) m_confirmTimer->stop();
-        } else {
-            const auto mins = (secs + 59) / 60;
-            m_ui->labelEta->setText(tr("Estimated time remaining: %n minute(s)", "", mins));
-            m_ui->labelEta2->setText(tr("Estimated time remaining: %n minute(s)", "", mins));
-        }
-    }
-    // Allow submitting (relay/postpone) at 1 confirmation and enable Next to proceed
-    if (confs >= m_relayRequiredConfs) {
-        m_ui->btnSubmit->setEnabled(true);
-        m_ui->btnNext3->setEnabled(true);
-    }
-    // No auto-advance; user controls when to proceed
-}
-
-void ProposalWizard::onSubmit()
-{
-    // Submit with same parent/revision/time and hex, including fee txid
-    const int64_t now = (m_prepareTime > 0 ? m_prepareTime : QDateTime::currentSecsSinceEpoch());
-    std::string res;
-    if (m_submitted) {
-        QMessageBox::information(this, tr("Already submitted"), tr("This proposal has already been submitted."));
-        return;
-    }
-    std::string error;
-    std::string obj_hash;
-    if (!m_walletModel->node().gov().submitProposal(uint256(), 1, now, m_hex.toStdString(),
-                                                    uint256S(m_txid.toStdString()), obj_hash, error)) {
-        QMessageBox::critical(this, tr("Submission failed"), QString::fromStdString(error));
-        return;
-    }
-    const QString govId = QString::fromStdString(obj_hash);
-    m_ui->editGovObjId->setText(govId);
-    QMessageBox::information(this, tr("Proposal submitted"),
-                             tr("Your proposal was submitted successfully.") +
-                             QString("\nID: %1").arg(govId));
-    m_submitted = true;
-    m_ui->btnSubmit->setEnabled(false);
-    // When 6 confs are reached show a final success message
-}
-
-void ProposalWizard::closeEvent(QCloseEvent* event)
-{
-    if (m_confirmTimer) m_confirmTimer->stop();
-    QDialog::closeEvent(event);
-}
-
-void ProposalWizard::onGoToSubmit()
-{
-    // Only allow entering the submit step if we have a prepared txid and at least relay confirmations
-    if (m_txid.isEmpty()) return;
-    if (m_lastConfs < m_relayRequiredConfs) return;
-    m_ui->stackedWidget->setCurrentIndex(2); // Go to pageSubmit
+    accept(); // Close the wizard
 }
 
 void ProposalWizard::updateLabels()
@@ -354,10 +227,6 @@ void ProposalWizard::updateLabels()
             BitcoinUnits::formatWithUnit(unit, total, /*plussign=*/false, BitcoinUnits::SeparatorStyle::ALWAYS));
         m_fee_formatted = BitcoinUnits::formatWithUnit(unit, GOVERNANCE_PROPOSAL_FEE_TX, /*plussign=*/false,
                                                        BitcoinUnits::SeparatorStyle::ALWAYS);
-        if (m_ui->labelPrepare) {
-            m_ui->labelPrepare->setText(
-                tr("Prepare (burn %1) and wait for %2 confirmations.").arg(m_fee_formatted).arg(m_requiredConfs));
-        }
     }
 }
 
