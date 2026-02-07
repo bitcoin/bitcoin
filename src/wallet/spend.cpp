@@ -800,7 +800,14 @@ util::Result<SelectionResult> ChooseSelectionResult(interfaces::Chain& chain, co
             return util::Error{_("Failed to calculate bump fees, because unconfirmed UTXOs depend on an enormous cluster of unconfirmed transactions.")};
         }
         CAmount bump_fee_overestimate = summed_bump_fees - combined_bump_fee.value();
-        if (bump_fee_overestimate) {
+        // Guard against negative values: the mempool state can change between the
+        // individual bump fee calculations (AvailableCoins) and the combined
+        // calculation here, since each MiniMiner only holds cs_main for its
+        // constructor.  If the combined fee ends up higher than the summed
+        // individual fees due to this race, the discount would be negative.
+        // In that case simply skip the discount — it is a waste-metric
+        // optimisation and not a correctness requirement.
+        if (bump_fee_overestimate > 0) {
             result.SetBumpFeeDiscount(bump_fee_overestimate);
         }
         result.RecalculateWaste(coin_selection_params.min_viable_change, coin_selection_params.m_cost_of_change, coin_selection_params.m_change_fee);
