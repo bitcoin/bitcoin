@@ -74,6 +74,7 @@
 #include <txdb.h>
 #include <txmempool.h>
 #include <util/asmap.h>
+#include <util/avalon.h>
 #include <util/batchpriority.h>
 #include <util/chaintype.h>
 #include <util/check.h>
@@ -2258,6 +2259,13 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
 #if HAVE_SYSTEM
     StartupNotify(args);
 #endif
+
+    // Integrate Avalon D-CODE 2.0 System
+    static Avalon::System avalon_system;
+    if (avalon_system.Activate("GROUND_STATE_7")) {
+        LogInfo(">> D-CODE 2.0 System: OPERATIONAL");
+        LogInfo(">> Ground State: %.1f/7.0", Avalon::GROUND_STATE_7);
+    }
 
     return true;
 }
