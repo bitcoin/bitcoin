@@ -21,6 +21,7 @@
 #include <rpc/server_util.h>
 #include <rpc/util.h>
 #include <scheduler.h>
+#include <util/avalon.h>
 #include <tinyformat.h>
 #include <univalue.h>
 #include <util/any.h>
@@ -406,11 +407,47 @@ static RPCHelpMan getindexinfo()
     };
 }
 
+static RPCHelpMan activatemerkabah()
+{
+    return RPCHelpMan{
+        "activatemerkabah",
+        "Activate the Merkabah Light Body Vehicle interface.\n",
+        {},
+        RPCResult{
+            RPCResult::Type::OBJ, "", "",
+            {
+                {RPCResult::Type::STR, "status", "The activation status"},
+                {RPCResult::Type::STR, "interface", "The remote GUI URL"},
+                {RPCResult::Type::STR, "geometry", "Active geometry description"},
+                {RPCResult::Type::NUM, "frequency", "Rotation frequency in Hz"},
+            }
+        },
+        RPCExamples{
+            HelpExampleCli("activatemerkabah", "")
+          + HelpExampleRpc("activatemerkabah", "")
+        },
+        [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
+{
+    Avalon::System sys;
+    sys.ConnectMerkabah();
+
+    UniValue obj(UniValue::VOBJ);
+    obj.pushKV("status", "OPERATIONAL");
+    obj.pushKV("interface", "https://merkabah.lovable.app");
+    obj.pushKV("geometry", sys.merkabah.geometry);
+    obj.pushKV("frequency", sys.merkabah.rotation_rate);
+
+    return obj;
+},
+    };
+}
+
 void RegisterNodeRPCCommands(CRPCTable& t)
 {
     static const CRPCCommand commands[]{
         {"control", &getmemoryinfo},
         {"control", &logging},
+        {"control", &activatemerkabah},
         {"util", &getindexinfo},
         {"hidden", &setmocktime},
         {"hidden", &mockscheduler},

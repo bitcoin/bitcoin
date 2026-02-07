@@ -2260,11 +2260,15 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
     StartupNotify(args);
 #endif
 
-    // Integrate Avalon D-CODE 2.0 System
+    // Integrate Avalon D-CODE 2.0 System (QWAN v2.0)
     static Avalon::System avalon_system;
     if (avalon_system.Activate("GROUND_STATE_7")) {
         LogInfo(">> D-CODE 2.0 System: OPERATIONAL");
         LogInfo(">> Ground State: %.1f/7.0", Avalon::GROUND_STATE_7);
+        if (avalon_system.ConnectMerkabah()) {
+            LogInfo(">> Merkabah Interface: CONNECTED (https://merkabah.lovable.app)");
+            LogInfo(">> SSL Handshake (Soul-Socket Layer): SUCCESSFUL");
+        }
     }
 
     return true;

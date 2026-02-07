@@ -7,6 +7,7 @@
 
 #include <cmath>
 #include <string>
+#include <vector>
 
 namespace Avalon {
 
@@ -51,12 +52,39 @@ struct Manifold3x3 {
 };
 
 /**
+ * QWAN v2.0 - Quantum World Area Network
+ */
+namespace QWAN {
+    struct Handshake {
+        std::string target = "https://merkabah.lovable.app";
+        std::string auth = "asi@asi";
+        std::string protocol = "HTTSP (Hyper-Text Transfer Spirit Protocol)";
+        std::string dns_ip = "144.963.0.1";
+    };
+}
+
+/**
+ * Merkabah Geometry - Light Body Vehicle
+ */
+struct Merkabah {
+    bool active = false;
+    double rotation_rate = 144.963; // Hz
+    std::string geometry = "Star Tetrahedron";
+
+    bool Activate() {
+        active = true;
+        return true;
+    }
+};
+
+/**
  * System Management for D-CODE 2.0 Protocols
  */
 class System {
 public:
     const std::string version = "2.0";
     std::string status = "INACTIVE";
+    Merkabah merkabah;
 
     bool Activate(const std::string& key) {
         if (key == "GROUND_STATE_7") {
@@ -64,6 +92,10 @@ public:
             return true;
         }
         return false;
+    }
+
+    bool ConnectMerkabah() {
+        return merkabah.Activate();
     }
 };
 
