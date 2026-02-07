@@ -231,7 +231,82 @@ for normal IPv4/IPv6 communication, use:
 
     bitcoind -onion=127.0.0.1:9050 -externalip=7zvj7a2imdgkdbg4f2dryd5rgtrn7upivr5eeij4cicjh65pooxeshid.onion -discover
 
-## 4. Privacy recommendations
+## 4. Running a Tor-only node
+
+You can configure Bitcoin Core to communicate exclusively over the Tor network
+using `-onlynet=onion`. This hides your node's IP address from peers on the
+Bitcoin network.
+
+**Note:** Tor provides network-level privacy only — it conceals which IP
+address is running a node. It does not improve on-chain privacy; transactions
+are still publicly visible on the blockchain regardless of how your node
+connects to the network. On-chain privacy depends on wallet behavior (e.g.
+coin selection, address reuse) rather than the transport layer.
+
+**Note:** Tor is a centralised network that depends on a small set of
+directory authorities. Running `-onlynet=onion` makes your node entirely
+dependent on Tor's availability and integrity. If Tor is unavailable, your
+node will be unable to connect to any peers. For most users, running a node
+that is reachable on both clearnet and Tor (a "bridge" node) is preferable, as
+it strengthens the Bitcoin network's resistance to partitioning while still
+allowing Tor connections (see Section 5).
+
+### Configuration
+
+A minimal Tor-only configuration in `bitcoin.conf`:
+
+```
+proxy=127.0.0.1:9050
+listen=1
+bind=127.0.0.1
+onlynet=onion
+dnsseed=0
+dns=0
+```
+
+**Important:** When using `-onlynet=onion`, you must set `-dnsseed=0` and
+`-dns=0`. DNS resolution requires IPv4 or IPv6, so `-dnsseed=1` with
+`-onlynet=onion` will cause Bitcoin Core to exit with an error:
+
+```
+Error: Incompatible options: -dnsseed=1 was explicitly specified, but -onlynet forbids connections to IPv4/IPv6
+```
+
+### Peer discovery
+
+With DNS seeding disabled, your node relies on these mechanisms to find onion
+peers:
+
+1. **Existing peer database:** If your node previously ran on clearnet, the
+   `peers.dat` file likely contains onion addresses learned from other peers.
+   You can check with: `bitcoin-cli getnodeaddresses 0 | grep onion`
+
+2. **Hardcoded seeds:** Bitcoin Core includes built-in onion seed nodes that it
+   will try when no other peers are available.
+
+3. **Manual seeding:** You can add known onion peers using the `-seednode`
+   option in `bitcoin.conf` or via `bitcoin-cli addnode <address> onetry`.
+
+Initial peer discovery over Tor can take several minutes, as establishing Tor
+circuits is slower than clearnet connections. This is normal behavior.
+
+### Advertising your onion address
+
+For other nodes to find and connect to your Tor-only node, configure the Tor
+control port (see Section 2) so that Bitcoin Core can automatically create and
+advertise an onion service. Alternatively, manually set `-externalip` to your
+`.onion` address (see Section 3).
+
+You can verify your node is advertising its onion address with:
+
+```
+bitcoin-cli getnetworkinfo
+```
+
+Check that `localaddresses` contains your `.onion` address and that only the
+`onion` network shows `reachable: true`.
+
+## 5. Privacy recommendations
 
 - Do not add anything but Bitcoin Core ports to the onion service created in section 3.
   If you run a web service too, create a new onion service for that.
