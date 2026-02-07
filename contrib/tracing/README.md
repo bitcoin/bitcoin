@@ -22,7 +22,7 @@ corresponding packages. See [installing bpftrace] and [installing BCC] for more
 information. For development there exist a [bpftrace Reference Guide], a
 [BCC Reference Guide], and a [bcc Python Developer Tutorial].
 
-[installing bpftrace]: https://github.com/iovisor/bpftrace/blob/master/INSTALL.md
+[installing bpftrace]: https://github.com/bpftrace/bpftrace/blob/master/README.md#quick-start
 [installing BCC]: https://github.com/iovisor/bcc/blob/master/INSTALL.md
 [bpftrace Reference Guide]: https://github.com/iovisor/bpftrace/blob/master/docs/reference_guide.md
 [BCC Reference Guide]: https://github.com/iovisor/bcc/blob/master/docs/reference_guide.md

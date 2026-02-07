@@ -117,6 +117,9 @@ public:
 
     void ignore(size_t n)
     {
+        if (n > m_data.size()) {
+            throw std::ios_base::failure("SpanReader::ignore(): end of data");
+        }
         m_data = m_data.subspan(n);
     }
 };
@@ -195,7 +198,6 @@ public:
     //
     // Stream subset
     //
-    bool eof() const             { return size() == 0; }
     int in_avail() const         { return size(); }
 
     void read(std::span<value_type> dst)

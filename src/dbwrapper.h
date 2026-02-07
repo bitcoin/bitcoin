@@ -214,9 +214,9 @@ public:
             return false;
         }
         try {
-            DataStream ssValue{MakeByteSpan(*strValue)};
+            std::span ssValue{MakeWritableByteSpan(*strValue)};
             m_obfuscation(ssValue);
-            ssValue >> value;
+            SpanReader{ssValue} >> value;
         } catch (const std::exception&) {
             return false;
         }

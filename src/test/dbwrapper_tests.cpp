@@ -364,7 +364,7 @@ struct StringContentsSerializer {
     {
         str.clear();
         uint8_t c{0};
-        while (!s.eof()) {
+        while (!s.empty()) {
             s >> c;
             str.push_back(c);
         }

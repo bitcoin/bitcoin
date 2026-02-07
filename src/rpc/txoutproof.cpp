@@ -144,9 +144,8 @@ static RPCHelpMan verifytxoutproof()
         RPCExamples{""},
         [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
         {
-            DataStream ssMB{ParseHexV(request.params[0], "proof")};
             CMerkleBlock merkleBlock;
-            ssMB >> merkleBlock;
+            SpanReader{ParseHexV(request.params[0], "proof")} >> merkleBlock;
 
             UniValue res(UniValue::VARR);
 

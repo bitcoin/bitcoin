@@ -1198,8 +1198,8 @@ class SegWitTest(BitcoinTestFramework):
         block.vtx = [block.vtx[0]]
         self.update_witness_block_with_transactions(block, [tx2])
         # This block doesn't result in a specific reject reason, but an iostream exception:
-        # "Exception 'CDataStream::read(): end of data: unspecified iostream_category error' (...) caught"
-        test_witness_block(self.nodes[0], self.test_node, block, accepted=False)
+        with self.nodes[0].assert_debug_log(["Exception 'DataStream::read(): end of data"]):
+            test_witness_block(self.nodes[0], self.test_node, block, accepted=False)
 
         # Now make one of the intermediate witnesses be incorrect
         tx2.wit.vtxinwit.append(CTxInWitness())

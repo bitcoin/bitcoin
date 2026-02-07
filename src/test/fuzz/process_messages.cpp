@@ -122,7 +122,7 @@ FUZZ_TARGET(process_messages, .init = initialize_process_messages)
                 more_work = connman.ProcessMessagesOnce(random_node);
             } catch (const std::ios_base::failure&) {
             }
-            node.peerman->SendMessages(&random_node);
+            node.peerman->SendMessages(random_node);
         }
     }
     node.validation_signals->SyncWithValidationInterfaceQueue();

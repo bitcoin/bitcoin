@@ -218,10 +218,10 @@ jobs:
         job-type: [standard, fuzz]
         include:
           - job-type: standard
-            generate-options: '-DBUILD_BENCH=ON -DBUILD_KERNEL_LIB=ON -DBUILD_UTIL_CHAINSTATE=ON -DWERROR=ON'
+            generate-options: '-DBUILD_BENCH=ON -DBUILD_KERNEL_LIB=ON -DBUILD_UTIL_CHAINSTATE=ON -DCMAKE_COMPILE_WARNING_AS_ERROR=ON'
             job-name: 'Windows native, VS 2022'
           - job-type: fuzz
-            generate-options: '-DVCPKG_MANIFEST_NO_DEFAULT_FEATURES=ON -DVCPKG_MANIFEST_FEATURES="wallet" -DBUILD_GUI=OFF -DWITH_ZMQ=OFF -DBUILD_FOR_FUZZING=ON -DWERROR=ON'
+            generate-options: '-DVCPKG_MANIFEST_NO_DEFAULT_FEATURES=ON -DVCPKG_MANIFEST_FEATURES="wallet" -DBUILD_GUI=OFF -DWITH_ZMQ=OFF -DBUILD_FOR_FUZZING=ON -DCMAKE_COMPILE_WARNING_AS_ERROR=ON'
             job-name: 'Windows native, fuzz, VS 2022'
 
     steps:
@@ -577,12 +577,6 @@ jobs:
             fallback-runner: 'ubuntu-24.04'
             timeout-minutes: 240
             file-env: './ci/test/00_setup_env_native_fuzz.sh'
-
-          - name: 'Valgrind, fuzz'
-            cirrus-runner: 'ghcr.io/cirruslabs/ubuntu-runner-amd64:24.04-md'
-            fallback-runner: 'ubuntu-24.04'
-            timeout-minutes: 240
-            file-env: './ci/test/00_setup_env_native_fuzz_with_valgrind.sh'
 
           - name: 'previous releases'
             cirrus-runner: 'ghcr.io/cirruslabs/ubuntu-runner-amd64:24.04-md'

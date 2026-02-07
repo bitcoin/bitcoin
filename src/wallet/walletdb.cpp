@@ -377,7 +377,7 @@ bool LoadCryptedKey(CWallet* pwallet, DataStream& ssKey, DataStream& ssValue, st
 
         // Get the checksum and check it
         bool checksum_valid = false;
-        if (!ssValue.eof()) {
+        if (!ssValue.empty()) {
             uint256 checksum;
             ssValue >> checksum;
             if (!(checksum_valid = Hash(vchPrivKey) == checksum)) {

@@ -6,7 +6,6 @@
 #include <clientversion.h>
 #include <common/args.h>
 #include <compat/compat.h>
-#include <cstdint>
 #include <net.h>
 #include <net_processing.h>
 #include <netaddress.h>
@@ -16,6 +15,7 @@
 #include <serialize.h>
 #include <span.h>
 #include <streams.h>
+#include <test/util/net.h>
 #include <test/util/random.h>
 #include <test/util/setup_common.h>
 #include <test/util/validation.h>
@@ -26,6 +26,7 @@
 #include <boost/test/unit_test.hpp>
 
 #include <algorithm>
+#include <cstdint>
 #include <ios>
 #include <memory>
 #include <optional>
@@ -802,6 +803,7 @@ BOOST_AUTO_TEST_CASE(LocalAddress_BasicLifecycle)
 BOOST_AUTO_TEST_CASE(initial_advertise_from_version_message)
 {
     LOCK(NetEventsInterface::g_msgproc_mutex);
+    auto& connman{static_cast<ConnmanTestMsg&>(*m_node.connman)};
 
     // Tests the following scenario:
     // * -bind=3.4.5.6:20001 is specified
@@ -845,22 +847,24 @@ BOOST_AUTO_TEST_CASE(initial_advertise_from_version_message)
 
     m_node.peerman->InitializeNode(peer, NODE_NETWORK);
 
-    std::atomic<bool> interrupt_dummy{false};
-    std::chrono::microseconds time_received_dummy{0};
+    m_node.peerman->SendMessages(peer);
+    connman.FlushSendBuffer(peer); // Drop sent version message
 
-    const auto msg_version =
+    auto msg_version_receive =
         NetMsg::Make(NetMsgType::VERSION, PROTOCOL_VERSION, services, time, services, CAddress::V1_NETWORK(peer_us));
-    DataStream msg_version_stream{msg_version.data};
+    Assert(connman.ReceiveMsgFrom(peer, std::move(msg_version_receive)));
+    peer.fPauseSend = false;
+    bool more_work{connman.ProcessMessagesOnce(peer)};
+    Assert(!more_work);
 
-    m_node.peerman->ProcessMessage(
-        peer, NetMsgType::VERSION, msg_version_stream, time_received_dummy, interrupt_dummy);
+    m_node.peerman->SendMessages(peer);
+    connman.FlushSendBuffer(peer); // Drop sent verack message
 
-    const auto msg_verack = NetMsg::Make(NetMsgType::VERACK);
-    DataStream msg_verack_stream{msg_verack.data};
-
+    Assert(connman.ReceiveMsgFrom(peer, NetMsg::Make(NetMsgType::VERACK)));
+    peer.fPauseSend = false;
     // Will set peer.fSuccessfullyConnected to true (necessary in SendMessages()).
-    m_node.peerman->ProcessMessage(
-        peer, NetMsgType::VERACK, msg_verack_stream, time_received_dummy, interrupt_dummy);
+    more_work = connman.ProcessMessagesOnce(peer);
+    Assert(!more_work);
 
     // Ensure that peer_us_addr:bind_port is sent to the peer.
     const CService expected{peer_us_addr, bind_port};
@@ -872,10 +876,9 @@ BOOST_AUTO_TEST_CASE(initial_advertise_from_version_message)
                                         std::span<const unsigned char> data,
                                         bool is_incoming) -> void {
         if (!is_incoming && msg_type == "addr") {
-            DataStream s{data};
             std::vector<CAddress> addresses;
 
-            s >> CAddress::V1_NETWORK(addresses);
+            SpanReader{data} >> CAddress::V1_NETWORK(addresses);
 
             for (const auto& addr : addresses) {
                 if (addr == expected) {
@@ -886,7 +889,7 @@ BOOST_AUTO_TEST_CASE(initial_advertise_from_version_message)
         }
     };
 
-    m_node.peerman->SendMessages(&peer);
+    m_node.peerman->SendMessages(peer);
 
     BOOST_CHECK(sent);
 

@@ -21,9 +21,8 @@
 
 static CBlock CreateTestBlock()
 {
-    DataStream stream{benchmark::data::block413567};
     CBlock block;
-    stream >> TX_WITH_WITNESS(block);
+    SpanReader{benchmark::data::block413567} >> TX_WITH_WITNESS(block);
     return block;
 }
 

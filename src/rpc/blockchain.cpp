@@ -832,9 +832,8 @@ static RPCHelpMan getblock()
         return HexStr(block_data);
     }
 
-    DataStream block_stream{block_data};
     CBlock block{};
-    block_stream >> TX_WITH_WITNESS(block);
+    SpanReader{block_data} >> TX_WITH_WITNESS(block);
 
     TxVerbosity tx_verbosity;
     if (verbosity == 1) {

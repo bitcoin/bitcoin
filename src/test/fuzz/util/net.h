@@ -151,9 +151,9 @@ public:
 
     virtual bool HasAllDesirableServiceFlags(ServiceFlags) const override { return m_fdp.ConsumeBool(); }
 
-    virtual bool ProcessMessages(CNode*, std::atomic<bool>&) override { return m_fdp.ConsumeBool(); }
+    virtual bool ProcessMessages(CNode&, std::atomic<bool>&) override { return m_fdp.ConsumeBool(); }
 
-    virtual bool SendMessages(CNode*) override { return m_fdp.ConsumeBool(); }
+    virtual bool SendMessages(CNode&) override { return m_fdp.ConsumeBool(); }
 
 private:
     FuzzedDataProvider& m_fdp;

@@ -535,7 +535,7 @@ See: https://github.com/include-what-you-use/include-what-you-use/blob/clang_21/
    { "<sys/ustat.h>", kPrivate, "<ustat.h>", kPublic },
    // Exports guaranteed by the C standard
 -  { "<stdint.h>", kPublic, "<inttypes.h>", kPublic },
-+  { "<stdint.h>", kPrivate, "<inttypes.h>", kPrivate },
++  { "<cstdint>", kPublic, "<cinttypes>", kPublic },
  };
  
  const IncludeMapEntry stdlib_c_include_map[] = {

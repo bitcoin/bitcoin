@@ -174,7 +174,7 @@ static bool DecodeTx(CMutableTransaction& tx, const std::vector<unsigned char>& 
     // Try decoding with extended serialization support, and remember if the result successfully
     // consumes the entire input.
     if (try_witness) {
-        DataStream ssData(tx_data);
+        SpanReader ssData{tx_data};
         try {
             ssData >> TX_WITH_WITNESS(tx_extended);
             if (ssData.empty()) ok_extended = true;
@@ -192,7 +192,7 @@ static bool DecodeTx(CMutableTransaction& tx, const std::vector<unsigned char>& 
 
     // Try decoding with legacy serialization, and remember if the result successfully consumes the entire input.
     if (try_no_witness) {
-        DataStream ssData(tx_data);
+        SpanReader ssData{tx_data};
         try {
             ssData >> TX_NO_WITNESS(tx_legacy);
             if (ssData.empty()) ok_legacy = true;
@@ -239,9 +239,8 @@ bool DecodeHexBlockHeader(CBlockHeader& header, const std::string& hex_header)
     if (!IsHex(hex_header)) return false;
 
     const std::vector<unsigned char> header_data{ParseHex(hex_header)};
-    DataStream ser_header{header_data};
     try {
-        ser_header >> header;
+        SpanReader{header_data} >> header;
     } catch (const std::exception&) {
         return false;
     }
@@ -254,9 +253,8 @@ bool DecodeHexBlk(CBlock& block, const std::string& strHexBlk)
         return false;
 
     std::vector<unsigned char> blockData(ParseHex(strHexBlk));
-    DataStream ssBlock(blockData);
     try {
-        ssBlock >> TX_WITH_WITNESS(block);
+        SpanReader{blockData} >> TX_WITH_WITNESS(block);
     }
     catch (const std::exception&) {
         return false;

@@ -38,7 +38,7 @@ def main():
         "-DAPPEND_CXXFLAGS='-O3 -g2'",
         "-DAPPEND_CFLAGS='-O3 -g2'",
         "-DCMAKE_BUILD_TYPE=Debug",
-        "-DWERROR=ON",
+        "-DCMAKE_COMPILE_WARNING_AS_ERROR=ON",
         "--preset=dev-mode",
         # Tolerate unused member functions in intermediate commits in a pull request
         "-DCMAKE_CXX_FLAGS=-Wno-error=unused-member-function",

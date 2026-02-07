@@ -908,7 +908,7 @@ void SelectionResult::AddInput(const OutputGroup& group)
     m_weight += group.m_weight;
 }
 
-void SelectionResult::AddInputs(const std::set<std::shared_ptr<COutput>>& inputs, bool subtract_fee_outputs)
+void SelectionResult::AddInputs(const OutputSet& inputs, bool subtract_fee_outputs)
 {
     // As it can fail, combine inputs first
     InsertInputs(inputs);
@@ -933,7 +933,7 @@ void SelectionResult::Merge(const SelectionResult& other)
     m_weight += other.m_weight;
 }
 
-const std::set<std::shared_ptr<COutput>>& SelectionResult::GetInputSet() const
+const OutputSet& SelectionResult::GetInputSet() const
 {
     return m_selected_inputs;
 }

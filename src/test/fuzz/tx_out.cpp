@@ -12,10 +12,9 @@
 
 FUZZ_TARGET(tx_out)
 {
-    DataStream ds{buffer};
     CTxOut tx_out;
     try {
-        ds >> tx_out;
+        SpanReader{buffer} >> tx_out;
     } catch (const std::ios_base::failure&) {
         return;
     }

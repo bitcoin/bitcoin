@@ -1127,7 +1127,7 @@ public:
     void write(std::span<const std::byte> src) { GetStream().write(src); }
     void read(std::span<std::byte> dst) { GetStream().read(dst); }
     void ignore(size_t num) { GetStream().ignore(num); }
-    bool eof() const { return GetStream().eof(); }
+    bool empty() const { return GetStream().empty(); }
     size_t size() const { return GetStream().size(); }
 
     //! Get reference to stream parameters.

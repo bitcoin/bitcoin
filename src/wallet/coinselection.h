@@ -319,11 +319,18 @@ enum class SelectionAlgorithm : uint8_t
 
 std::string GetAlgorithmName(SelectionAlgorithm algo);
 
+struct OutputPtrComparator {
+    bool operator()(const std::shared_ptr<COutput>& a, const std::shared_ptr<COutput>& b) const {
+        return *a < *b;
+    }
+};
+using OutputSet = std::set<std::shared_ptr<COutput>, OutputPtrComparator>;
+
 struct SelectionResult
 {
 private:
     /** Set of inputs selected by the algorithm to use in the transaction */
-    std::set<std::shared_ptr<COutput>> m_selected_inputs;
+    OutputSet m_selected_inputs;
     /** The target the algorithm selected for. Equal to the recipient amount plus non-input fees */
     CAmount m_target;
     /** The algorithm used to produce this result */
@@ -368,7 +375,7 @@ public:
     void Clear();
 
     void AddInput(const OutputGroup& group);
-    void AddInputs(const std::set<std::shared_ptr<COutput>>& inputs, bool subtract_fee_outputs);
+    void AddInputs(const OutputSet& inputs, bool subtract_fee_outputs);
 
     /** How much individual inputs overestimated the bump fees for shared ancestries */
     void SetBumpFeeDiscount(CAmount discount);
@@ -409,7 +416,7 @@ public:
     void Merge(const SelectionResult& other);
 
     /** Get m_selected_inputs */
-    const std::set<std::shared_ptr<COutput>>& GetInputSet() const;
+    const OutputSet& GetInputSet() const;
     /** Get the vector of COutputs that will be used to fill in a CTransaction's vin */
     std::vector<std::shared_ptr<COutput>> GetShuffledInputVector() const;
 
