@@ -27,6 +27,7 @@
 #include <key.h>
 #include <key_io.h>
 #include <logging.h>
+#include <net.h>
 #include <node/types.h>
 #include <outputtype.h>
 #include <policy/feerate.h>
@@ -2180,9 +2181,15 @@ void CWallet::ResubmitWalletTransactions(node::TxBroadcast broadcast_method, boo
 
 void MaybeResendWalletTxs(WalletContext& context)
 {
+    ArgsManager& args{*Assert(context.args)};
+    const node::TxBroadcast broadcast_method{
+        args.GetBoolArg("-privatebroadcast", DEFAULT_PRIVATE_BROADCAST)
+        ? node::TxBroadcast::NO_MEMPOOL_PRIVATE_BROADCAST
+        : node::TxBroadcast::MEMPOOL_AND_BROADCAST_TO_ALL};
+
     for (const std::shared_ptr<CWallet>& pwallet : GetWallets(context)) {
         if (!pwallet->ShouldResend()) continue;
-        pwallet->ResubmitWalletTransactions(node::TxBroadcast::MEMPOOL_AND_BROADCAST_TO_ALL, /*force=*/false);
+        pwallet->ResubmitWalletTransactions(broadcast_method, /*force=*/false);
         pwallet->SetNextResend();
     }
 }
