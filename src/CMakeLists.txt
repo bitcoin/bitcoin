@@ -179,6 +179,7 @@ add_library(bitcoin_node STATIC EXCLUDE_FROM_ALL
   addrman.cpp
   banman.cpp
   bip324.cpp
+  blockmap.cpp
   blockencodings.cpp
   blockfilter.cpp
   consensus/tx_verify.cpp

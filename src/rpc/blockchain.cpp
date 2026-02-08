@@ -1596,9 +1596,9 @@ static RPCHelpMan getchaintips()
     std::set<const CBlockIndex*> setPrevs;
 
     for (const auto& [_, block_index] : chainman.BlockIndex()) {
-        if (!active_chain.Contains(&block_index)) {
-            setOrphans.insert(&block_index);
-            setPrevs.insert(block_index.pprev);
+        if (!active_chain.Contains(block_index)) {
+            setOrphans.insert(block_index);
+            setPrevs.insert(block_index->pprev);
         }
     }
 

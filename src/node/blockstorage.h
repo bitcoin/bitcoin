@@ -6,6 +6,7 @@
 #define BITCOIN_NODE_BLOCKSTORAGE_H
 
 #include <attributes.h>
+#include <blockmap.h>
 #include <chain.h>
 #include <dbwrapper.h>
 #include <flatfile.h>
@@ -20,7 +21,6 @@
 #include <uint256.h>
 #include <util/expected.h>
 #include <util/fs.h>
-#include <util/hasher.h>
 #include <util/obfuscation.h>
 
 #include <algorithm>
@@ -127,12 +127,6 @@ static constexpr uint32_t STORAGE_HEADER_BYTES{std::tuple_size_v<MessageStartCha
 
 /** Total overhead when writing undo data: header (8 bytes) plus checksum (32 bytes) */
 static constexpr uint32_t UNDO_DATA_DISK_OVERHEAD{STORAGE_HEADER_BYTES + uint256::size()};
-
-// Because validation code takes pointers to the map's CBlockIndex objects, if
-// we ever switch to another associative container, we need to either use a
-// container that has stable addressing (true of all std associative
-// containers), or make the key a `std::unique_ptr<CBlockIndex>`
-using BlockMap = std::unordered_map<uint256, CBlockIndex, BlockHasher>;
 
 struct CBlockIndexWorkComparator {
     bool operator()(const CBlockIndex* pa, const CBlockIndex* pb) const;

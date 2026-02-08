@@ -202,7 +202,7 @@ std::vector<CBlockIndex*> BlockManager::GetAllBlockIndices()
     std::vector<CBlockIndex*> rv;
     rv.reserve(m_block_index.size());
     for (auto& [_, block_index] : m_block_index) {
-        rv.push_back(&block_index);
+        rv.push_back(block_index);
     }
     return rv;
 }
@@ -211,14 +211,14 @@ CBlockIndex* BlockManager::LookupBlockIndex(const uint256& hash)
 {
     AssertLockHeld(cs_main);
     BlockMap::iterator it = m_block_index.find(hash);
-    return it == m_block_index.end() ? nullptr : &it->second;
+    return it == m_block_index.end() ? nullptr : it->second;
 }
 
 const CBlockIndex* BlockManager::LookupBlockIndex(const uint256& hash) const
 {
     AssertLockHeld(cs_main);
     BlockMap::const_iterator it = m_block_index.find(hash);
-    return it == m_block_index.end() ? nullptr : &it->second;
+    return it == m_block_index.end() ? nullptr : it->second;
 }
 
 CBlockIndex* BlockManager::AddToBlockIndex(const CBlockHeader& block, CBlockIndex*& best_header)
@@ -227,19 +227,18 @@ CBlockIndex* BlockManager::AddToBlockIndex(const CBlockHeader& block, CBlockInde
 
     auto [mi, inserted] = m_block_index.try_emplace(block.GetHash(), block);
     if (!inserted) {
-        return &mi->second;
+        return mi->second;
     }
-    CBlockIndex* pindexNew = &(*mi).second;
+    CBlockIndex* pindexNew = mi->second;
 
     // We assign the sequence id to blocks only when the full data is available,
     // to avoid miners withholding blocks but broadcasting headers, to get a
     // competitive advantage.
     pindexNew->nSequenceId = SEQ_ID_INIT_FROM_DISK;
 
-    pindexNew->m_block_hash = ((*mi).first);
     BlockMap::iterator miPrev = m_block_index.find(block.hashPrevBlock);
     if (miPrev != m_block_index.end()) {
-        pindexNew->pprev = &(*miPrev).second;
+        pindexNew->pprev = (*miPrev).second;
         pindexNew->nHeight = pindexNew->pprev->nHeight + 1;
         pindexNew->BuildSkip();
     }
@@ -261,7 +260,7 @@ void BlockManager::PruneOneBlockFile(const int fileNumber)
     LOCK(cs_LastBlockFile);
 
     for (auto& entry : m_block_index) {
-        CBlockIndex* pindex = &entry.second;
+        CBlockIndex* pindex = entry.second;
         if (pindex->nFile == fileNumber) {
             pindex->nStatus &= ~BLOCK_HAVE_DATA;
             pindex->nStatus &= ~BLOCK_HAVE_UNDO;
@@ -413,10 +412,7 @@ CBlockIndex* BlockManager::InsertBlockIndex(const uint256& hash)
     }
 
     const auto [mi, inserted]{m_block_index.try_emplace(hash)};
-    CBlockIndex* pindex = &(*mi).second;
-    if (inserted) {
-        pindex->m_block_hash = ((*mi).first);
-    }
+    CBlockIndex* pindex = (*mi).second;
     return pindex;
 }
 
@@ -554,8 +550,8 @@ bool BlockManager::LoadBlockIndexDB(const std::optional<uint256>& snapshot_block
     LogInfo("Checking all blk files are present...");
     std::set<int> setBlkDataFiles;
     for (const auto& [_, block_index] : m_block_index) {
-        if (block_index.nStatus & BLOCK_HAVE_DATA) {
-            setBlkDataFiles.insert(block_index.nFile);
+        if (block_index->nStatus & BLOCK_HAVE_DATA) {
+            setBlkDataFiles.insert(block_index->nFile);
         }
     }
     for (std::set<int>::iterator it = setBlkDataFiles.begin(); it != setBlkDataFiles.end(); it++) {

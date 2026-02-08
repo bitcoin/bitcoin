@@ -255,10 +255,10 @@ static int64_t AddTx(ChainstateManager& chainman, CWallet& wallet, uint32_t lock
     CBlockIndex* block = nullptr;
     if (blockTime > 0) {
         LOCK(cs_main);
-        auto inserted = chainman.BlockIndex().emplace(std::piecewise_construct, std::make_tuple(GetRandHash()), std::make_tuple());
+        auto inserted = chainman.BlockIndex().try_emplace(GetRandHash());
         assert(inserted.second);
         const uint256& hash = inserted.first->first;
-        block = &inserted.first->second;
+        block = inserted.first->second;
         block->nTime = blockTime;
         block->m_block_hash = hash;
         state = TxStateConfirmed{hash, block->nHeight, /*index=*/0};
