@@ -260,7 +260,7 @@ static int64_t AddTx(ChainstateManager& chainman, CWallet& wallet, uint32_t lock
         const uint256& hash = inserted.first->first;
         block = &inserted.first->second;
         block->nTime = blockTime;
-        block->phashBlock = &hash;
+        block->m_block_hash = hash;
         state = TxStateConfirmed{hash, block->nHeight, /*index=*/0};
     }
     return wallet.AddToWallet(MakeTransactionRef(tx), state, [&](CWalletTx& wtx, bool /* new_tx */) {

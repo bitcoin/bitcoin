@@ -62,7 +62,7 @@ FUZZ_TARGET(headers_sync_state, .init = initialize_headers_sync_state_fuzz)
     SetMockTime(ConsumeTime(fuzzed_data_provider, /*min=*/start_index.GetMedianTimePast()));
 
     const uint256 genesis_hash = genesis_header.GetHash();
-    start_index.phashBlock = &genesis_hash;
+    start_index.m_block_hash = genesis_hash;
 
     const HeadersSyncParams params{
         .commitment_period = fuzzed_data_provider.ConsumeIntegralInRange<size_t>(1, Params().HeadersSync().commitment_period * 2),

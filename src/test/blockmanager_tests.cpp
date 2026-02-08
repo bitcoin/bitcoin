@@ -223,7 +223,7 @@ BOOST_FIXTURE_TEST_CASE(blockmanager_readblock_hash_mismatch, TestingSetup)
         const auto tip{m_node.chainman->ActiveTip()};
         index.nStatus = tip->nStatus;
         index.nDataPos = tip->nDataPos;
-        index.phashBlock = &uint256::ONE; // mismatched block hash
+        index.m_block_hash = uint256::ONE; // mismatched block hash
     }
 
     ASSERT_DEBUG_LOG("GetHash() doesn't match index");

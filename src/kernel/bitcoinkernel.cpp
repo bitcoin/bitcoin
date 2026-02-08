@@ -1169,7 +1169,7 @@ int32_t btck_block_tree_entry_get_height(const btck_BlockTreeEntry* entry)
 
 const btck_BlockHash* btck_block_tree_entry_get_block_hash(const btck_BlockTreeEntry* entry)
 {
-    return btck_BlockHash::ref(btck_BlockTreeEntry::get(entry).phashBlock);
+    return btck_BlockHash::ref(&btck_BlockTreeEntry::get(entry).m_block_hash);
 }
 
 int btck_block_tree_entry_equals(const btck_BlockTreeEntry* entry1, const btck_BlockTreeEntry* entry2)

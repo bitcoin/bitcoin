@@ -86,7 +86,7 @@ FUZZ_TARGET(block_index, .init = init_block_index)
     for (int i = 0; i < blocks_count; i++) {
         CBlockHeader header{ConsumeBlockHeader(fuzzed_data_provider)};
         blocks.push_back(std::make_unique<CBlockIndex>(std::move(header)));
-        blocks.back()->phashBlock = &g_block_hash;
+        blocks.back()->m_block_hash = g_block_hash;
         blocks_info.push_back(blocks.back().get());
     }
 

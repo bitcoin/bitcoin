@@ -2257,7 +2257,7 @@ script_verify_flags GetBlockScriptFlags(const CBlockIndex& block_index, const Ch
     // For simplicity, always leave P2SH+WITNESS+TAPROOT on except for the two
     // violating blocks.
     script_verify_flags flags{SCRIPT_VERIFY_P2SH | SCRIPT_VERIFY_WITNESS | SCRIPT_VERIFY_TAPROOT};
-    const auto it{consensusparams.script_flag_exceptions.find(*Assert(block_index.phashBlock))};
+    const auto it{consensusparams.script_flag_exceptions.find(block_index.GetBlockHash())};
     if (it != consensusparams.script_flag_exceptions.end()) {
         flags = it->second;
     }
@@ -2296,7 +2296,7 @@ bool Chainstate::ConnectBlock(const CBlock& block, BlockValidationState& state, 
     assert(pindex);
 
     uint256 block_hash{block.GetHash()};
-    assert(*pindex->phashBlock == block_hash);
+    assert(pindex->GetBlockHash() == block_hash);
 
     const auto time_start{SteadyClock::now()};
     const CChainParams& params{m_chainman.GetParams()};
@@ -4506,7 +4506,7 @@ BlockValidationState TestBlockValidity(
     BlockValidationState state;
     CBlockIndex* tip{Assert(chainstate.m_chain.Tip())};
 
-    if (block.hashPrevBlock != *Assert(tip->phashBlock)) {
+    if (block.hashPrevBlock != tip->GetBlockHash()) {
         state.Invalid({}, "inconclusive-not-best-prevblk");
         return state;
     }
@@ -4547,10 +4547,8 @@ BlockValidationState TestBlockValidity(
     // We don't want ConnectBlock to update the actual chainstate, so create
     // a cache on top of it, along with a dummy block index.
     CBlockIndex index_dummy{block};
-    uint256 block_hash(block.GetHash());
     index_dummy.pprev = tip;
     index_dummy.nHeight = tip->nHeight + 1;
-    index_dummy.phashBlock = &block_hash;
     CCoinsViewCache view_dummy(&chainstate.CoinsTip());
 
     // Set fJustCheck to true in order to update, and not clear, validation caches.
