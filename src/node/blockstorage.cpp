@@ -399,9 +399,16 @@ void BlockManager::FindFilesToPrune(
              min_block_to_prune, last_block_can_prune, count);
 }
 
-void BlockManager::UpdatePruneLock(const std::string& name, const PruneLockInfo& lock_info) {
+void BlockManager::UpdatePruneLock(const std::string& name, const PruneLockInfo& lock_info)
+{
     AssertLockHeld(::cs_main);
     m_prune_locks[name] = lock_info;
+}
+
+bool BlockManager::DeletePruneLock(const std::string& name)
+{
+    AssertLockHeld(::cs_main);
+    return m_prune_locks.erase(name) > 0;
 }
 
 CBlockIndex* BlockManager::InsertBlockIndex(const uint256& hash)
