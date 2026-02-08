@@ -231,101 +231,58 @@ for normal IPv4/IPv6 communication, use:
 
     bitcoind -onion=127.0.0.1:9050 -externalip=7zvj7a2imdgkdbg4f2dryd5rgtrn7upivr5eeij4cicjh65pooxeshid.onion -discover
 
-## 4. Running a Tor-only node
+## 4. Why you should not run `-onlynet=onion`
 
-You can configure Bitcoin Core to communicate exclusively over the Tor network
-using `-onlynet=onion`. This hides your node's IP address from peers on the
-Bitcoin network.
+Running Bitcoin Core exclusively over Tor (`-onlynet=onion`) is **strongly
+discouraged** for most users. While it may appear to improve privacy, the
+security trade-offs generally outweigh the benefits.
 
-### When to use Tor-only vs. a bridge node
+### Eclipse attacks
 
-Most users are better served by running a **bridge node** — a node reachable
-on both clearnet and Tor (see Section 5). Bridge nodes strengthen the Bitcoin
-network's resistance to partitioning while still allowing Tor connections.
+Onion addresses are free to create, making it trivial for an attacker to
+generate a large number of malicious onion peers. A Tor-only node is
+significantly easier to [eclipse](https://bitcoin.stackexchange.com/q/116146)
+than a node reachable on multiple networks, because the attacker only needs to
+dominate a single (cheap) address space. An eclipsed node can be fed false
+chain data or have its transactions suppressed.
 
-A Tor-only configuration (`-onlynet=onion`) is appropriate when your threat
-model specifically requires that your node's IP address is never revealed to
-Bitcoin peers — for example, when running a node in an environment where
-Bitcoin traffic on clearnet could be blocked or surveilled. The trade-offs are:
+### Tor is a centralised network
 
-- **Availability:** Your node depends entirely on the Tor network. Tor is a
-  centralised network that relies on a small set of directory authorities; if
-  Tor is unavailable, your node will be unable to connect to any peers.
-- **Performance:** Tor connections are slower, and initial peer discovery takes
-  longer than on clearnet.
-- **On-chain privacy is unchanged:** Tor conceals which IP address is running
-  a node, but does not improve on-chain privacy. Transactions are still
-  publicly visible on the blockchain regardless of how your node connects.
-  On-chain privacy depends on wallet behavior (e.g. coin selection, address
-  reuse) rather than the transport layer.
+Tor depends on a small set of directory authorities. Running `-onlynet=onion`
+makes your node entirely dependent on Tor's availability and integrity. If the
+Tor network is disrupted, your node will be unable to connect to any peers.
 
-### Configuration
+### On-chain privacy is unchanged
 
-A minimal Tor-only configuration in `bitcoin.conf`:
+Tor conceals which IP address is running a node, but does not improve on-chain
+privacy. Transactions are still publicly visible on the blockchain regardless
+of how your node connects. On-chain privacy depends on wallet behavior (e.g.
+coin selection, address reuse) rather than the transport layer.
 
-```
-proxy=127.0.0.1:9050
-listen=1
-bind=127.0.0.1
-onlynet=onion
-dnsseed=0
-dns=0
-```
+### Prefer a bridge node instead
 
-**Important:** When using `-onlynet=onion`, you must set `-dnsseed=0` and
-`-dns=0`. DNS resolution requires IPv4 or IPv6, so `-dnsseed=1` with
-`-onlynet=onion` will cause Bitcoin Core to exit with an error:
+A node reachable on both clearnet and Tor (a "bridge" node) strengthens the
+Bitcoin network's resistance to partitioning while still allowing Tor
+connections. This is the recommended configuration for most users who want Tor
+support (see Section 5).
 
-```
-Error: Incompatible options: -dnsseed=1 was explicitly specified, but -onlynet forbids connections to IPv4/IPv6
-```
+### Known configuration issues with `-onlynet=onion`
 
-### Peer discovery
+If you still choose to use `-onlynet=onion`, be aware of the following:
 
-With DNS seeding disabled, your node relies on these mechanisms to find onion
-peers:
-
-1. **Existing peer database:** If your node previously ran on clearnet, the
-   `peers.dat` file likely contains onion addresses learned from other peers.
-   You can check with: `bitcoin-cli getnodeaddresses 0 | grep onion`
-
-2. **Hardcoded seeds:** Bitcoin Core includes built-in onion seed nodes that it
-   will try when no other peers are available.
-
-3. **Manual seeding:** You can add known onion peers using the `-seednode`
-   option in `bitcoin.conf` or via `bitcoin-cli addnode <address> onetry`.
-
-Initial peer discovery over Tor can take several minutes, as establishing Tor
-circuits is slower than clearnet connections. This is normal behavior.
-
-### Advertising your onion address
-
-For other nodes to find and connect to your Tor-only node, configure the Tor
-control port (see Section 2) so that Bitcoin Core can automatically create and
-advertise an onion service. Alternatively, manually set `-externalip` to your
-`.onion` address (see Section 3).
-
-You can verify your node is advertising its onion address with:
-
-```
-bitcoin-cli getnetworkinfo
-```
-
-In the output, confirm:
-
-- The `"networks"` array shows `"reachable": true` only for the `"onion"`
-  entry (IPv4, IPv6, I2P, and CJDNS should all show `"reachable": false`).
-- The `"localaddresses"` array contains an object with your `.onion` address
-  and a non-zero `"score"`, e.g.:
-  ```json
-  "localaddresses": [
-    {
-      "address": "your7onion4address.onion",
-      "port": 8333,
-      "score": 4
-    }
-  ]
+- **DNS incompatibility:** You must set `-dnsseed=0` and `-dns=0`. DNS
+  resolution requires IPv4 or IPv6, so `-dnsseed=1` with `-onlynet=onion`
+  will cause Bitcoin Core to exit with:
   ```
+  Error: Incompatible options: -dnsseed=1 was explicitly specified, but -onlynet forbids connections to IPv4/IPv6
+  ```
+
+- **Peer discovery is limited:** With DNS seeding disabled, your node relies
+  on its existing `peers.dat` file, hardcoded onion seed nodes, or manually
+  added peers via `-seednode` or `bitcoin-cli addnode <address> onetry`.
+
+- **Slow startup:** Initial peer discovery over Tor can take several minutes,
+  as establishing Tor circuits is slower than clearnet connections.
 
 ## 5. Privacy recommendations
 
