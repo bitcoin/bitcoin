@@ -31,6 +31,7 @@
 #include <net.h>
 #include <net_processing.h>
 #include <node/block_template_manager.h>
+#include <node/blockmanager_args.h>
 #include <node/blockstorage.h>
 #include <node/context.h>
 #include <node/utxo_snapshot.h>
@@ -94,6 +95,7 @@
 #include <string>
 #include <string_view>
 #include <tuple>
+#include <unordered_map>
 #include <vector>
 
 using kernel::CCoinsStats;
@@ -942,6 +944,126 @@ std::optional<int> GetPruneHeight(const BlockManager& blockman, const CChain& ch
 
     // Block before the first unpruned block is the last pruned block.
     return CHECK_NONFATAL(first_unpruned.pprev)->nHeight;
+}
+
+static RPCMethod listprunelocks()
+{
+    return RPCMethod{"listprunelocks",
+        "Returns a list of all active prune locks.\n"
+        "Prune locks prevent block data at or above specific heights from being pruned.\n"
+        "These locks are used internally by indexes and can also be set manually via the setprunelock RPC.\n"
+        "The id of a lock of type \"user\" is the id it was set with via setprunelock or -prunelock.\n",
+        {},
+        RPCResult{
+            RPCResult::Type::OBJ, "", "",
+            {
+                {RPCResult::Type::ARR, "prune_locks", "",
+                {
+                    {RPCResult::Type::OBJ, "", "",
+                    {
+                        {RPCResult::Type::STR, "id", "The identifier of the prune lock"},
+                        {RPCResult::Type::STR, "type", "\"user\" if the lock was set via setprunelock or -prunelock, \"internal\" if it is managed by the node itself"},
+                        {RPCResult::Type::NUM, "height", "Height of the earliest block that should be kept"},
+                    }},
+                }},
+            }
+        },
+        RPCExamples{
+            HelpExampleCli("listprunelocks", "")
+          + HelpExampleRpc("listprunelocks", "")
+        },
+    [](const RPCMethod& self, const JSONRPCRequest& request) -> UniValue
+{
+    ChainstateManager& chainman = EnsureAnyChainman(request.context);
+    UniValue locks_arr(UniValue::VARR);
+    // Copy into a map to avoid holding the lock longer than necessary and to
+    // return the locks in a deterministic order
+    const auto prune_locks = WITH_LOCK(::cs_main, const auto& locks{chainman.m_blockman.GetPruneLocks()}; return std::map(locks.begin(), locks.end()));
+    for (const auto& [id, lock_info] : prune_locks) {
+        UniValue lock_obj(UniValue::VOBJ);
+        lock_obj.pushKV("id", util::RemovePrefix(id, node::PRUNE_LOCK_USER_PREFIX));
+        lock_obj.pushKV("type", id.starts_with(node::PRUNE_LOCK_USER_PREFIX) ? "user" : "internal");
+        lock_obj.pushKV("height", lock_info.height_first);
+        locks_arr.push_back(std::move(lock_obj));
+    }
+    UniValue result(UniValue::VOBJ);
+    result.pushKV("prune_locks", std::move(locks_arr));
+    return result;
+},
+    };
+}
+
+static RPCMethod setprunelock()
+{
+    return RPCMethod{"setprunelock",
+        "Add or remove a manual prune lock.\n"
+        "A prune lock prevents block data at or above the specified height from\n"
+        "being pruned. This can be used to ensure that blocks needed by external\n"
+        "applications remain available on disk for a certain amount of time.\n"
+        "\nNote: Manually created prune locks are stored in memory only and will\n"
+        "not persist across node restarts.\n"
+        "\nNote: The height can be above the current chain tip. The lock takes effect\n"
+        "once the chain reaches that height.\n"
+        "\nNote: When blocks are disconnected in a reorg, a lock above the height of\n"
+        "the last common block is moved down to that height and stays there.\n",
+        {
+            {"id", RPCArg::Type::STR, RPCArg::Optional::NO, "A unique identifier for this prune lock, consisting of alphanumeric characters, '.', '-' or '_'."},
+            {"command", RPCArg::Type::STR, RPCArg::Optional::NO, "\"add\" to add or update a prune lock, \"remove\" to remove one."},
+            {"height", RPCArg::Type::NUM, RPCArg::Default{0}, "The block height at or above which data should be preserved (only used for \"add\")."},
+        },
+        RPCResult{RPCResult::Type::OBJ, "", ""},
+        RPCExamples{
+            "\nAdd a prune lock to protect blocks from height 500000 onward:\n"
+          + HelpExampleCli("setprunelock", "\"mylock\" \"add\" 500000")
+          + HelpExampleRpc("setprunelock", "\"mylock\", \"add\", 500000")
+          + "\nRemove a prune lock:\n"
+          + HelpExampleCli("setprunelock", "\"mylock\" \"remove\"")
+          + HelpExampleRpc("setprunelock", "\"mylock\", \"remove\"")
+        },
+    [](const RPCMethod& self, const JSONRPCRequest& request) -> UniValue
+{
+    ChainstateManager& chainman = EnsureAnyChainman(request.context);
+    if (!chainman.m_blockman.IsPruneMode()) {
+        throw JSONRPCError(RPC_MISC_ERROR, "Cannot set a prune lock because node is not in prune mode.");
+    }
+
+    const std::string id{request.params[0].get_str()};
+    if (!node::IsValidPruneLockId(id)) {
+        throw JSONRPCError(RPC_INVALID_PARAMETER, "Prune lock id must not be empty and may only contain alphanumeric characters, '.', '-' and '_'");
+    }
+
+    const std::string command{request.params[1].get_str()};
+
+    // Prefix user-created locks to avoid collision with internal lock ids
+    const std::string lock_id{node::PRUNE_LOCK_USER_PREFIX + id};
+
+    if (command == "add") {
+        const int height{request.params[2].isNull() ? 0 : request.params[2].getInt<int>()};
+        if (height < 0) {
+            throw JSONRPCError(RPC_INVALID_PARAMETER, "Block height must not be negative");
+        }
+
+        node::PruneLockInfo lock_info;
+        lock_info.height_first = height;
+
+        LOCK(::cs_main);
+        chainman.m_blockman.UpdatePruneLock(lock_id, lock_info);
+    } else if (command == "remove") {
+        LOCK(::cs_main);
+        const bool existed{chainman.m_blockman.DeletePruneLock(lock_id)};
+        if (!existed) {
+            throw JSONRPCError(RPC_INVALID_PARAMETER,
+                strprintf("Prune lock \"%s\" not found", id));
+        }
+    } else {
+        throw JSONRPCError(RPC_INVALID_PARAMETER,
+            strprintf("Invalid command \"%s\". Use \"add\" or \"remove\".", command));
+    }
+
+    UniValue result(UniValue::VOBJ);
+    return result;
+},
+    };
 }
 
 static RPCMethod pruneblockchain()
@@ -3683,6 +3805,8 @@ void RegisterBlockchainRPCCommands(CRPCTable& t)
         {"blockchain", &getdeploymentinfo},
         {"blockchain", &gettxout},
         {"blockchain", &gettxoutsetinfo},
+        {"blockchain", &listprunelocks},
+        {"blockchain", &setprunelock},
         {"blockchain", &pruneblockchain},
         {"blockchain", &verifychain},
         {"blockchain", &preciousblock},

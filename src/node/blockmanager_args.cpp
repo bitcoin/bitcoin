@@ -10,10 +10,12 @@
 #include <tinyformat.h>
 #include <util/byte_units.h>
 #include <util/result.h>
+#include <util/strencodings.h>
 #include <util/translation.h>
 #include <validation.h>
 
 #include <cstdint>
+#include <string_view>
 
 namespace node {
 util::Result<void> ApplyArgsManOptions(const ArgsManager& args, BlockManager::Options& opts)
@@ -39,5 +41,10 @@ util::Result<void> ApplyArgsManOptions(const ArgsManager& args, BlockManager::Op
     ReadDatabaseArgs(args, opts.block_tree_db_params.options);
 
     return {};
+}
+
+bool IsValidPruneLockId(std::string_view id)
+{
+    return !id.empty() && id == SanitizeString(id, SAFE_CHARS_FILENAME);
 }
 } // namespace node
