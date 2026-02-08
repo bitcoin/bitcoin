@@ -237,19 +237,27 @@ You can configure Bitcoin Core to communicate exclusively over the Tor network
 using `-onlynet=onion`. This hides your node's IP address from peers on the
 Bitcoin network.
 
-**Note:** Tor provides network-level privacy only — it conceals which IP
-address is running a node. It does not improve on-chain privacy; transactions
-are still publicly visible on the blockchain regardless of how your node
-connects to the network. On-chain privacy depends on wallet behavior (e.g.
-coin selection, address reuse) rather than the transport layer.
+### When to use Tor-only vs. a bridge node
 
-**Note:** Tor is a centralised network that depends on a small set of
-directory authorities. Running `-onlynet=onion` makes your node entirely
-dependent on Tor's availability and integrity. If Tor is unavailable, your
-node will be unable to connect to any peers. For most users, running a node
-that is reachable on both clearnet and Tor (a "bridge" node) is preferable, as
-it strengthens the Bitcoin network's resistance to partitioning while still
-allowing Tor connections (see Section 5).
+Most users are better served by running a **bridge node** — a node reachable
+on both clearnet and Tor (see Section 5). Bridge nodes strengthen the Bitcoin
+network's resistance to partitioning while still allowing Tor connections.
+
+A Tor-only configuration (`-onlynet=onion`) is appropriate when your threat
+model specifically requires that your node's IP address is never revealed to
+Bitcoin peers — for example, when running a node in an environment where
+Bitcoin traffic on clearnet could be blocked or surveilled. The trade-offs are:
+
+- **Availability:** Your node depends entirely on the Tor network. Tor is a
+  centralised network that relies on a small set of directory authorities; if
+  Tor is unavailable, your node will be unable to connect to any peers.
+- **Performance:** Tor connections are slower, and initial peer discovery takes
+  longer than on clearnet.
+- **On-chain privacy is unchanged:** Tor conceals which IP address is running
+  a node, but does not improve on-chain privacy. Transactions are still
+  publicly visible on the blockchain regardless of how your node connects.
+  On-chain privacy depends on wallet behavior (e.g. coin selection, address
+  reuse) rather than the transport layer.
 
 ### Configuration
 
@@ -303,8 +311,21 @@ You can verify your node is advertising its onion address with:
 bitcoin-cli getnetworkinfo
 ```
 
-Check that `localaddresses` contains your `.onion` address and that only the
-`onion` network shows `reachable: true`.
+In the output, confirm:
+
+- The `"networks"` array shows `"reachable": true` only for the `"onion"`
+  entry (IPv4, IPv6, I2P, and CJDNS should all show `"reachable": false`).
+- The `"localaddresses"` array contains an object with your `.onion` address
+  and a non-zero `"score"`, e.g.:
+  ```json
+  "localaddresses": [
+    {
+      "address": "your7onion4address.onion",
+      "port": 8333,
+      "score": 4
+    }
+  ]
+  ```
 
 ## 5. Privacy recommendations
 
