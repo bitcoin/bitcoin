@@ -147,6 +147,10 @@ struct CBlockIndexHeightOnlyComparator {
     bool operator()(const CBlockIndex* pa, const CBlockIndex* pb) const;
 };
 
+/** Prefix for prune locks set by the user, through -prunelockheight or the setprunelock
+ *  RPC, to avoid collisions with the locks managed by the node itself. */
+static constexpr const char* PRUNE_LOCK_USER_PREFIX{"user:"};
+
 struct PruneLockInfo {
     /// Height of earliest block that should be kept and not pruned
     int height_first{std::numeric_limits<int>::max()};
