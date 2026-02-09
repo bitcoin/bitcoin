@@ -456,6 +456,10 @@ struct CNodeState {
     std::list<QueuedBlock> vBlocksInFlight;
     //! When the first entry in vBlocksInFlight started downloading. Don't care when vBlocksInFlight is empty.
     std::chrono::microseconds m_downloading_since{0us};
+    //! Set when a manual peer's in-flight blocks are released due to stalling
+    //! or download timeout; causes one round of block download to be skipped
+    //! so other peers can pick up the freed blocks before this peer re-requests.
+    bool m_stall_recovery{false};
     //! Whether we consider this a preferred download peer.
     bool fPreferredDownload{false};
     /** Whether this peer wants invs or cmpctblocks (when possible) for block announcements. */
@@ -6096,15 +6100,27 @@ bool PeerManagerImpl::SendMessages(CNode& node)
             // Stalling only triggers when the block download window cannot move. During normal steady state,
             // the download window should be much larger than the to-be-downloaded set of blocks, so disconnection
             // should only happen during initial block download.
-            LogInfo("Peer is stalling block download, %s", node.DisconnectMsg());
-            node.fDisconnect = true;
-            // Increase timeout for the next peer so that we don't disconnect multiple peers if our own
-            // bandwidth is insufficient.
-            const auto new_timeout = std::min(2 * stalling_timeout, BLOCK_STALLING_TIMEOUT_MAX);
-            if (stalling_timeout != new_timeout && m_block_stalling_timeout.compare_exchange_strong(stalling_timeout, new_timeout)) {
-                LogDebug(BCLog::NET, "Increased stalling timeout temporarily to %d seconds\n", count_seconds(new_timeout));
+            if (node.IsManualConn()) {
+                LogDebug(BCLog::NET, "Not disconnecting manual peer for stalling block download, %s", node.DisconnectMsg());
+                // Release all in-flight blocks so other peers can request them.
+                // Return early so the block download logic below doesn't
+                // immediately re-assign them to this peer.
+                while (!state.vBlocksInFlight.empty()) {
+                    RemoveBlockRequest(state.vBlocksInFlight.front().pindex->GetBlockHash(), node.GetId());
+                }
+                state.m_stall_recovery = true;
+                return true;
+            } else {
+                LogInfo("Peer is stalling block download, %s", node.DisconnectMsg());
+                node.fDisconnect = true;
+                // Increase timeout for the next peer so that we don't disconnect multiple peers if our own
+                // bandwidth is insufficient.
+                const auto new_timeout = std::min(2 * stalling_timeout, BLOCK_STALLING_TIMEOUT_MAX);
+                if (stalling_timeout != new_timeout && m_block_stalling_timeout.compare_exchange_strong(stalling_timeout, new_timeout)) {
+                    LogDebug(BCLog::NET, "Increased stalling timeout temporarily to %d seconds\n", count_seconds(new_timeout));
+                }
+                return true;
             }
-            return true;
         }
         // In case there is a block that has been in flight from this peer for block_interval * (1 + 0.5 * N)
         // (with N the number of peers from which we're downloading validated blocks), disconnect due to timeout.
@@ -6161,7 +6177,12 @@ bool PeerManagerImpl::SendMessages(CNode& node)
         // Message: getdata (blocks)
         //
         std::vector<CInv> vGetData;
-        if (CanServeBlocks(peer) && ((sync_blocks_and_headers_from_peer && !IsLimitedPeer(peer)) || !m_chainman.IsInitialBlockDownload()) && state.vBlocksInFlight.size() < MAX_BLOCKS_IN_TRANSIT_PER_PEER) {
+        // After releasing a manual peer's in-flight blocks (stalling or
+        // download timeout above), skip one round of block download so
+        // other peers get a chance to request the freed blocks first.
+        if (state.m_stall_recovery) {
+            state.m_stall_recovery = false;
+        } else if (CanServeBlocks(peer) && ((sync_blocks_and_headers_from_peer && !IsLimitedPeer(peer)) || !m_chainman.IsInitialBlockDownload()) && state.vBlocksInFlight.size() < MAX_BLOCKS_IN_TRANSIT_PER_PEER) {
             std::vector<const CBlockIndex*> vToDownload;
             NodeId staller = -1;
             auto get_inflight_budget = [&state]() {
