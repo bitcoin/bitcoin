@@ -29,9 +29,7 @@ export PATH="/python_env/bin:${PATH}"
 command -v python3
 python3 --version
 
-uv pip install --python /python_env \
-  lief==0.17.5 \
-  pyzmq==27.1.0
+uv pip install --python /python_env --requirements /ci/lint/requirements.txt
 
 SHELLCHECK_VERSION=v0.11.0
 curl --fail -L "https://github.com/koalaman/shellcheck/releases/download/${SHELLCHECK_VERSION}/shellcheck-${SHELLCHECK_VERSION}.linux.$(uname --machine).tar.xz" | \
