@@ -385,4 +385,46 @@ BOOST_FIXTURE_TEST_CASE(index_reorg_crash, BuildChainTestingSetup)
     index.Stop();
 }
 
+// Ensure the initial sync batch window behaves as expected.
+// Tests sync from the genesis block and from a higher block to mimic a restart.
+// Note: Test runs in /tmp by default, which is usually cached, so timings are not
+// a meaningful benchmark (use -testdatadir to run it elsewhere).
+BOOST_FIXTURE_TEST_CASE(initial_sync_batch_window, BuildChainTestingSetup)
+{
+    constexpr int MINE_BLOCKS = 173;
+    constexpr int BATCH_SIZE = 30;
+
+    int expected_tip = 100; // pre-mined blocks
+    for (int round = 0; round < 2; round++) { // two rounds to test sync from genesis and from a higher block
+        mineBlocks(MINE_BLOCKS); // Generate blocks
+        const int tip_height = WITH_LOCK(::cs_main, return m_node.chainman->ActiveChain().Height());
+        BOOST_REQUIRE(tip_height == MINE_BLOCKS + expected_tip);
+        expected_tip = tip_height;
+
+        BlockFilterIndex filter_index(interfaces::MakeChain(m_node), BlockFilterType::BASIC, 1 << 20, /*f_memory=*/false);
+        filter_index.SetProcessingBatchSize(BATCH_SIZE);
+        BOOST_REQUIRE(filter_index.Init());
+        BOOST_CHECK(!filter_index.BlockUntilSyncedToCurrentChain());
+
+        // Ensure we can sync up to the tip
+        filter_index.Sync();
+        const auto& summary{filter_index.GetSummary()};
+        BOOST_CHECK(summary.synced);
+        BOOST_CHECK_EQUAL(summary.best_block_height, expected_tip);
+
+        {
+            // Verify all blocks up to the tip exist, always start from genesis to verify nothing was overwritten
+            LOCK(::cs_main);
+            const auto& chain = m_node.chainman->ActiveChain();
+            uint256 last_header;
+            for (auto pblock = chain.Genesis(); pblock; pblock = chain.Next(pblock)) {
+                CheckFilterLookups(filter_index, pblock, last_header, m_node.chainman->m_blockman);
+            }
+        }
+
+        filter_index.Interrupt();
+        filter_index.Stop();
+    }
+}
+
 BOOST_AUTO_TEST_SUITE_END()
