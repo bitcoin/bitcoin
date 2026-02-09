@@ -19,6 +19,7 @@ static constexpr int SANCTUARY_TIME = 144; // minutes
 static constexpr int ATOMIC_GESTURE_MAX = 5; // minutes
 static constexpr double QUANTUM_LEAP_THRESHOLD = 0.33;
 static constexpr double EXCLUSION_THRESHOLD = 0.95;
+static constexpr double ADMISSIBILITY_THRESHOLD = 0.85; // Petrus Framework
 static constexpr double FIELD_COHERENCE = 144.963;
 static constexpr double SATOSHI_FREQUENCY = 33.4159; // updated for v33
 static constexpr double DIAMOND_LATTICE_CONSTANT = 3.567;

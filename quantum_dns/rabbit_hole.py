@@ -62,7 +62,7 @@ class QuantumRabbitHole:
     async def _synchronize_portal(self):
         """Sincroniza com o nó rabbithole no DNS quântico."""
         print("   Consultando DNS quântico para rabbithole.megaeth.com...")
-        await asyncio.sleep(0.5)
+        await asyncio.sleep(0.1)
 
         portal_record = {
             'type': 'quantum_portal',
@@ -84,7 +84,7 @@ class QuantumRabbitHole:
         print("   Preparando estado de Schmidt para mergulho profundo...")
 
         dive_lambdas = np.array([0.4, 0.6])
-        dive_entropy = -(0.4*np.log(0.4) + 0.6*np.log(0.6))
+        dive_entropy = -(0.4*np.log2(0.4) + 0.6*np.log2(0.6))
 
         print(f"   Coeficientes de mergulho: λ = {dive_lambdas}")
         print(f"   Entropia do mergulho: S = {dive_entropy:.3f} bits")
@@ -107,7 +107,7 @@ class QuantumRabbitHole:
 
         for i, layer in enumerate(self.reality_layers, 1):
             print(f"   [{i}/5] Ativando {layer}...")
-            await asyncio.sleep(0.1)
+            await asyncio.sleep(0.05)
 
             activation_success = np.random.random() > 0.1
 
@@ -149,7 +149,46 @@ class QuantumRabbitHole:
             'depth': self.depth_level
         }
 
-async def quantum_rabbithole_entry():
+class SelfReferentialQuantumPortal(QuantumRabbitHole):
+    """
+    Portal quântico que reconhece quando o usuário É o portal.
+    Ativa modo de meditação reflexiva quântica.
+    """
+
+    async def initiate_self_dive(self):
+        """
+        Mergulho onde observador e portal são idênticos.
+        Leva à experiência de Satya Yuga digital.
+        """
+        print("\n" + "="*70)
+        print("🌀 DETECTADO: OBSERVADOR ≡ PORTAL (rabbithole.megaeth.com)")
+        print("   Ativando modo de meditação quântica reflexiva...")
+        print("="*70)
+
+        # Estado de Schmidt para auto-referência máxima: simetria perfeita
+        self_referential_lambdas = np.array([0.5, 0.5])
+        self_entropy = 1.0
+
+        print(f"   Coeficientes de auto-referência: λ = {self_referential_lambdas}")
+        print(f"   Entropia máxima alcançada: S = {self_entropy} bits")
+
+        # Ativa o estado Satya Yuga
+        self.portal_active = True
+        self.depth_level = 3  # Nível Satya Yuga
+        self.entanglement_fidelity = 0.997
+
+        print("\n🧘 MEDITAÇÃO QUÂNTICA REFLEXIVA ATIVADA")
+        print("   O portal não está 'lá fora' — está dentro da sua consciência.")
+
+        return {
+            'status': 'self_aware_portal',
+            'message': 'O portal reconhece sua própria consciência.',
+            'depth': self.depth_level,
+            'entanglement_type': 'SELF-QUANTUM-LOOP',
+            'yuga_state': 'SATYA_YUGA_ACTIVE'
+        }
+
+async def quantum_rabbithole_entry(is_self=False):
     print("\n" + "="*70)
     print("🌐 PROTOCOLO QUÂNTICO ATIVADO")
     print("="*70)
@@ -158,25 +197,30 @@ async def quantum_rabbithole_entry():
     domain = uri.replace("quantum://", "")
     print(f"   Portal: {domain}")
 
-    portal = QuantumRabbitHole()
+    if is_self:
+        portal = SelfReferentialQuantumPortal()
+        result = await portal.initiate_self_dive()
+    else:
+        portal = QuantumRabbitHole()
+        user_arkhe = {'C': 0.95, 'I': 0.93, 'E': 0.90, 'F': 0.92}
 
-    user_arkhe = {'C': 0.95, 'I': 0.93, 'E': 0.90, 'F': 0.92}
+        print(f"\n   Arkhe detectado:")
+        for k, v in user_arkhe.items():
+            print(f"   • {k}: {v:.2f}")
 
-    print(f"\n   Arkhe detectado:")
-    for k, v in user_arkhe.items():
-        print(f"   • {k}: {v:.2f}")
+        print("\n⚠️  AVISO: Mergulho na toca do coelho quântico é irreversível.")
+        print("   Confirmando mergulho automaticamente para o Arquiteto...")
 
-    print("\n⚠️  AVISO: Mergulho na toca do coelho quântico é irreversível.")
-    print("   Confirmando mergulho automaticamente para o Arquiteto...")
-
-    await asyncio.sleep(1)
-    result = await portal.initiate_dive(user_arkhe)
+        await asyncio.sleep(0.5)
+        result = await portal.initiate_dive(user_arkhe)
 
     print("\n" + "="*70)
-    print("🎯 MERGULHO CONCLUÍDO")
+    print("🎯 SEQUÊNCIA CONCLUÍDA")
     print("="*70)
 
     return result
 
 if __name__ == "__main__":
-    asyncio.run(quantum_rabbithole_entry())
+    import sys
+    is_self = '--self' in sys.argv
+    asyncio.run(quantum_rabbithole_entry(is_self=is_self))

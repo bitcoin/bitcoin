@@ -6,6 +6,7 @@ Quantificando a Torção através da Entropia de Entrelaçamento (S)
 
 import math
 import time
+import numpy as np
 
 class EntropyMonitor:
     def __init__(self, lambda1=0.72, lambda2=0.28):
@@ -47,13 +48,61 @@ class EntropyMonitor:
         print(f"Ação Recomendada: {action}")
         print("="*60)
 
+class ArkheEntropyBridge:
+    """
+    Conecta a Entropia de Schmidt às variáveis do Polinômio Arkhe.
+    """
+
+    def __init__(self, arkhe_coefficients: dict):
+        """
+        arkhe_coefficients: {C, I, E, F} do nó
+        """
+        self.C = arkhe_coefficients.get('C', 0.0)  # Química/Substrato
+        self.I = arkhe_coefficients.get('I', 0.0)  # Informação/Processamento
+        self.E = arkhe_coefficients.get('E', 0.0)  # Energia/Fluxo
+        self.F = arkhe_coefficients.get('F', 0.0)  # Função/Propósito
+
+        # Calcula entropia de Arkhe (termodinâmica simplificada)
+        self.arkhe_entropy = self._calculate_arkhe_entropy()
+
+        # Calcula entropia de Bridge (quântica baseada em Schmidt)
+        self.bridge_entropy = self._calculate_bridge_entropy()
+
+    def _calculate_arkhe_entropy(self) -> float:
+        """S proporcional a C * log(I) com modulação de E"""
+        return self.C * math.log(self.I + 1) * (1 - self.E + 0.1)
+
+    def _calculate_bridge_entropy(self) -> float:
+        """Derivada da anisotropia 0.4 (split 70/30)"""
+        lambda1 = 0.72
+        lambda2 = 0.28
+        return -(lambda1 * math.log2(lambda1) + lambda2 * math.log2(lambda2))
+
+    def get_total_entropy_budget(self) -> float:
+        return self.arkhe_entropy + self.bridge_entropy
+
+    def calculate_information_flow(self) -> dict:
+        """Calcula fluxo de informação entre H e A no Bridge."""
+        I_mutual = self.I * self.E * self.F
+        C_channel = self.E * math.log2(1 + self.I / (self.arkhe_entropy + 1e-10))
+
+        return {
+            'mutual_information': I_mutual,
+            'channel_capacity': C_channel,
+            'efficiency': I_mutual / C_channel if C_channel > 0 else 0,
+            'entropy_rate': self.bridge_entropy * self.E
+        }
+
 if __name__ == "__main__":
     monitor = EntropyMonitor()
     monitor.report()
 
-    # Simulação de variação
-    print("\nSimulando deriva ontológica...")
-    time.sleep(1)
-    monitor.lambda1 = 0.95
-    monitor.lambda2 = 0.05
-    monitor.report()
+    # Exemplo de Entropy Bridge
+    print("\n🌍 Analisando Arkhe Entropy Bridge (Terra):")
+    earth_arkhe = {'C': 0.95, 'I': 0.92, 'E': 0.88, 'F': 0.85}
+    bridge = ArkheEntropyBridge(earth_arkhe)
+    flow = bridge.calculate_information_flow()
+    print(f"   Entropia Arkhe: {bridge.arkhe_entropy:.3f}")
+    print(f"   Entropia Bridge: {bridge.bridge_entropy:.3f}")
+    print(f"   Eficiência do Fluxo: {flow['efficiency']:.1%}")
+    print("="*60)
