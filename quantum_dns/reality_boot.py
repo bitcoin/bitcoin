@@ -30,14 +30,19 @@ class RealityBootSequence:
         results = {}
         for phase in self.BOOT_PHASES:
             print(f"--- FASE {self.current_phase+1}: {phase} ---")
-            method = getattr(self, f'_phase_{phase}')
-            result = await method()
+            result = await self.run_phase(phase)
             results[phase] = result
             if not result['success']:
+                print(f"❌ FALHA NA FASE {phase}")
                 return {'success': False, 'failed': phase}
             self.current_phase += 1
             await asyncio.sleep(0.1)
         return {'success': True, 'state': self.schmidt_state}
+
+    async def run_phase(self, phase_name: str) -> dict:
+        """Executa uma fase individual, permitindo hooks ou wraps."""
+        method = getattr(self, f'_phase_{phase_name}')
+        return await method()
 
     async def _phase_schmidt_calibration(self):
         self.schmidt_state = SchmidtBridgeState(
