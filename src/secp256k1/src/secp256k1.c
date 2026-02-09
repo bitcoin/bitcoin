@@ -140,7 +140,7 @@ secp256k1_context* secp256k1_context_preallocated_create(void* prealloc, unsigne
 
 secp256k1_context* secp256k1_context_create(unsigned int flags) {
     size_t const prealloc_size = secp256k1_context_preallocated_size(flags);
-    secp256k1_context* ctx = (secp256k1_context*)checked_malloc(&default_error_callback, prealloc_size);
+    secp256k1_context* ctx = checked_malloc(&default_error_callback, prealloc_size);
     if (EXPECT(secp256k1_context_preallocated_create(ctx, flags) == NULL, 0)) {
         free(ctx);
         return NULL;
@@ -168,7 +168,7 @@ secp256k1_context* secp256k1_context_clone(const secp256k1_context* ctx) {
     ARG_CHECK(secp256k1_context_is_proper(ctx));
 
     prealloc_size = secp256k1_context_preallocated_clone_size(ctx);
-    ret = (secp256k1_context*)checked_malloc(&ctx->error_callback, prealloc_size);
+    ret = checked_malloc(&ctx->error_callback, prealloc_size);
     ret = secp256k1_context_preallocated_clone(ctx, ret);
     return ret;
 }
@@ -824,4 +824,8 @@ int secp256k1_tagged_sha256(const secp256k1_context* ctx, unsigned char *hash32,
 
 #ifdef ENABLE_MODULE_ELLSWIFT
 # include "modules/ellswift/main_impl.h"
+#endif
+
+#ifdef ENABLE_MODULE_SILENTPAYMENTS
+# include "modules/silentpayments/main_impl.h"
 #endif
