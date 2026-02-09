@@ -428,14 +428,18 @@ static RPCHelpMan activatemerkabah()
         },
         [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
 {
-    Avalon::System sys;
-    sys.ConnectMerkabah();
+    NodeContext& node_context{EnsureAnyNodeContext(request.context)};
+    if (!node_context.avalon_system) {
+        throw JSONRPCError(RPC_INTERNAL_ERROR, "Avalon system not initialized");
+    }
+
+    node_context.avalon_system->ConnectMerkabah();
 
     UniValue obj(UniValue::VOBJ);
-    obj.pushKV("status", "OPERATIONAL");
+    obj.pushKV("status", node_context.avalon_system->status);
     obj.pushKV("interface", "https://merkabah.lovable.app");
-    obj.pushKV("geometry", sys.merkabah.geometry);
-    obj.pushKV("frequency", sys.merkabah.rotation_rate);
+    obj.pushKV("geometry", node_context.avalon_system->merkabah.geometry);
+    obj.pushKV("frequency", node_context.avalon_system->merkabah.rotation_rate);
 
     return obj;
 },

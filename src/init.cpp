@@ -2261,13 +2261,13 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
 #endif
 
     // Integrate Avalon D-CODE 2.0 System (QWAN v2.0)
-    static Avalon::System avalon_system;
-    if (avalon_system.Activate("GROUND_STATE_7")) {
-        LogInfo(">> D-CODE 2.0 System: OPERATIONAL");
-        LogInfo(">> Ground State: %.1f/7.0", Avalon::GROUND_STATE_7);
-        if (avalon_system.ConnectMerkabah()) {
-            LogInfo(">> Merkabah Interface: CONNECTED (https://merkabah.lovable.app)");
-            LogInfo(">> SSL Handshake (Soul-Socket Layer): SUCCESSFUL");
+    node.avalon_system = std::make_unique<Avalon::System>();
+    if (node.avalon_system->Activate("GROUND_STATE_7")) {
+        LogPrintf(">> D-CODE 2.0 System: OPERATIONAL\n");
+        LogPrintf(">> Ground State: %.1f/7.0\n", Avalon::GROUND_STATE_7);
+        if (node.avalon_system->ConnectMerkabah()) {
+            LogPrintf(">> Merkabah Interface: CONNECTED (https://merkabah.lovable.app)\n");
+            LogPrintf(">> SSL Handshake (Soul-Socket Layer): SUCCESSFUL\n");
         }
     }
 
