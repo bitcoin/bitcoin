@@ -96,7 +96,6 @@ iwyu_tool.py \
   "src/rpc/fees.cpp" \
   "src/rpc/signmessage.cpp" \
   "src/test/fuzz/txorphan.cpp" \
-  "src/threadinterrupt.cpp" \
   "src/util/bip32.cpp" \
   "src/util/bytevectorhash.cpp" \
   "src/util/check.cpp" \
@@ -110,6 +109,7 @@ iwyu_tool.py \
   "src/util/string.cpp" \
   "src/util/strencodings.cpp" \
   "src/util/syserror.cpp" \
+  "src/util/threadinterrupt.cpp" \
   "src/util/url.cpp" \
   "src/zmq" \
   -p . "${MAKEJOBS}" \

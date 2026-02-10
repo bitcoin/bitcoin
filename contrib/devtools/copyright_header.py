@@ -28,7 +28,6 @@ EXCLUDE = [
     'src/wallet/bip39.cpp',
     'src/wallet/bip39.h',
     'src/wallet/bip39_english.h',
-    'test/functional/test_framework/bignum.py',
     # python init:
     '*__init__.py',
 ]
