@@ -285,6 +285,9 @@ namespace BCLog {
         static std::string LogLevelToStr(BCLog::Level level);
 
         bool DefaultShrinkDebugFile() const;
+
+        //! Return log flag if str parses as a log category.
+        static std::optional<BCLog::LogFlags> GetLogCategory(std::string_view str);
     };
 } // namespace BCLog
 
@@ -295,8 +298,5 @@ static inline bool LogAcceptCategory(BCLog::LogFlags category, BCLog::Level leve
 {
     return LogInstance().WillLogCategoryLevel(category, level);
 }
-
-/// Return log flag if str parses as a log category.
-std::optional<BCLog::LogFlags> GetLogCategory(std::string_view str);
 
 #endif // BITCOIN_LOGGING_H
