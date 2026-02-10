@@ -1064,7 +1064,7 @@ static bool rest_getutxos(const std::any& context, HTTPRequest* req, const std::
         UniValue utxos(UniValue::VARR);
         for (const CCoin& coin : outs) {
             UniValue utxo(UniValue::VOBJ);
-            utxo.pushKV("height", (int32_t)coin.nHeight);
+            utxo.pushKV("height", coin.nHeight);
             utxo.pushKV("value", ValueFromAmount(coin.out.nValue));
 
             // include the script in a json output

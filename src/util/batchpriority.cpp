@@ -4,7 +4,7 @@
 
 #include <util/batchpriority.h>
 
-#include <logging.h>
+#include <util/log.h>
 #include <util/syserror.h>
 
 #include <string>

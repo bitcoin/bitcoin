@@ -7,7 +7,6 @@
 #include <consensus/merkle.h>
 #include <consensus/params.h>
 #include <consensus/validation.h>
-#include <logging.h>
 #include <primitives/block.h>
 #include <primitives/transaction.h>
 #include <script/interpreter.h>
@@ -15,6 +14,7 @@
 #include <streams.h>
 #include <uint256.h>
 #include <util/check.h>
+#include <util/log.h>
 
 #include <algorithm>
 #include <cstddef>

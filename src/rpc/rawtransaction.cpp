@@ -1092,7 +1092,7 @@ static RPCHelpMan decodepsbt()
     result.pushKV("global_xpubs", std::move(global_xpubs));
 
     // PSBT version
-    result.pushKV("psbt_version", static_cast<uint64_t>(psbtx.GetVersion()));
+    result.pushKV("psbt_version", psbtx.GetVersion());
 
     // Proprietary
     UniValue proprietary(UniValue::VARR);

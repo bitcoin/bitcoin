@@ -6,12 +6,12 @@
 #include <script/sigcache.h>
 
 #include <crypto/sha256.h>
-#include <logging.h>
 #include <pubkey.h>
 #include <random.h>
 #include <script/interpreter.h>
 #include <span.h>
 #include <uint256.h>
+#include <util/log.h>
 
 #include <mutex>
 #include <shared_mutex>

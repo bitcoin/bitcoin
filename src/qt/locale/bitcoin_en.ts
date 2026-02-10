@@ -345,7 +345,7 @@ Signing is only possible with addresses of the type &apos;legacy&apos;.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+184"/>
+        <location line="+185"/>
         <source>Runaway exception</source>
         <translation type="unfinished"></translation>
     </message>
@@ -368,7 +368,7 @@ Signing is only possible with addresses of the type &apos;legacy&apos;.</source>
 <context>
     <name>BitcoinGUI</name>
     <message>
-        <location filename="../bitcoingui.cpp" line="+252"/>
+        <location filename="../bitcoingui.cpp" line="+258"/>
         <source>&amp;Overview</source>
         <translation>&amp;Overview</translation>
     </message>
@@ -428,7 +428,7 @@ Signing is only possible with addresses of the type &apos;legacy&apos;.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+188"/>
+        <location line="+218"/>
         <source>&amp;Minimize</source>
         <translation type="unfinished"></translation>
     </message>
@@ -449,7 +449,7 @@ Signing is only possible with addresses of the type &apos;legacy&apos;.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="-1220"/>
+        <location line="-1250"/>
         <source>Send coins to a Bitcoin address</source>
         <translation>Send coins to a Bitcoin address</translation>
     </message>
@@ -544,7 +544,7 @@ Signing is only possible with addresses of the type &apos;legacy&apos;.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+146"/>
+        <location line="+176"/>
         <source>&amp;File</source>
         <translation>&amp;File</translation>
     </message>
@@ -589,7 +589,7 @@ Signing is only possible with addresses of the type &apos;legacy&apos;.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="-883"/>
+        <location line="-913"/>
         <source>Request payments (generates QR codes and bitcoin: URIs)</source>
         <translation type="unfinished"></translation>
     </message>
@@ -609,7 +609,7 @@ Signing is only possible with addresses of the type &apos;legacy&apos;.</source>
         <translation type="unfinished"></translation>
     </message>
     <message numerus="yes">
-        <location line="+794"/>
+        <location line="+824"/>
         <source>Processed %n block(s) of transaction history.</source>
         <translation>
             <numerusform>Processed %n block of transaction history.</numerusform>
@@ -657,7 +657,7 @@ Signing is only possible with addresses of the type &apos;legacy&apos;.</source>
         <translation>Up to date</translation>
     </message>
     <message>
-        <location line="-868"/>
+        <location line="-898"/>
         <source>Ctrl+Q</source>
         <translation type="unfinished"></translation>
     </message>
@@ -760,18 +760,19 @@ Signing is only possible with addresses of the type &apos;legacy&apos;.</source>
     </message>
     <message>
         <location line="+55"/>
-        <location line="+59"/>
+        <location line="+63"/>
         <source>No wallets available</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="-53"/>
+        <location line="-57"/>
+        <location line="+65"/>
         <source>Wallet Data</source>
         <extracomment>Name of the wallet data file format.</extracomment>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+3"/>
+        <location line="-62"/>
         <source>Load Wallet Backup</source>
         <extracomment>The title for Restore Wallet File Windows</extracomment>
         <translation type="unfinished"></translation>
@@ -784,12 +785,39 @@ Signing is only possible with addresses of the type &apos;legacy&apos;.</source>
     </message>
     <message>
         <location line="+2"/>
+        <location line="+63"/>
         <source>Wallet Name</source>
         <extracomment>Label of the input field where the name of the wallet is entered.</extracomment>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+90"/>
+        <location line="-59"/>
+        <source>Invalid Wallet Name</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+0"/>
+        <source>Wallet name cannot be empty</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+44"/>
+        <source>Restore and Migrate Wallet File...</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+5"/>
+        <source>Restore and Migrate Wallet Backup</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+8"/>
+        <source>Restore and Migrate Wallet</source>
+        <extracomment>Title of pop-up window shown when the user is attempting to restore a wallet.</extracomment>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+59"/>
         <source>&amp;Window</source>
         <translation type="unfinished">&amp;Window</translation>
     </message>
@@ -1206,7 +1234,7 @@ Signing is only possible with addresses of the type &apos;legacy&apos;.</source>
     </message>
     <message>
         <location line="+7"/>
-        <source>Make a blank wallet. Blank wallets do not initially have private keys or scripts. Private keys and addresses can be imported, or an HD seed can be set, at a later time.</source>
+        <source>Make a blank wallet. Blank wallets do not initially have private keys or scripts. Private keys and addresses can be imported using descriptors at a later time.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -1499,7 +1527,7 @@ Signing is only possible with addresses of the type &apos;legacy&apos;.</source>
 <context>
     <name>MigrateWalletActivity</name>
     <message>
-        <location line="+63"/>
+        <location line="+94"/>
         <source>Migrate wallet</source>
         <translation type="unfinished"></translation>
     </message>
@@ -1518,7 +1546,7 @@ The migration process will create a backup of the wallet before migrating. This 
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+17"/>
+        <location line="-28"/>
         <source>Migrate Wallet</source>
         <translation type="unfinished"></translation>
     </message>
@@ -1543,7 +1571,40 @@ The migration process will create a backup of the wallet before migrating. This 
         <translation type="unfinished"></translation>
     </message>
     <message>
+        <location line="+34"/>
+        <source>Restore and Migrate wallet</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Are you sure you wish to restore the wallet file &lt;i&gt;%1&lt;/i&gt; to &lt;i&gt;%2&lt;/i&gt; and migrate it?</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Restoring the wallet will copy the backup file to the wallets directory and place it in the standard wallet directory layout. The original file will not be modified.
+
+Migrating the wallet will convert the restored wallet to one or more descriptor wallets. A new wallet backup will need to be made.
+If this wallet contains any watchonly scripts, a new wallet will be created which contains those watchonly scripts.
+If this wallet contains any solvable but not watched scripts, a different and new wallet will be created which contains those scripts.
+
+The migration process will create a backup of the wallet before migrating. This backup file will be named &lt;wallet name&gt;-&lt;timestamp&gt;.legacy.bak and can be found in the directory for this wallet. In the event of an incorrect migration, the backup can be restored with the &quot;Restore Wallet&quot; functionality.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
         <location line="+14"/>
+        <source>Restore Wallet</source>
+        <extracomment>Title of progress window which is displayed when wallets are being restored.</extracomment>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>Restoring Wallet &lt;b&gt;%1&lt;/b&gt;…</source>
+        <extracomment>Descriptive text of the restore wallets progress window which indicates to the user that wallets are currently being restored.</extracomment>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+19"/>
         <source>Migration failed</source>
         <translation type="unfinished"></translation>
     </message>
@@ -1656,7 +1717,7 @@ The migration process will create a backup of the wallet before migrating. This 
 <context>
     <name>OpenWalletActivity</name>
     <message>
-        <location filename="../walletcontroller.cpp" line="-155"/>
+        <location filename="../walletcontroller.cpp" line="-199"/>
         <source>Open wallet failed</source>
         <translation type="unfinished"></translation>
     </message>
@@ -2502,7 +2563,7 @@ If you are receiving this error you should request the merchant provide a BIP21 
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+295"/>
+        <location line="+288"/>
         <source>Ctrl+W</source>
         <translation type="unfinished"></translation>
     </message>
@@ -2586,6 +2647,12 @@ If you are receiving this error you should request the merchant provide a BIP21 
         <location line="+2"/>
         <source>Address Fetch</source>
         <extracomment>Short-lived peer connection type that solicits known addresses from a peer.</extracomment>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>Private Broadcast</source>
+        <extracomment>Short-lived peer connection type that is used for broadcasting privacy-sensitive data.</extracomment>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -2689,7 +2756,7 @@ If you are receiving this error you should request the merchant provide a BIP21 
     </message>
     <message>
         <location line="+2"/>
-        <location filename="../rpcconsole.cpp" line="+979"/>
+        <location filename="../rpcconsole.cpp" line="+985"/>
         <source>%1 kB</source>
         <translation type="unfinished"></translation>
     </message>
@@ -2711,7 +2778,7 @@ If you are receiving this error you should request the merchant provide a BIP21 
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../bitcoin.cpp" line="-287"/>
+        <location filename="../bitcoin.cpp" line="-288"/>
         <source>Do you want to reset settings to default values, or to abort without making changes?</source>
         <extracomment>Explanatory text shown on startup when the settings file cannot be read. Prompts user to make a choice between resetting or aborting.</extracomment>
         <translation type="unfinished"></translation>
@@ -2723,7 +2790,7 @@ If you are receiving this error you should request the merchant provide a BIP21 
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+422"/>
+        <location line="+418"/>
         <source>Error: %1</source>
         <translation type="unfinished"></translation>
     </message>
@@ -2819,7 +2886,6 @@ If you are receiving this error you should request the merchant provide a BIP21 
         <location line="+23"/>
         <location line="+23"/>
         <location line="+23"/>
-        <location line="+23"/>
         <location line="+26"/>
         <location line="+26"/>
         <location line="+23"/>
@@ -2834,12 +2900,12 @@ If you are receiving this error you should request the merchant provide a BIP21 
         <location line="+26"/>
         <location line="+26"/>
         <location line="+26"/>
-        <location filename="../rpcconsole.h" line="+144"/>
+        <location filename="../rpcconsole.h" line="+147"/>
         <source>N/A</source>
         <translation>N/A</translation>
     </message>
     <message>
-        <location line="-1759"/>
+        <location line="-1736"/>
         <source>Client version</source>
         <translation>Client version</translation>
     </message>
@@ -2941,18 +3007,18 @@ If you are receiving this error you should request the merchant provide a BIP21 
     </message>
     <message>
         <location line="+80"/>
-        <location line="+835"/>
+        <location line="+812"/>
         <source>Received</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="-755"/>
-        <location line="+732"/>
+        <location line="-732"/>
+        <location line="+709"/>
         <source>Sent</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="-691"/>
+        <location line="-668"/>
         <source>&amp;Peers</source>
         <translation type="unfinished"></translation>
     </message>
@@ -3009,11 +3075,6 @@ If you are receiving this error you should request the merchant provide a BIP21 
     </message>
     <message>
         <location line="+49"/>
-        <source>Starting Block</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location line="+23"/>
         <source>Synced Headers</source>
         <translation type="unfinished"></translation>
     </message>
@@ -3074,7 +3135,7 @@ If you are receiving this error you should request the merchant provide a BIP21 
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="-1726"/>
+        <location line="-1703"/>
         <location line="+1213"/>
         <source>User Agent</source>
         <translation type="unfinished"></translation>
@@ -3145,7 +3206,7 @@ If you are receiving this error you should request the merchant provide a BIP21 
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+92"/>
+        <location line="+69"/>
         <source>Connection Time</source>
         <translation type="unfinished"></translation>
     </message>
@@ -3201,7 +3262,7 @@ If you are receiving this error you should request the merchant provide a BIP21 
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="-1385"/>
+        <location line="-1362"/>
         <source>Last block time</source>
         <translation>Last block time</translation>
     </message>
@@ -3276,7 +3337,7 @@ If you are receiving this error you should request the merchant provide a BIP21 
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../rpcconsole.cpp" line="-469"/>
+        <location filename="../rpcconsole.cpp" line="-472"/>
         <source>Inbound: initiated by peer</source>
         <extracomment>Explanatory text for an inbound peer connection.</extracomment>
         <translation type="unfinished"></translation>
@@ -3309,6 +3370,12 @@ If you are receiving this error you should request the merchant provide a BIP21 
         <location line="+3"/>
         <source>Outbound Address Fetch: short-lived, for soliciting addresses</source>
         <extracomment>Explanatory text for a short-lived outbound peer connection that is used to request addresses from a peer.</extracomment>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>Private broadcast: short-lived, for broadcasting privacy-sensitive transactions</source>
+        <extracomment>Explanatory text for a short-lived outbound peer connection that is used to broadcast privacy-sensitive data (like our transactions).</extracomment>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -3426,7 +3493,7 @@ If you are receiving this error you should request the merchant provide a BIP21 
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+326"/>
+        <location line="+321"/>
         <source>Ctrl+I</source>
         <translation type="unfinished"></translation>
     </message>
@@ -3451,7 +3518,7 @@ If you are receiving this error you should request the merchant provide a BIP21 
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="-349"/>
+        <location line="-344"/>
         <source>Executing command using &quot;%1&quot; wallet</source>
         <translation type="unfinished"></translation>
     </message>
@@ -4583,7 +4650,7 @@ Note:  Since the fee is calculated on a per-byte basis, a fee rate of &quot;100 
 <context>
     <name>TransactionDesc</name>
     <message>
-        <location filename="../transactiondesc.cpp" line="+39"/>
+        <location filename="../transactiondesc.cpp" line="+34"/>
         <source>conflicted with a transaction with %1 confirmations</source>
         <extracomment>Text explaining the current status of a transaction, shown in the status field of the details window for this transaction. This status represents an unconfirmed transaction that conflicts with a confirmed transaction.</extracomment>
         <translation type="unfinished"></translation>
@@ -4640,7 +4707,7 @@ Note:  Since the fee is calculated on a per-byte basis, a fee rate of &quot;100 
     </message>
     <message>
         <location line="+5"/>
-        <location line="+14"/>
+        <location line="+13"/>
         <source>From</source>
         <translation type="unfinished"></translation>
     </message>
@@ -4652,32 +4719,32 @@ Note:  Since the fee is calculated on a per-byte basis, a fee rate of &quot;100 
     <message>
         <location line="+1"/>
         <location line="+20"/>
-        <location line="+66"/>
+        <location line="+57"/>
         <source>To</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="-84"/>
-        <location line="+91"/>
+        <location line="-75"/>
+        <location line="+82"/>
         <source>own address</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="-89"/>
+        <location line="-80"/>
         <source>label</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
         <location line="+36"/>
         <location line="+12"/>
-        <location line="+48"/>
+        <location line="+39"/>
         <location line="+30"/>
         <location line="+60"/>
         <source>Credit</source>
         <translation type="unfinished"></translation>
     </message>
     <message numerus="yes">
-        <location line="-148"/>
+        <location line="-139"/>
         <source>matures in %n more block(s)</source>
         <translation>
             <numerusform>matures in %n more block</numerusform>
@@ -4690,7 +4757,7 @@ Note:  Since the fee is calculated on a per-byte basis, a fee rate of &quot;100 
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+54"/>
+        <location line="+45"/>
         <location line="+26"/>
         <location line="+63"/>
         <source>Debit</source>
@@ -5113,7 +5180,7 @@ Note:  Since the fee is calculated on a per-byte basis, a fee rate of &quot;100 
 <context>
     <name>UnitDisplayStatusBarControl</name>
     <message>
-        <location filename="../bitcoingui.cpp" line="+39"/>
+        <location filename="../bitcoingui.cpp" line="+46"/>
         <source>Unit to show amounts in. Click to select another unit.</source>
         <translation type="unfinished"></translation>
     </message>
@@ -5333,12 +5400,12 @@ Go to File &gt; Open Wallet to load a wallet.
 <context>
     <name>bitcoin-core</name>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="+206"/>
+        <location filename="../bitcoinstrings.cpp" line="+208"/>
         <source>The %s developers</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="-194"/>
+        <location line="-196"/>
         <source>%s failed to validate the -assumeutxo snapshot state. This indicates a hardware problem, or a bug in the software, or a bad software modification that allowed an invalid snapshot to be loaded. As a result of this, the node will shut down and stop using any state that was built on the snapshot, resetting the chain height from %d to %d. On the next restart, the node will resume syncing from %d without using any snapshot data. Please report this incident to %s, including how you obtained the snapshot. The invalid snapshot chainstate will be left on disk in case it is helpful in diagnosing the issue that caused this error.</source>
         <translation type="unfinished"></translation>
     </message>
@@ -5348,7 +5415,7 @@ Go to File &gt; Open Wallet to load a wallet.
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+23"/>
+        <location line="+25"/>
         <source>Disk space for %s may not accommodate the block files. Approximately %u GB of data will be stored in this directory.</source>
         <translation type="unfinished"></translation>
     </message>
@@ -5393,7 +5460,7 @@ Go to File &gt; Open Wallet to load a wallet.
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+31"/>
+        <location line="+28"/>
         <source>File %s already exists. If you are sure this is what you want, move it out of the way first.</source>
         <translation type="unfinished"></translation>
     </message>
@@ -5428,7 +5495,7 @@ Go to File &gt; Open Wallet to load a wallet.
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+2"/>
+        <location line="+5"/>
         <source>Prune configured below the minimum of %d MiB.  Please use a higher number.</source>
         <translation type="unfinished"></translation>
     </message>
@@ -5498,13 +5565,8 @@ Go to File &gt; Open Wallet to load a wallet.
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+8"/>
+        <location line="+9"/>
         <source>Warning: Private keys detected in wallet {%s} with disabled private keys</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location line="+1"/>
-        <source>Warning: We do not appear to fully agree with our peers! You may need to upgrade, or other nodes may need to upgrade.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -5518,12 +5580,12 @@ Go to File &gt; Open Wallet to load a wallet.
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="-253"/>
+        <location line="-255"/>
         <source>%s is set very high!</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+3"/>
+        <location line="+4"/>
         <source>-maxmempool must be at least %d MB</source>
         <translation type="unfinished"></translation>
     </message>
@@ -5548,22 +5610,22 @@ Go to File &gt; Open Wallet to load a wallet.
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="-14"/>
+        <location line="-15"/>
         <source>%s is set very high! Fees this large could be paid on a single transaction.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+11"/>
+        <location line="+12"/>
         <source>Cannot provide specific connections and have addrman find outgoing connections at the same time.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+23"/>
+        <location line="+25"/>
         <source>Error loading %s: External signer wallet being loaded without external signer support compiled</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+10"/>
+        <location line="+9"/>
         <source>Error reading %s! All keys read correctly, but transaction data or address metadata may be missing or incorrect.</source>
         <translation type="unfinished"></translation>
     </message>
@@ -5583,7 +5645,7 @@ Go to File &gt; Open Wallet to load a wallet.
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+23"/>
+        <location line="+22"/>
         <source>Failed to remove snapshot chainstate dir (%s). Manually remove it before restarting.
 </source>
         <translation type="unfinished"></translation>
@@ -5594,7 +5656,7 @@ Go to File &gt; Open Wallet to load a wallet.
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+9"/>
+        <location line="+7"/>
         <source>Fee estimation failed. Fallbackfee is disabled. Wait a few blocks or enable %s.</source>
         <translation type="unfinished"></translation>
     </message>
@@ -5634,17 +5696,7 @@ Go to File &gt; Open Wallet to load a wallet.
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+1"/>
-        <source>Option &apos;-maxorphantx&apos; is set but no longer has any effect (see release notes). Please remove it from your configuration.</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location line="+1"/>
-        <source>Options &apos;-datacarrier&apos; or &apos;-datacarriersize&apos; are set but are marked as deprecated. They will be removed in a future version.</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location line="+1"/>
+        <location line="+3"/>
         <source>Outbound connections restricted to CJDNS (-onlynet=cjdns) but -cjdnsreachable is not provided</source>
         <translation type="unfinished"></translation>
     </message>
@@ -5664,7 +5716,7 @@ Go to File &gt; Open Wallet to load a wallet.
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+6"/>
+        <location line="+9"/>
         <source>Prune: last wallet synchronisation goes beyond pruned data. You need to -reindex (download the whole blockchain again in case of a pruned node)</source>
         <translation type="unfinished"></translation>
     </message>
@@ -5749,12 +5801,12 @@ Unable to restore backup of wallet.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="-255"/>
+        <location line="-256"/>
         <source>-paytxfee is deprecated and will be fully removed in v31.0.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+1"/>
+        <location line="+2"/>
         <source>A fatal internal error occurred, see debug.log for details: </source>
         <translation type="unfinished"></translation>
     </message>
@@ -5776,11 +5828,6 @@ Unable to restore backup of wallet.</source>
     <message>
         <location line="+1"/>
         <source>Can&apos;t spend unconfirmed version 3 pre-selected input with a version %d tx</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location line="+1"/>
-        <source>Cannot add WalletDescriptor to a non-descriptor wallet</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -5829,7 +5876,7 @@ Unable to restore backup of wallet.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+2"/>
+        <location line="+3"/>
         <source>Disk space is too low!</source>
         <translation type="unfinished"></translation>
     </message>
@@ -5844,17 +5891,12 @@ Unable to restore backup of wallet.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+1"/>
+        <location line="+2"/>
         <source>Elliptic curve cryptography sanity check failure. %s is shutting down.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+1"/>
-        <source>Error creating %s</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location line="+1"/>
+        <location line="+2"/>
         <source>Error initializing block database</source>
         <translation type="unfinished"></translation>
     </message>
@@ -5865,11 +5907,6 @@ Unable to restore backup of wallet.</source>
     </message>
     <message>
         <location line="+2"/>
-        <source>Error loading %s: Private keys can only be disabled during creation</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location line="+1"/>
         <source>Error loading %s: Wallet corrupted</source>
         <translation type="unfinished"></translation>
     </message>
@@ -6055,11 +6092,6 @@ Unable to restore backup of wallet.</source>
     </message>
     <message>
         <location line="+1"/>
-        <source>Failed to connect best block (%s).</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location line="+1"/>
         <source>Failed to disconnect block.</source>
         <translation type="unfinished"></translation>
     </message>
@@ -6086,16 +6118,6 @@ Unable to restore backup of wallet.</source>
     <message>
         <location line="+1"/>
         <source>Failed to write block.</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location line="+1"/>
-        <source>Failed to write to block index database.</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location line="+1"/>
-        <source>Failed to write to coin database.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -6174,7 +6196,32 @@ Unable to restore backup of wallet.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
+        <location line="-119"/>
+        <source>-asmap requires a file path. Use -asmap=&lt;file&gt;.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
         <location line="+3"/>
+        <source>A %zu MiB dbcache may be too large for a system memory of only %zu MiB.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+20"/>
+        <source>Creating wallet…</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+7"/>
+        <source>Duplicate binding configuration for address %s. Please check your -bind, -bind=...=onion and -whitebind settings.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>Error creating %s: Could not write version metadata.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+90"/>
         <source>Invalid amount for -%s=&lt;amount&gt;: &apos;%s&apos;</source>
         <translation type="unfinished"></translation>
     </message>
@@ -6254,7 +6301,32 @@ Unable to restore backup of wallet.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+9"/>
+        <location line="+2"/>
+        <source>Option &apos;-limitancestorsize&apos; is given but ancestor size limits have been replaced with cluster size limits (see -limitclustersize). This option has no effect.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Option &apos;-limitdescendantsize&apos; is given but descendant size limits have been replaced with cluster size limits (see -limitclustersize). This option has no effect.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+6"/>
+        <source>Private broadcast of own transactions requested (-privatebroadcast) and -proxyrandomize is disabled. Tor circuits for private broadcast connections may be correlated to other connections over Tor. For maximum privacy set -proxyrandomize=1.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Private broadcast of own transactions requested (-privatebroadcast), but -connect is also configured. They are incompatible because the private broadcast needs to open new connections to randomly chosen Tor or I2P peers. Consider using -maxconnections=0 -addnode=... instead</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Private broadcast of own transactions requested (-privatebroadcast), but none of Tor or I2P networks is reachable</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+1"/>
         <source>Prune cannot be configured with a negative value.</source>
         <translation type="unfinished"></translation>
     </message>
@@ -6534,7 +6606,12 @@ Unable to restore backup of wallet.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+9"/>
+        <location line="+2"/>
+        <source>Warning: Found invalid chain more than 6 blocks longer than our best chain. This could be due to database corruption or consensus incompatibility with peers.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+7"/>
         <source>acceptstalefeeestimates is not supported on %s chain.</source>
         <translation type="unfinished"></translation>
     </message>
@@ -6598,12 +6675,12 @@ Please try running the latest software version.
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+13"/>
+        <location line="+12"/>
         <source>Failed to start indexes, shutting down…</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+21"/>
+        <location line="+19"/>
         <source>Invalid -proxy address or hostname, ends with &apos;=&apos;: &apos;%s&apos;</source>
         <translation type="unfinished"></translation>
     </message>
@@ -6613,7 +6690,7 @@ Please try running the latest software version.
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+94"/>
+        <location line="+97"/>
         <source>Unrecognized network in -proxy=&apos;%s&apos;: &apos;%s&apos;</source>
         <translation type="unfinished"></translation>
     </message>

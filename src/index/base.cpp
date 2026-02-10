@@ -10,7 +10,6 @@
 #include <interfaces/chain.h>
 #include <interfaces/types.h>
 #include <kernel/types.h>
-#include <logging.h>
 #include <node/abort.h>
 #include <node/blockstorage.h>
 #include <node/context.h>
@@ -22,6 +21,7 @@
 #include <uint256.h>
 #include <undo.h>
 #include <util/fs.h>
+#include <util/log.h>
 #include <util/string.h>
 #include <util/thread.h>
 #include <util/threadinterrupt.h>

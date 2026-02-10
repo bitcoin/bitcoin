@@ -10,10 +10,10 @@
 #include <kernel/mempool_entry.h>
 #include <kernel/mempool_removal_reason.h>
 #include <kernel/types.h>
-#include <logging.h>
 #include <primitives/block.h>
 #include <primitives/transaction.h>
 #include <util/check.h>
+#include <util/log.h>
 #include <util/task_runner.h>
 
 #include <future>

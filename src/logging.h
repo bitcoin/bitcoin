@@ -7,10 +7,10 @@
 #define BITCOIN_LOGGING_H
 
 #include <crypto/siphash.h>
+#include <logging/categories.h> // IWYU pragma: export
 #include <threadsafety.h>
-#include <tinyformat.h>
-#include <util/check.h>
 #include <util/fs.h>
+#include <util/log.h> // IWYU pragma: export
 #include <util/string.h>
 #include <util/time.h>
 
@@ -20,11 +20,8 @@
 #include <functional>
 #include <list>
 #include <memory>
-#include <mutex>
-#include <source_location>
 #include <string>
 #include <unordered_map>
-#include <unordered_set>
 #include <vector>
 
 static const bool DEFAULT_LOGTIMEMICROS = false;
@@ -36,26 +33,6 @@ static constexpr bool DEFAULT_LOGLEVELALWAYS = false;
 extern const char * const DEFAULT_DEBUGLOGFILE;
 
 extern bool fLogIPs;
-
-/// Like std::source_location, but allowing to override the function name.
-class SourceLocation
-{
-public:
-    /// The func argument must be constructed from the C++11 __func__ macro.
-    /// Ref: https://en.cppreference.com/w/cpp/language/function.html#func
-    /// Non-static string literals are not supported.
-    SourceLocation(const char* func,
-                   std::source_location loc = std::source_location::current())
-        : m_func{func}, m_loc{loc} {}
-
-    std::string_view file_name() const { return m_loc.file_name(); }
-    std::uint_least32_t line() const { return m_loc.line(); }
-    std::string_view function_name_short() const { return m_func; }
-
-private:
-    std::string_view m_func;
-    std::source_location m_loc;
-};
 
 struct SourceLocationEqual {
     bool operator()(const SourceLocation& lhs, const SourceLocation& rhs) const noexcept
@@ -81,51 +58,6 @@ struct LogCategory {
 };
 
 namespace BCLog {
-    using CategoryMask = uint64_t;
-    enum LogFlags : CategoryMask {
-        NONE        = CategoryMask{0},
-        NET         = (CategoryMask{1} <<  0),
-        TOR         = (CategoryMask{1} <<  1),
-        MEMPOOL     = (CategoryMask{1} <<  2),
-        HTTP        = (CategoryMask{1} <<  3),
-        BENCH       = (CategoryMask{1} <<  4),
-        ZMQ         = (CategoryMask{1} <<  5),
-        WALLETDB    = (CategoryMask{1} <<  6),
-        RPC         = (CategoryMask{1} <<  7),
-        ESTIMATEFEE = (CategoryMask{1} <<  8),
-        ADDRMAN     = (CategoryMask{1} <<  9),
-        SELECTCOINS = (CategoryMask{1} << 10),
-        REINDEX     = (CategoryMask{1} << 11),
-        CMPCTBLOCK  = (CategoryMask{1} << 12),
-        RAND        = (CategoryMask{1} << 13),
-        PRUNE       = (CategoryMask{1} << 14),
-        PROXY       = (CategoryMask{1} << 15),
-        MEMPOOLREJ  = (CategoryMask{1} << 16),
-        LIBEVENT    = (CategoryMask{1} << 17),
-        COINDB      = (CategoryMask{1} << 18),
-        QT          = (CategoryMask{1} << 19),
-        LEVELDB     = (CategoryMask{1} << 20),
-        VALIDATION  = (CategoryMask{1} << 21),
-        I2P         = (CategoryMask{1} << 22),
-        IPC         = (CategoryMask{1} << 23),
-#ifdef DEBUG_LOCKCONTENTION
-        LOCK        = (CategoryMask{1} << 24),
-#endif
-        BLOCKSTORAGE = (CategoryMask{1} << 25),
-        TXRECONCILIATION = (CategoryMask{1} << 26),
-        SCAN        = (CategoryMask{1} << 27),
-        TXPACKAGES  = (CategoryMask{1} << 28),
-        KERNEL      = (CategoryMask{1} << 29),
-        PRIVBROADCAST = (CategoryMask{1} << 30),
-        ALL         = ~NONE,
-    };
-    enum class Level {
-        Trace = 0, // High-volume or detailed logging for development/debugging
-        Debug,     // Reasonably noisy logging, but still usable in production
-        Info,      // Default
-        Warning,
-        Error,
-    };
     constexpr auto DEFAULT_LOG_LEVEL{Level::Debug};
     constexpr size_t DEFAULT_MAX_LOG_BUFFER{1'000'000}; // buffer up to 1MB of log data prior to StartLogging
     constexpr uint64_t RATELIMIT_MAX_BYTES{1024 * 1024}; // maximum number of bytes per source location that can be logged within the RATELIMIT_WINDOW
@@ -366,50 +298,5 @@ static inline bool LogAcceptCategory(BCLog::LogFlags category, BCLog::Level leve
 
 /** Return true if str parses as a log category and set the flag */
 bool GetLogCategory(BCLog::LogFlags& flag, std::string_view str);
-
-template <typename... Args>
-inline void LogPrintFormatInternal(SourceLocation&& source_loc, BCLog::LogFlags flag, BCLog::Level level, bool should_ratelimit, util::ConstevalFormatString<sizeof...(Args)> fmt, const Args&... args)
-{
-    if (LogInstance().Enabled()) {
-        std::string log_msg;
-        try {
-            log_msg = tfm::format(fmt, args...);
-        } catch (tinyformat::format_error& fmterr) {
-            log_msg = "Error \"" + std::string{fmterr.what()} + "\" while formatting log message: " + fmt.fmt;
-        }
-        LogInstance().LogPrintStr(log_msg, std::move(source_loc), flag, level, should_ratelimit);
-    }
-}
-
-// Allow __func__ to be used in any context without warnings:
-// NOLINTNEXTLINE(bugprone-lambda-function-name)
-#define LogPrintLevel_(category, level, should_ratelimit, ...) LogPrintFormatInternal(SourceLocation{__func__}, category, level, should_ratelimit, __VA_ARGS__)
-
-// Log unconditionally. Uses basic rate limiting to mitigate disk filling attacks.
-// Be conservative when using functions that unconditionally log to debug.log!
-// It should not be the case that an inbound peer can fill up a user's storage
-// with debug.log entries.
-#define LogInfo(...) LogPrintLevel_(BCLog::LogFlags::ALL, BCLog::Level::Info, /*should_ratelimit=*/true, __VA_ARGS__)
-#define LogWarning(...) LogPrintLevel_(BCLog::LogFlags::ALL, BCLog::Level::Warning, /*should_ratelimit=*/true, __VA_ARGS__)
-#define LogError(...) LogPrintLevel_(BCLog::LogFlags::ALL, BCLog::Level::Error, /*should_ratelimit=*/true, __VA_ARGS__)
-
-// Use a macro instead of a function for conditional logging to prevent
-// evaluating arguments when logging for the category is not enabled.
-
-// Log by prefixing the output with the passed category name and severity level. This logs conditionally if
-// the category is allowed. No rate limiting is applied, because users specifying -debug are assumed to be
-// developers or power users who are aware that -debug may cause excessive disk usage due to logging.
-#define detail_LogIfCategoryAndLevelEnabled(category, level, ...)     \
-    do {                                                              \
-        if (LogAcceptCategory((category), (level))) {                 \
-            bool rate_limit{level >= BCLog::Level::Info};             \
-            Assume(!rate_limit);/*Only called with the levels below*/ \
-            LogPrintLevel_(category, level, rate_limit, __VA_ARGS__); \
-        }                                                             \
-    } while (0)
-
-// Log conditionally, prefixing the output with the passed category name.
-#define LogDebug(category, ...) detail_LogIfCategoryAndLevelEnabled(category, BCLog::Level::Debug, __VA_ARGS__)
-#define LogTrace(category, ...) detail_LogIfCategoryAndLevelEnabled(category, BCLog::Level::Trace, __VA_ARGS__)
 
 #endif // BITCOIN_LOGGING_H

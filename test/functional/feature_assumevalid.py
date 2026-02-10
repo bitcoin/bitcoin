@@ -164,6 +164,7 @@ class AssumeValidTest(BitcoinTestFramework):
             self.send_blocks_until_disconnected(p2p0)
             self.wait_until(lambda: self.nodes[0].getblockcount() >= COINBASE_MATURITY + 1)
             assert_equal(self.nodes[0].getblockcount(), COINBASE_MATURITY + 1)
+            self.wait_until(lambda: next(filter(lambda x: x["hash"] == self.blocks[-1].hash_hex, self.nodes[0].getchaintips()))["status"] == "invalid")
 
 
         # nodes[1]

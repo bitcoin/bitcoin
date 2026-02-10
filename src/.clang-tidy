@@ -37,7 +37,7 @@ CheckOptions:
  - key: modernize-deprecated-headers.CheckHeaderFile
    value: false
  - key: performance-move-const-arg.CheckTriviallyCopyableMove
-   value: false
+   value: false  # Disabled, to allow the bugprone-use-after-move rule on trivially copyable types, to catch logic bugs
  - key: bugprone-unhandled-self-assignment.WarnOnlyIfThisHasSuspiciousField
    value: false
  - key: bugprone-unused-return-value.CheckedReturnTypes

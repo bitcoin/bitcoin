@@ -28,7 +28,6 @@
 #include <kernel/notifications_interface.h>
 #include <kernel/types.h>
 #include <kernel/warning.h>
-#include <logging.h>
 #include <logging/timer.h>
 #include <node/blockstorage.h>
 #include <node/utxo_snapshot.h>
@@ -53,6 +52,7 @@
 #include <util/fs.h>
 #include <util/fs_helpers.h>
 #include <util/hasher.h>
+#include <util/log.h>
 #include <util/moneystr.h>
 #include <util/rbf.h>
 #include <util/result.h>
@@ -2870,7 +2870,7 @@ static void UpdateTipLog(
     AssertLockHeld(::cs_main);
 
     // Disable rate limiting in LogPrintLevel_ so this source location may log during IBD.
-    LogPrintLevel_(BCLog::LogFlags::ALL, BCLog::Level::Info, /*should_ratelimit=*/false, "%s%s: new best=%s height=%d version=0x%08x log2_work=%f tx=%lu date='%s' progress=%f cache=%.1fMiB(%utxo)%s\n",
+    LogPrintLevel_(BCLog::LogFlags::ALL, util::log::Level::Info, /*should_ratelimit=*/false, "%s%s: new best=%s height=%d version=0x%08x log2_work=%f tx=%lu date='%s' progress=%f cache=%.1fMiB(%utxo)%s\n",
                    prefix, func_name,
                    tip->GetBlockHash().ToString(), tip->nHeight, tip->nVersion,
                    log(tip->nChainWork.getdouble()) / log(2.0), tip->m_chain_tx_count,

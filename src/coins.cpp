@@ -5,9 +5,9 @@
 #include <coins.h>
 
 #include <consensus/consensus.h>
-#include <logging.h>
 #include <random.h>
 #include <uint256.h>
+#include <util/log.h>
 #include <util/trace.h>
 
 TRACEPOINT_SEMAPHORE(utxocache, add);

@@ -235,7 +235,7 @@ static RPCHelpMan getpeerinfo()
         }
         obj.pushKV("network", GetNetworkName(stats.m_network));
         if (stats.m_mapped_as != 0) {
-            obj.pushKV("mapped_as", uint64_t(stats.m_mapped_as));
+            obj.pushKV("mapped_as", stats.m_mapped_as);
         }
         ServiceFlags services{statestats.their_services};
         obj.pushKV("services", strprintf("%016x", services));
@@ -958,7 +958,7 @@ static RPCHelpMan getnodeaddresses()
 
     for (const CAddress& addr : vAddr) {
         UniValue obj(UniValue::VOBJ);
-        obj.pushKV("time", int64_t{TicksSinceEpoch<std::chrono::seconds>(addr.nTime)});
+        obj.pushKV("time", TicksSinceEpoch<std::chrono::seconds>(addr.nTime));
         obj.pushKV("services", static_cast<std::underlying_type_t<decltype(addr.nServices)>>(addr.nServices));
         obj.pushKV("address", addr.ToStringAddr());
         obj.pushKV("port", addr.GetPort());
@@ -1127,7 +1127,7 @@ UniValue AddrmanEntryToJSON(const AddrInfo& info, const CConnman& connman)
     }
     ret.pushKV("port", info.GetPort());
     ret.pushKV("services", static_cast<std::underlying_type_t<decltype(info.nServices)>>(info.nServices));
-    ret.pushKV("time", int64_t{TicksSinceEpoch<std::chrono::seconds>(info.nTime)});
+    ret.pushKV("time", TicksSinceEpoch<std::chrono::seconds>(info.nTime));
     ret.pushKV("network", GetNetworkName(info.GetNetClass()));
     ret.pushKV("source", info.source.ToStringAddr());
     ret.pushKV("source_network", GetNetworkName(info.source.GetNetClass()));

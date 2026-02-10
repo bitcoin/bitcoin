@@ -9,6 +9,7 @@
 #include <checkqueue.h>
 #include <clientversion.h>
 #include <consensus/amount.h>
+#include <consensus/consensus.h>
 #include <consensus/tx_check.h>
 #include <consensus/tx_verify.h>
 #include <consensus/validation.h>
@@ -1111,6 +1112,55 @@ BOOST_AUTO_TEST_CASE(max_standard_legacy_sigops)
     AddCoins(coins, CTransaction(tx_create_p2pk), 0, false);
     BOOST_CHECK_GT(p2sh_inputs_count * MAX_P2SH_SIGOPS + p2pk_inputs_count * 1, MAX_TX_LEGACY_SIGOPS);
     BOOST_CHECK(!::AreInputsStandard(CTransaction(tx_max_sigops), coins));
+}
+
+BOOST_AUTO_TEST_CASE(checktxinputs_invalid_transactions_test)
+{
+    auto check_invalid{[](CAmount input_value, CAmount output_value, bool coinbase, int spend_height, TxValidationResult expected_result, std::string_view expected_reason) {
+        CCoinsView coins_dummy;
+        CCoinsViewCache inputs(&coins_dummy);
+
+        const COutPoint prevout{Txid::FromUint256(uint256::ONE), 0};
+        inputs.AddCoin(prevout, Coin{{input_value, CScript() << OP_TRUE}, /*nHeightIn=*/1, coinbase}, /*possible_overwrite=*/false);
+
+        CMutableTransaction mtx;
+        mtx.vin.emplace_back(prevout);
+        mtx.vout.emplace_back(output_value, CScript() << OP_TRUE);
+
+        TxValidationState state;
+        CAmount txfee{0};
+        BOOST_CHECK(!Consensus::CheckTxInputs(CTransaction{mtx}, state, inputs, spend_height, txfee));
+        BOOST_CHECK(state.IsInvalid());
+        BOOST_CHECK_EQUAL(state.GetResult(), expected_result);
+        BOOST_CHECK_EQUAL(state.GetRejectReason(), expected_reason);
+    }};
+
+    check_invalid(/*input_value=*/MAX_MONEY + 1,
+                  /*output_value=*/0,
+                  /*coinbase=*/false,
+                  /*spend_height=*/2,
+                  TxValidationResult::TX_CONSENSUS, /*expected_reason=*/"bad-txns-inputvalues-outofrange");
+
+    check_invalid(/*input_value=*/1 * COIN,
+                  /*output_value=*/2 * COIN,
+                  /*coinbase=*/false,
+                  /*spend_height=*/2,
+                  TxValidationResult::TX_CONSENSUS, /*expected_reason=*/"bad-txns-in-belowout");
+
+    check_invalid(/*input_value=*/1 * COIN,
+                  /*output_value=*/0,
+                  /*coinbase=*/true,
+                  /*spend_height=*/COINBASE_MATURITY,
+                  TxValidationResult::TX_PREMATURE_SPEND, /*expected_reason=*/"bad-txns-premature-spend-of-coinbase");
+}
+
+BOOST_AUTO_TEST_CASE(getvalueout_out_of_range_throws)
+{
+    CMutableTransaction mtx;
+    mtx.vout.emplace_back(MAX_MONEY + 1, CScript() << OP_TRUE);
+
+    const CTransaction tx{mtx};
+    BOOST_CHECK_EXCEPTION(tx.GetValueOut(), std::runtime_error, HasReason("GetValueOut: value out of range"));
 }
 
 /** Sanity check the return value of SpendsNonAnchorWitnessProg for various output types. */

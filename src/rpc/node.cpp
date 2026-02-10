@@ -113,12 +113,12 @@ static UniValue RPCLockedMemoryInfo()
 {
     LockedPool::Stats stats = LockedPoolManager::Instance().stats();
     UniValue obj(UniValue::VOBJ);
-    obj.pushKV("used", uint64_t(stats.used));
-    obj.pushKV("free", uint64_t(stats.free));
-    obj.pushKV("total", uint64_t(stats.total));
-    obj.pushKV("locked", uint64_t(stats.locked));
-    obj.pushKV("chunks_used", uint64_t(stats.chunks_used));
-    obj.pushKV("chunks_free", uint64_t(stats.chunks_free));
+    obj.pushKV("used", stats.used);
+    obj.pushKV("free", stats.free);
+    obj.pushKV("total", stats.total);
+    obj.pushKV("locked", stats.locked);
+    obj.pushKV("chunks_used", stats.chunks_used);
+    obj.pushKV("chunks_free", stats.chunks_free);
     return obj;
 }
 

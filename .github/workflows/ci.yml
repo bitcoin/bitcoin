@@ -31,7 +31,7 @@ defaults:
 jobs:
   runners:
     name: '[meta] determine runners'
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-slim
     outputs:
       provider: ${{ steps.runners.outputs.provider }}
     steps:
@@ -218,10 +218,8 @@ jobs:
         job-type: [standard, fuzz]
         include:
           - job-type: standard
-            generate-options: '-DBUILD_BENCH=ON -DBUILD_KERNEL_LIB=ON -DBUILD_UTIL_CHAINSTATE=ON -DCMAKE_COMPILE_WARNING_AS_ERROR=ON'
             job-name: 'Windows native, VS 2022'
           - job-type: fuzz
-            generate-options: '-DVCPKG_MANIFEST_NO_DEFAULT_FEATURES=ON -DVCPKG_MANIFEST_FEATURES="wallet" -DBUILD_GUI=OFF -DWITH_ZMQ=OFF -DBUILD_FOR_FUZZING=ON -DCMAKE_COMPILE_WARNING_AS_ERROR=ON'
             job-name: 'Windows native, fuzz, VS 2022'
 
     steps:
@@ -257,6 +255,10 @@ jobs:
           # Workaround for libevent, which requires CMake 3.1 but is incompatible with CMake >= 4.0.
           sed -i '1s/^/set(ENV{CMAKE_POLICY_VERSION_MINIMUM} 3.5)\n/' "${VCPKG_INSTALLATION_ROOT}/scripts/ports.cmake"
 
+      - name: Set VCPKG_ROOT
+        run: |
+          echo "VCPKG_ROOT=${VCPKG_INSTALLATION_ROOT}" >> "$GITHUB_ENV"
+
       - name: vcpkg tools cache
         uses: actions/cache@v5
         with:
@@ -272,7 +274,7 @@ jobs:
 
       - name: Generate build system
         run: |
-          cmake -B build -Werror=dev --preset vs2022 -DCMAKE_TOOLCHAIN_FILE="${VCPKG_INSTALLATION_ROOT}/scripts/buildsystems/vcpkg.cmake" ${{ matrix.generate-options }}
+          py -3 .github/ci-windows.py ${{ matrix.job-type }} generate
 
       - name: Save vcpkg binary cache
         uses: actions/cache/save@v4
@@ -282,75 +284,28 @@ jobs:
           key: ${{ github.job }}-vcpkg-binary-${{ hashFiles('cmake_version', 'msbuild_version', 'toolset_version', 'vcpkg.json') }}
 
       - name: Build
-        working-directory: build
         run: |
-          cmake --build . -j $NUMBER_OF_PROCESSORS --config Release
+          py -3 .github/ci-windows.py ${{ matrix.job-type }} build
 
       - name: Check executable manifests
-        if: matrix.job-type == 'standard'
-        working-directory: build
-        shell: pwsh -Command "$PSVersionTable; $PSNativeCommandUseErrorActionPreference = $true; $ErrorActionPreference = 'Stop'; & '{0}'"
         run: |
-          mt.exe -nologo -inputresource:bin\Release\bitcoind.exe -out:bitcoind.manifest
-          Get-Content bitcoind.manifest
+          py -3 .github/ci-windows.py ${{ matrix.job-type }} check_manifests
 
-          Get-ChildItem -Filter "bin\Release\*.exe" | ForEach-Object {
-            $exeName = $_.Name
-
-            # Skip as they currently do not have manifests
-            if ($exeName -eq "fuzz.exe" -or $exeName -eq "bench_bitcoin.exe" -or $exeName -eq "test_bitcoin-qt.exe" -or $exeName -eq "test_kernel.exe" -or $exeName -eq "bitcoin-chainstate.exe") {
-              Write-Host "Skipping $exeName (no manifest present)"
-              return
-            }
-
-            Write-Host "Checking $exeName"
-            & mt.exe -nologo -inputresource:$_.FullName -validate_manifest
-          }
-
-      - name: Run test suite
-        if: matrix.job-type == 'standard'
-        working-directory: build
+      - name: Prepare tests
         run: |
-          ctest --output-on-failure --stop-on-failure -j $NUMBER_OF_PROCESSORS -C Release
+          py -3 .github/ci-windows.py ${{ matrix.job-type }} prepare_tests
 
-      - name: Run functional tests
-        if: matrix.job-type == 'standard'
-        working-directory: build
+      - name: Run tests
         env:
-          BITCOIN_BIN: '${{ github.workspace }}\build\bin\Release\bitcoin.exe'
-          BITCOIND: '${{ github.workspace }}\build\bin\Release\bitcoind.exe'
-          BITCOINCLI: '${{ github.workspace }}\build\bin\Release\bitcoin-cli.exe'
-          BITCOIN_BENCH: '${{ github.workspace }}\build\bin\Release\bench_bitcoin.exe'
-          BITCOINTX: '${{ github.workspace }}\build\bin\Release\bitcoin-tx.exe'
-          BITCOINUTIL: '${{ github.workspace }}\build\bin\Release\bitcoin-util.exe'
-          BITCOINWALLET: '${{ github.workspace }}\build\bin\Release\bitcoin-wallet.exe'
-          BITCOINCHAINSTATE: '${{ github.workspace }}\build\bin\Release\bitcoin-chainstate.exe'
-          TEST_RUNNER_EXTRA: ${{ github.event_name != 'pull_request' && '--extended' || '' }}
+          TEST_RUNNER_EXTRA: "--timeout-factor=${{ env.TEST_RUNNER_TIMEOUT_FACTOR }} ${{ case(github.event_name == 'pull_request', '', '--extended') }}"
         run: |
-          py -3 -m pip install pyzmq
-          py -3 test/functional/test_runner.py --jobs $NUMBER_OF_PROCESSORS --quiet --tmpdirprefix="${RUNNER_TEMP}" --combinedlogslen=99999999 --timeout-factor=${TEST_RUNNER_TIMEOUT_FACTOR} ${TEST_RUNNER_EXTRA}
-
-      - name: Clone corpora
-        if: matrix.job-type == 'fuzz'
-        run: |
-          git clone --depth=1 https://github.com/bitcoin-core/qa-assets "${RUNNER_TEMP}/qa-assets"
-          cd "${RUNNER_TEMP}/qa-assets"
-          echo "Using qa-assets repo from commit ..."
-          git log -1
-
-      - name: Run fuzz tests
-        if: matrix.job-type == 'fuzz'
-        working-directory: build
-        env:
-          BITCOINFUZZ: '${{ github.workspace }}\build\bin\Release\fuzz.exe'
-        run: |
-          py -3 test/fuzz/test_runner.py --par $NUMBER_OF_PROCESSORS --loglevel DEBUG "${RUNNER_TEMP}/qa-assets/fuzz_corpora"
+          py -3 .github/ci-windows.py ${{ matrix.job-type }} run_tests
 
   record-frozen-commit:
     # Record frozen commit, so that the native tests on cross-builds can run on
     # the exact same commit id of the build.
     name: '[meta] record frozen commit'
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-slim
     outputs:
       commit: ${{ steps.record-commit.outputs.commit }}
     steps:

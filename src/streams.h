@@ -6,11 +6,11 @@
 #ifndef BITCOIN_STREAMS_H
 #define BITCOIN_STREAMS_H
 
-#include <logging.h>
 #include <serialize.h>
 #include <span.h>
 #include <support/allocators/zeroafterfree.h>
 #include <util/check.h>
+#include <util/log.h>
 #include <util/obfuscation.h>
 #include <util/overflow.h>
 #include <util/syserror.h>

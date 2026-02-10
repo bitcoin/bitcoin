@@ -1096,7 +1096,7 @@ static RPCHelpMan gettxoutsetinfo()
         CHECK_NONFATAL(stats.total_amount.has_value());
         ret.pushKV("total_amount", ValueFromAmount(stats.total_amount.value()));
         if (!stats.index_used) {
-            ret.pushKV("transactions", static_cast<int64_t>(stats.nTransactions));
+            ret.pushKV("transactions", stats.nTransactions);
             ret.pushKV("disk_size", stats.nDiskSize);
         } else {
             CCoinsStats prev_stats{};
