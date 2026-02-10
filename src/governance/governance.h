@@ -8,7 +8,6 @@
 #include <cachemap.h>
 #include <cachemultimap.h>
 #include <governance/signing.h>
-#include <msg_result.h>
 
 #include <protocol.h>
 #include <sync.h>
@@ -362,23 +361,27 @@ public:
     // Used by NetGovernance
     std::vector<CInv> FetchRelayInventory() EXCLUSIVE_LOCKS_REQUIRED(!cs_relay);
     void CheckAndRemove() EXCLUSIVE_LOCKS_REQUIRED(!cs_store);
-    void RequestOrphanObjects(CConnman& connman) EXCLUSIVE_LOCKS_REQUIRED(!cs_store);
+    /** Get hashes of governance objects for which we have orphan votes. Also cleans up expired orphans. */
+    [[nodiscard]] std::vector<uint256> GetOrphanVoteObjectHashes() EXCLUSIVE_LOCKS_REQUIRED(!cs_store);
     std::pair<std::vector<uint256>, std::vector<uint256>> FetchGovernanceObjectVotes(
         size_t peers_per_hash_max, int64_t now, std::map<uint256, std::map<CService, int64_t>>& map_asked_recently) const
         EXCLUSIVE_LOCKS_REQUIRED(!cs_store);
-    void RequestGovernanceObject(CNode* pfrom, const uint256& nHash, CConnman& connman, bool fUseFilter = false) const
+    /** Build bloom filter of existing votes for a governance object (for sync requests) */
+    [[nodiscard]] CBloomFilter GetVoteBloomFilter(const uint256& nHash) const EXCLUSIVE_LOCKS_REQUIRED(!cs_store);
+    /** Returns inventory items for all syncable (non-deleted, non-expired) governance objects */
+    [[nodiscard]] std::vector<CInv> GetSyncableObjectInvs() const EXCLUSIVE_LOCKS_REQUIRED(!cs_store);
+    /** Returns inventory items for syncable votes on a specific object, filtered by bloom filter */
+    [[nodiscard]] std::vector<CInv> GetSyncableVoteInvs(const uint256& nProp, const CBloomFilter& filter) const
         EXCLUSIVE_LOCKS_REQUIRED(!cs_store);
-    [[nodiscard]] MessageProcessingResult SyncObjects(CNode& peer, CConnman& connman) const
-        EXCLUSIVE_LOCKS_REQUIRED(!cs_store);
-    [[nodiscard]] MessageProcessingResult SyncSingleObjVotes(CNode& peer, const uint256& nProp, const CBloomFilter& filter,
-                                                             CConnman& connman) EXCLUSIVE_LOCKS_REQUIRED(!cs_store);
     /// Called to indicate a requested object or vote has been received
     bool AcceptMessage(const uint256& nHash) EXCLUSIVE_LOCKS_REQUIRED(!cs_store);
     bool ProcessObject(const CNode& peer, const uint256& hash, CGovernanceObject& govobj)
         EXCLUSIVE_LOCKS_REQUIRED(::cs_main, !cs_store, !cs_relay);
 
     CDeterministicMNManager& GetMNManager();
-    bool ProcessVote(CNode* pfrom, const CGovernanceVote& vote, CGovernanceException& exception, CConnman& connman)
+    /** Process a governance vote. Returns true on success.
+     *  If the vote is for an unknown object (orphan), hashToRequest is set to the object hash. */
+    bool ProcessVote(CNode* pfrom, const CGovernanceVote& vote, CGovernanceException& exception, uint256& hashToRequest)
         EXCLUSIVE_LOCKS_REQUIRED(!cs_store);
 
 

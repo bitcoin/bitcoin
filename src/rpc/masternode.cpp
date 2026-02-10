@@ -12,6 +12,7 @@
 #include <rpc/evo_util.h>
 
 #include <chainparams.h>
+#include <core_io.h>
 #include <index/txindex.h>
 #include <net.h>
 #include <netbase.h>
