@@ -41,16 +41,16 @@ private:
     QString m_service{};
     QString m_type_description{};
     QString m_voting_address{};
-    std::optional<int32_t> m_collateral_index{std::nullopt};
-    std::optional<int32_t> m_consecutive_payments{std::nullopt};
-    std::optional<int32_t> m_pose_ban_height{std::nullopt};
-    std::optional<int32_t> m_pose_revived_height{std::nullopt};
-    std::optional<QString> m_collateral_hash{std::nullopt};
-    std::optional<QString> m_network_addresses{std::nullopt};
-    std::optional<QString> m_platform_https_addresses{std::nullopt};
-    std::optional<QString> m_platform_node_id{std::nullopt};
-    std::optional<QString> m_platform_p2p_addresses{std::nullopt};
-    std::optional<QString> m_pub_key_operator{std::nullopt};
+    std::optional<int32_t> m_collateral_index{};
+    std::optional<int32_t> m_consecutive_payments{};
+    std::optional<int32_t> m_pose_ban_height{};
+    std::optional<int32_t> m_pose_revived_height{};
+    std::optional<QString> m_collateral_hash{};
+    std::optional<QString> m_network_addresses{};
+    std::optional<QString> m_platform_https_addresses{};
+    std::optional<QString> m_platform_node_id{};
+    std::optional<QString> m_platform_p2p_addresses{};
+    std::optional<QString> m_pub_key_operator{};
     uint16_t m_operator_reward_pct{0};
 
 public:
