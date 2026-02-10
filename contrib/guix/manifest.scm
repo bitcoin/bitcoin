@@ -1,11 +1,11 @@
 (use-modules (gnu packages)
              ((gnu packages bash) #:select (bash-minimal))
              (gnu packages bison)
-             ((gnu packages check) #:select (libfaketime))
              ((gnu packages cmake) #:select (cmake-minimal))
              (gnu packages commencement)
              (gnu packages compression)
              (gnu packages cross-base)
+             ((gnu packages crypto) #:select (osslsigncode))
              (gnu packages gawk)
              (gnu packages gcc)
              ((gnu packages installers) #:select (nsis-x86_64))
@@ -194,38 +194,6 @@ chain for " target " development."))
      "@code{python-lief} is a cross platform library which can parse, modify
 and abstract ELF, PE and MachO formats.")
     (license license:asl2.0)))
-
-(define osslsigncode
-  (package
-    (name "osslsigncode")
-    (version "2.5")
-    (source (origin
-              (method git-fetch)
-              (uri (git-reference
-                    (url "https://github.com/mtrojnar/osslsigncode")
-                    (commit version)))
-              (sha256
-               (base32
-                "1j47vwq4caxfv0xw68kw5yh00qcpbd56d7rq6c483ma3y7s96yyz"))))
-    (build-system cmake-build-system)
-    (arguments
-     (list
-      #:phases
-      #~(modify-phases %standard-phases
-          (replace 'check
-            (lambda* (#:key tests? #:allow-other-keys)
-              (if tests?
-                  (invoke "faketime" "-f" "@2025-01-01 00:00:00" ;; Tests fail after 2025.
-                          "ctest" "--output-on-failure" "--no-tests=error")
-                  (format #t "test suite not run~%")))))))
-    (inputs (list libfaketime openssl))
-    (home-page "https://github.com/mtrojnar/osslsigncode")
-    (synopsis "Authenticode signing and timestamping tool")
-    (description "osslsigncode is a small tool that implements part of the
-functionality of the Microsoft tool signtool.exe - more exactly the Authenticode
-signing and timestamping. But osslsigncode is based on OpenSSL and cURL, and
-thus should be able to compile on most platforms where these exist.")
-    (license license:gpl3+))) ; license is with openssl exception
 
 (define-public python-elfesteem
   (let ((commit "2eb1e5384ff7a220fd1afacd4a0170acff54fe56"))
