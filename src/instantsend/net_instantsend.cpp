@@ -104,7 +104,8 @@ Uint256HashSet NetInstantSend::ProcessPendingInstantSendLocks(
             continue;
         }
 
-        if (!islock->sig.Get().IsValid()) {
+        CBLSSignature sig = islock->sig.Get();
+        if (!sig.IsValid()) {
             batchVerifier.badSources.emplace(nodeId);
             continue;
         }
@@ -140,7 +141,7 @@ Uint256HashSet NetInstantSend::ProcessPendingInstantSendLocks(
             return {};
         }
         uint256 signHash = llmq::SignHash{llmq_params.type, quorum->qc->quorumHash, id, islock->txid}.Get();
-        batchVerifier.PushMessage(nodeId, hash, signHash, islock->sig.Get(), quorum->qc->quorumPublicKey);
+        batchVerifier.PushMessage(nodeId, hash, signHash, sig, quorum->qc->quorumPublicKey);
         verifyCount++;
 
         // We can reconstruct the CRecoveredSig objects from the islock and pass it to the signing manager, which
@@ -160,23 +161,27 @@ Uint256HashSet NetInstantSend::ProcessPendingInstantSendLocks(
              __func__, verifyCount, alreadyVerified, verifyTimer.count(), batchVerifier.GetUniqueSourceCount());
 
     Uint256HashSet badISLocks;
+    std::set<NodeId> penalized;
 
-    if (ban && !batchVerifier.badSources.empty()) {
-        for (const auto& nodeId : batchVerifier.badSources) {
-            // Let's not be too harsh, as the peer might simply be unlucky and might have sent us an old lock which
-            // does not validate anymore due to changed quorums
-            m_peer_manager->PeerMisbehaving(nodeId, 20);
-        }
-    }
     for (const auto& p : pend) {
         const auto& hash = p.first;
         auto nodeId = p.second.node_id;
         const auto& islock = p.second.islock;
 
-        if (batchVerifier.badMessages.count(hash)) {
-            LogPrint(BCLog::INSTANTSEND, "NetInstantSend::%s -- txid=%s, islock=%s: invalid sig in islock, peer=%d\n",
+        const bool source_bad = batchVerifier.badSources.count(nodeId);
+        const bool message_bad = batchVerifier.badMessages.count(hash);
+
+        if (source_bad || message_bad) {
+            LogPrint(BCLog::INSTANTSEND, "NetInstantSend::%s -- txid=%s, islock=%s: verification failed, peer=%d\n",
                      __func__, islock->txid.ToString(), hash.ToString(), nodeId);
-            badISLocks.emplace(hash);
+            if (ban && source_bad && penalized.emplace(nodeId).second) {
+                // Let's not be too harsh, as the peer might simply be unlucky and might have sent us
+                // an old lock which does not validate anymore due to changed quorums
+                m_peer_manager->PeerMisbehaving(nodeId, 20);
+            }
+            if (message_bad) {
+                badISLocks.emplace(hash);
+            }
             continue;
         }
 
