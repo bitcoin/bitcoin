@@ -144,7 +144,7 @@ std::variant<uint256, CTransactionRef, std::monostate> CInstantSendManager::Proc
     }
 
     uint256 hashBlock{};
-    const auto tx = GetTransaction(nullptr, &mempool, islock->txid, Params().GetConsensus(), hashBlock);
+    auto tx = GetTransaction(nullptr, &mempool, islock->txid, Params().GetConsensus(), hashBlock);
     const bool found_transaction{tx != nullptr};
     // we ignore failure here as we must be able to propagate the lock even if we don't have the TX locally
     std::optional<int> minedHeight = GetBlockHeight(hashBlock);
