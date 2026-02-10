@@ -293,10 +293,4 @@ namespace BCLog {
 
 BCLog::Logger& LogInstance();
 
-/** Return true if log accepts specified category, at the specified level. */
-static inline bool LogAcceptCategory(BCLog::LogFlags category, BCLog::Level level)
-{
-    return LogInstance().WillLogCategoryLevel(category, level);
-}
-
 #endif // BITCOIN_LOGGING_H
