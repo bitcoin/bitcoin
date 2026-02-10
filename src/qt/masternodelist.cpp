@@ -7,94 +7,141 @@
 
 #include <coins.h>
 #include <evo/deterministicmns.h>
+#include <evo/dmn_types.h>
+
 #include <qt/clientmodel.h>
+#include <qt/descriptiondialog.h>
 #include <qt/guiutil.h>
 #include <qt/guiutil_font.h>
+#include <qt/masternodemodel.h>
 #include <qt/walletmodel.h>
 
-#include <univalue.h>
-
+#include <QApplication>
 #include <QClipboard>
-#include <QMessageBox>
-#include <QTableWidgetItem>
+#include <QHeaderView>
 
-template <typename T>
-class CMasternodeListWidgetItem : public QTableWidgetItem
+namespace {
+constexpr int MASTERNODELIST_UPDATE_SECONDS{3};
+} // anonymous namespace
+
+bool MasternodeListSortFilterProxyModel::filterAcceptsRow(int source_row, const QModelIndex& source_parent) const
 {
-    T itemData;
-
-public:
-    explicit CMasternodeListWidgetItem(const QString& text, const T& data, int type = Type) :
-        QTableWidgetItem(text, type),
-        itemData(data) {}
-
-    bool operator<(const QTableWidgetItem& other) const override
-    {
-        return itemData < ((CMasternodeListWidgetItem*)&other)->itemData;
+    // "Type" filter
+    if (m_type_filter != TypeFilter::All) {
+        QModelIndex idx = sourceModel()->index(source_row, MasternodeModel::TYPE, source_parent);
+        int type = sourceModel()->data(idx, Qt::EditRole).toInt();
+        if (m_type_filter == TypeFilter::Regular && type != static_cast<int>(MnType::Regular)) {
+            return false;
+        }
+        if (m_type_filter == TypeFilter::Evo && type != static_cast<int>(MnType::Evo)) {
+            return false;
+        }
     }
-};
+
+    // Banned filter
+    if (m_hide_banned) {
+        QModelIndex idx = sourceModel()->index(source_row, MasternodeModel::STATUS, source_parent);
+        int banned = sourceModel()->data(idx, Qt::EditRole).toInt();
+        if (banned != 0) {
+            return false;
+        }
+    }
+
+    // Text-matching filter
+    if (const auto& regex = filterRegularExpression(); !regex.pattern().isEmpty()) {
+        QModelIndex idx = sourceModel()->index(source_row, 0, source_parent);
+        QString searchText = sourceModel()->data(idx, Qt::UserRole).toString();
+        if (!searchText.contains(regex)) {
+            return false;
+        }
+    }
+
+    // "Owned" filter
+    if (m_show_owned_only) {
+        QModelIndex idx = sourceModel()->index(source_row, MasternodeModel::PROTX_HASH, source_parent);
+        QString proTxHash = sourceModel()->data(idx, Qt::DisplayRole).toString();
+        if (m_my_mn_hashes.find(proTxHash) == m_my_mn_hashes.end()) {
+            return false;
+        }
+    }
+
+    return true;
+}
 
 MasternodeList::MasternodeList(QWidget* parent) :
     QWidget(parent),
-    ui(new Ui::MasternodeList)
+    ui(new Ui::MasternodeList),
+    m_model(new MasternodeModel(this)),
+    m_proxy_model(new MasternodeListSortFilterProxyModel(this))
 {
     ui->setupUi(this);
 
-    GUIUtil::setFont({ui->label_count_2, ui->countLabelDIP3}, {GUIUtil::FontWeight::Bold, 14});
-    GUIUtil::setFont({ui->label_filter_2}, {GUIUtil::FontWeight::Normal, 15});
+    GUIUtil::setFont({ui->label_count, ui->countLabel}, {GUIUtil::FontWeight::Bold, 14});
 
-    int columnAddressWidth = 200;
-    int columnTypeWidth = 160;
-    int columnStatusWidth = 80;
-    int columnPoSeScoreWidth = 80;
-    int columnRegisteredWidth = 80;
-    int columnLastPaidWidth = 80;
-    int columnNextPaymentWidth = 100;
-    int columnPayeeWidth = 130;
-    int columnOperatorRewardWidth = 130;
-    int columnCollateralWidth = 130;
-    int columnOwnerWidth = 130;
-    int columnVotingWidth = 130;
+    // Set up proxy model
+    m_proxy_model->setSourceModel(m_model);
+    m_proxy_model->setFilterCaseSensitivity(Qt::CaseInsensitive);
+    m_proxy_model->setSortRole(Qt::EditRole);
 
-    ui->tableWidgetMasternodesDIP3->setColumnWidth(COLUMN_SERVICE, columnAddressWidth);
-    ui->tableWidgetMasternodesDIP3->setColumnWidth(COLUMN_TYPE, columnTypeWidth);
-    ui->tableWidgetMasternodesDIP3->setColumnWidth(COLUMN_STATUS, columnStatusWidth);
-    ui->tableWidgetMasternodesDIP3->setColumnWidth(COLUMN_POSE, columnPoSeScoreWidth);
-    ui->tableWidgetMasternodesDIP3->setColumnWidth(COLUMN_REGISTERED, columnRegisteredWidth);
-    ui->tableWidgetMasternodesDIP3->setColumnWidth(COLUMN_LAST_PAYMENT, columnLastPaidWidth);
-    ui->tableWidgetMasternodesDIP3->setColumnWidth(COLUMN_NEXT_PAYMENT, columnNextPaymentWidth);
-    ui->tableWidgetMasternodesDIP3->setColumnWidth(COLUMN_PAYOUT_ADDRESS, columnPayeeWidth);
-    ui->tableWidgetMasternodesDIP3->setColumnWidth(COLUMN_OPERATOR_REWARD, columnOperatorRewardWidth);
-    ui->tableWidgetMasternodesDIP3->setColumnWidth(COLUMN_COLLATERAL_ADDRESS, columnCollateralWidth);
-    ui->tableWidgetMasternodesDIP3->setColumnWidth(COLUMN_OWNER_ADDRESS, columnOwnerWidth);
-    ui->tableWidgetMasternodesDIP3->setColumnWidth(COLUMN_VOTING_ADDRESS, columnVotingWidth);
+    // Set up table view
+    ui->tableViewMasternodes->setModel(m_proxy_model);
+    ui->tableViewMasternodes->setContextMenuPolicy(Qt::CustomContextMenu);
+    ui->tableViewMasternodes->verticalHeader()->setVisible(false);
 
-    // dummy column for proTxHash
-    ui->tableWidgetMasternodesDIP3->insertColumn(COLUMN_PROTX_HASH);
-    ui->tableWidgetMasternodesDIP3->setColumnHidden(COLUMN_PROTX_HASH, true);
+    // Set column widths
+    auto* header = ui->tableViewMasternodes->horizontalHeader();
+    header->setStretchLastSection(false);
+    for (int col = 0; col < MasternodeModel::COUNT; ++col) {
+        if (col == MasternodeModel::SERVICE) {
+            header->setSectionResizeMode(col, QHeaderView::Stretch);
+        } else {
+            header->setSectionResizeMode(col, QHeaderView::ResizeToContents);
+        }
+    }
 
-    ui->tableWidgetMasternodesDIP3->setContextMenuPolicy(Qt::CustomContextMenu);
-    ui->tableWidgetMasternodesDIP3->verticalHeader()->setVisible(false);
+    // Hide ProTx Hash column (used for internal lookup)
+    ui->tableViewMasternodes->setColumnHidden(MasternodeModel::PROTX_HASH, true);
 
-    ui->checkBoxMyMasternodesOnly->setEnabled(false);
+    // Hide PoSe column by default (since "Hide banned" is checked by default)
+    ui->tableViewMasternodes->setColumnHidden(MasternodeModel::POSE, true);
+
+    ui->checkBoxOwned->setEnabled(false);
 
     contextMenuDIP3 = new QMenu(this);
     contextMenuDIP3->addAction(tr("Copy ProTx Hash"), this, &MasternodeList::copyProTxHash_clicked);
     contextMenuDIP3->addAction(tr("Copy Collateral Outpoint"), this, &MasternodeList::copyCollateralOutpoint_clicked);
 
-    connect(ui->tableWidgetMasternodesDIP3, &QTableWidget::customContextMenuRequested, this, &MasternodeList::showContextMenuDIP3);
-    connect(ui->tableWidgetMasternodesDIP3, &QTableWidget::doubleClicked, this, &MasternodeList::extraInfoDIP3_clicked);
+    QMenu* filterMenu = contextMenuDIP3->addMenu(tr("Filter by"));
+    filterMenu->addAction(tr("Collateral Address"), this, &MasternodeList::filterByCollateralAddress);
+    filterMenu->addAction(tr("Payout Address"), this, &MasternodeList::filterByPayoutAddress);
+    filterMenu->addAction(tr("Owner Address"), this, &MasternodeList::filterByOwnerAddress);
+    filterMenu->addAction(tr("Voting Address"), this, &MasternodeList::filterByVotingAddress);
+
+    connect(ui->tableViewMasternodes, &QTableView::customContextMenuRequested, this, &MasternodeList::showContextMenuDIP3);
+    connect(ui->tableViewMasternodes, &QTableView::doubleClicked, this, &MasternodeList::extraInfoDIP3_clicked);
+    connect(m_proxy_model, &QSortFilterProxyModel::rowsInserted, this, &MasternodeList::updateFilteredCount);
+    connect(m_proxy_model, &QSortFilterProxyModel::rowsRemoved, this, &MasternodeList::updateFilteredCount);
+    connect(m_proxy_model, &QSortFilterProxyModel::modelReset, this, &MasternodeList::updateFilteredCount);
+    connect(m_proxy_model, &QSortFilterProxyModel::layoutChanged, this, &MasternodeList::updateFilteredCount);
 
     timer = new QTimer(this);
     connect(timer, &QTimer::timeout, this, &MasternodeList::updateDIP3ListScheduled);
-    timer->start(1000);
 
     GUIUtil::updateFonts();
 }
 
 MasternodeList::~MasternodeList()
 {
+    timer->stop();
     delete ui;
+}
+
+void MasternodeList::changeEvent(QEvent* event)
+{
+    QWidget::changeEvent(event);
+    if (event->type() == QEvent::StyleChange) {
+        QTimer::singleShot(0, m_model, &MasternodeModel::refreshIcons);
+    }
 }
 
 void MasternodeList::setClientModel(ClientModel* model)
@@ -103,53 +150,44 @@ void MasternodeList::setClientModel(ClientModel* model)
     if (model) {
         // try to update list when masternode count changes
         connect(clientModel, &ClientModel::masternodeListChanged, this, &MasternodeList::handleMasternodeListChanged);
+        timer->start(1000);
+    } else {
+        timer->stop();
     }
 }
 
 void MasternodeList::setWalletModel(WalletModel* model)
 {
     this->walletModel = model;
-    ui->checkBoxMyMasternodesOnly->setEnabled(model != nullptr);
+    ui->checkBoxOwned->setEnabled(model != nullptr);
 }
 
 void MasternodeList::showContextMenuDIP3(const QPoint& point)
 {
-    QTableWidgetItem* item = ui->tableWidgetMasternodesDIP3->itemAt(point);
-    if (item) contextMenuDIP3->exec(QCursor::pos());
+    QModelIndex index = ui->tableViewMasternodes->indexAt(point);
+    if (index.isValid()) {
+        contextMenuDIP3->exec(QCursor::pos());
+    }
 }
 
 void MasternodeList::handleMasternodeListChanged()
 {
-    LOCK(cs_dip3list);
-    mnListChanged = true;
+    m_mn_list_changed.store(true, std::memory_order_relaxed);
 }
 
 void MasternodeList::updateDIP3ListScheduled()
 {
-    TRY_LOCK(cs_dip3list, fLockAcquired);
-    if (!fLockAcquired) return;
-
     if (!clientModel || clientModel->node().shutdownRequested()) {
         return;
     }
 
-    // To prevent high cpu usage update only once in MASTERNODELIST_FILTER_COOLDOWN_SECONDS seconds
-    // after filter was last changed unless we want to force the update.
-    if (fFilterUpdatedDIP3) {
-        int64_t nSecondsToWait = nTimeFilterUpdatedDIP3 - GetTime() + MASTERNODELIST_FILTER_COOLDOWN_SECONDS;
-        ui->countLabelDIP3->setText(tr("Please wait…") + " " + QString::number(nSecondsToWait));
-
-        if (nSecondsToWait <= 0) {
-            updateDIP3List();
-            fFilterUpdatedDIP3 = false;
-        }
-    } else if (mnListChanged) {
+    if (m_mn_list_changed.load(std::memory_order_relaxed)) {
         int64_t nMnListUpdateSecods = clientModel->masternodeSync().isBlockchainSynced() ? MASTERNODELIST_UPDATE_SECONDS : MASTERNODELIST_UPDATE_SECONDS * 10;
         int64_t nSecondsToWait = nTimeUpdatedDIP3 - GetTime() + nMnListUpdateSecods;
 
         if (nSecondsToWait <= 0) {
             updateDIP3List();
-            mnListChanged = false;
+            m_mn_list_changed.store(false, std::memory_order_relaxed);
         }
     }
 }
@@ -185,13 +223,7 @@ void MasternodeList::updateDIP3List()
         });
     }
 
-    LOCK(cs_dip3list);
-
-    QString strToFilter;
-    ui->countLabelDIP3->setText(tr("Updating…"));
-    ui->tableWidgetMasternodesDIP3->setSortingEnabled(false);
-    ui->tableWidgetMasternodesDIP3->clearContents();
-    ui->tableWidgetMasternodesDIP3->setRowCount(0);
+    ui->countLabel->setText(tr("Updating…"));
 
     nTimeUpdatedDIP3 = GetTime();
 
@@ -201,198 +233,190 @@ void MasternodeList::updateDIP3List()
         nextPayments.emplace(dmn->getProTxHash(), mnList->getHeight() + (int)i + 1);
     }
 
-    std::set<COutPoint> setOutpts;
-    if (walletModel && ui->checkBoxMyMasternodesOnly->isChecked()) {
-        for (const auto& outpt : walletModel->wallet().listProTxCoins()) {
-            setOutpts.emplace(outpt);
-        }
-    }
-
+    MasternodeEntryList entries;
     mnList->forEachMN(/*only_valid=*/false, [&](const auto& dmn) {
-        if (walletModel && ui->checkBoxMyMasternodesOnly->isChecked()) {
-            bool fMyMasternode = setOutpts.count(dmn.getCollateralOutpoint()) ||
-                                 walletModel->wallet().isSpendable(PKHash(dmn.getKeyIdOwner())) ||
-                                 walletModel->wallet().isSpendable(PKHash(dmn.getKeyIdVoting())) ||
-                                 walletModel->wallet().isSpendable(dmn.getScriptPayout()) ||
-                                 walletModel->wallet().isSpendable(dmn.getScriptOperatorPayout());
-            if (!fMyMasternode) return;
-        }
-        // populate list
-        // Address, Protocol, Status, Active Seconds, Last Seen, Pub Key
-        auto addr_key = dmn.getNetInfoPrimary().GetKey();
-        QByteArray addr_ba(reinterpret_cast<const char*>(addr_key.data()), addr_key.size());
-        QTableWidgetItem* addressItem = new CMasternodeListWidgetItem<QByteArray>(
-            QString::fromStdString(dmn.getNetInfoPrimary().ToStringAddrPort()), addr_ba);
-        QTableWidgetItem* typeItem = new QTableWidgetItem(
-            QString::fromStdString(std::string(GetMnType(dmn.getType()).description)));
-        QTableWidgetItem* statusItem = new QTableWidgetItem(dmn.isBanned() ? tr("POSE_BANNED") : tr("ENABLED"));
-        QTableWidgetItem* PoSeScoreItem = new CMasternodeListWidgetItem<int>(QString::number(dmn.getPoSePenalty()),
-                                                                             dmn.getPoSePenalty());
-        QTableWidgetItem* registeredItem = new CMasternodeListWidgetItem<int>(QString::number(dmn.getRegisteredHeight()),
-                                                                              dmn.getRegisteredHeight());
-        QTableWidgetItem* lastPaidItem = new CMasternodeListWidgetItem<int>(QString::number(dmn.getLastPaidHeight()),
-                                                                            dmn.getLastPaidHeight());
-
-        QString strNextPayment = "UNKNOWN";
-        int nNextPayment = 0;
-        if (nextPayments.count(dmn.getProTxHash())) {
-            nNextPayment = nextPayments[dmn.getProTxHash()];
-            strNextPayment = QString::number(nNextPayment);
-        }
-        QTableWidgetItem* nextPaymentItem = new CMasternodeListWidgetItem<int>(strNextPayment, nNextPayment);
-
-        CTxDestination payeeDest;
-        QString payeeStr = tr("UNKNOWN");
-        if (ExtractDestination(dmn.getScriptPayout(), payeeDest)) {
-            payeeStr = QString::fromStdString(EncodeDestination(payeeDest));
-        }
-        QTableWidgetItem* payeeItem = new QTableWidgetItem(payeeStr);
-
-        QString operatorRewardStr = tr("NONE");
-        if (dmn.getOperatorReward()) {
-            operatorRewardStr = QString::number(dmn.getOperatorReward() / 100.0, 'f', 2) + "% ";
-
-            if (dmn.getScriptOperatorPayout() != CScript()) {
-                CTxDestination operatorDest;
-                if (ExtractDestination(dmn.getScriptOperatorPayout(), operatorDest)) {
-                    operatorRewardStr += tr("to %1").arg(QString::fromStdString(EncodeDestination(operatorDest)));
-                } else {
-                    operatorRewardStr += tr("to UNKNOWN");
-                }
-            } else {
-                operatorRewardStr += tr("but not claimed");
-            }
-        }
-        QTableWidgetItem* operatorRewardItem = new CMasternodeListWidgetItem<uint16_t>(operatorRewardStr,
-                                                                                       dmn.getOperatorReward());
-
         QString collateralStr = tr("UNKNOWN");
         auto collateralDestIt = mapCollateralDests.find(dmn.getProTxHash());
         if (collateralDestIt != mapCollateralDests.end()) {
             collateralStr = QString::fromStdString(EncodeDestination(collateralDestIt->second));
         }
-        QTableWidgetItem* collateralItem = new QTableWidgetItem(collateralStr);
 
-        QString ownerStr = QString::fromStdString(EncodeDestination(PKHash(dmn.getKeyIdOwner())));
-        QTableWidgetItem* ownerItem = new QTableWidgetItem(ownerStr);
-
-        QString votingStr = QString::fromStdString(EncodeDestination(PKHash(dmn.getKeyIdVoting())));
-        QTableWidgetItem* votingItem = new QTableWidgetItem(votingStr);
-
-        QTableWidgetItem* proTxHashItem = new QTableWidgetItem(QString::fromStdString(dmn.getProTxHash().ToString()));
-
-        if (strCurrentFilterDIP3 != "") {
-            strToFilter = addressItem->text() + " " +
-                          typeItem->text() + " " +
-                          statusItem->text() + " " +
-                          PoSeScoreItem->text() + " " +
-                          registeredItem->text() + " " +
-                          lastPaidItem->text() + " " +
-                          nextPaymentItem->text() + " " +
-                          payeeItem->text() + " " +
-                          operatorRewardItem->text() + " " +
-                          collateralItem->text() + " " +
-                          ownerItem->text() + " " +
-                          votingItem->text() + " " +
-                          proTxHashItem->text();
-            if (!strToFilter.contains(strCurrentFilterDIP3)) return;
+        int nNextPayment = 0;
+        auto nextPaymentIt = nextPayments.find(dmn.getProTxHash());
+        if (nextPaymentIt != nextPayments.end()) {
+            nNextPayment = nextPaymentIt->second;
         }
 
-        ui->tableWidgetMasternodesDIP3->insertRow(0);
-        ui->tableWidgetMasternodesDIP3->setItem(0, COLUMN_SERVICE, addressItem);
-        ui->tableWidgetMasternodesDIP3->setItem(0, COLUMN_TYPE, typeItem);
-        ui->tableWidgetMasternodesDIP3->setItem(0, COLUMN_STATUS, statusItem);
-        ui->tableWidgetMasternodesDIP3->setItem(0, COLUMN_POSE, PoSeScoreItem);
-        ui->tableWidgetMasternodesDIP3->setItem(0, COLUMN_REGISTERED, registeredItem);
-        ui->tableWidgetMasternodesDIP3->setItem(0, COLUMN_LAST_PAYMENT, lastPaidItem);
-        ui->tableWidgetMasternodesDIP3->setItem(0, COLUMN_NEXT_PAYMENT, nextPaymentItem);
-        ui->tableWidgetMasternodesDIP3->setItem(0, COLUMN_PAYOUT_ADDRESS, payeeItem);
-        ui->tableWidgetMasternodesDIP3->setItem(0, COLUMN_OPERATOR_REWARD, operatorRewardItem);
-        ui->tableWidgetMasternodesDIP3->setItem(0, COLUMN_COLLATERAL_ADDRESS, collateralItem);
-        ui->tableWidgetMasternodesDIP3->setItem(0, COLUMN_OWNER_ADDRESS, ownerItem);
-        ui->tableWidgetMasternodesDIP3->setItem(0, COLUMN_VOTING_ADDRESS, votingItem);
-        ui->tableWidgetMasternodesDIP3->setItem(0, COLUMN_PROTX_HASH, proTxHashItem);
+        entries.push_back(std::make_unique<MasternodeEntry>(dmn, collateralStr, nNextPayment));
     });
 
-    ui->countLabelDIP3->setText(QString::number(ui->tableWidgetMasternodesDIP3->rowCount()));
-    ui->tableWidgetMasternodesDIP3->setSortingEnabled(true);
+    // Update model
+    m_model->setCurrentHeight(mnList->getHeight());
+    m_model->reconcile(std::move(entries));
+
+    // Update filters
+    if (walletModel && ui->checkBoxOwned->isChecked()) {
+        updateMyMasternodeHashes(mnList);
+    }
+
+    updateFilteredCount();
 }
 
-void MasternodeList::on_filterLineEditDIP3_textChanged(const QString& strFilterIn)
+void MasternodeList::updateMyMasternodeHashes(const interfaces::MnListPtr& mnList)
 {
-    strCurrentFilterDIP3 = strFilterIn;
-    nTimeFilterUpdatedDIP3 = GetTime();
-    fFilterUpdatedDIP3 = true;
-    ui->countLabelDIP3->setText(tr("Please wait…") + " " + QString::number(MASTERNODELIST_FILTER_COOLDOWN_SECONDS));
+    if (!walletModel || !mnList) {
+        return;
+    }
+
+    std::set<COutPoint> setOutpts;
+    for (const auto& outpt : walletModel->wallet().listProTxCoins()) {
+        setOutpts.emplace(outpt);
+    }
+
+    std::set<QString> myHashes;
+    mnList->forEachMN(/*only_valid=*/false, [&](const auto& dmn) {
+        bool fMyMasternode = setOutpts.count(dmn.getCollateralOutpoint()) ||
+                             walletModel->wallet().isSpendable(PKHash(dmn.getKeyIdOwner())) ||
+                             walletModel->wallet().isSpendable(PKHash(dmn.getKeyIdVoting())) ||
+                             walletModel->wallet().isSpendable(dmn.getScriptPayout()) ||
+                             walletModel->wallet().isSpendable(dmn.getScriptOperatorPayout());
+        if (fMyMasternode) {
+            myHashes.insert(QString::fromStdString(dmn.getProTxHash().ToString()));
+        }
+    });
+
+    m_proxy_model->setMyMasternodeHashes(std::move(myHashes));
+    m_proxy_model->forceInvalidateFilter();
 }
 
-void MasternodeList::on_checkBoxMyMasternodesOnly_stateChanged(int state)
+void MasternodeList::updateFilteredCount()
 {
-    // no cooldown
-    nTimeFilterUpdatedDIP3 = GetTime() - MASTERNODELIST_FILTER_COOLDOWN_SECONDS;
-    fFilterUpdatedDIP3 = true;
+    ui->countLabel->setText(QString::number(m_proxy_model->rowCount()));
 }
 
-std::unique_ptr<const interfaces::MnEntry> MasternodeList::GetSelectedDIP3MN()
+void MasternodeList::on_filterText_textChanged(const QString& strFilterIn)
 {
-    if (!clientModel) {
+    m_proxy_model->setFilterRegularExpression(
+        QRegularExpression(QRegularExpression::escape(strFilterIn), QRegularExpression::CaseInsensitiveOption));
+    updateFilteredCount();
+}
+
+void MasternodeList::on_comboBoxType_currentIndexChanged(int index)
+{
+    if (index < 0 || index >= static_cast<int>(MasternodeListSortFilterProxyModel::TypeFilter::COUNT)) {
+        return;
+    }
+    const auto index_enum{static_cast<MasternodeListSortFilterProxyModel::TypeFilter>(index)};
+    ui->tableViewMasternodes->setColumnHidden(MasternodeModel::TYPE, index_enum != MasternodeListSortFilterProxyModel::TypeFilter::All);
+    m_proxy_model->setTypeFilter(index_enum);
+    m_proxy_model->forceInvalidateFilter();
+    updateFilteredCount();
+}
+
+void MasternodeList::on_checkBoxOwned_stateChanged(int state)
+{
+    m_proxy_model->setShowOwnedOnly(state == Qt::Checked);
+    if (clientModel && state == Qt::Checked) {
+        auto [mnList, pindex] = clientModel->getMasternodeList();
+        if (mnList) {
+            updateMyMasternodeHashes(mnList);
+        }
+    } else {
+        m_proxy_model->forceInvalidateFilter();
+    }
+    updateFilteredCount();
+}
+
+void MasternodeList::on_checkBoxHideBanned_stateChanged(int state)
+{
+    const bool hide_banned{state == Qt::Checked};
+    ui->tableViewMasternodes->setColumnHidden(MasternodeModel::POSE, hide_banned);
+    m_proxy_model->setHideBanned(hide_banned);
+    m_proxy_model->forceInvalidateFilter();
+    updateFilteredCount();
+}
+
+const MasternodeEntry* MasternodeList::GetSelectedEntry()
+{
+    if (!m_model) {
         return nullptr;
     }
 
-    std::string strProTxHash;
-    {
-        LOCK(cs_dip3list);
-
-        QItemSelectionModel* selectionModel = ui->tableWidgetMasternodesDIP3->selectionModel();
-        QModelIndexList selected = selectionModel->selectedRows();
-
-        if (selected.count() == 0) return nullptr;
-
-        QModelIndex index = selected.at(0);
-        int nSelectedRow = index.row();
-        strProTxHash = ui->tableWidgetMasternodesDIP3->item(nSelectedRow, COLUMN_PROTX_HASH)->text().toStdString();
+    QItemSelectionModel* selectionModel = ui->tableViewMasternodes->selectionModel();
+    if (!selectionModel) {
+        return nullptr;
     }
 
-    uint256 proTxHash;
-    proTxHash.SetHex(strProTxHash);
+    QModelIndexList selected = selectionModel->selectedRows();
+    if (selected.count() == 0) {
+        return nullptr;
+    }
 
-    // Caller is responsible for nullptr checking return value
-    return clientModel->getMasternodeList().first->getMN(proTxHash);
+    // Map from proxy to source model
+    return m_model->getEntryAt(m_proxy_model->mapToSource(selected.at(0)));
 }
 
 void MasternodeList::extraInfoDIP3_clicked()
 {
-    auto dmn = GetSelectedDIP3MN();
-    if (!dmn) {
+    const auto* entry = GetSelectedEntry();
+    if (!entry) {
         return;
     }
 
-    UniValue json = dmn->toJson();
-
-    // Title of popup window
-    QString strWindowtitle =
-        tr("Additional information for DIP3 Masternode %1").arg(QString::fromStdString(dmn->getProTxHash().ToString()));
-    QString strText = QString::fromStdString(json.write(2));
-
-    QMessageBox::information(this, strWindowtitle, strText);
+    auto* dialog = new DescriptionDialog(tr("Details for Masternode %1").arg(entry->proTxHash()), entry->toHtml(), /*parent=*/this);
+    dialog->resize(1000, 500);
+    dialog->setAttribute(Qt::WA_DeleteOnClose);
+    dialog->show();
 }
 
 void MasternodeList::copyProTxHash_clicked()
 {
-    auto dmn = GetSelectedDIP3MN();
-    if (!dmn) {
+    const auto* entry = GetSelectedEntry();
+    if (!entry) {
         return;
     }
 
-    QApplication::clipboard()->setText(QString::fromStdString(dmn->getProTxHash().ToString()));
+    QApplication::clipboard()->setText(entry->proTxHash());
 }
 
 void MasternodeList::copyCollateralOutpoint_clicked()
 {
-    auto dmn = GetSelectedDIP3MN();
-    if (!dmn) {
+    const auto* entry = GetSelectedEntry();
+    if (!entry) {
         return;
     }
 
-    QApplication::clipboard()->setText(QString::fromStdString(dmn->getCollateralOutpoint().ToStringShort()));
+    QApplication::clipboard()->setText(entry->collateralOutpoint());
+}
+
+void MasternodeList::filterByCollateralAddress()
+{
+    const auto* entry = GetSelectedEntry();
+    if (entry) {
+        ui->filterText->setText(entry->collateralAddress());
+    }
+}
+
+void MasternodeList::filterByPayoutAddress()
+{
+    const auto* entry = GetSelectedEntry();
+    if (entry) {
+        ui->filterText->setText(entry->payoutAddress());
+    }
+}
+
+void MasternodeList::filterByOwnerAddress()
+{
+    const auto* entry = GetSelectedEntry();
+    if (entry) {
+        ui->filterText->setText(entry->ownerAddress());
+    }
+}
+
+void MasternodeList::filterByVotingAddress()
+{
+    const auto* entry = GetSelectedEntry();
+    if (entry) {
+        ui->filterText->setText(entry->votingAddress());
+    }
 }
