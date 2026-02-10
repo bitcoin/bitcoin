@@ -58,7 +58,7 @@ COPY --from=ghcr.io/astral-sh/uv:latest /uv /uvx /bin/
 
 # Install Python to a system-wide location and set it as default
 # PYTHON_VERSION should match the value in .python-version
-ARG PYTHON_VERSION=3.10.14
+ARG PYTHON_VERSION=3.10.19
 ENV UV_PYTHON_INSTALL_DIR=/usr/local/python
 RUN uv python install ${PYTHON_VERSION}
 
