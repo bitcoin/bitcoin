@@ -219,7 +219,7 @@ ReadStatus PartiallyDownloadedBlock::FillBlock(CBlock& block, const std::vector<
         return READ_STATUS_FAILED; // Possible Short ID collision
     }
 
-    if (LogAcceptCategory(BCLog::CMPCTBLOCK, BCLog::Level::Debug)) {
+    if (util::log::ShouldDebugLog(BCLog::CMPCTBLOCK)) {
         const uint256 hash{block.GetHash()};
         uint32_t tx_missing_size{0};
         for (const auto& tx : vtx_missing) tx_missing_size += tx->ComputeTotalSize();
