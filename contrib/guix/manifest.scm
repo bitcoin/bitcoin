@@ -17,8 +17,7 @@
              ((gnu packages python) #:select (python-minimal))
              ((gnu packages python-build) #:select (python-poetry-core))
              ((gnu packages python-crypto) #:select (python-asn1crypto))
-             ((gnu packages python-science) #:select (python-scikit-build-core))
-             ((gnu packages python-xyz) #:select (python-pydantic))
+             ((gnu packages python-xyz) #:select (python-lief))
              ((gnu packages tls) #:select (openssl))
              ((gnu packages version-control) #:select (git-minimal))
              (guix build-system cmake)
@@ -152,48 +151,6 @@ desirable for building Bitcoin Core release binaries."
 chain for " target " development."))
       (home-page (package-home-page pthreads-xgcc))
       (license (package-license pthreads-xgcc)))))
-
-;; While LIEF is packaged in Guix, we maintain our own package,
-;; to simplify building, and more easily apply updates.
-;; Moreover, the Guix's package uses cmake, which caused build
-;; failure; see https://github.com/bitcoin/bitcoin/pull/27296.
-(define-public python-lief
-  (package
-    (name "python-lief")
-    (version "0.16.6")
-    (source (origin
-              (method git-fetch)
-              (uri (git-reference
-                    (url "https://github.com/lief-project/LIEF")
-                    (commit version)))
-              (file-name (git-file-name name version))
-              (sha256
-               (base32
-                "1pq9nagrnkl1x943bqnpiyxmkd9vk99znfxiwqp6vf012b50bz2a"))
-              (patches (search-our-patches "lief-scikit-0-9.patch"))))
-    (build-system pyproject-build-system)
-    (native-inputs (list cmake-minimal
-                         ninja
-                         python-scikit-build-core
-                         python-pydantic))
-    (arguments
-     (list
-      #:tests? #f                  ;needs network
-      #:phases #~(modify-phases %standard-phases
-                   (add-before 'build 'set-pythonpath
-                     (lambda _
-                       (setenv "PYTHONPATH"
-                         (string-append (string-append (getcwd) "/api/python/backend")
-                                      ":" (or (getenv "PYTHONPATH") "")))))
-                  (add-after 'set-pythonpath 'change-directory
-                     (lambda _
-                       (chdir "api/python"))))))
-    (home-page "https://github.com/lief-project/LIEF")
-    (synopsis "Library to instrument executable formats")
-    (description
-     "@code{python-lief} is a cross platform library which can parse, modify
-and abstract ELF, PE and MachO formats.")
-    (license license:asl2.0)))
 
 (define-public python-elfesteem
   (let ((commit "2eb1e5384ff7a220fd1afacd4a0170acff54fe56"))
