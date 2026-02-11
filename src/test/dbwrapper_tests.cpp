@@ -75,13 +75,12 @@ BOOST_AUTO_TEST_CASE(dbwrapper_read_deserialization_error)
     CDBWrapper dbw{{.path = "",
                     .cache_bytes = 1_MiB,
                     .memory_only = true,
-                    }};
-
+                    .read_error_cb = [] { throw dbwrapper_error{"dbwrapper test read error"}; }}};
     constexpr uint8_t key{'k'};
     dbw.Write(key, uint8_t{0x01});
 
     uint256 value{};
-    BOOST_CHECK(!dbw.Read(key, value)); // TODO abort on deserialization failure
+    BOOST_CHECK_THROW(dbw.Read(key, value), dbwrapper_error); // Check that callback is called before abort
 
     constexpr uint8_t missing_key{'m'};
     BOOST_CHECK(!dbw.Read(missing_key, value));
