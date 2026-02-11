@@ -282,6 +282,7 @@ public:
         info.proposalfee = GOVERNANCE_PROPOSAL_FEE_TX;
         info.superblockcycle = consensusParams.nSuperblockCycle;
         info.superblockmaturitywindow = consensusParams.nSuperblockMaturityWindow;
+        info.targetSpacing = consensusParams.nPowTargetSpacing;
         info.relayRequiredConfs = GOVERNANCE_MIN_RELAY_FEE_CONFIRMATIONS;
         info.requiredConfs = GOVERNANCE_FEE_CONFIRMATIONS;
         if (ctx.dmnman) {

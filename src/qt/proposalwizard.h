@@ -51,6 +51,8 @@ private:
     QString m_txid;
     QString m_fee_formatted;
     qint64 m_prepareTime{0};
+    int64_t m_superblock_cycle{0};
+    int64_t m_target_spacing{0};
     int m_relayRequiredConfs{1};
     int m_requiredConfs{6};
     int m_lastConfs{-1};
