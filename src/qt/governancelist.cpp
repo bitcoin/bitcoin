@@ -18,7 +18,6 @@
 #include <interfaces/wallet.h>
 #include <script/standard.h>
 #include <util/strencodings.h>
-#include <wallet/wallet.h>
 
 #include <qt/clientmodel.h>
 #include <qt/guiutil.h>
@@ -304,8 +303,8 @@ void GovernanceList::voteForProposal(vote_outcome_enum_t outcome)
         // Create vote
         CGovernanceVote vote(dmn->getCollateralOutpoint(), proposalHash, VOTE_SIGNAL_FUNDING, outcome);
 
-        // Sign vote using CWallet member function
-        if (!walletModel->wallet().wallet()->SignGovernanceVote(votingKeyID, vote)) {
+        // Sign vote via wallet interface
+        if (!walletModel->wallet().signGovernanceVote(votingKeyID, vote)) {
             nFailed++;
             failedMessages.append(
                 tr("Failed to sign vote for masternode %1").arg(QString::fromStdString(proTxHash.ToString())));

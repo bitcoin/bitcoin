@@ -27,6 +27,7 @@
 #include <vector>
 
 class CFeeRate;
+class CGovernanceVote;
 class CKey;
 class CRPCCommand;
 enum class FeeReason;
@@ -354,6 +355,9 @@ public:
     virtual bool prepareProposal(const uint256& govobj_hash, CAmount fee, int32_t revision, int64_t created_time,
                                  const std::string& data_hex, const COutPoint& outpoint,
                                  std::string& out_fee_txid, std::string& error) = 0;
+
+    //! Sign a governance vote with the given voting key.
+    virtual bool signGovernanceVote(const CKeyID& keyID, CGovernanceVote& vote) = 0;
 
     //! Return pointer to internal wallet class, useful for testing.
     virtual wallet::CWallet* wallet() { return nullptr; }
