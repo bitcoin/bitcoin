@@ -158,8 +158,15 @@ class InitTest(BitcoinTestFramework):
             },
             {
                 'filepath_glob': 'chainstate/*.ldb',
+                'error_message': 'Cannot read from database, shutting down.',
+                'startup_args': [],
+            },
+            {
+                'filepath_glob': 'chainstate/CURRENT',
                 'error_message': 'Error opening coins database.',
                 'startup_args': [],
+                'perturb_offset': 0,
+                'perturb_bytes': b'X',
             },
             {
                 'filepath_glob': 'blocks/blk*.dat',
@@ -233,10 +240,10 @@ class InitTest(BitcoinTestFramework):
                 self.log.info(f"Perturbing file to ensure failure {target_file}")
                 with open(target_file, "r+b") as tf:
                     # Since the genesis block is not checked by -checkblocks, the
-                    # perturbation window must be chosen such that a higher block
-                    # in blk*.dat is affected.
-                    tf.seek(150)
-                    tf.write(b"1" * 200)
+                    # default perturbation window must be chosen such that a
+                    # higher block in blk*.dat is affected.
+                    tf.seek(round_info.get('perturb_offset', 150))
+                    tf.write(round_info.get('perturb_bytes', b"1" * 200))
 
             start_expecting_error(err_fragment, startup_args)
 

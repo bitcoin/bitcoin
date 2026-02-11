@@ -9,6 +9,7 @@
 #include <serialize.h>
 #include <span.h>
 #include <streams.h>
+#include <tinyformat.h>
 #include <util/byte_units.h>
 #include <util/check.h>
 #include <util/fs.h>
@@ -205,6 +206,7 @@ private:
     inline static const std::string OBFUSCATION_KEY{"\000obfuscate_key", 14}; // explicit size to avoid truncation at leading \0
 
     std::optional<std::string> ReadImpl(std::span<const std::byte> key) const;
+    [[noreturn]] void FatalReadError(const std::string& message) const;
     size_t EstimateSizeImpl(std::span<const std::byte> key1, std::span<const std::byte> key2) const;
     auto& DBContext() const LIFETIMEBOUND { return *Assert(m_db_context); }
 
@@ -234,8 +236,8 @@ public:
             m_obfuscation(ssValue);
             SpanReader{ssValue} >> value;
             return true;
-        } catch (const std::exception&) {
-            return false;
+        } catch (const std::exception& e) {
+            FatalReadError(strprintf("Corrupted database entry in %s: %s", m_name, e.what()));
         }
     }
 

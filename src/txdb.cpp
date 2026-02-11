@@ -72,21 +72,11 @@ void CCoinsViewDB::ResizeCache(size_t new_cache_size)
 
 std::optional<Coin> CCoinsViewDB::GetCoin(const COutPoint& outpoint, bool) const
 {
-    try {
-        if (Coin coin; m_db->Read(CoinEntry(&outpoint), coin)) {
-            Assert(!coin.IsSpent()); // The UTXO database should never contain spent coins
-            return coin;
-        }
-        return std::nullopt;
-    } catch (const std::runtime_error& e) {
-        m_db_params.read_error_cb();
-        LogError("Error reading from database: %s\n", e.what());
-        // Starting the shutdown sequence and returning false to the caller would be
-        // interpreted as 'entry not found' (as opposed to unable to read data), and
-        // could lead to invalid interpretation. Just exit immediately, as we can't
-        // continue anyway, and all writes should be atomic.
-        std::abort();
+    if (Coin coin; m_db->Read(CoinEntry(&outpoint), coin)) {
+        Assert(!coin.IsSpent()); // The UTXO database should never contain spent coins
+        return coin;
     }
+    return std::nullopt;
 }
 
 bool CCoinsViewDB::HaveCoin(const COutPoint& outpoint) const

@@ -99,9 +99,8 @@ interfaces::Chain::NotifyOptions BlockFilterIndex::CustomOptions()
 bool BlockFilterIndex::CustomInit(const std::optional<interfaces::BlockRef>& block)
 {
     if (!m_db->Read(DB_FILTER_POS, m_next_filter_pos)) {
-        // Check that the cause of the read failure is that the key does not exist. Any other errors
-        // indicate database corruption or a disk failure, and starting the index would cause
-        // further corruption.
+        // TODO: Drop this Read+Exists pattern. Read() now terminates on corruption,
+        // so this branch should only represent the missing-key initialization path.
         if (m_db->Exists(DB_FILTER_POS)) {
             LogError("Cannot read current %s state; index may be corrupted",
                       GetName());

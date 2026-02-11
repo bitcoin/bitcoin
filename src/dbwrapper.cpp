@@ -29,6 +29,7 @@
 #include <algorithm>
 #include <cassert>
 #include <cstdarg>
+#include <cstdlib>
 #include <cstdint>
 #include <cstdio>
 #include <memory>
@@ -313,10 +314,16 @@ std::optional<std::string> CDBWrapper::ReadImpl(std::span<const std::byte> key) 
     if (!status.ok()) {
         if (status.IsNotFound())
             return std::nullopt;
-        LogError("LevelDB read failure: %s", status.ToString());
-        HandleError(status);
+        FatalReadError(strprintf("LevelDB read failure: %s", status.ToString()));
     }
     return strValue;
+}
+
+[[noreturn]] void CDBWrapper::FatalReadError(const std::string& message) const
+{
+    LogError("%s", message);
+    m_read_error_cb();
+    std::abort();
 }
 
 size_t CDBWrapper::EstimateSizeImpl(std::span<const std::byte> key1, std::span<const std::byte> key2) const

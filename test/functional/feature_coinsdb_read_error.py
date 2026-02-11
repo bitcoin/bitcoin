@@ -93,7 +93,7 @@ class DBReadErrorTest(BitcoinTestFramework):
         self.corrupt_leveldb(node, "indexes/txindex")
         self.start_node(2, extra_args=["-txindex=1"])
 
-        self.assert_read_error_without_shutdown(node, rpc_fn=lambda: self.for_txids(node, node.getrawtransaction))  # TODO: assert that shutdown after read decode errors throw
+        self.assert_shutdown_on_read_error(node, rpc_fn=lambda: self.for_txids(node, node.getrawtransaction))
 
     def test_coinsdb_gettxoutsetinfo_read_error(self):
         node = self.nodes[1]
