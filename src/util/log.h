@@ -60,9 +60,13 @@ struct Entry {
     std::string message;
 };
 
-/** Return whether messages with specified category and level should be logged. Applications using
- * the logging library need to provide this. */
-bool ShouldLog(Category category, Level level);
+/** Return whether messages with specified category should be debug logged.
+ * Applications using the logging library need to provide this. */
+bool ShouldDebugLog(Category category);
+
+/** Return whether messages with specified category should be trace logged.
+ * Applications using the logging library need to provide this. */
+bool ShouldTraceLog(Category category);
 
 /** Send message to be logged. Applications using the logging library need to provide this. */
 void Log(Entry entry);
@@ -120,16 +124,15 @@ using Level = util::log::Level;
 // Log by prefixing the output with the passed category name and severity level. This logs conditionally if
 // the category is allowed. No rate limiting is applied, because users specifying -debug are assumed to be
 // developers or power users who are aware that -debug may cause excessive disk usage due to logging.
-#define detail_LogIfCategoryAndLevelEnabled(category, level, ...)      \
-    do {                                                               \
-        if (util::log::ShouldLog((category), (level))) {               \
-            Assume((level) < util::log::Level::Info); /*Only called with the levels below*/ \
-            detail_LogPrintLevel_((category), (level), util::log::NO_RATE_LIMIT, __VA_ARGS__);  \
-        }                                                              \
+#define detail_LogIfCategoryAndLevelEnabled(category, shouldlog, level, ...) \
+    do { \
+        if (shouldlog(category)) { \
+            detail_LogPrintLevel_((category), (level), util::log::NO_RATE_LIMIT, __VA_ARGS__); \
+        } \
     } while (0)
 
 // Log conditionally, prefixing the output with the passed category name.
-#define LogDebug(category, ...) detail_LogIfCategoryAndLevelEnabled(category, util::log::Level::Debug, __VA_ARGS__)
-#define LogTrace(category, ...) detail_LogIfCategoryAndLevelEnabled(category, util::log::Level::Trace, __VA_ARGS__)
+#define LogDebug(category, ...) detail_LogIfCategoryAndLevelEnabled(category, util::log::ShouldDebugLog, util::log::Level::Debug, __VA_ARGS__)
+#define LogTrace(category, ...) detail_LogIfCategoryAndLevelEnabled(category, util::log::ShouldTraceLog, util::log::Level::Trace, __VA_ARGS__)
 
 #endif // BITCOIN_UTIL_LOG_H
