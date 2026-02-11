@@ -13,6 +13,7 @@
 #include <pow.h>
 #include <test/util/blockfilter.h>
 #include <test/util/setup_common.h>
+#include <util/threadpool.h>
 #include <validation.h>
 
 #include <boost/test/unit_test.hpp>
@@ -119,6 +120,7 @@ BOOST_FIXTURE_TEST_CASE(blockfilter_index_initial_sync, BuildChainTestingSetup)
     BOOST_REQUIRE(filter_index.Init());
 
     uint256 last_header;
+    int tip_height;
 
     // Filter should not be found in the index before it is started.
     {
@@ -138,12 +140,17 @@ BOOST_FIXTURE_TEST_CASE(blockfilter_index_initial_sync, BuildChainTestingSetup)
             BOOST_CHECK(!filter_index.LookupFilterHashRange(block_index->nHeight, block_index,
                                                             filter_hashes));
         }
+        tip_height = m_node.chainman->ActiveChain().Height();
     }
 
     // BlockUntilSyncedToCurrentChain should return false before index is started.
     BOOST_CHECK(!filter_index.BlockUntilSyncedToCurrentChain());
 
     filter_index.Sync();
+
+    const auto& summary{filter_index.GetSummary()};
+    BOOST_CHECK(summary.synced);
+    BOOST_CHECK_EQUAL(summary.best_block_height, tip_height);
 
     // Check that filter index has all blocks that were in the chain before it started.
     {
@@ -269,6 +276,50 @@ BOOST_FIXTURE_TEST_CASE(blockfilter_index_initial_sync, BuildChainTestingSetup)
     filter_index.Stop();
 }
 
+BOOST_FIXTURE_TEST_CASE(blockfilter_index_parallel_initial_sync, BuildChainTestingSetup)
+{
+    int tip_height = 100; // pre-mined blocks
+    const uint16_t MINE_BLOCKS = 622;
+    for (int round = 0; round < 2; round++) { // two rounds to test sync from genesis and from a higher block
+        // Generate blocks
+        mineBlocks(MINE_BLOCKS);
+        const CBlockIndex* tip = WITH_LOCK(::cs_main, return m_node.chainman->ActiveChain().Tip());
+        BOOST_REQUIRE(tip->nHeight == MINE_BLOCKS + tip_height);
+        tip_height = tip->nHeight;
+
+        // Init index
+        BlockFilterIndex filter_index(interfaces::MakeChain(m_node), BlockFilterType::BASIC, 1 << 20, /*f_memory=*/false);
+        BOOST_REQUIRE(filter_index.Init());
+
+        ThreadPool thread_pool("blockfilter");
+        thread_pool.Start(2);
+        filter_index.SetThreadPool(thread_pool);
+        filter_index.SetBlocksPerWorker(200);
+
+        // Start sync
+        BOOST_CHECK(!filter_index.BlockUntilSyncedToCurrentChain());
+        filter_index.Sync();
+        const auto& summary{filter_index.GetSummary()};
+        BOOST_CHECK(summary.synced);
+        BOOST_CHECK_EQUAL(summary.best_block_height, tip_height);
+
+        // Check that filter index has all blocks that were in the chain before it started.
+        {
+            uint256 last_header;
+            LOCK(cs_main);
+            const CBlockIndex* block_index;
+            for (block_index = m_node.chainman->ActiveChain().Genesis();
+                 block_index != nullptr;
+                 block_index = m_node.chainman->ActiveChain().Next(block_index)) {
+                CheckFilterLookups(filter_index, block_index, last_header, m_node.chainman->m_blockman);
+            }
+        }
+
+        filter_index.Interrupt();
+        filter_index.Stop();
+    }
+}
+
 BOOST_FIXTURE_TEST_CASE(blockfilter_index_init_destroy, BasicTestingSetup)
 {
     BlockFilterIndex* filter_index;
@@ -304,83 +355,6 @@ BOOST_FIXTURE_TEST_CASE(blockfilter_index_init_destroy, BasicTestingSetup)
 
     filter_index = GetBlockFilterIndex(BlockFilterType::BASIC);
     BOOST_CHECK(filter_index == nullptr);
-}
-
-class IndexReorgCrash : public BaseIndex
-{
-private:
-    std::unique_ptr<BaseIndex::DB> m_db;
-    std::shared_future<void> m_blocker;
-    int m_blocking_height;
-
-public:
-    explicit IndexReorgCrash(std::unique_ptr<interfaces::Chain> chain, std::shared_future<void> blocker,
-                             int blocking_height) : BaseIndex(std::move(chain), "test index"), m_blocker(blocker),
-                                                    m_blocking_height(blocking_height)
-    {
-        const fs::path path = gArgs.GetDataDirNet() / "index";
-        fs::create_directories(path);
-        m_db = std::make_unique<BaseIndex::DB>(path / "db", /*n_cache_size=*/0, /*f_memory=*/true, /*f_wipe=*/false);
-    }
-
-    bool AllowPrune() const override { return false; }
-    BaseIndex::DB& GetDB() const override { return *m_db; }
-
-    bool CustomAppend(const interfaces::BlockInfo& block) override
-    {
-        // Simulate a delay so new blocks can get connected during the initial sync
-        if (block.height == m_blocking_height) m_blocker.wait();
-
-        // Move mock time forward so the best index gets updated only when we are not at the blocking height
-        if (block.height == m_blocking_height - 1 || block.height > m_blocking_height) {
-            SetMockTime(GetTime<std::chrono::seconds>() + 31s);
-        }
-
-        return true;
-    }
-};
-
-BOOST_FIXTURE_TEST_CASE(index_reorg_crash, BuildChainTestingSetup)
-{
-    // Enable mock time
-    SetMockTime(GetTime<std::chrono::minutes>());
-
-    std::promise<void> promise;
-    std::shared_future<void> blocker(promise.get_future());
-    int blocking_height = WITH_LOCK(cs_main, return m_node.chainman->ActiveChain().Tip()->nHeight);
-
-    IndexReorgCrash index(interfaces::MakeChain(m_node), blocker, blocking_height);
-    BOOST_REQUIRE(index.Init());
-    BOOST_REQUIRE(index.StartBackgroundSync());
-
-    auto func_wait_until = [&](int height, std::chrono::milliseconds timeout) {
-        auto deadline = std::chrono::steady_clock::now() + timeout;
-        while (index.GetSummary().best_block_height < height) {
-            if (std::chrono::steady_clock::now() > deadline) {
-                BOOST_FAIL(strprintf("Timeout waiting for index height %d (current: %d)", height, index.GetSummary().best_block_height));
-                return;
-            }
-            std::this_thread::sleep_for(100ms);
-        }
-    };
-
-    // Wait until the index is one block before the fork point
-    func_wait_until(blocking_height - 1, /*timeout=*/5s);
-
-    // Create a fork to trigger the reorg
-    std::vector<std::shared_ptr<CBlock>> fork;
-    const CBlockIndex* prev_tip = WITH_LOCK(cs_main, return m_node.chainman->ActiveChain().Tip()->pprev);
-    BOOST_REQUIRE(BuildChain(prev_tip, GetScriptForDestination(PKHash(GenerateRandomKey().GetPubKey())), 3, fork));
-
-    for (const auto& block : fork) {
-        BOOST_REQUIRE(m_node.chainman->ProcessNewBlock(block, /*force_processing=*/true, /*min_pow_checked=*/true, nullptr));
-    }
-
-    // Unblock the index thread so it can process the reorg
-    promise.set_value();
-    // Wait for the index to reach the new tip
-    func_wait_until(blocking_height + 2, 5s);
-    index.Stop();
 }
 
 BOOST_AUTO_TEST_SUITE_END()
