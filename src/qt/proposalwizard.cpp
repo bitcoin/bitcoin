@@ -8,6 +8,7 @@
 
 #include <governance/object.h>
 #include <governance/validators.h>
+#include <util/moneystr.h>
 
 #include <interfaces/node.h>
 #include <qt/bitcoinamountfield.h>
@@ -20,14 +21,14 @@
 #include <qt/walletmodel.h>
 
 #include <QDateTime>
-#include <QJsonDocument>
-#include <QJsonObject>
 #include <QLabel>
 #include <QLineEdit>
 #include <QMessageBox>
 #include <QPushButton>
 #include <QStackedWidget>
 #include <QTimer>
+
+#include <univalue.h>
 
 #include <algorithm>
 
@@ -158,15 +159,17 @@ void ProposalWizard::buildJsonAndHex()
         }
     }
 
-    QJsonObject o;
-    o.insert("name", m_ui->editName->text());
-    o.insert("payment_address", m_ui->editPayAddr->text());
-    o.insert("payment_amount", m_ui->paymentAmount->value() / static_cast<double>(COIN));
-    o.insert("url", m_ui->editUrl->text());
-    if (start_epoch > 0) o.insert("start_epoch", start_epoch);
-    if (end_epoch > 0) o.insert("end_epoch", end_epoch);
-    o.insert("type", 1);
-    const auto json = QJsonDocument(o).toJson(QJsonDocument::Compact);
+    UniValue o(UniValue::VOBJ);
+    o.pushKV("name", m_ui->editName->text().toStdString());
+    o.pushKV("payment_address", m_ui->editPayAddr->text().toStdString());
+    UniValue amount;
+    amount.setNumStr(FormatMoney(m_ui->paymentAmount->value()));
+    o.pushKV("payment_amount", amount);
+    o.pushKV("url", m_ui->editUrl->text().toStdString());
+    if (start_epoch > 0) o.pushKV("start_epoch", start_epoch);
+    if (end_epoch > 0) o.pushKV("end_epoch", end_epoch);
+    o.pushKV("type", 1);
+    const auto json{QByteArray::fromStdString(o.write())};
     m_ui->plainJson->setPlainText(QString::fromUtf8(json));
     m_hex = toHex(json);
     m_ui->editHex->setText(m_hex);
