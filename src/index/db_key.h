@@ -7,9 +7,9 @@
 
 #include <dbwrapper.h>
 #include <interfaces/types.h>
-#include <logging.h>
 #include <serialize.h>
 #include <uint256.h>
+#include <util/log.h>
 
 #include <cstdint>
 #include <ios>

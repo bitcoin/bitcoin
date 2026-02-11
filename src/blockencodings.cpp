@@ -9,10 +9,10 @@
 #include <consensus/validation.h>
 #include <crypto/sha256.h>
 #include <crypto/siphash.h>
-#include <logging.h>
 #include <random.h>
 #include <streams.h>
 #include <txmempool.h>
+#include <util/log.h>
 #include <validation.h>
 
 #include <unordered_map>

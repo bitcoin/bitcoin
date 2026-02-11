@@ -8,9 +8,9 @@
 #include <netbase.h>
 
 #include <compat/compat.h>
-#include <logging.h>
 #include <sync.h>
 #include <tinyformat.h>
+#include <util/log.h>
 #include <util/sock.h>
 #include <util/strencodings.h>
 #include <util/string.h>

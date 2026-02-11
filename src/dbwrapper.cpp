@@ -14,7 +14,6 @@
 #include <leveldb/slice.h>
 #include <leveldb/status.h>
 #include <leveldb/write_batch.h>
-#include <logging.h>
 #include <random.h>
 #include <serialize.h>
 #include <span.h>

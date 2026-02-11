@@ -8,7 +8,6 @@
 #include <compat/endian.h>
 #include <crypto/sha256.h>
 #include <i2p.h>
-#include <logging.h>
 #include <netaddress.h>
 #include <netbase.h>
 #include <random.h>
@@ -16,6 +15,7 @@
 #include <sync.h>
 #include <tinyformat.h>
 #include <util/fs.h>
+#include <util/log.h>
 #include <util/readwritefile.h>
 #include <util/sock.h>
 #include <util/strencodings.h>

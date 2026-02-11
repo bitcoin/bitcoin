@@ -10,7 +10,6 @@
 #include <common/args.h>
 #include <compat/compat.h>
 #include <crypto/hmac_sha256.h>
-#include <logging.h>
 #include <net.h>
 #include <netaddress.h>
 #include <netbase.h>
@@ -18,6 +17,7 @@
 #include <tinyformat.h>
 #include <util/check.h>
 #include <util/fs.h>
+#include <util/log.h>
 #include <util/readwritefile.h>
 #include <util/strencodings.h>
 #include <util/string.h>

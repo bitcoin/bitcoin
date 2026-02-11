@@ -11,11 +11,11 @@
 #include <common/messages.h>
 #include <consensus/amount.h>
 #include <kernel/chainparams.h>
-#include <logging.h>
 #include <policy/feerate.h>
 #include <policy/policy.h>
 #include <tinyformat.h>
 #include <txgraph.h>
+#include <util/log.h>
 #include <util/moneystr.h>
 #include <util/translation.h>
 

@@ -8,10 +8,10 @@
 
 #include <chainparams.h>
 #include <crypto/common.h>
-#include <logging.h>
 #include <sync.h>
 #include <util/check.h>
 #include <util/fs_helpers.h>
+#include <util/log.h>
 #include <util/strencodings.h>
 #include <util/translation.h>
 #include <wallet/db.h>
