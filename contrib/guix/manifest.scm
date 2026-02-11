@@ -16,7 +16,7 @@
              (gnu packages pkg-config)
              ((gnu packages python) #:select (python-minimal))
              ((gnu packages python-build) #:select (python-poetry-core))
-             ((gnu packages python-crypto) #:select (python-asn1crypto))
+             ((gnu packages python-crypto) #:select (python-asn1crypto python-oscrypto))
              ((gnu packages python-xyz) #:select (python-lief))
              ((gnu packages tls) #:select (openssl))
              ((gnu packages version-control) #:select (git-minimal))
@@ -176,64 +176,6 @@ chain for " target " development."))
       (description "elfesteem parses ELF, PE and Mach-O files.")
       (license license:lgpl2.1))))
 
-(define-public python-oscrypto
-  (package
-    (name "python-oscrypto")
-    (version "1.3.0")
-    (source
-     (origin
-       (method git-fetch)
-       (uri (git-reference
-             (url "https://github.com/wbond/oscrypto")
-             (commit version)))
-       (file-name (git-file-name name version))
-       (sha256
-        (base32
-         "1v5wkmzcyiqy39db8j2dvkdrv2nlsc48556h73x4dzjwd6kg4q0a"))
-       (patches (search-our-patches "oscrypto-hard-code-openssl.patch"))))
-    (build-system python-build-system)
-    (native-search-paths
-     (list (search-path-specification
-            (variable "SSL_CERT_FILE")
-            (file-type 'regular)
-            (separator #f)                ;single entry
-            (files '("etc/ssl/certs/ca-certificates.crt")))))
-
-    (propagated-inputs
-      (list python-asn1crypto openssl))
-    (arguments
-     `(#:phases
-       (modify-phases %standard-phases
-         (add-after 'unpack 'hard-code-path-to-libscrypt
-           (lambda* (#:key inputs #:allow-other-keys)
-             (let ((openssl (assoc-ref inputs "openssl")))
-               (substitute* "oscrypto/__init__.py"
-                 (("@GUIX_OSCRYPTO_USE_OPENSSL@")
-                  (string-append openssl "/lib/libcrypto.so" "," openssl "/lib/libssl.so")))
-               #t)))
-         (add-after 'unpack 'disable-broken-tests
-           (lambda _
-             ;; This test is broken as there is no keyboard interrupt.
-             (substitute* "tests/test_trust_list.py"
-               (("^(.*)class TrustListTests" line indent)
-                (string-append indent
-                               "@unittest.skip(\"Disabled by Guix\")\n"
-                               line)))
-             (substitute* "tests/test_tls.py"
-               (("^(.*)class TLSTests" line indent)
-                (string-append indent
-                               "@unittest.skip(\"Disabled by Guix\")\n"
-                               line)))
-             #t))
-         (replace 'check
-           (lambda _
-             (invoke "python" "run.py" "tests")
-             #t)))))
-    (home-page "https://github.com/wbond/oscrypto")
-    (synopsis "Compiler-free Python crypto library backed by the OS")
-    (description "oscrypto is a compilation-free, always up-to-date encryption library for Python.")
-    (license license:expat)))
-
 (define-public python-oscryptotests
   (package (inherit python-oscrypto)
     (name "python-oscryptotests")
@@ -265,7 +207,8 @@ chain for " target " development."))
            "1qw2k7xis53179lpqdqyylbcmp76lj7sagp883wmxg5i7chhc96k"))))
       (build-system python-build-system)
       (propagated-inputs
-        (list python-asn1crypto
+        (list openssl
+              python-asn1crypto
               python-oscrypto
               python-oscryptotests)) ;; certvalidator tests import oscryptotests
       (arguments
