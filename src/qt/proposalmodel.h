@@ -58,8 +58,6 @@ public:
     QString toHtml(const BitcoinUnit& unit) const;
     QString toJson() const;
     QString url() const { return m_url; }
-
-    void openUrl() const;
 };
 
 using ProposalList = std::vector<std::unique_ptr<Proposal>>;

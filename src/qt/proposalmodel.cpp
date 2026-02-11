@@ -15,9 +15,6 @@
 #include <qt/clientmodel.h>
 #include <qt/guiutil.h>
 
-#include <QDesktopServices>
-#include <QUrl>
-
 #include <univalue.h>
 
 #include <algorithm>
@@ -112,11 +109,6 @@ bool Proposal::isActive() const
     }
     std::string strError;
     return clientModel->node().gov().getObjLocalValidity(govObj, strError, false);
-}
-
-void Proposal::openUrl() const
-{
-    QDesktopServices::openUrl(QUrl(m_url));
 }
 
 ///

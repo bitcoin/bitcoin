@@ -26,10 +26,14 @@
 #include <qt/walletmodel.h>
 
 #include <QAbstractItemView>
+#include <QApplication>
+#include <QClipboard>
+#include <QDesktopServices>
 #include <QMessageBox>
 #include <QMetaObject>
 #include <QResizeEvent>
 #include <QShowEvent>
+#include <QUrl>
 
 namespace {
 constexpr int TITLE_MIN_WIDTH{220};
@@ -246,16 +250,15 @@ void GovernanceList::showProposalContextMenu(const QPoint& pos)
     }
 
     const auto proposal = proposalModel->getProposalAt(proposalModelProxy->mapToSource(index));
-    if (proposal == nullptr) {
+    if (!proposal) {
         return;
     }
 
-    // right click menu with option to open proposal url
-    QString proposal_url = proposal->url();
-    proposal_url.replace(QChar('&'), QString("&&"));
-
     proposalContextMenu->clear();
-    proposalContextMenu->addAction(proposal_url, [proposal]() { proposal->openUrl(); });
+    proposalContextMenu->addAction(tr("Copy Raw JSON"), this, &GovernanceList::copyProposalJson);
+    if (!proposal->url().isEmpty()) {
+        proposalContextMenu->addAction(tr("Open Proposal URL…"), this, &GovernanceList::openProposalUrl);
+    }
 
     // Add voting options if wallet is available and has voting capability
     if (walletModel && canVote()) {
@@ -301,6 +304,54 @@ void GovernanceList::voteNo() { voteForProposal(VOTE_OUTCOME_NO); }
 
 void GovernanceList::voteAbstain() { voteForProposal(VOTE_OUTCOME_ABSTAIN); }
 
+void GovernanceList::openProposalUrl()
+{
+    const auto selection = ui->govTableView->selectionModel()->selectedRows();
+    if (selection.isEmpty()) {
+        return;
+    }
+
+    const auto proposal = proposalModel->getProposalAt(proposalModelProxy->mapToSource(selection.first()));
+    if (!proposal || proposal->url().isEmpty()) {
+        return;
+    }
+
+    const QUrl url{QUrl(proposal->url())};
+    if (const QString scheme = url.isValid() ? url.scheme().toLower() : QString();
+        scheme != QLatin1String("http") && scheme != QLatin1String("https")) {
+        QMessageBox::critical(this, tr("Error"), tr("Cannot validate URL, potentially malformed or unknown protocol."));
+        return;
+    }
+    QMessageBox::StandardButton reply = QMessageBox::warning(
+        this,
+        tr("External Link Warning"),
+        tr("You are about to open the following URL in your default browser\n\n%1\n\n"
+           "This content was submitted by a user. It may not match what is described in the title.\n\n"
+           "Do you wish to continue?").arg(proposal->url()),
+        QMessageBox::Yes | QMessageBox::No,
+        QMessageBox::No
+    );
+
+    if (reply == QMessageBox::Yes) {
+        QDesktopServices::openUrl(url);
+    }
+}
+
+void GovernanceList::copyProposalJson()
+{
+    const auto selection = ui->govTableView->selectionModel()->selectedRows();
+    if (selection.isEmpty()) {
+        return;
+    }
+
+    const auto proposal = proposalModel->getProposalAt(proposalModelProxy->mapToSource(selection.first()));
+    if (!proposal) {
+        return;
+    }
+
+    QApplication::clipboard()->setText(proposal->toJson());
+}
+
 void GovernanceList::voteForProposal(vote_outcome_enum_t outcome)
 {
     if (!walletModel) {
@@ -322,7 +373,7 @@ void GovernanceList::voteForProposal(vote_outcome_enum_t outcome)
 
     const auto index = selection.first();
     const auto proposal = proposalModel->getProposalAt(proposalModelProxy->mapToSource(index));
-    if (proposal == nullptr) return;
+    if (!proposal) return;
 
     const uint256 proposalHash(uint256S(proposal->hash().toStdString()));
 
