@@ -6,8 +6,11 @@
 #include <chainparamsbase.h>
 
 #include <common/args.h>
+#include <crypto/hex_base.h>
+#include <signet.h>
 #include <tinyformat.h>
 #include <util/chaintype.h>
+#include <util/strencodings.h>
 
 #include <cassert>
 
@@ -33,6 +36,17 @@ const CBaseChainParams& BaseParams()
     return *globalChainBaseParams;
 }
 
+std::string GetSignetDataDir()
+{
+    std::string base_data_dir = "signet";
+    const std::string challenge_hex = gArgs.GetArg("-signetchallenge", "");
+    if (challenge_hex.empty() || ToLower(challenge_hex) == SIGNET_DEFAULT_CHALLENGE_HEX) {
+        return base_data_dir;
+    }
+    const std::vector<uint8_t> challenge_bytes = ParseHex<uint8_t>(challenge_hex);
+    return base_data_dir + "_" + HexStr(GetSignetMessageStart(challenge_bytes));
+}
+
 /**
  * Port numbers for incoming Tor connections (8334, 18334, 38334, 48334, 18445) have
  * been chosen arbitrarily to keep ranges of used ports tight.
@@ -47,7 +61,7 @@ std::unique_ptr<CBaseChainParams> CreateBaseChainParams(const ChainType chain)
     case ChainType::TESTNET4:
         return std::make_unique<CBaseChainParams>("testnet4", 48332);
     case ChainType::SIGNET:
-        return std::make_unique<CBaseChainParams>("signet", 38332);
+        return std::make_unique<CBaseChainParams>(GetSignetDataDir(), 38332);
     case ChainType::REGTEST:
         return std::make_unique<CBaseChainParams>("regtest", 18443);
     }
@@ -56,6 +70,9 @@ std::unique_ptr<CBaseChainParams> CreateBaseChainParams(const ChainType chain)
 
 void SelectBaseParams(const ChainType chain)
 {
-    globalChainBaseParams = CreateBaseChainParams(chain);
+    // We need to call SelectConfigNetwork before CreateBaseChainParams since we
+    // check -signetchallenge in CreateBaseChainParams to determine the signet
+    // datadir.
     gArgs.SelectConfigNetwork(ChainTypeToString(chain));
+    globalChainBaseParams = CreateBaseChainParams(chain);
 }
