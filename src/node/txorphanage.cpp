@@ -5,12 +5,12 @@
 #include <node/txorphanage.h>
 
 #include <consensus/validation.h>
-#include <logging.h>
 #include <policy/policy.h>
 #include <primitives/transaction.h>
 #include <util/feefrac.h>
-#include <util/time.h>
 #include <util/hasher.h>
+#include <util/log.h>
+#include <util/time.h>
 
 #include <boost/multi_index/indexed_by.hpp>
 #include <boost/multi_index/ordered_index.hpp>

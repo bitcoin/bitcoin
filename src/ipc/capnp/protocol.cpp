@@ -10,10 +10,10 @@
 #include <ipc/exception.h>
 #include <ipc/protocol.h>
 #include <kj/async.h>
-#include <logging.h>
 #include <mp/proxy-io.h>
 #include <mp/proxy-types.h>
 #include <mp/util.h>
+#include <util/log.h>
 #include <util/threadnames.h>
 
 #include <cassert>

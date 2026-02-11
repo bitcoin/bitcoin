@@ -12,7 +12,6 @@
 #include <interfaces/chain.h>
 #include <interfaces/handler.h>
 #include <kernel/cs_main.h>
-#include <logging.h>
 #include <node/types.h>
 #include <outputtype.h>
 #include <policy/feerate.h>
@@ -26,6 +25,7 @@
 #include <uint256.h>
 #include <util/fs.h>
 #include <util/hasher.h>
+#include <util/log.h>
 #include <util/result.h>
 #include <util/string.h>
 #include <util/time.h>

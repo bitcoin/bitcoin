@@ -8,9 +8,9 @@
 #include <consensus/amount.h>
 #include <consensus/consensus.h>
 #include <interfaces/chain.h>
-#include <logging.h>
 #include <policy/feerate.h>
 #include <util/check.h>
+#include <util/log.h>
 #include <util/moneystr.h>
 
 #include <numeric>
