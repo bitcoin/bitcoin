@@ -276,10 +276,15 @@ void MnemonicVerificationDialog::onHideMnemonicClicked()
     ui->hideMnemonicButton->hide();
     ui->showMnemonicButton->show();
     m_mnemonic_revealed = false;
+    // Clear parsed words from memory immediately when hiding
+    m_words.clear();
 }
 
 void MnemonicVerificationDialog::reject()
 {
+    // Eagerly clear parsed words to minimize exposure time in memory.
+    // They will be re-parsed on demand via parseWords() if needed.
+    m_words.clear();
     // close dialog for step-1; return back to step-1 for step-2
     if (ui->stackedWidget->currentIndex() == 0) {
         QDialog::reject();
@@ -303,7 +308,7 @@ bool MnemonicVerificationDialog::validateWord(const QString& word, int position)
     }
     // Convert SecureString to QString temporarily for comparison
     QString secureWord{QString::fromUtf8(words[position - 1].data(), words[position - 1].size()).toLower()};
-    const bool result{word == secureWord.toLower()};
+    const bool result{word == secureWord};
     // Clear temporary QString immediately
     secureWord.fill(QChar(0));
     secureWord.clear();
@@ -367,15 +372,13 @@ std::vector<SecureString> MnemonicVerificationDialog::parseWords()
     // Convert to SecureString vector for secure storage
     m_words.clear();
     m_words.reserve(wordList.size());
-    std::string wordStd;
     for (const QString& word : wordList) {
-        wordStd = word.toStdString();
+        QByteArray utf8 = word.toUtf8();
         SecureString secureWord;
-        secureWord.assign(std::string_view{wordStd});
-        m_words.push_back(secureWord);
+        secureWord.assign(utf8.constData(), utf8.size());
+        m_words.push_back(std::move(secureWord));
+        utf8.fill(0);
     }
-    // Clear temporary std::string
-    wordStd.assign(wordStd.size(), 0);
 
     // Clear the temporary QString immediately after parsing
     mnemonicStr.fill(QChar(0));
