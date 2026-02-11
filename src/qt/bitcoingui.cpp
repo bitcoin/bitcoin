@@ -1468,11 +1468,11 @@ void BitcoinGUI::updateProgressBarVisibility()
         return;
     }
     // Show the progress bar label if the network is active + we are out of sync or we have no connections.
-    bool fShowProgressBarLabel = m_node.getNetworkActive() && (!m_node.masternodeSync().isSynced() || clientModel->getNumConnections() == 0);
+    bool fShowProgressBarLabel = m_node.getNetworkActive() && (!m_node.masternodeSync().isBlockchainSynced() || clientModel->getNumConnections() == 0);
     // Show the progress bar only if the the network active + we are not synced + we have any connection. Unlike with the label
     // which gives an info text about the connecting phase there is no reason to show the progress bar if we don't have connections
     // since it will not get any updates in this case.
-    bool fShowProgressBar = m_node.getNetworkActive() && !m_node.masternodeSync().isSynced() && clientModel->getNumConnections() > 0;
+    bool fShowProgressBar = m_node.getNetworkActive() && !m_node.masternodeSync().isBlockchainSynced() && clientModel->getNumConnections() > 0;
     progressBarLabel->setVisible(fShowProgressBarLabel);
     progressBar->setVisible(fShowProgressBar);
 }
@@ -1670,7 +1670,7 @@ void BitcoinGUI::setNumBlocks(int count, const QDateTime& blockDate, const QStri
         tooltip += tr("Last received block was generated %1 ago.").arg(timeBehindText);
         tooltip += QString("<br>");
         tooltip += tr("Transactions after this will not yet be visible.");
-    } else if (!m_node.gov().isEnabled()) {
+    } else {
         setAdditionalDataSyncProgress(1);
     }
 
@@ -1704,11 +1704,7 @@ void BitcoinGUI::setAdditionalDataSyncProgress(double nSyncProgress)
     // Prevent orphan statusbar messages (e.g. hover Quit in main menu, wait until chain-sync starts -> garbelled text)
     statusBar()->clearMessage();
 
-    QString tooltip;
-
-    // Set icon state: spinning if catching up, tick otherwise
-    QString strSyncStatus;
-    tooltip = tr("Up to date") + QString(".<br>") + tooltip;
+    QString tooltip{tr("Up to date")};
 
 #ifdef ENABLE_WALLET
     if(walletFrame)
@@ -1718,18 +1714,8 @@ void BitcoinGUI::setAdditionalDataSyncProgress(double nSyncProgress)
     updateProgressBarVisibility();
     updateGovernanceCycleIcon();
 
-    if(m_node.masternodeSync().isSynced()) {
-        stopSpinner();
-        labelBlocksIcon->setPixmap(GUIUtil::getIcon("synced", GUIUtil::ThemedColor::GREEN).pixmap(STATUSBAR_ICONSIZE, STATUSBAR_ICONSIZE));
-    } else {
-        progressBar->setFormat(tr("Synchronizing additional data: %p%"));
-        progressBar->setMaximum(1000000000);
-        progressBar->setValue(nSyncProgress * 1000000000.0 + 0.5);
-    }
-
-    strSyncStatus = QString(m_node.masternodeSync().getSyncStatus().c_str());
-    progressBarLabel->setText(strSyncStatus);
-    tooltip = strSyncStatus + QString("<br>") + tooltip;
+    stopSpinner();
+    labelBlocksIcon->setPixmap(GUIUtil::getIcon("synced", GUIUtil::ThemedColor::GREEN).pixmap(STATUSBAR_ICONSIZE, STATUSBAR_ICONSIZE));
 
     // Don't word-wrap this (fixed-width) tooltip
     tooltip = QString("<nobr>") + tooltip + QString("</nobr>");
