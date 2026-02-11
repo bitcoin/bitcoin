@@ -65,11 +65,11 @@ class SignetMinerTest(BitcoinTestFramework):
         # Nodes with different signet networks are not connected
 
     # generate block with signet miner tool
-    def mine_block(self, node):
+    def mine_block(self, node, extra_args):
         n_blocks = node.getblockcount()
         base_dir = self.config["environment"]["SRCDIR"]
         signet_miner_path = os.path.join(base_dir, "contrib", "signet", "miner")
-        rpc_argv = node.binaries.rpc_argv() + [f"-datadir={node.datadir_path}"]
+        rpc_argv = node.binaries.rpc_argv() + [f"-datadir={node.datadir_path}"] + extra_args
         util_argv = node.binaries.util_argv() + ["grind"]
         subprocess.run([
                 sys.executable,
@@ -85,11 +85,11 @@ class SignetMinerTest(BitcoinTestFramework):
         assert_equal(node.getblockcount(), n_blocks + 1)
 
     # generate block using the signet miner tool genpsbt and solvepsbt commands
-    def mine_block_manual(self, node, *, sign):
+    def mine_block_manual(self, node, extra_args, *, sign):
         n_blocks = node.getblockcount()
         base_dir = self.config["environment"]["SRCDIR"]
         signet_miner_path = os.path.join(base_dir, "contrib", "signet", "miner")
-        rpc_argv = node.binaries.rpc_argv() + [f"-datadir={node.datadir_path}"]
+        rpc_argv = node.binaries.rpc_argv() + [f"-datadir={node.datadir_path}"] + extra_args
         util_argv = node.binaries.util_argv() + ["grind"]
         base_cmd = [
             sys.executable,
@@ -118,36 +118,36 @@ class SignetMinerTest(BitcoinTestFramework):
 
     def run_test(self):
         self.log.info("Signet node with single signature challenge")
-        node = self.nodes[0]
+        node, extra_args = self.nodes[0], self.extra_args[0]
         # import private key needed for signing block
         wallet_importprivkey(node, bytes_to_wif(CHALLENGE_PRIVATE_KEY), 0)
-        self.mine_block(node)
+        self.mine_block(node, extra_args)
         # MUST include signet commitment
         assert get_signet_commitment(get_segwit_commitment(node))
 
         self.log.info("Mine manually using genpsbt and solvepsbt")
-        self.mine_block_manual(node, sign=True)
+        self.mine_block_manual(node, extra_args, sign=True)
         assert get_signet_commitment(get_segwit_commitment(node))
 
-        node = self.nodes[1]
+        node, extra_args = self.nodes[1], self.extra_args[1]
         self.log.info("Signet node with trivial challenge (OP_TRUE)")
-        self.mine_block(node)
+        self.mine_block(node, extra_args)
         # MAY omit signet commitment (BIP 325). Do so for better compatibility
         # with signet unaware mining software and hardware.
         assert get_signet_commitment(get_segwit_commitment(node)) is None
 
-        node = self.nodes[2]
+        node, extra_args = self.nodes[2], self.extra_args[2]
         self.log.info("Signet node with trivial challenge (OP_16)")
-        self.mine_block(node)
+        self.mine_block(node, extra_args)
         assert get_signet_commitment(get_segwit_commitment(node)) is None
 
-        node = self.nodes[3]
+        node, extra_args = self.nodes[3], self.extra_args[3]
         self.log.info("Signet node with trivial challenge (push sha256 hash)")
-        self.mine_block(node)
+        self.mine_block(node, extra_args)
         assert get_signet_commitment(get_segwit_commitment(node)) is None
 
         self.log.info("Manual mining with a trivial challenge doesn't require a PSBT")
-        self.mine_block_manual(node, sign=False)
+        self.mine_block_manual(node, extra_args, sign=False)
         assert get_signet_commitment(get_segwit_commitment(node)) is None
 
 
