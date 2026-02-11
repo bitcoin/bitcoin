@@ -10,6 +10,7 @@
 #include <util/result.h>
 #include <wallet/coinselection.h>
 #include <wallet/transaction.h>
+#include <wallet/types.h>
 #include <wallet/wallet.h>
 
 #include <map>
@@ -185,17 +186,6 @@ util::Result<SelectionResult> AutomaticCoinSelection(const CWallet& wallet, Coin
 util::Result<SelectionResult> SelectCoins(const CWallet& wallet, CoinsResult& available_coins, const CoinsResult& pre_set_inputs,
                                           const CAmount& nTargetValue, const CCoinControl& coin_control,
                                           const CoinSelectionParams& coin_selection_params) EXCLUSIVE_LOCKS_REQUIRED(wallet.cs_wallet);
-
-struct CreatedTransactionResult
-{
-    CTransactionRef tx;
-    CAmount fee;
-    FeeCalculation fee_calc;
-    std::optional<unsigned int> change_pos;
-
-    CreatedTransactionResult(CTransactionRef _tx, CAmount _fee, std::optional<unsigned int> _change_pos, const FeeCalculation& _fee_calc)
-        : tx(_tx), fee(_fee), fee_calc(_fee_calc), change_pos(_change_pos) {}
-};
 
 /**
  * Set a height-based locktime for new transactions (uses the height of the
