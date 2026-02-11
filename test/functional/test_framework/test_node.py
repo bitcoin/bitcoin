@@ -42,6 +42,7 @@ from .util import (
     p2p_port,
     tor_port,
 )
+from .signet import SIGNET_DEFAULT_CHALLENGE, message_start
 
 BITCOIND_PROC_WAIT_TIMEOUT = 60
 # The size of the blocks xor key
@@ -274,7 +275,7 @@ class TestNode():
         # Delete any existing cookie file -- if such a file exists (eg due to
         # unclean shutdown), it will get overwritten anyway by bitcoind, and
         # potentially interfere with our attempt to authenticate
-        delete_cookie_file(self.datadir_path, self.chain)
+        delete_cookie_file(self.datadir_path, self.chain_dir)
 
         # add environment variable LIBC_FATAL_STDERR_=1 so that libc errors are written to stderr and not the terminal
         subp_env = dict(os.environ, LIBC_FATAL_STDERR_="1")
@@ -301,7 +302,7 @@ class TestNode():
             else:
                 host = self.rpchost
         if mode == RPCConnectionType.AUTHPROXY:
-            rpc_u, rpc_p = get_auth_cookie(self.datadir_path, self.chain)
+            rpc_u, rpc_p = get_auth_cookie(self.datadir_path, self.chain_dir)
             url = f"http://{rpc_u}:{rpc_p}@{host}:{port}"
             proxy = AuthServiceProxy(url, timeout=int(client_timeout))
             coverage_logfile = coverage.get_filename(self.coverage_dir, self.index) if self.coverage_dir else None
@@ -309,11 +310,13 @@ class TestNode():
             rpc.auth_service_proxy_instance.reuse_http_connections = self.reuse_http_connections
             return rpc
         else:  # mode==CLI
+            extra_args = [arg for arg in self.extra_args if arg.startswith("-signetchallenge")]
             return TestNodeCLI(self.binaries)(
                 f"-datadir={self.datadir_path}",
                 f"-rpcclienttimeout={client_timeout}",
                 f"-rpcconnect={host}",
                 f"-rpcport={port}",
+                *extra_args
             )
 
     def wait_for_rpc_connection(self, *, wait_for_import=True):
@@ -417,7 +420,7 @@ class TestNode():
         poll_per_s = 4
         for _ in range(poll_per_s * self.rpc_timeout):
             try:
-                get_auth_cookie(self.datadir_path, self.chain)
+                get_auth_cookie(self.datadir_path, self.chain_dir)
                 self.log.debug("Cookie credentials successfully retrieved")
                 return
             except ValueError:  # cookie file not found and no rpcuser or rpcpassword; bitcoind is still starting
@@ -549,7 +552,21 @@ class TestNode():
 
     @property
     def chain_path(self) -> Path:
-        return self.datadir_path / self.chain
+        return self.datadir_path / self.chain_dir
+
+    @property
+    def chain_dir(self) -> str:
+        if self.chain != "signet":
+            return self.chain
+        for arg in self.extra_args:
+            if not arg.startswith("-signetchallenge"):
+                continue
+            signetchallenge = arg.split('=')[1]
+            if signetchallenge.lower() == SIGNET_DEFAULT_CHALLENGE:
+                return self.chain
+            suffix = message_start(signetchallenge)
+            return f"signet_{suffix}"
+        return self.chain
 
     @property
     def debug_log_path(self) -> Path:

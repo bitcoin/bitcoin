@@ -35,7 +35,7 @@ private:
 /**
  * Creates and returns a std::unique_ptr<CBaseChainParams> of the chosen chain.
  */
-std::unique_ptr<CBaseChainParams> CreateBaseChainParams(ChainType chain);
+std::unique_ptr<CBaseChainParams> CreateBaseChainParams(const ArgsManager& args, ChainType chain);
 
 /**
  *Set the arguments for chainparams

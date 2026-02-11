@@ -142,11 +142,11 @@ static void SetupCliArgs(ArgsManager& argsman)
 {
     SetupHelpOptions(argsman);
 
-    const auto defaultBaseParams = CreateBaseChainParams(ChainType::MAIN);
-    const auto testnetBaseParams = CreateBaseChainParams(ChainType::TESTNET);
-    const auto testnet4BaseParams = CreateBaseChainParams(ChainType::TESTNET4);
-    const auto signetBaseParams = CreateBaseChainParams(ChainType::SIGNET);
-    const auto regtestBaseParams = CreateBaseChainParams(ChainType::REGTEST);
+    const auto defaultBaseParams = CreateBaseChainParams(argsman, ChainType::MAIN);
+    const auto testnetBaseParams = CreateBaseChainParams(argsman, ChainType::TESTNET);
+    const auto testnet4BaseParams = CreateBaseChainParams(argsman, ChainType::TESTNET4);
+    const auto signetBaseParams = CreateBaseChainParams(argsman, ChainType::SIGNET);
+    const auto regtestBaseParams = CreateBaseChainParams(argsman, ChainType::REGTEST);
 
     argsman.AddArg("-version", "Print version and exit", ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
     argsman.AddArg("-conf=<file>", strprintf("Specify configuration file. Relative paths will be prefixed by datadir location. (default: %s)", BITCOIN_CONF_FILENAME), ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
