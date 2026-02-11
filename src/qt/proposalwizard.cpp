@@ -169,9 +169,7 @@ void ProposalWizard::buildJsonAndHex()
     QJsonObject o;
     o.insert("name", m_ui->editName->text());
     o.insert("payment_address", m_ui->editPayAddr->text());
-    const auto formatted = BitcoinUnits::format(BitcoinUnits::Unit::DASH, m_ui->paymentAmount->value(), false,
-                                                BitcoinUnits::SeparatorStyle::NEVER);
-    o.insert("payment_amount", formatted.toDouble());
+    o.insert("payment_amount", m_ui->paymentAmount->value() / static_cast<double>(COIN));
     o.insert("url", m_ui->editUrl->text());
     if (start_epoch > 0) o.insert("start_epoch", start_epoch);
     if (end_epoch > 0) o.insert("end_epoch", end_epoch);
@@ -346,11 +344,17 @@ void ProposalWizard::updateLabels()
 {
     if (m_walletModel && m_walletModel->getOptionsModel()) {
         const auto unit = m_walletModel->getOptionsModel()->getDisplayUnit();
-        const CAmount totalAmount = static_cast<CAmount>(m_ui->paymentAmount->value() *
-                                                         m_ui->comboPayments->currentData().toInt());
+        const CAmount per_payment = m_ui->paymentAmount->value();
+        const int payments = m_ui->comboPayments->currentData().toInt();
+        CAmount total{0};
+        if (payments > 0 && per_payment > 0 && per_payment <= MAX_MONEY / payments) {
+            total = per_payment * payments;
+        } else if (payments > 0 && per_payment > 0) {
+            total = MAX_MONEY;
+        }
         m_ui->labelTotalValue->setText(
-            BitcoinUnits::formatWithUnit(unit, totalAmount, false, BitcoinUnits::SeparatorStyle::ALWAYS));
-        m_fee_formatted = BitcoinUnits::formatWithUnit(unit, GOVERNANCE_PROPOSAL_FEE_TX, false,
+            BitcoinUnits::formatWithUnit(unit, total, /*plussign=*/false, BitcoinUnits::SeparatorStyle::ALWAYS));
+        m_fee_formatted = BitcoinUnits::formatWithUnit(unit, GOVERNANCE_PROPOSAL_FEE_TX, /*plussign=*/false,
                                                        BitcoinUnits::SeparatorStyle::ALWAYS);
         m_ui->labelFeeValue->setText(m_fee_formatted.isEmpty() ? QString("-") : m_fee_formatted);
         // Dynamic header/subheader and prepare text

@@ -16,6 +16,7 @@
 #include <univalue.h>
 
 #include <algorithm>
+#include <cmath>
 
 Proposal::Proposal(ClientModel* _clientModel, const CGovernanceObject& _govObj) :
     clientModel{_clientModel},
@@ -40,7 +41,7 @@ Proposal::Proposal(ClientModel* _clientModel, const CGovernanceObject& _govObj) 
     }
 
     if (const UniValue& amountValue = prop_data.find_value("payment_amount"); amountValue.isNum()) {
-        m_paymentAmount = amountValue.get_real();
+        m_paymentAmount = llround(amountValue.get_real() * COIN);
     }
 
     if (const UniValue& urlValue = prop_data.find_value("url"); urlValue.isStr()) {
@@ -121,7 +122,7 @@ QVariant ProposalModel::data(const QModelIndex& index, int role) const
         case Column::END_DATE:
             return proposal->endDate().date();
         case Column::PAYMENT_AMOUNT: {
-            return BitcoinUnits::floorWithUnit(m_display_unit, proposal->paymentAmount() * COIN, false,
+            return BitcoinUnits::floorWithUnit(m_display_unit, proposal->paymentAmount(), false,
                                                BitcoinUnits::SeparatorStyle::ALWAYS);
         }
         case Column::IS_ACTIVE:
@@ -146,7 +147,7 @@ QVariant ProposalModel::data(const QModelIndex& index, int role) const
         case Column::END_DATE:
             return proposal->endDate();
         case Column::PAYMENT_AMOUNT:
-            return proposal->paymentAmount();
+            return qlonglong(proposal->paymentAmount());
         case Column::IS_ACTIVE:
             return proposal->isActive();
         case Column::VOTING_STATUS:
