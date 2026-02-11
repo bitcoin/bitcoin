@@ -260,20 +260,13 @@ namespace BCLog {
             m_trace_categories = tracemask;
         }
 
-        bool WillLogCategory(LogFlags category) const { return WillLogCategoryLevel(category, BCLog::Level::Debug); }
-        bool WillLogCategoryLevel(LogFlags category, Level level) const
+        bool ShouldDebugLog(LogFlags category) const
         {
-            switch (level) {
-            case BCLog::Level::Error:
-            case BCLog::Level::Warning:
-            case BCLog::Level::Info:
-                break;
-            case BCLog::Level::Debug:
-                return (m_categories.load(std::memory_order_relaxed) & category) != 0;
-            case BCLog::Level::Trace:
-                return (m_trace_categories.load(std::memory_order_relaxed) & category) != 0;
-            }
-            return true;
+            return (m_categories.load(std::memory_order_relaxed) & category) != 0;
+        }
+        bool ShouldTraceLog(LogFlags category) const
+        {
+            return (m_trace_categories.load(std::memory_order_relaxed) & category) != 0;
         }
 
         /** Returns a vector of the log categories in alphabetical order. */

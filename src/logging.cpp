@@ -574,12 +574,12 @@ bool BCLog::Logger::SetCategoryLogLevel(std::string_view str, BCLog::Level level
 
 bool util::log::ShouldDebugLog(Category category)
 {
-    return LogInstance().WillLogCategoryLevel(static_cast<BCLog::LogFlags>(category), util::log::Level::Debug);
+    return LogInstance().ShouldDebugLog(static_cast<BCLog::LogFlags>(category));
 }
 
 bool util::log::ShouldTraceLog(Category category)
 {
-    return LogInstance().WillLogCategoryLevel(static_cast<BCLog::LogFlags>(category), util::log::Level::Trace);
+    return LogInstance().ShouldTraceLog(static_cast<BCLog::LogFlags>(category));
 }
 
 void util::log::Log(util::log::Entry entry)

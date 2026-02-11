@@ -273,7 +273,7 @@ static RPCMethod logging()
 
     // Update libevent logging if BCLog::LIBEVENT has changed.
     if (changed_log_categories & BCLog::LIBEVENT) {
-        UpdateHTTPServerLogging(LogInstance().WillLogCategory(BCLog::LIBEVENT));
+        UpdateHTTPServerLogging(util::log::ShouldDebugLog(BCLog::LIBEVENT));
     }
 
     bool use_deprecated = IsDeprecatedRPCEnabled("logging");

@@ -8,12 +8,12 @@
 #include <common/args.h>
 #include <common/messages.h>
 #include <compat/compat.h>
-#include <logging.h>
 #include <netbase.h>
 #include <node/interface_ui.h>
 #include <rpc/protocol.h>
 #include <sync.h>
 #include <util/check.h>
+#include <util/log.h>
 #include <util/signalinterrupt.h>
 #include <util/strencodings.h>
 #include <util/threadnames.h>
@@ -387,7 +387,7 @@ bool InitHTTPServer(const util::SignalInterrupt& interrupt)
     // Redirect libevent's logging to our own log
     event_set_log_callback(&libevent_log_cb);
     // Update libevent's log handling.
-    UpdateHTTPServerLogging(LogInstance().WillLogCategory(BCLog::LIBEVENT));
+    UpdateHTTPServerLogging(util::log::ShouldDebugLog(BCLog::LIBEVENT));
 
 #ifdef WIN32
     evthread_use_windows_threads();
