@@ -1857,13 +1857,12 @@ CAmount GetBlockSubsidy(int nHeight, const Consensus::Params& consensusParams)
 }
 
 CoinsViews::CoinsViews(DBParams db_params, CoinsViewOptions options)
-    : m_dbview{std::move(db_params), std::move(options)},
-      m_catcherview(&m_dbview) {}
+    : m_dbview{std::move(db_params), std::move(options)} {}
 
 void CoinsViews::InitCache(int32_t prevoutfetch_threads)
 {
     AssertLockHeld(::cs_main);
-    m_cacheview = std::make_unique<CCoinsViewCache>(&m_catcherview);
+    m_cacheview = std::make_unique<CCoinsViewCache>(&m_dbview);
     auto thread_pool{std::make_shared<ThreadPool>("prevout")};
     if (prevoutfetch_threads > 0) {
         thread_pool->Start(prevoutfetch_threads);
