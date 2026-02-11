@@ -8,6 +8,7 @@
 #include <test/fuzz/util/net.h>
 
 #include <common/pcp.h>
+#include <logging.h>
 #include <util/check.h>
 #include <util/threadinterrupt.h>
 
