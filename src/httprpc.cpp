@@ -7,12 +7,12 @@
 #include <common/args.h>
 #include <crypto/hmac_sha256.h>
 #include <httpserver.h>
-#include <logging.h>
 #include <netaddress.h>
 #include <rpc/protocol.h>
 #include <rpc/server.h>
 #include <util/fs.h>
 #include <util/fs_helpers.h>
+#include <util/log.h>
 #include <util/strencodings.h>
 #include <util/string.h>
 #include <walletinitinterface.h>

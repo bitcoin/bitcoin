@@ -3,16 +3,16 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <interfaces/init.h>
+#include <ipc/capnp/mining.capnp.h>
 #include <ipc/capnp/protocol.h>
 #include <ipc/process.h>
 #include <ipc/protocol.h>
-#include <logging.h>
-#include <mp/proxy-types.h>
-#include <ipc/capnp/mining.capnp.h>
 #include <ipc/test/ipc_test.capnp.h>
 #include <ipc/test/ipc_test.capnp.proxy.h>
 #include <ipc/test/ipc_test.h>
+#include <mp/proxy-types.h>
 #include <tinyformat.h>
+#include <util/log.h>
 #include <validation.h>
 
 #include <future>

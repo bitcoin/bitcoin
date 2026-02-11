@@ -4,7 +4,7 @@
 
 #include <zmq/zmqutil.h>
 
-#include <logging.h>
+#include <util/log.h>
 
 #include <zmq.h>
 

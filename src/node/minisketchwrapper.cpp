@@ -4,7 +4,7 @@
 
 #include <node/minisketchwrapper.h>
 
-#include <logging.h>
+#include <util/log.h>
 #include <util/time.h>
 
 #include <minisketch.h>
