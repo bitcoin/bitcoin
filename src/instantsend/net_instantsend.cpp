@@ -14,10 +14,19 @@
 #include <util/thread.h>
 #include <validation.h>
 
+#include <chrono>
 #include <set>
 
+namespace {
+constexpr int BATCH_VERIFIER_SOURCE_THRESHOLD{8};
+constexpr int INVALID_ISLOCK_MISBEHAVIOR_SCORE{100};
+constexpr int UNKNOWN_CYCLE_HASH_MISBEHAVIOR_SCORE{1};
+constexpr int OLD_ACTIVE_SET_FAILURE_MISBEHAVIOR_SCORE{20};
+constexpr auto WORK_THREAD_SLEEP_INTERVAL{std::chrono::milliseconds{100}};
+} // namespace
+
 struct NetInstantSend::BatchVerificationData {
-    CBLSBatchVerifier<NodeId, uint256> batchVerifier{false, true, 8};
+    CBLSBatchVerifier<NodeId, uint256> batchVerifier{false, true, BATCH_VERIFIER_SOURCE_THRESHOLD};
     Uint256HashMap<llmq::CRecoveredSig> recSigs;
     size_t verifyCount{0};
     size_t alreadyVerified{0};
@@ -114,7 +123,7 @@ Uint256HashSet NetInstantSend::ApplyVerificationResults(
             if (ban && source_bad && penalized.emplace(nodeId).second) {
                 // Let's not be too harsh, as the peer might simply be unlucky and might have sent us
                 // an old lock which does not validate anymore due to changed quorums
-                m_peer_manager->PeerMisbehaving(nodeId, 20);
+                m_peer_manager->PeerMisbehaving(nodeId, OLD_ACTIVE_SET_FAILURE_MISBEHAVIOR_SCORE);
             }
             if (message_bad) {
                 badISLocks.emplace(hash);
@@ -166,7 +175,7 @@ void NetInstantSend::ProcessMessage(CNode& pfrom, const std::string& msg_type, C
     WITH_LOCK(::cs_main, m_peer_manager->PeerEraseObjectRequest(pfrom.GetId(), CInv{MSG_ISDLOCK, hash}));
 
     if (!islock->TriviallyValid()) {
-        m_peer_manager->PeerMisbehaving(pfrom.GetId(), 100);
+        m_peer_manager->PeerMisbehaving(pfrom.GetId(), INVALID_ISLOCK_MISBEHAVIOR_SCORE);
         return;
     }
 
@@ -175,7 +184,7 @@ void NetInstantSend::ProcessMessage(CNode& pfrom, const std::string& msg_type, C
         const auto blockIndex = WITH_LOCK(::cs_main, return m_chainstate.m_blockman.LookupBlockIndex(islock->cycleHash));
         if (blockIndex == nullptr) {
             // Maybe we don't have the block yet or maybe some peer spams invalid values for cycleHash
-            m_peer_manager->PeerMisbehaving(pfrom.GetId(), 1);
+            m_peer_manager->PeerMisbehaving(pfrom.GetId(), UNKNOWN_CYCLE_HASH_MISBEHAVIOR_SCORE);
             return;
         }
         m_is_manager.CacheBlockHeight(blockIndex);
@@ -188,7 +197,7 @@ void NetInstantSend::ProcessMessage(CNode& pfrom, const std::string& msg_type, C
     const auto& llmq_params_opt = Params().GetLLMQ(llmqType);
     assert(llmq_params_opt);
     if (block_height % llmq_params_opt->dkgInterval != 0) {
-        m_peer_manager->PeerMisbehaving(pfrom.GetId(), 100);
+        m_peer_manager->PeerMisbehaving(pfrom.GetId(), INVALID_ISLOCK_MISBEHAVIOR_SCORE);
         return;
     }
 
@@ -284,7 +293,7 @@ void NetInstantSend::WorkThreadMain()
             return more_work;
         }();
 
-        if (!fMoreWork && !workInterrupt.sleep_for(std::chrono::milliseconds(100))) {
+        if (!fMoreWork && !workInterrupt.sleep_for(WORK_THREAD_SLEEP_INTERVAL)) {
             return;
         }
     }
