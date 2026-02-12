@@ -182,8 +182,13 @@ public:
     virtual int GetLevel(const TxGraphImpl& graph) const noexcept = 0;
     /** Only called by TxGraphImpl::SwapIndexes. */
     virtual void UpdateMapping(DepGraphIndex cluster_idx, GraphIndex graph_idx) noexcept = 0;
-    /** Push changes to Cluster and its linearization to the TxGraphImpl Entry objects. */
-    virtual void Updated(TxGraphImpl& graph, int level) noexcept = 0;
+    /** Push changes to Cluster and its linearization to the TxGraphImpl Entry objects. Main chunk
+     *  information is computed if the cluster is acceptable, or when rename is set. Rename is used
+     *  when called from Compact, to recompute after GraphIndexes may have changed; in this case,
+     *  no chunk index objects are removed or created either. */
+    virtual void Updated(TxGraphImpl& graph, int level, bool rename) noexcept = 0;
+    /** Remove all chunk index entries for this cluster (level=0 only). */
+    virtual void RemoveChunkData(TxGraphImpl& graph) noexcept = 0;
     /** Create a copy of this Cluster in staging, returning a pointer to it (used by PullIn). */
     virtual Cluster* CopyToStaging(TxGraphImpl& graph) const noexcept = 0;
     /** Get the list of Clusters in main that conflict with this one (which is assumed to be in staging). */
@@ -279,7 +284,8 @@ public:
     void ExtractTransactions(const std::function<void (DepGraphIndex, GraphIndex, FeePerWeight)>& visit1_fn, const std::function<void (DepGraphIndex, GraphIndex, SetType)>& visit2_fn) noexcept final;
     int GetLevel(const TxGraphImpl& graph) const noexcept final;
     void UpdateMapping(DepGraphIndex cluster_idx, GraphIndex graph_idx) noexcept final { m_mapping[cluster_idx] = graph_idx; }
-    void Updated(TxGraphImpl& graph, int level) noexcept final;
+    void Updated(TxGraphImpl& graph, int level, bool rename) noexcept final;
+    void RemoveChunkData(TxGraphImpl& graph) noexcept final;
     Cluster* CopyToStaging(TxGraphImpl& graph) const noexcept final;
     void GetConflicts(const TxGraphImpl& graph, std::vector<Cluster*>& out) const noexcept final;
     void MakeStagingTransactionsMissing(TxGraphImpl& graph) noexcept final;
@@ -335,7 +341,8 @@ public:
     void ExtractTransactions(const std::function<void (DepGraphIndex, GraphIndex, FeePerWeight)>& visit1_fn, const std::function<void (DepGraphIndex, GraphIndex, SetType)>& visit2_fn) noexcept final;
     int GetLevel(const TxGraphImpl& graph) const noexcept final;
     void UpdateMapping(DepGraphIndex cluster_idx, GraphIndex graph_idx) noexcept final { Assume(cluster_idx == 0); m_graph_index = graph_idx; }
-    void Updated(TxGraphImpl& graph, int level) noexcept final;
+    void Updated(TxGraphImpl& graph, int level, bool rename) noexcept final;
+    void RemoveChunkData(TxGraphImpl& graph) noexcept final;
     Cluster* CopyToStaging(TxGraphImpl& graph) const noexcept final;
     void GetConflicts(const TxGraphImpl& graph, std::vector<Cluster*>& out) const noexcept final;
     void MakeStagingTransactionsMissing(TxGraphImpl& graph) noexcept final;
@@ -396,6 +403,8 @@ private:
     /** The number of linearization improvement steps needed per cluster to be considered
      *  acceptable. */
     const uint64_t m_acceptable_iters;
+    /** Fallback ordering for transactions. */
+    const std::function<std::strong_ordering(const TxGraph::Ref&, const TxGraph::Ref&)> m_fallback_order;
 
     /** Information about one group of Clusters to be merged. */
     struct GroupEntry
@@ -483,6 +492,7 @@ private:
     /** Compare two entries (which must both exist within the main graph). */
     std::strong_ordering CompareMainTransactions(GraphIndex a, GraphIndex b) const noexcept
     {
+        if (a == b) return std::strong_ordering::equal;
         Assume(a < m_entries.size() && b < m_entries.size());
         const auto& entry_a = m_entries[a];
         const auto& entry_b = m_entries[b];
@@ -490,14 +500,27 @@ private:
         auto feerate_cmp = FeeRateCompare(entry_b.m_main_chunk_feerate, entry_a.m_main_chunk_feerate);
         if (feerate_cmp < 0) return std::strong_ordering::less;
         if (feerate_cmp > 0) return std::strong_ordering::greater;
-        // Compare Cluster m_sequence as tie-break for equal chunk feerates.
+        // Compare equal-feerate chunk prefix size for comparing equal chunk feerates. This does two
+        // things: it distinguishes equal-feerate chunks within the same cluster (because later
+        // ones will always have a higher prefix size), and it may distinguish equal-feerate chunks
+        // from distinct clusters.
+        if (entry_a.m_main_equal_feerate_chunk_prefix_size != entry_b.m_main_equal_feerate_chunk_prefix_size) {
+            return entry_a.m_main_equal_feerate_chunk_prefix_size <=> entry_b.m_main_equal_feerate_chunk_prefix_size;
+        }
+        // Compare by maximum m_fallback_order element to order equal-feerate chunks in distinct
+        // clusters, when the equal-feerate-prefix size is also the same.
         const auto& locator_a = entry_a.m_locator[0];
         const auto& locator_b = entry_b.m_locator[0];
         Assume(locator_a.IsPresent() && locator_b.IsPresent());
         if (locator_a.cluster != locator_b.cluster) {
+            auto fallback_cmp = m_fallback_order(*m_entries[entry_a.m_main_max_chunk_fallback].m_ref,
+                                                 *m_entries[entry_b.m_main_max_chunk_fallback].m_ref);
+            if (fallback_cmp != 0) return fallback_cmp;
+            // This shouldn't be reachable as m_fallback_order defines a strong ordering.
+            Assume(false);
             return CompareClusters(locator_a.cluster, locator_b.cluster);
         }
-        // As final tie-break, compare position within cluster linearization.
+        // Within a single chunk, sort by position within cluster linearization.
         return entry_a.m_main_lin_index <=> entry_b.m_main_lin_index;
     }
 
@@ -588,8 +611,18 @@ private:
         Locator m_locator[MAX_LEVELS];
         /** The chunk feerate of this transaction in main (if present in m_locator[0]). */
         FeePerWeight m_main_chunk_feerate;
+        /** The equal-feerate chunk prefix size of this transaction in main. If the transaction is
+         *  part of chunk C in main, then this gives the sum of the sizes of all chunks in C's
+         *  cluster, whose feerate is equal to that of C, which do not appear after C itself in
+         *  the cluster's linearization.
+         *  This provides a way to sort equal-feerate chunks across clusters, in a way that agrees
+         *  with the within-cluster chunk ordering. */
+        int32_t m_main_equal_feerate_chunk_prefix_size;
         /** The position this transaction has in the main linearization (if present). */
         LinearizationIndex m_main_lin_index;
+        /** Of all transactions within this transaction's chunk in main (if present there), the
+         *  maximal one according to m_fallback_order. */
+        GraphIndex m_main_max_chunk_fallback = GraphIndex(-1);
     };
 
     /** The set of all transactions (in all levels combined). GraphIndex values index into this. */
@@ -599,11 +632,17 @@ private:
     std::vector<GraphIndex> m_unlinked;
 
 public:
-    /** Construct a new TxGraphImpl with the specified limits. */
-    explicit TxGraphImpl(DepGraphIndex max_cluster_count, uint64_t max_cluster_size, uint64_t acceptable_iters) noexcept :
+    /** Construct a new TxGraphImpl with the specified limits and fallback order. */
+    explicit TxGraphImpl(
+        DepGraphIndex max_cluster_count,
+        uint64_t max_cluster_size,
+        uint64_t acceptable_iters,
+        const std::function<std::strong_ordering(const TxGraph::Ref&, const TxGraph::Ref&)>& fallback_order
+    ) noexcept :
         m_max_cluster_count(max_cluster_count),
         m_max_cluster_size(max_cluster_size),
         m_acceptable_iters(acceptable_iters),
+        m_fallback_order(fallback_order),
         m_main_chunkindex(ChunkOrder(this))
     {
         Assume(max_cluster_count >= 1);
@@ -621,8 +660,9 @@ public:
 
     // Simple helper functions.
 
-    /** Swap the Entry referred to by a and the one referred to by b. */
-    void SwapIndexes(GraphIndex a, GraphIndex b) noexcept;
+    /** Swap the Entry referred to by a and the one referred to by b. Gather main clusters to
+     *  update afterwards. */
+    void SwapIndexes(GraphIndex a, GraphIndex b, std::vector<Cluster*>& affected_main) noexcept;
     /** If idx exists in the specified level ClusterSet (explicitly, or in the level below and not
     *   removed), return the Cluster it is in. Otherwise, return nullptr. */
     Cluster* FindCluster(GraphIndex idx, int level) const noexcept { return FindClusterAndLevel(idx, level).first; }
@@ -693,6 +733,11 @@ public:
         auto& entry = m_entries[idx];
         Assume(entry.m_ref != nullptr);
         Assume(m_main_chunkindex_observers == 0 || !entry.m_locator[0].IsPresent());
+        // Remove all chunk index entries for the affected cluster, to avoid any chunk indexes
+        // referencing unlinked/destroyed Refs.
+        if (entry.m_locator[0].IsPresent()) {
+            entry.m_locator[0].cluster->RemoveChunkData(*this);
+        }
         entry.m_ref = nullptr;
         // Mark the transaction as to be removed in all levels where it explicitly or implicitly
         // exists.
@@ -753,7 +798,7 @@ public:
 
     // Implementations for the public TxGraph interface.
 
-    Ref AddTransaction(const FeePerWeight& feerate) noexcept final;
+    void AddTransaction(Ref& arg, const FeePerWeight& feerate) noexcept final;
     void RemoveTransaction(const Ref& arg) noexcept final;
     void AddDependency(const Ref& parent, const Ref& child) noexcept final;
     void SetTransactionFee(const Ref&, int64_t fee) noexcept final;
@@ -848,6 +893,9 @@ void TxGraphImpl::ClearChunkData(Entry& entry) noexcept
 void TxGraphImpl::CreateChunkData(GraphIndex idx, LinearizationIndex chunk_count) noexcept
 {
     auto& entry = m_entries[idx];
+    // Make sure to not create chunk data for unlinked entries, which would make invoking
+    // m_fallback_order on them impossible.
+    Assume(entry.m_ref != nullptr);
     if (!m_main_chunkindex_discarded.empty()) {
         // Reuse an discarded node handle.
         auto& node = m_main_chunkindex_discarded.back().value();
@@ -1007,14 +1055,29 @@ void TxGraphImpl::ClearLocator(int level, GraphIndex idx, bool oversized_tx) noe
     if (level == 0) ClearChunkData(entry);
 }
 
-void GenericClusterImpl::Updated(TxGraphImpl& graph, int level) noexcept
+void GenericClusterImpl::RemoveChunkData(TxGraphImpl& graph) noexcept
+{
+    for (DepGraphIndex idx : m_linearization) {
+        auto& entry = graph.m_entries[m_mapping[idx]];
+        graph.ClearChunkData(entry);
+    }
+}
+
+void SingletonClusterImpl::RemoveChunkData(TxGraphImpl& graph) noexcept
+{
+    if (GetTxCount() == 0) return;
+    auto& entry = graph.m_entries[m_graph_index];
+    graph.ClearChunkData(entry);
+}
+
+void GenericClusterImpl::Updated(TxGraphImpl& graph, int level, bool rename) noexcept
 {
     // Update all the Locators for this Cluster's Entry objects.
     for (DepGraphIndex idx : m_linearization) {
         auto& entry = graph.m_entries[m_mapping[idx]];
         // Discard any potential ChunkData prior to modifying the Cluster (as that could
         // invalidate its ordering).
-        if (level == 0) graph.ClearChunkData(entry);
+        if (level == 0 && !rename) graph.ClearChunkData(entry);
         entry.m_locator[level].SetPresent(this, idx);
     }
     // If this is for the main graph (level = 0), and the Cluster's quality is ACCEPTABLE or
@@ -1022,14 +1085,40 @@ void GenericClusterImpl::Updated(TxGraphImpl& graph, int level) noexcept
     // and m_main_chunk_feerate. These fields are only accessed after making the entire graph
     // ACCEPTABLE, so it is pointless to compute these if we haven't reached that quality level
     // yet.
-    if (level == 0 && IsAcceptable()) {
+    // When rename=true, this is always performed for level 0, to make sure the values inside the
+    // entries remain consistent with the chunk index (otherwise unrelated chunk index operations
+    // could cause the index to become corrupted, by inserting elements in the wrong place).
+    if (level == 0 && (rename || IsAcceptable())) {
         auto chunking = ChunkLinearizationInfo(m_depgraph, m_linearization);
         LinearizationIndex lin_idx{0};
+        /** The sum of all chunk feerate FeeFracs with the same feerate as the current chunk,
+         *  up to and including the current chunk. */
+        FeeFrac equal_feerate_chunk_feerate;
         // Iterate over the chunks.
         for (unsigned chunk_idx = 0; chunk_idx < chunking.size(); ++chunk_idx) {
             auto& chunk = chunking[chunk_idx];
             auto chunk_count = chunk.transactions.Count();
             Assume(chunk_count > 0);
+            // Update equal_feerate_chunk_feerate to include this chunk, starting over when the
+            // feerate changed.
+            if (chunk.feerate << equal_feerate_chunk_feerate) {
+                equal_feerate_chunk_feerate = chunk.feerate;
+            } else {
+                // Note that this is adding fees to fees, and sizes to sizes, so the overall
+                // ratio remains the same; it's just accounting for the size of the added chunk.
+                equal_feerate_chunk_feerate += chunk.feerate;
+            }
+            // Determine the m_fallback_order maximum transaction in the chunk.
+            auto it = chunk.transactions.begin();
+            GraphIndex max_element = m_mapping[*it];
+            ++it;
+            while (it != chunk.transactions.end()) {
+                GraphIndex this_element = m_mapping[*it];
+                if (graph.m_fallback_order(*graph.m_entries[this_element].m_ref, *graph.m_entries[max_element].m_ref) > 0) {
+                    max_element = this_element;
+                }
+                ++it;
+            }
             // Iterate over the transactions in the linearization, which must match those in chunk.
             while (true) {
                 DepGraphIndex idx = m_linearization[lin_idx];
@@ -1037,6 +1126,8 @@ void GenericClusterImpl::Updated(TxGraphImpl& graph, int level) noexcept
                 auto& entry = graph.m_entries[graph_idx];
                 entry.m_main_lin_index = lin_idx++;
                 entry.m_main_chunk_feerate = FeePerWeight::FromFeeFrac(chunk.feerate);
+                entry.m_main_equal_feerate_chunk_prefix_size = equal_feerate_chunk_feerate.size;
+                entry.m_main_max_chunk_fallback = max_element;
                 Assume(chunk.transactions[idx]);
                 chunk.transactions.Reset(idx);
                 if (chunk.transactions.None()) {
@@ -1047,7 +1138,7 @@ void GenericClusterImpl::Updated(TxGraphImpl& graph, int level) noexcept
                         // clusters), store the special value -1 as chunk count.
                         chunk_count = LinearizationIndex(-1);
                     }
-                    graph.CreateChunkData(graph_idx, chunk_count);
+                    if (!rename) graph.CreateChunkData(graph_idx, chunk_count);
                     break;
                 }
             }
@@ -1055,7 +1146,7 @@ void GenericClusterImpl::Updated(TxGraphImpl& graph, int level) noexcept
     }
 }
 
-void SingletonClusterImpl::Updated(TxGraphImpl& graph, int level) noexcept
+void SingletonClusterImpl::Updated(TxGraphImpl& graph, int level, bool rename) noexcept
 {
     // Don't do anything if this is empty.
     if (GetTxCount() == 0) return;
@@ -1063,16 +1154,18 @@ void SingletonClusterImpl::Updated(TxGraphImpl& graph, int level) noexcept
     auto& entry = graph.m_entries[m_graph_index];
     // Discard any potential ChunkData prior to modifying the Cluster (as that could
     // invalidate its ordering).
-    if (level == 0) graph.ClearChunkData(entry);
+    if (level == 0 && !rename) graph.ClearChunkData(entry);
     entry.m_locator[level].SetPresent(this, 0);
     // If this is for the main graph (level = 0), compute its chunking and store its information in
     // the Entry's m_main_lin_index and m_main_chunk_feerate.
-    if (level == 0 && IsAcceptable()) {
+    if (level == 0 && (rename || IsAcceptable())) {
         entry.m_main_lin_index = 0;
         entry.m_main_chunk_feerate = m_feerate;
+        entry.m_main_equal_feerate_chunk_prefix_size = m_feerate.size;
+        entry.m_main_max_chunk_fallback = m_graph_index;
         // Always use the special LinearizationIndex(-1), indicating singleton chunk at end of
         // Cluster, here.
-        graph.CreateChunkData(m_graph_index, LinearizationIndex(-1));
+        if (!rename) graph.CreateChunkData(m_graph_index, LinearizationIndex(-1));
     }
 }
 
@@ -1138,7 +1231,7 @@ Cluster* GenericClusterImpl::CopyToStaging(TxGraphImpl& graph) const noexcept
     // Insert the new Cluster into the graph.
     graph.InsertCluster(/*level=*/1, std::move(ret), m_quality);
     // Update its Locators.
-    ptr->Updated(graph, /*level=*/1);
+    ptr->Updated(graph, /*level=*/1, /*rename=*/false);
     // Update memory usage.
     graph.GetClusterSet(/*level=*/1).m_cluster_usage += ptr->TotalMemoryUsage();
     return ptr;
@@ -1155,7 +1248,7 @@ Cluster* SingletonClusterImpl::CopyToStaging(TxGraphImpl& graph) const noexcept
     // Insert the new Cluster into the graph.
     graph.InsertCluster(/*level=*/1, std::move(ret), m_quality);
     // Update its Locators.
-    ptr->Updated(graph, /*level=*/1);
+    ptr->Updated(graph, /*level=*/1, /*rename=*/false);
     // Update memory usage.
     graph.GetClusterSet(/*level=*/1).m_cluster_usage += ptr->TotalMemoryUsage();
     return ptr;
@@ -1204,7 +1297,7 @@ void GenericClusterImpl::ApplyRemovals(TxGraphImpl& graph, int level, std::span<
     graph.GetClusterSet(level).m_cluster_usage += TotalMemoryUsage();
     auto new_quality = IsTopological() ? QualityLevel::NEEDS_SPLIT : QualityLevel::NEEDS_SPLIT_FIX;
     graph.SetClusterQuality(level, m_quality, m_setindex, new_quality);
-    Updated(graph, level);
+    Updated(graph, /*level=*/level, /*rename=*/false);
 }
 
 void SingletonClusterImpl::ApplyRemovals(TxGraphImpl& graph, int level, std::span<GraphIndex>& to_remove) noexcept
@@ -1260,7 +1353,7 @@ void GenericClusterImpl::MoveToMain(TxGraphImpl& graph) noexcept
     // Remove cluster itself from staging and add it to main.
     auto cluster = graph.ExtractCluster(1, quality, m_setindex);
     graph.InsertCluster(/*level=*/0, std::move(cluster), quality);
-    Updated(graph, /*level=*/0);
+    Updated(graph, /*level=*/0, /*rename=*/false);
 }
 
 void SingletonClusterImpl::MoveToMain(TxGraphImpl& graph) noexcept
@@ -1274,7 +1367,7 @@ void SingletonClusterImpl::MoveToMain(TxGraphImpl& graph) noexcept
     auto cluster = graph.ExtractCluster(/*level=*/1, quality, m_setindex);
     graph.InsertCluster(/*level=*/0, std::move(cluster), quality);
     graph.GetClusterSet(/*level=*/0).m_cluster_usage += TotalMemoryUsage();
-    Updated(graph, /*level=*/0);
+    Updated(graph, /*level=*/0, /*rename=*/false);
 }
 
 void GenericClusterImpl::Compact() noexcept
@@ -1372,7 +1465,7 @@ bool GenericClusterImpl::Split(TxGraphImpl& graph, int level) noexcept
             graph.SetClusterQuality(level, m_quality, m_setindex, split_quality);
             // If this made the quality ACCEPTABLE or OPTIMAL, we need to compute and cache its
             // chunking.
-            Updated(graph, level);
+            Updated(graph, /*level=*/level, /*rename=*/false);
             return false;
         }
         first = false;
@@ -1407,7 +1500,7 @@ bool GenericClusterImpl::Split(TxGraphImpl& graph, int level) noexcept
     }
     // Update all the Locators of moved transactions, and memory usage.
     for (Cluster* new_cluster : new_clusters) {
-        new_cluster->Updated(graph, level);
+        new_cluster->Updated(graph, /*level=*/level, /*rename=*/false);
         new_cluster->Compact();
         graph.GetClusterSet(level).m_cluster_usage += new_cluster->TotalMemoryUsage();
     }
@@ -1497,7 +1590,7 @@ void GenericClusterImpl::ApplyDependencies(TxGraphImpl& graph, int level, std::s
     graph.SetClusterQuality(level, m_quality, m_setindex, QualityLevel::NEEDS_FIX);
 
     // Finally push the changes to graph.m_entries.
-    Updated(graph, level);
+    Updated(graph, /*level=*/level, /*rename=*/false);
 }
 
 void SingletonClusterImpl::ApplyDependencies(TxGraphImpl&, int, std::span<std::pair<GraphIndex, GraphIndex>>) noexcept
@@ -1653,7 +1746,7 @@ void TxGraphImpl::ApplyRemovals(int up_to_level) noexcept
     Compact();
 }
 
-void TxGraphImpl::SwapIndexes(GraphIndex a, GraphIndex b) noexcept
+void TxGraphImpl::SwapIndexes(GraphIndex a, GraphIndex b, std::vector<Cluster*>& affected_main) noexcept
 {
     Assume(a < m_entries.size());
     Assume(b < m_entries.size());
@@ -1669,12 +1762,12 @@ void TxGraphImpl::SwapIndexes(GraphIndex a, GraphIndex b) noexcept
         if (entry.m_main_chunkindex_iterator != m_main_chunkindex.end()) {
             entry.m_main_chunkindex_iterator->m_graph_index = idx;
         }
-        // Update the locators for both levels. The rest of the Entry information will not change,
-        // so no need to invoke Cluster::Updated().
+        // Update the locators for both levels.
         for (int level = 0; level < MAX_LEVELS; ++level) {
             Locator& locator = entry.m_locator[level];
             if (locator.IsPresent()) {
                 locator.cluster->UpdateMapping(locator.index, idx);
+                if (level == 0) affected_main.push_back(locator.cluster);
             }
         }
     }
@@ -1702,6 +1795,7 @@ void TxGraphImpl::Compact() noexcept
     // invalidate them).
     std::sort(m_unlinked.begin(), m_unlinked.end(), std::greater{});
 
+    std::vector<Cluster*> affected_main;
     auto last = GraphIndex(-1);
     for (GraphIndex idx : m_unlinked) {
         // m_unlinked should never contain the same GraphIndex twice (the code below would fail
@@ -1718,9 +1812,17 @@ void TxGraphImpl::Compact() noexcept
         }
 
         // Move the entry to the end.
-        if (idx != m_entries.size() - 1) SwapIndexes(idx, m_entries.size() - 1);
+        if (idx != m_entries.size() - 1) SwapIndexes(idx, m_entries.size() - 1, affected_main);
         // Drop the entry for idx, now that it is at the end.
         m_entries.pop_back();
+    }
+
+    // Update the affected clusters, to fixup Entry::m_main_max_chunk_fallback values which may
+    // have become outdated due to the compaction above.
+    std::sort(affected_main.begin(), affected_main.end());
+    affected_main.erase(std::unique(affected_main.begin(), affected_main.end()), affected_main.end());
+    for (Cluster* cluster : affected_main) {
+        cluster->Updated(*this, /*level=*/0, /*rename=*/true);
     }
     m_unlinked.clear();
 }
@@ -2061,8 +2163,13 @@ std::pair<uint64_t, bool> GenericClusterImpl::Relinearize(TxGraphImpl& graph, in
     if (IsOptimal()) return {0, false};
     // Invoke the actual linearization algorithm (passing in the existing one).
     uint64_t rng_seed = graph.m_rng.rand64();
-    auto [linearization, optimal, cost] = Linearize(m_depgraph, max_iters, rng_seed, m_linearization, /*is_topological=*/IsTopological());
-    // Postlinearize to undo some of the non-determinism caused by randomizing the linearization.
+    const auto fallback_order = [&](DepGraphIndex a, DepGraphIndex b) noexcept {
+        const auto ref_a = graph.m_entries[m_mapping[a]].m_ref;
+        const auto ref_b = graph.m_entries[m_mapping[b]].m_ref;
+        return graph.m_fallback_order(*ref_a, *ref_b);
+    };
+    auto [linearization, optimal, cost] = Linearize(m_depgraph, max_iters, rng_seed, fallback_order, m_linearization, /*is_topological=*/IsTopological());
+    // Postlinearize to improve the linearization (if optimal, only the sub-chunk order).
     // This also guarantees that all chunks are connected (even when non-optimal).
     PostLinearize(m_depgraph, linearization);
     // Update the linearization.
@@ -2080,7 +2187,7 @@ std::pair<uint64_t, bool> GenericClusterImpl::Relinearize(TxGraphImpl& graph, in
         improved = true;
     }
     // Update the Entry objects.
-    Updated(graph, level);
+    Updated(graph, /*level=*/level, /*rename=*/false);
     return {cost, improved};
 }
 
@@ -2115,20 +2222,19 @@ void TxGraphImpl::MakeAllAcceptable(int level) noexcept
 
 GenericClusterImpl::GenericClusterImpl(uint64_t sequence) noexcept : Cluster{sequence} {}
 
-TxGraph::Ref TxGraphImpl::AddTransaction(const FeePerWeight& feerate) noexcept
+void TxGraphImpl::AddTransaction(Ref& arg, const FeePerWeight& feerate) noexcept
 {
     Assume(m_main_chunkindex_observers == 0 || GetTopLevel() != 0);
     Assume(feerate.size > 0);
-    // Construct a new Ref.
-    Ref ret;
+    Assume(GetRefGraph(arg) == nullptr);
     // Construct a new Entry, and link it with the Ref.
     auto idx = m_entries.size();
     m_entries.emplace_back();
     auto& entry = m_entries.back();
     entry.m_main_chunkindex_iterator = m_main_chunkindex.end();
-    entry.m_ref = &ret;
-    GetRefGraph(ret) = this;
-    GetRefIndex(ret) = idx;
+    entry.m_ref = &arg;
+    GetRefGraph(arg) = this;
+    GetRefIndex(arg) = idx;
     // Construct a new singleton Cluster (which is necessarily optimally linearized).
     bool oversized = uint64_t(feerate.size) > m_max_cluster_size;
     auto cluster = CreateEmptyCluster(1);
@@ -2137,7 +2243,7 @@ TxGraph::Ref TxGraphImpl::AddTransaction(const FeePerWeight& feerate) noexcept
     int level = GetTopLevel();
     auto& clusterset = GetClusterSet(level);
     InsertCluster(level, std::move(cluster), oversized ? QualityLevel::OVERSIZED_SINGLETON : QualityLevel::OPTIMAL);
-    cluster_ptr->Updated(*this, level);
+    cluster_ptr->Updated(*this, /*level=*/level, /*rename=*/false);
     clusterset.m_cluster_usage += cluster_ptr->TotalMemoryUsage();
     ++clusterset.m_txcount;
     // Deal with individually oversized transactions.
@@ -2146,8 +2252,6 @@ TxGraph::Ref TxGraphImpl::AddTransaction(const FeePerWeight& feerate) noexcept
         clusterset.m_oversized = true;
         clusterset.m_group_data = std::nullopt;
     }
-    // Return the Ref.
-    return ret;
 }
 
 void TxGraphImpl::RemoveTransaction(const Ref& arg) noexcept
@@ -2574,6 +2678,10 @@ void TxGraphImpl::CommitStaging() noexcept
     // Staging must exist.
     Assume(m_staging_clusterset.has_value());
     Assume(m_main_chunkindex_observers == 0);
+    // Get rid of removed transactions in staging before moving to main, so they do not need to be
+    // added to the chunk index there. Doing so is impossible if they were unlinked, and thus have
+    // no Ref anymore to pass to the fallback comparator.
+    ApplyRemovals(/*up_to_level=*/1);
     // Delete all conflicting Clusters in main, to make place for moving the staging ones
     // there. All of these have been copied to staging in PullIn().
     auto conflicts = GetConflicts();
@@ -2619,7 +2727,7 @@ void GenericClusterImpl::SetFee(TxGraphImpl& graph, int level, DepGraphIndex idx
     } else if (IsAcceptable()) {
         graph.SetClusterQuality(level, m_quality, m_setindex, QualityLevel::NEEDS_RELINEARIZE);
     }
-    Updated(graph, level);
+    Updated(graph, /*level=*/level, /*rename=*/false);
 }
 
 void SingletonClusterImpl::SetFee(TxGraphImpl& graph, int level, DepGraphIndex idx, int64_t fee) noexcept
@@ -2627,7 +2735,7 @@ void SingletonClusterImpl::SetFee(TxGraphImpl& graph, int level, DepGraphIndex i
     Assume(GetTxCount());
     Assume(idx == 0);
     m_feerate.fee = fee;
-    Updated(graph, level);
+    Updated(graph, /*level=*/level, /*rename=*/false);
 }
 
 void TxGraphImpl::SetTransactionFee(const Ref& ref, int64_t fee) noexcept
@@ -2740,6 +2848,8 @@ void GenericClusterImpl::SanityCheck(const TxGraphImpl& graph, int level) const
     LinearizationIndex linindex{0};
     DepGraphIndex chunk_pos{0}; //!< position within the current chunk
     assert(m_depgraph.IsAcyclic());
+    if (m_linearization.empty()) return;
+    FeeFrac equal_feerate_prefix = linchunking[chunk_num].feerate;
     for (auto lin_pos : m_linearization) {
         assert(lin_pos < m_mapping.size());
         const auto& entry = graph.m_entries[m_mapping[lin_pos]];
@@ -2756,20 +2866,31 @@ void GenericClusterImpl::SanityCheck(const TxGraphImpl& graph, int level) const
             assert(entry.m_main_lin_index == linindex);
             ++linindex;
             if (!linchunking[chunk_num].transactions[lin_pos]) {
+                // First transaction of a new chunk.
                 ++chunk_num;
+                assert(chunk_num < linchunking.size());
                 chunk_pos = 0;
+                if (linchunking[chunk_num].feerate << equal_feerate_prefix) {
+                    equal_feerate_prefix = linchunking[chunk_num].feerate;
+                } else {
+                    assert(!(linchunking[chunk_num].feerate >> equal_feerate_prefix));
+                    equal_feerate_prefix += linchunking[chunk_num].feerate;
+                }
             }
             assert(entry.m_main_chunk_feerate == linchunking[chunk_num].feerate);
+            assert(entry.m_main_equal_feerate_chunk_prefix_size == equal_feerate_prefix.size);
             // Verify that an entry in the chunk index exists for every chunk-ending transaction.
             ++chunk_pos;
-            bool is_chunk_end = (chunk_pos == linchunking[chunk_num].transactions.Count());
-            assert((entry.m_main_chunkindex_iterator != graph.m_main_chunkindex.end()) == is_chunk_end);
-            if (is_chunk_end) {
-                auto& chunk_data = *entry.m_main_chunkindex_iterator;
-                if (m_done == m_depgraph.Positions() && chunk_pos == 1) {
-                    assert(chunk_data.m_chunk_count == LinearizationIndex(-1));
-                } else {
-                    assert(chunk_data.m_chunk_count == chunk_pos);
+            if (graph.m_main_clusterset.m_to_remove.empty()) {
+                bool is_chunk_end = (chunk_pos == linchunking[chunk_num].transactions.Count());
+                assert((entry.m_main_chunkindex_iterator != graph.m_main_chunkindex.end()) == is_chunk_end);
+                if (is_chunk_end) {
+                    auto& chunk_data = *entry.m_main_chunkindex_iterator;
+                    if (m_done == m_depgraph.Positions() && chunk_pos == 1) {
+                        assert(chunk_data.m_chunk_count == LinearizationIndex(-1));
+                    } else {
+                        assert(chunk_data.m_chunk_count == chunk_pos);
+                    }
                 }
             }
             // If this Cluster has an acceptable quality level, its chunks must be connected.
@@ -2793,9 +2914,12 @@ void SingletonClusterImpl::SanityCheck(const TxGraphImpl& graph, int level) cons
         if (level == 0 && IsAcceptable()) {
             assert(entry.m_main_lin_index == 0);
             assert(entry.m_main_chunk_feerate == m_feerate);
-            assert(entry.m_main_chunkindex_iterator != graph.m_main_chunkindex.end());
-            auto& chunk_data = *entry.m_main_chunkindex_iterator;
-            assert(chunk_data.m_chunk_count == LinearizationIndex(-1));
+            assert(entry.m_main_equal_feerate_chunk_prefix_size == m_feerate.size);
+            if (graph.m_main_clusterset.m_to_remove.empty()) {
+                assert(entry.m_main_chunkindex_iterator != graph.m_main_chunkindex.end());
+                auto& chunk_data = *entry.m_main_chunkindex_iterator;
+                assert(chunk_data.m_chunk_count == LinearizationIndex(-1));
+            }
         }
     }
 }
@@ -3438,7 +3562,11 @@ TxGraph::Ref::Ref(Ref&& other) noexcept
     std::swap(m_index, other.m_index);
 }
 
-std::unique_ptr<TxGraph> MakeTxGraph(unsigned max_cluster_count, uint64_t max_cluster_size, uint64_t acceptable_iters) noexcept
+std::unique_ptr<TxGraph> MakeTxGraph(
+    unsigned max_cluster_count,
+    uint64_t max_cluster_size,
+    uint64_t acceptable_iters,
+    const std::function<std::strong_ordering(const TxGraph::Ref&, const TxGraph::Ref&)>& fallback_order) noexcept
 {
-    return std::make_unique<TxGraphImpl>(max_cluster_count, max_cluster_size, acceptable_iters);
+    return std::make_unique<TxGraphImpl>(max_cluster_count, max_cluster_size, acceptable_iters, fallback_order);
 }

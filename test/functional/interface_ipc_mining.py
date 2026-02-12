@@ -8,6 +8,7 @@ from contextlib import AsyncExitStack
 from io import BytesIO
 from test_framework.blocktools import NULL_OUTPOINT
 from test_framework.messages import (
+    MAX_BLOCK_WEIGHT,
     CTransaction,
     CTxIn,
     CTxOut,
@@ -160,6 +161,7 @@ class IPCMiningTest(BitcoinTestFramework):
             async with AsyncExitStack() as stack:
                 self.log.debug("Create a template")
                 template = await mining_create_block_template(mining, stack, ctx, self.default_block_create_options)
+                assert template is not None
 
                 self.log.debug("Test some inspectors of Template")
                 header = (await template.getBlockHeader(ctx)).result
@@ -179,23 +181,26 @@ class IPCMiningTest(BitcoinTestFramework):
                 template2 = await wait_and_do(
                     mining_wait_next_template(template, stack, ctx, waitoptions),
                     lambda: self.generate(self.nodes[0], 1))
+                assert template2 is not None
                 block2 = await mining_get_block(template2, ctx)
                 assert_equal(len(block2.vtx), 1)
 
                 self.log.debug("Wait for another, but time out")
-                template3 = await template2.waitNext(ctx, waitoptions)
-                assert_equal(template3._has("result"), False)
+                template3 = await mining_wait_next_template(template2, stack, ctx, waitoptions)
+                assert template3 is None
 
                 self.log.debug("Wait for another, get one after increase in fees in the mempool")
                 template4 = await wait_and_do(
                     mining_wait_next_template(template2, stack, ctx, waitoptions),
                     lambda: self.miniwallet.send_self_transfer(fee_rate=10, from_node=self.nodes[0]))
+                assert template4 is not None
                 block3 = await mining_get_block(template4, ctx)
                 assert_equal(len(block3.vtx), 2)
 
                 self.log.debug("Wait again, this should return the same template, since the fee threshold is zero")
                 waitoptions.feeThreshold = 0
                 template5 = await mining_wait_next_template(template4, stack, ctx, waitoptions)
+                assert template5 is not None
                 block4 = await mining_get_block(template5, ctx)
                 assert_equal(len(block4.vtx), 2)
                 waitoptions.feeThreshold = 1
@@ -204,21 +209,62 @@ class IPCMiningTest(BitcoinTestFramework):
                 template6 = await wait_and_do(
                     mining_wait_next_template(template5, stack, ctx, waitoptions),
                     lambda: self.miniwallet.send_self_transfer(fee_rate=10, from_node=self.nodes[0]))
+                assert template6 is not None
                 block4 = await mining_get_block(template6, ctx)
                 assert_equal(len(block4.vtx), 3)
 
                 self.log.debug("Wait for another, but time out, since the fee threshold is set now")
-                template7 = await template6.waitNext(ctx, waitoptions)
-                assert_equal(template7._has("result"), False)
+                template7 = await mining_wait_next_template(template6, stack, ctx, waitoptions)
+                assert template7 is None
 
                 self.log.debug("interruptWait should abort the current wait")
                 async def wait_for_block():
                     new_waitoptions = self.capnp_modules['mining'].BlockWaitOptions()
                     new_waitoptions.timeout = timeout * 60 # 1 minute wait
                     new_waitoptions.feeThreshold = 1
-                    template7 = await template6.waitNext(ctx, new_waitoptions)
-                    assert_equal(template7._has("result"), False)
+                    template7 = await mining_wait_next_template(template6, stack, ctx, new_waitoptions)
+                    assert template7 is None
                 await wait_and_do(wait_for_block(), template6.interruptWait())
+
+        asyncio.run(capnp.run(async_routine()))
+
+    def run_ipc_option_override_test(self):
+        self.log.info("Running IPC option override test")
+        # Set an absurd reserved weight. `-blockreservedweight` is RPC-only, so
+        # with this setting RPC templates would be empty. IPC clients set
+        # blockReservedWeight per template request and are unaffected; later in
+        # the test the IPC template includes a mempool transaction.
+        self.restart_node(0, extra_args=[f"-blockreservedweight={MAX_BLOCK_WEIGHT}"])
+
+        async def async_routine():
+            ctx, mining = await self.make_mining_ctx()
+            self.miniwallet.send_self_transfer(fee_rate=10, from_node=self.nodes[0])
+
+            async with AsyncExitStack() as stack:
+                opts = self.capnp_modules['mining'].BlockCreateOptions()
+                opts.useMempool = True
+                opts.blockReservedWeight = 4000
+                opts.coinbaseOutputMaxAdditionalSigops = 0
+                template = await mining_create_block_template(mining, stack, ctx, opts)
+                assert template is not None
+                block = await mining_get_block(template, ctx)
+                assert_equal(len(block.vtx), 2)
+
+                self.log.debug("Use absurdly large reserved weight to force an empty template")
+                opts.blockReservedWeight = MAX_BLOCK_WEIGHT
+                empty_template = await mining_create_block_template(mining, stack, ctx, opts)
+                assert empty_template is not None
+                empty_block = await mining_get_block(empty_template, ctx)
+                assert_equal(len(empty_block.vtx), 1)
+
+                self.log.debug("Enforce minimum reserved weight for IPC clients too")
+                opts.blockReservedWeight = 0
+                try:
+                    await mining.createNewBlock(opts)
+                    raise AssertionError("createNewBlock unexpectedly succeeded")
+                except capnp.lib.capnp.KjException as e:
+                    assert_equal(e.description, "remote exception: std::exception: block_reserved_weight (0) must be at least 2000 weight units")
+                    assert_equal(e.type, "FAILED")
 
         asyncio.run(capnp.run(async_routine()))
 
@@ -304,6 +350,7 @@ class IPCMiningTest(BitcoinTestFramework):
         self.run_mining_interface_test()
         self.run_block_template_test()
         self.run_coinbase_and_submission_test()
+        self.run_ipc_option_override_test()
 
 
 if __name__ == '__main__':

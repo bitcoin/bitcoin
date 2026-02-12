@@ -45,7 +45,7 @@ def generate(ci_type):
         "build",
         "-Werror=dev",
         "--preset",
-        "vs2022",
+        "vs2026",
     ] + GENERATE_OPTIONS[ci_type]
     run(command)
 

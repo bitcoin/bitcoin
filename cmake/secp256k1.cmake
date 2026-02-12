@@ -9,6 +9,11 @@ function(add_secp256k1 subdir)
   message("Configuring secp256k1 subtree...")
   set(BUILD_SHARED_LIBS OFF)
   set(CMAKE_EXPORT_COMPILE_COMMANDS OFF)
+
+  # Unconditionally prevent secp's symbols from being exported by our libs
+  set(CMAKE_C_VISIBILITY_PRESET hidden)
+  set(SECP256K1_ENABLE_API_VISIBILITY_ATTRIBUTES OFF CACHE BOOL "" FORCE)
+
   set(SECP256K1_ENABLE_MODULE_ECDH OFF CACHE BOOL "" FORCE)
   set(SECP256K1_ENABLE_MODULE_RECOVERY ON CACHE BOOL "" FORCE)
   set(SECP256K1_ENABLE_MODULE_MUSIG ON CACHE BOOL "" FORCE)

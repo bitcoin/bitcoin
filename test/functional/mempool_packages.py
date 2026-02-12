@@ -239,9 +239,9 @@ class MempoolPackagesTest(BitcoinTestFramework):
         self.generate(self.nodes[0], 1)
         self.trigger_reorg(fork_blocks, self.nodes[0])
 
-        # Check if the txs are returned to the mempool (though the transaction ordering may
-        # change as it is non-deterministic).
-        assert_equal(set(self.nodes[0].getrawmempool()), set(mempool0))
+        # Check that the txs are returned to the mempool, and that transaction ordering is
+        # unchanged, as it is deterministic.
+        assert_equal(self.nodes[0].getrawmempool(), mempool0)
 
         # Clean-up the mempool
         self.generate(self.nodes[0], 1)

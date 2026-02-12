@@ -4,6 +4,7 @@
 
 #include <compare>
 #include <cstdint>
+#include <functional>
 #include <memory>
 #include <optional>
 #include <utility>
@@ -67,12 +68,14 @@ public:
 
     /** Virtual destructor, so inheriting is safe. */
     virtual ~TxGraph() = default;
-    /** Construct a new transaction with the specified feerate, and return a Ref to it.
+    /** Initialize arg (which must be an empty Ref) to refer to a new transaction in this graph
+     *  with the specified feerate.
+     *
      *  If a staging graph exists, the new transaction is only created there. feerate.size must be
-     *  strictly positive. In all further calls, only Refs created by AddTransaction() are allowed
+     *  strictly positive. In all further calls, only Refs passed to AddTransaction() are allowed
      *  to be passed to this TxGraph object (or empty Ref objects). Ref objects may outlive the
-     *  TxGraph they were created for. */
-    [[nodiscard]] virtual Ref AddTransaction(const FeePerWeight& feerate) noexcept = 0;
+     *  TxGraph they were added to. */
+    virtual void AddTransaction(Ref& arg, const FeePerWeight& feerate) noexcept = 0;
     /** Remove the specified transaction. If a staging graph exists, the removal only happens
      *  there. This is a no-op if the transaction was already removed.
      *
@@ -235,8 +238,7 @@ public:
         /** Index into the Graph's m_entries. Only used if m_graph != nullptr. */
         GraphIndex m_index = GraphIndex(-1);
     public:
-        /** Construct an empty Ref. Non-empty Refs can only be created using
-         *  TxGraph::AddTransaction. */
+        /** Construct an empty Ref. It can be initialized through TxGraph::AddTransaction. */
         Ref() noexcept = default;
         /** Destroy this Ref. If it is not empty, the corresponding transaction is removed (in both
          *  main and staging, if it exists). */
@@ -252,9 +254,20 @@ public:
 };
 
 /** Construct a new TxGraph with the specified limit on the number of transactions within a cluster,
- *  and on the sum of transaction sizes within a cluster. max_cluster_count cannot exceed
- *  MAX_CLUSTER_COUNT_LIMIT. acceptable_iters controls how many linearization optimization
- *  steps will be performed per cluster before they are considered to be of acceptable quality. */
-std::unique_ptr<TxGraph> MakeTxGraph(unsigned max_cluster_count, uint64_t max_cluster_size, uint64_t acceptable_iters) noexcept;
+ *  and on the sum of transaction sizes within a cluster.
+ *
+ * - max_cluster_count cannot exceed MAX_CLUSTER_COUNT_LIMIT.
+ * - acceptable_iters controls how many linearization optimization steps will be performed per
+ *   cluster before they are considered to be of acceptable quality.
+ * - fallback_order determines how to break tie-breaks between transactions:
+ *   fallback_order(a, b) < 0 means a is "better" than b, and will (in case of ties) be placed
+ *   first. This ordering must be stable over the transactions' lifetimes.
+ */
+std::unique_ptr<TxGraph> MakeTxGraph(
+    unsigned max_cluster_count,
+    uint64_t max_cluster_size,
+    uint64_t acceptable_iters,
+    const std::function<std::strong_ordering(const TxGraph::Ref&, const TxGraph::Ref&)>& fallback_order
+) noexcept;
 
 #endif // BITCOIN_TXGRAPH_H

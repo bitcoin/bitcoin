@@ -9,6 +9,7 @@
 #include <uint256.h>
 #include <util/types.h>
 
+#include <compare>
 #include <cstddef>
 #include <optional>
 #include <string>
@@ -42,7 +43,7 @@ public:
     template <typename Other>
     bool operator==(const Other& other) const { return Compare(other) == 0; }
     template <typename Other>
-    bool operator<(const Other& other) const { return Compare(other) < 0; }
+    std::strong_ordering operator<=>(const Other& other) const { return Compare(other) <=> 0; }
 
     const uint256& ToUint256() const LIFETIMEBOUND { return m_wrapped; }
     static transaction_identifier FromUint256(const uint256& id) { return {id}; }

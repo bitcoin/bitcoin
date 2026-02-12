@@ -10,11 +10,11 @@ For cross-compiling options, please see [`build-windows.md`](./build-windows.md)
 
 This guide relies on using CMake and vcpkg package manager provided with the Visual Studio installation.
 Here are requirements for the Visual Studio installation:
-1. Minimum required version: Visual Studio 2022 version 17.13.
+1. Minimum required version: Visual Studio 2026 version 18.3.
 2. Installed components:
 - The "Desktop development with C++" workload.
 
-The commands in this guide should be executed in "Developer PowerShell for VS 2022" or "Developer Command Prompt for VS 2022".
+The commands in this guide should be executed in "Developer PowerShell for VS" or "Developer Command Prompt for VS".
 The former is assumed hereinafter.
 
 ### 2. Git
@@ -54,8 +54,8 @@ Run `cmake -B build -LH` to see the full list of available options.
 
 ### 4. Building with Static Linking with GUI
 
-```
-cmake -B build --preset vs2022-static          # It might take a while if the vcpkg binary cache is unpopulated or invalidated.
+```powershell
+cmake -B build --preset vs2026-static          # It might take a while if the vcpkg binary cache is unpopulated or invalidated.
 cmake --build build --config Release           # Append "-j N" for N parallel jobs.
 ctest --test-dir build --build-config Release  # Append "-j N" for N parallel tests.
 cmake --install build --config Release         # Optional.
@@ -63,8 +63,8 @@ cmake --install build --config Release         # Optional.
 
 ### 5. Building with Dynamic Linking without GUI
 
-```
-cmake -B build --preset vs2022 -DBUILD_GUI=OFF # It might take a while if the vcpkg binary cache is unpopulated or invalidated.
+```powershell
+cmake -B build --preset vs2026 -DBUILD_GUI=OFF # It might take a while if the vcpkg binary cache is unpopulated or invalidated.
 cmake --build build --config Release           # Append "-j N" for N parallel jobs.
 ctest --test-dir build --build-config Release  # Append "-j N" for N parallel tests.
 ```
@@ -79,7 +79,7 @@ specify a shorter path to store intermediate build files by using
 the [`--x-buildtrees-root`](https://learn.microsoft.com/en-us/vcpkg/commands/common-options#buildtrees-root) option:
 
 ```powershell
-cmake -B build --preset vs2022-static -DVCPKG_INSTALL_OPTIONS="--x-buildtrees-root=C:\vcpkg"
+cmake -B build --preset vs2026-static -DVCPKG_INSTALL_OPTIONS="--x-buildtrees-root=C:\vcpkg"
 ```
 
 If vcpkg installation fails with the message "Paths with embedded space may be handled incorrectly", which
@@ -87,17 +87,17 @@ can occur if your local Bitcoin Core repository path contains spaces, you can ov
 by setting the [`VCPKG_INSTALLED_DIR`](https://github.com/microsoft/vcpkg-docs/blob/main/vcpkg/users/buildsystems/cmake-integration.md#vcpkg_installed_dir) variable:
 
 ```powershell
-cmake -B build --preset vs2022-static -DVCPKG_INSTALLED_DIR="C:\path_without_spaces"
+cmake -B build --preset vs2026-static -DVCPKG_INSTALLED_DIR="C:\path_without_spaces"
 ```
 
 ## Performance Notes
 
 ### 7. vcpkg Manifest Default Features
 
-One can skip vcpkg manifest default features to speedup the configuration step.
+One can skip vcpkg manifest default features to speed up the configuration step.
 For example, the following invocation will skip all features except for "wallet" and "tests" and their dependencies:
 ```
-cmake -B build --preset vs2022 -DVCPKG_MANIFEST_NO_DEFAULT_FEATURES=ON -DVCPKG_MANIFEST_FEATURES="wallet;tests" -DBUILD_GUI=OFF -DWITH_ZMQ=OFF
+cmake -B build --preset vs2026 -DVCPKG_MANIFEST_NO_DEFAULT_FEATURES=ON -DVCPKG_MANIFEST_FEATURES="wallet;tests" -DBUILD_GUI=OFF -DWITH_ZMQ=OFF
 ```
 
 Available features are listed in the [`vcpkg.json`](/vcpkg.json) file.

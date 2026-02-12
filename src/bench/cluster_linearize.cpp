@@ -55,7 +55,7 @@ void BenchLinearizeOptimallyTotal(benchmark::Bench& bench, const std::string& na
         // Benchmark the total time to optimal.
         uint64_t rng_seed = 0;
         bench.name(bench_name).run([&] {
-            auto [_lin, optimal, _cost] = Linearize(depgraph, /*max_iterations=*/10000000, rng_seed++);
+            auto [_lin, optimal, _cost] = Linearize(depgraph, /*max_iterations=*/10000000, rng_seed++, IndexTxOrder{});
             assert(optimal);
         });
     }
@@ -72,7 +72,7 @@ void BenchLinearizeOptimallyPerCost(benchmark::Bench& bench, const std::string& 
         // Determine the cost of 100 rng_seeds.
         uint64_t total_cost = 0;
         for (uint64_t iter = 0; iter < 100; ++iter) {
-            auto [_lin, optimal, cost] = Linearize(depgraph, /*max_iterations=*/10000000, /*rng_seed=*/iter);
+            auto [_lin, optimal, cost] = Linearize(depgraph, /*max_iterations=*/10000000, /*rng_seed=*/iter, IndexTxOrder{});
             total_cost += cost;
         }
 
@@ -80,7 +80,7 @@ void BenchLinearizeOptimallyPerCost(benchmark::Bench& bench, const std::string& 
         bench.name(bench_name).unit("cost").batch(total_cost).run([&] {
             uint64_t recompute_cost = 0;
             for (uint64_t iter = 0; iter < 100; ++iter) {
-                auto [_lin, optimal, cost] = Linearize(depgraph, /*max_iterations=*/10000000, /*rng_seed=*/iter);
+                auto [_lin, optimal, cost] = Linearize(depgraph, /*max_iterations=*/10000000, /*rng_seed=*/iter, IndexTxOrder{});
                 assert(optimal);
                 recompute_cost += cost;
             }

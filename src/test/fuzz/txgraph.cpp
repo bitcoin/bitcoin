@@ -23,6 +23,14 @@ using namespace cluster_linearize;
 
 namespace {
 
+struct SimTxObject : public TxGraph::Ref
+{
+    // Use random uint64_t as txids for this simulation (0 = empty object).
+    const uint64_t m_txid{0};
+    SimTxObject() noexcept = default;
+    explicit SimTxObject(uint64_t txid) noexcept : m_txid(txid) {}
+};
+
 /** Data type representing a naive simulated TxGraph, keeping all transactions (even from
  *  disconnected components) in a single DepGraph. Unlike the real TxGraph, this only models
  *  a single graph, and multiple instances are used to simulate main/staging. */
@@ -42,14 +50,14 @@ struct SimTxGraph
     /** The dependency graph (for all transactions in the simulation, regardless of
      *  connectivity/clustering). */
     DepGraph<SetType> graph;
-    /** For each position in graph, which TxGraph::Ref it corresponds with (if any). Use shared_ptr
+    /** For each position in graph, which SimTxObject it corresponds with (if any). Use shared_ptr
      *  so that a SimTxGraph can be copied to create a staging one, while sharing Refs with
      *  the main graph. */
-    std::array<std::shared_ptr<TxGraph::Ref>, MAX_TRANSACTIONS> simmap;
+    std::array<std::shared_ptr<SimTxObject>, MAX_TRANSACTIONS> simmap;
     /** For each TxGraph::Ref in graph, the position it corresponds with. */
     std::map<const TxGraph::Ref*, Pos> simrevmap;
-    /** The set of TxGraph::Ref entries that have been removed, but not yet destroyed. */
-    std::vector<std::shared_ptr<TxGraph::Ref>> removed;
+    /** The set of SimTxObject entries that have been removed, but not yet destroyed. */
+    std::vector<std::shared_ptr<SimTxObject>> removed;
     /** Whether the graph is oversized (true = yes, false = no, std::nullopt = unknown). */
     std::optional<bool> oversized;
     /** The configured maximum number of transactions per cluster. */
@@ -129,23 +137,24 @@ struct SimTxGraph
         return MISSING;
     }
 
-    /** Given a position in this simulated graph, get the corresponding TxGraph::Ref. */
-    TxGraph::Ref* GetRef(Pos pos)
+    /** Given a position in this simulated graph, get the corresponding SimTxObject. */
+    SimTxObject* GetRef(Pos pos)
     {
         assert(graph.Positions()[pos]);
         assert(simmap[pos]);
         return simmap[pos].get();
     }
 
-    /** Add a new transaction to the simulation. */
-    void AddTransaction(TxGraph::Ref&& ref, const FeePerWeight& feerate)
+    /** Add a new transaction to the simulation and the specified real graph. */
+    void AddTransaction(TxGraph& txgraph, const FeePerWeight& feerate, uint64_t txid)
     {
         assert(graph.TxCount() < MAX_TRANSACTIONS);
         auto simpos = graph.AddTransaction(feerate);
         real_is_optimal = false;
         MakeModified(simpos);
         assert(graph.Positions()[simpos]);
-        simmap[simpos] = std::make_shared<TxGraph::Ref>(std::move(ref));
+        simmap[simpos] = std::make_shared<SimTxObject>(txid);
+        txgraph.AddTransaction(*simmap[simpos], feerate);
         auto ptr = simmap[simpos].get();
         simrevmap[ptr] = simpos;
         // This may invalidate our cached oversized value.
@@ -308,8 +317,8 @@ FUZZ_TARGET(txgraph)
      *  specialized test cases that are hard to perform more generically. */
     InsecureRandomContext rng(provider.ConsumeIntegral<uint64_t>());
 
-    /** Variable used whenever an empty TxGraph::Ref is needed. */
-    TxGraph::Ref empty_ref;
+    /** Variable used whenever an empty SimTxObject is needed. */
+    SimTxObject empty_ref;
 
     /** The maximum number of transactions per (non-oversized) cluster we will use in this
      *  simulation. */
@@ -319,8 +328,23 @@ FUZZ_TARGET(txgraph)
     /** The number of iterations to consider a cluster acceptably linearized. */
     auto acceptable_iters = provider.ConsumeIntegralInRange<uint64_t>(0, 10000);
 
+    /** The set of uint64_t "txid"s that have been assigned before. */
+    std::set<uint64_t> assigned_txids;
+
     // Construct a real graph, and a vector of simulated graphs (main, and possibly staging).
-    auto real = MakeTxGraph(max_cluster_count, max_cluster_size, acceptable_iters);
+    auto fallback_order = [&](const TxGraph::Ref& a, const TxGraph::Ref& b) noexcept {
+        uint64_t txid_a = static_cast<const SimTxObject&>(a).m_txid;
+        uint64_t txid_b = static_cast<const SimTxObject&>(b).m_txid;
+        assert(assigned_txids.contains(txid_a));
+        assert(assigned_txids.contains(txid_b));
+        return txid_a <=> txid_b;
+    };
+    auto real = MakeTxGraph(
+        /*max_cluster_count=*/max_cluster_count,
+        /*max_cluster_size=*/max_cluster_size,
+        /*acceptable_iters=*/acceptable_iters,
+        /*fallback_order=*/fallback_order);
+
     std::vector<SimTxGraph> sims;
     sims.reserve(2);
     sims.emplace_back(max_cluster_count, max_cluster_size);
@@ -343,9 +367,9 @@ FUZZ_TARGET(txgraph)
     /** Currently active block builders. */
     std::vector<BlockBuilderData> block_builders;
 
-    /** Function to pick any Ref (for either sim in sims: from sim.simmap or sim.removed, or the
-     *  empty Ref). */
-    auto pick_fn = [&]() noexcept -> TxGraph::Ref* {
+    /** Function to pick any SimTxObject (for either sim in sims: from sim.simmap or sim.removed, or the
+     *  empty one). */
+    auto pick_fn = [&]() noexcept -> SimTxObject* {
         size_t tx_count[2] = {sims[0].GetTransactionCount(), 0};
         /** The number of possible choices. */
         size_t choices = tx_count[0] + sims[0].removed.size() + 1;
@@ -455,10 +479,14 @@ FUZZ_TARGET(txgraph)
                     size = provider.ConsumeIntegralInRange<uint32_t>(1, 0xff);
                 }
                 FeePerWeight feerate{fee, size};
-                // Create a real TxGraph::Ref.
-                auto ref = real->AddTransaction(feerate);
-                // Create a shared_ptr place in the simulation to put the Ref in.
-                top_sim.AddTransaction(std::move(ref), feerate);
+                // Pick a novel txid (and not 0, which is reserved for empty_ref).
+                uint64_t txid;
+                do {
+                    txid = rng.rand64();
+                } while (txid == 0 || assigned_txids.contains(txid));
+                assigned_txids.insert(txid);
+                // Create the transaction in the simulation and the real graph.
+                top_sim.AddTransaction(*real, feerate, txid);
                 break;
             } else if ((block_builders.empty() || sims.size() > 1) && top_sim.GetTransactionCount() + top_sim.removed.size() > 1 && command-- == 0) {
                 // AddDependency.
@@ -1066,10 +1094,115 @@ FUZZ_TARGET(txgraph)
         // that calling Linearize on it does not improve it further.
         if (sims[0].real_is_optimal) {
             auto real_diagram = ChunkLinearization(sims[0].graph, vec1);
-            auto [sim_lin, _optimal, _cost] = Linearize(sims[0].graph, 300000, rng.rand64(), vec1);
+            auto fallback_order_sim = [&](DepGraphIndex a, DepGraphIndex b) noexcept {
+                auto txid_a = sims[0].GetRef(a)->m_txid;
+                auto txid_b = sims[0].GetRef(b)->m_txid;
+                return txid_a <=> txid_b;
+            };
+            auto [sim_lin, sim_optimal, _cost] = Linearize(sims[0].graph, 300000, rng.rand64(), fallback_order_sim, vec1);
+            PostLinearize(sims[0].graph, sim_lin);
             auto sim_diagram = ChunkLinearization(sims[0].graph, sim_lin);
             auto cmp = CompareChunks(real_diagram, sim_diagram);
             assert(cmp == 0);
+
+            // Verify consistency of cross-cluster chunk ordering with tie-break (equal-feerate
+            // prefix size).
+            auto real_chunking = ChunkLinearizationInfo(sims[0].graph, vec1);
+            /** Map with one entry per component of the sim main graph. Key is the first Pos of the
+             *  component. Value is the sum of all chunk sizes from that component seen
+             *  already, at the current chunk feerate. */
+            std::map<SimTxGraph::Pos, int32_t> comp_prefix_sizes;
+            /** Current chunk feerate. */
+            FeeFrac last_chunk_feerate;
+            /** Largest seen (equal-feerate chunk prefix size, max txid).  */
+            std::pair<int32_t, uint64_t> max_chunk_tiebreak{0, 0};
+            for (const auto& chunk : real_chunking) {
+                // If this is the first chunk with a strictly lower feerate, reset.
+                if (chunk.feerate << last_chunk_feerate) {
+                    comp_prefix_sizes.clear();
+                    max_chunk_tiebreak = {0, 0};
+                }
+                last_chunk_feerate = chunk.feerate;
+                // Find which sim component this chunk belongs to.
+                auto component = sims[0].graph.GetConnectedComponent(sims[0].graph.Positions(), chunk.transactions.First());
+                assert(chunk.transactions.IsSubsetOf(component));
+                auto comp_key = component.First();
+                auto& comp_prefix_size = comp_prefix_sizes[comp_key];
+                comp_prefix_size += chunk.feerate.size;
+                // Determine the chunk's max txid.
+                uint64_t chunk_max_txid{0};
+                for (auto tx : chunk.transactions) {
+                    auto txid = sims[0].GetRef(tx)->m_txid;
+                    chunk_max_txid = std::max(txid, chunk_max_txid);
+                }
+                // Verify consistency: within each group of equal-feerate chunks, the
+                // (equal-feerate chunk prefix size, max txid) must be increasing.
+                std::pair<int32_t, uint64_t> chunk_tiebreak{comp_prefix_size, chunk_max_txid};
+                assert(chunk_tiebreak > max_chunk_tiebreak);
+                max_chunk_tiebreak = chunk_tiebreak;
+            }
+
+            // Verify that within each cluster, the internal ordering matches that of the
+            // simulation if that is optimal too, since per-cluster optimal orderings are
+            // deterministic. Note that both have been PostLinearize()'ed.
+            if (sim_optimal) {
+                for (const auto& component : sims[0].GetComponents()) {
+                    std::vector<DepGraphIndex> sim_chunk_lin, real_chunk_lin;
+                    for (auto i : sim_lin) {
+                        if (component[i]) sim_chunk_lin.push_back(i);
+                    }
+                    for (auto i : vec1) {
+                        if (component[i]) real_chunk_lin.push_back(i);
+                    }
+                    assert(sim_chunk_lin == real_chunk_lin);
+                }
+            }
+
+            // Verify that a fresh TxGraph, with the same transactions and txids, but constructed
+            // in a different order, and with a different RNG state, recreates the exact same
+            // ordering, showing that for optimal graphs, the full mempool ordering is
+            // deterministic.
+            auto real_redo = MakeTxGraph(
+                /*max_cluster_count=*/max_cluster_count,
+                /*max_cluster_size=*/max_cluster_size,
+                /*acceptable_iters=*/acceptable_iters,
+                /*fallback_order=*/fallback_order);
+            /** Vector (indexed by SimTxGraph::Pos) of TxObjects in real_redo). */
+            std::vector<std::optional<SimTxObject>> txobjects_redo;
+            txobjects_redo.resize(sims[0].graph.PositionRange());
+            // Recreate the graph's transactions with same feerate and txid.
+            std::vector<DepGraphIndex> positions;
+            for (auto i : sims[0].graph.Positions()) positions.push_back(i);
+            std::shuffle(positions.begin(), positions.end(), rng);
+            for (auto i : positions) {
+                txobjects_redo[i].emplace(sims[0].GetRef(i)->m_txid);
+                real_redo->AddTransaction(*txobjects_redo[i], FeePerWeight::FromFeeFrac(sims[0].graph.FeeRate(i)));
+            }
+            // Recreate the graph's dependencies.
+            std::vector<std::pair<DepGraphIndex, DepGraphIndex>> deps;
+            for (auto i : sims[0].graph.Positions()) {
+                for (auto j : sims[0].graph.GetReducedParents(i)) {
+                    deps.emplace_back(j, i);
+                }
+            }
+            std::shuffle(deps.begin(), deps.end(), rng);
+            for (auto [parent, child] : deps) {
+                real_redo->AddDependency(*txobjects_redo[parent], *txobjects_redo[child]);
+            }
+            // Do work to reach optimality.
+            if (real_redo->DoWork(300000)) {
+                // Start from a random permutation.
+                auto vec_redo = vec1;
+                std::shuffle(vec_redo.begin(), vec_redo.end(), rng);
+                if (vec_redo == vec1) std::next_permutation(vec_redo.begin(), vec_redo.end());
+                // Sort it according to the main graph order in real_redo.
+                auto cmp_redo = [&](SimTxGraph::Pos a, SimTxGraph::Pos b) noexcept {
+                    return real_redo->CompareMainOrder(*txobjects_redo[a], *txobjects_redo[b]) < 0;
+                };
+                std::sort(vec_redo.begin(), vec_redo.end(), cmp_redo);
+                // Compare with the ordering we got from real.
+                assert(vec1 == vec_redo);
+            }
         }
 
         // For every transaction in the total ordering, find a random one before it and after it,

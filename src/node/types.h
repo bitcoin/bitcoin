@@ -43,9 +43,14 @@ struct BlockCreateOptions {
     bool use_mempool{true};
     /**
      * The default reserved weight for the fixed-size block header,
-     * transaction count and coinbase transaction.
+     * transaction count and coinbase transaction. Minimum: 2000 weight units
+     * (MINIMUM_BLOCK_RESERVED_WEIGHT).
+     *
+     * Providing a value overrides the `-blockreservedweight` startup setting.
+     * Cap'n Proto IPC clients currently cannot leave this field unset, so they
+     * always provide a value.
      */
-    size_t block_reserved_weight{DEFAULT_BLOCK_RESERVED_WEIGHT};
+    std::optional<size_t> block_reserved_weight{};
     /**
      * The maximum additional sigops which the pool will add in coinbase
      * transaction outputs.

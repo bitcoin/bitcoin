@@ -108,12 +108,18 @@ async def make_capnp_init_ctx(self):
 
 async def mining_create_block_template(mining, stack, ctx, opts):
     """Call mining.createNewBlock() and return template, then call template.destroy() when stack exits."""
-    return await stack.enter_async_context(destroying((await mining.createNewBlock(opts)).result, ctx))
+    response = await mining.createNewBlock(opts)
+    if not response._has("result"):
+        return None
+    return await stack.enter_async_context(destroying(response.result, ctx))
 
 
 async def mining_wait_next_template(template, stack, ctx, opts):
     """Call template.waitNext() and return template, then call template.destroy() when stack exits."""
-    return await stack.enter_async_context(destroying((await template.waitNext(ctx, opts)).result, ctx))
+    response = await template.waitNext(ctx, opts)
+    if not response._has("result"):
+        return None
+    return await stack.enter_async_context(destroying(response.result, ctx))
 
 
 async def mining_get_block(block_template, ctx):

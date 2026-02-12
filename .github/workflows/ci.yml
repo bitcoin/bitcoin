@@ -204,7 +204,7 @@ jobs:
 
   windows-native-dll:
     name: ${{ matrix.job-name }}
-    runs-on: windows-2022
+    runs-on: windows-2025-vs2026
 
     if: ${{ vars.SKIP_BRANCH_PUSH != 'true' || github.event_name == 'pull_request' }}
 
@@ -218,9 +218,9 @@ jobs:
         job-type: [standard, fuzz]
         include:
           - job-type: standard
-            job-name: 'Windows native, VS 2022'
+            job-name: 'Windows native, VS'
           - job-type: fuzz
-            job-name: 'Windows native, fuzz, VS 2022'
+            job-name: 'Windows native, fuzz, VS'
 
     steps:
       - *ANNOTATION_PR_NUMBER
