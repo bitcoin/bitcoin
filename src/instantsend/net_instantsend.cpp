@@ -32,6 +32,46 @@ struct NetInstantSend::BatchVerificationData {
     size_t alreadyVerified{0};
 };
 
+bool NetInstantSend::ValidateIncomingISLock(const instantsend::InstantSendLock& islock, NodeId node_id)
+{
+    if (!islock.TriviallyValid()) {
+        m_peer_manager->PeerMisbehaving(node_id, INVALID_ISLOCK_MISBEHAVIOR_SCORE);
+        return false;
+    }
+
+    return true;
+}
+
+std::optional<int> NetInstantSend::ResolveCycleHeight(const uint256& cycle_hash)
+{
+    auto cycle_height = m_is_manager.GetBlockHeight(cycle_hash);
+    if (cycle_height) {
+        return cycle_height;
+    }
+
+    const auto block_index = WITH_LOCK(::cs_main, return m_chainstate.m_blockman.LookupBlockIndex(cycle_hash));
+    if (block_index == nullptr) {
+        return std::nullopt;
+    }
+
+    m_is_manager.CacheBlockHeight(block_index);
+    return block_index->nHeight;
+}
+
+bool NetInstantSend::ValidateDeterministicCycleHeight(
+    int cycle_height,
+    const Consensus::LLMQParams& llmq_params,
+    NodeId node_id)
+{
+    // Deterministic islocks MUST use rotation based llmq
+    if (cycle_height % llmq_params.dkgInterval == 0) {
+        return true;
+    }
+
+    m_peer_manager->PeerMisbehaving(node_id, INVALID_ISLOCK_MISBEHAVIOR_SCORE);
+    return false;
+}
+
 std::unique_ptr<NetInstantSend::BatchVerificationData> NetInstantSend::BuildVerificationBatch(
     const Consensus::LLMQParams& llmq_params,
     int signOffset,
@@ -170,42 +210,34 @@ void NetInstantSend::ProcessMessage(CNode& pfrom, const std::string& msg_type, C
     auto islock = std::make_shared<instantsend::InstantSendLock>();
     vRecv >> *islock;
 
+    const NodeId from = pfrom.GetId();
     uint256 hash = ::SerializeHash(*islock);
 
-    WITH_LOCK(::cs_main, m_peer_manager->PeerEraseObjectRequest(pfrom.GetId(), CInv{MSG_ISDLOCK, hash}));
+    WITH_LOCK(::cs_main, m_peer_manager->PeerEraseObjectRequest(from, CInv{MSG_ISDLOCK, hash}));
 
-    if (!islock->TriviallyValid()) {
-        m_peer_manager->PeerMisbehaving(pfrom.GetId(), INVALID_ISLOCK_MISBEHAVIOR_SCORE);
+    if (!ValidateIncomingISLock(*islock, from)) {
         return;
     }
 
-    auto cycleHeightOpt = m_is_manager.GetBlockHeight(islock->cycleHash);
-    if (!cycleHeightOpt) {
-        const auto blockIndex = WITH_LOCK(::cs_main, return m_chainstate.m_blockman.LookupBlockIndex(islock->cycleHash));
-        if (blockIndex == nullptr) {
-            // Maybe we don't have the block yet or maybe some peer spams invalid values for cycleHash
-            m_peer_manager->PeerMisbehaving(pfrom.GetId(), UNKNOWN_CYCLE_HASH_MISBEHAVIOR_SCORE);
-            return;
-        }
-        m_is_manager.CacheBlockHeight(blockIndex);
-        cycleHeightOpt = blockIndex->nHeight;
+    auto cycle_height = ResolveCycleHeight(islock->cycleHash);
+    if (!cycle_height) {
+        // Maybe we don't have the block yet or maybe some peer spams invalid values for cycleHash
+        m_peer_manager->PeerMisbehaving(from, UNKNOWN_CYCLE_HASH_MISBEHAVIOR_SCORE);
+        return;
     }
-    const int block_height = *cycleHeightOpt;
 
-    // Deterministic islocks MUST use rotation based llmq
     auto llmqType = Params().GetConsensus().llmqTypeDIP0024InstantSend;
     const auto& llmq_params_opt = Params().GetLLMQ(llmqType);
     assert(llmq_params_opt);
-    if (block_height % llmq_params_opt->dkgInterval != 0) {
-        m_peer_manager->PeerMisbehaving(pfrom.GetId(), INVALID_ISLOCK_MISBEHAVIOR_SCORE);
+    if (!ValidateDeterministicCycleHeight(*cycle_height, *llmq_params_opt, from)) {
         return;
     }
 
     if (!m_is_manager.AlreadyHave(CInv{MSG_ISDLOCK, hash})) {
         LogPrint(BCLog::INSTANTSEND, "NetInstantSend -- ISDLOCK txid=%s, islock=%s: received islock, peer=%d\n",
-                 islock->txid.ToString(), hash.ToString(), pfrom.GetId());
+                 islock->txid.ToString(), hash.ToString(), from);
 
-        m_is_manager.EnqueueInstantSendLock(pfrom.GetId(), hash, std::move(islock));
+        m_is_manager.EnqueueInstantSendLock(from, hash, std::move(islock));
     }
 }
 

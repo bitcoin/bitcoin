@@ -11,6 +11,7 @@
 #include <util/threadinterrupt.h>
 
 #include <memory>
+#include <optional>
 #include <thread>
 #include <vector>
 
@@ -18,6 +19,7 @@ namespace Consensus {
 struct LLMQParams;
 } // namespace Consensus
 namespace instantsend {
+struct InstantSendLock;
 struct PendingISLockEntry;
 } // namespace instantsend
 namespace llmq {
@@ -47,6 +49,10 @@ public:
 
 private:
     struct BatchVerificationData;
+
+    bool ValidateIncomingISLock(const instantsend::InstantSendLock& islock, NodeId node_id);
+    std::optional<int> ResolveCycleHeight(const uint256& cycle_hash);
+    bool ValidateDeterministicCycleHeight(int cycle_height, const Consensus::LLMQParams& llmq_params, NodeId node_id);
 
     std::unique_ptr<BatchVerificationData> BuildVerificationBatch(
         const Consensus::LLMQParams& llmq_params, int signOffset,
