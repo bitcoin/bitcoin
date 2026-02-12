@@ -1,5 +1,6 @@
 openbsd_CFLAGS=
 openbsd_CXXFLAGS=
+openbsd_LDFLAGS=
 
 openbsd_release_CFLAGS=-O2
 openbsd_release_CXXFLAGS=$(openbsd_release_CFLAGS)
