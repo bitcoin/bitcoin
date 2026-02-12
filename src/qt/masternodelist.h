@@ -96,7 +96,7 @@ private:
 
     const MasternodeEntry* GetSelectedEntry();
 
-    void updateDIP3List();
+    bool updateDIP3List();
     void updateMyMasternodeHashes(const interfaces::MnListPtr& mnList);
 
 Q_SIGNALS:

@@ -181,32 +181,32 @@ void MasternodeList::updateDIP3ListScheduled()
         return;
     }
 
-    if (m_mn_list_changed.exchange(false)) {
+    if (m_mn_list_changed.load(std::memory_order_relaxed)) {
         int64_t nMnListUpdateSecods = clientModel->masternodeSync().isBlockchainSynced() ? MASTERNODELIST_UPDATE_SECONDS : MASTERNODELIST_UPDATE_SECONDS * 10;
         int64_t nSecondsToWait = nTimeUpdatedDIP3 - GetTime() + nMnListUpdateSecods;
 
         if (nSecondsToWait <= 0) {
-            updateDIP3List();
-        } else {
-            m_mn_list_changed.store(true, std::memory_order_relaxed);
+            if (updateDIP3List()) {
+                m_mn_list_changed.store(false, std::memory_order_relaxed);
+            }
         }
     }
 }
 
-void MasternodeList::updateDIP3List()
+bool MasternodeList::updateDIP3List()
 {
     if (!clientModel || clientModel->node().shutdownRequested()) {
-        return;
+        return false;
     }
 
     auto [mnList, pindex] = clientModel->getMasternodeList();
-    if (!pindex) return;
+    if (!pindex) return false;
     auto projectedPayees = mnList->getProjectedMNPayees(pindex);
 
     if (projectedPayees.empty() && mnList->getValidMNsCount() > 0) {
         // GetProjectedMNPayees failed to provide results for a list with valid mns.
         // Keep current list and let it try again later.
-        return;
+        return false;
     }
 
     std::map<uint256, CTxDestination> mapCollateralDests;
@@ -261,6 +261,7 @@ void MasternodeList::updateDIP3List()
     }
 
     updateFilteredCount();
+    return true;
 }
 
 void MasternodeList::updateMyMasternodeHashes(const interfaces::MnListPtr& mnList)
