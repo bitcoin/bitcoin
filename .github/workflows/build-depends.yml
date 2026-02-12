@@ -49,6 +49,7 @@ jobs:
             depends/hosts
             contrib/containers/ci/ci.Dockerfile
             contrib/containers/ci/ci-slim.Dockerfile
+            contrib/containers/guix/scripts/setup-sdk
 
       - name: Compute cache key
         id: setup
@@ -75,6 +76,19 @@ jobs:
           key: ${{ steps.setup.outputs.cache-key }}
           lookup-only: true
 
+      - name: Cache SDKs
+        id: cache-sdk-check
+        uses: actions/cache@v4
+        if: inputs.build-target == 'mac'
+        with:
+          path: depends/SDKs
+          key: depends-sdks-${{ hashFiles('depends/hosts/darwin.mk') }}
+          restore-keys: depends-sdks-
+
+      - name: Prepare SDKs
+        if: inputs.build-target == 'mac' && steps.cache-sdk-check.outputs.cache-hit != 'true'
+        run: ./contrib/containers/guix/scripts/setup-sdk
+
   build:
     name: Build depends
     needs: [check-cache]
@@ -96,13 +110,14 @@ jobs:
           key: depends-sources-${{ hashFiles('depends/packages/*') }}
           restore-keys: depends-sources-
 
-      - name: Cache SDKs
-        uses: actions/cache@v4
+      - name: Restore SDKs cache
+        uses: actions/cache/restore@v4
         if: inputs.build-target == 'mac'
         with:
           path: depends/SDKs
           key: depends-sdks-${{ hashFiles('depends/hosts/darwin.mk') }}
           restore-keys: depends-sdks-
+          fail-on-cache-miss: true
 
       - name: Restore cached depends
         uses: actions/cache/restore@v4
@@ -115,9 +130,6 @@ jobs:
       - name: Build depends
         run: |
           export HOST="${{ needs.check-cache.outputs.host }}"
-          if [ "${HOST}" = "x86_64-apple-darwin" ]; then
-            ./contrib/containers/guix/scripts/setup-sdk
-          fi
           env ${{ needs.check-cache.outputs.dep-opts }} make -j$(nproc) -C depends
 
       - name: Save depends cache
