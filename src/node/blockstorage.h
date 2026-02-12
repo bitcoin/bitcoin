@@ -297,6 +297,8 @@ private:
     const FlatFileSeq m_block_file_seq;
     const FlatFileSeq m_undo_file_seq;
 
+    mutable Mutex m_block_index_mutex;
+
 protected:
     std::vector<CBlockFileInfo> m_blockfile_info;
 
@@ -323,7 +325,7 @@ public:
      */
     std::atomic_bool m_blockfiles_indexed{true};
 
-    BlockMap m_block_index GUARDED_BY(cs_main);
+    BlockMap m_block_index;
 
     /**
      * The height of the base block of an assumeutxo snapshot, if one is in use.
@@ -339,7 +341,7 @@ public:
      */
     std::optional<int> m_snapshot_height;
 
-    std::vector<CBlockIndex*> GetAllBlockIndices() EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
+    std::vector<CBlockIndex*> GetAllBlockIndices();
 
     /**
      * All pairs A->B, where A (or one of its ancestors) misses transactions, but B has transactions.
@@ -360,15 +362,15 @@ public:
      */
     void ScanAndUnlinkAlreadyPrunedFiles() EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
 
-    CBlockIndex* AddToBlockIndex(const CBlockHeader& block, CBlockIndex*& best_header) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
+    CBlockIndex* AddToBlockIndex(const CBlockHeader& block, CBlockIndex*& best_header) EXCLUSIVE_LOCKS_REQUIRED(!m_block_index_mutex);
     /** Create a new block index entry for a given block hash */
-    CBlockIndex* InsertBlockIndex(const uint256& hash) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
+    CBlockIndex* InsertBlockIndex(const uint256& hash) EXCLUSIVE_LOCKS_REQUIRED(!m_block_index_mutex);
 
     //! Mark one block file as pruned (modify associated database entries)
     void PruneOneBlockFile(int fileNumber) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
 
-    CBlockIndex* LookupBlockIndex(const uint256& hash) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
-    const CBlockIndex* LookupBlockIndex(const uint256& hash) const EXCLUSIVE_LOCKS_REQUIRED(cs_main);
+    CBlockIndex* LookupBlockIndex(const uint256& hash);
+    const CBlockIndex* LookupBlockIndex(const uint256& hash) const;
 
     /** Get block file info entry for one block file */
     CBlockFileInfo* GetBlockFileInfo(size_t n);
@@ -468,6 +470,11 @@ public:
     bool ReadBlockUndo(CBlockUndo& blockundo, const CBlockIndex& index) const;
 
     void CleanupBlockRevFiles() const;
+
+    BlockMap GetBlockIndexSnapshot() const
+    {
+        return m_block_index;
+    }
 };
 
 // Calls ActivateBestChain() even if no blocks are imported.

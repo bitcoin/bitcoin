@@ -5,6 +5,7 @@
 #include <node/blockstorage.h>
 
 #include <arith_uint256.h>
+#include <blockmap.h>
 #include <chain.h>
 #include <consensus/params.h>
 #include <crypto/hex_base.h>
@@ -198,10 +199,10 @@ bool CBlockIndexHeightOnlyComparator::operator()(const CBlockIndex* pa, const CB
 
 std::vector<CBlockIndex*> BlockManager::GetAllBlockIndices()
 {
-    AssertLockHeld(cs_main);
+    BlockMap block_index_snapshot = GetBlockIndexSnapshot();
     std::vector<CBlockIndex*> rv;
-    rv.reserve(m_block_index.size());
-    for (auto& [_, block_index] : m_block_index) {
+    rv.reserve(block_index_snapshot.size());
+    for (auto& [_, block_index] : block_index_snapshot) {
         rv.push_back(block_index);
     }
     return rv;
@@ -209,47 +210,54 @@ std::vector<CBlockIndex*> BlockManager::GetAllBlockIndices()
 
 CBlockIndex* BlockManager::LookupBlockIndex(const uint256& hash)
 {
-    AssertLockHeld(cs_main);
-    BlockMap::iterator it = m_block_index.find(hash);
-    return it == m_block_index.end() ? nullptr : it->second;
+    BlockMap block_index_snapshot = GetBlockIndexSnapshot();
+    BlockMap::iterator it = block_index_snapshot.find(hash);
+    return it == block_index_snapshot.end() ? nullptr : it->second;
 }
 
 const CBlockIndex* BlockManager::LookupBlockIndex(const uint256& hash) const
 {
-    AssertLockHeld(cs_main);
-    BlockMap::const_iterator it = m_block_index.find(hash);
-    return it == m_block_index.end() ? nullptr : it->second;
+    BlockMap block_index_snapshot = GetBlockIndexSnapshot();
+    BlockMap::const_iterator it = block_index_snapshot.find(hash);
+    return it == block_index_snapshot.end() ? nullptr : it->second;
 }
 
 CBlockIndex* BlockManager::AddToBlockIndex(const CBlockHeader& block, CBlockIndex*& best_header)
 {
-    AssertLockHeld(cs_main);
+    CBlockIndex* pindexNew;
 
-    auto [mi, inserted] = m_block_index.try_emplace(block.GetHash(), block);
-    if (!inserted) {
-        return mi->second;
+    {
+        LOCK(m_block_index_mutex);
+
+        auto [mi, inserted] = m_block_index.try_emplace(block.GetHash(), block);
+        if (!inserted) {
+            return mi->second;
+        }
+        pindexNew = mi->second;
+
+        // We assign the sequence id to blocks only when the full data is available,
+        // to avoid miners withholding blocks but broadcasting headers, to get a
+        // competitive advantage.
+        pindexNew->nSequenceId = SEQ_ID_INIT_FROM_DISK;
+
+        BlockMap::iterator miPrev = m_block_index.find(block.hashPrevBlock);
+        if (miPrev != m_block_index.end()) {
+            pindexNew->pprev = (*miPrev).second;
+            pindexNew->nHeight = pindexNew->pprev->nHeight + 1;
+            pindexNew->BuildSkip();
+        }
+        pindexNew->nTimeMax = (pindexNew->pprev ? std::max(pindexNew->pprev->nTimeMax, pindexNew->nTime) : pindexNew->nTime);
+        pindexNew->nChainWork = (pindexNew->pprev ? pindexNew->pprev->nChainWork : 0) + GetBlockProof(*pindexNew);
     }
-    CBlockIndex* pindexNew = mi->second;
 
-    // We assign the sequence id to blocks only when the full data is available,
-    // to avoid miners withholding blocks but broadcasting headers, to get a
-    // competitive advantage.
-    pindexNew->nSequenceId = SEQ_ID_INIT_FROM_DISK;
-
-    BlockMap::iterator miPrev = m_block_index.find(block.hashPrevBlock);
-    if (miPrev != m_block_index.end()) {
-        pindexNew->pprev = (*miPrev).second;
-        pindexNew->nHeight = pindexNew->pprev->nHeight + 1;
-        pindexNew->BuildSkip();
+    {
+        LOCK(cs_main);
+        pindexNew->RaiseValidity(BLOCK_VALID_TREE);
+        m_dirty_blockindex.insert(pindexNew);
+        if (best_header == nullptr || best_header->nChainWork < pindexNew->nChainWork) {
+            best_header = pindexNew;
+        }
     }
-    pindexNew->nTimeMax = (pindexNew->pprev ? std::max(pindexNew->pprev->nTimeMax, pindexNew->nTime) : pindexNew->nTime);
-    pindexNew->nChainWork = (pindexNew->pprev ? pindexNew->pprev->nChainWork : 0) + GetBlockProof(*pindexNew);
-    pindexNew->RaiseValidity(BLOCK_VALID_TREE);
-    if (best_header == nullptr || best_header->nChainWork < pindexNew->nChainWork) {
-        best_header = pindexNew;
-    }
-
-    m_dirty_blockindex.insert(pindexNew);
 
     return pindexNew;
 }
@@ -405,7 +413,7 @@ void BlockManager::UpdatePruneLock(const std::string& name, const PruneLockInfo&
 
 CBlockIndex* BlockManager::InsertBlockIndex(const uint256& hash)
 {
-    AssertLockHeld(cs_main);
+    LOCK(m_block_index_mutex);
 
     if (hash.IsNull()) {
         return nullptr;
