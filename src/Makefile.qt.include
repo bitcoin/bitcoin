@@ -230,6 +230,7 @@ QT_RES_ICONS = \
   qt/res/icons/transaction5.png \
   qt/res/icons/transaction_abandoned.png \
   qt/res/icons/transaction_locked.png \
+  qt/res/icons/voting.png \
   qt/res/icons/warning.png
 
 BITCOIN_QT_BASE_CPP = \

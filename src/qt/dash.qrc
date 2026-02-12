@@ -36,6 +36,7 @@
         <file alias="moon_6">res/icons/moon_6.png</file>
         <file alias="moon_7">res/icons/moon_7.png</file>
         <file alias="proxy">res/icons/proxy.png</file>
+        <file alias="voting">res/icons/voting.png</file>
     </qresource>
     <qresource prefix="/css">
         <file alias="general">res/css/general.css</file>

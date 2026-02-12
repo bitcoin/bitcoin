@@ -1,0 +1,13 @@
+<svg width="64" height="64" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <clipPath id="bc"><rect x="0" y="0" width="64" height="24"/></clipPath>
+    <mask id="bm">
+      <rect x="0" y="0" width="64" height="64" fill="white"/>
+      <rect x="22" y="4" width="20" height="28" rx="2" transform="rotate(10 32 24)" fill="black" stroke="black" stroke-width="4"/>
+    </mask>
+  </defs>
+  <path d="M14 14 H50 L60 34 M14 14 L4 34" stroke="black" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" fill="none" mask="url(#bm)"/>
+  <path d="M20 24 H44" stroke="black" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+  <rect x="22" y="4" width="20" height="28" rx="2" transform="rotate(10 32 24)" stroke="black" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" fill="none" clip-path="url(#bc)"/>
+  <rect x="4" y="34" width="56" height="26" rx="3" stroke="black" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+</svg>
