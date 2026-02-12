@@ -21,6 +21,10 @@ $(package)_patches += qtbase_skip_tools.patch
 $(package)_patches += rcc_hardcode_timestamp.patch
 $(package)_patches += qttools_skip_dependencies.patch
 $(package)_patches += fix-gcc16-qcompare.patch
+$(package)_patches += fix-gcc16-sfinae-qregularexpression.patch
+$(package)_patches += fix-gcc16-sfinae-qchar.patch
+$(package)_patches += fix-gcc16-sfinae-qbitarray.patch
+$(package)_patches += fix-qbytearray-include.patch
 
 $(package)_qttranslations_file_name=$(qt_details_qttranslations_file_name)
 $(package)_qttranslations_sha256_hash=$(qt_details_qttranslations_sha256_hash)
@@ -266,7 +270,11 @@ define $(package)_preprocess_cmds
   patch -p1 -i $($(package)_patch_dir)/qtbase_plugins_windows11style.patch && \
   patch -p1 -i $($(package)_patch_dir)/qtbase_skip_tools.patch && \
   patch -p1 -i $($(package)_patch_dir)/rcc_hardcode_timestamp.patch && \
-  patch -p1 -i $($(package)_patch_dir)/fix-gcc16-qcompare.patch
+  patch -p1 -i $($(package)_patch_dir)/fix-gcc16-qcompare.patch && \
+  patch -p1 -i $($(package)_patch_dir)/fix-gcc16-sfinae-qregularexpression.patch && \
+  patch -p1 -i $($(package)_patch_dir)/fix-gcc16-sfinae-qchar.patch && \
+  patch -p1 -i $($(package)_patch_dir)/fix-gcc16-sfinae-qbitarray.patch && \
+  patch -p1 -i $($(package)_patch_dir)/fix-qbytearray-include.patch
 endef
 ifeq ($(host),$(build))
   $(package)_preprocess_cmds += && patch -p1 -i $($(package)_patch_dir)/qttools_skip_dependencies.patch
