@@ -211,6 +211,14 @@ QT_RES_ICONS = \
   qt/res/icons/hd_enabled.png \
   qt/res/icons/lock_closed.png \
   qt/res/icons/lock_open.png \
+  qt/res/icons/moon_0.png \
+  qt/res/icons/moon_1.png \
+  qt/res/icons/moon_2.png \
+  qt/res/icons/moon_3.png \
+  qt/res/icons/moon_4.png \
+  qt/res/icons/moon_5.png \
+  qt/res/icons/moon_6.png \
+  qt/res/icons/moon_7.png \
   qt/res/icons/proxy.png \
   qt/res/icons/remove.png \
   qt/res/icons/synced.png \
