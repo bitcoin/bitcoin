@@ -8,6 +8,7 @@
 
 #include <governance/object.h>
 #include <governance/validators.h>
+#include <util/moneystr.h>
 
 #include <interfaces/node.h>
 #include <qt/bitcoinamountfield.h>
@@ -20,14 +21,14 @@
 #include <qt/walletmodel.h>
 
 #include <QDateTime>
-#include <QJsonDocument>
-#include <QJsonObject>
 #include <QLabel>
 #include <QLineEdit>
 #include <QMessageBox>
 #include <QPushButton>
 #include <QStackedWidget>
 #include <QTimer>
+
+#include <univalue.h>
 
 #include <algorithm>
 
@@ -36,9 +37,8 @@ namespace {
 static QString toHex(const QByteArray& bytes) { return QString(bytes.toHex()); }
 } // namespace
 
-ProposalWizard::ProposalWizard(interfaces::Node& node, WalletModel* walletModel, QWidget* parent) :
+ProposalWizard::ProposalWizard(WalletModel* walletModel, QWidget* parent) :
     QDialog(parent),
-    m_node(node),
     m_walletModel(walletModel),
     m_ui(new Ui::ProposalWizard)
 {
@@ -68,6 +68,8 @@ ProposalWizard::ProposalWizard(interfaces::Node& node, WalletModel* walletModel,
     {
         // Load governance parameters
         const auto info = m_walletModel->node().gov().getGovernanceInfo();
+        m_superblock_cycle = info.superblockcycle;
+        m_target_spacing = info.targetSpacing;
         m_relayRequiredConfs = info.relayRequiredConfs;
         m_requiredConfs = info.requiredConfs;
 
@@ -77,7 +79,7 @@ ProposalWizard::ProposalWizard(interfaces::Node& node, WalletModel* walletModel,
         const int cycle = info.superblockcycle;
         for (int i = 0; i < 12; ++i) {
             const int sbHeight = nextSb + i * cycle;
-            const qint64 secs = static_cast<qint64>(i) * cycle * Params().GetConsensus().nPowTargetSpacing;
+            const qint64 secs = static_cast<qint64>(i) * cycle * m_target_spacing;
             const auto dt = QDateTime::currentDateTimeUtc().addSecs(secs).toLocalTime();
             m_ui->comboFirstPayment->addItem(QLocale().toString(dt, QLocale::ShortFormat), sbHeight);
         }
@@ -131,53 +133,43 @@ ProposalWizard::~ProposalWizard()
 
 void ProposalWizard::buildJsonAndHex()
 {
+    const int64_t multiplier = std::numeric_limits<int64_t>::max() / std::max<int64_t>(1, m_target_spacing);
+
     // Compute start/end epochs from selected superblocks
-    int start_epoch = 0;
-    int end_epoch = 0;
-    int firstSb = m_ui->comboFirstPayment->currentData().toInt();
-    int payments = m_ui->comboPayments->currentData().toInt();
-    if (firstSb > 0 && payments > 0) {
-        const int cycle = Params().GetConsensus().nSuperblockCycle;
-        if (cycle > 0) {
-            const int prevSb = firstSb - cycle;
-            const int lastSb = firstSb + (payments - 1) * cycle;
-            const int nextAfterLast = lastSb + cycle;
+    int64_t start_epoch = 0;
+    int64_t end_epoch = 0;
+    const int64_t first_sb = m_ui->comboFirstPayment->currentData().toInt();
+    const int64_t payments = m_ui->comboPayments->currentData().toInt();
+    if (first_sb > 0 && payments > 0) {
+        if (m_superblock_cycle > 0) {
+            const int64_t prev_sb{first_sb - m_superblock_cycle};
+            const int64_t last_sb{first_sb + (payments - 1) * m_superblock_cycle};
+            const int64_t next_sb{last_sb + m_superblock_cycle};
             // Midpoints in blocks; convert roughly to seconds relative to now
-            const int startMidBlocks = (firstSb + prevSb) / 2;
-            const int endMidBlocks = (lastSb + nextAfterLast) / 2;
+            const int64_t start_blocks{(first_sb + prev_sb) / 2};
+            const int64_t end_blocks{(last_sb + next_sb) / 2};
             // We don't know absolute time for those heights in GUI; approximate using consensus block time
             // Use now as baseline; this is only to pass validator and give a stable window
-            const qint64 now = QDateTime::currentSecsSinceEpoch();
-            const int64_t targetSpacing = Params().GetConsensus().nPowTargetSpacing; // seconds
-            const int64_t deltaStartBlocks = static_cast<int64_t>(startMidBlocks) - static_cast<int64_t>(firstSb);
-            const int64_t deltaEndBlocks = static_cast<int64_t>(endMidBlocks) - static_cast<int64_t>(firstSb);
-            // Guard against overflow when multiplying
-            const int64_t maxMultiplier = std::numeric_limits<int64_t>::max() / std::max<int64_t>(1, targetSpacing);
-            const int64_t clampedDeltaStart = std::clamp<int64_t>(deltaStartBlocks, -maxMultiplier, maxMultiplier);
-            const int64_t clampedDeltaEnd = std::clamp<int64_t>(deltaEndBlocks, -maxMultiplier, maxMultiplier);
-            const int64_t startOffsetSecs = clampedDeltaStart * targetSpacing;
-            const int64_t endOffsetSecs = clampedDeltaEnd * targetSpacing;
-            const int64_t startEpoch64 = now + startOffsetSecs;
-            const int64_t endEpoch64 = now + endOffsetSecs;
-            // Clamp to 32-bit int range used by validator
-            start_epoch = static_cast<int>(
-                std::clamp<int64_t>(startEpoch64, std::numeric_limits<int>::min(), std::numeric_limits<int>::max()));
-            end_epoch = static_cast<int>(
-                std::clamp<int64_t>(endEpoch64, std::numeric_limits<int>::min(), std::numeric_limits<int>::max()));
+            const qint64 now{QDateTime::currentSecsSinceEpoch()};
+            const int64_t delta_start{start_blocks - first_sb};
+            const int64_t delta_end{end_blocks - first_sb};
+            // Guard against overflow when multiplying by clamping deltas first
+            start_epoch = now + std::clamp<int64_t>(delta_start, -multiplier, multiplier) * m_target_spacing;
+            end_epoch = now + std::clamp<int64_t>(delta_end, -multiplier, multiplier) * m_target_spacing;
         }
     }
 
-    QJsonObject o;
-    o.insert("name", m_ui->editName->text());
-    o.insert("payment_address", m_ui->editPayAddr->text());
-    const auto formatted = BitcoinUnits::format(BitcoinUnits::Unit::DASH, m_ui->paymentAmount->value(), false,
-                                                BitcoinUnits::SeparatorStyle::NEVER);
-    o.insert("payment_amount", formatted.toDouble());
-    o.insert("url", m_ui->editUrl->text());
-    if (start_epoch > 0) o.insert("start_epoch", start_epoch);
-    if (end_epoch > 0) o.insert("end_epoch", end_epoch);
-    o.insert("type", 1);
-    const auto json = QJsonDocument(o).toJson(QJsonDocument::Compact);
+    UniValue o(UniValue::VOBJ);
+    o.pushKV("name", m_ui->editName->text().toStdString());
+    o.pushKV("payment_address", m_ui->editPayAddr->text().toStdString());
+    UniValue amount;
+    amount.setNumStr(FormatMoney(m_ui->paymentAmount->value()));
+    o.pushKV("payment_amount", amount);
+    o.pushKV("url", m_ui->editUrl->text().toStdString());
+    if (start_epoch > 0) o.pushKV("start_epoch", start_epoch);
+    if (end_epoch > 0) o.pushKV("end_epoch", end_epoch);
+    o.pushKV("type", 1);
+    const auto json{QByteArray::fromStdString(o.write())};
     m_ui->plainJson->setPlainText(QString::fromUtf8(json));
     m_hex = toHex(json);
     m_ui->editHex->setText(m_hex);
@@ -347,11 +339,17 @@ void ProposalWizard::updateLabels()
 {
     if (m_walletModel && m_walletModel->getOptionsModel()) {
         const auto unit = m_walletModel->getOptionsModel()->getDisplayUnit();
-        const CAmount totalAmount = static_cast<CAmount>(m_ui->paymentAmount->value() *
-                                                         m_ui->comboPayments->currentData().toInt());
+        const CAmount per_payment = m_ui->paymentAmount->value();
+        const int payments = m_ui->comboPayments->currentData().toInt();
+        CAmount total{0};
+        if (payments > 0 && per_payment > 0 && per_payment <= MAX_MONEY / payments) {
+            total = per_payment * payments;
+        } else if (payments > 0 && per_payment > 0) {
+            total = MAX_MONEY;
+        }
         m_ui->labelTotalValue->setText(
-            BitcoinUnits::formatWithUnit(unit, totalAmount, false, BitcoinUnits::SeparatorStyle::ALWAYS));
-        m_fee_formatted = BitcoinUnits::formatWithUnit(unit, GOVERNANCE_PROPOSAL_FEE_TX, false,
+            BitcoinUnits::formatWithUnit(unit, total, /*plussign=*/false, BitcoinUnits::SeparatorStyle::ALWAYS));
+        m_fee_formatted = BitcoinUnits::formatWithUnit(unit, GOVERNANCE_PROPOSAL_FEE_TX, /*plussign=*/false,
                                                        BitcoinUnits::SeparatorStyle::ALWAYS);
         m_ui->labelFeeValue->setText(m_fee_formatted.isEmpty() ? QString("-") : m_fee_formatted);
         // Dynamic header/subheader and prepare text

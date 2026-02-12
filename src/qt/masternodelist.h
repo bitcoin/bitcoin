@@ -8,6 +8,7 @@
 #include <util/system.h>
 
 #include <QMenu>
+#include <QSet>
 #include <QSortFilterProxyModel>
 #include <QString>
 #include <QTimer>
@@ -15,7 +16,6 @@
 
 #include <atomic>
 #include <memory>
-#include <set>
 
 namespace interfaces {
 class MnList;
@@ -51,7 +51,7 @@ public:
 
     void forceInvalidateFilter() { invalidateFilter(); }
     void setHideBanned(bool hide) { m_hide_banned = hide; }
-    void setMyMasternodeHashes(std::set<QString> hashes) { m_my_mn_hashes = std::move(hashes); }
+    void setMyMasternodeHashes(QSet<QString> hashes) { m_my_mn_hashes = std::move(hashes); }
     void setShowOwnedOnly(bool show) { m_show_owned_only = show; }
     void setTypeFilter(TypeFilter type) { m_type_filter = type; }
 
@@ -61,7 +61,7 @@ protected:
 private:
     bool m_hide_banned{true};
     bool m_show_owned_only{false};
-    std::set<QString> m_my_mn_hashes;
+    QSet<QString> m_my_mn_hashes;
     TypeFilter m_type_filter{TypeFilter::All};
 };
 
@@ -96,7 +96,7 @@ private:
 
     const MasternodeEntry* GetSelectedEntry();
 
-    void updateDIP3List();
+    bool updateDIP3List();
     void updateMyMasternodeHashes(const interfaces::MnListPtr& mnList);
 
 Q_SIGNALS:

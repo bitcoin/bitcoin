@@ -665,6 +665,10 @@ public:
         out_fee_txid = tx->GetHash().ToString();
         return true;
     }
+    bool signGovernanceVote(const CKeyID& keyID, CGovernanceVote& vote) override
+    {
+        return m_wallet->SignGovernanceVote(keyID, vote);
+    }
     CWallet* wallet() override { return m_wallet.get(); }
 
     WalletContext& m_context;

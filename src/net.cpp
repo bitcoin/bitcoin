@@ -4200,6 +4200,7 @@ void CConnman::StopNodes()
     }
     m_nodes_disconnected.clear();
     vhListenSocket.clear();
+    WITH_LOCK(m_reconnections_mutex, m_reconnections.clear());
     semOutbound.reset();
     semAddnode.reset();
     /**

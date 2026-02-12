@@ -1476,7 +1476,14 @@ void BitcoinGUI::updateGovernanceVisibility()
     // Show/hide the underlying QAction, hiding the QToolButton itself doesn't
     // work for the GUI part but is still needed for shortcuts to work properly.
     if (m_governance_action) m_governance_action->setVisible(fShow);
-    if (governanceButton) governanceButton->setVisible(fShow);
+    if (governanceButton) {
+#ifdef ENABLE_WALLET
+        if (!fShow && governanceButton->isChecked()) {
+            gotoOverviewPage();
+        }
+#endif // ENABLE_WALLET
+        governanceButton->setVisible(fShow);
+    }
 
     GUIUtil::updateButtonGroupShortcuts(tabGroup);
     updateWidth();
@@ -1490,7 +1497,14 @@ void BitcoinGUI::updateMasternodesVisibility()
     // Show/hide the underlying QAction, hiding the QToolButton itself doesn't
     // work for the GUI part but is still needed for shortcuts to work properly.
     if (m_masternode_action) m_masternode_action->setVisible(fShow);
-    if (masternodeButton) masternodeButton->setVisible(fShow);
+    if (masternodeButton) {
+#ifdef ENABLE_WALLET
+        if (!fShow && masternodeButton->isChecked()) {
+            gotoOverviewPage();
+        }
+#endif // ENABLE_WALLET
+        masternodeButton->setVisible(fShow);
+    }
 
     GUIUtil::updateButtonGroupShortcuts(tabGroup);
     updateWidth();
@@ -1507,7 +1521,7 @@ void BitcoinGUI::updateWidth()
     int nWidthWidestButton{0};
     int nButtonsVisible{0};
     for (QAbstractButton* button : tabGroup->buttons()) {
-        if (!button->isEnabled()) {
+        if (!button->isEnabled() || !button->isVisible()) {
             continue;
         }
         QFontMetrics fm(button->font());

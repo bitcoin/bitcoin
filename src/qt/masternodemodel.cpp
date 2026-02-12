@@ -14,12 +14,12 @@
 #include <qt/clientmodel.h>
 #include <qt/guiutil.h>
 
+#include <QHash>
 #include <QObject>
 #include <QStringList>
 
 #include <univalue.h>
 
-#include <map>
 #include <set>
 
 namespace {
@@ -354,7 +354,7 @@ void MasternodeModel::remove(int row)
 
 void MasternodeModel::reconcile(MasternodeEntryList&& entries)
 {
-    std::map<QString, int> existing;
+    QHash<QString, int> existing;
     for (int i = 0; i < static_cast<int>(m_data.size()); ++i) {
         existing[m_data[i]->proTxHash()] = i;
     }
@@ -364,7 +364,7 @@ void MasternodeModel::reconcile(MasternodeEntryList&& entries)
     std::vector<std::unique_ptr<MasternodeEntry>> add;
     for (auto& entry : entries) {
         if (auto it = existing.find(entry->proTxHash()); it != existing.end()) {
-            int idx = it->second;
+            int idx = it.value();
             present.insert(idx);
             if (m_data[idx]->toTie() != entry->toTie()) {
                 m_data[idx] = std::move(entry);

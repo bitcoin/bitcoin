@@ -23,7 +23,7 @@ private:
     ClientModel* clientModel;
     const CGovernanceObject govObj;
 
-    double m_paymentAmount{0.0};
+    CAmount m_paymentAmount{0};
     QDateTime m_endDate{};
     QDateTime m_startDate{};
     QString m_hash{};
@@ -34,7 +34,7 @@ public:
     explicit Proposal(ClientModel* _clientModel, const CGovernanceObject& _govObj);
 
     bool isActive() const;
-    double paymentAmount() const { return m_paymentAmount; }
+    CAmount paymentAmount() const { return m_paymentAmount; }
     int GetAbsoluteYesCount() const;
     QDateTime endDate() const { return m_endDate; }
     QDateTime startDate() const { return m_startDate; }
@@ -82,7 +82,7 @@ public:
     void append(std::unique_ptr<Proposal>&& proposal);
     void remove(int row);
     void reconcile(ProposalList&& proposals);
-    void setDisplayUnit(const BitcoinUnit& display_unit) { m_display_unit = display_unit; }
+    void setDisplayUnit(const BitcoinUnit& display_unit);
     void setVotingParams(int nAbsVoteReq);
     const Proposal* getProposalAt(const QModelIndex& index) const;
 

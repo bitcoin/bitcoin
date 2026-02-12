@@ -20,6 +20,8 @@
 #include <QClipboard>
 #include <QHeaderView>
 
+#include <set>
+
 namespace {
 constexpr int MASTERNODELIST_UPDATE_SECONDS{3};
 } // anonymous namespace
@@ -60,7 +62,7 @@ bool MasternodeListSortFilterProxyModel::filterAcceptsRow(int source_row, const 
     if (m_show_owned_only) {
         QModelIndex idx = sourceModel()->index(source_row, MasternodeModel::PROTX_HASH, source_parent);
         QString proTxHash = sourceModel()->data(idx, Qt::DisplayRole).toString();
-        if (m_my_mn_hashes.find(proTxHash) == m_my_mn_hashes.end()) {
+        if (!m_my_mn_hashes.contains(proTxHash)) {
             return false;
         }
     }
@@ -186,26 +188,27 @@ void MasternodeList::updateDIP3ListScheduled()
         int64_t nSecondsToWait = nTimeUpdatedDIP3 - GetTime() + nMnListUpdateSecods;
 
         if (nSecondsToWait <= 0) {
-            updateDIP3List();
-            m_mn_list_changed.store(false, std::memory_order_relaxed);
+            if (updateDIP3List()) {
+                m_mn_list_changed.store(false, std::memory_order_relaxed);
+            }
         }
     }
 }
 
-void MasternodeList::updateDIP3List()
+bool MasternodeList::updateDIP3List()
 {
     if (!clientModel || clientModel->node().shutdownRequested()) {
-        return;
+        return false;
     }
 
     auto [mnList, pindex] = clientModel->getMasternodeList();
-    if (!pindex) return;
+    if (!pindex) return false;
     auto projectedPayees = mnList->getProjectedMNPayees(pindex);
 
     if (projectedPayees.empty() && mnList->getValidMNsCount() > 0) {
         // GetProjectedMNPayees failed to provide results for a list with valid mns.
         // Keep current list and let it try again later.
-        return;
+        return false;
     }
 
     std::map<uint256, CTxDestination> mapCollateralDests;
@@ -260,6 +263,7 @@ void MasternodeList::updateDIP3List()
     }
 
     updateFilteredCount();
+    return true;
 }
 
 void MasternodeList::updateMyMasternodeHashes(const interfaces::MnListPtr& mnList)
@@ -273,7 +277,7 @@ void MasternodeList::updateMyMasternodeHashes(const interfaces::MnListPtr& mnLis
         setOutpts.emplace(outpt);
     }
 
-    std::set<QString> myHashes;
+    QSet<QString> myHashes;
     mnList->forEachMN(/*only_valid=*/false, [&](const auto& dmn) {
         bool fMyMasternode = setOutpts.count(dmn.getCollateralOutpoint()) ||
                              walletModel->wallet().isSpendable(PKHash(dmn.getKeyIdOwner())) ||

@@ -146,6 +146,7 @@ public:
         int nextsuperblock{0};
         int fundingthreshold{0};
         CAmount governancebudget{0};
+        int64_t targetSpacing{0};
         int relayRequiredConfs{1};
         int requiredConfs{6};
     };
