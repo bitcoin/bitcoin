@@ -1999,7 +1999,7 @@ static bool VerifyWitnessProgram(const CScriptWitness& witness, int witversion, 
             }
             return set_success(serror);
         }
-    } else if (!is_p2sh && CScript::IsPayToAnchor(witversion, program)) {
+    } else if (stack.empty() && !is_p2sh && CScript::IsPayToAnchor(witversion, program)) {
         return true;
     } else {
         if (flags & SCRIPT_VERIFY_DISCOURAGE_UPGRADABLE_WITNESS_PROGRAM) {
