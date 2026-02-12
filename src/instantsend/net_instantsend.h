@@ -6,13 +6,19 @@
 #define BITCOIN_INSTANTSEND_NET_INSTANTSEND_H
 
 #include <net_processing.h>
+#include <saltedhasher.h>
 
 #include <util/threadinterrupt.h>
 
+#include <memory>
+#include <thread>
+#include <vector>
+
+namespace Consensus {
+struct LLMQParams;
+} // namespace Consensus
 namespace instantsend {
-struct InstantSendLock;
-struct PendingISLockFromPeer;
-using InstantSendLockPtr = std::shared_ptr<InstantSendLock>;
+struct PendingISLockEntry;
 } // namespace instantsend
 namespace llmq {
 class CInstantSendManager;
@@ -40,11 +46,21 @@ public:
     void WorkThreadMain();
 
 private:
-    void ProcessPendingISLocks(std::vector<std::pair<uint256, instantsend::PendingISLockFromPeer>>&& locks_to_process);
+    struct BatchVerificationData;
+
+    std::unique_ptr<BatchVerificationData> BuildVerificationBatch(
+        const Consensus::LLMQParams& llmq_params, int signOffset,
+        const std::vector<instantsend::PendingISLockEntry>& pend);
+    Uint256HashSet ApplyVerificationResults(
+        const Consensus::LLMQParams& llmq_params, bool ban,
+        BatchVerificationData& data,
+        const std::vector<instantsend::PendingISLockEntry>& pend);
+
+    void ProcessPendingISLocks(std::vector<instantsend::PendingISLockEntry>&& locks_to_process);
 
     Uint256HashSet ProcessPendingInstantSendLocks(
         const Consensus::LLMQParams& llmq_params, int signOffset, bool ban,
-        const std::vector<std::pair<uint256, instantsend::PendingISLockFromPeer>>& pend);
+        const std::vector<instantsend::PendingISLockEntry>& pend);
     llmq::CInstantSendManager& m_is_manager;
     llmq::CQuorumManager& m_qman;
     const CChainState& m_chainstate;

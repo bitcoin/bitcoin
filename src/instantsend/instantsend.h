@@ -49,9 +49,13 @@ struct PendingISLockFromPeer {
     InstantSendLockPtr islock;
 };
 
+struct PendingISLockEntry : PendingISLockFromPeer {
+    uint256 islock_hash;
+};
+
 struct PendingState {
     bool m_pending_work{false};
-    std::vector<std::pair<uint256, PendingISLockFromPeer>> m_pending_is;
+    std::vector<PendingISLockEntry> m_pending_is;
 };
 } // namespace instantsend
 
