@@ -173,6 +173,10 @@
         <source>Font Weight Bold:</source>
         <translation>Потъмнен шрифт:</translation>
     </message>
+    <message>
+        <source>Font in the Overview tab: </source>
+        <translation>Шрифт в раздела Преглед: </translation>
+    </message>
 </context>
 <context>
     <name>AskPassphraseDialog</name>
@@ -325,6 +329,10 @@
 </context>
 <context>
     <name>BitcoinApplication</name>
+    <message>
+        <source>Settings file %1 might be corrupt or invalid.</source>
+        <translation>Файлът с настройки %1 може да е повреден или невалиден.</translation>
+    </message>
     <message>
         <source>Runaway exception</source>
         <translation>Неконтролирано изключение</translation>
@@ -501,6 +509,14 @@
         <translation>Променя паролата за криптиране на портфейла</translation>
     </message>
     <message>
+        <source>&amp;Show Recovery Phrase…</source>
+        <translation>&amp;Покажи фраза за възстановяване…</translation>
+    </message>
+    <message>
+        <source>Show the recovery phrase (mnemonic seed) for this wallet</source>
+        <translation>Покажи фразата за възстановяване (мнемонично семе) за този портфейл</translation>
+    </message>
+    <message>
         <source>Unlock wallet</source>
         <translation>Отключване на портфейла</translation>
     </message>
@@ -587,6 +603,26 @@
     <message>
         <source>%1 client</source>
         <translation>%1 клиент</translation>
+    </message>
+    <message>
+        <source>Waiting for blockchain sync…</source>
+        <translation>Изчакване на синхронизация на блокчейна…</translation>
+    </message>
+    <message>
+        <source>Synchronizing governance data…</source>
+        <translation>Синхронизиране на данни за управление…</translation>
+    </message>
+    <message numerus="yes">
+        <source>~%n day(s) (%1 blocks) left for superblock</source>
+        <translation><numerusform>~%n ден (%1 блока) до суперблока</numerusform><numerusform>~%n дни (%1 блока) до суперблока</numerusform></translation>
+    </message>
+    <message numerus="yes">
+        <source>~%n day(s) (%1 blocks) left for voting</source>
+        <translation><numerusform>~%n ден (%1 блока) до гласуването</numerusform><numerusform>~%n дни (%1 блока) до гласуването</numerusform></translation>
+    </message>
+    <message>
+        <source>~%1% of budget committed (%2 %3).</source>
+        <translation>~%1% от бюджета е ангажиран (%2 %3).</translation>
     </message>
     <message>
         <source>Wallet: %1
@@ -808,10 +844,6 @@
     <message>
         <source>Up to date</source>
         <translation>Синхронизиран</translation>
-    </message>
-    <message>
-        <source>Synchronizing additional data: %p%</source>
-        <translation>Синхронизиране на допълнителни данни: %p%</translation>
     </message>
     <message>
         <source>Error</source>
@@ -1115,6 +1147,38 @@
         <source>Create wallet warning</source>
         <translation>Внимание при създаване на портфейл</translation>
     </message>
+    <message>
+        <source>Unlock failed</source>
+        <translation>Отключването не успя</translation>
+    </message>
+    <message>
+        <source>Failed to unlock wallet for mnemonic verification. Wallet creation completed but verification skipped.</source>
+        <translation>Неуспешно отключване на портфейла за мнемонична проверка. Създаването на портфейла е завършено, но проверката е пропусната.</translation>
+    </message>
+    <message>
+        <source>Mnemonic retrieval failed</source>
+        <translation>Извличането на мнемоничната фраза не успя</translation>
+    </message>
+    <message>
+        <source>Could not retrieve mnemonic phrase from wallet. Wallet creation completed but verification skipped.</source>
+        <translation>Мнемоничната фраза не може да бъде извлечена от портфейла. Създаването на портфейла е завършено, но проверката е пропусната.</translation>
+    </message>
+    <message>
+        <source>Verification cancelled</source>
+        <translation>Проверката е отменена</translation>
+    </message>
+    <message>
+        <source>You cancelled mnemonic verification. Please make sure you have saved your mnemonic phrase safely.</source>
+        <translation>Отменихте мнемоничната проверка. Моля, уверете се, че сте запазили мнемоничната си фраза на сигурно място.</translation>
+    </message>
+    <message>
+        <source>Can't list signers</source>
+        <translation>Не може да се покаже списък с подписващи</translation>
+    </message>
+    <message>
+        <source>Too many external signers found</source>
+        <translation>Намерени са твърде много външни подписващи</translation>
+    </message>
 </context>
 <context>
     <name>CreateWalletDialog</name>
@@ -1139,8 +1203,24 @@
         <translation>Шифриране на портфейла</translation>
     </message>
     <message>
-        <source>Advanced Options</source>
-        <translation>Допълнителни опции</translation>
+        <source>Use descriptors for scriptPubKey management.</source>
+        <translation>Използвайте дескриптори за управление на scriptPubKey.</translation>
+    </message>
+    <message>
+        <source>Descriptor Wallet</source>
+        <translation>Дескрипторен портфейл</translation>
+    </message>
+    <message>
+        <source>Use an external signing device such as a hardware wallet. Configure the external signer script in wallet preferences first.</source>
+        <translation>Използвайте външно устройство за подписване, като хардуерен портфейл. Първо конфигурирайте скрипта на външния подписващ в настройките на портфейла.</translation>
+    </message>
+    <message>
+        <source>External signer</source>
+        <translation>Външен подписващ</translation>
+    </message>
+    <message>
+        <source>Show Advanced Options</source>
+        <translation>Покажи разширени опции</translation>
     </message>
     <message>
         <source>Disable private keys for this wallet. Wallets with private keys disabled will have no private keys and cannot have an HD seed or imported private keys. This is ideal for watch-only wallets.</source>
@@ -1159,20 +1239,28 @@
         <translation>Създай празен портфейл</translation>
     </message>
     <message>
-        <source>Use descriptors for scriptPubKey management. This feature is well-tested but still considered experimental and not recommended for use yet.</source>
-        <translation>Използвай дескриптори за управление на scriptPubKey. Тази функция е добре тествана, но все още се счита за експериментална и не се препоръчва за употреба засега.</translation>
-    </message>
-    <message>
-        <source>Descriptor Wallet (EXPERIMENTAL)</source>
-        <translation>Дескрипторен портфейл (ЕКСПЕРИМЕНТАЛЕН)</translation>
-    </message>
-    <message>
         <source>Create</source>
         <translation>Създай</translation>
     </message>
     <message>
+        <source>Hide Advanced Options</source>
+        <translation>Скрий разширени опции</translation>
+    </message>
+    <message>
         <source>Compiled without sqlite support (required for descriptor wallets)</source>
         <translation>Компилиран без sqlite поддръжка (необходима за дескрипторни портфейли)</translation>
+    </message>
+    <message>
+        <source>Compiled without external signing support (required for external signing)</source>
+        <extracomment>"External signing" means using devices such as hardware wallets.</extracomment>
+        <translation>Компилирано без поддръжка на външно подписване (необходимо за външно подписване)</translation>
+    </message>
+</context>
+<context>
+    <name>DescriptionDialog</name>
+    <message>
+        <source>This pane shows detailed information</source>
+        <translation>Този панел показва подробна информация</translation>
     </message>
 </context>
 <context>
@@ -1260,10 +1348,6 @@
         <translation>Формуляр</translation>
     </message>
     <message>
-        <source>Filter List:</source>
-        <translation>Филтрирай списъка:</translation>
-    </message>
-    <message>
         <source>Filter proposal list</source>
         <translation>Филтрирай списъка с предложения</translation>
     </message>
@@ -1276,12 +1360,24 @@
         <translation>Брой masternodes с които този портфейл може да гласува (masternodes за които този портфейл държи гласуващия ключ)</translation>
     </message>
     <message>
+        <source>No active proposals on the network.</source>
+        <translation>Няма активни предложения в мрежата.</translation>
+    </message>
+    <message>
+        <source>Resume Proposal</source>
+        <translation>Продължи предложението</translation>
+    </message>
+    <message>
         <source>Proposal Count:</source>
         <translation>Брой предложения:</translation>
     </message>
     <message>
         <source>Create Proposal</source>
         <translation>Създай предложение</translation>
+    </message>
+    <message>
+        <source>Select proposals to display</source>
+        <translation>Изберете предложения за показване</translation>
     </message>
     <message>
         <source>Filter by Title</source>
@@ -1308,8 +1404,76 @@
         <translation>Гласувай ВЪЗДЪРЖАЛ СЕ</translation>
     </message>
     <message>
-        <source>Proposal Info: %1</source>
-        <translation>Информация за предложението: %1</translation>
+        <source>Active Proposals</source>
+        <translation>Активни предложения</translation>
+    </message>
+    <message>
+        <source>My Proposals</source>
+        <translation>Моите предложения</translation>
+    </message>
+    <message>
+        <source>No proposals recorded in wallet file.</source>
+        <translation>Няма записани предложения във файла на портфейла.</translation>
+    </message>
+    <message>
+        <source>Resume proposal</source>
+        <translation>Продължи предложението</translation>
+    </message>
+    <message>
+        <source>Copy Raw JSON</source>
+        <translation>Копирай суров JSON</translation>
+    </message>
+    <message>
+        <source>Open Proposal URL…</source>
+        <translation>Отвори URL на предложението…</translation>
+    </message>
+    <message>
+        <source>Details for %1</source>
+        <translation>Подробности за %1</translation>
+    </message>
+    <message>
+        <source>Cannot interact with governance before sync completes</source>
+        <translation>Не може да се взаимодейства с управлението преди завършване на синхронизацията</translation>
+    </message>
+    <message>
+        <source>Creates a new proposal</source>
+        <translation>Създава ново предложение</translation>
+    </message>
+    <message>
+        <source>Resumes an existing proposal</source>
+        <translation>Продължава съществуващо предложение</translation>
+    </message>
+    <message>
+        <source>Creating proposals costs %1, insufficient balance</source>
+        <translation>Създаването на предложения струва %1, недостатъчен баланс</translation>
+    </message>
+    <message>
+        <source>Error</source>
+        <translation>Грешка</translation>
+    </message>
+    <message>
+        <source>Cannot validate URL, potentially malformed or unknown protocol.</source>
+        <translation>URL адресът не може да бъде валидиран, възможно е да е с грешен формат или непознат протокол.</translation>
+    </message>
+    <message>
+        <source>External Link Warning</source>
+        <translation>Предупреждение за външна връзка</translation>
+    </message>
+    <message>
+        <source>You are about to open the following URL in your default browser
+
+%1
+
+This content was submitted by a user. It may not match what is described in the title.
+
+Do you wish to continue?</source>
+        <translation>На път сте да отворите следния URL в браузъра си по подразбиране
+
+%1
+
+Това съдържание е изпратено от потребител. Може да не съответства на описаното в заглавието.
+
+Желаете ли да продължите?</translation>
     </message>
     <message>
         <source>Voting Failed</source>
@@ -1478,7 +1642,13 @@
 <context>
     <name>LoadWalletsActivity</name>
     <message>
+        <source>Load Wallets</source>
+        <extracomment>Title of progress window which is displayed when wallets are being loaded.</extracomment>
+        <translation>Зареждане на портфейли</translation>
+    </message>
+    <message>
         <source>Loading wallets…</source>
+        <extracomment>Descriptive text of the load wallets progress window which indicates to the user that wallets are currently being loaded.</extracomment>
         <translation>Зареждане на портфейли…</translation>
     </message>
 </context>
@@ -1489,16 +1659,36 @@
         <translation>От</translation>
     </message>
     <message>
-        <source>Status</source>
-        <translation>Статус</translation>
+        <source>Filter by masternode type</source>
+        <translation>Филтриране по тип мастернод</translation>
     </message>
     <message>
-        <source>Filter List:</source>
-        <translation>Филтър на списък:</translation>
+        <source>All</source>
+        <translation>Всички</translation>
+    </message>
+    <message>
+        <source>Regular</source>
+        <translation>Обикновен</translation>
+    </message>
+    <message>
+        <source>Evo</source>
+        <translation>Evo</translation>
     </message>
     <message>
         <source>Filter masternode list</source>
         <translation>Филтър на списък masternode </translation>
+    </message>
+    <message>
+        <source>Owned</source>
+        <translation>Притежавани</translation>
+    </message>
+    <message>
+        <source>Hide masternodes that are currently PoSe banned.</source>
+        <translation>Скрий мастернодовете, които в момента са забранени от PoSe.</translation>
+    </message>
+    <message>
+        <source>Hide banned</source>
+        <translation>Скрий забранените</translation>
     </message>
     <message>
         <source>Node Count:</source>
@@ -1509,8 +1699,67 @@
         <translation>Показване само на masternodes, чиито ключове притежава този портфейл.</translation>
     </message>
     <message>
-        <source>My masternodes only</source>
-        <translation>Само моите masternodes</translation>
+        <source>Payout Address</source>
+        <translation>Адрес за изплащане</translation>
+    </message>
+    <message>
+        <source>Filter by</source>
+        <translation>Филтриране по</translation>
+    </message>
+    <message>
+        <source>Collateral Address</source>
+        <translation>Адрес за обезпечаване</translation>
+    </message>
+    <message>
+        <source>Owner Address</source>
+        <translation>Адрес на собственика</translation>
+    </message>
+    <message>
+        <source>Voting Address</source>
+        <translation>Адрес за гласуване</translation>
+    </message>
+    <message>
+        <source>Details for Masternode %1</source>
+        <translation>Подробности за мастернод %1</translation>
+    </message>
+    <message>
+        <source>Copy ProTx Hash</source>
+        <translation>Копирай ProTx Hash</translation>
+    </message>
+    <message>
+        <source>Copy Collateral Outpoint</source>
+        <translation>Копирай Collateral Outpoint</translation>
+    </message>
+    <message>
+        <source>Filter by any property (e.g. address or protx hash)</source>
+        <translation>Филтрирайте по някакво свойство (напр. Адрес или хеш на protx)</translation>
+    </message>
+</context>
+<context>
+    <name>MasternodeModel</name>
+    <message numerus="yes">
+        <source>Banned for %n day(s)</source>
+        <translation><numerusform>Забранен за %n ден</numerusform><numerusform>Забранен за %n дни</numerusform></translation>
+    </message>
+    <message>
+        <source>Banned for less than a day</source>
+        <translation>Забранен за по-малко от ден</translation>
+    </message>
+    <message>
+        <source>Banned</source>
+        <translation>Забранен</translation>
+    </message>
+    <message numerus="yes">
+        <source>Active for %n day(s)</source>
+        <translation><numerusform>Активен от %n ден</numerusform><numerusform>Активен от %n дни</numerusform></translation>
+    </message>
+    <message>
+        <source>Active for less than a day</source>
+        <translation>Активен по-малко от ден</translation>
+    </message>
+    <message>
+        <source>UNKNOWN</source>
+        <translation>НЕИЗВЕСТЕН</translation>
     </message>
     <message>
         <source>Service</source>
@@ -1537,76 +1786,111 @@
         <translation>Следващо плащане</translation>
     </message>
     <message>
-        <source>Payout Address</source>
-        <translation>Адрес за изплащане</translation>
-    </message>
-    <message>
         <source>Operator Reward</source>
         <translation>Награда на оператора</translation>
     </message>
     <message>
-        <source>Collateral Address</source>
-        <translation>Адрес за обезпечаване</translation>
+        <source>ProTx Hash</source>
+        <translation>ProTx хеш</translation>
+    </message>
+</context>
+<context>
+    <name>MnemonicVerificationDialog</name>
+    <message>
+        <source>Save Your Mnemonic</source>
+        <translation>Запазете мнемоничната си фраза</translation>
     </message>
     <message>
-        <source>Owner Address</source>
-        <translation>Адрес на собственика</translation>
+        <source>WARNING: If you lose your mnemonic seed phrase, you will lose access to your wallet forever.</source>
+        <translation>ПРЕДУПРЕЖДЕНИЕ: Ако загубите мнемоничната си фраза, ще загубите достъп до портфейла си завинаги.</translation>
     </message>
     <message>
-        <source>Voting Address</source>
-        <translation>Адрес за гласуване</translation>
+        <source>Please write down these words in order. You will need them to restore your wallet.</source>
+        <translation>Моля, запишете тези думи по ред. Ще ви трябват за възстановяване на портфейла.</translation>
     </message>
     <message>
-        <source>Copy ProTx Hash</source>
-        <translation>Копирай ProTx Hash</translation>
+        <source>Show</source>
+        <translation>Покажи</translation>
     </message>
     <message>
-        <source>Copy Collateral Outpoint</source>
-        <translation>Копирай Collateral Outpoint</translation>
+        <source>Hide</source>
+        <translation>Скрий</translation>
     </message>
     <message>
-        <source>Please wait…</source>
-        <translation>Моля изчакайте…</translation>
+        <source>I have written down my mnemonic</source>
+        <translation>Записах мнемоничната си фраза</translation>
     </message>
     <message>
-        <source>Updating…</source>
-        <translation>Обновяване…</translation>
+        <source>To verify you've saved your mnemonic, please enter the following words:</source>
+        <translation>За да потвърдите, че сте запазили мнемоничната си фраза, моля въведете следните думи:</translation>
     </message>
     <message>
-        <source>ENABLED</source>
-        <translation>ВКЛЮЧЕН</translation>
+        <source>Word #1:</source>
+        <translation>Дума #1:</translation>
     </message>
     <message>
-        <source>POSE_BANNED</source>
-        <translation>POSE_BANNED</translation>
+        <source>Word #2:</source>
+        <translation>Дума #2:</translation>
     </message>
     <message>
-        <source>UNKNOWN</source>
-        <translation>НЕИЗВЕСТЕН</translation>
+        <source>Word #3:</source>
+        <translation>Дума #3:</translation>
     </message>
     <message>
-        <source>to %1</source>
-        <translation>до %1</translation>
+        <source>Your Recovery Phrase</source>
+        <translation>Вашата фраза за възстановяване</translation>
     </message>
     <message>
-        <source>to UNKNOWN</source>
-        <translation>към НЕИЗВЕСТЕН</translation>
+        <source>Close</source>
+        <translation>Затвори</translation>
     </message>
     <message>
-        <source>but not claimed</source>
-        <translation>но неизискан</translation>
+        <source>Continue</source>
+        <translation>Продължи</translation>
     </message>
     <message>
-        <source>NONE</source>
-        <translation>НИЩО</translation>
+        <source>WARNING: Never share your recovery phrase with anyone. Store it securely offline.</source>
+        <translation>ПРЕДУПРЕЖДЕНИЕ: Никога не споделяйте фразата си за възстановяване с никого. Съхранявайте я сигурно офлайн.</translation>
     </message>
     <message>
-        <source>Filter by any property (e.g. address or protx hash)</source>
-        <translation>Филтрирайте по някакво свойство (напр. Адрес или хеш на protx)</translation>
+        <source>These words can restore your wallet. Keep them safe and private.</source>
+        <translation>Тези думи могат да възстановят портфейла ви. Пазете ги на сигурно и поверително място.</translation>
     </message>
     <message>
-        <source>Additional information for DIP3 Masternode %1</source>
-        <translation>Допълнителна информация за DIP3 Masternode %1</translation>
+        <source>WARNING: If you lose your mnemonic seed phrase, you will lose access to your wallet forever. Write it down in a safe place and never share it with anyone.</source>
+        <translation>ПРЕДУПРЕЖДЕНИЕ: Ако загубите мнемоничната си фраза, ще загубите достъп до портфейла си завинаги. Запишете я на сигурно място и никога не я споделяйте с никого.</translation>
+    </message>
+    <message>
+        <source>Invalid Mnemonic</source>
+        <translation>Невалидна мнемонична фраза</translation>
+    </message>
+    <message>
+        <source>Mnemonic phrase has fewer than 3 words (found %1). Verification cannot proceed.</source>
+        <translation>Мнемоничната фраза има по-малко от 3 думи (намерени %1). Проверката не може да продължи.</translation>
+    </message>
+    <message>
+        <source>Verification Error</source>
+        <translation>Грешка при проверка</translation>
+    </message>
+    <message>
+        <source>Failed to generate verification positions. Please try again.</source>
+        <translation>Неуспешно генериране на позиции за проверка. Моля, опитайте отново.</translation>
+    </message>
+    <message>
+        <source>Word #%1:</source>
+        <translation>Дума #%1:</translation>
+    </message>
+    <message>
+        <source>Back</source>
+        <translation>Назад</translation>
+    </message>
+    <message>
+        <source>Verification Failed</source>
+        <translation>Проверката не успя</translation>
+    </message>
+    <message>
+        <source>One or more words are incorrect. Please try again.</source>
+        <translation>Една или повече думи са неправилни. Моля, опитайте отново.</translation>
     </message>
 </context>
 <context>
@@ -1824,12 +2108,52 @@
         <translation>Покажи раздел Управление</translation>
     </message>
     <message>
+        <source>Show the governance clock in the status bar.</source>
+        <translation>Показване на часовника за управление в лентата на състоянието.</translation>
+    </message>
+    <message>
+        <source>Show governance clock</source>
+        <translation>Показване на часовника за управление</translation>
+    </message>
+    <message>
         <source>If you disable the spending of unconfirmed change, the change from a transaction&lt;br/&gt;cannot be used until that transaction has at least one confirmation.&lt;br/&gt;This also affects how your balance is computed.</source>
         <translation>Ако деактивирате харченето на непотвърдено ресто, рестото от транзакция&lt;br/&gt; няма да може да се използва преди да бъде получено поне едно потвърждение. &lt;br/&gt;Това се отразява и на начина на изчисление на баланса ви.</translation>
     </message>
     <message>
         <source>Show mixing interface on Overview screen and reveal an additional screen which allows to spend fully mixed coins only.&lt;br/&gt;A new tab with more settings will also appear in this dialog, please make sure to check them before mixing your coins.</source>
         <translation>Показване на интерфейса за смесване  в основния прозорец и показване на допълнителен процорез, който позволява да се харчат само напълно смесени монети.&lt;br/&gt; В този диалогов прозорец ще се появи и нов раздел с повече настройки, моля не забравяйте да ги проверите, преди да смесите монетите си. </translation>
+    </message>
+    <message>
+        <source>Automatically lock small incoming transactions from external sources that may be dust attacks. Locked UTXOs will be excluded from coin selection.</source>
+        <translation>Автоматично заключване на малки входящи транзакции от външни източници, които може да са прахови атаки. Заключените UTXO ще бъдат изключени от избора на монети.</translation>
+    </message>
+    <message>
+        <source>Enable &amp;dust attack protection</source>
+        <translation>Активирай защита от &amp;прахови атаки</translation>
+    </message>
+    <message>
+        <source>Dust threshold:</source>
+        <translation>Праг за прах:</translation>
+    </message>
+    <message>
+        <source>Transactions with outputs at or below this amount will be considered dust when received from external sources.</source>
+        <translation>Транзакции с изходи, равни на или по-малки от тази сума, ще се считат за прах при получаване от външни източници.</translation>
+    </message>
+    <message>
+        <source>duffs</source>
+        <translation>duffs</translation>
+    </message>
+    <message>
+        <source>External Signer (e.g. hardware wallet)</source>
+        <translation>Външен подписващ (напр. хардуерен портфейл)</translation>
+    </message>
+    <message>
+        <source>&amp;External signer script path</source>
+        <translation>Път на скрипта на &amp;външния подписващ</translation>
+    </message>
+    <message>
+        <source>Full path to a %1 compatible script (e.g. C:\Downloads\hwi.exe or /Users/you/Downloads/hwi.py). Beware: malware can steal your coins!</source>
+        <translation>Пълен път до скрипт, съвместим с %1 (напр. C:\Downloads\hwi.exe или /Users/you/Downloads/hwi.py). Внимание: зловреден софтуер може да открадне монетите ви!</translation>
     </message>
     <message>
         <source>Show additional information and buttons on overview screen.</source>
@@ -1948,10 +2272,6 @@ https://explore.transifex.com/dash/dash/</translation>
     <message>
         <source>&amp;Third-party transaction URLs</source>
         <translation>&amp;URL адреси на транзакции на трети страни</translation>
-    </message>
-    <message>
-        <source>Options set in this dialog are overridden by the command line or in the configuration file:</source>
-        <translation>Опциите зададени в този диалог се заменят от командния ред или в конфигурационния файл:</translation>
     </message>
     <message>
         <source>Minimize instead of exit the application when the window is closed. When this option is enabled, the application will be closed only after selecting Exit in the menu.</source>
@@ -2074,6 +2394,10 @@ https://explore.transifex.com/dash/dash/</translation>
         <translation>Десетични цифри</translation>
     </message>
     <message>
+        <source>Options set in this dialog are overridden by the command line:</source>
+        <translation>Опциите, зададени в този диалог, се заменят от командния ред:</translation>
+    </message>
+    <message>
         <source>Reset all client options to default.</source>
         <translation>Изчисти всички опции до фабричните.</translation>
     </message>
@@ -2108,6 +2432,11 @@ https://explore.transifex.com/dash/dash/</translation>
         <translation>За да влязат в сила промените е необходим рестарт на клиента.</translation>
     </message>
     <message>
+        <source>Compiled without external signing support (required for external signing)</source>
+        <extracomment>"External signing" means using devices such as hardware wallets.</extracomment>
+        <translation>Компилирано без поддръжка на външно подписване (необходимо за външно подписване)</translation>
+    </message>
+    <message>
         <source>Current settings will be backed up at "%1".</source>
         <extracomment>Text explaining to the user that the client's current settings will be backed up at a specific location. %1 is a stand-in argument for the backup location's path.</extracomment>
         <translation>Текущите настройки ще бъдат архивирани в "%1".</translation>
@@ -2124,6 +2453,13 @@ https://explore.transifex.com/dash/dash/</translation>
     <message>
         <source>The supplied proxy address is invalid.</source>
         <translation>Текущият прокси адрес е невалиден.</translation>
+    </message>
+</context>
+<context>
+    <name>OptionsModel</name>
+    <message>
+        <source>Could not read setting "%1", %2.</source>
+        <translation>Настройката "%1" не може да бъде прочетена, %2.</translation>
     </message>
 </context>
 <context>
@@ -2433,8 +2769,8 @@ https://explore.transifex.com/dash/dash/</translation>
         <translation>PSBT запазен на диска.</translation>
     </message>
     <message>
-        <source> * Sends %1 to %2</source>
-        <translation> * Изпраща %1 до %2</translation>
+        <source>Sends %1 to %2</source>
+        <translation>Изпраща %1 към %2</translation>
     </message>
     <message>
         <source>own address</source>
@@ -2586,25 +2922,141 @@ Due to discontinued support, you should request the merchant to provide you with
     </message>
 </context>
 <context>
-    <name>Proposal</name>
+    <name>ProposalCreate</name>
     <message>
-        <source>Passing +%1</source>
-        <translation>Преминаващ +%1</translation>
+        <source>New proposal</source>
+        <translation>Ново предложение</translation>
     </message>
     <message>
-        <source>Needs additional %1 votes</source>
-        <translation>Нужда от допълнителни %1 гласа</translation>
+        <source>Proposal &amp;name</source>
+        <translation>&amp;Име на предложението</translation>
+    </message>
+    <message>
+        <source>&amp;Description URL</source>
+        <translation>URL на &amp;описанието</translation>
+    </message>
+    <message>
+        <source>&amp;Payment date</source>
+        <translation>&amp;Дата на плащане</translation>
+    </message>
+    <message>
+        <source>Pa&amp;yments</source>
+        <translation>Плащани&amp;я</translation>
+    </message>
+    <message>
+        <source>Payment &amp;address</source>
+        <translation>&amp;Адрес за плащане</translation>
+    </message>
+    <message>
+        <source>Payment &amp;amount</source>
+        <translation>&amp;Сума на плащането</translation>
+    </message>
+    <message>
+        <source>To&amp;tal amount</source>
+        <translation>Обща &amp;сума</translation>
+    </message>
+    <message>
+        <source>The amount to request in a single payment</source>
+        <translation>Сумата за заявяване в едно плащане</translation>
+    </message>
+    <message>
+        <source>View JSON</source>
+        <translation>Преглед на JSON</translation>
+    </message>
+    <message>
+        <source>View Payload</source>
+        <translation>Преглед на полезен товар</translation>
+    </message>
+    <message>
+        <source>margin-left: 8px;</source>
+        <translation>margin-left: 8px;</translation>
+    </message>
+    <message>
+        <source>Create Proposal</source>
+        <translation>Създай предложение</translation>
+    </message>
+    <message>
+        <source>All fields are mandatory</source>
+        <translation>Всички полета са задължителни</translation>
+    </message>
+    <message>
+        <source>Confirm Proposal</source>
+        <translation>Потвърди предложението</translation>
+    </message>
+    <message>
+        <source>Are you sure you want to create this proposal?</source>
+        <translation>Сигурни ли сте, че искате да създадете това предложение?</translation>
+    </message>
+    <message>
+        <source>Creating a proposal pays %1 to the network. This fee is non-refundable regardless of outcome.</source>
+        <translation>Създаването на предложение плаща %1 на мрежата. Тази такса не подлежи на възстановяване, независимо от резултата.</translation>
+    </message>
+    <message>
+        <source>Creation failed</source>
+        <translation>Създаването не успя</translation>
+    </message>
+    <message>
+        <source>Proposal Created</source>
+        <translation>Предложението е създадено</translation>
+    </message>
+    <message>
+        <source>%1 successfully sent for your proposal "%2".
+
+You will now be redirected to monitor and broadcast your new proposal, you can resume this later by clicking "Resume Proposal".</source>
+        <translation>%1 е изпратено успешно за вашето предложение "%2".
+
+Сега ще бъдете пренасочени за наблюдение и излъчване на новото ви предложение. Можете да продължите по-късно, като щракнете върху "Продължи предложението".</translation>
     </message>
 </context>
 <context>
     <name>ProposalModel</name>
     <message>
-        <source>Yes</source>
-        <translation>Да</translation>
+        <source>Pending, %1 of %2 confirmations</source>
+        <translation>В изчакване, %1 от %2 потвърждения</translation>
     </message>
     <message>
-        <source>No</source>
-        <translation>Не</translation>
+        <source>Voting, needs %1 more votes for funding</source>
+        <translation>Гласуване, необходими са още %1 гласа за финансиране</translation>
+    </message>
+    <message>
+        <source>Passing with %1 votes</source>
+        <translation>Преминава с %1 гласа</translation>
+    </message>
+    <message>
+        <source>Passing with %1 votes but budget saturated, may not be funded</source>
+        <translation>Преминава с %1 гласа, но бюджетът е наситен, може да не бъде финансирано</translation>
+    </message>
+    <message>
+        <source>Failed, needed %1 more votes</source>
+        <translation>Неуспешно, бяха необходими още %1 гласа</translation>
+    </message>
+    <message>
+        <source>Funded at block %1</source>
+        <translation>Финансирано в блок %1</translation>
+    </message>
+    <message>
+        <source>Funded</source>
+        <translation>Финансирано</translation>
+    </message>
+    <message>
+        <source>Lapsed, past proposal end date</source>
+        <translation>Изтекло, крайната дата на предложението е минала</translation>
+    </message>
+    <message>
+        <source>Ready to broadcast, check "Resume Proposal" dialog</source>
+        <translation>Готово за излъчване, проверете диалога "Възобновяване на предложение"</translation>
+    </message>
+    <message>
+        <source>%1 Yes, %2 No, %3 Abstain, %4</source>
+        <translation>%1 Да, %2 Не, %3 Въздържал се, %4</translation>
+    </message>
+    <message>
+        <source>passing with %1 votes</source>
+        <translation>преминава с %1 гласа</translation>
+    </message>
+    <message>
+        <source>needs %1 more votes</source>
+        <translation>необходими са още %1 гласа</translation>
     </message>
     <message>
         <source>Hash</source>
@@ -2627,187 +3079,63 @@ Due to discontinued support, you should request the merchant to provide you with
         <translation>Сума</translation>
     </message>
     <message>
-        <source>Active</source>
-        <translation>Активен</translation>
-    </message>
-    <message>
-        <source>Status</source>
-        <translation>Статус</translation>
+        <source>Votes</source>
+        <translation>Гласове</translation>
     </message>
 </context>
 <context>
-    <name>ProposalWizard</name>
+    <name>ProposalResume</name>
     <message>
-        <source>Create Governance Proposal</source>
-        <translation>Създай предложение за управление</translation>
-    </message>
-    <message>
-        <source>Enter proposal details</source>
-        <translation>Въведете детайли за предложението</translation>
-    </message>
-    <message>
-        <source>A fee will be burned when you prepare the proposal.</source>
-        <translation>Такса ще бъде изгорена когато подготвите предложението.</translation>
-    </message>
-    <message>
-        <source>Proposal &amp;name</source>
-        <translation>Име на &amp;предложението</translation>
-    </message>
-    <message>
-        <source>&amp;Description URL</source>
-        <translation>URL за &amp;описание</translation>
-    </message>
-    <message>
-        <source>Payment &amp;address</source>
-        <translation>&amp;Адрес за плащане</translation>
-    </message>
-    <message>
-        <source>Payment &amp;amount</source>
-        <translation>&amp;Сума за плащане</translation>
-    </message>
-    <message>
-        <source>The amount to request in a single payment</source>
-        <translation>Сумата за заявка в едно плащане</translation>
-    </message>
-    <message>
-        <source>&amp;First payment</source>
-        <translation>&amp;Първо плащане</translation>
-    </message>
-    <message>
-        <source>Pa&amp;yments</source>
-        <translation>Пла&amp;щания</translation>
-    </message>
-    <message>
-        <source>To&amp;tal amount</source>
-        <translation>Об&amp;ща сума</translation>
-    </message>
-    <message>
-        <source>Proposal &amp;fee</source>
-        <translation>&amp;Такса на предложението</translation>
-    </message>
-    <message>
-        <source>Next</source>
-        <translation>Напред</translation>
-    </message>
-    <message>
-        <source>Review proposal JSON and validate.</source>
-        <translation>Прегледайте JSON на предложението и валидирайте.</translation>
-    </message>
-    <message>
-        <source>Hex-encoded JSON</source>
-        <translation>Hex-кодиран JSON</translation>
-    </message>
-    <message>
-        <source>Back</source>
-        <translation>Назад</translation>
-    </message>
-    <message>
-        <source>Validate</source>
-        <translation>Валидирай</translation>
-    </message>
-    <message>
-        <source>Prepare (burn fee) and wait for confirmations.</source>
-        <translation>Подгответе (изгорете такса) и изчакайте потвърждения.</translation>
-    </message>
-    <message>
-        <source>Copy</source>
-        <translation>Копирай</translation>
-    </message>
-    <message>
-        <source>At 1/6 confirmations: can be relayed and queued. At 6/6: accepted and processed.</source>
-        <translation>При 1/6 потвърждения: може да се препрати и добави в опашката. При 6/6: приета и обработена.</translation>
-    </message>
-    <message>
-        <source>Confirmations progress</source>
-        <translation>Напредък на потвържденията</translation>
-    </message>
-    <message>
-        <source>Shows progress toward the required number of confirmations for the proposal fee transaction.</source>
-        <translation>Показва напредъка към необходимия брой потвърждения за транзакцията с таксата на предложението.</translation>
-    </message>
-    <message>
-        <source>Estimated time remaining: -</source>
-        <translation>Приблизително оставащо време: -</translation>
-    </message>
-    <message>
-        <source>Prepare Proposal</source>
-        <translation>Подгответе предложението</translation>
-    </message>
-    <message>
-        <source>You can submit after 1 confirmation. At 6 confirmations it is accepted and processed.</source>
-        <translation>Можете да подадете след 1 потвърждение. При 6 потвърждения се приема и обработва.</translation>
-    </message>
-    <message>
-        <source>Proposal ID:</source>
-        <translation>ID на предложението:</translation>
-    </message>
-    <message>
-        <source>Submit Proposal</source>
-        <translation>Подайте предложение</translation>
+        <source>Resume Proposals</source>
+        <translation>Продължи предложенията</translation>
     </message>
     <message>
         <source>Close</source>
         <translation>Затвори</translation>
     </message>
     <message>
-        <source>Valid</source>
-        <translation>Валиден</translation>
+        <source>No pending proposals to broadcast.</source>
+        <translation>Няма чакащи предложения за излъчване.</translation>
     </message>
     <message>
-        <source>Invalid: %1</source>
-        <translation>Невалиден: %1</translation>
+        <source>For %1 payment(s) of %2 to %3</source>
+        <translation>За %1 плащане(ия) от %2 към %3</translation>
     </message>
     <message>
-        <source>Burn %1</source>
-        <translation>Изгори %1</translation>
+        <source>Unknown</source>
+        <translation>Неизвестен</translation>
     </message>
     <message>
-        <source>Burn %1 to create the fee transaction?</source>
-        <translation>Изгори %1 за създаване на транзакция за такса?</translation>
+        <source>Pending</source>
+        <translation>В изчакване</translation>
     </message>
     <message>
-        <source>Prepare failed</source>
-        <translation>Подготовката се провали</translation>
+        <source>Ready</source>
+        <translation>Готово</translation>
     </message>
     <message>
-        <source>Confirmations: %1 / %2 required</source>
-        <translation>Потвърждения: %1 / %2 необходими</translation>
+        <source>Collateral Hash</source>
+        <translation>Хеш на обезпечението</translation>
     </message>
     <message>
-        <source>Estimated time remaining: Ready</source>
-        <translation>Оценено оставащо време: Готово</translation>
-    </message>
-    <message numerus="yes">
-        <source>Estimated time remaining: %n minute(s)</source>
-        <translation><numerusform>Оценено оставащо време: %n минута</numerusform><numerusform>Оценено оставащо време: %n минути</numerusform></translation>
+        <source>Collateral Status</source>
+        <translation>Статус на обезпечението</translation>
     </message>
     <message>
-        <source>Your proposal was submitted successfully.</source>
-        <translation>Вашето предложение е подадено успешно.</translation>
+        <source>Broadcast</source>
+        <translation>Излъчи</translation>
     </message>
     <message>
-        <source>Already submitted</source>
-        <translation>Вече подадено</translation>
+        <source>Broadcast proposal</source>
+        <translation>Излъчи предложението</translation>
     </message>
     <message>
-        <source>This proposal has already been submitted.</source>
-        <translation>Това предложение вече е подадено.</translation>
+        <source>Proposal has been broadcasted to the network with hash %1</source>
+        <translation>Предложението е излъчено в мрежата с хеш %1</translation>
     </message>
     <message>
-        <source>Submission failed</source>
-        <translation>Подаването се провали</translation>
-    </message>
-    <message>
-        <source>Proposal submitted</source>
-        <translation>Предложението е подадено</translation>
-    </message>
-    <message>
-        <source>A fee of %1 will be burned when you prepare the proposal.</source>
-        <translation>Такса от %1 ще бъде изгорена, когато подготвите предложението.</translation>
-    </message>
-    <message>
-        <source>Prepare (burn %1) and wait for %2 confirmations.</source>
-        <translation>Подготви (изгори %1) и изчакай %2 потвърждения.</translation>
+        <source>Unable to broadcast proposal, %1</source>
+        <translation>Предложението не може да бъде излъчено, %1</translation>
     </message>
 </context>
 <context>
@@ -2875,8 +3203,8 @@ Due to discontinued support, you should request the merchant to provide you with
         <translation>Грешка: Неуспешно зареждане на шрифтовете на приложението.</translation>
     </message>
     <message>
-        <source>Error: Specified font-family invalid. Valid values: %1.</source>
-        <translation>Грешка: Посоченото семейство шрифтове е невалидно. Валидни стойности: %1.</translation>
+        <source>Error: Font "%1" could not be loaded.</source>
+        <translation>Грешка: Шрифтът "%1" не може да бъде зареден.</translation>
     </message>
     <message>
         <source>Error: Specified font-weight-normal invalid. Valid range %1 to %2.</source>
@@ -3045,6 +3373,170 @@ Due to discontinued support, you should request the merchant to provide you with
         <source>unknown</source>
         <translation>неизвестен</translation>
     </message>
+    <message>
+        <source>Default monospace font "%1"</source>
+        <translation>Шрифт по подразбиране с фиксирана ширина "%1"</translation>
+    </message>
+    <message>
+        <source>Embedded "%1"</source>
+        <translation>Вграден "%1"</translation>
+    </message>
+    <message>
+        <source>Use existing font</source>
+        <translation>Използвай съществуващ шрифт</translation>
+    </message>
+    <message>
+        <source>Custom…</source>
+        <translation>По избор…</translation>
+    </message>
+    <message>
+        <source>Error: Wallet controller not available.</source>
+        <translation>Грешка: Контролерът на портфейла не е наличен.</translation>
+    </message>
+    <message>
+        <source>Error: Rescan failed. Wallet not loaded.</source>
+        <translation>Грешка: Повторното сканиране не успя. Портфейлът не е зареден.</translation>
+    </message>
+    <message>
+        <source>UNKNOWN</source>
+        <translation>НЕИЗВЕСТЕН</translation>
+    </message>
+    <message>
+        <source>to %1</source>
+        <translation>към %1</translation>
+    </message>
+    <message>
+        <source>to UNKNOWN</source>
+        <translation>към НЕИЗВЕСТЕН</translation>
+    </message>
+    <message>
+        <source>but not claimed</source>
+        <translation>но не е заявено</translation>
+    </message>
+    <message>
+        <source>NONE</source>
+        <translation>НЯМА</translation>
+    </message>
+    <message>
+        <source>ProTx Hash</source>
+        <translation>ProTx хеш</translation>
+    </message>
+    <message>
+        <source>Public Key Operator</source>
+        <translation>Публичен ключ на оператора</translation>
+    </message>
+    <message>
+        <source>Owner Address</source>
+        <translation>Адрес на собственика</translation>
+    </message>
+    <message>
+        <source>Payout Address</source>
+        <translation>Адрес за изплащане</translation>
+    </message>
+    <message>
+        <source>Voting Address</source>
+        <translation>Адрес за гласуване</translation>
+    </message>
+    <message>
+        <source>Collateral Address</source>
+        <translation>Адрес на обезпечението</translation>
+    </message>
+    <message>
+        <source>Collateral Hash</source>
+        <translation>Хеш на обезпечението</translation>
+    </message>
+    <message>
+        <source>Collateral Index</source>
+        <translation>Индекс на обезпечението</translation>
+    </message>
+    <message>
+        <source>Masternode Type</source>
+        <translation>Тип мастернод</translation>
+    </message>
+    <message>
+        <source>Registered Height</source>
+        <translation>Височина на регистрация</translation>
+    </message>
+    <message>
+        <source>Last Paid Height</source>
+        <translation>Височина на последно плащане</translation>
+    </message>
+    <message>
+        <source>Consecutive Payments</source>
+        <translation>Последователни плащания</translation>
+    </message>
+    <message>
+        <source>Operator Reward</source>
+        <translation>Награда на оператора</translation>
+    </message>
+    <message>
+        <source>Network Addresses</source>
+        <translation>Мрежови адреси</translation>
+    </message>
+    <message>
+        <source>Platform HTTPS Addresses</source>
+        <translation>HTTPS адреси на платформата</translation>
+    </message>
+    <message>
+        <source>Platform P2P Addresses</source>
+        <translation>P2P адреси на платформата</translation>
+    </message>
+    <message>
+        <source>Platform Node ID</source>
+        <translation>ID на възел на платформата</translation>
+    </message>
+    <message>
+        <source>PoSe Penalty</source>
+        <translation>PoSe наказание</translation>
+    </message>
+    <message>
+        <source>PoSe Ban Height</source>
+        <translation>Височина на PoSe забрана</translation>
+    </message>
+    <message>
+        <source>PoSe Revived Height</source>
+        <translation>Височина на PoSe възстановяване</translation>
+    </message>
+    <message>
+        <source>Title</source>
+        <translation>Заглавие</translation>
+    </message>
+    <message>
+        <source>URL</source>
+        <translation>URL</translation>
+    </message>
+    <message>
+        <source>Destination Address</source>
+        <translation>Адрес на получател</translation>
+    </message>
+    <message>
+        <source>Payment Amount</source>
+        <translation>Сума на плащането</translation>
+    </message>
+    <message>
+        <source>Payments Requested</source>
+        <translation>Заявени плащания</translation>
+    </message>
+    <message>
+        <source>Payment Start</source>
+        <translation>Начало на плащането</translation>
+    </message>
+    <message>
+        <source>Payment End</source>
+        <translation>Край на плащането</translation>
+    </message>
+    <message>
+        <source>Object Hash</source>
+        <translation>Хеш на обекта</translation>
+    </message>
+    <message>
+        <source>Parent Hash</source>
+        <translation>Родителски хеш</translation>
+    </message>
+    <message>
+        <source>Collateral Date</source>
+        <translation>Дата на обезпечението</translation>
+    </message>
 </context>
 <context>
     <name>QRDialog</name>
@@ -3184,6 +3676,10 @@ Due to discontinued support, you should request the merchant to provide you with
         <translation>&amp;Пиъри</translation>
     </message>
     <message>
+        <source>&amp;Repair</source>
+        <translation>&amp;Поправка</translation>
+    </message>
+    <message>
         <source>Wallet:</source>
         <translation>Портфейл:</translation>
     </message>
@@ -3263,26 +3759,6 @@ Due to discontinued support, you should request the merchant to provide you with
         <source>Addresses Rate-Limited</source>
         <extracomment>Text title for the Addresses Rate-Limited field in the peer details area, which displays the total number of addresses received from this peer that were dropped (not processed) due to rate-limiting.</extracomment>
         <translation>Адреси с ограничена честота</translation>
-    </message>
-    <message>
-        <source>Rescan blockchain files 1</source>
-        <translation>Повторно сканиране на блокчейн файловете 1</translation>
-    </message>
-    <message>
-        <source>Rescan blockchain files 2</source>
-        <translation>Повторно сканиране на блокчейн файловете 2</translation>
-    </message>
-    <message>
-        <source>The buttons below will restart the wallet with command-line options to repair the wallet, fix issues with corrupt blockchain files or missing/obsolete transactions.</source>
-        <translation>Бутоните по-долу ще рестартират портфейла с опции от командния ред за поправка на портфейла, коригиране на проблеми с повредени блокчейн файлове или липсващи/остарели транзакции.</translation>
-    </message>
-    <message>
-        <source>-rescan=1: Rescan the block chain for missing wallet transactions starting from wallet creation time.</source>
-        <translation>-rescan=1: Повторно сканиране на блокчейна за липсващи транзакции в портфейла, започвайки от времето на създаване на портфейла.</translation>
-    </message>
-    <message>
-        <source>-rescan=2: Rescan the block chain for missing wallet transactions starting from genesis block.</source>
-        <translation>-rescan=2: Повторно сканиране на блокчейна за липсващи транзакции в портфейла, започвайки от първият блок в мрежата.</translation>
     </message>
     <message>
         <source>User Agent</source>
@@ -3445,8 +3921,36 @@ Due to discontinued support, you should request the merchant to provide you with
         <translation>Изминало време</translation>
     </message>
     <message>
-        <source>&amp;Wallet Repair</source>
-        <translation>&amp;Поправяне на портфейла</translation>
+        <source>Repair options.</source>
+        <translation>Опции за поправка.</translation>
+    </message>
+    <message>
+        <source>The buttons below will trigger repair actions to fix issues with corrupt files or missing/obsolete transactions.</source>
+        <translation>Бутоните по-долу ще задействат действия за поправка за отстраняване на проблеми с повредени файлове или липсващи/остарели транзакции.</translation>
+    </message>
+    <message>
+        <source>Rescan Chain</source>
+        <translation>Повторно сканиране на веригата</translation>
+    </message>
+    <message>
+        <source>Rescan the chain for missing wallet transactions starting from wallet creation time.</source>
+        <translation>Повторно сканиране на веригата за липсващи транзакции от портфейла, започвайки от момента на създаването му.</translation>
+    </message>
+    <message>
+        <source>Rescan Chain (full)</source>
+        <translation>Повторно сканиране на веригата (пълно)</translation>
+    </message>
+    <message>
+        <source>Rescan the chain for missing wallet transactions starting from genesis block.</source>
+        <translation>Повторно сканиране на веригата за липсващи транзакции от портфейла, започвайки от genesis блока.</translation>
+    </message>
+    <message>
+        <source>Rebuild Index</source>
+        <translation>Възстанови индекса</translation>
+    </message>
+    <message>
+        <source>Restarts the client to rebuild the chain index from current blk000??.dat files.</source>
+        <translation>Рестартира клиента за възстановяване на индекса на веригата от текущите blk000??.dat файлове.</translation>
     </message>
     <message>
         <source>The total number of addresses received from this peer that were processed (excludes addresses that were dropped due to rate-limiting).</source>
@@ -3457,18 +3961,6 @@ Due to discontinued support, you should request the merchant to provide you with
         <source>The total number of addresses received from this peer that were dropped (not processed) due to rate-limiting.</source>
         <extracomment>Tooltip text for the Addresses Rate-Limited field in the peer details area, which displays the total number of addresses received from this peer that were dropped (not processed) due to rate-limiting.</extracomment>
         <translation>Общият брой адреси получени от този пиър, които са изпуснати (не обработени) поради ограничаване на честотата.</translation>
-    </message>
-    <message>
-        <source>Wallet repair options.</source>
-        <translation>Опции за възстановяване на портфейла.</translation>
-    </message>
-    <message>
-        <source>Rebuild index</source>
-        <translation>Възстановяване на индекса</translation>
-    </message>
-    <message>
-        <source>-reindex: Rebuild block chain index from current blk000??.dat files.</source>
-        <translation>-reindex: Възстановява блок индекс веригата от настоящия blk000??.dat файл.</translation>
     </message>
     <message>
         <source>Inbound: initiated by peer</source>
@@ -3633,7 +4125,7 @@ Due to discontinued support, you should request the merchant to provide you with
     </message>
     <message>
         <source>&amp;Copy address</source>
-        <extracomment>Context menu action to copy the address of a peer</extracomment>
+        <extracomment>Context menu action to copy the address of a peer.</extracomment>
         <translation>&amp;Копирай адрес</translation>
     </message>
     <message>
@@ -3642,7 +4134,7 @@ Due to discontinued support, you should request the merchant to provide you with
     </message>
     <message>
         <source>&amp;Copy IP/Netmask</source>
-        <extracomment>Context menu action to copy the IP/Netmask of a banned peer. IP/Netmask is the combination of a peer's IP address and its Netmask. For IP address see: https://en.wikipedia.org/wiki/IP_address</extracomment>
+        <extracomment>Context menu action to copy the IP/Netmask of a banned peer. IP/Netmask is the combination of a peer's IP address and its Netmask. For IP address, see: https://en.wikipedia.org/wiki/IP_address.</extracomment>
         <translation>v1: нешифрован, plaintext транспортен протокол</translation>
     </message>
     <message>
@@ -3842,6 +4334,14 @@ For more information on using this console, type %6.
         <translation>&amp;Копирай адрес</translation>
     </message>
     <message>
+        <source>&amp;Verify</source>
+        <translation>&amp;Провери</translation>
+    </message>
+    <message>
+        <source>Verify this address on e.g. a hardware wallet screen</source>
+        <translation>Проверете този адрес напр. на екрана на хардуерен портфейл</translation>
+    </message>
+    <message>
         <source>&amp;Save Image…</source>
         <translation>&amp;Запиши изображението…</translation>
     </message>
@@ -3883,6 +4383,33 @@ For more information on using this console, type %6.
     <message>
         <source>Requested</source>
         <translation>Заявени</translation>
+    </message>
+</context>
+<context>
+    <name>RescanWalletActivity</name>
+    <message>
+        <source>Rescan unavailable</source>
+        <translation>Повторното сканиране не е налично</translation>
+    </message>
+    <message>
+        <source>Wallet is currently rescanning. Abort existing rescan or wait.</source>
+        <translation>Портфейлът в момента се сканира повторно. Прекратете текущото сканиране или изчакайте.</translation>
+    </message>
+    <message>
+        <source>Rescan wallet failed</source>
+        <translation>Повторното сканиране на портфейла не успя</translation>
+    </message>
+    <message>
+        <source>Rescan failed. Potentially corrupted data files.</source>
+        <translation>Повторното сканиране не успя. Възможно е файловете с данни да са повредени.</translation>
+    </message>
+    <message>
+        <source>Rescan aborted</source>
+        <translation>Повторното сканиране е прекратено</translation>
+    </message>
+    <message>
+        <source>Wallet rescan was aborted.</source>
+        <translation>Повторното сканиране на портфейла е прекратено.</translation>
     </message>
 </context>
 <context>
@@ -4104,10 +4631,6 @@ For more information on using this console, type %6.
         <translation>Съ&amp;здай неподписана</translation>
     </message>
     <message>
-        <source> from wallet '%1'</source>
-        <translation> от портфейл '%1'</translation>
-    </message>
-    <message>
         <source>%1 to '%2'</source>
         <translation>%1 до '%2'</translation>
     </message>
@@ -4176,9 +4699,39 @@ For more information on using this console, type %6.
         <translation>Създава частично подписана блокчейн транзакция (PSBT) за използване например с офлайн %1 портфейл или с хардуерен портфейл съвместим с PSBT.</translation>
     </message>
     <message>
+        <source>Sign on device</source>
+        <extracomment>"device" usually means a hardware wallet.</extracomment>
+        <translation>Подпиши на устройството</translation>
+    </message>
+    <message>
+        <source>Connect your hardware wallet first.</source>
+        <translation>Първо свържете хардуерния си портфейл.</translation>
+    </message>
+    <message>
+        <source>Set external signer script path in Options -&gt; Wallet</source>
+        <extracomment>"External signer" means using devices such as hardware wallets.</extracomment>
+        <translation>Задайте пътя на скрипта на външния подписващ в Опции -&gt; Портфейл</translation>
+    </message>
+    <message>
+        <source>Confirm duplicate recipients</source>
+        <translation>Потвърдете дублиращите се получатели</translation>
+    </message>
+    <message>
+        <source>You are sending to the same address multiple times in a single transaction. This is unusual and may not be what you intended. Are you sure you want to proceed?</source>
+        <translation>Изпращате към един и същ адрес няколко пъти в една транзакция. Това е необичайно и може да не е това, което сте имали предвид. Сигурни ли сте, че искате да продължите?</translation>
+    </message>
+    <message>
+        <source>%1 from wallet '%2'</source>
+        <translation>%1 от портфейл '%2'</translation>
+    </message>
+    <message>
         <source>Do you want to create this transaction?</source>
         <extracomment>Message displayed when attempting to create a transaction. Cautionary text to prompt the user to verify that the displayed transaction details represent the transaction the user intends to create.</extracomment>
         <translation>Искате ли да създадете тази транзакция?</translation>
+    </message>
+    <message>
+        <source>Do you want to draft this transaction?</source>
+        <translation>Искате ли да изготвите чернова на тази транзакция?</translation>
     </message>
     <message>
         <source>Please, review your transaction proposal. This will produce a Partially Signed Blockchain Transaction (PSBT) which you can save or copy and then sign with e.g. an offline %1 wallet, or a PSBT-compatible hardware wallet.</source>
@@ -4200,9 +4753,27 @@ For more information on using this console, type %6.
         <translation>За да прегледате списъка с получатели кликнете "Покажи детайли…"</translation>
     </message>
     <message>
+        <source>Sign failed</source>
+        <translation>Подписването не успя</translation>
+    </message>
+    <message>
+        <source>External signer not found</source>
+        <extracomment>"External signer" means using devices such as hardware wallets.</extracomment>
+        <translation>Външният подписващ не е намерен</translation>
+    </message>
+    <message>
+        <source>External signer failure</source>
+        <extracomment>"External signer" means using devices such as hardware wallets.</extracomment>
+        <translation>Грешка на външния подписващ</translation>
+    </message>
+    <message>
         <source>Partially Signed Transaction (Binary)</source>
         <extracomment>Expanded name of the binary PSBT file format. See: BIP 174.</extracomment>
         <translation>Частично подписана транзакция (двоична)</translation>
+    </message>
+    <message>
+        <source>External balance:</source>
+        <translation>Външен баланс:</translation>
     </message>
     <message>
         <source>The recipient address is not valid. Please recheck.</source>
@@ -4219,10 +4790,6 @@ For more information on using this console, type %6.
     <message>
         <source>The total exceeds your balance when the %1 transaction fee is included.</source>
         <translation>Общият сбор надхвърля вашия баланс, когато се добави  %1 такса за операцията.</translation>
-    </message>
-    <message>
-        <source>Duplicate address found: addresses should only be used once each.</source>
-        <translation>Намерен е дублиран адрес:адресите трябва да се използват по веднъж всеки.</translation>
     </message>
     <message>
         <source>Transaction creation failed!</source>
@@ -4710,17 +5277,6 @@ For more information on using this console, type %6.
     </message>
 </context>
 <context>
-    <name>TransactionDescDialog</name>
-    <message>
-        <source>This pane shows a detailed description of the transaction</source>
-        <translation>Описание на транзакцията</translation>
-    </message>
-    <message>
-        <source>Details for %1</source>
-        <translation>Детайли за %1</translation>
-    </message>
-</context>
-<context>
     <name>TransactionTableModel</name>
     <message>
         <source>Date</source>
@@ -4797,6 +5353,10 @@ For more information on using this console, type %6.
     <message>
         <source>Platform Transfer</source>
         <translation>Трансфер на платформа</translation>
+    </message>
+    <message>
+        <source>Dust Receive</source>
+        <translation>Получаване на прах</translation>
     </message>
     <message>
         <source>%1 Mixing</source>
@@ -4930,6 +5490,10 @@ For more information on using this console, type %6.
         <translation>Трансфер на платформа</translation>
     </message>
     <message>
+        <source>Dust Receive</source>
+        <translation>Получаване на прах</translation>
+    </message>
+    <message>
         <source>Other</source>
         <translation>Други</translation>
     </message>
@@ -4976,6 +5540,10 @@ For more information on using this console, type %6.
     <message>
         <source>Rese&amp;nd transaction</source>
         <translation>Препра&amp;ти транзакция</translation>
+    </message>
+    <message>
+        <source>&amp;Unlock dust UTXO</source>
+        <translation>&amp;Отключи прахови UTXO</translation>
     </message>
     <message>
         <source>&amp;Edit address label</source>
@@ -5042,6 +5610,10 @@ For more information on using this console, type %6.
     <message>
         <source>The transaction history was successfully saved to %1.</source>
         <translation>Направените транзакции са запазени до %1.</translation>
+    </message>
+    <message>
+        <source>Details for %1</source>
+        <translation>Подробности за %1</translation>
     </message>
     <message>
         <source>QR code</source>
@@ -5132,6 +5704,10 @@ Go to File &gt; Open Wallet to load a wallet.
         <translation>Изпращане</translation>
     </message>
     <message>
+        <source>Can't display address</source>
+        <translation>Адресът не може да бъде показан</translation>
+    </message>
+    <message>
         <source>default wallet</source>
         <translation>портфейл по подразбиране</translation>
     </message>
@@ -5174,6 +5750,26 @@ Go to File &gt; Open Wallet to load a wallet.
     <message>
         <source>The wallet data was successfully saved to %1.</source>
         <translation>Базата на портфейла беше запазена успешно в %1.</translation>
+    </message>
+    <message>
+        <source>No Recovery Phrase</source>
+        <translation>Няма фраза за възстановяване</translation>
+    </message>
+    <message>
+        <source>This wallet does not have private keys and therefore has no recovery phrase.</source>
+        <translation>Този портфейл няма частни ключове и следователно няма фраза за възстановяване.</translation>
+    </message>
+    <message>
+        <source>This wallet was not created with HD (Hierarchical Deterministic) mode and does not have a recovery phrase.</source>
+        <translation>Този портфейл не е създаден в HD (йерархично детерминистичен) режим и няма фраза за възстановяване.</translation>
+    </message>
+    <message>
+        <source>Mnemonic Retrieval Failed</source>
+        <translation>Извличането на мнемоничната фраза не успя</translation>
+    </message>
+    <message>
+        <source>Could not retrieve the recovery phrase from this wallet.</source>
+        <translation>Фразата за възстановяване не може да бъде извлечена от този портфейл.</translation>
     </message>
     <message>
         <source>Cancel</source>
@@ -5265,10 +5861,6 @@ Go to File &gt; Open Wallet to load a wallet.
     <message>
         <source>SQLiteDatabase: Unknown sqlite wallet schema version %d. Only version %d is supported</source>
         <translation>SQLiteDatabase: Неизвестна sqlite wallet schema версия %d. Само версия %d се поддържа</translation>
-    </message>
-    <message>
-        <source>Transaction index can't be disabled with governance validation enabled. Either start with -disablegovernance command line switch or enable transaction index.</source>
-        <translation>Индексът на транзакциите не може да бъде деактивиран в пълен режим. Или започнете с -disablegovernanc от командния ред или активирайте индексиране на транзакциите.</translation>
     </message>
     <message>
         <source>Unsupported category-specific logging level -loglevel=%s. Expected -loglevel=&lt;category&gt;:&lt;loglevel&gt;. Valid categories: %s. Valid loglevels: %s.</source>
@@ -5427,6 +6019,22 @@ Go to File &gt; Open Wallet to load a wallet.
         <translation>Файл %s  съдържа всички частни ключове от този портфейл. Не го споделяйте с никого!</translation>
     </message>
     <message>
+        <source>%s request to listen on port %u. This port is considered "bad" and thus it is unlikely that any peer will connect to it. See doc/p2p-bad-ports.md for details and a full list.</source>
+        <translation>Заявка от %s за слушане на порт %u. Този порт се счита за "лош" и е малко вероятно някой партньор да се свърже с него. Вижте doc/p2p-bad-ports.md за подробности и пълен списък.</translation>
+    </message>
+    <message>
+        <source>Disk space for %s may not accommodate the block files. Approximately %u GB of data will be stored in this directory.</source>
+        <translation>Дисковото пространство за %s може да не побере файловете с блокове. Приблизително %u GB данни ще бъдат съхранени в тази директория.</translation>
+    </message>
+    <message>
+        <source>Error loading %s: External signer wallet being loaded without external signer support compiled</source>
+        <translation>Грешка при зареждане на %s: Портфейл за външен подписващ се зарежда без компилирана поддръжка за външен подписващ</translation>
+    </message>
+    <message>
+        <source>Error: Dumpfile version is not supported. This version of dash-wallet only supports version 1 dumpfiles. Got dumpfile with version %s</source>
+        <translation>Грешка: Версията на дъмп файла не се поддържа. Тази версия на dash-wallet поддържа само дъмп файлове версия 1. Получен е дъмп файл с версия %s</translation>
+    </message>
+    <message>
         <source>Failed to create backup, file already exists! This could happen if you restarted wallet in less than 60 seconds. You can continue if you are ok with this.</source>
         <translation>Не може да се създаде копие, файлът вече съществува! Това може да се случи, ако сте рестартирали портфейла си преди по-малко от 60 секунди. Може да продължите, ако сте разбрали това.</translation>
     </message>
@@ -5483,6 +6091,10 @@ Go to File &gt; Open Wallet to load a wallet.
         <translation>Автоматичното архивиране е изключено</translation>
     </message>
     <message>
+        <source>Cannot set -forcednsseed to true when setting -dnsseed to false.</source>
+        <translation>Не може да се зададе -forcednsseed на true, когато -dnsseed е зададено на false.</translation>
+    </message>
+    <message>
         <source>Cannot set -peerblockfilters without -blockfilterindex.</source>
         <translation>Не може да се зададе -peerblockfilters без -blockfilterindex.</translation>
     </message>
@@ -5505,6 +6117,10 @@ Go to File &gt; Open Wallet to load a wallet.
     <message>
         <source>Error loading %s: Private keys can only be disabled during creation</source>
         <translation>Грешка при зареждане на %s: Частните ключове могат да бъдат деактивирани само при създаване</translation>
+    </message>
+    <message>
+        <source>Error: Cannot extract destination from the generated scriptpubkey</source>
+        <translation>Грешка: Не може да се извлече получател от генерирания scriptpubkey</translation>
     </message>
     <message>
         <source>Error: Couldn't create cursor into database</source>
@@ -5703,6 +6319,10 @@ Go to File &gt; Open Wallet to load a wallet.
         <translation>Невъзможно създаване на PID файл '%s': %s</translation>
     </message>
     <message>
+        <source>Unable to find UTXO for external input</source>
+        <translation>Не може да се намери UTXO за външен вход</translation>
+    </message>
+    <message>
         <source>Unable to generate initial keys</source>
         <translation>Не може да се генерират първоначални ключове</translation>
     </message>
@@ -5801,10 +6421,6 @@ Go to File &gt; Open Wallet to load a wallet.
     <message>
         <source>Error: Dumpfile identifier record is incorrect. Got "%s", expected "%s".</source>
         <translation>Грешка: Записът на идентификатора на дъмп файла е неправилен. Получен "%s", очакван "%s".</translation>
-    </message>
-    <message>
-        <source>Error: Dumpfile version is not supported. This version of bitcoin-wallet only supports version 1 dumpfiles. Got dumpfile with version %s</source>
-        <translation>Грешка: Версията на дъмп файла не се поддържа. Тази версия на bitcoin-wallet поддържа само версия 1 дъмп файлове. Получен дъмп файл с версия %s</translation>
     </message>
     <message>
         <source>Failed to rename invalid peers.dat file. Please move or delete it and try again.</source>
@@ -6133,10 +6749,6 @@ Go to File &gt; Open Wallet to load a wallet.
     <message>
         <source>%s is set very high! Fees this large could be paid on a single transaction.</source>
         <translation>%s е зададен много високо! Такси толкова големи могат да бъдат платени в една транзакция.</translation>
-    </message>
-    <message>
-        <source>%s request to listen on port %u. This port is considered "bad" and thus it is unlikely that any Dash Core peers connect to it. See doc/p2p-bad-ports.md for details and a full list.</source>
-        <translation>%s искане за слушане на порт %u. Този порт се счита за "лош" и следователно е малко вероятно Dash Core пиъри да се свържат към него. Вижте doc/p2p-bad-ports.md за детайли и пълен списък.</translation>
     </message>
     <message>
         <source>Cannot provide specific connections and have addrman find outgoing connections at the same time.</source>

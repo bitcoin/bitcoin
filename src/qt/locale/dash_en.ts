@@ -155,7 +155,7 @@
 <context>
     <name>AddressTableModel</name>
     <message>
-        <location filename="../addresstablemodel.cpp" line="+165"/>
+        <location filename="../addresstablemodel.cpp" line="+166"/>
         <source>Label</source>
         <translation>Label</translation>
     </message>
@@ -219,6 +219,11 @@
         <source>Font Weight Bold:</source>
         <translation>Font Weight Bold:</translation>
     </message>
+    <message>
+        <location line="+161"/>
+        <source>Font in the Overview tab: </source>
+        <translation>Font in the Overview tab: </translation>
+    </message>
 </context>
 <context>
     <name>AskPassphraseDialog</name>
@@ -248,7 +253,7 @@
         <translation>Show passphrase</translation>
     </message>
     <message>
-        <location filename="../askpassphrasedialog.cpp" line="+58"/>
+        <location filename="../askpassphrasedialog.cpp" line="+57"/>
         <source>Encrypt wallet</source>
         <translation>Encrypt wallet</translation>
     </message>
@@ -411,7 +416,7 @@
 <context>
     <name>BitcoinAmountField</name>
     <message>
-        <location filename="../bitcoinamountfield.cpp" line="+293"/>
+        <location filename="../bitcoinamountfield.cpp" line="+292"/>
         <source>Amount in %1</source>
         <translation>Amount in %1</translation>
     </message>
@@ -419,7 +424,12 @@
 <context>
     <name>BitcoinApplication</name>
     <message>
-        <location filename="../bitcoin.cpp" line="+452"/>
+        <location filename="../bitcoin.cpp" line="+276"/>
+        <source>Settings file %1 might be corrupt or invalid.</source>
+        <translation>Settings file %1 might be corrupt or invalid.</translation>
+    </message>
+    <message>
+        <location line="+189"/>
         <source>Runaway exception</source>
         <translation>Runaway exception</translation>
     </message>
@@ -442,7 +452,7 @@
 <context>
     <name>BitcoinGUI</name>
     <message>
-        <location filename="../bitcoingui.cpp" line="+703"/>
+        <location filename="../bitcoingui.cpp" line="+735"/>
         <source>&amp;Overview</source>
         <translation>&amp;Overview</translation>
     </message>
@@ -452,7 +462,7 @@
         <translation>Show general overview of wallet</translation>
     </message>
     <message>
-        <location line="-351"/>
+        <location line="-355"/>
         <source>&amp;Send</source>
         <translation>&amp;Send</translation>
     </message>
@@ -497,7 +507,7 @@
         <translation>&amp;Change Passphrase…</translation>
     </message>
     <message>
-        <location line="+2"/>
+        <location line="+4"/>
         <source>&amp;Unlock Wallet…</source>
         <translation>&amp;Unlock Wallet…</translation>
     </message>
@@ -547,12 +557,12 @@
         <translation>Close wallet</translation>
     </message>
     <message>
-        <location line="+93"/>
+        <location line="+94"/>
         <source>No wallets available</source>
         <translation>No wallets available</translation>
     </message>
     <message>
-        <location line="+91"/>
+        <location line="+92"/>
         <source>&amp;Window</source>
         <translation>&amp;Window</translation>
     </message>
@@ -577,7 +587,7 @@
         <translation>Browse transaction history</translation>
     </message>
     <message>
-        <location line="+11"/>
+        <location line="+9"/>
         <source>&amp;Masternodes</source>
         <translation>&amp;Masternodes</translation>
     </message>
@@ -587,7 +597,7 @@
         <translation>Browse masternodes</translation>
     </message>
     <message>
-        <location line="-356"/>
+        <location line="-358"/>
         <source>E&amp;xit</source>
         <translation>E&amp;xit</translation>
     </message>
@@ -635,6 +645,16 @@
         <location line="+2"/>
         <source>Change the passphrase used for wallet encryption</source>
         <translation>Change the passphrase used for wallet encryption</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>&amp;Show Recovery Phrase…</source>
+        <translation>&amp;Show Recovery Phrase…</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Show the recovery phrase (mnemonic seed) for this wallet</source>
+        <translation>Show the recovery phrase (mnemonic seed) for this wallet</translation>
     </message>
     <message>
         <location line="+2"/>
@@ -737,39 +757,70 @@
         <translation>Show the %1 help message to get a list with possible Dash command-line options</translation>
     </message>
     <message>
-        <location line="+56"/>
+        <location line="+57"/>
         <source>default wallet</source>
         <translation>default wallet</translation>
     </message>
     <message>
-        <location line="+540"/>
+        <location line="+551"/>
         <source>%1 client</source>
         <translation>%1 client</translation>
     </message>
     <message>
-        <location line="+802"/>
+        <location line="+685"/>
+        <source>Waiting for blockchain sync…</source>
+        <translation>Waiting for blockchain sync…</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>Synchronizing governance data…</source>
+        <translation>Synchronizing governance data…</translation>
+    </message>
+    <message numerus="yes">
+        <location line="+26"/>
+        <source>~%n day(s) (%1 blocks) left for superblock</source>
+        <translation>
+            <numerusform>~%n day (%1 blocks) left for superblock</numerusform>
+            <numerusform>~%n days (%1 blocks) left for superblock</numerusform>
+        </translation>
+    </message>
+    <message numerus="yes">
+        <location line="+7"/>
+        <source>~%n day(s) (%1 blocks) left for voting</source>
+        <translation>
+            <numerusform>~%n day (%1 blocks) left for voting</numerusform>
+            <numerusform>~%n days (%1 blocks) left for voting</numerusform>
+        </translation>
+    </message>
+    <message>
+        <location line="+8"/>
+        <source>~%1% of budget committed (%2 %3).</source>
+        <translation>~%1% of budget committed (%2 %3).</translation>
+    </message>
+    <message>
+        <location line="+213"/>
         <source>Wallet: %1
 </source>
         <translation>Wallet: %1
 </translation>
     </message>
     <message>
-        <location line="+81"/>
+        <location line="+82"/>
         <source>Wallet is &lt;b&gt;unencrypted&lt;/b&gt;</source>
         <translation>Wallet is &lt;b&gt;unencrypted&lt;/b&gt;</translation>
     </message>
     <message>
-        <location line="-1350"/>
+        <location line="-1501"/>
         <source>&amp;File</source>
         <translation>&amp;File</translation>
     </message>
     <message>
-        <location line="-213"/>
+        <location line="-216"/>
         <source>Show information about %1</source>
         <translation>Show information about %1</translation>
     </message>
     <message>
-        <location line="+26"/>
+        <location line="+28"/>
         <source>Load PSBT from &amp;clipboard…</source>
         <translation>Load PSBT from &amp;clipboard…</translation>
     </message>
@@ -831,7 +882,7 @@
         <translation></translation>
     </message>
     <message>
-        <location line="+74"/>
+        <location line="+75"/>
         <source>Wallet Data</source>
         <extracomment>Name of the wallet data file format.</extracomment>
         <translation>Wallet Data</translation>
@@ -860,7 +911,7 @@
         <translation>&amp;Settings</translation>
     </message>
     <message>
-        <location line="+15"/>
+        <location line="+16"/>
         <source>&amp;Minimize</source>
         <translation>&amp;Minimize</translation>
     </message>
@@ -875,7 +926,7 @@
         <translation>Tabs toolbar</translation>
     </message>
     <message>
-        <location line="+45"/>
+        <location line="+39"/>
         <source>&amp;Governance</source>
         <translation>&amp;Governance</translation>
     </message>
@@ -885,7 +936,7 @@
         <translation>View Governance Proposals</translation>
     </message>
     <message>
-        <location line="+381"/>
+        <location line="+397"/>
         <source>&amp;Hide</source>
         <translation>&amp;Hide</translation>
     </message>
@@ -895,7 +946,7 @@
         <translation>S&amp;how</translation>
     </message>
     <message numerus="yes">
-        <location line="+229"/>
+        <location line="+227"/>
         <source>%n active connection(s) to Dash network</source>
         <extracomment>A substring of the tooltip.</extracomment>
         <translation>
@@ -909,7 +960,7 @@
         <translation>Network activity disabled</translation>
     </message>
     <message numerus="yes">
-        <location line="+199"/>
+        <location line="+245"/>
         <source>Processed %n block(s) of transaction history.</source>
         <translation>
             <numerusform>Processed %n block of transaction history.</numerusform>
@@ -922,7 +973,7 @@
         <translation>%1 behind</translation>
     </message>
     <message>
-        <location line="-1125"/>
+        <location line="-1181"/>
         <source>Close Wallet…</source>
         <translation>Close Wallet…</translation>
     </message>
@@ -952,18 +1003,18 @@
         <translation>Ctrl+Shift+D</translation>
     </message>
     <message>
-        <location line="+163"/>
+        <location line="+165"/>
         <source>Ctrl+M</source>
         <translation>Ctrl+M</translation>
     </message>
     <message>
-        <location line="+727"/>
+        <location line="+735"/>
         <source>Click for more actions.</source>
         <extracomment>A substring of the tooltip. &quot;More actions&quot; are available via the context menu.</extracomment>
         <translation>Click for more actions.</translation>
     </message>
     <message>
-        <location line="+23"/>
+        <location line="+24"/>
         <source>Show Peers tab</source>
         <extracomment>A context menu item. The &quot;Peers tab&quot; is an element of the &quot;Node window&quot;.</extracomment>
         <translation>Show Peers tab</translation>
@@ -986,7 +1037,7 @@
         <translation>Syncing Headers (%1%)…</translation>
     </message>
     <message>
-        <location line="+125"/>
+        <location line="+170"/>
         <source>Synchronizing with network…</source>
         <translation>Synchronizing with network…</translation>
     </message>
@@ -1021,17 +1072,12 @@
         <translation>Transactions after this will not yet be visible.</translation>
     </message>
     <message>
-        <location line="+39"/>
+        <location line="+35"/>
         <source>Up to date</source>
         <translation>Up to date</translation>
     </message>
     <message>
-        <location line="+13"/>
-        <source>Synchronizing additional data: %p%</source>
-        <translation>Synchronizing additional data: %p%</translation>
-    </message>
-    <message>
-        <location line="+31"/>
+        <location line="+141"/>
         <source>Error</source>
         <translation>Error</translation>
     </message>
@@ -1056,7 +1102,7 @@
         <translation>Information</translation>
     </message>
     <message>
-        <location line="+157"/>
+        <location line="+159"/>
         <source>Received and sent multiple transactions</source>
         <translation>Received and sent multiple transactions</translation>
     </message>
@@ -1135,7 +1181,7 @@
         <translation>HD key generation is &lt;b&gt;enabled&lt;/b&gt;</translation>
     </message>
     <message>
-        <location line="+28"/>
+        <location line="+29"/>
         <source>Wallet is &lt;b&gt;encrypted&lt;/b&gt; and currently &lt;b&gt;unlocked&lt;/b&gt;</source>
         <translation>Wallet is &lt;b&gt;encrypted&lt;/b&gt; and currently &lt;b&gt;unlocked&lt;/b&gt;</translation>
     </message>
@@ -1258,7 +1304,7 @@
         <translation>Confirmed</translation>
     </message>
     <message>
-        <location filename="../coincontroldialog.cpp" line="+79"/>
+        <location filename="../coincontroldialog.cpp" line="+80"/>
         <source>Copy amount</source>
         <translation>Copy amount</translation>
     </message>
@@ -1382,7 +1428,7 @@
 <context>
     <name>CreateWalletActivity</name>
     <message>
-        <location filename="../walletcontroller.cpp" line="+244"/>
+        <location filename="../walletcontroller.cpp" line="+249"/>
         <source>Create Wallet</source>
         <extracomment>Title of window indicating the progress of creation of a new wallet.</extracomment>
         <translation>Create Wallet</translation>
@@ -1394,7 +1440,7 @@
         <translation>Creating Wallet &lt;b&gt;%1&lt;/b&gt;…</translation>
     </message>
     <message>
-        <location line="+30"/>
+        <location line="+33"/>
         <source>Create wallet failed</source>
         <translation>Create wallet failed</translation>
     </message>
@@ -1402,6 +1448,46 @@
         <location line="+2"/>
         <source>Create wallet warning</source>
         <translation>Create wallet warning</translation>
+    </message>
+    <message>
+        <location line="+22"/>
+        <source>Unlock failed</source>
+        <translation>Unlock failed</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Failed to unlock wallet for mnemonic verification. Wallet creation completed but verification skipped.</source>
+        <translation>Failed to unlock wallet for mnemonic verification. Wallet creation completed but verification skipped.</translation>
+    </message>
+    <message>
+        <location line="+20"/>
+        <source>Mnemonic retrieval failed</source>
+        <translation>Mnemonic retrieval failed</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Could not retrieve mnemonic phrase from wallet. Wallet creation completed but verification skipped.</source>
+        <translation>Could not retrieve mnemonic phrase from wallet. Wallet creation completed but verification skipped.</translation>
+    </message>
+    <message>
+        <location line="+28"/>
+        <source>Verification cancelled</source>
+        <translation>Verification cancelled</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>You cancelled mnemonic verification. Please make sure you have saved your mnemonic phrase safely.</source>
+        <translation>You cancelled mnemonic verification. Please make sure you have saved your mnemonic phrase safely.</translation>
+    </message>
+    <message>
+        <location line="+19"/>
+        <source>Can&apos;t list signers</source>
+        <translation>Can&apos;t list signers</translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>Too many external signers found</source>
+        <translation>Too many external signers found</translation>
     </message>
 </context>
 <context>
@@ -1412,7 +1498,7 @@
         <translation>Create Wallet</translation>
     </message>
     <message>
-        <location line="+11"/>
+        <location line="+14"/>
         <source>Wallet Name</source>
         <translation>Wallet Name</translation>
     </message>
@@ -1432,12 +1518,33 @@
         <translation>Encrypt Wallet</translation>
     </message>
     <message>
-        <location line="+26"/>
-        <source>Advanced Options</source>
-        <translation>Advanced Options</translation>
+        <location line="+73"/>
+        <source>Use descriptors for scriptPubKey management.</source>
+        <translation>Use descriptors for scriptPubKey management.</translation>
     </message>
     <message>
-        <location line="+9"/>
+        <location line="+3"/>
+        <source>Descriptor Wallet</source>
+        <translation>Descriptor Wallet</translation>
+    </message>
+    <message>
+        <location line="+7"/>
+        <source>Use an external signing device such as a hardware wallet. Configure the external signer script in wallet preferences first.</source>
+        <translation>Use an external signing device such as a hardware wallet. Configure the external signer script in wallet preferences first.</translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>External signer</source>
+        <translation>External signer</translation>
+    </message>
+    <message>
+        <location line="+25"/>
+        <location filename="../createwalletdialog.cpp" line="+35"/>
+        <source>Show Advanced Options</source>
+        <translation>Show Advanced Options</translation>
+    </message>
+    <message>
+        <location line="-58"/>
         <source>Disable private keys for this wallet. Wallets with private keys disabled will have no private keys and cannot have an HD seed or imported private keys. This is ideal for watch-only wallets.</source>
         <translation>Disable private keys for this wallet. Wallets with private keys disabled will have no private keys and cannot have an HD seed or imported private keys. This is ideal for watch-only wallets.</translation>
     </message>
@@ -1457,24 +1564,33 @@
         <translation>Make Blank Wallet</translation>
     </message>
     <message>
-        <location line="+7"/>
-        <source>Use descriptors for scriptPubKey management. This feature is well-tested but still considered experimental and not recommended for use yet.</source>
-        <translation>Use descriptors for scriptPubKey management. This feature is well-tested but still considered experimental and not recommended for use yet.</translation>
-    </message>
-    <message>
-        <location line="+3"/>
-        <source>Descriptor Wallet (EXPERIMENTAL)</source>
-        <translation>Descriptor Wallet (EXPERIMENTAL)</translation>
-    </message>
-    <message>
-        <location filename="../createwalletdialog.cpp" line="+21"/>
+        <location filename="../createwalletdialog.cpp" line="-10"/>
         <source>Create</source>
         <translation>Create</translation>
     </message>
     <message>
-        <location line="+41"/>
+        <location line="+10"/>
+        <source>Hide Advanced Options</source>
+        <translation>Hide Advanced Options</translation>
+    </message>
+    <message>
+        <location line="+66"/>
         <source>Compiled without sqlite support (required for descriptor wallets)</source>
         <translation>Compiled without sqlite support (required for descriptor wallets)</translation>
+    </message>
+    <message>
+        <location line="+14"/>
+        <source>Compiled without external signing support (required for external signing)</source>
+        <extracomment>&quot;External signing&quot; means using devices such as hardware wallets.</extracomment>
+        <translation>Compiled without external signing support (required for external signing)</translation>
+    </message>
+</context>
+<context>
+    <name>DescriptionDialog</name>
+    <message>
+        <location filename="../forms/descriptiondialog.ui" line="+20"/>
+        <source>This pane shows detailed information</source>
+        <translation>This pane shows detailed information</translation>
     </message>
 </context>
 <context>
@@ -1505,7 +1621,7 @@
         <translation>The address associated with this address list entry. This can only be modified for sending addresses.</translation>
     </message>
     <message>
-        <location filename="../editaddressdialog.cpp" line="+31"/>
+        <location filename="../editaddressdialog.cpp" line="+30"/>
         <source>New sending address</source>
         <translation>New sending address</translation>
     </message>
@@ -1581,17 +1697,12 @@
         <translation>Form</translation>
     </message>
     <message>
-        <location line="+43"/>
-        <source>Filter List:</source>
-        <translation>Filter List:</translation>
-    </message>
-    <message>
-        <location line="+7"/>
+        <location line="+41"/>
         <source>Filter proposal list</source>
         <translation>Filter proposal list</translation>
     </message>
     <message>
-        <location line="+26"/>
+        <location line="+10"/>
         <source>Masternode Count:</source>
         <translation>Masternode Count:</translation>
     </message>
@@ -1601,32 +1712,49 @@
         <translation>Number of masternodes this wallet can vote with (masternodes for which this wallet holds the voting key)</translation>
     </message>
     <message>
-        <location line="+30"/>
+        <location line="+35"/>
+        <location filename="../governancelist.cpp" line="+342"/>
+        <source>No active proposals on the network.</source>
+        <translation>No active proposals on the network.</translation>
+    </message>
+    <message>
+        <location line="+36"/>
+        <source>Resume Proposal</source>
+        <translation>Resume Proposal</translation>
+    </message>
+    <message>
+        <location line="+25"/>
         <source>Proposal Count:</source>
         <translation>Proposal Count:</translation>
     </message>
     <message>
-        <location line="+30"/>
+        <location line="-32"/>
         <source>Create Proposal</source>
         <translation>Create Proposal</translation>
     </message>
     <message>
-        <location line="-86"/>
+        <location line="-90"/>
+        <source>Select proposals to display</source>
+        <translation>Select proposals to display</translation>
+    </message>
+    <message>
+        <location line="+16"/>
         <source>Filter by Title</source>
         <translation>Filter by Title</translation>
     </message>
     <message>
-        <location filename="../governancelist.cpp" line="+426"/>
+        <location filename="../governancelist.cpp" line="+13"/>
         <source>Unavailable</source>
         <translation>Unavailable</translation>
     </message>
     <message>
         <location line="+0"/>
+        <location line="+18"/>
         <source>A synced node and an unlocked wallet are required.</source>
         <translation>A synced node and an unlocked wallet are required.</translation>
     </message>
     <message>
-        <location line="+36"/>
+        <location line="+35"/>
         <source>Vote Yes</source>
         <translation>Vote Yes</translation>
     </message>
@@ -1641,12 +1769,95 @@
         <translation>Vote Abstain</translation>
     </message>
     <message>
-        <location line="+17"/>
-        <source>Proposal Info: %1</source>
-        <translation>Proposal Info: %1</translation>
+        <location line="-329"/>
+        <source>Active Proposals</source>
+        <translation>Active Proposals</translation>
     </message>
     <message>
-        <location line="+42"/>
+        <location line="+70"/>
+        <location line="+48"/>
+        <source>My Proposals</source>
+        <translation>My Proposals</translation>
+    </message>
+    <message>
+        <location line="+146"/>
+        <source>No proposals recorded in wallet file.</source>
+        <translation>No proposals recorded in wallet file.</translation>
+    </message>
+    <message>
+        <location line="+28"/>
+        <source>Resume proposal</source>
+        <translation>Resume proposal</translation>
+    </message>
+    <message>
+        <location line="+27"/>
+        <source>Copy Raw JSON</source>
+        <translation>Copy Raw JSON</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>Open Proposal URL…</source>
+        <translation>Open Proposal URL…</translation>
+    </message>
+    <message>
+        <location line="+26"/>
+        <source>Details for %1</source>
+        <translation>Details for %1</translation>
+    </message>
+    <message>
+        <location line="+23"/>
+        <source>Cannot interact with governance before sync completes</source>
+        <translation>Cannot interact with governance before sync completes</translation>
+    </message>
+    <message>
+        <location line="+10"/>
+        <source>Creates a new proposal</source>
+        <translation>Creates a new proposal</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>Resumes an existing proposal</source>
+        <translation>Resumes an existing proposal</translation>
+    </message>
+    <message>
+        <location line="+8"/>
+        <source>Creating proposals costs %1, insufficient balance</source>
+        <translation>Creating proposals costs %1, insufficient balance</translation>
+    </message>
+    <message>
+        <location line="+35"/>
+        <source>Error</source>
+        <translation>Error</translation>
+    </message>
+    <message>
+        <location line="+0"/>
+        <source>Cannot validate URL, potentially malformed or unknown protocol.</source>
+        <translation>Cannot validate URL, potentially malformed or unknown protocol.</translation>
+    </message>
+    <message>
+        <location line="+5"/>
+        <source>External Link Warning</source>
+        <translation>External Link Warning</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>You are about to open the following URL in your default browser
+
+%1
+
+This content was submitted by a user. It may not match what is described in the title.
+
+Do you wish to continue?</source>
+        <translation>You are about to open the following URL in your default browser
+
+%1
+
+This content was submitted by a user. It may not match what is described in the title.
+
+Do you wish to continue?</translation>
+    </message>
+    <message>
+        <location line="+30"/>
         <location line="+5"/>
         <location line="+7"/>
         <location line="+14"/>
@@ -1724,7 +1935,7 @@
 <context>
     <name>HelpMessageDialog</name>
     <message>
-        <location filename="../utilitydialog.cpp" line="+41"/>
+        <location filename="../utilitydialog.cpp" line="+42"/>
         <source>version</source>
         <translation>version</translation>
     </message>
@@ -1807,7 +2018,7 @@
         <translation>Use a custom data directory:</translation>
     </message>
     <message numerus="yes">
-        <location filename="../intro.cpp" line="+201"/>
+        <location filename="../intro.cpp" line="+199"/>
         <source>%n GB of space available</source>
         <translation>
             <numerusform>%n GB of space available</numerusform>
@@ -1873,8 +2084,15 @@
 <context>
     <name>LoadWalletsActivity</name>
     <message>
-        <location filename="../walletcontroller.cpp" line="+78"/>
+        <location filename="../walletcontroller.cpp" line="+74"/>
+        <source>Load Wallets</source>
+        <extracomment>Title of progress window which is displayed when wallets are being loaded.</extracomment>
+        <translation>Load Wallets</translation>
+    </message>
+    <message>
+        <location line="+3"/>
         <source>Loading wallets…</source>
+        <extracomment>Descriptive text of the load wallets progress window which indicates to the user that wallets are currently being loaded.</extracomment>
         <translation>Loading wallets…</translation>
     </message>
 </context>
@@ -1886,92 +2104,87 @@
         <translation>Form</translation>
     </message>
     <message>
-        <location line="+128"/>
-        <source>Status</source>
-        <translation>Status</translation>
+        <location line="+30"/>
+        <source>Filter by masternode type</source>
+        <translation>Filter by masternode type</translation>
     </message>
     <message>
-        <location line="-85"/>
-        <source>Filter List:</source>
-        <translation>Filter List:</translation>
+        <location line="+4"/>
+        <source>All</source>
+        <translation>All</translation>
     </message>
     <message>
-        <location line="+7"/>
+        <location line="+5"/>
+        <source>Regular</source>
+        <translation>Regular</translation>
+    </message>
+    <message>
+        <location line="+5"/>
+        <source>Evo</source>
+        <translation>Evo</translation>
+    </message>
+    <message>
+        <location line="+8"/>
         <source>Filter masternode list</source>
         <translation>Filter masternode list</translation>
     </message>
     <message>
-        <location line="+33"/>
+        <location line="+13"/>
+        <source>Owned</source>
+        <translation>Owned</translation>
+    </message>
+    <message>
+        <location line="+7"/>
+        <source>Hide masternodes that are currently PoSe banned.</source>
+        <translation>Hide masternodes that are currently PoSe banned.</translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>Hide banned</source>
+        <translation>Hide banned</translation>
+    </message>
+    <message>
+        <location line="+49"/>
         <source>Node Count:</source>
         <translation>Node Count:</translation>
     </message>
     <message>
-        <location line="-23"/>
+        <location line="-62"/>
         <source>Show only masternodes this wallet has keys for.</source>
         <translation>Show only masternodes this wallet has keys for.</translation>
     </message>
     <message>
-        <location line="+3"/>
-        <source>My masternodes only</source>
-        <translation>My masternodes only</translation>
-    </message>
-    <message>
-        <location line="+55"/>
-        <source>Service</source>
-        <translation>Service</translation>
-    </message>
-    <message>
-        <location line="+5"/>
-        <source>Type</source>
-        <translation>Type</translation>
-    </message>
-    <message>
-        <location line="+10"/>
-        <source>PoSe Score</source>
-        <translation>PoSe Score</translation>
-    </message>
-    <message>
-        <location line="+5"/>
-        <source>Registered</source>
-        <translation>Registered</translation>
-    </message>
-    <message>
-        <location line="+5"/>
-        <source>Last Paid</source>
-        <translation>Last Paid</translation>
-    </message>
-    <message>
-        <location line="+5"/>
-        <source>Next Payment</source>
-        <translation>Next Payment</translation>
-    </message>
-    <message>
-        <location line="+5"/>
+        <location filename="../masternodelist.cpp" line="+123"/>
         <source>Payout Address</source>
         <translation>Payout Address</translation>
     </message>
     <message>
-        <location line="+5"/>
-        <source>Operator Reward</source>
-        <translation>Operator Reward</translation>
+        <location line="-2"/>
+        <source>Filter by</source>
+        <translation>Filter by</translation>
     </message>
     <message>
-        <location line="+5"/>
+        <location line="+1"/>
         <source>Collateral Address</source>
         <translation>Collateral Address</translation>
     </message>
     <message>
-        <location line="+5"/>
+        <location line="+2"/>
         <source>Owner Address</source>
         <translation>Owner Address</translation>
     </message>
     <message>
-        <location line="+5"/>
+        <location line="+1"/>
         <source>Voting Address</source>
         <translation>Voting Address</translation>
     </message>
     <message>
-        <location filename="../masternodelist.cpp" line="+83"/>
+        <location line="+260"/>
+        <source>Details for Masternode %1</source>
+        <translation>Details for Masternode %1</translation>
+    </message>
+    <message>
+        <location line="-267"/>
         <source>Copy ProTx Hash</source>
         <translation>Copy ProTx Hash</translation>
     </message>
@@ -1981,61 +2194,215 @@
         <translation>Copy Collateral Outpoint</translation>
     </message>
     <message>
-        <location line="+57"/>
-        <location line="+180"/>
-        <source>Please wait…</source>
-        <translation>Please wait…</translation>
+        <location filename="../forms/masternodelist.ui" line="-7"/>
+        <source>Filter by any property (e.g. address or protx hash)</source>
+        <translation>Filter by any property (e.g. address or protx hash)</translation>
     </message>
-    <message>
-        <location line="-130"/>
-        <source>Updating…</source>
-        <translation>Updating…</translation>
-    </message>
-    <message>
-        <location line="+36"/>
-        <source>ENABLED</source>
-        <translation>ENABLED</translation>
+</context>
+<context>
+    <name>MasternodeModel</name>
+    <message numerus="yes">
+        <location filename="../masternodemodel.cpp" line="+223"/>
+        <source>Banned for %n day(s)</source>
+        <translation>
+            <numerusform>Banned for %n day</numerusform>
+            <numerusform>Banned for %n days</numerusform>
+        </translation>
     </message>
     <message>
         <location line="+0"/>
-        <source>POSE_BANNED</source>
-        <translation>POSE_BANNED</translation>
+        <source>Banned for less than a day</source>
+        <translation>Banned for less than a day</translation>
     </message>
     <message>
-        <location line="+14"/>
-        <location line="+23"/>
+        <location line="+2"/>
+        <source>Banned</source>
+        <translation>Banned</translation>
+    </message>
+    <message numerus="yes">
+        <location line="+8"/>
+        <source>Active for %n day(s)</source>
+        <translation>
+            <numerusform>Active for %n day</numerusform>
+            <numerusform>Active for %n days</numerusform>
+        </translation>
+    </message>
+    <message>
+        <location line="+0"/>
+        <source>Active for less than a day</source>
+        <translation>Active for less than a day</translation>
+    </message>
+    <message>
+        <location line="+39"/>
         <source>UNKNOWN</source>
         <translation>UNKNOWN</translation>
     </message>
     <message>
-        <location line="-10"/>
-        <source>to %1</source>
-        <translation>to %1</translation>
+        <location line="+44"/>
+        <source>Service</source>
+        <translation>Service</translation>
     </message>
     <message>
         <location line="+2"/>
-        <source>to UNKNOWN</source>
-        <translation>to UNKNOWN</translation>
+        <source>Type</source>
+        <translation>Type</translation>
+    </message>
+    <message>
+        <location line="+4"/>
+        <source>PoSe Score</source>
+        <translation>PoSe Score</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>Registered</source>
+        <translation>Registered</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>Last Paid</source>
+        <translation>Last Paid</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>Next Payment</source>
+        <translation>Next Payment</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>Operator Reward</source>
+        <translation>Operator Reward</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>ProTx Hash</source>
+        <translation>ProTx Hash</translation>
+    </message>
+</context>
+<context>
+    <name>MnemonicVerificationDialog</name>
+    <message>
+        <location filename="../forms/mnemonicverificationdialog.ui" line="+6"/>
+        <location filename="../mnemonicverificationdialog.cpp" line="+42"/>
+        <source>Save Your Mnemonic</source>
+        <translation>Save Your Mnemonic</translation>
+    </message>
+    <message>
+        <location line="+13"/>
+        <source>WARNING: If you lose your mnemonic seed phrase, you will lose access to your wallet forever.</source>
+        <translation>WARNING: If you lose your mnemonic seed phrase, you will lose access to your wallet forever.</translation>
+    </message>
+    <message>
+        <location line="+13"/>
+        <location filename="../mnemonicverificationdialog.cpp" line="+107"/>
+        <source>Please write down these words in order. You will need them to restore your wallet.</source>
+        <translation>Please write down these words in order. You will need them to restore your wallet.</translation>
+    </message>
+    <message>
+        <location line="+25"/>
+        <source>Show</source>
+        <translation>Show</translation>
+    </message>
+    <message>
+        <location line="+7"/>
+        <source>Hide</source>
+        <translation>Hide</translation>
+    </message>
+    <message>
+        <location line="+20"/>
+        <source>I have written down my mnemonic</source>
+        <translation>I have written down my mnemonic</translation>
+    </message>
+    <message>
+        <location line="+13"/>
+        <source>To verify you&apos;ve saved your mnemonic, please enter the following words:</source>
+        <translation>To verify you&apos;ve saved your mnemonic, please enter the following words:</translation>
+    </message>
+    <message>
+        <location line="+12"/>
+        <source>Word #1:</source>
+        <translation>Word #1:</translation>
+    </message>
+    <message>
+        <location line="+17"/>
+        <source>Word #2:</source>
+        <translation>Word #2:</translation>
+    </message>
+    <message>
+        <location line="+17"/>
+        <source>Word #3:</source>
+        <translation>Word #3:</translation>
+    </message>
+    <message>
+        <location filename="../mnemonicverificationdialog.cpp" line="-107"/>
+        <source>Your Recovery Phrase</source>
+        <translation>Your Recovery Phrase</translation>
+    </message>
+    <message>
+        <location line="+51"/>
+        <source>Close</source>
+        <translation>Close</translation>
+    </message>
+    <message>
+        <location line="+0"/>
+        <source>Continue</source>
+        <translation>Continue</translation>
+    </message>
+    <message>
+        <location line="+47"/>
+        <source>WARNING: Never share your recovery phrase with anyone. Store it securely offline.</source>
+        <translation>WARNING: Never share your recovery phrase with anyone. Store it securely offline.</translation>
     </message>
     <message>
         <location line="+3"/>
-        <source>but not claimed</source>
-        <translation>but not claimed</translation>
+        <source>These words can restore your wallet. Keep them safe and private.</source>
+        <translation>These words can restore your wallet. Keep them safe and private.</translation>
     </message>
     <message>
-        <location line="-12"/>
-        <source>NONE</source>
-        <translation>NONE</translation>
+        <location line="+3"/>
+        <source>WARNING: If you lose your mnemonic seed phrase, you will lose access to your wallet forever. Write it down in a safe place and never share it with anyone.</source>
+        <translation>WARNING: If you lose your mnemonic seed phrase, you will lose access to your wallet forever. Write it down in a safe place and never share it with anyone.</translation>
     </message>
     <message>
-        <location filename="../forms/masternodelist.ui" line="-120"/>
-        <source>Filter by any property (e.g. address or protx hash)</source>
-        <translation>Filter by any property (e.g. address or protx hash)</translation>
+        <location line="+26"/>
+        <source>Invalid Mnemonic</source>
+        <translation>Invalid Mnemonic</translation>
     </message>
     <message>
-        <location filename="../masternodelist.cpp" line="+121"/>
-        <source>Additional information for DIP3 Masternode %1</source>
-        <translation>Additional information for DIP3 Masternode %1</translation>
+        <location line="+1"/>
+        <source>Mnemonic phrase has fewer than 3 words (found %1). Verification cannot proceed.</source>
+        <translation>Mnemonic phrase has fewer than 3 words (found %1). Verification cannot proceed.</translation>
+    </message>
+    <message>
+        <location line="+9"/>
+        <source>Verification Error</source>
+        <translation>Verification Error</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Failed to generate verification positions. Please try again.</source>
+        <translation>Failed to generate verification positions. Please try again.</translation>
+    </message>
+    <message>
+        <location line="+10"/>
+        <location line="+1"/>
+        <location line="+1"/>
+        <source>Word #%1:</source>
+        <translation>Word #%1:</translation>
+    </message>
+    <message>
+        <location line="+8"/>
+        <source>Back</source>
+        <translation>Back</translation>
+    </message>
+    <message>
+        <location line="+151"/>
+        <source>Verification Failed</source>
+        <translation>Verification Failed</translation>
+    </message>
+    <message>
+        <location line="+0"/>
+        <source>One or more words are incorrect. Please try again.</source>
+        <translation>One or more words are incorrect. Please try again.</translation>
     </message>
 </context>
 <context>
@@ -2063,7 +2430,7 @@
     <message>
         <location line="+7"/>
         <location line="+20"/>
-        <location filename="../modaloverlay.cpp" line="+171"/>
+        <location filename="../modaloverlay.cpp" line="+168"/>
         <source>Unknown…</source>
         <translation>Unknown…</translation>
     </message>
@@ -2131,7 +2498,7 @@
 <context>
     <name>OpenWalletActivity</name>
     <message>
-        <location filename="../walletcontroller.cpp" line="-41"/>
+        <location filename="../walletcontroller.cpp" line="-46"/>
         <source>Open wallet failed</source>
         <translation>Open wallet failed</translation>
     </message>
@@ -2250,7 +2617,7 @@
         <translation>Enable R&amp;PC server</translation>
     </message>
     <message>
-        <location line="+24"/>
+        <location line="+26"/>
         <source>Whether to set subtract fee from amount as default or not.</source>
         <extracomment>Tooltip text for Options window setting that sets subtracting the fee from a sending amount as default.</extracomment>
         <translation>Whether to set subtract fee from amount as default or not.</translation>
@@ -2262,7 +2629,7 @@
         <translation>Subtract &amp;fee from amount by default</translation>
     </message>
     <message>
-        <location line="+19"/>
+        <location line="+17"/>
         <source>Enable &amp;PSBT controls</source>
         <extracomment>An options window setting to enable PSBT controls.</extracomment>
         <translation>Enable &amp;PSBT controls</translation>
@@ -2304,7 +2671,17 @@
         <translation>Show Governance Tab</translation>
     </message>
     <message>
-        <location line="+7"/>
+        <location line="+28"/>
+        <source>Show the governance clock in the status bar.</source>
+        <translation>Show the governance clock in the status bar.</translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>Show governance clock</source>
+        <translation>Show governance clock</translation>
+    </message>
+    <message>
+        <location line="+9"/>
         <source>If you disable the spending of unconfirmed change, the change from a transaction&lt;br/&gt;cannot be used until that transaction has at least one confirmation.&lt;br/&gt;This also affects how your balance is computed.</source>
         <translation>If you disable the spending of unconfirmed change, the change from a transaction&lt;br/&gt;cannot be used until that transaction has at least one confirmation.&lt;br/&gt;This also affects how your balance is computed.</translation>
     </message>
@@ -2312,6 +2689,46 @@
         <location line="+10"/>
         <source>Show mixing interface on Overview screen and reveal an additional screen which allows to spend fully mixed coins only.&lt;br/&gt;A new tab with more settings will also appear in this dialog, please make sure to check them before mixing your coins.</source>
         <translation>Show mixing interface on Overview screen and reveal an additional screen which allows to spend fully mixed coins only.&lt;br/&gt;A new tab with more settings will also appear in this dialog, please make sure to check them before mixing your coins.</translation>
+    </message>
+    <message>
+        <location line="+10"/>
+        <source>Automatically lock small incoming transactions from external sources that may be dust attacks. Locked UTXOs will be excluded from coin selection.</source>
+        <translation>Automatically lock small incoming transactions from external sources that may be dust attacks. Locked UTXOs will be excluded from coin selection.</translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>Enable &amp;dust attack protection</source>
+        <translation>Enable &amp;dust attack protection</translation>
+    </message>
+    <message>
+        <location line="+9"/>
+        <source>Dust threshold:</source>
+        <translation>Dust threshold:</translation>
+    </message>
+    <message>
+        <location line="+7"/>
+        <source>Transactions with outputs at or below this amount will be considered dust when received from external sources.</source>
+        <translation>Transactions with outputs at or below this amount will be considered dust when received from external sources.</translation>
+    </message>
+    <message>
+        <location line="+16"/>
+        <source>duffs</source>
+        <translation>duffs</translation>
+    </message>
+    <message>
+        <location line="+27"/>
+        <source>External Signer (e.g. hardware wallet)</source>
+        <translation>External Signer (e.g. hardware wallet)</translation>
+    </message>
+    <message>
+        <location line="+8"/>
+        <source>&amp;External signer script path</source>
+        <translation>&amp;External signer script path</translation>
+    </message>
+    <message>
+        <location line="+10"/>
+        <source>Full path to a %1 compatible script (e.g. C:\Downloads\hwi.exe or /Users/you/Downloads/hwi.py). Beware: malware can steal your coins!</source>
+        <translation>Full path to a %1 compatible script (e.g. C:\Downloads\hwi.exe or /Users/you/Downloads/hwi.py). Beware: malware can steal your coins!</translation>
     </message>
     <message>
         <location line="+29"/>
@@ -2464,12 +2881,7 @@ https://explore.transifex.com/dash/dash/</translation>
         <translation>&amp;Third-party transaction URLs</translation>
     </message>
     <message>
-        <location line="+64"/>
-        <source>Options set in this dialog are overridden by the command line or in the configuration file:</source>
-        <translation>Options set in this dialog are overridden by the command line or in the configuration file:</translation>
-    </message>
-    <message>
-        <location line="-955"/>
+        <location line="-1014"/>
         <source>Minimize instead of exit the application when the window is closed. When this option is enabled, the application will be closed only after selecting Exit in the menu.</source>
         <translation>Minimize instead of exit the application when the window is closed. When this option is enabled, the application will be closed only after selecting Exit in the menu.</translation>
     </message>
@@ -2494,17 +2906,17 @@ https://explore.transifex.com/dash/dash/</translation>
         <translation>Enable coin &amp;control features</translation>
     </message>
     <message>
-        <location line="+50"/>
+        <location line="+83"/>
         <source>&amp;Spend unconfirmed change</source>
         <translation>&amp;Spend unconfirmed change</translation>
     </message>
     <message>
-        <location line="+101"/>
+        <location line="+191"/>
         <source>This setting determines the amount of individual masternodes that an input will be mixed through.&lt;br/&gt;More rounds of mixing gives a higher degree of privacy, but also costs more in fees.</source>
         <translation>This setting determines the amount of individual masternodes that an input will be mixed through.&lt;br/&gt;More rounds of mixing gives a higher degree of privacy, but also costs more in fees.</translation>
     </message>
     <message>
-        <location line="-430"/>
+        <location line="-553"/>
         <source>&amp;Network</source>
         <translation>&amp;Network</translation>
     </message>
@@ -2514,7 +2926,7 @@ https://explore.transifex.com/dash/dash/</translation>
         <translation>Enabling pruning significantly reduces the disk space required to store transactions. All blocks are still fully validated. Reverting this setting requires re-downloading the entire blockchain.</translation>
     </message>
     <message>
-        <location line="+484"/>
+        <location line="+607"/>
         <source>Map port using &amp;UPnP</source>
         <translation>Map port using &amp;UPnP</translation>
     </message>
@@ -2568,7 +2980,7 @@ https://explore.transifex.com/dash/dash/</translation>
         <translation>Tor</translation>
     </message>
     <message>
-        <location line="-668"/>
+        <location line="-791"/>
         <source>Show only a tray icon after minimizing the window.</source>
         <translation>Show only a tray icon after minimizing the window.</translation>
     </message>
@@ -2588,7 +3000,7 @@ https://explore.transifex.com/dash/dash/</translation>
         <translation>&amp;Display</translation>
     </message>
     <message>
-        <location line="+761"/>
+        <location line="+884"/>
         <source>Connect to the Dash network through a separate SOCKS5 proxy for Tor onion services.</source>
         <translation>Connect to the Dash network through a separate SOCKS5 proxy for Tor onion services.</translation>
     </message>
@@ -2623,7 +3035,12 @@ https://explore.transifex.com/dash/dash/</translation>
         <translation>Decimal digits</translation>
     </message>
     <message>
-        <location line="+127"/>
+        <location line="+81"/>
+        <source>Options set in this dialog are overridden by the command line:</source>
+        <translation>Options set in this dialog are overridden by the command line:</translation>
+    </message>
+    <message>
+        <location line="+46"/>
         <source>Reset all client options to default.</source>
         <translation>Reset all client options to default.</translation>
     </message>
@@ -2643,17 +3060,17 @@ https://explore.transifex.com/dash/dash/</translation>
         <translation>&amp;Cancel</translation>
     </message>
     <message>
-        <location filename="../optionsdialog.cpp" line="+77"/>
+        <location filename="../optionsdialog.cpp" line="+79"/>
         <source>Enable %1 features</source>
         <translation>Enable %1 features</translation>
     </message>
     <message>
-        <location line="+81"/>
+        <location line="+84"/>
         <source>default</source>
         <translation>default</translation>
     </message>
     <message>
-        <location line="+260"/>
+        <location line="+275"/>
         <source>Confirm options reset</source>
         <extracomment>Window title text of pop-up window shown when the user has chosen to reset options.</extracomment>
         <translation>Confirm options reset</translation>
@@ -2666,7 +3083,13 @@ https://explore.transifex.com/dash/dash/</translation>
         <translation>Client restart required to activate changes.</translation>
     </message>
     <message>
-        <location line="-61"/>
+        <location line="-350"/>
+        <source>Compiled without external signing support (required for external signing)</source>
+        <extracomment>&quot;External signing&quot; means using devices such as hardware wallets.</extracomment>
+        <translation>Compiled without external signing support (required for external signing)</translation>
+    </message>
+    <message>
+        <location line="+289"/>
         <source>Current settings will be backed up at &quot;%1&quot;.</source>
         <extracomment>Text explaining to the user that the client&apos;s current settings will be backed up at a specific location. %1 is a stand-in argument for the backup location&apos;s path.</extracomment>
         <translation>Current settings will be backed up at &quot;%1&quot;.</translation>
@@ -2686,6 +3109,14 @@ https://explore.transifex.com/dash/dash/</translation>
         <location line="+28"/>
         <source>The supplied proxy address is invalid.</source>
         <translation>The supplied proxy address is invalid.</translation>
+    </message>
+</context>
+<context>
+    <name>OptionsModel</name>
+    <message>
+        <location filename="../optionsmodel.cpp" line="+397"/>
+        <source>Could not read setting &quot;%1&quot;, %2.</source>
+        <translation>Could not read setting &quot;%1&quot;, %2.</translation>
     </message>
 </context>
 <context>
@@ -2828,14 +3259,14 @@ https://explore.transifex.com/dash/dash/</translation>
         <translation>The denominations you submitted to the Masternode.&lt;br&gt;To mix, other users must submit the exact same denominations.</translation>
     </message>
     <message>
-        <location filename="../overviewpage.cpp" line="+181"/>
+        <location filename="../overviewpage.cpp" line="+176"/>
         <location line="+1"/>
         <location line="+1"/>
         <source>out of sync</source>
         <translation>out of sync</translation>
     </message>
     <message>
-        <location line="+321"/>
+        <location line="+348"/>
         <source>Automatic backups are disabled, no mixing available!</source>
         <translation>Automatic backups are disabled, no mixing available!</translation>
     </message>
@@ -2846,17 +3277,17 @@ https://explore.transifex.com/dash/dash/</translation>
         <translation>No inputs detected</translation>
     </message>
     <message>
-        <location line="-207"/>
+        <location line="-234"/>
         <source>%1 Balance</source>
         <translation>%1 Balance</translation>
     </message>
     <message>
-        <location line="+32"/>
+        <location line="+33"/>
         <source>Discreet mode activated for the Overview tab. To unmask the values, uncheck Settings-&gt;Discreet mode.</source>
         <translation>Discreet mode activated for the Overview tab. To unmask the values, uncheck Settings-&gt;Discreet mode.</translation>
     </message>
     <message numerus="yes">
-        <location line="+173"/>
+        <location line="+199"/>
         <location line="+17"/>
         <location line="+6"/>
         <location line="+11"/>
@@ -2938,13 +3369,13 @@ https://explore.transifex.com/dash/dash/</translation>
     <message>
         <location line="-137"/>
         <location line="+54"/>
-        <location line="+119"/>
+        <location line="+121"/>
         <location line="+3"/>
         <source>Disabled</source>
         <translation>Disabled</translation>
     </message>
     <message>
-        <location line="-157"/>
+        <location line="-159"/>
         <source>Very low number of keys left since last automatic backup!</source>
         <translation>Very low number of keys left since last automatic backup!</translation>
     </message>
@@ -3090,9 +3521,9 @@ https://explore.transifex.com/dash/dash/</translation>
         <translation>PSBT saved to disk.</translation>
     </message>
     <message>
-        <location line="+16"/>
-        <source> * Sends %1 to %2</source>
-        <translation> * Sends %1 to %2</translation>
+        <location line="+17"/>
+        <source>Sends %1 to %2</source>
+        <translation>Sends %1 to %2</translation>
     </message>
     <message>
         <location line="+4"/>
@@ -3163,7 +3594,7 @@ https://explore.transifex.com/dash/dash/</translation>
 <context>
     <name>PaymentServer</name>
     <message>
-        <location filename="../paymentserver.cpp" line="+151"/>
+        <location filename="../paymentserver.cpp" line="+148"/>
         <source>Payment request error</source>
         <translation>Payment request error</translation>
     </message>
@@ -3267,7 +3698,7 @@ Due to discontinued support, you should request the merchant to provide you with
         <translation>Network</translation>
     </message>
     <message>
-        <location filename="../peertablemodel.cpp" line="+77"/>
+        <location filename="../peertablemodel.cpp" line="+76"/>
         <source>Inbound</source>
         <extracomment>An Inbound Connection from a Peer.</extracomment>
         <translation>Inbound</translation>
@@ -3280,32 +3711,176 @@ Due to discontinued support, you should request the merchant to provide you with
     </message>
 </context>
 <context>
-    <name>Proposal</name>
+    <name>ProposalCreate</name>
     <message>
-        <location filename="../governancelist.cpp" line="-516"/>
-        <source>Passing +%1</source>
-        <translation>Passing +%1</translation>
+        <location filename="../forms/proposalcreate.ui" line="+20"/>
+        <source>New proposal</source>
+        <translation>New proposal</translation>
     </message>
     <message>
-        <location line="+2"/>
-        <source>Needs additional %1 votes</source>
-        <translation>Needs additional %1 votes</translation>
+        <location line="+36"/>
+        <source>Proposal &amp;name</source>
+        <translation>Proposal &amp;name</translation>
+    </message>
+    <message>
+        <location line="+39"/>
+        <source>&amp;Description URL</source>
+        <translation>&amp;Description URL</translation>
+    </message>
+    <message>
+        <location line="+42"/>
+        <source>&amp;Payment date</source>
+        <translation>&amp;Payment date</translation>
+    </message>
+    <message>
+        <location line="+10"/>
+        <source>Pa&amp;yments</source>
+        <translation>Pa&amp;yments</translation>
+    </message>
+    <message>
+        <location line="+10"/>
+        <source>Payment &amp;address</source>
+        <translation>Payment &amp;address</translation>
+    </message>
+    <message>
+        <location line="+83"/>
+        <source>Payment &amp;amount</source>
+        <translation>Payment &amp;amount</translation>
+    </message>
+    <message>
+        <location line="+10"/>
+        <source>To&amp;tal amount</source>
+        <translation>To&amp;tal amount</translation>
+    </message>
+    <message>
+        <location line="+19"/>
+        <source>The amount to request in a single payment</source>
+        <translation>The amount to request in a single payment</translation>
+    </message>
+    <message>
+        <location line="+66"/>
+        <source>View JSON</source>
+        <translation>View JSON</translation>
+    </message>
+    <message>
+        <location line="+22"/>
+        <source>View Payload</source>
+        <translation>View Payload</translation>
+    </message>
+    <message>
+        <location line="+34"/>
+        <source>margin-left: 8px;</source>
+        <translation>margin-left: 8px;</translation>
+    </message>
+    <message>
+        <location line="+7"/>
+        <source>Create Proposal</source>
+        <translation>Create Proposal</translation>
+    </message>
+    <message>
+        <location filename="../proposalcreate.cpp" line="+170"/>
+        <source>All fields are mandatory</source>
+        <translation>All fields are mandatory</translation>
+    </message>
+    <message>
+        <location line="+15"/>
+        <source>Confirm Proposal</source>
+        <translation>Confirm Proposal</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Are you sure you want to create this proposal?</source>
+        <translation>Are you sure you want to create this proposal?</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Creating a proposal pays %1 to the network. This fee is non-refundable regardless of outcome.</source>
+        <translation>Creating a proposal pays %1 to the network. This fee is non-refundable regardless of outcome.</translation>
+    </message>
+    <message>
+        <location line="+18"/>
+        <source>Creation failed</source>
+        <translation>Creation failed</translation>
+    </message>
+    <message>
+        <location line="+4"/>
+        <source>Proposal Created</source>
+        <translation>Proposal Created</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>%1 successfully sent for your proposal &quot;%2&quot;.
+
+You will now be redirected to monitor and broadcast your new proposal, you can resume this later by clicking &quot;Resume Proposal&quot;.</source>
+        <translation>%1 successfully sent for your proposal &quot;%2&quot;.
+
+You will now be redirected to monitor and broadcast your new proposal, you can resume this later by clicking &quot;Resume Proposal&quot;.</translation>
     </message>
 </context>
 <context>
     <name>ProposalModel</name>
     <message>
-        <location line="+56"/>
-        <source>Yes</source>
-        <translation>Yes</translation>
+        <location filename="../proposalmodel.cpp" line="+278"/>
+        <source>Pending, %1 of %2 confirmations</source>
+        <translation>Pending, %1 of %2 confirmations</translation>
+    </message>
+    <message>
+        <location line="+4"/>
+        <source>Voting, needs %1 more votes for funding</source>
+        <translation>Voting, needs %1 more votes for funding</translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>Passing with %1 votes</source>
+        <translation>Passing with %1 votes</translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>Passing with %1 votes but budget saturated, may not be funded</source>
+        <translation>Passing with %1 votes but budget saturated, may not be funded</translation>
+    </message>
+    <message>
+        <location line="+4"/>
+        <source>Failed, needed %1 more votes</source>
+        <translation>Failed, needed %1 more votes</translation>
+    </message>
+    <message>
+        <location line="+4"/>
+        <source>Funded at block %1</source>
+        <translation>Funded at block %1</translation>
     </message>
     <message>
         <location line="+0"/>
-        <source>No</source>
-        <translation>No</translation>
+        <source>Funded</source>
+        <translation>Funded</translation>
     </message>
     <message>
-        <location line="+40"/>
+        <location line="+3"/>
+        <source>Lapsed, past proposal end date</source>
+        <translation>Lapsed, past proposal end date</translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>Ready to broadcast, check &quot;Resume Proposal&quot; dialog</source>
+        <translation>Ready to broadcast, check &quot;Resume Proposal&quot; dialog</translation>
+    </message>
+    <message>
+        <location line="+6"/>
+        <source>%1 Yes, %2 No, %3 Abstain, %4</source>
+        <translation>%1 Yes, %2 No, %3 Abstain, %4</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>passing with %1 votes</source>
+        <translation>passing with %1 votes</translation>
+    </message>
+    <message>
+        <location line="+0"/>
+        <source>needs %1 more votes</source>
+        <translation>needs %1 more votes</translation>
+    </message>
+    <message>
+        <location line="+41"/>
         <source>Hash</source>
         <translation>Hash</translation>
     </message>
@@ -3331,251 +3906,83 @@ Due to discontinued support, you should request the merchant to provide you with
     </message>
     <message>
         <location line="+2"/>
-        <source>Active</source>
-        <translation>Active</translation>
-    </message>
-    <message>
-        <location line="+2"/>
-        <source>Status</source>
-        <translation>Status</translation>
+        <source>Votes</source>
+        <translation>Votes</translation>
     </message>
 </context>
 <context>
-    <name>ProposalWizard</name>
+    <name>ProposalResume</name>
     <message>
-        <location filename="../forms/proposalwizard.ui" line="+14"/>
-        <source>Create Governance Proposal</source>
-        <translation>Create Governance Proposal</translation>
+        <location filename="../forms/proposalresume.ui" line="+20"/>
+        <source>Resume Proposals</source>
+        <translation>Resume Proposals</translation>
     </message>
     <message>
-        <location line="+40"/>
-        <source>Enter proposal details</source>
-        <translation>Enter proposal details</translation>
-    </message>
-    <message>
-        <location line="+16"/>
-        <source>A fee will be burned when you prepare the proposal.</source>
-        <translation>A fee will be burned when you prepare the proposal.</translation>
-    </message>
-    <message>
-        <location line="+27"/>
-        <source>Proposal &amp;name</source>
-        <translation>Proposal &amp;name</translation>
-    </message>
-    <message>
-        <location line="+26"/>
-        <source>&amp;Description URL</source>
-        <translation>&amp;Description URL</translation>
-    </message>
-    <message>
-        <location line="+26"/>
-        <source>Payment &amp;address</source>
-        <translation>Payment &amp;address</translation>
-    </message>
-    <message>
-        <location line="+23"/>
-        <source>Payment &amp;amount</source>
-        <translation>Payment &amp;amount</translation>
-    </message>
-    <message>
-        <location line="+16"/>
-        <source>The amount to request in a single payment</source>
-        <translation>The amount to request in a single payment</translation>
-    </message>
-    <message>
-        <location line="+7"/>
-        <source>&amp;First payment</source>
-        <translation>&amp;First payment</translation>
-    </message>
-    <message>
-        <location line="+28"/>
-        <source>Pa&amp;yments</source>
-        <translation>Pa&amp;yments</translation>
-    </message>
-    <message>
-        <location line="+25"/>
-        <source>To&amp;tal amount</source>
-        <translation>To&amp;tal amount</translation>
-    </message>
-    <message>
-        <location line="+17"/>
-        <source>Proposal &amp;fee</source>
-        <translation>Proposal &amp;fee</translation>
-    </message>
-    <message>
-        <location line="+40"/>
-        <location line="+91"/>
-        <location line="+166"/>
-        <source>Next</source>
-        <translation>Next</translation>
-    </message>
-    <message>
-        <location line="-238"/>
-        <source>Review proposal JSON and validate.</source>
-        <translation>Review proposal JSON and validate.</translation>
-    </message>
-    <message>
-        <location line="+14"/>
-        <source>Hex-encoded JSON</source>
-        <translation>Hex-encoded JSON</translation>
-    </message>
-    <message>
-        <location line="+32"/>
-        <location line="+166"/>
-        <source>Back</source>
-        <translation>Back</translation>
-    </message>
-    <message>
-        <location line="-153"/>
-        <source>Validate</source>
-        <translation>Validate</translation>
-    </message>
-    <message>
-        <location line="+35"/>
-        <source>Prepare (burn fee) and wait for confirmations.</source>
-        <translation>Prepare (burn fee) and wait for confirmations.</translation>
-    </message>
-    <message>
-        <location line="+32"/>
-        <location line="+224"/>
-        <source>Copy</source>
-        <translation>Copy</translation>
-    </message>
-    <message>
-        <location line="-200"/>
-        <source>At 1/6 confirmations: can be relayed and queued. At 6/6: accepted and processed.</source>
-        <translation>At 1/6 confirmations: can be relayed and queued. At 6/6: accepted and processed.</translation>
-    </message>
-    <message>
-        <location line="+25"/>
-        <location line="+131"/>
-        <source>Confirmations progress</source>
-        <translation>Confirmations progress</translation>
-    </message>
-    <message>
-        <location line="-128"/>
-        <location line="+131"/>
-        <source>Shows progress toward the required number of confirmations for the proposal fee transaction.</source>
-        <translation>Shows progress toward the required number of confirmations for the proposal fee transaction.</translation>
-    </message>
-    <message>
-        <location line="-124"/>
-        <location line="+131"/>
-        <source>Estimated time remaining: -</source>
-        <translation>Estimated time remaining: -</translation>
-    </message>
-    <message>
-        <location line="-91"/>
-        <source>Prepare Proposal</source>
-        <translation>Prepare Proposal</translation>
-    </message>
-    <message>
-        <location line="+35"/>
-        <source>You can submit after 1 confirmation. At 6 confirmations it is accepted and processed.</source>
-        <translation>You can submit after 1 confirmation. At 6 confirmations it is accepted and processed.</translation>
-    </message>
-    <message>
-        <location line="+70"/>
-        <source>Proposal ID:</source>
-        <translation>Proposal ID:</translation>
-    </message>
-    <message>
-        <location line="+53"/>
-        <source>Submit Proposal</source>
-        <translation>Submit Proposal</translation>
-    </message>
-    <message>
-        <location line="+16"/>
+        <location line="+86"/>
         <source>Close</source>
         <translation>Close</translation>
     </message>
     <message>
-        <location filename="../proposalwizard.cpp" line="+211"/>
-        <source>Valid</source>
-        <translation>Valid</translation>
+        <location filename="../proposalresume.cpp" line="+49"/>
+        <source>No pending proposals to broadcast.</source>
+        <translation>No pending proposals to broadcast.</translation>
     </message>
     <message>
-        <location line="+3"/>
-        <source>Invalid: %1</source>
-        <translation>Invalid: %1</translation>
-    </message>
-    <message>
-        <location line="+16"/>
-        <source>Burn %1</source>
-        <translation>Burn %1</translation>
-    </message>
-    <message>
-        <location line="+1"/>
-        <source>Burn %1 to create the fee transaction?</source>
-        <translation>Burn %1 to create the fee transaction?</translation>
-    </message>
-    <message>
-        <location line="+16"/>
-        <location line="+5"/>
-        <source>Prepare failed</source>
-        <translation>Prepare failed</translation>
-    </message>
-    <message>
-        <location line="+27"/>
-        <location line="+4"/>
-        <source>Confirmations: %1 / %2 required</source>
-        <translation>Confirmations: %1 / %2 required</translation>
-    </message>
-    <message>
-        <location line="+5"/>
-        <location line="+1"/>
-        <source>Estimated time remaining: Ready</source>
-        <translation>Estimated time remaining: Ready</translation>
-    </message>
-    <message numerus="yes">
-        <location line="+4"/>
-        <location line="+1"/>
-        <source>Estimated time remaining: %n minute(s)</source>
-        <translation>
-            <numerusform>Estimated time remaining: %n minute</numerusform>
-            <numerusform>Estimated time remaining: %n minutes</numerusform>
-        </translation>
-    </message>
-    <message>
-        <location line="+30"/>
-        <source>Your proposal was submitted successfully.</source>
-        <translation>Your proposal was submitted successfully.</translation>
-    </message>
-    <message>
-        <location line="-13"/>
-        <source>Already submitted</source>
-        <translation>Already submitted</translation>
-    </message>
-    <message>
-        <location line="+0"/>
-        <source>This proposal has already been submitted.</source>
-        <translation>This proposal has already been submitted.</translation>
+        <location line="+76"/>
+        <source>For %1 payment(s) of %2 to %3</source>
+        <translation>For %1 payment(s) of %2 to %3</translation>
     </message>
     <message>
         <location line="+7"/>
-        <source>Submission failed</source>
-        <translation>Submission failed</translation>
+        <source>Unknown</source>
+        <translation>Unknown</translation>
     </message>
     <message>
-        <location line="+5"/>
-        <source>Proposal submitted</source>
-        <translation>Proposal submitted</translation>
+        <location line="+2"/>
+        <source>Pending</source>
+        <translation>Pending</translation>
     </message>
     <message>
-        <location line="+36"/>
-        <source>A fee of %1 will be burned when you prepare the proposal.</source>
-        <translation>A fee of %1 will be burned when you prepare the proposal.</translation>
+        <location line="+2"/>
+        <source>Ready</source>
+        <translation>Ready</translation>
     </message>
     <message>
-        <location line="+4"/>
-        <source>Prepare (burn %1) and wait for %2 confirmations.</source>
-        <translation>Prepare (burn %1) and wait for %2 confirmations.</translation>
+        <location line="+8"/>
+        <source>Collateral Hash</source>
+        <translation>Collateral Hash</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Collateral Status</source>
+        <translation>Collateral Status</translation>
+    </message>
+    <message>
+        <location line="+24"/>
+        <source>Broadcast</source>
+        <translation>Broadcast</translation>
+    </message>
+    <message>
+        <location line="+45"/>
+        <location line="+3"/>
+        <source>Broadcast proposal</source>
+        <translation>Broadcast proposal</translation>
+    </message>
+    <message>
+        <location line="-2"/>
+        <source>Proposal has been broadcasted to the network with hash %1</source>
+        <translation>Proposal has been broadcasted to the network with hash %1</translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>Unable to broadcast proposal, %1</source>
+        <translation>Unable to broadcast proposal, %1</translation>
     </message>
 </context>
 <context>
     <name>QObject</name>
     <message>
-        <location filename="../bitcoin.cpp" line="-276"/>
+        <location filename="../bitcoin.cpp" line="-290"/>
         <source>Do you want to reset settings to default values, or to abort without making changes?</source>
         <extracomment>Explanatory text shown on startup when the settings file cannot be read. Prompts user to make a choice between resetting or aborting.</extracomment>
         <translation>Do you want to reset settings to default values, or to abort without making changes?</translation>
@@ -3587,7 +3994,7 @@ Due to discontinued support, you should request the merchant to provide you with
         <translation>A fatal error occurred. Check that settings file is writable, or try running with -nosettings.</translation>
     </message>
     <message>
-        <location line="+277"/>
+        <location line="+291"/>
         <source>Choose data directory on startup (default: %u)</source>
         <translation>Choose data directory on startup (default: %u)</translation>
     </message>
@@ -3632,7 +4039,7 @@ Due to discontinued support, you should request the merchant to provide you with
         <translation>Show splash screen on startup (default: %u)</translation>
     </message>
     <message>
-        <location line="+98"/>
+        <location line="+123"/>
         <source>Error: Specified data directory &quot;%1&quot; does not exist.</source>
         <translation>Error: Specified data directory &quot;%1&quot; does not exist.</translation>
     </message>
@@ -3647,17 +4054,17 @@ Due to discontinued support, you should request the merchant to provide you with
         <translation>Error: %1</translation>
     </message>
     <message>
-        <location line="+51"/>
+        <location line="+50"/>
         <source>Error: Failed to load application fonts.</source>
         <translation>Error: Failed to load application fonts.</translation>
     </message>
     <message>
-        <location line="+13"/>
-        <source>Error: Specified font-family invalid. Valid values: %1.</source>
-        <translation>Error: Specified font-family invalid. Valid values: %1.</translation>
+        <location line="+18"/>
+        <source>Error: Font &quot;%1&quot; could not be loaded.</source>
+        <translation>Error: Font &quot;%1&quot; could not be loaded.</translation>
     </message>
     <message>
-        <location line="+10"/>
+        <location line="+9"/>
         <source>Error: Specified font-weight-normal invalid. Valid range %1 to %2.</source>
         <translation>Error: Specified font-weight-normal invalid. Valid range %1 to %2.</translation>
     </message>
@@ -3672,7 +4079,7 @@ Due to discontinued support, you should request the merchant to provide you with
         <translation>Error: Specified font-scale invalid. Valid range %1 to %2.</translation>
     </message>
     <message>
-        <location line="+14"/>
+        <location line="+17"/>
         <source>Error: Invalid -custom-css-dir path.</source>
         <translation>Error: Invalid -custom-css-dir path.</translation>
     </message>
@@ -3682,7 +4089,7 @@ Due to discontinued support, you should request the merchant to provide you with
         <translation>Error: %1 CSS file(s) missing in -custom-css-dir path.</translation>
     </message>
     <message>
-        <location line="+32"/>
+        <location line="+27"/>
         <source>%1 didn&apos;t yet exit safely…</source>
         <translation>%1 didn&apos;t yet exit safely…</translation>
     </message>
@@ -3692,7 +4099,7 @@ Due to discontinued support, you should request the merchant to provide you with
         <translation>Amount</translation>
     </message>
     <message>
-        <location filename="../guiutil.cpp" line="+294"/>
+        <location filename="../guiutil.cpp" line="+257"/>
         <source>Enter a Dash address (e.g. %1)</source>
         <translation>Enter a Dash address (e.g. %1)</translation>
     </message>
@@ -3717,7 +4124,7 @@ Due to discontinued support, you should request the merchant to provide you with
         <translation>Ctrl+W</translation>
     </message>
     <message>
-        <location line="+1034"/>
+        <location line="+485"/>
         <source>Unroutable</source>
         <translation>Unroutable</translation>
     </message>
@@ -3869,7 +4276,7 @@ Due to discontinued support, you should request the merchant to provide you with
     </message>
     <message>
         <location line="+2"/>
-        <location filename="../rpcconsole.cpp" line="+1114"/>
+        <location filename="../rpcconsole.cpp" line="+1146"/>
         <source>%1 kB</source>
         <translation>%1 kB</translation>
     </message>
@@ -3889,6 +4296,213 @@ Due to discontinued support, you should request the merchant to provide you with
         <location filename="../modaloverlay.cpp" line="-35"/>
         <source>unknown</source>
         <translation>unknown</translation>
+    </message>
+    <message>
+        <location filename="../appearancewidget.cpp" line="+49"/>
+        <source>Default monospace font &quot;%1&quot;</source>
+        <translation>Default monospace font &quot;%1&quot;</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Embedded &quot;%1&quot;</source>
+        <translation>Embedded &quot;%1&quot;</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Use existing font</source>
+        <translation>Use existing font</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Custom…</source>
+        <translation>Custom…</translation>
+    </message>
+    <message>
+        <location filename="../rpcconsole.cpp" line="-209"/>
+        <source>Error: Wallet controller not available.</source>
+        <translation>Error: Wallet controller not available.</translation>
+    </message>
+    <message>
+        <location line="+6"/>
+        <source>Error: Rescan failed. Wallet not loaded.</source>
+        <translation>Error: Rescan failed. Wallet not loaded.</translation>
+    </message>
+    <message>
+        <location filename="../masternodelist.cpp" line="+146"/>
+        <location filename="../masternodemodel.cpp" line="-269"/>
+        <source>UNKNOWN</source>
+        <translation>UNKNOWN</translation>
+    </message>
+    <message>
+        <location filename="../masternodemodel.cpp" line="+8"/>
+        <source>to %1</source>
+        <translation>to %1</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>to UNKNOWN</source>
+        <translation>to UNKNOWN</translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>but not claimed</source>
+        <translation>but not claimed</translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>NONE</source>
+        <translation>NONE</translation>
+    </message>
+    <message>
+        <location line="+43"/>
+        <source>ProTx Hash</source>
+        <translation>ProTx Hash</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>Public Key Operator</source>
+        <translation>Public Key Operator</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>Owner Address</source>
+        <translation>Owner Address</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Payout Address</source>
+        <translation>Payout Address</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Voting Address</source>
+        <translation>Voting Address</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Collateral Address</source>
+        <translation>Collateral Address</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <location filename="../proposalmodel.cpp" line="-260"/>
+        <source>Collateral Hash</source>
+        <translation>Collateral Hash</translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>Collateral Index</source>
+        <translation>Collateral Index</translation>
+    </message>
+    <message>
+        <location line="+4"/>
+        <source>Masternode Type</source>
+        <translation>Masternode Type</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Registered Height</source>
+        <translation>Registered Height</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Last Paid Height</source>
+        <translation>Last Paid Height</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>Consecutive Payments</source>
+        <translation>Consecutive Payments</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>Operator Reward</source>
+        <translation>Operator Reward</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>Network Addresses</source>
+        <translation>Network Addresses</translation>
+    </message>
+    <message>
+        <location line="+4"/>
+        <source>Platform HTTPS Addresses</source>
+        <translation>Platform HTTPS Addresses</translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>Platform P2P Addresses</source>
+        <translation>Platform P2P Addresses</translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>Platform Node ID</source>
+        <translation>Platform Node ID</translation>
+    </message>
+    <message>
+        <location line="+4"/>
+        <source>PoSe Penalty</source>
+        <translation>PoSe Penalty</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>PoSe Ban Height</source>
+        <translation>PoSe Ban Height</translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>PoSe Revived Height</source>
+        <translation>PoSe Revived Height</translation>
+    </message>
+    <message>
+        <location filename="../proposalmodel.cpp" line="-12"/>
+        <source>Title</source>
+        <translation>Title</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>URL</source>
+        <translation>URL</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>Destination Address</source>
+        <translation>Destination Address</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Payment Amount</source>
+        <translation>Payment Amount</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Payments Requested</source>
+        <translation>Payments Requested</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Payment Start</source>
+        <translation>Payment Start</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Payment End</source>
+        <translation>Payment End</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Object Hash</source>
+        <translation>Object Hash</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Parent Hash</source>
+        <translation>Parent Hash</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Collateral Date</source>
+        <translation>Collateral Date</translation>
     </message>
 </context>
 <context>
@@ -3912,7 +4526,7 @@ Due to discontinued support, you should request the merchant to provide you with
 <context>
     <name>QRImageWidget</name>
     <message>
-        <location filename="../qrimagewidget.cpp" line="+29"/>
+        <location filename="../qrimagewidget.cpp" line="+30"/>
         <source>&amp;Save Image…</source>
         <translation>&amp;Save Image…</translation>
     </message>
@@ -4018,7 +4632,7 @@ Due to discontinued support, you should request the merchant to provide you with
         <location line="+26"/>
         <location line="+26"/>
         <location line="+26"/>
-        <location filename="../rpcconsole.h" line="+166"/>
+        <location filename="../rpcconsole.h" line="+170"/>
         <source>N/A</source>
         <translation>N/A</translation>
     </message>
@@ -4109,7 +4723,12 @@ Due to discontinued support, you should request the merchant to provide you with
         <translation>&amp;Peers</translation>
     </message>
     <message>
-        <location line="+569"/>
+        <location line="+10"/>
+        <source>&amp;Repair</source>
+        <translation>&amp;Repair</translation>
+    </message>
+    <message>
+        <location line="+559"/>
         <source>Wallet:</source>
         <translation>Wallet:</translation>
     </message>
@@ -4120,7 +4739,7 @@ Due to discontinued support, you should request the merchant to provide you with
     </message>
     <message>
         <location line="+63"/>
-        <location filename="../rpcconsole.cpp" line="+181"/>
+        <location filename="../rpcconsole.cpp" line="+384"/>
         <source>Select a peer to view detailed information.</source>
         <translation>Select a peer to view detailed information.</translation>
     </message>
@@ -4210,32 +4829,7 @@ Due to discontinued support, you should request the merchant to provide you with
         <translation>Addresses Rate-Limited</translation>
     </message>
     <message>
-        <location line="+81"/>
-        <source>Rescan blockchain files 1</source>
-        <translation>Rescan blockchain files 1</translation>
-    </message>
-    <message>
-        <location line="+23"/>
-        <source>Rescan blockchain files 2</source>
-        <translation>Rescan blockchain files 2</translation>
-    </message>
-    <message>
-        <location line="-43"/>
-        <source>The buttons below will restart the wallet with command-line options to repair the wallet, fix issues with corrupt blockchain files or missing/obsolete transactions.</source>
-        <translation>The buttons below will restart the wallet with command-line options to repair the wallet, fix issues with corrupt blockchain files or missing/obsolete transactions.</translation>
-    </message>
-    <message>
-        <location line="+27"/>
-        <source>-rescan=1: Rescan the block chain for missing wallet transactions starting from wallet creation time.</source>
-        <translation>-rescan=1: Rescan the block chain for missing wallet transactions starting from wallet creation time.</translation>
-    </message>
-    <message>
-        <location line="+23"/>
-        <source>-rescan=2: Rescan the block chain for missing wallet transactions starting from genesis block.</source>
-        <translation>-rescan=2: Rescan the block chain for missing wallet transactions starting from genesis block.</translation>
-    </message>
-    <message>
-        <location line="-1649"/>
+        <location line="-1538"/>
         <location line="+1025"/>
         <source>User Agent</source>
         <translation>User Agent</translation>
@@ -4436,12 +5030,47 @@ Due to discontinued support, you should request the merchant to provide you with
         <translation>Time Offset</translation>
     </message>
     <message>
-        <location line="-1492"/>
-        <source>&amp;Wallet Repair</source>
-        <translation>&amp;Wallet Repair</translation>
+        <location line="+155"/>
+        <source>Repair options.</source>
+        <translation>Repair options.</translation>
     </message>
     <message>
-        <location line="+1567"/>
+        <location line="+10"/>
+        <source>The buttons below will trigger repair actions to fix issues with corrupt files or missing/obsolete transactions.</source>
+        <translation>The buttons below will trigger repair actions to fix issues with corrupt files or missing/obsolete transactions.</translation>
+    </message>
+    <message>
+        <location line="+20"/>
+        <source>Rescan Chain</source>
+        <translation>Rescan Chain</translation>
+    </message>
+    <message>
+        <location line="+7"/>
+        <source>Rescan the chain for missing wallet transactions starting from wallet creation time.</source>
+        <translation>Rescan the chain for missing wallet transactions starting from wallet creation time.</translation>
+    </message>
+    <message>
+        <location line="+16"/>
+        <source>Rescan Chain (full)</source>
+        <translation>Rescan Chain (full)</translation>
+    </message>
+    <message>
+        <location line="+7"/>
+        <source>Rescan the chain for missing wallet transactions starting from genesis block.</source>
+        <translation>Rescan the chain for missing wallet transactions starting from genesis block.</translation>
+    </message>
+    <message>
+        <location line="+10"/>
+        <source>Rebuild Index</source>
+        <translation>Rebuild Index</translation>
+    </message>
+    <message>
+        <location line="+7"/>
+        <source>Restarts the client to rebuild the chain index from current blk000??.dat files.</source>
+        <translation>Restarts the client to rebuild the chain index from current blk000??.dat files.</translation>
+    </message>
+    <message>
+        <location line="-157"/>
         <source>The total number of addresses received from this peer that were processed (excludes addresses that were dropped due to rate-limiting).</source>
         <extracomment>Tooltip text for the Addresses Processed field in the peer details area, which displays the total number of addresses received from this peer that were processed (excludes addresses that were dropped due to rate-limiting).</extracomment>
         <translation>The total number of addresses received from this peer that were processed (excludes addresses that were dropped due to rate-limiting).</translation>
@@ -4453,22 +5082,7 @@ Due to discontinued support, you should request the merchant to provide you with
         <translation>The total number of addresses received from this peer that were dropped (not processed) due to rate-limiting.</translation>
     </message>
     <message>
-        <location line="+54"/>
-        <source>Wallet repair options.</source>
-        <translation>Wallet repair options.</translation>
-    </message>
-    <message>
-        <location line="+70"/>
-        <source>Rebuild index</source>
-        <translation>Rebuild index</translation>
-    </message>
-    <message>
-        <location line="+7"/>
-        <source>-reindex: Rebuild block chain index from current blk000??.dat files.</source>
-        <translation>-reindex: Rebuild block chain index from current blk000??.dat files.</translation>
-    </message>
-    <message>
-        <location filename="../rpcconsole.cpp" line="-778"/>
+        <location filename="../rpcconsole.cpp" line="-810"/>
         <source>Inbound: initiated by peer</source>
         <extracomment>Explanatory text for an inbound peer connection.</extracomment>
         <translation>Inbound: initiated by peer</translation>
@@ -4534,7 +5148,7 @@ Due to discontinued support, you should request the merchant to provide you with
         <translation>no high bandwidth relay selected</translation>
     </message>
     <message>
-        <location line="+186"/>
+        <location line="+189"/>
         <source>&amp;Disconnect</source>
         <translation>&amp;Disconnect</translation>
     </message>
@@ -4564,7 +5178,7 @@ Due to discontinued support, you should request the merchant to provide you with
         <translation>&amp;Unban</translation>
     </message>
     <message>
-        <location line="+264"/>
+        <location line="+293"/>
         <source>In:</source>
         <translation>In:</translation>
     </message>
@@ -4649,7 +5263,7 @@ Due to discontinued support, you should request the merchant to provide you with
         <translation>Executing command using &quot;%1&quot; wallet</translation>
     </message>
     <message>
-        <location line="-638"/>
+        <location line="-670"/>
         <source>detecting: peer could be v1 or v2</source>
         <extracomment>Explanatory text for &quot;detecting&quot; transport type.</extracomment>
         <translation>detecting: peer could be v1 or v2</translation>
@@ -4667,9 +5281,9 @@ Due to discontinued support, you should request the merchant to provide you with
         <translation>v2: BIP324 encrypted transport protocol</translation>
     </message>
     <message>
-        <location line="+188"/>
+        <location line="+191"/>
         <source>&amp;Copy address</source>
-        <extracomment>Context menu action to copy the address of a peer</extracomment>
+        <extracomment>Context menu action to copy the address of a peer.</extracomment>
         <translation>&amp;Copy address</translation>
     </message>
     <message>
@@ -4680,11 +5294,11 @@ Due to discontinued support, you should request the merchant to provide you with
     <message>
         <location line="+28"/>
         <source>&amp;Copy IP/Netmask</source>
-        <extracomment>Context menu action to copy the IP/Netmask of a banned peer. IP/Netmask is the combination of a peer&apos;s IP address and its Netmask. For IP address see: https://en.wikipedia.org/wiki/IP_address</extracomment>
+        <extracomment>Context menu action to copy the IP/Netmask of a banned peer. IP/Netmask is the combination of a peer&apos;s IP address and its Netmask. For IP address, see: https://en.wikipedia.org/wiki/IP_address.</extracomment>
         <translation>&amp;Copy IP/Netmask</translation>
     </message>
     <message>
-        <location line="+221"/>
+        <location line="+250"/>
         <source>Welcome to the %1 RPC console.
 Use up and down arrows to navigate history, and %2 to clear screen.
 Use %3 and %4 to increase or decrease the font size.
@@ -4743,7 +5357,7 @@ For more information on using this console, type %6.
         <translation>Unknown</translation>
     </message>
     <message>
-        <location line="+48"/>
+        <location line="+55"/>
         <source>Never</source>
         <translation>Never</translation>
     </message>
@@ -4926,6 +5540,16 @@ For more information on using this console, type %6.
     </message>
     <message>
         <location line="+10"/>
+        <source>&amp;Verify</source>
+        <translation>&amp;Verify</translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>Verify this address on e.g. a hardware wallet screen</source>
+        <translation>Verify this address on e.g. a hardware wallet screen</translation>
+    </message>
+    <message>
+        <location line="+10"/>
         <source>&amp;Save Image…</source>
         <translation>&amp;Save Image…</translation>
     </message>
@@ -4935,7 +5559,7 @@ For more information on using this console, type %6.
         <translation>Request payment to %1</translation>
     </message>
     <message>
-        <location filename="../forms/receiverequestdialog.ui" line="-221"/>
+        <location filename="../forms/receiverequestdialog.ui" line="-234"/>
         <source>Payment information</source>
         <translation>Payment information</translation>
     </message>
@@ -4979,9 +5603,42 @@ For more information on using this console, type %6.
     </message>
 </context>
 <context>
+    <name>RescanWalletActivity</name>
+    <message>
+        <location filename="../walletcontroller.cpp" line="+111"/>
+        <source>Rescan unavailable</source>
+        <translation>Rescan unavailable</translation>
+    </message>
+    <message>
+        <location line="+0"/>
+        <source>Wallet is currently rescanning. Abort existing rescan or wait.</source>
+        <translation>Wallet is currently rescanning. Abort existing rescan or wait.</translation>
+    </message>
+    <message>
+        <location line="+4"/>
+        <source>Rescan wallet failed</source>
+        <translation>Rescan wallet failed</translation>
+    </message>
+    <message>
+        <location line="+0"/>
+        <source>Rescan failed. Potentially corrupted data files.</source>
+        <translation>Rescan failed. Potentially corrupted data files.</translation>
+    </message>
+    <message>
+        <location line="+7"/>
+        <source>Rescan aborted</source>
+        <translation>Rescan aborted</translation>
+    </message>
+    <message>
+        <location line="+0"/>
+        <source>Wallet rescan was aborted.</source>
+        <translation>Wallet rescan was aborted.</translation>
+    </message>
+</context>
+<context>
     <name>RestoreWalletActivity</name>
     <message>
-        <location filename="../walletcontroller.cpp" line="+44"/>
+        <location line="-72"/>
         <source>Restore Wallet</source>
         <extracomment>Title of progress window which is displayed when wallets are being restored.</extracomment>
         <translation>Restore Wallet</translation>
@@ -5015,7 +5672,7 @@ For more information on using this console, type %6.
     <name>SendCoinsDialog</name>
     <message>
         <location filename="../forms/sendcoinsdialog.ui" line="+14"/>
-        <location filename="../sendcoinsdialog.cpp" line="+777"/>
+        <location filename="../sendcoinsdialog.cpp" line="+843"/>
         <source>Send Coins</source>
         <translation>Send Coins</translation>
     </message>
@@ -5151,7 +5808,7 @@ For more information on using this console, type %6.
     </message>
     <message>
         <location line="+165"/>
-        <location filename="../sendcoinsdialog.cpp" line="-626"/>
+        <location filename="../sendcoinsdialog.cpp" line="-695"/>
         <source>Confirm the send action</source>
         <translation>Confirm the send action</translation>
     </message>
@@ -5222,23 +5879,23 @@ For more information on using this console, type %6.
         <translation>%1 (%2 blocks)</translation>
     </message>
     <message>
-        <location line="+190"/>
+        <location line="+216"/>
         <location line="+2"/>
         <source>using</source>
         <translation>using</translation>
     </message>
     <message>
-        <location line="-46"/>
+        <location line="-44"/>
         <source>%1 to %2</source>
         <translation>%1 to %2</translation>
     </message>
     <message>
-        <location line="+55"/>
+        <location line="+53"/>
         <source>&lt;b&gt;(%1 of %2 entries displayed)&lt;/b&gt;</source>
         <translation>&lt;b&gt;(%1 of %2 entries displayed)&lt;/b&gt;</translation>
     </message>
     <message>
-        <location line="-261"/>
+        <location line="-287"/>
         <source>S&amp;end mixed funds</source>
         <translation>S&amp;end mixed funds</translation>
     </message>
@@ -5248,22 +5905,17 @@ For more information on using this console, type %6.
         <translation>Confirm the %1 send action</translation>
     </message>
     <message>
-        <location line="+82"/>
+        <location line="+93"/>
         <source>Cr&amp;eate Unsigned</source>
         <translation>Cr&amp;eate Unsigned</translation>
     </message>
     <message>
-        <location line="+107"/>
-        <source> from wallet &apos;%1&apos;</source>
-        <translation> from wallet &apos;%1&apos;</translation>
-    </message>
-    <message>
-        <location line="+11"/>
+        <location line="+135"/>
         <source>%1 to &apos;%2&apos;</source>
         <translation>%1 to &apos;%2&apos;</translation>
     </message>
     <message>
-        <location line="+49"/>
+        <location line="+47"/>
         <source>%1 funds only</source>
         <translation>%1 funds only</translation>
     </message>
@@ -5326,7 +5978,7 @@ For more information on using this console, type %6.
         <translation>Confirm send coins</translation>
     </message>
     <message>
-        <location line="+45"/>
+        <location line="+88"/>
         <source>Save Transaction Data</source>
         <translation>Save Transaction Data</translation>
     </message>
@@ -5336,23 +5988,60 @@ For more information on using this console, type %6.
         <translation>PSBT saved</translation>
     </message>
     <message>
-        <location line="+177"/>
+        <location line="+179"/>
         <source>Watch-only balance:</source>
         <translation>Watch-only balance:</translation>
     </message>
     <message>
-        <location line="-489"/>
+        <location line="-549"/>
         <source>Creates a Partially Signed Blockchain Transaction (PSBT) for use with e.g. an offline %1 wallet, or a PSBT-compatible hardware wallet.</source>
         <translation>Creates a Partially Signed Blockchain Transaction (PSBT) for use with e.g. an offline %1 wallet, or a PSBT-compatible hardware wallet.</translation>
     </message>
     <message>
-        <location line="+139"/>
+        <location line="-11"/>
+        <source>Sign on device</source>
+        <extracomment>&quot;device&quot; usually means a hardware wallet.</extracomment>
+        <translation>Sign on device</translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>Connect your hardware wallet first.</source>
+        <translation>Connect your hardware wallet first.</translation>
+    </message>
+    <message>
+        <location line="+4"/>
+        <source>Set external signer script path in Options -&gt; Wallet</source>
+        <extracomment>&quot;External signer&quot; means using devices such as hardware wallets.</extracomment>
+        <translation>Set external signer script path in Options -&gt; Wallet</translation>
+    </message>
+    <message>
+        <location line="+103"/>
+        <source>Confirm duplicate recipients</source>
+        <translation>Confirm duplicate recipients</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>You are sending to the same address multiple times in a single transaction. This is unusual and may not be what you intended. Are you sure you want to proceed?</source>
+        <translation>You are sending to the same address multiple times in a single transaction. This is unusual and may not be what you intended. Are you sure you want to proceed?</translation>
+    </message>
+    <message>
+        <location line="+23"/>
+        <source>%1 from wallet &apos;%2&apos;</source>
+        <translation>%1 from wallet &apos;%2&apos;</translation>
+    </message>
+    <message>
+        <location line="+33"/>
         <source>Do you want to create this transaction?</source>
         <extracomment>Message displayed when attempting to create a transaction. Cautionary text to prompt the user to verify that the displayed transaction details represent the transaction the user intends to create.</extracomment>
         <translation>Do you want to create this transaction?</translation>
     </message>
     <message>
-        <location line="+9"/>
+        <location line="+3"/>
+        <source>Do you want to draft this transaction?</source>
+        <translation>Do you want to draft this transaction?</translation>
+    </message>
+    <message>
+        <location line="+4"/>
         <source>Please, review your transaction proposal. This will produce a Partially Signed Blockchain Transaction (PSBT) which you can save or copy and then sign with e.g. an offline %1 wallet, or a PSBT-compatible hardware wallet.</source>
         <extracomment>Text to inform a user attempting to create a transaction of their current options. At this stage, a user can only create a PSBT. This string is displayed when private keys are disabled and an external signer is not available.</extracomment>
         <translation>Please, review your transaction proposal. This will produce a Partially Signed Blockchain Transaction (PSBT) which you can save or copy and then sign with e.g. an offline %1 wallet, or a PSBT-compatible hardware wallet.</translation>
@@ -5375,13 +6064,35 @@ For more information on using this console, type %6.
         <translation>To review recipient list click &quot;Show Details…&quot;</translation>
     </message>
     <message>
-        <location line="+63"/>
+        <location line="+42"/>
+        <source>Sign failed</source>
+        <translation>Sign failed</translation>
+    </message>
+    <message>
+        <location line="+6"/>
+        <source>External signer not found</source>
+        <extracomment>&quot;External signer&quot; means using devices such as hardware wallets.</extracomment>
+        <translation>External signer not found</translation>
+    </message>
+    <message>
+        <location line="+6"/>
+        <source>External signer failure</source>
+        <extracomment>&quot;External signer&quot; means using devices such as hardware wallets.</extracomment>
+        <translation>External signer failure</translation>
+    </message>
+    <message>
+        <location line="+52"/>
         <source>Partially Signed Transaction (Binary)</source>
         <extracomment>Expanded name of the binary PSBT file format. See: BIP 174.</extracomment>
         <translation>Partially Signed Transaction (Binary)</translation>
     </message>
     <message>
-        <location line="+214"/>
+        <location line="+183"/>
+        <source>External balance:</source>
+        <translation>External balance:</translation>
+    </message>
+    <message>
+        <location line="+33"/>
         <source>The recipient address is not valid. Please recheck.</source>
         <translation>The recipient address is not valid. Please recheck.</translation>
     </message>
@@ -5402,11 +6113,6 @@ For more information on using this console, type %6.
     </message>
     <message>
         <location line="+3"/>
-        <source>Duplicate address found: addresses should only be used once each.</source>
-        <translation>Duplicate address found: addresses should only be used once each.</translation>
-    </message>
-    <message>
-        <location line="+3"/>
         <source>Transaction creation failed!</source>
         <translation>Transaction creation failed!</translation>
     </message>
@@ -5416,7 +6122,7 @@ For more information on using this console, type %6.
         <translation>A fee higher than %1 is considered an absurdly high fee.</translation>
     </message>
     <message numerus="yes">
-        <location line="+118"/>
+        <location line="+119"/>
         <source>Estimated to begin confirmation within %n block(s).</source>
         <translation>
             <numerusform>Estimated to begin confirmation within %n block.</numerusform>
@@ -5700,7 +6406,7 @@ For more information on using this console, type %6.
         <translation>Enter a signature for the message to be verified</translation>
     </message>
     <message>
-        <location filename="../signverifymessagedialog.cpp" line="+151"/>
+        <location filename="../signverifymessagedialog.cpp" line="+150"/>
         <location line="+99"/>
         <source>The entered address is invalid.</source>
         <translation>The entered address is invalid.</translation>
@@ -5774,7 +6480,7 @@ For more information on using this console, type %6.
 <context>
     <name>SplashScreen</name>
     <message>
-        <location filename="../splashscreen.cpp" line="+181"/>
+        <location filename="../splashscreen.cpp" line="+182"/>
         <source>(press q to shutdown and continue later)</source>
         <translation>(press q to shutdown and continue later)</translation>
     </message>
@@ -5787,7 +6493,7 @@ For more information on using this console, type %6.
 <context>
     <name>TrafficGraphWidget</name>
     <message>
-        <location filename="../trafficgraphwidget.cpp" line="+101"/>
+        <location filename="../trafficgraphwidget.cpp" line="+96"/>
         <source>kB/s</source>
         <translation>kB/s</translation>
     </message>
@@ -6036,22 +6742,9 @@ For more information on using this console, type %6.
     </message>
 </context>
 <context>
-    <name>TransactionDescDialog</name>
-    <message>
-        <location filename="../forms/transactiondescdialog.ui" line="+20"/>
-        <source>This pane shows a detailed description of the transaction</source>
-        <translation>This pane shows a detailed description of the transaction</translation>
-    </message>
-    <message>
-        <location filename="../transactiondescdialog.cpp" line="+20"/>
-        <source>Details for %1</source>
-        <translation>Details for %1</translation>
-    </message>
-</context>
-<context>
     <name>TransactionTableModel</name>
     <message>
-        <location filename="../transactiontablemodel.cpp" line="+277"/>
+        <location filename="../transactiontablemodel.cpp" line="+279"/>
         <source>Date</source>
         <translation>Date</translation>
     </message>
@@ -6066,7 +6759,7 @@ For more information on using this console, type %6.
         <translation>Address / Label</translation>
     </message>
     <message>
-        <location line="+78"/>
+        <location line="+80"/>
         <source>Unconfirmed</source>
         <translation>Unconfirmed</translation>
     </message>
@@ -6146,6 +6839,11 @@ For more information on using this console, type %6.
         <translation>Platform Transfer</translation>
     </message>
     <message>
+        <location line="+2"/>
+        <source>Dust Receive</source>
+        <translation>Dust Receive</translation>
+    </message>
+    <message>
         <location line="+3"/>
         <source>%1 Mixing</source>
         <translation>%1 Mixing</translation>
@@ -6176,17 +6874,17 @@ For more information on using this console, type %6.
         <translation>watch-only</translation>
     </message>
     <message>
-        <location line="+25"/>
+        <location line="+26"/>
         <source>(n/a)</source>
         <translation>(n/a)</translation>
     </message>
     <message>
-        <location line="+233"/>
+        <location line="+235"/>
         <source>(no label)</source>
         <translation>(no label)</translation>
     </message>
     <message>
-        <location line="+39"/>
+        <location line="+41"/>
         <source>Transaction status. Hover over this field to show number of confirmations.</source>
         <translation>Transaction status. Hover over this field to show number of confirmations.</translation>
     </message>
@@ -6219,7 +6917,7 @@ For more information on using this console, type %6.
 <context>
     <name>TransactionView</name>
     <message>
-        <location filename="../transactionview.cpp" line="+71"/>
+        <location filename="../transactionview.cpp" line="+72"/>
         <location line="+13"/>
         <source>All</source>
         <translation>All</translation>
@@ -6311,6 +7009,11 @@ For more information on using this console, type %6.
     </message>
     <message>
         <location line="+1"/>
+        <source>Dust Receive</source>
+        <translation>Dust Receive</translation>
+    </message>
+    <message>
+        <location line="+1"/>
         <source>Other</source>
         <translation>Other</translation>
     </message>
@@ -6368,6 +7071,11 @@ For more information on using this console, type %6.
         <location line="+1"/>
         <source>Rese&amp;nd transaction</source>
         <translation>Rese&amp;nd transaction</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>&amp;Unlock dust UTXO</source>
+        <translation>&amp;Unlock dust UTXO</translation>
     </message>
     <message>
         <location line="+1"/>
@@ -6452,7 +7160,12 @@ For more information on using this console, type %6.
         <translation>The transaction history was successfully saved to %1.</translation>
     </message>
     <message>
-        <location line="+158"/>
+        <location line="+180"/>
+        <source>Details for %1</source>
+        <translation>Details for %1</translation>
+    </message>
+    <message>
+        <location line="+19"/>
         <source>QR code</source>
         <translation>QR code</translation>
     </message>
@@ -6470,7 +7183,7 @@ For more information on using this console, type %6.
 <context>
     <name>UnitDisplayStatusBarControl</name>
     <message>
-        <location filename="../bitcoingui.cpp" line="+47"/>
+        <location filename="../bitcoingui.cpp" line="+45"/>
         <source>Unit to show amounts in. Click to select another unit.</source>
         <translation>Unit to show amounts in. Click to select another unit.</translation>
     </message>
@@ -6478,7 +7191,7 @@ For more information on using this console, type %6.
 <context>
     <name>WalletController</name>
     <message>
-        <location filename="../walletcontroller.cpp" line="-323"/>
+        <location filename="../walletcontroller.cpp" line="-423"/>
         <source>Close wallet</source>
         <translation>Close wallet</translation>
     </message>
@@ -6555,12 +7268,17 @@ Go to File &gt; Open Wallet to load a wallet.
 <context>
     <name>WalletModel</name>
     <message>
-        <location filename="../walletmodel.cpp" line="+269"/>
+        <location filename="../walletmodel.cpp" line="+356"/>
         <source>Send Coins</source>
         <translation>Send Coins</translation>
     </message>
     <message>
-        <location line="+325"/>
+        <location line="+330"/>
+        <source>Can&apos;t display address</source>
+        <translation>Can&apos;t display address</translation>
+    </message>
+    <message>
+        <location line="+18"/>
         <source>default wallet</source>
         <translation>default wallet</translation>
     </message>
@@ -6568,7 +7286,7 @@ Go to File &gt; Open Wallet to load a wallet.
 <context>
     <name>WalletView</name>
     <message>
-        <location filename="../walletview.cpp" line="+53"/>
+        <location filename="../walletview.cpp" line="+55"/>
         <source>&amp;Export</source>
         <translation>&amp;Export</translation>
     </message>
@@ -6583,7 +7301,7 @@ Go to File &gt; Open Wallet to load a wallet.
         <translation>Selected amount:</translation>
     </message>
     <message>
-        <location line="+246"/>
+        <location line="+235"/>
         <source>Wallet Data</source>
         <extracomment>Name of the wallet data file format.</extracomment>
         <translation>Wallet Data</translation>
@@ -6614,7 +7332,33 @@ Go to File &gt; Open Wallet to load a wallet.
         <translation>The wallet data was successfully saved to %1.</translation>
     </message>
     <message>
-        <location line="+42"/>
+        <location line="+16"/>
+        <location line="+6"/>
+        <source>No Recovery Phrase</source>
+        <translation>No Recovery Phrase</translation>
+    </message>
+    <message>
+        <location line="-5"/>
+        <source>This wallet does not have private keys and therefore has no recovery phrase.</source>
+        <translation>This wallet does not have private keys and therefore has no recovery phrase.</translation>
+    </message>
+    <message>
+        <location line="+6"/>
+        <source>This wallet was not created with HD (Hierarchical Deterministic) mode and does not have a recovery phrase.</source>
+        <translation>This wallet was not created with HD (Hierarchical Deterministic) mode and does not have a recovery phrase.</translation>
+    </message>
+    <message>
+        <location line="+17"/>
+        <source>Mnemonic Retrieval Failed</source>
+        <translation>Mnemonic Retrieval Failed</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Could not retrieve the recovery phrase from this wallet.</source>
+        <translation>Could not retrieve the recovery phrase from this wallet.</translation>
+    </message>
+    <message>
+        <location line="+49"/>
         <source>Cancel</source>
         <translation>Cancel</translation>
     </message>
@@ -6622,7 +7366,7 @@ Go to File &gt; Open Wallet to load a wallet.
 <context>
     <name>dash-core</name>
     <message>
-        <location filename="../dashstrings.cpp" line="+150"/>
+        <location filename="../dashstrings.cpp" line="+156"/>
         <source>This error could occur if this wallet was not shutdown cleanly and was last loaded using a build with a newer version of Berkeley DB. If so, please use the software that last loaded this wallet</source>
         <translation>This error could occur if this wallet was not shutdown cleanly and was last loaded using a build with a newer version of Berkeley DB. If so, please use the software that last loaded this wallet</translation>
     </message>
@@ -6632,7 +7376,7 @@ Go to File &gt; Open Wallet to load a wallet.
         <translation>This is a pre-release test build - use at your own risk - do not use for mining or merchant applications</translation>
     </message>
     <message>
-        <location line="+43"/>
+        <location line="+39"/>
         <source>Warning: We do not appear to fully agree with our peers! You may need to upgrade, or other nodes may need to upgrade.</source>
         <translation>Warning: We do not appear to fully agree with our peers! You may need to upgrade, or other nodes may need to upgrade.</translation>
     </message>
@@ -6642,7 +7386,7 @@ Go to File &gt; Open Wallet to load a wallet.
         <translation>Already have that input.</translation>
     </message>
     <message>
-        <location line="+11"/>
+        <location line="+12"/>
         <source>Collateral not valid.</source>
         <translation>Collateral not valid.</translation>
     </message>
@@ -6692,7 +7436,7 @@ Go to File &gt; Open Wallet to load a wallet.
         <translation>Error reading from database, shutting down.</translation>
     </message>
     <message>
-        <location line="+9"/>
+        <location line="+10"/>
         <source>Error: Missing checksum</source>
         <translation>Error: Missing checksum</translation>
     </message>
@@ -6712,7 +7456,7 @@ Go to File &gt; Open Wallet to load a wallet.
         <translation>Failed to listen on any port. Use -listen=0 if you want this.</translation>
     </message>
     <message>
-        <location line="-193"/>
+        <location line="-191"/>
         <source>Found unconfirmed denominated outputs, will wait till they confirm to continue.</source>
         <translation>Found unconfirmed denominated outputs, will wait till they confirm to continue.</translation>
     </message>
@@ -6727,12 +7471,7 @@ Go to File &gt; Open Wallet to load a wallet.
         <translation>SQLiteDatabase: Unknown sqlite wallet schema version %d. Only version %d is supported</translation>
     </message>
     <message>
-        <location line="+28"/>
-        <source>Transaction index can&apos;t be disabled with governance validation enabled. Either start with -disablegovernance command line switch or enable transaction index.</source>
-        <translation>Transaction index can&apos;t be disabled with governance validation enabled. Either start with -disablegovernance command line switch or enable transaction index.</translation>
-    </message>
-    <message>
-        <location line="+13"/>
+        <location line="+37"/>
         <source>Unsupported category-specific logging level -loglevel=%s. Expected -loglevel=&lt;category&gt;:&lt;loglevel&gt;. Valid categories: %s. Valid loglevels: %s.</source>
         <translation>Unsupported category-specific logging level -loglevel=%s. Expected -loglevel=&lt;category&gt;:&lt;loglevel&gt;. Valid categories: %s. Valid loglevels: %s.</translation>
     </message>
@@ -6742,7 +7481,7 @@ Go to File &gt; Open Wallet to load a wallet.
         <translation>Can&apos;t mix: no compatible inputs found!</translation>
     </message>
     <message>
-        <location line="+19"/>
+        <location line="+20"/>
         <source>Entry exceeds maximum size.</source>
         <translation>Entry exceeds maximum size.</translation>
     </message>
@@ -6752,7 +7491,7 @@ Go to File &gt; Open Wallet to load a wallet.
         <translation>Error upgrading evo database for EHF</translation>
     </message>
     <message>
-        <location line="+14"/>
+        <location line="+15"/>
         <source>Failed to commit Evo database</source>
         <translation>Failed to commit Evo database</translation>
     </message>
@@ -6872,7 +7611,7 @@ Go to File &gt; Open Wallet to load a wallet.
         <translation>Transaction change output index out of range</translation>
     </message>
     <message>
-        <location line="+20"/>
+        <location line="+21"/>
         <source>Unable to start HTTP server. See debug log for details.</source>
         <translation>Unable to start HTTP server. See debug log for details.</translation>
     </message>
@@ -6892,7 +7631,7 @@ Go to File &gt; Open Wallet to load a wallet.
         <translation>User Agent comment (%s) contains unsafe characters.</translation>
     </message>
     <message>
-        <location line="-184"/>
+        <location line="-187"/>
         <source>Can&apos;t find random Masternode.</source>
         <translation>Can&apos;t find random Masternode.</translation>
     </message>
@@ -6912,7 +7651,7 @@ Go to File &gt; Open Wallet to load a wallet.
         <translation>Can&apos;t mix while sync in progress.</translation>
     </message>
     <message>
-        <location line="+87"/>
+        <location line="+89"/>
         <source>Invalid netmask specified in -whitelist: &apos;%s&apos;</source>
         <translation>Invalid netmask specified in -whitelist: &apos;%s&apos;</translation>
     </message>
@@ -6922,12 +7661,32 @@ Go to File &gt; Open Wallet to load a wallet.
         <translation>Invalid script detected.</translation>
     </message>
     <message>
-        <location line="-295"/>
+        <location line="-299"/>
         <source>%s file contains all private keys from this wallet. Do not share it with anyone!</source>
         <translation>%s file contains all private keys from this wallet. Do not share it with anyone!</translation>
     </message>
     <message>
-        <location line="+52"/>
+        <location line="+5"/>
+        <source>%s request to listen on port %u. This port is considered &quot;bad&quot; and thus it is unlikely that any peer will connect to it. See doc/p2p-bad-ports.md for details and a full list.</source>
+        <translation>%s request to listen on port %u. This port is considered &quot;bad&quot; and thus it is unlikely that any peer will connect to it. See doc/p2p-bad-ports.md for details and a full list.</translation>
+    </message>
+    <message>
+        <location line="+27"/>
+        <source>Disk space for %s may not accommodate the block files. Approximately %u GB of data will be stored in this directory.</source>
+        <translation>Disk space for %s may not accommodate the block files. Approximately %u GB of data will be stored in this directory.</translation>
+    </message>
+    <message>
+        <location line="+6"/>
+        <source>Error loading %s: External signer wallet being loaded without external signer support compiled</source>
+        <translation>Error loading %s: External signer wallet being loaded without external signer support compiled</translation>
+    </message>
+    <message>
+        <location line="+17"/>
+        <source>Error: Dumpfile version is not supported. This version of dash-wallet only supports version 1 dumpfiles. Got dumpfile with version %s</source>
+        <translation>Error: Dumpfile version is not supported. This version of dash-wallet only supports version 1 dumpfiles. Got dumpfile with version %s</translation>
+    </message>
+    <message>
+        <location line="+3"/>
         <source>Failed to create backup, file already exists! This could happen if you restarted wallet in less than 60 seconds. You can continue if you are ok with this.</source>
         <translation>Failed to create backup, file already exists! This could happen if you restarted wallet in less than 60 seconds. You can continue if you are ok with this.</translation>
     </message>
@@ -6967,7 +7726,7 @@ Go to File &gt; Open Wallet to load a wallet.
         <translation>Total length of network version string (%i) exceeds maximum length (%i). Reduce the number or size of uacomments.</translation>
     </message>
     <message>
-        <location line="+22"/>
+        <location line="+18"/>
         <source>WARNING! Failed to replenish keypool, please unlock your wallet to do so.</source>
         <translation>WARNING! Failed to replenish keypool, please unlock your wallet to do so.</translation>
     </message>
@@ -6998,6 +7757,11 @@ Go to File &gt; Open Wallet to load a wallet.
     </message>
     <message>
         <location line="+8"/>
+        <source>Cannot set -forcednsseed to true when setting -dnsseed to false.</source>
+        <translation>Cannot set -forcednsseed to true when setting -dnsseed to false.</translation>
+    </message>
+    <message>
+        <location line="+1"/>
         <source>Cannot set -peerblockfilters without -blockfilterindex.</source>
         <translation>Cannot set -peerblockfilters without -blockfilterindex.</translation>
     </message>
@@ -7028,6 +7792,11 @@ Go to File &gt; Open Wallet to load a wallet.
     </message>
     <message>
         <location line="+9"/>
+        <source>Error: Cannot extract destination from the generated scriptpubkey</source>
+        <translation>Error: Cannot extract destination from the generated scriptpubkey</translation>
+    </message>
+    <message>
+        <location line="+1"/>
         <source>Error: Couldn&apos;t create cursor into database</source>
         <translation>Error: Couldn&apos;t create cursor into database</translation>
     </message>
@@ -7273,6 +8042,11 @@ Go to File &gt; Open Wallet to load a wallet.
     </message>
     <message>
         <location line="+1"/>
+        <source>Unable to find UTXO for external input</source>
+        <translation>Unable to find UTXO for external input</translation>
+    </message>
+    <message>
+        <location line="+1"/>
         <source>Unable to generate initial keys</source>
         <translation>Unable to generate initial keys</translation>
     </message>
@@ -7332,7 +8106,7 @@ Go to File &gt; Open Wallet to load a wallet.
         <translation>see debug.log for details.</translation>
     </message>
     <message>
-        <location line="-411"/>
+        <location line="-416"/>
         <source>The %s developers</source>
         <translation>The %s developers</translation>
     </message>
@@ -7367,12 +8141,12 @@ Go to File &gt; Open Wallet to load a wallet.
         <translation>Cannot obtain a lock on data directory %s. %s is probably already running.</translation>
     </message>
     <message>
-        <location line="+5"/>
+        <location line="+8"/>
         <source>Distributed under the MIT software license, see the accompanying file %s or %s</source>
         <translation>Distributed under the MIT software license, see the accompanying file %s or %s</translation>
     </message>
     <message>
-        <location line="+3"/>
+        <location line="+6"/>
         <source>Error loading %s: You can&apos;t enable HD on an already existing non-HD wallet</source>
         <translation>Error loading %s: You can&apos;t enable HD on an already existing non-HD wallet</translation>
     </message>
@@ -7397,12 +8171,7 @@ Go to File &gt; Open Wallet to load a wallet.
         <translation>Error: Dumpfile identifier record is incorrect. Got &quot;%s&quot;, expected &quot;%s&quot;.</translation>
     </message>
     <message>
-        <location line="+2"/>
-        <source>Error: Dumpfile version is not supported. This version of bitcoin-wallet only supports version 1 dumpfiles. Got dumpfile with version %s</source>
-        <translation>Error: Dumpfile version is not supported. This version of bitcoin-wallet only supports version 1 dumpfiles. Got dumpfile with version %s</translation>
-    </message>
-    <message>
-        <location line="+7"/>
+        <location line="+9"/>
         <source>Failed to rename invalid peers.dat file. Please move or delete it and try again.</source>
         <translation>Failed to rename invalid peers.dat file. Please move or delete it and try again.</translation>
     </message>
@@ -7502,7 +8271,7 @@ Go to File &gt; Open Wallet to load a wallet.
         <translation>This is the transaction fee you may pay when fee estimates are not available.</translation>
     </message>
     <message>
-        <location line="+9"/>
+        <location line="+5"/>
         <source>Transaction requires one destination of non-0 value, a non-0 feerate, or a pre-selected input</source>
         <translation>Transaction requires one destination of non-0 value, a non-0 feerate, or a pre-selected input</translation>
     </message>
@@ -7607,7 +8376,7 @@ Go to File &gt; Open Wallet to load a wallet.
         <translation>Cannot resolve -%s address: &apos;%s&apos;</translation>
     </message>
     <message>
-        <location line="+2"/>
+        <location line="+3"/>
         <source>Cannot write to data directory &apos;%s&apos;; check permissions.</source>
         <translation>Cannot write to data directory &apos;%s&apos;; check permissions.</translation>
     </message>
@@ -7657,7 +8426,7 @@ Go to File &gt; Open Wallet to load a wallet.
         <translation>Error reading next record from wallet database</translation>
     </message>
     <message>
-        <location line="+62"/>
+        <location line="+63"/>
         <source>Loading P2P addresses…</source>
         <translation>Loading P2P addresses…</translation>
     </message>
@@ -7802,7 +8571,7 @@ Go to File &gt; Open Wallet to load a wallet.
         <translation>Last queue was created too recently.</translation>
     </message>
     <message>
-        <location line="-300"/>
+        <location line="-304"/>
         <source>%s corrupt. Try using the wallet tool dash-wallet to salvage or restoring a backup.</source>
         <translation>%s corrupt. Try using the wallet tool dash-wallet to salvage or restoring a backup.</translation>
     </message>
@@ -7812,17 +8581,12 @@ Go to File &gt; Open Wallet to load a wallet.
         <translation>%s is set very high! Fees this large could be paid on a single transaction.</translation>
     </message>
     <message>
-        <location line="+2"/>
-        <source>%s request to listen on port %u. This port is considered &quot;bad&quot; and thus it is unlikely that any Dash Core peers connect to it. See doc/p2p-bad-ports.md for details and a full list.</source>
-        <translation>%s request to listen on port %u. This port is considered &quot;bad&quot; and thus it is unlikely that any Dash Core peers connect to it. See doc/p2p-bad-ports.md for details and a full list.</translation>
-    </message>
-    <message>
-        <location line="+24"/>
+        <location line="+26"/>
         <source>Cannot provide specific connections and have addrman find outgoing connections at the same time.</source>
         <translation>Cannot provide specific connections and have addrman find outgoing connections at the same time.</translation>
     </message>
     <message>
-        <location line="+236"/>
+        <location line="+240"/>
         <source>Failed to upgrade Evo database</source>
         <translation>Failed to upgrade Evo database</translation>
     </message>
@@ -7942,7 +8706,7 @@ Go to File &gt; Open Wallet to load a wallet.
         <translation>Unable to bind to %s on this computer (bind returned error %s)</translation>
     </message>
     <message>
-        <location line="+4"/>
+        <location line="+5"/>
         <source>Unable to locate enough mixed funds for this transaction.</source>
         <translation>Unable to locate enough mixed funds for this transaction.</translation>
     </message>
@@ -8042,7 +8806,7 @@ Go to File &gt; Open Wallet to load a wallet.
         <translation>Your entries added successfully.</translation>
     </message>
     <message>
-        <location filename="../bitcoin.cpp" line="-599"/>
+        <location filename="../bitcoin.cpp" line="-639"/>
         <source>Settings file could not be read</source>
         <translation>Settings file could not be read</translation>
     </message>

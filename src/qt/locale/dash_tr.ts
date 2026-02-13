@@ -173,6 +173,10 @@
         <source>Font Weight Bold:</source>
         <translation>Yazı Tipi Genişliği Kalın:</translation>
     </message>
+    <message>
+        <source>Font in the Overview tab: </source>
+        <translation>Genel Bakış sekmesindeki yazı tipi: </translation>
+    </message>
 </context>
 <context>
     <name>AskPassphraseDialog</name>
@@ -325,6 +329,10 @@
 </context>
 <context>
     <name>BitcoinApplication</name>
+    <message>
+        <source>Settings file %1 might be corrupt or invalid.</source>
+        <translation>Ayarlar dosyası %1 bozuk veya geçersiz olabilir.</translation>
+    </message>
     <message>
         <source>Runaway exception</source>
         <translation>Kontrolsüz istisna</translation>
@@ -501,6 +509,14 @@
         <translation>Cüzdan şifrelemesi için kullanılan parolayı değiştir</translation>
     </message>
     <message>
+        <source>&amp;Show Recovery Phrase…</source>
+        <translation>Kurtarma İfadesini &amp;Göster…</translation>
+    </message>
+    <message>
+        <source>Show the recovery phrase (mnemonic seed) for this wallet</source>
+        <translation>Bu cüzdan için kurtarma ifadesini (anımsatıcı tohum) göster</translation>
+    </message>
+    <message>
         <source>Unlock wallet</source>
         <translation>Cüzdan kilidini kaldır</translation>
     </message>
@@ -587,6 +603,26 @@
     <message>
         <source>%1 client</source>
         <translation>%1 istemci</translation>
+    </message>
+    <message>
+        <source>Waiting for blockchain sync…</source>
+        <translation>Blok zinciri senkronizasyonu bekleniyor…</translation>
+    </message>
+    <message>
+        <source>Synchronizing governance data…</source>
+        <translation>Yönetişim verileri senkronize ediliyor…</translation>
+    </message>
+    <message numerus="yes">
+        <source>~%n day(s) (%1 blocks) left for superblock</source>
+        <translation><numerusform>Süper bloğa ~%n gün (%1 blok) kaldı</numerusform><numerusform>Süper bloğa ~%n gün (%1 blok) kaldı</numerusform></translation>
+    </message>
+    <message numerus="yes">
+        <source>~%n day(s) (%1 blocks) left for voting</source>
+        <translation><numerusform>Oylamaya ~%n gün (%1 blok) kaldı</numerusform><numerusform>Oylamaya ~%n gün (%1 blok) kaldı</numerusform></translation>
+    </message>
+    <message>
+        <source>~%1% of budget committed (%2 %3).</source>
+        <translation>~%1% bütçe taahhüt edildi (%2 %3).</translation>
     </message>
     <message>
         <source>Wallet: %1
@@ -808,10 +844,6 @@
     <message>
         <source>Up to date</source>
         <translation>Güncel</translation>
-    </message>
-    <message>
-        <source>Synchronizing additional data: %p%</source>
-        <translation>Ek veri eşleniyor: %p%</translation>
     </message>
     <message>
         <source>Error</source>
@@ -1115,6 +1147,38 @@
         <source>Create wallet warning</source>
         <translation>Cüzdan uyarısı oluştur</translation>
     </message>
+    <message>
+        <source>Unlock failed</source>
+        <translation>Kilit açma başarısız</translation>
+    </message>
+    <message>
+        <source>Failed to unlock wallet for mnemonic verification. Wallet creation completed but verification skipped.</source>
+        <translation>Anımsatıcı doğrulama için cüzdan kilidi açılamadı. Cüzdan oluşturma tamamlandı ancak doğrulama atlandı.</translation>
+    </message>
+    <message>
+        <source>Mnemonic retrieval failed</source>
+        <translation>Anımsatıcı alınamadı</translation>
+    </message>
+    <message>
+        <source>Could not retrieve mnemonic phrase from wallet. Wallet creation completed but verification skipped.</source>
+        <translation>Cüzdandan anımsatıcı ifade alınamadı. Cüzdan oluşturma tamamlandı ancak doğrulama atlandı.</translation>
+    </message>
+    <message>
+        <source>Verification cancelled</source>
+        <translation>Doğrulama iptal edildi</translation>
+    </message>
+    <message>
+        <source>You cancelled mnemonic verification. Please make sure you have saved your mnemonic phrase safely.</source>
+        <translation>Anımsatıcı doğrulamayı iptal ettiniz. Lütfen anımsatıcı ifadenizi güvenli bir şekilde kaydettiğinizden emin olun.</translation>
+    </message>
+    <message>
+        <source>Can't list signers</source>
+        <translation>İmzalayıcılar listelenemedi</translation>
+    </message>
+    <message>
+        <source>Too many external signers found</source>
+        <translation>Çok fazla harici imzalayıcı bulundu</translation>
+    </message>
 </context>
 <context>
     <name>CreateWalletDialog</name>
@@ -1139,8 +1203,24 @@
         <translation>Cüzdanı Şifrele</translation>
     </message>
     <message>
-        <source>Advanced Options</source>
-        <translation>Gelişmiş Seçenekler</translation>
+        <source>Use descriptors for scriptPubKey management.</source>
+        <translation>scriptPubKey yönetimi için tanımlayıcıları kullanın.</translation>
+    </message>
+    <message>
+        <source>Descriptor Wallet</source>
+        <translation>Tanımlayıcı Cüzdan</translation>
+    </message>
+    <message>
+        <source>Use an external signing device such as a hardware wallet. Configure the external signer script in wallet preferences first.</source>
+        <translation>Donanım cüzdanı gibi harici bir imzalama cihazı kullanın. Önce cüzdan tercihlerinde harici imzalayıcı betiğini yapılandırın.</translation>
+    </message>
+    <message>
+        <source>External signer</source>
+        <translation>Harici imzalayıcı</translation>
+    </message>
+    <message>
+        <source>Show Advanced Options</source>
+        <translation>Gelişmiş Seçenekleri Göster</translation>
     </message>
     <message>
         <source>Disable private keys for this wallet. Wallets with private keys disabled will have no private keys and cannot have an HD seed or imported private keys. This is ideal for watch-only wallets.</source>
@@ -1159,20 +1239,28 @@
         <translation>Boş Bir Cüzdan Oluşturun</translation>
     </message>
     <message>
-        <source>Use descriptors for scriptPubKey management. This feature is well-tested but still considered experimental and not recommended for use yet.</source>
-        <translation>scriptPubKey yönetimi için tanımlayıcıları kullanın. Bu özellik iyi test edilmiştir ancak hala deneysel olarak kabul edilir ve henüz kullanımı önerilmez.</translation>
-    </message>
-    <message>
-        <source>Descriptor Wallet (EXPERIMENTAL)</source>
-        <translation>Tanımlayıcı Cüzdan (DENEYSEL)</translation>
-    </message>
-    <message>
         <source>Create</source>
         <translation>Oluştur</translation>
     </message>
     <message>
+        <source>Hide Advanced Options</source>
+        <translation>Gelişmiş Seçenekleri Gizle</translation>
+    </message>
+    <message>
         <source>Compiled without sqlite support (required for descriptor wallets)</source>
         <translation>SQLite desteği olmadan derlenmiş (tanımlayıcı cüzdanlar için gerekli)</translation>
+    </message>
+    <message>
+        <source>Compiled without external signing support (required for external signing)</source>
+        <extracomment>"External signing" means using devices such as hardware wallets.</extracomment>
+        <translation>Harici imzalama desteği olmadan derlendi (harici imzalama için gerekli)</translation>
+    </message>
+</context>
+<context>
+    <name>DescriptionDialog</name>
+    <message>
+        <source>This pane shows detailed information</source>
+        <translation>Bu panel ayrıntılı bilgileri gösterir</translation>
     </message>
 </context>
 <context>
@@ -1260,10 +1348,6 @@
         <translation>Form</translation>
     </message>
     <message>
-        <source>Filter List:</source>
-        <translation>Filtre Listesi:</translation>
-    </message>
-    <message>
         <source>Filter proposal list</source>
         <translation>Teklif listesini filtrele</translation>
     </message>
@@ -1276,12 +1360,24 @@
         <translation>Bu cüzdanın oy verebileceği masternode sayısı (bu cüzdanın oy anahtarını tuttuğu masternodelar)</translation>
     </message>
     <message>
+        <source>No active proposals on the network.</source>
+        <translation>Ağda aktif teklif bulunmuyor.</translation>
+    </message>
+    <message>
+        <source>Resume Proposal</source>
+        <translation>Teklife Devam Et</translation>
+    </message>
+    <message>
         <source>Proposal Count:</source>
         <translation>Teklif Sayısı:</translation>
     </message>
     <message>
         <source>Create Proposal</source>
         <translation>Teklif Oluştur</translation>
+    </message>
+    <message>
+        <source>Select proposals to display</source>
+        <translation>Görüntülenecek teklifleri seçin</translation>
     </message>
     <message>
         <source>Filter by Title</source>
@@ -1308,8 +1404,76 @@
         <translation>Çekimser Oy</translation>
     </message>
     <message>
-        <source>Proposal Info: %1</source>
-        <translation>Teklif Bilgisi: %1</translation>
+        <source>Active Proposals</source>
+        <translation>Aktif Teklifler</translation>
+    </message>
+    <message>
+        <source>My Proposals</source>
+        <translation>Tekliflerim</translation>
+    </message>
+    <message>
+        <source>No proposals recorded in wallet file.</source>
+        <translation>Cüzdan dosyasında kayıtlı teklif bulunmuyor.</translation>
+    </message>
+    <message>
+        <source>Resume proposal</source>
+        <translation>Teklife devam et</translation>
+    </message>
+    <message>
+        <source>Copy Raw JSON</source>
+        <translation>Ham JSON Kopyala</translation>
+    </message>
+    <message>
+        <source>Open Proposal URL…</source>
+        <translation>Teklif URL'sini Aç…</translation>
+    </message>
+    <message>
+        <source>Details for %1</source>
+        <translation>%1 için ayrıntılar</translation>
+    </message>
+    <message>
+        <source>Cannot interact with governance before sync completes</source>
+        <translation>Senkronizasyon tamamlanmadan yönetişimle etkileşim kurulamaz</translation>
+    </message>
+    <message>
+        <source>Creates a new proposal</source>
+        <translation>Yeni bir teklif oluşturur</translation>
+    </message>
+    <message>
+        <source>Resumes an existing proposal</source>
+        <translation>Mevcut bir teklife devam eder</translation>
+    </message>
+    <message>
+        <source>Creating proposals costs %1, insufficient balance</source>
+        <translation>Teklif oluşturma maliyeti %1, yetersiz bakiye</translation>
+    </message>
+    <message>
+        <source>Error</source>
+        <translation>Hata</translation>
+    </message>
+    <message>
+        <source>Cannot validate URL, potentially malformed or unknown protocol.</source>
+        <translation>URL doğrulanamıyor, muhtemelen hatalı biçimlendirilmiş veya bilinmeyen protokol.</translation>
+    </message>
+    <message>
+        <source>External Link Warning</source>
+        <translation>Harici Bağlantı Uyarısı</translation>
+    </message>
+    <message>
+        <source>You are about to open the following URL in your default browser
+
+%1
+
+This content was submitted by a user. It may not match what is described in the title.
+
+Do you wish to continue?</source>
+        <translation>Varsayılan tarayıcınızda aşağıdaki URL'yi açmak üzeresiniz
+
+%1
+
+Bu içerik bir kullanıcı tarafından gönderilmiştir. Başlıkta açıklananla eşleşmeyebilir.
+
+Devam etmek istiyor musunuz?</translation>
     </message>
     <message>
         <source>Voting Failed</source>
@@ -1478,7 +1642,13 @@
 <context>
     <name>LoadWalletsActivity</name>
     <message>
+        <source>Load Wallets</source>
+        <extracomment>Title of progress window which is displayed when wallets are being loaded.</extracomment>
+        <translation>Cüzdanları Yükle</translation>
+    </message>
+    <message>
         <source>Loading wallets…</source>
+        <extracomment>Descriptive text of the load wallets progress window which indicates to the user that wallets are currently being loaded.</extracomment>
         <translation>Cüzdanlar yükleniyor…</translation>
     </message>
 </context>
@@ -1489,16 +1659,36 @@
         <translation>Form</translation>
     </message>
     <message>
-        <source>Status</source>
-        <translation>Durum</translation>
+        <source>Filter by masternode type</source>
+        <translation>Masternode türüne göre filtrele</translation>
     </message>
     <message>
-        <source>Filter List:</source>
-        <translation>Filtre Listesi:</translation>
+        <source>All</source>
+        <translation>Tümü</translation>
+    </message>
+    <message>
+        <source>Regular</source>
+        <translation>Normal</translation>
+    </message>
+    <message>
+        <source>Evo</source>
+        <translation>Evo</translation>
     </message>
     <message>
         <source>Filter masternode list</source>
         <translation>Ana düğüm listesini filtrele</translation>
+    </message>
+    <message>
+        <source>Owned</source>
+        <translation>Sahip olunan</translation>
+    </message>
+    <message>
+        <source>Hide masternodes that are currently PoSe banned.</source>
+        <translation>Şu anda PoSe yasaklı olan masternode'ları gizle.</translation>
+    </message>
+    <message>
+        <source>Hide banned</source>
+        <translation>Yasaklıları gizle</translation>
     </message>
     <message>
         <source>Node Count:</source>
@@ -1509,8 +1699,67 @@
         <translation>Yalnızca bu cüzdanın anahtarlarına sahip olan anadüğümleri göster.</translation>
     </message>
     <message>
-        <source>My masternodes only</source>
-        <translation>Sadece benim anadüğümlerim</translation>
+        <source>Payout Address</source>
+        <translation>Ödeme Adresleri</translation>
+    </message>
+    <message>
+        <source>Filter by</source>
+        <translation>Filtrele</translation>
+    </message>
+    <message>
+        <source>Collateral Address</source>
+        <translation>Teminat Adresi</translation>
+    </message>
+    <message>
+        <source>Owner Address</source>
+        <translation>Adres Sahibi</translation>
+    </message>
+    <message>
+        <source>Voting Address</source>
+        <translation>Oylama Adresi</translation>
+    </message>
+    <message>
+        <source>Details for Masternode %1</source>
+        <translation>Masternode %1 için ayrıntılar</translation>
+    </message>
+    <message>
+        <source>Copy ProTx Hash</source>
+        <translation>ProTx Hashini kopyala</translation>
+    </message>
+    <message>
+        <source>Copy Collateral Outpoint</source>
+        <translation>Teminat Çıkış Noktasını Kopyala</translation>
+    </message>
+    <message>
+        <source>Filter by any property (e.g. address or protx hash)</source>
+        <translation>Herhangi bir özelliğe göre filtreleyin (ör. adres veya protx hash'ı)</translation>
+    </message>
+</context>
+<context>
+    <name>MasternodeModel</name>
+    <message numerus="yes">
+        <source>Banned for %n day(s)</source>
+        <translation><numerusform>%n gün yasaklı</numerusform><numerusform>%n gün yasaklı</numerusform></translation>
+    </message>
+    <message>
+        <source>Banned for less than a day</source>
+        <translation>Bir günden az süredir yasaklı</translation>
+    </message>
+    <message>
+        <source>Banned</source>
+        <translation>Yasaklı</translation>
+    </message>
+    <message numerus="yes">
+        <source>Active for %n day(s)</source>
+        <translation><numerusform>%n gündür aktif</numerusform><numerusform>%n gündür aktif</numerusform></translation>
+    </message>
+    <message>
+        <source>Active for less than a day</source>
+        <translation>Bir günden az süredir aktif</translation>
+    </message>
+    <message>
+        <source>UNKNOWN</source>
+        <translation>BİLİNMİYOR</translation>
     </message>
     <message>
         <source>Service</source>
@@ -1534,79 +1783,114 @@
     </message>
     <message>
         <source>Next Payment</source>
-        <translation>Gelecek Ödeme</translation>
-    </message>
-    <message>
-        <source>Payout Address</source>
-        <translation>Ödeme Adresleri</translation>
+        <translation>Sonraki Ödeme</translation>
     </message>
     <message>
         <source>Operator Reward</source>
         <translation>Operatör Ödülü</translation>
     </message>
     <message>
-        <source>Collateral Address</source>
-        <translation>Teminat Adresi</translation>
+        <source>ProTx Hash</source>
+        <translation>ProTx Karması</translation>
+    </message>
+</context>
+<context>
+    <name>MnemonicVerificationDialog</name>
+    <message>
+        <source>Save Your Mnemonic</source>
+        <translation>Anımsatıcınızı Kaydedin</translation>
     </message>
     <message>
-        <source>Owner Address</source>
-        <translation>Adres Sahibi</translation>
+        <source>WARNING: If you lose your mnemonic seed phrase, you will lose access to your wallet forever.</source>
+        <translation>UYARI: Anımsatıcı tohum ifadenizi kaybederseniz, cüzdanınıza erişiminizi kalıcı olarak kaybedersiniz.</translation>
     </message>
     <message>
-        <source>Voting Address</source>
-        <translation>Oylama Adresi</translation>
+        <source>Please write down these words in order. You will need them to restore your wallet.</source>
+        <translation>Lütfen bu kelimeleri sırasıyla yazın. Cüzdanınızı geri yüklemek için bunlara ihtiyacınız olacak.</translation>
     </message>
     <message>
-        <source>Copy ProTx Hash</source>
-        <translation>ProTx Hashini kopyala</translation>
+        <source>Show</source>
+        <translation>Göster</translation>
     </message>
     <message>
-        <source>Copy Collateral Outpoint</source>
-        <translation>Teminat Çıkış Noktasını Kopyala</translation>
+        <source>Hide</source>
+        <translation>Gizle</translation>
     </message>
     <message>
-        <source>Please wait…</source>
-        <translation>Lütfen bekleyin…</translation>
+        <source>I have written down my mnemonic</source>
+        <translation>Anımsatıcımı yazdım</translation>
     </message>
     <message>
-        <source>Updating…</source>
-        <translation>Güncelleştiriyor…</translation>
+        <source>To verify you've saved your mnemonic, please enter the following words:</source>
+        <translation>Anımsatıcınızı kaydettiğinizi doğrulamak için lütfen aşağıdaki kelimeleri girin:</translation>
     </message>
     <message>
-        <source>ENABLED</source>
-        <translation>ETKİN</translation>
+        <source>Word #1:</source>
+        <translation>Kelime #1:</translation>
     </message>
     <message>
-        <source>POSE_BANNED</source>
-        <translation>POSE_BANNED</translation>
+        <source>Word #2:</source>
+        <translation>Kelime #2:</translation>
     </message>
     <message>
-        <source>UNKNOWN</source>
-        <translation>BİLİNMİYOR</translation>
+        <source>Word #3:</source>
+        <translation>Kelime #3:</translation>
     </message>
     <message>
-        <source>to %1</source>
-        <translation>şuna: %1</translation>
+        <source>Your Recovery Phrase</source>
+        <translation>Kurtarma İfadeniz</translation>
     </message>
     <message>
-        <source>to UNKNOWN</source>
-        <translation>şuna: BİLİNMİYOR</translation>
+        <source>Close</source>
+        <translation>Kapat</translation>
     </message>
     <message>
-        <source>but not claimed</source>
-        <translation>ama alınmadı</translation>
+        <source>Continue</source>
+        <translation>Devam</translation>
     </message>
     <message>
-        <source>NONE</source>
-        <translation>YOK</translation>
+        <source>WARNING: Never share your recovery phrase with anyone. Store it securely offline.</source>
+        <translation>UYARI: Kurtarma ifadenizi asla kimseyle paylaşmayın. Çevrimdışı olarak güvenli bir şekilde saklayın.</translation>
     </message>
     <message>
-        <source>Filter by any property (e.g. address or protx hash)</source>
-        <translation>Herhangi bir özelliğe göre filtreleyin (ör. adres veya protx hash'ı)</translation>
+        <source>These words can restore your wallet. Keep them safe and private.</source>
+        <translation>Bu kelimeler cüzdanınızı geri yükleyebilir. Onları güvende ve gizli tutun.</translation>
     </message>
     <message>
-        <source>Additional information for DIP3 Masternode %1</source>
-        <translation>DIP3 Ana Düğümü %1 için ek bilgi</translation>
+        <source>WARNING: If you lose your mnemonic seed phrase, you will lose access to your wallet forever. Write it down in a safe place and never share it with anyone.</source>
+        <translation>UYARI: Anımsatıcı tohum ifadenizi kaybederseniz, cüzdanınıza erişiminizi kalıcı olarak kaybedersiniz. Güvenli bir yere yazın ve asla kimseyle paylaşmayın.</translation>
+    </message>
+    <message>
+        <source>Invalid Mnemonic</source>
+        <translation>Geçersiz Anımsatıcı</translation>
+    </message>
+    <message>
+        <source>Mnemonic phrase has fewer than 3 words (found %1). Verification cannot proceed.</source>
+        <translation>Anımsatıcı ifade 3 kelimeden az (%1 bulundu). Doğrulama devam edemiyor.</translation>
+    </message>
+    <message>
+        <source>Verification Error</source>
+        <translation>Doğrulama Hatası</translation>
+    </message>
+    <message>
+        <source>Failed to generate verification positions. Please try again.</source>
+        <translation>Doğrulama konumları oluşturulamadı. Lütfen tekrar deneyin.</translation>
+    </message>
+    <message>
+        <source>Word #%1:</source>
+        <translation>Kelime #%1:</translation>
+    </message>
+    <message>
+        <source>Back</source>
+        <translation>Geri</translation>
+    </message>
+    <message>
+        <source>Verification Failed</source>
+        <translation>Doğrulama Başarısız</translation>
+    </message>
+    <message>
+        <source>One or more words are incorrect. Please try again.</source>
+        <translation>Bir veya daha fazla kelime yanlış. Lütfen tekrar deneyin.</translation>
     </message>
 </context>
 <context>
@@ -1824,12 +2108,52 @@
         <translation>Yönetim Sekmesini Göster</translation>
     </message>
     <message>
+        <source>Show the governance clock in the status bar.</source>
+        <translation>Durum çubuğunda yönetişim saatini göster.</translation>
+    </message>
+    <message>
+        <source>Show governance clock</source>
+        <translation>Yönetişim saatini göster</translation>
+    </message>
+    <message>
         <source>If you disable the spending of unconfirmed change, the change from a transaction&lt;br/&gt;cannot be used until that transaction has at least one confirmation.&lt;br/&gt;This also affects how your balance is computed.</source>
         <translation>Teyit edilmemiş para üstünü harcamayı devre dışı bırakırsanız&lt;br/&gt;bir işlemin para üstü bu işlem için en az bir teyit olana dek harcanamaz.&lt;br/&gt;Bu, aynı zamanda bakiyenizin nasıl hesaplandığını da etkiler.</translation>
     </message>
     <message>
         <source>Show mixing interface on Overview screen and reveal an additional screen which allows to spend fully mixed coins only.&lt;br/&gt;A new tab with more settings will also appear in this dialog, please make sure to check them before mixing your coins.</source>
         <translation>Genel bakış kranında karıştırma arayüzünü göster ve karıştırılan bakiyenin harcanmasına olanak sunan ek bir ekran göster. &lt;br/&gt;Bu iletişim kutusunda daha geniş ayarlar içeren yeni bir sekme de görülecektir, lütfen paranızı karıştırmadan önce bunları kontrol ettiğinizden emin olun.</translation>
+    </message>
+    <message>
+        <source>Automatically lock small incoming transactions from external sources that may be dust attacks. Locked UTXOs will be excluded from coin selection.</source>
+        <translation>Toz saldırıları olabilecek harici kaynaklardan gelen küçük işlemleri otomatik olarak kilitle. Kilitli UTXO'lar para seçiminden hariç tutulacaktır.</translation>
+    </message>
+    <message>
+        <source>Enable &amp;dust attack protection</source>
+        <translation>&amp;Toz saldırısı korumasını etkinleştir</translation>
+    </message>
+    <message>
+        <source>Dust threshold:</source>
+        <translation>Toz eşiği:</translation>
+    </message>
+    <message>
+        <source>Transactions with outputs at or below this amount will be considered dust when received from external sources.</source>
+        <translation>Harici kaynaklardan alındığında bu tutara eşit veya altındaki çıktılara sahip işlemler toz olarak kabul edilecektir.</translation>
+    </message>
+    <message>
+        <source>duffs</source>
+        <translation>duff</translation>
+    </message>
+    <message>
+        <source>External Signer (e.g. hardware wallet)</source>
+        <translation>Harici İmzalayıcı (ör. donanım cüzdanı)</translation>
+    </message>
+    <message>
+        <source>&amp;External signer script path</source>
+        <translation>&amp;Harici imzalayıcı betik yolu</translation>
+    </message>
+    <message>
+        <source>Full path to a %1 compatible script (e.g. C:\Downloads\hwi.exe or /Users/you/Downloads/hwi.py). Beware: malware can steal your coins!</source>
+        <translation>%1 uyumlu bir betiğin tam yolu (ör. C:\Downloads\hwi.exe veya /Users/you/Downloads/hwi.py). Dikkat: kötü amaçlı yazılım paralarınızı çalabilir!</translation>
     </message>
     <message>
         <source>Show additional information and buttons on overview screen.</source>
@@ -1948,10 +2272,6 @@ https://explore.transifex.com/dash/dash/</translation>
     <message>
         <source>&amp;Third-party transaction URLs</source>
         <translation>&amp;Üçüncü taraf işlem URL'leri</translation>
-    </message>
-    <message>
-        <source>Options set in this dialog are overridden by the command line or in the configuration file:</source>
-        <translation>Bu iletişim kutusunda ayarlanan seçenekler, komut satırı veya yapılandırma dosyası tarafından geçersiz kılınır:</translation>
     </message>
     <message>
         <source>Minimize instead of exit the application when the window is closed. When this option is enabled, the application will be closed only after selecting Exit in the menu.</source>
@@ -2074,6 +2394,10 @@ https://explore.transifex.com/dash/dash/</translation>
         <translation>Ondalık haneler</translation>
     </message>
     <message>
+        <source>Options set in this dialog are overridden by the command line:</source>
+        <translation>Bu iletişim kutusunda ayarlanan seçenekler komut satırı tarafından geçersiz kılınır:</translation>
+    </message>
+    <message>
         <source>Reset all client options to default.</source>
         <translation>İstemcinin tüm seçeneklerini varsayılan değerlere geri al.</translation>
     </message>
@@ -2108,6 +2432,11 @@ https://explore.transifex.com/dash/dash/</translation>
         <translation>Değişikliklerin uygulanması için istemcinin yeniden başlatılması lazımdır.</translation>
     </message>
     <message>
+        <source>Compiled without external signing support (required for external signing)</source>
+        <extracomment>"External signing" means using devices such as hardware wallets.</extracomment>
+        <translation>Harici imzalama desteği olmadan derlendi (harici imzalama için gerekli)</translation>
+    </message>
+    <message>
         <source>Current settings will be backed up at "%1".</source>
         <extracomment>Text explaining to the user that the client's current settings will be backed up at a specific location. %1 is a stand-in argument for the backup location's path.</extracomment>
         <translation>Mevcut ayarlar "%1" konumunda yedeklenecektir.</translation>
@@ -2124,6 +2453,13 @@ https://explore.transifex.com/dash/dash/</translation>
     <message>
         <source>The supplied proxy address is invalid.</source>
         <translation>Girilen vekil sunucu adresi geçersizdir.</translation>
+    </message>
+</context>
+<context>
+    <name>OptionsModel</name>
+    <message>
+        <source>Could not read setting "%1", %2.</source>
+        <translation>"%1" ayarı okunamadı, %2.</translation>
     </message>
 </context>
 <context>
@@ -2433,8 +2769,8 @@ https://explore.transifex.com/dash/dash/</translation>
         <translation>PSBT diske kaydedildi.</translation>
     </message>
     <message>
-        <source> * Sends %1 to %2</source>
-        <translation> * %1'i %2'ye gönderir</translation>
+        <source>Sends %1 to %2</source>
+        <translation>%1 öğesini %2 adresine gönderir</translation>
     </message>
     <message>
         <source>own address</source>
@@ -2586,25 +2922,141 @@ Desteğin sonlandırılması nedeniyle, satıcıdan size BIP21 uyumlu bir URI sa
     </message>
 </context>
 <context>
-    <name>Proposal</name>
+    <name>ProposalCreate</name>
     <message>
-        <source>Passing +%1</source>
-        <translation>+%1'i Geçiyor</translation>
+        <source>New proposal</source>
+        <translation>Yeni teklif</translation>
     </message>
     <message>
-        <source>Needs additional %1 votes</source>
-        <translation>Ek %1 oy gerekiyor</translation>
+        <source>Proposal &amp;name</source>
+        <translation>Teklif &amp;adı</translation>
+    </message>
+    <message>
+        <source>&amp;Description URL</source>
+        <translation>&amp;Açıklama URL'si</translation>
+    </message>
+    <message>
+        <source>&amp;Payment date</source>
+        <translation>&amp;Ödeme tarihi</translation>
+    </message>
+    <message>
+        <source>Pa&amp;yments</source>
+        <translation>Ö&amp;demeler</translation>
+    </message>
+    <message>
+        <source>Payment &amp;address</source>
+        <translation>Ödeme &amp;adresi</translation>
+    </message>
+    <message>
+        <source>Payment &amp;amount</source>
+        <translation>Ödeme &amp;tutarı</translation>
+    </message>
+    <message>
+        <source>To&amp;tal amount</source>
+        <translation>To&amp;plam tutar</translation>
+    </message>
+    <message>
+        <source>The amount to request in a single payment</source>
+        <translation>Tek bir ödemede talep edilecek tutar</translation>
+    </message>
+    <message>
+        <source>View JSON</source>
+        <translation>JSON Görüntüle</translation>
+    </message>
+    <message>
+        <source>View Payload</source>
+        <translation>Yük Görüntüle</translation>
+    </message>
+    <message>
+        <source>margin-left: 8px;</source>
+        <translation>margin-left: 8px;</translation>
+    </message>
+    <message>
+        <source>Create Proposal</source>
+        <translation>Teklif Oluştur</translation>
+    </message>
+    <message>
+        <source>All fields are mandatory</source>
+        <translation>Tüm alanlar zorunludur</translation>
+    </message>
+    <message>
+        <source>Confirm Proposal</source>
+        <translation>Teklifi Onayla</translation>
+    </message>
+    <message>
+        <source>Are you sure you want to create this proposal?</source>
+        <translation>Bu teklifi oluşturmak istediğinizden emin misiniz?</translation>
+    </message>
+    <message>
+        <source>Creating a proposal pays %1 to the network. This fee is non-refundable regardless of outcome.</source>
+        <translation>Bir teklif oluşturmak ağa %1 öder. Bu ücret sonuç ne olursa olsun iade edilmez.</translation>
+    </message>
+    <message>
+        <source>Creation failed</source>
+        <translation>Oluşturma başarısız</translation>
+    </message>
+    <message>
+        <source>Proposal Created</source>
+        <translation>Teklif Oluşturuldu</translation>
+    </message>
+    <message>
+        <source>%1 successfully sent for your proposal "%2".
+
+You will now be redirected to monitor and broadcast your new proposal, you can resume this later by clicking "Resume Proposal".</source>
+        <translation>Teklifiniz "%2" için %1 başarıyla gönderildi.
+
+Şimdi yeni teklifinizi izleme ve yayınlama sayfasına yönlendirileceksiniz, daha sonra "Teklife Devam Et" düğmesine tıklayarak devam edebilirsiniz.</translation>
     </message>
 </context>
 <context>
     <name>ProposalModel</name>
     <message>
-        <source>Yes</source>
-        <translation>Evet</translation>
+        <source>Pending, %1 of %2 confirmations</source>
+        <translation>Beklemede, %1/%2 onay</translation>
     </message>
     <message>
-        <source>No</source>
-        <translation>Hayır</translation>
+        <source>Voting, needs %1 more votes for funding</source>
+        <translation>Oylama, fonlama için %1 oy daha gerekiyor</translation>
+    </message>
+    <message>
+        <source>Passing with %1 votes</source>
+        <translation>%1 oyla geçiyor</translation>
+    </message>
+    <message>
+        <source>Passing with %1 votes but budget saturated, may not be funded</source>
+        <translation>%1 oyla geçiyor ancak bütçe doymuş, fonlanmayabilir</translation>
+    </message>
+    <message>
+        <source>Failed, needed %1 more votes</source>
+        <translation>Başarısız, %1 oy daha gerekiyordu</translation>
+    </message>
+    <message>
+        <source>Funded at block %1</source>
+        <translation>Blok %1'de fonlandı</translation>
+    </message>
+    <message>
+        <source>Funded</source>
+        <translation>Fonlandı</translation>
+    </message>
+    <message>
+        <source>Lapsed, past proposal end date</source>
+        <translation>Süresi doldu, teklif bitiş tarihi geçti</translation>
+    </message>
+    <message>
+        <source>Ready to broadcast, check "Resume Proposal" dialog</source>
+        <translation>Yayınlamaya hazır, "Teklifi Sürdür" iletişim kutusunu kontrol edin</translation>
+    </message>
+    <message>
+        <source>%1 Yes, %2 No, %3 Abstain, %4</source>
+        <translation>%1 Evet, %2 Hayır, %3 Çekimser, %4</translation>
+    </message>
+    <message>
+        <source>passing with %1 votes</source>
+        <translation>%1 oyla geçiyor</translation>
+    </message>
+    <message>
+        <source>needs %1 more votes</source>
+        <translation>%1 oy daha gerekiyor</translation>
     </message>
     <message>
         <source>Hash</source>
@@ -2627,187 +3079,63 @@ Desteğin sonlandırılması nedeniyle, satıcıdan size BIP21 uyumlu bir URI sa
         <translation>Miktar</translation>
     </message>
     <message>
-        <source>Active</source>
-        <translation>Aktif</translation>
-    </message>
-    <message>
-        <source>Status</source>
-        <translation>Durum</translation>
+        <source>Votes</source>
+        <translation>Oylar</translation>
     </message>
 </context>
 <context>
-    <name>ProposalWizard</name>
+    <name>ProposalResume</name>
     <message>
-        <source>Create Governance Proposal</source>
-        <translation>Yönetim Teklifi Oluştur</translation>
-    </message>
-    <message>
-        <source>Enter proposal details</source>
-        <translation>Teklif detaylarını girin</translation>
-    </message>
-    <message>
-        <source>A fee will be burned when you prepare the proposal.</source>
-        <translation>Teklifi hazırladığınızda bir ücret yakılacaktır.</translation>
-    </message>
-    <message>
-        <source>Proposal &amp;name</source>
-        <translation>Teklif &amp;adı</translation>
-    </message>
-    <message>
-        <source>&amp;Description URL</source>
-        <translation>&amp;Açıklama URL'si</translation>
-    </message>
-    <message>
-        <source>Payment &amp;address</source>
-        <translation>Ödeme &amp;adresi</translation>
-    </message>
-    <message>
-        <source>Payment &amp;amount</source>
-        <translation>Ödeme &amp;tutarı</translation>
-    </message>
-    <message>
-        <source>The amount to request in a single payment</source>
-        <translation>Tek bir ödemede talep edilecek tutar</translation>
-    </message>
-    <message>
-        <source>&amp;First payment</source>
-        <translation>&amp;İlk ödeme</translation>
-    </message>
-    <message>
-        <source>Pa&amp;yments</source>
-        <translation>Ö&amp;demeler</translation>
-    </message>
-    <message>
-        <source>To&amp;tal amount</source>
-        <translation>Top&amp;lam tutar</translation>
-    </message>
-    <message>
-        <source>Proposal &amp;fee</source>
-        <translation>Teklif &amp;ücreti</translation>
-    </message>
-    <message>
-        <source>Next</source>
-        <translation>İleri</translation>
-    </message>
-    <message>
-        <source>Review proposal JSON and validate.</source>
-        <translation>Teklif JSON'unu inceleyin ve doğrulayın.</translation>
-    </message>
-    <message>
-        <source>Hex-encoded JSON</source>
-        <translation>Hex-kodlu JSON</translation>
-    </message>
-    <message>
-        <source>Back</source>
-        <translation>Geri</translation>
-    </message>
-    <message>
-        <source>Validate</source>
-        <translation>Doğrula</translation>
-    </message>
-    <message>
-        <source>Prepare (burn fee) and wait for confirmations.</source>
-        <translation>Hazırlayın (ücreti yakın) ve onayları bekleyin.</translation>
-    </message>
-    <message>
-        <source>Copy</source>
-        <translation>Kopyala</translation>
-    </message>
-    <message>
-        <source>At 1/6 confirmations: can be relayed and queued. At 6/6: accepted and processed.</source>
-        <translation>1/6 onayda: aktarılabilir ve kuyruğa alınabilir. 6/6'da: kabul edilir ve işlenir.</translation>
-    </message>
-    <message>
-        <source>Confirmations progress</source>
-        <translation>Onay ilerlemesi</translation>
-    </message>
-    <message>
-        <source>Shows progress toward the required number of confirmations for the proposal fee transaction.</source>
-        <translation>Teklif ücreti işlemi için gereken onay sayısına doğru ilerlemeyi gösterir.</translation>
-    </message>
-    <message>
-        <source>Estimated time remaining: -</source>
-        <translation>Tahmini kalan süre: -</translation>
-    </message>
-    <message>
-        <source>Prepare Proposal</source>
-        <translation>Teklifi Hazırla</translation>
-    </message>
-    <message>
-        <source>You can submit after 1 confirmation. At 6 confirmations it is accepted and processed.</source>
-        <translation>1 onaydan sonra gönderebilirsiniz. 6 onayda kabul edilir ve işlenir.</translation>
-    </message>
-    <message>
-        <source>Proposal ID:</source>
-        <translation>Teklif ID:</translation>
-    </message>
-    <message>
-        <source>Submit Proposal</source>
-        <translation>Teklifi Gönder</translation>
+        <source>Resume Proposals</source>
+        <translation>Tekliflere Devam Et</translation>
     </message>
     <message>
         <source>Close</source>
         <translation>Kapat</translation>
     </message>
     <message>
-        <source>Valid</source>
-        <translation>Geçerli</translation>
+        <source>No pending proposals to broadcast.</source>
+        <translation>Yayınlanacak bekleyen teklif yok.</translation>
     </message>
     <message>
-        <source>Invalid: %1</source>
-        <translation>Geçersiz: %1</translation>
+        <source>For %1 payment(s) of %2 to %3</source>
+        <translation>%3 adresine %2 tutarında %1 ödeme için</translation>
     </message>
     <message>
-        <source>Burn %1</source>
-        <translation>%1 Yak</translation>
+        <source>Unknown</source>
+        <translation>Bilinmiyor</translation>
     </message>
     <message>
-        <source>Burn %1 to create the fee transaction?</source>
-        <translation>Ücret işlemini oluşturmak için %1 yakılsın mı?</translation>
+        <source>Pending</source>
+        <translation>Beklemede</translation>
     </message>
     <message>
-        <source>Prepare failed</source>
-        <translation>Hazırlama başarısız</translation>
+        <source>Ready</source>
+        <translation>Hazır</translation>
     </message>
     <message>
-        <source>Confirmations: %1 / %2 required</source>
-        <translation>Onaylar: %1 / %2 gerekli</translation>
+        <source>Collateral Hash</source>
+        <translation>Teminat Karması</translation>
     </message>
     <message>
-        <source>Estimated time remaining: Ready</source>
-        <translation>Tahmini kalan süre: Hazır</translation>
-    </message>
-    <message numerus="yes">
-        <source>Estimated time remaining: %n minute(s)</source>
-        <translation><numerusform>Tahmini kalan süre: %n dakika</numerusform><numerusform>Tahmini kalan süre: %n dakika</numerusform></translation>
+        <source>Collateral Status</source>
+        <translation>Teminat Durumu</translation>
     </message>
     <message>
-        <source>Your proposal was submitted successfully.</source>
-        <translation>Teklifiniz başarıyla gönderildi.</translation>
+        <source>Broadcast</source>
+        <translation>Yayınla</translation>
     </message>
     <message>
-        <source>Already submitted</source>
-        <translation>Zaten gönderildi</translation>
+        <source>Broadcast proposal</source>
+        <translation>Teklifi yayınla</translation>
     </message>
     <message>
-        <source>This proposal has already been submitted.</source>
-        <translation>Bu teklif zaten gönderilmiş.</translation>
+        <source>Proposal has been broadcasted to the network with hash %1</source>
+        <translation>Teklif %1 karmasıyla ağa yayınlandı</translation>
     </message>
     <message>
-        <source>Submission failed</source>
-        <translation>Gönderim başarısız</translation>
-    </message>
-    <message>
-        <source>Proposal submitted</source>
-        <translation>Teklif gönderildi</translation>
-    </message>
-    <message>
-        <source>A fee of %1 will be burned when you prepare the proposal.</source>
-        <translation>Teklifi hazırladığınızda %1 tutarında bir ücret yakılacaktır.</translation>
-    </message>
-    <message>
-        <source>Prepare (burn %1) and wait for %2 confirmations.</source>
-        <translation>Hazırlayın (%1 yakın) ve %2 onay bekleyin.</translation>
+        <source>Unable to broadcast proposal, %1</source>
+        <translation>Teklif yayınlanamıyor, %1</translation>
     </message>
 </context>
 <context>
@@ -2875,8 +3203,8 @@ Desteğin sonlandırılması nedeniyle, satıcıdan size BIP21 uyumlu bir URI sa
         <translation>Hata: Uygulama yazı tipleri yüklenmedi.</translation>
     </message>
     <message>
-        <source>Error: Specified font-family invalid. Valid values: %1.</source>
-        <translation>Hata: Belirtilen yazı tipi ailesi geçersiz. Geçerli değerler: %1.</translation>
+        <source>Error: Font "%1" could not be loaded.</source>
+        <translation>Hata: "%1" yazı tipi yüklenemedi.</translation>
     </message>
     <message>
         <source>Error: Specified font-weight-normal invalid. Valid range %1 to %2.</source>
@@ -3045,6 +3373,170 @@ Desteğin sonlandırılması nedeniyle, satıcıdan size BIP21 uyumlu bir URI sa
         <source>unknown</source>
         <translation>bilinmiyor</translation>
     </message>
+    <message>
+        <source>Default monospace font "%1"</source>
+        <translation>Varsayılan sabit genişlikli yazı tipi "%1"</translation>
+    </message>
+    <message>
+        <source>Embedded "%1"</source>
+        <translation>Gömülü "%1"</translation>
+    </message>
+    <message>
+        <source>Use existing font</source>
+        <translation>Mevcut yazı tipini kullan</translation>
+    </message>
+    <message>
+        <source>Custom…</source>
+        <translation>Özel…</translation>
+    </message>
+    <message>
+        <source>Error: Wallet controller not available.</source>
+        <translation>Hata: Cüzdan denetleyicisi kullanılamıyor.</translation>
+    </message>
+    <message>
+        <source>Error: Rescan failed. Wallet not loaded.</source>
+        <translation>Hata: Yeniden tarama başarısız. Cüzdan yüklenmedi.</translation>
+    </message>
+    <message>
+        <source>UNKNOWN</source>
+        <translation>BİLİNMİYOR</translation>
+    </message>
+    <message>
+        <source>to %1</source>
+        <translation>%1 adresine</translation>
+    </message>
+    <message>
+        <source>to UNKNOWN</source>
+        <translation>BİLİNMEYEN adresine</translation>
+    </message>
+    <message>
+        <source>but not claimed</source>
+        <translation>ancak talep edilmedi</translation>
+    </message>
+    <message>
+        <source>NONE</source>
+        <translation>HİÇBİRİ</translation>
+    </message>
+    <message>
+        <source>ProTx Hash</source>
+        <translation>ProTx Karması</translation>
+    </message>
+    <message>
+        <source>Public Key Operator</source>
+        <translation>Operatör Genel Anahtarı</translation>
+    </message>
+    <message>
+        <source>Owner Address</source>
+        <translation>Sahip Adresi</translation>
+    </message>
+    <message>
+        <source>Payout Address</source>
+        <translation>Ödeme Adresi</translation>
+    </message>
+    <message>
+        <source>Voting Address</source>
+        <translation>Oylama Adresi</translation>
+    </message>
+    <message>
+        <source>Collateral Address</source>
+        <translation>Teminat Adresi</translation>
+    </message>
+    <message>
+        <source>Collateral Hash</source>
+        <translation>Teminat Karması</translation>
+    </message>
+    <message>
+        <source>Collateral Index</source>
+        <translation>Teminat Dizini</translation>
+    </message>
+    <message>
+        <source>Masternode Type</source>
+        <translation>Masternode Türü</translation>
+    </message>
+    <message>
+        <source>Registered Height</source>
+        <translation>Kayıt Yüksekliği</translation>
+    </message>
+    <message>
+        <source>Last Paid Height</source>
+        <translation>Son Ödeme Yüksekliği</translation>
+    </message>
+    <message>
+        <source>Consecutive Payments</source>
+        <translation>Ardışık Ödemeler</translation>
+    </message>
+    <message>
+        <source>Operator Reward</source>
+        <translation>Operatör Ödülü</translation>
+    </message>
+    <message>
+        <source>Network Addresses</source>
+        <translation>Ağ Adresleri</translation>
+    </message>
+    <message>
+        <source>Platform HTTPS Addresses</source>
+        <translation>Platform HTTPS Adresleri</translation>
+    </message>
+    <message>
+        <source>Platform P2P Addresses</source>
+        <translation>Platform P2P Adresleri</translation>
+    </message>
+    <message>
+        <source>Platform Node ID</source>
+        <translation>Platform Düğüm Kimliği</translation>
+    </message>
+    <message>
+        <source>PoSe Penalty</source>
+        <translation>PoSe Cezası</translation>
+    </message>
+    <message>
+        <source>PoSe Ban Height</source>
+        <translation>PoSe Yasak Yüksekliği</translation>
+    </message>
+    <message>
+        <source>PoSe Revived Height</source>
+        <translation>PoSe Canlandırma Yüksekliği</translation>
+    </message>
+    <message>
+        <source>Title</source>
+        <translation>Başlık</translation>
+    </message>
+    <message>
+        <source>URL</source>
+        <translation>URL</translation>
+    </message>
+    <message>
+        <source>Destination Address</source>
+        <translation>Hedef Adres</translation>
+    </message>
+    <message>
+        <source>Payment Amount</source>
+        <translation>Ödeme Tutarı</translation>
+    </message>
+    <message>
+        <source>Payments Requested</source>
+        <translation>Talep Edilen Ödemeler</translation>
+    </message>
+    <message>
+        <source>Payment Start</source>
+        <translation>Ödeme Başlangıcı</translation>
+    </message>
+    <message>
+        <source>Payment End</source>
+        <translation>Ödeme Sonu</translation>
+    </message>
+    <message>
+        <source>Object Hash</source>
+        <translation>Nesne Karması</translation>
+    </message>
+    <message>
+        <source>Parent Hash</source>
+        <translation>Üst Karma</translation>
+    </message>
+    <message>
+        <source>Collateral Date</source>
+        <translation>Teminat Tarihi</translation>
+    </message>
 </context>
 <context>
     <name>QRDialog</name>
@@ -3184,6 +3676,10 @@ Desteğin sonlandırılması nedeniyle, satıcıdan size BIP21 uyumlu bir URI sa
         <translation>&amp;Eşler</translation>
     </message>
     <message>
+        <source>&amp;Repair</source>
+        <translation>&amp;Onar</translation>
+    </message>
+    <message>
         <source>Wallet:</source>
         <translation>Cüzdan:</translation>
     </message>
@@ -3263,26 +3759,6 @@ Desteğin sonlandırılması nedeniyle, satıcıdan size BIP21 uyumlu bir URI sa
         <source>Addresses Rate-Limited</source>
         <extracomment>Text title for the Addresses Rate-Limited field in the peer details area, which displays the total number of addresses received from this peer that were dropped (not processed) due to rate-limiting.</extracomment>
         <translation>Hız Sınırlı Adresler</translation>
-    </message>
-    <message>
-        <source>Rescan blockchain files 1</source>
-        <translation>Blok zinciri dosyalarını yeniden tara 1</translation>
-    </message>
-    <message>
-        <source>Rescan blockchain files 2</source>
-        <translation>Blok zinciri dosyalarını yeniden tara 2</translation>
-    </message>
-    <message>
-        <source>The buttons below will restart the wallet with command-line options to repair the wallet, fix issues with corrupt blockchain files or missing/obsolete transactions.</source>
-        <translation>Aşağıdaki düğmeler, cüzdanı onarmak, bozuk blok zinciri dosyaları veya eksik/eski işlemlerle ilgili sorunları düzeltmek için komut satırı seçenekleriyle cüzdanı yeniden başlatır.</translation>
-    </message>
-    <message>
-        <source>-rescan=1: Rescan the block chain for missing wallet transactions starting from wallet creation time.</source>
-        <translation>-rescan=1: Cüzdana ait görünmeyen işlemleri bulmak için blok zincirini cüzdan açılışından itibaren tarama.</translation>
-    </message>
-    <message>
-        <source>-rescan=2: Rescan the block chain for missing wallet transactions starting from genesis block.</source>
-        <translation>-rescan=2: Cüzdana ait görünmeyen işlemleri bulmak için blok zincirini genesis blokundan itibaren tarama.</translation>
     </message>
     <message>
         <source>User Agent</source>
@@ -3445,8 +3921,36 @@ Desteğin sonlandırılması nedeniyle, satıcıdan size BIP21 uyumlu bir URI sa
         <translation>Saat Farkı</translation>
     </message>
     <message>
-        <source>&amp;Wallet Repair</source>
-        <translation>&amp;Cüzdan Tamiri</translation>
+        <source>Repair options.</source>
+        <translation>Onarım seçenekleri.</translation>
+    </message>
+    <message>
+        <source>The buttons below will trigger repair actions to fix issues with corrupt files or missing/obsolete transactions.</source>
+        <translation>Aşağıdaki düğmeler, bozuk dosyalar veya eksik/eski işlemlerle ilgili sorunları gidermek için onarım eylemlerini başlatacaktır.</translation>
+    </message>
+    <message>
+        <source>Rescan Chain</source>
+        <translation>Zinciri Yeniden Tara</translation>
+    </message>
+    <message>
+        <source>Rescan the chain for missing wallet transactions starting from wallet creation time.</source>
+        <translation>Cüzdan oluşturma zamanından itibaren eksik cüzdan işlemleri için zinciri yeniden tarayın.</translation>
+    </message>
+    <message>
+        <source>Rescan Chain (full)</source>
+        <translation>Zinciri Yeniden Tara (tam)</translation>
+    </message>
+    <message>
+        <source>Rescan the chain for missing wallet transactions starting from genesis block.</source>
+        <translation>Genesis bloğundan itibaren eksik cüzdan işlemleri için zinciri yeniden tarayın.</translation>
+    </message>
+    <message>
+        <source>Rebuild Index</source>
+        <translation>Dizini Yeniden Oluştur</translation>
+    </message>
+    <message>
+        <source>Restarts the client to rebuild the chain index from current blk000??.dat files.</source>
+        <translation>Mevcut blk000??.dat dosyalarından zincir dizinini yeniden oluşturmak için istemciyi yeniden başlatır.</translation>
     </message>
     <message>
         <source>The total number of addresses received from this peer that were processed (excludes addresses that were dropped due to rate-limiting).</source>
@@ -3457,18 +3961,6 @@ Desteğin sonlandırılması nedeniyle, satıcıdan size BIP21 uyumlu bir URI sa
         <source>The total number of addresses received from this peer that were dropped (not processed) due to rate-limiting.</source>
         <extracomment>Tooltip text for the Addresses Rate-Limited field in the peer details area, which displays the total number of addresses received from this peer that were dropped (not processed) due to rate-limiting.</extracomment>
         <translation>Bu eşten alınan ve hız sınırlaması nedeniyle bırakılan (işlenmeyen) adreslerin toplam sayısı.</translation>
-    </message>
-    <message>
-        <source>Wallet repair options.</source>
-        <translation>Cüzdan tamir seçenekleri.</translation>
-    </message>
-    <message>
-        <source>Rebuild index</source>
-        <translation>Dizini yeniden oluştur</translation>
-    </message>
-    <message>
-        <source>-reindex: Rebuild block chain index from current blk000??.dat files.</source>
-        <translation>-reindex: Blok zinciri dizinini mevcut blk000??.dat dosyalarından yeniden oluşturma.</translation>
     </message>
     <message>
         <source>Inbound: initiated by peer</source>
@@ -3633,7 +4125,7 @@ Desteğin sonlandırılması nedeniyle, satıcıdan size BIP21 uyumlu bir URI sa
     </message>
     <message>
         <source>&amp;Copy address</source>
-        <extracomment>Context menu action to copy the address of a peer</extracomment>
+        <extracomment>Context menu action to copy the address of a peer.</extracomment>
         <translation>&amp;Adresi kopyala</translation>
     </message>
     <message>
@@ -3642,7 +4134,7 @@ Desteğin sonlandırılması nedeniyle, satıcıdan size BIP21 uyumlu bir URI sa
     </message>
     <message>
         <source>&amp;Copy IP/Netmask</source>
-        <extracomment>Context menu action to copy the IP/Netmask of a banned peer. IP/Netmask is the combination of a peer's IP address and its Netmask. For IP address see: https://en.wikipedia.org/wiki/IP_address</extracomment>
+        <extracomment>Context menu action to copy the IP/Netmask of a banned peer. IP/Netmask is the combination of a peer's IP address and its Netmask. For IP address, see: https://en.wikipedia.org/wiki/IP_address.</extracomment>
         <translation>&amp;IP/Netmask'i kopyala</translation>
     </message>
     <message>
@@ -3842,6 +4334,14 @@ Bu konsolu kullanma hakkında daha fazla bilgi için %6 yazın.
         <translation>&amp;Adresi kopyala</translation>
     </message>
     <message>
+        <source>&amp;Verify</source>
+        <translation>&amp;Doğrula</translation>
+    </message>
+    <message>
+        <source>Verify this address on e.g. a hardware wallet screen</source>
+        <translation>Bu adresi ör. bir donanım cüzdanı ekranında doğrulayın</translation>
+    </message>
+    <message>
         <source>&amp;Save Image…</source>
         <translation>Resmi ka&amp;ydet…</translation>
     </message>
@@ -3883,6 +4383,33 @@ Bu konsolu kullanma hakkında daha fazla bilgi için %6 yazın.
     <message>
         <source>Requested</source>
         <translation>Talep edilen</translation>
+    </message>
+</context>
+<context>
+    <name>RescanWalletActivity</name>
+    <message>
+        <source>Rescan unavailable</source>
+        <translation>Yeniden tarama kullanılamıyor</translation>
+    </message>
+    <message>
+        <source>Wallet is currently rescanning. Abort existing rescan or wait.</source>
+        <translation>Cüzdan şu anda yeniden taranıyor. Mevcut taramayı iptal edin veya bekleyin.</translation>
+    </message>
+    <message>
+        <source>Rescan wallet failed</source>
+        <translation>Cüzdan yeniden taraması başarısız</translation>
+    </message>
+    <message>
+        <source>Rescan failed. Potentially corrupted data files.</source>
+        <translation>Yeniden tarama başarısız. Veri dosyaları bozulmuş olabilir.</translation>
+    </message>
+    <message>
+        <source>Rescan aborted</source>
+        <translation>Yeniden tarama iptal edildi</translation>
+    </message>
+    <message>
+        <source>Wallet rescan was aborted.</source>
+        <translation>Cüzdan yeniden taraması iptal edildi.</translation>
     </message>
 </context>
 <context>
@@ -4104,10 +4631,6 @@ Bu konsolu kullanma hakkında daha fazla bilgi için %6 yazın.
         <translation>İmzasız &amp;Oluştur</translation>
     </message>
     <message>
-        <source> from wallet '%1'</source>
-        <translation> '%1' cüzdanından</translation>
-    </message>
-    <message>
         <source>%1 to '%2'</source>
         <translation>%1 '%2' adresine</translation>
     </message>
@@ -4176,9 +4699,39 @@ Bu konsolu kullanma hakkında daha fazla bilgi için %6 yazın.
         <translation>Örneğin çevrimdışı %1 cüzdanı veya PSBT uyumlu bir donanım cüzdanı ile kullanmak için Kısmen İmzalanmış Blokzincir İşlemi (PSBT) oluşturur.</translation>
     </message>
     <message>
+        <source>Sign on device</source>
+        <extracomment>"device" usually means a hardware wallet.</extracomment>
+        <translation>Cihazda imzala</translation>
+    </message>
+    <message>
+        <source>Connect your hardware wallet first.</source>
+        <translation>Önce donanım cüzdanınızı bağlayın.</translation>
+    </message>
+    <message>
+        <source>Set external signer script path in Options -&gt; Wallet</source>
+        <extracomment>"External signer" means using devices such as hardware wallets.</extracomment>
+        <translation>Seçenekler -&gt; Cüzdan bölümünde harici imzalayıcı betik yolunu ayarlayın</translation>
+    </message>
+    <message>
+        <source>Confirm duplicate recipients</source>
+        <translation>Yinelenen alıcıları onayla</translation>
+    </message>
+    <message>
+        <source>You are sending to the same address multiple times in a single transaction. This is unusual and may not be what you intended. Are you sure you want to proceed?</source>
+        <translation>Tek bir işlemde aynı adrese birden fazla kez gönderiyorsunuz. Bu olağandışıdır ve niyetiniz olmayabilir. Devam etmek istediğinizden emin misiniz?</translation>
+    </message>
+    <message>
+        <source>%1 from wallet '%2'</source>
+        <translation>'%2' cüzdanından %1</translation>
+    </message>
+    <message>
         <source>Do you want to create this transaction?</source>
         <extracomment>Message displayed when attempting to create a transaction. Cautionary text to prompt the user to verify that the displayed transaction details represent the transaction the user intends to create.</extracomment>
         <translation>Bu işlemi oluşturmak istiyor musunuz?</translation>
+    </message>
+    <message>
+        <source>Do you want to draft this transaction?</source>
+        <translation>Bu işlemin taslağını oluşturmak istiyor musunuz?</translation>
     </message>
     <message>
         <source>Please, review your transaction proposal. This will produce a Partially Signed Blockchain Transaction (PSBT) which you can save or copy and then sign with e.g. an offline %1 wallet, or a PSBT-compatible hardware wallet.</source>
@@ -4200,9 +4753,27 @@ Bu konsolu kullanma hakkında daha fazla bilgi için %6 yazın.
         <translation>Alıcı listesini gözden geçirmek için "Detayları Göster…" öğesine tıklayın</translation>
     </message>
     <message>
+        <source>Sign failed</source>
+        <translation>İmzalama başarısız</translation>
+    </message>
+    <message>
+        <source>External signer not found</source>
+        <extracomment>"External signer" means using devices such as hardware wallets.</extracomment>
+        <translation>Harici imzalayıcı bulunamadı</translation>
+    </message>
+    <message>
+        <source>External signer failure</source>
+        <extracomment>"External signer" means using devices such as hardware wallets.</extracomment>
+        <translation>Harici imzalayıcı hatası</translation>
+    </message>
+    <message>
         <source>Partially Signed Transaction (Binary)</source>
         <extracomment>Expanded name of the binary PSBT file format. See: BIP 174.</extracomment>
         <translation>Kısmen İmzalanmış İşlem (İkili)</translation>
+    </message>
+    <message>
+        <source>External balance:</source>
+        <translation>Harici bakiye:</translation>
     </message>
     <message>
         <source>The recipient address is not valid. Please recheck.</source>
@@ -4219,10 +4790,6 @@ Bu konsolu kullanma hakkında daha fazla bilgi için %6 yazın.
     <message>
         <source>The total exceeds your balance when the %1 transaction fee is included.</source>
         <translation>Toplam, %1 işlem ücreti eklendiğinde bakiyenizi geçmektedir.</translation>
-    </message>
-    <message>
-        <source>Duplicate address found: addresses should only be used once each.</source>
-        <translation>Tekrarlayan adres bulundu: adresler sadece bir kez kullanılmalıdır.</translation>
     </message>
     <message>
         <source>Transaction creation failed!</source>
@@ -4710,17 +5277,6 @@ Bu konsolu kullanma hakkında daha fazla bilgi için %6 yazın.
     </message>
 </context>
 <context>
-    <name>TransactionDescDialog</name>
-    <message>
-        <source>This pane shows a detailed description of the transaction</source>
-        <translation>Bu pano muamelenin ayrıntılı açıklamasını gösterir</translation>
-    </message>
-    <message>
-        <source>Details for %1</source>
-        <translation>%1 için ayrıntılar</translation>
-    </message>
-</context>
-<context>
     <name>TransactionTableModel</name>
     <message>
         <source>Date</source>
@@ -4797,6 +5353,10 @@ Bu konsolu kullanma hakkında daha fazla bilgi için %6 yazın.
     <message>
         <source>Platform Transfer</source>
         <translation>Platform Transferi</translation>
+    </message>
+    <message>
+        <source>Dust Receive</source>
+        <translation>Toz Alımı</translation>
     </message>
     <message>
         <source>%1 Mixing</source>
@@ -4930,6 +5490,10 @@ Bu konsolu kullanma hakkında daha fazla bilgi için %6 yazın.
         <translation>Platform Transferi</translation>
     </message>
     <message>
+        <source>Dust Receive</source>
+        <translation>Toz Alımı</translation>
+    </message>
+    <message>
         <source>Other</source>
         <translation>Diğer</translation>
     </message>
@@ -4976,6 +5540,10 @@ Bu konsolu kullanma hakkında daha fazla bilgi için %6 yazın.
     <message>
         <source>Rese&amp;nd transaction</source>
         <translation>İşlemi yeniden &amp;gönder</translation>
+    </message>
+    <message>
+        <source>&amp;Unlock dust UTXO</source>
+        <translation>&amp;Toz UTXO kilidini aç</translation>
     </message>
     <message>
         <source>&amp;Edit address label</source>
@@ -5042,6 +5610,10 @@ Bu konsolu kullanma hakkında daha fazla bilgi için %6 yazın.
     <message>
         <source>The transaction history was successfully saved to %1.</source>
         <translation>İşlem tarihçesi %1 konumuna başarıyla kaydedildi.</translation>
+    </message>
+    <message>
+        <source>Details for %1</source>
+        <translation>%1 için ayrıntılar</translation>
     </message>
     <message>
         <source>QR code</source>
@@ -5132,6 +5704,10 @@ Bir cüzdan yüklemek için Dosya &gt; Cüzdan Aç'a gidin.
         <translation>Bitcoini Gönder</translation>
     </message>
     <message>
+        <source>Can't display address</source>
+        <translation>Adres görüntülenemiyor</translation>
+    </message>
+    <message>
         <source>default wallet</source>
         <translation>varsayılan cüzdan</translation>
     </message>
@@ -5174,6 +5750,26 @@ Bir cüzdan yüklemek için Dosya &gt; Cüzdan Aç'a gidin.
     <message>
         <source>The wallet data was successfully saved to %1.</source>
         <translation>Cüzdan verileri %1 konumuna başarıyla kaydedildi.</translation>
+    </message>
+    <message>
+        <source>No Recovery Phrase</source>
+        <translation>Kurtarma İfadesi Yok</translation>
+    </message>
+    <message>
+        <source>This wallet does not have private keys and therefore has no recovery phrase.</source>
+        <translation>Bu cüzdanın özel anahtarları yoktur ve bu nedenle kurtarma ifadesi bulunmamaktadır.</translation>
+    </message>
+    <message>
+        <source>This wallet was not created with HD (Hierarchical Deterministic) mode and does not have a recovery phrase.</source>
+        <translation>Bu cüzdan HD (Hiyerarşik Belirleyici) modunda oluşturulmamıştır ve kurtarma ifadesi bulunmamaktadır.</translation>
+    </message>
+    <message>
+        <source>Mnemonic Retrieval Failed</source>
+        <translation>Anımsatıcı Alınamadı</translation>
+    </message>
+    <message>
+        <source>Could not retrieve the recovery phrase from this wallet.</source>
+        <translation>Bu cüzdandan kurtarma ifadesi alınamadı.</translation>
     </message>
     <message>
         <source>Cancel</source>
@@ -5265,10 +5861,6 @@ Bir cüzdan yüklemek için Dosya &gt; Cüzdan Aç'a gidin.
     <message>
         <source>SQLiteDatabase: Unknown sqlite wallet schema version %d. Only version %d is supported</source>
         <translation>SQLiteDatabase: Bilinmeyen sqlite cüzdan şema sürümü %d. Yalnızca %d sürümü destekleniyor</translation>
-    </message>
-    <message>
-        <source>Transaction index can't be disabled with governance validation enabled. Either start with -disablegovernance command line switch or enable transaction index.</source>
-        <translation>Yönetim doğrulaması etkinken işlem endeksi devre dışı bırakılamaz. Ya -disablegovernance komut satırı anahtarıyla başlayın ya da işlem endeksini etkinleştirin.</translation>
     </message>
     <message>
         <source>Unsupported category-specific logging level -loglevel=%s. Expected -loglevel=&lt;category&gt;:&lt;loglevel&gt;. Valid categories: %s. Valid loglevels: %s.</source>
@@ -5427,6 +6019,22 @@ Bir cüzdan yüklemek için Dosya &gt; Cüzdan Aç'a gidin.
         <translation>%s dosyası bu cüzdana ait tüm özel anahtarları tutuyor. Kimseyle paylaşmayın!</translation>
     </message>
     <message>
+        <source>%s request to listen on port %u. This port is considered "bad" and thus it is unlikely that any peer will connect to it. See doc/p2p-bad-ports.md for details and a full list.</source>
+        <translation>%s port %u üzerinde dinleme isteği. Bu port "kötü" olarak kabul edilir ve bu nedenle herhangi bir eşin bağlanması olası değildir. Ayrıntılar ve tam liste için doc/p2p-bad-ports.md dosyasına bakın.</translation>
+    </message>
+    <message>
+        <source>Disk space for %s may not accommodate the block files. Approximately %u GB of data will be stored in this directory.</source>
+        <translation>%s için disk alanı blok dosyalarını barındırmaya yetmeyebilir. Bu dizinde yaklaşık %u GB veri depolanacaktır.</translation>
+    </message>
+    <message>
+        <source>Error loading %s: External signer wallet being loaded without external signer support compiled</source>
+        <translation>%s yüklenirken hata: Harici imzalayıcı cüzdanı, derlenmiş harici imzalayıcı desteği olmadan yükleniyor</translation>
+    </message>
+    <message>
+        <source>Error: Dumpfile version is not supported. This version of dash-wallet only supports version 1 dumpfiles. Got dumpfile with version %s</source>
+        <translation>Hata: Döküm dosyası sürümü desteklenmiyor. Bu dash-wallet sürümü yalnızca sürüm 1 döküm dosyalarını destekler. Sürüm %s döküm dosyası alındı</translation>
+    </message>
+    <message>
         <source>Failed to create backup, file already exists! This could happen if you restarted wallet in less than 60 seconds. You can continue if you are ok with this.</source>
         <translation>Yedek oluşturulamadı, dosya zaten mevcut! Bu durum eğer 60 saniyeden kısa sürede cüzdanı yenidden başlattıysanız oluşabilir. Sizin için sorun yoksa devam edebilirsiniz.</translation>
     </message>
@@ -5483,6 +6091,10 @@ Bir cüzdan yüklemek için Dosya &gt; Cüzdan Aç'a gidin.
         <translation>Otomatik yedekleme kapalı</translation>
     </message>
     <message>
+        <source>Cannot set -forcednsseed to true when setting -dnsseed to false.</source>
+        <translation>-dnsseed false olarak ayarlandığında -forcednsseed true olarak ayarlanamaz.</translation>
+    </message>
+    <message>
         <source>Cannot set -peerblockfilters without -blockfilterindex.</source>
         <translation>-blokfiltresiindeksi olmadan -eşengellemefiltreleri ayarlanmıyor.</translation>
     </message>
@@ -5505,6 +6117,10 @@ Bir cüzdan yüklemek için Dosya &gt; Cüzdan Aç'a gidin.
     <message>
         <source>Error loading %s: Private keys can only be disabled during creation</source>
         <translation>%s yüklenirken hata oluştu: Özel anahtarlar yalnızca oluşturma sırasında devre dışı bırakılabilir</translation>
+    </message>
+    <message>
+        <source>Error: Cannot extract destination from the generated scriptpubkey</source>
+        <translation>Hata: Oluşturulan scriptpubkey'den hedef çıkarılamıyor</translation>
     </message>
     <message>
         <source>Error: Couldn't create cursor into database</source>
@@ -5703,6 +6319,10 @@ Bir cüzdan yüklemek için Dosya &gt; Cüzdan Aç'a gidin.
         <translation>'%s' PID dosyası oluşturulamadı: %s</translation>
     </message>
     <message>
+        <source>Unable to find UTXO for external input</source>
+        <translation>Harici girdi için UTXO bulunamıyor</translation>
+    </message>
+    <message>
         <source>Unable to generate initial keys</source>
         <translation>Başlangıç anahtarları oluşturulamıyor</translation>
     </message>
@@ -5801,10 +6421,6 @@ Bir cüzdan yüklemek için Dosya &gt; Cüzdan Aç'a gidin.
     <message>
         <source>Error: Dumpfile identifier record is incorrect. Got "%s", expected "%s".</source>
         <translation>Hata: Döküm dosyası tanımlayıcı kaydı yanlış. Alınan "%s", beklenen "%s".</translation>
-    </message>
-    <message>
-        <source>Error: Dumpfile version is not supported. This version of bitcoin-wallet only supports version 1 dumpfiles. Got dumpfile with version %s</source>
-        <translation>Hata: Döküm dosyası sürümü desteklenmiyor. Bitcoin-wallet'ın bu sürümü yalnızca sürüm 1 döküm dosyalarını destekler. Alınan döküm dosyası sürümü %s</translation>
     </message>
     <message>
         <source>Failed to rename invalid peers.dat file. Please move or delete it and try again.</source>

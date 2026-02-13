@@ -173,6 +173,10 @@
         <source>Font Weight Bold:</source>
         <translation>Vet lettertype:</translation>
     </message>
+    <message>
+        <source>Font in the Overview tab: </source>
+        <translation>Lettertype in het tabblad Overzicht: </translation>
+    </message>
 </context>
 <context>
     <name>AskPassphraseDialog</name>
@@ -325,6 +329,10 @@
 </context>
 <context>
     <name>BitcoinApplication</name>
+    <message>
+        <source>Settings file %1 might be corrupt or invalid.</source>
+        <translation>Instellingenbestand %1 is mogelijk beschadigd of ongeldig.</translation>
+    </message>
     <message>
         <source>Runaway exception</source>
         <translation>Runaway exception</translation>
@@ -501,6 +509,14 @@
         <translation>Wijzig de wachtwoordzin die wordt gebruikt voor portemonneeversleuteling</translation>
     </message>
     <message>
+        <source>&amp;Show Recovery Phrase…</source>
+        <translation>Herstelzin &amp;tonen…</translation>
+    </message>
+    <message>
+        <source>Show the recovery phrase (mnemonic seed) for this wallet</source>
+        <translation>De herstelzin (mnemonic seed) voor deze portemonnee tonen</translation>
+    </message>
+    <message>
         <source>Unlock wallet</source>
         <translation>Portemonnee ontgrendelen</translation>
     </message>
@@ -587,6 +603,26 @@
     <message>
         <source>%1 client</source>
         <translation>%1 client</translation>
+    </message>
+    <message>
+        <source>Waiting for blockchain sync…</source>
+        <translation>Wachten op blockchainsynchronisatie…</translation>
+    </message>
+    <message>
+        <source>Synchronizing governance data…</source>
+        <translation>Governancegegevens synchroniseren…</translation>
+    </message>
+    <message numerus="yes">
+        <source>~%n day(s) (%1 blocks) left for superblock</source>
+        <translation><numerusform>~%n dag (%1 blokken) tot het superblok</numerusform><numerusform>~%n dagen (%1 blokken) tot het superblok</numerusform></translation>
+    </message>
+    <message numerus="yes">
+        <source>~%n day(s) (%1 blocks) left for voting</source>
+        <translation><numerusform>~%n dag (%1 blokken) tot einde stemming</numerusform><numerusform>~%n dagen (%1 blokken) tot einde stemming</numerusform></translation>
+    </message>
+    <message>
+        <source>~%1% of budget committed (%2 %3).</source>
+        <translation>~%1% van het budget toegewezen (%2 %3).</translation>
     </message>
     <message>
         <source>Wallet: %1
@@ -808,10 +844,6 @@
     <message>
         <source>Up to date</source>
         <translation>Bijgewerkt</translation>
-    </message>
-    <message>
-        <source>Synchronizing additional data: %p%</source>
-        <translation>Extra data aan het synchroniseren: %p%</translation>
     </message>
     <message>
         <source>Error</source>
@@ -1115,6 +1147,38 @@
         <source>Create wallet warning</source>
         <translation>Waarschuwing portemonnee aanmaken</translation>
     </message>
+    <message>
+        <source>Unlock failed</source>
+        <translation>Ontgrendelen mislukt</translation>
+    </message>
+    <message>
+        <source>Failed to unlock wallet for mnemonic verification. Wallet creation completed but verification skipped.</source>
+        <translation>Kan portemonnee niet ontgrendelen voor mnemonische verificatie. Het aanmaken van de portemonnee is voltooid, maar de verificatie is overgeslagen.</translation>
+    </message>
+    <message>
+        <source>Mnemonic retrieval failed</source>
+        <translation>Ophalen van mnemonic mislukt</translation>
+    </message>
+    <message>
+        <source>Could not retrieve mnemonic phrase from wallet. Wallet creation completed but verification skipped.</source>
+        <translation>Kan de mnemonische zin niet ophalen uit de portemonnee. Het aanmaken van de portemonnee is voltooid, maar de verificatie is overgeslagen.</translation>
+    </message>
+    <message>
+        <source>Verification cancelled</source>
+        <translation>Verificatie geannuleerd</translation>
+    </message>
+    <message>
+        <source>You cancelled mnemonic verification. Please make sure you have saved your mnemonic phrase safely.</source>
+        <translation>U heeft de mnemonische verificatie geannuleerd. Zorg ervoor dat u uw mnemonische zin veilig heeft opgeslagen.</translation>
+    </message>
+    <message>
+        <source>Can't list signers</source>
+        <translation>Kan ondertekenaars niet weergeven</translation>
+    </message>
+    <message>
+        <source>Too many external signers found</source>
+        <translation>Te veel externe ondertekenaars gevonden</translation>
+    </message>
 </context>
 <context>
     <name>CreateWalletDialog</name>
@@ -1139,8 +1203,24 @@
         <translation>Portemonnee versleutelen</translation>
     </message>
     <message>
-        <source>Advanced Options</source>
-        <translation>Geavanceerde Opties</translation>
+        <source>Use descriptors for scriptPubKey management.</source>
+        <translation>Gebruik descriptors voor scriptPubKey-beheer.</translation>
+    </message>
+    <message>
+        <source>Descriptor Wallet</source>
+        <translation>Descriptor-portemonnee</translation>
+    </message>
+    <message>
+        <source>Use an external signing device such as a hardware wallet. Configure the external signer script in wallet preferences first.</source>
+        <translation>Gebruik een extern ondertekeningsapparaat zoals een hardware-portemonnee. Configureer eerst het externe ondertekeningsscript in de portemonnee-instellingen.</translation>
+    </message>
+    <message>
+        <source>External signer</source>
+        <translation>Externe ondertekenaar</translation>
+    </message>
+    <message>
+        <source>Show Advanced Options</source>
+        <translation>Geavanceerde opties tonen</translation>
     </message>
     <message>
         <source>Disable private keys for this wallet. Wallets with private keys disabled will have no private keys and cannot have an HD seed or imported private keys. This is ideal for watch-only wallets.</source>
@@ -1159,20 +1239,28 @@
         <translation>Maak lege portemonnee</translation>
     </message>
     <message>
-        <source>Use descriptors for scriptPubKey management. This feature is well-tested but still considered experimental and not recommended for use yet.</source>
-        <translation>Gebruik descriptors voor scriptPubKey beheer. Deze functie is goed getest, maar wordt nog steeds als experimenteel beschouwd en wordt voorlopig niet aanbevolen voor gebruik.</translation>
-    </message>
-    <message>
-        <source>Descriptor Wallet (EXPERIMENTAL)</source>
-        <translation>Descriptor Portemonnee (EXPERIMENTEEL)</translation>
-    </message>
-    <message>
         <source>Create</source>
         <translation>Aanmaken</translation>
     </message>
     <message>
+        <source>Hide Advanced Options</source>
+        <translation>Geavanceerde opties verbergen</translation>
+    </message>
+    <message>
         <source>Compiled without sqlite support (required for descriptor wallets)</source>
         <translation>Gecompileerd zonder sqlite ondersteuning (vereist voor descriptor portemonnees)</translation>
+    </message>
+    <message>
+        <source>Compiled without external signing support (required for external signing)</source>
+        <extracomment>"External signing" means using devices such as hardware wallets.</extracomment>
+        <translation>Gecompileerd zonder ondersteuning voor externe ondertekening (vereist voor externe ondertekening)</translation>
+    </message>
+</context>
+<context>
+    <name>DescriptionDialog</name>
+    <message>
+        <source>This pane shows detailed information</source>
+        <translation>Dit paneel toont gedetailleerde informatie</translation>
     </message>
 </context>
 <context>
@@ -1260,10 +1348,6 @@
         <translation>Formulier</translation>
     </message>
     <message>
-        <source>Filter List:</source>
-        <translation>Filter Lijst:</translation>
-    </message>
-    <message>
         <source>Filter proposal list</source>
         <translation>Filter proposal lijst</translation>
     </message>
@@ -1276,12 +1360,24 @@
         <translation>Aantal masternodes waarmee deze portemonnee kan stemmen (masternodes waarvoor deze portemonnee de stemsleutel heeft)</translation>
     </message>
     <message>
+        <source>No active proposals on the network.</source>
+        <translation>Geen actieve voorstellen op het netwerk.</translation>
+    </message>
+    <message>
+        <source>Resume Proposal</source>
+        <translation>Voorstel hervatten</translation>
+    </message>
+    <message>
         <source>Proposal Count:</source>
         <translation>Proposal aantal:</translation>
     </message>
     <message>
         <source>Create Proposal</source>
         <translation>Voorstel maken</translation>
+    </message>
+    <message>
+        <source>Select proposals to display</source>
+        <translation>Selecteer voorstellen om weer te geven</translation>
     </message>
     <message>
         <source>Filter by Title</source>
@@ -1308,8 +1404,76 @@
         <translation>Onthouding</translation>
     </message>
     <message>
-        <source>Proposal Info: %1</source>
-        <translation>Proposal Info: %1</translation>
+        <source>Active Proposals</source>
+        <translation>Actieve voorstellen</translation>
+    </message>
+    <message>
+        <source>My Proposals</source>
+        <translation>Mijn voorstellen</translation>
+    </message>
+    <message>
+        <source>No proposals recorded in wallet file.</source>
+        <translation>Geen voorstellen opgeslagen in het portemonneebestand.</translation>
+    </message>
+    <message>
+        <source>Resume proposal</source>
+        <translation>Voorstel hervatten</translation>
+    </message>
+    <message>
+        <source>Copy Raw JSON</source>
+        <translation>JSON kopiëren</translation>
+    </message>
+    <message>
+        <source>Open Proposal URL…</source>
+        <translation>Voorstel-URL openen…</translation>
+    </message>
+    <message>
+        <source>Details for %1</source>
+        <translation>Details voor %1</translation>
+    </message>
+    <message>
+        <source>Cannot interact with governance before sync completes</source>
+        <translation>Kan niet communiceren met governance voordat de synchronisatie is voltooid</translation>
+    </message>
+    <message>
+        <source>Creates a new proposal</source>
+        <translation>Maakt een nieuw voorstel aan</translation>
+    </message>
+    <message>
+        <source>Resumes an existing proposal</source>
+        <translation>Hervat een bestaand voorstel</translation>
+    </message>
+    <message>
+        <source>Creating proposals costs %1, insufficient balance</source>
+        <translation>Het aanmaken van voorstellen kost %1, onvoldoende saldo</translation>
+    </message>
+    <message>
+        <source>Error</source>
+        <translation>Fout</translation>
+    </message>
+    <message>
+        <source>Cannot validate URL, potentially malformed or unknown protocol.</source>
+        <translation>Kan URL niet valideren, mogelijk onjuist gevormd of onbekend protocol.</translation>
+    </message>
+    <message>
+        <source>External Link Warning</source>
+        <translation>Waarschuwing voor externe link</translation>
+    </message>
+    <message>
+        <source>You are about to open the following URL in your default browser
+
+%1
+
+This content was submitted by a user. It may not match what is described in the title.
+
+Do you wish to continue?</source>
+        <translation>U staat op het punt de volgende URL te openen in uw standaardbrowser
+
+%1
+
+Deze inhoud is ingediend door een gebruiker. Het komt mogelijk niet overeen met wat in de titel wordt beschreven.
+
+Wilt u doorgaan?</translation>
     </message>
     <message>
         <source>Voting Failed</source>
@@ -1478,7 +1642,13 @@
 <context>
     <name>LoadWalletsActivity</name>
     <message>
+        <source>Load Wallets</source>
+        <extracomment>Title of progress window which is displayed when wallets are being loaded.</extracomment>
+        <translation>Portemonnees laden</translation>
+    </message>
+    <message>
         <source>Loading wallets…</source>
+        <extracomment>Descriptive text of the load wallets progress window which indicates to the user that wallets are currently being loaded.</extracomment>
         <translation>Portemonnees laden…</translation>
     </message>
 </context>
@@ -1489,16 +1659,36 @@
         <translation>Formulier</translation>
     </message>
     <message>
-        <source>Status</source>
-        <translation>Status</translation>
+        <source>Filter by masternode type</source>
+        <translation>Filteren op masternodetype</translation>
     </message>
     <message>
-        <source>Filter List:</source>
-        <translation>Filter Lijst:</translation>
+        <source>All</source>
+        <translation>Alle</translation>
+    </message>
+    <message>
+        <source>Regular</source>
+        <translation>Regulier</translation>
+    </message>
+    <message>
+        <source>Evo</source>
+        <translation>Evo</translation>
     </message>
     <message>
         <source>Filter masternode list</source>
         <translation>Filter masternode lijst</translation>
+    </message>
+    <message>
+        <source>Owned</source>
+        <translation>Eigen</translation>
+    </message>
+    <message>
+        <source>Hide masternodes that are currently PoSe banned.</source>
+        <translation>Verberg masternodes die momenteel door PoSe zijn verbannen.</translation>
+    </message>
+    <message>
+        <source>Hide banned</source>
+        <translation>Verbannen verbergen</translation>
     </message>
     <message>
         <source>Node Count:</source>
@@ -1509,40 +1699,12 @@
         <translation>Toon alleen masternodes waar deze portemonnee sleutels voor heeft.</translation>
     </message>
     <message>
-        <source>My masternodes only</source>
-        <translation>Alleen mijn masternodes</translation>
-    </message>
-    <message>
-        <source>Service</source>
-        <translation>Service</translation>
-    </message>
-    <message>
-        <source>Type</source>
-        <translation>Type</translation>
-    </message>
-    <message>
-        <source>PoSe Score</source>
-        <translation>PoSe Score</translation>
-    </message>
-    <message>
-        <source>Registered</source>
-        <translation>Geregistreerd</translation>
-    </message>
-    <message>
-        <source>Last Paid</source>
-        <translation>Laatst Betaald</translation>
-    </message>
-    <message>
-        <source>Next Payment</source>
-        <translation>Volgende betaling</translation>
-    </message>
-    <message>
         <source>Payout Address</source>
         <translation>Betalingsadres</translation>
     </message>
     <message>
-        <source>Operator Reward</source>
-        <translation>Vergoeding voor Bediener</translation>
+        <source>Filter by</source>
+        <translation>Filteren op</translation>
     </message>
     <message>
         <source>Collateral Address</source>
@@ -1557,6 +1719,10 @@
         <translation>Stemadres</translation>
     </message>
     <message>
+        <source>Details for Masternode %1</source>
+        <translation>Details voor masternode %1</translation>
+    </message>
+    <message>
         <source>Copy ProTx Hash</source>
         <translation>Kopieer ProTx Hash</translation>
     </message>
@@ -1565,48 +1731,166 @@
         <translation>Kopieer Onderpand Outpoint</translation>
     </message>
     <message>
-        <source>Please wait…</source>
-        <translation>Wachten aub…</translation>
+        <source>Filter by any property (e.g. address or protx hash)</source>
+        <translation>Filter op elke eigenschap (bv. adres of protx hash)</translation>
+    </message>
+</context>
+<context>
+    <name>MasternodeModel</name>
+    <message numerus="yes">
+        <source>Banned for %n day(s)</source>
+        <translation><numerusform>Verbannen voor %n dag</numerusform><numerusform>Verbannen voor %n dagen</numerusform></translation>
     </message>
     <message>
-        <source>Updating…</source>
-        <translation>Bezig met bijwerken…</translation>
+        <source>Banned for less than a day</source>
+        <translation>Verbannen voor minder dan een dag</translation>
     </message>
     <message>
-        <source>ENABLED</source>
-        <translation>INGESCHAKELD</translation>
+        <source>Banned</source>
+        <translation>Verbannen</translation>
+    </message>
+    <message numerus="yes">
+        <source>Active for %n day(s)</source>
+        <translation><numerusform>Actief voor %n dag</numerusform><numerusform>Actief voor %n dagen</numerusform></translation>
     </message>
     <message>
-        <source>POSE_BANNED</source>
-        <translation>POSE_BANNED</translation>
+        <source>Active for less than a day</source>
+        <translation>Actief voor minder dan een dag</translation>
     </message>
     <message>
         <source>UNKNOWN</source>
         <translation>ONBEKEND</translation>
     </message>
     <message>
-        <source>to %1</source>
-        <translation>naar %1</translation>
+        <source>Service</source>
+        <translation>Service</translation>
     </message>
     <message>
-        <source>to UNKNOWN</source>
-        <translation>naar ONBEKEND</translation>
+        <source>Type</source>
+        <translation>Type</translation>
     </message>
     <message>
-        <source>but not claimed</source>
-        <translation>naar niet gevorderd</translation>
+        <source>PoSe Score</source>
+        <translation>PoSe-score</translation>
     </message>
     <message>
-        <source>NONE</source>
-        <translation>GEEN</translation>
+        <source>Registered</source>
+        <translation>Geregistreerd</translation>
     </message>
     <message>
-        <source>Filter by any property (e.g. address or protx hash)</source>
-        <translation>Filter op elke eigenschap (bv. adres of protx hash)</translation>
+        <source>Last Paid</source>
+        <translation>Laatst betaald</translation>
     </message>
     <message>
-        <source>Additional information for DIP3 Masternode %1</source>
-        <translation>Extra informatie voor DIP3-masternode %1</translation>
+        <source>Next Payment</source>
+        <translation>Volgende betaling</translation>
+    </message>
+    <message>
+        <source>Operator Reward</source>
+        <translation>Operatorbeloning</translation>
+    </message>
+    <message>
+        <source>ProTx Hash</source>
+        <translation>ProTx-hash</translation>
+    </message>
+</context>
+<context>
+    <name>MnemonicVerificationDialog</name>
+    <message>
+        <source>Save Your Mnemonic</source>
+        <translation>Sla uw mnemonic op</translation>
+    </message>
+    <message>
+        <source>WARNING: If you lose your mnemonic seed phrase, you will lose access to your wallet forever.</source>
+        <translation>WAARSCHUWING: Als u uw mnemonische seed-zin verliest, verliest u voor altijd de toegang tot uw portemonnee.</translation>
+    </message>
+    <message>
+        <source>Please write down these words in order. You will need them to restore your wallet.</source>
+        <translation>Schrijf deze woorden op volgorde op. U heeft ze nodig om uw portemonnee te herstellen.</translation>
+    </message>
+    <message>
+        <source>Show</source>
+        <translation>Tonen</translation>
+    </message>
+    <message>
+        <source>Hide</source>
+        <translation>Verbergen</translation>
+    </message>
+    <message>
+        <source>I have written down my mnemonic</source>
+        <translation>Ik heb mijn mnemonic opgeschreven</translation>
+    </message>
+    <message>
+        <source>To verify you've saved your mnemonic, please enter the following words:</source>
+        <translation>Om te verifiëren dat u uw mnemonic heeft opgeslagen, voer de volgende woorden in:</translation>
+    </message>
+    <message>
+        <source>Word #1:</source>
+        <translation>Woord #1:</translation>
+    </message>
+    <message>
+        <source>Word #2:</source>
+        <translation>Woord #2:</translation>
+    </message>
+    <message>
+        <source>Word #3:</source>
+        <translation>Woord #3:</translation>
+    </message>
+    <message>
+        <source>Your Recovery Phrase</source>
+        <translation>Uw herstelzin</translation>
+    </message>
+    <message>
+        <source>Close</source>
+        <translation>Sluiten</translation>
+    </message>
+    <message>
+        <source>Continue</source>
+        <translation>Doorgaan</translation>
+    </message>
+    <message>
+        <source>WARNING: Never share your recovery phrase with anyone. Store it securely offline.</source>
+        <translation>WAARSCHUWING: Deel uw herstelzin nooit met iemand. Bewaar deze veilig offline.</translation>
+    </message>
+    <message>
+        <source>These words can restore your wallet. Keep them safe and private.</source>
+        <translation>Deze woorden kunnen uw portemonnee herstellen. Bewaar ze veilig en vertrouwelijk.</translation>
+    </message>
+    <message>
+        <source>WARNING: If you lose your mnemonic seed phrase, you will lose access to your wallet forever. Write it down in a safe place and never share it with anyone.</source>
+        <translation>WAARSCHUWING: Als u uw mnemonische seed-zin verliest, verliest u voor altijd de toegang tot uw portemonnee. Schrijf deze op een veilige plaats op en deel deze nooit met iemand.</translation>
+    </message>
+    <message>
+        <source>Invalid Mnemonic</source>
+        <translation>Ongeldige mnemonic</translation>
+    </message>
+    <message>
+        <source>Mnemonic phrase has fewer than 3 words (found %1). Verification cannot proceed.</source>
+        <translation>Mnemonische zin bevat minder dan 3 woorden (gevonden: %1). Verificatie kan niet doorgaan.</translation>
+    </message>
+    <message>
+        <source>Verification Error</source>
+        <translation>Verificatiefout</translation>
+    </message>
+    <message>
+        <source>Failed to generate verification positions. Please try again.</source>
+        <translation>Kan verificatieposities niet genereren. Probeer het opnieuw.</translation>
+    </message>
+    <message>
+        <source>Word #%1:</source>
+        <translation>Woord #%1:</translation>
+    </message>
+    <message>
+        <source>Back</source>
+        <translation>Terug</translation>
+    </message>
+    <message>
+        <source>Verification Failed</source>
+        <translation>Verificatie mislukt</translation>
+    </message>
+    <message>
+        <source>One or more words are incorrect. Please try again.</source>
+        <translation>Een of meer woorden zijn onjuist. Probeer het opnieuw.</translation>
     </message>
 </context>
 <context>
@@ -1824,12 +2108,52 @@
         <translation>Toon Governance tab</translation>
     </message>
     <message>
+        <source>Show the governance clock in the status bar.</source>
+        <translation>Toon de governance-klok in de statusbalk.</translation>
+    </message>
+    <message>
+        <source>Show governance clock</source>
+        <translation>Governance-klok tonen</translation>
+    </message>
+    <message>
         <source>If you disable the spending of unconfirmed change, the change from a transaction&lt;br/&gt;cannot be used until that transaction has at least one confirmation.&lt;br/&gt;This also affects how your balance is computed.</source>
         <translation>Indien het uitgeven van onbevestigd wisselgeld uitgeschakeld wordt dan kan het wisselgeld van een transactie&lt;br/&gt;niet worden gebruikt totdat de transactie ten minste een bevestiging heeft.&lt;br/&gt;Dit heeft ook invloed op de manier waarop uw saldo wordt berekend.</translation>
     </message>
     <message>
         <source>Show mixing interface on Overview screen and reveal an additional screen which allows to spend fully mixed coins only.&lt;br/&gt;A new tab with more settings will also appear in this dialog, please make sure to check them before mixing your coins.</source>
         <translation>Toon de mix interface op het overzichtsscherm en open een extra scherm waarin u alleen volledig gemixte munten kunt uitgeven. &lt;br/&gt; Er verschijnt ook een nieuw tabblad met meer instellingen in dit dialoogvenster, controleer deze voordat u uw munten gaat mixen.</translation>
+    </message>
+    <message>
+        <source>Automatically lock small incoming transactions from external sources that may be dust attacks. Locked UTXOs will be excluded from coin selection.</source>
+        <translation>Vergrendel automatisch kleine inkomende transacties van externe bronnen die dust-aanvallen kunnen zijn. Vergrendelde UTXO's worden uitgesloten van muntselectie.</translation>
+    </message>
+    <message>
+        <source>Enable &amp;dust attack protection</source>
+        <translation>&amp;Dust-aanvalsbescherming inschakelen</translation>
+    </message>
+    <message>
+        <source>Dust threshold:</source>
+        <translation>Dust-drempel:</translation>
+    </message>
+    <message>
+        <source>Transactions with outputs at or below this amount will be considered dust when received from external sources.</source>
+        <translation>Transacties met outputs gelijk aan of lager dan dit bedrag worden als dust beschouwd wanneer ze van externe bronnen worden ontvangen.</translation>
+    </message>
+    <message>
+        <source>duffs</source>
+        <translation>duffs</translation>
+    </message>
+    <message>
+        <source>External Signer (e.g. hardware wallet)</source>
+        <translation>Externe ondertekenaar (bijv. hardware-portemonnee)</translation>
+    </message>
+    <message>
+        <source>&amp;External signer script path</source>
+        <translation>Pad naar &amp;extern ondertekeningsscript</translation>
+    </message>
+    <message>
+        <source>Full path to a %1 compatible script (e.g. C:\Downloads\hwi.exe or /Users/you/Downloads/hwi.py). Beware: malware can steal your coins!</source>
+        <translation>Volledig pad naar een met %1 compatibel script (bijv. C:\Downloads\hwi.exe of /Users/you/Downloads/hwi.py). Pas op: malware kan uw munten stelen!</translation>
     </message>
     <message>
         <source>Show additional information and buttons on overview screen.</source>
@@ -1948,10 +2272,6 @@ https://explore.transifex.com/dash/dash/</translation>
     <message>
         <source>&amp;Third-party transaction URLs</source>
         <translation>&amp;Transactie-URL's van derden</translation>
-    </message>
-    <message>
-        <source>Options set in this dialog are overridden by the command line or in the configuration file:</source>
-        <translation>Opties die in dit dialoogvenster worden ingesteld, worden overschreven door de opdrachtregel(CLI) of in het configuratiebestand:</translation>
     </message>
     <message>
         <source>Minimize instead of exit the application when the window is closed. When this option is enabled, the application will be closed only after selecting Exit in the menu.</source>
@@ -2074,6 +2394,10 @@ https://explore.transifex.com/dash/dash/</translation>
         <translation>Decimalen</translation>
     </message>
     <message>
+        <source>Options set in this dialog are overridden by the command line:</source>
+        <translation>Opties ingesteld in dit dialoogvenster worden overschreven door de opdrachtregel:</translation>
+    </message>
+    <message>
         <source>Reset all client options to default.</source>
         <translation>Reset alle clientopties naar de standaardinstellingen.</translation>
     </message>
@@ -2108,6 +2432,11 @@ https://explore.transifex.com/dash/dash/</translation>
         <translation>Herstart van de client is vereist om aanpassingen door te voeren.</translation>
     </message>
     <message>
+        <source>Compiled without external signing support (required for external signing)</source>
+        <extracomment>"External signing" means using devices such as hardware wallets.</extracomment>
+        <translation>Gecompileerd zonder ondersteuning voor externe ondertekening (vereist voor externe ondertekening)</translation>
+    </message>
+    <message>
         <source>Current settings will be backed up at "%1".</source>
         <extracomment>Text explaining to the user that the client's current settings will be backed up at a specific location. %1 is a stand-in argument for the backup location's path.</extracomment>
         <translation>Huidige instellingen worden opgeslagen in "%1".</translation>
@@ -2124,6 +2453,13 @@ https://explore.transifex.com/dash/dash/</translation>
     <message>
         <source>The supplied proxy address is invalid.</source>
         <translation>Het opgegeven proxyadres is ongeldig.</translation>
+    </message>
+</context>
+<context>
+    <name>OptionsModel</name>
+    <message>
+        <source>Could not read setting "%1", %2.</source>
+        <translation>Kan instelling "%1" niet lezen, %2.</translation>
     </message>
 </context>
 <context>
@@ -2434,8 +2770,8 @@ Om te mixen moeten andere gebruikers exact dezelfde denominaties inbrengen.</tra
         <translation>PSBT opgeslagen op schijf.</translation>
     </message>
     <message>
-        <source> * Sends %1 to %2</source>
-        <translation>* Stuurt %1 naar %2</translation>
+        <source>Sends %1 to %2</source>
+        <translation>Verstuurt %1 naar %2</translation>
     </message>
     <message>
         <source>own address</source>
@@ -2586,25 +2922,141 @@ Due to discontinued support, you should request the merchant to provide you with
     </message>
 </context>
 <context>
-    <name>Proposal</name>
+    <name>ProposalCreate</name>
     <message>
-        <source>Passing +%1</source>
-        <translation>Slaagt +%1</translation>
+        <source>New proposal</source>
+        <translation>Nieuw voorstel</translation>
     </message>
     <message>
-        <source>Needs additional %1 votes</source>
-        <translation>Heeft extra %1 stemmen nodig</translation>
+        <source>Proposal &amp;name</source>
+        <translation>Voorstel&amp;naam</translation>
+    </message>
+    <message>
+        <source>&amp;Description URL</source>
+        <translation>&amp;Beschrijvings-URL</translation>
+    </message>
+    <message>
+        <source>&amp;Payment date</source>
+        <translation>&amp;Betaaldatum</translation>
+    </message>
+    <message>
+        <source>Pa&amp;yments</source>
+        <translation>Betalin&amp;gen</translation>
+    </message>
+    <message>
+        <source>Payment &amp;address</source>
+        <translation>Betaal&amp;adres</translation>
+    </message>
+    <message>
+        <source>Payment &amp;amount</source>
+        <translation>Betaal&amp;bedrag</translation>
+    </message>
+    <message>
+        <source>To&amp;tal amount</source>
+        <translation>To&amp;taalbedrag</translation>
+    </message>
+    <message>
+        <source>The amount to request in a single payment</source>
+        <translation>Het bedrag dat in één betaling wordt aangevraagd</translation>
+    </message>
+    <message>
+        <source>View JSON</source>
+        <translation>JSON bekijken</translation>
+    </message>
+    <message>
+        <source>View Payload</source>
+        <translation>Gegevens bekijken</translation>
+    </message>
+    <message>
+        <source>margin-left: 8px;</source>
+        <translation>margin-left: 8px;</translation>
+    </message>
+    <message>
+        <source>Create Proposal</source>
+        <translation>Voorstel aanmaken</translation>
+    </message>
+    <message>
+        <source>All fields are mandatory</source>
+        <translation>Alle velden zijn verplicht</translation>
+    </message>
+    <message>
+        <source>Confirm Proposal</source>
+        <translation>Voorstel bevestigen</translation>
+    </message>
+    <message>
+        <source>Are you sure you want to create this proposal?</source>
+        <translation>Weet u zeker dat u dit voorstel wilt aanmaken?</translation>
+    </message>
+    <message>
+        <source>Creating a proposal pays %1 to the network. This fee is non-refundable regardless of outcome.</source>
+        <translation>Het aanmaken van een voorstel betaalt %1 aan het netwerk. Deze vergoeding is niet-restitueerbaar ongeacht het resultaat.</translation>
+    </message>
+    <message>
+        <source>Creation failed</source>
+        <translation>Aanmaken mislukt</translation>
+    </message>
+    <message>
+        <source>Proposal Created</source>
+        <translation>Voorstel aangemaakt</translation>
+    </message>
+    <message>
+        <source>%1 successfully sent for your proposal "%2".
+
+You will now be redirected to monitor and broadcast your new proposal, you can resume this later by clicking "Resume Proposal".</source>
+        <translation>%1 succesvol verstuurd voor uw voorstel "%2".
+
+U wordt nu doorgestuurd om uw nieuwe voorstel te monitoren en uit te zenden. U kunt dit later hervatten door op "Voorstel hervatten" te klikken.</translation>
     </message>
 </context>
 <context>
     <name>ProposalModel</name>
     <message>
-        <source>Yes</source>
-        <translation>Ja</translation>
+        <source>Pending, %1 of %2 confirmations</source>
+        <translation>In afwachting, %1 van %2 bevestigingen</translation>
     </message>
     <message>
-        <source>No</source>
-        <translation>Nee</translation>
+        <source>Voting, needs %1 more votes for funding</source>
+        <translation>Stemming, heeft nog %1 stemmen nodig voor financiering</translation>
+    </message>
+    <message>
+        <source>Passing with %1 votes</source>
+        <translation>Aangenomen met %1 stemmen</translation>
+    </message>
+    <message>
+        <source>Passing with %1 votes but budget saturated, may not be funded</source>
+        <translation>Aangenomen met %1 stemmen maar budget is verzadigd, wordt mogelijk niet gefinancierd</translation>
+    </message>
+    <message>
+        <source>Failed, needed %1 more votes</source>
+        <translation>Mislukt, had nog %1 stemmen nodig</translation>
+    </message>
+    <message>
+        <source>Funded at block %1</source>
+        <translation>Gefinancierd bij blok %1</translation>
+    </message>
+    <message>
+        <source>Funded</source>
+        <translation>Gefinancierd</translation>
+    </message>
+    <message>
+        <source>Lapsed, past proposal end date</source>
+        <translation>Verlopen, einddatum van het voorstel is verstreken</translation>
+    </message>
+    <message>
+        <source>Ready to broadcast, check "Resume Proposal" dialog</source>
+        <translation>Klaar om uit te zenden, controleer het "Voorstel hervatten"-dialoogvenster</translation>
+    </message>
+    <message>
+        <source>%1 Yes, %2 No, %3 Abstain, %4</source>
+        <translation>%1 Ja, %2 Nee, %3 Onthouding, %4</translation>
+    </message>
+    <message>
+        <source>passing with %1 votes</source>
+        <translation>aangenomen met %1 stemmen</translation>
+    </message>
+    <message>
+        <source>needs %1 more votes</source>
+        <translation>heeft nog %1 stemmen nodig</translation>
     </message>
     <message>
         <source>Hash</source>
@@ -2627,187 +3079,63 @@ Due to discontinued support, you should request the merchant to provide you with
         <translation>Bedrag</translation>
     </message>
     <message>
-        <source>Active</source>
-        <translation>Actief</translation>
-    </message>
-    <message>
-        <source>Status</source>
-        <translation>Status</translation>
+        <source>Votes</source>
+        <translation>Stemmen</translation>
     </message>
 </context>
 <context>
-    <name>ProposalWizard</name>
+    <name>ProposalResume</name>
     <message>
-        <source>Create Governance Proposal</source>
-        <translation>Governance-voorstel maken</translation>
-    </message>
-    <message>
-        <source>Enter proposal details</source>
-        <translation>Voer voorsteldetails in</translation>
-    </message>
-    <message>
-        <source>A fee will be burned when you prepare the proposal.</source>
-        <translation>Er wordt een vergoeding verbrand wanneer u het voorstel voorbereidt.</translation>
-    </message>
-    <message>
-        <source>Proposal &amp;name</source>
-        <translation>Voorstel&amp;naam</translation>
-    </message>
-    <message>
-        <source>&amp;Description URL</source>
-        <translation>&amp;Beschrijvings-URL</translation>
-    </message>
-    <message>
-        <source>Payment &amp;address</source>
-        <translation>Betalings&amp;adres</translation>
-    </message>
-    <message>
-        <source>Payment &amp;amount</source>
-        <translation>Betalings&amp;bedrag</translation>
-    </message>
-    <message>
-        <source>The amount to request in a single payment</source>
-        <translation>Het bedrag om aan te vragen in een enkele betaling</translation>
-    </message>
-    <message>
-        <source>&amp;First payment</source>
-        <translation>&amp;Eerste betaling</translation>
-    </message>
-    <message>
-        <source>Pa&amp;yments</source>
-        <translation>Bet&amp;alingen</translation>
-    </message>
-    <message>
-        <source>To&amp;tal amount</source>
-        <translation>To&amp;taal bedrag</translation>
-    </message>
-    <message>
-        <source>Proposal &amp;fee</source>
-        <translation>Voorstel&amp;vergoeding</translation>
-    </message>
-    <message>
-        <source>Next</source>
-        <translation>Volgende</translation>
-    </message>
-    <message>
-        <source>Review proposal JSON and validate.</source>
-        <translation>Bekijk voorstel-JSON en valideer.</translation>
-    </message>
-    <message>
-        <source>Hex-encoded JSON</source>
-        <translation>Hex-gecodeerde JSON</translation>
-    </message>
-    <message>
-        <source>Back</source>
-        <translation>Terug</translation>
-    </message>
-    <message>
-        <source>Validate</source>
-        <translation>Valideren</translation>
-    </message>
-    <message>
-        <source>Prepare (burn fee) and wait for confirmations.</source>
-        <translation>Voorbereiden (vergoeding verbranden) en wachten op bevestigingen.</translation>
-    </message>
-    <message>
-        <source>Copy</source>
-        <translation>Kopiëren</translation>
-    </message>
-    <message>
-        <source>At 1/6 confirmations: can be relayed and queued. At 6/6: accepted and processed.</source>
-        <translation>Bij 1/6 bevestigingen: kan worden doorgestuurd en in de wachtrij geplaatst. Bij 6/6: geaccepteerd en verwerkt.</translation>
-    </message>
-    <message>
-        <source>Confirmations progress</source>
-        <translation>Bevestigingsvoortgang</translation>
-    </message>
-    <message>
-        <source>Shows progress toward the required number of confirmations for the proposal fee transaction.</source>
-        <translation>Toont de voortgang naar het vereiste aantal bevestigingen voor de voorstelvergoedingstransactie.</translation>
-    </message>
-    <message>
-        <source>Estimated time remaining: -</source>
-        <translation>Geschatte resterende tijd: -</translation>
-    </message>
-    <message>
-        <source>Prepare Proposal</source>
-        <translation>Voorstel voorbereiden</translation>
-    </message>
-    <message>
-        <source>You can submit after 1 confirmation. At 6 confirmations it is accepted and processed.</source>
-        <translation>U kunt indienen na 1 bevestiging. Bij 6 bevestigingen wordt het geaccepteerd en verwerkt.</translation>
-    </message>
-    <message>
-        <source>Proposal ID:</source>
-        <translation>Voorstel-ID:</translation>
-    </message>
-    <message>
-        <source>Submit Proposal</source>
-        <translation>Voorstel indienen</translation>
+        <source>Resume Proposals</source>
+        <translation>Voorstellen hervatten</translation>
     </message>
     <message>
         <source>Close</source>
         <translation>Sluiten</translation>
     </message>
     <message>
-        <source>Valid</source>
-        <translation>Geldig</translation>
+        <source>No pending proposals to broadcast.</source>
+        <translation>Geen openstaande voorstellen om uit te zenden.</translation>
     </message>
     <message>
-        <source>Invalid: %1</source>
-        <translation>Ongeldig: %1</translation>
+        <source>For %1 payment(s) of %2 to %3</source>
+        <translation>Voor %1 betaling(en) van %2 aan %3</translation>
     </message>
     <message>
-        <source>Burn %1</source>
-        <translation>Verbranden %1</translation>
+        <source>Unknown</source>
+        <translation>Onbekend</translation>
     </message>
     <message>
-        <source>Burn %1 to create the fee transaction?</source>
-        <translation>%1 verbranden om de vergoedingstransactie aan te maken?</translation>
+        <source>Pending</source>
+        <translation>In afwachting</translation>
     </message>
     <message>
-        <source>Prepare failed</source>
-        <translation>Voorbereiden mislukt</translation>
+        <source>Ready</source>
+        <translation>Gereed</translation>
     </message>
     <message>
-        <source>Confirmations: %1 / %2 required</source>
-        <translation>Bevestigingen: %1 / %2 vereist</translation>
+        <source>Collateral Hash</source>
+        <translation>Onderpand-hash</translation>
     </message>
     <message>
-        <source>Estimated time remaining: Ready</source>
-        <translation>Geschatte resterende tijd: Gereed</translation>
-    </message>
-    <message numerus="yes">
-        <source>Estimated time remaining: %n minute(s)</source>
-        <translation><numerusform>Geschatte resterende tijd: %n minuut</numerusform><numerusform>Geschatte resterende tijd: %n minuten</numerusform></translation>
+        <source>Collateral Status</source>
+        <translation>Onderpandstatus</translation>
     </message>
     <message>
-        <source>Your proposal was submitted successfully.</source>
-        <translation>Uw voorstel is succesvol ingediend.</translation>
+        <source>Broadcast</source>
+        <translation>Uitzenden</translation>
     </message>
     <message>
-        <source>Already submitted</source>
-        <translation>Reeds ingediend</translation>
+        <source>Broadcast proposal</source>
+        <translation>Voorstel uitzenden</translation>
     </message>
     <message>
-        <source>This proposal has already been submitted.</source>
-        <translation>Dit voorstel is al ingediend.</translation>
+        <source>Proposal has been broadcasted to the network with hash %1</source>
+        <translation>Voorstel is uitgezonden naar het netwerk met hash %1</translation>
     </message>
     <message>
-        <source>Submission failed</source>
-        <translation>Indienen mislukt</translation>
-    </message>
-    <message>
-        <source>Proposal submitted</source>
-        <translation>Voorstel ingediend</translation>
-    </message>
-    <message>
-        <source>A fee of %1 will be burned when you prepare the proposal.</source>
-        <translation>Een vergoeding van %1 wordt verbrand wanneer u het voorstel voorbereidt.</translation>
-    </message>
-    <message>
-        <source>Prepare (burn %1) and wait for %2 confirmations.</source>
-        <translation>Voorbereiden (verbranden %1) en wachten op %2 bevestigingen.</translation>
+        <source>Unable to broadcast proposal, %1</source>
+        <translation>Kan voorstel niet uitzenden, %1</translation>
     </message>
 </context>
 <context>
@@ -2875,8 +3203,8 @@ Due to discontinued support, you should request the merchant to provide you with
         <translation>Fout: kan lettertypen niet laden.</translation>
     </message>
     <message>
-        <source>Error: Specified font-family invalid. Valid values: %1.</source>
-        <translation>Fout: opgegeven lettertypefamilie ongeldig. Geldige waarden: %1.</translation>
+        <source>Error: Font "%1" could not be loaded.</source>
+        <translation>Fout: Lettertype "%1" kon niet worden geladen.</translation>
     </message>
     <message>
         <source>Error: Specified font-weight-normal invalid. Valid range %1 to %2.</source>
@@ -3045,6 +3373,170 @@ Due to discontinued support, you should request the merchant to provide you with
         <source>unknown</source>
         <translation>onbekend</translation>
     </message>
+    <message>
+        <source>Default monospace font "%1"</source>
+        <translation>Standaard monospace-lettertype "%1"</translation>
+    </message>
+    <message>
+        <source>Embedded "%1"</source>
+        <translation>Ingebed "%1"</translation>
+    </message>
+    <message>
+        <source>Use existing font</source>
+        <translation>Bestaand lettertype gebruiken</translation>
+    </message>
+    <message>
+        <source>Custom…</source>
+        <translation>Aangepast…</translation>
+    </message>
+    <message>
+        <source>Error: Wallet controller not available.</source>
+        <translation>Fout: Portemonneecontroller niet beschikbaar.</translation>
+    </message>
+    <message>
+        <source>Error: Rescan failed. Wallet not loaded.</source>
+        <translation>Fout: Herscan mislukt. Portemonnee niet geladen.</translation>
+    </message>
+    <message>
+        <source>UNKNOWN</source>
+        <translation>ONBEKEND</translation>
+    </message>
+    <message>
+        <source>to %1</source>
+        <translation>naar %1</translation>
+    </message>
+    <message>
+        <source>to UNKNOWN</source>
+        <translation>naar ONBEKEND</translation>
+    </message>
+    <message>
+        <source>but not claimed</source>
+        <translation>maar niet opgeëist</translation>
+    </message>
+    <message>
+        <source>NONE</source>
+        <translation>GEEN</translation>
+    </message>
+    <message>
+        <source>ProTx Hash</source>
+        <translation>ProTx-hash</translation>
+    </message>
+    <message>
+        <source>Public Key Operator</source>
+        <translation>Publieke sleutel operator</translation>
+    </message>
+    <message>
+        <source>Owner Address</source>
+        <translation>Eigenaaradres</translation>
+    </message>
+    <message>
+        <source>Payout Address</source>
+        <translation>Uitbetalingsadres</translation>
+    </message>
+    <message>
+        <source>Voting Address</source>
+        <translation>Stemadres</translation>
+    </message>
+    <message>
+        <source>Collateral Address</source>
+        <translation>Onderpandadres</translation>
+    </message>
+    <message>
+        <source>Collateral Hash</source>
+        <translation>Onderpand-hash</translation>
+    </message>
+    <message>
+        <source>Collateral Index</source>
+        <translation>Onderpandindex</translation>
+    </message>
+    <message>
+        <source>Masternode Type</source>
+        <translation>Masternodetype</translation>
+    </message>
+    <message>
+        <source>Registered Height</source>
+        <translation>Registratiehoogte</translation>
+    </message>
+    <message>
+        <source>Last Paid Height</source>
+        <translation>Laatste betaalhoogte</translation>
+    </message>
+    <message>
+        <source>Consecutive Payments</source>
+        <translation>Opeenvolgende betalingen</translation>
+    </message>
+    <message>
+        <source>Operator Reward</source>
+        <translation>Operatorbeloning</translation>
+    </message>
+    <message>
+        <source>Network Addresses</source>
+        <translation>Netwerkadressen</translation>
+    </message>
+    <message>
+        <source>Platform HTTPS Addresses</source>
+        <translation>Platform HTTPS-adressen</translation>
+    </message>
+    <message>
+        <source>Platform P2P Addresses</source>
+        <translation>Platform P2P-adressen</translation>
+    </message>
+    <message>
+        <source>Platform Node ID</source>
+        <translation>Platform node-ID</translation>
+    </message>
+    <message>
+        <source>PoSe Penalty</source>
+        <translation>PoSe-straf</translation>
+    </message>
+    <message>
+        <source>PoSe Ban Height</source>
+        <translation>PoSe-verbodshoogte</translation>
+    </message>
+    <message>
+        <source>PoSe Revived Height</source>
+        <translation>PoSe-herstelhoogte</translation>
+    </message>
+    <message>
+        <source>Title</source>
+        <translation>Titel</translation>
+    </message>
+    <message>
+        <source>URL</source>
+        <translation>URL</translation>
+    </message>
+    <message>
+        <source>Destination Address</source>
+        <translation>Bestemmingsadres</translation>
+    </message>
+    <message>
+        <source>Payment Amount</source>
+        <translation>Betaalbedrag</translation>
+    </message>
+    <message>
+        <source>Payments Requested</source>
+        <translation>Aangevraagde betalingen</translation>
+    </message>
+    <message>
+        <source>Payment Start</source>
+        <translation>Betaling start</translation>
+    </message>
+    <message>
+        <source>Payment End</source>
+        <translation>Betaling einde</translation>
+    </message>
+    <message>
+        <source>Object Hash</source>
+        <translation>Object-hash</translation>
+    </message>
+    <message>
+        <source>Parent Hash</source>
+        <translation>Ouder-hash</translation>
+    </message>
+    <message>
+        <source>Collateral Date</source>
+        <translation>Onderpanddatum</translation>
+    </message>
 </context>
 <context>
     <name>QRDialog</name>
@@ -3184,6 +3676,10 @@ Due to discontinued support, you should request the merchant to provide you with
         <translation>&amp;Peers</translation>
     </message>
     <message>
+        <source>&amp;Repair</source>
+        <translation>&amp;Reparatie</translation>
+    </message>
+    <message>
         <source>Wallet:</source>
         <translation>Portemonnee:</translation>
     </message>
@@ -3263,26 +3759,6 @@ Due to discontinued support, you should request the merchant to provide you with
         <source>Addresses Rate-Limited</source>
         <extracomment>Text title for the Addresses Rate-Limited field in the peer details area, which displays the total number of addresses received from this peer that were dropped (not processed) due to rate-limiting.</extracomment>
         <translation>Rate-Limited Adressen </translation>
-    </message>
-    <message>
-        <source>Rescan blockchain files 1</source>
-        <translation>Herscan blokketenbestanden 1</translation>
-    </message>
-    <message>
-        <source>Rescan blockchain files 2</source>
-        <translation>Herscan blokketenbestanden 2</translation>
-    </message>
-    <message>
-        <source>The buttons below will restart the wallet with command-line options to repair the wallet, fix issues with corrupt blockchain files or missing/obsolete transactions.</source>
-        <translation>De knoppen onderaan zal de portemonnee herstarten met commandoregelopties voor portemonneeherstel, voor reparatie van corrupte blockchain bestanden, of om ontbrekende transacties te herstellen.</translation>
-    </message>
-    <message>
-        <source>-rescan=1: Rescan the block chain for missing wallet transactions starting from wallet creation time.</source>
-        <translation>-rescan=1: Scan de blockchain opnieuw op ontbrekende transacties vanaf het moment dat de portefeuille is aangemaakt.</translation>
-    </message>
-    <message>
-        <source>-rescan=2: Rescan the block chain for missing wallet transactions starting from genesis block.</source>
-        <translation>-rescan=2: Scan de Blockchain opnieuw op ontbrekende transacties, startend bij de allereerste block.</translation>
     </message>
     <message>
         <source>User Agent</source>
@@ -3445,8 +3921,36 @@ Due to discontinued support, you should request the merchant to provide you with
         <translation>Tijdcompensatie</translation>
     </message>
     <message>
-        <source>&amp;Wallet Repair</source>
-        <translation>&amp;Portemonnee Herstel</translation>
+        <source>Repair options.</source>
+        <translation>Reparatieopties.</translation>
+    </message>
+    <message>
+        <source>The buttons below will trigger repair actions to fix issues with corrupt files or missing/obsolete transactions.</source>
+        <translation>De onderstaande knoppen starten reparatieacties om problemen met corrupte bestanden of ontbrekende/verouderde transacties op te lossen.</translation>
+    </message>
+    <message>
+        <source>Rescan Chain</source>
+        <translation>Keten opnieuw scannen</translation>
+    </message>
+    <message>
+        <source>Rescan the chain for missing wallet transactions starting from wallet creation time.</source>
+        <translation>De keten opnieuw scannen voor ontbrekende portemonnaetransacties vanaf het aanmaakmoment van de portemonnee.</translation>
+    </message>
+    <message>
+        <source>Rescan Chain (full)</source>
+        <translation>Keten opnieuw scannen (volledig)</translation>
+    </message>
+    <message>
+        <source>Rescan the chain for missing wallet transactions starting from genesis block.</source>
+        <translation>De keten opnieuw scannen voor ontbrekende portemonnaetransacties vanaf het genesisblok.</translation>
+    </message>
+    <message>
+        <source>Rebuild Index</source>
+        <translation>Index opnieuw opbouwen</translation>
+    </message>
+    <message>
+        <source>Restarts the client to rebuild the chain index from current blk000??.dat files.</source>
+        <translation>Herstart de client om de ketenindex opnieuw op te bouwen uit de huidige blk000??.dat-bestanden.</translation>
     </message>
     <message>
         <source>The total number of addresses received from this peer that were processed (excludes addresses that were dropped due to rate-limiting).</source>
@@ -3457,18 +3961,6 @@ Due to discontinued support, you should request the merchant to provide you with
         <source>The total number of addresses received from this peer that were dropped (not processed) due to rate-limiting.</source>
         <extracomment>Tooltip text for the Addresses Rate-Limited field in the peer details area, which displays the total number of addresses received from this peer that were dropped (not processed) due to rate-limiting.</extracomment>
         <translation>Het totale aantal ontvangen adressen van deze peer die zijn verworpen (niet verwerkt) vanwege snelheidsbeperkingen.</translation>
-    </message>
-    <message>
-        <source>Wallet repair options.</source>
-        <translation>Portemonneeherstelopties</translation>
-    </message>
-    <message>
-        <source>Rebuild index</source>
-        <translation>Herbouw index</translation>
-    </message>
-    <message>
-        <source>-reindex: Rebuild block chain index from current blk000??.dat files.</source>
-        <translation>-herbouw index: Herbouw de blokketen index vanuit de huidige blk000???.dat bestanden.</translation>
     </message>
     <message>
         <source>Inbound: initiated by peer</source>
@@ -3633,7 +4125,7 @@ Due to discontinued support, you should request the merchant to provide you with
     </message>
     <message>
         <source>&amp;Copy address</source>
-        <extracomment>Context menu action to copy the address of a peer</extracomment>
+        <extracomment>Context menu action to copy the address of a peer.</extracomment>
         <translation>&amp;Kopieer adres</translation>
     </message>
     <message>
@@ -3642,7 +4134,7 @@ Due to discontinued support, you should request the merchant to provide you with
     </message>
     <message>
         <source>&amp;Copy IP/Netmask</source>
-        <extracomment>Context menu action to copy the IP/Netmask of a banned peer. IP/Netmask is the combination of a peer's IP address and its Netmask. For IP address see: https://en.wikipedia.org/wiki/IP_address</extracomment>
+        <extracomment>Context menu action to copy the IP/Netmask of a banned peer. IP/Netmask is the combination of a peer's IP address and its Netmask. For IP address, see: https://en.wikipedia.org/wiki/IP_address.</extracomment>
         <translation>&amp;Kopieer IP/Netmask</translation>
     </message>
     <message>
@@ -3843,6 +4335,14 @@ Nota: Het bericht zal niet verzonden worden met de betaling over het Dash netwer
         <translation>Kopieer &amp;adres</translation>
     </message>
     <message>
+        <source>&amp;Verify</source>
+        <translation>&amp;Verifiëren</translation>
+    </message>
+    <message>
+        <source>Verify this address on e.g. a hardware wallet screen</source>
+        <translation>Verifieer dit adres op bijv. het scherm van een hardware-portemonnee</translation>
+    </message>
+    <message>
         <source>&amp;Save Image…</source>
         <translation>&amp;Sla afbeelding op…</translation>
     </message>
@@ -3884,6 +4384,33 @@ Nota: Het bericht zal niet verzonden worden met de betaling over het Dash netwer
     <message>
         <source>Requested</source>
         <translation>Verzoek ingediend</translation>
+    </message>
+</context>
+<context>
+    <name>RescanWalletActivity</name>
+    <message>
+        <source>Rescan unavailable</source>
+        <translation>Herscan niet beschikbaar</translation>
+    </message>
+    <message>
+        <source>Wallet is currently rescanning. Abort existing rescan or wait.</source>
+        <translation>Portemonnee wordt momenteel opnieuw gescand. Breek de bestaande scan af of wacht.</translation>
+    </message>
+    <message>
+        <source>Rescan wallet failed</source>
+        <translation>Herscan van portemonnee mislukt</translation>
+    </message>
+    <message>
+        <source>Rescan failed. Potentially corrupted data files.</source>
+        <translation>Herscan mislukt. Mogelijk beschadigde gegevensbestanden.</translation>
+    </message>
+    <message>
+        <source>Rescan aborted</source>
+        <translation>Herscan afgebroken</translation>
+    </message>
+    <message>
+        <source>Wallet rescan was aborted.</source>
+        <translation>De herscan van de portemonnee is afgebroken.</translation>
     </message>
 </context>
 <context>
@@ -4105,10 +4632,6 @@ Nota: Het bericht zal niet verzonden worden met de betaling over het Dash netwer
         <translation>Maak &amp;ongetekend aan</translation>
     </message>
     <message>
-        <source> from wallet '%1'</source>
-        <translation>van portemonnee '%1'</translation>
-    </message>
-    <message>
         <source>%1 to '%2'</source>
         <translation>%1 naar '%2'</translation>
     </message>
@@ -4177,9 +4700,39 @@ Nota: Het bericht zal niet verzonden worden met de betaling over het Dash netwer
         <translation>Maakt een Partially Signed Blockchain Transaction (PSBT) aan voor gebruik met bijvoorbeeld een offline %1 portemonnee of een PSBT compatibele hardware portemonnee .</translation>
     </message>
     <message>
+        <source>Sign on device</source>
+        <extracomment>"device" usually means a hardware wallet.</extracomment>
+        <translation>Ondertekenen op apparaat</translation>
+    </message>
+    <message>
+        <source>Connect your hardware wallet first.</source>
+        <translation>Sluit eerst uw hardware-portemonnee aan.</translation>
+    </message>
+    <message>
+        <source>Set external signer script path in Options -&gt; Wallet</source>
+        <extracomment>"External signer" means using devices such as hardware wallets.</extracomment>
+        <translation>Stel het pad naar het externe ondertekeningsscript in via Opties -&gt; Portemonnee</translation>
+    </message>
+    <message>
+        <source>Confirm duplicate recipients</source>
+        <translation>Dubbele ontvangers bevestigen</translation>
+    </message>
+    <message>
+        <source>You are sending to the same address multiple times in a single transaction. This is unusual and may not be what you intended. Are you sure you want to proceed?</source>
+        <translation>U verstuurt meerdere keren naar hetzelfde adres in één transactie. Dit is ongebruikelijk en mogelijk niet wat u bedoelde. Weet u zeker dat u wilt doorgaan?</translation>
+    </message>
+    <message>
+        <source>%1 from wallet '%2'</source>
+        <translation>%1 uit portemonnee '%2'</translation>
+    </message>
+    <message>
         <source>Do you want to create this transaction?</source>
         <extracomment>Message displayed when attempting to create a transaction. Cautionary text to prompt the user to verify that the displayed transaction details represent the transaction the user intends to create.</extracomment>
         <translation>Wilt u deze transactie aanmaken?</translation>
+    </message>
+    <message>
+        <source>Do you want to draft this transaction?</source>
+        <translation>Wilt u een concept van deze transactie maken?</translation>
     </message>
     <message>
         <source>Please, review your transaction proposal. This will produce a Partially Signed Blockchain Transaction (PSBT) which you can save or copy and then sign with e.g. an offline %1 wallet, or a PSBT-compatible hardware wallet.</source>
@@ -4201,9 +4754,27 @@ Nota: Het bericht zal niet verzonden worden met de betaling over het Dash netwer
         <translation>Klik op "Toon Details..." om de ontvangerslijst te bekijken</translation>
     </message>
     <message>
+        <source>Sign failed</source>
+        <translation>Ondertekenen mislukt</translation>
+    </message>
+    <message>
+        <source>External signer not found</source>
+        <extracomment>"External signer" means using devices such as hardware wallets.</extracomment>
+        <translation>Externe ondertekenaar niet gevonden</translation>
+    </message>
+    <message>
+        <source>External signer failure</source>
+        <extracomment>"External signer" means using devices such as hardware wallets.</extracomment>
+        <translation>Fout van externe ondertekenaar</translation>
+    </message>
+    <message>
         <source>Partially Signed Transaction (Binary)</source>
         <extracomment>Expanded name of the binary PSBT file format. See: BIP 174.</extracomment>
         <translation>Deels ondertekende transactie (Binair)</translation>
+    </message>
+    <message>
+        <source>External balance:</source>
+        <translation>Extern saldo:</translation>
     </message>
     <message>
         <source>The recipient address is not valid. Please recheck.</source>
@@ -4220,10 +4791,6 @@ Nota: Het bericht zal niet verzonden worden met de betaling over het Dash netwer
     <message>
         <source>The total exceeds your balance when the %1 transaction fee is included.</source>
         <translation>Het totaal overschrijdt uw huidige saldo wanneer de %1 transactie vergoeding wordt meegerekend.</translation>
-    </message>
-    <message>
-        <source>Duplicate address found: addresses should only be used once each.</source>
-        <translation>Dubbel adres gevonden: adressen mogen maar één keer worden gebruikt worden.</translation>
     </message>
     <message>
         <source>Transaction creation failed!</source>
@@ -4711,17 +5278,6 @@ Nota: Het bericht zal niet verzonden worden met de betaling over het Dash netwer
     </message>
 </context>
 <context>
-    <name>TransactionDescDialog</name>
-    <message>
-        <source>This pane shows a detailed description of the transaction</source>
-        <translation>Dit venster laat een uitgebreide beschrijving van de transactie zien</translation>
-    </message>
-    <message>
-        <source>Details for %1</source>
-        <translation>Details voor %1</translation>
-    </message>
-</context>
-<context>
     <name>TransactionTableModel</name>
     <message>
         <source>Date</source>
@@ -4798,6 +5354,10 @@ Nota: Het bericht zal niet verzonden worden met de betaling over het Dash netwer
     <message>
         <source>Platform Transfer</source>
         <translation>Platform overdracht</translation>
+    </message>
+    <message>
+        <source>Dust Receive</source>
+        <translation>Dust-ontvangst</translation>
     </message>
     <message>
         <source>%1 Mixing</source>
@@ -4931,6 +5491,10 @@ Nota: Het bericht zal niet verzonden worden met de betaling over het Dash netwer
         <translation>Platform overdracht</translation>
     </message>
     <message>
+        <source>Dust Receive</source>
+        <translation>Dust-ontvangst</translation>
+    </message>
+    <message>
         <source>Other</source>
         <translation>Anders</translation>
     </message>
@@ -4977,6 +5541,10 @@ Nota: Het bericht zal niet verzonden worden met de betaling over het Dash netwer
     <message>
         <source>Rese&amp;nd transaction</source>
         <translation>Transactie &amp;opnieuw versturen</translation>
+    </message>
+    <message>
+        <source>&amp;Unlock dust UTXO</source>
+        <translation>Dust-UTXO &amp;ontgrendelen</translation>
     </message>
     <message>
         <source>&amp;Edit address label</source>
@@ -5043,6 +5611,10 @@ Nota: Het bericht zal niet verzonden worden met de betaling over het Dash netwer
     <message>
         <source>The transaction history was successfully saved to %1.</source>
         <translation>De transactiegeschiedenis was succesvol bewaard in %1.</translation>
+    </message>
+    <message>
+        <source>Details for %1</source>
+        <translation>Details voor %1</translation>
     </message>
     <message>
         <source>QR code</source>
@@ -5133,6 +5705,10 @@ Ga naar Bestand &gt; Open portemonnee om een wallet te openen.
         <translation>Verstuur munten</translation>
     </message>
     <message>
+        <source>Can't display address</source>
+        <translation>Kan adres niet weergeven</translation>
+    </message>
+    <message>
         <source>default wallet</source>
         <translation>standaard portemonnee</translation>
     </message>
@@ -5175,6 +5751,26 @@ Ga naar Bestand &gt; Open portemonnee om een wallet te openen.
     <message>
         <source>The wallet data was successfully saved to %1.</source>
         <translation>De portemonneedata is succesvol opgeslagen in %1.</translation>
+    </message>
+    <message>
+        <source>No Recovery Phrase</source>
+        <translation>Geen herstelzin</translation>
+    </message>
+    <message>
+        <source>This wallet does not have private keys and therefore has no recovery phrase.</source>
+        <translation>Deze portemonnee heeft geen privésleutels en heeft daarom geen herstelzin.</translation>
+    </message>
+    <message>
+        <source>This wallet was not created with HD (Hierarchical Deterministic) mode and does not have a recovery phrase.</source>
+        <translation>Deze portemonnee is niet aangemaakt in HD-modus (Hierarchisch Deterministisch) en heeft geen herstelzin.</translation>
+    </message>
+    <message>
+        <source>Mnemonic Retrieval Failed</source>
+        <translation>Ophalen van mnemonic mislukt</translation>
+    </message>
+    <message>
+        <source>Could not retrieve the recovery phrase from this wallet.</source>
+        <translation>Kan de herstelzin niet ophalen uit deze portemonnee.</translation>
     </message>
     <message>
         <source>Cancel</source>
@@ -5266,10 +5862,6 @@ Ga naar Bestand &gt; Open portemonnee om een wallet te openen.
     <message>
         <source>SQLiteDatabase: Unknown sqlite wallet schema version %d. Only version %d is supported</source>
         <translation>SQLiteDatabase: Onbekend sqlite wallet schema versie %d. Alleen versie %d wordt ondersteund</translation>
-    </message>
-    <message>
-        <source>Transaction index can't be disabled with governance validation enabled. Either start with -disablegovernance command line switch or enable transaction index.</source>
-        <translation>Transactieindex kan niet worden uitgeschakeld als validatie van governance is ingeschakeld. Begin met -disablegovernance command line switch of schakel transactieindex in.</translation>
     </message>
     <message>
         <source>Unsupported category-specific logging level -loglevel=%s. Expected -loglevel=&lt;category&gt;:&lt;loglevel&gt;. Valid categories: %s. Valid loglevels: %s.</source>
@@ -5428,6 +6020,22 @@ Ga naar Bestand &gt; Open portemonnee om een wallet te openen.
         <translation>%s bestand bevat alle persoonlijke sleutel van deze portemonnee. Deel deze met niemand!</translation>
     </message>
     <message>
+        <source>%s request to listen on port %u. This port is considered "bad" and thus it is unlikely that any peer will connect to it. See doc/p2p-bad-ports.md for details and a full list.</source>
+        <translation>%s verzoek om te luisteren op poort %u. Deze poort wordt als "slecht" beschouwd en het is daarom onwaarschijnlijk dat een peer ermee verbinding maakt. Zie doc/p2p-bad-ports.md voor details en een volledige lijst.</translation>
+    </message>
+    <message>
+        <source>Disk space for %s may not accommodate the block files. Approximately %u GB of data will be stored in this directory.</source>
+        <translation>De schijfruimte voor %s is mogelijk niet voldoende voor de blokbestanden. Er wordt ongeveer %u GB aan gegevens opgeslagen in deze map.</translation>
+    </message>
+    <message>
+        <source>Error loading %s: External signer wallet being loaded without external signer support compiled</source>
+        <translation>Fout bij het laden van %s: portemonnee met externe ondertekenaar wordt geladen zonder dat ondersteuning voor externe ondertekenaars is gecompileerd</translation>
+    </message>
+    <message>
+        <source>Error: Dumpfile version is not supported. This version of dash-wallet only supports version 1 dumpfiles. Got dumpfile with version %s</source>
+        <translation>Fout: Dumpbestandsversie wordt niet ondersteund. Deze versie van dash-wallet ondersteunt alleen versie 1-dumpbestanden. Dumpbestand met versie %s ontvangen</translation>
+    </message>
+    <message>
         <source>Failed to create backup, file already exists! This could happen if you restarted wallet in less than 60 seconds. You can continue if you are ok with this.</source>
         <translation>Backup maken is mislukt, het bestand bestaat al! Dit kan gebeuren als u de wallet herstart binnen 60 seconden. U kunt verder gaan als u hier ok mee bent.</translation>
     </message>
@@ -5484,6 +6092,10 @@ Ga naar Bestand &gt; Open portemonnee om een wallet te openen.
         <translation>Automatische backups uitgeschakeld</translation>
     </message>
     <message>
+        <source>Cannot set -forcednsseed to true when setting -dnsseed to false.</source>
+        <translation>Kan -forcednsseed niet op true zetten wanneer -dnsseed op false staat.</translation>
+    </message>
+    <message>
         <source>Cannot set -peerblockfilters without -blockfilterindex.</source>
         <translation>Kan -peerblockfilters niet instellen zonder -blockfilterindex.</translation>
     </message>
@@ -5506,6 +6118,10 @@ Ga naar Bestand &gt; Open portemonnee om een wallet te openen.
     <message>
         <source>Error loading %s: Private keys can only be disabled during creation</source>
         <translation>Fout bij laden %s: privésleutels kunnen alleen worden uitgeschakeld tijdens aanmaken</translation>
+    </message>
+    <message>
+        <source>Error: Cannot extract destination from the generated scriptpubkey</source>
+        <translation>Fout: Kan bestemming niet extraheren uit de gegenereerde scriptpubkey</translation>
     </message>
     <message>
         <source>Error: Couldn't create cursor into database</source>
@@ -5704,6 +6320,10 @@ Ga naar Bestand &gt; Open portemonnee om een wallet te openen.
         <translation>Kan het PID bestand '%s' niet maken: %s</translation>
     </message>
     <message>
+        <source>Unable to find UTXO for external input</source>
+        <translation>Kan UTXO voor externe invoer niet vinden</translation>
+    </message>
+    <message>
         <source>Unable to generate initial keys</source>
         <translation>Kan eerste sleutels niet genereren</translation>
     </message>
@@ -5802,10 +6422,6 @@ Ga naar Bestand &gt; Open portemonnee om een wallet te openen.
     <message>
         <source>Error: Dumpfile identifier record is incorrect. Got "%s", expected "%s".</source>
         <translation>Fout: Dumpfile identificaterecord is onjuist. Ontvangen "%s", verwacht "%s".</translation>
-    </message>
-    <message>
-        <source>Error: Dumpfile version is not supported. This version of bitcoin-wallet only supports version 1 dumpfiles. Got dumpfile with version %s</source>
-        <translation>Fout: Dumpfile versie wordt niet ondersteund. Deze versie van bitcoin wallet ondersteunt alleen versie 1 dumpfiles. Ontvangen dumpfile is versie %s.</translation>
     </message>
     <message>
         <source>Failed to rename invalid peers.dat file. Please move or delete it and try again.</source>
@@ -6134,10 +6750,6 @@ Ga naar Bestand &gt; Open portemonnee om een wallet te openen.
     <message>
         <source>%s is set very high! Fees this large could be paid on a single transaction.</source>
         <translation>%s is zeer hoog ingesteld! Vergoedingen van deze grootte kunnen betaald worden op een enkele transactie.</translation>
-    </message>
-    <message>
-        <source>%s request to listen on port %u. This port is considered "bad" and thus it is unlikely that any Dash Core peers connect to it. See doc/p2p-bad-ports.md for details and a full list.</source>
-        <translation>%s verzoek om te luisteren op poort %u. Deze poort wordt als "slecht" beschouwd, waardoor het onwaarschijnlijk is dat Dash Core peers er mee verbinden. Zie doc/p2p-bad-ports.md voor details en een volledige lijst.</translation>
     </message>
     <message>
         <source>Cannot provide specific connections and have addrman find outgoing connections at the same time.</source>

@@ -20,8 +20,8 @@ QT_TRANSLATE_NOOP("dash-core", ""
 "%s is set very high! Fees this large could be paid on a single transaction."),
 QT_TRANSLATE_NOOP("dash-core", ""
 "%s request to listen on port %u. This port is considered \"bad\" and thus it "
-"is unlikely that any Dash Core peers connect to it. See doc/p2p-bad-ports.md "
-"for details and a full list."),
+"is unlikely that any peer will connect to it. See doc/p2p-bad-ports.md for "
+"details and a full list."),
 QT_TRANSLATE_NOOP("dash-core", ""
 "%s uses exact denominated amounts to send funds, you might simply need to "
 "mix some more coins."),
@@ -46,8 +46,14 @@ QT_TRANSLATE_NOOP("dash-core", ""
 "Cannot provide specific connections and have addrman find outgoing "
 "connections at the same time."),
 QT_TRANSLATE_NOOP("dash-core", ""
+"Disk space for %s may not accommodate the block files. Approximately %u GB "
+"of data will be stored in this directory."),
+QT_TRANSLATE_NOOP("dash-core", ""
 "Distributed under the MIT software license, see the accompanying file %s or "
 "%s"),
+QT_TRANSLATE_NOOP("dash-core", ""
+"Error loading %s: External signer wallet being loaded without external "
+"signer support compiled"),
 QT_TRANSLATE_NOOP("dash-core", ""
 "Error loading %s: You can't enable HD on an already existing non-HD wallet"),
 QT_TRANSLATE_NOOP("dash-core", ""
@@ -63,8 +69,8 @@ QT_TRANSLATE_NOOP("dash-core", ""
 QT_TRANSLATE_NOOP("dash-core", ""
 "Error: Dumpfile identifier record is incorrect. Got \"%s\", expected \"%s\"."),
 QT_TRANSLATE_NOOP("dash-core", ""
-"Error: Dumpfile version is not supported. This version of bitcoin-wallet "
-"only supports version 1 dumpfiles. Got dumpfile with version %s"),
+"Error: Dumpfile version is not supported. This version of dash-wallet only "
+"supports version 1 dumpfiles. Got dumpfile with version %s"),
 QT_TRANSLATE_NOOP("dash-core", ""
 "Failed to create backup, file already exists! This could happen if you "
 "restarted wallet in less than 60 seconds. You can continue if you are ok "
@@ -166,10 +172,6 @@ QT_TRANSLATE_NOOP("dash-core", ""
 "Total length of network version string (%i) exceeds maximum length (%i). "
 "Reduce the number or size of uacomments."),
 QT_TRANSLATE_NOOP("dash-core", ""
-"Transaction index can't be disabled with governance validation enabled. "
-"Either start with -disablegovernance command line switch or enable "
-"transaction index."),
-QT_TRANSLATE_NOOP("dash-core", ""
 "Transaction requires one destination of non-0 value, a non-0 feerate, or a "
 "pre-selected input"),
 QT_TRANSLATE_NOOP("dash-core", ""
@@ -225,6 +227,7 @@ QT_TRANSLATE_NOOP("dash-core", "Cannot create socket (socket() returned error %s
 QT_TRANSLATE_NOOP("dash-core", "Cannot get socket address for %s"),
 QT_TRANSLATE_NOOP("dash-core", "Cannot init Statsd client"),
 QT_TRANSLATE_NOOP("dash-core", "Cannot resolve -%s address: '%s'"),
+QT_TRANSLATE_NOOP("dash-core", "Cannot set -forcednsseed to true when setting -dnsseed to false."),
 QT_TRANSLATE_NOOP("dash-core", "Cannot set -peerblockfilters without -blockfilterindex."),
 QT_TRANSLATE_NOOP("dash-core", "Cannot write to data directory '%s'; check permissions."),
 QT_TRANSLATE_NOOP("dash-core", "Collateral not valid."),
@@ -253,6 +256,7 @@ QT_TRANSLATE_NOOP("dash-core", "Error opening block database"),
 QT_TRANSLATE_NOOP("dash-core", "Error reading from database, shutting down."),
 QT_TRANSLATE_NOOP("dash-core", "Error reading next record from wallet database"),
 QT_TRANSLATE_NOOP("dash-core", "Error upgrading evo database for EHF"),
+QT_TRANSLATE_NOOP("dash-core", "Error: Cannot extract destination from the generated scriptpubkey"),
 QT_TRANSLATE_NOOP("dash-core", "Error: Couldn't create cursor into database"),
 QT_TRANSLATE_NOOP("dash-core", "Error: Disk space is low for %s"),
 QT_TRANSLATE_NOOP("dash-core", "Error: Dumpfile checksum does not match. Computed %s, expected %s"),
@@ -385,6 +389,7 @@ QT_TRANSLATE_NOOP("dash-core", "Trying to connect…"),
 QT_TRANSLATE_NOOP("dash-core", "Unable to bind to %s on this computer (bind returned error %s)"),
 QT_TRANSLATE_NOOP("dash-core", "Unable to bind to %s on this computer. %s is probably already running."),
 QT_TRANSLATE_NOOP("dash-core", "Unable to create the PID file '%s': %s"),
+QT_TRANSLATE_NOOP("dash-core", "Unable to find UTXO for external input"),
 QT_TRANSLATE_NOOP("dash-core", "Unable to generate initial keys"),
 QT_TRANSLATE_NOOP("dash-core", "Unable to locate enough mixed funds for this transaction."),
 QT_TRANSLATE_NOOP("dash-core", "Unable to locate enough non-denominated funds for this transaction."),
