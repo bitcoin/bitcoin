@@ -173,6 +173,10 @@
         <source>Font Weight Bold:</source>
         <translation>文字の太さ（太字）：</translation>
     </message>
+    <message>
+        <source>Font in the Overview tab: </source>
+        <translation>概要タブのフォント: </translation>
+    </message>
 </context>
 <context>
     <name>AskPassphraseDialog</name>
@@ -325,6 +329,10 @@
 </context>
 <context>
     <name>BitcoinApplication</name>
+    <message>
+        <source>Settings file %1 might be corrupt or invalid.</source>
+        <translation>設定ファイル %1 が破損しているか無効である可能性があります。</translation>
+    </message>
     <message>
         <source>Runaway exception</source>
         <translation>ランナウェイの例外</translation>
@@ -501,6 +509,14 @@
         <translation>ウォレット暗号化のためのパスフレーズを変更</translation>
     </message>
     <message>
+        <source>&amp;Show Recovery Phrase…</source>
+        <translation>リカバリーフレーズを表示(&amp;S)…</translation>
+    </message>
+    <message>
+        <source>Show the recovery phrase (mnemonic seed) for this wallet</source>
+        <translation>このウォレットのリカバリーフレーズ（ニーモニックシード）を表示する</translation>
+    </message>
+    <message>
         <source>Unlock wallet</source>
         <translation>ウォレットをアンロックする</translation>
     </message>
@@ -587,6 +603,26 @@
     <message>
         <source>%1 client</source>
         <translation>%1 クライアント</translation>
+    </message>
+    <message>
+        <source>Waiting for blockchain sync…</source>
+        <translation>ブロックチェーンの同期を待っています…</translation>
+    </message>
+    <message>
+        <source>Synchronizing governance data…</source>
+        <translation>ガバナンスデータを同期中…</translation>
+    </message>
+    <message numerus="yes">
+        <source>~%n day(s) (%1 blocks) left for superblock</source>
+        <translation><numerusform>スーパーブロックまであと約%n日（%1ブロック）</numerusform></translation>
+    </message>
+    <message numerus="yes">
+        <source>~%n day(s) (%1 blocks) left for voting</source>
+        <translation><numerusform>投票終了まであと約%n日（%1ブロック）</numerusform></translation>
+    </message>
+    <message>
+        <source>~%1% of budget committed (%2 %3).</source>
+        <translation>~%1% の予算が割り当て済み (%2 %3)。</translation>
     </message>
     <message>
         <source>Wallet: %1
@@ -807,10 +843,6 @@
     <message>
         <source>Up to date</source>
         <translation>バージョンは最新です</translation>
-    </message>
-    <message>
-        <source>Synchronizing additional data: %p%</source>
-        <translation>追加データを同期中: %p%</translation>
     </message>
     <message>
         <source>Error</source>
@@ -1114,6 +1146,38 @@
         <source>Create wallet warning</source>
         <translation>ウォレット作成の警告</translation>
     </message>
+    <message>
+        <source>Unlock failed</source>
+        <translation>ロック解除に失敗しました</translation>
+    </message>
+    <message>
+        <source>Failed to unlock wallet for mnemonic verification. Wallet creation completed but verification skipped.</source>
+        <translation>ニーモニック検証のためのウォレットのロック解除に失敗しました。ウォレットの作成は完了しましたが、検証はスキップされました。</translation>
+    </message>
+    <message>
+        <source>Mnemonic retrieval failed</source>
+        <translation>ニーモニックの取得に失敗しました</translation>
+    </message>
+    <message>
+        <source>Could not retrieve mnemonic phrase from wallet. Wallet creation completed but verification skipped.</source>
+        <translation>ウォレットからニーモニックフレーズを取得できませんでした。ウォレットの作成は完了しましたが、検証はスキップされました。</translation>
+    </message>
+    <message>
+        <source>Verification cancelled</source>
+        <translation>検証がキャンセルされました</translation>
+    </message>
+    <message>
+        <source>You cancelled mnemonic verification. Please make sure you have saved your mnemonic phrase safely.</source>
+        <translation>ニーモニック検証をキャンセルしました。ニーモニックフレーズを安全に保存したことを確認してください。</translation>
+    </message>
+    <message>
+        <source>Can't list signers</source>
+        <translation>署名者を一覧表示できません</translation>
+    </message>
+    <message>
+        <source>Too many external signers found</source>
+        <translation>外部署名者が多すぎます</translation>
+    </message>
 </context>
 <context>
     <name>CreateWalletDialog</name>
@@ -1138,8 +1202,24 @@
         <translation>ウォレットを暗号化する</translation>
     </message>
     <message>
-        <source>Advanced Options</source>
-        <translation>高機能オプション</translation>
+        <source>Use descriptors for scriptPubKey management.</source>
+        <translation>scriptPubKey管理にディスクリプタを使用します。</translation>
+    </message>
+    <message>
+        <source>Descriptor Wallet</source>
+        <translation>ディスクリプタウォレット</translation>
+    </message>
+    <message>
+        <source>Use an external signing device such as a hardware wallet. Configure the external signer script in wallet preferences first.</source>
+        <translation>ハードウェアウォレットなどの外部署名デバイスを使用します。先にウォレット設定で外部署名者スクリプトを設定してください。</translation>
+    </message>
+    <message>
+        <source>External signer</source>
+        <translation>外部署名者</translation>
+    </message>
+    <message>
+        <source>Show Advanced Options</source>
+        <translation>詳細オプションを表示</translation>
     </message>
     <message>
         <source>Disable private keys for this wallet. Wallets with private keys disabled will have no private keys and cannot have an HD seed or imported private keys. This is ideal for watch-only wallets.</source>
@@ -1158,20 +1238,28 @@
         <translation>ブランクウォレットを作成する</translation>
     </message>
     <message>
-        <source>Use descriptors for scriptPubKey management. This feature is well-tested but still considered experimental and not recommended for use yet.</source>
-        <translation>ScriptPubKeyの管理には、Descriptorを使用してください。この機能は十分にテストされていますが、まだ実験的なものと見なされており、現時点では使用は推奨されていません。</translation>
-    </message>
-    <message>
-        <source>Descriptor Wallet (EXPERIMENTAL)</source>
-        <translation>Descriptor Wallet (試験的)</translation>
-    </message>
-    <message>
         <source>Create</source>
         <translation>作成</translation>
     </message>
     <message>
+        <source>Hide Advanced Options</source>
+        <translation>詳細オプションを非表示</translation>
+    </message>
+    <message>
         <source>Compiled without sqlite support (required for descriptor wallets)</source>
         <translation>SQLiteのサポートなしでコンパイル (Descriptor Walletには必須)</translation>
+    </message>
+    <message>
+        <source>Compiled without external signing support (required for external signing)</source>
+        <extracomment>"External signing" means using devices such as hardware wallets.</extracomment>
+        <translation>外部署名サポートなしでコンパイルされました（外部署名に必要）</translation>
+    </message>
+</context>
+<context>
+    <name>DescriptionDialog</name>
+    <message>
+        <source>This pane shows detailed information</source>
+        <translation>このパネルは詳細情報を表示します</translation>
     </message>
 </context>
 <context>
@@ -1259,10 +1347,6 @@
         <translation>フォーム</translation>
     </message>
     <message>
-        <source>Filter List:</source>
-        <translation>フィルターリスト：</translation>
-    </message>
-    <message>
         <source>Filter proposal list</source>
         <translation>提案リストを絞り込む</translation>
     </message>
@@ -1275,12 +1359,24 @@
         <translation>このウォレットで投票できるマスターノードの数（このウォレットが投票キーを保持しているマスターノード）</translation>
     </message>
     <message>
+        <source>No active proposals on the network.</source>
+        <translation>ネットワーク上にアクティブな提案はありません。</translation>
+    </message>
+    <message>
+        <source>Resume Proposal</source>
+        <translation>提案を再開</translation>
+    </message>
+    <message>
         <source>Proposal Count:</source>
         <translation>提案回数：</translation>
     </message>
     <message>
         <source>Create Proposal</source>
         <translation>提案を作成</translation>
+    </message>
+    <message>
+        <source>Select proposals to display</source>
+        <translation>表示する提案を選択</translation>
     </message>
     <message>
         <source>Filter by Title</source>
@@ -1307,8 +1403,76 @@
         <translation>棄権票を投じる</translation>
     </message>
     <message>
-        <source>Proposal Info: %1</source>
-        <translation>提案情報：%1</translation>
+        <source>Active Proposals</source>
+        <translation>アクティブな提案</translation>
+    </message>
+    <message>
+        <source>My Proposals</source>
+        <translation>自分の提案</translation>
+    </message>
+    <message>
+        <source>No proposals recorded in wallet file.</source>
+        <translation>ウォレットファイルに記録された提案はありません。</translation>
+    </message>
+    <message>
+        <source>Resume proposal</source>
+        <translation>提案を再開</translation>
+    </message>
+    <message>
+        <source>Copy Raw JSON</source>
+        <translation>JSONをコピー</translation>
+    </message>
+    <message>
+        <source>Open Proposal URL…</source>
+        <translation>提案のURLを開く…</translation>
+    </message>
+    <message>
+        <source>Details for %1</source>
+        <translation>%1 の詳細</translation>
+    </message>
+    <message>
+        <source>Cannot interact with governance before sync completes</source>
+        <translation>同期が完了するまでガバナンスと対話できません</translation>
+    </message>
+    <message>
+        <source>Creates a new proposal</source>
+        <translation>新しい提案を作成します</translation>
+    </message>
+    <message>
+        <source>Resumes an existing proposal</source>
+        <translation>既存の提案を再開します</translation>
+    </message>
+    <message>
+        <source>Creating proposals costs %1, insufficient balance</source>
+        <translation>提案の作成には %1 かかります。残高が不足しています</translation>
+    </message>
+    <message>
+        <source>Error</source>
+        <translation>エラー</translation>
+    </message>
+    <message>
+        <source>Cannot validate URL, potentially malformed or unknown protocol.</source>
+        <translation>URLを検証できません。不正な形式または不明なプロトコルの可能性があります。</translation>
+    </message>
+    <message>
+        <source>External Link Warning</source>
+        <translation>外部リンク警告</translation>
+    </message>
+    <message>
+        <source>You are about to open the following URL in your default browser
+
+%1
+
+This content was submitted by a user. It may not match what is described in the title.
+
+Do you wish to continue?</source>
+        <translation>デフォルトのブラウザで以下のURLを開こうとしています
+
+%1
+
+このコンテンツはユーザーによって送信されました。タイトルに記載されている内容と一致しない場合があります。
+
+続行しますか？</translation>
     </message>
     <message>
         <source>Voting Failed</source>
@@ -1478,7 +1642,13 @@
 <context>
     <name>LoadWalletsActivity</name>
     <message>
+        <source>Load Wallets</source>
+        <extracomment>Title of progress window which is displayed when wallets are being loaded.</extracomment>
+        <translation>ウォレットを読み込み中</translation>
+    </message>
+    <message>
         <source>Loading wallets…</source>
+        <extracomment>Descriptive text of the load wallets progress window which indicates to the user that wallets are currently being loaded.</extracomment>
         <translation>ウォレットを読み込んでいます…</translation>
     </message>
 </context>
@@ -1489,16 +1659,36 @@
         <translation>フォーム</translation>
     </message>
     <message>
-        <source>Status</source>
-        <translation>ステータス</translation>
+        <source>Filter by masternode type</source>
+        <translation>マスターノードタイプでフィルタ</translation>
     </message>
     <message>
-        <source>Filter List:</source>
-        <translation>フィルターリスト:</translation>
+        <source>All</source>
+        <translation>すべて</translation>
+    </message>
+    <message>
+        <source>Regular</source>
+        <translation>レギュラー</translation>
+    </message>
+    <message>
+        <source>Evo</source>
+        <translation>Evo</translation>
     </message>
     <message>
         <source>Filter masternode list</source>
         <translation>マスターノードのリストをフィルター</translation>
+    </message>
+    <message>
+        <source>Owned</source>
+        <translation>所有</translation>
+    </message>
+    <message>
+        <source>Hide masternodes that are currently PoSe banned.</source>
+        <translation>現在PoSeで禁止されているマスターノードを非表示にします。</translation>
+    </message>
+    <message>
+        <source>Hide banned</source>
+        <translation>禁止を非表示</translation>
     </message>
     <message>
         <source>Node Count:</source>
@@ -1509,8 +1699,67 @@
         <translation>このウォレットがキーを持つマスターノードのみを表示</translation>
     </message>
     <message>
-        <source>My masternodes only</source>
-        <translation>自分のマスターノードのみ</translation>
+        <source>Payout Address</source>
+        <translation>支払いアドレス</translation>
+    </message>
+    <message>
+        <source>Filter by</source>
+        <translation>フィルタ</translation>
+    </message>
+    <message>
+        <source>Collateral Address</source>
+        <translation>担保アドレス</translation>
+    </message>
+    <message>
+        <source>Owner Address</source>
+        <translation>所有者アドレス</translation>
+    </message>
+    <message>
+        <source>Voting Address</source>
+        <translation>投票アドレス</translation>
+    </message>
+    <message>
+        <source>Details for Masternode %1</source>
+        <translation>マスターノード %1 の詳細</translation>
+    </message>
+    <message>
+        <source>Copy ProTx Hash</source>
+        <translation>ProTxハッシュをコピー</translation>
+    </message>
+    <message>
+        <source>Copy Collateral Outpoint</source>
+        <translation>担保のアウトポイントをコピー</translation>
+    </message>
+    <message>
+        <source>Filter by any property (e.g. address or protx hash)</source>
+        <translation>プロパティでのフィルタリング（例：アドレスやProTxハッシュなど）</translation>
+    </message>
+</context>
+<context>
+    <name>MasternodeModel</name>
+    <message numerus="yes">
+        <source>Banned for %n day(s)</source>
+        <translation><numerusform>%n日間禁止</numerusform></translation>
+    </message>
+    <message>
+        <source>Banned for less than a day</source>
+        <translation>1日未満の禁止</translation>
+    </message>
+    <message>
+        <source>Banned</source>
+        <translation>禁止</translation>
+    </message>
+    <message numerus="yes">
+        <source>Active for %n day(s)</source>
+        <translation><numerusform>%n日間アクティブ</numerusform></translation>
+    </message>
+    <message>
+        <source>Active for less than a day</source>
+        <translation>1日未満のアクティブ</translation>
+    </message>
+    <message>
+        <source>UNKNOWN</source>
+        <translation>不明</translation>
     </message>
     <message>
         <source>Service</source>
@@ -1530,83 +1779,118 @@
     </message>
     <message>
         <source>Last Paid</source>
-        <translation>最新の支払い</translation>
+        <translation>最終支払い</translation>
     </message>
     <message>
         <source>Next Payment</source>
         <translation>次の支払い</translation>
     </message>
     <message>
-        <source>Payout Address</source>
-        <translation>支払いアドレス</translation>
-    </message>
-    <message>
         <source>Operator Reward</source>
         <translation>オペレーター報酬</translation>
     </message>
     <message>
-        <source>Collateral Address</source>
-        <translation>担保アドレス</translation>
+        <source>ProTx Hash</source>
+        <translation>ProTxハッシュ</translation>
+    </message>
+</context>
+<context>
+    <name>MnemonicVerificationDialog</name>
+    <message>
+        <source>Save Your Mnemonic</source>
+        <translation>ニーモニックを保存してください</translation>
     </message>
     <message>
-        <source>Owner Address</source>
-        <translation>所有者アドレス</translation>
+        <source>WARNING: If you lose your mnemonic seed phrase, you will lose access to your wallet forever.</source>
+        <translation>警告: ニーモニックシードフレーズを紛失すると、ウォレットへのアクセスを永久に失います。</translation>
     </message>
     <message>
-        <source>Voting Address</source>
-        <translation>投票アドレス</translation>
+        <source>Please write down these words in order. You will need them to restore your wallet.</source>
+        <translation>これらの単語を順番に書き留めてください。ウォレットの復元に必要です。</translation>
     </message>
     <message>
-        <source>Copy ProTx Hash</source>
-        <translation>ProTxハッシュをコピー</translation>
+        <source>Show</source>
+        <translation>表示</translation>
     </message>
     <message>
-        <source>Copy Collateral Outpoint</source>
-        <translation>担保のアウトポイントをコピー</translation>
+        <source>Hide</source>
+        <translation>非表示</translation>
     </message>
     <message>
-        <source>Please wait…</source>
-        <translation>お待ちください…</translation>
+        <source>I have written down my mnemonic</source>
+        <translation>ニーモニックを書き留めました</translation>
     </message>
     <message>
-        <source>Updating…</source>
-        <translation>更新中…</translation>
+        <source>To verify you've saved your mnemonic, please enter the following words:</source>
+        <translation>ニーモニックを保存したことを確認するために、以下の単語を入力してください:</translation>
     </message>
     <message>
-        <source>ENABLED</source>
-        <translation>有効</translation>
+        <source>Word #1:</source>
+        <translation>単語 #1:</translation>
     </message>
     <message>
-        <source>POSE_BANNED</source>
-        <translation>POSE_BANNED</translation>
+        <source>Word #2:</source>
+        <translation>単語 #2:</translation>
     </message>
     <message>
-        <source>UNKNOWN</source>
-        <translation>不明</translation>
+        <source>Word #3:</source>
+        <translation>単語 #3:</translation>
     </message>
     <message>
-        <source>to %1</source>
-        <translation>%1に</translation>
+        <source>Your Recovery Phrase</source>
+        <translation>リカバリーフレーズ</translation>
     </message>
     <message>
-        <source>to UNKNOWN</source>
-        <translation>不明者に</translation>
+        <source>Close</source>
+        <translation>閉じる</translation>
     </message>
     <message>
-        <source>but not claimed</source>
-        <translation>しかし、請求されていません</translation>
+        <source>Continue</source>
+        <translation>続行</translation>
     </message>
     <message>
-        <source>NONE</source>
-        <translation>なし</translation>
+        <source>WARNING: Never share your recovery phrase with anyone. Store it securely offline.</source>
+        <translation>警告: リカバリーフレーズを誰とも共有しないでください。安全にオフラインで保管してください。</translation>
     </message>
     <message>
-        <source>Filter by any property (e.g. address or protx hash)</source>
-        <translation>プロパティでのフィルタリング（例：アドレスやProTxハッシュなど）</translation>
+        <source>These words can restore your wallet. Keep them safe and private.</source>
+        <translation>これらの単語でウォレットを復元できます。安全かつ秘密に保管してください。</translation>
     </message>
     <message>
-        <source>Additional information for DIP3 Masternode %1</source>
-        <translation>DIP3のマスターノード%1の追加情報</translation>
+        <source>WARNING: If you lose your mnemonic seed phrase, you will lose access to your wallet forever. Write it down in a safe place and never share it with anyone.</source>
+        <translation>警告: ニーモニックシードフレーズを紛失すると、ウォレットへのアクセスを永久に失います。安全な場所に書き留め、誰とも共有しないでください。</translation>
+    </message>
+    <message>
+        <source>Invalid Mnemonic</source>
+        <translation>無効なニーモニック</translation>
+    </message>
+    <message>
+        <source>Mnemonic phrase has fewer than 3 words (found %1). Verification cannot proceed.</source>
+        <translation>ニーモニックフレーズの単語数が3未満です（%1 個検出）。検証を続行できません。</translation>
+    </message>
+    <message>
+        <source>Verification Error</source>
+        <translation>検証エラー</translation>
+    </message>
+    <message>
+        <source>Failed to generate verification positions. Please try again.</source>
+        <translation>検証位置の生成に失敗しました。もう一度お試しください。</translation>
+    </message>
+    <message>
+        <source>Word #%1:</source>
+        <translation>単語 #%1:</translation>
+    </message>
+    <message>
+        <source>Back</source>
+        <translation>戻る</translation>
+    </message>
+    <message>
+        <source>Verification Failed</source>
+        <translation>検証に失敗しました</translation>
+    </message>
+    <message>
+        <source>One or more words are incorrect. Please try again.</source>
+        <translation>1つ以上の単語が正しくありません。もう一度お試しください。</translation>
     </message>
 </context>
 <context>
@@ -1824,12 +2108,52 @@
         <translation>ガバナンスタブを表示する</translation>
     </message>
     <message>
+        <source>Show the governance clock in the status bar.</source>
+        <translation>ステータスバーにガバナンスクロックを表示します。</translation>
+    </message>
+    <message>
+        <source>Show governance clock</source>
+        <translation>ガバナンスクロックを表示</translation>
+    </message>
+    <message>
         <source>If you disable the spending of unconfirmed change, the change from a transaction&lt;br/&gt;cannot be used until that transaction has at least one confirmation.&lt;br/&gt;This also affects how your balance is computed.</source>
         <translation>もし未確認のチェンジを使用することを無効にする場合&lt;br/&gt;トランザクションから生じたチェンジはそのトランザクションが少なくとも一回コンファメーションがないと使用できません。&lt;br/&gt;これはまたあなたのウォレットの残高の計算にも影響を与えます。</translation>
     </message>
     <message>
         <source>Show mixing interface on Overview screen and reveal an additional screen which allows to spend fully mixed coins only.&lt;br/&gt;A new tab with more settings will also appear in this dialog, please make sure to check them before mixing your coins.</source>
         <translation>概要画面にミキシングインターフェースを表示し、完全にミキシングされたコインのみを使用できる追加画面を表示します。&lt;br/&gt;このダイアログには、他の設定ができる新しいタブも表示されますので、コインをミキシングする前に必ず確認してください。</translation>
+    </message>
+    <message>
+        <source>Automatically lock small incoming transactions from external sources that may be dust attacks. Locked UTXOs will be excluded from coin selection.</source>
+        <translation>ダスト攻撃の可能性がある外部ソースからの小額入金トランザクションを自動的にロックします。ロックされたUTXOはコイン選択から除外されます。</translation>
+    </message>
+    <message>
+        <source>Enable &amp;dust attack protection</source>
+        <translation>ダスト攻撃保護を有効にする(&amp;D)</translation>
+    </message>
+    <message>
+        <source>Dust threshold:</source>
+        <translation>ダストしきい値:</translation>
+    </message>
+    <message>
+        <source>Transactions with outputs at or below this amount will be considered dust when received from external sources.</source>
+        <translation>外部ソースから受信した場合、この金額以下の出力を持つトランザクションはダストとみなされます。</translation>
+    </message>
+    <message>
+        <source>duffs</source>
+        <translation>duffs</translation>
+    </message>
+    <message>
+        <source>External Signer (e.g. hardware wallet)</source>
+        <translation>外部署名者（例: ハードウェアウォレット）</translation>
+    </message>
+    <message>
+        <source>&amp;External signer script path</source>
+        <translation>外部署名者スクリプトパス(&amp;E)</translation>
+    </message>
+    <message>
+        <source>Full path to a %1 compatible script (e.g. C:\Downloads\hwi.exe or /Users/you/Downloads/hwi.py). Beware: malware can steal your coins!</source>
+        <translation>%1 互換スクリプトへのフルパス（例: C:\Downloads\hwi.exe または /Users/you/Downloads/hwi.py）。注意: マルウェアがコインを盗む可能性があります！</translation>
     </message>
     <message>
         <source>Show additional information and buttons on overview screen.</source>
@@ -1948,10 +2272,6 @@ https://explore.transifex.com/dash/dash/</translation>
     <message>
         <source>&amp;Third-party transaction URLs</source>
         <translation>サードパーティトランザクションURL(&amp;T)</translation>
-    </message>
-    <message>
-        <source>Options set in this dialog are overridden by the command line or in the configuration file:</source>
-        <translation>このダイアログで設定されたオプションは、コマンドラインまたは設定ファイルによって上書きされます。</translation>
     </message>
     <message>
         <source>Minimize instead of exit the application when the window is closed. When this option is enabled, the application will be closed only after selecting Exit in the menu.</source>
@@ -2074,6 +2394,10 @@ https://explore.transifex.com/dash/dash/</translation>
         <translation>10進数</translation>
     </message>
     <message>
+        <source>Options set in this dialog are overridden by the command line:</source>
+        <translation>このダイアログで設定されたオプションはコマンドラインによって上書きされます:</translation>
+    </message>
+    <message>
         <source>Reset all client options to default.</source>
         <translation>すべてのオプションを初期値に戻します。</translation>
     </message>
@@ -2108,6 +2432,11 @@ https://explore.transifex.com/dash/dash/</translation>
         <translation>変更を有効にするにはクライアントを再起動する必要があります。</translation>
     </message>
     <message>
+        <source>Compiled without external signing support (required for external signing)</source>
+        <extracomment>"External signing" means using devices such as hardware wallets.</extracomment>
+        <translation>外部署名サポートなしでコンパイルされました（外部署名に必要）</translation>
+    </message>
+    <message>
         <source>Current settings will be backed up at "%1".</source>
         <extracomment>Text explaining to the user that the client's current settings will be backed up at a specific location. %1 is a stand-in argument for the backup location's path.</extracomment>
         <translation>現在の設定は「%1」にバックアップされます。</translation>
@@ -2124,6 +2453,13 @@ https://explore.transifex.com/dash/dash/</translation>
     <message>
         <source>The supplied proxy address is invalid.</source>
         <translation>プロキシアドレスが無効です。</translation>
+    </message>
+</context>
+<context>
+    <name>OptionsModel</name>
+    <message>
+        <source>Could not read setting "%1", %2.</source>
+        <translation>設定 "%1" を読み取れませんでした。%2。</translation>
     </message>
 </context>
 <context>
@@ -2433,8 +2769,8 @@ https://explore.transifex.com/dash/dash/</translation>
         <translation>PSBTをディスクに保存しました。</translation>
     </message>
     <message>
-        <source> * Sends %1 to %2</source>
-        <translation>*%1を%2に送金する</translation>
+        <source>Sends %1 to %2</source>
+        <translation>%1 を %2 に送金</translation>
     </message>
     <message>
         <source>own address</source>
@@ -2586,25 +2922,141 @@ Due to discontinued support, you should request the merchant to provide you with
     </message>
 </context>
 <context>
-    <name>Proposal</name>
+    <name>ProposalCreate</name>
     <message>
-        <source>Passing +%1</source>
-        <translation>+%1のパッシング</translation>
+        <source>New proposal</source>
+        <translation>新しい提案</translation>
     </message>
     <message>
-        <source>Needs additional %1 votes</source>
-        <translation>%1の追加投票が必要です</translation>
+        <source>Proposal &amp;name</source>
+        <translation>提案の名前(&amp;N)</translation>
+    </message>
+    <message>
+        <source>&amp;Description URL</source>
+        <translation>説明URL(&amp;D)</translation>
+    </message>
+    <message>
+        <source>&amp;Payment date</source>
+        <translation>支払日(&amp;P)</translation>
+    </message>
+    <message>
+        <source>Pa&amp;yments</source>
+        <translation>支払い(&amp;Y)</translation>
+    </message>
+    <message>
+        <source>Payment &amp;address</source>
+        <translation>支払いアドレス(&amp;A)</translation>
+    </message>
+    <message>
+        <source>Payment &amp;amount</source>
+        <translation>支払い金額(&amp;A)</translation>
+    </message>
+    <message>
+        <source>To&amp;tal amount</source>
+        <translation>合計金額(&amp;T)</translation>
+    </message>
+    <message>
+        <source>The amount to request in a single payment</source>
+        <translation>1回の支払いで要求する金額</translation>
+    </message>
+    <message>
+        <source>View JSON</source>
+        <translation>JSONを表示</translation>
+    </message>
+    <message>
+        <source>View Payload</source>
+        <translation>ペイロードを表示</translation>
+    </message>
+    <message>
+        <source>margin-left: 8px;</source>
+        <translation>margin-left: 8px;</translation>
+    </message>
+    <message>
+        <source>Create Proposal</source>
+        <translation>提案を作成</translation>
+    </message>
+    <message>
+        <source>All fields are mandatory</source>
+        <translation>すべての項目は必須です</translation>
+    </message>
+    <message>
+        <source>Confirm Proposal</source>
+        <translation>提案を確認</translation>
+    </message>
+    <message>
+        <source>Are you sure you want to create this proposal?</source>
+        <translation>この提案を作成してもよろしいですか？</translation>
+    </message>
+    <message>
+        <source>Creating a proposal pays %1 to the network. This fee is non-refundable regardless of outcome.</source>
+        <translation>提案の作成にはネットワークへの %1 の支払いが必要です。この手数料は結果に関わらず返金されません。</translation>
+    </message>
+    <message>
+        <source>Creation failed</source>
+        <translation>作成に失敗しました</translation>
+    </message>
+    <message>
+        <source>Proposal Created</source>
+        <translation>提案が作成されました</translation>
+    </message>
+    <message>
+        <source>%1 successfully sent for your proposal "%2".
+
+You will now be redirected to monitor and broadcast your new proposal, you can resume this later by clicking "Resume Proposal".</source>
+        <translation>提案 "%2" のために %1 が正常に送信されました。
+
+新しい提案の監視とブロードキャストのためにリダイレクトされます。後で"提案を再開"をクリックして再開できます。</translation>
     </message>
 </context>
 <context>
     <name>ProposalModel</name>
     <message>
-        <source>Yes</source>
-        <translation>はい</translation>
+        <source>Pending, %1 of %2 confirmations</source>
+        <translation>保留中、%1 / %2 承認</translation>
     </message>
     <message>
-        <source>No</source>
-        <translation>いいえ</translation>
+        <source>Voting, needs %1 more votes for funding</source>
+        <translation>投票中、資金調達にはあと %1 票必要です</translation>
+    </message>
+    <message>
+        <source>Passing with %1 votes</source>
+        <translation>%1 票で可決</translation>
+    </message>
+    <message>
+        <source>Passing with %1 votes but budget saturated, may not be funded</source>
+        <translation>%1 票で可決していますが予算が飽和しており、資金調達されない可能性があります</translation>
+    </message>
+    <message>
+        <source>Failed, needed %1 more votes</source>
+        <translation>否決、あと %1 票必要でした</translation>
+    </message>
+    <message>
+        <source>Funded at block %1</source>
+        <translation>ブロック %1 で資金調達済み</translation>
+    </message>
+    <message>
+        <source>Funded</source>
+        <translation>資金調達済み</translation>
+    </message>
+    <message>
+        <source>Lapsed, past proposal end date</source>
+        <translation>期限切れ、提案の終了日を過ぎています</translation>
+    </message>
+    <message>
+        <source>Ready to broadcast, check "Resume Proposal" dialog</source>
+        <translation>ブロードキャスト準備完了、"提案を再開"ダイアログを確認してください</translation>
+    </message>
+    <message>
+        <source>%1 Yes, %2 No, %3 Abstain, %4</source>
+        <translation>%1 賛成、%2 反対、%3 棄権、%4</translation>
+    </message>
+    <message>
+        <source>passing with %1 votes</source>
+        <translation>%1 票で可決</translation>
+    </message>
+    <message>
+        <source>needs %1 more votes</source>
+        <translation>あと %1 票必要</translation>
     </message>
     <message>
         <source>Hash</source>
@@ -2627,187 +3079,63 @@ Due to discontinued support, you should request the merchant to provide you with
         <translation>金額</translation>
     </message>
     <message>
-        <source>Active</source>
-        <translation>アクティブ</translation>
-    </message>
-    <message>
-        <source>Status</source>
-        <translation>ステータス</translation>
+        <source>Votes</source>
+        <translation>投票</translation>
     </message>
 </context>
 <context>
-    <name>ProposalWizard</name>
+    <name>ProposalResume</name>
     <message>
-        <source>Create Governance Proposal</source>
-        <translation>ガバナンス提案を作成</translation>
-    </message>
-    <message>
-        <source>Enter proposal details</source>
-        <translation>提案の詳細を入力</translation>
-    </message>
-    <message>
-        <source>A fee will be burned when you prepare the proposal.</source>
-        <translation>提案を準備する際に手数料がバーン（焼却）されます。</translation>
-    </message>
-    <message>
-        <source>Proposal &amp;name</source>
-        <translation>提案名(&amp;N)</translation>
-    </message>
-    <message>
-        <source>&amp;Description URL</source>
-        <translation>説明 URL(&amp;D)</translation>
-    </message>
-    <message>
-        <source>Payment &amp;address</source>
-        <translation>支払アドレス(&amp;A)</translation>
-    </message>
-    <message>
-        <source>Payment &amp;amount</source>
-        <translation>支払金額(&amp;A)</translation>
-    </message>
-    <message>
-        <source>The amount to request in a single payment</source>
-        <translation>1回の支払いで要求する金額</translation>
-    </message>
-    <message>
-        <source>&amp;First payment</source>
-        <translation>初回支払(&amp;F)</translation>
-    </message>
-    <message>
-        <source>Pa&amp;yments</source>
-        <translation>支払回数(&amp;Y)</translation>
-    </message>
-    <message>
-        <source>To&amp;tal amount</source>
-        <translation>合計金額(&amp;T)</translation>
-    </message>
-    <message>
-        <source>Proposal &amp;fee</source>
-        <translation>提案手数料(&amp;F)</translation>
-    </message>
-    <message>
-        <source>Next</source>
-        <translation>次へ</translation>
-    </message>
-    <message>
-        <source>Review proposal JSON and validate.</source>
-        <translation>提案JSONを確認して検証します。</translation>
-    </message>
-    <message>
-        <source>Hex-encoded JSON</source>
-        <translation>16進数エンコードされたJSON</translation>
-    </message>
-    <message>
-        <source>Back</source>
-        <translation>戻る</translation>
-    </message>
-    <message>
-        <source>Validate</source>
-        <translation>検証</translation>
-    </message>
-    <message>
-        <source>Prepare (burn fee) and wait for confirmations.</source>
-        <translation>準備（手数料をバーン）して承認を待ちます。</translation>
-    </message>
-    <message>
-        <source>Copy</source>
-        <translation>コピー</translation>
-    </message>
-    <message>
-        <source>At 1/6 confirmations: can be relayed and queued. At 6/6: accepted and processed.</source>
-        <translation>1/6承認時：リレーおよびキュー可能。6/6時：承認され処理されます。</translation>
-    </message>
-    <message>
-        <source>Confirmations progress</source>
-        <translation>承認の進行状況</translation>
-    </message>
-    <message>
-        <source>Shows progress toward the required number of confirmations for the proposal fee transaction.</source>
-        <translation>提案手数料トランザクションに必要な承認数への進行状況を表示します。</translation>
-    </message>
-    <message>
-        <source>Estimated time remaining: -</source>
-        <translation>推定残り時間: -</translation>
-    </message>
-    <message>
-        <source>Prepare Proposal</source>
-        <translation>提案を準備</translation>
-    </message>
-    <message>
-        <source>You can submit after 1 confirmation. At 6 confirmations it is accepted and processed.</source>
-        <translation>1承認後に提出できます。6承認で承認され処理されます。</translation>
-    </message>
-    <message>
-        <source>Proposal ID:</source>
-        <translation>提案 ID:</translation>
-    </message>
-    <message>
-        <source>Submit Proposal</source>
-        <translation>提案を提出</translation>
+        <source>Resume Proposals</source>
+        <translation>提案を再開</translation>
     </message>
     <message>
         <source>Close</source>
         <translation>閉じる</translation>
     </message>
     <message>
-        <source>Valid</source>
-        <translation>有効</translation>
+        <source>No pending proposals to broadcast.</source>
+        <translation>ブロードキャストする保留中の提案はありません。</translation>
     </message>
     <message>
-        <source>Invalid: %1</source>
-        <translation>無効: %1</translation>
+        <source>For %1 payment(s) of %2 to %3</source>
+        <translation>%3 への %2 の支払い %1 回分</translation>
     </message>
     <message>
-        <source>Burn %1</source>
-        <translation>%1 をバーン</translation>
+        <source>Unknown</source>
+        <translation>不明</translation>
     </message>
     <message>
-        <source>Burn %1 to create the fee transaction?</source>
-        <translation>手数料トランザクションを作成するために %1 をバーンしますか？</translation>
+        <source>Pending</source>
+        <translation>保留中</translation>
     </message>
     <message>
-        <source>Prepare failed</source>
-        <translation>準備に失敗しました</translation>
+        <source>Ready</source>
+        <translation>準備完了</translation>
     </message>
     <message>
-        <source>Confirmations: %1 / %2 required</source>
-        <translation>承認: %1 / %2 必要</translation>
+        <source>Collateral Hash</source>
+        <translation>担保ハッシュ</translation>
     </message>
     <message>
-        <source>Estimated time remaining: Ready</source>
-        <translation>推定残り時間: 準備完了</translation>
-    </message>
-    <message numerus="yes">
-        <source>Estimated time remaining: %n minute(s)</source>
-        <translation><numerusform>推定残り時間: %n 分</numerusform></translation>
+        <source>Collateral Status</source>
+        <translation>担保ステータス</translation>
     </message>
     <message>
-        <source>Your proposal was submitted successfully.</source>
-        <translation>提案が正常に提出されました。</translation>
+        <source>Broadcast</source>
+        <translation>ブロードキャスト</translation>
     </message>
     <message>
-        <source>Already submitted</source>
-        <translation>すでに提出済み</translation>
+        <source>Broadcast proposal</source>
+        <translation>提案をブロードキャスト</translation>
     </message>
     <message>
-        <source>This proposal has already been submitted.</source>
-        <translation>この提案はすでに提出されています。</translation>
+        <source>Proposal has been broadcasted to the network with hash %1</source>
+        <translation>提案はハッシュ %1 でネットワークにブロードキャストされました</translation>
     </message>
     <message>
-        <source>Submission failed</source>
-        <translation>提出に失敗しました</translation>
-    </message>
-    <message>
-        <source>Proposal submitted</source>
-        <translation>提案が提出されました</translation>
-    </message>
-    <message>
-        <source>A fee of %1 will be burned when you prepare the proposal.</source>
-        <translation>提案を準備する際に %1 の手数料がバーンされます。</translation>
-    </message>
-    <message>
-        <source>Prepare (burn %1) and wait for %2 confirmations.</source>
-        <translation>準備（%1 をバーン）して %2 承認を待ちます。</translation>
+        <source>Unable to broadcast proposal, %1</source>
+        <translation>提案をブロードキャストできません、%1</translation>
     </message>
 </context>
 <context>
@@ -2875,8 +3203,8 @@ Due to discontinued support, you should request the merchant to provide you with
         <translation>エラー：アプリケーションフォントの読み込みに失敗しました。</translation>
     </message>
     <message>
-        <source>Error: Specified font-family invalid. Valid values: %1.</source>
-        <translation>エラー：指定されたフォントファミリが無効です。有効値：%1。</translation>
+        <source>Error: Font "%1" could not be loaded.</source>
+        <translation>エラー: フォント "%1" を読み込めませんでした。</translation>
     </message>
     <message>
         <source>Error: Specified font-weight-normal invalid. Valid range %1 to %2.</source>
@@ -3045,6 +3373,170 @@ Due to discontinued support, you should request the merchant to provide you with
         <source>unknown</source>
         <translation>不明</translation>
     </message>
+    <message>
+        <source>Default monospace font "%1"</source>
+        <translation>デフォルトの等幅フォント "%1"</translation>
+    </message>
+    <message>
+        <source>Embedded "%1"</source>
+        <translation>埋め込み "%1"</translation>
+    </message>
+    <message>
+        <source>Use existing font</source>
+        <translation>既存のフォントを使用</translation>
+    </message>
+    <message>
+        <source>Custom…</source>
+        <translation>カスタム…</translation>
+    </message>
+    <message>
+        <source>Error: Wallet controller not available.</source>
+        <translation>エラー: ウォレットコントローラーが利用できません。</translation>
+    </message>
+    <message>
+        <source>Error: Rescan failed. Wallet not loaded.</source>
+        <translation>エラー: 再スキャンに失敗しました。ウォレットが読み込まれていません。</translation>
+    </message>
+    <message>
+        <source>UNKNOWN</source>
+        <translation>不明</translation>
+    </message>
+    <message>
+        <source>to %1</source>
+        <translation>%1 へ</translation>
+    </message>
+    <message>
+        <source>to UNKNOWN</source>
+        <translation>不明へ</translation>
+    </message>
+    <message>
+        <source>but not claimed</source>
+        <translation>ただし未請求</translation>
+    </message>
+    <message>
+        <source>NONE</source>
+        <translation>なし</translation>
+    </message>
+    <message>
+        <source>ProTx Hash</source>
+        <translation>ProTxハッシュ</translation>
+    </message>
+    <message>
+        <source>Public Key Operator</source>
+        <translation>オペレーター公開鍵</translation>
+    </message>
+    <message>
+        <source>Owner Address</source>
+        <translation>オーナーアドレス</translation>
+    </message>
+    <message>
+        <source>Payout Address</source>
+        <translation>支払いアドレス</translation>
+    </message>
+    <message>
+        <source>Voting Address</source>
+        <translation>投票アドレス</translation>
+    </message>
+    <message>
+        <source>Collateral Address</source>
+        <translation>担保アドレス</translation>
+    </message>
+    <message>
+        <source>Collateral Hash</source>
+        <translation>担保ハッシュ</translation>
+    </message>
+    <message>
+        <source>Collateral Index</source>
+        <translation>担保インデックス</translation>
+    </message>
+    <message>
+        <source>Masternode Type</source>
+        <translation>マスターノードタイプ</translation>
+    </message>
+    <message>
+        <source>Registered Height</source>
+        <translation>登録ブロック高</translation>
+    </message>
+    <message>
+        <source>Last Paid Height</source>
+        <translation>最終支払いブロック高</translation>
+    </message>
+    <message>
+        <source>Consecutive Payments</source>
+        <translation>連続支払い回数</translation>
+    </message>
+    <message>
+        <source>Operator Reward</source>
+        <translation>オペレーター報酬</translation>
+    </message>
+    <message>
+        <source>Network Addresses</source>
+        <translation>ネットワークアドレス</translation>
+    </message>
+    <message>
+        <source>Platform HTTPS Addresses</source>
+        <translation>プラットフォームHTTPSアドレス</translation>
+    </message>
+    <message>
+        <source>Platform P2P Addresses</source>
+        <translation>プラットフォームP2Pアドレス</translation>
+    </message>
+    <message>
+        <source>Platform Node ID</source>
+        <translation>プラットフォームノードID</translation>
+    </message>
+    <message>
+        <source>PoSe Penalty</source>
+        <translation>PoSeペナルティ</translation>
+    </message>
+    <message>
+        <source>PoSe Ban Height</source>
+        <translation>PoSe禁止ブロック高</translation>
+    </message>
+    <message>
+        <source>PoSe Revived Height</source>
+        <translation>PoSe復活ブロック高</translation>
+    </message>
+    <message>
+        <source>Title</source>
+        <translation>タイトル</translation>
+    </message>
+    <message>
+        <source>URL</source>
+        <translation>URL</translation>
+    </message>
+    <message>
+        <source>Destination Address</source>
+        <translation>送信先アドレス</translation>
+    </message>
+    <message>
+        <source>Payment Amount</source>
+        <translation>支払い金額</translation>
+    </message>
+    <message>
+        <source>Payments Requested</source>
+        <translation>要求された支払い</translation>
+    </message>
+    <message>
+        <source>Payment Start</source>
+        <translation>支払い開始</translation>
+    </message>
+    <message>
+        <source>Payment End</source>
+        <translation>支払い終了</translation>
+    </message>
+    <message>
+        <source>Object Hash</source>
+        <translation>オブジェクトハッシュ</translation>
+    </message>
+    <message>
+        <source>Parent Hash</source>
+        <translation>親ハッシュ</translation>
+    </message>
+    <message>
+        <source>Collateral Date</source>
+        <translation>担保日</translation>
+    </message>
 </context>
 <context>
     <name>QRDialog</name>
@@ -3184,6 +3676,10 @@ Due to discontinued support, you should request the merchant to provide you with
         <translation>ピア (&amp;P)</translation>
     </message>
     <message>
+        <source>&amp;Repair</source>
+        <translation>修復(&amp;R)</translation>
+    </message>
+    <message>
         <source>Wallet:</source>
         <translation>ウォレット：</translation>
     </message>
@@ -3263,26 +3759,6 @@ Due to discontinued support, you should request the merchant to provide you with
         <source>Addresses Rate-Limited</source>
         <extracomment>Text title for the Addresses Rate-Limited field in the peer details area, which displays the total number of addresses received from this peer that were dropped (not processed) due to rate-limiting.</extracomment>
         <translation>アドレスはレートで制限されました</translation>
-    </message>
-    <message>
-        <source>Rescan blockchain files 1</source>
-        <translation>ブロックチェーンファイル1の再スキャンをする</translation>
-    </message>
-    <message>
-        <source>Rescan blockchain files 2</source>
-        <translation>ブロックチェーンファイル2の再スキャンをする</translation>
-    </message>
-    <message>
-        <source>The buttons below will restart the wallet with command-line options to repair the wallet, fix issues with corrupt blockchain files or missing/obsolete transactions.</source>
-        <translation>下記のボタンは、ウォレットを修復し、破損したブロックチェーンファイルや欠落または削除された取引の問題を修正するためのコマンドラインオプションを使用してウォレットを再起動します。</translation>
-    </message>
-    <message>
-        <source>-rescan=1: Rescan the block chain for missing wallet transactions starting from wallet creation time.</source>
-        <translation>-rescan=1：ウォレット作成時から始まるウォレット取引の欠落のために、ブロックチェーンを再スキャンします。</translation>
-    </message>
-    <message>
-        <source>-rescan=2: Rescan the block chain for missing wallet transactions starting from genesis block.</source>
-        <translation>-rescan=2：ジェネシスブロックから始まるウォレット取引の欠落のために、ブロックチェーンを再スキャンします。</translation>
     </message>
     <message>
         <source>User Agent</source>
@@ -3445,8 +3921,36 @@ Due to discontinued support, you should request the merchant to provide you with
         <translation>時間オフセット</translation>
     </message>
     <message>
-        <source>&amp;Wallet Repair</source>
-        <translation>ウォレットの修復 (&amp;W)</translation>
+        <source>Repair options.</source>
+        <translation>修復オプション。</translation>
+    </message>
+    <message>
+        <source>The buttons below will trigger repair actions to fix issues with corrupt files or missing/obsolete transactions.</source>
+        <translation>以下のボタンは、破損したファイルや欠落/古いトランザクションの問題を修復するためのアクションを実行します。</translation>
+    </message>
+    <message>
+        <source>Rescan Chain</source>
+        <translation>チェーンを再スキャン</translation>
+    </message>
+    <message>
+        <source>Rescan the chain for missing wallet transactions starting from wallet creation time.</source>
+        <translation>ウォレット作成時からウォレットの欠落トランザクションを探してチェーンを再スキャンします。</translation>
+    </message>
+    <message>
+        <source>Rescan Chain (full)</source>
+        <translation>チェーンを再スキャン（完全）</translation>
+    </message>
+    <message>
+        <source>Rescan the chain for missing wallet transactions starting from genesis block.</source>
+        <translation>ジェネシスブロックからウォレットの欠落トランザクションを探してチェーンを再スキャンします。</translation>
+    </message>
+    <message>
+        <source>Rebuild Index</source>
+        <translation>インデックスを再構築</translation>
+    </message>
+    <message>
+        <source>Restarts the client to rebuild the chain index from current blk000??.dat files.</source>
+        <translation>現在のblk000??.datファイルからチェーンインデックスを再構築するためにクライアントを再起動します。</translation>
     </message>
     <message>
         <source>The total number of addresses received from this peer that were processed (excludes addresses that were dropped due to rate-limiting).</source>
@@ -3457,18 +3961,6 @@ Due to discontinued support, you should request the merchant to provide you with
         <source>The total number of addresses received from this peer that were dropped (not processed) due to rate-limiting.</source>
         <extracomment>Tooltip text for the Addresses Rate-Limited field in the peer details area, which displays the total number of addresses received from this peer that were dropped (not processed) due to rate-limiting.</extracomment>
         <translation>このピアから受信したアドレスのうち、レート制限によりドロップされた(処理されなかった)アドレスの総数。</translation>
-    </message>
-    <message>
-        <source>Wallet repair options.</source>
-        <translation>ウォレット修復オプション</translation>
-    </message>
-    <message>
-        <source>Rebuild index</source>
-        <translation>インデックスのリビルド</translation>
-    </message>
-    <message>
-        <source>-reindex: Rebuild block chain index from current blk000??.dat files.</source>
-        <translation>-reindex: 現在の blk000??.dat ファイルからブロックチェーンインデックスをリビルドします</translation>
     </message>
     <message>
         <source>Inbound: initiated by peer</source>
@@ -3633,7 +4125,7 @@ Due to discontinued support, you should request the merchant to provide you with
     </message>
     <message>
         <source>&amp;Copy address</source>
-        <extracomment>Context menu action to copy the address of a peer</extracomment>
+        <extracomment>Context menu action to copy the address of a peer.</extracomment>
         <translation>アドレスをコピー (&amp;A)</translation>
     </message>
     <message>
@@ -3642,7 +4134,7 @@ Due to discontinued support, you should request the merchant to provide you with
     </message>
     <message>
         <source>&amp;Copy IP/Netmask</source>
-        <extracomment>Context menu action to copy the IP/Netmask of a banned peer. IP/Netmask is the combination of a peer's IP address and its Netmask. For IP address see: https://en.wikipedia.org/wiki/IP_address</extracomment>
+        <extracomment>Context menu action to copy the IP/Netmask of a banned peer. IP/Netmask is the combination of a peer's IP address and its Netmask. For IP address, see: https://en.wikipedia.org/wiki/IP_address.</extracomment>
         <translation>IP/Netmaskをコピー (&amp;C)</translation>
     </message>
     <message>
@@ -3842,6 +4334,14 @@ For more information on using this console, type %6.
         <translation>アドレスをコピー (&amp;A)</translation>
     </message>
     <message>
+        <source>&amp;Verify</source>
+        <translation>検証(&amp;V)</translation>
+    </message>
+    <message>
+        <source>Verify this address on e.g. a hardware wallet screen</source>
+        <translation>例えばハードウェアウォレットの画面でこのアドレスを検証します</translation>
+    </message>
+    <message>
         <source>&amp;Save Image…</source>
         <translation>画像を保存… (&amp;S)</translation>
     </message>
@@ -3883,6 +4383,33 @@ For more information on using this console, type %6.
     <message>
         <source>Requested</source>
         <translation>リクエスト完了</translation>
+    </message>
+</context>
+<context>
+    <name>RescanWalletActivity</name>
+    <message>
+        <source>Rescan unavailable</source>
+        <translation>再スキャンが利用できません</translation>
+    </message>
+    <message>
+        <source>Wallet is currently rescanning. Abort existing rescan or wait.</source>
+        <translation>ウォレットは現在再スキャン中です。既存の再スキャンを中止するか、お待ちください。</translation>
+    </message>
+    <message>
+        <source>Rescan wallet failed</source>
+        <translation>ウォレットの再スキャンに失敗しました</translation>
+    </message>
+    <message>
+        <source>Rescan failed. Potentially corrupted data files.</source>
+        <translation>再スキャンに失敗しました。データファイルが破損している可能性があります。</translation>
+    </message>
+    <message>
+        <source>Rescan aborted</source>
+        <translation>再スキャンが中止されました</translation>
+    </message>
+    <message>
+        <source>Wallet rescan was aborted.</source>
+        <translation>ウォレットの再スキャンが中止されました。</translation>
     </message>
 </context>
 <context>
@@ -4104,10 +4631,6 @@ For more information on using this console, type %6.
         <translation>未署名を作成する (&amp;C)</translation>
     </message>
     <message>
-        <source> from wallet '%1'</source>
-        <translation>「%1」のウォレットから</translation>
-    </message>
-    <message>
         <source>%1 to '%2'</source>
         <translation>%1から「%2」へ</translation>
     </message>
@@ -4176,9 +4699,39 @@ For more information on using this console, type %6.
         <translation>一部署名済みのブロックチェーン取引(PSBT)を生成し、オフラインの%1のウォレットやPSBT対応のハードウェアウォレットで使用します。</translation>
     </message>
     <message>
+        <source>Sign on device</source>
+        <extracomment>"device" usually means a hardware wallet.</extracomment>
+        <translation>デバイスで署名</translation>
+    </message>
+    <message>
+        <source>Connect your hardware wallet first.</source>
+        <translation>まずハードウェアウォレットを接続してください。</translation>
+    </message>
+    <message>
+        <source>Set external signer script path in Options -&gt; Wallet</source>
+        <extracomment>"External signer" means using devices such as hardware wallets.</extracomment>
+        <translation>オプション -&gt; ウォレット で外部署名者スクリプトのパスを設定してください</translation>
+    </message>
+    <message>
+        <source>Confirm duplicate recipients</source>
+        <translation>重複する受信者の確認</translation>
+    </message>
+    <message>
+        <source>You are sending to the same address multiple times in a single transaction. This is unusual and may not be what you intended. Are you sure you want to proceed?</source>
+        <translation>1つのトランザクションで同じアドレスに複数回送信しようとしています。これは通常ではなく、意図したものではない可能性があります。続行してもよろしいですか？</translation>
+    </message>
+    <message>
+        <source>%1 from wallet '%2'</source>
+        <translation>ウォレット '%2' から %1</translation>
+    </message>
+    <message>
         <source>Do you want to create this transaction?</source>
         <extracomment>Message displayed when attempting to create a transaction. Cautionary text to prompt the user to verify that the displayed transaction details represent the transaction the user intends to create.</extracomment>
         <translation>このトランザクションを作成しますか？</translation>
+    </message>
+    <message>
+        <source>Do you want to draft this transaction?</source>
+        <translation>このトランザクションの下書きを作成しますか？</translation>
     </message>
     <message>
         <source>Please, review your transaction proposal. This will produce a Partially Signed Blockchain Transaction (PSBT) which you can save or copy and then sign with e.g. an offline %1 wallet, or a PSBT-compatible hardware wallet.</source>
@@ -4200,9 +4753,27 @@ For more information on using this console, type %6.
         <translation>受取人リストを確認するには、「詳細を表示…」をクリックします</translation>
     </message>
     <message>
+        <source>Sign failed</source>
+        <translation>署名に失敗しました</translation>
+    </message>
+    <message>
+        <source>External signer not found</source>
+        <extracomment>"External signer" means using devices such as hardware wallets.</extracomment>
+        <translation>外部署名者が見つかりません</translation>
+    </message>
+    <message>
+        <source>External signer failure</source>
+        <extracomment>"External signer" means using devices such as hardware wallets.</extracomment>
+        <translation>外部署名者のエラー</translation>
+    </message>
+    <message>
         <source>Partially Signed Transaction (Binary)</source>
         <extracomment>Expanded name of the binary PSBT file format. See: BIP 174.</extracomment>
         <translation>一部署名された取引 (バイナリー)</translation>
+    </message>
+    <message>
+        <source>External balance:</source>
+        <translation>外部残高:</translation>
     </message>
     <message>
         <source>The recipient address is not valid. Please recheck.</source>
@@ -4219,10 +4790,6 @@ For more information on using this console, type %6.
     <message>
         <source>The total exceeds your balance when the %1 transaction fee is included.</source>
         <translation>%1 の取引手数料を含めると総額が残高を超えています。</translation>
-    </message>
-    <message>
-        <source>Duplicate address found: addresses should only be used once each.</source>
-        <translation>重複したアドレスが見つかりました: アドレスは一度のみ使用することができます。</translation>
     </message>
     <message>
         <source>Transaction creation failed!</source>
@@ -4710,17 +5277,6 @@ For more information on using this console, type %6.
     </message>
 </context>
 <context>
-    <name>TransactionDescDialog</name>
-    <message>
-        <source>This pane shows a detailed description of the transaction</source>
-        <translation>ここでは取引の詳細を表示しています</translation>
-    </message>
-    <message>
-        <source>Details for %1</source>
-        <translation>%1 の詳細</translation>
-    </message>
-</context>
-<context>
     <name>TransactionTableModel</name>
     <message>
         <source>Date</source>
@@ -4797,6 +5353,10 @@ For more information on using this console, type %6.
     <message>
         <source>Platform Transfer</source>
         <translation>プラットフォーム送金</translation>
+    </message>
+    <message>
+        <source>Dust Receive</source>
+        <translation>ダスト受信</translation>
     </message>
     <message>
         <source>%1 Mixing</source>
@@ -4930,6 +5490,10 @@ For more information on using this console, type %6.
         <translation>プラットフォーム送金</translation>
     </message>
     <message>
+        <source>Dust Receive</source>
+        <translation>ダスト受信</translation>
+    </message>
+    <message>
         <source>Other</source>
         <translation>その他</translation>
     </message>
@@ -4976,6 +5540,10 @@ For more information on using this console, type %6.
     <message>
         <source>Rese&amp;nd transaction</source>
         <translation>取引を再送信する (&amp;R)</translation>
+    </message>
+    <message>
+        <source>&amp;Unlock dust UTXO</source>
+        <translation>ダストUTXOのロック解除(&amp;U)</translation>
     </message>
     <message>
         <source>&amp;Edit address label</source>
@@ -5042,6 +5610,10 @@ For more information on using this console, type %6.
     <message>
         <source>The transaction history was successfully saved to %1.</source>
         <translation>トランザクション履歴は正常に%1に保存されました</translation>
+    </message>
+    <message>
+        <source>Details for %1</source>
+        <translation>%1 の詳細</translation>
     </message>
     <message>
         <source>QR code</source>
@@ -5132,6 +5704,10 @@ Go to File &gt; Open Wallet to load a wallet.
         <translation>送金</translation>
     </message>
     <message>
+        <source>Can't display address</source>
+        <translation>アドレスを表示できません</translation>
+    </message>
+    <message>
         <source>default wallet</source>
         <translation>デフォルトのウォレット</translation>
     </message>
@@ -5174,6 +5750,26 @@ Go to File &gt; Open Wallet to load a wallet.
     <message>
         <source>The wallet data was successfully saved to %1.</source>
         <translation>ウォレットデータは正常に%1に保存されました</translation>
+    </message>
+    <message>
+        <source>No Recovery Phrase</source>
+        <translation>リカバリーフレーズがありません</translation>
+    </message>
+    <message>
+        <source>This wallet does not have private keys and therefore has no recovery phrase.</source>
+        <translation>このウォレットには秘密鍵がないため、リカバリーフレーズがありません。</translation>
+    </message>
+    <message>
+        <source>This wallet was not created with HD (Hierarchical Deterministic) mode and does not have a recovery phrase.</source>
+        <translation>このウォレットはHD（階層的決定性）モードで作成されていないため、リカバリーフレーズがありません。</translation>
+    </message>
+    <message>
+        <source>Mnemonic Retrieval Failed</source>
+        <translation>ニーモニックの取得に失敗しました</translation>
+    </message>
+    <message>
+        <source>Could not retrieve the recovery phrase from this wallet.</source>
+        <translation>このウォレットからリカバリーフレーズを取得できませんでした。</translation>
     </message>
     <message>
         <source>Cancel</source>
@@ -5265,10 +5861,6 @@ Go to File &gt; Open Wallet to load a wallet.
     <message>
         <source>SQLiteDatabase: Unknown sqlite wallet schema version %d. Only version %d is supported</source>
         <translation>SQLiteのデータベース: SQLiteのウォレットスキーマのバージョン%dが不明です。サポートされているのはバージョン%dのみです</translation>
-    </message>
-    <message>
-        <source>Transaction index can't be disabled with governance validation enabled. Either start with -disablegovernance command line switch or enable transaction index.</source>
-        <translation>ガバナンス検証を有効にした状態で、取引インデックスを無効化することはできません。-disablegovernanceのコマンドラインスイッチで開始するか、取引インデックスを有効にしてください。</translation>
     </message>
     <message>
         <source>Unsupported category-specific logging level -loglevel=%s. Expected -loglevel=&lt;category&gt;:&lt;loglevel&gt;. Valid categories: %s. Valid loglevels: %s.</source>
@@ -5427,6 +6019,22 @@ Go to File &gt; Open Wallet to load a wallet.
         <translation>%s ファイルはこのウォレットのプライベートキーをすべて保有しています。誰ともシェアしないでください。</translation>
     </message>
     <message>
+        <source>%s request to listen on port %u. This port is considered "bad" and thus it is unlikely that any peer will connect to it. See doc/p2p-bad-ports.md for details and a full list.</source>
+        <translation>%s がポート %u でリッスンする要求をしています。このポートは"不良"とみなされており、ピアが接続する可能性は低いです。詳細と完全なリストについては doc/p2p-bad-ports.md を参照してください。</translation>
+    </message>
+    <message>
+        <source>Disk space for %s may not accommodate the block files. Approximately %u GB of data will be stored in this directory.</source>
+        <translation>%s のディスク容量がブロックファイルに十分でない可能性があります。このディレクトリに約 %u GB のデータが保存されます。</translation>
+    </message>
+    <message>
+        <source>Error loading %s: External signer wallet being loaded without external signer support compiled</source>
+        <translation>%s の読み込みエラー: 外部署名者サポートがコンパイルされていない状態で外部署名者ウォレットが読み込まれています</translation>
+    </message>
+    <message>
+        <source>Error: Dumpfile version is not supported. This version of dash-wallet only supports version 1 dumpfiles. Got dumpfile with version %s</source>
+        <translation>エラー: ダンプファイルのバージョンがサポートされていません。このバージョンのdash-walletはバージョン1のダンプファイルのみサポートしています。バージョン %s のダンプファイルを取得しました</translation>
+    </message>
+    <message>
         <source>Failed to create backup, file already exists! This could happen if you restarted wallet in less than 60 seconds. You can continue if you are ok with this.</source>
         <translation>バックアップ作成失敗、ファイルは既に存在します！これはウォレットを60秒以内にリスタートしたときに発生することがあります。これで問題なければ先に進むことができます。</translation>
     </message>
@@ -5483,6 +6091,10 @@ Go to File &gt; Open Wallet to load a wallet.
         <translation>自動バックアップ無効</translation>
     </message>
     <message>
+        <source>Cannot set -forcednsseed to true when setting -dnsseed to false.</source>
+        <translation>-dnsseedがfalseに設定されている場合、-forcednsseedをtrueに設定することはできません。</translation>
+    </message>
+    <message>
         <source>Cannot set -peerblockfilters without -blockfilterindex.</source>
         <translation>-peerblockfiltersを-blockfilterindexなしで設定することはできません。</translation>
     </message>
@@ -5505,6 +6117,10 @@ Go to File &gt; Open Wallet to load a wallet.
     <message>
         <source>Error loading %s: Private keys can only be disabled during creation</source>
         <translation>%sの読み込みエラー：プライベートキーは作成時にのみ無効化できます。</translation>
+    </message>
+    <message>
+        <source>Error: Cannot extract destination from the generated scriptpubkey</source>
+        <translation>エラー: 生成されたscriptpubkeyから送信先を抽出できません</translation>
     </message>
     <message>
         <source>Error: Couldn't create cursor into database</source>
@@ -5703,6 +6319,10 @@ Go to File &gt; Open Wallet to load a wallet.
         <translation>PIDファイルの「%s」を作成できません：%s</translation>
     </message>
     <message>
+        <source>Unable to find UTXO for external input</source>
+        <translation>外部入力のUTXOが見つかりません</translation>
+    </message>
+    <message>
         <source>Unable to generate initial keys</source>
         <translation>初期キーが生成できません</translation>
     </message>
@@ -5801,10 +6421,6 @@ Go to File &gt; Open Wallet to load a wallet.
     <message>
         <source>Error: Dumpfile identifier record is incorrect. Got "%s", expected "%s".</source>
         <translation>エラー: ダンプファイルの識別記録が正しくありません。「%s」を取得しましたが、「%s」が適切です。</translation>
-    </message>
-    <message>
-        <source>Error: Dumpfile version is not supported. This version of bitcoin-wallet only supports version 1 dumpfiles. Got dumpfile with version %s</source>
-        <translation>エラー: ダンプファイルのバージョンがサポートされていません。このバージョンのbitcoin-wallet は、バージョン1のダンプファイルのみをサポートしていますが、バージョン%sのダンプファイルを取得してしまいました。</translation>
     </message>
     <message>
         <source>Failed to rename invalid peers.dat file. Please move or delete it and try again.</source>
@@ -6133,10 +6749,6 @@ Go to File &gt; Open Wallet to load a wallet.
     <message>
         <source>%s is set very high! Fees this large could be paid on a single transaction.</source>
         <translation>%s が非常に高く設定されています！このような高額な手数料は、単一のトランザクションで支払われる可能性があります。</translation>
-    </message>
-    <message>
-        <source>%s request to listen on port %u. This port is considered "bad" and thus it is unlikely that any Dash Core peers connect to it. See doc/p2p-bad-ports.md for details and a full list.</source>
-        <translation>%sは、ポート%uで受信するよう要求しています。このポートは「悪い」と見なされるため、Dashコアのピアが接続することはまずありません。詳細および全体リストについては、doc/p2p-bad-ports.mdを参照してください。</translation>
     </message>
     <message>
         <source>Cannot provide specific connections and have addrman find outgoing connections at the same time.</source>
