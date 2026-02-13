@@ -293,6 +293,35 @@ public:
         }
         return info;
     }
+    CAmount getAllocatedBudget() override
+    {
+        if (context().govman != nullptr && context().chainman != nullptr && context().dmnman != nullptr) {
+            const auto tip_mn_list{context().dmnman->GetListAtChainTip()};
+            if (const auto proposals{context().govman->GetApprovedProposals(tip_mn_list)}; !proposals.empty()) {
+                int32_t last_sb{0}, next_sb{0};
+                CSuperblock::GetNearestSuperblocksHeights(context().chainman->ActiveHeight(), last_sb, next_sb);
+                const CAmount budget{CSuperblock::GetPaymentsLimit(context().chainman->ActiveChain(), next_sb)};
+
+                CAmount allocated{0};
+                for (const auto& proposal : proposals) {
+                    UniValue json = proposal->GetJSONObject();
+                    CAmount payment_amount{0};
+                    try {
+                        payment_amount = ParsePaymentAmount(json["payment_amount"].getValStr());
+                    } catch (...) {
+                        continue;
+                    }
+                    if (allocated + payment_amount > budget) {
+                        // Budget is saturated, cannot fulfill proposal
+                        continue;
+                    }
+                    allocated += payment_amount;
+                }
+                return allocated;
+            }
+        }
+        return 0;
+    }
     std::optional<CGovernanceObject> createProposal(int32_t revision, int64_t created_time,
                         const std::string& data_hex, std::string& error) override
     {
@@ -399,6 +428,13 @@ public:
     {
         if (context().mn_sync != nullptr) {
             return context().mn_sync->IsBlockchainSynced();
+        }
+        return false;
+    }
+    bool isGovernanceSynced() override
+    {
+        if (context().mn_sync != nullptr) {
+            return context().mn_sync->GetAssetID() > MASTERNODE_SYNC_GOVERNANCE;
         }
         return false;
     }

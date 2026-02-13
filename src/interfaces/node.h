@@ -151,6 +151,7 @@ public:
         int requiredConfs{6};
     };
     virtual GovernanceInfo getGovernanceInfo() = 0;
+    virtual CAmount getAllocatedBudget() = 0;
     virtual std::optional<CGovernanceObject> createProposal(int32_t revision, int64_t created_time,
                                 const std::string& data_hex, std::string& error) = 0;
     virtual bool submitProposal(const uint256& parent, int32_t revision, int64_t created_time, const std::string& data_hex,
@@ -175,6 +176,7 @@ class Sync
 public:
     virtual ~Sync() {}
     virtual bool isBlockchainSynced() = 0;
+    virtual bool isGovernanceSynced() = 0;
     virtual bool isSynced() = 0;
     virtual std::string getSyncStatus() =  0;
     virtual void setContext(node::NodeContext* context) {}
