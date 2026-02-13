@@ -19,6 +19,8 @@
 
 #include <atomic>
 #include <map>
+#include <optional>
+#include <vector>
 
 inline constexpr int GOVERNANCELIST_UPDATE_SECONDS = 10;
 
@@ -28,9 +30,17 @@ class WalletModel;
 class ProposalWizard;
 class CDeterministicMNList;
 enum vote_outcome_enum_t : int;
+namespace Governance {
+class Object;
+} // namespace Governance
 namespace Ui {
 class GovernanceList;
 } // namespace Ui
+
+enum class ProposalSource : uint8_t {
+    Active,
+    Local
+};
 
 /** Governance Manager page widget */
 class GovernanceList : public QWidget
@@ -55,6 +65,7 @@ private:
 
     ClientModel* clientModel{nullptr};
     ProposalModel* proposalModel{nullptr};
+    ProposalSource m_proposal_source{ProposalSource::Active};
     QMenu* proposalContextMenu{nullptr};
     QObject* m_worker{nullptr};
     QSortFilterProxyModel* proposalModelProxy{nullptr};
@@ -67,6 +78,8 @@ private:
 
     bool canVote() const { return !votableMasternodes.empty(); }
     CalcProposalList calcProposalList() const;
+    int queryCollateralDepth(const uint256& collateralHash) const;
+    std::vector<Governance::Object> getWalletProposals(std::optional<bool> pending) const;
     void handleProposalListChanged();
     void refreshColumnWidths();
     void setProposalList(CalcProposalList&& data);
@@ -82,6 +95,7 @@ private Q_SLOTS:
     void updateProposalList();
     void updateProposalCount();
     void updateMasternodeCount() const;
+    void setProposalSource(int index);
     void showProposalContextMenu(const QPoint& pos);
     void showAdditionalInfo(const QModelIndex& index);
     void showCreateProposalDialog();

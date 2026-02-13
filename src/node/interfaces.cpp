@@ -234,11 +234,24 @@ public:
         Votes ret;
         if (context().govman != nullptr && context().dmnman != nullptr) {
             const auto& tip_mn_list{context().dmnman->GetListAtChainTip()};
-            ret.m_abs = obj.GetAbstainCount(tip_mn_list, vote_signal);
-            ret.m_no = obj.GetNoCount(tip_mn_list, vote_signal);
-            ret.m_yes = obj.GetYesCount(tip_mn_list, vote_signal);
+            if (auto govobj{context().govman->FindGovernanceObject(obj.GetHash())}) {
+                ret.m_abs = govobj->GetAbstainCount(tip_mn_list, vote_signal);
+                ret.m_no = govobj->GetNoCount(tip_mn_list, vote_signal);
+                ret.m_yes = govobj->GetYesCount(tip_mn_list, vote_signal);
+            } else {
+                ret.m_abs = obj.GetAbstainCount(tip_mn_list, vote_signal);
+                ret.m_no = obj.GetNoCount(tip_mn_list, vote_signal);
+                ret.m_yes = obj.GetYesCount(tip_mn_list, vote_signal);
+            }
         }
         return ret;
+    }
+    bool existsObj(const uint256& hash) override
+    {
+        if (context().govman != nullptr) {
+            return context().govman->HaveObjectForHash(hash);
+        }
+        return false;
     }
     bool getObjLocalValidity(const CGovernanceObject& obj, std::string& error, bool check_collateral) override
     {

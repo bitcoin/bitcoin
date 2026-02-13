@@ -37,7 +37,20 @@
         <number>0</number>
        </property>
        <item>
+        <widget class="QComboBox" name="proposalSourceCombo">
+         <property name="toolTip">
+          <string>Select proposals to display</string>
+         </property>
+        </widget>
+       </item>
+       <item>
         <widget class="QLineEdit" name="filterLineEdit">
+         <property name="sizePolicy">
+          <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
+           <horstretch>1</horstretch>
+           <verstretch>0</verstretch>
+          </sizepolicy>
+         </property>
          <property name="toolTip">
           <string>Filter proposal list</string>
          </property>

@@ -7,6 +7,7 @@
 #include <evo/deterministicmns.h>
 #include <governance/governance.h>
 #include <governance/vote.h>
+#include <util/underlying.h>
 
 #include <qt/descriptiondialog.h>
 #include <qt/governancelist.h>
@@ -68,6 +69,10 @@ GovernanceList::GovernanceList(QWidget* parent) :
     connect(ui->govTableView, &QTableView::doubleClicked, this, &GovernanceList::showAdditionalInfo);
     connect(ui->govTableView->horizontalHeader(), &QHeaderView::sectionResized, this, &GovernanceList::refreshColumnWidths);
 
+    ui->proposalSourceCombo->addItem(tr("Active Proposals"), ToUnderlying(ProposalSource::Active));
+    ui->proposalSourceCombo->setMinimumWidth(250);
+    connect(ui->proposalSourceCombo, qOverload<int>(&QComboBox::activated), this, &GovernanceList::setProposalSource);
+
     // Set up filtering.
     proposalModelProxy->setSourceModel(proposalModel);
     proposalModelProxy->setSortRole(Qt::EditRole);
@@ -117,23 +122,65 @@ void GovernanceList::changeEvent(QEvent* event)
 void GovernanceList::setClientModel(ClientModel* model)
 {
     this->clientModel = model;
-    if (clientModel) {
-        connect(clientModel, &ClientModel::governanceChanged, this, &GovernanceList::handleProposalListChanged);
-        connect(clientModel->getOptionsModel(), &OptionsModel::displayUnitChanged, this, &GovernanceList::updateDisplayUnit);
-        m_timer->start(0);
-    } else {
+    if (!clientModel) {
         m_timer->stop();
+        return;
     }
+    connect(clientModel, &ClientModel::governanceChanged, this, &GovernanceList::handleProposalListChanged);
+    connect(clientModel, &ClientModel::numBlocksChanged, this, &GovernanceList::handleProposalListChanged);
+    connect(clientModel->getOptionsModel(), &OptionsModel::displayUnitChanged, this, &GovernanceList::updateDisplayUnit);
+    if (walletModel && ui->proposalSourceCombo->findData(ToUnderlying(ProposalSource::Local)) == -1) {
+        ui->proposalSourceCombo->addItem(tr("My Proposals"), ToUnderlying(ProposalSource::Local));
+    }
+    m_timer->start(0);
+}
+
+std::vector<Governance::Object> GovernanceList::getWalletProposals(std::optional<bool> pending) const
+{
+    if (!clientModel || !walletModel) {
+        return {};
+    }
+
+    const auto wallet_objs = walletModel->wallet().getGovernanceObjects();
+
+    const int64_t now{GetTime()};
+    std::vector<Governance::Object> result{};
+    for (const auto& obj : wallet_objs) {
+        const bool is_broadcast{clientModel->node().gov().existsObj(obj.GetHash())};
+        bool is_stale{false};
+        try {
+            UniValue json_data;
+            json_data.read(obj.GetDataAsPlainString());
+            if (json_data.exists("type") && json_data["type"].getInt<int>() != 1) {
+                // Not a voting proposal
+                continue;
+            }
+            if (json_data.exists("end_epoch")) {
+                is_stale = json_data["end_epoch"].getInt<int64_t>() < now;
+            }
+        } catch (const std::exception&) {
+            // Unparsable objects are skipped
+            continue;
+        }
+        if (!pending.has_value() || *pending != (is_broadcast || is_stale)) {
+            result.push_back(obj);
+        }
+    }
+
+    return result;
 }
 
 void GovernanceList::setWalletModel(WalletModel* model)
 {
     this->walletModel = model;
-    if (walletModel && clientModel) {
-        m_timer->start(0);
-    } else {
+    if (!walletModel || !clientModel) {
         m_timer->stop();
+        return;
     }
+    if (clientModel && ui->proposalSourceCombo->findData(ToUnderlying(ProposalSource::Local)) == -1) {
+        ui->proposalSourceCombo->addItem(tr("My Proposals"), ToUnderlying(ProposalSource::Local));
+    }
+    m_timer->start(0);
 }
 
 void GovernanceList::updateDisplayUnit()
@@ -156,6 +203,18 @@ void GovernanceList::handleProposalListChanged()
         delay *= 6;
     }
     m_timer->start(delay);
+}
+
+int GovernanceList::queryCollateralDepth(const uint256& collateralHash) const
+{
+    if (!walletModel) return 0;
+    interfaces::WalletTxStatus tx_status;
+    int num_blocks{};
+    int64_t block_time{};
+    if (walletModel->wallet().tryGetTxStatus(collateralHash, tx_status, num_blocks, block_time)) {
+        return tx_status.depth_in_main_chain;
+    }
+    return 0;
 }
 
 void GovernanceList::updateProposalList()
@@ -198,13 +257,20 @@ GovernanceList::CalcProposalList GovernanceList::calcProposalList() const
     ret.m_abs_vote_req = std::max(Params().GetConsensus().nGovernanceMinQuorum, nWeightedMnCount / 10);
 
     const auto gov_info{clientModel->node().gov().getGovernanceInfo()};
-    std::vector<CGovernanceObject> govObjList;
-    clientModel->getAllGovernanceObjects(govObjList);
-    for (const auto& govObj : govObjList) {
-        if (govObj.GetObjectType() != GovernanceObject::PROPOSAL) {
-            continue; // Skip triggers.
+    if (m_proposal_source == ProposalSource::Active) {
+        std::vector<CGovernanceObject> govObjList;
+        clientModel->getAllGovernanceObjects(govObjList);
+        for (const auto& govObj : govObjList) {
+            if (govObj.GetObjectType() != GovernanceObject::PROPOSAL) {
+                continue; // Skip triggers.
+            }
+            ret.m_proposals.emplace_back(std::make_unique<Proposal>(this->clientModel, govObj, gov_info, gov_info.requiredConfs));
         }
-        ret.m_proposals.emplace_back(std::make_unique<Proposal>(this->clientModel, govObj, gov_info, gov_info.requiredConfs));
+    } else if (m_proposal_source == ProposalSource::Local) {
+        for (const auto& obj : getWalletProposals(/*pending=*/std::nullopt)) {
+            CGovernanceObject govObj(obj.hashParent, obj.revision, obj.time, obj.collateralHash, obj.GetDataAsHexString());
+            ret.m_proposals.emplace_back(std::make_unique<Proposal>(this->clientModel, govObj, gov_info, queryCollateralDepth(obj.collateralHash)));
+        }
     }
 
     auto fundable{clientModel->node().gov().getFundableProposalHashes()};
@@ -309,6 +375,13 @@ void GovernanceList::updateMasternodeCount() const
     if (ui && ui->mnCountLabel) {
         ui->mnCountLabel->setText(QString::number(votableMasternodes.size()));
     }
+}
+
+void GovernanceList::setProposalSource(int index)
+{
+    m_proposal_source = static_cast<ProposalSource>(ui->proposalSourceCombo->itemData(index).toInt());
+    ui->govTableView->setColumnHidden(ProposalModel::Column::VOTING_STATUS, m_proposal_source == ProposalSource::Local);
+    m_timer->start(0);
 }
 
 void GovernanceList::voteYes() { voteForProposal(VOTE_OUTCOME_YES); }
@@ -494,10 +567,10 @@ void GovernanceList::refreshColumnWidths()
     header->setSectionResizeMode(ProposalModel::Column::HASH, QHeaderView::ResizeToContents);
 
     // Calculate width used by ResizeToContents columns
-    const int availableWidth = [&header, &tableWidth](){
+    const int availableWidth = [this, &header, &tableWidth](){
         int fixedWidth = 0;
         for (int idx = 0; idx < ProposalModel::Column::_COUNT; idx++) {
-            if (idx != ProposalModel::Column::TITLE && idx != ProposalModel::Column::HASH) {
+            if (idx != ProposalModel::Column::TITLE && idx != ProposalModel::Column::HASH && !ui->govTableView->isColumnHidden(idx)) {
                 fixedWidth += header->sectionSize(idx);
             }
         }
