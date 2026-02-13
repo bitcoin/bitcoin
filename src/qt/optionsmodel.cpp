@@ -348,6 +348,10 @@ bool OptionsModel::Init(bilingual_str& error)
         settings.setValue("fShowMasternodesTab", false);
     m_enable_masternodes = settings.value("fShowMasternodesTab", false).toBool();
 
+    if (!settings.contains("show_governance_clock"))
+        settings.setValue("show_governance_clock", false);
+    m_show_governance_clock = settings.value("show_governance_clock", false).toBool();
+
     if (!settings.contains("fShowGovernanceTab"))
         settings.setValue("fShowGovernanceTab", false);
     m_enable_governance = settings.value("fShowGovernanceTab", false).toBool();
@@ -670,6 +674,8 @@ QVariant OptionsModel::getOption(OptionID option, const std::string& suffix) con
         return m_sub_fee_from_amount;
     case ShowMasternodesTab:
         return m_enable_masternodes;
+    case ShowGovernanceClock:
+        return m_show_governance_clock;
     case ShowGovernanceTab:
         return m_enable_governance;
     case CoinJoinEnabled:
@@ -868,6 +874,13 @@ bool OptionsModel::setOption(OptionID option, const QVariant& value, const std::
     case SubFeeFromAmount:
         m_sub_fee_from_amount = value.toBool();
         settings.setValue("SubFeeFromAmount", m_sub_fee_from_amount);
+        break;
+    case ShowGovernanceClock:
+        if (changed()) {
+            m_show_governance_clock = value.toBool();
+            settings.setValue("show_governance_clock", m_show_governance_clock);
+            Q_EMIT showGovernanceClockChanged();
+        }
         break;
     case ShowGovernanceTab:
         if (changed()) {

@@ -83,6 +83,7 @@ public:
         ExternalSignerPath,     // QString
         SpendZeroConfChange,    // bool
         ShowMasternodesTab,     // bool
+        ShowGovernanceClock,    // bool
         ShowGovernanceTab,      // bool
         CoinJoinEnabled,        // bool
         ShowAdvancedCJUI,       // bool
@@ -135,6 +136,7 @@ public:
     bool getEnablePSBTControls() const { return m_enable_psbt_controls; }
     bool getKeepChangeAddress() const { return fKeepChangeAddress; }
     bool getShowMasternodesTab() const { return m_enable_masternodes; }
+    bool getShowGovernanceClock() const { return m_show_governance_clock; }
     bool getShowGovernanceTab() const { return m_enable_governance; }
     bool getShowAdvancedCJUI() { return fShowAdvancedCJUI; }
     bool getDustProtection() const { return fDustProtection; }
@@ -169,6 +171,7 @@ private:
     bool fKeepChangeAddress;
     bool m_enable_masternodes;
     bool m_enable_governance;
+    bool m_show_governance_clock;
     bool fShowAdvancedCJUI;
     bool fDustProtection{false};
     qint64 nDustProtectionThreshold{DEFAULT_DUST_PROTECTION_THRESHOLD};
@@ -193,6 +196,7 @@ Q_SIGNALS:
     void coinControlFeaturesChanged(bool);
     void keepChangeAddressChanged(bool);
     void showCoinJoinChanged();
+    void showGovernanceClockChanged();
     void showGovernanceChanged();
     void showMasternodesChanged();
     void showTrayIconChanged(bool);

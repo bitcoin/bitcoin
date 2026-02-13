@@ -910,6 +910,7 @@ void BitcoinGUI::setClientModel(ClientModel *_clientModel, interfaces::BlockAndH
             connect(optionsModel, &OptionsModel::displayUnitChanged, this, &BitcoinGUI::updateGovernanceCycleIcon);
             connect(optionsModel, &OptionsModel::showCoinJoinChanged, this, &BitcoinGUI::updateCoinJoinVisibility);
             connect(optionsModel, &OptionsModel::showGovernanceChanged, this, &BitcoinGUI::updateGovernanceVisibility);
+            connect(optionsModel, &OptionsModel::showGovernanceClockChanged, this, &BitcoinGUI::updateGovernanceCycleIcon);
             connect(optionsModel, &OptionsModel::showMasternodesChanged, this, &BitcoinGUI::updateMasternodesVisibility);
 
             if (trayIcon) {
@@ -1773,7 +1774,8 @@ void BitcoinGUI::updateGovernanceCycleIcon()
     }
 
     const auto& options_model{*clientModel->getOptionsModel()};
-    if (!m_node.gov().isEnabled() || !options_model.getShowGovernanceTab() || clientModel->getNumConnections() == 0) {
+    const bool hide_gov{!options_model.getShowGovernanceTab() || !options_model.getShowGovernanceClock()};
+    if (!m_node.gov().isEnabled() || clientModel->getNumConnections() == 0 || hide_gov) {
         stopGovernanceSyncAnimation();
         labelGovernanceCycleIcon->hide();
         m_last_gov_cycle_height.reset();
