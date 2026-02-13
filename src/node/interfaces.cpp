@@ -285,11 +285,14 @@ public:
     GovernanceInfo getGovernanceInfo() override
     {
         GovernanceInfo info;
-        const NodeContext& ctx = context();
         const Consensus::Params& consensusParams = Params().GetConsensus();
-
-        if (ctx.chainman) {
-            CSuperblock::GetNearestSuperblocksHeights(ctx.chainman->ActiveHeight(), info.lastsuperblock, info.nextsuperblock);
+        if (context().chainman) {
+            LOCK(::cs_main);
+            CSuperblock::GetNearestSuperblocksHeights(context().chainman->ActiveHeight(), info.lastsuperblock, info.nextsuperblock);
+            info.governancebudget = CSuperblock::GetPaymentsLimit(context().chainman->ActiveChain(), info.nextsuperblock);
+            if (context().dmnman) {
+                info.fundingthreshold = context().dmnman->GetListAtChainTip().GetValidWeightedMNsCount() / 10;
+            }
         }
         info.proposalfee = GOVERNANCE_PROPOSAL_FEE_TX;
         info.superblockcycle = consensusParams.nSuperblockCycle;
@@ -297,12 +300,6 @@ public:
         info.targetSpacing = consensusParams.nPowTargetSpacing;
         info.relayRequiredConfs = GOVERNANCE_MIN_RELAY_FEE_CONFIRMATIONS;
         info.requiredConfs = GOVERNANCE_FEE_CONFIRMATIONS;
-        if (ctx.dmnman) {
-            info.fundingthreshold = ctx.dmnman->GetListAtChainTip().GetValidWeightedMNsCount() / 10;
-        }
-        if (ctx.chainman) {
-            info.governancebudget = CSuperblock::GetPaymentsLimit(ctx.chainman->ActiveChain(), info.nextsuperblock);
-        }
         return info;
     }
     std::optional<int32_t> getProposalFundedHeight(const uint256& proposal_hash) override
