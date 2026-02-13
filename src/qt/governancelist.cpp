@@ -146,8 +146,8 @@ void GovernanceList::setClientModel(ClientModel* model)
         return;
     }
     connect(clientModel, &ClientModel::additionalDataSyncProgressChanged, this, &GovernanceList::updateProposalButtons);
-    connect(clientModel, &ClientModel::governanceChanged, this, &GovernanceList::handleProposalListChanged);
-    connect(clientModel, &ClientModel::numBlocksChanged, this, &GovernanceList::handleProposalListChanged);
+    connect(clientModel, &ClientModel::governanceChanged, this, [this] { handleProposalListChanged(/*force=*/false); });
+    connect(clientModel, &ClientModel::numBlocksChanged, this, [this] { handleProposalListChanged(/*force=*/false); });
     connect(clientModel->getOptionsModel(), &OptionsModel::displayUnitChanged, this, &GovernanceList::updateDisplayUnit);
     if (walletModel && ui->proposalSourceCombo->findData(ToUnderlying(ProposalSource::Local)) == -1) {
         ui->proposalSourceCombo->addItem(tr("My Proposals"), ToUnderlying(ProposalSource::Local));
@@ -212,18 +212,21 @@ void GovernanceList::updateDisplayUnit()
     }
 }
 
-void GovernanceList::handleProposalListChanged()
+void GovernanceList::handleProposalListChanged(bool force)
 {
-    if (!clientModel || m_timer->isActive()) {
-        // Too early or already processing, nothing to do
+    if (!clientModel) {
         return;
     }
-    int delay{GOVERNANCELIST_UPDATE_SECONDS * 1000};
-    if (!clientModel->masternodeSync().isBlockchainSynced()) {
-        // Currently syncing, reduce refreshes
-        delay *= 6;
+    if (force) {
+        updateProposalList();
+    } else if (!m_timer->isActive()) {
+        int delay{GOVERNANCELIST_UPDATE_SECONDS * 1000};
+        if (!clientModel->masternodeSync().isBlockchainSynced()) {
+            // Currently syncing, reduce refreshes
+            delay *= 6;
+        }
+        m_timer->start(delay);
     }
-    m_timer->start(delay);
 }
 
 int GovernanceList::queryCollateralDepth(const uint256& collateralHash) const
@@ -246,7 +249,7 @@ void GovernanceList::updateProposalList()
 
     if (m_in_progress.exchange(true)) {
         // Already applying, re-arm for next attempt
-        handleProposalListChanged();
+        handleProposalListChanged(/*force=*/false);
         return;
     }
 
@@ -382,7 +385,7 @@ void GovernanceList::showResumeProposalDialog()
 
     const auto proposals = getWalletProposals(/*pending=*/true);
     ProposalResume* dialog = new ProposalResume(clientModel->node(), clientModel, walletModel, proposals, this);
-    connect(dialog, &ProposalResume::proposalBroadcasted, this, &GovernanceList::handleProposalListChanged);
+    connect(dialog, &ProposalResume::proposalBroadcasted, this, [this] { handleProposalListChanged(/*force=*/true); });
     dialog->setAttribute(Qt::WA_DeleteOnClose, true);
     dialog->setWindowModality(Qt::NonModal);
     dialog->setModal(false);
@@ -481,7 +484,7 @@ void GovernanceList::setProposalSource(int index)
 {
     m_proposal_source = static_cast<ProposalSource>(ui->proposalSourceCombo->itemData(index).toInt());
     ui->govTableView->setColumnHidden(ProposalModel::Column::VOTING_STATUS, m_proposal_source == ProposalSource::Local);
-    m_timer->start(0);
+    handleProposalListChanged(/*force=*/true);
 }
 
 void GovernanceList::voteYes() { voteForProposal(VOTE_OUTCOME_YES); }
@@ -632,7 +635,7 @@ void GovernanceList::voteForProposal(vote_outcome_enum_t outcome)
     QMessageBox::information(this, tr("Voting Results"), message);
 
     // Update proposal list to show new vote counts
-    handleProposalListChanged();
+    handleProposalListChanged(/*force=*/true);
 }
 
 void GovernanceList::showEvent(QShowEvent* event)

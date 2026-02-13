@@ -83,7 +83,7 @@ private:
     CalcProposalList calcProposalList() const;
     int queryCollateralDepth(const uint256& collateralHash) const;
     std::vector<Governance::Object> getWalletProposals(std::optional<bool> pending) const;
-    void handleProposalListChanged();
+    void handleProposalListChanged(bool force);
     void refreshColumnWidths();
     void setProposalList(CalcProposalList&& data);
     void updateEmptyPagePalette();
