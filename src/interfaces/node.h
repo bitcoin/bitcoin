@@ -466,6 +466,10 @@ public:
         std::function<void(SynchronizationState, interfaces::BlockTip tip, double verification_progress)>;
     virtual std::unique_ptr<Handler> handleNotifyHeaderTip(NotifyHeaderTipFn fn) = 0;
 
+    //! Register handler for governance data messages.
+    using NotifyGovernanceChangedFn = std::function<void()>;
+    virtual std::unique_ptr<Handler> handleNotifyGovernanceChanged(NotifyGovernanceChangedFn fn) = 0;
+
     //! Register handler for masternode list update messages.
     using NotifyMasternodeListChangedFn =
         std::function<void(const CDeterministicMNList& newList,

@@ -321,6 +321,10 @@ void ClientModel::subscribeToCoreSignals()
         [this](const CDeterministicMNList& newList, const CBlockIndex* pindex) {
             setMasternodeList(interfaces::MakeMNList(newList), pindex);
         }));
+    m_event_handlers.emplace_back(m_node.handleNotifyGovernanceChanged(
+        [this]() {
+            Q_EMIT governanceChanged();
+        }));
 }
 
 void ClientModel::unsubscribeFromCoreSignals()

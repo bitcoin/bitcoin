@@ -858,6 +858,10 @@ public:
                     /* verification progress is unused when a header was received */ 0);
             }));
     }
+    std::unique_ptr<Handler> handleNotifyGovernanceChanged(NotifyGovernanceChangedFn fn) override
+    {
+        return MakeHandler(::uiInterface.NotifyGovernanceChanged_connect(fn));
+    }
     std::unique_ptr<Handler> handleNotifyMasternodeListChanged(NotifyMasternodeListChangedFn fn) override
     {
         return MakeHandler(

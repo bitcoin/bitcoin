@@ -15,6 +15,7 @@
 #include <governance/validators.h>
 #include <masternode/meta.h>
 #include <masternode/sync.h>
+#include <node/interface_ui.h>
 #include <protocol.h>
 #include <shutdown.h>
 #include <spork.h>
@@ -318,6 +319,7 @@ void CGovernanceManager::AddGovernanceObjectInternal(CGovernanceObject& insert_o
 
     // SEND NOTIFICATION TO SCRIPT/ZMQ
     GetMainSignals().NotifyGovernanceObject(std::make_shared<const Governance::Object>(govobj->Object()), nHash.ToString());
+    uiInterface.NotifyGovernanceChanged();
 }
 
 void CGovernanceManager::AddGovernanceObject(CGovernanceObject& govobj, const CNode* pfrom)
