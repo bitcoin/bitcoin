@@ -387,6 +387,11 @@ void Chainstate::MaybeUpdateMempoolForReorg(
     m_mempool->removeForReorg(m_chain, filter_final_and_mature);
     // Re-limit mempool size, in case we added any transactions
     LimitMempoolSize(*m_mempool, this->CoinsTip());
+    // After mempool size limiting during reorg, the cached UTXO view may be stale.
+    // Clear any cached coins that reference mempool transactions to prevent
+    // race conditions in subsequent transaction validation.
+    BlockValidationState state_dummy;
+    FlushStateToDisk(state_dummy, FlushStateMode::PERIODIC);
 }
 
 /**
@@ -1397,6 +1402,8 @@ MempoolAcceptResult MemPoolAccept::AcceptSingleTransactionInternal(const CTransa
         // If mempool contents change, then the m_view cache is dirty. Given this isn't a package
         // submission, we won't be using the cache anymore, but clear it anyway for clarity.
         CleanupTemporaryCoins();
+        // Ensure m_view backend is reset to prevent stale cache access
+        m_view.SetBackend(m_dummy);
 
         if (!m_pool.exists(ws.m_hash)) {
             // The tx no longer meets our (new) mempool minimum feerate but could be reconsidered in a package.
@@ -1590,6 +1597,9 @@ void MemPoolAccept::CleanupTemporaryCoins()
     }
     // This deletes the temporary and mempool coins.
     m_viewmempool.Reset();
+    // Ensure the view backend is properly reset after coin cleanup
+    // to prevent any lingering references to stale mempool state
+    m_view.SetBackend(m_viewmempool);
 }
 
 PackageMempoolAcceptResult MemPoolAccept::AcceptSubPackage(const std::vector<CTransactionRef>& subpackage, ATMPArgs& args)
@@ -1728,6 +1738,8 @@ PackageMempoolAcceptResult MemPoolAccept::AcceptPackage(const Package& package, 
     // Package transactions that were submitted to mempool or already in mempool may be evicted.
     // If mempool contents change, then the m_view cache is dirty. It has already been cleared above.
     LimitMempoolSize(m_pool, m_active_chainstate.CoinsTip());
+    // Explicitly cleanup after mempool trimming to ensure cache consistency
+    CleanupTemporaryCoins();
 
     for (const auto& tx : package) {
         const auto& wtxid = tx->GetWitnessHash();
