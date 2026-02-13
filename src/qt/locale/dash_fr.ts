@@ -173,6 +173,10 @@
         <source>Font Weight Bold:</source>
         <translation>Style gras :</translation>
     </message>
+    <message>
+        <source>Font in the Overview tab: </source>
+        <translation>Police dans l'onglet Vue d'ensemble : </translation>
+    </message>
 </context>
 <context>
     <name>AskPassphraseDialog</name>
@@ -325,6 +329,10 @@
 </context>
 <context>
     <name>BitcoinApplication</name>
+    <message>
+        <source>Settings file %1 might be corrupt or invalid.</source>
+        <translation>Le fichier de paramètres %1 pourrait être corrompu ou invalide.</translation>
+    </message>
     <message>
         <source>Runaway exception</source>
         <translation>Exception lors de l'exécution</translation>
@@ -501,6 +509,14 @@
         <translation>Modifier la phrase de passe utilisée pour le chiffrement du portefeuille</translation>
     </message>
     <message>
+        <source>&amp;Show Recovery Phrase…</source>
+        <translation>&amp;Afficher la phrase de récupération…</translation>
+    </message>
+    <message>
+        <source>Show the recovery phrase (mnemonic seed) for this wallet</source>
+        <translation>Afficher la phrase de récupération (graine mnémonique) de ce portefeuille</translation>
+    </message>
+    <message>
         <source>Unlock wallet</source>
         <translation>Déverrouiller le portefeuille</translation>
     </message>
@@ -587,6 +603,26 @@
     <message>
         <source>%1 client</source>
         <translation>Client %1</translation>
+    </message>
+    <message>
+        <source>Waiting for blockchain sync…</source>
+        <translation>En attente de la synchronisation de la blockchain…</translation>
+    </message>
+    <message>
+        <source>Synchronizing governance data…</source>
+        <translation>Synchronisation des données de gouvernance…</translation>
+    </message>
+    <message numerus="yes">
+        <source>~%n day(s) (%1 blocks) left for superblock</source>
+        <translation><numerusform>~%n jour (%1 blocs) restant avant le superbloc</numerusform><numerusform>~%n jours (%1 blocs) restants avant le superbloc</numerusform><numerusform>~%n jours (%1 blocs) restants avant le superbloc</numerusform></translation>
+    </message>
+    <message numerus="yes">
+        <source>~%n day(s) (%1 blocks) left for voting</source>
+        <translation><numerusform>~%n jour (%1 blocs) restant avant la fin du vote</numerusform><numerusform>~%n jours (%1 blocs) restants avant la fin du vote</numerusform><numerusform>~%n jours (%1 blocs) restants avant la fin du vote</numerusform></translation>
+    </message>
+    <message>
+        <source>~%1% of budget committed (%2 %3).</source>
+        <translation>~%1% du budget alloué (%2 %3).</translation>
     </message>
     <message>
         <source>Wallet: %1
@@ -808,10 +844,6 @@
     <message>
         <source>Up to date</source>
         <translation>À jour</translation>
-    </message>
-    <message>
-        <source>Synchronizing additional data: %p%</source>
-        <translation>Synchronisation des données additionnelles : %p%</translation>
     </message>
     <message>
         <source>Error</source>
@@ -1115,6 +1147,38 @@
         <source>Create wallet warning</source>
         <translation>Avertissement sur la création du portefeuille</translation>
     </message>
+    <message>
+        <source>Unlock failed</source>
+        <translation>Échec du déverrouillage</translation>
+    </message>
+    <message>
+        <source>Failed to unlock wallet for mnemonic verification. Wallet creation completed but verification skipped.</source>
+        <translation>Impossible de déverrouiller le portefeuille pour la vérification mnémonique. La création du portefeuille est terminée mais la vérification a été ignorée.</translation>
+    </message>
+    <message>
+        <source>Mnemonic retrieval failed</source>
+        <translation>Échec de la récupération de la phrase mnémonique</translation>
+    </message>
+    <message>
+        <source>Could not retrieve mnemonic phrase from wallet. Wallet creation completed but verification skipped.</source>
+        <translation>Impossible de récupérer la phrase mnémonique du portefeuille. La création du portefeuille est terminée mais la vérification a été ignorée.</translation>
+    </message>
+    <message>
+        <source>Verification cancelled</source>
+        <translation>Vérification annulée</translation>
+    </message>
+    <message>
+        <source>You cancelled mnemonic verification. Please make sure you have saved your mnemonic phrase safely.</source>
+        <translation>Vous avez annulé la vérification mnémonique. Veuillez vous assurer que vous avez sauvegardé votre phrase mnémonique en lieu sûr.</translation>
+    </message>
+    <message>
+        <source>Can't list signers</source>
+        <translation>Impossible de lister les signataires</translation>
+    </message>
+    <message>
+        <source>Too many external signers found</source>
+        <translation>Trop de signataires externes trouvés</translation>
+    </message>
 </context>
 <context>
     <name>CreateWalletDialog</name>
@@ -1139,8 +1203,24 @@
         <translation>Chiffrer le portefeuille</translation>
     </message>
     <message>
-        <source>Advanced Options</source>
-        <translation>Options avancées</translation>
+        <source>Use descriptors for scriptPubKey management.</source>
+        <translation>Utiliser les descripteurs pour la gestion des scriptPubKey.</translation>
+    </message>
+    <message>
+        <source>Descriptor Wallet</source>
+        <translation>Portefeuille à descripteurs</translation>
+    </message>
+    <message>
+        <source>Use an external signing device such as a hardware wallet. Configure the external signer script in wallet preferences first.</source>
+        <translation>Utiliser un appareil de signature externe tel qu'un portefeuille matériel. Configurez d'abord le script du signataire externe dans les préférences du portefeuille.</translation>
+    </message>
+    <message>
+        <source>External signer</source>
+        <translation>Signataire externe</translation>
+    </message>
+    <message>
+        <source>Show Advanced Options</source>
+        <translation>Afficher les options avancées</translation>
     </message>
     <message>
         <source>Disable private keys for this wallet. Wallets with private keys disabled will have no private keys and cannot have an HD seed or imported private keys. This is ideal for watch-only wallets.</source>
@@ -1159,20 +1239,28 @@
         <translation>Créer un portefeuille vierge</translation>
     </message>
     <message>
-        <source>Use descriptors for scriptPubKey management. This feature is well-tested but still considered experimental and not recommended for use yet.</source>
-        <translation>Utiliser des descripteurs pour la gestion scriptPubKey. Cette fonction a été bien testée mais reste considérée comme expérimentale, son utilisation n'est pas encore recommandée.</translation>
-    </message>
-    <message>
-        <source>Descriptor Wallet (EXPERIMENTAL)</source>
-        <translation>Portefeuille à descripteur (EXPÉRIMENTAL)</translation>
-    </message>
-    <message>
         <source>Create</source>
         <translation>Créer</translation>
     </message>
     <message>
+        <source>Hide Advanced Options</source>
+        <translation>Masquer les options avancées</translation>
+    </message>
+    <message>
         <source>Compiled without sqlite support (required for descriptor wallets)</source>
         <translation>Compilé sans support sqlite (indispensable pour les portefeuilles à descripteurs)</translation>
+    </message>
+    <message>
+        <source>Compiled without external signing support (required for external signing)</source>
+        <extracomment>"External signing" means using devices such as hardware wallets.</extracomment>
+        <translation>Compilé sans le support de signature externe (requis pour la signature externe)</translation>
+    </message>
+</context>
+<context>
+    <name>DescriptionDialog</name>
+    <message>
+        <source>This pane shows detailed information</source>
+        <translation>Ce panneau affiche des informations détaillées</translation>
     </message>
 </context>
 <context>
@@ -1260,10 +1348,6 @@
         <translation>Formulaire</translation>
     </message>
     <message>
-        <source>Filter List:</source>
-        <translation>Liste de filtres :</translation>
-    </message>
-    <message>
         <source>Filter proposal list</source>
         <translation>Filtrer la liste des propositions</translation>
     </message>
@@ -1276,12 +1360,24 @@
         <translation>Nombre de masternodes avec lesquels ce portefeuille peut voter (masternodes pour lesquels ce portefeuille détient la clé de vote)</translation>
     </message>
     <message>
+        <source>No active proposals on the network.</source>
+        <translation>Aucune proposition active sur le réseau.</translation>
+    </message>
+    <message>
+        <source>Resume Proposal</source>
+        <translation>Reprendre la proposition</translation>
+    </message>
+    <message>
         <source>Proposal Count:</source>
         <translation>Nombre de propositions :</translation>
     </message>
     <message>
         <source>Create Proposal</source>
         <translation>Créer une proposition</translation>
+    </message>
+    <message>
+        <source>Select proposals to display</source>
+        <translation>Sélectionner les propositions à afficher</translation>
     </message>
     <message>
         <source>Filter by Title</source>
@@ -1308,8 +1404,76 @@
         <translation>Voter Abstention</translation>
     </message>
     <message>
-        <source>Proposal Info: %1</source>
-        <translation>Information sur proposition : %1</translation>
+        <source>Active Proposals</source>
+        <translation>Propositions actives</translation>
+    </message>
+    <message>
+        <source>My Proposals</source>
+        <translation>Mes propositions</translation>
+    </message>
+    <message>
+        <source>No proposals recorded in wallet file.</source>
+        <translation>Aucune proposition enregistrée dans le fichier du portefeuille.</translation>
+    </message>
+    <message>
+        <source>Resume proposal</source>
+        <translation>Reprendre la proposition</translation>
+    </message>
+    <message>
+        <source>Copy Raw JSON</source>
+        <translation>Copier le JSON</translation>
+    </message>
+    <message>
+        <source>Open Proposal URL…</source>
+        <translation>Ouvrir l'URL de la proposition…</translation>
+    </message>
+    <message>
+        <source>Details for %1</source>
+        <translation>Détails pour %1</translation>
+    </message>
+    <message>
+        <source>Cannot interact with governance before sync completes</source>
+        <translation>Impossible d'interagir avec la gouvernance avant la fin de la synchronisation</translation>
+    </message>
+    <message>
+        <source>Creates a new proposal</source>
+        <translation>Crée une nouvelle proposition</translation>
+    </message>
+    <message>
+        <source>Resumes an existing proposal</source>
+        <translation>Reprend une proposition existante</translation>
+    </message>
+    <message>
+        <source>Creating proposals costs %1, insufficient balance</source>
+        <translation>La création de propositions coûte %1, solde insuffisant</translation>
+    </message>
+    <message>
+        <source>Error</source>
+        <translation>Erreur</translation>
+    </message>
+    <message>
+        <source>Cannot validate URL, potentially malformed or unknown protocol.</source>
+        <translation>Impossible de valider l'URL, potentiellement mal formée ou protocole inconnu.</translation>
+    </message>
+    <message>
+        <source>External Link Warning</source>
+        <translation>Avertissement de lien externe</translation>
+    </message>
+    <message>
+        <source>You are about to open the following URL in your default browser
+
+%1
+
+This content was submitted by a user. It may not match what is described in the title.
+
+Do you wish to continue?</source>
+        <translation>Vous êtes sur le point d'ouvrir l'URL suivante dans votre navigateur par défaut
+
+%1
+
+Ce contenu a été soumis par un utilisateur. Il pourrait ne pas correspondre à ce qui est décrit dans le titre.
+
+Souhaitez-vous continuer ?</translation>
     </message>
     <message>
         <source>Voting Failed</source>
@@ -1478,7 +1642,13 @@
 <context>
     <name>LoadWalletsActivity</name>
     <message>
+        <source>Load Wallets</source>
+        <extracomment>Title of progress window which is displayed when wallets are being loaded.</extracomment>
+        <translation>Charger les portefeuilles</translation>
+    </message>
+    <message>
         <source>Loading wallets…</source>
+        <extracomment>Descriptive text of the load wallets progress window which indicates to the user that wallets are currently being loaded.</extracomment>
         <translation>Chargement des portefeuilles…</translation>
     </message>
 </context>
@@ -1489,16 +1659,36 @@
         <translation>Formulaire</translation>
     </message>
     <message>
-        <source>Status</source>
-        <translation>État</translation>
+        <source>Filter by masternode type</source>
+        <translation>Filtrer par type de masternode</translation>
     </message>
     <message>
-        <source>Filter List:</source>
-        <translation>Filtrer la liste :</translation>
+        <source>All</source>
+        <translation>Tous</translation>
+    </message>
+    <message>
+        <source>Regular</source>
+        <translation>Régulier</translation>
+    </message>
+    <message>
+        <source>Evo</source>
+        <translation>Evo</translation>
     </message>
     <message>
         <source>Filter masternode list</source>
         <translation>Filtrer la liste des masternodes</translation>
+    </message>
+    <message>
+        <source>Owned</source>
+        <translation>Possédés</translation>
+    </message>
+    <message>
+        <source>Hide masternodes that are currently PoSe banned.</source>
+        <translation>Masquer les masternodes actuellement bannis par PoSe.</translation>
+    </message>
+    <message>
+        <source>Hide banned</source>
+        <translation>Masquer les bannis</translation>
     </message>
     <message>
         <source>Node Count:</source>
@@ -1509,8 +1699,67 @@
         <translation>N'afficher que les masternodes dont les clés sont dans ce portefeuille</translation>
     </message>
     <message>
-        <source>My masternodes only</source>
-        <translation>Seulement mes masternodes</translation>
+        <source>Payout Address</source>
+        <translation>Adresse de rétribution</translation>
+    </message>
+    <message>
+        <source>Filter by</source>
+        <translation>Filtrer par</translation>
+    </message>
+    <message>
+        <source>Collateral Address</source>
+        <translation>Adresse de caution</translation>
+    </message>
+    <message>
+        <source>Owner Address</source>
+        <translation>Adresse de propriétaire</translation>
+    </message>
+    <message>
+        <source>Voting Address</source>
+        <translation>Adresse de vote</translation>
+    </message>
+    <message>
+        <source>Details for Masternode %1</source>
+        <translation>Détails du masternode %1</translation>
+    </message>
+    <message>
+        <source>Copy ProTx Hash</source>
+        <translation>Copier hachage ProTx</translation>
+    </message>
+    <message>
+        <source>Copy Collateral Outpoint</source>
+        <translation>Copier sortie caution</translation>
+    </message>
+    <message>
+        <source>Filter by any property (e.g. address or protx hash)</source>
+        <translation>Filtrer selon tout critère (par ex. : adresse ou empreinte protx)</translation>
+    </message>
+</context>
+<context>
+    <name>MasternodeModel</name>
+    <message numerus="yes">
+        <source>Banned for %n day(s)</source>
+        <translation><numerusform>Banni depuis %n jour</numerusform><numerusform>Banni depuis %n jours</numerusform><numerusform>Banni depuis %n jours</numerusform></translation>
+    </message>
+    <message>
+        <source>Banned for less than a day</source>
+        <translation>Banni depuis moins d'un jour</translation>
+    </message>
+    <message>
+        <source>Banned</source>
+        <translation>Banni</translation>
+    </message>
+    <message numerus="yes">
+        <source>Active for %n day(s)</source>
+        <translation><numerusform>Actif depuis %n jour</numerusform><numerusform>Actif depuis %n jours</numerusform><numerusform>Actif depuis %n jours</numerusform></translation>
+    </message>
+    <message>
+        <source>Active for less than a day</source>
+        <translation>Actif depuis moins d'un jour</translation>
+    </message>
+    <message>
+        <source>UNKNOWN</source>
+        <translation>INCONNU</translation>
     </message>
     <message>
         <source>Service</source>
@@ -1537,76 +1786,111 @@
         <translation>Prochain paiement</translation>
     </message>
     <message>
-        <source>Payout Address</source>
-        <translation>Adresse de rétribution</translation>
-    </message>
-    <message>
         <source>Operator Reward</source>
-        <translation>Récompense opérateur</translation>
+        <translation>Récompense de l'opérateur</translation>
     </message>
     <message>
-        <source>Collateral Address</source>
-        <translation>Adresse de caution</translation>
+        <source>ProTx Hash</source>
+        <translation>Hash ProTx</translation>
+    </message>
+</context>
+<context>
+    <name>MnemonicVerificationDialog</name>
+    <message>
+        <source>Save Your Mnemonic</source>
+        <translation>Sauvegardez votre phrase mnémonique</translation>
     </message>
     <message>
-        <source>Owner Address</source>
-        <translation>Adresse de propriétaire</translation>
+        <source>WARNING: If you lose your mnemonic seed phrase, you will lose access to your wallet forever.</source>
+        <translation>AVERTISSEMENT : Si vous perdez votre phrase mnémonique, vous perdrez l'accès à votre portefeuille pour toujours.</translation>
     </message>
     <message>
-        <source>Voting Address</source>
-        <translation>Adresse de vote</translation>
+        <source>Please write down these words in order. You will need them to restore your wallet.</source>
+        <translation>Veuillez noter ces mots dans l'ordre. Vous en aurez besoin pour restaurer votre portefeuille.</translation>
     </message>
     <message>
-        <source>Copy ProTx Hash</source>
-        <translation>Copier hachage ProTx</translation>
+        <source>Show</source>
+        <translation>Afficher</translation>
     </message>
     <message>
-        <source>Copy Collateral Outpoint</source>
-        <translation>Copier sortie caution</translation>
+        <source>Hide</source>
+        <translation>Masquer</translation>
     </message>
     <message>
-        <source>Please wait…</source>
-        <translation>Veuillez patienter…</translation>
+        <source>I have written down my mnemonic</source>
+        <translation>J'ai noté ma phrase mnémonique</translation>
     </message>
     <message>
-        <source>Updating…</source>
-        <translation>Mise à jour en cours…</translation>
+        <source>To verify you've saved your mnemonic, please enter the following words:</source>
+        <translation>Pour vérifier que vous avez sauvegardé votre phrase mnémonique, veuillez entrer les mots suivants :</translation>
     </message>
     <message>
-        <source>ENABLED</source>
-        <translation>ACTIVÉ</translation>
+        <source>Word #1:</source>
+        <translation>Mot #1 :</translation>
     </message>
     <message>
-        <source>POSE_BANNED</source>
-        <translation>BANNI_PoSe</translation>
+        <source>Word #2:</source>
+        <translation>Mot #2 :</translation>
     </message>
     <message>
-        <source>UNKNOWN</source>
-        <translation>INCONNU</translation>
+        <source>Word #3:</source>
+        <translation>Mot #3 :</translation>
     </message>
     <message>
-        <source>to %1</source>
-        <translation>à %1</translation>
+        <source>Your Recovery Phrase</source>
+        <translation>Votre phrase de récupération</translation>
     </message>
     <message>
-        <source>to UNKNOWN</source>
-        <translation>à INCONNU</translation>
+        <source>Close</source>
+        <translation>Fermer</translation>
     </message>
     <message>
-        <source>but not claimed</source>
-        <translation>mais non réclamé</translation>
+        <source>Continue</source>
+        <translation>Continuer</translation>
     </message>
     <message>
-        <source>NONE</source>
-        <translation>AUCUN</translation>
+        <source>WARNING: Never share your recovery phrase with anyone. Store it securely offline.</source>
+        <translation>AVERTISSEMENT : Ne partagez jamais votre phrase de récupération avec quiconque. Conservez-la en lieu sûr hors ligne.</translation>
     </message>
     <message>
-        <source>Filter by any property (e.g. address or protx hash)</source>
-        <translation>Filtrer selon tout critère (par ex. : adresse ou empreinte protx)</translation>
+        <source>These words can restore your wallet. Keep them safe and private.</source>
+        <translation>Ces mots peuvent restaurer votre portefeuille. Gardez-les en sécurité et confidentiels.</translation>
     </message>
     <message>
-        <source>Additional information for DIP3 Masternode %1</source>
-        <translation>Infos supplémentaires pour le masternode DIP3 %1</translation>
+        <source>WARNING: If you lose your mnemonic seed phrase, you will lose access to your wallet forever. Write it down in a safe place and never share it with anyone.</source>
+        <translation>AVERTISSEMENT : Si vous perdez votre phrase mnémonique, vous perdrez l'accès à votre portefeuille pour toujours. Notez-la dans un endroit sûr et ne la partagez jamais avec quiconque.</translation>
+    </message>
+    <message>
+        <source>Invalid Mnemonic</source>
+        <translation>Phrase mnémonique invalide</translation>
+    </message>
+    <message>
+        <source>Mnemonic phrase has fewer than 3 words (found %1). Verification cannot proceed.</source>
+        <translation>La phrase mnémonique contient moins de 3 mots (trouvé %1). La vérification ne peut pas continuer.</translation>
+    </message>
+    <message>
+        <source>Verification Error</source>
+        <translation>Erreur de vérification</translation>
+    </message>
+    <message>
+        <source>Failed to generate verification positions. Please try again.</source>
+        <translation>Impossible de générer les positions de vérification. Veuillez réessayer.</translation>
+    </message>
+    <message>
+        <source>Word #%1:</source>
+        <translation>Mot #%1 :</translation>
+    </message>
+    <message>
+        <source>Back</source>
+        <translation>Retour</translation>
+    </message>
+    <message>
+        <source>Verification Failed</source>
+        <translation>Échec de la vérification</translation>
+    </message>
+    <message>
+        <source>One or more words are incorrect. Please try again.</source>
+        <translation>Un ou plusieurs mots sont incorrects. Veuillez réessayer.</translation>
     </message>
 </context>
 <context>
@@ -1824,12 +2108,52 @@
         <translation>Afficher l'onglet de gouvernance</translation>
     </message>
     <message>
+        <source>Show the governance clock in the status bar.</source>
+        <translation>Afficher l'horloge de gouvernance dans la barre d'état.</translation>
+    </message>
+    <message>
+        <source>Show governance clock</source>
+        <translation>Afficher l'horloge de gouvernance</translation>
+    </message>
+    <message>
         <source>If you disable the spending of unconfirmed change, the change from a transaction&lt;br/&gt;cannot be used until that transaction has at least one confirmation.&lt;br/&gt;This also affects how your balance is computed.</source>
         <translation>Si vous désactivez la dépense d'argent non confirmé, le montant d'une transaction&lt;br/&gt;ne peut pas être utilisé tant que cette transaction n'a pas reçu au moins une confirmation.&lt;br/&gt;Ceci a aussi un impact sur le calcul de votre solde.</translation>
     </message>
     <message>
         <source>Show mixing interface on Overview screen and reveal an additional screen which allows to spend fully mixed coins only.&lt;br/&gt;A new tab with more settings will also appear in this dialog, please make sure to check them before mixing your coins.</source>
         <translation>Montre l'interface de mélange sur l'écran "Vue d'ensemble" et affiche un écran supplémentaire qui permet de dépenser uniquement les fonds entièrement mélangés.&lt;br/&gt;Un nouvel onglet avec davantage d'options apparaîtra aussi dans cette boîte de dialogue, veuillez vérifier ces options avant de mélanger vos fonds.</translation>
+    </message>
+    <message>
+        <source>Automatically lock small incoming transactions from external sources that may be dust attacks. Locked UTXOs will be excluded from coin selection.</source>
+        <translation>Verrouiller automatiquement les petites transactions entrantes provenant de sources externes qui pourraient être des attaques de poussière. Les UTXOs verrouillés seront exclus de la sélection de pièces.</translation>
+    </message>
+    <message>
+        <source>Enable &amp;dust attack protection</source>
+        <translation>Activer la protection contre les attaques de &amp;poussière</translation>
+    </message>
+    <message>
+        <source>Dust threshold:</source>
+        <translation>Seuil de poussière :</translation>
+    </message>
+    <message>
+        <source>Transactions with outputs at or below this amount will be considered dust when received from external sources.</source>
+        <translation>Les transactions avec des sorties inférieures ou égales à ce montant seront considérées comme de la poussière lorsqu'elles sont reçues de sources externes.</translation>
+    </message>
+    <message>
+        <source>duffs</source>
+        <translation>duffs</translation>
+    </message>
+    <message>
+        <source>External Signer (e.g. hardware wallet)</source>
+        <translation>Signataire externe (ex. portefeuille matériel)</translation>
+    </message>
+    <message>
+        <source>&amp;External signer script path</source>
+        <translation>Chemin du script du &amp;signataire externe</translation>
+    </message>
+    <message>
+        <source>Full path to a %1 compatible script (e.g. C:\Downloads\hwi.exe or /Users/you/Downloads/hwi.py). Beware: malware can steal your coins!</source>
+        <translation>Chemin complet vers un script compatible %1 (ex. C:\Downloads\hwi.exe ou /Users/you/Downloads/hwi.py). Attention : un malware peut voler vos pièces !</translation>
     </message>
     <message>
         <source>Show additional information and buttons on overview screen.</source>
@@ -1948,10 +2272,6 @@ https://explore.transifex.com/dash/dash/</translation>
     <message>
         <source>&amp;Third-party transaction URLs</source>
         <translation>URL de &amp;transaction tierces</translation>
-    </message>
-    <message>
-        <source>Options set in this dialog are overridden by the command line or in the configuration file:</source>
-        <translation>Les options choisies dans ce dialogue sont remplacées par la ligne de commande ou dans le fichier de configuration :</translation>
     </message>
     <message>
         <source>Minimize instead of exit the application when the window is closed. When this option is enabled, the application will be closed only after selecting Exit in the menu.</source>
@@ -2074,6 +2394,10 @@ https://explore.transifex.com/dash/dash/</translation>
         <translation>Nombre de décimales</translation>
     </message>
     <message>
+        <source>Options set in this dialog are overridden by the command line:</source>
+        <translation>Les options définies dans ce dialogue sont remplacées par la ligne de commande :</translation>
+    </message>
+    <message>
         <source>Reset all client options to default.</source>
         <translation>Réinitialiser toutes les options du client aux valeurs par défaut.</translation>
     </message>
@@ -2108,6 +2432,11 @@ https://explore.transifex.com/dash/dash/</translation>
         <translation>Le redémarrage du client est nécessaire pour activer les changements.</translation>
     </message>
     <message>
+        <source>Compiled without external signing support (required for external signing)</source>
+        <extracomment>"External signing" means using devices such as hardware wallets.</extracomment>
+        <translation>Compilé sans le support de signature externe (requis pour la signature externe)</translation>
+    </message>
+    <message>
         <source>Current settings will be backed up at "%1".</source>
         <extracomment>Text explaining to the user that the client's current settings will be backed up at a specific location. %1 is a stand-in argument for the backup location's path.</extracomment>
         <translation>Les paramètres actuels seront sauvegardés dans "%1".</translation>
@@ -2124,6 +2453,13 @@ https://explore.transifex.com/dash/dash/</translation>
     <message>
         <source>The supplied proxy address is invalid.</source>
         <translation>L'adresse de serveur mandataire fournie est invalide.</translation>
+    </message>
+</context>
+<context>
+    <name>OptionsModel</name>
+    <message>
+        <source>Could not read setting "%1", %2.</source>
+        <translation>Impossible de lire le paramètre "%1", %2.</translation>
     </message>
 </context>
 <context>
@@ -2433,8 +2769,8 @@ https://explore.transifex.com/dash/dash/</translation>
         <translation>PSBT enregistré sur le disque.</translation>
     </message>
     <message>
-        <source> * Sends %1 to %2</source>
-        <translation>* Envoie %1 à %2</translation>
+        <source>Sends %1 to %2</source>
+        <translation>Envoie %1 à %2</translation>
     </message>
     <message>
         <source>own address</source>
@@ -2586,25 +2922,141 @@ En raison d'un support interrompu, vous devriez demander au vendeur de vous comm
     </message>
 </context>
 <context>
-    <name>Proposal</name>
+    <name>ProposalCreate</name>
     <message>
-        <source>Passing +%1</source>
-        <translation>En traitement +%1</translation>
+        <source>New proposal</source>
+        <translation>Nouvelle proposition</translation>
     </message>
     <message>
-        <source>Needs additional %1 votes</source>
-        <translation>Besoin de votes %1 supplémentaires</translation>
+        <source>Proposal &amp;name</source>
+        <translation>&amp;Nom de la proposition</translation>
+    </message>
+    <message>
+        <source>&amp;Description URL</source>
+        <translation>URL de &amp;description</translation>
+    </message>
+    <message>
+        <source>&amp;Payment date</source>
+        <translation>&amp;Date de paiement</translation>
+    </message>
+    <message>
+        <source>Pa&amp;yments</source>
+        <translation>Pa&amp;iements</translation>
+    </message>
+    <message>
+        <source>Payment &amp;address</source>
+        <translation>&amp;Adresse de paiement</translation>
+    </message>
+    <message>
+        <source>Payment &amp;amount</source>
+        <translation>&amp;Montant du paiement</translation>
+    </message>
+    <message>
+        <source>To&amp;tal amount</source>
+        <translation>Mon&amp;tant total</translation>
+    </message>
+    <message>
+        <source>The amount to request in a single payment</source>
+        <translation>Le montant à demander en un seul paiement</translation>
+    </message>
+    <message>
+        <source>View JSON</source>
+        <translation>Voir JSON</translation>
+    </message>
+    <message>
+        <source>View Payload</source>
+        <translation>Voir les données</translation>
+    </message>
+    <message>
+        <source>margin-left: 8px;</source>
+        <translation>margin-left: 8px;</translation>
+    </message>
+    <message>
+        <source>Create Proposal</source>
+        <translation>Créer une proposition</translation>
+    </message>
+    <message>
+        <source>All fields are mandatory</source>
+        <translation>Tous les champs sont obligatoires</translation>
+    </message>
+    <message>
+        <source>Confirm Proposal</source>
+        <translation>Confirmer la proposition</translation>
+    </message>
+    <message>
+        <source>Are you sure you want to create this proposal?</source>
+        <translation>Êtes-vous sûr de vouloir créer cette proposition ?</translation>
+    </message>
+    <message>
+        <source>Creating a proposal pays %1 to the network. This fee is non-refundable regardless of outcome.</source>
+        <translation>La création d'une proposition paie %1 au réseau. Ces frais ne sont pas remboursables quel que soit le résultat.</translation>
+    </message>
+    <message>
+        <source>Creation failed</source>
+        <translation>Échec de la création</translation>
+    </message>
+    <message>
+        <source>Proposal Created</source>
+        <translation>Proposition créée</translation>
+    </message>
+    <message>
+        <source>%1 successfully sent for your proposal "%2".
+
+You will now be redirected to monitor and broadcast your new proposal, you can resume this later by clicking "Resume Proposal".</source>
+        <translation>%1 envoyé avec succès pour votre proposition "%2".
+
+Vous allez maintenant être redirigé pour surveiller et diffuser votre nouvelle proposition. Vous pourrez reprendre cela plus tard en cliquant sur "Reprendre la proposition".</translation>
     </message>
 </context>
 <context>
     <name>ProposalModel</name>
     <message>
-        <source>Yes</source>
-        <translation>Oui</translation>
+        <source>Pending, %1 of %2 confirmations</source>
+        <translation>En attente, %1 sur %2 confirmations</translation>
     </message>
     <message>
-        <source>No</source>
-        <translation>Non</translation>
+        <source>Voting, needs %1 more votes for funding</source>
+        <translation>Vote en cours, nécessite encore %1 votes pour le financement</translation>
+    </message>
+    <message>
+        <source>Passing with %1 votes</source>
+        <translation>Acceptée avec %1 votes</translation>
+    </message>
+    <message>
+        <source>Passing with %1 votes but budget saturated, may not be funded</source>
+        <translation>Acceptée avec %1 votes mais budget saturé, pourrait ne pas être financée</translation>
+    </message>
+    <message>
+        <source>Failed, needed %1 more votes</source>
+        <translation>Échouée, nécessitait encore %1 votes</translation>
+    </message>
+    <message>
+        <source>Funded at block %1</source>
+        <translation>Financée au bloc %1</translation>
+    </message>
+    <message>
+        <source>Funded</source>
+        <translation>Financée</translation>
+    </message>
+    <message>
+        <source>Lapsed, past proposal end date</source>
+        <translation>Expirée, date de fin de la proposition dépassée</translation>
+    </message>
+    <message>
+        <source>Ready to broadcast, check "Resume Proposal" dialog</source>
+        <translation>Prêt à diffuser, vérifiez le dialogue "Reprendre la proposition"</translation>
+    </message>
+    <message>
+        <source>%1 Yes, %2 No, %3 Abstain, %4</source>
+        <translation>%1 Oui, %2 Non, %3 Abstention, %4</translation>
+    </message>
+    <message>
+        <source>passing with %1 votes</source>
+        <translation>acceptée avec %1 votes</translation>
+    </message>
+    <message>
+        <source>needs %1 more votes</source>
+        <translation>nécessite encore %1 votes</translation>
     </message>
     <message>
         <source>Hash</source>
@@ -2627,187 +3079,63 @@ En raison d'un support interrompu, vous devriez demander au vendeur de vous comm
         <translation>Montant</translation>
     </message>
     <message>
-        <source>Active</source>
-        <translation>Actif</translation>
-    </message>
-    <message>
-        <source>Status</source>
-        <translation>État</translation>
+        <source>Votes</source>
+        <translation>Votes</translation>
     </message>
 </context>
 <context>
-    <name>ProposalWizard</name>
+    <name>ProposalResume</name>
     <message>
-        <source>Create Governance Proposal</source>
-        <translation>Créer une proposition de gouvernance</translation>
-    </message>
-    <message>
-        <source>Enter proposal details</source>
-        <translation>Entrer les détails de la proposition</translation>
-    </message>
-    <message>
-        <source>A fee will be burned when you prepare the proposal.</source>
-        <translation>Des frais seront brûlés lorsque vous préparerez la proposition.</translation>
-    </message>
-    <message>
-        <source>Proposal &amp;name</source>
-        <translation>&amp;Nom de la proposition</translation>
-    </message>
-    <message>
-        <source>&amp;Description URL</source>
-        <translation>URL de &amp;description</translation>
-    </message>
-    <message>
-        <source>Payment &amp;address</source>
-        <translation>&amp;Adresse de paiement</translation>
-    </message>
-    <message>
-        <source>Payment &amp;amount</source>
-        <translation>&amp;Montant du paiement</translation>
-    </message>
-    <message>
-        <source>The amount to request in a single payment</source>
-        <translation>Le montant à demander en un seul paiement</translation>
-    </message>
-    <message>
-        <source>&amp;First payment</source>
-        <translation>&amp;Premier paiement</translation>
-    </message>
-    <message>
-        <source>Pa&amp;yments</source>
-        <translation>Pa&amp;iements</translation>
-    </message>
-    <message>
-        <source>To&amp;tal amount</source>
-        <translation>Montant to&amp;tal</translation>
-    </message>
-    <message>
-        <source>Proposal &amp;fee</source>
-        <translation>&amp;Frais de proposition</translation>
-    </message>
-    <message>
-        <source>Next</source>
-        <translation>Suivant</translation>
-    </message>
-    <message>
-        <source>Review proposal JSON and validate.</source>
-        <translation>Examiner le JSON de la proposition et valider.</translation>
-    </message>
-    <message>
-        <source>Hex-encoded JSON</source>
-        <translation>JSON encodé en hexadécimal</translation>
-    </message>
-    <message>
-        <source>Back</source>
-        <translation>Retour</translation>
-    </message>
-    <message>
-        <source>Validate</source>
-        <translation>Valider</translation>
-    </message>
-    <message>
-        <source>Prepare (burn fee) and wait for confirmations.</source>
-        <translation>Préparer (brûler les frais) et attendre les confirmations.</translation>
-    </message>
-    <message>
-        <source>Copy</source>
-        <translation>Copier</translation>
-    </message>
-    <message>
-        <source>At 1/6 confirmations: can be relayed and queued. At 6/6: accepted and processed.</source>
-        <translation>À 1/6 confirmations : peut être relayé et mis en file d'attente. À 6/6 : accepté et traité.</translation>
-    </message>
-    <message>
-        <source>Confirmations progress</source>
-        <translation>Progression des confirmations</translation>
-    </message>
-    <message>
-        <source>Shows progress toward the required number of confirmations for the proposal fee transaction.</source>
-        <translation>Affiche la progression vers le nombre requis de confirmations pour la transaction de frais de proposition.</translation>
-    </message>
-    <message>
-        <source>Estimated time remaining: -</source>
-        <translation>Temps restant estimé : -</translation>
-    </message>
-    <message>
-        <source>Prepare Proposal</source>
-        <translation>Préparer la proposition</translation>
-    </message>
-    <message>
-        <source>You can submit after 1 confirmation. At 6 confirmations it is accepted and processed.</source>
-        <translation>Vous pouvez soumettre après 1 confirmation. À 6 confirmations, elle est acceptée et traitée.</translation>
-    </message>
-    <message>
-        <source>Proposal ID:</source>
-        <translation>ID de proposition :</translation>
-    </message>
-    <message>
-        <source>Submit Proposal</source>
-        <translation>Soumettre la proposition</translation>
+        <source>Resume Proposals</source>
+        <translation>Reprendre les propositions</translation>
     </message>
     <message>
         <source>Close</source>
         <translation>Fermer</translation>
     </message>
     <message>
-        <source>Valid</source>
-        <translation>Valide</translation>
+        <source>No pending proposals to broadcast.</source>
+        <translation>Aucune proposition en attente à diffuser.</translation>
     </message>
     <message>
-        <source>Invalid: %1</source>
-        <translation>Invalide : %1</translation>
+        <source>For %1 payment(s) of %2 to %3</source>
+        <translation>Pour %1 paiement(s) de %2 à %3</translation>
     </message>
     <message>
-        <source>Burn %1</source>
-        <translation>Brûler %1</translation>
+        <source>Unknown</source>
+        <translation>Inconnu</translation>
     </message>
     <message>
-        <source>Burn %1 to create the fee transaction?</source>
-        <translation>Brûler %1 pour créer la transaction de frais ?</translation>
+        <source>Pending</source>
+        <translation>En attente</translation>
     </message>
     <message>
-        <source>Prepare failed</source>
-        <translation>Échec de la préparation</translation>
+        <source>Ready</source>
+        <translation>Prêt</translation>
     </message>
     <message>
-        <source>Confirmations: %1 / %2 required</source>
-        <translation>Confirmations : %1 / %2 requises</translation>
+        <source>Collateral Hash</source>
+        <translation>Hash du collatéral</translation>
     </message>
     <message>
-        <source>Estimated time remaining: Ready</source>
-        <translation>Temps restant estimé : Prêt</translation>
-    </message>
-    <message numerus="yes">
-        <source>Estimated time remaining: %n minute(s)</source>
-        <translation><numerusform>Temps restant estimé : %n minute</numerusform><numerusform>Temps restant estimé : %n minutes</numerusform><numerusform>Temps restant estimé : %n minutes</numerusform></translation>
+        <source>Collateral Status</source>
+        <translation>Statut du collatéral</translation>
     </message>
     <message>
-        <source>Your proposal was submitted successfully.</source>
-        <translation>Votre proposition a été soumise avec succès.</translation>
+        <source>Broadcast</source>
+        <translation>Diffuser</translation>
     </message>
     <message>
-        <source>Already submitted</source>
-        <translation>Déjà soumise</translation>
+        <source>Broadcast proposal</source>
+        <translation>Diffuser la proposition</translation>
     </message>
     <message>
-        <source>This proposal has already been submitted.</source>
-        <translation>Cette proposition a déjà été soumise.</translation>
+        <source>Proposal has been broadcasted to the network with hash %1</source>
+        <translation>La proposition a été diffusée sur le réseau avec le hash %1</translation>
     </message>
     <message>
-        <source>Submission failed</source>
-        <translation>Échec de la soumission</translation>
-    </message>
-    <message>
-        <source>Proposal submitted</source>
-        <translation>Proposition soumise</translation>
-    </message>
-    <message>
-        <source>A fee of %1 will be burned when you prepare the proposal.</source>
-        <translation>Des frais de %1 seront brûlés lorsque vous préparerez la proposition.</translation>
-    </message>
-    <message>
-        <source>Prepare (burn %1) and wait for %2 confirmations.</source>
-        <translation>Préparer (brûler %1) et attendre %2 confirmations.</translation>
+        <source>Unable to broadcast proposal, %1</source>
+        <translation>Impossible de diffuser la proposition, %1</translation>
     </message>
 </context>
 <context>
@@ -2875,8 +3203,8 @@ En raison d'un support interrompu, vous devriez demander au vendeur de vous comm
         <translation>Erreur : échoué à charger les polices d'application.</translation>
     </message>
     <message>
-        <source>Error: Specified font-family invalid. Valid values: %1.</source>
-        <translation>Erreur : la famille de polices spécifiée est invalide. Valeurs valides : %1.</translation>
+        <source>Error: Font "%1" could not be loaded.</source>
+        <translation>Erreur : La police "%1" n'a pas pu être chargée.</translation>
     </message>
     <message>
         <source>Error: Specified font-weight-normal invalid. Valid range %1 to %2.</source>
@@ -3045,6 +3373,170 @@ En raison d'un support interrompu, vous devriez demander au vendeur de vous comm
         <source>unknown</source>
         <translation>inconnu</translation>
     </message>
+    <message>
+        <source>Default monospace font "%1"</source>
+        <translation>Police monospace par défaut "%1"</translation>
+    </message>
+    <message>
+        <source>Embedded "%1"</source>
+        <translation>Intégrée "%1"</translation>
+    </message>
+    <message>
+        <source>Use existing font</source>
+        <translation>Utiliser la police existante</translation>
+    </message>
+    <message>
+        <source>Custom…</source>
+        <translation>Personnalisée…</translation>
+    </message>
+    <message>
+        <source>Error: Wallet controller not available.</source>
+        <translation>Erreur : Contrôleur de portefeuille non disponible.</translation>
+    </message>
+    <message>
+        <source>Error: Rescan failed. Wallet not loaded.</source>
+        <translation>Erreur : Le réexamen a échoué. Portefeuille non chargé.</translation>
+    </message>
+    <message>
+        <source>UNKNOWN</source>
+        <translation>INCONNU</translation>
+    </message>
+    <message>
+        <source>to %1</source>
+        <translation>à %1</translation>
+    </message>
+    <message>
+        <source>to UNKNOWN</source>
+        <translation>à INCONNU</translation>
+    </message>
+    <message>
+        <source>but not claimed</source>
+        <translation>mais non réclamé</translation>
+    </message>
+    <message>
+        <source>NONE</source>
+        <translation>AUCUN</translation>
+    </message>
+    <message>
+        <source>ProTx Hash</source>
+        <translation>Hash ProTx</translation>
+    </message>
+    <message>
+        <source>Public Key Operator</source>
+        <translation>Clé publique de l'opérateur</translation>
+    </message>
+    <message>
+        <source>Owner Address</source>
+        <translation>Adresse du propriétaire</translation>
+    </message>
+    <message>
+        <source>Payout Address</source>
+        <translation>Adresse de paiement</translation>
+    </message>
+    <message>
+        <source>Voting Address</source>
+        <translation>Adresse de vote</translation>
+    </message>
+    <message>
+        <source>Collateral Address</source>
+        <translation>Adresse du collatéral</translation>
+    </message>
+    <message>
+        <source>Collateral Hash</source>
+        <translation>Hash du collatéral</translation>
+    </message>
+    <message>
+        <source>Collateral Index</source>
+        <translation>Index du collatéral</translation>
+    </message>
+    <message>
+        <source>Masternode Type</source>
+        <translation>Type de masternode</translation>
+    </message>
+    <message>
+        <source>Registered Height</source>
+        <translation>Hauteur d'enregistrement</translation>
+    </message>
+    <message>
+        <source>Last Paid Height</source>
+        <translation>Hauteur du dernier paiement</translation>
+    </message>
+    <message>
+        <source>Consecutive Payments</source>
+        <translation>Paiements consécutifs</translation>
+    </message>
+    <message>
+        <source>Operator Reward</source>
+        <translation>Récompense de l'opérateur</translation>
+    </message>
+    <message>
+        <source>Network Addresses</source>
+        <translation>Adresses réseau</translation>
+    </message>
+    <message>
+        <source>Platform HTTPS Addresses</source>
+        <translation>Adresses HTTPS de la plateforme</translation>
+    </message>
+    <message>
+        <source>Platform P2P Addresses</source>
+        <translation>Adresses P2P de la plateforme</translation>
+    </message>
+    <message>
+        <source>Platform Node ID</source>
+        <translation>ID du nœud de la plateforme</translation>
+    </message>
+    <message>
+        <source>PoSe Penalty</source>
+        <translation>Pénalité PoSe</translation>
+    </message>
+    <message>
+        <source>PoSe Ban Height</source>
+        <translation>Hauteur de bannissement PoSe</translation>
+    </message>
+    <message>
+        <source>PoSe Revived Height</source>
+        <translation>Hauteur de rétablissement PoSe</translation>
+    </message>
+    <message>
+        <source>Title</source>
+        <translation>Titre</translation>
+    </message>
+    <message>
+        <source>URL</source>
+        <translation>URL</translation>
+    </message>
+    <message>
+        <source>Destination Address</source>
+        <translation>Adresse de destination</translation>
+    </message>
+    <message>
+        <source>Payment Amount</source>
+        <translation>Montant du paiement</translation>
+    </message>
+    <message>
+        <source>Payments Requested</source>
+        <translation>Paiements demandés</translation>
+    </message>
+    <message>
+        <source>Payment Start</source>
+        <translation>Début des paiements</translation>
+    </message>
+    <message>
+        <source>Payment End</source>
+        <translation>Fin des paiements</translation>
+    </message>
+    <message>
+        <source>Object Hash</source>
+        <translation>Hash de l'objet</translation>
+    </message>
+    <message>
+        <source>Parent Hash</source>
+        <translation>Hash parent</translation>
+    </message>
+    <message>
+        <source>Collateral Date</source>
+        <translation>Date du collatéral</translation>
+    </message>
 </context>
 <context>
     <name>QRDialog</name>
@@ -3184,6 +3676,10 @@ En raison d'un support interrompu, vous devriez demander au vendeur de vous comm
         <translation>Liste des &amp;pairs</translation>
     </message>
     <message>
+        <source>&amp;Repair</source>
+        <translation>&amp;Réparation</translation>
+    </message>
+    <message>
         <source>Wallet:</source>
         <translation>Portefeuille :</translation>
     </message>
@@ -3263,26 +3759,6 @@ En raison d'un support interrompu, vous devriez demander au vendeur de vous comm
         <source>Addresses Rate-Limited</source>
         <extracomment>Text title for the Addresses Rate-Limited field in the peer details area, which displays the total number of addresses received from this peer that were dropped (not processed) due to rate-limiting.</extracomment>
         <translation>Adresses au taux limité</translation>
-    </message>
-    <message>
-        <source>Rescan blockchain files 1</source>
-        <translation>Rebalayer les fichiers de la chaîne de blocs (1)</translation>
-    </message>
-    <message>
-        <source>Rescan blockchain files 2</source>
-        <translation>Rebalayer les fichiers de la chaîne de blocs (2)</translation>
-    </message>
-    <message>
-        <source>The buttons below will restart the wallet with command-line options to repair the wallet, fix issues with corrupt blockchain files or missing/obsolete transactions.</source>
-        <translation>Les boutons ci-dessous vont redémarrer le portefeuille avec des options de ligne de commande pour réparer le portefeuille, régler les problèmes avec des fichiers corrompus de blockchain ou des transactions manquantes ou obsolètes.</translation>
-    </message>
-    <message>
-        <source>-rescan=1: Rescan the block chain for missing wallet transactions starting from wallet creation time.</source>
-        <translation>-rescan=1 : Rebalaye la chaîne de blocs pour les transactions de portefeuille manquantes, à compter du moment de création du portefeuille.</translation>
-    </message>
-    <message>
-        <source>-rescan=2: Rescan the block chain for missing wallet transactions starting from genesis block.</source>
-        <translation>-rescan=2 : Rebalaye la chaîne de blocs pour les transactions de portefeuille manquantes, à compter du tout premier bloc.</translation>
     </message>
     <message>
         <source>User Agent</source>
@@ -3445,8 +3921,36 @@ En raison d'un support interrompu, vous devriez demander au vendeur de vous comm
         <translation>Décalage temporel</translation>
     </message>
     <message>
-        <source>&amp;Wallet Repair</source>
-        <translation>&amp;Réparation de portefeuille</translation>
+        <source>Repair options.</source>
+        <translation>Options de réparation.</translation>
+    </message>
+    <message>
+        <source>The buttons below will trigger repair actions to fix issues with corrupt files or missing/obsolete transactions.</source>
+        <translation>Les boutons ci-dessous déclencheront des actions de réparation pour corriger les problèmes avec les fichiers corrompus ou les transactions manquantes/obsolètes.</translation>
+    </message>
+    <message>
+        <source>Rescan Chain</source>
+        <translation>Réexaminer la chaîne</translation>
+    </message>
+    <message>
+        <source>Rescan the chain for missing wallet transactions starting from wallet creation time.</source>
+        <translation>Réexaminer la chaîne pour les transactions manquantes du portefeuille à partir de la date de création du portefeuille.</translation>
+    </message>
+    <message>
+        <source>Rescan Chain (full)</source>
+        <translation>Réexaminer la chaîne (complet)</translation>
+    </message>
+    <message>
+        <source>Rescan the chain for missing wallet transactions starting from genesis block.</source>
+        <translation>Réexaminer la chaîne pour les transactions manquantes du portefeuille à partir du bloc de genèse.</translation>
+    </message>
+    <message>
+        <source>Rebuild Index</source>
+        <translation>Reconstruire l'index</translation>
+    </message>
+    <message>
+        <source>Restarts the client to rebuild the chain index from current blk000??.dat files.</source>
+        <translation>Redémarre le client pour reconstruire l'index de la chaîne à partir des fichiers blk000??.dat actuels.</translation>
     </message>
     <message>
         <source>The total number of addresses received from this peer that were processed (excludes addresses that were dropped due to rate-limiting).</source>
@@ -3457,18 +3961,6 @@ En raison d'un support interrompu, vous devriez demander au vendeur de vous comm
         <source>The total number of addresses received from this peer that were dropped (not processed) due to rate-limiting.</source>
         <extracomment>Tooltip text for the Addresses Rate-Limited field in the peer details area, which displays the total number of addresses received from this peer that were dropped (not processed) due to rate-limiting.</extracomment>
         <translation>Le nombre total d'adresses reçues de ce pair qui ont été abandonnées (non traitées) en raison de la limite de taux.</translation>
-    </message>
-    <message>
-        <source>Wallet repair options.</source>
-        <translation>Options de réparation du portefeuille.</translation>
-    </message>
-    <message>
-        <source>Rebuild index</source>
-        <translation>Reconstruire l'index</translation>
-    </message>
-    <message>
-        <source>-reindex: Rebuild block chain index from current blk000??.dat files.</source>
-        <translation>-reindex: Reconstruit l'index de la chaîne de blocs à partir des fichiers blk000??.dat actuels.</translation>
     </message>
     <message>
         <source>Inbound: initiated by peer</source>
@@ -3633,7 +4125,7 @@ En raison d'un support interrompu, vous devriez demander au vendeur de vous comm
     </message>
     <message>
         <source>&amp;Copy address</source>
-        <extracomment>Context menu action to copy the address of a peer</extracomment>
+        <extracomment>Context menu action to copy the address of a peer.</extracomment>
         <translation>&amp;Copier l'adresse</translation>
     </message>
     <message>
@@ -3642,7 +4134,7 @@ En raison d'un support interrompu, vous devriez demander au vendeur de vous comm
     </message>
     <message>
         <source>&amp;Copy IP/Netmask</source>
-        <extracomment>Context menu action to copy the IP/Netmask of a banned peer. IP/Netmask is the combination of a peer's IP address and its Netmask. For IP address see: https://en.wikipedia.org/wiki/IP_address</extracomment>
+        <extracomment>Context menu action to copy the IP/Netmask of a banned peer. IP/Netmask is the combination of a peer's IP address and its Netmask. For IP address, see: https://en.wikipedia.org/wiki/IP_address.</extracomment>
         <translation>&amp;Copier l'IP/netmask</translation>
     </message>
     <message>
@@ -3842,6 +4334,14 @@ Pour plus d'informations sur l'utilisation de cette console, tapez %6.
         <translation>Copier l'&amp;adresse</translation>
     </message>
     <message>
+        <source>&amp;Verify</source>
+        <translation>&amp;Vérifier</translation>
+    </message>
+    <message>
+        <source>Verify this address on e.g. a hardware wallet screen</source>
+        <translation>Vérifier cette adresse par ex. sur l'écran d'un portefeuille matériel</translation>
+    </message>
+    <message>
         <source>&amp;Save Image…</source>
         <translation>&amp;Sauvegarder l'image…</translation>
     </message>
@@ -3883,6 +4383,33 @@ Pour plus d'informations sur l'utilisation de cette console, tapez %6.
     <message>
         <source>Requested</source>
         <translation>Demandée</translation>
+    </message>
+</context>
+<context>
+    <name>RescanWalletActivity</name>
+    <message>
+        <source>Rescan unavailable</source>
+        <translation>Réexamen non disponible</translation>
+    </message>
+    <message>
+        <source>Wallet is currently rescanning. Abort existing rescan or wait.</source>
+        <translation>Le portefeuille est en cours de réexamen. Annulez le réexamen en cours ou attendez.</translation>
+    </message>
+    <message>
+        <source>Rescan wallet failed</source>
+        <translation>Échec du réexamen du portefeuille</translation>
+    </message>
+    <message>
+        <source>Rescan failed. Potentially corrupted data files.</source>
+        <translation>Échec du réexamen. Fichiers de données potentiellement corrompus.</translation>
+    </message>
+    <message>
+        <source>Rescan aborted</source>
+        <translation>Réexamen annulé</translation>
+    </message>
+    <message>
+        <source>Wallet rescan was aborted.</source>
+        <translation>Le réexamen du portefeuille a été annulé.</translation>
     </message>
 </context>
 <context>
@@ -4104,10 +4631,6 @@ Pour plus d'informations sur l'utilisation de cette console, tapez %6.
         <translation>Créer non-signée</translation>
     </message>
     <message>
-        <source> from wallet '%1'</source>
-        <translation>depuis le portefeuille '%1'</translation>
-    </message>
-    <message>
         <source>%1 to '%2'</source>
         <translation>%1 à '%2'</translation>
     </message>
@@ -4176,9 +4699,39 @@ Pour plus d'informations sur l'utilisation de cette console, tapez %6.
         <translation>Crée une transaction de blockchain partiellement signée (PSBT) pour utilisation avec, par ex., un portefeuille %1 hors ligne, ou un portefeuille matériel compatible PSBT.</translation>
     </message>
     <message>
+        <source>Sign on device</source>
+        <extracomment>"device" usually means a hardware wallet.</extracomment>
+        <translation>Signer sur l'appareil</translation>
+    </message>
+    <message>
+        <source>Connect your hardware wallet first.</source>
+        <translation>Connectez d'abord votre portefeuille matériel.</translation>
+    </message>
+    <message>
+        <source>Set external signer script path in Options -&gt; Wallet</source>
+        <extracomment>"External signer" means using devices such as hardware wallets.</extracomment>
+        <translation>Définir le chemin du script du signataire externe dans Options -&gt; Portefeuille</translation>
+    </message>
+    <message>
+        <source>Confirm duplicate recipients</source>
+        <translation>Confirmer les destinataires en double</translation>
+    </message>
+    <message>
+        <source>You are sending to the same address multiple times in a single transaction. This is unusual and may not be what you intended. Are you sure you want to proceed?</source>
+        <translation>Vous envoyez à la même adresse plusieurs fois dans une seule transaction. C'est inhabituel et ce n'est peut-être pas ce que vous souhaitiez. Êtes-vous sûr de vouloir continuer ?</translation>
+    </message>
+    <message>
+        <source>%1 from wallet '%2'</source>
+        <translation>%1 du portefeuille '%2'</translation>
+    </message>
+    <message>
         <source>Do you want to create this transaction?</source>
         <extracomment>Message displayed when attempting to create a transaction. Cautionary text to prompt the user to verify that the displayed transaction details represent the transaction the user intends to create.</extracomment>
         <translation>Voulez-vous créer cette transaction ?</translation>
+    </message>
+    <message>
+        <source>Do you want to draft this transaction?</source>
+        <translation>Voulez-vous créer un brouillon de cette transaction ?</translation>
     </message>
     <message>
         <source>Please, review your transaction proposal. This will produce a Partially Signed Blockchain Transaction (PSBT) which you can save or copy and then sign with e.g. an offline %1 wallet, or a PSBT-compatible hardware wallet.</source>
@@ -4200,9 +4753,27 @@ Pour plus d'informations sur l'utilisation de cette console, tapez %6.
         <translation>Pour voir la liste des destinataires, cliquez sur "Voir les détails…"</translation>
     </message>
     <message>
+        <source>Sign failed</source>
+        <translation>Échec de la signature</translation>
+    </message>
+    <message>
+        <source>External signer not found</source>
+        <extracomment>"External signer" means using devices such as hardware wallets.</extracomment>
+        <translation>Signataire externe non trouvé</translation>
+    </message>
+    <message>
+        <source>External signer failure</source>
+        <extracomment>"External signer" means using devices such as hardware wallets.</extracomment>
+        <translation>Échec du signataire externe</translation>
+    </message>
+    <message>
         <source>Partially Signed Transaction (Binary)</source>
         <extracomment>Expanded name of the binary PSBT file format. See: BIP 174.</extracomment>
         <translation>Transaction partiellement signée (binaire)</translation>
+    </message>
+    <message>
+        <source>External balance:</source>
+        <translation>Solde externe :</translation>
     </message>
     <message>
         <source>The recipient address is not valid. Please recheck.</source>
@@ -4219,10 +4790,6 @@ Pour plus d'informations sur l'utilisation de cette console, tapez %6.
     <message>
         <source>The total exceeds your balance when the %1 transaction fee is included.</source>
         <translation>Le montant dépasse votre solde lorsque les frais de transaction de %1 sont inclus.</translation>
-    </message>
-    <message>
-        <source>Duplicate address found: addresses should only be used once each.</source>
-        <translation>Adresse déjà utilisée : chaque adresse devrait n'être utilisée qu'une seule fois.</translation>
     </message>
     <message>
         <source>Transaction creation failed!</source>
@@ -4710,17 +5277,6 @@ Pour plus d'informations sur l'utilisation de cette console, tapez %6.
     </message>
 </context>
 <context>
-    <name>TransactionDescDialog</name>
-    <message>
-        <source>This pane shows a detailed description of the transaction</source>
-        <translation>Ce panneau affiche une description détaillée de la transaction</translation>
-    </message>
-    <message>
-        <source>Details for %1</source>
-        <translation>Détails de %1</translation>
-    </message>
-</context>
-<context>
     <name>TransactionTableModel</name>
     <message>
         <source>Date</source>
@@ -4797,6 +5353,10 @@ Pour plus d'informations sur l'utilisation de cette console, tapez %6.
     <message>
         <source>Platform Transfer</source>
         <translation>Transfert Platform</translation>
+    </message>
+    <message>
+        <source>Dust Receive</source>
+        <translation>Réception de poussière</translation>
     </message>
     <message>
         <source>%1 Mixing</source>
@@ -4930,6 +5490,10 @@ Pour plus d'informations sur l'utilisation de cette console, tapez %6.
         <translation>Transfert Platform</translation>
     </message>
     <message>
+        <source>Dust Receive</source>
+        <translation>Réception de poussière</translation>
+    </message>
+    <message>
         <source>Other</source>
         <translation>Autres</translation>
     </message>
@@ -4976,6 +5540,10 @@ Pour plus d'informations sur l'utilisation de cette console, tapez %6.
     <message>
         <source>Rese&amp;nd transaction</source>
         <translation>Envoyer à nouveau la transaction</translation>
+    </message>
+    <message>
+        <source>&amp;Unlock dust UTXO</source>
+        <translation>&amp;Déverrouiller l'UTXO de poussière</translation>
     </message>
     <message>
         <source>&amp;Edit address label</source>
@@ -5042,6 +5610,10 @@ Pour plus d'informations sur l'utilisation de cette console, tapez %6.
     <message>
         <source>The transaction history was successfully saved to %1.</source>
         <translation>L'historique des transactions a été sauvegardée avec succès vers %1.</translation>
+    </message>
+    <message>
+        <source>Details for %1</source>
+        <translation>Détails pour %1</translation>
     </message>
     <message>
         <source>QR code</source>
@@ -5132,6 +5704,10 @@ Allez à Fichier &gt; Ouvrir le portefeuille pour charger un portefeuille.
         <translation>Envoyer des fonds</translation>
     </message>
     <message>
+        <source>Can't display address</source>
+        <translation>Impossible d'afficher l'adresse</translation>
+    </message>
+    <message>
         <source>default wallet</source>
         <translation>portefeuille par défaut</translation>
     </message>
@@ -5174,6 +5750,26 @@ Allez à Fichier &gt; Ouvrir le portefeuille pour charger un portefeuille.
     <message>
         <source>The wallet data was successfully saved to %1.</source>
         <translation>Les données de portefeuille ont été enregistrées avec succès vers %1</translation>
+    </message>
+    <message>
+        <source>No Recovery Phrase</source>
+        <translation>Pas de phrase de récupération</translation>
+    </message>
+    <message>
+        <source>This wallet does not have private keys and therefore has no recovery phrase.</source>
+        <translation>Ce portefeuille ne possède pas de clés privées et n'a donc pas de phrase de récupération.</translation>
+    </message>
+    <message>
+        <source>This wallet was not created with HD (Hierarchical Deterministic) mode and does not have a recovery phrase.</source>
+        <translation>Ce portefeuille n'a pas été créé en mode HD (Hiérarchique Déterministe) et n'a pas de phrase de récupération.</translation>
+    </message>
+    <message>
+        <source>Mnemonic Retrieval Failed</source>
+        <translation>Échec de la récupération de la phrase mnémonique</translation>
+    </message>
+    <message>
+        <source>Could not retrieve the recovery phrase from this wallet.</source>
+        <translation>Impossible de récupérer la phrase de récupération de ce portefeuille.</translation>
     </message>
     <message>
         <source>Cancel</source>
@@ -5265,10 +5861,6 @@ Allez à Fichier &gt; Ouvrir le portefeuille pour charger un portefeuille.
     <message>
         <source>SQLiteDatabase: Unknown sqlite wallet schema version %d. Only version %d is supported</source>
         <translation>SQLiteDatabase : version %d de portefeuille sqlite inconnue. Seule la version %d est supportée</translation>
-    </message>
-    <message>
-        <source>Transaction index can't be disabled with governance validation enabled. Either start with -disablegovernance command line switch or enable transaction index.</source>
-        <translation>L'index de transaction ne peut pas être désactivé lorsque la validation de gouvernance est activée. Démarrez en ligne de commande avec l'argument -disablegovernance, ou bien activez l'index de transaction.</translation>
     </message>
     <message>
         <source>Unsupported category-specific logging level -loglevel=%s. Expected -loglevel=&lt;category&gt;:&lt;loglevel&gt;. Valid categories: %s. Valid loglevels: %s.</source>
@@ -5427,6 +6019,22 @@ Allez à Fichier &gt; Ouvrir le portefeuille pour charger un portefeuille.
         <translation>Le fichier %s contient toutes les clés privées de ce portefeuille. Ne le partagez avec personne !</translation>
     </message>
     <message>
+        <source>%s request to listen on port %u. This port is considered "bad" and thus it is unlikely that any peer will connect to it. See doc/p2p-bad-ports.md for details and a full list.</source>
+        <translation>Requête de %s pour écouter sur le port %u. Ce port est considéré comme "mauvais" et il est donc peu probable qu'un pair s'y connecte. Voir doc/p2p-bad-ports.md pour les détails et la liste complète.</translation>
+    </message>
+    <message>
+        <source>Disk space for %s may not accommodate the block files. Approximately %u GB of data will be stored in this directory.</source>
+        <translation>L'espace disque pour %s pourrait ne pas être suffisant pour les fichiers de blocs. Environ %u Go de données seront stockés dans ce répertoire.</translation>
+    </message>
+    <message>
+        <source>Error loading %s: External signer wallet being loaded without external signer support compiled</source>
+        <translation>Erreur lors du chargement de %s : un portefeuille avec signataire externe est chargé sans que le support du signataire externe soit compilé</translation>
+    </message>
+    <message>
+        <source>Error: Dumpfile version is not supported. This version of dash-wallet only supports version 1 dumpfiles. Got dumpfile with version %s</source>
+        <translation>Erreur : La version du fichier de vidage n'est pas supportée. Cette version de dash-wallet ne supporte que les fichiers de vidage version 1. Fichier de vidage reçu avec la version %s</translation>
+    </message>
+    <message>
         <source>Failed to create backup, file already exists! This could happen if you restarted wallet in less than 60 seconds. You can continue if you are ok with this.</source>
         <translation>La création de la sauvegarde a échoué, le fichier existe déjà ! Cela peut arriver si vous avez redémarré le portefeuille il y a moins de 60 secondes. Vous pouvez continuer si cela ne vous pose pas de problème.</translation>
     </message>
@@ -5483,6 +6091,10 @@ Allez à Fichier &gt; Ouvrir le portefeuille pour charger un portefeuille.
         <translation>Sauvegardes automatiques désactivées</translation>
     </message>
     <message>
+        <source>Cannot set -forcednsseed to true when setting -dnsseed to false.</source>
+        <translation>Impossible de définir -forcednsseed à true lorsque -dnsseed est défini à false.</translation>
+    </message>
+    <message>
         <source>Cannot set -peerblockfilters without -blockfilterindex.</source>
         <translation>Impossible de configurer -peerblockfilters sans -blockfilterindex.</translation>
     </message>
@@ -5505,6 +6117,10 @@ Allez à Fichier &gt; Ouvrir le portefeuille pour charger un portefeuille.
     <message>
         <source>Error loading %s: Private keys can only be disabled during creation</source>
         <translation>Erreur en chargeant %s : les clés privées ne peuvent être désactivées que pendant la création</translation>
+    </message>
+    <message>
+        <source>Error: Cannot extract destination from the generated scriptpubkey</source>
+        <translation>Erreur : Impossible d'extraire la destination du scriptpubkey généré</translation>
     </message>
     <message>
         <source>Error: Couldn't create cursor into database</source>
@@ -5703,6 +6319,10 @@ Allez à Fichier &gt; Ouvrir le portefeuille pour charger un portefeuille.
         <translation>Impossible de créer le fichier PID '%s' : %s</translation>
     </message>
     <message>
+        <source>Unable to find UTXO for external input</source>
+        <translation>Impossible de trouver un UTXO pour l'entrée externe</translation>
+    </message>
+    <message>
         <source>Unable to generate initial keys</source>
         <translation>Impossible de générer les clés initiales</translation>
     </message>
@@ -5801,10 +6421,6 @@ Allez à Fichier &gt; Ouvrir le portefeuille pour charger un portefeuille.
     <message>
         <source>Error: Dumpfile identifier record is incorrect. Got "%s", expected "%s".</source>
         <translation>Erreur : l'enregistrement d'identifieur dumpfile est incorrect. Obtenu "%s", attendu "%s".</translation>
-    </message>
-    <message>
-        <source>Error: Dumpfile version is not supported. This version of bitcoin-wallet only supports version 1 dumpfiles. Got dumpfile with version %s</source>
-        <translation>Erreur : version de dumpfile non supportée. Cette version de bitcoin-wallet supporte seulement les dumpfiles de version 1. Obtenu un dumpfile de version %s</translation>
     </message>
     <message>
         <source>Failed to rename invalid peers.dat file. Please move or delete it and try again.</source>
@@ -6133,10 +6749,6 @@ Allez à Fichier &gt; Ouvrir le portefeuille pour charger un portefeuille.
     <message>
         <source>%s is set very high! Fees this large could be paid on a single transaction.</source>
         <translation>%s est défini très haut ! Des frais aussi importants pourraient être payés sur une seule transaction.</translation>
-    </message>
-    <message>
-        <source>%s request to listen on port %u. This port is considered "bad" and thus it is unlikely that any Dash Core peers connect to it. See doc/p2p-bad-ports.md for details and a full list.</source>
-        <translation>Requête %s pour écouter le port %u. Ce port est considéré "mauvais" et il est donc improbable que des pairs Dash Core s'y connectent. Voir doc/p2p-bad-ports.md pour détails et liste.</translation>
     </message>
     <message>
         <source>Cannot provide specific connections and have addrman find outgoing connections at the same time.</source>
