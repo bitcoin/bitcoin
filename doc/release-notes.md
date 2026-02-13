@@ -1,7 +1,7 @@
-# Dash Core version v23.0.2
+# Dash Core version v23.1.0
 
-This is a new patch version release, bringing various bugfixes, performance improvements, and new tooling for database maintenance.
-This release is **optional** for all nodes, although recommended.
+This is a new minor version release, bringing new features, important bugfixes, and significant performance improvements.
+This release is highly recommended for all nodes. All Masternodes are required to upgrade.
 
 Please report bugs using the issue tracker at GitHub:
 
@@ -21,34 +21,134 @@ dashd/dash-qt (on Linux).
 ### Downgrade to a version < v23.0.0
 
 Downgrading to a version older than v23.0.0 is not supported, and will
- require a reindex.
+require a reindex.
 
-# Release Notes
+# Notable changes
 
-## New Features
+## InstantSend performance improvements
 
-- Added `evodb verify` and `evodb repair` RPC commands for diagnosing and repairing corrupted deterministic masternode list diffs in evodb. See `doc/evodb-verify-repair.md` for full documentation (dash#6969).
-- Added automatic verification and repair of evodb diffs at node startup. This helps detect and fix database corruption without manual intervention. Use `-forceevodbrepair` to force re-verification (dash#6999).
+This release includes a collection of changes that significantly improve InstantSend lock latency. When fully adopted
+across the network, these changes are expected to reduce average InstantSend lock times by 25-50%, bringing average
+lock confirmation times down to near 1 second. Key improvements include:
 
-## Bug Fixes
+- **Quorum message prioritization**: Network message processing now separates quorum-related messages (DKG contributions,
+  signing shares, recovered signatures, ChainLock signatures, InstantSend locks) into a dedicated priority queue. This
+  ensures consensus-critical quorum operations are processed with lower latency than regular network traffic. (#6952)
+- **Proactive recovered signature relay**: Recovered signatures are now proactively pushed to connected nodes rather than
+  waiting for them to be requested. InstantSend quorums are now fully connected for recovered signature relay, reducing
+  the number of network hops required for IS lock propagation. (#6967)
+- **Multi-threaded signing shares processing**: The `CSigSharesManager` has been enhanced with a multi-threaded worker
+  pool and dispatcher for parallel processing of signing shares, improving throughput during periods of high signing
+  activity. (#7004)
+- **InstantSend height caching**: Block heights are now cached in a dedicated LRU cache, significantly reducing
+  contention on `cs_main` during InstantSend lock verification. (#6953)
+- **Shared mutex conversions**: The `m_nodes_mutex` and `m_peer_mutex` have been converted from recursive mutexes to
+  shared mutexes, allowing concurrent read access from multiple threads. This reduces lock contention for the most
+  frequent network operations. (#6912, #6468)
+- **Reduced redundant work**: Peers that have requested recovered signature relay are no longer sent redundant `ISDLOCK`
+  inventory announcements. Redundant signature validation during signing share processing has been eliminated. (#6994,
+  #6958)
 
-- Fixed HD chain encryption check ordering issue where `LoadHDChain()` would fail if `CRYPTED_HDCHAIN` records were read before `MASTER_KEY` records during wallet loading (dash#6944).
-- Corrected BLS scheme setting in `MigrateLegacyDiffs()` when `nVersion` is present. The legacy scheme was only being set when the `nVersion` field was missing instead of whenever a `pubKeyOperator` field is present (dash#6961).
-- Fixed BLS benchmarks crash when ran independently without BLS_DKG benchmarks (dash#6977).
-- Fixed build issue on Debian 13 by including `QDebug` directly in Qt code (dash#7009).
-- Fixed `BuildTestVectors` call to adjust batch size based on output flag (dash#7013).
+## GUI refresh
 
-## Performance Improvements
+The Masternode tab has been significantly overhauled with new status icons reflecting masternode ban state, type and
+ban filters, context menus replacing address columns, elastic column widths, and a detailed masternode description
+dialog. A dedicated masternode model now backs the list view. (#7116)
 
-- Removed duplicated check of the same key in the InstantSend database (dash#6964).
+The Governance and Masternode tabs can now be shown or hidden at runtime through the Options dialog without requiring a
+client restart. The proposal model has been split out for better separation of concerns. (#7112)
 
-## Dependencies
+## Dust attack protection
 
-- Updated Qt from 5.15.14 to 5.15.18, which includes security patches for CVE-2025-4211, CVE-2025-5455, and CVE-2025-30348 (dash#6949).
+A new GUI option allows users to enable automatic dust attack protection. When enabled, small incoming transactions from
+external sources that appear to be dust attacks are automatically locked, excluding them from coin selection. Users can
+configure the dust threshold in the Options dialog. (#7095)
 
-# v23.0.2 Change log
+## Descriptor wallets no longer experimental
 
-See detailed [set of changes][set-of-changes].
+Descriptor-based wallets have been promoted from experimental status to a fully supported wallet type. Users can now
+create and use descriptor wallets without the experimental warning. (#7038)
+
+## GUI settings migration
+
+Configuration changes made in the Dash GUI (such as the pruning setting, proxy settings, UPNP preferences) are now
+saved to `<datadir>/settings.json` rather than to the Qt settings backend (Windows registry or Unix desktop config
+files), so these settings will now apply to `dashd` as well, instead of being ignored.
+
+Settings from `dash.conf` are now displayed normally in the GUI settings dialog, instead of in a separate warning
+message. These settings can now be edited because `settings.json` values take precedence over `dash.conf` values.
+(#6833)
+
+## Other notable changes
+
+* Masternodes now trickle transactions to non-masternode peers (as regular nodes do) rather than sending immediately,
+  reducing information leakage while maintaining fast masternode-to-masternode propagation. (#7045)
+* The Send Coins dialog now warns users when sending to duplicate addresses in the same transaction. (#7015)
+* External signer (hardware wallet) support has been added as an experimental feature, allowing wallets to delegate
+  signing to HWI-compatible external devices. (#6019)
+* Improved wallet encryption robustness and HD chain decryption error logging. (#6938, #6944, #6945, #6939)
+* Peers that re-propagate stale quorum final commitments (`QFCOMMIT`) are now banned starting at protocol version
+  70239. (#7079)
+* Various race conditions in ChainLock processing have been fixed. (#6924, #6940)
+
+## P2P and network changes
+
+- `PROTO_VERSION` has been bumped to `70240` with the introduction of protocol version-based negotiation of BIP324 v2
+  transport short IDs for Dash-specific message types. The `PLATFORMBAN` message has been added to the v2 P2P short ID
+  mapping (short ID 168). When communicating with peers supporting version 70240+, this message uses 1-byte encoding
+  instead of 13-byte encoding, reducing bandwidth. Compatible peers use compact encoding, while older v2 peers
+  automatically fall back to long encoding. (#7082)
+
+## Updated RPCs
+
+- `quorum dkginfo` now requires that nodes run in either watch-only mode (`-watchquorums`) or as an active masternode,
+  as regular nodes do not have insight into network DKG activity. (#7062)
+- `quorum dkgstatus` no longer emits the return values `time`, `timeStr` and `session` on nodes that do not run in
+  either watch-only or masternode mode. (#7062)
+- The `getbalances`, `gettransaction` and `getwalletinfo` RPCs now return a `lastprocessedblock` JSON object containing
+  the wallet's last processed block hash and height at the time the result was generated. (#6901)
+- Fixed the BLS scheme selection in `protx revoke` and `protx update_service` to use the actual deployment state rather
+  than hardcoded values. (#7096)
+- Fixed `protx register` to include the `Prepare` action for wallet unlock checks. (#7069)
+- Added a new `next_index` field in the response in `listdescriptors` to have the same format as `importdescriptors` (#6780)
+
+Changes to wallet related RPCs can be found in the Wallet section below.
+
+## Updated settings
+
+- The `shutdownnotify` option is used to specify a command to execute synchronously before Dash Core has begun its
+  shutdown sequence. (#6901)
+
+## Build System
+
+- Dash Core binaries now target Windows 10 and macOS 14 (Sonoma), replacing the previous targets of Windows 7 and
+  macOS 11 (Big Sur). (#6927)
+- The minimum supported Clang version has been bumped to Clang 19 for improved C++20 support and diagnostics. (#6995)
+
+## Wallet
+
+- CoinJoin denomination creation now respects the wallet's "avoid_reuse" setting. When the wallet has `avoid_reuse`
+  enabled, change is sent to a fresh change address to avoid address/public key reuse. Otherwise, change goes back to
+  the source address (legacy behavior). (#6870)
+- CoinJoin masternode tracking (`vecMasternodesUsed`) is now shared across all loaded wallets instead of per-wallet,
+  improving mixing efficiency. (#6875)
+
+## GUI changes
+
+- Masternode tab redesigned with new status icons, type/ban filters, context menus, elastic column widths, and
+  detailed masternode description dialog. (#7116)
+- Runtime show/hide of Governance and Masternode tabs through Options without restart. (#7112)
+- Dust attack protection option added to Options dialog. (#7095)
+- Duplicate recipient warning in Send Coins dialog. (#7015)
+- Auto-validation of governance proposals as fields are filled in. (#6970)
+- Wallet rescan option now available when multiple wallets are loaded (rescan remains one wallet at a time). (#7072)
+- Improved CreateWalletDialog layout. (#7039)
+- Dash-specific font infrastructure extracted to dedicated files with `FontInfo` and `FontRegistry` classes, supporting
+  arbitrary fonts and dynamic font weight resolution. (#7068, #7120)
+- Fixed precision loss in proposal generation. (#7134)
+- Fixed crash when changing themes after mnemonic dialog was shown. (#7126)
+
+See detailed [set-of-changes][set-of-changes].
 
 # Credits
 
@@ -57,7 +157,10 @@ Thanks to everyone who directly contributed to this release:
 - Kittywhiskers Van Gogh
 - Konstantin Akimov
 - PastaPastaPasta
+- thephez
 - UdjinM6
+- Vijay
+- zxccxccxz
 
 As well as everyone that submitted issues, reviewed pull requests and helped
 debug the release candidates.
@@ -66,6 +169,7 @@ debug the release candidates.
 
 These releases are considered obsolete. Old release notes can be found here:
 
+- [v23.0.2](https://github.com/dashpay/dash/blob/master/doc/release-notes/dash/release-notes-23.0.2.md) released Dec/4/2025
 - [v23.0.0](https://github.com/dashpay/dash/blob/master/doc/release-notes/dash/release-notes-23.0.0.md) released Nov/10/2025
 - [v22.1.3](https://github.com/dashpay/dash/blob/master/doc/release-notes/dash/release-notes-22.1.3.md) released Jul/15/2025
 - [v22.1.2](https://github.com/dashpay/dash/blob/master/doc/release-notes/dash/release-notes-22.1.2.md) released Apr/15/2025
@@ -125,4 +229,4 @@ These releases are considered obsolete. Old release notes can be found here:
 - [v0.10.x](https://github.com/dashpay/dash/blob/master/doc/release-notes/dash/release-notes-0.10.0.md) released Sep/25/2014
 - [v0.9.x](https://github.com/dashpay/dash/blob/master/doc/release-notes/dash/release-notes-0.9.0.md) released Mar/13/2014
 
-[set-of-changes]: https://github.com/dashpay/dash/compare/v23.0.0...dashpay:v23.0.2
+[set-of-changes]: https://github.com/dashpay/dash/compare/v23.0.2...dashpay:v23.1.0
