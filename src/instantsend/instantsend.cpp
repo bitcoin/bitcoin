@@ -101,13 +101,13 @@ instantsend::PendingState CInstantSendManager::FetchPendingLocks()
     std::vector<uint256> removed;
     removed.reserve(std::min(maxCount, pendingInstantSendLocks.size()));
 
-    for (auto& [islockHash, nodeid_islptr_pair] : pendingInstantSendLocks) {
+    for (auto& [islockHash, pending] : pendingInstantSendLocks) {
         // Check if we've reached max count
         if (ret.m_pending_is.size() >= maxCount) {
             ret.m_pending_work = true;
             break;
         }
-        ret.m_pending_is.emplace_back(islockHash, std::move(nodeid_islptr_pair));
+        ret.m_pending_is.push_back(instantsend::PendingISLockEntry{std::move(pending), islockHash});
         removed.emplace_back(islockHash);
     }
 
