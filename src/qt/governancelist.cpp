@@ -26,18 +26,20 @@
 
 #include <QAbstractItemView>
 #include <QMessageBox>
+#include <QMetaObject>
 
 //
 // Governance Tab main widget.
 //
-
 GovernanceList::GovernanceList(QWidget* parent) :
     QWidget(parent),
-    ui(std::make_unique<Ui::GovernanceList>()),
-    proposalModel(new ProposalModel(this)),
-    proposalModelProxy(new QSortFilterProxyModel(this)),
-    proposalContextMenu(new QMenu(this)),
-    timer(new QTimer(this))
+    ui{new Ui::GovernanceList},
+    proposalModel{new ProposalModel(this)},
+    proposalContextMenu{new QMenu(this)},
+    m_worker(new QObject),
+    proposalModelProxy{new QSortFilterProxyModel(this)},
+    m_thread{new QThread(this)},
+    m_timer{new QTimer(this)}
 {
     ui->setupUi(this);
 
@@ -77,31 +79,49 @@ GovernanceList::GovernanceList(QWidget* parent) :
     connect(ui->btnCreateProposal, &QPushButton::clicked, this, &GovernanceList::showCreateProposalDialog);
     connect(ui->govTableView, &QTableView::doubleClicked, this, &GovernanceList::showAdditionalInfo);
 
-    connect(timer, &QTimer::timeout, this, &GovernanceList::updateProposalList);
-
     // Initialize masternode count to 0
     ui->mnCountLabel->setText("0");
 
     GUIUtil::updateFonts();
+
+    // Background thread for calculating proposal list
+    m_worker->moveToThread(m_thread);
+    // Make sure executor object is deleted in its own thread
+    connect(m_thread, &QThread::finished, m_worker, &QObject::deleteLater);
+    m_thread->start();
+
+    // Debounce timer to apply proposal list changes
+    m_timer->setSingleShot(true);
+    connect(m_timer, &QTimer::timeout, this, &GovernanceList::updateProposalList);
 }
 
-GovernanceList::~GovernanceList() = default;
+GovernanceList::~GovernanceList()
+{
+    m_timer->stop();
+    m_thread->quit();
+    m_thread->wait();
+    delete ui;
+}
 
 void GovernanceList::setClientModel(ClientModel* model)
 {
     this->clientModel = model;
-    if (model != nullptr) {
-        connect(model->getOptionsModel(), &OptionsModel::displayUnitChanged, this, &GovernanceList::updateDisplayUnit);
-
-        updateProposalList();
+    if (clientModel) {
+        connect(clientModel, &ClientModel::governanceChanged, this, &GovernanceList::handleProposalListChanged);
+        connect(clientModel->getOptionsModel(), &OptionsModel::displayUnitChanged, this, &GovernanceList::updateDisplayUnit);
+        m_timer->start(0);
+    } else {
+        m_timer->stop();
     }
 }
 
 void GovernanceList::setWalletModel(WalletModel* model)
 {
     this->walletModel = model;
-    if (model && clientModel) {
-        updateVotingCapability();
+    if (walletModel && clientModel) {
+        m_timer->start(0);
+    } else {
+        m_timer->stop();
     }
 }
 
@@ -113,35 +133,88 @@ void GovernanceList::updateDisplayUnit()
     }
 }
 
+void GovernanceList::handleProposalListChanged()
+{
+    if (!clientModel || m_timer->isActive()) {
+        // Too early or already processing, nothing to do
+        return;
+    }
+    int delay{GOVERNANCELIST_UPDATE_SECONDS * 1000};
+    if (!clientModel->masternodeSync().isBlockchainSynced()) {
+        // Currently syncing, reduce refreshes
+        delay *= 6;
+    }
+    m_timer->start(delay);
+}
+
 void GovernanceList::updateProposalList()
 {
-    if (this->clientModel) {
-        // A proposal is considered passing if (YES votes - NO votes) >= (Total Weight of Masternodes / 10),
-        // count total valid (ENABLED) masternodes to determine passing threshold.
-        // Need to query number of masternodes here with access to clientModel.
-        const int nWeightedMnCount = clientModel->getMasternodeList().first->getValidWeightedMNsCount();
-        const int nAbsVoteReq = std::max(Params().GetConsensus().nGovernanceMinQuorum, nWeightedMnCount / 10);
-        proposalModel->setVotingParams(nAbsVoteReq);
-
-        std::vector<CGovernanceObject> govObjList;
-        clientModel->getAllGovernanceObjects(govObjList);
-        ProposalList newProposals;
-        for (const auto& govObj : govObjList) {
-            if (govObj.GetObjectType() != GovernanceObject::PROPOSAL) {
-                continue; // Skip triggers.
-            }
-            newProposals.emplace_back(std::make_unique<Proposal>(this->clientModel, govObj));
-        }
-        proposalModel->reconcile(std::move(newProposals));
-
-        // Update voting capability if we now have both client and wallet models
-        if (walletModel) {
-            updateVotingCapability();
-        }
+    if (!clientModel || clientModel->node().shutdownRequested()) {
+        return;
     }
 
-    // Schedule next update.
-    timer->start(GOVERNANCELIST_UPDATE_SECONDS * 1000);
+    if (m_in_progress.exchange(true)) {
+        // Already applying, re-arm for next attempt
+        handleProposalListChanged();
+        return;
+    }
+
+    QMetaObject::invokeMethod(m_worker, [this] {
+        auto result = std::make_shared<CalcProposalList>(calcProposalList());
+        m_in_progress.store(false);
+        QTimer::singleShot(0, this, [this, result] {
+            setProposalList(std::move(*result));
+        });
+    });
+}
+
+GovernanceList::CalcProposalList GovernanceList::calcProposalList() const
+{
+    CalcProposalList ret;
+    if (!clientModel || clientModel->node().shutdownRequested()) {
+        return ret;
+    }
+
+    const auto [dmn, pindex] = clientModel->getMasternodeList();
+    if (!dmn || !pindex) {
+        return ret;
+    }
+
+    // A proposal is considered passing if (YES votes - NO votes) >= (Total Weight of Masternodes / 10),
+    // count total valid (ENABLED) masternodes to determine passing threshold.
+    // Need to query number of masternodes here with access to clientModel.
+    const int nWeightedMnCount = dmn->getValidWeightedMNsCount();
+    ret.m_abs_vote_req = std::max(Params().GetConsensus().nGovernanceMinQuorum, nWeightedMnCount / 10);
+
+    std::vector<CGovernanceObject> govObjList;
+    clientModel->getAllGovernanceObjects(govObjList);
+    for (const auto& govObj : govObjList) {
+        if (govObj.GetObjectType() != GovernanceObject::PROPOSAL) {
+            continue; // Skip triggers.
+        }
+        ret.m_proposals.emplace_back(std::make_unique<Proposal>(this->clientModel, govObj));
+    }
+
+    // Discover voting capability if we now have both client and wallet models
+    if (walletModel) {
+        dmn->forEachMN(/*only_valid=*/true, [&](const auto& dmn) {
+            // Check if wallet owns the voting key using the same logic as RPC
+            const auto script = GetScriptForDestination(PKHash(dmn.getKeyIdVoting()));
+            if (walletModel->wallet().isSpendable(script)) {
+                ret.m_votable_masternodes[dmn.getProTxHash()] = dmn.getKeyIdVoting();
+            }
+        });
+    }
+
+    return ret;
+}
+
+void GovernanceList::setProposalList(CalcProposalList&& data)
+{
+    proposalModel->setVotingParams(data.m_abs_vote_req);
+    proposalModel->reconcile(std::move(data.m_proposals));
+    votableMasternodes = std::move(data.m_votable_masternodes);
+    updateMasternodeCount();
 }
 
 void GovernanceList::updateProposalCount() const
@@ -211,26 +284,6 @@ void GovernanceList::showAdditionalInfo(const QModelIndex& index)
     const auto json = proposal->toJson();
 
     QMessageBox::information(this, windowTitle, json);
-}
-
-void GovernanceList::updateVotingCapability()
-{
-    if (!walletModel || !clientModel) return;
-
-    auto [mn_list, pindex] = clientModel->getMasternodeList();
-    if (!pindex) return;
-
-    votableMasternodes.clear();
-    mn_list->forEachMN(/*only_valid=*/true, [&](const auto& dmn) {
-        // Check if wallet owns the voting key using the same logic as RPC
-        const CScript script = GetScriptForDestination(PKHash(dmn.getKeyIdVoting()));
-        if (walletModel->wallet().isSpendable(script)) {
-            votableMasternodes[dmn.getProTxHash()] = dmn.getKeyIdVoting();
-        }
-    });
-
-    // Update masternode count display
-    updateMasternodeCount();
 }
 
 void GovernanceList::updateMasternodeCount() const
@@ -340,5 +393,5 @@ void GovernanceList::voteForProposal(vote_outcome_enum_t outcome)
     QMessageBox::information(this, tr("Voting Results"), message);
 
     // Update proposal list to show new vote counts
-    updateProposalList();
+    handleProposalListChanged();
 }

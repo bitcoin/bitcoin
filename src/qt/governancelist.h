@@ -7,33 +7,37 @@
 
 #include <primitives/transaction.h>
 #include <pubkey.h>
+#include <saltedhasher.h>
+
+#include <qt/proposalmodel.h>
 
 #include <QMenu>
 #include <QSortFilterProxyModel>
 #include <QTimer>
+#include <QThread>
 #include <QWidget>
 
+#include <atomic>
 #include <map>
-#include <memory>
 
 inline constexpr int GOVERNANCELIST_UPDATE_SECONDS = 10;
-
-namespace Ui {
-class GovernanceList;
-}
 
 class ClientModel;
 class ProposalModel;
 class WalletModel;
 class ProposalWizard;
-
 class CDeterministicMNList;
 enum vote_outcome_enum_t : int;
+namespace Ui {
+class GovernanceList;
+} // namespace Ui
 
 /** Governance Manager page widget */
 class GovernanceList : public QWidget
 {
     Q_OBJECT
+
+    Ui::GovernanceList* ui;
 
 public:
     explicit GovernanceList(QWidget* parent = nullptr);
@@ -42,21 +46,27 @@ public:
     void setWalletModel(WalletModel* walletModel);
 
 private:
+    struct CalcProposalList {
+        int m_abs_vote_req{0};
+        ProposalList m_proposals;
+        Uint256HashMap<CKeyID> m_votable_masternodes;
+    };
+
     ClientModel* clientModel{nullptr};
+    ProposalModel* proposalModel{nullptr};
+    QMenu* proposalContextMenu{nullptr};
+    QObject* m_worker{nullptr};
+    QSortFilterProxyModel* proposalModelProxy{nullptr};
+    QThread* m_thread{nullptr};
+    QTimer* m_timer{nullptr};
+    std::atomic<bool> m_in_progress{false};
+    Uint256HashMap<CKeyID> votableMasternodes;
     WalletModel* walletModel{nullptr};
 
-    std::unique_ptr<Ui::GovernanceList> ui;
-    ProposalModel* proposalModel;
-    QSortFilterProxyModel* proposalModelProxy;
-
-    QMenu* proposalContextMenu;
-    QTimer* timer;
-
-    // Voting-related members
-    std::map<uint256, CKeyID> votableMasternodes; // proTxHash -> voting keyID
-
-    void updateVotingCapability();
     bool canVote() const { return !votableMasternodes.empty(); }
+    CalcProposalList calcProposalList() const;
+    void handleProposalListChanged();
+    void setProposalList(CalcProposalList&& data);
     void voteForProposal(vote_outcome_enum_t outcome);
 
 private Q_SLOTS:
