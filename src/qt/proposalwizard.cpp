@@ -20,6 +20,7 @@
 #include <qt/optionsmodel.h>
 #include <qt/qvalidatedlineedit.h>
 #include <qt/rpcconsole.h>
+#include <qt/sendcoinsdialog.h>
 #include <qt/walletmodel.h>
 
 #include <QDateTime>
@@ -217,11 +218,15 @@ void ProposalWizard::onPrepare()
     WalletModel::UnlockContext ctx(m_walletModel->requestUnlock());
     if (!ctx.isValid()) return;
 
-    // Confirm burn
-    if (QMessageBox::question(this, tr("Burn %1").arg(m_fee_formatted),
-                              tr("Burn %1 to create the fee transaction?").arg(m_fee_formatted),
-                              QMessageBox::StandardButton::Cancel | QMessageBox::StandardButton::Yes,
-                              QMessageBox::StandardButton::Cancel) != QMessageBox::StandardButton::Yes) {
+    SendConfirmationDialog diag_confirm(
+        /*title=*/tr("Confirm Proposal"),
+        /*text=*/tr("Are you sure you want to create this proposal?"),
+        /*informative_text=*/tr("Creating a proposal pays %1 to the network. This fee is non-refundable regardless of outcome.").arg(m_fee_formatted),
+        /*detailed_text=*/"", SEND_CONFIRM_DELAY,
+        /*enable_send=*/true, /*always_show_unsigned=*/false, /*parent=*/this);
+    diag_confirm.setWindowModality(Qt::WindowModal);
+    diag_confirm.exec();
+    if (diag_confirm.result() != QMessageBox::Yes) {
         return;
     }
 
