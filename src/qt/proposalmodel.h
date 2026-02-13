@@ -5,6 +5,7 @@
 #ifndef BITCOIN_QT_PROPOSALMODEL_H
 #define BITCOIN_QT_PROPOSALMODEL_H
 
+#include <interfaces/node.h>
 #include <governance/object.h>
 
 #include <qt/bitcoinunits.h>
@@ -24,6 +25,7 @@ private:
     const CGovernanceObject govObj;
 
     CAmount m_paymentAmount{0};
+    interfaces::GOV::Votes m_votes;
     QDateTime m_endDate{};
     QDateTime m_startDate{};
     QString m_hash{};
@@ -35,14 +37,16 @@ public:
 
     bool isActive() const;
     CAmount paymentAmount() const { return m_paymentAmount; }
-    int GetAbsoluteYesCount() const;
+    int32_t getAbsoluteYesCount() const { return m_votes.m_yes - m_votes.m_no; }
+    int32_t getAbstainCount() const { return m_votes.m_abs; }
+    int32_t getNoCount() const { return m_votes.m_no; }
+    int32_t getYesCount() const { return m_votes.m_yes; }
     QDateTime endDate() const { return m_endDate; }
     QDateTime startDate() const { return m_startDate; }
     QString hash() const { return m_hash; }
     QString title() const { return m_title; }
     QString toJson() const;
     QString url() const { return m_url; }
-    QString votingStatus(int nAbsVoteReq) const;
 
     void openUrl() const;
 };

@@ -28,6 +28,10 @@ Proposal::Proposal(ClientModel* _clientModel, const CGovernanceObject& _govObj) 
         return;
     }
 
+    if (clientModel) {
+        m_votes = clientModel->node().gov().getObjVotes(govObj, VOTE_SIGNAL_FUNDING);
+    }
+
     if (const UniValue& titleValue = prop_data.find_value("name"); titleValue.isStr()) {
         m_title = QString::fromStdString(titleValue.get_str());
     }
@@ -57,27 +61,11 @@ QString Proposal::toJson() const
 
 bool Proposal::isActive() const
 {
+    if (!clientModel) {
+        return false;
+    }
     std::string strError;
     return clientModel->node().gov().getObjLocalValidity(govObj, strError, false);
-}
-
-int Proposal::GetAbsoluteYesCount() const
-{
-    return clientModel->node().gov().getObjAbsYesCount(govObj, VOTE_SIGNAL_FUNDING);
-}
-
-QString Proposal::votingStatus(const int nAbsVoteReq) const
-{
-    // Voting status...
-    // TODO: determine if voting is in progress vs. funded or not funded for past proposals.
-    // see CSuperblock::GetNearestSuperblocksHeights(nBlockHeight, nLastSuperblock, nNextSuperblock);
-    const int absYesCount = clientModel->node().gov().getObjAbsYesCount(govObj, VOTE_SIGNAL_FUNDING);
-    if (absYesCount >= nAbsVoteReq) {
-        // Could use govObj.IsSetCachedFunding here, but need nAbsVoteReq to display numbers anyway.
-        return QObject::tr("Passing +%1").arg(absYesCount - nAbsVoteReq);
-    } else {
-        return QObject::tr("Needs additional %1 votes").arg(nAbsVoteReq - absYesCount);
-    }
 }
 
 void Proposal::openUrl() const
@@ -104,7 +92,7 @@ QVariant ProposalModel::data(const QModelIndex& index, int role) const
     if (!index.isValid() || !isValidRow(index.row())) {
         return {};
     }
-    if (role != Qt::DisplayRole && role != Qt::EditRole) {
+    if (role != Qt::DisplayRole && role != Qt::EditRole && role != Qt::ToolTipRole) {
         return {};
     }
 
@@ -127,8 +115,13 @@ QVariant ProposalModel::data(const QModelIndex& index, int role) const
         }
         case Column::IS_ACTIVE:
             return proposal->isActive() ? tr("Yes") : tr("No");
-        case Column::VOTING_STATUS:
-            return proposal->votingStatus(nAbsVoteReq);
+        case Column::VOTING_STATUS: {
+            const int margin = proposal->getAbsoluteYesCount() - nAbsVoteReq;
+            return QString("%1Y, %2N, %3A (%4%5)").arg(proposal->getYesCount()).arg(proposal->getNoCount())
+                                                  .arg(proposal->getAbstainCount()).arg(margin > 0 ? "+" : "")
+                                                  .arg(margin);
+
+        }
         default:
             return {};
         };
@@ -151,11 +144,21 @@ QVariant ProposalModel::data(const QModelIndex& index, int role) const
         case Column::IS_ACTIVE:
             return proposal->isActive();
         case Column::VOTING_STATUS:
-            return proposal->GetAbsoluteYesCount();
+            return proposal->getAbsoluteYesCount();
         default:
             return {};
         };
         break;
+    }
+    case Qt::ToolTipRole:
+    {
+        if (index.column() == Column::VOTING_STATUS) {
+            const int margin = proposal->getAbsoluteYesCount() - nAbsVoteReq;
+            return tr("%1 Yes, %2 No, %3 Abstain, %4").arg(proposal->getYesCount()).arg(proposal->getNoCount())
+                                                      .arg(proposal->getAbstainCount())
+                                                      .arg((margin >= 0 ? tr("passing with %1 votes") : tr("needs %1 more votes")).arg(std::abs(margin)));
+        }
+        return {};
     }
     };
     return {};
@@ -181,7 +184,7 @@ QVariant ProposalModel::headerData(int section, Qt::Orientation orientation, int
     case Column::IS_ACTIVE:
         return tr("Active");
     case Column::VOTING_STATUS:
-        return tr("Status");
+        return tr("Votes");
     default:
         return {};
     }
@@ -219,7 +222,7 @@ void ProposalModel::reconcile(ProposalList&& proposals)
         if (it != m_data.end()) {
             const auto idx{static_cast<int>(std::distance(m_data.begin(), it))};
             keep_index[static_cast<size_t>(idx)] = true;
-            if ((*it)->GetAbsoluteYesCount() != proposal->GetAbsoluteYesCount()) {
+            if ((*it)->getAbsoluteYesCount() != proposal->getAbsoluteYesCount()) {
                 // Replace proposal to update vote count
                 *it = std::move(proposal);
                 Q_EMIT dataChanged(createIndex(idx, Column::VOTING_STATUS), createIndex(idx, Column::VOTING_STATUS));

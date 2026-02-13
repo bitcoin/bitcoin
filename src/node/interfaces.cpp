@@ -229,12 +229,16 @@ public:
             context().govman->GetAllNewerThan(objs, nMoreThanTime);
         }
     }
-    int32_t getObjAbsYesCount(const CGovernanceObject& obj, vote_signal_enum_t vote_signal) override
+    Votes getObjVotes(const CGovernanceObject& obj, vote_signal_enum_t vote_signal) override
     {
+        Votes ret;
         if (context().govman != nullptr && context().dmnman != nullptr) {
-            return obj.GetAbsoluteYesCount(context().dmnman->GetListAtChainTip(), vote_signal);
+            const auto& tip_mn_list{context().dmnman->GetListAtChainTip()};
+            ret.m_abs = obj.GetAbstainCount(tip_mn_list, vote_signal);
+            ret.m_no = obj.GetNoCount(tip_mn_list, vote_signal);
+            ret.m_yes = obj.GetYesCount(tip_mn_list, vote_signal);
         }
-        return 0;
+        return ret;
     }
     bool getObjLocalValidity(const CGovernanceObject& obj, std::string& error, bool check_collateral) override
     {
