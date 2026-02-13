@@ -85,8 +85,8 @@ bool BCLog::Logger::StartLogging()
     }
     while (!m_msgs_before_open.empty()) {
         const auto& buflog = m_msgs_before_open.front();
-        std::string s{buflog.str};
-        FormatLogStrInPlace(s, buflog.category, buflog.level, buflog.source_loc, buflog.threadname, buflog.now, buflog.mocktime);
+        std::string s{buflog.entry.message};
+        FormatLogStrInPlace(s, static_cast<BCLog::LogFlags>(buflog.entry.category), buflog.entry.level, buflog.entry.source_loc, buflog.entry.thread_name, buflog.entry.timestamp, buflog.mocktime);
         m_msgs_before_open.pop_front();
 
         if (m_print_to_file) FileWriteStr(s, m_fileout);
@@ -374,8 +374,8 @@ std::string BCLog::Logger::GetLogPrefix(BCLog::LogFlags category, BCLog::Level l
 
 static size_t MemUsage(const BCLog::Logger::BufferedLog& buflog)
 {
-    return memusage::DynamicUsage(buflog.str) +
-           memusage::DynamicUsage(buflog.threadname) +
+    return memusage::DynamicUsage(buflog.entry.message) +
+           memusage::DynamicUsage(buflog.entry.thread_name) +
            memusage::MallocUsage(sizeof(memusage::list_node<BCLog::Logger::BufferedLog>));
 }
 
@@ -441,13 +441,8 @@ void BCLog::Logger::LogPrintStr_(util::log::Entry&& entry)
     if (m_buffering) {
         {
             BufferedLog buf{
-                .now = entry.timestamp,
+                .entry = std::move(entry),
                 .mocktime = GetMockTime(),
-                .str = std::move(str_prefixed),
-                .threadname = std::move(entry.thread_name),
-                .source_loc = entry.source_loc,
-                .category = static_cast<LogFlags>(entry.category),
-                .level = entry.level,
             };
             m_cur_buffer_memusage += MemUsage(buf);
             m_msgs_before_open.push_back(std::move(buf));

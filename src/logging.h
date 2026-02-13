@@ -128,12 +128,8 @@ namespace BCLog {
     {
     public:
         struct BufferedLog {
-            SystemClock::time_point now;
+            util::log::Entry entry;
             std::chrono::seconds mocktime;
-            std::string str, threadname;
-            SourceLocation source_loc;
-            LogFlags category;
-            Level level;
         };
 
     private:
