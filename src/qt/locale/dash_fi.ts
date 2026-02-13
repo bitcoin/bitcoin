@@ -173,6 +173,10 @@
         <source>Font Weight Bold:</source>
         <translation>Fontin Painoarvo Paksu:</translation>
     </message>
+    <message>
+        <source>Font in the Overview tab: </source>
+        <translation>Fontti Yhteenveto-välilehdessä: </translation>
+    </message>
 </context>
 <context>
     <name>AskPassphraseDialog</name>
@@ -325,6 +329,10 @@
 </context>
 <context>
     <name>BitcoinApplication</name>
+    <message>
+        <source>Settings file %1 might be corrupt or invalid.</source>
+        <translation>Asetustiedosto %1 saattaa olla vioittunut tai virheellinen.</translation>
+    </message>
     <message>
         <source>Runaway exception</source>
         <translation>Hallitsematon poikkeus</translation>
@@ -501,6 +509,14 @@
         <translation>Vaihda lompakon salaukseen käytettävä salasana</translation>
     </message>
     <message>
+        <source>&amp;Show Recovery Phrase…</source>
+        <translation>&amp;Näytä palautuslause…</translation>
+    </message>
+    <message>
+        <source>Show the recovery phrase (mnemonic seed) for this wallet</source>
+        <translation>Näytä tämän lompakon palautuslause (muistisana)</translation>
+    </message>
+    <message>
         <source>Unlock wallet</source>
         <translation>Avaa lompakon lukitus</translation>
     </message>
@@ -587,6 +603,26 @@
     <message>
         <source>%1 client</source>
         <translation>%1 asiakasohjelma</translation>
+    </message>
+    <message>
+        <source>Waiting for blockchain sync…</source>
+        <translation>Odotetaan lohkoketjun synkronointia…</translation>
+    </message>
+    <message>
+        <source>Synchronizing governance data…</source>
+        <translation>Synkronoidaan hallintotietoja…</translation>
+    </message>
+    <message numerus="yes">
+        <source>~%n day(s) (%1 blocks) left for superblock</source>
+        <translation><numerusform>~%n päivä (%1 lohkoa) jäljellä superlohkoon</numerusform><numerusform>~%n päivää (%1 lohkoa) jäljellä superlohkoon</numerusform></translation>
+    </message>
+    <message numerus="yes">
+        <source>~%n day(s) (%1 blocks) left for voting</source>
+        <translation><numerusform>~%n päivä (%1 lohkoa) jäljellä äänestykseen</numerusform><numerusform>~%n päivää (%1 lohkoa) jäljellä äänestykseen</numerusform></translation>
+    </message>
+    <message>
+        <source>~%1% of budget committed (%2 %3).</source>
+        <translation>~%1% budjetista sidottu (%2 %3).</translation>
     </message>
     <message>
         <source>Wallet: %1
@@ -808,10 +844,6 @@
     <message>
         <source>Up to date</source>
         <translation>Tapahtumahistoria on ajan tasalla</translation>
-    </message>
-    <message>
-        <source>Synchronizing additional data: %p%</source>
-        <translation>Synkronoidaan lisätietoja: %p%</translation>
     </message>
     <message>
         <source>Error</source>
@@ -1115,6 +1147,38 @@
         <source>Create wallet warning</source>
         <translation>Luo lompakko varoitus</translation>
     </message>
+    <message>
+        <source>Unlock failed</source>
+        <translation>Lukituksen avaus epäonnistui</translation>
+    </message>
+    <message>
+        <source>Failed to unlock wallet for mnemonic verification. Wallet creation completed but verification skipped.</source>
+        <translation>Lompakon lukituksen avaus epäonnistui muistisanan vahvistusta varten. Lompakon luonti valmistui, mutta vahvistus ohitettiin.</translation>
+    </message>
+    <message>
+        <source>Mnemonic retrieval failed</source>
+        <translation>Muistisanan haku epäonnistui</translation>
+    </message>
+    <message>
+        <source>Could not retrieve mnemonic phrase from wallet. Wallet creation completed but verification skipped.</source>
+        <translation>Muistisanaa ei voitu hakea lompakosta. Lompakon luonti valmistui, mutta vahvistus ohitettiin.</translation>
+    </message>
+    <message>
+        <source>Verification cancelled</source>
+        <translation>Vahvistus peruutettu</translation>
+    </message>
+    <message>
+        <source>You cancelled mnemonic verification. Please make sure you have saved your mnemonic phrase safely.</source>
+        <translation>Peruutit muistisanan vahvistuksen. Varmista, että olet tallentanut muistisanasi turvallisesti.</translation>
+    </message>
+    <message>
+        <source>Can't list signers</source>
+        <translation>Allekirjoittajia ei voi listata</translation>
+    </message>
+    <message>
+        <source>Too many external signers found</source>
+        <translation>Liian monta ulkoista allekirjoittajaa löytyi</translation>
+    </message>
 </context>
 <context>
     <name>CreateWalletDialog</name>
@@ -1139,8 +1203,24 @@
         <translation>Salaa Lompakko</translation>
     </message>
     <message>
-        <source>Advanced Options</source>
-        <translation>Edistyneet asetukset</translation>
+        <source>Use descriptors for scriptPubKey management.</source>
+        <translation>Käytä kuvaajia scriptPubKey-hallintaan.</translation>
+    </message>
+    <message>
+        <source>Descriptor Wallet</source>
+        <translation>Kuvaaja-lompakko</translation>
+    </message>
+    <message>
+        <source>Use an external signing device such as a hardware wallet. Configure the external signer script in wallet preferences first.</source>
+        <translation>Käytä ulkoista allekirjoituslaitetta, kuten laitteistolompakkoa. Määritä ensin ulkoisen allekirjoittajan komentosarja lompakon asetuksissa.</translation>
+    </message>
+    <message>
+        <source>External signer</source>
+        <translation>Ulkoinen allekirjoittaja</translation>
+    </message>
+    <message>
+        <source>Show Advanced Options</source>
+        <translation>Näytä lisäasetukset</translation>
     </message>
     <message>
         <source>Disable private keys for this wallet. Wallets with private keys disabled will have no private keys and cannot have an HD seed or imported private keys. This is ideal for watch-only wallets.</source>
@@ -1159,20 +1239,28 @@
         <translation>Luo Tyhjä Lompakko</translation>
     </message>
     <message>
-        <source>Use descriptors for scriptPubKey management. This feature is well-tested but still considered experimental and not recommended for use yet.</source>
-        <translation>Käytä deskriptoreja scriptPubKey-hallintaan. Tämä ominaisuus on hyvin testattu, mutta sitä pidetään edelleen kokeellisena, eikä sen käyttöä suositella vielä.</translation>
-    </message>
-    <message>
-        <source>Descriptor Wallet (EXPERIMENTAL)</source>
-        <translation>Deskriptorilompakko (KOKEELLINEN)</translation>
-    </message>
-    <message>
         <source>Create</source>
         <translation>Luo</translation>
     </message>
     <message>
+        <source>Hide Advanced Options</source>
+        <translation>Piilota lisäasetukset</translation>
+    </message>
+    <message>
         <source>Compiled without sqlite support (required for descriptor wallets)</source>
         <translation>Käännetty ilman sqlite-tukea (vaaditaan deskriptorilompakoille)</translation>
+    </message>
+    <message>
+        <source>Compiled without external signing support (required for external signing)</source>
+        <extracomment>"External signing" means using devices such as hardware wallets.</extracomment>
+        <translation>Käännetty ilman ulkoisen allekirjoituksen tukea (vaaditaan ulkoiseen allekirjoitukseen)</translation>
+    </message>
+</context>
+<context>
+    <name>DescriptionDialog</name>
+    <message>
+        <source>This pane shows detailed information</source>
+        <translation>Tämä paneeli näyttää yksityiskohtaiset tiedot</translation>
     </message>
 </context>
 <context>
@@ -1260,10 +1348,6 @@
         <translation>Lomake</translation>
     </message>
     <message>
-        <source>Filter List:</source>
-        <translation>SuodatusLista:</translation>
-    </message>
-    <message>
         <source>Filter proposal list</source>
         <translation>Suodata ehdotusluettelo</translation>
     </message>
@@ -1276,12 +1360,24 @@
         <translation>Masternodejen määrä, joilla tämä lompakko voi äänestää (masternodes, joiden äänestysavainta tämä lompakko hallitsee)</translation>
     </message>
     <message>
+        <source>No active proposals on the network.</source>
+        <translation>Verkossa ei ole aktiivisia ehdotuksia.</translation>
+    </message>
+    <message>
+        <source>Resume Proposal</source>
+        <translation>Jatka ehdotusta</translation>
+    </message>
+    <message>
         <source>Proposal Count:</source>
         <translation>Ehdotuksien Määrä:</translation>
     </message>
     <message>
         <source>Create Proposal</source>
         <translation>Luo ehdotus</translation>
+    </message>
+    <message>
+        <source>Select proposals to display</source>
+        <translation>Valitse näytettävät ehdotukset</translation>
     </message>
     <message>
         <source>Filter by Title</source>
@@ -1308,8 +1404,76 @@
         <translation>Tyhjää</translation>
     </message>
     <message>
-        <source>Proposal Info: %1</source>
-        <translation>Ehdotus Info: %1</translation>
+        <source>Active Proposals</source>
+        <translation>Aktiiviset ehdotukset</translation>
+    </message>
+    <message>
+        <source>My Proposals</source>
+        <translation>Omat ehdotukset</translation>
+    </message>
+    <message>
+        <source>No proposals recorded in wallet file.</source>
+        <translation>Lompakkotiedostossa ei ole tallennettuja ehdotuksia.</translation>
+    </message>
+    <message>
+        <source>Resume proposal</source>
+        <translation>Jatka ehdotusta</translation>
+    </message>
+    <message>
+        <source>Copy Raw JSON</source>
+        <translation>Kopioi raaka JSON</translation>
+    </message>
+    <message>
+        <source>Open Proposal URL…</source>
+        <translation>Avaa ehdotuksen URL…</translation>
+    </message>
+    <message>
+        <source>Details for %1</source>
+        <translation>Tiedot kohteesta %1</translation>
+    </message>
+    <message>
+        <source>Cannot interact with governance before sync completes</source>
+        <translation>Hallintoon ei voi ottaa yhteyttä ennen synkronoinnin valmistumista</translation>
+    </message>
+    <message>
+        <source>Creates a new proposal</source>
+        <translation>Luo uuden ehdotuksen</translation>
+    </message>
+    <message>
+        <source>Resumes an existing proposal</source>
+        <translation>Jatkaa olemassa olevaa ehdotusta</translation>
+    </message>
+    <message>
+        <source>Creating proposals costs %1, insufficient balance</source>
+        <translation>Ehdotuksen luonti maksaa %1, saldo ei riitä</translation>
+    </message>
+    <message>
+        <source>Error</source>
+        <translation>Virhe</translation>
+    </message>
+    <message>
+        <source>Cannot validate URL, potentially malformed or unknown protocol.</source>
+        <translation>URL:ää ei voi vahvistaa, mahdollisesti virheellinen muoto tai tuntematon protokolla.</translation>
+    </message>
+    <message>
+        <source>External Link Warning</source>
+        <translation>Ulkoisen linkin varoitus</translation>
+    </message>
+    <message>
+        <source>You are about to open the following URL in your default browser
+
+%1
+
+This content was submitted by a user. It may not match what is described in the title.
+
+Do you wish to continue?</source>
+        <translation>Olet avaamassa seuraavan URL-osoitteen oletusselaimessasi
+
+%1
+
+Tämän sisällön on lähettänyt käyttäjä. Se ei välttämättä vastaa otsikossa kuvattua.
+
+Haluatko jatkaa?</translation>
     </message>
     <message>
         <source>Voting Failed</source>
@@ -1478,7 +1642,13 @@
 <context>
     <name>LoadWalletsActivity</name>
     <message>
+        <source>Load Wallets</source>
+        <extracomment>Title of progress window which is displayed when wallets are being loaded.</extracomment>
+        <translation>Lataa lompakot</translation>
+    </message>
+    <message>
         <source>Loading wallets…</source>
+        <extracomment>Descriptive text of the load wallets progress window which indicates to the user that wallets are currently being loaded.</extracomment>
         <translation>Ladataan lompakoita…</translation>
     </message>
 </context>
@@ -1489,16 +1659,36 @@
         <translation>Lomake</translation>
     </message>
     <message>
-        <source>Status</source>
-        <translation>Tila</translation>
+        <source>Filter by masternode type</source>
+        <translation>Suodata masternode-tyypin mukaan</translation>
     </message>
     <message>
-        <source>Filter List:</source>
-        <translation>Suodatukset:</translation>
+        <source>All</source>
+        <translation>Kaikki</translation>
+    </message>
+    <message>
+        <source>Regular</source>
+        <translation>Tavallinen</translation>
+    </message>
+    <message>
+        <source>Evo</source>
+        <translation>Evo</translation>
     </message>
     <message>
         <source>Filter masternode list</source>
         <translation>Suodata masternodet lista</translation>
+    </message>
+    <message>
+        <source>Owned</source>
+        <translation>Omistetut</translation>
+    </message>
+    <message>
+        <source>Hide masternodes that are currently PoSe banned.</source>
+        <translation>Piilota masternodet, jotka ovat tällä hetkellä PoSe-kiellossa.</translation>
+    </message>
+    <message>
+        <source>Hide banned</source>
+        <translation>Piilota kielletyt</translation>
     </message>
     <message>
         <source>Node Count:</source>
@@ -1509,40 +1699,12 @@
         <translation>Näytä vain ne masternodet joiden avaimet ovat tässä lompakossa.</translation>
     </message>
     <message>
-        <source>My masternodes only</source>
-        <translation>Vain omat masternodet</translation>
-    </message>
-    <message>
-        <source>Service</source>
-        <translation>Palvelu</translation>
-    </message>
-    <message>
-        <source>Type</source>
-        <translation>Tyyppi</translation>
-    </message>
-    <message>
-        <source>PoSe Score</source>
-        <translation>PoSe Pisteet</translation>
-    </message>
-    <message>
-        <source>Registered</source>
-        <translation>Rekisteröity</translation>
-    </message>
-    <message>
-        <source>Last Paid</source>
-        <translation>Viimeisin Maksu</translation>
-    </message>
-    <message>
-        <source>Next Payment</source>
-        <translation>Seuraava Maksu</translation>
-    </message>
-    <message>
         <source>Payout Address</source>
         <translation>Maksu osoite</translation>
     </message>
     <message>
-        <source>Operator Reward</source>
-        <translation>Operaattorin Palkkio</translation>
+        <source>Filter by</source>
+        <translation>Suodata</translation>
     </message>
     <message>
         <source>Collateral Address</source>
@@ -1557,6 +1719,10 @@
         <translation>Äänestys osoite</translation>
     </message>
     <message>
+        <source>Details for Masternode %1</source>
+        <translation>Masternoden %1 tiedot</translation>
+    </message>
+    <message>
         <source>Copy ProTx Hash</source>
         <translation>Kopioi ProTx Tarkiste</translation>
     </message>
@@ -1565,48 +1731,166 @@
         <translation>Kopioi Vakuus Lähtöpiste</translation>
     </message>
     <message>
-        <source>Please wait…</source>
-        <translation>Odota…</translation>
+        <source>Filter by any property (e.g. address or protx hash)</source>
+        <translation>Suodata minkä tahansa ominaisuuden (esim. osoite tai protx tarkiste) mukaan</translation>
+    </message>
+</context>
+<context>
+    <name>MasternodeModel</name>
+    <message numerus="yes">
+        <source>Banned for %n day(s)</source>
+        <translation><numerusform>Kielletty %n päiväksi</numerusform><numerusform>Kielletty %n päiväksi</numerusform></translation>
     </message>
     <message>
-        <source>Updating…</source>
-        <translation>Päivitetään…</translation>
+        <source>Banned for less than a day</source>
+        <translation>Kielletty alle päiväksi</translation>
     </message>
     <message>
-        <source>ENABLED</source>
-        <translation>KÄYTÖSSÄ</translation>
+        <source>Banned</source>
+        <translation>Kielletty</translation>
+    </message>
+    <message numerus="yes">
+        <source>Active for %n day(s)</source>
+        <translation><numerusform>Aktiivinen %n päivän ajan</numerusform><numerusform>Aktiivinen %n päivän ajan</numerusform></translation>
     </message>
     <message>
-        <source>POSE_BANNED</source>
-        <translation>POSE_ESTETTY</translation>
+        <source>Active for less than a day</source>
+        <translation>Aktiivinen alle päivän</translation>
     </message>
     <message>
         <source>UNKNOWN</source>
         <translation>TUNTEMATON</translation>
     </message>
     <message>
-        <source>to %1</source>
-        <translation>-&gt; %1</translation>
+        <source>Service</source>
+        <translation>Palvelu</translation>
     </message>
     <message>
-        <source>to UNKNOWN</source>
-        <translation>-&gt; TUNTEMATON</translation>
+        <source>Type</source>
+        <translation>Tyyppi</translation>
     </message>
     <message>
-        <source>but not claimed</source>
-        <translation>mutta ei lunastettu</translation>
+        <source>PoSe Score</source>
+        <translation>PoSe-pisteet</translation>
     </message>
     <message>
-        <source>NONE</source>
-        <translation>EI MITÄÄN</translation>
+        <source>Registered</source>
+        <translation>Rekisteröity</translation>
     </message>
     <message>
-        <source>Filter by any property (e.g. address or protx hash)</source>
-        <translation>Suodata minkä tahansa ominaisuuden (esim. osoite tai protx tarkiste) mukaan</translation>
+        <source>Last Paid</source>
+        <translation>Viimeisin maksu</translation>
     </message>
     <message>
-        <source>Additional information for DIP3 Masternode %1</source>
-        <translation>Masternode DIP3 lisätietoja %1</translation>
+        <source>Next Payment</source>
+        <translation>Seuraava maksu</translation>
+    </message>
+    <message>
+        <source>Operator Reward</source>
+        <translation>Operaattorin palkkio</translation>
+    </message>
+    <message>
+        <source>ProTx Hash</source>
+        <translation>ProTx-tiiviste</translation>
+    </message>
+</context>
+<context>
+    <name>MnemonicVerificationDialog</name>
+    <message>
+        <source>Save Your Mnemonic</source>
+        <translation>Tallenna muistisanasi</translation>
+    </message>
+    <message>
+        <source>WARNING: If you lose your mnemonic seed phrase, you will lose access to your wallet forever.</source>
+        <translation>VAROITUS: Jos menetät muistisanasi, menetät pääsyn lompakkoosi pysyvästi.</translation>
+    </message>
+    <message>
+        <source>Please write down these words in order. You will need them to restore your wallet.</source>
+        <translation>Kirjoita nämä sanat muistiin järjestyksessä. Tarvitset niitä lompakon palauttamiseen.</translation>
+    </message>
+    <message>
+        <source>Show</source>
+        <translation>Näytä</translation>
+    </message>
+    <message>
+        <source>Hide</source>
+        <translation>Piilota</translation>
+    </message>
+    <message>
+        <source>I have written down my mnemonic</source>
+        <translation>Olen kirjoittanut muistisanani muistiin</translation>
+    </message>
+    <message>
+        <source>To verify you've saved your mnemonic, please enter the following words:</source>
+        <translation>Vahvistaaksesi, että olet tallentanut muistisanasi, syötä seuraavat sanat:</translation>
+    </message>
+    <message>
+        <source>Word #1:</source>
+        <translation>Sana #1:</translation>
+    </message>
+    <message>
+        <source>Word #2:</source>
+        <translation>Sana #2:</translation>
+    </message>
+    <message>
+        <source>Word #3:</source>
+        <translation>Sana #3:</translation>
+    </message>
+    <message>
+        <source>Your Recovery Phrase</source>
+        <translation>Palautuslauseesi</translation>
+    </message>
+    <message>
+        <source>Close</source>
+        <translation>Sulje</translation>
+    </message>
+    <message>
+        <source>Continue</source>
+        <translation>Jatka</translation>
+    </message>
+    <message>
+        <source>WARNING: Never share your recovery phrase with anyone. Store it securely offline.</source>
+        <translation>VAROITUS: Älä koskaan jaa palautuslausettasi kenellekään. Säilytä se turvallisesti offline-tilassa.</translation>
+    </message>
+    <message>
+        <source>These words can restore your wallet. Keep them safe and private.</source>
+        <translation>Näillä sanoilla voit palauttaa lompakkosi. Pidä ne turvassa ja yksityisinä.</translation>
+    </message>
+    <message>
+        <source>WARNING: If you lose your mnemonic seed phrase, you will lose access to your wallet forever. Write it down in a safe place and never share it with anyone.</source>
+        <translation>VAROITUS: Jos menetät muistisanasi, menetät pääsyn lompakkoosi pysyvästi. Kirjoita se turvalliseen paikkaan äläkä koskaan jaa sitä kenellekään.</translation>
+    </message>
+    <message>
+        <source>Invalid Mnemonic</source>
+        <translation>Virheellinen muistisana</translation>
+    </message>
+    <message>
+        <source>Mnemonic phrase has fewer than 3 words (found %1). Verification cannot proceed.</source>
+        <translation>Muistisanassa on alle 3 sanaa (löytyi %1). Vahvistusta ei voida jatkaa.</translation>
+    </message>
+    <message>
+        <source>Verification Error</source>
+        <translation>Vahvistusvirhe</translation>
+    </message>
+    <message>
+        <source>Failed to generate verification positions. Please try again.</source>
+        <translation>Vahvistuspaikkojen luonti epäonnistui. Yritä uudelleen.</translation>
+    </message>
+    <message>
+        <source>Word #%1:</source>
+        <translation>Sana #%1:</translation>
+    </message>
+    <message>
+        <source>Back</source>
+        <translation>Takaisin</translation>
+    </message>
+    <message>
+        <source>Verification Failed</source>
+        <translation>Vahvistus epäonnistui</translation>
+    </message>
+    <message>
+        <source>One or more words are incorrect. Please try again.</source>
+        <translation>Yksi tai useampi sana on virheellinen. Yritä uudelleen.</translation>
     </message>
 </context>
 <context>
@@ -1824,12 +2108,52 @@
         <translation>Näytä Hallinto Välilehti</translation>
     </message>
     <message>
+        <source>Show the governance clock in the status bar.</source>
+        <translation>Näytä hallintokello tilapalkissa.</translation>
+    </message>
+    <message>
+        <source>Show governance clock</source>
+        <translation>Näytä hallintokello</translation>
+    </message>
+    <message>
         <source>If you disable the spending of unconfirmed change, the change from a transaction&lt;br/&gt;cannot be used until that transaction has at least one confirmation.&lt;br/&gt;This also affects how your balance is computed.</source>
         <translation>Jos poistat vahvistamattomien vaihtorahojen käytön, siirtotapahtuman&lt;br/&gt;vaihtorahaa ei voida käyttää ennen vähintään yhtä vahvistusta.&lt;br/&gt;Tämä vaikuttaa myös kuinka saldosi lasketaan.</translation>
     </message>
     <message>
         <source>Show mixing interface on Overview screen and reveal an additional screen which allows to spend fully mixed coins only.&lt;br/&gt;A new tab with more settings will also appear in this dialog, please make sure to check them before mixing your coins.</source>
         <translation>Näytä sekoituskäyttöliittymä yleisnäkymässä ja nähdäksesi apunäytön joka sallii käyttää vain täysin sekoitettuja kolikoita.&lt;br/&gt;Uusi välilehti lisäasetuksilla ilmestyy myöskin käyttöön, tarkista asetukset ennen kuin alat sekoittaa kolikoita.</translation>
+    </message>
+    <message>
+        <source>Automatically lock small incoming transactions from external sources that may be dust attacks. Locked UTXOs will be excluded from coin selection.</source>
+        <translation>Lukitse automaattisesti ulkoisista lähteistä tulevat pienet tapahtumat, jotka voivat olla pölyhyökkäyksiä. Lukitut UTXO:t jätetään pois kolikoiden valinnasta.</translation>
+    </message>
+    <message>
+        <source>Enable &amp;dust attack protection</source>
+        <translation>Ota &amp;pölyhyökkäyssuojaus käyttöön</translation>
+    </message>
+    <message>
+        <source>Dust threshold:</source>
+        <translation>Pölykynnys:</translation>
+    </message>
+    <message>
+        <source>Transactions with outputs at or below this amount will be considered dust when received from external sources.</source>
+        <translation>Tapahtumat, joiden tulosteet ovat tämän summan suuruisia tai pienempiä, katsotaan pölyksi ulkoisista lähteistä vastaanotettaessa.</translation>
+    </message>
+    <message>
+        <source>duffs</source>
+        <translation>duffia</translation>
+    </message>
+    <message>
+        <source>External Signer (e.g. hardware wallet)</source>
+        <translation>Ulkoinen allekirjoittaja (esim. laitteistolompakko)</translation>
+    </message>
+    <message>
+        <source>&amp;External signer script path</source>
+        <translation>&amp;Ulkoisen allekirjoittajan komentosarjan polku</translation>
+    </message>
+    <message>
+        <source>Full path to a %1 compatible script (e.g. C:\Downloads\hwi.exe or /Users/you/Downloads/hwi.py). Beware: malware can steal your coins!</source>
+        <translation>Täydellinen polku %1-yhteensopivaan komentosarjaan (esim. C:\Downloads\hwi.exe tai /Users/you/Downloads/hwi.py). Varoitus: haittaohjelmat voivat varastaa kolikkosi!</translation>
     </message>
     <message>
         <source>Show additional information and buttons on overview screen.</source>
@@ -1948,10 +2272,6 @@ https://explore.transifex.com/dash/dash/</translation>
     <message>
         <source>&amp;Third-party transaction URLs</source>
         <translation>&amp;Kolmannen osapuolen tapahtuma-URL:t</translation>
-    </message>
-    <message>
-        <source>Options set in this dialog are overridden by the command line or in the configuration file:</source>
-        <translation>Asetukset tässä dialogissa ylikirjoitetaan joko komentorivin tai asetustiedostosta:</translation>
     </message>
     <message>
         <source>Minimize instead of exit the application when the window is closed. When this option is enabled, the application will be closed only after selecting Exit in the menu.</source>
@@ -2074,6 +2394,10 @@ https://explore.transifex.com/dash/dash/</translation>
         <translation>Desimaalit</translation>
     </message>
     <message>
+        <source>Options set in this dialog are overridden by the command line:</source>
+        <translation>Tässä ikkunassa asetetut asetukset korvataan komentoriviltä:</translation>
+    </message>
+    <message>
         <source>Reset all client options to default.</source>
         <translation>Palauta kaikki asetukset oletusarvoihin.</translation>
     </message>
@@ -2108,6 +2432,11 @@ https://explore.transifex.com/dash/dash/</translation>
         <translation>Ohjelman uudelleen käynnistys aktivoi muutokset käyttöön.</translation>
     </message>
     <message>
+        <source>Compiled without external signing support (required for external signing)</source>
+        <extracomment>"External signing" means using devices such as hardware wallets.</extracomment>
+        <translation>Käännetty ilman ulkoisen allekirjoituksen tukea (vaaditaan ulkoiseen allekirjoitukseen)</translation>
+    </message>
+    <message>
         <source>Current settings will be backed up at "%1".</source>
         <extracomment>Text explaining to the user that the client's current settings will be backed up at a specific location. %1 is a stand-in argument for the backup location's path.</extracomment>
         <translation>Nykyiset asetukset varmuuskopioidaan sijaintiin "%1".</translation>
@@ -2124,6 +2453,13 @@ https://explore.transifex.com/dash/dash/</translation>
     <message>
         <source>The supplied proxy address is invalid.</source>
         <translation>Antamasi proxyn osoite on virheellinen.</translation>
+    </message>
+</context>
+<context>
+    <name>OptionsModel</name>
+    <message>
+        <source>Could not read setting "%1", %2.</source>
+        <translation>Asetusta "%1" ei voitu lukea, %2.</translation>
     </message>
 </context>
 <context>
@@ -2433,8 +2769,8 @@ https://explore.transifex.com/dash/dash/</translation>
         <translation>PSBT tallennettu levylle.</translation>
     </message>
     <message>
-        <source> * Sends %1 to %2</source>
-        <translation> * Lähettää %1 osoitteeseen %2</translation>
+        <source>Sends %1 to %2</source>
+        <translation>Lähettää %1 kohteeseen %2</translation>
     </message>
     <message>
         <source>own address</source>
@@ -2586,25 +2922,141 @@ Tuen lopettamisen vuoksi sinun tulisi pyytää kauppiasta toimittamaan sinulle B
     </message>
 </context>
 <context>
-    <name>Proposal</name>
+    <name>ProposalCreate</name>
     <message>
-        <source>Passing +%1</source>
-        <translation>Läpi menossa +%1</translation>
+        <source>New proposal</source>
+        <translation>Uusi ehdotus</translation>
     </message>
     <message>
-        <source>Needs additional %1 votes</source>
-        <translation>Tarvitsee lisä-ääniä %1</translation>
+        <source>Proposal &amp;name</source>
+        <translation>Ehdotuksen &amp;nimi</translation>
+    </message>
+    <message>
+        <source>&amp;Description URL</source>
+        <translation>&amp;Kuvauksen URL</translation>
+    </message>
+    <message>
+        <source>&amp;Payment date</source>
+        <translation>&amp;Maksupäivä</translation>
+    </message>
+    <message>
+        <source>Pa&amp;yments</source>
+        <translation>Ma&amp;ksut</translation>
+    </message>
+    <message>
+        <source>Payment &amp;address</source>
+        <translation>Maksun &amp;osoite</translation>
+    </message>
+    <message>
+        <source>Payment &amp;amount</source>
+        <translation>Maksun &amp;summa</translation>
+    </message>
+    <message>
+        <source>To&amp;tal amount</source>
+        <translation>Ko&amp;konaissumma</translation>
+    </message>
+    <message>
+        <source>The amount to request in a single payment</source>
+        <translation>Yhdessä maksussa pyydettävä summa</translation>
+    </message>
+    <message>
+        <source>View JSON</source>
+        <translation>Näytä JSON</translation>
+    </message>
+    <message>
+        <source>View Payload</source>
+        <translation>Näytä kuorma</translation>
+    </message>
+    <message>
+        <source>margin-left: 8px;</source>
+        <translation>margin-left: 8px;</translation>
+    </message>
+    <message>
+        <source>Create Proposal</source>
+        <translation>Luo ehdotus</translation>
+    </message>
+    <message>
+        <source>All fields are mandatory</source>
+        <translation>Kaikki kentät ovat pakollisia</translation>
+    </message>
+    <message>
+        <source>Confirm Proposal</source>
+        <translation>Vahvista ehdotus</translation>
+    </message>
+    <message>
+        <source>Are you sure you want to create this proposal?</source>
+        <translation>Haluatko varmasti luoda tämän ehdotuksen?</translation>
+    </message>
+    <message>
+        <source>Creating a proposal pays %1 to the network. This fee is non-refundable regardless of outcome.</source>
+        <translation>Ehdotuksen luominen maksaa %1 verkolle. Tätä maksua ei palauteta tuloksesta riippumatta.</translation>
+    </message>
+    <message>
+        <source>Creation failed</source>
+        <translation>Luonti epäonnistui</translation>
+    </message>
+    <message>
+        <source>Proposal Created</source>
+        <translation>Ehdotus luotu</translation>
+    </message>
+    <message>
+        <source>%1 successfully sent for your proposal "%2".
+
+You will now be redirected to monitor and broadcast your new proposal, you can resume this later by clicking "Resume Proposal".</source>
+        <translation>%1 lähetetty onnistuneesti ehdotuksellesi "%2".
+
+Sinut ohjataan nyt seuraamaan ja lähettämään uutta ehdotustasi. Voit jatkaa tätä myöhemmin napsauttamalla "Jatka ehdotusta".</translation>
     </message>
 </context>
 <context>
     <name>ProposalModel</name>
     <message>
-        <source>Yes</source>
-        <translation>Kyllä</translation>
+        <source>Pending, %1 of %2 confirmations</source>
+        <translation>Odottaa, %1/%2 vahvistusta</translation>
     </message>
     <message>
-        <source>No</source>
-        <translation>Ei</translation>
+        <source>Voting, needs %1 more votes for funding</source>
+        <translation>Äänestys, tarvitaan vielä %1 ääntä rahoitukseen</translation>
+    </message>
+    <message>
+        <source>Passing with %1 votes</source>
+        <translation>Menee läpi %1 äänellä</translation>
+    </message>
+    <message>
+        <source>Passing with %1 votes but budget saturated, may not be funded</source>
+        <translation>Menee läpi %1 äänellä, mutta budjetti on täynnä, rahoitusta ei ehkä saada</translation>
+    </message>
+    <message>
+        <source>Failed, needed %1 more votes</source>
+        <translation>Epäonnistui, tarvittiin vielä %1 ääntä</translation>
+    </message>
+    <message>
+        <source>Funded at block %1</source>
+        <translation>Rahoitettu lohkossa %1</translation>
+    </message>
+    <message>
+        <source>Funded</source>
+        <translation>Rahoitettu</translation>
+    </message>
+    <message>
+        <source>Lapsed, past proposal end date</source>
+        <translation>Vanhentunut, ehdotuksen päättymispäivä ohitettu</translation>
+    </message>
+    <message>
+        <source>Ready to broadcast, check "Resume Proposal" dialog</source>
+        <translation>Valmis lähetettäväksi, tarkista "Jatka ehdotusta" -valintaikkuna</translation>
+    </message>
+    <message>
+        <source>%1 Yes, %2 No, %3 Abstain, %4</source>
+        <translation>%1 Kyllä, %2 Ei, %3 Tyhjä, %4</translation>
+    </message>
+    <message>
+        <source>passing with %1 votes</source>
+        <translation>menee läpi %1 äänellä</translation>
+    </message>
+    <message>
+        <source>needs %1 more votes</source>
+        <translation>tarvitaan vielä %1 ääntä</translation>
     </message>
     <message>
         <source>Hash</source>
@@ -2627,187 +3079,63 @@ Tuen lopettamisen vuoksi sinun tulisi pyytää kauppiasta toimittamaan sinulle B
         <translation>Määrä</translation>
     </message>
     <message>
-        <source>Active</source>
-        <translation>Aktiivinen</translation>
-    </message>
-    <message>
-        <source>Status</source>
-        <translation>Tila</translation>
+        <source>Votes</source>
+        <translation>Äänet</translation>
     </message>
 </context>
 <context>
-    <name>ProposalWizard</name>
+    <name>ProposalResume</name>
     <message>
-        <source>Create Governance Proposal</source>
-        <translation>Luo hallintoehdotus</translation>
-    </message>
-    <message>
-        <source>Enter proposal details</source>
-        <translation>Syötä ehdotuksen tiedot</translation>
-    </message>
-    <message>
-        <source>A fee will be burned when you prepare the proposal.</source>
-        <translation>Maksu poltetaan kun valmistat ehdotuksen.</translation>
-    </message>
-    <message>
-        <source>Proposal &amp;name</source>
-        <translation>Ehdotuksen &amp;nimi</translation>
-    </message>
-    <message>
-        <source>&amp;Description URL</source>
-        <translation>&amp;Kuvaus URL</translation>
-    </message>
-    <message>
-        <source>Payment &amp;address</source>
-        <translation>Maksu&amp;osoite</translation>
-    </message>
-    <message>
-        <source>Payment &amp;amount</source>
-        <translation>Maksun &amp;määrä</translation>
-    </message>
-    <message>
-        <source>The amount to request in a single payment</source>
-        <translation>Yhdessä maksussa pyydettävä määrä</translation>
-    </message>
-    <message>
-        <source>&amp;First payment</source>
-        <translation>&amp;Ensimmäinen maksu</translation>
-    </message>
-    <message>
-        <source>Pa&amp;yments</source>
-        <translation>Ma&amp;ksut</translation>
-    </message>
-    <message>
-        <source>To&amp;tal amount</source>
-        <translation>Kokona&amp;ismäärä</translation>
-    </message>
-    <message>
-        <source>Proposal &amp;fee</source>
-        <translation>Ehdotuksen &amp;maksu</translation>
-    </message>
-    <message>
-        <source>Next</source>
-        <translation>Seuraava</translation>
-    </message>
-    <message>
-        <source>Review proposal JSON and validate.</source>
-        <translation>Tarkista ehdotuksen JSON ja vahvista.</translation>
-    </message>
-    <message>
-        <source>Hex-encoded JSON</source>
-        <translation>Hex-koodattu JSON</translation>
-    </message>
-    <message>
-        <source>Back</source>
-        <translation>Takaisin</translation>
-    </message>
-    <message>
-        <source>Validate</source>
-        <translation>Vahvista</translation>
-    </message>
-    <message>
-        <source>Prepare (burn fee) and wait for confirmations.</source>
-        <translation>Valmistele (polta maksu) ja odota vahvistuksia.</translation>
-    </message>
-    <message>
-        <source>Copy</source>
-        <translation>Kopioi</translation>
-    </message>
-    <message>
-        <source>At 1/6 confirmations: can be relayed and queued. At 6/6: accepted and processed.</source>
-        <translation>1/6 vahvistuksella: voidaan välittää ja jonottaa. 6/6: hyväksytty ja käsitelty.</translation>
-    </message>
-    <message>
-        <source>Confirmations progress</source>
-        <translation>Vahvistusten edistyminen</translation>
-    </message>
-    <message>
-        <source>Shows progress toward the required number of confirmations for the proposal fee transaction.</source>
-        <translation>Näyttää edistymisen kohti vaadittujen vahvistusten määrää ehdotusmaksutapahtumalle.</translation>
-    </message>
-    <message>
-        <source>Estimated time remaining: -</source>
-        <translation>Arvioitu jäljellä oleva aika: -</translation>
-    </message>
-    <message>
-        <source>Prepare Proposal</source>
-        <translation>Valmistele ehdotus</translation>
-    </message>
-    <message>
-        <source>You can submit after 1 confirmation. At 6 confirmations it is accepted and processed.</source>
-        <translation>Voit lähettää 1 vahvistuksen jälkeen. 6 vahvistuksella se hyväksytään ja käsitellään.</translation>
-    </message>
-    <message>
-        <source>Proposal ID:</source>
-        <translation>Ehdotus ID:</translation>
-    </message>
-    <message>
-        <source>Submit Proposal</source>
-        <translation>Lähetä ehdotus</translation>
+        <source>Resume Proposals</source>
+        <translation>Jatka ehdotuksia</translation>
     </message>
     <message>
         <source>Close</source>
         <translation>Sulje</translation>
     </message>
     <message>
-        <source>Valid</source>
-        <translation>Kelvollinen</translation>
+        <source>No pending proposals to broadcast.</source>
+        <translation>Ei odottavia ehdotuksia lähetettäväksi.</translation>
     </message>
     <message>
-        <source>Invalid: %1</source>
-        <translation>Virheellinen: %1</translation>
+        <source>For %1 payment(s) of %2 to %3</source>
+        <translation>%1 maksu(a) à %2 kohteeseen %3</translation>
     </message>
     <message>
-        <source>Burn %1</source>
-        <translation>Polta %1</translation>
+        <source>Unknown</source>
+        <translation>Tuntematon</translation>
     </message>
     <message>
-        <source>Burn %1 to create the fee transaction?</source>
-        <translation>Poltetaanko %1 maksutapahtuman luomiseksi?</translation>
+        <source>Pending</source>
+        <translation>Odottaa</translation>
     </message>
     <message>
-        <source>Prepare failed</source>
-        <translation>Valmistelu epäonnistui</translation>
+        <source>Ready</source>
+        <translation>Valmis</translation>
     </message>
     <message>
-        <source>Confirmations: %1 / %2 required</source>
-        <translation>Vahvistukset: %1 / %2 vaaditaan</translation>
+        <source>Collateral Hash</source>
+        <translation>Vakuuden tiiviste</translation>
     </message>
     <message>
-        <source>Estimated time remaining: Ready</source>
-        <translation>Arvioitu jäljellä oleva aika: Valmis</translation>
-    </message>
-    <message numerus="yes">
-        <source>Estimated time remaining: %n minute(s)</source>
-        <translation><numerusform>Arvioitu jäljellä oleva aika: %n minuutti</numerusform><numerusform>Arvioitu jäljellä oleva aika: %n minuuttia</numerusform></translation>
+        <source>Collateral Status</source>
+        <translation>Vakuuden tila</translation>
     </message>
     <message>
-        <source>Your proposal was submitted successfully.</source>
-        <translation>Ehdotuksesi lähetettiin onnistuneesti.</translation>
+        <source>Broadcast</source>
+        <translation>Lähetä</translation>
     </message>
     <message>
-        <source>Already submitted</source>
-        <translation>Jo lähetetty</translation>
+        <source>Broadcast proposal</source>
+        <translation>Lähetä ehdotus</translation>
     </message>
     <message>
-        <source>This proposal has already been submitted.</source>
-        <translation>Tämä ehdotus on jo lähetetty.</translation>
+        <source>Proposal has been broadcasted to the network with hash %1</source>
+        <translation>Ehdotus on lähetetty verkkoon tiivisteellä %1</translation>
     </message>
     <message>
-        <source>Submission failed</source>
-        <translation>Lähetys epäonnistui</translation>
-    </message>
-    <message>
-        <source>Proposal submitted</source>
-        <translation>Ehdotus lähetetty</translation>
-    </message>
-    <message>
-        <source>A fee of %1 will be burned when you prepare the proposal.</source>
-        <translation>Maksu %1 poltetaan kun valmistat ehdotuksen.</translation>
-    </message>
-    <message>
-        <source>Prepare (burn %1) and wait for %2 confirmations.</source>
-        <translation>Valmistele (polta %1) ja odota %2 vahvistusta.</translation>
+        <source>Unable to broadcast proposal, %1</source>
+        <translation>Ehdotusta ei voitu lähettää, %1</translation>
     </message>
 </context>
 <context>
@@ -2875,8 +3203,8 @@ Tuen lopettamisen vuoksi sinun tulisi pyytää kauppiasta toimittamaan sinulle B
         <translation>Virhe: Fonttien lataus ei onnistunut.</translation>
     </message>
     <message>
-        <source>Error: Specified font-family invalid. Valid values: %1.</source>
-        <translation>Virhe: Määritetty fonttiperhe virheellinen. Sallittu arvoalue: %1.</translation>
+        <source>Error: Font "%1" could not be loaded.</source>
+        <translation>Virhe: Fonttia "%1" ei voitu ladata.</translation>
     </message>
     <message>
         <source>Error: Specified font-weight-normal invalid. Valid range %1 to %2.</source>
@@ -3045,6 +3373,170 @@ Tuen lopettamisen vuoksi sinun tulisi pyytää kauppiasta toimittamaan sinulle B
         <source>unknown</source>
         <translation>tuntematon</translation>
     </message>
+    <message>
+        <source>Default monospace font "%1"</source>
+        <translation>Oletusarvoinen tasavälinen fontti "%1"</translation>
+    </message>
+    <message>
+        <source>Embedded "%1"</source>
+        <translation>Upotettu "%1"</translation>
+    </message>
+    <message>
+        <source>Use existing font</source>
+        <translation>Käytä olemassa olevaa fonttia</translation>
+    </message>
+    <message>
+        <source>Custom…</source>
+        <translation>Mukautettu…</translation>
+    </message>
+    <message>
+        <source>Error: Wallet controller not available.</source>
+        <translation>Virhe: Lompakon ohjain ei ole käytettävissä.</translation>
+    </message>
+    <message>
+        <source>Error: Rescan failed. Wallet not loaded.</source>
+        <translation>Virhe: Uudelleenskannaus epäonnistui. Lompakkoa ei ladattu.</translation>
+    </message>
+    <message>
+        <source>UNKNOWN</source>
+        <translation>TUNTEMATON</translation>
+    </message>
+    <message>
+        <source>to %1</source>
+        <translation>kohteeseen %1</translation>
+    </message>
+    <message>
+        <source>to UNKNOWN</source>
+        <translation>kohteeseen TUNTEMATON</translation>
+    </message>
+    <message>
+        <source>but not claimed</source>
+        <translation>mutta ei lunastettu</translation>
+    </message>
+    <message>
+        <source>NONE</source>
+        <translation>EI MITÄÄN</translation>
+    </message>
+    <message>
+        <source>ProTx Hash</source>
+        <translation>ProTx-tiiviste</translation>
+    </message>
+    <message>
+        <source>Public Key Operator</source>
+        <translation>Operaattorin julkinen avain</translation>
+    </message>
+    <message>
+        <source>Owner Address</source>
+        <translation>Omistajan osoite</translation>
+    </message>
+    <message>
+        <source>Payout Address</source>
+        <translation>Maksuosoite</translation>
+    </message>
+    <message>
+        <source>Voting Address</source>
+        <translation>Äänestysosoite</translation>
+    </message>
+    <message>
+        <source>Collateral Address</source>
+        <translation>Vakuuden osoite</translation>
+    </message>
+    <message>
+        <source>Collateral Hash</source>
+        <translation>Vakuuden tiiviste</translation>
+    </message>
+    <message>
+        <source>Collateral Index</source>
+        <translation>Vakuuden indeksi</translation>
+    </message>
+    <message>
+        <source>Masternode Type</source>
+        <translation>Masternode-tyyppi</translation>
+    </message>
+    <message>
+        <source>Registered Height</source>
+        <translation>Rekisteröintikorkeus</translation>
+    </message>
+    <message>
+        <source>Last Paid Height</source>
+        <translation>Viimeisimmän maksun korkeus</translation>
+    </message>
+    <message>
+        <source>Consecutive Payments</source>
+        <translation>Peräkkäiset maksut</translation>
+    </message>
+    <message>
+        <source>Operator Reward</source>
+        <translation>Operaattorin palkkio</translation>
+    </message>
+    <message>
+        <source>Network Addresses</source>
+        <translation>Verkko-osoitteet</translation>
+    </message>
+    <message>
+        <source>Platform HTTPS Addresses</source>
+        <translation>Alustan HTTPS-osoitteet</translation>
+    </message>
+    <message>
+        <source>Platform P2P Addresses</source>
+        <translation>Alustan P2P-osoitteet</translation>
+    </message>
+    <message>
+        <source>Platform Node ID</source>
+        <translation>Alustan solmun tunnus</translation>
+    </message>
+    <message>
+        <source>PoSe Penalty</source>
+        <translation>PoSe-rangaistus</translation>
+    </message>
+    <message>
+        <source>PoSe Ban Height</source>
+        <translation>PoSe-kiellon korkeus</translation>
+    </message>
+    <message>
+        <source>PoSe Revived Height</source>
+        <translation>PoSe-elvytyksen korkeus</translation>
+    </message>
+    <message>
+        <source>Title</source>
+        <translation>Otsikko</translation>
+    </message>
+    <message>
+        <source>URL</source>
+        <translation>URL</translation>
+    </message>
+    <message>
+        <source>Destination Address</source>
+        <translation>Kohdeosoite</translation>
+    </message>
+    <message>
+        <source>Payment Amount</source>
+        <translation>Maksusumma</translation>
+    </message>
+    <message>
+        <source>Payments Requested</source>
+        <translation>Pyydetyt maksut</translation>
+    </message>
+    <message>
+        <source>Payment Start</source>
+        <translation>Maksun alku</translation>
+    </message>
+    <message>
+        <source>Payment End</source>
+        <translation>Maksun loppu</translation>
+    </message>
+    <message>
+        <source>Object Hash</source>
+        <translation>Objektin tiiviste</translation>
+    </message>
+    <message>
+        <source>Parent Hash</source>
+        <translation>Ylätason tiiviste</translation>
+    </message>
+    <message>
+        <source>Collateral Date</source>
+        <translation>Vakuuden päivämäärä</translation>
+    </message>
 </context>
 <context>
     <name>QRDialog</name>
@@ -3184,6 +3676,10 @@ Tuen lopettamisen vuoksi sinun tulisi pyytää kauppiasta toimittamaan sinulle B
         <translation>&amp;Peers</translation>
     </message>
     <message>
+        <source>&amp;Repair</source>
+        <translation>&amp;Korjaus</translation>
+    </message>
+    <message>
         <source>Wallet:</source>
         <translation>Lompakko:</translation>
     </message>
@@ -3263,26 +3759,6 @@ Tuen lopettamisen vuoksi sinun tulisi pyytää kauppiasta toimittamaan sinulle B
         <source>Addresses Rate-Limited</source>
         <extracomment>Text title for the Addresses Rate-Limited field in the peer details area, which displays the total number of addresses received from this peer that were dropped (not processed) due to rate-limiting.</extracomment>
         <translation>Nopeusrajoitetut osoitteet</translation>
-    </message>
-    <message>
-        <source>Rescan blockchain files 1</source>
-        <translation>Skannaa lohkoketju tiedostot 1 uudelleen</translation>
-    </message>
-    <message>
-        <source>Rescan blockchain files 2</source>
-        <translation>Skannaa lohkoketju tiedostot 2 uudelleen</translation>
-    </message>
-    <message>
-        <source>The buttons below will restart the wallet with command-line options to repair the wallet, fix issues with corrupt blockchain files or missing/obsolete transactions.</source>
-        <translation>Painikkeet uudelleen käynnistävät lompakon korjauksen komentorivin valintoja käyttäen, nämä korjaavat korruptoituneen lohkoketjun tai puuttuvat/vanhentuneet tapahtumat.</translation>
-    </message>
-    <message>
-        <source>-rescan=1: Rescan the block chain for missing wallet transactions starting from wallet creation time.</source>
-        <translation>-rescan=1: Skannaa uudelleen puuttuvat tapahtumat lohkoketjusta aloittaen lompakon luontiajasta.</translation>
-    </message>
-    <message>
-        <source>-rescan=2: Rescan the block chain for missing wallet transactions starting from genesis block.</source>
-        <translation>-rescan=2: Skannaa uudelleen puuttuvat tapahtumat lohkoketjusta aloittaen lohkoketjun alusta alkaen.</translation>
     </message>
     <message>
         <source>User Agent</source>
@@ -3445,8 +3921,36 @@ Tuen lopettamisen vuoksi sinun tulisi pyytää kauppiasta toimittamaan sinulle B
         <translation>Aikapoikkeama</translation>
     </message>
     <message>
-        <source>&amp;Wallet Repair</source>
-        <translation>&amp;Lompakon Korjaus</translation>
+        <source>Repair options.</source>
+        <translation>Korjausvaihtoehdot.</translation>
+    </message>
+    <message>
+        <source>The buttons below will trigger repair actions to fix issues with corrupt files or missing/obsolete transactions.</source>
+        <translation>Alla olevat painikkeet käynnistävät korjaustoiminnot vioittuneiden tiedostojen tai puuttuvien/vanhentuneiden tapahtumien korjaamiseksi.</translation>
+    </message>
+    <message>
+        <source>Rescan Chain</source>
+        <translation>Skannaa ketju uudelleen</translation>
+    </message>
+    <message>
+        <source>Rescan the chain for missing wallet transactions starting from wallet creation time.</source>
+        <translation>Skannaa ketju uudelleen puuttuvien lompakkotapahtumien löytämiseksi lompakon luontihetkestä alkaen.</translation>
+    </message>
+    <message>
+        <source>Rescan Chain (full)</source>
+        <translation>Skannaa ketju uudelleen (täysi)</translation>
+    </message>
+    <message>
+        <source>Rescan the chain for missing wallet transactions starting from genesis block.</source>
+        <translation>Skannaa ketju uudelleen puuttuvien lompakkotapahtumien löytämiseksi genesis-lohkosta alkaen.</translation>
+    </message>
+    <message>
+        <source>Rebuild Index</source>
+        <translation>Rakenna indeksi uudelleen</translation>
+    </message>
+    <message>
+        <source>Restarts the client to rebuild the chain index from current blk000??.dat files.</source>
+        <translation>Käynnistää asiakkaan uudelleen ketjuindeksin rakentamiseksi nykyisistä blk000??.dat-tiedostoista.</translation>
     </message>
     <message>
         <source>The total number of addresses received from this peer that were processed (excludes addresses that were dropped due to rate-limiting).</source>
@@ -3457,18 +3961,6 @@ Tuen lopettamisen vuoksi sinun tulisi pyytää kauppiasta toimittamaan sinulle B
         <source>The total number of addresses received from this peer that were dropped (not processed) due to rate-limiting.</source>
         <extracomment>Tooltip text for the Addresses Rate-Limited field in the peer details area, which displays the total number of addresses received from this peer that were dropped (not processed) due to rate-limiting.</extracomment>
         <translation>Tältä vertaiselta vastaanotettujen osoitteiden kokonaismäärä, jotka hylättiin (ei käsitelty) nopeusrajoituksen vuoksi.</translation>
-    </message>
-    <message>
-        <source>Wallet repair options.</source>
-        <translation>Lompakon korjausvalinnat</translation>
-    </message>
-    <message>
-        <source>Rebuild index</source>
-        <translation>Rakenna indeksi uudelleen</translation>
-    </message>
-    <message>
-        <source>-reindex: Rebuild block chain index from current blk000??.dat files.</source>
-        <translation>-reindex: Rakenna uudelleen lohkoketjun indeksi nykyisistä blk000??.dat tiedostoista.</translation>
     </message>
     <message>
         <source>Inbound: initiated by peer</source>
@@ -3633,7 +4125,7 @@ Tuen lopettamisen vuoksi sinun tulisi pyytää kauppiasta toimittamaan sinulle B
     </message>
     <message>
         <source>&amp;Copy address</source>
-        <extracomment>Context menu action to copy the address of a peer</extracomment>
+        <extracomment>Context menu action to copy the address of a peer.</extracomment>
         <translation>&amp;Kopioi osoite</translation>
     </message>
     <message>
@@ -3642,7 +4134,7 @@ Tuen lopettamisen vuoksi sinun tulisi pyytää kauppiasta toimittamaan sinulle B
     </message>
     <message>
         <source>&amp;Copy IP/Netmask</source>
-        <extracomment>Context menu action to copy the IP/Netmask of a banned peer. IP/Netmask is the combination of a peer's IP address and its Netmask. For IP address see: https://en.wikipedia.org/wiki/IP_address</extracomment>
+        <extracomment>Context menu action to copy the IP/Netmask of a banned peer. IP/Netmask is the combination of a peer's IP address and its Netmask. For IP address, see: https://en.wikipedia.org/wiki/IP_address.</extracomment>
         <translation>&amp;Kopioi IP/Verkkopeite</translation>
     </message>
     <message>
@@ -3842,6 +4334,14 @@ Lisätietoja tämän konsolin käytöstä saat kirjoittamalla %6.
         <translation>Kopioi &amp;Osoite</translation>
     </message>
     <message>
+        <source>&amp;Verify</source>
+        <translation>&amp;Vahvista</translation>
+    </message>
+    <message>
+        <source>Verify this address on e.g. a hardware wallet screen</source>
+        <translation>Vahvista tämä osoite esim. laitteistolompakon näytöllä</translation>
+    </message>
+    <message>
         <source>&amp;Save Image…</source>
         <translation>&amp;Tallenna Kuva</translation>
     </message>
@@ -3883,6 +4383,33 @@ Lisätietoja tämän konsolin käytöstä saat kirjoittamalla %6.
     <message>
         <source>Requested</source>
         <translation>Pyydetty</translation>
+    </message>
+</context>
+<context>
+    <name>RescanWalletActivity</name>
+    <message>
+        <source>Rescan unavailable</source>
+        <translation>Uudelleenskannaus ei käytettävissä</translation>
+    </message>
+    <message>
+        <source>Wallet is currently rescanning. Abort existing rescan or wait.</source>
+        <translation>Lompakkoa skannataan parhaillaan uudelleen. Keskeytä nykyinen skannaus tai odota.</translation>
+    </message>
+    <message>
+        <source>Rescan wallet failed</source>
+        <translation>Lompakon uudelleenskannaus epäonnistui</translation>
+    </message>
+    <message>
+        <source>Rescan failed. Potentially corrupted data files.</source>
+        <translation>Uudelleenskannaus epäonnistui. Datatiedostot voivat olla vioittuneita.</translation>
+    </message>
+    <message>
+        <source>Rescan aborted</source>
+        <translation>Uudelleenskannaus keskeytetty</translation>
+    </message>
+    <message>
+        <source>Wallet rescan was aborted.</source>
+        <translation>Lompakon uudelleenskannaus keskeytettiin.</translation>
     </message>
 </context>
 <context>
@@ -4104,10 +4631,6 @@ Lisätietoja tämän konsolin käytöstä saat kirjoittamalla %6.
         <translation>L&amp;uo allekirjoittamaton</translation>
     </message>
     <message>
-        <source> from wallet '%1'</source>
-        <translation> lompakosta '%1'</translation>
-    </message>
-    <message>
         <source>%1 to '%2'</source>
         <translation>%1 osoitteeseen '%2'</translation>
     </message>
@@ -4176,9 +4699,39 @@ Lisätietoja tämän konsolin käytöstä saat kirjoittamalla %6.
         <translation>Luo osittain allekirjoitetun lohkoketjutapahtuman (PSBT) käytettäväksi esim. offline-%1-lompakon kanssa tai PSBT-yhteensopivan laitteistolompakon kanssa.</translation>
     </message>
     <message>
+        <source>Sign on device</source>
+        <extracomment>"device" usually means a hardware wallet.</extracomment>
+        <translation>Allekirjoita laitteella</translation>
+    </message>
+    <message>
+        <source>Connect your hardware wallet first.</source>
+        <translation>Yhdistä ensin laitteistolompakkosi.</translation>
+    </message>
+    <message>
+        <source>Set external signer script path in Options -&gt; Wallet</source>
+        <extracomment>"External signer" means using devices such as hardware wallets.</extracomment>
+        <translation>Aseta ulkoisen allekirjoittajan komentosarjan polku kohdassa Asetukset -&gt; Lompakko</translation>
+    </message>
+    <message>
+        <source>Confirm duplicate recipients</source>
+        <translation>Vahvista kaksoiskappaleet vastaanottajista</translation>
+    </message>
+    <message>
+        <source>You are sending to the same address multiple times in a single transaction. This is unusual and may not be what you intended. Are you sure you want to proceed?</source>
+        <translation>Lähetät samaan osoitteeseen useita kertoja yhdessä tapahtumassa. Tämä on epätavallista eikä välttämättä ollut tarkoituksesi. Haluatko varmasti jatkaa?</translation>
+    </message>
+    <message>
+        <source>%1 from wallet '%2'</source>
+        <translation>%1 lompakosta '%2'</translation>
+    </message>
+    <message>
         <source>Do you want to create this transaction?</source>
         <extracomment>Message displayed when attempting to create a transaction. Cautionary text to prompt the user to verify that the displayed transaction details represent the transaction the user intends to create.</extracomment>
         <translation>Haluatko luoda tämän tapahtuman?</translation>
+    </message>
+    <message>
+        <source>Do you want to draft this transaction?</source>
+        <translation>Haluatko luonnostella tämän tapahtuman?</translation>
     </message>
     <message>
         <source>Please, review your transaction proposal. This will produce a Partially Signed Blockchain Transaction (PSBT) which you can save or copy and then sign with e.g. an offline %1 wallet, or a PSBT-compatible hardware wallet.</source>
@@ -4200,9 +4753,27 @@ Lisätietoja tämän konsolin käytöstä saat kirjoittamalla %6.
         <translation>Vastaanottajaluettelon tarkastelemiseksi napsauta "Näytä yksityiskohdat…"</translation>
     </message>
     <message>
+        <source>Sign failed</source>
+        <translation>Allekirjoitus epäonnistui</translation>
+    </message>
+    <message>
+        <source>External signer not found</source>
+        <extracomment>"External signer" means using devices such as hardware wallets.</extracomment>
+        <translation>Ulkoista allekirjoittajaa ei löytynyt</translation>
+    </message>
+    <message>
+        <source>External signer failure</source>
+        <extracomment>"External signer" means using devices such as hardware wallets.</extracomment>
+        <translation>Ulkoisen allekirjoittajan virhe</translation>
+    </message>
+    <message>
         <source>Partially Signed Transaction (Binary)</source>
         <extracomment>Expanded name of the binary PSBT file format. See: BIP 174.</extracomment>
         <translation>Osittain allekirjoitettu tapahtuma (binääri)</translation>
+    </message>
+    <message>
+        <source>External balance:</source>
+        <translation>Ulkoinen saldo:</translation>
     </message>
     <message>
         <source>The recipient address is not valid. Please recheck.</source>
@@ -4219,10 +4790,6 @@ Lisätietoja tämän konsolin käytöstä saat kirjoittamalla %6.
     <message>
         <source>The total exceeds your balance when the %1 transaction fee is included.</source>
         <translation>Määrä yhteensä ylittää saldosi kun siihen lisätään siirtomaksu %1.</translation>
-    </message>
-    <message>
-        <source>Duplicate address found: addresses should only be used once each.</source>
-        <translation>Osoitteen kaksoiskappale löydetty, osoitetta tulisi käyttää vain kerran.</translation>
     </message>
     <message>
         <source>Transaction creation failed!</source>
@@ -4710,17 +5277,6 @@ Lisätietoja tämän konsolin käytöstä saat kirjoittamalla %6.
     </message>
 </context>
 <context>
-    <name>TransactionDescDialog</name>
-    <message>
-        <source>This pane shows a detailed description of the transaction</source>
-        <translation>Tämä ruutu näyttää yksityiskohtaiset tiedot siirtotapahtumasta</translation>
-    </message>
-    <message>
-        <source>Details for %1</source>
-        <translation>%1:n yksityiskohdat</translation>
-    </message>
-</context>
-<context>
     <name>TransactionTableModel</name>
     <message>
         <source>Date</source>
@@ -4797,6 +5353,10 @@ Lisätietoja tämän konsolin käytöstä saat kirjoittamalla %6.
     <message>
         <source>Platform Transfer</source>
         <translation>Alustansiirto</translation>
+    </message>
+    <message>
+        <source>Dust Receive</source>
+        <translation>Pölyvastaanotto</translation>
     </message>
     <message>
         <source>%1 Mixing</source>
@@ -4930,6 +5490,10 @@ Lisätietoja tämän konsolin käytöstä saat kirjoittamalla %6.
         <translation>Alustansiirto</translation>
     </message>
     <message>
+        <source>Dust Receive</source>
+        <translation>Pölyvastaanotto</translation>
+    </message>
+    <message>
         <source>Other</source>
         <translation>Muu</translation>
     </message>
@@ -4976,6 +5540,10 @@ Lisätietoja tämän konsolin käytöstä saat kirjoittamalla %6.
     <message>
         <source>Rese&amp;nd transaction</source>
         <translation>Lähetä tapahtuma &amp;uudelleen</translation>
+    </message>
+    <message>
+        <source>&amp;Unlock dust UTXO</source>
+        <translation>&amp;Avaa pöly-UTXO:n lukitus</translation>
     </message>
     <message>
         <source>&amp;Edit address label</source>
@@ -5042,6 +5610,10 @@ Lisätietoja tämän konsolin käytöstä saat kirjoittamalla %6.
     <message>
         <source>The transaction history was successfully saved to %1.</source>
         <translation>Siirtotapahtumien historia tallennettiin onnistuneesti paikkaan %1.</translation>
+    </message>
+    <message>
+        <source>Details for %1</source>
+        <translation>Tiedot kohteesta %1</translation>
     </message>
     <message>
         <source>QR code</source>
@@ -5132,6 +5704,10 @@ Siirry Tiedosto &gt; Avaa lompakko ladataksesi lompakon.
         <translation>Lähetä</translation>
     </message>
     <message>
+        <source>Can't display address</source>
+        <translation>Osoitetta ei voi näyttää</translation>
+    </message>
+    <message>
         <source>default wallet</source>
         <translation>oletuslompakko</translation>
     </message>
@@ -5174,6 +5750,26 @@ Siirry Tiedosto &gt; Avaa lompakko ladataksesi lompakon.
     <message>
         <source>The wallet data was successfully saved to %1.</source>
         <translation>Lompakko tallennettiin onnistuneesti tiedostoon %1.</translation>
+    </message>
+    <message>
+        <source>No Recovery Phrase</source>
+        <translation>Ei palautuslausetta</translation>
+    </message>
+    <message>
+        <source>This wallet does not have private keys and therefore has no recovery phrase.</source>
+        <translation>Tällä lompakolla ei ole yksityisiä avaimia, joten sillä ei ole palautuslausetta.</translation>
+    </message>
+    <message>
+        <source>This wallet was not created with HD (Hierarchical Deterministic) mode and does not have a recovery phrase.</source>
+        <translation>Tätä lompakkoa ei luotu HD (Hierarchical Deterministic) -tilassa, joten sillä ei ole palautuslausetta.</translation>
+    </message>
+    <message>
+        <source>Mnemonic Retrieval Failed</source>
+        <translation>Muistisanan haku epäonnistui</translation>
+    </message>
+    <message>
+        <source>Could not retrieve the recovery phrase from this wallet.</source>
+        <translation>Palautuslausetta ei voitu hakea tästä lompakosta.</translation>
     </message>
     <message>
         <source>Cancel</source>
@@ -5265,10 +5861,6 @@ Siirry Tiedosto &gt; Avaa lompakko ladataksesi lompakon.
     <message>
         <source>SQLiteDatabase: Unknown sqlite wallet schema version %d. Only version %d is supported</source>
         <translation>SQLiteDatabase: Tuntematon sqlite-lompakkoskeeman versio %d. Vain versio %d on tuettu</translation>
-    </message>
-    <message>
-        <source>Transaction index can't be disabled with governance validation enabled. Either start with -disablegovernance command line switch or enable transaction index.</source>
-        <translation>Siirtotapahtumaindeksiä ei voi poistaa käytöstä jos hallinnon vahvistus on käytössä. Joko käynnistä -disablegovernance komentorivin valinnalla tai ota käyttöön siirtotapahtumaindeksi.</translation>
     </message>
     <message>
         <source>Unsupported category-specific logging level -loglevel=%s. Expected -loglevel=&lt;category&gt;:&lt;loglevel&gt;. Valid categories: %s. Valid loglevels: %s.</source>
@@ -5427,6 +6019,22 @@ Siirry Tiedosto &gt; Avaa lompakko ladataksesi lompakon.
         <translation>%s tiedosto sisältää kaikki yksityisavaimet tähän lompakkoon. Älä luovuta sitä kenellekkän!</translation>
     </message>
     <message>
+        <source>%s request to listen on port %u. This port is considered "bad" and thus it is unlikely that any peer will connect to it. See doc/p2p-bad-ports.md for details and a full list.</source>
+        <translation>%s pyyntö kuunnella porttia %u. Tämä portti katsotaan "huonoksi", joten on epätodennäköistä, että mikään vertaissolmu yhdistää siihen. Katso doc/p2p-bad-ports.md lisätietoja ja täydellinen luettelo.</translation>
+    </message>
+    <message>
+        <source>Disk space for %s may not accommodate the block files. Approximately %u GB of data will be stored in this directory.</source>
+        <translation>Levytila kohteelle %s ei ehkä riitä lohkotiedostoille. Tähän hakemistoon tallennetaan noin %u Gt dataa.</translation>
+    </message>
+    <message>
+        <source>Error loading %s: External signer wallet being loaded without external signer support compiled</source>
+        <translation>Virhe ladattaessa %s: Ulkoisen allekirjoittajan lompakkoa ladataan ilman käännösaikaista ulkoisen allekirjoittajan tukea</translation>
+    </message>
+    <message>
+        <source>Error: Dumpfile version is not supported. This version of dash-wallet only supports version 1 dumpfiles. Got dumpfile with version %s</source>
+        <translation>Virhe: Vedostiedoston versiota ei tueta. Tämä dash-wallet-versio tukee vain version 1 vedostiedostoja. Saatiin vedostiedosto versiolla %s</translation>
+    </message>
+    <message>
         <source>Failed to create backup, file already exists! This could happen if you restarted wallet in less than 60 seconds. You can continue if you are ok with this.</source>
         <translation>Varmistus epäonnistui, tiedosto on jo olemassa! Tämä voi tapahtua jos olet käynnistänyt lompakon uudelleen alle 60 sek aikana. Voit jatkaa jos hyväksyt tämän.</translation>
     </message>
@@ -5484,6 +6092,10 @@ Vähennä uakommenttien määrää tai kokoa.</translation>
         <translation>Automaattinen varmistus ei ole käytössä</translation>
     </message>
     <message>
+        <source>Cannot set -forcednsseed to true when setting -dnsseed to false.</source>
+        <translation>-forcednsseed ei voi asettaa arvoon true, kun -dnsseed on asetettu arvoon false.</translation>
+    </message>
+    <message>
         <source>Cannot set -peerblockfilters without -blockfilterindex.</source>
         <translation>Ei voida asettaa -peerblockfilters ilman -blockfilterindex.</translation>
     </message>
@@ -5506,6 +6118,10 @@ Vähennä uakommenttien määrää tai kokoa.</translation>
     <message>
         <source>Error loading %s: Private keys can only be disabled during creation</source>
         <translation>Virhe ladatessa %s: Yksityisavaimet voivat olla ainoastaan pois käytöstä luomisen aikana</translation>
+    </message>
+    <message>
+        <source>Error: Cannot extract destination from the generated scriptpubkey</source>
+        <translation>Virhe: Kohteetta ei voida poimia luodusta scriptpubkey:stä</translation>
     </message>
     <message>
         <source>Error: Couldn't create cursor into database</source>
@@ -5704,6 +6320,10 @@ Vähennä uakommenttien määrää tai kokoa.</translation>
         <translation>Ei voitu luoda PID tiedostoa '%s': %s</translation>
     </message>
     <message>
+        <source>Unable to find UTXO for external input</source>
+        <translation>UTXO:ta ei löydy ulkoiselle syötteelle</translation>
+    </message>
+    <message>
         <source>Unable to generate initial keys</source>
         <translation>Aloitusavaimia ei voitu luoda</translation>
     </message>
@@ -5802,10 +6422,6 @@ Vähennä uakommenttien määrää tai kokoa.</translation>
     <message>
         <source>Error: Dumpfile identifier record is incorrect. Got "%s", expected "%s".</source>
         <translation>Virhe: Vedostiedoston tunniste on virheellinen. Saatiin "%s", odotettiin "%s".</translation>
-    </message>
-    <message>
-        <source>Error: Dumpfile version is not supported. This version of bitcoin-wallet only supports version 1 dumpfiles. Got dumpfile with version %s</source>
-        <translation>Virhe: Vedostiedoston versiota ei tueta. Tämä bitcoin-wallet-versio tukee vain version 1 vedostiedostoja. Saatiin vedostiedosto versiolla %s</translation>
     </message>
     <message>
         <source>Failed to rename invalid peers.dat file. Please move or delete it and try again.</source>
@@ -6134,10 +6750,6 @@ Vähennä uakommenttien määrää tai kokoa.</translation>
     <message>
         <source>%s is set very high! Fees this large could be paid on a single transaction.</source>
         <translation>%s on asetettu erittäin korkeaksi! Näin suuret maksut voidaan maksaa yhdellä tapahtumalla.</translation>
-    </message>
-    <message>
-        <source>%s request to listen on port %u. This port is considered "bad" and thus it is unlikely that any Dash Core peers connect to it. See doc/p2p-bad-ports.md for details and a full list.</source>
-        <translation>%s pyyntö kuunnella portissa %u. Tätä porttia pidetään "huonona" ja siksi on epätodennäköistä että mikään Dash Core -vertainen yhdistää siihen. Katso doc/p2p-bad-ports.md yksityiskohtia ja täydellistä listaa varten.</translation>
     </message>
     <message>
         <source>Cannot provide specific connections and have addrman find outgoing connections at the same time.</source>
