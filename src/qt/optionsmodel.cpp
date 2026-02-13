@@ -365,6 +365,15 @@ bool OptionsModel::Init(bilingual_str& error)
 
     if (!settings.contains("fLowKeysWarning"))
         settings.setValue("fLowKeysWarning", true);
+
+    // Dust protection
+    if (!settings.contains("fDustProtection"))
+        settings.setValue("fDustProtection", false);
+    fDustProtection = settings.value("fDustProtection", false).toBool();
+
+    if (!settings.contains("nDustProtectionThreshold"))
+        settings.setValue("nDustProtectionThreshold", (qlonglong)DEFAULT_DUST_PROTECTION_THRESHOLD);
+    nDustProtectionThreshold = settings.value("nDustProtectionThreshold", (qlonglong)DEFAULT_DUST_PROTECTION_THRESHOLD).toLongLong();
 #endif // ENABLE_WALLET
 
     // These are shared with the core or have a command-line parameter
@@ -713,6 +722,10 @@ QVariant OptionsModel::getOption(OptionID option, const std::string& suffix) con
         return settings.value("enable_psbt_controls");
     case KeepChangeAddress:
         return fKeepChangeAddress;
+    case DustProtection:
+        return fDustProtection;
+    case DustProtectionThreshold:
+        return qlonglong(nDustProtectionThreshold);
 #endif // ENABLE_WALLET
     case Prune:
         return PruneEnabled(setting());
@@ -997,6 +1010,16 @@ bool OptionsModel::setOption(OptionID option, const QVariant& value, const std::
         fKeepChangeAddress = value.toBool();
         settings.setValue("fKeepChangeAddress", fKeepChangeAddress);
         Q_EMIT keepChangeAddressChanged(fKeepChangeAddress);
+        break;
+    case DustProtection:
+        fDustProtection = value.toBool();
+        settings.setValue("fDustProtection", fDustProtection);
+        Q_EMIT dustProtectionChanged();
+        break;
+    case DustProtectionThreshold:
+        nDustProtectionThreshold = value.toLongLong();
+        settings.setValue("nDustProtectionThreshold", qlonglong(nDustProtectionThreshold));
+        Q_EMIT dustProtectionChanged();
         break;
 #endif // ENABLE_WALLET
     case Prune:

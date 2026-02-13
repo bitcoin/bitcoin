@@ -77,6 +77,7 @@ private:
     QAction *resendAction;
     QAction *copyAddressAction{nullptr};
     QAction *copyLabelAction{nullptr};
+    QAction *unlockDustAction{nullptr};
 
     QWidget *createDateRangeWidget();
     void updateCalendarWidgets();
@@ -102,6 +103,7 @@ private Q_SLOTS:
     void updateCoinJoinVisibility();
     void abandonTx();
     void resendTx();
+    void unlockDust();
 
 Q_SIGNALS:
     void doubleClicked(const QModelIndex&);

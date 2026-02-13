@@ -24,6 +24,9 @@ class Node;
 extern const char *DEFAULT_GUI_PROXY_HOST;
 static constexpr uint16_t DEFAULT_GUI_PROXY_PORT = 9050;
 
+/** Default threshold for dust attack protection (in duffs) */
+static constexpr qint64 DEFAULT_DUST_PROTECTION_THRESHOLD = 10000;
+
 /**
  * Convert configured prune target MiB to displayed GB. Round up to avoid underestimating max disk usage.
  */
@@ -95,6 +98,8 @@ public:
         Server,                 // bool
         EnablePSBTControls,     // bool
         MaskValues,             // bool
+        DustProtection,         // bool
+        DustProtectionThreshold, // CAmount (in duffs)
         OptionIDRowCount,
     };
 
@@ -132,6 +137,8 @@ public:
     bool getShowMasternodesTab() const { return m_enable_masternodes; }
     bool getShowGovernanceTab() const { return m_enable_governance; }
     bool getShowAdvancedCJUI() { return fShowAdvancedCJUI; }
+    bool getDustProtection() const { return fDustProtection; }
+    qint64 getDustProtectionThreshold() const { return nDustProtectionThreshold; }
     const QString& getOverriddenByCommandLine() { return strOverriddenByCommandLine; }
     bool isOptionOverridden(const QString& option) const { return strOverriddenByCommandLine.contains(option); }
 
@@ -163,6 +170,8 @@ private:
     bool m_enable_masternodes;
     bool m_enable_governance;
     bool fShowAdvancedCJUI;
+    bool fDustProtection{false};
+    qint64 nDustProtectionThreshold{DEFAULT_DUST_PROTECTION_THRESHOLD};
 
     /* settings that were overridden by command-line */
     QString strOverriddenByCommandLine;
@@ -188,6 +197,7 @@ Q_SIGNALS:
     void showMasternodesChanged();
     void showTrayIconChanged(bool);
     void fontForMoneyChanged(const QFont&);
+    void dustProtectionChanged();
 };
 
 Q_DECLARE_METATYPE(OptionsModel::FontChoice)

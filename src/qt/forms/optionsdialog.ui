@@ -407,6 +407,66 @@
            </property>
           </widget>
          </item>
+         <item>
+          <widget class="QCheckBox" name="dustProtection">
+           <property name="toolTip">
+            <string>Automatically lock small incoming transactions from external sources that may be dust attacks. Locked UTXOs will be excluded from coin selection.</string>
+           </property>
+           <property name="text">
+            <string>Enable &amp;dust attack protection</string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <layout class="QHBoxLayout" name="horizontalLayoutDustThreshold">
+           <item>
+            <widget class="QLabel" name="dustThresholdLabel">
+             <property name="text">
+              <string>Dust threshold:</string>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <widget class="QSpinBox" name="dustProtectionThreshold">
+             <property name="toolTip">
+              <string>Transactions with outputs at or below this amount will be considered dust when received from external sources.</string>
+             </property>
+             <property name="minimum">
+              <number>1</number>
+             </property>
+             <property name="maximum">
+              <number>1000000</number>
+             </property>
+             <property name="value">
+              <number>10000</number>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <widget class="QLabel" name="dustProtectionThresholdUnitLabel">
+             <property name="text">
+              <string>duffs</string>
+             </property>
+             <property name="textFormat">
+              <enum>Qt::PlainText</enum>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <spacer name="horizontalSpacerDustThreshold">
+             <property name="orientation">
+              <enum>Qt::Horizontal</enum>
+             </property>
+             <property name="sizeHint" stdset="0">
+              <size>
+               <width>40</width>
+               <height>20</height>
+              </size>
+             </property>
+            </spacer>
+           </item>
+          </layout>
+         </item>
         </layout>
        </item>
        <item>

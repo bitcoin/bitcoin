@@ -23,6 +23,7 @@
 #include <interfaces/node.h>
 #include <key_io.h>
 #include <node/interface_ui.h>
+#include <primitives/transaction.h>
 #include <psbt.h>
 #include <util/system.h> // for GetBoolArg
 #include <util/translation.h>
@@ -58,6 +59,13 @@ WalletModel::WalletModel(std::unique_ptr<interfaces::Wallet> wallet, ClientModel
     recentRequestsTableModel = new RecentRequestsTableModel(this);
 
     subscribeToCoreSignals();
+
+    // Connect dust protection settings change to lock existing dust
+    if (optionsModel) {
+        connect(optionsModel, &OptionsModel::dustProtectionChanged, this, &WalletModel::lockExistingDustOutputs);
+        // Lock existing dust on startup if dust protection is enabled
+        lockExistingDustOutputs();
+    }
 }
 
 WalletModel::~WalletModel()
@@ -141,6 +149,94 @@ void WalletModel::updateTransaction()
 {
     // Balance and number of transactions might have changed
     fForceCheckBalanceChanged = true;
+}
+
+void WalletModel::checkAndLockDustOutputs(const QString& hashStr)
+{
+    // Check if dust protection is enabled
+    if (!optionsModel || !optionsModel->getDustProtection()) {
+        return;
+    }
+
+    CAmount dustThreshold = optionsModel->getDustProtectionThreshold();
+    if (dustThreshold <= 0) {
+        return;
+    }
+
+    uint256 hash;
+    hash.SetHex(hashStr.toStdString());
+
+    // Get the transaction (lighter than getWalletTx)
+    CTransactionRef tx = m_wallet->getTx(hash);
+    if (!tx) {
+        return;
+    }
+
+    // Skip coinbase and special transactions - not dust attacks
+    if (tx->IsCoinBase() || tx->nType != TRANSACTION_NORMAL) {
+        return;
+    }
+
+    // Check if any input belongs to this wallet (isFromMe check)
+    // Early exit on first match
+    for (const auto& txin : tx->vin) {
+        if (m_wallet->txinIsMine(txin)) {
+            return;
+        }
+    }
+
+    // Check each output - threshold first (cheap), then ownership (more expensive)
+    for (size_t i = 0; i < tx->vout.size(); i++) {
+        const CTxOut& txout = tx->vout[i];
+        if (txout.nValue > 0 && txout.nValue <= dustThreshold) {
+            if (m_wallet->txoutIsMine(txout)) {
+                m_wallet->lockCoin(COutPoint(hash, i), /*write_to_db=*/true);
+            }
+        }
+    }
+}
+
+void WalletModel::lockExistingDustOutputs()
+{
+    if (!optionsModel || !optionsModel->getDustProtection()) {
+        return;
+    }
+
+    CAmount dustThreshold = optionsModel->getDustProtectionThreshold();
+    if (dustThreshold <= 0) {
+        return;
+    }
+
+    // Iterate UTXOs (much smaller set than all transactions)
+    for (const auto& [dest, coins] : m_wallet->listCoins()) {
+        for (const auto& [outpoint, wtxout] : coins) {
+            // Skip if already locked
+            if (m_wallet->isLockedCoin(outpoint)) continue;
+
+            // Skip if above threshold
+            if (wtxout.txout.nValue > dustThreshold) continue;
+
+            // Get the transaction to check for coinbase/special tx and isFromMe
+            CTransactionRef tx = m_wallet->getTx(outpoint.hash);
+            if (!tx) continue;
+
+            // Skip coinbase and special transactions
+            if (tx->IsCoinBase() || tx->nType != TRANSACTION_NORMAL) continue;
+
+            // Check if any input is ours (skip self-sends)
+            bool isFromMe = false;
+            for (const auto& txin : tx->vin) {
+                if (m_wallet->txinIsMine(txin)) {
+                    isFromMe = true;
+                    break;
+                }
+            }
+            if (isFromMe) continue;
+
+            // External dust - lock it
+            m_wallet->lockCoin(outpoint, /*write_to_db=*/true);
+        }
+    }
 }
 
 void WalletModel::updateNumISLocks()
@@ -450,10 +546,16 @@ static void NotifyAddressBookChanged(WalletModel *walletmodel,
 
 static void NotifyTransactionChanged(WalletModel *walletmodel, const uint256 &hash, ChangeType status)
 {
-    Q_UNUSED(hash);
-    Q_UNUSED(status);
     bool invoked = QMetaObject::invokeMethod(walletmodel, "updateTransaction", Qt::QueuedConnection);
     assert(invoked);
+
+    // For new transactions, check if dust protection should lock UTXOs
+    if (status == CT_NEW) {
+        QString hashStr = QString::fromStdString(hash.ToString());
+        invoked = QMetaObject::invokeMethod(walletmodel, "checkAndLockDustOutputs", Qt::QueuedConnection,
+                                            Q_ARG(QString, hashStr));
+        assert(invoked);
+    }
 }
 
 static void NotifyISLockReceived(WalletModel *walletmodel)

@@ -241,6 +241,10 @@ public Q_SLOTS:
     void updateStatus();
     /* New transaction, or transaction changed status */
     void updateTransaction();
+    /* Check and lock dust outputs for a new transaction */
+    void checkAndLockDustOutputs(const QString& hash);
+    /* Lock existing dust outputs (called on startup and settings change) */
+    void lockExistingDustOutputs();
     /* IS-Lock received */
     void updateNumISLocks();
     /* ChainLock received */

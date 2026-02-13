@@ -19,6 +19,7 @@
 
 #include <interfaces/node.h>
 #include <node/interface_ui.h>
+#include <primitives/transaction.h>
 
 #include <chrono>
 #include <optional>
@@ -95,6 +96,7 @@ TransactionView::TransactionView(QWidget* parent) :
     typeWidget->addItem(tr("To yourself"), TransactionFilterProxy::TYPE(TransactionRecord::SendToSelf));
     typeWidget->addItem(tr("Mined"), TransactionFilterProxy::TYPE(TransactionRecord::Generated));
     typeWidget->addItem(tr("Platform Transfer"), TransactionFilterProxy::TYPE(TransactionRecord::PlatformTransfer));
+    typeWidget->addItem(tr("Dust Receive"), TransactionFilterProxy::TYPE(TransactionRecord::DustReceive));
     typeWidget->addItem(tr("Other"), TransactionFilterProxy::TYPE(TransactionRecord::Other));
     typeWidget->setCurrentIndex(settings.value("transactionType").toInt());
 
@@ -162,6 +164,7 @@ TransactionView::TransactionView(QWidget* parent) :
     contextMenu->addSeparator();
     abandonAction = contextMenu->addAction(tr("A&bandon transaction"), this, &TransactionView::abandonTx);
     resendAction = contextMenu->addAction(tr("Rese&nd transaction"), this, &TransactionView::resendTx);
+    unlockDustAction = contextMenu->addAction(tr("&Unlock dust UTXO"), this, &TransactionView::unlockDust);
     contextMenu->addAction(tr("&Edit address label"), this, &TransactionView::editLabel);
     [[maybe_unused]] QAction* showAddressQRCodeAction = contextMenu->addAction(tr("Show address &QR code"), this, &TransactionView::showAddressQRCode);
 #ifndef USE_QRCODE
@@ -419,6 +422,10 @@ void TransactionView::contextualMenu(const QPoint &point)
     copyAddressAction->setEnabled(GUIUtil::hasEntryData(transactionView, 0, TransactionTableModel::AddressRole));
     copyLabelAction->setEnabled(GUIUtil::hasEntryData(transactionView, 0, TransactionTableModel::LabelRole));
 
+    // Show unlock dust action only for dust receive transactions
+    int txType = selection.at(0).data(TransactionTableModel::TypeRole).toInt();
+    unlockDustAction->setVisible(txType == TransactionRecord::DustReceive);
+
     if (index.isValid()) {
         GUIUtil::PopupMenu(contextMenu, transactionView->viewport()->mapToGlobal(point));
     }
@@ -453,6 +460,39 @@ void TransactionView::resendTx()
 
     // Abandon the wallet transaction over the walletModel
     model->wallet().resendTransaction(hash);
+}
+
+void TransactionView::unlockDust()
+{
+    if(!transactionView || !transactionView->selectionModel() || !model) {
+        return;
+    }
+    QModelIndexList selection = transactionView->selectionModel()->selectedRows(0);
+    if (selection.isEmpty()) {
+        return;
+    }
+
+    // Get the transaction hash
+    QVariant hashVar = selection.at(0).data(TransactionTableModel::TxHashRole);
+    if (!hashVar.isValid()) {
+        return;
+    }
+    uint256 hash;
+    hash.SetHex(hashVar.toString().toStdString());
+
+    // Get the output index
+    QVariant idxVar = selection.at(0).data(TransactionTableModel::OutputIndexRole);
+    if (!idxVar.isValid()) {
+        return;
+    }
+    int outputIdx = idxVar.toInt();
+
+    // Create the outpoint and unlock
+    COutPoint outpoint(hash, outputIdx);
+    model->wallet().unlockCoin(outpoint);
+
+    // Refresh the transaction view to update the display
+    model->getTransactionTableModel()->refreshWallet(true);
 }
 
 void TransactionView::copyAddress()
