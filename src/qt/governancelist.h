@@ -50,6 +50,7 @@ private:
         int m_abs_vote_req{0};
         ProposalList m_proposals;
         Uint256HashMap<CKeyID> m_votable_masternodes;
+        Uint256HashSet m_fundable_hashes;
     };
 
     ClientModel* clientModel{nullptr};
@@ -72,6 +73,7 @@ private:
     void voteForProposal(vote_outcome_enum_t outcome);
 
 protected:
+    void changeEvent(QEvent* event) override;
     void showEvent(QShowEvent* event) override;
     void resizeEvent(QResizeEvent* event) override;
 

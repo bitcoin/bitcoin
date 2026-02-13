@@ -228,6 +228,7 @@ QT_RES_ICONS = \
   qt/res/icons/transaction3.png \
   qt/res/icons/transaction4.png \
   qt/res/icons/transaction5.png \
+  qt/res/icons/transaction6.png \
   qt/res/icons/transaction_abandoned.png \
   qt/res/icons/transaction_locked.png \
   qt/res/icons/voting.png \

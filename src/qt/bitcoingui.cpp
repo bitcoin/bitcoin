@@ -1820,7 +1820,7 @@ void BitcoinGUI::updateGovernanceCycleIcon()
         tooltip1 = tr("~%n day(s) (%1 blocks) left for voting", "", days).arg(remaining_blocks);
     }
 
-    const auto allocated_budget{m_node.gov().getAllocatedBudget()};
+    const auto allocated_budget{m_node.gov().getFundableProposalHashes().allocated};
     const auto budget_pct{gov_info.governancebudget > 0
         ? static_cast<int>(static_cast<double>(allocated_budget) / static_cast<double>(gov_info.governancebudget) * 100.0)
         : 0};

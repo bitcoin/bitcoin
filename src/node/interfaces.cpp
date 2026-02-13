@@ -275,13 +275,7 @@ public:
         const Consensus::Params& consensusParams = Params().GetConsensus();
 
         if (ctx.chainman) {
-            const CBlockIndex* tip = WITH_LOCK(::cs_main, return ctx.chainman->ActiveChain().Tip());
-            int last = 0;
-            int next = 0;
-            const int height = tip ? tip->nHeight : 0;
-            CSuperblock::GetNearestSuperblocksHeights(height, last, next);
-            info.lastsuperblock = last;
-            info.nextsuperblock = next;
+            CSuperblock::GetNearestSuperblocksHeights(ctx.chainman->ActiveHeight(), info.lastsuperblock, info.nextsuperblock);
         }
         info.proposalfee = GOVERNANCE_PROPOSAL_FEE_TX;
         info.superblockcycle = consensusParams.nSuperblockCycle;
@@ -297,16 +291,30 @@ public:
         }
         return info;
     }
-    CAmount getAllocatedBudget() override
+    std::optional<int32_t> getProposalFundedHeight(const uint256& proposal_hash) override
     {
+        if (context().govman != nullptr && context().chainman != nullptr) {
+            const int32_t nTipHeight = context().chainman->ActiveHeight();
+            for (const auto& trigger : context().govman->GetActiveTriggers()) {
+                if (!trigger || trigger->GetBlockHeight() > nTipHeight) continue;
+                for (const auto& hash : trigger->GetProposalHashes()) {
+                    if (hash == proposal_hash) {
+                        return trigger->GetBlockHeight();
+                    }
+                }
+            }
+        }
+        return std::nullopt;
+    }
+    FundableResult getFundableProposalHashes() override
+    {
+        FundableResult result;
         if (context().govman != nullptr && context().chainman != nullptr && context().dmnman != nullptr) {
             const auto tip_mn_list{context().dmnman->GetListAtChainTip()};
             if (const auto proposals{context().govman->GetApprovedProposals(tip_mn_list)}; !proposals.empty()) {
                 int32_t last_sb{0}, next_sb{0};
                 CSuperblock::GetNearestSuperblocksHeights(context().chainman->ActiveHeight(), last_sb, next_sb);
                 const CAmount budget{CSuperblock::GetPaymentsLimit(context().chainman->ActiveChain(), next_sb)};
-
-                CAmount allocated{0};
                 for (const auto& proposal : proposals) {
                     UniValue json = proposal->GetJSONObject();
                     CAmount payment_amount{0};
@@ -315,16 +323,17 @@ public:
                     } catch (...) {
                         continue;
                     }
-                    if (allocated + payment_amount > budget) {
+                    if (result.allocated + payment_amount > budget) {
                         // Budget is saturated, cannot fulfill proposal
                         continue;
                     }
-                    allocated += payment_amount;
+                    result.allocated += payment_amount;
+                    result.hashes.insert(proposal->GetHash());
                 }
-                return allocated;
+                return result;
             }
         }
-        return 0;
+        return result;
     }
     std::optional<CGovernanceObject> createProposal(int32_t revision, int64_t created_time,
                         const std::string& data_hex, std::string& error) override

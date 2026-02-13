@@ -7,23 +7,42 @@
 
 #include <interfaces/node.h>
 #include <governance/object.h>
+#include <saltedhasher.h>
+#include <uint256.h>
 
 #include <qt/bitcoinunits.h>
 
 #include <QAbstractTableModel>
 #include <QDateTime>
+#include <QIcon>
 #include <QString>
 
+#include <array>
 #include <memory>
+#include <optional>
+#include <unordered_set>
 #include <vector>
 
 class ClientModel;
+
+enum class ProposalStatus : uint8_t {
+    Confirming,
+    Failing,
+    Funded,
+    Lapsed,
+    Passing,
+    Unfunded,
+    Voting,
+};
 
 class Proposal
 {
 private:
     ClientModel* clientModel;
     const CGovernanceObject govObj;
+    int m_block_height{0};
+    int m_collateral_confs{0};
+    interfaces::GOV::GovernanceInfo m_gov_info;
 
     CAmount m_paymentAmount{0};
     interfaces::GOV::Votes m_votes;
@@ -36,17 +55,25 @@ private:
     QString m_hash_parent{};
     QString m_title{};
     QString m_url{};
+    std::optional<int> m_funded_height{};
+    uint256 m_objHash{};
 
 public:
-    explicit Proposal(ClientModel* _clientModel, const CGovernanceObject& _govObj);
+    explicit Proposal(ClientModel* _clientModel, const CGovernanceObject& _govObj,
+                      const interfaces::GOV::GovernanceInfo& govInfo, int collateral_confs);
 
     bool isActive() const;
     CAmount paymentAmount() const { return m_paymentAmount; }
+    const uint256& objHash() const { return m_objHash; }
+    int blocksUntilSuperblock() const;
+    int collateralConfs() const;
     int paymentsRequested() const;
+    int requiredConfs() const;
     int32_t getAbsoluteYesCount() const { return m_votes.m_yes - m_votes.m_no; }
     int32_t getAbstainCount() const { return m_votes.m_abs; }
     int32_t getNoCount() const { return m_votes.m_no; }
     int32_t getYesCount() const { return m_votes.m_yes; }
+    ProposalStatus status(bool is_fundable) const;
     QDateTime collateralDate() const { return m_date_collateral; }
     QDateTime endDate() const { return m_endDate; }
     QDateTime startDate() const { return m_startDate; }
@@ -58,6 +85,7 @@ public:
     QString toHtml(const BitcoinUnit& unit) const;
     QString toJson() const;
     QString url() const { return m_url; }
+    std::optional<int> getFundedHeight() const { return m_funded_height; }
 };
 
 using ProposalList = std::vector<std::unique_ptr<Proposal>>;
@@ -67,20 +95,26 @@ class ProposalModel : public QAbstractTableModel
     Q_OBJECT
 
 private:
-    ProposalList m_data;
-    int nAbsVoteReq = 0;
     BitcoinUnit m_display_unit{BitcoinUnit::DASH};
+    int nAbsVoteReq{0};
+    ProposalList m_data;
+    QIcon m_icon_failing;
+    QIcon m_icon_lapsed;
+    QIcon m_icon_passing;
+    QIcon m_icon_unfunded;
+    QIcon m_icon_voting;
+    std::array<QIcon, 6> m_icon_confirming;
+    Uint256HashSet m_fundable_hashes;
 
 public:
-    explicit ProposalModel(QObject* parent = nullptr) :
-        QAbstractTableModel(parent){};
+    explicit ProposalModel(QObject* parent = nullptr);
 
     enum Column : int {
-        TITLE = 0,
+        STATUS = 0,
+        TITLE,
         PAYMENT_AMOUNT,
         START_DATE,
         END_DATE,
-        IS_ACTIVE,
         VOTING_STATUS,
         HASH,
         _COUNT // for internal use only
@@ -93,7 +127,8 @@ public:
 
     void append(std::unique_ptr<Proposal>&& proposal);
     void remove(int row);
-    void reconcile(ProposalList&& proposals);
+    void reconcile(ProposalList&& proposals, Uint256HashSet&& fundable_hashes);
+    void refreshIcons();
     void setDisplayUnit(const BitcoinUnit& display_unit);
     void setVotingParams(int nAbsVoteReq);
     const Proposal* getProposalAt(const QModelIndex& index) const;

@@ -13,6 +13,7 @@
         <file alias="transaction_3">res/icons/transaction3.png</file>
         <file alias="transaction_4">res/icons/transaction4.png</file>
         <file alias="transaction_5">res/icons/transaction5.png</file>
+        <file alias="transaction_6">res/icons/transaction6.png</file>
         <file alias="transaction_abandoned">res/icons/transaction_abandoned.png</file>
         <file alias="transaction_locked">res/icons/transaction_locked.png</file>
         <file alias="eye">res/icons/eye.png</file>

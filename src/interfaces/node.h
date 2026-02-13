@@ -10,6 +10,7 @@
 #include <net_types.h>                 // For banmap_t
 #include <netaddress.h>                // For Network
 #include <netbase.h>                   // For ConnectionDirection
+#include <saltedhasher.h>              // For StaticSaltedHasher
 #include <support/allocators/secure.h> // For SecureString
 #include <uint256.h>
 #include <util/settings.h>             // For util::SettingsValue
@@ -23,6 +24,7 @@
 #include <stdint.h>
 #include <string>
 #include <tuple>
+#include <unordered_set>
 #include <vector>
 
 class BanMan;
@@ -156,7 +158,12 @@ public:
         int requiredConfs{6};
     };
     virtual GovernanceInfo getGovernanceInfo() = 0;
-    virtual CAmount getAllocatedBudget() = 0;
+    virtual std::optional<int32_t> getProposalFundedHeight(const uint256& proposal_hash) = 0;
+    struct FundableResult {
+        std::unordered_set<uint256, StaticSaltedHasher> hashes;
+        CAmount allocated{0};
+    };
+    virtual FundableResult getFundableProposalHashes() = 0;
     virtual std::optional<CGovernanceObject> createProposal(int32_t revision, int64_t created_time,
                                 const std::string& data_hex, std::string& error) = 0;
     virtual bool submitProposal(const uint256& parent, int32_t revision, int64_t created_time, const std::string& data_hex,

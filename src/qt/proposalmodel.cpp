@@ -20,13 +20,18 @@
 #include <algorithm>
 #include <cmath>
 
-Proposal::Proposal(ClientModel* _clientModel, const CGovernanceObject& _govObj) :
+Proposal::Proposal(ClientModel* _clientModel, const CGovernanceObject& _govObj,
+                   const interfaces::GOV::GovernanceInfo& govInfo, int collateral_confs) :
     clientModel{_clientModel},
     govObj{_govObj},
+    m_block_height{_clientModel ? _clientModel->getNumBlocks() : 0},
+    m_collateral_confs{collateral_confs},
+    m_gov_info{govInfo},
     m_date_collateral{QDateTime::fromSecsSinceEpoch(govObj.GetCreationTime())},
     m_hash_collateral{QString::fromStdString(govObj.GetCollateralHash().ToString())},
     m_hash_object{QString::fromStdString(govObj.GetHash().ToString())},
-    m_hash_parent{QString::fromStdString(govObj.Object().hashParent.ToString())}
+    m_hash_parent{QString::fromStdString(govObj.Object().hashParent.ToString())},
+    m_objHash{govObj.GetHash()}
 {
     UniValue prop_data;
     if (!prop_data.read(govObj.GetDataAsPlainString())) {
@@ -34,6 +39,7 @@ Proposal::Proposal(ClientModel* _clientModel, const CGovernanceObject& _govObj) 
     }
 
     if (clientModel) {
+        m_funded_height = clientModel->node().gov().getProposalFundedHeight(govObj.GetHash());
         m_votes = clientModel->node().gov().getObjVotes(govObj, VOTE_SIGNAL_FUNDING);
     }
 
@@ -102,6 +108,44 @@ QString Proposal::toJson() const
     return QString::fromStdString(json.write(2));
 }
 
+int Proposal::blocksUntilSuperblock() const
+{
+    return m_gov_info.nextsuperblock - m_block_height;
+}
+
+int Proposal::collateralConfs() const
+{
+    return m_collateral_confs;
+}
+
+int Proposal::requiredConfs() const
+{
+    return m_gov_info.requiredConfs;
+}
+
+ProposalStatus Proposal::status(bool is_fundable) const
+{
+    if (getFundedHeight().has_value()) {
+        return ProposalStatus::Funded;
+    }
+    if (QDateTime::currentDateTime() >= endDate()) {
+        return ProposalStatus::Lapsed;
+    }
+    if (m_collateral_confs < m_gov_info.requiredConfs) {
+        return ProposalStatus::Confirming;
+    }
+    if (m_gov_info.superblockcycle <= 0) {
+        return ProposalStatus::Voting;
+    }
+    if (m_block_height % m_gov_info.superblockcycle >= m_gov_info.superblockcycle - m_gov_info.superblockmaturitywindow) {
+        return is_fundable ? ProposalStatus::Passing : ProposalStatus::Failing;
+    }
+    if (getAbsoluteYesCount() < m_gov_info.fundingthreshold) {
+        return ProposalStatus::Voting;
+    }
+    return is_fundable ? ProposalStatus::Passing : ProposalStatus::Unfunded;
+}
+
 bool Proposal::isActive() const
 {
     if (!clientModel) {
@@ -114,6 +158,29 @@ bool Proposal::isActive() const
 ///
 /// Proposal Model
 ///
+
+ProposalModel::ProposalModel(QObject* parent) :
+    QAbstractTableModel(parent)
+{
+    refreshIcons();
+}
+
+void ProposalModel::refreshIcons()
+{
+    m_icon_confirming = {
+        GUIUtil::getIcon("transaction_0", GUIUtil::ThemedColor::ORANGE),
+        GUIUtil::getIcon("transaction_1", GUIUtil::ThemedColor::ORANGE),
+        GUIUtil::getIcon("transaction_2", GUIUtil::ThemedColor::ORANGE),
+        GUIUtil::getIcon("transaction_3", GUIUtil::ThemedColor::ORANGE),
+        GUIUtil::getIcon("transaction_4", GUIUtil::ThemedColor::ORANGE),
+        GUIUtil::getIcon("transaction_5", GUIUtil::ThemedColor::ORANGE)
+    };
+    m_icon_failing = GUIUtil::getIcon("voting", GUIUtil::ThemedColor::RED);
+    m_icon_lapsed = GUIUtil::getIcon("transaction_6", GUIUtil::ThemedColor::RED);
+    m_icon_passing = GUIUtil::getIcon("synced", GUIUtil::ThemedColor::GREEN);
+    m_icon_unfunded = GUIUtil::getIcon("voting", GUIUtil::ThemedColor::RED);
+    m_icon_voting = GUIUtil::getIcon("voting", GUIUtil::ThemedColor::ORANGE);
+}
 
 int ProposalModel::rowCount(const QModelIndex& index) const
 {
@@ -138,15 +205,18 @@ QVariant ProposalModel::data(const QModelIndex& index, int role) const
             return QVariant::fromValue(GUIUtil::getThemedQColor(GUIUtil::ThemedColor::UNCONFIRMED));
         }
     }
-    if (role != Qt::DisplayRole && role != Qt::EditRole && role != Qt::ToolTipRole) {
+    if (role != Qt::DisplayRole && role != Qt::DecorationRole && role != Qt::EditRole && role != Qt::ToolTipRole) {
         return {};
     }
 
     const auto* proposal = m_data[index.row()].get();
+    const bool isFundable = m_fundable_hashes.count(proposal->objHash()) > 0;
     switch(role) {
     case Qt::DisplayRole:
     {
         switch (index.column()) {
+        case Column::STATUS:
+            return {};
         case Column::HASH:
             return proposal->hash();
         case Column::TITLE:
@@ -159,8 +229,6 @@ QVariant ProposalModel::data(const QModelIndex& index, int role) const
             return BitcoinUnits::floorWithUnit(m_display_unit, proposal->paymentAmount(), false,
                                                BitcoinUnits::SeparatorStyle::ALWAYS);
         }
-        case Column::IS_ACTIVE:
-            return proposal->isActive() ? tr("Yes") : tr("No");
         case Column::VOTING_STATUS: {
             const int margin = proposal->getAbsoluteYesCount() - nAbsVoteReq;
             return QString("%1Y, %2N, %3A (%4%5)").arg(proposal->getYesCount()).arg(proposal->getNoCount())
@@ -177,6 +245,8 @@ QVariant ProposalModel::data(const QModelIndex& index, int role) const
     {
         // Edit role is used for sorting, so return the raw values where possible
         switch (index.column()) {
+        case Column::STATUS:
+            return static_cast<int>(proposal->status(isFundable));
         case Column::HASH:
             return proposal->hash();
         case Column::TITLE:
@@ -187,8 +257,6 @@ QVariant ProposalModel::data(const QModelIndex& index, int role) const
             return proposal->endDate();
         case Column::PAYMENT_AMOUNT:
             return qlonglong(proposal->paymentAmount());
-        case Column::IS_ACTIVE:
-            return proposal->isActive();
         case Column::VOTING_STATUS:
             return proposal->getAbsoluteYesCount();
         default:
@@ -198,6 +266,34 @@ QVariant ProposalModel::data(const QModelIndex& index, int role) const
     }
     case Qt::ToolTipRole:
     {
+        if (index.column() == Column::STATUS) {
+            switch (proposal->status(isFundable)) {
+            case ProposalStatus::Confirming: {
+                return tr("Pending, %1 of %2 confirmations").arg(proposal->collateralConfs()).arg(proposal->requiredConfs());
+            }
+            case ProposalStatus::Voting: {
+                const int margin = nAbsVoteReq - proposal->getAbsoluteYesCount();
+                return tr("Voting, needs %1 more votes for funding").arg(std::max(0, margin));
+            }
+            case ProposalStatus::Passing: {
+                return tr("Passing with %1 votes").arg(proposal->getAbsoluteYesCount());
+            }
+            case ProposalStatus::Unfunded: {
+                return tr("Passing with %1 votes but budget saturated, may not be funded").arg(proposal->getAbsoluteYesCount());
+            }
+            case ProposalStatus::Failing: {
+                const int margin = nAbsVoteReq - proposal->getAbsoluteYesCount();
+                return tr("Failed, needed %1 more votes").arg(std::max(0, margin));
+            }
+            case ProposalStatus::Funded: {
+                const auto height{proposal->getFundedHeight()};
+                return height.has_value() ? tr("Funded at block %1").arg(height.value()) : tr("Funded");
+            }
+            case ProposalStatus::Lapsed: {
+                return tr("Lapsed, past proposal end date");
+            }
+            } // no default case, so the compiler can warn about missing cases
+        }
         if (index.column() == Column::VOTING_STATUS) {
             const int margin = proposal->getAbsoluteYesCount() - nAbsVoteReq;
             return tr("%1 Yes, %2 No, %3 Abstain, %4").arg(proposal->getYesCount()).arg(proposal->getNoCount())
@@ -206,7 +302,28 @@ QVariant ProposalModel::data(const QModelIndex& index, int role) const
         }
         return {};
     }
-    };
+    case Qt::DecorationRole:
+    {
+        if (index.column() == Column::STATUS) {
+            switch (proposal->status(isFundable)) {
+            case ProposalStatus::Confirming:
+                return m_icon_confirming[std::clamp<int>(proposal->collateralConfs(), 0, 5)];
+            case ProposalStatus::Voting:
+                return m_icon_voting;
+            case ProposalStatus::Unfunded:
+                return m_icon_unfunded;
+            case ProposalStatus::Failing:
+                return m_icon_failing;
+            case ProposalStatus::Passing:
+            case ProposalStatus::Funded:
+                return m_icon_passing;
+            case ProposalStatus::Lapsed:
+                return m_icon_lapsed;
+            } // no default case, so the compiler can warn about missing cases
+        }
+        return {};
+    }
+    }
     return {};
 }
 
@@ -217,6 +334,8 @@ QVariant ProposalModel::headerData(int section, Qt::Orientation orientation, int
     }
 
     switch (section) {
+    case Column::STATUS:
+        return {};
     case Column::HASH:
         return tr("Hash");
     case Column::TITLE:
@@ -227,8 +346,6 @@ QVariant ProposalModel::headerData(int section, Qt::Orientation orientation, int
         return tr("End");
     case Column::PAYMENT_AMOUNT:
         return tr("Amount");
-    case Column::IS_ACTIVE:
-        return tr("Active");
     case Column::VOTING_STATUS:
         return tr("Votes");
     default:
@@ -253,8 +370,10 @@ void ProposalModel::remove(int row)
     endRemoveRows();
 }
 
-void ProposalModel::reconcile(ProposalList&& proposals)
+void ProposalModel::reconcile(ProposalList&& proposals, std::unordered_set<uint256, StaticSaltedHasher>&& fundable_hashes)
 {
+    m_fundable_hashes = std::move(fundable_hashes);
+
     // Track which existing proposals to keep. After processing new proposals,
     // remove any existing proposals that weren't found in the new set.
     const int original_sz{rowCount()};
@@ -268,10 +387,10 @@ void ProposalModel::reconcile(ProposalList&& proposals)
         if (it != m_data.end()) {
             const auto idx{static_cast<int>(std::distance(m_data.begin(), it))};
             keep_index[static_cast<size_t>(idx)] = true;
-            if ((*it)->getAbsoluteYesCount() != proposal->getAbsoluteYesCount()) {
-                // Replace proposal to update vote count
+            if ((*it)->getAbsoluteYesCount() != proposal->getAbsoluteYesCount() || (*it)->collateralConfs() != proposal->collateralConfs()) {
+                // Replace proposal to update vote count or confirmation depth
                 *it = std::move(proposal);
-                Q_EMIT dataChanged(createIndex(idx, Column::VOTING_STATUS), createIndex(idx, Column::VOTING_STATUS));
+                Q_EMIT dataChanged(createIndex(idx, Column::STATUS), createIndex(idx, Column::VOTING_STATUS));
             }
             // else: no changes, proposal unique_ptr goes out of scope and gets deleted
         } else {
@@ -284,6 +403,11 @@ void ProposalModel::reconcile(ProposalList&& proposals)
         if (!keep_index[static_cast<size_t>(idx)]) {
             remove(idx);
         }
+    }
+
+    // Fundable set may have changed; refresh all status icons
+    if (!m_data.empty()) {
+        Q_EMIT dataChanged(createIndex(0, Column::STATUS), createIndex(rowCount() - 1, Column::STATUS));
     }
 }
 

@@ -29,6 +29,7 @@
 #include <QApplication>
 #include <QClipboard>
 #include <QDesktopServices>
+#include <QEvent>
 #include <QMessageBox>
 #include <QMetaObject>
 #include <QResizeEvent>
@@ -103,6 +104,14 @@ GovernanceList::~GovernanceList()
     m_thread->quit();
     m_thread->wait();
     delete ui;
+}
+
+void GovernanceList::changeEvent(QEvent* event)
+{
+    QWidget::changeEvent(event);
+    if (event->type() == QEvent::StyleChange) {
+        QTimer::singleShot(0, proposalModel, &ProposalModel::refreshIcons);
+    }
 }
 
 void GovernanceList::setClientModel(ClientModel* model)
@@ -188,14 +197,18 @@ GovernanceList::CalcProposalList GovernanceList::calcProposalList() const
     const int nWeightedMnCount = dmn->getValidWeightedMNsCount();
     ret.m_abs_vote_req = std::max(Params().GetConsensus().nGovernanceMinQuorum, nWeightedMnCount / 10);
 
+    const auto gov_info{clientModel->node().gov().getGovernanceInfo()};
     std::vector<CGovernanceObject> govObjList;
     clientModel->getAllGovernanceObjects(govObjList);
     for (const auto& govObj : govObjList) {
         if (govObj.GetObjectType() != GovernanceObject::PROPOSAL) {
             continue; // Skip triggers.
         }
-        ret.m_proposals.emplace_back(std::make_unique<Proposal>(this->clientModel, govObj));
+        ret.m_proposals.emplace_back(std::make_unique<Proposal>(this->clientModel, govObj, gov_info, gov_info.requiredConfs));
     }
+
+    auto fundable{clientModel->node().gov().getFundableProposalHashes()};
+    ret.m_fundable_hashes = std::move(fundable.hashes);
 
     // Discover voting capability if we now have both client and wallet models
     if (walletModel) {
@@ -214,7 +227,7 @@ GovernanceList::CalcProposalList GovernanceList::calcProposalList() const
 void GovernanceList::setProposalList(CalcProposalList&& data)
 {
     proposalModel->setVotingParams(data.m_abs_vote_req);
-    proposalModel->reconcile(std::move(data.m_proposals));
+    proposalModel->reconcile(std::move(data.m_proposals), std::move(data.m_fundable_hashes));
     votableMasternodes = std::move(data.m_votable_masternodes);
     updateMasternodeCount();
 }
@@ -473,10 +486,10 @@ void GovernanceList::refreshColumnWidths()
 
     auto* header = ui->govTableView->horizontalHeader();
     header->setMinimumSectionSize(0);
+    header->setSectionResizeMode(ProposalModel::Column::STATUS, QHeaderView::ResizeToContents);
     header->setSectionResizeMode(ProposalModel::Column::PAYMENT_AMOUNT, QHeaderView::ResizeToContents);
     header->setSectionResizeMode(ProposalModel::Column::START_DATE, QHeaderView::ResizeToContents);
     header->setSectionResizeMode(ProposalModel::Column::END_DATE, QHeaderView::ResizeToContents);
-    header->setSectionResizeMode(ProposalModel::Column::IS_ACTIVE, QHeaderView::ResizeToContents);
     header->setSectionResizeMode(ProposalModel::Column::VOTING_STATUS, QHeaderView::ResizeToContents);
     header->setSectionResizeMode(ProposalModel::Column::HASH, QHeaderView::ResizeToContents);
 
