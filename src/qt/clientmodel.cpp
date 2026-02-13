@@ -153,7 +153,7 @@ int64_t ClientModel::getHeaderTipTime() const
 
 void ClientModel::getAllGovernanceObjects(std::vector<CGovernanceObject> &obj)
 {
-    m_node.gov().getAllNewerThan(obj, 0);
+    m_node.gov().getAllNewerThan(obj, 0, /*include_postponed=*/true);
 }
 
 std::map<CNetAddr, LocalServiceInfo> ClientModel::getNetLocalAddresses() const
@@ -320,6 +320,10 @@ void ClientModel::subscribeToCoreSignals()
     m_event_handlers.emplace_back(m_node.handleNotifyMasternodeListChanged(
         [this](const CDeterministicMNList& newList, const CBlockIndex* pindex) {
             setMasternodeList(interfaces::MakeMNList(newList), pindex);
+        }));
+    m_event_handlers.emplace_back(m_node.handleNotifyGovernanceChanged(
+        [this]() {
+            Q_EMIT governanceChanged();
         }));
 }
 

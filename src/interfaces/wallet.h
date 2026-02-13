@@ -7,6 +7,7 @@
 
 #include <consensus/amount.h>          // For CAmount
 #include <fs.h>
+#include <governance/common.h>
 #include <interfaces/chain.h>          // For ChainClient
 #include <pubkey.h>                    // For CKeyID and CScriptID (definitions needed in CTxDestination instantiation)
 #include <script/standard.h>           // For CTxDestination
@@ -350,6 +351,9 @@ public:
     //! Register handler for keypool changed messages.
     using CanGetAddressesChangedFn = std::function<void()>;
     virtual std::unique_ptr<Handler> handleCanGetAddressesChanged(CanGetAddressesChangedFn fn) = 0;
+
+    //! Get governance objects stored in the wallet.
+    virtual std::vector<Governance::Object> getGovernanceObjects() = 0;
 
     //! Prepare a governance proposal (burns fee).
     virtual bool prepareProposal(const uint256& govobj_hash, CAmount fee, int32_t revision, int64_t created_time,

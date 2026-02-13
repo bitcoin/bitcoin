@@ -32,91 +32,132 @@
       <number>0</number>
      </property>
      <item>
-      <spacer name="horizontalSpacer0">
-       <property name="orientation">
-        <enum>Qt::Horizontal</enum>
+      <layout class="QHBoxLayout" name="horizontalLayout_top">
+       <property name="bottomMargin">
+        <number>0</number>
        </property>
-       <property name="sizeHint" stdset="0">
-        <size>
-         <width>40</width>
-         <height>20</height>
-        </size>
-       </property>
-      </spacer>
+       <item>
+        <widget class="QComboBox" name="proposalSourceCombo">
+         <property name="toolTip">
+          <string>Select proposals to display</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QLineEdit" name="filterLineEdit">
+         <property name="sizePolicy">
+          <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
+           <horstretch>1</horstretch>
+           <verstretch>0</verstretch>
+          </sizepolicy>
+         </property>
+         <property name="toolTip">
+          <string>Filter proposal list</string>
+         </property>
+         <property name="placeholderText">
+          <string>Filter by Title</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QLabel" name="label_mn_count">
+         <property name="text">
+          <string>Masternode Count:</string>
+         </property>
+         <property name="toolTip">
+          <string>Number of masternodes this wallet can vote with (masternodes for which this wallet holds the voting key)</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QLabel" name="mnCountLabel">
+         <property name="text">
+          <string notr="true">0</string>
+         </property>
+        </widget>
+       </item>
+      </layout>
      </item>
      <item>
-      <layout class="QGridLayout" name="gridLayout_3">
-       <item row="0" column="0">
-        <layout class="QHBoxLayout" name="horizontalLayout_4">
-         <property name="bottomMargin">
-          <number>0</number>
-         </property>
+      <widget class="QStackedWidget" name="proposalStack">
+       <widget class="QTableView" name="govTableView">
+       </widget>
+       <widget class="QWidget" name="emptyPage">
+        <layout class="QVBoxLayout" name="emptyLayout">
          <item>
-          <widget class="QLabel" name="label_filter_2">
-           <property name="text">
-            <string>Filter List:</string>
-           </property>
-          </widget>
-         </item>
-         <item>
-          <widget class="QLineEdit" name="filterLineEdit">
-           <property name="toolTip">
-            <string>Filter proposal list</string>
-           </property>
-           <property name="placeholderText">
-            <string>Filter by Title</string>
-           </property>
-          </widget>
-         </item>
-         <item>
-          <spacer name="horizontalSpacer_4">
+          <spacer name="emptySpacerTop">
            <property name="orientation">
-            <enum>Qt::Horizontal</enum>
-           </property>
-           <property name="sizeType">
-            <enum>QSizePolicy::Expanding</enum>
-           </property>
-           <property name="sizeHint" stdset="0">
-            <size>
-             <width>40</width>
-             <height>20</height>
-            </size>
-           </property>
-          </spacer>
-         </item>
-         <item>
-          <widget class="QLabel" name="label_mn_count">
-           <property name="text">
-            <string>Masternode Count:</string>
-           </property>
-           <property name="toolTip">
-            <string>Number of masternodes this wallet can vote with (masternodes for which this wallet holds the voting key)</string>
-           </property>
-          </widget>
-         </item>
-         <item>
-          <widget class="QLabel" name="mnCountLabel">
-           <property name="text">
-            <string notr="true">0</string>
-           </property>
-          </widget>
-         </item>
-         <item>
-          <spacer name="horizontalSpacer_5">
-           <property name="orientation">
-            <enum>Qt::Horizontal</enum>
-           </property>
-           <property name="sizeType">
-            <enum>QSizePolicy::Fixed</enum>
+            <enum>Qt::Vertical</enum>
            </property>
            <property name="sizeHint" stdset="0">
             <size>
              <width>20</width>
-             <height>20</height>
+             <height>40</height>
             </size>
            </property>
           </spacer>
          </item>
+         <item>
+          <widget class="QLabel" name="emptyLabel">
+           <property name="text">
+            <string>No active proposals on the network.</string>
+           </property>
+           <property name="alignment">
+            <set>Qt::AlignCenter</set>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <spacer name="emptySpacerBottom">
+           <property name="orientation">
+            <enum>Qt::Vertical</enum>
+           </property>
+           <property name="sizeHint" stdset="0">
+            <size>
+             <width>20</width>
+             <height>40</height>
+            </size>
+           </property>
+          </spacer>
+         </item>
+        </layout>
+       </widget>
+      </widget>
+     </item>
+     <item>
+      <layout class="QHBoxLayout" name="horizontalLayout_bottom">
+       <item>
+        <widget class="QPushButton" name="btnCreateProposal">
+         <property name="text">
+          <string>Create Proposal</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QPushButton" name="btnResumeProposal">
+         <property name="text">
+          <string>Resume Proposal</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <spacer name="horizontalSpacer_bottom">
+         <property name="orientation">
+          <enum>Qt::Horizontal</enum>
+         </property>
+         <property name="sizeHint" stdset="0">
+          <size>
+           <width>40</width>
+           <height>20</height>
+          </size>
+         </property>
+        </spacer>
+       </item>
+       <item>
+        <layout class="QHBoxLayout" name="horizontalLayout_count">
+         <property name="spacing">
+          <number>3</number>
+         </property>
          <item>
           <widget class="QLabel" name="label_count_2">
            <property name="text">
@@ -131,34 +172,7 @@
            </property>
           </widget>
          </item>
-         <item>
-          <spacer name="horizontalSpacer_create">
-           <property name="orientation">
-            <enum>Qt::Horizontal</enum>
-           </property>
-           <property name="sizeType">
-            <enum>QSizePolicy::Expanding</enum>
-           </property>
-           <property name="sizeHint" stdset="0">
-            <size>
-             <width>40</width>
-             <height>20</height>
-            </size>
-           </property>
-          </spacer>
-         </item>
-         <item>
-          <widget class="QPushButton" name="btnCreateProposal">
-           <property name="text">
-            <string>Create Proposal</string>
-           </property>
-          </widget>
-         </item>
         </layout>
-       </item>
-       <item row="1" column="0">
-        <widget class="QTableView" name="govTableView">
-        </widget>
        </item>
       </layout>
      </item>

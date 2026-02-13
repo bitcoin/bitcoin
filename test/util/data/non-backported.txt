@@ -34,8 +34,9 @@ src/qt/guiutil_font.*
 src/qt/masternodelist.*
 src/qt/masternodemodel.*
 src/qt/mnemonicverificationdialog.*
+src/qt/proposalcreate.*
 src/qt/proposalmodel.*
-src/qt/proposalwizard.*
+src/qt/proposalresume.*
 src/rpc/coinjoin.cpp
 src/rpc/evo.cpp
 src/rpc/evo_util.*

@@ -15,6 +15,7 @@
 #include <governance/validators.h>
 #include <masternode/meta.h>
 #include <masternode/sync.h>
+#include <node/interface_ui.h>
 #include <protocol.h>
 #include <shutdown.h>
 #include <spork.h>
@@ -318,6 +319,7 @@ void CGovernanceManager::AddGovernanceObjectInternal(CGovernanceObject& insert_o
 
     // SEND NOTIFICATION TO SCRIPT/ZMQ
     GetMainSignals().NotifyGovernanceObject(std::make_shared<const Governance::Object>(govobj->Object()), nHash.ToString());
+    uiInterface.NotifyGovernanceChanged();
 }
 
 void CGovernanceManager::AddGovernanceObject(CGovernanceObject& govobj, const CNode* pfrom)
@@ -530,18 +532,25 @@ std::vector<CGovernanceVote> CGovernanceManager::GetCurrentVotes(const uint256& 
     return vecResult;
 }
 
-void CGovernanceManager::GetAllNewerThan(std::vector<CGovernanceObject>& objs, int64_t nMoreThanTime) const
+void CGovernanceManager::GetAllNewerThan(std::vector<CGovernanceObject>& objs, int64_t nMoreThanTime,
+                                          bool include_postponed) const
 {
     LOCK(cs_store);
 
     for (const auto& [_, govobj] : mapObjects) {
-        // IF THIS OBJECT IS OLDER THAN TIME, CONTINUE
         if (Assert(govobj)->GetCreationTime() < nMoreThanTime) {
             continue;
         }
-
-        // ADD GOVERNANCE OBJECT TO LIST
         objs.push_back(*govobj);
+    }
+
+    if (include_postponed) {
+        for (const auto& [_, govobj] : mapPostponedObjects) {
+            if (Assert(govobj)->GetCreationTime() < nMoreThanTime) {
+                continue;
+            }
+            objs.push_back(*govobj);
+        }
     }
 }
 

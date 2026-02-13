@@ -115,6 +115,9 @@ public:
     /** Masternode list has changed */
     ADD_SIGNALS_DECL_WRAPPER(NotifyMasternodeListChanged, void, const CDeterministicMNList&, const CBlockIndex*);
 
+    /** Governance data changed */
+    ADD_SIGNALS_DECL_WRAPPER(NotifyGovernanceChanged, void);
+
     /** Additional data sync progress changed */
     ADD_SIGNALS_DECL_WRAPPER(NotifyAdditionalDataSyncProgressChanged, void, double nSyncProgress);
 

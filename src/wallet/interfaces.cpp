@@ -647,6 +647,15 @@ public:
     {
         return MakeHandler(m_wallet->NotifyCanGetAddressesChanged.connect(fn));
     }
+    std::vector<Governance::Object> getGovernanceObjects() override
+    {
+        LOCK(m_wallet->cs_wallet);
+        std::vector<Governance::Object> result;
+        for (const auto* obj : m_wallet->GetGovernanceObjects()) {
+            result.push_back(*obj);
+        }
+        return result;
+    }
     bool prepareProposal(const uint256& govobj_hash, CAmount fee, int32_t revision, int64_t created_time,
                          const std::string& data_hex, const COutPoint& outpoint,
                          std::string& out_fee_txid, std::string& error) override

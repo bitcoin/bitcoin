@@ -1,0 +1,449 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>ProposalCreate</class>
+ <widget class="QDialog" name="ProposalCreate">
+  <property name="geometry">
+     <rect>
+      <x>0</x>
+      <y>0</y>
+      <width>860</width>
+      <height>380</height>
+     </rect>
+  </property>
+  <property name="minimumSize">
+    <size>
+      <width>860</width>
+      <height>380</height>
+    </size>
+  </property>
+  <property name="windowTitle">
+   <string>New proposal</string>
+  </property>
+   <layout class="QVBoxLayout" name="verticalLayout">
+    <property name="leftMargin">
+     <number>12</number>
+    </property>
+    <property name="topMargin">
+     <number>0</number>
+    </property>
+    <property name="rightMargin">
+     <number>12</number>
+    </property>
+    <property name="bottomMargin">
+     <number>10</number>
+    </property>
+    <property name="spacing">
+     <number>6</number>
+    </property>
+   <item>
+    <widget class="QStackedWidget" name="stackedWidget">
+     <widget class="QWidget" name="pageDetails">
+      <layout class="QVBoxLayout" name="detailsLayout">
+       <item>
+        <layout class="QVBoxLayout" name="nameFieldLayout">
+         <property name="leftMargin">
+          <number>4</number>
+         </property>
+         <property name="rightMargin">
+          <number>4</number>
+         </property>
+         <property name="spacing">
+          <number>4</number>
+         </property>
+         <item>
+          <widget class="QLabel" name="labelName">
+           <property name="text">
+            <string>Proposal &amp;name</string>
+           </property>
+           <property name="buddy">
+            <cstring>editName</cstring>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QLineEdit" name="editName">
+           <property name="sizePolicy">
+            <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
+             <horstretch>0</horstretch>
+             <verstretch>0</verstretch>
+            </sizepolicy>
+           </property>
+           <property name="placeholderText">
+            <string notr="true">short-unique-name</string>
+           </property>
+           <property name="maximumHeight">
+            <number>24</number>
+           </property>
+          </widget>
+         </item>
+        </layout>
+       </item>
+       <item>
+        <layout class="QVBoxLayout" name="urlFieldLayout">
+         <property name="leftMargin">
+          <number>4</number>
+         </property>
+         <property name="rightMargin">
+          <number>4</number>
+         </property>
+         <property name="spacing">
+          <number>4</number>
+         </property>
+         <item>
+          <widget class="QLabel" name="labelUrl">
+           <property name="text">
+            <string>&amp;Description URL</string>
+           </property>
+           <property name="buddy">
+            <cstring>editUrl</cstring>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QLineEdit" name="editUrl">
+           <property name="sizePolicy">
+            <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
+             <horstretch>0</horstretch>
+             <verstretch>0</verstretch>
+            </sizepolicy>
+           </property>
+           <property name="placeholderText">
+            <string notr="true">https://example.com/my-proposal</string>
+           </property>
+           <property name="maximumHeight">
+            <number>24</number>
+           </property>
+          </widget>
+         </item>
+        </layout>
+       </item>
+       <item>
+        <layout class="QGridLayout" name="fieldsGridLayout" columnstretch="2,1,2,0">
+         <property name="leftMargin">
+          <number>4</number>
+         </property>
+         <property name="rightMargin">
+          <number>4</number>
+         </property>
+         <property name="horizontalSpacing">
+          <number>12</number>
+         </property>
+         <property name="verticalSpacing">
+          <number>4</number>
+         </property>
+         <item row="0" column="0">
+          <widget class="QLabel" name="labelFirstPayment">
+           <property name="text">
+            <string>&amp;Payment date</string>
+           </property>
+           <property name="buddy">
+            <cstring>comboFirstPayment</cstring>
+           </property>
+          </widget>
+         </item>
+         <item row="0" column="1">
+          <widget class="QLabel" name="labelPaymentsInline">
+           <property name="text">
+            <string>Pa&amp;yments</string>
+           </property>
+           <property name="buddy">
+            <cstring>spinPayments</cstring>
+           </property>
+          </widget>
+         </item>
+         <item row="0" column="2" colspan="2">
+          <widget class="QLabel" name="labelPayAddr">
+           <property name="text">
+            <string>Payment &amp;address</string>
+           </property>
+           <property name="buddy">
+            <cstring>editPayAddr</cstring>
+           </property>
+          </widget>
+         </item>
+         <item row="1" column="0">
+          <widget class="QComboBox" name="comboFirstPayment">
+           <property name="sizePolicy">
+            <sizepolicy hsizetype="Ignored" vsizetype="Fixed">
+             <horstretch>0</horstretch>
+             <verstretch>0</verstretch>
+            </sizepolicy>
+           </property>
+           <property name="minimumWidth">
+            <number>140</number>
+           </property>
+           <property name="maximumHeight">
+            <number>24</number>
+           </property>
+          </widget>
+         </item>
+         <item row="1" column="1">
+          <widget class="QSpinBox" name="spinPayments">
+           <property name="sizePolicy">
+            <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
+             <horstretch>0</horstretch>
+             <verstretch>0</verstretch>
+            </sizepolicy>
+           </property>
+           <property name="minimumWidth">
+            <number>80</number>
+           </property>
+           <property name="maximumHeight">
+            <number>24</number>
+           </property>
+           <property name="minimum">
+            <number>1</number>
+           </property>
+           <property name="maximum">
+            <number>12</number>
+           </property>
+           <property name="value">
+            <number>1</number>
+           </property>
+          </widget>
+         </item>
+         <item row="1" column="2" colspan="2">
+          <widget class="QValidatedLineEdit" name="editPayAddr">
+           <property name="sizePolicy">
+            <sizepolicy hsizetype="Ignored" vsizetype="Fixed">
+             <horstretch>0</horstretch>
+             <verstretch>0</verstretch>
+            </sizepolicy>
+           </property>
+           <property name="minimumWidth">
+            <number>200</number>
+           </property>
+           <property name="maximumHeight">
+            <number>24</number>
+           </property>
+          </widget>
+         </item>
+         <item row="2" column="0" colspan="4">
+          <spacer name="gridRowSpacer">
+           <property name="orientation">
+            <enum>Qt::Vertical</enum>
+           </property>
+           <property name="sizeType">
+            <enum>QSizePolicy::Fixed</enum>
+           </property>
+           <property name="sizeHint" stdset="0">
+            <size>
+             <width>0</width>
+             <height>4</height>
+            </size>
+           </property>
+          </spacer>
+         </item>
+         <item row="3" column="0">
+          <widget class="QLabel" name="labelPayAmt">
+           <property name="text">
+            <string>Payment &amp;amount</string>
+           </property>
+           <property name="buddy">
+            <cstring>paymentAmount</cstring>
+           </property>
+          </widget>
+         </item>
+         <item row="3" column="2">
+          <widget class="QLabel" name="labelTotal">
+           <property name="text">
+            <string>To&amp;tal amount</string>
+           </property>
+           <property name="buddy">
+            <cstring>labelTotalValue</cstring>
+           </property>
+          </widget>
+         </item>
+         <item row="4" column="0">
+          <widget class="BitcoinAmountField" name="paymentAmount">
+           <property name="sizePolicy">
+            <sizepolicy hsizetype="Ignored" vsizetype="Fixed">
+             <horstretch>0</horstretch>
+             <verstretch>0</verstretch>
+            </sizepolicy>
+           </property>
+           <property name="minimumWidth">
+            <number>140</number>
+           </property>
+           <property name="toolTip">
+            <string>The amount to request in a single payment</string>
+           </property>
+          </widget>
+         </item>
+         <item row="4" column="1">
+          <spacer name="row4Spacer">
+           <property name="orientation">
+            <enum>Qt::Horizontal</enum>
+           </property>
+           <property name="sizeType">
+            <enum>QSizePolicy::Ignored</enum>
+           </property>
+           <property name="sizeHint" stdset="0">
+            <size>
+             <width>0</width>
+             <height>0</height>
+            </size>
+           </property>
+          </spacer>
+         </item>
+         <item row="4" column="2">
+          <widget class="QLabel" name="labelTotalValue">
+           <property name="text">
+            <string notr="true">0</string>
+           </property>
+           <property name="sizePolicy">
+            <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+             <horstretch>0</horstretch>
+             <verstretch>0</verstretch>
+            </sizepolicy>
+           </property>
+           <property name="minimumWidth">
+            <number>190</number>
+           </property>
+           <property name="minimumHeight">
+            <number>24</number>
+           </property>
+           <property name="alignment">
+            <set>Qt::AlignLeft|Qt::AlignVCenter</set>
+           </property>
+          </widget>
+         </item>
+        </layout>
+       </item>
+       <item>
+        <spacer name="detailsVerticalSpacer">
+         <property name="orientation">
+          <enum>Qt::Vertical</enum>
+         </property>
+         <property name="sizeHint" stdset="0">
+          <size>
+           <width>0</width>
+           <height>0</height>
+          </size>
+         </property>
+        </spacer>
+       </item>
+       <!-- Button row: [View JSON] [View Payload] ... [Create Proposal] -->
+       <item>
+        <layout class="QHBoxLayout" name="detailsButtonsLayout">
+         <property name="spacing">
+          <number>8</number>
+         </property>
+         <item>
+          <widget class="QPushButton" name="btnViewJson">
+           <property name="text">
+            <string>View JSON</string>
+           </property>
+           <property name="sizePolicy">
+            <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+             <horstretch>0</horstretch>
+             <verstretch>0</verstretch>
+            </sizepolicy>
+           </property>
+           <property name="minimumSize">
+            <size>
+             <width>100</width>
+             <height>28</height>
+            </size>
+           </property>
+           <property name="autoDefault">
+            <bool>false</bool>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QPushButton" name="btnViewPayload">
+           <property name="text">
+            <string>View Payload</string>
+           </property>
+           <property name="sizePolicy">
+            <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+             <horstretch>0</horstretch>
+             <verstretch>0</verstretch>
+            </sizepolicy>
+           </property>
+           <property name="minimumSize">
+            <size>
+             <width>100</width>
+             <height>28</height>
+            </size>
+           </property>
+           <property name="autoDefault">
+            <bool>false</bool>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QLabel" name="labelError">
+           <property name="text">
+            <string notr="true"/>
+           </property>
+           <property name="sizePolicy">
+            <sizepolicy hsizetype="Expanding" vsizetype="Preferred">
+             <horstretch>1</horstretch>
+             <verstretch>0</verstretch>
+            </sizepolicy>
+           </property>
+           <property name="alignment">
+            <set>Qt::AlignLeft|Qt::AlignVCenter</set>
+           </property>
+           <property name="styleSheet">
+            <string>margin-left: 8px;</string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QPushButton" name="btnCreate">
+           <property name="text">
+            <string>Create Proposal</string>
+           </property>
+           <property name="sizePolicy">
+            <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+             <horstretch>0</horstretch>
+             <verstretch>0</verstretch>
+            </sizepolicy>
+           </property>
+           <property name="minimumSize">
+            <size>
+             <width>120</width>
+             <height>28</height>
+            </size>
+           </property>
+           <property name="default">
+            <bool>true</bool>
+           </property>
+          </widget>
+         </item>
+        </layout>
+       </item>
+      </layout>
+     </widget>
+    </widget>
+   </item>
+  </layout>
+ </widget>
+ <customwidgets>
+  <customwidget>
+   <class>QValidatedLineEdit</class>
+   <extends>QLineEdit</extends>
+   <header>qt/qvalidatedlineedit.h</header>
+   <container>0</container>
+  </customwidget>
+  <customwidget>
+   <class>BitcoinAmountField</class>
+   <extends>QLineEdit</extends>
+   <header>qt/bitcoinamountfield.h</header>
+  </customwidget>
+ </customwidgets>
+  <tabstops>
+   <tabstop>editName</tabstop>
+   <tabstop>editUrl</tabstop>
+   <tabstop>comboFirstPayment</tabstop>
+   <tabstop>spinPayments</tabstop>
+   <tabstop>editPayAddr</tabstop>
+   <tabstop>paymentAmount</tabstop>
+   <tabstop>btnCreate</tabstop>
+  </tabstops>
+ <resources/>
+ <connections/>
+</ui>

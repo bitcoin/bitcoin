@@ -5,7 +5,7 @@
 #ifndef BITCOIN_QT_MASTERNODELIST_H
 #define BITCOIN_QT_MASTERNODELIST_H
 
-#include <util/system.h>
+#include <qt/masternodemodel.h>
 
 #include <QMenu>
 #include <QSet>
@@ -26,8 +26,7 @@ class MasternodeList;
 } // namespace Ui
 
 class ClientModel;
-class MasternodeEntry;
-class MasternodeModel;
+class QThread;
 class WalletModel;
 
 QT_BEGIN_NAMESPACE
@@ -51,7 +50,7 @@ public:
 
     void forceInvalidateFilter() { invalidateFilter(); }
     void setHideBanned(bool hide) { m_hide_banned = hide; }
-    void setMyMasternodeHashes(QSet<QString> hashes) { m_my_mn_hashes = std::move(hashes); }
+    void setMyMasternodeHashes(QSet<QString>&& hashes) { m_owned_mns = std::move(hashes); }
     void setShowOwnedOnly(bool show) { m_show_owned_only = show; }
     void setTypeFilter(TypeFilter type) { m_type_filter = type; }
 
@@ -61,7 +60,7 @@ protected:
 private:
     bool m_hide_banned{true};
     bool m_show_owned_only{false};
-    QSet<QString> m_my_mn_hashes;
+    QSet<QString> m_owned_mns;
     TypeFilter m_type_filter{TypeFilter::All};
 };
 
@@ -70,9 +69,11 @@ class MasternodeList : public QWidget
 {
     Q_OBJECT
 
+    Ui::MasternodeList* ui;
+
 public:
     explicit MasternodeList(QWidget* parent = nullptr);
-    ~MasternodeList();
+    ~MasternodeList() override;
 
     void setClientModel(ClientModel* clientModel);
     void setWalletModel(WalletModel* walletModel);
@@ -81,23 +82,27 @@ protected:
     void changeEvent(QEvent* event) override;
 
 private:
-    QMenu* contextMenuDIP3;
-    int64_t nTimeUpdatedDIP3{0};
+    struct CalcMnList {
+        int m_list_height{0};
+        MasternodeEntryList m_entries;
+        QSet<QString> m_owned_mns;
+        bool m_valid{false};
+    };
 
-    QTimer* timer;
-    Ui::MasternodeList* ui;
     ClientModel* clientModel{nullptr};
+    MasternodeListSortFilterProxyModel* m_proxy_model{nullptr};
+    MasternodeModel* m_model{nullptr};
+    QMenu* contextMenuDIP3{nullptr};
+    QObject* m_worker{nullptr};
+    QThread* m_thread{nullptr};
+    QTimer* m_timer{nullptr};
+    std::atomic<bool> m_in_progress{false};
     WalletModel* walletModel{nullptr};
 
-    MasternodeModel* m_model{nullptr};
-    MasternodeListSortFilterProxyModel* m_proxy_model{nullptr};
-
-    std::atomic<bool> m_mn_list_changed{true};
+    CalcMnList calcMasternodeList() const;
+    void setMasternodeList(CalcMnList&& data);
 
     const MasternodeEntry* GetSelectedEntry();
-
-    bool updateDIP3List();
-    void updateMyMasternodeHashes(const interfaces::MnListPtr& mnList);
 
 Q_SIGNALS:
     void doubleClicked(const QModelIndex&);

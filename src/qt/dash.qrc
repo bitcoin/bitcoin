@@ -13,6 +13,7 @@
         <file alias="transaction_3">res/icons/transaction3.png</file>
         <file alias="transaction_4">res/icons/transaction4.png</file>
         <file alias="transaction_5">res/icons/transaction5.png</file>
+        <file alias="transaction_6">res/icons/transaction6.png</file>
         <file alias="transaction_abandoned">res/icons/transaction_abandoned.png</file>
         <file alias="transaction_locked">res/icons/transaction_locked.png</file>
         <file alias="eye">res/icons/eye.png</file>
@@ -27,7 +28,16 @@
         <file alias="hd_enabled">res/icons/hd_enabled.png</file>
         <file alias="fontbigger">res/icons/fontbigger.png</file>
         <file alias="fontsmaller">res/icons/fontsmaller.png</file>
+        <file alias="moon_0">res/icons/moon_0.png</file>
+        <file alias="moon_1">res/icons/moon_1.png</file>
+        <file alias="moon_2">res/icons/moon_2.png</file>
+        <file alias="moon_3">res/icons/moon_3.png</file>
+        <file alias="moon_4">res/icons/moon_4.png</file>
+        <file alias="moon_5">res/icons/moon_5.png</file>
+        <file alias="moon_6">res/icons/moon_6.png</file>
+        <file alias="moon_7">res/icons/moon_7.png</file>
         <file alias="proxy">res/icons/proxy.png</file>
+        <file alias="voting">res/icons/voting.png</file>
     </qresource>
     <qresource prefix="/css">
         <file alias="general">res/css/general.css</file>

@@ -223,18 +223,36 @@ private:
     NodeContext& context() { return *Assert(m_context); }
 
 public:
-    void getAllNewerThan(std::vector<CGovernanceObject> &objs, int64_t nMoreThanTime) override
+    void getAllNewerThan(std::vector<CGovernanceObject> &objs, int64_t nMoreThanTime,
+                         bool include_postponed) override
     {
         if (context().govman != nullptr) {
-            context().govman->GetAllNewerThan(objs, nMoreThanTime);
+            context().govman->GetAllNewerThan(objs, nMoreThanTime, include_postponed);
         }
     }
-    int32_t getObjAbsYesCount(const CGovernanceObject& obj, vote_signal_enum_t vote_signal) override
+    Votes getObjVotes(const CGovernanceObject& obj, vote_signal_enum_t vote_signal) override
     {
+        Votes ret;
         if (context().govman != nullptr && context().dmnman != nullptr) {
-            return obj.GetAbsoluteYesCount(context().dmnman->GetListAtChainTip(), vote_signal);
+            const auto& tip_mn_list{context().dmnman->GetListAtChainTip()};
+            if (auto govobj{context().govman->FindGovernanceObject(obj.GetHash())}) {
+                ret.m_abs = govobj->GetAbstainCount(tip_mn_list, vote_signal);
+                ret.m_no = govobj->GetNoCount(tip_mn_list, vote_signal);
+                ret.m_yes = govobj->GetYesCount(tip_mn_list, vote_signal);
+            } else {
+                ret.m_abs = obj.GetAbstainCount(tip_mn_list, vote_signal);
+                ret.m_no = obj.GetNoCount(tip_mn_list, vote_signal);
+                ret.m_yes = obj.GetYesCount(tip_mn_list, vote_signal);
+            }
         }
-        return 0;
+        return ret;
+    }
+    bool existsObj(const uint256& hash) override
+    {
+        if (context().govman != nullptr) {
+            return context().govman->HaveObjectForHash(hash);
+        }
+        return false;
     }
     bool getObjLocalValidity(const CGovernanceObject& obj, std::string& error, bool check_collateral) override
     {
@@ -267,17 +285,14 @@ public:
     GovernanceInfo getGovernanceInfo() override
     {
         GovernanceInfo info;
-        const NodeContext& ctx = context();
         const Consensus::Params& consensusParams = Params().GetConsensus();
-
-        if (ctx.chainman) {
-            const CBlockIndex* tip = WITH_LOCK(::cs_main, return ctx.chainman->ActiveChain().Tip());
-            int last = 0;
-            int next = 0;
-            const int height = tip ? tip->nHeight : 0;
-            CSuperblock::GetNearestSuperblocksHeights(height, last, next);
-            info.lastsuperblock = last;
-            info.nextsuperblock = next;
+        if (context().chainman) {
+            LOCK(::cs_main);
+            CSuperblock::GetNearestSuperblocksHeights(context().chainman->ActiveHeight(), info.lastsuperblock, info.nextsuperblock);
+            info.governancebudget = CSuperblock::GetPaymentsLimit(context().chainman->ActiveChain(), info.nextsuperblock);
+            if (context().dmnman) {
+                info.fundingthreshold = context().dmnman->GetListAtChainTip().GetValidWeightedMNsCount() / 10;
+            }
         }
         info.proposalfee = GOVERNANCE_PROPOSAL_FEE_TX;
         info.superblockcycle = consensusParams.nSuperblockCycle;
@@ -285,13 +300,51 @@ public:
         info.targetSpacing = consensusParams.nPowTargetSpacing;
         info.relayRequiredConfs = GOVERNANCE_MIN_RELAY_FEE_CONFIRMATIONS;
         info.requiredConfs = GOVERNANCE_FEE_CONFIRMATIONS;
-        if (ctx.dmnman) {
-            info.fundingthreshold = ctx.dmnman->GetListAtChainTip().GetValidWeightedMNsCount() / 10;
-        }
-        if (ctx.chainman) {
-            info.governancebudget = CSuperblock::GetPaymentsLimit(ctx.chainman->ActiveChain(), info.nextsuperblock);
-        }
         return info;
+    }
+    std::optional<int32_t> getProposalFundedHeight(const uint256& proposal_hash) override
+    {
+        if (context().govman != nullptr && context().chainman != nullptr) {
+            const int32_t nTipHeight = context().chainman->ActiveHeight();
+            for (const auto& trigger : context().govman->GetActiveTriggers()) {
+                if (!trigger || trigger->GetBlockHeight() > nTipHeight) continue;
+                for (const auto& hash : trigger->GetProposalHashes()) {
+                    if (hash == proposal_hash) {
+                        return trigger->GetBlockHeight();
+                    }
+                }
+            }
+        }
+        return std::nullopt;
+    }
+    FundableResult getFundableProposalHashes() override
+    {
+        FundableResult result;
+        if (context().govman != nullptr && context().chainman != nullptr && context().dmnman != nullptr) {
+            const auto tip_mn_list{context().dmnman->GetListAtChainTip()};
+            if (const auto proposals{context().govman->GetApprovedProposals(tip_mn_list)}; !proposals.empty()) {
+                int32_t last_sb{0}, next_sb{0};
+                CSuperblock::GetNearestSuperblocksHeights(context().chainman->ActiveHeight(), last_sb, next_sb);
+                const CAmount budget{CSuperblock::GetPaymentsLimit(context().chainman->ActiveChain(), next_sb)};
+                for (const auto& proposal : proposals) {
+                    UniValue json = proposal->GetJSONObject();
+                    CAmount payment_amount{0};
+                    try {
+                        payment_amount = ParsePaymentAmount(json["payment_amount"].getValStr());
+                    } catch (...) {
+                        continue;
+                    }
+                    if (result.allocated + payment_amount > budget) {
+                        // Budget is saturated, cannot fulfill proposal
+                        continue;
+                    }
+                    result.allocated += payment_amount;
+                    result.hashes.insert(proposal->GetHash());
+                }
+                return result;
+            }
+        }
+        return result;
     }
     std::optional<CGovernanceObject> createProposal(int32_t revision, int64_t created_time,
                         const std::string& data_hex, std::string& error) override
@@ -399,6 +452,13 @@ public:
     {
         if (context().mn_sync != nullptr) {
             return context().mn_sync->IsBlockchainSynced();
+        }
+        return false;
+    }
+    bool isGovernanceSynced() override
+    {
+        if (context().mn_sync != nullptr) {
+            return context().mn_sync->GetAssetID() > MASTERNODE_SYNC_GOVERNANCE;
         }
         return false;
     }
@@ -857,6 +917,10 @@ public:
                 fn(sync_state, BlockTip{block->nHeight, block->GetBlockTime(), block->GetBlockHash()},
                     /* verification progress is unused when a header was received */ 0);
             }));
+    }
+    std::unique_ptr<Handler> handleNotifyGovernanceChanged(NotifyGovernanceChangedFn fn) override
+    {
+        return MakeHandler(::uiInterface.NotifyGovernanceChanged_connect(fn));
     }
     std::unique_ptr<Handler> handleNotifyMasternodeListChanged(NotifyMasternodeListChangedFn fn) override
     {

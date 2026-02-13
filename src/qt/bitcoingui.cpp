@@ -42,6 +42,7 @@
 #include <qt/masternodelist.h>
 #include <util/system.h>
 #include <util/translation.h>
+#include <util/underlying.h>
 #include <validation.h>
 
 #include <QAction>
@@ -52,12 +53,14 @@
 #include <QCursor>
 #include <QDateTime>
 #include <QDragEnterEvent>
+#include <QElapsedTimer>
 #include <QInputDialog>
 #include <QKeySequence>
 #include <QMenu>
 #include <QMenuBar>
 #include <QMessageBox>
 #include <QMimeData>
+#include <QPixmap>
 #include <QProgressDialog>
 #include <QScreen>
 #include <QSettings>
@@ -69,6 +72,19 @@
 #include <QVBoxLayout>
 #include <QWindow>
 
+namespace {
+// Total governance clock frames. Frame 0 is reserved for the superblock
+// maturity window; frames 1 through GOV_CYCLE_FRAME_COUNT-1 are used for the
+// voting cycle and sync animation.
+constexpr int GOV_CYCLE_FRAME_COUNT{8};
+
+// Per-frame interval for the governance sync animation. Divided by 2 because
+// the moon phases represent a cycle (wax + wane), not a single rotation.
+constexpr int GOV_CYCLE_FRAME_MS{STATUSBAR_ICON_CYCLE_MS / (GOV_CYCLE_FRAME_COUNT - 1) / 2};
+
+// Per-frame interval for the spinner animation
+constexpr int SPINNER_FRAME_MS{STATUSBAR_ICON_CYCLE_MS / SPINNER_FRAMES};
+} // anonymous namespace
 
 const std::string BitcoinGUI::DEFAULT_UIPLATFORM =
 #if defined(Q_OS_MACOS)
@@ -164,6 +180,7 @@ BitcoinGUI::BitcoinGUI(interfaces::Node& node, const NetworkStyle* networkStyle,
     labelWalletEncryptionIcon = new QLabel();
     labelWalletHDStatusIcon = new QLabel();
     labelConnectionsIcon = new GUIUtil::ClickableLabel();
+    labelGovernanceCycleIcon = new GUIUtil::ClickableLabel();
     labelProxyIcon = new GUIUtil::ClickableLabel();
     labelBlocksIcon = new GUIUtil::ClickableLabel();
     if(enableWallet)
@@ -180,8 +197,15 @@ BitcoinGUI::BitcoinGUI(interfaces::Node& node, const NetworkStyle* networkStyle,
     frameBlocksLayout->addStretch();
     frameBlocksLayout->addWidget(labelConnectionsIcon);
     frameBlocksLayout->addStretch();
+    frameBlocksLayout->addWidget(labelGovernanceCycleIcon);
+    frameBlocksLayout->addStretch();
     frameBlocksLayout->addWidget(labelBlocksIcon);
     frameBlocksLayout->addStretch();
+
+    // Hidden until governance sync completes
+    // Pre-cache pixmaps for all color/frame combos
+    labelGovernanceCycleIcon->hide();
+    refreshGovernanceCycleIcons();
 
     // Hide the spinner/synced icon by default to avoid
     // that the spinner starts before we have any connections
@@ -224,6 +248,9 @@ BitcoinGUI::BitcoinGUI(interfaces::Node& node, const NetworkStyle* networkStyle,
     modalOverlay = new ModalOverlay(enableWallet, this->centralWidget());
     connect(labelBlocksIcon, &GUIUtil::ClickableLabel::clicked, this, &BitcoinGUI::showModalOverlay);
     connect(progressBar, &GUIUtil::ClickableProgressBar::clicked, this, &BitcoinGUI::showModalOverlay);
+#ifdef ENABLE_WALLET
+    connect(labelGovernanceCycleIcon, &GUIUtil::ClickableLabel::clicked, this, &BitcoinGUI::gotoGovernancePage);
+#endif
 
 #ifdef Q_OS_MACOS
     m_app_nap_inhibitor = new CAppNapInhibitor;
@@ -294,7 +321,7 @@ void BitcoinGUI::startSpinner()
         }
         labelBlocksIcon->setPixmap(getNextFrame());
     });
-    timerSpinner->start(40);
+    timerSpinner->start(SPINNER_FRAME_MS);
 }
 
 void BitcoinGUI::stopSpinner()
@@ -866,6 +893,7 @@ void BitcoinGUI::setClientModel(ClientModel *_clientModel, interfaces::BlockAndH
         rpcConsole->setClientModel(_clientModel, tip_info->block_height, tip_info->block_time, tip_info->block_hash, tip_info->verification_progress);
 
         updateProxyIcon();
+        updateGovernanceCycleIcon();
 
 #ifdef ENABLE_WALLET
         if(walletFrame)
@@ -879,8 +907,10 @@ void BitcoinGUI::setClientModel(ClientModel *_clientModel, interfaces::BlockAndH
             unitDisplayControl->setOptionsModel(optionsModel);
             m_mask_values_action->setChecked(optionsModel->getOption(OptionsModel::OptionID::MaskValues).toBool());
 
+            connect(optionsModel, &OptionsModel::displayUnitChanged, this, [this]() { m_last_gov_cycle_height.reset(); updateGovernanceCycleIcon(); });
             connect(optionsModel, &OptionsModel::showCoinJoinChanged, this, &BitcoinGUI::updateCoinJoinVisibility);
             connect(optionsModel, &OptionsModel::showGovernanceChanged, this, &BitcoinGUI::updateGovernanceVisibility);
+            connect(optionsModel, &OptionsModel::showGovernanceClockChanged, this, &BitcoinGUI::updateGovernanceCycleIcon);
             connect(optionsModel, &OptionsModel::showMasternodesChanged, this, &BitcoinGUI::updateMasternodesVisibility);
 
             if (trayIcon) {
@@ -1383,6 +1413,7 @@ void BitcoinGUI::updateNetworkState()
 void BitcoinGUI::setNumConnections(int count)
 {
     updateNetworkState();
+    updateGovernanceCycleIcon();
 }
 
 void BitcoinGUI::setNetworkActive(bool network_active)
@@ -1438,11 +1469,11 @@ void BitcoinGUI::updateProgressBarVisibility()
         return;
     }
     // Show the progress bar label if the network is active + we are out of sync or we have no connections.
-    bool fShowProgressBarLabel = m_node.getNetworkActive() && (!m_node.masternodeSync().isSynced() || clientModel->getNumConnections() == 0);
+    bool fShowProgressBarLabel = m_node.getNetworkActive() && (!m_node.masternodeSync().isBlockchainSynced() || clientModel->getNumConnections() == 0);
     // Show the progress bar only if the the network active + we are not synced + we have any connection. Unlike with the label
     // which gives an info text about the connecting phase there is no reason to show the progress bar if we don't have connections
     // since it will not get any updates in this case.
-    bool fShowProgressBar = m_node.getNetworkActive() && !m_node.masternodeSync().isSynced() && clientModel->getNumConnections() > 0;
+    bool fShowProgressBar = m_node.getNetworkActive() && !m_node.masternodeSync().isBlockchainSynced() && clientModel->getNumConnections() > 0;
     progressBarLabel->setVisible(fShowProgressBarLabel);
     progressBar->setVisible(fShowProgressBar);
 }
@@ -1471,7 +1502,7 @@ void BitcoinGUI::updateCoinJoinVisibility()
 void BitcoinGUI::updateGovernanceVisibility()
 {
     if (!clientModel || !clientModel->getOptionsModel()) return;
-    const bool fShow = clientModel->getOptionsModel()->getShowGovernanceTab();
+    const bool fShow = m_node.gov().isEnabled() && clientModel->getOptionsModel()->getShowGovernanceTab();
 
     // Show/hide the underlying QAction, hiding the QToolButton itself doesn't
     // work for the GUI part but is still needed for shortcuts to work properly.
@@ -1485,6 +1516,7 @@ void BitcoinGUI::updateGovernanceVisibility()
         governanceButton->setVisible(fShow);
     }
 
+    updateGovernanceCycleIcon();
     GUIUtil::updateButtonGroupShortcuts(tabGroup);
     updateWidth();
 }
@@ -1567,6 +1599,7 @@ void BitcoinGUI::setNumBlocks(int count, const QDateTime& blockDate, const QStri
         return;
 
     updateProgressBarVisibility();
+    updateGovernanceCycleIcon();
 
     // Prevent orphan statusbar messages (e.g. hover Quit in main menu, wait until chain-sync starts -> garbled text)
     statusBar()->clearMessage();
@@ -1638,7 +1671,7 @@ void BitcoinGUI::setNumBlocks(int count, const QDateTime& blockDate, const QStri
         tooltip += tr("Last received block was generated %1 ago.").arg(timeBehindText);
         tooltip += QString("<br>");
         tooltip += tr("Transactions after this will not yet be visible.");
-    } else if (!m_node.gov().isEnabled()) {
+    } else {
         setAdditionalDataSyncProgress(1);
     }
 
@@ -1672,11 +1705,7 @@ void BitcoinGUI::setAdditionalDataSyncProgress(double nSyncProgress)
     // Prevent orphan statusbar messages (e.g. hover Quit in main menu, wait until chain-sync starts -> garbelled text)
     statusBar()->clearMessage();
 
-    QString tooltip;
-
-    // Set icon state: spinning if catching up, tick otherwise
-    QString strSyncStatus;
-    tooltip = tr("Up to date") + QString(".<br>") + tooltip;
+    QString tooltip{tr("Up to date")};
 
 #ifdef ENABLE_WALLET
     if(walletFrame)
@@ -1684,19 +1713,10 @@ void BitcoinGUI::setAdditionalDataSyncProgress(double nSyncProgress)
 #endif // ENABLE_WALLET
 
     updateProgressBarVisibility();
+    updateGovernanceCycleIcon();
 
-    if(m_node.masternodeSync().isSynced()) {
-        stopSpinner();
-        labelBlocksIcon->setPixmap(GUIUtil::getIcon("synced", GUIUtil::ThemedColor::GREEN).pixmap(STATUSBAR_ICONSIZE, STATUSBAR_ICONSIZE));
-    } else {
-        progressBar->setFormat(tr("Synchronizing additional data: %p%"));
-        progressBar->setMaximum(1000000000);
-        progressBar->setValue(nSyncProgress * 1000000000.0 + 0.5);
-    }
-
-    strSyncStatus = QString(m_node.masternodeSync().getSyncStatus().c_str());
-    progressBarLabel->setText(strSyncStatus);
-    tooltip = strSyncStatus + QString("<br>") + tooltip;
+    stopSpinner();
+    labelBlocksIcon->setPixmap(GUIUtil::getIcon("synced", GUIUtil::ThemedColor::GREEN).pixmap(STATUSBAR_ICONSIZE, STATUSBAR_ICONSIZE));
 
     // Don't word-wrap this (fixed-width) tooltip
     tooltip = QString("<nobr>") + tooltip + QString("</nobr>");
@@ -1704,6 +1724,112 @@ void BitcoinGUI::setAdditionalDataSyncProgress(double nSyncProgress)
     labelBlocksIcon->setToolTip(tooltip);
     progressBarLabel->setToolTip(tooltip);
     progressBar->setToolTip(tooltip);
+}
+
+void BitcoinGUI::startGovernanceSyncAnimation()
+{
+    if (labelGovernanceCycleIcon == nullptr || m_timer_governance_sync != nullptr) {
+        return;
+    }
+
+    auto elapsed = std::make_shared<QElapsedTimer>();
+    elapsed->start();
+    m_timer_governance_sync = new QTimer(this);
+    QObject::connect(m_timer_governance_sync, &QTimer::timeout, [this, elapsed]() {
+        if (m_timer_governance_sync == nullptr) {
+            return;
+        }
+        // Derive frame from wall-clock time so queued timer events don't cause speed-up
+        const auto frame{static_cast<int>((elapsed->elapsed() / GOV_CYCLE_FRAME_MS) % (GOV_CYCLE_FRAME_COUNT - 1) + 1)};
+        labelGovernanceCycleIcon->setPixmap(m_gov_cycle_pixmaps.at({ToUnderlying(GUIUtil::ThemedColor::ORANGE), frame}));
+    });
+    m_timer_governance_sync->start(GOV_CYCLE_FRAME_MS);
+}
+
+void BitcoinGUI::stopGovernanceSyncAnimation()
+{
+    if (m_timer_governance_sync == nullptr) {
+        return;
+    }
+    m_timer_governance_sync->deleteLater();
+    m_timer_governance_sync = nullptr;
+}
+
+void BitcoinGUI::refreshGovernanceCycleIcons()
+{
+    stopGovernanceSyncAnimation();
+    m_gov_cycle_pixmaps.clear();
+    for (auto color : {GUIUtil::ThemedColor::ORANGE, GUIUtil::ThemedColor::GREEN, GUIUtil::ThemedColor::BLUE}) {
+        for (int i = 0; i < GOV_CYCLE_FRAME_COUNT; ++i) {
+            m_gov_cycle_pixmaps[{ToUnderlying(color), i}] =
+                GUIUtil::getIcon(QString("moon_%1").arg(i), color).pixmap(STATUSBAR_ICONSIZE, STATUSBAR_ICONSIZE);
+        }
+    }
+}
+
+void BitcoinGUI::updateGovernanceCycleIcon()
+{
+    if (!labelGovernanceCycleIcon || !clientModel || !clientModel->getOptionsModel()) {
+        return;
+    }
+
+    const auto& options_model{*clientModel->getOptionsModel()};
+    const bool hide_gov{!options_model.getShowGovernanceTab() || !options_model.getShowGovernanceClock()};
+    if (!m_node.gov().isEnabled() || clientModel->getNumConnections() == 0 || hide_gov) {
+        stopGovernanceSyncAnimation();
+        labelGovernanceCycleIcon->hide();
+        m_last_gov_cycle_height.reset();
+        return;
+    }
+
+    if (!m_node.masternodeSync().isGovernanceSynced()) {
+        if (!m_node.masternodeSync().isBlockchainSynced()) {
+            labelGovernanceCycleIcon->setToolTip(tr("Waiting for blockchain sync…"));
+        } else {
+            labelGovernanceCycleIcon->setToolTip(tr("Synchronizing governance data…"));
+        }
+        labelGovernanceCycleIcon->show();
+        startGovernanceSyncAnimation();
+        m_last_gov_cycle_height.reset();
+        return;
+    }
+
+    const int current_height{m_node.getNumBlocks()};
+    if (current_height == m_last_gov_cycle_height) {
+        // Governance clock only changes with new blocks; skip redundant updates
+        // triggered by connection changes or sync progress signals.
+        return;
+    } else {
+        m_last_gov_cycle_height = current_height;
+    }
+    stopGovernanceSyncAnimation();
+
+    const auto gov_info{m_node.gov().getGovernanceInfo()};
+    const auto remaining_blocks{std::max<int>(0, gov_info.nextsuperblock - current_height)};
+    const auto days{static_cast<int>(static_cast<int64_t>(remaining_blocks) * gov_info.targetSpacing / (24*60*60))};
+    const bool awaiting_superblock{current_height % gov_info.superblockcycle >= gov_info.superblockcycle - gov_info.superblockmaturitywindow};
+
+    QString tooltip1{};
+    if (awaiting_superblock) {
+        labelGovernanceCycleIcon->setPixmap(m_gov_cycle_pixmaps.at({ToUnderlying(GUIUtil::ThemedColor::BLUE), 0}));
+        tooltip1 = tr("~%n day(s) (%1 blocks) left for superblock", "", days).arg(remaining_blocks);
+    } else {
+        const auto cycle_blocks{gov_info.superblockcycle - gov_info.superblockmaturitywindow};
+        const auto blocks_elapsed{gov_info.superblockcycle - remaining_blocks - gov_info.superblockmaturitywindow};
+        const auto progress{static_cast<double>(std::max(0, blocks_elapsed)) / static_cast<double>(std::max(1, cycle_blocks))};
+        const auto frame{std::clamp<int>(static_cast<int>(progress * (GOV_CYCLE_FRAME_COUNT - 1)), 0, GOV_CYCLE_FRAME_COUNT - 2) + 1};
+        labelGovernanceCycleIcon->setPixmap(m_gov_cycle_pixmaps.at({ToUnderlying(GUIUtil::ThemedColor::GREEN), frame}));
+        tooltip1 = tr("~%n day(s) (%1 blocks) left for voting", "", days).arg(remaining_blocks);
+    }
+
+    const auto allocated_budget{m_node.gov().getFundableProposalHashes().allocated};
+    const auto budget_pct{gov_info.governancebudget > 0
+        ? static_cast<int>(static_cast<double>(allocated_budget) / static_cast<double>(gov_info.governancebudget) * 100.0)
+        : 0};
+    const auto unit{options_model.getDisplayUnit()};
+    const auto tooltip2{tr("~%1% of budget committed (%2 %3).").arg(budget_pct).arg(allocated_budget / BitcoinUnits::factor(unit)).arg(BitcoinUnits::name(unit))};
+    labelGovernanceCycleIcon->setToolTip(QString("<nobr>%1<br>%2</nobr>").arg(tooltip1).arg(tooltip2));
+    labelGovernanceCycleIcon->show();
 }
 
 void BitcoinGUI::message(const QString& title, QString message, unsigned int style, bool* ret, const QString& detailed_message)
@@ -1798,6 +1924,8 @@ void BitcoinGUI::changeEvent(QEvent *e)
         if (m_node.masternodeSync().isSynced()) {
             labelBlocksIcon->setPixmap(GUIUtil::getIcon("synced", GUIUtil::ThemedColor::GREEN).pixmap(STATUSBAR_ICONSIZE, STATUSBAR_ICONSIZE));
         }
+        refreshGovernanceCycleIcons();
+        updateGovernanceCycleIcon();
     }
 }
 

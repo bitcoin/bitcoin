@@ -18,10 +18,13 @@
 #include <QLabel>
 #include <QMainWindow>
 #include <QMenu>
+#include <QPixmap>
 #include <QPoint>
 #include <QSystemTrayIcon>
 
+#include <map>
 #include <memory>
+#include <optional>
 
 #ifdef Q_OS_MACOS
 #include <qt/macos_appnap.h>
@@ -126,6 +129,7 @@ private:
     QLabel* labelWalletEncryptionIcon = nullptr;
     QLabel* labelWalletHDStatusIcon = nullptr;
     GUIUtil::ClickableLabel* labelConnectionsIcon = nullptr;
+    GUIUtil::ClickableLabel* labelGovernanceCycleIcon = nullptr;
     GUIUtil::ClickableLabel* labelProxyIcon = nullptr;
     GUIUtil::ClickableLabel* labelBlocksIcon = nullptr;
     QLabel* progressBarLabel = nullptr;
@@ -230,6 +234,13 @@ private:
     QTimer* timerCustomCss = nullptr;
     const NetworkStyle* const m_network_style;
 
+    /** Last block height of icon update. Used to skip redundant updates from non-block signals. */
+    std::optional<int> m_last_gov_cycle_height;
+    /** Timer to animate the governance clock while syncing. */
+    QTimer* m_timer_governance_sync{nullptr};
+    /** Pre-cached governance clock pixmaps keyed by {ThemedColor, frame}. */
+    std::map<std::pair<int, int>, QPixmap> m_gov_cycle_pixmaps;
+
     /** Create the main UI actions. */
     void createActions();
     /** Create the menu bar and sub-menus. */
@@ -249,6 +260,18 @@ private:
 
     /** Update UI with latest network info from model. */
     void updateNetworkState();
+
+    /** Regenerate all pre-cached governance clock pixmaps (e.g. after a theme change). */
+    void refreshGovernanceCycleIcons();
+
+    /** Recompute the governance clock state, pixmap and tooltip. */
+    void updateGovernanceCycleIcon();
+
+    /** Start the moon-phase animation while governance data is syncing. */
+    void startGovernanceSyncAnimation();
+
+    /** Stop the governance sync animation. */
+    void stopGovernanceSyncAnimation();
 
     void updateHeadersSyncProgressLabel();
 

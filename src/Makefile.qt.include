@@ -32,7 +32,8 @@ QT_FORMS_UI = \
   qt/forms/openuridialog.ui \
   qt/forms/optionsdialog.ui \
   qt/forms/overviewpage.ui \
-  qt/forms/proposalwizard.ui \
+  qt/forms/proposalcreate.ui \
+  qt/forms/proposalresume.ui \
   qt/forms/psbtoperationsdialog.ui \
   qt/forms/qrdialog.ui \
   qt/forms/receivecoinsdialog.ui \
@@ -78,7 +79,8 @@ QT_MOC_CPP = \
   qt/moc_peertablemodel.cpp \
   qt/moc_peertablesortproxy.cpp \
   qt/moc_proposalmodel.cpp \
-  qt/moc_proposalwizard.cpp \
+  qt/moc_proposalcreate.cpp \
+  qt/moc_proposalresume.cpp \
   qt/moc_psbtoperationsdialog.cpp \
   qt/moc_qrdialog.cpp \
   qt/moc_qrimagewidget.cpp \
@@ -160,8 +162,9 @@ BITCOIN_QT_H = \
   qt/paymentserver.h \
   qt/peertablemodel.h \
   qt/peertablesortproxy.h \
+  qt/proposalcreate.h \
   qt/proposalmodel.h \
-  qt/proposalwizard.h \
+  qt/proposalresume.h \
   qt/psbtoperationsdialog.h \
   qt/qrdialog.h \
   qt/qrimagewidget.h \
@@ -211,6 +214,14 @@ QT_RES_ICONS = \
   qt/res/icons/hd_enabled.png \
   qt/res/icons/lock_closed.png \
   qt/res/icons/lock_open.png \
+  qt/res/icons/moon_0.png \
+  qt/res/icons/moon_1.png \
+  qt/res/icons/moon_2.png \
+  qt/res/icons/moon_3.png \
+  qt/res/icons/moon_4.png \
+  qt/res/icons/moon_5.png \
+  qt/res/icons/moon_6.png \
+  qt/res/icons/moon_7.png \
   qt/res/icons/proxy.png \
   qt/res/icons/remove.png \
   qt/res/icons/synced.png \
@@ -220,8 +231,10 @@ QT_RES_ICONS = \
   qt/res/icons/transaction3.png \
   qt/res/icons/transaction4.png \
   qt/res/icons/transaction5.png \
+  qt/res/icons/transaction6.png \
   qt/res/icons/transaction_abandoned.png \
   qt/res/icons/transaction_locked.png \
+  qt/res/icons/voting.png \
   qt/res/icons/warning.png
 
 BITCOIN_QT_BASE_CPP = \
@@ -271,8 +284,9 @@ BITCOIN_QT_WALLET_CPP = \
   qt/openuridialog.cpp \
   qt/overviewpage.cpp \
   qt/paymentserver.cpp \
+  qt/proposalcreate.cpp \
   qt/proposalmodel.cpp \
-  qt/proposalwizard.cpp \
+  qt/proposalresume.cpp \
   qt/psbtoperationsdialog.cpp \
   qt/qrdialog.cpp \
   qt/qrimagewidget.cpp \

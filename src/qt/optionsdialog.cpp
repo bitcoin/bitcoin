@@ -263,6 +263,17 @@ void OptionsDialog::setModel(OptionsModel *_model)
         setMapper();
         mapper->toFirst();
 
+        // If governance is disabled at the node level, force-disable governance checkboxes.
+        if (m_client_model && !m_client_model->node().gov().isEnabled()) {
+            ui->showGovernanceTab->setChecked(false);
+            ui->showGovernanceTab->setEnabled(false);
+            ui->showGovernanceCycleIcon->setChecked(false);
+            ui->showGovernanceCycleIcon->setEnabled(false);
+        } else {
+            // Initialize governance clock checkbox state based on governance tab checkbox
+            ui->showGovernanceCycleIcon->setEnabled(ui->showGovernanceTab->isChecked());
+        }
+
         appearance->setModel(_model);
 
         updateDefaultProxyNets();
@@ -288,11 +299,17 @@ void OptionsDialog::setModel(OptionsModel *_model)
     connect(ui->digits, qOverload<>(&QValueComboBox::valueChanged), [this]{ showRestartWarning(); });
     connect(ui->lang, qOverload<>(&QValueComboBox::valueChanged), [this]{ showRestartWarning(); });
     connect(ui->thirdPartyTxUrls, &QLineEdit::textChanged, [this]{ showRestartWarning(); });
-
+    /* Display, Dash-specific */
     connect(ui->coinJoinEnabled, &QCheckBox::clicked, [this](bool fChecked) {
         model->setOption(OptionsModel::CoinJoinEnabled, fChecked);
         updateCoinJoinVisibility();
         updateWidth();
+    });
+    connect(ui->showGovernanceTab, &QCheckBox::clicked, [this](bool fChecked) {
+        ui->showGovernanceCycleIcon->setEnabled(fChecked);
+        if (!fChecked) {
+            ui->showGovernanceCycleIcon->setChecked(false);
+        }
     });
 
     updateCoinJoinVisibility();
@@ -342,6 +359,7 @@ void OptionsDialog::setMapper()
     mapper->addMapping(ui->dustProtection, OptionsModel::DustProtection);
     mapper->addMapping(ui->dustProtectionThreshold, OptionsModel::DustProtectionThreshold);
     mapper->addMapping(ui->showMasternodesTab, OptionsModel::ShowMasternodesTab);
+    mapper->addMapping(ui->showGovernanceCycleIcon, OptionsModel::ShowGovernanceClock);
     mapper->addMapping(ui->showGovernanceTab, OptionsModel::ShowGovernanceTab);
     mapper->addMapping(ui->showAdvancedCJUI, OptionsModel::ShowAdvancedCJUI);
     mapper->addMapping(ui->showCoinJoinPopups, OptionsModel::ShowCoinJoinPopups);

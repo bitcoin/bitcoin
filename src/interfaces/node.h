@@ -10,6 +10,7 @@
 #include <net_types.h>                 // For banmap_t
 #include <netaddress.h>                // For Network
 #include <netbase.h>                   // For ConnectionDirection
+#include <saltedhasher.h>              // For StaticSaltedHasher
 #include <support/allocators/secure.h> // For SecureString
 #include <uint256.h>
 #include <util/settings.h>             // For util::SettingsValue
@@ -23,6 +24,7 @@
 #include <stdint.h>
 #include <string>
 #include <tuple>
+#include <unordered_set>
 #include <vector>
 
 class BanMan;
@@ -133,9 +135,15 @@ class GOV
 {
 public:
     virtual ~GOV() {}
-    virtual void getAllNewerThan(std::vector<CGovernanceObject> &objs, int64_t nMoreThanTime) = 0;
-    virtual int32_t getObjAbsYesCount(const CGovernanceObject& obj, vote_signal_enum_t vote_signal) = 0;
+    virtual void getAllNewerThan(std::vector<CGovernanceObject> &objs, int64_t nMoreThanTime, bool include_postponed = false) = 0;
+    struct Votes {
+        int32_t m_abs{0};
+        int32_t m_no{0};
+        int32_t m_yes{0};
+    };
+    virtual Votes getObjVotes(const CGovernanceObject& obj, vote_signal_enum_t vote_signal) = 0;
     virtual bool getObjLocalValidity(const CGovernanceObject& obj, std::string& error, bool check_collateral) = 0;
+    virtual bool existsObj(const uint256& hash) = 0;
     virtual bool isEnabled() = 0;
     virtual bool processVoteAndRelay(const CGovernanceVote& vote, std::string& error) = 0;
     struct GovernanceInfo {
@@ -151,6 +159,12 @@ public:
         int requiredConfs{6};
     };
     virtual GovernanceInfo getGovernanceInfo() = 0;
+    virtual std::optional<int32_t> getProposalFundedHeight(const uint256& proposal_hash) = 0;
+    struct FundableResult {
+        std::unordered_set<uint256, StaticSaltedHasher> hashes;
+        CAmount allocated{0};
+    };
+    virtual FundableResult getFundableProposalHashes() = 0;
     virtual std::optional<CGovernanceObject> createProposal(int32_t revision, int64_t created_time,
                                 const std::string& data_hex, std::string& error) = 0;
     virtual bool submitProposal(const uint256& parent, int32_t revision, int64_t created_time, const std::string& data_hex,
@@ -175,6 +189,7 @@ class Sync
 public:
     virtual ~Sync() {}
     virtual bool isBlockchainSynced() = 0;
+    virtual bool isGovernanceSynced() = 0;
     virtual bool isSynced() = 0;
     virtual std::string getSyncStatus() =  0;
     virtual void setContext(node::NodeContext* context) {}
@@ -465,6 +480,10 @@ public:
     using NotifyHeaderTipFn =
         std::function<void(SynchronizationState, interfaces::BlockTip tip, double verification_progress)>;
     virtual std::unique_ptr<Handler> handleNotifyHeaderTip(NotifyHeaderTipFn fn) = 0;
+
+    //! Register handler for governance data messages.
+    using NotifyGovernanceChangedFn = std::function<void()>;
+    virtual std::unique_ptr<Handler> handleNotifyGovernanceChanged(NotifyGovernanceChangedFn fn) = 0;
 
     //! Register handler for masternode list update messages.
     using NotifyMasternodeListChangedFn =

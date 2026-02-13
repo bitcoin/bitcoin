@@ -405,7 +405,9 @@ QWidget#ReceiveCoinsDialog .QFrame#frame QPushButton#removeRequestButton,
 QWidget#ReceiveCoinsDialog .QFrame#frame2 QPushButton#clearButton,
 QWidget#ReceiveCoinsDialog .QFrame#frame QPushButton#showRequestButton,
 QDialog#SignVerifyMessageDialog QPushButton#clearButton_SM,
-QDialog#SignVerifyMessageDialog QPushButton#clearButton_VM {
+QDialog#SignVerifyMessageDialog QPushButton#clearButton_VM,
+QDialog#ProposalCreate QPushButton#btnViewJson,
+QDialog#ProposalCreate QPushButton#btnViewPayload {
     background-color: #c7c7c7;
     color: #333;
 }
@@ -423,7 +425,9 @@ QWidget#ReceiveCoinsDialog .QFrame#frame QPushButton#removeRequestButton:hover,
 QWidget#ReceiveCoinsDialog .QFrame#frame2 QPushButton#clearButton:hover,
 QWidget#ReceiveCoinsDialog .QFrame#frame QPushButton#showRequestButton:hover,
 QDialog#SignVerifyMessageDialog QPushButton#clearButton_SM:hover,
-QDialog#SignVerifyMessageDialog QPushButton#clearButton_VM:hover {
+QDialog#SignVerifyMessageDialog QPushButton#clearButton_VM:hover,
+QDialog#ProposalCreate QPushButton#btnViewJson:hover,
+QDialog#ProposalCreate QPushButton#btnViewPayload:hover {
     background-color: #818181;
     color: #2d2d2e;
 }
@@ -441,7 +445,9 @@ QWidget#ReceiveCoinsDialog .QFrame#frame QPushButton#removeRequestButton:pressed
 QWidget#ReceiveCoinsDialog .QFrame#frame2 QPushButton#clearButton:pressed,
 QWidget#ReceiveCoinsDialog .QFrame#frame QPushButton#showRequestButton:pressed,
 QDialog#SignVerifyMessageDialog QPushButton#clearButton_SM:pressed,
-QDialog#SignVerifyMessageDialog QPushButton#clearButton_VM:pressed {
+QDialog#SignVerifyMessageDialog QPushButton#clearButton_VM:pressed,
+QDialog#ProposalCreate QPushButton#btnViewJson:pressed,
+QDialog#ProposalCreate QPushButton#btnViewPayload:pressed {
     background-color: #f6f6f6;
     color: #585858;
 }
@@ -459,7 +465,9 @@ QWidget#ReceiveCoinsDialog .QFrame#frame QPushButton#removeRequestButton:disable
 QWidget#ReceiveCoinsDialog .QFrame#frame2 QPushButton#clearButton:disabled,
 QWidget#ReceiveCoinsDialog .QFrame#frame QPushButton#showRequestButton:disabled,
 QDialog#SignVerifyMessageDialog QPushButton#clearButton_SM:disabled,
-QDialog#SignVerifyMessageDialog QPushButton#clearButton_VM:disabled {
+QDialog#SignVerifyMessageDialog QPushButton#clearButton_VM:disabled,
+QDialog#ProposalCreate QPushButton#btnViewJson:disabled,
+QDialog#ProposalCreate QPushButton#btnViewPayload:disabled {
     background-color: #39393b;
     border-color: #585858;
     color: #585858;
@@ -827,6 +835,20 @@ GovernanceList
 
 GovernanceList QTableView {
     color: #c7c7c7;
+}
+
+/******************************************************
+ProposalResume
+******************************************************/
+
+QDialog#ProposalResume #scrollContents {
+    background-color: rgba(0, 0, 0, 0.15);
+    border-color: rgba(128, 128, 128, 0.4);
+}
+
+QDialog#ProposalResume #proposalEntry {
+    background-color: rgba(0, 0, 0, 0.1);
+    border-color: rgba(128, 128, 128, 0.4);
 }
 
 /******************************************************

@@ -41,6 +41,9 @@ static const int TOOLTIP_WRAP_THRESHOLD = 80;
 /* Number of frames in spinner animation */
 #define SPINNER_FRAMES 90
 
+/* Duration of one full status-bar icon animation cycle in milliseconds. */
+static constexpr int STATUSBAR_ICON_CYCLE_MS{3600};
+
 #define QAPP_ORG_NAME "Dash"
 #define QAPP_ORG_DOMAIN "dash.org"
 #define QAPP_APP_NAME_DEFAULT "Dash-Qt"

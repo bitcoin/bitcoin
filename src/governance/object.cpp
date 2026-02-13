@@ -15,6 +15,7 @@
 #include <core_io.h>
 #include <index/txindex.h>
 #include <logging.h>
+#include <node/interface_ui.h>
 #include <timedata.h>
 #include <util/time.h>
 #include <validation.h>
@@ -155,6 +156,7 @@ bool CGovernanceObject::ProcessVote(CMasternodeMetaMan& mn_metaman, CGovernanceM
     // SEND NOTIFICATION TO SCRIPT/ZMQ
     GetMainSignals().NotifyGovernanceVote(std::make_shared<CDeterministicMNList>(tip_mn_list),
                                           std::make_shared<const CGovernanceVote>(vote), vote.GetHash().ToString());
+    uiInterface.NotifyGovernanceChanged();
     return true;
 }
 

@@ -128,6 +128,7 @@ private:
 
 Q_SIGNALS:
     void numConnectionsChanged(int count);
+    void governanceChanged();
     void masternodeListChanged() const;
     void chainLockChanged(const QString& bestChainLockHash, int bestChainLockHeight);
     void numBlocksChanged(int count, const QDateTime& blockDate, const QString& blockHash, double nVerificationProgress, bool header, SynchronizationState sync_state);
