@@ -18,6 +18,7 @@
 #include <list>
 #include <map>
 #include <memory>
+#include <optional>
 #include <set>
 #include <string>
 #include <string.h>
@@ -459,10 +460,10 @@ void ReadFixedBitSet(Stream& s, std::vector<bool>& vec, size_t size)
 template<typename Stream>
 void WriteFixedVarIntsBitSet(Stream& s, const std::vector<bool>& vec, size_t size)
 {
-    int32_t last = -1;
-    for (int32_t i = 0; i < (int32_t)vec.size(); i++) {
+    std::optional<size_t> last;
+    for (size_t i = 0; i < vec.size(); i++) {
         if (vec[i]) {
-            WriteVarInt<Stream, VarIntMode::DEFAULT, uint32_t>(s, (uint32_t)(i - last));
+            WriteVarInt<Stream, VarIntMode::DEFAULT, uint32_t>(s, static_cast<uint32_t>(last ? (i - *last) : (i + 1)));
             last = i;
         }
     }
@@ -474,17 +475,17 @@ void ReadFixedVarIntsBitSet(Stream& s, std::vector<bool>& vec, size_t size)
 {
     vec.assign(size, false);
 
-    int32_t last = -1;
+    std::optional<size_t> last;
     while(true) {
         uint32_t offset = ReadVarInt<Stream, VarIntMode::DEFAULT, uint32_t>(s);
         if (offset == 0) {
             break;
         }
-        int32_t idx = last + offset;
-        if (idx >= int32_t(size)) {
+        size_t idx = last ? (*last + offset) : (static_cast<size_t>(offset) - 1);
+        if (idx >= size) {
             throw std::ios_base::failure("out of bounds index");
         }
-        if (last != -1 && idx <= last) {
+        if (last.has_value() && idx <= *last) {
             throw std::ios_base::failure("offset overflow");
         }
         vec[idx] = true;

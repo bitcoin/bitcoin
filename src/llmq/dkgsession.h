@@ -385,6 +385,7 @@ public:
 public:
     [[nodiscard]] bool AreWeMember() const { return !myProTxHash.IsNull(); }
     [[nodiscard]] CDKGMember* GetMember(const uint256& proTxHash) const;
+    [[nodiscard]] CDKGMember* GetMemberAtIndex(size_t index) const;
     [[nodiscard]] std::optional<size_t> GetMyMemberIndex() const { return myIdx; }
     [[nodiscard]] const Uint256HashSet& RelayMembers() const { return relayMembers; }
     [[nodiscard]] const CBlockIndex* BlockIndex() const { return m_quorum_base_block_index; }

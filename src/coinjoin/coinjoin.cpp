@@ -301,21 +301,17 @@ bool CoinJoin::IsCollateralValid(ChainstateManager& chainman, const llmq::CInsta
         }
     }
 
+    LOCK(::cs_main);
+    CCoinsViewMemPool viewMemPool(&chainman.ActiveChainstate().CoinsTip(), mempool);
+
     for (const auto& txin : txCollateral.vin) {
         Coin coin;
-        auto mempoolTx = mempool.get(txin.prevout.hash);
-        if (mempoolTx != nullptr) {
-            if (mempool.isSpent(txin.prevout) || !isman.IsLocked(txin.prevout.hash)) {
-                LogPrint(BCLog::COINJOIN, "CoinJoin::IsCollateralValid -- spent or non-locked mempool input! txin=%s\n", txin.ToString());
-                return false;
-            }
-            nValueIn += mempoolTx->vout[txin.prevout.n].nValue;
-        } else if (GetUTXOCoin(chainman.ActiveChainstate(), txin.prevout, coin)) {
-            nValueIn += coin.out.nValue;
-        } else {
-            LogPrint(BCLog::COINJOIN, "CoinJoin::IsCollateralValid -- Unknown inputs in collateral transaction, txCollateral=%s", txCollateral.ToString()); /* Continued */
+        if (!viewMemPool.GetCoin(txin.prevout, coin) || coin.IsSpent() ||
+            (coin.nHeight == MEMPOOL_HEIGHT && !isman.IsLocked(txin.prevout.hash))) {
+            LogPrint(BCLog::COINJOIN, "CoinJoin::IsCollateralValid -- missing, spent or non-locked mempool input! txin=%s\n", txin.ToString());
             return false;
         }
+        nValueIn += coin.out.nValue;
     }
 
     //collateral transactions are required to pay out a small fee to the miners
@@ -326,12 +322,9 @@ bool CoinJoin::IsCollateralValid(ChainstateManager& chainman, const llmq::CInsta
 
     LogPrint(BCLog::COINJOIN, "CoinJoin::IsCollateralValid -- %s", txCollateral.ToString()); /* Continued */
 
-    {
-        LOCK(::cs_main);
-        if (!ATMPIfSaneFee(chainman, MakeTransactionRef(txCollateral), /*test_accept=*/true)) {
-            LogPrint(BCLog::COINJOIN, "CoinJoin::IsCollateralValid -- didn't pass ATMPIfSaneFee()\n");
-            return false;
-        }
+    if (!ATMPIfSaneFee(chainman, MakeTransactionRef(txCollateral), /*test_accept=*/true)) {
+        LogPrint(BCLog::COINJOIN, "CoinJoin::IsCollateralValid -- didn't pass ATMPIfSaneFee()\n");
+        return false;
     }
 
     return true;
