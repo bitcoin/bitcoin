@@ -85,8 +85,8 @@ bool BCLog::Logger::StartLogging()
     }
     while (!m_msgs_before_open.empty()) {
         const auto& buflog = m_msgs_before_open.front();
-        std::string s{buflog.str};
-        FormatLogStrInPlace(s, buflog.category, buflog.level, buflog.source_loc, buflog.threadname, buflog.now, buflog.mocktime);
+        std::string s{buflog.message};
+        FormatLogStrInPlace(s, static_cast<BCLog::LogFlags>(buflog.category), buflog.level, buflog.source_loc, buflog.thread_name, buflog.timestamp, buflog.mocktime);
         m_msgs_before_open.pop_front();
 
         if (m_print_to_file) FileWriteStr(s, m_fileout);
@@ -372,11 +372,11 @@ std::string BCLog::Logger::GetLogPrefix(BCLog::LogFlags category, BCLog::Level l
     return s;
 }
 
-static size_t MemUsage(const BCLog::Logger::BufferedLog& buflog)
+static size_t MemUsage(const util::log::Entry& log)
 {
-    return memusage::DynamicUsage(buflog.str) +
-           memusage::DynamicUsage(buflog.threadname) +
-           memusage::MallocUsage(sizeof(memusage::list_node<BCLog::Logger::BufferedLog>));
+    return memusage::DynamicUsage(log.message) +
+           memusage::DynamicUsage(log.thread_name) +
+           memusage::MallocUsage(sizeof(memusage::list_node<util::log::Entry>));
 }
 
 BCLog::LogRateLimiter::LogRateLimiter(uint64_t max_bytes, std::chrono::seconds reset_window)
@@ -440,18 +440,8 @@ void BCLog::Logger::LogPrint_(util::log::Entry entry)
 
     if (m_buffering) {
         {
-            BufferedLog buf{
-                .now = entry.timestamp,
-                .mocktime = GetMockTime(),
-                .str = std::move(str_prefixed),
-                .threadname = std::move(entry.thread_name),
-                .source_loc = entry.source_loc,
-                .category = static_cast<LogFlags>(entry.category),
-                .level = entry.level,
-            };
-            (void)std::move(entry);
-            m_cur_buffer_memusage += MemUsage(buf);
-            m_msgs_before_open.push_back(std::move(buf));
+            m_cur_buffer_memusage += MemUsage(entry);
+            m_msgs_before_open.push_back(std::move(entry));
         }
 
         while (m_cur_buffer_memusage > m_max_buffer_memusage) {

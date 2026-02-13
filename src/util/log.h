@@ -56,6 +56,7 @@ struct Entry {
     Level level;
     bool should_ratelimit{false}; //!< Hint for consumers if this entry should be ratelimited
     SystemClock::time_point timestamp{SystemClock::now()};
+    std::chrono::seconds mocktime{GetMockTime()};
     std::string thread_name{util::ThreadGetInternalName()};
     SourceLocation source_loc;
     std::string message;
