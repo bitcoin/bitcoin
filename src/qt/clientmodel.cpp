@@ -153,7 +153,7 @@ int64_t ClientModel::getHeaderTipTime() const
 
 void ClientModel::getAllGovernanceObjects(std::vector<CGovernanceObject> &obj)
 {
-    m_node.gov().getAllNewerThan(obj, 0);
+    m_node.gov().getAllNewerThan(obj, 0, /*include_postponed=*/true);
 }
 
 std::map<CNetAddr, LocalServiceInfo> ClientModel::getNetLocalAddresses() const

@@ -164,6 +164,12 @@ void ProposalWizard::onViewPayload()
 void ProposalWizard::onCreate()
 {
     // Validate fields first
+    if (m_ui->editName->text().trimmed().isEmpty() || m_ui->editUrl->text().trimmed().isEmpty() ||
+        m_ui->editPayAddr->text().trimmed().isEmpty() || m_ui->paymentAmount->value() <= 0)
+    {
+        m_ui->labelError->setText(tr("All fields are mandatory"));
+        return;
+    }
     validateFields();
     if (!m_ui->labelError->text().isEmpty()) {
         return; // Don't proceed if there are errors
@@ -201,12 +207,11 @@ void ProposalWizard::onCreate()
     }
 
     QMessageBox::information(this, tr("Proposal Created"),
-        tr("%1 successfully sent for your proposal \"%2\".\n\nIt takes %3 confirmation(s) before "
-           "you can broadcast your proposal to the network.\n\nThis may take some time, you can monitor "
-           "progress and continue with publishing your proposal by clicking \"Resume Proposal\".")
+        tr("%1 successfully sent for your proposal \"%2\".\n\n"
+           "You will now be redirected to monitor and broadcast your new proposal, "
+           "you can resume this later by clicking \"Resume Proposal\".")
             .arg(m_fee_formatted)
-            .arg(m_ui->editName->text())
-            .arg(m_relay_confs));
+            .arg(m_ui->editName->text()));
 
     accept(); // Close the wizard
 }

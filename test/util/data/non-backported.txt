@@ -35,6 +35,7 @@ src/qt/masternodelist.*
 src/qt/masternodemodel.*
 src/qt/mnemonicverificationdialog.*
 src/qt/proposalmodel.*
+src/qt/proposalresume.*
 src/qt/proposalwizard.*
 src/rpc/coinjoin.cpp
 src/rpc/evo.cpp

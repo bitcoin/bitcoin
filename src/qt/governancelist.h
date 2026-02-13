@@ -101,6 +101,7 @@ private Q_SLOTS:
     void showProposalContextMenu(const QPoint& pos);
     void showAdditionalInfo(const QModelIndex& index);
     void showCreateProposalDialog();
+    void showResumeProposalDialog();
     void openProposalUrl();
     void copyProposalJson();
 

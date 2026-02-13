@@ -291,7 +291,8 @@ public:
     int64_t GetLastDiffTime() const { return nTimeLastDiff; }
     std::vector<CGovernanceVote> GetCurrentVotes(const uint256& nParentHash, const COutPoint& mnCollateralOutpointFilter) const
         EXCLUSIVE_LOCKS_REQUIRED(!cs_store);
-    void GetAllNewerThan(std::vector<CGovernanceObject>& objs, int64_t nMoreThanTime) const
+    void GetAllNewerThan(std::vector<CGovernanceObject>& objs, int64_t nMoreThanTime,
+                         bool include_postponed = false) const
         EXCLUSIVE_LOCKS_REQUIRED(!cs_store);
     void UpdateLastDiffTime(int64_t nTimeIn) { nTimeLastDiff = nTimeIn; }
 

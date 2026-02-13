@@ -135,7 +135,7 @@ class GOV
 {
 public:
     virtual ~GOV() {}
-    virtual void getAllNewerThan(std::vector<CGovernanceObject> &objs, int64_t nMoreThanTime) = 0;
+    virtual void getAllNewerThan(std::vector<CGovernanceObject> &objs, int64_t nMoreThanTime, bool include_postponed = false) = 0;
     struct Votes {
         int32_t m_abs{0};
         int32_t m_no{0};

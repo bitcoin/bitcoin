@@ -1622,6 +1622,31 @@ QWidget .QFrame#frame_2 QListView { /* Transaction List */
 }
 
 /******************************************************
+ProposalResume
+******************************************************/
+
+QDialog#ProposalResume #scrollArea {
+    background: transparent;
+}
+
+QDialog#ProposalResume #scrollContents {
+    background-color: red;
+    border: 1px solid red;
+    border-radius: 4px;
+}
+
+QDialog#ProposalResume #proposalEntry {
+    background-color: red;
+    border: 1px solid red;
+    border-radius: 4px;
+}
+
+QDialog#ProposalResume #proposalEntry QTextEdit {
+    background: transparent;
+    border: none;
+}
+
+/******************************************************
 ReceiveCoinsDialog
 ******************************************************/
 

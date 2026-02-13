@@ -223,10 +223,11 @@ private:
     NodeContext& context() { return *Assert(m_context); }
 
 public:
-    void getAllNewerThan(std::vector<CGovernanceObject> &objs, int64_t nMoreThanTime) override
+    void getAllNewerThan(std::vector<CGovernanceObject> &objs, int64_t nMoreThanTime,
+                         bool include_postponed) override
     {
         if (context().govman != nullptr) {
-            context().govman->GetAllNewerThan(objs, nMoreThanTime);
+            context().govman->GetAllNewerThan(objs, nMoreThanTime, include_postponed);
         }
     }
     Votes getObjVotes(const CGovernanceObject& obj, vote_signal_enum_t vote_signal) override

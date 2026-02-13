@@ -838,6 +838,20 @@ GovernanceList QTableView {
 }
 
 /******************************************************
+ProposalResume
+******************************************************/
+
+QDialog#ProposalResume #scrollContents {
+    background-color: rgba(0, 0, 0, 0.15);
+    border-color: rgba(128, 128, 128, 0.4);
+}
+
+QDialog#ProposalResume #proposalEntry {
+    background-color: rgba(0, 0, 0, 0.1);
+    border-color: rgba(128, 128, 128, 0.4);
+}
+
+/******************************************************
 HelpMessageDialog
 ******************************************************/
 
