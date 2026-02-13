@@ -78,7 +78,7 @@ MnemonicVerificationDialog::MnemonicVerificationDialog(const SecureString& mnemo
 
     // Connections
     connect(ui->showMnemonicButton, &QPushButton::clicked, this, &MnemonicVerificationDialog::onShowMnemonicClicked);
-    connect(ui->hideMnemonicButton,  &QPushButton::clicked, this, &MnemonicVerificationDialog::onHideMnemonicClicked);
+    connect(ui->hideMnemonicButton, &QPushButton::clicked, this, &MnemonicVerificationDialog::onHideMnemonicClicked);
 
     if (!m_view_only) {
         connect(ui->writtenDownCheckbox, &QCheckBox::toggled, this, [this](bool checked) {
@@ -96,8 +96,6 @@ MnemonicVerificationDialog::MnemonicVerificationDialog(const SecureString& mnemo
 
 MnemonicVerificationDialog::~MnemonicVerificationDialog()
 {
-    clearWordsSecurely();
-    clearMnemonic();
     delete ui;
 }
 
@@ -278,16 +276,15 @@ void MnemonicVerificationDialog::onHideMnemonicClicked()
     ui->hideMnemonicButton->hide();
     ui->showMnemonicButton->show();
     m_mnemonic_revealed = false;
-    // Clear words from non-secure memory immediately when hiding
-    clearWordsSecurely();
+    // Clear parsed words from memory immediately when hiding
+    m_words.clear();
 }
 
 void MnemonicVerificationDialog::reject()
 {
-    // Clear words when going back to step 1 (unless mnemonic is revealed)
-    if (!m_mnemonic_revealed) {
-        clearWordsSecurely();
-    }
+    // Eagerly clear parsed words to minimize exposure time in memory.
+    // They will be re-parsed on demand via parseWords() if needed.
+    m_words.clear();
     // close dialog for step-1; return back to step-1 for step-2
     if (ui->stackedWidget->currentIndex() == 0) {
         QDialog::reject();
@@ -310,8 +307,8 @@ bool MnemonicVerificationDialog::validateWord(const QString& word, int position)
         return false;
     }
     // Convert SecureString to QString temporarily for comparison
-    QString secureWord = QString::fromStdString(std::string(words[position - 1].begin(), words[position - 1].end()));
-    bool result = word == secureWord.toLower();
+    QString secureWord{QString::fromUtf8(words[position - 1].data(), words[position - 1].size()).toLower()};
+    const bool result{word == secureWord};
     // Clear temporary QString immediately
     secureWord.fill(QChar(0));
     secureWord.clear();
@@ -361,12 +358,6 @@ void MnemonicVerificationDialog::accept()
     QDialog::accept();
 }
 
-void MnemonicVerificationDialog::clearMnemonic()
-{
-    clearWordsSecurely();
-    m_mnemonic.assign(m_mnemonic.size(), 0);
-}
-
 std::vector<SecureString> MnemonicVerificationDialog::parseWords()
 {
     // If words are already parsed, reuse them (for step 2 validation or step 1 display)
@@ -375,19 +366,18 @@ std::vector<SecureString> MnemonicVerificationDialog::parseWords()
     }
 
     // Parse words from secure mnemonic string
-    QString mnemonicStr = QString::fromStdString(std::string(m_mnemonic.begin(), m_mnemonic.end()));
+    QString mnemonicStr{QString::fromUtf8(m_mnemonic.data(), m_mnemonic.size())};
     QStringList wordList = mnemonicStr.split(QRegularExpression("\\s+"), Qt::SkipEmptyParts);
 
     // Convert to SecureString vector for secure storage
     m_words.clear();
     m_words.reserve(wordList.size());
     for (const QString& word : wordList) {
-        std::string wordStd = word.toStdString();
+        QByteArray utf8 = word.toUtf8();
         SecureString secureWord;
-        secureWord.assign(std::string_view{wordStd});
-        m_words.push_back(secureWord);
-        // Clear temporary std::string
-        wordStd.assign(wordStd.size(), 0);
+        secureWord.assign(utf8.constData(), utf8.size());
+        m_words.push_back(std::move(secureWord));
+        utf8.fill(0);
     }
 
     // Clear the temporary QString immediately after parsing
@@ -399,23 +389,12 @@ std::vector<SecureString> MnemonicVerificationDialog::parseWords()
     return m_words;
 }
 
-void MnemonicVerificationDialog::clearWordsSecurely()
-{
-    // Securely clear each word string by overwriting before clearing
-    for (SecureString& word : m_words) {
-        // Overwrite with zeros before clearing
-        word.assign(word.size(), 0);
-        word.clear();
-    }
-    m_words.clear();
-}
-
 int MnemonicVerificationDialog::getWordCount() const
 {
     // Count words without parsing them into vector
     // This avoids storing words in non-secure memory unnecessarily
     if (m_words.empty()) {
-        QString mnemonicStr = QString::fromStdString(std::string(m_mnemonic.begin(), m_mnemonic.end()));
+        QString mnemonicStr{QString::fromUtf8(m_mnemonic.data(), m_mnemonic.size())};
         QStringList words = mnemonicStr.split(QRegularExpression("\\s+"), Qt::SkipEmptyParts);
         int count = words.size();
         // Clear immediately
@@ -480,7 +459,7 @@ void MnemonicVerificationDialog::buildMnemonicGrid(bool reveal)
         for (int c = 0; c < columns; ++c) {
             int idx = r * columns + c; if (idx >= n) break;
             // Convert SecureString to QString temporarily for display
-            QString wordStr = QString::fromStdString(std::string(words[idx].begin(), words[idx].end()));
+            QString wordStr{QString::fromUtf8(words[idx].data(), words[idx].size())};
             const QString text = QString("%1. %2").arg(idx + 1, 2).arg(wordStr);
             QLabel* lbl = new QLabel(text);
             lbl->setTextInteractionFlags(Qt::TextSelectableByMouse);
@@ -494,5 +473,3 @@ void MnemonicVerificationDialog::buildMnemonicGrid(bool reveal)
 
     m_gridLayout->setRowMinimumHeight(rows, 12);
 }
-
-

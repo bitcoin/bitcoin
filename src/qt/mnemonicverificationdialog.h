@@ -41,10 +41,8 @@ private:
     void generateRandomPositions();
     void updateWordValidation();
     bool validateWord(const QString& word, int position);
-    void clearMnemonic();
     void buildMnemonicGrid(bool reveal);
     std::vector<SecureString> parseWords();
-    void clearWordsSecurely();
     int getWordCount() const;
 
     Ui::MnemonicVerificationDialog *ui;
@@ -59,4 +57,3 @@ private:
 };
 
 #endif // BITCOIN_QT_MNEMONICVERIFICATIONDIALOG_H
-
