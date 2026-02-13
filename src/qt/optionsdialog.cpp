@@ -263,8 +263,16 @@ void OptionsDialog::setModel(OptionsModel *_model)
         setMapper();
         mapper->toFirst();
 
-        // Initialize governance clock icon checkbox state based on governance tab checkbox
-        ui->showGovernanceCycleIcon->setEnabled(ui->showGovernanceTab->isChecked());
+        // If governance is disabled at the node level, force-disable governance checkboxes.
+        if (m_client_model && !m_client_model->node().gov().isEnabled()) {
+            ui->showGovernanceTab->setChecked(false);
+            ui->showGovernanceTab->setEnabled(false);
+            ui->showGovernanceCycleIcon->setChecked(false);
+            ui->showGovernanceCycleIcon->setEnabled(false);
+        } else {
+            // Initialize governance clock checkbox state based on governance tab checkbox
+            ui->showGovernanceCycleIcon->setEnabled(ui->showGovernanceTab->isChecked());
+        }
 
         appearance->setModel(_model);
 
