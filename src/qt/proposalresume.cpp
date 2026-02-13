@@ -115,7 +115,7 @@ int ProposalResume::queryConfirmations(const uint256& tx_hash)
 QString ProposalResume::formatProposalHtml(const Governance::Object& obj, int confirmations)
 {
     const CGovernanceObject gov_obj(obj.hashParent, obj.revision, obj.time, obj.collateralHash, obj.GetDataAsHexString());
-    const Proposal proposal(m_client_model, gov_obj, m_node.gov().getGovernanceInfo(), confirmations);
+    const Proposal proposal(m_client_model, gov_obj, m_node.gov().getGovernanceInfo(), confirmations, /*is_broadcast=*/false);
     const BitcoinUnit unit = [this]() {
         if (m_client_model && m_client_model->getOptionsModel()) {
             return m_client_model->getOptionsModel()->getDisplayUnit();

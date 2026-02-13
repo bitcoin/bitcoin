@@ -21,12 +21,14 @@
 #include <cmath>
 
 Proposal::Proposal(ClientModel* _clientModel, const CGovernanceObject& _govObj,
-                   const interfaces::GOV::GovernanceInfo& govInfo, int collateral_confs) :
+                   const interfaces::GOV::GovernanceInfo& govInfo, int collateral_confs,
+                   bool is_broadcast) :
     clientModel{_clientModel},
-    govObj{_govObj},
+    m_is_broadcast{is_broadcast},
     m_block_height{_clientModel ? _clientModel->getNumBlocks() : 0},
     m_collateral_confs{collateral_confs},
     m_gov_info{govInfo},
+    govObj{_govObj},
     m_date_collateral{QDateTime::fromSecsSinceEpoch(govObj.GetCreationTime())},
     m_hash_collateral{QString::fromStdString(govObj.GetCollateralHash().ToString())},
     m_hash_object{QString::fromStdString(govObj.GetHash().ToString())},
@@ -134,6 +136,9 @@ ProposalStatus Proposal::status(bool is_fundable) const
     if (m_collateral_confs < m_gov_info.requiredConfs) {
         return ProposalStatus::Confirming;
     }
+    if (!m_is_broadcast) {
+        return ProposalStatus::Pending;
+    }
     if (m_gov_info.superblockcycle <= 0) {
         return ProposalStatus::Voting;
     }
@@ -178,6 +183,7 @@ void ProposalModel::refreshIcons()
     m_icon_failing = GUIUtil::getIcon("voting", GUIUtil::ThemedColor::RED);
     m_icon_lapsed = GUIUtil::getIcon("transaction_6", GUIUtil::ThemedColor::RED);
     m_icon_passing = GUIUtil::getIcon("synced", GUIUtil::ThemedColor::GREEN);
+    m_icon_pending = GUIUtil::getIcon("voting", GUIUtil::ThemedColor::BLUE);
     m_icon_unfunded = GUIUtil::getIcon("voting", GUIUtil::ThemedColor::RED);
     m_icon_voting = GUIUtil::getIcon("voting", GUIUtil::ThemedColor::ORANGE);
 }
@@ -292,6 +298,9 @@ QVariant ProposalModel::data(const QModelIndex& index, int role) const
             case ProposalStatus::Lapsed: {
                 return tr("Lapsed, past proposal end date");
             }
+            case ProposalStatus::Pending: {
+                return tr("Ready to broadcast, check \"Resume Proposal\" dialog");
+            }
             } // no default case, so the compiler can warn about missing cases
         }
         if (index.column() == Column::VOTING_STATUS) {
@@ -317,6 +326,8 @@ QVariant ProposalModel::data(const QModelIndex& index, int role) const
             case ProposalStatus::Passing:
             case ProposalStatus::Funded:
                 return m_icon_passing;
+            case ProposalStatus::Pending:
+                return m_icon_pending;
             case ProposalStatus::Lapsed:
                 return m_icon_lapsed;
             } // no default case, so the compiler can warn about missing cases

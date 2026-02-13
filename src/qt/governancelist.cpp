@@ -284,17 +284,20 @@ GovernanceList::CalcProposalList GovernanceList::calcProposalList() const
             if (govObj.GetObjectType() != GovernanceObject::PROPOSAL) {
                 continue; // Skip triggers.
             }
-            ret.m_proposals.emplace_back(std::make_unique<Proposal>(this->clientModel, govObj, ret.m_gov_info, ret.m_gov_info.requiredConfs));
+            ret.m_proposals.emplace_back(std::make_unique<Proposal>(this->clientModel, govObj, ret.m_gov_info, ret.m_gov_info.requiredConfs,
+                                                                    /*is_broadcast=*/true));
         }
         // Include unrelayed wallet proposals (0 confs, not yet broadcast)
         for (const auto& obj : getWalletProposals(/*pending=*/true)) {
             CGovernanceObject govObj(obj.hashParent, obj.revision, obj.time, obj.collateralHash, obj.GetDataAsHexString());
-            ret.m_proposals.emplace_back(std::make_unique<Proposal>(this->clientModel, govObj, ret.m_gov_info, queryCollateralDepth(obj.collateralHash)));
+            ret.m_proposals.emplace_back(std::make_unique<Proposal>(this->clientModel, govObj, ret.m_gov_info, queryCollateralDepth(obj.collateralHash),
+                                                                    /*is_broadcast=*/false));
         }
     } else if (m_proposal_source == ProposalSource::Local) {
         for (const auto& obj : getWalletProposals(/*pending=*/std::nullopt)) {
             CGovernanceObject govObj(obj.hashParent, obj.revision, obj.time, obj.collateralHash, obj.GetDataAsHexString());
-            ret.m_proposals.emplace_back(std::make_unique<Proposal>(this->clientModel, govObj, ret.m_gov_info, queryCollateralDepth(obj.collateralHash)));
+            ret.m_proposals.emplace_back(std::make_unique<Proposal>(this->clientModel, govObj, ret.m_gov_info, queryCollateralDepth(obj.collateralHash),
+                                                                    /*is_broadcast=*/clientModel->node().gov().existsObj(obj.GetHash())));
         }
     }
 
