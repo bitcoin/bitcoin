@@ -580,7 +580,7 @@ public:
         if (!block_filter_index) return std::nullopt;
 
         BlockFilter filter;
-        const CBlockIndex* index{WITH_LOCK(::cs_main, return chainman().m_blockman.LookupBlockIndex(block_hash))};
+        const CBlockIndex* index = chainman().m_blockman.LookupBlockIndex(block_hash);
         if (index == nullptr || !block_filter_index->LookupFilter(index, filter)) return std::nullopt;
         return filter.GetFilter().MatchAny(filter_set);
     }

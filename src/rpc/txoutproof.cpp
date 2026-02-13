@@ -59,7 +59,6 @@ static RPCHelpMan gettxoutproof()
             uint256 hashBlock;
             ChainstateManager& chainman = EnsureAnyChainman(request.context);
             if (!request.params[1].isNull()) {
-                LOCK(cs_main);
                 hashBlock = ParseHashV(request.params[1], "blockhash");
                 pblockindex = chainman.m_blockman.LookupBlockIndex(hashBlock);
                 if (!pblockindex) {
@@ -91,7 +90,6 @@ static RPCHelpMan gettxoutproof()
                     throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Transaction not yet in block");
                 }
 
-                LOCK(cs_main);
                 pblockindex = chainman.m_blockman.LookupBlockIndex(hashBlock);
                 if (!pblockindex) {
                     throw JSONRPCError(RPC_INTERNAL_ERROR, "Transaction index corrupt");

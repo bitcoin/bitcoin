@@ -13,12 +13,10 @@
 #include <script/script.h>
 #include <span.h>
 #include <streams.h>
-#include <sync.h>
 #include <uint256.h>
 #include <util/check.h>
 #include <util/log.h>
 #include <util/overflow.h>
-#include <validation.h>
 
 #include <map>
 #include <memory>
@@ -149,7 +147,7 @@ static bool ComputeUTXOStats(CCoinsView* view, CCoinsStats& stats, T hash_obj, c
 
 std::optional<CCoinsStats> ComputeUTXOStats(CoinStatsHashType hash_type, CCoinsView* view, node::BlockManager& blockman, const std::function<void()>& interruption_point)
 {
-    CBlockIndex* pindex = WITH_LOCK(::cs_main, return blockman.LookupBlockIndex(view->GetBestBlock()));
+    CBlockIndex* pindex = blockman.LookupBlockIndex(view->GetBestBlock());
     CCoinsStats stats{Assert(pindex)->nHeight, pindex->GetBlockHash()};
 
     bool success = [&]() -> bool {

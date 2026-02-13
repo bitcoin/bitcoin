@@ -336,7 +336,7 @@ static bool rest_spent_txouts(const std::any& context, HTTPRequest* req, const s
         return false;
     }
 
-    const CBlockIndex* pblockindex = WITH_LOCK(cs_main, return chainman->m_blockman.LookupBlockIndex(*hash));
+    const CBlockIndex* pblockindex = chainman->m_blockman.LookupBlockIndex(*hash);
     if (!pblockindex) {
         return RESTERR(req, HTTP_NOT_FOUND, hashStr + " not found");
     }

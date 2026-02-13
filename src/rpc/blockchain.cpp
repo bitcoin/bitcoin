@@ -541,7 +541,7 @@ static RPCHelpMan getblockfrompeer()
     const uint256& block_hash{ParseHashV(request.params[0], "blockhash")};
     const NodeId peer_id{request.params[1].getInt<int64_t>()};
 
-    const CBlockIndex* const index = WITH_LOCK(cs_main, return chainman.m_blockman.LookupBlockIndex(block_hash););
+    const CBlockIndex* const index = chainman.m_blockman.LookupBlockIndex(block_hash);
 
     if (!index) {
         throw JSONRPCError(RPC_MISC_ERROR, "Block header missing");
@@ -1672,12 +1672,9 @@ static RPCHelpMan preciousblock()
     CBlockIndex* pblockindex;
 
     ChainstateManager& chainman = EnsureAnyChainman(request.context);
-    {
-        LOCK(cs_main);
-        pblockindex = chainman.m_blockman.LookupBlockIndex(hash);
-        if (!pblockindex) {
-            throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Block not found");
-        }
+    pblockindex = chainman.m_blockman.LookupBlockIndex(hash);
+    if (!pblockindex) {
+        throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Block not found");
     }
 
     BlockValidationState state;
@@ -1693,15 +1690,12 @@ static RPCHelpMan preciousblock()
 }
 
 void InvalidateBlock(ChainstateManager& chainman, const uint256 block_hash) {
-    BlockValidationState state;
-    CBlockIndex* pblockindex;
-    {
-        LOCK(chainman.GetMutex());
-        pblockindex = chainman.m_blockman.LookupBlockIndex(block_hash);
-        if (!pblockindex) {
-            throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Block not found");
-        }
+    CBlockIndex* pblockindex = chainman.m_blockman.LookupBlockIndex(block_hash);
+    if (!pblockindex) {
+        throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Block not found");
     }
+
+    BlockValidationState state;
     chainman.ActiveChainstate().InvalidateBlock(state, pblockindex);
 
     if (state.IsValid()) {

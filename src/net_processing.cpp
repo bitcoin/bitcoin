@@ -3026,7 +3026,7 @@ void PeerManagerImpl::ProcessHeadersMessage(CNode& pfrom, Peer& peer,
     }
 
     // Do these headers connect to something in our block index?
-    const CBlockIndex *chain_start_header{WITH_LOCK(::cs_main, return m_chainman.m_blockman.LookupBlockIndex(headers[0].hashPrevBlock))};
+    const CBlockIndex* chain_start_header = m_chainman.m_blockman.LookupBlockIndex(headers[0].hashPrevBlock);
     bool headers_connect_blockindex{chain_start_header != nullptr};
 
     if (!headers_connect_blockindex) {
@@ -4867,7 +4867,7 @@ void PeerManagerImpl::ProcessMessage(Peer& peer, CNode& pfrom, const std::string
 
         LogDebug(BCLog::NET, "received block %s peer=%d\n", pblock->GetHash().ToString(), pfrom.GetId());
 
-        const CBlockIndex* prev_block{WITH_LOCK(m_chainman.GetMutex(), return m_chainman.m_blockman.LookupBlockIndex(pblock->hashPrevBlock))};
+        const CBlockIndex* prev_block = m_chainman.m_blockman.LookupBlockIndex(pblock->hashPrevBlock);
 
         // Check for possible mutation if it connects to something we know so we can check for DEPLOYMENT_SEGWIT being active
         if (prev_block && IsBlockMutated(/*block=*/*pblock,

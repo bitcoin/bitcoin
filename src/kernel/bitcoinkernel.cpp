@@ -1035,8 +1035,7 @@ btck_ChainstateManager* btck_chainstate_manager_create(
 
 const btck_BlockTreeEntry* btck_chainstate_manager_get_block_tree_entry_by_hash(const btck_ChainstateManager* chainman, const btck_BlockHash* block_hash)
 {
-    auto block_index = WITH_LOCK(btck_ChainstateManager::get(chainman).m_chainman->GetMutex(),
-                                 return btck_ChainstateManager::get(chainman).m_chainman->m_blockman.LookupBlockIndex(btck_BlockHash::get(block_hash)));
+    auto block_index = btck_ChainstateManager::get(chainman).m_chainman->m_blockman.LookupBlockIndex(btck_BlockHash::get(block_hash));
     if (!block_index) {
         LogDebug(BCLog::KERNEL, "A block with the given hash is not indexed.");
         return nullptr;
