@@ -2969,7 +2969,7 @@ Due to discontinued support, you should request the merchant to provide you with
     </message>
     <message>
         <source>margin-left: 8px;</source>
-        <translation>margin-right: 8px;</translation>
+        <translation>margin-left: 8px;</translation>
     </message>
     <message>
         <source>Create Proposal</source>

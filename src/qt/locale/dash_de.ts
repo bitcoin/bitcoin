@@ -1421,7 +1421,7 @@
     </message>
     <message>
         <source>Copy Raw JSON</source>
-        <translation>JSON kopieren</translation>
+        <translation>Rohes JSON kopieren</translation>
     </message>
     <message>
         <source>Open Proposal URL…</source>

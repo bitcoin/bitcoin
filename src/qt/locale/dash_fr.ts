@@ -3938,7 +3938,7 @@ Vous allez maintenant être redirigé pour surveiller et diffuser votre nouvelle
     </message>
     <message>
         <source>Rescan Chain (full)</source>
-        <translation>Réexaminer la chaîne (complet)</translation>
+        <translation>Réexaminer la chaîne (complète)</translation>
     </message>
     <message>
         <source>Rescan the chain for missing wallet transactions starting from genesis block.</source>

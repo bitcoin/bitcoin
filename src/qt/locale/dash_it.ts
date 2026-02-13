@@ -1421,7 +1421,7 @@
     </message>
     <message>
         <source>Copy Raw JSON</source>
-        <translation>Copia JSON</translation>
+        <translation>Copia JSON grezzo</translation>
     </message>
     <message>
         <source>Open Proposal URL…</source>
@@ -1728,7 +1728,7 @@ Vuoi continuare?</translation>
     </message>
     <message>
         <source>Copy Collateral Outpoint</source>
-        <translation>Copia Collateral Outpoint</translation>
+        <translation>Copia outpoint collaterale</translation>
     </message>
     <message>
         <source>Filter by any property (e.g. address or protx hash)</source>
@@ -2141,7 +2141,7 @@ Vuoi continuare?</translation>
     </message>
     <message>
         <source>duffs</source>
-        <translation>duff</translation>
+        <translation>duffs</translation>
     </message>
     <message>
         <source>External Signer (e.g. hardware wallet)</source>

@@ -3955,7 +3955,7 @@ You will now be redirected to monitor and broadcast your new proposal, you can r
     <message>
         <source>The total number of addresses received from this peer that were processed (excludes addresses that were dropped due to rate-limiting).</source>
         <extracomment>Tooltip text for the Addresses Processed field in the peer details area, which displays the total number of addresses received from this peer that were processed (excludes addresses that were dropped due to rate-limiting).</extracomment>
-        <translation>Възраст</translation>
+        <translation>Общият брой адреси, получени от този пиър, които са обработени (без адресите, отхвърлени поради ограничение на честотата).</translation>
     </message>
     <message>
         <source>The total number of addresses received from this peer that were dropped (not processed) due to rate-limiting.</source>
@@ -4135,7 +4135,7 @@ You will now be redirected to monitor and broadcast your new proposal, you can r
     <message>
         <source>&amp;Copy IP/Netmask</source>
         <extracomment>Context menu action to copy the IP/Netmask of a banned peer. IP/Netmask is the combination of a peer's IP address and its Netmask. For IP address, see: https://en.wikipedia.org/wiki/IP_address.</extracomment>
-        <translation>v1: нешифрован, plaintext транспортен протокол</translation>
+        <translation>&amp;Копирай IP/Netmask</translation>
     </message>
     <message>
         <source>Welcome to the %1 RPC console.

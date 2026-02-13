@@ -175,7 +175,7 @@
     </message>
     <message>
         <source>Font in the Overview tab: </source>
-        <translation>Czcionka w zakładce Podgląd: </translation>
+        <translation>Czcionka w zakładce Przegląd: </translation>
     </message>
 </context>
 <context>
@@ -3407,7 +3407,7 @@ Zostaniesz teraz przekierowany do monitorowania i rozgłaszania nowej propozycji
     </message>
     <message>
         <source>to UNKNOWN</source>
-        <translation>do NIEZNANY</translation>
+        <translation>do NIEZNANEGO</translation>
     </message>
     <message>
         <source>but not claimed</source>
