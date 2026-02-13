@@ -173,6 +173,10 @@
         <source>Font Weight Bold:</source>
         <translation>Độ đậm Font chứ Đậm:</translation>
     </message>
+    <message>
+        <source>Font in the Overview tab: </source>
+        <translation>Phông chữ trong tab Tổng quan: </translation>
+    </message>
 </context>
 <context>
     <name>AskPassphraseDialog</name>
@@ -325,6 +329,10 @@
 </context>
 <context>
     <name>BitcoinApplication</name>
+    <message>
+        <source>Settings file %1 might be corrupt or invalid.</source>
+        <translation>Tệp cài đặt %1 có thể bị hỏng hoặc không hợp lệ.</translation>
+    </message>
     <message>
         <source>Runaway exception</source>
         <translation>Ngoại lệ không kiểm soát</translation>
@@ -501,6 +509,14 @@
         <translation>Đổi mật khẩu dùng để mã hoá ví</translation>
     </message>
     <message>
+        <source>&amp;Show Recovery Phrase…</source>
+        <translation>&amp;Hiển thị cụm từ khôi phục…</translation>
+    </message>
+    <message>
+        <source>Show the recovery phrase (mnemonic seed) for this wallet</source>
+        <translation>Hiển thị cụm từ khôi phục (hạt giống ghi nhớ) cho ví này</translation>
+    </message>
+    <message>
         <source>Unlock wallet</source>
         <translation>Mở khoá ví</translation>
     </message>
@@ -587,6 +603,26 @@
     <message>
         <source>%1 client</source>
         <translation>%1 khách</translation>
+    </message>
+    <message>
+        <source>Waiting for blockchain sync…</source>
+        <translation>Đang chờ đồng bộ blockchain…</translation>
+    </message>
+    <message>
+        <source>Synchronizing governance data…</source>
+        <translation>Đang đồng bộ dữ liệu quản trị…</translation>
+    </message>
+    <message numerus="yes">
+        <source>~%n day(s) (%1 blocks) left for superblock</source>
+        <translation><numerusform>Còn ~%n ngày (%1 khối) đến superblock</numerusform></translation>
+    </message>
+    <message numerus="yes">
+        <source>~%n day(s) (%1 blocks) left for voting</source>
+        <translation><numerusform>Còn ~%n ngày (%1 khối) để bỏ phiếu</numerusform></translation>
+    </message>
+    <message>
+        <source>~%1% of budget committed (%2 %3).</source>
+        <translation>~%1% ngân sách đã cam kết (%2 %3).</translation>
     </message>
     <message>
         <source>Wallet: %1
@@ -808,10 +844,6 @@
     <message>
         <source>Up to date</source>
         <translation>Mới nhất</translation>
-    </message>
-    <message>
-        <source>Synchronizing additional data: %p%</source>
-        <translation>Đang đồng bộ những dữ liệu bổ sung: %p%</translation>
     </message>
     <message>
         <source>Error</source>
@@ -1115,6 +1147,38 @@
         <source>Create wallet warning</source>
         <translation>Cảnh báo tạo ví</translation>
     </message>
+    <message>
+        <source>Unlock failed</source>
+        <translation>Mở khóa thất bại</translation>
+    </message>
+    <message>
+        <source>Failed to unlock wallet for mnemonic verification. Wallet creation completed but verification skipped.</source>
+        <translation>Không thể mở khóa ví để xác minh cụm từ ghi nhớ. Việc tạo ví đã hoàn tất nhưng bỏ qua xác minh.</translation>
+    </message>
+    <message>
+        <source>Mnemonic retrieval failed</source>
+        <translation>Không thể lấy cụm từ ghi nhớ</translation>
+    </message>
+    <message>
+        <source>Could not retrieve mnemonic phrase from wallet. Wallet creation completed but verification skipped.</source>
+        <translation>Không thể lấy cụm từ ghi nhớ từ ví. Việc tạo ví đã hoàn tất nhưng bỏ qua xác minh.</translation>
+    </message>
+    <message>
+        <source>Verification cancelled</source>
+        <translation>Đã hủy xác minh</translation>
+    </message>
+    <message>
+        <source>You cancelled mnemonic verification. Please make sure you have saved your mnemonic phrase safely.</source>
+        <translation>Bạn đã hủy xác minh cụm từ ghi nhớ. Vui lòng đảm bảo bạn đã lưu cụm từ ghi nhớ an toàn.</translation>
+    </message>
+    <message>
+        <source>Can't list signers</source>
+        <translation>Không thể liệt kê người ký</translation>
+    </message>
+    <message>
+        <source>Too many external signers found</source>
+        <translation>Tìm thấy quá nhiều người ký bên ngoài</translation>
+    </message>
 </context>
 <context>
     <name>CreateWalletDialog</name>
@@ -1139,8 +1203,24 @@
         <translation>Mã hóa Ví</translation>
     </message>
     <message>
-        <source>Advanced Options</source>
-        <translation>Tùy chọn Nâng cao</translation>
+        <source>Use descriptors for scriptPubKey management.</source>
+        <translation>Sử dụng bộ mô tả để quản lý scriptPubKey.</translation>
+    </message>
+    <message>
+        <source>Descriptor Wallet</source>
+        <translation>Ví bộ mô tả</translation>
+    </message>
+    <message>
+        <source>Use an external signing device such as a hardware wallet. Configure the external signer script in wallet preferences first.</source>
+        <translation>Sử dụng thiết bị ký bên ngoài như ví phần cứng. Hãy cấu hình tập lệnh người ký bên ngoài trong cài đặt ví trước.</translation>
+    </message>
+    <message>
+        <source>External signer</source>
+        <translation>Người ký bên ngoài</translation>
+    </message>
+    <message>
+        <source>Show Advanced Options</source>
+        <translation>Hiển thị tùy chọn nâng cao</translation>
     </message>
     <message>
         <source>Disable private keys for this wallet. Wallets with private keys disabled will have no private keys and cannot have an HD seed or imported private keys. This is ideal for watch-only wallets.</source>
@@ -1159,20 +1239,28 @@
         <translation>Tạo Ví Trống</translation>
     </message>
     <message>
-        <source>Use descriptors for scriptPubKey management. This feature is well-tested but still considered experimental and not recommended for use yet.</source>
-        <translation>Sử dụng descriptor để quản lý scriptPubKey. Tính năng này đã được kiểm tra kỹ nhưng vẫn được coi là thử nghiệm và chưa được khuyến nghị sử dụng.</translation>
-    </message>
-    <message>
-        <source>Descriptor Wallet (EXPERIMENTAL)</source>
-        <translation>Ví Descriptor (THỬ NGHIỆM)</translation>
-    </message>
-    <message>
         <source>Create</source>
         <translation>Tạo</translation>
     </message>
     <message>
+        <source>Hide Advanced Options</source>
+        <translation>Ẩn tùy chọn nâng cao</translation>
+    </message>
+    <message>
         <source>Compiled without sqlite support (required for descriptor wallets)</source>
         <translation>Được biên dịch mà không có hỗ trợ sqlite (cần thiết cho ví descriptor)</translation>
+    </message>
+    <message>
+        <source>Compiled without external signing support (required for external signing)</source>
+        <extracomment>"External signing" means using devices such as hardware wallets.</extracomment>
+        <translation>Được biên dịch mà không có hỗ trợ ký bên ngoài (cần thiết cho việc ký bên ngoài)</translation>
+    </message>
+</context>
+<context>
+    <name>DescriptionDialog</name>
+    <message>
+        <source>This pane shows detailed information</source>
+        <translation>Bảng này hiển thị thông tin chi tiết</translation>
     </message>
 </context>
 <context>
@@ -1260,10 +1348,6 @@
         <translation>Biểu mẫu</translation>
     </message>
     <message>
-        <source>Filter List:</source>
-        <translation>Danh sách Lọc:</translation>
-    </message>
-    <message>
         <source>Filter proposal list</source>
         <translation>Lọc danh sách đề xuất</translation>
     </message>
@@ -1276,12 +1360,24 @@
         <translation>Số lượng masternode mà ví này có thể bỏ phiếu (các masternode mà ví này giữ khóa bỏ phiếu)</translation>
     </message>
     <message>
+        <source>No active proposals on the network.</source>
+        <translation>Không có đề xuất nào đang hoạt động trên mạng.</translation>
+    </message>
+    <message>
+        <source>Resume Proposal</source>
+        <translation>Tiếp tục đề xuất</translation>
+    </message>
+    <message>
         <source>Proposal Count:</source>
         <translation>Số lượng Đề xuất:</translation>
     </message>
     <message>
         <source>Create Proposal</source>
         <translation>Tạo Đề xuất</translation>
+    </message>
+    <message>
+        <source>Select proposals to display</source>
+        <translation>Chọn đề xuất để hiển thị</translation>
     </message>
     <message>
         <source>Filter by Title</source>
@@ -1308,8 +1404,76 @@
         <translation>Bỏ phiếu Trắng</translation>
     </message>
     <message>
-        <source>Proposal Info: %1</source>
-        <translation>Thông tin Đề xuất: %1</translation>
+        <source>Active Proposals</source>
+        <translation>Đề xuất đang hoạt động</translation>
+    </message>
+    <message>
+        <source>My Proposals</source>
+        <translation>Đề xuất của tôi</translation>
+    </message>
+    <message>
+        <source>No proposals recorded in wallet file.</source>
+        <translation>Không có đề xuất nào được ghi trong tệp ví.</translation>
+    </message>
+    <message>
+        <source>Resume proposal</source>
+        <translation>Tiếp tục đề xuất</translation>
+    </message>
+    <message>
+        <source>Copy Raw JSON</source>
+        <translation>Sao chép JSON thô</translation>
+    </message>
+    <message>
+        <source>Open Proposal URL…</source>
+        <translation>Mở URL đề xuất…</translation>
+    </message>
+    <message>
+        <source>Details for %1</source>
+        <translation>Chi tiết của %1</translation>
+    </message>
+    <message>
+        <source>Cannot interact with governance before sync completes</source>
+        <translation>Không thể tương tác với quản trị trước khi đồng bộ hoàn tất</translation>
+    </message>
+    <message>
+        <source>Creates a new proposal</source>
+        <translation>Tạo đề xuất mới</translation>
+    </message>
+    <message>
+        <source>Resumes an existing proposal</source>
+        <translation>Tiếp tục đề xuất hiện có</translation>
+    </message>
+    <message>
+        <source>Creating proposals costs %1, insufficient balance</source>
+        <translation>Tạo đề xuất tốn %1, số dư không đủ</translation>
+    </message>
+    <message>
+        <source>Error</source>
+        <translation>Lỗi</translation>
+    </message>
+    <message>
+        <source>Cannot validate URL, potentially malformed or unknown protocol.</source>
+        <translation>Không thể xác thực URL, có thể sai định dạng hoặc giao thức không xác định.</translation>
+    </message>
+    <message>
+        <source>External Link Warning</source>
+        <translation>Cảnh báo liên kết bên ngoài</translation>
+    </message>
+    <message>
+        <source>You are about to open the following URL in your default browser
+
+%1
+
+This content was submitted by a user. It may not match what is described in the title.
+
+Do you wish to continue?</source>
+        <translation>Bạn sắp mở URL sau trong trình duyệt mặc định
+
+%1
+
+Nội dung này được gửi bởi người dùng. Nó có thể không khớp với mô tả trong tiêu đề.
+
+Bạn có muốn tiếp tục không?</translation>
     </message>
     <message>
         <source>Voting Failed</source>
@@ -1478,7 +1642,13 @@
 <context>
     <name>LoadWalletsActivity</name>
     <message>
+        <source>Load Wallets</source>
+        <extracomment>Title of progress window which is displayed when wallets are being loaded.</extracomment>
+        <translation>Tải ví</translation>
+    </message>
+    <message>
         <source>Loading wallets…</source>
+        <extracomment>Descriptive text of the load wallets progress window which indicates to the user that wallets are currently being loaded.</extracomment>
         <translation>Đang tải ví…</translation>
     </message>
 </context>
@@ -1489,16 +1659,36 @@
         <translation>Từ</translation>
     </message>
     <message>
-        <source>Status</source>
-        <translation>Trạng thái</translation>
+        <source>Filter by masternode type</source>
+        <translation>Lọc theo loại masternode</translation>
     </message>
     <message>
-        <source>Filter List:</source>
-        <translation>Lọc danh sách:</translation>
+        <source>All</source>
+        <translation>Tất cả</translation>
+    </message>
+    <message>
+        <source>Regular</source>
+        <translation>Thường</translation>
+    </message>
+    <message>
+        <source>Evo</source>
+        <translation>Evo</translation>
     </message>
     <message>
         <source>Filter masternode list</source>
         <translation>Lọc danh sách masternode</translation>
+    </message>
+    <message>
+        <source>Owned</source>
+        <translation>Sở hữu</translation>
+    </message>
+    <message>
+        <source>Hide masternodes that are currently PoSe banned.</source>
+        <translation>Ẩn các masternode hiện đang bị cấm PoSe.</translation>
+    </message>
+    <message>
+        <source>Hide banned</source>
+        <translation>Ẩn bị cấm</translation>
     </message>
     <message>
         <source>Node Count:</source>
@@ -1509,8 +1699,67 @@
         <translation>Chỉ hiển thị masternode mà có khoá trong ví này.</translation>
     </message>
     <message>
-        <source>My masternodes only</source>
-        <translation>Chỉ các masternode của tôi</translation>
+        <source>Payout Address</source>
+        <translation>Địa chỉ thanh toán</translation>
+    </message>
+    <message>
+        <source>Filter by</source>
+        <translation>Lọc theo</translation>
+    </message>
+    <message>
+        <source>Collateral Address</source>
+        <translation>Địa chỉ đặt cọc</translation>
+    </message>
+    <message>
+        <source>Owner Address</source>
+        <translation>Địa chỉ chủ sở hữu</translation>
+    </message>
+    <message>
+        <source>Voting Address</source>
+        <translation>Địa chỉ bỏ phiếu</translation>
+    </message>
+    <message>
+        <source>Details for Masternode %1</source>
+        <translation>Chi tiết của Masternode %1</translation>
+    </message>
+    <message>
+        <source>Copy ProTx Hash</source>
+        <translation>Copy mã băm ProTx</translation>
+    </message>
+    <message>
+        <source>Copy Collateral Outpoint</source>
+        <translation>Copy các đầu ra của khoản đặt cọc</translation>
+    </message>
+    <message>
+        <source>Filter by any property (e.g. address or protx hash)</source>
+        <translation>Lọc bởi bất kỳ thuộc tính nào (ví dụ địa chỉ hoặc protx hash)</translation>
+    </message>
+</context>
+<context>
+    <name>MasternodeModel</name>
+    <message numerus="yes">
+        <source>Banned for %n day(s)</source>
+        <translation><numerusform>Bị cấm %n ngày</numerusform></translation>
+    </message>
+    <message>
+        <source>Banned for less than a day</source>
+        <translation>Bị cấm ít hơn một ngày</translation>
+    </message>
+    <message>
+        <source>Banned</source>
+        <translation>Bị cấm</translation>
+    </message>
+    <message numerus="yes">
+        <source>Active for %n day(s)</source>
+        <translation><numerusform>Hoạt động %n ngày</numerusform></translation>
+    </message>
+    <message>
+        <source>Active for less than a day</source>
+        <translation>Hoạt động ít hơn một ngày</translation>
+    </message>
+    <message>
+        <source>UNKNOWN</source>
+        <translation>KHÔNG XÁC ĐỊNH</translation>
     </message>
     <message>
         <source>Service</source>
@@ -1530,83 +1779,118 @@
     </message>
     <message>
         <source>Last Paid</source>
-        <translation>Thanh toán lần cuối</translation>
+        <translation>Thanh toán cuối</translation>
     </message>
     <message>
         <source>Next Payment</source>
-        <translation>Kỳ thanh toán tiếp theo</translation>
-    </message>
-    <message>
-        <source>Payout Address</source>
-        <translation>Địa chỉ thanh toán</translation>
+        <translation>Thanh toán tiếp theo</translation>
     </message>
     <message>
         <source>Operator Reward</source>
-        <translation>Phần thưởng cho người vận hành</translation>
+        <translation>Phần thưởng vận hành</translation>
     </message>
     <message>
-        <source>Collateral Address</source>
-        <translation>Địa chỉ đặt cọc</translation>
+        <source>ProTx Hash</source>
+        <translation>Mã băm ProTx</translation>
+    </message>
+</context>
+<context>
+    <name>MnemonicVerificationDialog</name>
+    <message>
+        <source>Save Your Mnemonic</source>
+        <translation>Lưu cụm từ ghi nhớ của bạn</translation>
     </message>
     <message>
-        <source>Owner Address</source>
-        <translation>Địa chỉ chủ sở hữu</translation>
+        <source>WARNING: If you lose your mnemonic seed phrase, you will lose access to your wallet forever.</source>
+        <translation>CẢNH BÁO: Nếu bạn mất cụm từ hạt giống ghi nhớ, bạn sẽ mất quyền truy cập vào ví vĩnh viễn.</translation>
     </message>
     <message>
-        <source>Voting Address</source>
-        <translation>Địa chỉ bỏ phiếu</translation>
+        <source>Please write down these words in order. You will need them to restore your wallet.</source>
+        <translation>Vui lòng ghi lại các từ này theo thứ tự. Bạn sẽ cần chúng để khôi phục ví.</translation>
     </message>
     <message>
-        <source>Copy ProTx Hash</source>
-        <translation>Copy mã băm ProTx</translation>
+        <source>Show</source>
+        <translation>Hiện</translation>
     </message>
     <message>
-        <source>Copy Collateral Outpoint</source>
-        <translation>Copy các đầu ra của khoản đặt cọc</translation>
+        <source>Hide</source>
+        <translation>Ẩn</translation>
     </message>
     <message>
-        <source>Please wait…</source>
-        <translation>Vui lòng đợi…</translation>
+        <source>I have written down my mnemonic</source>
+        <translation>Tôi đã ghi lại cụm từ ghi nhớ</translation>
     </message>
     <message>
-        <source>Updating…</source>
-        <translation>Đang cập nhật…</translation>
+        <source>To verify you've saved your mnemonic, please enter the following words:</source>
+        <translation>Để xác minh bạn đã lưu cụm từ ghi nhớ, vui lòng nhập các từ sau:</translation>
     </message>
     <message>
-        <source>ENABLED</source>
-        <translation>BẬT</translation>
+        <source>Word #1:</source>
+        <translation>Từ #1:</translation>
     </message>
     <message>
-        <source>POSE_BANNED</source>
-        <translation>POSE_BANNED</translation>
+        <source>Word #2:</source>
+        <translation>Từ #2:</translation>
     </message>
     <message>
-        <source>UNKNOWN</source>
-        <translation>KHÔNG XÁC ĐỊNH</translation>
+        <source>Word #3:</source>
+        <translation>Từ #3:</translation>
     </message>
     <message>
-        <source>to %1</source>
-        <translation>đến %1</translation>
+        <source>Your Recovery Phrase</source>
+        <translation>Cụm từ khôi phục của bạn</translation>
     </message>
     <message>
-        <source>to UNKNOWN</source>
-        <translation>đến KHÔNG XÁC ĐỊNH</translation>
+        <source>Close</source>
+        <translation>Đóng</translation>
     </message>
     <message>
-        <source>but not claimed</source>
-        <translation>nhưng không được đòi</translation>
+        <source>Continue</source>
+        <translation>Tiếp tục</translation>
     </message>
     <message>
-        <source>NONE</source>
-        <translation>KHÔNG</translation>
+        <source>WARNING: Never share your recovery phrase with anyone. Store it securely offline.</source>
+        <translation>CẢNH BÁO: Không bao giờ chia sẻ cụm từ khôi phục với bất kỳ ai. Lưu trữ an toàn ngoại tuyến.</translation>
     </message>
     <message>
-        <source>Filter by any property (e.g. address or protx hash)</source>
-        <translation>Lọc bởi bất kỳ thuộc tính nào (ví dụ địa chỉ hoặc protx hash)</translation>
+        <source>These words can restore your wallet. Keep them safe and private.</source>
+        <translation>Các từ này có thể khôi phục ví của bạn. Giữ chúng an toàn và riêng tư.</translation>
     </message>
     <message>
-        <source>Additional information for DIP3 Masternode %1</source>
-        <translation>Thông tin thêm về DIP3 Masternode %1</translation>
+        <source>WARNING: If you lose your mnemonic seed phrase, you will lose access to your wallet forever. Write it down in a safe place and never share it with anyone.</source>
+        <translation>CẢNH BÁO: Nếu bạn mất cụm từ hạt giống ghi nhớ, bạn sẽ mất quyền truy cập vào ví vĩnh viễn. Ghi lại ở nơi an toàn và không bao giờ chia sẻ với bất kỳ ai.</translation>
+    </message>
+    <message>
+        <source>Invalid Mnemonic</source>
+        <translation>Cụm từ ghi nhớ không hợp lệ</translation>
+    </message>
+    <message>
+        <source>Mnemonic phrase has fewer than 3 words (found %1). Verification cannot proceed.</source>
+        <translation>Cụm từ ghi nhớ có ít hơn 3 từ (tìm thấy %1). Không thể tiến hành xác minh.</translation>
+    </message>
+    <message>
+        <source>Verification Error</source>
+        <translation>Lỗi xác minh</translation>
+    </message>
+    <message>
+        <source>Failed to generate verification positions. Please try again.</source>
+        <translation>Không thể tạo vị trí xác minh. Vui lòng thử lại.</translation>
+    </message>
+    <message>
+        <source>Word #%1:</source>
+        <translation>Từ #%1:</translation>
+    </message>
+    <message>
+        <source>Back</source>
+        <translation>Quay lại</translation>
+    </message>
+    <message>
+        <source>Verification Failed</source>
+        <translation>Xác minh thất bại</translation>
+    </message>
+    <message>
+        <source>One or more words are incorrect. Please try again.</source>
+        <translation>Một hoặc nhiều từ không chính xác. Vui lòng thử lại.</translation>
     </message>
 </context>
 <context>
@@ -1824,12 +2108,52 @@
         <translation>Hiển thị Tab Quản trị</translation>
     </message>
     <message>
+        <source>Show the governance clock in the status bar.</source>
+        <translation>Hiển thị đồng hồ quản trị trên thanh trạng thái.</translation>
+    </message>
+    <message>
+        <source>Show governance clock</source>
+        <translation>Hiển thị đồng hồ quản trị</translation>
+    </message>
+    <message>
         <source>If you disable the spending of unconfirmed change, the change from a transaction&lt;br/&gt;cannot be used until that transaction has at least one confirmation.&lt;br/&gt;This also affects how your balance is computed.</source>
         <translation>Nếu bạn vô hiệu hóa các chi tiêu của phần tiền lẻ chưa được xác nhận, phần tiền lẻ từ một giao dịch &lt;br/&gt;không thể được sử dụng đến khi giao dịch đó nhận được ít nhất một xác nhận. &lt;br/&gt;Điều này ảnh hưởng đến cách tính số dư của bạn.</translation>
     </message>
     <message>
         <source>Show mixing interface on Overview screen and reveal an additional screen which allows to spend fully mixed coins only.&lt;br/&gt;A new tab with more settings will also appear in this dialog, please make sure to check them before mixing your coins.</source>
         <translation>Hiển thị giao diện trộn trên màn hình Tổng quan và hiển thị màn hình bổ sung cho phép chi tiêu chỉ các đồng coin đã trộn hoàn toàn.&lt;br/&gt;Tab mới với nhiều cài đặt hơn cũng sẽ xuất hiện trong hộp thoại này, vui lòng kiểm tra chúng trước khi trộn coin của bạn.</translation>
+    </message>
+    <message>
+        <source>Automatically lock small incoming transactions from external sources that may be dust attacks. Locked UTXOs will be excluded from coin selection.</source>
+        <translation>Tự động khóa các giao dịch nhỏ đến từ nguồn bên ngoài có thể là tấn công bụi. UTXO bị khóa sẽ được loại trừ khỏi việc chọn coin.</translation>
+    </message>
+    <message>
+        <source>Enable &amp;dust attack protection</source>
+        <translation>Bật bảo vệ tấn công &amp;bụi</translation>
+    </message>
+    <message>
+        <source>Dust threshold:</source>
+        <translation>Ngưỡng bụi:</translation>
+    </message>
+    <message>
+        <source>Transactions with outputs at or below this amount will be considered dust when received from external sources.</source>
+        <translation>Các giao dịch có đầu ra bằng hoặc thấp hơn số tiền này sẽ được coi là bụi khi nhận từ nguồn bên ngoài.</translation>
+    </message>
+    <message>
+        <source>duffs</source>
+        <translation>duffs</translation>
+    </message>
+    <message>
+        <source>External Signer (e.g. hardware wallet)</source>
+        <translation>Người ký bên ngoài (ví dụ: ví phần cứng)</translation>
+    </message>
+    <message>
+        <source>&amp;External signer script path</source>
+        <translation>Đường dẫn tập lệnh người ký &amp;bên ngoài</translation>
+    </message>
+    <message>
+        <source>Full path to a %1 compatible script (e.g. C:\Downloads\hwi.exe or /Users/you/Downloads/hwi.py). Beware: malware can steal your coins!</source>
+        <translation>Đường dẫn đầy đủ đến tập lệnh tương thích %1 (ví dụ: C:\Downloads\hwi.exe hoặc /Users/you/Downloads/hwi.py). Cẩn thận: phần mềm độc hại có thể đánh cắp coin của bạn!</translation>
     </message>
     <message>
         <source>Show additional information and buttons on overview screen.</source>
@@ -1948,10 +2272,6 @@ https://explore.transifex.com/dash/dash/</translation>
     <message>
         <source>&amp;Third-party transaction URLs</source>
         <translation>URL giao dịch của bên &amp;thứ ba</translation>
-    </message>
-    <message>
-        <source>Options set in this dialog are overridden by the command line or in the configuration file:</source>
-        <translation>Các tùy chọn được đặt trong hộp thoại này bị ghi đè bởi dòng lệnh hoặc trong tệp cấu hình:</translation>
     </message>
     <message>
         <source>Minimize instead of exit the application when the window is closed. When this option is enabled, the application will be closed only after selecting Exit in the menu.</source>
@@ -2074,6 +2394,10 @@ https://explore.transifex.com/dash/dash/</translation>
         <translation>Số các chữ số thập phân</translation>
     </message>
     <message>
+        <source>Options set in this dialog are overridden by the command line:</source>
+        <translation>Các tùy chọn đặt trong hộp thoại này bị ghi đè bởi dòng lệnh:</translation>
+    </message>
+    <message>
         <source>Reset all client options to default.</source>
         <translation>Tái lập lại tất cả các tuỳ chọn về ngầm định.</translation>
     </message>
@@ -2108,6 +2432,11 @@ https://explore.transifex.com/dash/dash/</translation>
         <translation>Cần phải khởi động phần mềm để kích hoạt các thay đổi.</translation>
     </message>
     <message>
+        <source>Compiled without external signing support (required for external signing)</source>
+        <extracomment>"External signing" means using devices such as hardware wallets.</extracomment>
+        <translation>Được biên dịch mà không có hỗ trợ ký bên ngoài (cần thiết cho việc ký bên ngoài)</translation>
+    </message>
+    <message>
         <source>Current settings will be backed up at "%1".</source>
         <extracomment>Text explaining to the user that the client's current settings will be backed up at a specific location. %1 is a stand-in argument for the backup location's path.</extracomment>
         <translation>Các cài đặt hiện tại sẽ được sao lưu tại "%1".</translation>
@@ -2124,6 +2453,13 @@ https://explore.transifex.com/dash/dash/</translation>
     <message>
         <source>The supplied proxy address is invalid.</source>
         <translation>Địa chỉ proxy được cung cấp không hợp lệ.</translation>
+    </message>
+</context>
+<context>
+    <name>OptionsModel</name>
+    <message>
+        <source>Could not read setting "%1", %2.</source>
+        <translation>Không thể đọc cài đặt "%1", %2.</translation>
     </message>
 </context>
 <context>
@@ -2433,8 +2769,8 @@ https://explore.transifex.com/dash/dash/</translation>
         <translation>PSBT đã lưu vào đĩa.</translation>
     </message>
     <message>
-        <source> * Sends %1 to %2</source>
-        <translation> * Gửi %1 đến %2</translation>
+        <source>Sends %1 to %2</source>
+        <translation>Gửi %1 đến %2</translation>
     </message>
     <message>
         <source>own address</source>
@@ -2586,25 +2922,141 @@ Do ngừng hỗ trợ, bạn nên yêu cầu người bán cung cấp cho bạn 
     </message>
 </context>
 <context>
-    <name>Proposal</name>
+    <name>ProposalCreate</name>
     <message>
-        <source>Passing +%1</source>
-        <translation>Đang vượt qua +%1</translation>
+        <source>New proposal</source>
+        <translation>Đề xuất mới</translation>
     </message>
     <message>
-        <source>Needs additional %1 votes</source>
-        <translation>Cần thêm %1 phiếu bầu</translation>
+        <source>Proposal &amp;name</source>
+        <translation>&amp;Tên đề xuất</translation>
+    </message>
+    <message>
+        <source>&amp;Description URL</source>
+        <translation>URL &amp;mô tả</translation>
+    </message>
+    <message>
+        <source>&amp;Payment date</source>
+        <translation>Ngày &amp;thanh toán</translation>
+    </message>
+    <message>
+        <source>Pa&amp;yments</source>
+        <translation>Số lần thanh &amp;toán</translation>
+    </message>
+    <message>
+        <source>Payment &amp;address</source>
+        <translation>Địa chỉ thanh &amp;toán</translation>
+    </message>
+    <message>
+        <source>Payment &amp;amount</source>
+        <translation>Số &amp;tiền thanh toán</translation>
+    </message>
+    <message>
+        <source>To&amp;tal amount</source>
+        <translation>Tổng &amp;số tiền</translation>
+    </message>
+    <message>
+        <source>The amount to request in a single payment</source>
+        <translation>Số tiền yêu cầu trong một lần thanh toán</translation>
+    </message>
+    <message>
+        <source>View JSON</source>
+        <translation>Xem JSON</translation>
+    </message>
+    <message>
+        <source>View Payload</source>
+        <translation>Xem tải trọng</translation>
+    </message>
+    <message>
+        <source>margin-left: 8px;</source>
+        <translation>margin-left: 8px;</translation>
+    </message>
+    <message>
+        <source>Create Proposal</source>
+        <translation>Tạo đề xuất</translation>
+    </message>
+    <message>
+        <source>All fields are mandatory</source>
+        <translation>Tất cả các trường là bắt buộc</translation>
+    </message>
+    <message>
+        <source>Confirm Proposal</source>
+        <translation>Xác nhận đề xuất</translation>
+    </message>
+    <message>
+        <source>Are you sure you want to create this proposal?</source>
+        <translation>Bạn có chắc chắn muốn tạo đề xuất này không?</translation>
+    </message>
+    <message>
+        <source>Creating a proposal pays %1 to the network. This fee is non-refundable regardless of outcome.</source>
+        <translation>Tạo đề xuất sẽ trả %1 cho mạng lưới. Phí này không được hoàn lại bất kể kết quả.</translation>
+    </message>
+    <message>
+        <source>Creation failed</source>
+        <translation>Tạo thất bại</translation>
+    </message>
+    <message>
+        <source>Proposal Created</source>
+        <translation>Đề xuất đã được tạo</translation>
+    </message>
+    <message>
+        <source>%1 successfully sent for your proposal "%2".
+
+You will now be redirected to monitor and broadcast your new proposal, you can resume this later by clicking "Resume Proposal".</source>
+        <translation>Đã gửi thành công %1 cho đề xuất "%2" của bạn.
+
+Bạn sẽ được chuyển hướng để theo dõi và phát sóng đề xuất mới, bạn có thể tiếp tục sau bằng cách nhấp "Tiếp tục đề xuất".</translation>
     </message>
 </context>
 <context>
     <name>ProposalModel</name>
     <message>
-        <source>Yes</source>
-        <translation>Có</translation>
+        <source>Pending, %1 of %2 confirmations</source>
+        <translation>Đang chờ, %1 trên %2 xác nhận</translation>
     </message>
     <message>
-        <source>No</source>
-        <translation>Không</translation>
+        <source>Voting, needs %1 more votes for funding</source>
+        <translation>Đang bỏ phiếu, cần thêm %1 phiếu để được tài trợ</translation>
+    </message>
+    <message>
+        <source>Passing with %1 votes</source>
+        <translation>Đang đạt với %1 phiếu</translation>
+    </message>
+    <message>
+        <source>Passing with %1 votes but budget saturated, may not be funded</source>
+        <translation>Đang đạt với %1 phiếu nhưng ngân sách đã bão hòa, có thể không được tài trợ</translation>
+    </message>
+    <message>
+        <source>Failed, needed %1 more votes</source>
+        <translation>Thất bại, cần thêm %1 phiếu</translation>
+    </message>
+    <message>
+        <source>Funded at block %1</source>
+        <translation>Được tài trợ tại khối %1</translation>
+    </message>
+    <message>
+        <source>Funded</source>
+        <translation>Đã được tài trợ</translation>
+    </message>
+    <message>
+        <source>Lapsed, past proposal end date</source>
+        <translation>Đã hết hạn, quá ngày kết thúc đề xuất</translation>
+    </message>
+    <message>
+        <source>Ready to broadcast, check "Resume Proposal" dialog</source>
+        <translation>Sẵn sàng phát sóng, kiểm tra hộp thoại "Tiếp tục đề xuất"</translation>
+    </message>
+    <message>
+        <source>%1 Yes, %2 No, %3 Abstain, %4</source>
+        <translation>%1 Đồng ý, %2 Không, %3 Trắng, %4</translation>
+    </message>
+    <message>
+        <source>passing with %1 votes</source>
+        <translation>đang đạt với %1 phiếu</translation>
+    </message>
+    <message>
+        <source>needs %1 more votes</source>
+        <translation>cần thêm %1 phiếu</translation>
     </message>
     <message>
         <source>Hash</source>
@@ -2627,187 +3079,63 @@ Do ngừng hỗ trợ, bạn nên yêu cầu người bán cung cấp cho bạn 
         <translation>Số lượng</translation>
     </message>
     <message>
-        <source>Active</source>
-        <translation>Hoạt động</translation>
-    </message>
-    <message>
-        <source>Status</source>
-        <translation>Trạng thái</translation>
+        <source>Votes</source>
+        <translation>Phiếu bầu</translation>
     </message>
 </context>
 <context>
-    <name>ProposalWizard</name>
+    <name>ProposalResume</name>
     <message>
-        <source>Create Governance Proposal</source>
-        <translation>Tạo Đề xuất Quản trị</translation>
-    </message>
-    <message>
-        <source>Enter proposal details</source>
-        <translation>Nhập chi tiết đề xuất</translation>
-    </message>
-    <message>
-        <source>A fee will be burned when you prepare the proposal.</source>
-        <translation>Một khoản phí sẽ bị đốt khi bạn chuẩn bị đề xuất.</translation>
-    </message>
-    <message>
-        <source>Proposal &amp;name</source>
-        <translation>&amp;Tên đề xuất</translation>
-    </message>
-    <message>
-        <source>&amp;Description URL</source>
-        <translation>URL &amp;Mô tả</translation>
-    </message>
-    <message>
-        <source>Payment &amp;address</source>
-        <translation>&amp;Địa chỉ thanh toán</translation>
-    </message>
-    <message>
-        <source>Payment &amp;amount</source>
-        <translation>&amp;Số tiền thanh toán</translation>
-    </message>
-    <message>
-        <source>The amount to request in a single payment</source>
-        <translation>Số tiền yêu cầu trong một lần thanh toán</translation>
-    </message>
-    <message>
-        <source>&amp;First payment</source>
-        <translation>Thanh toán &amp;đầu tiên</translation>
-    </message>
-    <message>
-        <source>Pa&amp;yments</source>
-        <translation>Các khoản thanh &amp;toán</translation>
-    </message>
-    <message>
-        <source>To&amp;tal amount</source>
-        <translation>Tổng &amp;số tiền</translation>
-    </message>
-    <message>
-        <source>Proposal &amp;fee</source>
-        <translation>&amp;Phí đề xuất</translation>
-    </message>
-    <message>
-        <source>Next</source>
-        <translation>Tiếp theo</translation>
-    </message>
-    <message>
-        <source>Review proposal JSON and validate.</source>
-        <translation>Xem lại JSON đề xuất và xác thực.</translation>
-    </message>
-    <message>
-        <source>Hex-encoded JSON</source>
-        <translation>JSON mã hóa Hex</translation>
-    </message>
-    <message>
-        <source>Back</source>
-        <translation>Quay lại</translation>
-    </message>
-    <message>
-        <source>Validate</source>
-        <translation>Xác thực</translation>
-    </message>
-    <message>
-        <source>Prepare (burn fee) and wait for confirmations.</source>
-        <translation>Chuẩn bị (đốt phí) và đợi xác nhận.</translation>
-    </message>
-    <message>
-        <source>Copy</source>
-        <translation>Sao chép</translation>
-    </message>
-    <message>
-        <source>At 1/6 confirmations: can be relayed and queued. At 6/6: accepted and processed.</source>
-        <translation>Tại 1/6 xác nhận: có thể được chuyển tiếp và xếp hàng. Tại 6/6: được chấp nhận và xử lý.</translation>
-    </message>
-    <message>
-        <source>Confirmations progress</source>
-        <translation>Tiến trình xác nhận</translation>
-    </message>
-    <message>
-        <source>Shows progress toward the required number of confirmations for the proposal fee transaction.</source>
-        <translation>Hiển thị tiến trình hướng tới số lượng xác nhận cần thiết cho giao dịch phí đề xuất.</translation>
-    </message>
-    <message>
-        <source>Estimated time remaining: -</source>
-        <translation>Thời gian ước tính còn lại: -</translation>
-    </message>
-    <message>
-        <source>Prepare Proposal</source>
-        <translation>Chuẩn bị Đề xuất</translation>
-    </message>
-    <message>
-        <source>You can submit after 1 confirmation. At 6 confirmations it is accepted and processed.</source>
-        <translation>Bạn có thể gửi sau 1 xác nhận. Tại 6 xác nhận nó sẽ được chấp nhận và xử lý.</translation>
-    </message>
-    <message>
-        <source>Proposal ID:</source>
-        <translation>ID Đề xuất:</translation>
-    </message>
-    <message>
-        <source>Submit Proposal</source>
-        <translation>Gửi Đề xuất</translation>
+        <source>Resume Proposals</source>
+        <translation>Tiếp tục đề xuất</translation>
     </message>
     <message>
         <source>Close</source>
         <translation>Đóng</translation>
     </message>
     <message>
-        <source>Valid</source>
-        <translation>Hợp lệ</translation>
+        <source>No pending proposals to broadcast.</source>
+        <translation>Không có đề xuất nào đang chờ phát sóng.</translation>
     </message>
     <message>
-        <source>Invalid: %1</source>
-        <translation>Không hợp lệ: %1</translation>
+        <source>For %1 payment(s) of %2 to %3</source>
+        <translation>Cho %1 lần thanh toán %2 đến %3</translation>
     </message>
     <message>
-        <source>Burn %1</source>
-        <translation>Đốt %1</translation>
+        <source>Unknown</source>
+        <translation>Không xác định</translation>
     </message>
     <message>
-        <source>Burn %1 to create the fee transaction?</source>
-        <translation>Đốt %1 để tạo giao dịch phí?</translation>
+        <source>Pending</source>
+        <translation>Đang chờ</translation>
     </message>
     <message>
-        <source>Prepare failed</source>
-        <translation>Chuẩn bị thất bại</translation>
+        <source>Ready</source>
+        <translation>Sẵn sàng</translation>
     </message>
     <message>
-        <source>Confirmations: %1 / %2 required</source>
-        <translation>Xác nhận: %1 / %2 yêu cầu</translation>
+        <source>Collateral Hash</source>
+        <translation>Mã băm tài sản thế chấp</translation>
     </message>
     <message>
-        <source>Estimated time remaining: Ready</source>
-        <translation>Thời gian ước tính còn lại: Sẵn sàng</translation>
-    </message>
-    <message numerus="yes">
-        <source>Estimated time remaining: %n minute(s)</source>
-        <translation><numerusform>Thời gian ước tính còn lại: %n phút</numerusform></translation>
+        <source>Collateral Status</source>
+        <translation>Trạng thái tài sản thế chấp</translation>
     </message>
     <message>
-        <source>Your proposal was submitted successfully.</source>
-        <translation>Đề xuất của bạn đã được gửi thành công.</translation>
+        <source>Broadcast</source>
+        <translation>Phát sóng</translation>
     </message>
     <message>
-        <source>Already submitted</source>
-        <translation>Đã gửi</translation>
+        <source>Broadcast proposal</source>
+        <translation>Phát sóng đề xuất</translation>
     </message>
     <message>
-        <source>This proposal has already been submitted.</source>
-        <translation>Đề xuất này đã được gửi rồi.</translation>
+        <source>Proposal has been broadcasted to the network with hash %1</source>
+        <translation>Đề xuất đã được phát sóng đến mạng với mã băm %1</translation>
     </message>
     <message>
-        <source>Submission failed</source>
-        <translation>Gửi thất bại</translation>
-    </message>
-    <message>
-        <source>Proposal submitted</source>
-        <translation>Đề xuất đã gửi</translation>
-    </message>
-    <message>
-        <source>A fee of %1 will be burned when you prepare the proposal.</source>
-        <translation>Phí %1 sẽ bị đốt khi bạn chuẩn bị đề xuất.</translation>
-    </message>
-    <message>
-        <source>Prepare (burn %1) and wait for %2 confirmations.</source>
-        <translation>Chuẩn bị (đốt %1) và đợi %2 xác nhận.</translation>
+        <source>Unable to broadcast proposal, %1</source>
+        <translation>Không thể phát sóng đề xuất, %1</translation>
     </message>
 </context>
 <context>
@@ -2875,8 +3203,8 @@ Do ngừng hỗ trợ, bạn nên yêu cầu người bán cung cấp cho bạn 
         <translation>Lỗi: Không tải được phông chữ ứng dụng.</translation>
     </message>
     <message>
-        <source>Error: Specified font-family invalid. Valid values: %1.</source>
-        <translation>Lỗi: Họ phông chữ được chỉ định không hợp lệ. Giá trị hợp lệ: %1.</translation>
+        <source>Error: Font "%1" could not be loaded.</source>
+        <translation>Lỗi: Không thể tải phông chữ "%1".</translation>
     </message>
     <message>
         <source>Error: Specified font-weight-normal invalid. Valid range %1 to %2.</source>
@@ -3045,6 +3373,170 @@ Do ngừng hỗ trợ, bạn nên yêu cầu người bán cung cấp cho bạn 
         <source>unknown</source>
         <translation>không xác định</translation>
     </message>
+    <message>
+        <source>Default monospace font "%1"</source>
+        <translation>Phông chữ đơn cách mặc định "%1"</translation>
+    </message>
+    <message>
+        <source>Embedded "%1"</source>
+        <translation>Nhúng "%1"</translation>
+    </message>
+    <message>
+        <source>Use existing font</source>
+        <translation>Sử dụng phông chữ hiện có</translation>
+    </message>
+    <message>
+        <source>Custom…</source>
+        <translation>Tùy chỉnh…</translation>
+    </message>
+    <message>
+        <source>Error: Wallet controller not available.</source>
+        <translation>Lỗi: Bộ điều khiển ví không khả dụng.</translation>
+    </message>
+    <message>
+        <source>Error: Rescan failed. Wallet not loaded.</source>
+        <translation>Lỗi: Quét lại thất bại. Ví chưa được tải.</translation>
+    </message>
+    <message>
+        <source>UNKNOWN</source>
+        <translation>KHÔNG XÁC ĐỊNH</translation>
+    </message>
+    <message>
+        <source>to %1</source>
+        <translation>đến %1</translation>
+    </message>
+    <message>
+        <source>to UNKNOWN</source>
+        <translation>đến KHÔNG XÁC ĐỊNH</translation>
+    </message>
+    <message>
+        <source>but not claimed</source>
+        <translation>nhưng chưa được nhận</translation>
+    </message>
+    <message>
+        <source>NONE</source>
+        <translation>KHÔNG CÓ</translation>
+    </message>
+    <message>
+        <source>ProTx Hash</source>
+        <translation>Mã băm ProTx</translation>
+    </message>
+    <message>
+        <source>Public Key Operator</source>
+        <translation>Khóa công khai vận hành</translation>
+    </message>
+    <message>
+        <source>Owner Address</source>
+        <translation>Địa chỉ chủ sở hữu</translation>
+    </message>
+    <message>
+        <source>Payout Address</source>
+        <translation>Địa chỉ thanh toán</translation>
+    </message>
+    <message>
+        <source>Voting Address</source>
+        <translation>Địa chỉ bỏ phiếu</translation>
+    </message>
+    <message>
+        <source>Collateral Address</source>
+        <translation>Địa chỉ tài sản thế chấp</translation>
+    </message>
+    <message>
+        <source>Collateral Hash</source>
+        <translation>Mã băm tài sản thế chấp</translation>
+    </message>
+    <message>
+        <source>Collateral Index</source>
+        <translation>Chỉ mục tài sản thế chấp</translation>
+    </message>
+    <message>
+        <source>Masternode Type</source>
+        <translation>Loại Masternode</translation>
+    </message>
+    <message>
+        <source>Registered Height</source>
+        <translation>Chiều cao đăng ký</translation>
+    </message>
+    <message>
+        <source>Last Paid Height</source>
+        <translation>Chiều cao thanh toán cuối</translation>
+    </message>
+    <message>
+        <source>Consecutive Payments</source>
+        <translation>Thanh toán liên tiếp</translation>
+    </message>
+    <message>
+        <source>Operator Reward</source>
+        <translation>Phần thưởng vận hành</translation>
+    </message>
+    <message>
+        <source>Network Addresses</source>
+        <translation>Địa chỉ mạng</translation>
+    </message>
+    <message>
+        <source>Platform HTTPS Addresses</source>
+        <translation>Địa chỉ HTTPS nền tảng</translation>
+    </message>
+    <message>
+        <source>Platform P2P Addresses</source>
+        <translation>Địa chỉ P2P nền tảng</translation>
+    </message>
+    <message>
+        <source>Platform Node ID</source>
+        <translation>ID nút nền tảng</translation>
+    </message>
+    <message>
+        <source>PoSe Penalty</source>
+        <translation>Hình phạt PoSe</translation>
+    </message>
+    <message>
+        <source>PoSe Ban Height</source>
+        <translation>Chiều cao cấm PoSe</translation>
+    </message>
+    <message>
+        <source>PoSe Revived Height</source>
+        <translation>Chiều cao khôi phục PoSe</translation>
+    </message>
+    <message>
+        <source>Title</source>
+        <translation>Tiêu đề</translation>
+    </message>
+    <message>
+        <source>URL</source>
+        <translation>URL</translation>
+    </message>
+    <message>
+        <source>Destination Address</source>
+        <translation>Địa chỉ đích</translation>
+    </message>
+    <message>
+        <source>Payment Amount</source>
+        <translation>Số tiền thanh toán</translation>
+    </message>
+    <message>
+        <source>Payments Requested</source>
+        <translation>Số lần thanh toán yêu cầu</translation>
+    </message>
+    <message>
+        <source>Payment Start</source>
+        <translation>Bắt đầu thanh toán</translation>
+    </message>
+    <message>
+        <source>Payment End</source>
+        <translation>Kết thúc thanh toán</translation>
+    </message>
+    <message>
+        <source>Object Hash</source>
+        <translation>Mã băm đối tượng</translation>
+    </message>
+    <message>
+        <source>Parent Hash</source>
+        <translation>Mã băm cha</translation>
+    </message>
+    <message>
+        <source>Collateral Date</source>
+        <translation>Ngày tài sản thế chấp</translation>
+    </message>
 </context>
 <context>
     <name>QRDialog</name>
@@ -3184,6 +3676,10 @@ Do ngừng hỗ trợ, bạn nên yêu cầu người bán cung cấp cho bạn 
         <translation>&amp;Máy ngang cấp</translation>
     </message>
     <message>
+        <source>&amp;Repair</source>
+        <translation>&amp;Sửa chữa</translation>
+    </message>
+    <message>
         <source>Wallet:</source>
         <translation>Ví:</translation>
     </message>
@@ -3263,26 +3759,6 @@ Do ngừng hỗ trợ, bạn nên yêu cầu người bán cung cấp cho bạn 
         <source>Addresses Rate-Limited</source>
         <extracomment>Text title for the Addresses Rate-Limited field in the peer details area, which displays the total number of addresses received from this peer that were dropped (not processed) due to rate-limiting.</extracomment>
         <translation>Địa chỉ bị giới hạn tốc độ</translation>
-    </message>
-    <message>
-        <source>Rescan blockchain files 1</source>
-        <translation>Quét lại các tệp blockchain 1</translation>
-    </message>
-    <message>
-        <source>Rescan blockchain files 2</source>
-        <translation>Quét lại các tệp blockchain 2</translation>
-    </message>
-    <message>
-        <source>The buttons below will restart the wallet with command-line options to repair the wallet, fix issues with corrupt blockchain files or missing/obsolete transactions.</source>
-        <translation>Các nút bên dưới sẽ khởi động lại ví với các tùy chọn dòng lệnh để sửa chữa ví, khắc phục sự cố với các tệp blockchain bị hỏng hoặc các giao dịch bị thiếu/lỗi thời.</translation>
-    </message>
-    <message>
-        <source>-rescan=1: Rescan the block chain for missing wallet transactions starting from wallet creation time.</source>
-        <translation>-rescan=1: Quét lại blockchain để tìm các giao dịch ví bị thiếu bắt đầu từ thời điểm tạo ví.</translation>
-    </message>
-    <message>
-        <source>-rescan=2: Rescan the block chain for missing wallet transactions starting from genesis block.</source>
-        <translation>-rescan=2: Quét lại blockchain để tìm các giao dịch ví bị thiếu bắt đầu từ khối genesis.</translation>
     </message>
     <message>
         <source>User Agent</source>
@@ -3445,8 +3921,36 @@ Do ngừng hỗ trợ, bạn nên yêu cầu người bán cung cấp cho bạn 
         <translation>Time Offset</translation>
     </message>
     <message>
-        <source>&amp;Wallet Repair</source>
-        <translation>Sửa &amp;Ví</translation>
+        <source>Repair options.</source>
+        <translation>Tùy chọn sửa chữa.</translation>
+    </message>
+    <message>
+        <source>The buttons below will trigger repair actions to fix issues with corrupt files or missing/obsolete transactions.</source>
+        <translation>Các nút bên dưới sẽ kích hoạt các hành động sửa chữa để khắc phục sự cố với tệp bị hỏng hoặc giao dịch bị thiếu/lỗi thời.</translation>
+    </message>
+    <message>
+        <source>Rescan Chain</source>
+        <translation>Quét lại chuỗi</translation>
+    </message>
+    <message>
+        <source>Rescan the chain for missing wallet transactions starting from wallet creation time.</source>
+        <translation>Quét lại chuỗi để tìm giao dịch ví bị thiếu bắt đầu từ thời điểm tạo ví.</translation>
+    </message>
+    <message>
+        <source>Rescan Chain (full)</source>
+        <translation>Quét lại chuỗi (đầy đủ)</translation>
+    </message>
+    <message>
+        <source>Rescan the chain for missing wallet transactions starting from genesis block.</source>
+        <translation>Quét lại chuỗi để tìm giao dịch ví bị thiếu bắt đầu từ khối genesis.</translation>
+    </message>
+    <message>
+        <source>Rebuild Index</source>
+        <translation>Xây dựng lại chỉ mục</translation>
+    </message>
+    <message>
+        <source>Restarts the client to rebuild the chain index from current blk000??.dat files.</source>
+        <translation>Khởi động lại ứng dụng để xây dựng lại chỉ mục chuỗi từ các tệp blk000??.dat hiện tại.</translation>
     </message>
     <message>
         <source>The total number of addresses received from this peer that were processed (excludes addresses that were dropped due to rate-limiting).</source>
@@ -3457,18 +3961,6 @@ Do ngừng hỗ trợ, bạn nên yêu cầu người bán cung cấp cho bạn 
         <source>The total number of addresses received from this peer that were dropped (not processed) due to rate-limiting.</source>
         <extracomment>Tooltip text for the Addresses Rate-Limited field in the peer details area, which displays the total number of addresses received from this peer that were dropped (not processed) due to rate-limiting.</extracomment>
         <translation>Tổng số địa chỉ nhận được từ peer này đã bị loại bỏ (không được xử lý) do giới hạn tốc độ.</translation>
-    </message>
-    <message>
-        <source>Wallet repair options.</source>
-        <translation>Các tuỳ chọn sửa ví.</translation>
-    </message>
-    <message>
-        <source>Rebuild index</source>
-        <translation>Lập lại chỉ mục</translation>
-    </message>
-    <message>
-        <source>-reindex: Rebuild block chain index from current blk000??.dat files.</source>
-        <translation>-reindex: Tái lập lại chỉ mục cho chuỗi khối từ tệp hiện tại blk000??.dat</translation>
     </message>
     <message>
         <source>Inbound: initiated by peer</source>
@@ -3633,7 +4125,7 @@ Do ngừng hỗ trợ, bạn nên yêu cầu người bán cung cấp cho bạn 
     </message>
     <message>
         <source>&amp;Copy address</source>
-        <extracomment>Context menu action to copy the address of a peer</extracomment>
+        <extracomment>Context menu action to copy the address of a peer.</extracomment>
         <translation>&amp;Sao chép địa chỉ</translation>
     </message>
     <message>
@@ -3642,7 +4134,7 @@ Do ngừng hỗ trợ, bạn nên yêu cầu người bán cung cấp cho bạn 
     </message>
     <message>
         <source>&amp;Copy IP/Netmask</source>
-        <extracomment>Context menu action to copy the IP/Netmask of a banned peer. IP/Netmask is the combination of a peer's IP address and its Netmask. For IP address see: https://en.wikipedia.org/wiki/IP_address</extracomment>
+        <extracomment>Context menu action to copy the IP/Netmask of a banned peer. IP/Netmask is the combination of a peer's IP address and its Netmask. For IP address, see: https://en.wikipedia.org/wiki/IP_address.</extracomment>
         <translation>&amp;Sao chép IP/Netmask</translation>
     </message>
     <message>
@@ -3842,6 +4334,14 @@ Nhập %5 để xem tổng quan về các lệnh có sẵn.
         <translation>Copy địa chỉ</translation>
     </message>
     <message>
+        <source>&amp;Verify</source>
+        <translation>&amp;Xác minh</translation>
+    </message>
+    <message>
+        <source>Verify this address on e.g. a hardware wallet screen</source>
+        <translation>Xác minh địa chỉ này trên ví dụ màn hình ví phần cứng</translation>
+    </message>
+    <message>
         <source>&amp;Save Image…</source>
         <translation>&amp;Lưu ảnh…</translation>
     </message>
@@ -3883,6 +4383,33 @@ Nhập %5 để xem tổng quan về các lệnh có sẵn.
     <message>
         <source>Requested</source>
         <translation>Đã yêu cầu</translation>
+    </message>
+</context>
+<context>
+    <name>RescanWalletActivity</name>
+    <message>
+        <source>Rescan unavailable</source>
+        <translation>Quét lại không khả dụng</translation>
+    </message>
+    <message>
+        <source>Wallet is currently rescanning. Abort existing rescan or wait.</source>
+        <translation>Ví hiện đang quét lại. Hủy quét hiện tại hoặc chờ.</translation>
+    </message>
+    <message>
+        <source>Rescan wallet failed</source>
+        <translation>Quét lại ví thất bại</translation>
+    </message>
+    <message>
+        <source>Rescan failed. Potentially corrupted data files.</source>
+        <translation>Quét lại thất bại. Tệp dữ liệu có thể bị hỏng.</translation>
+    </message>
+    <message>
+        <source>Rescan aborted</source>
+        <translation>Đã hủy quét lại</translation>
+    </message>
+    <message>
+        <source>Wallet rescan was aborted.</source>
+        <translation>Việc quét lại ví đã bị hủy.</translation>
     </message>
 </context>
 <context>
@@ -4104,10 +4631,6 @@ Nhập %5 để xem tổng quan về các lệnh có sẵn.
         <translation>&amp;Tạo Chưa ký</translation>
     </message>
     <message>
-        <source> from wallet '%1'</source>
-        <translation> từ ví '%1'</translation>
-    </message>
-    <message>
         <source>%1 to '%2'</source>
         <translation>%1 đến '%2'</translation>
     </message>
@@ -4176,9 +4699,39 @@ Nhập %5 để xem tổng quan về các lệnh có sẵn.
         <translation>Tạo Giao dịch Blockchain Được Ký Một Phần (PSBT) để sử dụng với ví %1 ngoại tuyến hoặc ví phần cứng tương thích PSBT.</translation>
     </message>
     <message>
+        <source>Sign on device</source>
+        <extracomment>"device" usually means a hardware wallet.</extracomment>
+        <translation>Ký trên thiết bị</translation>
+    </message>
+    <message>
+        <source>Connect your hardware wallet first.</source>
+        <translation>Hãy kết nối ví phần cứng trước.</translation>
+    </message>
+    <message>
+        <source>Set external signer script path in Options -&gt; Wallet</source>
+        <extracomment>"External signer" means using devices such as hardware wallets.</extracomment>
+        <translation>Đặt đường dẫn tập lệnh người ký bên ngoài trong Tùy chọn -&gt; Ví</translation>
+    </message>
+    <message>
+        <source>Confirm duplicate recipients</source>
+        <translation>Xác nhận người nhận trùng lặp</translation>
+    </message>
+    <message>
+        <source>You are sending to the same address multiple times in a single transaction. This is unusual and may not be what you intended. Are you sure you want to proceed?</source>
+        <translation>Bạn đang gửi đến cùng một địa chỉ nhiều lần trong một giao dịch. Điều này bất thường và có thể không phải ý định của bạn. Bạn có chắc chắn muốn tiếp tục không?</translation>
+    </message>
+    <message>
+        <source>%1 from wallet '%2'</source>
+        <translation>%1 từ ví '%2'</translation>
+    </message>
+    <message>
         <source>Do you want to create this transaction?</source>
         <extracomment>Message displayed when attempting to create a transaction. Cautionary text to prompt the user to verify that the displayed transaction details represent the transaction the user intends to create.</extracomment>
         <translation>Bạn có muốn tạo giao dịch này không?</translation>
+    </message>
+    <message>
+        <source>Do you want to draft this transaction?</source>
+        <translation>Bạn có muốn tạo bản nháp giao dịch này không?</translation>
     </message>
     <message>
         <source>Please, review your transaction proposal. This will produce a Partially Signed Blockchain Transaction (PSBT) which you can save or copy and then sign with e.g. an offline %1 wallet, or a PSBT-compatible hardware wallet.</source>
@@ -4200,9 +4753,27 @@ Nhập %5 để xem tổng quan về các lệnh có sẵn.
         <translation>Để xem xét danh sách người nhận, nhấp vào "Hiển thị Chi tiết…"</translation>
     </message>
     <message>
+        <source>Sign failed</source>
+        <translation>Ký thất bại</translation>
+    </message>
+    <message>
+        <source>External signer not found</source>
+        <extracomment>"External signer" means using devices such as hardware wallets.</extracomment>
+        <translation>Không tìm thấy người ký bên ngoài</translation>
+    </message>
+    <message>
+        <source>External signer failure</source>
+        <extracomment>"External signer" means using devices such as hardware wallets.</extracomment>
+        <translation>Lỗi người ký bên ngoài</translation>
+    </message>
+    <message>
         <source>Partially Signed Transaction (Binary)</source>
         <extracomment>Expanded name of the binary PSBT file format. See: BIP 174.</extracomment>
         <translation>Giao dịch Được Ký Một Phần (Nhị phân)</translation>
+    </message>
+    <message>
+        <source>External balance:</source>
+        <translation>Số dư bên ngoài:</translation>
     </message>
     <message>
         <source>The recipient address is not valid. Please recheck.</source>
@@ -4219,10 +4790,6 @@ Nhập %5 để xem tổng quan về các lệnh có sẵn.
     <message>
         <source>The total exceeds your balance when the %1 transaction fee is included.</source>
         <translation>Tổng số lớn hơn số dư của bạn khi tính cả %1 phí giao dịch.</translation>
-    </message>
-    <message>
-        <source>Duplicate address found: addresses should only be used once each.</source>
-        <translation>Tìm thấy địa chỉ trùng: các địa chỉ chỉ có thể được dùng mỗi lần một.</translation>
     </message>
     <message>
         <source>Transaction creation failed!</source>
@@ -4710,17 +5277,6 @@ Nhập %5 để xem tổng quan về các lệnh có sẵn.
     </message>
 </context>
 <context>
-    <name>TransactionDescDialog</name>
-    <message>
-        <source>This pane shows a detailed description of the transaction</source>
-        <translation>Bảng này hiển thị mô tả chi tiết về giao dịch</translation>
-    </message>
-    <message>
-        <source>Details for %1</source>
-        <translation>Details for %1</translation>
-    </message>
-</context>
-<context>
     <name>TransactionTableModel</name>
     <message>
         <source>Date</source>
@@ -4797,6 +5353,10 @@ Nhập %5 để xem tổng quan về các lệnh có sẵn.
     <message>
         <source>Platform Transfer</source>
         <translation>Chuyển nền tảng</translation>
+    </message>
+    <message>
+        <source>Dust Receive</source>
+        <translation>Nhận bụi</translation>
     </message>
     <message>
         <source>%1 Mixing</source>
@@ -4930,6 +5490,10 @@ Nhập %5 để xem tổng quan về các lệnh có sẵn.
         <translation>Chuyển nền tảng</translation>
     </message>
     <message>
+        <source>Dust Receive</source>
+        <translation>Nhận bụi</translation>
+    </message>
+    <message>
         <source>Other</source>
         <translation>Khác</translation>
     </message>
@@ -4976,6 +5540,10 @@ Nhập %5 để xem tổng quan về các lệnh có sẵn.
     <message>
         <source>Rese&amp;nd transaction</source>
         <translation>Gửi &amp;lại giao dịch</translation>
+    </message>
+    <message>
+        <source>&amp;Unlock dust UTXO</source>
+        <translation>&amp;Mở khóa UTXO bụi</translation>
     </message>
     <message>
         <source>&amp;Edit address label</source>
@@ -5042,6 +5610,10 @@ Nhập %5 để xem tổng quan về các lệnh có sẵn.
     <message>
         <source>The transaction history was successfully saved to %1.</source>
         <translation>Lịch sử giao dịch đã được lưu thành công vào %1.</translation>
+    </message>
+    <message>
+        <source>Details for %1</source>
+        <translation>Chi tiết của %1</translation>
     </message>
     <message>
         <source>QR code</source>
@@ -5132,6 +5704,10 @@ Vào File &gt; Mở Ví để tải một ví.
         <translation>Gửi tiền</translation>
     </message>
     <message>
+        <source>Can't display address</source>
+        <translation>Không thể hiển thị địa chỉ</translation>
+    </message>
+    <message>
         <source>default wallet</source>
         <translation>ví mặc định</translation>
     </message>
@@ -5174,6 +5750,26 @@ Vào File &gt; Mở Ví để tải một ví.
     <message>
         <source>The wallet data was successfully saved to %1.</source>
         <translation>Dữ liệu ví đã được lưu thành công vào %1.</translation>
+    </message>
+    <message>
+        <source>No Recovery Phrase</source>
+        <translation>Không có cụm từ khôi phục</translation>
+    </message>
+    <message>
+        <source>This wallet does not have private keys and therefore has no recovery phrase.</source>
+        <translation>Ví này không có khóa riêng tư và do đó không có cụm từ khôi phục.</translation>
+    </message>
+    <message>
+        <source>This wallet was not created with HD (Hierarchical Deterministic) mode and does not have a recovery phrase.</source>
+        <translation>Ví này không được tạo ở chế độ HD (Phân cấp xác định) và không có cụm từ khôi phục.</translation>
+    </message>
+    <message>
+        <source>Mnemonic Retrieval Failed</source>
+        <translation>Lấy cụm từ ghi nhớ thất bại</translation>
+    </message>
+    <message>
+        <source>Could not retrieve the recovery phrase from this wallet.</source>
+        <translation>Không thể lấy cụm từ khôi phục từ ví này.</translation>
     </message>
     <message>
         <source>Cancel</source>
@@ -5265,10 +5861,6 @@ Vào File &gt; Mở Ví để tải một ví.
     <message>
         <source>SQLiteDatabase: Unknown sqlite wallet schema version %d. Only version %d is supported</source>
         <translation>SQLiteDatabase: Phiên bản lược đồ ví sqlite không xác định %d. Chỉ phiên bản %d được hỗ trợ</translation>
-    </message>
-    <message>
-        <source>Transaction index can't be disabled with governance validation enabled. Either start with -disablegovernance command line switch or enable transaction index.</source>
-        <translation>Chỉ mục giao dịch không thể tắt với tính năng xác thực quản trị đã được bật. Thay vào đó hãy khởi động với câu lệnh -disablegovernance hoặc bật chế độ chỉ mục giao dịch.</translation>
     </message>
     <message>
         <source>Unsupported category-specific logging level -loglevel=%s. Expected -loglevel=&lt;category&gt;:&lt;loglevel&gt;. Valid categories: %s. Valid loglevels: %s.</source>
@@ -5427,6 +6019,22 @@ Vào File &gt; Mở Ví để tải một ví.
         <translation>File %s có chứa tất cả các khoá riêng từ ví này. Không nên chia sẻ nó với bất cứ ai.</translation>
     </message>
     <message>
+        <source>%s request to listen on port %u. This port is considered "bad" and thus it is unlikely that any peer will connect to it. See doc/p2p-bad-ports.md for details and a full list.</source>
+        <translation>Yêu cầu %s lắng nghe trên cổng %u. Cổng này được coi là "xấu" và do đó không có nút ngang hàng nào có thể kết nối đến. Xem doc/p2p-bad-ports.md để biết chi tiết và danh sách đầy đủ.</translation>
+    </message>
+    <message>
+        <source>Disk space for %s may not accommodate the block files. Approximately %u GB of data will be stored in this directory.</source>
+        <translation>Dung lượng đĩa cho %s có thể không đủ cho các tệp khối. Khoảng %u GB dữ liệu sẽ được lưu trong thư mục này.</translation>
+    </message>
+    <message>
+        <source>Error loading %s: External signer wallet being loaded without external signer support compiled</source>
+        <translation>Lỗi khi tải %s: Ví người ký bên ngoài đang được tải mà không có hỗ trợ người ký bên ngoài được biên dịch</translation>
+    </message>
+    <message>
+        <source>Error: Dumpfile version is not supported. This version of dash-wallet only supports version 1 dumpfiles. Got dumpfile with version %s</source>
+        <translation>Lỗi: Phiên bản tệp kết xuất không được hỗ trợ. Phiên bản dash-wallet này chỉ hỗ trợ tệp kết xuất phiên bản 1. Nhận được tệp kết xuất phiên bản %s</translation>
+    </message>
+    <message>
         <source>Failed to create backup, file already exists! This could happen if you restarted wallet in less than 60 seconds. You can continue if you are ok with this.</source>
         <translation>Không tạo được file dự phòng, file đã tồn tại rồi! Điều này có thể xảy ra nếu bạn khởi động lại ví trong ít hơn 60 giây. Bạn có thể tiếp tục nếu bạn đồng ý với việc đó.</translation>
     </message>
@@ -5483,6 +6091,10 @@ Vào File &gt; Mở Ví để tải một ví.
         <translation>Tự động backup đã bị tắt</translation>
     </message>
     <message>
+        <source>Cannot set -forcednsseed to true when setting -dnsseed to false.</source>
+        <translation>Không thể đặt -forcednsseed thành true khi -dnsseed được đặt thành false.</translation>
+    </message>
+    <message>
         <source>Cannot set -peerblockfilters without -blockfilterindex.</source>
         <translation>Không thể đặt -peerblockfilters mà không có -blockfilterindex.</translation>
     </message>
@@ -5505,6 +6117,10 @@ Vào File &gt; Mở Ví để tải một ví.
     <message>
         <source>Error loading %s: Private keys can only be disabled during creation</source>
         <translation>Lỗi tải %s: Khóa riêng chỉ có thể bị vô hiệu hóa trong quá trình tạo</translation>
+    </message>
+    <message>
+        <source>Error: Cannot extract destination from the generated scriptpubkey</source>
+        <translation>Lỗi: Không thể trích xuất đích từ scriptpubkey đã tạo</translation>
     </message>
     <message>
         <source>Error: Couldn't create cursor into database</source>
@@ -5703,6 +6319,10 @@ Vào File &gt; Mở Ví để tải một ví.
         <translation>Không thể tạo tệp PID '%s': %s</translation>
     </message>
     <message>
+        <source>Unable to find UTXO for external input</source>
+        <translation>Không thể tìm UTXO cho đầu vào bên ngoài</translation>
+    </message>
+    <message>
         <source>Unable to generate initial keys</source>
         <translation>Không thể sinh các khoá khởi tạo</translation>
     </message>
@@ -5801,10 +6421,6 @@ Vào File &gt; Mở Ví để tải một ví.
     <message>
         <source>Error: Dumpfile identifier record is incorrect. Got "%s", expected "%s".</source>
         <translation>Lỗi: Bản ghi định danh dumpfile không chính xác. Nhận được "%s", mong đợi "%s".</translation>
-    </message>
-    <message>
-        <source>Error: Dumpfile version is not supported. This version of bitcoin-wallet only supports version 1 dumpfiles. Got dumpfile with version %s</source>
-        <translation>Lỗi: Phiên bản dumpfile không được hỗ trợ. Phiên bản bitcoin-wallet này chỉ hỗ trợ dumpfile phiên bản 1. Nhận được dumpfile với phiên bản %s</translation>
     </message>
     <message>
         <source>Failed to rename invalid peers.dat file. Please move or delete it and try again.</source>
@@ -6133,10 +6749,6 @@ Vào File &gt; Mở Ví để tải một ví.
     <message>
         <source>%s is set very high! Fees this large could be paid on a single transaction.</source>
         <translation>%s được đặt rất cao! Phí lớn như vậy có thể được trả cho một giao dịch duy nhất.</translation>
-    </message>
-    <message>
-        <source>%s request to listen on port %u. This port is considered "bad" and thus it is unlikely that any Dash Core peers connect to it. See doc/p2p-bad-ports.md for details and a full list.</source>
-        <translation>%s yêu cầu lắng nghe trên cổng %u. Cổng này được coi là "xấu" và do đó khó có khả năng bất kỳ peer Dash Core nào kết nối với nó. Xem doc/p2p-bad-ports.md để biết chi tiết và danh sách đầy đủ.</translation>
     </message>
     <message>
         <source>Cannot provide specific connections and have addrman find outgoing connections at the same time.</source>
