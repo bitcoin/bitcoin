@@ -173,6 +173,10 @@
         <source>Font Weight Bold:</source>
         <translation>Tučná váha písma:</translation>
     </message>
+    <message>
+        <source>Font in the Overview tab: </source>
+        <translation>Písmo na karte Prehľad: </translation>
+    </message>
 </context>
 <context>
     <name>AskPassphraseDialog</name>
@@ -325,6 +329,10 @@
 </context>
 <context>
     <name>BitcoinApplication</name>
+    <message>
+        <source>Settings file %1 might be corrupt or invalid.</source>
+        <translation>Súbor nastavení %1 môže byť poškodený alebo neplatný.</translation>
+    </message>
     <message>
         <source>Runaway exception</source>
         <translation>Neodchytená výnimka</translation>
@@ -501,6 +509,14 @@
         <translation>Zmeniť heslo použité na šifrovanie peňaženky</translation>
     </message>
     <message>
+        <source>&amp;Show Recovery Phrase…</source>
+        <translation>&amp;Zobraziť frázu na obnovenie…</translation>
+    </message>
+    <message>
+        <source>Show the recovery phrase (mnemonic seed) for this wallet</source>
+        <translation>Zobraziť frázu na obnovenie (mnemonické semeno) pre túto peňaženku</translation>
+    </message>
+    <message>
         <source>Unlock wallet</source>
         <translation>Odomknúť peňaženku</translation>
     </message>
@@ -587,6 +603,26 @@
     <message>
         <source>%1 client</source>
         <translation>%1 klient</translation>
+    </message>
+    <message>
+        <source>Waiting for blockchain sync…</source>
+        <translation>Čakanie na synchronizáciu blockchainu…</translation>
+    </message>
+    <message>
+        <source>Synchronizing governance data…</source>
+        <translation>Synchronizácia údajov správy…</translation>
+    </message>
+    <message numerus="yes">
+        <source>~%n day(s) (%1 blocks) left for superblock</source>
+        <translation><numerusform>~%n deň (%1 blokov) do superbloku</numerusform><numerusform>~%n dni (%1 blokov) do superbloku</numerusform><numerusform>~%n dní (%1 blokov) do superbloku</numerusform><numerusform>~%n dní (%1 blokov) do superbloku</numerusform></translation>
+    </message>
+    <message numerus="yes">
+        <source>~%n day(s) (%1 blocks) left for voting</source>
+        <translation><numerusform>~%n deň (%1 blokov) do hlasovania</numerusform><numerusform>~%n dni (%1 blokov) do hlasovania</numerusform><numerusform>~%n dní (%1 blokov) do hlasovania</numerusform><numerusform>~%n dní (%1 blokov) do hlasovania</numerusform></translation>
+    </message>
+    <message>
+        <source>~%1% of budget committed (%2 %3).</source>
+        <translation>~%1% rozpočtu viazaných (%2 %3).</translation>
     </message>
     <message>
         <source>Wallet: %1
@@ -808,10 +844,6 @@
     <message>
         <source>Up to date</source>
         <translation>Aktualizovaný</translation>
-    </message>
-    <message>
-        <source>Synchronizing additional data: %p%</source>
-        <translation>Synchronizujú sa ďalšie dáta: %p%</translation>
     </message>
     <message>
         <source>Error</source>
@@ -1115,6 +1147,38 @@
         <source>Create wallet warning</source>
         <translation>Vytvorenie peňaženky s upozornením</translation>
     </message>
+    <message>
+        <source>Unlock failed</source>
+        <translation>Odomknutie zlyhalo</translation>
+    </message>
+    <message>
+        <source>Failed to unlock wallet for mnemonic verification. Wallet creation completed but verification skipped.</source>
+        <translation>Nepodarilo sa odomknúť peňaženku na overenie mnemonickej frázy. Vytvorenie peňaženky bolo dokončené, ale overenie bolo preskočené.</translation>
+    </message>
+    <message>
+        <source>Mnemonic retrieval failed</source>
+        <translation>Získanie mnemonickej frázy zlyhalo</translation>
+    </message>
+    <message>
+        <source>Could not retrieve mnemonic phrase from wallet. Wallet creation completed but verification skipped.</source>
+        <translation>Nepodarilo sa získať mnemonickú frázu z peňaženky. Vytvorenie peňaženky bolo dokončené, ale overenie bolo preskočené.</translation>
+    </message>
+    <message>
+        <source>Verification cancelled</source>
+        <translation>Overenie zrušené</translation>
+    </message>
+    <message>
+        <source>You cancelled mnemonic verification. Please make sure you have saved your mnemonic phrase safely.</source>
+        <translation>Zrušili ste overenie mnemonickej frázy. Uistite sa, že ste si mnemonickú frázu bezpečne uložili.</translation>
+    </message>
+    <message>
+        <source>Can't list signers</source>
+        <translation>Nie je možné zobraziť zoznam podpisovateľov</translation>
+    </message>
+    <message>
+        <source>Too many external signers found</source>
+        <translation>Nájdených príliš veľa externých podpisovateľov</translation>
+    </message>
 </context>
 <context>
     <name>CreateWalletDialog</name>
@@ -1139,8 +1203,24 @@
         <translation>Zašifrovať peňaženku</translation>
     </message>
     <message>
-        <source>Advanced Options</source>
-        <translation>Pokročilé možnosti</translation>
+        <source>Use descriptors for scriptPubKey management.</source>
+        <translation>Použiť deskriptory na správu scriptPubKey.</translation>
+    </message>
+    <message>
+        <source>Descriptor Wallet</source>
+        <translation>Deskriptorová peňaženka</translation>
+    </message>
+    <message>
+        <source>Use an external signing device such as a hardware wallet. Configure the external signer script in wallet preferences first.</source>
+        <translation>Použiť externé podpisovacie zariadenie, napríklad hardvérovú peňaženku. Najprv nakonfigurujte skript externého podpisovateľa v nastaveniach peňaženky.</translation>
+    </message>
+    <message>
+        <source>External signer</source>
+        <translation>Externý podpisovateľ</translation>
+    </message>
+    <message>
+        <source>Show Advanced Options</source>
+        <translation>Zobraziť rozšírené možnosti</translation>
     </message>
     <message>
         <source>Disable private keys for this wallet. Wallets with private keys disabled will have no private keys and cannot have an HD seed or imported private keys. This is ideal for watch-only wallets.</source>
@@ -1159,20 +1239,28 @@
         <translation>Vytvoriť prázdnu peňaženku</translation>
     </message>
     <message>
-        <source>Use descriptors for scriptPubKey management. This feature is well-tested but still considered experimental and not recommended for use yet.</source>
-        <translation>Použiť deskriptory pre správu scriptPubKey. Táto funkcia je dobre otestovaná, ale stále sa považuje za experimentálnu a zatiaľ sa neodporúča na použitie.</translation>
-    </message>
-    <message>
-        <source>Descriptor Wallet (EXPERIMENTAL)</source>
-        <translation>Deskriptorová peňaženka (EXPERIMENTÁLNE)</translation>
-    </message>
-    <message>
         <source>Create</source>
         <translation>Vytvoriť</translation>
     </message>
     <message>
+        <source>Hide Advanced Options</source>
+        <translation>Skryť rozšírené možnosti</translation>
+    </message>
+    <message>
         <source>Compiled without sqlite support (required for descriptor wallets)</source>
         <translation>Skompilované bez podpory sqlite (vyžadované pre deskriptorové peňaženky)</translation>
+    </message>
+    <message>
+        <source>Compiled without external signing support (required for external signing)</source>
+        <extracomment>"External signing" means using devices such as hardware wallets.</extracomment>
+        <translation>Kompilované bez podpory externého podpisovania (vyžadované pre externé podpisovanie)</translation>
+    </message>
+</context>
+<context>
+    <name>DescriptionDialog</name>
+    <message>
+        <source>This pane shows detailed information</source>
+        <translation>Tento panel zobrazuje podrobné informácie</translation>
     </message>
 </context>
 <context>
@@ -1260,10 +1348,6 @@
         <translation>Od</translation>
     </message>
     <message>
-        <source>Filter List:</source>
-        <translation>Filtrovať zoznam:</translation>
-    </message>
-    <message>
         <source>Filter proposal list</source>
         <translation>Filtrovať zoznam návrhov</translation>
     </message>
@@ -1276,12 +1360,24 @@
         <translation>Počet masternodov, ktorými môže táto peňaženka hlasovať (masternody, pre ktoré táto peňaženka drží hlasovací kľúč)</translation>
     </message>
     <message>
+        <source>No active proposals on the network.</source>
+        <translation>V sieti nie sú žiadne aktívne návrhy.</translation>
+    </message>
+    <message>
+        <source>Resume Proposal</source>
+        <translation>Pokračovať v návrhu</translation>
+    </message>
+    <message>
         <source>Proposal Count:</source>
         <translation>Počet návrhov:</translation>
     </message>
     <message>
         <source>Create Proposal</source>
         <translation>Vytvoriť návrh</translation>
+    </message>
+    <message>
+        <source>Select proposals to display</source>
+        <translation>Vyberte návrhy na zobrazenie</translation>
     </message>
     <message>
         <source>Filter by Title</source>
@@ -1308,8 +1404,76 @@
         <translation>Zdržať sa hlasovania</translation>
     </message>
     <message>
-        <source>Proposal Info: %1</source>
-        <translation>Informácie o návrhu: %1</translation>
+        <source>Active Proposals</source>
+        <translation>Aktívne návrhy</translation>
+    </message>
+    <message>
+        <source>My Proposals</source>
+        <translation>Moje návrhy</translation>
+    </message>
+    <message>
+        <source>No proposals recorded in wallet file.</source>
+        <translation>V súbore peňaženky nie sú zaznamenané žiadne návrhy.</translation>
+    </message>
+    <message>
+        <source>Resume proposal</source>
+        <translation>Pokračovať v návrhu</translation>
+    </message>
+    <message>
+        <source>Copy Raw JSON</source>
+        <translation>Kopírovať surový JSON</translation>
+    </message>
+    <message>
+        <source>Open Proposal URL…</source>
+        <translation>Otvoriť URL návrhu…</translation>
+    </message>
+    <message>
+        <source>Details for %1</source>
+        <translation>Podrobnosti pre %1</translation>
+    </message>
+    <message>
+        <source>Cannot interact with governance before sync completes</source>
+        <translation>Nie je možné pracovať so správou pred dokončením synchronizácie</translation>
+    </message>
+    <message>
+        <source>Creates a new proposal</source>
+        <translation>Vytvorí nový návrh</translation>
+    </message>
+    <message>
+        <source>Resumes an existing proposal</source>
+        <translation>Pokračuje v existujúcom návrhu</translation>
+    </message>
+    <message>
+        <source>Creating proposals costs %1, insufficient balance</source>
+        <translation>Vytvorenie návrhu stojí %1, nedostatočný zostatok</translation>
+    </message>
+    <message>
+        <source>Error</source>
+        <translation>Chyba</translation>
+    </message>
+    <message>
+        <source>Cannot validate URL, potentially malformed or unknown protocol.</source>
+        <translation>Nie je možné overiť URL, možný nesprávny formát alebo neznámy protokol.</translation>
+    </message>
+    <message>
+        <source>External Link Warning</source>
+        <translation>Upozornenie na externý odkaz</translation>
+    </message>
+    <message>
+        <source>You are about to open the following URL in your default browser
+
+%1
+
+This content was submitted by a user. It may not match what is described in the title.
+
+Do you wish to continue?</source>
+        <translation>Chystáte sa otvoriť nasledujúcu URL adresu v predvolenom prehliadači
+
+%1
+
+Tento obsah bol odoslaný používateľom. Nemusí zodpovedať tomu, čo je popísané v názve.
+
+Chcete pokračovať?</translation>
     </message>
     <message>
         <source>Voting Failed</source>
@@ -1478,7 +1642,13 @@
 <context>
     <name>LoadWalletsActivity</name>
     <message>
+        <source>Load Wallets</source>
+        <extracomment>Title of progress window which is displayed when wallets are being loaded.</extracomment>
+        <translation>Načítať peňaženky</translation>
+    </message>
+    <message>
         <source>Loading wallets…</source>
+        <extracomment>Descriptive text of the load wallets progress window which indicates to the user that wallets are currently being loaded.</extracomment>
         <translation>Načítavanie peňaženiek…</translation>
     </message>
 </context>
@@ -1489,16 +1659,36 @@
         <translation>Od</translation>
     </message>
     <message>
-        <source>Status</source>
-        <translation>Stav</translation>
+        <source>Filter by masternode type</source>
+        <translation>Filtrovať podľa typu masternode</translation>
     </message>
     <message>
-        <source>Filter List:</source>
-        <translation>Zoznam filtrov:</translation>
+        <source>All</source>
+        <translation>Všetko</translation>
+    </message>
+    <message>
+        <source>Regular</source>
+        <translation>Bežný</translation>
+    </message>
+    <message>
+        <source>Evo</source>
+        <translation>Evo</translation>
     </message>
     <message>
         <source>Filter masternode list</source>
         <translation>Filtrovať zoznam masternódov</translation>
+    </message>
+    <message>
+        <source>Owned</source>
+        <translation>Vlastnené</translation>
+    </message>
+    <message>
+        <source>Hide masternodes that are currently PoSe banned.</source>
+        <translation>Skryť masternode, ktoré sú momentálne zakázané PoSe.</translation>
+    </message>
+    <message>
+        <source>Hide banned</source>
+        <translation>Skryť zakázané</translation>
     </message>
     <message>
         <source>Node Count:</source>
@@ -1509,40 +1699,12 @@
         <translation>Zobraziť len masternódy, pre ktoré má táto peňaženka kľúče.</translation>
     </message>
     <message>
-        <source>My masternodes only</source>
-        <translation>Iba moje masternódy</translation>
-    </message>
-    <message>
-        <source>Service</source>
-        <translation>Služba</translation>
-    </message>
-    <message>
-        <source>Type</source>
-        <translation>Typ</translation>
-    </message>
-    <message>
-        <source>PoSe Score</source>
-        <translation>PoSe skóre</translation>
-    </message>
-    <message>
-        <source>Registered</source>
-        <translation>Zaregistrované</translation>
-    </message>
-    <message>
-        <source>Last Paid</source>
-        <translation>Posledná platba</translation>
-    </message>
-    <message>
-        <source>Next Payment</source>
-        <translation>Ďalšia platba</translation>
-    </message>
-    <message>
         <source>Payout Address</source>
         <translation>Výplatná adresa</translation>
     </message>
     <message>
-        <source>Operator Reward</source>
-        <translation>Odmena operátora</translation>
+        <source>Filter by</source>
+        <translation>Filtrovať podľa</translation>
     </message>
     <message>
         <source>Collateral Address</source>
@@ -1557,6 +1719,10 @@
         <translation>Hlasovacia adresa</translation>
     </message>
     <message>
+        <source>Details for Masternode %1</source>
+        <translation>Podrobnosti pre Masternode %1</translation>
+    </message>
+    <message>
         <source>Copy ProTx Hash</source>
         <translation>Skopírovať ProTx hash</translation>
     </message>
@@ -1565,48 +1731,166 @@
         <translation>Kopírovať zábezpeku Outpoint</translation>
     </message>
     <message>
-        <source>Please wait…</source>
-        <translation>Prosím čakajte…</translation>
-    </message>
-    <message>
-        <source>Updating…</source>
-        <translation>Aktualizuje sa…</translation>
-    </message>
-    <message>
-        <source>ENABLED</source>
-        <translation>AKTÍVNE</translation>
-    </message>
-    <message>
-        <source>POSE_BANNED</source>
-        <translation>POSE_ZAKÁZANÉ</translation>
-    </message>
-    <message>
-        <source>UNKNOWN</source>
-        <translation>NEZNÁME</translation>
-    </message>
-    <message>
-        <source>to %1</source>
-        <translation>do %1</translation>
-    </message>
-    <message>
-        <source>to UNKNOWN</source>
-        <translation>do NEZNÁME</translation>
-    </message>
-    <message>
-        <source>but not claimed</source>
-        <translation>ale nie nárokované</translation>
-    </message>
-    <message>
-        <source>NONE</source>
-        <translation>ŽIADNE</translation>
-    </message>
-    <message>
         <source>Filter by any property (e.g. address or protx hash)</source>
         <translation>Filtrovať podľa ľubovoľnej vlastnosti (napr. adresa alebo protx hash)</translation>
     </message>
+</context>
+<context>
+    <name>MasternodeModel</name>
+    <message numerus="yes">
+        <source>Banned for %n day(s)</source>
+        <translation><numerusform>Zakázaný na %n deň</numerusform><numerusform>Zakázaný na %n dni</numerusform><numerusform>Zakázaný na %n dní</numerusform><numerusform>Zakázaný na %n dní</numerusform></translation>
+    </message>
     <message>
-        <source>Additional information for DIP3 Masternode %1</source>
-        <translation>Ďalšie informácie pre DIP3 Masternode %1</translation>
+        <source>Banned for less than a day</source>
+        <translation>Zakázaný na menej ako deň</translation>
+    </message>
+    <message>
+        <source>Banned</source>
+        <translation>Zakázaný</translation>
+    </message>
+    <message numerus="yes">
+        <source>Active for %n day(s)</source>
+        <translation><numerusform>Aktívny %n deň</numerusform><numerusform>Aktívny %n dni</numerusform><numerusform>Aktívny %n dní</numerusform><numerusform>Aktívny %n dní</numerusform></translation>
+    </message>
+    <message>
+        <source>Active for less than a day</source>
+        <translation>Aktívny menej ako deň</translation>
+    </message>
+    <message>
+        <source>UNKNOWN</source>
+        <translation>NEZNÁMY</translation>
+    </message>
+    <message>
+        <source>Service</source>
+        <translation>Služba</translation>
+    </message>
+    <message>
+        <source>Type</source>
+        <translation>Typ</translation>
+    </message>
+    <message>
+        <source>PoSe Score</source>
+        <translation>Skóre PoSe</translation>
+    </message>
+    <message>
+        <source>Registered</source>
+        <translation>Registrovaný</translation>
+    </message>
+    <message>
+        <source>Last Paid</source>
+        <translation>Posledná platba</translation>
+    </message>
+    <message>
+        <source>Next Payment</source>
+        <translation>Ďalšia platba</translation>
+    </message>
+    <message>
+        <source>Operator Reward</source>
+        <translation>Odmena operátora</translation>
+    </message>
+    <message>
+        <source>ProTx Hash</source>
+        <translation>Hash ProTx</translation>
+    </message>
+</context>
+<context>
+    <name>MnemonicVerificationDialog</name>
+    <message>
+        <source>Save Your Mnemonic</source>
+        <translation>Uložte si mnemonickú frázu</translation>
+    </message>
+    <message>
+        <source>WARNING: If you lose your mnemonic seed phrase, you will lose access to your wallet forever.</source>
+        <translation>UPOZORNENIE: Ak stratíte mnemonickú frázu, stratíte prístup k peňaženke navždy.</translation>
+    </message>
+    <message>
+        <source>Please write down these words in order. You will need them to restore your wallet.</source>
+        <translation>Zapíšte si tieto slová v správnom poradí. Budete ich potrebovať na obnovenie peňaženky.</translation>
+    </message>
+    <message>
+        <source>Show</source>
+        <translation>Zobraziť</translation>
+    </message>
+    <message>
+        <source>Hide</source>
+        <translation>Skryť</translation>
+    </message>
+    <message>
+        <source>I have written down my mnemonic</source>
+        <translation>Zapísal som si mnemonickú frázu</translation>
+    </message>
+    <message>
+        <source>To verify you've saved your mnemonic, please enter the following words:</source>
+        <translation>Na overenie, že ste si uložili mnemonickú frázu, zadajte nasledujúce slová:</translation>
+    </message>
+    <message>
+        <source>Word #1:</source>
+        <translation>Slovo #1:</translation>
+    </message>
+    <message>
+        <source>Word #2:</source>
+        <translation>Slovo #2:</translation>
+    </message>
+    <message>
+        <source>Word #3:</source>
+        <translation>Slovo #3:</translation>
+    </message>
+    <message>
+        <source>Your Recovery Phrase</source>
+        <translation>Vaša fráza na obnovenie</translation>
+    </message>
+    <message>
+        <source>Close</source>
+        <translation>Zavrieť</translation>
+    </message>
+    <message>
+        <source>Continue</source>
+        <translation>Pokračovať</translation>
+    </message>
+    <message>
+        <source>WARNING: Never share your recovery phrase with anyone. Store it securely offline.</source>
+        <translation>UPOZORNENIE: Nikdy nezdieľajte svoju frázu na obnovenie s nikým. Uchovávajte ju bezpečne offline.</translation>
+    </message>
+    <message>
+        <source>These words can restore your wallet. Keep them safe and private.</source>
+        <translation>Tieto slová môžu obnoviť vašu peňaženku. Uchovávajte ich v bezpečí a v súkromí.</translation>
+    </message>
+    <message>
+        <source>WARNING: If you lose your mnemonic seed phrase, you will lose access to your wallet forever. Write it down in a safe place and never share it with anyone.</source>
+        <translation>UPOZORNENIE: Ak stratíte mnemonickú frázu, stratíte prístup k peňaženke navždy. Zapíšte si ju na bezpečné miesto a nikdy ju s nikým nezdieľajte.</translation>
+    </message>
+    <message>
+        <source>Invalid Mnemonic</source>
+        <translation>Neplatná mnemonická fráza</translation>
+    </message>
+    <message>
+        <source>Mnemonic phrase has fewer than 3 words (found %1). Verification cannot proceed.</source>
+        <translation>Mnemonická fráza má menej ako 3 slová (nájdených %1). Overenie nemôže pokračovať.</translation>
+    </message>
+    <message>
+        <source>Verification Error</source>
+        <translation>Chyba overenia</translation>
+    </message>
+    <message>
+        <source>Failed to generate verification positions. Please try again.</source>
+        <translation>Nepodarilo sa vygenerovať overovacie pozície. Skúste to znova.</translation>
+    </message>
+    <message>
+        <source>Word #%1:</source>
+        <translation>Slovo #%1:</translation>
+    </message>
+    <message>
+        <source>Back</source>
+        <translation>Späť</translation>
+    </message>
+    <message>
+        <source>Verification Failed</source>
+        <translation>Overenie zlyhalo</translation>
+    </message>
+    <message>
+        <source>One or more words are incorrect. Please try again.</source>
+        <translation>Jedno alebo viac slov je nesprávnych. Skúste to znova.</translation>
     </message>
 </context>
 <context>
@@ -1824,12 +2108,52 @@
         <translation>Zobraziť kartu dozoru</translation>
     </message>
     <message>
+        <source>Show the governance clock in the status bar.</source>
+        <translation>Zobraziť hodiny správy v stavovom riadku.</translation>
+    </message>
+    <message>
+        <source>Show governance clock</source>
+        <translation>Zobraziť hodiny správy</translation>
+    </message>
+    <message>
         <source>If you disable the spending of unconfirmed change, the change from a transaction&lt;br/&gt;cannot be used until that transaction has at least one confirmation.&lt;br/&gt;This also affects how your balance is computed.</source>
         <translation>Ak vypnete míňanie nepotvrdeného výdavku tak výdavok z transakcie &lt;br&gt;bude možné použiť až keď daná transakcia bude mať aspoň jedno potvrdenie.&lt;br/&gt; Toto má vplyv aj na výpočet vášho zostatku.</translation>
     </message>
     <message>
         <source>Show mixing interface on Overview screen and reveal an additional screen which allows to spend fully mixed coins only.&lt;br/&gt;A new tab with more settings will also appear in this dialog, please make sure to check them before mixing your coins.</source>
         <translation>Zobraziť mixovacie rozhranie na obrazovke prehľadu a odhaliť ďalšiu obrazovku, ktorá umožňuje minúť iba úplne zmiešané mince.&lt;br/&gt;V tomto dialógovom okne sa tiež zobrazí nová karta s ďalšími nastaveniami. Pred zmiešaním mincí ich prosím nezabudnite skontrolovať.</translation>
+    </message>
+    <message>
+        <source>Automatically lock small incoming transactions from external sources that may be dust attacks. Locked UTXOs will be excluded from coin selection.</source>
+        <translation>Automaticky zamknúť malé prichádzajúce transakcie z externých zdrojov, ktoré môžu byť prachové útoky. Zamknuté UTXO budú vylúčené z výberu mincí.</translation>
+    </message>
+    <message>
+        <source>Enable &amp;dust attack protection</source>
+        <translation>Povoliť ochranu pred &amp;prachovými útokmi</translation>
+    </message>
+    <message>
+        <source>Dust threshold:</source>
+        <translation>Prachový prah:</translation>
+    </message>
+    <message>
+        <source>Transactions with outputs at or below this amount will be considered dust when received from external sources.</source>
+        <translation>Transakcie s výstupmi rovnými alebo nižšími ako táto suma budú považované za prach pri prijatí z externých zdrojov.</translation>
+    </message>
+    <message>
+        <source>duffs</source>
+        <translation>duffov</translation>
+    </message>
+    <message>
+        <source>External Signer (e.g. hardware wallet)</source>
+        <translation>Externý podpisovateľ (napr. hardvérová peňaženka)</translation>
+    </message>
+    <message>
+        <source>&amp;External signer script path</source>
+        <translation>Cesta ku skriptu &amp;externého podpisovateľa</translation>
+    </message>
+    <message>
+        <source>Full path to a %1 compatible script (e.g. C:\Downloads\hwi.exe or /Users/you/Downloads/hwi.py). Beware: malware can steal your coins!</source>
+        <translation>Úplná cesta ku skriptu kompatibilnému s %1 (napr. C:\Downloads\hwi.exe alebo /Users/you/Downloads/hwi.py). Pozor: malvér môže ukradnúť vaše mince!</translation>
     </message>
     <message>
         <source>Show additional information and buttons on overview screen.</source>
@@ -1948,10 +2272,6 @@ https://explore.transifex.com/dash/dash/</translation>
     <message>
         <source>&amp;Third-party transaction URLs</source>
         <translation>&amp;URL adresy transakcií tretích strán</translation>
-    </message>
-    <message>
-        <source>Options set in this dialog are overridden by the command line or in the configuration file:</source>
-        <translation>Možnosti nastavené v tomto dialógovom okne sú prepísané príkazovým riadkom alebo v konfiguračnom súbore:</translation>
     </message>
     <message>
         <source>Minimize instead of exit the application when the window is closed. When this option is enabled, the application will be closed only after selecting Exit in the menu.</source>
@@ -2074,6 +2394,10 @@ https://explore.transifex.com/dash/dash/</translation>
         <translation>Decimálne čísla</translation>
     </message>
     <message>
+        <source>Options set in this dialog are overridden by the command line:</source>
+        <translation>Možnosti nastavené v tomto dialógu sú prepísané príkazovým riadkom:</translation>
+    </message>
+    <message>
         <source>Reset all client options to default.</source>
         <translation>Vynulovať všetky voľby klienta na predvolené.</translation>
     </message>
@@ -2108,6 +2432,11 @@ https://explore.transifex.com/dash/dash/</translation>
         <translation>Reštart klienta potrebný pre aktivovanie zmien.</translation>
     </message>
     <message>
+        <source>Compiled without external signing support (required for external signing)</source>
+        <extracomment>"External signing" means using devices such as hardware wallets.</extracomment>
+        <translation>Kompilované bez podpory externého podpisovania (vyžadované pre externé podpisovanie)</translation>
+    </message>
+    <message>
         <source>Current settings will be backed up at "%1".</source>
         <extracomment>Text explaining to the user that the client's current settings will be backed up at a specific location. %1 is a stand-in argument for the backup location's path.</extracomment>
         <translation>Aktuálne nastavenia budú zálohované v "%1".</translation>
@@ -2124,6 +2453,13 @@ https://explore.transifex.com/dash/dash/</translation>
     <message>
         <source>The supplied proxy address is invalid.</source>
         <translation>Zadaná proxy adresa je neplatná.</translation>
+    </message>
+</context>
+<context>
+    <name>OptionsModel</name>
+    <message>
+        <source>Could not read setting "%1", %2.</source>
+        <translation>Nepodarilo sa prečítať nastavenie "%1", %2.</translation>
     </message>
 </context>
 <context>
@@ -2433,8 +2769,8 @@ https://explore.transifex.com/dash/dash/</translation>
         <translation>PSBT uložené na disk.</translation>
     </message>
     <message>
-        <source> * Sends %1 to %2</source>
-        <translation> * Posiela %1 na %2</translation>
+        <source>Sends %1 to %2</source>
+        <translation>Odošle %1 na %2</translation>
     </message>
     <message>
         <source>own address</source>
@@ -2586,25 +2922,141 @@ Kvôli ukončeniu podpory by ste mali požiadať obchodníka, aby vám poskytol 
     </message>
 </context>
 <context>
-    <name>Proposal</name>
+    <name>ProposalCreate</name>
     <message>
-        <source>Passing +%1</source>
-        <translation>Prechádza +%1</translation>
+        <source>New proposal</source>
+        <translation>Nový návrh</translation>
     </message>
     <message>
-        <source>Needs additional %1 votes</source>
-        <translation>Vyžaduje dodatočných %1 hlasov</translation>
+        <source>Proposal &amp;name</source>
+        <translation>&amp;Názov návrhu</translation>
+    </message>
+    <message>
+        <source>&amp;Description URL</source>
+        <translation>URL &amp;popisu</translation>
+    </message>
+    <message>
+        <source>&amp;Payment date</source>
+        <translation>&amp;Dátum platby</translation>
+    </message>
+    <message>
+        <source>Pa&amp;yments</source>
+        <translation>Pla&amp;tby</translation>
+    </message>
+    <message>
+        <source>Payment &amp;address</source>
+        <translation>&amp;Adresa platby</translation>
+    </message>
+    <message>
+        <source>Payment &amp;amount</source>
+        <translation>&amp;Suma platby</translation>
+    </message>
+    <message>
+        <source>To&amp;tal amount</source>
+        <translation>Ce&amp;lková suma</translation>
+    </message>
+    <message>
+        <source>The amount to request in a single payment</source>
+        <translation>Suma na vyžiadanie v jednej platbe</translation>
+    </message>
+    <message>
+        <source>View JSON</source>
+        <translation>Zobraziť JSON</translation>
+    </message>
+    <message>
+        <source>View Payload</source>
+        <translation>Zobraziť obsah</translation>
+    </message>
+    <message>
+        <source>margin-left: 8px;</source>
+        <translation>margin-left: 8px;</translation>
+    </message>
+    <message>
+        <source>Create Proposal</source>
+        <translation>Vytvoriť návrh</translation>
+    </message>
+    <message>
+        <source>All fields are mandatory</source>
+        <translation>Všetky polia sú povinné</translation>
+    </message>
+    <message>
+        <source>Confirm Proposal</source>
+        <translation>Potvrdiť návrh</translation>
+    </message>
+    <message>
+        <source>Are you sure you want to create this proposal?</source>
+        <translation>Ste si istí, že chcete vytvoriť tento návrh?</translation>
+    </message>
+    <message>
+        <source>Creating a proposal pays %1 to the network. This fee is non-refundable regardless of outcome.</source>
+        <translation>Vytvorenie návrhu zaplatí %1 sieti. Tento poplatok je nevratný bez ohľadu na výsledok.</translation>
+    </message>
+    <message>
+        <source>Creation failed</source>
+        <translation>Vytvorenie zlyhalo</translation>
+    </message>
+    <message>
+        <source>Proposal Created</source>
+        <translation>Návrh vytvorený</translation>
+    </message>
+    <message>
+        <source>%1 successfully sent for your proposal "%2".
+
+You will now be redirected to monitor and broadcast your new proposal, you can resume this later by clicking "Resume Proposal".</source>
+        <translation>%1 bolo úspešne odoslané pre váš návrh "%2".
+
+Teraz budete presmerovaní na sledovanie a odoslanie vášho nového návrhu. Môžete v tom pokračovať neskôr kliknutím na "Pokračovať v návrhu".</translation>
     </message>
 </context>
 <context>
     <name>ProposalModel</name>
     <message>
-        <source>Yes</source>
-        <translation>Áno</translation>
+        <source>Pending, %1 of %2 confirmations</source>
+        <translation>Čaká sa, %1 z %2 potvrdení</translation>
     </message>
     <message>
-        <source>No</source>
-        <translation>Nie</translation>
+        <source>Voting, needs %1 more votes for funding</source>
+        <translation>Hlasovanie, potrebných ešte %1 hlasov na financovanie</translation>
+    </message>
+    <message>
+        <source>Passing with %1 votes</source>
+        <translation>Prechádza s %1 hlasmi</translation>
+    </message>
+    <message>
+        <source>Passing with %1 votes but budget saturated, may not be funded</source>
+        <translation>Prechádza s %1 hlasmi, ale rozpočet je vyčerpaný, nemusí byť financovaný</translation>
+    </message>
+    <message>
+        <source>Failed, needed %1 more votes</source>
+        <translation>Zlyhalo, bolo potrebných ešte %1 hlasov</translation>
+    </message>
+    <message>
+        <source>Funded at block %1</source>
+        <translation>Financovaný v bloku %1</translation>
+    </message>
+    <message>
+        <source>Funded</source>
+        <translation>Financovaný</translation>
+    </message>
+    <message>
+        <source>Lapsed, past proposal end date</source>
+        <translation>Vypršaný, po dátume ukončenia návrhu</translation>
+    </message>
+    <message>
+        <source>Ready to broadcast, check "Resume Proposal" dialog</source>
+        <translation>Pripravené na vysielanie, skontrolujte dialóg "Obnoviť návrh"</translation>
+    </message>
+    <message>
+        <source>%1 Yes, %2 No, %3 Abstain, %4</source>
+        <translation>%1 Áno, %2 Nie, %3 Zdržanie sa, %4</translation>
+    </message>
+    <message>
+        <source>passing with %1 votes</source>
+        <translation>prechádza s %1 hlasmi</translation>
+    </message>
+    <message>
+        <source>needs %1 more votes</source>
+        <translation>potrebných ešte %1 hlasov</translation>
     </message>
     <message>
         <source>Hash</source>
@@ -2627,187 +3079,63 @@ Kvôli ukončeniu podpory by ste mali požiadať obchodníka, aby vám poskytol 
         <translation>Suma</translation>
     </message>
     <message>
-        <source>Active</source>
-        <translation>Aktívne</translation>
-    </message>
-    <message>
-        <source>Status</source>
-        <translation>Stav</translation>
+        <source>Votes</source>
+        <translation>Hlasy</translation>
     </message>
 </context>
 <context>
-    <name>ProposalWizard</name>
+    <name>ProposalResume</name>
     <message>
-        <source>Create Governance Proposal</source>
-        <translation>Vytvoriť návrh správy</translation>
-    </message>
-    <message>
-        <source>Enter proposal details</source>
-        <translation>Zadajte podrobnosti návrhu</translation>
-    </message>
-    <message>
-        <source>A fee will be burned when you prepare the proposal.</source>
-        <translation>Pri príprave návrhu bude spálený poplatok.</translation>
-    </message>
-    <message>
-        <source>Proposal &amp;name</source>
-        <translation>&amp;Názov návrhu</translation>
-    </message>
-    <message>
-        <source>&amp;Description URL</source>
-        <translation>&amp;URL s popisom</translation>
-    </message>
-    <message>
-        <source>Payment &amp;address</source>
-        <translation>Platobná &amp;adresa</translation>
-    </message>
-    <message>
-        <source>Payment &amp;amount</source>
-        <translation>&amp;Suma platby</translation>
-    </message>
-    <message>
-        <source>The amount to request in a single payment</source>
-        <translation>Suma, ktorú chcete požiadať v jednej platbe</translation>
-    </message>
-    <message>
-        <source>&amp;First payment</source>
-        <translation>&amp;Prvá platba</translation>
-    </message>
-    <message>
-        <source>Pa&amp;yments</source>
-        <translation>Pla&amp;tby</translation>
-    </message>
-    <message>
-        <source>To&amp;tal amount</source>
-        <translation>Cel&amp;ková suma</translation>
-    </message>
-    <message>
-        <source>Proposal &amp;fee</source>
-        <translation>Poplatok za &amp;návrh</translation>
-    </message>
-    <message>
-        <source>Next</source>
-        <translation>Ďalej</translation>
-    </message>
-    <message>
-        <source>Review proposal JSON and validate.</source>
-        <translation>Skontrolujte JSON návrhu a overte.</translation>
-    </message>
-    <message>
-        <source>Hex-encoded JSON</source>
-        <translation>Hex-kódovaný JSON</translation>
-    </message>
-    <message>
-        <source>Back</source>
-        <translation>Späť</translation>
-    </message>
-    <message>
-        <source>Validate</source>
-        <translation>Overiť</translation>
-    </message>
-    <message>
-        <source>Prepare (burn fee) and wait for confirmations.</source>
-        <translation>Pripraviť (spáliť poplatok) a čakať na potvrdenia.</translation>
-    </message>
-    <message>
-        <source>Copy</source>
-        <translation>Kopírovať</translation>
-    </message>
-    <message>
-        <source>At 1/6 confirmations: can be relayed and queued. At 6/6: accepted and processed.</source>
-        <translation>Pri 1/6 potvrdeniach: môže byť preposlaný a zaradený do fronty. Pri 6/6: akceptovaný a spracovaný.</translation>
-    </message>
-    <message>
-        <source>Confirmations progress</source>
-        <translation>Priebeh potvrdení</translation>
-    </message>
-    <message>
-        <source>Shows progress toward the required number of confirmations for the proposal fee transaction.</source>
-        <translation>Zobrazuje pokrok smerom k požadovanému počtu potvrdení pre transakciu poplatku návrhu.</translation>
-    </message>
-    <message>
-        <source>Estimated time remaining: -</source>
-        <translation>Odhadovaný zostávajúci čas: -</translation>
-    </message>
-    <message>
-        <source>Prepare Proposal</source>
-        <translation>Pripraviť návrh</translation>
-    </message>
-    <message>
-        <source>You can submit after 1 confirmation. At 6 confirmations it is accepted and processed.</source>
-        <translation>Môžete odoslať po 1 potvrdení. Pri 6 potvrdeniach je akceptovaný a spracovaný.</translation>
-    </message>
-    <message>
-        <source>Proposal ID:</source>
-        <translation>ID návrhu:</translation>
-    </message>
-    <message>
-        <source>Submit Proposal</source>
-        <translation>Odoslať návrh</translation>
+        <source>Resume Proposals</source>
+        <translation>Pokračovať v návrhoch</translation>
     </message>
     <message>
         <source>Close</source>
         <translation>Zavrieť</translation>
     </message>
     <message>
-        <source>Valid</source>
-        <translation>Platný</translation>
+        <source>No pending proposals to broadcast.</source>
+        <translation>Žiadne čakajúce návrhy na odoslanie.</translation>
     </message>
     <message>
-        <source>Invalid: %1</source>
-        <translation>Neplatný: %1</translation>
+        <source>For %1 payment(s) of %2 to %3</source>
+        <translation>Pre %1 platbu(-ib) vo výške %2 na %3</translation>
     </message>
     <message>
-        <source>Burn %1</source>
-        <translation>Spáliť %1</translation>
+        <source>Unknown</source>
+        <translation>Neznámy</translation>
     </message>
     <message>
-        <source>Burn %1 to create the fee transaction?</source>
-        <translation>Spáliť %1 na vytvorenie transakcie poplatku?</translation>
+        <source>Pending</source>
+        <translation>Čakajúce</translation>
     </message>
     <message>
-        <source>Prepare failed</source>
-        <translation>Príprava zlyhala</translation>
+        <source>Ready</source>
+        <translation>Pripravené</translation>
     </message>
     <message>
-        <source>Confirmations: %1 / %2 required</source>
-        <translation>Potvrdenia: %1 / %2 požadovaných</translation>
+        <source>Collateral Hash</source>
+        <translation>Hash zálohy</translation>
     </message>
     <message>
-        <source>Estimated time remaining: Ready</source>
-        <translation>Odhadovaný zostávajúci čas: Pripravené</translation>
-    </message>
-    <message numerus="yes">
-        <source>Estimated time remaining: %n minute(s)</source>
-        <translation><numerusform>Odhadovaný zostávajúci čas: %n minúta</numerusform><numerusform>Odhadovaný zostávajúci čas: %n minúty</numerusform><numerusform>Odhadovaný zostávajúci čas: %n minút</numerusform><numerusform>Odhadovaný zostávajúci čas: %n minúty</numerusform></translation>
+        <source>Collateral Status</source>
+        <translation>Stav zálohy</translation>
     </message>
     <message>
-        <source>Your proposal was submitted successfully.</source>
-        <translation>Váš návrh bol úspešne odoslaný.</translation>
+        <source>Broadcast</source>
+        <translation>Odoslať</translation>
     </message>
     <message>
-        <source>Already submitted</source>
-        <translation>Už odoslaný</translation>
+        <source>Broadcast proposal</source>
+        <translation>Odoslať návrh</translation>
     </message>
     <message>
-        <source>This proposal has already been submitted.</source>
-        <translation>Tento návrh už bol odoslaný.</translation>
+        <source>Proposal has been broadcasted to the network with hash %1</source>
+        <translation>Návrh bol odoslaný do siete s hashom %1</translation>
     </message>
     <message>
-        <source>Submission failed</source>
-        <translation>Odoslanie zlyhalo</translation>
-    </message>
-    <message>
-        <source>Proposal submitted</source>
-        <translation>Návrh odoslaný</translation>
-    </message>
-    <message>
-        <source>A fee of %1 will be burned when you prepare the proposal.</source>
-        <translation>Pri príprave návrhu bude spálený poplatok vo výške %1.</translation>
-    </message>
-    <message>
-        <source>Prepare (burn %1) and wait for %2 confirmations.</source>
-        <translation>Pripraviť (spáliť %1) a čakať na %2 potvrdení.</translation>
+        <source>Unable to broadcast proposal, %1</source>
+        <translation>Nie je možné odoslať návrh, %1</translation>
     </message>
 </context>
 <context>
@@ -2875,8 +3203,8 @@ Kvôli ukončeniu podpory by ste mali požiadať obchodníka, aby vám poskytol 
         <translation>Chyba: Nepodarilo sa načítať písma aplikácie.</translation>
     </message>
     <message>
-        <source>Error: Specified font-family invalid. Valid values: %1.</source>
-        <translation>Chyba: Zadaná rodina fontov je neplatná. Platné hodnoty: %1.</translation>
+        <source>Error: Font "%1" could not be loaded.</source>
+        <translation>Chyba: Písmo "%1" sa nepodarilo načítať.</translation>
     </message>
     <message>
         <source>Error: Specified font-weight-normal invalid. Valid range %1 to %2.</source>
@@ -3045,6 +3373,170 @@ Kvôli ukončeniu podpory by ste mali požiadať obchodníka, aby vám poskytol 
         <source>unknown</source>
         <translation>neznámy</translation>
     </message>
+    <message>
+        <source>Default monospace font "%1"</source>
+        <translation>Predvolené neproporcionálne písmo "%1"</translation>
+    </message>
+    <message>
+        <source>Embedded "%1"</source>
+        <translation>Vložené "%1"</translation>
+    </message>
+    <message>
+        <source>Use existing font</source>
+        <translation>Použiť existujúce písmo</translation>
+    </message>
+    <message>
+        <source>Custom…</source>
+        <translation>Vlastné…</translation>
+    </message>
+    <message>
+        <source>Error: Wallet controller not available.</source>
+        <translation>Chyba: Ovládač peňaženky nie je k dispozícii.</translation>
+    </message>
+    <message>
+        <source>Error: Rescan failed. Wallet not loaded.</source>
+        <translation>Chyba: Opätovné skenovanie zlyhalo. Peňaženka nie je načítaná.</translation>
+    </message>
+    <message>
+        <source>UNKNOWN</source>
+        <translation>NEZNÁMY</translation>
+    </message>
+    <message>
+        <source>to %1</source>
+        <translation>na %1</translation>
+    </message>
+    <message>
+        <source>to UNKNOWN</source>
+        <translation>na NEZNÁMY</translation>
+    </message>
+    <message>
+        <source>but not claimed</source>
+        <translation>ale nevyzdvihnuté</translation>
+    </message>
+    <message>
+        <source>NONE</source>
+        <translation>ŽIADNE</translation>
+    </message>
+    <message>
+        <source>ProTx Hash</source>
+        <translation>Hash ProTx</translation>
+    </message>
+    <message>
+        <source>Public Key Operator</source>
+        <translation>Verejný kľúč operátora</translation>
+    </message>
+    <message>
+        <source>Owner Address</source>
+        <translation>Adresa vlastníka</translation>
+    </message>
+    <message>
+        <source>Payout Address</source>
+        <translation>Adresa výplaty</translation>
+    </message>
+    <message>
+        <source>Voting Address</source>
+        <translation>Adresa hlasovania</translation>
+    </message>
+    <message>
+        <source>Collateral Address</source>
+        <translation>Adresa zálohy</translation>
+    </message>
+    <message>
+        <source>Collateral Hash</source>
+        <translation>Hash zálohy</translation>
+    </message>
+    <message>
+        <source>Collateral Index</source>
+        <translation>Index zálohy</translation>
+    </message>
+    <message>
+        <source>Masternode Type</source>
+        <translation>Typ Masternode</translation>
+    </message>
+    <message>
+        <source>Registered Height</source>
+        <translation>Výška registrácie</translation>
+    </message>
+    <message>
+        <source>Last Paid Height</source>
+        <translation>Výška poslednej platby</translation>
+    </message>
+    <message>
+        <source>Consecutive Payments</source>
+        <translation>Opakované platby</translation>
+    </message>
+    <message>
+        <source>Operator Reward</source>
+        <translation>Odmena operátora</translation>
+    </message>
+    <message>
+        <source>Network Addresses</source>
+        <translation>Sieťové adresy</translation>
+    </message>
+    <message>
+        <source>Platform HTTPS Addresses</source>
+        <translation>HTTPS adresy platformy</translation>
+    </message>
+    <message>
+        <source>Platform P2P Addresses</source>
+        <translation>P2P adresy platformy</translation>
+    </message>
+    <message>
+        <source>Platform Node ID</source>
+        <translation>ID uzla platformy</translation>
+    </message>
+    <message>
+        <source>PoSe Penalty</source>
+        <translation>Pokuta PoSe</translation>
+    </message>
+    <message>
+        <source>PoSe Ban Height</source>
+        <translation>Výška zákazu PoSe</translation>
+    </message>
+    <message>
+        <source>PoSe Revived Height</source>
+        <translation>Výška obnovenia PoSe</translation>
+    </message>
+    <message>
+        <source>Title</source>
+        <translation>Názov</translation>
+    </message>
+    <message>
+        <source>URL</source>
+        <translation>URL</translation>
+    </message>
+    <message>
+        <source>Destination Address</source>
+        <translation>Cieľová adresa</translation>
+    </message>
+    <message>
+        <source>Payment Amount</source>
+        <translation>Suma platby</translation>
+    </message>
+    <message>
+        <source>Payments Requested</source>
+        <translation>Požadované platby</translation>
+    </message>
+    <message>
+        <source>Payment Start</source>
+        <translation>Začiatok platby</translation>
+    </message>
+    <message>
+        <source>Payment End</source>
+        <translation>Koniec platby</translation>
+    </message>
+    <message>
+        <source>Object Hash</source>
+        <translation>Hash objektu</translation>
+    </message>
+    <message>
+        <source>Parent Hash</source>
+        <translation>Hash rodiča</translation>
+    </message>
+    <message>
+        <source>Collateral Date</source>
+        <translation>Dátum zálohy</translation>
+    </message>
 </context>
 <context>
     <name>QRDialog</name>
@@ -3184,6 +3676,10 @@ Kvôli ukončeniu podpory by ste mali požiadať obchodníka, aby vám poskytol 
         <translation>&amp;Partnerské uzly</translation>
     </message>
     <message>
+        <source>&amp;Repair</source>
+        <translation>&amp;Oprava</translation>
+    </message>
+    <message>
         <source>Wallet:</source>
         <translation>Peňaženka:</translation>
     </message>
@@ -3263,26 +3759,6 @@ Kvôli ukončeniu podpory by ste mali požiadať obchodníka, aby vám poskytol 
         <source>Addresses Rate-Limited</source>
         <extracomment>Text title for the Addresses Rate-Limited field in the peer details area, which displays the total number of addresses received from this peer that were dropped (not processed) due to rate-limiting.</extracomment>
         <translation>Adresy obmedzené rýchlosťou</translation>
-    </message>
-    <message>
-        <source>Rescan blockchain files 1</source>
-        <translation>Znova prehľadať blockchain 1</translation>
-    </message>
-    <message>
-        <source>Rescan blockchain files 2</source>
-        <translation>Znova prehľadať blockchain 2</translation>
-    </message>
-    <message>
-        <source>The buttons below will restart the wallet with command-line options to repair the wallet, fix issues with corrupt blockchain files or missing/obsolete transactions.</source>
-        <translation>Nižšie uvedené tlačidlá reštartujú peňaženku s možnosťami príkazového riadka na opravu peňaženky, riešenie problémov s poškodenými súbormi blockchainu alebo chýbajúcimi/zastaranými transakciami.</translation>
-    </message>
-    <message>
-        <source>-rescan=1: Rescan the block chain for missing wallet transactions starting from wallet creation time.</source>
-        <translation>-rescan=1: Znova prehľadať reťazec blokov pre nájdenie chýbajúcich transakcií peňaženky od času jej vytvorenia.</translation>
-    </message>
-    <message>
-        <source>-rescan=2: Rescan the block chain for missing wallet transactions starting from genesis block.</source>
-        <translation>-rescan=2: Znova prehľadať reťazec blokov pre nájdenie chýbajúcich transakcií peňaženky od času vytvorenia prvého bloku.</translation>
     </message>
     <message>
         <source>User Agent</source>
@@ -3445,8 +3921,36 @@ Kvôli ukončeniu podpory by ste mali požiadať obchodníka, aby vám poskytol 
         <translation>Časový posun</translation>
     </message>
     <message>
-        <source>&amp;Wallet Repair</source>
-        <translation>&amp;Oprava peňaženky</translation>
+        <source>Repair options.</source>
+        <translation>Možnosti opravy.</translation>
+    </message>
+    <message>
+        <source>The buttons below will trigger repair actions to fix issues with corrupt files or missing/obsolete transactions.</source>
+        <translation>Tlačidlá nižšie spustia opravné akcie na opravu problémov s poškodenými súbormi alebo chýbajúcimi/zastaranými transakciami.</translation>
+    </message>
+    <message>
+        <source>Rescan Chain</source>
+        <translation>Opätovne skenovať reťazec</translation>
+    </message>
+    <message>
+        <source>Rescan the chain for missing wallet transactions starting from wallet creation time.</source>
+        <translation>Opätovne skenovať reťazec na chýbajúce transakcie peňaženky od času vytvorenia peňaženky.</translation>
+    </message>
+    <message>
+        <source>Rescan Chain (full)</source>
+        <translation>Opätovne skenovať reťazec (úplne)</translation>
+    </message>
+    <message>
+        <source>Rescan the chain for missing wallet transactions starting from genesis block.</source>
+        <translation>Opätovne skenovať reťazec na chýbajúce transakcie peňaženky od genesis bloku.</translation>
+    </message>
+    <message>
+        <source>Rebuild Index</source>
+        <translation>Obnoviť index</translation>
+    </message>
+    <message>
+        <source>Restarts the client to rebuild the chain index from current blk000??.dat files.</source>
+        <translation>Reštartuje klienta na obnovenie indexu reťazca z aktuálnych súborov blk000??.dat.</translation>
     </message>
     <message>
         <source>The total number of addresses received from this peer that were processed (excludes addresses that were dropped due to rate-limiting).</source>
@@ -3457,18 +3961,6 @@ Kvôli ukončeniu podpory by ste mali požiadať obchodníka, aby vám poskytol 
         <source>The total number of addresses received from this peer that were dropped (not processed) due to rate-limiting.</source>
         <extracomment>Tooltip text for the Addresses Rate-Limited field in the peer details area, which displays the total number of addresses received from this peer that were dropped (not processed) due to rate-limiting.</extracomment>
         <translation>Celkový počet adries prijatých od tohto peera, ktoré boli zahodené (nespracované) kvôli obmedzeniu rýchlosti.</translation>
-    </message>
-    <message>
-        <source>Wallet repair options.</source>
-        <translation>Možnosti opravy peňaženky.</translation>
-    </message>
-    <message>
-        <source>Rebuild index</source>
-        <translation>Znova vytvoriť index</translation>
-    </message>
-    <message>
-        <source>-reindex: Rebuild block chain index from current blk000??.dat files.</source>
-        <translation>-reindex: Znovu vytvoriť index reťazca blokov zo súčastného blk000??.dat súboru.</translation>
     </message>
     <message>
         <source>Inbound: initiated by peer</source>
@@ -3633,7 +4125,7 @@ Kvôli ukončeniu podpory by ste mali požiadať obchodníka, aby vám poskytol 
     </message>
     <message>
         <source>&amp;Copy address</source>
-        <extracomment>Context menu action to copy the address of a peer</extracomment>
+        <extracomment>Context menu action to copy the address of a peer.</extracomment>
         <translation>&amp;Kopírovať adresu</translation>
     </message>
     <message>
@@ -3642,7 +4134,7 @@ Kvôli ukončeniu podpory by ste mali požiadať obchodníka, aby vám poskytol 
     </message>
     <message>
         <source>&amp;Copy IP/Netmask</source>
-        <extracomment>Context menu action to copy the IP/Netmask of a banned peer. IP/Netmask is the combination of a peer's IP address and its Netmask. For IP address see: https://en.wikipedia.org/wiki/IP_address</extracomment>
+        <extracomment>Context menu action to copy the IP/Netmask of a banned peer. IP/Netmask is the combination of a peer's IP address and its Netmask. For IP address, see: https://en.wikipedia.org/wiki/IP_address.</extracomment>
         <translation>&amp;Kopírovať IP/sieťovú masku</translation>
     </message>
     <message>
@@ -3842,6 +4334,14 @@ Pre viac informácií o používaní tejto konzoly zadajte %6.
         <translation>Kopírovať &amp;adresu</translation>
     </message>
     <message>
+        <source>&amp;Verify</source>
+        <translation>&amp;Overiť</translation>
+    </message>
+    <message>
+        <source>Verify this address on e.g. a hardware wallet screen</source>
+        <translation>Overte túto adresu napr. na obrazovke hardvérovej peňaženky</translation>
+    </message>
+    <message>
         <source>&amp;Save Image…</source>
         <translation>&amp;Uložiť obrázok…</translation>
     </message>
@@ -3883,6 +4383,33 @@ Pre viac informácií o používaní tejto konzoly zadajte %6.
     <message>
         <source>Requested</source>
         <translation>Požadované</translation>
+    </message>
+</context>
+<context>
+    <name>RescanWalletActivity</name>
+    <message>
+        <source>Rescan unavailable</source>
+        <translation>Opätovné skenovanie nedostupné</translation>
+    </message>
+    <message>
+        <source>Wallet is currently rescanning. Abort existing rescan or wait.</source>
+        <translation>Peňaženka sa momentálne opätovne skenuje. Prerušte existujúce skenovanie alebo počkajte.</translation>
+    </message>
+    <message>
+        <source>Rescan wallet failed</source>
+        <translation>Opätovné skenovanie peňaženky zlyhalo</translation>
+    </message>
+    <message>
+        <source>Rescan failed. Potentially corrupted data files.</source>
+        <translation>Opätovné skenovanie zlyhalo. Dátové súbory môžu byť poškodené.</translation>
+    </message>
+    <message>
+        <source>Rescan aborted</source>
+        <translation>Opätovné skenovanie prerušené</translation>
+    </message>
+    <message>
+        <source>Wallet rescan was aborted.</source>
+        <translation>Opätovné skenovanie peňaženky bolo prerušené.</translation>
     </message>
 </context>
 <context>
@@ -4104,10 +4631,6 @@ Pre viac informácií o používaní tejto konzoly zadajte %6.
         <translation>&amp;Vytvoriť nepodpísané</translation>
     </message>
     <message>
-        <source> from wallet '%1'</source>
-        <translation> z peňaženky '%1'</translation>
-    </message>
-    <message>
         <source>%1 to '%2'</source>
         <translation>%1 do '%2'</translation>
     </message>
@@ -4176,9 +4699,39 @@ Pre viac informácií o používaní tejto konzoly zadajte %6.
         <translation>Vytvorí čiastočne podpísanú blockchainovú transakciu (PSBT) na použitie napr. s offline %1 peňaženkou alebo s PSBT-kompatibilnou hardvérovou peňaženkou.</translation>
     </message>
     <message>
+        <source>Sign on device</source>
+        <extracomment>"device" usually means a hardware wallet.</extracomment>
+        <translation>Podpísať na zariadení</translation>
+    </message>
+    <message>
+        <source>Connect your hardware wallet first.</source>
+        <translation>Najprv pripojte hardvérovú peňaženku.</translation>
+    </message>
+    <message>
+        <source>Set external signer script path in Options -&gt; Wallet</source>
+        <extracomment>"External signer" means using devices such as hardware wallets.</extracomment>
+        <translation>Nastaviť cestu ku skriptu externého podpisovateľa v Možnosti -&gt; Peňaženka</translation>
+    </message>
+    <message>
+        <source>Confirm duplicate recipients</source>
+        <translation>Potvrdiť duplicitných príjemcov</translation>
+    </message>
+    <message>
+        <source>You are sending to the same address multiple times in a single transaction. This is unusual and may not be what you intended. Are you sure you want to proceed?</source>
+        <translation>Posielate na rovnakú adresu viackrát v jednej transakcii. Toto je neobvyklé a nemusí to byť to, čo ste zamýšľali. Ste si istí, že chcete pokračovať?</translation>
+    </message>
+    <message>
+        <source>%1 from wallet '%2'</source>
+        <translation>%1 z peňaženky '%2'</translation>
+    </message>
+    <message>
         <source>Do you want to create this transaction?</source>
         <extracomment>Message displayed when attempting to create a transaction. Cautionary text to prompt the user to verify that the displayed transaction details represent the transaction the user intends to create.</extracomment>
         <translation>Chcete vytvoriť túto transakciu?</translation>
+    </message>
+    <message>
+        <source>Do you want to draft this transaction?</source>
+        <translation>Chcete vytvoriť návrh tejto transakcie?</translation>
     </message>
     <message>
         <source>Please, review your transaction proposal. This will produce a Partially Signed Blockchain Transaction (PSBT) which you can save or copy and then sign with e.g. an offline %1 wallet, or a PSBT-compatible hardware wallet.</source>
@@ -4200,9 +4753,27 @@ Pre viac informácií o používaní tejto konzoly zadajte %6.
         <translation>Ak chcete skontrolovať zoznam príjemcov, kliknite na „Zobraziť podrobnosti…"</translation>
     </message>
     <message>
+        <source>Sign failed</source>
+        <translation>Podpísanie zlyhalo</translation>
+    </message>
+    <message>
+        <source>External signer not found</source>
+        <extracomment>"External signer" means using devices such as hardware wallets.</extracomment>
+        <translation>Externý podpisovateľ nebol nájdený</translation>
+    </message>
+    <message>
+        <source>External signer failure</source>
+        <extracomment>"External signer" means using devices such as hardware wallets.</extracomment>
+        <translation>Zlyhanie externého podpisovateľa</translation>
+    </message>
+    <message>
         <source>Partially Signed Transaction (Binary)</source>
         <extracomment>Expanded name of the binary PSBT file format. See: BIP 174.</extracomment>
         <translation>Čiastočne podpísaná transakcia (binárna)</translation>
+    </message>
+    <message>
+        <source>External balance:</source>
+        <translation>Externý zostatok:</translation>
     </message>
     <message>
         <source>The recipient address is not valid. Please recheck.</source>
@@ -4219,10 +4790,6 @@ Pre viac informácií o používaní tejto konzoly zadajte %6.
     <message>
         <source>The total exceeds your balance when the %1 transaction fee is included.</source>
         <translation>Celková suma prevyšuje váš zostatok ak sú započítané %1 transakčné poplatky.</translation>
-    </message>
-    <message>
-        <source>Duplicate address found: addresses should only be used once each.</source>
-        <translation>Našla sa duplicitná adresa: každá adresa by sa mala použiť len raz.</translation>
     </message>
     <message>
         <source>Transaction creation failed!</source>
@@ -4710,17 +5277,6 @@ Pre viac informácií o používaní tejto konzoly zadajte %6.
     </message>
 </context>
 <context>
-    <name>TransactionDescDialog</name>
-    <message>
-        <source>This pane shows a detailed description of the transaction</source>
-        <translation>Táto časť obrazovky zobrazuje detailný popis transakcie</translation>
-    </message>
-    <message>
-        <source>Details for %1</source>
-        <translation>Podrobnosti pre %1</translation>
-    </message>
-</context>
-<context>
     <name>TransactionTableModel</name>
     <message>
         <source>Date</source>
@@ -4797,6 +5353,10 @@ Pre viac informácií o používaní tejto konzoly zadajte %6.
     <message>
         <source>Platform Transfer</source>
         <translation>Prevod platformy</translation>
+    </message>
+    <message>
+        <source>Dust Receive</source>
+        <translation>Príjem prachu</translation>
     </message>
     <message>
         <source>%1 Mixing</source>
@@ -4930,6 +5490,10 @@ Pre viac informácií o používaní tejto konzoly zadajte %6.
         <translation>Prevod platformy</translation>
     </message>
     <message>
+        <source>Dust Receive</source>
+        <translation>Príjem prachu</translation>
+    </message>
+    <message>
         <source>Other</source>
         <translation>Iné</translation>
     </message>
@@ -4976,6 +5540,10 @@ Pre viac informácií o používaní tejto konzoly zadajte %6.
     <message>
         <source>Rese&amp;nd transaction</source>
         <translation>Znova o&amp;doslať transakciu</translation>
+    </message>
+    <message>
+        <source>&amp;Unlock dust UTXO</source>
+        <translation>&amp;Odomknúť prachové UTXO</translation>
     </message>
     <message>
         <source>&amp;Edit address label</source>
@@ -5042,6 +5610,10 @@ Pre viac informácií o používaní tejto konzoly zadajte %6.
     <message>
         <source>The transaction history was successfully saved to %1.</source>
         <translation>História transakciá bola úspešne uložená do %1.</translation>
+    </message>
+    <message>
+        <source>Details for %1</source>
+        <translation>Podrobnosti pre %1</translation>
     </message>
     <message>
         <source>QR code</source>
@@ -5132,6 +5704,10 @@ Prejdite na Súbor &gt; Otvoriť peňaženku a načítajte peňaženku.
         <translation>Poslať Mince</translation>
     </message>
     <message>
+        <source>Can't display address</source>
+        <translation>Nie je možné zobraziť adresu</translation>
+    </message>
+    <message>
         <source>default wallet</source>
         <translation>predvolená peňaženka</translation>
     </message>
@@ -5174,6 +5750,26 @@ Prejdite na Súbor &gt; Otvoriť peňaženku a načítajte peňaženku.
     <message>
         <source>The wallet data was successfully saved to %1.</source>
         <translation>Dáta peňaženky boli úspešne uložené do %1.</translation>
+    </message>
+    <message>
+        <source>No Recovery Phrase</source>
+        <translation>Žiadna fráza na obnovenie</translation>
+    </message>
+    <message>
+        <source>This wallet does not have private keys and therefore has no recovery phrase.</source>
+        <translation>Táto peňaženka nemá súkromné kľúče, a preto nemá frázu na obnovenie.</translation>
+    </message>
+    <message>
+        <source>This wallet was not created with HD (Hierarchical Deterministic) mode and does not have a recovery phrase.</source>
+        <translation>Táto peňaženka nebola vytvorená v režime HD (Hierarchical Deterministic) a nemá frázu na obnovenie.</translation>
+    </message>
+    <message>
+        <source>Mnemonic Retrieval Failed</source>
+        <translation>Získanie mnemonickej frázy zlyhalo</translation>
+    </message>
+    <message>
+        <source>Could not retrieve the recovery phrase from this wallet.</source>
+        <translation>Nepodarilo sa získať frázu na obnovenie z tejto peňaženky.</translation>
     </message>
     <message>
         <source>Cancel</source>
@@ -5265,10 +5861,6 @@ Prejdite na Súbor &gt; Otvoriť peňaženku a načítajte peňaženku.
     <message>
         <source>SQLiteDatabase: Unknown sqlite wallet schema version %d. Only version %d is supported</source>
         <translation>SQLiteDatabase: Neznáma verzia schémy peňaženky sqlite %d. Podporovaná je iba verzia %d</translation>
-    </message>
-    <message>
-        <source>Transaction index can't be disabled with governance validation enabled. Either start with -disablegovernance command line switch or enable transaction index.</source>
-        <translation>Transakčný index nie je možné zakázať, ak je povolené overenie riadenia. Začnite buď prepínačom príkazového riadku -disablegovernance, alebo povolte index transakcií.</translation>
     </message>
     <message>
         <source>Unsupported category-specific logging level -loglevel=%s. Expected -loglevel=&lt;category&gt;:&lt;loglevel&gt;. Valid categories: %s. Valid loglevels: %s.</source>
@@ -5427,6 +6019,22 @@ Prejdite na Súbor &gt; Otvoriť peňaženku a načítajte peňaženku.
         <translation>Súbor %s obsahuje všetky súkromné kľúče z tejto peňaženky. Nezdieľajte s nikým!</translation>
     </message>
     <message>
+        <source>%s request to listen on port %u. This port is considered "bad" and thus it is unlikely that any peer will connect to it. See doc/p2p-bad-ports.md for details and a full list.</source>
+        <translation>Požiadavka %s na počúvanie na porte %u. Tento port je považovaný za "zlý", a preto je nepravdepodobné, že sa k nemu pripojí akýkoľvek uzol. Podrobnosti a úplný zoznam nájdete v doc/p2p-bad-ports.md.</translation>
+    </message>
+    <message>
+        <source>Disk space for %s may not accommodate the block files. Approximately %u GB of data will be stored in this directory.</source>
+        <translation>Miesto na disku pre %s nemusí stačiť na blokové súbory. V tomto adresári bude uložených približne %u GB dát.</translation>
+    </message>
+    <message>
+        <source>Error loading %s: External signer wallet being loaded without external signer support compiled</source>
+        <translation>Chyba pri načítaní %s: Peňaženka externého podpisovateľa sa načítava bez kompilovanej podpory externého podpisovateľa</translation>
+    </message>
+    <message>
+        <source>Error: Dumpfile version is not supported. This version of dash-wallet only supports version 1 dumpfiles. Got dumpfile with version %s</source>
+        <translation>Chyba: Verzia súboru výpisu nie je podporovaná. Táto verzia dash-wallet podporuje iba súbory výpisu verzie 1. Bol prijatý súbor výpisu verzie %s</translation>
+    </message>
+    <message>
         <source>Failed to create backup, file already exists! This could happen if you restarted wallet in less than 60 seconds. You can continue if you are ok with this.</source>
         <translation>Chyba pri vytváraní zálohy, lebo súbor už existuje! Toto môže nastať v prípade, ak ste reštartovali peňaženku za menej ako 60 sekúnd. Ak Vám to nevadí, môžete pokračovať.</translation>
     </message>
@@ -5483,6 +6091,10 @@ Prejdite na Súbor &gt; Otvoriť peňaženku a načítajte peňaženku.
         <translation>Automatické zálohy sú deaktivované</translation>
     </message>
     <message>
+        <source>Cannot set -forcednsseed to true when setting -dnsseed to false.</source>
+        <translation>Nie je možné nastaviť -forcednsseed na true, keď je -dnsseed nastavené na false.</translation>
+    </message>
+    <message>
         <source>Cannot set -peerblockfilters without -blockfilterindex.</source>
         <translation>Nie je možné nastaviť -peerblockfilters bez -blockfilterindex.</translation>
     </message>
@@ -5505,6 +6117,10 @@ Prejdite na Súbor &gt; Otvoriť peňaženku a načítajte peňaženku.
     <message>
         <source>Error loading %s: Private keys can only be disabled during creation</source>
         <translation>Chyba pri načítavaní %s: Súkromné kľúče je možné deaktivovať iba počas vytvárania</translation>
+    </message>
+    <message>
+        <source>Error: Cannot extract destination from the generated scriptpubkey</source>
+        <translation>Chyba: Nie je možné extrahovať cieľ z vygenerovaného scriptpubkey</translation>
     </message>
     <message>
         <source>Error: Couldn't create cursor into database</source>
@@ -5703,6 +6319,10 @@ Prejdite na Súbor &gt; Otvoriť peňaženku a načítajte peňaženku.
         <translation>Nie je možné vytvoriť súbor PID '%s': %s</translation>
     </message>
     <message>
+        <source>Unable to find UTXO for external input</source>
+        <translation>Nepodarilo sa nájsť UTXO pre externý vstup</translation>
+    </message>
+    <message>
         <source>Unable to generate initial keys</source>
         <translation>Nie je možné vygenerovať počiatočné kľúče</translation>
     </message>
@@ -5801,10 +6421,6 @@ Prejdite na Súbor &gt; Otvoriť peňaženku a načítajte peňaženku.
     <message>
         <source>Error: Dumpfile identifier record is incorrect. Got "%s", expected "%s".</source>
         <translation>Chyba: Záznam identifikátora súboru výpisu je nesprávny. Získané "%s", očakávané "%s".</translation>
-    </message>
-    <message>
-        <source>Error: Dumpfile version is not supported. This version of bitcoin-wallet only supports version 1 dumpfiles. Got dumpfile with version %s</source>
-        <translation>Chyba: Verzia súboru výpisu nie je podporovaná. Táto verzia bitcoin-wallet podporuje iba súbory výpisu verzie 1. Získaný súbor výpisu s verziou %s</translation>
     </message>
     <message>
         <source>Failed to rename invalid peers.dat file. Please move or delete it and try again.</source>
@@ -6133,10 +6749,6 @@ Prejdite na Súbor &gt; Otvoriť peňaženku a načítajte peňaženku.
     <message>
         <source>%s is set very high! Fees this large could be paid on a single transaction.</source>
         <translation>%s je nastavené veľmi vysoko! Takto veľké poplatky by mohli byť zaplatené v jednej transakcii.</translation>
-    </message>
-    <message>
-        <source>%s request to listen on port %u. This port is considered "bad" and thus it is unlikely that any Dash Core peers connect to it. See doc/p2p-bad-ports.md for details and a full list.</source>
-        <translation>%s požiadavka na počúvanie na porte %u. Tento port je považovaný za "zlý", a preto je nepravdepodobné, že sa k nemu pripoja peery Dash Core. Pozrite doc/p2p-bad-ports.md pre detaily a úplný zoznam.</translation>
     </message>
     <message>
         <source>Cannot provide specific connections and have addrman find outgoing connections at the same time.</source>
