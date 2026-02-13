@@ -5,6 +5,7 @@
 #ifndef BITCOIN_QT_GOVERNANCELIST_H
 #define BITCOIN_QT_GOVERNANCELIST_H
 
+#include <interfaces/node.h>
 #include <primitives/transaction.h>
 #include <pubkey.h>
 #include <saltedhasher.h>
@@ -58,12 +59,14 @@ public:
 private:
     struct CalcProposalList {
         int m_abs_vote_req{0};
+        interfaces::GOV::GovernanceInfo m_gov_info;
         ProposalList m_proposals;
         Uint256HashMap<CKeyID> m_votable_masternodes;
         Uint256HashSet m_fundable_hashes;
     };
 
     ClientModel* clientModel{nullptr};
+    interfaces::GOV::GovernanceInfo m_gov_info;
     ProposalModel* proposalModel{nullptr};
     ProposalSource m_proposal_source{ProposalSource::Active};
     QMenu* proposalContextMenu{nullptr};
@@ -85,6 +88,7 @@ private:
     void setProposalList(CalcProposalList&& data);
     void updateEmptyPagePalette();
     void updateEmptyState();
+    void updateProposalButtons();
     void voteForProposal(vote_outcome_enum_t outcome);
 
 protected:

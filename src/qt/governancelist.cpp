@@ -24,6 +24,7 @@
 #include <util/strencodings.h>
 #include <util/time.h>
 
+#include <qt/bitcoinunits.h>
 #include <qt/clientmodel.h>
 #include <qt/guiutil.h>
 #include <qt/optionsmodel.h>
@@ -95,6 +96,7 @@ GovernanceList::GovernanceList(QWidget* parent) :
     // Connect buttons
     connect(ui->btnCreateProposal, &QPushButton::clicked, this, &GovernanceList::showCreateProposalDialog);
     connect(ui->btnResumeProposal, &QPushButton::clicked, this, &GovernanceList::showResumeProposalDialog);
+    updateProposalButtons();
 
     // Initialize masternode count to 0
     ui->mnCountLabel->setText("0");
@@ -143,6 +145,7 @@ void GovernanceList::setClientModel(ClientModel* model)
         m_timer->stop();
         return;
     }
+    connect(clientModel, &ClientModel::additionalDataSyncProgressChanged, this, &GovernanceList::updateProposalButtons);
     connect(clientModel, &ClientModel::governanceChanged, this, &GovernanceList::handleProposalListChanged);
     connect(clientModel, &ClientModel::numBlocksChanged, this, &GovernanceList::handleProposalListChanged);
     connect(clientModel->getOptionsModel(), &OptionsModel::displayUnitChanged, this, &GovernanceList::updateDisplayUnit);
@@ -194,6 +197,7 @@ void GovernanceList::setWalletModel(WalletModel* model)
         m_timer->stop();
         return;
     }
+    connect(walletModel, &WalletModel::balanceChanged, this, &GovernanceList::updateProposalButtons);
     if (clientModel && ui->proposalSourceCombo->findData(ToUnderlying(ProposalSource::Local)) == -1) {
         ui->proposalSourceCombo->addItem(tr("My Proposals"), ToUnderlying(ProposalSource::Local));
     }
@@ -272,8 +276,7 @@ GovernanceList::CalcProposalList GovernanceList::calcProposalList() const
     // Need to query number of masternodes here with access to clientModel.
     const int nWeightedMnCount = dmn->getValidWeightedMNsCount();
     ret.m_abs_vote_req = std::max(Params().GetConsensus().nGovernanceMinQuorum, nWeightedMnCount / 10);
-
-    const auto gov_info{clientModel->node().gov().getGovernanceInfo()};
+    ret.m_gov_info = clientModel->node().gov().getGovernanceInfo();
     if (m_proposal_source == ProposalSource::Active) {
         std::vector<CGovernanceObject> govObjList;
         clientModel->getAllGovernanceObjects(govObjList);
@@ -281,17 +284,17 @@ GovernanceList::CalcProposalList GovernanceList::calcProposalList() const
             if (govObj.GetObjectType() != GovernanceObject::PROPOSAL) {
                 continue; // Skip triggers.
             }
-            ret.m_proposals.emplace_back(std::make_unique<Proposal>(this->clientModel, govObj, gov_info, gov_info.requiredConfs));
+            ret.m_proposals.emplace_back(std::make_unique<Proposal>(this->clientModel, govObj, ret.m_gov_info, ret.m_gov_info.requiredConfs));
         }
         // Include unrelayed wallet proposals (0 confs, not yet broadcast)
         for (const auto& obj : getWalletProposals(/*pending=*/true)) {
             CGovernanceObject govObj(obj.hashParent, obj.revision, obj.time, obj.collateralHash, obj.GetDataAsHexString());
-            ret.m_proposals.emplace_back(std::make_unique<Proposal>(this->clientModel, govObj, gov_info, queryCollateralDepth(obj.collateralHash)));
+            ret.m_proposals.emplace_back(std::make_unique<Proposal>(this->clientModel, govObj, ret.m_gov_info, queryCollateralDepth(obj.collateralHash)));
         }
     } else if (m_proposal_source == ProposalSource::Local) {
         for (const auto& obj : getWalletProposals(/*pending=*/std::nullopt)) {
             CGovernanceObject govObj(obj.hashParent, obj.revision, obj.time, obj.collateralHash, obj.GetDataAsHexString());
-            ret.m_proposals.emplace_back(std::make_unique<Proposal>(this->clientModel, govObj, gov_info, queryCollateralDepth(obj.collateralHash)));
+            ret.m_proposals.emplace_back(std::make_unique<Proposal>(this->clientModel, govObj, ret.m_gov_info, queryCollateralDepth(obj.collateralHash)));
         }
     }
 
@@ -316,8 +319,10 @@ void GovernanceList::setProposalList(CalcProposalList&& data)
 {
     proposalModel->setVotingParams(data.m_abs_vote_req);
     proposalModel->reconcile(std::move(data.m_proposals), std::move(data.m_fundable_hashes));
+    m_gov_info = std::move(data.m_gov_info);
     votableMasternodes = std::move(data.m_votable_masternodes);
     updateMasternodeCount();
+    updateProposalButtons();
 }
 
 void GovernanceList::updateProposalCount()
@@ -359,7 +364,8 @@ void GovernanceList::showCreateProposalDialog()
     proposalWizard->setModal(false);
     proposalWizard->setWindowFlag(Qt::Window, true);
     // Auto-open Resume dialog after successful creation and refresh the governance list
-    connect(proposalWizard, &QDialog::accepted, this, &GovernanceList::handleProposalListChanged);
+    connect(proposalWizard, &QDialog::accepted, this, [this] { handleProposalListChanged(/*force=*/true); });
+    connect(proposalWizard, &QDialog::accepted, this, &GovernanceList::updateProposalButtons);
     connect(proposalWizard, &QDialog::accepted, this, &GovernanceList::showResumeProposalDialog);
     proposalWizard->show();
 }
@@ -435,6 +441,36 @@ void GovernanceList::updateMasternodeCount() const
 {
     if (ui && ui->mnCountLabel) {
         ui->mnCountLabel->setText(QString::number(votableMasternodes.size()));
+    }
+}
+
+void GovernanceList::updateProposalButtons()
+{
+    if (!clientModel || !clientModel->masternodeSync().isGovernanceSynced()) {
+        const QString tooltip = tr("Cannot interact with governance before sync completes");
+        ui->btnCreateProposal->setEnabled(false);
+        ui->btnCreateProposal->setToolTip(tooltip);
+        ui->btnResumeProposal->setEnabled(false);
+        ui->btnResumeProposal->setToolTip(tooltip);
+        return;
+    }
+
+    // Using filler tooltips as tooltips once set cannot be disabled
+    ui->btnCreateProposal->setEnabled(true);
+    ui->btnCreateProposal->setToolTip(tr("Creates a new proposal"));
+    ui->btnResumeProposal->setEnabled(true);
+    ui->btnResumeProposal->setToolTip(tr("Resumes an existing proposal"));
+
+    // Wallets with insufficient balance cannot create proposals
+    if (walletModel && walletModel->getOptionsModel()) {
+        const auto proposal_fee = m_gov_info.proposalfee;
+        if (walletModel->wallet().getBalance() < proposal_fee) {
+            ui->btnCreateProposal->setEnabled(false);
+            ui->btnCreateProposal->setToolTip(
+                tr("Creating proposals costs %1, insufficient balance")
+                    .arg(BitcoinUnits::formatWithUnit(walletModel->getOptionsModel()->getDisplayUnit(), proposal_fee, false,
+                                                      BitcoinUnits::SeparatorStyle::ALWAYS)));
+        }
     }
 }
 
