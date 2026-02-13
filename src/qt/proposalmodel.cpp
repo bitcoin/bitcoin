@@ -398,12 +398,10 @@ void ProposalModel::reconcile(ProposalList&& proposals, std::unordered_set<uint2
         if (it != m_data.end()) {
             const auto idx{static_cast<int>(std::distance(m_data.begin(), it))};
             keep_index[static_cast<size_t>(idx)] = true;
-            if ((*it)->getAbsoluteYesCount() != proposal->getAbsoluteYesCount() || (*it)->collateralConfs() != proposal->collateralConfs()) {
-                // Replace proposal to update vote count or confirmation depth
-                *it = std::move(proposal);
-                Q_EMIT dataChanged(createIndex(idx, Column::STATUS), createIndex(idx, Column::VOTING_STATUS));
-            }
-            // else: no changes, proposal unique_ptr goes out of scope and gets deleted
+            // Always replace: block height, vote breakdown, and broadcast status
+            // can all change between cycles without a single cheap sentinel.
+            *it = std::move(proposal);
+            Q_EMIT dataChanged(createIndex(idx, Column::STATUS), createIndex(idx, Column::VOTING_STATUS));
         } else {
             append(std::move(proposal));
         }
@@ -416,10 +414,6 @@ void ProposalModel::reconcile(ProposalList&& proposals, std::unordered_set<uint2
         }
     }
 
-    // Fundable set may have changed; refresh all status icons
-    if (!m_data.empty()) {
-        Q_EMIT dataChanged(createIndex(0, Column::STATUS), createIndex(rowCount() - 1, Column::STATUS));
-    }
 }
 
 void ProposalModel::setDisplayUnit(const BitcoinUnit& display_unit)

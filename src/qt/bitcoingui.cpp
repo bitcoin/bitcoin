@@ -907,7 +907,7 @@ void BitcoinGUI::setClientModel(ClientModel *_clientModel, interfaces::BlockAndH
             unitDisplayControl->setOptionsModel(optionsModel);
             m_mask_values_action->setChecked(optionsModel->getOption(OptionsModel::OptionID::MaskValues).toBool());
 
-            connect(optionsModel, &OptionsModel::displayUnitChanged, this, &BitcoinGUI::updateGovernanceCycleIcon);
+            connect(optionsModel, &OptionsModel::displayUnitChanged, this, [this]() { m_last_gov_cycle_height.reset(); updateGovernanceCycleIcon(); });
             connect(optionsModel, &OptionsModel::showCoinJoinChanged, this, &BitcoinGUI::updateCoinJoinVisibility);
             connect(optionsModel, &OptionsModel::showGovernanceChanged, this, &BitcoinGUI::updateGovernanceVisibility);
             connect(optionsModel, &OptionsModel::showGovernanceClockChanged, this, &BitcoinGUI::updateGovernanceCycleIcon);
@@ -1797,7 +1797,7 @@ void BitcoinGUI::updateGovernanceCycleIcon()
     const int current_height{m_node.getNumBlocks()};
     if (current_height == m_last_gov_cycle_height) {
         // Governance clock only changes with new blocks; skip redundant updates
-        // triggered by connection changes, sync progress, or display unit signals.
+        // triggered by connection changes or sync progress signals.
         return;
     } else {
         m_last_gov_cycle_height = current_height;
