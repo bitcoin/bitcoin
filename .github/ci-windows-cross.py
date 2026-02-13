@@ -97,9 +97,6 @@ def run_functional_tests():
         # feature_unsupported_utxo_db.py fails on Windows because of emojis in the test data directory.
         "--exclude",
         "feature_unsupported_utxo_db.py",
-        # See https://github.com/bitcoin/bitcoin/issues/31409.
-        "--exclude",
-        "wallet_multiwallet.py",
     ]
     run(test_runner_cmd)
 
