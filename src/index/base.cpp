@@ -240,10 +240,11 @@ void BaseIndex::Sync()
                 FatalErrorf("Failed to rewind %s to a previous chain tip", GetName());
                 return;
             }
+
+            if (!ProcessBlock(pindex_next)) return; // error logged internally
+
+            // Update last processed block for next round
             pindex = pindex_next;
-
-
-            if (!ProcessBlock(pindex)) return; // error logged internally
 
             auto current_time{NodeClock::now()};
             if (current_time - last_log_time >= SYNC_LOG_INTERVAL) {
