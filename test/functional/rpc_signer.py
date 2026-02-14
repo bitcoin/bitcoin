@@ -16,6 +16,7 @@ from test_framework.util import (
     assert_equal,
     assert_raises_rpc_error,
 )
+from test_framework.authproxy import JSONRPCException
 
 
 class RPCSignerTest(BitcoinTestFramework):
@@ -51,13 +52,27 @@ class RPCSignerTest(BitcoinTestFramework):
         )
 
         # Handle script missing:
-        assert_raises_rpc_error(
-            -1,
-            "CreateProcess failed: The system cannot find the file specified."
-            if platform.system() == "Windows"
-            else "execve failed: No such file or directory",
-            self.nodes[3].enumeratesigners,
-        )
+        if platform.system() == "Windows":
+            assert_raises_rpc_error(
+                -1,
+                "CreateProcess failed: The system cannot find the file specified.",
+                self.nodes[3].enumeratesigners,
+            )
+        else:
+            try:
+                self.nodes[3].enumeratesigners()
+                assert False, "expected enumeratesigners to fail"
+            except JSONRPCException as e:
+                msg = e.error["message"]
+                assert msg.startswith("execve failed:"), msg
+                assert any(
+                    needle in msg
+                    for needle in (
+                        "No such file or directory",
+                        "Not a directory",
+                    )
+                ), msg
+
 
         # Handle error thrown by script
         self.set_mock_result(self.nodes[1], "2")
