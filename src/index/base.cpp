@@ -204,18 +204,7 @@ void BaseIndex::Sync()
     if (!m_synced) {
         auto last_log_time{NodeClock::now()};
         auto last_locator_write_time{last_log_time};
-        while (true) {
-            if (m_interrupt) {
-                LogInfo("%s: m_interrupt set; exiting ThreadSync", GetName());
-
-                SetBestBlockIndex(pindex);
-                // No need to handle errors in Commit. If it fails, the error will be already be
-                // logged. The best way to recover is to continue, as index cannot be corrupted by
-                // a missed commit to disk for an advanced index state.
-                Commit();
-                return;
-            }
-
+        while (!m_interrupt) {
             const CBlockIndex* pindex_next = WITH_LOCK(cs_main, return NextSyncBlock(pindex, m_chainstate->m_chain));
             // If pindex_next is null, it means pindex is the chain tip, so
             // commit data indexed so far.
@@ -259,6 +248,17 @@ void BaseIndex::Sync()
                 Commit();
             }
         }
+    }
+
+    if (m_interrupt) {
+        LogInfo("%s: m_interrupt set; exiting ThreadSync", GetName());
+
+        SetBestBlockIndex(pindex);
+        // No need to handle errors in Commit. If it fails, the error will be already be
+        // logged. The best way to recover is to continue, as index cannot be corrupted by
+        // a missed commit to disk for an advanced index state.
+        Commit();
+        return;
     }
 
     if (pindex) {
