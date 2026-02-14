@@ -513,4 +513,42 @@ BOOST_FIXTURE_TEST_CASE(initial_sync_reorg, BuildChainTestingSetup)
     BOOST_CHECK_EQUAL(summary.best_block_hash, tip_block->GetBlockHash());
 }
 
+// Verifies that the index persists its sync progress when interrupted during initial sync.
+// The index should resume from the last processed batch rather than restarting from genesis.
+BOOST_FIXTURE_TEST_CASE(shutdown_during_initial_sync, BuildChainTestingSetup)
+{
+    // The index will be interrupted at block 45. Due to the batch size of 10,
+    // the last synced block will be block 39 after interruption (end of batch range [30-39]).
+    constexpr int SHUTDOWN_HEIGHT = 45;
+    constexpr int BATCH_SIZE = 10;
+    constexpr int EXPECTED_LAST_SYNCED_BLOCK = 39;
+    const auto& dir = m_args.GetDataDirNet();
+
+    {
+        // Create a filter index that will block during initial sync
+        IndexBlockSim index(dir, interfaces::MakeChain(m_node), /*f_memory=*/false, /*blocking_height=*/SHUTDOWN_HEIGHT);
+        index.SetProcessingBatchSize(BATCH_SIZE);
+        BOOST_REQUIRE(index.Init());
+        BOOST_REQUIRE(index.StartBackgroundSync());
+
+        // Wait for the index to reach the blocking point
+        index.wait_at_blocking_point();
+
+        // Now mimic shutdown by interrupting the index and unblock sync
+        index.Interrupt();
+        index.allow_continue();
+        index.Stop(); // Wait for background thread to stop
+
+        // Check index ended with height at end of the last completed batch
+        BOOST_CHECK_EQUAL(index.GetSummary().best_block_height, EXPECTED_LAST_SYNCED_BLOCK);
+    }
+
+    {
+        // Check the index will resume from the last locator
+        IndexBlockSim index(dir, interfaces::MakeChain(m_node), /*f_memory=*/false, /*blocking_height=*/SHUTDOWN_HEIGHT);
+        BOOST_REQUIRE(index.Init());
+        BOOST_CHECK_EQUAL(index.GetSummary().best_block_height, EXPECTED_LAST_SYNCED_BLOCK);
+    }
+}
+
 BOOST_AUTO_TEST_SUITE_END()
