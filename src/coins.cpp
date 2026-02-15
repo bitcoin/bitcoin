@@ -41,6 +41,12 @@ void CCoinsViewBacked::BatchWrite(CoinsViewCacheCursor& cursor, const uint256& b
 std::unique_ptr<CCoinsViewCursor> CCoinsViewBacked::Cursor() const { return base->Cursor(); }
 size_t CCoinsViewBacked::EstimateSize() const { return base->EstimateSize(); }
 
+CoinsViewEmpty& CoinsViewEmpty::Get()
+{
+    static CoinsViewEmpty instance;
+    return instance;
+}
+
 std::optional<Coin> CCoinsViewCache::PeekCoin(const COutPoint& outpoint) const
 {
     if (auto it{cacheCoins.find(outpoint)}; it != cacheCoins.end()) {

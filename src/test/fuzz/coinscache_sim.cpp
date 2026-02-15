@@ -139,7 +139,7 @@ struct CacheLevel
  *
  * The initial state consists of the empty UTXO set.
  */
-class CoinsViewBottom final : public CCoinsView
+class CoinsViewBottom final : public CoinsViewEmpty
 {
     std::map<COutPoint, Coin> m_data;
 
@@ -152,11 +152,6 @@ public:
         }
         return std::nullopt;
     }
-
-    uint256 GetBestBlock() const final { return {}; }
-    std::vector<uint256> GetHeadBlocks() const final { return {}; }
-    std::unique_ptr<CCoinsViewCursor> Cursor() const final { return {}; }
-    size_t EstimateSize() const final { return m_data.size(); }
 
     void BatchWrite(CoinsViewCacheCursor& cursor, const uint256&) final
     {
