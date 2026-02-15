@@ -55,7 +55,7 @@ public:
 
     uint256 GetBestBlock() const override { return hashBestBlock_; }
 
-    void BatchWrite(CoinsViewCacheCursor& cursor, const uint256& hashBlock) override
+    void BatchWrite(CoinsViewCacheCursor& cursor, const uint256& block_hash) override
     {
         for (auto it{cursor.Begin()}; it != cursor.End(); it = cursor.NextAndMaybeErase(*it)){
             if (it->second.IsDirty()) {
@@ -67,8 +67,8 @@ public:
                 }
             }
         }
-        if (!hashBlock.IsNull())
-            hashBestBlock_ = hashBlock;
+        if (!block_hash.IsNull())
+            hashBestBlock_ = block_hash;
     }
 };
 
@@ -910,7 +910,7 @@ void TestFlushBehavior(
         for (auto i = all_caches.rbegin(); i != all_caches.rend(); ++i) {
             auto& cache = *i;
             cache->SanityCheck();
-            // hashBlock must be filled before flushing to disk; value is
+            // block_hash must be filled before flushing to disk; value is
             // unimportant here. This is normally done during connect/disconnect block.
             cache->SetBestBlock(m_rng.rand256());
             erase ? cache->Flush() : cache->Sync();
