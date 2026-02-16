@@ -3,7 +3,7 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <bench/bench.h>
-#include <bench/data/block413567.raw.h>
+#include <bench/block_generator.h>
 #include <bench/data/block413567_undo.raw.h>
 #include <chain.h>
 #include <consensus/params.h>
@@ -12,7 +12,6 @@
 #include <kernel/chainparams.h>
 #include <node/blockstorage.h>
 #include <primitives/block.h>
-#include <primitives/transaction.h>
 #include <rpc/blockchain.h>
 #include <serialize.h>
 #include <streams.h>
@@ -25,13 +24,12 @@
 #include <validation.h>
 
 #include <memory>
-#include <span>
 #include <string>
 
 namespace {
 
 struct TestBlockAndIndex {
-    const std::unique_ptr<const TestingSetup> testing_setup{MakeNoLogFileContext<const TestingSetup>(ChainType::MAIN)};
+    const std::unique_ptr<const TestingSetup> testing_setup{MakeNoLogFileContext<const TestingSetup>(ChainType::REGTEST)};
     CBlock block{};
     uint256 blockHash{};
     CBlockIndex prev_blockindex{};
@@ -39,12 +37,12 @@ struct TestBlockAndIndex {
 
     TestBlockAndIndex()
     {
-        SpanReader stream{benchmark::data::block413567};
-        stream >> TX_WITH_WITNESS(block);
+        const auto& params{testing_setup->m_node.chainman->GetParams()};
+        block = benchmark::GenerateBlock(params);
 
         blockHash = block.GetHash();
         blockindex.phashBlock = &blockHash;
-        blockindex.nBits = 403014710;
+        blockindex.nBits = block.nBits;
         // The undo data checksum commits to the previous block's hash.
         prev_blockindex.phashBlock = &block.hashPrevBlock;
         blockindex.pprev = &prev_blockindex;
