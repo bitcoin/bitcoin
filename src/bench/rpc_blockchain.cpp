@@ -17,6 +17,7 @@
 
 #include <memory>
 #include <string>
+#include <vector>
 
 namespace {
 
@@ -33,7 +34,13 @@ struct TestBlockAndIndex {
 
         blockHash = block.GetHash();
         blockindex.phashBlock = &blockHash;
+        blockindex.nVersion = block.nVersion;
+        blockindex.hashMerkleRoot = block.hashMerkleRoot;
+        blockindex.nTime = block.nTime;
         blockindex.nBits = block.nBits;
+        blockindex.nNonce = block.nNonce;
+        blockindex.nHeight = benchmark::GENERATED_BLOCK_HEIGHT;
+        blockindex.nTx = static_cast<unsigned int>(block.vtx.size());
     }
 };
 
