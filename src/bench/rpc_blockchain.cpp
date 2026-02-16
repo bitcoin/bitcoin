@@ -9,8 +9,6 @@
 #include <primitives/block.h>
 #include <primitives/transaction.h>
 #include <rpc/blockchain.h>
-#include <serialize.h>
-#include <span.h>
 #include <streams.h>
 #include <test/util/setup_common.h>
 #include <uint256.h>
@@ -19,7 +17,6 @@
 
 #include <cstddef>
 #include <memory>
-#include <vector>
 
 namespace {
 

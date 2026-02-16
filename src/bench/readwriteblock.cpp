@@ -4,7 +4,6 @@
 
 #include <bench/bench.h>
 #include <bench/block_generator.h>
-#include <flatfile.h>
 #include <node/blockstorage.h>
 #include <primitives/block.h>
 #include <test/util/setup_common.h>
