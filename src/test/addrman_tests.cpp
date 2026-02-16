@@ -93,6 +93,42 @@ BOOST_AUTO_TEST_CASE(addrman_simple)
     BOOST_CHECK(addrman->Size() >= 1);
 }
 
+
+BOOST_AUTO_TEST_CASE(addrman_terrible_many_failures)
+{
+    auto now = Now<NodeSeconds>();
+    SetMockTime(now - (ADDRMAN_MIN_FAIL + 24h));
+
+    auto addrman{std::make_unique<AddrMan>(EMPTY_NETGROUPMAN, DETERMINISTIC, GetCheckRatio(m_node))};
+
+    CNetAddr source{ResolveIP("250.1.2.1")};
+    CAddress addr{CAddress(ResolveService("250.250.2.1", 8333), NODE_NONE)};
+    addr.nTime = Now<NodeSeconds>();
+
+    BOOST_CHECK(addrman->Add({addr}, source));
+    BOOST_CHECK(addrman->Good(addr));
+
+    SetMockTime(now);
+
+    CAddress addr_helper{CAddress(ResolveService("251.252.2.3", 8333), NODE_NONE)};
+    addr_helper.nTime = Now<NodeSeconds>();
+    BOOST_CHECK(addrman->Add({addr_helper}, source));
+    BOOST_CHECK(addrman->Good(addr_helper));
+
+    for (int i = 0; i < ADDRMAN_MAX_FAILURES; ++i) {
+        // Use a time > 60s ago so IsTerrible doesn't bail out at the "tried in the last minute" check
+        addrman->Attempt(addr, /*fCountFailure=*/true, Now<NodeSeconds>() - 61s);
+    }
+
+    std::vector<CAddress> filtered{addrman->GetAddr(/*max_addresses=*/0, /*max_pct=*/0, /*network=*/std::nullopt)};
+    BOOST_CHECK_EQUAL(filtered.size(), 1U);
+    BOOST_CHECK_EQUAL(filtered[0].ToStringAddrPort(), "251.252.2.3:8333");
+
+    std::vector<CAddress> unfiltered{addrman->GetAddr(/*max_addresses=*/0, /*max_pct=*/0, /*network=*/std::nullopt, /*filtered=*/false)};
+    BOOST_CHECK_EQUAL(unfiltered.size(), 2U);
+}
+
+
 BOOST_AUTO_TEST_CASE(addrman_penalty_self_announcement)
 {
     SetMockTime(Now<NodeSeconds>());
