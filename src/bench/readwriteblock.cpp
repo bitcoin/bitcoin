@@ -9,12 +9,10 @@
 #include <primitives/block.h>
 #include <sync.h>
 #include <test/util/setup_common.h>
-#include <uint256.h>
 #include <util/check.h>
 #include <validation.h>
 
 #include <memory>
-#include <optional>
 
 static void WriteBlockBench(benchmark::Bench& bench)
 {
@@ -24,7 +22,7 @@ static void WriteBlockBench(benchmark::Bench& bench)
     const auto test_block{benchmark::GenerateBlock(params)};
     bench.run([&] {
         LOCK(::cs_main);
-        const auto pos{blockman.WriteBlock(test_block, /*nHeight=*/1)};
+        const auto pos{blockman.WriteBlock(test_block, benchmark::GENERATED_BLOCK_HEIGHT)};
         assert(!pos.IsNull());
     });
 }
@@ -36,7 +34,7 @@ static void ReadBlockBench(benchmark::Bench& bench)
     const auto& params{testing_setup->m_node.chainman->GetParams()};
     const auto test_block{benchmark::GenerateBlock(params)};
     const auto& expected_hash{test_block.GetHash()};
-    const auto& pos{WITH_LOCK(::cs_main, return blockman.WriteBlock(test_block, /*nHeight=*/1))};
+    const auto& pos{WITH_LOCK(::cs_main, return blockman.WriteBlock(test_block, benchmark::GENERATED_BLOCK_HEIGHT))};
     bench.run([&] {
         CBlock block;
         const auto success{blockman.ReadBlock(block, pos, expected_hash)};
@@ -50,7 +48,7 @@ static void ReadRawBlockBench(benchmark::Bench& bench)
     auto& blockman{testing_setup->m_node.chainman->m_blockman};
     const auto& params{testing_setup->m_node.chainman->GetParams()};
     const auto test_block{benchmark::GenerateBlock(params)};
-    const auto pos{WITH_LOCK(::cs_main, return blockman.WriteBlock(test_block, /*nHeight=*/1))};
+    const auto pos{WITH_LOCK(::cs_main, return blockman.WriteBlock(test_block, benchmark::GENERATED_BLOCK_HEIGHT))};
     bench.run([&] {
         const auto res{blockman.ReadRawBlock(pos)};
         assert(res);
