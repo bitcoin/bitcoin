@@ -43,7 +43,7 @@ void SetStdinEcho(bool enable)
         return;
     }
     if (!enable) {
-        tty.c_lflag &= ~ECHO;
+        tty.c_lflag &= static_cast<decltype(tty.c_lflag)>(~ECHO);
     } else {
         tty.c_lflag |= ECHO;
     }
