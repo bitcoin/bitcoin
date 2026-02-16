@@ -5,6 +5,7 @@
 
 #include <rpc/blockchain.h>
 
+#include <blockmap.h>
 #include <blockfilter.h>
 #include <chain.h>
 #include <chainparams.h>
@@ -1577,8 +1578,8 @@ static RPCHelpMan getchaintips()
         [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
 {
     ChainstateManager& chainman = EnsureAnyChainman(request.context);
-    LOCK(cs_main);
     CChain& active_chain = chainman.ActiveChain();
+    BlockMap block_index_snapshot = chainman.BlockIndexSnapshot();
 
     /*
      * Idea: The set of chain tips is the active chain tip, plus orphan blocks which do not have another orphan building off of them.
@@ -1591,7 +1592,7 @@ static RPCHelpMan getchaintips()
     std::set<const CBlockIndex*> setOrphans;
     std::set<const CBlockIndex*> setPrevs;
 
-    for (const auto& [_, block_index] : chainman.BlockIndex()) {
+    for (const auto& [_, block_index] : block_index_snapshot) {
         if (!active_chain.Contains(block_index)) {
             setOrphans.insert(block_index);
             setPrevs.insert(block_index->pprev);
@@ -1617,20 +1618,30 @@ static RPCHelpMan getchaintips()
         const int branchLen = block->nHeight - active_chain.FindFork(block)->nHeight;
         obj.pushKV("branchlen", branchLen);
 
+        uint32_t block_status;
+        bool is_valid_fork;
+        bool is_valid_header;
+        {
+            LOCK(cs_main);
+            block_status = block->nStatus;
+            is_valid_fork = block->IsValid(BLOCK_VALID_SCRIPTS);
+            is_valid_header = block->IsValid(BLOCK_VALID_TREE);
+        }
+
         std::string status;
         if (active_chain.Contains(block)) {
             // This block is part of the currently active chain.
             status = "active";
-        } else if (block->nStatus & BLOCK_FAILED_VALID) {
+        } else if (block_status & BLOCK_FAILED_VALID) {
             // This block or one of its ancestors is invalid.
             status = "invalid";
         } else if (!block->HaveNumChainTxs()) {
             // This block cannot be connected because full block data for it or one of its parents is missing.
             status = "headers-only";
-        } else if (block->IsValid(BLOCK_VALID_SCRIPTS)) {
+        } else if (is_valid_fork) {
             // This block is fully validated, but no longer part of the active chain. It was probably the active block once, but was reorganized.
             status = "valid-fork";
-        } else if (block->IsValid(BLOCK_VALID_TREE)) {
+        } else if (is_valid_header) {
             // The headers for this block are valid, but it has not been validated. It was probably never part of the most-work chain.
             status = "valid-headers";
         } else {
