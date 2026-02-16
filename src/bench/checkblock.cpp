@@ -4,7 +4,6 @@
 
 #include <bench/bench.h>
 #include <bench/block_generator.h>
-#include <chainparams.h>
 #include <consensus/validation.h>
 #include <kernel/chainparams.h>
 #include <primitives/block.h>
@@ -28,7 +27,7 @@ static void DeserializeBlockTest(benchmark::Bench& bench)
     bench.unit("block").run([&] {
         CBlock block;
         SpanReader{block_data} >> TX_WITH_WITNESS(block);
-        assert(block.vtx.size() == 1557);
+        assert(block.vtx.size() == 2001);
     });
 }
 
@@ -42,7 +41,7 @@ static void CheckBlockTest(benchmark::Bench& bench)
         .setup([&] {
             block = CBlock{};
             SpanReader{block_data} >> TX_WITH_WITNESS(block);
-            assert(block.vtx.size() == 1557);
+            assert(block.vtx.size() == 2001);
         })
         .run([&] {
             BlockValidationState validationState;
