@@ -1159,9 +1159,9 @@ public:
     //! should use CurrentChainstate() instead.
     //! @{
     Chainstate& ActiveChainstate() const;
-    CChain& ActiveChain() const EXCLUSIVE_LOCKS_REQUIRED(GetMutex()) { return ActiveChainstate().m_chain; }
-    int ActiveHeight() const EXCLUSIVE_LOCKS_REQUIRED(GetMutex()) { return ActiveChain().Height(); }
-    CBlockIndex* ActiveTip() const EXCLUSIVE_LOCKS_REQUIRED(GetMutex()) { return ActiveChain().Tip(); }
+    CChain& ActiveChain() const { return ActiveChainstate().m_chain; }
+    int ActiveHeight() const { return ActiveChain().Height(); }
+    CBlockIndex* ActiveTip() const { return ActiveChain().Tip(); }
     //! @}
 
     /**
