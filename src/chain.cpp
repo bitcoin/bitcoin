@@ -4,6 +4,8 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <chain.h>
+
+#include <sync.h>
 #include <tinyformat.h>
 #include <util/check.h>
 
@@ -13,8 +15,9 @@ std::string CBlockIndex::ToString() const
                      pprev, nHeight, hashMerkleRoot.ToString(), GetBlockHash().ToString());
 }
 
-void CChain::SetTip(CBlockIndex& block)
+void CChain::SetTip(CBlockIndex& block) EXCLUSIVE_LOCKS_REQUIRED(!m_mutex)
 {
+    LOCK(m_mutex);
     CBlockIndex* pindex = &block;
     vChain.resize(pindex->nHeight + 1);
     while (pindex && vChain[pindex->nHeight] != pindex) {
@@ -47,19 +50,31 @@ CBlockLocator GetLocator(const CBlockIndex* index)
     return CBlockLocator{LocatorEntries(index)};
 }
 
-const CBlockIndex *CChain::FindFork(const CBlockIndex *pindex) const {
+const CBlockIndex* CChain::FindFork(const CBlockIndex* pindex) const EXCLUSIVE_LOCKS_REQUIRED(!m_mutex)
+{
+    LOCK(m_mutex);
     if (pindex == nullptr) {
         return nullptr;
     }
-    if (pindex->nHeight > Height())
-        pindex = pindex->GetAncestor(Height());
-    while (pindex && !Contains(pindex))
+
+    int height = int(vChain.size()) - 1;
+    if (pindex->nHeight > height)
+        pindex = pindex->GetAncestor(height);
+
+    while (pindex) {
+        if (pindex->nHeight >= 0 && pindex->nHeight < (int)vChain.size() &&
+            vChain[pindex->nHeight] == pindex) {
+            break;
+        }
         pindex = pindex->pprev;
+    }
+
     return pindex;
 }
 
-CBlockIndex* CChain::FindEarliestAtLeast(int64_t nTime, int height) const
+CBlockIndex* CChain::FindEarliestAtLeast(int64_t nTime, int height) const EXCLUSIVE_LOCKS_REQUIRED(!m_mutex)
 {
+    LOCK(m_mutex);
     std::pair<int64_t, int> blockparams = std::make_pair(nTime, height);
     std::vector<CBlockIndex*>::const_iterator lower = std::lower_bound(vChain.begin(), vChain.end(), blockparams,
         [](CBlockIndex* pBlock, const std::pair<int64_t, int>& blockparams) -> bool { return pBlock->GetBlockTimeMax() < blockparams.first || pBlock->nHeight < blockparams.second; });
