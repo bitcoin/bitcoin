@@ -6,7 +6,7 @@
 
 export LC_ALL=C.UTF-8
 
-set -o errexit -o xtrace
+set -o errexit -o xtrace -o pipefail
 
 if [ "${DANGER_RUN_CI_ON_HOST}" != "1" ]; then
   echo "This script will make unsafe local and global modifications, so it can only be run inside a container and requires DANGER_RUN_CI_ON_HOST=1"
@@ -136,10 +136,30 @@ cmake --build "${BASE_BUILD_DIR}" "$MAKEJOBS" --target $GOAL || (
 )
 
 ccache --version | head -n 1 && ccache --show-stats --verbose
-hit_rate=$(ccache --show-stats | grep "Hits:" | head -1 | sed 's/.*(\(.*\)%).*/\1/')
-if [ "${hit_rate%.*}" -lt 75 ]; then
-  echo "::notice title=low ccache hitrate::Ccache hit-rate in $CONTAINER_NAME was $hit_rate%"
-fi
+ccache --print-stats | python3 -c '
+import os
+import sys
+
+for line in sys.stdin:
+    key, value = line.split("\t", 1)
+    # "primary storage" fallback only needed for ccache version 4.5.1
+    if key in ("local_storage_hit", "primary_storage_hit"):
+        hits = int(value)
+    elif key in ("local_storage_miss", "primary_storage_miss"):
+        miss = int(value)
+
+calls = hits + miss
+# codegen has no calls, so skip that here
+if calls:
+    rate = (hits / calls * 100)
+    print(f"{rate:.2f}")
+    if rate < 75:
+        container = os.environ["CONTAINER_NAME"]
+        print(
+            "::notice title=low ccache hitrate::"
+            f"Ccache hit-rate in {container} was {rate:.2f}%"
+        )
+'
 du -sh "${DEPENDS_DIR}"/*/
 du -sh "${PREVIOUS_RELEASES_DIR}"
 
@@ -217,12 +237,14 @@ if [[ "${RUN_IWYU}" == true ]]; then
 
   run_iwyu() {
     mv "${BASE_BUILD_DIR}/$1" "${BASE_BUILD_DIR}/compile_commands.json"
-    python3 "/include-what-you-use/iwyu_tool.py" \
+    {
+      python3 "/include-what-you-use/iwyu_tool.py" \
              -p "${BASE_BUILD_DIR}" "${MAKEJOBS}" \
              -- -Xiwyu --cxx17ns -Xiwyu --mapping_file="${BASE_ROOT_DIR}/contrib/devtools/iwyu/bitcoin.core.imp" \
              -Xiwyu --max_line_length=160 \
              -Xiwyu --check_also="*/primitives/*.h" \
-             2>&1 | tee /tmp/iwyu_ci.out
+             2>&1 || true
+    } | tee /tmp/iwyu_ci.out
     python3 "/include-what-you-use/fix_includes.py" --nosafe_headers < /tmp/iwyu_ci.out
     git diff -U1 | ./contrib/devtools/clang-format-diff.py -binary="clang-format-${IWYU_LLVM_V}" -p1 -i -v
   }
