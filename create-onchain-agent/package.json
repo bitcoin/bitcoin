@@ -1,0 +1,32 @@
+{
+  "name": "create-onchain-agent",
+  "version": "1.0.0",
+  "description": "CLI tool to scaffold onchain agent projects",
+  "type": "module",
+  "bin": {
+    "create-onchain-agent": "./index.js"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [
+    "onchain",
+    "agent",
+    "blockchain",
+    "coinbase",
+    "cdp",
+    "cli",
+    "scaffolding"
+  ],
+  "author": "Bitcoin Core",
+  "license": "MIT",
+  "dependencies": {
+    "prompts": "^2.4.2",
+    "chalk": "^5.3.0",
+    "ora": "^8.0.1"
+  },
+  "engines": {
+    "node": ">=18.0.0",
+    "npm": ">=9.0.0"
+  }
+}
