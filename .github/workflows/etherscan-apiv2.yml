@@ -112,18 +112,27 @@ jobs:
           echo "Chain ID: ${CHAIN_ID}"
           mkdir -p data/etherscan
           
+          # Store chain ID for use in later steps
+          echo "CHAIN_ID=${CHAIN_ID}" >> $GITHUB_ENV
+          
+          # ENS resolution only works on Ethereum mainnet (chainid=1)
+          if [ "${CHAIN_ID}" != "1" ]; then
+            echo "ℹ️ ENS resolution is only available on Ethereum mainnet (chainid=1)"
+            echo "Skipping ENS resolution for chain ID ${CHAIN_ID}"
+            echo "ENS_NAME=${ENS_NAME_INPUT}" >> $GITHUB_ENV
+            echo "ENS_RESOLVED=false" >> $GITHUB_ENV
+            echo "{\"ens_name\": \"${ENS_NAME_INPUT}\", \"chain_id\": \"${CHAIN_ID}\", \"status\": \"skipped_non_mainnet\"}" > data/etherscan/ens-resolution.json
+            exit 0
+          fi
+          
           # Check if API key is configured
           if [ -z "${ETHERSCAN_API_KEY}" ]; then
             echo "⚠️ ETHERSCAN_API_KEY not configured - skipping ENS resolution"
             echo "ENS_NAME=${ENS_NAME_INPUT}" >> $GITHUB_ENV
             echo "ENS_RESOLVED=false" >> $GITHUB_ENV
-            echo "CHAIN_ID=${CHAIN_ID}" >> $GITHUB_ENV
             echo "{\"ens_name\": \"${ENS_NAME_INPUT}\", \"status\": \"no_api_key\"}" > data/etherscan/ens-resolution.json
             exit 0
           fi
-          
-          # Store chain ID for use in later steps
-          echo "CHAIN_ID=${CHAIN_ID}" >> $GITHUB_ENV
           
           # Use Etherscan API to resolve ENS name (only works on mainnet)
           echo "Attempting ENS resolution via Etherscan API V2..."
