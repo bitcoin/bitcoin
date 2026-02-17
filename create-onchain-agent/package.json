@@ -18,7 +18,7 @@
     "cli",
     "scaffolding"
   ],
-  "author": "Bitcoin Core",
+  "author": "",
   "license": "MIT",
   "dependencies": {
     "prompts": "^2.4.2",
