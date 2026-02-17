@@ -2,7 +2,7 @@
   "name": "cdp-sdk-example",
   "version": "1.0.0",
   "description": "Example project demonstrating Coinbase Developer Platform (CDP) SDK setup",
-  "main": "index.js",
+  "main": "main.ts",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "start": "npx ts-node main.ts",

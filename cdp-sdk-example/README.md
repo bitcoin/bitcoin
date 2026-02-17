@@ -76,8 +76,8 @@ Once you have this basic setup working, you can:
 ## Related Resources
 
 - **CDP SDK Documentation**: https://docs.cdp.coinbase.com/
-- **CDP API Tools in this repo**: See `../contrib/devtools/CDP_API_README.md`
-- **CDP API Quick Start**: See `../CDP_API_QUICKSTART.md`
+- **CDP API Tools in this repo**: See `contrib/devtools/CDP_API_README.md` (from repository root)
+- **CDP API Quick Start**: See `CDP_API_QUICKSTART.md` (from repository root)
 
 ## Security Notes
 

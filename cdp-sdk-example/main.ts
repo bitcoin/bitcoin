@@ -23,7 +23,8 @@ async function main() {
   console.log('');
   console.log('For more information, see:');
   console.log('- CDP API Documentation: https://docs.cdp.coinbase.com/');
-  console.log('- Bitcoin repository CDP integration: ../contrib/devtools/CDP_API_README.md');
+  console.log('- Bitcoin repository CDP integration: contrib/devtools/CDP_API_README.md');
+  console.log('- Quick start guide: CDP_API_QUICKSTART.md');
 }
 
 main().catch(console.error);
