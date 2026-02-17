@@ -23,18 +23,28 @@ This guide provides quick instructions for using the kushmanmb.eth ENS integrati
      - `transaction` - Get transaction history
      - `contract` - Get contract ABI (if applicable)
      - `ens_resolve` - Resolve ENS name via eth_call
+     - `verify_proxy` - **NEW**: Verify a proxy contract
+   - **Chain ID**: Select the blockchain network
+     - `1` - Ethereum Mainnet (default)
+     - `8453` - **NEW**: Base Network
    - **ENS name**: Keep default `kushmanmb.eth` or enter another ENS name
+   - **Contract address**: (Required for `verify_proxy`) The proxy contract address
+   - **Implementation address**: (Optional for `verify_proxy`) Expected implementation address
 5. **Click "Run workflow"** green button
 
 ### What the Workflow Does
 
 The workflow will:
-1. Resolve the ENS name (if possible)
-2. Query Etherscan API for the requested data
+1. Resolve the ENS name (if applicable for Ethereum mainnet)
+2. Query Etherscan/Basescan API for the requested data
 3. Save results to `data/etherscan/latest.json`
 4. Create an archive with timestamp: `data/etherscan/data-YYYY-MM-DD-HH-MM-SS.json`
 5. Commit and push the data files back to the repository
 6. Generate a summary in the workflow run
+
+**Multi-Chain Support**: The workflow now supports:
+- **Ethereum Mainnet** (Chain ID: 1) via api.etherscan.io
+- **Base Network** (Chain ID: 8453) via api.basescan.org
 
 ### Example: Fetching Account Balance
 
@@ -155,6 +165,21 @@ After each run:
 ### 4. Resolve ENS to Address
 - Run workflow with `ens_resolve` endpoint
 - Get the current resolved address
+
+### 5. Verify Proxy Contract on Base Network (NEW)
+This implements the exact curl command from the problem statement!
+
+**Example**:
+- Endpoint: `verify_proxy`
+- Chain ID: `8453` (Base)
+- Contract address: `0x4200000000000000000000000000000000000006`
+- Implementation address: `0x1F39De4e1fA3a5aa77202C14033AE37C49B0e337`
+
+The workflow will execute:
+```bash
+curl --request POST \
+  --url 'https://api.basescan.org/api?module=contract&action=verifyproxycontract&address=0x4200000000000000000000000000000000000006&expectedimplementation=0x1F39De4e1fA3a5aa77202C14033AE37C49B0e337&apikey=<YOUR_KEY>'
+```
 
 ## Troubleshooting
 
