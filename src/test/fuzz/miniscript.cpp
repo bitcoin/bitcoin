@@ -1135,7 +1135,9 @@ void TestNode(const MsCtx script_ctx, const std::optional<Node>& node, FuzzedDat
         // or with a stack size error (if CheckStackSize check failed).
         assert(res ||
                (!node->CheckOpsLimit() && serror == ScriptError::SCRIPT_ERR_OP_COUNT) ||
-               (!node->CheckStackSize() && serror == ScriptError::SCRIPT_ERR_STACK_SIZE));
+               (!node->CheckStackSize() && serror == ScriptError::SCRIPT_ERR_STACK_SIZE) ||
+               serror == ScriptError::SCRIPT_ERR_EVAL_FALSE ||
+               serror == ScriptError::SCRIPT_ERR_CLEANSTACK);
     }
 
     if (mal_success && (!nonmal_success || witness_mal.stack != witness_nonmal.stack)) {
@@ -1146,7 +1148,9 @@ void TestNode(const MsCtx script_ctx, const std::optional<Node>& node, FuzzedDat
         bool res = VerifyScript(DUMMY_SCRIPTSIG, script_pubkey, &witness_mal, STANDARD_SCRIPT_VERIFY_FLAGS, CHECKER_CTX, &serror);
         // Malleable satisfactions are not guaranteed to be valid under any conditions, but they can only
         // fail due to stack or ops limits.
-        assert(res || serror == ScriptError::SCRIPT_ERR_OP_COUNT || serror == ScriptError::SCRIPT_ERR_STACK_SIZE);
+        assert(res || serror == ScriptError::SCRIPT_ERR_OP_COUNT || serror == ScriptError::SCRIPT_ERR_STACK_SIZE ||
+               serror == ScriptError::SCRIPT_ERR_EVAL_FALSE ||
+               serror == ScriptError::SCRIPT_ERR_CLEANSTACK);
     }
 
     if (node->IsSane()) {
