@@ -31,10 +31,27 @@ on:
           - transaction
           - contract
           - ens_resolve
+          - verify_proxy
+      chain_id:
+        description: 'Chain ID (1=Ethereum, 8453=Base)'
+        required: false
+        default: '1'
+        type: choice
+        options:
+          - '1'
+          - '8453'
       ens_name:
         description: 'ENS name to resolve (default: kushmanmb.eth)'
         required: false
         default: 'kushmanmb.eth'
+        type: string
+      contract_address:
+        description: 'Contract address (for verify_proxy endpoint)'
+        required: false
+        type: string
+      implementation_address:
+        description: 'Expected implementation address (for verify_proxy)'
+        required: false
         type: string
   schedule:
     # Run daily at 00:00 UTC
@@ -89,9 +106,24 @@ jobs:
         env:
           ENS_NAME_INPUT: ${{ github.event.inputs.ens_name || 'kushmanmb.eth' }}
           ETHERSCAN_API_KEY: ${{ secrets.ETHERSCAN_API_KEY }}
+          CHAIN_ID: ${{ github.event.inputs.chain_id || '1' }}
         run: |
           echo "Resolving ENS name: ${ENS_NAME_INPUT}"
+          echo "Chain ID: ${CHAIN_ID}"
           mkdir -p data/etherscan
+          
+          # Store chain ID for use in later steps
+          echo "CHAIN_ID=${CHAIN_ID}" >> $GITHUB_ENV
+          
+          # ENS resolution only works on Ethereum mainnet (chainid=1)
+          if [ "${CHAIN_ID}" != "1" ]; then
+            echo "ℹ️ ENS resolution is only available on Ethereum mainnet (chainid=1)"
+            echo "Skipping ENS resolution for chain ID ${CHAIN_ID}"
+            echo "ENS_NAME=${ENS_NAME_INPUT}" >> $GITHUB_ENV
+            echo "ENS_RESOLVED=false" >> $GITHUB_ENV
+            echo "{\"ens_name\": \"${ENS_NAME_INPUT}\", \"chain_id\": \"${CHAIN_ID}\", \"status\": \"skipped_non_mainnet\"}" > data/etherscan/ens-resolution.json
+            exit 0
+          fi
           
           # Check if API key is configured
           if [ -z "${ETHERSCAN_API_KEY}" ]; then
@@ -102,10 +134,11 @@ jobs:
             exit 0
           fi
           
-          # Use Etherscan API to resolve ENS name
+          # Use Etherscan API to resolve ENS name (only works on mainnet)
           echo "Attempting ENS resolution via Etherscan API V2..."
           
           # Use Etherscan's ENS lookup API V2 with error handling
+          # Note: ENS resolution only works on Ethereum mainnet (chainid=1)
           ENS_LOOKUP_URL="https://api.etherscan.io/v2/api?chainid=1&module=ens&action=getaddress&name=${ENS_NAME_INPUT}&apikey=${ETHERSCAN_API_KEY}"
           
           # Fetch with error handling
@@ -143,8 +176,12 @@ jobs:
           ENS_RESOLVED: ${{ env.ENS_RESOLVED }}
           RESOLVED_ADDRESS: ${{ env.RESOLVED_ADDRESS }}
           API_ENDPOINT_INPUT: ${{ github.event.inputs.api_endpoint || 'account' }}
+          CHAIN_ID: ${{ env.CHAIN_ID }}
+          CONTRACT_ADDRESS: ${{ github.event.inputs.contract_address }}
+          IMPLEMENTATION_ADDRESS: ${{ github.event.inputs.implementation_address }}
         run: |
           echo "Fetching data from Etherscan API for ${ENS_NAME_INPUT}..."
+          echo "Chain ID: ${CHAIN_ID}"
           mkdir -p data/etherscan
 
           # Check if API key is configured
@@ -152,40 +189,67 @@ jobs:
             echo "⚠️ ETHERSCAN_API_KEY not configured"
             repo_url="https://github.com/${GITHUB_REPOSITORY}"
             echo "Configure at: ${repo_url}/settings/secrets/actions"
-            echo "Get API key: https://etherscan.io/myapikey"
+            if [ "${CHAIN_ID}" = "8453" ]; then
+              echo "Get API key: https://basescan.org/myapikey"
+            else
+              echo "Get API key: https://etherscan.io/myapikey"
+            fi
             echo '{"status":"0","message":"API key not configured"}' > data/etherscan/latest.json
             exit 1
           fi
           
-          # Use the dynamically resolved address from previous step
-          if [ "${ENS_RESOLVED}" = "true" ] && [ -n "${RESOLVED_ADDRESS}" ]; then
-            # Use the resolved address from ENS resolution
-            TARGET_ADDRESS="${RESOLVED_ADDRESS}"
-            echo "Using dynamically resolved address: ${TARGET_ADDRESS}"
+          # Determine the API base URL based on chain ID
+          if [ "${CHAIN_ID}" = "8453" ]; then
+            # Base network
+            BASE_URL="https://api.basescan.org/api"
+            NETWORK_NAME="Base"
           else
-            echo "❌ ERROR: ENS name could not be resolved"
-            echo ""
-            echo "The ENS name '${ENS_NAME_INPUT}' could not be resolved to an Ethereum address."
-            echo ""
-            echo "This could be because:"
-            echo "  1. The ENS name is not registered"
-            echo "  2. The ENS name does not have an address record set"
-            echo "  3. The Etherscan API is not responding correctly"
-            echo ""
-            echo "Please verify the ENS name at: https://app.ens.domains/${ENS_NAME_INPUT}"
-            echo ""
-            # Create error data file
-            echo '{"status":"0","message":"ENS resolution failed","ens_name":"'"${ENS_NAME_INPUT}"'"}' > data/etherscan/latest.json
-            exit 1
+            # Ethereum mainnet (default)
+            BASE_URL="https://api.etherscan.io/v2/api"
+            NETWORK_NAME="Ethereum"
+          fi
+          
+          echo "Network: ${NETWORK_NAME} (Chain ID: ${CHAIN_ID})"
+          
+          # Use the dynamically resolved address from previous step (for non-proxy endpoints)
+          ENDPOINT="${API_ENDPOINT_INPUT}"
+          
+          # For verify_proxy endpoint, use the provided contract address
+          if [ "${ENDPOINT}" = "verify_proxy" ]; then
+            if [ -z "${CONTRACT_ADDRESS}" ]; then
+              echo "❌ ERROR: contract_address is required for verify_proxy endpoint"
+              echo '{"status":"0","message":"contract_address parameter is required"}' > data/etherscan/latest.json
+              exit 1
+            fi
+            TARGET_ADDRESS="${CONTRACT_ADDRESS}"
+            echo "Using provided contract address: ${TARGET_ADDRESS}"
+          else
+            # For other endpoints, use ENS resolved address
+            if [ "${ENS_RESOLVED}" = "true" ] && [ -n "${RESOLVED_ADDRESS}" ]; then
+              # Use the resolved address from ENS resolution
+              TARGET_ADDRESS="${RESOLVED_ADDRESS}"
+              echo "Using dynamically resolved address: ${TARGET_ADDRESS}"
+            else
+              echo "❌ ERROR: ENS name could not be resolved"
+              echo ""
+              echo "The ENS name '${ENS_NAME_INPUT}' could not be resolved to an Ethereum address."
+              echo ""
+              echo "This could be because:"
+              echo "  1. The ENS name is not registered"
+              echo "  2. The ENS name does not have an address record set"
+              echo "  3. The Etherscan API is not responding correctly"
+              echo ""
+              echo "Please verify the ENS name at: https://app.ens.domains/${ENS_NAME_INPUT}"
+              echo ""
+              # Create error data file
+              echo '{"status":"0","message":"ENS resolution failed","ens_name":"'"${ENS_NAME_INPUT}"'"}' > data/etherscan/latest.json
+              exit 1
+            fi
           fi
           
           # Contract addresses from problem statement
           RESOLVER_CONTRACT="0xAEEF46DB4855E25702F8237E8f403FddcaF931C0"
           QUERY_ADDRESS="0xe16359506c028e51f16be38986ec5746251e9724"
-
-          # Example API call to Etherscan V2 API
-          ENDPOINT="${API_ENDPOINT_INPUT}"
-          BASE_URL="https://api.etherscan.io/v2/api"
 
           # Map endpoint to appropriate action
           case "${ENDPOINT}" in
@@ -212,13 +276,26 @@ jobs:
               ;;
             "ens_resolve")
               # Use proxy API to resolve ENS name via eth_call
-              # This implements the curl command from the problem statement
               echo "Resolving ENS name via eth_call..."
               MODULE="proxy"
               ACTION="eth_call"
               # eth_call to resolver contract
               DATA="0x70a08231000000000000000000000000${QUERY_ADDRESS#0x}"
               PARAMS="&to=${RESOLVER_CONTRACT}&data=${DATA}&tag=latest"
+              ;;
+            "verify_proxy")
+              # Verify proxy contract - implements the curl command from problem statement
+              echo "Verifying proxy contract..."
+              echo "Contract Address: ${TARGET_ADDRESS}"
+              if [ -n "${IMPLEMENTATION_ADDRESS}" ]; then
+                echo "Expected Implementation: ${IMPLEMENTATION_ADDRESS}"
+              fi
+              MODULE="contract"
+              ACTION="verifyproxycontract"
+              PARAMS="&address=${TARGET_ADDRESS}"
+              if [ -n "${IMPLEMENTATION_ADDRESS}" ]; then
+                PARAMS="${PARAMS}&expectedimplementation=${IMPLEMENTATION_ADDRESS}"
+              fi
               ;;
             *)
               MODULE="account"
@@ -227,20 +304,38 @@ jobs:
               ;;
           esac
 
-          echo "Querying Etherscan API V2: ${MODULE}/${ACTION}"
+          echo "Querying ${NETWORK_NAME} API: ${MODULE}/${ACTION}"
           echo "Target Address: ${TARGET_ADDRESS}"
-          echo "ENS Name: ${ENS_NAME}"
+          if [ "${ENDPOINT}" != "verify_proxy" ]; then
+            echo "ENS Name: ${ENS_NAME}"
+          fi
 
-          # Build API URL - All endpoints now use V2 API
-          api_url="${BASE_URL}?chainid=1&module=${MODULE}&action=${ACTION}${PARAMS}"
+          # Build API URL
+          if [ "${CHAIN_ID}" = "8453" ]; then
+            # Base network uses standard API format (no chainid in URL)
+            api_url="${BASE_URL}?module=${MODULE}&action=${ACTION}${PARAMS}"
+          else
+            # Ethereum mainnet uses V2 API format with chainid
+            api_url="${BASE_URL}?chainid=${CHAIN_ID}&module=${MODULE}&action=${ACTION}${PARAMS}"
+          fi
 
           # Make request with API key from secret
-          # Key is only exposed during curl execution, not in logs
-          curl -s "${api_url}&apikey=${{ secrets.ETHERSCAN_API_KEY }}" \
-            -o data/etherscan/latest.json || {
-            echo '{"status":"0","message":"API request failed"}' \
-              > data/etherscan/latest.json
-          }
+          # For verify_proxy, use POST method as shown in problem statement
+          if [ "${ENDPOINT}" = "verify_proxy" ]; then
+            echo "Making POST request for proxy verification..."
+            curl -X POST -s "${api_url}&apikey=${{ secrets.ETHERSCAN_API_KEY }}" \
+              -o data/etherscan/latest.json || {
+              echo '{"status":"0","message":"API request failed"}' \
+                > data/etherscan/latest.json
+            }
+          else
+            # Other endpoints use GET method
+            curl -s "${api_url}&apikey=${{ secrets.ETHERSCAN_API_KEY }}" \
+              -o data/etherscan/latest.json || {
+              echo '{"status":"0","message":"API request failed"}' \
+                > data/etherscan/latest.json
+            }
+          fi
 
           # Add metadata using jq for proper JSON handling
           timestamp="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
@@ -248,12 +343,18 @@ jobs:
              --arg ens "${ENS_NAME}" \
              --arg addr "${TARGET_ADDRESS}" \
              --arg endpoint "${ENDPOINT}" \
-             '. + {timestamp: $ts, ens_name: $ens, resolved_address: $addr, endpoint: $endpoint}' \
+             --arg chain "${CHAIN_ID}" \
+             --arg network "${NETWORK_NAME}" \
+             '. + {timestamp: $ts, ens_name: $ens, resolved_address: $addr, endpoint: $endpoint, chain_id: $chain, network: $network}' \
              data/etherscan/latest.json \
              > data/etherscan/latest.tmp && \
             mv data/etherscan/latest.tmp data/etherscan/latest.json
 
-          echo "✓ Data fetched successfully for ${ENS_NAME}"
+          if [ "${ENDPOINT}" = "verify_proxy" ]; then
+            echo "✓ Proxy verification request submitted"
+          else
+            echo "✓ Data fetched successfully for ${ENS_NAME}"
+          fi
           cat data/etherscan/latest.json
 
       - name: Archive data with timestamp
@@ -293,11 +394,34 @@ jobs:
         env:
           API_ENDPOINT_INPUT: ${{ github.event.inputs.api_endpoint || 'account' }}
           ENS_NAME_INPUT: ${{ github.event.inputs.ens_name || 'kushmanmb.eth' }}
+          CHAIN_ID: ${{ github.event.inputs.chain_id || '1' }}
+          CONTRACT_ADDRESS: ${{ github.event.inputs.contract_address }}
+          IMPLEMENTATION_ADDRESS: ${{ github.event.inputs.implementation_address }}
         run: |
           summary="${GITHUB_STEP_SUMMARY}"
-          echo "## Etherscan API Integration Summary (kushmanmb.eth)" >> "${summary}"
+          echo "## Etherscan API Integration Summary" >> "${summary}"
           echo "" >> "${summary}"
-          echo "- **ENS Name**: ${ENS_NAME_INPUT}" >> "${summary}"
+          
+          # Show network information
+          if [ "${CHAIN_ID}" = "8453" ]; then
+            echo "- **Network**: Base (Chain ID: 8453)" >> "${summary}"
+          else
+            echo "- **Network**: Ethereum Mainnet (Chain ID: 1)" >> "${summary}"
+          fi
+          
+          # Show ENS name if not verify_proxy endpoint
+          if [ "${API_ENDPOINT_INPUT}" != "verify_proxy" ]; then
+            echo "- **ENS Name**: ${ENS_NAME_INPUT}" >> "${summary}"
+          fi
+          
+          # Show contract details for verify_proxy
+          if [ "${API_ENDPOINT_INPUT}" = "verify_proxy" ]; then
+            echo "- **Contract Address**: ${CONTRACT_ADDRESS}" >> "${summary}"
+            if [ -n "${IMPLEMENTATION_ADDRESS}" ]; then
+              echo "- **Implementation Address**: ${IMPLEMENTATION_ADDRESS}" >> "${summary}"
+            fi
+          fi
+          
           echo "- **Timestamp**: ${WORKFLOW_RUN_TIME}" >> "${summary}"
           echo "- **Endpoint**: ${API_ENDPOINT_INPUT}" >> "${summary}"
           if [ -f data/etherscan/latest.json ]; then
@@ -315,9 +439,13 @@ jobs:
             echo "- **Status**: ⚠️ No data file created" >> "${summary}"
           fi
           echo "" >> "${summary}"
-          echo "### ENS Configuration" >> "${summary}"
-          echo "This workflow is configured for the **kushmanmb.eth** ENS domain." >> "${summary}"
-          echo "To update the resolved address, modify the KUSHMANMB_ADDRESS variable in the workflow." >> "${summary}"
+          echo "### Configuration" >> "${summary}"
+          echo "This workflow supports Ethereum Mainnet and Base network." >> "${summary}"
+          if [ "${API_ENDPOINT_INPUT}" = "verify_proxy" ]; then
+            echo "Proxy contract verification implemented as per problem statement." >> "${summary}"
+          else
+            echo "ENS resolution configured for the **kushmanmb.eth** domain." >> "${summary}"
+          fi
 
       - name: Upload artifacts
         uses: actions/upload-artifact@v4
