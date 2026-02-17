@@ -6,7 +6,7 @@
 
 export LC_ALL=C.UTF-8
 
-set -o errexit -o xtrace
+set -o errexit -o xtrace -o pipefail
 
 if [ "${DANGER_RUN_CI_ON_HOST}" != "1" ]; then
   echo "This script will make unsafe local and global modifications, so it can only be run inside a container and requires DANGER_RUN_CI_ON_HOST=1"
@@ -136,10 +136,27 @@ cmake --build "${BASE_BUILD_DIR}" "$MAKEJOBS" --target $GOAL || (
 )
 
 ccache --version | head -n 1 && ccache --show-stats --verbose
-hit_rate=$(ccache --show-stats | grep "Hits:" | head -1 | sed 's/.*(\(.*\)%).*/\1/')
-if [ "${hit_rate%.*}" -lt 75 ]; then
-  echo "::notice title=low ccache hitrate::Ccache hit-rate in $CONTAINER_NAME was $hit_rate%"
-fi
+ccache --print-stats | python3 -c '
+import os
+import sys
+
+for line in sys.stdin:
+    key, value = line.split("\t", 1)
+    if key == "local_storage_hit":
+        hits = int(value)
+    elif key == "local_storage_miss":
+        miss = int(value)
+
+calls = hits + miss
+rate = (hits / calls * 100) if calls else 0
+print(f"{rate:.2f}")
+if rate < 75:
+    container = os.environ["CONTAINER_NAME"]
+    print(
+        "::notice title=low ccache hitrate::"
+        f"Ccache hit-rate in {container} was {rate:.2f}%"
+    )
+'
 du -sh "${DEPENDS_DIR}"/*/
 du -sh "${PREVIOUS_RELEASES_DIR}"
 
