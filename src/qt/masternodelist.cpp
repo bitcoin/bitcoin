@@ -20,6 +20,7 @@
 #include <QClipboard>
 #include <QHeaderView>
 #include <QMetaObject>
+#include <QSettings>
 #include <QThread>
 
 #include <set>
@@ -121,9 +122,6 @@ MasternodeList::MasternodeList(QWidget* parent) :
     // Hide ProTx Hash column (used for internal lookup)
     ui->tableViewMasternodes->setColumnHidden(MasternodeModel::PROTX_HASH, true);
 
-    // Hide PoSe column by default (since "Hide banned" is checked by default)
-    ui->tableViewMasternodes->setColumnHidden(MasternodeModel::POSE, true);
-
     ui->checkBoxOwned->setEnabled(false);
 
     contextMenuDIP3 = new QMenu(this);
@@ -154,6 +152,12 @@ MasternodeList::MasternodeList(QWidget* parent) :
     // Debounce timer to apply masternode list changes
     m_timer->setSingleShot(true);
     connect(m_timer, &QTimer::timeout, this, &MasternodeList::updateDIP3ListScheduled);
+
+    // Load filter settings
+    QSettings settings;
+    ui->checkBoxHideBanned->setChecked(settings.value("mnListHideBanned", false).toBool());
+    ui->comboBoxType->setCurrentIndex(settings.value("mnListTypeFilter", 0).toInt());
+    ui->filterText->setText(settings.value("mnListFilterText", "").toString());
 }
 
 MasternodeList::~MasternodeList()
@@ -186,7 +190,11 @@ void MasternodeList::setClientModel(ClientModel* model)
 void MasternodeList::setWalletModel(WalletModel* model)
 {
     this->walletModel = model;
-    ui->checkBoxOwned->setEnabled(model != nullptr);
+    ui->checkBoxOwned->setEnabled(walletModel != nullptr);
+    if (walletModel) {
+        QSettings settings;
+        ui->checkBoxOwned->setChecked(settings.value("mnListOwnedOnly", false).toBool());
+    }
 }
 
 void MasternodeList::showContextMenuDIP3(const QPoint& point)
@@ -337,6 +345,9 @@ void MasternodeList::on_filterText_textChanged(const QString& strFilterIn)
     m_proxy_model->setFilterRegularExpression(
         QRegularExpression(QRegularExpression::escape(strFilterIn), QRegularExpression::CaseInsensitiveOption));
     updateFilteredCount();
+
+    QSettings settings;
+    settings.setValue("mnListFilterText", strFilterIn);
 }
 
 void MasternodeList::on_comboBoxType_currentIndexChanged(int index)
@@ -349,6 +360,9 @@ void MasternodeList::on_comboBoxType_currentIndexChanged(int index)
     m_proxy_model->setTypeFilter(index_enum);
     m_proxy_model->forceInvalidateFilter();
     updateFilteredCount();
+
+    QSettings settings;
+    settings.setValue("mnListTypeFilter", index);
 }
 
 void MasternodeList::on_checkBoxOwned_stateChanged(int state)
@@ -356,6 +370,9 @@ void MasternodeList::on_checkBoxOwned_stateChanged(int state)
     m_proxy_model->setShowOwnedOnly(state == Qt::Checked);
     m_proxy_model->forceInvalidateFilter();
     updateFilteredCount();
+
+    QSettings settings;
+    settings.setValue("mnListOwnedOnly", state == Qt::Checked);
 }
 
 void MasternodeList::on_checkBoxHideBanned_stateChanged(int state)
@@ -365,6 +382,9 @@ void MasternodeList::on_checkBoxHideBanned_stateChanged(int state)
     m_proxy_model->setHideBanned(hide_banned);
     m_proxy_model->forceInvalidateFilter();
     updateFilteredCount();
+
+    QSettings settings;
+    settings.setValue("mnListHideBanned", hide_banned);
 }
 
 const MasternodeEntry* MasternodeList::GetSelectedEntry()

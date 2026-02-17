@@ -59,7 +59,7 @@ protected:
     bool lessThan(const QModelIndex& lhs, const QModelIndex& rhs) const override;
 
 private:
-    bool m_hide_banned{true};
+    bool m_hide_banned{false};
     bool m_show_owned_only{false};
     QSet<QString> m_owned_mns;
     TypeFilter m_type_filter{TypeFilter::All};
