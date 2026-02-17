@@ -23,11 +23,12 @@ This guide provides quick instructions for using the kushmanmb.eth ENS integrati
      - `transaction` - Get transaction history
      - `contract` - Get contract ABI (if applicable)
      - `ens_resolve` - Resolve ENS name via eth_call
-     - `verify_proxy` - **NEW**: Verify a proxy contract
+     - `verify_proxy` - Verify a proxy contract
+     - `eth_blockNumber` - **NEW**: Get the current block number on the network
    - **Chain ID**: Select the blockchain network
      - `1` - Ethereum Mainnet (default)
-     - `8453` - **NEW**: Base Network
-   - **ENS name**: Keep default `kushmanmb.eth` or enter another ENS name
+     - `8453` - Base Network
+   - **ENS name**: Keep default `kushmanmb.eth` or enter another ENS name (not needed for `eth_blockNumber`)
    - **Contract address**: (Required for `verify_proxy`) The proxy contract address
    - **Implementation address**: (Optional for `verify_proxy`) Expected implementation address
 5. **Click "Run workflow"** green button
@@ -52,7 +53,7 @@ The curl command from the problem statement is now integrated:
 
 ```bash
 # This is automatically executed in the workflow:
-curl "https://api.etherscan.io/v2/api?chainid=1&module=proxy&action=eth_call&to=0xAEEF46DB4855E25702F8237E8f403FddcaF931C0&data=0x70a08231000000000000000000000000e16359506c028e51f16be38986ec5746251e9724&tag=latest&apikey=<YOUR_KEY>"
+curl "https://api.etherscan.io/v2/api?chainid=1&module=proxy&action=eth_call&to=0x6fb9e80dDd0f5DC99D7cB38b07e8b298A57bF253&data=0x70a08231000000000000000000000000e16359506c028e51f16be38986ec5746251e9724&tag=latest&apikey=<YOUR_KEY>"
 ```
 
 ## Using Self-Hosted Runners
@@ -166,8 +167,22 @@ After each run:
 - Run workflow with `ens_resolve` endpoint
 - Get the current resolved address
 
-### 5. Verify Proxy Contract on Base Network (NEW)
+### 5. Get Current Block Number (NEW)
 This implements the exact curl command from the problem statement!
+
+**Example**:
+- Endpoint: `eth_blockNumber`
+- Chain ID: `1` (Ethereum) or `8453` (Base)
+
+The workflow will execute:
+```bash
+curl "https://api.etherscan.io/v2/api?chainid=1&module=proxy&action=eth_blockNumber&apikey=YourApiKeyToken"
+```
+
+This returns the current block number on the specified network without requiring any address.
+
+### 6. Verify Proxy Contract on Base Network
+This implements proxy contract verification!
 
 **Example**:
 - Endpoint: `verify_proxy`

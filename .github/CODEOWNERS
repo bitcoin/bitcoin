@@ -1,0 +1,181 @@
+# Code Owners for kushmanmb-org/bitcoin
+#
+# This file defines code ownership for different parts of the repository.
+# Code owners are automatically requested for review when someone opens a
+# pull request that modifies code that they own.
+#
+# Order is important; the last matching pattern takes precedence.
+#
+# More information: https://docs.github.com/en/repositories/managing-your-repositorys-settings-and-features/customizing-your-repository/about-code-owners
+
+# ═══════════════════════════════════════════════════════════════════
+# GLOBAL OWNERSHIP
+# ═══════════════════════════════════════════════════════════════════
+# Repository Owner: kushmanmb.eth (Ethereum Name Service)
+# Creator: kushmanmb
+# ENS Identifiers:
+#   - Primary: kushmanmb.eth (Ethereum Mainnet)
+#   - Base Network: Kushmanmb.base.eth
+#   - yaketh.eth
+#
+# Default ownership: All files not explicitly specified below
+# ═══════════════════════════════════════════════════════════════════
+
+# Default owner for everything in the repo
+# @kushmanmb-org/bitcoin-maintainers would be a team, but for single owner:
+* @kushmanmb
+
+# ═══════════════════════════════════════════════════════════════════
+# CRITICAL FILES - Require owner approval
+# ═══════════════════════════════════════════════════════════════════
+
+# Security and policy documents
+/SECURITY.md @kushmanmb
+/SECURITY_PRACTICES.md @kushmanmb
+/POLICY.md @kushmanmb
+/OWNERSHIP.md @kushmanmb
+/.github/CODEOWNERS @kushmanmb
+
+# License and legal
+/COPYING @kushmanmb
+/LICENSE @kushmanmb
+
+# Root configuration
+/.gitignore @kushmanmb
+/.gitattributes @kushmanmb
+/.editorconfig @kushmanmb
+
+# ═══════════════════════════════════════════════════════════════════
+# GITHUB CONFIGURATION - Require owner approval
+# ═══════════════════════════════════════════════════════════════════
+
+# All GitHub configuration
+/.github/ @kushmanmb
+
+# Workflows - critical for automation
+/.github/workflows/ @kushmanmb
+/.github/workflows/*.yml @kushmanmb
+
+# GitHub Actions
+/.github/actions/ @kushmanmb
+
+# Issue and PR templates
+/.github/ISSUE_TEMPLATE/ @kushmanmb
+/.github/PULL_REQUEST_TEMPLATE.md @kushmanmb
+
+# ═══════════════════════════════════════════════════════════════════
+# DOCUMENTATION - Owner review recommended
+# ═══════════════════════════════════════════════════════════════════
+
+# Main documentation
+/README.md @kushmanmb
+/CONTRIBUTING.md @kushmanmb
+/INSTALL.md @kushmanmb
+
+# Implementation and setup guides
+/SELF_HOSTED_RUNNER_SETUP.md @kushmanmb
+/ENS_CONFIGURATION.md @kushmanmb
+/GIT_WORKFLOW_GUIDE.md @kushmanmb
+
+# Documentation directory
+/doc/ @kushmanmb
+
+# ═══════════════════════════════════════════════════════════════════
+# BUILD SYSTEM - Owner review for critical changes
+# ═══════════════════════════════════════════════════════════════════
+
+# CMake build system
+/CMakeLists.txt @kushmanmb
+/CMakePresets.json @kushmanmb
+/cmake/ @kushmanmb
+
+# Dependencies
+/depends/ @kushmanmb
+/vcpkg.json @kushmanmb
+
+# Maven (if used)
+/pom.xml @kushmanmb
+
+# ═══════════════════════════════════════════════════════════════════
+# SOURCE CODE - Core components
+# ═══════════════════════════════════════════════════════════════════
+
+# Core Bitcoin implementation
+/src/ @kushmanmb
+
+# Consensus code - critical
+/src/consensus/ @kushmanmb
+/src/primitives/ @kushmanmb
+
+# Cryptography - critical
+/src/crypto/ @kushmanmb
+/src/secp256k1/ @kushmanmb
+
+# Security-critical components
+/src/policy/ @kushmanmb
+/src/script/ @kushmanmb
+/src/wallet/ @kushmanmb
+
+# ═══════════════════════════════════════════════════════════════════
+# TESTING - Test infrastructure
+# ═══════════════════════════════════════════════════════════════════
+
+# Test framework
+/test/ @kushmanmb
+/src/test/ @kushmanmb
+
+# Continuous Integration
+/ci/ @kushmanmb
+
+# ═══════════════════════════════════════════════════════════════════
+# SCRIPTS AND UTILITIES
+# ═══════════════════════════════════════════════════════════════════
+
+# Contribution tools
+/contrib/ @kushmanmb
+
+# Developer tools
+/contrib/devtools/ @kushmanmb
+
+# ═══════════════════════════════════════════════════════════════════
+# DATA AND CONFIGURATION
+# ═══════════════════════════════════════════════════════════════════
+
+# Ownership announcements
+/data/ownership/ @kushmanmb
+
+# Configuration files
+/data/ @kushmanmb
+/share/ @kushmanmb
+
+# ═══════════════════════════════════════════════════════════════════
+# SPECIAL COMPONENTS
+# ═══════════════════════════════════════════════════════════════════
+
+# Bitcoin onchain application
+/bitcoin-onchain-app/ @kushmanmb
+
+# WebAssembly components
+/zkpdf_lib/ @kushmanmb
+
+# Website
+/website/ @kushmanmb
+
+# Wiki
+/wiki/ @kushmanmb
+
+# ═══════════════════════════════════════════════════════════════════
+# NOTES
+# ═══════════════════════════════════════════════════════════════════
+#
+# This CODEOWNERS file ensures that:
+# 1. All changes require owner review by default
+# 2. Critical security and policy files explicitly require owner approval
+# 3. Infrastructure and build system changes are reviewed
+# 4. Community contributions are still welcome via pull requests
+#
+# For contribution guidelines, see CONTRIBUTING.md
+# For repository policies, see POLICY.md
+# For ownership information, see OWNERSHIP.md
+#
+# ═══════════════════════════════════════════════════════════════════
