@@ -387,9 +387,6 @@
            <property name="alignment">
             <set>Qt::AlignLeft|Qt::AlignVCenter</set>
            </property>
-           <property name="styleSheet">
-            <string>margin-left: 8px;</string>
-           </property>
           </widget>
          </item>
          <item>
