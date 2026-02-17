@@ -160,3 +160,81 @@ A test script is provided to verify the formatting functions:
 ```bash
 node contrib/devtools/test-erc20-events.js
 ```
+
+fetch-etherscan-eth-call.js
+============================
+
+A Node.js script to make `eth_call` requests to Ethereum smart contracts via the Etherscan API v2 proxy endpoint. This tool allows you to query smart contract functions without sending transactions.
+
+**Requirements:**
+- Node.js (v12 or higher)
+- Etherscan API key (get one at https://etherscan.io/myapikey)
+
+**Usage:**
+
+```bash
+ETHERSCAN_API_KEY=your_api_key node contrib/devtools/fetch-etherscan-eth-call.js --to <contract_address> --data <call_data>
+```
+
+**Example - Query balanceOf(address) function:**
+
+```bash
+ETHERSCAN_API_KEY=ABC123 node contrib/devtools/fetch-etherscan-eth-call.js \
+  --to 0xAEEF46DB4855E25702F8237E8f403FddcaF931C0 \
+  --data 0x70a08231000000000000000000000000e16359506c028e51f16be38986ec5746251e9724
+```
+
+**Example - Using environment variables:**
+
+```bash
+export ETHERSCAN_API_KEY=ABC123
+export TO_ADDRESS=0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48
+export CALL_DATA=0x313ce567  # decimals()
+node contrib/devtools/fetch-etherscan-eth-call.js
+```
+
+**Options:**
+
+- `--to <address>`: Contract address to call (required)
+- `--data <hex>`: Hex-encoded call data (required, with or without 0x prefix)
+- `--tag <tag>`: Block parameter (default: latest)
+- `--help, -h`: Show help message
+
+**Environment Variables:**
+
+- `ETHERSCAN_API_KEY`: Your Etherscan API key (required)
+- `TO_ADDRESS`: Contract address to call
+- `CALL_DATA`: Hex-encoded call data
+- `TAG`: Block parameter (default: latest)
+
+**Output:**
+
+The script displays:
+- Raw hex result from the contract call
+- Parsed result for common functions (balanceOf, totalSupply, decimals, etc.)
+- Full JSON API response
+
+**Common Function Signatures:**
+
+- `0x70a08231`: balanceOf(address) - Get token balance
+- `0x18160ddd`: totalSupply() - Get total token supply
+- `0x313ce567`: decimals() - Get token decimals
+- `0x95d89b41`: symbol() - Get token symbol
+- `0x06fdde03`: name() - Get token name
+
+**Testing:**
+
+A test suite is provided to verify functionality:
+
+```bash
+node contrib/devtools/test-etherscan-eth-call.js
+```
+
+**Demo:**
+
+A demo script demonstrates various usage examples:
+
+```bash
+export ETHERSCAN_API_KEY=your_api_key
+./contrib/devtools/demo-etherscan-eth-call.sh
+```
