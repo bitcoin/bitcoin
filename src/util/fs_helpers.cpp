@@ -28,6 +28,7 @@
 #else
 #include <io.h>
 #include <shlobj.h>
+#include <windows.h>
 #endif // WIN32
 
 #ifdef __APPLE__
@@ -315,3 +316,16 @@ FSType GetFilesystemType(const fs::path& path)
     return FSType::OTHER;
 }
 #endif
+
+bool IsSymlink(const fs::path& path)
+{
+#ifdef WIN32
+    DWORD file_attrs = GetFileAttributesW(path.wstring().c_str());
+    if (file_attrs == INVALID_FILE_ATTRIBUTES) {
+        throw fs::filesystem_error("Unable to get file attributes", fs::PathToString(path), std::make_error_code(std::errc::invalid_argument));
+    }
+    return (file_attrs & FILE_ATTRIBUTE_REPARSE_POINT) != 0;
+#else
+    return fs::is_symlink(path);
+#endif
+}
