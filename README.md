@@ -125,6 +125,27 @@ node contrib/devtools/fetch-cdp-api.js
 - Full Documentation: [contrib/devtools/CDP_API_README.md](contrib/devtools/CDP_API_README.md)
 - Demo Script: `./contrib/devtools/demo-cdp-api.sh`
 
+### Onchain Agent Scaffolding Tool
+
+This repository includes `create-onchain-agent`, a CLI tool for quickly bootstrapping AI-powered blockchain agent projects:
+
+**Quick Start:**
+```bash
+npm create onchain-agent@latest
+```
+
+**Features:**
+- 🤖 Ready-to-use agent interface with chat UI
+- 👛 Wallet integration (Coinbase Smart Wallet)
+- ⛓️ Multi-chain support (Base, Base Sepolia)
+- 📦 OnchainKit integration
+- 🔐 Secure environment variable management
+- 📝 Full TypeScript support
+
+**Documentation:**
+- Full Guide: [CREATE_ONCHAIN_AGENT_GUIDE.md](CREATE_ONCHAIN_AGENT_GUIDE.md)
+- Package README: [create-onchain-agent/README.md](create-onchain-agent/README.md)
+
 ### Safe Git Practices
 
 When contributing to Bitcoin Core:
