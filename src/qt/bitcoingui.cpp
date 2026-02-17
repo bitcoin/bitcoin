@@ -1091,6 +1091,8 @@ void BitcoinGUI::setWalletActionsEnabled(bool enabled)
     openAction->setEnabled(enabled);
     m_close_wallet_action->setEnabled(enabled);
     m_close_all_wallets_action->setEnabled(enabled);
+
+    updateWidth();
 }
 
 void BitcoinGUI::createTrayIcon()

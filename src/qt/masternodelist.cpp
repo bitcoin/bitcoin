@@ -45,8 +45,8 @@ bool MasternodeListSortFilterProxyModel::filterAcceptsRow(int source_row, const 
     // Banned filter
     if (m_hide_banned) {
         QModelIndex idx = sourceModel()->index(source_row, MasternodeModel::STATUS, source_parent);
-        int banned = sourceModel()->data(idx, Qt::EditRole).toInt();
-        if (banned != 0) {
+        int status_value = sourceModel()->data(idx, Qt::EditRole).toInt();
+        if (status_value > 0) {
             return false;
         }
     }
@@ -70,6 +70,18 @@ bool MasternodeListSortFilterProxyModel::filterAcceptsRow(int source_row, const 
     }
 
     return true;
+}
+
+bool MasternodeListSortFilterProxyModel::lessThan(const QModelIndex& lhs, const QModelIndex& rhs) const
+{
+    if (lhs.column() == MasternodeModel::SERVICE) {
+        QVariant lhs_data{sourceModel()->data(lhs, sortRole())};
+        QVariant rhs_data{sourceModel()->data(rhs, sortRole())};
+        if (lhs_data.userType() == QMetaType::QByteArray && rhs_data.userType() == QMetaType::QByteArray) {
+            return lhs_data.toByteArray() < rhs_data.toByteArray();
+        }
+    }
+    return QSortFilterProxyModel::lessThan(lhs, rhs);
 }
 
 MasternodeList::MasternodeList(QWidget* parent) :

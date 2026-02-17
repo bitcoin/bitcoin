@@ -69,7 +69,7 @@ struct TransactionStatus {
 class TransactionRecord
 {
 public:
-    // Update COMMON_TYPES in TransactionFilterProxyWhen when adding a new type
+    // Update EXCLUDED_TYPES in TransactionFilterProxy when adding a new type
     enum Type
     {
         Other,

@@ -56,6 +56,7 @@ public:
 
 protected:
     bool filterAcceptsRow(int source_row, const QModelIndex& source_parent) const override;
+    bool lessThan(const QModelIndex& lhs, const QModelIndex& rhs) const override;
 
 private:
     bool m_hide_banned{true};

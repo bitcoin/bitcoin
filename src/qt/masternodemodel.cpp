@@ -285,6 +285,22 @@ QVariant MasternodeModel::data(const QModelIndex& index, int role) const
         case Column::TYPE:
             return static_cast<int>(entry->type());
         case Column::STATUS:
+            if (m_current_height > 0) {
+                if (entry->isBanned()) {
+                    // Banned nodes use positive values
+                    if (auto ban_height = entry->poseBanHeight(); ban_height && *ban_height > 0) {
+                        return m_current_height - *ban_height;
+                    }
+                    return 0; // Unknown ban time, treat as freshly banned
+                } else {
+                    // Active nodes use negative values
+                    int32_t active_height = entry->registeredHeight();
+                    if (auto revived_height = entry->poseRevivedHeight(); revived_height && *revived_height > 0) {
+                        active_height = *revived_height;
+                    }
+                    return -(m_current_height - active_height);
+                }
+            }
             return entry->isBanned() ? 1 : 0;
         case Column::POSE:
             return entry->posePenalty();
