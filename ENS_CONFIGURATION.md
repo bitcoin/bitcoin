@@ -28,8 +28,8 @@ console.log('kushmanmb.eth resolves to:', address);
 #### 2. Via Etherscan API
 
 ```bash
-# Using Etherscan V2 API with eth_call (as specified in problem statement)
-curl "https://api.etherscan.io/v2/api?chainid=1&module=proxy&action=eth_call&to=0xAEEF46DB4855E25702F8237E8f403FddcaF931C0&data=0x70a08231000000000000000000000000e16359506c028e51f16be38986ec5746251e9724&tag=latest&apikey=YourApiKeyToken"
+# Using Etherscan V2 API with eth_call (updated to new implementation)
+curl "https://api.etherscan.io/v2/api?chainid=1&module=proxy&action=eth_call&to=0x6fb9e80dDd0f5DC99D7cB38b07e8b298A57bF253&data=0x70a08231000000000000000000000000e16359506c028e51f16be38986ec5746251e9724&tag=latest&apikey=YourApiKeyToken"
 ```
 
 #### 3. Via ENS Registry Contract
