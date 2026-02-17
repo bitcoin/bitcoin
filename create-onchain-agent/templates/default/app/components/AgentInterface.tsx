@@ -4,10 +4,15 @@ import { useState } from "react";
 import { useAccount } from "wagmi";
 import styles from "./AgentInterface.module.css";
 
+type Message = {
+  role: "user" | "assistant";
+  content: string;
+};
+
 export function AgentInterface() {
   const { isConnected } = useAccount();
   const [input, setInput] = useState("");
-  const [messages, setMessages] = useState<Array<{ role: string; content: string }>>([
+  const [messages, setMessages] = useState<Message[]>([
     {
       role: "assistant",
       content: "👋 Hello! I'm your onchain agent. I can help you interact with the blockchain. What would you like to do today?",
