@@ -88,7 +88,7 @@ function testFormatResult() {
         'Should identify totalSupply function'
     );
     
-    // Test decimals
+    // Test decimals (0x12 = 18 in decimal, which is common for many ERC20 tokens)
     const decimalsResult = '0x0000000000000000000000000000000000000000000000000000000000000012';
     const decimalsData = '0x313ce567';
     const decimalsFormatted = formatResult(decimalsResult, decimalsData);
@@ -99,7 +99,7 @@ function testFormatResult() {
     );
     assert(
         decimalsFormatted.value === 18,
-        'Should parse uint8 decimals correctly'
+        'Should parse uint8 decimals correctly (0x12 = 18)'
     );
     
     // Test unknown function
