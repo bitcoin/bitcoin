@@ -21,4 +21,4 @@ COPY ./ci/test/00_setup_env.sh ./${FILE_ENV} ./ci/test/01_base_install.sh ./ci/t
 # Bash is required, so install it when missing
 RUN sh -c "bash -c 'true' || ( apk update && apk add --no-cache bash )"
 
-RUN ["bash", "-c", "cd /ci_container_base/ && set -o errexit && source ./ci/test/00_setup_env.sh && ./ci/test/01_base_install.sh"]
+RUN ["bash", "-c", "cd /ci_container_base/ && set -o errexit && source ./ci/test/00_setup_env.sh && DANGER_RUN_CI_ON_HOST=1 ./ci/test/01_base_install.sh"]

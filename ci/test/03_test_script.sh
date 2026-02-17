@@ -6,7 +6,12 @@
 
 export LC_ALL=C.UTF-8
 
-set -ex
+set -o errexit -o xtrace
+
+if [ "${DANGER_RUN_CI_ON_HOST}" != "1" ]; then
+  echo "This script will make unsafe local and global modifications, so it can only be run inside a container and requires DANGER_RUN_CI_ON_HOST=1"
+  exit 1
+fi
 
 cd "${BASE_ROOT_DIR}"
 
