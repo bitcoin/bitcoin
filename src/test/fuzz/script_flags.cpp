@@ -10,6 +10,7 @@
 #include <test/fuzz/fuzz.h>
 #include <test/util/script.h>
 
+#include <array>
 #include <cassert>
 #include <ios>
 #include <utility>
@@ -24,7 +25,64 @@ static SpanReader& operator>>(SpanReader& ds, script_verify_flags& f)
     return ds;
 }
 
-FUZZ_TARGET(script_flags)
+namespace {
+
+class FuzzedSignatureChecker : public BaseSignatureChecker
+{
+public:
+    FuzzedSignatureChecker(const CTransaction* /*tx*/, unsigned int /*in*/,
+                           const CAmount& /*amount*/, const PrecomputedTransactionData& /*tx_data*/,
+                           MissingDataBehavior /*mdb*/) {}
+
+    bool CheckECDSASignature(const std::vector<unsigned char>& sig, const std::vector<unsigned char>& pub_key,
+                             const CScript& script_code, SigVersion sig_version) const override
+    {
+        return !sig.empty() && (sig[0] & 1);
+    }
+
+    bool CheckSchnorrSignature(std::span<const unsigned char> sig, std::span<const unsigned char> pub_key,
+                               SigVersion sig_version, ScriptExecutionData& exec_data,
+                               ScriptError* script_error = nullptr) const override
+    {
+        bool sig_ok = !sig.empty() && (sig[0] & 1);
+        if (!sig_ok && script_error) {
+            constexpr std::array<ScriptError, 3> schnorr_errs = {
+                SCRIPT_ERR_SCHNORR_SIG,
+                SCRIPT_ERR_SCHNORR_SIG_SIZE,
+                SCRIPT_ERR_SCHNORR_SIG_HASHTYPE};
+            size_t idx = (sig.size() > 1) ? (sig[1] % schnorr_errs.size()) : 0;
+            *script_error = schnorr_errs[idx];
+        }
+
+        return sig_ok;
+    }
+
+    bool CheckLockTime(const CScriptNum& lock_time) const override
+    {
+        return (lock_time.GetInt64() & 1) != 0;
+    }
+
+    bool CheckSequence(const CScriptNum& sequence) const override
+    {
+        return (sequence.GetInt64() & 1) != 0;
+    }
+
+    bool CheckTaprootCommitment(const std::vector<unsigned char>& control,
+                                const std::vector<unsigned char>& program,
+                                const uint256& tapleaf_hash) const override
+    {
+        return !program.empty() && (program[0] & 1);
+    }
+
+    bool CheckWitnessScriptHash(std::span<const unsigned char> program,
+                                const CScript& exec_script) const override
+    {
+        return !program.empty() && (program[0] & 1);
+    }
+};
+
+template <typename SigChecker>
+void CheckScriptFlags(FuzzBufferType buffer)
 {
     if (buffer.size() > 100'000) return;
     SpanReader ds{buffer};
@@ -56,7 +114,7 @@ FUZZ_TARGET(script_flags)
 
         for (unsigned i = 0; i < tx.vin.size(); ++i) {
             const CTxOut& prevout = txdata.m_spent_outputs.at(i);
-            const TransactionSignatureChecker checker{&tx, i, prevout.nValue, txdata, MissingDataBehavior::ASSERT_FAIL};
+            const SigChecker checker{&tx, i, prevout.nValue, txdata, MissingDataBehavior::ASSERT_FAIL};
 
             ScriptError serror;
             const bool ret = VerifyScript(tx.vin.at(i).scriptSig, prevout.scriptPubKey, &tx.vin.at(i).scriptWitness, verify_flags, checker, &serror);
@@ -79,4 +137,21 @@ FUZZ_TARGET(script_flags)
     } catch (const std::ios_base::failure&) {
         return;
     }
+}
+} // namespace
+
+/**
+ * Both of the following harnesses test that all script verification flags only
+ * tighten the interpreter rules (i.e. they represent soft-forks).
+ */
+
+FUZZ_TARGET(script_flags)
+{
+    CheckScriptFlags<TransactionSignatureChecker>(buffer);
+}
+
+// Signature validation is mocked out through FuzzedSignatureChecker
+FUZZ_TARGET(script_flags_mocked)
+{
+    CheckScriptFlags<FuzzedSignatureChecker>(buffer);
 }
