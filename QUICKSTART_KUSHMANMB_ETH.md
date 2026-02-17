@@ -52,7 +52,7 @@ The curl command from the problem statement is now integrated:
 
 ```bash
 # This is automatically executed in the workflow:
-curl "https://api.etherscan.io/v2/api?chainid=1&module=proxy&action=eth_call&to=0xAEEF46DB4855E25702F8237E8f403FddcaF931C0&data=0x70a08231000000000000000000000000e16359506c028e51f16be38986ec5746251e9724&tag=latest&apikey=<YOUR_KEY>"
+curl "https://api.etherscan.io/v2/api?chainid=1&module=proxy&action=eth_call&to=0x6fb9e80dDd0f5DC99D7cB38b07e8b298A57bF253&data=0x70a08231000000000000000000000000e16359506c028e51f16be38986ec5746251e9724&tag=latest&apikey=<YOUR_KEY>"
 ```
 
 ## Using Self-Hosted Runners
