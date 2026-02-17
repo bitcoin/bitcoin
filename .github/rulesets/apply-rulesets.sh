@@ -91,7 +91,6 @@ create_rulesets() {
     
     for file in "$RULESETS_DIR"/*.json; do
         if [ -f "$file" ]; then
-            filename=$(basename "$file")
             ruleset_name=$(jq -r '.name' "$file")
             
             echo -e "${YELLOW}Creating ruleset: $ruleset_name${NC}"
@@ -144,7 +143,7 @@ verify_rulesets() {
 # Function to delete rulesets
 delete_rulesets() {
     echo -e "${RED}WARNING: This will delete all rulesets for $REPO${NC}"
-    read -p "Are you sure? (yes/no): " confirm
+    read -r -p "Are you sure? (yes/no): " confirm
     
     if [ "$confirm" != "yes" ]; then
         echo "Aborted."
