@@ -32,6 +32,7 @@ on:
           - contract
           - ens_resolve
           - verify_proxy
+          - eth_blockNumber
       chain_id:
         description: 'Chain ID (1=Ethereum, 8453=Base)'
         required: false
@@ -214,8 +215,12 @@ jobs:
           # Use the dynamically resolved address from previous step (for non-proxy endpoints)
           ENDPOINT="${API_ENDPOINT_INPUT}"
           
+          # For eth_blockNumber endpoint, no address is needed
+          if [ "${ENDPOINT}" = "eth_blockNumber" ]; then
+            echo "eth_blockNumber endpoint does not require an address"
+            TARGET_ADDRESS=""
           # For verify_proxy endpoint, use the provided contract address
-          if [ "${ENDPOINT}" = "verify_proxy" ]; then
+          elif [ "${ENDPOINT}" = "verify_proxy" ]; then
             if [ -z "${CONTRACT_ADDRESS}" ]; then
               echo "❌ ERROR: contract_address is required for verify_proxy endpoint"
               echo '{"status":"0","message":"contract_address parameter is required"}' > data/etherscan/latest.json
@@ -297,6 +302,14 @@ jobs:
                 PARAMS="${PARAMS}&expectedimplementation=${IMPLEMENTATION_ADDRESS}"
               fi
               ;;
+            "eth_blockNumber")
+              # Get current block number via proxy module
+              # Implements: curl "https://api.etherscan.io/v2/api?chainid=1&module=proxy&action=eth_blockNumber&apikey=YourApiKeyToken"
+              echo "Fetching current block number..."
+              MODULE="proxy"
+              ACTION="eth_blockNumber"
+              PARAMS=""
+              ;;
             *)
               MODULE="account"
               ACTION="balance"
@@ -305,9 +318,11 @@ jobs:
           esac
 
           echo "Querying ${NETWORK_NAME} API: ${MODULE}/${ACTION}"
-          echo "Target Address: ${TARGET_ADDRESS}"
-          if [ "${ENDPOINT}" != "verify_proxy" ]; then
+          if [ "${ENDPOINT}" != "verify_proxy" ] && [ "${ENDPOINT}" != "eth_blockNumber" ]; then
+            echo "Target Address: ${TARGET_ADDRESS}"
             echo "ENS Name: ${ENS_NAME}"
+          elif [ "${ENDPOINT}" = "verify_proxy" ]; then
+            echo "Target Address: ${TARGET_ADDRESS}"
           fi
 
           # Build API URL
@@ -352,6 +367,8 @@ jobs:
 
           if [ "${ENDPOINT}" = "verify_proxy" ]; then
             echo "✓ Proxy verification request submitted"
+          elif [ "${ENDPOINT}" = "eth_blockNumber" ]; then
+            echo "✓ Block number fetched successfully"
           else
             echo "✓ Data fetched successfully for ${ENS_NAME}"
           fi
@@ -409,8 +426,8 @@ jobs:
             echo "- **Network**: Ethereum Mainnet (Chain ID: 1)" >> "${summary}"
           fi
           
-          # Show ENS name if not verify_proxy endpoint
-          if [ "${API_ENDPOINT_INPUT}" != "verify_proxy" ]; then
+          # Show ENS name if not verify_proxy or eth_blockNumber endpoint
+          if [ "${API_ENDPOINT_INPUT}" != "verify_proxy" ] && [ "${API_ENDPOINT_INPUT}" != "eth_blockNumber" ]; then
             echo "- **ENS Name**: ${ENS_NAME_INPUT}" >> "${summary}"
           fi
           
