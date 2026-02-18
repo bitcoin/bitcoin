@@ -34,6 +34,8 @@ static const char* WWW_AUTH_HEADER_DATA = "Basic realm=\"jsonrpc\"";
 
 /* List of -rpcauth values */
 static std::vector<std::vector<std::string>> g_rpcauth;
+/* List of -rpctoken values (username, salt, hash) */
+static std::vector<std::vector<std::string>> g_rpctoken;
 /* RPC Auth Whitelist */
 static std::map<std::string, std::set<std::string>> g_rpc_whitelist;
 static bool g_rpc_whitelist_default = false;
@@ -81,24 +83,56 @@ static bool CheckUserAuthorized(std::string_view user, std::string_view pass)
     return false;
 }
 
+//This function checks token against -rpctoken entries from config file.
+//Returns the username associated with the token if valid, empty string otherwise.
+static std::string CheckTokenAuthorized(std::string_view token)
+{
+    for (const auto& fields : g_rpctoken) {
+        const std::string& user = fields[0];
+        const std::string& salt = fields[1];
+        const std::string& hash = fields[2];
+
+        std::array<unsigned char, CHMAC_SHA256::OUTPUT_SIZE> out;
+        CHMAC_SHA256(UCharCast(salt.data()), salt.size()).Write(UCharCast(token.data()), token.size()).Finalize(out.data());
+        std::string hash_from_token = HexStr(out);
+
+        if (TimingResistantEqual(hash_from_token, hash)) {
+            return user;
+        }
+    }
+    return "";
+}
+
 static bool RPCAuthorized(const std::string& strAuth, std::string& strAuthUsernameOut)
 {
-    if (!strAuth.starts_with("Basic "))
-        return false;
-    std::string_view strUserPass64 = TrimStringView(std::string_view{strAuth}.substr(6));
-    auto userpass_data = DecodeBase64(strUserPass64);
-    std::string strUserPass;
-    if (!userpass_data) return false;
-    strUserPass.assign(userpass_data->begin(), userpass_data->end());
+    // Check for Basic authentication
+    if (strAuth.starts_with("Basic ")) {
+        std::string_view strUserPass64 = TrimStringView(std::string_view{strAuth}.substr(6));
+        auto userpass_data = DecodeBase64(strUserPass64);
+        std::string strUserPass;
+        if (!userpass_data) return false;
+        strUserPass.assign(userpass_data->begin(), userpass_data->end());
 
-    size_t colon_pos = strUserPass.find(':');
-    if (colon_pos == std::string::npos) {
-        return false; // Invalid basic auth.
+        size_t colon_pos = strUserPass.find(':');
+        if (colon_pos == std::string::npos) {
+            return false; // Invalid basic auth.
+        }
+        std::string user = strUserPass.substr(0, colon_pos);
+        std::string pass = strUserPass.substr(colon_pos + 1);
+        strAuthUsernameOut = user;
+        return CheckUserAuthorized(user, pass);
     }
-    std::string user = strUserPass.substr(0, colon_pos);
-    std::string pass = strUserPass.substr(colon_pos + 1);
-    strAuthUsernameOut = user;
-    return CheckUserAuthorized(user, pass);
+    // Check for Bearer token authentication
+    else if (strAuth.starts_with("Bearer ")) {
+        std::string_view token = TrimStringView(std::string_view{strAuth}.substr(7));
+        std::string user = CheckTokenAuthorized(token);
+        if (!user.empty()) {
+            strAuthUsernameOut = user;
+            return true;
+        }
+        return false;
+    }
+    return false;
 }
 
 static bool HTTPReq_JSONRPC(const std::any& context, HTTPRequest* req)
@@ -298,6 +332,22 @@ static bool InitRPCAuthentication()
                 g_rpcauth.push_back(fields);
             } else {
                 LogWarning("Invalid -rpcauth argument.");
+                return false;
+            }
+        }
+    }
+
+    if (!gArgs.GetArgs("-rpctoken").empty()) {
+        LogInfo("Using rpctoken authentication.\n");
+        for (const std::string& rpctoken : gArgs.GetArgs("-rpctoken")) {
+            std::vector<std::string> fields{SplitString(rpctoken, ':')};
+            const std::vector<std::string> salt_hmac{SplitString(fields.back(), '$')};
+            if (fields.size() == 2 && salt_hmac.size() == 2) {
+                fields.pop_back();
+                fields.insert(fields.end(), salt_hmac.begin(), salt_hmac.end());
+                g_rpctoken.push_back(fields);
+            } else {
+                LogWarning("Invalid -rpctoken argument.");
                 return false;
             }
         }
