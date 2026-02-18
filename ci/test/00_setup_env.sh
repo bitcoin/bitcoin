@@ -6,7 +6,7 @@
 
 export LC_ALL=C.UTF-8
 
-set -o errexit -o pipefail -o xtrace
+set -o errexit -o nounset -o pipefail -o xtrace
 
 # The source root dir, usually from git, usually read-only.
 # The ci system copies this folder.
@@ -24,11 +24,8 @@ export DEPENDS_DIR=${DEPENDS_DIR:-$BASE_ROOT_DIR/depends}
 export BASE_SCRATCH_DIR=${BASE_SCRATCH_DIR:-$BASE_ROOT_DIR/ci/scratch}
 
 echo "Setting specific values in env"
-if [ -n "${FILE_ENV}" ]; then
-  set -o errexit;
-  # shellcheck disable=SC1090
-  source "${FILE_ENV}"
-fi
+# shellcheck disable=SC1090
+source "${FILE_ENV}"
 
 echo "Fallback to default values in env (if not yet set)"
 # The number of parallel jobs to pass down to make and test_runner.py
