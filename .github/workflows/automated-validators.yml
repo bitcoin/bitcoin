@@ -1,0 +1,214 @@
+# ═══════════════════════════════════════════════════════════════════
+# GLOBAL OWNERSHIP & CREATOR STATUS
+# ═══════════════════════════════════════════════════════════════════
+# Repository Owner: kushmanmb.eth (Ethereum Name Service)
+# Creator: Kushman MB
+# ENS Identifiers:
+#   - Primary: kushmanmb.eth (Ethereum Mainnet)
+#   - Base Network: Kushmanmb.base.eth
+# 
+# This workflow is part of the kushmanmb-org/bitcoin repository
+# and is maintained by the repository owner and authorized contributors.
+# ═══════════════════════════════════════════════════════════════════
+
+name: Automated Validators
+
+on:
+  push:
+    branches:
+      - main
+      - master
+      - develop
+      - 'release/**'
+  pull_request:
+    branches:
+      - main
+      - master
+      - develop
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  validate-code-quality:
+    name: Code Quality Validation
+    runs-on: ${{ vars.USE_SELF_HOSTED == 'true' && 'self-hosted' || 'ubuntu-latest' }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup secure environment
+        uses: ./.github/actions/setup-secure-environment
+        with:
+          enable-gpg: 'false'
+          cleanup-after: 'true'
+
+      - name: Run code quality validation
+        uses: ./.github/actions/validate-code-quality
+        with:
+          path: '.'
+          fail-on-warning: 'false'
+
+      - name: Upload quality report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: code-quality-report
+          path: |
+            format-report.txt
+          retention-days: 30
+          if-no-files-found: ignore
+
+  validate-security:
+    name: Security Validation
+    runs-on: ${{ vars.USE_SELF_HOSTED == 'true' && 'self-hosted' || 'ubuntu-latest' }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup secure environment
+        uses: ./.github/actions/setup-secure-environment
+        with:
+          enable-gpg: 'true'
+          cleanup-after: 'true'
+
+      - name: Run security validation
+        id: security
+        uses: ./.github/actions/validate-security
+        with:
+          check-secrets: 'true'
+          check-dependencies: 'true'
+
+      - name: Check validation result
+        if: steps.security.outputs.status == 'failed'
+        run: |
+          echo "::error::Security validation failed with ${{ steps.security.outputs.issues-found }} issues"
+          exit 1
+
+      - name: Upload security report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: security-validation-report
+          path: |
+            npm-audit.txt
+          retention-days: 30
+          if-no-files-found: ignore
+
+  validate-dependencies:
+    name: Dependency Validation
+    runs-on: ${{ vars.USE_SELF_HOSTED == 'true' && 'self-hosted' || 'ubuntu-latest' }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        if: hashFiles('package.json') != ''
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Setup Python
+        if: hashFiles('requirements.txt') != ''
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: 'pip'
+
+      - name: Install dependencies
+        run: |
+          if [ -f "package.json" ]; then
+            npm ci || npm install
+          fi
+          if [ -f "requirements.txt" ]; then
+            pip install -r requirements.txt
+          fi
+
+      - name: Run dependency validation
+        id: deps
+        uses: ./.github/actions/validate-dependencies
+        with:
+          fail-on-vulnerability: 'false'
+
+      - name: Upload dependency reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: dependency-reports
+          path: |
+            npm-audit.json
+            safety-report.json
+            maven-deps.txt
+            maven-updates.txt
+          retention-days: 30
+          if-no-files-found: ignore
+
+  validate-commits:
+    name: Commit Message Validation
+    runs-on: ${{ vars.USE_SELF_HOSTED == 'true' && 'self-hosted' || 'ubuntu-latest' }}
+    if: github.event_name == 'pull_request' || github.event_name == 'push'
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Validate commit messages
+        uses: ./.github/actions/validate-commit-messages
+        with:
+          pattern: '^(feat|fix|docs|style|refactor|perf|test|build|ci|chore|revert)(\(.+\))?: .{1,72}'
+
+  validation-summary:
+    name: Validation Summary
+    needs:
+      - validate-code-quality
+      - validate-security
+      - validate-dependencies
+      - validate-commits
+    if: always()
+    runs-on: ${{ vars.USE_SELF_HOSTED == 'true' && 'self-hosted' || 'ubuntu-latest' }}
+    steps:
+      - name: Generate summary
+        run: |
+          cat >> $GITHUB_STEP_SUMMARY << EOF
+          # Automated Validation Summary
+          
+          ## Results
+          
+          | Validation | Status |
+          |------------|--------|
+          | Code Quality | ${{ needs.validate-code-quality.result }} |
+          | Security | ${{ needs.validate-security.result }} |
+          | Dependencies | ${{ needs.validate-dependencies.result }} |
+          | Commit Messages | ${{ needs.validate-commits.result }} |
+          
+          ## Overall Status
+          
+          $(if [ "${{ needs.validate-code-quality.result }}" == "success" ] && \
+              [ "${{ needs.validate-security.result }}" == "success" ] && \
+              [ "${{ needs.validate-dependencies.result }}" == "success" ]; then
+            echo "✅ All validations passed successfully!"
+          else
+            echo "⚠️ Some validations failed or were skipped. Please review the details above."
+          fi)
+          
+          ---
+          *Workflow run: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}*
+          EOF
+
+      - name: Check for failures
+        if: |
+          needs.validate-code-quality.result == 'failure' ||
+          needs.validate-security.result == 'failure' ||
+          needs.validate-dependencies.result == 'failure' ||
+          needs.validate-commits.result == 'failure'
+        run: |
+          echo "::error::One or more validation checks failed"
+          exit 1

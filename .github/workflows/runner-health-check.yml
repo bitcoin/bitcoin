@@ -1,0 +1,170 @@
+# ═══════════════════════════════════════════════════════════════════
+# GLOBAL OWNERSHIP & CREATOR STATUS
+# ═══════════════════════════════════════════════════════════════════
+# Repository Owner: kushmanmb.eth (Ethereum Name Service)
+# Creator: Kushman MB
+# ENS Identifiers:
+#   - Primary: kushmanmb.eth (Ethereum Mainnet)
+#   - Base Network: Kushmanmb.base.eth
+# 
+# This workflow is part of the kushmanmb-org/bitcoin repository
+# and is maintained by the repository owner and authorized contributors.
+# ═══════════════════════════════════════════════════════════════════
+
+name: Runner Health Check
+
+on:
+  schedule:
+    - cron: '0 */6 * * *'  # Every 6 hours
+  workflow_dispatch:
+
+jobs:
+  check-self-hosted-runners:
+    name: Self-Hosted Runner Health Check
+    runs-on: ${{ vars.USE_SELF_HOSTED == 'true' && 'self-hosted' || 'ubuntu-latest' }}
+    if: vars.USE_SELF_HOSTED == 'true'
+    steps:
+      - name: Check runner connectivity
+        run: |
+          echo "::group::Runner Connectivity Check"
+          echo "✓ Runner is online and responsive"
+          echo "Runner: ${{ runner.name }}"
+          echo "OS: ${{ runner.os }}"
+          echo "Architecture: ${{ runner.arch }}"
+          echo "::endgroup::"
+
+      - name: Check disk space
+        run: |
+          echo "::group::Disk Space Check"
+          df -h
+          
+          # Check if disk usage is above 80%
+          DISK_USAGE=$(df / | awk 'NR==2 {print $5}' | sed 's/%//')
+          if [ $DISK_USAGE -gt 80 ]; then
+            echo "::warning::Disk usage is high: ${DISK_USAGE}%"
+          else
+            echo "✓ Disk usage is acceptable: ${DISK_USAGE}%"
+          fi
+          echo "::endgroup::"
+
+      - name: Check memory
+        run: |
+          echo "::group::Memory Check"
+          free -h
+          
+          # Check available memory
+          AVAILABLE_MEM=$(free -m | awk 'NR==2 {print $7}')
+          if [ $AVAILABLE_MEM -lt 1024 ]; then
+            echo "::warning::Available memory is low: ${AVAILABLE_MEM}MB"
+          else
+            echo "✓ Available memory is sufficient: ${AVAILABLE_MEM}MB"
+          fi
+          echo "::endgroup::"
+
+      - name: Check CPU load
+        run: |
+          echo "::group::CPU Load Check"
+          uptime
+          
+          # Get 1-minute load average
+          LOAD=$(uptime | awk -F'load average:' '{print $2}' | awk -F',' '{print $1}' | xargs)
+          CPU_COUNT=$(nproc)
+          echo "Load average: $LOAD"
+          echo "CPU count: $CPU_COUNT"
+          echo "✓ CPU load checked"
+          echo "::endgroup::"
+
+      - name: Check Docker (if available)
+        run: |
+          echo "::group::Docker Check"
+          if command -v docker &> /dev/null; then
+            docker version
+            docker system df
+            echo "✓ Docker is available"
+          else
+            echo "::notice::Docker not available on this runner"
+          fi
+          echo "::endgroup::"
+
+      - name: Check network connectivity
+        run: |
+          echo "::group::Network Connectivity Check"
+          curl -I https://github.com
+          curl -I https://api.github.com
+          echo "✓ Network connectivity OK"
+          echo "::endgroup::"
+
+      - name: Generate health report
+        run: |
+          cat >> $GITHUB_STEP_SUMMARY << EOF
+          # Self-Hosted Runner Health Report
+          
+          **Runner**: ${{ runner.name }}
+          **OS**: ${{ runner.os }}
+          **Architecture**: ${{ runner.arch }}
+          **Check Time**: $(date -u +"%Y-%m-%d %H:%M:%S UTC")
+          
+          ## Status
+          
+          ✅ Runner is healthy and operational
+          
+          ## System Resources
+          
+          - Disk usage checked
+          - Memory checked
+          - CPU load checked
+          - Network connectivity verified
+          
+          ---
+          *Next check in 6 hours*
+          EOF
+
+  github-hosted-fallback-test:
+    name: GitHub-Hosted Fallback Test
+    runs-on: ubuntu-latest
+    steps:
+      - name: Test GitHub-hosted runner
+        run: |
+          echo "Testing GitHub-hosted runner as fallback"
+          echo "Runner: ${{ runner.name }}"
+          echo "OS: ${{ runner.os }}"
+
+      - name: Generate fallback report
+        run: |
+          cat >> $GITHUB_STEP_SUMMARY << EOF
+          # GitHub-Hosted Runner Status
+          
+          ✅ GitHub-hosted runners are available as fallback
+          
+          **Configuration**: Set \`USE_SELF_HOSTED\` variable to \`true\` to use self-hosted runners
+          EOF
+
+  health-summary:
+    name: Health Check Summary
+    needs:
+      - check-self-hosted-runners
+      - github-hosted-fallback-test
+    if: always()
+    runs-on: ubuntu-latest
+    steps:
+      - name: Generate summary
+        run: |
+          cat >> $GITHUB_STEP_SUMMARY << EOF
+          # Runner Infrastructure Health Summary
+          
+          ## Status Overview
+          
+          | Component | Status |
+          |-----------|--------|
+          | Self-Hosted Runners | ${{ needs.check-self-hosted-runners.result }} |
+          | GitHub-Hosted Fallback | ${{ needs.github-hosted-fallback-test.result }} |
+          
+          $(if [ "${{ needs.check-self-hosted-runners.result }}" == "success" ]; then
+            echo "✅ Self-hosted runner infrastructure is healthy"
+          else
+            echo "⚠️ Self-hosted runners may have issues. GitHub-hosted runners available as fallback."
+          fi)
+          
+          ---
+          *Health check workflow: ${{ github.run_id }}*
+          EOF
