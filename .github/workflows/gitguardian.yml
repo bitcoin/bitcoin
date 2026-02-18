@@ -1,0 +1,70 @@
+# Copyright (c) 2023-present The Bitcoin Core developers
+# Distributed under the MIT software license, see the accompanying
+# file COPYING or https://opensource.org/license/mit.
+#
+# ═══════════════════════════════════════════════════════════════════
+# GLOBAL OWNERSHIP & CREATOR STATUS
+# ═══════════════════════════════════════════════════════════════════
+# Repository Owner: kushmanmb.eth (Ethereum Name Service)
+# Creator: kushmanmb
+# ENS Identifiers:
+#   - Primary: kushmanmb.eth (Ethereum Mainnet)
+#   - Base Network: Kushmanmb.base.eth
+#   - yaketh.eth
+# 
+# This workflow is part of the kushmanmb-org/bitcoin repository
+# and is maintained by the repository owner and authorized contributors.
+# ═══════════════════════════════════════════════════════════════════
+#
+# GitGuardian Secret Scanning Workflow
+# This workflow uses GitGuardian to scan for secrets and sensitive data
+# in the repository code to prevent credential leaks and security issues.
+#
+# Security Features:
+# - Scans all pull requests for secrets before merge
+# - Scans push events to detect secrets in commits
+# - Uses GitGuardian's ggshield tool for comprehensive detection
+# - Integrates with GitHub Security tab for alerts
+
+name: GitGuardian Secret Scanning
+
+on:
+  push:
+    branches:
+      - master
+      - main
+      - '**'
+  pull_request:
+    branches:
+      - '**'
+  schedule:
+    # Run daily at 2 AM UTC to catch any secrets that may have been added
+    - cron: '0 2 * * *'
+
+concurrency:
+  group: ${{ github.event_name != 'pull_request' && github.run_id || github.ref }}-gitguardian
+  cancel-in-progress: true
+
+jobs:
+  scanning:
+    name: GitGuardian scan
+    runs-on: ubuntu-latest
+    permissions:
+      # Required for private repositories to read the code
+      contents: read
+      # Required to write security alerts to the Security tab
+      security-events: write
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0 # fetch all history so gitguardian can scan all commits
+
+      - name: GitGuardian scan
+        uses: GitGuardian/ggshield-action@v1.33.0
+        env:
+          GITHUB_PUSH_BEFORE_SHA: ${{ github.event.before }}
+          GITHUB_PUSH_BASE_SHA: ${{ github.event.base }}
+          GITHUB_PULL_BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          GITHUB_DEFAULT_BRANCH: ${{ github.event.repository.default_branch }}
+          GITGUARDIAN_API_KEY: ${{ secrets.GITGUARDIAN_API_KEY }}
