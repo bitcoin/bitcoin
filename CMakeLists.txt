@@ -189,6 +189,14 @@ string(APPEND CMAKE_CXX_COMPILE_OBJECT " ${APPEND_CPPFLAGS} ${APPEND_CXXFLAGS}")
 string(APPEND CMAKE_CXX_CREATE_SHARED_LIBRARY " ${APPEND_LDFLAGS}")
 string(APPEND CMAKE_CXX_LINK_EXECUTABLE " ${APPEND_LDFLAGS}")
 
+#=============================
+# C++ Feature Detection
+#=============================
+# In case the compiler is not GCC, Clang or MSVC this provides extra checks
+# which verify that some features are available in the standard library.
+include(CheckCXXFeatures)
+check_cxx_features()
+
 set(configure_warnings)
 
 include(CheckLinkerSupportsPIE)
