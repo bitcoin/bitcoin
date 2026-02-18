@@ -335,7 +335,7 @@ inspecting signatures in Mach-O binaries.")
                #t))))))))
 
 (define-public glibc-2.31
-  (let ((commit "7b27c450c34563a28e634cccb399cd415e71ebfe"))
+  (let ((commit "28eb5caf895ced5d895cb02757e109004a2d33e5"))
   (package
     (inherit glibc) ;; 2.39
     (version "2.31")
@@ -347,7 +347,7 @@ inspecting signatures in Mach-O binaries.")
               (file-name (git-file-name "glibc" commit))
               (sha256
                (base32
-                "017qdpr5id7ddb4lpkzj2li1abvw916m3fc6n7nw28z4h5qbv2n0"))
+                "07arjrc1smqy8wrhg38apr1s9ji7xv1rpzdapk4k2ps2n07irp58"))
               (patches (search-our-patches "glibc-guix-prefix.patch"
                                            "glibc-riscv-jumptarget.patch"))))
     (arguments
