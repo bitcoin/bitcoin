@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 # GitLab Agent Installation Script
 # This script installs the GitLab agent for Kubernetes using Helm
 
@@ -16,7 +16,7 @@ if [ -z "$GITLAB_AGENT_TOKEN" ]; then
     echo "  export GITLAB_AGENT_TOKEN='your-token-here'"
     echo ""
     echo "Example:"
-    echo "  export GITLAB_AGENT_TOKEN='glagent-7Z5SUNjeFVdmGzhx9kTe4m86MQpwOjFiZGo4dww.01.130dzsxzk'"
+    echo "  export GITLAB_AGENT_TOKEN='glagent-EXAMPLE_TOKEN_REPLACE_WITH_YOUR_ACTUAL_TOKEN'"
     echo "  ./install.sh"
     exit 1
 fi

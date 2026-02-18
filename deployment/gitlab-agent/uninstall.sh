@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 # GitLab Agent Uninstallation Script
 # This script removes the GitLab agent from Kubernetes
 
@@ -14,10 +14,19 @@ echo "Namespace: $NAMESPACE"
 
 # Uninstall the GitLab agent using Helm
 echo "Removing Helm release..."
-helm uninstall "$AGENT_NAME" -n "$NAMESPACE"
+helm uninstall "$AGENT_NAME" -n "$NAMESPACE" || {
+    echo "Warning: Failed to uninstall Helm release. It may have already been removed."
+}
 
 # Delete the namespace
 echo "Deleting namespace..."
-kubectl delete namespace "$NAMESPACE"
+echo "Note: Namespace deletion may take time as resources are terminated."
+kubectl delete namespace "$NAMESPACE" --timeout=60s || {
+    echo "Warning: Namespace deletion timed out or failed."
+    echo "Resources may still be terminating. Check with:"
+    echo "  kubectl get namespace $NAMESPACE"
+    echo "  kubectl get all -n $NAMESPACE"
+    exit 1
+}
 
 echo "GitLab agent uninstallation complete!"
