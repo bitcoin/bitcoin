@@ -19,12 +19,14 @@
 #include <sqlite3.h>
 
 #include <cstdint>
+#include <fstream>
 #include <optional>
 #include <utility>
 #include <vector>
 
 namespace wallet {
 static constexpr int32_t WALLET_SCHEMA_VERSION = 0;
+static constexpr size_t SQLITE_JOURNAL_HEADER_SIZE = 28;
 
 static std::span<const std::byte> SpanFromBlob(sqlite3_stmt* stmt, int col)
 {
@@ -374,6 +376,31 @@ void SQLiteDatabase::Close()
         throw std::runtime_error(strprintf("SQLiteDatabase: Failed to close database: %s\n", sqlite3_errstr(res)));
     }
     m_db = nullptr;
+
+    std::error_code ec;
+    const fs::path journal_path = fs::PathFromString(Filename() + "-journal");
+    bool journal_exists = fs::exists(journal_path, ec);
+    if (ec) return;
+    if (journal_exists) {
+        // If the journal file is more than 0 bytes, check if the 28 byte header is zero'd
+        auto size = fs::file_size(journal_path, ec);
+        if (ec) return;
+        if (size > SQLITE_JOURNAL_HEADER_SIZE) {
+            std::ifstream file{journal_path.std_path(), std::ios::binary};
+            if (!file.is_open()) return;
+
+            char header[SQLITE_JOURNAL_HEADER_SIZE];
+            file.read(header, SQLITE_JOURNAL_HEADER_SIZE);
+            file.close();
+
+            if (std::any_of(header, header + SQLITE_JOURNAL_HEADER_SIZE, [](char c){ return c != 0; })) {
+                return;
+            }
+        }
+
+        // Journal file is truncated or zero'd header, so it can be safely deleted
+        fs::remove(journal_path);
+    }
 }
 
 bool SQLiteDatabase::HasActiveTxn()
