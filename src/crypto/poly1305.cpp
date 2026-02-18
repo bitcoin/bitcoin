@@ -182,17 +182,14 @@ void poly1305_finish(poly1305_context *st, unsigned char mac[16]) noexcept {
 }
 
 void poly1305_update(poly1305_context *st, const unsigned char *m, size_t bytes) noexcept {
-    size_t i;
-
     /* handle leftover */
     if (st->leftover) {
         size_t want = (POLY1305_BLOCK_SIZE - st->leftover);
         if (want > bytes) {
             want = bytes;
         }
-        for (i = 0; i < want; i++) {
-            st->buffer[st->leftover + i] = m[i];
-        }
+        
+        std::memcpy(st->buffer + st->leftover, m, want);
         bytes -= want;
         m += want;
         st->leftover += want;
@@ -211,9 +208,8 @@ void poly1305_update(poly1305_context *st, const unsigned char *m, size_t bytes)
 
     /* store leftover */
     if (bytes) {
-        for (i = 0; i < bytes; i++) {
-            st->buffer[st->leftover + i] = m[i];
-        }
+        
+        std::memcpy(st->buffer + st->leftover, m, bytes);
         st->leftover += bytes;
     }
 }
