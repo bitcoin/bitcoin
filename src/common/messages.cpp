@@ -6,7 +6,6 @@
 #include <common/messages.h>
 #include <common/types.h>
 #include <node/types.h>
-#include <policy/fees/block_policy_estimator.h>
 #include <tinyformat.h>
 #include <util/fees.h>
 #include <util/strencodings.h>
@@ -23,23 +22,6 @@ using node::TransactionError;
 using util::Join;
 
 namespace common {
-std::string StringForFeeReason(FeeReason reason)
-{
-    switch (reason) {
-    case FeeReason::NONE:
-        return "None";
-    case FeeReason::HALF_ESTIMATE:
-        return "Half Target 60% Threshold";
-    case FeeReason::FULL_ESTIMATE:
-        return "Target 85% Threshold";
-    case FeeReason::DOUBLE_ESTIMATE:
-        return "Double Target 95% Threshold";
-    case FeeReason::CONSERVATIVE:
-        return "Conservative Double Target longer horizon";
-    } // no default case, so the compiler can warn about missing cases
-    assert(false);
-}
-
 std::string StringForFeeSource(FeeSource source)
 {
     switch (source) {
