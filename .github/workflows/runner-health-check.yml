@@ -18,8 +18,13 @@ on:
     - cron: '0 */6 * * *'  # Every 6 hours
   workflow_dispatch:
 
+permissions:
+  contents: read
+
 jobs:
   check-self-hosted-runners:
+    permissions:
+      contents: read
     name: Self-Hosted Runner Health Check
     runs-on: ${{ vars.USE_SELF_HOSTED == 'true' && 'self-hosted' || 'ubuntu-latest' }}
     if: vars.USE_SELF_HOSTED == 'true'
@@ -122,6 +127,8 @@ jobs:
   github-hosted-fallback-test:
     name: GitHub-Hosted Fallback Test
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
     steps:
       - name: Test GitHub-hosted runner
         run: |
@@ -146,6 +153,8 @@ jobs:
       - github-hosted-fallback-test
     if: always()
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
     steps:
       - name: Generate summary
         run: |

@@ -34,8 +34,13 @@ env:
   CMAKE_BUILD_TYPE: Release
   CCACHE_DIR: ${{ github.workspace }}/.ccache
 
+permissions:
+  contents: read
+
 jobs:
   lint-cpp:
+    permissions:
+      contents: read
     name: C++ Linting
     runs-on: ${{ vars.USE_SELF_HOSTED == 'true' && 'self-hosted' || 'ubuntu-latest' }}
     steps:
@@ -85,6 +90,8 @@ jobs:
   lint-python:
     name: Python Linting
     runs-on: ${{ vars.USE_SELF_HOSTED == 'true' && 'self-hosted' || 'ubuntu-latest' }}
+    permissions:
+      contents: read
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -152,6 +159,8 @@ jobs:
   lint-shell:
     name: Shell Script Linting
     runs-on: ${{ vars.USE_SELF_HOSTED == 'true' && 'self-hosted' || 'ubuntu-latest' }}
+    permissions:
+      contents: read
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -183,6 +192,8 @@ jobs:
     name: Build - Linux
     needs: [lint-cpp, lint-python, lint-shell]
     runs-on: ${{ vars.USE_SELF_HOSTED == 'true' && 'self-hosted' || 'ubuntu-latest' }}
+    permissions:
+      contents: read
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -257,6 +268,8 @@ jobs:
   build-documentation:
     name: Build Documentation
     runs-on: ${{ vars.USE_SELF_HOSTED == 'true' && 'self-hosted' || 'ubuntu-latest' }}
+    permissions:
+      contents: read
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -303,6 +316,8 @@ jobs:
       - build-documentation
     if: always()
     runs-on: ${{ vars.USE_SELF_HOSTED == 'true' && 'self-hosted' || 'ubuntu-latest' }}
+    permissions:
+      contents: read
     steps:
       - name: Generate summary
         run: |

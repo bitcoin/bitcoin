@@ -44,8 +44,13 @@ env:
   PYTHON_VERSION: '3.11'
   NODE_VERSION: '20'
 
+permissions:
+  contents: read
+
 jobs:
   test-setup:
+    permissions:
+      contents: read
     name: Test Environment Setup
     runs-on: ${{ vars.USE_SELF_HOSTED == 'true' && 'self-hosted' || 'ubuntu-latest' }}
     outputs:
@@ -75,6 +80,8 @@ jobs:
     name: Unit Tests
     needs: test-setup
     runs-on: ${{ vars.USE_SELF_HOSTED == 'true' && 'self-hosted' || 'ubuntu-latest' }}
+    permissions:
+      contents: read
     strategy:
       fail-fast: false
       matrix:
@@ -144,6 +151,8 @@ jobs:
   lint-tests:
     name: Linting Tests
     runs-on: ${{ vars.USE_SELF_HOSTED == 'true' && 'self-hosted' || 'ubuntu-latest' }}
+    permissions:
+      contents: read
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -206,6 +215,8 @@ jobs:
     runs-on: ${{ vars.USE_SELF_HOSTED == 'true' && 'self-hosted' || 'ubuntu-latest' }}
     if: hashFiles('test/functional') != ''
     timeout-minutes: 120
+    permissions:
+      contents: read
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -251,6 +262,8 @@ jobs:
       - functional-tests
     if: always()
     runs-on: ${{ vars.USE_SELF_HOSTED == 'true' && 'self-hosted' || 'ubuntu-latest' }}
+    permissions:
+      contents: read
     steps:
       - name: Generate test summary
         run: |
