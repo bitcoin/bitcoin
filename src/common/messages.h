@@ -18,6 +18,7 @@ struct bilingual_str;
 
 enum class FeeEstimateMode;
 enum class FeeReason;
+enum class FeeSource;
 namespace node {
 enum class TransactionError;
 } // namespace node
@@ -26,6 +27,7 @@ namespace common {
 enum class PSBTError;
 bool FeeModeFromString(std::string_view mode_string, FeeEstimateMode& fee_estimate_mode);
 std::string StringForFeeReason(FeeReason reason);
+std::string StringForFeeSource(FeeSource source);
 std::string FeeModes(const std::string& delimiter);
 std::string FeeModeInfo(std::pair<std::string, FeeEstimateMode>& mode);
 std::string FeeModesDetail(std::string default_info);

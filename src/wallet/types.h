@@ -36,10 +36,11 @@ struct CreatedTransactionResult
     CTransactionRef tx;
     CAmount fee;
     FeeCalculation fee_calc;
+    FeeSource m_fee_source;
     std::optional<unsigned int> change_pos;
 
-    CreatedTransactionResult(CTransactionRef _tx, CAmount _fee, std::optional<unsigned int> _change_pos, const FeeCalculation& _fee_calc)
-            : tx(_tx), fee(_fee), fee_calc(_fee_calc), change_pos(_change_pos) {}
+    CreatedTransactionResult(CTransactionRef _tx, CAmount _fee, std::optional<unsigned int> _change_pos, const FeeCalculation& _fee_calc, FeeSource fee_source)
+        : tx(_tx), fee(_fee), fee_calc(_fee_calc), m_fee_source(fee_source), change_pos(_change_pos) {}
 };
 
 } // namespace wallet

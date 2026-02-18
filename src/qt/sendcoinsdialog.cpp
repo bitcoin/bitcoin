@@ -23,6 +23,7 @@
 #include <node/types.h>
 #include <policy/fees/block_policy_estimator.h>
 #include <txmempool.h>
+#include <util/fees.h>
 #include <validation.h>
 #include <wallet/coincontrol.h>
 #include <wallet/fees.h>
@@ -862,7 +863,7 @@ void SendCoinsDialog::updateSmartFeeLabel()
 
     ui->labelSmartFee->setText(tr("%1/kvB").arg(BitcoinUnits::formatWithUnit(model->getOptionsModel()->getDisplayUnit(), feeRate.GetFeePerK())));
 
-    if (reason == FeeReason::FALLBACK) {
+    if (reason == FeeReason::NONE) { // FIXME: use correct enum
         ui->labelSmartFee2->show(); // (Smart fee not initialized yet. This usually takes a few blocks...)
         ui->labelFeeEstimation->setText("");
         ui->fallbackFeeWarningLabel->setVisible(true);

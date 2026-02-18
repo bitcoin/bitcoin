@@ -3,8 +3,8 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
+#include <util/fees.h>
 #include <wallet/fees.h>
-
 #include <wallet/coincontrol.h>
 #include <wallet/wallet.h>
 
@@ -16,9 +16,9 @@ CAmount GetRequiredFee(const CWallet& wallet, unsigned int nTxBytes)
 }
 
 
-CAmount GetMinimumFee(const CWallet& wallet, unsigned int nTxBytes, const CCoinControl& coin_control, FeeCalculation* feeCalc)
+CAmount GetMinimumFee(const CWallet& wallet, unsigned int nTxBytes, const CCoinControl& coin_control, FeeCalculation* feeCalc, FeeSource* fee_source)
 {
-    return GetMinimumFeeRate(wallet, coin_control, feeCalc).GetFee(static_cast<int32_t>(nTxBytes));
+    return GetMinimumFeeRate(wallet, coin_control, feeCalc, fee_source).GetFee(static_cast<int32_t>(nTxBytes));
 }
 
 CFeeRate GetRequiredFeeRate(const CWallet& wallet)
@@ -26,7 +26,7 @@ CFeeRate GetRequiredFeeRate(const CWallet& wallet)
     return std::max(wallet.m_min_fee, wallet.chain().relayMinFee());
 }
 
-CFeeRate GetMinimumFeeRate(const CWallet& wallet, const CCoinControl& coin_control, FeeCalculation* feeCalc)
+CFeeRate GetMinimumFeeRate(const CWallet& wallet, const CCoinControl& coin_control, FeeCalculation* feeCalc, FeeSource* fee_source)
 {
     /* User control of how to calculate fee uses the following parameter precedence:
        1. coin_control.m_feerate
@@ -37,8 +37,11 @@ CFeeRate GetMinimumFeeRate(const CWallet& wallet, const CCoinControl& coin_contr
     CFeeRate feerate_needed;
     if (coin_control.m_feerate) { // 1.
         feerate_needed = *(coin_control.m_feerate);
+        if (fee_source) *fee_source = FeeSource::USER_SPECIFIED;
         // Allow to override automatic min/max check over coin control instance
-        if (coin_control.fOverrideFeeRate) return feerate_needed;
+        if (coin_control.fOverrideFeeRate) {
+            return feerate_needed;
+        }
     }
     else { // 2. or 3.
         // We will use smart fee estimation
@@ -50,11 +53,11 @@ CFeeRate GetMinimumFeeRate(const CWallet& wallet, const CCoinControl& coin_contr
         else if (coin_control.m_fee_mode == FeeEstimateMode::ECONOMICAL) conservative_estimate = false;
 
         feerate_needed = wallet.chain().estimateSmartFee(target, conservative_estimate, feeCalc);
+        if (fee_source) *fee_source = FeeSource::FEE_RATE_ESTIMATOR;
         if (feerate_needed == CFeeRate(0)) {
             // if we don't have enough data for estimateSmartFee, then use fallback fee
             feerate_needed = wallet.m_fallback_fee;
-            if (feeCalc) feeCalc->reason = FeeReason::FALLBACK;
-
+            if (fee_source) *fee_source = FeeSource::FALLBACK;
             // directly return if fallback fee is disabled (feerate 0 == disabled)
             if (wallet.m_fallback_fee == CFeeRate(0)) return feerate_needed;
         }
@@ -62,7 +65,7 @@ CFeeRate GetMinimumFeeRate(const CWallet& wallet, const CCoinControl& coin_contr
         CFeeRate min_mempool_feerate = wallet.chain().mempoolMinFee();
         if (feerate_needed < min_mempool_feerate) {
             feerate_needed = min_mempool_feerate;
-            if (feeCalc) feeCalc->reason = FeeReason::MEMPOOL_MIN;
+            if (fee_source) *fee_source = FeeSource::MEMPOOL_MIN;
         }
     }
 
@@ -70,7 +73,7 @@ CFeeRate GetMinimumFeeRate(const CWallet& wallet, const CCoinControl& coin_contr
     CFeeRate required_feerate = GetRequiredFeeRate(wallet);
     if (required_feerate > feerate_needed) {
         feerate_needed = required_feerate;
-        if (feeCalc) feeCalc->reason = FeeReason::REQUIRED;
+        if (fee_source) *fee_source = FeeSource::REQUIRED;
     }
     return feerate_needed;
 }

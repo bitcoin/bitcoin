@@ -63,9 +63,6 @@ enum class FeeReason {
     FULL_ESTIMATE,
     DOUBLE_ESTIMATE,
     CONSERVATIVE,
-    MEMPOOL_MIN,
-    FALLBACK,
-    REQUIRED,
 };
 
 /* Used to return detailed information about a feerate bucket */

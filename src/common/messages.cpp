@@ -36,11 +36,22 @@ std::string StringForFeeReason(FeeReason reason)
         return "Double Target 95% Threshold";
     case FeeReason::CONSERVATIVE:
         return "Conservative Double Target longer horizon";
-    case FeeReason::MEMPOOL_MIN:
+    } // no default case, so the compiler can warn about missing cases
+    assert(false);
+}
+
+std::string StringForFeeSource(FeeSource source)
+{
+    switch (source) {
+    case FeeSource::FEE_RATE_ESTIMATOR:
+        return "Fee Rate Estimator";
+    case FeeSource::MEMPOOL_MIN:
         return "Mempool Min Fee";
-    case FeeReason::FALLBACK:
+    case FeeSource::USER_SPECIFIED:
+        return "User Specified Fee";
+    case FeeSource::FALLBACK:
         return "Fallback fee";
-    case FeeReason::REQUIRED:
+    case FeeSource::REQUIRED:
         return "Minimum Required Fee";
     } // no default case, so the compiler can warn about missing cases
     assert(false);

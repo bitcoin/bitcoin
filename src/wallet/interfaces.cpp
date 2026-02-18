@@ -472,7 +472,7 @@ public:
     {
         FeeCalculation fee_calc;
         CAmount result;
-        result = GetMinimumFee(*m_wallet, tx_bytes, coin_control, &fee_calc);
+        result = GetMinimumFee(*m_wallet, tx_bytes, coin_control, &fee_calc, /*fee_source=*/nullptr);
         if (returned_target) *returned_target = fee_calc.returnedTarget;
         if (reason) *reason = fee_calc.reason;
         return result;

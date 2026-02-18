@@ -1431,13 +1431,14 @@ RPCHelpMan sendall()
             const bool rbf{options.exists("replaceable") ? options["replaceable"].get_bool() : pwallet->m_signal_rbf};
 
             FeeCalculation fee_calc_out;
-            CFeeRate fee_rate{GetMinimumFeeRate(*pwallet, coin_control, &fee_calc_out)};
+            FeeSource fee_source;
+            CFeeRate fee_rate{GetMinimumFeeRate(*pwallet, coin_control, &fee_calc_out, &fee_source)};
             // Do not, ever, assume that it's fine to change the fee rate if the user has explicitly
             // provided one
             if (coin_control.m_feerate && fee_rate > *coin_control.m_feerate) {
                 throw JSONRPCError(RPC_INVALID_PARAMETER, strprintf("Fee rate (%s) is lower than the minimum fee rate setting (%s)", coin_control.m_feerate->ToString(FeeRateFormat::SAT_VB), fee_rate.ToString(FeeRateFormat::SAT_VB)));
             }
-            if (fee_calc_out.reason == FeeReason::FALLBACK && !pwallet->m_allow_fallback_fee) {
+            if (fee_source == FeeSource::FALLBACK && !pwallet->m_allow_fallback_fee) {
                 // eventually allow a fallback fee
                 throw JSONRPCError(RPC_WALLET_ERROR, "Fee estimation failed. Fallbackfee is disabled. Wait a few blocks or enable -fallbackfee.");
             }
