@@ -27,7 +27,7 @@
 using common::FeeModeFromString;
 using common::FeeModesDetail;
 using common::InvalidEstimateModeErrorMessage;
-using common::StringForFeeReason;
+using common::StringForFeeSource;
 using common::TransactionErrorString;
 using node::TransactionError;
 
@@ -191,7 +191,7 @@ UniValue SendMoney(CWallet& wallet, const CCoinControl &coin_control, std::vecto
     if (verbose) {
         UniValue entry(UniValue::VOBJ);
         entry.pushKV("txid", tx->GetHash().GetHex());
-        entry.pushKV("fee_reason", StringForFeeReason(res->fee_calc.reason));
+        entry.pushKV("fee_source", StringForFeeSource(res->m_fee_source));
         return entry;
     }
     return tx->GetHash().GetHex();
@@ -268,7 +268,7 @@ RPCHelpMan sendtoaddress()
                         RPCResult::Type::OBJ, "", "",
                         {
                             {RPCResult::Type::STR_HEX, "txid", "The transaction id."},
-                            {RPCResult::Type::STR, "fee_reason", "The transaction fee reason."}
+                            {RPCResult::Type::STR, "fee_source", "The transaction fee source."}
                         },
                     },
                 },
@@ -375,7 +375,7 @@ RPCHelpMan sendmany()
                         {
                             {RPCResult::Type::STR_HEX, "txid", "The transaction id for the send. Only 1 transaction is created regardless of\n"
                 "the number of addresses."},
-                            {RPCResult::Type::STR, "fee_reason", "The transaction fee reason."}
+                            {RPCResult::Type::STR, "fee_source", "The transaction fee source."}
                         },
                     },
                 },
