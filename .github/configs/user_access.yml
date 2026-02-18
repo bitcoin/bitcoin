@@ -1,0 +1,59 @@
+# User Access Configuration
+# This file defines user access levels and project permissions for the repository
+
+user_access:
+  # Access roles with their tier levels
+  access_as:
+    # Agent role - for free tier users
+    agent:
+      tier: "free"
+      description: "Free tier access for automated agents and basic users"
+      permissions:
+        - read
+        - basic_queries
+        - public_data_access
+      rate_limits:
+        requests_per_hour: 100
+        concurrent_requests: 5
+      
+    # User role - for premium+ tier users
+    user:
+      tier: "premium+"
+      description: "Premium tier access for authenticated users with full features"
+      permissions:
+        - read
+        - write
+        - advanced_queries
+        - private_data_access
+        - api_access
+        - analytics
+      rate_limits:
+        requests_per_hour: 1000
+        concurrent_requests: 20
+  
+  # Project-specific access configuration
+  projects:
+    - id: "bitcoin-core"
+      name: "Bitcoin Core"
+      description: "Main Bitcoin Core project"
+      access_level: "all"
+      
+    - id: "onchain-agent"
+      name: "OnChain Agent"
+      description: "AI-powered blockchain agent scaffolding tool"
+      access_level: "all"
+      
+    - id: "cdp-api-integration"
+      name: "CDP API Integration"
+      description: "Coinbase Developer Platform API integration"
+      access_level: "premium"
+      
+    - id: "ens-integration"
+      name: "ENS Integration"
+      description: "Ethereum Name Service integration"
+      access_level: "premium"
+      
+    - id: "private-workflows"
+      name: "Private Workflows"
+      description: "Private CI/CD workflows and automation"
+      access_level: "premium"
