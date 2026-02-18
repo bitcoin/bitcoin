@@ -55,6 +55,10 @@ export interface UserAccessConfig {
 
 /**
  * Permission types available in the system
+ * 
+ * NOTE: These permission values must match the permissions defined in the YAML configuration.
+ * If you add or modify permissions in .github/configs/user_access.yml, update this type accordingly.
+ * The validation script (.github/configs/validate_user_access.py) enforces this consistency.
  */
 export type Permission =
   | 'read'

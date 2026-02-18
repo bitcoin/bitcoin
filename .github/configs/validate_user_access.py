@@ -27,13 +27,23 @@ def validate_access_role(role_name, role_data):
     
     # Validate tier values
     if 'tier' in role_data:
-        valid_tiers = ['free', 'premium', 'premium+']
+        valid_tiers = ['free', 'premium+']
         if role_data['tier'] not in valid_tiers:
             errors.append(f"Role '{role_name}' has invalid tier: {role_data['tier']}")
     
     # Validate permissions is a list
-    if 'permissions' in role_data and not isinstance(role_data['permissions'], list):
-        errors.append(f"Role '{role_name}' permissions must be a list")
+    if 'permissions' in role_data:
+        if not isinstance(role_data['permissions'], list):
+            errors.append(f"Role '{role_name}' permissions must be a list")
+        else:
+            # Validate permission values against expected permissions
+            valid_permissions = [
+                'read', 'write', 'basic_queries', 'advanced_queries',
+                'public_data_access', 'private_data_access', 'api_access', 'analytics'
+            ]
+            for permission in role_data['permissions']:
+                if permission not in valid_permissions:
+                    errors.append(f"Role '{role_name}' has invalid permission: {permission}")
     
     # Validate rate_limits structure
     if 'rate_limits' in role_data:

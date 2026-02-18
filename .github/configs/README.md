@@ -121,7 +121,10 @@ const config = yaml.load(
 ### Validating Configuration
 
 ```bash
-# Validate YAML syntax
+# Validate YAML syntax and structure
+python3 .github/configs/validate_user_access.py
+
+# Or just validate YAML syntax
 python3 -c "import yaml; yaml.safe_load(open('.github/configs/user_access.yml'))"
 
 # Or using yq (if installed)
@@ -133,9 +136,15 @@ yq eval '.github/configs/user_access.yml'
 To add new projects or modify access levels:
 
 1. Edit `user_access.yml`
-2. Ensure YAML syntax is valid
-3. Update this README if adding new project types or access levels
-4. Commit changes and create a pull request
+2. If adding/modifying permissions, update the TypeScript types in `bitcoin-onchain-app/app/userAccessTypes.ts`
+3. Run the validation script: `python3 .github/configs/validate_user_access.py`
+4. Update this README if adding new project types or access levels
+5. Commit changes and create a pull request
+
+**Important**: When adding new permissions, update both:
+- The YAML configuration (`user_access.yml`)
+- The TypeScript Permission type (`userAccessTypes.ts`)
+- The validation script's valid_permissions list (`validate_user_access.py`)
 
 ## Security Considerations
 
@@ -143,3 +152,4 @@ To add new projects or modify access levels:
 - Changes to access levels should be reviewed by repository maintainers
 - Rate limits help prevent abuse and ensure fair resource usage
 - Premium features require proper authentication and authorization mechanisms
+- The validation script helps maintain consistency between configuration and types
