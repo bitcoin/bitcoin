@@ -24,7 +24,7 @@ def token_to_hmac(salt, token):
 def main():
     parser = ArgumentParser(description='Create API token credentials for a JSON-RPC user')
     parser.add_argument('username', help='the username for authentication')
-    parser.add_argument('token', help='leave empty to generate a random token or provide an existing token', nargs='?')
+    parser.add_argument('token', help='optional: provide an existing token, or omit to generate a random token', nargs='?')
     parser.add_argument("-j", "--json", help="output to json instead of plain-text", action='store_true')
     args = parser.parse_args()
 

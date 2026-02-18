@@ -37,31 +37,32 @@ class TokenAuthTest(BitcoinTestFramework):
         rpcauth_path = self.config["environment"]["RPCAUTH"]
         rpctoken_path = os.path.join(os.path.dirname(rpcauth_path), "rpctoken.py")
         
-        # Generate token with specified value for testing
+        # Generate token with specified value for testing using JSON output
         self.test_token = "test_token_abc123xyz789"
-        p = subprocess.Popen([sys.executable, rpctoken_path, 'tokenuser', self.test_token], 
+        p = subprocess.Popen([sys.executable, rpctoken_path, 'tokenuser', self.test_token, '-j'], 
                            stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
         stdout, stderr = p.communicate()
         if p.returncode != 0:
             raise RuntimeError(f"rpctoken.py failed: {stderr}")
-        lines = stdout.splitlines()
-        rpctoken = lines[1]
+        import json
+        token_data = json.loads(stdout)
+        rpctoken = token_data['rpctoken']
         
-        # Generate token without specifying value (random)
+        # Generate token without specifying value (random) using JSON output
         self.test_user2 = 'tokenuser2'
-        p = subprocess.Popen([sys.executable, rpctoken_path, self.test_user2], 
+        p = subprocess.Popen([sys.executable, rpctoken_path, self.test_user2, '-j'], 
                            stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
         stdout, stderr = p.communicate()
         if p.returncode != 0:
             raise RuntimeError(f"rpctoken.py failed: {stderr}")
-        lines = stdout.splitlines()
-        rpctoken2 = lines[1]
-        self.test_token2 = lines[3]
+        token_data2 = json.loads(stdout)
+        rpctoken2 = token_data2['rpctoken']
+        self.test_token2 = token_data2['token']
 
         # Add token config to bitcoin.conf
         with open(self.nodes[0].datadir_path / "bitcoin.conf", "a") as f:
-            f.write(f"{rpctoken}\n")
-            f.write(f"{rpctoken2}\n")
+            f.write(f"rpctoken={rpctoken}\n")
+            f.write(f"rpctoken={rpctoken2}\n")
         
         self.start_node(0)
 
