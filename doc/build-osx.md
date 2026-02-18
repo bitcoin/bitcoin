@@ -1,6 +1,6 @@
 # macOS Build Guide
 
-**Updated for macOS [14](https://developer.apple.com/documentation/macos-release-notes/macos-14-release-notes/)**
+**Updated for macOS [11](https://developer.apple.com/documentation/macos-release-notes/macos-big-sur-11_0_1-release-notes/)**
 
 This guide describes how to build dashd, command-line utilities, and GUI on macOS.
 
@@ -49,6 +49,20 @@ See [dependencies.md](dependencies.md) for a complete overview.
 ``` bash
 brew install automake libtool boost gmp pkg-config libevent
 ```
+
+For macOS 11 (Big Sur) and 12 (Monterey) you need to install a more recent version of llvm.
+
+``` bash
+brew install llvm
+```
+
+And append the following to the configure commands below:
+
+``` bash
+CC=$(brew --prefix llvm)/bin/clang CXX=$(brew --prefix llvm)/bin/clang++
+```
+
+Try `llvm@17` if compilation fails with the default version of llvm.
 
 ### 4. Clone Dash repository
 
