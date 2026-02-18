@@ -137,7 +137,7 @@ static CFeeRate EstimateFeeRate(const CWallet& wallet, const CWalletTx& wtx, con
     feerate += std::max(node_incremental_relay_fee, wallet_incremental_relay_fee);
 
     // Fee rate must also be at least the wallet's GetMinimumFeeRate
-    CFeeRate min_feerate(GetMinimumFeeRate(wallet, coin_control, /*feeCalc=*/nullptr, /*fee_source=*/nullptr));
+    CFeeRate min_feerate(GetMinimumFeeRate(wallet, coin_control).fee_rate);
 
     // Set the required fee rate for the replacement transaction in coin control.
     return std::max(feerate, min_feerate);

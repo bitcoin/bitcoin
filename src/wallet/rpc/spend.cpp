@@ -1430,9 +1430,7 @@ RPCHelpMan sendall()
 
             const bool rbf{options.exists("replaceable") ? options["replaceable"].get_bool() : pwallet->m_signal_rbf};
 
-            FeeCalculation fee_calc_out;
-            FeeSource fee_source;
-            CFeeRate fee_rate{GetMinimumFeeRate(*pwallet, coin_control, &fee_calc_out, &fee_source)};
+            auto [fee_rate, fee_source, returned_target] = GetMinimumFeeRate(*pwallet, coin_control);
             // Do not, ever, assume that it's fine to change the fee rate if the user has explicitly
             // provided one
             if (coin_control.m_feerate && fee_rate > *coin_control.m_feerate) {

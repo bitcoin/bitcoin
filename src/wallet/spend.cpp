@@ -1155,9 +1155,8 @@ static util::Result<CreatedTransactionResult> CreateTransactionInternal(
     coin_selection_params.m_discard_feerate = GetDiscardRate(wallet);
 
     // Get the fee rate to use effective values in coin selection
-    FeeCalculation feeCalc;
-    FeeSource fee_source;
-    coin_selection_params.m_effective_feerate = GetMinimumFeeRate(wallet, coin_control, &feeCalc, &fee_source);
+    auto [fee_rate, fee_source, returned_target]{GetMinimumFeeRate(wallet, coin_control)};
+    coin_selection_params.m_effective_feerate = fee_rate;
     // Do not, ever, assume that it's fine to change the fee rate if the user has explicitly
     // provided one
     if (coin_control.m_feerate && coin_selection_params.m_effective_feerate > *coin_control.m_feerate) {
@@ -1431,7 +1430,7 @@ static util::Result<CreatedTransactionResult> CreateTransactionInternal(
     wallet.WalletLogPrintf("Fee Calculation: Fee:%d Bytes:%u Source: %s \n",
                            current_fee, nBytes, StringForFeeSource(fee_source));
 
-    return CreatedTransactionResult(tx, current_fee, change_pos, feeCalc, fee_source);
+    return CreatedTransactionResult(tx, current_fee, change_pos, fee_source);
 }
 
 util::Result<CreatedTransactionResult> CreateTransaction(

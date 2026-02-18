@@ -29,7 +29,7 @@
 
 class CFeeRate;
 class CKey;
-enum class FeeReason;
+enum class FeeSource;
 enum class OutputType;
 struct PartiallySignedTransaction;
 struct bilingual_str;
@@ -46,6 +46,7 @@ class CWallet;
 enum class AddressPurpose;
 struct CRecipient;
 struct WalletContext;
+struct MinimumFeeRateResult;
 } // namespace wallet
 
 namespace interfaces {
@@ -245,10 +246,8 @@ public:
     virtual CAmount getRequiredFee(unsigned int tx_bytes) = 0;
 
     //! Get minimum fee.
-    virtual CAmount getMinimumFee(unsigned int tx_bytes,
-        const wallet::CCoinControl& coin_control,
-        int* returned_target,
-        FeeReason* reason) = 0;
+    virtual std::tuple<CAmount, int, FeeSource> getMinimumFee(unsigned int tx_bytes,
+        const wallet::CCoinControl& coin_control) = 0;
 
     //! Get tx confirm target.
     virtual unsigned int getConfirmTarget() = 0;

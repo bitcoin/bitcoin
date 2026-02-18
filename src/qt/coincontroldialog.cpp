@@ -461,8 +461,9 @@ void CoinControlDialog::updateLabels(CCoinControl& m_coin_control, WalletModel *
             if (nAmount - nPayAmount == 0)
                 nBytes -= 34;
 
+        auto res = model->wallet().getMinimumFee(nBytes, m_coin_control);
         // Fee
-        nPayFee = model->wallet().getMinimumFee(nBytes, m_coin_control, /*returned_target=*/nullptr, /*reason=*/nullptr);
+        nPayFee = std::get<0>(res);
 
         if (nPayAmount > 0)
         {
