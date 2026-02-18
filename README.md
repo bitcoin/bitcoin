@@ -32,6 +32,7 @@ This repository operates under documented policies and governance:
 - **[RULESETS.md](RULESETS.md)** - GitHub repository rulesets and branch protection
 - **[CONTRIBUTING.md](CONTRIBUTING.md)** - How to contribute to this project
 - **[.github/CODEOWNERS](.github/CODEOWNERS)** - Code ownership and review requirements
+- **[.github/configs/user_access.yml](.github/configs/user_access.yml)** - User access configuration and project permissions
 
 ## License
 
