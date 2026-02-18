@@ -11,14 +11,41 @@ The GitLab agent for Kubernetes enables GitLab to interact with your Kubernetes 
 - Kubernetes cluster with `kubectl` configured
 - Helm 3.x installed
 - Appropriate permissions to create namespaces and deploy applications
+- GitLab agent token (obtain from your GitLab project settings)
+  - Navigate to: Project Settings > Infrastructure > Kubernetes clusters > GitLab Agent
+  - Create a new agent or use an existing one
+  - Copy the agent token for use in installation
 
 ## Installation
 
 ### Quick Start
 
-Run the installation script:
+1. Set your GitLab agent token as an environment variable:
+   ```bash
+   export GITLAB_AGENT_TOKEN='<YOUR_AGENT_TOKEN>'
+   ```
+   
+   Alternatively, you can copy the example environment file and source it:
+   ```bash
+   cp .env.example .env
+   # Edit .env and add your token
+   source .env
+   ```
+
+2. Run the installation script:
+   ```bash
+   ./install.sh
+   ```
+
+### Custom Configuration
+
+You can override the default configuration using environment variables:
 
 ```bash
+export GITLAB_AGENT_TOKEN='<YOUR_AGENT_TOKEN>'
+export GITLAB_AGENT_NAME='kushbot801'                      # Default: kushbot801
+export GITLAB_AGENT_NAMESPACE='gitlab-agent-kushbot801'    # Default: gitlab-agent-kushbot801
+export GITLAB_KAS_ADDRESS='wss://kas.gitlab.com'           # Default: wss://kas.gitlab.com
 ./install.sh
 ```
 
@@ -37,9 +64,11 @@ helm repo update
 helm upgrade --install kushbot801 gitlab/gitlab-agent \
     --namespace gitlab-agent-kushbot801 \
     --create-namespace \
-    --set config.token=glagent-7Z5SUNjeFVdmGzhx9kTe4m86MQpwOjFiZGo4dww.01.130dzsxzk \
+    --set config.token='<YOUR_AGENT_TOKEN>' \
     --set config.kasAddress=wss://kas.gitlab.com
 ```
+
+**Important:** Replace `<YOUR_AGENT_TOKEN>` with your actual GitLab agent token.
 
 ## Configuration
 

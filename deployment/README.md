@@ -6,9 +6,11 @@ This directory contains deployment configurations and scripts for the Bitcoin Co
 
 ```
 deployment/
-├── gitlab-agent/       # GitLab Agent for Kubernetes installation
-│   ├── README.md      # Detailed GitLab agent documentation
-│   └── install.sh     # Automated installation script
+├── README.md
+└── gitlab-agent/       # GitLab Agent for Kubernetes installation
+    ├── README.md      # Detailed GitLab agent documentation
+    ├── install.sh     # Automated installation script
+    └── uninstall.sh   # Automated uninstallation script
 ```
 
 ## GitLab Agent

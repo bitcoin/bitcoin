@@ -4,7 +4,27 @@
 
 set -e
 
+# Configuration
+AGENT_NAME="${GITLAB_AGENT_NAME:-kushbot801}"
+NAMESPACE="${GITLAB_AGENT_NAMESPACE:-gitlab-agent-kushbot801}"
+KAS_ADDRESS="${GITLAB_KAS_ADDRESS:-wss://kas.gitlab.com}"
+
+# Check if token is provided via environment variable
+if [ -z "$GITLAB_AGENT_TOKEN" ]; then
+    echo "Error: GITLAB_AGENT_TOKEN environment variable is not set"
+    echo "Please set it before running this script:"
+    echo "  export GITLAB_AGENT_TOKEN='your-token-here'"
+    echo ""
+    echo "Example:"
+    echo "  export GITLAB_AGENT_TOKEN='glagent-7Z5SUNjeFVdmGzhx9kTe4m86MQpwOjFiZGo4dww.01.130dzsxzk'"
+    echo "  ./install.sh"
+    exit 1
+fi
+
 echo "Installing GitLab Agent for Kubernetes..."
+echo "Agent name: $AGENT_NAME"
+echo "Namespace: $NAMESPACE"
+echo "KAS address: $KAS_ADDRESS"
 
 # Add GitLab Helm repository
 echo "Adding GitLab Helm repository..."
@@ -16,12 +36,12 @@ helm repo update
 
 # Install or upgrade the GitLab agent
 echo "Installing/Upgrading GitLab agent..."
-helm upgrade --install kushbot801 gitlab/gitlab-agent \
-    --namespace gitlab-agent-kushbot801 \
+helm upgrade --install "$AGENT_NAME" gitlab/gitlab-agent \
+    --namespace "$NAMESPACE" \
     --create-namespace \
-    --set config.token=glagent-7Z5SUNjeFVdmGzhx9kTe4m86MQpwOjFiZGo4dww.01.130dzsxzk \
-    --set config.kasAddress=wss://kas.gitlab.com
+    --set config.token="$GITLAB_AGENT_TOKEN" \
+    --set config.kasAddress="$KAS_ADDRESS"
 
 echo "GitLab agent installation complete!"
-echo "Namespace: gitlab-agent-kushbot801"
-echo "Agent name: kushbot801"
+echo "Namespace: $NAMESPACE"
+echo "Agent name: $AGENT_NAME"
