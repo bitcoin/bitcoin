@@ -33,20 +33,28 @@ class TokenAuthTest(BitcoinTestFramework):
 
     def setup_network(self):
         # Generate token credentials using rpctoken.py
-        gen_rpctoken = self.config["environment"]["RPCAUTH"].replace("rpcauth.py", "rpctoken.py")
+        import os
+        rpcauth_path = self.config["environment"]["RPCAUTH"]
+        rpctoken_path = os.path.join(os.path.dirname(rpcauth_path), "rpctoken.py")
         
         # Generate token with specified value for testing
         self.test_token = "test_token_abc123xyz789"
-        p = subprocess.Popen([sys.executable, gen_rpctoken, 'tokenuser', self.test_token], 
-                           stdout=subprocess.PIPE, text=True)
-        lines = p.stdout.read().splitlines()
+        p = subprocess.Popen([sys.executable, rpctoken_path, 'tokenuser', self.test_token], 
+                           stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
+        stdout, stderr = p.communicate()
+        if p.returncode != 0:
+            raise RuntimeError(f"rpctoken.py failed: {stderr}")
+        lines = stdout.splitlines()
         rpctoken = lines[1]
         
         # Generate token without specifying value (random)
         self.test_user2 = 'tokenuser2'
-        p = subprocess.Popen([sys.executable, gen_rpctoken, self.test_user2], 
-                           stdout=subprocess.PIPE, text=True)
-        lines = p.stdout.read().splitlines()
+        p = subprocess.Popen([sys.executable, rpctoken_path, self.test_user2], 
+                           stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
+        stdout, stderr = p.communicate()
+        if p.returncode != 0:
+            raise RuntimeError(f"rpctoken.py failed: {stderr}")
+        lines = stdout.splitlines()
         rpctoken2 = lines[1]
         self.test_token2 = lines[3]
 
