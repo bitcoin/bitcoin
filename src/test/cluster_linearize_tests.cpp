@@ -583,4 +583,84 @@ BOOST_AUTO_TEST_CASE(postlinearize_tree_optimal_tests)
     }
 }
 
+/** Construct a random chain-structured dependency graph.
+ *  A chain structure means: tx0 -> tx1 -> tx2 -> ... -> tx_{n-1}
+ *  Each transaction depends only on the previous one.
+ *  Uses random feerates for transactions.
+ */
+template<typename SetType>
+DepGraph<SetType> MakeRandomChainGraph(DepGraphIndex ntx, InsecureRandomContext& rng)
+{
+    DepGraph<SetType> depgraph;
+
+    // Add transactions with random feerates
+    for (DepGraphIndex i = 0; i < ntx; ++i) {
+        int64_t fee = rng.randbits<27>() + 100;  // Random fee: 100 to 100 + (2^27 - 1)
+        int32_t size = rng.randrange(1000) + 1;  // Random size: 1 to 1000
+        depgraph.AddTransaction({fee, size});
+    }
+
+    // Create chain: tx0 -> tx1 -> tx2 -> ... -> tx_{n-1}
+    for (DepGraphIndex i = 1; i < ntx; ++i) {
+        depgraph.AddDependencies(SetType::Singleton(i - 1), i);
+    }
+
+    return depgraph;
+}
+
+/** Test that PostLinearize finds optimal linearization for chain-structured graphs.
+ *  Chain graphs are a special case of tree graphs (each transaction has at most one parent),
+ *  so PostLinearize should find optimal linearization.
+ */
+BOOST_AUTO_TEST_CASE(postlinearize_chain_optimal_tests)
+{
+    FastRandomContext rng;
+
+    // Test with different chain sizes
+    for (DepGraphIndex ntx : {5, 10, 15, 20, 25, 30, 40, 50}) {
+        for (int iter = 0; iter < 10; ++iter) {
+            InsecureRandomContext chain_rng(rng.rand64());
+            DepGraph<BitSet<64>> depgraph = MakeRandomChainGraph<BitSet<64>>(ntx, chain_rng);
+
+            SanityCheck(depgraph);
+
+            // Create a topological linearization as input to PostLinearize
+            // For chain graphs, the topological order is simply [0, 1, 2, ..., n-1]
+            std::vector<DepGraphIndex> topo_lin(ntx);
+            for (DepGraphIndex i = 0; i < ntx; ++i) {
+                topo_lin[i] = i;
+            }
+
+            // Apply PostLinearize
+            std::vector<DepGraphIndex> post_lin = topo_lin;
+            PostLinearize(depgraph, post_lin);
+            SanityCheck(depgraph, post_lin);
+
+            // Find optimal linearization using Linearize
+            auto [opt_lin, optimal, cost] = Linearize(depgraph, /*max_iterations=*/10000000, rng.rand64(), IndexTxOrder{});
+            BOOST_CHECK(optimal);
+            SanityCheck(depgraph, opt_lin);
+
+            // Compare chunk diagrams: PostLinearize result should be equal to optimal
+            auto post_chunks = ChunkLinearization(depgraph, post_lin);
+            auto opt_chunks = ChunkLinearization(depgraph, opt_lin);
+            auto cmp = CompareChunks(post_chunks, opt_chunks);
+
+            // PostLinearize should produce optimal result for chain graphs
+            BOOST_CHECK_MESSAGE(std::is_eq(cmp),
+                "PostLinearize should find optimal linearization for chain-structured graphs. "
+                "ntx=" << ntx << ", iter=" << iter);
+
+            // Verify that running PostLinearize again doesn't change the result
+            std::vector<DepGraphIndex> post_post_lin = post_lin;
+            PostLinearize(depgraph, post_post_lin);
+            auto post_post_chunks = ChunkLinearization(depgraph, post_post_lin);
+            auto cmp_post = CompareChunks(post_post_chunks, post_chunks);
+            BOOST_CHECK_MESSAGE(std::is_eq(cmp_post),
+                "PostLinearize should be idempotent on chain-structured graphs. "
+                "ntx=" << ntx << ", iter=" << iter);
+        }
+    }
+}
+
 BOOST_AUTO_TEST_SUITE_END()
