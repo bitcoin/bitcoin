@@ -36,7 +36,7 @@ def main():
     token_hmac = token_to_hmac(salt, args.token)
 
     if args.json:
-        odict={'username':args.username, 'token':args.token, 'rpctoken':f'{args.username}:{salt}${token_hmac}'}
+        odict = {'username': args.username, 'token': args.token, 'rpctoken': f'{args.username}:{salt}${token_hmac}'}
         print(json.dumps(odict))
     else:
         print('String to be appended to bitcoin.conf:')

@@ -60,8 +60,8 @@ static void JSONErrorReply(HTTPRequest* req, UniValue objError, const JSONRPCReq
     req->WriteReply(nStatus, strReply);
 }
 
-//This function checks username and password against -rpcauth
-//entries from config file.
+// This function checks username and password against -rpcauth
+// entries from config file.
 static bool CheckUserAuthorized(std::string_view user, std::string_view pass)
 {
     for (const auto& fields : g_rpcauth) {
@@ -83,8 +83,8 @@ static bool CheckUserAuthorized(std::string_view user, std::string_view pass)
     return false;
 }
 
-//This function checks token against -rpctoken entries from config file.
-//Returns the username associated with the token if valid, empty string otherwise.
+// This function checks token against -rpctoken entries from config file.
+// Returns the username associated with the token if valid, empty string otherwise.
 static std::string CheckTokenAuthorized(std::string_view token)
 {
     for (const auto& fields : g_rpctoken) {
