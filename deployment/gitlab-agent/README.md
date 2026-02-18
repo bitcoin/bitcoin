@@ -68,7 +68,17 @@ To update the agent configuration or upgrade to a new version, simply run the in
 
 ## Uninstallation
 
-To remove the GitLab agent:
+### Quick Start
+
+Run the uninstallation script:
+
+```bash
+./uninstall.sh
+```
+
+### Manual Uninstallation
+
+To remove the GitLab agent manually:
 
 ```bash
 helm uninstall kushbot801 -n gitlab-agent-kushbot801
