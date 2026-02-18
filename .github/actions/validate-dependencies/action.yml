@@ -1,0 +1,134 @@
+name: 'Validate Dependencies'
+description: 'Check dependencies for security vulnerabilities and compatibility'
+inputs:
+  fail-on-vulnerability:
+    description: 'Fail on security vulnerabilities'
+    required: false
+    default: 'true'
+outputs:
+  status:
+    description: 'Dependency validation status'
+    value: ${{ steps.report.outputs.status }}
+  vulnerabilities:
+    description: 'Number of vulnerabilities found'
+    value: ${{ steps.report.outputs.vulns }}
+runs:
+  using: 'composite'
+  steps:
+    - name: Check Python dependencies
+      shell: bash
+      run: |
+        echo "::group::Python Dependencies"
+        if [ -f "requirements.txt" ] && command -v pip &> /dev/null; then
+          echo "Checking Python dependencies for vulnerabilities..."
+          pip install --upgrade pip safety 2>/dev/null || true
+          if command -v safety &> /dev/null; then
+            safety check --json > safety-report.json 2>&1 || true
+            if [ -f safety-report.json ]; then
+              cat safety-report.json | head -20
+              echo "PYTHON_VULNS=$(cat safety-report.json | grep -c 'vulnerability' || echo 0)" >> $GITHUB_ENV
+            fi
+          else
+            echo "::notice::safety not available"
+            echo "PYTHON_VULNS=0" >> $GITHUB_ENV
+          fi
+        else
+          echo "No Python dependencies found"
+          echo "PYTHON_VULNS=0" >> $GITHUB_ENV
+        fi
+        echo "::endgroup::"
+
+    - name: Check Node.js dependencies
+      shell: bash
+      run: |
+        echo "::group::Node.js Dependencies"
+        if [ -f "package.json" ] && command -v npm &> /dev/null; then
+          echo "Running npm audit..."
+          npm audit --json > npm-audit.json 2>&1 || true
+          if [ -f npm-audit.json ]; then
+            cat npm-audit.json | head -30
+            HIGH=$(cat npm-audit.json | grep -o '"high":[0-9]*' | grep -o '[0-9]*' || echo 0)
+            CRITICAL=$(cat npm-audit.json | grep -o '"critical":[0-9]*' | grep -o '[0-9]*' || echo 0)
+            TOTAL=$((HIGH + CRITICAL))
+            echo "NODE_VULNS=$TOTAL" >> $GITHUB_ENV
+            if [ $TOTAL -gt 0 ]; then
+              echo "::warning::Found $TOTAL high/critical npm vulnerabilities"
+            fi
+          fi
+        else
+          echo "No Node.js dependencies found"
+          echo "NODE_VULNS=0" >> $GITHUB_ENV
+        fi
+        echo "::endgroup::"
+
+    - name: Check Maven dependencies
+      shell: bash
+      run: |
+        echo "::group::Maven Dependencies"
+        if [ -f "pom.xml" ] && command -v mvn &> /dev/null; then
+          echo "Analyzing Maven dependencies..."
+          mvn dependency:tree > maven-deps.txt 2>&1 || true
+          mvn versions:display-dependency-updates > maven-updates.txt 2>&1 || true
+          
+          if [ -f maven-updates.txt ]; then
+            OUTDATED=$(grep -c "The following dependencies in Dependencies have newer versions" maven-updates.txt || echo 0)
+            echo "Found $OUTDATED outdated dependencies"
+            echo "MAVEN_OUTDATED=$OUTDATED" >> $GITHUB_ENV
+          else
+            echo "MAVEN_OUTDATED=0" >> $GITHUB_ENV
+          fi
+        else
+          echo "No Maven dependencies found"
+          echo "MAVEN_OUTDATED=0" >> $GITHUB_ENV
+        fi
+        echo "::endgroup::"
+
+    - name: Check for license compliance
+      shell: bash
+      run: |
+        echo "::group::License Compliance"
+        
+        # Check common dependency files for license info
+        if [ -f "package.json" ]; then
+          echo "Checking npm package licenses..."
+          npm list --depth=0 --json 2>/dev/null | grep -i license || true
+        fi
+        
+        if [ -f "requirements.txt" ]; then
+          echo "Checking Python package licenses..."
+          pip-licenses 2>/dev/null || echo "pip-licenses not available"
+        fi
+        
+        echo "::endgroup::"
+
+    - name: Generate dependency report
+      id: report
+      shell: bash
+      run: |
+        PYTHON_VULNS=${PYTHON_VULNS:-0}
+        NODE_VULNS=${NODE_VULNS:-0}
+        MAVEN_OUTDATED=${MAVEN_OUTDATED:-0}
+        
+        TOTAL_VULNS=$((PYTHON_VULNS + NODE_VULNS))
+        STATUS="passed"
+        
+        if [ "${{ inputs.fail-on-vulnerability }}" == "true" ] && [ $TOTAL_VULNS -gt 0 ]; then
+          STATUS="failed"
+        fi
+        
+        echo "status=$STATUS" >> $GITHUB_OUTPUT
+        echo "vulns=$TOTAL_VULNS" >> $GITHUB_OUTPUT
+        
+        cat >> $GITHUB_STEP_SUMMARY << EOF
+        ### Dependency Validation Report
+        
+        **Status**: $STATUS
+        **Total Vulnerabilities**: $TOTAL_VULNS
+        
+        #### Findings:
+        - Python Vulnerabilities: $PYTHON_VULNS
+        - Node.js Vulnerabilities: $NODE_VULNS
+        - Maven Outdated: $MAVEN_OUTDATED
+        
+        $([ $TOTAL_VULNS -eq 0 ] && echo "✓ No critical vulnerabilities found" || echo "⚠ Vulnerabilities detected - review required")
+        EOF

@@ -1,0 +1,307 @@
+# ═══════════════════════════════════════════════════════════════════
+# GLOBAL OWNERSHIP & CREATOR STATUS
+# ═══════════════════════════════════════════════════════════════════
+# Repository Owner: kushmanmb.eth (Ethereum Name Service)
+# Creator: Kushman MB
+# ENS Identifiers:
+#   - Primary: kushmanmb.eth (Ethereum Mainnet)
+#   - Base Network: Kushmanmb.base.eth
+# 
+# This workflow is part of the kushmanmb-org/bitcoin repository
+# and is maintained by the repository owner and authorized contributors.
+# ═══════════════════════════════════════════════════════════════════
+
+name: Test Suite - Self-Hosted
+
+on:
+  push:
+    branches:
+      - main
+      - master
+      - develop
+  pull_request:
+    branches:
+      - main
+      - master
+      - develop
+  workflow_dispatch:
+    inputs:
+      test-level:
+        description: 'Test level to run'
+        required: false
+        default: 'unit'
+        type: choice
+        options:
+          - unit
+          - integration
+          - all
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  PYTHON_VERSION: '3.11'
+  NODE_VERSION: '20'
+
+permissions:
+  contents: read
+
+jobs:
+  test-setup:
+    permissions:
+      contents: read
+    name: Test Environment Setup
+    runs-on: ${{ vars.USE_SELF_HOSTED == 'true' && 'self-hosted' || 'ubuntu-latest' }}
+    outputs:
+      test-matrix: ${{ steps.setup.outputs.test-matrix }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Determine test matrix
+        id: setup
+        run: |
+          # Determine which tests to run based on repository structure
+          TESTS='["unit"]'
+          
+          if [ -d "test/functional" ]; then
+            TESTS=$(echo $TESTS | jq -c '. + ["functional"]')
+          fi
+          
+          if [ -d "test/integration" ]; then
+            TESTS=$(echo $TESTS | jq -c '. + ["integration"]')
+          fi
+          
+          echo "test-matrix=$TESTS" >> $GITHUB_OUTPUT
+          echo "Tests to run: $TESTS"
+
+  unit-tests:
+    name: Unit Tests
+    needs: test-setup
+    runs-on: ${{ vars.USE_SELF_HOSTED == 'true' && 'self-hosted' || 'ubuntu-latest' }}
+    permissions:
+      contents: read
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: C++ Unit Tests
+            path: src/test
+            command: |
+              if [ -f "CMakeLists.txt" ]; then
+                cmake -B build -DBUILD_TESTS=ON
+                cmake --build build --target test
+              else
+                echo "No C++ tests configured"
+              fi
+          - name: Python Unit Tests
+            path: test
+            command: |
+              if [ -f "test/lint/lint-python.py" ]; then
+                python3 test/lint/lint-python.py
+              fi
+              if [ -d "test/functional" ]; then
+                echo "Functional tests found (run separately)"
+              fi
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup secure environment
+        uses: ./.github/actions/setup-secure-environment
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+
+      - name: Install dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            build-essential \
+            libtool \
+            autotools-dev \
+            automake \
+            pkg-config \
+            bsdmainutils \
+            python3-zmq \
+            libevent-dev \
+            libboost-dev \
+            libboost-system-dev \
+            libboost-filesystem-dev \
+            libboost-test-dev
+
+      - name: Run ${{ matrix.name }}
+        run: ${{ matrix.command }}
+        working-directory: ${{ github.workspace }}
+
+      - name: Upload test results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.name }}-results
+          path: |
+            build/test-results/
+            test-results/
+          retention-days: 7
+          if-no-files-found: ignore
+
+  lint-tests:
+    name: Linting Tests
+    runs-on: ${{ vars.USE_SELF_HOSTED == 'true' && 'self-hosted' || 'ubuntu-latest' }}
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup secure environment
+        uses: ./.github/actions/setup-secure-environment
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+
+      - name: Install linting tools
+        run: |
+          pip install \
+            pylint \
+            flake8 \
+            black \
+            isort \
+            mypy \
+            codespell
+
+      - name: Run Python linters
+        if: hashFiles('**/*.py') != ''
+        run: |
+          echo "::group::Running flake8"
+          find . -name "*.py" -not -path "./build/*" -not -path "./depends/*" | \
+            xargs flake8 --max-line-length=120 --ignore=E501,W503 || true
+          echo "::endgroup::"
+          
+          echo "::group::Running pylint"
+          find . -name "*.py" -not -path "./build/*" -not -path "./depends/*" | \
+            xargs pylint --disable=all --enable=E,W --max-line-length=120 || true
+          echo "::endgroup::"
+
+      - name: Run codespell
+        run: |
+          echo "::group::Running codespell"
+          codespell \
+            --skip=".git,*.pyc,*.png,*.jpg,*.jpeg,*.svg" \
+            --ignore-words-list="ser,keypair,nd,te,applys" \
+            . || true
+          echo "::endgroup::"
+
+      - name: Check shell scripts
+        run: |
+          if command -v shellcheck &> /dev/null; then
+            echo "::group::Running shellcheck"
+            find . -name "*.sh" -not -path "./build/*" -not -path "./depends/*" | \
+              xargs shellcheck -e SC1091,SC2148 || true
+            echo "::endgroup::"
+          else
+            echo "::notice::shellcheck not available"
+          fi
+
+  functional-tests:
+    name: Functional Tests
+    runs-on: ${{ vars.USE_SELF_HOSTED == 'true' && 'self-hosted' || 'ubuntu-latest' }}
+    if: hashFiles('test/functional') != ''
+    timeout-minutes: 120
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup secure environment
+        uses: ./.github/actions/setup-secure-environment
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+
+      - name: Install dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            python3-zmq \
+            python3-requests
+
+      - name: Run functional tests
+        run: |
+          if [ -f "test/functional/test_runner.py" ]; then
+            python3 test/functional/test_runner.py --jobs=4
+          else
+            echo "No functional test runner found"
+          fi
+
+      - name: Upload functional test results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: functional-test-results
+          path: |
+            test/functional/*.log
+          retention-days: 7
+          if-no-files-found: ignore
+
+  test-summary:
+    name: Test Summary
+    needs:
+      - unit-tests
+      - lint-tests
+      - functional-tests
+    if: always()
+    runs-on: ${{ vars.USE_SELF_HOSTED == 'true' && 'self-hosted' || 'ubuntu-latest' }}
+    permissions:
+      contents: read
+    steps:
+      - name: Generate test summary
+        run: |
+          cat >> $GITHUB_STEP_SUMMARY << EOF
+          # Test Suite Summary
+          
+          ## Test Results
+          
+          | Test Suite | Status |
+          |------------|--------|
+          | Unit Tests | ${{ needs.unit-tests.result }} |
+          | Lint Tests | ${{ needs.lint-tests.result }} |
+          | Functional Tests | ${{ needs.functional-tests.result }} |
+          
+          ## Details
+          
+          - **Runner Type**: ${{ vars.USE_SELF_HOSTED == 'true' && 'Self-Hosted' || 'GitHub-Hosted' }}
+          - **Workflow**: ${{ github.workflow }}
+          - **Trigger**: ${{ github.event_name }}
+          - **Branch**: ${{ github.ref_name }}
+          - **Commit**: ${{ github.sha }}
+          
+          $(if [ "${{ needs.unit-tests.result }}" == "success" ] && \
+              [ "${{ needs.lint-tests.result }}" == "success" ]; then
+            echo "✅ All required tests passed!"
+          else
+            echo "⚠️ Some tests failed. Review the logs for details."
+          fi)
+          
+          ---
+          *Run ID: ${{ github.run_id }}*
+          EOF
+
+      - name: Fail if tests failed
+        if: |
+          needs.unit-tests.result == 'failure' ||
+          needs.lint-tests.result == 'failure' ||
+          needs.functional-tests.result == 'failure'
+        run: |
+          echo "::error::One or more test suites failed"
+          exit 1

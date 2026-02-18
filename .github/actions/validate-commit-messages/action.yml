@@ -1,0 +1,72 @@
+name: 'Validate Commit Messages'
+description: 'Validate commit messages follow conventional commit format'
+inputs:
+  pattern:
+    description: 'Regex pattern for commit message validation'
+    required: false
+    default: '^(feat|fix|docs|style|refactor|perf|test|build|ci|chore|revert)(\(.+\))?: .{1,72}'
+outputs:
+  status:
+    description: 'Validation status'
+    value: ${{ steps.validate.outputs.status }}
+runs:
+  using: 'composite'
+  steps:
+    - name: Validate commit message format
+      id: validate
+      shell: bash
+      run: |
+        echo "::group::Commit Message Validation"
+        
+        # Get the commit message
+        if [ -n "${{ github.event.head_commit.message }}" ]; then
+          COMMIT_MSG="${{ github.event.head_commit.message }}"
+        else
+          COMMIT_MSG=$(git log -1 --pretty=%B)
+        fi
+        
+        echo "Validating commit message:"
+        echo "$COMMIT_MSG"
+        echo ""
+        
+        # Extract first line
+        FIRST_LINE=$(echo "$COMMIT_MSG" | head -n1)
+        
+        # Check conventional commit format
+        if echo "$FIRST_LINE" | grep -qE "${{ inputs.pattern }}"; then
+          echo "✓ Commit message follows conventional format"
+          STATUS="passed"
+        else
+          echo "::warning::Commit message does not follow conventional format"
+          echo "Expected format: type(scope): subject"
+          echo "Types: feat, fix, docs, style, refactor, perf, test, build, ci, chore, revert"
+          STATUS="warning"
+        fi
+        
+        # Check length
+        LENGTH=${#FIRST_LINE}
+        if [ $LENGTH -gt 72 ]; then
+          echo "::warning::Commit subject line is too long ($LENGTH chars, max 72)"
+        fi
+        
+        # Check for imperative mood (common indicators)
+        if echo "$FIRST_LINE" | grep -qE "(Added|Updated|Fixed|Changed|Removed)"; then
+          echo "::notice::Consider using imperative mood (Add, Update, Fix, Change, Remove)"
+        fi
+        
+        echo "status=$STATUS" >> $GITHUB_OUTPUT
+        
+        cat >> $GITHUB_STEP_SUMMARY << EOF
+        ### Commit Message Validation
+        
+        **Status**: $STATUS
+        **Length**: $LENGTH characters
+        
+        \`\`\`
+        $FIRST_LINE
+        \`\`\`
+        
+        $([ "$STATUS" == "passed" ] && echo "✓ Follows conventional commit format" || echo "⚠ Does not follow conventional commit format")
+        EOF
+        
+        echo "::endgroup::"

@@ -1,0 +1,104 @@
+name: 'Validate Code Quality'
+description: 'Automated code quality validation with multiple checks'
+inputs:
+  path:
+    description: 'Path to check for code quality'
+    required: false
+    default: '.'
+  fail-on-warning:
+    description: 'Fail the build on warnings'
+    required: false
+    default: 'false'
+outputs:
+  status:
+    description: 'Validation status (passed/failed)'
+    value: ${{ steps.validate.outputs.status }}
+  warnings:
+    description: 'Number of warnings found'
+    value: ${{ steps.validate.outputs.warnings }}
+runs:
+  using: 'composite'
+  steps:
+    - name: Check code formatting
+      id: format-check
+      shell: bash
+      run: |
+        echo "::group::Code Format Check"
+        if command -v clang-format &> /dev/null; then
+          echo "Running clang-format checks..."
+          find ${{ inputs.path }} -type f \( -name "*.cpp" -o -name "*.h" -o -name "*.c" \) \
+            -not -path "*/build/*" -not -path "*/depends/*" | \
+            xargs clang-format --dry-run --Werror 2>&1 | tee format-report.txt || true
+          if [ -s format-report.txt ]; then
+            echo "::warning::Code formatting issues found"
+            cat format-report.txt
+          else
+            echo "✓ Code formatting OK"
+          fi
+        else
+          echo "::notice::clang-format not available, skipping"
+        fi
+        echo "::endgroup::"
+
+    - name: Check for common issues
+      shell: bash
+      run: |
+        echo "::group::Common Issues Check"
+        ISSUES=0
+        
+        # Check for trailing whitespace
+        echo "Checking for trailing whitespace..."
+        if git ls-files | grep -v -E '\.(png|jpg|jpeg|gif|svg|pdf|ico)$' | xargs grep -n '[[:space:]]$' 2>/dev/null; then
+          echo "::warning::Trailing whitespace found"
+          ISSUES=$((ISSUES + 1))
+        fi
+        
+        # Check for tabs instead of spaces
+        echo "Checking for tabs..."
+        if git ls-files '*.cpp' '*.h' '*.py' '*.sh' 2>/dev/null | xargs grep -n $'\t' 2>/dev/null | head -5; then
+          echo "::warning::Tabs found (should use spaces)"
+          ISSUES=$((ISSUES + 1))
+        fi
+        
+        # Check for debug statements
+        echo "Checking for debug statements..."
+        if git ls-files '*.cpp' '*.py' 2>/dev/null | xargs grep -n -E '(console\.log|print\(.*debug|std::cout.*debug)' 2>/dev/null | head -5; then
+          echo "::warning::Debug statements found"
+          ISSUES=$((ISSUES + 1))
+        fi
+        
+        echo "Found $ISSUES issue types"
+        echo "::endgroup::"
+
+    - name: Validate file permissions
+      shell: bash
+      run: |
+        echo "::group::File Permissions Check"
+        echo "Checking for executable permissions on source files..."
+        EXEC_FILES=$(find ${{ inputs.path }} -type f \( -name "*.cpp" -o -name "*.h" \) -executable 2>/dev/null || true)
+        if [ -n "$EXEC_FILES" ]; then
+          echo "::warning::Source files should not be executable:"
+          echo "$EXEC_FILES"
+        else
+          echo "✓ File permissions OK"
+        fi
+        echo "::endgroup::"
+
+    - name: Set validation status
+      id: validate
+      shell: bash
+      run: |
+        STATUS="passed"
+        WARNINGS=0
+        
+        if [ "${{ inputs.fail-on-warning }}" == "true" ]; then
+          # Check if any warnings were issued
+          if grep -q "::warning::" $GITHUB_STEP_SUMMARY 2>/dev/null; then
+            STATUS="failed"
+            WARNINGS=1
+          fi
+        fi
+        
+        echo "status=$STATUS" >> $GITHUB_OUTPUT
+        echo "warnings=$WARNINGS" >> $GITHUB_OUTPUT
+        echo "### Code Quality Validation: $STATUS" >> $GITHUB_STEP_SUMMARY
