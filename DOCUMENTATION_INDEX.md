@@ -131,12 +131,39 @@ Defines:
 Additional:
 - [SECURITY_PRACTICES.md](SECURITY_PRACTICES.md)
 - [SELF_HOSTED_RUNNER_SETUP.md](SELF_HOSTED_RUNNER_SETUP.md)
+- [KEY_MANAGEMENT_GUIDE.md](KEY_MANAGEMENT_GUIDE.md)
 
 Defines:
 - Vulnerability reporting
 - Security requirements
 - Best practices
 - Runner security
+- Key management and secrets handling
+
+### 6. Workflow and Automation Documentation
+
+**Primary**: [.github/workflows/README.md](.github/workflows/README.md)
+
+Additional Workflows:
+- [automated-validators.yml](.github/workflows/automated-validators.yml)
+- [test-suite.yml](.github/workflows/test-suite.yml)
+- [lint-and-build.yml](.github/workflows/lint-and-build.yml)
+- [runner-health-check.yml](.github/workflows/runner-health-check.yml)
+
+Validator Actions:
+- [validate-code-quality](.github/actions/validate-code-quality/action.yml)
+- [validate-security](.github/actions/validate-security/action.yml)
+- [validate-dependencies](.github/actions/validate-dependencies/action.yml)
+- [validate-commit-messages](.github/actions/validate-commit-messages/action.yml)
+- [setup-secure-environment](.github/actions/setup-secure-environment/action.yml)
+
+Defines:
+- Automated validation workflows
+- CI/CD pipelines
+- Self-hosted runner support
+- Test automation
+- Linting and build processes
+- Runner health monitoring
 
 ---
 
@@ -164,8 +191,10 @@ Before submitting a pull request:
 - [ ] Read [CONTRIBUTING.md](CONTRIBUTING.md)
 - [ ] Understand [POLICY.md](POLICY.md) requirements
 - [ ] Follow [SECURITY.md](SECURITY.md) guidelines
+- [ ] Review [KEY_MANAGEMENT_GUIDE.md](KEY_MANAGEMENT_GUIDE.md) for secrets
 - [ ] Check [.github/CODEOWNERS](.github/CODEOWNERS) for reviewers
 - [ ] Ensure [RULESETS.md](RULESETS.md) compliance
+- [ ] Run automated validators locally
 - [ ] Include tests and documentation
 - [ ] Sign commits (recommended)
 
@@ -222,6 +251,58 @@ All access control is documented in:
 - Security verification
 - Automated git commits
 - Artifact retention (365 days)
+
+### Automated Validators
+
+**Workflow**: `.github/workflows/automated-validators.yml`
+
+**Documentation**: [.github/workflows/README.md](.github/workflows/README.md)
+
+**Purpose**: Automated code quality, security, and dependency validation
+
+**Features**:
+- Code quality validation
+- Security scanning
+- Dependency vulnerability checks
+- Commit message validation
+- Self-hosted runner support
+
+### Test Suite
+
+**Workflow**: `.github/workflows/test-suite.yml`
+
+**Purpose**: Comprehensive test execution
+
+**Features**:
+- Unit tests (C++, Python)
+- Linting tests
+- Functional tests
+- Self-hosted runner support
+
+### Lint and Build
+
+**Workflow**: `.github/workflows/lint-and-build.yml`
+
+**Purpose**: Multi-language linting and build validation
+
+**Features**:
+- C++ linting (clang-format, cppcheck)
+- Python linting (black, flake8, pylint)
+- Shell linting (shellcheck)
+- Linux builds with ccache
+- Documentation building
+
+### Runner Health Check
+
+**Workflow**: `.github/workflows/runner-health-check.yml`
+
+**Purpose**: Monitor self-hosted runner infrastructure
+
+**Features**:
+- Periodic health checks (every 6 hours)
+- Resource monitoring
+- Network connectivity tests
+- Fallback verification
 
 ### Self-Hosted Runners
 
