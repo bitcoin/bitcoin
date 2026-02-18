@@ -20,8 +20,10 @@ export BASE_ROOT_DIR="${BASE_ROOT_DIR:-/ci_container_base}"
 # This folder exists only on the ci guest, and on the ci host as a volume.
 export DEPENDS_DIR=${DEPENDS_DIR:-$BASE_ROOT_DIR/depends}
 # A folder for the ci system to put temporary files (build result, datadirs for tests, ...)
+# The name contains a space and a non-ASCII symbol to confirm the build and
+# tests handle word-splitting and UTF8 correctly.
 # This folder only exists on the ci guest.
-export BASE_SCRATCH_DIR=${BASE_SCRATCH_DIR:-$BASE_ROOT_DIR/ci/scratch}
+export BASE_SCRATCH_DIR=${BASE_SCRATCH_DIR:-$BASE_ROOT_DIR/ci/scratch_ ₿🧪_}
 
 echo "Setting specific values in env"
 # shellcheck disable=SC1090
