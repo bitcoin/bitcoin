@@ -14,7 +14,6 @@
 #include <util/translation.h>
 
 #include <cassert>
-#include <map>
 #include <string>
 #include <string_view>
 #include <utility>
@@ -26,21 +25,25 @@ using util::Join;
 namespace common {
 std::string StringForFeeReason(FeeReason reason)
 {
-    static const std::map<FeeReason, std::string> fee_reason_strings = {
-        {FeeReason::NONE, "None"},
-        {FeeReason::HALF_ESTIMATE, "Half Target 60% Threshold"},
-        {FeeReason::FULL_ESTIMATE, "Target 85% Threshold"},
-        {FeeReason::DOUBLE_ESTIMATE, "Double Target 95% Threshold"},
-        {FeeReason::CONSERVATIVE, "Conservative Double Target longer horizon"},
-        {FeeReason::MEMPOOL_MIN, "Mempool Min Fee"},
-        {FeeReason::FALLBACK, "Fallback fee"},
-        {FeeReason::REQUIRED, "Minimum Required Fee"},
-    };
-    auto reason_string = fee_reason_strings.find(reason);
-
-    if (reason_string == fee_reason_strings.end()) return "Unknown";
-
-    return reason_string->second;
+    switch (reason) {
+    case FeeReason::NONE:
+        return "None";
+    case FeeReason::HALF_ESTIMATE:
+        return "Half Target 60% Threshold";
+    case FeeReason::FULL_ESTIMATE:
+        return "Target 85% Threshold";
+    case FeeReason::DOUBLE_ESTIMATE:
+        return "Double Target 95% Threshold";
+    case FeeReason::CONSERVATIVE:
+        return "Conservative Double Target longer horizon";
+    case FeeReason::MEMPOOL_MIN:
+        return "Mempool Min Fee";
+    case FeeReason::FALLBACK:
+        return "Fallback fee";
+    case FeeReason::REQUIRED:
+        return "Minimum Required Fee";
+    } // no default case, so the compiler can warn about missing cases
+    assert(false);
 }
 
 const std::vector<std::pair<std::string, FeeEstimateMode>>& FeeModeMap()
