@@ -2161,17 +2161,20 @@ std::pair<uint64_t, bool> GenericClusterImpl::Relinearize(TxGraphImpl& graph, in
     Assume(!NeedsSplitting());
     // No work is required for Clusters which are already optimally linearized.
     if (IsOptimal()) return {0, false};
-    // Invoke the actual linearization algorithm (passing in the existing one).
+    // Invoke the linearization algorithm (passing in the existing one).
+    // For chain-shaped clusters Linearize() uses an O(N) fast path and signals is_chain=true,
+    // indicating that the result is already optimal — PostLinearize is not needed.
     uint64_t rng_seed = graph.m_rng.rand64();
     const auto fallback_order = [&](DepGraphIndex a, DepGraphIndex b) noexcept {
         const auto ref_a = graph.m_entries[m_mapping[a]].m_ref;
         const auto ref_b = graph.m_entries[m_mapping[b]].m_ref;
         return graph.m_fallback_order(*ref_a, *ref_b);
     };
-    auto [linearization, optimal, cost] = Linearize(m_depgraph, max_iters, rng_seed, fallback_order, m_linearization, /*is_topological=*/IsTopological());
+    auto [linearization, optimal, cost, is_chain] = Linearize(m_depgraph, max_iters, rng_seed, fallback_order, m_linearization, /*is_topological=*/IsTopological());
     // Postlinearize to improve the linearization (if optimal, only the sub-chunk order).
     // This also guarantees that all chunks are connected (even when non-optimal).
-    PostLinearize(m_depgraph, linearization);
+    // Skipped for chains: TryLinearizeChain already produces an optimal, connected result.
+    if (!is_chain) PostLinearize(m_depgraph, linearization);
     // Update the linearization.
     m_linearization = std::move(linearization);
     // Update the Cluster's quality.

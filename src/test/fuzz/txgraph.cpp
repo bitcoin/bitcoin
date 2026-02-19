@@ -1099,7 +1099,7 @@ FUZZ_TARGET(txgraph)
                 auto txid_b = sims[0].GetRef(b)->m_txid;
                 return txid_a <=> txid_b;
             };
-            auto [sim_lin, sim_optimal, _cost] = Linearize(sims[0].graph, 300000, rng.rand64(), fallback_order_sim, vec1);
+            auto [sim_lin, sim_optimal, _cost, _is_chain] = Linearize(sims[0].graph, 300000, rng.rand64(), fallback_order_sim, vec1);
             PostLinearize(sims[0].graph, sim_lin);
             auto sim_diagram = ChunkLinearization(sims[0].graph, sim_lin);
             auto cmp = CompareChunks(real_diagram, sim_diagram);

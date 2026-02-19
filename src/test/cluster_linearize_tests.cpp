@@ -92,7 +92,7 @@ void TestOptimalLinearization(std::span<const uint8_t> enc, std::initializer_lis
                 is_topological = false;
                 break;
             }
-            std::tie(lin, opt, cost) = Linearize(depgraph, 1000000000000, rng.rand64(), IndexTxOrder{}, lin, is_topological);
+            std::tie(lin, opt, cost, std::ignore) = Linearize(depgraph, 1000000000000, rng.rand64(), IndexTxOrder{}, lin, is_topological);
             BOOST_CHECK(opt);
             BOOST_CHECK(cost <= MaxOptimalLinearizationIters(depgraph.TxCount()));
             SanityCheck(depgraph, lin);
@@ -556,7 +556,7 @@ BOOST_AUTO_TEST_CASE(postlinearize_tree_optimal_tests)
                 SanityCheck(depgraph, post_lin);
 
                 // Find optimal linearization using Linearize
-                auto [opt_lin, optimal, cost] = Linearize(depgraph, /*max_iterations=*/10000000, rng.rand64(), IndexTxOrder{});
+                auto [opt_lin, optimal, cost, _is_chain] = Linearize(depgraph, /*max_iterations=*/10000000, rng.rand64(), IndexTxOrder{});
                 BOOST_CHECK(optimal);
                 SanityCheck(depgraph, opt_lin);
 
@@ -637,8 +637,9 @@ BOOST_AUTO_TEST_CASE(postlinearize_chain_optimal_tests)
             SanityCheck(depgraph, post_lin);
 
             // Find optimal linearization using Linearize
-            auto [opt_lin, optimal, cost] = Linearize(depgraph, /*max_iterations=*/10000000, rng.rand64(), IndexTxOrder{});
+            auto [opt_lin, optimal, cost, is_chain] = Linearize(depgraph, /*max_iterations=*/10000000, rng.rand64(), IndexTxOrder{});
             BOOST_CHECK(optimal);
+            BOOST_CHECK(is_chain);
             SanityCheck(depgraph, opt_lin);
 
             // Compare chunk diagrams: PostLinearize result should be equal to optimal

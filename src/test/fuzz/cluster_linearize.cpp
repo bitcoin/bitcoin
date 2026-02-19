@@ -1044,7 +1044,7 @@ FUZZ_TARGET(clusterlin_linearize)
 
     // Invoke Linearize().
     iter_count &= 0x7ffff;
-    auto [linearization, optimal, cost] = Linearize(depgraph, iter_count, rng_seed, IndexTxOrder{}, old_linearization, /*is_topological=*/claim_topological_input);
+    auto [linearization, optimal, cost, _is_chain] = Linearize(depgraph, iter_count, rng_seed, IndexTxOrder{}, old_linearization, /*is_topological=*/claim_topological_input);
     SanityCheck(depgraph, linearization);
     auto chunking = ChunkLinearization(depgraph, linearization);
 
@@ -1145,7 +1145,7 @@ FUZZ_TARGET(clusterlin_linearize)
 
         // Redo from scratch with a different rng_seed. The resulting linearization should be
         // deterministic, if both are optimal.
-        auto [linearization2, optimal2, cost2] = Linearize(depgraph, MaxOptimalLinearizationIters(depgraph.TxCount()) + 1, rng_seed ^ 0x1337, IndexTxOrder{});
+        auto [linearization2, optimal2, cost2, _is_chain2] = Linearize(depgraph, MaxOptimalLinearizationIters(depgraph.TxCount()) + 1, rng_seed ^ 0x1337, IndexTxOrder{});
         assert(optimal2);
         assert(linearization2 == linearization);
     }
@@ -1236,7 +1236,7 @@ FUZZ_TARGET(clusterlin_postlinearize_tree)
 
     // Try to find an even better linearization directly. This must not change the diagram for the
     // same reason.
-    auto [opt_linearization, _optimal, _cost] = Linearize(depgraph_tree, 100000, rng_seed, IndexTxOrder{}, post_linearization);
+    auto [opt_linearization, _optimal, _cost, _is_chain] = Linearize(depgraph_tree, 100000, rng_seed, IndexTxOrder{}, post_linearization);
     auto opt_chunking = ChunkLinearization(depgraph_tree, opt_linearization);
     auto cmp_opt = CompareChunks(opt_chunking, post_chunking);
     assert(cmp_opt == 0);

@@ -1662,7 +1662,41 @@ public:
     }
 };
 
-/** Find or improve a linearization for a cluster.
+/** Check if a cluster forms a single chain and, if so, compute an optimal linearization for it.
+ *
+ * A cluster is a chain if every transaction has at most one direct parent and at most one direct
+ * child. Equivalently, the multiset of ancestor-set sizes of all transactions equals {1,...,N}.
+ *
+ * @param[in] depgraph   Dependency graph of the cluster.
+ * @return               An optimal linearization, or an empty vector if not a chain.
+ *
+ * Complexity: O(N) where N = depgraph.TxCount().
+ */
+template<typename SetType>
+std::vector<DepGraphIndex> TryLinearizeChain(const DepGraph<SetType>& depgraph) noexcept
+{
+    const auto n = depgraph.TxCount();
+    if (n == 0) return {};
+
+    // A cluster with N transactions is a chain iff the ancestor-set sizes form exactly {1,...,N}.
+    // Check this in O(N) using a presence array (Ancestors().Count() is O(1) for BitSets).
+    std::vector<bool> seen(n + 1, false);
+    for (auto i : depgraph.Positions()) {
+        auto sz = depgraph.Ancestors(i).Count();
+        if (sz > n || seen[sz]) return {};
+        seen[sz] = true;
+    }
+
+    // Build the linearization directly: the node with k ancestors occupies position k-1.
+    // For a chain this topological order is unique and already optimal.
+    std::vector<DepGraphIndex> result(n);
+    for (auto i : depgraph.Positions()) {
+        result[depgraph.Ancestors(i).Count() - 1] = i;
+    }
+    return result;
+}
+
+/** SPF-based implementation of cluster linearization. Called by Linearize() for non-chain clusters.
  *
  * @param[in] depgraph            Dependency graph of the cluster to be linearized.
  * @param[in] max_iterations      Upper bound on the amount of work that will be done.
@@ -1683,7 +1717,7 @@ public:
  *                                - How many optimization steps were actually performed.
  */
 template<typename SetType>
-std::tuple<std::vector<DepGraphIndex>, bool, uint64_t> Linearize(
+std::tuple<std::vector<DepGraphIndex>, bool, uint64_t> LinearizeSPF(
     const DepGraph<SetType>& depgraph,
     uint64_t max_iterations,
     uint64_t rng_seed,
@@ -1720,6 +1754,49 @@ std::tuple<std::vector<DepGraphIndex>, bool, uint64_t> Linearize(
         } while (forest.GetCost() < max_iterations);
     }
     return {forest.GetLinearization(fallback_order), optimal, forest.GetCost()};
+}
+
+/** Find or improve a linearization for a cluster.
+ *
+ * For chain-shaped clusters (every transaction has at most one parent and at most one child),
+ * an O(N) fast path (TryLinearizeChain) is tried first, producing an optimal linearization
+ * directly without invoking the SPF algorithm.  For all other clusters the SPF algorithm
+ * (LinearizeSPF) is used.
+ *
+ * @param[in] depgraph            Dependency graph of the cluster to be linearized.
+ * @param[in] max_iterations      Upper bound on the amount of work that will be done (SPF path).
+ * @param[in] rng_seed            A random number seed to control search order (SPF path).
+ * @param[in] fallback_order      A comparator to order transactions, used to sort equal-feerate
+ *                                chunks and transactions (SPF path).
+ * @param[in] old_linearization   An existing linearization for the cluster, or empty (SPF path).
+ * @param[in] is_topological      (Only relevant if old_linearization is not empty) Whether
+ *                                old_linearization is topologically valid (SPF path).
+ * @return                        A tuple of:
+ *                                - The resulting linearization. It is guaranteed to be at least as
+ *                                  good (in the feerate diagram sense) as old_linearization.
+ *                                - A boolean indicating whether the result is guaranteed to be
+ *                                  optimal with minimal chunks.
+ *                                - How many optimization steps were actually performed.
+ *                                - A boolean indicating whether the chain fast path was used.
+ *                                  When true, the result is already optimal and PostLinearize is
+ *                                  not needed.
+ */
+template<typename SetType>
+std::tuple<std::vector<DepGraphIndex>, bool, uint64_t, bool> Linearize(
+    const DepGraph<SetType>& depgraph,
+    uint64_t max_iterations,
+    uint64_t rng_seed,
+    const StrongComparator<DepGraphIndex> auto& fallback_order,
+    std::span<const DepGraphIndex> old_linearization = {},
+    bool is_topological = true) noexcept
+{
+    // Fast path: O(N) optimal linearization for chain-shaped clusters, bypassing SPF entirely.
+    if (auto chain_lin = TryLinearizeChain(depgraph); !chain_lin.empty()) {
+        return {std::move(chain_lin), /*optimal=*/true, /*cost=*/0, /*is_chain=*/true};
+    }
+    // General path: SPF algorithm.
+    auto [lin, optimal, cost] = LinearizeSPF(depgraph, max_iterations, rng_seed, fallback_order, old_linearization, is_topological);
+    return {std::move(lin), optimal, cost, /*is_chain=*/false};
 }
 
 /** Improve a given linearization.
