@@ -458,7 +458,7 @@ void CTxMemPool::check(const CCoinsViewCache& active_coins_tip, int64_t spendhei
     assert(diagram.size() <= score_with_topo.size() + 1);
     assert(diagram.size() >= 1);
 
-    std::optional<Wtxid> last_wtxid = std::nullopt;
+    std::optional<txiter> last_iter = std::nullopt;
     auto diagram_iter = diagram.cbegin();
 
     for (const auto& it : score_with_topo) {
@@ -480,11 +480,10 @@ void CTxMemPool::check(const CCoinsViewCache& active_coins_tip, int64_t spendhei
         innerUsage += it->DynamicMemoryUsage();
         const CTransaction& tx = it->GetTx();
 
-        // CompareMiningScoreWithTopology should agree with GetSortedScoreWithTopology()
-        if (last_wtxid) {
-            assert(CompareMiningScoreWithTopology(*last_wtxid, tx.GetWitnessHash()));
+        if (last_iter) {
+            assert(m_txgraph->CompareMainOrder(**last_iter, *it) < 0);
         }
-        last_wtxid = tx.GetWitnessHash();
+        last_iter = it;
 
         std::set<CTxMemPoolEntry::CTxMemPoolEntryRef, CompareIteratorByHash> setParentCheck;
         std::set<CTxMemPoolEntry::CTxMemPoolEntryRef, CompareIteratorByHash> setParentsStored;
@@ -577,22 +576,6 @@ std::vector<CTxMemPool::txiter> CTxMemPool::SortMiningScoreWithTopology(std::spa
         }
     }
     return res;
-}
-
-bool CTxMemPool::CompareMiningScoreWithTopology(const Wtxid& hasha, const Wtxid& hashb) const
-{
-    /* Return `true` if hasha should be considered sooner than hashb, namely when:
-     *     a is not in the mempool but b is, or
-     *     both are in the mempool but a is sorted before b in the total mempool ordering
-     *     (which takes dependencies and (chunk) feerates into account).
-     */
-    LOCK(cs);
-    auto j{GetIter(hashb)};
-    if (!j.has_value()) return false;
-    auto i{GetIter(hasha)};
-    if (!i.has_value()) return true;
-
-    return m_txgraph->CompareMainOrder(*i.value(), *j.value()) < 0;
 }
 
 std::vector<CTxMemPool::indexed_transaction_set::const_iterator> CTxMemPool::GetSortedScoreWithTopology() const
