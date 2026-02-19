@@ -344,7 +344,6 @@ public:
      * mempool.cs is released.
      */
     std::vector<txiter> ExtractBestByMiningScoreWithTopology(std::vector<Wtxid>& wtxids, size_t n_to_sort) const EXCLUSIVE_LOCKS_REQUIRED(cs);
-    bool CompareMiningScoreWithTopology(const Wtxid& hasha, const Wtxid& hashb) const;
     bool isSpent(const COutPoint& outpoint) const;
     unsigned int GetTransactionsUpdated() const;
     void AddTransactionsUpdated(unsigned int n);
