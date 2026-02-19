@@ -539,6 +539,15 @@ struct InvToSendBucket {
         bool x = size_bucket.decrement(size, /*floor=*/-50e3);
         return count_bucket.decrement(1) && x;
     }
+
+    PeerManagerInfo::InvBucketInfo info() const
+    {
+        return {
+            .backlog_count = backlog.size(),
+            .count_bucket = count_bucket.value(),
+            .size_bucket = size_bucket.value(),
+        };
+    }
 };
 
 class PeerManagerImpl final : public PeerManager
@@ -578,7 +587,7 @@ public:
         EXCLUSIVE_LOCKS_REQUIRED(!m_peer_mutex);
     bool GetNodeStateStats(NodeId nodeid, CNodeStateStats& stats) const override EXCLUSIVE_LOCKS_REQUIRED(!m_peer_mutex);
     std::vector<node::TxOrphanage::OrphanInfo> GetOrphanTransactions() override EXCLUSIVE_LOCKS_REQUIRED(!m_tx_download_mutex);
-    PeerManagerInfo GetInfo() const override EXCLUSIVE_LOCKS_REQUIRED(!m_peer_mutex);
+    PeerManagerInfo GetInfo() const override EXCLUSIVE_LOCKS_REQUIRED(!m_peer_mutex, !m_inv_to_send_mutex);
     std::vector<PrivateBroadcast::TxBroadcastInfo> GetPrivateBroadcastInfo() const override EXCLUSIVE_LOCKS_REQUIRED(!m_peer_mutex);
     std::vector<CTransactionRef> AbortPrivateBroadcast(const uint256& id) override EXCLUSIVE_LOCKS_REQUIRED(!m_peer_mutex);
     void SendPings() override EXCLUSIVE_LOCKS_REQUIRED(!m_peer_mutex);
@@ -1898,9 +1907,13 @@ std::vector<node::TxOrphanage::OrphanInfo> PeerManagerImpl::GetOrphanTransaction
 
 PeerManagerInfo PeerManagerImpl::GetInfo() const
 {
+    LOCK(m_inv_to_send_mutex);
     return PeerManagerInfo{
         .median_outbound_time_offset = m_outbound_time_offsets.Median(),
         .ignores_incoming_txs = m_opts.ignore_incoming_txs,
+        .tx_send_rate = m_opts.tx_send_rate,
+        .inbound_bucket = m_inbound_inv_bucket.info(),
+        .outbound_bucket = m_outbound_inv_bucket.info(),
     };
 }
 
