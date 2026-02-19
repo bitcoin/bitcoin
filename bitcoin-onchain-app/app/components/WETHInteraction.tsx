@@ -1,15 +1,23 @@
 "use client";
 import { useState, useEffect } from "react";
-import { useAccount, useReadContract, useWriteContract, useWaitForTransactionReceipt } from "wagmi";
+import { useAccount, useReadContract, useWriteContract, useWaitForTransactionReceipt, useEnsAddress } from "wagmi";
 import { parseEther, formatEther } from "viem";
 import { WETH_ADDRESS, WETH_ABI } from "../contracts/weth";
 import styles from "./WETHInteraction.module.css";
 
+const YAKETH_ENS = "yaketh.eth";
+
 export function WETHInteraction() {
   const [depositAmount, setDepositAmount] = useState("");
   const [withdrawAmount, setWithdrawAmount] = useState("");
+  const [transferAmount, setTransferAmount] = useState("");
   const { address, isConnected, chain } = useAccount();
   const { writeContract, data: hash, isPending: isWritePending } = useWriteContract();
+
+  const { data: yakethAddress } = useEnsAddress({
+    name: YAKETH_ENS,
+    chainId: 1,
+  });
 
   const { isLoading: isConfirming, isSuccess: isConfirmed } =
     useWaitForTransactionReceipt({
@@ -31,6 +39,7 @@ export function WETHInteraction() {
       refetchBalance();
       setDepositAmount("");
       setWithdrawAmount("");
+      setTransferAmount("");
     }
   }, [isConfirmed, refetchBalance]);
 
@@ -66,6 +75,22 @@ export function WETHInteraction() {
     }
   };
 
+  const handleTransferToYaketh = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!transferAmount || parseFloat(transferAmount) <= 0 || !yakethAddress) return;
+
+    try {
+      writeContract({
+        address: WETH_ADDRESS,
+        abi: WETH_ABI,
+        functionName: "transfer",
+        args: [yakethAddress, parseEther(transferAmount)],
+      });
+    } catch (error) {
+      console.error("Transfer error:", error);
+    }
+  };
+
   if (!isConnected) {
     return (
       <div className={styles.container}>
@@ -95,6 +120,12 @@ export function WETHInteraction() {
       <p className={styles.contractInfo}>
         Contract: <code>{WETH_ADDRESS}</code>
       </p>
+
+      {yakethAddress && (
+        <p className={styles.ensInfo}>
+          {YAKETH_ENS} → <code>{yakethAddress}</code>
+        </p>
+      )}
 
       <div className={styles.balanceSection}>
         <h3>Your WETH Balance</h3>
@@ -148,6 +179,32 @@ export function WETHInteraction() {
               {isWritePending || isConfirming ? "Processing..." : "Withdraw"}
             </button>
           </form>
+        </div>
+
+        <div className={styles.actionCard}>
+          <h3>Transfer WETH to yaketh.eth</h3>
+          <form onSubmit={handleTransferToYaketh}>
+            <input
+              type="number"
+              step="0.001"
+              min="0"
+              placeholder="Amount in WETH"
+              value={transferAmount}
+              onChange={(e) => setTransferAmount(e.target.value)}
+              className={styles.input}
+              disabled={isWritePending || isConfirming || !yakethAddress}
+            />
+            <button
+              type="submit"
+              className={styles.button}
+              disabled={!transferAmount || isWritePending || isConfirming || !yakethAddress}
+            >
+              {isWritePending || isConfirming ? "Processing..." : "Transfer to yaketh.eth"}
+            </button>
+          </form>
+          {!yakethAddress && (
+            <p className={styles.ensResolving}>Resolving ENS address...</p>
+          )}
         </div>
       </div>
 

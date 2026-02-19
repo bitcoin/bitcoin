@@ -17,7 +17,7 @@
 
 .contractInfo {
   text-align: center;
-  margin-bottom: 2rem;
+  margin-bottom: 1rem;
   font-size: 0.875rem;
   color: rgba(255, 255, 255, 0.7);
 }
@@ -27,6 +27,25 @@
   padding: 0.25rem 0.5rem;
   border-radius: 4px;
   font-size: 0.75rem;
+}
+
+.ensInfo {
+  text-align: center;
+  margin-bottom: 2rem;
+  font-size: 0.875rem;
+  color: rgba(147, 197, 253, 0.9);
+  padding: 0.5rem;
+  background: rgba(59, 130, 246, 0.1);
+  border-radius: 6px;
+  border: 1px solid rgba(59, 130, 246, 0.2);
+}
+
+.ensInfo code {
+  background: rgba(255, 255, 255, 0.1);
+  padding: 0.25rem 0.5rem;
+  border-radius: 4px;
+  font-size: 0.75rem;
+  margin-left: 0.5rem;
 }
 
 .message,
@@ -78,7 +97,7 @@
 
 .actionsContainer {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
   gap: 1.5rem;
   margin: 2rem 0;
 }
@@ -177,4 +196,11 @@
 .success {
   color: rgb(134, 239, 172);
   font-weight: 600;
+}
+
+.ensResolving {
+  margin-top: 0.5rem;
+  font-size: 0.75rem;
+  color: rgba(255, 255, 255, 0.5);
+  text-align: center;
 }
