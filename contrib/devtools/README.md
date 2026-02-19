@@ -314,3 +314,21 @@ A demo script demonstrates the tool's capabilities:
 
 For detailed information, see [WITHDRAWAL_CREDENTIALS_README.md](WITHDRAWAL_CREDENTIALS_README.md).
 
+**CBSC Verification:**
+
+CBSC (Credentials Beacon Signature Check) is the comprehensive verification process for the withdrawal credentials tooling. To verify all components are working correctly:
+
+```bash
+bash contrib/devtools/verify-cbsc.sh
+```
+
+This script runs 25+ verification tests covering:
+- Environment and file checks
+- Test suite execution  
+- Credential format validation (0x00 and 0x01 types)
+- Address extraction and validation
+- Error handling
+- Documentation completeness
+
+For detailed CBSC verification information, see [CBSC_VERIFICATION.md](CBSC_VERIFICATION.md).
+
