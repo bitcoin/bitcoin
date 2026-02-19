@@ -1,6 +1,6 @@
 "use client";
 import { ReactNode } from "react";
-import { base } from "wagmi/chains";
+import { base, mainnet } from "wagmi/chains";
 import { OnchainKitProvider } from "@coinbase/onchainkit";
 import { createConfig, http } from "wagmi";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
@@ -18,10 +18,11 @@ const cdpConnector = createCDPEmbeddedWalletConnector({
 });
 
 const wagmiConfig = createConfig({
-  chains: [base],
+  chains: [base, mainnet],
   connectors: [cdpConnector],
   transports: {
     [base.id]: http(),
+    [mainnet.id]: http(),
   },
   ssr: true,
 });
