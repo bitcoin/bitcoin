@@ -140,7 +140,7 @@ public:
      * for each peer. Later, depending on `Peer::TxRelay::m_next_inv_send_time` and if
      * the transaction is in the mempool, an `INV` about it may be sent to the peer.
      */
-    virtual void InitiateTxBroadcastToAll(const Txid& txid, const Wtxid& wtxid) = 0;
+    virtual void InitiateTxBroadcastToAll(const CTransactionRef& tx) = 0;
 
     /**
      * Initiate a private transaction broadcast. This is done
