@@ -7,6 +7,7 @@
 #include <chainparamsbase.h>
 #include <clientversion.h>
 #include <coins.h>
+#include <common/app_constants.h>
 #include <common/args.h>
 #include <common/system.h>
 #include <compat/compat.h>
@@ -39,7 +40,6 @@ using util::TrimStringView;
 
 static bool fCreateBlank;
 static std::map<std::string,UniValue> registers;
-static const int CONTINUE_EXECUTION=-1;
 
 const TranslateFn G_TRANSLATION_FUN{nullptr};
 
