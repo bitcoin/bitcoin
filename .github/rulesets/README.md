@@ -11,6 +11,13 @@ Repository rulesets provide a modern way to enforce branch protection and other 
 - Easier management through the API
 - Version-controlled configuration
 
+## Quick Links
+
+- **[APPLICATION_GUIDE.md](APPLICATION_GUIDE.md)** - Complete step-by-step application instructions
+- **[QUICKSTART.md](QUICKSTART.md)** - Quick 3-step setup guide
+- **[verify-status-checks.sh](verify-status-checks.sh)** - Script to verify status check names
+- **[apply-rulesets.sh](apply-rulesets.sh)** - Script to apply/manage rulesets
+
 ## Configuration Files
 
 ### Branch Protection Rulesets
