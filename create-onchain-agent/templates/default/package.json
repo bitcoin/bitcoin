@@ -1,0 +1,31 @@
+{
+  "name": "onchain-agent",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "next lint"
+  },
+  "dependencies": {
+    "@coinbase/onchainkit": "latest",
+    "@coinbase/cdp-sdk": "^0.0.12",
+    "@tanstack/react-query": "^5.81.5",
+    "next": "^15.3.9",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0",
+    "viem": "^2.31.6",
+    "wagmi": "^2.16.3"
+  },
+  "devDependencies": {
+    "@eslint/eslintrc": "^3",
+    "@next/eslint-plugin-next": "^15.3.9",
+    "@types/node": "^20",
+    "@types/react": "^19",
+    "@types/react-dom": "^19",
+    "eslint": "^9",
+    "eslint-config-next": "^15.3.9",
+    "typescript": "^5"
+  }
+}

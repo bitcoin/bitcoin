@@ -1,0 +1,17 @@
+{
+  "name": "development-branches",
+  "target": "branch",
+  "enforcement": "active",
+  "conditions": {
+    "ref_name": {
+      "include": [
+        "refs/heads/feature/*",
+        "refs/heads/fix/*",
+        "refs/heads/docs/*"
+      ],
+      "exclude": []
+    }
+  },
+  "rules": [],
+  "bypass_actors": []
+}

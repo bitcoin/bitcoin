@@ -1,0 +1,57 @@
+.page {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  font-family: var(--font-geist-sans);
+}
+
+.main {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 2rem;
+  max-width: 1200px;
+  margin: 0 auto;
+  width: 100%;
+}
+
+.title {
+  font-size: 3rem;
+  margin-bottom: 1rem;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.description {
+  font-size: 1.2rem;
+  color: #666;
+  margin-bottom: 2rem;
+}
+
+.connectSection {
+  margin-bottom: 2rem;
+}
+
+.agentSection {
+  width: 100%;
+  max-width: 800px;
+}
+
+.footer {
+  padding: 2rem;
+  text-align: center;
+  border-top: 1px solid #eaeaea;
+  color: #666;
+}
+
+.footer a {
+  color: #0070f3;
+  text-decoration: none;
+}
+
+.footer a:hover {
+  text-decoration: underline;
+}

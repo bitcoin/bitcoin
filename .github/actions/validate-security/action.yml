@@ -1,0 +1,160 @@
+name: 'Validate Security'
+description: 'Automated security validation checks'
+inputs:
+  check-secrets:
+    description: 'Check for hardcoded secrets'
+    required: false
+    default: 'true'
+  check-dependencies:
+    description: 'Check for vulnerable dependencies'
+    required: false
+    default: 'true'
+outputs:
+  status:
+    description: 'Security validation status'
+    value: ${{ steps.report.outputs.status }}
+  issues-found:
+    description: 'Number of security issues found'
+    value: ${{ steps.report.outputs.issues }}
+runs:
+  using: 'composite'
+  steps:
+    - name: Check for hardcoded secrets
+      if: inputs.check-secrets == 'true'
+      shell: bash
+      run: |
+        echo "::group::Secret Detection"
+        SECRETS_FOUND=0
+        
+        echo "Scanning for potential hardcoded secrets..."
+        
+        # Check for common secret patterns
+        PATTERNS=(
+          'password\s*=\s*["\047][^"\047]{8,}'
+          'api[_-]?key\s*[=:]\s*["\047][a-zA-Z0-9]{20,}'
+          'secret\s*[=:]\s*["\047][^"\047]{10,}'
+          'token\s*[=:]\s*["\047][a-zA-Z0-9]{20,}'
+          'private[_-]?key.*BEGIN'
+          'ghp_[a-zA-Z0-9]{36}'
+          'AKIA[0-9A-Z]{16}'
+        )
+        
+        for pattern in "${PATTERNS[@]}"; do
+          if git ls-files | xargs grep -niE "$pattern" 2>/dev/null | grep -v -E '(test|example|sample|mock)' | head -3; then
+            echo "::warning::Potential secret pattern found: $pattern"
+            SECRETS_FOUND=$((SECRETS_FOUND + 1))
+          fi
+        done
+        
+        if [ $SECRETS_FOUND -eq 0 ]; then
+          echo "✓ No hardcoded secrets detected"
+        else
+          echo "::error::Found $SECRETS_FOUND potential secret patterns"
+        fi
+        
+        echo "::endgroup::"
+        echo "SECRETS_FOUND=$SECRETS_FOUND" >> $GITHUB_ENV
+
+    - name: Check file permissions and ownership
+      shell: bash
+      run: |
+        echo "::group::File Security Check"
+        
+        # Check for world-writable files
+        echo "Checking for world-writable files..."
+        WRITABLE=$(find . -type f -perm -002 -not -path "./.git/*" 2>/dev/null || true)
+        if [ -n "$WRITABLE" ]; then
+          echo "::warning::World-writable files found"
+          echo "$WRITABLE" | head -5
+        else
+          echo "✓ No world-writable files"
+        fi
+        
+        # Check for files with SUID/SGID bits
+        echo "Checking for SUID/SGID files..."
+        SUID=$(find . -type f \( -perm -4000 -o -perm -2000 \) -not -path "./.git/*" 2>/dev/null || true)
+        if [ -n "$SUID" ]; then
+          echo "::warning::SUID/SGID files found"
+          echo "$SUID"
+        else
+          echo "✓ No SUID/SGID files"
+        fi
+        
+        echo "::endgroup::"
+
+    - name: Validate secure coding patterns
+      shell: bash
+      run: |
+        echo "::group::Secure Coding Patterns"
+        
+        # Check for unsafe C functions
+        echo "Checking for unsafe C functions..."
+        UNSAFE_FUNCS="strcpy|strcat|sprintf|gets|scanf"
+        if git ls-files '*.c' '*.cpp' '*.h' 2>/dev/null | xargs grep -nE "\b($UNSAFE_FUNCS)\s*\(" 2>/dev/null | head -5; then
+          echo "::warning::Unsafe C functions found (use safe alternatives)"
+        else
+          echo "✓ No unsafe C functions detected"
+        fi
+        
+        # Check for SQL injection risks
+        echo "Checking for SQL injection risks..."
+        if git ls-files '*.cpp' '*.py' '*.js' 2>/dev/null | xargs grep -nE '(execute|query).*\+.*\+|"SELECT.*"\s*\+' 2>/dev/null | head -3; then
+          echo "::warning::Potential SQL injection risk (string concatenation in queries)"
+        else
+          echo "✓ No obvious SQL injection patterns"
+        fi
+        
+        echo "::endgroup::"
+
+    - name: Check dependencies security
+      if: inputs.check-dependencies == 'true'
+      shell: bash
+      run: |
+        echo "::group::Dependency Security"
+        
+        # Check if package files exist
+        if [ -f "package.json" ] && command -v npm &> /dev/null; then
+          echo "Running npm audit..."
+          npm audit --audit-level=moderate 2>&1 | tee npm-audit.txt || true
+          if grep -q "found.*vulnerabilit" npm-audit.txt; then
+            echo "::warning::npm vulnerabilities found"
+          fi
+        fi
+        
+        if [ -f "requirements.txt" ] && command -v pip &> /dev/null; then
+          echo "Checking Python dependencies..."
+          pip list --outdated 2>&1 | head -10 || true
+        fi
+        
+        if [ -f "pom.xml" ] && command -v mvn &> /dev/null; then
+          echo "Checking Maven dependencies..."
+          mvn dependency:analyze 2>&1 | grep -E "(WARNING|ERROR)" | head -10 || true
+        fi
+        
+        echo "::endgroup::"
+
+    - name: Generate security report
+      id: report
+      shell: bash
+      run: |
+        TOTAL_ISSUES=${SECRETS_FOUND:-0}
+        STATUS="passed"
+        
+        if [ $TOTAL_ISSUES -gt 0 ]; then
+          STATUS="failed"
+        fi
+        
+        echo "status=$STATUS" >> $GITHUB_OUTPUT
+        echo "issues=$TOTAL_ISSUES" >> $GITHUB_OUTPUT
+        
+        cat >> $GITHUB_STEP_SUMMARY << EOF
+        ### Security Validation Report
+        
+        **Status**: $STATUS
+        **Issues Found**: $TOTAL_ISSUES
+        
+        - Secret Detection: $([ ${SECRETS_FOUND:-0} -eq 0 ] && echo "✓ Passed" || echo "⚠ Issues found")
+        - File Permissions: Checked
+        - Secure Coding: Checked
+        - Dependencies: Checked
+        EOF

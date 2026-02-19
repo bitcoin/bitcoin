@@ -28,8 +28,8 @@ console.log('kushmanmb.eth resolves to:', address);
 #### 2. Via Etherscan API
 
 ```bash
-# Using Etherscan V2 API with eth_call (as specified in problem statement)
-curl "https://api.etherscan.io/v2/api?chainid=1&module=proxy&action=eth_call&to=0xAEEF46DB4855E25702F8237E8f403FddcaF931C0&data=0x70a08231000000000000000000000000e16359506c028e51f16be38986ec5746251e9724&tag=latest&apikey=YourApiKeyToken"
+# Using Etherscan V2 API with eth_call (updated to new implementation)
+curl "https://api.etherscan.io/v2/api?chainid=1&module=proxy&action=eth_call&to=0x6fb9e80dDd0f5DC99D7cB38b07e8b298A57bF253&data=0x70a08231000000000000000000000000e16359506c028e51f16be38986ec5746251e9724&tag=latest&apikey=YourApiKeyToken"
 ```
 
 #### 3. Via ENS Registry Contract
@@ -47,6 +47,8 @@ The kushmanmb.eth ENS name is integrated into GitHub Actions workflows for:
    - Queries blockchain data associated with kushmanmb.eth
    - Resolves ENS name to Ethereum address
    - Fetches account balance, transactions, and contract data
+   - **NEW**: Supports Base network (Chain ID: 8453) via Basescan API
+   - **NEW**: Proxy contract verification on both Ethereum and Base
 
 2. **Website Deployment** (`.github/workflows/deploy-website.yml`)
    - Uses kushmanmb.eth as the primary identity marker
@@ -90,13 +92,19 @@ Only one requirement: Add your Etherscan API key to repository secrets:
 
 ### API Keys
 
-To query Etherscan API for kushmanmb.eth data:
+To query blockchain APIs:
 
+**For Ethereum Mainnet**:
 1. Get an API key from https://etherscan.io/myapikey
 2. Add it as a repository secret:
    - Go to repository Settings → Secrets and variables → Actions
    - Create a new secret named `ETHERSCAN_API_KEY`
    - Paste your API key
+
+**For Base Network** (NEW):
+- The same `ETHERSCAN_API_KEY` works for both Etherscan and Basescan
+- If needed, get a separate Base API key from https://basescan.org/myapikey
+- The workflow automatically selects the correct API endpoint based on chain ID
 
 ## Privacy Considerations
 

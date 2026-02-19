@@ -1,0 +1,378 @@
+# ═══════════════════════════════════════════════════════════════════
+# GLOBAL OWNERSHIP & CREATOR STATUS
+# ═══════════════════════════════════════════════════════════════════
+# Repository Owner: kushmanmb.eth (Ethereum Name Service)
+# Creator: Kushman MB
+# ENS Identifiers:
+#   - Primary: kushmanmb.eth (Ethereum Mainnet)
+#   - Base Network: Kushmanmb.base.eth
+# 
+# This workflow is part of the kushmanmb-org/bitcoin repository
+# and is maintained by the repository owner and authorized contributors.
+# ═══════════════════════════════════════════════════════════════════
+
+name: Lint and Build
+
+on:
+  push:
+    branches:
+      - main
+      - master
+      - develop
+  pull_request:
+    branches:
+      - main
+      - master
+      - develop
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  CMAKE_BUILD_TYPE: Release
+  CCACHE_DIR: ${{ github.workspace }}/.ccache
+
+permissions:
+  contents: read
+
+jobs:
+  lint-cpp:
+    permissions:
+      contents: read
+    name: C++ Linting
+    runs-on: ${{ vars.USE_SELF_HOSTED == 'true' && 'self-hosted' || 'ubuntu-latest' }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup secure environment
+        uses: ./.github/actions/setup-secure-environment
+
+      - name: Install linting tools
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            clang-format \
+            clang-tidy \
+            cppcheck
+
+      - name: Run clang-format
+        run: |
+          echo "::group::Running clang-format"
+          find src -name "*.cpp" -o -name "*.h" | \
+            xargs clang-format --dry-run --Werror -style=file 2>&1 | tee clang-format.log || true
+          echo "::endgroup::"
+
+      - name: Run cppcheck
+        run: |
+          echo "::group::Running cppcheck"
+          cppcheck --enable=all --inconclusive --std=c++17 \
+            --suppress=missingIncludeSystem \
+            --suppress=unusedFunction \
+            -I src \
+            src 2>&1 | tee cppcheck.log || true
+          echo "::endgroup::"
+
+      - name: Upload lint reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: cpp-lint-reports
+          path: |
+            clang-format.log
+            cppcheck.log
+          retention-days: 30
+
+  lint-python:
+    name: Python Linting
+    runs-on: ${{ vars.USE_SELF_HOSTED == 'true' && 'self-hosted' || 'ubuntu-latest' }}
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup secure environment
+        uses: ./.github/actions/setup-secure-environment
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install Python linting tools
+        run: |
+          pip install --upgrade pip
+          pip install \
+            pylint \
+            flake8 \
+            black \
+            isort \
+            mypy
+
+      - name: Run black format check
+        if: hashFiles('**/*.py') != ''
+        run: |
+          echo "::group::Running black"
+          black --check --diff . 2>&1 | tee black.log || true
+          echo "::endgroup::"
+
+      - name: Run isort check
+        if: hashFiles('**/*.py') != ''
+        run: |
+          echo "::group::Running isort"
+          isort --check-only --diff . 2>&1 | tee isort.log || true
+          echo "::endgroup::"
+
+      - name: Run flake8
+        if: hashFiles('**/*.py') != ''
+        run: |
+          echo "::group::Running flake8"
+          flake8 --max-line-length=120 --statistics . 2>&1 | tee flake8.log || true
+          echo "::endgroup::"
+
+      - name: Run pylint
+        if: hashFiles('**/*.py') != ''
+        run: |
+          echo "::group::Running pylint"
+          find . -name "*.py" -not -path "./build/*" | \
+            xargs pylint --rcfile=.pylintrc --output-format=text 2>&1 | tee pylint.log || true
+          echo "::endgroup::"
+
+      - name: Upload Python lint reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: python-lint-reports
+          path: |
+            black.log
+            isort.log
+            flake8.log
+            pylint.log
+          retention-days: 30
+          if-no-files-found: ignore
+
+  lint-shell:
+    name: Shell Script Linting
+    runs-on: ${{ vars.USE_SELF_HOSTED == 'true' && 'self-hosted' || 'ubuntu-latest' }}
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup secure environment
+        uses: ./.github/actions/setup-secure-environment
+
+      - name: Install shellcheck
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y shellcheck
+
+      - name: Run shellcheck
+        run: |
+          echo "::group::Running shellcheck"
+          find . -name "*.sh" -not -path "./build/*" -not -path "./depends/*" | \
+            xargs shellcheck -f gcc 2>&1 | tee shellcheck.log || true
+          echo "::endgroup::"
+
+      - name: Upload shell lint reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: shell-lint-reports
+          path: shellcheck.log
+          retention-days: 30
+
+  build-linux:
+    name: Build - Linux
+    needs: [lint-cpp, lint-python, lint-shell]
+    runs-on: ${{ vars.USE_SELF_HOSTED == 'true' && 'self-hosted' || 'ubuntu-latest' }}
+    permissions:
+      contents: read
+      id-token: write
+      attestations: write
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup secure environment
+        uses: ./.github/actions/setup-secure-environment
+
+      - name: Install build dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            build-essential \
+            cmake \
+            ninja-build \
+            ccache \
+            libtool \
+            autotools-dev \
+            automake \
+            pkg-config \
+            bsdmainutils \
+            python3 \
+            libevent-dev \
+            libboost-dev \
+            libboost-system-dev \
+            libboost-filesystem-dev \
+            libboost-test-dev \
+            libssl-dev
+
+      - name: Setup ccache
+        run: |
+          mkdir -p ${{ env.CCACHE_DIR }}
+          ccache --set-config=max_size=2G
+          ccache --set-config=compression=true
+          ccache --zero-stats
+
+      - name: Configure CMake
+        if: hashFiles('CMakeLists.txt') != ''
+        run: |
+          cmake -B build \
+            -GNinja \
+            -DCMAKE_BUILD_TYPE=${{ env.CMAKE_BUILD_TYPE }} \
+            -DCMAKE_C_COMPILER_LAUNCHER=ccache \
+            -DCMAKE_CXX_COMPILER_LAUNCHER=ccache \
+            -DBUILD_TESTS=ON
+
+      - name: Build
+        if: hashFiles('CMakeLists.txt') != ''
+        run: |
+          cmake --build build --parallel $(nproc)
+
+      - name: Show ccache statistics
+        run: ccache --show-stats
+
+      - name: Run build tests
+        if: hashFiles('CMakeLists.txt') != ''
+        run: |
+          cd build
+          ctest --output-on-failure --parallel $(nproc)
+
+      - name: Upload build artifacts
+        if: success()
+        uses: actions/upload-artifact@v4
+        with:
+          name: linux-build
+          path: |
+            build/src/bitcoind
+            build/src/bitcoin-cli
+            build/src/bitcoin-tx
+          retention-days: 7
+          if-no-files-found: ignore
+
+      - name: Attest build provenance
+        if: success() && hashFiles('build/src/bitcoind') != ''
+        uses: actions/attest-build-provenance@v2
+        with:
+          subject-path: |
+            build/src/bitcoind
+            build/src/bitcoin-cli
+            build/src/bitcoin-tx
+
+  build-documentation:
+    name: Build Documentation
+    runs-on: ${{ vars.USE_SELF_HOSTED == 'true' && 'self-hosted' || 'ubuntu-latest' }}
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install documentation tools
+        run: |
+          pip install --upgrade pip
+          pip install sphinx sphinx-rtd-theme recommonmark
+
+      - name: Build documentation
+        if: hashFiles('doc/conf.py') != '' || hashFiles('docs/conf.py') != ''
+        run: |
+          if [ -d "doc" ]; then
+            cd doc && make html
+          elif [ -d "docs" ]; then
+            cd docs && make html
+          else
+            echo "No documentation directory found"
+          fi
+
+      - name: Upload documentation
+        if: success()
+        uses: actions/upload-artifact@v4
+        with:
+          name: documentation
+          path: |
+            doc/_build/html
+            docs/_build/html
+          retention-days: 30
+          if-no-files-found: ignore
+
+  lint-build-summary:
+    name: Lint & Build Summary
+    needs:
+      - lint-cpp
+      - lint-python
+      - lint-shell
+      - build-linux
+      - build-documentation
+    if: always()
+    runs-on: ${{ vars.USE_SELF_HOSTED == 'true' && 'self-hosted' || 'ubuntu-latest' }}
+    permissions:
+      contents: read
+    steps:
+      - name: Generate summary
+        run: |
+          cat >> $GITHUB_STEP_SUMMARY << EOF
+          # Lint and Build Summary
+          
+          ## Lint Results
+          
+          | Linter | Status |
+          |--------|--------|
+          | C++ (clang-format, cppcheck) | ${{ needs.lint-cpp.result }} |
+          | Python (black, flake8, pylint) | ${{ needs.lint-python.result }} |
+          | Shell (shellcheck) | ${{ needs.lint-shell.result }} |
+          
+          ## Build Results
+          
+          | Build Target | Status |
+          |--------------|--------|
+          | Linux Build | ${{ needs.build-linux.result }} |
+          | Documentation | ${{ needs.build-documentation.result }} |
+          
+          ## Overall Status
+          
+          $(if [ "${{ needs.lint-cpp.result }}" == "success" ] && \
+              [ "${{ needs.lint-python.result }}" == "success" ] && \
+              [ "${{ needs.lint-shell.result }}" == "success" ] && \
+              [ "${{ needs.build-linux.result }}" == "success" ]; then
+            echo "✅ All lint and build checks passed!"
+          else
+            echo "⚠️ Some checks failed. Please review the details above."
+          fi)
+          
+          ---
+          **Runner**: ${{ vars.USE_SELF_HOSTED == 'true' && 'Self-Hosted' || 'GitHub-Hosted' }}
+          **Workflow**: ${{ github.workflow }}
+          **Run**: ${{ github.run_id }}
+          EOF
+
+      - name: Check for failures
+        if: |
+          needs.lint-cpp.result == 'failure' ||
+          needs.lint-python.result == 'failure' ||
+          needs.lint-shell.result == 'failure' ||
+          needs.build-linux.result == 'failure'
+        run: |
+          echo "::error::One or more lint or build checks failed"
+          exit 1

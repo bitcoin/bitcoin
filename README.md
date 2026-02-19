@@ -6,8 +6,16 @@ https://bitcoincore.org
 For an immediately usable, binary version of the Bitcoin Core software, see
 https://bitcoincore.org/en/download/.
 
-What is Bitcoin Core?
----------------------
+## Repository Ownership
+
+**Owner**: kushmanmb  
+**Creator**: kushmanmb  
+**ENS**: kushmanmb.eth, Kushmanmb.base.eth, yaketh.eth  
+**Organization**: kushmanmb-org
+
+For complete ownership documentation, see [OWNERSHIP.md](OWNERSHIP.md).
+
+## What is Bitcoin Core?
 
 Bitcoin Core connects to the Bitcoin peer-to-peer network to download and fully
 validate blocks and transactions. It also includes a wallet and graphical user
@@ -15,8 +23,28 @@ interface, which can be optionally built.
 
 Further information about Bitcoin Core is available in the [doc folder](/doc).
 
-License
--------
+## Repository Policies
+
+This repository operates under documented policies and governance:
+
+- **[POLICY.md](POLICY.md)** - Repository governance, contribution policies, and guidelines
+- **[OWNERSHIP.md](OWNERSHIP.md)** - Creator and ownership documentation
+- **[RULESETS.md](RULESETS.md)** - GitHub repository rulesets and branch protection
+- **[CONTRIBUTING.md](CONTRIBUTING.md)** - How to contribute to this project
+- **[.github/CODEOWNERS](.github/CODEOWNERS)** - Code ownership and review requirements
+- **[.github/configs/user_access.yml](.github/configs/user_access.yml)** - User access configuration and project permissions
+
+## Security & Verification
+
+This repository implements cryptographic attestations for build artifacts:
+
+- **[ATTESTATION_VERIFICATION.md](ATTESTATION_VERIFICATION.md)** - Guide to verifying build artifact attestations
+- **Verification Script**: `contrib/verify-attestation.sh` - Verify attestations for binaries
+- **ENS Identity**: kushmanmb.base.eth - Repository identity on Base network
+
+All build artifacts (bitcoind, bitcoin-cli, bitcoin-tx) are cryptographically signed and can be verified using `gh attestation verify`.
+
+## License
 
 Bitcoin Core is released under the terms of the MIT license. See [COPYING](COPYING) for more
 information or see https://opensource.org/license/MIT.
@@ -124,6 +152,27 @@ node contrib/devtools/fetch-cdp-api.js
 - Quick Start Guide: [CDP_API_QUICKSTART.md](CDP_API_QUICKSTART.md)
 - Full Documentation: [contrib/devtools/CDP_API_README.md](contrib/devtools/CDP_API_README.md)
 - Demo Script: `./contrib/devtools/demo-cdp-api.sh`
+
+### Onchain Agent Scaffolding Tool
+
+This repository includes `create-onchain-agent`, a CLI tool for quickly bootstrapping AI-powered blockchain agent projects:
+
+**Quick Start:**
+```bash
+npm create onchain-agent@latest
+```
+
+**Features:**
+- 🤖 Ready-to-use agent interface with chat UI
+- 👛 Wallet integration (Coinbase Smart Wallet)
+- ⛓️ Multi-chain support (Base, Base Sepolia)
+- 📦 OnchainKit integration
+- 🔐 Secure environment variable management
+- 📝 Full TypeScript support
+
+**Documentation:**
+- Full Guide: [CREATE_ONCHAIN_AGENT_GUIDE.md](CREATE_ONCHAIN_AGENT_GUIDE.md)
+- Package README: [create-onchain-agent/README.md](create-onchain-agent/README.md)
 
 ### Safe Git Practices
 

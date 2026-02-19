@@ -10,8 +10,9 @@ associated with ENS (Ethereum Name Service) identifiers.
 
 ## Recent Announcements
 
+- [announcement-2026-02-16.md](announcement-2026-02-16.md)
 - [announcement-2026-02-15.md](announcement-2026-02-15.md)
 - [announcement-2026-02-13.md](announcement-2026-02-13.md)
 
 ---
-Last updated: 2026-02-15 18:36:57 UTC
+Last updated: 2026-02-16 03:20:13 UTC

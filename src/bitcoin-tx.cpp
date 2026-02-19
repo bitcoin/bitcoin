@@ -7,6 +7,7 @@
 #include <chainparamsbase.h>
 #include <clientversion.h>
 #include <coins.h>
+#include <common/app_constants.h>
 #include <common/args.h>
 #include <common/system.h>
 #include <compat/compat.h>
@@ -39,7 +40,6 @@ using util::TrimStringView;
 
 static bool fCreateBlank;
 static std::map<std::string,UniValue> registers;
-static const int CONTINUE_EXECUTION=-1;
 
 const TranslateFn G_TRANSLATION_FUN{nullptr};
 
@@ -91,7 +91,7 @@ static int AppInitRawTx(int argc, char* argv[])
     SetupBitcoinTxArgs(gArgs);
     std::string error;
     if (!gArgs.ParseParameters(argc, argv, error)) {
-        tfm::format(std::cerr, "Error parsing command line arguments: %s\n", error);
+        tfm::format(std::cerr, app_error::COMMAND_LINE_PARSE_ERROR, error);
         return EXIT_FAILURE;
     }
 
@@ -125,7 +125,7 @@ static int AppInitRawTx(int argc, char* argv[])
         tfm::format(std::cout, "%s", strUsage);
 
         if (argc < 2) {
-            tfm::format(std::cerr, "Error: too few parameters\n");
+            tfm::format(std::cerr, app_error::TOO_FEW_PARAMETERS);
             return EXIT_FAILURE;
         }
         return EXIT_SUCCESS;

@@ -288,7 +288,6 @@ class MultiWalletTest(BitcoinTestFramework):
             threads.append(t)
         for t in threads:
             t.join()
-        global got_loading_error
         assert_equal(got_loading_error, True)
 
         self.log.info("Load remaining wallets")

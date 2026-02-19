@@ -23,18 +23,29 @@ This guide provides quick instructions for using the kushmanmb.eth ENS integrati
      - `transaction` - Get transaction history
      - `contract` - Get contract ABI (if applicable)
      - `ens_resolve` - Resolve ENS name via eth_call
-   - **ENS name**: Keep default `kushmanmb.eth` or enter another ENS name
+     - `verify_proxy` - Verify a proxy contract
+     - `eth_blockNumber` - **NEW**: Get the current block number on the network
+   - **Chain ID**: Select the blockchain network
+     - `1` - Ethereum Mainnet (default)
+     - `8453` - Base Network
+   - **ENS name**: Keep default `kushmanmb.eth` or enter another ENS name (not needed for `eth_blockNumber`)
+   - **Contract address**: (Required for `verify_proxy`) The proxy contract address
+   - **Implementation address**: (Optional for `verify_proxy`) Expected implementation address
 5. **Click "Run workflow"** green button
 
 ### What the Workflow Does
 
 The workflow will:
-1. Resolve the ENS name (if possible)
-2. Query Etherscan API for the requested data
+1. Resolve the ENS name (if applicable for Ethereum mainnet)
+2. Query Etherscan/Basescan API for the requested data
 3. Save results to `data/etherscan/latest.json`
 4. Create an archive with timestamp: `data/etherscan/data-YYYY-MM-DD-HH-MM-SS.json`
 5. Commit and push the data files back to the repository
 6. Generate a summary in the workflow run
+
+**Multi-Chain Support**: The workflow now supports:
+- **Ethereum Mainnet** (Chain ID: 1) via api.etherscan.io
+- **Base Network** (Chain ID: 8453) via api.basescan.org
 
 ### Example: Fetching Account Balance
 
@@ -42,7 +53,7 @@ The curl command from the problem statement is now integrated:
 
 ```bash
 # This is automatically executed in the workflow:
-curl "https://api.etherscan.io/v2/api?chainid=1&module=proxy&action=eth_call&to=0xAEEF46DB4855E25702F8237E8f403FddcaF931C0&data=0x70a08231000000000000000000000000e16359506c028e51f16be38986ec5746251e9724&tag=latest&apikey=<YOUR_KEY>"
+curl "https://api.etherscan.io/v2/api?chainid=1&module=proxy&action=eth_call&to=0x6fb9e80dDd0f5DC99D7cB38b07e8b298A57bF253&data=0x70a08231000000000000000000000000e16359506c028e51f16be38986ec5746251e9724&tag=latest&apikey=<YOUR_KEY>"
 ```
 
 ## Using Self-Hosted Runners
@@ -155,6 +166,35 @@ After each run:
 ### 4. Resolve ENS to Address
 - Run workflow with `ens_resolve` endpoint
 - Get the current resolved address
+
+### 5. Get Current Block Number (NEW)
+This implements the exact curl command from the problem statement!
+
+**Example**:
+- Endpoint: `eth_blockNumber`
+- Chain ID: `1` (Ethereum) or `8453` (Base)
+
+The workflow will execute:
+```bash
+curl "https://api.etherscan.io/v2/api?chainid=1&module=proxy&action=eth_blockNumber&apikey=YourApiKeyToken"
+```
+
+This returns the current block number on the specified network without requiring any address.
+
+### 6. Verify Proxy Contract on Base Network
+This implements proxy contract verification!
+
+**Example**:
+- Endpoint: `verify_proxy`
+- Chain ID: `8453` (Base)
+- Contract address: `0x4200000000000000000000000000000000000006`
+- Implementation address: `0x1F39De4e1fA3a5aa77202C14033AE37C49B0e337`
+
+The workflow will execute:
+```bash
+curl --request POST \
+  --url 'https://api.basescan.org/api?module=contract&action=verifyproxycontract&address=0x4200000000000000000000000000000000000006&expectedimplementation=0x1F39De4e1fA3a5aa77202C14033AE37C49B0e337&apikey=<YOUR_KEY>'
+```
 
 ## Troubleshooting
 
