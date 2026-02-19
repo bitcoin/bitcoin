@@ -538,6 +538,7 @@ void CTxMemPool::check(const CCoinsViewCache& active_coins_tip, int64_t spendhei
         for (const auto& input: tx.vin) mempoolDuplicate.SpendCoin(input.prevout);
         AddCoins(mempoolDuplicate, tx, std::numeric_limits<int>::max());
     }
+
     for (auto it = mapNextTx.cbegin(); it != mapNextTx.cend(); it++) {
         indexed_transaction_set::const_iterator it2 = it->second;
         assert(it2 != mapTx.end());
@@ -551,6 +552,31 @@ void CTxMemPool::check(const CCoinsViewCache& active_coins_tip, int64_t spendhei
     assert(diagram.back().fee == check_total_modified_fee);
     assert(diagram.back().size == check_total_adjusted_weight);
     assert(innerUsage == cachedInnerUsage);
+}
+
+std::vector<CTxMemPool::txiter> CTxMemPool::SortMiningScoreWithTopology(std::span<const Wtxid> wtxids, size_t n) const
+{
+    auto cmp = [&](const auto& a, const auto& b) EXCLUSIVE_LOCKS_REQUIRED(cs) noexcept { return m_txgraph->CompareMainOrder(*a, *b) < 0; };
+
+    std::vector<txiter> res;
+
+    n = std::min(wtxids.size(), n);
+    if (n > 0) {
+        res.reserve(wtxids.size());
+        for (auto& wtxid : wtxids) {
+            if (auto i{GetIter(wtxid)}; i.has_value()) {
+                res.push_back(i.value());
+            }
+        }
+
+        if (n >= res.size()) {
+            // use regular sort when taking everything
+            std::sort(res.rbegin(), res.rend(), cmp);
+        } else {
+            std::partial_sort(res.rbegin(), res.rbegin() + n, res.rend(), cmp);
+        }
+    }
+    return res;
 }
 
 bool CTxMemPool::CompareMiningScoreWithTopology(const Wtxid& hasha, const Wtxid& hashb) const
