@@ -70,14 +70,60 @@ Expected output should show you're logged in to github.com.
 
 ## Applying Rulesets
 
-### Quick Apply (Recommended)
+### Important: Choose Your Approach
 
-Use the provided script to apply all rulesets at once:
+There are two versions of the master branch protection ruleset:
+
+1. **`master-branch-protection.json`** - Full protection with specific status checks
+   - ⚠️ Requires status check names to match exactly
+   - Read [STATUS_CHECK_NOTES.md](STATUS_CHECK_NOTES.md) before using
+
+2. **`master-branch-protection-simple.json`** - Simplified protection without status checks (RECOMMENDED for initial setup)
+   - ✅ Works immediately
+   - Still requires PR approval from code owner
+   - Blocks force pushes and deletions
+   - Add status checks later after verification
+
+### Quick Apply - Simplified Version (Recommended)
+
+Apply the simplified version first to get protection active immediately:
+
+```bash
+cd /path/to/bitcoin
+
+# Apply simplified master protection (no status checks)
+gh api --method POST \
+  -H "Accept: application/vnd.github+json" \
+  repos/kushmanmb-org/bitcoin/rulesets \
+  --input .github/rulesets/master-branch-protection-simple.json
+
+# Apply other rulesets
+gh api --method POST \
+  -H "Accept: application/vnd.github+json" \
+  repos/kushmanmb-org/bitcoin/rulesets \
+  --input .github/rulesets/release-branch-protection.json
+
+gh api --method POST \
+  -H "Accept: application/vnd.github+json" \
+  repos/kushmanmb-org/bitcoin/rulesets \
+  --input .github/rulesets/development-branches.json
+
+gh api --method POST \
+  -H "Accept: application/vnd.github+json" \
+  repos/kushmanmb-org/bitcoin/rulesets \
+  --input .github/rulesets/release-tags-protection.json
+```
+
+### Quick Apply - Full Version with Script
+
+Use the provided script to apply all rulesets at once (includes status checks):
 
 ```bash
 cd /path/to/bitcoin
 .github/rulesets/apply-rulesets.sh --create
 ```
+
+⚠️ **Note:** The script will attempt to create `master-branch-protection.json` with status checks. If this fails or blocks legitimate PRs, delete it and apply the simplified version instead.
 
 ### Manual Apply (Alternative)
 
