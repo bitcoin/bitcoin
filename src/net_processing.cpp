@@ -4597,8 +4597,13 @@ void PeerManagerImpl::ProcessMessage(Peer& peer, CNode& pfrom, const std::string
             nodestate->m_last_block_announcement = GetTime();
         }
 
-        if (pindex->nStatus & BLOCK_HAVE_DATA) // Nothing to do here
+        // Nothing to do here
+        if (pindex->nStatus & BLOCK_HAVE_DATA) {
             return;
+        } else if (m_opts.ignore_incoming_txs) {
+            LogDebug(BCLog::CMPCTBLOCK, "Peer %d%s sent us a compact block even though we are blocksonly!", pfrom.GetId(), pfrom.LogIP(fLogIPs));
+            return;
+        }
 
         auto range_flight = mapBlocksInFlight.equal_range(pindex->GetBlockHash());
         size_t already_in_flight = std::distance(range_flight.first, range_flight.second);
