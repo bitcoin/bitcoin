@@ -44,7 +44,7 @@ TransactionError BroadcastTransaction(NodeContext& node,
     assert(node.peerman);
 
     Txid txid = tx->GetHash();
-    Wtxid wtxid = tx->GetWitnessHash();
+    CTransactionRef mempool_tx{nullptr};
     bool callback_set = false;
 
     {
@@ -60,15 +60,15 @@ TransactionError BroadcastTransaction(NodeContext& node,
             if (!existingCoin.IsSpent()) return TransactionError::ALREADY_IN_UTXO_SET;
         }
 
-        if (auto mempool_tx = node.mempool->get(txid); mempool_tx) {
+        mempool_tx = node.mempool->get(txid);
+        if (mempool_tx) {
             // There's already a transaction in the mempool with this txid. Don't
             // try to submit this transaction to the mempool (since it'll be
             // rejected as a TX_CONFLICT), but do attempt to reannounce the mempool
             // transaction if broadcast_method is not TxBroadcast::MEMPOOL_NO_BROADCAST.
             //
             // The mempool transaction may have the same or different witness (and
-            // wtxid) as this transaction. Use the mempool's wtxid for reannouncement.
-            wtxid = mempool_tx->GetWitnessHash();
+            // wtxid) as this transaction. We will use the mempool_tx for announcement.
         } else {
             // Transaction is not already in the mempool.
             const bool check_max_fee{max_tx_fee > 0};
@@ -130,7 +130,7 @@ TransactionError BroadcastTransaction(NodeContext& node,
     case TxBroadcast::MEMPOOL_NO_BROADCAST:
         break;
     case TxBroadcast::MEMPOOL_AND_BROADCAST_TO_ALL:
-        node.peerman->InitiateTxBroadcastToAll(txid, wtxid);
+        node.peerman->InitiateTxBroadcastToAll(mempool_tx ? mempool_tx : tx);
         break;
     case TxBroadcast::NO_MEMPOOL_PRIVATE_BROADCAST:
         node.peerman->InitiateTxBroadcastPrivate(tx);
