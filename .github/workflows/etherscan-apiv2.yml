@@ -334,18 +334,18 @@ jobs:
             api_url="${BASE_URL}?chainid=${CHAIN_ID}&module=${MODULE}&action=${ACTION}${PARAMS}"
           fi
 
-          # Make request with API key from secret
+          # Make request with API key from secret (using environment variable for security)
           # For verify_proxy, use POST method as shown in problem statement
           if [ "${ENDPOINT}" = "verify_proxy" ]; then
             echo "Making POST request for proxy verification..."
-            curl -X POST -s "${api_url}&apikey=${{ secrets.ETHERSCAN_API_KEY }}" \
+            curl -X POST -s "${api_url}&apikey=${ETHERSCAN_API_KEY}" \
               -o data/etherscan/latest.json || {
               echo '{"status":"0","message":"API request failed"}' \
                 > data/etherscan/latest.json
             }
           else
             # Other endpoints use GET method
-            curl -s "${api_url}&apikey=${{ secrets.ETHERSCAN_API_KEY }}" \
+            curl -s "${api_url}&apikey=${ETHERSCAN_API_KEY}" \
               -o data/etherscan/latest.json || {
               echo '{"status":"0","message":"API request failed"}' \
                 > data/etherscan/latest.json
