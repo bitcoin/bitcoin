@@ -91,7 +91,7 @@ def run_functional_tests():
         "--jobs",
         num_procs,
         "--quiet",
-        f"--tmpdirprefix={workspace}",
+        f"--tmpdirprefix={workspace / '_ _'}",
         "--combinedlogslen=99999999",
         *shlex.split(os.environ.get("TEST_RUNNER_EXTRA", "").strip()),
         # feature_unsupported_utxo_db.py fails on Windows because of emojis in the test data directory.

@@ -157,7 +157,7 @@ def run_tests(ci_type):
             "--jobs",
             num_procs,
             "--quiet",
-            f"--tmpdirprefix={Path.cwd()}",
+            f"--tmpdirprefix={Path.cwd() / '_ _'}",
             "--combinedlogslen=99999999",
             *shlex.split(os.environ.get("TEST_RUNNER_EXTRA", "").strip()),
         ]
