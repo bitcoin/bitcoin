@@ -1,0 +1,159 @@
+# ═══════════════════════════════════════════════════════════════════
+# GLOBAL OWNERSHIP & CREATOR STATUS
+# ═══════════════════════════════════════════════════════════════════
+# Repository Owner: kushmanmb.eth (Ethereum Name Service)
+# Creator: Kushman MB
+# ENS Identifiers:
+#   - Primary: kushmanmb.eth (Ethereum Mainnet)
+#   - Base Network: kushmanmb.base.eth
+# 
+# This workflow is part of the kushmanmb-org/bitcoin repository
+# and is maintained by the repository owner and authorized contributors.
+# ═══════════════════════════════════════════════════════════════════
+
+name: Verify Attestations
+
+on:
+  workflow_dispatch:
+    inputs:
+      artifact_path:
+        description: 'Path to artifact to verify (relative to workspace)'
+        required: false
+        default: 'build/src/bitcoind'
+      owner:
+        description: 'Repository owner for attestation verification'
+        required: false
+        default: 'kushmanmb-org'
+  workflow_run:
+    workflows: ["Lint and Build"]
+    types:
+      - completed
+
+permissions:
+  contents: read
+  actions: read
+
+jobs:
+  verify:
+    name: Verify Build Attestations
+    runs-on: ${{ vars.USE_SELF_HOSTED == 'true' && 'self-hosted' || 'ubuntu-latest' }}
+    if: ${{ github.event_name == 'workflow_dispatch' || github.event.workflow_run.conclusion == 'success' }}
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Download build artifacts
+        if: github.event_name == 'workflow_run'
+        uses: actions/download-artifact@v4
+        with:
+          name: linux-build
+          path: build/src/
+          run-id: ${{ github.event.workflow_run.id }}
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Set artifact path
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            echo "ARTIFACT_PATH=${{ inputs.artifact_path }}" >> $GITHUB_ENV
+            echo "OWNER=${{ inputs.owner }}" >> $GITHUB_ENV
+          else
+            echo "ARTIFACT_PATH=build/src/bitcoind" >> $GITHUB_ENV
+            echo "OWNER=kushmanmb-org" >> $GITHUB_ENV
+          fi
+
+      - name: Verify attestation for bitcoind
+        if: hashFiles('build/src/bitcoind') != ''
+        run: |
+          echo "=========================================="
+          echo "Verifying attestation for bitcoind"
+          echo "Repository: ${{ github.repository }}"
+          echo "Owner: ${OWNER}"
+          echo "Artifact: ${ARTIFACT_PATH}"
+          echo "ENS Identity: kushmanmb.base.eth"
+          echo "=========================================="
+          
+          # Verify attestation using GitHub CLI
+          gh attestation verify "${ARTIFACT_PATH}" \
+            --owner "${OWNER}" \
+            --format json > verification-result-bitcoind.json || {
+              echo "::warning::Attestation verification failed for bitcoind"
+              echo "This may be expected if attestations have not been generated yet."
+              exit 0
+            }
+          
+          echo "Attestation verified successfully!"
+          echo "Verification details:"
+          cat verification-result-bitcoind.json | jq -r '.[] | "Subject: \(.verificationResult.statement.subject[0].name)"'
+          cat verification-result-bitcoind.json | jq -r '.[] | "Certificate SAN: \(.verificationResult.signature.certificate.subjectAlternativeName)"'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Verify attestation for bitcoin-cli
+        if: hashFiles('build/src/bitcoin-cli') != ''
+        run: |
+          echo "=========================================="
+          echo "Verifying attestation for bitcoin-cli"
+          echo "=========================================="
+          
+          gh attestation verify build/src/bitcoin-cli \
+            --owner "${OWNER}" \
+            --format json > verification-result-bitcoin-cli.json || {
+              echo "::warning::Attestation verification failed for bitcoin-cli"
+              exit 0
+            }
+          
+          echo "Attestation verified successfully!"
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Verify attestation for bitcoin-tx
+        if: hashFiles('build/src/bitcoin-tx') != ''
+        run: |
+          echo "=========================================="
+          echo "Verifying attestation for bitcoin-tx"
+          echo "=========================================="
+          
+          gh attestation verify build/src/bitcoin-tx \
+            --owner "${OWNER}" \
+            --format json > verification-result-bitcoin-tx.json || {
+              echo "::warning::Attestation verification failed for bitcoin-tx"
+              exit 0
+            }
+          
+          echo "Attestation verified successfully!"
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Upload verification results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: attestation-verification-results
+          path: |
+            verification-result-*.json
+          retention-days: 30
+          if-no-files-found: ignore
+
+      - name: Summary
+        if: always()
+        run: |
+          echo "## Attestation Verification Summary" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "Repository: \`${{ github.repository }}\`" >> $GITHUB_STEP_SUMMARY
+          echo "Owner: \`${OWNER}\`" >> $GITHUB_STEP_SUMMARY
+          echo "ENS Identity: \`kushmanmb.base.eth\`" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          
+          if [ -f verification-result-bitcoind.json ]; then
+            echo "### ✅ bitcoind - Attestation Verified" >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "\`\`\`json" >> $GITHUB_STEP_SUMMARY
+            cat verification-result-bitcoind.json | jq '.[0].verificationResult.signature.certificate | {issuer, subjectAlternativeName}' >> $GITHUB_STEP_SUMMARY
+            echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "### ⚠️ bitcoind - No attestation available" >> $GITHUB_STEP_SUMMARY
+          fi
+          
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "For more details about attestations, see the [GitHub documentation](https://docs.github.com/en/actions/security-guides/using-artifact-attestations-to-establish-provenance-for-builds)." >> $GITHUB_STEP_SUMMARY

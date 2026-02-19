@@ -16,6 +16,7 @@ This document serves as the central index for all ownership, policy, and governa
 | [.github/CODEOWNERS](.github/CODEOWNERS) | Code ownership assignments | ✅ Active |
 | [CONTRIBUTING.md](CONTRIBUTING.md) | Contribution guidelines | ✅ Active |
 | [SECURITY.md](SECURITY.md) | Security policies | ✅ Active |
+| [ATTESTATION_VERIFICATION.md](ATTESTATION_VERIFICATION.md) | Build artifact attestation and verification | ✅ Active |
 
 ---
 
@@ -130,6 +131,7 @@ Defines:
 
 Additional:
 - [SECURITY_PRACTICES.md](SECURITY_PRACTICES.md)
+- [ATTESTATION_VERIFICATION.md](ATTESTATION_VERIFICATION.md)
 - [SELF_HOSTED_RUNNER_SETUP.md](SELF_HOSTED_RUNNER_SETUP.md)
 - [KEY_MANAGEMENT_GUIDE.md](KEY_MANAGEMENT_GUIDE.md)
 
@@ -137,6 +139,8 @@ Defines:
 - Vulnerability reporting
 - Security requirements
 - Best practices
+- Attestation verification
+- Build artifact provenance
 - Runner security
 - Key management and secrets handling
 
@@ -149,6 +153,7 @@ Additional Workflows:
 - [test-suite.yml](.github/workflows/test-suite.yml)
 - [lint-and-build.yml](.github/workflows/lint-and-build.yml)
 - [runner-health-check.yml](.github/workflows/runner-health-check.yml)
+- [verify-attestation.yml](.github/workflows/verify-attestation.yml)
 
 Validator Actions:
 - [validate-code-quality](.github/actions/validate-code-quality/action.yml)
