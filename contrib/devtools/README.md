@@ -238,3 +238,79 @@ A demo script demonstrates various usage examples:
 export ETHERSCAN_API_KEY=your_api_key
 ./contrib/devtools/demo-etherscan-eth-call.sh
 ```
+
+fetch-withdrawal-credentials.js
+================================
+
+A Node.js script to query and decode Ethereum 2.0 validator withdrawal credentials. This tool helps verify where validator withdrawals and rewards will be sent.
+
+**Requirements:**
+- Node.js (v12 or higher)
+- Optional: Beacon Chain API access (default: beaconcha.in)
+
+**Usage:**
+
+```bash
+# Query validator by index
+node contrib/devtools/fetch-withdrawal-credentials.js --index 12345
+
+# Query validator by public key
+node contrib/devtools/fetch-withdrawal-credentials.js --pubkey 0x123abc...
+
+# Decode withdrawal credentials directly (offline)
+node contrib/devtools/fetch-withdrawal-credentials.js --decode 0x010000000000000000000000e16359506c028e51f16be38986ec5746251e9724
+```
+
+**Withdrawal Credentials Types:**
+
+- **Type 0x01**: Execution address credentials - can receive withdrawals
+  - Format: 0x01 + 11 zero bytes + 20-byte Ethereum address
+  - Ready for withdrawals post-Shapella upgrade
+  
+- **Type 0x00**: BLS credentials - legacy format
+  - Requires upgrade to 0x01 via BLSToExecutionChange message
+  - Cannot receive withdrawals until upgraded
+
+**Options:**
+
+- `--index <number>`: Query validator by index
+- `--pubkey <hex>`: Query validator by public key (48 bytes)
+- `--api <url>`: Beacon Chain API endpoint (default: beaconcha.in)
+- `--decode <hex>`: Decode withdrawal credentials hex directly (32 bytes)
+- `--help, -h`: Show help message
+
+**Environment Variables:**
+
+- `BEACON_API_URL`: Beacon Chain API endpoint
+- `VALIDATOR_INDEX`: Validator index to query
+- `VALIDATOR_PUBKEY`: Validator public key
+
+**Output:**
+
+The script displays:
+- Validator information (if queried from API)
+- Withdrawal credentials type (0x00 or 0x01)
+- Execution address (for 0x01 type)
+- Withdrawal capability status
+- Format validation results
+
+**Testing:**
+
+A comprehensive test suite is provided:
+
+```bash
+node contrib/devtools/test-withdrawal-credentials.js
+```
+
+**Demo:**
+
+A demo script demonstrates the tool's capabilities:
+
+```bash
+./contrib/devtools/demo-withdrawal-credentials.sh
+```
+
+**Documentation:**
+
+For detailed information, see [WITHDRAWAL_CREDENTIALS_README.md](WITHDRAWAL_CREDENTIALS_README.md).
+
