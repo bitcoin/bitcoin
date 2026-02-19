@@ -3,11 +3,14 @@ import './App.css'
 
 function App() {
   const [wasmLoaded, setWasmLoaded] = useState(false)
-  const [wasmModule, setWasmModule] = useState(null)
   const [greeting, setGreeting] = useState('')
   const [txId, setTxId] = useState('')
   const [pdfResult, setPdfResult] = useState('')
   const [error, setError] = useState('')
+
+  // WASM module state - will be used when WASM integration is complete
+  // eslint-disable-next-line no-unused-vars
+  const [wasmModule, setWasmModule] = useState(null)
 
   // Load WASM module
   useEffect(() => {
