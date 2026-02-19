@@ -236,6 +236,11 @@ def main():
     parser.add_argument("step", choices=steps, help="CI step to perform.")
     args = parser.parse_args()
 
+    os.environ.setdefault(
+        "VCPKG_INSTALLED_DIR",
+        str(Path.cwd() / "vcpkg_installed_dir"),
+    )
+
     exec(f'{args.step}("{args.ci_type}")')
 
 
