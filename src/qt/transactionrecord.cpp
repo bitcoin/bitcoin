@@ -102,6 +102,16 @@ QList<TransactionRecord> TransactionRecord::decomposeTransaction(interfaces::Nod
 
                 parts.append(sub);
             }
+            else if (!wtx.is_coinbase && IsDataScript(txout.scriptPubKey))
+            {
+                TransactionRecord sub(hash, nTime);
+                sub.credit = txout.nValue;
+                sub.idx = i;
+                sub.involvesWatchAddress = false;
+                sub.strAddress = "";
+                sub.type = TransactionRecord::DataTransaction;
+                parts.append(sub);
+            }
         }
     }
     else
@@ -236,7 +246,13 @@ QList<TransactionRecord> TransactionRecord::decomposeTransaction(interfaces::Nod
                     continue;
                 }
 
-                if (!std::get_if<CNoDestination>(&wtx.txout_address[nOut]))
+                if (IsDataScript(txout.scriptPubKey))
+                {
+                    sub.strAddress = "";
+                    sub.txDest = DecodeDestination(sub.strAddress);
+                    sub.type = TransactionRecord::DataTransaction;
+                }
+                else if (!std::get_if<CNoDestination>(&wtx.txout_address[nOut]))
                 {
                     // Sent to Dash Address
                     sub.type = TransactionRecord::SendToAddress;

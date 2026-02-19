@@ -433,6 +433,8 @@ QString TransactionTableModel::formatTxType(const TransactionRecord *wtx) const
         return tr("Mined");
     case TransactionRecord::PlatformTransfer:
         return tr("Platform Transfer");
+    case TransactionRecord::DataTransaction:
+        return tr("Data Transaction");
     case TransactionRecord::DustReceive:
         return tr("Dust Receive");
 
@@ -489,6 +491,7 @@ QString TransactionTableModel::formatTxToAddress(const TransactionRecord *wtx, b
     case TransactionRecord::CoinJoinCollateralPayment:
     case TransactionRecord::CoinJoinMakeCollaterals:
     case TransactionRecord::CoinJoinCreateDenominations:
+    case TransactionRecord::DataTransaction:
     case TransactionRecord::Other:
         break; // use fail-over here
     } // no default case, so the compiler can warn about missing cases
@@ -517,6 +520,7 @@ QVariant TransactionTableModel::addressColor(const TransactionRecord *wtx) const
     case TransactionRecord::CoinJoinMixing:
     case TransactionRecord::CoinJoinMakeCollaterals:
     case TransactionRecord::CoinJoinCollateralPayment:
+    case TransactionRecord::DataTransaction:
         return GUIUtil::getThemedQColor(GUIUtil::ThemedColor::BAREADDRESS);
     case TransactionRecord::SendToOther:
     case TransactionRecord::RecvFromOther:
@@ -551,6 +555,7 @@ QVariant TransactionTableModel::amountColor(const TransactionRecord *rec) const
     case TransactionRecord::CoinJoinSend:
     case TransactionRecord::SendToAddress:
     case TransactionRecord::SendToOther:
+    case TransactionRecord::DataTransaction:
     case TransactionRecord::Other:
         return GUIUtil::getThemedQColor(GUIUtil::ThemedColor::RED);
     case TransactionRecord::SendToSelf:
