@@ -134,6 +134,7 @@ add_executable(fuzz
   utxo_snapshot.cpp
   utxo_total_supply.cpp
   validation_load_mempool.cpp
+  private_broadcast_persist.cpp
   vecdeque.cpp
   versionbits.cpp
 )

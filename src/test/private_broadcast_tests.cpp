@@ -7,6 +7,7 @@
 #include <test/util/setup_common.h>
 #include <util/time.h>
 
+#include <algorithm>
 #include <boost/test/unit_test.hpp>
 
 BOOST_FIXTURE_TEST_SUITE(private_broadcast_tests, BasicTestingSetup)
@@ -34,6 +35,7 @@ BOOST_AUTO_TEST_CASE(basic)
     BOOST_CHECK(!pb.PickTxForSend(/*will_send_to_nodeid=*/recipient1).has_value());
     BOOST_CHECK_EQUAL(pb.GetStale().size(), 0);
     BOOST_CHECK(!pb.HavePendingTransactions());
+    BOOST_CHECK_EQUAL(pb.GetBroadcastInfo().size(), 0);
 
     // Make a transaction and add it.
     const auto tx1{MakeDummyTx(/*id=*/1, /*num_witness=*/0)};
@@ -48,6 +50,28 @@ BOOST_AUTO_TEST_CASE(basic)
 
     BOOST_CHECK(pb.Add(tx2));
 
+    {
+        const auto infos{pb.GetBroadcastInfo()};
+        BOOST_CHECK_EQUAL(infos.size(), 2);
+
+        const auto it1{std::ranges::find_if(infos, [&](const auto& info) { return info.tx->GetWitnessHash() == tx1->GetWitnessHash(); })};
+        const auto it2{std::ranges::find_if(infos, [&](const auto& info) { return info.tx->GetWitnessHash() == tx2->GetWitnessHash(); })};
+        BOOST_REQUIRE(it1 != infos.end());
+        BOOST_REQUIRE(it2 != infos.end());
+        const auto& info1{*it1};
+        const auto& info2{*it2};
+
+        BOOST_CHECK_EQUAL(info1.num_sent, 0);
+        BOOST_CHECK(!info1.last_sent.has_value());
+        BOOST_CHECK_EQUAL(info1.num_peer_reception_acks, 0);
+        BOOST_CHECK(!info1.last_peer_reception_ack.has_value());
+
+        BOOST_CHECK_EQUAL(info2.num_sent, 0);
+        BOOST_CHECK(!info2.last_sent.has_value());
+        BOOST_CHECK_EQUAL(info2.num_peer_reception_acks, 0);
+        BOOST_CHECK(!info2.last_peer_reception_ack.has_value());
+    }
+
     const auto tx_for_recipient1{pb.PickTxForSend(/*will_send_to_nodeid=*/recipient1).value()};
     BOOST_CHECK(tx_for_recipient1 == tx1 || tx_for_recipient1 == tx2);
 
@@ -56,6 +80,23 @@ BOOST_AUTO_TEST_CASE(basic)
     const auto tx_for_recipient2{pb.PickTxForSend(/*will_send_to_nodeid=*/recipient2).value()};
     BOOST_CHECK(tx_for_recipient2 == tx1 || tx_for_recipient2 == tx2);
     BOOST_CHECK_NE(tx_for_recipient1, tx_for_recipient2);
+
+    {
+        const auto infos{pb.GetBroadcastInfo()};
+        BOOST_CHECK_EQUAL(infos.size(), 2);
+
+        const auto it1{std::ranges::find_if(infos, [&](const auto& info) { return info.tx->GetWitnessHash() == tx1->GetWitnessHash(); })};
+        const auto it2{std::ranges::find_if(infos, [&](const auto& info) { return info.tx->GetWitnessHash() == tx2->GetWitnessHash(); })};
+        BOOST_REQUIRE(it1 != infos.end());
+        BOOST_REQUIRE(it2 != infos.end());
+        const auto& info1{*it1};
+        const auto& info2{*it2};
+
+        BOOST_CHECK_EQUAL(info1.num_sent, 1);
+        BOOST_CHECK(info1.last_sent.has_value());
+        BOOST_CHECK_EQUAL(info2.num_sent, 1);
+        BOOST_CHECK(info2.last_sent.has_value());
+    }
 
     const NodeId nonexistent_recipient{0};
 
@@ -78,6 +119,23 @@ BOOST_AUTO_TEST_CASE(basic)
     BOOST_CHECK(pb.DidNodeConfirmReception(recipient1));
     BOOST_CHECK(!pb.DidNodeConfirmReception(recipient2));
 
+    {
+        const auto infos{pb.GetBroadcastInfo()};
+        BOOST_CHECK_EQUAL(infos.size(), 2);
+
+        const auto it_confirmed{std::ranges::find_if(infos, [&](const auto& info) { return info.tx->GetWitnessHash() == tx_for_recipient1->GetWitnessHash(); })};
+        const auto it_unconfirmed{std::ranges::find_if(infos, [&](const auto& info) { return info.tx->GetWitnessHash() == tx_for_recipient2->GetWitnessHash(); })};
+        BOOST_REQUIRE(it_confirmed != infos.end());
+        BOOST_REQUIRE(it_unconfirmed != infos.end());
+        const auto& confirmed_tx{*it_confirmed};
+        const auto& unconfirmed_tx{*it_unconfirmed};
+
+        BOOST_CHECK_EQUAL(confirmed_tx.num_peer_reception_acks, 1);
+        BOOST_CHECK(confirmed_tx.last_peer_reception_ack.has_value());
+        BOOST_CHECK_EQUAL(unconfirmed_tx.num_peer_reception_acks, 0);
+        BOOST_CHECK(!unconfirmed_tx.last_peer_reception_ack.has_value());
+    }
+
     BOOST_CHECK_EQUAL(pb.GetStale().size(), 1);
     BOOST_CHECK_EQUAL(pb.GetStale()[0], tx_for_recipient2);
 
@@ -90,6 +148,7 @@ BOOST_AUTO_TEST_CASE(basic)
     BOOST_CHECK_EQUAL(pb.Remove(tx_for_recipient2).value(), 0);
     BOOST_CHECK(!pb.Remove(tx_for_recipient2).has_value());
 
+    BOOST_CHECK_EQUAL(pb.GetBroadcastInfo().size(), 0);
     BOOST_CHECK(!pb.PickTxForSend(/*will_send_to_nodeid=*/nonexistent_recipient).has_value());
 }
 

@@ -11,6 +11,7 @@
 #include <node/txorphanage.h>
 #include <protocol.h>
 #include <threadsafety.h>
+#include <util/fs.h>
 #include <util/expected.h>
 #include <validationinterface.h>
 
@@ -131,6 +132,12 @@ public:
      * asynchronously via short-lived connections to peers on privacy networks.
      */
     virtual void InitiateTxBroadcastPrivate(const CTransactionRef& tx) = 0;
+
+    /** Dump private broadcast state to disk. */
+    virtual void DumpPrivateBroadcast(const fs::path& dump_path) const = 0;
+
+    /** Load private broadcast state from disk. */
+    virtual void LoadPrivateBroadcast(const fs::path& load_path) = 0;
 
     /** Send ping message to all peers */
     virtual void SendPings() = 0;
