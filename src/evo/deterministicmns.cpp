@@ -702,7 +702,7 @@ bool CDeterministicMNManager::ProcessBlock(const CBlock& block, gsl::not_null<co
     }
 
     if (diff.HasChanges()) {
-        updatesRet = {newList, oldList, diff};
+        updatesRet = {.old_list = oldList, .new_list = newList, .diff = diff};
     }
 
     if (::g_stats_client->active()) {
@@ -755,7 +755,7 @@ bool CDeterministicMNManager::UndoBlock(gsl::not_null<const CBlockIndex*> pindex
         curList.ApplyDiff(pindex, diff);
 
         auto inversedDiff{curList.BuildDiff(prevList)};
-        updatesRet = {curList, prevList, inversedDiff};
+        updatesRet = {.old_list = curList, .new_list = prevList, .diff = inversedDiff};
     }
 
     const auto& consensusParams = Params().GetConsensus();
