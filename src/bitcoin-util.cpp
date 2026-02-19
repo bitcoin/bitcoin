@@ -9,6 +9,7 @@
 #include <chainparams.h>
 #include <chainparamsbase.h>
 #include <clientversion.h>
+#include <common/app_constants.h>
 #include <common/args.h>
 #include <common/system.h>
 #include <compat/compat.h>
@@ -23,8 +24,6 @@
 #include <functional>
 #include <memory>
 #include <thread>
-
-static const int CONTINUE_EXECUTION=-1;
 
 const TranslateFn G_TRANSLATION_FUN{nullptr};
 
@@ -46,7 +45,7 @@ static int AppInitUtil(ArgsManager& args, int argc, char* argv[])
     SetupBitcoinUtilArgs(args);
     std::string error;
     if (!args.ParseParameters(argc, argv, error)) {
-        tfm::format(std::cerr, "Error parsing command line arguments: %s\n", error);
+        tfm::format(std::cerr, app_error::COMMAND_LINE_PARSE_ERROR, error);
         return EXIT_FAILURE;
     }
 
@@ -68,7 +67,7 @@ static int AppInitUtil(ArgsManager& args, int argc, char* argv[])
         tfm::format(std::cout, "%s", strUsage);
 
         if (argc < 2) {
-            tfm::format(std::cerr, "Error: too few parameters\n");
+            tfm::format(std::cerr, app_error::TOO_FEW_PARAMETERS);
             return EXIT_FAILURE;
         }
         return EXIT_SUCCESS;

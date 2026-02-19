@@ -7,6 +7,7 @@
 #include <chainparams.h>
 #include <chainparamsbase.h>
 #include <clientversion.h>
+#include <common/app_constants.h>
 #include <common/args.h>
 #include <common/system.h>
 #include <compat/compat.h>
@@ -51,7 +52,7 @@ static std::optional<int> WalletAppInit(ArgsManager& args, int argc, char* argv[
     SetupWalletToolArgs(args);
     std::string error_message;
     if (!args.ParseParameters(argc, argv, error_message)) {
-        tfm::format(std::cerr, "Error parsing command line arguments: %s\n", error_message);
+        tfm::format(std::cerr, app_error::COMMAND_LINE_PARSE_ERROR, error_message);
         return EXIT_FAILURE;
     }
     const bool missing_args{argc < 2};
@@ -72,7 +73,7 @@ static std::optional<int> WalletAppInit(ArgsManager& args, int argc, char* argv[
         }
         tfm::format(std::cout, "%s", strUsage);
         if (missing_args) {
-            tfm::format(std::cerr, "Error: too few parameters\n");
+            tfm::format(std::cerr, app_error::TOO_FEW_PARAMETERS);
             return EXIT_FAILURE;
         }
         return EXIT_SUCCESS;
@@ -82,7 +83,7 @@ static std::optional<int> WalletAppInit(ArgsManager& args, int argc, char* argv[
     LogInstance().m_print_to_console = args.GetBoolArg("-printtoconsole", args.GetBoolArg("-debug", false));
 
     if (!CheckDataDirOption(args)) {
-        tfm::format(std::cerr, "Error: Specified data directory \"%s\" does not exist.\n", args.GetArg("-datadir", ""));
+        tfm::format(std::cerr, app_error::DATADIR_DOES_NOT_EXIST, args.GetArg("-datadir", ""));
         return EXIT_FAILURE;
     }
     // Check for chain settings (Params() calls are only valid after this clause)
