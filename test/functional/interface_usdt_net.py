@@ -352,7 +352,6 @@ class NetTracepointTest(BitcoinTestFramework):
         EXPECTED_INBOUND_CONNECTIONS = 2
 
         def handle_inbound_connection(_, data, __):
-            nonlocal inbound_connections
             event = ctypes.cast(data, ctypes.POINTER(NewConnection)).contents
             self.log.info(f"handle_inbound_connection(): {event}")
             inbound_connections.append(event)
