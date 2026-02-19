@@ -145,7 +145,7 @@ static int AppInitRPC(int argc, char* argv[])
     SetupCliArgs(gArgs);
     std::string error;
     if (!gArgs.ParseParameters(argc, argv, error)) {
-        tfm::format(std::cerr, "Error parsing command line arguments: %s\n", error);
+        tfm::format(std::cerr, app_error::COMMAND_LINE_PARSE_ERROR, error);
         return EXIT_FAILURE;
     }
     if (argc < 2 || HelpRequested(gArgs) || gArgs.GetBoolArg("-version", false)) {
@@ -170,13 +170,13 @@ static int AppInitRPC(int argc, char* argv[])
 
         tfm::format(std::cout, "%s", strUsage);
         if (argc < 2) {
-            tfm::format(std::cerr, "Error: too few parameters\n");
+            tfm::format(std::cerr, app_error::TOO_FEW_PARAMETERS);
             return EXIT_FAILURE;
         }
         return EXIT_SUCCESS;
     }
     if (!CheckDataDirOption(gArgs)) {
-        tfm::format(std::cerr, "Error: Specified data directory \"%s\" does not exist.\n", gArgs.GetArg("-datadir", ""));
+        tfm::format(std::cerr, app_error::DATADIR_DOES_NOT_EXIST, gArgs.GetArg("-datadir", ""));
         return EXIT_FAILURE;
     }
     if (!gArgs.ReadConfigFiles(error, true)) {

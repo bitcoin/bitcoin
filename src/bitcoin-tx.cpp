@@ -91,7 +91,7 @@ static int AppInitRawTx(int argc, char* argv[])
     SetupBitcoinTxArgs(gArgs);
     std::string error;
     if (!gArgs.ParseParameters(argc, argv, error)) {
-        tfm::format(std::cerr, "Error parsing command line arguments: %s\n", error);
+        tfm::format(std::cerr, app_error::COMMAND_LINE_PARSE_ERROR, error);
         return EXIT_FAILURE;
     }
 
@@ -125,7 +125,7 @@ static int AppInitRawTx(int argc, char* argv[])
         tfm::format(std::cout, "%s", strUsage);
 
         if (argc < 2) {
-            tfm::format(std::cerr, "Error: too few parameters\n");
+            tfm::format(std::cerr, app_error::TOO_FEW_PARAMETERS);
             return EXIT_FAILURE;
         }
         return EXIT_SUCCESS;
