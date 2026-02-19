@@ -70,8 +70,17 @@ struct CNodeStateStats {
 };
 
 struct PeerManagerInfo {
+    struct InvBucketInfo {
+        size_t backlog_count{0};
+        double count_bucket{0};
+        double size_bucket{0};
+    };
+
     std::chrono::seconds median_outbound_time_offset{0s};
     bool ignores_incoming_txs{false};
+    unsigned int tx_send_rate{0};
+    InvBucketInfo inbound_bucket;
+    InvBucketInfo outbound_bucket;
 };
 
 class PeerManager : public CValidationInterface, public NetEventsInterface
