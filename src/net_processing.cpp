@@ -59,6 +59,7 @@
 #include <util/check.h>
 #include <util/strencodings.h>
 #include <util/time.h>
+#include <util/tokenbucket.h>
 #include <util/trace.h>
 #include <validation.h>
 
@@ -169,9 +170,11 @@ static constexpr auto INBOUND_INVENTORY_BROADCAST_INTERVAL{5s};
 static constexpr auto OUTBOUND_INVENTORY_BROADCAST_INTERVAL{2s};
 /** Maximum rate of inventory items to send per second.
  *  Limits the impact of low-fee transaction floods. */
-// static constexpr unsigned int INVENTORY_BROADCAST_PER_SECOND{14};
+static constexpr unsigned int INVENTORY_BROADCAST_PER_SECOND{14};
 /** Target number of tx inventory items to send per transmission. */
-// static constexpr unsigned int INVENTORY_BROADCAST_TARGET = INVENTORY_BROADCAST_PER_SECOND * count_seconds(INBOUND_INVENTORY_BROADCAST_INTERVAL);
+static constexpr unsigned int INVENTORY_BROADCAST_TARGET = INVENTORY_BROADCAST_PER_SECOND * count_seconds(INBOUND_INVENTORY_BROADCAST_INTERVAL);
+/** Multiplier for the inventory bucket rate for outbounds */
+static constexpr double OUTBOUND_INVENTORY_BUCKET_MULTIPLIER{Ticks<SecondsDouble>(INBOUND_INVENTORY_BROADCAST_INTERVAL) / Ticks<SecondsDouble>(OUTBOUND_INVENTORY_BROADCAST_INTERVAL)};
 /** Average delay between feefilter broadcasts in seconds. */
 static constexpr auto AVG_FEEFILTER_BROADCAST_INTERVAL{10min};
 /** Maximum feefilter broadcast delay after significant change. */
@@ -496,6 +499,53 @@ struct CNodeState {
     int64_t m_last_block_announcement{0};
 };
 
+struct InvToSendBucket {
+    std::vector<Wtxid> backlog;
+    util::TokenBucket<NodeClock> size_bucket;
+    util::TokenBucket<NodeClock> count_bucket;
+
+    /* Initialization rationale:
+     *
+     * Count bucket: Fills at rate*mult, total/initial capacity of 30s at fill rate
+     * Size bucket: Fills at 12MB every 600s, times mult so expected to be 6 times
+     *   the rate at which blocks can confirm transactions, but at least 3 times that in
+     *   the worst case. High limit to avoid triggering even with large spikes, but a
+     *   low initial value to ensure that frequent node restarts don't allow the limit
+     *   to be bypassed.
+     */
+    InvToSendBucket(unsigned int rate, double mult)
+        : size_bucket(/*rate=*/20e3 * mult, /*value=*/4e6, /*cap=*/50e6),
+          count_bucket(/*rate=*/rate * mult, /*value=*/rate * 30, /*cap=*/rate * 30)
+    {
+    }
+
+    bool immediate_relay() const
+    {
+        return backlog.empty() && count_bucket.value() >= 1 && size_bucket.value() >= 0;
+    }
+
+    size_t avail() const
+    {
+        if (backlog.empty() || size_bucket.value() < 0 || count_bucket.value() < 0) {
+            return 0;
+        } else {
+            return static_cast<size_t>(count_bucket.value());
+        }
+    }
+
+    void increment(NodeClock::time_point now)
+    {
+        size_bucket.increment(now);
+        count_bucket.increment(now);
+    }
+
+    bool decrement(double size)
+    {
+        bool x = size_bucket.decrement(size, /*floor=*/-50e3);
+        return count_bucket.decrement(1) && x;
+    }
+};
+
 class PeerManagerImpl final : public PeerManager
 {
 public:
@@ -522,9 +572,9 @@ public:
     void FinalizeNode(const CNode& node) override EXCLUSIVE_LOCKS_REQUIRED(!m_peer_mutex, !m_headers_presync_mutex, !m_tx_download_mutex);
     bool HasAllDesirableServiceFlags(ServiceFlags services) const override;
     bool ProcessMessages(CNode& node, std::atomic<bool>& interrupt) override
-        EXCLUSIVE_LOCKS_REQUIRED(!m_peer_mutex, !m_most_recent_block_mutex, !m_headers_presync_mutex, g_msgproc_mutex, !m_tx_download_mutex);
+        EXCLUSIVE_LOCKS_REQUIRED(!m_peer_mutex, !m_most_recent_block_mutex, !m_headers_presync_mutex, g_msgproc_mutex, !m_tx_download_mutex, !m_inv_to_send_mutex);
     bool SendMessages(CNode& node) override
-        EXCLUSIVE_LOCKS_REQUIRED(!m_peer_mutex, !m_most_recent_block_mutex, g_msgproc_mutex, !m_tx_download_mutex);
+        EXCLUSIVE_LOCKS_REQUIRED(!m_peer_mutex, !m_most_recent_block_mutex, g_msgproc_mutex, !m_tx_download_mutex, !m_inv_to_send_mutex);
 
     /** Implement PeerManager */
     void StartScheduledTasks(CScheduler& scheduler) override;
@@ -537,7 +587,7 @@ public:
     std::vector<PrivateBroadcast::TxBroadcastInfo> GetPrivateBroadcastInfo() const override EXCLUSIVE_LOCKS_REQUIRED(!m_peer_mutex);
     std::vector<CTransactionRef> AbortPrivateBroadcast(const uint256& id) override EXCLUSIVE_LOCKS_REQUIRED(!m_peer_mutex);
     void SendPings() override EXCLUSIVE_LOCKS_REQUIRED(!m_peer_mutex);
-    void InitiateTxBroadcastToAll(const CTransactionRef& tx) override EXCLUSIVE_LOCKS_REQUIRED(!m_peer_mutex);
+    void InitiateTxBroadcastToAll(const CTransactionRef& tx) override EXCLUSIVE_LOCKS_REQUIRED(!m_peer_mutex, !m_inv_to_send_mutex);
     void InitiateTxBroadcastPrivate(const CTransactionRef& tx) override EXCLUSIVE_LOCKS_REQUIRED(!m_peer_mutex);
     void SetBestBlock(int height, std::chrono::seconds time) override
     {
@@ -551,7 +601,7 @@ public:
 private:
     void ProcessMessage(Peer& peer, CNode& pfrom, const std::string& msg_type, DataStream& vRecv, std::chrono::microseconds time_received,
                         const std::atomic<bool>& interruptMsgProc)
-        EXCLUSIVE_LOCKS_REQUIRED(!m_peer_mutex, !m_most_recent_block_mutex, !m_headers_presync_mutex, g_msgproc_mutex, !m_tx_download_mutex);
+        EXCLUSIVE_LOCKS_REQUIRED(!m_peer_mutex, !m_most_recent_block_mutex, !m_headers_presync_mutex, g_msgproc_mutex, !m_tx_download_mutex, !m_inv_to_send_mutex);
 
     /** Consider evicting an outbound peer based on the amount of time they've been behind our tip */
     void ConsiderEviction(CNode& pto, Peer& peer, std::chrono::seconds time_in_seconds) EXCLUSIVE_LOCKS_REQUIRED(cs_main, g_msgproc_mutex);
@@ -560,7 +610,7 @@ private:
     void EvictExtraOutboundPeers(std::chrono::seconds now) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
 
     /** Retrieve unbroadcast transactions from the mempool and reattempt sending to peers */
-    void ReattemptInitialBroadcast(CScheduler& scheduler) EXCLUSIVE_LOCKS_REQUIRED(!m_peer_mutex);
+    void ReattemptInitialBroadcast(CScheduler& scheduler) EXCLUSIVE_LOCKS_REQUIRED(!m_peer_mutex, !m_inv_to_send_mutex);
 
     /** Rebroadcast stale private transactions (already broadcast but not received back from the network). */
     void ReattemptPrivateBroadcast(CScheduler& scheduler);
@@ -615,13 +665,13 @@ private:
     /** Handle a transaction whose result was MempoolAcceptResult::ResultType::VALID.
      * Updates m_txrequest, m_orphanage, and vExtraTxnForCompact. Also queues the tx for relay. */
     void ProcessValidTx(NodeId nodeid, const CTransactionRef& tx, const std::list<CTransactionRef>& replaced_transactions)
-        EXCLUSIVE_LOCKS_REQUIRED(!m_peer_mutex, g_msgproc_mutex, m_tx_download_mutex);
+        EXCLUSIVE_LOCKS_REQUIRED(!m_peer_mutex, g_msgproc_mutex, m_tx_download_mutex, !m_inv_to_send_mutex);
 
     /** Handle the results of package validation: calls ProcessValidTx and ProcessInvalidTx for
      * individual transactions, and caches rejection for the package as a group.
      */
     void ProcessPackageResult(const node::PackageToValidate& package_to_validate, const PackageMempoolAcceptResult& package_result)
-        EXCLUSIVE_LOCKS_REQUIRED(!m_peer_mutex, g_msgproc_mutex, m_tx_download_mutex);
+        EXCLUSIVE_LOCKS_REQUIRED(!m_peer_mutex, g_msgproc_mutex, m_tx_download_mutex, !m_inv_to_send_mutex);
 
     /**
      * Reconsider orphan transactions after a parent has been accepted to the mempool.
@@ -635,7 +685,7 @@ private:
      *                     will be empty.
      */
     bool ProcessOrphanTx(Peer& peer)
-        EXCLUSIVE_LOCKS_REQUIRED(!m_peer_mutex, g_msgproc_mutex, !m_tx_download_mutex);
+        EXCLUSIVE_LOCKS_REQUIRED(!m_peer_mutex, g_msgproc_mutex, !m_tx_download_mutex, !m_inv_to_send_mutex);
 
     /** Process a single headers message from a peer.
      *
@@ -1086,6 +1136,12 @@ private:
 
     /// The transactions to be broadcast privately.
     PrivateBroadcast m_tx_for_private_broadcast;
+
+    mutable Mutex m_inv_to_send_mutex;
+    InvToSendBucket m_inbound_inv_bucket GUARDED_BY(m_inv_to_send_mutex);
+    InvToSendBucket m_outbound_inv_bucket GUARDED_BY(m_inv_to_send_mutex);
+
+    void CatchupRelayTransactions(NodeClock::time_point now) EXCLUSIVE_LOCKS_REQUIRED(!m_peer_mutex, !m_inv_to_send_mutex);
 };
 
 const CNodeState* PeerManagerImpl::State(NodeId pnode) const
@@ -2006,7 +2062,9 @@ PeerManagerImpl::PeerManagerImpl(CConnman& connman, AddrMan& addrman,
       m_mempool(pool),
       m_txdownloadman(node::TxDownloadOptions{pool, m_rng, opts.deterministic_rng}),
       m_warnings{warnings},
-      m_opts{opts}
+      m_opts{opts},
+      m_inbound_inv_bucket(/*rate=*/INVENTORY_BROADCAST_PER_SECOND, /*mult=*/1.0),
+      m_outbound_inv_bucket(/*rate=*/INVENTORY_BROADCAST_PER_SECOND, /*mult=*/OUTBOUND_INVENTORY_BUCKET_MULTIPLIER)
 {
     // While Erlay support is incomplete, it must be enabled explicitly via -txreconciliation.
     // This argument can go away after Erlay support is complete.
@@ -2233,13 +2291,128 @@ void PeerManagerImpl::SendPings()
     for(auto& it : m_peer_map) it.second->m_ping_queued = true;
 }
 
+static std::vector<Wtxid> BumpInvVecForProcessing(InvToSendBucket& inv_bucket, size_t n, CTxMemPool& mempool) EXCLUSIVE_LOCKS_REQUIRED(mempool.cs)
+{
+    std::vector<Wtxid> to_process;
+
+    if (n > 0 && !inv_bucket.backlog.empty()) {
+        // sort an extra element if possible so we always include a duplicate of any of the
+        // best n elements if there is one
+        auto itervec = mempool.SortMiningScoreWithTopology(inv_bucket.backlog, n + 1);
+        if (n >= itervec.size()) {
+            inv_bucket.backlog.clear();
+            inv_bucket.backlog.swap(to_process); // maybe avoid reallocating
+            to_process.reserve(itervec.size());
+        } else {
+            inv_bucket.backlog.clear();
+            to_process.reserve(n);
+        }
+
+        // process things at the end
+        size_t i = itervec.size();
+        while (i > 0 && n > 0) {
+            --i;
+            --n;
+            if (i > 0 && itervec[i] == itervec[i - 1]) continue; // skip duplicates
+            to_process.push_back(itervec[i]->GetTx().GetWitnessHash());
+            if (!inv_bucket.size_bucket.decrement(itervec[i]->GetTx().ComputeTotalSize())) {
+                break; // used up size budget
+            }
+        }
+        // save the remainder (mostly unsorted) section as-is
+        for (size_t j = 0; j < i; ++j) {
+            inv_bucket.backlog.push_back(itervec[j]->GetTx().GetWitnessHash());
+        }
+        if (inv_bucket.backlog.empty()) {
+            std::vector<Wtxid>{}.swap(inv_bucket.backlog); // free memory associated with vec
+        }
+        inv_bucket.count_bucket.decrement(to_process.size());
+    }
+    return to_process;
+}
+
+void PeerManagerImpl::CatchupRelayTransactions(NodeClock::time_point now)
+{
+    std::vector<Wtxid> for_inbound;
+    std::vector<Wtxid> for_outbound;
+
+    LOCK(m_inv_to_send_mutex);
+    m_inbound_inv_bucket.increment(now);
+    m_outbound_inv_bucket.increment(now);
+    size_t in_avail = m_inbound_inv_bucket.avail();
+    size_t out_avail = m_outbound_inv_bucket.avail();
+
+    if (in_avail < INVENTORY_BROADCAST_TARGET && out_avail < INVENTORY_BROADCAST_TARGET) return;
+    if (in_avail < INVENTORY_BROADCAST_TARGET) in_avail = 0;
+    if (out_avail < INVENTORY_BROADCAST_TARGET / 2) out_avail = 0;
+
+    {
+        LOCK(m_mempool.cs);
+        for_inbound = BumpInvVecForProcessing(m_inbound_inv_bucket, in_avail, m_mempool);
+        for_outbound = BumpInvVecForProcessing(m_outbound_inv_bucket, out_avail, m_mempool);
+    }
+    if (!for_inbound.empty() || !for_outbound.empty()) {
+        bool any_inbound_connected = false;
+        bool any_outbound_connected = false;
+        LOCK(m_peer_mutex);
+        for (auto& it : m_peer_map) {
+            Peer& peer = *it.second;
+            auto tx_relay = peer.GetTxRelay();
+            if (!tx_relay) continue;
+
+            LOCK(tx_relay->m_tx_inventory_mutex);
+            // Only queue transactions for announcement once the version handshake
+            // is completed. The time of arrival for these transactions is
+            // otherwise at risk of leaking to a spy, if the spy is able to
+            // distinguish transactions received during the handshake from the rest
+            // in the announcement.
+            if (tx_relay->m_next_inv_send_time == 0s) continue;
+            if (peer.m_is_inbound) {
+                any_inbound_connected = true;
+            } else {
+                any_outbound_connected = true;
+            }
+            for (auto& i : (peer.m_is_inbound ? for_inbound : for_outbound)) {
+                tx_relay->m_tx_inventory_to_send.emplace_back(i);
+            }
+        }
+        // if the node has no in/outbound connections, pretend we send all the backlog txs
+        if (!any_inbound_connected) std::vector<Wtxid>{}.swap(m_inbound_inv_bucket.backlog);
+        if (!any_outbound_connected) std::vector<Wtxid>{}.swap(m_outbound_inv_bucket.backlog);
+    }
+}
+
 void PeerManagerImpl::InitiateTxBroadcastToAll(const CTransactionRef& tx)
 {
     const Txid& txid{tx->GetHash()};
     const Wtxid& wtxid{tx->GetWitnessHash()};
+
+    bool immediate_inbound = false;
+    bool immediate_outbound = false;
+    {
+        LOCK(m_inv_to_send_mutex);
+        auto now = NodeClock::now();
+        m_inbound_inv_bucket.increment(now);
+        m_outbound_inv_bucket.increment(now);
+        immediate_inbound = m_inbound_inv_bucket.immediate_relay();
+        immediate_outbound = m_outbound_inv_bucket.immediate_relay();
+        if (!immediate_inbound) m_inbound_inv_bucket.backlog.push_back(wtxid);
+        if (!immediate_outbound) m_outbound_inv_bucket.backlog.push_back(wtxid);
+        if (!immediate_inbound && !immediate_outbound) {
+            return;
+        }
+        auto size = tx->ComputeTotalSize();
+        if (immediate_inbound) m_inbound_inv_bucket.decrement(size);
+        if (immediate_outbound) m_outbound_inv_bucket.decrement(size);
+    }
     LOCK(m_peer_mutex);
     for(auto& it : m_peer_map) {
         Peer& peer = *it.second;
+        if (peer.m_is_inbound) {
+            if (!immediate_inbound) continue;
+        } else {
+            if (!immediate_outbound) continue;
+        }
         auto tx_relay = peer.GetTxRelay();
         if (!tx_relay) continue;
 
@@ -5735,6 +5908,8 @@ bool PeerManagerImpl::SendMessages(CNode& node)
     MaybeSendAddr(node, peer, current_time);
 
     MaybeSendSendHeaders(node, peer);
+
+    CatchupRelayTransactions(NodeClock::now());
 
     {
         LOCK(cs_main);
