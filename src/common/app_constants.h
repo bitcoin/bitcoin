@@ -10,15 +10,15 @@
  */
 
 /** Return value to indicate continuing execution (not an exit code) */
-static constexpr int CONTINUE_EXECUTION = -1;
+inline constexpr int CONTINUE_EXECUTION = -1;
 
 /**
  * Common error messages used across command-line applications.
  */
 namespace app_error {
-    constexpr const char* TOO_FEW_PARAMETERS = "Error: too few parameters\n";
-    constexpr const char* DATADIR_DOES_NOT_EXIST = "Error: Specified data directory \"%s\" does not exist.\n";
-    constexpr const char* COMMAND_LINE_PARSE_ERROR = "Error parsing command line arguments: %s\n";
+    inline constexpr const char* TOO_FEW_PARAMETERS = "Error: too few parameters\n";
+    inline constexpr const char* DATADIR_DOES_NOT_EXIST = "Error: Specified data directory \"%s\" does not exist.\n";
+    inline constexpr const char* COMMAND_LINE_PARSE_ERROR = "Error parsing command line arguments: %s\n";
 }
 
 #endif // BITCOIN_COMMON_APP_CONSTANTS_H
