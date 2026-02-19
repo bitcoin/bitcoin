@@ -88,7 +88,7 @@ void BenchLinearizeOptimallyTotal(benchmark::Bench& bench, const std::string& na
         // Benchmark the total time to optimal.
         uint64_t rng_seed = 0;
         bench.name(bench_name).run([&] {
-            auto [_lin, optimal, _cost] = Linearize(depgraph, /*max_iterations=*/10000000, rng_seed++, IndexTxOrder{});
+            auto [_lin, optimal, _cost, _is_chain] = Linearize(depgraph, /*max_iterations=*/10000000, rng_seed++, IndexTxOrder{});
             assert(optimal);
         });
     }
@@ -105,7 +105,7 @@ void BenchLinearizeOptimallyPerCost(benchmark::Bench& bench, const std::string& 
         // Determine the cost of 100 rng_seeds.
         uint64_t total_cost = 0;
         for (uint64_t iter = 0; iter < 100; ++iter) {
-            auto [_lin, optimal, cost] = Linearize(depgraph, /*max_iterations=*/10000000, /*rng_seed=*/iter, IndexTxOrder{});
+            auto [_lin, optimal, cost, _is_chain] = Linearize(depgraph, /*max_iterations=*/10000000, /*rng_seed=*/iter, IndexTxOrder{});
             total_cost += cost;
         }
 
@@ -113,13 +113,32 @@ void BenchLinearizeOptimallyPerCost(benchmark::Bench& bench, const std::string& 
         bench.name(bench_name).unit("cost").batch(total_cost).run([&] {
             uint64_t recompute_cost = 0;
             for (uint64_t iter = 0; iter < 100; ++iter) {
-                auto [_lin, optimal, cost] = Linearize(depgraph, /*max_iterations=*/10000000, /*rng_seed=*/iter, IndexTxOrder{});
+                auto [_lin, optimal, cost, _is_chain] = Linearize(depgraph, /*max_iterations=*/10000000, /*rng_seed=*/iter, IndexTxOrder{});
                 assert(optimal);
                 recompute_cost += cost;
             }
             assert(total_cost == recompute_cost);
         });
     }
+}
+
+/** Construct a chain graph with strictly increasing individual feerates (fee_i = i+1, size_i = 1).
+ *
+ * This is a pessimal feerate distribution for the SPF algorithm on chains: every transaction
+ * looks attractive in isolation (feerate i+1), but to include tx_i all its ancestors must be
+ * included too. As a result the only valid chunk with feerate greater than any strict prefix is
+ * the entire chain (feerate (N+1)/2), which SPF must discover through many improvement steps.
+ * TryLinearizeChain handles this in O(N) regardless of feerate distribution.
+ */
+template<typename SetType>
+DepGraph<SetType> MakeMonotoneChainGraph(DepGraphIndex ntx)
+{
+    DepGraph<SetType> depgraph;
+    for (DepGraphIndex i = 0; i < ntx; ++i) {
+        depgraph.AddTransaction({int64_t(i) + 1, 1});
+        if (i > 0) depgraph.AddDependencies(SetType::Singleton(i - 1), i);
+    }
+    return depgraph;
 }
 
 /** Benchmark Linearize on chain graphs of given sizes (total time to optimal). */
@@ -134,8 +153,29 @@ void BenchLinearizeOptimallyChainTotal(benchmark::Bench& bench, const std::vecto
 
         uint64_t rng_seed = 0;
         bench.name(bench_name).run([&] {
-            auto [_lin, optimal, _cost] = Linearize(depgraph, /*max_iterations=*/10000000, rng_seed++, IndexTxOrder{});
+            auto [_lin, optimal, _cost, is_chain] = Linearize(depgraph, /*max_iterations=*/10000000, rng_seed++, IndexTxOrder{});
             assert(optimal);
+            assert(is_chain);
+        });
+    }
+}
+
+/** Benchmark Linearize on monotone chain graphs (worst-case feerate distribution for SPF).
+ *
+ * Without TryLinearizeChain, the SPF MakeTopological phase triggers an O(N²) cascade for
+ * strictly increasing feerates.  With TryLinearizeChain the result is produced in O(N).
+ */
+void BenchLinearizeOptimallyMonotoneChainTotal(benchmark::Bench& bench, const std::vector<DepGraphIndex>& chain_sizes)
+{
+    for (DepGraphIndex ntx : chain_sizes) {
+        DepGraph<BitSet<64>> depgraph = MakeMonotoneChainGraph<BitSet<64>>(ntx);
+        auto bench_name = strprintf("LinearizeOptimallyMonotoneChainTotal_%utx_%udep", depgraph.TxCount(), depgraph.CountDependencies());
+
+        uint64_t rng_seed = 0;
+        bench.name(bench_name).run([&] {
+            auto [_lin, optimal, _cost, is_chain] = Linearize(depgraph, /*max_iterations=*/10000000, rng_seed++, IndexTxOrder{});
+            assert(optimal);
+            assert(is_chain);
         });
     }
 }
@@ -216,6 +256,11 @@ static void LinearizeOptimallyChainTotal(benchmark::Bench& bench)
     BenchLinearizeOptimallyChainTotal(bench, CHAIN_SIZES);
 }
 
+static void LinearizeOptimallyMonotoneChainTotal(benchmark::Bench& bench)
+{
+    BenchLinearizeOptimallyMonotoneChainTotal(bench, CHAIN_SIZES);
+}
+
 BENCHMARK(PostLinearize16TxWorstCase);
 BENCHMARK(PostLinearize32TxWorstCase);
 BENCHMARK(PostLinearize48TxWorstCase);
@@ -233,3 +278,4 @@ BENCHMARK(PostLinearize99TxChain);
 BENCHMARK(LinearizeOptimallyTotal);
 BENCHMARK(LinearizeOptimallyPerCost);
 BENCHMARK(LinearizeOptimallyChainTotal);
+BENCHMARK(LinearizeOptimallyMonotoneChainTotal);
