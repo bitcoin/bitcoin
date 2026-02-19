@@ -23,6 +23,7 @@ struct CacheSizes {
 CacheSizes CalculateCacheSizes(const ArgsManager& args, size_t n_indexes = 0);
 
 void LogOversizedDbCache(const ArgsManager& args) noexcept;
+void LogAutoDbCacheSettings() noexcept;
 } // namespace node
 
 #endif // BITCOIN_NODE_CACHES_H

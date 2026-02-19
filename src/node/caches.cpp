@@ -12,6 +12,7 @@
 #include <node/interface_ui.h>
 #include <tinyformat.h>
 #include <util/byte_units.h>
+#include <util/log.h>
 #include <util/overflow.h>
 #include <util/translation.h>
 
@@ -62,9 +63,17 @@ void LogOversizedDbCache(const ArgsManager& args) noexcept
     if (const auto total_ram{TryGetTotalRam()}) {
         const size_t db_cache{CalculateDbCacheBytes(args)};
         if (ShouldWarnOversizedDbCache(db_cache, *total_ram)) {
-            InitWarning(bilingual_str{tfm::format(_("A %zu MiB dbcache may be too large for a system memory of only %zu MiB."),
+            InitWarning(bilingual_str{tfm::format(_("A %s MiB dbcache may be too large for a system with only %s MiB of memory."),
                         db_cache >> 20, *total_ram >> 20)});
         }
     }
+}
+
+void LogAutoDbCacheSettings() noexcept
+{
+    LogInfo("Automatically selected -dbcache=%s MiB based on %s system memory of %s MiB.",
+            GetDefaultDBCache(GetTotalRam()) >> 20,
+            TryGetTotalRam() ? "detected" : "assumed",
+            GetTotalRam() >> 20);
 }
 } // namespace node
