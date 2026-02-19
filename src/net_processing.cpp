@@ -168,11 +168,6 @@ static constexpr auto INBOUND_INVENTORY_BROADCAST_INTERVAL{5s};
  *  Use a smaller delay as there is less privacy concern for them.
  *  Blocks and peers with NetPermissionFlags::NoBan permission bypass this. */
 static constexpr auto OUTBOUND_INVENTORY_BROADCAST_INTERVAL{2s};
-/** Maximum rate of inventory items to send per second.
- *  Limits the impact of low-fee transaction floods. */
-static constexpr unsigned int INVENTORY_BROADCAST_PER_SECOND{14};
-/** Target number of tx inventory items to send per transmission. */
-static constexpr unsigned int INVENTORY_BROADCAST_TARGET = INVENTORY_BROADCAST_PER_SECOND * count_seconds(INBOUND_INVENTORY_BROADCAST_INTERVAL);
 /** Multiplier for the inventory bucket rate for outbounds */
 static constexpr double OUTBOUND_INVENTORY_BUCKET_MULTIPLIER{Ticks<SecondsDouble>(INBOUND_INVENTORY_BROADCAST_INTERVAL) / Ticks<SecondsDouble>(OUTBOUND_INVENTORY_BROADCAST_INTERVAL)};
 /** Average delay between feefilter broadcasts in seconds. */
@@ -2063,8 +2058,8 @@ PeerManagerImpl::PeerManagerImpl(CConnman& connman, AddrMan& addrman,
       m_txdownloadman(node::TxDownloadOptions{pool, m_rng, opts.deterministic_rng}),
       m_warnings{warnings},
       m_opts{opts},
-      m_inbound_inv_bucket(/*rate=*/INVENTORY_BROADCAST_PER_SECOND, /*mult=*/1.0),
-      m_outbound_inv_bucket(/*rate=*/INVENTORY_BROADCAST_PER_SECOND, /*mult=*/OUTBOUND_INVENTORY_BUCKET_MULTIPLIER)
+      m_inbound_inv_bucket(/*rate=*/m_opts.tx_send_rate, /*mult=*/1.0),
+      m_outbound_inv_bucket(/*rate=*/m_opts.tx_send_rate, /*mult=*/OUTBOUND_INVENTORY_BUCKET_MULTIPLIER)
 {
     // While Erlay support is incomplete, it must be enabled explicitly via -txreconciliation.
     // This argument can go away after Erlay support is complete.
@@ -2342,9 +2337,10 @@ void PeerManagerImpl::CatchupRelayTransactions(NodeClock::time_point now)
     size_t in_avail = m_inbound_inv_bucket.avail();
     size_t out_avail = m_outbound_inv_bucket.avail();
 
-    if (in_avail < INVENTORY_BROADCAST_TARGET && out_avail < INVENTORY_BROADCAST_TARGET) return;
-    if (in_avail < INVENTORY_BROADCAST_TARGET) in_avail = 0;
-    if (out_avail < INVENTORY_BROADCAST_TARGET / 2) out_avail = 0;
+    const size_t inventory_broadcast_target{m_opts.tx_send_rate * static_cast<size_t>(count_seconds(INBOUND_INVENTORY_BROADCAST_INTERVAL))};
+    if (in_avail < inventory_broadcast_target && out_avail < inventory_broadcast_target) return;
+    if (in_avail < inventory_broadcast_target) in_avail = 0;
+    if (out_avail < inventory_broadcast_target / 2) out_avail = 0;
 
     {
         LOCK(m_mempool.cs);
