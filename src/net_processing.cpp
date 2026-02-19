@@ -168,11 +168,6 @@ static constexpr auto INBOUND_INVENTORY_BROADCAST_INTERVAL{5s};
  *  Use a smaller delay as there is less privacy concern for them.
  *  Blocks and peers with NetPermissionFlags::NoBan permission bypass this. */
 static constexpr auto OUTBOUND_INVENTORY_BROADCAST_INTERVAL{2s};
-/** Maximum rate of inventory items to send per second.
- *  Limits the impact of low-fee transaction floods. */
-[[maybe_unused]] static constexpr unsigned int INVENTORY_BROADCAST_PER_SECOND{14};
-/** Target number of tx inventory items to send per transmission. */
-[[maybe_unused]] static constexpr unsigned int INVENTORY_BROADCAST_TARGET = INVENTORY_BROADCAST_PER_SECOND * count_seconds(INBOUND_INVENTORY_BROADCAST_INTERVAL);
 /** Multiplier for the inventory bucket rate for outbounds */
 static constexpr double OUTBOUND_INVENTORY_BUCKET_MULTIPLIER{Ticks<SecondsDouble>(INBOUND_INVENTORY_BROADCAST_INTERVAL) / Ticks<SecondsDouble>(OUTBOUND_INVENTORY_BROADCAST_INTERVAL)};
 /** Delay between checking inventory bucket and backlog */
@@ -531,7 +526,7 @@ struct InvToSendBucket {
     static constexpr double INBOUND_COUNT_SECONDS{30}; // cap/initial at 30s/mult worth of txs
 
     InvToSendBucket(unsigned int rate, double mult)
-        : count_floor{-1.0 * INVENTORY_BROADCAST_TARGET},
+        : count_floor{-1.0 * rate * count_seconds(INBOUND_INVENTORY_BROADCAST_INTERVAL)},
           size_bucket(/*rate=*/SIZE_REFILL * mult, /*value=*/SIZE_INIT, /*cap=*/SIZE_CAP),
           count_bucket(/*rate=*/rate * mult, /*value=*/rate * INBOUND_COUNT_SECONDS, /*cap=*/rate * INBOUND_COUNT_SECONDS)
     {
@@ -2112,8 +2107,8 @@ PeerManagerImpl::PeerManagerImpl(CConnman& connman, AddrMan& addrman,
       m_txdownloadman(node::TxDownloadOptions{pool, m_rng, opts.deterministic_rng}),
       m_warnings{warnings},
       m_opts{opts},
-      m_inbound_inv_bucket(/*rate=*/INVENTORY_BROADCAST_PER_SECOND, /*mult=*/1.0),
-      m_outbound_inv_bucket(/*rate=*/INVENTORY_BROADCAST_PER_SECOND, /*mult=*/OUTBOUND_INVENTORY_BUCKET_MULTIPLIER)
+      m_inbound_inv_bucket(/*rate=*/m_opts.tx_send_rate, /*mult=*/1.0),
+      m_outbound_inv_bucket(/*rate=*/m_opts.tx_send_rate, /*mult=*/OUTBOUND_INVENTORY_BUCKET_MULTIPLIER)
 {
     // While Erlay support is incomplete, it must be enabled explicitly via -txreconciliation.
     // This argument can go away after Erlay support is complete.
