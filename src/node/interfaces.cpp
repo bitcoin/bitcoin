@@ -919,6 +919,7 @@ public:
 
     bool submitSolution(uint32_t version, uint32_t timestamp, uint32_t nonce, CTransactionRef coinbase) override
     {
+        if (!coinbase) return false;
         AddMerkleRootAndCoinbase(m_block_template->block, std::move(coinbase), version, timestamp, nonce);
         std::string reason;
         std::string debug;

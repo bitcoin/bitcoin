@@ -511,9 +511,13 @@ class IPCMiningTest(BitcoinTestFramework):
                 # lets node 2 accept/reject complete blocks independently.
                 self.disconnect_nodes(1, 2)
 
+                self.log.debug("submitSolution should reject an empty coinbase")
+                submitted = (await template.submitSolution(ctx, 0, 0, 0, b"")).result
+                assert_equal(submitted, False)
+
                 self.log.debug("Submit solution that can't be deserialized")
                 try:
-                    await template.submitSolution(ctx, 0, 0, 0, b"")
+                    await template.submitSolution(ctx, 0, 0, 0, b"\x00")
                     raise AssertionError("submitSolution unexpectedly succeeded")
                 except capnp.lib.capnp.KjException as e:
                     assert_capnp_failed(e, "remote exception: std::exception: SpanReader::read(): end of data:")
@@ -651,6 +655,13 @@ class IPCMiningTest(BitcoinTestFramework):
             self.log.debug("Submit a malformed complete block")
             try:
                 await mining2.submitBlock(ctx2, block.serialize()[:-15])
+                raise AssertionError("submitBlock unexpectedly succeeded")
+            except capnp.lib.capnp.KjException as e:
+                assert_capnp_failed(e, "remote exception: std::exception: SpanReader::read(): end of data:")
+
+            self.log.debug("Submit empty block data")
+            try:
+                await mining2.submitBlock(ctx2, b"")
                 raise AssertionError("submitBlock unexpectedly succeeded")
             except capnp.lib.capnp.KjException as e:
                 assert_capnp_failed(e, "remote exception: std::exception: SpanReader::read(): end of data:")
