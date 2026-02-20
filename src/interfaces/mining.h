@@ -154,6 +154,23 @@ public:
      */
     virtual bool checkBlock(const CBlock& block, const node::BlockCheckOptions& options, std::string& reason, std::string& debug) = 0;
 
+    /**
+     * Process a fully assembled block.
+     *
+     * Similar to the submitblock RPC. Accepts a complete block, validates
+     * it, and if accepted as new, processes it into chainstate. Accepted
+     * blocks may then be announced to peers through normal validation signals.
+     *
+     * @param[in]  block  the complete block to submit
+     * @param[out] reason failure reason (BIP22)
+     * @param[out] debug  more detailed rejection reason
+     * @returns           true if the block was accepted as a new block
+     *
+     * @note unlike the submitblock RPC, this method does NOT add the
+     *       coinbase witness automatically.
+     */
+    virtual bool submitBlock(const CBlock& block, std::string& reason, std::string& debug) = 0;
+
     //! Get internal node context. Useful for RPC and testing,
     //! but not accessible across processes.
     virtual node::NodeContext* context() { return nullptr; }

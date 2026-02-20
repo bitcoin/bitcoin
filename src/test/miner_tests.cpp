@@ -833,7 +833,19 @@ BOOST_AUTO_TEST_CASE(CreateNewBlock_validity)
         // Alternate calls between Chainman's ProcessNewBlock and submitSolution
         // via the Mining interface. The former is used by net_processing as well
         // as the submitblock RPC.
-        if (current_height % 2 == 0) {
+        if (current_height == 0) {
+            std::string reason{"stale reason"};
+            std::string debug{"stale debug"};
+            BOOST_REQUIRE(mining->submitBlock(block, reason, debug));
+            BOOST_REQUIRE_EQUAL(reason, "");
+            BOOST_REQUIRE_EQUAL(debug, "");
+
+            reason = "stale reason";
+            debug = "stale debug";
+            BOOST_REQUIRE(!mining->submitBlock(block, reason, debug));
+            BOOST_REQUIRE_EQUAL(reason, "duplicate");
+            BOOST_REQUIRE_EQUAL(debug, "");
+        } else if (current_height % 2 == 0) {
             BOOST_REQUIRE(Assert(m_node.chainman)->ProcessNewBlock(shared_pblock, /*force_processing=*/true, /*min_pow_checked=*/true, nullptr));
         } else {
             BOOST_REQUIRE(block_template->submitSolution(block.nVersion, block.nTime, block.nNonce, MakeTransactionRef(txCoinbase)));
