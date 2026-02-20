@@ -154,18 +154,37 @@ avail_KiB="$(df -Pk "$VERSION_BASE" | sed 1d | tr -s ' ' | cut -d' ' -f4)"
 total_required_KiB=0
 for host in $HOSTS; do
     case "$host" in
-        *darwin*) required_KiB=440000 ;;
-        *mingw*)  required_KiB=7600000 ;;
-        *)        required_KiB=6400000 ;;
+        *darwin*)  required_KiB=3000000 ;;
+        *mingw*)   required_KiB=9000000 ;;
+        *riscv64*) required_KiB=6300000 ;;
+        *)         required_KiB=4400000 ;;
     esac
     total_required_KiB=$((total_required_KiB+required_KiB))
 done
+
+total_required_KiB=$((total_required_KiB+5500000)) # output directory
 
 if (( total_required_KiB > avail_KiB )); then
     total_required_GiB=$((total_required_KiB / 1048576))
     avail_GiB=$((avail_KiB / 1048576))
     echo "Performing a Bitcoin Core Guix build for the selected HOSTS requires ${total_required_GiB} GiB, however, only ${avail_GiB} GiB is available. Please free up some disk space before performing the build."
     exit 1
+fi
+
+total_required_KiB=$((total_required_KiB+9500000)) # guix overhead
+
+if (( total_required_KiB > avail_KiB )); then
+    total_required_GiB=$((total_required_KiB / 1048576))
+    avail_GiB=$((avail_KiB / 1048576))
+cat << EOF
+
+WARN: Available disk space (${avail_GiB} GiB) may be insufficient for the
+      estimated total of ${total_required_GiB} GiB (build directories, output,
+      and Guix environment overhead).
+
+The build will proceed, but may fail mid-way if disk space runs out.
+
+EOF
 fi
 
 ################
