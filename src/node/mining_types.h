@@ -16,8 +16,11 @@
 #include <policy/policy.h>
 #include <primitives/transaction.h>
 #include <script/script.h>
+#include <tinyformat.h>
 #include <uint256.h>
+#include <util/result.h>
 #include <util/time.h>
+#include <util/translation.h>
 
 #include <cstddef>
 #include <optional>
@@ -162,6 +165,40 @@ struct CoinbaseTx {
     std::vector<CTxOut> required_outputs;
     uint32_t lock_time;
 };
+
+/** Check that block_max_weight does not exceed consensus limits. */
+[[nodiscard]] inline util::Result<void> CheckBlockMaxWeight(size_t block_max_weight)
+{
+    if (block_max_weight > MAX_BLOCK_WEIGHT) {
+        return util::Error{Untranslated(strprintf("(%zu) exceeds consensus maximum block weight (%u)",
+                                                  block_max_weight, MAX_BLOCK_WEIGHT))};
+    }
+    return {};
+}
+
+/** Check that block_reserved_weight is within allowed bounds. */
+[[nodiscard]] inline util::Result<void> CheckBlockReservedWeight(size_t block_reserved_weight)
+{
+    if (block_reserved_weight < MINIMUM_BLOCK_RESERVED_WEIGHT) {
+        return util::Error{Untranslated(strprintf("(%zu) is lower than minimum safety value of (%u)",
+                                                  block_reserved_weight, MINIMUM_BLOCK_RESERVED_WEIGHT))};
+    }
+    if (block_reserved_weight > MAX_BLOCK_WEIGHT) {
+        return util::Error{Untranslated(strprintf("(%zu) exceeds consensus maximum block weight (%u)",
+                                                  block_reserved_weight, MAX_BLOCK_WEIGHT))};
+    }
+    return {};
+}
+
+/** Check that coinbase_output_max_additional_sigops does not exceed consensus limits. */
+[[nodiscard]] inline util::Result<void> CheckCoinbaseOutputMaxAdditionalSigops(size_t sigops)
+{
+    if (sigops > MAX_BLOCK_SIGOPS_COST) {
+        return util::Error{Untranslated(strprintf("(%zu) exceeds consensus maximum block sigops cost (%d)",
+                                                  sigops, MAX_BLOCK_SIGOPS_COST))};
+    }
+    return {};
+}
 
 } // namespace node
 
