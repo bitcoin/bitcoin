@@ -49,6 +49,7 @@
 #include <node/blockmanager_args.h>
 #include <node/blockstorage.h>
 #include <node/caches.h>
+#include <node/dbcache.h>
 #include <node/chainstate.h>
 #include <node/chainstatemanager_args.h>
 #include <node/context.h>

@@ -2,7 +2,7 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or https://opensource.org/license/mit.
 
-#include <node/caches.h>
+#include <node/dbcache.h>
 #include <util/byte_units.h>
 
 #include <boost/test/unit_test.hpp>
