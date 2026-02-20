@@ -5,7 +5,6 @@
 #ifndef BITCOIN_NODE_DBCACHE_H
 #define BITCOIN_NODE_DBCACHE_H
 
-#include <kernel/caches.h>
 #include <util/byte_units.h>
 
 #include <cstddef>
@@ -13,7 +12,7 @@
 //! min. -dbcache (bytes)
 static constexpr size_t MIN_DB_CACHE{4_MiB};
 //! -dbcache default (bytes)
-static constexpr size_t DEFAULT_DB_CACHE{DEFAULT_KERNEL_CACHE};
+static constexpr size_t DEFAULT_DB_CACHE{450_MiB};
 
 namespace node {
 size_t GetDefaultDBCache();
