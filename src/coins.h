@@ -303,43 +303,43 @@ private:
     bool m_will_erase;
 };
 
-/** Abstract view on the open txout dataset. */
+/** Pure abstract view on the open txout dataset. */
 class CCoinsView
 {
 public:
+    //! As we use CCoinsViews polymorphically, have a virtual destructor
+    virtual ~CCoinsView() = default;
+
     //! Retrieve the Coin (unspent transaction output) for a given outpoint.
     //! May populate the cache. Use PeekCoin() to perform a non-caching lookup.
-    virtual std::optional<Coin> GetCoin(const COutPoint& outpoint) const;
+    virtual std::optional<Coin> GetCoin(const COutPoint& outpoint) const = 0;
 
     //! Retrieve the Coin (unspent transaction output) for a given outpoint, without caching results.
     //! Does not populate the cache. Use GetCoin() to cache the result.
-    virtual std::optional<Coin> PeekCoin(const COutPoint& outpoint) const;
+    virtual std::optional<Coin> PeekCoin(const COutPoint& outpoint) const = 0;
 
     //! Just check whether a given outpoint is unspent.
     //! May populate the cache. Use PeekCoin() to perform a non-caching lookup.
-    virtual bool HaveCoin(const COutPoint& outpoint) const;
+    virtual bool HaveCoin(const COutPoint& outpoint) const = 0;
 
     //! Retrieve the block hash whose state this CCoinsView currently represents
-    virtual uint256 GetBestBlock() const;
+    virtual uint256 GetBestBlock() const = 0;
 
     //! Retrieve the range of blocks that may have been only partially written.
     //! If the database is in a consistent state, the result is the empty vector.
     //! Otherwise, a two-element vector is returned consisting of the new and
     //! the old block hash, in that order.
-    virtual std::vector<uint256> GetHeadBlocks() const;
+    virtual std::vector<uint256> GetHeadBlocks() const = 0;
 
     //! Do a bulk modification (multiple Coin changes + BestBlock change).
     //! The passed cursor is used to iterate through the coins.
-    virtual void BatchWrite(CoinsViewCacheCursor& cursor, const uint256& block_hash);
+    virtual void BatchWrite(CoinsViewCacheCursor& cursor, const uint256& block_hash) = 0;
 
-    //! Get a cursor to iterate over the whole state
-    virtual std::unique_ptr<CCoinsViewCursor> Cursor() const;
+    //! Get a cursor to iterate over the whole state. Implementations may return nullptr.
+    virtual std::unique_ptr<CCoinsViewCursor> Cursor() const = 0;
 
-    //! As we use CCoinsViews polymorphically, have a virtual destructor
-    virtual ~CCoinsView() = default;
-
-    //! Estimate database size (0 if not implemented)
-    virtual size_t EstimateSize() const { return 0; }
+    //! Estimate database size
+    virtual size_t EstimateSize() const = 0;
 };
 
 /** Noop coins view. */
@@ -357,6 +357,18 @@ public:
 
     CoinsViewEmpty(const CoinsViewEmpty&) = delete;
     CoinsViewEmpty& operator=(const CoinsViewEmpty&) = delete;
+
+    std::optional<Coin> GetCoin(const COutPoint&) const override { return {}; }
+    std::optional<Coin> PeekCoin(const COutPoint& outpoint) const override { return GetCoin(outpoint); }
+    bool HaveCoin(const COutPoint& outpoint) const override { return !!GetCoin(outpoint); }
+    uint256 GetBestBlock() const override { return {}; }
+    std::vector<uint256> GetHeadBlocks() const override { return {}; }
+    void BatchWrite(CoinsViewCacheCursor& cursor, const uint256&) override
+    {
+        for (auto it{cursor.Begin()}; it != cursor.End(); it = cursor.NextAndMaybeErase(*it)) { }
+    }
+    std::unique_ptr<CCoinsViewCursor> Cursor() const override { return {}; }
+    size_t EstimateSize() const override { return 0; }
 };
 
 /** CCoinsView backed by another CCoinsView */
