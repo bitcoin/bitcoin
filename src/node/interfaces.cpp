@@ -934,6 +934,24 @@ public:
     NodeContext& m_node;
 };
 
+class SubmitBlockStateCatcher final : public CValidationInterface
+{
+public:
+    uint256 hash;
+    bool found{false};
+    BlockValidationState state;
+
+    explicit SubmitBlockStateCatcher(const uint256& hashIn) : hash(hashIn), state() {}
+
+protected:
+    void BlockChecked(const std::shared_ptr<const CBlock>& block, const BlockValidationState& stateIn) override
+    {
+        if (block->GetHash() != hash) return;
+        found = true;
+        state = stateIn;
+    }
+};
+
 class MinerImpl : public Mining
 {
 public:
@@ -1008,6 +1026,35 @@ public:
         reason = state.GetRejectReason();
         debug = state.GetDebugMessage();
         return state.IsValid();
+    }
+
+    bool submitBlock(const CBlock& block_in, std::string& reason, std::string& debug) override
+    {
+        reason.clear();
+        debug.clear();
+
+        auto blockptr = std::make_shared<const CBlock>(block_in);
+
+        bool new_block;
+        auto sc = std::make_shared<SubmitBlockStateCatcher>(blockptr->GetHash());
+        CHECK_NONFATAL(chainman().m_options.signals)->RegisterSharedValidationInterface(sc);
+        bool accepted = chainman().ProcessNewBlock(blockptr, /*force_processing=*/true, /*min_pow_checked=*/true, /*new_block=*/&new_block);
+        CHECK_NONFATAL(chainman().m_options.signals)->UnregisterSharedValidationInterface(sc);
+
+        if (!new_block && accepted) {
+            reason = "duplicate";
+            return false;
+        }
+        if (!sc->found) {
+            reason = "inconclusive";
+            return false;
+        }
+        if (!sc->state.IsValid()) {
+            reason = sc->state.GetRejectReason();
+            debug = sc->state.GetDebugMessage();
+            return false;
+        }
+        return true;
     }
 
     NodeContext* context() override { return &m_node; }
