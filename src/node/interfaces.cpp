@@ -1023,6 +1023,17 @@ public:
         return state.IsValid();
     }
 
+    bool submitBlock(const CBlock& block_in, std::string& reason, std::string& debug) override
+    {
+        auto block = std::make_shared<const CBlock>(block_in);
+        bool new_block;
+        const bool accepted = SubmitBlock(chainman(), block, &new_block, reason, debug);
+        // ProcessNewBlock() can accept and store a block before it is checked
+        // for validity. Treat duplicates as errors for mining clients, and only
+        // return success when validation completed without setting a reason.
+        return accepted && new_block && reason.empty();
+    }
+
     const NodeContext* context() override { return &m_node; }
     ChainstateManager& chainman() { return *Assert(m_node.chainman); }
     KernelNotifications& notifications() { return *Assert(m_node.notifications); }
