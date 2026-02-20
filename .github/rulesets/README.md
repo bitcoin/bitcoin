@@ -62,6 +62,34 @@ Protects version tags matching `v*.*.*` pattern:
 
 ## Applying Rulesets
 
+### Automated Workflow (Recommended)
+
+This repository includes a GitHub Actions workflow that automatically validates ruleset configurations:
+
+**Workflow**: `.github/workflows/apply-rulesets.yml`
+
+The workflow:
+- ✅ Validates all JSON configuration files
+- ✅ Verifies required rulesets are defined
+- ✅ Checks policy documentation exists
+- ✅ Generates summary reports
+- ✅ Runs on changes to ruleset files or policy documents
+
+**Trigger the workflow manually**:
+```bash
+# Via GitHub CLI
+gh workflow run apply-rulesets.yml -f action=verify
+
+# Via GitHub web interface
+# Go to: Actions → Apply Branch Protection Rulesets → Run workflow
+```
+
+**View workflow results**:
+```bash
+gh run list --workflow=apply-rulesets.yml
+gh run view <run-id>
+```
+
 ### Option 1: Using GitHub CLI
 
 1. **Install GitHub CLI** (if not already installed):
