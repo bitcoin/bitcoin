@@ -60,7 +60,7 @@ static RPCMethod estimatesmartfee()
             HelpExampleCli("estimatesmartfee", "6") +
             HelpExampleRpc("estimatesmartfee", "6")
         },
-        [&](const RPCMethod& self, const JSONRPCRequest& request) -> UniValue
+        [](const RPCMethod& self, const JSONRPCRequest& request) -> UniValue
         {
             CBlockPolicyEstimator& fee_estimator = EnsureAnyFeeEstimator(request.context);
             const NodeContext& node = EnsureAnyNodeContext(request.context);
@@ -149,7 +149,7 @@ static RPCMethod estimaterawfee()
         RPCExamples{
             HelpExampleCli("estimaterawfee", "6 0.9")
         },
-        [&](const RPCMethod& self, const JSONRPCRequest& request) -> UniValue
+        [](const RPCMethod& self, const JSONRPCRequest& request) -> UniValue
         {
             CBlockPolicyEstimator& fee_estimator = EnsureAnyFeeEstimator(request.context);
             const NodeContext& node = EnsureAnyNodeContext(request.context);

@@ -36,7 +36,7 @@ static RPCMethod verifymessage()
             "\nAs a JSON-RPC call\n"
             + HelpExampleRpc("verifymessage", "\"1D1ZrZNe3JUo7ZycKEYQQiQAWd9y54F4XX\", \"signature\", \"my message\"")
         },
-        [&](const RPCMethod& self, const JSONRPCRequest& request) -> UniValue
+        [](const RPCMethod& self, const JSONRPCRequest& request) -> UniValue
         {
             switch (MessageVerify(std::string{self.Arg<std::string_view>("address")},
                                   std::string{self.Arg<std::string_view>("signature")},
@@ -79,7 +79,7 @@ static RPCMethod signmessagewithprivkey()
             "\nAs a JSON-RPC call\n"
             + HelpExampleRpc("signmessagewithprivkey", "\"privkey\", \"my message\"")
         },
-        [&](const RPCMethod& self, const JSONRPCRequest& request) -> UniValue
+        [](const RPCMethod& self, const JSONRPCRequest& request) -> UniValue
         {
             std::string strPrivkey = request.params[0].get_str();
             std::string strMessage = request.params[1].get_str();
