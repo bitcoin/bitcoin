@@ -70,7 +70,6 @@
 #include <any>
 #include <memory>
 #include <optional>
-#include <stdexcept>
 #include <utility>
 
 using interfaces::BlockRef;
@@ -971,16 +970,6 @@ public:
 
     std::unique_ptr<BlockTemplate> createNewBlock(BlockCreateOptions options, bool cooldown) override
     {
-        // Reject too-small values instead of clamping so callers don't silently
-        // end up mining with different options than requested. This matches the
-        // behavior of the `-blockreservedweight` startup option, which rejects
-        // values below MINIMUM_BLOCK_RESERVED_WEIGHT.
-        if (options.block_reserved_weight && options.block_reserved_weight < MINIMUM_BLOCK_RESERVED_WEIGHT) {
-            throw std::runtime_error(strprintf("block_reserved_weight (%zu) must be at least %u weight units",
-                                               *options.block_reserved_weight,
-                                               MINIMUM_BLOCK_RESERVED_WEIGHT));
-        }
-
         // Ensure m_tip_block is set so consumers of BlockTemplate can rely on that.
         std::optional<BlockRef> maybe_tip{waitTipChanged(uint256::ZERO, MillisecondsDouble::max())};
 

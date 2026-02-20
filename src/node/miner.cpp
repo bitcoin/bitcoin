@@ -30,6 +30,7 @@
 #include <algorithm>
 #include <utility>
 #include <numeric>
+#include <stdexcept>
 
 namespace node {
 
@@ -76,16 +77,26 @@ void RegenerateCommitments(CBlock& block, ChainstateManager& chainman)
     block.hashMerkleRoot = BlockMerkleRoot(block);
 }
 
-static BlockCreateOptions ClampOptions(BlockCreateOptions options)
+static BlockCreateOptions ApplyBlockCreateOptions(BlockCreateOptions options)
 {
     // Typically block_reserved_weight and block_max_weight are set by
     // ApplyMiningDefaults before the constructor calls this; value_or(DEFAULT_...)
     // only affects (test) call sites that don't go through the Mining interface.
-    options.block_reserved_weight = std::clamp<size_t>(options.block_reserved_weight.value_or(DEFAULT_BLOCK_RESERVED_WEIGHT), MINIMUM_BLOCK_RESERVED_WEIGHT, MAX_BLOCK_WEIGHT);
-    options.coinbase_output_max_additional_sigops = std::clamp<size_t>(options.coinbase_output_max_additional_sigops, 0, MAX_BLOCK_SIGOPS_COST);
-    // Limit weight to between block_reserved_weight and MAX_BLOCK_WEIGHT for sanity:
-    // block_reserved_weight can safely exceed -blockmaxweight, but the rest of the block template will be empty.
-    options.block_max_weight = std::clamp<size_t>(options.block_max_weight.value_or(DEFAULT_BLOCK_MAX_WEIGHT), *options.block_reserved_weight, MAX_BLOCK_WEIGHT);
+    const size_t reserved_weight{options.block_reserved_weight.value_or(DEFAULT_BLOCK_RESERVED_WEIGHT)};
+    if (auto result{CheckBlockReservedWeight(reserved_weight)}; !result) {
+        throw std::runtime_error("block_reserved_weight " + util::ErrorString(result).original);
+    }
+    options.block_reserved_weight = reserved_weight;
+    if (auto result{CheckCoinbaseOutputMaxAdditionalSigops(options.coinbase_output_max_additional_sigops)}; !result) {
+        throw std::runtime_error("coinbase_output_max_additional_sigops " + util::ErrorString(result).original);
+    }
+    const size_t max_weight{options.block_max_weight.value_or(DEFAULT_BLOCK_MAX_WEIGHT)};
+    // block_reserved_weight can safely exceed block_max_weight, but the rest
+    // of the block template will be empty.
+    if (auto result{CheckBlockMaxWeight(max_weight)}; !result) {
+        throw std::runtime_error("block_max_weight " + util::ErrorString(result).original);
+    }
+    options.block_max_weight = max_weight;
     return options;
 }
 
@@ -97,7 +108,7 @@ BlockAssembler::BlockAssembler(Chainstate& chainstate,
       m_mempool{options.use_mempool ? mempool : nullptr},
       m_chainstate{chainstate},
       m_mining_args{mining_args},
-      m_options{ClampOptions(options)}
+      m_options{ApplyBlockCreateOptions(options)}
 {
 }
 

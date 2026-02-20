@@ -6,9 +6,7 @@
 
 #include <common/args.h>
 #include <common/messages.h>
-#include <consensus/consensus.h>
 #include <node/mining_types.h>
-#include <tinyformat.h>
 #include <util/moneystr.h>
 #include <util/translation.h>
 
@@ -25,17 +23,14 @@ util::Result<void> ReadMiningArgs(const ArgsManager& args, MiningArgs& mining_ar
     }
 
     const size_t max_block_weight = args.GetIntArg("-blockmaxweight", DEFAULT_BLOCK_MAX_WEIGHT);
-    if (max_block_weight > MAX_BLOCK_WEIGHT) {
-        return util::Error{strprintf(_("Specified -blockmaxweight (%d) exceeds consensus maximum block weight (%d)"), max_block_weight, MAX_BLOCK_WEIGHT)};
+    if (auto result{CheckBlockMaxWeight(max_block_weight)}; !result) {
+        return util::Error{Untranslated("Specified -blockmaxweight " + util::ErrorString(result).original)};
     }
     mining_args.default_block_max_weight = max_block_weight;
 
     const size_t block_reserved_weight = args.GetIntArg("-blockreservedweight", DEFAULT_BLOCK_RESERVED_WEIGHT);
-    if (block_reserved_weight > MAX_BLOCK_WEIGHT) {
-        return util::Error{strprintf(_("Specified -blockreservedweight (%d) exceeds consensus maximum block weight (%d)"), block_reserved_weight, MAX_BLOCK_WEIGHT)};
-    }
-    if (block_reserved_weight < MINIMUM_BLOCK_RESERVED_WEIGHT) {
-        return util::Error{strprintf(_("Specified -blockreservedweight (%d) is lower than minimum safety value of (%d)"), block_reserved_weight, MINIMUM_BLOCK_RESERVED_WEIGHT)};
+    if (auto result{CheckBlockReservedWeight(block_reserved_weight)}; !result) {
+        return util::Error{Untranslated("Specified -blockreservedweight " + util::ErrorString(result).original)};
     }
     mining_args.default_block_reserved_weight = block_reserved_weight;
 
