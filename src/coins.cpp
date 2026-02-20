@@ -25,18 +25,18 @@ void CCoinsView::BatchWrite(CoinsViewCacheCursor& cursor, const uint256& block_h
 
 std::unique_ptr<CCoinsViewCursor> CCoinsView::Cursor() const { return nullptr; }
 
-bool CCoinsView::HaveCoin(const COutPoint &outpoint) const
+bool CCoinsView::HaveCoin(const COutPoint& outpoint) const
 {
     return GetCoin(outpoint).has_value();
 }
 
-CCoinsViewBacked::CCoinsViewBacked(CCoinsView *in_view) : base(in_view) { }
+CCoinsViewBacked::CCoinsViewBacked(CCoinsView* in_view) : base(in_view) { }
 std::optional<Coin> CCoinsViewBacked::GetCoin(const COutPoint& outpoint) const { return base->GetCoin(outpoint); }
 std::optional<Coin> CCoinsViewBacked::PeekCoin(const COutPoint& outpoint) const { return base->PeekCoin(outpoint); }
-bool CCoinsViewBacked::HaveCoin(const COutPoint &outpoint) const { return base->HaveCoin(outpoint); }
+bool CCoinsViewBacked::HaveCoin(const COutPoint& outpoint) const { return base->HaveCoin(outpoint); }
 uint256 CCoinsViewBacked::GetBestBlock() const { return base->GetBestBlock(); }
 std::vector<uint256> CCoinsViewBacked::GetHeadBlocks() const { return base->GetHeadBlocks(); }
-void CCoinsViewBacked::SetBackend(CCoinsView &in_view) { base = &in_view; }
+void CCoinsViewBacked::SetBackend(CCoinsView& in_view) { base = &in_view; }
 void CCoinsViewBacked::BatchWrite(CoinsViewCacheCursor& cursor, const uint256& block_hash) { base->BatchWrite(cursor, block_hash); }
 std::unique_ptr<CCoinsViewCursor> CCoinsViewBacked::Cursor() const { return base->Cursor(); }
 size_t CCoinsViewBacked::EstimateSize() const { return base->EstimateSize(); }
@@ -185,7 +185,8 @@ const Coin& CCoinsViewCache::AccessCoin(const COutPoint &outpoint) const {
     }
 }
 
-bool CCoinsViewCache::HaveCoin(const COutPoint &outpoint) const {
+bool CCoinsViewCache::HaveCoin(const COutPoint& outpoint) const
+{
     CCoinsMap::const_iterator it = FetchCoin(outpoint);
     return (it != cacheCoins.end() && !it->second.coin.IsSpent());
 }
@@ -201,7 +202,8 @@ uint256 CCoinsViewCache::GetBestBlock() const {
     return m_block_hash;
 }
 
-void CCoinsViewCache::SetBestBlock(const uint256 &in_block_hash) {
+void CCoinsViewCache::SetBestBlock(const uint256& in_block_hash)
+{
     m_block_hash = in_block_hash;
 }
 
