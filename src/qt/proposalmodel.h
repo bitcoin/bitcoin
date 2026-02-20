@@ -39,7 +39,7 @@ enum class ProposalStatus : uint8_t {
 class Proposal
 {
 private:
-    ClientModel* clientModel;
+    ClientModel& m_client_model;
     bool m_is_broadcast{true};
     int m_block_height{0};
     int m_collateral_confs{0};
@@ -61,7 +61,7 @@ private:
     uint256 m_objHash{};
 
 public:
-    explicit Proposal(ClientModel* _clientModel, const CGovernanceObject& _govObj,
+    explicit Proposal(ClientModel& client_model, const CGovernanceObject& _govObj,
                       const interfaces::GOV::GovernanceInfo& govInfo, int collateral_confs,
                       bool is_broadcast);
 
@@ -92,7 +92,7 @@ public:
     std::optional<int> getFundedHeight() const { return m_funded_height; }
 };
 
-using ProposalList = std::vector<std::unique_ptr<Proposal>>;
+using Proposals = std::vector<std::shared_ptr<Proposal>>;
 
 class ProposalModel : public QAbstractTableModel
 {
@@ -101,7 +101,7 @@ class ProposalModel : public QAbstractTableModel
 private:
     BitcoinUnit m_display_unit{BitcoinUnit::DASH};
     int nAbsVoteReq{0};
-    ProposalList m_data;
+    Proposals m_data;
     QIcon m_icon_failing;
     QIcon m_icon_lapsed;
     QIcon m_icon_passing;
@@ -130,9 +130,9 @@ public:
     QVariant data(const QModelIndex& index, int role) const override;
     QVariant headerData(int section, Qt::Orientation orientation, int role) const override;
 
-    void append(std::unique_ptr<Proposal>&& proposal);
+    void append(std::shared_ptr<Proposal>&& proposal);
     void remove(int row);
-    void reconcile(ProposalList&& proposals, Uint256HashSet&& fundable_hashes);
+    void reconcile(Proposals&& proposals, Uint256HashSet&& fundable_hashes);
     void refreshIcons();
     void setDisplayUnit(const BitcoinUnit& display_unit);
     void setVotingParams(int nAbsVoteReq);

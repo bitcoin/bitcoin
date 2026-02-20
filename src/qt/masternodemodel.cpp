@@ -351,7 +351,7 @@ QVariant MasternodeModel::headerData(int section, Qt::Orientation orientation, i
     }
 }
 
-void MasternodeModel::append(std::unique_ptr<MasternodeEntry>&& entry)
+void MasternodeModel::append(std::shared_ptr<MasternodeEntry>&& entry)
 {
     beginInsertRows({}, rowCount(), rowCount());
     m_data.push_back(std::move(entry));
@@ -377,7 +377,7 @@ void MasternodeModel::reconcile(MasternodeEntryList&& entries)
 
     std::set<int> present;
     std::vector<int> changed;
-    std::vector<std::unique_ptr<MasternodeEntry>> add;
+    std::vector<std::shared_ptr<MasternodeEntry>> add;
     for (auto& entry : entries) {
         if (auto it = existing.find(entry->proTxHash()); it != existing.end()) {
             int idx = it.value();

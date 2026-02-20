@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <ui version="4.0">
- <class>GovernanceList</class>
- <widget class="QWidget" name="GovernanceList">
+ <class>ProposalList</class>
+ <widget class="QWidget" name="ProposalList">
   <property name="geometry">
    <rect>
     <x>0</x>

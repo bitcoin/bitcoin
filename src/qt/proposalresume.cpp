@@ -33,7 +33,7 @@
 
 #include <algorithm>
 
-ProposalResume::ProposalResume(interfaces::Node& node, ClientModel* client_model, WalletModel* wallet_model,
+ProposalResume::ProposalResume(interfaces::Node& node, ClientModel& client_model, WalletModel* wallet_model,
                                const std::vector<Governance::Object>& proposals, QWidget* parent) :
     QDialog{parent},
     m_ui{new Ui::ProposalResume},
@@ -117,8 +117,8 @@ QString ProposalResume::formatProposalHtml(const Governance::Object& obj, int co
     const CGovernanceObject gov_obj(obj.hashParent, obj.revision, obj.time, obj.collateralHash, obj.GetDataAsHexString());
     const Proposal proposal(m_client_model, gov_obj, m_node.gov().getGovernanceInfo(), confirmations, /*is_broadcast=*/false);
     const BitcoinUnit unit = [this]() {
-        if (m_client_model && m_client_model->getOptionsModel()) {
-            return m_client_model->getOptionsModel()->getDisplayUnit();
+        if (m_client_model.getOptionsModel()) {
+            return m_client_model.getOptionsModel()->getDisplayUnit();
         }
         return BitcoinUnit::DASH;
     }();

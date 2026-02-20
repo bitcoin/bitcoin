@@ -5,18 +5,31 @@
 
 #include <qt/bitcoingui.h>
 
+#include <chain.h>
+#include <chainparams.h>
+#include <interfaces/coinjoin.h>
+#include <interfaces/handler.h>
+#include <interfaces/node.h>
+#include <node/interface_ui.h>
+#include <util/system.h>
+#include <util/translation.h>
+#include <util/underlying.h>
+#include <validation.h>
+
 #include <qt/bitcoinunits.h>
 #include <qt/clientmodel.h>
 #include <qt/createwalletdialog.h>
 #include <qt/guiconstants.h>
-#include <qt/guiutil.h>
 #include <qt/guiutil_font.h>
+#include <qt/guiutil.h>
+#include <qt/masternodelist.h>
 #include <qt/modaloverlay.h>
 #include <qt/networkstyle.h>
 #include <qt/notificator.h>
 #include <qt/openuridialog.h>
 #include <qt/optionsdialog.h>
 #include <qt/optionsmodel.h>
+#include <qt/proposallist.h>
 #include <qt/rpcconsole.h>
 #include <qt/utilitydialog.h>
 
@@ -30,20 +43,6 @@
 #ifdef Q_OS_MACOS
 #include <qt/macdockiconhandler.h>
 #endif
-
-#include <functional>
-#include <chain.h>
-#include <chainparams.h>
-#include <interfaces/coinjoin.h>
-#include <interfaces/handler.h>
-#include <interfaces/node.h>
-#include <node/interface_ui.h>
-#include <qt/governancelist.h>
-#include <qt/masternodelist.h>
-#include <util/system.h>
-#include <util/translation.h>
-#include <util/underlying.h>
-#include <validation.h>
 
 #include <QAction>
 #include <QActionGroup>
@@ -71,6 +70,8 @@
 #include <QToolButton>
 #include <QVBoxLayout>
 #include <QWindow>
+
+#include <functional>
 
 namespace {
 // Total governance clock frames. Frame 0 is reserved for the superblock

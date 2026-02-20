@@ -86,7 +86,7 @@ public:
     QString toHtml() const;
 };
 
-using MasternodeEntryList = std::vector<std::unique_ptr<MasternodeEntry>>;
+using MasternodeEntryList = std::vector<std::shared_ptr<MasternodeEntry>>;
 
 class MasternodeModel : public QAbstractTableModel
 {
@@ -124,7 +124,7 @@ public:
     QVariant data(const QModelIndex& index, int role = Qt::DisplayRole) const override;
     QVariant headerData(int section, Qt::Orientation orientation, int role = Qt::DisplayRole) const override;
 
-    void append(std::unique_ptr<MasternodeEntry>&& entry);
+    void append(std::shared_ptr<MasternodeEntry>&& entry);
     void remove(int row);
     void reconcile(MasternodeEntryList&& entries);
     void setCurrentHeight(int height) { m_current_height = height; }

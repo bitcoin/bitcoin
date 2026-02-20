@@ -7,14 +7,15 @@
 #include <fs.h>
 #include <node/interface_ui.h>
 #include <psbt.h>
-#include <qt/governancelist.h>
+#include <util/system.h>
+
 #include <qt/guiutil.h>
 #include <qt/masternodelist.h>
 #include <qt/overviewpage.h>
+#include <qt/proposallist.h>
 #include <qt/psbtoperationsdialog.h>
 #include <qt/walletmodel.h>
 #include <qt/walletview.h>
-#include <util/system.h>
 
 #include <cassert>
 #include <fstream>
@@ -58,8 +59,8 @@ WalletFrame::WalletFrame(QWidget* parent)
     masternodeListPage = new MasternodeList();
     walletStack->addWidget(masternodeListPage);
 
-    governanceListPage = new GovernanceList();
-    walletStack->addWidget(governanceListPage);
+    proposalListPage = new ProposalList();
+    walletStack->addWidget(proposalListPage);
 }
 
 WalletFrame::~WalletFrame() = default;
@@ -69,7 +70,7 @@ void WalletFrame::setClientModel(ClientModel *_clientModel)
     this->clientModel = _clientModel;
 
     masternodeListPage->setClientModel(_clientModel);
-    governanceListPage->setClientModel(_clientModel);
+    proposalListPage->setClientModel(_clientModel);
 
     for (auto i = mapWalletViews.constBegin(); i != mapWalletViews.constEnd(); ++i) {
         i.value()->setClientModel(_clientModel);
@@ -165,7 +166,7 @@ void WalletFrame::gotoGovernancePage()
     QMap<WalletModel*, WalletView*>::const_iterator i;
 
     if (mapWalletViews.empty()) {
-        walletStack->setCurrentWidget(governanceListPage);
+        walletStack->setCurrentWidget(proposalListPage);
         return;
     }
 

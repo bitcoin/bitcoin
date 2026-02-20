@@ -6,9 +6,10 @@
 #define BITCOIN_QT_WALLETVIEW_H
 
 #include <consensus/amount.h>
+
 #include <qt/bitcoinunits.h>
-#include <qt/governancelist.h>
 #include <qt/masternodelist.h>
+#include <qt/proposallist.h>
 
 #include <QStackedWidget>
 
@@ -68,7 +69,7 @@ private:
     AddressBookPage *usedSendingAddressesPage;
     AddressBookPage *usedReceivingAddressesPage;
     MasternodeList* masternodeListPage{nullptr};
-    GovernanceList* governanceListPage{nullptr};
+    ProposalList* proposalListPage{nullptr};
 
     TransactionView *transactionView;
 

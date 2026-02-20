@@ -3,17 +3,21 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
+#if defined(HAVE_CONFIG_H)
+#include <config/bitcoin-config.h>
+#endif
+
 #include <qt/clientmodel.h>
 
 #include <qt/bantablemodel.h>
+#include <qt/clientfeeds.h>
 #include <qt/guiconstants.h>
 #include <qt/guiutil.h>
 #include <qt/peertablemodel.h>
 #include <qt/peertablesortproxy.h>
 
-#include <evo/deterministicmns.h>
-
 #include <clientversion.h>
+#include <evo/deterministicmns.h>
 #include <governance/object.h>
 #include <interfaces/handler.h>
 #include <interfaces/node.h>
@@ -24,7 +28,7 @@
 #include <util/time.h>
 #include <validation.h>
 
-#include <stdint.h>
+#include <cstdint>
 
 #include <QDebug>
 #include <QMetaObject>
@@ -66,6 +70,30 @@ ClientModel::ClientModel(interfaces::Node& node, OptionsModel *_optionsModel, QO
     QTimer::singleShot(0, timer, []() {
         util::ThreadRename("qt-clientmodl");
     });
+
+    // Setup data feed thread
+    m_feeds = std::make_unique<ClientFeeds>(this);
+
+    // Setup feeds
+    m_feed_masternode = m_feeds->add<MasternodeFeed>(this, *this);
+    connect(this, &ClientModel::masternodeListChanged, this, [this] { m_feed_masternode->requestRefresh(); });
+
+    if (m_node.gov().isEnabled()) {
+        m_feed_proposal = m_feeds->add<ProposalFeed>(this, *this);
+        connect(this, &ClientModel::governanceChanged, this, [this] { m_feed_proposal->requestRefresh(); });
+    }
+
+    // Update sync state to decide delay param, trigger refreshes
+    connect(this, &ClientModel::numBlocksChanged, this,
+        [this](int, const QDateTime&, const QString&, double, bool header, SynchronizationState sync_state) {
+            if (header) return;
+            m_feeds->setSyncing(sync_state != SynchronizationState::POST_INIT);
+            if (m_feed_masternode) m_feed_masternode->requestRefresh();
+            if (m_feed_proposal) m_feed_proposal->requestRefresh();
+        });
+
+    // Start all tasks
+    m_feeds->start();
 
     subscribeToCoreSignals();
 }

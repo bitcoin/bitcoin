@@ -830,10 +830,10 @@ EditAddressDialog
 /***** No dark.css specific coloring here yet *****/
 
 /******************************************************
-GovernanceList
+ProposalList
 ******************************************************/
 
-GovernanceList QTableView {
+ProposalList QTableView {
     color: #c7c7c7;
 }
 
