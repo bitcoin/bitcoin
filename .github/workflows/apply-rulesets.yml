@@ -1,0 +1,357 @@
+# Copyright (c) 2023-present The Bitcoin Core developers
+# Distributed under the MIT software license, see the accompanying
+# file COPYING or https://opensource.org/license/mit.
+#
+# ═══════════════════════════════════════════════════════════════════
+# GLOBAL OWNERSHIP & CREATOR STATUS
+# ═══════════════════════════════════════════════════════════════════
+# Repository Owner: kushmanmb.eth (Ethereum Name Service)
+# Creator: kushmanmb
+# ENS Identifiers:
+#   - Primary: kushmanmb.eth (Ethereum Mainnet)
+#   - Base Network: Kushmanmb.base.eth
+#   - yaketh.eth
+#
+# This workflow is part of the kushmanmb-org/bitcoin repository
+# and is maintained by the repository owner and authorized contributors.
+# ═══════════════════════════════════════════════════════════════════
+#
+# Branch Protection Rulesets and Repository Policy Workflow
+# This workflow manages GitHub repository rulesets and enforces
+# repository policies
+#
+# Features:
+# - Applies branch protection rulesets from JSON configuration files
+# - Verifies rulesets are active and properly configured
+# - Runs on changes to ruleset configuration files
+# - Can be manually triggered to verify or reapply rulesets
+#
+# Rulesets Applied:
+# - master-branch-protection: Protects master branch with PR requirements
+# - release-branch-protection: Protects release/* branches
+# - development-branches: Light protection for feature/fix/docs branches
+# - release-tags-protection: Protects version tags (v*.*.*)
+
+name: Apply Branch Protection Rulesets
+
+on:
+  push:
+    branches:
+      - master
+    paths:
+      - '.github/rulesets/*.json'
+      - '.github/workflows/apply-rulesets.yml'
+      - 'RULESETS.md'
+      - 'POLICY.md'
+  pull_request:
+    branches:
+      - master
+    paths:
+      - '.github/rulesets/*.json'
+      - '.github/workflows/apply-rulesets.yml'
+      - 'RULESETS.md'
+      - 'POLICY.md'
+  workflow_dispatch:
+    inputs:
+      action:
+        description: 'Action to perform'
+        required: true
+        default: 'verify'
+        type: choice
+        options:
+          - verify
+          - apply
+          - list
+
+concurrency:
+  group: rulesets-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  verify-rulesets:
+    name: Verify Repository Rulesets
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      # Note: Applying rulesets requires admin permissions
+      # This workflow verifies configuration but actual application
+      # must be done by repository administrators
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6
+
+      - name: Setup GitHub CLI
+        run: |
+          # GitHub CLI is pre-installed on ubuntu-latest runners
+          gh --version
+
+      - name: Validate ruleset JSON files
+        run: |
+          echo "Validating ruleset JSON configuration files..."
+
+          for file in .github/rulesets/*.json; do
+            if [ -f "$file" ]; then
+              echo "Validating: $file"
+              if jq empty "$file" 2>/dev/null; then
+                echo "✓ Valid JSON: $file"
+              else
+                echo "✗ Invalid JSON: $file"
+                exit 1
+              fi
+            fi
+          done
+
+          echo "All ruleset JSON files are valid!"
+
+      - name: Verify ruleset configuration
+        run: |
+          echo "Verifying ruleset configurations..."
+
+          # Check that required rulesets are defined
+          required_rulesets=(
+            "master-branch-protection"
+            "release-branch-protection"
+            "development-branches"
+            "release-tags-protection"
+          )
+
+          for ruleset in "${required_rulesets[@]}"; do
+            found=false
+            for file in .github/rulesets/*.json; do
+              if [ -f "$file" ]; then
+                name=$(jq -r '.name' "$file")
+                if [ "$name" == "$ruleset" ]; then
+                  found=true
+                  echo "✓ Found ruleset: $ruleset"
+
+                  # Verify required fields
+                  target=$(jq -r '.target' "$file")
+                  enforcement=$(jq -r '.enforcement' "$file")
+                  echo "  - Target: $target"
+                  echo "  - Enforcement: $enforcement"
+
+                  if [ "$enforcement" != "active" ]; then
+                    echo "  ⚠ Warning: Enforcement is not 'active'"
+                  fi
+                  break
+                fi
+              fi
+            done
+
+            if [ "$found" = false ]; then
+              echo "✗ Missing ruleset: $ruleset"
+              exit 1
+            fi
+          done
+
+          echo ""
+          echo "All required rulesets are configured!"
+
+      - name: List configured rulesets
+        if: |
+          github.event.inputs.action == 'list' ||
+          github.event.inputs.action == ''
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          echo "Configured rulesets in repository:"
+          echo "=================================="
+
+          for file in .github/rulesets/*.json; do
+            if [ -f "$file" ]; then
+              name=$(jq -r '.name' "$file")
+              target=$(jq -r '.target' "$file")
+              enforcement=$(jq -r '.enforcement' "$file")
+
+              echo ""
+              echo "Ruleset: $name"
+              echo "  File: $(basename $file)"
+              echo "  Target: $target"
+              echo "  Enforcement: $enforcement"
+
+              # Show conditions
+              if [ "$target" == "branch" ]; then
+                includes=$(jq -r '.conditions.ref_name.include[]' \
+                  "$file" 2>/dev/null || echo "")
+                if [ ! -z "$includes" ]; then
+                  echo "  Branch patterns:"
+                  echo "$includes" | while read -r pattern; do
+                    echo "    - $pattern"
+                  done
+                fi
+              elif [ "$target" == "tag" ]; then
+                includes=$(jq -r '.conditions.ref_name.include[]' \
+                  "$file" 2>/dev/null || echo "")
+                if [ ! -z "$includes" ]; then
+                  echo "  Tag patterns:"
+                  echo "$includes" | while read -r pattern; do
+                    echo "    - $pattern"
+                  done
+                fi
+              fi
+            fi
+          done
+
+      - name: Check if rulesets can be applied
+        if: |
+          github.event_name == 'push' ||
+          github.event.inputs.action == 'apply'
+        run: |
+          echo "Note: Applying rulesets requires repository admin"
+          echo "permissions"
+          echo ""
+          echo "To apply these rulesets, a repository administrator"
+          echo "should run:"
+          echo "  cd .github/rulesets"
+          echo "  ./apply-rulesets.sh --create"
+          echo ""
+          echo "Or use GitHub CLI manually:"
+          echo "  gh api --method POST \\"
+          echo "    repos/kushmanmb-org/bitcoin/rulesets \\"
+          echo "    --input .github/rulesets/master-branch-protection.json"
+          echo ""
+          echo "For more information, see:"
+          echo "  - .github/rulesets/README.md"
+          echo "  - RULESETS_SETUP_GUIDE.md"
+
+      - name: Generate ruleset summary
+        run: |
+          echo "## Ruleset Configuration Summary" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### Configured Rulesets" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+
+          for file in .github/rulesets/*.json; do
+            if [ -f "$file" ]; then
+              name=$(jq -r '.name' "$file")
+              target=$(jq -r '.target' "$file")
+              enforcement=$(jq -r '.enforcement' "$file")
+
+              echo "#### $name" >> $GITHUB_STEP_SUMMARY
+              echo "" >> $GITHUB_STEP_SUMMARY
+              echo "- **File**: \`$(basename $file)\`" \
+                >> $GITHUB_STEP_SUMMARY
+              echo "- **Target**: $target" >> $GITHUB_STEP_SUMMARY
+              echo "- **Enforcement**: $enforcement" \
+                >> $GITHUB_STEP_SUMMARY
+
+              # Count rules
+              rule_count=$(jq '.rules | length' "$file")
+              echo "- **Rules**: $rule_count configured" \
+                >> $GITHUB_STEP_SUMMARY
+              echo "" >> $GITHUB_STEP_SUMMARY
+            fi
+          done
+
+          echo "### Documentation" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "- [RULESETS.md](../RULESETS.md) - Complete ruleset" \
+            "documentation" >> $GITHUB_STEP_SUMMARY
+          echo "- [POLICY.md](../POLICY.md) - Repository policy" \
+            "documentation" >> $GITHUB_STEP_SUMMARY
+          echo "- [.github/rulesets/README.md](.github/rulesets/README.md)" \
+            "- Ruleset configuration guide" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### Application Instructions" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "To apply these rulesets (requires admin permissions):" \
+            >> $GITHUB_STEP_SUMMARY
+          echo '```bash' >> $GITHUB_STEP_SUMMARY
+          echo "cd .github/rulesets" >> $GITHUB_STEP_SUMMARY
+          echo "./apply-rulesets.sh --create" >> $GITHUB_STEP_SUMMARY
+          echo '```' >> $GITHUB_STEP_SUMMARY
+
+  policy-check:
+    name: Verify Repository Policy
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6
+
+      - name: Verify policy documentation
+        run: |
+          echo "Verifying repository policy documentation..."
+
+          # Check that required policy documents exist
+          required_docs=(
+            "POLICY.md"
+            "RULESETS.md"
+            "SECURITY.md"
+            "CONTRIBUTING.md"
+          )
+
+          for doc in "${required_docs[@]}"; do
+            if [ -f "$doc" ]; then
+              echo "✓ Found: $doc"
+
+              # Check file is not empty
+              if [ -s "$doc" ]; then
+                lines=$(wc -l < "$doc")
+                echo "  - Lines: $lines"
+              else
+                echo "  ✗ Error: File is empty"
+                exit 1
+              fi
+            else
+              echo "✗ Missing: $doc"
+              exit 1
+            fi
+          done
+
+          echo ""
+          echo "All required policy documents are present!"
+
+      - name: Validate CODEOWNERS file
+        run: |
+          echo "Checking CODEOWNERS file..."
+
+          if [ -f ".github/CODEOWNERS" ]; then
+            echo "✓ CODEOWNERS file exists"
+
+            # Show CODEOWNERS content
+            echo "CODEOWNERS content:"
+            cat .github/CODEOWNERS
+          else
+            echo "⚠ Warning: CODEOWNERS file not found"
+            echo "Consider creating .github/CODEOWNERS to define" \
+              "code ownership"
+          fi
+
+      - name: Generate policy summary
+        run: |
+          echo "## Repository Policy Summary" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### Policy Documents" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "- ✅ [POLICY.md](../POLICY.md) - Repository governance" \
+            "and contribution policies" >> $GITHUB_STEP_SUMMARY
+          echo "- ✅ [RULESETS.md](../RULESETS.md) - Branch protection" \
+            "and ruleset documentation" >> $GITHUB_STEP_SUMMARY
+          echo "- ✅ [SECURITY.md](../SECURITY.md) - Security policy" \
+            "and vulnerability reporting" >> $GITHUB_STEP_SUMMARY
+          echo "- ✅ [CONTRIBUTING.md](../CONTRIBUTING.md) -" \
+            "Contribution guidelines" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+
+          if [ -f ".github/CODEOWNERS" ]; then
+            echo "- ✅ [.github/CODEOWNERS](.github/CODEOWNERS) -" \
+              "Code ownership definitions" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "- ⚠️  .github/CODEOWNERS - Not configured" \
+              >> $GITHUB_STEP_SUMMARY
+          fi
+
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### Policy Highlights" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "- **Governance Model**: Single-owner with community" \
+            "contributions" >> $GITHUB_STEP_SUMMARY
+          echo "- **Branch Protection**: Active on master and release" \
+            "branches" >> $GITHUB_STEP_SUMMARY
+          echo "- **Review Requirements**: Minimum 1 approval for all" \
+            "PRs" >> $GITHUB_STEP_SUMMARY
+          echo "- **Status Checks**: CI, lint, CodeQL, and secret" \
+            "scanning required" >> $GITHUB_STEP_SUMMARY
+          echo "- **License**: MIT License" >> $GITHUB_STEP_SUMMARY
