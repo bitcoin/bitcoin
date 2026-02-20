@@ -173,7 +173,7 @@ jobs:
               if [ "$target" == "branch" ]; then
                 includes=$(jq -r '.conditions.ref_name.include[]' \
                   "$file" 2>/dev/null || echo "")
-                if [ ! -z "$includes" ]; then
+                if [ -n "$includes" ]; then
                   echo "  Branch patterns:"
                   echo "$includes" | while read -r pattern; do
                     echo "    - $pattern"
@@ -182,7 +182,7 @@ jobs:
               elif [ "$target" == "tag" ]; then
                 includes=$(jq -r '.conditions.ref_name.include[]' \
                   "$file" 2>/dev/null || echo "")
-                if [ ! -z "$includes" ]; then
+                if [ -n "$includes" ]; then
                   echo "  Tag patterns:"
                   echo "$includes" | while read -r pattern; do
                     echo "    - $pattern"
