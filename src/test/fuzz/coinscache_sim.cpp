@@ -247,7 +247,7 @@ FUZZ_TARGET(coinscache_sim)
         CallOneOf(
             provider,
 
-            [&]() { // GetCoin
+            [&]() { // PeekCoin/GetCoin
                 uint32_t outpointidx = provider.ConsumeIntegralInRange<uint32_t>(0, NUM_OUTPOINTS - 1);
                 // Look up in simulation data.
                 auto sim = lookup(outpointidx);
