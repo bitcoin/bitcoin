@@ -1014,6 +1014,17 @@ class CompactBlocksTest(BitcoinTestFramework):
         unsolicited_peer = self.nodes[0].add_p2p_connection(TestP2PConn())
         self.assert_highbandwidth_states(node, idx=-1, hb_to=False, hb_from=False)
 
+        self.log.info("Test that a node ignores unsolicited CMPCTBLOCK messages from peers that have not sent SENDCMPCT.")
+        assert ignores_compact_block(unsolicited_peer, solicited=False)
+
+        self.log.info("Test that a node ignores solicited CMPCTBLOCK messages from peers that have not sent SENDCMPCT.")
+        assert ignores_compact_block(unsolicited_peer, solicited=True)
+
+        # Unsolicited peer announces CMPCTBLOCK support with SENDCMPCT message,
+        # but still non-HB.
+        unsolicited_peer.send_and_ping(msg_sendcmpct())
+        self.assert_highbandwidth_states(node, idx=-1, hb_to=False, hb_from=False)
+
         self.log.info("Test that a node ignores unsolicited CMPCTBLOCK messages from non-HB peers.")
         assert ignores_compact_block(unsolicited_peer, solicited=False)
         self.assert_highbandwidth_states(node, idx=-1, hb_to=False, hb_from=False)
@@ -1093,12 +1104,14 @@ class CompactBlocksTest(BitcoinTestFramework):
 
         # The previous test will lead to a disconnection. Reconnect before continuing.
         self.segwit_node = self.nodes[0].add_p2p_connection(TestP2PConn())
+        self.segwit_node.send_and_ping(msg_sendcmpct())
 
         self.log.info("Testing handling of multiple blocktxn responses...")
         self.test_multiple_blocktxn_response(self.segwit_node)
 
         # The previous test will lead to a disconnection. Reconnect before continuing.
         self.segwit_node = self.nodes[0].add_p2p_connection(TestP2PConn())
+        self.segwit_node.send_and_ping(msg_sendcmpct())
 
         self.log.info("Testing invalid index in cmpctblock message...")
         self.test_invalid_cmpctblock_message()

@@ -4603,6 +4603,9 @@ void PeerManagerImpl::ProcessMessage(Peer& peer, CNode& pfrom, const std::string
         } else if (m_opts.ignore_incoming_txs) {
             LogDebug(BCLog::CMPCTBLOCK, "Peer %d%s sent us a compact block even though we are blocksonly!", pfrom.GetId(), pfrom.LogIP(fLogIPs));
             return;
+        } else if (!nodestate->m_provides_cmpctblocks) {
+            LogDebug(BCLog::CMPCTBLOCK, "Peer %d%s sent us a compact block despite never having sent us a SENDCMPCT!", pfrom.GetId(), pfrom.LogIP(fLogIPs));
+            return;
         }
 
         auto range_flight = mapBlocksInFlight.equal_range(pindex->GetBlockHash());
