@@ -90,7 +90,7 @@ jobs:
             path: src/test
             command: |
               if [ -f "CMakeLists.txt" ]; then
-                cmake -B build -DBUILD_TESTS=ON
+                cmake -B build -DBUILD_TESTS=ON -DENABLE_IPC=OFF
                 cmake --build build --target test
               else
                 echo "No C++ tests configured"

@@ -239,7 +239,8 @@ jobs:
             -DCMAKE_BUILD_TYPE=${{ env.CMAKE_BUILD_TYPE }} \
             -DCMAKE_C_COMPILER_LAUNCHER=ccache \
             -DCMAKE_CXX_COMPILER_LAUNCHER=ccache \
-            -DBUILD_TESTS=ON
+            -DBUILD_TESTS=ON \
+            -DENABLE_IPC=OFF
 
       - name: Build
         if: hashFiles('CMakeLists.txt') != ''
