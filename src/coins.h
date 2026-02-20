@@ -229,7 +229,7 @@ using CCoinsMapMemoryResource = CCoinsMap::allocator_type::ResourceType;
 class CCoinsViewCursor
 {
 public:
-    CCoinsViewCursor(const uint256 &in_block_hash): block_hash(in_block_hash) {}
+    CCoinsViewCursor(const uint256& in_block_hash) : block_hash(in_block_hash) {}
     virtual ~CCoinsViewCursor() = default;
 
     virtual bool GetKey(COutPoint &key) const = 0;
@@ -239,7 +239,7 @@ public:
     virtual void Next() = 0;
 
     //! Get best block at the time this cursor was created
-    const uint256 &GetBestBlock() const { return block_hash; }
+    const uint256& GetBestBlock() const { return block_hash; }
 private:
     uint256 block_hash;
 };
@@ -317,7 +317,7 @@ public:
 
     //! Just check whether a given outpoint is unspent.
     //! May populate the cache. Use PeekCoin() to perform a non-caching lookup.
-    virtual bool HaveCoin(const COutPoint &outpoint) const;
+    virtual bool HaveCoin(const COutPoint& outpoint) const;
 
     //! Retrieve the block hash whose state this CCoinsView currently represents
     virtual uint256 GetBestBlock() const;
@@ -347,16 +347,16 @@ public:
 class CCoinsViewBacked : public CCoinsView
 {
 protected:
-    CCoinsView *base;
+    CCoinsView* base;
 
 public:
-    CCoinsViewBacked(CCoinsView *in_view);
+    CCoinsViewBacked(CCoinsView* in_view);
     std::optional<Coin> GetCoin(const COutPoint& outpoint) const override;
     std::optional<Coin> PeekCoin(const COutPoint& outpoint) const override;
-    bool HaveCoin(const COutPoint &outpoint) const override;
+    bool HaveCoin(const COutPoint& outpoint) const override;
     uint256 GetBestBlock() const override;
     std::vector<uint256> GetHeadBlocks() const override;
-    void SetBackend(CCoinsView &in_view);
+    void SetBackend(CCoinsView& in_view);
     void BatchWrite(CoinsViewCacheCursor& cursor, const uint256& block_hash) override;
     std::unique_ptr<CCoinsViewCursor> Cursor() const override;
     size_t EstimateSize() const override;
@@ -395,7 +395,7 @@ protected:
     virtual std::optional<Coin> FetchCoinFromBase(const COutPoint& outpoint) const;
 
 public:
-    CCoinsViewCache(CCoinsView *in_base, bool deterministic = false);
+    CCoinsViewCache(CCoinsView* in_base, bool deterministic = false);
 
     /**
      * By deleting the copy constructor, we prevent accidentally using it when one intends to create a cache on top of a base cache.
@@ -405,9 +405,9 @@ public:
     // Standard CCoinsView methods
     std::optional<Coin> GetCoin(const COutPoint& outpoint) const override;
     std::optional<Coin> PeekCoin(const COutPoint& outpoint) const override;
-    bool HaveCoin(const COutPoint &outpoint) const override;
+    bool HaveCoin(const COutPoint& outpoint) const override;
     uint256 GetBestBlock() const override;
-    void SetBestBlock(const uint256 &block_hash);
+    void SetBestBlock(const uint256& block_hash);
     void BatchWrite(CoinsViewCacheCursor& cursor, const uint256& block_hash) override;
     std::unique_ptr<CCoinsViewCursor> Cursor() const override {
         throw std::logic_error("CCoinsViewCache cursor iteration not supported.");
@@ -578,7 +578,7 @@ public:
     }
 
     std::optional<Coin> GetCoin(const COutPoint& outpoint) const override;
-    bool HaveCoin(const COutPoint &outpoint) const override;
+    bool HaveCoin(const COutPoint& outpoint) const override;
     std::optional<Coin> PeekCoin(const COutPoint& outpoint) const override;
 
 private:
