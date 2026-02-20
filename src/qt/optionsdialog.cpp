@@ -16,7 +16,7 @@
 #include <common/system.h>
 #include <interfaces/node.h>
 #include <netbase.h>
-#include <node/caches.h>
+#include <node/dbcache.h>
 #include <node/chainstatemanager_args.h>
 #include <util/strencodings.h>
 

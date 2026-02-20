@@ -3,6 +3,7 @@
 // file COPYING or https://opensource.org/license/mit.
 
 #include <node/caches.h>
+#include <node/dbcache.h>
 #include <util/byte_units.h>
 
 #include <boost/test/unit_test.hpp>
@@ -13,10 +14,10 @@ BOOST_AUTO_TEST_SUITE(caches_tests)
 
 BOOST_AUTO_TEST_CASE(oversized_dbcache_warning)
 {
-    // memory restricted setup - cap is DEFAULT_DB_CACHE (450 MiB)
-    BOOST_CHECK(!ShouldWarnOversizedDbCache(/*dbcache=*/4_MiB, /*total_ram=*/1024_MiB));    // Under cap
-    BOOST_CHECK( ShouldWarnOversizedDbCache(/*dbcache=*/512_MiB, /*total_ram=*/1024_MiB));  // At cap
-    BOOST_CHECK( ShouldWarnOversizedDbCache(/*dbcache=*/1500_MiB, /*total_ram=*/1024_MiB)); // Over cap
+    // Below 2 GiB RAM, the warning cap follows `GetDefaultDBCache()`.
+    BOOST_CHECK(!ShouldWarnOversizedDbCache(MIN_DB_CACHE, /*total_ram=*/1024_MiB));            // Under cap
+    BOOST_CHECK(!ShouldWarnOversizedDbCache(GetDefaultDBCache(), /*total_ram=*/1024_MiB));     // At cap
+    BOOST_CHECK( ShouldWarnOversizedDbCache(GetDefaultDBCache() + 1, /*total_ram=*/1024_MiB)); // Over cap
 
     // 2 GiB RAM - cap is 75%
     BOOST_CHECK(!ShouldWarnOversizedDbCache(/*dbcache=*/1500_MiB, /*total_ram=*/2048_MiB)); // Under cap
