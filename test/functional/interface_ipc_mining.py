@@ -349,9 +349,13 @@ class IPCMiningTest(BitcoinTestFramework):
                 block.hashMerkleRoot = block.calc_merkle_root()
                 original_version = block.nVersion
 
+                self.log.debug("Submit empty coinbase")
+                submitted = (await template.submitSolution(ctx, 0, 0, 0, b"")).result
+                assert_equal(submitted, False)
+
                 self.log.debug("Submit solution that can't be deserialized")
                 try:
-                    await template.submitSolution(ctx, 0, 0, 0, b"")
+                    await template.submitSolution(ctx, 0, 0, 0, b"\x00")
                     raise AssertionError("submitSolution unexpectedly succeeded")
                 except capnp.lib.capnp.KjException as e:
                     assert_capnp_failed(e, "remote exception: std::exception: SpanReader::read(): end of data:")
