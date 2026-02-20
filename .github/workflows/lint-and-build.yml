@@ -194,6 +194,8 @@ jobs:
     runs-on: ${{ vars.USE_SELF_HOSTED == 'true' && 'self-hosted' || 'ubuntu-latest' }}
     permissions:
       contents: read
+      id-token: write
+      attestations: write
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -265,6 +267,15 @@ jobs:
             build/src/bitcoin-tx
           retention-days: 7
           if-no-files-found: ignore
+
+      - name: Attest build provenance
+        if: success() && hashFiles('build/src/bitcoind') != ''
+        uses: actions/attest-build-provenance@v2
+        with:
+          subject-path: |
+            build/src/bitcoind
+            build/src/bitcoin-cli
+            build/src/bitcoin-tx
 
   build-documentation:
     name: Build Documentation

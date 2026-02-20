@@ -7,6 +7,7 @@
 
 #include <chainparamsbase.h>
 #include <clientversion.h>
+#include <common/app_constants.h>
 #include <common/args.h>
 #include <common/system.h>
 #include <compat/compat.h>
@@ -56,7 +57,6 @@ static const char DEFAULT_RPCCONNECT[] = "127.0.0.1";
 static const int DEFAULT_HTTP_CLIENT_TIMEOUT=900;
 static constexpr int DEFAULT_WAIT_CLIENT_TIMEOUT = 0;
 static const bool DEFAULT_NAMED=false;
-static const int CONTINUE_EXECUTION=-1;
 static constexpr uint8_t NETINFO_MAX_LEVEL{4};
 static constexpr int8_t UNKNOWN_NETWORK{-1};
 // See GetNetworkName() in netbase.cpp
@@ -145,7 +145,7 @@ static int AppInitRPC(int argc, char* argv[])
     SetupCliArgs(gArgs);
     std::string error;
     if (!gArgs.ParseParameters(argc, argv, error)) {
-        tfm::format(std::cerr, "Error parsing command line arguments: %s\n", error);
+        tfm::format(std::cerr, app_error::COMMAND_LINE_PARSE_ERROR, error);
         return EXIT_FAILURE;
     }
     if (argc < 2 || HelpRequested(gArgs) || gArgs.GetBoolArg("-version", false)) {
@@ -170,13 +170,13 @@ static int AppInitRPC(int argc, char* argv[])
 
         tfm::format(std::cout, "%s", strUsage);
         if (argc < 2) {
-            tfm::format(std::cerr, "Error: too few parameters\n");
+            tfm::format(std::cerr, app_error::TOO_FEW_PARAMETERS);
             return EXIT_FAILURE;
         }
         return EXIT_SUCCESS;
     }
     if (!CheckDataDirOption(gArgs)) {
-        tfm::format(std::cerr, "Error: Specified data directory \"%s\" does not exist.\n", gArgs.GetArg("-datadir", ""));
+        tfm::format(std::cerr, app_error::DATADIR_DOES_NOT_EXIST, gArgs.GetArg("-datadir", ""));
         return EXIT_FAILURE;
     }
     if (!gArgs.ReadConfigFiles(error, true)) {

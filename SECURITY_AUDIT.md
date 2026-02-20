@@ -1,7 +1,8 @@
 # Blockchain Security Audit Report
 
 ## Audit Date
-2026-02-16
+2026-02-16 (Initial)
+2026-02-19 (Updated)
 
 ## Scope
 This security audit covers the Bitcoin Core blockchain implementation, focusing on:
@@ -104,6 +105,57 @@ run: |
 - `.github/workflows/bitcoin-ownership-announcement.yml` (lines 181-208, 209-239)
 - `.github/workflows/etherscan-apiv2.yml` (lines 87-136, 138-188, 267-287, 289-320)
 
+#### 2. Command Injection in CI Workflow (2026-02-19)
+**Severity**: Critical  
+**Location**: `.github/workflows/ci.yml` (line 82)
+
+**Issue**: Direct interpolation of `${{ github.event.pull_request.commits }}` in shell arithmetic expression. If this value contained special characters or was manipulated, it could lead to command injection.
+
+**Example**:
+```yaml
+# VULNERABLE
+run: echo "FETCH_DEPTH=$((${{ github.event.pull_request.commits }} + 2))" >> "$GITHUB_ENV"
+```
+
+**Fix Applied**: Pass through environment variable first:
+```yaml
+# SECURE
+env:
+  PR_COMMITS: ${{ github.event.pull_request.commits }}
+run: echo "FETCH_DEPTH=$(($PR_COMMITS + 2))" >> "$GITHUB_ENV"
+```
+
+**Files Fixed**:
+- `.github/workflows/ci.yml` (line 82)
+
+#### 3. Secret Exposure in API Calls (2026-02-19)
+**Severity**: High  
+**Location**: `.github/workflows/etherscan-apiv2.yml` (lines 341, 348)
+
+**Issue**: API secrets were being interpolated directly into curl URL parameters, which could expose them in:
+- Process listings (`ps aux`)
+- Shell history
+- Workflow logs (if debug logging enabled)
+- Error messages
+
+**Example**:
+```yaml
+# VULNERABLE
+curl -s "${api_url}&apikey=${{ secrets.ETHERSCAN_API_KEY }}"
+```
+
+**Fix Applied**: Use environment variable that's already set in the step:
+```yaml
+# SECURE
+env:
+  ETHERSCAN_API_KEY: ${{ secrets.ETHERSCAN_API_KEY }}
+run: |
+  curl -s "${api_url}&apikey=${ETHERSCAN_API_KEY}"
+```
+
+**Files Fixed**:
+- `.github/workflows/etherscan-apiv2.yml` (lines 341, 348)
+
 ## Findings Summary
 
 ### Security Strengths
@@ -153,8 +205,10 @@ This audit verifies compliance with:
 ## Conclusion
 The Bitcoin Core blockchain implementation demonstrates strong security practices and mature defensive coding patterns. The codebase shows evidence of careful attention to security throughout its development, with comprehensive validation, proper memory management, and protection against common vulnerability classes.
 
-During this audit, one medium-severity issue was identified and fixed:
-- **Command Injection in GitHub Actions**: Fixed by using environment variables instead of direct interpolation
+During this audit, three security issues were identified and fixed:
+1. **Command Injection in GitHub Actions (2026-02-16)**: Fixed by using environment variables instead of direct interpolation
+2. **Command Injection in CI Workflow (2026-02-19)**: Fixed arithmetic expression vulnerability in fetch depth calculation
+3. **Secret Exposure in API Calls (2026-02-19)**: Fixed API key exposure in curl commands
 
 No critical security vulnerabilities were identified in the core blockchain code. The code continues to follow industry best practices for security-critical software development.
 
@@ -168,10 +222,14 @@ This audit was performed using:
 - Verification against SECURITY_PRACTICES.md guidelines
 
 ### Changes Made
-1. Fixed command injection vulnerabilities in GitHub Actions workflows:
+1. Fixed command injection vulnerabilities in GitHub Actions workflows (2026-02-16):
    - `bitcoin-ownership-announcement.yml`: Converted direct interpolations to environment variables
    - `etherscan-apiv2.yml`: Converted direct interpolations to environment variables
-2. Created comprehensive security audit documentation
+2. Fixed command injection in CI workflow (2026-02-19):
+   - `ci.yml`: Fixed arithmetic expression vulnerability by using environment variable
+3. Fixed secret exposure in API calls (2026-02-19):
+   - `etherscan-apiv2.yml`: Changed to use environment variable for API key instead of direct secret interpolation
+4. Created and updated comprehensive security audit documentation
 
 ---
 **Report Status**: COMPLETED  

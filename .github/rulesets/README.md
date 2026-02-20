@@ -11,6 +11,13 @@ Repository rulesets provide a modern way to enforce branch protection and other 
 - Easier management through the API
 - Version-controlled configuration
 
+## Quick Links
+
+- **[APPLICATION_GUIDE.md](APPLICATION_GUIDE.md)** - Complete step-by-step application instructions
+- **[QUICKSTART.md](QUICKSTART.md)** - Quick 3-step setup guide
+- **[verify-status-checks.sh](verify-status-checks.sh)** - Script to verify status check names
+- **[apply-rulesets.sh](apply-rulesets.sh)** - Script to apply/manage rulesets
+
 ## Configuration Files
 
 ### Branch Protection Rulesets
@@ -54,6 +61,34 @@ Protects version tags matching `v*.*.*` pattern:
 - Restricts tag updates (makes tags immutable)
 
 ## Applying Rulesets
+
+### Automated Workflow (Recommended)
+
+This repository includes a GitHub Actions workflow that automatically validates ruleset configurations:
+
+**Workflow**: `.github/workflows/apply-rulesets.yml`
+
+The workflow:
+- ✅ Validates all JSON configuration files
+- ✅ Verifies required rulesets are defined
+- ✅ Checks policy documentation exists
+- ✅ Generates summary reports
+- ✅ Runs on changes to ruleset files or policy documents
+
+**Trigger the workflow manually**:
+```bash
+# Via GitHub CLI
+gh workflow run apply-rulesets.yml -f action=verify
+
+# Via GitHub web interface
+# Go to: Actions → Apply Branch Protection Rulesets → Run workflow
+```
+
+**View workflow results**:
+```bash
+gh run list --workflow=apply-rulesets.yml
+gh run view <run-id>
+```
 
 ### Option 1: Using GitHub CLI
 

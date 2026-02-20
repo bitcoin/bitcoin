@@ -2,6 +2,7 @@
 import Image from "next/image";
 import styles from "./page.module.css";
 import { Wallet } from "@coinbase/onchainkit/wallet";
+import { WETHInteraction } from "./components/WETHInteraction";
 
 export default function Home() {
   return (
@@ -20,9 +21,7 @@ export default function Home() {
         />
         <h1 className={styles.title}>OnchainKit</h1>
 
-        <p>
-          Get started by editing <code>app/page.tsx</code>
-        </p>
+        <WETHInteraction />
 
         <h2 className={styles.componentsTitle}>Explore Components</h2>
 
