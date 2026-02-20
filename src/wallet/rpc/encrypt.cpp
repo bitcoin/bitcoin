@@ -10,9 +10,9 @@
 
 
 namespace wallet {
-RPCHelpMan walletpassphrase()
+RPCMethod walletpassphrase()
 {
-    return RPCHelpMan{
+    return RPCMethod{
         "walletpassphrase",
         "Stores the wallet decryption key in memory for 'timeout' seconds.\n"
                 "This is needed prior to performing transactions related to private keys such as sending bitcoins\n"
@@ -32,7 +32,7 @@ RPCHelpMan walletpassphrase()
             "\nAs a JSON-RPC call\n"
             + HelpExampleRpc("walletpassphrase", "\"my pass phrase\", 60")
                 },
-        [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
+        [&](const RPCMethod& self, const JSONRPCRequest& request) -> UniValue
 {
     std::shared_ptr<CWallet> const wallet = GetWalletForJSONRPCRequest(request);
     if (!wallet) return UniValue::VNULL;
@@ -115,9 +115,9 @@ RPCHelpMan walletpassphrase()
 }
 
 
-RPCHelpMan walletpassphrasechange()
+RPCMethod walletpassphrasechange()
 {
-    return RPCHelpMan{
+    return RPCMethod{
         "walletpassphrasechange",
         "Changes the wallet passphrase from 'oldpassphrase' to 'newpassphrase'.\n",
                 {
@@ -129,7 +129,7 @@ RPCHelpMan walletpassphrasechange()
                     HelpExampleCli("walletpassphrasechange", "\"old one\" \"new one\"")
             + HelpExampleRpc("walletpassphrasechange", "\"old one\", \"new one\"")
                 },
-        [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
+        [&](const RPCMethod& self, const JSONRPCRequest& request) -> UniValue
 {
     std::shared_ptr<CWallet> const pwallet = GetWalletForJSONRPCRequest(request);
     if (!pwallet) return UniValue::VNULL;
@@ -175,9 +175,9 @@ RPCHelpMan walletpassphrasechange()
 }
 
 
-RPCHelpMan walletlock()
+RPCMethod walletlock()
 {
-    return RPCHelpMan{
+    return RPCMethod{
         "walletlock",
         "Removes the wallet encryption key from memory, locking the wallet.\n"
                 "After calling this method, you will need to call walletpassphrase again\n"
@@ -194,7 +194,7 @@ RPCHelpMan walletlock()
             "\nAs a JSON-RPC call\n"
             + HelpExampleRpc("walletlock", "")
                 },
-        [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
+        [&](const RPCMethod& self, const JSONRPCRequest& request) -> UniValue
 {
     std::shared_ptr<CWallet> const pwallet = GetWalletForJSONRPCRequest(request);
     if (!pwallet) return UniValue::VNULL;
@@ -218,9 +218,9 @@ RPCHelpMan walletlock()
 }
 
 
-RPCHelpMan encryptwallet()
+RPCMethod encryptwallet()
 {
-    return RPCHelpMan{
+    return RPCMethod{
         "encryptwallet",
         "Encrypts the wallet with 'passphrase'. This is for first time encryption.\n"
         "After this, any calls that interact with private keys such as sending or signing \n"
@@ -247,7 +247,7 @@ RPCHelpMan encryptwallet()
             "\nAs a JSON-RPC call\n"
             + HelpExampleRpc("encryptwallet", "\"my pass phrase\"")
                 },
-        [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
+        [&](const RPCMethod& self, const JSONRPCRequest& request) -> UniValue
 {
     std::shared_ptr<CWallet> const pwallet = GetWalletForJSONRPCRequest(request);
     if (!pwallet) return UniValue::VNULL;
