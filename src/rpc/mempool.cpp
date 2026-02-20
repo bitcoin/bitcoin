@@ -940,7 +940,7 @@ static RPCHelpMan gettxspendingprevout()
             if (output_params.empty()) {
                 throw JSONRPCError(RPC_INVALID_PARAMETER, "Invalid parameter, outputs are missing");
             }
-            const UniValue options{request.params[1].isNull() ? UniValue::VOBJ : request.params[1]};\
+            const UniValue options{request.params[1].isNull() ? UniValue::VOBJ : request.params[1]};
             RPCTypeCheckObj(options,
                             {
                                 {"mempool_only", UniValueType(UniValue::VBOOL)},
