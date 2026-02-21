@@ -240,3 +240,143 @@ class Socks5Server():
         s.connect(self.conf.addr)
         s.close()
         self.thread.join()
+
+
+# Fake .onion addresses for populating addrman in tests. These use the
+# "testonly" prefix pattern recognized by Bitcoin Core's address validation.
+FAKE_ONION_ADDRESSES = [
+    "testonlyad777777777777777777777777777777777777777775b6qd.onion",
+    "testonlyah77777777777777777777777777777777777777777z7ayd.onion",
+    "testonlyal77777777777777777777777777777777777777777vp6qd.onion",
+    "testonlyap77777777777777777777777777777777777777777r5qad.onion",
+    "testonlyat77777777777777777777777777777777777777777udsid.onion",
+    "testonlyax77777777777777777777777777777777777777777yciid.onion",
+    "testonlya777777777777777777777777777777777777777777rhgyd.onion",
+    "testonlybd77777777777777777777777777777777777777777rs4ad.onion",
+    "testonlybp77777777777777777777777777777777777777777zs2ad.onion",
+    "testonlybt777777777777777777777777777777777777777777x6id.onion",
+    "testonlybx777777777777777777777777777777777777777775styd.onion",
+    "testonlyb3777777777777777777777777777777777777777774ckid.onion",
+    "testonlycd77777777777777777777777777777777777777777733id.onion",
+    "testonlych77777777777777777777777777777777777777777t6kid.onion",
+    "testonlycl77777777777777777777777777777777777777777tt3ad.onion",
+    "testonlyct77777777777777777777777777777777777777777wvhyd.onion",
+    "testonlycx7777777777777777777777777777777777777777774bad.onion",
+    "testonlyc377777777777777777777777777777777777777777u6aid.onion",
+    "testonlydd777777777777777777777777777777777777777777u5ad.onion",
+    "testonlydh77777777777777777777777777777777777777777wgnyd.onion",
+]
+
+
+class Socks5ProxyHelper:
+    """Helper class for setting up SOCKS5 proxy servers in tests.
+
+    This class simplifies the common pattern of creating a SOCKS5 proxy that
+    redirects connections to a specific target, tracking the destinations
+    that clients attempt to connect to.
+
+    Example usage:
+        # In setup_nodes():
+        self.proxy = Socks5ProxyHelper(self.log)
+        self.proxy.start_simple_redirect("127.0.0.1", tor_port(1))
+
+        # In extra_args:
+        f"-proxy=127.0.0.1:{self.proxy.port}"
+
+        # Check connections made:
+        self.wait_until(lambda: len(self.proxy.destinations) >= 1)
+
+        # Cleanup:
+        self.proxy.stop()
+    """
+
+    def __init__(self, log):
+        """Initialize the helper.
+
+        Args:
+            log: Logger instance (typically self.log from BitcoinTestFramework)
+        """
+        self.log = log
+        self.server = None
+        self.port = None
+        self.destinations = []
+        self.destinations_lock = threading.Lock()
+
+    def start_simple_redirect(self, target_addr, target_port):
+        """Start a SOCKS5 proxy that redirects all connections to a fixed target.
+
+        This is the simplest mode: every incoming connection is redirected to
+        the same target_addr:target_port, regardless of what the client requested.
+
+        Args:
+            target_addr: Address to redirect all connections to (e.g., "127.0.0.1")
+            target_port: Port to redirect all connections to (e.g., tor_port(1))
+        """
+        config = Socks5Configuration()
+        config.addr = ("127.0.0.1", 0)  # Ephemeral port
+        config.unauth = True
+        config.auth = True
+
+        self.server = Socks5Server(config)
+        self.port = self.server.conf.addr[1]
+
+        def factory(requested_to_addr, requested_to_port):
+            with self.destinations_lock:
+                self.destinations.append({
+                    "requested_to_addr": requested_to_addr,
+                    "requested_to_port": requested_to_port,
+                })
+                self.log.debug(f"SOCKS5: Redirecting {requested_to_addr}:{requested_to_port} "
+                               f"-> {target_addr}:{target_port}")
+                return {
+                    "actual_to_addr": target_addr,
+                    "actual_to_port": target_port,
+                }
+
+        self.server.conf.destinations_factory = factory
+        self.server.start()
+
+    def start_with_custom_factory(self, destinations_factory):
+        """Start a SOCKS5 proxy with a custom destinations factory.
+
+        Use this when you need more complex routing logic than simple redirect.
+
+        Args:
+            destinations_factory: Function(requested_to_addr, requested_to_port)
+                                  that returns {"actual_to_addr": ..., "actual_to_port": ...}
+                                  or None to reject the connection.
+        """
+        config = Socks5Configuration()
+        config.addr = ("127.0.0.1", 0)  # Ephemeral port
+        config.unauth = True
+        config.auth = True
+
+        self.server = Socks5Server(config)
+        self.port = self.server.conf.addr[1]
+        self.server.conf.destinations_factory = destinations_factory
+        self.server.start()
+
+    def stop(self):
+        """Stop the SOCKS5 proxy server."""
+        if self.server is not None:
+            self.server.stop()
+            self.server = None
+
+    def reset_destinations(self):
+        """Clear the list of recorded destinations."""
+        with self.destinations_lock:
+            self.destinations = []
+
+
+def add_addresses_to_addrman(node, addresses, log=None):
+    """Add a list of addresses to a node's addrman.
+
+    Args:
+        node: The node RPC object to add addresses to
+        addresses: List of address strings (IPv4, IPv6, .onion, .i2p, etc.)
+        log: Optional logger for debug output
+    """
+    for addr in addresses:
+        res = node.addpeeraddress(address=addr, port=8333, tried=False)
+        if not res["success"] and log:
+            log.debug(f"Could not add {addr} to addrman (collision?)")
