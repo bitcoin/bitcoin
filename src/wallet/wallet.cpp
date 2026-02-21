@@ -27,6 +27,8 @@
 #include <key.h>
 #include <key_io.h>
 #include <logging.h>
+#include <net.h>
+#include <netbase.h>
 #include <node/types.h>
 #include <outputtype.h>
 #include <policy/feerate.h>
@@ -2143,7 +2145,10 @@ void MaybeResendWalletTxs(WalletContext& context)
 {
     for (const std::shared_ptr<CWallet>& pwallet : GetWallets(context)) {
         if (!pwallet->ShouldResend()) continue;
-        pwallet->ResubmitWalletTransactions(node::TxBroadcast::MEMPOOL_AND_BROADCAST_TO_ALL, /*force=*/false);
+        const bool private_broadcast{gArgs.GetBoolArg("-privatebroadcast", DEFAULT_PRIVATE_BROADCAST)};
+        const auto method = private_broadcast ? node::TxBroadcast::NO_MEMPOOL_PRIVATE_BROADCAST
+                                              : node::TxBroadcast::MEMPOOL_AND_BROADCAST_TO_ALL;
+        pwallet->ResubmitWalletTransactions(method, /*force=*/false);
         pwallet->SetNextResend();
     }
 }
@@ -2316,6 +2321,16 @@ void CWallet::CommitTransaction(CTransactionRef tx, mapValue_t mapValue, std::ve
     LOCK(cs_wallet);
     WalletLogPrintf("CommitTransaction:\n%s\n", util::RemoveSuffixView(tx->ToString(), "\n"));
 
+    const bool private_broadcast{gArgs.GetBoolArg("-privatebroadcast", DEFAULT_PRIVATE_BROADCAST)};
+    if (fBroadcastTransactions && private_broadcast &&
+        !g_reachable_nets.Contains(NET_ONION) &&
+        !g_reachable_nets.Contains(NET_I2P)) {
+        const std::string err_string{
+            common::TransactionErrorString(node::TransactionError::PRIVATE_BROADCAST_UNAVAILABLE).original};
+        WalletLogPrintf("CommitTransaction(): Transaction cannot be broadcast immediately, %s\n", err_string);
+        throw std::runtime_error(std::string(__func__) + ": " + err_string);
+    }
+
     // Add tx to wallet, because if it has change it's also ours,
     // otherwise just for transaction history.
     CWalletTx* wtx = AddToWallet(tx, TxStateInactive{}, [&](CWalletTx& wtx, bool new_tx) {
@@ -2344,8 +2359,11 @@ void CWallet::CommitTransaction(CTransactionRef tx, mapValue_t mapValue, std::ve
     }
 
     std::string err_string;
-    if (!SubmitTxMemoryPoolAndRelay(*wtx, err_string, node::TxBroadcast::MEMPOOL_AND_BROADCAST_TO_ALL)) {
+    const auto method = private_broadcast ? node::TxBroadcast::NO_MEMPOOL_PRIVATE_BROADCAST
+                                          : node::TxBroadcast::MEMPOOL_AND_BROADCAST_TO_ALL;
+    if (!SubmitTxMemoryPoolAndRelay(*wtx, err_string, method)) {
         WalletLogPrintf("CommitTransaction(): Transaction cannot be broadcast immediately, %s\n", err_string);
+        // Keep the committed wallet transaction so it can be retried later via rebroadcast.
         // TODO: if we expect the failure to be long term or permanent, instead delete wtx from the wallet and return failure.
     }
 }
