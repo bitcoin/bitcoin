@@ -83,11 +83,12 @@ public:
             // This error is thrown if the cursor contains a fresh entry for an outpoint that we already have a fresh
             // entry for. This can happen if the fuzzer calls AddCoin -> Flush -> AddCoin -> Flush on the child cache.
             // There's not an easy way to prevent the fuzzer from reaching this, so we handle it here.
-            // Since it is thrown in the middle of the write, we reset our own state and iterate through
-            // the cursor so the caller's state is also reset.
+            // Since it is thrown in the middle of the write, we reset our own state and rethrow for the caller
+            // to catch.
             assert(e.what() == std::string{"FRESH flag misapplied to coin that exists in parent cache"});
             Reset();
-            for (auto it{cursor.Begin()}; it != cursor.End(); it = cursor.NextAndMaybeErase(*it)) {}
+            m_expected_snapshot = ComputeCacheCoinsSnapshot();
+            throw;
         }
         m_expected_snapshot = ComputeCacheCoinsSnapshot();
     }
@@ -132,10 +133,22 @@ void TestCoinsView(FuzzedDataProvider& fuzzed_data_provider, CCoinsViewCache& co
                 }
             },
             [&] {
-                coins_view_cache.Flush(/*reallocate_cache=*/fuzzed_data_provider.ConsumeBool());
+                try {
+                    coins_view_cache.Flush(/*reallocate_cache=*/fuzzed_data_provider.ConsumeBool());
+                } catch (const std::logic_error& e) {
+                    assert(e.what() == std::string{"FRESH flag misapplied to coin that exists in parent cache"});
+                    assert(dynamic_cast<CCoinsViewCache*>(&backend_coins_view) != nullptr);
+                    const auto reset_guard{coins_view_cache.CreateResetGuard()};
+                }
             },
             [&] {
-                coins_view_cache.Sync();
+                try {
+                    coins_view_cache.Sync();
+                } catch (const std::logic_error& e) {
+                    assert(e.what() == std::string{"FRESH flag misapplied to coin that exists in parent cache"});
+                    assert(dynamic_cast<CCoinsViewCache*>(&backend_coins_view) != nullptr);
+                    const auto reset_guard{coins_view_cache.CreateResetGuard()};
+                }
             },
             [&] {
                 uint256 best_block{ConsumeUInt256(fuzzed_data_provider)};
