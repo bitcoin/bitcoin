@@ -70,7 +70,7 @@ distros, please see: https://repology.org/project/guix/versions
 ### Debian / Ubuntu
 
 **Note:** As of early 2026, the `guix` package has been removed from Debian
-repositories and Ubuntu repositories will likely follow. See
+repositories and from Ubuntu 25.10 (Questing) and later. See
 https://lwn.net/Articles/1035491/ for details.
 
 Debian/Ubuntu users may use any other installation option mentioned in this document.
