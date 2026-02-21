@@ -225,7 +225,8 @@ std::vector<CDeterministicMNCPtr> CDeterministicMNList::GetProjectedMNPayees(gsl
     }
     const bool isMNRewardReallocation = DeploymentActiveAfter(pindexPrev, Params().GetConsensus(),
                                                               Consensus::DEPLOYMENT_MN_RR);
-    const auto weighted_count = isMNRewardReallocation ? GetValidMNsCount() : GetValidWeightedMNsCount();
+    const auto counts = GetCounts();
+    const auto weighted_count = isMNRewardReallocation ? counts.enabled() : counts.m_valid_weighted;
     nCount = std::min(nCount, int(weighted_count));
 
     std::vector<CDeterministicMNCPtr> result;
@@ -293,7 +294,7 @@ int CDeterministicMNList::CalcMaxPoSePenalty() const
     // Maximum PoSe penalty is dynamic and equals the number of registered MNs
     // It's however at least 100.
     // This means that the max penalty is usually equal to a full payment cycle
-    return std::max(100, (int)GetAllMNsCount());
+    return std::max(100, (int)GetCounts().total());
 }
 
 int CDeterministicMNList::CalcPenalty(int percent) const
@@ -333,7 +334,7 @@ void CDeterministicMNList::PoSePunish(const uint256& proTxHash, int penalty, boo
 void CDeterministicMNList::DecreaseScores()
 {
     std::vector<CDeterministicMNCPtr> toDecrease;
-    toDecrease.reserve(GetAllMNsCount() / 10);
+    toDecrease.reserve(GetCounts().total() / 10);
     // only iterate and decrease for valid ones (not PoSe banned yet)
     // if a MN ever reaches the maximum, it stays in PoSe banned state until revived
     ForEachMNShared(/*onlyValid=*/true, [&toDecrease](const auto& dmn) {
@@ -690,7 +691,7 @@ bool CDeterministicMNManager::ProcessBlock(const CBlock& block, gsl::not_null<co
             m_evoDb.Write(std::make_pair(DB_LIST_SNAPSHOT, newList.GetBlockHash()), newList);
             mnListsCache.emplace(newList.GetBlockHash(), newList);
             LogPrintf("CDeterministicMNManager::%s -- Wrote snapshot. nHeight=%d, mapCurMNs.allMNsCount=%d\n",
-                __func__, nHeight, newList.GetAllMNsCount());
+                __func__, nHeight, newList.GetCounts().total());
         }
 
         diff.nHeight = pindex->nHeight;
@@ -706,14 +707,15 @@ bool CDeterministicMNManager::ProcessBlock(const CBlock& block, gsl::not_null<co
     }
 
     if (::g_stats_client->active()) {
-        ::g_stats_client->gauge("masternodes.count", newList.GetAllMNsCount());
-        ::g_stats_client->gauge("masternodes.weighted_count", newList.GetValidWeightedMNsCount());
-        ::g_stats_client->gauge("masternodes.enabled", newList.GetValidMNsCount());
-        ::g_stats_client->gauge("masternodes.weighted_enabled", newList.GetValidWeightedMNsCount());
-        ::g_stats_client->gauge("masternodes.evo.count", newList.GetAllEvoCount());
-        ::g_stats_client->gauge("masternodes.evo.enabled", newList.GetValidEvoCount());
-        ::g_stats_client->gauge("masternodes.mn.count", newList.GetAllMNsCount() - newList.GetAllEvoCount());
-        ::g_stats_client->gauge("masternodes.mn.enabled", newList.GetValidMNsCount() - newList.GetValidEvoCount());
+        const auto counts{newList.GetCounts()};
+        ::g_stats_client->gauge("masternodes.count", counts.total());
+        ::g_stats_client->gauge("masternodes.weighted_count", counts.m_total_weighted);
+        ::g_stats_client->gauge("masternodes.enabled", counts.enabled());
+        ::g_stats_client->gauge("masternodes.weighted_enabled", counts.m_valid_weighted);
+        ::g_stats_client->gauge("masternodes.evo.count", counts.m_total_evo);
+        ::g_stats_client->gauge("masternodes.evo.enabled", counts.m_valid_evo);
+        ::g_stats_client->gauge("masternodes.mn.count", counts.m_total_mn);
+        ::g_stats_client->gauge("masternodes.mn.enabled", counts.m_valid_mn);
     }
 
     if (nHeight == consensusParams.DIP0003EnforcementHeight) {

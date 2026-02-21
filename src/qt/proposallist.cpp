@@ -251,9 +251,9 @@ void ProposalList::updateProposalList()
     const auto [dmn, pindex] = clientModel->getMasternodeList();
     if (dmn && pindex) {
         dmn->forEachMN(/*only_valid=*/true, [&](const auto& dmn) {
-            const auto script = GetScriptForDestination(PKHash(dmn.getKeyIdVoting()));
+            const auto script = GetScriptForDestination(PKHash(dmn->getKeyIdVoting()));
             if (walletModel->wallet().isSpendable(script)) {
-                votableMasternodes[dmn.getProTxHash()] = dmn.getKeyIdVoting();
+                votableMasternodes[dmn->getProTxHash()] = dmn->getKeyIdVoting();
             }
         });
     }

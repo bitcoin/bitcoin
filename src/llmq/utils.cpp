@@ -134,7 +134,7 @@ std::vector<MasternodeScore> CalculateScoresForQuorum(const CDeterministicMNList
                                                       const bool onlyEvoNodes)
 {
     std::vector<MasternodeScore> scores;
-    scores.reserve(mn_list.GetAllMNsCount());
+    scores.reserve(mn_list.GetCounts().total());
 
     mn_list.ForEachMNShared(/*onlyValid=*/true, [&](const auto& dmn) {
         if (dmn->pdmnState->confirmedHash.IsNull()) {
@@ -310,12 +310,13 @@ void BuildQuorumSnapshot(const Consensus::LLMQParams& llmqParams, const Consensu
         return;
     }
 
-    quorumSnapshot.activeQuorumMembers.resize(allMns.GetAllMNsCount());
+    const auto allMnsTotal = allMns.GetCounts().total();
+    quorumSnapshot.activeQuorumMembers.resize(allMnsTotal);
     const auto modifier = GetHashModifier(llmqParams, consensus_params, pCycleQuorumBaseBlockIndex);
     auto sortedAllMns = CalculateQuorum(allMns, modifier);
 
     LogPrint(BCLog::LLMQ, "BuildQuorumSnapshot h[%d] numMns[%d]\n", pCycleQuorumBaseBlockIndex->nHeight,
-             allMns.GetAllMNsCount());
+             allMnsTotal);
 
     std::fill(quorumSnapshot.activeQuorumMembers.begin(), quorumSnapshot.activeQuorumMembers.end(), false);
     size_t index = {};
@@ -352,7 +353,7 @@ std::vector<QuorumMembers> BuildNewQuorumQuarterMembers(const Consensus::LLMQPar
     auto quarterSize{quorumSize / 4};
     const auto modifier = GetHashModifier(llmqParams, util_params.m_chainman.GetConsensus(), util_params.m_base_index);
 
-    if (allMns.GetValidMNsCount() < quarterSize) {
+    if (allMns.GetCounts().enabled() < quarterSize) {
         return quarterQuorumMembers;
     }
 
@@ -408,7 +409,7 @@ std::vector<QuorumMembers> BuildNewQuorumQuarterMembers(const Consensus::LLMQPar
     size_t firstSkippedIndex = 0;
     size_t idx{0};
     for (const size_t i : irange::range(nQuorums)) {
-        auto usedMNsCount = MnsUsedAtHIndexed[i].GetAllMNsCount();
+        auto usedMNsCount = MnsUsedAtHIndexed[i].GetCounts().total();
         bool updated{false};
         size_t initial_loop_idx = idx;
         while (quarterQuorumMembers[i].size() < quarterSize && (usedMNsCount + quarterQuorumMembers[i].size() < sortedCombinedMnsList.size())) {
@@ -468,7 +469,7 @@ std::vector<QuorumMembers> ComputeQuorumMembersByQuarterRotation(const Consensus
                                                                                llmq::WORK_DIFF_DEPTH);
     CDeterministicMNList allMns = util_params.m_dmnman.GetListForBlock(pWorkBlockIndex);
     LogPrint(BCLog::LLMQ, "ComputeQuorumMembersByQuarterRotation llmqType[%d] nHeight[%d] allMns[%d]\n",
-             ToUnderlying(llmqParams.type), util_params.m_base_index->nHeight, allMns.GetValidMNsCount());
+             ToUnderlying(llmqParams.type), util_params.m_base_index->nHeight, allMns.GetCounts().enabled());
 
     PreviousQuorumQuarters previousQuarters(nQuorums);
     auto prev_cycles{previousQuarters.GetCycles()};

@@ -1124,17 +1124,14 @@ void RPCConsole::updateMasternodeCount()
         return;
     }
     auto mnList = clientModel->getMasternodeList().first;
-    size_t total_mn_count = mnList->getAllMNsCount();
-    size_t total_enabled_mn_count = mnList->getValidMNsCount();
-    size_t total_evo_count = mnList->getAllEvoCount();
-    size_t total_enabled_evo_count = mnList->getValidEvoCount();
+    const auto mn_counts = mnList->getCounts();
     QString strMasternodeCount = tr("Total: %1 (Enabled: %2)")
-        .arg(QString::number(total_mn_count - total_evo_count))
-        .arg(QString::number(total_enabled_mn_count - total_enabled_evo_count));
+        .arg(QString::number(mn_counts.m_total_mn))
+        .arg(QString::number(mn_counts.m_valid_mn));
     ui->masternodeCount->setText(strMasternodeCount);
     QString strEvoCount = tr("Total: %1 (Enabled: %2)")
-            .arg(QString::number(total_evo_count))
-            .arg(QString::number(total_enabled_evo_count));
+        .arg(QString::number(mn_counts.m_total_evo))
+        .arg(QString::number(mn_counts.m_valid_evo));
     ui->evoCount->setText(strEvoCount);
 }
 

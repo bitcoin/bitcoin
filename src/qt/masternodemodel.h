@@ -6,6 +6,7 @@
 #define BITCOIN_QT_MASTERNODEMODEL_H
 
 #include <evo/dmn_types.h>
+#include <interfaces/node.h>
 
 #include <QAbstractTableModel>
 #include <QByteArray>
@@ -16,10 +17,6 @@
 #include <optional>
 #include <tuple>
 #include <vector>
-
-namespace interfaces {
-class MnEntry;
-} // namespace interfaces
 
 class MasternodeEntry
 {
@@ -54,7 +51,7 @@ private:
     uint16_t m_operator_reward_pct{0};
 
 public:
-    explicit MasternodeEntry(const interfaces::MnEntry& dmn, const QString& collateral_address, int next_payment_height);
+    explicit MasternodeEntry(const interfaces::MnEntryCPtr& dmn, const QString& collateral_address, int next_payment_height);
     ~MasternodeEntry();
 
     bool isBanned() const { return m_banned; }

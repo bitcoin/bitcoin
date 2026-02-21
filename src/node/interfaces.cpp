@@ -11,6 +11,8 @@
 #include <chainparams.h>
 #include <coinjoin/common.h>
 #include <deploymentstatus.h>
+#include <evo/chainhelper.h>
+#include <evo/creditpool.h>
 #include <evo/deterministicmns.h>
 #include <governance/classes.h>
 #include <governance/exceptions.h>
@@ -24,7 +26,11 @@
 #include <interfaces/handler.h>
 #include <interfaces/wallet.h>
 #include <instantsend/instantsend.h>
+#include <llmq/commitment.h>
 #include <llmq/context.h>
+#include <llmq/options.h>
+#include <llmq/quorums.h>
+#include <llmq/quorumsman.h>
 #include <mapport.h>
 #include <masternode/sync.h>
 #include <net.h>
@@ -135,40 +141,47 @@ public:
     }
     ~MnListImpl() = default;
 
+    Counts getCounts() const override
+    {
+        const auto counts{m_list.GetCounts()};
+        return {
+            .m_total_evo = counts.m_total_evo,
+            .m_total_mn = counts.m_total_mn,
+            .m_total_weighted = counts.m_total_weighted,
+            .m_valid_evo = counts.m_valid_evo,
+            .m_valid_mn = counts.m_valid_mn,
+            .m_valid_weighted = counts.m_valid_weighted,
+        };
+    }
     int32_t getHeight() const override { return m_list.GetHeight(); }
-    size_t getAllEvoCount() const override { return m_list.GetAllEvoCount(); }
-    size_t getAllMNsCount() const override { return m_list.GetAllMNsCount(); }
-    size_t getValidEvoCount() const override { return m_list.GetValidEvoCount(); }
-    size_t getValidMNsCount() const override { return m_list.GetValidMNsCount(); }
-    size_t getValidWeightedMNsCount() const override { return m_list.GetValidWeightedMNsCount(); }
     uint256 getBlockHash() const override { return m_list.GetBlockHash(); }
 
-    void forEachMN(bool only_valid, std::function<void(const MnEntry&)> cb) const override
+    void forEachMN(bool only_valid, std::function<void(const MnEntryCPtr&)> cb) const override
     {
         m_list.ForEachMNShared(only_valid, [&cb](const auto& dmn) {
-            cb(MnEntryImpl{dmn});
+            cb(std::make_shared<const MnEntryImpl>(dmn));
         });
     }
     MnEntryCPtr getMN(const uint256& hash) const override
     {
         const auto dmn{m_list.GetMN(hash)};
-        return dmn ? std::make_unique<const MnEntryImpl>(dmn) : nullptr;
+        return dmn ? std::make_shared<const MnEntryImpl>(dmn) : nullptr;
     }
     MnEntryCPtr getMNByService(const CService& service) const override
     {
         const auto dmn{m_list.GetMNByService(service)};
-        return dmn ? std::make_unique<const MnEntryImpl>(dmn) : nullptr;
+        return dmn ? std::make_shared<const MnEntryImpl>(dmn) : nullptr;
     }
     MnEntryCPtr getValidMN(const uint256& hash) const override
     {
         const auto dmn{m_list.GetValidMN(hash)};
-        return dmn ? std::make_unique<const MnEntryImpl>(dmn) : nullptr;
+        return dmn ? std::make_shared<const MnEntryImpl>(dmn) : nullptr;
     }
     std::vector<MnEntryCPtr> getProjectedMNPayees(const CBlockIndex* pindex) const override
     {
         std::vector<MnEntryCPtr> ret;
         for (const auto& payee : m_list.GetProjectedMNPayees(pindex)) {
-            ret.emplace_back(std::make_unique<const MnEntryImpl>(payee));
+            ret.emplace_back(std::make_shared<const MnEntryImpl>(payee));
         }
         return ret;
     }
@@ -200,13 +213,15 @@ private:
 public:
     std::pair<MnListPtr, const CBlockIndex*> getListAtChainTip() override
     {
-        const CBlockIndex *tip = WITH_LOCK(::cs_main, return chainman().ActiveChain().Tip());
-        MnListImpl mnList{CDeterministicMNList{}};
-        if (tip != nullptr && context().dmnman != nullptr) {
-            mnList = context().dmnman->GetListForBlock(tip);
+        const auto *tip = WITH_LOCK(::cs_main, return chainman().ActiveChain().Tip());
+        if (tip && context().dmnman) {
+            MnListImpl mnList = context().dmnman->GetListForBlock(tip);
+            if (!mnList.getBlockHash().IsNull()) {
+                mnList.setContext(m_context);
+                return {std::make_shared<MnListImpl>(mnList), tip};
+            }
         }
-        mnList.setContext(m_context);
-        return {std::make_shared<MnListImpl>(mnList), tip};
+        return {nullptr, nullptr};
     }
     void setContext(NodeContext* context) override
     {
@@ -291,7 +306,7 @@ public:
             CSuperblock::GetNearestSuperblocksHeights(context().chainman->ActiveHeight(), info.lastsuperblock, info.nextsuperblock);
             info.governancebudget = CSuperblock::GetPaymentsLimit(context().chainman->ActiveChain(), info.nextsuperblock);
             if (context().dmnman) {
-                info.fundingthreshold = context().dmnman->GetListAtChainTip().GetValidWeightedMNsCount() / 10;
+                info.fundingthreshold = static_cast<int>(context().dmnman->GetListAtChainTip().GetCounts().m_valid_weighted / 10);
             }
         }
         info.proposalfee = GOVERNANCE_PROPOSAL_FEE_TX;
@@ -418,12 +433,100 @@ private:
     NodeContext& context() { return *Assert(m_context); }
 
 public:
-    size_t getInstantSentLockCount() override
+    CreditPoolCounts getCreditPoolCounts() override
     {
-        if (context().llmq_ctx && context().llmq_ctx->isman != nullptr) {
-            return context().llmq_ctx->isman->GetInstantSendLockCount();
+        CreditPoolCounts ret{};
+        if (!context().chainman) {
+            return ret;
         }
-        return 0;
+        const auto* pindex{WITH_LOCK(::cs_main, return context().chainman->ActiveChain().Tip())};
+        if (!pindex || !pindex->pprev) {
+            return ret;
+        }
+        auto& chain_helper{context().chainman->ActiveChainstate().ChainHelper()};
+        const auto pool{chain_helper.GetCreditPool(pindex)};
+        ret.m_locked = pool.locked;
+        ret.m_limit = pool.currentLimit;
+        ret.m_diff = pool.locked - chain_helper.GetCreditPool(pindex->pprev).locked;
+        return ret;
+    }
+    ChainLockInfo getBestChainLock() override
+    {
+        if (!context().chainlocks) {
+            return {};
+        }
+        const auto [clsig, pindex] = context().chainlocks->GetBestChainlockWithPindex();
+        if (!pindex) {
+            return {};
+        }
+        return {
+            .m_height = clsig.getHeight(),
+            .m_block_time = pindex->GetBlockTime(),
+            .m_hash = clsig.getBlockHash(),
+        };
+    }
+    InstantSendCounts getInstantSendCounts() override
+    {
+        if (!context().llmq_ctx || !context().llmq_ctx->isman) {
+            return {};
+        }
+        const auto counts{context().llmq_ctx->isman->GetCounts()};
+        return {
+            .m_verified = counts.m_verified,
+            .m_unverified = counts.m_unverified,
+            .m_awaiting_tx = counts.m_awaiting_tx,
+            .m_unprotected_tx = counts.m_unprotected_tx,
+        };
+    }
+    size_t getPendingAssetUnlocks() override
+    {
+        if (!context().mempool) {
+            return 0;
+        }
+        LOCK(context().mempool->cs);
+        return static_cast<size_t>(ranges::count_if(context().mempool->mapTx, [](const auto& entry) {
+            return entry.GetTx().IsPlatformTransfer();
+        }));
+    }
+    std::vector<QuorumInfo> getQuorumStats() override
+    {
+        std::vector<QuorumInfo> stats{};
+        if (!context().llmq_ctx || !context().llmq_ctx->qman || !context().chainman) {
+            return stats;
+        }
+        const auto* pindex{WITH_LOCK(::cs_main, return context().chainman->ActiveChain().Tip())};
+        if (!pindex) {
+            return stats;
+        }
+        for (const auto& type : llmq::GetEnabledQuorumTypes(*context().chainman, pindex)) {
+            const auto llmq_params{Params().GetLLMQ(type)};
+            if (!llmq_params.has_value()) {
+                continue;
+            }
+            const auto quorums{context().llmq_ctx->qman->ScanQuorums(type, pindex, llmq_params->signingActiveQuorumCount)};
+            double health{0.0};
+            for (const auto& q : quorums) {
+                size_t numMembers = q->members.size();
+                size_t numValidMembers = q->qc->CountValidMembers();
+                health += (numMembers > 0) ? (double(numValidMembers) / double(numMembers)) : 0.0;
+            }
+            health = quorums.empty() ? 0.0 : (health / quorums.size());
+            const int32_t newest_height{(!quorums.empty() && quorums[0]->m_quorum_base_block_index)
+                ? quorums[0]->m_quorum_base_block_index->nHeight : 0};
+            const int32_t expiry_height{(newest_height > 0)
+                ? newest_height + llmq_params->signingActiveQuorumCount * llmq_params->dkgInterval
+                : 0};
+            stats.emplace_back(QuorumInfo{
+                .m_name = std::string(llmq_params->name),
+                .m_count = quorums.size(),
+                .m_health = health,
+                .m_rotates = llmq_params->useRotation,
+                .m_data_retention_blocks = llmq_params->max_store_depth(),
+                .m_newest_height = newest_height,
+                .m_expiry_height = expiry_height,
+            });
+        }
+        return stats;
     }
     void setContext(NodeContext* context) override
     {

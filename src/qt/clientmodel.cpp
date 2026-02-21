@@ -60,7 +60,7 @@ ClientModel::ClientModel(interfaces::Node& node, OptionsModel *_optionsModel, QO
         // no locking required at this point
         // the following calls will acquire the required lock
         Q_EMIT mempoolSizeChanged(m_node.getMempoolSize(), m_node.getMempoolDynamicUsage(), m_node.getMempoolMaxUsage());
-        Q_EMIT islockCountChanged(m_node.llmq().getInstantSentLockCount());
+        Q_EMIT islockCountChanged(m_node.llmq().getInstantSendCounts().m_verified);
     });
     connect(m_thread, &QThread::finished, timer, &QObject::deleteLater);
     connect(m_thread, &QThread::started, [timer] { timer->start(); });
@@ -146,7 +146,9 @@ std::pair<interfaces::MnListPtr, const CBlockIndex*> ClientModel::getMasternodeL
 void ClientModel::refreshMasternodeList()
 {
     auto [mnList, tip] = m_node.evo().getListAtChainTip();
-
+    if (!mnList || !tip) {
+        return;
+    }
     LOCK(cs_mnlist);
     setMasternodeList(std::move(mnList), tip);
 }

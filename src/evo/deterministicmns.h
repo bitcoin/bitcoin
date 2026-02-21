@@ -142,6 +142,18 @@ public:
     using MnInternalIdMap = immer::map<uint64_t, uint256>;
     using MnUniquePropertyMap = immer::map<uint256, std::pair<uint256, uint32_t>, ImmerHasher>;
 
+    struct Counts {
+        size_t m_total_evo{0};
+        size_t m_total_mn{0};
+        size_t m_total_weighted{0};
+        size_t m_valid_evo{0};
+        size_t m_valid_mn{0};
+        size_t m_valid_weighted{0};
+
+        [[nodiscard]] size_t total() const { return m_total_mn + m_total_evo; }
+        [[nodiscard]] size_t enabled() const { return m_valid_mn + m_valid_evo; }
+    };
+
 private:
     uint256 blockHash;
     int nHeight{-1};
@@ -253,34 +265,30 @@ public:
         InvalidateSMLCache();
     }
 
-    [[nodiscard]] size_t GetAllMNsCount() const
+    [[nodiscard]] Counts GetCounts() const
     {
-        return mnMap.size();
-    }
-
-    [[nodiscard]] size_t GetValidMNsCount() const
-    {
-        return ranges::count_if(mnMap, [](const auto& p) { return !p.second->pdmnState->IsBanned(); });
-    }
-
-    [[nodiscard]] size_t GetAllEvoCount() const
-    {
-        return ranges::count_if(mnMap, [](const auto& p) { return p.second->nType == MnType::Evo; });
-    }
-
-    [[nodiscard]] size_t GetValidEvoCount() const
-    {
-        return ranges::count_if(mnMap, [](const auto& p) {
-            return p.second->nType == MnType::Evo && !p.second->pdmnState->IsBanned();
-        });
-    }
-
-    [[nodiscard]] size_t GetValidWeightedMNsCount() const
-    {
-        return std::accumulate(mnMap.begin(), mnMap.end(), 0, [](auto res, const auto& p) {
-            if (p.second->pdmnState->IsBanned()) return res;
-            return res + GetMnType(p.second->nType).voting_weight;
-        });
+        Counts ret;
+        for (const auto& [_, dmn] : mnMap) {
+            const bool is_evo = dmn->nType == MnType::Evo;
+            const bool is_valid = !dmn->pdmnState->IsBanned();
+            const auto weight = GetMnType(dmn->nType).voting_weight;
+            if (is_evo) {
+                ret.m_total_evo++;
+                if (is_valid) {
+                    ret.m_valid_evo++;
+                }
+            } else {
+                ret.m_total_mn++;
+                if (is_valid) {
+                    ret.m_valid_mn++;
+                }
+            }
+            if (is_valid) {
+                ret.m_valid_weighted += weight;
+            }
+            ret.m_total_weighted += weight;
+        }
+        return ret;
     }
 
     /**
@@ -364,7 +372,7 @@ public:
     /**
      * Calculates the projected MN payees for the next *count* blocks. The result is not guaranteed to be correct
      * as PoSe banning might occur later
-     * @param nCount the number of payees to return. "nCount = max()"" means "all", use it to avoid calling GetValidWeightedMNsCount twice.
+     * @param nCount the number of payees to return. "nCount = max()"" means "all", use it to avoid calling GetCounts twice.
      */
     [[nodiscard]] std::vector<CDeterministicMNCPtr> GetProjectedMNPayees(gsl::not_null<const CBlockIndex* const> pindexPrev, int nCount = std::numeric_limits<int>::max()) const;
 

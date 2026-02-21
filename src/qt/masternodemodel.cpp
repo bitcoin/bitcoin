@@ -38,26 +38,26 @@ std::optional<QString> JoinArray(const UniValue& arr)
 }
 } // anonymous namespace
 
-MasternodeEntry::MasternodeEntry(const interfaces::MnEntry& dmn, const QString& collateral_address, int next_payment_height) :
-    m_banned{dmn.isBanned()},
-    m_last_paid_height{dmn.getLastPaidHeight()},
+MasternodeEntry::MasternodeEntry(const interfaces::MnEntryCPtr& dmn, const QString& collateral_address, int next_payment_height) :
+    m_banned{dmn->isBanned()},
+    m_last_paid_height{dmn->getLastPaidHeight()},
     m_next_payment_height{next_payment_height},
-    m_pose_penalty{dmn.getPoSePenalty()},
-    m_registered_height{dmn.getRegisteredHeight()},
-    m_type{dmn.getType()},
+    m_pose_penalty{dmn->getPoSePenalty()},
+    m_registered_height{dmn->getRegisteredHeight()},
+    m_type{dmn->getType()},
     m_collateral_address{collateral_address},
-    m_collateral_outpoint{QString::fromStdString(dmn.getCollateralOutpoint().ToStringShort())},
-    m_owner_address{QString::fromStdString(EncodeDestination(PKHash(dmn.getKeyIdOwner())))},
-    m_protx_hash{QString::fromStdString(dmn.getProTxHash().ToString())},
-    m_service{QString::fromStdString(dmn.getNetInfoPrimary().ToStringAddrPort())},
-    m_type_description{QString::fromStdString(std::string(GetMnType(dmn.getType()).description))},
-    m_voting_address{QString::fromStdString(EncodeDestination(PKHash(dmn.getKeyIdVoting())))},
-    m_operator_reward_pct{dmn.getOperatorReward()}
+    m_collateral_outpoint{QString::fromStdString(dmn->getCollateralOutpoint().ToStringShort())},
+    m_owner_address{QString::fromStdString(EncodeDestination(PKHash(dmn->getKeyIdOwner())))},
+    m_protx_hash{QString::fromStdString(dmn->getProTxHash().ToString())},
+    m_service{QString::fromStdString(dmn->getNetInfoPrimary().ToStringAddrPort())},
+    m_type_description{QString::fromStdString(std::string(GetMnType(dmn->getType()).description))},
+    m_voting_address{QString::fromStdString(EncodeDestination(PKHash(dmn->getKeyIdVoting())))},
+    m_operator_reward_pct{dmn->getOperatorReward()}
 {
-    auto addr_key = dmn.getNetInfoPrimary().GetKey();
+    auto addr_key = dmn->getNetInfoPrimary().GetKey();
     m_service_key = QByteArray(reinterpret_cast<const char*>(addr_key.data()), addr_key.size());
 
-    if (CTxDestination dest; ExtractDestination(dmn.getScriptPayout(), dest)) {
+    if (CTxDestination dest; ExtractDestination(dmn->getScriptPayout(), dest)) {
         m_payout_address = QString::fromStdString(EncodeDestination(dest));
     } else {
         m_payout_address = QObject::tr("UNKNOWN");
@@ -65,9 +65,9 @@ MasternodeEntry::MasternodeEntry(const interfaces::MnEntry& dmn, const QString& 
 
     if (m_operator_reward_pct) {
         m_operator_reward = QString::number(m_operator_reward_pct / 100.0, 'f', 2) + "%";
-        if (dmn.getScriptOperatorPayout() != CScript()) {
+        if (dmn->getScriptOperatorPayout() != CScript()) {
             CTxDestination operatorDest;
-            if (ExtractDestination(dmn.getScriptOperatorPayout(), operatorDest)) {
+            if (ExtractDestination(dmn->getScriptOperatorPayout(), operatorDest)) {
                 m_operator_reward += " " + QObject::tr("to %1").arg(QString::fromStdString(EncodeDestination(operatorDest)));
             } else {
                 m_operator_reward += " " + QObject::tr("to UNKNOWN");
@@ -79,7 +79,7 @@ MasternodeEntry::MasternodeEntry(const interfaces::MnEntry& dmn, const QString& 
         m_operator_reward = QObject::tr("NONE");
     }
 
-    const auto json{dmn.toJson()};
+    const auto json{dmn->toJson()};
     m_json = QString::fromStdString(json.write(2));
     if (const auto& val = json.find_value("collateralHash"); val.isStr()) {
         m_collateral_hash = QString::fromStdString(val.get_str());

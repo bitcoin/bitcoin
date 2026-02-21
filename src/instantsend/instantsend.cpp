@@ -721,6 +721,22 @@ size_t CInstantSendManager::GetInstantSendLockCount() const
     return db.GetInstantSendLockCount();
 }
 
+CInstantSendManager::Counts CInstantSendManager::GetCounts() const
+{
+    Counts ret;
+    ret.m_verified = db.GetInstantSendLockCount();
+    {
+        LOCK(cs_pendingLocks);
+        ret.m_unverified = pendingInstantSendLocks.size();
+        ret.m_awaiting_tx = pendingNoTxInstantSendLocks.size();
+    }
+    {
+        LOCK(cs_nonLocked);
+        ret.m_unprotected_tx = nonLockedTxs.size();
+    }
+    return ret;
+}
+
 void CInstantSendManager::CacheBlockHeightInternal(const CBlockIndex* const block_index) const
 {
     AssertLockHeld(cs_height_cache);

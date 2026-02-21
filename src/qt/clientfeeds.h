@@ -97,6 +97,7 @@ using MasternodeEntryList = std::vector<std::shared_ptr<MasternodeEntry>>;
 struct MasternodeData {
     bool m_valid{false};
     int m_list_height{0};
+    interfaces::MnList::Counts m_counts{};
     MasternodeEntryList m_entries;
 };
 

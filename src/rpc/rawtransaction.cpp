@@ -640,7 +640,7 @@ static RPCHelpMan getassetunlockstatuses()
     const CTxMemPool& mempool = EnsureMemPool(node);
     CHECK_NONFATAL(node.chainlocks);
     const ChainstateManager& chainman = EnsureChainman(node);
-    CCreditPoolManager& cpoolman = *chainman.ActiveChainstate().ChainHelper().credit_pool_manager;
+    auto& chain_helper = chainman.ActiveChainstate().ChainHelper();
     UniValue result_arr(UniValue::VARR);
     const UniValue str_indexes = request.params[0].get_array();
     if (str_indexes.size() > 100) {
@@ -666,7 +666,7 @@ static RPCHelpMan getassetunlockstatuses()
         if (nSpecificCoreHeight.value() < 0 || nSpecificCoreHeight.value() > chainman.ActiveChain().Height()) {
             throw JSONRPCError(RPC_INVALID_PARAMETER, "Block height out of range");
         }
-        poolCL = std::make_optional(cpoolman.GetCreditPool(chainman.ActiveChain()[nSpecificCoreHeight.value()]));
+        poolCL = std::make_optional(chain_helper.GetCreditPool(chainman.ActiveChain()[nSpecificCoreHeight.value()]));
     }
     else {
         const auto pBlockIndexBestCL = [&]() -> const CBlockIndex* {
@@ -685,12 +685,12 @@ static RPCHelpMan getassetunlockstatuses()
         // We need in 2 credit pools: at tip of chain and on best CL to know if tx is mined or chainlocked
         // Sometimes that's two different blocks, sometimes not and we need to initialize 2nd creditPoolManager
         poolCL = pBlockIndexBestCL ?
-                 std::make_optional(cpoolman.GetCreditPool(pBlockIndexBestCL)) :
+                 std::make_optional(chain_helper.GetCreditPool(pBlockIndexBestCL)) :
                  std::nullopt;
 
         poolOnTip = [&]() -> std::optional<CCreditPool> {
             if (pTipBlockIndex != pBlockIndexBestCL) {
-                return std::make_optional(cpoolman.GetCreditPool(pTipBlockIndex));
+                return std::make_optional(chain_helper.GetCreditPool(pTipBlockIndex));
             }
             return std::nullopt;
         }();

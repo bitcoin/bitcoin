@@ -21,9 +21,9 @@ CChainstateHelper::CChainstateHelper(CEvoDB& evodb, CDeterministicMNManager& dmn
                                      const CSporkManager& sporkman, const chainlock::Chainlocks& chainlocks,
                                      const llmq::CQuorumManager& qman) :
     isman{isman},
+    credit_pool_manager{std::make_unique<CCreditPoolManager>(evodb, chainman)},
     m_chainlocks{chainlocks},
     ehf_manager{std::make_unique<CMNHFManager>(evodb, chainman, qman)},
-    credit_pool_manager{std::make_unique<CCreditPoolManager>(evodb, chainman)},
     mn_payments{std::make_unique<CMNPaymentsProcessor>(dmnman, govman, chainman, consensus_params, mn_sync, sporkman)},
     special_tx{std::make_unique<CSpecialTxProcessor>(*credit_pool_manager, dmnman, *ehf_manager, qblockman, qsnapman,
                                                      chainman, consensus_params, chainlocks, qman)}
@@ -43,6 +43,12 @@ bool CChainstateHelper::HasChainLock(int nHeight, const uint256& blockHash) cons
 }
 
 int32_t CChainstateHelper::GetBestChainLockHeight() const { return m_chainlocks.GetBestChainLockHeight(); }
+
+/** Passthrough functions to CCreditPoolManager */
+CCreditPool CChainstateHelper::GetCreditPool(const CBlockIndex* const pindex)
+{
+    return credit_pool_manager->GetCreditPool(pindex);
+}
 
 /** Passthrough functions to CInstantSendManager */
 std::optional<std::pair</*islock_hash=*/uint256, /*txid=*/uint256>> CChainstateHelper::ConflictingISLockIfAny(

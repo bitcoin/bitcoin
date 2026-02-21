@@ -1466,7 +1466,7 @@ std::vector<std::shared_ptr<const CGovernanceObject>> CGovernanceManager::GetApp
 
     // A proposal is considered passing if (YES votes) >= (Total Weight of Masternodes / 10),
     // count total valid (ENABLED) masternodes to determine passing threshold.
-    const int nWeightedMnCount = tip_mn_list.GetValidWeightedMNsCount();
+    const int nWeightedMnCount = tip_mn_list.GetCounts().m_valid_weighted;
     const int nAbsVoteReq = std::max(Params().GetConsensus().nGovernanceMinQuorum, nWeightedMnCount / 10);
 
     LOCK(cs_store);

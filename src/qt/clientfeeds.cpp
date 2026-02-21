@@ -5,6 +5,7 @@
 #include <qt/clientfeeds.h>
 
 #include <coins.h>
+#include <governance/object.h>
 #include <key_io.h>
 #include <script/standard.h>
 #include <util/threadnames.h>
@@ -64,7 +65,7 @@ void MasternodeFeed::fetch()
     }
 
     auto projectedPayees = dmn->getProjectedMNPayees(pindex);
-    if (projectedPayees.empty() && dmn->getValidMNsCount() > 0) {
+    if (projectedPayees.empty() && dmn->getCounts().enabled() > 0) {
         // GetProjectedMNPayees failed to provide results for a list with valid mns.
         // Keep current list and let it try again later.
         return;
@@ -72,6 +73,7 @@ void MasternodeFeed::fetch()
 
     auto ret = std::make_shared<Data>();
     ret->m_list_height = dmn->getHeight();
+    ret->m_counts = dmn->getCounts();
 
     Uint256HashMap<int> nextPayments;
     for (size_t i = 0; i < projectedPayees.size(); i++) {
@@ -83,12 +85,12 @@ void MasternodeFeed::fetch()
         CTxDestination collateralDest;
         Coin coin;
         QString collateralStr = QObject::tr("UNKNOWN");
-        if (m_client_model.node().getUnspentOutput(dmn.getCollateralOutpoint(), coin) &&
+        if (m_client_model.node().getUnspentOutput(dmn->getCollateralOutpoint(), coin) &&
             ExtractDestination(coin.out.scriptPubKey, collateralDest)) {
             collateralStr = QString::fromStdString(EncodeDestination(collateralDest));
         }
         int nNextPayment{0};
-        if (auto nextPaymentIt = nextPayments.find(dmn.getProTxHash()); nextPaymentIt != nextPayments.end()) {
+        if (auto nextPaymentIt = nextPayments.find(dmn->getProTxHash()); nextPaymentIt != nextPayments.end()) {
             nNextPayment = nextPaymentIt->second;
         }
         ret->m_entries.push_back(std::make_unique<MasternodeEntry>(dmn, collateralStr, nNextPayment));
@@ -120,9 +122,8 @@ void ProposalFeed::fetch()
     auto ret = std::make_shared<Data>();
     // A proposal is considered passing if (YES votes - NO votes) >= (Total Weight of Masternodes / 10),
     // count total valid (ENABLED) masternodes to determine passing threshold.
-    // Need to query number of masternodes here with access to client model.
-    const int nWeightedMnCount = dmn->getValidWeightedMNsCount();
-    ret->m_abs_vote_req = std::max(Params().GetConsensus().nGovernanceMinQuorum, nWeightedMnCount / 10);
+    const auto nMinQuorum = static_cast<size_t>(Params().GetConsensus().nGovernanceMinQuorum);
+    ret->m_abs_vote_req = static_cast<int>(std::max(nMinQuorum, dmn->getCounts().m_valid_weighted / 10));
     ret->m_gov_info = m_client_model.node().gov().getGovernanceInfo();
     std::vector<CGovernanceObject> govObjList;
     m_client_model.getAllGovernanceObjects(govObjList);

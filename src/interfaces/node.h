@@ -88,7 +88,7 @@ public:
     virtual const uint256& getProTxHash() const = 0;
 };
 
-using MnEntryCPtr = std::unique_ptr<const MnEntry>;
+using MnEntryCPtr = std::shared_ptr<const MnEntry>;
 
 //! Interface for a list of masternode entries
 class MnList
@@ -99,15 +99,22 @@ public:
 
     MnList() = delete;
 
+    struct Counts {
+        size_t m_total_evo{0};
+        size_t m_total_mn{0};
+        size_t m_total_weighted{0};
+        size_t m_valid_evo{0};
+        size_t m_valid_mn{0};
+        size_t m_valid_weighted{0};
+
+        [[nodiscard]] size_t total() const { return m_total_mn + m_total_evo; }
+        [[nodiscard]] size_t enabled() const { return m_valid_mn + m_valid_evo; }
+    };
+    virtual Counts getCounts() const = 0;
     virtual int32_t getHeight() const = 0;
-    virtual size_t getAllEvoCount() const = 0;
-    virtual size_t getAllMNsCount() const = 0;
-    virtual size_t getValidEvoCount() const = 0;
-    virtual size_t getValidMNsCount() const = 0;
-    virtual size_t getValidWeightedMNsCount() const = 0;
     virtual uint256 getBlockHash() const = 0;
 
-    virtual void forEachMN(bool only_valid, std::function<void(const MnEntry&)> cb) const = 0;
+    virtual void forEachMN(bool only_valid, std::function<void(const MnEntryCPtr&)> cb) const = 0;
     virtual MnEntryCPtr getMN(const uint256& hash) const = 0;
     virtual MnEntryCPtr getMNByService(const CService& service) const = 0;
     virtual MnEntryCPtr getValidMN(const uint256& hash) const = 0;
@@ -177,7 +184,36 @@ class LLMQ
 {
 public:
     virtual ~LLMQ() {}
-    virtual size_t getInstantSentLockCount() = 0;
+    struct ChainLockInfo {
+        int32_t m_height{0};
+        int64_t m_block_time{0};
+        uint256 m_hash{};
+    };
+    virtual ChainLockInfo getBestChainLock() = 0;
+    struct CreditPoolCounts {
+        CAmount m_diff{0};
+        CAmount m_limit{0};
+        CAmount m_locked{0};
+    };
+    virtual CreditPoolCounts getCreditPoolCounts() = 0;
+    struct InstantSendCounts {
+        size_t m_verified{0};
+        size_t m_unverified{0};
+        size_t m_awaiting_tx{0};
+        size_t m_unprotected_tx{0};
+    };
+    virtual InstantSendCounts getInstantSendCounts() = 0;
+    virtual size_t getPendingAssetUnlocks() = 0;
+    struct QuorumInfo {
+        std::string m_name;
+        size_t m_count{0};
+        double m_health{0.0};
+        bool m_rotates{false};
+        int32_t m_data_retention_blocks{0};
+        int32_t m_newest_height{0};
+        int32_t m_expiry_height{0};
+    };
+    virtual std::vector<QuorumInfo> getQuorumStats() = 0;
     virtual void setContext(node::NodeContext* context) {}
 };
 

@@ -226,13 +226,13 @@ void MasternodeList::updateMasternodeList()
     const auto [dmn, pindex] = clientModel->getMasternodeList();
     if (dmn && pindex) {
         dmn->forEachMN(/*only_valid=*/false, [&](const auto& dmn) {
-            bool fMyMasternode = setOutpts.count(dmn.getCollateralOutpoint()) ||
-                                walletModel->wallet().isSpendable(PKHash(dmn.getKeyIdOwner())) ||
-                                walletModel->wallet().isSpendable(PKHash(dmn.getKeyIdVoting())) ||
-                                walletModel->wallet().isSpendable(dmn.getScriptPayout()) ||
-                                walletModel->wallet().isSpendable(dmn.getScriptOperatorPayout());
+            bool fMyMasternode = setOutpts.count(dmn->getCollateralOutpoint()) ||
+                                walletModel->wallet().isSpendable(PKHash(dmn->getKeyIdOwner())) ||
+                                walletModel->wallet().isSpendable(PKHash(dmn->getKeyIdVoting())) ||
+                                walletModel->wallet().isSpendable(dmn->getScriptPayout()) ||
+                                walletModel->wallet().isSpendable(dmn->getScriptOperatorPayout());
             if (fMyMasternode) {
-                owned_mns.insert(QString::fromStdString(dmn.getProTxHash().ToString()));
+                owned_mns.insert(QString::fromStdString(dmn->getProTxHash().ToString()));
             }
         });
     }

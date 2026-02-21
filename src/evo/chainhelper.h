@@ -13,34 +13,45 @@ class CBlockIndex;
 class CCreditPoolManager;
 class CDeterministicMNManager;
 class CEvoDB;
+class CGovernanceManager;
 class ChainstateManager;
+class CMasternodeSync;
 class CMNHFManager;
 class CMNPaymentsProcessor;
-class CMasternodeSync;
-class CGovernanceManager;
 class CSpecialTxProcessor;
 class CSporkManager;
 class CTransaction;
 class uint256;
-
+struct CCreditPool;
 namespace chainlock {
 class Chainlocks;
-}
-namespace Consensus { struct Params; }
+} // namespace chainlock
+namespace Consensus {
+struct Params;
+} // namespace Consensus
 namespace llmq {
 class CInstantSendManager;
 class CQuorumBlockProcessor;
 class CQuorumManager;
 class CQuorumSnapshotManager;
-}
+} // namespace llmq
+namespace node {
+class BlockAssembler;
+} // namespace node
 
 class CChainstateHelper
 {
+    friend class node::BlockAssembler;
+
 private:
     llmq::CInstantSendManager& isman;
+    const std::unique_ptr<CCreditPoolManager> credit_pool_manager;
 
 public:
     const chainlock::Chainlocks& m_chainlocks;
+    const std::unique_ptr<CMNHFManager> ehf_manager;
+    const std::unique_ptr<CMNPaymentsProcessor> mn_payments;
+    const std::unique_ptr<CSpecialTxProcessor> special_tx;
 
 public:
     CChainstateHelper() = delete;
@@ -54,10 +65,13 @@ public:
                                const llmq::CQuorumManager& qman);
     ~CChainstateHelper();
 
-    /** Passthrough functions to chainlock::Chainlocks*/
+    /** Passthrough functions to chainlock::Chainlocks */
     bool HasConflictingChainLock(int nHeight, const uint256& blockHash) const;
     bool HasChainLock(int nHeight, const uint256& blockHash) const;
     int32_t GetBestChainLockHeight() const;
+
+    /** Passthrough functions to CCreditPoolManager */
+    CCreditPool GetCreditPool(const CBlockIndex* const pindex);
 
     /** Passthrough functions to CInstantSendManager */
     std::optional<std::pair</*islock_hash=*/uint256, /*txid=*/uint256>> ConflictingISLockIfAny(const CTransaction& tx) const;
@@ -66,12 +80,6 @@ public:
     bool ShouldInstantSendRejectConflicts() const;
 
     std::unordered_map<uint8_t, int> GetSignalsStage(const CBlockIndex* const pindexPrev);
-
-public:
-    const std::unique_ptr<CMNHFManager> ehf_manager;
-    const std::unique_ptr<CCreditPoolManager> credit_pool_manager;
-    const std::unique_ptr<CMNPaymentsProcessor> mn_payments;
-    const std::unique_ptr<CSpecialTxProcessor> special_tx;
 };
 
 #endif // BITCOIN_EVO_CHAINHELPER_H
