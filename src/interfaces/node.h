@@ -115,18 +115,12 @@ public:
     virtual uint256 getBlockHash() const = 0;
 
     virtual void forEachMN(bool only_valid, std::function<void(const MnEntryCPtr&)> cb) const = 0;
-    virtual MnEntryCPtr getMN(const uint256& hash) const = 0;
-    virtual MnEntryCPtr getMNByService(const CService& service) const = 0;
-    virtual MnEntryCPtr getValidMN(const uint256& hash) const = 0;
     virtual std::vector<MnEntryCPtr> getProjectedMNPayees(const CBlockIndex* pindex) const = 0;
 
-    virtual void copyContextTo(MnList& mn_list) const = 0;
     virtual void setContext(node::NodeContext* context) = 0;
 };
 
 using MnListPtr = std::shared_ptr<MnList>;
-
-MnListPtr MakeMNList(const CDeterministicMNList& mn_list);
 
 //! Interface for the src/evo part of a dash node (dashd process).
 class EVO
@@ -516,6 +510,10 @@ public:
     using NotifyHeaderTipFn =
         std::function<void(SynchronizationState, interfaces::BlockTip tip, double verification_progress)>;
     virtual std::unique_ptr<Handler> handleNotifyHeaderTip(NotifyHeaderTipFn fn) = 0;
+
+    //! Register handler for InstantSend data messages.
+    using NotifyInstantSendChangedFn = std::function<void()>;
+    virtual std::unique_ptr<Handler> handleNotifyInstantSendChanged(NotifyInstantSendChangedFn fn) = 0;
 
     //! Register handler for governance data messages.
     using NotifyGovernanceChangedFn = std::function<void()>;

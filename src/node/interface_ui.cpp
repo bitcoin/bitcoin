@@ -24,6 +24,7 @@ struct UISignals {
     boost::signals2::signal<CClientUIInterface::NotifyChainLockSig> NotifyChainLock;
     boost::signals2::signal<CClientUIInterface::NotifyHeaderTipSig> NotifyHeaderTip;
     boost::signals2::signal<CClientUIInterface::NotifyGovernanceChangedSig> NotifyGovernanceChanged;
+    boost::signals2::signal<CClientUIInterface::NotifyInstantSendChangedSig> NotifyInstantSendChanged;
     boost::signals2::signal<CClientUIInterface::NotifyMasternodeListChangedSig> NotifyMasternodeListChanged;
     boost::signals2::signal<CClientUIInterface::NotifyAdditionalDataSyncProgressChangedSig> NotifyAdditionalDataSyncProgressChanged;
     boost::signals2::signal<CClientUIInterface::BannedListChangedSig> BannedListChanged;
@@ -48,6 +49,7 @@ ADD_SIGNALS_IMPL_WRAPPER(NotifyBlockTip);
 ADD_SIGNALS_IMPL_WRAPPER(NotifyChainLock);
 ADD_SIGNALS_IMPL_WRAPPER(NotifyHeaderTip);
 ADD_SIGNALS_IMPL_WRAPPER(NotifyGovernanceChanged);
+ADD_SIGNALS_IMPL_WRAPPER(NotifyInstantSendChanged);
 ADD_SIGNALS_IMPL_WRAPPER(NotifyMasternodeListChanged);
 ADD_SIGNALS_IMPL_WRAPPER(NotifyAdditionalDataSyncProgressChanged);
 ADD_SIGNALS_IMPL_WRAPPER(BannedListChanged);
@@ -64,6 +66,7 @@ void CClientUIInterface::NotifyBlockTip(SynchronizationState s, const CBlockInde
 void CClientUIInterface::NotifyChainLock(const std::string& bestChainLockHash, int bestChainLockHeight) { return g_ui_signals.NotifyChainLock(bestChainLockHash, bestChainLockHeight); }
 void CClientUIInterface::NotifyHeaderTip(SynchronizationState s, const CBlockIndex* i) { return g_ui_signals.NotifyHeaderTip(s, i); }
 void CClientUIInterface::NotifyGovernanceChanged() { return g_ui_signals.NotifyGovernanceChanged(); }
+void CClientUIInterface::NotifyInstantSendChanged() { return g_ui_signals.NotifyInstantSendChanged(); }
 void CClientUIInterface::NotifyMasternodeListChanged(const CDeterministicMNList& list, const CBlockIndex* i) { return g_ui_signals.NotifyMasternodeListChanged(list, i); }
 void CClientUIInterface::NotifyAdditionalDataSyncProgressChanged(double nSyncProgress) { return g_ui_signals.NotifyAdditionalDataSyncProgressChanged(nSyncProgress); }
 void CClientUIInterface::BannedListChanged() { return g_ui_signals.BannedListChanged(); }

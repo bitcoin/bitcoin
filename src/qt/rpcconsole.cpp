@@ -10,18 +10,22 @@
 #include <qt/rpcconsole.h>
 #include <qt/forms/ui_debugwindow.h>
 
-#include <evo/deterministicmns.h>
+#include <qt/bantablemodel.h>
+#include <qt/clientfeeds.h>
+#include <qt/clientmodel.h>
+#include <qt/guiutil_font.h>
+#include <qt/guiutil.h>
+#include <qt/informationwidget.h>
+#include <qt/masternodemodel.h>
+#include <qt/networkwidget.h>
+#include <qt/peertablesortproxy.h>
+#include <qt/util.h>
+#include <qt/walletcontroller.h>
+#include <qt/walletmodel.h>
 
 #include <chainparams.h>
 #include <interfaces/node.h>
 #include <node/connection_types.h>
-#include <qt/bantablemodel.h>
-#include <qt/clientmodel.h>
-#include <qt/guiutil.h>
-#include <qt/guiutil_font.h>
-#include <qt/peertablesortproxy.h>
-#include <qt/walletcontroller.h>
-#include <qt/walletmodel.h>
 #include <rpc/client.h>
 #include <rpc/server.h>
 #include <util/strencodings.h>
@@ -68,6 +72,7 @@ using wallet::GetWalletDir;
 const int CONSOLE_HISTORY = 50;
 const QSize FONT_RANGE(4, 40);
 const char fontSizeSettingsKey[] = "consoleFontSize";
+const char rpcConsoleInfoViewSettingsKey[] = "RPCConsoleInfoView";
 
 const TrafficGraphData::GraphRange INITIAL_TRAFFIC_GRAPH_SETTING = TrafficGraphData::Range_30m;
 
@@ -481,11 +486,7 @@ RPCConsole::RPCConsole(interfaces::Node& node, QWidget* parent, Qt::WindowFlags 
 {
     ui->setupUi(this);
 
-    GUIUtil::setFont({ui->label_9,
-                      ui->labelNetwork,
-                      ui->label_10,
-                      ui->labelMempoolTitle,
-                      ui->peerHeading,
+    GUIUtil::setFont({ui->peerHeading,
                       ui->label_repair_header,
                       ui->banHeading
                      }, {GUIUtil::FontWeight::Bold, 16});
@@ -554,9 +555,6 @@ RPCConsole::RPCConsole(interfaces::Node& node, QWidget* parent, Qt::WindowFlags 
         + ts.from + "\" – " + tr("the peer selected us for high bandwidth relay") + "</li><li>\""
         + ts.no + "\" – " + tr("no high bandwidth relay selected") + "</li></ul>"};
     ui->peerHighBandwidthLabel->setToolTip(ui->peerHighBandwidthLabel->toolTip().arg(hb_list));
-    ui->dataDir->setToolTip(ui->dataDir->toolTip().arg(QString(nonbreaking_hyphen) + "datadir"));
-    ui->blocksDir->setToolTip(ui->blocksDir->toolTip().arg(QString(nonbreaking_hyphen) + "blocksdir"));
-    ui->openDebugLogfileButton->setToolTip(ui->openDebugLogfileButton->toolTip().arg(PACKAGE_NAME));
 
     setButtonIcons();
 
@@ -608,6 +606,10 @@ RPCConsole::RPCConsole(interfaces::Node& node, QWidget* parent, Qt::WindowFlags 
     connect(pageButtons, QOverload<int>::of(&QButtonGroup::buttonClicked), this, &RPCConsole::showPage);
 #endif
 
+    // Keep tabs compact; prevent Qt from stretching them to fill the bar width
+    ui->tabWidgetInfo->tabBar()->setExpanding(false);
+
+    showInfoView(settings.value(rpcConsoleInfoViewSettingsKey, ToUnderlying(InfoView::General)).toInt());
     showPage(ToUnderlying(TabTypes::INFO));
 
     reloadThemedWidgets();
@@ -632,6 +634,7 @@ RPCConsole::~RPCConsole()
 
     settings.setValue("PeersTabPeerHeaderState", m_peer_widget_header_state);
     settings.setValue("PeersTabBanlistHeaderState", m_banlist_widget_header_state);
+    settings.setValue(rpcConsoleInfoViewSettingsKey, ui->tabWidgetInfo->currentIndex());
 
     m_node.rpcUnsetTimerInterface(rpcTimerInterface);
     delete rpcTimerInterface;
@@ -697,26 +700,13 @@ void RPCConsole::setClientModel(ClientModel *model, int bestblock_height, int64_
         updateAlerts(model->getStatusBarWarnings());
     }
 
+    ui->informationWidget->setClientModel(model);
+    ui->networkWidget->setClientModel(model);
     ui->trafficGraph->setClientModel(model);
     if (model && clientModel->getPeerTableModel() && clientModel->getBanTableModel()) {
         // Keep up to date with client
-        setNumConnections(model->getNumConnections());
-        connect(model, &ClientModel::numConnectionsChanged, this, &RPCConsole::setNumConnections);
-
-        setNumBlocks(bestblock_height, QDateTime::fromSecsSinceEpoch(bestblock_date), QString::fromStdString(bestblock_hash.ToString()), verification_progress, false);
-        connect(model, &ClientModel::numBlocksChanged, this, &RPCConsole::setNumBlocks);
-
-        connect(model, &ClientModel::chainLockChanged, this, &RPCConsole::setChainLock);
-
-        updateNetworkState();
-        connect(model, &ClientModel::networkActiveChanged, this, &RPCConsole::setNetworkActive);
-
-        connect(model, &ClientModel::masternodeListChanged, this, &RPCConsole::updateMasternodeCount);
-        clientModel->refreshMasternodeList();
-
-        connect(model, &ClientModel::mempoolSizeChanged, this, &RPCConsole::setMempoolSize);
-        connect(model, &ClientModel::islockCountChanged, this, &RPCConsole::setInstantSendLockCount);
-
+        connect(model, &ClientModel::numBlocksChanged, ui->informationWidget, &InformationWidget::setNumBlocks);
+        m_feed_masternode = model->feedMasternode();
 
         // set up peer table
         ui->peerWidget->setModel(model->peerTableSortProxy());
@@ -785,12 +775,8 @@ void RPCConsole::setClientModel(ClientModel *model, int bestblock_height, int64_
         showOrHideBanTableIfRequired();
 
         // Provide initial values
-        ui->clientVersion->setText(model->formatFullVersion());
-        ui->clientUserAgent->setText(model->formatSubVersion());
-        ui->dataDir->setText(model->dataDir());
-        ui->blocksDir->setText(model->blocksDir());
-        ui->startupTime->setText(model->formatClientStartupTime());
-        ui->networkName->setText(QString::fromStdString(Params().NetworkIDString()));
+        ui->informationWidget->setNumBlocks(/*count=*/bestblock_height, QDateTime::fromSecsSinceEpoch(bestblock_date), QString::fromStdString(bestblock_hash.ToString()),
+                                            verification_progress, /*headers=*/false);
 
         //Setup autocomplete and attach it
         QStringList wordList;
@@ -1064,94 +1050,6 @@ void RPCConsole::message(int category, const QString &message, bool html)
     ui->messagesWidget->append(out);
 }
 
-void RPCConsole::updateNetworkState()
-{
-    if (!clientModel) return;
-    QString connections = QString::number(clientModel->getNumConnections()) + " (";
-    connections += tr("In:") + " " + QString::number(clientModel->getNumConnections(CONNECTIONS_IN)) + " / ";
-    connections += tr("Out:") + " " + QString::number(clientModel->getNumConnections(CONNECTIONS_OUT)) + ")";
-
-    if(!clientModel->node().getNetworkActive()) {
-        connections += " (" + tr("Network activity disabled") + ")";
-    }
-
-    ui->numberOfConnections->setText(connections);
-
-    QString local_addresses;
-    std::map<CNetAddr, LocalServiceInfo> hosts = clientModel->getNetLocalAddresses();
-    for (const auto& [addr, info] : hosts) {
-        local_addresses += QString::fromStdString(addr.ToStringAddr());
-        if (!addr.IsI2P()) local_addresses += ":" + QString::number(info.nPort);
-        local_addresses += ", ";
-    }
-    local_addresses.chop(2); // remove last ", "
-    if (local_addresses.isEmpty()) local_addresses = tr("None");
-
-    ui->localAddresses->setText(local_addresses);
-}
-
-void RPCConsole::setNumConnections(int count)
-{
-    if (!clientModel)
-        return;
-
-    updateNetworkState();
-}
-
-void RPCConsole::setNetworkActive(bool networkActive)
-{
-    updateNetworkState();
-}
-
-void RPCConsole::setNumBlocks(int count, const QDateTime& blockDate, const QString& blockHash, double nVerificationProgress, bool headers)
-{
-    if (!headers) {
-        ui->numberOfBlocks->setText(QString::number(count));
-        ui->lastBlockTime->setText(blockDate.toString());
-        ui->lastBlockHash->setText(blockHash);
-    }
-}
-
-void RPCConsole::setChainLock(const QString& bestChainLockHash, int bestChainLockHeight)
-{
-    ui->bestChainLockHash->setText(bestChainLockHash);
-    ui->bestChainLockHeight->setText(QString::number(bestChainLockHeight));
-}
-
-void RPCConsole::updateMasternodeCount()
-{
-    if (!clientModel) {
-        return;
-    }
-    auto mnList = clientModel->getMasternodeList().first;
-    const auto mn_counts = mnList->getCounts();
-    QString strMasternodeCount = tr("Total: %1 (Enabled: %2)")
-        .arg(QString::number(mn_counts.m_total_mn))
-        .arg(QString::number(mn_counts.m_valid_mn));
-    ui->masternodeCount->setText(strMasternodeCount);
-    QString strEvoCount = tr("Total: %1 (Enabled: %2)")
-        .arg(QString::number(mn_counts.m_total_evo))
-        .arg(QString::number(mn_counts.m_valid_evo));
-    ui->evoCount->setText(strEvoCount);
-}
-
-void RPCConsole::setMempoolSize(long numberOfTxs, size_t dynUsage, size_t maxUsage)
-{
-    ui->mempoolNumberTxs->setText(QString::number(numberOfTxs));
-
-    const auto cur_usage_str = dynUsage < 1000000 ?
-        QObject::tr("%1 kB").arg(dynUsage / 1000.0, 0, 'f', 2) :
-        QObject::tr("%1 MB").arg(dynUsage / 1000000.0, 0, 'f', 2);
-    const auto max_usage_str = QObject::tr("%1 MB").arg(maxUsage / 1000000.0, 0, 'f', 2);
-
-    ui->mempoolSize->setText(cur_usage_str + " / " + max_usage_str);
-}
-
-void RPCConsole::setInstantSendLockCount(size_t count)
-{
-    ui->instantSendLockCount->setText(QString::number(count));
-}
-
 void RPCConsole::showPage(int index)
 {
     std::vector<QWidget*> vecNormal;
@@ -1168,6 +1066,13 @@ void RPCConsole::showPage(int index)
 
     ui->stackedWidgetRPC->setCurrentIndex(index);
     btnActive->setChecked(true);
+}
+
+void RPCConsole::showInfoView(int index)
+{
+    const int count{ui->tabWidgetInfo->count()};
+    const int selected{(index >= 0 && index < count) ? index : ToUnderlying(InfoView::General)};
+    ui->tabWidgetInfo->setCurrentIndex(selected);
 }
 
 void RPCConsole::on_lineEdit_returnPressed()
@@ -1296,11 +1201,6 @@ void RPCConsole::on_stackedWidgetRPC_currentChanged(int index)
     }
 }
 
-void RPCConsole::on_openDebugLogfileButton_clicked()
-{
-    GUIUtil::openDebugLogfile();
-}
-
 void RPCConsole::scrollToEnd()
 {
     QScrollBar *scrollbar = ui->messagesWidget->verticalScrollBar();
@@ -1376,7 +1276,19 @@ void RPCConsole::updateDetailWidget()
         ui->peerPermissions->setText(permissions.join(" & "));
     }
     ui->peerMappedAS->setText(stats->nodeStats.m_mapped_as != 0 ? QString::number(stats->nodeStats.m_mapped_as) : ts.na);
-    auto dmn = clientModel->getMasternodeList().first->getMNByService(stats->nodeStats.addr);
+
+    const auto addr_key{util::make_array(stats->nodeStats.addr.GetKey())};
+    const MasternodeEntry* dmn = [&]() -> const MasternodeEntry* {
+        if (m_feed_masternode) {
+            if (const auto data{m_feed_masternode->data()}; data) {
+                if (auto it = data->m_by_service.find(addr_key); it != data->m_by_service.end()) {
+                    return it.value();
+                }
+            }
+        }
+        return nullptr;
+    }();
+
     if (dmn == nullptr) {
         ui->peerNodeType->setText(tr("Regular"));
         ui->peerPoSeScore->setText(ts.na);
@@ -1386,7 +1298,7 @@ void RPCConsole::updateDetailWidget()
         } else {
             ui->peerNodeType->setText(tr("Verified Masternode"));
         }
-        ui->peerPoSeScore->setText(QString::number(dmn->getPoSePenalty()));
+        ui->peerPoSeScore->setText(QString::number(dmn->posePenalty()));
     }
 
     // This check fails for example if the lock was busy and

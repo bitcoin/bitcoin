@@ -20,8 +20,8 @@
 #include <optional>
 #include <vector>
 
-class CDeterministicMNList;
 class ClientModel;
+class MasternodeFeed;
 class ProposalCreate;
 class ProposalFeed;
 class ProposalModel;
@@ -56,7 +56,8 @@ public:
 private:
     ClientModel* clientModel{nullptr};
     interfaces::GOV::GovernanceInfo m_gov_info;
-    ProposalFeed* m_feed{nullptr};
+    MasternodeFeed* m_feed_masternode{nullptr};
+    ProposalFeed* m_feed_proposal{nullptr};
     ProposalModel* proposalModel{nullptr};
     ProposalSource m_proposal_source{ProposalSource::Active};
     QMenu* proposalContextMenu{nullptr};
@@ -69,6 +70,7 @@ private:
     int queryCollateralDepth(const uint256& collateralHash) const;
     std::vector<Governance::Object> getWalletProposals(std::optional<bool> pending) const;
     void refreshColumnWidths();
+    void requestForceRefresh();
     void setProposalList(ProposalData&& data);
     void updateEmptyPagePalette();
     void updateEmptyState();

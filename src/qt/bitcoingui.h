@@ -173,6 +173,7 @@ private:
     QAction* openGraphAction = nullptr;
     QAction* openPeersAction = nullptr;
     QAction* openRepairAction = nullptr;
+    QAction* openDebugLogAction = nullptr;
     QAction* openConfEditorAction = nullptr;
     QAction* showBackupsAction = nullptr;
     QAction* openAction = nullptr;

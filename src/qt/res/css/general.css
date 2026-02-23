@@ -732,6 +732,48 @@ QPushButton - Special case, tabbar replacement buttons
 }
 
 /******************************************************
+QTabWidget - Info sub-tab segmented control
+******************************************************/
+
+QTabWidget#tabWidgetInfo::pane {
+    border: none;
+    margin-top: 6px;
+}
+
+QTabWidget#tabWidgetInfo QTabBar::tab {
+    background-color: transparent;
+    border: 1px solid red;
+    border-right: none;
+    padding: 3px 12px;
+    color: red;
+}
+
+QTabWidget#tabWidgetInfo QTabBar::tab:first {
+    border-top-left-radius: 4px;
+    border-bottom-left-radius: 4px;
+}
+
+QTabWidget#tabWidgetInfo QTabBar::tab:last {
+    border-right: 1px solid red;
+    border-top-right-radius: 4px;
+    border-bottom-right-radius: 4px;
+}
+
+QTabWidget#tabWidgetInfo QTabBar::tab:only-one {
+    border-right: 1px solid red;
+    border-radius: 4px;
+}
+
+QTabWidget#tabWidgetInfo QTabBar::tab:selected {
+    background-color: red;
+    color: white;
+}
+
+QTabWidget#tabWidgetInfo QTabBar::tab:hover:!selected {
+    background-color: rgba(255, 0, 0, 25);
+}
+
+/******************************************************
 QRadioButton
 ******************************************************/
 
@@ -1686,15 +1728,6 @@ RPCConsole
 QWidget#RPCConsole { /* RPC Console Dialog Box */
 }
 
-QWidget#RPCConsole QLabel#label_9,
-QWidget#RPCConsole QLabel#labelNetwork,
-QWidget#RPCConsole QLabel#label_10,
-QWidget#RPCConsole QLabel#labelMempoolTitle,
-QWidget#RPCConsole QLabel#label_repair_header,
-QWidget#RPCConsole QLabel#peerHeading,
-QWidget#RPCConsole QLabel#banHeading {
-}
-
 QWidget#RPCConsole QLabel#label_alerts {
     background-color: #c79304;
     color: #222222;
@@ -1702,23 +1735,22 @@ QWidget#RPCConsole QLabel#label_alerts {
     padding: 5px;
 }
 
-QWidget#RPCConsole QLabel#labelNetwork,
-QWidget#RPCConsole QLabel#label_10,
-QWidget#RPCConsole QLabel#labelMempoolTitle { /* Margin between Network and Block Chain headers */
+QWidget#InformationWidget QLabel#labelNetwork,
+QWidget#InformationWidget QLabel#label_10,
+QWidget#InformationWidget QLabel#labelMempoolTitle,
+QWidget#NetworkWidget QLabel#labelChainLocks,
+QWidget#NetworkWidget QLabel#labelCreditPool,
+QWidget#NetworkWidget QLabel#labelInstantSend,
+QWidget#NetworkWidget QLabel#labelMasternodes,
+QWidget#NetworkWidget QLabel#labelQuorums { /* Margin between Network and Block Chain headers */
     qproperty-alignment: 'AlignLeft | AlignBottom';
     min-height: 25px;
-    margin-top: 10px;
-    margin-left: -4px;
 }
 
 QWidget#RPCConsole  QLabel#banHeading { /* Peers Info Header */
     min-height: 30px;
     margin-left: -3px;
     margin-bottom: 15px;
-}
-
-QWidget#RPCConsole QPushButton#openDebugLogfileButton {
-    max-width: 60px;
 }
 
 QWidget#RPCConsole QTextEdit#messagesWidget { /* Console Messages Window */

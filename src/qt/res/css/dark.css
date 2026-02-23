@@ -558,6 +558,50 @@ QPushButton - Special case, tabbar replacement buttons
 }
 
 /******************************************************
+QTabWidget - Info sub-tab segmented control
+******************************************************/
+
+QTabWidget#tabWidgetInfo::pane {
+    border: none;
+    margin-top: 6px;
+}
+
+QTabWidget#tabWidgetInfo QTabBar::tab {
+    background-color: transparent;
+    border: 1px solid #00599a;
+    border-right: none;
+    padding: 3px 12px;
+    color: #818181;
+}
+
+QTabWidget#tabWidgetInfo QTabBar::tab:first {
+    border-top-left-radius: 4px;
+    border-bottom-left-radius: 4px;
+}
+
+QTabWidget#tabWidgetInfo QTabBar::tab:last {
+    border-right: 1px solid #00599a;
+    border-top-right-radius: 4px;
+    border-bottom-right-radius: 4px;
+}
+
+QTabWidget#tabWidgetInfo QTabBar::tab:only-one {
+    border-right: 1px solid #00599a;
+    border-radius: 4px;
+}
+
+QTabWidget#tabWidgetInfo QTabBar::tab:selected {
+    background-color: #00599a;
+    border-color: #00599a;
+    color: #c7c7c7;
+}
+
+QTabWidget#tabWidgetInfo QTabBar::tab:hover:!selected {
+    background-color: rgba(0, 89, 154, 40);
+    color: #c7c7c7;
+}
+
+/******************************************************
 QRadioButton
 ******************************************************/
 

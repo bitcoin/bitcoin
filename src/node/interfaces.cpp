@@ -162,21 +162,6 @@ public:
             cb(std::make_shared<const MnEntryImpl>(dmn));
         });
     }
-    MnEntryCPtr getMN(const uint256& hash) const override
-    {
-        const auto dmn{m_list.GetMN(hash)};
-        return dmn ? std::make_shared<const MnEntryImpl>(dmn) : nullptr;
-    }
-    MnEntryCPtr getMNByService(const CService& service) const override
-    {
-        const auto dmn{m_list.GetMNByService(service)};
-        return dmn ? std::make_shared<const MnEntryImpl>(dmn) : nullptr;
-    }
-    MnEntryCPtr getValidMN(const uint256& hash) const override
-    {
-        const auto dmn{m_list.GetValidMN(hash)};
-        return dmn ? std::make_shared<const MnEntryImpl>(dmn) : nullptr;
-    }
     std::vector<MnEntryCPtr> getProjectedMNPayees(const CBlockIndex* pindex) const override
     {
         std::vector<MnEntryCPtr> ret;
@@ -186,11 +171,6 @@ public:
         return ret;
     }
 
-    void copyContextTo(MnList& mn_list) const override
-    {
-        if (!m_context) return;
-        mn_list.setContext(m_context);
-    }
     void setContext(NodeContext* context) override
     {
         m_context = context;
@@ -1021,6 +1001,10 @@ public:
                     /* verification progress is unused when a header was received */ 0);
             }));
     }
+    std::unique_ptr<Handler> handleNotifyInstantSendChanged(NotifyInstantSendChangedFn fn) override
+    {
+        return MakeHandler(::uiInterface.NotifyInstantSendChanged_connect(fn));
+    }
     std::unique_ptr<Handler> handleNotifyGovernanceChanged(NotifyGovernanceChangedFn fn) override
     {
         return MakeHandler(::uiInterface.NotifyGovernanceChanged_connect(fn));
@@ -1487,5 +1471,4 @@ public:
 namespace interfaces {
 std::unique_ptr<Node> MakeNode(node::NodeContext& context) { return std::make_unique<node::NodeImpl>(context); }
 std::unique_ptr<Chain> MakeChain(node::NodeContext& node) { return std::make_unique<node::ChainImpl>(node); }
-MnListPtr MakeMNList(const CDeterministicMNList& mn_list) { return std::make_shared<node::MnListImpl>(mn_list); }
 } // namespace interfaces

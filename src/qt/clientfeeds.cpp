@@ -14,13 +14,18 @@
 #include <qt/clientmodel.h>
 #include <qt/masternodemodel.h>
 #include <qt/proposalmodel.h>
+#include <qt/util.h>
 
 #include <QDebug>
 #include <QThread>
 
 namespace {
+constexpr auto CHAINLOCK_UPDATE_INTERVAL{3s};
+constexpr auto CREDITPOOL_UPDATE_INTERVAL{3s};
+constexpr auto INSTANTSEND_UPDATE_INTERVAL{3s};
 constexpr auto MASTERNODE_UPDATE_INTERVAL{3s};
 constexpr auto PROPOSAL_UPDATE_INTERVAL{10s};
+constexpr auto QUORUM_UPDATE_INTERVAL{3s};
 } // anonymous namespace
 
 FeedBase::FeedBase(QObject* parent, const FeedBase::Config& config) :
@@ -45,6 +50,95 @@ void FeedBase::requestRefresh()
     }
 }
 
+ChainLockFeed::ChainLockFeed(QObject* parent, ClientModel& client_model) :
+    Feed<ChainLockData>{parent, {/*m_baseline=*/CHAINLOCK_UPDATE_INTERVAL, /*m_throttle=*/CHAINLOCK_UPDATE_INTERVAL*10}},
+    m_client_model{client_model}
+{
+}
+
+ChainLockFeed::~ChainLockFeed() = default;
+
+void ChainLockFeed::fetch()
+{
+    if (m_client_model.node().shutdownRequested()) {
+        return;
+    }
+
+    const auto cl_info = m_client_model.node().llmq().getBestChainLock();
+    if (cl_info.m_height == 0) {
+        // Chainlock at genesis height not possible, assume something went wrong
+        return;
+    }
+
+    auto ret = std::make_shared<Data>();
+    ret->m_block_time = cl_info.m_block_time;
+    ret->m_height = cl_info.m_height;
+    ret->m_hash = QString::fromStdString(cl_info.m_hash.ToString());
+
+    setData(std::move(ret));
+}
+
+CreditPoolFeed::CreditPoolFeed(QObject* parent, ClientModel& client_model) :
+    Feed<CreditPoolData>{parent, {/*m_baseline=*/CREDITPOOL_UPDATE_INTERVAL, /*m_throttle=*/CREDITPOOL_UPDATE_INTERVAL*10}},
+    m_client_model{client_model}
+{
+}
+
+CreditPoolFeed::~CreditPoolFeed() = default;
+
+void CreditPoolFeed::fetch()
+{
+    if (m_client_model.node().shutdownRequested()) {
+        return;
+    }
+
+    auto ret = std::make_shared<Data>();
+    ret->m_counts = m_client_model.node().llmq().getCreditPoolCounts();
+    ret->m_pending_unlocks = m_client_model.node().llmq().getPendingAssetUnlocks();
+
+    setData(std::move(ret));
+}
+
+InstantSendFeed::InstantSendFeed(QObject* parent, ClientModel& client_model) :
+    Feed<InstantSendData>{parent, {/*m_baseline=*/INSTANTSEND_UPDATE_INTERVAL, /*m_throttle=*/INSTANTSEND_UPDATE_INTERVAL*10}},
+    m_client_model{client_model}
+{
+}
+
+InstantSendFeed::~InstantSendFeed() = default;
+
+void InstantSendFeed::fetch()
+{
+    if (m_client_model.node().shutdownRequested()) {
+        return;
+    }
+
+    auto ret = std::make_shared<Data>();
+    ret->m_counts = m_client_model.node().llmq().getInstantSendCounts();
+
+    setData(std::move(ret));
+}
+
+QuorumFeed::QuorumFeed(QObject* parent, ClientModel& client_model) :
+    Feed<QuorumData>{parent, {/*m_baseline=*/QUORUM_UPDATE_INTERVAL, /*m_throttle=*/QUORUM_UPDATE_INTERVAL*10}},
+    m_client_model{client_model}
+{
+}
+
+QuorumFeed::~QuorumFeed() = default;
+
+void QuorumFeed::fetch()
+{
+    if (m_client_model.node().shutdownRequested()) {
+        return;
+    }
+
+    auto ret = std::make_shared<Data>();
+    ret->m_quorums = m_client_model.node().llmq().getQuorumStats();
+
+    setData(std::move(ret));
+}
+
 MasternodeFeed::MasternodeFeed(QObject* parent, ClientModel& client_model) :
     Feed<MasternodeData>{parent, {/*m_baseline=*/MASTERNODE_UPDATE_INTERVAL, /*m_throttle=*/MASTERNODE_UPDATE_INTERVAL*10}},
     m_client_model{client_model}
@@ -59,7 +153,7 @@ void MasternodeFeed::fetch()
         return;
     }
 
-    const auto [dmn, pindex] = m_client_model.getMasternodeList();
+    const auto [dmn, pindex] = m_client_model.node().evo().getListAtChainTip();
     if (!dmn || !pindex) {
         return;
     }
@@ -93,16 +187,20 @@ void MasternodeFeed::fetch()
         if (auto nextPaymentIt = nextPayments.find(dmn->getProTxHash()); nextPaymentIt != nextPayments.end()) {
             nNextPayment = nextPaymentIt->second;
         }
-        ret->m_entries.push_back(std::make_unique<MasternodeEntry>(dmn, collateralStr, nNextPayment));
+        auto entry = std::make_shared<MasternodeEntry>(dmn, collateralStr, nNextPayment);
+        ret->m_by_protx[dmn->getProTxHash()] = entry.get();
+        ret->m_by_service[util::make_array(dmn->getNetInfoPrimary().GetKey())] = entry.get();
+        ret->m_entries.push_back(std::move(entry));
     });
 
     ret->m_valid = true;
     setData(std::move(ret));
 }
 
-ProposalFeed::ProposalFeed(QObject* parent, ClientModel& client_model) :
+ProposalFeed::ProposalFeed(QObject* parent, ClientModel& client_model, MasternodeFeed& feed_masternode) :
     Feed<ProposalData>{parent, {/*m_baseline=*/PROPOSAL_UPDATE_INTERVAL, /*m_throttle=*/PROPOSAL_UPDATE_INTERVAL*6}},
-    m_client_model{client_model}
+    m_client_model{client_model},
+    m_feed_masternode{feed_masternode}
 {
 }
 
@@ -114,8 +212,8 @@ void ProposalFeed::fetch()
         return;
     }
 
-    const auto [dmn, pindex] = m_client_model.getMasternodeList();
-    if (!dmn || !pindex) {
+    const auto data_mn = m_feed_masternode.data();
+    if (!data_mn || !data_mn->m_valid) {
         return;
     }
 
@@ -123,7 +221,7 @@ void ProposalFeed::fetch()
     // A proposal is considered passing if (YES votes - NO votes) >= (Total Weight of Masternodes / 10),
     // count total valid (ENABLED) masternodes to determine passing threshold.
     const auto nMinQuorum = static_cast<size_t>(Params().GetConsensus().nGovernanceMinQuorum);
-    ret->m_abs_vote_req = static_cast<int>(std::max(nMinQuorum, dmn->getCounts().m_valid_weighted / 10));
+    ret->m_abs_vote_req = static_cast<int>(std::max(nMinQuorum, data_mn->m_counts.m_valid_weighted / 10));
     ret->m_gov_info = m_client_model.node().gov().getGovernanceInfo();
     std::vector<CGovernanceObject> govObjList;
     m_client_model.getAllGovernanceObjects(govObjList);

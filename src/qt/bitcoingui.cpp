@@ -447,6 +447,8 @@ void BitcoinGUI::createActions()
     openPeersAction->setStatusTip(tr("Show peers info"));
     openRepairAction = new QAction(tr("Wallet &Repair"), this);
     openRepairAction->setStatusTip(tr("Show wallet repair options"));
+    openDebugLogAction = new QAction(tr("Open &debug log file"), this);
+    openDebugLogAction->setStatusTip(tr("Open the debug log file from the current data directory"));
     openConfEditorAction = new QAction(tr("Open &wallet configuration file"), this);
     openConfEditorAction->setStatusTip(tr("Open configuration file"));
     // override TextHeuristicRole set by default which confuses this action with application settings
@@ -517,7 +519,8 @@ void BitcoinGUI::createActions()
     connect(openPeersAction, &QAction::triggered, this, &BitcoinGUI::showPeers);
     connect(openRepairAction, &QAction::triggered, this, &BitcoinGUI::showRepair);
 
-    // Open configs and backup folder from menu
+    // Open logs, configs, and backup folder from menu
+    connect(openDebugLogAction, &QAction::triggered, GUIUtil::openDebugLogfile);
     connect(openConfEditorAction, &QAction::triggered, this, &BitcoinGUI::showConfEditor);
     connect(showBackupsAction, &QAction::triggered, this, &BitcoinGUI::showBackups);
 
@@ -640,6 +643,7 @@ void BitcoinGUI::createMenuBar()
         file->addAction(m_load_psbt_clipboard_action);
         file->addSeparator();
     }
+    file->addAction(openDebugLogAction);
     file->addAction(openConfEditorAction);
     if(walletFrame) {
         file->addAction(showBackupsAction);
@@ -1142,6 +1146,7 @@ void BitcoinGUI::createIconMenu(QMenu *pmenu)
         repair_action = pmenu->addAction(openRepairAction->text(), openRepairAction, &QAction::trigger);
     }
     pmenu->addSeparator();
+    QAction* debuglog_action = pmenu->addAction(openDebugLogAction->text(), openDebugLogAction, &QAction::trigger);
     QAction* conf_action = pmenu->addAction(openConfEditorAction->text(), openConfEditorAction, &QAction::trigger);
     QAction* backups_action{nullptr};
     if (enableWallet) {
@@ -1158,7 +1163,7 @@ void BitcoinGUI::createIconMenu(QMenu *pmenu)
         // Using QSystemTrayIcon::Context is not reliable.
         // See https://bugreports.qt.io/browse/QTBUG-91697
         pmenu, &QMenu::aboutToShow,
-        [this, show_hide_action, send_action, cj_send_action, receive_action, sign_action, verify_action, options_action, node_window_action, quit_action, repair_action, backups_action, info_action, graph_action, peer_action, conf_action] {
+        [this, show_hide_action, send_action, cj_send_action, receive_action, sign_action, verify_action, options_action, node_window_action, quit_action, repair_action, backups_action, info_action, graph_action, peer_action, debuglog_action, conf_action] {
             if (m_node.shutdownRequested()) return; // nothing to do, node is shutting down.
 
             if (show_hide_action) show_hide_action->setText(
@@ -1185,6 +1190,7 @@ void BitcoinGUI::createIconMenu(QMenu *pmenu)
                 node_window_action->setEnabled(openRPCConsoleAction->isEnabled());
                 graph_action->setEnabled(openGraphAction->isEnabled());
                 peer_action->setEnabled(openPeersAction->isEnabled());
+                debuglog_action->setEnabled(openDebugLogAction->isEnabled());
                 conf_action->setEnabled(openConfEditorAction->isEnabled());
                 if (quit_action) quit_action->setEnabled(true);
             }
@@ -1809,20 +1815,20 @@ void BitcoinGUI::updateGovernanceCycleIcon()
 
     const auto gov_info{m_node.gov().getGovernanceInfo()};
     const auto remaining_blocks{std::max<int>(0, gov_info.nextsuperblock - current_height)};
-    const auto days{static_cast<int>(static_cast<int64_t>(remaining_blocks) * gov_info.targetSpacing / (24*60*60))};
+    const auto remaining_str{GUIUtil::formatBlockDuration(remaining_blocks, gov_info.targetSpacing)};
     const bool awaiting_superblock{current_height % gov_info.superblockcycle >= gov_info.superblockcycle - gov_info.superblockmaturitywindow};
 
     QString tooltip1{};
     if (awaiting_superblock) {
         labelGovernanceCycleIcon->setPixmap(m_gov_cycle_pixmaps.at({ToUnderlying(GUIUtil::ThemedColor::BLUE), 0}));
-        tooltip1 = tr("~%n day(s) (%1 blocks) left for superblock", "", days).arg(remaining_blocks);
+        tooltip1 = tr("~%1 (%2 blocks) left for superblock").arg(remaining_str).arg(remaining_blocks);
     } else {
         const auto cycle_blocks{gov_info.superblockcycle - gov_info.superblockmaturitywindow};
         const auto blocks_elapsed{gov_info.superblockcycle - remaining_blocks - gov_info.superblockmaturitywindow};
         const auto progress{static_cast<double>(std::max(0, blocks_elapsed)) / static_cast<double>(std::max(1, cycle_blocks))};
         const auto frame{std::clamp<int>(static_cast<int>(progress * (GOV_CYCLE_FRAME_COUNT - 1)), 0, GOV_CYCLE_FRAME_COUNT - 2) + 1};
         labelGovernanceCycleIcon->setPixmap(m_gov_cycle_pixmaps.at({ToUnderlying(GUIUtil::ThemedColor::GREEN), frame}));
-        tooltip1 = tr("~%n day(s) (%1 blocks) left for voting", "", days).arg(remaining_blocks);
+        tooltip1 = tr("~%1 (%2 blocks) left for voting").arg(remaining_str).arg(remaining_blocks);
     }
 
     const auto allocated_budget{m_node.gov().getFundableProposalHashes().allocated};

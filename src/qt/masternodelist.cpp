@@ -5,10 +5,7 @@
 #include <qt/masternodelist.h>
 #include <qt/forms/ui_masternodelist.h>
 
-#include <coins.h>
-#include <evo/deterministicmns.h>
-#include <evo/dmn_types.h>
-#include <saltedhasher.h>
+#include <script/standard.h>
 
 #include <qt/clientfeeds.h>
 #include <qt/clientmodel.h>
@@ -195,7 +192,7 @@ void MasternodeList::updateMasternodeList()
         return;
     }
 
-    auto feed = m_feed->data();
+    const auto feed = m_feed->data();
     if (!feed) {
         return;
     }
@@ -223,18 +220,15 @@ void MasternodeList::updateMasternodeList()
     }
 
     QSet<QString> owned_mns;
-    const auto [dmn, pindex] = clientModel->getMasternodeList();
-    if (dmn && pindex) {
-        dmn->forEachMN(/*only_valid=*/false, [&](const auto& dmn) {
-            bool fMyMasternode = setOutpts.count(dmn->getCollateralOutpoint()) ||
-                                walletModel->wallet().isSpendable(PKHash(dmn->getKeyIdOwner())) ||
-                                walletModel->wallet().isSpendable(PKHash(dmn->getKeyIdVoting())) ||
-                                walletModel->wallet().isSpendable(dmn->getScriptPayout()) ||
-                                walletModel->wallet().isSpendable(dmn->getScriptOperatorPayout());
-            if (fMyMasternode) {
-                owned_mns.insert(QString::fromStdString(dmn->getProTxHash().ToString()));
-            }
-        });
+    for (const auto& entry : feed->m_entries) {
+        bool fMyMasternode{setOutpts.count(entry->collateralOutpointRaw()) ||
+                           walletModel->wallet().isSpendable(PKHash(entry->keyIdOwnerRaw())) ||
+                           walletModel->wallet().isSpendable(PKHash(entry->keyIdVotingRaw())) ||
+                           walletModel->wallet().isSpendable(entry->scriptPayoutRaw()) ||
+                           walletModel->wallet().isSpendable(entry->scriptOperatorPayoutRaw())};
+        if (fMyMasternode) {
+            owned_mns.insert(entry->proTxHash());
+        }
     }
     setMasternodeList(std::move(ret), std::move(owned_mns));
 }

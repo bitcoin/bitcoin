@@ -23,8 +23,6 @@
 #include <set>
 
 namespace {
-constexpr int64_t DAY_SECS{24 * 60 * 60};
-
 std::optional<QString> JoinArray(const UniValue& arr)
 {
     if (!arr.isArray() || arr.empty()) return std::nullopt;
@@ -44,6 +42,7 @@ MasternodeEntry::MasternodeEntry(const interfaces::MnEntryCPtr& dmn, const QStri
     m_next_payment_height{next_payment_height},
     m_pose_penalty{dmn->getPoSePenalty()},
     m_registered_height{dmn->getRegisteredHeight()},
+    m_dmn{dmn},
     m_type{dmn->getType()},
     m_collateral_address{collateral_address},
     m_collateral_outpoint{QString::fromStdString(dmn->getCollateralOutpoint().ToStringShort())},
@@ -216,11 +215,10 @@ QVariant MasternodeModel::data(const QModelIndex& index, int role) const
 
     if (role == Qt::ToolTipRole) {
         if (index.column() == Column::STATUS && m_current_height > 0) {
-            const int32_t blocks_per_day = DAY_SECS / Params().GetConsensus().nPowTargetSpacing;
+            const int64_t spacing = Params().GetConsensus().nPowTargetSpacing;
             if (entry->isBanned()) {
                 if (auto ban_height = entry->poseBanHeight(); ban_height && *ban_height > 0) {
-                    const auto days{(m_current_height - *ban_height) / blocks_per_day};
-                    return days > 0 ? tr("Banned for %n day(s)", "", days) : tr("Banned for less than a day");
+                    return tr("Banned for %1").arg(GUIUtil::formatBlockDuration(m_current_height - *ban_height, spacing));
                 } else {
                     return tr("Banned");
                 }
@@ -229,8 +227,7 @@ QVariant MasternodeModel::data(const QModelIndex& index, int role) const
                 if (auto revived_height = entry->poseRevivedHeight(); revived_height && *revived_height > 0) {
                     active_height = *revived_height;
                 }
-                const auto days{(m_current_height - active_height) / blocks_per_day};
-                return days > 0 ? tr("Active for %n day(s)", "", days) : tr("Active for less than a day");
+                return tr("Active for %1").arg(GUIUtil::formatBlockDuration(m_current_height - active_height, spacing));
             }
         }
         return {};

@@ -9,7 +9,9 @@
 #include <saltedhasher.h>
 #include <sync.h>
 #include <threadsafety.h>
+#include <uint256.h>
 
+#include <QHash>
 #include <QObject>
 #include <QTimer>
 
@@ -92,13 +94,67 @@ private:
     std::shared_ptr<const Data> m_data GUARDED_BY(m_cs);
 };
 
-using MasternodeEntryList = std::vector<std::shared_ptr<MasternodeEntry>>;
+struct ChainLockData {
+    int32_t m_height{0};
+    int64_t m_block_time{0};
+    QString m_hash;
+};
+
+class ChainLockFeed : public Feed<ChainLockData> {
+    Q_OBJECT
+
+public:
+    explicit ChainLockFeed(QObject* parent, ClientModel& client_model);
+    ~ChainLockFeed();
+
+    void fetch() override;
+
+private:
+    ClientModel& m_client_model;
+};
+
+struct CreditPoolData {
+    interfaces::LLMQ::CreditPoolCounts m_counts{};
+    size_t m_pending_unlocks{0};
+};
+
+class CreditPoolFeed : public Feed<CreditPoolData> {
+    Q_OBJECT
+
+public:
+    explicit CreditPoolFeed(QObject* parent, ClientModel& client_model);
+    ~CreditPoolFeed();
+
+    void fetch() override;
+
+private:
+    ClientModel& m_client_model;
+};
+
+struct InstantSendData {
+    interfaces::LLMQ::InstantSendCounts m_counts{};
+};
+
+class InstantSendFeed : public Feed<InstantSendData> {
+    Q_OBJECT
+
+public:
+    explicit InstantSendFeed(QObject* parent, ClientModel& client_model);
+    ~InstantSendFeed();
+
+    void fetch() override;
+
+private:
+    ClientModel& m_client_model;
+};
 
 struct MasternodeData {
     bool m_valid{false};
     int m_list_height{0};
     interfaces::MnList::Counts m_counts{};
-    MasternodeEntryList m_entries;
+    QHash<QByteArray, const MasternodeEntry*> m_by_service{};
+    std::vector<std::shared_ptr<MasternodeEntry>> m_entries{};
+    Uint256HashMap<const MasternodeEntry*> m_by_protx{};
 };
 
 class MasternodeFeed : public Feed<MasternodeData> {
@@ -107,6 +163,23 @@ class MasternodeFeed : public Feed<MasternodeData> {
 public:
     explicit MasternodeFeed(QObject* parent, ClientModel& client_model);
     ~MasternodeFeed();
+
+    void fetch() override;
+
+private:
+    ClientModel& m_client_model;
+};
+
+struct QuorumData {
+    std::vector<interfaces::LLMQ::QuorumInfo> m_quorums{};
+};
+
+class QuorumFeed : public Feed<QuorumData> {
+    Q_OBJECT
+
+public:
+    explicit QuorumFeed(QObject* parent, ClientModel& client_model);
+    ~QuorumFeed();
 
     void fetch() override;
 
@@ -127,13 +200,14 @@ class ProposalFeed : public Feed<ProposalData> {
     Q_OBJECT
 
 public:
-    explicit ProposalFeed(QObject* parent, ClientModel& client_model);
+    explicit ProposalFeed(QObject* parent, ClientModel& client_model, MasternodeFeed& feed_masternode);
     ~ProposalFeed();
 
     void fetch() override;
 
 private:
     ClientModel& m_client_model;
+    MasternodeFeed& m_feed_masternode;
 };
 
 class ClientFeeds : public QObject

@@ -26,6 +26,7 @@ private:
     int32_t m_next_payment_height{0};
     int32_t m_pose_penalty{0};
     int32_t m_registered_height{0};
+    interfaces::MnEntryCPtr m_dmn;
     MnType m_type{MnType::Regular};
     QByteArray m_service_key{};
     QString m_collateral_address{};
@@ -64,6 +65,11 @@ public:
     std::optional<int32_t> poseRevivedHeight() const { return m_pose_revived_height; }
     uint16_t operatorRewardPct() const { return m_operator_reward_pct; }
 
+    const CKeyID& keyIdOwnerRaw() const { return m_dmn->getKeyIdOwner(); }
+    const CKeyID& keyIdVotingRaw() const { return m_dmn->getKeyIdVoting(); }
+    const COutPoint& collateralOutpointRaw() const { return m_dmn->getCollateralOutpoint(); }
+    const CScript& scriptOperatorPayoutRaw() const { return m_dmn->getScriptOperatorPayout(); }
+    const CScript& scriptPayoutRaw() const { return m_dmn->getScriptPayout(); }
     const QByteArray& serviceKey() const { return m_service_key; }
     const QString& collateralAddress() const { return m_collateral_address; }
     const QString& collateralOutpoint() const { return m_collateral_outpoint; }
@@ -75,6 +81,7 @@ public:
     const QString& toJson() const { return m_json; }
     const QString& typeDescription() const { return m_type_description; }
     const QString& votingAddress() const { return m_voting_address; }
+    const uint256& proTxHashRaw() const { return m_dmn->getProTxHash(); }
 
     auto toTie() const
     {
