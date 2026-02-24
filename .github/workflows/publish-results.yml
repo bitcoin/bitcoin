@@ -18,6 +18,7 @@ jobs:
       comparison: ${{ steps.generate.outputs.comparison }}
       pr-number: ${{ steps.metadata.outputs.pr-number }}
       result-url: ${{ steps.generate.outputs.result-url }}
+      pages-commit: ${{ steps.push-pages.outputs.pages-commit }}
     steps:
       - uses: actions/checkout@v4
         with:
@@ -135,6 +136,7 @@ jobs:
           path: results
 
       - name: Commit and push to gh-pages
+        id: push-pages
         run: |
           git config --global user.name "github-actions[bot]"
           git config --global user.email "github-actions[bot]@users.noreply.github.com"
@@ -143,9 +145,30 @@ jobs:
           git add results/
           git commit -m "Update benchmark results from run ${{ github.event.workflow_run.id }}"
           git push origin gh-pages
+          echo "pages-commit=$(git rev-parse HEAD)" >> $GITHUB_OUTPUT
+
+  wait-for-pages:
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - name: Wait for GitHub Pages deployment
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          COMMIT="${{ needs.build.outputs.pages-commit }}"
+          for i in $(seq 1 60); do
+            RUN_ID=$(gh run list -R "${{ github.repository }}" -w "pages-build-deployment" --commit "$COMMIT" -L 1 --json databaseId -q '.[0].databaseId')
+            if [ -n "$RUN_ID" ]; then
+              echo "Found pages-build-deployment run ${RUN_ID} for commit ${COMMIT}"
+              gh run watch "$RUN_ID" -R "${{ github.repository }}"
+              exit 0
+            fi
+            sleep 5
+          done
+          echo "::warning::Could not find pages-build-deployment run for commit ${COMMIT}"
 
   comment-pr:
-    needs: build
+    needs: [build, wait-for-pages]
     runs-on: ubuntu-latest
     permissions:
       pull-requests: write
