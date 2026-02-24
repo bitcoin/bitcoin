@@ -5,7 +5,6 @@ Ported from the JavaScript logic in .github/workflows/publish-results.yml.
 
 from __future__ import annotations
 
-import gzip
 import json
 import logging
 import shutil
@@ -194,7 +193,8 @@ class ReportGenerator:
 
         # Generate HTML
         html = self._generate_html(
-            all_runs, nightly_comparison, full_title, output_dir, output_dir, commit
+            all_runs, nightly_comparison, full_title, output_dir, output_dir, commit,
+            run_id,
         )
 
         # Write report
@@ -421,15 +421,9 @@ class ReportGenerator:
             shutil.copy2(svg, dest)
             logger.debug(f"Copied {svg.name} as {dest.name}")
 
-        # Gzip and copy debug logs with network prefix
-        for log in input_dir.glob("*-debug.log"):
-            dest = output_dir / f"{network}-{log.name}.gz"
-            with open(log, "rb") as f_in:
-                with gzip.open(dest, "wb") as f_out:
-                    shutil.copyfileobj(f_in, f_out)
-            logger.debug(f"Compressed {log.name} as {dest.name}")
-
-            if HAS_MATPLOTLIB:
+        # Generate plots from debug logs (logs themselves are available as CI artifacts)
+        if HAS_MATPLOTLIB:
+            for log in input_dir.glob("*-debug.log"):
                 name = log.name.removesuffix("-debug.log")
                 prefix = f"{network}-{name}"
                 plots_dir = output_dir / "plots"
@@ -451,6 +445,7 @@ class ReportGenerator:
         input_dir: Path,
         output_dir: Path,
         commit: str | None = None,
+        run_id: str | None = None,
     ) -> str:
         """Generate the HTML report."""
         sorted_runs = sorted(runs, key=lambda r: r.network)
@@ -481,6 +476,8 @@ class ReportGenerator:
         if pr_chart_data and self.nightly_history:
             nightly_chart_data = self.nightly_history.get_chart_data()
 
+        ci_run_url = f"{self.repo_url}/actions/runs/{run_id}" if run_id else None
+
         return render_template(
             "pr-report.html",
             title=title,
@@ -490,6 +487,7 @@ class ReportGenerator:
             nightly_chart_data=nightly_chart_data,
             graphs=graphs,
             repo_url=self.repo_url,
+            ci_run_url=ci_run_url,
         )
 
     def _prepare_nightly_data(
@@ -558,18 +556,6 @@ class ReportGenerator:
             elif (input_dir / non_prefixed).exists():
                 flamegraph_name = non_prefixed
 
-            debug_log_name = None
-            network_prefixed_log_gz = f"{network}-{name}-debug.log.gz"
-            network_prefixed_log = f"{network}-{name}-debug.log"
-            non_prefixed_log = f"{name}-debug.log"
-
-            if (output_dir / network_prefixed_log_gz).exists():
-                debug_log_name = network_prefixed_log_gz
-            elif (output_dir / network_prefixed_log).exists():
-                debug_log_name = network_prefixed_log
-            elif (input_dir / non_prefixed_log).exists():
-                debug_log_name = non_prefixed_log
-
             plots = []
             plots_dir = output_dir / "plots"
             if plots_dir.exists():
@@ -579,7 +565,7 @@ class ReportGenerator:
                         plots = [f"plots/{p.name}" for p in plot_files]
                         break
 
-            if not flamegraph_name and not debug_log_name and not plots:
+            if not flamegraph_name and not plots:
                 continue
 
             display_label = f"{network} - {name}" if network != "default" else name
@@ -588,7 +574,6 @@ class ReportGenerator:
                 {
                     "label": display_label,
                     "flamegraph": flamegraph_name,
-                    "debug_log": debug_log_name,
                     "plots": plots,
                 }
             )
@@ -596,7 +581,7 @@ class ReportGenerator:
         return graphs
 
     def _copy_artifacts(self, input_dir: Path, output_dir: Path) -> None:
-        """Copy flamegraphs and gzip debug logs to output directory."""
+        """Copy flamegraphs and generate plots from debug logs."""
         same_dir = input_dir.resolve() == output_dir.resolve()
 
         if not same_dir:
@@ -605,15 +590,8 @@ class ReportGenerator:
                 shutil.copy2(svg, dest)
                 logger.debug(f"Copied {svg.name}")
 
-        for log in input_dir.glob("*-debug.log"):
-            if not same_dir:
-                dest = output_dir / f"{log.name}.gz"
-                with open(log, "rb") as f_in:
-                    with gzip.open(dest, "wb") as f_out:
-                        shutil.copyfileobj(f_in, f_out)
-                logger.debug(f"Compressed {log.name} as {dest.name}")
-
-            if HAS_MATPLOTLIB:
+        if HAS_MATPLOTLIB:
+            for log in input_dir.glob("*-debug.log"):
                 name = log.name.removesuffix("-debug.log")
                 plots_dir = output_dir / "plots"
                 plots_dir.mkdir(parents=True, exist_ok=True)
