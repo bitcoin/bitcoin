@@ -1,64 +1,104 @@
 name: Bug report
-description: Submit a new bug report.
+description: Report a reproducible technical issue in Bitcoin Core.
 labels: [bug]
 body:
   - type: markdown
     attributes:
       value: |
-        ## This issue tracker is only for technical issues related to Bitcoin Core.
+        ## Important
 
-        * General bitcoin questions and/or support requests should use Bitcoin StackExchange at https://bitcoin.stackexchange.com.
-        * For reporting security issues, please read instructions at https://bitcoincore.org/en/contact/.
-        * If the node is "stuck" during sync or giving "block checksum mismatch" errors, please ensure your hardware is stable by running `memtest` and observe CPU temperature with a load-test tool such as `linpack` before creating an issue.
+        This issue tracker is only for technical issues related to Bitcoin Core.
+
+        • General bitcoin questions: https://bitcoin.stackexchange.com  
+        • Security vulnerabilities: https://bitcoincore.org/en/contact/  
+        • Sync issues ("stuck", checksum mismatch): please first verify hardware stability using `memtest` and monitor CPU temperature under load (e.g., `linpack`).
+
+        Please provide complete and reproducible information. Incomplete reports may be closed.
 
         ----
+
   - type: checkboxes
     attributes:
-      label: Is there an existing issue for this?
-      description: Please search to see if an issue already exists for the bug you encountered.
+      label: Preliminary checks
       options:
-      - label: I have searched the existing issues
-        required: true
+        - label: I have searched existing issues and confirmed this has not been reported.
+          required: true
+        - label: I am running an officially supported version of Bitcoin Core.
+          required: true
+
+  - type: dropdown
+    id: network
+    attributes:
+      label: Network
+      description: Which network are you running?
+      options:
+        - Mainnet
+        - Testnet
+        - Signet
+        - Regtest
+    validations:
+      required: true
+
   - type: textarea
     id: current-behaviour
     attributes:
       label: Current behaviour
-      description: Tell us what went wrong
+      description: Clearly describe what is happening.
+      placeholder: |
+        Example:
+        After block 812345, node crashes with assertion failure in validation.cpp.
     validations:
       required: true
+
   - type: textarea
     id: expected-behaviour
     attributes:
       label: Expected behaviour
-      description: Tell us what you expected to happen
+      description: What should have happened instead?
     validations:
       required: true
+
   - type: textarea
     id: reproduction-steps
     attributes:
       label: Steps to reproduce
       description: |
-        Tell us how to reproduce your bug. Please attach related screenshots if necessary.
-        * Run-time or compile-time configuration options
-        * Actions taken
+        Provide precise reproduction steps:
+        • Configuration options (bitcoin.conf)
+        • CLI arguments
+        • Build flags (if compiled from source)
+        • Exact commands executed
+        • Whether the issue is intermittent or deterministic
     validations:
       required: true
+
+  - type: textarea
+    id: frequency
+    attributes:
+      label: Frequency
+      description: How often does this occur?
+      placeholder: |
+        • Always
+        • Intermittent (approx. 1 in 5 runs)
+        • Only after long uptime
+    validations:
+      required: false
+
   - type: textarea
     id: logs
     attributes:
       label: Relevant log output
       description: |
-        Please copy and paste any relevant log output or attach a debug log file.
+        Paste relevant excerpts from debug.log.
 
-        You can find the debug.log in your [data dir.](https://github.com/bitcoin/bitcoin/blob/master/doc/files.md#data-directory-location)
-
-        Please be aware that the debug log might contain personally identifying information.
+        ⚠ Warning: debug.log may contain IP addresses or other identifying information.
     validations:
       required: false
+
   - type: dropdown
+    id: obtain-method
     attributes:
-      label: How did you obtain Bitcoin Core
-      multiple: false
+      label: How did you obtain Bitcoin Core?
       options:
         - Compiled from source
         - Pre-built binaries
@@ -66,27 +106,33 @@ body:
         - Other
     validations:
       required: true
+
   - type: input
     id: core-version
     attributes:
-      label: What version of Bitcoin Core are you using?
-      description: Run `bitcoind --version` or in Bitcoin-QT use `Help > About Bitcoin Core`
-      placeholder: e.g. v24.0.1 or master@e1bf547
+      label: Bitcoin Core version
+      description: Run `bitcoind --version` or check Help > About in Bitcoin-Qt
+      placeholder: e.g. v27.0 or master@abc1234
     validations:
       required: true
+
   - type: input
     id: os
     attributes:
-      label: Operating system and version
-      placeholder: e.g. "MacOS 26.0" or "Ubuntu 26.04 LTS"
+      label: Operating system
+      placeholder: e.g. Ubuntu 24.04 LTS, macOS 14.3, Windows 11
     validations:
       required: true
+
   - type: textarea
     id: machine-specs
     attributes:
       label: Machine specifications
       description: |
-        What are the specifications of the host machine?
-        e.g. OS/CPU and disk type, network connectivity
+        • CPU model
+        • RAM amount
+        • Disk type (HDD/SSD/NVMe)
+        • Pruned or full node
+        • Network bandwidth
     validations:
       required: false
