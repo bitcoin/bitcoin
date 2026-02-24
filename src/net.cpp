@@ -310,7 +310,9 @@ bool AddLocal(const CNetAddr &addr, int nScore)
 void RemoveLocal(const CService& addr)
 {
     LOCK(g_maplocalhost_mutex);
-    LogInfo("RemoveLocal(%s)\n", addr.ToStringAddrPort());
+    if (fLogIPs) {
+        LogInfo("RemoveLocal(%s)\n", addr.ToStringAddrPort());
+    }
     mapLocalHost.erase(addr);
 }
 
