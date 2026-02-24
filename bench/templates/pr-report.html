@@ -106,9 +106,11 @@
           Download debug.log
         </a>
       </div>
-      {% set chart_id = graph.label | replace(' ', '-') | replace('.', '') | lower %}
-      {% set debug_log_url = graph.debug_log %}
-      {% include 'partials/debug-log-charts.html' %}
+      {% endif %}
+      {% if graph.plots %}
+      {% for plot in graph.plots %}
+      <img src="{{ plot }}" alt="{{ graph.label }}" loading="lazy" class="w-full mb-4">
+      {% endfor %}
       {% endif %}
     </div>
     {% endfor %}
