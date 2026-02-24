@@ -14,6 +14,7 @@ from datetime import date
 from pathlib import Path
 from typing import Any
 
+from bench.analyze import HAS_MATPLOTLIB, LogParser, PlotGenerator
 from bench.nightly import (
     NightlyHistory,
     series_color_index,
@@ -263,6 +264,9 @@ class ReportGenerator:
         # Parse results
         runs = self._parse_results(data)
 
+        # Copy artifacts first so plots are available for template rendering
+        self._copy_artifacts(input_dir, output_dir)
+
         # Generate HTML (no nightly comparison in single-directory mode)
         html = self._generate_html(runs, {}, title, input_dir, output_dir)
 
@@ -270,9 +274,6 @@ class ReportGenerator:
         index_file = output_dir / "index.html"
         index_file.write_text(html)
         logger.info(f"Generated report: {index_file}")
-
-        # Copy artifacts (flamegraphs, plots)
-        self._copy_artifacts(input_dir, output_dir)
 
         return ReportResult(
             output_dir=output_dir,
@@ -428,6 +429,20 @@ class ReportGenerator:
                     shutil.copyfileobj(f_in, f_out)
             logger.debug(f"Compressed {log.name} as {dest.name}")
 
+            if HAS_MATPLOTLIB:
+                name = log.name.removesuffix("-debug.log")
+                prefix = f"{network}-{name}"
+                plots_dir = output_dir / "plots"
+                plots_dir.mkdir(parents=True, exist_ok=True)
+                try:
+                    data = LogParser().parse_file(log)
+                    plots = PlotGenerator(prefix, plots_dir).generate_all(data)
+                    logger.info(f"Generated {len(plots)} plots for {prefix}")
+                except Exception:
+                    logger.warning(
+                        f"Failed to generate plots for {prefix}", exc_info=True
+                    )
+
     def _generate_html(
         self,
         runs: list[BenchmarkRun],
@@ -555,7 +570,16 @@ class ReportGenerator:
             elif (input_dir / non_prefixed_log).exists():
                 debug_log_name = non_prefixed_log
 
-            if not flamegraph_name and not debug_log_name:
+            plots = []
+            plots_dir = output_dir / "plots"
+            if plots_dir.exists():
+                for prefix in [f"{network}-{name}", name]:
+                    plot_files = sorted(plots_dir.glob(f"{prefix}-*.png"))
+                    if plot_files:
+                        plots = [f"plots/{p.name}" for p in plot_files]
+                        break
+
+            if not flamegraph_name and not debug_log_name and not plots:
                 continue
 
             display_label = f"{network} - {name}" if network != "default" else name
@@ -565,6 +589,7 @@ class ReportGenerator:
                     "label": display_label,
                     "flamegraph": flamegraph_name,
                     "debug_log": debug_log_name,
+                    "plots": plots,
                 }
             )
 
@@ -572,24 +597,34 @@ class ReportGenerator:
 
     def _copy_artifacts(self, input_dir: Path, output_dir: Path) -> None:
         """Copy flamegraphs and gzip debug logs to output directory."""
-        # Skip if input and output are the same directory
-        if input_dir.resolve() == output_dir.resolve():
-            logger.debug("Input and output are the same directory, skipping copy")
-            return
+        same_dir = input_dir.resolve() == output_dir.resolve()
 
-        # Copy flamegraphs
-        for svg in input_dir.glob("*-flamegraph.svg"):
-            dest = output_dir / svg.name
-            shutil.copy2(svg, dest)
-            logger.debug(f"Copied {svg.name}")
+        if not same_dir:
+            for svg in input_dir.glob("*-flamegraph.svg"):
+                dest = output_dir / svg.name
+                shutil.copy2(svg, dest)
+                logger.debug(f"Copied {svg.name}")
 
-        # Gzip and copy debug logs
         for log in input_dir.glob("*-debug.log"):
-            dest = output_dir / f"{log.name}.gz"
-            with open(log, "rb") as f_in:
-                with gzip.open(dest, "wb") as f_out:
-                    shutil.copyfileobj(f_in, f_out)
-            logger.debug(f"Compressed {log.name} as {dest.name}")
+            if not same_dir:
+                dest = output_dir / f"{log.name}.gz"
+                with open(log, "rb") as f_in:
+                    with gzip.open(dest, "wb") as f_out:
+                        shutil.copyfileobj(f_in, f_out)
+                logger.debug(f"Compressed {log.name} as {dest.name}")
+
+            if HAS_MATPLOTLIB:
+                name = log.name.removesuffix("-debug.log")
+                plots_dir = output_dir / "plots"
+                plots_dir.mkdir(parents=True, exist_ok=True)
+                try:
+                    data = LogParser().parse_file(log)
+                    plots = PlotGenerator(name, plots_dir).generate_all(data)
+                    logger.info(f"Generated {len(plots)} plots for {name}")
+                except Exception:
+                    logger.warning(
+                        f"Failed to generate plots for {name}", exc_info=True
+                    )
 
 
 class ReportPhase:
