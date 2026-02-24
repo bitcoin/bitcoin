@@ -10,16 +10,18 @@ nix develop --command python3 bench.py build HEAD:test
 nix develop --command python3 bench.py run \
     --benchmark-config bench/configs/test-signet.toml \
     --matrix-entry 450 \
+    --datadir /path/to/signet-datadir \
     --output-dir ./output \
     test:./binaries/test/bitcoind
 
 # Or use just
-just test-uninstrumented HEAD
+just test-uninstrumented HEAD /path/to/signet-datadir
 ```
 
 ## Requirements
 
 - **Nix** with flakes enabled (provides hyperfine, flamegraph, etc.)
+- A blockchain datadir snapshot to benchmark against
 
 Optional (auto-detected, gracefully degrades without):
 - `/run/wrappers/bin/drop-caches` (NixOS) - clears page cache between runs
@@ -61,6 +63,7 @@ Run a benchmark using a TOML config and matrix entry:
 python3 bench.py run \
     --benchmark-config bench/configs/pr.toml \
     --matrix-entry 450-uninstrumented \
+    --datadir /data/pruned-840k \
     --output-dir ./output \
     pr:./binaries/pr/bitcoind
 ```
@@ -68,6 +71,7 @@ python3 bench.py run \
 Options:
 - `--benchmark-config PATH` - TOML config file (required)
 - `--matrix-entry NAME` - Matrix entry to run (required)
+- `--datadir PATH` - Blockchain datadir snapshot to copy for each run
 - `--tmp-datadir PATH` - Working directory for benchmark runs
 - `-o, --output-dir PATH` - Output directory for results
 - `--no-cache-drop` - Skip clearing page cache between runs
@@ -124,7 +128,7 @@ Benchmarks are driven by TOML config files in `bench/configs/`:
 | `nightly.toml` | mainnet | 450, 32000 | Nightly baseline |
 | `test-signet.toml` | signet | 450 | Quick local smoke test |
 
-All configs use `full_ibd = true` (sync from genesis) with `runs = 1`.
+Configs use `start_height = 840000` (resuming from a pruned snapshot) with `runs = 2` (except signet which starts from 0 with `runs = 1`).
 
 ### Matrix Expansion
 
@@ -142,11 +146,11 @@ Select one with `--matrix-entry`.
 ## Justfile Recipes
 
 ```bash
-just test-instrumented HEAD          # Signet smoke test with flamegraphs
-just test-uninstrumented HEAD        # Signet smoke test without profiling
-just instrumented HEAD               # Full instrumented benchmark
-just build HEAD:pr                   # Build only
-just run pr:./binaries/pr/bitcoind   # Run with pre-built binary
+just test-instrumented HEAD /path/to/datadir    # Signet smoke test with flamegraphs
+just test-uninstrumented HEAD /path/to/datadir  # Signet smoke test without profiling
+just instrumented HEAD /path/to/datadir         # Full instrumented benchmark
+just build HEAD:pr                              # Build only
+just run /path/to/datadir pr:./binaries/pr/bitcoind  # Run with pre-built binary
 just analyze COMMIT debug.log ./plots
 just report ./input ./output --nightly-history ./nightly-history.json
 ```
@@ -171,8 +175,8 @@ bench/
 
 The benchmark phase generates shell scripts for hyperfine hooks:
 
-- `setup` - Create tmp datadir (once before all runs)
-- `prepare` - Create fresh datadir, drop caches, clean logs (before each run)
+- `setup` - Clean tmp datadir (once before all runs)
+- `prepare` - Copy snapshot, drop caches, clean logs (before each run)
 - `cleanup` - Clean tmp datadir (after all runs)
 - `conclude` - Collect flamegraph/logs (instrumented only)
 
@@ -194,6 +198,7 @@ GitHub Actions workflows call bench.py directly:
     nix develop --command python3 bench.py run \
       --benchmark-config bench/configs/pr.toml \
       --matrix-entry ${{ matrix.name }} \
+      --datadir $ORIGINAL_DATADIR \
       --tmp-datadir ${{ runner.temp }}/datadir \
       --output-dir ${{ runner.temp }}/output \
       pr:${{ runner.temp }}/binaries/pr/bitcoind

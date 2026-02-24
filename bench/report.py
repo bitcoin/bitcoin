@@ -295,7 +295,10 @@ class ReportGenerator:
         results = []
 
         if results_dir.exists():
-            for pr_dir in sorted(results_dir.iterdir()):
+            for pr_dir in sorted(
+                results_dir.iterdir(),
+                key=lambda d: int(d.name.replace("pr-", "")) if d.name.startswith("pr-") else 0,
+            ):
                 if pr_dir.is_dir() and pr_dir.name.startswith("pr-"):
                     pr_num = pr_dir.name.replace("pr-", "")
                     pr_runs = []
