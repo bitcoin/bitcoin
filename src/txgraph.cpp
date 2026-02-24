@@ -496,9 +496,8 @@ private:
         const auto& entry_a = m_entries[a];
         const auto& entry_b = m_entries[b];
         // Compare chunk feerates, and return result if it differs.
-        auto feerate_cmp = FeeRateCompare(entry_b.m_main_chunk_feerate, entry_a.m_main_chunk_feerate);
-        if (feerate_cmp < 0) return std::strong_ordering::less;
-        if (feerate_cmp > 0) return std::strong_ordering::greater;
+        auto feerate_cmp = ByRatio{entry_b.m_main_chunk_feerate} <=> ByRatio{entry_a.m_main_chunk_feerate};
+        if (feerate_cmp != 0) return feerate_cmp;
         // Compare equal-feerate chunk prefix size for comparing equal chunk feerates. This does two
         // things: it distinguishes equal-feerate chunks within the same cluster (because later
         // ones will always have a higher prefix size), and it may distinguish equal-feerate chunks
@@ -1100,7 +1099,7 @@ void GenericClusterImpl::Updated(TxGraphImpl& graph, int level, bool rename) noe
             Assume(chunk_count > 0);
             // Update equal_feerate_chunk_feerate to include this chunk, starting over when the
             // feerate changed.
-            if (chunk.feerate << equal_feerate_chunk_feerate) {
+            if (ByRatio{chunk.feerate} < ByRatio{equal_feerate_chunk_feerate}) {
                 equal_feerate_chunk_feerate = chunk.feerate;
             } else {
                 // Note that this is adding fees to fees, and sizes to sizes, so the overall
@@ -2828,8 +2827,8 @@ std::pair<std::vector<FeeFrac>, std::vector<FeeFrac>> TxGraphImpl::GetMainStagin
         }
     }
     // Sort both by decreasing feerate to obtain diagrams, and return them.
-    std::sort(main_feerates.begin(), main_feerates.end(), [](auto& a, auto& b) { return a > b; });
-    std::sort(staging_feerates.begin(), staging_feerates.end(), [](auto& a, auto& b) { return a > b; });
+    std::sort(main_feerates.begin(), main_feerates.end(), std::greater<ByRatioNegSize<FeeFrac>>{});
+    std::sort(staging_feerates.begin(), staging_feerates.end(), std::greater<ByRatioNegSize<FeeFrac>>{});
     return std::make_pair(std::move(main_feerates), std::move(staging_feerates));
 }
 
@@ -2875,10 +2874,10 @@ void GenericClusterImpl::SanityCheck(const TxGraphImpl& graph, int level) const
                 ++chunk_num;
                 assert(chunk_num < linchunking.size());
                 chunk_pos = 0;
-                if (linchunking[chunk_num].feerate << equal_feerate_prefix) {
+                if (ByRatio{linchunking[chunk_num].feerate} < ByRatio{equal_feerate_prefix}) {
                     equal_feerate_prefix = linchunking[chunk_num].feerate;
                 } else {
-                    assert(!(linchunking[chunk_num].feerate >> equal_feerate_prefix));
+                    assert(ByRatio{linchunking[chunk_num].feerate} == ByRatio{equal_feerate_prefix});
                     equal_feerate_prefix += linchunking[chunk_num].feerate;
                 }
             }
@@ -3103,7 +3102,7 @@ void TxGraphImpl::SanityCheck() const
         actual_chunkindex.insert(idx);
         auto chunk_feerate = m_entries[idx].m_main_chunk_feerate;
         if (!last_chunk_feerate.IsEmpty()) {
-            assert(FeeRateCompare(last_chunk_feerate, chunk_feerate) >= 0);
+            assert(ByRatio{last_chunk_feerate} >= ByRatio{FeeFrac{chunk_feerate}});
         }
         last_chunk_feerate = chunk_feerate;
     }
@@ -3338,7 +3337,7 @@ std::vector<TxGraph::Ref*> TxGraphImpl::Trim() noexcept
         // We do not need to sort by cluster or within clusters, because due to the implicit
         // dependency between consecutive linearization elements, no two transactions from the
         // same Cluster will ever simultaneously be in the heap.
-        return a->m_chunk_feerate < b->m_chunk_feerate;
+        return ByRatioNegSize{a->m_chunk_feerate} < ByRatioNegSize{b->m_chunk_feerate};
     };
 
     /** Given a TrimTxData entry, find the representative of the partition it is in. */

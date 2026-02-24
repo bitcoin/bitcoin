@@ -184,12 +184,12 @@ struct AncestorFeerateComparator
         auto min_feerate = [](const MiniMinerMempoolEntry& e) -> FeeFrac {
             FeeFrac self_feerate(e.GetModifiedFee(), e.GetTxSize());
             FeeFrac ancestor_feerate(e.GetModFeesWithAncestors(), e.GetSizeWithAncestors());
-            return std::min(ancestor_feerate, self_feerate);
+            return std::min<ByRatioNegSize<FeeFrac>>(ancestor_feerate, self_feerate);
         };
         FeeFrac a_feerate{min_feerate(a->second)};
         FeeFrac b_feerate{min_feerate(b->second)};
         if (a_feerate != b_feerate) {
-            return a_feerate > b_feerate;
+            return ByRatioNegSize{a_feerate} > ByRatioNegSize{b_feerate};
         }
         // Use txid as tiebreaker for stable sorting
         return a->first < b->first;

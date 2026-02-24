@@ -164,7 +164,7 @@ class TxOrphanageImpl final : public TxOrphanage {
             assert(max_peer_memory > 0);
             const FeeFrac latency_score(m_total_latency_score, max_peer_latency_score);
             const FeeFrac mem_score(m_total_usage, max_peer_memory);
-            return std::max<FeeFrac>(latency_score, mem_score);
+            return std::max<ByRatioNegSize<FeeFrac>>(latency_score, mem_score);
         }
     };
     /** Store per-peer statistics. Used to determine each peer's DoS score. The size of this map is used to determine the
@@ -457,12 +457,18 @@ void TxOrphanageImpl::LimitOrphans()
     for (const auto& [nodeid, entry] : m_peer_orphanage_info) {
         // Performance optimization: only consider peers with a DoS score > 1.
         const auto dos_score = entry.GetDosScore(max_lat, max_mem);
-        if (dos_score >> FeeFrac{1, 1}) {
+        if (ByRatio{dos_score} > ByRatio{FeeFrac{1, 1}}) {
             heap_peer_dos.emplace_back(nodeid, dos_score);
         }
     }
     static constexpr auto compare_score = [](const auto& left, const auto& right) {
-        if (left.second != right.second) return left.second < right.second;
+        if (left.second != right.second) {
+            // Note: if ratios are the same, this tiebreaks by denominator. In practice, since the
+            // latency denominator (number of announcements and inputs) is always lower, this means
+            // that a peer with only high latency scores will be targeted before a peer using a lot
+            // of memory, even if they have the same ratios.
+            return ByRatioNegSize{left.second} < ByRatioNegSize{right.second};
+        }
         // Tiebreak by considering the more recent peer (higher NodeId) to be worse.
         return left.first < right.first;
     };
@@ -472,9 +478,6 @@ void TxOrphanageImpl::LimitOrphans()
     // This outer loop finds the peer with the highest DoS score, which is a fraction of memory and latency scores
     // over the respective allowances. We continue until the orphanage is within global limits. That means some peers
     // might still have a DoS score > 1 at the end.
-    // Note: if ratios are the same, FeeFrac tiebreaks by denominator. In practice, since the latency denominator (number of
-    // announcements and inputs) is always lower, this means that a peer with only high latency scores will be targeted
-    // before a peer using a lot of memory, even if they have the same ratios.
     do {
         Assume(!heap_peer_dos.empty());
         // This is a max-heap, so the worst peer is at the front. pop_heap()
@@ -484,7 +487,7 @@ void TxOrphanageImpl::LimitOrphans()
         heap_peer_dos.pop_back();
 
         // If needs trim, then at least one peer has a DoS score higher than 1.
-        Assume(dos_score >> (FeeFrac{1, 1}));
+        Assume(ByRatio{dos_score} > ByRatio{FeeFrac(1, 1)});
 
         auto it_worst_peer = m_peer_orphanage_info.find(worst_peer);
 
@@ -506,7 +509,8 @@ void TxOrphanageImpl::LimitOrphans()
 
             // If we erased the last orphan from this peer, it_worst_peer will be invalidated.
             it_worst_peer = m_peer_orphanage_info.find(worst_peer);
-            if (it_worst_peer == m_peer_orphanage_info.end() || it_worst_peer->second.GetDosScore(max_lat, max_mem) <= dos_threshold) break;
+            if (it_worst_peer == m_peer_orphanage_info.end() ||
+                ByRatioNegSize{it_worst_peer->second.GetDosScore(max_lat, max_mem)} <= ByRatioNegSize{dos_threshold}) break;
         }
         LogDebug(BCLog::TXPACKAGES, "peer=%d orphanage overflow, removed %u of %u announcements\n", worst_peer, num_erased_this_round, starting_num_ann);
 

@@ -70,40 +70,40 @@ BOOST_AUTO_TEST_CASE(feefrac_operators)
     BOOST_CHECK(p1 + p3 == p4);
 
     // Fee-rate comparison
-    BOOST_CHECK(p1 > p2);
-    BOOST_CHECK(p1 >= p2);
-    BOOST_CHECK(p1 >= p4-p3);
-    BOOST_CHECK(!(p1 >> p3)); // not strictly better
-    BOOST_CHECK(p1 >> p2); // strictly greater feerate
+    BOOST_CHECK(ByRatioNegSize{p1} > ByRatioNegSize{p2});
+    BOOST_CHECK(ByRatioNegSize{p1} >= ByRatioNegSize{p2});
+    BOOST_CHECK(ByRatioNegSize{p1} >= ByRatioNegSize{p4-p3});
+    BOOST_CHECK(!(ByRatio{p1} > ByRatio{p3})); // not strictly better
+    BOOST_CHECK(ByRatio{p1} > ByRatio{p2}); // strictly greater feerate
 
-    BOOST_CHECK(p2 < p1);
-    BOOST_CHECK(p2 <= p1);
-    BOOST_CHECK(p1 <= p4-p3);
-    BOOST_CHECK(!(p3 << p1)); // not strictly worse
-    BOOST_CHECK(p2 << p1); // strictly lower feerate
+    BOOST_CHECK(ByRatioNegSize{p2} < ByRatioNegSize{p1});
+    BOOST_CHECK(ByRatioNegSize{p2} <= ByRatioNegSize{p1});
+    BOOST_CHECK(ByRatioNegSize{p1} <= ByRatioNegSize{p4-p3});
+    BOOST_CHECK(!(ByRatio{p3} < ByRatio{p1})); // not strictly worse
+    BOOST_CHECK(ByRatio{p2} < ByRatio{p1}); // strictly lower feerate
 
     // "empty" comparisons
-    BOOST_CHECK(!(p1 >> empty)); // << will always result in false
-    BOOST_CHECK(!(p1 << empty));
-    BOOST_CHECK(!(empty >> empty));
-    BOOST_CHECK(!(empty << empty));
+    BOOST_CHECK(!(ByRatio{p1} > ByRatio{empty})); // << will always result in false
+    BOOST_CHECK(!(ByRatio{p1} < ByRatio{empty}));
+    BOOST_CHECK(!(ByRatio{empty} > ByRatio{empty}));
+    BOOST_CHECK(!(ByRatio{empty} < ByRatio{empty}));
 
     // empty is always bigger than everything else
-    BOOST_CHECK(empty > p1);
-    BOOST_CHECK(empty > p2);
-    BOOST_CHECK(empty > p3);
-    BOOST_CHECK(empty >= p1);
-    BOOST_CHECK(empty >= p2);
-    BOOST_CHECK(empty >= p3);
+    BOOST_CHECK(ByRatioNegSize{empty} > ByRatioNegSize{p1});
+    BOOST_CHECK(ByRatioNegSize{empty} > ByRatioNegSize{p2});
+    BOOST_CHECK(ByRatioNegSize{empty} > ByRatioNegSize{p3});
+    BOOST_CHECK(ByRatioNegSize{empty} >= ByRatioNegSize{p1});
+    BOOST_CHECK(ByRatioNegSize{empty} >= ByRatioNegSize{p2});
+    BOOST_CHECK(ByRatioNegSize{empty} >= ByRatioNegSize{p3});
 
     // check "max" values for comparison
     FeeFrac oversized_1{4611686000000, 4000000};
     FeeFrac oversized_2{184467440000000, 100000};
 
-    BOOST_CHECK(oversized_1 < oversized_2);
-    BOOST_CHECK(oversized_1 <= oversized_2);
-    BOOST_CHECK(oversized_1 << oversized_2);
-    BOOST_CHECK(oversized_1 != oversized_2);
+    BOOST_CHECK(ByRatioNegSize{oversized_1} < ByRatioNegSize{oversized_2});
+    BOOST_CHECK(ByRatioNegSize{oversized_1} <= ByRatioNegSize{oversized_2});
+    BOOST_CHECK(ByRatio{oversized_1} < ByRatio{oversized_2});
+    BOOST_CHECK(ByRatioNegSize{oversized_1} != ByRatioNegSize{oversized_2});
 
     BOOST_CHECK_EQUAL(oversized_1.EvaluateFeeDown(0), 0);
     BOOST_CHECK_EQUAL(oversized_1.EvaluateFeeDown(1), 1152921);
@@ -124,13 +124,13 @@ BOOST_AUTO_TEST_CASE(feefrac_operators)
 
     // Tests paths that use double arithmetic
     FeeFrac busted{(static_cast<int64_t>(INT32_MAX)) + 1, INT32_MAX};
-    BOOST_CHECK(!(busted < busted));
+    BOOST_CHECK(!(ByRatioNegSize{busted} < ByRatioNegSize{busted}));
 
     FeeFrac max_fee{2100000000000000, INT32_MAX};
-    BOOST_CHECK(!(max_fee < max_fee));
-    BOOST_CHECK(!(max_fee > max_fee));
-    BOOST_CHECK(max_fee <= max_fee);
-    BOOST_CHECK(max_fee >= max_fee);
+    BOOST_CHECK(!(ByRatioNegSize{max_fee} < ByRatioNegSize{max_fee}));
+    BOOST_CHECK(!(ByRatioNegSize{max_fee} > ByRatioNegSize{max_fee}));
+    BOOST_CHECK(ByRatioNegSize{max_fee} <= ByRatioNegSize{max_fee});
+    BOOST_CHECK(ByRatioNegSize{max_fee} >= ByRatioNegSize{max_fee});
 
     BOOST_CHECK_EQUAL(max_fee.EvaluateFeeDown(0), 0);
     BOOST_CHECK_EQUAL(max_fee.EvaluateFeeDown(1), 977888);
@@ -146,7 +146,7 @@ BOOST_AUTO_TEST_CASE(feefrac_operators)
     BOOST_CHECK_EQUAL(max_fee.EvaluateFeeUp(INT32_MAX), 2100000000000000);
 
     FeeFrac max_fee2{1, 1};
-    BOOST_CHECK(max_fee >= max_fee2);
+    BOOST_CHECK(ByRatioNegSize{max_fee} >= ByRatioNegSize{max_fee2});
 
     // Test for integer overflow issue (https://github.com/bitcoin/bitcoin/issues/32294)
     BOOST_CHECK_EQUAL((FeeFrac{0x7ffffffdfffffffb, 0x7ffffffd}.EvaluateFeeDown(0x7fffffff)), 0x7fffffffffffffff);
