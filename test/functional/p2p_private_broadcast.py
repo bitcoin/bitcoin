@@ -7,7 +7,6 @@ Test how locally submitted transactions are sent to the network when private bro
 """
 
 import time
-import threading
 
 from test_framework.p2p import (
     P2PDataStore,
@@ -23,14 +22,7 @@ from test_framework.messages import (
     msg_inv,
     msg_tx,
 )
-from test_framework.netutil import (
-    format_addr_port
-)
 from test_framework.script_util import build_malleated_tx_package
-from test_framework.socks5 import (
-    Socks5Configuration,
-    Socks5Server,
-)
 from test_framework.test_framework import (
     BitcoinTestFramework,
 )
@@ -39,7 +31,6 @@ from test_framework.util import (
     assert_greater_than_or_equal,
     assert_not_equal,
     assert_raises_rpc_error,
-    p2p_port,
     tor_port,
 )
 from test_framework.wallet import (
@@ -164,79 +155,32 @@ ADDRMAN_ADDRESSES = [
 
 class P2PPrivateBroadcast(BitcoinTestFramework):
     def set_test_params(self):
-        self.disable_autoconnect = False
+        self.auto_outbound_mode = True
         self.num_nodes = 2
 
-    def setup_nodes(self):
-        # Start a SOCKS5 proxy server.
-        socks5_server_config = Socks5Configuration()
-        # self.nodes[0] listens on p2p_port(0),
-        # self.nodes[1] listens on p2p_port(1),
-        # thus we tell the SOCKS5 server to listen on p2p_port(self.num_nodes) (self.num_nodes is 2)
-        socks5_server_config.addr = ("127.0.0.1", p2p_port(self.num_nodes))
-        socks5_server_config.unauth = True
-        socks5_server_config.auth = True
-
-        self.socks5_server = Socks5Server(socks5_server_config)
-        self.socks5_server.start()
-
-        self.destinations = []
-
-        self.destinations_lock = threading.Lock()
-
-        def destinations_factory(requested_to_addr, requested_to_port):
-            with self.destinations_lock:
-                i = len(self.destinations)
+        def custom_auto_outbound_factory(i):
+            if i == NUM_INITIAL_CONNECTIONS:
+                # Redirect the first private broadcast connection from nodes[0] to nodes[1]
+                return ("127.0.0.1", tor_port(1), None)
+            else:
+                # The first outbound connection is used later to serve GETDATA,
+                # thus make it P2PDataStore().
+                listener = P2PDataStore() if i == 0 else P2PInterface()
                 actual_to_addr = ""
                 actual_to_port = 0
-                listener = None
-                if i == NUM_INITIAL_CONNECTIONS:
-                    # Instruct the SOCKS5 server to redirect the first private
-                    # broadcast connection from nodes[0] to nodes[1]
-                    actual_to_addr = "127.0.0.1" # nodes[1] listen address
-                    actual_to_port = tor_port(1) # nodes[1] listen port for Tor
-                    self.log.debug(f"Instructing the SOCKS5 proxy to redirect connection i={i} to "
-                                   f"{format_addr_port(actual_to_addr, actual_to_port)} (nodes[1])")
-                else:
-                    # Create a Python P2P listening node and instruct the SOCKS5 proxy to
-                    # redirect the connection to it. The first outbound connection is used
-                    # later to serve GETDATA, thus make it P2PDataStore().
-                    listener = P2PDataStore() if i == 0 else P2PInterface()
-                    listener.peer_connect_helper(dstaddr="0.0.0.0", dstport=0, net=self.chain, timeout_factor=self.options.timeout_factor)
-                    listener.peer_connect_send_version(services=P2P_SERVICES)
+                listener.peer_connect_helper(dstaddr="0.0.0.0", dstport=0, net=self.chain, timeout_factor=self.options.timeout_factor)
+                listener.peer_connect_send_version(services=P2P_SERVICES)
+                def on_listen_done(addr, port):
+                    nonlocal actual_to_addr, actual_to_port
+                    actual_to_addr = addr
+                    actual_to_port = port
+                self.network_thread.listen(addr="127.0.0.1", port=0, p2p=listener, callback=on_listen_done)
+                self.wait_until(lambda: actual_to_port != 0)
+                return (actual_to_addr, actual_to_port, listener)
 
-                    def on_listen_done(addr, port):
-                        nonlocal actual_to_addr
-                        nonlocal actual_to_port
-                        actual_to_addr = addr
-                        actual_to_port = port
+        self.auto_outbound_factory = custom_auto_outbound_factory
 
-                    # Use port=0 to let the OS assign an available port. This
-                    # avoids "address already in use" errors when tests run
-                    # concurrently or ports are still in TIME_WAIT state.
-                    self.network_thread.listen(
-                        addr="127.0.0.1",
-                        port=0,
-                        p2p=listener,
-                        callback=on_listen_done)
-                    # Wait until the callback has been called.
-                    self.wait_until(lambda: actual_to_port != 0)
-                    self.log.debug(f"Instructing the SOCKS5 proxy to redirect connection i={i} to "
-                                   f"{format_addr_port(actual_to_addr, actual_to_port)} (a Python node)")
-
-                self.destinations.append({
-                    "requested_to": format_addr_port(requested_to_addr, requested_to_port),
-                    "node": listener,
-                })
-                assert_equal(len(self.destinations), i + 1)
-
-                return {
-                    "actual_to_addr": actual_to_addr,
-                    "actual_to_port": actual_to_port,
-                }
-
-        self.socks5_server.conf.destinations_factory = destinations_factory
-
+    def setup_nodes(self):
         self.extra_args = [
             [
                 # Needed to be able to add CJDNS addresses to addrman (otherwise they are unroutable).
@@ -246,7 +190,6 @@ class P2PPrivateBroadcast(BitcoinTestFramework):
                 "-v2transport=0",
                 "-test=addrman",
                 "-privatebroadcast",
-                f"-proxy={socks5_server_config.addr[0]}:{socks5_server_config.addr[1]}",
                 # To increase coverage, make it think that the I2P network is reachable so that it
                 # selects such addresses as well. Pick a proxy address where nobody is listening
                 # and connection attempts fail quickly.
@@ -270,8 +213,8 @@ class P2PPrivateBroadcast(BitcoinTestFramework):
             self.log.debug(f"{label}: waiting for outbound connection i={i}")
             # At this point the connection may not yet have been established (A),
             # may be active (B), or may have already been closed (C).
-            self.wait_until(lambda: len(self.destinations) > i)
-            dest = self.destinations[i]
+            self.wait_until(lambda: len(self.auto_outbound_destinations) > i)
+            dest = self.auto_outbound_destinations[i]
             peer = dest["node"]
             peer.wait_until(lambda: peer.message_count["version"] == 1, check_connected=False)
             # Now it is either (B) or (C).
@@ -325,7 +268,7 @@ class P2PPrivateBroadcast(BitcoinTestFramework):
             if not res["success"]:
                 self.log.debug(f"Could not add {addr} to tx_originator's addrman (collision?)")
 
-        self.wait_until(lambda: len(self.destinations) == NUM_INITIAL_CONNECTIONS)
+        self.wait_until(lambda: len(self.auto_outbound_destinations) == NUM_INITIAL_CONNECTIONS)
 
         # The next opened connection by tx_originator should be "private broadcast"
         # for sending the transaction. The SOCKS5 proxy should redirect it to tx_receiver.
@@ -365,7 +308,7 @@ class P2PPrivateBroadcast(BitcoinTestFramework):
         inv = CInv(MSG_WTX, wtxid_int)
 
         self.log.info("Sending INV and waiting for GETDATA from node")
-        tx_returner = self.destinations[0]["node"] # Will return the transaction back to the originator.
+        tx_returner = self.auto_outbound_destinations[0]["node"] # Will return the transaction back to the originator.
         tx_returner.tx_store[wtxid_int] = txs[0]["tx"]
         assert "getdata" not in tx_returner.last_message
         received_back_msg = f"Received our privately broadcast transaction (txid={txs[0]['txid']}) from the network"
@@ -375,7 +318,7 @@ class P2PPrivateBroadcast(BitcoinTestFramework):
             self.wait_until(lambda: len(tx_originator.getrawmempool()) > 0)
 
         self.log.info("Waiting for normal broadcast to another peer")
-        self.destinations[1]["node"].wait_for_inv([inv])
+        self.auto_outbound_destinations[1]["node"].wait_for_inv([inv])
 
         self.log.info("Checking getprivatebroadcastinfo no longer reports the transaction after it is received back")
         pbinfo = tx_originator.getprivatebroadcastinfo()
@@ -383,12 +326,12 @@ class P2PPrivateBroadcast(BitcoinTestFramework):
         assert_equal(len(pending), 0)
 
         self.log.info("Sending a transaction that is already in the mempool")
-        skip_destinations = len(self.destinations)
+        skip_destinations = len(self.auto_outbound_destinations)
         tx_originator.sendrawtransaction(hexstring=txs[0]["hex"], maxfeerate=0)
         self.check_broadcasts("Broadcast of mempool transaction", txs[0], NUM_PRIVATE_BROADCAST_PER_TX, skip_destinations)
 
         self.log.info("Sending a transaction with a dependency in the mempool")
-        skip_destinations = len(self.destinations)
+        skip_destinations = len(self.auto_outbound_destinations)
         tx_originator.sendrawtransaction(hexstring=txs[1]["hex"], maxfeerate=0.1)
         self.check_broadcasts("Dependency in mempool", txs[1], NUM_PRIVATE_BROADCAST_PER_TX, skip_destinations)
 
@@ -405,7 +348,7 @@ class P2PPrivateBroadcast(BitcoinTestFramework):
         # NextTxBroadcast() in net_processing.cpp.
         self.log.info("Checking that rebroadcast works")
         delta = 20 * 60 # 20min
-        skip_destinations = len(self.destinations)
+        skip_destinations = len(self.auto_outbound_destinations)
         rebroadcast_msg = f"Reattempting broadcast of stale txid={txs[1]['txid']}"
         with tx_originator.busy_wait_for_debug_log(expected_msgs=[rebroadcast_msg.encode()]):
             tx_originator.setmocktime(int(time.time()) + delta)
