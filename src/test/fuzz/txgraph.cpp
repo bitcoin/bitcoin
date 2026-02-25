@@ -16,6 +16,7 @@
 #include <iterator>
 #include <map>
 #include <memory>
+#include <ranges>
 #include <set>
 #include <utility>
 
@@ -433,7 +434,7 @@ FUZZ_TARGET(txgraph)
         assert(num_tx == sim.GetTransactionCount());
         // Sort by feerate only, since violating topological constraints within same-feerate
         // chunks won't affect diagram comparisons.
-        std::sort(chunk_feerates.begin(), chunk_feerates.end(), std::greater<ByRatioNegSize<FeeFrac>>{});
+        std::ranges::sort(chunk_feerates, std::greater<ByRatioNegSize<FeeFrac>>{});
         return chunk_feerates;
     };
 
@@ -1006,7 +1007,7 @@ FUZZ_TARGET(txgraph)
                     for (auto i : cluster) sizes.push_back(top_sim.graph.FeeRate(i).size);
                     auto sum_sizes = std::accumulate(sizes.begin(), sizes.end(), uint64_t{0});
                     // Sort from large to small.
-                    std::sort(sizes.begin(), sizes.end(), std::greater{});
+                    std::ranges::sort(sizes, std::greater{});
                     // In the worst case, only the smallest transactions are removed.
                     while (sizes.size() > max_cluster_count || sum_sizes > max_cluster_size) {
                         sum_sizes -= sizes.back();
@@ -1075,8 +1076,8 @@ FUZZ_TARGET(txgraph)
         auto cmp = [&](SimTxGraph::Pos a, SimTxGraph::Pos b) noexcept {
             return real->CompareMainOrder(*sims[0].GetRef(a), *sims[0].GetRef(b)) < 0;
         };
-        std::sort(vec1.begin(), vec1.end(), cmp);
-        std::sort(vec2.begin(), vec2.end(), cmp);
+        std::ranges::sort(vec1, cmp);
+        std::ranges::sort(vec2, cmp);
 
         // Verify the resulting orderings are identical. This could only fail if the ordering was
         // not total.
@@ -1199,7 +1200,7 @@ FUZZ_TARGET(txgraph)
                 auto cmp_redo = [&](SimTxGraph::Pos a, SimTxGraph::Pos b) noexcept {
                     return real_redo->CompareMainOrder(*txobjects_redo[a], *txobjects_redo[b]) < 0;
                 };
-                std::sort(vec_redo.begin(), vec_redo.end(), cmp_redo);
+                std::ranges::sort(vec_redo, cmp_redo);
                 // Compare with the ordering we got from real.
                 assert(vec1 == vec_redo);
             }
@@ -1274,8 +1275,8 @@ FUZZ_TARGET(txgraph)
             // std::set_difference can be used on them below. The exact ordering does not matter
             // here, but it has to be consistent with the one used in main_real_diagram and
             // stage_real_diagram).
-            std::sort(main_cmp_diagram.begin(), main_cmp_diagram.end(), std::greater<ByRatioNegSize<FeeFrac>>{});
-            std::sort(stage_cmp_diagram.begin(), stage_cmp_diagram.end(), std::greater<ByRatioNegSize<FeeFrac>>{});
+            std::ranges::sort(main_cmp_diagram, std::greater<ByRatioNegSize<FeeFrac>>{});
+            std::ranges::sort(stage_cmp_diagram, std::greater<ByRatioNegSize<FeeFrac>>{});
             // Find the chunks that appear in main_diagram but are missing from main_cmp_diagram.
             // This is allowed, because GetMainStagingDiagrams omits clusters in main unaffected
             // by staging.

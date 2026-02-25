@@ -9,6 +9,7 @@
 #include <cstdint>
 #include <numeric>
 #include <optional>
+#include <ranges>
 #include <utility>
 #include <vector>
 
@@ -316,7 +317,7 @@ public:
     {
         DepGraphIndex old_len = list.size();
         for (auto i : select) list.push_back(i);
-        std::sort(list.begin() + old_len, list.end(), [&](DepGraphIndex a, DepGraphIndex b) noexcept {
+        std::ranges::sort(std::span{list}.subspan(old_len), [&](DepGraphIndex a, DepGraphIndex b) noexcept {
             const auto a_anc_count = entries[a].ancestors.Count();
             const auto b_anc_count = entries[b].ancestors.Count();
             if (a_anc_count != b_anc_count) return a_anc_count < b_anc_count;
@@ -1618,7 +1619,7 @@ public:
         for (auto chunk_idx : m_chunk_idxs) {
             ret.push_back(m_set_info[chunk_idx].feerate);
         }
-        std::sort(ret.begin(), ret.end(), std::greater<ByRatioNegSize<FeeFrac>>{});
+        std::ranges::sort(ret, std::greater<ByRatioNegSize<FeeFrac>>{});
         return ret;
     }
 
@@ -1647,8 +1648,8 @@ public:
                 }
             }
         }
-        std::sort(expected_dependencies.begin(), expected_dependencies.end());
-        std::sort(all_dependencies.begin(), all_dependencies.end());
+        std::ranges::sort(expected_dependencies);
+        std::ranges::sort(all_dependencies);
         assert(expected_dependencies == all_dependencies);
 
         //
