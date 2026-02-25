@@ -25,8 +25,6 @@
 #include <malloc.h>
 #endif
 
-#include <algorithm>
-#include <cstddef>
 #include <cstdint>
 #include <cstdlib>
 #include <locale>
@@ -111,20 +109,17 @@ int GetNumCores()
     return std::thread::hardware_concurrency();
 }
 
-std::optional<size_t> TryGetTotalRam()
+std::optional<uint64_t> TryGetTotalRam()
 {
-    [[maybe_unused]] auto clamp{[](uint64_t v) { return size_t(std::min(v, uint64_t{std::numeric_limits<size_t>::max()})); }};
+    static const auto total_ram{[]() -> std::optional<uint64_t> {
 #ifdef WIN32
-    if (MEMORYSTATUSEX m{}; (m.dwLength = sizeof(m), GlobalMemoryStatusEx(&m))) return clamp(m.ullTotalPhys);
-#elif defined(__APPLE__) || \
-      defined(__FreeBSD__) || \
-      defined(__NetBSD__) || \
-      defined(__OpenBSD__) || \
-      defined(__illumos__) || \
-      defined(__linux__)
-    if (long p{sysconf(_SC_PHYS_PAGES)}, s{sysconf(_SC_PAGESIZE)}; p > 0 && s > 0) return clamp(1ULL * p * s);
+        if (MEMORYSTATUSEX m{}; (m.dwLength = sizeof(m), GlobalMemoryStatusEx(&m))) return m.ullTotalPhys;
+#elif defined(__APPLE__) || defined(__FreeBSD__) || defined(__NetBSD__) || defined(__OpenBSD__) || defined(__illumos__) || defined(__linux__)
+        if (long p{sysconf(_SC_PHYS_PAGES)}, s{sysconf(_SC_PAGESIZE)}; p > 0 && s > 0) return 1ULL * p * s;
 #endif
-    return std::nullopt;
+        return std::nullopt;
+    }()};
+    return total_ram;
 }
 
 namespace {
