@@ -147,10 +147,8 @@ bool BaseIndex::Init()
     return true;
 }
 
-static const CBlockIndex* NextSyncBlock(const CBlockIndex* pindex_prev, CChain& chain) EXCLUSIVE_LOCKS_REQUIRED(cs_main)
+static const CBlockIndex* NextSyncBlock(const CBlockIndex* pindex_prev, CChain& chain)
 {
-    AssertLockHeld(cs_main);
-
     if (!pindex_prev) {
         return chain.Genesis();
     }
@@ -216,7 +214,7 @@ void BaseIndex::Sync()
                 return;
             }
 
-            const CBlockIndex* pindex_next = WITH_LOCK(cs_main, return NextSyncBlock(pindex, m_chainstate->m_chain));
+            const CBlockIndex* pindex_next = NextSyncBlock(pindex, m_chainstate->m_chain);
             // If pindex_next is null, it means pindex is the chain tip, so
             // commit data indexed so far.
             if (!pindex_next) {
