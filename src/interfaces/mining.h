@@ -60,17 +60,15 @@ public:
      * @param[in] timestamp time block header field (unix timestamp)
      * @param[in] nonce nonce block header field
      * @param[in] coinbase complete coinbase transaction (including witness)
+     * @param[out] reason failure reason (BIP22)
+     * @param[out] debug  more detailed rejection reason
      *
      * @note unlike the submitblock RPC, this method does NOT add the
      *       coinbase witness automatically.
      *
-     * @returns if the block was processed, does not necessarily indicate validity.
-     *
-     * @note Returns true if the block is already known, which can happen if
-     *       the solved block is constructed and broadcast by multiple nodes
-     *       (e.g. both the miner who constructed the template and the pool).
+     * @returns true if the block was accepted as a new block
      */
-    virtual bool submitSolution(uint32_t version, uint32_t timestamp, uint32_t nonce, CTransactionRef coinbase) = 0;
+    virtual bool submitSolution(uint32_t version, uint32_t timestamp, uint32_t nonce, CTransactionRef coinbase, std::string& reason, std::string& debug) = 0;
 
     /**
      * Waits for fees in the next block to rise, a new tip or the timeout.

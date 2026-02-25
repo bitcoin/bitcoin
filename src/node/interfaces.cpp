@@ -929,11 +929,32 @@ public:
         return TransactionMerklePath(m_block_template->block, 0);
     }
 
-    bool submitSolution(uint32_t version, uint32_t timestamp, uint32_t nonce, CTransactionRef coinbase) override
+    bool submitSolution(uint32_t version, uint32_t timestamp, uint32_t nonce, CTransactionRef coinbase, std::string& reason, std::string& debug) override
     {
+        reason.clear();
+        debug.clear();
+
         AddMerkleRootAndCoinbase(m_block_template->block, std::move(coinbase), version, timestamp, nonce);
+        auto blockptr = std::make_shared<const CBlock>(m_block_template->block);
+
+        bool new_block;
         std::shared_ptr<SubmitBlockStateCatcher> sc;
-        return ProcessBlock(chainman(), std::make_shared<const CBlock>(m_block_template->block), /*new_block=*/nullptr, sc);
+        bool accepted = ProcessBlock(chainman(), blockptr, &new_block, sc);
+
+        if (!new_block && accepted) {
+            reason = "duplicate";
+            return false;
+        }
+        if (!sc->found) {
+            reason = "inconclusive";
+            return false;
+        }
+        if (!sc->state.IsValid()) {
+            reason = sc->state.GetRejectReason();
+            debug = sc->state.GetDebugMessage();
+            return false;
+        }
+        return true;
     }
 
     std::unique_ptr<BlockTemplate> waitNext(BlockWaitOptions options) override
