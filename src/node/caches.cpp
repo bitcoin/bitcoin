@@ -5,7 +5,7 @@
 #include <node/caches.h>
 
 #include <common/args.h>
-#include <common/system.h>
+#include <common/system_ram.h>
 #include <index/txindex.h>
 #include <index/txospenderindex.h>
 #include <kernel/caches.h>
