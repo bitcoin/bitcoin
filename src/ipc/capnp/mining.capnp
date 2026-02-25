@@ -36,9 +36,12 @@ interface BlockTemplate $Proxy.wrap("interfaces::BlockTemplate") {
     getTxSigops @4 (context: Proxy.Context) -> (result: List(Int64));
     getCoinbaseTx @5 (context: Proxy.Context) -> (result: CoinbaseTx);
     getCoinbaseMerklePath @6 (context: Proxy.Context) -> (result: List(Data));
-    submitSolution @7 (context: Proxy.Context, version: UInt32, timestamp: UInt32, nonce: UInt32, coinbase :Data) -> (result: Bool);
+    submitSolution @10 (context: Proxy.Context, version: UInt32, timestamp: UInt32, nonce: UInt32, coinbase :Data) -> (reason: Text, debug: Text, result: Bool);
     waitNext @8 (context: Proxy.Context, options: BlockWaitOptions) -> (result: BlockTemplate);
     interruptWait @9() -> ();
+
+    # DEPRECATED: older version of submitSolution which returns an error.
+    submitSolutionOld7 @7 (context: Proxy.Context, version: UInt32, timestamp: UInt32, nonce: UInt32, coinbase :Data) -> (result: Bool);
 }
 
 struct BlockCreateOptions $Proxy.wrap("node::BlockCreateOptions") {

@@ -16,6 +16,7 @@
 #include <cstdint>
 #include <memory>
 #include <optional>
+#include <stdexcept>
 #include <string>
 #include <vector>
 
@@ -59,6 +60,8 @@ public:
      * @param[in] timestamp time block header field (unix timestamp)
      * @param[in] nonce nonce block header field
      * @param[in] coinbase complete coinbase transaction (including witness)
+     * @param[out] reason failure reason (BIP22)
+     * @param[out] debug  more detailed rejection reason
      *
      * @note Unlike the submitblock RPC, this method does not call
      *       UpdateUncommittedBlockStructures to add a missing coinbase witness
@@ -69,13 +72,16 @@ public:
      *       is only one byte long, so the coinbase scriptSig needs at least
      *       one additional byte of data to avoid bad-cb-length.
      *
-     * @returns if the block was processed, does not necessarily indicate validity.
-     *
-     * @note Returns true if the block is already known, which can happen if
-     *       the solved block is constructed and broadcast by multiple nodes
-     *       (e.g. both the miner who constructed the template and the pool).
+     * @returns true if the block was accepted as a new block
      */
-    virtual bool submitSolution(uint32_t version, uint32_t timestamp, uint32_t nonce, CTransactionRef coinbase) = 0;
+    virtual bool submitSolution(uint32_t version, uint32_t timestamp, uint32_t nonce, CTransactionRef coinbase, std::string& reason, std::string& debug) = 0;
+
+    //! Deprecated older method preserved to return an explicit error for IPC
+    //! clients using mining.capnp @7.
+    virtual bool submitSolutionOld7(uint32_t, uint32_t, uint32_t, CTransactionRef)
+    {
+        throw std::runtime_error("Old submitSolution (@7) not supported. Please update your client!");
+    }
 
     /**
      * Waits for fees in the next block to rise, a new tip or the timeout.

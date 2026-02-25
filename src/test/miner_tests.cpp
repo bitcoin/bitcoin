@@ -860,9 +860,9 @@ BOOST_AUTO_TEST_CASE(CreateNewBlock_validity)
         }
         // Alternate calls between submitBlock and submitSolution via the
         // Mining interface.
+        std::string reason{"stale reason"};
+        std::string debug{"stale debug"};
         if (current_height % 2 == 0) {
-            std::string reason{"stale reason"};
-            std::string debug{"stale debug"};
             BOOST_REQUIRE(mining->submitBlock(block, reason, debug));
             BOOST_REQUIRE_EQUAL(reason, "");
             BOOST_REQUIRE_EQUAL(debug, "");
@@ -873,7 +873,14 @@ BOOST_AUTO_TEST_CASE(CreateNewBlock_validity)
             BOOST_REQUIRE_EQUAL(reason, "duplicate");
             BOOST_REQUIRE_EQUAL(debug, "");
         } else {
-            BOOST_REQUIRE(block_template->submitSolution(block.nVersion, block.nTime, block.nNonce, MakeTransactionRef(txCoinbase)));
+            reason = "stale reason";
+            debug = "stale debug";
+            BOOST_REQUIRE(block_template->submitSolution(block.nVersion, block.nTime, block.nNonce, MakeTransactionRef(txCoinbase), reason, debug));
+            BOOST_REQUIRE_EQUAL(reason, "");
+            BOOST_REQUIRE_EQUAL(debug, "");
+            BOOST_CHECK_THROW(block_template->submitSolutionOld7(block.nVersion, block.nTime, block.nNonce,
+                                                                 MakeTransactionRef(txCoinbase)),
+                              std::runtime_error);
         }
         {
             LOCK(cs_main);
