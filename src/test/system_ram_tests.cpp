@@ -14,7 +14,7 @@ BOOST_AUTO_TEST_SUITE(system_ram_tests)
 
 BOOST_AUTO_TEST_CASE(total_ram)
 {
-    const auto total{GetTotalRAM()};
+    const auto total{TryGetTotalRam()};
     if (!total) {
         BOOST_WARN_MESSAGE(false, "skipping total_ram: total RAM unknown");
         return;

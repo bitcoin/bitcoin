@@ -12,6 +12,6 @@
 /**
  * Return the total RAM available on the current system, if detectable.
  */
-std::optional<size_t> GetTotalRAM();
+std::optional<size_t> TryGetTotalRam();
 
 #endif // BITCOIN_COMMON_SYSTEM_RAM_H

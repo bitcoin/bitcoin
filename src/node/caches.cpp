@@ -36,7 +36,7 @@ namespace node {
 size_t GetDefaultDBCache()
 {
     if constexpr (sizeof(void*) >= 8) {
-        if (GetTotalRAM().value_or(0) >= HIGH_DEFAULT_DBCACHE_MIN_TOTAL_RAM) {
+        if (TryGetTotalRam().value_or(0) >= HIGH_DEFAULT_DBCACHE_MIN_TOTAL_RAM) {
             return HIGH_DEFAULT_DBCACHE;
         }
     }
@@ -73,7 +73,7 @@ CacheSizes CalculateCacheSizes(const ArgsManager& args, size_t n_indexes)
 
 void LogOversizedDbCache(const ArgsManager& args) noexcept
 {
-    if (const auto total_ram{GetTotalRAM()}) {
+    if (const auto total_ram{TryGetTotalRam()}) {
         const size_t db_cache{CalculateDbCacheBytes(args)};
         if (ShouldWarnOversizedDbCache(db_cache, *total_ram)) {
             InitWarning(bilingual_str{tfm::format(_("A %zu MiB dbcache may be too large for a system memory of only %zu MiB."),

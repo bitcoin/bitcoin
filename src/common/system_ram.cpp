@@ -15,7 +15,7 @@
 #include <cstdint>
 #include <limits>
 
-std::optional<size_t> GetTotalRAM()
+std::optional<size_t> TryGetTotalRam()
 {
     [[maybe_unused]] auto clamp{[](uint64_t v) { return size_t(std::min(v, uint64_t{std::numeric_limits<size_t>::max()})); }};
 #ifdef WIN32
