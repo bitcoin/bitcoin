@@ -139,7 +139,9 @@ def dedup(ips: list[dict]) -> list[dict]:
     """ Remove duplicates from `ips` where multiple ips share address and port. """
     d = {}
     for ip in ips:
-        d[ip['ip'],ip['port']] = ip
+        ip_port = (ip["ip"], ip["port"])
+        if ip_port not in d or ip["lastsuccess"] > d[ip_port]["lastsuccess"]:
+            d[ip_port] = ip
     return list(d.values())
 
 def filtermultiport(ips: list[dict]) -> list[dict]:
