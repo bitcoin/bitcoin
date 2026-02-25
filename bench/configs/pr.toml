@@ -14,7 +14,7 @@ runs = 2
 stopatheight = 900000
 chain = "main"
 connect = "148.251.128.115:33333"
-prune = 10000
+prune = 1000000
 daemon = false
 printtoconsole = false
 

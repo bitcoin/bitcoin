@@ -13,7 +13,7 @@ runs = 1
 [bitcoind]
 stopatheight = 10000
 chain = "signet"
-prune = 1000
+prune = 1000000
 daemon = false
 printtoconsole = false
 

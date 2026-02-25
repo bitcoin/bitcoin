@@ -55,7 +55,7 @@ class BenchmarkConfig:
             stopatheight = 855000
             chain = "main"
             connect = "..."
-            prune = 10000
+            prune = 1000000
             daemon = false
             printtoconsole = false
 
