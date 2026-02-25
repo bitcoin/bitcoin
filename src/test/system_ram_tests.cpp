@@ -2,7 +2,7 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or https://opensource.org/license/mit/.
 
-#include <common/system.h>
+#include <common/system_ram.h>
 #include <test/util/setup_common.h>
 
 #include <boost/test/unit_test.hpp>
