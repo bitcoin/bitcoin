@@ -61,6 +61,7 @@ WalletFrame::WalletFrame(QWidget* parent)
 
     proposalListPage = new ProposalList();
     walletStack->addWidget(proposalListPage);
+    connect(proposalListPage, &ProposalList::showProposalInfo, this, &WalletFrame::showProposalInfo);
 }
 
 WalletFrame::~WalletFrame() = default;

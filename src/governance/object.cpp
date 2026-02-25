@@ -592,6 +592,27 @@ int CGovernanceObject::GetAbstainCount(const CDeterministicMNList& tip_mn_list, 
     return CountMatchingVotes(tip_mn_list, eVoteSignalIn, VOTE_OUTCOME_ABSTAIN);
 }
 
+CGovernanceObject::UniqueVoterCount CGovernanceObject::GetUniqueVoterCount(const CDeterministicMNList& tip_mn_list, vote_signal_enum_t eVoteSignalIn) const
+{
+    LOCK(cs);
+    UniqueVoterCount result;
+    for (const auto& [outpoint, recVote] : mapCurrentMNVotes) {
+        if (recVote.mapInstances.count(eVoteSignalIn) == 0) {
+            continue;
+        }
+        auto dmn = tip_mn_list.GetMNByCollateral(outpoint);
+        if (!dmn) {
+            continue;
+        }
+        if (dmn->nType == MnType::Evo) {
+            ++result.m_evo;
+        } else {
+            ++result.m_regular;
+        }
+    }
+    return result;
+}
+
 bool CGovernanceObject::GetCurrentMNVotes(const COutPoint& mnCollateralOutpoint, vote_rec_t& voteRecord) const
 {
     LOCK(cs);

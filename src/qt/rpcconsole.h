@@ -84,6 +84,7 @@ public:
     enum class InfoView : uint8_t {
         General,
         Network,
+        Governance,
     };
 
     std::vector<TabTypes> tabs() const { return {TabTypes::INFO, TabTypes::CONSOLE, TabTypes::GRAPH, TabTypes::PEERS, TabTypes::REPAIR}; }
@@ -146,6 +147,8 @@ public Q_SLOTS:
     void unbanSelectedNode();
     /** set which tab has the focus (is visible) */
     void setTabFocus(enum TabTypes tabType);
+    /** switch the info sub-view to the given InfoView */
+    void setInfoView(InfoView view);
 #ifdef ENABLE_WALLET
     /** Set the current (ie - active) wallet */
     void setCurrentWallet(WalletModel* const wallet_model);

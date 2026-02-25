@@ -107,6 +107,8 @@ WalletView::WalletView(WalletModel* wallet_model, QWidget* parent)
     proposalListPage->setWalletModel(walletModel);
     addWidget(proposalListPage);
 
+    connect(proposalListPage, &ProposalList::showProposalInfo, this, &WalletView::showProposalInfo);
+
     connect(overviewPage, &OverviewPage::transactionClicked, this, &WalletView::transactionClicked);
     // Clicking on a transaction on the overview pre-selects the transaction on the transaction history page
     connect(overviewPage, &OverviewPage::transactionClicked, transactionView, qOverload<const QModelIndex&>(&TransactionView::focusTransaction));

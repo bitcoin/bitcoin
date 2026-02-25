@@ -234,8 +234,24 @@ QVariant ProposalModel::data(const QModelIndex& index, int role) const
     {
         // Edit role is used for sorting, so return the raw values where possible
         switch (index.column()) {
-        case Column::STATUS:
-            return static_cast<int>(proposal->status(isFundable));
+        case Column::STATUS: {
+            // Two-level sort: status group (passing before failing), then
+            // vote margin within each group (winning by most sorts first).
+            // Clamp to 16 bits so the value stays within its group window
+            // and doesn't bleed into an adjacent group's key range.
+            const int deficit{std::clamp(nAbsVoteReq - proposal->getAbsoluteYesCount(), -32768, 32767)};
+            switch (proposal->status(isFundable)) {
+            case ProposalStatus::Funded:      return (0 << 16) + deficit;
+            case ProposalStatus::Passing:     return (1 << 16) + deficit;
+            case ProposalStatus::Unfunded:    return (2 << 16) + deficit;
+            case ProposalStatus::Voting:      return (3 << 16) + deficit;
+            case ProposalStatus::Confirming:  return (4 << 16) + deficit;
+            case ProposalStatus::Pending:     return (5 << 16) + deficit;
+            case ProposalStatus::Failing:     return (6 << 16) + deficit;
+            case ProposalStatus::Lapsed:      return (7 << 16) + deficit;
+            } // no default case, so the compiler can warn about missing cases
+            return 0;
+        }
         case Column::HASH:
             return proposal->hash();
         case Column::TITLE:
@@ -417,7 +433,8 @@ void ProposalModel::setVotingParams(int newAbsVoteReq)
     // column. Emit signal to force recalculation.
     this->nAbsVoteReq = newAbsVoteReq;
     if (!m_data.empty()) {
-        Q_EMIT dataChanged(createIndex(0, Column::VOTING_STATUS), createIndex(rowCount() - 1, Column::VOTING_STATUS));
+        // STATUS also embeds nAbsVoteReq in its sort key, so both columns need invalidating
+        Q_EMIT dataChanged(createIndex(0, Column::STATUS), createIndex(rowCount() - 1, Column::VOTING_STATUS));
     }
 }
 

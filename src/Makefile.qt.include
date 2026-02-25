@@ -34,6 +34,7 @@ QT_FORMS_UI = \
   qt/forms/optionsdialog.ui \
   qt/forms/overviewpage.ui \
   qt/forms/proposalcreate.ui \
+  qt/forms/proposalinfo.ui \
   qt/forms/proposallist.ui \
   qt/forms/proposalresume.ui \
   qt/forms/psbtoperationsdialog.ui \
@@ -62,6 +63,7 @@ QT_MOC_CPP = \
   qt/moc_createwalletdialog.cpp \
   qt/moc_csvmodelwriter.cpp \
   qt/moc_descriptiondialog.cpp \
+  qt/moc_donutchart.cpp \
   qt/moc_editaddressdialog.cpp \
   qt/moc_guiutil.cpp \
   qt/moc_informationwidget.cpp \
@@ -83,6 +85,7 @@ QT_MOC_CPP = \
   qt/moc_peertablemodel.cpp \
   qt/moc_peertablesortproxy.cpp \
   qt/moc_proposalcreate.cpp \
+  qt/moc_proposalinfo.cpp \
   qt/moc_proposallist.cpp \
   qt/moc_proposalmodel.cpp \
   qt/moc_proposalresume.cpp \
@@ -145,6 +148,7 @@ BITCOIN_QT_H = \
   qt/createwalletdialog.h \
   qt/csvmodelwriter.h \
   qt/descriptiondialog.h \
+  qt/donutchart.h \
   qt/editaddressdialog.h \
   qt/guiconstants.h \
   qt/guiutil_font.h \
@@ -170,6 +174,7 @@ BITCOIN_QT_H = \
   qt/peertablemodel.h \
   qt/peertablesortproxy.h \
   qt/proposalcreate.h \
+  qt/proposalinfo.h \
   qt/proposallist.h \
   qt/proposalmodel.h \
   qt/proposalresume.h \
@@ -251,19 +256,19 @@ BITCOIN_QT_BASE_CPP = \
   qt/bantablemodel.cpp \
   qt/bitcoin.cpp \
   qt/bitcoinaddressvalidator.cpp \
-  qt/masternodemodel.cpp \
-  qt/proposalmodel.cpp \
   qt/bitcoinamountfield.cpp \
   qt/bitcoingui.cpp \
   qt/bitcoinunits.cpp \
   qt/clientfeeds.cpp \
   qt/clientmodel.cpp \
   qt/csvmodelwriter.cpp \
+  qt/donutchart.cpp \
   qt/guiutil.cpp \
   qt/guiutil_font.cpp \
   qt/informationwidget.cpp \
   qt/initexecutor.cpp \
   qt/intro.cpp \
+  qt/masternodemodel.cpp \
   qt/modaloverlay.cpp \
   qt/networkstyle.cpp \
   qt/networkwidget.cpp \
@@ -272,6 +277,8 @@ BITCOIN_QT_BASE_CPP = \
   qt/optionsmodel.cpp \
   qt/peertablemodel.cpp \
   qt/peertablesortproxy.cpp \
+  qt/proposalinfo.cpp \
+  qt/proposalmodel.cpp \
   qt/qvalidatedlineedit.cpp \
   qt/qvaluecombobox.cpp \
   qt/rpcconsole.cpp \

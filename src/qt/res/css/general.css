@@ -1735,14 +1735,17 @@ QWidget#RPCConsole QLabel#label_alerts {
     padding: 5px;
 }
 
-QWidget#InformationWidget QLabel#labelNetwork,
 QWidget#InformationWidget QLabel#label_10,
 QWidget#InformationWidget QLabel#labelMempoolTitle,
+QWidget#InformationWidget QLabel#labelNetwork,
 QWidget#NetworkWidget QLabel#labelChainLocks,
 QWidget#NetworkWidget QLabel#labelCreditPool,
 QWidget#NetworkWidget QLabel#labelInstantSend,
 QWidget#NetworkWidget QLabel#labelMasternodes,
-QWidget#NetworkWidget QLabel#labelQuorums { /* Margin between Network and Block Chain headers */
+QWidget#NetworkWidget QLabel#labelQuorums,
+QWidget#ProposalInfo QLabel#labelNode,
+QWidget#ProposalInfo QLabel#labelParticipation,
+QWidget#ProposalInfo QLabel#labelProposals {
     qproperty-alignment: 'AlignLeft | AlignBottom';
     min-height: 25px;
 }

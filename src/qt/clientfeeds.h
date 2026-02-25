@@ -190,9 +190,12 @@ private:
 using Proposals = std::vector<std::shared_ptr<Proposal>>;
 
 struct ProposalData {
+    CAmount m_allocated{0};
     int m_abs_vote_req{0};
     interfaces::GOV::GovernanceInfo m_gov_info;
     Proposals m_proposals;
+    uint16_t m_max_evo_voters{0};
+    uint16_t m_max_regular_voters{0};
     Uint256HashSet m_fundable_hashes;
 };
 

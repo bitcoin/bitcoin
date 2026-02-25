@@ -136,6 +136,20 @@
            </item>
           </layout>
          </widget>
+         <widget class="QWidget" name="tabGovernance">
+          <attribute name="title">
+           <string>Go&amp;vernance</string>
+          </attribute>
+          <layout class="QVBoxLayout" name="verticalLayoutTabGovernance">
+           <property name="leftMargin"><number>0</number></property>
+           <property name="topMargin"><number>0</number></property>
+           <property name="rightMargin"><number>0</number></property>
+           <property name="bottomMargin"><number>0</number></property>
+           <item>
+            <widget class="ProposalInfo" name="proposalInfo" native="true"/>
+           </item>
+          </layout>
+         </widget>
         </widget>
        </item>
       </layout>
@@ -1342,6 +1356,12 @@
   </layout>
  </widget>
  <customwidgets>
+  <customwidget>
+   <class>ProposalInfo</class>
+   <extends>QWidget</extends>
+   <header>qt/proposalinfo.h</header>
+   <container>1</container>
+  </customwidget>
   <customwidget>
    <class>InformationWidget</class>
    <extends>QWidget</extends>

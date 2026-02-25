@@ -137,6 +137,8 @@ Q_SIGNALS:
     void incomingTransaction(const QString& date, BitcoinUnit unit, const CAmount& amount, const QString& type, const QString& address, const QString& label, const QString& walletName);
     /** Notify that the out of sync warning icon has been pressed */
     void outOfSyncWarningClicked();
+    /** Request navigation to proposal info view */
+    void showProposalInfo();
 };
 
 #endif // BITCOIN_QT_WALLETVIEW_H

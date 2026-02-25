@@ -242,6 +242,20 @@ public:
         }
         return ret;
     }
+    UniqueVoters getObjUniqueVoters(const CGovernanceObject& obj, vote_signal_enum_t vote_signal) override
+    {
+        if (context().govman != nullptr && context().dmnman != nullptr) {
+            const auto& tip_mn_list{context().dmnman->GetListAtChainTip()};
+            if (auto govobj{context().govman->FindGovernanceObject(obj.GetHash())}) {
+                const auto count = govobj->GetUniqueVoterCount(tip_mn_list, vote_signal);
+                return {.m_regular = count.m_regular, .m_evo = count.m_evo};
+            } else {
+                const auto count = obj.GetUniqueVoterCount(tip_mn_list, vote_signal);
+                return {.m_regular = count.m_regular, .m_evo = count.m_evo};
+            }
+        }
+        return {0, 0};
+    }
     bool existsObj(const uint256& hash) override
     {
         if (context().govman != nullptr) {

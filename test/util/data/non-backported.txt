@@ -30,6 +30,7 @@ src/messagesigner.*
 src/netfulfilledman.*
 src/qt/clientfeeds.*
 src/qt/descriptiondialog.*
+src/qt/donutchart.*
 src/qt/guiutil_font.*
 src/qt/informationwidget.*
 src/qt/masternodelist.*
@@ -37,6 +38,7 @@ src/qt/masternodemodel.*
 src/qt/mnemonicverificationdialog.*
 src/qt/networkwidget.*
 src/qt/proposalcreate.*
+src/qt/proposalinfo.*
 src/qt/proposallist.*
 src/qt/proposalmodel.*
 src/qt/proposalresume.*

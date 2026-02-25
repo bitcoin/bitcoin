@@ -373,6 +373,11 @@ QPushButton:hover {
     background-color: #27507a;
 }
 
+QPushButton#btnInfoView:hover,
+QPushButton#btnInfoView:pressed {
+    background-color: #00599a;
+}
+
 QPushButton:focus {
     border: none;
     outline: none;

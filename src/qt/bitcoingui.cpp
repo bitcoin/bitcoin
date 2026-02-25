@@ -135,6 +135,10 @@ BitcoinGUI::BitcoinGUI(interfaces::Node& node, const NetworkStyle* networkStyle,
             this->message(title, message, style);
         });
         connect(walletFrame, &WalletFrame::currentWalletSet, [this] { updateWalletStatus(); });
+        connect(walletFrame, &WalletFrame::showProposalInfo, this, [this] {
+            rpcConsole->setInfoView(RPCConsole::InfoView::Governance);
+            showDebugWindow();
+        });
     } else
 #endif // ENABLE_WALLET
     {
@@ -1009,6 +1013,10 @@ void BitcoinGUI::addWallet(WalletModel* walletModel)
     });
     connect(wallet_view, &WalletView::encryptionStatusChanged, this, &BitcoinGUI::updateWalletStatus);
     connect(wallet_view, &WalletView::incomingTransaction, this, &BitcoinGUI::incomingTransaction);
+    connect(wallet_view, &WalletView::showProposalInfo, this, [this] {
+        rpcConsole->setInfoView(RPCConsole::InfoView::Governance);
+        showDebugWindow();
+    });
     connect(this, &BitcoinGUI::setPrivacy, wallet_view, &WalletView::setPrivacy);
     wallet_view->setPrivacy(isPrivacyModeActivated());
     const QString display_name = walletModel->getDisplayName();
@@ -1817,26 +1825,35 @@ void BitcoinGUI::updateGovernanceCycleIcon()
     const auto remaining_blocks{std::max<int>(0, gov_info.nextsuperblock - current_height)};
     const auto remaining_str{GUIUtil::formatBlockDuration(remaining_blocks, gov_info.targetSpacing)};
     const bool awaiting_superblock{current_height % gov_info.superblockcycle >= gov_info.superblockcycle - gov_info.superblockmaturitywindow};
+    // Voting closes superblockmaturitywindow blocks before the superblock
+    const auto voting_remaining{std::max<int>(0, remaining_blocks - gov_info.superblockmaturitywindow)};
+    const auto voting_str{GUIUtil::formatBlockDuration(voting_remaining, gov_info.targetSpacing)};
 
-    QString tooltip1{};
     if (awaiting_superblock) {
         labelGovernanceCycleIcon->setPixmap(m_gov_cycle_pixmaps.at({ToUnderlying(GUIUtil::ThemedColor::BLUE), 0}));
-        tooltip1 = tr("~%1 (%2 blocks) left for superblock").arg(remaining_str).arg(remaining_blocks);
     } else {
         const auto cycle_blocks{gov_info.superblockcycle - gov_info.superblockmaturitywindow};
         const auto blocks_elapsed{gov_info.superblockcycle - remaining_blocks - gov_info.superblockmaturitywindow};
         const auto progress{static_cast<double>(std::max(0, blocks_elapsed)) / static_cast<double>(std::max(1, cycle_blocks))};
         const auto frame{std::clamp<int>(static_cast<int>(progress * (GOV_CYCLE_FRAME_COUNT - 1)), 0, GOV_CYCLE_FRAME_COUNT - 2) + 1};
         labelGovernanceCycleIcon->setPixmap(m_gov_cycle_pixmaps.at({ToUnderlying(GUIUtil::ThemedColor::GREEN), frame}));
-        tooltip1 = tr("~%1 (%2 blocks) left for voting").arg(remaining_str).arg(remaining_blocks);
     }
 
-    const auto allocated_budget{m_node.gov().getFundableProposalHashes().allocated};
-    const auto budget_pct{gov_info.governancebudget > 0
-        ? static_cast<int>(static_cast<double>(allocated_budget) / static_cast<double>(gov_info.governancebudget) * 100.0)
-        : 0};
-    const auto unit{options_model.getDisplayUnit()};
-    const auto tooltip2{tr("~%1% of budget committed (%2 %3).").arg(budget_pct).arg(allocated_budget / BitcoinUnits::factor(unit)).arg(BitcoinUnits::name(unit))};
+    const auto tooltip1{remaining_blocks == 0
+        ? (awaiting_superblock ? tr("Superblock imminent") : tr("Voting period ended"))
+        : (awaiting_superblock
+            ? tr("~%1 (%2 blocks) left for superblock").arg(remaining_str).arg(remaining_blocks)
+            : tr("~%1 (%2 blocks) left for voting").arg(voting_str).arg(voting_remaining))};
+    const auto tooltip2{[&]() {
+        const auto allocated_budget{m_node.gov().getFundableProposalHashes().allocated};
+        const auto budget_pct{gov_info.governancebudget > 0
+            ? static_cast<int>(static_cast<double>(allocated_budget) / static_cast<double>(gov_info.governancebudget) * 100.0)
+            : 0};
+        const auto unit{options_model.getDisplayUnit()};
+        return tr("~%1% of budget committed (%2 / %3)").arg(budget_pct)
+            .arg(GUIUtil::formatAmount(unit, allocated_budget, /*is_signed=*/false, /*truncate=*/2))
+            .arg(GUIUtil::formatAmount(unit, gov_info.governancebudget, /*is_signed=*/false, /*truncate=*/2));
+    }()};
     labelGovernanceCycleIcon->setToolTip(QString("<nobr>%1<br>%2</nobr>").arg(tooltip1).arg(tooltip2));
     labelGovernanceCycleIcon->show();
 }

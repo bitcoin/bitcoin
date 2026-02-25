@@ -323,7 +323,6 @@
          </property>
         </spacer>
        </item>
-       <!-- Button row: [View JSON] [View Payload] ... [Create Proposal] -->
        <item>
         <layout class="QHBoxLayout" name="detailsButtonsLayout">
          <property name="spacing">

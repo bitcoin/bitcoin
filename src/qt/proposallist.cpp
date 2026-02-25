@@ -57,7 +57,7 @@ ProposalList::ProposalList(QWidget* parent) :
 {
     ui->setupUi(this);
 
-    GUIUtil::setFont({ui->label_count_2, ui->countLabel, ui->label_mn_count, ui->mnCountLabel},
+    GUIUtil::setFont({ui->label_count_2, ui->countLabel},
                      {GUIUtil::FontWeight::Bold, 14});
 
     ui->govTableView->setContextMenuPolicy(Qt::CustomContextMenu);
@@ -93,8 +93,11 @@ ProposalList::ProposalList(QWidget* parent) :
     connect(ui->btnResumeProposal, &QPushButton::clicked, this, &ProposalList::showResumeProposalDialog);
     updateProposalButtons();
 
-    // Initialize masternode count to 0
-    ui->mnCountLabel->setText("0");
+    // Set up info button
+    ui->btnInfoView->setIcon(style()->standardIcon(QStyle::SP_MessageBoxInformation));
+    ui->btnInfoView->setIconSize(QSize(20, 20));
+    ui->btnInfoView->setFixedSize(36, 34);
+    connect(ui->btnInfoView, &QPushButton::clicked, this, &ProposalList::showProposalInfo);
 
     GUIUtil::updateFonts();
 }
@@ -132,6 +135,7 @@ void ProposalList::setClientModel(ClientModel* model)
         connect(m_feed_proposal, &ProposalFeed::dataReady, this, &ProposalList::updateProposalList);
         updateProposalList();
     }
+    connect(clientModel, &ClientModel::additionalDataSyncProgressChanged, this, &ProposalList::updateInfoTooltip);
     connect(clientModel, &ClientModel::additionalDataSyncProgressChanged, this, &ProposalList::updateProposalButtons);
     connect(clientModel->getOptionsModel(), &OptionsModel::displayUnitChanged, this, &ProposalList::updateDisplayUnit);
     if (walletModel && ui->proposalSourceCombo->findData(ToUnderlying(ProposalSource::Local)) == -1) {
@@ -267,7 +271,7 @@ void ProposalList::setProposalList(ProposalData&& data)
     proposalModel->setVotingParams(data.m_abs_vote_req);
     proposalModel->reconcile(std::move(data.m_proposals), std::move(data.m_fundable_hashes));
     m_gov_info = std::move(data.m_gov_info);
-    updateMasternodeCount();
+    updateInfoTooltip();
     updateProposalButtons();
 }
 
@@ -383,11 +387,51 @@ void ProposalList::showAdditionalInfo(const QModelIndex& index)
     dialog->show();
 }
 
-void ProposalList::updateMasternodeCount() const
+void ProposalList::updateInfoTooltip()
 {
-    if (ui && ui->mnCountLabel) {
-        ui->mnCountLabel->setText(QString::number(votableMasternodes.size()));
+    if (!clientModel || !clientModel->getOptionsModel() || !m_feed_proposal) {
+        return;
     }
+
+    const auto data_pr = m_feed_proposal->data();
+    if (!data_pr || m_gov_info.superblockcycle <= 0) {
+        return;
+    }
+
+    if (!clientModel->masternodeSync().isBlockchainSynced()) {
+        ui->btnInfoView->setToolTip(tr("Waiting for blockchain sync…"));
+        return;
+    }
+
+    if (!clientModel->masternodeSync().isGovernanceSynced()) {
+        ui->btnInfoView->setToolTip(tr("Waiting for governance sync…"));
+        return;
+    }
+
+    const int current_height{clientModel->getNumBlocks()};
+    const auto remaining_blocks{std::max<int>(0, m_gov_info.nextsuperblock - current_height)};
+    const QString remaining_str{GUIUtil::formatBlockDuration(remaining_blocks, m_gov_info.targetSpacing)};
+    const bool awaiting_superblock{current_height % m_gov_info.superblockcycle >= m_gov_info.superblockcycle - m_gov_info.superblockmaturitywindow};
+    const auto voting_remaining_blocks{std::max<int>(0, remaining_blocks - m_gov_info.superblockmaturitywindow)};
+    const QString voting_remaining_str{GUIUtil::formatBlockDuration(voting_remaining_blocks, m_gov_info.targetSpacing)};
+
+    const auto tooltip1{tr("%n masternode(s) available for voting", "", votableMasternodes.size())};
+    const auto tooltip2{remaining_blocks == 0
+        ? (awaiting_superblock ? tr("Superblock imminent") : tr("Voting period ended"))
+        : (awaiting_superblock
+            ? tr("~%1 (%2 blocks) left for superblock").arg(remaining_str).arg(remaining_blocks)
+            : tr("~%1 (%2 blocks) left for voting").arg(voting_remaining_str).arg(voting_remaining_blocks))};
+    const auto tooltip3{[&]() {
+        const auto allocated_budget{data_pr->m_allocated};
+        const auto budget_pct = m_gov_info.governancebudget > 0
+            ? static_cast<int>(static_cast<double>(allocated_budget) / static_cast<double>(m_gov_info.governancebudget) * 100.0)
+            : 0;
+        const auto unit{clientModel->getOptionsModel()->getDisplayUnit()};
+        return tr("~%1% of budget committed (%2 / %3)").arg(budget_pct)
+            .arg(GUIUtil::formatAmount(unit, allocated_budget, /*is_signed=*/false, /*truncate=*/2))
+            .arg(GUIUtil::formatAmount(unit, m_gov_info.governancebudget, /*is_signed=*/false, /*truncate=*/2));
+    }()};
+    ui->btnInfoView->setToolTip(QString("<nobr>%1</nobr><br><nobr>%2</nobr><br><nobr>%3</nobr>").arg(tooltip1).arg(tooltip2).arg(tooltip3));
 }
 
 void ProposalList::updateProposalButtons()

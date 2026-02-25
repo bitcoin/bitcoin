@@ -231,10 +231,14 @@ void ProposalFeed::fetch()
         }
         ret->m_proposals.emplace_back(std::make_shared<Proposal>(m_client_model, govObj, ret->m_gov_info, ret->m_gov_info.requiredConfs,
                                                                  /*is_broadcast=*/true));
+        const auto voters = m_client_model.node().gov().getObjUniqueVoters(govObj, VOTE_SIGNAL_FUNDING);
+        ret->m_max_regular_voters = std::max(ret->m_max_regular_voters, voters.m_regular);
+        ret->m_max_evo_voters = std::max(ret->m_max_evo_voters, voters.m_evo);
     }
 
     auto fundable{m_client_model.node().gov().getFundableProposalHashes()};
     ret->m_fundable_hashes = std::move(fundable.hashes);
+    ret->m_allocated = fundable.allocated;
 
     setData(std::move(ret));
 }
