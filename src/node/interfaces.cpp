@@ -876,15 +876,33 @@ protected:
     }
 };
 
-//! Process a block and capture the validation state via the BlockChecked callback.
-//! Returns whether ProcessNewBlock accepted the block.
-static bool ProcessBlock(ChainstateManager& chainman, const std::shared_ptr<const CBlock>& blockptr, bool* new_block, std::shared_ptr<SubmitBlockStateCatcher>& sc)
+//! Process a block via ProcessNewBlock and populate reason/debug from the
+//! BlockChecked validation interface callback.
+static bool ProcessBlock(ChainstateManager& chainman, const std::shared_ptr<const CBlock>& blockptr, std::string& reason, std::string& debug)
 {
-    sc = std::make_shared<SubmitBlockStateCatcher>(blockptr->GetHash());
+    reason.clear();
+    debug.clear();
+
+    bool new_block;
+    auto sc = std::make_shared<SubmitBlockStateCatcher>(blockptr->GetHash());
     CHECK_NONFATAL(chainman.m_options.signals)->RegisterSharedValidationInterface(sc);
-    bool accepted = chainman.ProcessNewBlock(blockptr, /*force_processing=*/true, /*min_pow_checked=*/true, /*new_block=*/new_block);
+    bool accepted = chainman.ProcessNewBlock(blockptr, /*force_processing=*/true, /*min_pow_checked=*/true, /*new_block=*/&new_block);
     CHECK_NONFATAL(chainman.m_options.signals)->UnregisterSharedValidationInterface(sc);
-    return accepted;
+
+    if (!new_block && accepted) {
+        reason = "duplicate";
+        return false;
+    }
+    if (!sc->found) {
+        reason = "inconclusive";
+        return false;
+    }
+    if (!sc->state.IsValid()) {
+        reason = sc->state.GetRejectReason();
+        debug = sc->state.GetDebugMessage();
+        return false;
+    }
+    return true;
 }
 
 class BlockTemplateImpl : public BlockTemplate
@@ -931,30 +949,8 @@ public:
 
     bool submitSolution(uint32_t version, uint32_t timestamp, uint32_t nonce, CTransactionRef coinbase, std::string& reason, std::string& debug) override
     {
-        reason.clear();
-        debug.clear();
-
         AddMerkleRootAndCoinbase(m_block_template->block, std::move(coinbase), version, timestamp, nonce);
-        auto blockptr = std::make_shared<const CBlock>(m_block_template->block);
-
-        bool new_block;
-        std::shared_ptr<SubmitBlockStateCatcher> sc;
-        bool accepted = ProcessBlock(chainman(), blockptr, &new_block, sc);
-
-        if (!new_block && accepted) {
-            reason = "duplicate";
-            return false;
-        }
-        if (!sc->found) {
-            reason = "inconclusive";
-            return false;
-        }
-        if (!sc->state.IsValid()) {
-            reason = sc->state.GetRejectReason();
-            debug = sc->state.GetDebugMessage();
-            return false;
-        }
-        return true;
+        return ProcessBlock(chainman(), std::make_shared<const CBlock>(m_block_template->block), reason, debug);
     }
 
     std::unique_ptr<BlockTemplate> waitNext(BlockWaitOptions options) override
@@ -1057,29 +1053,7 @@ public:
 
     bool submitBlock(const CBlock& block_in, std::string& reason, std::string& debug) override
     {
-        reason.clear();
-        debug.clear();
-
-        auto blockptr = std::make_shared<const CBlock>(block_in);
-
-        bool new_block;
-        std::shared_ptr<SubmitBlockStateCatcher> sc;
-        bool accepted = ProcessBlock(chainman(), blockptr, &new_block, sc);
-
-        if (!new_block && accepted) {
-            reason = "duplicate";
-            return false;
-        }
-        if (!sc->found) {
-            reason = "inconclusive";
-            return false;
-        }
-        if (!sc->state.IsValid()) {
-            reason = sc->state.GetRejectReason();
-            debug = sc->state.GetDebugMessage();
-            return false;
-        }
-        return true;
+        return ProcessBlock(chainman(), std::make_shared<const CBlock>(block_in), reason, debug);
     }
 
     NodeContext* context() override { return &m_node; }
