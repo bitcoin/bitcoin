@@ -66,9 +66,8 @@ std::string FeeModeInfo(const std::pair<std::string, FeeEstimateMode>& mode, std
             return strprintf("%s estimates use a longer time horizon, making them\n"
                    "less responsive to short-term drops in the prevailing fee market. This mode\n"
                    "potentially returns a higher fee rate estimate.\n", mode.first);
-        default:
-            assert(false);
-    }
+    } // no default case, so the compiler can warn about missing cases
+    assert(false);
 }
 
 std::string FeeModesDetail(std::string default_info)
@@ -119,8 +118,7 @@ bilingual_str PSBTErrorString(PSBTError err)
             return Untranslated("Input needs additional signatures or other data");
         case PSBTError::OK:
             return Untranslated("No errors");
-        // no default case, so the compiler can warn about missing cases
-    }
+    } // no default case, so the compiler can warn about missing cases
     assert(false);
 }
 
@@ -143,8 +141,7 @@ bilingual_str TransactionErrorString(const TransactionError err)
             return Untranslated("Unspendable output exceeds maximum configured by user (maxburnamount)");
         case TransactionError::INVALID_PACKAGE:
             return Untranslated("Transaction rejected due to invalid package");
-        // no default case, so the compiler can warn about missing cases
-    }
+    } // no default case, so the compiler can warn about missing cases
     assert(false);
 }
 

@@ -854,19 +854,19 @@ Foo(vec);
 enum class Tabs {
     info,
     console,
-    network_graph,
-    peers
 };
 
 int GetInt(Tabs tab)
 {
-    switch (tab) {
-    case Tabs::info: return 0;
-    case Tabs::console: return 1;
-    case Tabs::network_graph: return 2;
-    case Tabs::peers: return 3;
-    } // no default case, so the compiler can warn about missing cases
-    assert(false);
+    int ret = [&]() {
+        switch (tab) {
+        case Tabs::info: return 0;
+        case Tabs::console: return 1;
+        } // no default case, so the compiler can warn about missing cases
+        assert(false);
+    }();
+    LogInfo("Tab %s", ret);
+    return ret;
 }
 ```
 

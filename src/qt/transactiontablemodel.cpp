@@ -477,9 +477,8 @@ QVariant TransactionTableModel::txStatusDecoration(const TransactionRecord *wtx)
         }
     case TransactionStatus::NotAccepted:
         return QIcon(":/icons/transaction_0");
-    default:
-        return COLOR_BLACK;
-    }
+    } // no default case, so the compiler can warn about missing cases
+    assert(false);
 }
 
 QString TransactionTableModel::formatTooltip(const TransactionRecord *rec) const

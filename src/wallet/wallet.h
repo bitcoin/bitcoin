@@ -283,7 +283,7 @@ inline std::string PurposeToString(AddressPurpose p)
     case AddressPurpose::RECEIVE: return "receive";
     case AddressPurpose::SEND: return "send";
     case AddressPurpose::REFUND: return "refund";
-    } // no default case so the compiler will warn when a new enum as added
+    } // no default case, so the compiler can warn about missing cases
     assert(false);
 }
 
