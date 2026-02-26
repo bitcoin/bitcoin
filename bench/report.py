@@ -297,7 +297,9 @@ class ReportGenerator:
         if results_dir.exists():
             for pr_dir in sorted(
                 results_dir.iterdir(),
-                key=lambda d: int(d.name.replace("pr-", "")) if d.name.startswith("pr-") else 0,
+                key=lambda d: (0, int(d.name.replace("pr-", "")))
+                if d.name.startswith("pr-") and d.name.replace("pr-", "").isdigit()
+                else (1, d.name),
             ):
                 if pr_dir.is_dir() and pr_dir.name.startswith("pr-"):
                     pr_num = pr_dir.name.replace("pr-", "")
