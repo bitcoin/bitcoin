@@ -457,7 +457,6 @@ static RPCHelpMan getmininginfo()
     NodeContext& node = EnsureAnyNodeContext(request.context);
     const CTxMemPool& mempool = EnsureMemPool(node);
     ChainstateManager& chainman = EnsureChainman(node);
-    LOCK(cs_main);
     const CChain& active_chain = chainman.ActiveChain();
     CBlockIndex& tip{*CHECK_NONFATAL(active_chain.Tip())};
 

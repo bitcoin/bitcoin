@@ -22,11 +22,7 @@ BOOST_FIXTURE_TEST_CASE(coinstatsindex_initial_sync, TestChain100Setup)
     CoinStatsIndex coin_stats_index{interfaces::MakeChain(m_node), 1 << 20, true};
     BOOST_REQUIRE(coin_stats_index.Init());
 
-    const CBlockIndex* block_index;
-    {
-        LOCK(cs_main);
-        block_index = m_node.chainman->ActiveChain().Tip();
-    }
+    const CBlockIndex* block_index = m_node.chainman->ActiveChain().Tip();
 
     // CoinStatsIndex should not be found before it is started.
     BOOST_CHECK(!coin_stats_index.LookUpStats(*block_index));
@@ -38,11 +34,7 @@ BOOST_FIXTURE_TEST_CASE(coinstatsindex_initial_sync, TestChain100Setup)
     coin_stats_index.Sync();
 
     // Check that CoinStatsIndex works for genesis block.
-    const CBlockIndex* genesis_block_index;
-    {
-        LOCK(cs_main);
-        genesis_block_index = m_node.chainman->ActiveChain().Genesis();
-    }
+    const CBlockIndex* genesis_block_index = m_node.chainman->ActiveChain().Genesis();
     BOOST_CHECK(coin_stats_index.LookUpStats(*genesis_block_index));
 
     // Check that CoinStatsIndex updates with new blocks.
@@ -55,11 +47,8 @@ BOOST_FIXTURE_TEST_CASE(coinstatsindex_initial_sync, TestChain100Setup)
     // Let the CoinStatsIndex to catch up again.
     BOOST_CHECK(coin_stats_index.BlockUntilSyncedToCurrentChain());
 
-    const CBlockIndex* new_block_index;
-    {
-        LOCK(cs_main);
-        new_block_index = m_node.chainman->ActiveChain().Tip();
-    }
+    const CBlockIndex* new_block_index = m_node.chainman->ActiveChain().Tip();
+
     BOOST_CHECK(coin_stats_index.LookUpStats(*new_block_index));
 
     BOOST_CHECK(block_index != new_block_index);

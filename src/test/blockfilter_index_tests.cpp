@@ -348,7 +348,7 @@ BOOST_FIXTURE_TEST_CASE(index_reorg_crash, BuildChainTestingSetup)
 
     std::promise<void> promise;
     std::shared_future<void> blocker(promise.get_future());
-    int blocking_height = WITH_LOCK(cs_main, return m_node.chainman->ActiveChain().Tip()->nHeight);
+    int blocking_height = m_node.chainman->ActiveChain().Tip()->nHeight;
 
     IndexReorgCrash index(interfaces::MakeChain(m_node), blocker, blocking_height);
     BOOST_REQUIRE(index.Init());

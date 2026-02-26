@@ -125,7 +125,6 @@ static int ComputeNextBlockAndDepth(const CBlockIndex& tip, const CBlockIndex& b
 
 static const CBlockIndex* ParseHashOrHeight(const UniValue& param, ChainstateManager& chainman)
 {
-    LOCK(::cs_main);
     CChain& active_chain = chainman.ActiveChain();
 
     if (param.isNum()) {
@@ -260,7 +259,6 @@ static RPCHelpMan getblockcount()
         [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
 {
     ChainstateManager& chainman = EnsureAnyChainman(request.context);
-    LOCK(cs_main);
     return chainman.ActiveChain().Height();
 },
     };
@@ -281,7 +279,6 @@ static RPCHelpMan getbestblockhash()
         [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
 {
     ChainstateManager& chainman = EnsureAnyChainman(request.context);
-    LOCK(cs_main);
     return chainman.ActiveChain().Tip()->GetBlockHash().GetHex();
 },
     };
@@ -583,7 +580,6 @@ static RPCHelpMan getblockhash()
         [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
 {
     ChainstateManager& chainman = EnsureAnyChainman(request.context);
-    LOCK(cs_main);
     const CChain& active_chain = chainman.ActiveChain();
 
     int nHeight = request.params[0].getInt<int>();
@@ -1816,7 +1812,6 @@ static RPCHelpMan getchaintxstats()
     int blockcount = 30 * 24 * 60 * 60 / chainman.GetParams().GetConsensus().nPowTargetSpacing; // By default: 1 month
 
     if (request.params[1].isNull()) {
-        LOCK(cs_main);
         pindex = chainman.ActiveChain().Tip();
     } else {
         uint256 hash(ParseHashV(request.params[1], "blockhash"));
@@ -2591,22 +2586,19 @@ static RPCHelpMan scanblocks()
         // set the start-height
         const CBlockIndex* start_index = nullptr;
         const CBlockIndex* stop_block = nullptr;
-        {
-            LOCK(cs_main);
-            CChain& active_chain = chainman.ActiveChain();
-            start_index = active_chain.Genesis();
-            stop_block = active_chain.Tip(); // If no stop block is provided, stop at the chain tip.
-            if (!request.params[2].isNull()) {
-                start_index = active_chain[request.params[2].getInt<int>()];
-                if (!start_index) {
-                    throw JSONRPCError(RPC_MISC_ERROR, "Invalid start_height");
-                }
+        CChain& active_chain = chainman.ActiveChain();
+        start_index = active_chain.Genesis();
+        stop_block = active_chain.Tip(); // If no stop block is provided, stop at the chain tip.
+        if (!request.params[2].isNull()) {
+            start_index = active_chain[request.params[2].getInt<int>()];
+            if (!start_index) {
+                throw JSONRPCError(RPC_MISC_ERROR, "Invalid start_height");
             }
-            if (!request.params[3].isNull()) {
-                stop_block = active_chain[request.params[3].getInt<int>()];
-                if (!stop_block || stop_block->nHeight < start_index->nHeight) {
-                    throw JSONRPCError(RPC_MISC_ERROR, "Invalid stop_height");
-                }
+        }
+        if (!request.params[3].isNull()) {
+            stop_block = active_chain[request.params[3].getInt<int>()];
+            if (!stop_block || stop_block->nHeight < start_index->nHeight) {
+                throw JSONRPCError(RPC_MISC_ERROR, "Invalid stop_height");
             }
         }
         CHECK_NONFATAL(start_index);
@@ -2643,7 +2635,7 @@ static RPCHelpMan scanblocks()
             // split the lookup range in chunks if we are deeper than 'amount_per_chunk' blocks from the stopping block
             int start_block = !end_range ? start_index->nHeight : start_index->nHeight + 1; // to not include the previous round 'end_range' block
             end_range = (start_block + amount_per_chunk < stop_block->nHeight) ?
-                    WITH_LOCK(::cs_main, return chainman.ActiveChain()[start_block + amount_per_chunk]) :
+                    chainman.ActiveChain()[start_block + amount_per_chunk] :
                     stop_block;
 
             if (index->LookupFilterRange(start_block, end_range, filters)) {
@@ -3081,7 +3073,7 @@ static RPCHelpMan dumptxoutset()
         [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
 {
     NodeContext& node = EnsureAnyNodeContext(request.context);
-    const CBlockIndex* tip{WITH_LOCK(::cs_main, return node.chainman->ActiveChain().Tip())};
+    const CBlockIndex* tip{node.chainman->ActiveChain().Tip()};
     const CBlockIndex* target_index{nullptr};
     const auto snapshot_type{self.Arg<std::string_view>("type")};
     const UniValue options{request.params[2].isNull() ? UniValue::VOBJ : request.params[2]};
@@ -3153,7 +3145,7 @@ static RPCHelpMan dumptxoutset()
             disable_network.emplace(connman);
         }
 
-        invalidate_index = WITH_LOCK(::cs_main, return node.chainman->ActiveChain().Next(target_index));
+        invalidate_index = node.chainman->ActiveChain().Next(target_index);
         temporary_rollback.emplace(*node.chainman, *invalidate_index);
     }
 

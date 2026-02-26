@@ -1964,7 +1964,7 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
         return false;
     }
 
-    int chain_active_height = WITH_LOCK(cs_main, return chainman.ActiveChain().Height());
+    int chain_active_height = chainman.ActiveChain().Height();
 
     // On first startup, warn on low block storage space
     if (!do_reindex && !do_reindex_chainstate && chain_active_height <= 1) {

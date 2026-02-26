@@ -1320,19 +1320,16 @@ const btck_Chain* btck_chainstate_manager_get_active_chain(const btck_Chainstate
 
 int btck_chain_get_height(const btck_Chain* chain)
 {
-    LOCK(::cs_main);
     return btck_Chain::get(chain).Height();
 }
 
 const btck_BlockTreeEntry* btck_chain_get_by_height(const btck_Chain* chain, int height)
 {
-    LOCK(::cs_main);
     return btck_BlockTreeEntry::ref(btck_Chain::get(chain)[height]);
 }
 
 int btck_chain_contains(const btck_Chain* chain, const btck_BlockTreeEntry* entry)
 {
-    LOCK(::cs_main);
     return btck_Chain::get(chain).Contains(&btck_BlockTreeEntry::get(entry)) ? 1 : 0;
 }
 

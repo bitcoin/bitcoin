@@ -137,7 +137,7 @@ BOOST_FIXTURE_TEST_CASE(chainstatemanager_rebalance_caches, TestChain100Setup)
 
     // Create a snapshot-based chainstate.
     //
-    CBlockIndex* snapshot_base{WITH_LOCK(manager.GetMutex(), return manager.ActiveChain()[manager.ActiveChain().Height() / 2])};
+    CBlockIndex* snapshot_base{manager.ActiveChain()[manager.ActiveChain().Height() / 2]};
     Chainstate& c2{WITH_LOCK(::cs_main, return manager.AddChainstate(std::make_unique<Chainstate>(nullptr, manager.m_blockman, manager, snapshot_base->GetBlockHash())))};
     chainstates.push_back(&c2);
     c2.InitCoinsDB(

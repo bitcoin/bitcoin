@@ -305,12 +305,11 @@ public:
     }
     int getNumBlocks() override
     {
-        LOCK(::cs_main);
         return chainman().ActiveChain().Height();
     }
     uint256 getBestBlockHash() override
     {
-        const CBlockIndex* tip = WITH_LOCK(::cs_main, return chainman().ActiveChain().Tip());
+        const CBlockIndex* tip = chainman().ActiveChain().Tip();
         return tip ? tip->GetBlockHash() : chainman().GetParams().GenesisBlock().GetHash();
     }
     int64_t getLastBlockTime() override
@@ -553,7 +552,6 @@ public:
     }
     uint256 getBlockHash(int height) override
     {
-        LOCK(::cs_main);
         return Assert(chainman().ActiveChain()[height])->GetBlockHash();
     }
     bool haveBlockOnDisk(int height) override
@@ -782,7 +780,10 @@ public:
     }
     void waitForNotificationsIfTipChanged(const uint256& old_tip) override
     {
-        if (!old_tip.IsNull() && old_tip == WITH_LOCK(::cs_main, return chainman().ActiveChain().Tip()->GetBlockHash())) return;
+        if (!old_tip.IsNull()) {
+            const CBlockIndex* tip = chainman().ActiveChain().Tip();
+            if (tip && old_tip == tip->GetBlockHash()) return;
+        }
         validation_signals().SyncWithValidationInterfaceQueue();
     }
     void waitForNotifications() override

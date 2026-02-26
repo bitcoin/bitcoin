@@ -420,21 +420,14 @@ void BaseIndex::ChainStateFlushed(const ChainstateRole& role, const CBlockLocato
 
 bool BaseIndex::BlockUntilSyncedToCurrentChain() const
 {
-    AssertLockNotHeld(cs_main);
-
     if (!m_synced) {
         return false;
     }
 
-    {
-        // Skip the queue-draining stuff if we know we're caught up with
-        // m_chain.Tip().
-        LOCK(cs_main);
-        const CBlockIndex* chain_tip = m_chainstate->m_chain.Tip();
-        const CBlockIndex* best_block_index = m_best_block_index.load();
-        if (best_block_index->GetAncestor(chain_tip->nHeight) == chain_tip) {
-            return true;
-        }
+    const CBlockIndex* chain_tip = m_chainstate->m_chain.Tip();
+    const CBlockIndex* best_block_index = m_best_block_index.load();
+    if (best_block_index->GetAncestor(chain_tip->nHeight) == chain_tip) {
+        return true;
     }
 
     LogInfo("%s is catching up on block notifications", GetName());

@@ -102,7 +102,7 @@ void generateFakeBlock(const CChainParams& params,
     }
 
     // notify wallet
-    const auto& pindex = WITH_LOCK(::cs_main, return context.chainman->ActiveChain().Tip());
+    const auto& pindex = context.chainman->ActiveChain().Tip();
     wallet.blockConnected(ChainstateRole{}, kernel::MakeBlockInfo(pindex, &block));
 }
 

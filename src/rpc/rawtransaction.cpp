@@ -335,7 +335,6 @@ static RPCHelpMan getrawtransaction()
 
     UniValue result(UniValue::VOBJ);
     if (blockindex) {
-        LOCK(cs_main);
         result.pushKV("in_active_chain", chainman.ActiveChain().Contains(blockindex));
     }
     // If request is verbosity >= 1 but no blockhash was given, then look up the blockindex

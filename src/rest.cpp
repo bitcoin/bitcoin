@@ -1104,7 +1104,6 @@ static bool rest_blockhash_by_height(const std::any& context, HTTPRequest* req,
         ChainstateManager* maybe_chainman = GetChainman(context, req);
         if (!maybe_chainman) return false;
         ChainstateManager& chainman = *maybe_chainman;
-        LOCK(cs_main);
         const CChain& active_chain = chainman.ActiveChain();
         if (*blockheight > active_chain.Height()) {
             return RESTERR(req, HTTP_NOT_FOUND, "Block height out of range");
