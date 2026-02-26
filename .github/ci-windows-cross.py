@@ -10,6 +10,9 @@ import subprocess
 import sys
 from pathlib import Path
 
+sys.path.append(str(Path(__file__).resolve().parent.parent / "test"))
+from download_utils import download_script_assets
+
 
 def run(cmd, **kwargs):
     print("+ " + shlex.join(cmd), flush=True)
@@ -81,6 +84,9 @@ def prepare_tests():
     run(cmd_download_prev_rel)
     run([sys.executable, "-m", "pip", "install", "pyzmq"])
 
+    dest = workspace / "unit_test_data"
+    download_script_assets(dest)
+
 
 def run_functional_tests():
     workspace = Path.cwd()
@@ -117,6 +123,8 @@ def run_functional_tests():
 
 
 def run_unit_tests():
+    workspace = Path.cwd()
+    os.environ["DIR_UNIT_TEST_DATA"] = str(workspace / "unit_test_data")
     # Can't use ctest here like other jobs as we don't have a CMake build tree.
     commands = [
         ["./bin/test_bitcoin-qt.exe"],
