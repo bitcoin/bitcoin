@@ -30,9 +30,17 @@ private:
     bool m_save_progress;
     std::optional<std::pair<uint256, int>> m_next_block;
 
+    // Progress tracking
+    double m_progress_begin{0};
+    double m_progress_end{0};
+    double m_progress_current{0};
+    uint256 m_tip_hash;
+
     std::optional<std::pair<uint256, int>> ReadNextBlock(ScanResult& result);
     bool ShouldFetchBlock(const std::unique_ptr<FastWalletRescanFilter>& filter, const uint256& block_hash, int block_height);
     bool ScanBlock(const uint256& block_hash, int block_height, bool save_progress);
+    void UpdateProgress(int block_height);
+    void UpdateTipIfChanged();
 
 public:
     ChainScanner(CWallet& wallet, const WalletRescanReserver& reserver, const uint256& start_block, int start_height,

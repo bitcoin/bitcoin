@@ -145,6 +145,27 @@ bool ChainScanner::ShouldFetchBlock(const std::unique_ptr<FastWalletRescanFilter
     }
 }
 
+void ChainScanner::UpdateProgress(int block_height) {
+    if (m_progress_end - m_progress_begin > 0.0) {
+        m_wallet.m_scanning_progress = (m_progress_current - m_progress_begin) / (m_progress_end - m_progress_begin);
+    } else {
+        // avoid divide-by-zero for single block scan range (i.e. start and stop hashes are equal)
+        m_wallet.m_scanning_progress = 0;
+    }
+    if (block_height % 100 == 0 && m_progress_end - m_progress_begin > 0.0) {
+        m_wallet.ShowProgress(strprintf("[%s] %s", m_wallet.DisplayName(), _("Rescanning…")),
+                              std::max(1, std::min(99, (int)(m_wallet.m_scanning_progress * 100))));
+    }
+}
+
+void ChainScanner::UpdateTipIfChanged() {
+    const uint256 new_tip = WITH_LOCK(m_wallet.cs_wallet, return m_wallet.GetLastBlockHash());
+    if (!m_max_height && new_tip != m_tip_hash) {
+        m_tip_hash = new_tip;
+        m_progress_end = m_wallet.chain().guessVerificationProgress(m_tip_hash);
+    }
+}
+
 bool ChainScanner::ScanBlock(const uint256& block_hash, int block_height, bool save_progress) {
     // Read block data and locator if needed (the locator is usually null unless we need to save progress)
     CBlock block;
@@ -191,34 +212,30 @@ ScanResult ChainScanner::Scan() {
     m_wallet.fAbortRescan = false;
     // show rescan progress in GUI as dialog or on splashscreen, if rescan required on startup (e.g. due to corruption)
     m_wallet.ShowProgress(strprintf("[%s] %s", m_wallet.DisplayName(), _("Rescanning…")), 0);
-    uint256 tip_hash = WITH_LOCK(m_wallet.cs_wallet, return m_wallet.GetLastBlockHash());
-    uint256 end_hash = tip_hash;
-    if (m_max_height) chain.findAncestorByHeight(tip_hash, *m_max_height, FoundBlock().hash(end_hash));
+
+    m_tip_hash = WITH_LOCK(m_wallet.cs_wallet, return m_wallet.GetLastBlockHash());
+    uint256 end_hash = m_tip_hash;
+    if (m_max_height) chain.findAncestorByHeight(m_tip_hash, *m_max_height, FoundBlock().hash(end_hash));
 
     ScanResult result;
-    double progress_begin = chain.guessVerificationProgress(m_start_block);
-    double progress_end = chain.guessVerificationProgress(end_hash);
-    double progress_current = progress_begin;
+    m_progress_begin = chain.guessVerificationProgress(m_start_block);
+    m_progress_end = chain.guessVerificationProgress(end_hash);
+    m_progress_current = m_progress_begin;
     int block_height = m_start_height;
     m_next_block = {{m_start_block, m_start_height}};
+
     while (!m_wallet.fAbortRescan && !chain.shutdownRequested()) {
         auto current_block = ReadNextBlock(result);
         if (!current_block) break;
 
-        auto& [block_hash, block_height] = *current_block;
-        if (progress_end - progress_begin > 0.0) {
-            m_wallet.m_scanning_progress = (progress_current - progress_begin) / (progress_end - progress_begin);
-        } else { // avoid divide-by-zero for single block scan range (i.e. start and stop hashes are equal)
-            m_wallet.m_scanning_progress = 0;
-        }
-        if (block_height % 100 == 0 && progress_end - progress_begin > 0.0) {
-            m_wallet.ShowProgress(strprintf("[%s] %s", m_wallet.DisplayName(), _("Rescanning…")), std::max(1, std::min(99, (int)(m_wallet.m_scanning_progress * 100))));
-        }
+        const auto& [block_hash, block_height] = *current_block;
+
+        UpdateProgress(block_height);
 
         bool next_interval = m_reserver.now() >= current_time + INTERVAL_TIME;
         if (next_interval) {
             current_time = m_reserver.now();
-            m_wallet.WalletLogPrintf("Still rescanning. At block %d. Progress=%f\n", block_height, progress_current);
+            m_wallet.WalletLogPrintf("Still rescanning. At block %d. Progress=%f\n", block_height, m_progress_current);
         }
 
         bool fetch_block{true};
@@ -243,26 +260,19 @@ ScanResult ChainScanner::Scan() {
             }
         }
 
-        progress_current = chain.guessVerificationProgress(block_hash);
-
-        // handle updated tip hash
-        const uint256 prev_tip_hash = tip_hash;
-        tip_hash = WITH_LOCK(m_wallet.cs_wallet, return m_wallet.GetLastBlockHash());
-        if (!m_max_height && prev_tip_hash != tip_hash) {
-            // in case the tip has changed, update progress max
-            progress_end = chain.guessVerificationProgress(tip_hash);
-        }
+        m_progress_current = chain.guessVerificationProgress(block_hash);
+        if (!m_max_height) UpdateTipIfChanged();
     }
     if (!m_max_height) {
         m_wallet.WalletLogPrintf("Scanning current mempool transactions.\n");
         WITH_LOCK(m_wallet.cs_wallet, chain.requestMempoolTransactions(m_wallet));
     }
-    m_wallet.ShowProgress(strprintf("[%s] %s", m_wallet.DisplayName(), _("Rescanning…")), 100); // hide progress dialog in GUI
+    m_wallet.ShowProgress(strprintf("[%s] %s", m_wallet.DisplayName(), _("Rescanning...")), 100);
     if (block_height && m_wallet.fAbortRescan) {
-        m_wallet.WalletLogPrintf("Rescan aborted at block %d. Progress=%f\n", block_height, progress_current);
+        m_wallet.WalletLogPrintf("Rescan aborted at block %d. Progress=%f\n", block_height, m_progress_current);
         result.status = ScanResult::USER_ABORT;
-    } else if (block_height && m_wallet.chain().shutdownRequested()) {
-        m_wallet.WalletLogPrintf("Rescan interrupted by shutdown request at block %d. Progress=%f\n", block_height, progress_current);
+    } else if (block_height && chain.shutdownRequested()) {
+        m_wallet.WalletLogPrintf("Rescan interrupted by shutdown request at block %d. Progress=%f\n", block_height, m_progress_current);
         result.status = ScanResult::USER_ABORT;
     } else {
         m_wallet.WalletLogPrintf("Rescan completed in %15dms\n", Ticks<std::chrono::milliseconds>(m_reserver.now() - start_time));
