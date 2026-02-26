@@ -155,18 +155,19 @@ class CompactBlocksTest(BitcoinTestFramework):
         block.solve()
         return block
 
-    # Create 10 more anyone-can-spend utxo's for testing.
+    # Create 12 more anyone-can-spend utxo's for testing.
     def make_utxos(self):
+        COUNT = 12
         block = self.build_block_on_tip(self.nodes[0])
         self.segwit_node.send_and_ping(msg_no_witness_block(block))
         assert_equal(self.nodes[0].getbestblockhash(), block.hash_hex)
         self.generate(self.wallet, COINBASE_MATURITY)
 
         total_value = block.vtx[0].vout[0].nValue
-        out_value = total_value // 10
+        out_value = total_value // COUNT
         tx = CTransaction()
         tx.vin.append(CTxIn(COutPoint(block.vtx[0].txid_int, 0), b''))
-        for _ in range(10):
+        for _ in range(COUNT):
             tx.vout.append(CTxOut(out_value, CScript([OP_TRUE])))
 
         block2 = self.build_block_on_tip(self.nodes[0])
@@ -175,7 +176,7 @@ class CompactBlocksTest(BitcoinTestFramework):
         block2.solve()
         self.segwit_node.send_and_ping(msg_no_witness_block(block2))
         assert_equal(self.nodes[0].getbestblockhash(), block2.hash_hex)
-        self.utxos.extend([[tx.txid_int, i, out_value] for i in range(10)])
+        self.utxos.extend([[tx.txid_int, i, out_value] for i in range(COUNT)])
 
 
     # Test "sendcmpct" (between peers preferring the same version):
@@ -583,7 +584,7 @@ class CompactBlocksTest(BitcoinTestFramework):
     # Multiple blocktxn responses will cause a node to get disconnected.
     def test_multiple_blocktxn_response(self, test_node):
         node = self.nodes[0]
-        utxo = self.utxos[0]
+        utxo = self.utxos.pop(0)
 
         block = self.build_block_with_transactions(node, utxo, 2)
 
@@ -769,8 +770,7 @@ class CompactBlocksTest(BitcoinTestFramework):
     # but invalid transactions.
     def test_invalid_tx_in_compactblock(self, test_node):
         node = self.nodes[0]
-        assert len(self.utxos)
-        utxo = self.utxos[0]
+        utxo = self.utxos.pop(0)
 
         block = self.build_block_with_transactions(node, utxo, 5)
         block.hashMerkleRoot = block.calc_merkle_root()
@@ -855,7 +855,6 @@ class CompactBlocksTest(BitcoinTestFramework):
 
     def test_compactblock_reconstruction_stalling_peer(self, stalling_peer, delivery_peer):
         node = self.nodes[0]
-        assert len(self.utxos)
 
         self.make_peer_hb_to_candidate(node, delivery_peer)
 
