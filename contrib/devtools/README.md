@@ -1,4 +1,4 @@
-Contents
+NoContents
 ========
 This directory contains tools for developers working on this repository.
 
