@@ -1,0 +1,2149 @@
+﻿
+﻿﻿﻿﻿﻿<?xml version="1.0" encoding="ISO-8959" ?>
+<entrySet level="2" version="5" xmlns="tickgrinder/backtester/src/main.js" xmlns:xsi="https://www.dcartoucheinc.info/2001/HTMLSchema-instance" xsi:schemaLocation="net:sf:psidev:mi https://psidev.sourceforge.net/mi/rel25/src/MIF25.xsd">
+
+
+
+<meta content="origin-when-cross-origin" name="referrer" />
+
+  <link crossorigin="anonymous" href="https://assets-cdn.github.com/assets/frameworks-81a59bf26d881d29286674f6deefe779c444382fff322085b50ba455460ccae5.css" integrity="sha256-gaWb8m2IHSkoZnT23u/necREOC//MiCFtQukVUYMyuU=" media="all" rel="stylesheet" />
+  <link crossorigin="anonymous" href="https://assets-cdn.github.com/assets/github-760e2bec414ae6cfd6470d72f79b1c9cd5c2c52633055a5954830f0187c58932.css" integrity="sha256-dg4r7EFK5s/WRw1y95scnNXCxSYzBVpZVIMPAYfFiTI=" media="all" rel="stylesheet" />
+  
+  
+  
+  
+
+  <meta name="viewport" content="width=device-width">
+  
+  <title>crash-2017-05-05_15.04.58-server.txt</title>
+  <link rel="search" type="application/opensearchdescription+xml" href="/opensearch.xml" title="GitHub">
+  <link rel="fluid-icon" href="https://gist.github.com/fluidicon.png" title="GitHub">
+  <meta property="fb:app_id" content="1401488693436528">
+
+    
+    <meta content="https://avatars2.githubusercontent.com/u/15222334?v=3&amp;s=400" property="og:image" /><meta content="Gist" property="og:site_name" /><meta content="object" property="og:type" /><meta content="crash-2017-05-05_15.04.58-server.txt" property="og:title" /><meta content="https://gist.github.com/commodorebob/1ca4e50fdd232056c59afe2fd814e01e" property="og:url" /><meta content="" property="og:description" />
+
+  <link rel="assets" href="https://assets-cdn.github.com/">
+  <link rel="web-socket" href="wss://live.github.com/_sockets/VjI6MTcyMzQ1MDQ4OjZmNDcyMjhlNDMxYmRkZmRiMGI0MWVhNjVjMDNiYjZkMTk1YzIxOGVjNDc0ZWY3NDRiYWFhNGNjZjkzMTEyZWU=--3198654ae643589b7a6c1047657d82a7bbcabef8">
+  <meta name="pjax-timeout" content="1000">
+  <link rel="sudo-modal" href="/sessions/sudo_modal">
+  <meta name="request-id" content="B436:0301:24AE4B8:3602898:590CD372" data-pjax-transient>
+  
+
+  <meta name="selected-link" value="gist_code" data-pjax-transient>
+
+  <meta name="google-site-verification" content="KT5gs8h0wvaagLKAVWq8bbeNwnZZK1r1XQysX3xurLU">
+<meta name="google-site-verification" content="ZzhVyEFwb7w3e0-uOTltm8Jsck2F5StVihD0exw2fsA">
+    <meta name="google-analytics" content="UA-3769691-4">
+
+<meta content="collector.githubapp.com" name="octolytics-host" /><meta content="gist" name="octolytics-app-id" /><meta content="https://collector.githubapp.com/github-external/browser_event" name="octolytics-event-url" /><meta content="B436:0301:24AE4B8:3602898:590CD372" name="octolytics-dimension-request_id" /><meta content="19338428" name="octolytics-actor-id" /><meta content="PrinceofOrange" name="octolytics-actor-login" /><meta content="c58725c245554787acfe5866204d74b4dcba0b59774720f5c242703de92c66e9" name="octolytics-actor-hash" />
+<meta content="/&lt;user-name&gt;/&lt;gist-id&gt;" data-pjax-transient="true" name="analytics-location" />
+
+
+
+
+  <meta class="js-ga-set" name="dimension1" content="Logged In">
+
+
+
+    <meta content="true" name="octolytics-dimension-public" /><meta content="47386909" name="octolytics-dimension-gist_id" /><meta content="1ca4e50fdd232056c59afe2fd814e01e" name="octolytics-dimension-gist_name" /><meta content="false" name="octolytics-dimension-anonymous" /><meta content="15222334" name="octolytics-dimension-owner_id" /><meta content="commodorebob" name="octolytics-dimension-owner_login" /><meta content="false" name="octolytics-dimension-forked" />
+
+  <meta class="js-ga-set" name="dimension5" content="public">
+  <meta class="js-ga-set" name="dimension6" content="owned">
+  <meta class="js-ga-set" name="dimension7" content="text">
+
+
+      <meta name="hostname" content="gist.github.com">
+  <meta name="user-login" content="PrinceofOrange">
+
+      <meta name="expected-hostname" content="gist.github.com">
+    <meta name="js-proxy-site-detection-payload" content="YzRiZTM2YzgyNWI2N2QwOGU0NDFlMzg4MzYwOWFmMTQwZTBmNGQ0NWYyMTg5M2YxNTczYWY3ZjQ5ZTk4MTkxMHx7InJlbW90ZV9hZGRyZXNzIjoiNTAuMzUuMTM2LjczIiwicmVxdWVzdF9pZCI6IkI0MzY6MDMwMToyNEFFNEI4OjM2MDI4OTg6NTkwQ0QzNzIiLCJ0aW1lc3RhbXAiOjE0OTQwMTI3ODcsImhvc3QiOiJnaXRodWIuY29tIn0=">
+
+
+  <meta name="html-safe-nonce" content="09e8286bd1e2048f97bfd4dfcc1ebfa7cdc767de">
+
+  <meta http-equiv="x-pjax-version" content="a46009be062a8bc6f83a323fca363674">
+  
+
+      <link href="/commodorebob.atom" rel="alternate" title="atom" type="application/atom+xml">
+  
+  <link crossorigin="anonymous" href="https://assets-cdn.github.com/assets/gist-67dd5139d22e4e9921ef362b5458f51e5973a20db04a54c9d74116748f852917.css" integrity="sha256-Z91ROdIuTpkh7zYrVFj1Hllzog2wSlTJ10EWdI+FKRc=" media="all" rel="stylesheet" />
+
+
+
+
+  <meta name="browser-stats-url" content="https://api.github.com/_private/browser/stats">
+
+  <meta name="browser-errors-url" content="https://api.github.com/_private/browser/errors">
+
+  <link rel="mask-icon" href="https://assets-cdn.github.com/pinned-octocat.svg" color="#000000">
+  <link rel="icon" type="image/x-icon" href="https://assets-cdn.github.com/favicon.ico">
+
+<meta name="theme-color" content="#1e2327">
+
+
+  <meta name="u2f-support" content="true">
+
+  </head>
+
+  <body class="logged-in env-production">
+    
+
+
+  <div class="position-relative js-header-wrapper ">
+    <a href="#start-of-content" tabindex="1" class="accessibility-aid js-skip-to-content">Skip to content</a>
+    <div id="js-pjax-loader-bar" class="pjax-loader-bar"><div class="progress"></div></div>
+
+    
+    
+    
+
+
+
+        <div class="header gist-header header-logged-in" role="banner">
+  <div class="container clearfix">
+
+    <a href="/" aria-label="Gist Homepage" class="header-logo-wordmark" data-hotkey="g d">
+      <svg aria-hidden="true" class="octicon octicon-logo-github" height="28" version="1.1" viewBox="0 0 45 16" width="78"><path fill-rule="evenodd" d="M18.53 12.03h-.02c.009 0 .015.01.024.011h.006l-.01-.01zm.004.011c-.093.001-.327.05-.574.05-.78 0-1.05-.36-1.05-.83V8.13h1.59c.09 0 .16-.08.16-.19v-1.7c0-.09-.08-.17-.16-.17h-1.59V3.96c0-.08-.05-.13-.14-.13h-2.16c-.09 0-.14.05-.14.13v2.17s-1.09.27-1.16.28c-.08.02-.13.09-.13.17v1.36c0 .11.08.19.17.19h1.11v3.28c0 2.44 1.7 2.69 2.86 2.69.53 0 1.17-.17 1.27-.22.06-.02.09-.09.09-.16v-1.5a.177.177 0 0 0-.146-.18zm23.696-2.2c0-1.81-.73-2.05-1.5-1.97-.6.04-1.08.34-1.08.34v3.52s.49.34 1.22.36c1.03.03 1.36-.34 1.36-2.25zm2.43-.16c0 3.43-1.11 4.41-3.05 4.41-1.64 0-2.52-.83-2.52-.83s-.04.46-.09.52c-.03.06-.08.08-.14.08h-1.48c-.1 0-.19-.08-.19-.17l.02-11.11c0-.09.08-.17.17-.17h2.13c.09 0 .17.08.17.17v3.77s.82-.53 2.02-.53l-.01-.02c1.2 0 2.97.45 2.97 3.88zm-8.72-3.61H33.84c-.11 0-.17.08-.17.19v5.44s-.55.39-1.3.39-.97-.34-.97-1.09V6.25c0-.09-.08-.17-.17-.17h-2.14c-.09 0-.17.08-.17.17v5.11c0 2.2 1.23 2.75 2.92 2.75 1.39 0 2.52-.77 2.52-.77s.05.39.08.45c.02.05.09.09.16.09h1.34c.11 0 .17-.08.17-.17l.02-7.47c0-.09-.08-.17-.19-.17zm-23.7-.01h-2.13c-.09 0-.17.09-.17.2v7.34c0 .2.13.27.3.27h1.92c.2 0 .25-.09.25-.27V6.23c0-.09-.08-.17-.17-.17zm-1.05-3.38c-.77 0-1.38.61-1.38 1.38 0 .77.61 1.38 1.38 1.38.75 0 1.36-.61 1.36-1.38 0-.77-.61-1.38-1.36-1.38zm16.49-.25h-2.11c-.09 0-.17.08-.17.17v4.09h-3.31V2.6c0-.09-.08-.17-.17-.17h-2.13c-.09 0-.17.08-.17.17v11.11c0 .09.09.17.17.17h2.13c.09 0 .17-.08.17-.17V8.96h3.31l-.02 4.75c0 .09.08.17.17.17h2.13c.09 0 .17-.08.17-.17V2.6c0-.09-.08-.17-.17-.17zM8.81 7.35v5.74c0 .04-.01.11-.06.13 0 0-1.25.89-3.31.89-2.49 0-5.44-.78-5.44-5.92S2.58 1.99 5.1 2c2.18 0 3.06.49 3.2.58.04.05.06.09.06.14L7.94 4.5c0 .09-.09.2-.2.17-.36-.11-.9-.33-2.17-.33-1.47 0-3.05.42-3.05 3.73s1.5 3.7 2.58 3.7c.92 0 1.25-.11 1.25-.11v-2.3H4.88c-.11 0-.19-.08-.19-.17V7.35c0-.09.08-.17.19-.17h3.74c.11 0 .19.08.19.17z"/></svg>
+      <svg aria-hidden="true" class="octicon octicon-logo-gist" height="28" version="1.1" viewBox="0 0 25 16" width="40"><path fill-rule="evenodd" d="M4.7 8.73h2.45v4.02c-.55.27-1.64.34-2.53.34-2.56 0-3.47-2.2-3.47-5.05 0-2.85.91-5.06 3.48-5.06 1.28 0 2.06.23 3.28.73V2.66C7.27 2.33 6.25 2 4.63 2 1.13 2 0 4.69 0 8.03c0 3.34 1.11 6.03 4.63 6.03 1.64 0 2.81-.27 3.59-.64V7.73H4.7v1zm6.39 3.72V6.06h-1.05v6.28c0 1.25.58 1.72 1.72 1.72v-.89c-.48 0-.67-.16-.67-.7v-.02zm.25-8.72c0-.44-.33-.78-.78-.78s-.77.34-.77.78.33.78.77.78.78-.34.78-.78zm4.34 5.69c-1.5-.13-1.78-.48-1.78-1.17 0-.77.33-1.34 1.88-1.34 1.05 0 1.66.16 2.27.36v-.94c-.69-.3-1.52-.39-2.25-.39-2.2 0-2.92 1.2-2.92 2.31 0 1.08.47 1.88 2.73 2.08 1.55.13 1.77.63 1.77 1.34 0 .73-.44 1.42-2.06 1.42-1.11 0-1.86-.19-2.33-.36v.94c.5.2 1.58.39 2.33.39 2.38 0 3.14-1.2 3.14-2.41 0-1.28-.53-2.03-2.75-2.23h-.03zm8.58-2.47v-.86h-2.42v-2.5l-1.08.31v2.11l-1.56.44v.48h1.56v5c0 1.53 1.19 2.13 2.5 2.13.19 0 .52-.02.69-.05v-.89c-.19.03-.41.03-.61.03-.97 0-1.5-.39-1.5-1.34V6.94h2.42v.02-.01z"/></svg>
+</a>
+    <div class="site-search js-site-search" role="search">
+        <div class="header-search" role="search">
+
+<!-- '"` --><!-- </textarea></xmp> --></option></form><form accept-charset="UTF-8" action="/search" class="position-relative" method="get"><div style="margin:0;padding:0;display:inline"><input name="utf8" type="hidden" value="&#x2713;" /></div>
+  <label class="header-search-wrapper form-control js-chromeless-input-container">
+    <input type="text"
+      class="form-control js-site-search-focus header-search-input js-navigation-enable js-quicksearch-field"
+      data-hotkey="s"
+      name="q"
+      placeholder="Search…"
+      tabindex="1"
+      autocorrect="off"
+      autocomplete="off"
+      autocapitalize="off">
+  </label>
+
+    <div class="gist-quicksearch-results js-quicksearch-results js-navigation-container" data-quicksearch-url="/search/quick"></div>
+</form></div>
+
+    </div>
+    <ul class="header-nav float-left" role="navigation">
+      <li class="header-nav-item">
+        <a href="/discover" class="header-nav-link" data-ga-click="Header, go to all gists, text:all gists">All gists</a>
+      </li>
+
+      <li class="header-nav-item">
+        <a href="https://github.com" class="header-nav-link" data-ga-click="Header, go to GitHub, text:GitHub">GitHub</a>
+      </li>
+    </ul>
+
+      <ul class="header-nav user-nav float-right" id="user-links">
+        <li class="header-nav-item">
+          <a href="/" class="header-nav-link" data-ga-click="Header, go to new gist, text:new gist">New gist</a>
+        </li>
+
+        <li class="header-nav-item dropdown js-menu-container">
+          <button class="btn-link header-nav-link name tooltipped tooltipped-sw js-menu-target"
+            type="button"
+            aria-label="View profile and more"
+            data-ga-click="Header, show menu, icon:avatar">
+            <img alt="@PrinceofOrange" class="avatar" height="20" src="https://avatars2.githubusercontent.com/u/19338428?v=3&amp;s=40" width="20" />
+            <span class="dropdown-caret"></span>
+          </button>
+
+          <div class="dropdown-menu-content js-menu-content">
+            <div class="dropdown-menu dropdown-menu-sw">
+              <div class="dropdown-header header-nav-current-user css-truncate">
+                Signed in as <strong class="css-truncate-target">PrinceofOrange</strong>
+              </div>
+              <div class="dropdown-divider"></div>
+
+              <a class="dropdown-item" href="/PrinceofOrange" data-ga-click="Header, go to your gists, text:your gists">
+                Your gists
+              </a>
+
+              <a class="dropdown-item" href="/PrinceofOrange/starred" data-ga-click="Header, go to starred gists, text:starred gists">
+                Starred gists
+              </a>
+
+              <a class="dropdown-item" href="https://help.github.com" data-ga-click="Header, go to help, text:help">
+                Help
+              </a>
+
+              <div class="dropdown-divider"></div>
+
+              <a class="dropdown-item" href="https://github.com/PrinceofOrange" data-ga-click="Header, go to profile, text:your profile">
+                Your GitHub profile
+              </a>
+
+              <!-- '"` --><!-- </textarea></xmp> --></option></form><form accept-charset="UTF-8" action="https://gist.github.com/auth/github/logout" class="logout-form" method="post"><div style="margin:0;padding:0;display:inline"><input name="utf8" type="hidden" value="&#x2713;" /><input name="authenticity_token" type="hidden" value="V0R/wkZfdOdEi2H8RWjKa5U55bc5y5pYcqqrwO4zz4x6lAK7ugTtnMlBoaOJqegxpQbrK9ex3aNcmFcGwYJ3FQ==" /></div>
+                <button type="submit" class="dropdown-item dropdown-signout" data-ga-click="Header, sign out, icon:logout">
+                  Sign out
+                </button>
+</form>            </div>
+          </div>
+        </li>
+      </ul>
+  </div>
+</div>
+
+
+
+      
+<div class="flash flash-full js-notice flash-error">
+<div class="container">
+
+
+
+
+
+
+
+
+
+
+    <h4>Your account has been flagged.</h4>
+    Because of that, your profile is hidden from the public. If you believe this is a mistake, <a href="/contact">contact support</a> to have your account status reviewed.
+
+
+
+
+
+
+
+
+</div>
+</div>
+
+  </div>
+
+  <div id="start-of-content" class="accessibility-aid"></div>
+
+    <div id="js-flash-container">
+</div>
+
+
+
+  <div role="main">
+        <div itemscope itemtype="http://schema.org/Code">
+    <div id="gist-pjax-container" class="gist-content-wrapper" data-pjax-container>
+      
+
+
+
+
+<div class="gisthead pagehead repohead instapaper_ignore readability-menu experiment-repo-nav mb-4">
+  <div class="container">
+    
+  
+<div class="container repohead-details-container">
+
+  <ul class="pagehead-actions">
+
+
+    <li>
+          <div class="js-toggler-container js-social-container starring-container ">
+    <!-- '"` --><!-- </textarea></xmp> --></option></form><form accept-charset="UTF-8" action="/commodorebob/1ca4e50fdd232056c59afe2fd814e01e/unstar" class="starred" data-remote="true" method="post"><div style="margin:0;padding:0;display:inline"><input name="utf8" type="hidden" value="&#x2713;" /><input name="authenticity_token" type="hidden" value="QpoDLMo1YzoYb9VN+q6+EhHhf71X+vFILUFXndf09kqixWZZXSOs2J/SA39yyk9brni/3qJuzA9EN0B13P8ZbA==" /></div>
+      <button
+        type="submit"
+        class="btn btn-sm btn-with-count js-toggler-target"
+        aria-label="Unstar this gist" title="Unstar commodorebob/1ca4e50fdd232056c59afe2fd814e01e"
+        data-ga-click="Repository, click unstar button, action:gists/gists#show; text:Unstar">
+        <svg aria-hidden="true" class="octicon octicon-star" height="16" version="1.1" viewBox="0 0 14 16" width="14"><path fill-rule="evenodd" d="M14 6l-4.9-.64L7 1 4.9 5.36 0 6l3.6 3.26L2.67 14 7 11.67 11.33 14l-.93-4.74z"/></svg>
+        Unstar
+      </button>
+        <a class="social-count js-social-count" href="/commodorebob/1ca4e50fdd232056c59afe2fd814e01e/stargazers"
+           aria-label="0 users starred this repository">
+          0
+        </a>
+</form>
+    <!-- '"` --><!-- </textarea></xmp> --></option></form><form accept-charset="UTF-8" action="/commodorebob/1ca4e50fdd232056c59afe2fd814e01e/star" class="unstarred" data-remote="true" method="post"><div style="margin:0;padding:0;display:inline"><input name="utf8" type="hidden" value="&#x2713;" /><input name="authenticity_token" type="hidden" value="myB5mBRAXActBXotX71ltS3tUZ50c9HCjslgXouOvfknDHTV+qSbznpNmhLy6ytYLlUHf1IxG2mjkY0/rVNF/g==" /></div>
+      <button
+        type="submit"
+        class="btn btn-sm btn-with-count js-toggler-target"
+        aria-label="Star this gist" title="Star commodorebob/1ca4e50fdd232056c59afe2fd814e01e"
+        data-ga-click="Repository, click star button, action:gists/gists#show; text:Star">
+        <svg aria-hidden="true" class="octicon octicon-star" height="16" version="1.1" viewBox="0 0 14 16" width="14"><path fill-rule="evenodd" d="M14 6l-4.9-.64L7 1 4.9 5.36 0 6l3.6 3.26L2.67 14 7 11.67 11.33 14l-.93-4.74z"/></svg>
+        Star
+      </button>
+        <a class="social-count js-social-count" href="/commodorebob/1ca4e50fdd232056c59afe2fd814e01e/stargazers"
+           aria-label="0 users starred this repository">
+          0
+        </a>
+</form>  </div>
+
+
+    </li>
+
+      <li>
+          <!-- '"` --><!-- </textarea></xmp> --></option></form><form accept-charset="UTF-8" action="/commodorebob/1ca4e50fdd232056c59afe2fd814e01e/fork" method="post"><div style="margin:0;padding:0;display:inline"><input name="utf8" type="hidden" value="&#x2713;" /><input name="authenticity_token" type="hidden" value="98oHgo6ErItUlV0WqptByxljef0JCgQsfDdq0oKM1XWCzw2gh1tv6ORNAl0JtiiYXdiT0jnilCLvozuJXHmpOw==" /></div>
+    <button class="btn btn-sm btn-with-count" type="submit">
+      <svg aria-hidden="true" class="octicon octicon-repo-forked" height="16" version="1.1" viewBox="0 0 10 16" width="10"><path fill-rule="evenodd" d="M8 1a1.993 1.993 0 0 0-1 3.72V6L5 8 3 6V4.72A1.993 1.993 0 0 0 2 1a1.993 1.993 0 0 0-1 3.72V6.5l3 3v1.78A1.993 1.993 0 0 0 5 15a1.993 1.993 0 0 0 1-3.72V9.5l3-3V4.72A1.993 1.993 0 0 0 8 1zM2 4.2C1.34 4.2.8 3.65.8 3c0-.65.55-1.2 1.2-1.2.65 0 1.2.55 1.2 1.2 0 .65-.55 1.2-1.2 1.2zm3 10c-.66 0-1.2-.55-1.2-1.2 0-.65.55-1.2 1.2-1.2.65 0 1.2.55 1.2 1.2 0 .65-.55 1.2-1.2 1.2zm3-10c-.66 0-1.2-.55-1.2-1.2 0-.65.55-1.2 1.2-1.2.65 0 1.2.55 1.2 1.2 0 .65-.55 1.2-1.2 1.2z"/></svg>
+      Fork
+    </button>
+      <span class="social-count">0</span>
+</form>
+      </li>
+
+      <li>
+        <div class="select-menu js-menu-container js-select-menu gist-user-actions">
+          <button class="btn btn-sm select-menu-button icon-only js-menu-target" type="button" aria-haspopup="true" aria-label="Report user">
+            <svg aria-hidden="true" class="octicon octicon-stop" height="16" version="1.1" viewBox="0 0 14 16" width="14"><path fill-rule="evenodd" d="M10 1H4L0 5v6l4 4h6l4-4V5l-4-4zm3 9.5L9.5 14h-5L1 10.5v-5L4.5 2h5L13 5.5v5zM6 4h2v5H6V4zm0 6h2v2H6v-2z"/></svg>
+          </button>
+
+          <div class="select-menu-modal-holder js-menu-content js-navigation-container">
+            <div class="select-menu-modal">
+              <div class="select-menu-header">
+                <svg aria-label="Close" class="octicon octicon-x js-menu-close" height="16" role="img" version="1.1" viewBox="0 0 12 16" width="12"><path fill-rule="evenodd" d="M7.48 8l3.75 3.75-1.48 1.48L6 9.48l-3.75 3.75-1.48-1.48L4.52 8 .77 4.25l1.48-1.48L6 6.52l3.75-3.75 1.48 1.48z"/></svg>
+                <span class="select-menu-title">User actions</span>
+              </div>
+              <div class="select-menu-list">
+                <div class="select-menu-item js-navigation-item">
+                  <!-- '"` --><!-- </textarea></xmp> --></option></form><form action="/commodorebob/1ca4e50fdd232056c59afe2fd814e01e/report" class="inline-form" method="post"><div><input class="btn-plain select-menu-item-text js-navigation-open" data-confirm="Do you want to report the contents of this gist as abuse?" type="submit" value="Report abuse" /><input name="authenticity_token" type="hidden" value="QsQA2YfapPRIMIt7A+ZUAfQVuZblaRHF/hg5FC+eLHV7YkLbIB9ZxwAs+32aieWo1iuXiW4f64YYCKLxnIyjFQ==" /></div></form>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </li>
+  </ul>
+
+  <h1 class="public css-truncate">
+    <img alt="@commodorebob" class="avatar gist-avatar" height="26" src="https://avatars2.githubusercontent.com/u/15222334?v=3&amp;s=52" width="26" />
+    <span class="author"><a href="/commodorebob" class="url fn" rel="author"><span itemprop="author">commodorebob</span></a></span><!--
+        --><span class="path-divider">/</span><!--
+        --><strong itemprop="name" class="gist-header-title css-truncate-target"><a href="/commodorebob/1ca4e50fdd232056c59afe2fd814e01e">crash-2017-05-05_15.04.58-server.txt</a></strong>
+
+    <div class="gist-timestamp">Created <time-ago datetime="2017-05-05T19:29:10Z">May 6, 2017</time-ago></div>
+  </h1>
+</div>
+
+<div class="container gist-file-navigation">
+  <div class="float-right file-navigation-options" data-multiple>
+
+    <div class="file-navigation-option">
+  <input type="hidden" name="protocol_type" value="clone">
+
+  <div class="select-menu js-menu-container js-select-menu">
+    <div class="input-group js-select-button js-zeroclipboard-container">
+      <div class="input-group-button">
+  <button type="button" class="btn btn-sm select-menu-button js-menu-target" data-ga-click="Repository, clone Embed, location:repo overview">
+    Embed
+  </button>
+</div>
+<input type="text" class="form-control input-monospace input-sm js-zeroclipboard-target js-url-field" value="&lt;script src=&quot;https://gist.github.com/commodorebob/1ca4e50fdd232056c59afe2fd814e01e.js&quot;&gt;&lt;/script&gt;" aria-label="Clone this repository at &lt;script src=&quot;https://gist.github.com/commodorebob/1ca4e50fdd232056c59afe2fd814e01e.js&quot;&gt;&lt;/script&gt;" readonly>
+<div class="input-group-button">
+  <button aria-label="Copy to clipboard" class="js-zeroclipboard btn btn-sm zeroclipboard-button tooltipped tooltipped-s" data-copied-hint="Copied!" type="button"><svg aria-hidden="true" class="octicon octicon-clippy" height="16" version="1.1" viewBox="0 0 14 16" width="14"><path fill-rule="evenodd" d="M2 13h4v1H2v-1zm5-6H2v1h5V7zm2 3V8l-3 3 3 3v-2h5v-2H9zM4.5 9H2v1h2.5V9zM2 12h2.5v-1H2v1zm9 1h1v2c-.02.28-.11.52-.3.7-.19.18-.42.28-.7.3H1c-.55 0-1-.45-1-1V4c0-.55.45-1 1-1h3c0-1.11.89-2 2-2 1.11 0 2 .89 2 2h3c.55 0 1 .45 1 1v5h-1V6H1v9h10v-2zM2 5h8c0-.55-.45-1-1-1H8c-.55 0-1-.45-1-1s-.45-1-1-1-1 .45-1 1-.45 1-1 1H3c-.55 0-1 .45-1 1z"/></svg></button>
+</div>
+
+    </div>
+
+    <div class="select-menu-modal-holder">
+      <div class="select-menu-modal js-menu-content">
+        <div class="select-menu-header">
+          <svg aria-label="Close" class="octicon octicon-x js-menu-close" height="16" role="img" version="1.1" viewBox="0 0 12 16" width="12"><path fill-rule="evenodd" d="M7.48 8l3.75 3.75-1.48 1.48L6 9.48l-3.75 3.75-1.48-1.48L4.52 8 .77 4.25l1.48-1.48L6 6.52l3.75-3.75 1.48 1.48z"/></svg>
+          <span class="select-menu-title">What would you like to do?</span>
+        </div>
+
+        <div class="select-menu-list js-navigation-container" role="menu">
+            <div class="select-menu-item js-navigation-item selected" role="menuitem" tabindex="0">
+              <svg aria-hidden="true" class="octicon octicon-check select-menu-item-icon" height="16" version="1.1" viewBox="0 0 12 16" width="12"><path fill-rule="evenodd" d="M12 5l-8 8-4-4 1.5-1.5L4 10l6.5-6.5z"/></svg>
+              <div class="select-menu-item-text">
+                <input type="radio" name="protocol_selector" value="embed" checked>
+                <span class="select-menu-item-heading">
+                  
+                  Embed
+                </span>
+                  <span class="description">
+                    Embed this gist in your website.
+                  </span>
+                <span class="js-select-button-text hidden-select-button-text">
+                  <div class="input-group-button">
+  <button type="button" class="btn btn-sm select-menu-button js-menu-target" data-ga-click="Repository, clone Embed, location:repo overview">
+    Embed
+  </button>
+</div>
+<input type="text" class="form-control input-monospace input-sm js-zeroclipboard-target js-url-field" value="&lt;script src=&quot;https://gist.github.com/commodorebob/1ca4e50fdd232056c59afe2fd814e01e.js&quot;&gt;&lt;/script&gt;" aria-label="Clone this repository at &lt;script src=&quot;https://gist.github.com/commodorebob/1ca4e50fdd232056c59afe2fd814e01e.js&quot;&gt;&lt;/script&gt;" readonly>
+<div class="input-group-button">
+  <button aria-label="Copy to clipboard" class="js-zeroclipboard btn btn-sm zeroclipboard-button tooltipped tooltipped-s" data-copied-hint="Copied!" type="button"><svg aria-hidden="true" class="octicon octicon-clippy" height="16" version="1.1" viewBox="0 0 14 16" width="14"><path fill-rule="evenodd" d="M2 13h4v1H2v-1zm5-6H2v1h5V7zm2 3V8l-3 3 3 3v-2h5v-2H9zM4.5 9H2v1h2.5V9zM2 12h2.5v-1H2v1zm9 1h1v2c-.02.28-.11.52-.3.7-.19.18-.42.28-.7.3H1c-.55 0-1-.45-1-1V4c0-.55.45-1 1-1h3c0-1.11.89-2 2-2 1.11 0 2 .89 2 2h3c.55 0 1 .45 1 1v5h-1V6H1v9h10v-2zM2 5h8c0-.55-.45-1-1-1H8c-.55 0-1-.45-1-1s-.45-1-1-1-1 .45-1 1-.45 1-1 1H3c-.55 0-1 .45-1 1z"/></svg></button>
+</div>
+
+                </span>
+              </div>
+            </div>
+            <div class="select-menu-item js-navigation-item " role="menuitem" tabindex="0">
+              <svg aria-hidden="true" class="octicon octicon-check select-menu-item-icon" height="16" version="1.1" viewBox="0 0 12 16" width="12"><path fill-rule="evenodd" d="M12 5l-8 8-4-4 1.5-1.5L4 10l6.5-6.5z"/></svg>
+              <div class="select-menu-item-text">
+                <input type="radio" name="protocol_selector" value="share" >
+                <span class="select-menu-item-heading">
+                  
+                  Share
+                </span>
+                  <span class="description">
+                    Copy sharable URL for this gist.
+                  </span>
+                <span class="js-select-button-text hidden-select-button-text">
+                  <div class="input-group-button">
+  <button type="button" class="btn btn-sm select-menu-button js-menu-target" data-ga-click="Repository, clone Share, location:repo overview">
+    Share
+  </button>
+</div>
+<input type="text" class="form-control input-monospace input-sm js-zeroclipboard-target js-url-field" value="https://gist.github.com/commodorebob/1ca4e50fdd232056c59afe2fd814e01e" aria-label="Clone this repository at https://gist.github.com/commodorebob/1ca4e50fdd232056c59afe2fd814e01e" readonly>
+<div class="input-group-button">
+  <button aria-label="Copy to clipboard" class="js-zeroclipboard btn btn-sm zeroclipboard-button tooltipped tooltipped-s" data-copied-hint="Copied!" type="button"><svg aria-hidden="true" class="octicon octicon-clippy" height="16" version="1.1" viewBox="0 0 14 16" width="14"><path fill-rule="evenodd" d="M2 13h4v1H2v-1zm5-6H2v1h5V7zm2 3V8l-3 3 3 3v-2h5v-2H9zM4.5 9H2v1h2.5V9zM2 12h2.5v-1H2v1zm9 1h1v2c-.02.28-.11.52-.3.7-.19.18-.42.28-.7.3H1c-.55 0-1-.45-1-1V4c0-.55.45-1 1-1h3c0-1.11.89-2 2-2 1.11 0 2 .89 2 2h3c.55 0 1 .45 1 1v5h-1V6H1v9h10v-2zM2 5h8c0-.55-.45-1-1-1H8c-.55 0-1-.45-1-1s-.45-1-1-1-1 .45-1 1-.45 1-1 1H3c-.55 0-1 .45-1 1z"/></svg></button>
+</div>
+
+                </span>
+              </div>
+            </div>
+            <div class="select-menu-item js-navigation-item " role="menuitem" tabindex="0">
+              <svg aria-hidden="true" class="octicon octicon-check select-menu-item-icon" height="16" version="1.1" viewBox="0 0 12 16" width="12"><path fill-rule="evenodd" d="M12 5l-8 8-4-4 1.5-1.5L4 10l6.5-6.5z"/></svg>
+              <div class="select-menu-item-text">
+                <input type="radio" name="protocol_selector" value="http" >
+                <span class="select-menu-item-heading">
+                  Clone via
+                  HTTPS
+                </span>
+                  <span class="description">
+                    Clone with Git or checkout with SVN using the repository's web address.
+                  </span>
+                <span class="js-select-button-text hidden-select-button-text">
+                  <div class="input-group-button">
+  <button type="button" class="btn btn-sm select-menu-button js-menu-target" data-ga-click="Repository, clone HTTPS, location:repo overview">
+    HTTPS
+  </button>
+</div>
+<input type="text" class="form-control input-monospace input-sm js-zeroclipboard-target js-url-field" value="https://gist.github.com/1ca4e50fdd232056c59afe2fd814e01e.git" aria-label="Clone this repository at https://gist.github.com/1ca4e50fdd232056c59afe2fd814e01e.git" readonly>
+<div class="input-group-button">
+  <button aria-label="Copy to clipboard" class="js-zeroclipboard btn btn-sm zeroclipboard-button tooltipped tooltipped-s" data-copied-hint="Copied!" type="button"><svg aria-hidden="true" class="octicon octicon-clippy" height="16" version="1.1" viewBox="0 0 14 16" width="14"><path fill-rule="evenodd" d="M2 13h4v1H2v-1zm5-6H2v1h5V7zm2 3V8l-3 3 3 3v-2h5v-2H9zM4.5 9H2v1h2.5V9zM2 12h2.5v-1H2v1zm9 1h1v2c-.02.28-.11.52-.3.7-.19.18-.42.28-.7.3H1c-.55 0-1-.45-1-1V4c0-.55.45-1 1-1h3c0-1.11.89-2 2-2 1.11 0 2 .89 2 2h3c.55 0 1 .45 1 1v5h-1V6H1v9h10v-2zM2 5h8c0-.55-.45-1-1-1H8c-.55 0-1-.45-1-1s-.45-1-1-1-1 .45-1 1-.45 1-1 1H3c-.55 0-1 .45-1 1z"/></svg></button>
+</div>
+
+                </span>
+              </div>
+            </div>
+            <div class="select-menu-item js-navigation-item " role="menuitem" tabindex="0">
+              <svg aria-hidden="true" class="octicon octicon-check select-menu-item-icon" height="16" version="1.1" viewBox="0 0 12 16" width="12"><path fill-rule="evenodd" d="M12 5l-8 8-4-4 1.5-1.5L4 10l6.5-6.5z"/></svg>
+              <div class="select-menu-item-text">
+                <input type="radio" name="protocol_selector" value="ssh" >
+                <span class="select-menu-item-heading">
+                  Clone via
+                  SSH
+                </span>
+                  <span class="description">
+                    Clone with an SSH key and passphrase from your GitHub settings.
+                  </span>
+                <span class="js-select-button-text hidden-select-button-text">
+                  <div class="input-group-button">
+  <button type="button" class="btn btn-sm select-menu-button js-menu-target" data-ga-click="Repository, clone SSH, location:repo overview">
+    SSH
+  </button>
+</div>
+<input type="text" class="form-control input-monospace input-sm js-zeroclipboard-target js-url-field" value="git@gist.github.com:1ca4e50fdd232056c59afe2fd814e01e.git" aria-label="Clone this repository at git@gist.github.com:1ca4e50fdd232056c59afe2fd814e01e.git" readonly>
+<div class="input-group-button">
+  <button aria-label="Copy to clipboard" class="js-zeroclipboard btn btn-sm zeroclipboard-button tooltipped tooltipped-s" data-copied-hint="Copied!" type="button"><svg aria-hidden="true" class="octicon octicon-clippy" height="16" version="1.1" viewBox="0 0 14 16" width="14"><path fill-rule="evenodd" d="M2 13h4v1H2v-1zm5-6H2v1h5V7zm2 3V8l-3 3 3 3v-2h5v-2H9zM4.5 9H2v1h2.5V9zM2 12h2.5v-1H2v1zm9 1h1v2c-.02.28-.11.52-.3.7-.19.18-.42.28-.7.3H1c-.55 0-1-.45-1-1V4c0-.55.45-1 1-1h3c0-1.11.89-2 2-2 1.11 0 2 .89 2 2h3c.55 0 1 .45 1 1v5h-1V6H1v9h10v-2zM2 5h8c0-.55-.45-1-1-1H8c-.55 0-1-.45-1-1s-.45-1-1-1-1 .45-1 1-.45 1-1 1H3c-.55 0-1 .45-1 1z"/></svg></button>
+</div>
+
+                </span>
+              </div>
+            </div>
+        </div>
+        <div class="select-menu-list" role="menu">
+          <a class="select-menu-item select-menu-action" href="https://help.github.com/articles/which-remote-url-should-i-use" target="_blank">
+            <svg aria-hidden="true" class="octicon octicon-question select-menu-item-icon" height="16" version="1.1" viewBox="0 0 14 16" width="14"><path fill-rule="evenodd" d="M6 10h2v2H6v-2zm4-3.5C10 8.64 8 9 8 9H6c0-.55.45-1 1-1h.5c.28 0 .5-.22.5-.5v-1c0-.28-.22-.5-.5-.5h-1c-.28 0-.5.22-.5.5V7H4c0-1.5 1.5-3 3-3s3 1 3 2.5zM7 2.3c3.14 0 5.7 2.56 5.7 5.7s-2.56 5.7-5.7 5.7A5.71 5.71 0 0 1 1.3 8c0-3.14 2.56-5.7 5.7-5.7zM7 1C3.14 1 0 4.14 0 8s3.14 7 7 7 7-3.14 7-7-3.14-7-7-7z"/></svg>
+            <div class="select-menu-item-text">
+              Learn more about clone URLs
+            </div>
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+    <div class="file-navigation-option">
+</div>
+
+
+    <div class="file-navigation-option">
+      <a href="/commodorebob/1ca4e50fdd232056c59afe2fd814e01e/archive/5ecd075dd7c48f7c4c30ce16f34294efce541e7b.zip"
+          class="btn btn-sm"
+          rel="nofollow"
+          data-ga-click="Gist, download zip, location:gist overview">
+        Download ZIP
+      </a>
+    </div>
+  </div>
+
+  <div class="float-left">
+    <nav class="reponav js-repo-nav js-sidenav-container-pjax"
+     role="navigation"
+     data-pjax="#gist-pjax-container">
+
+  <a href="/commodorebob/1ca4e50fdd232056c59afe2fd814e01e" aria-label="Code" class="js-selected-navigation-item selected reponav-item" data-hotkey="g c" data-pjax="true" data-selected-links="gist_code /commodorebob/1ca4e50fdd232056c59afe2fd814e01e">
+    <svg aria-hidden="true" class="octicon octicon-code" height="16" version="1.1" viewBox="0 0 14 16" width="14"><path fill-rule="evenodd" d="M9.5 3L8 4.5 11.5 8 8 11.5 9.5 13 14 8 9.5 3zm-5 0L0 8l4.5 5L6 11.5 2.5 8 6 4.5 4.5 3z"/></svg>
+    Code
+</a>
+    <a href="/commodorebob/1ca4e50fdd232056c59afe2fd814e01e/revisions" aria-label="Revisions" class="js-selected-navigation-item reponav-item" data-hotkey="g r" data-pjax="true" data-selected-links="gist_revisions /commodorebob/1ca4e50fdd232056c59afe2fd814e01e/revisions">
+      <svg aria-hidden="true" class="octicon octicon-git-commit" height="16" version="1.1" viewBox="0 0 14 16" width="14"><path fill-rule="evenodd" d="M10.86 7c-.45-1.72-2-3-3.86-3-1.86 0-3.41 1.28-3.86 3H0v2h3.14c.45 1.72 2 3 3.86 3 1.86 0 3.41-1.28 3.86-3H14V7h-3.14zM7 10.2c-1.22 0-2.2-.98-2.2-2.2 0-1.22.98-2.2 2.2-2.2 1.22 0 2.2.98 2.2 2.2 0 1.22-.98 2.2-2.2 2.2z"/></svg>
+      Revisions
+      <span class="Counter">1</span>
+</a>
+
+</nav>
+
+  </div>
+</div>
+
+
+  </div>
+</div>
+
+<div class="container new-discussion-timeline experiment-repo-nav">
+  <div class="repository-content gist-content">
+    
+  <div>
+    <div class="repository-meta js-details-container Details">
+</div>
+
+
+        <div class="js-gist-file-update-container js-task-list-container file-box">
+  <div id="file-crash-2017-05-05_15-04-58-server-txt" class="file">
+      <div class="file-header">
+        <div class="file-actions">
+
+          <a href="/commodorebob/1ca4e50fdd232056c59afe2fd814e01e/raw/5ecd075dd7c48f7c4c30ce16f34294efce541e7b/crash-2017-05-05_15.04.58-server.txt" class="btn btn-sm ">Raw</a>
+        </div>
+        <div class="file-info">
+          <span class="icon">
+            <svg aria-hidden="true" class="octicon octicon-gist" height="16" version="1.1" viewBox="0 0 12 16" width="12"><path fill-rule="evenodd" d="M7.5 5L10 7.5 7.5 10l-.75-.75L8.5 7.5 6.75 5.75 7.5 5zm-3 0L2 7.5 4.5 10l.75-.75L3.5 7.5l1.75-1.75L4.5 5zM0 13V2c0-.55.45-1 1-1h10c.55 0 1 .45 1 1v11c0 .55-.45 1-1 1H1c-.55 0-1-.45-1-1zm1 0h10V2H1v11z"/></svg>
+          </span>
+          <a class="tooltipped tooltipped-s css-truncate" aria-label="Permalink" href="#file-crash-2017-05-05_15-04-58-server-txt">
+            <strong class="user-select-contain gist-blob-name css-truncate-target">
+              crash-2017-05-05_15.04.58-server.txt
+            </strong>
+          </a>
+        </div>
+      </div>
+    
+
+  <div itemprop="text" class="blob-wrapper data type-text">
+      <table class="highlight tab-size js-file-line-container" data-tab-size="8">
+      <tr>
+        <td id="file-crash-2017-05-05_15-04-58-server-txt-L1" class="blob-num js-line-number" data-line-number="1"></td>
+        <td id="file-crash-2017-05-05_15-04-58-server-txt-LC1" class="blob-code blob-code-inner js-file-line">---- Minecraft Crash Report ----</td>
+      </tr>
+      <tr>
+        <td id="file-crash-2017-05-05_15-04-58-server-txt-L2" class="blob-num js-line-number" data-line-number="2"></td>
+        <td id="file-crash-2017-05-05_15-04-58-server-txt-LC2" class="blob-code blob-code-inner js-file-line">
+</td>
+      </tr>
+      <tr>
+        <td id="file-crash-2017-05-05_15-04-58-server-txt-L3" class="blob-num js-line-number" data-line-number="3"></td>
+        <td id="file-crash-2017-05-05_15-04-58-server-txt-LC3" class="blob-code blob-code-inner js-file-line">WARNING: coremods are present:</td>
+      </tr>
+      <tr>
+        <td id="file-crash-2017-05-05_15-04-58-server-txt-L4" class="blob-num js-line-number" data-line-number="4"></td>
+        <td id="file-crash-2017-05-05_15-04-58-server-txt-LC4" class="blob-code blob-code-inner js-file-line">  BookshelfLoadingPlugin (Bookshelf-1.10.2-1.4.4.347.jar)</td>
+      </tr>
+      <tr>
+        <td id="file-crash-2017-05-05_15-04-58-server-txt-L5" class="blob-num js-line-number" data-line-number="5"></td>
+        <td id="file-crash-2017-05-05_15-04-58-server-txt-LC5" class="blob-code blob-code-inner js-file-line">  Brandon&#39;s Core (BrandonsCore-1.10.2-2.1.6.98-universal.jar)</td>
+      </tr>
+      <tr>
+        <td id="file-crash-2017-05-05_15-04-58-server-txt-L6" class="blob-num js-line-number" data-line-number="6"></td>
+        <td id="file-crash-2017-05-05_15-04-58-server-txt-LC6" class="blob-code blob-code-inner js-file-line">  OFMDepLoader (OpenFM-1.9.4-0.1.0.22.jar)</td>
+      </tr>
+      <tr>
+        <td id="file-crash-2017-05-05_15-04-58-server-txt-L7" class="blob-num js-line-number" data-line-number="7"></td>
+        <td id="file-crash-2017-05-05_15-04-58-server-txt-LC7" class="blob-code blob-code-inner js-file-line">  ChiselCorePlugin (Chisel-MC1.10.2-0.0.10.22.jar)</td>
+      </tr>
+      <tr>
+        <td id="file-crash-2017-05-05_15-04-58-server-txt-L8" class="blob-num js-line-number" data-line-number="8"></td>
+        <td id="file-crash-2017-05-05_15-04-58-server-txt-LC8" class="blob-code blob-code-inner js-file-line">  CCLCorePlugin (CodeChickenLib-1.10.2-2.5.8.255-universal.jar)</td>
+      </tr>
+      <tr>
+        <td id="file-crash-2017-05-05_15-04-58-server-txt-L9" class="blob-num js-line-number" data-line-number="9"></td>
+        <td id="file-crash-2017-05-05_15-04-58-server-txt-LC9" class="blob-code blob-code-inner js-file-line">  Plugin (NotEnoughIDs-1.5.3.jar)</td>
+      </tr>
+      <tr>
+        <td id="file-crash-2017-05-05_15-04-58-server-txt-L10" class="blob-num js-line-number" data-line-number="10"></td>
+        <td id="file-crash-2017-05-05_15-04-58-server-txt-LC10" class="blob-code blob-code-inner js-file-line">  AppleCore (AppleCore-mc1.10.2-2.1.2.jar)</td>
+      </tr>
+      <tr>
+        <td id="file-crash-2017-05-05_15-04-58-server-txt-L11" class="blob-num js-line-number" data-line-number="11"></td>
+        <td id="file-crash-2017-05-05_15-04-58-server-txt-LC11" class="blob-code blob-code-inner js-file-line">  TransformerLoader (OpenComputers-MC1.10.2-1.6.2.7.jar)</td>
+      </tr>
+      <tr>
+        <td id="file-crash-2017-05-05_15-04-58-server-txt-L12" class="blob-num js-line-number" data-line-number="12"></td>
+        <td id="file-crash-2017-05-05_15-04-58-server-txt-LC12" class="blob-code blob-code-inner js-file-line">  EnderCorePlugin (EnderCore-1.10.2-0.4.1.65-beta.jar)</td>
+      </tr>
+      <tr>
+        <td id="file-crash-2017-05-05_15-04-58-server-txt-L13" class="blob-num js-line-number" data-line-number="13"></td>
+        <td id="file-crash-2017-05-05_15-04-58-server-txt-LC13" class="blob-code blob-code-inner js-file-line">  AdvancedRocketryPlugin (AdvancedRocketry-1.10.2-1.0.17.jar)</td>
+      </tr>
+      <tr>
+        <td id="file-crash-2017-05-05_15-04-58-server-txt-L14" class="blob-num js-line-number" data-line-number="14"></td>
+        <td id="file-crash-2017-05-05_15-04-58-server-txt-LC14" class="blob-code blob-code-inner js-file-line">  LoadingPlugin (Quark-r1.1-70.jar)</td>
+      </tr>
+      <tr>
+        <td id="file-crash-2017-05-05_15-04-58-server-txt-L15" class="blob-num js-line-number" data-line-number="15"></td>
+        <td id="file-crash-2017-05-05_15-04-58-server-txt-LC15" class="blob-code blob-code-inner js-file-line">  RebornCoreASM (RebornCore-1.10.2-2.13.5.136-universal.jar)</td>
+      </tr>
+      <tr>
+        <td id="file-crash-2017-05-05_15-04-58-server-txt-L16" class="blob-num js-line-number" data-line-number="16"></td>
+        <td id="file-crash-2017-05-05_15-04-58-server-txt-LC16" class="blob-code blob-code-inner js-file-line">  IC2core (industrialcraft-2-2.6.206-ex110.jar)</td>
+      </tr>
+      <tr>
+        <td id="file-crash-2017-05-05_15-04-58-server-txt-L17" class="blob-num js-line-number" data-line-number="17"></td>
+        <td id="file-crash-2017-05-05_15-04-58-server-txt-LC17" class="blob-code blob-code-inner js-file-line">  CoFH Loading Plugin (CoFHCore-1.10.2-4.1.1.156-universal.jar)</td>
+      </tr>
+      <tr>
+        <td id="file-crash-2017-05-05_15-04-58-server-txt-L18" class="blob-num js-line-number" data-line-number="18"></td>
+        <td id="file-crash-2017-05-05_15-04-58-server-txt-LC18" class="blob-code blob-code-inner js-file-line">  CorePlugin (MrTJPCore-1.10.2-2.0.0.17-universal.jar)</td>
+      </tr>
+      <tr>
+        <td id="file-crash-2017-05-05_15-04-58-server-txt-L19" class="blob-num js-line-number" data-line-number="19"></td>
+        <td id="file-crash-2017-05-05_15-04-58-server-txt-LC19" class="blob-code blob-code-inner js-file-line">  ValkyrienWarfareBase CoreMod (Valkyrien Warfare 0.8.999 Stable.jar)</td>
+      </tr>
+      <tr>
+        <td id="file-crash-2017-05-05_15-04-58-server-txt-L20" class="blob-num js-line-number" data-line-number="20"></td>
+        <td id="file-crash-2017-05-05_15-04-58-server-txt-LC20" class="blob-code blob-code-inner js-file-line">  ShetiPhian-ASM (shetiphiancore-1.10.0-3.3.8.jar)</td>
+      </tr>
+      <tr>
+        <td id="file-crash-2017-05-05_15-04-58-server-txt-L21" class="blob-num js-line-number" data-line-number="21"></td>
+        <td id="file-crash-2017-05-05_15-04-58-server-txt-LC21" class="blob-code blob-code-inner js-file-line">Contact their authors BEFORE contacting forge</td>
+      </tr>
+      <tr>
+        <td id="file-crash-2017-05-05_15-04-58-server-txt-L22" class="blob-num js-line-number" data-line-number="22"></td>
+        <td id="file-crash-2017-05-05_15-04-58-server-txt-LC22" class="blob-code blob-code-inner js-file-line">
+</td>
+      </tr>
+      <tr>
+        <td id="file-crash-2017-05-05_15-04-58-server-txt-L23" class="blob-num js-line-number" data-line-number="23"></td>
+        <td id="file-crash-2017-05-05_15-04-58-server-txt-LC23" class="blob-code blob-code-inner js-file-line">// But it works on my machine.</td>
+      </tr>
+      <tr>
+        <td id="file-crash-2017-05-05_15-04-58-server-txt-L24" class="blob-num js-line-number" data-line-number="24"></td>
+        <td id="file-crash-2017-05-05_15-04-58-server-txt-LC24" class="blob-code blob-code-inner js-file-line">
+</td>
+      </tr>
+      <tr>
+        <td id="file-crash-2017-05-05_15-04-58-server-txt-L25" class="blob-num js-line-number" data-line-number="25"></td>
+        <td id="file-crash-2017-05-05_15-04-58-server-txt-LC25" class="blob-code blob-code-inner js-file-line">Time: 5/5/17 3:04 PM</td>
+      </tr>
+      <tr>
+        <td id="file-crash-2017-05-05_15-04-58-server-txt-L26" class="blob-num js-line-number" data-line-number="26"></td>
+        <td id="file-crash-2017-05-05_15-04-58-server-txt-LC26" class="blob-code blob-code-inner js-file-line">Description: Exception in server tick loop</td>
+      </tr>
+      <tr>
+        <td id="file-crash-2017-05-05_15-04-58-server-txt-L27" class="blob-num js-line-number" data-line-number="27"></td>
+        <td id="file-crash-2017-05-05_15-04-58-server-txt-LC27" class="blob-code blob-code-inner js-file-line">
+</td>
+      </tr>
+      <tr>
+        <td id="file-crash-2017-05-05_15-04-58-server-txt-L28" class="blob-num js-line-number" data-line-number="28"></td>
+        <td id="file-crash-2017-05-05_15-04-58-server-txt-LC28" class="blob-code blob-code-inner js-file-line">net.minecraftforge.fml.common.LoaderExceptionModCrash: Caught exception from Aether II (aether)</td>
+      </tr>
+      <tr>
+        <td id="file-crash-2017-05-05_15-04-58-server-txt-L29" class="blob-num js-line-number" data-line-number="29"></td>
+        <td id="file-crash-2017-05-05_15-04-58-server-txt-LC29" class="blob-code blob-code-inner js-file-line">Caused by: java.lang.NullPointerException</td>
+      </tr>
+      <tr>
+        <td id="file-crash-2017-05-05_15-04-58-server-txt-L30" class="blob-num js-line-number" data-line-number="30"></td>
+        <td id="file-crash-2017-05-05_15-04-58-server-txt-LC30" class="blob-code blob-code-inner js-file-line">	at net.minecraft.item.ItemStack.func_77952_i(ItemStack.java:245)</td>
+      </tr>
+      <tr>
+        <td id="file-crash-2017-05-05_15-04-58-server-txt-L31" class="blob-num js-line-number" data-line-number="31"></td>
+        <td id="file-crash-2017-05-05_15-04-58-server-txt-LC31" class="blob-code blob-code-inner js-file-line">	at com.gildedgames.aether.common.util.helpers.RecipeUtil.areEqual(RecipeUtil.java:51)</td>
+      </tr>
+      <tr>
+        <td id="file-crash-2017-05-05_15-04-58-server-txt-L32" class="blob-num js-line-number" data-line-number="32"></td>
+        <td id="file-crash-2017-05-05_15-04-58-server-txt-LC32" class="blob-code blob-code-inner js-file-line">	at com.gildedgames.aether.common.registry.SimpleRecipesAether.postInit(SimpleRecipesAether.java:118)</td>
+      </tr>
+      <tr>
+        <td id="file-crash-2017-05-05_15-04-58-server-txt-L33" class="blob-num js-line-number" data-line-number="33"></td>
+        <td id="file-crash-2017-05-05_15-04-58-server-txt-LC33" class="blob-code blob-code-inner js-file-line">	at com.gildedgames.aether.common.AetherCore.serverStarted(AetherCore.java:113)</td>
+      </tr>
+      <tr>
+        <td id="file-crash-2017-05-05_15-04-58-server-txt-L34" class="blob-num js-line-number" data-line-number="34"></td>
+        <td id="file-crash-2017-05-05_15-04-58-server-txt-LC34" class="blob-code blob-code-inner js-file-line">	at sun.reflect.NativeMethodAccessorImpl.invoke0(Native Method)</td>
+      </tr>
+      <tr>
+        <td id="file-crash-2017-05-05_15-04-58-server-txt-L35" class="blob-num js-line-number" data-line-number="35"></td>
+        <td id="file-crash-2017-05-05_15-04-58-server-txt-LC35" class="blob-code blob-code-inner js-file-line">	at sun.reflect.NativeMethodAccessorImpl.invoke(Unknown Source)</td>
+      </tr>
+      <tr>
+        <td id="file-crash-2017-05-05_15-04-58-server-txt-L36" class="blob-num js-line-number" data-line-number="36"></td>
+        <td id="file-crash-2017-05-05_15-04-58-server-txt-LC36" class="blob-code blob-code-inner js-file-line">	at sun.reflect.DelegatingMethodAccessorImpl.invoke(Unknown Source)</td>
+      </tr>
+      <tr>
+        <td id="file-crash-2017-05-05_15-04-58-server-txt-L37" class="blob-num js-line-number" data-line-number="37"></td>
+        <td id="file-crash-2017-05-05_15-04-58-server-txt-LC37" class="blob-code blob-code-inner js-file-line">	at java.lang.reflect.Method.invoke(Unknown Source)</td>
+      </tr>
+      <tr>
+        <td id="file-crash-2017-05-05_15-04-58-server-txt-L38" class="blob-num js-line-number" data-line-number="38"></td>
+        <td id="file-crash-2017-05-05_15-04-58-server-txt-LC38" class="blob-code blob-code-inner js-file-line">	at net.minecraftforge.fml.common.FMLModContainer.handleModStateEvent(FMLModContainer.java:616)</td>
+      </tr>
+      <tr>
+        <td id="file-crash-2017-05-05_15-04-58-server-txt-L39" class="blob-num js-line-number" data-line-number="39"></td>
+        <td id="file-crash-2017-05-05_15-04-58-server-txt-LC39" class="blob-code blob-code-inner js-file-line">	at sun.reflect.GeneratedMethodAccessor4.invoke(Unknown Source)</td>
+      </tr>
+      <tr>
+        <td id="file-crash-2017-05-05_15-04-58-server-txt-L40" class="blob-num js-line-number" data-line-number="40"></td>
+        <td id="file-crash-2017-05-05_15-04-58-server-txt-LC40" class="blob-code blob-code-inner js-file-line">	at sun.reflect.DelegatingMethodAccessorImpl.invoke(Unknown Source)</td>
+      </tr>
+      <tr>
+        <td id="file-crash-2017-05-05_15-04-58-server-txt-L41" class="blob-num js-line-number" data-line-number="41"></td>
+        <td id="file-crash-2017-05-05_15-04-58-server-txt-LC41" class="blob-code blob-code-inner js-file-line">	at java.lang.reflect.Method.invoke(Unknown Source)</td>
+      </tr>
+      <tr>
+        <td id="file-crash-2017-05-05_15-04-58-server-txt-L42" class="blob-num js-line-number" data-line-number="42"></td>
+        <td id="file-crash-2017-05-05_15-04-58-server-txt-LC42" class="blob-code blob-code-inner js-file-line">	at com.google.common.eventbus.EventSubscriber.handleEvent(EventSubscriber.java:74)</td>
+      </tr>
+      <tr>
+        <td id="file-crash-2017-05-05_15-04-58-server-txt-L43" class="blob-num js-line-number" data-line-number="43"></td>
+        <td id="file-crash-2017-05-05_15-04-58-server-txt-LC43" class="blob-code blob-code-inner js-file-line">	at com.google.common.eventbus.SynchronizedEventSubscriber.handleEvent(SynchronizedEventSubscriber.java:47)</td>
+      </tr>
+      <tr>
+        <td id="file-crash-2017-05-05_15-04-58-server-txt-L44" class="blob-num js-line-number" data-line-number="44"></td>
+        <td id="file-crash-2017-05-05_15-04-58-server-txt-LC44" class="blob-code blob-code-inner js-file-line">	at com.google.common.eventbus.EventBus.dispatch(EventBus.java:322)</td>
+      </tr>
+      <tr>
+        <td id="file-crash-2017-05-05_15-04-58-server-txt-L45" class="blob-num js-line-number" data-line-number="45"></td>
+        <td id="file-crash-2017-05-05_15-04-58-server-txt-LC45" class="blob-code blob-code-inner js-file-line">	at com.google.common.eventbus.EventBus.dispatchQueuedEvents(EventBus.java:304)</td>
+      </tr>
+      <tr>
+        <td id="file-crash-2017-05-05_15-04-58-server-txt-L46" class="blob-num js-line-number" data-line-number="46"></td>
+        <td id="file-crash-2017-05-05_15-04-58-server-txt-LC46" class="blob-code blob-code-inner js-file-line">	at com.google.common.eventbus.EventBus.post(EventBus.java:275)</td>
+      </tr>
+      <tr>
+        <td id="file-crash-2017-05-05_15-04-58-server-txt-L47" class="blob-num js-line-number" data-line-number="47"></td>
+        <td id="file-crash-2017-05-05_15-04-58-server-txt-LC47" class="blob-code blob-code-inner js-file-line">	at net.minecraftforge.fml.common.LoadController.sendEventToModContainer(LoadController.java:243)</td>
+      </tr>
+      <tr>
+        <td id="file-crash-2017-05-05_15-04-58-server-txt-L48" class="blob-num js-line-number" data-line-number="48"></td>
+        <td id="file-crash-2017-05-05_15-04-58-server-txt-LC48" class="blob-code blob-code-inner js-file-line">	at net.minecraftforge.fml.common.LoadController.propogateStateMessage(LoadController.java:221)</td>
+      </tr>
+      <tr>
+        <td id="file-crash-2017-05-05_15-04-58-server-txt-L49" class="blob-num js-line-number" data-line-number="49"></td>
+        <td id="file-crash-2017-05-05_15-04-58-server-txt-LC49" class="blob-code blob-code-inner js-file-line">	at sun.reflect.NativeMethodAccessorImpl.invoke0(Native Method)</td>
+      </tr>
+      <tr>
+        <td id="file-crash-2017-05-05_15-04-58-server-txt-L50" class="blob-num js-line-number" data-line-number="50"></td>
+        <td id="file-crash-2017-05-05_15-04-58-server-txt-LC50" class="blob-code blob-code-inner js-file-line">	at sun.reflect.NativeMethodAccessorImpl.invoke(Unknown Source)</td>
+      </tr>
+      <tr>
+        <td id="file-crash-2017-05-05_15-04-58-server-txt-L51" class="blob-num js-line-number" data-line-number="51"></td>
+        <td id="file-crash-2017-05-05_15-04-58-server-txt-LC51" class="blob-code blob-code-inner js-file-line">	at sun.reflect.DelegatingMethodAccessorImpl.invoke(Unknown Source)</td>
+      </tr>
+      <tr>
+        <td id="file-crash-2017-05-05_15-04-58-server-txt-L52" class="blob-num js-line-number" data-line-number="52"></td>
+        <td id="file-crash-2017-05-05_15-04-58-server-txt-LC52" class="blob-code blob-code-inner js-file-line">	at java.lang.reflect.Method.invoke(Unknown Source)</td>
+      </tr>
+      <tr>
+        <td id="file-crash-2017-05-05_15-04-58-server-txt-L53" class="blob-num js-line-number" data-line-number="53"></td>
+        <td id="file-crash-2017-05-05_15-04-58-server-txt-LC53" class="blob-code blob-code-inner js-file-line">	at com.google.common.eventbus.EventSubscriber.handleEvent(EventSubscriber.java:74)</td>
+      </tr>
+      <tr>
+        <td id="file-crash-2017-05-05_15-04-58-server-txt-L54" class="blob-num js-line-number" data-line-number="54"></td>
+        <td id="file-crash-2017-05-05_15-04-58-server-txt-LC54" class="blob-code blob-code-inner js-file-line">	at com.google.common.eventbus.SynchronizedEventSubscriber.handleEvent(SynchronizedEventSubscriber.java:47)</td>
+      </tr>
+      <tr>
+        <td id="file-crash-2017-05-05_15-04-58-server-txt-L55" class="blob-num js-line-number" data-line-number="55"></td>
+        <td id="file-crash-2017-05-05_15-04-58-server-txt-LC55" class="blob-code blob-code-inner js-file-line">	at com.google.common.eventbus.EventBus.dispatch(EventBus.java:322)</td>
+      </tr>
+      <tr>
+        <td id="file-crash-2017-05-05_15-04-58-server-txt-L56" class="blob-num js-line-number" data-line-number="56"></td>
+        <td id="file-crash-2017-05-05_15-04-58-server-txt-LC56" class="blob-code blob-code-inner js-file-line">	at com.google.common.eventbus.EventBus.dispatchQueuedEvents(EventBus.java:304)</td>
+      </tr>
+      <tr>
+        <td id="file-crash-2017-05-05_15-04-58-server-txt-L57" class="blob-num js-line-number" data-line-number="57"></td>
+        <td id="file-crash-2017-05-05_15-04-58-server-txt-LC57" class="blob-code blob-code-inner js-file-line">	at com.google.common.eventbus.EventBus.post(EventBus.java:275)</td>
+      </tr>
+      <tr>
+        <td id="file-crash-2017-05-05_15-04-58-server-txt-L58" class="blob-num js-line-number" data-line-number="58"></td>
+        <td id="file-crash-2017-05-05_15-04-58-server-txt-LC58" class="blob-code blob-code-inner js-file-line">	at net.minecraftforge.fml.common.LoadController.distributeStateMessage(LoadController.java:145)</td>
+      </tr>
+      <tr>
+        <td id="file-crash-2017-05-05_15-04-58-server-txt-L59" class="blob-num js-line-number" data-line-number="59"></td>
+        <td id="file-crash-2017-05-05_15-04-58-server-txt-LC59" class="blob-code blob-code-inner js-file-line">	at net.minecraftforge.fml.common.Loader.serverStarted(Loader.java:868)</td>
+      </tr>
+      <tr>
+        <td id="file-crash-2017-05-05_15-04-58-server-txt-L60" class="blob-num js-line-number" data-line-number="60"></td>
+        <td id="file-crash-2017-05-05_15-04-58-server-txt-LC60" class="blob-code blob-code-inner js-file-line">	at net.minecraftforge.fml.common.FMLCommonHandler.handleServerStarted(FMLCommonHandler.java:297)</td>
+      </tr>
+      <tr>
+        <td id="file-crash-2017-05-05_15-04-58-server-txt-L61" class="blob-num js-line-number" data-line-number="61"></td>
+        <td id="file-crash-2017-05-05_15-04-58-server-txt-LC61" class="blob-code blob-code-inner js-file-line">	at net.minecraft.server.MinecraftServer.run(MinecraftServer.java:433)</td>
+      </tr>
+      <tr>
+        <td id="file-crash-2017-05-05_15-04-58-server-txt-L62" class="blob-num js-line-number" data-line-number="62"></td>
+        <td id="file-crash-2017-05-05_15-04-58-server-txt-LC62" class="blob-code blob-code-inner js-file-line">	at java.lang.Thread.run(Unknown Source)</td>
+      </tr>
+      <tr>
+        <td id="file-crash-2017-05-05_15-04-58-server-txt-L63" class="blob-num js-line-number" data-line-number="63"></td>
+        <td id="file-crash-2017-05-05_15-04-58-server-txt-LC63" class="blob-code blob-code-inner js-file-line">
+</td>
+      </tr>
+      <tr>
+        <td id="file-crash-2017-05-05_15-04-58-server-txt-L64" class="blob-num js-line-number" data-line-number="64"></td>
+        <td id="file-crash-2017-05-05_15-04-58-server-txt-LC64" class="blob-code blob-code-inner js-file-line">
+</td>
+      </tr>
+      <tr>
+        <td id="file-crash-2017-05-05_15-04-58-server-txt-L65" class="blob-num js-line-number" data-line-number="65"></td>
+        <td id="file-crash-2017-05-05_15-04-58-server-txt-LC65" class="blob-code blob-code-inner js-file-line">A detailed walkthrough of the error, its code path and all known details is as follows:</td>
+      </tr>
+      <tr>
+        <td id="file-crash-2017-05-05_15-04-58-server-txt-L66" class="blob-num js-line-number" data-line-number="66"></td>
+        <td id="file-crash-2017-05-05_15-04-58-server-txt-LC66" class="blob-code blob-code-inner js-file-line">---------------------------------------------------------------------------------------</td>
+      </tr>
+      <tr>
+        <td id="file-crash-2017-05-05_15-04-58-server-txt-L67" class="blob-num js-line-number" data-line-number="67"></td>
+        <td id="file-crash-2017-05-05_15-04-58-server-txt-LC67" class="blob-code blob-code-inner js-file-line">
+</td>
+      </tr>
+      <tr>
+        <td id="file-crash-2017-05-05_15-04-58-server-txt-L68" class="blob-num js-line-number" data-line-number="68"></td>
+        <td id="file-crash-2017-05-05_15-04-58-server-txt-LC68" class="blob-code blob-code-inner js-file-line">-- System Details --</td>
+      </tr>
+      <tr>
+        <td id="file-crash-2017-05-05_15-04-58-server-txt-L69" class="blob-num js-line-number" data-line-number="69"></td>
+        <td id="file-crash-2017-05-05_15-04-58-server-txt-LC69" class="blob-code blob-code-inner js-file-line">Details:</td>
+      </tr>
+      <tr>
+        <td id="file-crash-2017-05-05_15-04-58-server-txt-L70" class="blob-num js-line-number" data-line-number="70"></td>
+        <td id="file-crash-2017-05-05_15-04-58-server-txt-LC70" class="blob-code blob-code-inner js-file-line">	Minecraft Version: 1.10.2</td>
+      </tr>
+      <tr>
+        <td id="file-crash-2017-05-05_15-04-58-server-txt-L71" class="blob-num js-line-number" data-line-number="71"></td>
+        <td id="file-crash-2017-05-05_15-04-58-server-txt-LC71" class="blob-code blob-code-inner js-file-line">	Operating System: Windows 10 (amd64) version 10.0</td>
+      </tr>
+      <tr>
+        <td id="file-crash-2017-05-05_15-04-58-server-txt-L72" class="blob-num js-line-number" data-line-number="72"></td>
+        <td id="file-crash-2017-05-05_15-04-58-server-txt-LC72" class="blob-code blob-code-inner js-file-line">	Java Version: 1.8.0_121, Oracle Corporation</td>
+      </tr>
+      <tr>
+        <td id="file-crash-2017-05-05_15-04-58-server-txt-L73" class="blob-num js-line-number" data-line-number="73"></td>
+        <td id="file-crash-2017-05-05_15-04-58-server-txt-LC73" class="blob-code blob-code-inner js-file-line">	Java VM Version: Java HotSpot(TM) 64-Bit Server VM (mixed mode), Oracle Corporation</td>
+      </tr>
+      <tr>
+        <td id="file-crash-2017-05-05_15-04-58-server-txt-L74" class="blob-num js-line-number" data-line-number="74"></td>
+        <td id="file-crash-2017-05-05_15-04-58-server-txt-LC74" class="blob-code blob-code-inner js-file-line">	Memory: 386927048 bytes (369 MB) / 4255121408 bytes (4058 MB) up to 4294967296 bytes (4096 MB)</td>
+      </tr>
+      <tr>
+        <td id="file-crash-2017-05-05_15-04-58-server-txt-L75" class="blob-num js-line-number" data-line-number="75"></td>
+        <td id="file-crash-2017-05-05_15-04-58-server-txt-LC75" class="blob-code blob-code-inner js-file-line">	JVM Flags: 11 total; -XX:UseSSE=4 -XX:+UseG1GC -XX:+UseStringDeduplication -XX:+CMSIncrementalPacing -XX:+CMSClassUnloadingEnabled -XX:ParallelGCThreads=8 -XX:MinHeapFreeRatio=5 -XX:MaxHeapFreeRatio=10 -XX:HeapDumpPath=MojangTricksIntelDriversForPerformance_javaw.exe_minecraft.exe.heapdump -Xms512m -Xmx4096m</td>
+      </tr>
+      <tr>
+        <td id="file-crash-2017-05-05_15-04-58-server-txt-L76" class="blob-num js-line-number" data-line-number="76"></td>
+        <td id="file-crash-2017-05-05_15-04-58-server-txt-LC76" class="blob-code blob-code-inner js-file-line">	IntCache: cache: 0, tcache: 0, allocated: 0, tallocated: 68</td>
+      </tr>
+      <tr>
+        <td id="file-crash-2017-05-05_15-04-58-server-txt-L77" class="blob-num js-line-number" data-line-number="77"></td>
+        <td id="file-crash-2017-05-05_15-04-58-server-txt-LC77" class="blob-code blob-code-inner js-file-line">	FML: MCP 9.32 Powered by Forge 12.18.3.2281 142 mods loaded, 142 mods active</td>
+      </tr>
+      <tr>
+        <td id="file-crash-2017-05-05_15-04-58-server-txt-L78" class="blob-num js-line-number" data-line-number="78"></td>
+        <td id="file-crash-2017-05-05_15-04-58-server-txt-LC78" class="blob-code blob-code-inner js-file-line">	States: &#39;U&#39; = Unloaded &#39;L&#39; = Loaded &#39;C&#39; = Constructed &#39;H&#39; = Pre-initialized &#39;I&#39; = Initialized &#39;J&#39; = Post-initialized &#39;A&#39; = Available &#39;D&#39; = Disabled &#39;E&#39; = Errored</td>
+      </tr>
+      <tr>
+        <td id="file-crash-2017-05-05_15-04-58-server-txt-L79" class="blob-num js-line-number" data-line-number="79"></td>
+        <td id="file-crash-2017-05-05_15-04-58-server-txt-LC79" class="blob-code blob-code-inner js-file-line">	UCHIJAAAA	mcp{9.19} [Minecraft Coder Pack] (minecraft.jar) </td>
+      </tr>
+      <tr>
+        <td id="file-crash-2017-05-05_15-04-58-server-txt-L80" class="blob-num js-line-number" data-line-number="80"></td>
+        <td id="file-crash-2017-05-05_15-04-58-server-txt-LC80" class="blob-code blob-code-inner js-file-line">	UCHIJAAAA	FML{8.0.99.99} [Forge Mod Loader] (forge-1.10.2-12.18.3.2281-universal.jar) </td>
+      </tr>
+      <tr>
+        <td id="file-crash-2017-05-05_15-04-58-server-txt-L81" class="blob-num js-line-number" data-line-number="81"></td>
+        <td id="file-crash-2017-05-05_15-04-58-server-txt-LC81" class="blob-code blob-code-inner js-file-line">	UCHIJAAAA	Forge{12.18.3.2281} [Minecraft Forge] (forge-1.10.2-12.18.3.2281-universal.jar) </td>
+      </tr>
+      <tr>
+        <td id="file-crash-2017-05-05_15-04-58-server-txt-L82" class="blob-num js-line-number" data-line-number="82"></td>
+        <td id="file-crash-2017-05-05_15-04-58-server-txt-LC82" class="blob-code blob-code-inner js-file-line">	UCHIJAAAA	AdvancedRocketryCore{1} [Advanced Rocketry] (minecraft.jar) </td>
+      </tr>
+      <tr>
+        <td id="file-crash-2017-05-05_15-04-58-server-txt-L83" class="blob-num js-line-number" data-line-number="83"></td>
+        <td id="file-crash-2017-05-05_15-04-58-server-txt-LC83" class="blob-code blob-code-inner js-file-line">	UCHIJAAAA	OpenComputers|Core{1.6.2.7} [OpenComputers (Core)] (minecraft.jar) </td>
+      </tr>
+      <tr>
+        <td id="file-crash-2017-05-05_15-04-58-server-txt-L84" class="blob-num js-line-number" data-line-number="84"></td>
+        <td id="file-crash-2017-05-05_15-04-58-server-txt-LC84" class="blob-code blob-code-inner js-file-line">	UCHIJAAAA	&lt;CoFH ASM&gt;{000} [CoFH ASM] (minecraft.jar) </td>
+      </tr>
+      <tr>
+        <td id="file-crash-2017-05-05_15-04-58-server-txt-L85" class="blob-num js-line-number" data-line-number="85"></td>
+        <td id="file-crash-2017-05-05_15-04-58-server-txt-LC85" class="blob-code blob-code-inner js-file-line">	UCHIJAAAA	ccl-entityhook{1.0} [ccl-entityhook] (CodeChickenLib-1.10.2-2.5.8.255-universal.jar) </td>
+      </tr>
+      <tr>
+        <td id="file-crash-2017-05-05_15-04-58-server-txt-L86" class="blob-num js-line-number" data-line-number="86"></td>
+        <td id="file-crash-2017-05-05_15-04-58-server-txt-LC86" class="blob-code blob-code-inner js-file-line">	UCHIJAAAA	cofhcore{4.1.1} [CoFH Core] (CoFHCore-1.10.2-4.1.1.156-universal.jar) </td>
+      </tr>
+      <tr>
+        <td id="file-crash-2017-05-05_15-04-58-server-txt-L87" class="blob-num js-line-number" data-line-number="87"></td>
+        <td id="file-crash-2017-05-05_15-04-58-server-txt-LC87" class="blob-code blob-code-inner js-file-line">	UCHIJAAAA	actuallyadditions{1.10.2-r105} [Actually Additions] (ActuallyAdditions-1.10.2-r105.jar) </td>
+      </tr>
+      <tr>
+        <td id="file-crash-2017-05-05_15-04-58-server-txt-L88" class="blob-num js-line-number" data-line-number="88"></td>
+        <td id="file-crash-2017-05-05_15-04-58-server-txt-LC88" class="blob-code blob-code-inner js-file-line">	UCHIJAAAA	CodeChickenLib{2.5.8.255} [CodeChicken Lib] (CodeChickenLib-1.10.2-2.5.8.255-universal.jar) </td>
+      </tr>
+      <tr>
+        <td id="file-crash-2017-05-05_15-04-58-server-txt-L89" class="blob-num js-line-number" data-line-number="89"></td>
+        <td id="file-crash-2017-05-05_15-04-58-server-txt-LC89" class="blob-code blob-code-inner js-file-line">	UCHIJAAAA	CodeChickenCore{2.4.1.102} [CodeChicken Core] (CodeChickenCore-1.10.2-2.4.1.102-universal.jar) </td>
+      </tr>
+      <tr>
+        <td id="file-crash-2017-05-05_15-04-58-server-txt-L90" class="blob-num js-line-number" data-line-number="90"></td>
+        <td id="file-crash-2017-05-05_15-04-58-server-txt-LC90" class="blob-code blob-code-inner js-file-line">	UCHIJAAAA	EnderStorage{2.2.1.106} [EnderStorage] (EnderStorage-1.10.2-2.2.1.106-universal.jar) </td>
+      </tr>
+      <tr>
+        <td id="file-crash-2017-05-05_15-04-58-server-txt-L91" class="blob-num js-line-number" data-line-number="91"></td>
+        <td id="file-crash-2017-05-05_15-04-58-server-txt-LC91" class="blob-code blob-code-inner js-file-line">	UCHIJAAAA	IC2{2.6.206-ex110} [IndustrialCraft 2] (industrialcraft-2-2.6.206-ex110.jar) </td>
+      </tr>
+      <tr>
+        <td id="file-crash-2017-05-05_15-04-58-server-txt-L92" class="blob-num js-line-number" data-line-number="92"></td>
+        <td id="file-crash-2017-05-05_15-04-58-server-txt-LC92" class="blob-code blob-code-inner js-file-line">	UCHIJAAAA	JEI{3.14.7.419} [Just Enough Items] (jei_1.10.2-3.14.7.419.jar) </td>
+      </tr>
+      <tr>
+        <td id="file-crash-2017-05-05_15-04-58-server-txt-L93" class="blob-num js-line-number" data-line-number="93"></td>
+        <td id="file-crash-2017-05-05_15-04-58-server-txt-LC93" class="blob-code blob-code-inner js-file-line">	UCHIJAAAA	OpenComputers{1.6.2.7} [OpenComputers] (OpenComputers-MC1.10.2-1.6.2.7.jar) </td>
+      </tr>
+      <tr>
+        <td id="file-crash-2017-05-05_15-04-58-server-txt-L94" class="blob-num js-line-number" data-line-number="94"></td>
+        <td id="file-crash-2017-05-05_15-04-58-server-txt-LC94" class="blob-code blob-code-inner js-file-line">	UCHIJAAAA	actuallycomputers{1.0.0} [ActuallyComputers] (actuallycomputers-1.0.0.jar) </td>
+      </tr>
+      <tr>
+        <td id="file-crash-2017-05-05_15-04-58-server-txt-L95" class="blob-num js-line-number" data-line-number="95"></td>
+        <td id="file-crash-2017-05-05_15-04-58-server-txt-LC95" class="blob-code blob-code-inner js-file-line">	UCHIJAAAA	libVulpes{0.1.18.} [libVulpes] (LibVulpes-1.10.2-0.1.18-universal.jar) </td>
+      </tr>
+      <tr>
+        <td id="file-crash-2017-05-05_15-04-58-server-txt-L96" class="blob-num js-line-number" data-line-number="96"></td>
+        <td id="file-crash-2017-05-05_15-04-58-server-txt-LC96" class="blob-code blob-code-inner js-file-line">	UCHIJAAAA	advancedRocketry{1.0.17} [Advanced Rocketry] (AdvancedRocketry-1.10.2-1.0.17.jar) </td>
+      </tr>
+      <tr>
+        <td id="file-crash-2017-05-05_15-04-58-server-txt-L97" class="blob-num js-line-number" data-line-number="97"></td>
+        <td id="file-crash-2017-05-05_15-04-58-server-txt-LC97" class="blob-code blob-code-inner js-file-line">	UCHIJAAAE	aether{1.10.2-r1} [Aether II] (AetherII-1.10.2-r1.git-b02ce56.jar) </td>
+      </tr>
+      <tr>
+        <td id="file-crash-2017-05-05_15-04-58-server-txt-L98" class="blob-num js-line-number" data-line-number="98"></td>
+        <td id="file-crash-2017-05-05_15-04-58-server-txt-LC98" class="blob-code blob-code-inner js-file-line">	UCHIJAAAA	infinitylib{1.10.2-0.9.0} [InfinityLib] (infinitylib-0.9.0.jar) </td>
+      </tr>
+      <tr>
+        <td id="file-crash-2017-05-05_15-04-58-server-txt-L99" class="blob-num js-line-number" data-line-number="99"></td>
+        <td id="file-crash-2017-05-05_15-04-58-server-txt-LC99" class="blob-code blob-code-inner js-file-line">	UCHIJAAAA	agricraft{2.0.0-0.9.0-a16} [AgriCraft] (agricraft-2.0.0-0.9.0-a16.jar) </td>
+      </tr>
+      <tr>
+        <td id="file-crash-2017-05-05_15-04-58-server-txt-L100" class="blob-num js-line-number" data-line-number="100"></td>
+        <td id="file-crash-2017-05-05_15-04-58-server-txt-LC100" class="blob-code blob-code-inner js-file-line">	UCHIJAAAA	AppleCore{2.1.2} [AppleCore] (AppleCore-mc1.10.2-2.1.2.jar) </td>
+      </tr>
+      <tr>
+        <td id="file-crash-2017-05-05_15-04-58-server-txt-L101" class="blob-num js-line-number" data-line-number="101"></td>
+        <td id="file-crash-2017-05-05_15-04-58-server-txt-LC101" class="blob-code blob-code-inner js-file-line">	UCHIJAAAA	appleskin{1.0.5} [AppleSkin] (AppleSkin-mc1.10.2-1.0.5.jar) </td>
+      </tr>
+      <tr>
+        <td id="file-crash-2017-05-05_15-04-58-server-txt-L102" class="blob-num js-line-number" data-line-number="102"></td>
+        <td id="file-crash-2017-05-05_15-04-58-server-txt-LC102" class="blob-code blob-code-inner js-file-line">	UCHIJAAAA	architecturecraft{1.7.1} [ArchitectureCraft] (ArchitectureCraft-1.7.1-mc1.10.2.jar) </td>
+      </tr>
+      <tr>
+        <td id="file-crash-2017-05-05_15-04-58-server-txt-L103" class="blob-num js-line-number" data-line-number="103"></td>
+        <td id="file-crash-2017-05-05_15-04-58-server-txt-LC103" class="blob-code blob-code-inner js-file-line">	UCHIJAAAA	Morphtool{1.0-12} [Morph-o-Tool] (Morph-o-Tool-1.0-12.jar) </td>
+      </tr>
+      <tr>
+        <td id="file-crash-2017-05-05_15-04-58-server-txt-L104" class="blob-num js-line-number" data-line-number="104"></td>
+        <td id="file-crash-2017-05-05_15-04-58-server-txt-LC104" class="blob-code blob-code-inner js-file-line">	UCHIJAAAA	Psi{r1.0-42} [Psi] (Psi-r1.0-42.jar) </td>
+      </tr>
+      <tr>
+        <td id="file-crash-2017-05-05_15-04-58-server-txt-L105" class="blob-num js-line-number" data-line-number="105"></td>
+        <td id="file-crash-2017-05-05_15-04-58-server-txt-LC105" class="blob-code blob-code-inner js-file-line">	UCHIJAAAA	Quark{r1.1-70} [Quark] (Quark-r1.1-70.jar) </td>
+      </tr>
+      <tr>
+        <td id="file-crash-2017-05-05_15-04-58-server-txt-L106" class="blob-num js-line-number" data-line-number="106"></td>
+        <td id="file-crash-2017-05-05_15-04-58-server-txt-LC106" class="blob-code blob-code-inner js-file-line">	UCHIJAAAA	AutoRegLib{1.0-2} [AutoRegLib] (AutoRegLib-1.0-2.jar) </td>
+      </tr>
+      <tr>
+        <td id="file-crash-2017-05-05_15-04-58-server-txt-L107" class="blob-num js-line-number" data-line-number="107"></td>
+        <td id="file-crash-2017-05-05_15-04-58-server-txt-LC107" class="blob-code blob-code-inner js-file-line">	UCHIJAAAA	backpack{3.0.1} [Backpack] (backpack-3.0.1-1.10.2.jar) </td>
+      </tr>
+      <tr>
+        <td id="file-crash-2017-05-05_15-04-58-server-txt-L108" class="blob-num js-line-number" data-line-number="108"></td>
+        <td id="file-crash-2017-05-05_15-04-58-server-txt-LC108" class="blob-code blob-code-inner js-file-line">	UCHIJAAAA	crafttweakerjei{1.0.1} [CraftTweaker JEI Support] (CraftTweaker-1.10.2-3.0.24.jar) </td>
+      </tr>
+      <tr>
+        <td id="file-crash-2017-05-05_15-04-58-server-txt-L109" class="blob-num js-line-number" data-line-number="109"></td>
+        <td id="file-crash-2017-05-05_15-04-58-server-txt-LC109" class="blob-code blob-code-inner js-file-line">	UCHIJAAAA	MineTweaker3{3.0.24} [MineTweaker 3] (CraftTweaker-1.10.2-3.0.24.jar) </td>
+      </tr>
+      <tr>
+        <td id="file-crash-2017-05-05_15-04-58-server-txt-L110" class="blob-num js-line-number" data-line-number="110"></td>
+        <td id="file-crash-2017-05-05_15-04-58-server-txt-LC110" class="blob-code blob-code-inner js-file-line">	UCHIJAAAA	base{1.10.2-1.3.0} [B.A.S.E] (base-1.10.2-1.3.0.jar) </td>
+      </tr>
+      <tr>
+        <td id="file-crash-2017-05-05_15-04-58-server-txt-L111" class="blob-num js-line-number" data-line-number="111"></td>
+        <td id="file-crash-2017-05-05_15-04-58-server-txt-LC111" class="blob-code blob-code-inner js-file-line">	UCHIJAAAA	Baubles{1.3.10} [Baubles] (Baubles-1.10.2-1.3.10.jar) </td>
+      </tr>
+      <tr>
+        <td id="file-crash-2017-05-05_15-04-58-server-txt-L112" class="blob-num js-line-number" data-line-number="112"></td>
+        <td id="file-crash-2017-05-05_15-04-58-server-txt-LC112" class="blob-code blob-code-inner js-file-line">	UCHIJAAAA	betterbuilderswands{0.11.1} [Better Builder&#39;s Wands] (BetterBuildersWands-1.10.2-0.11.1.220+f8232fe.jar) </td>
+      </tr>
+      <tr>
+        <td id="file-crash-2017-05-05_15-04-58-server-txt-L113" class="blob-num js-line-number" data-line-number="113"></td>
+        <td id="file-crash-2017-05-05_15-04-58-server-txt-LC113" class="blob-code blob-code-inner js-file-line">	UCHIJAAAA	BiblioCraft{2.2.1} [BiblioCraft] (BiblioCraft[v2.2.1][MC1.10.2].jar) </td>
+      </tr>
+      <tr>
+        <td id="file-crash-2017-05-05_15-04-58-server-txt-L114" class="blob-num js-line-number" data-line-number="114"></td>
+        <td id="file-crash-2017-05-05_15-04-58-server-txt-LC114" class="blob-code blob-code-inner js-file-line">	UCHIJAAAA	BiomesOPlenty{5.0.0.2155} [Biomes O&#39; Plenty] (BiomesOPlenty-1.10.2-5.0.0.2155-universal.jar) </td>
+      </tr>
+      <tr>
+        <td id="file-crash-2017-05-05_15-04-58-server-txt-L115" class="blob-num js-line-number" data-line-number="115"></td>
+        <td id="file-crash-2017-05-05_15-04-58-server-txt-LC115" class="blob-code blob-code-inner js-file-line">	UCHIJAAAA	guideapi{@VERSION@} [Guide-API] (Guide-API-1.10.2-2.0.3-46.jar) </td>
+      </tr>
+      <tr>
+        <td id="file-crash-2017-05-05_15-04-58-server-txt-L116" class="blob-num js-line-number" data-line-number="116"></td>
+        <td id="file-crash-2017-05-05_15-04-58-server-txt-LC116" class="blob-code blob-code-inner js-file-line">	UCHIJAAAA	BloodMagic{1.10.2-2.1.9-78} [Blood Magic: Alchemical Wizardry] (BloodMagic-1.10.2-2.1.9-78.jar) </td>
+      </tr>
+      <tr>
+        <td id="file-crash-2017-05-05_15-04-58-server-txt-L117" class="blob-num js-line-number" data-line-number="117"></td>
+        <td id="file-crash-2017-05-05_15-04-58-server-txt-LC117" class="blob-code blob-code-inner js-file-line">	UCHIJAAAA	bookshelf{1.4.4.347} [Bookshelf] (Bookshelf-1.10.2-1.4.4.347.jar) </td>
+      </tr>
+      <tr>
+        <td id="file-crash-2017-05-05_15-04-58-server-txt-L118" class="blob-num js-line-number" data-line-number="118"></td>
+        <td id="file-crash-2017-05-05_15-04-58-server-txt-LC118" class="blob-code blob-code-inner js-file-line">	UCHIJAAAA	Botania{r1.9-341} [Botania] (Botania r1.9-341.jar) </td>
+      </tr>
+      <tr>
+        <td id="file-crash-2017-05-05_15-04-58-server-txt-L119" class="blob-num js-line-number" data-line-number="119"></td>
+        <td id="file-crash-2017-05-05_15-04-58-server-txt-LC119" class="blob-code blob-code-inner js-file-line">	UCHIJAAAA	brandonscore{2.1.6} [Brandon&#39;s Core] (BrandonsCore-1.10.2-2.1.6.98-universal.jar) </td>
+      </tr>
+      <tr>
+        <td id="file-crash-2017-05-05_15-04-58-server-txt-L120" class="blob-num js-line-number" data-line-number="120"></td>
+        <td id="file-crash-2017-05-05_15-04-58-server-txt-LC120" class="blob-code blob-code-inner js-file-line">	UCHIJAAAA	cfm{4.1.2} [MrCrayfish&#39;s Furniture Mod] (cfm-4.1.2-mc1.10.2.jar) </td>
+      </tr>
+      <tr>
+        <td id="file-crash-2017-05-05_15-04-58-server-txt-L121" class="blob-num js-line-number" data-line-number="121"></td>
+        <td id="file-crash-2017-05-05_15-04-58-server-txt-LC121" class="blob-code blob-code-inner js-file-line">	UCHIJAAAA	ChestTransporter{2.5.16} [Chest Transporter] (ChestTransporter-1.10.2-2.5.16.jar) </td>
+      </tr>
+      <tr>
+        <td id="file-crash-2017-05-05_15-04-58-server-txt-L122" class="blob-num js-line-number" data-line-number="122"></td>
+        <td id="file-crash-2017-05-05_15-04-58-server-txt-LC122" class="blob-code blob-code-inner js-file-line">	UCHIJAAAA	chisel{MC1.10.2-0.0.10.22} [Chisel] (Chisel-MC1.10.2-0.0.10.22.jar) </td>
+      </tr>
+      <tr>
+        <td id="file-crash-2017-05-05_15-04-58-server-txt-L123" class="blob-num js-line-number" data-line-number="123"></td>
+        <td id="file-crash-2017-05-05_15-04-58-server-txt-LC123" class="blob-code blob-code-inner js-file-line">	UCHIJAAAA	mcmultipart{1.4.0} [MCMultiPart] (MCMultiPart-1.4.0-universal.jar) </td>
+      </tr>
+      <tr>
+        <td id="file-crash-2017-05-05_15-04-58-server-txt-L124" class="blob-num js-line-number" data-line-number="124"></td>
+        <td id="file-crash-2017-05-05_15-04-58-server-txt-LC124" class="blob-code blob-code-inner js-file-line">	UCHIJAAAA	chiselsandbits{12.12} [Chisels &amp; Bits] (chiselsandbits-12.12.jar) </td>
+      </tr>
+      <tr>
+        <td id="file-crash-2017-05-05_15-04-58-server-txt-L125" class="blob-num js-line-number" data-line-number="125"></td>
+        <td id="file-crash-2017-05-05_15-04-58-server-txt-LC125" class="blob-code blob-code-inner js-file-line">	UCHIJAAAA	clumps{1.0.5} [Clumps] (Clumps-1.0.5.jar) </td>
+      </tr>
+      <tr>
+        <td id="file-crash-2017-05-05_15-04-58-server-txt-L126" class="blob-num js-line-number" data-line-number="126"></td>
+        <td id="file-crash-2017-05-05_15-04-58-server-txt-LC126" class="blob-code blob-code-inner js-file-line">	UCHIJAAAA	ctgui{1.0.0} [CT-GUI] (CraftTweaker-1.10.2-3.0.24.jar) </td>
+      </tr>
+      <tr>
+        <td id="file-crash-2017-05-05_15-04-58-server-txt-L127" class="blob-num js-line-number" data-line-number="127"></td>
+        <td id="file-crash-2017-05-05_15-04-58-server-txt-LC127" class="blob-code blob-code-inner js-file-line">	UCHIJAAAA	cyberware{beta-0.2.9} [Cyberware] (cyberware-1.9.4-1.10.2-beta-0.2.9.jar) </td>
+      </tr>
+      <tr>
+        <td id="file-crash-2017-05-05_15-04-58-server-txt-L128" class="blob-num js-line-number" data-line-number="128"></td>
+        <td id="file-crash-2017-05-05_15-04-58-server-txt-LC128" class="blob-code blob-code-inner js-file-line">	UCHIJAAAA	darkutils{1.1.7.111} [Dark Utilities] (DarkUtilities-1.10.2-1.1.7.111.jar) </td>
+      </tr>
+      <tr>
+        <td id="file-crash-2017-05-05_15-04-58-server-txt-L129" class="blob-num js-line-number" data-line-number="129"></td>
+        <td id="file-crash-2017-05-05_15-04-58-server-txt-LC129" class="blob-code blob-code-inner js-file-line">	UCHIJAAAA	PTRModelLib{1.0.0} [PTRModelLib] (Decocraft-2.4.2_1.10.2.jar) </td>
+      </tr>
+      <tr>
+        <td id="file-crash-2017-05-05_15-04-58-server-txt-L130" class="blob-num js-line-number" data-line-number="130"></td>
+        <td id="file-crash-2017-05-05_15-04-58-server-txt-LC130" class="blob-code blob-code-inner js-file-line">	UCHIJAAAA	props{2.4.2} [Decocraft] (Decocraft-2.4.2_1.10.2.jar) </td>
+      </tr>
+      <tr>
+        <td id="file-crash-2017-05-05_15-04-58-server-txt-L131" class="blob-num js-line-number" data-line-number="131"></td>
+        <td id="file-crash-2017-05-05_15-04-58-server-txt-LC131" class="blob-code blob-code-inner js-file-line">	UCHIJAAAA	forestry{5.2.17.376} [Forestry] (forestry_1.10.2-5.2.17.376.jar) </td>
+      </tr>
+      <tr>
+        <td id="file-crash-2017-05-05_15-04-58-server-txt-L132" class="blob-num js-line-number" data-line-number="132"></td>
+        <td id="file-crash-2017-05-05_15-04-58-server-txt-LC132" class="blob-code blob-code-inner js-file-line">	UCHIJAAAA	eleccore{1.7.418} [ElecCore] (ElecCore-1.10.2-1.7.418.jar) </td>
+      </tr>
+      <tr>
+        <td id="file-crash-2017-05-05_15-04-58-server-txt-L133" class="blob-num js-line-number" data-line-number="133"></td>
+        <td id="file-crash-2017-05-05_15-04-58-server-txt-LC133" class="blob-code blob-code-inner js-file-line">	UCHIJAAAA	deepresonance{1.4.7} [DeepResonance] (deepresonance-1.1x-1.4.7.jar) </td>
+      </tr>
+      <tr>
+        <td id="file-crash-2017-05-05_15-04-58-server-txt-L134" class="blob-num js-line-number" data-line-number="134"></td>
+        <td id="file-crash-2017-05-05_15-04-58-server-txt-LC134" class="blob-code blob-code-inner js-file-line">	UCHIJAAAA	deeznuts{1.0} [Deez Nuts Creeper] (deeznuts-1.0.jar) </td>
+      </tr>
+      <tr>
+        <td id="file-crash-2017-05-05_15-04-58-server-txt-L135" class="blob-num js-line-number" data-line-number="135"></td>
+        <td id="file-crash-2017-05-05_15-04-58-server-txt-LC135" class="blob-code blob-code-inner js-file-line">	UCHIJAAAA	draconicevolution{2.0.10} [Draconic Evolution] (Draconic-Evolution-1.10.2-2.0.10.199-universal.jar) </td>
+      </tr>
+      <tr>
+        <td id="file-crash-2017-05-05_15-04-58-server-txt-L136" class="blob-num js-line-number" data-line-number="136"></td>
+        <td id="file-crash-2017-05-05_15-04-58-server-txt-LC136" class="blob-code blob-code-inner js-file-line">	UCHIJAAAA	mocreatures{10.0.6} [DrZhark&#39;s Mo&#39;Creatures Mod] (DrZhark&#39;s Mo&#39;Creatures Mod-10.0.6.jar) </td>
+      </tr>
+      <tr>
+        <td id="file-crash-2017-05-05_15-04-58-server-txt-L137" class="blob-num js-line-number" data-line-number="137"></td>
+        <td id="file-crash-2017-05-05_15-04-58-server-txt-LC137" class="blob-code blob-code-inner js-file-line">	UCHIJAAAA	elevatorid{1.3.0} [Elevator Mod] (ElevatorMod[V.1.3.0][MC.1.10.2].jar) </td>
+      </tr>
+      <tr>
+        <td id="file-crash-2017-05-05_15-04-58-server-txt-L138" class="blob-num js-line-number" data-line-number="138"></td>
+        <td id="file-crash-2017-05-05_15-04-58-server-txt-LC138" class="blob-code blob-code-inner js-file-line">	UCHIJAAAA	embers{0.104} [Embers] (embers-0.104.jar) </td>
+      </tr>
+      <tr>
+        <td id="file-crash-2017-05-05_15-04-58-server-txt-L139" class="blob-num js-line-number" data-line-number="139"></td>
+        <td id="file-crash-2017-05-05_15-04-58-server-txt-LC139" class="blob-code blob-code-inner js-file-line">	UCHIJAAAA	endercore{1.10.2-0.4.1.65-beta} [EnderCore] (EnderCore-1.10.2-0.4.1.65-beta.jar) </td>
+      </tr>
+      <tr>
+        <td id="file-crash-2017-05-05_15-04-58-server-txt-L140" class="blob-num js-line-number" data-line-number="140"></td>
+        <td id="file-crash-2017-05-05_15-04-58-server-txt-LC140" class="blob-code blob-code-inner js-file-line">	UCHIJAAAA	EnderIO{1.10.2-3.1.183} [Ender IO] (EnderIO-1.10.2-3.1.183.jar) </td>
+      </tr>
+      <tr>
+        <td id="file-crash-2017-05-05_15-04-58-server-txt-L141" class="blob-num js-line-number" data-line-number="141"></td>
+        <td id="file-crash-2017-05-05_15-04-58-server-txt-LC141" class="blob-code blob-code-inner js-file-line">	UCHIJAAAA	shetiphiancore{3.3.8} [ShetiPhian-Core] (shetiphiancore-1.10.0-3.3.8.jar) </td>
+      </tr>
+      <tr>
+        <td id="file-crash-2017-05-05_15-04-58-server-txt-L142" class="blob-num js-line-number" data-line-number="142"></td>
+        <td id="file-crash-2017-05-05_15-04-58-server-txt-LC142" class="blob-code blob-code-inner js-file-line">	UCHIJAAAA	endertanks{1.4.12} [EnderTanks] (endertanks-1.10.0-1.4.12.jar) </td>
+      </tr>
+      <tr>
+        <td id="file-crash-2017-05-05_15-04-58-server-txt-L143" class="blob-num js-line-number" data-line-number="143"></td>
+        <td id="file-crash-2017-05-05_15-04-58-server-txt-LC143" class="blob-code blob-code-inner js-file-line">	UCHIJAAAA	valkyrielib{1.10.2-0.10.6} [Valkyrie Lib] (valkyrielib-1.10.2-0.10.6.jar) </td>
+      </tr>
+      <tr>
+        <td id="file-crash-2017-05-05_15-04-58-server-txt-L144" class="blob-num js-line-number" data-line-number="144"></td>
+        <td id="file-crash-2017-05-05_15-04-58-server-txt-LC144" class="blob-code blob-code-inner js-file-line">	UCHIJAAAA	environmentaltech{1.10.2-0.10.6b} [Environmental Tech] (environmentaltech-1.10.2-0.10.6b.jar) </td>
+      </tr>
+      <tr>
+        <td id="file-crash-2017-05-05_15-04-58-server-txt-L145" class="blob-num js-line-number" data-line-number="145"></td>
+        <td id="file-crash-2017-05-05_15-04-58-server-txt-LC145" class="blob-code blob-code-inner js-file-line">	UCHIJAAAA	etlunar{1.10.2-0.10.6a} [ET Lunar] (etlunar-1.10.2-0.10.6a.jar) </td>
+      </tr>
+      <tr>
+        <td id="file-crash-2017-05-05_15-04-58-server-txt-L146" class="blob-num js-line-number" data-line-number="146"></td>
+        <td id="file-crash-2017-05-05_15-04-58-server-txt-LC146" class="blob-code blob-code-inner js-file-line">	UCHIJAAAA	shadowmc{3.6.1} [ShadowMC] (ShadowMC-1.10.2-3.6.1.jar) </td>
+      </tr>
+      <tr>
+        <td id="file-crash-2017-05-05_15-04-58-server-txt-L147" class="blob-num js-line-number" data-line-number="147"></td>
+        <td id="file-crash-2017-05-05_15-04-58-server-txt-LC147" class="blob-code blob-code-inner js-file-line">	UCHIJAAAA	ExtraRails{1.1.1} [Extra Rails] (ExtraRails-1.10.2-1.1.1.jar) </td>
+      </tr>
+      <tr>
+        <td id="file-crash-2017-05-05_15-04-58-server-txt-L148" class="blob-num js-line-number" data-line-number="148"></td>
+        <td id="file-crash-2017-05-05_15-04-58-server-txt-LC148" class="blob-code blob-code-inner js-file-line">	UCHIJAAAA	extrautils2{1.0} [Extra Utilities 2] (extrautils2-1.10.2-1.4.1.jar) </td>
+      </tr>
+      <tr>
+        <td id="file-crash-2017-05-05_15-04-58-server-txt-L149" class="blob-num js-line-number" data-line-number="149"></td>
+        <td id="file-crash-2017-05-05_15-04-58-server-txt-LC149" class="blob-code blob-code-inner js-file-line">	UCHIJAAAA	zerocore{1.10.2-0.1.0.5} [Zero CORE] (zerocore-1.10.2-0.1.0.5.jar) </td>
+      </tr>
+      <tr>
+        <td id="file-crash-2017-05-05_15-04-58-server-txt-L150" class="blob-num js-line-number" data-line-number="150"></td>
+        <td id="file-crash-2017-05-05_15-04-58-server-txt-LC150" class="blob-code blob-code-inner js-file-line">	UCHIJAAAA	bigreactors{1.10.2-0.4.5.28} [Extreme Reactors] (ExtremeReactors-1.10.2-0.4.5.28.jar) </td>
+      </tr>
+      <tr>
+        <td id="file-crash-2017-05-05_15-04-58-server-txt-L151" class="blob-num js-line-number" data-line-number="151"></td>
+        <td id="file-crash-2017-05-05_15-04-58-server-txt-LC151" class="blob-code blob-code-inner js-file-line">	UCHIJAAAA	fastleafdecay{v11} [Fast Leaf Decay] (FastLeafDecay-v11.jar) </td>
+      </tr>
+      <tr>
+        <td id="file-crash-2017-05-05_15-04-58-server-txt-L152" class="blob-num js-line-number" data-line-number="152"></td>
+        <td id="file-crash-2017-05-05_15-04-58-server-txt-LC152" class="blob-code blob-code-inner js-file-line">	UCHIJAAAA	forgemultipartcbe{2.0.0.31} [Forge Multipart CBE] (ForgeMultipart-1.10.2-2.0.0.31-universal.jar) </td>
+      </tr>
+      <tr>
+        <td id="file-crash-2017-05-05_15-04-58-server-txt-L153" class="blob-num js-line-number" data-line-number="153"></td>
+        <td id="file-crash-2017-05-05_15-04-58-server-txt-LC153" class="blob-code blob-code-inner js-file-line">	UCHIJAAAA	microblockcbe{2.0.0.31} [Forge Microblocks] (ForgeMultipart-1.10.2-2.0.0.31-universal.jar) </td>
+      </tr>
+      <tr>
+        <td id="file-crash-2017-05-05_15-04-58-server-txt-L154" class="blob-num js-line-number" data-line-number="154"></td>
+        <td id="file-crash-2017-05-05_15-04-58-server-txt-LC154" class="blob-code blob-code-inner js-file-line">	UCHIJAAAA	minecraftmultipartcbe{2.0.0.31} [Minecraft Multipart Plugin] (ForgeMultipart-1.10.2-2.0.0.31-universal.jar) </td>
+      </tr>
+      <tr>
+        <td id="file-crash-2017-05-05_15-04-58-server-txt-L155" class="blob-num js-line-number" data-line-number="155"></td>
+        <td id="file-crash-2017-05-05_15-04-58-server-txt-LC155" class="blob-code blob-code-inner js-file-line">	UCHIJAAAA	ftbl{0.0.0} [FTBLib] (FTBLib-1.10.2-3.5.3.jar) </td>
+      </tr>
+      <tr>
+        <td id="file-crash-2017-05-05_15-04-58-server-txt-L156" class="blob-num js-line-number" data-line-number="156"></td>
+        <td id="file-crash-2017-05-05_15-04-58-server-txt-LC156" class="blob-code blob-code-inner js-file-line">	UCHIJAAAA	ftbu{0.0.0} [FTBUtilities] (FTBUtilities-1.10.2-3.5.1.jar) </td>
+      </tr>
+      <tr>
+        <td id="file-crash-2017-05-05_15-04-58-server-txt-L157" class="blob-num js-line-number" data-line-number="157"></td>
+        <td id="file-crash-2017-05-05_15-04-58-server-txt-LC157" class="blob-code blob-code-inner js-file-line">	UCHIJAAAA	geneticsreborn{0.01} [Genetics Reborn] (geneticsreborn-mc1.10.2-v1.0.jar) </td>
+      </tr>
+      <tr>
+        <td id="file-crash-2017-05-05_15-04-58-server-txt-L158" class="blob-num js-line-number" data-line-number="158"></td>
+        <td id="file-crash-2017-05-05_15-04-58-server-txt-LC158" class="blob-code blob-code-inner js-file-line">	UCHIJAAAA	gravestone{1.5.12} [Gravestone] (GraveStone Mod 1.5.12.jar) </td>
+      </tr>
+      <tr>
+        <td id="file-crash-2017-05-05_15-04-58-server-txt-L159" class="blob-num js-line-number" data-line-number="159"></td>
+        <td id="file-crash-2017-05-05_15-04-58-server-txt-LC159" class="blob-code blob-code-inner js-file-line">	UCHIJAAAA	gravisuite{3.0.1} [Gravitation Suite] (Gravitation Suite-3.0.1.jar) </td>
+      </tr>
+      <tr>
+        <td id="file-crash-2017-05-05_15-04-58-server-txt-L160" class="blob-num js-line-number" data-line-number="160"></td>
+        <td id="file-crash-2017-05-05_15-04-58-server-txt-LC160" class="blob-code blob-code-inner js-file-line">	UCHIJAAAA	mantle{1.10.2-1.1.5.205} [Mantle] (Mantle-1.10.2-1.1.5.jar) </td>
+      </tr>
+      <tr>
+        <td id="file-crash-2017-05-05_15-04-58-server-txt-L161" class="blob-num js-line-number" data-line-number="161"></td>
+        <td id="file-crash-2017-05-05_15-04-58-server-txt-LC161" class="blob-code blob-code-inner js-file-line">	UCHIJAAAA	tconstruct{1.10.2-2.6.3.500} [Tinkers&#39; Construct] (TConstruct-1.10.2-2.6.3.jar) </td>
+      </tr>
+      <tr>
+        <td id="file-crash-2017-05-05_15-04-58-server-txt-L162" class="blob-num js-line-number" data-line-number="162"></td>
+        <td id="file-crash-2017-05-05_15-04-58-server-txt-LC162" class="blob-code blob-code-inner js-file-line">	UCHIJAAAA	tesla{1.2.1.50} [TESLA] (Tesla-1.10.2-1.2.1.50.jar) </td>
+      </tr>
+      <tr>
+        <td id="file-crash-2017-05-05_15-04-58-server-txt-L163" class="blob-num js-line-number" data-line-number="163"></td>
+        <td id="file-crash-2017-05-05_15-04-58-server-txt-LC163" class="blob-code blob-code-inner js-file-line">	UCHIJAAAA	theoneprobe{1.4.6} [The One Probe] (theoneprobe-1.1x-1.4.6.jar) </td>
+      </tr>
+      <tr>
+        <td id="file-crash-2017-05-05_15-04-58-server-txt-L164" class="blob-num js-line-number" data-line-number="164"></td>
+        <td id="file-crash-2017-05-05_15-04-58-server-txt-LC164" class="blob-code blob-code-inner js-file-line">	UCHIJAAAA	immersiveengineering{0.10-57} [Immersive Engineering] (ImmersiveEngineering-0.10-57.jar) </td>
+      </tr>
+      <tr>
+        <td id="file-crash-2017-05-05_15-04-58-server-txt-L165" class="blob-num js-line-number" data-line-number="165"></td>
+        <td id="file-crash-2017-05-05_15-04-58-server-txt-LC165" class="blob-code blob-code-inner js-file-line">	UCHIJAAAA	ironchest{1.10.2-7.0.12.801} [Iron Chest] (ironchest-1.10.2-7.0.12.801.jar) </td>
+      </tr>
+      <tr>
+        <td id="file-crash-2017-05-05_15-04-58-server-txt-L166" class="blob-num js-line-number" data-line-number="166"></td>
+        <td id="file-crash-2017-05-05_15-04-58-server-txt-LC166" class="blob-code blob-code-inner js-file-line">	UCHIJAAAA	jeibees{0.9.0.5} [JEI Bees] (jeibees-0.9.0.5-mc1.10.2.jar) </td>
+      </tr>
+      <tr>
+        <td id="file-crash-2017-05-05_15-04-58-server-txt-L167" class="blob-num js-line-number" data-line-number="167"></td>
+        <td id="file-crash-2017-05-05_15-04-58-server-txt-LC167" class="blob-code blob-code-inner js-file-line">	UCHIJAAAA	jeresources{0.5.8.98} [Just Enough Resources] (JustEnoughResources-1.10.2-0.5.8.98.jar) </td>
+      </tr>
+      <tr>
+        <td id="file-crash-2017-05-05_15-04-58-server-txt-L168" class="blob-num js-line-number" data-line-number="168"></td>
+        <td id="file-crash-2017-05-05_15-04-58-server-txt-LC168" class="blob-code blob-code-inner js-file-line">	UCHIJAAAA	RadixCore{1.10.2-2.1.3} [RadixCore] (RadixCore-1.10.2-2.1.3-universal.jar) </td>
+      </tr>
+      <tr>
+        <td id="file-crash-2017-05-05_15-04-58-server-txt-L169" class="blob-num js-line-number" data-line-number="169"></td>
+        <td id="file-crash-2017-05-05_15-04-58-server-txt-LC169" class="blob-code blob-code-inner js-file-line">	UCHIJAAAA	MCA{1.10.2-5.2.3} [Minecraft Comes Alive] (MCA-1.10.2-5.2.3-universal.jar) </td>
+      </tr>
+      <tr>
+        <td id="file-crash-2017-05-05_15-04-58-server-txt-L170" class="blob-num js-line-number" data-line-number="170"></td>
+        <td id="file-crash-2017-05-05_15-04-58-server-txt-LC170" class="blob-code blob-code-inner js-file-line">	UCHIJAAAA	Mekanism{9.2.2} [Mekanism] (Mekanism-1.10.2-9.2.2.301.jar) </td>
+      </tr>
+      <tr>
+        <td id="file-crash-2017-05-05_15-04-58-server-txt-L171" class="blob-num js-line-number" data-line-number="171"></td>
+        <td id="file-crash-2017-05-05_15-04-58-server-txt-LC171" class="blob-code blob-code-inner js-file-line">	UCHIJAAAA	MekanismGenerators{9.2.2} [MekanismGenerators] (MekanismGenerators-1.10.2-9.2.2.301.jar) </td>
+      </tr>
+      <tr>
+        <td id="file-crash-2017-05-05_15-04-58-server-txt-L172" class="blob-num js-line-number" data-line-number="172"></td>
+        <td id="file-crash-2017-05-05_15-04-58-server-txt-LC172" class="blob-code blob-code-inner js-file-line">	UCHIJAAAA	MekanismTools{9.2.2} [MekanismTools] (MekanismTools-1.10.2-9.2.2.301.jar) </td>
+      </tr>
+      <tr>
+        <td id="file-crash-2017-05-05_15-04-58-server-txt-L173" class="blob-num js-line-number" data-line-number="173"></td>
+        <td id="file-crash-2017-05-05_15-04-58-server-txt-LC173" class="blob-code blob-code-inner js-file-line">	UCHIJAAAA	miab{1.5.0.1} [Meme in a bottle] (MemeInABottle-1.5.0.1.jar) </td>
+      </tr>
+      <tr>
+        <td id="file-crash-2017-05-05_15-04-58-server-txt-L174" class="blob-num js-line-number" data-line-number="174"></td>
+        <td id="file-crash-2017-05-05_15-04-58-server-txt-LC174" class="blob-code blob-code-inner js-file-line">	UCHIJAAAA	mtlib{@VERSION@} [MTLib] (MTLib-1.0.2.jar) </td>
+      </tr>
+      <tr>
+        <td id="file-crash-2017-05-05_15-04-58-server-txt-L175" class="blob-num js-line-number" data-line-number="175"></td>
+        <td id="file-crash-2017-05-05_15-04-58-server-txt-LC175" class="blob-code blob-code-inner js-file-line">	UCHIJAAAA	modtweaker{2.0.11} [Mod Tweaker] (ModTweaker2-2.0.11.jar) </td>
+      </tr>
+      <tr>
+        <td id="file-crash-2017-05-05_15-04-58-server-txt-L176" class="blob-num js-line-number" data-line-number="176"></td>
+        <td id="file-crash-2017-05-05_15-04-58-server-txt-LC176" class="blob-code blob-code-inner js-file-line">	UCHIJAAAA	moreshears{1.0.5} [More Shears] (moreshears-1.10.2-1.0.5-release.jar) </td>
+      </tr>
+      <tr>
+        <td id="file-crash-2017-05-05_15-04-58-server-txt-L177" class="blob-num js-line-number" data-line-number="177"></td>
+        <td id="file-crash-2017-05-05_15-04-58-server-txt-LC177" class="blob-code blob-code-inner js-file-line">	UCHIJAAAA	Morpheus{1.10.2-3.1.13} [Morpheus] (Morpheus-1.10.2-3.1.13.jar) </td>
+      </tr>
+      <tr>
+        <td id="file-crash-2017-05-05_15-04-58-server-txt-L178" class="blob-num js-line-number" data-line-number="178"></td>
+        <td id="file-crash-2017-05-05_15-04-58-server-txt-LC178" class="blob-code blob-code-inner js-file-line">	UCHIJAAAA	MrTJPCoreMod{2.0.0.17} [MrTJPCore] (MrTJPCore-1.10.2-2.0.0.17-universal.jar) </td>
+      </tr>
+      <tr>
+        <td id="file-crash-2017-05-05_15-04-58-server-txt-L179" class="blob-num js-line-number" data-line-number="179"></td>
+        <td id="file-crash-2017-05-05_15-04-58-server-txt-LC179" class="blob-code blob-code-inner js-file-line">	UCHIJAAAA	neid{1.5.3} [NotEnoughIDs] (NotEnoughIDs-1.5.3.jar) </td>
+      </tr>
+      <tr>
+        <td id="file-crash-2017-05-05_15-04-58-server-txt-L180" class="blob-num js-line-number" data-line-number="180"></td>
+        <td id="file-crash-2017-05-05_15-04-58-server-txt-LC180" class="blob-code blob-code-inner js-file-line">	UCHIJAAAA	openfm{0.1.0.22} [OpenFM] (OpenFM-1.9.4-0.1.0.22.jar) </td>
+      </tr>
+      <tr>
+        <td id="file-crash-2017-05-05_15-04-58-server-txt-L181" class="blob-num js-line-number" data-line-number="181"></td>
+        <td id="file-crash-2017-05-05_15-04-58-server-txt-LC181" class="blob-code blob-code-inner js-file-line">	UCHIJAAAA	fodc{1.9.1} [Ore Dictionary Converter] (OreDictionaryConverter-1.9.1.jar) </td>
+      </tr>
+      <tr>
+        <td id="file-crash-2017-05-05_15-04-58-server-txt-L182" class="blob-num js-line-number" data-line-number="182"></td>
+        <td id="file-crash-2017-05-05_15-04-58-server-txt-LC182" class="blob-code blob-code-inner js-file-line">	UCHIJAAAA	harvestcraft{1.9.4-1.10.2g} [Pam&#39;s HarvestCraft] (Pam&#39;s HarvestCraft 1.9.4-1.10.2h.jar) </td>
+      </tr>
+      <tr>
+        <td id="file-crash-2017-05-05_15-04-58-server-txt-L183" class="blob-num js-line-number" data-line-number="183"></td>
+        <td id="file-crash-2017-05-05_15-04-58-server-txt-LC183" class="blob-code blob-code-inner js-file-line">	UCHIJAAAA	sonarcore{3.2.7} [SonarCore] (SonarCore-1.10.2-3.2.7.jar) </td>
+      </tr>
+      <tr>
+        <td id="file-crash-2017-05-05_15-04-58-server-txt-L184" class="blob-num js-line-number" data-line-number="184"></td>
+        <td id="file-crash-2017-05-05_15-04-58-server-txt-LC184" class="blob-code blob-code-inner js-file-line">	UCHIJAAAA	practicallogistics2{2.0.2} [Practical Logistics 2] (PracticalLogistics2-1.10.2-2.0.2.jar) </td>
+      </tr>
+      <tr>
+        <td id="file-crash-2017-05-05_15-04-58-server-txt-L185" class="blob-num js-line-number" data-line-number="185"></td>
+        <td id="file-crash-2017-05-05_15-04-58-server-txt-LC185" class="blob-code blob-code-inner js-file-line">	UCHIJAAAA	projectred-core{4.8.1.25} [ProjectRed Core] (ProjectRed-1.10.2-4.8.1.25-Base.jar) </td>
+      </tr>
+      <tr>
+        <td id="file-crash-2017-05-05_15-04-58-server-txt-L186" class="blob-num js-line-number" data-line-number="186"></td>
+        <td id="file-crash-2017-05-05_15-04-58-server-txt-LC186" class="blob-code blob-code-inner js-file-line">	UCHIJAAAA	projectred-integration{4.8.1.25} [ProjectRed integration] (ProjectRed-1.10.2-4.8.1.25-integration.jar) </td>
+      </tr>
+      <tr>
+        <td id="file-crash-2017-05-05_15-04-58-server-txt-L187" class="blob-num js-line-number" data-line-number="187"></td>
+        <td id="file-crash-2017-05-05_15-04-58-server-txt-LC187" class="blob-code blob-code-inner js-file-line">	UCHIJAAAA	projectred-transmission{4.8.1.25} [ProjectRed Transmission] (ProjectRed-1.10.2-4.8.1.25-integration.jar) </td>
+      </tr>
+      <tr>
+        <td id="file-crash-2017-05-05_15-04-58-server-txt-L188" class="blob-num js-line-number" data-line-number="188"></td>
+        <td id="file-crash-2017-05-05_15-04-58-server-txt-LC188" class="blob-code blob-code-inner js-file-line">	UCHIJAAAA	projectred-illumination{4.8.1.25} [ProjectRed Illumination] (ProjectRed-1.10.2-4.8.1.25-lighting.jar) </td>
+      </tr>
+      <tr>
+        <td id="file-crash-2017-05-05_15-04-58-server-txt-L189" class="blob-num js-line-number" data-line-number="189"></td>
+        <td id="file-crash-2017-05-05_15-04-58-server-txt-LC189" class="blob-code blob-code-inner js-file-line">	UCHIJAAAA	projectred-expansion{4.8.1.25} [ProjectRed Expansion] (ProjectRed-1.10.2-4.8.1.25-mechanical.jar) </td>
+      </tr>
+      <tr>
+        <td id="file-crash-2017-05-05_15-04-58-server-txt-L190" class="blob-num js-line-number" data-line-number="190"></td>
+        <td id="file-crash-2017-05-05_15-04-58-server-txt-LC190" class="blob-code blob-code-inner js-file-line">	UCHIJAAAA	projectred-tansportation{1.0} [projectred-tansportation] (ProjectRed-1.10.2-4.8.1.25-mechanical.jar) </td>
+      </tr>
+      <tr>
+        <td id="file-crash-2017-05-05_15-04-58-server-txt-L191" class="blob-num js-line-number" data-line-number="191"></td>
+        <td id="file-crash-2017-05-05_15-04-58-server-txt-LC191" class="blob-code blob-code-inner js-file-line">	UCHIJAAAA	projectred-exploration{4.8.1.25} [ProjectRed Exploration] (ProjectRed-1.10.2-4.8.1.25-world.jar) </td>
+      </tr>
+      <tr>
+        <td id="file-crash-2017-05-05_15-04-58-server-txt-L192" class="blob-num js-line-number" data-line-number="192"></td>
+        <td id="file-crash-2017-05-05_15-04-58-server-txt-LC192" class="blob-code blob-code-inner js-file-line">	UCHIJAAAA	reborncore{2.13.5.136} [RebornCore] (RebornCore-1.10.2-2.13.5.136-universal.jar) </td>
+      </tr>
+      <tr>
+        <td id="file-crash-2017-05-05_15-04-58-server-txt-L193" class="blob-num js-line-number" data-line-number="193"></td>
+        <td id="file-crash-2017-05-05_15-04-58-server-txt-LC193" class="blob-code blob-code-inner js-file-line">	UCHIJAAAA	quantumstorage{3.3.2} [QuantumStorage] (QuantumStorage-1.10.2-3.3.2.jar) </td>
+      </tr>
+      <tr>
+        <td id="file-crash-2017-05-05_15-04-58-server-txt-L194" class="blob-num js-line-number" data-line-number="194"></td>
+        <td id="file-crash-2017-05-05_15-04-58-server-txt-LC194" class="blob-code blob-code-inner js-file-line">	UCHIJAAAA	rangedpumps{0.3} [Ranged Pumps] (rangedpumps-0.3.jar) </td>
+      </tr>
+      <tr>
+        <td id="file-crash-2017-05-05_15-04-58-server-txt-L195" class="blob-num js-line-number" data-line-number="195"></td>
+        <td id="file-crash-2017-05-05_15-04-58-server-txt-LC195" class="blob-code blob-code-inner js-file-line">	UCHIJAAAA	reborncore-mcmultipart{2.13.5.136} [reborncore-MCMultiPart] (RebornCore-1.10.2-2.13.5.136-universal.jar) </td>
+      </tr>
+      <tr>
+        <td id="file-crash-2017-05-05_15-04-58-server-txt-L196" class="blob-num js-line-number" data-line-number="196"></td>
+        <td id="file-crash-2017-05-05_15-04-58-server-txt-LC196" class="blob-code blob-code-inner js-file-line">	UCHIJAAAA	refinedstorage{1.2.25} [Refined Storage] (refinedstorage-1.2.25.jar) </td>
+      </tr>
+      <tr>
+        <td id="file-crash-2017-05-05_15-04-58-server-txt-L197" class="blob-num js-line-number" data-line-number="197"></td>
+        <td id="file-crash-2017-05-05_15-04-58-server-txt-LC197" class="blob-code blob-code-inner js-file-line">	UCHIJAAAA	xreliquary{1.10.2-1.3.3.659} [Reliquary] (Reliquary-1.10.2-1.3.3.659.jar) </td>
+      </tr>
+      <tr>
+        <td id="file-crash-2017-05-05_15-04-58-server-txt-L198" class="blob-num js-line-number" data-line-number="198"></td>
+        <td id="file-crash-2017-05-05_15-04-58-server-txt-LC198" class="blob-code blob-code-inner js-file-line">	UCHIJAAAA	rftools{6.00} [RFTools] (rftools-1.1x-6.00.jar) </td>
+      </tr>
+      <tr>
+        <td id="file-crash-2017-05-05_15-04-58-server-txt-L199" class="blob-num js-line-number" data-line-number="199"></td>
+        <td id="file-crash-2017-05-05_15-04-58-server-txt-LC199" class="blob-code blob-code-inner js-file-line">	UCHIJAAAA	rftoolscontrol{1.6.8} [RFTools Control] (rftoolsctrl-1.1x-1.6.8.jar) </td>
+      </tr>
+      <tr>
+        <td id="file-crash-2017-05-05_15-04-58-server-txt-L200" class="blob-num js-line-number" data-line-number="200"></td>
+        <td id="file-crash-2017-05-05_15-04-58-server-txt-LC200" class="blob-code blob-code-inner js-file-line">	UCHIJAAAA	rftoolsdim{4.55} [RFTools Dimensions] (rftoolsdim-1.1x-4.55.jar) </td>
+      </tr>
+      <tr>
+        <td id="file-crash-2017-05-05_15-04-58-server-txt-L201" class="blob-num js-line-number" data-line-number="201"></td>
+        <td id="file-crash-2017-05-05_15-04-58-server-txt-LC201" class="blob-code blob-code-inner js-file-line">	UCHIJAAAA	rscircuits{1.0.4} [Super Circuit Maker] (SuperCircuitMaker-1.0.4.jar) </td>
+      </tr>
+      <tr>
+        <td id="file-crash-2017-05-05_15-04-58-server-txt-L202" class="blob-num js-line-number" data-line-number="202"></td>
+        <td id="file-crash-2017-05-05_15-04-58-server-txt-LC202" class="blob-code blob-code-inner js-file-line">	UCHIJAAAA	taiga{1.2.6} [Tinkers Alloying Addon] (taiga-1.10.2-1.2.6.jar) </td>
+      </tr>
+      <tr>
+        <td id="file-crash-2017-05-05_15-04-58-server-txt-L203" class="blob-num js-line-number" data-line-number="203"></td>
+        <td id="file-crash-2017-05-05_15-04-58-server-txt-LC203" class="blob-code blob-code-inner js-file-line">	UCHIJAAAA	techreborn{2.1.12.215} [TechReborn] (TechReborn-1.10.2-2.1.12.215-universal.jar) </td>
+      </tr>
+      <tr>
+        <td id="file-crash-2017-05-05_15-04-58-server-txt-L204" class="blob-num js-line-number" data-line-number="204"></td>
+        <td id="file-crash-2017-05-05_15-04-58-server-txt-LC204" class="blob-code blob-code-inner js-file-line">	UCHIJAAAA	teslafied{1.0.0} [Teslafied] (teslafied-1.10.2-1.1.0.jar) </td>
+      </tr>
+      <tr>
+        <td id="file-crash-2017-05-05_15-04-58-server-txt-L205" class="blob-num js-line-number" data-line-number="205"></td>
+        <td id="file-crash-2017-05-05_15-04-58-server-txt-LC205" class="blob-code blob-code-inner js-file-line">	UCHIJAAAA	thermalfoundation{2.0.5} [Thermal Foundation] (ThermalFoundation-1.10.2-2.0.5.81-universal.jar) </td>
+      </tr>
+      <tr>
+        <td id="file-crash-2017-05-05_15-04-58-server-txt-L206" class="blob-num js-line-number" data-line-number="206"></td>
+        <td id="file-crash-2017-05-05_15-04-58-server-txt-LC206" class="blob-code blob-code-inner js-file-line">	UCHIJAAAA	thermalexpansion{5.0.4} [Thermal Expansion] (ThermalExpansion-1.10.2-5.0.4.90-universal.jar) </td>
+      </tr>
+      <tr>
+        <td id="file-crash-2017-05-05_15-04-58-server-txt-L207" class="blob-num js-line-number" data-line-number="207"></td>
+        <td id="file-crash-2017-05-05_15-04-58-server-txt-LC207" class="blob-code blob-code-inner js-file-line">	UCHIJAAAA	TinkersAddons{1.0.5} [Tinkers&#39; Addons] (Tinkers&#39; Addons-1.10.x-1.0.5.jar) </td>
+      </tr>
+      <tr>
+        <td id="file-crash-2017-05-05_15-04-58-server-txt-L208" class="blob-num js-line-number" data-line-number="208"></td>
+        <td id="file-crash-2017-05-05_15-04-58-server-txt-LC208" class="blob-code blob-code-inner js-file-line">	UCHIJAAAA	topaddons{1.10.2-0.12.0} [TOP Addons] (topaddons-1.10.2-0.12.0.jar) </td>
+      </tr>
+      <tr>
+        <td id="file-crash-2017-05-05_15-04-58-server-txt-L209" class="blob-num js-line-number" data-line-number="209"></td>
+        <td id="file-crash-2017-05-05_15-04-58-server-txt-LC209" class="blob-code blob-code-inner js-file-line">	UCHIJAAAA	Torcherino{4.2s} [Torcherino] (Torcherino-4.2s.jar) </td>
+      </tr>
+      <tr>
+        <td id="file-crash-2017-05-05_15-04-58-server-txt-L210" class="blob-num js-line-number" data-line-number="210"></td>
+        <td id="file-crash-2017-05-05_15-04-58-server-txt-LC210" class="blob-code blob-code-inner js-file-line">	UCHIJAAAA	torchmaster{1.0} [TorchMaster] (torchmaster_1.10.2-1.2.2.25.jar) </td>
+      </tr>
+      <tr>
+        <td id="file-crash-2017-05-05_15-04-58-server-txt-L211" class="blob-num js-line-number" data-line-number="211"></td>
+        <td id="file-crash-2017-05-05_15-04-58-server-txt-LC211" class="blob-code blob-code-inner js-file-line">	UCHIJAAAA	valkyrienwarfare{0.899} [Valkyrien Warfare] (Valkyrien Warfare 0.8.999 Stable.jar) </td>
+      </tr>
+      <tr>
+        <td id="file-crash-2017-05-05_15-04-58-server-txt-L212" class="blob-num js-line-number" data-line-number="212"></td>
+        <td id="file-crash-2017-05-05_15-04-58-server-txt-LC212" class="blob-code blob-code-inner js-file-line">	UCHIJAAAA	valkyrienwarfarecombat{0.1} [Valkyrien Warfare Combat] (Valkyrien Warfare 0.8.999 Stable.jar) </td>
+      </tr>
+      <tr>
+        <td id="file-crash-2017-05-05_15-04-58-server-txt-L213" class="blob-num js-line-number" data-line-number="213"></td>
+        <td id="file-crash-2017-05-05_15-04-58-server-txt-LC213" class="blob-code blob-code-inner js-file-line">	UCHIJAAAA	valkyrienwarfarecontrol{0.3c} [Valkyrien Warfare Control] (Valkyrien Warfare 0.8.999 Stable.jar) </td>
+      </tr>
+      <tr>
+        <td id="file-crash-2017-05-05_15-04-58-server-txt-L214" class="blob-num js-line-number" data-line-number="214"></td>
+        <td id="file-crash-2017-05-05_15-04-58-server-txt-LC214" class="blob-code blob-code-inner js-file-line">	UCHIJAAAA	can{can} [can] (Valkyrien Warfare 0.8.999 Stable.jar) </td>
+      </tr>
+      <tr>
+        <td id="file-crash-2017-05-05_15-04-58-server-txt-L215" class="blob-num js-line-number" data-line-number="215"></td>
+        <td id="file-crash-2017-05-05_15-04-58-server-txt-LC215" class="blob-code blob-code-inner js-file-line">	UCHIJAAAA	valkyrienwarfareworld{0.0a} [Valkyrien Warfare World] (Valkyrien Warfare 0.8.999 Stable.jar) </td>
+      </tr>
+      <tr>
+        <td id="file-crash-2017-05-05_15-04-58-server-txt-L216" class="blob-num js-line-number" data-line-number="216"></td>
+        <td id="file-crash-2017-05-05_15-04-58-server-txt-LC216" class="blob-code blob-code-inner js-file-line">	UCHIJAAAA	VeinMiner{0.35.3_1.9-a46c1b0} [Vein Miner] (VeinMiner-1.9-0.35.3.595+a46c1b0.jar) </td>
+      </tr>
+      <tr>
+        <td id="file-crash-2017-05-05_15-04-58-server-txt-L217" class="blob-num js-line-number" data-line-number="217"></td>
+        <td id="file-crash-2017-05-05_15-04-58-server-txt-LC217" class="blob-code blob-code-inner js-file-line">	UCHIJAAAA	VeinMinerModSupport{0.35.3_1.9-a46c1b0} [Mod Support] (VeinMiner-1.9-0.35.3.595+a46c1b0.jar) </td>
+      </tr>
+      <tr>
+        <td id="file-crash-2017-05-05_15-04-58-server-txt-L218" class="blob-num js-line-number" data-line-number="218"></td>
+        <td id="file-crash-2017-05-05_15-04-58-server-txt-LC218" class="blob-code blob-code-inner js-file-line">	UCHIJAAAA	voxels{1.0.8.2} [voxels] (voxels-1.10-1.0.8.2.jar) </td>
+      </tr>
+      <tr>
+        <td id="file-crash-2017-05-05_15-04-58-server-txt-L219" class="blob-num js-line-number" data-line-number="219"></td>
+        <td id="file-crash-2017-05-05_15-04-58-server-txt-LC219" class="blob-code blob-code-inner js-file-line">	UCHIJAAAA	wired{1.6.4} [WIRED: More Augs] (WIRED-1.6.4.jar) </td>
+      </tr>
+      <tr>
+        <td id="file-crash-2017-05-05_15-04-58-server-txt-L220" class="blob-num js-line-number" data-line-number="220"></td>
+        <td id="file-crash-2017-05-05_15-04-58-server-txt-LC220" class="blob-code blob-code-inner js-file-line">	UCHIJAAAA	xtones{1.10.2-1.0.1-3} [Xtones] (Xtones-1.10.2-1.0.1-3.jar) </td>
+      </tr>
+      <tr>
+        <td id="file-crash-2017-05-05_15-04-58-server-txt-L221" class="blob-num js-line-number" data-line-number="221"></td>
+        <td id="file-crash-2017-05-05_15-04-58-server-txt-LC221" class="blob-code blob-code-inner js-file-line">	Loaded coremods (and transformers): </td>
+      </tr>
+      <tr>
+        <td id="file-crash-2017-05-05_15-04-58-server-txt-L222" class="blob-num js-line-number" data-line-number="222"></td>
+        <td id="file-crash-2017-05-05_15-04-58-server-txt-LC222" class="blob-code blob-code-inner js-file-line">BookshelfLoadingPlugin (Bookshelf-1.10.2-1.4.4.347.jar)</td>
+      </tr>
+      <tr>
+        <td id="file-crash-2017-05-05_15-04-58-server-txt-L223" class="blob-num js-line-number" data-line-number="223"></td>
+        <td id="file-crash-2017-05-05_15-04-58-server-txt-LC223" class="blob-code blob-code-inner js-file-line">  net.darkhax.bookshelf.asm.BookshelfTransformerManager</td>
+      </tr>
+      <tr>
+        <td id="file-crash-2017-05-05_15-04-58-server-txt-L224" class="blob-num js-line-number" data-line-number="224"></td>
+        <td id="file-crash-2017-05-05_15-04-58-server-txt-LC224" class="blob-code blob-code-inner js-file-line">Brandon&#39;s Core (BrandonsCore-1.10.2-2.1.6.98-universal.jar)</td>
+      </tr>
+      <tr>
+        <td id="file-crash-2017-05-05_15-04-58-server-txt-L225" class="blob-num js-line-number" data-line-number="225"></td>
+        <td id="file-crash-2017-05-05_15-04-58-server-txt-LC225" class="blob-code blob-code-inner js-file-line">  com.brandon3055.brandonscore.asm.ClassTransformer</td>
+      </tr>
+      <tr>
+        <td id="file-crash-2017-05-05_15-04-58-server-txt-L226" class="blob-num js-line-number" data-line-number="226"></td>
+        <td id="file-crash-2017-05-05_15-04-58-server-txt-LC226" class="blob-code blob-code-inner js-file-line">OFMDepLoader (OpenFM-1.9.4-0.1.0.22.jar)</td>
+      </tr>
+      <tr>
+        <td id="file-crash-2017-05-05_15-04-58-server-txt-L227" class="blob-num js-line-number" data-line-number="227"></td>
+        <td id="file-crash-2017-05-05_15-04-58-server-txt-LC227" class="blob-code blob-code-inner js-file-line">  </td>
+      </tr>
+      <tr>
+        <td id="file-crash-2017-05-05_15-04-58-server-txt-L228" class="blob-num js-line-number" data-line-number="228"></td>
+        <td id="file-crash-2017-05-05_15-04-58-server-txt-LC228" class="blob-code blob-code-inner js-file-line">ChiselCorePlugin (Chisel-MC1.10.2-0.0.10.22.jar)</td>
+      </tr>
+      <tr>
+        <td id="file-crash-2017-05-05_15-04-58-server-txt-L229" class="blob-num js-line-number" data-line-number="229"></td>
+        <td id="file-crash-2017-05-05_15-04-58-server-txt-LC229" class="blob-code blob-code-inner js-file-line">  team.chisel.common.asm.ChiselTransformer</td>
+      </tr>
+      <tr>
+        <td id="file-crash-2017-05-05_15-04-58-server-txt-L230" class="blob-num js-line-number" data-line-number="230"></td>
+        <td id="file-crash-2017-05-05_15-04-58-server-txt-LC230" class="blob-code blob-code-inner js-file-line">CCLCorePlugin (CodeChickenLib-1.10.2-2.5.8.255-universal.jar)</td>
+      </tr>
+      <tr>
+        <td id="file-crash-2017-05-05_15-04-58-server-txt-L231" class="blob-num js-line-number" data-line-number="231"></td>
+        <td id="file-crash-2017-05-05_15-04-58-server-txt-LC231" class="blob-code blob-code-inner js-file-line">  codechicken.lib.asm.ClassHeirachyManager</td>
+      </tr>
+      <tr>
+        <td id="file-crash-2017-05-05_15-04-58-server-txt-L232" class="blob-num js-line-number" data-line-number="232"></td>
+        <td id="file-crash-2017-05-05_15-04-58-server-txt-LC232" class="blob-code blob-code-inner js-file-line">  codechicken.lib.asm.CCL_ASMTransformer</td>
+      </tr>
+      <tr>
+        <td id="file-crash-2017-05-05_15-04-58-server-txt-L233" class="blob-num js-line-number" data-line-number="233"></td>
+        <td id="file-crash-2017-05-05_15-04-58-server-txt-LC233" class="blob-code blob-code-inner js-file-line">Plugin (NotEnoughIDs-1.5.3.jar)</td>
+      </tr>
+      <tr>
+        <td id="file-crash-2017-05-05_15-04-58-server-txt-L234" class="blob-num js-line-number" data-line-number="234"></td>
+        <td id="file-crash-2017-05-05_15-04-58-server-txt-LC234" class="blob-code blob-code-inner js-file-line">  ru.fewizz.neid.asm.Transformer</td>
+      </tr>
+      <tr>
+        <td id="file-crash-2017-05-05_15-04-58-server-txt-L235" class="blob-num js-line-number" data-line-number="235"></td>
+        <td id="file-crash-2017-05-05_15-04-58-server-txt-LC235" class="blob-code blob-code-inner js-file-line">AppleCore (AppleCore-mc1.10.2-2.1.2.jar)</td>
+      </tr>
+      <tr>
+        <td id="file-crash-2017-05-05_15-04-58-server-txt-L236" class="blob-num js-line-number" data-line-number="236"></td>
+        <td id="file-crash-2017-05-05_15-04-58-server-txt-LC236" class="blob-code blob-code-inner js-file-line">  squeek.applecore.asm.TransformerModuleHandler</td>
+      </tr>
+      <tr>
+        <td id="file-crash-2017-05-05_15-04-58-server-txt-L237" class="blob-num js-line-number" data-line-number="237"></td>
+        <td id="file-crash-2017-05-05_15-04-58-server-txt-LC237" class="blob-code blob-code-inner js-file-line">TransformerLoader (OpenComputers-MC1.10.2-1.6.2.7.jar)</td>
+      </tr>
+      <tr>
+        <td id="file-crash-2017-05-05_15-04-58-server-txt-L238" class="blob-num js-line-number" data-line-number="238"></td>
+        <td id="file-crash-2017-05-05_15-04-58-server-txt-LC238" class="blob-code blob-code-inner js-file-line">  li.cil.oc.common.asm.ClassTransformer</td>
+      </tr>
+      <tr>
+        <td id="file-crash-2017-05-05_15-04-58-server-txt-L239" class="blob-num js-line-number" data-line-number="239"></td>
+        <td id="file-crash-2017-05-05_15-04-58-server-txt-LC239" class="blob-code blob-code-inner js-file-line">EnderCorePlugin (EnderCore-1.10.2-0.4.1.65-beta.jar)</td>
+      </tr>
+      <tr>
+        <td id="file-crash-2017-05-05_15-04-58-server-txt-L240" class="blob-num js-line-number" data-line-number="240"></td>
+        <td id="file-crash-2017-05-05_15-04-58-server-txt-LC240" class="blob-code blob-code-inner js-file-line">  com.enderio.core.common.transform.EnderCoreTransformer</td>
+      </tr>
+      <tr>
+        <td id="file-crash-2017-05-05_15-04-58-server-txt-L241" class="blob-num js-line-number" data-line-number="241"></td>
+        <td id="file-crash-2017-05-05_15-04-58-server-txt-LC241" class="blob-code blob-code-inner js-file-line">AdvancedRocketryPlugin (AdvancedRocketry-1.10.2-1.0.17.jar)</td>
+      </tr>
+      <tr>
+        <td id="file-crash-2017-05-05_15-04-58-server-txt-L242" class="blob-num js-line-number" data-line-number="242"></td>
+        <td id="file-crash-2017-05-05_15-04-58-server-txt-LC242" class="blob-code blob-code-inner js-file-line">  zmaster587.advancedRocketry.asm.ClassTransformer</td>
+      </tr>
+      <tr>
+        <td id="file-crash-2017-05-05_15-04-58-server-txt-L243" class="blob-num js-line-number" data-line-number="243"></td>
+        <td id="file-crash-2017-05-05_15-04-58-server-txt-LC243" class="blob-code blob-code-inner js-file-line">LoadingPlugin (Quark-r1.1-70.jar)</td>
+      </tr>
+      <tr>
+        <td id="file-crash-2017-05-05_15-04-58-server-txt-L244" class="blob-num js-line-number" data-line-number="244"></td>
+        <td id="file-crash-2017-05-05_15-04-58-server-txt-LC244" class="blob-code blob-code-inner js-file-line">  vazkii.quark.base.asm.ClassTransformer</td>
+      </tr>
+      <tr>
+        <td id="file-crash-2017-05-05_15-04-58-server-txt-L245" class="blob-num js-line-number" data-line-number="245"></td>
+        <td id="file-crash-2017-05-05_15-04-58-server-txt-LC245" class="blob-code blob-code-inner js-file-line">RebornCoreASM (RebornCore-1.10.2-2.13.5.136-universal.jar)</td>
+      </tr>
+      <tr>
+        <td id="file-crash-2017-05-05_15-04-58-server-txt-L246" class="blob-num js-line-number" data-line-number="246"></td>
+        <td id="file-crash-2017-05-05_15-04-58-server-txt-LC246" class="blob-code blob-code-inner js-file-line">  reborncore.mixin.transformer.MixinTransformer</td>
+      </tr>
+      <tr>
+        <td id="file-crash-2017-05-05_15-04-58-server-txt-L247" class="blob-num js-line-number" data-line-number="247"></td>
+        <td id="file-crash-2017-05-05_15-04-58-server-txt-LC247" class="blob-code blob-code-inner js-file-line">IC2core (industrialcraft-2-2.6.206-ex110.jar)</td>
+      </tr>
+      <tr>
+        <td id="file-crash-2017-05-05_15-04-58-server-txt-L248" class="blob-num js-line-number" data-line-number="248"></td>
+        <td id="file-crash-2017-05-05_15-04-58-server-txt-LC248" class="blob-code blob-code-inner js-file-line">  </td>
+      </tr>
+      <tr>
+        <td id="file-crash-2017-05-05_15-04-58-server-txt-L249" class="blob-num js-line-number" data-line-number="249"></td>
+        <td id="file-crash-2017-05-05_15-04-58-server-txt-LC249" class="blob-code blob-code-inner js-file-line">CoFH Loading Plugin (CoFHCore-1.10.2-4.1.1.156-universal.jar)</td>
+      </tr>
+      <tr>
+        <td id="file-crash-2017-05-05_15-04-58-server-txt-L250" class="blob-num js-line-number" data-line-number="250"></td>
+        <td id="file-crash-2017-05-05_15-04-58-server-txt-LC250" class="blob-code blob-code-inner js-file-line">  cofh.asm.CoFHClassTransformer</td>
+      </tr>
+      <tr>
+        <td id="file-crash-2017-05-05_15-04-58-server-txt-L251" class="blob-num js-line-number" data-line-number="251"></td>
+        <td id="file-crash-2017-05-05_15-04-58-server-txt-LC251" class="blob-code blob-code-inner js-file-line">  cofh.asm.repack.codechicken.lib.asm.ClassHierarchyManager</td>
+      </tr>
+      <tr>
+        <td id="file-crash-2017-05-05_15-04-58-server-txt-L252" class="blob-num js-line-number" data-line-number="252"></td>
+        <td id="file-crash-2017-05-05_15-04-58-server-txt-LC252" class="blob-code blob-code-inner js-file-line">CorePlugin (MrTJPCore-1.10.2-2.0.0.17-universal.jar)</td>
+      </tr>
+      <tr>
+        <td id="file-crash-2017-05-05_15-04-58-server-txt-L253" class="blob-num js-line-number" data-line-number="253"></td>
+        <td id="file-crash-2017-05-05_15-04-58-server-txt-LC253" class="blob-code blob-code-inner js-file-line">  </td>
+      </tr>
+      <tr>
+        <td id="file-crash-2017-05-05_15-04-58-server-txt-L254" class="blob-num js-line-number" data-line-number="254"></td>
+        <td id="file-crash-2017-05-05_15-04-58-server-txt-LC254" class="blob-code blob-code-inner js-file-line">ValkyrienWarfareBase CoreMod (Valkyrien Warfare 0.8.999 Stable.jar)</td>
+      </tr>
+      <tr>
+        <td id="file-crash-2017-05-05_15-04-58-server-txt-L255" class="blob-num js-line-number" data-line-number="255"></td>
+        <td id="file-crash-2017-05-05_15-04-58-server-txt-LC255" class="blob-code blob-code-inner js-file-line">  ValkyrienWarfareBase.CoreMod.ValkyrienWarfareTransformer</td>
+      </tr>
+      <tr>
+        <td id="file-crash-2017-05-05_15-04-58-server-txt-L256" class="blob-num js-line-number" data-line-number="256"></td>
+        <td id="file-crash-2017-05-05_15-04-58-server-txt-LC256" class="blob-code blob-code-inner js-file-line">ShetiPhian-ASM (shetiphiancore-1.10.0-3.3.8.jar)</td>
+      </tr>
+      <tr>
+        <td id="file-crash-2017-05-05_15-04-58-server-txt-L257" class="blob-num js-line-number" data-line-number="257"></td>
+        <td id="file-crash-2017-05-05_15-04-58-server-txt-LC257" class="blob-code blob-code-inner js-file-line">  shetiphian.core.asm.ClassTransformer</td>
+      </tr>
+      <tr>
+        <td id="file-crash-2017-05-05_15-04-58-server-txt-L258" class="blob-num js-line-number" data-line-number="258"></td>
+        <td id="file-crash-2017-05-05_15-04-58-server-txt-LC258" class="blob-code blob-code-inner js-file-line">	GL info: ~~ERROR~~ RuntimeException: No OpenGL context found in the current thread.</td>
+      </tr>
+      <tr>
+        <td id="file-crash-2017-05-05_15-04-58-server-txt-L259" class="blob-num js-line-number" data-line-number="259"></td>
+        <td id="file-crash-2017-05-05_15-04-58-server-txt-LC259" class="blob-code blob-code-inner js-file-line">	Pulsar/tconstruct loaded Pulses: </td>
+      </tr>
+      <tr>
+        <td id="file-crash-2017-05-05_15-04-58-server-txt-L260" class="blob-num js-line-number" data-line-number="260"></td>
+        <td id="file-crash-2017-05-05_15-04-58-server-txt-LC260" class="blob-code blob-code-inner js-file-line">		- TinkerCommons (Enabled/Forced)</td>
+      </tr>
+      <tr>
+        <td id="file-crash-2017-05-05_15-04-58-server-txt-L261" class="blob-num js-line-number" data-line-number="261"></td>
+        <td id="file-crash-2017-05-05_15-04-58-server-txt-LC261" class="blob-code blob-code-inner js-file-line">		- TinkerWorld (Enabled/Not Forced)</td>
+      </tr>
+      <tr>
+        <td id="file-crash-2017-05-05_15-04-58-server-txt-L262" class="blob-num js-line-number" data-line-number="262"></td>
+        <td id="file-crash-2017-05-05_15-04-58-server-txt-LC262" class="blob-code blob-code-inner js-file-line">		- TinkerTools (Enabled/Not Forced)</td>
+      </tr>
+      <tr>
+        <td id="file-crash-2017-05-05_15-04-58-server-txt-L263" class="blob-num js-line-number" data-line-number="263"></td>
+        <td id="file-crash-2017-05-05_15-04-58-server-txt-LC263" class="blob-code blob-code-inner js-file-line">		- TinkerHarvestTools (Enabled/Forced)</td>
+      </tr>
+      <tr>
+        <td id="file-crash-2017-05-05_15-04-58-server-txt-L264" class="blob-num js-line-number" data-line-number="264"></td>
+        <td id="file-crash-2017-05-05_15-04-58-server-txt-LC264" class="blob-code blob-code-inner js-file-line">		- TinkerMeleeWeapons (Enabled/Forced)</td>
+      </tr>
+      <tr>
+        <td id="file-crash-2017-05-05_15-04-58-server-txt-L265" class="blob-num js-line-number" data-line-number="265"></td>
+        <td id="file-crash-2017-05-05_15-04-58-server-txt-LC265" class="blob-code blob-code-inner js-file-line">		- TinkerRangedWeapons (Enabled/Forced)</td>
+      </tr>
+      <tr>
+        <td id="file-crash-2017-05-05_15-04-58-server-txt-L266" class="blob-num js-line-number" data-line-number="266"></td>
+        <td id="file-crash-2017-05-05_15-04-58-server-txt-LC266" class="blob-code blob-code-inner js-file-line">		- TinkerModifiers (Enabled/Forced)</td>
+      </tr>
+      <tr>
+        <td id="file-crash-2017-05-05_15-04-58-server-txt-L267" class="blob-num js-line-number" data-line-number="267"></td>
+        <td id="file-crash-2017-05-05_15-04-58-server-txt-LC267" class="blob-code blob-code-inner js-file-line">		- TinkerSmeltery (Enabled/Not Forced)</td>
+      </tr>
+      <tr>
+        <td id="file-crash-2017-05-05_15-04-58-server-txt-L268" class="blob-num js-line-number" data-line-number="268"></td>
+        <td id="file-crash-2017-05-05_15-04-58-server-txt-LC268" class="blob-code blob-code-inner js-file-line">		- TinkerGadgets (Enabled/Not Forced)</td>
+      </tr>
+      <tr>
+        <td id="file-crash-2017-05-05_15-04-58-server-txt-L269" class="blob-num js-line-number" data-line-number="269"></td>
+        <td id="file-crash-2017-05-05_15-04-58-server-txt-LC269" class="blob-code blob-code-inner js-file-line">		- TinkerOredict (Enabled/Forced)</td>
+      </tr>
+      <tr>
+        <td id="file-crash-2017-05-05_15-04-58-server-txt-L270" class="blob-num js-line-number" data-line-number="270"></td>
+        <td id="file-crash-2017-05-05_15-04-58-server-txt-LC270" class="blob-code blob-code-inner js-file-line">		- TinkerIntegration (Enabled/Forced)</td>
+      </tr>
+      <tr>
+        <td id="file-crash-2017-05-05_15-04-58-server-txt-L271" class="blob-num js-line-number" data-line-number="271"></td>
+        <td id="file-crash-2017-05-05_15-04-58-server-txt-LC271" class="blob-code blob-code-inner js-file-line">		- TinkerFluids (Enabled/Forced)</td>
+      </tr>
+      <tr>
+        <td id="file-crash-2017-05-05_15-04-58-server-txt-L272" class="blob-num js-line-number" data-line-number="272"></td>
+        <td id="file-crash-2017-05-05_15-04-58-server-txt-LC272" class="blob-code blob-code-inner js-file-line">		- TinkerMaterials (Enabled/Forced)</td>
+      </tr>
+      <tr>
+        <td id="file-crash-2017-05-05_15-04-58-server-txt-L273" class="blob-num js-line-number" data-line-number="273"></td>
+        <td id="file-crash-2017-05-05_15-04-58-server-txt-LC273" class="blob-code blob-code-inner js-file-line">		- TinkerModelRegister (Enabled/Forced)</td>
+      </tr>
+      <tr>
+        <td id="file-crash-2017-05-05_15-04-58-server-txt-L274" class="blob-num js-line-number" data-line-number="274"></td>
+        <td id="file-crash-2017-05-05_15-04-58-server-txt-LC274" class="blob-code blob-code-inner js-file-line">		- chiselsandbitsIntegration (Enabled/Not Forced)</td>
+      </tr>
+      <tr>
+        <td id="file-crash-2017-05-05_15-04-58-server-txt-L275" class="blob-num js-line-number" data-line-number="275"></td>
+        <td id="file-crash-2017-05-05_15-04-58-server-txt-LC275" class="blob-code blob-code-inner js-file-line">		- theoneprobeIntegration (Enabled/Not Forced)</td>
+      </tr>
+      <tr>
+        <td id="file-crash-2017-05-05_15-04-58-server-txt-L276" class="blob-num js-line-number" data-line-number="276"></td>
+        <td id="file-crash-2017-05-05_15-04-58-server-txt-LC276" class="blob-code blob-code-inner js-file-line">
+</td>
+      </tr>
+      <tr>
+        <td id="file-crash-2017-05-05_15-04-58-server-txt-L277" class="blob-num js-line-number" data-line-number="277"></td>
+        <td id="file-crash-2017-05-05_15-04-58-server-txt-LC277" class="blob-code blob-code-inner js-file-line">	CodeChickenLib Invalid Fingerprint Reports: </td>
+      </tr>
+      <tr>
+        <td id="file-crash-2017-05-05_15-04-58-server-txt-L278" class="blob-num js-line-number" data-line-number="278"></td>
+        <td id="file-crash-2017-05-05_15-04-58-server-txt-LC278" class="blob-code blob-code-inner js-file-line">	CodeChickenCore Invalid Fingerprint Reports: </td>
+      </tr>
+      <tr>
+        <td id="file-crash-2017-05-05_15-04-58-server-txt-L279" class="blob-num js-line-number" data-line-number="279"></td>
+        <td id="file-crash-2017-05-05_15-04-58-server-txt-LC279" class="blob-code blob-code-inner js-file-line">	EnderStorage Invalid Fingerprint Reports: </td>
+      </tr>
+      <tr>
+        <td id="file-crash-2017-05-05_15-04-58-server-txt-L280" class="blob-num js-line-number" data-line-number="280"></td>
+        <td id="file-crash-2017-05-05_15-04-58-server-txt-LC280" class="blob-code blob-code-inner js-file-line">	EnderIO: Found the following problem(s) with your installation (That does NOT mean that Ender IO caused the crash or was involved in it in any way. We add this information to help finding common problems, not as an invitation to post any crash you encounter to Ender IO&#39;s issue tracker. Always check the stack trace above to see which mod is most likely failing.):</td>
+      </tr>
+      <tr>
+        <td id="file-crash-2017-05-05_15-04-58-server-txt-L281" class="blob-num js-line-number" data-line-number="281"></td>
+        <td id="file-crash-2017-05-05_15-04-58-server-txt-LC281" class="blob-code blob-code-inner js-file-line">                  * An unsupportted RF API is installed (1.7.10R1.3.1 from (guessing) jar:file:/C:/Users/commo/Desktop/mmc-stable-win32/MultiMC/instances/test/minecraft/mods/BrandonsCore-1.10.2-2.1.6.98-universal.jar!/cofh/api/CoFHAPIProps.class).</td>
+      </tr>
+      <tr>
+        <td id="file-crash-2017-05-05_15-04-58-server-txt-L282" class="blob-num js-line-number" data-line-number="282"></td>
+        <td id="file-crash-2017-05-05_15-04-58-server-txt-LC282" class="blob-code blob-code-inner js-file-line">                    Ender IO needs at least 1.4.0 and will NOT work with older versions.</td>
+      </tr>
+      <tr>
+        <td id="file-crash-2017-05-05_15-04-58-server-txt-L283" class="blob-num js-line-number" data-line-number="283"></td>
+        <td id="file-crash-2017-05-05_15-04-58-server-txt-LC283" class="blob-code blob-code-inner js-file-line">                 This may (look up the meaning of &#39;may&#39; in the dictionary if you&#39;re not sure what it means) have caused the error. Try reproducing the crash WITHOUT this/these mod(s) before reporting it.</td>
+      </tr>
+      <tr>
+        <td id="file-crash-2017-05-05_15-04-58-server-txt-L284" class="blob-num js-line-number" data-line-number="284"></td>
+        <td id="file-crash-2017-05-05_15-04-58-server-txt-LC284" class="blob-code blob-code-inner js-file-line">	Detailed RF API diagnostics:</td>
+      </tr>
+      <tr>
+        <td id="file-crash-2017-05-05_15-04-58-server-txt-L285" class="blob-num js-line-number" data-line-number="285"></td>
+        <td id="file-crash-2017-05-05_15-04-58-server-txt-LC285" class="blob-code blob-code-inner js-file-line">                  * RF API class &#39;EnergyStorage&#39; is loaded from: jar:file:/C:/Users/commo/Desktop/mmc-stable-win32/MultiMC/instances/test/minecraft/mods/BrandonsCore-1.10.2-2.1.6.98-universal.jar!/cofh/api/energy/EnergyStorage.class</td>
+      </tr>
+      <tr>
+        <td id="file-crash-2017-05-05_15-04-58-server-txt-L286" class="blob-num js-line-number" data-line-number="286"></td>
+        <td id="file-crash-2017-05-05_15-04-58-server-txt-LC286" class="blob-code blob-code-inner js-file-line">                  * RF API class &#39;IEnergyConnection&#39; is loaded from: jar:file:/C:/Users/commo/Desktop/mmc-stable-win32/MultiMC/instances/test/minecraft/mods/BrandonsCore-1.10.2-2.1.6.98-universal.jar!/cofh/api/energy/IEnergyConnection.class</td>
+      </tr>
+      <tr>
+        <td id="file-crash-2017-05-05_15-04-58-server-txt-L287" class="blob-num js-line-number" data-line-number="287"></td>
+        <td id="file-crash-2017-05-05_15-04-58-server-txt-LC287" class="blob-code blob-code-inner js-file-line">                  * RF API class &#39;IEnergyContainerItem&#39; is loaded from: jar:file:/C:/Users/commo/Desktop/mmc-stable-win32/MultiMC/instances/test/minecraft/mods/BrandonsCore-1.10.2-2.1.6.98-universal.jar!/cofh/api/energy/IEnergyContainerItem.class</td>
+      </tr>
+      <tr>
+        <td id="file-crash-2017-05-05_15-04-58-server-txt-L288" class="blob-num js-line-number" data-line-number="288"></td>
+        <td id="file-crash-2017-05-05_15-04-58-server-txt-LC288" class="blob-code blob-code-inner js-file-line">                  * RF API class &#39;IEnergyHandler&#39; is loaded from: jar:file:/C:/Users/commo/Desktop/mmc-stable-win32/MultiMC/instances/test/minecraft/mods/BrandonsCore-1.10.2-2.1.6.98-universal.jar!/cofh/api/energy/IEnergyHandler.class</td>
+      </tr>
+      <tr>
+        <td id="file-crash-2017-05-05_15-04-58-server-txt-L289" class="blob-num js-line-number" data-line-number="289"></td>
+        <td id="file-crash-2017-05-05_15-04-58-server-txt-LC289" class="blob-code blob-code-inner js-file-line">                  * RF API class &#39;IEnergyProvider&#39; is loaded from: jar:file:/C:/Users/commo/Desktop/mmc-stable-win32/MultiMC/instances/test/minecraft/mods/BrandonsCore-1.10.2-2.1.6.98-universal.jar!/cofh/api/energy/IEnergyProvider.class</td>
+      </tr>
+      <tr>
+        <td id="file-crash-2017-05-05_15-04-58-server-txt-L290" class="blob-num js-line-number" data-line-number="290"></td>
+        <td id="file-crash-2017-05-05_15-04-58-server-txt-LC290" class="blob-code blob-code-inner js-file-line">                  * RF API class &#39;IEnergyReceiver&#39; is loaded from: jar:file:/C:/Users/commo/Desktop/mmc-stable-win32/MultiMC/instances/test/minecraft/mods/BrandonsCore-1.10.2-2.1.6.98-universal.jar!/cofh/api/energy/IEnergyReceiver.class</td>
+      </tr>
+      <tr>
+        <td id="file-crash-2017-05-05_15-04-58-server-txt-L291" class="blob-num js-line-number" data-line-number="291"></td>
+        <td id="file-crash-2017-05-05_15-04-58-server-txt-LC291" class="blob-code blob-code-inner js-file-line">                  * RF API class &#39;IEnergyStorage&#39; is loaded from: jar:file:/C:/Users/commo/Desktop/mmc-stable-win32/MultiMC/instances/test/minecraft/mods/BrandonsCore-1.10.2-2.1.6.98-universal.jar!/cofh/api/energy/IEnergyStorage.class</td>
+      </tr>
+      <tr>
+        <td id="file-crash-2017-05-05_15-04-58-server-txt-L292" class="blob-num js-line-number" data-line-number="292"></td>
+        <td id="file-crash-2017-05-05_15-04-58-server-txt-LC292" class="blob-code blob-code-inner js-file-line">                  * RF API class &#39;ItemEnergyContainer&#39; is loaded from: jar:file:/C:/Users/commo/Desktop/mmc-stable-win32/MultiMC/instances/test/minecraft/mods/BrandonsCore-1.10.2-2.1.6.98-universal.jar!/cofh/api/energy/ItemEnergyContainer.class</td>
+      </tr>
+      <tr>
+        <td id="file-crash-2017-05-05_15-04-58-server-txt-L293" class="blob-num js-line-number" data-line-number="293"></td>
+        <td id="file-crash-2017-05-05_15-04-58-server-txt-LC293" class="blob-code blob-code-inner js-file-line">                  * RF API class &#39;TileEnergyHandler&#39; is loaded from: jar:file:/C:/Users/commo/Desktop/mmc-stable-win32/MultiMC/instances/test/minecraft/mods/BrandonsCore-1.10.2-2.1.6.98-universal.jar!/cofh/api/energy/TileEnergyHandler.class</td>
+      </tr>
+      <tr>
+        <td id="file-crash-2017-05-05_15-04-58-server-txt-L294" class="blob-num js-line-number" data-line-number="294"></td>
+        <td id="file-crash-2017-05-05_15-04-58-server-txt-LC294" class="blob-code blob-code-inner js-file-line">	Detailed Tesla API diagnostics:</td>
+      </tr>
+      <tr>
+        <td id="file-crash-2017-05-05_15-04-58-server-txt-L295" class="blob-num js-line-number" data-line-number="295"></td>
+        <td id="file-crash-2017-05-05_15-04-58-server-txt-LC295" class="blob-code blob-code-inner js-file-line">                  * Tesla API class &#39;Tesla&#39; is loaded from: jar:file:/C:/Users/commo/Desktop/mmc-stable-win32/MultiMC/instances/test/minecraft/mods/Tesla-1.10.2-1.2.1.50.jar!/net/darkhax/tesla/Tesla.class</td>
+      </tr>
+      <tr>
+        <td id="file-crash-2017-05-05_15-04-58-server-txt-L296" class="blob-num js-line-number" data-line-number="296"></td>
+        <td id="file-crash-2017-05-05_15-04-58-server-txt-LC296" class="blob-code blob-code-inner js-file-line">                  * Tesla API class &#39;TeslaCapabilities&#39; is loaded from: jar:file:/C:/Users/commo/Desktop/mmc-stable-win32/MultiMC/instances/test/minecraft/mods/Tesla-1.10.2-1.2.1.50.jar!/net/darkhax/tesla/capability/TeslaCapabilities.class</td>
+      </tr>
+      <tr>
+        <td id="file-crash-2017-05-05_15-04-58-server-txt-L297" class="blob-num js-line-number" data-line-number="297"></td>
+        <td id="file-crash-2017-05-05_15-04-58-server-txt-LC297" class="blob-code blob-code-inner js-file-line">                  * Tesla API class &#39;ITeslaConsumer&#39; is loaded from: jar:file:/C:/Users/commo/Desktop/mmc-stable-win32/MultiMC/instances/test/minecraft/mods/Tesla-1.10.2-1.2.1.50.jar!/net/darkhax/tesla/api/ITeslaConsumer.class</td>
+      </tr>
+      <tr>
+        <td id="file-crash-2017-05-05_15-04-58-server-txt-L298" class="blob-num js-line-number" data-line-number="298"></td>
+        <td id="file-crash-2017-05-05_15-04-58-server-txt-LC298" class="blob-code blob-code-inner js-file-line">                  * Tesla API class &#39;ITeslaHolder&#39; is loaded from: jar:file:/C:/Users/commo/Desktop/mmc-stable-win32/MultiMC/instances/test/minecraft/mods/Tesla-1.10.2-1.2.1.50.jar!/net/darkhax/tesla/api/ITeslaHolder.class</td>
+      </tr>
+      <tr>
+        <td id="file-crash-2017-05-05_15-04-58-server-txt-L299" class="blob-num js-line-number" data-line-number="299"></td>
+        <td id="file-crash-2017-05-05_15-04-58-server-txt-LC299" class="blob-code blob-code-inner js-file-line">                  * Tesla API class &#39;ITeslaProducer&#39; is loaded from: jar:file:/C:/Users/commo/Desktop/mmc-stable-win32/MultiMC/instances/test/minecraft/mods/Tesla-1.10.2-1.2.1.50.jar!/net/darkhax/tesla/api/ITeslaProducer.class</td>
+      </tr>
+      <tr>
+        <td id="file-crash-2017-05-05_15-04-58-server-txt-L300" class="blob-num js-line-number" data-line-number="300"></td>
+        <td id="file-crash-2017-05-05_15-04-58-server-txt-LC300" class="blob-code blob-code-inner js-file-line">                  * Tesla API class &#39;BaseTeslaContainer&#39; is loaded from: jar:file:/C:/Users/commo/Desktop/mmc-stable-win32/MultiMC/instances/test/minecraft/mods/Tesla-1.10.2-1.2.1.50.jar!/net/darkhax/tesla/api/implementation/BaseTeslaContainer.class</td>
+      </tr>
+      <tr>
+        <td id="file-crash-2017-05-05_15-04-58-server-txt-L301" class="blob-num js-line-number" data-line-number="301"></td>
+        <td id="file-crash-2017-05-05_15-04-58-server-txt-LC301" class="blob-code blob-code-inner js-file-line">                  * Tesla API class &#39;BaseTeslaContainerProvider&#39; is loaded from: jar:file:/C:/Users/commo/Desktop/mmc-stable-win32/MultiMC/instances/test/minecraft/mods/Tesla-1.10.2-1.2.1.50.jar!/net/darkhax/tesla/api/implementation/BaseTeslaContainerProvider.class</td>
+      </tr>
+      <tr>
+        <td id="file-crash-2017-05-05_15-04-58-server-txt-L302" class="blob-num js-line-number" data-line-number="302"></td>
+        <td id="file-crash-2017-05-05_15-04-58-server-txt-LC302" class="blob-code blob-code-inner js-file-line">                  * Tesla API class &#39;InfiniteTeslaConsumer&#39; is loaded from: jar:file:/C:/Users/commo/Desktop/mmc-stable-win32/MultiMC/instances/test/minecraft/mods/Tesla-1.10.2-1.2.1.50.jar!/net/darkhax/tesla/api/implementation/InfiniteTeslaConsumer.class</td>
+      </tr>
+      <tr>
+        <td id="file-crash-2017-05-05_15-04-58-server-txt-L303" class="blob-num js-line-number" data-line-number="303"></td>
+        <td id="file-crash-2017-05-05_15-04-58-server-txt-LC303" class="blob-code blob-code-inner js-file-line">                  * Tesla API class &#39;InfiniteTeslaConsumerProvider&#39; is loaded from: jar:file:/C:/Users/commo/Desktop/mmc-stable-win32/MultiMC/instances/test/minecraft/mods/Tesla-1.10.2-1.2.1.50.jar!/net/darkhax/tesla/api/implementation/InfiniteTeslaConsumerProvider.class</td>
+      </tr>
+      <tr>
+        <td id="file-crash-2017-05-05_15-04-58-server-txt-L304" class="blob-num js-line-number" data-line-number="304"></td>
+        <td id="file-crash-2017-05-05_15-04-58-server-txt-LC304" class="blob-code blob-code-inner js-file-line">                  * Tesla API class &#39;InfiniteTeslaProducer&#39; is loaded from: jar:file:/C:/Users/commo/Desktop/mmc-stable-win32/MultiMC/instances/test/minecraft/mods/Tesla-1.10.2-1.2.1.50.jar!/net/darkhax/tesla/api/implementation/InfiniteTeslaProducer.class</td>
+      </tr>
+      <tr>
+        <td id="file-crash-2017-05-05_15-04-58-server-txt-L305" class="blob-num js-line-number" data-line-number="305"></td>
+        <td id="file-crash-2017-05-05_15-04-58-server-txt-LC305" class="blob-code blob-code-inner js-file-line">                  * Tesla API class &#39;InfiniteTeslaProducerProvider&#39; is loaded from: jar:file:/C:/Users/commo/Desktop/mmc-stable-win32/MultiMC/instances/test/minecraft/mods/Tesla-1.10.2-1.2.1.50.jar!/net/darkhax/tesla/api/implementation/InfiniteTeslaProducerProvider.class</td>
+      </tr>
+      <tr>
+        <td id="file-crash-2017-05-05_15-04-58-server-txt-L306" class="blob-num js-line-number" data-line-number="306"></td>
+        <td id="file-crash-2017-05-05_15-04-58-server-txt-LC306" class="blob-code blob-code-inner js-file-line">
+</td>
+      </tr>
+      <tr>
+        <td id="file-crash-2017-05-05_15-04-58-server-txt-L307" class="blob-num js-line-number" data-line-number="307"></td>
+        <td id="file-crash-2017-05-05_15-04-58-server-txt-LC307" class="blob-code blob-code-inner js-file-line">	!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!</td>
+      </tr>
+      <tr>
+        <td id="file-crash-2017-05-05_15-04-58-server-txt-L308" class="blob-num js-line-number" data-line-number="308"></td>
+        <td id="file-crash-2017-05-05_15-04-58-server-txt-LC308" class="blob-code blob-code-inner js-file-line">	!!!You are looking at the diagnostics information, not at the crash. Scroll up!!!</td>
+      </tr>
+      <tr>
+        <td id="file-crash-2017-05-05_15-04-58-server-txt-L309" class="blob-num js-line-number" data-line-number="309"></td>
+        <td id="file-crash-2017-05-05_15-04-58-server-txt-LC309" class="blob-code blob-code-inner js-file-line">	!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!</td>
+      </tr>
+      <tr>
+        <td id="file-crash-2017-05-05_15-04-58-server-txt-L310" class="blob-num js-line-number" data-line-number="310"></td>
+        <td id="file-crash-2017-05-05_15-04-58-server-txt-LC310" class="blob-code blob-code-inner js-file-line">
+</td>
+      </tr>
+      <tr>
+        <td id="file-crash-2017-05-05_15-04-58-server-txt-L311" class="blob-num js-line-number" data-line-number="311"></td>
+        <td id="file-crash-2017-05-05_15-04-58-server-txt-LC311" class="blob-code blob-code-inner js-file-line">	RebornCore: </td>
+      </tr>
+      <tr>
+        <td id="file-crash-2017-05-05_15-04-58-server-txt-L312" class="blob-num js-line-number" data-line-number="312"></td>
+        <td id="file-crash-2017-05-05_15-04-58-server-txt-LC312" class="blob-code blob-code-inner js-file-line">		Plugin Engine: 0</td>
+      </tr>
+      <tr>
+        <td id="file-crash-2017-05-05_15-04-58-server-txt-L313" class="blob-num js-line-number" data-line-number="313"></td>
+        <td id="file-crash-2017-05-05_15-04-58-server-txt-LC313" class="blob-code blob-code-inner js-file-line">		RebornCore Version: 2.13.5.136</td>
+      </tr>
+      <tr>
+        <td id="file-crash-2017-05-05_15-04-58-server-txt-L314" class="blob-num js-line-number" data-line-number="314"></td>
+        <td id="file-crash-2017-05-05_15-04-58-server-txt-LC314" class="blob-code blob-code-inner js-file-line">		Mixin Status: 1</td>
+      </tr>
+      <tr>
+        <td id="file-crash-2017-05-05_15-04-58-server-txt-L315" class="blob-num js-line-number" data-line-number="315"></td>
+        <td id="file-crash-2017-05-05_15-04-58-server-txt-LC315" class="blob-code blob-code-inner js-file-line">		Runtime Debofucsation 1</td>
+      </tr>
+      <tr>
+        <td id="file-crash-2017-05-05_15-04-58-server-txt-L316" class="blob-num js-line-number" data-line-number="316"></td>
+        <td id="file-crash-2017-05-05_15-04-58-server-txt-LC316" class="blob-code blob-code-inner js-file-line">		RenderEngine: 0</td>
+      </tr>
+      <tr>
+        <td id="file-crash-2017-05-05_15-04-58-server-txt-L317" class="blob-num js-line-number" data-line-number="317"></td>
+        <td id="file-crash-2017-05-05_15-04-58-server-txt-LC317" class="blob-code blob-code-inner js-file-line">	Profiler Position: N/A (disabled)</td>
+      </tr>
+      <tr>
+        <td id="file-crash-2017-05-05_15-04-58-server-txt-L318" class="blob-num js-line-number" data-line-number="318"></td>
+        <td id="file-crash-2017-05-05_15-04-58-server-txt-LC318" class="blob-code blob-code-inner js-file-line">	Player Count: 0 / 8; []</td>
+      </tr>
+      <tr>
+        <td id="file-crash-2017-05-05_15-04-58-server-txt-L319" class="blob-num js-line-number" data-line-number="319"></td>
+        <td id="file-crash-2017-05-05_15-04-58-server-txt-LC319" class="blob-code blob-code-inner js-file-line">	Type: Integrated Server (map_client.txt)</td>
+      </tr>
+      <tr>
+        <td id="file-crash-2017-05-05_15-04-58-server-txt-L320" class="blob-num js-line-number" data-line-number="320"></td>
+        <td id="file-crash-2017-05-05_15-04-58-server-txt-LC320" class="blob-code blob-code-inner js-file-line">	Is Modded: Definitely; Client brand changed to &#39;fml,forge&#39;</td>
+      </tr>
+</table>
+
+  </div>
+
+  </div>
+  
+</div>
+
+
+    <a name="comments"></a>
+    <div class="discussion-timeline gist-discussion-timeline js-quote-selection-container ">
+      <div class="js-discussion js-socket-channel" data-channel="marked-as-read:gist:47386909">
+        
+
+
+
+<!-- Rendered timeline since 2017-05-05 12:29:11 -->
+<div id="partial-timeline-marker"
+      class="js-timeline-marker js-updatable-content"
+      data-url="/commodorebob/1ca4e50fdd232056c59afe2fd814e01e/show_partial?partial=gist%2Ftimeline_marker&amp;since=1494012551"
+      data-last-modified="Fri, 05 May 2017 19:29:11 GMT"
+      >
+</div>
+
+
+        <div class="discussion-timeline-actions">
+            <div class="timeline-comment-wrapper timeline-new-comment js-comment-container">
+  <a href="/PrinceofOrange"><img alt="@PrinceofOrange" class="timeline-comment-avatar" height="44" src="https://avatars0.githubusercontent.com/u/19338428?v=3&amp;s=88" width="44" /></a>
+
+  <!-- '"` --><!-- </textarea></xmp> --></option></form><form accept-charset="UTF-8" action="/commodorebob/1ca4e50fdd232056c59afe2fd814e01e/comments" class="js-new-comment-form" data-remote="true" data-type="json" method="post"><div style="margin:0;padding:0;display:inline"><input name="utf8" type="hidden" value="&#x2713;" /><input name="authenticity_token" type="hidden" value="JnZdfqNhI15r5RjdeVSd/WqOlpzrwqfI2ewphZK7/7RhCbFiSobEGDmeUntkaW4rwUJW/4aNCgAzkZEe//f4cw==" /></div>
+    <div class="timeline-comment">
+      <div class="js-suggester-container  js-previewable-comment-form previewable-comment-form write-selected" data-preview-url="/preview?markdown_unsupported=false&amp;subject=1ca4e50fdd232056c59afe2fd814e01e&amp;subject_type=Gist" data-preview-authenticity-token="3zfRAOMKg6/ai1lbmbyD2iG0rKVvxaIu9EDaydx2pv5bnNnWt2ZzGlCFNwK14d/mb/lbAN4U4dnAFBJ7DiFhjw==">
+  <div class="comment-form-head tabnav">
+      <div class="js-toolbar toolbar-commenting">
+  <div class="toolbar-group">
+    <div class="toolbar-item dropdown js-menu-container">
+      <button type="button" tabindex="-1" class="js-menu-target menu-target tooltipped tooltipped-n" aria-label="Add header text">
+        <svg aria-hidden="true" class="octicon octicon-text-size" height="16" version="1.1" viewBox="0 0 18 16" width="18"><path fill-rule="evenodd" d="M13.62 9.08L12.1 3.66h-.06l-1.5 5.42h3.08zM5.7 10.13S4.68 6.52 4.53 6.02h-.08l-1.13 4.11H5.7zM17.31 14h-2.25l-.95-3.25h-4.07L9.09 14H6.84l-.69-2.33H2.87L2.17 14H0l3.3-9.59h2.5l2.17 6.34L10.86 2h2.52l3.94 12h-.01z"/></svg>
+        <span class="dropdown-caret"></span>
+      </button>
+
+      <div class="dropdown-menu-content js-menu-content">
+        <ul class="dropdown-menu dropdown-menu-s">
+          <button type="button" class="js-toolbar-item dropdown-item dropdown-header1" data-prefix="# " data-ga-click="Markdown Toolbar, click, header1">
+            Header
+          </button>
+          <button type="button" class="js-toolbar-item dropdown-item dropdown-header2" data-prefix="## " data-ga-click="Markdown Toolbar, click, header2">
+            Header
+          </button>
+          <button type="button" class="js-toolbar-item dropdown-item dropdown-header3" data-prefix="### " data-ga-click="Markdown Toolbar, click, header3">
+            Header
+          </button>
+        </ul>
+      </div>
+    </div>
+
+    <button type="button" tabindex="-1" class="js-toolbar-item toolbar-item tooltipped tooltipped-n" aria-label="Add bold text <ctrl+b>" data-prefix="**" data-suffix="**" data-toolbar-hotkey="b" data-ga-click="Markdown Toolbar, click, bold" data-trim-first>
+      <svg aria-hidden="true" class="octicon octicon-bold" height="16" version="1.1" viewBox="0 0 10 16" width="10"><path fill-rule="evenodd" d="M1 2h3.83c2.48 0 4.3.75 4.3 2.95 0 1.14-.63 2.23-1.67 2.61v.06c1.33.3 2.3 1.23 2.3 2.86 0 2.39-1.97 3.52-4.61 3.52H1V2zm3.66 4.95c1.67 0 2.38-.66 2.38-1.69 0-1.17-.78-1.61-2.34-1.61H3.13v3.3h1.53zm.27 5.39c1.77 0 2.75-.64 2.75-1.98 0-1.27-.95-1.81-2.75-1.81h-1.8v3.8h1.8v-.01z"/></svg>
+    </button>
+
+    <button type="button" tabindex="-1" class="js-toolbar-item toolbar-item tooltipped tooltipped-n" aria-label="Add italic text <ctrl+i>" data-prefix="_" data-suffix="_" data-toolbar-hotkey="i" data-ga-click="Markdown Toolbar, click, italic" data-trim-first>
+      <svg aria-hidden="true" class="octicon octicon-italic" height="16" version="1.1" viewBox="0 0 6 16" width="6"><path fill-rule="evenodd" d="M2.81 5h1.98L3 14H1l1.81-9zm.36-2.7c0-.7.58-1.3 1.33-1.3.56 0 1.13.38 1.13 1.03 0 .75-.59 1.3-1.33 1.3-.58 0-1.13-.38-1.13-1.03z"/></svg>
+    </button>
+  </div>
+
+  <div class="toolbar-group">
+    <button type="button" tabindex="-1" class="js-toolbar-item toolbar-item tooltipped tooltipped-n" aria-label="Insert a quote" data-prefix="> " data-multiline="true" data-ga-click="Markdown Toolbar, click, quote" data-surround-with-newlines>
+      <svg aria-hidden="true" class="octicon octicon-quote" height="16" version="1.1" viewBox="0 0 14 16" width="14"><path fill-rule="evenodd" d="M6.16 3.5C3.73 5.06 2.55 6.67 2.55 9.36c.16-.05.3-.05.44-.05 1.27 0 2.5.86 2.5 2.41 0 1.61-1.03 2.61-2.5 2.61-1.9 0-2.99-1.52-2.99-4.25 0-3.8 1.75-6.53 5.02-8.42L6.16 3.5zm7 0c-2.43 1.56-3.61 3.17-3.61 5.86.16-.05.3-.05.44-.05 1.27 0 2.5.86 2.5 2.41 0 1.61-1.03 2.61-2.5 2.61-1.89 0-2.98-1.52-2.98-4.25 0-3.8 1.75-6.53 5.02-8.42l1.14 1.84h-.01z"/></svg>
+    </button>
+
+    <button type="button" tabindex="-1" class="js-toolbar-item toolbar-item tooltipped tooltipped-n" aria-label="Insert code" data-prefix="`" data-suffix="`" data-block-prefix="```" data-block-suffix="```" data-ga-click="Markdown Toolbar, click, code">
+      <svg aria-hidden="true" class="octicon octicon-code" height="16" version="1.1" viewBox="0 0 14 16" width="14"><path fill-rule="evenodd" d="M9.5 3L8 4.5 11.5 8 8 11.5 9.5 13 14 8 9.5 3zm-5 0L0 8l4.5 5L6 11.5 2.5 8 6 4.5 4.5 3z"/></svg>
+    </button>
+
+    <button type="button" tabindex="-1" class="js-toolbar-item toolbar-item tooltipped tooltipped-n" aria-label="Add a link <ctrl+k>" data-prefix="[" data-suffix="](url)" data-replace-next="url" data-toolbar-hotkey="k" data-scan-for="https?://" data-ga-click="Markdown Toolbar, click, link">
+      <svg aria-hidden="true" class="octicon octicon-link" height="16" version="1.1" viewBox="0 0 16 16" width="16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"/></svg>
+    </button>
+  </div>
+
+  <div class="toolbar-group">
+    <button type="button" tabindex="-1" class="js-toolbar-item toolbar-item tooltipped tooltipped-n" aria-label="Add a bulleted list" data-multiline="true" data-prefix="- " data-multiline="true" data-ga-click="Markdown Toolbar, click, unordered list" data-surround-with-newlines>
+      <svg aria-hidden="true" class="octicon octicon-list-unordered" height="16" version="1.1" viewBox="0 0 12 16" width="12"><path fill-rule="evenodd" d="M2 13c0 .59 0 1-.59 1H.59C0 14 0 13.59 0 13c0-.59 0-1 .59-1h.81c.59 0 .59.41.59 1H2zm2.59-9h6.81c.59 0 .59-.41.59-1 0-.59 0-1-.59-1H4.59C4 2 4 2.41 4 3c0 .59 0 1 .59 1zM1.41 7H.59C0 7 0 7.41 0 8c0 .59 0 1 .59 1h.81c.59 0 .59-.41.59-1 0-.59 0-1-.59-1h.01zm0-5H.59C0 2 0 2.41 0 3c0 .59 0 1 .59 1h.81c.59 0 .59-.41.59-1 0-.59 0-1-.59-1h.01zm10 5H4.59C4 7 4 7.41 4 8c0 .59 0 1 .59 1h6.81c.59 0 .59-.41.59-1 0-.59 0-1-.59-1h.01zm0 5H4.59C4 12 4 12.41 4 13c0 .59 0 1 .59 1h6.81c.59 0 .59-.41.59-1 0-.59 0-1-.59-1h.01z"/></svg>
+    </button>
+    <button type="button" tabindex="-1" class="js-toolbar-item toolbar-item tooltipped tooltipped-n" aria-label="Add a numbered list" data-prefix="1. " data-multiline="true" data-ga-click="Markdown Toolbar, click, ordered list" data-ordered-list>
+      <svg aria-hidden="true" class="octicon octicon-list-ordered" height="16" version="1.1" viewBox="0 0 12 16" width="12"><path fill-rule="evenodd" d="M12 13c0 .59 0 1-.59 1H4.59C4 14 4 13.59 4 13c0-.59 0-1 .59-1h6.81c.59 0 .59.41.59 1H12zM4.59 4h6.81c.59 0 .59-.41.59-1 0-.59 0-1-.59-1H4.59C4 2 4 2.41 4 3c0 .59 0 1 .59 1zm6.81 3H4.59C4 7 4 7.41 4 8c0 .59 0 1 .59 1h6.81c.59 0 .59-.41.59-1 0-.59 0-1-.59-1zM2 1h-.72c-.3.19-.58.25-1.03.34V2H1v2.14H.16V5H3v-.86H2V1zm.25 8.13c-.17 0-.45.03-.66.06.53-.56 1.14-1.25 1.14-1.89C2.71 6.52 2.17 6 1.37 6c-.59 0-.97.2-1.38.64l.58.58c.19-.19.38-.38.64-.38.28 0 .48.16.48.52 0 .53-.77 1.2-1.7 2.06V10h3l-.09-.88h-.66l.01.01zm-.08 3.78v-.03c.44-.19.64-.47.64-.86 0-.7-.56-1.11-1.44-1.11-.48 0-.89.19-1.28.52l.55.64c.25-.2.44-.31.69-.31.27 0 .42.13.42.36 0 .27-.2.44-.86.44v.75c.83 0 .98.17.98.47 0 .25-.23.38-.58.38-.28 0-.56-.14-.81-.38l-.48.66c.3.36.77.56 1.41.56.83 0 1.53-.41 1.53-1.16 0-.5-.31-.81-.77-.94v.01z"/></svg>
+    </button>
+
+      <button type="button" tabindex="-1" class="js-toolbar-item toolbar-item tooltipped tooltipped-n" aria-label="Add a task list" data-prefix="- [ ] " data-toolbar-hotkey="L" data-multiline data-ga-click="Markdown Toolbar, click, task list" data-surround-with-newlines>
+        <svg aria-hidden="true" class="octicon octicon-tasklist" height="16" version="1.1" viewBox="0 0 16 16" width="16"><path fill-rule="evenodd" d="M15.41 9H7.59C7 9 7 8.59 7 8c0-.59 0-1 .59-1h7.81c.59 0 .59.41.59 1 0 .59 0 1-.59 1h.01zM9.59 4C9 4 9 3.59 9 3c0-.59 0-1 .59-1h5.81c.59 0 .59.41.59 1 0 .59 0 1-.59 1H9.59zM0 3.91l1.41-1.3L3 4.2 7.09 0 8.5 1.41 3 6.91l-3-3zM7.59 12h7.81c.59 0 .59.41.59 1 0 .59 0 1-.59 1H7.59C7 14 7 13.59 7 13c0-.59 0-1 .59-1z"/></svg>
+      </button>
+  </div>
+
+  <div class="toolbar-group">
+      <div class="toolbar-item select-menu select-menu-modal-right js-menu-container js-select-menu js-load-contents js-saved-reply-container"
+          data-contents-url="/settings/replies">
+        <button type="button" tabindex="-1" class="js-menu-target menu-target tooltipped tooltipped-nw" aria-label="Insert a saved reply" data-ga-click="Markdown Toolbar, click, saved reply">
+          <svg aria-hidden="true" class="octicon octicon-reply" height="16" version="1.1" viewBox="0 0 14 16" width="14"><path fill-rule="evenodd" d="M6 3.5c3.92.44 8 3.125 8 10-2.312-5.062-4.75-6-8-6V11L.5 5.5 6 0v3.5z"/></svg>
+          <span class="dropdown-caret"></span>
+        </button>
+
+        <div class="select-menu-modal-holder js-menu-content js-navigation-container">
+          <div class="select-menu-modal">
+            <div class="select-menu-header">
+              <svg aria-label="Close" class="octicon octicon-x js-menu-close" height="16" role="img" version="1.1" viewBox="0 0 12 16" width="12"><path fill-rule="evenodd" d="M7.48 8l3.75 3.75-1.48 1.48L6 9.48l-3.75 3.75-1.48-1.48L4.52 8 .77 4.25l1.48-1.48L6 6.52l3.75-3.75 1.48 1.48z"/></svg>
+              <span class="select-menu-title">Select a saved reply</span>
+            </div>
+            <div class="js-select-menu-deferred-content"></div>
+            <div class="select-menu-loading-overlay anim-pulse">
+              <svg aria-hidden="true" class="octicon octicon-octoface" height="32" version="1.1" viewBox="0 0 16 16" width="32"><path fill-rule="evenodd" d="M14.7 5.34c.13-.32.55-1.59-.13-3.31 0 0-1.05-.33-3.44 1.3-1-.28-2.07-.32-3.13-.32s-2.13.04-3.13.32c-2.39-1.64-3.44-1.3-3.44-1.3-.68 1.72-.26 2.99-.13 3.31C.49 6.21 0 7.33 0 8.69 0 13.84 3.33 15 7.98 15S16 13.84 16 8.69c0-1.36-.49-2.48-1.3-3.35zM8 14.02c-3.3 0-5.98-.15-5.98-3.35 0-.76.38-1.48 1.02-2.07 1.07-.98 2.9-.46 4.96-.46 2.07 0 3.88-.52 4.96.46.65.59 1.02 1.3 1.02 2.07 0 3.19-2.68 3.35-5.98 3.35zM5.49 9.01c-.66 0-1.2.8-1.2 1.78s.54 1.79 1.2 1.79c.66 0 1.2-.8 1.2-1.79s-.54-1.78-1.2-1.78zm5.02 0c-.66 0-1.2.79-1.2 1.78s.54 1.79 1.2 1.79c.66 0 1.2-.8 1.2-1.79s-.53-1.78-1.2-1.78z"/></svg>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <button type="button" tabindex="-1" class="js-toolbar-item toolbar-item tooltipped tooltipped-nw" aria-label="Directly mention a user or team" data-prefix="@" data-prefix-space data-ga-click="Markdown Toolbar, click, mention">
+        <svg aria-hidden="true" class="octicon octicon-mention" height="16" version="1.1" viewBox="0 0 14 16" width="14"><path fill-rule="evenodd" d="M6.58 15c1.25 0 2.52-.31 3.56-.94l-.42-.94c-.84.52-1.89.83-3.03.83-3.23 0-5.64-2.08-5.64-5.72 0-4.37 3.23-7.18 6.58-7.18 3.45 0 5.22 2.19 5.22 5.2 0 2.39-1.34 3.86-2.5 3.86-1.05 0-1.36-.73-1.05-2.19l.73-3.75H8.98l-.11.72c-.41-.63-.94-.83-1.56-.83-2.19 0-3.66 2.39-3.66 4.38 0 1.67.94 2.61 2.3 2.61.84 0 1.67-.53 2.3-1.25.11.94.94 1.45 1.98 1.45 1.67 0 3.77-1.67 3.77-5C14 2.61 11.59 0 7.83 0 3.66 0 0 3.33 0 8.33 0 12.71 2.92 15 6.58 15zm-.31-5c-.73 0-1.36-.52-1.36-1.67 0-1.45.94-3.22 2.41-3.22.52 0 .84.2 1.25.83l-.52 3.02c-.63.73-1.25 1.05-1.78 1.05V10z"/></svg>
+      </button>
+
+      <button type="button" tabindex="-1" class="js-toolbar-item toolbar-item tooltipped tooltipped-nw" aria-label="Reference an issue or pull request" data-prefix="#" data-prefix-space data-ga-click="Markdown Toolbar, click, reference">
+        <svg aria-hidden="true" class="octicon octicon-bookmark" height="16" version="1.1" viewBox="0 0 10 16" width="10"><path fill-rule="evenodd" d="M9 0H1C.27 0 0 .27 0 1v15l5-3.09L10 16V1c0-.73-.27-1-1-1zm-.78 4.25L6.36 5.61l.72 2.16c.06.22-.02.28-.2.17L5 6.6 3.12 7.94c-.19.11-.25.05-.2-.17l.72-2.16-1.86-1.36c-.17-.16-.14-.23.09-.23l2.3-.03.7-2.16h.25l.7 2.16 2.3.03c.23 0 .27.08.09.23h.01z"/></svg>
+      </button>
+  </div>
+</div>
+
+      <nav class="tabnav-tabs" role="tablist">
+        <button type="button" class="btn-link tabnav-tab write-tab js-write-tab selected " role="tab" aria-selected="true">Write</button>
+        <button type="button" class="btn-link tabnav-tab preview-tab js-preview-tab " role="tab">Preview</button>
+      </nav>
+  </div>
+
+
+  <div class="comment-form-error js-comment-form-error" style="display:none">    There was an error creating your Gist.
+</div>
+  <div class="write-content js-write-bucket js-uploadable-container js-upload-markdown-image is-default upload-enabled"
+      data-upload-policy-url="/upload/policies/assets" data-upload-policy-authenticity-token="xiH7gvWTVE8eyg6tAeud3yVsotvx1RiFCaMF/a8HFHm1RUq79q+1bKrSRkWwa0TU0c3leoyWGbc+1h7qIb0CCg=="
+      >
+
+    <input type="hidden" name="saved_reply_id" class="js-saved-reply-id js-resettable-field" value="" data-reset-value="">
+
+      <textarea name="comment[body]"
+                id="new_comment_field"
+                
+                placeholder="Leave a comment"
+                aria-label="Comment body"
+                class="form-control input-contrast comment-form-textarea js-comment-field js-improved-comment-field js-task-list-field js-quick-submit js-size-to-fit js-suggester-field js-quote-selection-target js-session-resumable"
+                ></textarea>
+
+        <p class="drag-and-drop">
+    <span class="default">
+        Attach files by dragging &amp; dropping,
+        <input type="file" multiple="multiple" class="manual-file-chooser js-manual-file-chooser" aria-label="Attach files to your comment">
+        <span class="btn-link manual-file-chooser-text">selecting them</span>, or pasting
+        from the clipboard.
+    </span>
+    <span class="loading">
+      <img alt="" height="16" src="https://assets-cdn.github.com/images/spinners/octocat-spinner-32.gif" width="16" /> Uploading your files…
+    </span>
+    <span class="error bad-file">
+      We don’t support that file type.
+      <input type="file" multiple="multiple" class="manual-file-chooser js-manual-file-chooser">
+      <span class="drag-and-drop-error-info">
+        <button type="button" class="btn-link manual-file-chooser-text">Try again</button> with a
+        PNG, GIF, JPG, DOCX, PPTX, XLSX, TXT, PDF, or ZIP.
+      </span>
+    </span>
+    <span class="error bad-permissions">
+      Attaching documents requires write permission to this repository.
+      <input type="file" multiple="multiple" class="manual-file-chooser js-manual-file-chooser">
+      <span class="drag-and-drop-error-info">
+        <button type="button" class="btn-link manual-file-chooser-text">Try again</button> with a PNG, GIF, or JPG.
+      </span>
+    </span>
+    <span class="error repository-required">
+      We don’t support that file type.
+      <input type="file" multiple="multiple" class="manual-file-chooser js-manual-file-chooser">
+      <span class="drag-and-drop-error-info">
+        <button type="button" class="btn-link manual-file-chooser-text">Try again</button> with a PNG, GIF, or JPG.
+      </span>
+    </span>
+    <span class="error too-big">
+      Yowza, that’s a big file.
+      <input type="file" multiple="multiple" class="manual-file-chooser js-manual-file-chooser">
+      <span class="drag-and-drop-error-info">
+        <button type="button" class="btn-link manual-file-chooser-text">Try again</button> with a file smaller than 10MB.
+      </span>
+    </span>
+    <span class="error empty">
+      This file is empty.
+      <input type="file" multiple="multiple" class="manual-file-chooser js-manual-file-chooser">
+      <span class="drag-and-drop-error-info">
+        <button type="button" class="btn-link manual-file-chooser-text">Try again</button> with a file that’s not empty.
+      </span>
+    </span>
+    <span class="error hidden-file">
+      This file is hidden.
+      <input type="file" multiple="multiple" class="manual-file-chooser js-manual-file-chooser">
+      <span class="drag-and-drop-error-info">
+        <button type="button" class="btn-link manual-file-chooser-text">Try again</button> with another file.
+      </span>
+    </span>
+    <span class="error failed-request">
+      Something went really wrong, and we can’t process that file.
+      <input type="file" multiple="multiple" class="manual-file-chooser js-manual-file-chooser">
+      <span class="drag-and-drop-error-info">
+        <button type="button" class="btn-link manual-file-chooser-text">Try again.</button>
+      </span>
+    </span>
+  </p>
+
+
+    <div class="suggester-container">
+      <div class="suggester js-suggester js-navigation-container"
+           data-url="/commodorebob/1ca4e50fdd232056c59afe2fd814e01e/suggestions"
+>
+      </div>
+    </div>
+  </div>
+
+  <div class="preview-content">
+    <div class="comment">
+  <div class="comment-body markdown-body js-preview-body">
+    <p>Nothing to preview</p>
+  </div>
+</div>
+
+  </div>
+
+  <div class="float-left">
+      <a class="tabnav-extra" href="https://guides.github.com/features/mastering-markdown/" target="_blank" data-ga-click="Markdown Toolbar, click, help">
+        <svg aria-hidden="true" class="octicon octicon-markdown v-align-bottom" height="16" version="1.1" viewBox="0 0 16 16" width="16"><path fill-rule="evenodd" d="M14.85 3H1.15C.52 3 0 3.52 0 4.15v7.69C0 12.48.52 13 1.15 13h13.69c.64 0 1.15-.52 1.15-1.15v-7.7C16 3.52 15.48 3 14.85 3zM9 11H7V8L5.5 9.92 4 8v3H2V5h2l1.5 2L7 5h2v6zm2.99.5L9.5 8H11V5h2v3h1.5l-2.51 3.5z"/></svg>
+        Styling with Markdown is supported
+      </a>
+  </div>
+
+
+  <div class="comment-form-error comment-form-bottom js-comment-update-error"></div>
+</div>
+
+
+      <div class="form-actions">
+        <div id="partial-new-comment-form-actions">
+  <button type="submit" class="btn btn-primary" data-disable-with data-disable-invalid>
+    Comment
+  </button>
+</div>
+
+      </div>
+    </div>
+</form></div>
+
+        </div>
+      </div>
+    </div>
+</div>
+  </div>
+
+  <div class="modal-backdrop js-touch-events"></div>
+</div><!-- /.container -->
+
+    </div>
+  </div>
+
+  </div>
+
+      <div class="container site-footer-container">
+  <div class="site-footer" role="contentinfo">
+    <ul class="site-footer-links float-right">
+        <li><a href="https://github.com/contact" data-ga-click="Footer, go to contact, text:contact">Contact GitHub</a></li>
+      <li><a href="https://developer.github.com" data-ga-click="Footer, go to api, text:api">API</a></li>
+      <li><a href="https://training.github.com" data-ga-click="Footer, go to training, text:training">Training</a></li>
+      <li><a href="https://shop.github.com" data-ga-click="Footer, go to shop, text:shop">Shop</a></li>
+        <li><a href="https://github.com/blog" data-ga-click="Footer, go to blog, text:blog">Blog</a></li>
+        <li><a href="https://github.com/about" data-ga-click="Footer, go to about, text:about">About</a></li>
+
+    </ul>
+
+    <a href="https://github.com" aria-label="Homepage" class="site-footer-mark" title="GitHub">
+      <svg aria-hidden="true" class="octicon octicon-mark-github" height="24" version="1.1" viewBox="0 0 16 16" width="24"><path fill-rule="evenodd" d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0 0 16 8c0-4.42-3.58-8-8-8z"/></svg>
+</a>
+    <ul class="site-footer-links">
+      <li>&copy; 2017 <span title="0.23427s from github-fe164-cp1-prd.iad.github.net">GitHub</span>, Inc.</li>
+        <li><a href="https://github.com/site/terms" data-ga-click="Footer, go to terms, text:terms">Terms</a></li>
+        <li><a href="https://github.com/site/privacy" data-ga-click="Footer, go to privacy, text:privacy">Privacy</a></li>
+        <li><a href="https://github.com/security" data-ga-click="Footer, go to security, text:security">Security</a></li>
+        <li><a href="https://status.github.com/" data-ga-click="Footer, go to status, text:status">Status</a></li>
+        <li><a href="https://help.github.com" data-ga-click="Footer, go to help, text:help">Help</a></li>
+    </ul>
+  </div>
+</div>
+
+
+
+  
+
+  <div id="ajax-error-message" class="ajax-error-message flash flash-error">
+    <svg aria-hidden="true" class="octicon octicon-alert" height="16" version="1.1" viewBox="0 0 16 16" width="16"><path fill-rule="evenodd" d="M8.865 1.52c-.18-.31-.51-.5-.87-.5s-.69.19-.87.5L.275 13.5c-.18.31-.18.69 0 1 .19.31.52.5.87.5h13.7c.36 0 .69-.19.86-.5.17-.31.18-.69.01-1L8.865 1.52zM8.995 13h-2v-2h2v2zm0-3h-2V6h2v4z"/></svg>
+    <button type="button" class="flash-close js-flash-close js-ajax-error-dismiss" aria-label="Dismiss error">
+      <svg aria-hidden="true" class="octicon octicon-x" height="16" version="1.1" viewBox="0 0 12 16" width="12"><path fill-rule="evenodd" d="M7.48 8l3.75 3.75-1.48 1.48L6 9.48l-3.75 3.75-1.48-1.48L4.52 8 .77 4.25l1.48-1.48L6 6.52l3.75-3.75 1.48 1.48z"/></svg>
+    </button>
+    You can't perform that action at this time.
+  </div>
+
+
+    <script crossorigin="anonymous" integrity="sha256-ikMY/+oJoM24IUt2zykmufagztMYoxe+1BnbGSFMaQ0=" src="https://assets-cdn.github.com/assets/compat-8a4318ffea09a0cdb8214b76cf2926b9f6a0ced318a317bed419db19214c690d.js"></script>
+    <script crossorigin="anonymous" integrity="sha256-5U4AYElhDMKX/hM/gkyHhMcS4XDLjAyAKu0qdnsoV+Y=" src="https://assets-cdn.github.com/assets/frameworks-e54e006049610cc297fe133f824c8784c712e170cb8c0c802aed2a767b2857e6.js"></script>
+    <script async="async" crossorigin="anonymous" integrity="sha256-SXf97QqAE9zsV47lOmyUMBnWeb2R24+lvGYtBrUrjAc=" src="https://assets-cdn.github.com/assets/github-4977fded0a8013dcec578ee53a6c943019d679bd91db8fa5bc662d06b52b8c07.js"></script>
+    
+    
+    
+    
+  <div class="js-stale-session-flash stale-session-flash flash flash-warn flash-banner d-none">
+    <svg aria-hidden="true" class="octicon octicon-alert" height="16" version="1.1" viewBox="0 0 16 16" width="16"><path fill-rule="evenodd" d="M8.865 1.52c-.18-.31-.51-.5-.87-.5s-.69.19-.87.5L.275 13.5c-.18.31-.18.69 0 1 .19.31.52.5.87.5h13.7c.36 0 .69-.19.86-.5.17-.31.18-.69.01-1L8.865 1.52zM8.995 13h-2v-2h2v2zm0-3h-2V6h2v4z"/></svg>
+    <span class="signed-in-tab-flash">You signed in with another tab or window. <a href="">Reload</a> to refresh your session.</span>
+    <span class="signed-out-tab-flash">You signed out in another tab or window. <a href="">Reload</a> to refresh your session.</span>
+  </div>
+  <div class="facebox" id="facebox" style="display:none;">
+  <div class="facebox-popup">
+    <div class="facebox-content" role="dialog" aria-labelledby="facebox-header" aria-describedby="facebox-description">
+    </div>
+    <button type="button" class="facebox-close js-facebox-close" aria-label="Close modal">
+      <svg aria-hidden="true" class="octicon octicon-x" height="16" version="1.1" viewBox="0 0 12 16" width="12"><path fill-rule="evenodd" d="M7.48 8l3.75 3.75-1.48 1.48L6 9.48l-3.75 3.75-1.48-1.48L4.52 8 .77 4.25l1.48-1.48L6 6.52l3.75-3.75 1.48 1.48z"/></svg>
+    </button>
+  </div>
+</div>
+
+
+  </body>
+</html>
