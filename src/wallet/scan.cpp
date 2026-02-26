@@ -97,6 +97,39 @@ private:
 };
 } // namespace
 
+std::optional<std::pair<uint256, int>> ChainScanner::ReadNextBlock(ScanResult& result) {
+    if (!m_next_block) return std::nullopt;
+
+    auto [block_hash, block_height] = *m_next_block;
+    m_next_block.reset();
+
+    bool block_still_active = false;
+    bool has_next_block = false;
+    uint256 next_block_hash;
+    m_wallet.chain().findBlock(block_hash, FoundBlock().inActiveChain(block_still_active).nextBlock(FoundBlock().inActiveChain(has_next_block).hash(next_block_hash)));
+
+    if (!block_still_active) {
+        // Abort scan if current block is no longer active, to prevent
+        // marking transactions as coming from the wrong block.
+        result.last_failed_block = block_hash;
+        result.status = ScanResult::FAILURE;
+        return std::nullopt;
+    }
+
+    // Continue scanning if the next block exists, is within range, and hasn't reached the current tip.
+    // If scanning with cs_wallet locked (AttachChain), blocks connected during rescan are handled
+    // after scanning is complete via blockConnected notifications.
+    // Without the lock, newly added blocks are re-processed if the notifications were handled
+    // and the last block height was updated.
+    if (has_next_block &&
+        (!m_max_height || block_height < *m_max_height) &&
+        block_height < WITH_LOCK(m_wallet.cs_wallet, return m_wallet.GetLastBlockHeight())) {
+        m_next_block = {{next_block_hash, block_height + 1}};
+    }
+
+    return std::make_pair(block_hash, block_height);
+}
+
 bool ChainScanner::ShouldFetchBlock(const std::unique_ptr<FastWalletRescanFilter>& filter, const uint256& block_hash, int block_height) {
     auto matches_block{filter->MatchesBlock(block_hash)};
     if (matches_block.has_value()) {
@@ -163,12 +196,16 @@ ScanResult ChainScanner::Scan() {
     if (m_max_height) chain.findAncestorByHeight(tip_hash, *m_max_height, FoundBlock().hash(end_hash));
 
     ScanResult result;
-    uint256 block_hash = m_start_block;
-    double progress_begin = chain.guessVerificationProgress(block_hash);
+    double progress_begin = chain.guessVerificationProgress(m_start_block);
     double progress_end = chain.guessVerificationProgress(end_hash);
     double progress_current = progress_begin;
     int block_height = m_start_height;
+    m_next_block = {{m_start_block, m_start_height}};
     while (!m_wallet.fAbortRescan && !chain.shutdownRequested()) {
+        auto current_block = ReadNextBlock(result);
+        if (!current_block) break;
+
+        auto& [block_hash, block_height] = *current_block;
         if (progress_end - progress_begin > 0.0) {
             m_wallet.m_scanning_progress = (progress_current - progress_begin) / (progress_end - progress_begin);
         } else { // avoid divide-by-zero for single block scan range (i.e. start and stop hashes are equal)
@@ -194,21 +231,7 @@ ScanResult ChainScanner::Scan() {
             }
         }
 
-        // Find next block separately from reading data above, because reading
-        // is slow and there might be a reorg while it is read.
-        bool block_still_active = false;
-        bool next_block = false;
-        uint256 next_block_hash;
-        chain.findBlock(block_hash, FoundBlock().inActiveChain(block_still_active).nextBlock(FoundBlock().inActiveChain(next_block).hash(next_block_hash)));
-
         if (fetch_block) {
-            if (!block_still_active) {
-                // Abort scan if current block is no longer active, to prevent
-                // marking transactions as coming from the wrong block.
-                result.last_failed_block = block_hash;
-                result.status = ScanResult::FAILURE;
-                break;
-            }
             if (ScanBlock(block_hash, block_height, m_save_progress && next_interval)) {
                 // scan succeeded, record block as most recent successfully scanned
                 result.last_scanned_block = block_hash;
@@ -219,36 +242,15 @@ ScanResult ChainScanner::Scan() {
                 result.status = ScanResult::FAILURE;
             }
         }
-        if (m_max_height && block_height >= *m_max_height) {
-            break;
-        }
-        // If rescanning was triggered with cs_wallet permanently locked (AttachChain), additional blocks that were connected during the rescan
-        // aren't processed here but will be processed with the pending blockConnected notifications after the lock is released.
-        // If rescanning without a permanent cs_wallet lock, additional blocks that were added during the rescan will be re-processed if
-        // the notification was processed and the last block height was updated.
-        if (block_height >= WITH_LOCK(m_wallet.cs_wallet, return m_wallet.GetLastBlockHeight())) {
-            break;
-        }
 
-        {
-            if (!next_block) {
-                // break successfully when rescan has reached the tip, or
-                // previous block is no longer on the chain due to a reorg
-                break;
-            }
+        progress_current = chain.guessVerificationProgress(block_hash);
 
-            // increment block and verification progress
-            block_hash = next_block_hash;
-            ++block_height;
-            progress_current = chain.guessVerificationProgress(block_hash);
-
-            // handle updated tip hash
-            const uint256 prev_tip_hash = tip_hash;
-            tip_hash = WITH_LOCK(m_wallet.cs_wallet, return m_wallet.GetLastBlockHash());
-            if (!m_max_height && prev_tip_hash != tip_hash) {
-                // in case the tip has changed, update progress max
-                progress_end = chain.guessVerificationProgress(tip_hash);
-            }
+        // handle updated tip hash
+        const uint256 prev_tip_hash = tip_hash;
+        tip_hash = WITH_LOCK(m_wallet.cs_wallet, return m_wallet.GetLastBlockHash());
+        if (!m_max_height && prev_tip_hash != tip_hash) {
+            // in case the tip has changed, update progress max
+            progress_end = chain.guessVerificationProgress(tip_hash);
         }
     }
     if (!m_max_height) {

@@ -28,7 +28,9 @@ private:
     std::optional<int> m_max_height;
     bool m_fUpdate;
     bool m_save_progress;
+    std::optional<std::pair<uint256, int>> m_next_block;
 
+    std::optional<std::pair<uint256, int>> ReadNextBlock(ScanResult& result);
     bool ShouldFetchBlock(const std::unique_ptr<FastWalletRescanFilter>& filter, const uint256& block_hash, int block_height);
     bool ScanBlock(const uint256& block_hash, int block_height, bool save_progress);
 
