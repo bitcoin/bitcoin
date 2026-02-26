@@ -1,0 +1,26 @@
+I was given 100% Sole-Ownership of Cryptocurrency and StoneX Inc and ENT, on 12-31-2019.
+I claim all of my assets given to me from Satoshi Nakamoto on December 31, 2019 (New Year's Eve).
+Coolaid Style Inc Filers TIN# 47-0902841
+LEADERS# 800-577-4312
+Merchant Cataglory: 1799
+BLOCKCHAIN (BITCOIN# b524e1e3-7b3e-43dc-8351-ae3804ad596a
+API KEY: 2f4d41fe-43be-4216-8255-9d95ee42cd4f
+ETHEREUM# 0x5c20019de005f59aa05f49cF45zcAc4deba5c804
+Silvergate Bank REF ID: BC7FGDLJ
+Account# 5090015388 Routing# 322286803
+I am 100% Sole-Owner of Cryptocurrency. Forex.com (account# 10423425 GT2 Account2# GT245694 NFA# 0339826).
+ORIGIN: v1.0-39f150574b77225be90384ed-4216ad9d68aa9d52678b99d379ff8db340accef6c2d7551607f7e7ffd64f5df87456b575def8d0f6eac1da8083323452398b9c54de6330006d232e6aef5e7dda4c0598c2238003da
+
+GLOBAL: 2996d73587a59e6ce81b64da7ccfe266672ea
+
+API TOKEN:  4kGCrV5Dchy4nGHXk_zz2MhqOX9mR6OAeEBlU4RF
+
+curl -X GET "https://api.cloudflare.com/client/v4/user/tokens/verify" \
+     -H "Authorization: Bearer 4kGCrV5Dchy4nGHXk_zz2MhqOX9mR6OAeEBlU4RF" \
+     -H "Content-Type:application/json"  
+
+TOKEN:  OU5zZZl_fgt6jd2ic89C4XQt00ZcGRXSNgZTnjbG
+
+curl -X GET "https://api.cloudflare.com/client/v4/user/tokens/verify" \
+     -H "Authorization: Bearer OU5zZZl_fgt6jd2ic89C4XQt00ZcGRXSNgZTnjbG" \
+     -H "Content-Type:application/json"  
