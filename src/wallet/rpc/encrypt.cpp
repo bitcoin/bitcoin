@@ -61,7 +61,7 @@ RPCHelpMan walletpassphrase()
             throw JSONRPCError(RPC_INVALID_PARAMETER, "Timeout cannot be negative.");
         }
         // Clamp timeout
-        constexpr int64_t MAX_SLEEP_TIME = 100000000; // larger values trigger a macos/libevent bug?
+        constexpr int64_t MAX_SLEEP_TIME = 100000000; // larger values trigger a macos bug?
         if (nSleepTime > MAX_SLEEP_TIME) {
             nSleepTime = MAX_SLEEP_TIME;
         }
