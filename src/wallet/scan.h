@@ -15,6 +15,10 @@ class CWallet;
 class WalletRescanReserver;
 struct ScanResult;
 
+namespace {
+class FastWalletRescanFilter;
+} // namespace
+
 class ChainScanner {
 private:
     CWallet& m_wallet;
@@ -24,6 +28,8 @@ private:
     std::optional<int> m_max_height;
     bool m_fUpdate;
     bool m_save_progress;
+
+    bool ShouldFetchBlock(const std::unique_ptr<FastWalletRescanFilter>& filter, const uint256& block_hash, int block_height);
 
 public:
     ChainScanner(CWallet& wallet, const WalletRescanReserver& reserver, const uint256& start_block, int start_height,
