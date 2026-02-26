@@ -531,6 +531,11 @@ namespace GUIUtil
         return false;
     }
 
+    template <typename T1>
+    inline QByteArray MakeQByteArray(const T1& data)
+    {
+        return QByteArray(reinterpret_cast<const char*>(data.data()), data.size());
+    }
 } // namespace GUIUtil
 
 #endif // BITCOIN_QT_GUIUTIL_H

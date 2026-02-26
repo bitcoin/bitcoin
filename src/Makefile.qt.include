@@ -200,7 +200,6 @@ BITCOIN_QT_H = \
   qt/transactionrecord.h \
   qt/transactiontablemodel.h \
   qt/transactionview.h \
-  qt/util.h \
   qt/utilitydialog.h \
   qt/walletcontroller.h \
   qt/walletframe.h \

@@ -576,16 +576,19 @@ void ProposalList::voteForProposal(vote_outcome_enum_t outcome)
     // Vote with each masternode
     for (const auto& [proTxHash, votingKeyID] : votableMasternodes) {
         // Find the masternode
-        const auto* dmn = [&]() -> const MasternodeEntry* {
-            if (const auto it = data_mn->m_by_protx.find(proTxHash); it != data_mn->m_by_protx.end() && !it->second->isBanned()) {
-                return it->second;
+        QString protx_hash{QString::fromStdString(proTxHash.ToString())};
+        const auto dmn = [&]() -> const std::shared_ptr<MasternodeEntry> {
+            for (const auto& mn : data_mn->m_entries) {
+                if (mn->proTxHash() == protx_hash) {
+                    return mn->isBanned() ? nullptr : mn;
+                }
             }
             return nullptr;
         }();
 
         if (!dmn) {
             nFailed++;
-            failedMessages.append(tr("Masternode %1 not found").arg(QString::fromStdString(proTxHash.ToString())));
+            failedMessages.append(tr("Masternode %1 not found").arg(protx_hash));
             continue;
         }
 
@@ -595,8 +598,7 @@ void ProposalList::voteForProposal(vote_outcome_enum_t outcome)
         // Sign vote via wallet interface
         if (!walletModel->wallet().signGovernanceVote(votingKeyID, vote)) {
             nFailed++;
-            failedMessages.append(
-                tr("Failed to sign vote for masternode %1").arg(QString::fromStdString(proTxHash.ToString())));
+            failedMessages.append(tr("Failed to sign vote for masternode %1").arg(protx_hash));
             continue;
         }
 

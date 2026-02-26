@@ -14,7 +14,6 @@
 #include <qt/clientmodel.h>
 #include <qt/masternodemodel.h>
 #include <qt/proposalmodel.h>
-#include <qt/util.h>
 
 #include <QDebug>
 #include <QThread>
@@ -188,9 +187,7 @@ void MasternodeFeed::fetch()
             nNextPayment = nextPaymentIt->second;
         }
         auto entry = std::make_shared<MasternodeEntry>(dmn, collateralStr, nNextPayment);
-        ret->m_by_protx[dmn->getProTxHash()] = entry.get();
-        ret->m_by_service[util::make_array(dmn->getNetInfoPrimary().GetKey())] = entry.get();
-        ret->m_entries.push_back(std::move(entry));
+        ret->m_entries.emplace_back(std::move(entry));
     });
 
     ret->m_valid = true;

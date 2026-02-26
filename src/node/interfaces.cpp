@@ -263,14 +263,6 @@ public:
         }
         return false;
     }
-    bool getObjLocalValidity(const CGovernanceObject& obj, std::string& error, bool check_collateral) override
-    {
-        if (context().govman != nullptr && context().chainman != nullptr && context().dmnman != nullptr) {
-            LOCK(cs_main);
-            return obj.IsValidLocally(context().dmnman->GetListAtChainTip(), *(context().chainman), error, check_collateral);
-        }
-        return false;
-    }
     bool isEnabled() override
     {
         if (context().govman != nullptr) {
