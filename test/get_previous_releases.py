@@ -3,10 +3,6 @@
 # Copyright (c) 2018-present The Bitcoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
-#
-# Download or build previous releases.
-# Needs curl and tar to download a release, or the build dependencies when
-# building a release.
 
 import argparse
 import contextlib
