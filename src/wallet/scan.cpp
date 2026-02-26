@@ -112,6 +112,35 @@ bool ChainScanner::ShouldFetchBlock(const std::unique_ptr<FastWalletRescanFilter
     }
 }
 
+bool ChainScanner::ScanBlock(const uint256& block_hash, int block_height, bool save_progress) {
+    // Read block data and locator if needed (the locator is usually null unless we need to save progress)
+    CBlock block;
+    CBlockLocator loc;
+    // Find block
+    FoundBlock found_block{FoundBlock().data(block)};
+    if (save_progress) found_block.locator(loc);
+    m_wallet.chain().findBlock(block_hash, found_block);
+
+    if (block.IsNull()) return false;
+
+    {
+        LOCK(m_wallet.cs_wallet);
+        for (size_t posInBlock = 0; posInBlock < block.vtx.size(); ++posInBlock) {
+            m_wallet.SyncTransaction(
+                block.vtx[posInBlock], TxStateConfirmed{block_hash, block_height,
+                static_cast<int>(posInBlock)}, m_fUpdate,
+                /*rescanning_old_block=*/true);
+        }
+
+        if (!loc.IsNull()) {
+            m_wallet.WalletLogPrintf("Saving scan progress %d.\n", block_height);
+            WalletBatch batch(m_wallet.GetDatabase());
+            batch.WriteBestBlock(loc);
+        }
+    }
+    return true;
+}
+
 ScanResult ChainScanner::Scan() {
     constexpr auto INTERVAL_TIME{60s};
     auto current_time{m_reserver.now()};
@@ -173,35 +202,17 @@ ScanResult ChainScanner::Scan() {
         chain.findBlock(block_hash, FoundBlock().inActiveChain(block_still_active).nextBlock(FoundBlock().inActiveChain(next_block).hash(next_block_hash)));
 
         if (fetch_block) {
-            // Read block data and locator if needed (the locator is usually null unless we need to save progress)
-            CBlock block;
-            CBlockLocator loc;
-            // Find block
-            FoundBlock found_block{FoundBlock().data(block)};
-            if (m_save_progress && next_interval) found_block.locator(loc);
-            chain.findBlock(block_hash, found_block);
-
-            if (!block.IsNull()) {
-                LOCK(m_wallet.cs_wallet);
-                if (!block_still_active) {
-                    // Abort scan if current block is no longer active, to prevent
-                    // marking transactions as coming from the wrong block.
-                    result.last_failed_block = block_hash;
-                    result.status = ScanResult::FAILURE;
-                    break;
-                }
-                for (size_t posInBlock = 0; posInBlock < block.vtx.size(); ++posInBlock) {
-                    m_wallet.SyncTransaction(block.vtx[posInBlock], TxStateConfirmed{block_hash, block_height, static_cast<int>(posInBlock)}, m_fUpdate, /*rescanning_old_block=*/true);
-                }
+            if (!block_still_active) {
+                // Abort scan if current block is no longer active, to prevent
+                // marking transactions as coming from the wrong block.
+                result.last_failed_block = block_hash;
+                result.status = ScanResult::FAILURE;
+                break;
+            }
+            if (ScanBlock(block_hash, block_height, m_save_progress && next_interval)) {
                 // scan succeeded, record block as most recent successfully scanned
                 result.last_scanned_block = block_hash;
                 result.last_scanned_height = block_height;
-
-                if (!loc.IsNull()) {
-                    m_wallet.WalletLogPrintf("Saving scan progress %d.\n", block_height);
-                    WalletBatch batch(m_wallet.GetDatabase());
-                    batch.WriteBestBlock(loc);
-                }
             } else {
                 // could not scan block, keep scanning but record this block as the most recent failure
                 result.last_failed_block = block_hash;
