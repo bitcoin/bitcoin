@@ -8,6 +8,7 @@
 #include <uint256.h>
 
 #include <atomic>
+#include <deque>
 #include <optional>
 
 namespace wallet {
@@ -36,12 +37,18 @@ private:
     double m_progress_current{0};
     uint256 m_tip_hash;
 
+    /// Queued block hashes and heights to filter and scan
+    std::deque<std::pair<uint256, int>> m_blocks;
+
     std::optional<std::pair<uint256, int>> ReadNextBlock(ScanResult& result);
-    bool ShouldFetchBlock(const std::unique_ptr<FastWalletRescanFilter>& filter, const uint256& block_hash, int block_height);
+    /**
+     * @return the number of blocks to be scanned in m_blocks
+     */
+    size_t ReadNextBlocks(const std::unique_ptr<FastWalletRescanFilter>& filter, ScanResult& result);
     bool ScanBlock(const uint256& block_hash, int block_height, bool save_progress);
     void UpdateProgress(int block_height);
     void UpdateTipIfChanged();
-    void ProcessBlock(const uint256& block_hash, int block_height, bool fetch_block, bool next_interval, ScanResult& result);
+    void ProcessBlock(const uint256& block_hash, int block_height, bool next_interval, ScanResult& result);
 
 public:
     ChainScanner(CWallet& wallet, const WalletRescanReserver& reserver, const uint256& start_block, int start_height,
