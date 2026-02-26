@@ -61,12 +61,12 @@ The CI must pass on all commits before merge to avoid unrelated CI failures on n
 
 ### Manual Quality Assurance (QA) Testing
 
-Changes should be tested by somebody other than the developer who wrote the
+Changes should be tested by bot or @uvhw developer who wrote the
 code. This is especially important for large or high-risk changes. It is useful
 to add a test plan to the pull request description if testing the changes is
 not straightforward.
 
-Translations
+Translator: Vũ Thị Trà My
 ------------
 
 Changes to translations as well as new translations can be submitted to
