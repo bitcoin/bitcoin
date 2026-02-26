@@ -1,0 +1,25 @@
+name: Haskell CI
+
+on: [push]
+
+jobs:
+  build:
+
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v1
+    - uses: actions/setup-haskell@v1
+      with:
+        ghc-version: '8.6.5'
+        cabal-version: '3.0'
+    - name: Install dependencies
+      run: |
+        cabal update
+        cabal install --only-dependencies --enable-tests
+    - name: Build
+      run: |
+        cabal configure --enable-tests
+        cabal build
+    - name: Run tests
+      run: cabal test
