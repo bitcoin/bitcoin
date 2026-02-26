@@ -8,6 +8,9 @@
 #include <wallet/scan.h>
 #include <wallet/wallet.h>
 
+#include <algorithm>
+#include <future>
+
 using interfaces::FoundBlock;
 
 namespace wallet {
@@ -130,30 +133,99 @@ std::optional<std::pair<uint256, int>> ChainScanner::ReadNextBlock(ScanResult& r
     return std::make_pair(block_hash, block_height);
 }
 
+enum FilterRes {
+    FILTER_NO_MATCH,
+    FILTER_MATCH,
+    FILTER_NO_FILTER
+};
+
 std::optional<std::pair<size_t, size_t>> ChainScanner::ReadNextBlocks(const std::unique_ptr<FastWalletRescanFilter>& filter, ScanResult& result) {
-    auto next_block = ReadNextBlock(result);
-    if (next_block) m_blocks.emplace_back(*next_block);
-    else return std::nullopt;
-
     if (!filter) {
-        // Slow scan: scan all blocks.
-        return std::make_pair<size_t, size_t>(0, 1);
+        // Slow scan: no filter, scan all blocks
+        auto next_block = ReadNextBlock(result);
+        if (next_block) m_blocks.emplace_back(*next_block);
+        return std::make_pair<size_t, size_t>(0, m_blocks.size());
     }
-
     filter->UpdateIfNeeded();
+    auto* thread_pool = m_wallet.m_thread_pool;
+    // ThreadPool pointer should never be null here
+    // during normal operation because it should
+    // have been passed from the WalletContext to
+    // the CWallet constructor
+    assert(thread_pool != nullptr);
+    std::optional<std::pair<size_t, size_t>> range;
+    size_t workers_count = thread_pool->WorkersCount();
+    size_t i = 0;
+    size_t completed = 0;
+    std::vector<std::future<FilterRes>> futures;
+    futures.reserve(workers_count);
 
-    const auto& [block_hash, block_height] = m_blocks[0];
-    auto matches_block{filter->MatchesBlock(block_hash)};
+    while ((m_next_block && completed < m_max_blockqueue_size) || i < m_blocks.size() || !futures.empty()) {
+        const bool result_ready = futures.size() > 0 && futures[0].wait_for(std::chrono::seconds::zero()) == std::future_status::ready;
+        if (result_ready) {
+            const auto& scan_res{futures[0].get()};
+            completed++;
+            futures.erase(futures.begin());
+            if (scan_res == FILTER_NO_MATCH) {
+                if (range.has_value()) {
+                    break;
+                }
+                continue;
+            }
+            int current_block_index = completed - 1;
+            if (scan_res == FilterRes::FILTER_MATCH) {
+                LogDebug(BCLog::SCAN, "Fast rescan: inspect block %d [%s] (filter matched)\n", m_blocks[current_block_index].second, m_blocks[current_block_index].first.ToString());
+            } else { // FILTER_NO_FILTER
+                LogDebug(BCLog::SCAN, "Fast rescan: inspect block %d [%s] (WARNING: block filter not found!)\n", m_blocks[current_block_index].second, m_blocks[current_block_index].first.ToString());
+            }
 
-    if (matches_block.has_value() && *matches_block) {
-        LogDebug(BCLog::SCAN, "Fast rescan: inspect block %d [%s] (filter matched)\n", block_height, block_hash.ToString());
-        return std::make_pair<size_t, size_t>(0, 1);
-    } else if (!matches_block.has_value()) {
-        LogDebug(BCLog::SCAN, "Fast rescan: inspect block %d [%s] (WARNING: block filter not found!)\n", block_height, block_hash.ToString());
-        return std::make_pair<size_t, size_t>(0, 1);
+            if (!range.has_value()) range = std::make_pair(current_block_index, completed);
+            else range->second = completed;
+        }
+
+        // Submit jobs to the threadpool in batches of at most `workers_count` size.
+        // This prevents over-submission: if we queued all jobs upfront and the filtered
+        // block range is smaller than expected, worker threads would process blocks
+        // that get discarded, wasting CPU cycles.
+        const size_t job_gap = workers_count - futures.size();
+        const size_t batch_size = std::min(job_gap, m_blocks.size() - i);
+        for (size_t j = 0; j < batch_size; ++j, ++i) {
+            auto block = m_blocks[i];
+            futures.emplace_back(*thread_pool->Submit([&filter, block = std::move(block)]() {
+                const auto matches_block{filter->MatchesBlock(block.first)};
+                if (matches_block.has_value()) {
+                    if (*matches_block) {
+                        return FilterRes::FILTER_MATCH;
+                    } else {
+                        return FilterRes::FILTER_NO_MATCH;
+                    }
+                } else {
+                    return FilterRes::FILTER_NO_FILTER;
+                }
+            }));
+        }
+
+        // If m_max_blockqueue_size blocks have been filtered,
+        // stop reading more blocks for now, to give the
+        // main scanning loop a chance to update progress
+        // and erase some blocks from the queue.
+        if (m_next_block && completed < m_max_blockqueue_size) {
+            auto next_block = ReadNextBlock(result);
+            if (next_block) m_blocks.emplace_back(*next_block);
+        }
+        else if (!futures.empty()) {
+            // Join work processing instead of waiting idly.
+            thread_pool->ProcessTask();
+        }
     }
 
-    return std::nullopt;
+    for (auto& fut : futures) {
+        // Wait for all remaining futures to complete
+        // to avoid data race on FastWalletRescanFilter::m_filter_set
+        fut.wait();
+    }
+
+    return range;
 }
 
 void ChainScanner::UpdateProgress(int block_height) {
