@@ -129,8 +129,6 @@ def download_binary(tag, args) -> int:
     archive = f'bitcoin-{tag[1:]}-{host}.{archive_format}'
     archive_url = f'https://bitcoincore.org/{bin_path}/{archive}'
 
-    print(f'Fetching: {archive_url}')
-
     try:
         download_from_url(archive_url, archive)
     except Exception as e:

@@ -9,6 +9,7 @@ import urllib.request
 
 
 def download_from_url(url, archive):
+    print(f"Fetching: {url}")
     last_print_time = time.time()
 
     def progress_hook(progress_bytes, total_size):
