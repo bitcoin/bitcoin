@@ -94,8 +94,8 @@ def _extract_cpu_short_name(cpu_model: str) -> str:
 def series_key(result: "NightlyResult") -> str:
     """Generate unique series key from machine specs and config.
 
-    Format: {cpu_short}|{ram}GB|{disk}|{kernel}|db{dbcache}|{start}-{stop}
-    Example: ryzen77008core|64GB|nvme|6.6|db450|840000-900000
+    Format: {cpu_short}|{ram}GB|{disk}|{kernel}|db{dbcache}|prune{prune}|{start}-{stop}
+    Example: ryzen77008core|64GB|nvme|6.6|db450|prune1000000|840000-900000
     """
     machine = result.machine or {}
     config = result.config or {}
@@ -107,10 +107,11 @@ def series_key(result: "NightlyResult") -> str:
     kernel = _normalize_kernel(machine.get("os_kernel", "unknown"))
 
     dbcache = bitcoind.get("dbcache", result.dbcache)
+    prune = bitcoind.get("prune", 0)
     start = config.get("start_height", 0)
     stop = bitcoind.get("stopatheight", 0)
 
-    return f"{cpu}|{ram}GB|{disk}|{kernel}|db{dbcache}|{start}-{stop}"
+    return f"{cpu}|{ram}GB|{disk}|{kernel}|db{dbcache}|prune{prune}|{start}-{stop}"
 
 
 def series_label(result: "NightlyResult") -> str:
@@ -130,8 +131,10 @@ def series_label(result: "NightlyResult") -> str:
     block_range = f"{start}-{stop}" if start and stop else "?-?"
 
     dbcache = result.dbcache
+    prune = bitcoind.get("prune", 0)
 
-    return f"{arch}, {cpu_short}, {ram_str}, {block_range}, dbcache {dbcache}"
+    prune_str = f", prune {prune}" if prune else ""
+    return f"{arch}, {cpu_short}, {ram_str}, {block_range}, dbcache {dbcache}{prune_str}"
 
 
 @dataclass
