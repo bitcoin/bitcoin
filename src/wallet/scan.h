@@ -41,6 +41,7 @@ private:
     bool ScanBlock(const uint256& block_hash, int block_height, bool save_progress);
     void UpdateProgress(int block_height);
     void UpdateTipIfChanged();
+    void ProcessBlock(const uint256& block_hash, int block_height, bool fetch_block, bool next_interval, ScanResult& result);
 
 public:
     ChainScanner(CWallet& wallet, const WalletRescanReserver& reserver, const uint256& start_block, int start_height,
