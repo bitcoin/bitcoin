@@ -30,6 +30,7 @@ private:
     bool m_save_progress;
 
     bool ShouldFetchBlock(const std::unique_ptr<FastWalletRescanFilter>& filter, const uint256& block_hash, int block_height);
+    bool ScanBlock(const uint256& block_hash, int block_height, bool save_progress);
 
 public:
     ChainScanner(CWallet& wallet, const WalletRescanReserver& reserver, const uint256& start_block, int start_height,
