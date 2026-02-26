@@ -97,6 +97,21 @@ private:
 };
 } // namespace
 
+bool ChainScanner::ShouldFetchBlock(const std::unique_ptr<FastWalletRescanFilter>& filter, const uint256& block_hash, int block_height) {
+    auto matches_block{filter->MatchesBlock(block_hash)};
+    if (matches_block.has_value()) {
+        if (*matches_block) {
+            LogDebug(BCLog::SCAN, "Fast rescan: inspect block %d [%s] (filter matched)\n", block_height, block_hash.ToString());
+            return true;
+        } else {
+            return false;
+        }
+    } else {
+        LogDebug(BCLog::SCAN, "Fast rescan: inspect block %d [%s] (WARNING: block filter not found!)\n", block_height, block_hash.ToString());
+        return true;
+    }
+}
+
 ScanResult ChainScanner::Scan() {
     constexpr auto INTERVAL_TIME{60s};
     auto current_time{m_reserver.now()};
@@ -143,17 +158,10 @@ ScanResult ChainScanner::Scan() {
         bool fetch_block{true};
         if (fast_rescan_filter) {
             fast_rescan_filter->UpdateIfNeeded();
-            auto matches_block{fast_rescan_filter->MatchesBlock(block_hash)};
-            if (matches_block.has_value()) {
-                if (*matches_block) {
-                    LogDebug(BCLog::SCAN, "Fast rescan: inspect block %d [%s] (filter matched)\n", block_height, block_hash.ToString());
-                } else {
-                    result.last_scanned_block = block_hash;
-                    result.last_scanned_height = block_height;
-                    fetch_block = false;
-                }
-            } else {
-                LogDebug(BCLog::SCAN, "Fast rescan: inspect block %d [%s] (WARNING: block filter not found!)\n", block_height, block_hash.ToString());
+            fetch_block = ShouldFetchBlock(fast_rescan_filter, block_hash, block_height);
+            if (!fetch_block) {
+                result.last_scanned_block = block_hash;
+                result.last_scanned_height = block_height;
             }
         }
 
