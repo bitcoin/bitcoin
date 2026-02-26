@@ -241,6 +241,16 @@ BOOST_AUTO_TEST_CASE(noncanonical)
     BOOST_CHECK_EXCEPTION(ReadCompactSize(ss), std::ios_base::failure, isCanonicalException);
 }
 
+BOOST_AUTO_TEST_CASE(string_view)
+{
+    const std::string_view sv{"hello, world"};
+    DataStream ss;
+    ss << sv;
+    std::string s;
+    ss >> s;
+    BOOST_CHECK_EQUAL(sv, s);
+}
+
 BOOST_AUTO_TEST_CASE(class_methods)
 {
     int intval(100);

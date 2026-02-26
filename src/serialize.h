@@ -24,6 +24,7 @@
 #include <set>
 #include <span>
 #include <string>
+#include <string_view>
 #include <utility>
 #include <vector>
 
@@ -706,6 +707,12 @@ template<typename Stream, typename C> void Serialize(Stream& os, const std::basi
 template<typename Stream, typename C> void Unserialize(Stream& is, std::basic_string<C>& str);
 
 /**
+ *  string_view
+ */
+template<typename Stream, typename C> void Serialize(Stream& os, const std::basic_string_view<C>& str);
+template<typename Stream, typename C> void Unserialize(Stream& is, std::basic_string_view<C>& str) = delete;
+
+/**
  * prevector
  */
 template<typename Stream, unsigned int N, typename T> inline void Serialize(Stream& os, const prevector<N, T>& v);
@@ -807,7 +814,17 @@ void Unserialize(Stream& is, std::basic_string<C>& str)
         is.read(MakeWritableByteSpan(str));
 }
 
-
+/**
+ * string_view
+ */
+template<typename Stream, typename C>
+void Serialize(Stream& os, const std::basic_string_view<C>& str)
+{
+    WriteCompactSize(os, str.size());
+    if (!str.empty()) {
+        os.write(MakeByteSpan(str));
+    }
+}
 
 /**
  * prevector
