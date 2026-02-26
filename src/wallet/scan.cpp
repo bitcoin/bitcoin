@@ -166,6 +166,21 @@ void ChainScanner::UpdateTipIfChanged() {
     }
 }
 
+void ChainScanner::ProcessBlock(const uint256& block_hash, int block_height, bool fetch_block, bool next_interval, ScanResult& result) {
+    if (fetch_block) {
+        if (ScanBlock(block_hash, block_height, m_save_progress && next_interval)) {
+            result.last_scanned_block = block_hash;
+            result.last_scanned_height = block_height;
+        } else {
+            result.last_failed_block = block_hash;
+            result.status = ScanResult::FAILURE;
+        }
+    } else {
+        result.last_scanned_block = block_hash;
+        result.last_scanned_height = block_height;
+    }
+}
+
 bool ChainScanner::ScanBlock(const uint256& block_hash, int block_height, bool save_progress) {
     // Read block data and locator if needed (the locator is usually null unless we need to save progress)
     CBlock block;
@@ -238,28 +253,10 @@ ScanResult ChainScanner::Scan() {
             m_wallet.WalletLogPrintf("Still rescanning. At block %d. Progress=%f\n", block_height, m_progress_current);
         }
 
-        bool fetch_block{true};
-        if (fast_rescan_filter) {
-            fast_rescan_filter->UpdateIfNeeded();
-            fetch_block = ShouldFetchBlock(fast_rescan_filter, block_hash, block_height);
-            if (!fetch_block) {
-                result.last_scanned_block = block_hash;
-                result.last_scanned_height = block_height;
-            }
-        }
+        bool fetch_block = !fast_rescan_filter ||
+                          (fast_rescan_filter->UpdateIfNeeded(), ShouldFetchBlock(fast_rescan_filter, block_hash, block_height));
 
-        if (fetch_block) {
-            if (ScanBlock(block_hash, block_height, m_save_progress && next_interval)) {
-                // scan succeeded, record block as most recent successfully scanned
-                result.last_scanned_block = block_hash;
-                result.last_scanned_height = block_height;
-            } else {
-                // could not scan block, keep scanning but record this block as the most recent failure
-                result.last_failed_block = block_hash;
-                result.status = ScanResult::FAILURE;
-            }
-        }
-
+        ProcessBlock(block_hash, block_height, fetch_block, next_interval, result);
         m_progress_current = chain.guessVerificationProgress(block_hash);
         if (!m_max_height) UpdateTipIfChanged();
     }
