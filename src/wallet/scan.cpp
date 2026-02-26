@@ -130,19 +130,30 @@ std::optional<std::pair<uint256, int>> ChainScanner::ReadNextBlock(ScanResult& r
     return std::make_pair(block_hash, block_height);
 }
 
-bool ChainScanner::ShouldFetchBlock(const std::unique_ptr<FastWalletRescanFilter>& filter, const uint256& block_hash, int block_height) {
-    auto matches_block{filter->MatchesBlock(block_hash)};
-    if (matches_block.has_value()) {
-        if (*matches_block) {
-            LogDebug(BCLog::SCAN, "Fast rescan: inspect block %d [%s] (filter matched)\n", block_height, block_hash.ToString());
-            return true;
-        } else {
-            return false;
-        }
-    } else {
-        LogDebug(BCLog::SCAN, "Fast rescan: inspect block %d [%s] (WARNING: block filter not found!)\n", block_height, block_hash.ToString());
-        return true;
+std::optional<std::pair<size_t, size_t>> ChainScanner::ReadNextBlocks(const std::unique_ptr<FastWalletRescanFilter>& filter, ScanResult& result) {
+    auto next_block = ReadNextBlock(result);
+    if (next_block) m_blocks.emplace_back(*next_block);
+    else return std::nullopt;
+
+    if (!filter) {
+        // Slow scan: scan all blocks.
+        return std::make_pair<size_t, size_t>(0, 1);
     }
+
+    filter->UpdateIfNeeded();
+
+    const auto& [block_hash, block_height] = m_blocks[0];
+    auto matches_block{filter->MatchesBlock(block_hash)};
+
+    if (matches_block.has_value() && *matches_block) {
+        LogDebug(BCLog::SCAN, "Fast rescan: inspect block %d [%s] (filter matched)\n", block_height, block_hash.ToString());
+        return std::make_pair<size_t, size_t>(0, 1);
+    } else if (!matches_block.has_value()) {
+        LogDebug(BCLog::SCAN, "Fast rescan: inspect block %d [%s] (WARNING: block filter not found!)\n", block_height, block_hash.ToString());
+        return std::make_pair<size_t, size_t>(0, 1);
+    }
+
+    return std::nullopt;
 }
 
 void ChainScanner::UpdateProgress(int block_height) {
@@ -166,18 +177,13 @@ void ChainScanner::UpdateTipIfChanged() {
     }
 }
 
-void ChainScanner::ProcessBlock(const uint256& block_hash, int block_height, bool fetch_block, bool next_interval, ScanResult& result) {
-    if (fetch_block) {
-        if (ScanBlock(block_hash, block_height, m_save_progress && next_interval)) {
-            result.last_scanned_block = block_hash;
-            result.last_scanned_height = block_height;
-        } else {
-            result.last_failed_block = block_hash;
-            result.status = ScanResult::FAILURE;
-        }
-    } else {
+void ChainScanner::ProcessBlock(const uint256& block_hash, int block_height, bool next_interval, ScanResult& result) {
+    if (ScanBlock(block_hash, block_height, m_save_progress && next_interval)) {
         result.last_scanned_block = block_hash;
         result.last_scanned_height = block_height;
+    } else {
+        result.last_failed_block = block_hash;
+        result.status = ScanResult::FAILURE;
     }
 }
 
@@ -239,26 +245,40 @@ ScanResult ChainScanner::Scan() {
     int block_height = m_start_height;
     m_next_block = {{m_start_block, m_start_height}};
 
-    while (!m_wallet.fAbortRescan && !chain.shutdownRequested()) {
-        auto current_block = ReadNextBlock(result);
-        if (!current_block) break;
+    while ((m_next_block || !m_blocks.empty()) && !m_wallet.fAbortRescan && !chain.shutdownRequested()) {
+        uint256 block_hash;
+        auto range = ReadNextBlocks(fast_rescan_filter, result);
 
-        const auto& [block_hash, block_height] = *current_block;
-
-        UpdateProgress(block_height);
-
-        bool next_interval = m_reserver.now() >= current_time + INTERVAL_TIME;
-        if (next_interval) {
-            current_time = m_reserver.now();
-            m_wallet.WalletLogPrintf("Still rescanning. At block %d. Progress=%f\n", block_height, m_progress_current);
+        // If no blocks to scan, mark current batch as scanned
+        size_t start_index = range.has_value() ? range->first : m_blocks.size();
+        size_t end_index = range.has_value() ? range->second : m_blocks.size();
+        if (start_index > 0) {
+            // Some blocks at the start of the batch were skipped.
+            // Update last scanned block to indicate that these
+            // blocks have been scanned.
+            block_hash = m_blocks[start_index - 1].first;
+            block_height = m_blocks[start_index - 1].second;
+            result.last_scanned_block = block_hash;
+            result.last_scanned_height = block_height;
         }
 
-        bool fetch_block = !fast_rescan_filter ||
-                          (fast_rescan_filter->UpdateIfNeeded(), ShouldFetchBlock(fast_rescan_filter, block_hash, block_height));
+        for (size_t i = start_index; i < end_index; ++i) {
+            block_hash = m_blocks[i].first;
+            block_height = m_blocks[i].second;
 
-        ProcessBlock(block_hash, block_height, fetch_block, next_interval, result);
-        m_progress_current = chain.guessVerificationProgress(block_hash);
-        if (!m_max_height) UpdateTipIfChanged();
+            UpdateProgress(block_height);
+
+            bool next_interval = m_reserver.now() >= current_time + INTERVAL_TIME;
+            if (next_interval) {
+                current_time = m_reserver.now();
+                m_wallet.WalletLogPrintf("Still rescanning. At block %d. Progress=%f\n", block_height, m_progress_current);
+            }
+
+            ProcessBlock(block_hash, block_height, next_interval, result);
+            m_progress_current = chain.guessVerificationProgress(block_hash);
+            if (!m_max_height) UpdateTipIfChanged();
+        }
+        m_blocks.erase(m_blocks.begin(), m_blocks.begin() + end_index);
     }
     if (!m_max_height) {
         m_wallet.WalletLogPrintf("Scanning current mempool transactions.\n");

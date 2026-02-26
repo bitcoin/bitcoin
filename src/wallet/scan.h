@@ -38,12 +38,20 @@ private:
     double m_progress_current{0};
     uint256 m_tip_hash;
 
+    /// Queued block hashes and heights to filter and scan
+    std::vector<std::pair<uint256, int>> m_blocks;
+    size_t m_max_blockqueue_size{1000};
+
     std::optional<std::pair<uint256, int>> ReadNextBlock(ScanResult& result);
-    bool ShouldFetchBlock(const std::unique_ptr<FastWalletRescanFilter>& filter, const uint256& block_hash, int block_height);
+    /**
+     * @return a pair of indexes into the m_blocks array that specify a range of blocks
+     *         to scan (end index excluded) or std::nullopt if no blocks should be scanned.
+     */
+    std::optional<std::pair<size_t, size_t>> ReadNextBlocks(const std::unique_ptr<FastWalletRescanFilter>& filter, ScanResult& result);
     bool ScanBlock(const uint256& block_hash, int block_height, bool save_progress);
     void UpdateProgress(int block_height);
     void UpdateTipIfChanged();
-    void ProcessBlock(const uint256& block_hash, int block_height, bool fetch_block, bool next_interval, ScanResult& result);
+    void ProcessBlock(const uint256& block_hash, int block_height, bool next_interval, ScanResult& result);
 
 public:
     ChainScanner(CWallet& wallet, const WalletRescanReserver& reserver, const uint256& start_block, int start_height,
@@ -54,7 +62,9 @@ public:
         m_start_height(start_height),
         m_max_height(max_height),
         m_fUpdate(fUpdate),
-        m_save_progress(save_progress) {}
+        m_save_progress(save_progress) {
+            m_blocks.reserve(m_max_blockqueue_size);
+        }
 
     ScanResult Scan();
 
