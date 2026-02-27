@@ -27,8 +27,22 @@ static constexpr size_t MAX_FILTER_INDEX_CACHE{1024_MiB};
 static constexpr size_t MAX_TXOSPENDER_INDEX_CACHE{1024_MiB};
 //! Maximum dbcache size on 32-bit systems.
 static constexpr size_t MAX_32BIT_DBCACHE{1024_MiB};
+//! Larger default dbcache on 64-bit systems with enough RAM.
+static constexpr size_t HIGH_DEFAULT_DBCACHE{1024_MiB};
+//! Minimum detected RAM required for HIGH_DEFAULT_DBCACHE.
+static constexpr uint64_t HIGH_DEFAULT_DBCACHE_MIN_TOTAL_RAM{4096ULL << 20};
 
 namespace node {
+size_t GetDefaultDBCache()
+{
+    if constexpr (sizeof(void*) >= 8) {
+        if (GetTotalRAM().value_or(0) >= HIGH_DEFAULT_DBCACHE_MIN_TOTAL_RAM) {
+            return HIGH_DEFAULT_DBCACHE;
+        }
+    }
+    return DEFAULT_DB_CACHE;
+}
+
 size_t CalculateDbCacheBytes(const ArgsManager& args)
 {
     if (auto db_cache{args.GetIntArg("-dbcache")}) {
@@ -37,7 +51,7 @@ size_t CalculateDbCacheBytes(const ArgsManager& args)
         constexpr auto max_db_cache{sizeof(void*) == 4 ? MAX_32BIT_DBCACHE : std::numeric_limits<size_t>::max()};
         return std::max<size_t>(MIN_DB_CACHE, std::min<uint64_t>(db_cache_bytes, max_db_cache));
     }
-    return DEFAULT_DB_CACHE;
+    return GetDefaultDBCache();
 }
 
 CacheSizes CalculateCacheSizes(const ArgsManager& args, size_t n_indexes)
