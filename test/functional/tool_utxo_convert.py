@@ -2,7 +2,7 @@
 # Copyright (c) 2024-present The Bitcoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
-"""Test utxo-to-sqlite conversion tool"""
+"""Test utxo_convert conversion tool"""
 from itertools import product
 import os
 import platform
@@ -126,9 +126,9 @@ class UtxoToSqliteTest(BitcoinTestFramework):
             self.log.info('-> Convert UTXO set from compact-serialized format to sqlite format')
             output_filename = os.path.join(self.options.tmpdir, f"utxos_{i+1}.sqlite")
             base_dir = self.config["environment"]["SRCDIR"]
-            utxo_to_sqlite_path = os.path.join(base_dir, "contrib", "utxo-tools", "utxo_to_sqlite.py")
+            utxo_convert_path = os.path.join(base_dir, "contrib", "utxo-tools", "utxo_convert.py")
             arguments = [input_filename, output_filename, f'--txid={txid_format}', f'--spk={spk_format}']
-            subprocess.run([sys.executable, utxo_to_sqlite_path] + arguments, check=True, stderr=subprocess.STDOUT)
+            subprocess.run([sys.executable, utxo_convert_path] + arguments, check=True, stderr=subprocess.STDOUT)
 
             self.log.info('-> Verify that both UTXO sets match by comparing their MuHash')
             muhash_sqlite = calculate_muhash_from_sqlite_utxos(output_filename, txid_format, spk_format)

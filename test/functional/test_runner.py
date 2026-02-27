@@ -266,7 +266,7 @@ BASE_SCRIPTS = [
     'mempool_packages.py',
     'mempool_package_limits.py',
     'mempool_package_rbf.py',
-    'tool_utxo_to_sqlite.py',
+    'tool_utxo_convert.py',
     'feature_versionbits_warning.py',
     'feature_blocksxor.py',
     'rpc_preciousblock.py',
