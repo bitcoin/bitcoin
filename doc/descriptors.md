@@ -218,7 +218,7 @@ Instead, it should be written as `xpub.../1/*`, where xpub corresponds to
 
 When interacting with a hardware device, it may be necessary to include
 the entire path from the master down. [BIP 174](https://github.com/bitcoin/bips/blob/master/bip-0174.mediawiki) standardizes this by
-providing the master key *fingerprint* (first 32 bit of the Hash160 of
+providing the master key *fingerprint* (first 32 bits of the Hash160 of
 the master pubkey), plus all derivation steps. To support constructing
 these, we permit providing this key origin information inside the
 descriptor language, even though it does not affect the actual
