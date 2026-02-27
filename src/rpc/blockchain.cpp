@@ -639,14 +639,9 @@ static RPCHelpMan getblockheader()
     if (!request.params[1].isNull())
         fVerbose = request.params[1].get_bool();
 
-    const CBlockIndex* pblockindex;
-    const CBlockIndex* tip;
     ChainstateManager& chainman = EnsureAnyChainman(request.context);
-    {
-        LOCK(cs_main);
-        pblockindex = chainman.m_blockman.LookupBlockIndex(hash);
-        tip = chainman.ActiveChain().Tip();
-    }
+    const CBlockIndex* pblockindex = chainman.m_blockman.LookupBlockIndex(hash);
+    const CBlockIndex* tip = chainman.ActiveChain().Tip();
 
     if (!pblockindex) {
         throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Block not found");
@@ -843,14 +838,11 @@ static RPCHelpMan getblock()
     const CBlockIndex* pblockindex;
     const CBlockIndex* tip;
     ChainstateManager& chainman = EnsureAnyChainman(request.context);
-    {
-        LOCK(cs_main);
-        pblockindex = chainman.m_blockman.LookupBlockIndex(hash);
-        tip = chainman.ActiveChain().Tip();
+    pblockindex = chainman.m_blockman.LookupBlockIndex(hash);
+    tip = chainman.ActiveChain().Tip();
 
-        if (!pblockindex) {
-            throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Block not found");
-        }
+    if (!pblockindex) {
+        throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Block not found");
     }
 
     const std::vector<std::byte> block_data{GetRawBlockChecked(chainman.m_blockman, *pblockindex)};
@@ -1826,7 +1818,6 @@ static RPCHelpMan getchaintxstats()
         pindex = chainman.ActiveChain().Tip();
     } else {
         uint256 hash(ParseHashV(request.params[1], "blockhash"));
-        LOCK(cs_main);
         pindex = chainman.m_blockman.LookupBlockIndex(hash);
         if (!pindex) {
             throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Block not found");
@@ -2757,20 +2748,17 @@ static RPCHelpMan getdescriptoractivity()
 
     std::set<const CBlockIndex*, CompareByHeightAscending> blockindexes_sorted;
 
-    {
-        // Validate all given blockhashes, and ensure blocks are along a single chain.
-        LOCK(::cs_main);
-        for (const UniValue& blockhash : request.params[0].get_array().getValues()) {
-            uint256 bhash = ParseHashV(blockhash, "blockhash");
-            CBlockIndex* pindex = chainman.m_blockman.LookupBlockIndex(bhash);
-            if (!pindex) {
-                throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Block not found");
-            }
-            if (!chainman.ActiveChain().Contains(pindex)) {
-                throw JSONRPCError(RPC_INVALID_PARAMETER, "Block is not in main chain");
-            }
-            blockindexes_sorted.insert(pindex);
+    // Validate all given blockhashes, and ensure blocks are along a single chain.
+    for (const UniValue& blockhash : request.params[0].get_array().getValues()) {
+        uint256 bhash = ParseHashV(blockhash, "blockhash");
+        CBlockIndex* pindex = chainman.m_blockman.LookupBlockIndex(bhash);
+        if (!pindex) {
+            throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Block not found");
         }
+        if (!chainman.ActiveChain().Contains(pindex)) {
+            throw JSONRPCError(RPC_INVALID_PARAMETER, "Block is not in main chain");
+        }
+        blockindexes_sorted.insert(pindex);
     }
 
     std::set<CScript> scripts_to_watch;

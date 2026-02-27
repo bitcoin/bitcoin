@@ -2343,13 +2343,9 @@ bool StartIndexBackgroundSync(NodeContext& node)
             if (summary.synced) continue;
 
             // Get the last common block between the index best block and the active chain
-            const CBlockIndex* pindex = nullptr;
-            {
-                LOCK(::cs_main);
-                pindex = chainman.m_blockman.LookupBlockIndex(summary.best_block_hash);
-                if (!index_chain.Contains(pindex)) {
-                    pindex = index_chain.FindFork(pindex);
-                }
+            const CBlockIndex* pindex = chainman.m_blockman.LookupBlockIndex(summary.best_block_hash);
+            if (!index_chain.Contains(pindex)) {
+                pindex = index_chain.FindFork(pindex);
             }
             if (!pindex) {
                 pindex = index_chain.Genesis();

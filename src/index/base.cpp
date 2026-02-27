@@ -118,7 +118,6 @@ bool BaseIndex::Init()
 
     const auto locator{GetDB().ReadBestBlock()};
 
-    LOCK(cs_main);
     CChain& index_chain = m_chainstate->m_chain;
 
     if (locator.IsNull()) {
