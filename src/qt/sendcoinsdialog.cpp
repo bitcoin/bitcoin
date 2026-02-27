@@ -542,9 +542,15 @@ void SendCoinsDialog::sendButtonClicked([[maybe_unused]] bool checked)
         // Broadcast the transaction, unless an external signer was used and it
         // failed, or more signatures are needed.
         if (broadcast) {
-            // now send the prepared transaction
-            model->sendCoins(*m_current_transaction);
-            Q_EMIT coinsSent(m_current_transaction->getWtx()->GetHash());
+            try {
+                model->sendCoins(*m_current_transaction);
+            } catch (const std::runtime_error& e) {
+                QMessageBox::critical(this, tr("Send Coins"), QString::fromStdString(e.what()));
+                send_failure = true;
+            }
+            if (!send_failure) {
+                Q_EMIT coinsSent(m_current_transaction->getWtx()->GetHash());
+            }
         }
     }
     if (!send_failure) {
