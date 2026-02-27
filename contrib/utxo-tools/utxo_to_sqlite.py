@@ -18,6 +18,7 @@ import os
 import sqlite3
 import sys
 import time
+from typing import BinaryIO
 
 
 UTXO_DUMP_MAGIC = b'utxo\xff'
@@ -31,7 +32,7 @@ NET_MAGIC_BYTES = {
 }
 
 
-def read_varint(f):
+def read_varint(f: BinaryIO) -> int:
     """Equivalent of `ReadVarInt()` (see serialization module)."""
     n = 0
     while True:
@@ -43,7 +44,7 @@ def read_varint(f):
             return n
 
 
-def read_compactsize(f):
+def read_compactsize(f: BinaryIO) -> int:
     """Equivalent of `ReadCompactSize()` (see serialization module)."""
     n = f.read(1)[0]
     if n == 253:
@@ -55,7 +56,7 @@ def read_compactsize(f):
     return n
 
 
-def decompress_amount(x):
+def decompress_amount(x: int) -> int:
     """Equivalent of `DecompressAmount()` (see compressor module)."""
     if x == 0:
         return 0
@@ -75,25 +76,25 @@ def decompress_amount(x):
     return n
 
 
-def decompress_script(f):
+def decompress_script(f: BinaryIO) -> bytes:
     """Equivalent of `DecompressScript()` (see compressor module)."""
     size = read_varint(f)  # sizes 0-5 encode compressed script types
     if size == 0:  # P2PKH
         return bytes([0x76, 0xa9, 20]) + f.read(20) + bytes([0x88, 0xac])
-    elif size == 1:  # P2SH
+    if size == 1:  # P2SH
         return bytes([0xa9, 20]) + f.read(20) + bytes([0x87])
-    elif size in (2, 3):  # P2PK (compressed)
+    if size in (2, 3):  # P2PK (compressed)
         return bytes([33, size]) + f.read(32) + bytes([0xac])
-    elif size in (4, 5):  # P2PK (uncompressed)
+    if size in (4, 5):  # P2PK (uncompressed)
         compressed_pubkey = bytes([size - 2]) + f.read(32)
         return bytes([65]) + decompress_pubkey(compressed_pubkey) + bytes([0xac])
-    else:  # others (bare multisig, segwit etc.)
-        size -= 6
-        assert size <= 10000, f"too long script with size {size}"
-        return f.read(size)
+    # others (bare multisig, segwit etc.)
+    size -= 6
+    assert size <= 10000, f"too long script with size {size}"
+    return f.read(size)
 
 
-def decompress_pubkey(compressed_pubkey):
+def decompress_pubkey(compressed_pubkey: bytes) -> bytes:
     """Decompress pubkey by calculating y = sqrt(x^3 + 7) % p
        (see functions `secp256k1_eckey_pubkey_parse` and `secp256k1_ge_set_xo_var`).
     """
@@ -101,7 +102,7 @@ def decompress_pubkey(compressed_pubkey):
     assert len(compressed_pubkey) == 33 and compressed_pubkey[0] in (2, 3)
     x = int.from_bytes(compressed_pubkey[1:], 'big')
     rhs = (x**3 + 7) % P
-    y = pow(rhs, (P + 1)//4, P)  # get sqrt using Tonelli-Shanks algorithm (for p % 4 = 3)
+    y = pow(rhs, (P + 1) // 4, P)  # get sqrt using Tonelli-Shanks algorithm (for p % 4 = 3)
     assert pow(y, 2, P) == rhs, f"pubkey is not on curve ({compressed_pubkey.hex()})"
     tag_is_odd = compressed_pubkey[0] == 3
     y_is_odd = (y & 1) == 1
@@ -110,7 +111,7 @@ def decompress_pubkey(compressed_pubkey):
     return bytes([4]) + x.to_bytes(32, 'big') + y.to_bytes(32, 'big')
 
 
-def main():
+def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument('infile', help='filename of compact-serialized UTXO set (input)')
     parser.add_argument('outfile', help='filename of created SQLite3 database (output)')
@@ -127,9 +128,9 @@ def main():
         print(f"Error: provided output file '{args.outfile}' already exists.")
         sys.exit(1)
 
-    spk_hex = (args.spk == 'hex')
-    txid_hex = (args.txid == 'hex')
-    txid_reverse = (args.txid != 'raw')
+    spk_hex = args.spk == 'hex'
+    txid_hex = args.txid == 'hex'
+    txid_reverse = args.txid != 'raw'
 
     # create database table
     txid_fmt = "TEXT" if txid_hex else "BLOB"
@@ -161,7 +162,7 @@ def main():
     prevout_hash = None
     max_height = 0
 
-    for coin_idx in range(1, num_utxos+1):
+    for coin_idx in range(1, num_utxos + 1):
         # read key (COutPoint)
         if coins_per_hash_left == 0:  # read next prevout hash
             prevout_hash = f.read(32)
@@ -175,11 +176,17 @@ def main():
         scriptpubkey = decompress_script(f)
 
         scriptpubkey_write = scriptpubkey.hex() if spk_hex else scriptpubkey
-        txid_write = prevout_hash[::-1] if txid_reverse else prevout_hash
-        txid_write = txid_write.hex() if txid_hex else txid_write
+        assert prevout_hash is not None
+        txid = prevout_hash
+        if txid_reverse:
+            txid = txid[::-1]
+        txid_write: bytes | str
+        if txid_hex:
+            txid_write = txid.hex()
+        else:
+            txid_write = txid
         write_batch.append((txid_write, prevout_index, amount, is_coinbase, height, scriptpubkey_write))
-        if height > max_height:
-            max_height = height
+        max_height = max(height, max_height)
         coins_per_hash_left -= 1
 
         if args.verbose:
@@ -188,15 +195,15 @@ def main():
             print(f"    amount = {amount}, height = {height}, coinbase = {is_coinbase}")
             print(f"    scriptPubKey = {scriptpubkey.hex()}\n")
 
-        if coin_idx % (16*1024) == 0 or coin_idx == num_utxos:
+        if coin_idx % (16 * 1024) == 0 or coin_idx == num_utxos:
             # write utxo batch to database
             con.executemany("INSERT INTO utxos VALUES(?, ?, ?, ?, ?, ?)", write_batch)
             con.commit()
             write_batch.clear()
 
-        if coin_idx % (1024*1024) == 0:
+        if coin_idx % (1024 * 1024) == 0:
             elapsed = time.time() - start_time
-            print(f"{coin_idx} coins converted [{coin_idx/num_utxos*100:.2f}%], " +
+            print(f"{coin_idx} coins converted [{coin_idx / num_utxos * 100:.2f}%], "
                   f"{elapsed:.3f}s passed since start")
     con.close()
 
