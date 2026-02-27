@@ -69,6 +69,7 @@ Descriptors consist of several types of expressions. The top level expression is
 - `addr(ADDR)` (top level only): the script which ADDR expands to, defined in [BIP 385](https://github.com/bitcoin/bips/blob/master/bip-0385.mediawiki).
 - `raw(HEX)` (top level only): the script whose hex encoding is HEX, defined in [BIP 385](https://github.com/bitcoin/bips/blob/master/bip-0385.mediawiki).
 - `rawtr(KEY)` (top level only): P2TR output with the specified key as output key. NOTE: while it's possible to use this to construct wallets, it has several downsides, like being unable to prove no hidden script path exists. Use at your own risk.
+- The miniscript expressions `0`, `1`, `pk_k(KEY)`, `pk_h(KEY)`, `older(k)`, `after(k)`, `sha256(HEX)`, `hash256(HEX)`, `ripemd160(HEX)`, `hash160(HEX)`, `andor(SCRIPT,SCRIPT,SCRIPT)`, `and_v(SCRIPT,SCRIPT)`, `and_b(SCRIPT,SCRIPT)`, `and_n(SCRIPT,SCRIPT)`, `or_b(SCRIPT,SCRIPT)`, `or_c(SCRIPT,SCRIPT)`, `or_d(SCRIPT,SCRIPT)`, `or_i(SCRIPT,SCRIPT)`, `thresh(k,SCRIPT,SCRIPT,...)`, `a:SCRIPT`, `s:SCRIPT`, `c:SCRIPT`, `t:SCRIPT`, `d:SCRIPT`, `v:SCRIPT`, `j:SCRIPT`, `n:SCRIPT`, `l:SCRIPT`, and `u:SCRIPT`, all only inside `wsh()` and `tr()`. Various rules apply that control how these can be combined. For details, see [BIP 379](https://github.com/bitcoin/bips/blob/master/bip-0379.md).
 
 `KEY` expressions, defined in [BIP 380](https://github.com/bitcoin/bips/blob/master/bip-0380.mediawiki):
 - Optionally, key origin information, consisting of:
