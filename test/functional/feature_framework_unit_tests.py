@@ -30,6 +30,7 @@ TEST_FRAMEWORK_MODULES = [
     "script",
     "script_util",
     "segwit_addr",
+    "util",
     "wallet_util",
 ]
 

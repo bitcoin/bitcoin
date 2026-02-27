@@ -19,6 +19,7 @@ import re
 import shlex
 import time
 import types
+import unittest
 
 from . import coverage
 from .authproxy import AuthServiceProxy, JSONRPCException
@@ -213,16 +214,25 @@ def assert_array_result(object_array, to_match, expected, should_not_find=False)
                 all_match = False
         if not all_match:
             continue
-        elif should_not_find:
-            num_matched = num_matched + 1
+        num_matched += 1
+        if should_not_find:
+            continue
         for key, value in expected.items():
             if item[key] != value:
                 raise AssertionError("%s : expected %s=%s" % (str(item), str(key), str(value)))
-            num_matched = num_matched + 1
     if num_matched == 0 and not should_not_find:
         raise AssertionError("No objects matched %s" % (str(to_match)))
     if num_matched > 0 and should_not_find:
         raise AssertionError("Objects were found %s" % (str(to_match)))
+
+
+class TestFrameworkUtil(unittest.TestCase):
+    def test_assert_array_result_empty_expected(self):
+        assert_array_result([{"key": 1}], {"key": 1}, {})
+
+    def test_assert_array_result_empty_expected_without_match_raises(self):
+        with self.assertRaisesRegex(AssertionError, "No objects matched"):
+            assert_array_result([{"key": 2}], {"key": 1}, {})
 
 
 # Utility functions
