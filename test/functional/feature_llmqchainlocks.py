@@ -55,8 +55,9 @@ class LLMQChainLocksTest(DashTestFramework):
         # Connect all nodes to node1 so that we always have the whole network connected
         # Otherwise only masternode connections will be established between nodes, which won't propagate TXs/blocks
         # Usually node0 is the one that does this, but in this test we isolate it multiple times
-        for i in range(2, len(self.nodes)):
-            self.connect_nodes(i, 1)
+        for i in range(len(self.nodes)):
+            for j in range(i + 1, len(self.nodes)):
+                self.connect_nodes(i, j, wait_for_connect=False)
             
         self.generate(self.nodes[0], 10)
         self.sync_blocks(self.nodes, timeout=60*5)
@@ -90,8 +91,9 @@ class LLMQChainLocksTest(DashTestFramework):
         self.start_node(3, extra_args=["-mocktime=" + str(self.mocktime), '-reindex', *self.extra_args[3]])
         for i in range(len(self.nodes)):
             force_finish_mnsync(self.nodes[i])
-        for i in range(2, len(self.nodes)):
-            self.connect_nodes(i, 1)
+        for i in range(len(self.nodes)):
+            for j in range(i + 1, len(self.nodes)):
+                self.connect_nodes(i, j, wait_for_connect=False)
         self.sync_all()
         cl = self.nodes[0].getbestblockhash()
         self.generate(self.nodes[0], 5)
@@ -124,6 +126,9 @@ class LLMQChainLocksTest(DashTestFramework):
         self.wait_for_chainlocked_block(self.nodes[1], cl)
         assert self.nodes[0].getbestblockhash() == node0_tip
         self.reconnect_isolated_node(self.nodes[0], 1)
+        for i in range(1, len(self.nodes)):
+            self.connect_nodes(0, i, wait_for_connect=False)
+        self.wait_until(lambda: self.nodes[0].getbestblockhash() == self.nodes[1].getbestblockhash())
         cl = self.nodes[1].getbestblockhash()
         self.generatetoaddress(self.nodes[1], 5, node0_mining_addr, sync_fun=self.no_op)
         self.wait_for_chainlocked_block(self.nodes[0], cl)
@@ -149,6 +154,9 @@ class LLMQChainLocksTest(DashTestFramework):
         assert best_0['signature'] != best_1['signature']
         assert_equal(best_0['known_block'], True)
         self.reconnect_isolated_node(self.nodes[0], 1)
+        for i in range(1, len(self.nodes)):
+            self.connect_nodes(0, i, wait_for_connect=False)
+        self.wait_until(lambda: self.nodes[0].getbestblockhash() == self.nodes[1].getbestblockhash())
         cl = self.nodes[1].getbestblockhash()
         self.generatetoaddress(self.nodes[1], 5, node0_mining_addr, sync_fun=self.no_op)
         self.wait_for_chainlocked_block(self.nodes[0], cl)
@@ -163,6 +171,8 @@ class LLMQChainLocksTest(DashTestFramework):
         self.wait_for_chainlocked_block(self.nodes[1], good_cl)
         assert not self.nodes[0].getblock(bad_cl)["chainlock"]
         self.reconnect_isolated_node(self.nodes[0], 1)
+        for i in range(1, len(self.nodes)):
+            self.connect_nodes(0, i, wait_for_connect=False)
         self.bump_mocktime(5, nodes=self.nodes)
         good_cl = self.nodes[1].getbestblockhash()
         # create a new CLSIG
@@ -259,6 +269,8 @@ class LLMQChainLocksTest(DashTestFramework):
         # for the mined TXs, which will then allow the network to create a CLSIG
         self.log.info("Re-enable network on first node and wait for chainlock")
         self.reconnect_isolated_node(self.nodes[0], 1)
+        for i in range(1, len(self.nodes)):
+            self.connect_nodes(0, i, wait_for_connect=False)
         self.wait_for_chainlocked_block(self.nodes[0], node0_cl)
 
         self.log.info("Send fake future clsigs and see if this breaks ChainLocks")
