@@ -116,8 +116,16 @@ BitcoinGUI::BitcoinGUI(interfaces::Node& node, const NetworkStyle* networkStyle,
 #ifdef ENABLE_WALLET
     enableWallet = WalletModel::isWalletEnabled();
 #endif // ENABLE_WALLET
-    QApplication::setWindowIcon(m_network_style->getTrayAndWindowIcon());
-    setWindowIcon(m_network_style->getTrayAndWindowIcon());
+
+    QIcon icon{m_network_style->getTrayAndWindowIcon()};
+#ifdef Q_OS_MACOS
+    if (auto macos_icon{m_network_style->getMacIcon()}) {
+        icon = macos_icon.value();
+    }
+#endif // Q_OS_MACOS
+    QApplication::setWindowIcon(icon);
+    setWindowIcon(icon);
+
     updateWindowTitle();
 
     rpcConsole = new RPCConsole(node, this, enableWallet ? Qt::Window : Qt::Widget);
@@ -1113,7 +1121,13 @@ void BitcoinGUI::createTrayIcon()
     assert(QSystemTrayIcon::isSystemTrayAvailable());
 
     if (QSystemTrayIcon::isSystemTrayAvailable()) {
-        trayIcon = new QSystemTrayIcon(m_network_style->getTrayAndWindowIcon(), this);
+        QIcon icon{m_network_style->getTrayAndWindowIcon()};
+#ifdef Q_OS_MACOS
+        if (auto macos_tray{m_network_style->getMacTray()}) {
+            icon = macos_tray.value();
+        }
+#endif // Q_OS_MACOS
+        trayIcon = new QSystemTrayIcon(icon, this);
         QString toolTip = tr("%1 client").arg(PACKAGE_NAME) + " " + m_network_style->getTitleAddText();
         trayIcon->setToolTip(toolTip);
     }
