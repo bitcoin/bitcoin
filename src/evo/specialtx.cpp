@@ -65,11 +65,13 @@ bool ProcessSpecialTxsInBlock(ChainstateManager &chainman, const CBlock& block, 
         LogPrint(BCLog::BENCHMARK, "        - Loop: %.2fms [%.2fs]\n",  Ticks<MillisecondsDouble>(nTime2 - nTime1), Ticks<SecondsDouble>(nTimeLoop));
 
         // SYSCOIN: consensus-validated, lagged BTC checkpoint attestation embedded in the coinbase Syscoin-data payload.
-        // Carrier schedule: every 10 blocks shifted by 5. If non-null, must verify against the ancestor at height (h-5).
+        // Schedule: one checkpoint per 10-block epoch counted from activation height.
+        // Carrier at epoch offset +7. If non-null, must verify against the ancestor at height (h-5).
         {
             const auto& consensus = Params().GetConsensus();
             const int32_t height = pindex->nHeight;
-            const bool receiptRequired = height >= consensus.nCLReceiptStartBlock && (height % 10 == 5) && height >= 5;
+            const int start = consensus.nCLReceiptStartBlock;
+            const bool receiptRequired = height >= start && ((height - start) % BTCCHECK_PERIOD == BTCCHECK_CARRIER_OFFSET) && height >= BTCCHECK_PROP_BUFFER;
             if (receiptRequired) {
                 std::vector<unsigned char> vchData;
                 int nOut{-1};
@@ -105,7 +107,7 @@ bool ProcessSpecialTxsInBlock(ChainstateManager &chainman, const CBlock& block, 
 
                 // If BTCCHECK is non-null, it must match the (h-5) ancestor referenced by this carrier block.
                 if (!btcc.IsNull()) {
-                    const int32_t expected = height - 5;
+                    const int32_t expected = height - BTCCHECK_PROP_BUFFER;
                     if (btcc.nHeight != expected) {
                         LogPrintf("%s -- bad-btcc-height at height=%d block=%s btcc_height=%d expected=%d\n",
                                 __func__, height, pindex->GetBlockHash().ToString(), btcc.nHeight, expected);

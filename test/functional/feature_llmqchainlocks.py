@@ -450,13 +450,13 @@ class LLMQChainLocksTest(DashTestFramework):
         node0 = self.nodes[0]
         node1 = self.nodes[1]
 
-        # Bring everyone to a known height where next block is carrier height (height % 10 == 4 -> next is 5)
+        # Bring everyone to a known height where next block is carrier height (height % 10 == 6 -> next is 7)
         tip_height = node1.getblockcount()
-        blocks_to_4 = (4 - (tip_height % 10)) % 10
-        if blocks_to_4:
-            self.generate(node1, blocks_to_4)
+        blocks_to_6 = (6 - (tip_height % 10)) % 10
+        if blocks_to_6:
+            self.generate(node1, blocks_to_6)
             self.sync_blocks(self.nodes, timeout=60*5)
-        assert node1.getblockcount() % 10 == 4
+        assert node1.getblockcount() % 10 == 6
 
         common_prev_hash = node1.getbestblockhash()
         common_prev = node1.getblock(common_prev_hash)
@@ -507,7 +507,7 @@ class LLMQChainLocksTest(DashTestFramework):
 
         bad_sig_hash = bad_sig_block.hash
 
-        # Mine the canonical carrier block and then enough blocks so that a CLSIG forms for it (sign offset 5)
+        # Mine the canonical carrier block and then enough blocks so that a CLSIG forms for it (CL sign offset 5)
         good_h = self.generate(node1, 1, sync_fun=self.no_op)[-1]
         assert self.block_has_clreceipt_marker(node1, good_h)
         self.generate(node1, 5, sync_fun=self.no_op)

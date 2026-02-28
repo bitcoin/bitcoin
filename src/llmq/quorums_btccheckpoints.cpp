@@ -32,12 +32,21 @@ CBTCCheckpointsHandler* btcCheckpointsHandler{nullptr};
 
 static int32_t GetExpectedBTCCheckpointHeight(const ChainstateManager& chainman) EXCLUSIVE_LOCKS_REQUIRED(cs_main)
 {
-    // Mirror ChainLocks' strict height-window gating:
-    // only accept/relay checkpoint material for the current deterministic target.
-    int nActiveHeight = chainman.ActiveHeight();
-    if (nActiveHeight < 0) return -1;
-    nActiveHeight -= nActiveHeight % 10;
-    return nActiveHeight;
+    // Strict height-window gating:
+    // - Emit exactly one checkpoint per 10-block epoch counted from activation
+    // - Sign at epoch offset +2 to avoid colliding with CL's mod-5 boundary
+    const auto& consensus = Params().GetConsensus();
+    const int start = consensus.nCLReceiptStartBlock;
+    const int tip = chainman.ActiveHeight();
+    if (tip < start) return -1;
+
+    static constexpr int PERIOD{BTCCHECK_PERIOD};
+    static constexpr int SIGN_OFFSET{BTCCHECK_SIGN_OFFSET}; // within [0, PERIOD)
+
+    // Compute the greatest height h <= tip such that (h-start) % PERIOD == SIGN_OFFSET
+    const int delta = tip - start; // >= 0
+    if (delta < SIGN_OFFSET) return -1;
+    return tip - ((delta - SIGN_OFFSET) % PERIOD);
 }
 
 bool CBTCCheckpointSig::IsNull() const
@@ -373,11 +382,10 @@ void CBTCCheckpointsHandler::TrySignBTCCheckpointTip()
     const CBlockIndex* pindex{nullptr};
     {
         LOCK(cs_main);
-        // We want a 5-block buffer between signing and mining the carrier block.
-        // Policy: sign the most recent height aligned to 10, and embed it 5 blocks later (carrier height = nHeight + 5).
-        int nActiveHeight = chainman.ActiveHeight();
-        if (nActiveHeight < 0) return;
-        nActiveHeight -= nActiveHeight % 10;
+        // We want a propagation buffer between signing and mining the carrier block.
+        // Sign at epoch offset +BTCCHECK_SIGN_OFFSET and embed at +BTCCHECK_CARRIER_OFFSET (buffer BTCCHECK_PROP_BUFFER).
+        const int nActiveHeight = GetExpectedBTCCheckpointHeight(chainman);
+        if (nActiveHeight == -1) return;
         pindex = chainman.ActiveChain()[nActiveHeight];
         if (!pindex || !pindex->pprev || !pindex->IsValid(BLOCK_VALID_SCRIPTS)) {
             return;

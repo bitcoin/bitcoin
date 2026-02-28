@@ -108,6 +108,12 @@ extern std::atomic_bool fReindexGeth;
 static constexpr uint8_t NEVM_MAGIC_BYTES[4] = {'n', 'e', 'v', 'm'};
 static constexpr uint8_t BTCCHECK_MAGIC_BYTES[4] = {'b', 't', 'c', 'c'};
 
+// SYSCOIN: BTC checkpoint cadence (must remain in sync across miner/specialtx/llmq handler)
+static constexpr int BTCCHECK_PERIOD{10};
+static constexpr int BTCCHECK_SIGN_OFFSET{2};   // within [0, BTCCHECK_PERIOD)
+static constexpr int BTCCHECK_PROP_BUFFER{5};   // blocks between signing and carrier mining
+static constexpr int BTCCHECK_CARRIER_OFFSET{BTCCHECK_SIGN_OFFSET + BTCCHECK_PROP_BUFFER}; // 7
+
 /** Documentation for argument 'checklevel'. */
 extern const std::vector<std::string> CHECKLEVEL_DOC;
 
