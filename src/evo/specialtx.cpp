@@ -17,6 +17,7 @@
 #include <llmq/quorums_commitment.h>
 #include <llmq/quorums_blockprocessor.h>
 #include <llmq/quorums_chainlocks.h>
+#include <llmq/quorums_btccheckpoints.h>
 #include <logging.h>
 #include <governance/governance.h>
 class CCoinsViewCache;
@@ -73,60 +74,64 @@ bool ProcessSpecialTxsInBlock(ChainstateManager &chainman, const CBlock& block, 
                 std::vector<unsigned char> vchData;
                 int nOut{-1};
                 if (!GetSyscoinData(*block.vtx[0], vchData, nOut)) {
-                    LogPrintf("%s -- bad-clrc-output at height=%d block=%s\n", __func__, height, pindex->GetBlockHash().ToString());
-                    return state.Invalid(BlockValidationResult::BLOCK_CONSENSUS, "bad-clrc-output");
+                    LogPrintf("%s -- bad-btcc-output at height=%d block=%s\n", __func__, height, pindex->GetBlockHash().ToString());
+                    return state.Invalid(BlockValidationResult::BLOCK_CONSENSUS, "bad-btcc-output");
                 }
-                auto pos = vchData.end();
+
+                // SYSCOIN: consensus-validated, lagged BTC checkpoint attestation embedded in the same payload.
+                // Required every 10 blocks post activation (null allowed).
+                auto pos_btcc = vchData.end();
                 for (auto it = vchData.begin();;) {
-                    it = std::search(it, vchData.end(), std::begin(CLRECEIPT_MAGIC_BYTES), std::end(CLRECEIPT_MAGIC_BYTES));
+                    it = std::search(it, vchData.end(), std::begin(BTCCHECK_MAGIC_BYTES), std::end(BTCCHECK_MAGIC_BYTES));
                     if (it == vchData.end()) {
                         break;
                     }
-                    pos = it;
+                    pos_btcc = it;
                     ++it;
                 }
-                if (pos == vchData.end()) {
-                    LogPrintf("%s -- bad-clrc-missing at height=%d block=%s data_size=%u\n", __func__, height, pindex->GetBlockHash().ToString(), static_cast<unsigned>(vchData.size()));
-                    return state.Invalid(BlockValidationResult::BLOCK_CONSENSUS, "bad-clrc-missing");
+                if (pos_btcc == vchData.end()) {
+                    LogPrintf("%s -- bad-btcc-missing at height=%d block=%s data_size=%u\n", __func__, height, pindex->GetBlockHash().ToString(), static_cast<unsigned>(vchData.size()));
+                    return state.Invalid(BlockValidationResult::BLOCK_CONSENSUS, "bad-btcc-missing");
                 }
-                pos = std::next(pos, sizeof(CLRECEIPT_MAGIC_BYTES));
-                llmq::CChainLockSig receipt;
+                pos_btcc = std::next(pos_btcc, sizeof(BTCCHECK_MAGIC_BYTES));
+                llmq::CBTCCheckpointSig btcc;
                 try {
-                    CDataStream ds(std::vector<unsigned char>(pos, vchData.end()), SER_NETWORK, PROTOCOL_VERSION);
-                    ds >> receipt;
+                    CDataStream ds(std::vector<unsigned char>(pos_btcc, vchData.end()), SER_NETWORK, PROTOCOL_VERSION);
+                    ds >> btcc;
                 } catch (const std::exception&) {
-                    LogPrintf("%s -- bad-clrc-unserialize at height=%d block=%s\n", __func__, height, pindex->GetBlockHash().ToString());
-                    return state.Invalid(BlockValidationResult::BLOCK_CONSENSUS, "bad-clrc-unserialize");
+                    LogPrintf("%s -- bad-btcc-unserialize at height=%d block=%s\n", __func__, height, pindex->GetBlockHash().ToString());
+                    return state.Invalid(BlockValidationResult::BLOCK_CONSENSUS, "bad-btcc-unserialize");
                 }
 
-                if (!receipt.IsNull()) {
+                // If BTCCHECK is non-null, it must match the same (h-10) ancestor referenced by a non-null BTC checkpoint.
+                if (!btcc.IsNull()) {
                     const int32_t expected = height - 10;
-                    if (receipt.nHeight != expected) {
-                        LogPrintf("%s -- bad-clrc-height at height=%d block=%s receipt_height=%d expected=%d\n",
-                                __func__, height, pindex->GetBlockHash().ToString(), receipt.nHeight, expected);
-                        return state.Invalid(BlockValidationResult::BLOCK_CONSENSUS, "bad-clrc-height");
+                    if (btcc.nHeight != expected) {
+                        LogPrintf("%s -- bad-btcc-height at height=%d block=%s btcc_height=%d expected=%d\n",
+                                __func__, height, pindex->GetBlockHash().ToString(), btcc.nHeight, expected);
+                        return state.Invalid(BlockValidationResult::BLOCK_CONSENSUS, "bad-btcc-height");
                     }
                     const CBlockIndex* pindexReceipt = pindex->GetAncestor(expected);
                     if (!pindexReceipt) {
-                        LogPrintf("%s -- bad-clrc-ancestor at height=%d block=%s expected=%d\n",
+                        LogPrintf("%s -- bad-btcc-ancestor at height=%d block=%s expected=%d\n",
                                 __func__, height, pindex->GetBlockHash().ToString(), expected);
-                        return state.Invalid(BlockValidationResult::BLOCK_CONSENSUS, "bad-clrc-ancestor");
+                        return state.Invalid(BlockValidationResult::BLOCK_CONSENSUS, "bad-btcc-ancestor");
                     }
-                    if (receipt.blockHash != pindexReceipt->GetBlockHash()) {
-                        LogPrintf("%s -- bad-clrc-hash at height=%d block=%s receipt_hash=%s expected_hash=%s\n",
+                    if (btcc.sysHash != pindexReceipt->GetBlockHash()) {
+                        LogPrintf("%s -- bad-btcc-syshash at height=%d block=%s btcc_sys=%s expected_sys=%s\n",
                                 __func__, height, pindex->GetBlockHash().ToString(),
-                                receipt.blockHash.ToString(), pindexReceipt->GetBlockHash().ToString());
-                        return state.Invalid(BlockValidationResult::BLOCK_CONSENSUS, "bad-clrc-hash");
+                                btcc.sysHash.ToString(), pindexReceipt->GetBlockHash().ToString());
+                        return state.Invalid(BlockValidationResult::BLOCK_CONSENSUS, "bad-btcc-syshash");
                     }
                     if (!ibd) {
-                        if (!llmq::chainLocksHandler) {
-                            LogPrintf("%s -- bad-clrc-nohandler at height=%d block=%s\n", __func__, height, pindex->GetBlockHash().ToString());
-                            return state.Invalid(BlockValidationResult::BLOCK_CHAINLOCK, "bad-clrc-nohandler");
+                        if (!llmq::btcCheckpointsHandler) {
+                            LogPrintf("%s -- bad-btcc-nohandler at height=%d block=%s\n", __func__, height, pindex->GetBlockHash().ToString());
+                            return state.Invalid(BlockValidationResult::BLOCK_CHAINLOCK, "bad-btcc-nohandler");
                         }
-                        if (!llmq::chainLocksHandler->VerifyAggregatedChainLockNoCache(receipt, pindexReceipt)) {
-                            LogPrintf("%s -- bad-clrc-sig at height=%d block=%s receipt_height=%d receipt_hash=%s\n",
-                                    __func__, height, pindex->GetBlockHash().ToString(), receipt.nHeight, receipt.blockHash.ToString());
-                            return state.Invalid(BlockValidationResult::BLOCK_CHAINLOCK, "bad-clrc-sig");
+                        if (!llmq::btcCheckpointsHandler->VerifyAggregatedBTCCheckpoint(btcc, pindexReceipt)) {
+                            LogPrintf("%s -- bad-btcc-sig at height=%d block=%s btcc_height=%d btcc_sys=%s\n",
+                                    __func__, height, pindex->GetBlockHash().ToString(), btcc.nHeight, btcc.sysHash.ToString());
+                            return state.Invalid(BlockValidationResult::BLOCK_CHAINLOCK, "bad-btcc-sig");
                         }
                     }
                 }

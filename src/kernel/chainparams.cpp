@@ -606,7 +606,7 @@ public:
         consensus.vchTokenFreezeMethod = ParseHex("0b8914e27c9a6c88836bc5547f82ccf331142c761f84e9f1d36934a6a31eefad");
         consensus.nBridgeStartBlock = 0;
         consensus.nNEVMStartBlock = opts.nevmstartblock;
-        consensus.nCLReceiptStartBlock = 0;
+        consensus.nCLReceiptStartBlock = opts.clreceiptstartblock;
         consensus.nNEVMStartTime = 0;
         consensus.nPODAStartBlock = 0;
         consensus.nNexusStartBlock = opts.dip3startblock;

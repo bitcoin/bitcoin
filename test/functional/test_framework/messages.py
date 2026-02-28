@@ -404,19 +404,21 @@ class CNEVMBlock(CNEVMHeader):
             self.nBlockHash, self.nTxRoot, self.nReceiptRoot, self.vchNEVMBlockData.hex())
 
 class CNEVMBlockConnect:
-    __slots__ = ("evmBlock", "sysblockhash", "NEVMDataVecOut", "diff")
+    __slots__ = ("evmBlock", "sysblockhash", "NEVMDataVecOut", "diff", "btcprevhash")
 
     def __init__(self):
         self.evmBlock = CNEVMBlock()
         self.sysblockhash = 0
         self.NEVMDataVecOut = NEVMDataVec()
         self.diff = CDeterministicMNListNEVMAddressDiff()
+        self.btcprevhash = 0
 
     def deserialize(self, f):
         self.evmBlock.deserialize(f)
         self.sysblockhash = deser_uint256(f)
         self.NEVMDataVecOut.deserialize(f)
         self.diff.deserialize(f)
+        self.btcprevhash = deser_uint256(f)
 
     def serialize(self):
         r = b""
@@ -424,11 +426,12 @@ class CNEVMBlockConnect:
         r += ser_uint256(self.sysblockhash)
         r += self.NEVMDataVecOut.serialize()
         r += self.diff.serialize()
+        r += ser_uint256(self.btcprevhash)
         return r
 
     def __repr__(self):
-        return "CNEVMBlockConnect(evmBlock=%s, sysblockhash=%064x, NEVMDataVecOut=%s, diff=%s)" % (
-            repr(self.evmBlock), self.sysblockhash, repr(self.NEVMDataVecOut), repr(self.diff))
+        return "CNEVMBlockConnect(evmBlock=%s, sysblockhash=%064x, NEVMDataVecOut=%s, diff=%s, btcprevhash=%064x)" % (
+            repr(self.evmBlock), self.sysblockhash, repr(self.NEVMDataVecOut), repr(self.diff), self.btcprevhash)
 
 class CNEVMBlockDisconnect:
     __slots__ = ("sysblockhash", "diff")
@@ -2297,6 +2300,43 @@ class msg_clsig():
 
     def __repr__(self):
         return "msg_clsig(height=%d, blockHash=%064x)" % (self.height, self.blockHash)
+
+class msg_btccsig():
+    """
+    CBTCCheckpointSig wire format (used as an in-block receipt, not a P2P message).
+
+    Serialized fields match the C++ struct:
+      int32 nHeight
+      uint256 sysHash
+      bytes[96] sig
+      dyn_bitset signers
+    """
+    msgtype = b"btccsig"
+
+    def __init__(self, height=0, sysHash=0, sig=b'\x00' * 96, signers=None):
+        self.height = height
+        self.sysHash = sysHash
+        self.sig = sig
+        if signers is None:
+            signers = []
+        self.signers = signers
+
+    def deserialize(self, f):
+        self.height = struct.unpack('<i', f.read(4))[0]
+        self.sysHash = deser_uint256(f)
+        self.sig = f.read(96)
+        self.signers = deser_dyn_bitset(f, False)
+
+    def serialize(self):
+        r = b""
+        r += struct.pack('<i', self.height)
+        r += ser_uint256(self.sysHash)
+        r += self.sig
+        r += ser_dyn_bitset(self.signers, False)
+        return r
+
+    def __repr__(self):
+        return "msg_btccsig(height=%d, sysHash=%064x)" % (self.height, self.sysHash)
 
 class msg_no_witness_blocktxn(msg_blocktxn):
     __slots__ = ()

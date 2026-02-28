@@ -119,6 +119,12 @@ public:
     return parentBlock.GetHash ();
   }
 
+  inline uint256
+  getParentPrevBlockHash () const
+  {
+    return parentBlock.hashPrevBlock;
+  }
+
   /**
    * Returns the coinbase tx.  This is used to validate the AuxPoW tags.
    */

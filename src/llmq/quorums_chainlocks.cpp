@@ -3,6 +3,7 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <llmq/quorums_chainlocks.h>
+#include <llmq/quorums_btccheckpoints.h>
 #include <llmq/quorums.h>
 #include <llmq/quorums_utils.h>
 #include <llmq/quorums_commitment.h>
@@ -80,6 +81,9 @@ void CChainLocksHandler::Start()
         }
         tryLockChainTipScheduled = true;
         CheckActiveState();
+        if (btcCheckpointsHandler) {
+            btcCheckpointsHandler->TrySignBTCCheckpointTip();
+        }
         bool enforced = false;
         const CBlockIndex* pindex;
         {       
@@ -359,44 +363,6 @@ bool CChainLocksHandler::VerifyAggregatedChainLock(const CChainLockSig& clsig, c
                 (int)quorums_scanned.size());
     }
     return result;
-}
-
-bool CChainLocksHandler::VerifyAggregatedChainLockNoCache(const CChainLockSig& clsig, const CBlockIndex* pindexScan)
-{
-    const auto& consensus = Params().GetConsensus();
-    const auto& llmqParams = consensus.llmqTypeChainLocks;
-    const auto& signingActiveQuorumCount = llmqParams.signingActiveQuorumCount;
-
-    std::vector<uint256> hashes;
-    std::vector<CBLSPublicKey> quorumPublicKeys;
-
-    if (clsig.signers.size() != (size_t)signingActiveQuorumCount) {
-        return false;
-    }
-
-    if (std::count(clsig.signers.begin(), clsig.signers.end(), true) < (signingActiveQuorumCount / 2 + 1)) {
-        return false;
-    }
-
-    const auto quorums_scanned = llmq::quorumManager->ScanQuorums(pindexScan, signingActiveQuorumCount);
-    if (quorums_scanned.empty()) {
-        return false;
-    }
-
-    for (size_t i = 0; i < quorums_scanned.size(); ++i) {
-        const CQuorumCPtr& quorum = quorums_scanned[i];
-        if (quorum == nullptr) {
-            return false;
-        }
-        if (!clsig.signers[i]) {
-            continue;
-        }
-        quorumPublicKeys.emplace_back(quorum->qc->quorumPublicKey);
-        uint256 requestId = ::SerializeHash(std::make_tuple(CLSIG_REQUESTID_PREFIX, clsig.nHeight, quorum->qc->quorumHash));
-        uint256 signHash = llmq::BuildSignHash(quorum->qc->quorumHash, requestId, clsig.blockHash);
-        hashes.emplace_back(signHash);
-    }
-    return clsig.sig.VerifyInsecureAggregated(quorumPublicKeys, hashes);
 }
 
 bool CChainLocksHandler::GetRecentChainLockByHeight(int32_t nHeight, CChainLockSig& ret)

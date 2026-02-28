@@ -34,6 +34,7 @@
 #include <llmq/quorums_blockprocessor.h>
 #include <llmq/quorums_commitment.h>
 #include <llmq/quorums_chainlocks.h>
+#include <llmq/quorums_btccheckpoints.h>
 #include <validationinterface.h>
 #include <llmq/quorums.h>
 namespace node {
@@ -221,21 +222,21 @@ std::unique_ptr<CBlockTemplate> BlockAssembler::CreateNewBlock(const CScript& sc
 
     // SYSCOIN: embed lagged ChainLock receipt (required every 10 blocks post-NEVM start, null allowed).
     if (nHeight >= Params().GetConsensus().nCLReceiptStartBlock && (nHeight % 10 == 0) && nHeight >= 10) {
-        llmq::CChainLockSig receipt;
         const int32_t expectedHeight = nHeight - 10;
         const CBlockIndex* pindexReceipt = pindexPrev->GetAncestor(expectedHeight);
-        if (!llmq::chainLocksHandler || !llmq::chainLocksHandler->GetRecentChainLockByHeight(expectedHeight, receipt)) {
-            receipt = llmq::CChainLockSig();
-        } else if (!receipt.IsNull()) {
-            // Only embed receipts that are valid for the chain we are extending.
-            if (pindexReceipt == nullptr ||
-                receipt.nHeight != expectedHeight ||
-                receipt.blockHash != pindexReceipt->GetBlockHash() ||
-                !llmq::chainLocksHandler->VerifyAggregatedChainLockNoCache(receipt, pindexReceipt)) {
-                receipt = llmq::CChainLockSig();
+        llmq::CBTCCheckpointSig btcc;
+        // SYSCOIN: embed lagged BTC checkpoint attestation (null allowed), independent of finality.
+        // Attests the deterministic ancestor at (h-10).
+        if (llmq::btcCheckpointsHandler && pindexReceipt != nullptr &&
+            llmq::btcCheckpointsHandler->GetRecentBTCCheckpointByHeight(expectedHeight, btcc)) {
+            if (btcc.nHeight != expectedHeight || btcc.sysHash != pindexReceipt->GetBlockHash() ||
+                !llmq::btcCheckpointsHandler->VerifyAggregatedBTCCheckpoint(btcc, pindexReceipt)) {
+                btcc = llmq::CBTCCheckpointSig();
             }
+        } else {
+            btcc = llmq::CBTCCheckpointSig();
         }
-        dsNEVM << CLRECEIPT_MAGIC_BYTES << receipt;
+        dsNEVM << BTCCHECK_MAGIC_BYTES << btcc;
     }
     pblock->vtx[0] = MakeTransactionRef(coinbaseTx);
     // SYSCOIN

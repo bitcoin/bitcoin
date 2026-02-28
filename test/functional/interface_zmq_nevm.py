@@ -76,6 +76,7 @@ class ZMQPublisher:
         self.log = log
         self.sysToNEVMBlockMapping = {}
         self.NEVMToSysBlockMapping = {}
+        self.sysToBTCPrevHashMapping = {}
         self.mnNEVMAddressMapping = {}
         self.artificialDelay = False
 
@@ -130,6 +131,7 @@ class ZMQPublisher:
         
         self.sysToNEVMBlockMapping[evmBlockConnect.sysblockhash] = evmBlockConnect
         self.NEVMToSysBlockMapping[evmBlockConnect.evmBlock.nBlockHash] = evmBlockConnect.sysblockhash
+        self.sysToBTCPrevHashMapping[evmBlockConnect.sysblockhash] = evmBlockConnect.btcprevhash
         
 
         
@@ -155,6 +157,8 @@ class ZMQPublisher:
         # Remove the block from the mapping
         del self.sysToNEVMBlockMapping[evmBlockDisconnect.sysblockhash]
         del self.NEVMToSysBlockMapping[nevmConnect.evmBlock.nBlockHash]
+        if evmBlockDisconnect.sysblockhash in self.sysToBTCPrevHashMapping:
+            del self.sysToBTCPrevHashMapping[evmBlockDisconnect.sysblockhash]
         
         return True
 
@@ -168,9 +172,16 @@ class ZMQPublisher:
             return None
         return self.sysToNEVMBlockMapping[self.getLastSYSBlock()]
 
+    def getLastBTCPrevHash(self):
+        last = self.getLastSYSBlock()
+        if last == 0:
+            return 0
+        return self.sysToBTCPrevHashMapping.get(last, 0)
+
     def clearMappings(self):
         self.sysToNEVMBlockMapping = {}
         self.NEVMToSysBlockMapping = {}
+        self.sysToBTCPrevHashMapping = {}
         self.mnNEVMAddressMapping = {}
         
     def assertMNList(self, expected_mn_mapping):
@@ -254,6 +265,7 @@ class ZMQTest(SyscoinTestFramework):
         assert_equal(int(bestblockhash, 16), nevmsub.getLastSYSBlock())
         assert_equal(nevmsub1.getLastSYSBlock(), nevmsub.getLastSYSBlock())
         assert_equal(self.nodes[1].getbestblockhash(), bestblockhash)
+        assert_equal(nevmsub1.getLastBTCPrevHash(), nevmsub.getLastBTCPrevHash())
 
         prevblockhash = self.nodes[0].getblockhash(205)
         blockhash = self.nodes[0].getblockhash(206)
@@ -263,6 +275,7 @@ class ZMQTest(SyscoinTestFramework):
 
         assert_equal(int(prevblockhash, 16), nevmsub.getLastSYSBlock())
         assert_equal(nevmsub1.getLastSYSBlock(), nevmsub.getLastSYSBlock())
+        assert_equal(nevmsub1.getLastBTCPrevHash(), nevmsub.getLastBTCPrevHash())
 
         self.nodes[0].reconsiderblock(blockhash)
         self.nodes[1].reconsiderblock(blockhash)
@@ -271,6 +284,7 @@ class ZMQTest(SyscoinTestFramework):
         assert_equal(int(bestblockhash, 16), nevmsub.getLastSYSBlock())
         assert_equal(self.nodes[1].getbestblockhash(), bestblockhash)
         assert_equal(nevmsub1.getLastSYSBlock(), nevmsub.getLastSYSBlock())
+        assert_equal(nevmsub1.getLastBTCPrevHash(), nevmsub.getLastBTCPrevHash())
 
         self.log.info('Restarting node 0')
         self.restart_node(0, self.extra_args[0])
@@ -279,6 +293,7 @@ class ZMQTest(SyscoinTestFramework):
         assert_equal(int(bestblockhash, 16), nevmsub.getLastSYSBlock())
         assert_equal(self.nodes[1].getbestblockhash(), bestblockhash)
         assert_equal(nevmsub1.getLastSYSBlock(), nevmsub.getLastSYSBlock())
+        assert_equal(nevmsub1.getLastBTCPrevHash(), nevmsub.getLastBTCPrevHash())
 
         self.log.info('Restarting node 1')
         self.restart_node(1, self.extra_args[1])
@@ -288,6 +303,7 @@ class ZMQTest(SyscoinTestFramework):
         assert_equal(int(bestblockhash, 16), nevmsub.getLastSYSBlock())
         assert_equal(self.nodes[1].getbestblockhash(), bestblockhash)
         assert_equal(nevmsub1.getLastSYSBlock(), nevmsub.getLastSYSBlock())
+        assert_equal(nevmsub1.getLastBTCPrevHash(), nevmsub.getLastBTCPrevHash())
 
         self.log.info('Reindexing node 0')
         self.extra_args[0] += ["-reindex"]
@@ -299,6 +315,7 @@ class ZMQTest(SyscoinTestFramework):
         assert_equal(int(bestblockhash, 16), nevmsub.getLastSYSBlock())
         assert_equal(self.nodes[1].getbestblockhash(), bestblockhash)
         assert_equal(nevmsub1.getLastSYSBlock(), nevmsub.getLastSYSBlock())
+        assert_equal(nevmsub1.getLastBTCPrevHash(), nevmsub.getLastBTCPrevHash())
 
         self.log.info('Reindexing node 1')
         self.extra_args[1] += ["-reindex"]
@@ -310,6 +327,7 @@ class ZMQTest(SyscoinTestFramework):
         assert_equal(int(bestblockhash, 16), nevmsub.getLastSYSBlock())
         assert_equal(self.nodes[1].getbestblockhash(), bestblockhash)
         assert_equal(nevmsub1.getLastSYSBlock(), nevmsub.getLastSYSBlock())
+        assert_equal(nevmsub1.getLastBTCPrevHash(), nevmsub.getLastBTCPrevHash())
 
         self.disconnect_nodes(0, 1)
         self.log.info("Mine 4 blocks on Node 0")
@@ -354,6 +372,7 @@ class ZMQTest(SyscoinTestFramework):
         assert_equal(nevmsub1.getLastSYSBlock(), nevmsub.getLastSYSBlock())
         assert_equal(int(besthash, 16), nevmsub.getLastSYSBlock())
         assert_equal(self.nodes[0].getbestblockhash(), self.nodes[1].getbestblockhash())
+        assert_equal(nevmsub1.getLastBTCPrevHash(), nevmsub.getLastBTCPrevHash())
     
     def test_nevm_mapping(self, nevmsub):
         nevmsub.clearMappings()
