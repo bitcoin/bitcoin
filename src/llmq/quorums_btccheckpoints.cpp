@@ -32,21 +32,17 @@ CBTCCheckpointsHandler* btcCheckpointsHandler{nullptr};
 
 static int32_t GetExpectedBTCCheckpointHeight(const ChainstateManager& chainman) EXCLUSIVE_LOCKS_REQUIRED(cs_main)
 {
-    // Strict height-window gating:
-    // - Emit exactly one checkpoint per 10-block epoch counted from activation
-    // - Sign at epoch offset +2 to avoid colliding with CL's mod-5 boundary
-    const auto& consensus = Params().GetConsensus();
-    const int start = consensus.nCLReceiptStartBlock;
+    // Strict height-window gating (absolute schedule):
+    // - Emit exactly one checkpoint per BTCCHECK_PERIOD blocks
+    // - Sign at heights where height % BTCCHECK_PERIOD == BTCCHECK_SIGN_OFFSET
     const int tip = chainman.ActiveHeight();
-    if (tip < start) return -1;
-
     static constexpr int PERIOD{BTCCHECK_PERIOD};
     static constexpr int SIGN_OFFSET{BTCCHECK_SIGN_OFFSET}; // within [0, PERIOD)
 
-    // Compute the greatest height h <= tip such that (h-start) % PERIOD == SIGN_OFFSET
-    const int delta = tip - start; // >= 0
-    if (delta < SIGN_OFFSET) return -1;
-    return tip - ((delta - SIGN_OFFSET) % PERIOD);
+    // Compute the greatest height h <= tip such that h % PERIOD == SIGN_OFFSET.
+    // Still enforce activation: don't return pre-activation heights.
+    if (tip < SIGN_OFFSET) return -1;
+    return tip - ((tip - SIGN_OFFSET) % PERIOD);
 }
 
 bool CBTCCheckpointSig::IsNull() const
@@ -382,6 +378,10 @@ void CBTCCheckpointsHandler::TrySignBTCCheckpointTip()
     const CBlockIndex* pindex{nullptr};
     {
         LOCK(cs_main);
+        const int start = Params().GetConsensus().nCLReceiptStartBlock;
+        if (chainman.ActiveHeight() < start) {
+            return;
+        }
         // We want a propagation buffer between signing and mining the carrier block.
         // Sign at epoch offset +BTCCHECK_SIGN_OFFSET and embed at +BTCCHECK_CARRIER_OFFSET (buffer BTCCHECK_PROP_BUFFER).
         const int nActiveHeight = GetExpectedBTCCheckpointHeight(chainman);

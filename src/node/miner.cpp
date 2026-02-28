@@ -226,7 +226,7 @@ std::unique_ptr<CBlockTemplate> BlockAssembler::CreateNewBlock(const CScript& sc
     // - Mine/embed at epoch offset +7 (5-block propagation buffer)
     // Carrier height H where (H-start) % 10 == 7 embeds a btcc that attests height (H-5).
     const int start = Params().GetConsensus().nCLReceiptStartBlock;
-    if (nHeight >= start && (nHeight - start) % BTCCHECK_PERIOD == BTCCHECK_CARRIER_OFFSET && nHeight >= BTCCHECK_PROP_BUFFER) {
+    if (nHeight >= start && (nHeight % BTCCHECK_PERIOD) == BTCCHECK_CARRIER_OFFSET && nHeight >= BTCCHECK_PROP_BUFFER) {
         const int32_t expectedHeight = nHeight - BTCCHECK_PROP_BUFFER;
         const CBlockIndex* pindexReceipt = pindexPrev->GetAncestor(expectedHeight);
         llmq::CBTCCheckpointSig btcc;

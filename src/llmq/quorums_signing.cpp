@@ -632,8 +632,7 @@ void CSigningManager::ProcessRecoveredSig(NodeId nodeId, const std::shared_ptr<c
                 return;
             }
         } else if (is_btccheck_request) {
-            const int delta = pindex->nHeight - start;
-            if (delta < BTCCHECK_SIGN_OFFSET || (delta % BTCCHECK_PERIOD) != BTCCHECK_SIGN_OFFSET) {
+            if ((pindex->nHeight % BTCCHECK_PERIOD) != BTCCHECK_SIGN_OFFSET) {
                 peerman.ForgetTxHash(nodeId, hash);
                 if (peer) peerman.Misbehaving(*peer, 10, "invalid btcc recovered signature height");
                 return;
