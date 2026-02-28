@@ -147,6 +147,7 @@ struct Peer {
         bool m_send_mempool GUARDED_BY(m_tx_inventory_mutex){false};
         // SYSCOIN
         bool m_send_clsig GUARDED_BY(m_tx_inventory_mutex){false};
+        bool m_send_btccsig GUARDED_BY(m_tx_inventory_mutex){false};
          /** The mempool sequence num at which we sent the last `inv` message to this peer.
          *  Can relay txs with lower sequence numbers than this (see CTxMempool::info_for_relay). */
         uint64_t m_last_inv_sequence GUARDED_BY(NetEventsInterface::g_msgproc_mutex){1};

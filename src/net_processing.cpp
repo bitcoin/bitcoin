@@ -65,6 +65,7 @@
 #include <llmq/quorums_signing.h>
 #include <llmq/quorums_signing_shares.h>
 #include <llmq/quorums_chainlocks.h>
+#include <llmq/quorums_btccheckpoints.h>
 #include <optional>
 #include <typeinfo>
 #include <common/args.h>
@@ -1305,6 +1306,8 @@ std::chrono::microseconds GetAdditionalTxRequestDelay(uint32_t invType)
             return GETDATA_OTHER_INTERVAL;
         case MSG_CLSIG:
             return std::chrono::milliseconds{100};
+        case MSG_BTCCSIG:
+            return std::chrono::milliseconds{100};
         default:
             return GETDATA_TX_INTERVAL;
     }
@@ -2037,6 +2040,8 @@ bool PeerManagerImpl::AlreadyHaveTx(const GenTxid& gtxid)
         return llmq::quorumSigningManager->AlreadyHave(hash);
     case MSG_CLSIG:
         return llmq::chainLocksHandler->AlreadyHave(hash);
+    case MSG_BTCCSIG:
+        return llmq::btcCheckpointsHandler && llmq::btcCheckpointsHandler->AlreadyHave(hash);
     }
 
     if (m_orphanage.HaveTx(gtxid)) return true;
@@ -2490,6 +2495,14 @@ void PeerManagerImpl::ProcessGetData(CNode& pfrom, Peer& peer, const std::atomic
                     llmq::CChainLockSig o;
                     if (llmq::chainLocksHandler->GetChainLockByHash(inv.hash, o)) {
                         m_connman.PushMessage(&pfrom, msgMaker.Make(NetMsgType::CLSIG, o));
+                        push = true;
+                    }
+                    break;
+                }
+                case(MSG_BTCCSIG): {
+                    llmq::CBTCCheckpointSig o;
+                    if (llmq::btcCheckpointsHandler && llmq::btcCheckpointsHandler->GetBTCCheckpointByHash(inv.hash, o)) {
+                        m_connman.PushMessage(&pfrom, msgMaker.Make(NetMsgType::BTCCSIG, o));
                         push = true;
                     }
                     break;
@@ -4955,6 +4968,13 @@ void PeerManagerImpl::ProcessMessage(CNode& pfrom, const std::string& msg_type, 
         }
         return;
     }
+    if (msg_type == NetMsgType::GETBTCCSIG) {
+        if (auto tx_relay = peer->GetTxRelay(); tx_relay != nullptr) {
+            LOCK(tx_relay->m_tx_inventory_mutex);
+            tx_relay->m_send_btccsig = true;
+        }
+        return;
+    }
     if (msg_type == NetMsgType::MEMPOOL) {
         // Only process received mempool messages if we advertise NODE_BLOOM
         // or if the peer has mempool permissions.
@@ -5197,6 +5217,11 @@ void PeerManagerImpl::ProcessMessage(CNode& pfrom, const std::string& msg_type, 
         return;
     } else if(msg_type == NetMsgType::CLSIG) {
         llmq::chainLocksHandler->ProcessMessage(&pfrom, msg_type, vRecv);
+        return;
+    } else if(msg_type == NetMsgType::BTCCSIG) {
+        if (llmq::btcCheckpointsHandler) {
+            llmq::btcCheckpointsHandler->ProcessMessage(&pfrom, msg_type, vRecv);
+        }
         return;
     } else if(msg_type == NetMsgType::QCONTRIB ||
             msg_type == NetMsgType::QCOMPLAINT ||
@@ -6068,6 +6093,22 @@ bool PeerManagerImpl::SendMessages(CNode* pto)
                         if (vInv.size() == MAX_INV_SZ) {
                             m_connman.PushMessage(pto, msgMaker.Make(NetMsgType::INV, vInv));
                             vInv.clear();
+                        }
+                    }
+                }
+                if (fSendTrickle && tx_relay->m_send_btccsig) {
+                    tx_relay->m_send_btccsig = false;
+                    // SYSCOIN Send an inv for the best BTC checkpoint we have
+                    if (llmq::btcCheckpointsHandler) {
+                        const auto& btccsig = llmq::btcCheckpointsHandler->GetBestBTCCheckpoint();
+                        if (!btccsig.IsNull()) {
+                            CInv inv(MSG_BTCCSIG, ::SerializeHash(btccsig));
+                            vInv.push_back(inv);
+                            tx_relay->m_tx_inventory_known_filter.insert(inv.hash);
+                            if (vInv.size() == MAX_INV_SZ) {
+                                m_connman.PushMessage(pto, msgMaker.Make(NetMsgType::INV, vInv));
+                                vInv.clear();
+                            }
                         }
                     }
                 }

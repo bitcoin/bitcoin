@@ -220,13 +220,13 @@ std::unique_ptr<CBlockTemplate> BlockAssembler::CreateNewBlock(const CScript& sc
         dsNEVM << NEVM_MAGIC_BYTES << CNEVMHeader(std::move(nevmBlock));
     }
 
-    // SYSCOIN: embed lagged ChainLock receipt (required every 10 blocks post-NEVM start, null allowed).
-    if (nHeight >= Params().GetConsensus().nCLReceiptStartBlock && (nHeight % 10 == 0) && nHeight >= 10) {
-        const int32_t expectedHeight = nHeight - 10;
+    // SYSCOIN: embed lagged BTC checkpoint attestation (null allowed), independent of finality.
+    // Carrier schedule: every 10 blocks, shifted by 5 to provide propagation buffer.
+    // Carrier height H where (H % 10 == 5) embeds a btcc that attests height (H-5) (aligned to 10).
+    if (nHeight >= Params().GetConsensus().nCLReceiptStartBlock && (nHeight % 10 == 5) && nHeight >= 5) {
+        const int32_t expectedHeight = nHeight - 5;
         const CBlockIndex* pindexReceipt = pindexPrev->GetAncestor(expectedHeight);
         llmq::CBTCCheckpointSig btcc;
-        // SYSCOIN: embed lagged BTC checkpoint attestation (null allowed), independent of finality.
-        // Attests the deterministic ancestor at (h-10).
         if (llmq::btcCheckpointsHandler && pindexReceipt != nullptr &&
             llmq::btcCheckpointsHandler->GetRecentBTCCheckpointByHeight(expectedHeight, btcc)) {
             if (btcc.nHeight != expectedHeight || btcc.sysHash != pindexReceipt->GetBlockHash() ||

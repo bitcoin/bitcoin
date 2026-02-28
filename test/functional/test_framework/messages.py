@@ -82,6 +82,7 @@ MSG_QUORUM_JUSTIFICATION = 17
 MSG_QUORUM_PREMATURE_COMMITMENT = 18
 MSG_QUORUM_RECOVERED_SIG = 19
 MSG_CLSIG = 20
+MSG_BTCCSIG = 21
 VERSION_NEVM = (1 << 7)
 # Constants for the auxpow block version.
 VERSION_AUXPOW = (1 << 8)
@@ -615,7 +616,8 @@ class CInv:
         MSG_QUORUM_JUSTIFICATION: "qjustify",
         MSG_QUORUM_PREMATURE_COMMITMENT: "qpcommit",
         MSG_QUORUM_RECOVERED_SIG: "qsigrec",
-        MSG_CLSIG: "clsig"
+        MSG_CLSIG: "clsig",
+        MSG_BTCCSIG: "btccsig",
     }
 
     def __init__(self, t=0, h=0):

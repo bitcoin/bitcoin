@@ -171,6 +171,7 @@ void CMasternodeSync::ProcessTick(CConnman& connman, const PeerManager& peerman)
                     if (pNodeTmp->nVersion >= PROTOCOL_VERSION && !pNodeTmp->IsInboundConn() && !fRequestedEarlier) {
                         netfulfilledman->AddFulfilledRequest(pNodeTmp->addr, "mempool-sync");
                         connman.PushMessage(pNodeTmp, msgMaker.Make(NetMsgType::GETCLSIG));
+                        connman.PushMessage(pNodeTmp, msgMaker.Make(NetMsgType::GETBTCCSIG));
                         LogPrint(BCLog::MNSYNC, "CMasternodeSync::ProcessTick -- nTick %d nMode %d -- syncing mempool from peer=%d\n", nTick, nMode, pNodeTmp->GetId());
                     }
                 }
@@ -250,6 +251,7 @@ void CMasternodeSync::ProcessTick(CConnman& connman, const PeerManager& peerman)
                                 connman.PushMessage(pNodeTmp, msgMaker.Make(NetMsgType::MEMPOOL));
                             }
                             connman.PushMessage(pNodeTmp, msgMaker.Make(NetMsgType::GETCLSIG));
+                            connman.PushMessage(pNodeTmp, msgMaker.Make(NetMsgType::GETBTCCSIG));
                             LogPrint(BCLog::MNSYNC, "CMasternodeSync::ProcessTick -- nTick %d nMode %d -- syncing mempool from peer=%d\n", nTick, nMode, pNodeTmp->GetId());
                         }
                     }

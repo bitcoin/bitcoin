@@ -18,6 +18,8 @@ class CBlockIndex;
 class ChainstateManager;
 class CConnman;
 class PeerManager;
+class CNode;
+class CDataStream;
 
 namespace llmq
 {
@@ -34,7 +36,7 @@ namespace llmq
 class CBTCCheckpointSig
 {
 public:
-    int32_t nHeight{-1};         //!< Syscoin height being attested (expected: h-10 of the carrier block)
+    int32_t nHeight{-1};         //!< Syscoin height being attested (expected: h-5 of the carrier block)
     uint256 sysHash;             //!< Syscoin block hash at nHeight
     CBLSSignature sig;           //!< Aggregated signature
     std::vector<bool> signers;   //!< Which of the active quorums signed
@@ -62,12 +64,19 @@ using CBTCCheckpointSigCPtr = std::shared_ptr<const CBTCCheckpointSig>;
 class CBTCCheckpointsHandler : public CRecoveredSigsListener
 {
     static constexpr int32_t RECENT_BTCCHECKPOINTS_MAX{256};
+    static const int64_t CLEANUP_INTERVAL = 1000 * 30;
+    static const int64_t CLEANUP_SEEN_TIMEOUT = 24 * 60 * 60 * 1000;
 
 private:
     mutable Mutex cs;
     ChainstateManager& chainman;
     CConnman& connman;
     PeerManager& peerman;
+
+    // hashes of btccsig objects we've already processed/relayed
+    std::map<uint256, int64_t> seenBTCCheckpointSigs GUARDED_BY(cs);
+    mutable std::map<uint256, int64_t> sigChecked GUARDED_BY(cs);
+    int64_t lastCleanupTime GUARDED_BY(cs) {0};
 
     // requestId -> (height, sysHash)
     std::map<uint256, std::pair<int32_t, uint256>> mapSignedRequestIds GUARDED_BY(cs);
@@ -85,8 +94,13 @@ public:
     void Start();
     void Stop();
 
-    // Periodic signer: signs a deterministic, lagged checkpoint (activeHeight-10, aligned to 10).
+    // Periodic signer: signs a deterministic checkpoint (activeHeight aligned to 10).
+    // The carrier block at height (nHeight+5) embeds this checkpoint for a 5-block propagation buffer.
     void TrySignBTCCheckpointTip();
+
+    void ProcessMessage(CNode* pfrom, const std::string& msg_type, CDataStream& vRecv) EXCLUSIVE_LOCKS_REQUIRED(!cs);
+    bool AlreadyHave(const uint256& hash) const EXCLUSIVE_LOCKS_REQUIRED(!cs);
+    bool GetBTCCheckpointByHash(const uint256& hash, CBTCCheckpointSig& ret) const EXCLUSIVE_LOCKS_REQUIRED(!cs);
 
     void HandleNewRecoveredSig(const CRecoveredSig& recoveredSig) override;
 
@@ -102,7 +116,9 @@ public:
 private:
     void AddRecentBTCCheckpoint(const CBTCCheckpointSig& btcsig) EXCLUSIVE_LOCKS_REQUIRED(cs);
     bool TryUpdateBestBTCCheckpoint(const CBlockIndex* pindexScan) EXCLUSIVE_LOCKS_REQUIRED(cs);
-    bool VerifyBTCCheckpointShare(const CBTCCheckpointSig& btcsig, const CBlockIndex* pindexScan, const uint256& idIn, std::pair<int, CQuorumCPtr>& ret) const EXCLUSIVE_LOCKS_REQUIRED(!cs);
+    bool VerifyBTCCheckpointShare(const CBTCCheckpointSig& btcsig, const CBlockIndex* pindexScan, const uint256& idIn, std::pair<int, CQuorumCPtr>& ret, const uint256& hash) const EXCLUSIVE_LOCKS_REQUIRED(!cs);
+    bool VerifyAggregatedBTCCheckpointNoCache(const CBTCCheckpointSig& btcsig, const CBlockIndex* pindexScan) const EXCLUSIVE_LOCKS_REQUIRED(!cs);
+    void Cleanup() EXCLUSIVE_LOCKS_REQUIRED(!cs);
 };
 
 extern CBTCCheckpointsHandler* btcCheckpointsHandler;
