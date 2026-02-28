@@ -9,6 +9,7 @@ from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import (
     assert_greater_than_or_equal,
     assert_equal,
+    assert_raises_rpc_error,
     find_vout_for_address,
 )
 
@@ -462,6 +463,73 @@ class UnconfirmedInputTest(BitcoinTestFramework):
 
         wallet.unloadwallet()
 
+    def test_unconfirmed_cluster_limit_error(self):
+        self.log.info("Check that hitting the unconfirmed cluster limit returns a descriptive error")
+        # Confirm any leftovers from previous test cases so this scenario starts from an empty mempool.
+        self.generate(self.nodes[0], 1)
+
+        self.nodes[0].createwallet("cluster_limit_wallet")
+        wallet = self.nodes[0].get_wallet_rpc("cluster_limit_wallet")
+
+        # Fund the wallet with enough mature coinbase outputs for the transactions below.
+        self.generatetoaddress(self.nodes[0], 701, wallet.getnewaddress())
+
+        # Bump fees cannot be calculated once the mempool transactions gathered for the requested
+        # inputs exceed the cluster limit of 500, so create one unconfirmed transaction more.
+        address = wallet.getnewaddress()
+        for _ in range(501):
+            result = wallet.send(outputs=[{address: 1}], options={"fee_rate": 10})
+            assert "txid" in result
+
+        error_msg = (
+            "Failed to calculate bump fees, because unconfirmed UTXOs depend on "
+            "an enormous cluster of unconfirmed transactions."
+        )
+
+        # Take a single output per transaction, so that spending them reaches all 501.
+        unconfirmed_inputs = []
+        seen_txids = set()
+        for utxo in wallet.listunspent(minconf=0, maxconf=0, include_unsafe=True):
+            if utxo["txid"] in seen_txids:
+                continue
+            seen_txids.add(utxo["txid"])
+            unconfirmed_inputs.append({"txid": utxo["txid"], "vout": utxo["vout"]})
+        assert_greater_than_or_equal(len(unconfirmed_inputs), 501)
+
+        assert_raises_rpc_error(
+            -4,
+            error_msg,
+            wallet.send,
+            outputs=[{address: 1}],
+            options={
+                "inputs": unconfirmed_inputs[:501],
+                "include_unsafe": True,
+                "add_inputs": False,
+                "fee_rate": 10,
+            },
+        )
+
+        assert_raises_rpc_error(
+            -4,
+            error_msg,
+            wallet.send,
+            outputs=[{address: 1}],
+            options={"fee_rate": 10},
+        )
+
+        assert_raises_rpc_error(
+            -4,
+            error_msg,
+            wallet.sendall,
+            recipients=[address],
+            fee_rate=10,
+        )
+
+        self.generate(self.nodes[0], 1)
+        assert "txid" in wallet.send(outputs=[{address: 1}], options={"fee_rate": 10})
+
+        wallet.unloadwallet()
+
 
     def run_test(self):
         self.log.info("Starting UnconfirmedInputTest!")
@@ -500,6 +568,8 @@ class UnconfirmedInputTest(BitcoinTestFramework):
         self.test_confirmed_and_unconfirmed_parent()
 
         self.test_external_input_unconfirmed_low()
+
+        self.test_unconfirmed_cluster_limit_error()
 
 if __name__ == '__main__':
     UnconfirmedInputTest(__file__).main()
