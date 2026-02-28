@@ -201,6 +201,8 @@ public:
         consensus.vchTokenFreezeMethod = ParseHex("0b8914e27c9a6c88836bc5547f82ccf331142c761f84e9f1d36934a6a31eefad");
         consensus.nBridgeStartBlock = 348000;
         consensus.nNEVMStartBlock = 1317500;
+        // ChainLock receipt activation height (set on deployment to avoid invalidating historical blocks)
+        consensus.nCLReceiptStartBlock = std::numeric_limits<int>::max();
         consensus.nNEVMStartTime = 1638791667;
         consensus.nPODAStartBlock = 1586000;
         consensus.nV19StartBlock = 1586000;
@@ -364,6 +366,7 @@ public:
         consensus.vchTokenFreezeMethod = ParseHex("0b8914e27c9a6c88836bc5547f82ccf331142c761f84e9f1d36934a6a31eefad");
         consensus.nBridgeStartBlock = 1000;
         consensus.nNEVMStartBlock = 840000;
+        consensus.nCLReceiptStartBlock = std::numeric_limits<int>::max();
         consensus.nNEVMStartTime = 1632775675;
         consensus.nPODAStartBlock = 1022500;
         consensus.nV19StartBlock = 1063000;
@@ -603,6 +606,7 @@ public:
         consensus.vchTokenFreezeMethod = ParseHex("0b8914e27c9a6c88836bc5547f82ccf331142c761f84e9f1d36934a6a31eefad");
         consensus.nBridgeStartBlock = 0;
         consensus.nNEVMStartBlock = opts.nevmstartblock;
+        consensus.nCLReceiptStartBlock = 0;
         consensus.nNEVMStartTime = 0;
         consensus.nPODAStartBlock = 0;
         consensus.nNexusStartBlock = opts.dip3startblock;

@@ -616,14 +616,19 @@ void CSigningManager::ProcessRecoveredSig(NodeId nodeId, const std::shared_ptr<c
                 peerman.Misbehaving(*peer, 10, "invalid recovered signature block height");
             return;
         }
-        if (!chainman.ActiveChain().Contains(pindex) || !pindex->IsValid(BLOCK_VALID_SCRIPTS)) {
-            // Should not happen
-            LogPrintf("CSigningManager::%s -- CL block not valid or confirmed in active chain. Block (%s) rejected\n",
+        if (!pindex->IsValid(BLOCK_VALID_SCRIPTS)) {
+            LogPrintf("CSigningManager::%s -- CL block invalid. Block (%s) rejected\n",
                     __func__, pindex->ToString());
             peerman.ForgetTxHash(nodeId, hash);
             if(peer)
-                peerman.Misbehaving(*peer, 10, "recovered signature of unconfirmed block");
+                peerman.Misbehaving(*peer, 10, "recovered signature of invalid block");
             return;
+        }
+        if (!chainman.ActiveChain().Contains(pindex)) {
+            // During partition/reorg races, a valid recovered sig can reference a block that is not active yet.
+            // Keep processing so chainlocks can enforce the correct chain.
+            LogPrint(BCLog::LLMQ, "CSigningManager::%s -- CL block not in active chain yet. Block (%s)\n",
+                    __func__, pindex->ToString());
         }
     }
 

@@ -69,6 +69,7 @@ class CChainLocksHandler : public CRecoveredSigsListener
 {
     static const int64_t CLEANUP_INTERVAL = 1000 * 30;
     static const int64_t CLEANUP_SEEN_TIMEOUT = 24 * 60 * 60 * 1000;
+    static constexpr int32_t RECENT_CHAINLOCKS_MAX{256};
 
 
 private:
@@ -85,6 +86,9 @@ private:
     // Keep best chainlock shares and candidates, sorted by height (highest heght first).
     std::map<int, std::map<CQuorumCPtr, CChainLockSigCPtr>, ReverseHeightComparator> bestChainLockShares GUARDED_BY(cs);
     std::map<int, CChainLockSigCPtr, ReverseHeightComparator> bestChainLockCandidates GUARDED_BY(cs);
+
+    // Needed for deterministic in-block receipts (mining needs access to recent CLSIGs by height).
+    std::map<int32_t, CChainLockSig, ReverseHeightComparator> recentChainLocks GUARDED_BY(cs);
 
     std::map<uint256, std::pair<int, uint256> > mapSignedRequestIds GUARDED_BY(cs);
     std::map<uint256, int64_t> seenChainLocks GUARDED_BY(cs);
@@ -120,10 +124,14 @@ public:
     bool HasChainLock(int nHeight, const uint256& blockHash) EXCLUSIVE_LOCKS_REQUIRED(!cs);
     bool HasConflictingChainLock(int nHeight, const uint256& blockHash) EXCLUSIVE_LOCKS_REQUIRED(!cs);
     bool VerifyAggregatedChainLock(const CChainLockSig& clsig, const CBlockIndex* pindexScan, const uint256& hash) EXCLUSIVE_LOCKS_REQUIRED(!cs);
+    bool VerifyAggregatedChainLockNoCache(const CChainLockSig& clsig, const CBlockIndex* pindexScan) EXCLUSIVE_LOCKS_REQUIRED(!cs);
+    bool GetRecentChainLockByHeight(int32_t nHeight, CChainLockSig& ret) EXCLUSIVE_LOCKS_REQUIRED(!cs);
 private:
     // these require locks to be held already
     bool InternalHasChainLock(int nHeight, const uint256& blockHash) const EXCLUSIVE_LOCKS_REQUIRED(cs);
     bool InternalHasConflictingChainLock(int nHeight, const uint256& blockHash) const EXCLUSIVE_LOCKS_REQUIRED(cs);
+
+    void AddRecentChainLock(const CChainLockSig& clsig) EXCLUSIVE_LOCKS_REQUIRED(cs);
 
     bool TryUpdateBestChainLock(const CBlockIndex* pindex) EXCLUSIVE_LOCKS_REQUIRED(cs);
     bool VerifyChainLockShare(const CChainLockSig& clsig, const CBlockIndex* pindexScan, const uint256& idIn, std::pair<int, CQuorumCPtr>& ret, const uint256& hash) EXCLUSIVE_LOCKS_REQUIRED(!cs);

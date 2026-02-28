@@ -106,6 +106,7 @@ extern bool fSigNet;
 extern bool fNEVMConnection;
 extern std::atomic_bool fReindexGeth;
 static constexpr uint8_t NEVM_MAGIC_BYTES[4] = {'n', 'e', 'v', 'm'};
+static constexpr uint8_t CLRECEIPT_MAGIC_BYTES[4] = {'c', 'l', 'r', 'c'};
 
 /** Documentation for argument 'checklevel'. */
 extern const std::vector<std::string> CHECKLEVEL_DOC;

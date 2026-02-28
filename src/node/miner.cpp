@@ -33,6 +33,7 @@
 #include <evo/deterministicmns.h>
 #include <llmq/quorums_blockprocessor.h>
 #include <llmq/quorums_commitment.h>
+#include <llmq/quorums_chainlocks.h>
 #include <validationinterface.h>
 #include <llmq/quorums.h>
 namespace node {
@@ -216,6 +217,25 @@ std::unique_ptr<CBlockTemplate> BlockAssembler::CreateNewBlock(const CScript& sc
         // block data stored in block which is a mutable field that is only sent over network
         pblock->vchNEVMBlockData = std::move(nevmBlock.vchNEVMBlockData);
         dsNEVM << NEVM_MAGIC_BYTES << CNEVMHeader(std::move(nevmBlock));
+    }
+
+    // SYSCOIN: embed lagged ChainLock receipt (required every 10 blocks post-NEVM start, null allowed).
+    if (nHeight >= Params().GetConsensus().nCLReceiptStartBlock && (nHeight % 10 == 0) && nHeight >= 10) {
+        llmq::CChainLockSig receipt;
+        const int32_t expectedHeight = nHeight - 10;
+        const CBlockIndex* pindexReceipt = pindexPrev->GetAncestor(expectedHeight);
+        if (!llmq::chainLocksHandler || !llmq::chainLocksHandler->GetRecentChainLockByHeight(expectedHeight, receipt)) {
+            receipt = llmq::CChainLockSig();
+        } else if (!receipt.IsNull()) {
+            // Only embed receipts that are valid for the chain we are extending.
+            if (pindexReceipt == nullptr ||
+                receipt.nHeight != expectedHeight ||
+                receipt.blockHash != pindexReceipt->GetBlockHash() ||
+                !llmq::chainLocksHandler->VerifyAggregatedChainLockNoCache(receipt, pindexReceipt)) {
+                receipt = llmq::CChainLockSig();
+            }
+        }
+        dsNEVM << CLRECEIPT_MAGIC_BYTES << receipt;
     }
     pblock->vtx[0] = MakeTransactionRef(coinbaseTx);
     // SYSCOIN

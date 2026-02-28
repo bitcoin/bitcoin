@@ -3998,7 +3998,19 @@ bool Chainstate::EnforceBestChainLock(const CBlockIndex* bestChainLockBlockIndex
     LogPrint(BCLog::CHAINLOCKS, "Chainstate::%s -- enforcing block %s via CLSIG\n", __func__, bestChainLockBlockIndex->GetBlockHash().ToString());
     EnforceBlock(state, bestChainLockBlockIndex);
     // no cs_main allowed
-    bool activateNeeded = WITH_LOCK(::cs_main, return m_chain.Tip()->GetAncestor(bestChainLockBlockIndex->nHeight)) != bestChainLockBlockIndex;
+    const bool activateNeeded = WITH_LOCK(::cs_main, return m_chain.Tip()->GetAncestor(bestChainLockBlockIndex->nHeight)) != bestChainLockBlockIndex;
+    if (!activateNeeded) {
+        const auto [tip_hash, tip_height, ancestor_hash] = WITH_LOCK(::cs_main, {
+            const CBlockIndex* tip = m_chain.Tip();
+            const CBlockIndex* ancestor = tip ? tip->GetAncestor(bestChainLockBlockIndex->nHeight) : nullptr;
+            return std::make_tuple(
+                tip ? tip->GetBlockHash().ToString() : std::string("null"),
+                tip ? tip->nHeight : -1,
+                ancestor ? ancestor->GetBlockHash().ToString() : std::string("null"));
+        });
+        LogPrint(BCLog::CHAINLOCKS, "Chainstate::%s -- no activation needed, tip=%s@%d ancestor_at_cl=%s cl=%s@%d\n",
+                __func__, tip_hash, tip_height, ancestor_hash, bestChainLockBlockIndex->GetBlockHash().ToString(), bestChainLockBlockIndex->nHeight);
+    }
     if (activateNeeded) {
         if(!ActivateBestChain(state, nullptr)) {
             LogPrintf("Chainstate::%s -- ActivateBestChain failed: %s\n", __func__, state.ToString());
