@@ -101,9 +101,17 @@ class LLMQChainLocksTest(DashTestFramework):
         # (e.g. miners) can reliably learn the aggregated btccsig without requesting recovered sigs.
         self.log.info("Wait for BTCCSIG INV relay to non-masternode node")
         p2p_btcc = self.nodes[3].add_p2p_connection(TestP2PBTCCObserver())
-        self.generate(self.nodes[0], 20)
-        self.sync_blocks(self.nodes, timeout=60*5)
-        self.wait_until(lambda: len(p2p_btcc.btccsigs) > 0, timeout=60)
+        # Mine incrementally to avoid racing past BTCC (+2/+7 cadence) and to give relay threads time.
+        for _ in range(60):
+            if len(p2p_btcc.btccsigs) > 0:
+                break
+            self.generate(self.nodes[0], 1)
+            self.sync_blocks(self.nodes, timeout=60*5)
+            try:
+                self.wait_until(lambda: len(p2p_btcc.btccsigs) > 0, timeout=2)
+            except AssertionError:
+                pass
+        assert len(p2p_btcc.btccsigs) > 0
         assert any(m.height >= 0 and len(m.sig) == 96 for m in p2p_btcc.btccsigs.values())
         # Also ensure we saw at least one BTCCSIG inv (share or aggregate) via the standard inv/getdata path.
         assert len(p2p_btcc.last_inv) > 0
