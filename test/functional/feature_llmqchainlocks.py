@@ -130,7 +130,7 @@ class LLMQChainLocksTest(DashTestFramework):
                 self.connect_nodes(i, j, wait_for_connect=False)
         self.sync_all()
         cl = self.nodes[0].getbestblockhash()
-        self.generate(self.nodes[0], 5)
+        self.generate(self.nodes[0], 3)
 
         self.wait_for_chainlocked_block_all_nodes(cl)
         self.log.info("Restart miner and ensure chainlock is sent via P2P")
