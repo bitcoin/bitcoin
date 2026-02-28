@@ -271,7 +271,10 @@ util::Result<CoinsResult> FetchSelectedInputs(const CWallet& wallet, const CCoin
 {
     CoinsResult result;
     const bool can_grind_r = wallet.CanGrindR();
-    std::map<COutPoint, CAmount> map_of_bump_fees = wallet.chain().calculateIndividualBumpFees(coin_control.ListSelected(), coin_selection_params.m_effective_feerate);
+    auto map_of_bump_fees = wallet.chain().calculateIndividualBumpFees(coin_control.ListSelected(), coin_selection_params.m_effective_feerate);
+    if (map_of_bump_fees.empty() && !coin_control.ListSelected().empty()) {
+        return util::Error{_("Failed to calculate bump fees, because unconfirmed UTXOs depend on an enormous cluster of unconfirmed transactions.")};
+    }
     for (const COutPoint& outpoint : coin_control.ListSelected()) {
         int64_t input_bytes = coin_control.GetInputWeight(outpoint).value_or(-1);
         if (input_bytes != -1) {
@@ -322,7 +325,18 @@ CoinsResult AvailableCoins(const CWallet& wallet,
                            std::optional<CFeeRate> feerate,
                            const CoinFilterParams& params)
 {
+    bool bump_fee_calculation_failed_unused;
+    return AvailableCoins(wallet, coinControl, feerate, params, bump_fee_calculation_failed_unused);
+}
+
+CoinsResult AvailableCoins(const CWallet& wallet,
+                           const CCoinControl* coinControl,
+                           std::optional<CFeeRate> feerate,
+                           const CoinFilterParams& params,
+                           bool& bump_fee_calculation_failed)
+{
     AssertLockHeld(wallet.cs_wallet);
+    bump_fee_calculation_failed = false;
 
     CoinsResult result;
     // track unconfirmed truc outputs separately if we are tracking trucness
@@ -513,7 +527,11 @@ CoinsResult AvailableCoins(const CWallet& wallet,
     }
 
     if (feerate.has_value()) {
-        std::map<COutPoint, CAmount> map_of_bump_fees = wallet.chain().calculateIndividualBumpFees(outpoints, feerate.value());
+        auto map_of_bump_fees = wallet.chain().calculateIndividualBumpFees(outpoints, feerate.value());
+        if (map_of_bump_fees.empty() && !outpoints.empty()) {
+            bump_fee_calculation_failed = true;
+            return result;
+        }
 
         for (auto& [_, outputs] : result.coins) {
             for (auto& output : outputs) {
@@ -1205,7 +1223,11 @@ static util::Result<CreatedTransactionResult> CreateTransactionInternal(
     // allowed (coins automatically selected by the wallet)
     CoinsResult available_coins;
     if (coin_control.m_allow_other_inputs) {
-        available_coins = AvailableCoins(wallet, &coin_control, coin_selection_params.m_effective_feerate);
+        bool bump_fee_calculation_failed{false};
+        available_coins = AvailableCoins(wallet, &coin_control, coin_selection_params.m_effective_feerate, {}, bump_fee_calculation_failed);
+        if (bump_fee_calculation_failed) {
+            return util::Error{_("Failed to calculate bump fees, because unconfirmed UTXOs depend on an enormous cluster of unconfirmed transactions.")};
+        }
     }
 
     // Choose coins to use
