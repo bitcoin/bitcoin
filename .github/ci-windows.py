@@ -128,6 +128,13 @@ def check_manifests(ci_type):
 def prepare_tests(ci_type):
     if ci_type == "standard":
         run([sys.executable, "-m", "pip", "install", "pyzmq"])
+        dir_unit_test_data = Path.cwd() / "qa-assets" / "unit_test_data"
+        dir_unit_test_data.mkdir(parents=True, exist_ok=True)
+        import urllib.request
+        urllib.request.urlretrieve(
+            "https://github.com/bitcoin-core/qa-assets/raw/main/unit_test_data/script_assets_test.json",
+            dir_unit_test_data / "script_assets_test.json",
+        )
     elif ci_type == "fuzz":
         repo_dir = str(Path.cwd() / "qa-assets")
         clone_cmd = [
@@ -160,6 +167,8 @@ def run_tests(ci_type):
         }
         for var, exe in test_envs.items():
             os.environ[var] = str(release_bin / exe)
+
+        os.environ["DIR_UNIT_TEST_DATA"] = str(Path.cwd() / "qa-assets" / "unit_test_data")
 
         ctest_cmd = [
             "ctest",

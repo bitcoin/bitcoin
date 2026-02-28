@@ -80,6 +80,13 @@ def prepare_tests():
     ]
     run(cmd_download_prev_rel)
     run([sys.executable, "-m", "pip", "install", "pyzmq"])
+    dir_unit_test_data = Path.cwd() / "qa-assets" / "unit_test_data"
+    dir_unit_test_data.mkdir(parents=True, exist_ok=True)
+    import urllib.request
+    urllib.request.urlretrieve(
+        "https://github.com/bitcoin-core/qa-assets/raw/main/unit_test_data/script_assets_test.json",
+        dir_unit_test_data / "script_assets_test.json",
+    )
 
 
 def run_functional_tests():
@@ -118,6 +125,7 @@ def run_functional_tests():
 
 def run_unit_tests():
     # Can't use ctest here like other jobs as we don't have a CMake build tree.
+    os.environ["DIR_UNIT_TEST_DATA"] = str(Path.cwd() / "qa-assets" / "unit_test_data")
     commands = [
         ["./bin/test_bitcoin-qt.exe"],
         # Intentionally run sequentially here, to catch test case failures caused by dirty global state from prior test cases:
