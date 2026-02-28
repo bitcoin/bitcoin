@@ -101,17 +101,22 @@ class LLMQChainLocksTest(DashTestFramework):
         # (e.g. miners) can reliably learn the aggregated btccsig without requesting recovered sigs.
         self.log.info("Wait for BTCCSIG INV relay to non-masternode node")
         p2p_btcc = self.nodes[3].add_p2p_connection(TestP2PBTCCObserver())
-        # Mine incrementally to avoid racing past BTCC (+2/+7 cadence) and to give relay threads time.
-        for _ in range(60):
-            if len(p2p_btcc.btccsigs) > 0:
-                break
-            self.generate(self.nodes[0], 1)
-            self.sync_blocks(self.nodes, timeout=60*5)
-            try:
-                self.wait_until(lambda: len(p2p_btcc.btccsigs) > 0, timeout=2)
-            except AssertionError:
-                pass
-        assert len(p2p_btcc.btccsigs) > 0
+        p2p_btcc.wait_for_verack()
+        # Align to the next BTCC carrier block modulo before mining.
+        start_mod = 0
+        try:
+            # If a BTCC already exists: (height - start) % 10 == 2 -> start % 10 = (height - 2) % 10.
+            start_mod = (self.nodes[0].getbestbtccheckpoint()["height"] - 2) % 10
+        except JSONRPCException:
+            pass
+        carrier_mod = (start_mod + 7) % 10
+        tip_mod = self.nodes[0].getblockcount() % 10
+        blocks_to_carrier = (carrier_mod - tip_mod) % 10
+        if blocks_to_carrier == 0:
+            blocks_to_carrier = 10
+        self.generate(self.nodes[0], blocks_to_carrier)
+        self.sync_blocks(self.nodes, timeout=60*5)
+        self.wait_until(lambda: len(p2p_btcc.btccsigs) > 0, timeout=60)
         assert any(m.height >= 0 and len(m.sig) == 96 for m in p2p_btcc.btccsigs.values())
         # Also ensure we saw at least one BTCCSIG inv (share or aggregate) via the standard inv/getdata path.
         assert len(p2p_btcc.last_inv) > 0
