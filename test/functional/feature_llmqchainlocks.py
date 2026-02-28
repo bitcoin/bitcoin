@@ -142,12 +142,14 @@ class LLMQChainLocksTest(DashTestFramework):
         self.wait_for_chainlocked_block(self.nodes[0], cl)
         
         self.log.info("Mine many blocks, wait for chainlock")
-        cl = self.generate(self.nodes[0], 20)[-6]
-        # We need more time here due to 20 blocks being generated at once
-        self.wait_for_chainlocked_block_all_nodes(cl, timeout=30)
 
-        self.log.info("Assert that all blocks up until the lookback are chainlocked")
-        for h in range(1, self.nodes[0].getblockcount()-5):
+        self.generate(self.nodes[0], 20)
+        self.sync_blocks(self.nodes, timeout=60*5)
+        cl = self.mine_until_new_chainlock(self.nodes[0], node0_mining_addr, max_blocks=20, sync_nodes=self.nodes)
+        self.wait_for_chainlocked_block_all_nodes(cl, timeout=60)
+        self.log.info("Assert that blocks up to current chainlock height are chainlocked")
+        chainlocked_height = self.nodes[0].getbestchainlock()["height"]
+        for h in range(1, chainlocked_height + 1):
             block = self.nodes[0].getblock(self.nodes[0].getblockhash(h))
             assert block['chainlock']
 
@@ -157,7 +159,10 @@ class LLMQChainLocksTest(DashTestFramework):
             for j in range(i + 1, len(self.nodes)):
                 self.connect_nodes(i, j, wait_for_connect=False)
         node0_tip = self.nodes[0].getbestblockhash()
-        cl = self.generatetoaddress(self.nodes[1], 10, node0_mining_addr, sync_fun=self.no_op)[-6]
+        prev_cl = self.nodes[1].getbestchainlock()["blockhash"]
+        self.generatetoaddress(self.nodes[1], 10, node0_mining_addr, sync_fun=self.no_op)
+        self.wait_until(lambda: self.nodes[1].getbestchainlock()["blockhash"] != prev_cl, timeout=120)
+        cl = self.nodes[1].getbestchainlock()["blockhash"]
         self.wait_for_chainlocked_block(self.nodes[1], cl)
         assert self.nodes[0].getbestblockhash() == node0_tip
         self.reconnect_isolated_node(self.nodes[0], 1)
@@ -201,7 +206,8 @@ class LLMQChainLocksTest(DashTestFramework):
             for j in range(i + 1, len(self.nodes)):
                 self.connect_nodes(i, j, wait_for_connect=False)
         # node 0 creates longer chain of 15 blocks but no chainlocks
-        bad_cl =  self.generate(self.nodes[0], 15, sync_fun=self.no_op)[-6]
+        self.generate(self.nodes[0], 15, sync_fun=self.no_op)
+        bad_cl = self.nodes[0].getbestblockhash()
         bad_tip = self.nodes[0].getbestblockhash()
         # node 1 creates shorter chain of 10 blocks which is chainlocked (this is the canonical chain because sentry nodes see it)
         node1_mining_addr = self.nodes[1].get_deterministic_priv_key().address
@@ -341,13 +347,9 @@ class LLMQChainLocksTest(DashTestFramework):
         # create a fork
         self.generate(self.nodes[1], 5, sync_fun=self.no_op)
         time.sleep(5)
-        # this just ensures all nodes are on the same tip and continue on getting locked
-        # Make sure we are mod of 5 block count before checking for CL
-        skip_count = 5 - (self.nodes[0].getblockcount() % 5)
-        if skip_count != 0:
-            self.generate(self.nodes[0], skip_count)
-        new_cl = self.nodes[0].getblockhash(self.nodes[0].getblockcount() - 5)
-        self.wait_for_chainlocked_block_all_nodes(new_cl, timeout=30)
+        # Continue by observing the next real chainlock instead of assuming a fixed offset.
+        new_cl = self.mine_until_new_chainlock(self.nodes[0], node0_mining_addr, sync_nodes=self.nodes)
+        self.wait_for_chainlocked_block_all_nodes(new_cl, timeout=60)
 
         self.log.info("Reject bad BTC checkpoint receipt linkage during IBD and reorg away from garbage receipts")
         self.test_clreceipt_ibd_reject_and_chainlock_reorg()
@@ -365,19 +367,17 @@ class LLMQChainLocksTest(DashTestFramework):
             self.generatetoaddress(miner, 1, address, sync_fun=self.no_op)
             if sync_nodes:
                 self.sync_blocks(sync_nodes, timeout=60)
-            # Give chainlock scheduler/recovery some time after each new block.
-            self.bump_mocktime(1, nodes=self.nodes)
-            def has_new_chainlock():
+            # Give chainlock scheduler/recovery time after each new block, without
+            # repeatedly emitting wait_until timeout noise in logs.
+            for _ in range(4):
+                self.bump_mocktime(1, nodes=self.nodes)
                 try:
                     cur_cl = miner.getbestchainlock()["blockhash"]
+                    if prev_cl is None or cur_cl != prev_cl:
+                        return cur_cl
                 except JSONRPCException:
-                    return False
-                return prev_cl is None or cur_cl != prev_cl
-            try:
-                self.wait_until(has_new_chainlock, timeout=2)
-                return miner.getbestchainlock()["blockhash"]
-            except AssertionError:
-                pass
+                    pass
+                time.sleep(0.25)
         raise AssertionError("No new chainlock after mining additional blocks")
 
     def make_block_from_gbt_with_extradata(self, node, extradata: bytes):
@@ -506,10 +506,12 @@ class LLMQChainLocksTest(DashTestFramework):
         bad_sig_hash = bad_sig_block.hash
 
         # Mine the canonical carrier block and then enough blocks so that a CLSIG forms for it (CL sign offset 5)
+        node1_mining_addr = node1.get_deterministic_priv_key().address
         good_h = self.generate(node1, 1, sync_fun=self.no_op)[-1]
         assert self.block_has_clreceipt_marker(node1, good_h)
         self.generate(node1, 5, sync_fun=self.no_op)
-        self.wait_for_chainlocked_block(node1, good_h)
+        good_cl = self.mine_until_new_chainlock(node1, node1_mining_addr, sync_nodes=self.nodes[1:])
+        self.wait_for_chainlocked_block(node1, good_cl)
 
         # Also ensure a btcc aggregation is visible via RPC for debugging/tests.
         self.wait_until(
