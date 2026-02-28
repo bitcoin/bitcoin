@@ -211,7 +211,7 @@ class LLMQChainLocksTest(DashTestFramework):
             self.generate(self.nodes[0], align)
         good_cl = self.nodes[0].getbestblockhash()
         good_tip = self.generate(self.nodes[0], 5)[-1]
-        self.wait_for_chainlocked_block_all_nodes(gVerifyAggregatedBTCCheckpointood_cl, timeout=120)
+        self.wait_for_chainlocked_block_all_nodes(good_cl, timeout=120)
         self.log.info("Restart it so that it forgets all the chainlock messages from the past")
         self.stop_node(0)
         self.start_node(0)
