@@ -241,12 +241,12 @@ void ValidationSignals::MempoolTransactionsRemovedForBlock(const std::vector<Rem
     ENQUEUE_AND_LOG_EVENT(std::move(event), std::move(log_msg));
 }
 
-void ValidationSignals::BlockDisconnected(const std::shared_ptr<const CBlock>& pblock, const CBlockIndex* pindex)
+void ValidationSignals::BlockDisconnected(std::shared_ptr<const CBlock> pblock, const CBlockIndex* pindex)
 {
     auto log_msg = LOG_MSG("%s: block hash=%s block height=%d", __func__,
                           pblock->GetHash().ToString(),
                           pindex->nHeight);
-    auto event = [pblock, pindex, this] {
+    auto event = [pblock = std::move(pblock), pindex, this] {
         m_internals->Iterate([&](CValidationInterface& callbacks) { callbacks.BlockDisconnected(pblock, pindex); });
     };
     ENQUEUE_AND_LOG_EVENT(std::move(event), std::move(log_msg));

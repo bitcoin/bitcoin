@@ -2982,7 +2982,7 @@ bool Chainstate::DisconnectTip(BlockValidationState& state, DisconnectedBlockTra
     // Let wallets know transactions went from 1-confirmed to
     // 0-confirmed or conflicted:
     if (m_chainman.m_options.signals) {
-        m_chainman.m_options.signals->BlockDisconnected(pblock, pindexDelete);
+        m_chainman.m_options.signals->BlockDisconnected(std::move(pblock), pindexDelete);
     }
     return true;
 }
