@@ -148,31 +148,38 @@ bool BaseIndex::Init()
     return true;
 }
 
-// Returns the next block to sync, or null if fully synced
-static const CBlockIndex* NextSyncBlock(const CBlockIndex* pindex_prev, const CChain& chain) EXCLUSIVE_LOCKS_REQUIRED(cs_main)
+struct BlockRange {
+    const CBlockIndex* first{nullptr};
+    const CBlockIndex* last{nullptr};
+};
+
+// Returns the next range of blocks to sync, or 'std::nullopt' if fully synced
+static std::optional<BlockRange> NextSyncRange(const CBlockIndex* pindex_prev, const CChain& chain) EXCLUSIVE_LOCKS_REQUIRED(cs_main)
 {
     AssertLockHeld(cs_main);
-    const CBlockIndex* first;
+    BlockRange range;
 
     if (!pindex_prev) {
         // Only the genesis block has no prev block
-        first = chain.Genesis();
+        range.first = chain.Genesis();
     } else {
-        first = chain.Next(pindex_prev);
-        if (!first) {
+        range.first = chain.Next(pindex_prev);
+        if (!range.first) {
             // If there is no next block, we might be synced
             if (pindex_prev == chain.Tip()) {
-                return nullptr;
+                return std::nullopt;
             }
 
             // Since block is not in the chain, return the next block in the chain AFTER the last common ancestor.
             // Caller will be responsible for rewinding back to the common ancestor.
-            first = chain.Next(chain.FindFork(pindex_prev));
+            range.first = chain.Next(chain.FindFork(pindex_prev));
         }
     }
 
-    Assume(first);
-    return first;
+    Assume(range.first);
+    // For now, process a single block at time
+    range.last = range.first;
+    return range;
 }
 
 bool BaseIndex::ProcessBlock(const CBlockIndex* pindex, const CBlock* block_data)
@@ -233,10 +240,10 @@ void BaseIndex::Sync()
         auto last_log_time{NodeClock::now()};
         auto last_locator_write_time{last_log_time};
         while (!m_interrupt) {
-            const CBlockIndex* pindex_next = WITH_LOCK(cs_main, return NextSyncBlock(pindex, m_chainstate->m_chain));
-            // If pindex_next is null, it means pindex is the chain tip, so
+            auto block_range = WITH_LOCK(cs_main, return NextSyncRange(pindex, m_chainstate->m_chain));
+            // If range.first is null, it means pindex is the chain tip, so
             // commit data indexed so far.
-            if (!pindex_next) {
+            if (!block_range) {
                 SetBestBlockIndex(pindex);
                 // No need to handle errors in Commit. See rationale above.
                 Commit();
@@ -247,19 +254,18 @@ void BaseIndex::Sync()
                 // attached while m_synced is still false, and it would not be
                 // indexed.
                 LOCK(::cs_main);
-                pindex_next = NextSyncBlock(pindex, m_chainstate->m_chain);
-                if (!pindex_next) {
+                block_range = NextSyncRange(pindex, m_chainstate->m_chain);
+                if (!block_range) {
                     m_synced = true;
                     break;
                 }
             }
-            if (pindex_next->pprev != pindex && !Rewind(pindex, pindex_next->pprev)) {
+            if (block_range->first->pprev != pindex && !Rewind(pindex, block_range->first->pprev)) {
                 FatalErrorf("Failed to rewind %s to a previous chain tip", GetName());
                 return;
             }
 
-            // For now, process a single block at time
-            if (!ProcessBlocks(/*start=*/pindex_next, /*end=*/pindex_next)) {
+            if (!ProcessBlocks(block_range->first, block_range->last)) {
                 // If failed due to an interruption, we haven't processed the block.
                 if (m_interrupt) break;
                 // Otherwise this is an unrecoverable error and we want to stop.
@@ -267,7 +273,7 @@ void BaseIndex::Sync()
             }
 
             // Update last processed block for next round
-            pindex = pindex_next;
+            pindex = block_range->last;
 
             auto current_time{NodeClock::now()};
             if (current_time - last_log_time >= SYNC_LOG_INTERVAL) {
