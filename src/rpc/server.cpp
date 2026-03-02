@@ -264,6 +264,9 @@ bool CRPCTable::removeCommand(const std::string& name, const CRPCCommand* pcmd)
         auto new_end = std::remove(it->second.begin(), it->second.end(), pcmd);
         if (it->second.end() != new_end) {
             it->second.erase(new_end, it->second.end());
+            if (it->second.empty()) {
+                mapCommands.erase(it);
+            }
             return true;
         }
     }
