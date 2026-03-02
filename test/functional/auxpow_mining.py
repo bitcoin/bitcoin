@@ -20,6 +20,7 @@ from test_framework.auxpow_testing import (
   getCoinbaseAddr,
   mineAuxpowBlock,
   mineAuxpowBlockWithMethods,
+  NON_NULL_BTCPREV_HASH_HEX,
   ZERO_HASH_HEX,
 )
 # SYSCOIN
@@ -236,10 +237,19 @@ class AuxpowMiningTest (SyscoinTestFramework):
     apow_bad = computeAuxpow(auxblock_bad['hash'], target_bad, True, auxblock_bad['coinbasescript'])
     assert not submit(auxblock_bad['hash'], apow_bad)
 
-    # Match case: explicit zero commitment aligns with test auxpow builder.
-    auxblock_ok = self.nodes[0].createauxblock(addr1, ZERO_HASH_HEX)
+    # Match case: use a different payout address to force a distinct candidate hash,
+    # then align non-null commitment with auxpow parent prevhash.
+    addr_ok = self.nodes[1].get_deterministic_priv_key().address
+    auxblock_ok = self.nodes[0].createauxblock(addr_ok, NON_NULL_BTCPREV_HASH_HEX)
+    assert auxblock_ok['hash'] != auxblock_bad['hash']
     target_ok = reverseHex(auxblock_ok['_target'])
-    apow_ok = computeAuxpow(auxblock_ok['hash'], target_ok, True, auxblock_ok['coinbasescript'])
+    apow_ok = computeAuxpow(
+      auxblock_ok['hash'],
+      target_ok,
+      True,
+      auxblock_ok['coinbasescript'],
+      NON_NULL_BTCPREV_HASH_HEX,
+    )
     assert submit(auxblock_ok['hash'], apow_ok)
     self.sync_all()
 
