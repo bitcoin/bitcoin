@@ -390,8 +390,9 @@ CNode* CConnman::ConnectNode(CAddress addrConnect,
         }
     }
 
-    LogDebug(BCLog::NET, "trying %s connection %s lastseen=%.1fhrs\n",
+    LogDebug(BCLog::NET, "trying %s connection (%s) to %s, lastseen=%.1fhrs\n",
         use_v2transport ? "v2" : "v1",
+        ConnectionTypeAsString(conn_type),
         pszDest ? pszDest : addrConnect.ToStringAddrPort(),
         Ticks<HoursDouble>(pszDest ? 0h : Now<NodeSeconds>() - addrConnect.nTime));
 
