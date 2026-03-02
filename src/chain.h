@@ -203,6 +203,10 @@ public:
     uint32_t nTime{0};
     uint32_t nBits{0};
     uint32_t nNonce{0};
+    // SYSCOIN: BTC prev-block-hash commitment (BTCPREV) extracted from this block's coinbase payload.
+    // Persisted in the block index so later logic (e.g. BTCC carrier handling / ZMQ forwarding) can
+    // deterministically map sysHash -> BTCPREV without reading block data from disk.
+    uint256 btcpPrevCommitment{};
 
     //! (memory only) Sequential id assigned to distinguish order in which blocks are received.
     int32_t nSequenceId{0};
@@ -400,7 +404,10 @@ class CDiskBlockIndex : public CBlockIndex
      * Hard-code to the highest client version ever written.
      * SerParams can be used if the field requires any meaning in the future.
      **/
-    static constexpr int DUMMY_VERSION = 259900;
+    // NOTE: This is a legacy, historically-unused on-disk version marker for CDiskBlockIndex records.
+    // Bumping it allows backwards-compatible extension of the serialized format.
+    static constexpr int DUMMY_VERSION = 260000;
+    static constexpr int DISK_INDEX_VERSION_BTCPREV = 260000;
 
 public:
     uint256 hashPrev;
@@ -435,6 +442,9 @@ public:
         READWRITE(obj.nTime);
         READWRITE(obj.nBits);
         READWRITE(obj.nNonce);
+        if (_nVersion >= DISK_INDEX_VERSION_BTCPREV) {
+            READWRITE(obj.btcpPrevCommitment);
+        }
     }
 
     uint256 ConstructBlockHash() const

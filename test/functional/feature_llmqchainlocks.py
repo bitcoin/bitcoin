@@ -15,6 +15,7 @@ from test_framework.blocktools import (
   create_coinbase,
   add_witness_commitment,
 )
+from test_framework.auxpow_testing import mineAuxpowBlock
 from test_framework.util import force_finish_mnsync, assert_equal, assert_raises_rpc_error
 '''
 feature_llmqchainlocks.py
@@ -45,14 +46,16 @@ class TestP2PBTCCObserver(P2PInterface):
         super().__init__()
         self.btccsigs = {}
         self.last_inv = []
+        self.seen_btcc_inv = False
 
     def on_inv(self, message):
         want = []
         for inv in message.inv:
             if inv.type == 21:  # MSG_BTCCSIG
                 want.append(inv)
-        self.last_inv = want
         if want:
+            self.last_inv = want
+            self.seen_btcc_inv = True
             self.send_message(msg_getdata(want))
 
     def on_btccsig(self, message):
@@ -81,7 +84,7 @@ class LLMQChainLocksTest(DashTestFramework):
                 self.connect_nodes(i, j, wait_for_connect=False)
             
         self.generate(self.nodes[0], 10)
-        self.sync_blocks(self.nodes, timeout=60*5)
+        self.sync_blocks(self.nodes, timeout=60)
         self.nodes[0].spork("SPORK_17_QUORUM_DKG_ENABLED", 0)
         self.nodes[0].spork("SPORK_19_CHAINLOCKS_ENABLED", 0)
         self.wait_for_sporks_same()
@@ -101,16 +104,20 @@ class LLMQChainLocksTest(DashTestFramework):
         # (e.g. miners) can reliably learn the aggregated btccsig without requesting recovered sigs.
         self.log.info("Wait for BTCCSIG INV relay to non-masternode node")
         p2p_btcc = self.nodes[3].add_p2p_connection(TestP2PBTCCObserver())
+        self.wait_for_btccsig_relay(p2p_btcc, miner=self.nodes[0], timeout=120)
         self.generate(self.nodes[0], 22)
-        self.sync_blocks(self.nodes, timeout=60*5)
-        self.wait_until(lambda: len(p2p_btcc.btccsigs) > 0, timeout=60)
-        assert any(m.height >= 0 and len(m.sig) == 96 for m in p2p_btcc.btccsigs.values())
-        # Also ensure we saw at least one BTCCSIG inv (share or aggregate) via the standard inv/getdata path.
-        assert len(p2p_btcc.last_inv) > 0
+        self.sync_blocks(self.nodes, timeout=60)
 
         self.log.info("Stop half the nodes to ensure chainlocks don't form")
-        cl0_before_split = self.nodes[0].getbestchainlock()['blockhash']
-        cl1_before_split = self.nodes[1].getbestchainlock()['blockhash']
+        self.generate(self.nodes[0], 3)
+        self.sync_blocks(self.nodes, timeout=60)
+        tip_height = self.nodes[0].getblockcount()
+        cl_before_split_height = tip_height - 5
+        cl_before_split_height -= cl_before_split_height % 5
+        cl_before_split = self.nodes[0].getblockhash(cl_before_split_height)
+        self.wait_for_chainlocked_block_all_nodes(cl_before_split)
+        assert self.nodes[0].getbestchainlock()['blockhash'] == cl_before_split
+        assert self.nodes[1].getbestchainlock()['blockhash'] == cl_before_split
         self.stop_node(2)
         self.stop_node(3)
         self.log.info("Check recent_chainlock forms but not an active chainlock")
@@ -118,8 +125,8 @@ class LLMQChainLocksTest(DashTestFramework):
         time.sleep(5)
         # bump cleanup for seen shares
         self.bump_mocktime(30, self.nodes[0:2])
-        assert self.nodes[0].getbestchainlock()['blockhash'] == cl0_before_split
-        assert self.nodes[1].getbestchainlock()['blockhash'] == cl1_before_split
+        assert self.nodes[0].getbestchainlock()['blockhash'] == cl_before_split
+        assert self.nodes[1].getbestchainlock()['blockhash'] == cl_before_split
         self.log.info("Start nodes again and check for chainlock")
         self.start_node(2, extra_args=["-mocktime=" + str(self.mocktime), '-reindex', *self.extra_args[2]])
         self.start_node(3, extra_args=["-mocktime=" + str(self.mocktime), '-reindex', *self.extra_args[3]])
@@ -144,7 +151,7 @@ class LLMQChainLocksTest(DashTestFramework):
         self.log.info("Mine many blocks, wait for chainlock")
 
         self.generate(self.nodes[0], 20)
-        self.sync_blocks(self.nodes, timeout=60*5)
+        self.sync_blocks(self.nodes, timeout=60)
         cl = self.mine_until_new_chainlock(self.nodes[0], node0_mining_addr, max_blocks=20, sync_nodes=self.nodes)
         self.wait_for_chainlocked_block_all_nodes(cl, timeout=60)
         self.log.info("Assert that blocks up to current chainlock height are chainlocked")
@@ -380,6 +387,42 @@ class LLMQChainLocksTest(DashTestFramework):
                 time.sleep(0.25)
         raise AssertionError("No new chainlock after mining additional blocks")
 
+    def wait_for_btccsig_relay(self, observer, *, miner=None, timeout=90, max_total_advance=40):
+        """Wait for BTCCSIG relay with throttled mocktime advancement."""
+        deadline = time.monotonic() + timeout
+        advances = 0
+        while time.monotonic() < deadline:
+            # Let existing inv/getdata/recovery traffic settle before advancing mocktime again.
+            for _ in range(5):
+                observer.sync_with_ping()
+                if observer.seen_btcc_inv and any(m.height >= 0 and len(m.sig) == 96 for m in observer.btccsigs.values()):
+                    return
+                if time.monotonic() >= deadline:
+                    break
+                time.sleep(0.1)
+
+            if advances >= max_total_advance:
+                break
+            # BTCC relay scheduling and periodic BTCC checks are mocktime-driven in functional tests.
+            self.bump_mocktime(1, nodes=self.nodes)
+            advances += 1
+            if miner is not None:
+                mineAuxpowBlock(miner, None)
+                self.sync_blocks(self.nodes, timeout=60)
+
+        btcc_states = []
+        for n in self.nodes:
+            try:
+                best = n.getbestbtccheckpoint()
+                btcc_states.append(f"node{n.index}:height={best.get('height')} hash={best.get('blockhash')}")
+            except Exception:
+                btcc_states.append(f"node{n.index}:no-best-btcc")
+        raise AssertionError(
+            f"BTCCSIG relay timeout after {timeout}s and {advances} mocktime advances; "
+            f"seen_btcc_inv={observer.seen_btcc_inv}, btccsig_count={len(observer.btccsigs)}, "
+            f"states={btcc_states}"
+        )
+
     def make_block_from_gbt_with_extradata(self, node, extradata: bytes):
         """
         Build a fully consensus-valid block from getblocktemplate(), preserving the
@@ -441,19 +484,28 @@ class LLMQChainLocksTest(DashTestFramework):
     def test_clreceipt_ibd_reject_and_chainlock_reorg(self):
         """
         - Ensure carrier blocks missing 'btcc' are rejected even while IBD=true (cheap deterministic checks).
+        - Ensure invalid btcc signatures hit `bad-btcc-sig` when the required ancestor btcp commitment exists.
         - Ensure a node which accepted an invalid-sig btcc block while IBD=true will reorg away once a CLSIG
           forms on the canonical branch at/after the divergence height.
-        - Ensure invalid-sig btcc is rejected when IBD=false.
         """
         node0 = self.nodes[0]
         node1 = self.nodes[1]
 
-        # Bring everyone to a known height where next block is carrier height (height % 10 == 6 -> next is 7)
+        # Deterministically create a sign-offset ancestor with persisted btcp commitment:
+        # move to height % 10 == 1, mine one AuxPoW block at %10 == 2, then move to %10 == 6.
         tip_height = node1.getblockcount()
-        blocks_to_6 = (6 - (tip_height % 10)) % 10
-        if blocks_to_6:
-            self.generate(node1, blocks_to_6)
-            self.sync_blocks(self.nodes, timeout=60*5)
+        blocks_to_1 = (1 - (tip_height % 10)) % 10
+        if blocks_to_1:
+            self.generate(node1, blocks_to_1)
+            self.sync_blocks(self.nodes, timeout=60)
+        assert node1.getblockcount() % 10 == 1
+
+        mineAuxpowBlock(node1, None)
+        self.sync_blocks(self.nodes, timeout=60)
+        assert node1.getblockcount() % 10 == 2
+
+        self.generate(node1, 4)
+        self.sync_blocks(self.nodes, timeout=60)
         assert node1.getblockcount() % 10 == 6
 
         common_prev_hash = node1.getbestblockhash()
@@ -461,7 +513,7 @@ class LLMQChainLocksTest(DashTestFramework):
         common_prev_time = common_prev["time"]
         target_height = node1.getblockcount() + 1
 
-        # (pre) When IBD=false, an invalid btcc signature must be rejected.
+        # (pre) With btcp precondition satisfied at (h-5), malformed signature must fail as bad-btcc-sig.
         tmpl1 = node1.getblocktemplate({"rules": ["segwit"]})
         base_extra1 = bytes.fromhex(tmpl1.get("default_witness_commitment_extra", ""))
         expected_receipt_height = target_height - 5
@@ -479,7 +531,7 @@ class LLMQChainLocksTest(DashTestFramework):
         node0 = self.nodes[0]
         force_finish_mnsync(node0)
         self.connect_nodes(0, 1, wait_for_connect=False)
-        self.sync_blocks([node0, node1], timeout=60*5)
+        self.sync_blocks([node0, node1], timeout=60)
         assert node0.getblockchaininfo()["initialblockdownload"]
 
         # Now isolate node0 to build a competing chain
@@ -493,7 +545,8 @@ class LLMQChainLocksTest(DashTestFramework):
         bad_block_missing = self.make_block_from_gbt_with_extradata(node0, missing_payload)
         assert_equal(node0.submitblock(hexdata=bad_block_missing.serialize().hex()), "bad-btcc-missing")
 
-        # (B) Build an alternative carrier block that has correct linkage but garbage signature bytes (accepted while IBD=true)
+        # (B) Build an alternative carrier block that has correct linkage but garbage signature bytes
+        # (accepted while IBD=true).
         expected_receipt_height = target_height - 5
         expected_ancestor_hash = node0.getblockhash(expected_receipt_height)
         receipt = msg_btccsig(height=expected_receipt_height, sysHash=int(expected_ancestor_hash, 16), sig=b"\x01" + b"\x00" * 95, signers=[])

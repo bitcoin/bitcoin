@@ -64,39 +64,6 @@ static const char *MSG_HASHGOBJ      = "hashgovernanceobject";
 static const char *MSG_SEQUENCE  = "sequence";
 RecursiveMutex cs_nevm;
 
-// Cache of recently connected blocks' auxpow parent prev-block hash,
-// keyed by Syscoin block hash. Used to derive the BTC anchor for the (h-10)
-// CL-selected block without any disk reads.
-static std::map<uint256, uint256> g_btc_prev_by_sys_hash;
-static std::deque<uint256> g_btc_prev_fifo;
-static constexpr size_t BTC_PREV_CACHE_MAX = 4096;
-
-
-static bool ExtractBTCCReceipt(const CBlock& block, llmq::CBTCCheckpointSig& receipt)
-{
-    if (block.vtx.empty() || !block.vtx[0]) return false;
-    std::vector<unsigned char> vchData;
-    int nOut{-1};
-    if (!GetSyscoinData(*block.vtx[0], vchData, nOut)) return false;
-
-    auto pos = vchData.end();
-    for (auto it = vchData.begin();;) {
-        it = std::search(it, vchData.end(), std::begin(BTCCHECK_MAGIC_BYTES), std::end(BTCCHECK_MAGIC_BYTES));
-        if (it == vchData.end()) break;
-        pos = it;
-        ++it;
-    }
-    if (pos == vchData.end()) return false;
-
-    pos = std::next(pos, sizeof(BTCCHECK_MAGIC_BYTES));
-    try {
-        CDataStream ds(std::vector<unsigned char>(pos, vchData.end()), SER_NETWORK, PROTOCOL_VERSION);
-        ds >> receipt;
-    } catch (const std::exception&) {
-        return false;
-    }
-    return true;
-}
 // Internal function to send multipart message
 static int zmq_send_multipart(void *sock, const void* data, size_t size, ...)
 {
@@ -393,7 +360,7 @@ bool CZMQAbstractPublishNotifier::NotifyNEVMCommsCommon(const std::string &commM
     }
     return true;
 }
-bool CZMQPublishNEVMBlockConnectNotifier::NotifyNEVMBlockConnect(const CNEVMHeader &evmBlock, const CBlock& block, std::string &state, const uint256& nSYSBlockHash, NEVMDataVec &NEVMDataVecOut, const uint32_t& nHeight, bool bSkipValidation, const CDeterministicMNListNEVMAddressDiff &diff)
+bool CZMQPublishNEVMBlockConnectNotifier::NotifyNEVMBlockConnect(const CNEVMHeader &evmBlock, const CBlock& block, std::string &state, const uint256& nSYSBlockHash, NEVMDataVec &NEVMDataVecOut, const uint32_t& nHeight, bool bSkipValidation, const uint256& btcPrevHashForNEVM, const CDeterministicMNListNEVMAddressDiff &diff)
 {
     LOCK(cs_nevm);
     state = "";
@@ -420,37 +387,6 @@ bool CZMQPublishNEVMBlockConnectNotifier::NotifyNEVMBlockConnect(const CNEVMHead
     uint256 hash = evmBlock.nBlockHash;
     LogPrint(BCLog::ZMQ, "zmq: Publish nevm block connect %s to %s, subscriber %s\n", hash.GetHex(), this->address, this->addresssub);
     CDataStream ss(SER_NETWORK, PROTOCOL_VERSION);
-
-    // Cache the current block's auxpow parent prev-block hash by Syscoin block hash.
-    // Used later to map a CL-selected Syscoin hash -> BTC prev hash without disk reads.
-    if (!nSYSBlockHash.IsNull()) {
-        const uint256 cur_btc_prev = (block.auxpow ? block.auxpow->getParentPrevBlockHash() : uint256());
-        if (g_btc_prev_by_sys_hash.emplace(nSYSBlockHash, cur_btc_prev).second) {
-            g_btc_prev_fifo.push_back(nSYSBlockHash);
-            while (g_btc_prev_fifo.size() > BTC_PREV_CACHE_MAX) {
-                const uint256 old = g_btc_prev_fifo.front();
-                g_btc_prev_fifo.pop_front();
-                g_btc_prev_by_sys_hash.erase(old);
-            }
-        }
-    }
-
-    // Only forward a BTC anchor when the in-block BTC checkpoint attestation is non-null.
-    // The BTC hash itself is implied by the attested Syscoin block's AuxPoW.
-    uint256 btcPrevHashForNEVM;
-    llmq::CBTCCheckpointSig btcc;
-    if (ExtractBTCCReceipt(block, btcc) && !btcc.IsNull()) {
-        auto it = g_btc_prev_by_sys_hash.find(btcc.sysHash);
-        if (it != g_btc_prev_by_sys_hash.end()) {
-            btcPrevHashForNEVM = it->second;
-        } else {
-            btcPrevHashForNEVM = uint256();
-            LogPrint(BCLog::ZMQ, "NotifyNEVMBlockConnect: missing btc-prev cache for btcc sys=%s (cur=%s height=%u)\n",
-                     btcc.sysHash.ToString(), nSYSBlockHash.ToString(), nHeight);
-        }
-    } else {
-        btcPrevHashForNEVM = uint256();
-    }
 
     ss << evmBlock << block.vchNEVMBlockData << nSYSBlockHash << NEVMDataVecOut << diff << btcPrevHashForNEVM;
     if(!SendZmqMessageNEVM(MSG_NEVMBLOCKCONNECT, &(*ss.begin()), ss.size())) {
@@ -502,11 +438,6 @@ bool CZMQPublishNEVMBlockDisconnectNotifier::NotifyNEVMBlockDisconnect(std::stri
     }
     std::vector<std::string> parts;
     LogPrint(BCLog::ZMQ, "zmq: Publish nevm block disconnect %s to %s, subscriber %s\n", nSYSBlockHash.GetHex(), this->address, this->addresssub);
-
-    // Keep cache from growing across reorgs; FIFO eviction also bounds it.
-    if (!nSYSBlockHash.IsNull()) {
-        g_btc_prev_by_sys_hash.erase(nSYSBlockHash);
-    }
 
     CDataStream ss(SER_NETWORK, PROTOCOL_VERSION);
     ss << nSYSBlockHash << diff;

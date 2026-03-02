@@ -36,13 +36,16 @@ static int32_t GetExpectedBTCCheckpointHeight(const ChainstateManager& chainman)
     // - Emit exactly one checkpoint per BTCCHECK_PERIOD blocks
     // - Sign at heights where height % BTCCHECK_PERIOD == BTCCHECK_SIGN_OFFSET
     const int tip = chainman.ActiveHeight();
+    const int start = Params().GetConsensus().nCLReceiptStartBlock;
     static constexpr int PERIOD{BTCCHECK_PERIOD};
     static constexpr int SIGN_OFFSET{BTCCHECK_SIGN_OFFSET}; // within [0, PERIOD)
 
     // Compute the greatest height h <= tip such that h % PERIOD == SIGN_OFFSET.
-    // Still enforce activation: don't return pre-activation heights.
+    // Enforce activation: don't return pre-activation heights.
     if (tip < SIGN_OFFSET) return -1;
-    return tip - ((tip - SIGN_OFFSET) % PERIOD);
+    const int h = tip - ((tip - SIGN_OFFSET) % PERIOD);
+    if (h < start) return -1;
+    return h;
 }
 
 bool CBTCCheckpointSig::IsNull() const
@@ -167,6 +170,12 @@ bool CBTCCheckpointsHandler::GetBTCCheckpointByHash(const uint256& hash, CBTCChe
         }
     }
 
+    auto itp = pendingVerifiedBTCCheckpointSigs.find(hash);
+    if (itp != pendingVerifiedBTCCheckpointSigs.end()) {
+        ret = itp->second.first;
+        return true;
+    }
+
     return false;
 }
 
@@ -207,6 +216,7 @@ void CBTCCheckpointsHandler::ProcessMessage(CNode* pfrom, const std::string& msg
     CBTCCheckpointSig btccsig;
     vRecv >> btccsig;
     const uint256 hash = ::SerializeHash(btccsig);
+    const size_t signers_count = std::count(btccsig.signers.begin(), btccsig.signers.end(), true);
 
     const NodeId from = pfrom->GetId();
     PeerRef peer = peerman.GetPeerRef(from);
@@ -240,7 +250,6 @@ already_seen:
     forget_tx_hash();
     return;
 not_seen:
-
     const CBlockIndex* pindexScan{nullptr};
     int32_t expectedHeight{-1};
     {
@@ -263,16 +272,13 @@ not_seen:
             forget_tx_hash();
             return;
         }
-        if (expectedHeight == -1 || btccsig.nHeight != expectedHeight) {
-            // Strict height-window acceptance (ChainLocks parity).
-            // NOTE: Do not mark as "seen" here; it might become valid later as the window advances.
+        if (expectedHeight == -1) {
             forget_tx_hash();
             return;
         }
     }
 
     const auto& llmqParams = Params().GetConsensus().llmqTypeChainLocks;
-    const size_t signers_count = std::count(btccsig.signers.begin(), btccsig.signers.end(), true);
     if (btccsig.signers.size() != (size_t)llmqParams.signingActiveQuorumCount) {
         forget_tx_hash();
         return;
@@ -296,6 +302,11 @@ not_older:
         // share
         std::pair<int, CQuorumCPtr> ret;
         if (!VerifyBTCCheckpointShare(btccsig, pindexScan, uint256(), ret, hash)) {
+            forget_tx_hash();
+            return;
+        }
+        if (btccsig.nHeight != expectedHeight) {
+            AddPendingVerifiedBTCCheckpointSig(hash, btccsig);
             forget_tx_hash();
             return;
         }
@@ -343,6 +354,11 @@ not_older:
         forget_tx_hash();
         return;
     }
+    if (btccsig.nHeight != expectedHeight) {
+        AddPendingVerifiedBTCCheckpointSig(hash, btccsig);
+        forget_tx_hash();
+        return;
+    }
     {
         LOCK(cs);
         seenBTCCheckpointSigs.emplace(hash, TicksSinceEpoch<std::chrono::milliseconds>(SystemClock::now()));
@@ -377,7 +393,10 @@ void CBTCCheckpointsHandler::TrySignBTCCheckpointTip()
 
     const CBlockIndex* pindex{nullptr};
     {
-        LOCK(cs_main);
+        TRY_LOCK(cs_main, lockMain);
+        if (!lockMain) {
+            return;
+        }
         const int start = Params().GetConsensus().nCLReceiptStartBlock;
         if (chainman.ActiveHeight() < start) {
             return;
@@ -386,6 +405,11 @@ void CBTCCheckpointsHandler::TrySignBTCCheckpointTip()
         // Sign at epoch offset +BTCCHECK_SIGN_OFFSET and embed at +BTCCHECK_CARRIER_OFFSET (buffer BTCCHECK_PROP_BUFFER).
         const int nActiveHeight = GetExpectedBTCCheckpointHeight(chainman);
         if (nActiveHeight == -1) return;
+        // Don't sign a height whose carrier block already passed; it can't be embedded anymore.
+        // This can happen after restarts or if a node comes online late.
+        if (chainman.ActiveHeight() >= nActiveHeight + BTCCHECK_PROP_BUFFER) {
+            return;
+        }
         pindex = chainman.ActiveChain()[nActiveHeight];
         if (!pindex || !pindex->pprev || !pindex->IsValid(BLOCK_VALID_SCRIPTS)) {
             return;
@@ -425,7 +449,9 @@ void CBTCCheckpointsHandler::TrySignBTCCheckpointTip()
     const auto& signingActiveQuorumCount = llmqParams.signingActiveQuorumCount;
 
     const auto quorums_scanned = llmq::quorumManager->ScanQuorums(pindex, signingActiveQuorumCount);
-    if (quorums_scanned.empty()) return;
+    if (quorums_scanned.empty()) {
+        return;
+    }
 
     auto proTxHash = WITH_LOCK(activeMasternodeInfoCs, return activeMasternodeInfo.proTxHash);
 
@@ -491,6 +517,14 @@ bool CBTCCheckpointsHandler::VerifyBTCCheckpointShare(const CBTCCheckpointSig& b
             return false;
         }
 
+        if (idIn.IsNull() && !quorumSigningManager->HasRecoveredSigForId(requestId)) {
+            // Mirror ChainLocks behavior: reconstruct recovered sig from validated share.
+            // This avoids double verification and keeps signing-manager caches consistent
+            // even if we learned the share via BTCCSIG gossip instead of QSIGREC.
+            auto rs = std::make_shared<CRecoveredSig>(quorum->qc->quorumHash, requestId, msgHash, btcsig.sig);
+            quorumSigningManager->PushReconstructedRecoveredSig(rs);
+        }
+
         ret = std::make_pair((int)i, quorum);
         {
             LOCK(cs);
@@ -515,7 +549,9 @@ bool CBTCCheckpointsHandler::TryUpdateBestBTCCheckpoint(const CBlockIndex* pinde
 
     for (const auto& pair : it2->second) {
         const auto& share = pair.second;
-        if (share->sysHash != pindexScan->GetBlockHash()) continue;
+        if (share->sysHash != pindexScan->GetBlockHash()) {
+            continue;
+        }
 
         sigs.emplace_back(share->sig);
         if (agg.IsNull()) {
@@ -544,6 +580,137 @@ void CBTCCheckpointsHandler::AddRecentBTCCheckpoint(const CBTCCheckpointSig& btc
     }
 }
 
+void CBTCCheckpointsHandler::AddPendingVerifiedBTCCheckpointSig(const uint256& hash, const CBTCCheckpointSig& btccsig)
+{
+    const int64_t now = TicksSinceEpoch<std::chrono::milliseconds>(SystemClock::now());
+    LOCK(cs);
+    // Mark as seen once we've fully verified it (prevents re-processing spam).
+    seenBTCCheckpointSigs.emplace(hash, now);
+    pendingVerifiedBTCCheckpointSigs[hash] = std::make_pair(btccsig, now);
+
+    // Bound memory; these are fully verified objects so we keep eviction simple.
+    while (pendingVerifiedBTCCheckpointSigs.size() > PENDING_VERIFIED_BTCCSIG_MAX) {
+        auto oldest = pendingVerifiedBTCCheckpointSigs.end();
+        for (auto it = pendingVerifiedBTCCheckpointSigs.begin(); it != pendingVerifiedBTCCheckpointSigs.end(); ++it) {
+            if (oldest == pendingVerifiedBTCCheckpointSigs.end() || it->second.second < oldest->second.second) {
+                oldest = it;
+            }
+        }
+        if (oldest == pendingVerifiedBTCCheckpointSigs.end()) break;
+        pendingVerifiedBTCCheckpointSigs.erase(oldest);
+    }
+}
+
+void CBTCCheckpointsHandler::AcceptVerifiedBTCCSig(const CBTCCheckpointSig& btccsig, const uint256& hash, const CBlockIndex* pindexScan)
+{
+    Assert(pindexScan != nullptr);
+
+    // Cheap re-check #1: still active chain, matching sysHash at that height.
+    {
+        LOCK(cs_main);
+        if (btccsig.nHeight < 0 || btccsig.nHeight > chainman.ActiveHeight()) return;
+        if (chainman.ActiveChain()[btccsig.nHeight] != pindexScan) return;
+        if (pindexScan->GetBlockHash() != btccsig.sysHash) return;
+    }
+
+    const auto& llmqParams = Params().GetConsensus().llmqTypeChainLocks;
+    if (btccsig.signers.size() != (size_t)llmqParams.signingActiveQuorumCount) return;
+
+    const size_t signers_count = std::count(btccsig.signers.begin(), btccsig.signers.end(), true);
+    if (signers_count == 1) {
+        // Share: determine quorum by signer bit and store without re-verifying BLS.
+        const auto quorums_scanned = llmq::quorumManager->ScanQuorums(pindexScan, llmqParams.signingActiveQuorumCount);
+        if (quorums_scanned.empty()) return;
+
+        CQuorumCPtr quorum{nullptr};
+        for (size_t i = 0; i < quorums_scanned.size() && i < btccsig.signers.size(); ++i) {
+            if (!btccsig.signers[i]) continue;
+            quorum = quorums_scanned[i];
+            break;
+        }
+        if (quorum == nullptr) return;
+
+        bool agg{false};
+        uint256 agg_hash;
+        {
+            LOCK(cs);
+            bestShares[btccsig.nHeight].emplace(quorum, std::make_shared<const CBTCCheckpointSig>(btccsig));
+            agg = TryUpdateBestBTCCheckpoint(pindexScan);
+            if (agg) {
+                auto it = bestCandidates.find(btccsig.nHeight);
+                if (it != bestCandidates.end() && it->second) {
+                    agg_hash = ::SerializeHash(*it->second);
+                    seenBTCCheckpointSigs.emplace(agg_hash, TicksSinceEpoch<std::chrono::milliseconds>(SystemClock::now()));
+                }
+            }
+        }
+        if (agg && !agg_hash.IsNull()) {
+            peerman.RelayInv(CInv(MSG_BTCCSIG, agg_hash));
+        }
+        return;
+    }
+
+    // Aggregate: store and relay.
+    bool accepted{false};
+    {
+        LOCK(cs);
+        auto it = bestCandidates.find(btccsig.nHeight);
+        if (it == bestCandidates.end() || it->second == nullptr || it->second->sysHash != btccsig.sysHash) {
+            bestCandidates[btccsig.nHeight] = std::make_shared<const CBTCCheckpointSig>(btccsig);
+            AddRecentBTCCheckpoint(btccsig);
+            accepted = true;
+        }
+    }
+    if (accepted) {
+        peerman.RelayInv(CInv(MSG_BTCCSIG, hash));
+    }
+}
+
+void CBTCCheckpointsHandler::ProcessPendingVerifiedBTCCheckpointSigs()
+{
+    Cleanup();
+
+    int32_t expectedHeight{-1};
+    {
+        LOCK(cs_main);
+        expectedHeight = GetExpectedBTCCheckpointHeight(chainman);
+    }
+    if (expectedHeight == -1) return;
+
+    const int64_t now = TicksSinceEpoch<std::chrono::milliseconds>(SystemClock::now());
+    std::vector<std::pair<uint256, CBTCCheckpointSig>> to_process;
+    {
+        LOCK(cs);
+        for (auto it = pendingVerifiedBTCCheckpointSigs.begin(); it != pendingVerifiedBTCCheckpointSigs.end();) {
+            if (now - it->second.second >= PENDING_VERIFIED_BTCCSIG_TIMEOUT) {
+                it = pendingVerifiedBTCCheckpointSigs.erase(it);
+                continue;
+            }
+            if (it->second.first.nHeight == expectedHeight) {
+                to_process.emplace_back(it->first, it->second.first);
+                it = pendingVerifiedBTCCheckpointSigs.erase(it);
+                continue;
+            }
+            ++it;
+        }
+    }
+    if (to_process.empty()) return;
+
+    for (const auto& item : to_process) {
+        const uint256& hash = item.first;
+        const CBTCCheckpointSig& btccsig = item.second;
+        const CBlockIndex* pindexScan{nullptr};
+        {
+            LOCK(cs_main);
+            pindexScan = chainman.m_blockman.LookupBlockIndex(btccsig.sysHash);
+            if (pindexScan == nullptr || pindexScan->nHeight != btccsig.nHeight) {
+                continue;
+            }
+        }
+        AcceptVerifiedBTCCSig(btccsig, hash, pindexScan);
+    }
+}
+
 void CBTCCheckpointsHandler::HandleNewRecoveredSig(const CRecoveredSig& recoveredSig)
 {
     Cleanup();
@@ -568,6 +735,11 @@ void CBTCCheckpointsHandler::HandleNewRecoveredSig(const CRecoveredSig& recovere
         expectedHeight = GetExpectedBTCCheckpointHeight(chainman);
         pindexScan = chainman.m_blockman.LookupBlockIndex(recoveredSig.getMsgHash());
     }
+    if (!haveSignedTarget) {
+        // ChainLocks parity: recovered-sig aggregation path is only for ids this node signed.
+        // Non-signers should learn BTCC through MSG_BTCCSIG objects.
+        return;
+    }
     if (pindexScan == nullptr) return;
     {
         LOCK(cs_main);
@@ -579,12 +751,6 @@ void CBTCCheckpointsHandler::HandleNewRecoveredSig(const CRecoveredSig& recovere
         }
     }
 
-    // Accept recovered sigs originating from peers even if we didn't sign locally.
-    // msgHash is sysHash, so derive height/hash directly from it.
-    if (!haveSignedTarget) {
-        share.nHeight = pindexScan->nHeight;
-        share.sysHash = pindexScan->GetBlockHash();
-    }
     if (recoveredSig.getMsgHash() != share.sysHash || pindexScan->nHeight != share.nHeight) return;
     if (share.nHeight != expectedHeight) {
         // Strict height-window acceptance (ChainLocks parity).
@@ -714,7 +880,9 @@ bool CBTCCheckpointsHandler::GetRecentBTCCheckpointByHeight(int32_t nHeight, CBT
 {
     LOCK(cs);
     auto it = recentBTCCheckpoints.find(nHeight);
-    if (it == recentBTCCheckpoints.end()) return false;
+    if (it == recentBTCCheckpoints.end()) {
+        return false;
+    }
     ret = it->second;
     return true;
 }

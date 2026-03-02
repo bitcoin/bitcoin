@@ -11,17 +11,25 @@
 #include <kernel/cs_main.h>
 class CBlock;
 class CBlockIndex;
+class uint256;
 class TxValidationState;
 class BlockValidationState;
 class CCoinsViewCache;
 class ChainstateManager;
 class CDeterministicMNListNEVMAddressDiff;
+namespace llmq {
+class CBTCCheckpointSig;
+}
 namespace node {
 class BlockManager;
 }
 bool CheckSpecialTx(node::BlockManager &blockman, const CTransaction& tx, const CBlockIndex* pindexPrev, TxValidationState& state, CCoinsViewCache& view, bool fJustCheck, bool check_sigs) EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
 bool ProcessSpecialTxsInBlock(ChainstateManager &chainman, const CBlock& block, const CBlockIndex* pindex, BlockValidationState& state, CDeterministicMNListNEVMAddressDiff &diff, CCoinsViewCache& view, bool fJustCheck, bool check_sigs, bool ibd) EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
 bool UndoSpecialTxsInBlock(const CBlock& block, const CBlockIndex* pindex, CDeterministicMNListNEVMAddressDiff& diffNEVM, bool bReverify, bool bReplay) EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
+
+// SYSCOIN: helpers for extracting BTCC and BTCPREV from coinbase Syscoin-data payload.
+bool ExtractBTCCReceipt(const CBlock& block, llmq::CBTCCheckpointSig& receipt);
+bool ExtractBTCPREVCommitment(const CBlock& block, uint256& btcPrevHash);
 
 template <typename T>
 inline bool GetTxPayload(const std::vector<unsigned char>& payload, T& obj)

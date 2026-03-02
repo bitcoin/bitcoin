@@ -107,6 +107,7 @@ extern bool fNEVMConnection;
 extern std::atomic_bool fReindexGeth;
 static constexpr uint8_t NEVM_MAGIC_BYTES[4] = {'n', 'e', 'v', 'm'};
 static constexpr uint8_t BTCCHECK_MAGIC_BYTES[4] = {'b', 't', 'c', 'c'};
+static constexpr uint8_t BTCPREV_MAGIC_BYTES[4] = {'b', 't', 'c', 'p'};
 
 // SYSCOIN: BTC checkpoint cadence (must remain in sync across miner/specialtx/llmq handler)
 static constexpr int BTCCHECK_PERIOD{10};
@@ -792,7 +793,7 @@ private:
     void UpdateTip(const CBlockIndex* pindexNew)
         EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
     // SYSCOIN
-    bool ConnectNEVMCommitment(BlockValidationState& state, NEVMTxRootMap &mapNEVMTxRoots, const CBlock& block, const uint256& nBlockHash, const uint32_t& nHeight, const bool fJustCheck, PoDAMAPMemory &mapPoDA, const CDeterministicMNListNEVMAddressDiff &diff) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
+    bool ConnectNEVMCommitment(BlockValidationState& state, NEVMTxRootMap &mapNEVMTxRoots, const CBlock& block, const CBlockIndex* pindex, const uint256& nBlockHash, const uint32_t& nHeight, const bool fJustCheck, PoDAMAPMemory &mapPoDA, const CDeterministicMNListNEVMAddressDiff &diff) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
 
     SteadyClock::time_point m_last_write{};
     SteadyClock::time_point m_last_flush{};
@@ -953,6 +954,12 @@ public:
      * By default this only executes fully when using the Regtest chain; see: m_options.check_block_index.
      */
     void CheckBlockIndex();
+
+    // SYSCOIN: Startup hardening for BTCC carrier validation.
+    // Backfill btcpPrevCommitment for recent sign-offset blocks if missing in the block index.
+    // This is intended to run after loading/verifying chainstate, before processing new blocks,
+    // avoiding consensus-path disk reads while remaining tolerant to crashes/upgrades.
+    void BackfillRecentBTCPREVCommitments();
 
     /**
      * Alias for ::cs_main.

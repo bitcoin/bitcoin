@@ -10,7 +10,7 @@ import binascii
 import codecs
 import hashlib
 
-def constructAuxpow(block, auxpowtag_script):
+def constructAuxpow(block, auxpowtag_script, parent_prev_hash=None):
   """
   Starts to construct a minimal auxpow, ready to be mined.  Returns the
   coinbase tx (with one OP_RETURN output containing a Syscoin-like commitment)
@@ -49,7 +49,11 @@ def constructAuxpow(block, auxpowtag_script):
 
   # Construct the parent block header
   header  = b"01000000"
-  header += b"00" * 32
+  if parent_prev_hash is None:
+    header += b"00" * 32
+  else:
+    # Header fields are serialized little-endian in the hex payload.
+    header += reverseHex(parent_prev_hash)
   # The coinbase is the only tx, so merkle root is the coinbase txid reversed
   header += reverseHex(txHash)
   header += b"00" * 4

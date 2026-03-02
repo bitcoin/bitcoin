@@ -69,7 +69,7 @@ public:
     virtual bool NotifyTransactionMempool(const CTransaction &transaction);
     virtual bool NotifyGovernanceVote(const uint256& vote);
     virtual bool NotifyGovernanceObject(const uint256& object);
-    virtual bool NotifyNEVMBlockConnect(const CNEVMHeader &evmBlock, const CBlock& block, std::string &state, const uint256& nBlockHash, NEVMDataVec &NEVMDataVecOut, const uint32_t& nHeight, bool bSkipValidation, const CDeterministicMNListNEVMAddressDiff &diff);
+    virtual bool NotifyNEVMBlockConnect(const CNEVMHeader &evmBlock, const CBlock& block, std::string &state, const uint256& nBlockHash, NEVMDataVec &NEVMDataVecOut, const uint32_t& nHeight, bool bSkipValidation, const uint256& btcPrevHashForNEVM, const CDeterministicMNListNEVMAddressDiff &diff);
     virtual bool NotifyNEVMBlockDisconnect(std::string &state, const uint256& nBlockHash, const CDeterministicMNListNEVMAddressDiff &diff);
     virtual bool NotifyGetNEVMBlockInfo(uint64_t &nHeight, std::string &state);
     virtual bool NotifyGetNEVMBlock(CNEVMBlock &evmBlock, std::string &state);

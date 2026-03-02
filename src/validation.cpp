@@ -14,6 +14,7 @@
 #include <chain.h>
 #include <checkqueue.h>
 #include <clientversion.h>
+#include <llmq/quorums_btccheckpoints.h>
 #include <consensus/amount.h>
 #include <consensus/consensus.h>
 #include <consensus/merkle.h>
@@ -2213,7 +2214,7 @@ bool GetNEVMData(BlockValidationState& state, const CBlock& block, CNEVMHeader &
     }
     return true;
 }
-bool Chainstate::ConnectNEVMCommitment(BlockValidationState& state, NEVMTxRootMap &mapNEVMTxRoots, const CBlock& block, const uint256& nBlockHash, const uint32_t& nHeight, const bool fJustCheck, PoDAMAPMemory &mapPoDA, const CDeterministicMNListNEVMAddressDiff &diff) {
+bool Chainstate::ConnectNEVMCommitment(BlockValidationState& state, NEVMTxRootMap &mapNEVMTxRoots, const CBlock& block, const CBlockIndex* pindex, const uint256& nBlockHash, const uint32_t& nHeight, const bool fJustCheck, PoDAMAPMemory &mapPoDA, const CDeterministicMNListNEVMAddressDiff &diff) {
     CNEVMHeader nevmBlockHeader;
     if(!GetNEVMData(state, block, nevmBlockHeader)) {
         return false; //state filled by GetNEVMData
@@ -2230,9 +2231,32 @@ bool Chainstate::ConnectNEVMCommitment(BlockValidationState& state, NEVMTxRootMa
     if(bSkipValidation) {
         LogPrintf("ConnectNEVMCommitment: skipping validation result...\n");
     }
+    // Derive the BTC anchor once from consensus-indexed chain state and pass it through
+    // to ZMQ, avoiding BTCC payload parsing in notifier code.
+    uint256 btcPrevHashForNEVM{};
+    {
+        const auto& consensus = m_chainman.GetConsensus();
+        const bool carrier_height = nHeight >= static_cast<uint32_t>(consensus.nCLReceiptStartBlock) &&
+                                    (nHeight % BTCCHECK_PERIOD) == BTCCHECK_CARRIER_OFFSET;
+        if (carrier_height && nHeight >= BTCCHECK_PROP_BUFFER) {
+            // Only forward a BTC anchor if this carrier block has a non-null BTCC receipt.
+            // (Null receipts are allowed for censorship resistance and must result in no NEVM checkpoint.)
+            llmq::CBTCCheckpointSig btcc;
+            const bool extracted = ExtractBTCCReceipt(block, btcc);
+            if (extracted && !btcc.IsNull()) {
+                if (pindex != nullptr) {
+                    const int expected_height = static_cast<int>(nHeight) - BTCCHECK_PROP_BUFFER;
+                    const CBlockIndex* pindexReceipt = pindex->GetAncestor(expected_height);
+                    if (pindexReceipt != nullptr) {
+                        btcPrevHashForNEVM = pindexReceipt->btcpPrevCommitment;
+                    }
+                }
+            }
+        }
+    }
     std::string stateStr;
     if(fNEVMConnection) {
-        GetMainSignals().NotifyNEVMBlockConnect(nevmBlockHeader, block, stateStr, fJustCheck? uint256(): nBlockHash, NEVMDataVecOut, nHeight, bSkipValidation, diff);
+        GetMainSignals().NotifyNEVMBlockConnect(nevmBlockHeader, block, stateStr, fJustCheck? uint256(): nBlockHash, NEVMDataVecOut, nHeight, bSkipValidation, btcPrevHashForNEVM, diff);
         if(!stateStr.empty()) {
             state.Invalid(BlockValidationResult::BLOCK_INVALID_HEADER, stateStr);
             if(stateStr == "nevm-connect-response-invalid-data" || stateStr == "nevm-response-not-found") {
@@ -2254,7 +2278,7 @@ bool Chainstate::ConnectNEVMCommitment(BlockValidationState& state, NEVMTxRootMa
             if(!bResponse) {
                 if(RestartGethNode()) {
                     // try again after resetting connection
-                    GetMainSignals().NotifyNEVMBlockConnect(nevmBlockHeader, block, stateStr, fJustCheck? uint256(): nBlockHash, NEVMDataVecOut, nHeight, bSkipValidation, diff);
+                    GetMainSignals().NotifyNEVMBlockConnect(nevmBlockHeader, block, stateStr, fJustCheck? uint256(): nBlockHash, NEVMDataVecOut, nHeight, bSkipValidation, btcPrevHashForNEVM, diff);
                     if(!stateStr.empty()) {
                         state.Invalid(BlockValidationResult::BLOCK_INVALID_HEADER, stateStr);
                         if(stateStr == "nevm-connect-response-invalid-data" || stateStr == "nevm-response-not-found") {
@@ -2690,6 +2714,22 @@ bool Chainstate::ConnectBlock(const CBlock& block, BlockValidationState& state, 
         return true;
     }
 
+    // SYSCOIN: Persist BTCPREV commitment in block index only for consensus-relevant
+    // sign-offset BTCC heights. This keeps indexed state aligned with enforced rules.
+    if (!fJustCheck) {
+        const auto& consensus = params.GetConsensus();
+        const bool btcp_required = pindex->nHeight >= consensus.nCLReceiptStartBlock &&
+                                   (pindex->nHeight % BTCCHECK_PERIOD) == BTCCHECK_SIGN_OFFSET &&
+                                   block.auxpow;
+        if (btcp_required) {
+            uint256 btcp;
+            if (ExtractBTCPREVCommitment(block, btcp) && pindex->btcpPrevCommitment != btcp) {
+                pindex->btcpPrevCommitment = btcp;
+                m_blockman.m_dirty_blockindex.insert(pindex);
+            }
+        }
+    }
+
     bool fScriptChecks = true;
     if (!m_chainman.AssumedValidBlock().IsNull()) {
         // We've been configured with the hash of a block which has been externally verified to have a valid history.
@@ -2954,7 +2994,7 @@ bool Chainstate::ConnectBlock(const CBlock& block, BlockValidationState& state, 
     }
 
     bool bRegTestContext = !fRegTest || (fRegTest && fNEVMConnection);
-    if (bRegTestContext && bReverify && pindex->nHeight >= params.GetConsensus().nNEVMStartBlock && !ConnectNEVMCommitment(state, mapNEVMTxRoots, block, blockHash, (uint32_t)pindex->nHeight, fJustCheck, mapPoDA, diff)) {
+    if (bRegTestContext && bReverify && pindex->nHeight >= params.GetConsensus().nNEVMStartBlock && !ConnectNEVMCommitment(state, mapNEVMTxRoots, block, pindex, blockHash, (uint32_t)pindex->nHeight, fJustCheck, mapPoDA, diff)) {
         return false; // state filled by ConnectNEVMCommitment
     }
     const auto time_3{SteadyClock::now()};
@@ -4784,7 +4824,27 @@ static bool ContextualCheckBlock(const CBlock& block, BlockValidationState& stat
             }
         }
     }
-
+    // SYSCOIN: BTC prev-hash commitment binding for BTCC sign-offset blocks.
+    // Miners commit BTCPREV into the block's coinbase payload (merkle-root committed).
+    // Consensus verifies that it matches this block's AuxPoW parent prev-block hash.
+    {
+        const Consensus::Params& consensusParams = chainman.GetConsensus();
+        const bool btcpRequired = nHeight >= consensusParams.nCLReceiptStartBlock &&
+                                  (nHeight % BTCCHECK_PERIOD) == BTCCHECK_SIGN_OFFSET;
+        if (btcpRequired && block.auxpow) {
+            uint256 btcPrevHashCommit;
+            if (!ExtractBTCPREVCommitment(block, btcPrevHashCommit)) {
+                return state.Invalid(BlockValidationResult::BLOCK_CONSENSUS, "bad-btcp-missing");
+            }
+            if (btcPrevHashCommit.IsNull()) {
+                return state.Invalid(BlockValidationResult::BLOCK_CONSENSUS, "bad-btcp-null");
+            }
+            const uint256 btcPrevHashExpected = block.auxpow->getParentPrevBlockHash();
+            if (btcPrevHashCommit != btcPrevHashExpected) {
+                return state.Invalid(BlockValidationResult::BLOCK_CONSENSUS, "bad-btcp-mismatch");
+            }
+        }
+    }
     // After the coinbase witness reserved value and commitment are verified,
     // we can check if the block weight passes (before we've checked the
     // coinbase witness, it would be possible for the weight to be too
@@ -5446,7 +5506,7 @@ bool Chainstate::RollforwardBlock(const CBlockIndex* pindex, CCoinsViewCache& in
         AddCoins(inputs, *tx, pindex->nHeight, true);
     }
     bool bRegTestContext = !fRegTest || (fRegTest && fNEVMConnection);
-    if (bRegTestContext && pindex->nHeight >= chainParams.nNEVMStartBlock && !ConnectNEVMCommitment(state, mapNEVMTxRoots, block, pindex->GetBlockHash(), pindex->nHeight, false, mapPoDA, diff)) {
+    if (bRegTestContext && pindex->nHeight >= chainParams.nNEVMStartBlock && !ConnectNEVMCommitment(state, mapNEVMTxRoots, block, pindex, pindex->GetBlockHash(), pindex->nHeight, false, mapPoDA, diff)) {
         return error("RollforwardBlock(): ConnectNEVMCommitment() failed at %d, hash=%s state=%s", pindex->nHeight, pindex->GetBlockHash().ToString(), state.ToString());
     }
     return true;
@@ -6114,6 +6174,39 @@ void ChainstateManager::CheckBlockIndex()
 
     // Check that we actually traversed the entire map.
     assert(nNodes == forward.size());
+}
+
+// SYSCOIN: fill btcpPrevCommitment for recent sign-offset blocks if missing.
+void ChainstateManager::BackfillRecentBTCPREVCommitments()
+{
+    LOCK(cs_main);
+
+    const auto& consensus = GetConsensus();
+    const int start = consensus.nCLReceiptStartBlock;
+    const int tip = ActiveHeight();
+    if (tip < 0 || tip < start) return;
+
+    // Only need a small window: carriers reference the (h-5) sign-offset block.
+    const int low = std::max(start, tip - (BTCCHECK_PERIOD * 2));
+
+    for (int h = tip; h >= low; --h) {
+        if ((h % BTCCHECK_PERIOD) != BTCCHECK_SIGN_OFFSET) continue;
+        CBlockIndex* pindex = ActiveChain()[h];
+        if (!pindex) continue;
+        if (!pindex->btcpPrevCommitment.IsNull()) continue;
+        if (!(pindex->nStatus & BLOCK_HAVE_DATA)) continue;
+
+        CBlock block;
+        if (!m_blockman.ReadBlockFromDisk(block, *pindex)) continue;
+        if (!block.auxpow) continue;
+
+        uint256 btcp;
+        if (!ExtractBTCPREVCommitment(block, btcp)) continue;
+        if (btcp != block.auxpow->getParentPrevBlockHash()) continue;
+
+        pindex->btcpPrevCommitment = btcp;
+        m_blockman.m_dirty_blockindex.insert(pindex);
+    }
 }
 
 std::string Chainstate::ToString()

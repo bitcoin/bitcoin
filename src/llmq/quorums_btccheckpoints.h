@@ -64,6 +64,8 @@ using CBTCCheckpointSigCPtr = std::shared_ptr<const CBTCCheckpointSig>;
 class CBTCCheckpointsHandler : public CRecoveredSigsListener
 {
     static constexpr int32_t RECENT_BTCCHECKPOINTS_MAX{256};
+    static constexpr size_t PENDING_VERIFIED_BTCCSIG_MAX{256};
+    static const int64_t PENDING_VERIFIED_BTCCSIG_TIMEOUT = 1000 * 60 * 10; // 10 minutes
     static const int64_t CLEANUP_INTERVAL = 1000 * 30;
     static const int64_t CLEANUP_SEEN_TIMEOUT = 24 * 60 * 60 * 1000;
 
@@ -87,6 +89,9 @@ private:
     std::map<int32_t, std::map<CQuorumCPtr, CBTCCheckpointSigCPtr>> bestShares GUARDED_BY(cs);
     std::map<int32_t, CBTCCheckpointSigCPtr> bestCandidates GUARDED_BY(cs);
     std::map<int32_t, CBTCCheckpointSig> recentBTCCheckpoints GUARDED_BY(cs);
+    // Verified BTCCSIG objects received early (expectedHeight mismatch), kept briefly and re-applied
+    // once the local expected height reaches the object's height. Keyed by object hash.
+    std::map<uint256, std::pair<CBTCCheckpointSig, int64_t>> pendingVerifiedBTCCheckpointSigs GUARDED_BY(cs);
 
 public:
     CBTCCheckpointsHandler(CConnman& connman, PeerManager& peerman, ChainstateManager& chainman);
@@ -97,6 +102,7 @@ public:
     // Periodic signer: signs a deterministic checkpoint (activeHeight aligned to 10).
     // The carrier block at height (nHeight+5) embeds this checkpoint for a 5-block propagation buffer.
     void TrySignBTCCheckpointTip();
+    void ProcessPendingVerifiedBTCCheckpointSigs();
 
     void ProcessMessage(CNode* pfrom, const std::string& msg_type, CDataStream& vRecv) EXCLUSIVE_LOCKS_REQUIRED(!cs);
     bool AlreadyHave(const uint256& hash) const EXCLUSIVE_LOCKS_REQUIRED(!cs);
@@ -119,6 +125,8 @@ private:
     bool VerifyBTCCheckpointShare(const CBTCCheckpointSig& btcsig, const CBlockIndex* pindexScan, const uint256& idIn, std::pair<int, CQuorumCPtr>& ret, const uint256& hash) const EXCLUSIVE_LOCKS_REQUIRED(!cs);
     bool VerifyAggregatedBTCCheckpointNoCache(const CBTCCheckpointSig& btcsig, const CBlockIndex* pindexScan) const EXCLUSIVE_LOCKS_REQUIRED(!cs);
     void Cleanup() EXCLUSIVE_LOCKS_REQUIRED(!cs);
+    void AddPendingVerifiedBTCCheckpointSig(const uint256& hash, const CBTCCheckpointSig& btcsig) EXCLUSIVE_LOCKS_REQUIRED(!cs);
+    void AcceptVerifiedBTCCSig(const CBTCCheckpointSig& btccsig, const uint256& hash, const CBlockIndex* pindexScan) EXCLUSIVE_LOCKS_REQUIRED(!cs);
 };
 
 extern CBTCCheckpointsHandler* btcCheckpointsHandler;

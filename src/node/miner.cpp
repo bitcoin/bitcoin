@@ -233,6 +233,7 @@ std::unique_ptr<CBlockTemplate> BlockAssembler::CreateNewBlock(const CScript& sc
         if (llmq::btcCheckpointsHandler && pindexReceipt != nullptr &&
             llmq::btcCheckpointsHandler->GetRecentBTCCheckpointByHeight(expectedHeight, btcc)) {
             if (btcc.nHeight != expectedHeight || btcc.sysHash != pindexReceipt->GetBlockHash() ||
+                pindexReceipt->btcpPrevCommitment.IsNull() ||
                 !llmq::btcCheckpointsHandler->VerifyAggregatedBTCCheckpoint(btcc, pindexReceipt)) {
                 btcc = llmq::CBTCCheckpointSig();
             }

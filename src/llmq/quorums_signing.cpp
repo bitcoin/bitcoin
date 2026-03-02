@@ -637,14 +637,6 @@ void CSigningManager::ProcessRecoveredSig(NodeId nodeId, const std::shared_ptr<c
                 if (peer) peerman.Misbehaving(*peer, 10, "invalid btcc recovered signature height");
                 return;
             }
-        } else {
-            // A recovered sig referring to a known block hash but not matching any known block-bound request ID
-            // is unexpected. Drop it early to avoid pollution/DoS via arbitrary block-based signing sessions.
-            LogPrint(BCLog::LLMQ, "CSigningManager::%s -- unexpected block-bound recovered signature id=%s height=%d msgHash=%s\n",
-                     __func__, recoveredSig->getId().ToString(), pindex->nHeight, recoveredSig->getMsgHash().ToString());
-            peerman.ForgetTxHash(nodeId, hash);
-            if (peer) peerman.Misbehaving(*peer, 10, "unexpected block-bound recovered signature");
-            return;
         }
     }
 

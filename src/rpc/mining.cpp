@@ -1173,6 +1173,7 @@ static RPCHelpMan createauxblock()
                 " merge-mine it.\n",
                 {
                     {"address", RPCArg::Type::STR, RPCArg::Optional::NO, "Payout address for the coinbase transaction"},
+                    {"btcprevhash", RPCArg::Type::STR_HEX, RPCArg::Optional::OMITTED, "Optional. BTC prev-block hash commitment for BTCC sign-offset blocks (required at those heights)."},
                 },
                 RPCResult{
                     RPCResult::Type::OBJ, "", "",

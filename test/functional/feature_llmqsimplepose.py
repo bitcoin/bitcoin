@@ -39,7 +39,7 @@ class LLMQSimplePoSeTest(DashTestFramework):
         else:
             self.nodes[0].spork("SPORK_23_QUORUM_POSE", 0)
         self.deaf_mns = []
-        self.sync_blocks(self.nodes, timeout=60*5)
+        self.sync_blocks(self.nodes, timeout=60)
         for i in range(len(self.nodes)):
             force_finish_mnsync(self.nodes[i])
         self.nodes[0].spork("SPORK_17_QUORUM_DKG_ENABLED", 0)

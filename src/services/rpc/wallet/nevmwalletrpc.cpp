@@ -1,4 +1,4 @@
-﻿// Copyright (c) 2013-2019 The Syscoin Core developers
+// Copyright (c) 2013-2019 The Syscoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 #include <messagesigner.h>
@@ -321,6 +321,7 @@ static RPCHelpMan getauxblock()
                 "required to merge-mine it.  With arguments, submits a solved\n"
                 "auxpow for a previously returned block.\n",
                 {
+                    {"btcprevhash", RPCArg::Type::STR_HEX, RPCArg::Optional::OMITTED, "Optional. BTC prev-block hash commitment for BTCC sign-offset blocks (required at those heights)."},
                     {"hash", RPCArg::Type::STR_HEX, RPCArg::Optional::OMITTED, "Hash of the block to submit"},
                     {"auxpow", RPCArg::Type::STR_HEX, RPCArg::Optional::OMITTED, "Serialised auxpow found"},
                 },
@@ -359,7 +360,7 @@ static RPCHelpMan getauxblock()
     }
     LOCK(g_mining_keys.cs);
     /* Create a new block */
-    if (request.params.size() == 0)
+    if (request.params.size() == 0 || request.params.size() == 1)
     {
         const CScript coinbaseScript = g_mining_keys.GetCoinbaseScript(pwallet);
         UniValue res = AuxpowMiner::get().createAuxBlock(request, coinbaseScript);

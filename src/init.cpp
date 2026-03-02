@@ -1763,6 +1763,9 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
             }
             std::tie(status, error) = catch_exceptions([&]{ return VerifyLoadedChainstate(chainman, options);});
             if (status == node::ChainstateLoadStatus::SUCCESS) {
+                // SYSCOIN: ensure recent sign-offset BTCPREV commitments are available in the block index
+                // before we start processing new blocks (prevents false bad-btcc-btcp after crash/upgrade).
+                chainman.BackfillRecentBTCPREVCommitments();
                 fLoaded = true;
                 LogPrintf(" block index %15dms\n", Ticks<std::chrono::milliseconds>(SteadyClock::now() - load_block_index_start_time));
             }

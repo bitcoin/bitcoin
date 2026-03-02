@@ -13,6 +13,7 @@
 
 #include <map>
 #include <memory>
+#include <optional>
 #include <string>
 #include <vector>
 #include <kernel/cs_main.h>
@@ -63,7 +64,9 @@ private:
    * fills in the difficulty target value.
    */
   const CBlock* getCurrentBlock (ChainstateManager &chainman, const CTxMemPool& mempool,
-                                 const CScript& scriptPubKey, uint256& target) EXCLUSIVE_LOCKS_REQUIRED(cs);
+                                 const CScript& scriptPubKey, uint256& target,
+                                 const std::optional<uint256>& btcPrevHash = std::nullopt,
+                                 bool btcpRequired = false) EXCLUSIVE_LOCKS_REQUIRED(cs);
 
   /**
    * Looks up a previously constructed block by its (hex-encoded) hash.  If the

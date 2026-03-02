@@ -83,6 +83,7 @@ void CChainLocksHandler::Start()
         CheckActiveState();
         if (btcCheckpointsHandler) {
             btcCheckpointsHandler->TrySignBTCCheckpointTip();
+            btcCheckpointsHandler->ProcessPendingVerifiedBTCCheckpointSigs();
         }
         bool enforced = false;
         const CBlockIndex* pindex;
@@ -646,6 +647,12 @@ void CChainLocksHandler::UpdatedBlockTip(const CBlockIndex* pindexNew, bool fIni
 {
     if(fInitialDownload)
         return;
+    // BTCC signing must see every tip transition. Unlike ChainLocks, a coalesced scheduler run
+    // can skip past BTCC sign windows during fast block production.
+    if (btcCheckpointsHandler) {
+        btcCheckpointsHandler->TrySignBTCCheckpointTip();
+        btcCheckpointsHandler->ProcessPendingVerifiedBTCCheckpointSigs();
+    }
     // don't call TrySignChainTip directly but instead let the scheduler call it. This way we ensure that cs_main is
     // never locked and TrySignChainTip is not called twice in parallel. Also avoids recursive calls due to
     // EnforceBestChainLock switching chains.

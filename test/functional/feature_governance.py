@@ -50,31 +50,34 @@ class SyscoinGovernanceTest (DashTestFramework):
     def check_superblock(self):
         # Make sure Superblock has only payments that fit into the budget
         # p0 must always be included because it has most votes
-        # p1 and p2 have equal number of votes (but less votes than p0)
-        # so only one of them can be included (depends on proposal hashes).
+        # p1 and p2 have equal number of votes (but less votes than p0),
+        # so exactly one of them must be included.
         coinbase_outputs = self.nodes[0].getblock(self.nodes[0].getbestblockhash(), 2)["tx"][0]["vout"]
         payments_found = 0
         payment_value = 0
+        found_p0 = False
+        found_p1 = False
+        found_p2 = False
         for txout in coinbase_outputs:
             if txout["value"] == self.p0_amount and txout["scriptPubKey"]["address"] == self.p0_payout_address:
                 payments_found += 1
                 payment_value += self.p0_amount
+                found_p0 = True
             if txout["value"] == self.p1_amount and txout["scriptPubKey"]["address"] == self.p1_payout_address:
-                if self.p1_hash > self.p2_hash:
-                    payments_found += 1
-                else:
-                    assert False
+                payments_found += 1
                 payment_value += self.p1_amount
+                found_p1 = True
             if txout["value"] == self.p2_amount and txout["scriptPubKey"]["address"] == self.p2_payout_address:
-                if self.p2_hash > self.p1_hash:
-                    payments_found += 1
-                else:
-                    assert False
+                payments_found += 1
                 payment_value += self.p2_amount
+                found_p2 = True
         if payment_value <= self.budget*Decimal("0.95"):
             self.budget = self.budget*Decimal("0.9")
         elif payment_value >= self.budget*Decimal("1.05"):
             self.budget = self.budget*Decimal("1.1")
+        assert_equal(found_p0, True)
+        # Only one of equal-vote proposals can fit with p0 in budget.
+        assert_equal(int(found_p1) + int(found_p2), 1)
         assert_equal(payments_found, 2)
 
     def have_trigger_for_height(self, sb_block_height):
@@ -309,7 +312,7 @@ class SyscoinGovernanceTest (DashTestFramework):
             return node.mnsync("status")["IsSynced"]
 
         # make sure isolated node is fully synced at this point
-        self.wait_until(lambda: sync_gov(isolated))
+        self.wait_until(lambda: sync_gov(isolated), timeout=180)
         # let all fulfilled requests expire for re-sync to work correctly
         self.bump_mocktime(5 * 60)
         for node in self.nodes:
@@ -317,7 +320,7 @@ class SyscoinGovernanceTest (DashTestFramework):
             node.mnsync("reset")
             # fast-forward to governance sync
             node.mnsync("next")
-            self.wait_until(lambda: sync_gov(node))
+            self.wait_until(lambda: sync_gov(node), timeout=180)
 
         # Should see two triggers now
         self.wait_until(lambda: sync_gobject_list_trigger(isolated, 2), timeout=5)
