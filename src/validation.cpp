@@ -6225,6 +6225,7 @@ bool Chainstate::ResizeCoinsCaches(size_t coinstip_size, size_t coinsdb_size)
         return true;
     }
     size_t old_coinstip_size = m_coinstip_cache_size_bytes;
+    size_t old_coinsdb_size = m_coinsdb_cache_size_bytes;
     m_coinstip_cache_size_bytes = coinstip_size;
     m_coinsdb_cache_size_bytes = coinsdb_size;
     CoinsDB().ResizeCache(coinsdb_size);
@@ -6237,7 +6238,10 @@ bool Chainstate::ResizeCoinsCaches(size_t coinstip_size, size_t coinsdb_size)
     BlockValidationState state;
     bool ret;
 
-    if (coinstip_size > old_coinstip_size) {
+    // SYSCOIN: consider both coinstip and coinsdb deltas when deciding flush mode.
+    // if (coinstip_size > old_coinstip_size) {
+    const bool any_shrank = coinstip_size < old_coinstip_size || coinsdb_size < old_coinsdb_size;
+    if (!any_shrank) {
         // Likely no need to flush if cache sizes have grown.
         ret = FlushStateToDisk(state, FlushStateMode::IF_NEEDED);
     } else {
@@ -6451,11 +6455,15 @@ bool ChainstateManager::ActivateSnapshot(
     assert(chaintip_loaded);
 
     // Transfer possession of the mempool to the snapshot chainstate.
+    // SYSCOIN: upstream assumes m_active_chainstate is always non-null.
     // Mempool is empty at this point because we're still in IBD.
-    Assert(m_active_chainstate->m_mempool->size() == 0);
+    // Assert(m_active_chainstate->m_mempool->size() == 0);
     Assert(!m_snapshot_chainstate->m_mempool);
-    m_snapshot_chainstate->m_mempool = m_active_chainstate->m_mempool;
-    m_active_chainstate->m_mempool = nullptr;
+    if (m_active_chainstate != nullptr) {
+        Assert(m_active_chainstate->m_mempool == nullptr || m_active_chainstate->m_mempool->size() == 0);
+        m_snapshot_chainstate->m_mempool = m_active_chainstate->m_mempool;
+        m_active_chainstate->m_mempool = nullptr;
+    }
     m_active_chainstate = m_snapshot_chainstate.get();
     m_blockman.m_snapshot_height = this->GetSnapshotBaseHeight();
 
@@ -7544,11 +7552,15 @@ Chainstate& ChainstateManager::ActivateExistingSnapshot(uint256 base_blockhash)
         std::make_unique<Chainstate>(nullptr, m_blockman, *this, base_blockhash);
     LogPrintf("[snapshot] switching active chainstate to %s\n", m_snapshot_chainstate->ToString());
 
+    // SYSCOIN: upstream assumes m_active_chainstate is always non-null.
     // Mempool is empty at this point because we're still in IBD.
-    Assert(m_active_chainstate->m_mempool->size() == 0);
+    // Assert(m_active_chainstate->m_mempool->size() == 0);
     Assert(!m_snapshot_chainstate->m_mempool);
-    m_snapshot_chainstate->m_mempool = m_active_chainstate->m_mempool;
-    m_active_chainstate->m_mempool = nullptr;
+    if (m_active_chainstate != nullptr) {
+        Assert(m_active_chainstate->m_mempool == nullptr || m_active_chainstate->m_mempool->size() == 0);
+        m_snapshot_chainstate->m_mempool = m_active_chainstate->m_mempool;
+        m_active_chainstate->m_mempool = nullptr;
+    }
     m_active_chainstate = m_snapshot_chainstate.get();
     return *m_snapshot_chainstate;
 }

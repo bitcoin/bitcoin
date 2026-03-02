@@ -121,22 +121,33 @@ BOOST_FIXTURE_TEST_CASE(chainstatemanager_rebalance_caches, TestChain100Setup)
     //
     Chainstate& c1 = manager.ActiveChainstate();
     chainstates.push_back(&c1);
+    uint256 snapshot_base_hash;
     {
         LOCK(::cs_main);
-        c1.InitCoinsCache(1 << 23);
+        BOOST_REQUIRE(c1.m_chain.Tip() != nullptr);
+        CBlockIndex* snapshot_base = c1.m_chain[c1.m_chain.Height() / 2];
+        BOOST_REQUIRE(snapshot_base != nullptr);
+        BOOST_REQUIRE(snapshot_base->phashBlock != nullptr);
+        snapshot_base_hash = *snapshot_base->phashBlock;
         manager.MaybeRebalanceCaches();
     }
 
     BOOST_CHECK_EQUAL(c1.m_coinstip_cache_size_bytes, max_cache);
     BOOST_CHECK_EQUAL(c1.m_coinsdb_cache_size_bytes, max_cache);
-
+    SyncWithValidationInterfaceQueue();
     // Create a snapshot-based chainstate.
     //
-    CBlockIndex* snapshot_base{WITH_LOCK(manager.GetMutex(), return manager.ActiveChain()[manager.ActiveChain().Height() / 2])};
-    Chainstate& c2 = WITH_LOCK(cs_main, return manager.ActivateExistingSnapshot(*snapshot_base->phashBlock));
+    Chainstate* c2_ptr{nullptr};
+    {
+        LOCK(::cs_main);
+        Chainstate& active_before = manager.ActiveChainstate();
+        BOOST_REQUIRE(&active_before == &c1);
+        c2_ptr = &manager.ActivateExistingSnapshot(snapshot_base_hash);
+    }
+    Chainstate& c2 = *c2_ptr;
     chainstates.push_back(&c2);
     c2.InitCoinsDB(
-        /* cache_size_bytes */ 1 << 23, /* in_memory */ true, /* should_wipe */ false);
+        /* cache_size_bytes */ static_cast<size_t>(max_cache * 0.95), /* in_memory */ true, /* should_wipe */ false);
 
     // Reset IBD state so IsInitialBlockDownload() returns true and causes
     // MaybeRebalancesCaches() to prioritize the snapshot chainstate, giving it
@@ -149,7 +160,10 @@ BOOST_FIXTURE_TEST_CASE(chainstatemanager_rebalance_caches, TestChain100Setup)
 
     {
         LOCK(::cs_main);
-        c2.InitCoinsCache(1 << 23);
+        // SYSCOIN: Keep snapshot coinstip cache at the expected rebalance target
+        // so this test does not force a flush on a snapshot chainstate that has
+        // not loaded a chain tip yet.
+        c2.InitCoinsCache(static_cast<size_t>(max_cache * 0.95));
         manager.MaybeRebalanceCaches();
     }
 
