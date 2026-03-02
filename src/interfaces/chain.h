@@ -326,11 +326,17 @@ public:
     };
 
     //! Register handler for notifications.
+    //! Some notifications are asynchronous and may still execute after the handler is disconnected.
+    //! Use waitForNotifications() after the handler is disconnected to ensure all pending notifications
+    //! have been processed.
     virtual std::unique_ptr<Handler> handleNotifications(std::shared_ptr<Notifications> notifications) = 0;
 
     //! Wait for pending notifications to be processed unless block hash points to the current
     //! chain tip.
     virtual void waitForNotificationsIfTipChanged(const uint256& old_tip) = 0;
+
+    //! Wait for all pending notifications up to this point to be processed
+    virtual void waitForNotifications() = 0;
 
     //! Register handler for RPC. Command is not copied, so reference
     //! needs to remain valid until Handler is disconnected.

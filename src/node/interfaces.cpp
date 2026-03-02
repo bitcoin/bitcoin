@@ -785,6 +785,10 @@ public:
         if (!old_tip.IsNull() && old_tip == WITH_LOCK(::cs_main, return chainman().ActiveChain().Tip()->GetBlockHash())) return;
         validation_signals().SyncWithValidationInterfaceQueue();
     }
+    void waitForNotifications() override
+    {
+        validation_signals().SyncWithValidationInterfaceQueue();
+    }
     std::unique_ptr<Handler> handleRpc(const CRPCCommand& command) override
     {
         return std::make_unique<RpcHandlerImpl>(command);

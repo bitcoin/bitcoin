@@ -169,7 +169,7 @@ bool RemoveWallet(WalletContext& context, const std::shared_ptr<CWallet>& wallet
     WITH_LOCK(wallet->cs_wallet, wallet->WriteBestBlock());
 
     // Unregister with the validation interface which also drops shared pointers.
-    wallet->m_chain_notifications_handler.reset();
+    wallet->DisconnectChainNotifications();
     {
         LOCK(context.wallets_mutex);
         std::vector<std::shared_ptr<CWallet>>::iterator i = std::find(context.wallets.begin(), context.wallets.end(), wallet);
@@ -3117,7 +3117,7 @@ std::shared_ptr<CWallet> CWallet::CreateNew(WalletContext& context, const std::s
     walletInstance->TopUpKeyPool();
 
     if (chain && !AttachChain(walletInstance, *chain, /*rescan_required=*/false, error, warnings)) {
-        walletInstance->m_chain_notifications_handler.reset(); // Reset this pointer so that the wallet will actually be unloaded
+        walletInstance->DisconnectChainNotifications();
         return nullptr;
     }
 
@@ -3158,7 +3158,7 @@ std::shared_ptr<CWallet> CWallet::LoadExisting(WalletContext& context, const std
     walletInstance->TopUpKeyPool();
 
     if (chain && !AttachChain(walletInstance, *chain, rescan_required, error, warnings)) {
-        walletInstance->m_chain_notifications_handler.reset(); // Reset this pointer so that the wallet will actually be unloaded
+        walletInstance->DisconnectChainNotifications();
         return nullptr;
     }
 
@@ -4577,4 +4577,14 @@ std::optional<WalletTXO> CWallet::GetTXO(const COutPoint& outpoint) const
     }
     return it->second;
 }
+
+void CWallet::DisconnectChainNotifications()
+{
+    if (m_chain_notifications_handler) {
+        m_chain_notifications_handler->disconnect();
+        chain().waitForNotifications();
+        m_chain_notifications_handler.reset();
+    }
+}
+
 } // namespace wallet
