@@ -157,6 +157,10 @@ BOOST_FIXTURE_TEST_CASE(chainstatemanager_rebalance_caches, TestChain100Setup)
     BOOST_CHECK_CLOSE(c1.m_coinsdb_cache_size_bytes, max_cache * 0.05, 1);
     BOOST_CHECK_CLOSE(c2.m_coinstip_cache_size_bytes, max_cache * 0.95, 1);
     BOOST_CHECK_CLOSE(c2.m_coinsdb_cache_size_bytes, max_cache * 0.95, 1);
+
+    // SYSCOIN Ensure queued validationinterface callbacks drain before fixture teardown.
+    // This avoids use-after-free races against chainstate structures.
+    SyncWithValidationInterfaceQueue();
 }
 
 struct SnapshotTestSetup : TestChain100Setup {
