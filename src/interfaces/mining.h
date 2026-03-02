@@ -60,17 +60,15 @@ public:
      * @param[in] timestamp time block header field (unix timestamp)
      * @param[in] nonce nonce block header field
      * @param[in] coinbase complete coinbase transaction (including witness)
+     * @param[out] reason failure reason (BIP22)
+     * @param[out] debug  more detailed rejection reason
      *
      * @note unlike the submitblock RPC, this method does NOT add the
      *       coinbase witness automatically.
      *
-     * @returns if the block was processed, does not necessarily indicate validity.
-     *
-     * @note Returns true if the block is already known, which can happen if
-     *       the solved block is constructed and broadcast by multiple nodes
-     *       (e.g. both the miner who constructed the template and the pool).
+     * @returns true if the block was accepted as a new block
      */
-    virtual bool submitSolution(uint32_t version, uint32_t timestamp, uint32_t nonce, CTransactionRef coinbase) = 0;
+    virtual bool submitSolution(uint32_t version, uint32_t timestamp, uint32_t nonce, CTransactionRef coinbase, std::string& reason, std::string& debug) = 0;
 
     /**
      * Waits for fees in the next block to rise, a new tip or the timeout.
@@ -153,6 +151,23 @@ public:
      * For signets the challenge verification is skipped when check_pow is false.
      */
     virtual bool checkBlock(const CBlock& block, const node::BlockCheckOptions& options, std::string& reason, std::string& debug) = 0;
+
+    /**
+     * Process a fully assembled block.
+     *
+     * Similar to the submitblock RPC. Accepts a complete block, validates
+     * it, and if accepted as new, processes it into chainstate. Accepted
+     * blocks may then be announced to peers through normal validation signals.
+     *
+     * @param[in]  block  the complete block to submit
+     * @param[out] reason failure reason (BIP22)
+     * @param[out] debug  more detailed rejection reason
+     * @returns           true if the block was accepted as a new block
+     *
+     * @note unlike the submitblock RPC, this method does NOT add the
+     *       coinbase witness automatically.
+     */
+    virtual bool submitBlock(const CBlock& block, std::string& reason, std::string& debug) = 0;
 
     //! Get internal node context. Useful for RPC and testing,
     //! but not accessible across processes.
