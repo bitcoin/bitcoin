@@ -58,8 +58,9 @@ detect_jobs() {
 detect_compiler() {
     local env_value="$1"
     shift
-    if [[ -n "$env_value" ]] && command -v "$env_value" >/dev/null 2>&1; then
-        printf '%s\n' "$env_value"
+    local env_bin="${env_value%% *}"
+    if [[ -n "$env_bin" ]] && command -v "$env_bin" >/dev/null 2>&1; then
+        printf '%s\n' "$env_bin"
         return 0
     fi
     local candidate
@@ -193,6 +194,9 @@ fi
 STATIC_LINK_FLAGS="${BTCHEADERNODE_STATIC_LINK_FLAGS:--static-libstdc++}"
 SOURCE_ARCHIVE="${BTCHEADERNODE_SOURCE_ARCHIVE:-}"
 BASE_LDFLAGS="${LDFLAGS:-}"
+BASE_CPPFLAGS="${CPPFLAGS:-}"
+BASE_CFLAGS="${CFLAGS:-}"
+BASE_CXXFLAGS="${CXXFLAGS:-}"
 
 OUT_ROOT="$BUILD_ROOT/src/bin/btcheadernode"
 WORK_ROOT="$OUT_ROOT/work"
@@ -338,10 +342,21 @@ else
     BOOST_CONFIG_DIR="$BITCOIN_BUILD/cmake/boost-config"
     write_boost_config_compat "$BOOST_CONFIG_DIR" "$BOOST_INCLUDE_DIR" "$BOOST_VERSION"
 
+    CMAKE_C_FLAGS="$BASE_CFLAGS"
+    if [[ -n "$BASE_CPPFLAGS" ]]; then
+        CMAKE_C_FLAGS="${CMAKE_C_FLAGS:+$CMAKE_C_FLAGS }$BASE_CPPFLAGS"
+    fi
+    CMAKE_CXX_FLAGS="$BASE_CXXFLAGS"
+    if [[ -n "$BASE_CPPFLAGS" ]]; then
+        CMAKE_CXX_FLAGS="${CMAKE_CXX_FLAGS:+$CMAKE_CXX_FLAGS }$BASE_CPPFLAGS"
+    fi
+
     cmake -S "$BITCOIN_SRC" -B "$BITCOIN_BUILD" \
         -DCMAKE_BUILD_TYPE=Release \
         "-DCMAKE_C_COMPILER=${C_COMPILER}" \
         "-DCMAKE_CXX_COMPILER=${CXX_COMPILER}" \
+        "-DCMAKE_C_FLAGS=${CMAKE_C_FLAGS}" \
+        "-DCMAKE_CXX_FLAGS=${CMAKE_CXX_FLAGS}" \
         "-DBoost_DIR=${BOOST_CONFIG_DIR}" \
         -DBUILD_GUI=OFF \
         -DBUILD_SHARED_LIBS=OFF \

@@ -1083,7 +1083,7 @@ nodist_bin_SCRIPTS += \
   bin/btcheadernode/bin/bitcoin-cli
 
 $(BTCHEADERNODE_BIN_STAMP): $(top_srcdir)/contrib/btcheadernode/build-bitcoin-header-node.sh $(top_srcdir)/contrib/btcheadernode/bitcoin.lock
-	$(AM_V_at)LDFLAGS="$(LDFLAGS)" $(top_srcdir)/contrib/btcheadernode/build-bitcoin-header-node.sh --src-root "$(abs_top_srcdir)" --build-root "$(abs_top_builddir)"
+	$(AM_V_at)CC="$(CC)" CXX="$(CXX)" CPPFLAGS="$(CPPFLAGS)" CFLAGS="$(CFLAGS)" CXXFLAGS="$(CXXFLAGS)" LDFLAGS="$(LDFLAGS)" $(top_srcdir)/contrib/btcheadernode/build-bitcoin-header-node.sh --src-root "$(abs_top_srcdir)" --build-root "$(abs_top_builddir)"
 	$(AM_V_at)mkdir -p "$(dir $@)"
 	$(AM_V_at)touch "$@"
 
