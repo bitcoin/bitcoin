@@ -53,7 +53,7 @@ CAmount PlatformShare(const CAmount reward)
         voutMasternodePaymentsRet.emplace_back(platformReward, CScript() << OP_RETURN);
     }
     const auto mnList = m_dmnman.GetListForBlock(pindexPrev);
-    if (mnList.GetAllMNsCount() == 0) {
+    if (mnList.GetCounts().total() == 0) {
         LogPrint(BCLog::MNPAYMENTS, "CMNPaymentsProcessor::%s -- no masternode registered to receive a payment\n", __func__);
         return true;
     }

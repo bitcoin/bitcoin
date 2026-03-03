@@ -6,7 +6,6 @@
 #define BITCOIN_QT_PROPOSALMODEL_H
 
 #include <interfaces/node.h>
-#include <governance/object.h>
 #include <saltedhasher.h>
 #include <uint256.h>
 
@@ -23,6 +22,7 @@
 #include <unordered_set>
 #include <vector>
 
+class CGovernanceObject;
 class ClientModel;
 
 enum class ProposalStatus : uint8_t {
@@ -39,14 +39,11 @@ enum class ProposalStatus : uint8_t {
 class Proposal
 {
 private:
-    ClientModel* clientModel;
     bool m_is_broadcast{true};
+    CAmount m_paymentAmount{0};
     int m_block_height{0};
     int m_collateral_confs{0};
     interfaces::GOV::GovernanceInfo m_gov_info;
-    const CGovernanceObject govObj;
-
-    CAmount m_paymentAmount{0};
     interfaces::GOV::Votes m_votes;
     QDateTime m_date_collateral{};
     QDateTime m_endDate{};
@@ -55,17 +52,17 @@ private:
     QString m_hash_collateral{};
     QString m_hash_object{};
     QString m_hash_parent{};
+    QString m_json{};
     QString m_title{};
     QString m_url{};
     std::optional<int> m_funded_height{};
     uint256 m_objHash{};
 
 public:
-    explicit Proposal(ClientModel* _clientModel, const CGovernanceObject& _govObj,
+    explicit Proposal(ClientModel& client_model, const CGovernanceObject& _govObj,
                       const interfaces::GOV::GovernanceInfo& govInfo, int collateral_confs,
                       bool is_broadcast);
 
-    bool isActive() const;
     bool isBroadcast() const { return m_is_broadcast; }
     CAmount paymentAmount() const { return m_paymentAmount; }
     const uint256& objHash() const { return m_objHash; }
@@ -87,12 +84,12 @@ public:
     QString paymentAddress() const { return m_address; }
     QString title() const { return m_title; }
     QString toHtml(const BitcoinUnit& unit) const;
-    QString toJson() const;
+    QString toJson() const { return m_json; }
     QString url() const { return m_url; }
     std::optional<int> getFundedHeight() const { return m_funded_height; }
 };
 
-using ProposalList = std::vector<std::unique_ptr<Proposal>>;
+using Proposals = std::vector<std::shared_ptr<Proposal>>;
 
 class ProposalModel : public QAbstractTableModel
 {
@@ -101,7 +98,7 @@ class ProposalModel : public QAbstractTableModel
 private:
     BitcoinUnit m_display_unit{BitcoinUnit::DASH};
     int nAbsVoteReq{0};
-    ProposalList m_data;
+    Proposals m_data;
     QIcon m_icon_failing;
     QIcon m_icon_lapsed;
     QIcon m_icon_passing;
@@ -130,9 +127,9 @@ public:
     QVariant data(const QModelIndex& index, int role) const override;
     QVariant headerData(int section, Qt::Orientation orientation, int role) const override;
 
-    void append(std::unique_ptr<Proposal>&& proposal);
+    void append(std::shared_ptr<Proposal>&& proposal);
     void remove(int row);
-    void reconcile(ProposalList&& proposals, Uint256HashSet&& fundable_hashes);
+    void reconcile(Proposals&& proposals, Uint256HashSet&& fundable_hashes);
     void refreshIcons();
     void setDisplayUnit(const BitcoinUnit& display_unit);
     void setVotingParams(int nAbsVoteReq);

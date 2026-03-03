@@ -6,6 +6,7 @@
 #define BITCOIN_QT_MASTERNODEMODEL_H
 
 #include <evo/dmn_types.h>
+#include <interfaces/node.h>
 
 #include <QAbstractTableModel>
 #include <QByteArray>
@@ -17,10 +18,6 @@
 #include <tuple>
 #include <vector>
 
-namespace interfaces {
-class MnEntry;
-} // namespace interfaces
-
 class MasternodeEntry
 {
 private:
@@ -29,6 +26,7 @@ private:
     int32_t m_next_payment_height{0};
     int32_t m_pose_penalty{0};
     int32_t m_registered_height{0};
+    interfaces::MnEntryCPtr m_dmn;
     MnType m_type{MnType::Regular};
     QByteArray m_service_key{};
     QString m_collateral_address{};
@@ -54,7 +52,7 @@ private:
     uint16_t m_operator_reward_pct{0};
 
 public:
-    explicit MasternodeEntry(const interfaces::MnEntry& dmn, const QString& collateral_address, int next_payment_height);
+    explicit MasternodeEntry(const interfaces::MnEntryCPtr& dmn, const QString& collateral_address, int next_payment_height);
     ~MasternodeEntry();
 
     bool isBanned() const { return m_banned; }
@@ -67,6 +65,11 @@ public:
     std::optional<int32_t> poseRevivedHeight() const { return m_pose_revived_height; }
     uint16_t operatorRewardPct() const { return m_operator_reward_pct; }
 
+    const CKeyID& keyIdOwnerRaw() const { return m_dmn->getKeyIdOwner(); }
+    const CKeyID& keyIdVotingRaw() const { return m_dmn->getKeyIdVoting(); }
+    const COutPoint& collateralOutpointRaw() const { return m_dmn->getCollateralOutpoint(); }
+    const CScript& scriptOperatorPayoutRaw() const { return m_dmn->getScriptOperatorPayout(); }
+    const CScript& scriptPayoutRaw() const { return m_dmn->getScriptPayout(); }
     const QByteArray& serviceKey() const { return m_service_key; }
     const QString& collateralAddress() const { return m_collateral_address; }
     const QString& collateralOutpoint() const { return m_collateral_outpoint; }
@@ -78,6 +81,7 @@ public:
     const QString& toJson() const { return m_json; }
     const QString& typeDescription() const { return m_type_description; }
     const QString& votingAddress() const { return m_voting_address; }
+    const uint256& proTxHashRaw() const { return m_dmn->getProTxHash(); }
 
     auto toTie() const
     {
@@ -86,7 +90,7 @@ public:
     QString toHtml() const;
 };
 
-using MasternodeEntryList = std::vector<std::unique_ptr<MasternodeEntry>>;
+using MasternodeEntryList = std::vector<std::shared_ptr<MasternodeEntry>>;
 
 class MasternodeModel : public QAbstractTableModel
 {
@@ -124,7 +128,7 @@ public:
     QVariant data(const QModelIndex& index, int role = Qt::DisplayRole) const override;
     QVariant headerData(int section, Qt::Orientation orientation, int role = Qt::DisplayRole) const override;
 
-    void append(std::unique_ptr<MasternodeEntry>&& entry);
+    void append(std::shared_ptr<MasternodeEntry>&& entry);
     void remove(int row);
     void reconcile(MasternodeEntryList&& entries);
     void setCurrentHeight(int height) { m_current_height = height; }

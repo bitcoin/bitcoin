@@ -117,24 +117,19 @@ static RPCHelpMan masternode_count()
 {
     const NodeContext& node = EnsureAnyNodeContext(request.context);
 
-    auto mnList = node.dmnman->GetListAtChainTip();
-    int total = mnList.GetAllMNsCount();
-    int enabled = mnList.GetValidMNsCount();
+    const auto counts{node.dmnman->GetListAtChainTip().GetCounts()};
 
     UniValue obj(UniValue::VOBJ);
-    obj.pushKV("total", total);
-    obj.pushKV("enabled", enabled);
-
-    int evo_total = mnList.GetAllEvoCount();
-    int evo_enabled = mnList.GetValidEvoCount();
+    obj.pushKV("total", counts.total());
+    obj.pushKV("enabled", counts.enabled());
 
     UniValue evoObj(UniValue::VOBJ);
-    evoObj.pushKV("total", evo_total);
-    evoObj.pushKV("enabled", evo_enabled);
+    evoObj.pushKV("total", counts.m_total_evo);
+    evoObj.pushKV("enabled", counts.m_valid_evo);
 
     UniValue regularObj(UniValue::VOBJ);
-    regularObj.pushKV("total", total - evo_total);
-    regularObj.pushKV("enabled", enabled - evo_enabled);
+    regularObj.pushKV("total", counts.m_total_mn);
+    regularObj.pushKV("enabled", counts.m_valid_mn);
 
     UniValue detailedObj(UniValue::VOBJ);
     detailedObj.pushKV("regular", regularObj);

@@ -1,0 +1,246 @@
+// Copyright (c) 2026 The Dash Core developers
+// Distributed under the MIT software license, see the accompanying
+// file COPYING or http://www.opensource.org/licenses/mit-license.php.
+
+#ifndef BITCOIN_QT_CLIENTFEEDS_H
+#define BITCOIN_QT_CLIENTFEEDS_H
+
+#include <interfaces/node.h>
+#include <saltedhasher.h>
+#include <sync.h>
+#include <threadsafety.h>
+#include <uint256.h>
+
+#include <QHash>
+#include <QObject>
+#include <QTimer>
+
+#include <atomic>
+#include <cassert>
+#include <memory>
+#include <vector>
+
+QT_BEGIN_NAMESPACE
+class QThread;
+QT_END_NAMESPACE
+
+class ClientModel;
+class MasternodeEntry;
+class Proposal;
+
+class FeedBase : public QObject
+{
+    Q_OBJECT
+
+    friend class ClientFeeds;
+
+public:
+    struct Config {
+        std::chrono::milliseconds m_baseline;
+        std::chrono::milliseconds m_throttle;
+    };
+
+    explicit FeedBase(QObject* parent, const Config& config);
+    virtual ~FeedBase();
+
+    void setSyncing(bool syncing) { m_syncing.store(syncing); }
+    const Config& config() const { return m_config; }
+
+    virtual void fetch() = 0;
+    void requestForceRefresh();
+    void requestRefresh();
+
+Q_SIGNALS:
+    void dataReady();
+
+protected:
+    Config m_config;
+    QTimer* m_timer{nullptr};
+    std::atomic<bool> m_in_progress{false};
+    std::atomic<bool> m_retry_pending{false};
+    std::atomic<bool> m_syncing{true};
+};
+
+template<typename T>
+class Feed : public FeedBase
+{
+public:
+    using Data = T;
+
+    explicit Feed(QObject* parent, const Config& config) :
+        FeedBase{parent, config}
+    {
+    }
+    ~Feed() override = default;
+
+    std::shared_ptr<const Data> data() const EXCLUSIVE_LOCKS_REQUIRED(!m_cs)
+    {
+        LOCK(m_cs);
+        return m_data;
+    }
+
+    // FeedBase
+    void fetch() override EXCLUSIVE_LOCKS_REQUIRED(!m_cs) = 0;
+
+protected:
+    void setData(std::shared_ptr<const Data> data) EXCLUSIVE_LOCKS_REQUIRED(!m_cs)
+    {
+        LOCK(m_cs);
+        m_data = std::move(data);
+    }
+
+private:
+    mutable Mutex m_cs;
+    std::shared_ptr<const Data> m_data GUARDED_BY(m_cs);
+};
+
+struct ChainLockData {
+    int32_t m_height{0};
+    int64_t m_block_time{0};
+    QString m_hash;
+};
+
+class ChainLockFeed : public Feed<ChainLockData> {
+    Q_OBJECT
+
+public:
+    explicit ChainLockFeed(QObject* parent, ClientModel& client_model);
+    ~ChainLockFeed();
+
+    void fetch() override;
+
+private:
+    ClientModel& m_client_model;
+};
+
+struct CreditPoolData {
+    interfaces::LLMQ::CreditPoolCounts m_counts{};
+    size_t m_pending_unlocks{0};
+};
+
+class CreditPoolFeed : public Feed<CreditPoolData> {
+    Q_OBJECT
+
+public:
+    explicit CreditPoolFeed(QObject* parent, ClientModel& client_model);
+    ~CreditPoolFeed();
+
+    void fetch() override;
+
+private:
+    ClientModel& m_client_model;
+};
+
+struct InstantSendData {
+    interfaces::LLMQ::InstantSendCounts m_counts{};
+};
+
+class InstantSendFeed : public Feed<InstantSendData> {
+    Q_OBJECT
+
+public:
+    explicit InstantSendFeed(QObject* parent, ClientModel& client_model);
+    ~InstantSendFeed();
+
+    void fetch() override;
+
+private:
+    ClientModel& m_client_model;
+};
+
+struct MasternodeData {
+    bool m_valid{false};
+    int m_list_height{0};
+    interfaces::MnList::Counts m_counts;
+    std::vector<std::shared_ptr<MasternodeEntry>> m_entries;
+};
+
+class MasternodeFeed : public Feed<MasternodeData> {
+    Q_OBJECT
+
+public:
+    explicit MasternodeFeed(QObject* parent, ClientModel& client_model);
+    ~MasternodeFeed();
+
+    void fetch() override;
+
+private:
+    ClientModel& m_client_model;
+};
+
+struct QuorumData {
+    std::vector<interfaces::LLMQ::QuorumInfo> m_quorums{};
+};
+
+class QuorumFeed : public Feed<QuorumData> {
+    Q_OBJECT
+
+public:
+    explicit QuorumFeed(QObject* parent, ClientModel& client_model);
+    ~QuorumFeed();
+
+    void fetch() override;
+
+private:
+    ClientModel& m_client_model;
+};
+
+using Proposals = std::vector<std::shared_ptr<Proposal>>;
+
+struct ProposalData {
+    CAmount m_allocated{0};
+    int m_abs_vote_req{0};
+    interfaces::GOV::GovernanceInfo m_gov_info;
+    Proposals m_proposals;
+    uint16_t m_max_evo_voters{0};
+    uint16_t m_max_regular_voters{0};
+    Uint256HashSet m_fundable_hashes;
+};
+
+class ProposalFeed : public Feed<ProposalData> {
+    Q_OBJECT
+
+public:
+    explicit ProposalFeed(QObject* parent, ClientModel& client_model, MasternodeFeed& feed_masternode);
+    ~ProposalFeed();
+
+    void fetch() override;
+
+private:
+    ClientModel& m_client_model;
+    MasternodeFeed& m_feed_masternode;
+};
+
+class ClientFeeds : public QObject
+{
+    Q_OBJECT
+
+public:
+    explicit ClientFeeds(QObject* parent);
+    ~ClientFeeds();
+
+    template<typename Source, typename... Args>
+    Source* add(Args&&... args) {
+        assert(!m_stopped);
+        auto source = std::make_unique<Source>(std::forward<Args>(args)...);
+        Source* ptr = source.get();
+        registerFeed(ptr);
+        m_sources.push_back(std::move(source));
+        return ptr;
+    }
+
+    void setSyncing(bool syncing);
+    void start();
+    void stop();
+
+private:
+    void registerFeed(FeedBase* source);
+
+private:
+    bool m_stopped{false};
+    QObject* m_worker{nullptr};
+    QThread* m_thread{nullptr};
+    std::vector<std::unique_ptr<FeedBase>> m_sources{};
+};
+
+#endif // BITCOIN_QT_CLIENTFEEDS_H

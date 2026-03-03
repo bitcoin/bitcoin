@@ -38,6 +38,7 @@ jobs:
           # Configure which scopes are allowed (newline delimited).
           scopes: |
             consensus
+            interfaces
             log
             mining
             net
@@ -45,7 +46,7 @@ jobs:
             rest
             rpc
             scripts
+            stats
             utils
             wallet
             zmq
-            stats

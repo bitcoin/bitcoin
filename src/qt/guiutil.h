@@ -7,10 +7,12 @@
 
 #include <consensus/amount.h>
 #include <fs.h>
-#include <qt/guiconstants.h>
 #include <net.h>
 #include <netaddress.h>
 #include <util/check.h>
+
+#include <qt/bitcoinunits.h>
+#include <qt/guiconstants.h>
 
 #include <QApplication>
 #include <QEvent>
@@ -23,6 +25,7 @@
 
 #include <cassert>
 #include <chrono>
+#include <optional>
 #include <utility>
 
 class QValidatedLineEdit;
@@ -147,6 +150,9 @@ namespace GUIUtil
 
     // Returns true if given address+amount meets "dust" definition
     bool isDust(interfaces::Node& node, const QString& address, const CAmount& amount);
+
+    // Format a CAmount as a string with unit name (and truncate to a given number of decimal places).
+    QString formatAmount(BitcoinUnit unit, CAmount amount, bool is_signed = false, std::optional<uint8_t> truncate = std::nullopt);
 
     // HTML escaping for rich text controls
     QString HtmlEscape(const QString& str, bool fMultiLine=false);
@@ -353,6 +359,9 @@ namespace GUIUtil
 
     QString formatNiceTimeOffset(qint64 secs);
 
+    /** Convert a block count to a human-readable duration using the given block spacing. */
+    QString formatBlockDuration(int blocks, int64_t spacing_seconds);
+
     QString formatBytes(uint64_t bytes);
 
     qreal calculateIdealFontSize(int width, const QString& text, QFont font, qreal minPointSize = 4, qreal startPointSize = 14);
@@ -522,6 +531,11 @@ namespace GUIUtil
         return false;
     }
 
+    template <typename T1>
+    inline QByteArray MakeQByteArray(const T1& data)
+    {
+        return QByteArray(reinterpret_cast<const char*>(data.data()), data.size());
+    }
 } // namespace GUIUtil
 
 #endif // BITCOIN_QT_GUIUTIL_H

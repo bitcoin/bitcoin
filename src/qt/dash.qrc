@@ -1,6 +1,12 @@
 <!DOCTYPE RCC><RCC version="1.0">
     <qresource prefix="/icons">
         <file alias="dash">res/icons/dash.png</file>
+        <file alias="dash_macos_devnet">res/icons/dash_macos_devnet.png</file>
+        <file alias="dash_macos_mainnet">res/icons/dash_macos_mainnet.png</file>
+        <file alias="dash_macos_regtest">res/icons/dash_macos_regtest.png</file>
+        <file alias="dash_macos_testnet">res/icons/dash_macos_testnet.png</file>
+        <file alias="dash_macos_tray">res/icons/dash_macos_tray.png</file>
+        <file alias="dash_macos_tray@2x">res/icons/dash_macos_tray@2x.png</file>
         <file alias="warning">res/icons/warning.png</file>
         <file alias="address-book">res/icons/address-book.png</file>
         <file alias="connect_1">res/icons/connect1_16.png</file>

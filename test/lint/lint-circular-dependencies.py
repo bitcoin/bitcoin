@@ -57,6 +57,7 @@ EXPECTED_CIRCULAR_DEPENDENCIES = (
     "qt/appearancewidget -> qt/guiutil -> qt/appearancewidget",
     "qt/bitcoinaddressvalidator -> qt/guiutil -> qt/bitcoinaddressvalidator",
     "qt/bitcoingui -> qt/guiutil -> qt/bitcoingui",
+    "qt/clientfeeds -> qt/clientmodel -> qt/clientfeeds",
     "qt/guiutil -> qt/qvalidatedlineedit -> qt/guiutil",
     "wallet/coinjoin -> wallet/receive -> wallet/coinjoin",
 )

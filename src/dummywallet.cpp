@@ -18,7 +18,7 @@ class Loader;
 } // namespace CoinJoin
 } // namespace interfaces
 namespace node {
-class NodeContext;
+struct NodeContext;
 } // namespace node
 namespace wallet {
 class CWallet;

@@ -273,7 +273,7 @@ bool CSpecialTxProcessor::RebuildListFromBlock(const CBlock& block, gsl::not_nul
                     LogPrintf("%s -- MN %s removed from list because collateral was used for " /* Continued */
                               "a new ProRegTx. collateralOutpoint=%s, nHeight=%d, mapCurMNs.allMNsCount=%d\n",
                               __func__, replacedDmn->proTxHash.ToString(), dmn->collateralOutpoint.ToStringShort(),
-                              nHeight, newList.GetAllMNsCount());
+                              nHeight, newList.GetCounts().total());
                 }
             }
 
@@ -467,7 +467,7 @@ bool CSpecialTxProcessor::RebuildListFromBlock(const CBlock& block, gsl::not_nul
                     LogPrintf("%s -- MN %s removed from list because collateral was spent. " /* Continued */
                               "collateralOutpoint=%s, nHeight=%d, mapCurMNs.allMNsCount=%d\n",
                               __func__, dmn->proTxHash.ToString(), dmn->collateralOutpoint.ToStringShort(), nHeight,
-                              newList.GetAllMNsCount());
+                              newList.GetCounts().total());
                 }
             }
         }

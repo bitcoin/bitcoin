@@ -124,7 +124,7 @@ MessageProcessingResult CCoinJoinClientQueueManager::ProcessMessage(NodeId from,
             LogPrint(BCLog::COINJOIN, "DSQUEUE -- CoinJoin queue is ready, masternode=%s, queue=%s\n", dmn->proTxHash.ToString(), dsq.ToString());
             return ret;
         } else {
-            if (m_mn_metaman.IsMixingThresholdExceeded(dmn->proTxHash, tip_mn_list.GetValidMNsCount())) {
+            if (m_mn_metaman.IsMixingThresholdExceeded(dmn->proTxHash, tip_mn_list.GetCounts().enabled())) {
                 LogPrint(BCLog::COINJOIN, "DSQUEUE -- Masternode %s is sending too many dsq messages\n",
                          dmn->proTxHash.ToString());
                 return ret;
@@ -826,7 +826,7 @@ bool CCoinJoinClientSession::DoAutomaticDenominating(ChainstateManager& chainman
             return false;
         }
 
-        if (m_dmnman.GetListAtChainTip().GetValidMNsCount() == 0 &&
+        if (m_dmnman.GetListAtChainTip().GetCounts().enabled() == 0 &&
             Params().NetworkIDString() != CBaseChainParams::REGTEST) {
             strAutoDenomResult = _("No Masternodes detected.");
             WalletCJLogPrint(m_wallet, "CCoinJoinClientSession::DoAutomaticDenominating -- %s\n", strAutoDenomResult.original);
@@ -988,7 +988,7 @@ bool CCoinJoinClientManager::DoAutomaticDenominating(ChainstateManager& chainman
         return false;
     }
 
-    int nMnCountEnabled = m_dmnman.GetListAtChainTip().GetValidMNsCount();
+    int nMnCountEnabled = m_dmnman.GetListAtChainTip().GetCounts().enabled();
 
     // If we've used 90% of the Masternode list then drop the oldest first ~30%
     int nThreshold_high = nMnCountEnabled * 0.9;
@@ -1033,7 +1033,7 @@ CDeterministicMNCPtr CCoinJoinClientManager::GetRandomNotUsedMasternode()
 {
     auto mnList = m_dmnman.GetListAtChainTip();
 
-    size_t nCountEnabled = mnList.GetValidMNsCount();
+    size_t nCountEnabled = mnList.GetCounts().enabled();
     size_t nCountNotExcluded{nCountEnabled - m_mn_metaman.GetUsedMasternodesCount()};
 
     WalletCJLogPrint(m_wallet, "CCoinJoinClientManager::%s -- %d enabled masternodes, %d masternodes to choose from\n", __func__, nCountEnabled, nCountNotExcluded);
@@ -1078,7 +1078,7 @@ bool CCoinJoinClientSession::JoinExistingQueue(CAmount nBalanceNeedsAnonymized, 
     if (m_queueman == nullptr) return false;
 
     const auto mnList = m_dmnman.GetListAtChainTip();
-    const int nWeightedMnCount = mnList.GetValidWeightedMNsCount();
+    const int nWeightedMnCount = mnList.GetCounts().m_valid_weighted;
 
     // Look through the queues and see if anything matches
     CCoinJoinQueue dsq;
@@ -1143,8 +1143,9 @@ bool CCoinJoinClientSession::StartNewQueue(CAmount nBalanceNeedsAnonymized, CCon
 
     int nTries = 0;
     const auto mnList = m_dmnman.GetListAtChainTip();
-    const int nMnCount = mnList.GetValidMNsCount();
-    const int nWeightedMnCount = mnList.GetValidWeightedMNsCount();
+    const auto mnCounts = mnList.GetCounts();
+    const int nMnCount = mnCounts.enabled();
+    const int nWeightedMnCount = mnCounts.m_valid_weighted;
 
     // find available denominated amounts
     std::set<CAmount> setAmounts;

@@ -96,6 +96,7 @@ TransactionView::TransactionView(QWidget* parent) :
     typeWidget->addItem(tr("To yourself"), TransactionFilterProxy::TYPE(TransactionRecord::SendToSelf));
     typeWidget->addItem(tr("Mined"), TransactionFilterProxy::TYPE(TransactionRecord::Generated));
     typeWidget->addItem(tr("Platform Transfer"), TransactionFilterProxy::TYPE(TransactionRecord::PlatformTransfer));
+    typeWidget->addItem(tr("Data Transaction"), TransactionFilterProxy::TYPE(TransactionRecord::DataTransaction));
     typeWidget->addItem(tr("Dust Receive"), TransactionFilterProxy::TYPE(TransactionRecord::DustReceive));
     typeWidget->addItem(tr("Other"), TransactionFilterProxy::TYPE(TransactionRecord::Other));
     typeWidget->setCurrentIndex(settings.value("transactionType").toInt());

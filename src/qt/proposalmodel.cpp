@@ -5,6 +5,7 @@
 #include <qt/proposalmodel.h>
 
 #include <governance/classes.h>
+#include <governance/object.h>
 #include <governance/vote.h>
 
 #include <qt/guiutil_font.h>
@@ -20,19 +21,18 @@
 #include <algorithm>
 #include <cmath>
 
-Proposal::Proposal(ClientModel* _clientModel, const CGovernanceObject& _govObj,
+Proposal::Proposal(ClientModel& client_model, const CGovernanceObject& govObj,
                    const interfaces::GOV::GovernanceInfo& govInfo, int collateral_confs,
                    bool is_broadcast) :
-    clientModel{_clientModel},
     m_is_broadcast{is_broadcast},
-    m_block_height{_clientModel ? _clientModel->getNumBlocks() : 0},
+    m_block_height{client_model.getNumBlocks()},
     m_collateral_confs{collateral_confs},
     m_gov_info{govInfo},
-    govObj{_govObj},
     m_date_collateral{QDateTime::fromSecsSinceEpoch(govObj.GetCreationTime())},
     m_hash_collateral{QString::fromStdString(govObj.GetCollateralHash().ToString())},
     m_hash_object{QString::fromStdString(govObj.GetHash().ToString())},
     m_hash_parent{QString::fromStdString(govObj.Object().hashParent.ToString())},
+    m_json{QString::fromStdString(govObj.GetInnerJson().write(2))},
     m_objHash{govObj.GetHash()}
 {
     UniValue prop_data;
@@ -40,10 +40,8 @@ Proposal::Proposal(ClientModel* _clientModel, const CGovernanceObject& _govObj,
         return;
     }
 
-    if (clientModel) {
-        m_funded_height = clientModel->node().gov().getProposalFundedHeight(govObj.GetHash());
-        m_votes = clientModel->node().gov().getObjVotes(govObj, VOTE_SIGNAL_FUNDING);
-    }
+    m_funded_height = client_model.node().gov().getProposalFundedHeight(govObj.GetHash());
+    m_votes = client_model.node().gov().getObjVotes(govObj, VOTE_SIGNAL_FUNDING);
 
     if (const UniValue& titleValue = prop_data.find_value("name"); titleValue.isStr()) {
         m_title = QString::fromStdString(titleValue.get_str());
@@ -104,12 +102,6 @@ QString Proposal::toHtml(const BitcoinUnit& unit) const
     return ret;
 }
 
-QString Proposal::toJson() const
-{
-    const auto json = govObj.GetInnerJson();
-    return QString::fromStdString(json.write(2));
-}
-
 int Proposal::blocksUntilSuperblock() const
 {
     return m_gov_info.nextsuperblock - m_block_height;
@@ -149,15 +141,6 @@ ProposalStatus Proposal::status(bool is_fundable) const
         return ProposalStatus::Voting;
     }
     return is_fundable ? ProposalStatus::Passing : ProposalStatus::Unfunded;
-}
-
-bool Proposal::isActive() const
-{
-    if (!clientModel) {
-        return false;
-    }
-    std::string strError;
-    return clientModel->node().gov().getObjLocalValidity(govObj, strError, false);
 }
 
 ///
@@ -251,8 +234,24 @@ QVariant ProposalModel::data(const QModelIndex& index, int role) const
     {
         // Edit role is used for sorting, so return the raw values where possible
         switch (index.column()) {
-        case Column::STATUS:
-            return static_cast<int>(proposal->status(isFundable));
+        case Column::STATUS: {
+            // Two-level sort: status group (passing before failing), then
+            // vote margin within each group (winning by most sorts first).
+            // Clamp to 16 bits so the value stays within its group window
+            // and doesn't bleed into an adjacent group's key range.
+            const int deficit{std::clamp(nAbsVoteReq - proposal->getAbsoluteYesCount(), -32768, 32767)};
+            switch (proposal->status(isFundable)) {
+            case ProposalStatus::Funded:      return (0 << 16) + deficit;
+            case ProposalStatus::Passing:     return (1 << 16) + deficit;
+            case ProposalStatus::Unfunded:    return (2 << 16) + deficit;
+            case ProposalStatus::Voting:      return (3 << 16) + deficit;
+            case ProposalStatus::Confirming:  return (4 << 16) + deficit;
+            case ProposalStatus::Pending:     return (5 << 16) + deficit;
+            case ProposalStatus::Failing:     return (6 << 16) + deficit;
+            case ProposalStatus::Lapsed:      return (7 << 16) + deficit;
+            } // no default case, so the compiler can warn about missing cases
+            return 0;
+        }
         case Column::HASH:
             return proposal->hash();
         case Column::TITLE:
@@ -364,7 +363,7 @@ QVariant ProposalModel::headerData(int section, Qt::Orientation orientation, int
     }
 }
 
-void ProposalModel::append(std::unique_ptr<Proposal>&& proposal)
+void ProposalModel::append(std::shared_ptr<Proposal>&& proposal)
 {
     beginInsertRows({}, rowCount(), rowCount());
     m_data.push_back(std::move(proposal));
@@ -381,7 +380,7 @@ void ProposalModel::remove(int row)
     endRemoveRows();
 }
 
-void ProposalModel::reconcile(ProposalList&& proposals, std::unordered_set<uint256, StaticSaltedHasher>&& fundable_hashes)
+void ProposalModel::reconcile(Proposals&& proposals, Uint256HashSet&& fundable_hashes)
 {
     m_fundable_hashes = std::move(fundable_hashes);
 
@@ -434,7 +433,8 @@ void ProposalModel::setVotingParams(int newAbsVoteReq)
     // column. Emit signal to force recalculation.
     this->nAbsVoteReq = newAbsVoteReq;
     if (!m_data.empty()) {
-        Q_EMIT dataChanged(createIndex(0, Column::VOTING_STATUS), createIndex(rowCount() - 1, Column::VOTING_STATUS));
+        // STATUS also embeds nAbsVoteReq in its sort key, so both columns need invalidating
+        Q_EMIT dataChanged(createIndex(0, Column::STATUS), createIndex(rowCount() - 1, Column::VOTING_STATUS));
     }
 }
 

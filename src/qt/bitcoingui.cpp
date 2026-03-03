@@ -5,18 +5,31 @@
 
 #include <qt/bitcoingui.h>
 
+#include <chain.h>
+#include <chainparams.h>
+#include <interfaces/coinjoin.h>
+#include <interfaces/handler.h>
+#include <interfaces/node.h>
+#include <node/interface_ui.h>
+#include <util/system.h>
+#include <util/translation.h>
+#include <util/underlying.h>
+#include <validation.h>
+
 #include <qt/bitcoinunits.h>
 #include <qt/clientmodel.h>
 #include <qt/createwalletdialog.h>
 #include <qt/guiconstants.h>
-#include <qt/guiutil.h>
 #include <qt/guiutil_font.h>
+#include <qt/guiutil.h>
+#include <qt/masternodelist.h>
 #include <qt/modaloverlay.h>
 #include <qt/networkstyle.h>
 #include <qt/notificator.h>
 #include <qt/openuridialog.h>
 #include <qt/optionsdialog.h>
 #include <qt/optionsmodel.h>
+#include <qt/proposallist.h>
 #include <qt/rpcconsole.h>
 #include <qt/utilitydialog.h>
 
@@ -30,20 +43,6 @@
 #ifdef Q_OS_MACOS
 #include <qt/macdockiconhandler.h>
 #endif
-
-#include <functional>
-#include <chain.h>
-#include <chainparams.h>
-#include <interfaces/coinjoin.h>
-#include <interfaces/handler.h>
-#include <interfaces/node.h>
-#include <node/interface_ui.h>
-#include <qt/governancelist.h>
-#include <qt/masternodelist.h>
-#include <util/system.h>
-#include <util/translation.h>
-#include <util/underlying.h>
-#include <validation.h>
 
 #include <QAction>
 #include <QActionGroup>
@@ -71,6 +70,8 @@
 #include <QToolButton>
 #include <QVBoxLayout>
 #include <QWindow>
+
+#include <functional>
 
 namespace {
 // Total governance clock frames. Frame 0 is reserved for the superblock
@@ -115,8 +116,16 @@ BitcoinGUI::BitcoinGUI(interfaces::Node& node, const NetworkStyle* networkStyle,
 #ifdef ENABLE_WALLET
     enableWallet = WalletModel::isWalletEnabled();
 #endif // ENABLE_WALLET
-    QApplication::setWindowIcon(m_network_style->getTrayAndWindowIcon());
-    setWindowIcon(m_network_style->getTrayAndWindowIcon());
+
+    QIcon icon{m_network_style->getTrayAndWindowIcon()};
+#ifdef Q_OS_MACOS
+    if (auto macos_icon{m_network_style->getMacIcon()}) {
+        icon = macos_icon.value();
+    }
+#endif // Q_OS_MACOS
+    QApplication::setWindowIcon(icon);
+    setWindowIcon(icon);
+
     updateWindowTitle();
 
     rpcConsole = new RPCConsole(node, this, enableWallet ? Qt::Window : Qt::Widget);
@@ -134,6 +143,10 @@ BitcoinGUI::BitcoinGUI(interfaces::Node& node, const NetworkStyle* networkStyle,
             this->message(title, message, style);
         });
         connect(walletFrame, &WalletFrame::currentWalletSet, [this] { updateWalletStatus(); });
+        connect(walletFrame, &WalletFrame::showProposalInfo, this, [this] {
+            rpcConsole->setInfoView(RPCConsole::InfoView::Governance);
+            showDebugWindow();
+        });
     } else
 #endif // ENABLE_WALLET
     {
@@ -446,6 +459,8 @@ void BitcoinGUI::createActions()
     openPeersAction->setStatusTip(tr("Show peers info"));
     openRepairAction = new QAction(tr("Wallet &Repair"), this);
     openRepairAction->setStatusTip(tr("Show wallet repair options"));
+    openDebugLogAction = new QAction(tr("Open &debug log file"), this);
+    openDebugLogAction->setStatusTip(tr("Open the debug log file from the current data directory"));
     openConfEditorAction = new QAction(tr("Open &wallet configuration file"), this);
     openConfEditorAction->setStatusTip(tr("Open configuration file"));
     // override TextHeuristicRole set by default which confuses this action with application settings
@@ -516,7 +531,8 @@ void BitcoinGUI::createActions()
     connect(openPeersAction, &QAction::triggered, this, &BitcoinGUI::showPeers);
     connect(openRepairAction, &QAction::triggered, this, &BitcoinGUI::showRepair);
 
-    // Open configs and backup folder from menu
+    // Open logs, configs, and backup folder from menu
+    connect(openDebugLogAction, &QAction::triggered, GUIUtil::openDebugLogfile);
     connect(openConfEditorAction, &QAction::triggered, this, &BitcoinGUI::showConfEditor);
     connect(showBackupsAction, &QAction::triggered, this, &BitcoinGUI::showBackups);
 
@@ -639,6 +655,7 @@ void BitcoinGUI::createMenuBar()
         file->addAction(m_load_psbt_clipboard_action);
         file->addSeparator();
     }
+    file->addAction(openDebugLogAction);
     file->addAction(openConfEditorAction);
     if(walletFrame) {
         file->addAction(showBackupsAction);
@@ -1004,6 +1021,10 @@ void BitcoinGUI::addWallet(WalletModel* walletModel)
     });
     connect(wallet_view, &WalletView::encryptionStatusChanged, this, &BitcoinGUI::updateWalletStatus);
     connect(wallet_view, &WalletView::incomingTransaction, this, &BitcoinGUI::incomingTransaction);
+    connect(wallet_view, &WalletView::showProposalInfo, this, [this] {
+        rpcConsole->setInfoView(RPCConsole::InfoView::Governance);
+        showDebugWindow();
+    });
     connect(this, &BitcoinGUI::setPrivacy, wallet_view, &WalletView::setPrivacy);
     wallet_view->setPrivacy(isPrivacyModeActivated());
     const QString display_name = walletModel->getDisplayName();
@@ -1091,6 +1112,8 @@ void BitcoinGUI::setWalletActionsEnabled(bool enabled)
     openAction->setEnabled(enabled);
     m_close_wallet_action->setEnabled(enabled);
     m_close_all_wallets_action->setEnabled(enabled);
+
+    updateWidth();
 }
 
 void BitcoinGUI::createTrayIcon()
@@ -1098,7 +1121,13 @@ void BitcoinGUI::createTrayIcon()
     assert(QSystemTrayIcon::isSystemTrayAvailable());
 
     if (QSystemTrayIcon::isSystemTrayAvailable()) {
-        trayIcon = new QSystemTrayIcon(m_network_style->getTrayAndWindowIcon(), this);
+        QIcon icon{m_network_style->getTrayAndWindowIcon()};
+#ifdef Q_OS_MACOS
+        if (auto macos_tray{m_network_style->getMacTray()}) {
+            icon = macos_tray.value();
+        }
+#endif // Q_OS_MACOS
+        trayIcon = new QSystemTrayIcon(icon, this);
         QString toolTip = tr("%1 client").arg(PACKAGE_NAME) + " " + m_network_style->getTitleAddText();
         trayIcon->setToolTip(toolTip);
     }
@@ -1139,6 +1168,7 @@ void BitcoinGUI::createIconMenu(QMenu *pmenu)
         repair_action = pmenu->addAction(openRepairAction->text(), openRepairAction, &QAction::trigger);
     }
     pmenu->addSeparator();
+    QAction* debuglog_action = pmenu->addAction(openDebugLogAction->text(), openDebugLogAction, &QAction::trigger);
     QAction* conf_action = pmenu->addAction(openConfEditorAction->text(), openConfEditorAction, &QAction::trigger);
     QAction* backups_action{nullptr};
     if (enableWallet) {
@@ -1155,7 +1185,7 @@ void BitcoinGUI::createIconMenu(QMenu *pmenu)
         // Using QSystemTrayIcon::Context is not reliable.
         // See https://bugreports.qt.io/browse/QTBUG-91697
         pmenu, &QMenu::aboutToShow,
-        [this, show_hide_action, send_action, cj_send_action, receive_action, sign_action, verify_action, options_action, node_window_action, quit_action, repair_action, backups_action, info_action, graph_action, peer_action, conf_action] {
+        [this, show_hide_action, send_action, cj_send_action, receive_action, sign_action, verify_action, options_action, node_window_action, quit_action, repair_action, backups_action, info_action, graph_action, peer_action, debuglog_action, conf_action] {
             if (m_node.shutdownRequested()) return; // nothing to do, node is shutting down.
 
             if (show_hide_action) show_hide_action->setText(
@@ -1182,6 +1212,7 @@ void BitcoinGUI::createIconMenu(QMenu *pmenu)
                 node_window_action->setEnabled(openRPCConsoleAction->isEnabled());
                 graph_action->setEnabled(openGraphAction->isEnabled());
                 peer_action->setEnabled(openPeersAction->isEnabled());
+                debuglog_action->setEnabled(openDebugLogAction->isEnabled());
                 conf_action->setEnabled(openConfEditorAction->isEnabled());
                 if (quit_action) quit_action->setEnabled(true);
             }
@@ -1806,28 +1837,37 @@ void BitcoinGUI::updateGovernanceCycleIcon()
 
     const auto gov_info{m_node.gov().getGovernanceInfo()};
     const auto remaining_blocks{std::max<int>(0, gov_info.nextsuperblock - current_height)};
-    const auto days{static_cast<int>(static_cast<int64_t>(remaining_blocks) * gov_info.targetSpacing / (24*60*60))};
+    const auto remaining_str{GUIUtil::formatBlockDuration(remaining_blocks, gov_info.targetSpacing)};
     const bool awaiting_superblock{current_height % gov_info.superblockcycle >= gov_info.superblockcycle - gov_info.superblockmaturitywindow};
+    // Voting closes superblockmaturitywindow blocks before the superblock
+    const auto voting_remaining{std::max<int>(0, remaining_blocks - gov_info.superblockmaturitywindow)};
+    const auto voting_str{GUIUtil::formatBlockDuration(voting_remaining, gov_info.targetSpacing)};
 
-    QString tooltip1{};
     if (awaiting_superblock) {
         labelGovernanceCycleIcon->setPixmap(m_gov_cycle_pixmaps.at({ToUnderlying(GUIUtil::ThemedColor::BLUE), 0}));
-        tooltip1 = tr("~%n day(s) (%1 blocks) left for superblock", "", days).arg(remaining_blocks);
     } else {
         const auto cycle_blocks{gov_info.superblockcycle - gov_info.superblockmaturitywindow};
         const auto blocks_elapsed{gov_info.superblockcycle - remaining_blocks - gov_info.superblockmaturitywindow};
         const auto progress{static_cast<double>(std::max(0, blocks_elapsed)) / static_cast<double>(std::max(1, cycle_blocks))};
         const auto frame{std::clamp<int>(static_cast<int>(progress * (GOV_CYCLE_FRAME_COUNT - 1)), 0, GOV_CYCLE_FRAME_COUNT - 2) + 1};
         labelGovernanceCycleIcon->setPixmap(m_gov_cycle_pixmaps.at({ToUnderlying(GUIUtil::ThemedColor::GREEN), frame}));
-        tooltip1 = tr("~%n day(s) (%1 blocks) left for voting", "", days).arg(remaining_blocks);
     }
 
-    const auto allocated_budget{m_node.gov().getFundableProposalHashes().allocated};
-    const auto budget_pct{gov_info.governancebudget > 0
-        ? static_cast<int>(static_cast<double>(allocated_budget) / static_cast<double>(gov_info.governancebudget) * 100.0)
-        : 0};
-    const auto unit{options_model.getDisplayUnit()};
-    const auto tooltip2{tr("~%1% of budget committed (%2 %3).").arg(budget_pct).arg(allocated_budget / BitcoinUnits::factor(unit)).arg(BitcoinUnits::name(unit))};
+    const auto tooltip1{remaining_blocks == 0
+        ? (awaiting_superblock ? tr("Superblock imminent") : tr("Voting period ended"))
+        : (awaiting_superblock
+            ? tr("~%1 (%2 blocks) left for superblock").arg(remaining_str).arg(remaining_blocks)
+            : tr("~%1 (%2 blocks) left for voting").arg(voting_str).arg(voting_remaining))};
+    const auto tooltip2{[&]() {
+        const auto allocated_budget{m_node.gov().getFundableProposalHashes().allocated};
+        const auto budget_pct{gov_info.governancebudget > 0
+            ? static_cast<int>(static_cast<double>(allocated_budget) / static_cast<double>(gov_info.governancebudget) * 100.0)
+            : 0};
+        const auto unit{options_model.getDisplayUnit()};
+        return tr("~%1% of budget committed (%2 / %3)").arg(budget_pct)
+            .arg(GUIUtil::formatAmount(unit, allocated_budget, /*is_signed=*/false, /*truncate=*/2))
+            .arg(GUIUtil::formatAmount(unit, gov_info.governancebudget, /*is_signed=*/false, /*truncate=*/2));
+    }()};
     labelGovernanceCycleIcon->setToolTip(QString("<nobr>%1<br>%2</nobr>").arg(tooltip1).arg(tooltip2));
     labelGovernanceCycleIcon->show();
 }

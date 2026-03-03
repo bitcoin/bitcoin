@@ -23,8 +23,6 @@
 #include <set>
 
 namespace {
-constexpr int64_t DAY_SECS{24 * 60 * 60};
-
 std::optional<QString> JoinArray(const UniValue& arr)
 {
     if (!arr.isArray() || arr.empty()) return std::nullopt;
@@ -38,26 +36,27 @@ std::optional<QString> JoinArray(const UniValue& arr)
 }
 } // anonymous namespace
 
-MasternodeEntry::MasternodeEntry(const interfaces::MnEntry& dmn, const QString& collateral_address, int next_payment_height) :
-    m_banned{dmn.isBanned()},
-    m_last_paid_height{dmn.getLastPaidHeight()},
+MasternodeEntry::MasternodeEntry(const interfaces::MnEntryCPtr& dmn, const QString& collateral_address, int next_payment_height) :
+    m_banned{dmn->isBanned()},
+    m_last_paid_height{dmn->getLastPaidHeight()},
     m_next_payment_height{next_payment_height},
-    m_pose_penalty{dmn.getPoSePenalty()},
-    m_registered_height{dmn.getRegisteredHeight()},
-    m_type{dmn.getType()},
+    m_pose_penalty{dmn->getPoSePenalty()},
+    m_registered_height{dmn->getRegisteredHeight()},
+    m_dmn{dmn},
+    m_type{dmn->getType()},
     m_collateral_address{collateral_address},
-    m_collateral_outpoint{QString::fromStdString(dmn.getCollateralOutpoint().ToStringShort())},
-    m_owner_address{QString::fromStdString(EncodeDestination(PKHash(dmn.getKeyIdOwner())))},
-    m_protx_hash{QString::fromStdString(dmn.getProTxHash().ToString())},
-    m_service{QString::fromStdString(dmn.getNetInfoPrimary().ToStringAddrPort())},
-    m_type_description{QString::fromStdString(std::string(GetMnType(dmn.getType()).description))},
-    m_voting_address{QString::fromStdString(EncodeDestination(PKHash(dmn.getKeyIdVoting())))},
-    m_operator_reward_pct{dmn.getOperatorReward()}
+    m_collateral_outpoint{QString::fromStdString(dmn->getCollateralOutpoint().ToStringShort())},
+    m_owner_address{QString::fromStdString(EncodeDestination(PKHash(dmn->getKeyIdOwner())))},
+    m_protx_hash{QString::fromStdString(dmn->getProTxHash().ToString())},
+    m_service{QString::fromStdString(dmn->getNetInfoPrimary().ToStringAddrPort())},
+    m_type_description{QString::fromStdString(std::string(GetMnType(dmn->getType()).description))},
+    m_voting_address{QString::fromStdString(EncodeDestination(PKHash(dmn->getKeyIdVoting())))},
+    m_operator_reward_pct{dmn->getOperatorReward()}
 {
-    auto addr_key = dmn.getNetInfoPrimary().GetKey();
+    auto addr_key = dmn->getNetInfoPrimary().GetKey();
     m_service_key = QByteArray(reinterpret_cast<const char*>(addr_key.data()), addr_key.size());
 
-    if (CTxDestination dest; ExtractDestination(dmn.getScriptPayout(), dest)) {
+    if (CTxDestination dest; ExtractDestination(dmn->getScriptPayout(), dest)) {
         m_payout_address = QString::fromStdString(EncodeDestination(dest));
     } else {
         m_payout_address = QObject::tr("UNKNOWN");
@@ -65,9 +64,9 @@ MasternodeEntry::MasternodeEntry(const interfaces::MnEntry& dmn, const QString& 
 
     if (m_operator_reward_pct) {
         m_operator_reward = QString::number(m_operator_reward_pct / 100.0, 'f', 2) + "%";
-        if (dmn.getScriptOperatorPayout() != CScript()) {
+        if (dmn->getScriptOperatorPayout() != CScript()) {
             CTxDestination operatorDest;
-            if (ExtractDestination(dmn.getScriptOperatorPayout(), operatorDest)) {
+            if (ExtractDestination(dmn->getScriptOperatorPayout(), operatorDest)) {
                 m_operator_reward += " " + QObject::tr("to %1").arg(QString::fromStdString(EncodeDestination(operatorDest)));
             } else {
                 m_operator_reward += " " + QObject::tr("to UNKNOWN");
@@ -79,7 +78,7 @@ MasternodeEntry::MasternodeEntry(const interfaces::MnEntry& dmn, const QString& 
         m_operator_reward = QObject::tr("NONE");
     }
 
-    const auto json{dmn.toJson()};
+    const auto json{dmn->toJson()};
     m_json = QString::fromStdString(json.write(2));
     if (const auto& val = json.find_value("collateralHash"); val.isStr()) {
         m_collateral_hash = QString::fromStdString(val.get_str());
@@ -216,11 +215,10 @@ QVariant MasternodeModel::data(const QModelIndex& index, int role) const
 
     if (role == Qt::ToolTipRole) {
         if (index.column() == Column::STATUS && m_current_height > 0) {
-            const int32_t blocks_per_day = DAY_SECS / Params().GetConsensus().nPowTargetSpacing;
+            const int64_t spacing = Params().GetConsensus().nPowTargetSpacing;
             if (entry->isBanned()) {
                 if (auto ban_height = entry->poseBanHeight(); ban_height && *ban_height > 0) {
-                    const auto days{(m_current_height - *ban_height) / blocks_per_day};
-                    return days > 0 ? tr("Banned for %n day(s)", "", days) : tr("Banned for less than a day");
+                    return tr("Banned for %1").arg(GUIUtil::formatBlockDuration(m_current_height - *ban_height, spacing));
                 } else {
                     return tr("Banned");
                 }
@@ -229,8 +227,7 @@ QVariant MasternodeModel::data(const QModelIndex& index, int role) const
                 if (auto revived_height = entry->poseRevivedHeight(); revived_height && *revived_height > 0) {
                     active_height = *revived_height;
                 }
-                const auto days{(m_current_height - active_height) / blocks_per_day};
-                return days > 0 ? tr("Active for %n day(s)", "", days) : tr("Active for less than a day");
+                return tr("Active for %1").arg(GUIUtil::formatBlockDuration(m_current_height - active_height, spacing));
             }
         }
         return {};
@@ -285,6 +282,22 @@ QVariant MasternodeModel::data(const QModelIndex& index, int role) const
         case Column::TYPE:
             return static_cast<int>(entry->type());
         case Column::STATUS:
+            if (m_current_height > 0) {
+                if (entry->isBanned()) {
+                    // Banned nodes use positive values
+                    if (auto ban_height = entry->poseBanHeight(); ban_height && *ban_height > 0) {
+                        return m_current_height - *ban_height + 1; // +1: freshly banned → 1, never 0
+                    }
+                    return 1; // Unknown ban time, treat as freshly banned
+                } else {
+                    // Active nodes use negative values
+                    int32_t active_height = entry->registeredHeight();
+                    if (auto revived_height = entry->poseRevivedHeight(); revived_height && *revived_height > 0) {
+                        active_height = *revived_height;
+                    }
+                    return -(m_current_height - active_height);
+                }
+            }
             return entry->isBanned() ? 1 : 0;
         case Column::POSE:
             return entry->posePenalty();
@@ -335,7 +348,7 @@ QVariant MasternodeModel::headerData(int section, Qt::Orientation orientation, i
     }
 }
 
-void MasternodeModel::append(std::unique_ptr<MasternodeEntry>&& entry)
+void MasternodeModel::append(std::shared_ptr<MasternodeEntry>&& entry)
 {
     beginInsertRows({}, rowCount(), rowCount());
     m_data.push_back(std::move(entry));
@@ -361,7 +374,7 @@ void MasternodeModel::reconcile(MasternodeEntryList&& entries)
 
     std::set<int> present;
     std::vector<int> changed;
-    std::vector<std::unique_ptr<MasternodeEntry>> add;
+    std::vector<std::shared_ptr<MasternodeEntry>> add;
     for (auto& entry : entries) {
         if (auto it = existing.find(entry->proTxHash()); it != existing.end()) {
             int idx = it.value();

@@ -6,9 +6,10 @@
 #define BITCOIN_QT_WALLETVIEW_H
 
 #include <consensus/amount.h>
+
 #include <qt/bitcoinunits.h>
-#include <qt/governancelist.h>
 #include <qt/masternodelist.h>
+#include <qt/proposallist.h>
 
 #include <QStackedWidget>
 
@@ -68,7 +69,7 @@ private:
     AddressBookPage *usedSendingAddressesPage;
     AddressBookPage *usedReceivingAddressesPage;
     MasternodeList* masternodeListPage{nullptr};
-    GovernanceList* governanceListPage{nullptr};
+    ProposalList* proposalListPage{nullptr};
 
     TransactionView *transactionView;
 
@@ -136,6 +137,8 @@ Q_SIGNALS:
     void incomingTransaction(const QString& date, BitcoinUnit unit, const CAmount& amount, const QString& type, const QString& address, const QString& label, const QString& walletName);
     /** Notify that the out of sync warning icon has been pressed */
     void outOfSyncWarningClicked();
+    /** Request navigation to proposal info view */
+    void showProposalInfo();
 };
 
 #endif // BITCOIN_QT_WALLETVIEW_H

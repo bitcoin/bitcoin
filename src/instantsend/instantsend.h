@@ -186,6 +186,14 @@ public:
 
     size_t GetInstantSendLockCount() const;
 
+    struct Counts {
+        size_t m_verified{0};
+        size_t m_unverified{0};
+        size_t m_awaiting_tx{0};
+        size_t m_unprotected_tx{0};
+    };
+    Counts GetCounts() const EXCLUSIVE_LOCKS_REQUIRED(!cs_pendingLocks, !cs_nonLocked);
+
     void CacheBlockHeight(const CBlockIndex* const block_index) const EXCLUSIVE_LOCKS_REQUIRED(!cs_height_cache);
     std::optional<int> GetBlockHeight(const uint256& hash) const override EXCLUSIVE_LOCKS_REQUIRED(!cs_height_cache);
     void CacheTipHeight(const CBlockIndex* const tip) const EXCLUSIVE_LOCKS_REQUIRED(!cs_height_cache);

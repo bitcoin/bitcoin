@@ -3,15 +3,18 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
+#if defined(HAVE_CONFIG_H)
+#include <config/bitcoin-config.h>
+#endif
+
 #include <qt/clientmodel.h>
 
 #include <qt/bantablemodel.h>
+#include <qt/clientfeeds.h>
 #include <qt/guiconstants.h>
 #include <qt/guiutil.h>
 #include <qt/peertablemodel.h>
 #include <qt/peertablesortproxy.h>
-
-#include <evo/deterministicmns.h>
 
 #include <clientversion.h>
 #include <governance/object.h>
@@ -24,7 +27,7 @@
 #include <util/time.h>
 #include <validation.h>
 
-#include <stdint.h>
+#include <cstdint>
 
 #include <QDebug>
 #include <QMetaObject>
@@ -48,15 +51,12 @@ ClientModel::ClientModel(interfaces::Node& node, OptionsModel *_optionsModel, QO
     m_peer_table_sort_proxy->setSourceModel(peerTableModel);
 
     banTableModel = new BanTableModel(m_node, this);
-    mnListCached = interfaces::MakeMNList(CDeterministicMNList{});
-
     QTimer* timer = new QTimer;
     timer->setInterval(MODEL_UPDATE_DELAY);
     connect(timer, &QTimer::timeout, [this] {
         // no locking required at this point
         // the following calls will acquire the required lock
         Q_EMIT mempoolSizeChanged(m_node.getMempoolSize(), m_node.getMempoolDynamicUsage(), m_node.getMempoolMaxUsage());
-        Q_EMIT islockCountChanged(m_node.llmq().getInstantSentLockCount());
     });
     connect(m_thread, &QThread::finished, timer, &QObject::deleteLater);
     connect(m_thread, &QThread::started, [timer] { timer->start(); });
@@ -66,6 +66,40 @@ ClientModel::ClientModel(interfaces::Node& node, OptionsModel *_optionsModel, QO
     QTimer::singleShot(0, timer, []() {
         util::ThreadRename("qt-clientmodl");
     });
+
+    // Setup data feed thread
+    m_feeds = std::make_unique<ClientFeeds>(this);
+
+    // Setup feeds
+    m_feed_chainlock = m_feeds->add<ChainLockFeed>(this, *this);
+    m_feed_creditpool = m_feeds->add<CreditPoolFeed>(this, *this);
+    m_feed_instantsend = m_feeds->add<InstantSendFeed>(this, *this);
+    m_feed_masternode = m_feeds->add<MasternodeFeed>(this, *this);
+    if (m_node.gov().isEnabled()) {
+        m_feed_proposal = m_feeds->add<ProposalFeed>(this, *this, *m_feed_masternode);
+    }
+    m_feed_quorum = m_feeds->add<QuorumFeed>(this, *this);
+
+    connect(this, &ClientModel::chainLockChanged, m_feed_chainlock, &ChainLockFeed::requestRefresh);
+    connect(this, &ClientModel::instantSendChanged, m_feed_instantsend, &InstantSendFeed::requestRefresh);
+    connect(this, &ClientModel::masternodeListChanged, m_feed_masternode, &MasternodeFeed::requestRefresh);
+    if (m_feed_proposal) {
+        connect(this, &ClientModel::governanceChanged, m_feed_proposal, &ProposalFeed::requestRefresh);
+    }
+
+    // Update sync state to decide delay param, trigger refreshes
+    connect(this, &ClientModel::numBlocksChanged, this,
+        [this](int, const QDateTime&, const QString&, double, bool header, SynchronizationState sync_state) {
+            if (header) return;
+            m_feeds->setSyncing(sync_state != SynchronizationState::POST_INIT);
+            if (m_feed_creditpool) m_feed_creditpool->requestRefresh();
+            if (m_feed_masternode) m_feed_masternode->requestRefresh();
+            if (m_feed_proposal) m_feed_proposal->requestRefresh();
+            if (m_feed_quorum) m_feed_quorum->requestRefresh();
+        });
+
+    // Start all tasks
+    m_feeds->start();
 
     subscribeToCoreSignals();
 }
@@ -95,32 +129,6 @@ int ClientModel::getNumConnections(unsigned int flags) const
         connections = ConnectionDirection::Both;
 
     return m_node.getNodeCount(connections);
-}
-
-void ClientModel::setMasternodeList(interfaces::MnListPtr mnList, const CBlockIndex* tip)
-{
-    LOCK(cs_mnlist);
-    if (mnListCached->getBlockHash() == mnList->getBlockHash()) {
-        return;
-    }
-    mnListCached->copyContextTo(*mnList);
-    mnListCached = std::move(mnList);
-    mnListTip = tip;
-    Q_EMIT masternodeListChanged();
-}
-
-std::pair<interfaces::MnListPtr, const CBlockIndex*> ClientModel::getMasternodeList() const
-{
-    LOCK(cs_mnlist);
-    return {mnListCached, mnListTip};
-}
-
-void ClientModel::refreshMasternodeList()
-{
-    auto [mnList, tip] = m_node.evo().getListAtChainTip();
-
-    LOCK(cs_mnlist);
-    setMasternodeList(std::move(mnList), tip);
 }
 
 int ClientModel::getHeaderTipHeight() const
@@ -314,12 +322,16 @@ void ClientModel::subscribeToCoreSignals()
             Q_EMIT additionalDataSyncProgressChanged(nSyncProgress);
         }));
     m_event_handlers.emplace_back(m_node.handleNotifyChainLock(
-        [this](const std::string& best_hash, int best_height) {
-            Q_EMIT chainLockChanged(QString::fromStdString(best_hash), best_height);
+        [this](const std::string&, int) {
+            Q_EMIT chainLockChanged();
         }));
     m_event_handlers.emplace_back(m_node.handleNotifyMasternodeListChanged(
-        [this](const CDeterministicMNList& newList, const CBlockIndex* pindex) {
-            setMasternodeList(interfaces::MakeMNList(newList), pindex);
+        [this](const CDeterministicMNList&, const CBlockIndex*) {
+            Q_EMIT masternodeListChanged();
+        }));
+    m_event_handlers.emplace_back(m_node.handleNotifyInstantSendChanged(
+        [this]() {
+            Q_EMIT instantSendChanged();
         }));
     m_event_handlers.emplace_back(m_node.handleNotifyGovernanceChanged(
         [this]() {

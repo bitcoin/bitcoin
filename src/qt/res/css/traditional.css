@@ -139,6 +139,50 @@ QPushButton - Special case, tabbar replacement buttons
 }
 
 /******************************************************
+QTabWidget - Info sub-tab segmented control
+******************************************************/
+
+QTabWidget#tabWidgetInfo::pane {
+    border: none;
+    margin-top: 6px;
+}
+
+QTabWidget#tabWidgetInfo QTabBar::tab {
+    background-color: transparent;
+    border: 1px solid #008de4;
+    border-right: none;
+    padding: 3px 12px;
+    color: #a7a7a7;
+}
+
+QTabWidget#tabWidgetInfo QTabBar::tab:first {
+    border-top-left-radius: 4px;
+    border-bottom-left-radius: 4px;
+}
+
+QTabWidget#tabWidgetInfo QTabBar::tab:last {
+    border-right: 1px solid #008de4;
+    border-top-right-radius: 4px;
+    border-bottom-right-radius: 4px;
+}
+
+QTabWidget#tabWidgetInfo QTabBar::tab:only-one {
+    border-right: 1px solid #008de4;
+    border-radius: 4px;
+}
+
+QTabWidget#tabWidgetInfo QTabBar::tab:selected {
+    background-color: #008de4;
+    border-color: #008de4;
+    color: #ffffff;
+}
+
+QTabWidget#tabWidgetInfo QTabBar::tab:hover:!selected {
+    background-color: rgba(0, 141, 228, 25);
+    color: #333;
+}
+
+/******************************************************
 ModalOverlay
 ******************************************************/
 

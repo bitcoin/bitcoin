@@ -2,27 +2,26 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include <qt/forms/ui_governancelist.h>
+#include <qt/forms/ui_proposallist.h>
 
-#include <evo/deterministicmns.h>
+#include <chainparams.h>
 #include <governance/common.h>
 #include <governance/governance.h>
 #include <governance/vote.h>
-#include <util/underlying.h>
-
-#include <qt/descriptiondialog.h>
-#include <qt/governancelist.h>
-#include <qt/guiutil_font.h>
-#include <qt/proposalcreate.h>
-#include <qt/proposalmodel.h>
-#include <qt/proposalresume.h>
-
-#include <chainparams.h>
 #include <interfaces/node.h>
 #include <interfaces/wallet.h>
 #include <script/standard.h>
 #include <util/strencodings.h>
-#include <util/time.h>
+#include <util/underlying.h>
+
+#include <qt/clientfeeds.h>
+#include <qt/descriptiondialog.h>
+#include <qt/masternodemodel.h>
+#include <qt/guiutil_font.h>
+#include <qt/proposalcreate.h>
+#include <qt/proposallist.h>
+#include <qt/proposalmodel.h>
+#include <qt/proposalresume.h>
 
 #include <qt/bitcoinunits.h>
 #include <qt/clientmodel.h>
@@ -43,26 +42,22 @@
 
 #include <univalue.h>
 
+#include <algorithm>
+
 namespace {
 constexpr int TITLE_MIN_WIDTH{220};
 } // anonymous namespace
 
-//
-// Governance Tab main widget.
-//
-GovernanceList::GovernanceList(QWidget* parent) :
+ProposalList::ProposalList(QWidget* parent) :
     QWidget(parent),
-    ui{new Ui::GovernanceList},
+    ui{new Ui::ProposalList},
     proposalModel{new ProposalModel(this)},
     proposalContextMenu{new QMenu(this)},
-    m_worker(new QObject),
-    proposalModelProxy{new QSortFilterProxyModel(this)},
-    m_thread{new QThread(this)},
-    m_timer{new QTimer(this)}
+    proposalModelProxy{new QSortFilterProxyModel(this)}
 {
     ui->setupUi(this);
 
-    GUIUtil::setFont({ui->label_count_2, ui->countLabel, ui->label_mn_count, ui->mnCountLabel},
+    GUIUtil::setFont({ui->label_count_2, ui->countLabel},
                      {GUIUtil::FontWeight::Bold, 14});
 
     ui->govTableView->setContextMenuPolicy(Qt::CustomContextMenu);
@@ -71,16 +66,16 @@ GovernanceList::GovernanceList(QWidget* parent) :
     ui->govTableView->setSortingEnabled(true);
     ui->govTableView->sortByColumn(ProposalModel::Column::TITLE, Qt::AscendingOrder);
     ui->govTableView->verticalHeader()->setVisible(false);
-    connect(ui->govTableView, &QTableView::customContextMenuRequested, this, &GovernanceList::showProposalContextMenu);
-    connect(ui->govTableView, &QTableView::doubleClicked, this, &GovernanceList::showAdditionalInfo);
-    connect(ui->govTableView->horizontalHeader(), &QHeaderView::sectionResized, this, &GovernanceList::refreshColumnWidths);
+    connect(ui->govTableView, &QTableView::customContextMenuRequested, this, &ProposalList::showProposalContextMenu);
+    connect(ui->govTableView, &QTableView::doubleClicked, this, &ProposalList::showAdditionalInfo);
+    connect(ui->govTableView->horizontalHeader(), &QHeaderView::sectionResized, this, &ProposalList::refreshColumnWidths);
 
     ui->emptyPage->setAutoFillBackground(true);
     updateEmptyPagePalette();
 
     ui->proposalSourceCombo->addItem(tr("Active Proposals"), ToUnderlying(ProposalSource::Active));
     ui->proposalSourceCombo->setMinimumWidth(250);
-    connect(ui->proposalSourceCombo, qOverload<int>(&QComboBox::activated), this, &GovernanceList::setProposalSource);
+    connect(ui->proposalSourceCombo, qOverload<int>(&QComboBox::activated), this, &ProposalList::setProposalSource);
 
     // Set up filtering.
     proposalModelProxy->setSourceModel(proposalModel);
@@ -89,73 +84,66 @@ GovernanceList::GovernanceList(QWidget* parent) :
     connect(ui->filterLineEdit, &QLineEdit::textChanged, proposalModelProxy, &QSortFilterProxyModel::setFilterFixedString);
 
     // Changes to number of rows should update proposal count display.
-    connect(proposalModelProxy, &QSortFilterProxyModel::rowsInserted, this, &GovernanceList::updateProposalCount);
-    connect(proposalModelProxy, &QSortFilterProxyModel::rowsRemoved, this, &GovernanceList::updateProposalCount);
-    connect(proposalModelProxy, &QSortFilterProxyModel::layoutChanged, this, &GovernanceList::updateProposalCount);
+    connect(proposalModelProxy, &QSortFilterProxyModel::rowsInserted, this, &ProposalList::updateProposalCount);
+    connect(proposalModelProxy, &QSortFilterProxyModel::rowsRemoved, this, &ProposalList::updateProposalCount);
+    connect(proposalModelProxy, &QSortFilterProxyModel::layoutChanged, this, &ProposalList::updateProposalCount);
 
     // Connect buttons
-    connect(ui->btnCreateProposal, &QPushButton::clicked, this, &GovernanceList::showCreateProposalDialog);
-    connect(ui->btnResumeProposal, &QPushButton::clicked, this, &GovernanceList::showResumeProposalDialog);
+    connect(ui->btnCreateProposal, &QPushButton::clicked, this, &ProposalList::showCreateProposalDialog);
+    connect(ui->btnResumeProposal, &QPushButton::clicked, this, &ProposalList::showResumeProposalDialog);
     updateProposalButtons();
 
-    // Initialize masternode count to 0
-    ui->mnCountLabel->setText("0");
+    // Set up info button
+    ui->btnInfoView->setIcon(style()->standardIcon(QStyle::SP_MessageBoxInformation));
+    ui->btnInfoView->setIconSize(QSize(20, 20));
+    ui->btnInfoView->setFixedSize(36, 34);
+    connect(ui->btnInfoView, &QPushButton::clicked, this, &ProposalList::showProposalInfo);
 
     GUIUtil::updateFonts();
-
-    // Background thread for calculating proposal list
-    m_worker->moveToThread(m_thread);
-    // Make sure executor object is deleted in its own thread
-    connect(m_thread, &QThread::finished, m_worker, &QObject::deleteLater);
-    m_thread->start();
-
-    // Debounce timer to apply proposal list changes
-    m_timer->setSingleShot(true);
-    connect(m_timer, &QTimer::timeout, this, &GovernanceList::updateProposalList);
 }
 
-GovernanceList::~GovernanceList()
+ProposalList::~ProposalList()
 {
-    m_timer->stop();
-    m_thread->quit();
-    m_thread->wait();
     delete ui;
 }
 
-void GovernanceList::changeEvent(QEvent* event)
+void ProposalList::changeEvent(QEvent* event)
 {
     QWidget::changeEvent(event);
     if (event->type() == QEvent::StyleChange) {
         QTimer::singleShot(0, proposalModel, &ProposalModel::refreshIcons);
-        QTimer::singleShot(0, this, &GovernanceList::updateEmptyPagePalette);
+        QTimer::singleShot(0, this, &ProposalList::updateEmptyPagePalette);
     }
 }
 
-void GovernanceList::updateEmptyPagePalette()
+void ProposalList::updateEmptyPagePalette()
 {
     QPalette emptyPalette = ui->emptyPage->palette();
     emptyPalette.setColor(QPalette::Window, ui->govTableView->palette().color(QPalette::Base));
     ui->emptyPage->setPalette(emptyPalette);
 }
 
-void GovernanceList::setClientModel(ClientModel* model)
+void ProposalList::setClientModel(ClientModel* model)
 {
     this->clientModel = model;
     if (!clientModel) {
-        m_timer->stop();
         return;
     }
-    connect(clientModel, &ClientModel::additionalDataSyncProgressChanged, this, &GovernanceList::updateProposalButtons);
-    connect(clientModel, &ClientModel::governanceChanged, this, [this] { handleProposalListChanged(/*force=*/false); });
-    connect(clientModel, &ClientModel::numBlocksChanged, this, [this] { handleProposalListChanged(/*force=*/false); });
-    connect(clientModel->getOptionsModel(), &OptionsModel::displayUnitChanged, this, &GovernanceList::updateDisplayUnit);
+    m_feed_masternode = clientModel->feedMasternode();
+    m_feed_proposal = clientModel->feedProposal();
+    if (m_feed_masternode && m_feed_proposal) {
+        connect(m_feed_proposal, &ProposalFeed::dataReady, this, &ProposalList::updateProposalList);
+        updateProposalList();
+    }
+    connect(clientModel, &ClientModel::additionalDataSyncProgressChanged, this, &ProposalList::updateInfoTooltip);
+    connect(clientModel, &ClientModel::additionalDataSyncProgressChanged, this, &ProposalList::updateProposalButtons);
+    connect(clientModel->getOptionsModel(), &OptionsModel::displayUnitChanged, this, &ProposalList::updateDisplayUnit);
     if (walletModel && ui->proposalSourceCombo->findData(ToUnderlying(ProposalSource::Local)) == -1) {
         ui->proposalSourceCombo->addItem(tr("My Proposals"), ToUnderlying(ProposalSource::Local));
     }
-    m_timer->start(0);
 }
 
-std::vector<Governance::Object> GovernanceList::getWalletProposals(std::optional<bool> pending) const
+std::vector<Governance::Object> ProposalList::getWalletProposals(std::optional<bool> pending) const
 {
     if (!clientModel || !walletModel) {
         return {};
@@ -190,21 +178,19 @@ std::vector<Governance::Object> GovernanceList::getWalletProposals(std::optional
     return result;
 }
 
-void GovernanceList::setWalletModel(WalletModel* model)
+void ProposalList::setWalletModel(WalletModel* model)
 {
     this->walletModel = model;
     if (!walletModel || !clientModel) {
-        m_timer->stop();
         return;
     }
-    connect(walletModel, &WalletModel::balanceChanged, this, &GovernanceList::updateProposalButtons);
+    connect(walletModel, &WalletModel::balanceChanged, this, &ProposalList::updateProposalButtons);
     if (clientModel && ui->proposalSourceCombo->findData(ToUnderlying(ProposalSource::Local)) == -1) {
         ui->proposalSourceCombo->addItem(tr("My Proposals"), ToUnderlying(ProposalSource::Local));
     }
-    m_timer->start(0);
 }
 
-void GovernanceList::updateDisplayUnit()
+void ProposalList::updateDisplayUnit()
 {
     if (this->clientModel) {
         proposalModel->setDisplayUnit(this->clientModel->getOptionsModel()->getDisplayUnit());
@@ -212,24 +198,7 @@ void GovernanceList::updateDisplayUnit()
     }
 }
 
-void GovernanceList::handleProposalListChanged(bool force)
-{
-    if (!clientModel) {
-        return;
-    }
-    if (force) {
-        updateProposalList();
-    } else if (!m_timer->isActive()) {
-        int delay{GOVERNANCELIST_UPDATE_SECONDS * 1000};
-        if (!clientModel->masternodeSync().isBlockchainSynced()) {
-            // Currently syncing, reduce refreshes
-            delay *= 6;
-        }
-        m_timer->start(delay);
-    }
-}
-
-int GovernanceList::queryCollateralDepth(const uint256& collateralHash) const
+int ProposalList::queryCollateralDepth(const uint256& collateralHash) const
 {
     if (!walletModel) return 0;
     interfaces::WalletTxStatus tx_status;
@@ -241,104 +210,79 @@ int GovernanceList::queryCollateralDepth(const uint256& collateralHash) const
     return 0;
 }
 
-void GovernanceList::updateProposalList()
+void ProposalList::updateProposalList()
 {
-    if (!clientModel || clientModel->node().shutdownRequested()) {
+    if (!clientModel || !m_feed_masternode || !m_feed_proposal) {
         return;
     }
 
-    if (m_in_progress.exchange(true)) {
-        // Already applying, re-arm for next attempt
-        handleProposalListChanged(/*force=*/false);
+    const auto data_mn = m_feed_masternode->data();
+    const auto data_pr = m_feed_proposal->data();
+    if (!data_mn || !data_mn->m_valid || !data_pr) {
         return;
     }
 
-    QMetaObject::invokeMethod(m_worker, [this] {
-        auto result = std::make_shared<CalcProposalList>(calcProposalList());
-        m_in_progress.store(false);
-        QTimer::singleShot(0, this, [this, result] {
-            setProposalList(std::move(*result));
-        });
-    });
-}
+    // Assume that wallet-specific knowledge is stale
+    votableMasternodes.clear();
 
-GovernanceList::CalcProposalList GovernanceList::calcProposalList() const
-{
-    CalcProposalList ret;
-    if (!clientModel || clientModel->node().shutdownRequested()) {
-        return ret;
+    ProposalData ret;
+    ret.m_abs_vote_req = data_pr->m_abs_vote_req;
+    ret.m_gov_info = data_pr->m_gov_info;
+    ret.m_fundable_hashes = data_pr->m_fundable_hashes;
+    ret.m_proposals = data_pr->m_proposals;
+
+    // If we don't have a wallet, we can't fetch based on proposal source
+    if (!walletModel) {
+        setProposalList(std::move(ret));
+        return;
     }
 
-    const auto [dmn, pindex] = clientModel->getMasternodeList();
-    if (!dmn || !pindex) {
-        return ret;
-    }
-
-    // A proposal is considered passing if (YES votes - NO votes) >= (Total Weight of Masternodes / 10),
-    // count total valid (ENABLED) masternodes to determine passing threshold.
-    // Need to query number of masternodes here with access to clientModel.
-    const int nWeightedMnCount = dmn->getValidWeightedMNsCount();
-    ret.m_abs_vote_req = std::max(Params().GetConsensus().nGovernanceMinQuorum, nWeightedMnCount / 10);
-    ret.m_gov_info = clientModel->node().gov().getGovernanceInfo();
     if (m_proposal_source == ProposalSource::Active) {
-        std::vector<CGovernanceObject> govObjList;
-        clientModel->getAllGovernanceObjects(govObjList);
-        for (const auto& govObj : govObjList) {
-            if (govObj.GetObjectType() != GovernanceObject::PROPOSAL) {
-                continue; // Skip triggers.
-            }
-            ret.m_proposals.emplace_back(std::make_unique<Proposal>(this->clientModel, govObj, ret.m_gov_info, ret.m_gov_info.requiredConfs,
-                                                                    /*is_broadcast=*/true));
-        }
         // Include unrelayed wallet proposals (0 confs, not yet broadcast)
         for (const auto& obj : getWalletProposals(/*pending=*/true)) {
             CGovernanceObject govObj(obj.hashParent, obj.revision, obj.time, obj.collateralHash, obj.GetDataAsHexString());
-            ret.m_proposals.emplace_back(std::make_unique<Proposal>(this->clientModel, govObj, ret.m_gov_info, queryCollateralDepth(obj.collateralHash),
-                                                                    /*is_broadcast=*/false));
+            ret.m_proposals.emplace_back(std::make_shared<Proposal>(*clientModel, govObj, ret.m_gov_info, queryCollateralDepth(obj.collateralHash),
+                                                                     /*is_broadcast=*/false));
         }
     } else if (m_proposal_source == ProposalSource::Local) {
+        // Discard network proposals and only include wallet proposals
+        ret.m_proposals.clear();
         for (const auto& obj : getWalletProposals(/*pending=*/std::nullopt)) {
             CGovernanceObject govObj(obj.hashParent, obj.revision, obj.time, obj.collateralHash, obj.GetDataAsHexString());
-            ret.m_proposals.emplace_back(std::make_unique<Proposal>(this->clientModel, govObj, ret.m_gov_info, queryCollateralDepth(obj.collateralHash),
-                                                                    /*is_broadcast=*/clientModel->node().gov().existsObj(obj.GetHash())));
+            ret.m_proposals.emplace_back(std::make_shared<Proposal>(*clientModel, govObj, ret.m_gov_info, queryCollateralDepth(obj.collateralHash),
+                                                                     /*is_broadcast=*/clientModel->node().gov().existsObj(obj.GetHash())));
         }
     }
 
-    auto fundable{clientModel->node().gov().getFundableProposalHashes()};
-    ret.m_fundable_hashes = std::move(fundable.hashes);
-
-    // Discover voting capability if we now have both client and wallet models
-    if (walletModel) {
-        dmn->forEachMN(/*only_valid=*/true, [&](const auto& dmn) {
-            // Check if wallet owns the voting key using the same logic as RPC
-            const auto script = GetScriptForDestination(PKHash(dmn.getKeyIdVoting()));
-            if (walletModel->wallet().isSpendable(script)) {
-                ret.m_votable_masternodes[dmn.getProTxHash()] = dmn.getKeyIdVoting();
-            }
-        });
+    for (const auto& entry : data_mn->m_entries) {
+        if (entry->isBanned()) {
+            continue;
+        }
+        const auto script = GetScriptForDestination(PKHash(entry->keyIdVotingRaw()));
+        if (walletModel->wallet().isSpendable(script)) {
+            votableMasternodes[entry->proTxHashRaw()] = entry->keyIdVotingRaw();
+        }
     }
-
-    return ret;
+    setProposalList(std::move(ret));
 }
 
-void GovernanceList::setProposalList(CalcProposalList&& data)
+void ProposalList::setProposalList(ProposalData&& data)
 {
     proposalModel->setVotingParams(data.m_abs_vote_req);
     proposalModel->reconcile(std::move(data.m_proposals), std::move(data.m_fundable_hashes));
     m_gov_info = std::move(data.m_gov_info);
-    votableMasternodes = std::move(data.m_votable_masternodes);
-    updateMasternodeCount();
+    updateInfoTooltip();
     updateProposalButtons();
 }
 
-void GovernanceList::updateProposalCount()
+void ProposalList::updateProposalCount()
 {
     ui->countLabel->setText(QString::number(proposalModelProxy->rowCount()));
     refreshColumnWidths();
     updateEmptyState();
 }
 
-void GovernanceList::updateEmptyState()
+void ProposalList::updateEmptyState()
 {
     const bool hasProposals = proposalModelProxy->rowCount() > 0;
     if (hasProposals) {
@@ -356,7 +300,7 @@ void GovernanceList::updateEmptyState()
     }
 }
 
-void GovernanceList::showCreateProposalDialog()
+void ProposalList::showCreateProposalDialog()
 {
     if (!this->clientModel || !this->walletModel) {
         QMessageBox::warning(this, tr("Unavailable"), tr("A synced node and an unlocked wallet are required."));
@@ -369,14 +313,14 @@ void GovernanceList::showCreateProposalDialog()
     proposalCreate->setWindowModality(Qt::NonModal);
     proposalCreate->setModal(false);
     proposalCreate->setWindowFlag(Qt::Window, true);
-    // Auto-open Resume dialog after successful creation and refresh the governance list
-    connect(proposalCreate, &QDialog::accepted, this, [this] { handleProposalListChanged(/*force=*/true); });
-    connect(proposalCreate, &QDialog::accepted, this, &GovernanceList::updateProposalButtons);
-    connect(proposalCreate, &QDialog::accepted, this, &GovernanceList::showResumeProposalDialog);
+    // Auto-open Resume dialog after successful creation and refresh the proposal list
+    connect(proposalCreate, &QDialog::accepted, this, &ProposalList::requestForceRefresh);
+    connect(proposalCreate, &QDialog::accepted, this, &ProposalList::updateProposalButtons);
+    connect(proposalCreate, &QDialog::accepted, this, &ProposalList::showResumeProposalDialog);
     proposalCreate->show();
 }
 
-void GovernanceList::showResumeProposalDialog()
+void ProposalList::showResumeProposalDialog()
 {
     if (!clientModel || !walletModel) {
         QMessageBox::warning(this, tr("Resume proposal"), tr("A synced node and an unlocked wallet are required."));
@@ -384,8 +328,8 @@ void GovernanceList::showResumeProposalDialog()
     }
 
     const auto proposals = getWalletProposals(/*pending=*/true);
-    ProposalResume* dialog = new ProposalResume(clientModel->node(), clientModel, walletModel, proposals, this);
-    connect(dialog, &ProposalResume::proposalBroadcasted, this, [this] { handleProposalListChanged(/*force=*/true); });
+    ProposalResume* dialog = new ProposalResume(clientModel->node(), *clientModel, walletModel, proposals, this);
+    connect(dialog, &ProposalResume::proposalBroadcasted, this, &ProposalList::requestForceRefresh);
     dialog->setAttribute(Qt::WA_DeleteOnClose, true);
     dialog->setWindowModality(Qt::NonModal);
     dialog->setModal(false);
@@ -393,7 +337,7 @@ void GovernanceList::showResumeProposalDialog()
     dialog->show();
 }
 
-void GovernanceList::showProposalContextMenu(const QPoint& pos)
+void ProposalList::showProposalContextMenu(const QPoint& pos)
 {
     const auto index = ui->govTableView->indexAt(pos);
 
@@ -407,23 +351,23 @@ void GovernanceList::showProposalContextMenu(const QPoint& pos)
     }
 
     proposalContextMenu->clear();
-    proposalContextMenu->addAction(tr("Copy Raw JSON"), this, &GovernanceList::copyProposalJson);
+    proposalContextMenu->addAction(tr("Copy Raw JSON"), this, &ProposalList::copyProposalJson);
     if (!proposal->url().isEmpty()) {
-        proposalContextMenu->addAction(tr("Open Proposal URL…"), this, &GovernanceList::openProposalUrl);
+        proposalContextMenu->addAction(tr("Open Proposal URL…"), this, &ProposalList::openProposalUrl);
     }
 
     // Add voting options if wallet is available and has voting capability
     if (walletModel && canVote()) {
         proposalContextMenu->addSeparator();
-        proposalContextMenu->addAction(tr("Vote Yes"), this, &GovernanceList::voteYes);
-        proposalContextMenu->addAction(tr("Vote No"), this, &GovernanceList::voteNo);
-        proposalContextMenu->addAction(tr("Vote Abstain"), this, &GovernanceList::voteAbstain);
+        proposalContextMenu->addAction(tr("Vote Yes"), this, &ProposalList::voteYes);
+        proposalContextMenu->addAction(tr("Vote No"), this, &ProposalList::voteNo);
+        proposalContextMenu->addAction(tr("Vote Abstain"), this, &ProposalList::voteAbstain);
     }
 
     proposalContextMenu->exec(QCursor::pos());
 }
 
-void GovernanceList::showAdditionalInfo(const QModelIndex& index)
+void ProposalList::showAdditionalInfo(const QModelIndex& index)
 {
     if (!index.isValid() || !clientModel) {
         return;
@@ -443,14 +387,54 @@ void GovernanceList::showAdditionalInfo(const QModelIndex& index)
     dialog->show();
 }
 
-void GovernanceList::updateMasternodeCount() const
+void ProposalList::updateInfoTooltip()
 {
-    if (ui && ui->mnCountLabel) {
-        ui->mnCountLabel->setText(QString::number(votableMasternodes.size()));
+    if (!clientModel || !clientModel->getOptionsModel() || !m_feed_proposal) {
+        return;
     }
+
+    const auto data_pr = m_feed_proposal->data();
+    if (!data_pr || m_gov_info.superblockcycle <= 0) {
+        return;
+    }
+
+    if (!clientModel->masternodeSync().isBlockchainSynced()) {
+        ui->btnInfoView->setToolTip(tr("Waiting for blockchain sync…"));
+        return;
+    }
+
+    if (!clientModel->masternodeSync().isGovernanceSynced()) {
+        ui->btnInfoView->setToolTip(tr("Waiting for governance sync…"));
+        return;
+    }
+
+    const int current_height{clientModel->getNumBlocks()};
+    const auto remaining_blocks{std::max<int>(0, m_gov_info.nextsuperblock - current_height)};
+    const QString remaining_str{GUIUtil::formatBlockDuration(remaining_blocks, m_gov_info.targetSpacing)};
+    const bool awaiting_superblock{current_height % m_gov_info.superblockcycle >= m_gov_info.superblockcycle - m_gov_info.superblockmaturitywindow};
+    const auto voting_remaining_blocks{std::max<int>(0, remaining_blocks - m_gov_info.superblockmaturitywindow)};
+    const QString voting_remaining_str{GUIUtil::formatBlockDuration(voting_remaining_blocks, m_gov_info.targetSpacing)};
+
+    const auto tooltip1{tr("%n masternode(s) available for voting", "", votableMasternodes.size())};
+    const auto tooltip2{remaining_blocks == 0
+        ? (awaiting_superblock ? tr("Superblock imminent") : tr("Voting period ended"))
+        : (awaiting_superblock
+            ? tr("~%1 (%2 blocks) left for superblock").arg(remaining_str).arg(remaining_blocks)
+            : tr("~%1 (%2 blocks) left for voting").arg(voting_remaining_str).arg(voting_remaining_blocks))};
+    const auto tooltip3{[&]() {
+        const auto allocated_budget{data_pr->m_allocated};
+        const auto budget_pct = m_gov_info.governancebudget > 0
+            ? static_cast<int>(static_cast<double>(allocated_budget) / static_cast<double>(m_gov_info.governancebudget) * 100.0)
+            : 0;
+        const auto unit{clientModel->getOptionsModel()->getDisplayUnit()};
+        return tr("~%1% of budget committed (%2 / %3)").arg(budget_pct)
+            .arg(GUIUtil::formatAmount(unit, allocated_budget, /*is_signed=*/false, /*truncate=*/2))
+            .arg(GUIUtil::formatAmount(unit, m_gov_info.governancebudget, /*is_signed=*/false, /*truncate=*/2));
+    }()};
+    ui->btnInfoView->setToolTip(QString("<nobr>%1</nobr><br><nobr>%2</nobr><br><nobr>%3</nobr>").arg(tooltip1).arg(tooltip2).arg(tooltip3));
 }
 
-void GovernanceList::updateProposalButtons()
+void ProposalList::updateProposalButtons()
 {
     if (!clientModel || !clientModel->masternodeSync().isGovernanceSynced()) {
         const QString tooltip = tr("Cannot interact with governance before sync completes");
@@ -480,20 +464,20 @@ void GovernanceList::updateProposalButtons()
     }
 }
 
-void GovernanceList::setProposalSource(int index)
+void ProposalList::setProposalSource(int index)
 {
     m_proposal_source = static_cast<ProposalSource>(ui->proposalSourceCombo->itemData(index).toInt());
     ui->govTableView->setColumnHidden(ProposalModel::Column::VOTING_STATUS, m_proposal_source == ProposalSource::Local);
-    handleProposalListChanged(/*force=*/true);
+    updateProposalList();
 }
 
-void GovernanceList::voteYes() { voteForProposal(VOTE_OUTCOME_YES); }
+void ProposalList::voteYes() { voteForProposal(VOTE_OUTCOME_YES); }
 
-void GovernanceList::voteNo() { voteForProposal(VOTE_OUTCOME_NO); }
+void ProposalList::voteNo() { voteForProposal(VOTE_OUTCOME_NO); }
 
-void GovernanceList::voteAbstain() { voteForProposal(VOTE_OUTCOME_ABSTAIN); }
+void ProposalList::voteAbstain() { voteForProposal(VOTE_OUTCOME_ABSTAIN); }
 
-void GovernanceList::openProposalUrl()
+void ProposalList::openProposalUrl()
 {
     const auto selection = ui->govTableView->selectionModel()->selectedRows();
     if (selection.isEmpty()) {
@@ -526,7 +510,7 @@ void GovernanceList::openProposalUrl()
     }
 }
 
-void GovernanceList::copyProposalJson()
+void ProposalList::copyProposalJson()
 {
     const auto selection = ui->govTableView->selectionModel()->selectedRows();
     if (selection.isEmpty()) {
@@ -541,7 +525,7 @@ void GovernanceList::copyProposalJson()
     QApplication::clipboard()->setText(proposal->toJson());
 }
 
-void GovernanceList::voteForProposal(vote_outcome_enum_t outcome)
+void ProposalList::voteForProposal(vote_outcome_enum_t outcome)
 {
     if (!walletModel) {
         QMessageBox::warning(this, tr("Voting Failed"), tr("No wallet available."));
@@ -550,6 +534,17 @@ void GovernanceList::voteForProposal(vote_outcome_enum_t outcome)
 
     if (votableMasternodes.empty()) {
         QMessageBox::warning(this, tr("Voting Failed"), tr("No masternode voting keys found in wallet."));
+        return;
+    }
+
+    if (!m_feed_masternode) {
+        QMessageBox::warning(this, tr("Voting Failed"), tr("Unable to fetch masternode data."));
+        return;
+    }
+
+    const auto data_mn = m_feed_masternode->data();
+    if (!data_mn || !data_mn->m_valid) {
+        QMessageBox::warning(this, tr("Voting Failed"), tr("Unable to fetch masternode data."));
         return;
     }
 
@@ -578,31 +573,32 @@ void GovernanceList::voteForProposal(vote_outcome_enum_t outcome)
     int nFailed = 0;
     QStringList failedMessages;
 
-    // Get masternode list once before the loop
-    auto [mnList, pindex] = clientModel->getMasternodeList();
-    if (!pindex) {
-        QMessageBox::warning(this, tr("Voting Failed"), tr("Unable to get masternode list. Please try again later."));
-        return;
-    }
-
     // Vote with each masternode
     for (const auto& [proTxHash, votingKeyID] : votableMasternodes) {
         // Find the masternode
-        auto dmn = mnList->getValidMN(proTxHash);
+        QString protx_hash{QString::fromStdString(proTxHash.ToString())};
+        const auto dmn = [&]() -> const std::shared_ptr<MasternodeEntry> {
+            for (const auto& mn : data_mn->m_entries) {
+                if (mn->proTxHash() == protx_hash) {
+                    return mn->isBanned() ? nullptr : mn;
+                }
+            }
+            return nullptr;
+        }();
+
         if (!dmn) {
             nFailed++;
-            failedMessages.append(tr("Masternode %1 not found").arg(QString::fromStdString(proTxHash.ToString())));
+            failedMessages.append(tr("Masternode %1 not found").arg(protx_hash));
             continue;
         }
 
         // Create vote
-        CGovernanceVote vote(dmn->getCollateralOutpoint(), proposalHash, VOTE_SIGNAL_FUNDING, outcome);
+        CGovernanceVote vote(dmn->collateralOutpointRaw(), proposalHash, VOTE_SIGNAL_FUNDING, outcome);
 
         // Sign vote via wallet interface
         if (!walletModel->wallet().signGovernanceVote(votingKeyID, vote)) {
             nFailed++;
-            failedMessages.append(
-                tr("Failed to sign vote for masternode %1").arg(QString::fromStdString(proTxHash.ToString())));
+            failedMessages.append(tr("Failed to sign vote for masternode %1").arg(protx_hash));
             continue;
         }
 
@@ -635,22 +631,22 @@ void GovernanceList::voteForProposal(vote_outcome_enum_t outcome)
     QMessageBox::information(this, tr("Voting Results"), message);
 
     // Update proposal list to show new vote counts
-    handleProposalListChanged(/*force=*/true);
+    requestForceRefresh();
 }
 
-void GovernanceList::showEvent(QShowEvent* event)
+void ProposalList::showEvent(QShowEvent* event)
 {
     QWidget::showEvent(event);
     refreshColumnWidths();
 }
 
-void GovernanceList::resizeEvent(QResizeEvent* event)
+void ProposalList::resizeEvent(QResizeEvent* event)
 {
     QWidget::resizeEvent(event);
     refreshColumnWidths();
 }
 
-void GovernanceList::refreshColumnWidths()
+void ProposalList::refreshColumnWidths()
 {
     // Bail out if resize in progress or viewport is too small
     const int tableWidth = ui->govTableView->viewport()->width();
@@ -690,4 +686,12 @@ void GovernanceList::refreshColumnWidths()
     header->resizeSection(ProposalModel::Column::HASH, hashWidth);
 
     m_col_refresh = false;
+}
+
+void ProposalList::requestForceRefresh()
+{
+    if (!m_feed_proposal) {
+        return;
+    }
+    m_feed_proposal->requestForceRefresh();
 }

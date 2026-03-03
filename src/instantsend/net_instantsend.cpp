@@ -5,6 +5,7 @@
 #include <instantsend/net_instantsend.h>
 
 #include <bls/bls_batchverifier.h>
+#include <node/interface_ui.h>
 #include <cxxtimer.hpp>
 #include <instantsend/instantsend.h>
 #include <llmq/commitment.h>
@@ -307,6 +308,7 @@ void NetInstantSend::ProcessPendingISLocks(std::vector<instantsend::PendingISLoc
         // Now check against the previous active set and perform banning if this fails
         ProcessPendingInstantSendLocks(llmq_params, dkgInterval, /*ban=*/true, still_pending);
     }
+    uiInterface.NotifyInstantSendChanged();
 }
 
 void NetInstantSend::WorkThreadMain()

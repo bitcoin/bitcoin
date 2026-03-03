@@ -14,7 +14,7 @@ class SendCoinsRecipient;
 class WalletModel;
 class WalletView;
 class MasternodeList;
-class GovernanceList;
+class ProposalList;
 
 QT_BEGIN_NAMESPACE
 class QStackedWidget;
@@ -53,6 +53,7 @@ Q_SIGNALS:
     void currentWalletSet();
 
     void createWalletButtonClicked();
+    void showProposalInfo();
 
 private:
     QStackedWidget *walletStack;
@@ -60,7 +61,7 @@ private:
     QMap<WalletModel*, WalletView*> mapWalletViews;
     QGroupBox* no_wallet_group;
     MasternodeList* masternodeListPage;
-    GovernanceList* governanceListPage;
+    ProposalList* proposalListPage;
 
     bool bOutOfSync;
 

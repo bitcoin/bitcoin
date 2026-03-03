@@ -76,7 +76,7 @@ int SyncManager::RequestGovernanceObjectVotes(const std::vector<CNode*>& vNodesC
     if (Params().NetworkIDString() != CBaseChainParams::MAIN) {
         nMaxObjRequestsPerNode =
             std::max(1, int(nProjectedVotes /
-                            std::max(1, (int)m_gov_manager.GetMNManager().GetListAtChainTip().GetValidMNsCount())));
+                            std::max(1, (int)m_gov_manager.GetMNManager().GetListAtChainTip().GetCounts().enabled())));
     }
 
     static Mutex cs_recently;

@@ -227,6 +227,13 @@ public:
     int GetAbstainCount(const CDeterministicMNList& tip_mn_list, vote_signal_enum_t eVoteSignalIn) const
         EXCLUSIVE_LOCKS_REQUIRED(!cs);
 
+    struct UniqueVoterCount {
+        uint16_t m_regular{0};
+        uint16_t m_evo{0};
+    };
+    UniqueVoterCount GetUniqueVoterCount(const CDeterministicMNList& tip_mn_list, vote_signal_enum_t eVoteSignalIn) const
+        EXCLUSIVE_LOCKS_REQUIRED(!cs);
+
     bool GetCurrentMNVotes(const COutPoint& mnCollateralOutpoint, vote_rec_t& voteRecord) const
         EXCLUSIVE_LOCKS_REQUIRED(!cs);
 

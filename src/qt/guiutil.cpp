@@ -417,6 +417,22 @@ bool isDust(interfaces::Node& node, const QString& address, const CAmount& amoun
     return IsDust(txOut, node.getDustRelayFee());
 }
 
+QString formatAmount(BitcoinUnit unit, CAmount amount, bool is_signed, std::optional<uint8_t> truncate)
+{
+    QString formatted = BitcoinUnits::format(unit, amount, is_signed, BitcoinUnits::SeparatorStyle::ALWAYS);
+    if (truncate) {
+        int dotIndex = formatted.indexOf('.');
+        if (dotIndex != -1) {
+            if (*truncate == 0) {
+                formatted = formatted.left(dotIndex);
+            } else if (formatted.length() > dotIndex + 1 + *truncate) {
+                formatted = formatted.left(dotIndex + 1 + *truncate);
+            }
+        }
+    }
+    return formatted + " " + BitcoinUnits::name(unit);
+}
+
 QString HtmlEscape(const QString& str, bool fMultiLine)
 {
     QString escaped = str.toHtmlEscaped();
@@ -1213,6 +1229,18 @@ QString formatNiceTimeOffset(qint64 secs)
         timeBehindText = QObject::tr("%1 and %2").arg(QObject::tr("%n year(s)", "", years)).arg(QObject::tr("%n week(s)","", remainder/WEEK_IN_SECONDS));
     }
     return timeBehindText;
+}
+
+QString formatBlockDuration(int blocks, int64_t spacing_seconds)
+{
+    if (blocks <= 0) return QObject::tr("now");
+    const double secs = static_cast<double>(blocks) * static_cast<double>(spacing_seconds);
+    constexpr double MINUTE{60.0}, HOUR{3600.0}, DAY{86400.0}, MONTH{30.44 * 86400.0}, YEAR{365.25 * 86400.0};
+    if (secs < HOUR)  return QObject::tr("%n minute(s)", "", static_cast<int>(secs / MINUTE + 0.5));
+    if (secs < DAY)   return QObject::tr("%n hour(s)",   "", static_cast<int>(secs / HOUR + 0.5));
+    if (secs < MONTH) return QObject::tr("%n day(s)",    "", static_cast<int>(secs / DAY + 0.5));
+    if (secs < YEAR)  return QObject::tr("%n month(s)",  "", static_cast<int>(secs / MONTH + 0.5));
+    return QObject::tr("%n year(s)", "", static_cast<int>(secs / YEAR + 0.5));
 }
 
 QString formatBytes(uint64_t bytes)

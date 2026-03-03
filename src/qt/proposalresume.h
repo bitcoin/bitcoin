@@ -46,7 +46,7 @@ class ProposalResume : public QDialog
     Ui::ProposalResume* m_ui;
 
 public:
-    explicit ProposalResume(interfaces::Node& node, ClientModel* client_model, WalletModel* wallet_model,
+    explicit ProposalResume(interfaces::Node& node, ClientModel& client_model, WalletModel* wallet_model,
                             const std::vector<Governance::Object>& proposals, QWidget* parent = nullptr);
     ~ProposalResume();
 
@@ -64,7 +64,7 @@ private Q_SLOTS:
 
 private:
     interfaces::Node& m_node;
-    ClientModel* m_client_model;
+    ClientModel& m_client_model;
     WalletModel* m_wallet_model;
 
 private:
