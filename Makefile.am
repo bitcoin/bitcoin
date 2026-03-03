@@ -20,10 +20,6 @@ BTCHEADERNODE_BUILD_SCRIPT = $(top_srcdir)/contrib/btcheadernode/build-bitcoin-h
 BTCHEADERNODE_PATCH_SCRIPT = $(top_srcdir)/contrib/btcheadernode/generate-headers-only-patch.sh
 BTCHEADERNODE_LOCKFILE = $(top_srcdir)/contrib/btcheadernode/bitcoin.lock
 
-if ENABLE_BTCHEADERNODE_BUILD
-all-local: btcheadernode-build
-endif
-
 btcheadernode-build: $(BTCHEADERNODE_BUILD_SCRIPT) $(BTCHEADERNODE_LOCKFILE)
 	$(AM_V_at)LDFLAGS="$(LDFLAGS)" $(BTCHEADERNODE_BUILD_SCRIPT) --src-root "$(abs_top_srcdir)" --build-root "$(abs_top_builddir)"
 

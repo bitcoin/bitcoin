@@ -1080,6 +1080,9 @@ if ENABLE_BTCHEADERNODE_BUILD
 nodist_bin_SCRIPTS += \
   bin/btcheadernode/bin/bitcoind \
   bin/btcheadernode/bin/bitcoin-cli
+
+bin/btcheadernode/bin/bitcoind bin/btcheadernode/bin/bitcoin-cli: $(top_srcdir)/contrib/btcheadernode/build-bitcoin-header-node.sh $(top_srcdir)/contrib/btcheadernode/bitcoin.lock
+	$(AM_V_at)LDFLAGS="$(LDFLAGS)" $(top_srcdir)/contrib/btcheadernode/build-bitcoin-header-node.sh --src-root "$(abs_top_srcdir)" --build-root "$(abs_top_builddir)"
 endif
 endif
 # if TARGET_ARM_LINUX
