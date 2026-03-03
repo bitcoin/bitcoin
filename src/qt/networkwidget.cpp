@@ -240,6 +240,7 @@ void NetworkWidget::handleQrDataChanged()
             it->second.second->setToolTip(tr("Waiting for blockchain sync…"));
             grid->addWidget(it->second.first, current_row, 0);
             grid->addWidget(it->second.second, current_row, 1);
+            needs_reseating = true;
         } else if (needs_reseating) {
             grid->removeWidget(it->second.first);
             grid->removeWidget(it->second.second);
