@@ -17,6 +17,7 @@
 #include <tinyformat.h>
 #include <util/check.h>
 #include <util/feefrac.h>
+#include <util/hasher.h>
 #include <util/log.h>
 #include <util/moneystr.h>
 #include <util/overflow.h>
@@ -52,6 +53,16 @@ bool TestLockPointValidity(CChain& active_chain, const LockPoints& lp)
 
     // LockPoints still valid
     return true;
+}
+
+static uint256 GetChunkHash(const std::vector<TxGraph::Ref*>& refs)
+{
+    std::vector<Wtxid> wtxids;
+    wtxids.reserve(refs.size());
+    for (const auto& ref : refs) {
+        wtxids.emplace_back(static_cast<const CTxMemPoolEntry&>(*ref).GetTx().GetWitnessHash());
+    }
+    return GetHashFromWitnesses(std::move(wtxids));
 }
 
 std::vector<CTxMemPoolEntry::CTxMemPoolEntryRef> CTxMemPool::GetChildren(const CTxMemPoolEntry& entry) const
@@ -1000,16 +1011,31 @@ util::Result<std::pair<std::vector<FeeFrac>, std::vector<FeeFrac>>> CTxMemPool::
     }
 
     std::vector<FeeFrac> old_diagram, new_diagram;
-    auto diagrams = m_pool->m_txgraph->GetMainStagingDiagrams();
-    old_diagram.reserve(diagrams.first.size());
-    new_diagram.reserve(diagrams.second.size());
-    for (auto& chunk : diagrams.first) {
+    m_fee_rate_diagrams = m_pool->m_txgraph->GetMainStagingDiagrams();
+    old_diagram.reserve(m_fee_rate_diagrams.first.size());
+    new_diagram.reserve(m_fee_rate_diagrams.second.size());
+    for (auto& chunk : m_fee_rate_diagrams.first) {
         old_diagram.emplace_back(chunk.feerate);
     }
-    for (auto& chunk : diagrams.second) {
+    for (auto& chunk : m_fee_rate_diagrams.second) {
         new_diagram.emplace_back(chunk.feerate);
     }
     return std::make_pair(old_diagram, new_diagram);
+}
+
+std::pair<std::vector<MemPoolChunk>, std::vector<MemPoolChunk>> CTxMemPool::ChangeSet::GetFeeRateDiagramChunks()
+{
+    std::vector<MemPoolChunk> old_diagrams;
+    old_diagrams.reserve(m_fee_rate_diagrams.first.size());
+    for (auto& chunk : m_fee_rate_diagrams.first) {
+        old_diagrams.emplace_back(chunk.feerate, GetChunkHash(chunk.refs));
+    }
+    std::vector<MemPoolChunk> new_diagrams;
+    new_diagrams.reserve(m_fee_rate_diagrams.second.size());
+    for (auto& chunk : m_fee_rate_diagrams.second) {
+        new_diagrams.emplace_back(chunk.feerate, GetChunkHash(chunk.refs));
+    }
+    return {old_diagrams, new_diagrams};
 }
 
 CTxMemPool::ChangeSet::TxHandle CTxMemPool::ChangeSet::StageAddition(const CTransactionRef& tx, const CAmount fee, int64_t time, unsigned int entry_height, uint64_t entry_sequence, bool spends_coinbase, int64_t sigops_cost, LockPoints lp)
