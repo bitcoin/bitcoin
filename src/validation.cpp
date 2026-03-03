@@ -2990,39 +2990,24 @@ bool Chainstate::DisconnectTip(BlockValidationState& state, DisconnectedBlockTra
 struct PerBlockConnectTrace {
     CBlockIndex* pindex = nullptr;
     std::shared_ptr<const CBlock> pblock;
-    PerBlockConnectTrace() = default;
 };
 /**
  * Used to track blocks whose transactions were applied to the UTXO state as a
  * part of a single ActivateBestChainStep call.
- *
- * This class is single-use, once you call GetBlocksConnected() you have to throw
- * it away and make a new one.
  */
 class ConnectTrace {
 private:
     std::vector<PerBlockConnectTrace> blocksConnected;
 
 public:
-    explicit ConnectTrace() : blocksConnected(1) {}
-
     void BlockConnected(CBlockIndex* pindex, std::shared_ptr<const CBlock> pblock) {
-        assert(!blocksConnected.back().pindex);
         assert(pindex);
         assert(pblock);
-        blocksConnected.back().pindex = pindex;
-        blocksConnected.back().pblock = std::move(pblock);
-        blocksConnected.emplace_back();
+        blocksConnected.emplace_back(pindex, std::move(pblock));
     }
 
-    std::vector<PerBlockConnectTrace>& GetBlocksConnected() {
-        // We always keep one extra block at the end of our list because
-        // blocks are added after all the conflicted transactions have
-        // been filled in. Thus, the last entry should always be an empty
-        // one waiting for the transactions from the next block. We pop
-        // the last entry here to make sure the list we return is sane.
-        assert(!blocksConnected.back().pindex);
-        blocksConnected.pop_back();
+    const std::vector<PerBlockConnectTrace>& GetBlocksConnected() const
+    {
         return blocksConnected;
     }
 };
