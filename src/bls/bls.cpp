@@ -66,6 +66,9 @@ void CBLSSecretKey::MakeNewKey()
         GetStrongRandBytes({buf, sizeof(buf)});
         try {
             impl = bls::PrivateKey::FromBytes(bls::Bytes(reinterpret_cast<const uint8_t*>(buf), SerSize));
+            if (impl == bls::PrivateKey()) {
+                continue;
+            }
             break;
         } catch (...) {
         }

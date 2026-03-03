@@ -111,6 +111,11 @@ public:
         } else {
             try {
                 impl = ImplType::FromBytes(bls::Bytes(vecBytes.data(), vecBytes.size()), specificLegacyScheme);
+                if (impl == ImplType()) {
+                    Reset();
+                    cachedHash.SetNull();
+                    return;
+                }
                 fValid = true;
             } catch (...) {
                 Reset();
