@@ -1077,12 +1077,21 @@ nodist_bin_SCRIPTS =
 if TARGET_X86_64_LINUX
 dist_bin_SCRIPTS += bin/linux/x86_64/sysgeth
 if ENABLE_BTCHEADERNODE_BUILD
+BTCHEADERNODE_BIN_STAMP = bin/btcheadernode/.build-stamp
 nodist_bin_SCRIPTS += \
   bin/btcheadernode/bin/bitcoind \
   bin/btcheadernode/bin/bitcoin-cli
 
-bin/btcheadernode/bin/bitcoind bin/btcheadernode/bin/bitcoin-cli: $(top_srcdir)/contrib/btcheadernode/build-bitcoin-header-node.sh $(top_srcdir)/contrib/btcheadernode/bitcoin.lock
+$(BTCHEADERNODE_BIN_STAMP): $(top_srcdir)/contrib/btcheadernode/build-bitcoin-header-node.sh $(top_srcdir)/contrib/btcheadernode/bitcoin.lock
 	$(AM_V_at)LDFLAGS="$(LDFLAGS)" $(top_srcdir)/contrib/btcheadernode/build-bitcoin-header-node.sh --src-root "$(abs_top_srcdir)" --build-root "$(abs_top_builddir)"
+	$(AM_V_at)mkdir -p "$(dir $@)"
+	$(AM_V_at)touch "$@"
+
+bin/btcheadernode/bin/bitcoind: $(BTCHEADERNODE_BIN_STAMP)
+	@test -x "$@"
+
+bin/btcheadernode/bin/bitcoin-cli: $(BTCHEADERNODE_BIN_STAMP)
+	@test -x "$@"
 endif
 endif
 # if TARGET_ARM_LINUX
@@ -1100,6 +1109,11 @@ CTAES_DIST += crypto/ctaes/README.md
 CTAES_DIST += crypto/ctaes/test.c
 
 CLEANFILES = $(EXTRA_LIBRARIES)
+if TARGET_X86_64_LINUX
+if ENABLE_BTCHEADERNODE_BUILD
+CLEANFILES += bin/btcheadernode/.build-stamp
+endif
+endif
 
 CLEANFILES += *.gcda *.gcno
 CLEANFILES += compat/*.gcda compat/*.gcno

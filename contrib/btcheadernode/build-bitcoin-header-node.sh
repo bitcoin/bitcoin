@@ -55,6 +55,81 @@ detect_jobs() {
     fi
 }
 
+detect_compiler() {
+    local env_value="$1"
+    shift
+    if [[ -n "$env_value" ]] && command -v "$env_value" >/dev/null 2>&1; then
+        printf '%s\n' "$env_value"
+        return 0
+    fi
+    local candidate
+    for candidate in "$@"; do
+        if command -v "$candidate" >/dev/null 2>&1; then
+            printf '%s\n' "$candidate"
+            return 0
+        fi
+    done
+    return 1
+}
+
+detect_boost_version() {
+    local include_dir="$1"
+    local version_header="$include_dir/boost/version.hpp"
+    if [[ -f "$version_header" ]]; then
+        local boost_version
+        boost_version="$(awk '/^#define[[:space:]]+BOOST_VERSION[[:space:]]+[0-9]+/{print $3; exit}' "$version_header")"
+        if [[ "$boost_version" =~ ^[0-9]+$ ]]; then
+            local major minor patch
+            major=$((boost_version / 100000))
+            minor=$(((boost_version / 100) % 1000))
+            patch=$((boost_version % 100))
+            printf '%s\n' "${major}.${minor}.${patch}"
+            return 0
+        fi
+    fi
+    printf '%s\n' "1.74.0"
+}
+
+write_boost_config_compat() {
+    local config_dir="$1"
+    local include_dir="$2"
+    local boost_version="$3"
+
+    mkdir -p "$config_dir"
+
+    cat > "$config_dir/BoostConfig.cmake" <<EOF
+set(Boost_FOUND TRUE)
+set(Boost_INCLUDE_DIR "${include_dir}")
+set(Boost_VERSION_STRING "${boost_version}")
+set(boost_headers_FOUND TRUE)
+set(boost_headers_DIR "\${CMAKE_CURRENT_LIST_DIR}")
+if(NOT TARGET Boost::headers)
+  add_library(Boost::headers INTERFACE IMPORTED)
+  set_target_properties(Boost::headers PROPERTIES
+    INTERFACE_INCLUDE_DIRECTORIES "${include_dir}"
+  )
+endif()
+if(NOT TARGET Boost::boost)
+  add_library(Boost::boost INTERFACE IMPORTED)
+  set_target_properties(Boost::boost PROPERTIES
+    INTERFACE_INCLUDE_DIRECTORIES "${include_dir}"
+  )
+endif()
+EOF
+
+    cat > "$config_dir/BoostConfigVersion.cmake" <<EOF
+set(PACKAGE_VERSION "${boost_version}")
+if(PACKAGE_FIND_VERSION VERSION_GREATER PACKAGE_VERSION)
+  set(PACKAGE_VERSION_COMPATIBLE FALSE)
+else()
+  set(PACKAGE_VERSION_COMPATIBLE TRUE)
+endif()
+if(PACKAGE_FIND_VERSION VERSION_EQUAL PACKAGE_VERSION)
+  set(PACKAGE_VERSION_EXACT TRUE)
+endif()
+EOF
+}
+
 SRC_ROOT=""
 BUILD_ROOT=""
 JOBS=""
@@ -231,8 +306,43 @@ else
         echo "cmake is required to build this pinned Bitcoin version." >&2
         exit 1
     fi
+
+    C_COMPILER="$(detect_compiler "${CC:-}" x86_64-linux-gnu-gcc gcc cc)" || {
+        echo "Could not locate a C compiler for Bitcoin CMake build." >&2
+        exit 1
+    }
+    CXX_COMPILER="$(detect_compiler "${CXX:-}" x86_64-linux-gnu-g++ g++ c++)" || {
+        echo "Could not locate a C++ compiler for Bitcoin CMake build." >&2
+        exit 1
+    }
+
+    BOOST_INCLUDE_DIR=""
+    if [[ -n "${HOST:-}" && -d "$SRC_ROOT/depends/${HOST}/include/boost" ]]; then
+        BOOST_INCLUDE_DIR="$SRC_ROOT/depends/${HOST}/include"
+    elif [[ -d "$SRC_ROOT/depends/x86_64-linux-gnu/include/boost" ]]; then
+        BOOST_INCLUDE_DIR="$SRC_ROOT/depends/x86_64-linux-gnu/include"
+    elif [[ -d "/usr/include/boost" ]]; then
+        BOOST_INCLUDE_DIR="/usr/include"
+    elif [[ -d "/usr/local/include/boost" ]]; then
+        BOOST_INCLUDE_DIR="/usr/local/include"
+    elif [[ -d "/opt/homebrew/include/boost" ]]; then
+        BOOST_INCLUDE_DIR="/opt/homebrew/include"
+    fi
+
+    if [[ -z "$BOOST_INCLUDE_DIR" ]]; then
+        echo "Could not locate Boost headers for Bitcoin CMake build." >&2
+        exit 1
+    fi
+
+    BOOST_VERSION="$(detect_boost_version "$BOOST_INCLUDE_DIR")"
+    BOOST_CONFIG_DIR="$BITCOIN_BUILD/cmake/boost-config"
+    write_boost_config_compat "$BOOST_CONFIG_DIR" "$BOOST_INCLUDE_DIR" "$BOOST_VERSION"
+
     cmake -S "$BITCOIN_SRC" -B "$BITCOIN_BUILD" \
         -DCMAKE_BUILD_TYPE=Release \
+        "-DCMAKE_C_COMPILER=${C_COMPILER}" \
+        "-DCMAKE_CXX_COMPILER=${CXX_COMPILER}" \
+        "-DBoost_DIR=${BOOST_CONFIG_DIR}" \
         -DBUILD_GUI=OFF \
         -DBUILD_SHARED_LIBS=OFF \
         -DBUILD_TESTS=OFF \
