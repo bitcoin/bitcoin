@@ -40,6 +40,8 @@ require a reindex.
 ## Bug Fixes
 
 - Fixed MN update notifications where the old and new masternode lists were swapped, causing incorrect change detection (dash#7154).
+- Reject identity elements in BLS deserialization and key generation to prevent invalid keys from being accepted (dash#7193).
+- Fixed quorum labels not being correctly reseated when new quorum types are inserted (dash#7191).
 
 ## Interfaces
 
@@ -68,8 +70,8 @@ debug the release candidates.
 
 These releases are considered obsolete. Old release notes can be found here:
 
-- [v23.1.0](https://github.com/dashpay/dash/blob/master/doc/release-notes/dash/release-notes-23.1.0.md) released Feb/2026
-- [v23.0.2](https://github.com/dashpay/dash/blob/master/doc/release-notes/dash/release-notes-23.0.2.md) released Dec/2025
+- [v23.1.0](https://github.com/dashpay/dash/blob/master/doc/release-notes/dash/release-notes-23.1.0.md) released Feb/15/2026
+- [v23.0.2](https://github.com/dashpay/dash/blob/master/doc/release-notes/dash/release-notes-23.0.2.md) released Dec/4/2025
 - [v23.0.0](https://github.com/dashpay/dash/blob/master/doc/release-notes/dash/release-notes-23.0.0.md) released Nov/10/2025
 - [v22.1.3](https://github.com/dashpay/dash/blob/master/doc/release-notes/dash/release-notes-22.1.3.md) released Jul/15/2025
 - [v22.1.2](https://github.com/dashpay/dash/blob/master/doc/release-notes/dash/release-notes-22.1.2.md) released Apr/15/2025
