@@ -154,6 +154,10 @@ public:
         return m_quality == QualityLevel::NEEDS_SPLIT || m_quality == QualityLevel::NEEDS_SPLIT_FIX;
     }
 
+    /** Whether this Cluster type is compatible with chain topology (Singleton and Chain are,
+     *  Generic is not). Used to determine if a group of clusters can be optimistically merged
+     *  into a ChainCluster. */
+    virtual bool IsChainCompatible() const noexcept = 0;
     /** Get the smallest number of transactions this Cluster is intended for. */
     virtual DepGraphIndex GetMinIntendedTxCount() const noexcept = 0;
     /** Get the maximum number of transactions this Cluster supports. */
@@ -273,6 +277,7 @@ public:
     explicit GenericClusterImpl(uint64_t sequence) noexcept;
 
     size_t TotalMemoryUsage() const noexcept final;
+    bool IsChainCompatible() const noexcept final { return false; }
     constexpr DepGraphIndex GetMinIntendedTxCount() const noexcept final { return MIN_INTENDED_TX_COUNT; }
     constexpr DepGraphIndex GetMaxTxCount() const noexcept final { return MAX_TX_COUNT; }
     DepGraphIndex GetDepGraphIndexRange() const noexcept final { return m_depgraph.PositionRange(); }
@@ -330,6 +335,7 @@ public:
     explicit SingletonClusterImpl(uint64_t sequence) noexcept : Cluster(sequence) {}
 
     size_t TotalMemoryUsage() const noexcept final;
+    bool IsChainCompatible() const noexcept final { return true; }
     constexpr DepGraphIndex GetMinIntendedTxCount() const noexcept final { return MIN_INTENDED_TX_COUNT; }
     constexpr DepGraphIndex GetMaxTxCount() const noexcept final { return MAX_TX_COUNT; }
     LinearizationIndex GetTxCount() const noexcept final { return m_graph_index != NO_GRAPH_INDEX; }
@@ -416,6 +422,9 @@ private:
         uint32_t m_deps_offset;
         /** How many dependencies to add. */
         uint32_t m_deps_count;
+        /** Whether all clusters in this group are chain-compatible (Singleton or Chain), meaning
+         *  the merged result might form a chain and can be optimistically merged as ChainCluster. */
+        bool m_maybe_chain{false};
     };
 
     /** Information about all groups of Clusters to be merged. */
@@ -2041,14 +2050,17 @@ void TxGraphImpl::GroupClusters(int level) noexcept
         new_entry.m_deps_count = 0;
         uint32_t total_count{0};
         uint64_t total_size{0};
+        bool all_chain_compatible{true};
         // Add all its clusters to it (copying those from an_clusters to m_group_clusters).
         while (an_clusters_it != an_clusters.end() && an_clusters_it->second == rep) {
             clusterset.m_group_data->m_group_clusters.push_back(an_clusters_it->first);
             total_count += an_clusters_it->first->GetTxCount();
             total_size += an_clusters_it->first->GetTotalTxSize();
+            if (!an_clusters_it->first->IsChainCompatible()) all_chain_compatible = false;
             ++an_clusters_it;
             ++new_entry.m_cluster_count;
         }
+        new_entry.m_maybe_chain = all_chain_compatible;
         // Add all its dependencies to it (copying those back from an_deps to m_deps_to_add).
         while (an_deps_it != an_deps.end() && an_deps_it->second == rep) {
             clusterset.m_deps_to_add.push_back(an_deps_it->first);
