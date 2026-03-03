@@ -2902,7 +2902,7 @@ Luo natiivin segwit-osoitteen (BIP-173). Jotkin vanhat lompakot eivät tue sitä
     </message>
     <message>
         <source>Insufficient funds!</source>
-        <translation type="unfinished">Lompakon saldo ei riitä!</translation>
+        <translation type="unfinished">Riittämätön saldo</translation>
     </message>
     <message>
         <source>Quantity:</source>
@@ -4009,7 +4009,7 @@ Varoitus: Tämä voi maksaa ylimääräisen maksun vähentämällä vaihtotuloja
     </message>
     <message>
         <source>There was an error trying to save the wallet data to %1.</source>
-        <translation type="unfinished">Lompakon tallennuksessa tapahtui virhe %1.</translation>
+        <translation type="unfinished">Lompakon tietojen tallentamisessa tapahtui virhe. %1.</translation>
     </message>
     <message>
         <source>Backup Successful</source>
