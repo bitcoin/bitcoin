@@ -91,6 +91,44 @@ detect_boost_version() {
     printf '%s\n' "1.74.0"
 }
 
+extract_include_dirs_from_flags() {
+    local flags="$1"
+    local token=""
+    local expect_path=0
+    for token in $flags; do
+        if [[ "$expect_path" -eq 1 ]]; then
+            printf '%s\n' "$token"
+            expect_path=0
+            continue
+        fi
+        case "$token" in
+            -I|-isystem)
+                expect_path=1
+                ;;
+            -I*)
+                printf '%s\n' "${token#-I}"
+                ;;
+            -isystem*)
+                printf '%s\n' "${token#-isystem}"
+                ;;
+        esac
+    done
+}
+
+detect_boost_include_dir_from_flags() {
+    local flags="$1"
+    local include_dir=""
+    while IFS= read -r include_dir; do
+        [[ -n "$include_dir" ]] || continue
+        include_dir="${include_dir%/}"
+        if [[ -d "$include_dir/boost" ]]; then
+            printf '%s\n' "$include_dir"
+            return 0
+        fi
+    done < <(extract_include_dirs_from_flags "$flags")
+    return 1
+}
+
 write_boost_config_compat() {
     local config_dir="$1"
     local include_dir="$2"
@@ -320,16 +358,19 @@ else
         exit 1
     }
 
-    BOOST_INCLUDE_DIR=""
-    if [[ -n "${HOST:-}" && -d "$SRC_ROOT/depends/${HOST}/include/boost" ]]; then
+    BOOST_INCLUDE_DIR="$(detect_boost_include_dir_from_flags "$BASE_CPPFLAGS" || true)"
+    if [[ -z "$BOOST_INCLUDE_DIR" ]]; then
+        BOOST_INCLUDE_DIR="$(detect_boost_include_dir_from_flags "$BASE_CXXFLAGS" || true)"
+    fi
+    if [[ -z "$BOOST_INCLUDE_DIR" && -n "${HOST:-}" && -d "$SRC_ROOT/depends/${HOST}/include/boost" ]]; then
         BOOST_INCLUDE_DIR="$SRC_ROOT/depends/${HOST}/include"
-    elif [[ -d "$SRC_ROOT/depends/x86_64-linux-gnu/include/boost" ]]; then
+    elif [[ -z "$BOOST_INCLUDE_DIR" && -d "$SRC_ROOT/depends/x86_64-linux-gnu/include/boost" ]]; then
         BOOST_INCLUDE_DIR="$SRC_ROOT/depends/x86_64-linux-gnu/include"
-    elif [[ -d "/usr/include/boost" ]]; then
+    elif [[ -z "$BOOST_INCLUDE_DIR" && -d "/usr/include/boost" ]]; then
         BOOST_INCLUDE_DIR="/usr/include"
-    elif [[ -d "/usr/local/include/boost" ]]; then
+    elif [[ -z "$BOOST_INCLUDE_DIR" && -d "/usr/local/include/boost" ]]; then
         BOOST_INCLUDE_DIR="/usr/local/include"
-    elif [[ -d "/opt/homebrew/include/boost" ]]; then
+    elif [[ -z "$BOOST_INCLUDE_DIR" && -d "/opt/homebrew/include/boost" ]]; then
         BOOST_INCLUDE_DIR="/opt/homebrew/include"
     fi
 
