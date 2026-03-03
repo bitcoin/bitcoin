@@ -148,3 +148,10 @@ async def mining_get_coinbase_tx(block_template, ctx) -> CoinbaseTxData:
         requiredOutputs=[bytes(output) for output in template_capnp.requiredOutputs],
         lockTime=int(template_capnp.lockTime),
     )
+
+async def make_mining_ctx(self):
+    """Create IPC context and Mining proxy object."""
+    ctx, init = await make_capnp_init_ctx(self)
+    self.log.debug("Create Mining proxy object")
+    mining = init.makeMining(ctx).result
+    return ctx, mining
