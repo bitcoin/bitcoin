@@ -67,7 +67,7 @@
     </message>
     <message>
         <source>&amp;Edit</source>
-        <translation type="unfinished">&amp;Өңдеу</translation>
+        <translation type="unfinished">&amp;Өзгерту</translation>
     </message>
     <message>
         <source>Export Address List</source>
@@ -477,7 +477,7 @@
     </message>
     <message>
         <source>%1 behind</source>
-        <translation type="unfinished">%1 қалмады</translation>
+        <translation type="unfinished">%1 артта</translation>
     </message>
     <message>
         <source>Catching up…</source>
@@ -485,7 +485,7 @@
     </message>
     <message>
         <source>Error</source>
-        <translation type="unfinished">қате</translation>
+        <translation type="unfinished">Қате</translation>
     </message>
     <message>
         <source>Warning</source>
@@ -493,7 +493,7 @@
     </message>
     <message>
         <source>Information</source>
-        <translation type="unfinished">Информация</translation>
+        <translation type="unfinished">Ақпарат</translation>
     </message>
     <message>
         <source>Up to date</source>
@@ -661,6 +661,23 @@
     <message>
         <source>Error</source>
         <translation type="unfinished">Қате</translation>
+    </message>
+    </context>
+<context>
+    <name>PSBTOperationsDialog</name>
+    <message numerus="yes">
+        <source>Signed %n input(s), but more signatures are still required.</source>
+        <translation type="unfinished">
+            <numerusform />
+            <numerusform />
+        </translation>
+    </message>
+    <message numerus="yes">
+        <source>Transaction has %n unsigned input(s).</source>
+        <translation type="unfinished">
+            <numerusform />
+            <numerusform />
+        </translation>
     </message>
     </context>
 <context>

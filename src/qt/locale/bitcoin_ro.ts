@@ -30,6 +30,10 @@
         <translation type="unfinished">Introduceţi adresa sau eticheta pentru căutare</translation>
     </message>
     <message>
+        <source>Copy the currently selected address to the clipboard</source>
+        <translation type="unfinished">Copiază adresa selectată curent în clipboard</translation>
+    </message>
+    <message>
         <source>Export the data in the current tab to a file</source>
         <translation type="unfinished">Exportă datele din tab-ul curent într-un fişier</translation>
     </message>
@@ -604,9 +608,9 @@ Semnarea este posibilă numai cu adrese de tip "legacy".</translation>
     <message numerus="yes">
         <source>Processed %n block(s) of transaction history.</source>
         <translation type="unfinished">
-            <numerusform />
-            <numerusform />
-            <numerusform />
+            <numerusform>S-a procesat %nbloc din istoricul tranzacțiilor.</numerusform>
+            <numerusform>S-au procesat %n blocuri din istoria tranzacțiilor.</numerusform>
+            <numerusform>S-au procesat %n blocuri din istoria tranzacțiilor.</numerusform>
         </translation>
     </message>
     <message>
@@ -1074,6 +1078,16 @@ Semnarea este posibilă numai cu adrese de tip "legacy".</translation>
     <message>
         <source>The wallet '%1' was migrated successfully.</source>
         <translation type="unfinished">Portofelul '%1' a fost migrat cu succes.</translation>
+    </message>
+    <message>
+        <source>Restore Wallet</source>
+        <extracomment>Title of progress window which is displayed when wallets are being restored.</extracomment>
+        <translation type="unfinished">Restaurare portofel</translation>
+    </message>
+    <message>
+        <source>Restoring Wallet &lt;b&gt;%1&lt;/b&gt;…</source>
+        <extracomment>Descriptive text of the restore wallets progress window which indicates to the user that wallets are currently being restored.</extracomment>
+        <translation type="unfinished">Restabilirea Portofelului&lt;b&gt;%1&lt;/b&gt;</translation>
     </message>
     <message>
         <source>Migration failed</source>
@@ -1792,6 +1806,14 @@ Semnarea este posibilă numai cu adrese de tip "legacy".</translation>
         <source>Could not sign any more inputs.</source>
         <translation type="unfinished">Nu s-au mai putut semna alte intrări.</translation>
     </message>
+    <message numerus="yes">
+        <source>Signed %n input(s), but more signatures are still required.</source>
+        <translation type="unfinished">
+            <numerusform />
+            <numerusform />
+            <numerusform />
+        </translation>
+    </message>
     <message>
         <source>Unknown error processing transaction.</source>
         <translation type="unfinished">Eroare necunoscută la procesarea tranzacției.</translation>
@@ -1829,9 +1851,13 @@ Semnarea este posibilă numai cu adrese de tip "legacy".</translation>
         <source>or</source>
         <translation type="unfinished">sau</translation>
     </message>
-    <message>
-        <source>Transaction has %1 unsigned inputs.</source>
-        <translation type="unfinished">Tranzacția are %1 intrări nesemnate.</translation>
+    <message numerus="yes">
+        <source>Transaction has %n unsigned input(s).</source>
+        <translation type="unfinished">
+            <numerusform />
+            <numerusform />
+            <numerusform />
+        </translation>
     </message>
     <message>
         <source>Transaction still needs signature(s).</source>
@@ -2060,10 +2086,6 @@ Semnarea este posibilă numai cu adrese de tip "legacy".</translation>
     <message>
         <source>Version</source>
         <translation type="unfinished">Versiune</translation>
-    </message>
-    <message>
-        <source>Starting Block</source>
-        <translation type="unfinished">Bloc de început</translation>
     </message>
     <message>
         <source>Synced Headers</source>
@@ -2429,7 +2451,7 @@ Pentru mai multe informații privind folosirea consolei, tastează %6.
     <name>RecentRequestsTableModel</name>
     <message>
         <source>Date</source>
-        <translation type="unfinished">Dată</translation>
+        <translation type="unfinished">Data</translation>
     </message>
     <message>
         <source>Label</source>
@@ -2711,10 +2733,6 @@ Pentru mai multe informații privind folosirea consolei, tastează %6.
         <translation type="unfinished">Suma depăşeşte soldul contului.</translation>
     </message>
     <message>
-        <source>The total exceeds your balance when the %1 transaction fee is included.</source>
-        <translation type="unfinished">Totalul depăşeşte soldul contului dacă se include şi plata taxei de %1.</translation>
-    </message>
-    <message>
         <source>Duplicate address found: addresses should only be used once each.</source>
         <translation type="unfinished">Adresă duplicat găsită: fiecare adresă ar trebui folosită o singură dată.</translation>
     </message>
@@ -2991,7 +3009,7 @@ Pentru mai multe informații privind folosirea consolei, tastează %6.
     </message>
     <message>
         <source>Date</source>
-        <translation type="unfinished">Dată</translation>
+        <translation type="unfinished">Data</translation>
     </message>
     <message>
         <source>Source</source>
@@ -3117,7 +3135,7 @@ Pentru mai multe informații privind folosirea consolei, tastează %6.
     <name>TransactionTableModel</name>
     <message>
         <source>Date</source>
-        <translation type="unfinished">Dată</translation>
+        <translation type="unfinished">Data</translation>
     </message>
     <message>
         <source>Type</source>
@@ -3277,7 +3295,7 @@ Pentru mai multe informații privind folosirea consolei, tastează %6.
     <message>
         <source>Show in %1</source>
         <extracomment>Transactions table context menu action to show the selected transaction in a third-party block explorer. %1 is a stand-in argument for the URL of the explorer.</extracomment>
-        <translation type="unfinished">Arată in %1</translation>
+        <translation type="unfinished">Arata in %1</translation>
     </message>
     <message>
         <source>Export Transaction History</source>
@@ -3294,7 +3312,7 @@ Pentru mai multe informații privind folosirea consolei, tastează %6.
     </message>
     <message>
         <source>Date</source>
-        <translation type="unfinished">Dată</translation>
+        <translation type="unfinished">Data</translation>
     </message>
     <message>
         <source>Type</source>
@@ -3310,7 +3328,7 @@ Pentru mai multe informații privind folosirea consolei, tastează %6.
     </message>
     <message>
         <source>Exporting Failed</source>
-        <translation type="unfinished">Export nereușit</translation>
+        <translation type="unfinished">Export nereusit</translation>
     </message>
     <message>
         <source>There was an error trying to save the transaction history to %1.</source>
@@ -3503,10 +3521,6 @@ Mergi la Fisiere&gt;Deschide Portofel ca sa incarci un portofel.
         <translation type="unfinished">Atentie: S-au detectat chei private in portofelul {%s} cu cheile private dezactivate</translation>
     </message>
     <message>
-        <source>Warning: We do not appear to fully agree with our peers! You may need to upgrade, or other nodes may need to upgrade.</source>
-        <translation type="unfinished">Atenţie: Aparent, nu suntem de acord cu toţi partenerii noştri! Va trebui să faceţi o actualizare, sau alte noduri necesită actualizare.</translation>
-    </message>
-    <message>
         <source>You need to rebuild the database using -reindex to go back to unpruned mode.  This will redownload the entire blockchain</source>
         <translation type="unfinished">Trebuie reconstruita intreaga baza de date folosind -reindex pentru a va intoarce la modul non-redus. Aceasta va determina descarcarea din nou a intregului blockchain</translation>
     </message>
@@ -3553,20 +3567,12 @@ Restaurarea copiei de rezervă a portofelului a eșuat.</translation>
         <translation type="unfinished">Încărcare terminată</translation>
     </message>
     <message>
-        <source>Error creating %s</source>
-        <translation type="unfinished">Eroare creând %s</translation>
-    </message>
-    <message>
         <source>Error initializing block database</source>
         <translation type="unfinished">Eroare la iniţializarea bazei de date de blocuri</translation>
     </message>
     <message>
         <source>Error loading %s</source>
         <translation type="unfinished">Eroare la încărcarea %s</translation>
-    </message>
-    <message>
-        <source>Error loading %s: Private keys can only be disabled during creation</source>
-        <translation type="unfinished">Eroare la incarcarea %s: Cheile private pot fi dezactivate doar in momentul crearii</translation>
     </message>
     <message>
         <source>Error loading %s: Wallet corrupted</source>
@@ -3601,10 +3607,6 @@ Restaurarea copiei de rezervă a portofelului a eșuat.</translation>
         <translation type="unfinished">Eroare: Spațiul pe disc este redus pentru %s</translation>
     </message>
     <message>
-        <source>Failed to connect best block (%s).</source>
-        <translation type="unfinished">Conectarea celui mai bun bloc a eșuat (%s).</translation>
-    </message>
-    <message>
         <source>Failed to disconnect block.</source>
         <translation type="unfinished">Deconectarea blocului a eșuat.</translation>
     </message>
@@ -3627,10 +3629,6 @@ Restaurarea copiei de rezervă a portofelului a eșuat.</translation>
     <message>
         <source>Failed to write block.</source>
         <translation type="unfinished">Scrierea blocului a eșuat.</translation>
-    </message>
-    <message>
-        <source>Failed to write to coin database.</source>
-        <translation type="unfinished">Scrierea la baza de date a monedei a eșuat.</translation>
     </message>
     <message>
         <source>Failed to write undo data.</source>
@@ -3759,10 +3757,6 @@ Restaurarea copiei de rezervă a portofelului a eșuat.</translation>
     <message>
         <source>This is the minimum transaction fee you pay on every transaction.</source>
         <translation type="unfinished">Acesta este minimum de taxa de tranzactie care va fi platit la fiecare tranzactie.</translation>
-    </message>
-    <message>
-        <source>This is the transaction fee you will pay if you send a transaction.</source>
-        <translation type="unfinished">Aceasta este taxa de tranzactie pe care o platiti cand trimiteti o tranzactie.</translation>
     </message>
     <message>
         <source>Transaction %s does not belong to this wallet</source>

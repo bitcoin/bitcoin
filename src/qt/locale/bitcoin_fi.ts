@@ -30,6 +30,10 @@
         <translation type="unfinished">Anna etsittävä osoite tai tunniste</translation>
     </message>
     <message>
+        <source>Copy the currently selected address to the clipboard</source>
+        <translation type="unfinished">Kopioi valittu osoite leikepöydälle</translation>
+    </message>
+    <message>
         <source>Export the data in the current tab to a file</source>
         <translation type="unfinished">Vie auki olevan välilehden tiedot tiedostoon</translation>
     </message>
@@ -763,6 +767,23 @@ Allekirjoitus on mahdollista vain 'legacy'-tyyppisillä osoitteilla.</translatio
         <translation type="unfinished">Lompakon nimi</translation>
     </message>
     <message>
+        <source>Invalid Wallet Name</source>
+        <translation type="unfinished">Virheellinen lomapkon nimi</translation>
+    </message>
+    <message>
+        <source>Wallet name cannot be empty</source>
+        <translation type="unfinished">Lompakon nimeä ei voi jättää tyhjäksi</translation>
+    </message>
+    <message>
+        <source>Restore and Migrate Wallet Backup</source>
+        <translation type="unfinished">Palauta ja siirrä lompakon varmuuskopio</translation>
+    </message>
+    <message>
+        <source>Restore and Migrate Wallet</source>
+        <extracomment>Title of pop-up window shown when the user is attempting to restore a wallet.</extracomment>
+        <translation type="unfinished">Palauta ja siirrä lompakko</translation>
+    </message>
+    <message>
         <source>&amp;Window</source>
         <translation type="unfinished">&amp;Ikkuna</translation>
     </message>
@@ -1122,6 +1143,24 @@ Siirtoprosessi luo varmuuskopion lompakosta ennen siirtoa. Tämä varmuuskopioti
         <translation type="unfinished">Ratkaistavat mutta ei katsotut skriptit on siirretty uuteen lompakkoon nimeltä '%1'.</translation>
     </message>
     <message>
+        <source>Restore and Migrate wallet</source>
+        <translation type="unfinished">Palauta ja siirrä lompakko</translation>
+    </message>
+    <message>
+        <source>Are you sure you wish to restore the wallet file &lt;i&gt;%1&lt;/i&gt; to &lt;i&gt;%2&lt;/i&gt; and migrate it?</source>
+        <translation type="unfinished">Haluatko varmasti palauttaa lompakon &lt;i&gt;%1&lt;/i&gt; kohteeseen &lt;i&gt;%2&lt;/i&gt; ja siirtää sen?</translation>
+    </message>
+    <message>
+        <source>Restore Wallet</source>
+        <extracomment>Title of progress window which is displayed when wallets are being restored.</extracomment>
+        <translation type="unfinished">Palauta lompakko</translation>
+    </message>
+    <message>
+        <source>Restoring Wallet &lt;b&gt;%1&lt;/b&gt;…</source>
+        <extracomment>Descriptive text of the restore wallets progress window which indicates to the user that wallets are currently being restored.</extracomment>
+        <translation type="unfinished">Lompakon palautus&lt;b&gt;%1&lt;/b&gt;…</translation>
+    </message>
+    <message>
         <source>Migration failed</source>
         <translation type="unfinished">Siirto epäonnistui</translation>
     </message>
@@ -1243,10 +1282,6 @@ Siirtoprosessi luo varmuuskopion lompakosta ennen siirtoa. Tämä varmuuskopioti
     <message>
         <source>Disable Private Keys</source>
         <translation type="unfinished">Poista yksityisavaimet käytöstä</translation>
-    </message>
-    <message>
-        <source>Make a blank wallet. Blank wallets do not initially have private keys or scripts. Private keys and addresses can be imported, or an HD seed can be set, at a later time.</source>
-        <translation type="unfinished">Luo tyhjä lompakko. Tyhjissä lompakoissa ei aluksi ole yksityisavaimia tai skriptejä. Myöhemmin voidaan tuoda yksityisavaimia ja -osoitteita, tai asettaa HD-siemen.</translation>
     </message>
     <message>
         <source>Make Blank Wallet</source>
@@ -1457,8 +1492,8 @@ Siirtoprosessi luo varmuuskopion lompakosta ennen siirtoa. Tämä varmuuskopioti
         <source>(sufficient to restore backups %n day(s) old)</source>
         <extracomment>Explanatory text on the capability of the current prune target.</extracomment>
         <translation type="unfinished">
-            <numerusform />
-            <numerusform />
+            <numerusform>(riittää %n päivän vanhojen varmuuskopioiden palauttamiseen)</numerusform>
+            <numerusform>(riittää %n päivää vanhojen varmuuskopioiden palauttamiseen)</numerusform>
         </translation>
     </message>
     <message>
@@ -1576,6 +1611,11 @@ Siirtoprosessi luo varmuuskopion lompakosta ennen siirtoa. Tämä varmuuskopioti
         <translation type="unfinished">Rajaamisen ottaminen käyttöön vähentää merkittävästi tapahtumien tallentamiseen tarvittavaa levytilaa. Kaikki lohkot validoidaan edelleen täysin. Tämän asetuksen peruuttaminen edellyttää koko lohkoketjun lataamista uudelleen.</translation>
     </message>
     <message>
+        <source>Maximum database cache size. Make sure you have enough RAM. A larger cache can contribute to faster sync, after which the benefit is less pronounced for most use cases. Lowering the cache size will reduce memory usage. Unused mempool memory is shared for this cache.</source>
+        <extracomment>Tooltip text for Options window setting that sets the size of the database cache. Explains the corresponding effects of increasing/decreasing this value.</extracomment>
+        <translation type="unfinished">Tietokannan välimuistin enimmäiskoko. Varmista, että keskusmuistia on riittävästi. Suurempi välimuisti voi nopeuttaa synkronointia, mutta sen jälkeen hyöty ei ole enää niin merkittävä useimmissa käyttötapauksissa. Välimuistin koon pienentäminen vähentää muistin käyttöä. Käyttämätön mempool-muisti jaetaan tätä välimuistia varten.</translation>
+    </message>
+    <message>
         <source>Size of &amp;database cache</source>
         <translation type="unfinished">&amp;Tietokannan välimuistin koko</translation>
     </message>
@@ -1586,6 +1626,14 @@ Siirtoprosessi luo varmuuskopion lompakosta ennen siirtoa. Tämä varmuuskopioti
     <message>
         <source>Full path to a %1 compatible script (e.g. C:\Downloads\hwi.exe or /Users/you/Downloads/hwi.py). Beware: malware can steal your coins!</source>
         <translation type="unfinished">Täysi polku %1 yhteensopivaan komentosarjaan (esim. C:\Downloads\hwi.exe tai /Users/you/Downloads/hwi.py). Varo: haittaohjelmat voivat varastaa kolikkosi!</translation>
+    </message>
+    <message>
+        <source>Automatically open the Bitcoin client port on the router. This only works when your router supports PCP or NAT-PMP and it is enabled. The external port could be random.</source>
+        <translation type="unfinished">Avaa reitittimen Bitcoin-asiakasohjelman portti automaattisesti. Tämä toimii vain, jos reitittimesi tukee PCP:tä tai NAT-PMP:tä ja se on otettu käyttöön. Ulkoinen portti voi olla satunnainen.</translation>
+    </message>
+    <message>
+        <source>Map port using PCP or NA&amp;T-PMP</source>
+        <translation type="unfinished">Portin uudelleenohjaus PCP:llä tai NA&amp;T-PMP:llä</translation>
     </message>
     <message>
         <source>IP address of the proxy (e.g. IPv4: 127.0.0.1 / IPv6: ::1)</source>
@@ -1783,6 +1831,10 @@ Siirtoprosessi luo varmuuskopion lompakosta ennen siirtoa. Tämä varmuuskopioti
         <translation type="unfinished">Valitse mitä yksikköä käytetään ensisijaisesti bitcoin-määrien näyttämiseen.</translation>
     </message>
     <message>
+        <source>Third-party URLs (e.g. a block explorer) that appear in the transactions tab as context menu items. %s in the URL is replaced by transaction hash. Multiple URLs are separated by vertical bar |.</source>
+        <translation type="unfinished">Kolmannen osapuolen URL-osoitteet (esim. block explorer), jotka esiintyvät siirrot-välilehden pikavalikoissa. URL-osoitteessa oleva %s korvataan siirtotunnisteella.  Jos URL-osoitteita on useampia, ne on eroteltu pystyviivalla |.</translation>
+    </message>
+    <message>
         <source>&amp;Third-party transaction URLs</source>
         <translation type="unfinished">&amp;Kolmannen osapuolen tapahtuma-URL-osoitteet</translation>
     </message>
@@ -1974,9 +2026,12 @@ Siirtoprosessi luo varmuuskopion lompakosta ennen siirtoa. Tämä varmuuskopioti
         <source>Could not sign any more inputs.</source>
         <translation type="unfinished">Syötteitä ei voitu enää allekirjoittaa.</translation>
     </message>
-    <message>
-        <source>Signed %1 inputs, but more signatures are still required.</source>
-        <translation type="unfinished">%1 syötettä allekirjoitettiin, mutta lisää allekirjoituksia tarvitaan.</translation>
+    <message numerus="yes">
+        <source>Signed %n input(s), but more signatures are still required.</source>
+        <translation type="unfinished">
+            <numerusform />
+            <numerusform />
+        </translation>
     </message>
     <message>
         <source>Signed transaction successfully. Transaction is ready to broadcast.</source>
@@ -2035,9 +2090,12 @@ Siirtoprosessi luo varmuuskopion lompakosta ennen siirtoa. Tämä varmuuskopioti
         <source>or</source>
         <translation type="unfinished">tai</translation>
     </message>
-    <message>
-        <source>Transaction has %1 unsigned inputs.</source>
-        <translation type="unfinished">Siirrossa on %1 allekirjoittamatonta syötettä.</translation>
+    <message numerus="yes">
+        <source>Transaction has %n unsigned input(s).</source>
+        <translation type="unfinished">
+            <numerusform />
+            <numerusform />
+        </translation>
     </message>
     <message>
         <source>Transaction is missing some information about inputs.</source>
@@ -2329,10 +2387,6 @@ Jos saat tämän virheen, pyydä kauppiasta antamaan BIP21-yhteensopiva URI.</tr
         <translation type="unfinished">Siirtokulu</translation>
     </message>
     <message>
-        <source>Starting Block</source>
-        <translation type="unfinished">Alkaen lohkosta</translation>
-    </message>
-    <message>
         <source>Synced Headers</source>
         <translation type="unfinished">Synkronoidut ylätunnisteet</translation>
     </message>
@@ -2429,6 +2483,10 @@ Jos saat tämän virheen, pyydä kauppiasta antamaan BIP21-yhteensopiva URI.</tr
     <message>
         <source>Services</source>
         <translation type="unfinished">Palvelut</translation>
+    </message>
+    <message>
+        <source>High bandwidth BIP152 compact block relay: %1</source>
+        <translation type="unfinished">Suuren kaistanleveyden BIP152-tiivislohkojen välitys: %1</translation>
     </message>
     <message>
         <source>High Bandwidth</source>
@@ -2902,7 +2960,7 @@ Luo natiivin segwit-osoitteen (BIP-173). Jotkin vanhat lompakot eivät tue sitä
     </message>
     <message>
         <source>Insufficient funds!</source>
-        <translation type="unfinished">Lompakon saldo ei riitä!</translation>
+        <translation type="unfinished">Riittämätön saldo!</translation>
     </message>
     <message>
         <source>Quantity:</source>
@@ -3200,10 +3258,6 @@ Huom: Koska maksu lasketaan per tavu, "100 satoshin per kB" maksunopeus 500 virt
     <message>
         <source>The amount exceeds your balance.</source>
         <translation type="unfinished">Määrä ylittää tilisi saldon.</translation>
-    </message>
-    <message>
-        <source>The total exceeds your balance when the %1 transaction fee is included.</source>
-        <translation type="unfinished">Kokonaismäärä ylittää saldosi kun %1 siirtomaksu lisätään summaan.</translation>
     </message>
     <message>
         <source>Duplicate address found: addresses should only be used once each.</source>
@@ -4100,10 +4154,6 @@ ilman, että käytetään mitään snapshot-tietoja. Ilmoita tästä tapauksesta
         <translation type="unfinished">Varoitus: lompakosta {%s} tunnistetut yksityiset avaimet, on poistettu käytöstä</translation>
     </message>
     <message>
-        <source>Warning: We do not appear to fully agree with our peers! You may need to upgrade, or other nodes may need to upgrade.</source>
-        <translation type="unfinished">Varoitus: Olemme ristiriidassa vertaisten kanssa! Sinun tulee päivittää tai toisten solmujen tulee päivitää.</translation>
-    </message>
-    <message>
         <source>You need to rebuild the database using -reindex to go back to unpruned mode.  This will redownload the entire blockchain</source>
         <translation type="unfinished">Palataksesi karsimattomaan tilaan joudut uudelleenrakentamaan tietokannan -reindex -valinnalla. Tämä lataa koko lohkoketjun uudestaan.</translation>
     </message>
@@ -4176,20 +4226,12 @@ Ei voinut palauttaa lompakon varmuuskopiota..</translation>
         <translation type="unfinished">Dump-tiedostoa %s ei ole olemassa.</translation>
     </message>
     <message>
-        <source>Error creating %s</source>
-        <translation type="unfinished">Virhe luodessa %s</translation>
-    </message>
-    <message>
         <source>Error initializing block database</source>
         <translation type="unfinished">Virhe alustaessa lohkotietokantaa</translation>
     </message>
     <message>
         <source>Error loading %s</source>
         <translation type="unfinished">Virhe ladattaessa %s</translation>
-    </message>
-    <message>
-        <source>Error loading %s: Private keys can only be disabled during creation</source>
-        <translation type="unfinished">Virhe %s:n lataamisessa: Yksityiset avaimet voidaan poistaa käytöstä vain luomisen aikana</translation>
     </message>
     <message>
         <source>Error loading %s: Wallet corrupted</source>
@@ -4297,7 +4339,7 @@ Ei voinut palauttaa lompakon varmuuskopiota..</translation>
     </message>
     <message>
         <source>Insufficient funds</source>
-        <translation type="unfinished">Lompakon saldo ei riitä</translation>
+        <translation type="unfinished">Riittämätön saldo</translation>
     </message>
     <message>
         <source>Invalid -i2psam address or hostname: '%s'</source>
@@ -4470,10 +4512,6 @@ Ei voinut palauttaa lompakon varmuuskopiota..</translation>
     <message>
         <source>This is the minimum transaction fee you pay on every transaction.</source>
         <translation type="unfinished">Tämä on jokaisesta siirrosta maksettava vähimmäismaksu.</translation>
-    </message>
-    <message>
-        <source>This is the transaction fee you will pay if you send a transaction.</source>
-        <translation type="unfinished">Tämä on se siirtomaksu, jonka maksat, mikäli lähetät siirron.</translation>
     </message>
     <message>
         <source>Transaction %s does not belong to this wallet</source>

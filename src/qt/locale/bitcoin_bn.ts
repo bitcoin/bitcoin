@@ -465,7 +465,7 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     </message>
     <message>
         <source>Copy &amp;label</source>
-        <translation type="unfinished">কপি &amp;লেবেল</translation>
+        <translation type="unfinished">কপি লেবেল</translation>
     </message>
     <message>
         <source>Copy &amp;amount</source>
@@ -638,6 +638,23 @@ The migration process will create a backup of the wallet before migrating. This 
     </message>
     </context>
 <context>
+    <name>PSBTOperationsDialog</name>
+    <message numerus="yes">
+        <source>Signed %n input(s), but more signatures are still required.</source>
+        <translation type="unfinished">
+            <numerusform />
+            <numerusform />
+        </translation>
+    </message>
+    <message numerus="yes">
+        <source>Transaction has %n unsigned input(s).</source>
+        <translation type="unfinished">
+            <numerusform />
+            <numerusform />
+        </translation>
+    </message>
+    </context>
+<context>
     <name>PeerTableModel</name>
     <message>
         <source>Address</source>
@@ -672,10 +689,6 @@ The migration process will create a backup of the wallet before migrating. This 
         <extracomment>Context menu action to copy the IP/Netmask of a banned peer. IP/Netmask is the combination of a peer's IP address and its Netmask. For IP address, see: https://en.wikipedia.org/wiki/IP_address.</extracomment>
         <translation type="unfinished">&amp;copy আইপি/নেটমাস্ক
 (IP/Netmask)</translation>
-    </message>
-    <message>
-        <source>None</source>
-        <translation type="unfinished">কিছুই নেই</translation>
     </message>
     <message>
         <source>Ctrl+I</source>
@@ -803,14 +816,6 @@ The migration process will create a backup of the wallet before migrating. This 
         <source>Date</source>
         <translation type="unfinished">তারিখ</translation>
     </message>
-    <message>
-        <source>From</source>
-        <translation type="unfinished">থেকে</translation>
-    </message>
-    <message>
-        <source>To</source>
-        <translation type="unfinished">উদ্দেশ্যে</translation>
-    </message>
     <message numerus="yes">
         <source>matures in %n more block(s)</source>
         <translation type="unfinished">
@@ -831,7 +836,7 @@ The migration process will create a backup of the wallet before migrating. This 
     </message>
     <message>
         <source>Label</source>
-        <translation type="unfinished">লেবেল</translation>
+        <translation type="unfinished">টিকেট</translation>
     </message>
     </context>
 <context>
@@ -842,7 +847,7 @@ The migration process will create a backup of the wallet before migrating. This 
     </message>
     <message>
         <source>Copy &amp;label</source>
-        <translation type="unfinished">কপি &amp;লেবেল</translation>
+        <translation type="unfinished">কপি লেবেল</translation>
     </message>
     <message>
         <source>Copy &amp;amount</source>

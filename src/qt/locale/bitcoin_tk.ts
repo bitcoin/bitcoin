@@ -1050,6 +1050,19 @@ Diňe "miras" görnüşli salgylar bilen gol çekmek mümkin.</translation>
     </message>
 </context>
 <context>
+    <name>MigrateWalletActivity</name>
+    <message>
+        <source>Restore Wallet</source>
+        <extracomment>Title of progress window which is displayed when wallets are being restored.</extracomment>
+        <translation type="unfinished">Gapjygy düzeltmek</translation>
+    </message>
+    <message>
+        <source>Restoring Wallet &lt;b&gt;%1&lt;/b&gt;…</source>
+        <extracomment>Descriptive text of the restore wallets progress window which indicates to the user that wallets are currently being restored.</extracomment>
+        <translation type="unfinished">&lt;b&gt;%1&lt;/b&gt; Gapjyk düzeltilýär…</translation>
+    </message>
+    </context>
+<context>
     <name>OpenWalletActivity</name>
     <message>
         <source>Open wallet failed</source>
@@ -1154,10 +1167,6 @@ Diňe "miras" görnüşli salgylar bilen gol çekmek mümkin.</translation>
     <message>
         <source>Disable Private Keys</source>
         <translation type="unfinished">Hususy açarlary öçür</translation>
-    </message>
-    <message>
-        <source>Make a blank wallet. Blank wallets do not initially have private keys or scripts. Private keys and addresses can be imported, or an HD seed can be set, at a later time.</source>
-        <translation type="unfinished">Boş gapjyk emele getir. Boş gapjyklaryň başda hususy açary ýa-da skripti bolmaýar. Soňra hususy açarlar ýa-da salgylar import edilip bilner ýa-da HD esasy açar bellenip bilner.</translation>
     </message>
     <message>
         <source>Make Blank Wallet</source>
@@ -1881,9 +1890,12 @@ Diňe "miras" görnüşli salgylar bilen gol çekmek mümkin.</translation>
         <source>Could not sign any more inputs.</source>
         <translation type="unfinished">Başga hiç-hili girizilenlere gol çekip bolanok.</translation>
     </message>
-    <message>
-        <source>Signed %1 inputs, but more signatures are still required.</source>
-        <translation type="unfinished">%1 girizilene gol çekildi, ýöne entegem has köp gol zerur.</translation>
+    <message numerus="yes">
+        <source>Signed %n input(s), but more signatures are still required.</source>
+        <translation type="unfinished">
+            <numerusform />
+            <numerusform />
+        </translation>
     </message>
     <message>
         <source>Signed transaction successfully. Transaction is ready to broadcast.</source>
@@ -1934,9 +1946,12 @@ Diňe "miras" görnüşli salgylar bilen gol çekmek mümkin.</translation>
         <source>or</source>
         <translation type="unfinished">ýa-da</translation>
     </message>
-    <message>
-        <source>Transaction has %1 unsigned inputs.</source>
-        <translation type="unfinished">Amalyň %1 gol çekilmedik girizileni bar.</translation>
+    <message numerus="yes">
+        <source>Transaction has %n unsigned input(s).</source>
+        <translation type="unfinished">
+            <numerusform />
+            <numerusform />
+        </translation>
     </message>
     <message>
         <source>Transaction is missing some information about inputs.</source>
@@ -2201,10 +2216,6 @@ Size bu ýalňyşlyk gelýän bolsa, siz täjirden BIP21-e gabat gelýän URI-ni
     <message>
         <source>Transaction Relay</source>
         <translation type="unfinished">Amal ýaýlyma beriji</translation>
-    </message>
-    <message>
-        <source>Starting Block</source>
-        <translation type="unfinished">Blogy başlamak</translation>
     </message>
     <message>
         <source>Synced Headers</source>

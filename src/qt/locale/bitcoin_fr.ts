@@ -376,6 +376,11 @@ Il n’est possible de signer qu’avec les adresses de type « legacy ».</tr
         <translation type="unfinished">Récupération d’adresses</translation>
     </message>
     <message>
+        <source>Private Broadcast</source>
+        <extracomment>Short-lived peer connection type that is used for broadcasting privacy-sensitive data.</extracomment>
+        <translation type="unfinished">Diffusion privée</translation>
+    </message>
+    <message>
         <source>%1 d</source>
         <translation type="unfinished">%1 j</translation>
     </message>
@@ -594,6 +599,10 @@ Il n’est possible de signer qu’avec les adresses de type « legacy ».</tr
         <translation type="unfinished">Fermer tous les portefeuilles…</translation>
     </message>
     <message>
+        <source>Restore and Migrate Wallet File…</source>
+        <translation type="unfinished">Restaurer et migrer le fichier du portefeuille…</translation>
+    </message>
+    <message>
         <source>&amp;File</source>
         <translation type="unfinished">&amp;Fichier</translation>
     </message>
@@ -648,7 +657,7 @@ Il n’est possible de signer qu’avec les adresses de type « legacy ».</tr
     <message numerus="yes">
         <source>Processed %n block(s) of transaction history.</source>
         <translation type="unfinished">
-            <numerusform>%n bloc d’historique transactionnel a été traité.</numerusform>
+            <numerusform>%n blocs d’historique transactionnel ont été traités.</numerusform>
             <numerusform>%n blocs d’historique transactionnel ont été traités.</numerusform>
         </translation>
     </message>
@@ -756,11 +765,11 @@ Il n’est possible de signer qu’avec les adresses de type « legacy ».</tr
     </message>
     <message>
         <source>&amp;Mask values</source>
-        <translation type="unfinished">&amp;Masquer les montants</translation>
+        <translation type="unfinished">&amp;Cacher les montants</translation>
     </message>
     <message>
         <source>Mask the values in the Overview tab</source>
-        <translation type="unfinished">Masquer les montants dans l’onglet Vue d’ensemble</translation>
+        <translation type="unfinished">Cacher les montants dans l’onglet Vue d’ensemble</translation>
     </message>
     <message>
         <source>No wallets available</source>
@@ -779,12 +788,29 @@ Il n’est possible de signer qu’avec les adresses de type « legacy ».</tr
     <message>
         <source>Restore Wallet</source>
         <extracomment>Title of pop-up window shown when the user is attempting to restore a wallet.</extracomment>
-        <translation type="unfinished">Restaurer le portefeuille</translation>
+        <translation type="unfinished">Restauration du portefeuille</translation>
     </message>
     <message>
         <source>Wallet Name</source>
         <extracomment>Label of the input field where the name of the wallet is entered.</extracomment>
         <translation type="unfinished">Nom du portefeuille</translation>
+    </message>
+    <message>
+        <source>Invalid Wallet Name</source>
+        <translation type="unfinished">Le nom du portefeuille est invalide</translation>
+    </message>
+    <message>
+        <source>Wallet name cannot be empty</source>
+        <translation type="unfinished">Le nom du portefeuille ne peut pas être vide</translation>
+    </message>
+    <message>
+        <source>Restore and Migrate Wallet Backup</source>
+        <translation type="unfinished">Restaurer et migrer la sauvegarde du portefeuille</translation>
+    </message>
+    <message>
+        <source>Restore and Migrate Wallet</source>
+        <extracomment>Title of pop-up window shown when the user is attempting to restore a wallet.</extracomment>
+        <translation type="unfinished">Restaurer et migrer le portefeuille</translation>
     </message>
     <message>
         <source>&amp;Window</source>
@@ -1058,7 +1084,7 @@ Il n’est possible de signer qu’avec les adresses de type « legacy ».</tr
     <message>
         <source>Create Wallet</source>
         <extracomment>Title of window indicating the progress of creation of a new wallet.</extracomment>
-        <translation type="unfinished">Créer un portefeuille</translation>
+        <translation type="unfinished">Création du portefeuille</translation>
     </message>
     <message>
         <source>Creating Wallet &lt;b&gt;%1&lt;/b&gt;…</source>
@@ -1087,7 +1113,7 @@ Il n’est possible de signer qu’avec les adresses de type « legacy ».</tr
     <message>
         <source>Load Wallets</source>
         <extracomment>Title of progress window which is displayed when wallets are being loaded.</extracomment>
-        <translation type="unfinished">Charger les portefeuilles</translation>
+        <translation type="unfinished">Chargement des portefeuilles</translation>
     </message>
     <message>
         <source>Loading wallets…</source>
@@ -1138,6 +1164,40 @@ Le processus de migration créera une sauvegarde du portefeuille avant migration
         <translation type="unfinished">Les scripts solubles, mais non surveillés ont été migrés vers un nouveau portefeuille nommé « %1 ».</translation>
     </message>
     <message>
+        <source>Restore and Migrate wallet</source>
+        <translation type="unfinished">Restaurer et migrer le portefeuille</translation>
+    </message>
+    <message>
+        <source>Are you sure you wish to restore the wallet file &lt;i&gt;%1&lt;/i&gt; to &lt;i&gt;%2&lt;/i&gt; and migrate it?</source>
+        <translation type="unfinished">Confirmez-vous vouloir restaurer le fichier portefeuille &lt;i&gt;%1&lt;/i&gt; vers &lt;i&gt;%2&lt;/i&gt; et le migrer ?</translation>
+    </message>
+    <message>
+        <source>Restoring the wallet will copy the backup file to the wallets directory and place it in the standard wallet directory layout. The original file will not be modified.
+
+Migrating the wallet will convert the restored wallet to one or more descriptor wallets. A new wallet backup will need to be made.
+If this wallet contains any watchonly scripts, a new wallet will be created which contains those watchonly scripts.
+If this wallet contains any solvable but not watched scripts, a different and new wallet will be created which contains those scripts.
+
+The migration process will create a backup of the wallet before migrating. This backup file will be named &lt;wallet name&gt;-&lt;timestamp&gt;.legacy.bak and can be found in the directory for this wallet. In the event of an incorrect migration, the backup can be restored with the "Restore Wallet" functionality.</source>
+        <translation type="unfinished">La restauration du portefeuille copie le fichier de sauvegarde dans le dossier des portefeuilles et le place dans la structure habituelle du dossier des portefeuilles. Le fichier d’origine n’est pas modifié.
+
+La migration du portefeuille convertit le portefeuille restauré en un ou plusieurs portefeuilles de descripteurs. Une nouvelle sauvegarde du portefeuille devra être effectuée.
+Si ce portefeuille comprend des scripts en observation, un nouveau portefeuille est créé qui comprend ces scripts en observation. 
+Si ce portefeuille comprend des scripts dépensables, mais non observés, un nouveau portefeuille différent est créé qui comporte ces scripts.
+
+Le processus de migration crée une sauvegarde du portefeuille avant migration. Ce fichier de sauvegarde est nommé &lt;wallet name&gt;-&lt;timestamp&gt;.legacy.bak et se trouve dans le dossier de ce portefeuille. En cas de migration erronée, la sauvegarde peut être restaurée avec la fonction « Restaurer le portefeuille ».</translation>
+    </message>
+    <message>
+        <source>Restore Wallet</source>
+        <extracomment>Title of progress window which is displayed when wallets are being restored.</extracomment>
+        <translation type="unfinished">Restaurer le portefeuille</translation>
+    </message>
+    <message>
+        <source>Restoring Wallet &lt;b&gt;%1&lt;/b&gt;…</source>
+        <extracomment>Descriptive text of the restore wallets progress window which indicates to the user that wallets are currently being restored.</extracomment>
+        <translation type="unfinished">Restauration du portefeuille &lt;b&gt;%1&lt;/b&gt;…</translation>
+    </message>
+    <message>
         <source>Migration failed</source>
         <translation type="unfinished">Échec de migration</translation>
     </message>
@@ -1172,7 +1232,7 @@ Le processus de migration créera une sauvegarde du portefeuille avant migration
     <message>
         <source>Restore Wallet</source>
         <extracomment>Title of progress window which is displayed when wallets are being restored.</extracomment>
-        <translation type="unfinished">Restaurer le portefeuille</translation>
+        <translation type="unfinished">Restauration du portefeuille</translation>
     </message>
     <message>
         <source>Restoring Wallet &lt;b&gt;%1&lt;/b&gt;…</source>
@@ -1261,8 +1321,8 @@ Le processus de migration créera une sauvegarde du portefeuille avant migration
         <translation type="unfinished">Désactiver les clés privées</translation>
     </message>
     <message>
-        <source>Make a blank wallet. Blank wallets do not initially have private keys or scripts. Private keys and addresses can be imported, or an HD seed can be set, at a later time.</source>
-        <translation type="unfinished">Créer un portefeuilles vide. Les portefeuilles vides n’ont initialement ni clé privée ni script. Ultérieurement, des clés privées et des adresses peuvent être importées ou une graine HD peut être définie.</translation>
+        <source>Make a blank wallet. Blank wallets do not initially have private keys or scripts. Private keys and addresses can be imported using descriptors at a later time.</source>
+        <translation type="unfinished">Créer un portefeuille vide. Les portefeuilles vides n’ont initialement ni clé privée ni script. Ultérieurement, des clés privées et des adresses peuvent être importées en utilisant des descripteurs.</translation>
     </message>
     <message>
         <source>Make Blank Wallet</source>
@@ -1716,12 +1776,12 @@ Le processus de migration créera une sauvegarde du portefeuille avant migration
     <message>
         <source>Enable &amp;PSBT controls</source>
         <extracomment>An options window setting to enable PSBT controls.</extracomment>
-        <translation type="unfinished">Activer les contrôles &amp;TBPS</translation>
+        <translation type="unfinished">Activer les contrôles &amp;TBSP</translation>
     </message>
     <message>
         <source>Whether to show PSBT controls.</source>
         <extracomment>Tooltip text for options window setting that enables PSBT controls.</extracomment>
-        <translation type="unfinished">Afficher ou non les contrôles TBPS.</translation>
+        <translation type="unfinished">Afficher ou non les contrôles TBSP.</translation>
     </message>
     <message>
         <source>External Signer (e.g. hardware wallet)</source>
@@ -1962,7 +2022,7 @@ Le processus de migration créera une sauvegarde du portefeuille avant migration
     </message>
     <message>
         <source>Privacy mode activated for the Overview tab. To unmask the values, uncheck Settings-&gt;Mask values.</source>
-        <translation type="unfinished">Le mode privé est activé dans l’onglet Vue d’ensemble. Pour afficher les montants, décocher Paramètres &gt; Masquer les montants.</translation>
+        <translation type="unfinished">Le mode privé est activé dans l’onglet Vue d’ensemble. Pour afficher les montants, décocher Paramètres &gt; Cacher les montants.</translation>
     </message>
 </context>
 <context>
@@ -2007,9 +2067,12 @@ Le processus de migration créera une sauvegarde du portefeuille avant migration
         <source>Could not sign any more inputs.</source>
         <translation type="unfinished">Aucune autre entrée n’a pu être signée.</translation>
     </message>
-    <message>
-        <source>Signed %1 inputs, but more signatures are still required.</source>
-        <translation type="unfinished">%1 entrées ont été signées, mais il faut encore d’autres signatures.</translation>
+    <message numerus="yes">
+        <source>Signed %n input(s), but more signatures are still required.</source>
+        <translation type="unfinished">
+            <numerusform>%n entrée a été signée, mais d'autres signatures sont encore nécessaires.</numerusform>
+            <numerusform>%n entrées ont été signées, mais d'autres signatures sont encore nécessaires.</numerusform>
+        </translation>
     </message>
     <message>
         <source>Signed transaction successfully. Transaction is ready to broadcast.</source>
@@ -2068,9 +2131,12 @@ Le processus de migration créera une sauvegarde du portefeuille avant migration
         <source>or</source>
         <translation type="unfinished">ou</translation>
     </message>
-    <message>
-        <source>Transaction has %1 unsigned inputs.</source>
-        <translation type="unfinished">La transaction a %1 entrées non signées.</translation>
+    <message numerus="yes">
+        <source>Transaction has %n unsigned input(s).</source>
+        <translation type="unfinished">
+            <numerusform>La transaction a %n entrée non signée.</numerusform>
+            <numerusform>La transaction a %n entrées non signées.</numerusform>
+        </translation>
     </message>
     <message>
         <source>Transaction is missing some information about inputs.</source>
@@ -2341,10 +2407,6 @@ If you are receiving this error you should request the merchant provide a BIP21 
         <translation type="unfinished">Relais de transactions</translation>
     </message>
     <message>
-        <source>Starting Block</source>
-        <translation type="unfinished">Bloc de départ</translation>
-    </message>
-    <message>
         <source>Synced Headers</source>
         <translation type="unfinished">En-têtes synchronisés</translation>
     </message>
@@ -2552,6 +2614,11 @@ If you are receiving this error you should request the merchant provide a BIP21 
         <source>Outbound Address Fetch: short-lived, for soliciting addresses</source>
         <extracomment>Explanatory text for a short-lived outbound peer connection that is used to request addresses from a peer.</extracomment>
         <translation type="unfinished">Récupération d’adresse sortante : de courte durée, pour solliciter des adresses</translation>
+    </message>
+    <message>
+        <source>Private broadcast: short-lived, for broadcasting privacy-sensitive transactions</source>
+        <extracomment>Explanatory text for a short-lived outbound peer connection that is used to broadcast privacy-sensitive data (like our transactions).</extracomment>
+        <translation type="unfinished">Diffusion privée : de courte durée, pour diffuser des transactions sensibles en termes de confidentialité</translation>
     </message>
     <message>
         <source>detecting: peer could be v1 or v2</source>
@@ -3210,10 +3277,6 @@ Note : Les frais étant calculés par octet, un taux de frais de « 100 satoshi
         <translation type="unfinished">Le montant dépasse votre solde.</translation>
     </message>
     <message>
-        <source>The total exceeds your balance when the %1 transaction fee is included.</source>
-        <translation type="unfinished">Le montant dépasse votre solde quand les frais de transaction de %1 sont compris.</translation>
-    </message>
-    <message>
         <source>Duplicate address found: addresses should only be used once each.</source>
         <translation type="unfinished">Une adresse identique a été trouvée : chaque adresse ne devrait être utilisée qu’une fois.</translation>
     </message>
@@ -3228,8 +3291,8 @@ Note : Les frais étant calculés par octet, un taux de frais de « 100 satoshi
     <message numerus="yes">
         <source>Estimated to begin confirmation within %n block(s).</source>
         <translation type="unfinished">
-            <numerusform>Début de confirmation estimé à %n bloc.</numerusform>
-            <numerusform>Début de confirmation estimé à %n de blocs.</numerusform>
+            <numerusform>Début de confirmation estimé à %n blocs.</numerusform>
+            <numerusform>Début de confirmation estimé à %n blocs.</numerusform>
         </translation>
     </message>
     <message>
@@ -3542,8 +3605,8 @@ Note : Les frais étant calculés par octet, un taux de frais de « 100 satoshi
     <message numerus="yes">
         <source>matures in %n more block(s)</source>
         <translation type="unfinished">
-            <numerusform>arrivera à maturité dans %n bloc</numerusform>
-            <numerusform>arrivera à maturité dans %n de blocs</numerusform>
+            <numerusform>arrivera à maturité dans %n blocs</numerusform>
+            <numerusform>arrivera à maturité dans %n blocs</numerusform>
         </translation>
     </message>
     <message>
@@ -3942,7 +4005,7 @@ Accédez à Fichier &gt; Ouvrir un portefeuille pour en charger un.
     </message>
     <message>
         <source>PSBT copied</source>
-        <translation type="unfinished">La TBPS a été copiée</translation>
+        <translation type="unfinished">La TBSP a été copiée</translation>
     </message>
     <message>
         <source>Fee-bump PSBT copied to clipboard</source>
@@ -4144,10 +4207,6 @@ Accédez à Fichier &gt; Ouvrir un portefeuille pour en charger un.
         <translation type="unfinished">Avertissement : Des clés privées ont été détectées dans le portefeuille {%s} avec des clés privées désactivées</translation>
     </message>
     <message>
-        <source>Warning: We do not appear to fully agree with our peers! You may need to upgrade, or other nodes may need to upgrade.</source>
-        <translation type="unfinished">Avertissement : Nous ne semblons pas être en accord complet avec nos pairs. Une mise à niveau pourrait être nécessaire pour vous ou pour d’autres nœuds du réseau.</translation>
-    </message>
-    <message>
         <source>Witness data for blocks after height %d requires validation. Please restart with -reindex.</source>
         <translation type="unfinished">Les données témoin pour les blocs postérieurs à la hauteur %d exigent une validation. Redémarrez avec -reindex.</translation>
     </message>
@@ -4249,14 +4308,6 @@ Accédez à Fichier &gt; Ouvrir un portefeuille pour en charger un.
         <translation type="unfinished">L’option « -checkpoints » est activée, mais les points de contrôle ont été supprimés. Cette option n’a aucun effet.</translation>
     </message>
     <message>
-        <source>Option '-maxorphantx' is set but no longer has any effect (see release notes). Please remove it from your configuration.</source>
-        <translation type="unfinished">L’option « -maxorphantx » est définie, mais n’a plus aucun effet (voir les notes de mise à jour). Supprimez-la de votre configuration.</translation>
-    </message>
-    <message>
-        <source>Options '-datacarrier' or '-datacarriersize' are set but are marked as deprecated. They will be removed in a future version.</source>
-        <translation type="unfinished">Les options « -datacarrier » ou « -datacarriersize » sont définies, mais marquées comme obsolètes. Elles seront supprimées dans une version ultérieure.</translation>
-    </message>
-    <message>
         <source>Outbound connections restricted to CJDNS (-onlynet=cjdns) but -cjdnsreachable is not provided</source>
         <translation type="unfinished">Les connexions sortantes sont limitées à CJDNS (-onlynet=cjdns), mais -cjdnsreachable n’est pas indiqué</translation>
     </message>
@@ -4347,10 +4398,6 @@ Impossible de restaurer la sauvegarde du portefeuille</translation>
         <translation type="unfinished">« whitebind » ne peut être utilisé que pour les connexions entrantes (« out » a été passé)</translation>
     </message>
     <message>
-        <source>-paytxfee is deprecated and will be fully removed in v31.0.</source>
-        <translation type="unfinished">« -paytxfee » est obsolète et sera complètement supprimé dans la version 31.0.</translation>
-    </message>
-    <message>
         <source>A fatal internal error occurred, see debug.log for details: </source>
         <translation type="unfinished">Une erreur interne fatale est survenue. Pour plus de précisions, consultez debug.log :</translation>
     </message>
@@ -4369,10 +4416,6 @@ Impossible de restaurer la sauvegarde du portefeuille</translation>
     <message>
         <source>Can't spend unconfirmed version 3 pre-selected input with a version %d tx</source>
         <translation type="unfinished">Impossible de dépenser une entrée présélectionnée non confirmée de version 3 avec une transaction de version %d</translation>
-    </message>
-    <message>
-        <source>Cannot add WalletDescriptor to a non-descriptor wallet</source>
-        <translation type="unfinished">Impossible d’ajouter WalletDescriptor à un portefeuille qui n’est pas à descripteurs</translation>
     </message>
     <message>
         <source>Cannot write to directory '%s'; check permissions.</source>
@@ -4407,6 +4450,10 @@ Impossible de restaurer la sauvegarde du portefeuille</translation>
         <translation type="unfinished">Impossible d’analyser le fichier asmap %s</translation>
     </message>
     <message>
+        <source>Could not read embedded asmap data</source>
+        <translation type="unfinished">Impossible de lire les données asmap intégrées</translation>
+    </message>
+    <message>
         <source>Could not top up scriptPubKeys</source>
         <translation type="unfinished">Impossible de remplir la réserve interne d’adresses (ScriptPubKey)</translation>
     </message>
@@ -4427,8 +4474,8 @@ Impossible de restaurer la sauvegarde du portefeuille</translation>
         <translation type="unfinished">Échec du contrôle d’intégrité de la cryptographie à courbe elliptique. Fermeture de %s.</translation>
     </message>
     <message>
-        <source>Error creating %s</source>
-        <translation type="unfinished">Erreur de création de %s</translation>
+        <source>Embedded asmap data not available</source>
+        <translation type="unfinished">Les données asmap intégrées ne sont pas proposées</translation>
     </message>
     <message>
         <source>Error initializing block database</source>
@@ -4437,10 +4484,6 @@ Impossible de restaurer la sauvegarde du portefeuille</translation>
     <message>
         <source>Error loading %s</source>
         <translation type="unfinished">Erreur de chargement de %s</translation>
-    </message>
-    <message>
-        <source>Error loading %s: Private keys can only be disabled during creation</source>
-        <translation type="unfinished">Erreur de chargement de %s : les clés privées ne peuvent être désactivées qu’à la création</translation>
     </message>
     <message>
         <source>Error loading %s: Wallet corrupted</source>
@@ -4591,10 +4634,6 @@ Impossible de restaurer la sauvegarde du portefeuille</translation>
         <translation type="unfinished">Échec de fermeture du fichier pendant l’écriture du bloc.</translation>
     </message>
     <message>
-        <source>Failed to connect best block (%s).</source>
-        <translation type="unfinished">Échec de connexion du meilleur bloc (%s).</translation>
-    </message>
-    <message>
         <source>Failed to disconnect block.</source>
         <translation type="unfinished">Échec de déconnexion du bloc.</translation>
     </message>
@@ -4617,14 +4656,6 @@ Impossible de restaurer la sauvegarde du portefeuille</translation>
     <message>
         <source>Failed to write block.</source>
         <translation type="unfinished">Échec d’écriture du bloc.</translation>
-    </message>
-    <message>
-        <source>Failed to write to block index database.</source>
-        <translation type="unfinished">Échec d’écriture dans la base de données d’index des blocs.</translation>
-    </message>
-    <message>
-        <source>Failed to write to coin database.</source>
-        <translation type="unfinished">Échec d’écriture dans la base de données des pièces.</translation>
     </message>
     <message>
         <source>Failed to write undo data.</source>
@@ -4679,12 +4710,24 @@ Impossible de restaurer la sauvegarde du portefeuille</translation>
         <translation type="unfinished">Autorisation P2P invalide : « %s »</translation>
     </message>
     <message>
-        <source>Invalid amount for %s=&lt;amount&gt;: '%s' (must be at least %s)</source>
-        <translation type="unfinished">Le montant est invalide pour %s=&lt;amount&gt; : « %s » (doit être au moins %s)</translation>
-    </message>
-    <message>
         <source>Invalid amount for %s=&lt;amount&gt;: '%s'</source>
         <translation type="unfinished">Le montant est invalide pour %s=&lt;amount&gt; : « %s »</translation>
+    </message>
+    <message>
+        <source>A %zu MiB dbcache may be too large for a system memory of only %zu MiB.</source>
+        <translation type="unfinished">Un cache de base de données (dbcache) de %zu Mio peut être trop volumineux pour une mémoire système de seulement %zu Mio.</translation>
+    </message>
+    <message>
+        <source>Creating wallet…</source>
+        <translation type="unfinished">Création du portefeuille…</translation>
+    </message>
+    <message>
+        <source>Duplicate binding configuration for address %s. Please check your -bind, -bind=...=onion and -whitebind settings.</source>
+        <translation type="unfinished">Configuration de liaison en double pour l’adresse %s. Vérifiez vos paramètres -bind, -bind=...=onion et -whitebind.</translation>
+    </message>
+    <message>
+        <source>Error creating %s: Could not write version metadata.</source>
+        <translation type="unfinished">Erreur de création de %s : impossible d’écrire les métadonnées de la version.</translation>
     </message>
     <message>
         <source>Invalid amount for -%s=&lt;amount&gt;: '%s'</source>
@@ -4751,12 +4794,36 @@ Impossible de restaurer la sauvegarde du portefeuille</translation>
         <translation type="unfinished">Seule la direction a été définie, sans droits : « %s »</translation>
     </message>
     <message>
+        <source>Option '-limitancestorsize' is given but ancestor size limits have been replaced with cluster size limits (see -limitclustersize). This option has no effect.</source>
+        <translation type="unfinished">L’option « -limitancestorsize » est indiquée, mais les limites de taille des ancêtres ont été remplacées par des limites de taille des grappes (voir -limitclustersize). Cette option n’a aucun effet.</translation>
+    </message>
+    <message>
+        <source>Option '-limitdescendantsize' is given but descendant size limits have been replaced with cluster size limits (see -limitclustersize). This option has no effect.</source>
+        <translation type="unfinished">L’option « -limitdescendantsize » est indiquée, mais les limites de taille des descendants ont été remplacées par des limites de taille des grappes (voir -limitclustersize). Cette option n’a aucun effet.</translation>
+    </message>
+    <message>
+        <source>Private broadcast of own transactions requested (-privatebroadcast) and -proxyrandomize is disabled. Tor circuits for private broadcast connections may be correlated to other connections over Tor. For maximum privacy set -proxyrandomize=1.</source>
+        <translation type="unfinished">La diffusion privée de vos propres transactions est demandée (-privatebroadcast) et -proxyrandomize est désactivé. Les circuits Tor pour les connexions de diffusion privée peuvent être mis en corrélation à d’autres connexions sur le réseau Tor. Pour une confidentialité maximale, définissez -proxyrandomize=1.</translation>
+    </message>
+    <message>
+        <source>Private broadcast of own transactions requested (-privatebroadcast), but -connect is also configured. They are incompatible because the private broadcast needs to open new connections to randomly chosen Tor or I2P peers. Consider using -maxconnections=0 -addnode=... instead</source>
+        <translation type="unfinished">Une diffusion privée des vos propres transactions a été demandée (-privatebroadcast), mais -connect est aussi configuré. Ces arguments sont incompatibles, car la diffusion privée nécessite d’ouvrir de nouvelles connexions vers des pairs Tor ou I2P choisis au hasard. Envisagez de plutôt utiliser -maxconnections=0 -addnode=...</translation>
+    </message>
+    <message>
+        <source>Private broadcast of own transactions requested (-privatebroadcast), but none of Tor or I2P networks is reachable</source>
+        <translation type="unfinished">La diffusion privée de vos propres transactions est demandée (-privatebroadcast), mais les réseaux Tor et I2P sont inaccessibles</translation>
+    </message>
+    <message>
         <source>Prune cannot be configured with a negative value.</source>
         <translation type="unfinished">L’élagage ne peut pas être configuré avec une valeur négative</translation>
     </message>
     <message>
         <source>Prune mode is incompatible with -txindex.</source>
         <translation type="unfinished">Le mode élagage n’est pas compatible avec -txindex</translation>
+    </message>
+    <message>
+        <source>Prune mode is incompatible with -txospenderindex.</source>
+        <translation type="unfinished">Le mode élagage n’est pas compatible avec -txospenderindex.</translation>
     </message>
     <message>
         <source>Pruning blockstore…</source>
@@ -4859,6 +4926,10 @@ Impossible de restaurer la sauvegarde du portefeuille</translation>
         <translation type="unfinished">Le fichier de configuration indiqué %s n’existe pas</translation>
     </message>
     <message>
+        <source>The total exceeds your balance when the %s transaction fee is included.</source>
+        <translation type="unfinished">Le montant dépasse votre solde quand les frais de transaction de %s sont compris.</translation>
+    </message>
+    <message>
         <source>The transaction amount is too small to pay the fee</source>
         <translation type="unfinished">Le montant de la transaction est trop bas pour que les frais soient payés</translation>
     </message>
@@ -4881,10 +4952,6 @@ Impossible de restaurer la sauvegarde du portefeuille</translation>
     <message>
         <source>This is the minimum transaction fee you pay on every transaction.</source>
         <translation type="unfinished">Il s’agit des frais minimaux que vous payez pour chaque transaction.</translation>
-    </message>
-    <message>
-        <source>This is the transaction fee you will pay if you send a transaction.</source>
-        <translation type="unfinished">Les frais que vous payerez si vous envoyez une transaction.</translation>
     </message>
     <message>
         <source>Transaction %s does not belong to this wallet</source>
@@ -4973,6 +5040,10 @@ Impossible de restaurer la sauvegarde du portefeuille</translation>
     <message>
         <source>Wallet file creation failed: %s</source>
         <translation type="unfinished">Échec de création du fichier du portefeuille : %s</translation>
+    </message>
+    <message>
+        <source>Warning: Found invalid chain more than 6 blocks longer than our best chain. This could be due to database corruption or consensus incompatibility with peers.</source>
+        <translation type="unfinished">Avertissement : une chaîne invalide a été trouvée dépassant de plus de 6 blocs notre meilleure chaîne. Cela peut être causé par la corruption de la base de données ou à une incompatibilité de consensus avec les pairs.</translation>
     </message>
     <message>
         <source>acceptstalefeeestimates is not supported on %s chain.</source>

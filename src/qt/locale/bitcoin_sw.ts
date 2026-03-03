@@ -554,6 +554,10 @@ Kutia sahihi kunawezekana tu kwa anwani za aina ya 'urithi'.</translation>
         <translation type="unfinished">Inakamata...</translation>
     </message>
     <message>
+        <source>Last received block was generated %1 ago.</source>
+        <translation type="unfinished">Kizuizi cha mwisho kilichopokelewa kilitolewa %1awali.</translation>
+    </message>
+    <message>
         <source>Transactions after this will not yet be visible.</source>
         <translation type="unfinished">Shughuli baada ya hii bado hazitaonekana.</translation>
     </message>
@@ -929,7 +933,7 @@ Kutia sahihi kunawezekana tu kwa anwani za aina ya 'urithi'.</translation>
     </message>
     <message>
         <source>(no label)</source>
-        <translation type="unfinished">(hamna chapa)</translation>
+        <translation type="unfinished">(hakuna lebo)</translation>
     </message>
     <message>
         <source>(change)</source>
@@ -998,6 +1002,11 @@ Mchakato wa uhamiaji utaunda nakala rudufu ya pochi kabla ya kuhama. Faili hii y
     <message>
         <source>Migrate Wallet</source>
         <translation type="unfinished">Hamisha Pochi</translation>
+    </message>
+    <message>
+        <source>Restore Wallet</source>
+        <extracomment>Title of progress window which is displayed when wallets are being restored.</extracomment>
+        <translation type="unfinished">Rejesha Pochi</translation>
     </message>
     <message>
         <source>Migration failed</source>
@@ -1101,10 +1110,6 @@ Mchakato wa uhamiaji utaunda nakala rudufu ya pochi kabla ya kuhama. Faili hii y
         <translation type="unfinished">Zima funguo za siri kwa ajili ya pochi hii. Pochi zenye funguo za siri zilizozimwa hazitakua na funguo za siri na hazitakuwa na mbegu ya HD au funguo za siri zilizoingizwa. Hii inafaa kwa pochi za uangalizi tu.</translation>
     </message>
     <message>
-        <source>Make a blank wallet. Blank wallets do not initially have private keys or scripts. Private keys and addresses can be imported, or an HD seed can be set, at a later time.</source>
-        <translation type="unfinished">Tengeneza pochi tupu. Pochi tupu kwa kuanza hazina funguo za siri au hati. Funguo za siri zinaweza kuingizwa, au mbegu ya HD inaweza kuwekwa baadae.</translation>
-    </message>
-    <message>
         <source>Use an external signing device such as a hardware wallet. Configure the external signer script in wallet preferences first.</source>
         <translation type="unfinished">Tumia kifaa cha kutia sahihi cha nje kama vile pochi ya maunzi. Sanidi hati ya kutia sahihi ya nje katika mapendeleo ya pochi kwanza.</translation>
     </message>
@@ -1200,7 +1205,7 @@ Mchakato wa uhamiaji utaunda nakala rudufu ya pochi kabla ya kuhama. Faili hii y
     </message>
     <message>
         <source>Error</source>
-        <translation type="unfinished">Onyo</translation>
+        <translation type="unfinished">Kosa</translation>
     </message>
 </context>
 <context>
@@ -1216,6 +1221,23 @@ Mchakato wa uhamiaji utaunda nakala rudufu ya pochi kabla ya kuhama. Faili hii y
     <message>
         <source>Error</source>
         <translation type="unfinished">Onyo</translation>
+    </message>
+    </context>
+<context>
+    <name>PSBTOperationsDialog</name>
+    <message numerus="yes">
+        <source>Signed %n input(s), but more signatures are still required.</source>
+        <translation type="unfinished">
+            <numerusform />
+            <numerusform />
+        </translation>
+    </message>
+    <message numerus="yes">
+        <source>Transaction has %n unsigned input(s).</source>
+        <translation type="unfinished">
+            <numerusform />
+            <numerusform />
+        </translation>
     </message>
     </context>
 <context>
@@ -1299,7 +1321,7 @@ Mchakato wa uhamiaji utaunda nakala rudufu ya pochi kabla ya kuhama. Faili hii y
     </message>
     <message>
         <source>Label</source>
-        <translation type="unfinished">Chapa</translation>
+        <translation type="unfinished">Lebo</translation>
     </message>
     <message>
         <source>(no label)</source>
@@ -1413,7 +1435,7 @@ Mchakato wa uhamiaji utaunda nakala rudufu ya pochi kabla ya kuhama. Faili hii y
     </message>
     <message>
         <source>(no label)</source>
-        <translation type="unfinished">(hakuna lebo)</translation>
+        <translation type="unfinished">(hamna chapa)</translation>
     </message>
     </context>
 <context>
@@ -1457,15 +1479,15 @@ Mchakato wa uhamiaji utaunda nakala rudufu ya pochi kabla ya kuhama. Faili hii y
     </message>
     <message>
         <source>Label</source>
-        <translation type="unfinished">Chapa</translation>
+        <translation type="unfinished">Lebo</translation>
     </message>
     <message>
         <source>Address</source>
-        <translation type="unfinished">Anwani</translation>
+        <translation type="unfinished">Anuani</translation>
     </message>
     <message>
         <source>Exporting Failed</source>
-        <translation type="unfinished">Kuuza Nje Kushindwa</translation>
+        <translation type="unfinished">Utoaji Haujafanikiwa</translation>
     </message>
     <message>
         <source>Exporting Successful</source>
@@ -1480,7 +1502,7 @@ Mchakato wa uhamiaji utaunda nakala rudufu ya pochi kabla ya kuhama. Faili hii y
     </message>
     <message>
         <source>Error</source>
-        <translation type="unfinished">Onyo</translation>
+        <translation type="unfinished">Kosa</translation>
     </message>
     </context>
 <context>
@@ -1511,7 +1533,7 @@ Mchakato wa uhamiaji utaunda nakala rudufu ya pochi kabla ya kuhama. Faili hii y
     </message>
     <message>
         <source>Error: Address book data in wallet cannot be identified to belong to migrated wallets</source>
-        <translation type="unfinished">Hitilafu: Data za kitabu cha anunai katika pochi haziwezi kutambulika kuwa ni ya pochi zilizohamia.</translation>
+        <translation type="unfinished">HITILAFU: Data za kitabu cha anunai katika pochi haziwezi kutambulika kuwa ni ya pochi zilizohamia.</translation>
     </message>
     <message>
         <source>default wallet</source>

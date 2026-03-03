@@ -361,15 +361,11 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <source>%n second(s)</source>
         <translation type="unfinished">
             <numerusform />
-            <numerusform />
-            <numerusform />
         </translation>
     </message>
     <message numerus="yes">
         <source>%n minute(s)</source>
         <translation type="unfinished">
-            <numerusform />
-            <numerusform />
             <numerusform />
         </translation>
     </message>
@@ -377,23 +373,17 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <source>%n hour(s)</source>
         <translation type="unfinished">
             <numerusform />
-            <numerusform />
-            <numerusform />
         </translation>
     </message>
     <message numerus="yes">
         <source>%n day(s)</source>
         <translation type="unfinished">
             <numerusform />
-            <numerusform />
-            <numerusform />
         </translation>
     </message>
     <message numerus="yes">
         <source>%n week(s)</source>
         <translation type="unfinished">
-            <numerusform />
-            <numerusform />
             <numerusform />
         </translation>
     </message>
@@ -404,8 +394,6 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     <message numerus="yes">
         <source>%n year(s)</source>
         <translation type="unfinished">
-            <numerusform />
-            <numerusform />
             <numerusform />
         </translation>
     </message>
@@ -613,8 +601,6 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <source>Processed %n block(s) of transaction history.</source>
         <translation type="unfinished">
             <numerusform />
-            <numerusform />
-            <numerusform />
         </translation>
     </message>
     <message>
@@ -783,8 +769,6 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <source>%n active connection(s) to Bitcoin network.</source>
         <extracomment>A substring of the tooltip.</extracomment>
         <translation type="unfinished">
-            <numerusform>%n активних конекција са Биткоин мрежом</numerusform>
-            <numerusform>%n активних конекција са Биткоин мрежом</numerusform>
             <numerusform>%n активних конекција са Биткоин мрежом</numerusform>
         </translation>
     </message>
@@ -1088,6 +1072,11 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <translation type="unfinished">Novčanik '%1' je uspešno prenešen. </translation>
     </message>
     <message>
+        <source>Restore Wallet</source>
+        <extracomment>Title of progress window which is displayed when wallets are being restored.</extracomment>
+        <translation type="unfinished">Поврати Новчаник</translation>
+    </message>
+    <message>
         <source>Migration failed</source>
         <translation type="unfinished">Prenošenje novčanika je neuspešno</translation>
     </message>
@@ -1181,10 +1170,6 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     <message>
         <source>Disable Private Keys</source>
         <translation type="unfinished">Онемогући Приватне Кључеве</translation>
-    </message>
-    <message>
-        <source>Make a blank wallet. Blank wallets do not initially have private keys or scripts. Private keys and addresses can be imported, or an HD seed can be set, at a later time.</source>
-        <translation type="unfinished">Направи празан новчаник. Празни новчанци немају приватане кључеве или скрипте. Приватни кључеви могу се увести, или HD семе може бити постављено касније.</translation>
     </message>
     <message>
         <source>Make Blank Wallet</source>
@@ -1363,23 +1348,17 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <source>%n GB of space available</source>
         <translation type="unfinished">
             <numerusform />
-            <numerusform />
-            <numerusform />
         </translation>
     </message>
     <message numerus="yes">
         <source>(of %n GB needed)</source>
         <translation type="unfinished">
             <numerusform>(од потребних %n GB)</numerusform>
-            <numerusform>(од потребних %n GB)</numerusform>
-            <numerusform>(од  потребних  %n GB)</numerusform>
         </translation>
     </message>
     <message numerus="yes">
         <source>(%n GB needed for full chain)</source>
         <translation type="unfinished">
-            <numerusform>(%n GB потребно за цео ланац)</numerusform>
-            <numerusform>(%n GB потребно за цео ланац)</numerusform>
             <numerusform>(%n GB потребно за цео ланац)</numerusform>
         </translation>
     </message>
@@ -1395,8 +1374,6 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <source>(sufficient to restore backups %n day(s) old)</source>
         <extracomment>Explanatory text on the capability of the current prune target.</extracomment>
         <translation type="unfinished">
-            <numerusform>(довољно за враћање резервних копија старих %n дана)</numerusform>
-            <numerusform>(довољно за враћање резервних копија старих %n дана)</numerusform>
             <numerusform>(довољно за враћање резервних копија старих %n дана)</numerusform>
         </translation>
     </message>
@@ -1847,9 +1824,11 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <source>Could not sign any more inputs.</source>
         <translation type="unfinished">Није могуће потписати више уноса.</translation>
     </message>
-    <message>
-        <source>Signed %1 inputs, but more signatures are still required.</source>
-        <translation type="unfinished">Потписано %1 поље, али је потребно још потписа.</translation>
+    <message numerus="yes">
+        <source>Signed %n input(s), but more signatures are still required.</source>
+        <translation type="unfinished">
+            <numerusform />
+        </translation>
     </message>
     <message>
         <source>Signed transaction successfully. Transaction is ready to broadcast.</source>
@@ -1904,9 +1883,11 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <source>or</source>
         <translation type="unfinished">или</translation>
     </message>
-    <message>
-        <source>Transaction has %1 unsigned inputs.</source>
-        <translation type="unfinished">Трансакција има %1 непотписана поља.</translation>
+    <message numerus="yes">
+        <source>Transaction has %n unsigned input(s).</source>
+        <translation type="unfinished">
+            <numerusform />
+        </translation>
     </message>
     <message>
         <source>Transaction is missing some information about inputs.</source>
@@ -2151,10 +2132,6 @@ If you are receiving this error you should request the merchant provide a BIP21 
     <message>
         <source>Version</source>
         <translation type="unfinished">Верзија</translation>
-    </message>
-    <message>
-        <source>Starting Block</source>
-        <translation type="unfinished">Почетни блок</translation>
     </message>
     <message>
         <source>Synced Headers</source>
@@ -2936,10 +2913,6 @@ Note:  Since the fee is calculated on a per-byte basis, a fee rate of "100 satos
         <translation type="unfinished">Овај износ је већи од вашег салда.</translation>
     </message>
     <message>
-        <source>The total exceeds your balance when the %1 transaction fee is included.</source>
-        <translation type="unfinished">Укупни износ премашује ваш салдо, када се %1 провизија за трансакцију укључи у износ.</translation>
-    </message>
-    <message>
         <source>Duplicate address found: addresses should only be used once each.</source>
         <translation type="unfinished">Пронађена је дуплирана адреса: адресе се требају користити само једном.</translation>
     </message>
@@ -2954,8 +2927,6 @@ Note:  Since the fee is calculated on a per-byte basis, a fee rate of "100 satos
     <message numerus="yes">
         <source>Estimated to begin confirmation within %n block(s).</source>
         <translation type="unfinished">
-            <numerusform />
-            <numerusform />
             <numerusform />
         </translation>
     </message>
@@ -3260,8 +3231,6 @@ Note:  Since the fee is calculated on a per-byte basis, a fee rate of "100 satos
     <message numerus="yes">
         <source>matures in %n more block(s)</source>
         <translation type="unfinished">
-            <numerusform />
-            <numerusform />
             <numerusform />
         </translation>
     </message>
@@ -3758,10 +3727,6 @@ Note:  Since the fee is calculated on a per-byte basis, a fee rate of "100 satos
         <translation type="unfinished">Упозорење: Приватни кључеви су пронађени у новчанику {%s} са онемогућеним приватним кључевима.</translation>
     </message>
     <message>
-        <source>Warning: We do not appear to fully agree with our peers! You may need to upgrade, or other nodes may need to upgrade.</source>
-        <translation type="unfinished">Упозорење: Изгледа да се ми у потпуности не слажемо са нашим чворовима! Можда постоји потреба да урадите надоградњу, или други чворови морају да ураде надоградњу.</translation>
-    </message>
-    <message>
         <source>You need to rebuild the database using -reindex to go back to unpruned mode.  This will redownload the entire blockchain</source>
         <translation type="unfinished">Обновите базу података користећи -reindex да би се вратили у нескраћени мод. Ово ће урадити поновно преузимање комплетног ланца података</translation>
     </message>
@@ -3816,10 +3781,6 @@ Note:  Since the fee is calculated on a per-byte basis, a fee rate of "100 satos
     <message>
         <source>Error loading %s</source>
         <translation type="unfinished">Грешка током учитавања %s</translation>
-    </message>
-    <message>
-        <source>Error loading %s: Private keys can only be disabled during creation</source>
-        <translation type="unfinished">Грешка током учитавања %s: Приватни кључеви могу бити онемогућени само приликом креирања</translation>
     </message>
     <message>
         <source>Error loading %s: Wallet corrupted</source>
@@ -3944,10 +3905,6 @@ Note:  Since the fee is calculated on a per-byte basis, a fee rate of "100 satos
     <message>
         <source>This is the minimum transaction fee you pay on every transaction.</source>
         <translation type="unfinished">Ово је минимални износ провизије за трансакцију коју ћете платити на свакој трансакцији.</translation>
-    </message>
-    <message>
-        <source>This is the transaction fee you will pay if you send a transaction.</source>
-        <translation type="unfinished">Ово је износ провизије за трансакцију коју ћете платити уколико шаљете трансакцију.</translation>
     </message>
     <message>
         <source>Transaction amount too small</source>

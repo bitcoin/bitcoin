@@ -1019,6 +1019,14 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     </message>
 </context>
 <context>
+    <name>MigrateWalletActivity</name>
+    <message>
+        <source>Restore Wallet</source>
+        <extracomment>Title of progress window which is displayed when wallets are being restored.</extracomment>
+        <translation type="unfinished">Gjenopprett lommebok</translation>
+    </message>
+    </context>
+<context>
     <name>OpenWalletActivity</name>
     <message>
         <source>Open wallet failed</source>
@@ -1107,10 +1115,6 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     <message>
         <source>Disable Private Keys</source>
         <translation type="unfinished">Deaktiver Private Nøkler</translation>
-    </message>
-    <message>
-        <source>Make a blank wallet. Blank wallets do not initially have private keys or scripts. Private keys and addresses can be imported, or an HD seed can be set, at a later time.</source>
-        <translation type="unfinished">Lag en tom lommebok. Tomme lommebøker har i utgangspunktet ikke private nøkler eller skript. Private nøkler og adresser kan importeres, eller et HD- frø kan angis på et senere tidspunkt.</translation>
     </message>
     <message>
         <source>Make Blank Wallet</source>
@@ -1743,9 +1747,12 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <source>Could not sign any more inputs.</source>
         <translation type="unfinished">Kunne ikke signere flere inputs.</translation>
     </message>
-    <message>
-        <source>Signed %1 inputs, but more signatures are still required.</source>
-        <translation type="unfinished">Signerte %1 inputs, men flere signaturer kreves.</translation>
+    <message numerus="yes">
+        <source>Signed %n input(s), but more signatures are still required.</source>
+        <translation type="unfinished">
+            <numerusform />
+            <numerusform />
+        </translation>
     </message>
     <message>
         <source>Signed transaction successfully. Transaction is ready to broadcast.</source>
@@ -1800,9 +1807,12 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <source>or</source>
         <translation type="unfinished">eller</translation>
     </message>
-    <message>
-        <source>Transaction has %1 unsigned inputs.</source>
-        <translation type="unfinished">Transaksjon har %1 usignert inputs.</translation>
+    <message numerus="yes">
+        <source>Transaction has %n unsigned input(s).</source>
+        <translation type="unfinished">
+            <numerusform />
+            <numerusform />
+        </translation>
     </message>
     <message>
         <source>Transaction is missing some information about inputs.</source>
@@ -2055,10 +2065,6 @@ Hvis du får denne feilen burde du be forretningsdrivende om å tilby en BIP21 k
     <message>
         <source>Version</source>
         <translation type="unfinished">Versjon</translation>
-    </message>
-    <message>
-        <source>Starting Block</source>
-        <translation type="unfinished">Startblokk</translation>
     </message>
     <message>
         <source>Synced Headers</source>
@@ -2789,10 +2795,6 @@ Hvis du får denne feilen burde du be forretningsdrivende om å tilby en BIP21 k
     <message>
         <source>The amount exceeds your balance.</source>
         <translation type="unfinished">Beløper overstiger saldo.</translation>
-    </message>
-    <message>
-        <source>The total exceeds your balance when the %1 transaction fee is included.</source>
-        <translation type="unfinished">Totalbeløpet overstiger saldo etter at %1-transaksjonsgebyret er lagt til.</translation>
     </message>
     <message>
         <source>Duplicate address found: addresses should only be used once each.</source>
@@ -3628,10 +3630,6 @@ Gå til Fil &gt; Åpne lommebok for å laste en lommebok.
         <translation type="unfinished">Advarsel: Private nøkler oppdaget i lommeboken {%s} med deaktiverte private nøkler</translation>
     </message>
     <message>
-        <source>Warning: We do not appear to fully agree with our peers! You may need to upgrade, or other nodes may need to upgrade.</source>
-        <translation type="unfinished">Advarsel: Vi ser ikke ut til å være i full overenstemmelse med våre likemenn! Du kan trenge å oppgradere, eller andre noder kan trenge å oppgradere.</translation>
-    </message>
-    <message>
         <source>You need to rebuild the database using -reindex to go back to unpruned mode.  This will redownload the entire blockchain</source>
         <translation type="unfinished">Du må gjenoppbygge databasen ved hjelp av -reindex for å gå tilbake til ubeskåret modus. Dette vil laste ned hele blokkjeden på nytt.</translation>
     </message>
@@ -3694,20 +3692,12 @@ Kunne ikke gjenopprette sikkerhetskopi av lommebok.</translation>
         <translation type="unfinished">Dump fil %s eksisterer ikke.</translation>
     </message>
     <message>
-        <source>Error creating %s</source>
-        <translation type="unfinished">Feil under opprettelse av %s</translation>
-    </message>
-    <message>
         <source>Error initializing block database</source>
         <translation type="unfinished">Feil under initialisering av blokkdatabase</translation>
     </message>
     <message>
         <source>Error loading %s</source>
         <translation type="unfinished">Feil ved lasting av %s</translation>
-    </message>
-    <message>
-        <source>Error loading %s: Private keys can only be disabled during creation</source>
-        <translation type="unfinished">Feil ved lasting av%s: Private nøkler kan bare deaktiveres under opprettelsen</translation>
     </message>
     <message>
         <source>Error loading %s: Wallet corrupted</source>
@@ -3945,10 +3935,6 @@ Mangler løsningsdata for å estimere transaksjonsstørrelse</translation>
     <message>
         <source>This is the minimum transaction fee you pay on every transaction.</source>
         <translation type="unfinished">Dette er minimumsgebyret du betaler for hver transaksjon.</translation>
-    </message>
-    <message>
-        <source>This is the transaction fee you will pay if you send a transaction.</source>
-        <translation type="unfinished">Dette er transaksjonsgebyret du betaler som forsender av transaksjon.</translation>
     </message>
     <message>
         <source>Transaction amount too small</source>
