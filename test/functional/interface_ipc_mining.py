@@ -199,6 +199,25 @@ class IPCMiningTest(BitcoinTestFramework):
                 # spurious failures.
                 assert_greater_than_or_equal(time.time() - start, 0.9)
 
+                self.log.debug("createNewBlock() should wake up promptly after tip advances")
+                success = False
+                duration = 0.0
+                async def wait_fn():
+                    nonlocal success, duration
+                    start = time.time()
+                    res = await mining.createNewBlock(ctx, self.default_block_create_options)
+                    duration = time.time() - start
+                    success = res._has("result")
+                def do_fn():
+                    block_hex = self.nodes[1].getblock(node1_block_hash, False)
+                    self.nodes[0].submitblock(block_hex)
+                await wait_and_do(wait_fn(), do_fn)
+                assert_equal(success, True)
+                if self.options.timeout_factor <= 1:
+                    assert duration < 3.0, f"createNewBlock took {duration:.2f}s, did not wake up promptly after tip advances"
+                else:
+                    self.log.debug("Skipping strict wake-up duration check because timeout_factor > 1")
+
                 self.log.debug("interrupt() should abort createNewBlock() during cooldown")
                 async def create_block():
                     result = await mining.createNewBlock(ctx, self.default_block_create_options)
