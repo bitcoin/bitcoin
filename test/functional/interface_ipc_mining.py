@@ -37,11 +37,11 @@ from test_framework.ipc_util import (
     destroying,
     mining_create_block_template,
     load_capnp_modules,
-    make_capnp_init_ctx,
     mining_get_block,
     mining_get_coinbase_tx,
     mining_wait_next_template,
     wait_and_do,
+    make_mining_ctx,
 )
 
 # Test may be skipped and not have capnp installed
@@ -106,13 +106,6 @@ class IPCMiningTest(BitcoinTestFramework):
         coinbase_tx.nLockTime = coinbase_res.lockTime
         return coinbase_tx
 
-    async def make_mining_ctx(self):
-        """Create IPC context and Mining proxy object."""
-        ctx, init = await make_capnp_init_ctx(self)
-        self.log.debug("Create Mining proxy object")
-        mining = init.makeMining(ctx).result
-        return ctx, mining
-
     def run_mining_interface_test(self):
         """Test Mining interface methods."""
         self.log.info("Running Mining interface test")
@@ -120,7 +113,7 @@ class IPCMiningTest(BitcoinTestFramework):
         timeout = 1000.0 # 1000 milliseconds
 
         async def async_routine():
-            ctx, mining = await self.make_mining_ctx()
+            ctx, mining = await make_mining_ctx(self)
             blockref = await mining.getTip(ctx)
             current_block_height = self.nodes[0].getchaintips()[0]["height"]
             assert_equal(blockref.result.height, current_block_height)
@@ -159,7 +152,7 @@ class IPCMiningTest(BitcoinTestFramework):
         async def async_routine():
             while True:
                 try:
-                    ctx, mining = await self.make_mining_ctx()
+                    ctx, mining = await make_mining_ctx(self)
                     break
                 except (ConnectionRefusedError, FileNotFoundError):
                     # Poll quickly to connect as soon as socket becomes
@@ -182,7 +175,7 @@ class IPCMiningTest(BitcoinTestFramework):
         timeout = 1000.0 # 1000 milliseconds
 
         async def async_routine():
-            ctx, mining = await self.make_mining_ctx()
+            ctx, mining = await make_mining_ctx(self)
 
             async with AsyncExitStack() as stack:
                 self.log.debug("createNewBlock() should wait if tip is still updating")
@@ -309,7 +302,7 @@ class IPCMiningTest(BitcoinTestFramework):
         self.restart_node(0, extra_args=[f"-blockreservedweight={MAX_BLOCK_WEIGHT}"])
 
         async def async_routine():
-            ctx, mining = await self.make_mining_ctx()
+            ctx, mining = await make_mining_ctx(self)
             self.miniwallet.send_self_transfer(fee_rate=10, from_node=self.nodes[0])
 
             async with AsyncExitStack() as stack:
@@ -349,7 +342,7 @@ class IPCMiningTest(BitcoinTestFramework):
         self.log.info("Running coinbase construction and submission test")
 
         async def async_routine():
-            ctx, mining = await self.make_mining_ctx()
+            ctx, mining = await make_mining_ctx(self)
 
             current_block_height = self.nodes[0].getchaintips()[0]["height"]
             check_opts = self.capnp_modules['mining'].BlockCheckOptions()
