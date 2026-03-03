@@ -129,6 +129,17 @@ detect_boost_include_dir_from_flags() {
     return 1
 }
 
+fix_cmake_libevent_link_order_for_static() {
+    local cmake_lists="$1/src/CMakeLists.txt"
+    [[ -f "$cmake_lists" ]] || return 0
+
+    # With static libevent archives, link order matters: extra must precede core.
+    local tmp_file
+    tmp_file="$(mktemp "${cmake_lists}.tmp.XXXXXX")"
+    sed '/libevent::core/{N;s/libevent::core\n\([[:space:]]*\)libevent::extra/libevent::extra\n\1libevent::core/;}' "$cmake_lists" > "$tmp_file"
+    mv "$tmp_file" "$cmake_lists"
+}
+
 write_boost_config_compat() {
     local config_dir="$1"
     local include_dir="$2"
@@ -294,6 +305,11 @@ if [[ -n "$SOURCE_ARCHIVE" ]]; then
 else
     if [[ ! -d "$BITCOIN_SRC/.git" ]]; then
         git clone "$BITCOIN_REPO" "$BITCOIN_SRC"
+    elif ! git -C "$BITCOIN_SRC" remote get-url origin >/dev/null 2>&1; then
+        # Recreate the clone if previous archive-based extraction left a git repo
+        # without an origin remote.
+        rm -rf "$BITCOIN_SRC"
+        git clone "$BITCOIN_REPO" "$BITCOIN_SRC"
     fi
 
     git -C "$BITCOIN_SRC" fetch --tags --prune origin
@@ -315,6 +331,8 @@ if [[ -n "$PATCH_ABS" ]]; then
     git -C "$BITCOIN_SRC" apply --check "$PATCH_ABS"
     git -C "$BITCOIN_SRC" apply "$PATCH_ABS"
 fi
+
+fix_cmake_libevent_link_order_for_static "$BITCOIN_SRC"
 
 mkdir -p "$BITCOIN_BUILD"
 mkdir -p "$OUTPUT_BIN_DIR"
