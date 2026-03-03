@@ -5,7 +5,6 @@
 #include "nontrivial-threadlocal.h"
 
 #include <clang-tidy/ClangTidyModule.h>
-#include <clang-tidy/ClangTidyModuleRegistry.h>
 
 class BitcoinModule final : public clang::tidy::ClangTidyModule
 {
