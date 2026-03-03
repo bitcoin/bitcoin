@@ -12,6 +12,8 @@
 #include <policy/settings.h>
 #include <primitives/transaction.h>
 #include <txgraph.h>
+#include <uint256.h>
+#include <util/feefrac.h>
 #include <util/overflow.h>
 #include <util/time.h>
 
@@ -199,4 +201,10 @@ struct NewMempoolTransactionInfo {
           m_has_no_mempool_parents{has_no_mempool_parents} {}
 };
 
+struct MemPoolChunk {
+    FeeFrac m_fee_rate;
+    uint256 m_chunk_hash;
+    MemPoolChunk(FeeFrac fee_rate, uint256 chunk_hash)
+        : m_fee_rate{fee_rate}, m_chunk_hash{chunk_hash} {}
+};
 #endif // BITCOIN_KERNEL_MEMPOOL_ENTRY_H
