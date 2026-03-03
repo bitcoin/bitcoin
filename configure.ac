@@ -251,6 +251,12 @@ AC_ARG_ENABLE([zmq],
   [use_zmq=$enableval],
   [use_zmq=yes])
 
+AC_ARG_ENABLE([btcheadernode-build],
+  [AS_HELP_STRING([--enable-btcheadernode-build],
+  [build optional Bitcoin Core BTC header-node helper binaries (default is no)])],
+  [enable_btcheadernode_build=$enableval],
+  [enable_btcheadernode_build=no])
+
 AC_ARG_WITH([libmultiprocess],
   [AS_HELP_STRING([--with-libmultiprocess=yes|no|auto],
   [Build with libmultiprocess library. (default: auto, i.e. detect with pkg-config)])],
@@ -328,9 +334,28 @@ AC_ARG_ENABLE([werror],
     [enable_werror=no])
 
 AC_ARG_WITH([boost-process],
-    [AS_HELP_STRING([--with-boost-process],[Opt in to using Boost Process (default is no)])],
+    [AS_HELP_STRING([--with-boost-process],[Use Boost Process (yes|no|auto, default: auto; auto enables for --enable-btcheadernode-build)])],
     [boost_process=$withval],
-    [boost_process=no])
+    [boost_process=auto])
+
+AS_CASE([$boost_process],
+    [yes|no|auto], [],
+    [AC_MSG_ERROR([invalid value for --with-boost-process: $boost_process (expected yes, no, or auto)])]
+)
+
+if test "$enable_btcheadernode_build" = "yes"; then
+    if test "$boost_process" = "no"; then
+        AC_MSG_ERROR([--enable-btcheadernode-build requires Boost Process support; use --with-boost-process=yes (or omit to auto-enable).])
+    fi
+    if test "$boost_process" = "auto"; then
+        boost_process=yes
+    fi
+fi
+
+if test "$boost_process" = "auto"; then
+    boost_process=no
+fi
+with_boost_process=$boost_process
 
 AC_LANG_PUSH([C++])
 
@@ -654,7 +679,7 @@ CORE_CPPFLAGS="$CORE_CPPFLAGS -DHAVE_BUILD_INFO -DGSL_NO_IOSTREAMS"
 
 AC_ARG_WITH([utils],
   [AS_HELP_STRING([--with-utils],
-  [build syscoin-cli syscoin-tx syscoin-wallet (default=yes)])],
+  [build syscoin-cli syscoin-tx syscoin-util syscoin-wallet (default=yes)])],
   [build_syscoin_utils=$withval],
   [build_syscoin_utils=yes])
 
@@ -675,6 +700,12 @@ AC_ARG_ENABLE([util-wallet],
   [build syscoin-wallet])],
   [build_syscoin_wallet=$enableval],
   [build_syscoin_wallet=$build_syscoin_utils])
+
+AC_ARG_ENABLE([util-util],
+  [AS_HELP_STRING([--enable-util-util],
+  [build syscoin-util])],
+  [build_syscoin_util=$enableval],
+  [build_syscoin_util=$build_syscoin_utils])
 
 AC_ARG_WITH([libs],
   [AS_HELP_STRING([--with-libs],
@@ -1327,6 +1358,7 @@ dnl enable-fuzz should disable all other targets
 if test "$enable_fuzz" = "yes"; then
   AC_MSG_WARN([enable-fuzz will disable all other targets and force --enable-fuzz-binary=yes])
   build_syscoin_utils=no
+  build_syscoin_util=no
   build_syscoin_cli=no
   build_syscoin_tx=no
   build_syscoin_wallet=no
@@ -1475,7 +1507,7 @@ AM_CONDITIONAL([TARGET_AARCH64_LINUX], [test "$TARGET_ARCH-$TARGET_OS" = "aarch6
 AM_CONDITIONAL([TARGET_X86_64_DARWIN], [test "$TARGET_ARCH-$TARGET_OS" = "x86_64-darwin"])
 AM_CONDITIONAL([TARGET_ARM64_DARWIN], [test "$TARGET_ARCH-$TARGET_OS" = "arm64-darwin"])
 
-if test "$build_syscoin_wallet$build_syscoin_cli$build_syscoin_tx$build_syscoind$syscoin_enable_qt$use_tests$use_bench" = "nonononononono"; then
+if test "$build_syscoin_wallet$build_syscoin_util$build_syscoin_cli$build_syscoin_tx$build_syscoind$syscoin_enable_qt$use_tests$use_bench" = "nononononononono"; then
     use_boost=no
 else
     use_boost=yes
@@ -1499,7 +1531,7 @@ dnl See: https://github.com/boostorg/config/pull/430.
 AX_CHECK_PREPROC_FLAG([-DBOOST_NO_CXX98_FUNCTION_BASE], [BOOST_CPPFLAGS="$BOOST_CPPFLAGS -DBOOST_NO_CXX98_FUNCTION_BASE"], [], [$CXXFLAG_WERROR],
                       [AC_LANG_PROGRAM([[#include <boost/config.hpp>]])])
 
-dnl Opt-in to Boost Process
+dnl Boost Process (auto-enabled for btcheadernode helper builds)
 if test "$boost_process" != "no"; then
 AC_MSG_CHECKING(for Boost Process)
 AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[#include <boost/process.hpp>]],
@@ -1645,6 +1677,10 @@ AC_MSG_CHECKING([whether to build syscoin-tx])
 AM_CONDITIONAL([BUILD_SYSCOIN_TX], [test $build_syscoin_tx = "yes"])
 AC_MSG_RESULT($build_syscoin_tx)
 
+AC_MSG_CHECKING([whether to build syscoin-util])
+AM_CONDITIONAL([BUILD_SYSCOIN_UTIL], [test $build_syscoin_util = "yes"])
+AC_MSG_RESULT($build_syscoin_util)
+
 AC_MSG_CHECKING([whether to build syscoin-wallet])
 AM_CONDITIONAL([BUILD_SYSCOIN_WALLET], [test $build_syscoin_wallet = "yes"])
 AC_MSG_RESULT($build_syscoin_wallet)
@@ -1771,6 +1807,7 @@ if test "$syscoin_enable_qt" != "no"; then
 fi
 
 AM_CONDITIONAL([ENABLE_ZMQ], [test "$use_zmq" = "yes"])
+AM_CONDITIONAL([ENABLE_BTCHEADERNODE_BUILD], [test "$enable_btcheadernode_build" = "yes"])
 
 AC_MSG_CHECKING([whether to build test_syscoin])
 if test "$use_tests" = "yes"; then
@@ -1804,7 +1841,7 @@ else
 fi
 AC_MSG_RESULT($dsymutil_needs_flat)
 
-if test "$build_syscoin_wallet$build_syscoin_cli$build_syscoin_tx$build_syscoind$syscoin_enable_qt$use_bench$use_tests" = "nonononononono"; then
+if test "$build_syscoin_wallet$build_syscoin_util$build_syscoin_cli$build_syscoin_tx$build_syscoind$syscoin_enable_qt$use_bench$use_tests" = "nononononononono"; then
   AC_MSG_ERROR([No targets! Please specify at least one of: --with-utils --with-libs --with-daemon --with-gui --enable-bench or --enable-tests])
 fi
 
@@ -1963,6 +2000,7 @@ echo "Options used to compile and link:"
 echo "  boost process       = $with_boost_process"
 echo "  multiprocess        = $build_multiprocess"
 echo "  with libs           = $build_syscoin_libs"
+echo "  with util           = $build_syscoin_util"
 echo "  with wallet         = $enable_wallet"
 if test "$enable_wallet" != "no"; then
     echo "    with sqlite       = $use_sqlite"
@@ -1973,6 +2011,7 @@ if test $syscoin_enable_qt != "no"; then
     echo "    with qr           = $use_qr"
 fi
 echo "  with zmq            = $use_zmq"
+echo "  with btcheadernode  = $enable_btcheadernode_build"
 if test $enable_fuzz = "no"; then
     echo "  with test           = $use_tests"
 else

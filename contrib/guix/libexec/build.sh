@@ -213,6 +213,7 @@ mkdir -p "$OUTDIR"
 # CONFIGFLAGS
 CONFIGFLAGS+=" --enable-reduce-exports --disable-bench --disable-gui-tests --disable-fuzz-binary"
 case "$HOST" in
+    x86_64-linux-gnu) CONFIGFLAGS+=" --enable-btcheadernode-build" ;;
     *mingw*) CONFIGFLAGS+=" --disable-miner" ;;
 esac
 
@@ -420,8 +421,9 @@ rm -rf "$ACTUAL_OUTDIR"
 mv --no-target-directory "$OUTDIR" "$ACTUAL_OUTDIR" \
     || ( rm -rf "$ACTUAL_OUTDIR" && exit 1 )
 
+OUTDIR_BASE="$(dirname "$DIST_ARCHIVE_BASE")"
 (
-    cd /outdir-base
+    cd "$OUTDIR_BASE"
     {
         echo "$GIT_ARCHIVE"
         find "$ACTUAL_OUTDIR" -type f

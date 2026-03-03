@@ -8,16 +8,18 @@
 
 #include <common/run_command.h>
 
+#ifdef HAVE_BOOST_PROCESS
+#include <boost/process.hpp>
+#endif
 #include <tinyformat.h>
 #include <univalue.h>
 
-#ifdef ENABLE_EXTERNAL_SIGNER
-#include <boost/process.hpp>
-#endif // ENABLE_EXTERNAL_SIGNER
+#include <stdexcept>
+#include <thread>
 
 UniValue RunCommandParseJSON(const std::string& str_command, const std::string& str_std_in)
 {
-#ifdef ENABLE_EXTERNAL_SIGNER
+#ifdef HAVE_BOOST_PROCESS
     namespace bp = boost::process;
 
     UniValue result_json;
@@ -38,18 +40,29 @@ UniValue RunCommandParseJSON(const std::string& str_command, const std::string& 
     }
     stdin_stream.pipe().close();
 
+    auto collect_stream = [](bp::ipstream& stream, std::string& output) {
+        std::string line;
+        while (std::getline(stream, line)) {
+            if (!output.empty()) output.push_back('\n');
+            output += line;
+        }
+    };
+
     std::string result;
     std::string error;
-    std::getline(stdout_stream, result);
-    std::getline(stderr_stream, error);
+    std::thread stdout_reader([&]() { collect_stream(stdout_stream, result); });
+    std::thread stderr_reader([&]() { collect_stream(stderr_stream, error); });
 
     c.wait();
+    stdout_reader.join();
+    stderr_reader.join();
+
     const int n_error = c.exit_code();
     if (n_error) throw std::runtime_error(strprintf("RunCommandParseJSON error: process(%s) returned %d: %s\n", str_command, n_error, error));
     if (!result_json.read(result)) throw std::runtime_error("Unable to parse JSON: " + result);
 
     return result_json;
 #else
-    throw std::runtime_error("Compiled without external signing support (required for external signing).");
-#endif // ENABLE_EXTERNAL_SIGNER
+    throw std::runtime_error("RunCommandParseJSON requires Boost::Process support (configure with --with-boost-process).");
+#endif
 }

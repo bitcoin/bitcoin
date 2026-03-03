@@ -12,6 +12,7 @@
 #include <atomic>
 #include <map>
 #include <memory>
+#include <string>
 #include <vector>
 
 class CBlockIndex;
@@ -20,6 +21,7 @@ class CConnman;
 class PeerManager;
 class CNode;
 class CDataStream;
+class UniValue;
 
 namespace llmq
 {
@@ -61,6 +63,31 @@ public:
 
 using CBTCCheckpointSigCPtr = std::shared_ptr<const CBTCCheckpointSig>;
 
+class CBTCHeaderPolicyWatchdog
+{
+private:
+    mutable Mutex cs;
+    ChainstateManager& chainman;
+
+    int64_t lastProbeTime GUARDED_BY(cs){0};
+    bool lastProbeHealthy GUARDED_BY(cs){true};
+    std::string lastProbeReason GUARDED_BY(cs);
+    int64_t lastRestartTime GUARDED_BY(cs){0};
+    int32_t consecutiveRestartFailures GUARDED_BY(cs){0};
+    bool reindexAttemptedInFailureStreak GUARDED_BY(cs){false};
+    int64_t lastProgressTime GUARDED_BY(cs){0};
+    int64_t lastTipHeight GUARDED_BY(cs){-1};
+
+public:
+    explicit CBTCHeaderPolicyWatchdog(ChainstateManager& chainman);
+    bool CheckAndRecover(std::string& denyReason) EXCLUSIVE_LOCKS_REQUIRED(!cs);
+
+private:
+    bool ProbeChainInfo(UniValue& out, std::string& err) const;
+    bool ParseChainInfo(const UniValue& chainInfo, bool& ibd, int64_t& tipHeight, std::string& err) const;
+    bool AttemptManagedRestart(const std::string& restartReason, std::string& denyReason) EXCLUSIVE_LOCKS_REQUIRED(!cs);
+};
+
 class CBTCCheckpointsHandler : public CRecoveredSigsListener
 {
     static constexpr int32_t RECENT_BTCCHECKPOINTS_MAX{256};
@@ -74,6 +101,7 @@ private:
     ChainstateManager& chainman;
     CConnman& connman;
     PeerManager& peerman;
+    CBTCHeaderPolicyWatchdog btcheaderWatchdog;
 
     // hashes of btccsig objects we've already processed/relayed
     std::map<uint256, int64_t> seenBTCCheckpointSigs GUARDED_BY(cs);
@@ -84,6 +112,12 @@ private:
     std::map<uint256, std::pair<int32_t, uint256>> mapSignedRequestIds GUARDED_BY(cs);
     int32_t lastSignedHeight GUARDED_BY(cs){-1};
     uint256 lastSignedSysHash GUARDED_BY(cs);
+    // Last BTC header hash/height we queued for signing (policy continuity guard).
+    uint256 lastSignedBTCHash GUARDED_BY(cs);
+    int32_t lastSignedBTCHeight GUARDED_BY(cs){-1};
+    // Deduplicate policy-denial logs for the same sign target.
+    int32_t lastPolicyRejectHeight GUARDED_BY(cs){-1};
+    std::string lastPolicyRejectReason GUARDED_BY(cs);
 
     // Best shares per height (signed by single quorum), later aggregated.
     std::map<int32_t, std::map<CQuorumCPtr, CBTCCheckpointSigCPtr>> bestShares GUARDED_BY(cs);
@@ -127,6 +161,8 @@ private:
     void Cleanup() EXCLUSIVE_LOCKS_REQUIRED(!cs);
     void AddPendingVerifiedBTCCheckpointSig(const uint256& hash, const CBTCCheckpointSig& btcsig) EXCLUSIVE_LOCKS_REQUIRED(!cs);
     void AcceptVerifiedBTCCSig(const CBTCCheckpointSig& btccsig, const uint256& hash, const CBlockIndex* pindexScan) EXCLUSIVE_LOCKS_REQUIRED(!cs);
+    bool RunBTCHeaderCommand(const std::string& method_and_args, UniValue& out, std::string& err) const EXCLUSIVE_LOCKS_REQUIRED(!cs);
+    bool CheckBTCHeaderSigningPolicy(const uint256& btcHash, int32_t sysHeight, int32_t& btcHeightOut, std::string& denyReason) EXCLUSIVE_LOCKS_REQUIRED(!cs);
 };
 
 extern CBTCCheckpointsHandler* btcCheckpointsHandler;

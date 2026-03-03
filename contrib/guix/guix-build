@@ -299,6 +299,42 @@ for host in $HOSTS; do
     make -C "${PWD}/depends" -j"$JOBS" download-"$(host_to_commonname "$host")" ${V:+V=1} ${SOURCES_PATH:+SOURCES_PATH="$SOURCES_PATH"}
 done
 
+# Prepare pinned Bitcoin source archive for btcheadernode helper builds.
+# This avoids VCS/network source fetching inside the isolated build container.
+BTCHEADERNODE_SOURCE_ARCHIVE=""
+if contains "$HOSTS" "x86_64-linux-gnu"; then
+    lock_file="${PWD}/contrib/btcheadernode/bitcoin.lock"
+    if [ -f "$lock_file" ]; then
+        # shellcheck source=/dev/null
+        source "$lock_file"
+        : "${BITCOIN_REPO:?BITCOIN_REPO must be set in contrib/btcheadernode/bitcoin.lock}"
+        : "${BITCOIN_COMMIT:?BITCOIN_COMMIT must be set in contrib/btcheadernode/bitcoin.lock}"
+
+        btcheader_src_cache_dir="${PWD}/depends/sources/btcheadernode"
+        btcheader_archive_host="${btcheader_src_cache_dir}/bitcoin-${BITCOIN_COMMIT}.tar.gz"
+        btcheader_archive_container="/syscoin/depends/sources/btcheadernode/bitcoin-${BITCOIN_COMMIT}.tar.gz"
+        if [ ! -f "$btcheader_archive_host" ]; then
+            tmpdir="$(mktemp -d "${TMPDIR:-/tmp}/btcheadernode-guix.XXXXXXXX")"
+            git clone --filter=blob:none "$BITCOIN_REPO" "$tmpdir/bitcoin-src"
+            git -C "$tmpdir/bitcoin-src" fetch --tags --prune origin
+            if [ -n "${BITCOIN_REF:-}" ]; then
+                resolved_ref="$(git -C "$tmpdir/bitcoin-src" rev-parse --verify "${BITCOIN_REF}^{commit}")"
+                if [ "$resolved_ref" != "$BITCOIN_COMMIT" ]; then
+                    echo "ERR: bitcoin.lock mismatch: BITCOIN_REF (${BITCOIN_REF} -> ${resolved_ref}) != BITCOIN_COMMIT (${BITCOIN_COMMIT})" >&2
+                    rm -rf "$tmpdir"
+                    exit 1
+                fi
+            fi
+            git -C "$tmpdir/bitcoin-src" checkout --detach "$BITCOIN_COMMIT"
+            mkdir -p "$btcheader_src_cache_dir"
+            git -C "$tmpdir/bitcoin-src" archive --format=tar.gz --prefix=bitcoin-src/ "$BITCOIN_COMMIT" > "${btcheader_archive_host}.tmp"
+            mv "${btcheader_archive_host}.tmp" "$btcheader_archive_host"
+            rm -rf "$tmpdir"
+        fi
+        BTCHEADERNODE_SOURCE_ARCHIVE="$btcheader_archive_container"
+    fi
+fi
+
 # Usage: outdir_for_host HOST SUFFIX
 #
 #   HOST: The current platform triple we're building for
@@ -460,6 +496,7 @@ EOF
                                         ${SOURCES_PATH:+SOURCES_PATH="$SOURCES_PATH"} \
                                         ${BASE_CACHE:+BASE_CACHE="$BASE_CACHE"} \
                                         ${SDK_PATH:+SDK_PATH="$SDK_PATH"} \
+                                        ${BTCHEADERNODE_SOURCE_ARCHIVE:+BTCHEADERNODE_SOURCE_ARCHIVE="$BTCHEADERNODE_SOURCE_ARCHIVE"} \
                                         DISTSRC="$(DISTSRC_BASE=/distsrc-base && distsrc_for_host "$HOST")" \
                                         OUTDIR="$(OUTDIR_BASE=/outdir-base && outdir_for_host "$HOST")" \
                                         DIST_ARCHIVE_BASE=/outdir-base/dist-archive \

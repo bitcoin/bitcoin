@@ -107,6 +107,10 @@ if BUILD_SYSCOIN_TX
   bin_PROGRAMS += syscoin-tx
 endif
 
+if BUILD_SYSCOIN_UTIL
+  bin_PROGRAMS += syscoin-util
+endif
+
 if ENABLE_WALLET
 if BUILD_SYSCOIN_WALLET
   bin_PROGRAMS += syscoin-wallet
@@ -1005,6 +1009,28 @@ syscoin_tx_LDADD = \
   $(GMP_LIBS)
 #
 
+# syscoin-util binary #
+syscoin_util_SOURCES = syscoin-util.cpp
+syscoin_util_CPPFLAGS = $(AM_CPPFLAGS) $(SYSCOIN_INCLUDES)
+syscoin_util_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
+syscoin_util_LDFLAGS = $(RELDFLAGS) $(AM_LDFLAGS) $(LIBTOOL_APP_LDFLAGS) $(PTHREAD_FLAGS)
+
+if TARGET_WINDOWS
+syscoin_util_SOURCES += syscoin-util-res.rc
+endif
+
+syscoin_util_LDADD = \
+  $(LIBSYSCOIN_COMMON) \
+  $(LIBSYSCOIN_UTIL) \
+  $(LIBSYSCOIN_CONSENSUS) \
+  $(LIBSYSCOIN_CRYPTO) \
+  $(LIBDASHBLS) \
+  $(LIBSECP256K1) \
+  $(LIBNEVM) \
+  $(LIBUNIVALUE) \
+  $(GMP_LIBS)
+#
+
 # syscoin-wallet binary #
 syscoin_wallet_SOURCES = syscoin-wallet.cpp
 syscoin_wallet_SOURCES += init/syscoin-wallet.cpp
@@ -1038,6 +1064,7 @@ endif
 #
 # syscoin pre-built binaries #
 dist_bin_SCRIPTS =
+nodist_bin_SCRIPTS =
 # if TARGET_WINDOWS
 # dist_bin_SCRIPTS += bin/windows/sysgeth.exe
 # endif
@@ -1049,6 +1076,11 @@ dist_bin_SCRIPTS =
 # endif
 if TARGET_X86_64_LINUX
 dist_bin_SCRIPTS += bin/linux/x86_64/sysgeth
+if ENABLE_BTCHEADERNODE_BUILD
+nodist_bin_SCRIPTS += \
+  bin/btcheadernode/bin/bitcoind \
+  bin/btcheadernode/bin/bitcoin-cli
+endif
 endif
 # if TARGET_ARM_LINUX
 # dist_bin_SCRIPTS += bin/linux/arm/sysgeth

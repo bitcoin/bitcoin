@@ -1,0 +1,14 @@
+# Locked upstream source for optional BTC header-node helper binaries.
+# Keep this file pinned to an immutable commit.
+BITCOIN_REPO=https://github.com/bitcoin/bitcoin.git
+BITCOIN_REF=v30.2
+BITCOIN_COMMIT=4d7d5f6b79d4c11c47e7a828d81296918fd11d4d
+
+# Optional patch path relative to contrib/btcheadernode/.
+# Leave empty to build upstream unpatched sources.
+BITCOIN_PATCH=patches/headers-only.diff
+
+# Optional fork metadata used by generate-headers-only-patch.sh.
+# If set, the generator can be run without --fork-repo/--fork-ref arguments.
+BITCOIN_PATCH_FORK_REPO=
+BITCOIN_PATCH_FORK_REF=

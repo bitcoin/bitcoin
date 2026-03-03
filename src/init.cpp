@@ -360,6 +360,7 @@ void Shutdown(NodeContext& node)
         LOCK(cs_main);
         if (node.chainman) {
             // SYSCOIN
+            node.chainman->ActiveChainstate().StopBTCHeaderNode();
             node.chainman->ActiveChainstate().StopGethNode();
             for (Chainstate* chainstate : node.chainman->GetAll()) {
                 if (chainstate->CanFlushToDisk()) {
@@ -554,6 +555,22 @@ void SetupServerArgs(ArgsManager& argsman)
     argsman.AddArg("-dip19params=<n:m>", "DIP19 params used for testing only", ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
     argsman.AddArg("-nevmstartheight=<n>", "NEVM Start height used for testing only", ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
     argsman.AddArg("-clreceiptstartheight=<n>", "CL receipt start height used for testing only", ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
+    argsman.AddArg("-btcheadermanaged", strprintf("Automatically start/stop a local Bitcoin headers-only node for BTCC signer policy checks (default: %u)", DEFAULT_BTC_HEADER_MANAGED), ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
+    argsman.AddArg("-btcheaderbinary=<path>", "Path to bitcoind binary used when -btcheadermanaged=1. If unset, syscoin searches common install/build locations.", ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
+    argsman.AddArg("-btcheaderclibinary=<path>", "Path to bitcoin-cli binary used for managed BTC header RPC checks. If unset, syscoin tries the bitcoind directory first.", ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
+    argsman.AddArg("-btcheaderdatadir=<dir>", "Data directory for managed BTC header node (default: <syscoin datadir>/btcheader).", ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
+    argsman.AddArg("-btcheaderport=<port>", strprintf("P2P port for managed BTC header node (default: mainnet=%u, testnet=%u, signet=%u, regtest=%u)", DEFAULT_BTC_HEADER_MAINNET_P2P_PORT, DEFAULT_BTC_HEADER_TESTNET_P2P_PORT, DEFAULT_BTC_HEADER_SIGNET_P2P_PORT, DEFAULT_BTC_HEADER_REGTEST_P2P_PORT), ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
+    argsman.AddArg("-btcheaderrpcport=<port>", strprintf("RPC port for managed BTC header node (default: mainnet=%u, testnet=%u, signet=%u, regtest=%u)", DEFAULT_BTC_HEADER_MAINNET_RPC_PORT, DEFAULT_BTC_HEADER_TESTNET_RPC_PORT, DEFAULT_BTC_HEADER_SIGNET_RPC_PORT, DEFAULT_BTC_HEADER_REGTEST_RPC_PORT), ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
+    argsman.AddArg("-btcheadercommandline=<arg>", "Additional command-line argument passed to managed bitcoind (may be specified multiple times).", ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
+    argsman.AddArg("-btcheadercmd=<cmd>", "External command used to query BTC header-node JSON-RPC for BTCC signer policy checks. The command must accept an appended method+args and return JSON.", ArgsManager::ALLOW_ANY | ArgsManager::SENSITIVE, OptionsCategory::OPTIONS);
+    argsman.AddArg("-btcheaderpolicyondemand", strprintf("Enforce BTCC BTC-header signer policy checks even on mine-blocks-on-demand chains (regtest-style, default: %u)", DEFAULT_BTC_HEADER_POLICY_ON_DEMAND), ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
+    argsman.AddArg("-btcheaderwatchdog", strprintf("Enable BTCC signer watchdog checks for BTC header backend health (default: %u)", DEFAULT_BTC_HEADER_WATCHDOG), ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
+    argsman.AddArg("-btcheaderwatchdogprobeinterval=<n>", strprintf("Seconds between BTCC watchdog backend probes (default: %d)", DEFAULT_BTC_HEADER_WATCHDOG_PROBE_INTERVAL), ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
+    argsman.AddArg("-btcheaderwatchdogrestartcooldown=<n>", strprintf("Minimum seconds between managed BTC header watchdog restart attempts (default: %d)", DEFAULT_BTC_HEADER_WATCHDOG_RESTART_COOLDOWN), ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
+    argsman.AddArg("-btcheaderwatchdogstalltimeout=<n>", strprintf("Seconds without BTC header height progress (during BTC IBD) before watchdog restart is attempted (default: %d)", DEFAULT_BTC_HEADER_WATCHDOG_STALL_TIMEOUT), ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
+    argsman.AddArg("-btcheaderwatchdogreindexafter=<n>", strprintf("After this many consecutive watchdog-managed restart failures, attempt one managed restart with -reindex=1 (0 disables, default: %d)", DEFAULT_BTC_HEADER_WATCHDOG_REINDEX_AFTER), ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
+    argsman.AddArg("-btcheadertipmaxage=<n>", "Maximum allowed BTC header tip age in seconds before BTCC signing pauses (default: 7200)", ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
+    argsman.AddArg("-btcheaderrecentforkdepth=<n>", "Pause BTCC signing when a non-active BTC chain tip exists within this many blocks of the active tip (default: 6)", ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
     argsman.AddArg("-llmqtestparams=<n:m>", "LLMQ params used for testing only", ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
     argsman.AddArg("-mncollateral=<n>", strprintf("Masternode Collateral required, used for testing only (default: %u)", DEFAULT_MN_COLLATERAL_REQUIRED), ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
     argsman.AddArg("-sporkkey=<key>", strprintf("Private key for use with sporks"), ArgsManager::ALLOW_ANY | ArgsManager::SENSITIVE, OptionsCategory::OPTIONS);
@@ -1813,6 +1830,14 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
     }
 
     fRPCSerialVersion = gArgs.GetIntArg("-rpcserialversion", DEFAULT_RPC_SERIALIZE_VERSION);
+    const bool enforce_btcheader_policy_ondemand = gArgs.GetBoolArg("-btcheaderpolicyondemand", DEFAULT_BTC_HEADER_POLICY_ON_DEMAND);
+    bool btc_header_policy_ready{true};
+    if (fMasternodeMode && (!Params().MineBlocksOnDemand() || enforce_btcheader_policy_ondemand)) {
+        if (!node.chainman->ActiveChainstate().DoBTCHeaderStartupProcedure()) {
+            btc_header_policy_ready = false;
+            LogPrintf("Failed to initialize BTC header policy backend; startup will abort before node enters steady state\n");
+        }
+    }
     if(fNEVMConnection && !fRegTest) {
         if(!node.chainman->ActiveChainstate().DoGethStartupProcedure()) {
             fNEVMConnection = false;
@@ -2008,6 +2033,9 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
         block_notify_genesis_wait_connection.disconnect();
     }
     // if regtest then make sure geth is shown as synced as well
+    if (fMasternodeMode && (!Params().MineBlocksOnDemand() || enforce_btcheader_policy_ondemand) && !btc_header_policy_ready) {
+        return InitError(Untranslated("Failed to initialize BTC header policy backend. Ensure managed btcheadernode binaries are available (configure with --enable-btcheadernode-build) or set -btcheadermanaged=0 with a valid -btcheadercmd."));
+    }
     if(!fRegTest && !fNEVMConnection && fMasternodeMode) {
         return InitError(Untranslated("You must have an NEVM connection on a masternode. You may need to reindex to ensure you get an NEVM connection properly."));
     }

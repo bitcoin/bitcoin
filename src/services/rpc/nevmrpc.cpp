@@ -1,4 +1,4 @@
-﻿// Copyright (c) 2013-2019 The Syscoin Core developers
+// Copyright (c) 2013-2019 The Syscoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 #include <validation.h>
@@ -537,6 +537,60 @@ static RPCHelpMan syscoinstartgeth()
     };
 }
 
+static RPCHelpMan syscoinstopbtcheadernode()
+{
+    return RPCHelpMan{"syscoinstopbtcheadernode",
+    "\nStops the managed BTC header node.\n",
+    {},
+    RPCResult{
+        RPCResult::Type::OBJ, "", "",
+        {
+            {RPCResult::Type::STR, "status", "Result"},
+        }},
+    RPCExamples{
+        HelpExampleCli("syscoinstopbtcheadernode", "")
+        + HelpExampleRpc("syscoinstopbtcheadernode", "")
+    },
+    [&](const RPCHelpMan& self, const node::JSONRPCRequest& request) -> UniValue
+{
+    ChainstateManager& chainman = EnsureAnyChainman(request.context);
+    if (!chainman.ActiveChainstate().StopBTCHeaderNode()) {
+        throw JSONRPCError(RPC_MISC_ERROR, "Could not stop managed BTC header node (is -btcheadermanaged enabled?)");
+    }
+    UniValue ret(UniValue::VOBJ);
+    ret.pushKVEnd("status", "success");
+    return ret;
+},
+    };
+}
+
+static RPCHelpMan syscoinstartbtcheadernode()
+{
+    return RPCHelpMan{"syscoinstartbtcheadernode",
+    "\nStarts (or restarts) the managed BTC header node.\n",
+    {},
+    RPCResult{
+        RPCResult::Type::OBJ, "", "",
+        {
+            {RPCResult::Type::STR, "status", "Result"},
+        }},
+    RPCExamples{
+        HelpExampleCli("syscoinstartbtcheadernode", "")
+        + HelpExampleRpc("syscoinstartbtcheadernode", "")
+    },
+    [&](const RPCHelpMan& self, const node::JSONRPCRequest& request) -> UniValue
+{
+    ChainstateManager& chainman = EnsureAnyChainman(request.context);
+    if (!chainman.ActiveChainstate().RestartBTCHeaderNode()) {
+        throw JSONRPCError(RPC_MISC_ERROR, "Could not start managed BTC header node, see debug.log for details");
+    }
+    UniValue ret(UniValue::VOBJ);
+    ret.pushKVEnd("status", "success");
+    return ret;
+},
+    };
+}
+
 // clang-format on
 void RegisterNEVMRPCCommands(CRPCTable &t)
 {
@@ -545,6 +599,8 @@ void RegisterNEVMRPCCommands(CRPCTable &t)
         {"syscoin", &listnevmblobdata},
         {"syscoin", &syscoinstopgeth},
         {"syscoin", &syscoinstartgeth},
+        {"syscoin", &syscoinstopbtcheadernode},
+        {"syscoin", &syscoinstartbtcheadernode},
         {"syscoin", &getnevmblockchaininfo},
         {"syscoin", &getnevmblobdata},
     };

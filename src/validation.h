@@ -108,6 +108,21 @@ extern std::atomic_bool fReindexGeth;
 static constexpr uint8_t NEVM_MAGIC_BYTES[4] = {'n', 'e', 'v', 'm'};
 static constexpr uint8_t BTCCHECK_MAGIC_BYTES[4] = {'b', 't', 'c', 'c'};
 static constexpr uint8_t BTCPREV_MAGIC_BYTES[4] = {'b', 't', 'c', 'p'};
+static constexpr bool DEFAULT_BTC_HEADER_MANAGED{true};
+static constexpr bool DEFAULT_BTC_HEADER_POLICY_ON_DEMAND{false};
+static constexpr bool DEFAULT_BTC_HEADER_WATCHDOG{true};
+static constexpr int DEFAULT_BTC_HEADER_WATCHDOG_PROBE_INTERVAL{15};
+static constexpr int DEFAULT_BTC_HEADER_WATCHDOG_RESTART_COOLDOWN{60};
+static constexpr int DEFAULT_BTC_HEADER_WATCHDOG_STALL_TIMEOUT{1800};
+static constexpr int DEFAULT_BTC_HEADER_WATCHDOG_REINDEX_AFTER{3};
+static constexpr int DEFAULT_BTC_HEADER_MAINNET_P2P_PORT{18444};
+static constexpr int DEFAULT_BTC_HEADER_MAINNET_RPC_PORT{18443};
+static constexpr int DEFAULT_BTC_HEADER_TESTNET_P2P_PORT{19444};
+static constexpr int DEFAULT_BTC_HEADER_TESTNET_RPC_PORT{19443};
+static constexpr int DEFAULT_BTC_HEADER_SIGNET_P2P_PORT{20444};
+static constexpr int DEFAULT_BTC_HEADER_SIGNET_RPC_PORT{20443};
+static constexpr int DEFAULT_BTC_HEADER_REGTEST_P2P_PORT{21444};
+static constexpr int DEFAULT_BTC_HEADER_REGTEST_RPC_PORT{21443};
 
 // SYSCOIN: BTC checkpoint cadence (must remain in sync across miner/specialtx/llmq handler)
 static constexpr int BTCCHECK_PERIOD{10};
@@ -711,6 +726,11 @@ public:
     bool DoGethStartupProcedure();
     bool StartGethNode();
     bool StopGethNode(bool bOnStart = false);
+    bool RestartBTCHeaderNode(bool force_reindex = false);
+    bool DoBTCHeaderStartupProcedure();
+    bool StartBTCHeaderNode(bool force_reindex = false);
+    bool StopBTCHeaderNode(bool bOnStart = false);
+    bool IsManagedBTCHeaderNodeRunning(std::string& reason);
     void EnforceBlock(BlockValidationState& state, const CBlockIndex* pindex)
         EXCLUSIVE_LOCKS_REQUIRED(!m_chainstate_mutex)
         LOCKS_EXCLUDED(cs_main);

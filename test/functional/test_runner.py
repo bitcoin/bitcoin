@@ -90,6 +90,7 @@ EXTENDED_SCRIPTS = [
     'feature_dbcrash.py',
     'feature_index_prune.py',
     'wallet_pruning.py --legacy-wallet',
+    'feature_btcheader_policy_auxpow.py',
 ]
 
 BASE_SCRIPTS = [

@@ -11,10 +11,21 @@ SUBDIRS = src
 if ENABLE_MAN
 SUBDIRS += doc/man
 endif
-.PHONY: deploy FORCE
+.PHONY: deploy FORCE btcheadernode-build
 .INTERMEDIATE: $(COVERAGE_INFO)
 
 export PYTHONPATH
+
+BTCHEADERNODE_BUILD_SCRIPT = $(top_srcdir)/contrib/btcheadernode/build-bitcoin-header-node.sh
+BTCHEADERNODE_PATCH_SCRIPT = $(top_srcdir)/contrib/btcheadernode/generate-headers-only-patch.sh
+BTCHEADERNODE_LOCKFILE = $(top_srcdir)/contrib/btcheadernode/bitcoin.lock
+
+if ENABLE_BTCHEADERNODE_BUILD
+all-local: btcheadernode-build
+endif
+
+btcheadernode-build: $(BTCHEADERNODE_BUILD_SCRIPT) $(BTCHEADERNODE_LOCKFILE)
+	$(AM_V_at)LDFLAGS="$(LDFLAGS)" $(BTCHEADERNODE_BUILD_SCRIPT) --src-root "$(abs_top_srcdir)" --build-root "$(abs_top_builddir)"
 
 if BUILD_SYSCOIN_LIBS
 pkgconfigdir = $(libdir)/pkgconfig
@@ -261,9 +272,14 @@ cov: test_syscoin.coverage/.dirstamp total.coverage/.dirstamp
 
 endif
 
-dist_noinst_SCRIPTS = autogen.sh
+dist_noinst_SCRIPTS = autogen.sh $(BTCHEADERNODE_BUILD_SCRIPT) $(BTCHEADERNODE_PATCH_SCRIPT)
 
 EXTRA_DIST = $(DIST_SHARE) $(DIST_CONTRIB) $(WINDOWS_PACKAGING) $(OSX_PACKAGING) $(BIN_CHECKS)
+EXTRA_DIST += \
+  contrib/btcheadernode/README.md \
+  contrib/btcheadernode/HEADERS_ONLY_PATCH_SPEC.md \
+  contrib/btcheadernode/bitcoin.lock \
+  contrib/btcheadernode/patches/headers-only.diff
 
 EXTRA_DIST += \
     test/functional \

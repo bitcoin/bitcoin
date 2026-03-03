@@ -9,6 +9,8 @@
 #include <llmq/quorums_utils.h>
 #include <chain.h>
 #include <chainparams.h>
+#include <common/args.h>
+#include <common/run_command.h>
 #include <evo/deterministicmns.h>
 #include <logging.h>
 #include <masternode/activemasternode.h>
@@ -19,6 +21,7 @@
 #include <util/strencodings.h>
 #include <util/time.h>
 #include <validation.h>
+#include <univalue.h>
 
 #include <algorithm>
 
@@ -27,8 +30,29 @@ namespace llmq
 
 static const std::string BTCCHECK_REQUESTID_PREFIX = "btcc";
 static constexpr size_t MAX_SIGNED_REQUESTIDS = 4096;
+static constexpr int64_t DEFAULT_BTC_HEADER_TIP_MAX_AGE{2 * 60 * 60}; // seconds
+static constexpr int64_t DEFAULT_BTC_HEADER_RECENT_FORK_DEPTH{6};      // headers near tip
+static constexpr int64_t DEFAULT_BTC_HEADER_MIN_CONFIRMATIONS{1};
 
 CBTCCheckpointsHandler* btcCheckpointsHandler{nullptr};
+
+static bool ParseHexUint256Strict(const UniValue& v, uint256& out)
+{
+    if (!v.isStr()) return false;
+    const std::string s = v.get_str();
+    if (!IsHex(s) || s.size() != 64) return false;
+    out.SetHex(s);
+    return true;
+}
+
+static bool GetObjectInt64(const UniValue& obj, const char* key, int64_t& out)
+{
+    if (!obj.isObject()) return false;
+    const UniValue& v = obj.find_value(key);
+    if (!v.isNum()) return false;
+    out = v.getInt<int64_t>();
+    return true;
+}
 
 static int32_t GetExpectedBTCCheckpointHeight(const ChainstateManager& chainman) EXCLUSIVE_LOCKS_REQUIRED(cs_main)
 {
@@ -48,6 +72,231 @@ static int32_t GetExpectedBTCCheckpointHeight(const ChainstateManager& chainman)
     return h;
 }
 
+CBTCHeaderPolicyWatchdog::CBTCHeaderPolicyWatchdog(ChainstateManager& _chainman) :
+    chainman(_chainman)
+{
+}
+
+bool CBTCHeaderPolicyWatchdog::ProbeChainInfo(UniValue& out, std::string& err) const
+{
+    const std::string cmd = gArgs.GetArg("-btcheadercmd", "");
+    if (cmd.empty()) {
+        err = "btcheadercmd-not-set";
+        return false;
+    }
+    try {
+        out = RunCommandParseJSON(cmd + " getblockchaininfo");
+    } catch (const std::exception& e) {
+        err = e.what();
+        return false;
+    }
+    if (!out.isObject()) {
+        err = "btc-chaininfo-not-object";
+        return false;
+    }
+    return true;
+}
+
+bool CBTCHeaderPolicyWatchdog::ParseChainInfo(const UniValue& chainInfo, bool& ibd, int64_t& tipHeight, std::string& err) const
+{
+    const UniValue& ibdV = chainInfo.find_value("initialblockdownload");
+    if (!ibdV.isBool()) {
+        err = "btc-chaininfo-missing-ibd";
+        return false;
+    }
+    ibd = ibdV.get_bool();
+
+    if (!GetObjectInt64(chainInfo, "headers", tipHeight)) {
+        // Some backends may not expose "headers"; fallback to "blocks".
+        if (!GetObjectInt64(chainInfo, "blocks", tipHeight)) {
+            err = "btc-chaininfo-missing-height";
+            return false;
+        }
+    }
+    return true;
+}
+
+bool CBTCHeaderPolicyWatchdog::AttemptManagedRestart(const std::string& restartReason, std::string& denyReason)
+{
+    const int64_t now = GetTime();
+    const int64_t cooldown = std::max<int64_t>(1, gArgs.GetIntArg("-btcheaderwatchdogrestartcooldown", DEFAULT_BTC_HEADER_WATCHDOG_RESTART_COOLDOWN));
+    const int64_t reindex_after = std::max<int64_t>(0, gArgs.GetIntArg("-btcheaderwatchdogreindexafter", DEFAULT_BTC_HEADER_WATCHDOG_REINDEX_AFTER));
+    bool force_reindex{false};
+    {
+        LOCK(cs);
+        if (lastRestartTime > 0 && (now - lastRestartTime) < cooldown) {
+            denyReason = strprintf("btcheader-watchdog-restart-cooldown(wait=%d reason=%s)",
+                                   cooldown - (now - lastRestartTime), restartReason);
+            return false;
+        }
+        if (reindex_after > 0 && !reindexAttemptedInFailureStreak && consecutiveRestartFailures >= reindex_after) {
+            force_reindex = true;
+            reindexAttemptedInFailureStreak = true;
+        }
+        lastRestartTime = now;
+    }
+
+    if (!chainman.ActiveChainstate().RestartBTCHeaderNode(force_reindex)) {
+        int32_t failures_now{0};
+        {
+            LOCK(cs);
+            ++consecutiveRestartFailures;
+            failures_now = consecutiveRestartFailures;
+        }
+        denyReason = strprintf("btcheader-watchdog-restart-failed(reindex=%d failures=%d): %s",
+                               force_reindex ? 1 : 0, failures_now, restartReason);
+        return false;
+    }
+
+    {
+        LOCK(cs);
+        // Force a fresh backend probe after successful restart.
+        consecutiveRestartFailures = 0;
+        reindexAttemptedInFailureStreak = false;
+        lastProbeTime = 0;
+        lastProbeHealthy = true;
+        lastProbeReason.clear();
+        lastProgressTime = now;
+        lastTipHeight = -1;
+    }
+
+    LogPrint(BCLog::CHAINLOCKS,
+             "CBTCHeaderPolicyWatchdog -- restarted managed BTC header node (reindex=%d reason=%s)\n",
+             force_reindex ? 1 : 0, restartReason);
+    return true;
+}
+
+bool CBTCHeaderPolicyWatchdog::CheckAndRecover(std::string& denyReason)
+{
+    denyReason.clear();
+
+    if (!gArgs.GetBoolArg("-btcheaderwatchdog", DEFAULT_BTC_HEADER_WATCHDOG)) {
+        return true;
+    }
+
+    const bool enforce_on_demand = gArgs.GetBoolArg("-btcheaderpolicyondemand", DEFAULT_BTC_HEADER_POLICY_ON_DEMAND);
+    if (Params().MineBlocksOnDemand() && !enforce_on_demand) {
+        return true;
+    }
+
+    const bool managed = gArgs.GetBoolArg("-btcheadermanaged", DEFAULT_BTC_HEADER_MANAGED);
+    if (managed) {
+        std::string runningReason;
+        if (!chainman.ActiveChainstate().IsManagedBTCHeaderNodeRunning(runningReason)) {
+            if (!AttemptManagedRestart("process-not-running:" + runningReason, denyReason)) {
+                LOCK(cs);
+                lastProbeTime = GetTime();
+                lastProbeHealthy = false;
+                lastProbeReason = denyReason;
+                return false;
+            }
+        }
+    }
+
+    const int64_t now = GetTime();
+    const int64_t probeInterval = std::max<int64_t>(1, gArgs.GetIntArg("-btcheaderwatchdogprobeinterval", DEFAULT_BTC_HEADER_WATCHDOG_PROBE_INTERVAL));
+    {
+        LOCK(cs);
+        if (lastProbeTime > 0 && (now - lastProbeTime) < probeInterval) {
+            if (!lastProbeHealthy) {
+                denyReason = lastProbeReason;
+            }
+            return lastProbeHealthy;
+        }
+    }
+
+    UniValue chainInfo;
+    std::string err;
+    if (!ProbeChainInfo(chainInfo, err)) {
+        if (managed) {
+            if (!AttemptManagedRestart("rpc-unreachable", denyReason)) {
+                LOCK(cs);
+                lastProbeTime = now;
+                lastProbeHealthy = false;
+                lastProbeReason = denyReason;
+                return false;
+            }
+            if (!ProbeChainInfo(chainInfo, err)) {
+                denyReason = "btcheader-watchdog-rpc-unreachable-after-restart: " + err;
+                LOCK(cs);
+                lastProbeTime = now;
+                lastProbeHealthy = false;
+                lastProbeReason = denyReason;
+                return false;
+            }
+        } else {
+            denyReason = "btcheader-watchdog-external-unreachable: " + err;
+            LOCK(cs);
+            lastProbeTime = now;
+            lastProbeHealthy = false;
+            lastProbeReason = denyReason;
+            return false;
+        }
+    }
+
+    bool ibd{false};
+    int64_t tipHeight{-1};
+    if (!ParseChainInfo(chainInfo, ibd, tipHeight, err)) {
+        denyReason = "btcheader-watchdog-chaininfo-parse-failed: " + err;
+        LOCK(cs);
+        lastProbeTime = now;
+        lastProbeHealthy = false;
+        lastProbeReason = denyReason;
+        return false;
+    }
+
+    bool stalled{false};
+    int64_t stalledFor{0};
+    const int64_t stallTimeout = std::max<int64_t>(0, gArgs.GetIntArg("-btcheaderwatchdogstalltimeout", DEFAULT_BTC_HEADER_WATCHDOG_STALL_TIMEOUT));
+    {
+        LOCK(cs);
+        if (lastProgressTime == 0) {
+            lastProgressTime = now;
+        }
+        if (tipHeight > lastTipHeight) {
+            lastTipHeight = tipHeight;
+            lastProgressTime = now;
+        }
+        if (!ibd) {
+            lastProgressTime = now;
+        } else if (stallTimeout > 0) {
+            stalledFor = now - lastProgressTime;
+            stalled = stalledFor >= stallTimeout;
+        }
+    }
+
+    if (stalled) {
+        if (managed) {
+            if (!AttemptManagedRestart(strprintf("ibd-stalled(headers=%d stalled=%d)", tipHeight, stalledFor), denyReason)) {
+                LOCK(cs);
+                lastProbeTime = now;
+                lastProbeHealthy = false;
+                lastProbeReason = denyReason;
+                return false;
+            }
+        } else {
+            denyReason = strprintf("btcheader-watchdog-external-stalled(headers=%d stalled=%d)", tipHeight, stalledFor);
+            LOCK(cs);
+            lastProbeTime = now;
+            lastProbeHealthy = false;
+            lastProbeReason = denyReason;
+            return false;
+        }
+    }
+
+    {
+        LOCK(cs);
+        if (managed) {
+            consecutiveRestartFailures = 0;
+            reindexAttemptedInFailureStreak = false;
+        }
+        lastProbeTime = now;
+        lastProbeHealthy = true;
+        lastProbeReason.clear();
+    }
+    return true;
+}
+
 bool CBTCCheckpointSig::IsNull() const
 {
     return nHeight == -1 && sysHash == uint256();
@@ -63,7 +312,8 @@ std::string CBTCCheckpointSig::ToString() const
 CBTCCheckpointsHandler::CBTCCheckpointsHandler(CConnman& _connman, PeerManager& _peerman, ChainstateManager& _chainman) :
     chainman(_chainman),
     connman(_connman),
-    peerman(_peerman)
+    peerman(_peerman),
+    btcheaderWatchdog(_chainman)
 {
 }
 
@@ -75,6 +325,177 @@ void CBTCCheckpointsHandler::Start()
 void CBTCCheckpointsHandler::Stop()
 {
     quorumSigningManager->UnregisterRecoveredSigsListener(this);
+}
+
+bool CBTCCheckpointsHandler::RunBTCHeaderCommand(const std::string& method_and_args, UniValue& out, std::string& err) const
+{
+    const std::string cmd = gArgs.GetArg("-btcheadercmd", "");
+    if (cmd.empty()) {
+        err = "btcheadercmd-not-set";
+        return false;
+    }
+    try {
+        out = RunCommandParseJSON(cmd + " " + method_and_args);
+        return true;
+    } catch (const std::exception& e) {
+        err = e.what();
+        return false;
+    }
+}
+
+bool CBTCCheckpointsHandler::CheckBTCHeaderSigningPolicy(const uint256& btcHash, int32_t sysHeight, int32_t& btcHeightOut, std::string& denyReason)
+{
+    btcHeightOut = -1;
+
+    const bool enforce_on_demand = gArgs.GetBoolArg("-btcheaderpolicyondemand", DEFAULT_BTC_HEADER_POLICY_ON_DEMAND);
+    // Mine-blocks-on-demand setups keep policy disabled unless explicitly enabled.
+    if (Params().MineBlocksOnDemand() && !enforce_on_demand) {
+        return true;
+    }
+
+    if (btcHash.IsNull()) {
+        denyReason = "btcprev-null";
+        return false;
+    }
+
+    UniValue chainInfo;
+    std::string err;
+    if (!RunBTCHeaderCommand("getblockchaininfo", chainInfo, err)) {
+        denyReason = "btc-chaininfo-failed: " + err;
+        return false;
+    }
+    if (!chainInfo.isObject()) {
+        denyReason = "btc-chaininfo-not-object";
+        return false;
+    }
+
+    const UniValue& ibd = chainInfo.find_value("initialblockdownload");
+    if (!ibd.isBool()) {
+        denyReason = "btc-chaininfo-missing-ibd";
+        return false;
+    }
+    if (ibd.get_bool()) {
+        denyReason = "btc-node-ibd";
+        return false;
+    }
+
+    uint256 bestHash;
+    if (!ParseHexUint256Strict(chainInfo.find_value("bestblockhash"), bestHash)) {
+        denyReason = "btc-chaininfo-badhash";
+        return false;
+    }
+
+    UniValue bestHeader;
+    if (!RunBTCHeaderCommand(strprintf("getblockheader %s true", bestHash.ToString()), bestHeader, err)) {
+        denyReason = "btc-bestheader-failed: " + err;
+        return false;
+    }
+
+    int64_t tipHeight{-1};
+    int64_t tipTime{0};
+    if (!GetObjectInt64(bestHeader, "height", tipHeight) || !GetObjectInt64(bestHeader, "time", tipTime)) {
+        denyReason = "btc-bestheader-missing-fields";
+        return false;
+    }
+
+    const int64_t tipMaxAge = std::max<int64_t>(0, gArgs.GetIntArg("-btcheadertipmaxage", DEFAULT_BTC_HEADER_TIP_MAX_AGE));
+    if (tipMaxAge > 0) {
+        const int64_t age = GetTime() - tipTime;
+        if (age > tipMaxAge) {
+            denyReason = strprintf("btc-tip-stale(age=%d)", age);
+            return false;
+        }
+    }
+
+    UniValue candidateHeader;
+    if (!RunBTCHeaderCommand(strprintf("getblockheader %s true", btcHash.ToString()), candidateHeader, err)) {
+        denyReason = "btc-candidate-header-failed: " + err;
+        return false;
+    }
+
+    int64_t confirmations{0};
+    int64_t candidateHeight{-1};
+    if (!GetObjectInt64(candidateHeader, "confirmations", confirmations) || !GetObjectInt64(candidateHeader, "height", candidateHeight)) {
+        denyReason = "btc-candidate-header-missing-fields";
+        return false;
+    }
+    if (confirmations < DEFAULT_BTC_HEADER_MIN_CONFIRMATIONS) {
+        denyReason = "btc-candidate-unconfirmed";
+        return false;
+    }
+    if (candidateHeight > tipHeight) {
+        denyReason = "btc-candidate-height-ahead-of-tip";
+        return false;
+    }
+
+    // Recent fork heuristic: if any non-active, valid-looking competing tip is near
+    // the active tip, pause signing until the fork risk cools down.
+    UniValue chainTips;
+    if (!RunBTCHeaderCommand("getchaintips", chainTips, err)) {
+        denyReason = "btc-chaintips-failed: " + err;
+        return false;
+    }
+    if (!chainTips.isArray()) {
+        denyReason = "btc-chaintips-not-array";
+        return false;
+    }
+
+    const int64_t recentForkDepth = std::max<int64_t>(1, gArgs.GetIntArg("-btcheaderrecentforkdepth", DEFAULT_BTC_HEADER_RECENT_FORK_DEPTH));
+    for (const UniValue& tip : chainTips.getValues()) {
+        if (!tip.isObject()) continue;
+        const UniValue& statusV = tip.find_value("status");
+        if (!statusV.isStr()) continue;
+        const std::string status = statusV.get_str();
+        if (status == "active" || status == "invalid") continue;
+        if (status != "valid-fork" && status != "valid-headers" && status != "headers-only") continue;
+
+        int64_t forkTipHeight{-1};
+        if (!GetObjectInt64(tip, "height", forkTipHeight)) continue;
+        if (forkTipHeight >= tipHeight - recentForkDepth) {
+            denyReason = strprintf("btc-recent-fork(status=%s height=%d tip=%d depth=%d)",
+                                   status, forkTipHeight, tipHeight, recentForkDepth);
+            return false;
+        }
+    }
+
+    // Continuity guard: never move backward relative to the latest BTC hash this node
+    // already queued for signing.
+    uint256 prevSignedBTCHash;
+    int32_t prevSignedBTCHeight{-1};
+    {
+        LOCK(cs);
+        prevSignedBTCHash = lastSignedBTCHash;
+        prevSignedBTCHeight = lastSignedBTCHeight;
+    }
+    if (!prevSignedBTCHash.IsNull()) {
+        UniValue prevHeader;
+        if (RunBTCHeaderCommand(strprintf("getblockheader %s true", prevSignedBTCHash.ToString()), prevHeader, err)) {
+            int64_t prevConfirmations{0};
+            int64_t prevHeight{-1};
+            if (!GetObjectInt64(prevHeader, "confirmations", prevConfirmations) || !GetObjectInt64(prevHeader, "height", prevHeight)) {
+                denyReason = "btc-prev-signed-header-missing-fields";
+                return false;
+            }
+            if (prevConfirmations >= DEFAULT_BTC_HEADER_MIN_CONFIRMATIONS) {
+                if (prevSignedBTCHeight >= 0 && prevHeight != prevSignedBTCHeight) {
+                    denyReason = "btc-prev-signed-height-mismatch";
+                    return false;
+                }
+                if (candidateHeight < prevHeight) {
+                    denyReason = strprintf("btc-non-monotonic-height(prev=%d cand=%d)", prevHeight, candidateHeight);
+                    return false;
+                }
+                if (candidateHeight == prevHeight && btcHash != prevSignedBTCHash) {
+                    denyReason = "btc-same-height-different-hash";
+                    return false;
+                }
+            }
+        }
+    }
+
+    btcHeightOut = static_cast<int32_t>(candidateHeight);
+    (void)sysHeight;
+    return true;
 }
 
 bool CBTCCheckpointsHandler::AlreadyHave(const uint256& hash) const
@@ -387,11 +808,8 @@ void CBTCCheckpointsHandler::TrySignBTCCheckpointTip()
     if (!fMasternodeMode) return;
     if (!masternodeSync.IsBlockchainSynced()) return;
 
-    // Policy: for now, only enabled on regtest-like setups.
-    // This will later be replaced with a real BTC header-chain membership check.
-    if (!Params().MineBlocksOnDemand()) return;
-
     const CBlockIndex* pindex{nullptr};
+    uint256 btcPrevHash;
     {
         TRY_LOCK(cs_main, lockMain);
         if (!lockMain) {
@@ -414,6 +832,46 @@ void CBTCCheckpointsHandler::TrySignBTCCheckpointTip()
         if (!pindex || !pindex->pprev || !pindex->IsValid(BLOCK_VALID_SCRIPTS)) {
             return;
         }
+        btcPrevHash = pindex->btcpPrevCommitment;
+    }
+
+    std::string watchdogDenyReason;
+    if (!btcheaderWatchdog.CheckAndRecover(watchdogDenyReason)) {
+        bool shouldLog{false};
+        {
+            LOCK(cs);
+            if (lastPolicyRejectHeight != pindex->nHeight || lastPolicyRejectReason != watchdogDenyReason) {
+                lastPolicyRejectHeight = pindex->nHeight;
+                lastPolicyRejectReason = watchdogDenyReason;
+                shouldLog = true;
+            }
+        }
+        if (shouldLog) {
+            LogPrint(BCLog::CHAINLOCKS,
+                     "CBTCCheckpointsHandler -- skip btcc sign at sysHeight=%d btcPrev=%s reason=%s\n",
+                     pindex->nHeight, btcPrevHash.ToString(), watchdogDenyReason);
+        }
+        return;
+    }
+
+    int32_t btcHeight{-1};
+    std::string policyDenyReason;
+    if (!CheckBTCHeaderSigningPolicy(btcPrevHash, pindex->nHeight, btcHeight, policyDenyReason)) {
+        bool shouldLog{false};
+        {
+            LOCK(cs);
+            if (lastPolicyRejectHeight != pindex->nHeight || lastPolicyRejectReason != policyDenyReason) {
+                lastPolicyRejectHeight = pindex->nHeight;
+                lastPolicyRejectReason = policyDenyReason;
+                shouldLog = true;
+            }
+        }
+        if (shouldLog) {
+            LogPrint(BCLog::CHAINLOCKS,
+                     "CBTCCheckpointsHandler -- skip btcc sign at sysHeight=%d btcPrev=%s reason=%s\n",
+                     pindex->nHeight, btcPrevHash.ToString(), policyDenyReason);
+        }
+        return;
     }
 
     // Keep internal state bounded. We only need a recent window for aggregation/replay.
@@ -480,6 +938,10 @@ void CBTCCheckpointsHandler::TrySignBTCCheckpointTip()
     if (queued_sign) {
         lastSignedHeight = want.nHeight;
         lastSignedSysHash = want.sysHash;
+        lastSignedBTCHash = btcPrevHash;
+        lastSignedBTCHeight = btcHeight;
+        lastPolicyRejectHeight = -1;
+        lastPolicyRejectReason.clear();
     }
 }
 

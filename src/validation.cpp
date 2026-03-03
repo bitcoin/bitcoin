@@ -14,6 +14,8 @@
 #include <chain.h>
 #include <checkqueue.h>
 #include <clientversion.h>
+#include <common/args.h>
+#include <common/run_command.h>
 #include <llmq/quorums_btccheckpoints.h>
 #include <consensus/amount.h>
 #include <consensus/consensus.h>
@@ -56,6 +58,7 @@
 #include <util/moneystr.h>
 #include <util/rbf.h>
 #include <util/signalinterrupt.h>
+#include <util/chaintype.h>
 #include <util/strencodings.h>
 #include <util/time.h>
 #include <util/trace.h>
@@ -103,10 +106,14 @@
     #include <limits.h>
 #endif
 pid_t gethpid = -1;
+pid_t btcheaderpid = -1;
 #ifdef WIN32
 HANDLE hProcessGeth = NULL;
+HANDLE hProcessBTCHeader = NULL;
 #endif
 RecursiveMutex cs_geth;
+RecursiveMutex cs_btcheader;
+std::string g_managed_btcheader_rpc_cmd;
 NEVMMintTxSet setMintTxsMempool;
 std::unordered_map<COutPoint, std::pair<CTransactionRef, CTransactionRef>, SaltedOutpointHasher> mapAssetAllocationConflicts;
 std::map<uint256, int64_t> mapRejectedBlocks GUARDED_BY(cs_main);
@@ -7169,6 +7176,204 @@ std::string GetGethFilename(){
         return "sysgeth";
     #endif
 }
+
+namespace {
+int GetManagedBTCHeaderDefaultP2PPort(ChainType chain_type)
+{
+    switch (chain_type) {
+    case ChainType::MAIN:
+        return DEFAULT_BTC_HEADER_MAINNET_P2P_PORT;
+    case ChainType::TESTNET:
+        return DEFAULT_BTC_HEADER_TESTNET_P2P_PORT;
+    case ChainType::SIGNET:
+        return DEFAULT_BTC_HEADER_SIGNET_P2P_PORT;
+    case ChainType::REGTEST:
+        return DEFAULT_BTC_HEADER_REGTEST_P2P_PORT;
+    }
+    return DEFAULT_BTC_HEADER_MAINNET_P2P_PORT;
+}
+
+int GetManagedBTCHeaderDefaultRPCPort(ChainType chain_type)
+{
+    switch (chain_type) {
+    case ChainType::MAIN:
+        return DEFAULT_BTC_HEADER_MAINNET_RPC_PORT;
+    case ChainType::TESTNET:
+        return DEFAULT_BTC_HEADER_TESTNET_RPC_PORT;
+    case ChainType::SIGNET:
+        return DEFAULT_BTC_HEADER_SIGNET_RPC_PORT;
+    case ChainType::REGTEST:
+        return DEFAULT_BTC_HEADER_REGTEST_RPC_PORT;
+    }
+    return DEFAULT_BTC_HEADER_MAINNET_RPC_PORT;
+}
+
+bool ParseManagedBTCHeaderPorts(int& p2p_port_out, int& rpc_port_out)
+{
+    const int64_t p2p_port = gArgs.GetIntArg("-btcheaderport", GetManagedBTCHeaderDefaultP2PPort(Params().GetChainType()));
+    const int64_t rpc_port = gArgs.GetIntArg("-btcheaderrpcport", GetManagedBTCHeaderDefaultRPCPort(Params().GetChainType()));
+    if (p2p_port < 1 || p2p_port > 65535) {
+        LogPrintf("Invalid -btcheaderport=%d (must be 1..65535)\n", p2p_port);
+        return false;
+    }
+    if (rpc_port < 1 || rpc_port > 65535) {
+        LogPrintf("Invalid -btcheaderrpcport=%d (must be 1..65535)\n", rpc_port);
+        return false;
+    }
+    p2p_port_out = static_cast<int>(p2p_port);
+    rpc_port_out = static_cast<int>(rpc_port);
+    return true;
+}
+
+std::string GetBTCHeaderNodeFilename()
+{
+#ifdef WIN32
+    return "bitcoind.exe";
+#else
+    return "bitcoind";
+#endif
+}
+
+std::string GetBTCHeaderCliFilename()
+{
+#ifdef WIN32
+    return "bitcoin-cli.exe";
+#else
+    return "bitcoin-cli";
+#endif
+}
+
+void AppendBTCHeaderNetworkArg(std::vector<std::string>& args_out)
+{
+    switch (Params().GetChainType()) {
+    case ChainType::MAIN:
+        break;
+    case ChainType::TESTNET:
+        args_out.emplace_back("-testnet=1");
+        break;
+    case ChainType::SIGNET:
+        args_out.emplace_back("-signet=1");
+        break;
+    case ChainType::REGTEST:
+        args_out.emplace_back("-regtest=1");
+        break;
+    }
+}
+
+void AppendBTCHeaderNetworkArgCli(std::string& cmd_out)
+{
+    switch (Params().GetChainType()) {
+    case ChainType::MAIN:
+        break;
+    case ChainType::TESTNET:
+        cmd_out += " -testnet";
+        break;
+    case ChainType::SIGNET:
+        cmd_out += " -signet";
+        break;
+    case ChainType::REGTEST:
+        cmd_out += " -regtest";
+        break;
+    }
+}
+
+fs::path ResolveFirstExistingPath(const std::vector<fs::path>& candidates)
+{
+    for (const auto& candidate : candidates) {
+        if (candidate.empty()) continue;
+        fs::path preferred = candidate;
+        preferred.make_preferred();
+        if (fs::exists(preferred)) return preferred;
+    }
+    return fs::path{};
+}
+
+fs::path ResolveManagedBTCHeaderBinaryPath(const fs::path& exec_path, const fs::path& datadir_base, const std::string& filename)
+{
+    const fs::path filename_path = fs::u8path(filename);
+    const std::string configured = gArgs.GetArg("-btcheaderbinary", "");
+    if (!configured.empty()) {
+        const fs::path configured_path = fs::u8path(configured).make_preferred();
+        if (fs::exists(configured_path)) return configured_path;
+        LogPrintf("Configured -btcheaderbinary not found: %s\n", fs::PathToString(configured_path));
+        return fs::path{};
+    }
+
+    return ResolveFirstExistingPath({
+        exec_path / "../Resources" / "btcheadernode" / "bin" / filename_path,
+        exec_path / "bin" / "btcheadernode" / "bin" / filename_path,
+        exec_path / "btcheadernode" / "bin" / filename_path,
+        exec_path / "../Resources" / filename_path,
+        exec_path / filename_path,
+        exec_path / "daemon" / filename_path,
+        datadir_base / "btcheadernode" / "bin" / filename_path,
+        datadir_base / filename_path,
+#ifndef WIN32
+        fs::u8path("/usr/local/bin") / filename_path,
+        fs::u8path("/usr/bin") / filename_path,
+#endif
+    });
+}
+
+fs::path ResolveManagedBTCHeaderCliPath(const fs::path& bitcoind_path, const fs::path& exec_path, const fs::path& datadir_base, const std::string& filename)
+{
+    const fs::path filename_path = fs::u8path(filename);
+    fs::path sibling_cli = bitcoind_path.parent_path();
+    sibling_cli /= filename_path;
+    const std::string configured = gArgs.GetArg("-btcheaderclibinary", "");
+    if (!configured.empty()) {
+        const fs::path configured_path = fs::u8path(configured).make_preferred();
+        if (fs::exists(configured_path)) return configured_path;
+        LogPrintf("Configured -btcheaderclibinary not found: %s\n", fs::PathToString(configured_path));
+        return fs::path{};
+    }
+
+    return ResolveFirstExistingPath({
+        sibling_cli,
+        exec_path / "../Resources" / "btcheadernode" / "bin" / filename_path,
+        exec_path / "bin" / "btcheadernode" / "bin" / filename_path,
+        exec_path / "btcheadernode" / "bin" / filename_path,
+        exec_path / "../Resources" / filename_path,
+        exec_path / filename_path,
+        exec_path / "daemon" / filename_path,
+        datadir_base / "btcheadernode" / "bin" / filename_path,
+        datadir_base / filename_path,
+#ifndef WIN32
+        fs::u8path("/usr/local/bin") / filename_path,
+        fs::u8path("/usr/bin") / filename_path,
+#endif
+    });
+}
+
+std::vector<std::string> SanitizeBTCHeaderNodeCmdLine(const std::vector<std::string>& extra_args, const fs::path& binary_url, const fs::path& data_dir, int p2p_port, int rpc_port, bool force_reindex)
+{
+    std::vector<std::string> cmd;
+    cmd.push_back(fs::PathToString(binary_url));
+    for (const auto& arg : extra_args) cmd.push_back(arg);
+    cmd.push_back("-headersonly=1");
+    cmd.push_back("-server=1");
+    cmd.push_back("-daemon=0");
+    cmd.push_back(strprintf("-datadir=%s", fs::PathToString(data_dir)));
+    cmd.push_back(strprintf("-port=%d", p2p_port));
+    cmd.push_back(strprintf("-rpcport=%d", rpc_port));
+    if (force_reindex) {
+        cmd.push_back("-reindex=1");
+    }
+    AppendBTCHeaderNetworkArg(cmd);
+    return cmd;
+}
+
+std::string BuildManagedBTCHeaderRPCCommand(const fs::path& cli_binary, const fs::path& data_dir, int rpc_port)
+{
+    std::string cmd = strprintf("%s -datadir=%s -rpcport=%d",
+        fs::quoted(fs::PathToString(cli_binary)),
+        fs::quoted(fs::PathToString(data_dir)),
+        rpc_port);
+    AppendBTCHeaderNetworkArgCli(cmd);
+    return cmd;
+}
+} // namespace
+
 bool Chainstate::StartGethNode()
 {
     LOCK(cs_geth);
@@ -7237,12 +7442,6 @@ bool Chainstate::StartGethNode()
     const fs::path log = m_chainman.m_options.datadir / "sysgeth.log";
 
     #ifndef WIN32
-    // Prevent killed child-processes remaining as "defunct"
-    struct sigaction sa;
-    sa.sa_handler = SIG_DFL;
-    sa.sa_flags = SA_NOCLDWAIT;
-    sigaction(SIGCHLD, &sa, nullptr);
-
     // Fork the process
     gethpid = fork();
     if (gethpid < 0) {
@@ -7302,6 +7501,8 @@ bool Chainstate::StartGethNode()
 }
 bool Chainstate::StopGethNode(bool bOnStart)
 {
+    LOCK(cs_geth);
+
     if (!fNEVMConnection || fRegTest) {
         return false;
     }
@@ -7324,25 +7525,28 @@ bool Chainstate::StopGethNode(bool bOnStart)
                 CloseHandle(hProcessGeth);
             }
             #else
-            for (int i = 0; i < 20; ++i) { // wait up to 40 seconds
-                int status = 0;
-                pid_t result = waitpid(gethpid, &status, WNOHANG);
-            
-                if (result == gethpid) {
-                    if (WIFEXITED(status)) {
-                        LogPrintf("Geth shutdown gracefully with exit code %d.\n", WEXITSTATUS(status));
+            if (gethpid > 0) {
+                for (int i = 0; i < 20; ++i) { // wait up to 40 seconds
+                    int status = 0;
+                    pid_t result = waitpid(gethpid, &status, WNOHANG);
+
+                    if (result == gethpid) {
+                        if (WIFEXITED(status)) {
+                            LogPrintf("Geth shutdown gracefully with exit code %d.\n", WEXITSTATUS(status));
+                        } else if (WIFSIGNALED(status)) {
+                            LogPrintf("Geth terminated by signal %d.\n", WTERMSIG(status));
+                        }
+                        gethpid = -1;
                         return true;
-                    } else if (WIFSIGNALED(status)) {
-                        LogPrintf("Geth terminated by signal %d.\n", WTERMSIG(status));
-                        return true;  // explicitly treat signal exits as valid shutdowns
+                    } else if (result == -1 && errno == ECHILD) {
+                        LogPrintf("Geth process no longer exists (ECHILD).\n");
+                        gethpid = -1;
+                        return true;
                     }
-                } else if (result == -1 && errno == ECHILD) {
-                    LogPrintf("Geth process no longer exists (ECHILD).\n");
-                    return true;
+
+                    LogPrintf("Geth shutdown check (%d)\n", i);
+                    UninterruptibleSleep(std::chrono::milliseconds{2000});
                 }
-            
-                LogPrintf("Geth shutdown check (%d)\n", i);
-                UninterruptibleSleep(std::chrono::milliseconds{2000});
             }
             #endif
         } else {
@@ -7352,6 +7556,22 @@ bool Chainstate::StopGethNode(bool bOnStart)
 
     // Only now explicitly kill sysgeth as last resort
     LogPrintf("Graceful shutdown failed; explicitly killing sysgeth...\n");
+#ifndef WIN32
+    if (gethpid > 0) {
+        if (kill(gethpid, SIGKILL) != 0 && errno != ESRCH) {
+            LogPrintf("Failed to kill sysgeth pid %d (errno=%d)\n", gethpid, errno);
+        }
+        int status = 0;
+        const pid_t result = waitpid(gethpid, &status, 0);
+        if (result == -1 && errno != ECHILD) {
+            LogPrintf("Failed waiting for sysgeth pid %d after SIGKILL (errno=%d)\n", gethpid, errno);
+        }
+        gethpid = -1;
+        return true;
+    }
+#endif
+
+    // Unknown pid fallback, preserve prior behavior for stale/orphaned processes.
     #ifndef USE_SYSCALL_SANDBOX
     #if HAVE_SYSTEM
     std::string cmd = "pkill -9 -f sysgeth";
@@ -7363,6 +7583,7 @@ bool Chainstate::StopGethNode(bool bOnStart)
         t.join();
     #endif
     #endif
+    gethpid = -1;
 
     return true;
 }
@@ -7447,6 +7668,249 @@ bool Chainstate::DoGethStartupProcedure() {
             return false;
         }
         LogPrintf("%s: Done, waiting for resync...\n", __func__);
+    }
+    return true;
+}
+
+bool Chainstate::RestartBTCHeaderNode(bool force_reindex)
+{
+    LOCK(cs_btcheader);
+
+    if (!gArgs.GetBoolArg("-btcheadermanaged", DEFAULT_BTC_HEADER_MANAGED)) {
+        LogPrintf("%s: Managed BTC header node is disabled (-btcheadermanaged=0)\n", __func__);
+        return false;
+    }
+    StopBTCHeaderNode();
+    return StartBTCHeaderNode(force_reindex);
+}
+
+bool Chainstate::StartBTCHeaderNode(bool force_reindex)
+{
+    LOCK(cs_btcheader);
+
+    if (!gArgs.GetBoolArg("-btcheadermanaged", DEFAULT_BTC_HEADER_MANAGED)) {
+        LogPrintf("%s: Managed BTC header node is disabled (-btcheadermanaged=0)\n", __func__);
+        return false;
+    }
+
+#ifdef WIN32
+    LogPrintf("%s: Managed BTC header node is not supported on WIN32 builds\n", __func__);
+    return false;
+#else
+    LogPrintf("%s: Starting managed BTC header node\n", __func__);
+
+    int p2p_port{0};
+    int rpc_port{0};
+    if (!ParseManagedBTCHeaderPorts(p2p_port, rpc_port)) {
+        return false;
+    }
+
+    std::string binArchitectureTag;
+    const fs::path exec_path = FindExecPath(binArchitectureTag);
+    const fs::path node_binary = ResolveManagedBTCHeaderBinaryPath(exec_path, m_chainman.m_options.datadir_base, GetBTCHeaderNodeFilename());
+    if (node_binary.empty()) {
+        LogPrintf("%s: Could not locate bitcoind for managed BTC header node. Configure -btcheaderbinary.\n", __func__);
+        return false;
+    }
+
+    const fs::path cli_binary = ResolveManagedBTCHeaderCliPath(node_binary, exec_path, m_chainman.m_options.datadir_base, GetBTCHeaderCliFilename());
+    if (cli_binary.empty()) {
+        LogPrintf("%s: Could not locate bitcoin-cli for managed BTC header node. Configure -btcheaderclibinary.\n", __func__);
+        return false;
+    }
+
+    const fs::path data_dir = gArgs.GetPathArg("-btcheaderdatadir", m_chainman.m_options.datadir / "btcheader");
+    const fs::path log_path = m_chainman.m_options.datadir / "btcheadernode.log";
+    try {
+        fs::create_directories(data_dir);
+    } catch (const fs::filesystem_error& e) {
+        LogPrintf("%s: Failed to create managed BTC header datadir %s (%s)\n", __func__, fs::PathToString(data_dir), e.what());
+        return false;
+    }
+
+    std::vector<std::string> cmdline = SanitizeBTCHeaderNodeCmdLine(gArgs.GetArgs("-btcheadercommandline"), node_binary, data_dir, p2p_port, rpc_port, force_reindex);
+
+    g_managed_btcheader_rpc_cmd = BuildManagedBTCHeaderRPCCommand(cli_binary, data_dir, rpc_port);
+    if (gArgs.IsArgSet("-btcheadercmd")) {
+        LogPrintf("%s: Overriding user-provided -btcheadercmd with managed local bitcoin-cli command\n", __func__);
+    }
+    gArgs.ForceSetArg("-btcheadercmd", g_managed_btcheader_rpc_cmd);
+
+    btcheaderpid = fork();
+    if (btcheaderpid < 0) {
+        LogPrintf("%s: Could not start managed BTC header node, fork failed (pid=%d)\n", __func__, btcheaderpid);
+        return false;
+    }
+    if (btcheaderpid == 0) {
+        if (setsid() < 0) {
+            LogPrintf("%s: setsid failed for managed BTC header node\n", __func__);
+            exit(EXIT_FAILURE);
+        }
+
+        std::vector<char*> argv;
+        argv.reserve(cmdline.size() + 1);
+        for (const std::string& arg : cmdline) argv.push_back(const_cast<char*>(arg.c_str()));
+        argv.push_back(nullptr);
+
+        int fd = open(fs::PathToString(log_path).c_str(), O_RDWR | O_CREAT | O_APPEND, 0600);
+        if (fd == -1) {
+            LogPrintf("%s: Could not open btcheadernode.log\n", __func__);
+            exit(EXIT_FAILURE);
+        }
+        if (-1 == dup2(fd, fileno(stderr))) {
+            LogPrintf("%s: Cannot redirect stderr for managed BTC header node\n", __func__);
+            exit(EXIT_FAILURE);
+        }
+        fflush(stderr);
+        close(fd);
+
+        execvp(argv[0], &argv[0]);
+        LogPrintf("%s: execvp failed for %s\n", __func__, fs::PathToString(node_binary));
+        exit(EXIT_FAILURE);
+    }
+
+    LogPrintf("%s: Managed BTC header node started with pid %d (reindex=%d)\n", __func__, btcheaderpid, force_reindex ? 1 : 0);
+
+    // Ensure the child stays alive beyond initial spawn, without depending on
+    // external signer support for JSON command execution.
+    for (int i = 0; i < 15; ++i) {
+        int status = 0;
+        const pid_t result = waitpid(btcheaderpid, &status, WNOHANG);
+        if (result == btcheaderpid) {
+            LogPrintf("%s: Managed BTC header node exited early with status %d\n", __func__, status);
+            btcheaderpid = -1;
+            g_managed_btcheader_rpc_cmd.clear();
+            return false;
+        }
+        if (result == -1 && errno == ECHILD) {
+            LogPrintf("%s: Managed BTC header node exited early (ECHILD)\n", __func__);
+            btcheaderpid = -1;
+            g_managed_btcheader_rpc_cmd.clear();
+            return false;
+        }
+        UninterruptibleSleep(std::chrono::milliseconds{200});
+    }
+
+    return true;
+#endif
+}
+
+bool Chainstate::StopBTCHeaderNode(bool bOnStart)
+{
+    LOCK(cs_btcheader);
+
+    if (!gArgs.GetBoolArg("-btcheadermanaged", DEFAULT_BTC_HEADER_MANAGED)) {
+        return false;
+    }
+
+#ifdef WIN32
+    return false;
+#else
+    if (!bOnStart && !g_managed_btcheader_rpc_cmd.empty()) {
+        try {
+            (void)RunCommandParseJSON(g_managed_btcheader_rpc_cmd + " stop");
+        } catch (const std::exception& e) {
+            LogPrintf("%s: Managed BTC header node graceful shutdown request failed: %s\n", __func__, e.what());
+        }
+    }
+
+    // Always send SIGTERM for managed restarts, including startup stop path.
+    if (btcheaderpid > 0) {
+        if (kill(btcheaderpid, SIGTERM) != 0 && errno != ESRCH) {
+            LogPrintf("Failed to SIGTERM BTC header node pid %d (errno=%d)\n", btcheaderpid, errno);
+        }
+    }
+
+    if (btcheaderpid > 0) {
+        for (int i = 0; i < 20; ++i) {
+            int status = 0;
+            const pid_t result = waitpid(btcheaderpid, &status, WNOHANG);
+            if (result == btcheaderpid) {
+                if (WIFEXITED(status)) {
+                    LogPrintf("BTC header node shutdown gracefully with exit code %d.\n", WEXITSTATUS(status));
+                } else if (WIFSIGNALED(status)) {
+                    LogPrintf("BTC header node terminated by signal %d.\n", WTERMSIG(status));
+                }
+                btcheaderpid = -1;
+                g_managed_btcheader_rpc_cmd.clear();
+                return true;
+            }
+            if (result == -1 && errno == ECHILD) {
+                LogPrintf("BTC header node process no longer exists (ECHILD).\n");
+                btcheaderpid = -1;
+                g_managed_btcheader_rpc_cmd.clear();
+                return true;
+            }
+            LogPrintf("BTC header node shutdown check (%d)\n", i);
+            UninterruptibleSleep(std::chrono::milliseconds{2000});
+        }
+        LogPrintf("Graceful BTC header node shutdown failed; explicitly killing pid %d\n", btcheaderpid);
+        if (kill(btcheaderpid, SIGKILL) != 0) {
+            LogPrintf("Failed to kill BTC header node pid %d (errno=%d)\n", btcheaderpid, errno);
+        }
+        int status = 0;
+        waitpid(btcheaderpid, &status, 0);
+    }
+
+    btcheaderpid = -1;
+    g_managed_btcheader_rpc_cmd.clear();
+    return true;
+#endif
+}
+
+bool Chainstate::IsManagedBTCHeaderNodeRunning(std::string& reason)
+{
+    LOCK(cs_btcheader);
+
+    if (!gArgs.GetBoolArg("-btcheadermanaged", DEFAULT_BTC_HEADER_MANAGED)) {
+        reason = "managed-disabled";
+        return true;
+    }
+
+#ifdef WIN32
+    reason = "managed-unsupported-win32";
+    return false;
+#else
+    if (btcheaderpid <= 0) {
+        reason = "pid-missing";
+        return false;
+    }
+    if (kill(btcheaderpid, 0) == 0 || errno == EPERM) {
+        reason.clear();
+        return true;
+    }
+    if (errno == ESRCH) {
+        btcheaderpid = -1;
+        g_managed_btcheader_rpc_cmd.clear();
+        reason = "process-not-found";
+        return false;
+    }
+    reason = strprintf("process-check-failed(errno=%d)", errno);
+    return false;
+#endif
+}
+
+bool Chainstate::DoBTCHeaderStartupProcedure()
+{
+    if (m_chainman.m_interrupt) {
+        return false;
+    }
+
+    if (!gArgs.GetBoolArg("-btcheadermanaged", DEFAULT_BTC_HEADER_MANAGED)) {
+        const std::string cmd = gArgs.GetArg("-btcheadercmd", "");
+        if (cmd.empty()) {
+            LogPrintf("%s: -btcheadermanaged=0 requires -btcheadercmd to be configured\n", __func__);
+            return false;
+        }
+        LogPrintf("%s: Using external -btcheadercmd backend (managed node disabled)\n", __func__);
+        return true;
+    }
+
+    LogPrintf("%s: Restarting managed BTC header node\n", __func__);
+    StopBTCHeaderNode(true);
+    if (!StartBTCHeaderNode()) {
+        LogPrintf("%s: Failed to start managed BTC header node\n", __func__);
+        return false;
     }
     return true;
 }
