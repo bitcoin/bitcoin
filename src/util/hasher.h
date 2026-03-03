@@ -8,12 +8,14 @@
 #include <crypto/common.h>
 #include <crypto/siphash.h>
 #include <primitives/transaction.h>
+#include <primitives/transaction_identifier.h>
 #include <span.h>
 #include <uint256.h>
 
 #include <concepts>
 #include <cstdint>
 #include <cstring>
+#include <vector>
 
 class SaltedUint256Hasher
 {
@@ -116,5 +118,8 @@ public:
 
     size_t operator()(const std::span<const unsigned char>& script) const;
 };
+
+/** Sorts and hashes a set of wtxids into a single hash*/
+uint256 GetHashFromWitnesses(std::vector<Wtxid> wtxids);
 
 #endif // BITCOIN_UTIL_HASHER_H
