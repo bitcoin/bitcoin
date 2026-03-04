@@ -255,9 +255,9 @@ bool ArgsManager::ParseParameters(int argc, const char* const argv[], std::strin
     return true;
 }
 
-std::optional<unsigned int> ArgsManager::GetArgFlags(const std::string& name) const
+std::optional<unsigned int> ArgsManager::GetArgFlags_(const std::string& name) const
 {
-    LOCK(cs_args);
+    AssertLockHeld(cs_args);
     for (const auto& arg_map : m_available_args) {
         const auto search = arg_map.second.find(name);
         if (search != arg_map.second.end()) {
@@ -267,20 +267,34 @@ std::optional<unsigned int> ArgsManager::GetArgFlags(const std::string& name) co
     return m_default_flags;
 }
 
+std::optional<unsigned int> ArgsManager::GetArgFlags(const std::string& name) const
+{
+    LOCK(cs_args);
+    return GetArgFlags_(name);
+}
+
 void ArgsManager::SetDefaultFlags(std::optional<unsigned int> flags)
 {
     LOCK(cs_args);
     m_default_flags = flags;
 }
 
-fs::path ArgsManager::GetPathArg(std::string arg, const fs::path& default_value) const
+fs::path ArgsManager::GetPathArg_(std::string arg, const fs::path& default_value) const
 {
-    if (IsArgNegated(arg)) return fs::path{};
-    std::string path_str = GetArg(arg, "");
+    AssertLockHeld(cs_args);
+    const auto value = GetSetting_(arg);
+    if (value.isFalse()) return {};
+    std::string path_str = SettingToString(value, "");
     if (path_str.empty()) return default_value;
     fs::path result = fs::PathFromString(path_str).lexically_normal();
     // Remove trailing slash, if present.
     return result.has_filename() ? result : result.parent_path();
+}
+
+fs::path ArgsManager::GetPathArg(std::string arg, const fs::path& default_value) const
+{
+    LOCK(cs_args);
+    return GetPathArg_(std::move(arg), default_value);
 }
 
 fs::path ArgsManager::GetBlocksDirPath() const
@@ -308,15 +322,25 @@ fs::path ArgsManager::GetBlocksDirPath() const
     return path;
 }
 
+fs::path ArgsManager::GetDataDirBase() const {
+    LOCK(cs_args);
+    return GetDataDir(/*net_specific=*/false);
+}
+
+fs::path ArgsManager::GetDataDirNet() const {
+    LOCK(cs_args);
+    return GetDataDir(/*net_specific=*/true);
+}
+
 fs::path ArgsManager::GetDataDir(bool net_specific) const
 {
-    LOCK(cs_args);
+    AssertLockHeld(cs_args);
     fs::path& path = net_specific ? m_cached_network_datadir_path : m_cached_datadir_path;
 
     // Used cached path if available
     if (!path.empty()) return path;
 
-    const fs::path datadir{GetPathArg("-datadir")};
+    const fs::path datadir{GetPathArg_("-datadir")};
     if (!datadir.empty()) {
         path = fs::absolute(datadir);
         if (!fs::is_directory(path)) {
@@ -853,15 +877,22 @@ std::variant<ChainType, std::string> ArgsManager::GetChainArg() const
 
 bool ArgsManager::UseDefaultSection(const std::string& arg) const
 {
+    AssertLockHeld(cs_args);
     return m_network == ChainTypeToString(ChainType::MAIN) || !m_network_only_args.contains(arg);
+}
+
+common::SettingsValue ArgsManager::GetSetting_(const std::string& arg) const
+{
+    AssertLockHeld(cs_args);
+    return common::GetSetting(
+        m_settings, m_network, SettingName(arg), !UseDefaultSection(arg),
+        /*ignore_nonpersistent=*/false, /*get_chain_type=*/false);
 }
 
 common::SettingsValue ArgsManager::GetSetting(const std::string& arg) const
 {
     LOCK(cs_args);
-    return common::GetSetting(
-        m_settings, m_network, SettingName(arg), !UseDefaultSection(arg),
-        /*ignore_nonpersistent=*/false, /*get_chain_type=*/false);
+    return GetSetting_(arg);
 }
 
 std::vector<common::SettingsValue> ArgsManager::GetSettingsList(const std::string& arg) const
@@ -875,6 +906,7 @@ void ArgsManager::logArgsPrefix(
     const std::string& section,
     const std::map<std::string, std::vector<common::SettingsValue>>& args) const
 {
+    AssertLockHeld(cs_args);
     std::string section_str = section.empty() ? "" : "[" + section + "] ";
     for (const auto& arg : args) {
         for (const auto& value : arg.second) {

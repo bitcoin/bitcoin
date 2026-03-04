@@ -229,14 +229,14 @@ protected:
      *
      * @return Absolute path on success, otherwise an empty path when a non-directory path would be returned
      */
-    fs::path GetDataDirBase() const { return GetDataDir(false); }
+    fs::path GetDataDirBase() const;
 
     /**
      * Get data directory path with appended network identifier
      *
      * @return Absolute path on success, otherwise an empty path when a non-directory path would be returned
      */
-    fs::path GetDataDirNet() const { return GetDataDir(true); }
+    fs::path GetDataDirNet() const;
 
     /**
      * Clear cached directory paths
@@ -435,13 +435,18 @@ protected:
     void LogArgs() const;
 
 private:
+    // Internal helpers, for use by callers that already hold `cs_args`.
+    common::SettingsValue GetSetting_(const std::string& arg) const EXCLUSIVE_LOCKS_REQUIRED(cs_args);
+    std::optional<unsigned int> GetArgFlags_(const std::string& name) const EXCLUSIVE_LOCKS_REQUIRED(cs_args);
+    fs::path GetPathArg_(std::string arg, const fs::path& default_value = {}) const EXCLUSIVE_LOCKS_REQUIRED(cs_args);
+
     /**
      * Get data directory path
      *
      * @param net_specific Append network identifier to the returned path
      * @return Absolute path on success, otherwise an empty path when a non-directory path would be returned
      */
-    fs::path GetDataDir(bool net_specific) const;
+    fs::path GetDataDir(bool net_specific) const EXCLUSIVE_LOCKS_REQUIRED(cs_args);
 
     /**
      * Return -regtest/-signet/-testnet/-testnet4/-chain= setting as a ChainType enum if a
@@ -455,7 +460,7 @@ private:
     void logArgsPrefix(
         const std::string& prefix,
         const std::string& section,
-        const std::map<std::string, std::vector<common::SettingsValue>>& args) const;
+        const std::map<std::string, std::vector<common::SettingsValue>>& args) const EXCLUSIVE_LOCKS_REQUIRED(cs_args);
 };
 
 extern ArgsManager gArgs;
