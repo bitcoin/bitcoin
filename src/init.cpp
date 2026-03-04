@@ -165,6 +165,9 @@ static constexpr bool DEFAULT_I2P_ACCEPT_INCOMING{true};
 // SYSCOIN
 extern unsigned int fRPCSerialVersion;
 static constexpr bool DEFAULT_STOPAFTERBLOCKIMPORT{false};
+static constexpr int64_t DEFAULT_GETH_STARTUP_TIMEOUT{14400};
+static constexpr int64_t DEFAULT_GETH_STARTUP_RETRY_INTERVAL_MS{2000};
+static constexpr int64_t DEFAULT_GETH_STARTUP_LOG_INTERVAL{30};
 
 #ifdef WIN32
 // Win32 LevelDB doesn't use filedescriptors, and the ones used for
@@ -543,6 +546,7 @@ void SetupServerArgs(ArgsManager& argsman)
     argsman.AddArg("-txindex", strprintf("Maintain a full transaction index, used by the getrawtransaction rpc call (default: %u)", DEFAULT_TXINDEX), ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
     // SYSCOIN
     argsman.AddArg("-gethcommandline=<port>", strprintf("Geth command line parameters (default: %s)", ""), ArgsManager::ALLOW_ANY, OptionsCategory::RPC);
+    argsman.AddArg("-gethstartuptimeout=<n>", strprintf("Maximum seconds to wait for sysgeth to become ready during startup before NEVM is marked offline (0 = wait indefinitely, default: %d)", DEFAULT_GETH_STARTUP_TIMEOUT), ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
     argsman.AddArg("-sporkaddr=<hex>", strprintf("Override spork address. Only useful for regtest. Using this on mainnet or testnet will ban you."), ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
     argsman.AddArg("-mnconf=<file>", strprintf("Specify masternode configuration file (default: %s)", "masternode.conf"), ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
     argsman.AddArg("-mnconflock=<n>", strprintf("Lock masternodes from masternode configuration file (default: %u)", 1), ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
@@ -1851,17 +1855,46 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
         fNEVMConnection = false;
     if(fNEVMConnection && !fRegTest) {
         uiInterface.InitMessage("Loading Geth...");
-        UninterruptibleSleep(std::chrono::milliseconds{5000});
+        const int64_t geth_startup_timeout = std::max<int64_t>(0, args.GetIntArg("-gethstartuptimeout", DEFAULT_GETH_STARTUP_TIMEOUT));
+        const auto wait_start = std::chrono::steady_clock::now();
+        const auto wait_deadline = wait_start + std::chrono::seconds{geth_startup_timeout};
+        auto next_wait_log = wait_start;
         uint64_t nHeightFromGeth{0};
         std::string stateStr;
-        BlockValidationState state;
-        GetMainSignals().NotifyGetNEVMBlockInfo(nHeightFromGeth, stateStr);
-        if(!stateStr.empty()) {
-            state.Invalid(BlockValidationResult::BLOCK_INVALID_HEADER, stateStr);
-            fNEVMConnection = false;
-            LogPrintf("Could not call NotifyGetNEVMBlockInfo, setting fNEVMConnection to false...\n");
+        bool geth_ready{false};
+        while (!ShutdownRequested()) {
+            stateStr.clear();
+            GetMainSignals().NotifyGetNEVMBlockInfo(nHeightFromGeth, stateStr);
+            if (stateStr.empty()) {
+                geth_ready = true;
+                break;
+            }
+
+            const auto now = std::chrono::steady_clock::now();
+            if (now >= next_wait_log) {
+                if (geth_startup_timeout == 0) {
+                    LogPrintf("Waiting for sysgeth startup to complete before NEVM attach (%s)\n", stateStr);
+                } else {
+                    const auto waited = std::chrono::duration_cast<std::chrono::seconds>(now - wait_start).count();
+                    LogPrintf("Waiting for sysgeth startup to complete before NEVM attach (%s), elapsed=%d timeout=%d seconds\n", stateStr, waited, geth_startup_timeout);
+                }
+                next_wait_log = now + std::chrono::seconds{DEFAULT_GETH_STARTUP_LOG_INTERVAL};
+            }
+
+            if (geth_startup_timeout != 0 && now >= wait_deadline) {
+                break;
+            }
+            UninterruptibleSleep(std::chrono::milliseconds{DEFAULT_GETH_STARTUP_RETRY_INTERVAL_MS});
         }
-        if(state.IsValid()) {
+        if (!geth_ready) {
+            fNEVMConnection = false;
+            if (stateStr.empty()) {
+                LogPrintf("Could not call NotifyGetNEVMBlockInfo, setting fNEVMConnection to false...\n");
+            } else {
+                LogPrintf("Could not call NotifyGetNEVMBlockInfo (%s), setting fNEVMConnection to false...\n", stateStr);
+            }
+        }
+        if(geth_ready) {
             int64_t nHeightLocalGeth;
             {
                 LOCK(cs_main);
