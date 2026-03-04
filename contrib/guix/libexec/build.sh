@@ -341,7 +341,7 @@ mkdir -p "$DISTSRC"
             *)
                 # SYSCOIN Split binaries and libraries from their debug symbols
                 {
-                    find "${DISTNAME}/bin" -type f -executable ! -name "sysgeth" ! -name "sysgeth.exe" -print0
+                    find "${DISTNAME}/bin" -type f -executable ! -name "sysgeth" -print0
                     find "${DISTNAME}/lib" -type f -print0
                 } | xargs -0 -P"$JOBS" -I{} "${DISTSRC}/contrib/devtools/split-debug.sh" {} {} {}.dbg
                 ;;

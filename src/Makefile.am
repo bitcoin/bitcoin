@@ -1065,15 +1065,6 @@ endif
 # syscoin pre-built binaries #
 dist_bin_SCRIPTS =
 nodist_bin_SCRIPTS =
-# if TARGET_WINDOWS
-# dist_bin_SCRIPTS += bin/windows/sysgeth.exe
-# endif
-# if TARGET_X86_64_DARWIN
-# dist_bin_SCRIPTS += bin/darwin/x86_64/sysgeth
-# endif
-# if TARGET_ARM64_DARWIN
-# dist_bin_SCRIPTS += bin/darwin/arm64/sysgeth
-# endif
 if TARGET_X86_64_LINUX
 dist_bin_SCRIPTS += bin/linux/x86_64/sysgeth
 if ENABLE_BTCHEADERNODE_BUILD

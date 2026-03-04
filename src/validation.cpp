@@ -93,7 +93,11 @@
 #ifndef WIN32
 #include <sys/wait.h>
 #include <sys/types.h>
+#include <fcntl.h>
 #include <signal.h>
+#include <spawn.h>
+#include <unistd.h>
+extern char** environ;
 #endif
 // SYSCOIN
 #if ENABLE_ZMQ
@@ -107,10 +111,6 @@
 #endif
 pid_t gethpid = -1;
 pid_t btcheaderpid = -1;
-#ifdef WIN32
-HANDLE hProcessGeth = NULL;
-HANDLE hProcessBTCHeader = NULL;
-#endif
 RecursiveMutex cs_geth;
 RecursiveMutex cs_btcheader;
 std::string g_managed_btcheader_rpc_cmd;
@@ -158,6 +158,23 @@ uint256 g_best_block;
 // SYSCOIN
 std::atomic_bool fReindexGeth(false);
 unsigned int fRPCSerialVersion;
+std::vector<std::string> g_managed_btcheader_rpc_args;
+
+bool GetManagedBTCHeaderRPCCommandArgs(std::vector<std::string>& args_out)
+{
+#ifdef WIN32
+    args_out.clear();
+    return false;
+#else
+    LOCK(cs_btcheader);
+    if (g_managed_btcheader_rpc_args.empty()) {
+        return false;
+    }
+    args_out = g_managed_btcheader_rpc_args;
+    return true;
+#endif
+}
+
 const CBlockIndex* Chainstate::FindForkInGlobalIndex(const CBlockLocator& locator) const
 {
     AssertLockHeld(cs_main);
@@ -7001,51 +7018,6 @@ void recursive_copy(const fs::path &src, const fs::path &dst)
     throw std::runtime_error(dst.generic_string() + " not dir or file");
   }
 }
-#ifdef WIN32
-    #include <windows.h>
-    #include <winnt.h>
-    #include <winternl.h>
-    #include <stdio.h>
-    #include <errno.h>
-    #include <assert.h>
-    #include <process.h>
-    pid_t fork(fs::path appIn, std::string arg)
-    {
-        std::string app = fs::PathToString(appIn);
-        std::string appQuoted = strprintf("%s", fs::quoted(app));
-        PROCESS_INFORMATION pi;
-        STARTUPINFOW si;
-        ZeroMemory(&pi, sizeof(pi));
-        ZeroMemory(&si, sizeof(si));
-        GetStartupInfoW (&si);
-        si.cb = sizeof(si);
-        //Prepare CreateProcess args
-        std::wstring appQuoted_w(appQuoted.length(), L' '); // Make room for characters
-        std::copy(appQuoted.begin(), appQuoted.end(), appQuoted_w.begin()); // Copy string to wstring.
-
-        std::wstring app_w(app.length(), L' '); // Make room for characters
-        std::copy(app.begin(), app.end(), app_w.begin()); // Copy string to wstring.
-
-        std::wstring arg_w(arg.length(), L' '); // Make room for characters
-        std::copy(arg.begin(), arg.end(), arg_w.begin()); // Copy string to wstring.
-
-        std::wstring input = appQuoted_w + L" " + arg_w;
-        wchar_t* arg_concat = const_cast<wchar_t*>( input.c_str() );
-        const wchar_t* app_const = app_w.c_str();
-        LogPrintf("CreateProcessW app %s %s\n",app,arg);
-        int result = CreateProcessW(app_const, arg_concat, nullptr, nullptr, FALSE,
-              CREATE_NO_WINDOW, nullptr, nullptr, &si, &pi);
-        if(!result)
-        {
-            LogPrintf("CreateProcess failed (%d)\n", GetLastError());
-            return 0;
-        }
-        pid_t pid = (pid_t)pi.dwProcessId;
-        hProcessGeth = pi.hProcess;
-        CloseHandle(pi.hThread);
-        return pid;
-    }
-#endif
 size_t write_data(void *ptr, size_t size, size_t nmemb, FILE *stream) {
     size_t written = fwrite(ptr, size, nmemb, stream);
     return written;
@@ -7120,26 +7092,8 @@ bool Chainstate::RestartGethNode() {
     }
     return true;
 }
-#ifdef WIN32
-// Convert a wide Unicode string to an UTF8 string
-std::string utf8_encode(const std::wstring &wstr)
-{
-    int size_needed = WideCharToMultiByte(CP_UTF8, 0, &wstr[0], (int)wstr.size(), NULL, 0, NULL, NULL);
-    std::string strTo( size_needed, 0 );
-    WideCharToMultiByte (CP_UTF8, 0, &wstr[0], (int)wstr.size(), &strTo[0], size_needed, NULL, NULL);
-    return strTo;
-}
-#endif
 fs::path FindExecPath(std::string &binArchitectureTag) {
     fs::path fpathDefault;
-    #ifdef WIN32
-        binArchitectureTag = "windows";
-        WCHAR pszExePath[MAX_PATH];
-        GetModuleFileNameW(nullptr, pszExePath, ARRAYSIZE(pszExePath));
-        fpathDefault = fs::u8path(utf8_encode(std::wstring(pszExePath)));
-        fpathDefault = fpathDefault.parent_path();
-        return fpathDefault;
-    #endif
     #ifdef MAC_OSX
         binArchitectureTag = "darwin";
         char buf [PATH_MAX];
@@ -7164,17 +7118,7 @@ fs::path FindExecPath(std::string &binArchitectureTag) {
     return fpathDefault;
 }
 std::string GetGethFilename(){
-    // For Windows:
-    #ifdef WIN32
-       return "sysgeth.exe";
-    #endif
-    #ifdef MAC_OSX
-        // Mac
-        return "sysgeth";
-    #else
-        // Linux
-        return "sysgeth";
-    #endif
+    return "sysgeth";
 }
 
 namespace {
@@ -7277,6 +7221,16 @@ void AppendBTCHeaderNetworkArgCli(std::string& cmd_out)
     }
 }
 
+std::vector<std::string> BuildManagedBTCHeaderRPCArgs(const fs::path& cli_binary, const fs::path& data_dir, int rpc_port)
+{
+    std::vector<std::string> args;
+    args.emplace_back(fs::PathToString(cli_binary));
+    args.emplace_back(strprintf("-datadir=%s", fs::PathToString(data_dir)));
+    args.emplace_back(strprintf("-rpcport=%d", rpc_port));
+    AppendBTCHeaderNetworkArg(args);
+    return args;
+}
+
 fs::path ResolveFirstExistingPath(const std::vector<fs::path>& candidates)
 {
     for (const auto& candidate : candidates) {
@@ -7372,12 +7326,98 @@ std::string BuildManagedBTCHeaderRPCCommand(const fs::path& cli_binary, const fs
     AppendBTCHeaderNetworkArgCli(cmd);
     return cmd;
 }
+
+#ifndef WIN32
+bool SpawnDetachedProcessWithStderrLog(const std::vector<std::string>& cmdline, const fs::path& log_path, pid_t& pid_out, std::string& err_out)
+{
+    pid_out = -1;
+    err_out.clear();
+
+    if (cmdline.empty()) {
+        err_out = "empty-command";
+        return false;
+    }
+
+    const int fd = open(fs::PathToString(log_path).c_str(), O_RDWR | O_CREAT | O_APPEND, 0600);
+    if (fd == -1) {
+        err_out = strprintf("open-log-failed(errno=%d)", errno);
+        return false;
+    }
+
+    posix_spawn_file_actions_t actions;
+    if (posix_spawn_file_actions_init(&actions) != 0) {
+        close(fd);
+        err_out = "spawn-file-actions-init-failed";
+        return false;
+    }
+
+    int action_result = posix_spawn_file_actions_adddup2(&actions, fd, STDERR_FILENO);
+    if (action_result == 0) {
+        action_result = posix_spawn_file_actions_addclose(&actions, fd);
+    }
+    if (action_result != 0) {
+        posix_spawn_file_actions_destroy(&actions);
+        close(fd);
+        err_out = strprintf("spawn-file-actions-config-failed(errno=%d)", action_result);
+        return false;
+    }
+
+    posix_spawnattr_t attr;
+    if (posix_spawnattr_init(&attr) != 0) {
+        posix_spawn_file_actions_destroy(&actions);
+        close(fd);
+        err_out = "spawn-attr-init-failed";
+        return false;
+    }
+
+    short spawn_flags{0};
+#ifdef POSIX_SPAWN_SETSID
+    spawn_flags |= POSIX_SPAWN_SETSID;
+#endif
+    if (spawn_flags != 0) {
+        const int flags_result = posix_spawnattr_setflags(&attr, spawn_flags);
+        if (flags_result != 0) {
+            posix_spawnattr_destroy(&attr);
+            posix_spawn_file_actions_destroy(&actions);
+            close(fd);
+            err_out = strprintf("spawn-attr-setflags-failed(errno=%d)", flags_result);
+            return false;
+        }
+    }
+
+    std::vector<char*> argv;
+    argv.reserve(cmdline.size() + 1);
+    for (const std::string& arg : cmdline) {
+        argv.push_back(const_cast<char*>(arg.c_str()));
+    }
+    argv.push_back(nullptr);
+
+    pid_t child_pid{-1};
+    const int spawn_result = posix_spawn(&child_pid, argv[0], &actions, &attr, argv.data(), ::environ);
+
+    posix_spawnattr_destroy(&attr);
+    posix_spawn_file_actions_destroy(&actions);
+    close(fd);
+
+    if (spawn_result != 0) {
+        err_out = strprintf("spawn-failed(errno=%d)", spawn_result);
+        return false;
+    }
+
+    pid_out = child_pid;
+    return true;
+}
+#endif
 } // namespace
 
 bool Chainstate::StartGethNode()
 {
     LOCK(cs_geth);
 
+#ifdef WIN32
+    LogPrintf("%s: SysGeth management is not supported on WIN32 builds\n", __func__);
+    return false;
+#else
     LogPrintf("%s: Starting SysGeth\n", __func__);
     fs::path gethFilename = fs::u8path(GetGethFilename());
     std::string binArchitectureTag;
@@ -7391,7 +7431,7 @@ bool Chainstate::StartGethNode()
         binaryURL = fpathDefault / gethFilename;
         binaryURL = binaryURL.make_preferred();
         LogPrintf("Could not find sysgeth in %s, trying %s\n", fs::PathToString(binaryURLTmp), fs::PathToString(binaryURL));
-        // current executable path + daemon subdirectory (for windows installer users)
+        // current executable path + daemon subdirectory (legacy layout)
         if(!fs::exists(binaryURL)) {
             fs::path binaryURLTmp = binaryURL;
             binaryURL = fpathDefault / "daemon" / gethFilename;
@@ -7440,69 +7480,25 @@ bool Chainstate::StartGethNode()
     const fs::path dataDir = m_chainman.m_options.datadir / "geth";
     std::vector<std::string> vecCmdLineStr = SanitizeGethCmdLine(m_chainman.GethCommandLine(), binaryURL, dataDir);
     const fs::path log = m_chainman.m_options.datadir / "sysgeth.log";
-
-    #ifndef WIN32
-    // Fork the process
-    gethpid = fork();
-    if (gethpid < 0) {
-        LogPrintf("Could not start Geth, pid < 0 %d\n", gethpid);
+    std::string spawn_error;
+    if (!SpawnDetachedProcessWithStderrLog(vecCmdLineStr, log, gethpid, spawn_error)) {
+        LogPrintf("%s: Could not start Geth (%s)\n", __func__, spawn_error);
+        gethpid = -1;
         return false;
     }
-
-    // Child process logic
-    if (gethpid == 0) {
-        if (setsid() < 0) {  // <--- explicitly create new session here
-            LogPrintf("setsid failed\n");
-            exit(EXIT_FAILURE);
-        }
-
-        std::vector<char*> commandVector;
-        commandVector.reserve(vecCmdLineStr.size());
-        for (const std::string &cmdStr: vecCmdLineStr) {
-            commandVector.push_back(const_cast<char*>(cmdStr.c_str()));
-        }
-        commandVector.push_back(nullptr);
-
-        char **command = commandVector.data();
-        LogPrintf("%s: Starting geth with command line: %s...\n", __func__, command[0]);
-
-        int err = open(fs::PathToString(log).c_str(), O_RDWR|O_CREAT|O_APPEND, 0600);
-        if (err == -1) {
-            LogPrintf("Could not open sysgeth.log\n");
-            exit(EXIT_FAILURE);
-        }
-        if (-1 == dup2(err, fileno(stderr))) { 
-            LogPrintf("Cannot redirect stderr for sysgeth\n");
-            exit(EXIT_FAILURE); 
-        }
-        fflush(stderr);
-        close(err);
-
-        execvp(command[0], &command[0]);
-        LogPrintf("Geth not found at %s\n", fs::PathToString(binaryURL));
-        exit(EXIT_FAILURE);
-    }
-    #else
-        std::string commandStr;
-        // the first cmd is the binary file which is not needed as binaryURL is that, in windows we only need params passed as commandStr
-        vecCmdLineStr.erase(vecCmdLineStr.begin());
-        for(const std::string &cmdStr: vecCmdLineStr) {
-            commandStr += cmdStr + " ";
-        }
-        gethpid = fork(binaryURL, commandStr);
-        if( gethpid <= 0 ) {
-            LogPrintf("Geth not found at %s\n", fs::PathToString(binaryURL));
-            return false;
-        }
-    #endif
     if(gethpid > 0)
         LogPrintf("%s: Geth Started with pid %d\n", __func__, gethpid);
     return true;
+#endif
 }
 bool Chainstate::StopGethNode(bool bOnStart)
 {
     LOCK(cs_geth);
 
+#ifdef WIN32
+    LogPrintf("%s: SysGeth management is not supported on WIN32 builds\n", __func__);
+    return false;
+#else
     if (!fNEVMConnection || fRegTest) {
         return false;
     }
@@ -7513,18 +7509,6 @@ bool Chainstate::StopGethNode(bool bOnStart)
         if (bResponse) {
             LogPrintf("Waiting for sysgeth to shutdown gracefully...\n");
             UninterruptibleSleep(std::chrono::milliseconds{2000});
-            #ifdef WIN32
-            if (hProcessGeth) {
-                for (int i = 0; i < 20; ++i) { // wait up to 40 seconds
-                    if (WaitForSingleObject(hProcessGeth, 2000) == WAIT_OBJECT_0) {
-                        CloseHandle(hProcessGeth);
-                        return true;
-                    }
-                    LogPrintf("Geth shutdown check (%d)\n", i);
-                }
-                CloseHandle(hProcessGeth);
-            }
-            #else
             if (gethpid > 0) {
                 for (int i = 0; i < 20; ++i) { // wait up to 40 seconds
                     int status = 0;
@@ -7548,7 +7532,6 @@ bool Chainstate::StopGethNode(bool bOnStart)
                     UninterruptibleSleep(std::chrono::milliseconds{2000});
                 }
             }
-            #endif
         } else {
             LogPrintf("No response from sysgeth on disconnect.\n");
         }
@@ -7556,7 +7539,6 @@ bool Chainstate::StopGethNode(bool bOnStart)
 
     // Only now explicitly kill sysgeth as last resort
     LogPrintf("Graceful shutdown failed; explicitly killing sysgeth...\n");
-#ifndef WIN32
     if (gethpid > 0) {
         if (kill(gethpid, SIGKILL) != 0 && errno != ESRCH) {
             LogPrintf("Failed to kill sysgeth pid %d (errno=%d)\n", gethpid, errno);
@@ -7569,15 +7551,11 @@ bool Chainstate::StopGethNode(bool bOnStart)
         gethpid = -1;
         return true;
     }
-#endif
 
     // Unknown pid fallback, preserve prior behavior for stale/orphaned processes.
     #ifndef USE_SYSCALL_SANDBOX
     #if HAVE_SYSTEM
     std::string cmd = "pkill -9 -f sysgeth";
-    #ifdef WIN32
-        cmd = "taskkill /F /T /IM sysgeth.exe >nul 2>&1";
-    #endif
     std::thread t(runCommand, cmd);
     if (t.joinable())
         t.join();
@@ -7586,6 +7564,7 @@ bool Chainstate::StopGethNode(bool bOnStart)
     gethpid = -1;
 
     return true;
+#endif
 }
 
 bool Chainstate::DoGethStartupProcedure() {
@@ -7730,43 +7709,32 @@ bool Chainstate::StartBTCHeaderNode(bool force_reindex)
 
     std::vector<std::string> cmdline = SanitizeBTCHeaderNodeCmdLine(gArgs.GetArgs("-btcheadercommandline"), node_binary, data_dir, p2p_port, rpc_port, force_reindex);
 
+    g_managed_btcheader_rpc_args = BuildManagedBTCHeaderRPCArgs(cli_binary, data_dir, rpc_port);
     g_managed_btcheader_rpc_cmd = BuildManagedBTCHeaderRPCCommand(cli_binary, data_dir, rpc_port);
     if (gArgs.IsArgSet("-btcheadercmd")) {
         LogPrintf("%s: Overriding user-provided -btcheadercmd with managed local bitcoin-cli command\n", __func__);
     }
     gArgs.ForceSetArg("-btcheadercmd", g_managed_btcheader_rpc_cmd);
 
-    btcheaderpid = fork();
-    if (btcheaderpid < 0) {
-        LogPrintf("%s: Could not start managed BTC header node, fork failed (pid=%d)\n", __func__, btcheaderpid);
-        return false;
+    // Best-effort cleanup for stale managed instances from previous unclean exits.
+    if (!g_managed_btcheader_rpc_args.empty()) {
+        std::vector<std::string> stop_cmd = g_managed_btcheader_rpc_args;
+        stop_cmd.emplace_back("stop");
+        try {
+            (void)RunCommandParseJSON(stop_cmd);
+            UninterruptibleSleep(std::chrono::milliseconds{200});
+        } catch (const std::exception&) {
+            // Ignore when no previous node is reachable.
+        }
     }
-    if (btcheaderpid == 0) {
-        if (setsid() < 0) {
-            LogPrintf("%s: setsid failed for managed BTC header node\n", __func__);
-            exit(EXIT_FAILURE);
-        }
 
-        std::vector<char*> argv;
-        argv.reserve(cmdline.size() + 1);
-        for (const std::string& arg : cmdline) argv.push_back(const_cast<char*>(arg.c_str()));
-        argv.push_back(nullptr);
-
-        int fd = open(fs::PathToString(log_path).c_str(), O_RDWR | O_CREAT | O_APPEND, 0600);
-        if (fd == -1) {
-            LogPrintf("%s: Could not open btcheadernode.log\n", __func__);
-            exit(EXIT_FAILURE);
-        }
-        if (-1 == dup2(fd, fileno(stderr))) {
-            LogPrintf("%s: Cannot redirect stderr for managed BTC header node\n", __func__);
-            exit(EXIT_FAILURE);
-        }
-        fflush(stderr);
-        close(fd);
-
-        execvp(argv[0], &argv[0]);
-        LogPrintf("%s: execvp failed for %s\n", __func__, fs::PathToString(node_binary));
-        exit(EXIT_FAILURE);
+    std::string spawn_error;
+    if (!SpawnDetachedProcessWithStderrLog(cmdline, log_path, btcheaderpid, spawn_error)) {
+        LogPrintf("%s: Could not start managed BTC header node (%s)\n", __func__, spawn_error);
+        btcheaderpid = -1;
+        g_managed_btcheader_rpc_cmd.clear();
+        g_managed_btcheader_rpc_args.clear();
+        return false;
     }
 
     LogPrintf("%s: Managed BTC header node started with pid %d (reindex=%d)\n", __func__, btcheaderpid, force_reindex ? 1 : 0);
@@ -7780,12 +7748,14 @@ bool Chainstate::StartBTCHeaderNode(bool force_reindex)
             LogPrintf("%s: Managed BTC header node exited early with status %d\n", __func__, status);
             btcheaderpid = -1;
             g_managed_btcheader_rpc_cmd.clear();
+            g_managed_btcheader_rpc_args.clear();
             return false;
         }
         if (result == -1 && errno == ECHILD) {
             LogPrintf("%s: Managed BTC header node exited early (ECHILD)\n", __func__);
             btcheaderpid = -1;
             g_managed_btcheader_rpc_cmd.clear();
+            g_managed_btcheader_rpc_args.clear();
             return false;
         }
         UninterruptibleSleep(std::chrono::milliseconds{200});
@@ -7806,9 +7776,11 @@ bool Chainstate::StopBTCHeaderNode(bool bOnStart)
 #ifdef WIN32
     return false;
 #else
-    if (!bOnStart && !g_managed_btcheader_rpc_cmd.empty()) {
+    if (!bOnStart && !g_managed_btcheader_rpc_args.empty()) {
         try {
-            (void)RunCommandParseJSON(g_managed_btcheader_rpc_cmd + " stop");
+            std::vector<std::string> stop_cmd = g_managed_btcheader_rpc_args;
+            stop_cmd.emplace_back("stop");
+            (void)RunCommandParseJSON(stop_cmd);
         } catch (const std::exception& e) {
             LogPrintf("%s: Managed BTC header node graceful shutdown request failed: %s\n", __func__, e.what());
         }
@@ -7833,12 +7805,14 @@ bool Chainstate::StopBTCHeaderNode(bool bOnStart)
                 }
                 btcheaderpid = -1;
                 g_managed_btcheader_rpc_cmd.clear();
+                g_managed_btcheader_rpc_args.clear();
                 return true;
             }
             if (result == -1 && errno == ECHILD) {
                 LogPrintf("BTC header node process no longer exists (ECHILD).\n");
                 btcheaderpid = -1;
                 g_managed_btcheader_rpc_cmd.clear();
+                g_managed_btcheader_rpc_args.clear();
                 return true;
             }
             LogPrintf("BTC header node shutdown check (%d)\n", i);
@@ -7854,6 +7828,7 @@ bool Chainstate::StopBTCHeaderNode(bool bOnStart)
 
     btcheaderpid = -1;
     g_managed_btcheader_rpc_cmd.clear();
+    g_managed_btcheader_rpc_args.clear();
     return true;
 #endif
 }
@@ -7882,6 +7857,7 @@ bool Chainstate::IsManagedBTCHeaderNodeRunning(std::string& reason)
     if (errno == ESRCH) {
         btcheaderpid = -1;
         g_managed_btcheader_rpc_cmd.clear();
+        g_managed_btcheader_rpc_args.clear();
         reason = "process-not-found";
         return false;
     }

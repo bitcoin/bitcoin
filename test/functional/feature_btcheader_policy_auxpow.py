@@ -233,7 +233,6 @@ class BTCHeaderPolicyAuxpowTest(DashTestFramework):
 
     def skip_test_if_missing_module(self):
         self.skip_if_no_wallet()
-        self.skip_if_no_bdb()
         self.skip_if_no_py3_zmq()
         self.skip_if_no_syscoind_zmq()
 
@@ -460,6 +459,7 @@ if __name__ == "__main__":
                 "-btcheaderwatchdogstalltimeout=300",
                 "-btcheaderwatchdogreindexafter=2",
                 "-btcheadertipmaxage=0",
+                "-btcheadermaxlagblocks=36",
                 "-btcheaderrecentforkdepth=2",
                 "-debug=chainlocks",
                 "-nevmstartheight=1",
@@ -491,6 +491,8 @@ if __name__ == "__main__":
             "-btcheaderwatchdogstalltimeout",
             "-btcheaderwatchdogreindexafter",
             "-btcheadertipmaxage",
+            "-btcheadertipmaxnoprogress",
+            "-btcheadermaxlagblocks",
             "-btcheaderrecentforkdepth",
         )
         return [arg for arg in args if not any(arg.startswith(prefix) for prefix in prefixes)]
@@ -652,7 +654,7 @@ if __name__ == "__main__":
         wrappers = self._write_managed_wrappers(node_index)
         p2p_port = self._alloc_free_port()
         rpc_port = self._alloc_free_port()
-        btcheader_datadir = Path(self.nodes[node_index].chain_path) / "btcheader_managed_test"
+        btcheader_datadir = Path(self.nodes[node_index].chain_path) / "btcheader managed test"
         btcheader_datadir.mkdir(parents=True, exist_ok=True)
 
         new_args = self._strip_btcheader_args(self.extra_args[node_index])
@@ -670,6 +672,7 @@ if __name__ == "__main__":
             "-btcheaderwatchdogstalltimeout=8",
             "-btcheaderwatchdogreindexafter=2",
             "-btcheadertipmaxage=0",
+            "-btcheadermaxlagblocks=36",
             "-btcheaderrecentforkdepth=2",
             "-debug=chainlocks",
         ])
@@ -783,6 +786,18 @@ if __name__ == "__main__":
         assert header["confirmations"] >= 5
         return candidate_hash
 
+    def _btc_far_older_confirmed_hash(self, min_lag=50):
+        tip_height = self.btc_nodes[0].rpc("getblockcount")
+        if tip_height < min_lag + 5:
+            self.btc_nodes[0].mine((min_lag + 5) - tip_height)
+            self._wait_for_btc_sync()
+            tip_height = self.btc_nodes[0].rpc("getblockcount")
+        candidate_height = max(0, tip_height - min_lag)
+        candidate_hash = self.btc_nodes[0].rpc("getblockhash", candidate_height)
+        header = self.btc_nodes[0].rpc("getblockheader", candidate_hash, "true")
+        assert header["confirmations"] >= min_lag
+        return candidate_hash
+
     def _btc_nonexistent_hash(self):
         candidate = "aa" * 32
         try:
@@ -848,6 +863,15 @@ if __name__ == "__main__":
             f"Did not observe policy deny reason~{reason_fragment} at {needle_height} on signer logs. "
             f"Recent log excerpt:\n{last_excerpt}"
         )
+
+    def _restart_signer_node(self, node_index):
+        self.restart_node(node_index, extra_args=self.extra_args[node_index])
+        for peer_index in range(self.num_nodes):
+            if peer_index == node_index:
+                continue
+            self.connect_nodes(node_index, peer_index, wait_for_connect=False)
+        self.sync_all()
+        force_finish_mnsync(self.nodes[node_index])
 
     def _mine_auxpow_with_btcprev(self, miner, btc_prev_hash):
         address = miner.get_deterministic_priv_key().address
@@ -1031,6 +1055,18 @@ if __name__ == "__main__":
         healed_sys_height = self._exercise_policy_allows(self._btc_active_confirmed_hash())
         assert healed_sys_height > signed_sys_height
 
+    def _exercise_continuity_persistence_after_restart(self):
+        self.log.info("Verify continuity guard persists after signer restart using on-chain baseline")
+        signed_sys_height = self._exercise_policy_allows(self._btc_active_confirmed_hash())
+        restart_node = 1
+        self._restart_signer_node(restart_node)
+        denied_sys_height = self._exercise_node_policy_denies(
+            restart_node,
+            self._btc_older_confirmed_hash(),
+            "btc-non-monotonic-height(",
+        )
+        assert denied_sys_height > signed_sys_height
+
     def _create_recent_fork(self):
         self.log.info("Create near-tip competing Bitcoin fork")
         self._wait_for_btc_sync()
@@ -1080,6 +1116,10 @@ if __name__ == "__main__":
         managed_node = 1
         self.log.info("Switch node %d to managed BTC header backend for watchdog condition coverage", managed_node)
         self._enable_managed_btcheader_on_node(managed_node)
+
+        self.log.info("Managed lifecycle: restart node with managed backend active")
+        self._restart_signer_node(managed_node)
+        self._wait_for_managed_chaininfo(managed_node)
 
         managed_hash = self._managed_genesis_hash(managed_node)
         assert isinstance(managed_hash, str) and len(managed_hash) == 64
@@ -1188,12 +1228,12 @@ if __name__ == "__main__":
         confirmed_hash = self._btc_active_confirmed_hash()
 
         self._exercise_policy_allows(confirmed_hash)
+        self._exercise_policy_denies(self._btc_far_older_confirmed_hash(), "btc-candidate-too-old(")
         self._exercise_watchdog_external_down(confirmed_hash)
         self._exercise_watchdog_external_parse_fail(confirmed_hash)
         self._exercise_watchdog_external_stalled(confirmed_hash)
 
         self._exercise_policy_denies(self._btc_nonexistent_hash(), "btc-candidate-header-failed")
-        self._exercise_policy_denies(self._btc_older_confirmed_hash(), "btc-non-monotonic-height(")
 
         stale_hash = self._create_unconfirmed_stale_hash()
         stale_deny_height = self._exercise_policy_denies(stale_hash, "btc-candidate-unconfirmed")
@@ -1201,6 +1241,7 @@ if __name__ == "__main__":
         assert stale_recovery_height > stale_deny_height
 
         self._exercise_signed_hash_reorg_recovery()
+        self._exercise_continuity_persistence_after_restart()
         self._exercise_watchdog_managed_conditions()
 
 

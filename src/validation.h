@@ -115,6 +115,10 @@ static constexpr int DEFAULT_BTC_HEADER_WATCHDOG_PROBE_INTERVAL{15};
 static constexpr int DEFAULT_BTC_HEADER_WATCHDOG_RESTART_COOLDOWN{60};
 static constexpr int DEFAULT_BTC_HEADER_WATCHDOG_STALL_TIMEOUT{1800};
 static constexpr int DEFAULT_BTC_HEADER_WATCHDOG_REINDEX_AFTER{3};
+static constexpr int DEFAULT_BTC_HEADER_TIP_MAX_AGE{2 * 60 * 60};      // seconds
+static constexpr int DEFAULT_BTC_HEADER_RECENT_FORK_DEPTH{2};           // blocks from active tip
+static constexpr int DEFAULT_BTC_HEADER_MAX_LAG_BLOCKS{36};             // candidate lag behind active tip
+static constexpr int DEFAULT_BTC_HEADER_TIP_MAX_NO_PROGRESS{1800};      // seconds
 static constexpr int DEFAULT_BTC_HEADER_MAINNET_P2P_PORT{18444};
 static constexpr int DEFAULT_BTC_HEADER_MAINNET_RPC_PORT{18443};
 static constexpr int DEFAULT_BTC_HEADER_TESTNET_P2P_PORT{19444};
@@ -132,6 +136,10 @@ static constexpr int BTCCHECK_CARRIER_OFFSET{BTCCHECK_SIGN_OFFSET + BTCCHECK_PRO
 
 /** Documentation for argument 'checklevel'. */
 extern const std::vector<std::string> CHECKLEVEL_DOC;
+
+// Returns the managed bitcoin-cli base argv used for BTC header policy RPC checks.
+// When managed mode is disabled or uninitialized, this returns false.
+bool GetManagedBTCHeaderRPCCommandArgs(std::vector<std::string>& args_out);
 
 /** Run instances of script checking worker threads */
 void StartScriptCheckWorkerThreads(int threads_num);

@@ -19,6 +19,7 @@
 #include <node/blockstorage.h>
 #include <primitives/block.h>
 #include <util/strencodings.h>
+#include <util/string.h>
 #include <util/time.h>
 #include <validation.h>
 #include <univalue.h>
@@ -30,8 +31,6 @@ namespace llmq
 
 static const std::string BTCCHECK_REQUESTID_PREFIX = "btcc";
 static constexpr size_t MAX_SIGNED_REQUESTIDS = 4096;
-static constexpr int64_t DEFAULT_BTC_HEADER_TIP_MAX_AGE{2 * 60 * 60}; // seconds
-static constexpr int64_t DEFAULT_BTC_HEADER_RECENT_FORK_DEPTH{6};      // headers near tip
 static constexpr int64_t DEFAULT_BTC_HEADER_MIN_CONFIRMATIONS{1};
 
 CBTCCheckpointsHandler* btcCheckpointsHandler{nullptr};
@@ -72,6 +71,59 @@ static int32_t GetExpectedBTCCheckpointHeight(const ChainstateManager& chainman)
     return h;
 }
 
+static bool RunBTCHeaderRPCCommand(const std::string& method_and_args, UniValue& out, std::string& err)
+{
+    const bool managed = gArgs.GetBoolArg("-btcheadermanaged", DEFAULT_BTC_HEADER_MANAGED);
+    if (managed) {
+        std::vector<std::string> command_args;
+        if (!GetManagedBTCHeaderRPCCommandArgs(command_args)) {
+            err = "btcheadercmd-not-set";
+            return false;
+        }
+        const std::vector<std::string> rpc_args = SplitString(method_and_args, " \t\r\n");
+        if (rpc_args.empty()) {
+            err = "btcheadercmd-empty-method";
+            return false;
+        }
+        command_args.insert(command_args.end(), rpc_args.begin(), rpc_args.end());
+        try {
+            out = RunCommandParseJSON(command_args);
+            return true;
+        } catch (const std::exception& e) {
+            err = e.what();
+            return false;
+        }
+    }
+
+    const std::string cmd = gArgs.GetArg("-btcheadercmd", "");
+    if (cmd.empty()) {
+        err = "btcheadercmd-not-set";
+        return false;
+    }
+    try {
+        out = RunCommandParseJSON(cmd + " " + method_and_args);
+        return true;
+    } catch (const std::exception& e) {
+        err = e.what();
+        return false;
+    }
+}
+
+static bool GetLatestOnChainBTCPREVCommitment(const ChainstateManager& chainman, int32_t sign_height, uint256& out_hash) EXCLUSIVE_LOCKS_REQUIRED(cs_main)
+{
+    out_hash.SetNull();
+    const int start = Params().GetConsensus().nCLReceiptStartBlock;
+    for (int32_t h = sign_height - BTCCHECK_PERIOD; h >= start; h -= BTCCHECK_PERIOD) {
+        const CBlockIndex* pindex = chainman.ActiveChain()[h];
+        if (!pindex) continue;
+        if (!pindex->btcpPrevCommitment.IsNull()) {
+            out_hash = pindex->btcpPrevCommitment;
+            return true;
+        }
+    }
+    return false;
+}
+
 CBTCHeaderPolicyWatchdog::CBTCHeaderPolicyWatchdog(ChainstateManager& _chainman) :
     chainman(_chainman)
 {
@@ -79,15 +131,7 @@ CBTCHeaderPolicyWatchdog::CBTCHeaderPolicyWatchdog(ChainstateManager& _chainman)
 
 bool CBTCHeaderPolicyWatchdog::ProbeChainInfo(UniValue& out, std::string& err) const
 {
-    const std::string cmd = gArgs.GetArg("-btcheadercmd", "");
-    if (cmd.empty()) {
-        err = "btcheadercmd-not-set";
-        return false;
-    }
-    try {
-        out = RunCommandParseJSON(cmd + " getblockchaininfo");
-    } catch (const std::exception& e) {
-        err = e.what();
+    if (!RunBTCHeaderRPCCommand("getblockchaininfo", out, err)) {
         return false;
     }
     if (!out.isObject()) {
@@ -329,18 +373,7 @@ void CBTCCheckpointsHandler::Stop()
 
 bool CBTCCheckpointsHandler::RunBTCHeaderCommand(const std::string& method_and_args, UniValue& out, std::string& err) const
 {
-    const std::string cmd = gArgs.GetArg("-btcheadercmd", "");
-    if (cmd.empty()) {
-        err = "btcheadercmd-not-set";
-        return false;
-    }
-    try {
-        out = RunCommandParseJSON(cmd + " " + method_and_args);
-        return true;
-    } catch (const std::exception& e) {
-        err = e.what();
-        return false;
-    }
+    return RunBTCHeaderRPCCommand(method_and_args, out, err);
 }
 
 bool CBTCCheckpointsHandler::CheckBTCHeaderSigningPolicy(const uint256& btcHash, int32_t sysHeight, int32_t& btcHeightOut, std::string& denyReason)
@@ -398,12 +431,44 @@ bool CBTCCheckpointsHandler::CheckBTCHeaderSigningPolicy(const uint256& btcHash,
         return false;
     }
 
+    const int64_t now = GetTime();
+    int64_t tipNoProgressAge{0};
+    bool tipProgressBypassEligible{false};
+    {
+        LOCK(cs);
+        if (lastPolicyTipProgressTime == 0) {
+            // Initialize progress tracker from the first observed tip.
+            lastPolicyObservedTipHeight = tipHeight;
+            lastPolicyTipProgressTime = now;
+        } else {
+            tipProgressBypassEligible = true;
+            if (tipHeight > lastPolicyObservedTipHeight) {
+                lastPolicyObservedTipHeight = tipHeight;
+                lastPolicyTipProgressTime = now;
+            }
+        }
+        tipNoProgressAge = std::max<int64_t>(0, now - lastPolicyTipProgressTime);
+    }
+
+    const int64_t tipMaxNoProgress = std::max<int64_t>(0, gArgs.GetIntArg("-btcheadertipmaxnoprogress", DEFAULT_BTC_HEADER_TIP_MAX_NO_PROGRESS));
+    if (tipMaxNoProgress > 0 && tipNoProgressAge > tipMaxNoProgress) {
+        denyReason = strprintf("btc-tip-no-progress(age=%d tip=%d)", tipNoProgressAge, tipHeight);
+        return false;
+    }
+
     const int64_t tipMaxAge = std::max<int64_t>(0, gArgs.GetIntArg("-btcheadertipmaxage", DEFAULT_BTC_HEADER_TIP_MAX_AGE));
     if (tipMaxAge > 0) {
-        const int64_t age = GetTime() - tipTime;
+        const int64_t age = now - tipTime;
         if (age > tipMaxAge) {
-            denyReason = strprintf("btc-tip-stale(age=%d)", age);
-            return false;
+            // When local clock skew makes header timestamps appear old, allow if
+            // the header tip is still progressing within the no-progress window.
+            const bool allow_by_progress = tipProgressBypassEligible &&
+                                           tipMaxNoProgress > 0 &&
+                                           tipNoProgressAge <= tipMaxNoProgress;
+            if (!allow_by_progress) {
+                denyReason = strprintf("btc-tip-stale(age=%d)", age);
+                return false;
+            }
         }
     }
 
@@ -428,33 +493,41 @@ bool CBTCCheckpointsHandler::CheckBTCHeaderSigningPolicy(const uint256& btcHash,
         return false;
     }
 
-    // Recent fork heuristic: if any non-active, valid-looking competing tip is near
-    // the active tip, pause signing until the fork risk cools down.
-    UniValue chainTips;
-    if (!RunBTCHeaderCommand("getchaintips", chainTips, err)) {
-        denyReason = "btc-chaintips-failed: " + err;
-        return false;
-    }
-    if (!chainTips.isArray()) {
-        denyReason = "btc-chaintips-not-array";
+    const int64_t maxLagBlocks = std::max<int64_t>(0, gArgs.GetIntArg("-btcheadermaxlagblocks", DEFAULT_BTC_HEADER_MAX_LAG_BLOCKS));
+    const int64_t lagBlocks = tipHeight - candidateHeight;
+    if (maxLagBlocks > 0 && lagBlocks > maxLagBlocks) {
+        denyReason = strprintf("btc-candidate-too-old(lag=%d max=%d)", lagBlocks, maxLagBlocks);
         return false;
     }
 
-    const int64_t recentForkDepth = std::max<int64_t>(1, gArgs.GetIntArg("-btcheaderrecentforkdepth", DEFAULT_BTC_HEADER_RECENT_FORK_DEPTH));
-    for (const UniValue& tip : chainTips.getValues()) {
-        if (!tip.isObject()) continue;
-        const UniValue& statusV = tip.find_value("status");
-        if (!statusV.isStr()) continue;
-        const std::string status = statusV.get_str();
-        if (status == "active" || status == "invalid") continue;
-        if (status != "valid-fork" && status != "valid-headers" && status != "headers-only") continue;
-
-        int64_t forkTipHeight{-1};
-        if (!GetObjectInt64(tip, "height", forkTipHeight)) continue;
-        if (forkTipHeight >= tipHeight - recentForkDepth) {
-            denyReason = strprintf("btc-recent-fork(status=%s height=%d tip=%d depth=%d)",
-                                   status, forkTipHeight, tipHeight, recentForkDepth);
+    const int64_t recentForkDepth = std::max<int64_t>(0, gArgs.GetIntArg("-btcheaderrecentforkdepth", DEFAULT_BTC_HEADER_RECENT_FORK_DEPTH));
+    if (recentForkDepth > 0) {
+        // Recent fork heuristic: if any non-active, valid-looking competing tip is near
+        // the active tip, pause signing until the fork risk cools down.
+        UniValue chainTips;
+        if (!RunBTCHeaderCommand("getchaintips", chainTips, err)) {
+            denyReason = "btc-chaintips-failed: " + err;
             return false;
+        }
+        if (!chainTips.isArray()) {
+            denyReason = "btc-chaintips-not-array";
+            return false;
+        }
+        for (const UniValue& tip : chainTips.getValues()) {
+            if (!tip.isObject()) continue;
+            const UniValue& statusV = tip.find_value("status");
+            if (!statusV.isStr()) continue;
+            const std::string status = statusV.get_str();
+            if (status == "active" || status == "invalid") continue;
+            if (status != "valid-fork" && status != "valid-headers" && status != "headers-only") continue;
+
+            int64_t forkTipHeight{-1};
+            if (!GetObjectInt64(tip, "height", forkTipHeight)) continue;
+            if (forkTipHeight >= tipHeight - recentForkDepth) {
+                denyReason = strprintf("btc-recent-fork(status=%s height=%d tip=%d depth=%d)",
+                                       status, forkTipHeight, tipHeight, recentForkDepth);
+                return false;
+            }
         }
     }
 
@@ -810,6 +883,7 @@ void CBTCCheckpointsHandler::TrySignBTCCheckpointTip()
 
     const CBlockIndex* pindex{nullptr};
     uint256 btcPrevHash;
+    uint256 chainBaselineBTCHash;
     {
         TRY_LOCK(cs_main, lockMain);
         if (!lockMain) {
@@ -833,6 +907,15 @@ void CBTCCheckpointsHandler::TrySignBTCCheckpointTip()
             return;
         }
         btcPrevHash = pindex->btcpPrevCommitment;
+        (void)GetLatestOnChainBTCPREVCommitment(chainman, nActiveHeight, chainBaselineBTCHash);
+    }
+
+    if (!chainBaselineBTCHash.IsNull()) {
+        LOCK(cs);
+        if (lastSignedBTCHash.IsNull()) {
+            lastSignedBTCHash = chainBaselineBTCHash;
+            lastSignedBTCHeight = -1;
+        }
     }
 
     std::string watchdogDenyReason;

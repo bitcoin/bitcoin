@@ -115,6 +115,9 @@ private:
     // Last BTC header hash/height we queued for signing (policy continuity guard).
     uint256 lastSignedBTCHash GUARDED_BY(cs);
     int32_t lastSignedBTCHeight GUARDED_BY(cs){-1};
+    // Tip progress tracking used by height-based freshness checks (clock-skew tolerant).
+    int64_t lastPolicyObservedTipHeight GUARDED_BY(cs){-1};
+    int64_t lastPolicyTipProgressTime GUARDED_BY(cs){0};
     // Deduplicate policy-denial logs for the same sign target.
     int32_t lastPolicyRejectHeight GUARDED_BY(cs){-1};
     std::string lastPolicyRejectReason GUARDED_BY(cs);
