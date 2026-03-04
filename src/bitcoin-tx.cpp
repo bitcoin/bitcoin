@@ -659,7 +659,9 @@ static void MutateTxSign(CMutableTransaction& tx, const std::string& flagStr)
                 UniValue v = prevOut["redeemScript"];
                 std::vector<unsigned char> rsData(ParseHexUV(v, "redeemScript"));
                 CScript redeemScript(rsData.begin(), rsData.end());
-                tempKeystore.AddCScript(redeemScript);
+                if (!tempKeystore.AddCScript(redeemScript)) {
+                    throw std::runtime_error(strprintf("Error adding redeemscript=%s", HexStr(redeemScript)));
+                }
             }
         }
     }
