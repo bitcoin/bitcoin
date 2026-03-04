@@ -593,7 +593,7 @@ private:
      *  also be in the set, unless this transaction is being removed for being
      *  in a block.
      */
-    void RemoveStaged(setEntries& stage, MemPoolRemovalReason reason) EXCLUSIVE_LOCKS_REQUIRED(cs);
+    void RemoveStaged(const setEntries& stage, MemPoolRemovalReason reason) EXCLUSIVE_LOCKS_REQUIRED(cs);
 
     /* Helper for the public removeRecursive() */
     void removeRecursive(txiter to_remove, MemPoolRemovalReason reason) EXCLUSIVE_LOCKS_REQUIRED(cs);
@@ -694,6 +694,7 @@ public:
 
     private:
         void ProcessDependencies();
+        std::pair<std::vector<FeeFrac>, std::vector<FeeFrac>> SnapshotDiagrams();
 
         CTxMemPool* m_pool;
         CTxMemPool::indexed_transaction_set m_to_add;
