@@ -753,6 +753,11 @@ logging messages. They should be used as follows:
   severe enough to warrant shutting down the node (e.g., system time
   appears to be wrong, unknown soft fork appears to have activated).
 
+- `LogWarnThenDebug(BCLog::CATEGORY, fmt, params...)` should be used
+  for errors that indicate a systematic problem that should be addressed,
+  (and thus warrant a warning) but are likely to occur frequently if they
+  occur at all, so later occurrences are demoted to debug level.
+
 - `LogTrace(BCLog::CATEGORY, fmt, params...)` should be used in place of
   `LogDebug` for log messages that would be unusable on a production
   system, e.g. due to being too noisy in normal use, or too resource
