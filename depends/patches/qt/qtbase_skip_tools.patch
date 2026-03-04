@@ -16,13 +16,10 @@ Skip building/installing unneeded tools:
 -# Depends on the global features being evaluated.
 -qt_internal_create_wrapper_scripts()
 -
- add_library(Qt::GlobalConfig ALIAS GlobalConfig)
  
- add_library(GlobalConfigPrivate INTERFACE)
-
---- a/qtbase/cmake/QtBaseGlobalTargets.cmake
-+++ b/qtbase/cmake/QtBaseGlobalTargets.cmake
-@@ -349,12 +349,3 @@ elseif(WASM)
+ qt_internal_add_platform_internal_target(GlobalConfigPrivate)
+ target_link_libraries(GlobalConfigPrivate INTERFACE GlobalConfig)
+@@ -390,12 +387,3 @@ elseif(WASM)
      qt_install(PROGRAMS "${QT_BUILD_DIR}/${INSTALL_LIBEXECDIR}/qt-wasmtestrunner.py"
          DESTINATION "${INSTALL_LIBEXECDIR}")
  endif()

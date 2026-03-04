@@ -96,6 +96,11 @@ $(package)_cmake_opts := -DCMAKE_EXE_LINKER_FLAGS="$$(build_LDFLAGS)"
 ifneq ($(V),)
 $(package)_cmake_opts += --log-level=STATUS
 endif
+
+ifeq ($(host_os),darwin)
+$(package)_cmake_opts += -DQT_INTERNAL_XCODE_VERSION=$(XCODE_VERSION)
+$(package)_cmake_opts += -DQT_NO_APPLE_SDK_MAX_VERSION_CHECK=ON
+endif
 endef
 
 define $(package)_fetch_cmds
