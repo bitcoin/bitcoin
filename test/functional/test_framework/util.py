@@ -721,6 +721,16 @@ def find_vout_for_address(node, txid, addr):
     raise RuntimeError("Vout not found for address: txid=%s, addr=%s" % (txid, addr))
 
 
+def dumb_sync_blocks(*, src, dst, height=None):
+    """Sync blocks between `src` and `dst` nodes via RPC submitblock up to height."""
+    height = height or src.getblockcount()
+    for i in range(dst.getblockcount() + 1, height + 1):
+        block_hash = src.getblockhash(i)
+        block = src.getblock(blockhash=block_hash, verbose=0)
+        dst.submitblock(block)
+    assert_equal(dst.getblockcount(), height)
+
+
 def sync_txindex(test_framework, node):
     test_framework.log.debug("Waiting for node txindex to sync")
     sync_start = int(time.time())
