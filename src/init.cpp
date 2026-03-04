@@ -1454,7 +1454,7 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
     auto& scheduler = *node.scheduler;
 
     // Start the lightweight task scheduler thread
-    scheduler.m_service_thread = std::thread(util::TraceThread, "scheduler", [&] { scheduler.serviceQueue(); });
+    scheduler.m_service_thread = std::thread(&util::TraceThread, "scheduler", [&] { scheduler.serviceQueue(); });
 
     // Gather some entropy once per minute.
     scheduler.scheduleEvery([]{
