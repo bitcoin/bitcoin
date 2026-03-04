@@ -71,8 +71,13 @@ static int32_t GetExpectedBTCCheckpointHeight(const ChainstateManager& chainman)
     return h;
 }
 
-static bool RunBTCHeaderRPCCommand(const std::string& method_and_args, UniValue& out, std::string& err)
+static bool RunBTCHeaderRPCCommand(const std::vector<std::string>& method_and_args, UniValue& out, std::string& err)
 {
+    if (method_and_args.empty()) {
+        err = "btcheadercmd-empty-method";
+        return false;
+    }
+
     const bool managed = gArgs.GetBoolArg("-btcheadermanaged", DEFAULT_BTC_HEADER_MANAGED);
     if (managed) {
         std::vector<std::string> command_args;
@@ -80,12 +85,7 @@ static bool RunBTCHeaderRPCCommand(const std::string& method_and_args, UniValue&
             err = "btcheadercmd-not-set";
             return false;
         }
-        const std::vector<std::string> rpc_args = SplitString(method_and_args, " \t\r\n");
-        if (rpc_args.empty()) {
-            err = "btcheadercmd-empty-method";
-            return false;
-        }
-        command_args.insert(command_args.end(), rpc_args.begin(), rpc_args.end());
+        command_args.insert(command_args.end(), method_and_args.begin(), method_and_args.end());
         try {
             out = RunCommandParseJSON(command_args);
             return true;
@@ -100,8 +100,13 @@ static bool RunBTCHeaderRPCCommand(const std::string& method_and_args, UniValue&
         err = "btcheadercmd-not-set";
         return false;
     }
+    std::string method_tail;
+    for (const std::string& arg : method_and_args) {
+        if (!method_tail.empty()) method_tail += " ";
+        method_tail += arg;
+    }
     try {
-        out = RunCommandParseJSON(cmd + " " + method_and_args);
+        out = RunCommandParseJSON(cmd + " " + method_tail);
         return true;
     } catch (const std::exception& e) {
         err = e.what();
@@ -131,7 +136,7 @@ CBTCHeaderPolicyWatchdog::CBTCHeaderPolicyWatchdog(ChainstateManager& _chainman)
 
 bool CBTCHeaderPolicyWatchdog::ProbeChainInfo(UniValue& out, std::string& err) const
 {
-    if (!RunBTCHeaderRPCCommand("getblockchaininfo", out, err)) {
+    if (!RunBTCHeaderRPCCommand({"getblockchaininfo"}, out, err)) {
         return false;
     }
     if (!out.isObject()) {
@@ -371,7 +376,7 @@ void CBTCCheckpointsHandler::Stop()
     quorumSigningManager->UnregisterRecoveredSigsListener(this);
 }
 
-bool CBTCCheckpointsHandler::RunBTCHeaderCommand(const std::string& method_and_args, UniValue& out, std::string& err) const
+bool CBTCCheckpointsHandler::RunBTCHeaderCommand(const std::vector<std::string>& method_and_args, UniValue& out, std::string& err) const
 {
     return RunBTCHeaderRPCCommand(method_and_args, out, err);
 }
@@ -393,7 +398,7 @@ bool CBTCCheckpointsHandler::CheckBTCHeaderSigningPolicy(const uint256& btcHash,
 
     UniValue chainInfo;
     std::string err;
-    if (!RunBTCHeaderCommand("getblockchaininfo", chainInfo, err)) {
+    if (!RunBTCHeaderCommand({"getblockchaininfo"}, chainInfo, err)) {
         denyReason = "btc-chaininfo-failed: " + err;
         return false;
     }
@@ -419,7 +424,7 @@ bool CBTCCheckpointsHandler::CheckBTCHeaderSigningPolicy(const uint256& btcHash,
     }
 
     UniValue bestHeader;
-    if (!RunBTCHeaderCommand(strprintf("getblockheader %s true", bestHash.ToString()), bestHeader, err)) {
+    if (!RunBTCHeaderCommand({"getblockheader", bestHash.ToString(), "true"}, bestHeader, err)) {
         denyReason = "btc-bestheader-failed: " + err;
         return false;
     }
@@ -473,7 +478,7 @@ bool CBTCCheckpointsHandler::CheckBTCHeaderSigningPolicy(const uint256& btcHash,
     }
 
     UniValue candidateHeader;
-    if (!RunBTCHeaderCommand(strprintf("getblockheader %s true", btcHash.ToString()), candidateHeader, err)) {
+    if (!RunBTCHeaderCommand({"getblockheader", btcHash.ToString(), "true"}, candidateHeader, err)) {
         denyReason = "btc-candidate-header-failed: " + err;
         return false;
     }
@@ -505,7 +510,7 @@ bool CBTCCheckpointsHandler::CheckBTCHeaderSigningPolicy(const uint256& btcHash,
         // Recent fork heuristic: if any non-active, valid-looking competing tip is near
         // the active tip, pause signing until the fork risk cools down.
         UniValue chainTips;
-        if (!RunBTCHeaderCommand("getchaintips", chainTips, err)) {
+        if (!RunBTCHeaderCommand({"getchaintips"}, chainTips, err)) {
             denyReason = "btc-chaintips-failed: " + err;
             return false;
         }
@@ -541,28 +546,49 @@ bool CBTCCheckpointsHandler::CheckBTCHeaderSigningPolicy(const uint256& btcHash,
         prevSignedBTCHeight = lastSignedBTCHeight;
     }
     if (!prevSignedBTCHash.IsNull()) {
-        UniValue prevHeader;
-        if (RunBTCHeaderCommand(strprintf("getblockheader %s true", prevSignedBTCHash.ToString()), prevHeader, err)) {
-            int64_t prevConfirmations{0};
-            int64_t prevHeight{-1};
-            if (!GetObjectInt64(prevHeader, "confirmations", prevConfirmations) || !GetObjectInt64(prevHeader, "height", prevHeight)) {
-                denyReason = "btc-prev-signed-header-missing-fields";
+        int64_t prevHeight = prevSignedBTCHeight;
+        if (prevHeight < 0) {
+            UniValue prevHeader;
+            if (!RunBTCHeaderCommand({"getblockheader", prevSignedBTCHash.ToString(), "true"}, prevHeader, err)) {
+                denyReason = "btc-prev-signed-header-lookup-failed: " + err;
                 return false;
             }
-            if (prevConfirmations >= DEFAULT_BTC_HEADER_MIN_CONFIRMATIONS) {
-                if (prevSignedBTCHeight >= 0 && prevHeight != prevSignedBTCHeight) {
-                    denyReason = "btc-prev-signed-height-mismatch";
-                    return false;
-                }
-                if (candidateHeight < prevHeight) {
-                    denyReason = strprintf("btc-non-monotonic-height(prev=%d cand=%d)", prevHeight, candidateHeight);
-                    return false;
-                }
-                if (candidateHeight == prevHeight && btcHash != prevSignedBTCHash) {
-                    denyReason = "btc-same-height-different-hash";
-                    return false;
+            if (!GetObjectInt64(prevHeader, "height", prevHeight)) {
+                denyReason = "btc-prev-signed-header-missing-height";
+                return false;
+            }
+        }
+
+        // Stronger continuity: the previously signed hash must remain active at its recorded height.
+        UniValue activeHashAtPrevHeightV;
+        if (!RunBTCHeaderCommand({"getblockhash", strprintf("%d", prevHeight)}, activeHashAtPrevHeightV, err)) {
+            denyReason = "btc-prev-signed-active-chain-lookup-failed: " + err;
+            return false;
+        }
+        uint256 activeHashAtPrevHeight;
+        if (!ParseHexUint256Strict(activeHashAtPrevHeightV, activeHashAtPrevHeight)) {
+            denyReason = "btc-prev-signed-active-chain-badhash";
+            return false;
+        }
+        if (activeHashAtPrevHeight != prevSignedBTCHash) {
+            {
+                LOCK(cs);
+                // Rebaseline once to recover liveness after a detected BTC reorg.
+                if (lastSignedBTCHash == prevSignedBTCHash) {
+                    lastSignedBTCHash = activeHashAtPrevHeight;
+                    lastSignedBTCHeight = static_cast<int32_t>(prevHeight);
                 }
             }
+            denyReason = strprintf("btc-prev-signed-not-active-chain(height=%d)", prevHeight);
+            return false;
+        }
+        if (candidateHeight < prevHeight) {
+            denyReason = strprintf("btc-non-monotonic-height(prev=%d cand=%d)", prevHeight, candidateHeight);
+            return false;
+        }
+        if (candidateHeight == prevHeight && btcHash != prevSignedBTCHash) {
+            denyReason = "btc-same-height-different-hash";
+            return false;
         }
     }
 
