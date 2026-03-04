@@ -581,7 +581,7 @@ private:
      *  also be in the set, unless this transaction is being removed for being
      *  in a block.
      */
-    void RemoveStaged(setEntries& stage, MemPoolRemovalReason reason) EXCLUSIVE_LOCKS_REQUIRED(cs);
+    void RemoveStaged(const setEntries& stage, MemPoolRemovalReason reason) EXCLUSIVE_LOCKS_REQUIRED(cs);
 
     /* Helper for the public removeRecursive() */
     void removeRecursive(txiter to_remove, MemPoolRemovalReason reason) EXCLUSIVE_LOCKS_REQUIRED(cs);
@@ -674,6 +674,8 @@ public:
         util::Result<std::pair<std::vector<FeeFrac>, std::vector<FeeFrac>>> CalculateChunksForRBF();
 
         std::pair<std::vector<MemPoolChunk>, std::vector<MemPoolChunk>> GetFeeRateDiagramChunks();
+
+        std::pair<std::vector<FeeFrac>, std::vector<FeeFrac>> GetAndSaveMainStagingDiagram();
 
         size_t GetTxCount() const { return m_entry_vec.size(); }
         const CTransaction& GetAddedTxn(size_t index) const { return m_entry_vec.at(index)->GetTx(); }

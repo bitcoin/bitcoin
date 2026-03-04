@@ -801,7 +801,8 @@ void CTxMemPool::RemoveUnbroadcastTx(const Txid& txid, const bool unchecked) {
     }
 }
 
-void CTxMemPool::RemoveStaged(setEntries &stage, MemPoolRemovalReason reason) {
+void CTxMemPool::RemoveStaged(const setEntries& stage, MemPoolRemovalReason reason)
+{
     AssertLockHeld(cs);
     for (txiter it : stage) {
         removeUnchecked(it, reason);
@@ -1005,11 +1006,15 @@ std::vector<CTxMemPool::txiter> CTxMemPool::GatherClusters(const std::vector<Txi
 util::Result<std::pair<std::vector<FeeFrac>, std::vector<FeeFrac>>> CTxMemPool::ChangeSet::CalculateChunksForRBF()
 {
     LOCK(m_pool->cs);
-
     if (!CheckMemPoolPolicyLimits()) {
         return util::Error{Untranslated("cluster size limit exceeded")};
     }
+    return GetAndSaveMainStagingDiagram();
+}
 
+std::pair<std::vector<FeeFrac>, std::vector<FeeFrac>> CTxMemPool::ChangeSet::GetAndSaveMainStagingDiagram()
+{
+    LOCK(m_pool->cs);
     std::vector<FeeFrac> old_diagram, new_diagram;
     m_fee_rate_diagrams = m_pool->m_txgraph->GetMainStagingDiagrams();
     old_diagram.reserve(m_fee_rate_diagrams.first.size());
