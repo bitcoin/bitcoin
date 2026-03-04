@@ -72,7 +72,9 @@ class IPCInterfaceTest(BitcoinTestFramework):
     def run_deprecated_mining_test(self):
         self.log.info("Running deprecated mining interface test")
         async def async_routine():
-            ctx, init = await make_capnp_init_ctx(self)
+            node = self.nodes[0]
+            connection = await capnp.AsyncIoStream.create_unix_connection(node.ipc_socket_path)
+            init = capnp.TwoPartyClient(connection).bootstrap().cast_as(self.capnp_modules['init'].Init)
             self.log.debug("Calling deprecated makeMiningOld2 should raise an error")
             try:
                 await init.makeMiningOld2()
