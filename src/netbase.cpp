@@ -539,7 +539,7 @@ std::unique_ptr<Sock> CreateSockOS(int domain, int type, int protocol)
     // Ensure that waiting for I/O on this socket won't result in undefined
     // behavior.
     if (!sock->IsSelectable()) {
-        LogInfo("Cannot create connection: non-selectable socket created (fd >= FD_SETSIZE ?)\n");
+        LogWarnThenDebug(BCLog::NET, "Cannot create connection: non-selectable socket created (fd >= FD_SETSIZE ?)");
         return nullptr;
     }
 
@@ -548,14 +548,14 @@ std::unique_ptr<Sock> CreateSockOS(int domain, int type, int protocol)
     // Set the no-sigpipe option on the socket for BSD systems, other UNIXes
     // should use the MSG_NOSIGNAL flag for every send.
     if (sock->SetSockOpt(SOL_SOCKET, SO_NOSIGPIPE, &set, sizeof(int)) == SOCKET_ERROR) {
-        LogInfo("Error setting SO_NOSIGPIPE on socket: %s, continuing anyway\n",
+        LogDebug(BCLog::NET, "Error setting SO_NOSIGPIPE on socket: %s, continuing anyway",
                   NetworkErrorString(WSAGetLastError()));
     }
 #endif
 
     // Set the non-blocking option on the socket.
     if (!sock->SetNonBlocking()) {
-        LogInfo("Error setting socket to non-blocking: %s\n", NetworkErrorString(WSAGetLastError()));
+        LogWarnThenDebug(BCLog::NET, "Error setting socket to non-blocking: %s", NetworkErrorString(WSAGetLastError()));
         return nullptr;
     }
 
@@ -581,9 +581,9 @@ static void LogConnectFailure(bool manual_connection, util::ConstevalFormatStrin
 {
     std::string error_message = tfm::format(fmt, args...);
     if (manual_connection) {
-        LogInfo("%s\n", error_message);
+        LogInfo("%s", error_message);
     } else {
-        LogDebug(BCLog::NET, "%s\n", error_message);
+        LogDebug(BCLog::NET, "%s", error_message);
     }
 }
 
@@ -601,7 +601,7 @@ static bool ConnectToSocket(const Sock& sock, struct sockaddr* sockaddr, socklen
             const Sock::Event requested = Sock::RECV | Sock::SEND;
             Sock::Event occurred;
             if (!sock.Wait(std::chrono::milliseconds{nConnectTimeout}, requested, &occurred)) {
-                LogInfo("wait for connect to %s failed: %s\n",
+                LogDebug(BCLog::NET, "wait for connect to %s failed: %s",
                           dest_str,
                           NetworkErrorString(WSAGetLastError()));
                 return false;
@@ -618,7 +618,7 @@ static bool ConnectToSocket(const Sock& sock, struct sockaddr* sockaddr, socklen
             socklen_t sockerr_len = sizeof(sockerr);
             if (sock.GetSockOpt(SOL_SOCKET, SO_ERROR, &sockerr, &sockerr_len) ==
                 SOCKET_ERROR) {
-                LogInfo("getsockopt() for %s failed: %s\n", dest_str, NetworkErrorString(WSAGetLastError()));
+                LogWarnThenDebug(BCLog::NET, "getsockopt() for %s failed: %s", dest_str, NetworkErrorString(WSAGetLastError()));
                 return false;
             }
             if (sockerr != 0) {
@@ -646,7 +646,7 @@ std::unique_ptr<Sock> ConnectDirectly(const CService& dest, bool manual_connecti
 {
     auto sock = CreateSock(dest.GetSAFamily(), SOCK_STREAM, IPPROTO_TCP);
     if (!sock) {
-        LogError("Cannot create a socket for connecting to %s\n", dest.ToStringAddrPort());
+        LogDebug(BCLog::NET, "Cannot create a socket for connecting to %s", dest.ToStringAddrPort());
         return {};
     }
 
@@ -654,7 +654,7 @@ std::unique_ptr<Sock> ConnectDirectly(const CService& dest, bool manual_connecti
     struct sockaddr_storage sockaddr;
     socklen_t len = sizeof(sockaddr);
     if (!dest.GetSockAddr((struct sockaddr*)&sockaddr, &len)) {
-        LogInfo("Cannot get sockaddr for %s: unsupported network\n", dest.ToStringAddrPort());
+        LogDebug(BCLog::NET, "Cannot get sockaddr for %s: unsupported network", dest.ToStringAddrPort());
         return {};
     }
 
@@ -961,7 +961,7 @@ CService GetBindAddress(const Sock& sock)
     if (sock.GetSockName(sa, &len) == 0) {
         addr_bind.SetSockAddr(sa, len);
     } else {
-        LogWarning("getsockname failed\n");
+        LogWarning("getsockname failed");
     }
     return addr_bind;
 }
