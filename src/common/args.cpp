@@ -206,7 +206,7 @@ bool ArgsManager::ParseParameters(int argc, const char* const argv[], std::strin
         if (key[0] != '-') {
             if (!m_accept_any_command && m_command.empty()) {
                 // The first non-dash arg is a registered command
-                std::optional<unsigned int> flags = GetArgFlags(key);
+                std::optional<unsigned int> flags = GetArgFlags_(key);
                 if (!flags || !(*flags & ArgsManager::COMMAND)) {
                     error = strprintf("Invalid command '%s'", argv[i]);
                     return false;
@@ -227,7 +227,7 @@ bool ArgsManager::ParseParameters(int argc, const char* const argv[], std::strin
         // Transform -foo to foo
         key.erase(0, 1);
         KeyInfo keyinfo = InterpretKey(key);
-        std::optional<unsigned int> flags = GetArgFlags('-' + keyinfo.name);
+        std::optional<unsigned int> flags = GetArgFlags_('-' + keyinfo.name);
 
         // Unknown command line options and command line options with dot
         // characters (which are returned from InterpretKey with nonempty
@@ -306,14 +306,14 @@ fs::path ArgsManager::GetBlocksDirPath() const
     // this function
     if (!path.empty()) return path;
 
-    if (IsArgSet("-blocksdir")) {
-        path = fs::absolute(GetPathArg("-blocksdir"));
+    if (!GetSetting_("-blocksdir").isNull()) {
+        path = fs::absolute(GetPathArg_("-blocksdir"));
         if (!fs::is_directory(path)) {
             path = "";
             return path;
         }
     } else {
-        path = GetDataDirBase();
+        path = GetDataDir(/*net_specific=*/false);
     }
 
     path /= fs::PathFromString(BaseParams().DataDir());
@@ -443,7 +443,7 @@ bool ArgsManager::ReadSettingsFile(std::vector<std::string>* errors)
     }
     for (const auto& setting : m_settings.rw_settings) {
         KeyInfo key = InterpretKey(setting.first); // Split setting key into section and argname
-        if (!GetArgFlags('-' + key.name)) {
+        if (!GetArgFlags_('-' + key.name)) {
             LogWarning("Ignoring unknown rw_settings value %s", setting.first);
         }
     }
@@ -579,8 +579,8 @@ INSTANTIATE_INT_TYPE(uint64_t);
 bool ArgsManager::SoftSetArg(const std::string& strArg, const std::string& strValue)
 {
     LOCK(cs_args);
-    if (IsArgSet(strArg)) return false;
-    ForceSetArg(strArg, strValue);
+    if (!GetSetting_(strArg).isNull()) return false;
+    m_settings.forced_settings[SettingName(strArg)] = strValue;
     return true;
 }
 
@@ -653,7 +653,7 @@ void ArgsManager::CheckMultipleCLIArgs() const
     auto cmds = m_available_args.find(OptionsCategory::CLI_COMMANDS);
     if (cmds != m_available_args.end()) {
         for (const auto& [cmd, argspec] : cmds->second) {
-            if (IsArgSet(cmd)) {
+            if (!GetSetting_(cmd).isNull()) {
                 found.push_back(cmd);
             }
         }
@@ -910,7 +910,7 @@ void ArgsManager::logArgsPrefix(
     std::string section_str = section.empty() ? "" : "[" + section + "] ";
     for (const auto& arg : args) {
         for (const auto& value : arg.second) {
-            std::optional<unsigned int> flags = GetArgFlags('-' + arg.first);
+            std::optional<unsigned int> flags = GetArgFlags_('-' + arg.first);
             if (flags) {
                 std::string value_str = (*flags & SENSITIVE) ? "****" : value.write();
                 LogInfo("%s %s%s=%s\n", prefix, section_str, arg.first, value_str);
