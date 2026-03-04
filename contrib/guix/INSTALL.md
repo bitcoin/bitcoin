@@ -71,13 +71,13 @@ https://repology.org/project/guix/versions
 
 ### Debian / Ubuntu
 
-Guix is available as a distribution package in [Debian
-](https://packages.debian.org/search?keywords=guix) and [Ubuntu
-](https://packages.ubuntu.com/search?keywords=guix).
+Currently, the `guix` package is no longer present in recent Debian or Ubuntu
+repositories. Any other installation option mentioned in this document may be
+used.
 
-To install:
+If you previously installed `guix` via `apt`, you can remove it with:
 ```sh
-sudo apt install guix
+sudo apt purge guix
 ```
 
 ### Arch Linux
