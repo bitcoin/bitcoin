@@ -84,7 +84,6 @@ CreateAndActivateUTXOSnapshot(
             chain.InitCoinsDB(1 << 20, /*in_memory=*/true, /*should_wipe=*/false);
             chain.InitCoinsCache(1 << 20);
             chain.CoinsTip().SetBestBlock(gen_hash);
-            chain.setBlockIndexCandidates.insert(node.chainman->m_blockman.LookupBlockIndex(gen_hash));
             chain.LoadChainTip();
             node.chainman->MaybeRebalanceCaches();
 
@@ -106,6 +105,7 @@ CreateAndActivateUTXOSnapshot(
                 pindex->nSequenceId = 0;
                 pindex = pindex->pprev;
             }
+            chain.PopulateBlockIndexCandidates();
         }
         BlockValidationState state;
         if (!node.chainman->ActiveChainstate().ActivateBestChain(state)) {

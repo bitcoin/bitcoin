@@ -811,11 +811,15 @@ public:
     /** Ensures we have a genesis block in the block tree, possibly writing one to disk. */
     bool LoadGenesisBlock();
 
+    /** Add a block to the candidate set if it has as much work as the current tip. */
     void TryAddBlockIndexCandidate(CBlockIndex* pindex) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
 
     void PruneBlockIndexCandidates();
 
     void ClearBlockIndexCandidates() EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
+
+    /** Populate the candidate set by calling TryAddBlockIndexCandidate on all valid block indices. */
+    void PopulateBlockIndexCandidates() EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
 
     /** Find the last common block of this chain and a locator. */
     const CBlockIndex* FindForkInGlobalIndex(const CBlockLocator& locator) const EXCLUSIVE_LOCKS_REQUIRED(cs_main);

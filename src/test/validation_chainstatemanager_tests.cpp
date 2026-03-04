@@ -76,8 +76,13 @@ BOOST_FIXTURE_TEST_CASE(chainstatemanager, TestChain100Setup)
         LOCK(::cs_main);
         c2.InitCoinsCache(1 << 23);
         c2.CoinsTip().SetBestBlock(active_tip->GetBlockHash());
-        c2.setBlockIndexCandidates.insert(manager.m_blockman.LookupBlockIndex(active_tip->GetBlockHash()));
+        for (const auto& cs : manager.m_chainstates) {
+            cs->ClearBlockIndexCandidates();
+        }
         c2.LoadChainTip();
+        for (const auto& cs : manager.m_chainstates) {
+            cs->PopulateBlockIndexCandidates();
+        }
     }
     BlockValidationState _;
     BOOST_CHECK(c2.ActivateBestChain(_, nullptr));
@@ -492,6 +497,9 @@ BOOST_FIXTURE_TEST_CASE(chainstatemanager_loadblockindex, TestChain100Setup)
             BOOST_CHECK(cs->setBlockIndexCandidates.empty());
         }
         chainman.LoadBlockIndex();
+        for (const auto& cs : chainman.m_chainstates) {
+            cs->PopulateBlockIndexCandidates();
+        }
     };
 
     // Ensure that without any assumed-valid BlockIndex entries, only the current tip is
