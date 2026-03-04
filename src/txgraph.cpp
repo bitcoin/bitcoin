@@ -877,6 +877,10 @@ public:
     void GroupClusters(int level) noexcept;
     /** Merge the specified clusters. */
     void Merge(std::span<Cluster*> to_merge, int level) noexcept;
+    /** Try to optimistically merge chain-compatible clusters into a ChainCluster.
+     *  Returns true on success (ChainCluster created, old clusters deleted, deps applied).
+     *  Returns false if the merged topology is not a chain (caller should fall back to Generic). */
+    bool TryChainMerge(std::span<Cluster*> to_merge, std::span<std::pair<GraphIndex, GraphIndex>> deps, int level) noexcept;
     /** Apply all m_deps_to_add to the relevant Clusters in the specified level. */
     void ApplyDependencies(int level) noexcept;
     /** Make a specified Cluster have quality ACCEPTABLE or OPTIMAL. */
@@ -1993,22 +1997,12 @@ bool ChainClusterImpl::Split(TxGraphImpl& graph, int level) noexcept
     return true;
 }
 
-void ChainClusterImpl::Merge(TxGraphImpl& graph, int level, Cluster& other) noexcept
+void ChainClusterImpl::Merge(TxGraphImpl&, int, Cluster&) noexcept
 {
-    // Absorb all transactions from other into this chain cluster, appending at the end.
-    // This is used during optimistic chain merge. The caller must verify afterward (in
-    // ApplyDependencies) that the result is still a valid chain.
-    other.ExtractTransactions([&](DepGraphIndex pos, GraphIndex idx, FeePerWeight feerate) noexcept {
-        m_txdata.push_back({idx, feerate});
-    }, [&](DepGraphIndex pos, GraphIndex idx, SetType other_parents) noexcept {
-        auto& entry = graph.m_entries[idx];
-        if (level == 0) graph.ClearChunkData(entry);
-        DepGraphIndex new_pos = m_txdata.size() - 1;
-        for (DepGraphIndex i = 0; i < m_txdata.size(); ++i) {
-            if (m_txdata[i].graph_index == idx) { new_pos = i; break; }
-        }
-        entry.m_locator[level].SetPresent(this, new_pos);
-    });
+    // Nothing can be merged into a ChainCluster via the standard Merge path.
+    // ChainClusters are only constructed via TryChainMerge which bypasses Merge entirely.
+    // In TxGraphImpl::Merge, only Generic clusters are selected as the into_cluster target.
+    Assume(false);
 }
 
 void ChainClusterImpl::ApplyDependencies(TxGraphImpl& graph, int level, std::span<std::pair<GraphIndex, GraphIndex>> to_apply) noexcept
@@ -2657,33 +2651,37 @@ void TxGraphImpl::GroupClusters(int level) noexcept
 void TxGraphImpl::Merge(std::span<Cluster*> to_merge, int level) noexcept
 {
     Assume(!to_merge.empty());
-    // Nothing to do if a group consists of just a single Cluster.
-    if (to_merge.size() == 1) return;
+    // Nothing to do if a group consists of just a single Cluster that can handle
+    // ApplyDependencies on its own. ChainClusters cannot (their deps are implicit), so
+    // they must be converted to Generic to apply arbitrary new dependency edges.
+    if (to_merge.size() == 1 && !to_merge[0]->IsChainCompatible()) return;
 
-    // Move the largest Cluster to the front of to_merge. As all transactions in other to-be-merged
-    // Clusters will be moved to that one, putting the largest one first minimizes the number of
-    // moves.
-    size_t max_size_pos{0};
-    DepGraphIndex max_size = to_merge[max_size_pos]->GetTxCount();
-    GetClusterSet(level).m_cluster_usage -= to_merge[max_size_pos]->TotalMemoryUsage();
-    DepGraphIndex total_size = max_size;
-    for (size_t i = 1; i < to_merge.size(); ++i) {
+    // Move the largest Generic (non-chain-compatible) Cluster to the front of to_merge. As all
+    // transactions in other to-be-merged Clusters will be moved to that one, putting the largest
+    // Generic one first minimizes the number of moves. Chain clusters cannot absorb arbitrary
+    // topologies, so they are not eligible as the into_cluster target.
+    size_t max_generic_pos = SIZE_MAX;
+    DepGraphIndex max_generic_size = 0;
+    DepGraphIndex total_size = 0;
+    for (size_t i = 0; i < to_merge.size(); ++i) {
         GetClusterSet(level).m_cluster_usage -= to_merge[i]->TotalMemoryUsage();
         DepGraphIndex size = to_merge[i]->GetTxCount();
         total_size += size;
-        if (size > max_size) {
-            max_size_pos = i;
-            max_size = size;
+        if (!to_merge[i]->IsChainCompatible() && size > max_generic_size) {
+            max_generic_pos = i;
+            max_generic_size = size;
         }
     }
-    if (max_size_pos != 0) std::swap(to_merge[0], to_merge[max_size_pos]);
+    if (max_generic_pos != SIZE_MAX && max_generic_pos != 0) {
+        std::swap(to_merge[0], to_merge[max_generic_pos]);
+    }
 
     size_t start_idx = 1;
     Cluster* into_cluster = to_merge[0];
-    if (total_size > into_cluster->GetMaxTxCount()) {
-        // The into_merge cluster is too small to fit all transactions being merged. Construct a
-        // a new Cluster using an implementation that matches the total size, and merge everything
-        // in there.
+    if (max_generic_pos == SIZE_MAX || total_size > into_cluster->GetMaxTxCount()) {
+        // No Generic cluster exists to reuse (all are chain-compatible), or the largest Generic
+        // cluster is too small to fit all transactions. Construct a new Cluster using an
+        // implementation that matches the total size, and merge everything in there.
         auto new_cluster = CreateEmptyCluster(total_size);
         into_cluster = new_cluster.get();
         InsertCluster(level, std::move(new_cluster), QualityLevel::OPTIMAL);
@@ -2698,6 +2696,112 @@ void TxGraphImpl::Merge(std::span<Cluster*> to_merge, int level) noexcept
     }
     into_cluster->Compact();
     GetClusterSet(level).m_cluster_usage += into_cluster->TotalMemoryUsage();
+}
+
+bool TxGraphImpl::TryChainMerge(std::span<Cluster*> to_merge, std::span<std::pair<GraphIndex, GraphIndex>> deps, int level) noexcept
+{
+    // Phase 1: Read-only verification. No side effects until we're sure the merged topology is a
+    // chain. This allows the caller to fall back to the standard Generic merge path if this
+    // returns false.
+    //
+    // Since every cluster in to_merge is already chain-compatible (guaranteed by m_maybe_chain),
+    // the merged result is a chain iff every dep connects the tail (last tx) of one cluster to
+    // the head (first tx) of another, and the resulting cluster-level graph is itself a linear
+    // chain. We only need to verify at the cluster level rather than the individual tx level.
+
+    uint32_t n_clusters = to_merge.size();
+
+    // Count total transactions and verify minimum chain size.
+    uint32_t n = 0;
+    for (const auto* cluster : to_merge) n += cluster->GetTxCount();
+    if (n < ChainClusterImpl::MIN_INTENDED_TX_COUNT) return false;
+
+    // Build maps from a cluster's tail/head GraphIndex to its index in to_merge.
+    std::unordered_map<GraphIndex, uint32_t> tail_to_cluster; // tail tx -> cluster index
+    std::unordered_map<GraphIndex, uint32_t> head_to_cluster; // head tx -> cluster index
+    for (uint32_t i = 0; i < n_clusters; ++i) {
+        const auto* cluster = to_merge[i];
+        DepGraphIndex tx_count = cluster->GetTxCount();
+        tail_to_cluster[cluster->GetClusterEntry(tx_count - 1)] = i;
+        head_to_cluster[cluster->GetClusterEntry(0)] = i;
+    }
+
+    // For each dep, verify it goes from the tail of one cluster to the head of another, and
+    // build the cluster-level adjacency (each cluster has at most one parent and one child).
+    std::vector<uint32_t> cluster_parent(n_clusters, uint32_t(-1));
+    std::vector<uint32_t> cluster_child(n_clusters, uint32_t(-1));
+    for (auto [par_gidx, chl_gidx] : deps) {
+        auto par_it = tail_to_cluster.find(par_gidx);
+        if (par_it == tail_to_cluster.end()) return false; // par is not a cluster tail.
+        auto chl_it = head_to_cluster.find(chl_gidx);
+        if (chl_it == head_to_cluster.end()) return false; // chl is not a cluster head.
+
+        uint32_t par_idx = par_it->second;
+        uint32_t chl_idx = chl_it->second;
+
+        // Record cluster-level edge; duplicate (identical) edges are allowed.
+        if (cluster_child[par_idx] == uint32_t(-1)) {
+            cluster_child[par_idx] = chl_idx;
+        } else if (cluster_child[par_idx] != chl_idx) {
+            return false; // One cluster connects to multiple distinct children.
+        }
+        if (cluster_parent[chl_idx] == uint32_t(-1)) {
+            cluster_parent[chl_idx] = par_idx;
+        } else if (cluster_parent[chl_idx] != par_idx) {
+            return false; // One cluster has multiple distinct parents.
+        }
+    }
+
+    // Find the root cluster (exactly one with no parent).
+    uint32_t root_cluster = uint32_t(-1);
+    uint32_t root_count = 0;
+    for (uint32_t i = 0; i < n_clusters; ++i) {
+        if (cluster_parent[i] == uint32_t(-1)) {
+            root_cluster = i;
+            ++root_count;
+        }
+    }
+    if (root_count != 1) return false;
+
+    // Walk from the root cluster following cluster_child to verify all clusters are visited.
+    // (This catches cycles and disconnected components simultaneously.)
+    uint32_t visited = 0;
+    uint32_t cur = root_cluster;
+    while (cur != uint32_t(-1)) {
+        ++visited;
+        cur = cluster_child[cur];
+    }
+    if (visited != n_clusters) return false;
+
+    // Phase 2: The merged topology is a chain. Now perform side effects.
+
+    // Create the new ChainCluster and populate it by walking the cluster chain in order.
+    auto new_chain = CreateEmptyChainCluster();
+    auto* chain_ptr = new_chain.get();
+    InsertCluster(level, std::move(new_chain), QualityLevel::OPTIMAL);
+
+    cur = root_cluster;
+    while (cur != uint32_t(-1)) {
+        auto* cluster = to_merge[cur];
+        DepGraphIndex tx_count = cluster->GetTxCount();
+        for (DepGraphIndex i = 0; i < tx_count; ++i) {
+            chain_ptr->AppendTransaction(cluster->GetClusterEntry(i), cluster->GetIndividualFeerate(i));
+        }
+        cur = cluster_child[cur];
+    }
+
+    // Update locators for all transactions (pointing them to the new ChainCluster).
+    chain_ptr->Updated(*this, level, /*rename=*/false);
+    chain_ptr->Compact();
+    GetClusterSet(level).m_cluster_usage += chain_ptr->TotalMemoryUsage();
+
+    // Delete the old clusters. Subtract their memory usage and remove them.
+    for (auto* cluster : to_merge) {
+        GetClusterSet(level).m_cluster_usage -= cluster->TotalMemoryUsage();
+        DeleteCluster(*cluster, level);
+    }
+
+    return true;
 }
 
 void TxGraphImpl::ApplyDependencies(int level) noexcept
@@ -2723,13 +2827,21 @@ void TxGraphImpl::ApplyDependencies(int level) noexcept
                 cluster = PullIn(cluster, cluster->GetLevel(*this));
             }
         }
-        // Invoke Merge() to merge them into a single Cluster.
-        Merge(cluster_span, level);
-        // Actually apply all to-be-added dependencies (all parents and children from this grouping
-        // belong to the same Cluster at this point because of the merging above).
         auto deps_span = std::span{clusterset.m_deps_to_add}
                              .subspan(group_entry.m_deps_offset, group_entry.m_deps_count);
         Assume(!deps_span.empty());
+
+        // If all clusters in this group are chain-compatible, try optimistic chain merge.
+        if (group_entry.m_maybe_chain && TryChainMerge(cluster_span, deps_span, level)) {
+            // Success: TryChainMerge created a ChainCluster, deleted old clusters, and applied
+            // dependencies. Nothing more to do for this group.
+            continue;
+        }
+
+        // Standard path: merge into GenericCluster and apply dependencies.
+        Merge(cluster_span, level);
+        // Actually apply all to-be-added dependencies (all parents and children from this grouping
+        // belong to the same Cluster at this point because of the merging above).
         const auto& loc = m_entries[deps_span[0].second].m_locator[level];
         Assume(loc.IsPresent());
         loc.cluster->ApplyDependencies(*this, level, deps_span);
