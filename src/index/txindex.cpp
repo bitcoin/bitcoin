@@ -226,7 +226,7 @@ std::optional<TxIndexResult> TxIndex::FindLegacyTx(const Txid& tx_hash) const
 
     AutoFile file{m_chainstate->m_blockman.OpenBlockFile(postx, /*fReadOnly=*/true)};
     if (file.IsNull()) {
-        LogError("OpenBlockFile failed");
+        LogWarning("%s: OpenBlockFile failed", GetName());
         return std::nullopt;
     }
     CBlockHeader header;
@@ -236,11 +236,11 @@ std::optional<TxIndexResult> TxIndex::FindLegacyTx(const Txid& tx_hash) const
         file.seek(postx.nTxOffset, SEEK_CUR);
         file >> TX_WITH_WITNESS(tx);
     } catch (const std::exception& e) {
-        LogError("Deserialize or I/O error - %s", e.what());
+        LogWarning("%s: Deserialize or I/O error - %s", GetName(), e.what());
         return std::nullopt;
     }
     if (tx->GetHash() != tx_hash) {
-        LogError("txid mismatch");
+        LogWarning("%s: txid mismatch", GetName());
         return std::nullopt;
     }
     return TxIndexResult{header.GetHash(), std::move(tx)};
