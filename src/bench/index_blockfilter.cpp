@@ -53,6 +53,9 @@ static void BlockFilterIndexSync(benchmark::Bench& bench)
         IndexSummary summary = filter_index.GetSummary();
         assert(summary.synced);
         assert(summary.best_block_hash == WITH_LOCK(::cs_main, return test_setup->m_node.chainman->ActiveTip()->GetBlockHash()));
+
+        // Shutdown sequence (c.f. Shutdown() in init.cpp)
+        filter_index.Stop();
     });
 }
 
