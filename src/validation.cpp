@@ -5741,8 +5741,6 @@ util::Result<CBlockIndex*> ChainstateManager::ActivateSnapshot(
     }
 
     Chainstate& chainstate{AddChainstate(std::move(snapshot_chainstate))};
-    const bool chaintip_loaded{chainstate.LoadChainTip()};
-    assert(chaintip_loaded);
     m_blockman.m_snapshot_height = Assert(chainstate.SnapshotBase())->nHeight;
 
     LogInfo("[snapshot] successfully activated snapshot %s", base_blockhash.ToString());
