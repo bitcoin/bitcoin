@@ -125,8 +125,126 @@ void BenchTxGraphTrim(benchmark::Bench& bench)
     assert(graph->GetTransactionCount(TxGraph::Level::TOP) >= (NUM_TOP_CHAINS * NUM_TX_PER_TOP_CHAIN * 99) / 100);
 }
 
+/** Benchmark: connect NUM_TX singleton clusters into a single chain via TryChainMerge.
+ *
+ * This exercises the ApplyDependencies hot path when all clusters are chain-compatible
+ * (singleton -> singleton -> ... -> singleton) and the resulting topology is a linear chain.
+ * All NUM_TX-1 deps are submitted at once before ApplyDependencies is triggered.
+ *
+ * Run once since the merge is irreversible. */
+void BenchTxGraphChainMergeSingletons(benchmark::Bench& bench)
+{
+    /** Number of transactions (= max cluster count, the largest possible single chain). */
+    static constexpr int NUM_TX = 64;
+    static constexpr int32_t MAX_CLUSTER_SIZE = 100'000 * 100;
+    static constexpr uint64_t HIGH_ACCEPTABLE_COST = 100'000'000;
+
+    InsecureRandomContext rng(42);
+    auto graph = MakeTxGraph(NUM_TX, MAX_CLUSTER_SIZE, HIGH_ACCEPTABLE_COST, PointerComparator);
+
+    std::vector<TxGraph::Ref> refs(NUM_TX);
+    for (int i = 0; i < NUM_TX; ++i) {
+        int64_t fee = rng.randbits<27>() + 100;
+        graph->AddTransaction(refs[i], FeePerWeight{fee, 100});
+    }
+
+    bench.epochIterations(1).epochs(1).run([&] {
+        for (int i = 0; i < NUM_TX - 1; ++i) {
+            graph->AddDependency(refs[i], refs[i + 1]);
+        }
+        // Trigger ApplyDependencies, which calls TryChainMerge once for all NUM_TX singletons.
+        graph->GetBlockBuilder();
+    });
+
+    assert(graph->GetTransactionCount(TxGraph::Level::TOP) == NUM_TX);
+}
+
+/** Benchmark: connect NUM_CHAINS pre-built ChainClusters into a single large chain.
+ *
+ * Each chain has CHAIN_LEN transactions and is first materialized as a ChainCluster
+ * via GetBlockBuilder(). Then NUM_CHAINS-1 tail->head deps connect them into one chain.
+ * This exercises TryChainMerge when inputs are already ChainClusters (not singletons).
+ *
+ * Run once since the merge is irreversible.
+ * NUM_CHAINS * CHAIN_LEN must not exceed max_cluster_count (64) to avoid oversized state. */
+void BenchTxGraphChainMergeFromChains(benchmark::Bench& bench)
+{
+    static constexpr int NUM_CHAINS = 32;
+    static constexpr int CHAIN_LEN = 2; // 32 chains of 2 txs = 64 txs total
+    static constexpr int NUM_TX = NUM_CHAINS * CHAIN_LEN;
+    static constexpr int32_t MAX_CLUSTER_SIZE = 100'000 * 100;
+    static constexpr uint64_t HIGH_ACCEPTABLE_COST = 100'000'000;
+
+    InsecureRandomContext rng(42);
+    auto graph = MakeTxGraph(MAX_CLUSTER_COUNT_LIMIT, MAX_CLUSTER_SIZE, HIGH_ACCEPTABLE_COST, PointerComparator);
+
+    std::vector<TxGraph::Ref> refs(NUM_TX);
+    for (int chain = 0; chain < NUM_CHAINS; ++chain) {
+        for (int pos = 0; pos < CHAIN_LEN; ++pos) {
+            int idx = chain * CHAIN_LEN + pos;
+            int64_t fee = rng.randbits<27>() + 100;
+            graph->AddTransaction(refs[idx], FeePerWeight{fee, 100});
+            if (pos > 0) graph->AddDependency(refs[idx - 1], refs[idx]);
+        }
+    }
+    // Materialize all chains as ChainClusters before the benchmark starts.
+    graph->GetBlockBuilder();
+
+    bench.epochIterations(1).epochs(1).run([&] {
+        // Connect chain_i tail -> chain_{i+1} head for all consecutive chain pairs.
+        for (int chain = 0; chain < NUM_CHAINS - 1; ++chain) {
+            int tail = chain * CHAIN_LEN + (CHAIN_LEN - 1);
+            int head = (chain + 1) * CHAIN_LEN;
+            graph->AddDependency(refs[tail], refs[head]);
+        }
+        // Trigger ApplyDependencies, which calls TryChainMerge NUM_CHAINS-1 times,
+        // each time merging two ChainClusters until one large chain remains.
+        graph->GetBlockBuilder();
+    });
+
+    assert(graph->GetTransactionCount(TxGraph::Level::TOP) == NUM_TX);
+}
+
+/** Benchmark: repeated GetBlockBuilder calls on a single ChainCluster of NUM_TX transactions.
+ *
+ * Measures the cost of iterating the optimal linearization order for a chain cluster,
+ * which is what the mempool does on every block template request.
+ *
+ * Repeatable: GetBlockBuilder does not modify the graph. */
+void BenchTxGraphChainBlockBuilder(benchmark::Bench& bench)
+{
+    static constexpr int NUM_TX = 64;
+    static constexpr int32_t MAX_CLUSTER_SIZE = 100'000 * 100;
+    static constexpr uint64_t HIGH_ACCEPTABLE_COST = 100'000'000;
+
+    InsecureRandomContext rng(42);
+    auto graph = MakeTxGraph(NUM_TX, MAX_CLUSTER_SIZE, HIGH_ACCEPTABLE_COST, PointerComparator);
+
+    std::vector<TxGraph::Ref> refs(NUM_TX);
+    for (int i = 0; i < NUM_TX; ++i) {
+        int64_t fee = rng.randbits<27>() + 100;
+        graph->AddTransaction(refs[i], FeePerWeight{fee, 100});
+        if (i > 0) graph->AddDependency(refs[i - 1], refs[i]);
+    }
+    // Build and materialize the ChainCluster before benchmarking.
+    graph->GetBlockBuilder();
+
+    bench.run([&] {
+        auto builder = graph->GetBlockBuilder();
+        while (auto chunk = builder->GetCurrentChunk()) {
+            builder->Include();
+        }
+    });
+}
+
 } // namespace
 
 static void TxGraphTrim(benchmark::Bench& bench) { BenchTxGraphTrim(bench); }
+static void TxGraphChainMergeSingletons(benchmark::Bench& bench) { BenchTxGraphChainMergeSingletons(bench); }
+static void TxGraphChainMergeFromChains(benchmark::Bench& bench) { BenchTxGraphChainMergeFromChains(bench); }
+static void TxGraphChainBlockBuilder(benchmark::Bench& bench) { BenchTxGraphChainBlockBuilder(bench); }
 
 BENCHMARK(TxGraphTrim);
+BENCHMARK(TxGraphChainMergeSingletons);
+BENCHMARK(TxGraphChainMergeFromChains);
+BENCHMARK(TxGraphChainBlockBuilder);
