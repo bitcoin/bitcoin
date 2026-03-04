@@ -1,0 +1,47 @@
+commit 27230157212c32420e71b28870d6c77630c3dc37
+Author: Allan Sandfeld Jensen <allan.jensen@qt.io>
+Date:   Fri Aug 1 12:14:50 2025 +0200
+
+    Fix incomplete SFINAE of QAnyStringView
+    
+    Inside the QAnyStringView class, the class is incomplete, and will
+    erroneously fail SFINAE. Do the assert after for it to actually work.
+    
+    Detected with gcc 16.
+    
+    Amends 2c9529e158fc589c48e6b1fb61dca2133e33ac4d.
+    
+    Pick-to: 6.10 6.9 6.8 6.5
+    Change-Id: Ifd3ad6d3ec17cd1725fb8b735469502791f9e9a3
+    Reviewed-by: Marc Mutz <marc.mutz@qt.io>
+
+diff --git a/qtbase/src/corelib/text/qanystringview.cpp b/qtbase/src/corelib/text/qanystringview.cpp
+index 7bf8a3fa1fd..3c993ff1da0 100644
+--- a/qtbase/src/corelib/text/qanystringview.cpp
++++ b/qtbase/src/corelib/text/qanystringview.cpp
+@@ -243,6 +243,10 @@ QT_BEGIN_NAMESPACE
+     \sa isNull(), isEmpty()
+ */
+ 
++// confirm we don't make an accidental copy constructor:
++static_assert(QtPrivate::IsContainerCompatibleWithQStringView<QAnyStringView>::value == false);
++static_assert(QtPrivate::IsContainerCompatibleWithQUtf8StringView<QAnyStringView>::value == false);
++
+ /*!
+     \fn template <typename Char, size_t Size> static QAnyStringView fromArray(const Char (&string)[Size]) noexcept
+ 
+diff --git a/qtbase/src/corelib/text/qanystringview.h b/qtbase/src/corelib/text/qanystringview.h
+index 9617209059b..69b7fafb438 100644
+--- a/qtbase/src/corelib/text/qanystringview.h
++++ b/qtbase/src/corelib/text/qanystringview.h
+@@ -96,10 +96,6 @@ private:
+         std::is_convertible<T, QStringOrQByteArray>
+     >, bool>;
+ 
+-    // confirm we don't make an accidental copy constructor:
+-    static_assert(QtPrivate::IsContainerCompatibleWithQStringView<QAnyStringView>::value == false);
+-    static_assert(QtPrivate::IsContainerCompatibleWithQUtf8StringView<QAnyStringView>::value == false);
+-
+     template<typename Char>
+     static constexpr bool isAsciiOnlyCharsAtCompileTime(Char *str, qsizetype sz) noexcept
+     {
