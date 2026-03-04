@@ -209,6 +209,29 @@ BOOST_FIXTURE_TEST_CASE(logging_SeverityLevels, LogSetup)
     BOOST_CHECK_EQUAL_COLLECTIONS(log_lines.begin(), log_lines.end(), expected.begin(), expected.end());
 }
 
+namespace {
+void CheckLogWarnThenDebug(std::string_view message)
+{
+    LogWarnThenDebug(BCLog::NET, "warn_then_debug: %s", message);
+}
+} // namespace
+
+BOOST_FIXTURE_TEST_CASE(logging_LogWarnThenDebug, LogSetup)
+{
+    ResetLogger();
+    CheckLogWarnThenDebug("first");
+    CheckLogWarnThenDebug("suppressed");
+    LogInstance().EnableCategory(BCLog::NET);
+    CheckLogWarnThenDebug("debug");
+
+    std::vector log_lines{ReadDebugLogLines()};
+    std::vector<std::string> expected = {
+        "[warning] warn_then_debug: first",
+        "[net] warn_then_debug: debug",
+    };
+    BOOST_CHECK_EQUAL_COLLECTIONS(log_lines.begin(), log_lines.end(), expected.begin(), expected.end());
+}
+
 BOOST_FIXTURE_TEST_CASE(logging_Conf, LogSetup)
 {
     // Set global log level

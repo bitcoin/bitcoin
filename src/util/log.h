@@ -13,6 +13,7 @@
 #include <util/threadnames.h>
 #include <util/time.h>
 
+#include <atomic>
 #include <cstdint>
 #include <source_location>
 #include <string>
@@ -142,5 +143,16 @@ using Level = util::log::Level;
 // Log conditionally, prefixing the output with the passed category name.
 #define LogDebug(category, ...) detail_LogIfCategoryAndLevelEnabled(category, util::log::ShouldDebugLog, util::log::Level::Debug, __VA_ARGS__)
 #define LogTrace(category, ...) detail_LogIfCategoryAndLevelEnabled(category, util::log::ShouldTraceLog, util::log::Level::Trace, __VA_ARGS__)
+
+// Log unconditionally the first time this statement is hit, then conditionally afterwards
+#define LogWarnThenDebug(category, ...) \
+    do { \
+        static std::atomic<bool> _warned{false}; \
+        if (!_warned.exchange(true)) { \
+            LogWarning(__VA_ARGS__); \
+        } else { \
+            LogDebug(category, __VA_ARGS__); \
+        } \
+    } while (0)
 
 #endif // BITCOIN_UTIL_LOG_H
