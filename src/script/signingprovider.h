@@ -313,7 +313,7 @@ public:
     virtual bool HaveKey(const CKeyID &address) const override;
     virtual std::set<CKeyID> GetKeys() const;
     virtual bool GetKey(const CKeyID &address, CKey &keyOut) const override;
-    virtual bool AddCScript(const CScript& redeemScript);
+    [[nodiscard]] virtual bool AddCScript(const CScript& redeemScript);
     virtual bool HaveCScript(const CScriptID &hash) const override;
     virtual std::set<CScriptID> GetCScripts() const;
     virtual bool GetCScript(const CScriptID &hash, CScript& redeemScriptOut) const override;
