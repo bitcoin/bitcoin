@@ -10,6 +10,9 @@ import subprocess
 import sys
 from pathlib import Path
 
+sys.path.append(str(Path(__file__).resolve().parent.parent / "test"))
+from download_utils import download_script_assets
+
 
 def run(cmd, **kwargs):
     print("+ " + shlex.join(cmd), flush=True)
@@ -126,10 +129,13 @@ def check_manifests(ci_type):
 
 
 def prepare_tests(ci_type):
+    workspace = Path.cwd()
     if ci_type == "standard":
         run([sys.executable, "-m", "pip", "install", "pyzmq"])
+        dest = workspace / "unit_test_data"
+        download_script_assets(dest)
     elif ci_type == "fuzz":
-        repo_dir = str(Path.cwd() / "qa-assets")
+        repo_dir = str(workspace / "qa-assets")
         clone_cmd = [
             "git",
             "clone",
@@ -143,11 +149,13 @@ def prepare_tests(ci_type):
 
 
 def run_tests(ci_type):
-    build_dir = Path.cwd() / "build"
+    workspace = Path.cwd()
+    build_dir = workspace / "build"
     num_procs = str(os.process_cpu_count())
     release_bin = build_dir / "bin" / "Release"
 
     if ci_type == "standard":
+        os.environ["DIR_UNIT_TEST_DATA"] = str(workspace / "unit_test_data")
         test_envs = {
             "BITCOIN_BIN": "bitcoin.exe",
             "BITCOIND": "bitcoind.exe",
@@ -180,7 +188,7 @@ def run_tests(ci_type):
             "--jobs",
             num_procs,
             "--quiet",
-            f"--tmpdirprefix={Path.cwd()}",
+            f"--tmpdirprefix={workspace}",
             "--combinedlogslen=99999999",
             *shlex.split(os.environ.get("TEST_RUNNER_EXTRA", "").strip()),
         ]
@@ -195,7 +203,7 @@ def run_tests(ci_type):
             num_procs,
             "--loglevel",
             "DEBUG",
-            str(Path.cwd() / "qa-assets" / "fuzz_corpora"),
+            str(workspace / "qa-assets" / "fuzz_corpora"),
         ]
         run(fuzz_cmd)
 

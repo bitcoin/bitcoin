@@ -428,12 +428,11 @@ jobs:
       - name: Check executable manifests
         run: py -3 .github/ci-windows-cross.py check_manifests
 
+      - name: Prepare Windows test environment
+        run: py -3 .github/ci-windows-cross.py prepare_tests
+
       - name: Run unit tests
         run: py -3 .github/ci-windows-cross.py run_unit_tests
-
-      - name: Prepare Windows test environment
-        run: |
-          py -3 .github/ci-windows-cross.py prepare_tests
 
       - name: Run functional tests
         env:
