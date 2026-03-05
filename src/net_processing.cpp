@@ -4093,7 +4093,10 @@ void PeerManagerImpl::ProcessMessage(CNode& pfrom, const std::string& msg_type, 
                 // SYSCOIN
                 } else if(!fAlreadyHave) {
                     static std::set<int> allowWhileInIBDObjs = {
-                        MSG_SPORK
+                        MSG_SPORK,
+                        // Allow explicit quorum finality/checkpoint fetches to complete at startup.
+                        MSG_CLSIG,
+                        MSG_BTCCSIG
                     };
                     bool allowWhileInIBD = allowWhileInIBDObjs.count(inv.type);
                     if (allowWhileInIBD) {
