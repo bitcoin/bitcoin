@@ -1051,6 +1051,21 @@ class MasternodeInfo:
 
 
 class DashTestFramework(SyscoinTestFramework):
+    def add_wallet_options(self, parser, *, descriptors=True, legacy=True):
+        # Dash/MN functional tests are descriptor-only.
+        super().add_wallet_options(parser, descriptors=True, legacy=False)
+
+    def skip_if_no_wallet(self):
+        """Dash/MN tests require descriptor wallets (sqlite)."""
+        self._requires_wallet = True
+        if not self.is_wallet_compiled():
+            raise SkipTest("wallet has not been compiled.")
+        if self.options.descriptors is not True:
+            self.log.info("Dash tests force descriptor wallets; ignoring legacy wallet selection")
+        self.options.descriptors = True
+        self.default_wallet_name = "default_wallet"
+        self.skip_if_no_sqlite()
+
     # Methods to override in subclass test scripts.
     def run_test(self):
         """Tests must override this method to define test logic"""
@@ -1207,7 +1222,12 @@ class DashTestFramework(SyscoinTestFramework):
         force_finish_mnsync(mninfo.node)
 
     def setup_network(self):
-        self.options.descriptors = False
+        if not self.is_sqlite_compiled():
+            raise SkipTest("sqlite has not been compiled (required for Dash descriptor-wallet tests).")
+        if self.options.descriptors is not True:
+            self.log.info("Dash tests force descriptor wallets; using descriptors")
+        self.options.descriptors = True
+        self.default_wallet_name = "default_wallet"
         self.log.info("Creating and starting controller node")
         self.add_nodes(1, extra_args=[self.extra_args[0]])
         self.start_node(0)

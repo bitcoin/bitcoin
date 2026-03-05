@@ -27,7 +27,6 @@ class LLMQSimplePoSeTest(DashTestFramework):
 
     def skip_test_if_missing_module(self):
         self.skip_if_no_wallet()
-        self.skip_if_no_bdb()
 
     def add_options(self, parser):
         parser.add_argument("--disable-spork23", dest="disable_spork23", default=False, action="store_true",

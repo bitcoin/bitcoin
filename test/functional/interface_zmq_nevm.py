@@ -192,7 +192,8 @@ class ZMQPublisher:
 class ZMQTest(SyscoinTestFramework):
 
     def add_options(self, parser):
-        self.add_wallet_options(parser)
+        # This test is descriptor-only; do not expose legacy wallet mode.
+        self.add_wallet_options(parser, descriptors=True, legacy=False)
 
     def set_test_params(self):
         self.num_nodes = 2
@@ -204,8 +205,11 @@ class ZMQTest(SyscoinTestFramework):
     def skip_test_if_missing_module(self):
         self.skip_if_no_py3_zmq()
         self.skip_if_no_syscoind_zmq()
+        if self.options.descriptors is not True:
+            self.log.info("ZMQ NEVM test forces descriptor wallets")
+        self.options.descriptors = True
+        self.default_wallet_name = "default_wallet"
         self.skip_if_no_wallet()
-        self.skip_if_no_bdb()
 
     def run_test(self):
         try:

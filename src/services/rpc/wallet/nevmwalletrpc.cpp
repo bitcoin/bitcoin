@@ -1,13 +1,10 @@
 // Copyright (c) 2013-2019 The Syscoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
-#include <messagesigner.h>
-#include <key_io.h>
 #include <rpc/util.h>
 #include <wallet/wallet.h>
 #include <wallet/rpc/util.h>
 #include <wallet/rpc/wallet.h>
-#include <wallet/scriptpubkeyman.h>
 #include <util/fees.h>
 #include <consensus/validation.h>
 #include <validation.h>
@@ -18,69 +15,6 @@
 #include <wallet/coincontrol.h>
 #include <nevm/sha3.h>
 using namespace wallet;
-
-static RPCHelpMan signmessagebech32()
-{
-    return RPCHelpMan{"signmessagebech32",
-                "\nSign a message with the private key of an address (p2pkh or p2wpkh)" +
-        HELP_REQUIRING_PASSPHRASE,
-                {
-                    {"address", RPCArg::Type::STR, RPCArg::Optional::NO, "The syscoin address to use for the private key."},
-                    {"message", RPCArg::Type::STR, RPCArg::Optional::NO, "Message to sign."},
-                },
-                RPCResult{
-                    RPCResult::Type::STR, "signature", "The signature of the message encoded in base 64"
-                },
-                RPCExamples{
-            "\nUnlock the wallet for 30 seconds\n"
-            + HelpExampleCli("walletpassphrase", "\"mypassphrase\" 30") +
-            "\nCreate the signature\n"
-            + HelpExampleCli("signmessagebech32", "\"1D1ZrZNe3JUo7ZycKEYQQiQAWd9y54F4XX\" \"message\"") +
-            "\nAs a JSON-RPC signmessagebech32\n"
-            + HelpExampleRpc("signmessagebech32", "\"1D1ZrZNe3JUo7ZycKEYQQiQAWd9y54F4XX\", \"message\"")
-                },
-    [&](const RPCHelpMan& self, const node::JSONRPCRequest& request) -> UniValue
-{
-
-    std::shared_ptr<CWallet> const pwallet = GetWalletForJSONRPCRequest(request);
-    if (!pwallet) return NullUniValue;
-
-    LegacyScriptPubKeyMan& spk_man = EnsureLegacyScriptPubKeyMan(*pwallet);
-
-    LOCK2(pwallet->cs_wallet, spk_man.cs_KeyStore);
-
-    EnsureWalletIsUnlocked(*pwallet);
-
-    std::string strAddress = request.params[0].get_str();
-    std::string strMessage = request.params[1].get_str();
-
-    CTxDestination dest = DecodeDestination(strAddress);
-    if (!IsValidDestination(dest)) {
-        throw JSONRPCError(RPC_TYPE_ERROR, "Invalid address");
-    }
-
-    auto keyid = GetKeyForDestination(spk_man, dest);
-    if (keyid.IsNull()) {
-        throw JSONRPCError(RPC_TYPE_ERROR, "Address does not refer to a key");
-    }
-    CKey vchSecret;
-    if (!spk_man.GetKey(keyid, vchSecret)) {
-        throw JSONRPCError(RPC_WALLET_ERROR, "Private key for address " + strAddress + " is not known");
-    }
-    std::vector<unsigned char> vchSig;
-    if(!CMessageSigner::SignMessage(strMessage, vchSig, vchSecret)) {
-        throw JSONRPCError(RPC_TYPE_ERROR, "SignMessage failed");
-    }
-   
-    if (!CMessageSigner::VerifyMessage(vchSecret.GetPubKey(), vchSig, strMessage)) {
-        LogPrintf("Sign -- VerifyMessage() failed\n");
-        return false;
-    }
-    return EncodeBase64(vchSig);
-},
-    };
-} 
-
 
 static RPCHelpMan syscoincreaterawnevmblob()
 {
@@ -385,7 +319,6 @@ static RPCHelpMan getauxblock()
 Span<const CRPCCommand> wallet::GetNEVMWalletRPCCommands()
 {
     static const CRPCCommand commands[]{ 
-        {"syscoinwallet", &signmessagebech32},
         {"syscoinwallet", &syscoincreatenevmblob},
         {"syscoinwallet", &syscoincreaterawnevmblob},
         /** Auxpow wallet functions */

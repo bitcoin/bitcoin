@@ -36,7 +36,6 @@ class NEVMDataTest(DashTestFramework):
         self.skip_if_no_py3_zmq()
         self.skip_if_no_syscoind_zmq()
         self.skip_if_no_wallet()
-        self.skip_if_no_bdb()
 
     def nevm_data_max_size_blob(self):
         print('Testing for max size of a blob (2MB)')

@@ -5507,25 +5507,21 @@ bool Chainstate::RollforwardBlock(const CBlockIndex* pindex, CCoinsViewCache& in
         return error("ReplayBlock(): poda-validation-failed");
     }
     for (const CTransactionRef& tx : block.vtx) {
-        TxValidationState tx_state;
-        CAmount txfee = 0;
-        CAssetsMap mapAssetIn;
-        CAssetsMap mapAssetOut;
         if (!tx->IsCoinBase()) {
-            for (const CTxIn &txin : tx->vin) {
+            const uint256& txHash = tx->GetHash();
+            // Replay must remain idempotent even if the base cache is partially applied.
+            // Avoid strict input re-validation here and just apply effects like upstream replay.
+            if (IsSyscoinMintTx(tx->nVersion)) {
+                const CMintSyscoin mintSyscoin(*tx);
+                if (mintSyscoin.IsNull()) {
+                    return error("%s: invalid mint payload while replaying tx=%s", __func__, txHash.ToString());
+                }
+                setMintTxs.insert(mintSyscoin.nTxHash);
+            }
+            for (const CTxIn& txin : tx->vin) {
                 inputs.SpendCoin(txin.prevout);
             }
-            // SYSCOIN
-            const uint256& txHash = tx->GetHash();
-            if (!Consensus::CheckTxInputs(*tx, tx_state, inputs, pindex->nHeight, txfee, mapAssetIn, mapAssetOut)) {
-                return error("%s: Consensus::CheckTxInputs: %s, %s", __func__, txHash.ToString(), tx_state.ToString());
-            }
-            // just temp var not used in !fJustCheck mode
-            if (!CheckSyscoinInputs(chainParams, *tx, txHash, tx_state, (uint32_t)pindex->nHeight, false, setMintTxs, mapAssetIn, mapAssetOut)) {
-                return error("%s: Consensus::CheckSyscoinInputs: %s, %s", __func__, txHash.ToString(), tx_state.ToString());
-            }
             vecTXIDPairs.emplace_back(txHash, pindex->nHeight);
-
         }
         // Pass check = true as every addition may be an overwrite.
         AddCoins(inputs, *tx, pindex->nHeight, true);

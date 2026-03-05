@@ -13,13 +13,14 @@
 #include <evo/deterministicmns.h>
 #include <rpc/server_util.h>
 #include <wallet/rpc/wallet.h>
+#include <util/message.h>
 #include <util/result.h>
 #include <governance/governance.h>
 #include <index/txindex.h>
 using namespace wallet;
-UniValue VoteWithMasternodes(const std::map<uint256, CKey>& keys,
+UniValue VoteWithMasternodes(const std::map<uint256, CKeyID>& key_ids,
                              const uint256& hash, vote_signal_enum_t eVoteSignal,
-                             vote_outcome_enum_t eVoteOutcome, CConnman& connman, PeerManager& peerman)
+                             vote_outcome_enum_t eVoteOutcome, const CWallet& wallet, CConnman& connman, PeerManager& peerman)
 {
     {
         LOCK(governance->cs);
@@ -35,9 +36,9 @@ UniValue VoteWithMasternodes(const std::map<uint256, CKey>& keys,
 
     UniValue resultsObj(UniValue::VOBJ);
 
-    for (const auto& p : keys) {
+    for (const auto& p : key_ids) {
         const auto& proTxHash = p.first;
-        const auto& key = p.second;
+        const auto& keyID = p.second;
 
         UniValue statusObj(UniValue::VOBJ);
 
@@ -51,10 +52,20 @@ UniValue VoteWithMasternodes(const std::map<uint256, CKey>& keys,
         }
 
         CGovernanceVote vote(dmn->collateralOutpoint, hash, eVoteSignal, eVoteOutcome);
-        if (!vote.Sign(key, key.GetPubKey().GetID())) {
+        std::vector<unsigned char> vchSig;
+        const SigningResult sign_result = wallet.SignHash(vote.GetSignatureHash(), CTxDestination(WitnessV0KeyHash(keyID)), vchSig);
+        if (sign_result != SigningResult::OK) {
             nFailed++;
             statusObj.pushKV("result", "failed");
-            statusObj.pushKV("errorMessage", "Failure to sign.");
+            statusObj.pushKV("errorMessage", strprintf("Failure to sign: %s", SigningResultString(sign_result)));
+            resultsObj.pushKV(proTxHash.ToString(), statusObj);
+            continue;
+        }
+        vote.SetSignature(vchSig);
+        if (!vote.CheckSignature(keyID)) {
+            nFailed++;
+            statusObj.pushKV("result", "failed");
+            statusObj.pushKV("errorMessage", "Failure to verify signature.");
             resultsObj.pushKV(proTxHash.ToString(), statusObj);
             continue;
         }
@@ -281,24 +292,20 @@ static RPCHelpMan gobject_vote_many()
 
     EnsureWalletIsUnlocked(*pwallet);
 
-    std::map<uint256, CKey> votingKeys;
+    std::map<uint256, CKeyID> votingKeyIDs;
     // Make sure the results are valid at least up to the most recent block
     // the user could have gotten from another RPC command prior to now
     pwallet->BlockUntilSyncedToCurrentChain();
     auto mnList = deterministicMNManager->GetListAtChainTip();
     mnList.ForEachMN(true, [&](const auto& dmn) {
-        LegacyScriptPubKeyMan& spk_man = EnsureLegacyScriptPubKeyMan(*pwallet);
-        LOCK2(pwallet->cs_wallet, spk_man.cs_KeyStore);
-
         EnsureWalletIsUnlocked(*pwallet);
-
-        CKey key;
-        if (spk_man.GetKey(dmn.pdmnState->keyIDVoting, key)) {
-            votingKeys.emplace(dmn.proTxHash, key);
+        CKey dummy;
+        if (pwallet->GetKey(dmn.pdmnState->keyIDVoting, dummy)) {
+            votingKeyIDs.emplace(dmn.proTxHash, dmn.pdmnState->keyIDVoting);
         }
     });
 
-    return VoteWithMasternodes(votingKeys, hash, eVoteSignal, eVoteOutcome, *node.connman, *node.peerman);
+    return VoteWithMasternodes(votingKeyIDs, hash, eVoteSignal, eVoteOutcome, *pwallet, *node.connman, *node.peerman);
 },
     };
 } 
@@ -355,21 +362,14 @@ static RPCHelpMan gobject_vote_alias()
     // Make sure the results are valid at least up to the most recent block
     // the user could have gotten from another RPC command prior to now
     pwallet->BlockUntilSyncedToCurrentChain();
-    CKey key;
-    {
-        LegacyScriptPubKeyMan& spk_man = EnsureLegacyScriptPubKeyMan(*pwallet);
-        LOCK2(pwallet->cs_wallet, spk_man.cs_KeyStore);
-
-        
-        if (!spk_man.GetKey(dmn->pdmnState->keyIDVoting, key)) {
-            throw JSONRPCError(RPC_INVALID_PARAMETER, strprintf("Private key for voting address %s not known by wallet", EncodeDestination(WitnessV0KeyHash(dmn->pdmnState->keyIDVoting))));
-        }
+    CKey dummy;
+    if (!pwallet->GetKey(dmn->pdmnState->keyIDVoting, dummy)) {
+        throw JSONRPCError(RPC_INVALID_PARAMETER, strprintf("Private key for voting address %s not known by wallet", EncodeDestination(WitnessV0KeyHash(dmn->pdmnState->keyIDVoting))));
     }
+    std::map<uint256, CKeyID> votingKeyIDs;
+    votingKeyIDs.emplace(proTxHash, dmn->pdmnState->keyIDVoting);
 
-    std::map<uint256, CKey> votingKeys;
-    votingKeys.emplace(proTxHash, key);
-
-    return VoteWithMasternodes(votingKeys, hash, eVoteSignal, eVoteOutcome, *node.connman, *node.peerman);
+    return VoteWithMasternodes(votingKeyIDs, hash, eVoteSignal, eVoteOutcome, *pwallet, *node.connman, *node.peerman);
 },
     };
 } 

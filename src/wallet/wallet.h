@@ -641,6 +641,8 @@ public:
     SigningResult SignMessage(const std::string& message, const PKHash& pkhash, std::string& str_sig) const;
     // SYSCOIN
     SigningResult SignMessage(const std::string& message, const CTxDestination& dest, std::string& str_sig) const;
+    // SYSCOIN
+    SigningResult SignHash(const uint256& hash, const CTxDestination& dest, std::vector<unsigned char>& vch_sig) const;
     /**
      * Fills out a PSBT with information from the wallet. Fills in UTXOs if we have
      * them. Tries to sign if sign=true. Sets `complete` if the PSBT is now complete
@@ -952,6 +954,8 @@ public:
     //! Get the SigningProvider for a script
     std::unique_ptr<SigningProvider> GetSolvingProvider(const CScript& script) const;
     std::unique_ptr<SigningProvider> GetSolvingProvider(const CScript& script, SignatureData& sigdata) const;
+    // SYSCOIN
+    bool GetKey(const CKeyID& key_id, CKey& key_out) const;
 
     //! Get the wallet descriptors for a script.
     std::vector<WalletDescriptor> GetWalletDescriptors(const CScript& script) const;

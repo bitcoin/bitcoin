@@ -2227,6 +2227,19 @@ SigningResult CWallet::SignMessage(const std::string& message, const CTxDestinat
     }
     return SigningResult::PRIVATE_KEY_NOT_AVAILABLE;
 }
+// SYSCOIN
+SigningResult CWallet::SignHash(const uint256& hash, const CTxDestination& dest, std::vector<unsigned char>& vch_sig) const
+{
+    SignatureData sigdata;
+    CScript script_pub_key = GetScriptForDestination(dest);
+    for (const auto& spk_man_pair : m_spk_managers) {
+        if (spk_man_pair.second->CanProvide(script_pub_key, sigdata)) {
+            LOCK(cs_wallet);  // DescriptorScriptPubKeyMan calls IsLocked which can lock cs_wallet in a deadlocking order
+            return spk_man_pair.second->SignHash(hash, dest, vch_sig);
+        }
+    }
+    return SigningResult::PRIVATE_KEY_NOT_AVAILABLE;
+}
 
 OutputType CWallet::TransactionChangeType(const std::optional<OutputType>& change_type, const std::vector<CRecipient>& vecSend) const
 {
@@ -3545,6 +3558,17 @@ std::unique_ptr<SigningProvider> CWallet::GetSolvingProvider(const CScript& scri
         }
     }
     return nullptr;
+}
+// SYSCOIN
+bool CWallet::GetKey(const CKeyID& key_id, CKey& key_out) const
+{
+    LOCK(cs_wallet);
+    for (const auto& spk_man_pair : m_spk_managers) {
+        if (spk_man_pair.second->GetKey(key_id, key_out)) {
+            return true;
+        }
+    }
+    return false;
 }
 
 std::vector<WalletDescriptor> CWallet::GetWalletDescriptors(const CScript& script) const
