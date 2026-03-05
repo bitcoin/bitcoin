@@ -994,33 +994,50 @@ static RPCHelpMan gettxspendingprevout()
                     }
                 }
             }
-            // if search is not limited to the mempool and no spender was found for an outpoint, search the txospenderindex
-            // we call g_txospenderindex->BlockUntilSyncedToCurrentChain() only if g_txospenderindex is going to be used
+
+            // The index is only needed if on-chain search is enabled and at least one output was not found in the mempool
+            bool use_index = false;
+            if (!mempool_only && missing_from_mempool) {
+                // As we are going to use the index, let's wait until it is synced
+                use_index = g_txospenderindex && g_txospenderindex->BlockUntilSyncedToCurrentChain();
+            }
+
+            // Construct results
             UniValue result{UniValue::VARR};
-            bool txospenderindex_ready{mempool_only || !missing_from_mempool || (g_txospenderindex && g_txospenderindex->BlockUntilSyncedToCurrentChain())};
             for (auto& entry : prevouts) {
+                // Spent in mempool. Add output directly
                 if (!entry.output.isNull()) {
                     result.push_back(std::move(entry.output));
                     continue;
                 }
-                UniValue o{entry.input};
+
+                // Mempool-only mode. Return the input outpoint (which means: unspent).
                 if (mempool_only) {
-                    // do nothing, caller has selected to only query the mempool
-                } else if (!txospenderindex_ready) {
+                    result.push_back(entry.input);
+                    continue;
+                }
+
+                // No tx spending this output in the mempool, check on-chain via the index if possible
+                if (!use_index) {
                     throw JSONRPCError(RPC_MISC_ERROR, strprintf("No spending tx for the outpoint %s:%d in mempool, and txospenderindex is unavailable.", entry.prevout.hash.GetHex(), entry.prevout.n));
-                } else {
-                    // no spending tx in mempool, query txospender index
-                    const auto spender{g_txospenderindex->FindSpender(entry.prevout)};
-                    if (!spender) {
-                        throw JSONRPCError(RPC_MISC_ERROR, spender.error());
-                    }
-                    if (spender.value()) {
-                        o.pushKV("spendingtxid", spender.value()->tx->GetHash().GetHex());
-                        o.pushKV("blockhash", spender.value()->block_hash.GetHex());
-                        if (return_spending_tx) {
-                            o.pushKV("spendingtx", EncodeHexTx(*spender.value()->tx));
-                        }
-                    }
+                }
+
+                const auto spender{g_txospenderindex->FindSpender(entry.prevout)};
+                if (!spender) throw JSONRPCError(RPC_MISC_ERROR, spender.error());
+
+                const std::optional<TxoSpender>& op_spend_info = spender.value();
+                // If info is nullopt, it means this output was not spent. Return the input outpoint (which means: unspent).
+                if (!op_spend_info.has_value()) {
+                    result.push_back(entry.input);
+                    continue;
+                }
+
+                // Otherwise, this outpoint was spent on-chain
+                UniValue o {entry.input};
+                o.pushKV("spendingtxid", op_spend_info->tx->GetHash().GetHex());
+                o.pushKV("blockhash", op_spend_info->block_hash.GetHex());
+                if (return_spending_tx) {
+                    o.pushKV("spendingtx", EncodeHexTx(*op_spend_info->tx));
                 }
                 result.push_back(std::move(o));
             }
