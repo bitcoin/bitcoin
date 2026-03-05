@@ -247,12 +247,6 @@ bool CChainLocksHandler::TryUpdateBestChainLock(const CBlockIndex* pindex)
 
 bool CChainLocksHandler::VerifyChainLockShare(const CChainLockSig& clsig, const CBlockIndex* pindexScan, const uint256& idIn, std::pair<int, CQuorumCPtr>& ret, const uint256& hash)
 {
-    {
-        LOCK(cs);
-        if(sigChecked.find(hash) != sigChecked.end()) {
-            return true;
-        }
-    }
     const auto& consensus = Params().GetConsensus();
     const auto& llmqParams = consensus.llmqTypeChainLocks;
     const auto& signingActiveQuorumCount = llmqParams.signingActiveQuorumCount;
@@ -268,6 +262,34 @@ bool CChainLocksHandler::VerifyChainLockShare(const CChainLockSig& clsig, const 
     }
     bool fHaveSigner{std::count(clsig.signers.begin(), clsig.signers.end(), true) > 0};
     const auto quorums_scanned = llmq::quorumManager->ScanQuorums(pindexScan, signingActiveQuorumCount);
+    if (quorums_scanned.empty()) {
+        return false;
+    }
+    const auto resolveSignerAndQuorum = [&]() -> bool {
+        for (size_t i = 0; i < quorums_scanned.size(); ++i) {
+            const CQuorumCPtr& quorum = quorums_scanned[i];
+            if (quorum == nullptr) {
+                return false;
+            }
+            const uint256 requestId = ::SerializeHash(std::make_tuple(CLSIG_REQUESTID_PREFIX, clsig.nHeight, quorum->qc->quorumHash));
+            if (!idIn.IsNull() && idIn != requestId) {
+                continue;
+            }
+            if (fHaveSigner && !clsig.signers[i]) {
+                continue;
+            }
+            ret = std::make_pair((int)i, quorum);
+            return true;
+        }
+        return false;
+    };
+    {
+        LOCK(cs);
+        if(sigChecked.find(hash) != sigChecked.end()) {
+            // Cache hits must still resolve signer/quorum context for callers.
+            return resolveSignerAndQuorum();
+        }
+    }
     for (size_t i = 0; i < quorums_scanned.size(); ++i) {
         const CQuorumCPtr& quorum = quorums_scanned[i];
         if (quorum == nullptr) {

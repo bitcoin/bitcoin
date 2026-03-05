@@ -15,6 +15,10 @@ class PeerManager;
 class CScheduler;
 class ChainstateManager;
 class BlockValidationState;
+namespace llmq_tests
+{
+class CChainLocksHandlerTestAccess;
+}
 namespace llmq
 {
 
@@ -135,6 +139,8 @@ private:
     bool TryUpdateBestChainLock(const CBlockIndex* pindex) EXCLUSIVE_LOCKS_REQUIRED(cs);
     bool VerifyChainLockShare(const CChainLockSig& clsig, const CBlockIndex* pindexScan, const uint256& idIn, std::pair<int, CQuorumCPtr>& ret, const uint256& hash) EXCLUSIVE_LOCKS_REQUIRED(!cs);
     void Cleanup() EXCLUSIVE_LOCKS_REQUIRED(!cs);
+
+    friend class llmq_tests::CChainLocksHandlerTestAccess;
 };
 
 extern CChainLocksHandler* chainLocksHandler;

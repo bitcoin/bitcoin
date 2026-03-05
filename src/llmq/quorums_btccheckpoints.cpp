@@ -1059,7 +1059,30 @@ bool CBTCCheckpointsHandler::VerifyBTCCheckpointShare(const CBTCCheckpointSig& b
     {
         LOCK(cs);
         if (sigChecked.find(hash) != sigChecked.end()) {
-            return true;
+            // Cache hits must still populate ret for callers that key state by
+            // signer index/quorum pointer.
+            const auto& consensus = Params().GetConsensus();
+            const auto& llmqParams = consensus.llmqTypeChainLocks;
+            const auto& signingActiveQuorumCount = llmqParams.signingActiveQuorumCount;
+
+            const auto quorums_scanned = llmq::quorumManager->ScanQuorums(pindexScan, signingActiveQuorumCount);
+            if (quorums_scanned.empty()) return false;
+
+            for (size_t i = 0; i < quorums_scanned.size(); ++i) {
+                const CQuorumCPtr& quorum = quorums_scanned[i];
+                if (quorum == nullptr) return false;
+
+                const uint256 requestId = ::SerializeHash(std::make_tuple(BTCCHECK_REQUESTID_PREFIX, btcsig.nHeight, quorum->qc->quorumHash));
+                if (!idIn.IsNull() && requestId != idIn) continue;
+                if (idIn.IsNull()) {
+                    // For p2p-delivered shares, determine quorum by signer bit (must be exactly one).
+                    if (btcsig.signers.size() != (size_t)signingActiveQuorumCount) return false;
+                    if (!btcsig.signers[i]) continue;
+                }
+                ret = std::make_pair((int)i, quorum);
+                return true;
+            }
+            return false;
         }
     }
     const auto& consensus = Params().GetConsensus();

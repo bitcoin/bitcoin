@@ -22,6 +22,10 @@ class PeerManager;
 class CNode;
 class CDataStream;
 class UniValue;
+namespace llmq_tests
+{
+class CBTCCheckpointsHandlerTestAccess;
+}
 
 namespace llmq
 {
@@ -166,6 +170,8 @@ private:
     void AcceptVerifiedBTCCSig(const CBTCCheckpointSig& btccsig, const uint256& hash, const CBlockIndex* pindexScan) EXCLUSIVE_LOCKS_REQUIRED(!cs);
     bool RunBTCHeaderCommand(const std::vector<std::string>& method_and_args, UniValue& out, std::string& err) const EXCLUSIVE_LOCKS_REQUIRED(!cs);
     bool CheckBTCHeaderSigningPolicy(const uint256& btcHash, int32_t sysHeight, int32_t& btcHeightOut, std::string& denyReason) EXCLUSIVE_LOCKS_REQUIRED(!cs);
+
+    friend class llmq_tests::CBTCCheckpointsHandlerTestAccess;
 };
 
 extern CBTCCheckpointsHandler* btcCheckpointsHandler;
