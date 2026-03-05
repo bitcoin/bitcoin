@@ -249,13 +249,12 @@ class NEVMDataTest(DashTestFramework):
         # then ensure getnevmblobdata(vh) reports chainlock
         self.generate_helper(self.nodes[0], 5)
         self.wait_until(lambda: self.sync_blocks_helper(self.nodes), timeout=180)
-        self.wait_until(
-            lambda: all(
-                ('chainlock' in n.getnevmblobdata(vh)) and n.getnevmblobdata(vh)['chainlock']
-                for n in self.nodes
-            ),
-            timeout=180,
-        )
+        def blob_chainlocked_all_nodes():
+            # CLSIG inv/getdata scheduling is mocktime-driven in these tests.
+            # Keep mocktime moving so delayed announcements become requestable.
+            self._throttled_bump_mocktime("basic_nevm_data_blob_chainlock", step=1, nodes=self.nodes)
+            return all(n.getnevmblobdata(vh).get('chainlock', False) for n in self.nodes)
+        self.wait_until(blob_chainlocked_all_nodes, timeout=180)
         print('Test blob expiry...')
         expiry_timestamp = (mtp + NEVM_DATA_EXPIRE_TIME)
         bump_to_expiry = expiry_timestamp - self.mocktime
