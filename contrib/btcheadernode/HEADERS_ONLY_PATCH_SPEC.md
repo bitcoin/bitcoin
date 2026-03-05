@@ -26,6 +26,7 @@ Syscoin signer policy currently calls:
 
 - `getblockchaininfo`
 - `getblockheader <hash> true`
+- `getblockhash <height>`
 - `getchaintips`
 
 Patch behavior must preserve useful semantics for these calls in headers-only mode:
@@ -38,6 +39,10 @@ Patch behavior must preserve useful semantics for these calls in headers-only mo
   - returns info for headers in the tracked header tree.
   - `confirmations` for canonical headers is meaningful for policy checks.
   - includes correct `height`, `time`, `previousblockhash`, and chainwork-related fields.
+- `getblockhash <height>`:
+  - returns the canonical active-chain header hash at the requested height.
+  - returns an RPC error for out-of-range heights.
+  - remains consistent with `getblockchaininfo` tip height and `getblockheader` chain view.
 - `getchaintips`:
   - includes active tip and recent competing tips in a way usable by fork-stability heuristics.
 

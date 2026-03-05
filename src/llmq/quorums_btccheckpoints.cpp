@@ -44,6 +44,26 @@ static bool ParseHexUint256Strict(const UniValue& v, uint256& out)
     return true;
 }
 
+static bool ParseGetBlockHashResult(const std::string& command_output, UniValue& out)
+{
+    const std::string trimmed = TrimString(command_output);
+    if (IsHex(trimmed) && trimmed.size() == 64) {
+        out.setStr(trimmed);
+        return true;
+    }
+
+    // Keep compatibility with wrappers that may JSON-encode string output.
+    UniValue wrapped;
+    if (wrapped.read(trimmed) && wrapped.isStr()) {
+        const std::string hash = wrapped.get_str();
+        if (IsHex(hash) && hash.size() == 64) {
+            out.setStr(hash);
+            return true;
+        }
+    }
+    return false;
+}
+
 static bool GetObjectInt64(const UniValue& obj, const char* key, int64_t& out)
 {
     if (!obj.isObject()) return false;
@@ -77,6 +97,7 @@ static bool RunBTCHeaderRPCCommand(const std::vector<std::string>& method_and_ar
         err = "btcheadercmd-empty-method";
         return false;
     }
+    const bool is_getblockhash = method_and_args.front() == "getblockhash";
 
     const bool managed = gArgs.GetBoolArg("-btcheadermanaged", DEFAULT_BTC_HEADER_MANAGED);
     if (managed) {
@@ -87,6 +108,13 @@ static bool RunBTCHeaderRPCCommand(const std::vector<std::string>& method_and_ar
         }
         command_args.insert(command_args.end(), method_and_args.begin(), method_and_args.end());
         try {
+            if (is_getblockhash) {
+                if (!ParseGetBlockHashResult(RunCommand(command_args), out)) {
+                    err = "btc-getblockhash-invalid-output";
+                    return false;
+                }
+                return true;
+            }
             out = RunCommandParseJSON(command_args);
             return true;
         } catch (const std::exception& e) {
@@ -106,6 +134,13 @@ static bool RunBTCHeaderRPCCommand(const std::vector<std::string>& method_and_ar
         method_tail += arg;
     }
     try {
+        if (is_getblockhash) {
+            if (!ParseGetBlockHashResult(RunCommand(cmd + " " + method_tail), out)) {
+                err = "btc-getblockhash-invalid-output";
+                return false;
+            }
+            return true;
+        }
         out = RunCommandParseJSON(cmd + " " + method_tail);
         return true;
     } catch (const std::exception& e) {
