@@ -38,9 +38,18 @@ std::string WaitCollectOutputFromChild(bp::child& process, bp::ipstream& stdout_
     std::thread stdout_reader([&]() { CollectStream(stdout_stream, result); });
     std::thread stderr_reader([&]() { CollectStream(stderr_stream, error); });
 
-    process.wait();
-    stdout_reader.join();
-    stderr_reader.join();
+    const auto join_reader_threads = [&]() {
+        if (stdout_reader.joinable()) stdout_reader.join();
+        if (stderr_reader.joinable()) stderr_reader.join();
+    };
+
+    try {
+        process.wait();
+    } catch (...) {
+        join_reader_threads();
+        throw;
+    }
+    join_reader_threads();
 
     const int n_error = process.exit_code();
     if (n_error) {
