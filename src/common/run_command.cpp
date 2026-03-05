@@ -31,7 +31,12 @@ void CollectStream(bp::ipstream& stream, std::string& output)
     }
 }
 
-std::string WaitCollectOutputFromChild(bp::child& process, bp::ipstream& stdout_stream, bp::ipstream& stderr_stream, const std::string& command_for_errors)
+std::string WaitCollectOutputFromChild(
+    bp::child& process,
+    bp::ipstream& stdout_stream,
+    bp::ipstream& stderr_stream,
+    const std::string& caller_for_errors,
+    const std::string& command_for_errors)
 {
     std::string result;
     std::string error;
@@ -53,7 +58,7 @@ std::string WaitCollectOutputFromChild(bp::child& process, bp::ipstream& stdout_
 
     const int n_error = process.exit_code();
     if (n_error) {
-        throw std::runtime_error(strprintf("RunCommandParseJSON error: process(%s) returned %d: %s\n", command_for_errors, n_error, error));
+        throw std::runtime_error(strprintf("%s error: process(%s) returned %d: %s\n", caller_for_errors, command_for_errors, n_error, error));
     }
 
     return result;
@@ -88,7 +93,7 @@ UniValue RunCommandParseJSON(const std::string& str_command, const std::string& 
     }
     stdin_stream.pipe().close();
 
-    return ParseJSONResult(WaitCollectOutputFromChild(c, stdout_stream, stderr_stream, str_command));
+    return ParseJSONResult(WaitCollectOutputFromChild(c, stdout_stream, stderr_stream, "RunCommandParseJSON", str_command));
 #else
     throw std::runtime_error("RunCommandParseJSON requires Boost::Process support (configure with --with-boost-process).");
 #endif
@@ -114,7 +119,7 @@ std::string RunCommand(const std::string& str_command, const std::string& str_st
     }
     stdin_stream.pipe().close();
 
-    return WaitCollectOutputFromChild(c, stdout_stream, stderr_stream, str_command);
+    return WaitCollectOutputFromChild(c, stdout_stream, stderr_stream, "RunCommand", str_command);
 #else
     throw std::runtime_error("RunCommand requires Boost::Process support (configure with --with-boost-process).");
 #endif
@@ -147,7 +152,7 @@ UniValue RunCommandParseJSON(const std::vector<std::string>& command_and_args, c
     }
     stdin_stream.pipe().close();
 
-    return ParseJSONResult(WaitCollectOutputFromChild(c, stdout_stream, stderr_stream, executable));
+    return ParseJSONResult(WaitCollectOutputFromChild(c, stdout_stream, stderr_stream, "RunCommandParseJSON", executable));
 #else
     throw std::runtime_error("RunCommandParseJSON requires Boost::Process support (configure with --with-boost-process).");
 #endif
@@ -180,7 +185,7 @@ std::string RunCommand(const std::vector<std::string>& command_and_args, const s
     }
     stdin_stream.pipe().close();
 
-    return WaitCollectOutputFromChild(c, stdout_stream, stderr_stream, executable);
+    return WaitCollectOutputFromChild(c, stdout_stream, stderr_stream, "RunCommand", executable);
 #else
     throw std::runtime_error("RunCommand requires Boost::Process support (configure with --with-boost-process).");
 #endif
