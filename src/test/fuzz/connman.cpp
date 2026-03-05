@@ -79,6 +79,18 @@ FUZZ_TARGET(connman, .init = initialize_connman)
     CConnman::Options options;
     options.m_msgproc = &net_events;
     options.nMaxOutboundLimit = max_outbound_limit;
+
+    auto consume_whitelist = [&]() {
+        std::vector<NetWhitelistPermissions> result(fuzzed_data_provider.ConsumeIntegralInRange<size_t>(0, 3));
+        for (auto& entry : result) {
+            entry.m_flags = ConsumeWeakEnum(fuzzed_data_provider, ALL_NET_PERMISSION_FLAGS);
+            entry.m_subnet = ConsumeSubNet(fuzzed_data_provider);
+        }
+        return result;
+    };
+    options.vWhitelistedRangeIncoming = consume_whitelist();
+    options.vWhitelistedRangeOutgoing = consume_whitelist();
+
     connman.Init(options);
 
     CNetAddr random_netaddr;
