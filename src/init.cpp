@@ -1907,19 +1907,44 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
             // local height is higher so we need to rollback to geth height
             if(nHeightFromGeth > 0) {
                 if((int64_t)nHeightFromGeth < nHeightLocalGeth) {
+                    const int64_t geth_lag_blocks = nHeightLocalGeth - (int64_t)nHeightFromGeth;
+                    const int64_t geth_reindex_lag_threshold = CDeterministicMNManager::LIST_CACHE_SIZE;
+                    if (geth_lag_blocks > geth_reindex_lag_threshold) {
+                        bool wrote_reindex_flag{false};
+                        {
+                            LOCK(cs_main);
+                            if (chainman.m_blockman.m_block_tree_db) {
+                                wrote_reindex_flag = chainman.m_blockman.m_block_tree_db->WriteReindexing(true);
+                            }
+                        }
+                        if (wrote_reindex_flag) {
+                            LogPrintf("Persisted reindex marker due to deep geth lag; next restart will reindex automatically.\n");
+                        } else {
+                            LogPrintf("Failed to persist reindex marker due to deep geth lag; restart with -reindex manually.\n");
+                        }
+                        const std::string err = strprintf(
+                            "Geth lag (%d blocks) exceeds deterministic masternode cache horizon (%d). Refusing automatic rollback to avoid deep reorg validation failures. %s",
+                            geth_lag_blocks, geth_reindex_lag_threshold,
+                            wrote_reindex_flag
+                                ? "Reindex marker persisted; restart to continue with automatic reindex (state bootstrap if configured)."
+                                : "Restart with -reindex (and state bootstrap if configured).");
+                        LogPrintf("%s\n", err);
+                        return InitError(Untranslated(err));
+                    }
                     LogPrintf("Geth nHeightFromGeth %d vs nHeightLocalGeth %d, rolling back...\n",nHeightFromGeth, nHeightLocalGeth);
                     nHeightFromGeth += Params().GetConsensus().nNEVMStartBlock;
+                    BlockValidationState rollback_state;
                     CBlockIndex *pblockindex;
                     {
                         LOCK(cs_main);
                         pblockindex = chainman.ActiveChain()[(int)nHeightFromGeth];
                     }
-                    chainman.ActiveChainstate().InvalidateBlock(state, pblockindex, false);
-                    if (state.IsValid()) {
+                    chainman.ActiveChainstate().InvalidateBlock(rollback_state, pblockindex, false);
+                    if (rollback_state.IsValid()) {
                         LOCK(cs_main);
                         chainman.ActiveChainstate().ResetBlockFailureFlags(pblockindex);
                     } else {
-                        LogPrintf("InvalidateBlock failed %s...\n",state.ToString());
+                        LogPrintf("InvalidateBlock failed %s...\n", rollback_state.ToString());
                     }
                 } else if((int64_t)nHeightFromGeth > nHeightLocalGeth) {
                     LogPrintf("Geth nHeightFromGeth %d vs nHeightLocalGeth %d, catching up...\n",nHeightFromGeth, nHeightLocalGeth);
@@ -2133,7 +2158,7 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
     }
 
     node.scheduler->scheduleEvery([&] { netfulfilledman->DoMaintenance(); }, std::chrono::minutes{1});
-    node.scheduler->scheduleEvery([&] { masternodeSync.DoMaintenance(*node.connman, *node.peerman); }, std::chrono::seconds{1});
+    node.scheduler->scheduleEvery([&] { masternodeSync.DoMaintenance(*node.connman, *node.peerman, *node.chainman); }, std::chrono::seconds{1});
     node.scheduler->scheduleEvery(std::bind(CMasternodeUtils::DoMaintenance, std::ref(*node.connman)), std::chrono::minutes{1});
     node.scheduler->scheduleEvery([&] { governance->DoMaintenance(*node.connman); }, std::chrono::minutes{5});
     if (activeMasternodeManager) {
