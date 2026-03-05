@@ -22,6 +22,14 @@ if TYPE_CHECKING:
 logger = logging.getLogger(__name__)
 
 
+def _find_mount_point(path: Path) -> Path:
+    """Walk up from path to find its mount point."""
+    path = path.resolve()
+    while not path.is_mount():
+        path = path.parent
+    return path
+
+
 @dataclass
 class BenchmarkResult:
     """Result of the benchmark phase."""
@@ -218,7 +226,8 @@ class BenchmarkPhase:
 
         # TRIM SSD once before benchmarking for consistent write performance
         if self.capabilities.can_fstrim:
-            commands.append(f'{self.capabilities.fstrim_path} "{tmp_datadir}"')
+            mount = _find_mount_point(tmp_datadir)
+            commands.append(f'{self.capabilities.fstrim_path} "{mount}"')
         return self._create_temp_script(commands, "setup")
 
     def _create_prepare_script(
