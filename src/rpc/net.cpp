@@ -320,8 +320,9 @@ static RPCHelpMan addnode()
         "addnode",
         "Attempts to add or remove a node from the addnode list.\n"
                 "Or try a connection to a node once.\n"
-                "Nodes added using addnode (or -connect) are protected from DoS disconnection and are not required to be\n"
-                "full nodes/support SegWit as other outbound peers are (though such peers will not be synced from).\n" +
+                "Nodes added using addnode (or -connect) are protected from DoS disconnection and IBD block stalling\n"
+                "disconnection, and are not required to be full nodes or support SegWit as other outbound peers are (though\n"
+                "such peers will not be synced from).\n" +
                 strprintf("Addnode connections are limited to %u at a time", MAX_ADDNODE_CONNECTIONS) +
                 " and are counted separately from the -maxconnections limit.\n",
                 {
