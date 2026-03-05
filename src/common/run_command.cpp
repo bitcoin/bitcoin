@@ -17,12 +17,45 @@
 #include <stdexcept>
 #include <thread>
 
+#ifdef HAVE_BOOST_PROCESS
+namespace {
+namespace bp = boost::process;
+
+void CollectStream(bp::ipstream& stream, std::string& output)
+{
+    std::string line;
+    while (std::getline(stream, line)) {
+        if (!output.empty()) output.push_back('\n');
+        output += line;
+    }
+}
+
+UniValue WaitParseJsonFromChild(bp::child& process, bp::ipstream& stdout_stream, bp::ipstream& stderr_stream, const std::string& command_for_errors)
+{
+    std::string result;
+    std::string error;
+    std::thread stdout_reader([&]() { CollectStream(stdout_stream, result); });
+    std::thread stderr_reader([&]() { CollectStream(stderr_stream, error); });
+
+    process.wait();
+    stdout_reader.join();
+    stderr_reader.join();
+
+    const int n_error = process.exit_code();
+    if (n_error) {
+        throw std::runtime_error(strprintf("RunCommandParseJSON error: process(%s) returned %d: %s\n", command_for_errors, n_error, error));
+    }
+
+    UniValue result_json;
+    if (!result_json.read(result)) throw std::runtime_error("Unable to parse JSON: " + result);
+    return result_json;
+}
+} // namespace
+#endif
+
 UniValue RunCommandParseJSON(const std::string& str_command, const std::string& str_std_in)
 {
 #ifdef HAVE_BOOST_PROCESS
-    namespace bp = boost::process;
-
-    UniValue result_json;
     bp::opstream stdin_stream;
     bp::ipstream stdout_stream;
     bp::ipstream stderr_stream;
@@ -40,28 +73,7 @@ UniValue RunCommandParseJSON(const std::string& str_command, const std::string& 
     }
     stdin_stream.pipe().close();
 
-    auto collect_stream = [](bp::ipstream& stream, std::string& output) {
-        std::string line;
-        while (std::getline(stream, line)) {
-            if (!output.empty()) output.push_back('\n');
-            output += line;
-        }
-    };
-
-    std::string result;
-    std::string error;
-    std::thread stdout_reader([&]() { collect_stream(stdout_stream, result); });
-    std::thread stderr_reader([&]() { collect_stream(stderr_stream, error); });
-
-    c.wait();
-    stdout_reader.join();
-    stderr_reader.join();
-
-    const int n_error = c.exit_code();
-    if (n_error) throw std::runtime_error(strprintf("RunCommandParseJSON error: process(%s) returned %d: %s\n", str_command, n_error, error));
-    if (!result_json.read(result)) throw std::runtime_error("Unable to parse JSON: " + result);
-
-    return result_json;
+    return WaitParseJsonFromChild(c, stdout_stream, stderr_stream, str_command);
 #else
     throw std::runtime_error("RunCommandParseJSON requires Boost::Process support (configure with --with-boost-process).");
 #endif
@@ -70,9 +82,6 @@ UniValue RunCommandParseJSON(const std::string& str_command, const std::string& 
 UniValue RunCommandParseJSON(const std::vector<std::string>& command_and_args, const std::string& str_std_in)
 {
 #ifdef HAVE_BOOST_PROCESS
-    namespace bp = boost::process;
-
-    UniValue result_json;
     bp::opstream stdin_stream;
     bp::ipstream stdout_stream;
     bp::ipstream stderr_stream;
@@ -97,30 +106,7 @@ UniValue RunCommandParseJSON(const std::vector<std::string>& command_and_args, c
     }
     stdin_stream.pipe().close();
 
-    auto collect_stream = [](bp::ipstream& stream, std::string& output) {
-        std::string line;
-        while (std::getline(stream, line)) {
-            if (!output.empty()) output.push_back('\n');
-            output += line;
-        }
-    };
-
-    std::string result;
-    std::string error;
-    std::thread stdout_reader([&]() { collect_stream(stdout_stream, result); });
-    std::thread stderr_reader([&]() { collect_stream(stderr_stream, error); });
-
-    c.wait();
-    stdout_reader.join();
-    stderr_reader.join();
-
-    const int n_error = c.exit_code();
-    if (n_error) {
-        throw std::runtime_error(strprintf("RunCommandParseJSON error: process(%s) returned %d: %s\n", executable, n_error, error));
-    }
-    if (!result_json.read(result)) throw std::runtime_error("Unable to parse JSON: " + result);
-
-    return result_json;
+    return WaitParseJsonFromChild(c, stdout_stream, stderr_stream, executable);
 #else
     throw std::runtime_error("RunCommandParseJSON requires Boost::Process support (configure with --with-boost-process).");
 #endif
