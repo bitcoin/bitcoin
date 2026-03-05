@@ -218,8 +218,8 @@ public:
         consensus.vDeployments[Consensus::DEPLOYMENT_V24].nFalloffCoeff = 5;          // this corresponds to 10 periods
         consensus.vDeployments[Consensus::DEPLOYMENT_V24].useEHF = true;
 
-        consensus.nMinimumChainWork = uint256S("0x00000000000000000000000000000000000000000000b49762009e34b8b6dc25"); // 2421800
-        consensus.defaultAssumeValid = uint256S("0x000000000000000718ed026ebd644a8b70b42d4cbd7b25304c066c9bf15f85b7"); // 2421800
+        consensus.nMinimumChainWork = uint256S("0x00000000000000000000000000000000000000000000b567e2d53a06de194061"); // 2429859
+        consensus.defaultAssumeValid = uint256S("0x00000000000000018fb7d55a2d7ab5f3d1369cf0d7eef25db727bf8c9ca7d4b2"); // 2429859
 
         /**
          * The message start string is designed to be unlikely to occur in normal data.
@@ -415,8 +415,8 @@ public:
         consensus.vDeployments[Consensus::DEPLOYMENT_V24].nFalloffCoeff = 5;          // this corresponds to 10 periods
         consensus.vDeployments[Consensus::DEPLOYMENT_V24].useEHF = true;
 
-        consensus.nMinimumChainWork = uint256S("0x000000000000000000000000000000000000000000000000036c8f29bb33ee48"); // 1380000
-        consensus.defaultAssumeValid = uint256S("0x000000a98084beaf77ed26a905a7d59979009e23367a55b5d634962d7d65a1f9"); // 1380000
+        consensus.nMinimumChainWork = uint256S("0x000000000000000000000000000000000000000000000000036c8f738da818d2"); // 1400000
+        consensus.defaultAssumeValid = uint256S("0x000000541a23f9db7411cddbe50f9f1ebd4aa7108ebdcad62214753f648c0239"); // 1400000
 
         pchMessageStart[0] = 0xce;
         pchMessageStart[1] = 0xe2;
