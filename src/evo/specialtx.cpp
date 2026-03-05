@@ -20,8 +20,6 @@
 #include <llmq/quorums_btccheckpoints.h>
 #include <logging.h>
 #include <governance/governance.h>
-// SYSCOIN
-#include <algorithm>
 
 class CCoinsViewCache;
 
