@@ -55,6 +55,16 @@ protected:
 public:
     explicit TxoSpenderIndex(std::unique_ptr<interfaces::Chain> chain, size_t n_cache_size, bool f_memory = false, bool f_wipe = false);
 
+    /**
+     * Search the index for a transaction that spends the given outpoint.
+     *
+     * @param[in] txo  The outpoint to search for.
+     *
+     * @return  std::nullopt               if the outpoint has not been spent on-chain.
+     *          std::optional{TxoSpender}  if the output has been spent on-chain. Contains the spending transaction
+     *                                     and the block it was confirmed in.
+     *          util::Unexpected{error}    if something unexpected happened (i.e. disk or deserialization error).
+     */
     util::Expected<std::optional<TxoSpender>, std::string> FindSpender(const COutPoint& txo) const;
 };
 
