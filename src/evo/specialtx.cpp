@@ -168,7 +168,7 @@ bool ProcessSpecialTxsInBlock(ChainstateManager &chainman, const CBlock& block, 
                         return state.Invalid(BlockValidationResult::BLOCK_CONSENSUS, "bad-btcc-btcp");
                     }
 
-                    if (!ibd) {
+                    if (check_sigs) {
                         if (!llmq::btcCheckpointsHandler) {
                             LogPrintf("%s -- bad-btcc-nohandler at height=%d block=%s\n", __func__, height, pindex->GetBlockHash().ToString());
                             return state.Invalid(BlockValidationResult::BLOCK_CHAINLOCK, "bad-btcc-nohandler");
