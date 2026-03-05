@@ -709,7 +709,7 @@ bool CBTCCheckpointsHandler::VerifyAggregatedBTCCheckpointNoCache(const CBTCChec
     if (std::count(btcsig.signers.begin(), btcsig.signers.end(), true) < (signingActiveQuorumCount / 2 + 1)) return false;
 
     const auto quorums_scanned = llmq::quorumManager->ScanQuorums(pindexScan, signingActiveQuorumCount);
-    if (quorums_scanned.empty()) return false;
+    if (quorums_scanned.size() != static_cast<size_t>(signingActiveQuorumCount)) return false;
 
     const uint256 msgHash = btcsig.sysHash;
 

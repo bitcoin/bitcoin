@@ -352,7 +352,7 @@ bool CChainLocksHandler::VerifyAggregatedChainLock(const CChainLockSig& clsig, c
         return false;
     }
     const auto quorums_scanned = llmq::quorumManager->ScanQuorums(pindexScan, signingActiveQuorumCount);
-    if(quorums_scanned.empty()) {
+    if (quorums_scanned.size() != static_cast<size_t>(signingActiveQuorumCount)) {
         return false;
     }
     
