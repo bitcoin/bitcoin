@@ -85,15 +85,16 @@ class AssumeutxoTest(BitcoinTestFramework):
         # Balance of w wallet is still 0 because n3 has not synced yet
         assert_equal(n3.getbalance(), 0)
 
+        n3.unloadwallet("w")
         self.log.info("Backup from before the snapshot height can't be loaded during background sync (pruned node)")
         assert_raises_rpc_error(-4, expected_error_message, n3.restorewallet, "w2", "backup_w2.dat")
 
     def test_restore_wallet_pruneheight(self, n3):
         self.log.info("Ensuring wallet can't be restored from a backup that was created before the pruneheight (pruned node)")
         self.complete_background_validation(n3)
-        # After background sync, pruneheight is reset to 0, so mine 500 blocks
+        # After background sync, pruneheight is reset to 0, so mine 200 blocks
         # and prune the chain again
-        self.generate(n3, nblocks=500, sync_fun=self.no_op)
+        self.generate(n3, nblocks=200, sync_fun=self.no_op)
         assert_equal(n3.pruneblockchain(FINAL_HEIGHT), 298)  # 298 is the height of the last block pruned (pruneheight 299)
         error_message = "Wallet loading failed. Prune: last wallet synchronisation goes beyond pruned data. You need to -reindex (download the whole blockchain again in case of a pruned node)"
         # This backup (backup_w2.dat) was created at height 199, so it can't be restored in a node with a pruneheight of 299
