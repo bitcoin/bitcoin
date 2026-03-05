@@ -901,7 +901,8 @@ if __name__ == "__main__":
                 if "RunCommandParseJSON requires Boost::Process support" in skip_line:
                     raise SkipTest(
                         "feature_btcheader_policy_auxpow.py requires btcheader command execution support "
-                        "(configure with --with-boost-process=yes, or build with ENABLE_EXTERNAL_SIGNER). "
+                        "(configure with --with-boost-process=yes, enable --enable-btcheadernode-build, "
+                        "or build with ENABLE_EXTERNAL_SIGNER). "
                         f"Observed on signer node {node_index}: {skip_line}"
                     )
                 raise AssertionError(
