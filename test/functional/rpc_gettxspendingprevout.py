@@ -77,6 +77,8 @@ class GetTxSpendingPrevoutTest(BitcoinTestFramework):
         txidA, txidB, txidC, txidD, txidE, txidF, txidG, txidH = [tx["txid"] for tx in txs]
 
         self.sync_mempools()
+        self.wait_until(lambda: node0.getindexinfo()["txospenderindex"]["synced"])
+        self.wait_until(lambda: node1.getindexinfo()["txospenderindex"]["synced"])
         mempool = node0.getrawmempool()
         assert_equal(len(mempool), 8)
         for tx in txs:
