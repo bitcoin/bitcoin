@@ -76,6 +76,26 @@ class PSBTTest(BitcoinTestFramework):
     def skip_test_if_missing_module(self):
         self.skip_if_no_wallet()
 
+    @staticmethod
+    def create_psbt(inputs=None, outputs=None):
+        if inputs is None:
+            inputs = {}
+        if outputs is None:
+            outputs = {}
+        tx = CTransaction()
+        tx.vin = [CTxIn(outpoint=COutPoint(hash=0, n=0))]
+        tx.vout = [CTxOut(nValue=1, scriptPubKey=CScript([OP_TRUE]))]
+
+        # https://github.com/bitcoin/bips/blob/master/bip-0174.mediawiki#specification
+        psbt = PSBT()
+        # global map
+        psbt.g = PSBTMap({PSBT_GLOBAL_UNSIGNED_TX: tx.serialize()})
+        # input map
+        psbt.i = [PSBTMap(inputs)]
+        # output map
+        psbt.o = [PSBTMap(outputs)]
+        return psbt
+
     def test_psbt_incomplete_after_invalid_modification(self):
         self.log.info("Check that PSBT is correctly marked as incomplete after invalid modification")
         node = self.nodes[2]
@@ -791,12 +811,23 @@ class PSBTTest(BitcoinTestFramework):
         assert_raises_rpc_error(-4, "Insufficient funds", wunsafe.walletcreatefundedpsbt, [], [{self.nodes[0].getnewaddress(): 1}])
         wunsafe.walletcreatefundedpsbt([], [{self.nodes[0].getnewaddress(): 1}], 0, {"include_unsafe": True})
 
-        # BIP 174 Test Vectors
+        self.log.info("Test that unknown values are just passed through")
+        unknown_type = b'\xf0'
+        unknown_key = unknown_type + bytes(range(1, 10))
+        unknown_value = bytes(range(1, 16))
 
-        # Check that unknown values are just passed through
-        unknown_psbt = "cHNidP8BAD8CAAAAAf//////////////////////////////////////////AAAAAAD/////AQAAAAAAAAAAA2oBAAAAAAAACg8BAgMEBQYHCAkPAQIDBAUGBwgJCgsMDQ4PAAA="
+        unknown_psbt = self.create_psbt(inputs={unknown_key: unknown_value}).to_base64()
         unknown_out = self.nodes[0].walletprocesspsbt(unknown_psbt)['psbt']
         assert_equal(unknown_psbt, unknown_out)
+
+        unknown_key2 = unknown_type + bytes(range(1, 9)) + bytes(11)
+        unknown_psbt2 = self.create_psbt(inputs={unknown_key2: unknown_value}).to_base64()
+        merged_unknown = self.nodes[0].combinepsbt([unknown_psbt, unknown_psbt2])
+        merged_unknown_psbt = PSBT.from_base64(merged_unknown)
+        assert_equal(merged_unknown_psbt.i[0].map[unknown_key], unknown_value)
+        assert_equal(merged_unknown_psbt.i[0].map[unknown_key2], unknown_value)
+
+        # BIP 174 Test Vectors
 
         # Open the data file
         with open(os.path.join(os.path.dirname(os.path.realpath(__file__)), 'data/rpc_psbt.json')) as f:
