@@ -71,12 +71,8 @@ jobs:
           name: machine-specs
           path: ${{ runner.temp }}/machine-specs.json
 
-  benchmark:
+  benchmark-450:
     needs: build
-    strategy:
-      matrix:
-        # Matrix entries from configs/nightly.toml: dbcache=[450,32000]
-        name: ["450", "32000"]
     runs-on: [self-hosted, linux, x64]
     timeout-minutes: 600
     env:
@@ -101,7 +97,7 @@ jobs:
         run: |
           nix develop --command python3 bench.py run \
             --benchmark-config bench/configs/nightly.toml \
-            --matrix-entry ${{ matrix.name }} \
+            --matrix-entry 450 \
             --datadir $ORIGINAL_DATADIR \
             --tmp-datadir ${{ runner.temp }}/datadir \
             --output-dir ${{ runner.temp }}/output \
@@ -110,18 +106,63 @@ jobs:
       - name: Upload results
         uses: actions/upload-artifact@v4
         with:
-          name: result-nightly-${{ matrix.name }}
+          name: result-nightly-450
           path: ${{ runner.temp }}/output/results.json
 
       - name: Upload debug logs
         uses: actions/upload-artifact@v4
         with:
-          name: debug-logs-nightly-${{ matrix.name }}
+          name: debug-logs-nightly-450
+          path: ${{ runner.temp }}/output/*-debug.log
+          if-no-files-found: ignore
+
+  benchmark-32000:
+    needs: benchmark-450
+    runs-on: [self-hosted, linux, x64]
+    timeout-minutes: 600
+    env:
+      ORIGINAL_DATADIR: /data/pruned-840k
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+
+      - name: Download binaries
+        uses: actions/download-artifact@v4
+        with:
+          name: nightly-binaries
+          path: ${{ runner.temp }}/binaries
+
+      - name: Set binary permissions
+        run: |
+          chmod +x ${{ runner.temp }}/binaries/master/bitcoind
+
+      - name: Run benchmark
+        run: |
+          nix develop --command python3 bench.py run \
+            --benchmark-config bench/configs/nightly.toml \
+            --matrix-entry 32000 \
+            --datadir $ORIGINAL_DATADIR \
+            --tmp-datadir ${{ runner.temp }}/datadir \
+            --output-dir ${{ runner.temp }}/output \
+            master:${{ runner.temp }}/binaries/master/bitcoind
+
+      - name: Upload results
+        uses: actions/upload-artifact@v4
+        with:
+          name: result-nightly-32000
+          path: ${{ runner.temp }}/output/results.json
+
+      - name: Upload debug logs
+        uses: actions/upload-artifact@v4
+        with:
+          name: debug-logs-nightly-32000
           path: ${{ runner.temp }}/output/*-debug.log
           if-no-files-found: ignore
 
   publish:
-    needs: benchmark
+    needs: benchmark-32000
     runs-on: ubuntu-latest
     permissions:
       contents: write
