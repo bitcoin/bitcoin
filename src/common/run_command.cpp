@@ -70,30 +70,54 @@ UniValue ParseJSONResult(const std::string& result)
     if (!result_json.read(result)) throw std::runtime_error("Unable to parse JSON: " + result);
     return result_json;
 }
+
+template <typename EmptyResultFn, typename ChildFactoryFn, typename ResultProcessorFn>
+auto RunCommandWithPipes(
+    bool has_command,
+    const std::string& str_std_in,
+    const std::string& caller_for_errors,
+    const std::string& command_for_errors,
+    EmptyResultFn empty_result_fn,
+    ChildFactoryFn create_child_fn,
+    ResultProcessorFn result_processor_fn) -> decltype(result_processor_fn(std::string{}))
+{
+    if (!has_command) return empty_result_fn();
+
+    bp::opstream stdin_stream;
+    bp::ipstream stdout_stream;
+    bp::ipstream stderr_stream;
+
+    bp::child process = create_child_fn(stdin_stream, stdout_stream, stderr_stream);
+    if (!str_std_in.empty()) {
+        stdin_stream << str_std_in << std::endl;
+    }
+    stdin_stream.pipe().close();
+
+    const std::string output =
+        WaitCollectOutputFromChild(process, stdout_stream, stderr_stream, caller_for_errors, command_for_errors);
+    return result_processor_fn(output);
+}
 } // namespace
 #endif
 
 UniValue RunCommandParseJSON(const std::string& str_command, const std::string& str_std_in)
 {
 #ifdef RUN_COMMAND_HAS_BOOST_PROCESS
-    bp::opstream stdin_stream;
-    bp::ipstream stdout_stream;
-    bp::ipstream stderr_stream;
-
-    if (str_command.empty()) return UniValue::VNULL;
-
-    bp::child c(
+    return RunCommandWithPipes(
+        !str_command.empty(),
+        str_std_in,
+        "RunCommandParseJSON",
         str_command,
-        bp::std_out > stdout_stream,
-        bp::std_err > stderr_stream,
-        bp::std_in < stdin_stream
-    );
-    if (!str_std_in.empty()) {
-        stdin_stream << str_std_in << std::endl;
-    }
-    stdin_stream.pipe().close();
-
-    return ParseJSONResult(WaitCollectOutputFromChild(c, stdout_stream, stderr_stream, "RunCommandParseJSON", str_command));
+        []() { return UniValue::VNULL; },
+        [&](bp::opstream& stdin_stream, bp::ipstream& stdout_stream, bp::ipstream& stderr_stream) {
+            return bp::child(
+                str_command,
+                bp::std_out > stdout_stream,
+                bp::std_err > stderr_stream,
+                bp::std_in < stdin_stream
+            );
+        },
+        [](const std::string& output) { return ParseJSONResult(output); });
 #else
     throw std::runtime_error("RunCommandParseJSON requires Boost::Process support (configure with --with-boost-process).");
 #endif
@@ -102,24 +126,21 @@ UniValue RunCommandParseJSON(const std::string& str_command, const std::string& 
 std::string RunCommand(const std::string& str_command, const std::string& str_std_in)
 {
 #ifdef RUN_COMMAND_HAS_BOOST_PROCESS
-    bp::opstream stdin_stream;
-    bp::ipstream stdout_stream;
-    bp::ipstream stderr_stream;
-
-    if (str_command.empty()) return {};
-
-    bp::child c(
+    return RunCommandWithPipes(
+        !str_command.empty(),
+        str_std_in,
+        "RunCommand",
         str_command,
-        bp::std_out > stdout_stream,
-        bp::std_err > stderr_stream,
-        bp::std_in < stdin_stream
-    );
-    if (!str_std_in.empty()) {
-        stdin_stream << str_std_in << std::endl;
-    }
-    stdin_stream.pipe().close();
-
-    return WaitCollectOutputFromChild(c, stdout_stream, stderr_stream, "RunCommand", str_command);
+        []() { return std::string{}; },
+        [&](bp::opstream& stdin_stream, bp::ipstream& stdout_stream, bp::ipstream& stderr_stream) {
+            return bp::child(
+                str_command,
+                bp::std_out > stdout_stream,
+                bp::std_err > stderr_stream,
+                bp::std_in < stdin_stream
+            );
+        },
+        [](const std::string& output) { return output; });
 #else
     throw std::runtime_error("RunCommand requires Boost::Process support (configure with --with-boost-process).");
 #endif
@@ -128,31 +149,29 @@ std::string RunCommand(const std::string& str_command, const std::string& str_st
 UniValue RunCommandParseJSON(const std::vector<std::string>& command_and_args, const std::string& str_std_in)
 {
 #ifdef RUN_COMMAND_HAS_BOOST_PROCESS
-    bp::opstream stdin_stream;
-    bp::ipstream stdout_stream;
-    bp::ipstream stderr_stream;
-
-    if (command_and_args.empty()) return UniValue::VNULL;
-
-    const std::string executable = command_and_args.front();
+    const bool has_command = !command_and_args.empty();
+    const std::string executable = has_command ? command_and_args.front() : std::string{};
     std::vector<std::string> args;
     if (command_and_args.size() > 1) {
         args.assign(command_and_args.begin() + 1, command_and_args.end());
     }
 
-    bp::child c(
-        bp::exe = executable,
-        bp::args = args,
-        bp::std_out > stdout_stream,
-        bp::std_err > stderr_stream,
-        bp::std_in < stdin_stream
-    );
-    if (!str_std_in.empty()) {
-        stdin_stream << str_std_in << std::endl;
-    }
-    stdin_stream.pipe().close();
-
-    return ParseJSONResult(WaitCollectOutputFromChild(c, stdout_stream, stderr_stream, "RunCommandParseJSON", executable));
+    return RunCommandWithPipes(
+        has_command,
+        str_std_in,
+        "RunCommandParseJSON",
+        executable,
+        []() { return UniValue::VNULL; },
+        [&](bp::opstream& stdin_stream, bp::ipstream& stdout_stream, bp::ipstream& stderr_stream) {
+            return bp::child(
+                bp::exe = executable,
+                bp::args = args,
+                bp::std_out > stdout_stream,
+                bp::std_err > stderr_stream,
+                bp::std_in < stdin_stream
+            );
+        },
+        [](const std::string& output) { return ParseJSONResult(output); });
 #else
     throw std::runtime_error("RunCommandParseJSON requires Boost::Process support (configure with --with-boost-process).");
 #endif
@@ -161,31 +180,29 @@ UniValue RunCommandParseJSON(const std::vector<std::string>& command_and_args, c
 std::string RunCommand(const std::vector<std::string>& command_and_args, const std::string& str_std_in)
 {
 #ifdef RUN_COMMAND_HAS_BOOST_PROCESS
-    bp::opstream stdin_stream;
-    bp::ipstream stdout_stream;
-    bp::ipstream stderr_stream;
-
-    if (command_and_args.empty()) return {};
-
-    const std::string executable = command_and_args.front();
+    const bool has_command = !command_and_args.empty();
+    const std::string executable = has_command ? command_and_args.front() : std::string{};
     std::vector<std::string> args;
     if (command_and_args.size() > 1) {
         args.assign(command_and_args.begin() + 1, command_and_args.end());
     }
 
-    bp::child c(
-        bp::exe = executable,
-        bp::args = args,
-        bp::std_out > stdout_stream,
-        bp::std_err > stderr_stream,
-        bp::std_in < stdin_stream
-    );
-    if (!str_std_in.empty()) {
-        stdin_stream << str_std_in << std::endl;
-    }
-    stdin_stream.pipe().close();
-
-    return WaitCollectOutputFromChild(c, stdout_stream, stderr_stream, "RunCommand", executable);
+    return RunCommandWithPipes(
+        has_command,
+        str_std_in,
+        "RunCommand",
+        executable,
+        []() { return std::string{}; },
+        [&](bp::opstream& stdin_stream, bp::ipstream& stdout_stream, bp::ipstream& stderr_stream) {
+            return bp::child(
+                bp::exe = executable,
+                bp::args = args,
+                bp::std_out > stdout_stream,
+                bp::std_err > stderr_stream,
+                bp::std_in < stdin_stream
+            );
+        },
+        [](const std::string& output) { return output; });
 #else
     throw std::runtime_error("RunCommand requires Boost::Process support (configure with --with-boost-process).");
 #endif
