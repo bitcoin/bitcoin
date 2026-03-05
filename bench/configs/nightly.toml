@@ -13,7 +13,7 @@ runs = 2
 [bitcoind]
 stopatheight = 900000
 chain = "main"
-connect = "127.0.0.1:38333"
+connect = "148.251.128.115:33333" # accepts whitelisted ip addrs only
 prune = 1000000
 daemon = false
 printtoconsole = false
