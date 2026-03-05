@@ -35,6 +35,20 @@ hash_file() {
     fi
 }
 
+resolve_command_path() {
+    local command_name="$1"
+    local resolved_path
+    resolved_path="$(command -v "$command_name" 2>/dev/null || true)"
+    [[ -n "$resolved_path" ]] || return 1
+    if command -v realpath >/dev/null 2>&1; then
+        realpath "$resolved_path"
+    elif command -v readlink >/dev/null 2>&1; then
+        readlink -f "$resolved_path" 2>/dev/null || printf '%s\n' "$resolved_path"
+    else
+        printf '%s\n' "$resolved_path"
+    fi
+}
+
 first_existing_file() {
     for candidate in "$@"; do
         if [[ -f "$candidate" ]]; then
@@ -60,13 +74,13 @@ detect_compiler() {
     shift
     local env_bin="${env_value%% *}"
     if [[ -n "$env_bin" ]] && command -v "$env_bin" >/dev/null 2>&1; then
-        printf '%s\n' "$env_bin"
+        resolve_command_path "$env_bin"
         return 0
     fi
     local candidate
     for candidate in "$@"; do
         if command -v "$candidate" >/dev/null 2>&1; then
-            printf '%s\n' "$candidate"
+            resolve_command_path "$candidate"
             return 0
         fi
     done
@@ -270,6 +284,7 @@ PATCH_DIGEST="none"
 if [[ -n "$PATCH_ABS" ]]; then
     PATCH_DIGEST="$(hash_file "$PATCH_ABS")"
 fi
+SCRIPT_DIGEST="$(hash_file "$SRC_ROOT/contrib/btcheadernode/build-bitcoin-header-node.sh")"
 SOURCE_ARCHIVE_DIGEST="none"
 if [[ -n "$SOURCE_ARCHIVE" ]]; then
     if [[ ! -f "$SOURCE_ARCHIVE" ]]; then
@@ -279,7 +294,7 @@ if [[ -n "$SOURCE_ARCHIVE" ]]; then
     SOURCE_ARCHIVE_DIGEST="$(hash_file "$SOURCE_ARCHIVE")"
 fi
 LOCK_DIGEST="$(hash_file "$LOCK_FILE")"
-BUILD_FINGERPRINT="${BITCOIN_COMMIT}:${LOCK_DIGEST}:${PATCH_DIGEST}:${SOURCE_ARCHIVE_DIGEST}:${BASE_LDFLAGS}:${STATIC_LINK_FLAGS}"
+BUILD_FINGERPRINT="${BITCOIN_COMMIT}:${LOCK_DIGEST}:${PATCH_DIGEST}:${SCRIPT_DIGEST}:${SOURCE_ARCHIVE_DIGEST}:${BASE_CPPFLAGS}:${BASE_CFLAGS}:${BASE_CXXFLAGS}:${BASE_LDFLAGS}:${STATIC_LINK_FLAGS}:${CC:-}:${CXX:-}"
 
 if [[ -f "$STAMP_FILE" ]] && [[ -x "$OUTPUT_BIN_DIR/bitcoind" ]] && [[ -x "$OUTPUT_BIN_DIR/bitcoin-cli" ]]; then
     if [[ "$(cat "$STAMP_FILE")" == "$BUILD_FINGERPRINT" ]]; then
@@ -366,6 +381,11 @@ else
         echo "cmake is required to build this pinned Bitcoin version." >&2
         exit 1
     fi
+
+    # Avoid CMake cache drift (e.g. compiler alias changes) causing a silent
+    # reconfigure that drops critical toggles like -DENABLE_IPC=OFF.
+    rm -rf "$BITCOIN_BUILD"
+    mkdir -p "$BITCOIN_BUILD"
 
     C_COMPILER="$(detect_compiler "${CC:-}" x86_64-linux-gnu-gcc gcc cc)" || {
         echo "Could not locate a C compiler for Bitcoin CMake build." >&2
