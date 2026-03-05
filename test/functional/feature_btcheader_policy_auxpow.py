@@ -864,6 +864,58 @@ if __name__ == "__main__":
             f"Recent log excerpt:\n{last_excerpt}"
         )
 
+    def _poll_skip_reason_for_height_on_any_signer(self, target_sign_height, offsets):
+        signer_indices = list(range(1, len(self.nodes)))
+        needle_height = f"sysHeight={target_sign_height}"
+        for node_index in signer_indices:
+            path = self._debug_log_path(node_index)
+            start = offsets.get(node_index, 0)
+            try:
+                with open(path, "rb") as f:
+                    f.seek(start, os.SEEK_SET)
+                    chunk = f.read()
+                    offsets[node_index] = f.tell()
+            except FileNotFoundError:
+                continue
+            if not chunk:
+                continue
+            text = chunk.decode("utf-8", errors="replace")
+            for line in reversed(text.splitlines()):
+                if "CBTCCheckpointsHandler -- skip btcc sign at" in line and needle_height in line:
+                    return node_index, line
+        return None
+
+    def _wait_for_btcc_signer_progress_or_reason(self, target_sign_height, timeout=180):
+        offsets = self._capture_log_offsets(range(1, len(self.nodes)))
+        deadline = time.time() + timeout
+        last_height = self._best_btcc_height_signers()
+        while time.time() < deadline:
+            current = self._best_btcc_height_signers()
+            if current >= target_sign_height:
+                return current
+            last_height = max(last_height, current)
+
+            skip_hit = self._poll_skip_reason_for_height_on_any_signer(target_sign_height, offsets)
+            if skip_hit is not None:
+                node_index, skip_line = skip_hit
+                if "RunCommandParseJSON requires Boost::Process support" in skip_line:
+                    raise SkipTest(
+                        "feature_btcheader_policy_auxpow.py requires btcheader command execution support "
+                        "(configure with --with-boost-process=yes, or build with ENABLE_EXTERNAL_SIGNER). "
+                        f"Observed on signer node {node_index}: {skip_line}"
+                    )
+                raise AssertionError(
+                    f"Expected ALLOW at sysHeight={target_sign_height}, but signer node {node_index} denied: {skip_line}"
+                )
+
+            # Poll at a moderate cadence to avoid hammering all signers via RPC.
+            time.sleep(0.5)
+
+        raise AssertionError(
+            f"BTCC signer did not reach height {target_sign_height} within {timeout}s "
+            f"(best observed height={last_height})."
+        )
+
     def _restart_signer_node(self, node_index):
         self.restart_node(node_index, extra_args=self.extra_args[node_index])
         for peer_index in range(self.num_nodes):
@@ -922,7 +974,7 @@ if __name__ == "__main__":
         self.bump_mocktime(2, nodes=self.nodes)
         time.sleep(0.2)
 
-        self.wait_until(lambda: self._best_btcc_height_signers() >= target_sign_height, timeout=180)
+        self._wait_for_btcc_signer_progress_or_reason(target_sign_height, timeout=180)
         self._mine_sys_blocks_with_btcprev(self.BTCCHECK_PROP_BUFFER + 2, btc_prev_hash)
         after = self._best_btcc_height_signers()
         assert after >= target_sign_height
