@@ -29,13 +29,29 @@ class P2PFeelerReceiver(P2PInterface):
 
 class P2PAddConnections(BitcoinTestFramework):
     def set_test_params(self):
-        self.num_nodes = 2
+        self.num_nodes = 3
+        self.bind_to_localhost_only = False
+        self.extra_args = [
+            ["-bind=127.0.0.1"],
+            ["-bind=127.0.0.1"],
+            ["-maxconnections=1", "-listen=0"],
+        ]
 
     def setup_network(self):
         self.setup_nodes()
         # Don't connect the nodes
 
     def run_test(self):
+        self.log.info("Add a manual connection after filling automatic outbound capacity")
+        self.nodes[2].add_outbound_p2p_connection(P2PInterface(), p2p_idx=0)
+        self.nodes[2].add_outbound_p2p_connection(
+            P2PInterface(), p2p_idx=1, connection_type="manual")
+        assert_equal(
+            {peer["connection_type"] for peer in self.nodes[2].getpeerinfo()},
+            {"manual", "outbound-full-relay"},
+        )
+        self.nodes[2].disconnect_p2ps()
+
         self.log.info("Add 8 outbounds to node 0")
         for i in range(8):
             self.log.info(f"outbound: {i}")
