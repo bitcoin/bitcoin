@@ -2260,9 +2260,10 @@ bool Chainstate::ConnectNEVMCommitment(BlockValidationState& state, NEVMTxRootMa
     uint256 btcPrevHashForNEVM{};
     {
         const auto& consensus = m_chainman.GetConsensus();
-        const bool carrier_height = nHeight >= static_cast<uint32_t>(consensus.nCLReceiptStartBlock) &&
-                                    (nHeight % BTCCHECK_PERIOD) == BTCCHECK_CARRIER_OFFSET;
-        if (carrier_height && nHeight >= BTCCHECK_PROP_BUFFER) {
+        const bool carrier_height = nHeight >= BTCCHECK_PROP_BUFFER &&
+                                    (nHeight % BTCCHECK_PERIOD) == BTCCHECK_CARRIER_OFFSET &&
+                                    (static_cast<int>(nHeight) - BTCCHECK_PROP_BUFFER) >= consensus.nCLReceiptStartBlock;
+        if (carrier_height) {
             // Only forward a BTC anchor if this carrier block has a non-null BTCC receipt.
             // (Null receipts are allowed for censorship resistance and must result in no NEVM checkpoint.)
             llmq::CBTCCheckpointSig btcc;

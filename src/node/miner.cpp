@@ -221,13 +221,16 @@ std::unique_ptr<CBlockTemplate> BlockAssembler::CreateNewBlock(const CScript& sc
     }
 
     // SYSCOIN: embed lagged BTC checkpoint attestation (null allowed), independent of finality.
-    // Schedule: one checkpoint per 10-block epoch counted from activation height.
+    // Schedule: one checkpoint per 10-block absolute epoch (+2 sign, +7 carrier).
+    // Require carrier embedding only when its referenced sign height (H-5) is post-activation.
     // - Sign at epoch offset +2 (avoids CL's mod-5 boundary)
     // - Mine/embed at epoch offset +7 (5-block propagation buffer)
-    // Carrier height H where (H-start) % 10 == 7 embeds a btcc that attests height (H-5).
+    // Carrier height H where H % 10 == 7 embeds a btcc that attests height (H-5).
     const int start = Params().GetConsensus().nCLReceiptStartBlock;
-    if (nHeight >= start && (nHeight % BTCCHECK_PERIOD) == BTCCHECK_CARRIER_OFFSET && nHeight >= BTCCHECK_PROP_BUFFER) {
-        const int32_t expectedHeight = nHeight - BTCCHECK_PROP_BUFFER;
+    const int32_t expectedHeight = nHeight - BTCCHECK_PROP_BUFFER;
+    if (nHeight >= BTCCHECK_PROP_BUFFER &&
+        expectedHeight >= start &&
+        (nHeight % BTCCHECK_PERIOD) == BTCCHECK_CARRIER_OFFSET) {
         const CBlockIndex* pindexReceipt = pindexPrev->GetAncestor(expectedHeight);
         llmq::CBTCCheckpointSig btcc;
         if (llmq::btcCheckpointsHandler && pindexReceipt != nullptr &&
