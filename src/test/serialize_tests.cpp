@@ -2,6 +2,7 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
+#include <chain.h>
 #include <hash.h>
 #include <serialize.h>
 #include <streams.h>
@@ -253,6 +254,60 @@ BOOST_AUTO_TEST_CASE(class_methods)
         BOOST_CHECK_EQUAL(out.at(1), std::byte{'b'});
         BOOST_CHECK_EQUAL(out_3, std::byte{'c'});
     }
+}
+// SYSCOIN
+BOOST_AUTO_TEST_CASE(cdiskblockindex_btcp_prev_serialization)
+{
+    const auto make_disk_index = [](const uint256& btcp_prev) {
+        CBlockIndex index{};
+        index.nHeight = 42;
+        index.nStatus = BLOCK_HAVE_DATA | BLOCK_HAVE_UNDO;
+        index.nTx = 7;
+        index.nFile = 3;
+        index.nDataPos = 64;
+        index.nUndoPos = 96;
+        index.nVersion = 4;
+        index.hashMerkleRoot = uint256S("0000000000000000000000000000000000000000000000000000000000000001");
+        index.nTime = 1234567890;
+        index.nBits = 0x1d00ffff;
+        index.nNonce = 9;
+        index.btcpPrevCommitment = btcp_prev;
+        return CDiskBlockIndex{&index};
+    };
+
+    const CDiskBlockIndex without_btcp_prev = make_disk_index(uint256{});
+    const CDiskBlockIndex with_btcp_prev = make_disk_index(
+        uint256S("00000000000000000000000000000000000000000000000000000000000000aa"));
+
+    DataStream without_btcp_prev_ser{};
+    without_btcp_prev_ser << without_btcp_prev;
+    DataStream with_btcp_prev_ser{};
+    with_btcp_prev_ser << with_btcp_prev;
+
+    int without_btcp_prev_version{0};
+    {
+        DataStream version_stream{without_btcp_prev_ser};
+        version_stream >> VARINT_MODE(without_btcp_prev_version, VarIntMode::NONNEGATIVE_SIGNED);
+    }
+
+    int with_btcp_prev_version{0};
+    {
+        DataStream version_stream{with_btcp_prev_ser};
+        version_stream >> VARINT_MODE(with_btcp_prev_version, VarIntMode::NONNEGATIVE_SIGNED);
+    }
+
+    BOOST_CHECK(with_btcp_prev_version > without_btcp_prev_version);
+    BOOST_CHECK_EQUAL(with_btcp_prev_ser.size() - without_btcp_prev_ser.size(), GetSerializeSize(uint256{}));
+
+    CDiskBlockIndex without_btcp_prev_roundtrip;
+    DataStream without_btcp_prev_read{without_btcp_prev_ser};
+    without_btcp_prev_read >> without_btcp_prev_roundtrip;
+    BOOST_CHECK(without_btcp_prev_roundtrip.btcpPrevCommitment.IsNull());
+
+    CDiskBlockIndex with_btcp_prev_roundtrip;
+    DataStream with_btcp_prev_read{with_btcp_prev_ser};
+    with_btcp_prev_read >> with_btcp_prev_roundtrip;
+    BOOST_CHECK(with_btcp_prev_roundtrip.btcpPrevCommitment == with_btcp_prev.btcpPrevCommitment);
 }
 
 enum class BaseFormat {

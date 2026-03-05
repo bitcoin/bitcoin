@@ -407,7 +407,7 @@ class CDiskBlockIndex : public CBlockIndex
     // NOTE: This is a legacy, historically-unused on-disk version marker for CDiskBlockIndex records.
     // Bumping it allows backwards-compatible extension of the serialized format.
     static constexpr int DUMMY_VERSION = 260000;
-    static constexpr int DISK_INDEX_VERSION_BTCPREV = 260000;
+    static constexpr int DISK_INDEX_VERSION_BTCPREV = DUMMY_VERSION + 1;
 
 public:
     uint256 hashPrev;
@@ -426,6 +426,11 @@ public:
     {
         LOCK(::cs_main);
         int _nVersion = DUMMY_VERSION;
+        SER_WRITE(obj, {
+            if (!obj.btcpPrevCommitment.IsNull()) {
+                _nVersion = DISK_INDEX_VERSION_BTCPREV;
+            }
+        });
         READWRITE(VARINT_MODE(_nVersion, VarIntMode::NONNEGATIVE_SIGNED));
 
         READWRITE(VARINT_MODE(obj.nHeight, VarIntMode::NONNEGATIVE_SIGNED));
