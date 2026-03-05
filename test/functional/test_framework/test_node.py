@@ -906,6 +906,33 @@ class TestNode():
 
         return p2p_conn
 
+    def add_manual_p2p_connection(self, p2p_conn, *, p2p_idx, **kwargs):
+        """Add a manual (addnode onetry) p2p connection to the node.
+
+        This method adds the p2p connection to the self.p2ps list and returns
+        the connection to the caller.
+        """
+        v2 = self.use_v2transport
+
+        def addnode_callback(address, port):
+            self.addnode('%s:%d' % (address, port), "onetry", v2transport=v2)
+
+        if v2:
+            kwargs['services'] = kwargs.get('services', P2P_SERVICES) | NODE_P2P_V2
+
+        p2p_conn.peer_accept_connection(
+            connect_cb=addnode_callback, connect_id=p2p_idx + 1,
+            net=self.chain, timeout_factor=self.timeout_factor,
+            supports_v2_p2p=v2, reconnect=False, **kwargs)()
+        p2p_conn.wait_for_connect()
+        self.p2ps.append(p2p_conn)
+        if v2:
+            p2p_conn.wait_until(lambda: p2p_conn.v2_state.tried_v2_handshake)
+        p2p_conn.wait_until(lambda: not p2p_conn.on_connection_send_msg)
+        p2p_conn.wait_for_verack()
+        p2p_conn.sync_with_ping()
+        return p2p_conn
+
     def num_test_p2p_connections(self):
         """Return number of test framework p2p connections to the node."""
         return len([peer for peer in self.getpeerinfo() if peer['subver'] == P2P_SUBVERSION])
