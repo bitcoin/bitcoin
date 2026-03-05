@@ -8,7 +8,8 @@
 
 #include <common/run_command.h>
 
-#ifdef HAVE_BOOST_PROCESS
+#if defined(HAVE_BOOST_PROCESS) || defined(ENABLE_EXTERNAL_SIGNER)
+#define RUN_COMMAND_HAS_BOOST_PROCESS 1
 #include <boost/process.hpp>
 #endif
 #include <tinyformat.h>
@@ -17,7 +18,7 @@
 #include <stdexcept>
 #include <thread>
 
-#ifdef HAVE_BOOST_PROCESS
+#ifdef RUN_COMMAND_HAS_BOOST_PROCESS
 namespace {
 namespace bp = boost::process;
 
@@ -55,7 +56,7 @@ UniValue WaitParseJsonFromChild(bp::child& process, bp::ipstream& stdout_stream,
 
 UniValue RunCommandParseJSON(const std::string& str_command, const std::string& str_std_in)
 {
-#ifdef HAVE_BOOST_PROCESS
+#ifdef RUN_COMMAND_HAS_BOOST_PROCESS
     bp::opstream stdin_stream;
     bp::ipstream stdout_stream;
     bp::ipstream stderr_stream;
@@ -81,7 +82,7 @@ UniValue RunCommandParseJSON(const std::string& str_command, const std::string& 
 
 UniValue RunCommandParseJSON(const std::vector<std::string>& command_and_args, const std::string& str_std_in)
 {
-#ifdef HAVE_BOOST_PROCESS
+#ifdef RUN_COMMAND_HAS_BOOST_PROCESS
     bp::opstream stdin_stream;
     bp::ipstream stdout_stream;
     bp::ipstream stderr_stream;
