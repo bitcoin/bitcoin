@@ -64,9 +64,10 @@ def mineAuxpowBlock (node, wallet):
           code = e.error.get("code")
         except Exception:
           pass
-        # Some test nodes run with wallet RPC disabled.
-        # Use the framework deterministic address in that case.
-        if code == -32601:
+        # Some test nodes run with wallet RPC disabled, or can have no wallet
+        # loaded after restart. Use the framework deterministic address in both
+        # cases so auxpow mining remains wallet-independent for tests.
+        if code in (-32601, -18):
           addr = node.get_deterministic_priv_key().address
         else:
           raise

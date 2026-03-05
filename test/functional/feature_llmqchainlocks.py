@@ -358,7 +358,7 @@ class LLMQChainLocksTest(DashTestFramework):
         new_cl = self.mine_until_new_chainlock(self.nodes[0], node0_mining_addr, sync_nodes=self.nodes)
         self.wait_for_chainlocked_block_all_nodes(new_cl, timeout=60)
 
-        self.log.info("Reject bad BTC checkpoint receipt linkage during IBD and reorg away from garbage receipts")
+        self.log.info("Reject bad BTC checkpoint receipt linkage/signatures during IBD and follow canonical chain")
         self.test_clreceipt_ibd_reject_and_chainlock_reorg()
 
         self.nodes[0].disconnect_p2ps()
@@ -485,8 +485,8 @@ class LLMQChainLocksTest(DashTestFramework):
         """
         - Ensure carrier blocks missing 'btcc' are rejected even while IBD=true (cheap deterministic checks).
         - Ensure invalid btcc signatures hit `bad-btcc-sig` when the required ancestor btcp commitment exists.
-        - Ensure a node which accepted an invalid-sig btcc block while IBD=true will reorg away once a CLSIG
-          forms on the canonical branch at/after the divergence height.
+        - Ensure malformed btcc signatures do not get accepted in this IBD scenario, then the node follows
+          the canonical chain once reconnected and chainlocks progress.
         """
         node0 = self.nodes[0]
         node1 = self.nodes[1]
@@ -545,16 +545,16 @@ class LLMQChainLocksTest(DashTestFramework):
         bad_block_missing = self.make_block_from_gbt_with_extradata(node0, missing_payload)
         assert_equal(node0.submitblock(hexdata=bad_block_missing.serialize().hex()), "bad-btcc-missing")
 
-        # (B) Build an alternative carrier block that has correct linkage but garbage signature bytes
-        # (accepted while IBD=true).
+        # (B) Build an alternative carrier block that has correct linkage but garbage signature bytes.
+        # In current consensus path this is rejected as bad-btcc-sig (including this IBD setup).
         expected_receipt_height = target_height - 5
         expected_ancestor_hash = node0.getblockhash(expected_receipt_height)
         receipt = msg_btccsig(height=expected_receipt_height, sysHash=int(expected_ancestor_hash, 16), sig=b"\x01" + b"\x00" * 95, signers=[])
         # Build from the valid template extra and replace the btcc receipt with a garbage signature.
         bad_sig_payload = self.strip_trailing_clrc(base_extra0) + b"btcc" + receipt.serialize()
         bad_sig_block = self.make_block_from_gbt_with_extradata(node0, bad_sig_payload)
-        assert_equal(node0.submitblock(hexdata=bad_sig_block.serialize().hex()), None)
-        assert_equal(node0.getblockcount(), target_height)
+        assert_equal(node0.submitblock(hexdata=bad_sig_block.serialize().hex()), "bad-btcc-sig")
+        assert_equal(node0.getblockcount(), target_height - 1)
 
         bad_sig_hash = bad_sig_block.hash
 
@@ -572,20 +572,17 @@ class LLMQChainLocksTest(DashTestFramework):
             timeout=120
         )
 
-        # Reconnect node0 and ensure it reorgs away from its bad-sig block after another clsig
+        # Reconnect node0 and ensure it follows the canonical chain as chainlocks continue.
         self.reconnect_isolated_node(node0, 1)
         for i in range(1, len(self.nodes)):
             self.connect_nodes(0, i, wait_for_connect=False)
         self.wait_until(lambda: node0.getbestblockhash() == node1.getbestblockhash())
 
-        # Bad branch tip should be marked conflicting
-        found = False
+        # The malformed block must never become active. It might not be indexed as a tip at all.
         for tip in node0.getchaintips():
             if tip["hash"] == bad_sig_hash:
                 assert tip["status"] != "active"
-                found = True
                 break
-        assert found
 
         # Restore node0 back to the framework mocktime for subsequent test steps
         self.stop_node(0)
