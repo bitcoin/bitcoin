@@ -3,16 +3,26 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <chain.h>
+#include <evo/specialtx.h>
 #include <hash.h>
+#include <llmq/quorums_btccheckpoints.h>
+#include <primitives/block.h>
 #include <serialize.h>
+#include <script/script.h>
 #include <streams.h>
 #include <test/util/setup_common.h>
 #include <util/strencodings.h>
 
 #include <stdint.h>
+#include <array>
 #include <string>
+#include <vector>
 
 #include <boost/test/unit_test.hpp>
+
+#ifdef LOWER
+#undef LOWER
+#endif
 
 BOOST_FIXTURE_TEST_SUITE(serialize_tests, BasicTestingSetup)
 
@@ -308,6 +318,85 @@ BOOST_AUTO_TEST_CASE(cdiskblockindex_btcp_prev_serialization)
     DataStream with_btcp_prev_read{with_btcp_prev_ser};
     with_btcp_prev_read >> with_btcp_prev_roundtrip;
     BOOST_CHECK(with_btcp_prev_roundtrip.btcpPrevCommitment == with_btcp_prev.btcpPrevCommitment);
+}
+
+static CBlock BuildCoinbaseOnlyBlockWithPayload(const std::vector<unsigned char>& payload)
+{
+    CMutableTransaction coinbase;
+    coinbase.vin.resize(1);
+    coinbase.vin[0].prevout.SetNull();
+    coinbase.vout.emplace_back(0, CScript{} << OP_RETURN << payload);
+
+    CBlock block;
+    block.vtx.push_back(MakeTransactionRef(std::move(coinbase)));
+    return block;
+}
+
+static std::vector<bool> BitsetFromBytesLE(const std::vector<uint8_t>& bytes)
+{
+    std::vector<bool> bits;
+    bits.reserve(bytes.size() * 8);
+    for (const uint8_t b : bytes) {
+        for (int bit = 0; bit < 8; ++bit) {
+            bits.push_back(((b >> bit) & 0x01) != 0);
+        }
+    }
+    return bits;
+}
+
+BOOST_AUTO_TEST_CASE(extract_btcprev_ignores_embedded_magic_in_hash_tail)
+{
+    static constexpr std::array<uint8_t, 4> BTCP_MAGIC{{'b', 't', 'c', 'p'}};
+
+    std::vector<unsigned char> hash_bytes(32, 0x11);
+    hash_bytes[28] = BTCP_MAGIC[0];
+    hash_bytes[29] = BTCP_MAGIC[1];
+    hash_bytes[30] = BTCP_MAGIC[2];
+    hash_bytes[31] = BTCP_MAGIC[3];
+
+    std::vector<unsigned char> payload;
+    payload.reserve(BTCP_MAGIC.size() + hash_bytes.size());
+    payload.insert(payload.end(), BTCP_MAGIC.begin(), BTCP_MAGIC.end());
+    payload.insert(payload.end(), hash_bytes.begin(), hash_bytes.end());
+
+    const CBlock block = BuildCoinbaseOnlyBlockWithPayload(payload);
+
+    uint256 extracted{};
+    BOOST_CHECK(ExtractBTCPREVCommitment(block, extracted));
+
+    DataStream hash_stream;
+    hash_stream << extracted;
+    const std::string extracted_bytes = hash_stream.str();
+    BOOST_CHECK_EQUAL(extracted_bytes.size(), hash_bytes.size());
+    BOOST_CHECK(std::equal(extracted_bytes.begin(), extracted_bytes.end(), hash_bytes.begin()));
+}
+
+BOOST_AUTO_TEST_CASE(extract_btcc_ignores_embedded_magic_inside_receipt_payload)
+{
+    static constexpr std::array<uint8_t, 4> BTCC_MAGIC{{'b', 't', 'c', 'c'}};
+
+    llmq::CBTCCheckpointSig expected{};
+    expected.nHeight = 123;
+    expected.sysHash = uint256S("00000000000000000000000000000000000000000000000000000000000000ab");
+    expected.signers = BitsetFromBytesLE(
+        std::vector<uint8_t>{BTCC_MAGIC[0], BTCC_MAGIC[1], BTCC_MAGIC[2], BTCC_MAGIC[3]});
+
+    DataStream receipt_stream;
+    receipt_stream << expected;
+    const std::string receipt_bytes = receipt_stream.str();
+    BOOST_CHECK(HexStr(receipt_bytes).find("62746363") != std::string::npos);
+
+    std::vector<unsigned char> payload{0x01, 0x02};
+    payload.insert(payload.end(), BTCC_MAGIC.begin(), BTCC_MAGIC.end());
+    payload.insert(payload.end(), receipt_bytes.begin(), receipt_bytes.end());
+
+    const CBlock block = BuildCoinbaseOnlyBlockWithPayload(payload);
+
+    llmq::CBTCCheckpointSig extracted{};
+    BOOST_CHECK(ExtractBTCCReceipt(block, extracted));
+    BOOST_CHECK_EQUAL(extracted.nHeight, expected.nHeight);
+    BOOST_CHECK(extracted.sysHash == expected.sysHash);
+    BOOST_CHECK(extracted.signers == expected.signers);
 }
 
 enum class BaseFormat {

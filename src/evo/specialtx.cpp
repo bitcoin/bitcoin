@@ -10,6 +10,7 @@
 #include <validation.h>
 
 #include <algorithm>
+#include <iterator>
 
 #include <evo/deterministicmns.h>
 #include <evo/specialtx.h>
@@ -23,30 +24,58 @@
 
 class CCoinsViewCache;
 
+namespace {
+template <typename T, typename ParseFn>
+bool ExtractUniqueTaggedTailObject(const std::vector<unsigned char>& vchData,
+                                   const uint8_t (&magic)[4],
+                                   T& out,
+                                   ParseFn&& parse_fn)
+{
+    bool found{false};
+    T parsed{};
+    for (auto it = vchData.begin(); it != vchData.end();) {
+        it = std::search(it, vchData.end(), std::begin(magic), std::end(magic));
+        if (it == vchData.end()) {
+            break;
+        }
+
+        const auto payload_begin = std::next(it, sizeof(magic));
+        T candidate{};
+        if (parse_fn(payload_begin, vchData.end(), candidate)) {
+            // Multiple decodable tails are ambiguous and thus invalid.
+            if (found) {
+                return false;
+            }
+            parsed = std::move(candidate);
+            found = true;
+        }
+        ++it;
+    }
+
+    if (!found) {
+        return false;
+    }
+    out = std::move(parsed);
+    return true;
+}
+} // namespace
+
 bool ExtractBTCCReceipt(const CBlock& block, llmq::CBTCCheckpointSig& receipt)
 {
     if (block.vtx.empty() || !block.vtx[0]) return false;
     std::vector<unsigned char> vchData;
     int nOut{-1};
     if (!GetSyscoinData(*block.vtx[0], vchData, nOut)) return false;
-
-    auto pos = vchData.end();
-    for (auto it = vchData.begin();;) {
-        it = std::search(it, vchData.end(), std::begin(BTCCHECK_MAGIC_BYTES), std::end(BTCCHECK_MAGIC_BYTES));
-        if (it == vchData.end()) break;
-        pos = it;
-        ++it;
-    }
-    if (pos == vchData.end()) return false;
-
-    pos = std::next(pos, sizeof(BTCCHECK_MAGIC_BYTES));
-    try {
-        CDataStream ds(std::vector<unsigned char>(pos, vchData.end()), SER_NETWORK, PROTOCOL_VERSION);
-        ds >> receipt;
-    } catch (const std::exception&) {
-        return false;
-    }
-    return true;
+    return ExtractUniqueTaggedTailObject(vchData, BTCCHECK_MAGIC_BYTES, receipt,
+                                         [](auto begin, auto end, llmq::CBTCCheckpointSig& candidate) {
+                                             try {
+                                                 CDataStream ds(std::vector<unsigned char>(begin, end), SER_NETWORK, PROTOCOL_VERSION);
+                                                 ds >> candidate;
+                                                 return ds.empty();
+                                             } catch (const std::exception&) {
+                                                 return false;
+                                             }
+                                         });
 }
 
 bool ExtractBTCPREVCommitment(const CBlock& block, uint256& btcPrevHash)
@@ -55,24 +84,20 @@ bool ExtractBTCPREVCommitment(const CBlock& block, uint256& btcPrevHash)
     std::vector<unsigned char> vchData;
     int nOut{-1};
     if (!GetSyscoinData(*block.vtx[0], vchData, nOut)) return false;
-
-    auto pos = vchData.end();
-    for (auto it = vchData.begin();;) {
-        it = std::search(it, vchData.end(), std::begin(BTCPREV_MAGIC_BYTES), std::end(BTCPREV_MAGIC_BYTES));
-        if (it == vchData.end()) break;
-        pos = it;
-        ++it;
-    }
-    if (pos == vchData.end()) return false;
-
-    pos = std::next(pos, sizeof(BTCPREV_MAGIC_BYTES));
-    try {
-        CDataStream ds(std::vector<unsigned char>(pos, vchData.end()), SER_NETWORK, PROTOCOL_VERSION);
-        ds >> btcPrevHash;
-    } catch (const std::exception&) {
-        return false;
-    }
-    return true;
+    constexpr size_t BTCPREV_PAYLOAD_SIZE{32};
+    return ExtractUniqueTaggedTailObject(vchData, BTCPREV_MAGIC_BYTES, btcPrevHash,
+                                         [](auto begin, auto end, uint256& candidate) {
+                                             if (static_cast<size_t>(std::distance(begin, end)) != BTCPREV_PAYLOAD_SIZE) {
+                                                 return false;
+                                             }
+                                             try {
+                                                 CDataStream ds(std::vector<unsigned char>(begin, end), SER_NETWORK, PROTOCOL_VERSION);
+                                                 ds >> candidate;
+                                                 return ds.empty();
+                                             } catch (const std::exception&) {
+                                                 return false;
+                                             }
+                                         });
 }
 
 bool CheckSpecialTx(node::BlockManager &blockman, const CTransaction& tx, const CBlockIndex* pindexPrev, TxValidationState& state, CCoinsViewCache& view, bool fJustCheck, bool check_sigs)
