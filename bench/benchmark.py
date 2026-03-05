@@ -215,6 +215,10 @@ class BenchmarkPhase:
             f'mkdir -p "{tmp_datadir}"',
             f'rm -rf "{tmp_datadir}"/*',
         ]
+
+        # TRIM SSD once before benchmarking for consistent write performance
+        if self.capabilities.can_fstrim:
+            commands.append(f'{self.capabilities.fstrim_path} "{tmp_datadir}"')
         return self._create_temp_script(commands, "setup")
 
     def _create_prepare_script(

@@ -18,6 +18,12 @@ DROP_CACHES_PATHS = [
     "/usr/local/bin/drop-caches",
 ]
 
+# Known paths for fstrim wrapper
+FSTRIM_PATHS = [
+    "/run/wrappers/bin/fstrim",
+    "/usr/local/bin/fstrim",
+]
+
 
 @dataclass
 class Capabilities:
@@ -26,6 +32,10 @@ class Capabilities:
     # Cache management
     can_drop_caches: bool
     drop_caches_path: str | None
+
+    # Disk TRIM
+    can_fstrim: bool
+    fstrim_path: str | None
 
     # Required tools
     has_hyperfine: bool
@@ -88,6 +98,11 @@ class Capabilities:
                 "drop-caches not available - cache won't be cleared between runs"
             )
 
+        if not self.can_fstrim:
+            warnings.append(
+                "fstrim not available - SSD TRIM won't run before benchmarks"
+            )
+
         return warnings
 
 
@@ -104,6 +119,14 @@ def _find_drop_caches() -> str | None:
     return None
 
 
+def _find_fstrim() -> str | None:
+    """Find fstrim executable."""
+    for path in FSTRIM_PATHS:
+        if Path(path).exists() and os.access(path, os.X_OK):
+            return path
+    return None
+
+
 def _is_nixos() -> bool:
     """Check if we're running on NixOS."""
     return Path("/etc/NIXOS").exists()
@@ -112,10 +135,13 @@ def _is_nixos() -> bool:
 def detect_capabilities() -> Capabilities:
     """Auto-detect system capabilities."""
     drop_caches_path = _find_drop_caches()
+    fstrim_path = _find_fstrim()
 
     return Capabilities(
         can_drop_caches=drop_caches_path is not None,
         drop_caches_path=drop_caches_path,
+        can_fstrim=fstrim_path is not None,
+        fstrim_path=fstrim_path,
         has_hyperfine=_check_executable("hyperfine"),
         has_flamegraph=_check_executable("flamegraph"),
         has_perf=_check_executable("perf"),
