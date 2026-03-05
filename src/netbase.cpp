@@ -723,12 +723,13 @@ bool SetNameProxy(const Proxy &addrProxy) {
     return true;
 }
 
-bool GetNameProxy(Proxy &nameProxyOut) {
+std::optional<Proxy> GetNameProxy()
+{
     LOCK(g_proxyinfo_mutex);
-    if(!nameProxy.IsValid())
-        return false;
-    nameProxyOut = nameProxy;
-    return true;
+    if (!nameProxy.IsValid()) {
+        return std::nullopt;
+    }
+    return nameProxy;
 }
 
 bool HaveNameProxy() {

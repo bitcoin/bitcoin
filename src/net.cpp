@@ -434,7 +434,6 @@ CNode* CConnman::ConnectNode(CAddress addrConnect,
 
     // Connect
     std::unique_ptr<Sock> sock;
-    Proxy proxy;
     CService addr_bind;
     assert(!addr_bind.IsValid());
     std::unique_ptr<i2p::sam::Session> i2p_transient_session;
@@ -442,6 +441,7 @@ CNode* CConnman::ConnectNode(CAddress addrConnect,
     for (auto& target_addr: connect_to) {
         if (target_addr.IsValid()) {
             bool use_proxy;
+            Proxy proxy;
             if (proxy_override.has_value()) {
                 use_proxy = true;
                 proxy = proxy_override.value();
@@ -495,12 +495,14 @@ CNode* CConnman::ConnectNode(CAddress addrConnect,
                 // the proxy, mark this as an attempt.
                 addrman.get().Attempt(target_addr, fCountFailure);
             }
-        } else if (pszDest && GetNameProxy(proxy)) {
-            std::string host;
-            uint16_t port{default_port};
-            SplitHostPort(std::string(pszDest), port, host);
-            bool proxyConnectionFailed;
-            sock = ConnectThroughProxy(proxy, host, port, proxyConnectionFailed);
+        } else if (pszDest) {
+            if (const auto name_proxy = GetNameProxy()) {
+                std::string host;
+                uint16_t port{default_port};
+                SplitHostPort(std::string(pszDest), port, host);
+                bool proxyConnectionFailed;
+                sock = ConnectThroughProxy(*name_proxy, host, port, proxyConnectionFailed);
+            }
         }
         // Check any other resolved address (if any) if we fail to connect
         if (!sock) {
