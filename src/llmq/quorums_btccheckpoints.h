@@ -125,6 +125,9 @@ private:
     // Deduplicate policy-denial logs for the same sign target.
     int32_t lastPolicyRejectHeight GUARDED_BY(cs){-1};
     std::string lastPolicyRejectReason GUARDED_BY(cs);
+    // If continuity rebaseline triggers, deny the rest of the same sign height.
+    int32_t continuityRebaselineSysHeight GUARDED_BY(cs){-1};
+    int32_t continuityRebaselinePrevBTCHeight GUARDED_BY(cs){-1};
 
     // Best shares per height (signed by single quorum), later aggregated.
     std::map<int32_t, std::map<CQuorumCPtr, CBTCCheckpointSigCPtr>> bestShares GUARDED_BY(cs);

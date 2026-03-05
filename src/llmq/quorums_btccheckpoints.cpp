@@ -540,12 +540,22 @@ bool CBTCCheckpointsHandler::CheckBTCHeaderSigningPolicy(const uint256& btcHash,
     // already queued for signing.
     uint256 prevSignedBTCHash;
     int32_t prevSignedBTCHeight{-1};
+    int32_t continuityDeniedSysHeight{-1};
+    int32_t continuityDeniedPrevHeight{-1};
     {
         LOCK(cs);
         prevSignedBTCHash = lastSignedBTCHash;
         prevSignedBTCHeight = lastSignedBTCHeight;
+        continuityDeniedSysHeight = continuityRebaselineSysHeight;
+        continuityDeniedPrevHeight = continuityRebaselinePrevBTCHeight;
     }
     if (!prevSignedBTCHash.IsNull()) {
+        if (continuityDeniedSysHeight == sysHeight) {
+            const int32_t denyHeight = continuityDeniedPrevHeight >= 0 ? continuityDeniedPrevHeight : prevSignedBTCHeight;
+            denyReason = strprintf("btc-prev-signed-not-active-chain(height=%d)", denyHeight);
+            return false;
+        }
+
         int64_t prevHeight = prevSignedBTCHeight;
         if (prevHeight < 0) {
             UniValue prevHeader;
@@ -577,6 +587,8 @@ bool CBTCCheckpointsHandler::CheckBTCHeaderSigningPolicy(const uint256& btcHash,
                 if (lastSignedBTCHash == prevSignedBTCHash) {
                     lastSignedBTCHash = activeHashAtPrevHeight;
                     lastSignedBTCHeight = static_cast<int32_t>(prevHeight);
+                    continuityRebaselineSysHeight = sysHeight;
+                    continuityRebaselinePrevBTCHeight = static_cast<int32_t>(prevHeight);
                 }
             }
             denyReason = strprintf("btc-prev-signed-not-active-chain(height=%d)", prevHeight);
@@ -593,7 +605,6 @@ bool CBTCCheckpointsHandler::CheckBTCHeaderSigningPolicy(const uint256& btcHash,
     }
 
     btcHeightOut = static_cast<int32_t>(candidateHeight);
-    (void)sysHeight;
     return true;
 }
 
@@ -1022,35 +1033,44 @@ void CBTCCheckpointsHandler::TrySignBTCCheckpointTip()
 
     auto proTxHash = WITH_LOCK(activeMasternodeInfoCs, return activeMasternodeInfo.proTxHash);
 
-    LOCK(cs);
-    if (lastSignedHeight == want.nHeight && lastSignedSysHash == want.sysHash) {
-        auto it = bestCandidates.find(want.nHeight);
-        if (it != bestCandidates.end() && it->second && it->second->sysHash == want.sysHash) {
-            // Suppress redundant signing only after this exact target was already aggregated.
-            return;
+    std::vector<std::pair<uint256, uint256>> sign_jobs;
+    sign_jobs.reserve(quorums_scanned.size());
+    {
+        LOCK(cs);
+        if (lastSignedHeight == want.nHeight && lastSignedSysHash == want.sysHash) {
+            auto it = bestCandidates.find(want.nHeight);
+            if (it != bestCandidates.end() && it->second && it->second->sysHash == want.sysHash) {
+                // Suppress redundant signing only after this exact target was already aggregated.
+                return;
+            }
         }
-    }
-    bool queued_sign = false;
-    for (size_t i = 0; i < quorums_scanned.size(); ++i) {
-        const CQuorumCPtr& quorum = quorums_scanned[i];
-        if (quorum == nullptr) return;
-        if (!quorum->IsValidMember(proTxHash)) continue;
+        for (size_t i = 0; i < quorums_scanned.size(); ++i) {
+            const CQuorumCPtr& quorum = quorums_scanned[i];
+            if (quorum == nullptr) return;
+            if (!quorum->IsValidMember(proTxHash)) continue;
 
-        const uint256 requestId = ::SerializeHash(std::make_tuple(BTCCHECK_REQUESTID_PREFIX, want.nHeight, quorum->qc->quorumHash));
-        mapSignedRequestIds.emplace(requestId, std::make_pair(want.nHeight, want.sysHash));
-        while (mapSignedRequestIds.size() > MAX_SIGNED_REQUESTIDS) {
-            mapSignedRequestIds.erase(mapSignedRequestIds.begin());
+            const uint256 requestId = ::SerializeHash(std::make_tuple(BTCCHECK_REQUESTID_PREFIX, want.nHeight, quorum->qc->quorumHash));
+            mapSignedRequestIds.emplace(requestId, std::make_pair(want.nHeight, want.sysHash));
+            while (mapSignedRequestIds.size() > MAX_SIGNED_REQUESTIDS) {
+                mapSignedRequestIds.erase(mapSignedRequestIds.begin());
+            }
+            sign_jobs.emplace_back(requestId, quorum->qc->quorumHash);
         }
-        quorumSigningManager->AsyncSignIfMember(requestId, msgHash, quorum->qc->quorumHash);
-        queued_sign = true;
+        if (!sign_jobs.empty()) {
+            lastSignedHeight = want.nHeight;
+            lastSignedSysHash = want.sysHash;
+            lastSignedBTCHash = btcPrevHash;
+            lastSignedBTCHeight = btcHeight;
+            continuityRebaselineSysHeight = -1;
+            continuityRebaselinePrevBTCHeight = -1;
+            lastPolicyRejectHeight = -1;
+            lastPolicyRejectReason.clear();
+        }
     }
-    if (queued_sign) {
-        lastSignedHeight = want.nHeight;
-        lastSignedSysHash = want.sysHash;
-        lastSignedBTCHash = btcPrevHash;
-        lastSignedBTCHeight = btcHeight;
-        lastPolicyRejectHeight = -1;
-        lastPolicyRejectReason.clear();
+
+    // Avoid lock-order inversion: AsyncSignIfMember can reach quorum manager/cs_main.
+    for (const auto& sign_job : sign_jobs) {
+        quorumSigningManager->AsyncSignIfMember(sign_job.first, msgHash, sign_job.second);
     }
 }
 
