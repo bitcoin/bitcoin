@@ -1897,9 +1897,11 @@ bool CConnman::AddConnection(const std::string& address, ConnectionType conn_typ
     std::optional<int> max_connections;
     switch (conn_type) {
     case ConnectionType::INBOUND:
-    case ConnectionType::MANUAL:
     case ConnectionType::PRIVATE_BROADCAST:
         return false;
+    // no separate per-type limit for MANUAL because semAddnode limits them
+    case ConnectionType::MANUAL:
+        break;
     case ConnectionType::OUTBOUND_FULL_RELAY:
         max_connections = m_max_outbound_full_relay;
         break;
@@ -1921,8 +1923,8 @@ bool CConnman::AddConnection(const std::string& address, ConnectionType conn_typ
     // Max connections of specified type already exist
     if (max_connections != std::nullopt && existing_connections >= max_connections) return false;
 
-    // Max total outbound connections already exist
-    CountingSemaphoreGrant<> grant(*semOutbound, true);
+    // Max total automatic outbound or manual connections already exist
+    CountingSemaphoreGrant<> grant(conn_type == ConnectionType::MANUAL ? *semAddnode : *semOutbound, true);
     if (!grant) return false;
 
     OpenNetworkConnection(/*addrConnect=*/CAddress{},
