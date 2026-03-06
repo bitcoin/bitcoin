@@ -11,6 +11,11 @@
 #include <util/string.h>
 #include <util/time.h>
 
+#ifdef __linux__
+#include <util/strencodings.h>
+#include <fstream>
+#endif
+
 #ifdef WIN32
 #include <cassert>
 #include <codecvt>
@@ -125,7 +130,26 @@ std::optional<size_t> GetTotalRAM()
       defined(__OpenBSD__) || \
       defined(__illumos__) || \
       defined(__linux__)
-    if (long p{sysconf(_SC_PHYS_PAGES)}, s{sysconf(_SC_PAGESIZE)}; p > 0 && s > 0) return clamp(1ULL * p * s);
+    if (long p{sysconf(_SC_PHYS_PAGES)}, s{sysconf(_SC_PAGESIZE)}; p > 0 && s > 0) {
+        uint64_t physical_ram{1ULL * p * s};
+#ifdef __linux__
+        // Containers restrict memory via cgroup limits, which sysconf(_SC_PHYS_PAGES)
+        // does not reflect (it reads host-wide physical memory). Cap with the cgroup
+        // limit when one is set. Try cgroup v2 first, then fall back to cgroup v1.
+        if (std::ifstream cg2{"/sys/fs/cgroup/memory.max"}; cg2) {
+            std::string val;
+            if (cg2 >> val && val != "max") {
+                if (auto limit{ToIntegral<uint64_t>(val)}) physical_ram = std::min(physical_ram, *limit);
+            }
+        } else if (std::ifstream cg1{"/sys/fs/cgroup/memory/memory.limit_in_bytes"}; cg1) {
+            std::string val;
+            if (cg1 >> val) {
+                if (auto limit{ToIntegral<uint64_t>(val)}) physical_ram = std::min(physical_ram, *limit);
+            }
+        }
+#endif // __linux__
+        return clamp(physical_ram);
+    }
 #endif
     return std::nullopt;
 }
