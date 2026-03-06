@@ -167,6 +167,52 @@ class NEVMDataTest(DashTestFramework):
             if bumps >= max_bumps:
                 raise RuntimeError("Exceeded max mocktime bumps without reaching expiry MTP.")
 
+    def _wait_for_blob_chainlock_with_time_advance(
+        self,
+        versionhash,
+        nodes,
+        *,
+        timeout=180,
+        throttle_key,
+        step_seconds=1,
+    ):
+        def blob_chainlocked():
+            # CLSIG inv/getdata scheduling is mocktime-driven in these tests.
+            self._throttled_bump_mocktime(throttle_key, step=step_seconds, nodes=nodes)
+            return all(node.getnevmblobdata(versionhash).get('chainlock', False) for node in nodes)
+        self.wait_until(blob_chainlocked, timeout=timeout)
+
+    def _wait_for_best_chainlock_recovery_with_time_advance(
+        self,
+        node,
+        expected_chainlock,
+        *,
+        versionhash=None,
+        timeout=180,
+        throttle_key,
+        nodes=None,
+        step_seconds=1,
+    ):
+        wait_nodes = self.nodes if nodes is None else nodes
+
+        def recovered_best_chainlock():
+            self._throttled_bump_mocktime(throttle_key, step=step_seconds, nodes=wait_nodes)
+            try:
+                recovered_chainlock = node.getbestchainlock()
+            except JSONRPCException:
+                return False
+            if (
+                recovered_chainlock["height"] != expected_chainlock["height"]
+                or recovered_chainlock["blockhash"] != expected_chainlock["blockhash"]
+                or not recovered_chainlock["known_block"]
+            ):
+                return False
+            if versionhash is None:
+                return True
+            return node.getnevmblobdata(versionhash).get('chainlock', False)
+
+        self.wait_until(recovered_best_chainlock, timeout=timeout)
+
     def basic_nevm_data(self):
         print('Testing relay in mempool and compact blocks around blobs')
         # test relay with block
@@ -233,6 +279,13 @@ class NEVMDataTest(DashTestFramework):
         assert_equal(self.nodes[1].getnevmblobdata(txid, True)['data'], txidData)
         assert_equal(self.nodes[1].getnevmblobdata(vh, True)['data'], vhData)
         assert_equal(self.nodes[1].getnevmblobdata(txid1, True)['data'], txid1Data)
+        self._wait_for_blob_chainlock_with_time_advance(
+            vh,
+            self.nodes[0:4],
+            timeout=180,
+            throttle_key="basic_nevm_data_pre_restart_chainlock",
+        )
+        expected_chainlock = self.nodes[0].getbestchainlock()
         mtp = self.nodes[1].getnevmblobdata(txid1)['mtp']
         print('Start node 4...')
         self.start_node(4, extra_args=["-mocktime=" + str(self.mocktime), *self.extra_args[4]])
@@ -245,16 +298,15 @@ class NEVMDataTest(DashTestFramework):
         assert_equal(self.nodes[4].getnevmblobdata(txid, True)['data'], txidData)
         assert_equal(self.nodes[4].getnevmblobdata(vh, True)['data'], vhData)
         assert_equal(self.nodes[4].getnevmblobdata(txid1, True)['data'], txid1Data)
-        # After node 4 is back online and synced, wait for next chainlock across all nodes,
-        # then ensure getnevmblobdata(vh) reports chainlock
-        self.generate_helper(self.nodes[0], 5)
-        self.wait_until(lambda: self.sync_blocks_helper(self.nodes), timeout=180)
-        def blob_chainlocked_all_nodes():
-            # CLSIG inv/getdata scheduling is mocktime-driven in these tests.
-            # Keep mocktime moving so delayed announcements become requestable.
-            self._throttled_bump_mocktime("basic_nevm_data_blob_chainlock", step=1, nodes=self.nodes)
-            return all(n.getnevmblobdata(vh).get('chainlock', False) for n in self.nodes)
-        self.wait_until(blob_chainlocked_all_nodes, timeout=180)
+        # Node 4 should recover the current best CLSIG from its peers after restart.
+        # No new block should be needed for getnevmblobdata(vh) to report chainlock.
+        self._wait_for_best_chainlock_recovery_with_time_advance(
+            self.nodes[4],
+            expected_chainlock,
+            versionhash=vh,
+            timeout=180,
+            throttle_key="basic_nevm_data_restart_chainlock",
+        )
         print('Test blob expiry...')
         expiry_timestamp = (mtp + NEVM_DATA_EXPIRE_TIME)
         bump_to_expiry = expiry_timestamp - self.mocktime
