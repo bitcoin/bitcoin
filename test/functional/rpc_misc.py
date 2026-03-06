@@ -111,7 +111,7 @@ class RpcMiscTest(BitcoinTestFramework):
                 "txindex": values,
                 "basic block filter index": values,
                 "coinstatsindex": values,
-                "txospenderindex": values
+                "txospenderindex": values,
             }
         )
         # Specifying an index by name returns only the status of that index
