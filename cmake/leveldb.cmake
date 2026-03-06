@@ -11,11 +11,9 @@ check_cxx_symbol_exists(F_FULLFSYNC "fcntl.h" HAVE_FULLFSYNC)
 
 add_library(leveldb STATIC EXCLUDE_FROM_ALL
   ${PROJECT_SOURCE_DIR}/src/leveldb/db/builder.cc
-  ${PROJECT_SOURCE_DIR}/src/leveldb/db/c.cc
   ${PROJECT_SOURCE_DIR}/src/leveldb/db/db_impl.cc
   ${PROJECT_SOURCE_DIR}/src/leveldb/db/db_iter.cc
   ${PROJECT_SOURCE_DIR}/src/leveldb/db/dbformat.cc
-  ${PROJECT_SOURCE_DIR}/src/leveldb/db/dumpfile.cc
   ${PROJECT_SOURCE_DIR}/src/leveldb/db/filename.cc
   ${PROJECT_SOURCE_DIR}/src/leveldb/db/log_reader.cc
   ${PROJECT_SOURCE_DIR}/src/leveldb/db/log_writer.cc
@@ -45,7 +43,6 @@ add_library(leveldb STATIC EXCLUDE_FROM_ALL
   $<$<BOOL:${WIN32}>:${PROJECT_SOURCE_DIR}/src/leveldb/util/env_windows.cc>
   ${PROJECT_SOURCE_DIR}/src/leveldb/util/filter_policy.cc
   ${PROJECT_SOURCE_DIR}/src/leveldb/util/hash.cc
-  ${PROJECT_SOURCE_DIR}/src/leveldb/util/histogram.cc
   ${PROJECT_SOURCE_DIR}/src/leveldb/util/logging.cc
   ${PROJECT_SOURCE_DIR}/src/leveldb/util/options.cc
   ${PROJECT_SOURCE_DIR}/src/leveldb/util/status.cc
