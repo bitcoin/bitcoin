@@ -1851,6 +1851,9 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
         }
     }
     LogPrintf("NEVM connection %d\n", fNEVMConnection? 1: 0);
+    if (fMasternodeMode && (!Params().MineBlocksOnDemand() || enforce_btcheader_policy_ondemand) && !btc_header_policy_ready) {
+        return InitError(Untranslated("Failed to initialize BTC header policy backend. Ensure managed btcheadernode binaries are available (configure with --enable-btcheadernode-build) or set -btcheadermanaged=0 with a valid -btcheadercmd."));
+    }
     if(args.IsArgSet("-hrp"))
         fNEVMConnection = false;
     if(fNEVMConnection && !fRegTest) {
@@ -2091,10 +2094,6 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
             g_genesis_wait_cv.wait_for(lock, std::chrono::milliseconds(500));
         }
         block_notify_genesis_wait_connection.disconnect();
-    }
-    // if regtest then make sure geth is shown as synced as well
-    if (fMasternodeMode && (!Params().MineBlocksOnDemand() || enforce_btcheader_policy_ondemand) && !btc_header_policy_ready) {
-        return InitError(Untranslated("Failed to initialize BTC header policy backend. Ensure managed btcheadernode binaries are available (configure with --enable-btcheadernode-build) or set -btcheadermanaged=0 with a valid -btcheadercmd."));
     }
     if(!fRegTest && !fNEVMConnection && fMasternodeMode) {
         return InitError(Untranslated("You must have an NEVM connection on a masternode. You may need to reindex to ensure you get an NEVM connection properly."));
