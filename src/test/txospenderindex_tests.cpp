@@ -70,6 +70,7 @@ BOOST_FIXTURE_TEST_CASE(txospenderindex_initial_sync, TestChain100Setup)
         BOOST_CHECK_EQUAL((*tx_spender)->block_hash, tip_hash);
     }
 
+    // Shutdown sequence (c.f. Shutdown() in init.cpp)
     txospenderindex.Stop();
 }
 

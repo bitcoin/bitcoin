@@ -61,14 +61,6 @@ BOOST_FIXTURE_TEST_CASE(txindex_initial_sync, TestChain100Setup)
         }
     }
 
-    // It is not safe to stop and destroy the index until it finishes handling
-    // the last BlockConnected notification. The BlockUntilSyncedToCurrentChain()
-    // call above is sufficient to ensure this, but the
-    // SyncWithValidationInterfaceQueue() call below is also needed to ensure
-    // TSAN always sees the test thread waiting for the notification thread, and
-    // avoid potential false positive reports.
-    m_node.validation_signals->SyncWithValidationInterfaceQueue();
-
     // shutdown sequence (c.f. Shutdown() in init.cpp)
     txindex.Stop();
 }
