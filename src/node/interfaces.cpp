@@ -960,6 +960,11 @@ public:
     {
     }
 
+    std::vector<uint32_t> unknownTxPos() override
+    {
+        return m_tx_collection.UnknownTxPos();
+    }
+
 private:
     node::TxCollection m_tx_collection;
 };
