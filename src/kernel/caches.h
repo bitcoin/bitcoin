@@ -10,7 +10,7 @@
 #include <algorithm>
 
 //! Suggested default amount of cache reserved for the kernel (bytes)
-static constexpr size_t DEFAULT_KERNEL_CACHE{450_MiB};
+static constexpr size_t DEFAULT_KERNEL_CACHE{1024_MiB};
 //! Default LevelDB write batch size
 static constexpr size_t DEFAULT_DB_CACHE_BATCH{32_MiB};
 
