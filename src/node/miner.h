@@ -13,12 +13,14 @@
 #include <threadsafety.h>
 #include <txmempool.h>
 #include <util/feefrac.h>
+#include <util/hasher.h>
 #include <util/time.h>
 
 #include <cstdint>
 #include <memory>
 #include <optional>
 #include <string>
+#include <unordered_map>
 #include <vector>
 
 class CBlockIndex;
@@ -38,6 +40,7 @@ using interfaces::BlockRef;
 
 namespace node {
 class KernelNotifications;
+struct NodeContext;
 
 struct CBlockTemplate
 {
@@ -177,6 +180,22 @@ std::optional<BlockRef> WaitTipChanged(ChainstateManager& chainman, KernelNotifi
  * @returns false if interrupted.
  */
 bool CooldownIfHeadersAhead(ChainstateManager& chainman, KernelNotifications& kernel_notifications, const BlockRef& last_tip, bool& interrupt_mining);
+
+/** Node-side implementation of the interfaces::TxCollection interface: holds
+ *  the client-requested transactions, tracks which are still missing, and
+ *  assembles them into a block template. */
+class TxCollection
+{
+public:
+    TxCollection(std::vector<Wtxid> wtxids, const NodeContext& node);
+
+private:
+    /** Requested transaction order as provided by the client. */
+    const std::vector<Wtxid> m_wtxids;
+    /** Collected transactions keyed by wtxid. */
+    std::unordered_map<Wtxid, CTransactionRef, SaltedWtxidHasher> m_transactions;
+    const NodeContext& m_node;
+};
 } // namespace node
 
 #endif // BITCOIN_NODE_MINER_H
