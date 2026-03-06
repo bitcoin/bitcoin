@@ -327,6 +327,7 @@ def cmd_nightly(args: argparse.Namespace) -> int:
                 instrumentation=args.instrumentation,
                 machine_specs_file=machine_specs_file,
                 run_date=args.run_date or "",
+                trigger=args.trigger,
             )
             logger.info(f"Appended result to {history_file}")
         elif args.nightly_command == "chart":
@@ -574,6 +575,13 @@ def main() -> int:
         "--run-date",
         metavar="YYYY-MM-DD",
         help="Date when benchmark was executed (default: today). Stored for reference.",
+    )
+    nightly_append.add_argument(
+        "--trigger",
+        default="scheduled",
+        choices=["scheduled", "manual"],
+        help="How the benchmark was triggered (default: scheduled). "
+        "Scheduled runs dedup by commit; manual runs are always kept.",
     )
 
     # nightly chart

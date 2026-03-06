@@ -134,7 +134,9 @@ def series_label(result: "NightlyResult") -> str:
     prune = bitcoind.get("prune", 0)
 
     prune_str = f", prune {prune}" if prune else ""
-    return f"{arch}, {cpu_short}, {ram_str}, {block_range}, dbcache {dbcache}{prune_str}"
+    return (
+        f"{arch}, {cpu_short}, {ram_str}, {block_range}, dbcache {dbcache}{prune_str}"
+    )
 
 
 @dataclass
@@ -151,6 +153,9 @@ class NightlyResult:
     ]  # Full benchmark config (dbcache inside config.bitcoind.dbcache)
     machine: dict[str, Any]  # Full machine specs
     run_date: str = ""  # When benchmark was executed (reference only)
+    trigger: str = (
+        "scheduled"  # "scheduled" (nightly cron) or "manual" (workflow_dispatch)
+    )
 
     @property
     def dbcache(self) -> int:
@@ -183,6 +188,8 @@ class NightlyResult:
         }
         if self.run_date:
             result["run_date"] = self.run_date
+        if self.trigger != "scheduled":
+            result["trigger"] = self.trigger
         return result
 
     @classmethod
@@ -202,6 +209,7 @@ class NightlyResult:
                 config=data["config"],
                 machine=data.get("machine", {}),
                 run_date=data.get("run_date", ""),
+                trigger=data.get("trigger", "scheduled"),
             )
 
         # Legacy format - convert to new format
@@ -252,19 +260,24 @@ class NightlyHistory:
         logger.info(f"Saved {len(self.results)} results to {self.history_file}")
 
     def append(self, result: NightlyResult) -> None:
-        """Append a new result to history."""
-        # Check for duplicate (same date, commit, dbcache)
-        for existing in self.results:
-            if (
-                existing.date == result.date
-                and existing.commit == result.commit
-                and existing.dbcache == result.dbcache
-            ):
-                logger.warning(
-                    f"Duplicate result for {result.date} {result.commit[:8]} dbcache={result.dbcache}, replacing"
-                )
-                self.results.remove(existing)
-                break
+        """Append a new result to history.
+
+        Scheduled runs dedup by (date, commit, dbcache) to handle retries.
+        Manual runs are always appended as additional data points.
+        """
+        if result.trigger == "scheduled":
+            for existing in self.results:
+                if (
+                    existing.trigger == "scheduled"
+                    and existing.date == result.date
+                    and existing.commit == result.commit
+                    and existing.dbcache == result.dbcache
+                ):
+                    logger.warning(
+                        f"Replacing scheduled result for {result.date} {result.commit[:8]} dbcache={result.dbcache}"
+                    )
+                    self.results.remove(existing)
+                    break
 
         self.results.append(result)
         # Sort by date, then dbcache
@@ -314,6 +327,8 @@ class NightlyHistory:
                     "series_key": key,
                     "series_label": series_label(r),
                     "color_index": series_color_index(key),
+                    "trigger": r.trigger,
+                    "run_date": r.run_date,
                 }
             )
         return chart_data
@@ -326,6 +341,7 @@ class NightlyHistory:
         machine_specs: dict[str, Any],
         date_str: str | None = None,
         run_date: str = "",
+        trigger: str = "scheduled",
     ) -> None:
         """Append result from a hyperfine results.json file.
 
@@ -367,6 +383,7 @@ class NightlyHistory:
             config=benchmark_config,
             machine=machine_specs,
             run_date=run_date,
+            trigger=trigger,
         )
         self.append(result)
 
@@ -404,6 +421,7 @@ class NightlyPhase:
         instrumentation: str = "uninstrumented",
         machine_specs_file: Path | None = None,
         run_date: str = "",
+        trigger: str = "scheduled",
     ) -> None:
         """Append a result from hyperfine results.json to history.
 
@@ -450,6 +468,7 @@ class NightlyPhase:
             machine_specs=machine_specs,
             date_str=date_str,
             run_date=run_date,
+            trigger=trigger,
         )
         history.save()
 

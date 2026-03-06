@@ -193,7 +193,12 @@ class ReportGenerator:
 
         # Generate HTML
         html = self._generate_html(
-            all_runs, nightly_comparison, full_title, output_dir, output_dir, commit,
+            all_runs,
+            nightly_comparison,
+            full_title,
+            output_dir,
+            output_dir,
+            commit,
             run_id,
         )
 

@@ -205,13 +205,19 @@ jobs:
       - name: Install Nix
         uses: cachix/install-nix-action@v31
 
-      - name: Get dates
+      - name: Get dates and trigger
         run: |
           # Commit date (for chart X-axis)
           COMMIT_DATE=$(cat ./commit-info/commit-date.txt)
           echo "COMMIT_DATE=$COMMIT_DATE" >> "$GITHUB_ENV"
           # Run date (for reference)
           echo "RUN_DATE=$(date -u +%Y-%m-%d)" >> "$GITHUB_ENV"
+          # Trigger type (scheduled nightly vs manual dispatch)
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            echo "TRIGGER=manual" >> "$GITHUB_ENV"
+          else
+            echo "TRIGGER=scheduled" >> "$GITHUB_ENV"
+          fi
 
       - name: Append results to history
         run: |
@@ -226,6 +232,7 @@ jobs:
             450 \
             --date "$COMMIT_DATE" \
             --run-date "$RUN_DATE" \
+            --trigger "$TRIGGER" \
             --benchmark-config benchcoin-tools/bench/configs/nightly.toml \
             --machine-specs ./machine-specs/machine-specs.json
 
@@ -238,6 +245,7 @@ jobs:
             32000 \
             --date "$COMMIT_DATE" \
             --run-date "$RUN_DATE" \
+            --trigger "$TRIGGER" \
             --benchmark-config benchcoin-tools/bench/configs/nightly.toml \
             --machine-specs ./machine-specs/machine-specs.json
 
