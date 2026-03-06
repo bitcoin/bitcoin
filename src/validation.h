@@ -119,8 +119,9 @@ static constexpr int DEFAULT_BTC_HEADER_TIP_MAX_AGE{2 * 60 * 60};      // second
 static constexpr int DEFAULT_BTC_HEADER_RECENT_FORK_DEPTH{2};           // blocks from active tip
 static constexpr int DEFAULT_BTC_HEADER_MAX_LAG_BLOCKS{36};             // candidate lag behind active tip
 static constexpr int DEFAULT_BTC_HEADER_TIP_MAX_NO_PROGRESS{1800};      // seconds
-static constexpr int DEFAULT_BTC_HEADER_MAINNET_P2P_PORT{18444};
-static constexpr int DEFAULT_BTC_HEADER_MAINNET_RPC_PORT{18443};
+// Keep mainnet managed btcheader defaults off Bitcoin Core regtest ports (18444/18443).
+static constexpr int DEFAULT_BTC_HEADER_MAINNET_P2P_PORT{18544};
+static constexpr int DEFAULT_BTC_HEADER_MAINNET_RPC_PORT{18543};
 static constexpr int DEFAULT_BTC_HEADER_TESTNET_P2P_PORT{19444};
 static constexpr int DEFAULT_BTC_HEADER_TESTNET_RPC_PORT{19443};
 static constexpr int DEFAULT_BTC_HEADER_SIGNET_P2P_PORT{20444};
