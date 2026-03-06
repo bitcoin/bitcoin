@@ -108,6 +108,7 @@ public:
  * Usage:
  * - Call Mining::collectTxs() with the requested wtxids in final block order.
  * - Use unknownTxPos() to learn which transactions are still missing.
+ * - Provide missing transactions with addMissingTxs().
  */
 class TxCollection
 {
@@ -116,6 +117,18 @@ public:
 
     //! Return the zero-based positions of transactions that are still missing.
     virtual std::vector<uint32_t> unknownTxPos() = 0;
+
+    /**
+     * Add transactions that were missing from the initial collection.
+     *
+     * The list is checked for null entries and unexpected wtxids before any
+     * transaction is added, so a failed call leaves the collection unchanged.
+     *
+     * @throws std::runtime_error on a null transaction, a wtxid that was not
+     *         among those requested, or a list with more transactions than
+     *         the whole collection.
+     */
+    virtual void addMissingTxs(const std::vector<CTransactionRef>& txs) = 0;
 };
 
 //! Interface giving clients (RPC, Stratum v2 Template Provider in the future)
