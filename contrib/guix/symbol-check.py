@@ -202,7 +202,7 @@ def check_exported_symbols(binary) -> bool:
         if not symbol.exported:
             continue
         name = symbol.name
-        if binary.header.machine_type == lief.ELF.ARCH.RISCV or name in IGNORE_EXPORTS:
+        if name in IGNORE_EXPORTS:
             continue
         print(f'{filename}: export of symbol {name} not allowed!')
         ok = False
