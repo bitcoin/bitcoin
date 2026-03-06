@@ -2220,11 +2220,14 @@ int ApplyTxInUndo(Coin&& undo, CCoinsViewCache& view, const COutPoint& out)
 
     return fClean ? DISCONNECT_OK : DISCONNECT_UNCLEAN;
 }
-bool GetNEVMData(BlockValidationState& state, const CBlock& block, CNEVMHeader &evmBlockHeader) {
+bool GetNEVMData(BlockValidationState& state, const CBlock& block, CNEVMHeader &evmBlockHeader, std::vector<unsigned char>* coinbase_payload) {
     std::vector<unsigned char> vchData;
 	int nOut;
 	if (!GetSyscoinData(*block.vtx[0], vchData, nOut))
 		return state.Invalid(BlockValidationResult::BLOCK_CONSENSUS, "nevm-block-data-output");
+    if (coinbase_payload != nullptr) {
+        *coinbase_payload = vchData;
+    }
     auto pos = std::search(vchData.begin(), vchData.end(), std::begin(NEVM_MAGIC_BYTES), std::end(NEVM_MAGIC_BYTES));
     if(pos == vchData.end() )
         return state.Invalid(BlockValidationResult::BLOCK_CONSENSUS, "nevm-block-tag");
@@ -2240,7 +2243,8 @@ bool GetNEVMData(BlockValidationState& state, const CBlock& block, CNEVMHeader &
 }
 bool Chainstate::ConnectNEVMCommitment(BlockValidationState& state, NEVMTxRootMap &mapNEVMTxRoots, const CBlock& block, const CBlockIndex* pindex, const uint256& nBlockHash, const uint32_t& nHeight, const bool fJustCheck, PoDAMAPMemory &mapPoDA, const CDeterministicMNListNEVMAddressDiff &diff) {
     CNEVMHeader nevmBlockHeader;
-    if(!GetNEVMData(state, block, nevmBlockHeader)) {
+    std::vector<unsigned char> coinbase_payload;
+    if(!GetNEVMData(state, block, nevmBlockHeader, &coinbase_payload)) {
         return false; //state filled by GetNEVMData
     }
     if(block.vchNEVMBlockData.empty()) {
@@ -2267,7 +2271,7 @@ bool Chainstate::ConnectNEVMCommitment(BlockValidationState& state, NEVMTxRootMa
             // Only forward a BTC anchor if this carrier block has a non-null BTCC receipt.
             // (Null receipts are allowed for censorship resistance and must result in no NEVM checkpoint.)
             llmq::CBTCCheckpointSig btcc;
-            const bool extracted = ExtractBTCCReceipt(block, btcc);
+            const bool extracted = ExtractBTCCReceipt(coinbase_payload, btcc);
             if (extracted && !btcc.IsNull()) {
                 if (pindex != nullptr) {
                     const int expected_height = static_cast<int>(nHeight) - BTCCHECK_PROP_BUFFER;
@@ -2740,17 +2744,29 @@ bool Chainstate::ConnectBlock(const CBlock& block, BlockValidationState& state, 
     }
 
     // SYSCOIN: Persist BTCPREV commitment in block index only for consensus-relevant
-    // sign-offset BTCC heights. This keeps indexed state aligned with enforced rules.
+    // sign-offset BTCC heights. Reuse the contextual-validation cache in the common
+    // accept->connect flow; otherwise fall back to reparsing.
     if (!fJustCheck) {
         const auto& consensus = params.GetConsensus();
         const bool btcp_required = pindex->nHeight >= consensus.nCLReceiptStartBlock &&
                                    (pindex->nHeight % BTCCHECK_PERIOD) == BTCCHECK_SIGN_OFFSET &&
                                    block.auxpow;
         if (btcp_required) {
-            uint256 btcp;
-            if (ExtractBTCPREVCommitment(block, btcp) && pindex->btcpPrevCommitment != btcp) {
-                pindex->btcpPrevCommitment = btcp;
-                m_blockman.m_dirty_blockindex.insert(pindex);
+            const uint256& btcp_expected = block.auxpow->getParentPrevBlockHash();
+            if (pindex->m_btcp_prev_contextually_validated &&
+                pindex->m_btcp_prev_contextual_commitment == btcp_expected) {
+                if (pindex->btcpPrevCommitment != btcp_expected) {
+                    pindex->btcpPrevCommitment = btcp_expected;
+                    m_blockman.m_dirty_blockindex.insert(pindex);
+                }
+            } else {
+                uint256 btcp;
+                if (ExtractBTCPREVCommitment(block, btcp) &&
+                    btcp == btcp_expected &&
+                    pindex->btcpPrevCommitment != btcp) {
+                    pindex->btcpPrevCommitment = btcp;
+                    m_blockman.m_dirty_blockindex.insert(pindex);
+                }
             }
         }
     }
@@ -5151,6 +5167,17 @@ bool ChainstateManager::AcceptBlock(const std::shared_ptr<const CBlock>& pblock,
             m_blockman.m_dirty_blockindex.insert(pindex);
         }
         return error("%s: %s", __func__, state.ToString());
+    }
+    // SYSCOIN: cache the contextually validated BTCPREV so ConnectBlock can reuse it
+    // without reparsing the coinbase payload in the common accept->connect flow.
+    {
+        const bool btcp_required = pindex->nHeight >= params.GetConsensus().nCLReceiptStartBlock &&
+                                   (pindex->nHeight % BTCCHECK_PERIOD) == BTCCHECK_SIGN_OFFSET &&
+                                   block.auxpow;
+        if (btcp_required) {
+            pindex->m_btcp_prev_contextually_validated = true;
+            pindex->m_btcp_prev_contextual_commitment = block.auxpow->getParentPrevBlockHash();
+        }
     }
     // SYSCOIN ProcessNEVMData/FlushDataToCache so we have the data from processing out-of-order blocks and it reads from disk (recreating PoDA data in block) prior to validation in ConnectTip()
     bool PODAContext = pindex->nHeight >= params.GetConsensus().nPODAStartBlock;

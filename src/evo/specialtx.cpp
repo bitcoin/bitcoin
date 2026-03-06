@@ -58,14 +58,11 @@ bool ExtractUniqueTaggedTailObject(const std::vector<unsigned char>& vchData,
     out = std::move(parsed);
     return true;
 }
+
 } // namespace
 
-bool ExtractBTCCReceipt(const CBlock& block, llmq::CBTCCheckpointSig& receipt)
+bool ExtractBTCCReceipt(const std::vector<unsigned char>& vchData, llmq::CBTCCheckpointSig& receipt)
 {
-    if (block.vtx.empty() || !block.vtx[0]) return false;
-    std::vector<unsigned char> vchData;
-    int nOut{-1};
-    if (!GetSyscoinData(*block.vtx[0], vchData, nOut)) return false;
     return ExtractUniqueTaggedTailObject(vchData, BTCCHECK_MAGIC_BYTES, receipt,
                                          [](auto begin, auto end, llmq::CBTCCheckpointSig& candidate) {
                                              try {
@@ -76,6 +73,15 @@ bool ExtractBTCCReceipt(const CBlock& block, llmq::CBTCCheckpointSig& receipt)
                                                  return false;
                                              }
                                          });
+}
+
+bool ExtractBTCCReceipt(const CBlock& block, llmq::CBTCCheckpointSig& receipt)
+{
+    if (block.vtx.empty() || !block.vtx[0]) return false;
+    std::vector<unsigned char> vchData;
+    int nOut{-1};
+    if (!GetSyscoinData(*block.vtx[0], vchData, nOut)) return false;
+    return ExtractBTCCReceipt(vchData, receipt);
 }
 
 bool ExtractBTCPREVCommitment(const CBlock& block, uint256& btcPrevHash)
@@ -165,7 +171,7 @@ bool ProcessSpecialTxsInBlock(ChainstateManager &chainman, const CBlock& block, 
                 // SYSCOIN: consensus-validated, lagged BTC checkpoint attestation embedded in the same payload.
                 // Required on carrier heights whose referenced sign height is post-activation (null allowed).
                 llmq::CBTCCheckpointSig btcc;
-                if (!ExtractBTCCReceipt(block, btcc)) {
+                if (!ExtractBTCCReceipt(vchData, btcc)) {
                     LogPrintf("%s -- bad-btcc-missing at height=%d block=%s data_size=%u\n", __func__, height, pindex->GetBlockHash().ToString(), static_cast<unsigned>(vchData.size()));
                     return state.Invalid(BlockValidationResult::BLOCK_CONSENSUS, "bad-btcc-missing");
                 }

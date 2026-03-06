@@ -207,6 +207,11 @@ public:
     // Persisted in the block index so later logic (e.g. BTCC carrier handling / ZMQ forwarding) can
     // deterministically map sysHash -> BTCPREV without reading block data from disk.
     uint256 btcpPrevCommitment{};
+    // SYSCOIN: memory-only cache populated after contextual BTCPREV validation so
+    // ConnectBlock can avoid reparsing in the hot path without changing persisted
+    // side-chain index semantics.
+    bool m_btcp_prev_contextually_validated{false};
+    uint256 m_btcp_prev_contextual_commitment{};
 
     //! (memory only) Sequential id assigned to distinguish order in which blocks are received.
     int32_t nSequenceId{0};

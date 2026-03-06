@@ -28,6 +28,7 @@ bool ProcessSpecialTxsInBlock(ChainstateManager &chainman, const CBlock& block, 
 bool UndoSpecialTxsInBlock(const CBlock& block, const CBlockIndex* pindex, CDeterministicMNListNEVMAddressDiff& diffNEVM, bool bReverify, bool bReplay) EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
 
 // SYSCOIN: helpers for extracting BTCC and BTCPREV from coinbase Syscoin-data payload.
+bool ExtractBTCCReceipt(const std::vector<unsigned char>& vchData, llmq::CBTCCheckpointSig& receipt);
 bool ExtractBTCCReceipt(const CBlock& block, llmq::CBTCCheckpointSig& receipt);
 bool ExtractBTCPREVCommitment(const CBlock& block, uint256& btcPrevHash);
 

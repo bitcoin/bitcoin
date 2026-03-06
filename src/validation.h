@@ -1343,7 +1343,7 @@ extern std::unique_ptr<CBlockIndexDB> pblockindexdb;
 static const unsigned int DEFAULT_RPC_SERIALIZE_VERSION = 1;
 int RPCSerializationFlags();
 bool DisconnectNEVMCommitment(BlockValidationState& state, std::vector<uint256> &vecNEVMBlocks, const CBlock& block, const CDeterministicMNListNEVMAddressDiff &diff) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
-bool GetNEVMData(BlockValidationState& state, const CBlock& block, CNEVMHeader &evmBlock);
+bool GetNEVMData(BlockValidationState& state, const CBlock& block, CNEVMHeader &evmBlock, std::vector<unsigned char>* coinbase_payload = nullptr);
 bool FillNEVMData(CBlock &block);
 bool EraseNEVMData(const NEVMDataVec &NEVMDataVecOut);
 bool ProcessNEVMData(const node::BlockManager& blockman, const CBlock &block, const int64_t &nMedianTime, const int64_t& nTimeNow, PoDAMAPMemory &mapPoDA);
