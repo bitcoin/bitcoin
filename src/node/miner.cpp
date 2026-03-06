@@ -16,6 +16,7 @@
 #include <consensus/validation.h>
 #include <interfaces/types.h>
 #include <node/blockstorage.h>
+#include <node/context.h>
 #include <node/kernel_notifications.h>
 #include <node/mining_args.h>
 #include <node/mining_types.h>
@@ -32,6 +33,7 @@
 #include <uint256.h>
 #include <util/check.h>
 #include <util/feefrac.h>
+#include <util/hasher.h>
 #include <util/log.h>
 #include <util/result.h>
 #include <util/signalinterrupt.h>
@@ -42,6 +44,7 @@
 #include <versionbits.h>
 
 #include <algorithm>
+#include <boost/multi_index/detail/hash_index_iterator.hpp>
 #include <compare>
 #include <condition_variable>
 #include <cstddef>
@@ -50,9 +53,30 @@
 #include <span>
 #include <stdexcept>
 #include <string>
+#include <unordered_map>
 #include <utility>
 
 namespace node {
+
+TxCollection::TxCollection(std::vector<Wtxid> wtxids, const NodeContext& node)
+    : m_wtxids(std::move(wtxids)),
+      m_node(node)
+{
+    // Check for excessively high numbers of transactions.
+    if (m_wtxids.size() > MAX_BLOCK_WEIGHT / MIN_TRANSACTION_WEIGHT) {
+        throw std::runtime_error(strprintf("too many wtxids (%d > %d)", m_wtxids.size(), MAX_BLOCK_WEIGHT / MIN_TRANSACTION_WEIGHT));
+    }
+    CTxMemPool& mempool{*Assert(m_node.mempool)};
+    LOCK(mempool.cs);
+    for (const auto& wtxid : m_wtxids) {
+        const auto it{mempool.GetIter(wtxid)};
+        CTransactionRef tx{it ? (*it)->GetSharedTx() : nullptr};
+        if (!m_transactions.emplace(wtxid, std::move(tx)).second) {
+            throw std::runtime_error(strprintf("duplicate wtxid %s", wtxid.ToString()));
+        }
+    }
+}
+
 
 int64_t GetMinimumTime(const CBlockIndex* pindexPrev, const int64_t difficulty_adjustment_interval)
 {
