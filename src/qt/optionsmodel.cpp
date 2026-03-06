@@ -469,7 +469,7 @@ QVariant OptionsModel::getOption(OptionID option, const std::string& suffix) con
                suffix.empty()          ? getOption(option, "-prev") :
                                          DEFAULT_PRUNE_TARGET_GB;
     case DatabaseCache:
-        return qlonglong(SettingTo<int64_t>(setting(), DEFAULT_DB_CACHE >> 20));
+        return qlonglong(SettingTo<int64_t>(setting(), node::GetDefaultDBCache() >> 20));
     case ThreadsScriptVerif:
         return qlonglong(SettingTo<int64_t>(setting(), DEFAULT_SCRIPTCHECK_THREADS));
     case Listen:
