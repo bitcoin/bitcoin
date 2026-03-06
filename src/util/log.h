@@ -71,8 +71,12 @@
 /// called internally, and in special cases to override default behaviors.
 // NOLINTBEGIN(bugprone-lambda-function-name)
 // Allow __func__ to be used in any context without warnings:
+constexpr bool LOG_REQUIRE_CONTEXT = false;
 #define LOG_EMIT(options, ...)                                                                     \
     do {                                                                                           \
+        static_assert(!LOG_REQUIRE_CONTEXT ||                                                      \
+            util::log::detail::LogContext<decltype(PP_FIRST_ARG(__VA_ARGS__))>,                    \
+            "Log macro call is missing required context argument");                                \
         constexpr util::log::Options _options{PP_EXPAND_ARGS options};                             \
         auto&& _context{util::log::detail::GetContext<_options>(PP_FIRST_ARG(__VA_ARGS__))};       \
         if (util::log::hooks::ShouldLog(_context.logger, _context.category, _options.level)) {     \
@@ -191,11 +195,15 @@ void Log(Logger* logger, const Options& options, Entry entry);
 
 /// Internal functions used to help implement logging macros.
 namespace detail {
+template <typename T>
+concept LogContext = requires {
+    requires std::remove_reference_t<T>::log_context;
+};
+
 /// Internal helper to get Context from the first macro argument. Overloaded to
 /// detect case where first macro argument is a string literal and context has
 /// been omitted.
-template <Options options, typename Context>
-requires (Context::log_context)
+template <Options options, LogContext Context>
 Context& GetContext(Context& context LIFETIMEBOUND) { return context; }
 template <Options options>
 Context GetContext(std::string_view fmt)
