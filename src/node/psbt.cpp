@@ -62,12 +62,30 @@ PSBTAnalysis AnalyzePSBT(PartiallySignedTransaction psbtx)
         if (!PSBTInputSignedAndVerified(psbtx, i, &txdata)) {
             input_analysis.is_final = false;
 
+            // If the input has final scripts (i.e. it has been finalized) but
+            // verification failed, the existing signature(s) must be invalid.
+            if (input_analysis.has_utxo && PSBTInputSigned(input)) {
+                result.SetInvalid(strprintf("PSBT is not valid. Input %u has an invalid signature", i));
+                return result;
+            }
+
             // Figure out what is missing
             SignatureData outdata;
             bool complete = SignPSBTInput(DUMMY_SIGNING_PROVIDER, psbtx, i, &txdata, std::nullopt, &outdata) == PSBTError::OK;
 
             // Things are missing
             if (!complete) {
+                // Check for invalid signatures: if UTXO info is present, signature data
+                // exists, but nothing is reported as missing and signing still couldn't
+                // complete, the existing signature(s) must be invalid.
+                if (input_analysis.has_utxo &&
+                    outdata.missing_pubkeys.empty() && outdata.missing_redeem_script.IsNull() &&
+                    outdata.missing_witness_script.IsNull() && outdata.missing_sigs.empty() &&
+                    (!input.m_tap_key_sig.empty() || !input.m_tap_script_sigs.empty() || !input.partial_sigs.empty())) {
+                    result.SetInvalid(strprintf("PSBT is not valid. Input %u has an invalid signature", i));
+                    return result;
+                }
+
                 input_analysis.missing_pubkeys = outdata.missing_pubkeys;
                 input_analysis.missing_redeem_script = outdata.missing_redeem_script;
                 input_analysis.missing_witness_script = outdata.missing_witness_script;
