@@ -4595,6 +4595,12 @@ bool Chainstate::LoadChainTip()
     m_chainman.UpdateIBDStatus();
     tip = m_chain.Tip();
 
+    // nSequenceId is one of the keys used to sort setBlockIndexCandidates. Ensure all
+    // candidate sets are empty to avoid UB, as nSequenceId is about to be modified.
+    for (const auto& cs : m_chainman.m_chainstates) {
+        assert(cs->setBlockIndexCandidates.empty());
+    }
+
     // Make sure our chain tip before shutting down scores better than any other candidate
     // to maintain a consistent best tip over reboots in case of a tie.
     auto target = tip;
@@ -4603,13 +4609,6 @@ bool Chainstate::LoadChainTip()
         target = target->pprev;
     }
 
-    // Block index candidates are loaded before the chain tip, so we need to replace this entry
-    // Otherwise the scoring will be based on the memory address location instead of the nSequenceId
-    setBlockIndexCandidates.erase(tip);
-    TryAddBlockIndexCandidate(tip);
-    PruneBlockIndexCandidates();
-
-    tip = m_chain.Tip();
     LogInfo("Loaded best chain: hashBestChain=%s height=%d date=%s progress=%f",
               tip->GetBlockHash().ToString(),
               m_chain.Height(),
@@ -4914,6 +4913,22 @@ void Chainstate::ClearBlockIndexCandidates()
     setBlockIndexCandidates.clear();
 }
 
+void Chainstate::PopulateBlockIndexCandidates()
+{
+    AssertLockHeld(::cs_main);
+
+    for (CBlockIndex* pindex : m_blockman.GetAllBlockIndices()) {
+        // With assumeutxo, the snapshot block is a candidate for the tip, but it
+        // may not have BLOCK_VALID_TRANSACTIONS (e.g. if we haven't yet downloaded
+        // the block), so we special-case it here.
+        if (pindex == SnapshotBase() || pindex == TargetBlock() ||
+                (pindex->IsValid(BLOCK_VALID_TRANSACTIONS) &&
+                 (pindex->HaveNumChainTxs() || pindex->pprev == nullptr))) {
+            TryAddBlockIndexCandidate(pindex);
+        }
+    }
+}
+
 bool ChainstateManager::LoadBlockIndex()
 {
     AssertLockHeld(cs_main);
@@ -4930,19 +4945,6 @@ bool ChainstateManager::LoadBlockIndex()
 
         for (CBlockIndex* pindex : vSortedByHeight) {
             if (m_interrupt) return false;
-            // If we have an assumeutxo-based chainstate, then the snapshot
-            // block will be a candidate for the tip, but it may not be
-            // VALID_TRANSACTIONS (eg if we haven't yet downloaded the block),
-            // so we special-case the snapshot block as a potential candidate
-            // here.
-            if (pindex == CurrentChainstate().SnapshotBase() ||
-                    (pindex->IsValid(BLOCK_VALID_TRANSACTIONS) &&
-                     (pindex->HaveNumChainTxs() || pindex->pprev == nullptr))) {
-
-                for (const auto& chainstate : m_chainstates) {
-                    chainstate->TryAddBlockIndexCandidate(pindex);
-                }
-            }
             if (pindex->nStatus & BLOCK_FAILED_VALID && (!m_best_invalid || pindex->nChainWork > m_best_invalid->nChainWork)) {
                 m_best_invalid = pindex;
             }
@@ -5732,9 +5734,9 @@ util::Result<CBlockIndex*> ChainstateManager::ActivateSnapshot(
     }
 
     Chainstate& chainstate{AddChainstate(std::move(snapshot_chainstate))};
-    const bool chaintip_loaded{chainstate.LoadChainTip()};
-    assert(chaintip_loaded);
     m_blockman.m_snapshot_height = Assert(chainstate.SnapshotBase())->nHeight;
+
+    chainstate.PopulateBlockIndexCandidates();
 
     LogInfo("[snapshot] successfully activated snapshot %s", base_blockhash.ToString());
     LogInfo("[snapshot] (%.2f MB)",
@@ -5964,7 +5966,6 @@ util::Result<void> ChainstateManager::PopulateAndValidateSnapshot(
     assert(index);
     assert(index == snapshot_start_block);
     index->m_chain_tx_count = au_data.m_chain_tx_count;
-    snapshot_chainstate.setBlockIndexCandidates.insert(snapshot_start_block);
 
     LogInfo("[snapshot] validated snapshot (%.2f MB)",
         coins_cache.DynamicMemoryUsage() / (1000 * 1000));
