@@ -644,6 +644,7 @@ void ArgsManager::ClearArgs()
     m_settings = {};
     m_available_args.clear();
     m_network_only_args.clear();
+    m_config_sections.clear();
 }
 
 void ArgsManager::CheckMultipleCLIArgs() const
