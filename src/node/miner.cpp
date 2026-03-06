@@ -77,6 +77,16 @@ TxCollection::TxCollection(std::vector<Wtxid> wtxids, const NodeContext& node)
     }
 }
 
+std::vector<uint32_t> TxCollection::UnknownTxPos() const
+{
+    std::vector<uint32_t> result;
+    for (size_t i{0}; i < m_wtxids.size(); ++i) {
+        // Every requested wtxid is a key (added in the constructor), so at()
+        // is safe; a null value means the transaction is still missing.
+        if (!m_transactions.at(m_wtxids[i])) result.push_back(static_cast<uint32_t>(i));
+    }
+    return result;
+}
 
 int64_t GetMinimumTime(const CBlockIndex* pindexPrev, const int64_t difficulty_adjustment_interval)
 {
