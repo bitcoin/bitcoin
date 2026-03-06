@@ -402,8 +402,7 @@ class AddrTest(BitcoinTestFramework):
     def get_nodes_that_received_addr(self, peer, receiver_peer, addr_receivers,
                                      time_interval_1, time_interval_2):
 
-        # Clean addr response related to the initial getaddr. There is no way to avoid initial
-        # getaddr because the peer won't self-announce then.
+        # Clean addr response related to the initial getaddr.
         for addr_receiver in addr_receivers:
             addr_receiver.num_ipv4_received = 0
 

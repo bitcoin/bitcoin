@@ -78,14 +78,16 @@ class AddrSelfAnnouncementTest(BitcoinTestFramework):
         self.self_announcement_test(outbound=True, addrv2=False)
         self.self_announcement_test(outbound=True, addrv2=True)
 
-    def inbound_connection_open_assertions(self, addr_receiver):
+    @staticmethod
+    def inbound_connection_open_assertions(addr_receiver):
         # In response to a GETADDR, we expect a message with the self-announcement
         # and an addr message containing the GETADDR response.
         assert_equal(addr_receiver.self_announcements_received, 1)
         assert_equal(addr_receiver.addr_messages_received, 2)
         assert_greater_than(addr_receiver.addresses_received, 1)
 
-    def outbound_connection_open_assertions(self, addr_receiver):
+    @staticmethod
+    def outbound_connection_open_assertions(addr_receiver):
         # We expect only the self-announcement.
         assert_equal(addr_receiver.self_announcements_received, 1)
         assert_equal(addr_receiver.addr_messages_received, 1)
