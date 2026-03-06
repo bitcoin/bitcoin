@@ -11,9 +11,12 @@ import time
 
 from test_framework.messages import (
     CAddress,
+    CBlockHeader,
     msg_addr,
     msg_getaddr,
+    msg_headers,
     msg_verack,
+    from_hex,
 )
 from test_framework.p2p import (
     P2PInterface,
@@ -273,10 +276,15 @@ class AddrTest(BitcoinTestFramework):
         full_outbound_peer.sync_with_ping()
         assert full_outbound_peer.getaddr_received()
 
+        # to avoid the node evicting the outbound peer, protect it by announcing the most recent header to it
+        tip_header = from_hex(CBlockHeader(), self.nodes[0].getblockheader(self.nodes[0].getbestblockhash(), False))
+        full_outbound_peer.send_and_ping(msg_headers([tip_header]))
+
         self.log.info('Check that we do not send a getaddr message to a block-relay-only or inbound peer')
         block_relay_peer = self.nodes[0].add_outbound_p2p_connection(AddrReceiver(), p2p_idx=1, connection_type="block-relay-only")
         block_relay_peer.sync_with_ping()
         assert_equal(block_relay_peer.getaddr_received(), False)
+        block_relay_peer.send_and_ping(msg_headers([tip_header]))
 
         inbound_peer = self.nodes[0].add_p2p_connection(AddrReceiver(send_getaddr=False))
         inbound_peer.sync_with_ping()
