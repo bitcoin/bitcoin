@@ -24,6 +24,7 @@ $(package)_patches += fix-gcc16-qcompare.patch
 $(package)_patches += fix-gcc16-sfinae-qregularexpression.patch
 $(package)_patches += fix-gcc16-sfinae-qchar.patch
 $(package)_patches += fix-gcc16-sfinae-qbitarray.patch
+$(package)_patches += fix-gcc16-sfinae-qanystringview.patch
 $(package)_patches += fix-qbytearray-include.patch
 
 $(package)_qttranslations_file_name=$(qt_details_qttranslations_file_name)
@@ -274,6 +275,7 @@ define $(package)_preprocess_cmds
   patch -p1 -i $($(package)_patch_dir)/fix-gcc16-sfinae-qregularexpression.patch && \
   patch -p1 -i $($(package)_patch_dir)/fix-gcc16-sfinae-qchar.patch && \
   patch -p1 -i $($(package)_patch_dir)/fix-gcc16-sfinae-qbitarray.patch && \
+  patch -p1 -i $($(package)_patch_dir)/fix-gcc16-sfinae-qanystringview.patch && \
   patch -p1 -i $($(package)_patch_dir)/fix-qbytearray-include.patch
 endef
 ifeq ($(host),$(build))
