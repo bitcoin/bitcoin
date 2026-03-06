@@ -117,4 +117,10 @@ inline void LogPrintFormatInternal(SourceLocation&& source_loc, BCLog::LogFlags 
 #define LogDebug(category, ...) detail_LogIfCategoryAndLevelEnabled(category, BCLog::Level::Debug, __VA_ARGS__)
 #define LogTrace(category, ...) detail_LogIfCategoryAndLevelEnabled(category, BCLog::Level::Trace, __VA_ARGS__)
 
+/** Return true if log accepts specified category, at the specified level. */
+static inline bool LogAcceptCategory(BCLog::LogFlags category, BCLog::Level level)
+{
+    return util::log::ShouldLog(category, level);
+}
+
 #endif // BITCOIN_UTIL_LOG_H
