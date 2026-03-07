@@ -86,7 +86,8 @@ def base58_to_byte(s):
     n = 0
     for c in s:
         n *= 58
-        assert c in b58chars
+        if c not in b58chars:
+            raise ValueError(f"Invalid Base58 character '{c}'")
         digit = b58chars.index(c)
         n += digit
     h = '%x' % n
@@ -185,17 +186,20 @@ def bech32_to_bytes(address):
 
 def address_to_scriptpubkey(address):
     """Converts a given address to the corresponding output script (scriptPubKey)."""
-    version, payload = bech32_to_bytes(address)
-    if version is not None:
-        return program_to_witness_script(version, payload) # testnet segwit scriptpubkey
+    wit_ver, wit_payload = bech32_to_bytes(address)
+    if wit_ver is not None:
+        return program_to_witness_script(wit_ver, wit_payload)
+
     payload, version = base58_to_byte(address)
-    if version == 111:  # testnet pubkey hash
+    if version in (0, 111):  # mainnet/testnet pubkey hash
+        if len(payload) != 20:
+            raise ValueError(f"Invalid base58 payload length for P2PKH: {len(payload)}")
         return keyhash_to_p2pkh_script(payload)
-    elif version == 196:  # testnet script hash
+    if version in (5, 196):  # mainnet/testnet script hash
+        if len(payload) != 20:
+            raise ValueError(f"Invalid base58 payload length for P2SH: {len(payload)}")
         return scripthash_to_p2sh_script(payload)
-    # TODO: also support other address formats
-    else:
-        assert False
+    raise ValueError(f"Unsupported base58 address version byte: {version}")
 
 
 class TestFrameworkScript(unittest.TestCase):
@@ -230,3 +234,31 @@ class TestFrameworkScript(unittest.TestCase):
         check_bech32_decode(bytes.fromhex('616211ab00dffe0adcb6ce258d6d3fd8cbd901e2'), 0)
         check_bech32_decode(bytes.fromhex('b6a7c98b482d7fb21c9fa8e65692a0890410ff22'), 0)
         check_bech32_decode(bytes.fromhex('f0c2109cb1008cfa7b5a09cc56f7267cd8e50929'), 0)
+
+    def test_address_to_scriptpubkey_base58(self):
+        payload_p2pkh = bytes.fromhex('1f8ea1702a7bd4941bca0941b852c4bbfedb2e05')
+        payload_p2sh = bytes.fromhex('3a0b05f4d7f66c3ba7009f453530296c845cc9cf')
+
+        for version in (0, 111):
+            address = byte_to_base58(payload_p2pkh, version)
+            assert_equal(address_to_scriptpubkey(address), keyhash_to_p2pkh_script(payload_p2pkh))
+
+        for version in (5, 196):
+            address = byte_to_base58(payload_p2sh, version)
+            assert_equal(address_to_scriptpubkey(address), scripthash_to_p2sh_script(payload_p2sh))
+
+    def test_address_to_scriptpubkey_invalid_base58(self):
+        invalid_version_addr = byte_to_base58(bytes.fromhex('11' * 20), 42)
+        with self.assertRaisesRegex(ValueError, "Unsupported base58 address version byte: 42"):
+            address_to_scriptpubkey(invalid_version_addr)
+
+        invalid_p2pkh_len_addr = byte_to_base58(bytes.fromhex('11' * 19), 0)
+        with self.assertRaisesRegex(ValueError, "Invalid base58 payload length for P2PKH: 19"):
+            address_to_scriptpubkey(invalid_p2pkh_len_addr)
+
+        invalid_p2sh_len_addr = byte_to_base58(bytes.fromhex('11' * 21), 5)
+        with self.assertRaisesRegex(ValueError, "Invalid base58 payload length for P2SH: 21"):
+            address_to_scriptpubkey(invalid_p2sh_len_addr)
+
+        with self.assertRaisesRegex(ValueError, "Invalid Base58 character '0'"):
+            address_to_scriptpubkey("0")
