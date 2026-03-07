@@ -386,6 +386,7 @@ FUZZ_TARGET(coins_view_db, .init = initialize_coins_view)
 // called.
 FUZZ_TARGET(coins_view_overlay, .init = initialize_coins_view) EXCLUSIVE_LOCKS_REQUIRED(!g_thread_pool_mutex)
 {
+    SeedRandomStateForTest(SeedRand::ZEROS); // for SaltedTxidHasher
     FuzzedDataProvider fuzzed_data_provider{buffer.data(), buffer.size()};
     MutationGuardCoinsViewCache backend_cache{&CoinsViewEmpty::Get(), /*deterministic=*/true};
     CoinsViewOverlay coins_view_cache{&backend_cache, g_thread_pool, /*deterministic=*/true};
