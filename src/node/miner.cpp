@@ -112,6 +112,92 @@ void TxCollection::AddMissingTxs(const std::vector<CTransactionRef>& txs)
     }
 }
 
+std::unique_ptr<CBlockTemplate> TxCollection::MakeTemplate(const uint256& prevhash,
+                                                           const CTransactionRef& coinbase,
+                                                           std::string& reason,
+                                                           std::string& debug)
+{
+    reason.clear();
+    debug.clear();
+
+    auto block_template{[&]() -> std::unique_ptr<CBlockTemplate> {
+        LOCK(m_mutex);
+        if (std::ranges::any_of(m_transactions, [](const auto& entry) { return !entry.second; })) {
+            reason = "missing-txs";
+            debug = "collected transaction(s) still missing";
+            return nullptr;
+        }
+        ChainstateManager& chainman{*Assert(m_node.chainman)};
+        LOCK(chainman.GetMutex());
+        const auto current_tip{GetTip(chainman)};
+        if (!current_tip || prevhash != current_tip->hash) {
+            const CBlockIndex* prev_block{chainman.m_blockman.LookupBlockIndex(prevhash)};
+            if (prev_block && chainman.ActiveChain().Contains(*prev_block)) {
+                reason = "stale-prevblk";
+            } else {
+                reason = "inconclusive-not-best-prevblk";
+            }
+            debug = strprintf("requested prevhash %s does not match current tip %s",
+                              prevhash.ToString(),
+                              current_tip ? current_tip->hash.ToString() : "(none)");
+            return nullptr;
+        }
+        const CBlockIndex* const prev_block{Assert(chainman.m_blockman.LookupBlockIndex(prevhash))};
+        auto block_template{std::make_unique<CBlockTemplate>()};
+        CBlock& block{block_template->block};
+
+        block.hashPrevBlock = prevhash;
+        block.nVersion = chainman.m_versionbitscache.ComputeBlockVersion(prev_block, chainman.GetParams().GetConsensus());
+        if (chainman.GetParams().MineBlocksOnDemand()) {
+            block.nVersion = gArgs.GetIntArg("-blockversion", block.nVersion);
+        }
+        block.nTime = TicksSinceEpoch<std::chrono::seconds>(NodeClock::now());
+
+        // Placeholder for the coinbase tx, filled in after the collected
+        // transactions are added so the witness commitment is current.
+        block.vtx.emplace_back();
+
+        for (const auto& wtxid : m_wtxids) {
+            const auto it{m_transactions.find(wtxid)};
+            Assert(it != m_transactions.end());
+            Assert(it->second);
+            block.vtx.push_back(it->second);
+        }
+
+        if (coinbase) {
+            // Validate the block with the caller-provided coinbase, which is
+            // expected to commit to the collected transactions (witness
+            // commitment) and the next block height (BIP34).
+            block.vtx[0] = coinbase;
+        } else {
+            // Validate with a node-generated dummy coinbase. Checks involving the
+            // coinbase still pass, but say nothing about the coinbase the caller
+            // intends to use.
+            BlockAssembler{
+                chainman.ActiveChainstate(),
+                m_node.mempool.get(),
+                BlockCreateOptions{.use_mempool = false},
+            }.CreateCoinbaseTx(block, *prev_block, /*fees=*/0);
+        }
+
+        UpdateTime(&block, chainman.GetParams().GetConsensus(), prev_block);
+        block.nBits = GetNextWorkRequired(prev_block, &block, chainman.GetParams().GetConsensus());
+        block.nNonce = 0;
+
+        BlockValidationState state{TestBlockValidity(chainman.ActiveChainstate(), block, /*check_pow=*/false, /*check_merkle_root=*/false)};
+        if (!state.IsValid()) {
+            reason = state.GetRejectReason();
+            debug = state.GetDebugMessage();
+            return nullptr;
+        }
+        return block_template;
+    }()};
+    // This follows the SubmitBlock convention: a missing template must set a
+    // rejection reason, and a successful one must not.
+    CHECK_NONFATAL((block_template != nullptr) == reason.empty());
+    return block_template;
+}
+
 int64_t GetMinimumTime(const CBlockIndex* pindexPrev, const int64_t difficulty_adjustment_interval)
 {
     int64_t min_time{pindexPrev->GetMedianTimePast() + 1};
