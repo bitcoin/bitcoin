@@ -28,6 +28,7 @@
 #include <algorithm>
 #include <atomic>
 #include <functional>
+#include <future>
 #include <memory>
 #include <optional>
 #include <ranges>
@@ -572,6 +573,7 @@ private:
         InputToFetch(InputToFetch&& other) noexcept : outpoint{other.outpoint} {}
         explicit InputToFetch(const COutPoint& o LIFETIMEBOUND) noexcept : outpoint{o} {}
     };
+    //! Must only be mutated when m_futures is empty. Elements may be mutated when m_futures is not empty.
     mutable std::vector<InputToFetch> m_inputs{};
 
     class QuickHashHasher
@@ -606,11 +608,12 @@ private:
      * the input will not be fetched in the background. The input will still be fetched later on the main thread.
      * Using a sorted vector and binary search lookups is a performance improvement. It is faster than
      * using std::unordered_set with salted hash or std::set.
+     * Must only be mutated when m_futures is empty.
      */
     std::vector<uint64_t> m_txids{};
 
     /**
-     * Claim and fetch the next input in the queue.
+     * Claim and fetch the next input in the queue. Safe to call from any thread.
      *
      * @return true if there are more inputs in the queue to fetch
      * @return false if there are no more inputs in the queue to fetch
@@ -636,9 +639,15 @@ private:
         return true;
     }
 
-    //! Clear fetching data.
+    //! Stop all worker threads and clear fetching data.
     void StopFetching() noexcept
     {
+        if (m_futures.empty()) return;
+        // Skip fetching the rest of the inputs by moving the head to the end.
+        m_input_head.store(m_inputs.size(), std::memory_order_relaxed);
+        // Wait for all threads to stop.
+        for (auto& future : m_futures) future.wait();
+        m_futures.clear();
         m_inputs.clear();
         m_input_head.store(0, std::memory_order_relaxed);
         m_input_tail = 0;
@@ -675,6 +684,7 @@ private:
     }
 
     std::shared_ptr<ThreadPool> m_thread_pool;
+    std::vector<std::future<void>> m_futures{};
 
 protected:
     void Reset() noexcept override
@@ -696,17 +706,31 @@ public:
         }
     }
 
-    //! Start fetching inputs from block.
+    //! Start fetching inputs from block in background.
     [[nodiscard]] ResetGuard StartFetching(const CBlock& block LIFETIMEBOUND) noexcept
     {
+        Assert(m_futures.empty());
         // Loop through the inputs of the block and set them in the queue. Also construct the set of txids to filter.
         for (const auto& tx : block.vtx | std::views::drop(1)) [[likely]] {
             for (const auto& input : tx->vin) [[likely]] m_inputs.emplace_back(input.prevout);
             m_txids.emplace_back(m_hasher(tx->GetHash()));
         }
-        // Sort txids so we can do binary search lookups.
-        std::ranges::sort(m_txids);
-        while (ProcessInput()) [[likely]] {}
+        // Only start threads if we have something to fetch.
+        if (!m_inputs.empty()) [[likely]] {
+            // Sort txids so we can do binary search lookups.
+            std::ranges::sort(m_txids);
+            // Start workers.
+            std::vector<std::function<void()>> tasks(m_thread_pool->WorkersCount(), [this] {
+                while (ProcessInput()) [[likely]] {}
+            });
+            if (auto futures{m_thread_pool->Submit(std::move(tasks))}; futures.has_value()) [[likely]] {
+                m_futures = std::move(*futures);
+            }
+        }
+        if (m_futures.empty()) [[unlikely]] {
+            m_inputs.clear();
+            m_txids.clear();
+        }
         return CreateResetGuard();
     }
 
