@@ -4,10 +4,13 @@
 
 #include <coins.h>
 #include <crypto/sha256.h>
+#include <logging.h>
+#include <primitives/block.h>
 #include <primitives/transaction.h>
 #include <test/fuzz/FuzzedDataProvider.h>
 #include <test/fuzz/fuzz.h>
 #include <test/fuzz/util.h>
+#include <util/threadpool.h>
 
 #include <cassert>
 #include <cstdint>
@@ -34,12 +37,16 @@ struct PrecomputedData
     //! Randomly generated Coin values.
     Coin coins[NUM_COINS];
 
+    //! Block with a tx containing as inputs the above outpoints.
+    CBlock block;
+
     PrecomputedData()
     {
         static const uint8_t PREFIX_O[1] = {'o'}; /** Hash prefix for outpoint hashes. */
         static const uint8_t PREFIX_S[1] = {'s'}; /** Hash prefix for coins scriptPubKeys. */
         static const uint8_t PREFIX_M[1] = {'m'}; /** Hash prefix for coins nValue/fCoinBase. */
 
+        CMutableTransaction tx;
         for (uint32_t i = 0; i < NUM_OUTPOINTS; ++i) {
             uint32_t idx = (i * 1200U) >> 12; /* Map 3 or 4 entries to same txid. */
             const uint8_t ser[4] = {uint8_t(idx), uint8_t(idx >> 8), uint8_t(idx >> 16), uint8_t(idx >> 24)};
@@ -47,7 +54,9 @@ struct PrecomputedData
             CSHA256().Write(PREFIX_O, 1).Write(ser, sizeof(ser)).Finalize(txid.begin());
             outpoints[i].hash = Txid::FromUint256(txid);
             outpoints[i].n = i;
+            tx.vin.emplace_back(outpoints[i]);
         }
+        block.vtx.push_back(MakeTransactionRef(tx));
 
         for (uint32_t i = 0; i < NUM_COINS; ++i) {
             const uint8_t ser[4] = {uint8_t(i), uint8_t(i >> 8), uint8_t(i >> 16), uint8_t(i >> 24)};
@@ -187,9 +196,26 @@ public:
     }
 };
 
+// Hold a non-movable ResetGuard on the heap so StartFetching can remain active
+// for the lifetime of a CoinsViewOverlay cache level.
+struct OverlayFetchScope
+{
+    CCoinsViewCache::ResetGuard guard;
+    OverlayFetchScope(CoinsViewOverlay& view, const CBlock& block) : guard(view.StartFetching(block)) {}
+};
+
+std::shared_ptr<ThreadPool> g_thread_pool{};
+
 } // namespace
 
-FUZZ_TARGET(coinscache_sim)
+static void setup_coinscache_sim()
+{
+    LogInstance().DisableLogging();
+    g_thread_pool = std::make_shared<ThreadPool>("fuzz_coinscache_sim_async");
+    g_thread_pool->Start(COINS_VIEW_OVERLAY_WORKER_THREADS);
+}
+
+FUZZ_TARGET(coinscache_sim, .init = setup_coinscache_sim)
 {
     /** Precomputed COutPoint and CCoins values. */
     static const PrecomputedData data;
@@ -198,6 +224,8 @@ FUZZ_TARGET(coinscache_sim)
     CoinsViewBottom bottom;
     /** Real CCoinsViewCache objects. */
     std::vector<std::unique_ptr<CCoinsViewCache>> caches;
+    /** Long-lived StartFetching guards (nullptr unless corresponding level is a CoinsViewOverlay). */
+    std::vector<std::unique_ptr<OverlayFetchScope>> overlay_fetch_scopes;
     /** Simulated cache data (sim_caches[0] matches bottom, sim_caches[i+1] matches caches[i]). */
     CacheLevel sim_caches[MAX_CACHES + 1];
     /** Current height in the simulation. */
@@ -245,6 +273,7 @@ FUZZ_TARGET(coinscache_sim)
         // Make sure there is always at least one CCoinsViewCache.
         if (caches.empty()) {
             caches.emplace_back(new CCoinsViewCache(&bottom, /*deterministic=*/true));
+            overlay_fetch_scopes.emplace_back(nullptr);
             sim_caches[caches.size()].Wipe();
         }
 
@@ -376,8 +405,11 @@ FUZZ_TARGET(coinscache_sim)
                     // Apply to real caches.
                     if (provider.ConsumeBool()) {
                         caches.emplace_back(new CCoinsViewCache(&*caches.back(), /*deterministic=*/true));
+                        overlay_fetch_scopes.emplace_back(nullptr);
                     } else {
-                        caches.emplace_back(new CoinsViewOverlay(&*caches.back(), /*deterministic=*/true));
+                        caches.emplace_back(new CoinsViewOverlay(&*caches.back(), /*deterministic=*/true, g_thread_pool));
+                        auto& overlay{static_cast<CoinsViewOverlay&>(*caches.back())};
+                        overlay_fetch_scopes.emplace_back(std::make_unique<OverlayFetchScope>(overlay, data.block));
                     }
                     // Apply to simulation data.
                     sim_caches[caches.size()].Wipe();
@@ -387,6 +419,7 @@ FUZZ_TARGET(coinscache_sim)
             [&]() { // Remove a cache level.
                 // Apply to real caches (this reduces caches.size(), implicitly doing the same on the simulation data).
                 caches.back()->SanityCheck();
+                overlay_fetch_scopes.pop_back();
                 caches.pop_back();
             },
 
