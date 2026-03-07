@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
-# Copyright (c) 2014-present The Bitcoin Core developers
+# Copyright (c) The Bitcoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
-"""Test the RPC HTTP basics."""
+"""Test the HTTP server basics."""
 
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import assert_equal, str_to_b64str
@@ -10,6 +10,82 @@ from test_framework.util import assert_equal, str_to_b64str
 import http.client
 import time
 import urllib.parse
+
+# Configuration option for some test nodes
+RPCSERVERTIMEOUT = 2
+# Set in httpserver.cpp and passed to libevent evhttp_set_max_headers_size()
+MAX_HEADERS_SIZE = 8192
+
+
+class BitcoinHTTPConnection:
+    def __init__(self, node):
+        self.url = urllib.parse.urlparse(node.url)
+        self.authpair = f'{self.url.username}:{self.url.password}'
+        self.headers = {"Authorization": f"Basic {str_to_b64str(self.authpair)}"}
+        self.reset_conn()
+
+    def reset_conn(self):
+        self.conn = http.client.HTTPConnection(self.url.hostname, self.url.port)
+        self.conn.connect()
+
+    def sock_closed(self):
+        if self.conn.sock is None:
+            return True
+        try:
+            self.conn.request('GET', '/')
+            self.conn.getresponse().read()
+            return False
+        #       macos/linux           windows
+        except (ConnectionResetError, ConnectionAbortedError):
+            return True
+
+    def close_sock(self):
+        self.conn.close()
+
+    def set_timeout(self, seconds):
+        self.conn.sock.settimeout(seconds)
+
+    def _request(self, method, path, data, connection_header, **kwargs):
+        headers = self.headers
+        if connection_header is not None:
+            headers["Connection"] = connection_header
+        self.conn.request(method, path, data, headers, **kwargs)
+        return self.conn.getresponse()
+
+    def post(self, path, data, connection_header=None, **kwargs):
+        return self._request('POST', path, data, connection_header, **kwargs)
+
+    def get(self, path, connection_header=None):
+        return self._request('GET', path, '', connection_header)
+
+    def post_raw(self, path, data):
+        req = f"POST {path} HTTP/1.1\r\n"
+        req += f'Authorization: Basic {str_to_b64str(self.authpair)}\r\n'
+        req += f'Content-Length: {len(data)}\r\n\r\n'
+        req += data
+        self.conn.sock.sendall(req.encode("utf-8"))
+
+    def recv_raw(self):
+        '''
+        Blocking socket will wait until data is received and return up to 1024 bytes
+        '''
+        return self.conn.sock.recv(1024)
+
+    def expect_timeout(self, seconds):
+        # Wait for response, but expect a timeout disconnection
+        start = time.time()
+        response1 = self.recv_raw()
+        stop = time.time()
+        # Server disconnected with EOF
+        assert_equal(response1, b"")
+        # Server disconnected within an acceptable range of time:
+        # not immediately, and not too far over the configured duration.
+        # This allows for some jitter in the test between client and server.
+        duration = stop - start
+        assert duration <= seconds + 2, f"Server disconnected too slow: {duration} > {seconds}"
+        assert duration >= seconds - 1, f"Server disconnected too fast: {duration} < {seconds}"
+        # The connection is definitely closed.
+        assert self.sock_closed()
 
 class HTTPBasicsTest (BitcoinTestFramework):
     def set_test_params(self):
@@ -20,123 +96,96 @@ class HTTPBasicsTest (BitcoinTestFramework):
         self.setup_nodes()
 
     def run_test(self):
-
-        #################################################
-        # lowlevel check for http persistent connection #
-        #################################################
-        url = urllib.parse.urlparse(self.nodes[0].url)
-        authpair = f'{url.username}:{url.password}'
-        headers = {"Authorization": f"Basic {str_to_b64str(authpair)}"}
-
-        conn = http.client.HTTPConnection(url.hostname, url.port)
-        conn.connect()
-        conn.request('POST', '/', '{"method": "getbestblockhash"}', headers)
-        out1 = conn.getresponse().read()
-        assert b'"error":null' in out1
-        assert conn.sock is not None  #according to http/1.1 connection must still be open!
-
-        #send 2nd request without closing connection
-        conn.request('POST', '/', '{"method": "getchaintips"}', headers)
-        out1 = conn.getresponse().read()
-        assert b'"error":null' in out1  #must also response with a correct json-rpc message
-        assert conn.sock is not None  #according to http/1.1 connection must still be open!
-        conn.close()
-
-        #same should be if we add keep-alive because this should be the std. behaviour
-        headers = {"Authorization": f"Basic {str_to_b64str(authpair)}", "Connection": "keep-alive"}
-
-        conn = http.client.HTTPConnection(url.hostname, url.port)
-        conn.connect()
-        conn.request('POST', '/', '{"method": "getbestblockhash"}', headers)
-        out1 = conn.getresponse().read()
-        assert b'"error":null' in out1
-        assert conn.sock is not None  #according to http/1.1 connection must still be open!
-
-        #send 2nd request without closing connection
-        conn.request('POST', '/', '{"method": "getchaintips"}', headers)
-        out1 = conn.getresponse().read()
-        assert b'"error":null' in out1  #must also response with a correct json-rpc message
-        assert conn.sock is not None  #according to http/1.1 connection must still be open!
-        conn.close()
-
-        #now do the same with "Connection: close"
-        headers = {"Authorization": f"Basic {str_to_b64str(authpair)}", "Connection":"close"}
-
-        conn = http.client.HTTPConnection(url.hostname, url.port)
-        conn.connect()
-        conn.request('POST', '/', '{"method": "getbestblockhash"}', headers)
-        out1 = conn.getresponse().read()
-        assert b'"error":null' in out1
-        assert conn.sock is None  #now the connection must be closed after the response
-
-        #node1 (2nd node) is running with disabled keep-alive option
-        urlNode1 = urllib.parse.urlparse(self.nodes[1].url)
-        authpair = f'{urlNode1.username}:{urlNode1.password}'
-        headers = {"Authorization": f"Basic {str_to_b64str(authpair)}"}
-
-        conn = http.client.HTTPConnection(urlNode1.hostname, urlNode1.port)
-        conn.connect()
-        conn.request('POST', '/', '{"method": "getbestblockhash"}', headers)
-        out1 = conn.getresponse().read()
-        assert b'"error":null' in out1
-
-        #node2 (third node) is running with standard keep-alive parameters which means keep-alive is on
-        urlNode2 = urllib.parse.urlparse(self.nodes[2].url)
-        authpair = f'{urlNode2.username}:{urlNode2.password}'
-        headers = {"Authorization": f"Basic {str_to_b64str(authpair)}"}
-
-        conn = http.client.HTTPConnection(urlNode2.hostname, urlNode2.port)
-        conn.connect()
-        conn.request('POST', '/', '{"method": "getbestblockhash"}', headers)
-        out1 = conn.getresponse().read()
-        assert b'"error":null' in out1
-        assert conn.sock is not None  #connection must be closed because bitcoind should use keep-alive by default
-
-        # Check excessive request size
-        conn = http.client.HTTPConnection(urlNode2.hostname, urlNode2.port)
-        conn.connect()
-        conn.request('GET', f'/{"x"*1000}', '', headers)
-        out1 = conn.getresponse()
-        assert_equal(out1.status, http.client.NOT_FOUND)
-
-        conn = http.client.HTTPConnection(urlNode2.hostname, urlNode2.port)
-        conn.connect()
-        conn.request('GET', f'/{"x"*10000}', '', headers)
-        out1 = conn.getresponse()
-        assert_equal(out1.status, http.client.BAD_REQUEST)
+        self.check_default_connection()
+        self.check_keepalive_connection()
+        self.check_close_connection()
+        self.check_excessive_request_size()
+        self.check_pipelining()
+        self.check_chunked_transfer()
+        self.check_idle_timeout()
 
 
+    def check_default_connection(self):
+        self.log.info("Checking default HTTP/1.1 connection persistence")
+        conn = BitcoinHTTPConnection(self.nodes[0])
+        # Make request without explicit "Connection" header
+        response1 = conn.post('/', '{"method": "getbestblockhash"}').read()
+        assert b'"error":null' in response1
+        # Connection still open after request
+        assert not conn.sock_closed()
+        # Make second request without explicit "Connection" header
+        response2 = conn.post('/', '{"method": "getchaintips"}').read()
+        assert b'"error":null' in response2
+        # Connection still open after second request
+        assert not conn.sock_closed()
+        # Close
+        conn.close_sock()
+        assert conn.sock_closed()
+
+
+    def check_keepalive_connection(self):
+        self.log.info("Checking keep-alive connection persistence")
+        conn = BitcoinHTTPConnection(self.nodes[0])
+        # Make request with explicit "Connection: keep-alive" header
+        response1 = conn.post('/', '{"method": "getbestblockhash"}', connection_header='keep-alive').read()
+        assert b'"error":null' in response1
+        # Connection still open after request
+        assert not conn.sock_closed()
+        # Make second request without explicit "Connection" header
+        response2 = conn.post('/', '{"method": "getchaintips"}').read()
+        assert b'"error":null' in response2
+        # Connection still open after second request
+        assert not conn.sock_closed()
+        # Close
+        conn.close_sock()
+        assert conn.sock_closed()
+
+
+    def check_close_connection(self):
+        self.log.info("Checking close connection after response")
+        conn = BitcoinHTTPConnection(self.nodes[0])
+        # Make request with explicit "Connection: keep-alive" header
+        response1 = conn.post('/', '{"method": "getbestblockhash"}', connection_header='close').read()
+        assert b'"error":null' in response1
+        # Connection closed after response
+        assert conn.sock_closed()
+
+
+    def check_excessive_request_size(self):
+        self.log.info("Checking excessive request size")
+
+        # Large URI plus up to 1000 bytes of default headers
+        # added by python's http.client still below total limit.
+        conn = BitcoinHTTPConnection(self.nodes[0])
+        response1 = conn.get(f'/{"x" * (MAX_HEADERS_SIZE - 1000)}')
+        assert_equal(response1.status, http.client.NOT_FOUND)
+
+        # Excessive URI size plus default headers breaks the limit.
+        conn = BitcoinHTTPConnection(self.nodes[1])
+        response2 = conn.get(f'/{"x" * MAX_HEADERS_SIZE}')
+        assert_equal(response2.status, http.client.BAD_REQUEST)
+
+
+    def check_pipelining(self):
+        """
+        Requests are responded to in the order in which they were received
+        See https://www.rfc-editor.org/rfc/rfc7230#section-6.3.2
+        """
         self.log.info("Check pipelining")
-        # Requests are responded to in order they were received
-        # See https://www.rfc-editor.org/rfc/rfc7230#section-6.3.2
         tip_height = self.nodes[2].getblockcount()
+        conn = BitcoinHTTPConnection(self.nodes[2])
+        conn.set_timeout(5)
 
-        req = "POST / HTTP/1.1\r\n"
-        req += f'Authorization: Basic {str_to_b64str(authpair)}\r\n'
+        # Send two requests in a row.
+        # The first request will block the second indefinitely
+        conn.post_raw('/', f'{{"method": "waitforblockheight", "params": [{tip_height + 1}]}}')
+        conn.post_raw('/', '{"method": "getblockcount"}')
 
-        # First request will take a long time to process
-        body1 = f'{{"method": "waitforblockheight", "params": [{tip_height + 1}]}}'
-        req1 = req
-        req1 += f'Content-Length: {len(body1)}\r\n\r\n'
-        req1 += body1
-
-        # Second request will process very fast
-        body2 = '{"method": "getblockcount"}'
-        req2 = req
-        req2 += f'Content-Length: {len(body2)}\r\n\r\n'
-        req2 += body2
-        # Get the underlying socket from HTTP connection so we can send something unusual
-        conn = http.client.HTTPConnection(urlNode2.hostname, urlNode2.port)
-        conn.connect()
-        sock = conn.sock
-        sock.settimeout(5)
-        # Send two requests in a row. The first will block the second indefinitely
-        sock.sendall(req1.encode("utf-8"))
-        sock.sendall(req2.encode("utf-8"))
         try:
-            # The server should not respond to the fast, second request
-            # until the (very) slow first request has been handled:
-            res = sock.recv(1024)
+            # The server should not respond to the second request until the first
+            # request has been handled. Since the server will not respond at all
+            # to the first request until we generate a block we expect a socket timeout.
+            conn.recv_raw()
             assert False
         except TimeoutError:
             pass
@@ -147,7 +196,7 @@ class HTTPBasicsTest (BitcoinTestFramework):
         # Wait for two responses to be received
         res = b""
         while res.count(b"result") != 2:
-            res += sock.recv(1024)
+            res += conn.recv_raw()
 
         # waitforblockheight was responded to first, and then getblockcount
         # which includes the block added after the request was made
@@ -156,8 +205,10 @@ class HTTPBasicsTest (BitcoinTestFramework):
         assert chunks[2].startswith(bytes(f'{tip_height + 1}', 'utf8'))
 
 
+    def check_chunked_transfer(self):
         self.log.info("Check HTTP request encoded with chunked transfer")
-        headers_chunked = headers.copy()
+        conn = BitcoinHTTPConnection(self.nodes[2])
+        headers_chunked = conn.headers.copy()
         headers_chunked.update({"Transfer-encoding": "chunked"})
         body_chunked = [
             b'{"method": "submitblock", "params": ["',
@@ -167,18 +218,17 @@ class HTTPBasicsTest (BitcoinTestFramework):
             b'3' * 1000000,
             b'"]}'
         ]
-        conn = http.client.HTTPConnection(urlNode2.hostname, urlNode2.port)
-        conn.connect()
-        conn.request(
+        conn.conn.request(
             method='POST',
             url='/',
             body=iter(body_chunked),
             headers=headers_chunked,
             encode_chunked=True)
-        out1 = conn.getresponse().read()
-        assert_equal(out1, b'{"result":"high-hash","error":null}\n')
+        response1 = conn.recv_raw()
+        assert b'{"result":"high-hash","error":null}\n' in response1
 
 
+    def check_idle_timeout(self):
         self.log.info("Check -rpcservertimeout")
         # The test framework typically reuses a single persistent HTTP connection
         # for all RPCs to a TestNode. Because we are setting -rpcservertimeout
@@ -188,54 +238,29 @@ class HTTPBasicsTest (BitcoinTestFramework):
         # called for the remainder of this test.
         self.nodes[2].reuse_http_connections = False
 
-        self.restart_node(2, extra_args=["-rpcservertimeout=2"])
         # This is the amount of time the server will wait for a client to
         # send a complete request. Test it by sending an incomplete but
-        # so-far otherwise well-formed HTTP request, and never finishing it.
+        # so-far otherwise well-formed HTTP request, and never finishing it
+        self.restart_node(2, extra_args=[f"-rpcservertimeout={RPCSERVERTIMEOUT}"])
 
         # Copied from http_incomplete_test_() in regress_http.c in libevent.
         # A complete request would have an additional "\r\n" at the end.
-        http_request = "GET /test1 HTTP/1.1\r\nHost: somehost\r\n"
+        bad_http_request = "GET /test1 HTTP/1.1\r\nHost: somehost\r\n"
+        conn = BitcoinHTTPConnection(self.nodes[2])
+        conn.conn.sock.sendall(bad_http_request.encode("utf-8"))
 
-        # Get the underlying socket from HTTP connection so we can send something unusual
-        conn = http.client.HTTPConnection(urlNode2.hostname, urlNode2.port)
-        conn.connect()
-        sock = conn.sock
-        sock.sendall(http_request.encode("utf-8"))
-        # Wait for response, but expect a timeout disconnection after 1 second
-        start = time.time()
-        res = sock.recv(1024)
-        stop = time.time()
-        # Server disconnected with EOF
-        assert_equal(res, b"")
-        # Server disconnected within an acceptable range of time:
-        # not immediately, and not too far over the configured duration.
-        # This allows for some jitter in the test between client and server.
-        duration = stop - start
-        assert duration <= 4, f"Server disconnected too slow: {duration} > 4"
-        assert duration >= 1, f"Server disconnected too fast: {duration} < 1"
+        conn.expect_timeout(RPCSERVERTIMEOUT)
 
-        # The connection is definitely closed.
-        got_expected_error = False
-        try:
-            conn.request('GET', '/')
-            conn.getresponse()
-        #       macos/linux           windows
-        except (ConnectionResetError, ConnectionAbortedError):
-            got_expected_error = True
-        assert got_expected_error
+        # Sanity check -- complete requests don't timeout waiting for completion
+        good_http_request = "GET /test2 HTTP/1.1\r\nHost: somehost\r\n\r\n"
+        conn.reset_conn()
+        conn.conn.sock.sendall(good_http_request.encode("utf-8"))
+        response2 = conn.recv_raw()
+        assert response2.startswith(b"HTTP/1.1 404 Not Found")
 
-        # Sanity check
-        http_request = "GET /test2 HTTP/1.1\r\nHost: somehost\r\n\r\n"
-        conn = http.client.HTTPConnection(urlNode2.hostname, urlNode2.port)
-        conn.connect()
-        sock = conn.sock
-        sock.sendall(http_request.encode("utf-8"))
-        res = sock.recv(1024)
-        assert res.startswith(b"HTTP/1.1 404 Not Found")
-        # still open
-        conn.request('GET', '/')
-        conn.getresponse()
+        # Still open
+        assert not conn.sock_closed()
+
 
 if __name__ == '__main__':
     HTTPBasicsTest(__file__).main()
