@@ -565,13 +565,67 @@ private:
 };
 
 /**
- * CCoinsViewCache overlay that avoids populating/mutating parent cache layers on cache misses.
+ * CCoinsViewCache subclass that asynchronously fetches all block inputs in parallel during ConnectBlock without
+ * mutating the base cache.
  *
- * This is achieved by fetching coins from the base view using PeekCoin() instead of GetCoin(),
- * so intermediate CCoinsViewCache layers are not filled.
+ * Only used in ConnectBlock to pass as an ephemeral view that can be reset if the block is invalid.
+ * It provides the same interface as CCoinsViewCache. It overrides all methods that mutate base,
+ * stopping threads before calling superclass.
+ * It adds an additional StartFetching method to provide the block.
  *
- * Used during ConnectBlock() as an ephemeral, resettable top-level view that is flushed only
- * on success, so invalid blocks don't pollute the underlying cache.
+ * When a block is passed to StartFetching, the inputs of the block are flattened into a vector of InputToFetch
+ * objects. An unordered set of "quick hashes" of all block txids (m_txids) is also constructed. StartFetching then
+ * submits worker tasks to a ThreadPool and keeps the returned futures alive until fetching is stopped.
+ *
+ * ProcessInput() atomically fetches and increments m_input_head, so each thread can only access a single element of the
+ * m_inputs vector at a time. Workers race to claim inputs, so they may fetch elements in any order. If the fetched
+ * index is greater than the size of m_inputs, no more inputs can be fetched and false is returned.
+ *
+ * The worker claims the InputToFetch at this index. Before fetching, it checks if the input's txid quick hash matches
+ * any quick hash in the unordered set. If there is a match, the input is spending a coin created
+ * earlier in the same block and won't be in the base cache, so fetching is skipped. Otherwise, the coin is fetched
+ * from the base cache and moved to the InputToFetch object. The ready flag is then set with a release memory order.
+ * This allows the ready flag to be used as a memory fence, guaranteeing the coin being written to the object will
+ * have happened before another thread tests the flag with an acquire memory order.
+ *
+ * When a coin is requested from the cache on the main thread and is not already in cacheCoins map, the coin is first
+ * looked up from the m_inputs vector instead of the base cache. The vector is scanned beginning at the element at
+ * m_input_tail. If the InputToFetch object has the same outpoint as requested, m_input_tail is advanced to the next
+ * index so the previous inputs do not need to be scanned again. The InputToFetch object's ready flag is tested with
+ * an acquire memory order. If the object is ready, the background worker has completed and the coin can be moved
+ * from the InputToFetch. If the object is not ready, the main thread will call ProcessInput() itself
+ * until the requested coin becomes ready. This allows the main thread to keep making progress (by fetching other
+ * inputs) rather than blocking on a specific worker.
+ *
+ * StopFetching() is called before mutating operations (Flush/Sync/Reset/SetBackend). It stops fetching by moving
+ * m_input_head to the end of m_inputs (so workers quickly exit), then waits for all futures to complete and clears the
+ * per-block state (m_inputs/m_txids).
+ *
+ *       Workers advance m_input_head to fetch inputs. Main thread advances m_input_tail to consume.
+ *
+ *       Before workers start:
+ *
+ *                 m_input_head
+ *                 m_input_tail
+ *                      │
+ *                      ▼
+ *                 ┌─────────┬─────────┬─────────┬─────────┬─────────┬─────────┬─────────┬─────────┬─────────┐
+ *       m_inputs: │ waiting │ waiting │ waiting │ waiting │ waiting │ waiting │ waiting │ waiting │ waiting │
+ *                 │         │         │         │         │         │         │         │         │         │
+ *                 └─────────┴─────────┴─────────┴─────────┴─────────┴─────────┴─────────┴─────────┴─────────┘
+ *
+ *       After workers start:
+ *
+ *                                       Worker 2            Worker 0  Worker 3  Worker 1  m_input_head
+ *                                          │                   │         │         │         │
+ *                                          ▼                   ▼         ▼         ▼         ▼
+ *                 ┌─────────┬─────────┬─────────┬─────────┬─────────┬─────────┬─────────┬─────────┬─────────┐
+ *       m_inputs: │  ready  │  ready  │fetching │  ready  │fetching │fetching │fetching │ waiting │ waiting │
+ *                 │consumed │    ✓    │    ●    │    ✓    │    ●    │    ●    │    ●    │         │         │
+ *                 └─────────┴─────────┴─────────┴─────────┴─────────┴─────────┴─────────┴─────────┴─────────┘
+ *                                ▲
+ *                                │
+ *                           m_input_tail
  */
 class CoinsViewOverlay : public CCoinsViewCache
 {
