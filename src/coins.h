@@ -12,6 +12,8 @@
 #include <memusage.h>
 #include <primitives/block.h>
 #include <primitives/transaction.h>
+#include <primitives/transaction_identifier.h>
+#include <random.h>
 #include <serialize.h>
 #include <support/allocators/pool.h>
 #include <uint256.h>
@@ -586,6 +588,32 @@ private:
     };
     mutable std::vector<InputToFetch> m_inputs{};
 
+    using QuickHash = uint64_t;
+
+    class QuickHashHasher
+    {
+        uint64_t m_key[4];
+
+    public:
+        explicit QuickHashHasher(bool deterministic) noexcept
+        {
+            FastRandomContext rng;
+            for (auto& k : m_key) k = deterministic ? 0 : rng.rand64();
+        }
+
+#if defined(__clang__)
+        __attribute__((no_sanitize("unsigned-integer-overflow")))
+#endif
+        QuickHash operator()(const Txid& txid) const noexcept
+        {
+            const auto& hash_input{txid.ToUint256()};
+            QuickHash out{0};
+            for (const auto i : std::views::iota(0, 4)) out += hash_input.GetUint64(i) ^ m_key[i];
+            return out;
+        }
+    };
+    QuickHashHasher m_hasher;
+
     /**
      * Claim and fetch the next input in the queue.
      *
@@ -636,7 +664,8 @@ protected:
     }
 
 public:
-    using CCoinsViewCache::CCoinsViewCache;
+    explicit CoinsViewOverlay(CCoinsView* in_base, bool deterministic = false) noexcept
+        : CCoinsViewCache{in_base, deterministic}, m_hasher{deterministic} {}
 
     //! Start fetching inputs from block.
     [[nodiscard]] ResetGuard StartFetching(const CBlock& block LIFETIMEBOUND) noexcept
