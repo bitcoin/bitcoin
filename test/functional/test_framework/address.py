@@ -186,6 +186,9 @@ def bech32_to_bytes(address):
 
 def address_to_scriptpubkey(address):
     """Converts a given address to the corresponding output script (scriptPubKey)."""
+    if address == "":
+        raise ValueError("Empty address")
+
     wit_ver, wit_payload = bech32_to_bytes(address)
     if wit_ver is not None:
         return program_to_witness_script(wit_ver, wit_payload)
@@ -248,6 +251,9 @@ class TestFrameworkScript(unittest.TestCase):
             assert_equal(address_to_scriptpubkey(address), scripthash_to_p2sh_script(payload_p2sh))
 
     def test_address_to_scriptpubkey_invalid_base58(self):
+        with self.assertRaisesRegex(ValueError, "Empty address"):
+            address_to_scriptpubkey("")
+
         invalid_version_addr = byte_to_base58(bytes.fromhex('11' * 20), 42)
         with self.assertRaisesRegex(ValueError, "Unsupported base58 address version byte: 42"):
             address_to_scriptpubkey(invalid_version_addr)
