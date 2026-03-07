@@ -580,11 +580,18 @@ private:
 
     //! The inputs of the block which is being fetched.
     struct InputToFetch {
+        //! Workers set this after setting the coin. The main thread tests this before reading the coin.
+        std::atomic_flag ready{};
         //! The outpoint of the input to fetch.
         const COutPoint& outpoint;
         //! The coin that workers will fetch and main thread will insert into cache.
         std::optional<Coin> coin{std::nullopt};
 
+        /**
+         * The move constructor is only used if m_inputs reallocates during StartFetching.
+         * In StartFetching ready and coin will all have default values, so we don't need to move them.
+         */
+        InputToFetch(InputToFetch&& other) noexcept : outpoint{other.outpoint} {}
         explicit InputToFetch(const COutPoint& o LIFETIMEBOUND) noexcept : outpoint{o} {}
     };
     mutable std::vector<InputToFetch> m_inputs{};
@@ -638,10 +645,16 @@ private:
         auto& input{m_inputs[i]};
         // Inputs spending a coin from a tx earlier in the block won't be in the cache or db
         if (m_txids.contains(m_hasher(input.outpoint.hash))) {
+            // We can use relaxed ordering here since we don't write the coin.
+            input.ready.test_and_set(std::memory_order_relaxed);
+            input.ready.notify_one();
             return true;
         }
 
         if (auto coin{base->PeekCoin(input.outpoint)}) [[likely]] input.coin.emplace(std::move(*coin));
+        // We need release here, so writing coin in the line above happens before the main thread acquires.
+        input.ready.test_and_set(std::memory_order_release);
+        input.ready.notify_one();
         return true;
     }
 
@@ -664,6 +677,15 @@ private:
             if (input.outpoint != outpoint) continue;
             // We advance the tail since the input is cached and not accessed through this method again.
             m_input_tail = i + 1;
+            // Check if the coin is ready to be read. We need acquire so we match the worker thread's release.
+            while (!input.ready.test(std::memory_order_acquire)) {
+                // Work instead of waiting if the coin is not ready
+                if (!ProcessInput()) {
+                    // No more work, just wait
+                    input.ready.wait(/*old=*/false, std::memory_order_acquire);
+                    break;
+                }
+            }
             // We can move the coin since we won't access this input again.
             if (input.coin) [[likely]] return std::move(*input.coin);
             // If we get here, then this block has missing or spent inputs or there is a txid quick hash collision.
