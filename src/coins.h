@@ -10,6 +10,7 @@
 #include <compressor.h>
 #include <core_memusage.h>
 #include <memusage.h>
+#include <primitives/block.h>
 #include <primitives/transaction.h>
 #include <serialize.h>
 #include <support/allocators/pool.h>
@@ -21,8 +22,13 @@
 #include <cassert>
 #include <cstdint>
 
+#include <atomic>
 #include <functional>
+#include <optional>
+#include <ranges>
 #include <unordered_map>
+#include <utility>
+#include <vector>
 
 /**
  * A UTXO entry.
@@ -415,7 +421,7 @@ protected:
      * Discard all modifications made to this cache without flushing to the base view.
      * This can be used to efficiently reuse a cache instance across multiple operations.
      */
-    void Reset() noexcept;
+    virtual void Reset() noexcept;
 
     /* Fetch the coin from base. Used for cache misses in FetchCoin. */
     virtual std::optional<Coin> FetchCoinFromBase(const COutPoint& outpoint) const;
@@ -564,13 +570,80 @@ private:
 class CoinsViewOverlay : public CCoinsViewCache
 {
 private:
+    //! The latest input not yet being fetched. Workers atomically increment this when fetching.
+    mutable std::atomic_uint32_t m_input_head{0};
+
+    //! The inputs of the block which is being fetched.
+    struct InputToFetch {
+        //! The outpoint of the input to fetch.
+        const COutPoint& outpoint;
+        //! The coin that workers will fetch and main thread will insert into cache.
+        mutable std::optional<Coin> coin{std::nullopt};
+
+        explicit InputToFetch(const COutPoint& o LIFETIMEBOUND) noexcept : outpoint{o} {}
+    };
+    std::vector<InputToFetch> m_inputs{};
+
+    /**
+     * Claim and fetch the next input in the queue.
+     *
+     * @return true if there are more inputs in the queue to fetch
+     * @return false if there are no more inputs in the queue to fetch
+     */
+    bool ProcessInput() const noexcept
+    {
+        const auto i{m_input_head.fetch_add(1, std::memory_order_relaxed)};
+        if (i >= m_inputs.size()) return false;
+
+        auto& input{m_inputs[i]};
+        input.coin = base->PeekCoin(input.outpoint);
+        return true;
+    }
+
+    //! Clear fetching data.
+    void StopFetching() noexcept
+    {
+        m_inputs.clear();
+        m_input_head.store(0, std::memory_order_relaxed);
+    }
+
     std::optional<Coin> FetchCoinFromBase(const COutPoint& outpoint) const override
     {
+        // TODO: linear scan; replaced with O(1) m_input_tail lookup in a follow-up commit.
+        for (const auto i : std::views::iota(0U, m_inputs.size())) {
+            auto& input{m_inputs[i]};
+            if (input.outpoint != outpoint) continue;
+            return input.coin;
+        }
+
+        // We will only get here for BIP30 checks.
         return base->PeekCoin(outpoint);
+    }
+
+protected:
+    void Reset() noexcept override
+    {
+        StopFetching();
+        CCoinsViewCache::Reset();
     }
 
 public:
     using CCoinsViewCache::CCoinsViewCache;
+
+    //! Start fetching inputs from block.
+    [[nodiscard]] ResetGuard StartFetching(const CBlock& block LIFETIMEBOUND) noexcept
+    {
+        Assume(m_inputs.empty());
+        Assume(m_input_head.load(std::memory_order_relaxed) == 0);
+        // Loop through the inputs of the block and set them in the queue.
+        for (const auto& tx : block.vtx | std::views::drop(1)) {
+            for (const auto& input : tx->vin) {
+                m_inputs.emplace_back(input.prevout);
+            }
+        }
+        while (ProcessInput()) {}
+        return CreateResetGuard();
+    }
 };
 
 //! Utility function to add all of a transaction's outputs to a cache.
