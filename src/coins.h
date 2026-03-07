@@ -29,6 +29,7 @@
 #include <optional>
 #include <ranges>
 #include <unordered_map>
+#include <unordered_set>
 #include <utility>
 #include <vector>
 
@@ -615,6 +616,15 @@ private:
     QuickHashHasher m_hasher;
 
     /**
+     * Quick hashes of txids of all txs in the block being fetched. This is used to filter out inputs that
+     * are created earlier in the same block, since they will not be in the db or the cache.
+     * Using an 8 byte quick hash is a performance improvement, versus storing the entire 32 bytes. In case of a
+     * collision of an input being spent having the same quick hash as a txid of a tx elsewhere in the block,
+     * the input will not be fetched in the background. The input will still be fetched later on the main thread.
+     */
+    std::unordered_set<QuickHash> m_txids{};
+
+    /**
      * Claim and fetch the next input in the queue.
      *
      * @return true if there are more inputs in the queue to fetch
@@ -626,6 +636,11 @@ private:
         if (i >= m_inputs.size()) [[unlikely]] return false;
 
         auto& input{m_inputs[i]};
+        // Inputs spending a coin from a tx earlier in the block won't be in the cache or db
+        if (m_txids.contains(m_hasher(input.outpoint.hash))) {
+            return true;
+        }
+
         if (auto coin{base->PeekCoin(input.outpoint)}) [[likely]] input.coin.emplace(std::move(*coin));
         return true;
     }
@@ -636,6 +651,7 @@ private:
         m_inputs.clear();
         m_input_head.store(0, std::memory_order_relaxed);
         m_input_tail = 0;
+        m_txids.clear();
     }
 
     std::optional<Coin> FetchCoinFromBase(const COutPoint& outpoint) const override
@@ -649,10 +665,12 @@ private:
             // We advance the tail since the input is cached and not accessed through this method again.
             m_input_tail = i + 1;
             // We can move the coin since we won't access this input again.
-            return std::move(input.coin);
+            if (input.coin) [[likely]] return std::move(*input.coin);
+            // If we get here, then this block has missing or spent inputs or there is a txid quick hash collision.
+            break;
         }
 
-        // We will only get here for BIP30 checks.
+        // We will only get here for BIP30 checks, txid quick hash collisions or a block with missing or spent inputs.
         return base->PeekCoin(outpoint);
     }
 
@@ -670,9 +688,10 @@ public:
     //! Start fetching inputs from block.
     [[nodiscard]] ResetGuard StartFetching(const CBlock& block LIFETIMEBOUND) noexcept
     {
-        // Loop through the inputs of the block and set them in the queue.
+        // Loop through the inputs of the block and set them in the queue. Also construct the set of txids to filter.
         for (const auto& tx : block.vtx | std::views::drop(1)) [[likely]] {
             for (const auto& input : tx->vin) [[likely]] m_inputs.emplace_back(input.prevout);
+            m_txids.emplace(m_hasher(tx->GetHash()));
         }
         while (ProcessInput()) [[likely]] {}
         return CreateResetGuard();
