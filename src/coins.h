@@ -565,13 +565,63 @@ private:
 };
 
 /**
- * CCoinsViewCache overlay that avoids populating/mutating parent cache layers on cache misses.
+ * CCoinsViewCache subclass that asynchronously fetches all block inputs in parallel during ConnectBlock without
+ * mutating the base cache.
  *
- * This is achieved by fetching coins from the base view using PeekCoin() instead of GetCoin(),
- * so intermediate CCoinsViewCache layers are not filled.
+ * Only used in ConnectBlock to pass as an ephemeral view that can be reset if the block is invalid.
+ * It provides the same interface as CCoinsViewCache. It overrides all methods that mutate base,
+ * stopping threads before calling superclass.
+ * It adds an additional StartFetching method to provide the block.
  *
- * Used during ConnectBlock() as an ephemeral, resettable top-level view that is flushed only
- * on success, so invalid blocks don't pollute the underlying cache.
+ * When a block is passed to StartFetching, the inputs of the block are flattened into a vector of InputToFetch
+ * objects. StartFetching then submits worker tasks to a ThreadPool and keeps the returned futures alive until fetching
+ * is stopped.
+ *
+ * ProcessInput() atomically fetches and increments m_input_head, so each thread can only access a single element of the
+ * m_inputs vector at a time. Workers race to claim inputs, so they may fetch elements in any order. If the fetched
+ * index is greater than the size of m_inputs, no more inputs can be fetched and false is returned.
+ *
+ * The worker claims the InputToFetch at this index, fetches the coin from the base cache and moves it into the
+ * InputToFetch object. The ready flag is then set with a release memory order. This allows the ready flag to be
+ * used as a memory fence, guaranteeing the coin being written to the object will have happened before another
+ * thread tests the flag with an acquire memory order.
+ * This assumes all base->PeekCoin() paths are safe for concurrent readers and do not mutate lower cache layers.
+ *
+ * When a coin is requested from the cache on the main thread and is not already in cacheCoins map, FetchCoinFromBase
+ * checks whether the next unconsumed entry in m_inputs has the requested outpoint. On a match, m_input_tail is advanced
+ * and the entry's ready flag is tested with an acquire memory order. If the worker has already completed, the coin is
+ * moved out and returned. Otherwise the main thread calls ProcessInput() to make progress (by fetching other inputs)
+ * rather than blocking on a specific worker.
+ *
+ * StopFetching() is called before mutating operations (Flush/Sync/Reset/SetBackend). It stops fetching by moving
+ * m_input_head to the end of m_inputs (so workers quickly exit), then waits for all futures to complete and clears
+ * the per-block state (m_inputs and the head/tail counters).
+ *
+ *       Workers advance m_input_head to fetch inputs. Main thread advances m_input_tail to consume.
+ *
+ *       Before workers start:
+ *
+ *                 m_input_head
+ *                 m_input_tail
+ *                      │
+ *                      ▼
+ *                 ┌─────────┬─────────┬─────────┬─────────┬─────────┬─────────┬─────────┬─────────┬─────────┐
+ *       m_inputs: │ waiting │ waiting │ waiting │ waiting │ waiting │ waiting │ waiting │ waiting │ waiting │
+ *                 │         │         │         │         │         │         │         │         │         │
+ *                 └─────────┴─────────┴─────────┴─────────┴─────────┴─────────┴─────────┴─────────┴─────────┘
+ *
+ *       After workers start:
+ *
+ *                                       Worker 2            Worker 0  Worker 3  Worker 1  m_input_head
+ *                                          │                   │         │         │         │
+ *                                          ▼                   ▼         ▼         ▼         ▼
+ *                 ┌─────────┬─────────┬─────────┬─────────┬─────────┬─────────┬─────────┬─────────┬─────────┐
+ *       m_inputs: │  ready  │  ready  │fetching │  ready  │fetching │fetching │fetching │ waiting │ waiting │
+ *                 │consumed │    ✓    │    ●    │    ✓    │    ●    │    ●    │    ●    │         │         │
+ *                 └─────────┴─────────┴─────────┴─────────┴─────────┴─────────┴─────────┴─────────┴─────────┘
+ *                                ▲
+ *                                │
+ *                           m_input_tail
  */
 class CoinsViewOverlay : public CCoinsViewCache
 {
