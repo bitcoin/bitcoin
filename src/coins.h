@@ -572,6 +572,8 @@ class CoinsViewOverlay : public CCoinsViewCache
 private:
     //! The latest input not yet being fetched. Workers atomically increment this when fetching.
     mutable std::atomic_uint32_t m_input_head{0};
+    //! The latest input not yet accessed by a consumer. Only the main thread increments this.
+    mutable uint32_t m_input_tail{0};
 
     //! The inputs of the block which is being fetched.
     struct InputToFetch {
@@ -605,14 +607,21 @@ private:
     {
         m_inputs.clear();
         m_input_head.store(0, std::memory_order_relaxed);
+        m_input_tail = 0;
     }
 
     std::optional<Coin> FetchCoinFromBase(const COutPoint& outpoint) const override
     {
-        for (const auto i : std::views::iota(0U, m_inputs.size())) [[likely]] {
+        // This assumes ConnectBlock accesses all inputs in the same order as they are added to m_inputs
+        // in StartFetching. Some outpoints are not accessed because they are created by the block, so we scan until we
+        // come across the requested input.
+        for (const auto i : std::views::iota(m_input_tail, m_inputs.size())) [[likely]] {
             auto& input{m_inputs[i]};
             if (input.outpoint != outpoint) continue;
-            return input.coin;
+            // We advance the tail since the input is cached and not accessed through this method again.
+            m_input_tail = i + 1;
+            // We can move the coin since we won't access this input again.
+            return std::move(input.coin);
         }
 
         // We will only get here for BIP30 checks.
