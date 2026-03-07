@@ -956,7 +956,8 @@ class TxCollectionImpl : public interfaces::TxCollection
 {
 public:
     TxCollectionImpl(std::vector<Wtxid> wtxids, const NodeContext& node)
-        : m_tx_collection(std::move(wtxids), node)
+        : m_tx_collection(std::move(wtxids), node),
+          m_node(node)
     {
     }
 
@@ -970,8 +971,19 @@ public:
         m_tx_collection.AddMissingTxs(txs);
     }
 
+    std::unique_ptr<BlockTemplate> makeTemplate(uint256 prevhash,
+                                                CTransactionRef coinbase,
+                                                std::string& reason,
+                                                std::string& debug) override
+    {
+        auto block_template{m_tx_collection.MakeTemplate(prevhash, coinbase, reason, debug)};
+        if (!block_template) return nullptr;
+        return std::make_unique<BlockTemplateImpl>(BlockCreateOptions{}, std::move(block_template), m_node);
+    }
+
 private:
     node::TxCollection m_tx_collection;
+    const NodeContext& m_node;
 };
 
 class MinerImpl : public Mining

@@ -103,12 +103,15 @@ public:
 };
 
 /**
- * Collect transactions in a client-specified order.
+ * Collect transactions in a client-specified order and later assemble and
+ * validate them as a block template.
  *
  * Usage:
  * - Call Mining::collectTxs() with the requested wtxids in final block order.
  * - Use unknownTxPos() to learn which transactions are still missing.
  * - Provide missing transactions with addMissingTxs().
+ * - Once all requested transactions are available, call makeTemplate() to
+ *   validate the requested prevhash and build a block template.
  */
 class TxCollection
 {
@@ -129,6 +132,40 @@ public:
      *         the whole collection.
      */
     virtual void addMissingTxs(const std::vector<CTransactionRef>& txs) = 0;
+
+    /**
+     * Construct a block template using the collected transactions in their
+     * requested order.
+     *
+     * Requires all requested transactions to be present, and prevhash to
+     * match the current tip.
+     *
+     * The resulting block is validated with the same final TestBlockValidity()
+     * call used by checkBlock(), with the proof-of-work and merkle-root checks
+     * disabled.
+     *
+     * Possible @p reason values:
+     * - `missing-txs`: one or more requested transactions have not been
+     *   provided yet
+     * - `stale-prevblk`: the requested prevhash is an ancestor of the
+     *   current tip
+     * - `inconclusive-not-best-prevblk`: the requested prevhash does not
+     *   match the current tip and is not in the active chain (e.g. it is
+     *   on a fork, or the node has not seen it yet)
+     * - otherwise BIP-22 style
+     *
+     * @param[in] prevhash hash of the tip the template must build on top of
+     * @param[in] coinbase optional coinbase transaction to validate the block
+     *                     with. When null, a node-generated dummy
+     *                     coinbase is used.
+     * @param[out] reason  failure reason; see above
+     * @param[out] debug   more detailed rejection reason
+     * @returns            block template on success, otherwise nullptr
+     */
+    virtual std::unique_ptr<BlockTemplate> makeTemplate(uint256 prevhash,
+                                                        CTransactionRef coinbase,
+                                                        std::string& reason,
+                                                        std::string& debug) = 0;
 };
 
 //! Interface giving clients (RPC, Stratum v2 Template Provider in the future)
