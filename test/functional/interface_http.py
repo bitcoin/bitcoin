@@ -103,6 +103,7 @@ class HTTPBasicsTest (BitcoinTestFramework):
         self.check_pipelining()
         self.check_chunked_transfer()
         self.check_idle_timeout()
+        self.check_server_busy_idle_timeout()
 
 
     def check_default_connection(self):
@@ -260,6 +261,26 @@ class HTTPBasicsTest (BitcoinTestFramework):
 
         # Still open
         assert not conn.sock_closed()
+
+
+    def check_server_busy_idle_timeout(self):
+        self.log.info("Check that -rpcservertimeout won't close on a delayed response")
+        tip_height = self.nodes[2].getblockcount()
+        conn = BitcoinHTTPConnection(self.nodes[2])
+        conn.post_raw('/', f'{{"method": "waitforblockheight", "params": [{tip_height + 1}]}}')
+
+        # Wait until after the timeout, then generate a block with a second HTTP connection
+        time.sleep(RPCSERVERTIMEOUT + 1)
+        generated_block = self.generate(self.nodes[2], 1, sync_fun=self.no_op)[0]
+
+        # The first connection gets the response it is patiently waiting for
+        response1 = conn.recv_raw().decode()
+        assert generated_block in response1
+        # The connection is still open
+        assert not conn.sock_closed()
+
+        # Now it will actually close due to idle timeout
+        conn.expect_timeout(RPCSERVERTIMEOUT)
 
 
 if __name__ == '__main__':
