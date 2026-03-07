@@ -5,6 +5,7 @@
 #include <coins.h>
 #include <crypto/sha256.h>
 #include <kernel/chainstatemanager_opts.h>
+#include <primitives/block.h>
 #include <primitives/transaction.h>
 #include <test/fuzz/FuzzedDataProvider.h>
 #include <test/fuzz/fuzz.h>
@@ -37,12 +38,20 @@ struct PrecomputedData
     //! Randomly generated Coin values.
     Coin coins[NUM_COINS];
 
+    //! Block with a tx containing as inputs the above outpoints.
+    CBlock block;
+
     PrecomputedData()
     {
         static const uint8_t PREFIX_O[1] = {'o'}; /** Hash prefix for outpoint hashes. */
         static const uint8_t PREFIX_S[1] = {'s'}; /** Hash prefix for coins scriptPubKeys. */
         static const uint8_t PREFIX_M[1] = {'m'}; /** Hash prefix for coins nValue/fCoinBase. */
 
+        CMutableTransaction coinbase;
+        coinbase.vin.emplace_back();
+        block.vtx.push_back(MakeTransactionRef(coinbase));
+
+        CMutableTransaction tx;
         for (uint32_t i = 0; i < NUM_OUTPOINTS; ++i) {
             uint32_t idx = (i * 1200U) >> 12; /* Map 3 or 4 entries to same txid. */
             const uint8_t ser[4] = {uint8_t(idx), uint8_t(idx >> 8), uint8_t(idx >> 16), uint8_t(idx >> 24)};
@@ -50,7 +59,9 @@ struct PrecomputedData
             CSHA256().Write(PREFIX_O, 1).Write(ser, sizeof(ser)).Finalize(txid.begin());
             outpoints[i].hash = Txid::FromUint256(txid);
             outpoints[i].n = i;
+            tx.vin.emplace_back(outpoints[i]);
         }
+        block.vtx.push_back(MakeTransactionRef(tx));
 
         for (uint32_t i = 0; i < NUM_COINS; ++i) {
             const uint8_t ser[4] = {uint8_t(i), uint8_t(i >> 8), uint8_t(i >> 16), uint8_t(i >> 24)};
@@ -185,6 +196,14 @@ public:
     }
 };
 
+// Hold a non-movable ResetGuard on the heap so StartFetching can remain active
+// for the lifetime of a CoinsViewOverlay cache level.
+struct OverlayFetchScope
+{
+    CCoinsViewCache::ResetGuard guard;
+    OverlayFetchScope(CoinsViewOverlay& view, const CBlock& block) : guard(view.StartFetching(block)) {}
+};
+
 std::shared_ptr<ThreadPool> g_thread_pool{std::make_shared<ThreadPool>("cache_fuzz")};
 Mutex g_thread_pool_mutex;
 
@@ -199,6 +218,7 @@ void StartPoolIfNeeded() EXCLUSIVE_LOCKS_REQUIRED(!g_thread_pool_mutex)
 
 FUZZ_TARGET(coinscache_sim, .init = [] { static auto setup{MakeNoLogFileContext<>()}; }) EXCLUSIVE_LOCKS_REQUIRED(!g_thread_pool_mutex)
 {
+    SeedRandomStateForTest(SeedRand::ZEROS);
     StartPoolIfNeeded();
     /** Precomputed COutPoint and CCoins values. */
     static const PrecomputedData data;
@@ -207,6 +227,8 @@ FUZZ_TARGET(coinscache_sim, .init = [] { static auto setup{MakeNoLogFileContext<
     CoinsViewBottom bottom;
     /** Real CCoinsViewCache objects. */
     std::vector<std::unique_ptr<CCoinsViewCache>> caches;
+    /** Long-lived StartFetching guard (nullptr unless corresponding level is a CoinsViewOverlay). */
+    std::unique_ptr<OverlayFetchScope> overlay_fetch_scope;
     /** Simulated cache data (sim_caches[0] matches bottom, sim_caches[i+1] matches caches[i]). */
     CacheLevel sim_caches[MAX_CACHES + 1];
     /** Current height in the simulation. */
@@ -382,11 +404,17 @@ FUZZ_TARGET(coinscache_sim, .init = [] { static auto setup{MakeNoLogFileContext<
 
             [&]() { // Add a cache level (if not already at the max).
                 if (caches.size() != MAX_CACHES) {
+                    if (overlay_fetch_scope) {
+                        overlay_fetch_scope.reset();
+                        sim_caches[caches.size()].Wipe();
+                    }
                     // Apply to real caches.
                     if (provider.ConsumeBool()) {
                         caches.emplace_back(new CCoinsViewCache(&*caches.back(), /*deterministic=*/true));
                     } else {
                         caches.emplace_back(new CoinsViewOverlay(&*caches.back(), g_thread_pool, /*deterministic=*/true));
+                        auto& overlay{static_cast<CoinsViewOverlay&>(*caches.back())};
+                        overlay_fetch_scope = std::make_unique<OverlayFetchScope>(overlay, data.block);
                     }
                     // Apply to simulation data.
                     sim_caches[caches.size()].Wipe();
@@ -396,6 +424,7 @@ FUZZ_TARGET(coinscache_sim, .init = [] { static auto setup{MakeNoLogFileContext<
             [&]() { // Remove a cache level.
                 // Apply to real caches (this reduces caches.size(), implicitly doing the same on the simulation data).
                 caches.back()->SanityCheck();
+                overlay_fetch_scope.reset();
                 caches.pop_back();
             },
 
@@ -415,9 +444,13 @@ FUZZ_TARGET(coinscache_sim, .init = [] { static auto setup{MakeNoLogFileContext<
 
             [&]() { // Reset.
                 sim_caches[caches.size()].Wipe();
-                // Apply to real caches.
-                {
-                    const auto reset_guard{caches.back()->CreateResetGuard()};
+                // Apply to real caches. Optionally start fetching again.
+                if (overlay_fetch_scope && provider.ConsumeBool()) {
+                    overlay_fetch_scope.reset();
+                    auto& overlay{static_cast<CoinsViewOverlay&>(*caches.back())};
+                    overlay_fetch_scope = std::make_unique<OverlayFetchScope>(overlay, data.block);
+                } else {
+                    (void)caches.back()->CreateResetGuard();
                 }
             },
 
@@ -441,22 +474,21 @@ FUZZ_TARGET(coinscache_sim, .init = [] { static auto setup{MakeNoLogFileContext<
     }
 
     // Full comparison between caches and simulation data, from bottom to top,
-    // as AccessCoin on a higher cache may affect caches below it.
     for (unsigned sim_idx = 1; sim_idx <= caches.size(); ++sim_idx) {
         auto& cache = *caches[sim_idx - 1];
         size_t cache_size = 0;
 
         for (uint32_t outpointidx = 0; outpointidx < NUM_OUTPOINTS; ++outpointidx) {
             cache_size += cache.HaveCoinInCache(data.outpoints[outpointidx]);
-            const auto& real = cache.AccessCoin(data.outpoints[outpointidx]);
+            const auto real{cache.PeekCoin(data.outpoints[outpointidx])};
             auto sim = lookup(outpointidx, sim_idx);
             if (!sim.has_value()) {
-                assert(real.IsSpent());
+                assert(!real);
             } else {
-                assert(!real.IsSpent());
-                assert(real.out == data.coins[sim->first].out);
-                assert(real.fCoinBase == data.coins[sim->first].fCoinBase);
-                assert(real.nHeight == sim->second);
+                assert(!real->IsSpent());
+                assert(real->out == data.coins[sim->first].out);
+                assert(real->fCoinBase == data.coins[sim->first].fCoinBase);
+                assert(real->nHeight == sim->second);
             }
         }
 
