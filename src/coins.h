@@ -20,6 +20,7 @@
 #include <util/check.h>
 #include <util/overflow.h>
 #include <util/hasher.h>
+#include <util/threadpool.h>
 
 #include <cassert>
 #include <cstdint>
@@ -27,11 +28,14 @@
 #include <algorithm>
 #include <atomic>
 #include <functional>
+#include <memory>
 #include <optional>
 #include <ranges>
 #include <unordered_map>
 #include <utility>
 #include <vector>
+
+constexpr auto COINS_VIEW_OVERLAY_WORKER_THREADS{4};
 
 /**
  * A UTXO entry.
@@ -670,6 +674,8 @@ private:
         return base->PeekCoin(outpoint);
     }
 
+    std::shared_ptr<ThreadPool> m_thread_pool;
+
 protected:
     void Reset() noexcept override
     {
@@ -678,8 +684,17 @@ protected:
     }
 
 public:
-    explicit CoinsViewOverlay(CCoinsView* in_base, bool deterministic = false) noexcept
-        : CCoinsViewCache{in_base, deterministic}, m_hasher{deterministic} {}
+    explicit CoinsViewOverlay(CCoinsView* in_base, bool deterministic = false,
+                              std::shared_ptr<ThreadPool> thread_pool = nullptr) noexcept
+        : CCoinsViewCache{in_base, deterministic}, m_hasher{deterministic}
+    {
+        if (thread_pool != nullptr) {
+            m_thread_pool = thread_pool;
+        } else {
+            m_thread_pool = std::make_shared<ThreadPool>("inputfetch");
+            m_thread_pool->Start(COINS_VIEW_OVERLAY_WORKER_THREADS);
+        }
+    }
 
     //! Start fetching inputs from block.
     [[nodiscard]] ResetGuard StartFetching(const CBlock& block LIFETIMEBOUND) noexcept
