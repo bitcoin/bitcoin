@@ -179,7 +179,7 @@ class MempoolLimitTest(BitcoinTestFramework):
         # Package should be submitted, temporarily exceeding maxmempool, and then evicted.
         res = node.submitpackage(package_hex)
         assert_equal(res["package_msg"], "transaction failed")
-        assert len([tx_res for _, tx_res in res["tx-results"].items() if "error" in tx_res and tx_res["error"] == "bad-txns-inputs-missingorspent"])
+        assert "bad-txns-inputs-missingorspent" in [tx_res["error"] for _, tx_res in res["tx-results"].items() if "error" in tx_res]
 
         # Maximum size must never be exceeded.
         assert_greater_than(node.getmempoolinfo()["maxmempool"], node.getmempoolinfo()["bytes"])

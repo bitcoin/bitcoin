@@ -982,7 +982,7 @@ class WalletMigrationTest(BitcoinTestFramework):
 
         # Also, the watch-only wallet should have the descriptor for the standard sh(pkh())
         desc = descsum_create(f"addr({addy_script_sh_pkh})")
-        assert next(it['desc'] for it in wallet_wo.listdescriptors()['descriptors'] if it['desc'] == desc)
+        assert desc in [it['desc'] for it in wallet_wo.listdescriptors()['descriptors']]
         # And doesn't have a descriptor for the invalid one
         desc_invalid = descsum_create(f"addr({addy_script_double_sh_pkh})")
         assert_equal(next((it['desc'] for it in wallet_wo.listdescriptors()['descriptors'] if it['desc'] == desc_invalid), None), None)

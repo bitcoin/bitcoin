@@ -21,6 +21,7 @@ from .messages import (
 )
 
 from .crypto.ripemd160 import ripemd160
+from .util import assert_equal
 
 MAX_SCRIPT_ELEMENT_SIZE = 520
 MAX_SCRIPT_SIZE = 10000
@@ -814,8 +815,8 @@ def BIP341_sha_outputs(txTo):
     return sha256(b"".join(o.serialize() for o in txTo.vout))
 
 def TaprootSignatureMsg(txTo, spent_utxos, hash_type, input_index=0, *, scriptpath=False, leaf_script=None, codeseparator_pos=-1, annex=None, leaf_ver=LEAF_VERSION_TAPSCRIPT):
-    assert (len(txTo.vin) == len(spent_utxos))
-    assert (input_index < len(txTo.vin))
+    assert_equal(len(txTo.vin), len(spent_utxos))
+    assert input_index < len(txTo.vin)
     out_type = SIGHASH_ALL if hash_type == 0 else hash_type & 3
     in_type = hash_type & SIGHASH_ANYONECANPAY
     spk = spent_utxos[input_index].scriptPubKey
