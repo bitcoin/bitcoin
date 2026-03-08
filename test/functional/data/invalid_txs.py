@@ -58,6 +58,7 @@ from test_framework.script import (
     OP_SUBSTR,
     OP_XOR,
 )
+from test_framework.util import assert_equal
 from test_framework.script_util import (
     MIN_PADDING,
     MIN_STANDARD_TX_NONWITNESS_SIZE,
