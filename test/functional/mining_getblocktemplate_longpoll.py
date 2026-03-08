@@ -37,7 +37,7 @@ class GetBlockTemplateLPTest(BitcoinTestFramework):
         template = self.nodes[0].getblocktemplate({'rules': ['segwit']})
         longpollid = template['longpollid']
         template2 = self.nodes[0].getblocktemplate({'rules': ['segwit']})
-        assert template2['longpollid'] == longpollid
+        assert_equal(template2['longpollid'], longpollid)
 
         self.log.info("Test that longpoll waits if we do nothing")
         thr = LongpollThread(self.nodes[0])

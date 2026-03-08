@@ -490,7 +490,7 @@ class PSBTTest(BitcoinTestFramework):
         finalized_psbt = processed_finalized_psbt['psbt']
         finalized_psbt_hex = processed_finalized_psbt['hex']
         assert_not_equal(signed_psbt, finalized_psbt)
-        assert finalized_psbt_hex == finalized_hex
+        assert_equal(finalized_psbt_hex, finalized_hex)
 
         # Manually selected inputs can be locked:
         assert_equal(len(self.nodes[0].listlockunspent()), 0)

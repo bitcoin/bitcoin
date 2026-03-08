@@ -850,7 +850,7 @@ def spenders_taproot_active():
             for witlen in [20, 31, 32, 33]:
                 def mutate(spk):
                     prog = spk[2:]
-                    assert len(prog) == 32
+                    assert_equal(len(prog), 32)
                     if witlen < 32:
                         prog = prog[0:witlen]
                     elif witlen > 32:
@@ -1532,7 +1532,7 @@ class TaprootTest(BitcoinTestFramework):
         self.log.info("- Running %i spending tests" % done)
         random.shuffle(normal_utxos)
         random.shuffle(mismatching_utxos)
-        assert done == len(normal_utxos) + len(mismatching_utxos)
+        assert_equal(done, len(normal_utxos) + len(mismatching_utxos))
 
         left = done
         while left:
@@ -1645,9 +1645,9 @@ class TaprootTest(BitcoinTestFramework):
             if (len(spenders) - left) // 200 > (len(spenders) - left - len(input_utxos)) // 200:
                 self.log.info("  - %i tests done" % (len(spenders) - left))
 
-        assert left == 0
-        assert len(normal_utxos) == 0
-        assert len(mismatching_utxos) == 0
+        assert_equal(left, 0)
+        assert_equal(len(normal_utxos), 0)
+        assert_equal(len(mismatching_utxos), 0)
         self.log.info("  - Done")
 
     def gen_test_vectors(self):
@@ -1662,7 +1662,7 @@ class TaprootTest(BitcoinTestFramework):
         coinbase.vin = [CTxIn(COutPoint(0, 0xffffffff), CScript([OP_1, OP_1]), SEQUENCE_FINAL)]
         coinbase.vout = [CTxOut(5000000000, CScript([OP_1]))]
         coinbase.nLockTime = 0
-        assert coinbase.txid_hex == "f60c73405d499a956d3162e3483c395526ef78286458a4cb17b125aa92e49b20"
+        assert_equal(coinbase.txid_hex, "f60c73405d499a956d3162e3483c395526ef78286458a4cb17b125aa92e49b20")
         # Mine it
         block = create_block(hashprev=int(self.nodes[0].getbestblockhash(), 16), coinbase=coinbase)
         block.solve()

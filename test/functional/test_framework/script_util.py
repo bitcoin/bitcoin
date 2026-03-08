@@ -61,12 +61,12 @@ MAX_STD_P2SH_SIGOPS = 15
 # least 5 bytes.
 MIN_STANDARD_TX_NONWITNESS_SIZE = 65
 MIN_PADDING = MIN_STANDARD_TX_NONWITNESS_SIZE - 10 - 41 - 9
-assert MIN_PADDING == 5
+assert_equal(MIN_PADDING, 5)
 
 # This script cannot be spent, allowing dust output values under
 # standardness checks
 DUMMY_MIN_OP_RETURN_SCRIPT = CScript([OP_RETURN] + ([OP_0] * (MIN_PADDING - 1)))
-assert len(DUMMY_MIN_OP_RETURN_SCRIPT) == MIN_PADDING
+assert_equal(len(DUMMY_MIN_OP_RETURN_SCRIPT), MIN_PADDING)
 
 PAY_TO_ANCHOR = CScript([OP_1, bytes.fromhex("4e73")])
 ANCHOR_ADDRESS = "bcrt1pfeesnyr2tx"
@@ -86,12 +86,12 @@ def keys_to_multisig_script(keys, *, k=None):
 
 
 def keyhash_to_p2pkh_script(hash):
-    assert len(hash) == 20
+    assert_equal(len(hash), 20)
     return CScript([OP_DUP, OP_HASH160, hash, OP_EQUALVERIFY, OP_CHECKSIG])
 
 
 def scripthash_to_p2sh_script(hash):
-    assert len(hash) == 20
+    assert_equal(len(hash), 20)
     return CScript([OP_HASH160, hash, OP_EQUAL])
 
 
@@ -147,7 +147,7 @@ def bulk_vout(tx, target_vsize):
     assert_equal(tx.get_vsize(), target_vsize)
 
 def output_key_to_p2tr_script(key):
-    assert len(key) == 32
+    assert_equal(len(key), 32)
     return program_to_witness_script(1, key)
 
 

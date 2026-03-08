@@ -109,7 +109,7 @@ class CScriptOp(int):
         try:
             return _opcode_instances[n]
         except IndexError:
-            assert len(_opcode_instances) == n
+            assert_equal(len(_opcode_instances), n)
             _opcode_instances.append(super().__new__(cls, n))
             return _opcode_instances[n]
 
@@ -854,7 +854,7 @@ def TaprootSignatureMsg(txTo, spent_utxos, hash_type, input_index=0, *, scriptpa
         ss += TaggedHash("TapLeaf", bytes([leaf_ver]) + ser_string(leaf_script))
         ss += bytes([0])
         ss += codeseparator_pos.to_bytes(4, "little", signed=False)
-    assert len(ss) == 175 - (in_type == SIGHASH_ANYONECANPAY) * 49 - (out_type != SIGHASH_ALL and out_type != SIGHASH_SINGLE) * 32 + (annex is not None) * 32 + scriptpath * 37
+    assert_equal(len(ss), 175 - (in_type == SIGHASH_ANYONECANPAY) * 49 - (out_type != SIGHASH_ALL and out_type != SIGHASH_SINGLE) * 32 + (annex is not None) * 32 + scriptpath * 37)
     return ss
 
 def TaprootSignatureHash(*args, **kwargs):
@@ -875,7 +875,7 @@ def taproot_tree_helper(scripts):
         code = script[1]
         if len(script) == 3:
             version = script[2]
-        assert version & 1 == 0
+        assert_equal(version & 1, 0)
         assert isinstance(code, bytes)
         h = TaggedHash("TapLeaf", bytes([version]) + ser_string(code))
         if name is None:

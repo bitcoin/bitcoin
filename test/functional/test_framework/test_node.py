@@ -228,7 +228,7 @@ class TestNode():
 
     def get_deterministic_priv_key(self):
         """Return a deterministic priv key in base58, that only depends on the node's index"""
-        assert len(self.PRIV_KEYS) == MAX_NODES
+        assert_equal(len(self.PRIV_KEYS), MAX_NODES)
         return self.PRIV_KEYS[self.index]
 
     def _node_msg(self, msg: str) -> str:
