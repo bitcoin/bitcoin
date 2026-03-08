@@ -105,7 +105,7 @@ class TestFrameworkEllSwift(unittest.TestCase):
             (FE(42), FE(0)),  # t = 0
             (FE(5), FE(-132).sqrt()),  # u^3 + t^2 + 7 = 0
         ]
-        assert undefined_inputs[-1][0]**3 + undefined_inputs[-1][1]**2 + 7 == 0
+        assert_equal(undefined_inputs[-1][0]**3 + undefined_inputs[-1][1]**2 + 7, 0)
         for u, t in undefined_inputs:
             x = xswiftec(u, t)
             self.assertTrue(GE.is_valid_x(x))
@@ -155,7 +155,7 @@ class TestFrameworkEllSwift(unittest.TestCase):
             reader = csv.DictReader(csvfile)
             for row in reader:
                 encoding = bytes.fromhex(row['ellswift'])
-                assert len(encoding) == 64
+                assert_equal(len(encoding), 64)
                 expected_x = FE(int(row['x'], 16))
                 u = FE(int.from_bytes(encoding[:32], 'big'))
                 t = FE(int.from_bytes(encoding[32:], 'big'))
