@@ -13,6 +13,7 @@ import random
 import unittest
 
 from test_framework.crypto.secp256k1 import FE, G, GE
+from test_framework.util import assert_equal
 
 # Precomputed constant square root of -3 (mod p).
 MINUS_3_SQRT = FE(-3).sqrt()

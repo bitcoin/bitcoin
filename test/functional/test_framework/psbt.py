@@ -5,6 +5,7 @@
 
 import base64
 
+from .util import assert_equal
 from .messages import (
     CTransaction,
     deser_string,
