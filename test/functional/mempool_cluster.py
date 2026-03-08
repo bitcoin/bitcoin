@@ -72,7 +72,7 @@ class MempoolClusterTest(BitcoinTestFramework):
             all_txids.append(next_tx["txid"])
             utxo_to_spend = next_tx["new_utxo"]
 
-        assert node.getmempoolcluster(parent_tx['txid'])['txcount'] == cluster_count
+        assert_equal(node.getmempoolcluster(parent_tx['txid'])['txcount'], cluster_count)
         return all_results
 
     def check_feerate_diagram(self, node):

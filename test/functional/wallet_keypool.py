@@ -110,7 +110,7 @@ class KeyPoolTest(BitcoinTestFramework):
         addr.add(nodes[0].getnewaddress(address_type="bech32"))
         addr.add(nodes[0].getnewaddress(address_type="bech32"))
         addr.add(nodes[0].getnewaddress(address_type="bech32"))
-        assert len(addr) == 6
+        assert_equal(len(addr), 6)
         # remember keypool sizes
         wi = nodes[0].getwalletinfo()
         kp_size_before = [wi['keypoolsize_hd_internal'], wi['keypoolsize']]

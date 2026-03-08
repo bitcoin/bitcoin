@@ -78,7 +78,7 @@ class BlockstoreReindexTest(BitcoinTestFramework):
             self.log.debug("Attempt to restart and reindex the node with the unwritable block file")
             with self.nodes[0].assert_debug_log(["Reindexing finished"], timeout=60):
                 self.start_node(0, extra_args=['-reindex', '-fastprune'])
-            assert block_count == self.nodes[0].getblockcount()
+            assert_equal(block_count, self.nodes[0].getblockcount())
             undo_immutable()
 
         filename.chmod(0o777)

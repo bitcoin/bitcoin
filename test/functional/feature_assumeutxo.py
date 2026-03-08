@@ -412,7 +412,7 @@ class AssumeutxoTest(BitcoinTestFramework):
 
         # Generate a series of blocks that `n0` will have in the snapshot,
         # but that n1 and n2 don't yet see.
-        assert n0.getblockcount() == START_HEIGHT
+        assert_equal(n0.getblockcount(), START_HEIGHT)
         blocks = {START_HEIGHT: Block(n0.getbestblockhash(), 1, START_HEIGHT + 1)}
         for i in range(100):
             block_tx = 1

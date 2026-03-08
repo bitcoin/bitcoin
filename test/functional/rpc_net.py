@@ -38,7 +38,7 @@ def assert_net_servicesnames(servicesflag, servicenames):
     servicesflag_generated = 0
     for servicename in servicenames:
         servicesflag_generated |= getattr(test_framework.messages, 'NODE_' + servicename)
-    assert servicesflag_generated == servicesflag
+    assert_equal(servicesflag_generated, servicesflag)
 
 
 def seed_addrman(node):
@@ -501,7 +501,7 @@ class NetTest(BitcoinTestFramework):
                 for bucket_position in getrawaddrman[table_name].keys():
                     entry = getrawaddrman[table_name][bucket_position]
                     expected_entry = list(filter(lambda e: e["address"] == entry["address"], table_info))[0]
-                    assert bucket_position == expected_entry["bucket_position"]
+                    assert_equal(bucket_position, expected_entry["bucket_position"])
                     check_addr_information(entry, expected_entry)
 
         # we expect 4 new and 4 tried table entries in the addrman which were added using seed_addrman()
