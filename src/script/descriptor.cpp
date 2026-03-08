@@ -1310,7 +1310,7 @@ public:
     {
         std::vector<std::unique_ptr<PubkeyProvider>> providers;
         providers.reserve(m_pubkey_args.size());
-        std::transform(m_pubkey_args.begin(), m_pubkey_args.end(), providers.begin(), [](const std::unique_ptr<PubkeyProvider>& p) { return p->Clone(); });
+        std::transform(m_pubkey_args.begin(), m_pubkey_args.end(), std::back_inserter(providers), [](const std::unique_ptr<PubkeyProvider>& p) { return p->Clone(); });
         return std::make_unique<MultisigDescriptor>(m_threshold, std::move(providers), m_sorted);
     }
 };
@@ -1533,7 +1533,7 @@ public:
     {
         std::vector<std::unique_ptr<DescriptorImpl>> subdescs;
         subdescs.reserve(m_subdescriptor_args.size());
-        std::transform(m_subdescriptor_args.begin(), m_subdescriptor_args.end(), subdescs.begin(), [](const std::unique_ptr<DescriptorImpl>& d) { return d->Clone(); });
+        std::transform(m_subdescriptor_args.begin(), m_subdescriptor_args.end(), std::back_inserter(subdescs), [](const std::unique_ptr<DescriptorImpl>& d) { return d->Clone(); });
         return std::make_unique<TRDescriptor>(m_pubkey_args.at(0)->Clone(), std::move(subdescs), m_depths);
     }
 };
