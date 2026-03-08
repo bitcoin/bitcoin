@@ -90,13 +90,13 @@ class ImportPrunedFundsTest(BitcoinTestFramework):
         wwatch = self.nodes[1].get_wallet_rpc('wwatch')
         wwatch.importdescriptors([{"desc": self.nodes[0].getaddressinfo(address2)["desc"], "timestamp": "now"}])
         wwatch.importprunedfunds(rawtransaction=rawtxn2, txoutproof=proof2)
-        assert [tx for tx in wwatch.listtransactions() if tx['txid'] == txnid2]
+        assert txnid2 in [tx['txid'] for tx in wwatch.listtransactions()]
 
         # Import with private key with no rescan
         w1 = self.nodes[1].get_wallet_rpc(self.default_wallet_name)
         wallet_importprivkey(w1, address3_privkey, "now")
         w1.importprunedfunds(rawtxn3, proof3)
-        assert [tx for tx in w1.listtransactions() if tx['txid'] == txnid3]
+        assert txnid3 in [tx['txid'] for tx in w1.listtransactions()]
         balance3 = w1.getbalance()
         assert_equal(balance3, Decimal('0.025'))
 
@@ -110,13 +110,13 @@ class ImportPrunedFundsTest(BitcoinTestFramework):
 
         # Remove transactions
         assert_raises_rpc_error(-4, f'Transaction {txnid1} does not belong to this wallet', w1.removeprunedfunds, txnid1)
-        assert not [tx for tx in w1.listtransactions() if tx['txid'] == txnid1]
+        assert txnid1 not in [tx['txid'] for tx in w1.listtransactions()]
 
         wwatch.removeprunedfunds(txnid2)
-        assert not [tx for tx in wwatch.listtransactions() if tx['txid'] == txnid2]
+        assert txnid2 not in [tx['txid'] for tx in wwatch.listtransactions()]
 
         w1.removeprunedfunds(txnid3)
-        assert not [tx for tx in w1.listtransactions() if tx['txid'] == txnid3]
+        assert txnid3 not in [tx['txid'] for tx in w1.listtransactions()]
 
         # Check various RPC parameter validation errors
         assert_raises_rpc_error(-22, "TX decode failed", w1.importprunedfunds, b'invalid tx'.hex(), proof1)

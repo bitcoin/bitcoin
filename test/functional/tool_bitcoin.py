@@ -35,7 +35,8 @@ class ToolBitcoinTest(BitcoinTestFramework):
         self.add_nodes(self.num_nodes, self.extra_args)
         node_argv = self.get_binaries().node_argv()
         self.node_options = [node.args[len(node_argv):] for node in self.nodes]
-        assert all(node.args[:len(node_argv)] == node_argv for node in self.nodes)
+        for node in self.nodes:
+            assert_equal(node.args[:len(node_argv)], node_argv)
 
     def set_cmd_args(self, node, args):
         """Set up node so it will be started through bitcoin wrapper command with specified arguments."""

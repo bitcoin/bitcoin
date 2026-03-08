@@ -166,7 +166,7 @@ class GetBlocksActivityTest(BitcoinTestFramework):
         assert 'blockhash' not in unconfirmed
         assert 'height' not in unconfirmed
 
-        assert any(a['txid'] == txid_2 for a in activity if not a.get('blockhash'))
+        assert txid_2 in [a['txid'] for a in activity if not a.get('blockhash')]
 
     def test_receive_then_spend(self, node, wallet):
         """Also important because this tests multiple blockhashes."""

@@ -672,7 +672,8 @@ class BitcoinTestFramework(metaclass=BitcoinTestMetaClass):
         `[{"txid": txid, "vout": vout1}, {"txid": txid, "vout": vout2}, ...]`.
         The result can be used to specify inputs for RPCs like `createrawtransaction`,
         `createpsbt`, `lockunspent` etc."""
-        assert all(len(output.keys()) == 1 for output in outputs)
+        for output in outputs:
+            assert_equal(len(output.keys()), 1)
         send_res = node.send(outputs)
         assert send_res["complete"]
         utxos = []
