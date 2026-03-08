@@ -20,12 +20,14 @@
 #include <util/check.h>
 #include <util/overflow.h>
 #include <util/hasher.h>
+#include <util/threadpool.h>
 
 #include <cassert>
 #include <cstdint>
 
 #include <atomic>
 #include <functional>
+#include <memory>
 #include <optional>
 #include <ranges>
 #include <unordered_map>
@@ -594,7 +596,7 @@ private:
     std::vector<InputToFetch> m_inputs{};
 
     /**
-     * Claim and fetch the next input in the queue.
+     * Claim and fetch the next input in the queue. Safe to call from any thread.
      *
      * @return true if there are more inputs in the queue to fetch
      * @return false if there are no more inputs in the queue to fetch
@@ -640,9 +642,12 @@ private:
             return std::move(input.coin);
         }
 
-        // We will only get here for BIP30 checks.
+        // We will only get here for BIP30 checks or when parallel fetching is disabled.
         return base->PeekCoin(outpoint);
     }
+
+    //! Non-null. May have zero workers when input fetching is disabled.
+    std::shared_ptr<ThreadPool> m_thread_pool;
 
 protected:
     void Reset() noexcept override
@@ -652,9 +657,11 @@ protected:
     }
 
 public:
-    explicit CoinsViewOverlay(CCoinsView* in_base, bool deterministic = false) noexcept
-        : CCoinsViewCache{in_base, deterministic}
+    explicit CoinsViewOverlay(CCoinsView* in_base, std::shared_ptr<ThreadPool> thread_pool,
+                              bool deterministic = false) noexcept
+        : CCoinsViewCache{in_base, deterministic}, m_thread_pool{std::move(thread_pool)}
     {
+        Assert(m_thread_pool);
         // Reserve to maximum theoretical number so emplace_back in StartFetching never reallocates m_inputs.
         m_inputs.reserve(MAX_INPUTS_PER_BLOCK);
     }

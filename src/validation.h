@@ -506,7 +506,7 @@ public:
     CoinsViews(DBParams db_params, CoinsViewOptions options);
 
     //! Initialize the CCoinsViewCache member.
-    void InitCache() EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
+    void InitCache(int32_t inputfetch_threads) EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
 };
 
 enum class CoinsCacheSizeState

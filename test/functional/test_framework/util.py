@@ -594,6 +594,7 @@ def write_config(config_path, *, n, chain, extra_config="", disable_autoconnect=
         #  nMaxConnections = available_fds - min_required_fds = 256 - 161 = 94;
         f.write("maxconnections=94\n")
         f.write("par=" + str(min(2, os.cpu_count())) + "\n")
+        f.write("inputfetchthreads=1\n")
         f.write(extra_config)
 
 

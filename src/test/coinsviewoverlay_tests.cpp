@@ -3,6 +3,7 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <coins.h>
+#include <kernel/chainstatemanager_opts.h>
 #include <primitives/block.h>
 #include <primitives/transaction.h>
 #include <primitives/transaction_identifier.h>
@@ -10,11 +11,13 @@
 #include <uint256.h>
 #include <util/byte_units.h>
 #include <util/hasher.h>
+#include <util/threadpool.h>
 
 #include <boost/test/unit_test.hpp>
 
 #include <cstdint>
 #include <cstring>
+#include <memory>
 #include <ranges>
 
 BOOST_AUTO_TEST_SUITE(coinsviewoverlay_tests)
@@ -55,6 +58,17 @@ void PopulateView(const CBlock& block, CCoinsView& view, bool spent = false)
     cache.Flush();
 }
 
+//! Returns a started thread pool shared across tests, mirroring how production reuses pools.
+std::shared_ptr<ThreadPool> StartedThreadPool()
+{
+    static const auto thread_pool{[] {
+        auto pool{std::make_shared<ThreadPool>("fetch_test")};
+        pool->Start(DEFAULT_INPUTFETCH_THREADS);
+        return pool;
+    }()};
+    return thread_pool;
+}
+
 void CheckCache(const CBlock& block, const CCoinsViewCache& cache)
 {
     uint32_t counter{0};
@@ -84,7 +98,7 @@ BOOST_AUTO_TEST_CASE(fetch_inputs_from_db)
     CCoinsViewDB db{{.path = "", .cache_bytes = 1_MiB, .memory_only = true}, {}};
     PopulateView(block, db);
     CCoinsViewCache main_cache{&db};
-    CoinsViewOverlay view{&main_cache};
+    CoinsViewOverlay view{&main_cache, StartedThreadPool()};
     const auto& outpoint{block.vtx[1]->vin[0].prevout};
 
     BOOST_CHECK(view.HaveCoin(outpoint));
@@ -111,7 +125,7 @@ BOOST_AUTO_TEST_CASE(fetch_inputs_from_cache)
     CCoinsViewDB db{{.path = "", .cache_bytes = 1_MiB, .memory_only = true}, {}};
     CCoinsViewCache main_cache{&db};
     PopulateView(block, main_cache);
-    CoinsViewOverlay view{&main_cache};
+    CoinsViewOverlay view{&main_cache, StartedThreadPool()};
     CheckCache(block, view);
 
     const auto& outpoint{block.vtx[1]->vin[0].prevout};
@@ -131,7 +145,7 @@ BOOST_AUTO_TEST_CASE(fetch_no_double_spend)
     CCoinsViewCache main_cache{&db};
     // Add all inputs as spent already in cache
     PopulateView(block, main_cache, /*spent=*/true);
-    CoinsViewOverlay view{&main_cache};
+    CoinsViewOverlay view{&main_cache, StartedThreadPool()};
     for (const auto& tx : block.vtx) {
         for (const auto& in : tx->vin) {
             const auto& c{view.AccessCoin(in.prevout)};
@@ -149,7 +163,7 @@ BOOST_AUTO_TEST_CASE(fetch_no_inputs)
     const auto block{CreateBlock()};
     CCoinsViewDB db{{.path = "", .cache_bytes = 1_MiB, .memory_only = true}, {}};
     CCoinsViewCache main_cache{&db};
-    CoinsViewOverlay view{&main_cache};
+    CoinsViewOverlay view{&main_cache, StartedThreadPool()};
     for (const auto& tx : block.vtx) {
         for (const auto& in : tx->vin) {
             const auto& c{view.AccessCoin(in.prevout)};
