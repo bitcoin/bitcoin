@@ -92,6 +92,9 @@ class FullBlockTest(BitcoinTestFramework):
         self.setup_clean_chain = True
         self.extra_args = [[
             '-testactivationheight=bip34@2',
+            # Override the functional-test default of 1 thread to exercise the multi-threaded
+            # prevout prefetching path in this block-heavy test.
+            '-prevoutfetchthreads=8',
         ]]
 
     def add_options(self, parser):

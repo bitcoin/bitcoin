@@ -22,7 +22,10 @@
 #include <cstdint>
 
 #include <functional>
+#include <memory>
 #include <unordered_map>
+
+class ThreadPool;
 
 /**
  * A UTXO entry.
@@ -569,8 +572,16 @@ private:
         return base->PeekCoin(outpoint);
     }
 
+    //! Non-null.
+    std::shared_ptr<ThreadPool> m_thread_pool;
+
 public:
-    using CCoinsViewCache::CCoinsViewCache;
+    explicit CoinsViewOverlay(CCoinsView* in_base, std::shared_ptr<ThreadPool> thread_pool,
+                              bool deterministic = false) noexcept
+        : CCoinsViewCache{in_base, deterministic}, m_thread_pool{std::move(thread_pool)}
+    {
+        Assert(m_thread_pool);
+    }
 };
 
 //! Utility function to add all of a transaction's outputs to a cache.

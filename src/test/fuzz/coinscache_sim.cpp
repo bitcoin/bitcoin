@@ -4,10 +4,13 @@
 
 #include <coins.h>
 #include <crypto/sha256.h>
+#include <kernel/chainstatemanager_opts.h>
 #include <primitives/transaction.h>
 #include <test/fuzz/FuzzedDataProvider.h>
 #include <test/fuzz/fuzz.h>
 #include <test/fuzz/util.h>
+#include <test/util/setup_common.h>
+#include <util/threadpool.h>
 
 #include <cassert>
 #include <cstdint>
@@ -182,10 +185,22 @@ public:
     }
 };
 
+// Reuse a single global thread pool across fuzz iterations. Creating and destroying a pool every
+// iteration leaks memory, since iterations can run faster than the OS can tear down the threads.
+std::shared_ptr<ThreadPool> g_thread_pool{std::make_shared<ThreadPool>("cache_fuzz")};
+Mutex g_thread_pool_mutex;
+
+void StartPoolIfNeeded() EXCLUSIVE_LOCKS_REQUIRED(!g_thread_pool_mutex)
+{
+    LOCK(g_thread_pool_mutex);
+    if (!g_thread_pool->WorkersCount()) g_thread_pool->Start(DEFAULT_PREVOUTFETCH_THREADS);
+}
+
 } // namespace
 
-FUZZ_TARGET(coinscache_sim)
+FUZZ_TARGET(coinscache_sim, .init = [] { static auto setup{MakeNoLogFileContext<>()}; }) EXCLUSIVE_LOCKS_REQUIRED(!g_thread_pool_mutex)
 {
+    StartPoolIfNeeded();
     /** Precomputed COutPoint and CCoins values. */
     static const PrecomputedData data;
 
@@ -372,7 +387,7 @@ FUZZ_TARGET(coinscache_sim)
                     if (provider.ConsumeBool()) {
                         caches.emplace_back(new CCoinsViewCache(&*caches.back(), /*deterministic=*/true));
                     } else {
-                        caches.emplace_back(new CoinsViewOverlay(&*caches.back(), /*deterministic=*/true));
+                        caches.emplace_back(new CoinsViewOverlay(&*caches.back(), g_thread_pool, /*deterministic=*/true));
                     }
                     // Apply to simulation data.
                     sim_caches[caches.size()].Wipe();
