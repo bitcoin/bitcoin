@@ -341,8 +341,8 @@ def test_simple_bumpfee_succeeds(self, mode, rbf_node, peer_node, dest_address):
     assert_equal(bumpedwtx["replaces_txid"], rbfid)
     # if this is a new_outputs test, check that outputs were indeed replaced
     if mode == "new_outputs":
-        assert len(bumpedwtx["details"]) == 1
-        assert bumpedwtx["details"][0]["address"] == new_address
+        assert_equal(len(bumpedwtx["details"]), 1)
+        assert_equal(bumpedwtx["details"][0]["address"], new_address)
     self.clear_mempool()
 
 

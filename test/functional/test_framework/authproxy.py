@@ -144,7 +144,8 @@ class AuthServiceProxy():
             else:
                 return response['result']
         else:
-            assert response['jsonrpc'] == '2.0'
+            from .util import assert_equal
+            assert_equal(response['jsonrpc'], '2.0')
             if status != HTTPStatus.OK:
                 raise JSONRPCException({
                     'code': -342, 'message': 'non-200 HTTP status code'}, status)
