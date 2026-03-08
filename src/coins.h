@@ -20,12 +20,14 @@
 #include <util/check.h>
 #include <util/overflow.h>
 #include <util/hasher.h>
+#include <util/threadpool.h>
 
 #include <cassert>
 #include <cstdint>
 
 #include <atomic>
 #include <functional>
+#include <memory>
 #include <optional>
 #include <ranges>
 #include <unordered_map>
@@ -696,6 +698,8 @@ private:
         return base->PeekCoin(outpoint);
     }
 
+    std::shared_ptr<ThreadPool> m_thread_pool;
+
 protected:
     void Reset() noexcept override
     {
@@ -704,8 +708,9 @@ protected:
     }
 
 public:
-    explicit CoinsViewOverlay(CCoinsView* in_base, bool deterministic = false) noexcept
-        : CCoinsViewCache{in_base, deterministic}, m_hasher{deterministic} {}
+    explicit CoinsViewOverlay(CCoinsView* in_base, std::shared_ptr<ThreadPool> thread_pool,
+                              bool deterministic = false) noexcept
+        : CCoinsViewCache{in_base, deterministic}, m_hasher{deterministic}, m_thread_pool{std::move(thread_pool)} {}
 
     //! Start fetching inputs from block.
     [[nodiscard]] ResetGuard StartFetching(const CBlock& block LIFETIMEBOUND) noexcept

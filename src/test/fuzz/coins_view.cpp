@@ -7,6 +7,7 @@
 #include <consensus/tx_check.h>
 #include <consensus/tx_verify.h>
 #include <consensus/validation.h>
+#include <kernel/chainstatemanager_opts.h>
 #include <policy/policy.h>
 #include <primitives/transaction.h>
 #include <script/interpreter.h>
@@ -16,6 +17,7 @@
 #include <test/util/setup_common.h>
 #include <txdb.h>
 #include <util/hasher.h>
+#include <util/threadpool.h>
 
 #include <cassert>
 #include <algorithm>
@@ -83,6 +85,17 @@ public:
 
     using CCoinsViewCache::CCoinsViewCache;
 };
+
+std::shared_ptr<ThreadPool> g_thread_pool{std::make_shared<ThreadPool>("fuzz_coins_view_async")};
+Mutex g_thread_pool_mutex;
+
+void StartPoolIfNeeded() EXCLUSIVE_LOCKS_REQUIRED(!g_thread_pool_mutex)
+{
+    LOCK(g_thread_pool_mutex);
+    if (g_thread_pool->WorkersCount() == DEFAULT_INPUTFETCH_THREADS) return;
+    g_thread_pool->Start(DEFAULT_INPUTFETCH_THREADS);
+}
+
 } // namespace
 
 void initialize_coins_view()
@@ -371,10 +384,11 @@ FUZZ_TARGET(coins_view_db, .init = initialize_coins_view)
 // This allows us to exercise all methods on a CoinsViewOverlay, while also
 // ensuring that nothing can mutate the underlying cache until Flush or Sync is
 // called.
-FUZZ_TARGET(coins_view_overlay, .init = initialize_coins_view)
+FUZZ_TARGET(coins_view_overlay, .init = initialize_coins_view) EXCLUSIVE_LOCKS_REQUIRED(!g_thread_pool_mutex)
 {
+    StartPoolIfNeeded();
     FuzzedDataProvider fuzzed_data_provider{buffer.data(), buffer.size()};
     MutationGuardCoinsViewCache backend_cache{&CoinsViewEmpty::Get(), /*deterministic=*/true};
-    CoinsViewOverlay coins_view_cache{&backend_cache, /*deterministic=*/true};
+    CoinsViewOverlay coins_view_cache{&backend_cache, g_thread_pool, /*deterministic=*/true};
     TestCoinsView(fuzzed_data_provider, coins_view_cache, &backend_cache);
 }
