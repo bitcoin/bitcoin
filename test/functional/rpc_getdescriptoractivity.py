@@ -225,13 +225,13 @@ class GetBlocksActivityTest(BitcoinTestFramework):
         assert a1['blockhash'] == blockhash
         # sPK lacks address.
         assert_equal(list(a1['prevout_spk'].keys()), ['asm', 'desc', 'hex', 'type'])
-        assert a1['amount'] == no_addr_tx["fee"] + Decimal(no_addr_tx["tx"].vout[0].nValue) / COIN
+        assert_equal(a1['amount'], no_addr_tx["fee"] + Decimal(no_addr_tx["tx"].vout[0].nValue) / COIN)
 
         assert a2['type'] == "receive"
         assert a2['blockhash'] == blockhash
         # sPK lacks address.
         assert_equal(list(a2['output_spk'].keys()), ['asm', 'desc', 'hex', 'type'])
-        assert a2['amount'] == Decimal(no_addr_tx["tx"].vout[0].nValue) / COIN
+        assert_equal(a2['amount'], Decimal(no_addr_tx["tx"].vout[0].nValue) / COIN)
 
     def test_required_args(self, node):
         self.log.info("Test that required arguments must be passed")

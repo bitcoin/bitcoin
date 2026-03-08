@@ -8,7 +8,7 @@ import random
 import threading
 
 from test_framework.test_framework import BitcoinTestFramework
-from test_framework.util import get_rpc_proxy
+from test_framework.util import assert_equal, get_rpc_proxy
 from test_framework.wallet import MiniWallet
 
 

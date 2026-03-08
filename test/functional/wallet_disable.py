@@ -9,7 +9,7 @@
 """
 
 from test_framework.test_framework import BitcoinTestFramework
-from test_framework.util import assert_raises_rpc_error
+from test_framework.util import assert_equal, assert_raises_rpc_error
 
 class DisableWalletTest (BitcoinTestFramework):
     def set_test_params(self):

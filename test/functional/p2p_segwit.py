@@ -790,7 +790,7 @@ class SegWitTest(BitcoinTestFramework):
         block_3.vtx[0].vout[0].nValue -= 1
         block_3.vtx[0].vout[-1].nValue += 1
         block_3.hashMerkleRoot = block_3.calc_merkle_root()
-        assert len(block_3.vtx[0].vout) == 4  # 3 OP_returns
+        assert_equal(len(block_3.vtx[0].vout), 4)  # 3 OP_returns
         block_3.solve()
         test_witness_block(self.nodes[0], self.test_node, block_3, accepted=True)
 
@@ -1101,7 +1101,7 @@ class SegWitTest(BitcoinTestFramework):
 
         # This script is 19 max pushes (9937 bytes), then 64 more opcode-bytes.
         long_witness_script = CScript([b'a' * MAX_SCRIPT_ELEMENT_SIZE] * 19 + [OP_DROP] * 63 + [OP_TRUE])
-        assert len(long_witness_script) == MAX_WITNESS_SCRIPT_LENGTH + 1
+        assert_equal(len(long_witness_script), MAX_WITNESS_SCRIPT_LENGTH + 1)
         long_script_pubkey = script_to_p2wsh_script(long_witness_script)
 
         block = self.build_next_block()

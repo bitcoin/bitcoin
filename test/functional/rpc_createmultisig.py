@@ -103,7 +103,7 @@ class RpcCreateMultiSigTest(BitcoinTestFramework):
         mredeem = msig["redeemScript"]
         assert_equal(desc, msig['descriptor'])
         if output_type == 'bech32':
-            assert madd[0:4] == "bcrt"  # actually a bech32 address
+            assert_equal(madd[0:4], "bcrt")  # actually a bech32 address
 
         spk = address_to_scriptpubkey(madd)
         value = decimal.Decimal("0.00004000")

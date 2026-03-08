@@ -301,7 +301,7 @@ class WalletMiniscriptTest(BitcoinTestFramework):
         sigs_field_name = "taproot_script_path_sigs" if is_taproot else "partial_signatures"
         assert len(psbtin[sigs_field_name]) == sigs_count
         res = self.ms_sig_wallet.finalizepsbt(res["psbt"])
-        assert res["complete"] == (stack_size is not None)
+        assert_equal(res["complete"], (stack_size is not None))
 
         if stack_size is not None:
             txin = self.nodes[0].decoderawtransaction(res["hex"])["vin"][0]

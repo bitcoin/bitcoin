@@ -1532,7 +1532,7 @@ class TaprootTest(BitcoinTestFramework):
         self.log.info("- Running %i spending tests" % done)
         random.shuffle(normal_utxos)
         random.shuffle(mismatching_utxos)
-        assert done == len(normal_utxos) + len(mismatching_utxos)
+        assert_equal(done, len(normal_utxos) + len(mismatching_utxos))
 
         left = done
         while left:
