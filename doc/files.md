@@ -109,12 +109,12 @@ These subdirectories and files are no longer used by Bitcoin Core:
 Path           | Description | Repository notes
 ---------------|-------------|-----------------
 `banlist.dat`  | Stores the addresses/subnets of banned nodes; superseded by `banlist.json` in 22.0 and completely ignored in 23.0 | [PR #20966](https://github.com/bitcoin/bitcoin/pull/20966), [PR #22570](https://github.com/bitcoin/bitcoin/pull/22570)
-`blktree/`     | Blockchain index; replaced by `blocks/index/` in [0.8.0](https://github.com/bitcoin/bitcoin/blob/master/doc/release-notes/release-notes-0.8.0.md#improvements) | [PR #2231](https://github.com/bitcoin/bitcoin/pull/2231), [`8fdc94cc`](https://github.com/bitcoin/bitcoin/commit/8fdc94cc8f0341e96b1edb3a5b56811c0b20bd15)
+`blktree/`     | Blockchain index; replaced by `blocks/index/` in [0.8.0](/doc/release-notes/release-notes-0.8.0.md#improvements) | [PR #2231](https://github.com/bitcoin/bitcoin/pull/2231), [`8fdc94cc`](https://github.com/bitcoin/bitcoin/commit/8fdc94cc8f0341e96b1edb3a5b56811c0b20bd15)
 `coins/`       | Unspent transaction output database; replaced by `chainstate/` in 0.8.0 | [PR #2231](https://github.com/bitcoin/bitcoin/pull/2231), [`8fdc94cc`](https://github.com/bitcoin/bitcoin/commit/8fdc94cc8f0341e96b1edb3a5b56811c0b20bd15)
 `blkindex.dat` | Blockchain index BDB database; replaced by {`chainstate/`, `blocks/index/`, `blocks/revNNNNN.dat`<sup>[\[2\]](#note2)</sup>} in 0.8.0 | [PR #1677](https://github.com/bitcoin/bitcoin/pull/1677)
 `blk000?.dat`  | Block data (custom format, 2 GiB per file); replaced by `blocks/blkNNNNN.dat`<sup>[\[2\]](#note2)</sup> in 0.8.0 | [PR #1677](https://github.com/bitcoin/bitcoin/pull/1677)
-`addr.dat`     | Peer IP address BDB database; replaced by `peers.dat` in [0.7.0](https://github.com/bitcoin/bitcoin/blob/master/doc/release-notes/release-notes-0.7.0.md) | [PR #1198](https://github.com/bitcoin/bitcoin/pull/1198), [`928d3a01`](https://github.com/bitcoin/bitcoin/commit/928d3a011cc66c7f907c4d053f674ea77dc611cc)
-`onion_private_key` | Cached Tor onion service private key for `-listenonion` option. Was used for Tor v2 services; replaced by `onion_v3_private_key` in [0.21.0](https://github.com/bitcoin/bitcoin/blob/master/doc/release-notes/release-notes-0.21.0.md) | [PR #19954](https://github.com/bitcoin/bitcoin/pull/19954)
+`addr.dat`     | Peer IP address BDB database; replaced by `peers.dat` in [0.7.0](/doc/release-notes/release-notes-0.7.0.md) | [PR #1198](https://github.com/bitcoin/bitcoin/pull/1198), [`928d3a01`](https://github.com/bitcoin/bitcoin/commit/928d3a011cc66c7f907c4d053f674ea77dc611cc)
+`onion_private_key` | Cached Tor onion service private key for `-listenonion` option. Was used for Tor v2 services; replaced by `onion_v3_private_key` in [0.21.0](/doc/release-notes/release-notes-0.21.0.md) | [PR #19954](https://github.com/bitcoin/bitcoin/pull/19954)
 
 ### Berkeley DB database based wallets
 

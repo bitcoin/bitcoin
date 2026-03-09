@@ -100,7 +100,7 @@ number of CJDNS addresses known to your node.
 In general, a node can be run with both an onion service and CJDNS (or any/all
 of IPv4/IPv6/onion/I2P/CJDNS), which can provide a potential fallback if one of
 the networks has issues. There are a number of ways to configure this; see
-[doc/tor.md](https://github.com/bitcoin/bitcoin/blob/master/doc/tor.md) for
+[doc/tor.md](/doc/tor.md) for
 details.
 
 ## CJDNS-related information in Bitcoin Core
