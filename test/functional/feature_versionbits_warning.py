@@ -18,9 +18,13 @@ from test_framework.test_framework import BitcoinTestFramework
 VB_PERIOD = 144           # versionbits period length for regtest
 VB_THRESHOLD = 108        # versionbits activation threshold for regtest
 VB_TOP_BITS = 0x20000000
-VB_UNKNOWN_BIT = 3        # Choose a bit unassigned to any deployment
 
+# Choose a bit unassigned to any deployment, or start the
+# node with the deployment matching this bit disabled.
+VB_UNKNOWN_BIT = 3
 VB_UNKNOWN_VERSION = VB_TOP_BITS | (1 << VB_UNKNOWN_BIT)
+VB_IGNORED_BIT = 5
+VB_IGNORED_VERSION = VB_TOP_BITS | (1 << VB_IGNORED_BIT)
 
 WARN_UNKNOWN_RULES_ACTIVE = f"Unknown new rules activated (versionbit {VB_UNKNOWN_BIT})"
 VB_PATTERN = re.compile("Unknown new rules activated.*versionbit")
@@ -77,11 +81,24 @@ class VersionBitsWarningTest(BitcoinTestFramework):
         assert not VB_PATTERN.match(",".join(node.getmininginfo()["warnings"]))
         assert not VB_PATTERN.match(",".join(node.getnetworkinfo()["warnings"]))
 
+        self.log.info("Check that there is no warning if previous VB_BLOCKS have VB_PERIOD blocks with ignored versionbits version.")
+        # Build one period of blocks with VB_THRESHOLD blocks signaling some unknown bit
+        self.send_blocks_with_version(peer, VB_THRESHOLD, VB_IGNORED_VERSION)
+        self.generatetoaddress(node, VB_PERIOD - VB_THRESHOLD, node_deterministic_address)
+
+        # Move the ignored deployment state to ACTIVE and make sure we're out of IBD.
+        self.generatetoaddress(node, VB_PERIOD, node_deterministic_address)
+        self.wait_until(lambda: not node.getblockchaininfo()['initialblockdownload'])
+
+        # Check that we're not getting any versionbit-related warnings in get*info()
+        assert not VB_PATTERN.match(", ".join(node.getmininginfo()["warnings"]))
+        assert not VB_PATTERN.match(", ".join(node.getnetworkinfo()["warnings"]))
+
+        self.log.info("Check that there is a warning if previous VB_BLOCKS have >=VB_THRESHOLD blocks with unknown versionbits version.")
         # Build one period of blocks with VB_THRESHOLD blocks signaling some unknown bit
         self.send_blocks_with_version(peer, VB_THRESHOLD, VB_UNKNOWN_VERSION)
         self.generatetoaddress(node, VB_PERIOD - VB_THRESHOLD, node_deterministic_address)
 
-        self.log.info("Check that there is a warning if previous VB_BLOCKS have >=VB_THRESHOLD blocks with unknown versionbits version.")
         # Mine a period worth of expected blocks so the generic block-version warning
         # is cleared. This will move the versionbit state to ACTIVE.
         self.generatetoaddress(node, VB_PERIOD, node_deterministic_address)
