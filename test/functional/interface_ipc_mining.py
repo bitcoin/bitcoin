@@ -7,7 +7,6 @@ import asyncio
 import time
 from contextlib import AsyncExitStack
 from io import BytesIO
-import platform
 from test_framework.blocktools import NULL_OUTPOINT
 from test_framework.messages import (
     MAX_BLOCK_WEIGHT,
@@ -42,6 +41,7 @@ from test_framework.ipc_util import (
     mining_wait_next_template,
     wait_and_do,
     make_mining_ctx,
+    assert_capnp_failed
 )
 
 # Test may be skipped and not have capnp installed
@@ -325,15 +325,7 @@ class IPCMiningTest(BitcoinTestFramework):
                 await mining.createNewBlock(ctx, opts)
                 raise AssertionError("createNewBlock unexpectedly succeeded")
             except capnp.lib.capnp.KjException as e:
-                if e.description == "remote exception: unknown non-KJ exception of type: kj::Exception":
-                    # macOS + REDUCE_EXPORTS bug: Cap'n Proto fails to recognize
-                    # its own exception type and returns a generic error instead.
-                    # https://github.com/bitcoin/bitcoin/pull/34422#discussion_r2863852691
-                    # Assert this only occurs on Darwin until fixed.
-                    assert_equal(platform.system(), "Darwin")
-                else:
-                    assert_equal(e.description, "remote exception: std::exception: block_reserved_weight (0) must be at least 2000 weight units")
-                assert_equal(e.type, "FAILED")
+                assert_capnp_failed(e, "remote exception: std::exception: block_reserved_weight (0) must be at least 2000 weight units")
 
         asyncio.run(capnp.run(async_routine()))
 
@@ -356,6 +348,13 @@ class IPCMiningTest(BitcoinTestFramework):
                 block.vtx[0] = coinbase
                 block.hashMerkleRoot = block.calc_merkle_root()
                 original_version = block.nVersion
+
+                self.log.debug("Submit solution that can't be deserialized")
+                try:
+                    await template.submitSolution(ctx, 0, 0, 0, b"")
+                    raise AssertionError("submitSolution unexpectedly succeeded")
+                except capnp.lib.capnp.KjException as e:
+                    assert_capnp_failed(e, "remote exception: std::exception: SpanReader::read(): end of data:")
 
                 self.log.debug("Submit a block with a bad version")
                 block.nVersion = 0
