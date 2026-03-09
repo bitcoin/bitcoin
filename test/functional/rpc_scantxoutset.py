@@ -3,7 +3,12 @@
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test the scantxoutset rpc call."""
-from test_framework.address import address_to_scriptpubkey
+from test_framework.address import (
+    address_to_scriptpubkey,
+    base58_to_byte,
+    keyhash_to_p2pkh_script,
+    scripthash_to_p2sh_script,
+)
 from test_framework.messages import COIN
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import assert_equal, assert_raises_rpc_error
@@ -39,9 +44,15 @@ class ScantxoutsetTest(BitcoinTestFramework):
         pubk1, spk_P2SH_SEGWIT, addr_P2SH_SEGWIT = getnewdestination("p2sh-segwit")
         pubk2, spk_LEGACY, addr_LEGACY = getnewdestination("legacy")
         pubk3, spk_BECH32, addr_BECH32 = getnewdestination("bech32")
+        mainnet_p2pkh_addr = "1BoatSLRHtKNngkdXEeobR76b53LETtpyT"
+        mainnet_p2sh_addr = "3J98t1WpEZ73CNmQviecrnyiWrnqRhWNLy"
+
         self.sendtodestination(spk_P2SH_SEGWIT, 0.001)
         self.sendtodestination(spk_LEGACY, 0.002)
         self.sendtodestination(spk_BECH32, 0.004)
+        self.log.info("Exercise address_to_scriptpubkey via string destinations with mainnet Base58 inputs.")
+        self.sendtodestination(mainnet_p2pkh_addr, 0.003)
+        self.sendtodestination(mainnet_p2sh_addr, 0.006)
 
         #send to child keys of tprv8ZgxMBicQKsPd7Uf69XL1XwhmjHopUGep8GuEiJDZmbQz6o58LninorQAfcKZWARbtRtfnLcJ5MQ2AtHcQJCCRUcMRvmDUjyEmNUWwx8UbK
         self.sendtodestination("mkHV1C6JLheLoUSSZYk7x3FH5tnx9bu7yc", 0.008)  # (m/0'/0'/0')
@@ -73,6 +84,17 @@ class ScantxoutsetTest(BitcoinTestFramework):
         assert_equal(self.nodes[0].scantxoutset("start", ["combo(" + pubk1.hex() + ")", "combo(" + pubk2.hex() + ")", "combo(" + pubk3.hex() + ")"])['total_amount'], Decimal("0.007"))
         assert_equal(self.nodes[0].scantxoutset("start", ["addr(" + addr_P2SH_SEGWIT + ")", "addr(" + addr_LEGACY + ")", "addr(" + addr_BECH32 + ")"])['total_amount'], Decimal("0.007"))
         assert_equal(self.nodes[0].scantxoutset("start", ["addr(" + addr_P2SH_SEGWIT + ")", "addr(" + addr_LEGACY + ")", "combo(" + pubk3.hex() + ")"])['total_amount'], Decimal("0.007"))
+
+        mainnet_p2pkh_payload, mainnet_p2pkh_version = base58_to_byte(mainnet_p2pkh_addr)
+        assert_equal(mainnet_p2pkh_version, 0)
+        mainnet_p2pkh_spk = keyhash_to_p2pkh_script(mainnet_p2pkh_payload)
+
+        mainnet_p2sh_payload, mainnet_p2sh_version = base58_to_byte(mainnet_p2sh_addr)
+        assert_equal(mainnet_p2sh_version, 5)
+        mainnet_p2sh_spk = scripthash_to_p2sh_script(mainnet_p2sh_payload)
+
+        assert_equal(self.nodes[0].scantxoutset("start", [f"raw({mainnet_p2pkh_spk.hex()})"])['total_amount'], Decimal("0.003"))
+        assert_equal(self.nodes[0].scantxoutset("start", [f"raw({mainnet_p2sh_spk.hex()})"])['total_amount'], Decimal("0.006"))
 
         self.log.info("Test range validation.")
         assert_raises_rpc_error(-8, "End of range is too high", self.nodes[0].scantxoutset, "start", [{"desc": "desc", "range": -1}])
