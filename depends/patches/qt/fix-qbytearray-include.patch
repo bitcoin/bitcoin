@@ -1,0 +1,40 @@
+From d68fc6ecc88a0e4532754b1a9f209881a248f4ee Mon Sep 17 00:00:00 2001
+From: Giuseppe D'Angelo <giuseppe.dangelo@kdab.com>
+Date: Wed, 4 Feb 2026 12:33:08 +0100
+Subject: [PATCH] QByteArrayView: include qchar.h
+
+QByteArrayView needs the complete definition of QChar in order to
+define its relational operators against it.
+
+In particular, the expansion of the
+
+Q_DECLARE_STRONGLY_ORDERED(QByteArrayView, QChar, QT_ASCII_CAST_WARN)
+
+macro creates an overload set where the QByteArrayView(Container)
+constructor is considered. GCC complains that that constructor is
+excluded via SFINAE for Container = QChar, not because QChar isn't a
+suitable container (indeed, it's not), but because it's *incomplete* at
+that point. When QChar is later completed, GCC is afraid that the
+previous substitution failure might have yielded a different result,
+and warns about it. Fix this by including QChar.
+
+Task-number: QTBUG-143470
+Change-Id: I705f91ef1133b59363df0cd6dbab91a5854e248c
+Reviewed-by: Thiago Macieira <thiago.macieira@intel.com>
+Reviewed-by: Fabian Kosmale <fabian.kosmale@qt.io>
+---
+ src/corelib/text/qbytearrayview.h | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/qtbase/src/corelib/text/qbytearrayview.h b/qtbase/src/corelib/text/qbytearrayview.h
+index 7d3e82e72a02..b19f6fd5424e 100644
+--- a/qtbase/src/corelib/text/qbytearrayview.h
++++ b/qtbase/src/corelib/text/qbytearrayview.h
+@@ -4,6 +4,7 @@
+ #define QBYTEARRAYVIEW_H
+ 
+ #include <QtCore/qbytearrayalgorithms.h>
++#include <QtCore/qchar.h>
+ #include <QtCore/qstringfwd.h>
+ #include <QtCore/qarraydata.h>
+ 
