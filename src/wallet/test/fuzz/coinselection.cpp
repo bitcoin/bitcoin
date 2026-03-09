@@ -33,7 +33,7 @@ static void GroupCoins(FuzzedDataProvider& fuzzed_data_provider, const std::vect
     bool valid_outputgroup{false};
     for (auto& coin : coins) {
         if (!positive_only || (positive_only && coin.GetEffectiveValue() > 0)) {
-            output_group.Insert(std::make_shared<COutput>(coin), /*ancestors=*/0, /*descendants=*/0);
+            output_group.Insert(std::make_shared<COutput>(coin), /*ancestors=*/0, /*cluster_count=*/0);
         }
         // If positive_only was specified, nothing was inserted, leading to an empty output group
         // that would be invalid for the BnB algorithm
@@ -167,7 +167,7 @@ FUZZ_TARGET(coin_grinder_is_optimal)
         max_spendable += eff_value;
 
         auto output_group = OutputGroup(coin_params);
-        output_group.Insert(std::make_shared<COutput>(temp_utxo_pool.at(0)), /*ancestors=*/0, /*descendants=*/0);
+        output_group.Insert(std::make_shared<COutput>(temp_utxo_pool.at(0)), /*ancestors=*/0, /*cluster_count=*/0);
         group_pos.push_back(output_group);
     }
     size_t num_groups = group_pos.size();
@@ -264,7 +264,7 @@ FUZZ_TARGET(bnb_finds_min_waste)
         max_spendable += eff_value;
 
         auto output_group = OutputGroup(coin_params);
-        output_group.Insert(std::make_shared<COutput>(temp_utxo_pool.at(0)), /*ancestors=*/0, /*descendants=*/0);
+        output_group.Insert(std::make_shared<COutput>(temp_utxo_pool.at(0)), /*ancestors=*/0, /*cluster_count=*/0);
         group_pos.push_back(output_group);
     }
     size_t num_groups = group_pos.size();
