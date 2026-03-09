@@ -551,8 +551,8 @@ BOOST_FIXTURE_TEST_CASE(chainstatemanager_loadblockindex, TestChain100Setup)
     // check contents below.
     reload_all_block_indexes();
 
-    // The fully validated chain should only have the current validated tip and
-    // the assumed valid base as candidates, blocks 90 and 110. Specifically:
+    // The fully validated chain should only have the current validated tip
+    // as a candidate (block 90). Specifically:
     //
     // - It does not have blocks 0-89 because they contain less work than the
     //   chain tip.
@@ -560,20 +560,13 @@ BOOST_FIXTURE_TEST_CASE(chainstatemanager_loadblockindex, TestChain100Setup)
     // - It has block 90 because it has data and equal work to the chain tip,
     //   (since it is the chain tip).
     //
-    // - It does not have blocks 91-109 because they do not contain data.
-    //
-    // - It has block 110 even though it does not have data, because
-    //   LoadBlockIndex has a special case to always add the snapshot block as a
-    //   candidate. The special case is only actually intended to apply to the
-    //   snapshot chainstate cs2, not the background chainstate cs1, but it is
-    //   written broadly and applies to both.
+    // - It does not have blocks 91-110 because they do not contain data.
     //
     // - It does not have any blocks after height 110 because cs1 is a background
-    //   chainstate, and only blocks where are ancestors of the snapshot block
+    //   chainstate, and only blocks that are ancestors of the snapshot block
     //   are added as candidates for the background chainstate.
-    BOOST_CHECK_EQUAL(cs1.setBlockIndexCandidates.size(), 2);
+    BOOST_CHECK_EQUAL(cs1.setBlockIndexCandidates.size(), 1);
     BOOST_CHECK_EQUAL(cs1.setBlockIndexCandidates.count(validated_tip), 1);
-    BOOST_CHECK_EQUAL(cs1.setBlockIndexCandidates.count(assumed_base), 1);
 
     // The assumed-valid tolerant chain has the assumed valid base as a
     // candidate, but otherwise has none of the assumed-valid (which do not
