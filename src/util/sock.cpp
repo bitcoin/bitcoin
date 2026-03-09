@@ -140,10 +140,12 @@ bool Sock::IsSelectable() const
 
 bool Sock::Wait(std::chrono::milliseconds timeout, Event requested, Event* occurred) const
 {
-    // We need a `shared_ptr` owning `this` for `WaitMany()`, but don't want
+    // We need a `shared_ptr` holding `this` for `WaitMany()`, but don't want
     // `this` to be destroyed when the `shared_ptr` goes out of scope at the
-    // end of this function. Create it with a custom noop deleter.
-    std::shared_ptr<const Sock> shared{this, [](const Sock*) {}};
+    // end of this function.
+    // Create it with an aliasing shared_ptr that points to `this` without
+    // owning it.
+    std::shared_ptr<const Sock> shared{std::shared_ptr<const Sock>{}, this};
 
     EventsPerSock events_per_sock{std::make_pair(shared, Events{requested})};
 
