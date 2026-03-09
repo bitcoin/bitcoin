@@ -44,7 +44,6 @@ def check_manifests():
     skipped = {  # Skip as they currently do not have manifests
         "fuzz.exe",
         "bench_bitcoin.exe",
-        "test_kernel.exe",
     }
     for entry in release_dir.iterdir():
         if entry.suffix.lower() != ".exe":
