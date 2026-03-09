@@ -40,6 +40,7 @@ class AddrReceiver(P2PInterface):
     test_addr_contents = False
     _tokens = 1
     send_getaddr = True
+    _getaddr_pending = False
 
     def __init__(self, test_addr_contents=False, send_getaddr=True):
         super().__init__()
@@ -59,7 +60,9 @@ class AddrReceiver(P2PInterface):
 
     def on_getaddr(self, message):
         # When the node sends us a getaddr, it increments the addr relay tokens for the connection by 1000
+        # and set _getaddr_pending as true to truck when we will recive the response
         self._tokens += 1000
+        self._getaddr_pending = True
 
     @property
     def tokens(self):
@@ -337,6 +340,10 @@ class AddrTest(BitcoinTestFramework):
 
         peer.send_and_ping(self.setup_addr_msg(new_addrs, sequential_ips=False))
 
+        if peer._getaddr_pending:
+            num_proc = min(new_addrs,peer.tokens)
+            peer.increment_tokens(-(1000 - num_proc))
+            peer._getaddr_pending = False
         peerinfo = self.nodes[0].getpeerinfo()[0]
         addrs_processed = peerinfo['addr_processed']
         addrs_rate_limited = peerinfo['addr_rate_limited']

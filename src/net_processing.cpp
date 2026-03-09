@@ -4112,8 +4112,11 @@ void PeerManagerImpl::ProcessMessage(Peer& peer, CNode& pfrom, const std::string
                  vAddr.size(), num_proc, num_rate_limit, pfrom.GetId());
 
         m_addrman.Add(vAddrOk, pfrom.addr, /*time_penalty=*/2h);
-        if (vAddr.size() < 1000) peer.m_getaddr_sent = false;
-
+        // Reduce the token bucket by the addresses we didn't process from the GETADDR response.
+        if (peer.m_getaddr_sent) {
+            peer.m_addr_token_bucket -= std::max<double>(MAX_ADDR_TO_SEND - num_proc, 0);
+            peer.m_getaddr_sent = false;
+        }
         // AddrFetch: Require multiple addresses to avoid disconnecting on self-announcements
         if (pfrom.IsAddrFetchConn() && vAddr.size() > 1) {
             LogDebug(BCLog::NET, "addrfetch connection completed, %s\n", pfrom.DisconnectMsg(fLogIPs));
@@ -5533,6 +5536,8 @@ void PeerManagerImpl::MaybeSendAddr(CNode& node, Peer& peer, std::chrono::micros
     if (!peer.m_addr_relay_enabled) return;
 
     LOCK(peer.m_addr_send_times_mutex);
+    // True if this is the first time we are sending our local address to this peer.
+    bool initial_addr_send = (peer.m_next_local_addr_send == 0us);
     // Periodically advertise our local address to the peer.
     if (fListen && !m_chainman.IsInitialBlockDownload() &&
         peer.m_next_local_addr_send < current_time) {
@@ -5547,10 +5552,9 @@ void PeerManagerImpl::MaybeSendAddr(CNode& node, Peer& peer, std::chrono::micros
         }
         if (std::optional<CService> local_service = GetLocalAddrForPeer(node)) {
             CAddress local_addr{*local_service, peer.m_our_services, Now<NodeSeconds>()};
-            if (peer.m_next_local_addr_send == 0us) {
-                // Send the initial self-announcement in its own message. This makes sure
-                // rate-limiting with limited start-tokens doesn't ignore it if the first
-                // message ends up containing multiple addresses.
+            if (initial_addr_send && !peer.m_is_inbound) {
+                // Send the initial self-announcement in its own message. only for the 
+                // outbound connections
                 if (IsAddrCompatible(peer, local_addr)) {
                     std::vector<CAddress> self_announcement{local_addr};
                     if (peer.m_wants_addrv2) {
@@ -5559,7 +5563,7 @@ void PeerManagerImpl::MaybeSendAddr(CNode& node, Peer& peer, std::chrono::micros
                         MakeAndPushMessage(node, NetMsgType::ADDR, CAddress::V1_NETWORK(self_announcement));
                     }
                 }
-            } else {
+            } else if(!initial_addr_send) {
                 // All later self-announcements are sent together with the other addresses.
                 PushAddress(peer, local_addr);
             }
@@ -5595,6 +5599,24 @@ void PeerManagerImpl::MaybeSendAddr(CNode& node, Peer& peer, std::chrono::micros
         MakeAndPushMessage(node, NetMsgType::ADDRV2, CAddress::V2_NETWORK(peer.m_addrs_to_send));
     } else {
         MakeAndPushMessage(node, NetMsgType::ADDR, CAddress::V1_NETWORK(peer.m_addrs_to_send));
+    }
+
+    // Send our self-announcement in separate ADDR/ADDRV2 message from the
+    // GETADDR response. A legitimate node will have 1 addr relay token
+    // remaining after processing the GETADDR response buffer, which is enough
+    // to accept this self-announcement from a separate message.
+    if (initial_addr_send && peer.m_is_inbound) {
+        if (std::optional<CService> local_service = GetLocalAddrForPeer(node)) {
+            CAddress local_addr{*local_service, peer.m_our_services, Now<NodeSeconds>()};
+            if (IsAddrCompatible(peer, local_addr)) {
+                std::vector<CAddress> self_announcement{local_addr};
+                if (peer.m_wants_addrv2) {
+                    MakeAndPushMessage(node, NetMsgType::ADDRV2, CAddress::V2_NETWORK(self_announcement));
+                } else {
+                    MakeAndPushMessage(node, NetMsgType::ADDR, CAddress::V1_NETWORK(self_announcement));
+                }
+            }
+        }
     }
     peer.m_addrs_to_send.clear();
 

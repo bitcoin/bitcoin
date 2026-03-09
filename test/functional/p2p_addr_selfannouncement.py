@@ -33,11 +33,13 @@ class SelfAnnouncementReceiver(P2PInterface):
 
     expected = None
     addrv2_test = False
+    outbound = False
 
-    def __init__(self, *, expected, addrv2):
+    def __init__(self, *, expected, addrv2, outbound):
         super().__init__(support_addrv2=addrv2)
         self.expected = expected
         self.addrv2_test = addrv2
+        self.outbound = outbound
 
     def handle_addr_message(self, message):
         self.addr_messages_received += 1
@@ -46,12 +48,15 @@ class SelfAnnouncementReceiver(P2PInterface):
             if addr == self.expected:
                 self.self_announcements_received += 1
                 if self.self_announcements_received == 1:
-                    # If it's the first self-announcement, check that it is
-                    # in the first addr message we receive, and that this message
-                    # only contains one address. This also implies that it is
-                    # the first address we receive.
-                    assert_equal(self.addr_messages_received, 1)
-                    assert_equal(len(message.addrs), 1)
+                    # Check if the self-announcement will be received first if the
+                    # sender is our outbound connection, otherwise its supposed to
+                    # be the second msg after the response to GETADDR
+                    if self.outbound:
+                        assert_equal(self.addr_messages_received, 1)
+                        assert_equal(len(message.addrs), 1)
+                    else:
+                        assert_equal(self.addr_messages_received, 2)
+                        assert_equal(len(message.addrs), 1)
 
     def on_addrv2(self, message):
         assert (self.addrv2_test)
@@ -112,10 +117,10 @@ class AddrSelfAnnouncementTest(BitcoinTestFramework):
         with self.nodes[0].assert_debug_log([f'Advertising address {IP_TO_ANNOUNCE}:{port}']):
             if outbound:
                 self.log.info(f"Check that we get an initial self-announcement on an outbound connection from the node ({connection_type}, {addr_version})")
-                addr_receiver = self.nodes[0].add_outbound_p2p_connection(SelfAnnouncementReceiver(expected=expected, addrv2=addrv2), p2p_idx=0, connection_type="outbound-full-relay")
+                addr_receiver = self.nodes[0].add_outbound_p2p_connection(SelfAnnouncementReceiver(expected=expected, addrv2=addrv2, outbound=outbound), p2p_idx=0, connection_type="outbound-full-relay")
             else:
                 self.log.info(f"Check that we get an initial self-announcement when connecting to a node and sending a GETADDR ({connection_type}, {addr_version})")
-                addr_receiver = self.nodes[0].add_p2p_connection(SelfAnnouncementReceiver(expected=expected, addrv2=addrv2))
+                addr_receiver = self.nodes[0].add_p2p_connection(SelfAnnouncementReceiver(expected=expected, addrv2=addrv2, outbound=outbound))
             addr_receiver.sync_with_ping()
 
         if outbound:
