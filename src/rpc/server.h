@@ -63,6 +63,7 @@ public:
               fn().GetArgNames(),
               intptr_t(fn))
     {
+        this->metadata_fn = fn;
     }
 
     std::string category;
@@ -79,6 +80,7 @@ public:
     //! appended after other arguments, see transformNamedArguments for details.
     std::vector<std::pair<std::string, bool>> argNames;
     intptr_t unique_id;
+    RpcMethodFnType metadata_fn{nullptr};
 };
 
 /**
