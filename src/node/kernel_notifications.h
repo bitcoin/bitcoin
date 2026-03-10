@@ -8,7 +8,6 @@
 #include <kernel/notifications_interface.h>
 
 #include <sync.h>
-#include <threadsafety.h>
 #include <uint256.h>
 
 #include <atomic>

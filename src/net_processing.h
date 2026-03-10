@@ -11,7 +11,6 @@
 #include <node/txorphanage.h>
 #include <private_broadcast.h>
 #include <protocol.h>
-#include <threadsafety.h>
 #include <uint256.h>
 #include <util/expected.h>
 #include <validationinterface.h>

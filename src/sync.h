@@ -6,6 +6,8 @@
 #ifndef BITCOIN_SYNC_H
 #define BITCOIN_SYNC_H
 
+// This header declares threading primitives compatible with Clang
+// Thread Safety Analysis and provides appropriate annotation macros.
 #include <threadsafety.h> // IWYU pragma: export
 #include <util/macros.h>
 
