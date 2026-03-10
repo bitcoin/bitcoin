@@ -9,14 +9,62 @@ set -e -o pipefail
 # shellcheck source=libexec/prelude.bash
 source "$(dirname "${BASH_SOURCE[0]}")/libexec/prelude.bash"
 
+print_help() {
+    cat <<EOF
+Usage: $(basename "$0") [OPTIONS]
+
+Clean the working tree using 'git clean -xdff', while preserving:
+  - Directories and files recorded in precious_dirs
+  - Any additional paths specified via --exclude
+
+Options:
+  --force                 Skip the interactive preview and prompt, run immediately
+  --exclude PATH          Exclude PATH (file or directory) from git clean (can be used multiple times)
+  --exclude=PATH          Same as --exclude PATH
+  -h, --help              Show this help message and exit
+EOF
+}
+
 # Parse supported args
 FORCE=0
-if [[ $* == "--force" ]]; then
-    FORCE=1
-elif [ $# != 0 ]; then
-    echo "Script only takes optional --force arg."
-    exit 1
-fi
+exclude_flags=()
+user_exclude_messages=()
+while [ "$#" -gt 0 ]; do
+    case "$1" in
+        --force)
+            FORCE=1
+            shift
+            ;;
+        --exclude=*)
+            path=${1#--exclude=}
+            user_exclude_messages+=( "Avoiding user-specified path: ${path}" )
+            exclude_flags+=( --exclude="$path" )
+            shift
+            ;;
+        --exclude)
+            if [ "$#" -lt 2 ]; then
+                echo "guix-clean: --exclude requires a PATH argument" >&2
+                exit 1
+            fi
+            user_exclude_messages+=( "Avoiding user-specified path: $2" )
+            exclude_flags+=( --exclude="$2" )
+            shift 2
+            ;;
+        -h|--help)
+            print_help
+            exit 0
+            ;;
+        *)
+            echo "guix-clean: unknown option '$1'" >&2
+            exit 1
+            ;;
+    esac
+done
+
+# Now that all options are validated, print the user exclude messages (if any)
+for msg in "${user_exclude_messages[@]}"; do
+    echo "$msg"
+done
 
 ###################
 ## Sanity Checks ##
@@ -65,8 +113,6 @@ dir_under_git_root() {
 shopt -s nullglob
 found_precious_dirs_files=( "${version_base_prefix}"*/"${var_base_basename}/precious_dirs" ) # This expands to an array of directories...
 shopt -u nullglob
-
-exclude_flags=()
 
 for precious_dirs_file in "${found_precious_dirs_files[@]}"; do
     # Make sure the precious directories (e.g. SOURCES_PATH, BASE_CACHE, SDK_PATH)
