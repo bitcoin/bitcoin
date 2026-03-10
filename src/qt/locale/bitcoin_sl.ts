@@ -597,11 +597,23 @@ Podpisovanje je možno le s podedovanimi ("legacy") naslovi.</translation>
     </message>
     <message>
         <source>Connecting to peers…</source>
-        <translation type="unfinished">Povezujem se s soležniki…</translation>
+        <translation type="unfinished">Povezujem se s soležniki...</translation>
+    </message>
+    <message>
+        <source>Request payments (generates QR codes and bitcoin: URIs)</source>
+        <translation type="unfinished">Zahtevajte plačilo (ustvarite zahtevek s kodo QR in URI tipa bitcoin)</translation>
+    </message>
+    <message>
+        <source>Show the list of used sending addresses and labels</source>
+        <translation type="unfinished">Preglejte in uredite seznam naslovov, na katere ste kdaj poslali plačila</translation>
+    </message>
+    <message>
+        <source>Show the list of used receiving addresses and labels</source>
+        <translation type="unfinished">Preglejte in uredite seznam naslovov, na katere ste kdaj prejeli plačila</translation>
     </message>
     <message>
         <source>&amp;Command-line options</source>
-        <translation type="unfinished">&amp;Možnosti iz ukazne vrstice</translation>
+        <translation type="unfinished">Možnosti &amp;ukazne vrstice</translation>
     </message>
     <message numerus="yes">
         <source>Processed %n block(s) of transaction history.</source>
@@ -611,6 +623,38 @@ Podpisovanje je možno le s podedovanimi ("legacy") naslovi.</translation>
             <numerusform>Obdelani %n bloki zgodovine transakcij.</numerusform>
             <numerusform>Obdelanih %n blokov zgodovine transakcij.</numerusform>
         </translation>
+    </message>
+    <message>
+        <source>%1 behind</source>
+        <translation type="unfinished">%1 zaostanka</translation>
+    </message>
+    <message>
+        <source>Catching up…</source>
+        <translation type="unfinished">Dohitevam...</translation>
+    </message>
+    <message>
+        <source>Last received block was generated %1 ago.</source>
+        <translation type="unfinished">Zadnji prejeti blok je star %1.</translation>
+    </message>
+    <message>
+        <source>Transactions after this will not yet be visible.</source>
+        <translation type="unfinished">Novejše transakcije še ne bodo vidne.</translation>
+    </message>
+    <message>
+        <source>Error</source>
+        <translation type="unfinished">Napaka</translation>
+    </message>
+    <message>
+        <source>Warning</source>
+        <translation type="unfinished">Opozorilo</translation>
+    </message>
+    <message>
+        <source>Information</source>
+        <translation type="unfinished">Informacije</translation>
+    </message>
+    <message>
+        <source>Up to date</source>
+        <translation type="unfinished">Ažurno</translation>
     </message>
     <message>
         <source>Load Partially Signed Bitcoin Transaction</source>
@@ -1048,6 +1092,16 @@ Podpisovanje je možno le s podedovanimi ("legacy") naslovi.</translation>
         <translation type="unfinished">Denarnica '%1' migrirana uspešno.</translation>
     </message>
     <message>
+        <source>Restore Wallet</source>
+        <extracomment>Title of progress window which is displayed when wallets are being restored.</extracomment>
+        <translation type="unfinished">Obnovi denarnico</translation>
+    </message>
+    <message>
+        <source>Restoring Wallet &lt;b&gt;%1&lt;/b&gt;…</source>
+        <extracomment>Descriptive text of the restore wallets progress window which indicates to the user that wallets are currently being restored.</extracomment>
+        <translation type="unfinished">Obnavljanje denarnice &lt;b&gt;%1&lt;/b&gt;...</translation>
+    </message>
+    <message>
         <source>Migration failed</source>
         <translation type="unfinished">Migracija neuspešna</translation>
     </message>
@@ -1169,10 +1223,6 @@ Podpisovanje je možno le s podedovanimi ("legacy") naslovi.</translation>
     <message>
         <source>Disable Private Keys</source>
         <translation type="unfinished">Onemogoči zasebne ključe</translation>
-    </message>
-    <message>
-        <source>Make a blank wallet. Blank wallets do not initially have private keys or scripts. Private keys and addresses can be imported, or an HD seed can be set, at a later time.</source>
-        <translation type="unfinished">Ustvari prazno denarnico. Prazne denarnice ne vključujejo zasebnih ključev ali skript. Pozneje lahko uvozite zasebne ključe ali vnesete HD-seme.</translation>
     </message>
     <message>
         <source>Make Blank Wallet</source>
@@ -1913,9 +1963,14 @@ Podpisovanje je možno le s podedovanimi ("legacy") naslovi.</translation>
         <source>Could not sign any more inputs.</source>
         <translation type="unfinished">Ne morem podpisati več kot toliko vhodov.</translation>
     </message>
-    <message>
-        <source>Signed %1 inputs, but more signatures are still required.</source>
-        <translation type="unfinished">%1 vhodov podpisanih, a potrebnih je več podpisov.</translation>
+    <message numerus="yes">
+        <source>Signed %n input(s), but more signatures are still required.</source>
+        <translation type="unfinished">
+            <numerusform />
+            <numerusform />
+            <numerusform />
+            <numerusform />
+        </translation>
     </message>
     <message>
         <source>Signed transaction successfully. Transaction is ready to broadcast.</source>
@@ -1970,9 +2025,14 @@ Podpisovanje je možno le s podedovanimi ("legacy") naslovi.</translation>
         <source>or</source>
         <translation type="unfinished">ali</translation>
     </message>
-    <message>
-        <source>Transaction has %1 unsigned inputs.</source>
-        <translation type="unfinished">Transakcija ima toliko nepodpisanih vhodov: %1.</translation>
+    <message numerus="yes">
+        <source>Transaction has %n unsigned input(s).</source>
+        <translation type="unfinished">
+            <numerusform />
+            <numerusform />
+            <numerusform />
+            <numerusform />
+        </translation>
     </message>
     <message>
         <source>Transaction is missing some information about inputs.</source>
@@ -2262,10 +2322,6 @@ Svetujemo, da prodajalca prosite, naj vam priskrbi URI na podlagi BIP21.</transl
     <message>
         <source>Transaction Relay</source>
         <translation type="unfinished">Posredovanje transakcij</translation>
-    </message>
-    <message>
-        <source>Starting Block</source>
-        <translation type="unfinished">Začetni blok</translation>
     </message>
     <message>
         <source>Synced Headers</source>
@@ -2965,10 +3021,6 @@ Opomba: Ker se provizija izračuna na bajt, bi provizija "100 satoshijev na kvB"
         <translation type="unfinished">Kopiraj količino</translation>
     </message>
     <message>
-        <source>Copy amount</source>
-        <translation type="unfinished">Kopiraj znesek</translation>
-    </message>
-    <message>
         <source>Copy fee</source>
         <translation type="unfinished">Kopiraj provizijo</translation>
     </message>
@@ -3123,10 +3175,6 @@ Opomba: Ker se provizija izračuna na bajt, bi provizija "100 satoshijev na kvB"
     <message>
         <source>The amount exceeds your balance.</source>
         <translation type="unfinished">Znesek presega vaše dobroimetje.</translation>
-    </message>
-    <message>
-        <source>The total exceeds your balance when the %1 transaction fee is included.</source>
-        <translation type="unfinished">Celotni znesek z vključeno provizijo %1 je višji od vašega dobroimetja.</translation>
     </message>
     <message>
         <source>Duplicate address found: addresses should only be used once each.</source>
@@ -4049,10 +4097,6 @@ Za odpiranje denarnice kliknite Datoteka &gt; Odpri denarnico
         <translation type="unfinished">Opozorilo: v denarnici {%s} z onemogočenimi zasebnimi ključi so prisotni zasebni ključi.</translation>
     </message>
     <message>
-        <source>Warning: We do not appear to fully agree with our peers! You may need to upgrade, or other nodes may need to upgrade.</source>
-        <translation type="unfinished">Opozorilo: Trenutno se s soležniki ne strinjamo v popolnosti! Morda morate posodobiti programsko opremo ali pa morajo to storiti vaši soležniki.</translation>
-    </message>
-    <message>
         <source>Witness data for blocks after height %d requires validation. Please restart with -reindex.</source>
         <translation type="unfinished">Podatke o priči (witness) za bloke nad višino %d je potrebno preveriti. Ponovno zaženite program z možnostjo -reindex.</translation>
     </message>
@@ -4157,20 +4201,12 @@ Obnovitev varnostne kopije denarnice ni bila mogoča.</translation>
         <translation type="unfinished">Izvozna (dump) datoteka %s ne obstaja.</translation>
     </message>
     <message>
-        <source>Error creating %s</source>
-        <translation type="unfinished">Napaka pri tvorbi %s</translation>
-    </message>
-    <message>
         <source>Error initializing block database</source>
         <translation type="unfinished">Napaka pri inicializaciji podatkovne baze blokov</translation>
     </message>
     <message>
         <source>Error loading %s</source>
         <translation type="unfinished">Napaka pri nalaganju %s</translation>
-    </message>
-    <message>
-        <source>Error loading %s: Private keys can only be disabled during creation</source>
-        <translation type="unfinished">Napaka pri nalaganju %s: Zasebni ključi se lahko onemogočijo samo ob tvorbi.</translation>
     </message>
     <message>
         <source>Error loading %s: Wallet corrupted</source>
@@ -4455,10 +4491,6 @@ Obnovitev varnostne kopije denarnice ni bila mogoča.</translation>
     <message>
         <source>This is the minimum transaction fee you pay on every transaction.</source>
         <translation type="unfinished">To je minimalna transakcijska provizija, ki jo plačate za vsako transakcijo.</translation>
-    </message>
-    <message>
-        <source>This is the transaction fee you will pay if you send a transaction.</source>
-        <translation type="unfinished">To je provizija, ki jo boste plačali, ko pošljete transakcijo.</translation>
     </message>
     <message>
         <source>Transaction amount too small</source>

@@ -3,7 +3,7 @@
     <name>AddressBookPage</name>
     <message>
         <source>Right-click to edit address or label</source>
-        <translation type="unfinished">Sağ tık ile adres ve etiket düzenle</translation>
+        <translation type="unfinished">Adresi veya etiketi düzenlemek için sağ butona tıklayın</translation>
     </message>
     <message>
         <source>Create a new address</source>
@@ -1074,6 +1074,16 @@ Taşıma işlemi, taşıma işleminden önce cüzdanın bir yedeğini oluşturac
         <translation type="unfinished">Çözülebilir ama izlenmeyen scriptler yeni bir cüzdana taşındı, adı '%1'.</translation>
     </message>
     <message>
+        <source>Restore Wallet</source>
+        <extracomment>Title of progress window which is displayed when wallets are being restored.</extracomment>
+        <translation type="unfinished">Cüzdanı Geri Yükle</translation>
+    </message>
+    <message>
+        <source>Restoring Wallet &lt;b&gt;%1&lt;/b&gt;…</source>
+        <extracomment>Descriptive text of the restore wallets progress window which indicates to the user that wallets are currently being restored.</extracomment>
+        <translation type="unfinished">Cüzdan Onarılıyor&lt;b&gt;%1&lt;/b&gt;</translation>
+    </message>
+    <message>
         <source>Migration failed</source>
         <translation type="unfinished">Taşıma başarısız oldu</translation>
     </message>
@@ -1197,10 +1207,6 @@ Taşıma işlemi, taşıma işleminden önce cüzdanın bir yedeğini oluşturac
         <translation type="unfinished">Özel Kilidi (Private Key) kaldır</translation>
     </message>
     <message>
-        <source>Make a blank wallet. Blank wallets do not initially have private keys or scripts. Private keys and addresses can be imported, or an HD seed can be set, at a later time.</source>
-        <translation type="unfinished">Boş bir cüzdan yapın. Boş cüzdanlar başlangıçta özel anahtarlara veya komut dosyalarına sahip değildir. Özel anahtarlar ve adresler içe aktarılabilir veya daha sonra bir HD tohum ayarlanabilir.</translation>
-    </message>
-    <message>
         <source>Make Blank Wallet</source>
         <translation type="unfinished">Boş Cüzdan Oluştur</translation>
     </message>
@@ -1261,7 +1267,7 @@ Taşıma işlemi, taşıma işleminden önce cüzdanın bir yedeğini oluşturac
     </message>
     <message>
         <source>The entered address "%1" is already in the address book with label "%2".</source>
-        <translation type="unfinished">Girilen "%1" adresi zaten adres defterinde "%2" etiketli olarak bulunuyor.</translation>
+        <translation type="unfinished">Girilen "%1" adresi zaten adres defterinde ''%2" etiketli olarak bulunuyor.</translation>
     </message>
     <message>
         <source>Could not unlock wallet.</source>
@@ -1873,6 +1879,12 @@ Taşıma işlemi, taşıma işleminden önce cüzdanın bir yedeğini oluşturac
         <source>Could not sign any more inputs.</source>
         <translation type="unfinished">Daha fazla girdi imzalanamıyor.</translation>
     </message>
+    <message numerus="yes">
+        <source>Signed %n input(s), but more signatures are still required.</source>
+        <translation type="unfinished">
+            <numerusform />
+        </translation>
+    </message>
     <message>
         <source>Signed transaction successfully. Transaction is ready to broadcast.</source>
         <translation type="unfinished">İşlem imzalandı ve ağa duyurulmaya hazır.</translation>
@@ -1914,12 +1926,14 @@ Taşıma işlemi, taşıma işleminden önce cüzdanın bir yedeğini oluşturac
         <translation type="unfinished">İşlem ücreti:&lt;br&gt;</translation>
     </message>
     <message>
-        <source>Total Amount</source>
-        <translation type="unfinished">Toplam Tutar</translation>
-    </message>
-    <message>
         <source>or</source>
         <translation type="unfinished">veya</translation>
+    </message>
+    <message numerus="yes">
+        <source>Transaction has %n unsigned input(s).</source>
+        <translation type="unfinished">
+            <numerusform />
+        </translation>
     </message>
     <message>
         <source>Transaction is missing some information about inputs.</source>
@@ -2180,10 +2194,6 @@ Taşıma işlemi, taşıma işleminden önce cüzdanın bir yedeğini oluşturac
     <message>
         <source>Transaction Relay</source>
         <translation type="unfinished">İşlem Aktarımı</translation>
-    </message>
-    <message>
-        <source>Starting Block</source>
-        <translation type="unfinished">Başlangıç Bloku</translation>
     </message>
     <message>
         <source>Synced Headers</source>
@@ -2837,10 +2847,6 @@ Taşıma işlemi, taşıma işleminden önce cüzdanın bir yedeğini oluşturac
     <message>
         <source>The amount exceeds your balance.</source>
         <translation type="unfinished">Tutar bakiyenizden yüksektir.</translation>
-    </message>
-    <message>
-        <source>The total exceeds your balance when the %1 transaction fee is included.</source>
-        <translation type="unfinished">Toplam, %1 işlem ücreti eklendiğinde bakiyenizi geçmektedir.</translation>
     </message>
     <message>
         <source>Duplicate address found: addresses should only be used once each.</source>
@@ -3661,10 +3667,6 @@ Taşıma işlemi, taşıma işleminden önce cüzdanın bir yedeğini oluşturac
         <translation type="unfinished">Uyarı: {%s} cüzdanında özel anahtarlarla devre dışı bırakılmış özel anahtarlar algılandı</translation>
     </message>
     <message>
-        <source>Warning: We do not appear to fully agree with our peers! You may need to upgrade, or other nodes may need to upgrade.</source>
-        <translation type="unfinished">Uyarı: Ağ eşlerimizle tamamen anlaşamamışız gibi görünüyor! Güncelleme yapmanız gerekebilir ya da diğer düğümlerin güncelleme yapmaları gerekebilir.</translation>
-    </message>
-    <message>
         <source>You need to rebuild the database using -reindex to go back to unpruned mode.  This will redownload the entire blockchain</source>
         <translation type="unfinished">Budama olmayan kipe dönmek için veritabanını -reindex ile tekrar derlemeniz gerekir. Bu, tüm blok zincirini tekrar indirecektir</translation>
     </message>
@@ -3675,6 +3677,10 @@ Taşıma işlemi, taşıma işleminden önce cüzdanın bir yedeğini oluşturac
     <message>
         <source>-maxmempool must be at least %d MB</source>
         <translation type="unfinished">-maxmempool en az %d MB olmalıdır</translation>
+    </message>
+    <message>
+        <source>Cannot obtain a lock on directory %s. %s is probably already running.</source>
+        <translation type="unfinished">%sDizin kilitlenemiyor. %s muhtemelen halihazırda çalışıyor.</translation>
     </message>
     <message>
         <source>Cannot resolve -%s address: '%s'</source>
@@ -3699,18 +3705,6 @@ Taşıma işlemi, taşıma işleminden önce cüzdanın bir yedeğini oluşturac
     <message>
         <source>Error reading %s! All keys read correctly, but transaction data or address metadata may be missing or incorrect.</source>
         <translation type="unfinished">Okumada Hata %s! Tüm anahtarlar doğru okundu, ancak işlem verileri veya adres metadata verileri eksik veya hatalı olabilir.</translation>
-    </message>
-    <message>
-        <source>Error: Address book data in wallet cannot be identified to belong to migrated wallets</source>
-        <translation type="unfinished">Hata: Cüzdandaki adres defteri verilerinin taşınan cüzdanlara ait olduğu tespit edilemiyor</translation>
-    </message>
-    <message>
-        <source>Error: Duplicate descriptors created during migration. Your wallet may be corrupted.</source>
-        <translation type="unfinished">Hata: Geçiş sırasında yinelenen tanımlayıcılar oluşturuldu. Cüzdanınız bozulmuş olabilir.</translation>
-    </message>
-    <message>
-        <source>Error: Transaction %s in wallet cannot be identified to belong to migrated wallets</source>
-        <translation type="unfinished">Hata: Cüzdandaki %s işleminin taşınan cüzdanlara ait olduğu tespit edilemiyor</translation>
     </message>
     <message>
         <source>Failed to remove snapshot chainstate dir (%s). Manually remove it before restarting.
@@ -3741,6 +3735,14 @@ Taşıma işlemi, taşıma işleminden önce cüzdanın bir yedeğini oluşturac
     <message>
         <source>Rename of '%s' -&gt; '%s' failed. Cannot clean up the background chainstate leveldb directory.</source>
         <translation type="unfinished">'%s' -&gt; '%s' yeniden adlandırması başarısız oldu. Arka plan zincir durumu leveldb dizinini temizleyemiyor.</translation>
+    </message>
+    <message>
+        <source>Specified -blockreservedweight (%d) exceeds consensus maximum block weight (%d)</source>
+        <translation type="unfinished">Belirtilen -blockreservedweight değeri (%d), konsensüs maksimum blok ağırlığını (%d) aşıyor.</translation>
+    </message>
+    <message>
+        <source>Specified -blockreservedweight (%d) is lower than minimum safety value of (%d)</source>
+        <translation type="unfinished">Belirtilen -blockreservedweight (%d), minimum güvenlik değeri olan (%d)' dan daha düşük.</translation>
     </message>
     <message>
         <source>The combination of the pre-selected inputs and the wallet automatic inputs selection exceeds the transaction maximum weight. Please try sending a smaller amount or manually consolidating your wallet's UTXOs</source>
@@ -3829,6 +3831,10 @@ Cüzdan yedeği geri yüklenemiyor.</translation>
         <translation type="unfinished">Blok veritabanının açılışı sırasında hata</translation>
     </message>
     <message>
+        <source>Error opening coins database</source>
+        <translation type="unfinished">Coin veritabanı açılırken hata oluştu.</translation>
+    </message>
+    <message>
         <source>Error reading from database, shutting down.</source>
         <translation type="unfinished">Veritabanı okuma hatası, program kapatılıyor.</translation>
     </message>
@@ -3861,10 +3867,6 @@ Cüzdan yedeği geri yüklenemiyor.</translation>
         <translation type="unfinished">Hata: %sCüzdan için veri tabanında işlem yapılamaz</translation>
     </message>
     <message>
-        <source>Failed to connect best block (%s).</source>
-        <translation type="unfinished">En iyi (%s) bloğa bağlanmak başarısız oldu.</translation>
-    </message>
-    <message>
         <source>Failed to disconnect block.</source>
         <translation type="unfinished">Bloğun bağlantısı kesilemedi.</translation>
     </message>
@@ -3887,14 +3889,6 @@ Cüzdan yedeği geri yüklenemiyor.</translation>
     <message>
         <source>Failed to write block.</source>
         <translation type="unfinished">Bloğa yazma başarısız oldu.</translation>
-    </message>
-    <message>
-        <source>Failed to write to block index database.</source>
-        <translation type="unfinished">Blok indeks veri tabanına yazma başarısız oldu.</translation>
-    </message>
-    <message>
-        <source>Failed to write to coin database.</source>
-        <translation type="unfinished">Coin veri tabanına yazma başarısız oldu.</translation>
     </message>
     <message>
         <source>Failed to write undo data.</source>
@@ -4059,10 +4053,6 @@ Cüzdan yedeği geri yüklenemiyor.</translation>
     <message>
         <source>This is the minimum transaction fee you pay on every transaction.</source>
         <translation type="unfinished">Bu her işlemde ödeceğiniz en düşük işlem ücretidir.</translation>
-    </message>
-    <message>
-        <source>This is the transaction fee you will pay if you send a transaction.</source>
-        <translation type="unfinished">-paytxfee çok yüksek bir değere ayarlanmış! Bu, işlemi gönderirseniz ödeyeceğiniz işlem ücretidir.</translation>
     </message>
     <message>
         <source>Transaction %s does not belong to this wallet</source>

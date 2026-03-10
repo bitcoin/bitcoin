@@ -1024,6 +1024,11 @@ Bydd y broses fudo yn creu copi wrth gefn o'r waled cyn mudo. Bydd y ffeil wrth 
         <translation type="unfinished">Mae sgriptiau hydoddadwy ond heb eu gwylio wedi'u symud i waled newydd o'r enw '%1'.</translation>
     </message>
     <message>
+        <source>Restore Wallet</source>
+        <extracomment>Title of progress window which is displayed when wallets are being restored.</extracomment>
+        <translation type="unfinished">Ail-adfer Waled</translation>
+    </message>
+    <message>
         <source>Migration Successful</source>
         <translation type="unfinished">Mudo yn Llwyddiannus</translation>
     </message>
@@ -1104,10 +1109,6 @@ Bydd y broses fudo yn creu copi wrth gefn o'r waled cyn mudo. Bydd y ffeil wrth 
     <message>
         <source>Disable private keys for this wallet. Wallets with private keys disabled will have no private keys and cannot have an HD seed or imported private keys. This is ideal for watch-only wallets.</source>
         <translation type="unfinished">Analluogi allweddi preifat ar gyfer y waled hon. Ni fydd gan waledi ag allweddi preifat anabl unrhyw allweddi preifat ac ni allant gael hedyn HD nac allweddi preifat wedi'u mewnforio. Mae hyn yn ddelfrydol ar gyfer waledi gwylio yn unig.</translation>
-    </message>
-    <message>
-        <source>Make a blank wallet. Blank wallets do not initially have private keys or scripts. Private keys and addresses can be imported, or an HD seed can be set, at a later time.</source>
-        <translation type="unfinished">Gwnewch waled wag. Nid oes gan waledi gwag allweddi preifat na sgriptiau i ddechrau. Gellir mewnforio allweddi preifat a chyfeiriadau, neu gellir gosod hedyn HD, yn ddiweddarach.</translation>
     </message>
     <message>
         <source>Use an external signing device such as a hardware wallet. Configure the external signer script in wallet preferences first.</source>
@@ -1503,6 +1504,29 @@ Bydd y broses fudo yn creu copi wrth gefn o'r waled cyn mudo. Bydd y ffeil wrth 
     <message>
         <source>Form</source>
         <translation type="unfinished">Ffurflen</translation>
+    </message>
+    </context>
+<context>
+    <name>PSBTOperationsDialog</name>
+    <message numerus="yes">
+        <source>Signed %n input(s), but more signatures are still required.</source>
+        <translation type="unfinished">
+            <numerusform />
+            <numerusform />
+            <numerusform />
+            <numerusform />
+            <numerusform />
+        </translation>
+    </message>
+    <message numerus="yes">
+        <source>Transaction has %n unsigned input(s).</source>
+        <translation type="unfinished">
+            <numerusform />
+            <numerusform />
+            <numerusform />
+            <numerusform />
+            <numerusform />
+        </translation>
     </message>
     </context>
 <context>

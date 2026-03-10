@@ -370,6 +370,11 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <translation type="unfinished">アドレスのフェッチ</translation>
     </message>
     <message>
+        <source>Private Broadcast</source>
+        <extracomment>Short-lived peer connection type that is used for broadcasting privacy-sensitive data.</extracomment>
+        <translation type="unfinished">プライベートブロードキャスト</translation>
+    </message>
+    <message>
         <source>%1 d</source>
         <translation type="unfinished">%1 日</translation>
     </message>
@@ -619,7 +624,7 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     </message>
     <message>
         <source>Connecting to peers…</source>
-        <translation type="unfinished">ピアに接続中...</translation>
+        <translation type="unfinished">ピアに接続中…</translation>
     </message>
     <message>
         <source>Request payments (generates QR codes and bitcoin: URIs)</source>
@@ -770,12 +775,29 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     <message>
         <source>Restore Wallet</source>
         <extracomment>Title of pop-up window shown when the user is attempting to restore a wallet.</extracomment>
-        <translation type="unfinished">ウォレットを復元</translation>
+        <translation type="unfinished">ウォレットを復</translation>
     </message>
     <message>
         <source>Wallet Name</source>
         <extracomment>Label of the input field where the name of the wallet is entered.</extracomment>
         <translation type="unfinished">ウォレット名</translation>
+    </message>
+    <message>
+        <source>Invalid Wallet Name</source>
+        <translation type="unfinished">無効なウォレット名</translation>
+    </message>
+    <message>
+        <source>Wallet name cannot be empty</source>
+        <translation type="unfinished">ウォレット名は空にはできません</translation>
+    </message>
+    <message>
+        <source>Restore and Migrate Wallet Backup</source>
+        <translation type="unfinished">ウォレットバックアップの復元と移行</translation>
+    </message>
+    <message>
+        <source>Restore and Migrate Wallet</source>
+        <extracomment>Title of pop-up window shown when the user is attempting to restore a wallet.</extracomment>
+        <translation type="unfinished">ウォレットの復元と移行</translation>
     </message>
     <message>
         <source>&amp;Window</source>
@@ -1000,7 +1022,7 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     </message>
     <message>
         <source>Copy transaction &amp;ID and output index</source>
-        <translation type="unfinished">取引IDとアウトプットのインデックスをコピー</translation>
+        <translation type="unfinished">取引IDとアウトプットのインデックスをコピー(&amp;I)</translation>
     </message>
     <message>
         <source>L&amp;ock unspent</source>
@@ -1136,6 +1158,40 @@ The migration process will create a backup of the wallet before migrating. This 
         <translation type="unfinished">解決可能だが監視されないスクリプトは '%1' という名前の新しいウォレットに移行されました。</translation>
     </message>
     <message>
+        <source>Restore and Migrate wallet</source>
+        <translation type="unfinished">ウォレットの復元と移行</translation>
+    </message>
+    <message>
+        <source>Are you sure you wish to restore the wallet file &lt;i&gt;%1&lt;/i&gt; to &lt;i&gt;%2&lt;/i&gt; and migrate it?</source>
+        <translation type="unfinished">ウォレットファイル&lt;i&gt;%1&lt;/i&gt;を復元し&lt;i&gt;%2&lt;/i&gt;に移行してもよろしいですか？</translation>
+    </message>
+    <message>
+        <source>Restoring the wallet will copy the backup file to the wallets directory and place it in the standard wallet directory layout. The original file will not be modified.
+
+Migrating the wallet will convert the restored wallet to one or more descriptor wallets. A new wallet backup will need to be made.
+If this wallet contains any watchonly scripts, a new wallet will be created which contains those watchonly scripts.
+If this wallet contains any solvable but not watched scripts, a different and new wallet will be created which contains those scripts.
+
+The migration process will create a backup of the wallet before migrating. This backup file will be named &lt;wallet name&gt;-&lt;timestamp&gt;.legacy.bak and can be found in the directory for this wallet. In the event of an incorrect migration, the backup can be restored with the "Restore Wallet" functionality.</source>
+        <translation type="unfinished">ウォレットの復元では、バックアップファイルをウォレットディレクトリにコピーし、標準のウォレットディレクトリレイアウトに配置します。元のファイルは変更されません。
+
+ウォレットの移行では、復元されたウォレットを１つ以上のディスクリプターウォレットに変換します。新しいウォレットバックアップを作成する必要があります。
+このウォレットに監視専用スクリプトが含まれている場合、それらの監視専用スクリプトを含む新しいウォレットが作成されます。
+このウォレットに解決可能だが非監視スクリプトが含まれている場合、それらのスクリプトを含む別の新しいウォレットが作成されます。
+
+移行プロセスでは、移行前にウォレットのバックアップが作成されます。このバックアップファイルの名前は&lt;wallet name&gt;-&lt;timestamp&gt;.legacy.bakで、このウォレット用のディレクトリ内に保存されます。間違った移行が行われた場合、「ウォレットの復元」機能をしよいうしてバックアップを復元できます。</translation>
+    </message>
+    <message>
+        <source>Restore Wallet</source>
+        <extracomment>Title of progress window which is displayed when wallets are being restored.</extracomment>
+        <translation type="unfinished">ウォレットを復元</translation>
+    </message>
+    <message>
+        <source>Restoring Wallet &lt;b&gt;%1&lt;/b&gt;…</source>
+        <extracomment>Descriptive text of the restore wallets progress window which indicates to the user that wallets are currently being restored.</extracomment>
+        <translation type="unfinished">ウォレット &lt;b&gt;%1&lt;/b&gt; を復元中...</translation>
+    </message>
+    <message>
         <source>Migration failed</source>
         <translation type="unfinished">移行に失敗しました</translation>
     </message>
@@ -1259,8 +1315,8 @@ The migration process will create a backup of the wallet before migrating. This 
         <translation type="unfinished">秘密鍵を無効化</translation>
     </message>
     <message>
-        <source>Make a blank wallet. Blank wallets do not initially have private keys or scripts. Private keys and addresses can be imported, or an HD seed can be set, at a later time.</source>
-        <translation type="unfinished">空ウォレットを作成。空ウォレットには、最初は秘密鍵やスクリプトがありません。後から秘密鍵やアドレスをインポート、またはHDシードを設定できます。</translation>
+        <source>Make a blank wallet. Blank wallets do not initially have private keys or scripts. Private keys and addresses can be imported using descriptors at a later time.</source>
+        <translation type="unfinished">空のウォレットを作成します。空のウォレットには、最初は秘密鍵やスクリプトが含まれていません。秘密鍵とアドレスは、後からディスクリプターを使用してインポートできます。</translation>
     </message>
     <message>
         <source>Make Blank Wallet</source>
@@ -1944,7 +2000,7 @@ The migration process will create a backup of the wallet before migrating. This 
     </message>
     <message>
         <source>Privacy mode activated for the Overview tab. To unmask the values, uncheck Settings-&gt;Mask values.</source>
-        <translation type="unfinished">概要タブでプライバシーモードが有効になっています。値のマスクを解除するには、設定-&gt;マスクの値のチェックを外してください。</translation>
+        <translation type="unfinished">概要タブでプライバシーモードが有効になっています。値のマスクを解除するには、設定 -&gt; 値を隠す のチェックを外してください。</translation>
     </message>
 </context>
 <context>
@@ -1955,11 +2011,11 @@ The migration process will create a backup of the wallet before migrating. This 
     </message>
     <message>
         <source>Sign Tx</source>
-        <translation type="unfinished">署名されたトランザクション</translation>
+        <translation type="unfinished">取引に署名</translation>
     </message>
     <message>
         <source>Broadcast Tx</source>
-        <translation type="unfinished">Txをブロードキャスト</translation>
+        <translation type="unfinished">取引をブロードキャスト</translation>
     </message>
     <message>
         <source>Copy to Clipboard</source>
@@ -1975,11 +2031,11 @@ The migration process will create a backup of the wallet before migrating. This 
     </message>
     <message>
         <source>Failed to load transaction: %1</source>
-        <translation type="unfinished">%1 : トランザクションの読込失敗</translation>
+        <translation type="unfinished">取引の読込に失敗: %1</translation>
     </message>
     <message>
         <source>Failed to sign transaction: %1</source>
-        <translation type="unfinished">%1 : トランザクション署名失敗</translation>
+        <translation type="unfinished">取引の署名に失敗: %1</translation>
     </message>
     <message>
         <source>Cannot sign inputs while wallet is locked.</source>
@@ -1989,25 +2045,27 @@ The migration process will create a backup of the wallet before migrating. This 
         <source>Could not sign any more inputs.</source>
         <translation type="unfinished">これ以上インプットに署名できませんでした。</translation>
     </message>
-    <message>
-        <source>Signed %1 inputs, but more signatures are still required.</source>
-        <translation type="unfinished">%1個のインプットに署名しましたが、さらに多くの署名が必要です。</translation>
+    <message numerus="yes">
+        <source>Signed %n input(s), but more signatures are still required.</source>
+        <translation type="unfinished">
+            <numerusform />
+        </translation>
     </message>
     <message>
         <source>Signed transaction successfully. Transaction is ready to broadcast.</source>
-        <translation type="unfinished">トランザクションへの署名が成功しました。トランザクションのブロードキャストの準備ができています。</translation>
+        <translation type="unfinished">取引への署名に成功しました。取引はブロードキャストの準備ができています。</translation>
     </message>
     <message>
         <source>Unknown error processing transaction.</source>
-        <translation type="unfinished">トランザクション処理中の不明なエラー。</translation>
+        <translation type="unfinished">取引処理中の不明なエラー。</translation>
     </message>
     <message>
         <source>Transaction broadcast successfully! Transaction ID: %1</source>
-        <translation type="unfinished">トランザクションのブロードキャストに成功しました！トランザクションID: %1</translation>
+        <translation type="unfinished">取引のブロードキャストに成功！ 取引 ID: %1</translation>
     </message>
     <message>
         <source>Transaction broadcast failed: %1</source>
-        <translation type="unfinished">トランザクションのブロードキャストが失敗しました: %1</translation>
+        <translation type="unfinished">取引のブロードキャストに失敗しました: %1</translation>
     </message>
     <message>
         <source>PSBT copied to clipboard.</source>
@@ -2015,12 +2073,12 @@ The migration process will create a backup of the wallet before migrating. This 
     </message>
     <message>
         <source>Save Transaction Data</source>
-        <translation type="unfinished">トランザクションデータの保存</translation>
+        <translation type="unfinished">取引データの保存</translation>
     </message>
     <message>
         <source>Partially Signed Transaction (Binary)</source>
         <extracomment>Expanded name of the binary PSBT file format. See: BIP 174.</extracomment>
-        <translation type="unfinished">部分的に署名されたトランザクション（バイナリ）</translation>
+        <translation type="unfinished">部分的に署名された取引（バイナリ）</translation>
     </message>
     <message>
         <source>PSBT saved to disk.</source>
@@ -2050,9 +2108,11 @@ The migration process will create a backup of the wallet before migrating. This 
         <source>or</source>
         <translation type="unfinished">または</translation>
     </message>
-    <message>
-        <source>Transaction has %1 unsigned inputs.</source>
-        <translation type="unfinished">取引には %1 個の未署名インプットがあります。</translation>
+    <message numerus="yes">
+        <source>Transaction has %n unsigned input(s).</source>
+        <translation type="unfinished">
+            <numerusform />
+        </translation>
     </message>
     <message>
         <source>Transaction is missing some information about inputs.</source>
@@ -2339,10 +2399,6 @@ BIP70には広範なセキュリティー上の問題があるので、ウォレ
         <translation type="unfinished">取引のリレー</translation>
     </message>
     <message>
-        <source>Starting Block</source>
-        <translation type="unfinished">開始ブロック</translation>
-    </message>
-    <message>
         <source>Synced Headers</source>
         <translation type="unfinished">同期済みヘッダ</translation>
     </message>
@@ -2558,6 +2614,11 @@ BIP70には広範なセキュリティー上の問題があるので、ウォレ
         <source>Outbound Address Fetch: short-lived, for soliciting addresses</source>
         <extracomment>Explanatory text for a short-lived outbound peer connection that is used to request addresses from a peer.</extracomment>
         <translation type="unfinished">アドレス収集用アウトバウンド: 短時間接続、アドレス収集用</translation>
+    </message>
+    <message>
+        <source>Private broadcast: short-lived, for broadcasting privacy-sensitive transactions</source>
+        <extracomment>Explanatory text for a short-lived outbound peer connection that is used to broadcast privacy-sensitive data (like our transactions).</extracomment>
+        <translation type="unfinished">プライベートブロードキャスト: プライバシーに配慮した取引をブロードキャストするためもので、短命</translation>
     </message>
     <message>
         <source>detecting: peer could be v1 or v2</source>
@@ -3128,12 +3189,12 @@ Note:  Since the fee is calculated on a per-byte basis, a fee rate of "100 satos
     </message>
     <message>
         <source>Save Transaction Data</source>
-        <translation type="unfinished">取引データの保存</translation>
+        <translation type="unfinished">トランザクションデータの保存</translation>
     </message>
     <message>
         <source>Partially Signed Transaction (Binary)</source>
         <extracomment>Expanded name of the binary PSBT file format. See: BIP 174.</extracomment>
-        <translation type="unfinished">部分的に署名された取引（バイナリ）</translation>
+        <translation type="unfinished">部分的に署名されたトランザクション（バイナリ）</translation>
     </message>
     <message>
         <source>PSBT saved</source>
@@ -3223,10 +3284,6 @@ Note:  Since the fee is calculated on a per-byte basis, a fee rate of "100 satos
     <message>
         <source>The amount exceeds your balance.</source>
         <translation type="unfinished">金額が残高を超えています。</translation>
-    </message>
-    <message>
-        <source>The total exceeds your balance when the %1 transaction fee is included.</source>
-        <translation type="unfinished">取引手数料 %1 を含めた総額が残高を超えています。</translation>
     </message>
     <message>
         <source>Duplicate address found: addresses should only be used once each.</source>
@@ -4194,10 +4251,6 @@ Go to File &gt; Open Wallet to load a wallet.
         <translation type="unfinished">警告: 秘密鍵が無効なウォレット {%s} で秘密鍵を検出しました</translation>
     </message>
     <message>
-        <source>Warning: We do not appear to fully agree with our peers! You may need to upgrade, or other nodes may need to upgrade.</source>
-        <translation type="unfinished">警告: ピアと完全に合意が取れていないようです！ このノードもしくは他のノードのアップグレードが必要な可能性があります。</translation>
-    </message>
-    <message>
         <source>Witness data for blocks after height %d requires validation. Please restart with -reindex.</source>
         <translation type="unfinished">高さ%d以降のブロックのwitnessデータは検証が必要です。-reindexを付けて再起動してください。</translation>
     </message>
@@ -4300,14 +4353,6 @@ Go to File &gt; Open Wallet to load a wallet.
         <translation type="unfinished">オプション「-checkpoints」が設定されていますが、チェックポイントは削除されています。このオプションは効果がありません。</translation>
     </message>
     <message>
-        <source>Option '-maxorphantx' is set but no longer has any effect (see release notes). Please remove it from your configuration.</source>
-        <translation type="unfinished">オプション「-maxorphantx」が設定されていますが、効果はありません（リリースノートを参照）。設定から削除してください。</translation>
-    </message>
-    <message>
-        <source>Options '-datacarrier' or '-datacarriersize' are set but are marked as deprecated. They will be removed in a future version.</source>
-        <translation type="unfinished">オプション「-datacarrier」または「-datacarriersize」が設定されていますが、非推奨とマークされています。これらは将来のバージョンで削除される予定です。</translation>
-    </message>
-    <message>
         <source>Outbound connections restricted to CJDNS (-onlynet=cjdns) but -cjdnsreachable is not provided</source>
         <translation type="unfinished">アウトバウンド接続がCJDNS (-onlynet=cjdns)に制限されていますが、-cjdnsreachableが設定されていません。</translation>
     </message>
@@ -4398,10 +4443,6 @@ Unable to restore backup of wallet.</source>
         <translation type="unfinished">whitebindは受信接続のみに使用できます（"out"が渡されました）</translation>
     </message>
     <message>
-        <source>-paytxfee is deprecated and will be fully removed in v31.0.</source>
-        <translation type="unfinished">-paytxfee は非推奨となり、v31.0 で完全に削除されます。</translation>
-    </message>
-    <message>
         <source>A fatal internal error occurred, see debug.log for details: </source>
         <translation type="unfinished">致命的な内部エラーが発生しました。詳細はデバッグ用のログファイル debug.log を参照してください:</translation>
     </message>
@@ -4414,8 +4455,12 @@ Unable to restore backup of wallet.</source>
         <translation type="unfinished">ブロック検証が中断されました</translation>
     </message>
     <message>
-        <source>Cannot add WalletDescriptor to a non-descriptor wallet</source>
-        <translation type="unfinished">WalletDescriptor を非ディスクリプターウォレットに追加することはできません</translation>
+        <source>Can't spend unconfirmed version %d pre-selected input with a version 3 tx</source>
+        <translation type="unfinished">バージョン3のtxで、未確認バージョン1%dの事前選択されたインプットを使うことはできません</translation>
+    </message>
+    <message>
+        <source>Can't spend unconfirmed version 3 pre-selected input with a version %d tx</source>
+        <translation type="unfinished">バージョン1%dのtxで、未確認バージョン3の事前選択されたインプットを使うことはできません</translation>
     </message>
     <message>
         <source>Cannot write to directory '%s'; check permissions.</source>
@@ -4466,20 +4511,12 @@ Unable to restore backup of wallet.</source>
         <translation type="unfinished">楕円曲線暗号の健全性チェックに失敗しました。%sを終了します。</translation>
     </message>
     <message>
-        <source>Error creating %s</source>
-        <translation type="unfinished">%sの作成エラー</translation>
-    </message>
-    <message>
         <source>Error initializing block database</source>
         <translation type="unfinished">ブロックデータベースの初期化時にエラーが発生しました</translation>
     </message>
     <message>
         <source>Error loading %s</source>
         <translation type="unfinished">%s の読み込みエラー</translation>
-    </message>
-    <message>
-        <source>Error loading %s: Private keys can only be disabled during creation</source>
-        <translation type="unfinished">%s の読み込みエラー: 秘密鍵の無効化はウォレットの生成時のみ可能です</translation>
     </message>
     <message>
         <source>Error loading %s: Wallet corrupted</source>
@@ -4630,10 +4667,6 @@ Unable to restore backup of wallet.</source>
         <translation type="unfinished">ブロックの書き込み時にファイルを閉じることができませんでした。</translation>
     </message>
     <message>
-        <source>Failed to connect best block (%s).</source>
-        <translation type="unfinished">ベストブロック（%s）への接続に失敗しました。</translation>
-    </message>
-    <message>
         <source>Failed to disconnect block.</source>
         <translation type="unfinished">ブロックの切断に失敗しました。</translation>
     </message>
@@ -4656,14 +4689,6 @@ Unable to restore backup of wallet.</source>
     <message>
         <source>Failed to write block.</source>
         <translation type="unfinished">ブロックの書き込みに失敗しました。</translation>
-    </message>
-    <message>
-        <source>Failed to write to block index database.</source>
-        <translation type="unfinished">ブロックインデックスデータベースの書き込みに失敗しました。</translation>
-    </message>
-    <message>
-        <source>Failed to write to coin database.</source>
-        <translation type="unfinished">コインデータベースへの書き込みに失敗しました。</translation>
     </message>
     <message>
         <source>Failed to write undo data.</source>
@@ -4718,12 +4743,24 @@ Unable to restore backup of wallet.</source>
         <translation type="unfinished">無効なP2Pアクセス権: '%s'</translation>
     </message>
     <message>
-        <source>Invalid amount for %s=&lt;amount&gt;: '%s' (must be at least %s)</source>
-        <translation type="unfinished">%s=&lt;amount&gt; オプションに対する不正な設定: '%s'（最低でも %s が必要です）</translation>
-    </message>
-    <message>
         <source>Invalid amount for %s=&lt;amount&gt;: '%s'</source>
         <translation type="unfinished">%s=&lt;amount&gt; オプションに対する不正な設定: '%s'</translation>
+    </message>
+    <message>
+        <source>A %zu MiB dbcache may be too large for a system memory of only %zu MiB.</source>
+        <translation type="unfinished">%zuMiBのdbcacheは、%zuMiBのシステムメモリには大きすぎる可能性があります。</translation>
+    </message>
+    <message>
+        <source>Creating wallet…</source>
+        <translation type="unfinished">ウォレットを作成中...</translation>
+    </message>
+    <message>
+        <source>Duplicate binding configuration for address %s. Please check your -bind, -bind=...=onion and -whitebind settings.</source>
+        <translation type="unfinished">アドレス%sのバインド設定が重複しています。-bindおよび-bind=...=onion、-whitebindの設定を確認してください。</translation>
+    </message>
+    <message>
+        <source>Error creating %s: Could not write version metadata.</source>
+        <translation type="unfinished">%s作成エラー: バージョンメタデータを書き込めませんでした。</translation>
     </message>
     <message>
         <source>Invalid amount for -%s=&lt;amount&gt;: '%s'</source>
@@ -4788,6 +4825,26 @@ Unable to restore backup of wallet.</source>
     <message>
         <source>Only direction was set, no permissions: '%s'</source>
         <translation type="unfinished">方向のみが設定されており、権限がありません: '%s'</translation>
+    </message>
+    <message>
+        <source>Option '-limitancestorsize' is given but ancestor size limits have been replaced with cluster size limits (see -limitclustersize). This option has no effect.</source>
+        <translation type="unfinished">「-limitancestorsize」オプションが指定されていますが、祖先サイズの制限はクラスターサイズの制限に置き換えられています（-limitclustersize を参照）。このオプションは効果がありません。</translation>
+    </message>
+    <message>
+        <source>Option '-limitdescendantsize' is given but descendant size limits have been replaced with cluster size limits (see -limitclustersize). This option has no effect.</source>
+        <translation type="unfinished">「-limitdescendantsize」オプションが指定されていますが、子孫サイズの制限はクラスターサイズの制限に置き換えられています（-limitclustersize を参照）。このオプションは効果がありません。</translation>
+    </message>
+    <message>
+        <source>Private broadcast of own transactions requested (-privatebroadcast) and -proxyrandomize is disabled. Tor circuits for private broadcast connections may be correlated to other connections over Tor. For maximum privacy set -proxyrandomize=1.</source>
+        <translation type="unfinished">自身のトランザクションのプライベートブロードキャスト（-privatebroadcast）が要求されており、-proxyrandomize が無効になっています。プライベートブロードキャスト接続用のTor回線が、Tor経由の他の接続と関連付けられる可能性があります。最大限のプライバシーを確保するには、-proxyrandomize=1 を設定してください。</translation>
+    </message>
+    <message>
+        <source>Private broadcast of own transactions requested (-privatebroadcast), but -connect is also configured. They are incompatible because the private broadcast needs to open new connections to randomly chosen Tor or I2P peers. Consider using -maxconnections=0 -addnode=... instead</source>
+        <translation type="unfinished">自身のトランザクションのプライベートブロードキャスト（-privatebroadcast）が要求されていますが、-connect も設定されています。プライベートブロードキャストはランダムに選択されたTorまたはI2Pピアへの新しい接続を開く必要があるため、これらは互換性がありません。代わりに -maxconnections=0 -addnode=... の使用を検討してください。</translation>
+    </message>
+    <message>
+        <source>Private broadcast of own transactions requested (-privatebroadcast), but none of Tor or I2P networks is reachable</source>
+        <translation type="unfinished">自身のトランザクションのプライベートブロードキャスト（-privatebroadcast）が要求されていますが、到達可能なTorネットワークもI2Pネットワークもありません。</translation>
     </message>
     <message>
         <source>Prune cannot be configured with a negative value.</source>
@@ -4886,6 +4943,10 @@ Unable to restore backup of wallet.</source>
         <translation type="unfinished">ブロックをディスクに保存中にシステムエラー: %s</translation>
     </message>
     <message>
+        <source>The %s path uses exFAT, which is known to have intermittent corruption problems on macOS. Move this directory to a different filesystem to avoid data loss.</source>
+        <translation type="unfinished">%sパスはexFATを使用しており、macOS上で断続的に破損問題が発生することが知られています。データ損失を避けるため、このディレクトリを別のファイルシステムに移動してください。</translation>
+    </message>
+    <message>
         <source>The source code is available from %s.</source>
         <translation type="unfinished">ソースコードは %s から入手できます。</translation>
     </message>
@@ -4916,10 +4977,6 @@ Unable to restore backup of wallet.</source>
     <message>
         <source>This is the minimum transaction fee you pay on every transaction.</source>
         <translation type="unfinished">これは、全ての取引に対して最低限支払うべき手数料です。</translation>
-    </message>
-    <message>
-        <source>This is the transaction fee you will pay if you send a transaction.</source>
-        <translation type="unfinished">これは、取引を送信する場合に支払う取引手数料です。</translation>
     </message>
     <message>
         <source>Transaction %s does not belong to this wallet</source>
@@ -5008,6 +5065,10 @@ Unable to restore backup of wallet.</source>
     <message>
         <source>Wallet file creation failed: %s</source>
         <translation type="unfinished">ウォレットファイルの作成に失敗しました：%s</translation>
+    </message>
+    <message>
+        <source>Warning: Found invalid chain more than 6 blocks longer than our best chain. This could be due to database corruption or consensus incompatibility with peers.</source>
+        <translation type="unfinished">警告: ベストチェーンより6ブロック以上長い無効なチェーンが見つかりました。これはデータベースの破損、またはピアとのコンセンサスの非互換性が原因である可能性があります。</translation>
     </message>
     <message>
         <source>acceptstalefeeestimates is not supported on %s chain.</source>

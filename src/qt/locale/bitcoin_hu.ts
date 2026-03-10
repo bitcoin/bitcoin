@@ -774,6 +774,10 @@ Aláírni csak régi típusú, egyessel kezdődő címekkel lehet.</translation>
         <translation type="unfinished">Tárca neve</translation>
     </message>
     <message>
+        <source>Invalid Wallet Name</source>
+        <translation type="unfinished">Érvénytelen tárca név</translation>
+    </message>
+    <message>
         <source>&amp;Window</source>
         <translation type="unfinished">&amp;Ablak</translation>
     </message>
@@ -988,11 +992,11 @@ Aláírni csak régi típusú, egyessel kezdődő címekkel lehet.</translation>
     </message>
     <message>
         <source>Copy &amp;label</source>
-        <translation type="unfinished">Címke &amp;másolása</translation>
+        <translation type="unfinished">C&amp;ímke másolása</translation>
     </message>
     <message>
         <source>Copy &amp;amount</source>
-        <translation type="unfinished">Ö&amp;sszeg másolása</translation>
+        <translation type="unfinished">&amp;Összeg másolása</translation>
     </message>
     <message>
         <source>Copy transaction &amp;ID and output index</source>
@@ -1132,6 +1136,16 @@ A migrációs folyamat készít biztonsági mentést a tárcáról migrálás el
         <translation type="unfinished">Megoldható de nem megfigyelt szkriptek az új '%1' nevű tárcába lettek migrálva.</translation>
     </message>
     <message>
+        <source>Restore Wallet</source>
+        <extracomment>Title of progress window which is displayed when wallets are being restored.</extracomment>
+        <translation type="unfinished">Tárca visszaállítása</translation>
+    </message>
+    <message>
+        <source>Restoring Wallet &lt;b&gt;%1&lt;/b&gt;…</source>
+        <extracomment>Descriptive text of the restore wallets progress window which indicates to the user that wallets are currently being restored.</extracomment>
+        <translation type="unfinished">Tárca visszaállítása folyamatban &lt;b&gt;%1&lt;/b&gt;...</translation>
+    </message>
+    <message>
         <source>Migration failed</source>
         <translation type="unfinished">Migrálás meghiúsult</translation>
     </message>
@@ -1253,10 +1267,6 @@ A migrációs folyamat készít biztonsági mentést a tárcáról migrálás el
     <message>
         <source>Disable Private Keys</source>
         <translation type="unfinished">Privát kulcsok letiltása</translation>
-    </message>
-    <message>
-        <source>Make a blank wallet. Blank wallets do not initially have private keys or scripts. Private keys and addresses can be imported, or an HD seed can be set, at a later time.</source>
-        <translation type="unfinished">Üres tárca készítése. Az üres tárcák kezdetben nem tartalmaznak privát kulcsokat vagy szkripteket. Később lehetséges a privát kulcsok vagy címek importálása illetve egy HD mag beállítása.</translation>
     </message>
     <message>
         <source>Make Blank Wallet</source>
@@ -1955,7 +1965,7 @@ A migrációs folyamat készít biztonsági mentést a tárcáról migrálás el
     </message>
     <message>
         <source>Broadcast Tx</source>
-        <translation type="unfinished">Tx szétküldése</translation>
+        <translation type="unfinished">Tx közlése</translation>
     </message>
     <message>
         <source>Copy to Clipboard</source>
@@ -1985,13 +1995,15 @@ A migrációs folyamat készít biztonsági mentést a tárcáról migrálás el
         <source>Could not sign any more inputs.</source>
         <translation type="unfinished">Több bemenetet nem lehet aláírni.</translation>
     </message>
-    <message>
-        <source>Signed %1 inputs, but more signatures are still required.</source>
-        <translation type="unfinished">%1 bemenet aláírva, de több aláírásra van szükség.</translation>
+    <message numerus="yes">
+        <source>Signed %n input(s), but more signatures are still required.</source>
+        <translation type="unfinished">
+            <numerusform />
+        </translation>
     </message>
     <message>
         <source>Signed transaction successfully. Transaction is ready to broadcast.</source>
-        <translation type="unfinished">Tranzakció sikeresen aláírva. Szétküldésre kész.</translation>
+        <translation type="unfinished">Tranzakció sikeresen aláírva. Közlésre kész.</translation>
     </message>
     <message>
         <source>Unknown error processing transaction.</source>
@@ -1999,11 +2011,11 @@ A migrációs folyamat készít biztonsági mentést a tárcáról migrálás el
     </message>
     <message>
         <source>Transaction broadcast successfully! Transaction ID: %1</source>
-        <translation type="unfinished">Tranzakció sikeresen szétküldve. Tranzakció azonosító: %1</translation>
+        <translation type="unfinished">Tranzakció sikeresen közölve. Tranzakció azonosító: %1</translation>
     </message>
     <message>
         <source>Transaction broadcast failed: %1</source>
-        <translation type="unfinished">Tranzakció szétküldése sikertelen: %1</translation>
+        <translation type="unfinished">Tranzakció közlése sikertelen: %1</translation>
     </message>
     <message>
         <source>PSBT copied to clipboard.</source>
@@ -2016,11 +2028,11 @@ A migrációs folyamat készít biztonsági mentést a tárcáról migrálás el
     <message>
         <source>Partially Signed Transaction (Binary)</source>
         <extracomment>Expanded name of the binary PSBT file format. See: BIP 174.</extracomment>
-        <translation type="unfinished">Részlegesen Aláírt Tranzakció (PSBT bináris)</translation>
+        <translation type="unfinished">Részlegesen aláírt tranzakció (PSBT bináris)</translation>
     </message>
     <message>
         <source>PSBT saved to disk.</source>
-        <translation type="unfinished">PSBT háttértárolóra mentve.</translation>
+        <translation type="unfinished">PSBT lemezre mentve.</translation>
     </message>
     <message>
         <source>Sends %1 to %2</source>
@@ -2046,9 +2058,11 @@ A migrációs folyamat készít biztonsági mentést a tárcáról migrálás el
         <source>or</source>
         <translation type="unfinished">vagy</translation>
     </message>
-    <message>
-        <source>Transaction has %1 unsigned inputs.</source>
-        <translation type="unfinished">A tranzakciónak %1 aláíratlan bemenete van.</translation>
+    <message numerus="yes">
+        <source>Transaction has %n unsigned input(s).</source>
+        <translation type="unfinished">
+            <numerusform />
+        </translation>
     </message>
     <message>
         <source>Transaction is missing some information about inputs.</source>
@@ -2335,10 +2349,6 @@ If you are receiving this error you should request the merchant provide a BIP21 
     <message>
         <source>Transaction Relay</source>
         <translation type="unfinished">Tranzakció elosztó</translation>
-    </message>
-    <message>
-        <source>Starting Block</source>
-        <translation type="unfinished">Kezdő blokk</translation>
     </message>
     <message>
         <source>Synced Headers</source>
@@ -2776,7 +2786,7 @@ Gépeljen %5 az elérhető parancsok áttekintéséhez. Több információért a
     </message>
     <message>
         <source>Copy &amp;label</source>
-        <translation type="unfinished">C&amp;ímke másolása</translation>
+        <translation type="unfinished">Címke &amp;másolása</translation>
     </message>
     <message>
         <source>Copy &amp;message</source>
@@ -3134,7 +3144,7 @@ Megjegyzés: Mivel a díj bájtonként van kiszámítva, egy "100 satoshi kvB-nk
     <message>
         <source>Partially Signed Transaction (Binary)</source>
         <extracomment>Expanded name of the binary PSBT file format. See: BIP 174.</extracomment>
-        <translation type="unfinished">Részlegesen aláírt tranzakció (PSBT bináris)</translation>
+        <translation type="unfinished">Részlegesen Aláírt Tranzakció (PSBT bináris)</translation>
     </message>
     <message>
         <source>PSBT saved</source>
@@ -3218,10 +3228,6 @@ Megjegyzés: Mivel a díj bájtonként van kiszámítva, egy "100 satoshi kvB-nk
     <message>
         <source>The amount exceeds your balance.</source>
         <translation type="unfinished">Az összeg meghaladja az egyenlegét.</translation>
-    </message>
-    <message>
-        <source>The total exceeds your balance when the %1 transaction fee is included.</source>
-        <translation type="unfinished">A küldeni kívánt összeg és a %1 tranzakciós díj együtt meghaladja az egyenlegén rendelkezésre álló összeget.</translation>
     </message>
     <message>
         <source>Duplicate address found: addresses should only be used once each.</source>
@@ -3811,7 +3817,7 @@ Megjegyzés: Mivel a díj bájtonként van kiszámítva, egy "100 satoshi kvB-nk
     </message>
     <message>
         <source>Copy &amp;amount</source>
-        <translation type="unfinished">Ö&amp;sszeg másolása</translation>
+        <translation type="unfinished">&amp;Összeg másolása</translation>
     </message>
     <message>
         <source>Copy transaction &amp;ID</source>
@@ -4190,10 +4196,6 @@ A "Fájl &gt; Tárca megnyitása" menüben tölthet be egyet.
         <translation type="unfinished">Figyelmeztetés: Privát kulcsokat észleltünk a {%s} tárcában, melynél a privát kulcsok le vannak tiltva.</translation>
     </message>
     <message>
-        <source>Warning: We do not appear to fully agree with our peers! You may need to upgrade, or other nodes may need to upgrade.</source>
-        <translation type="unfinished">Figyelmeztetés: Úgy tűnik nem értünk egyet teljesen a partnereinkel! Lehet, hogy frissítenie kell, vagy a többi partnernek kell frissítenie.</translation>
-    </message>
-    <message>
         <source>Witness data for blocks after height %d requires validation. Please restart with -reindex.</source>
         <translation type="unfinished">Érvényesítés szükséges a %d feletti blokkok tanúsító adatának. Kérjük indítsa újra -reindex paraméterrel.</translation>
     </message>
@@ -4296,14 +4298,6 @@ A "Fájl &gt; Tárca megnyitása" menüben tölthet be egyet.
         <translation type="unfinished">A '-checkpoints' opció be van állítva, de az ellenőrzőpontok el lettek távolítva. Ennek az opciónak nincs hatása.</translation>
     </message>
     <message>
-        <source>Option '-maxorphantx' is set but no longer has any effect (see release notes). Please remove it from your configuration.</source>
-        <translation type="unfinished">A '-maxorphantx' opció be van állítva, de már nincs hatása (lásd a kiadási megjegyzéseket). Kérjük, távolítsa el a konfigurációjából.</translation>
-    </message>
-    <message>
-        <source>Options '-datacarrier' or '-datacarriersize' are set but are marked as deprecated. They will be removed in a future version.</source>
-        <translation type="unfinished">A(z) '-datacarrier' vagy '-datacarriersize' opciók be vannak állítva, de elavultnak lettek jelölve. Egy jövőbeli verzióban eltávolításra kerülnek.</translation>
-    </message>
-    <message>
         <source>Outbound connections restricted to CJDNS (-onlynet=cjdns) but -cjdnsreachable is not provided</source>
         <translation type="unfinished">A kilépő kapcsolatok CJDNS-re korlátozottak (-onlynet=cjdns) de nincs megadva -cjdnsreachable</translation>
     </message>
@@ -4394,10 +4388,6 @@ A tárca biztonsági mentésének visszaállítása sikertelen.</translation>
         <translation type="unfinished">A whitebind csak bejövő kapcsolatokhoz használható ("out" lett megadva)</translation>
     </message>
     <message>
-        <source>-paytxfee is deprecated and will be fully removed in v31.0.</source>
-        <translation type="unfinished">A -paytxfee elavult, és a v31.0 verzióban teljesen eltávolításra kerül.</translation>
-    </message>
-    <message>
         <source>A fatal internal error occurred, see debug.log for details: </source>
         <translation type="unfinished">Végzetes belső hiba történt, részletek a debug.log fájlban:</translation>
     </message>
@@ -4416,10 +4406,6 @@ A tárca biztonsági mentésének visszaállítása sikertelen.</translation>
     <message>
         <source>Can't spend unconfirmed version 3 pre-selected input with a version %d tx</source>
         <translation type="unfinished">Nem lehet megerősítetlen, 3-as verziójú, előre kiválasztott bemenetet elkölteni egy %d verziójú tranzakcióval</translation>
-    </message>
-    <message>
-        <source>Cannot add WalletDescriptor to a non-descriptor wallet</source>
-        <translation type="unfinished">WalletDescriptor nem adható hozzá nem-leíró alapú tárcához</translation>
     </message>
     <message>
         <source>Cannot write to directory '%s'; check permissions.</source>
@@ -4474,20 +4460,12 @@ A tárca biztonsági mentésének visszaállítása sikertelen.</translation>
         <translation type="unfinished">Elliptikus görbés kriptográfia épségi ellenőrzése sikertelen. %s most leáll.</translation>
     </message>
     <message>
-        <source>Error creating %s</source>
-        <translation type="unfinished">Hiba %s létrehozása közben</translation>
-    </message>
-    <message>
         <source>Error initializing block database</source>
         <translation type="unfinished">A blokk-adatbázis előkészítése nem sikerült</translation>
     </message>
     <message>
         <source>Error loading %s</source>
         <translation type="unfinished">Hiba a(z) %s betöltése közben</translation>
-    </message>
-    <message>
-        <source>Error loading %s: Private keys can only be disabled during creation</source>
-        <translation type="unfinished"> %s betöltése sikertelen. A privát kulcsok csak a létrehozáskor tilthatóak le.</translation>
     </message>
     <message>
         <source>Error loading %s: Wallet corrupted</source>
@@ -4638,10 +4616,6 @@ A tárca biztonsági mentésének visszaállítása sikertelen.</translation>
         <translation type="unfinished">Blokk írása közben nem sikerült bezárni a fájlt</translation>
     </message>
     <message>
-        <source>Failed to connect best block (%s).</source>
-        <translation type="unfinished">Sikertelen a legjobb blokkhoz (%s) csatlakozás.</translation>
-    </message>
-    <message>
         <source>Failed to disconnect block.</source>
         <translation type="unfinished">Blokk szétkapcsolása nem sikerült.</translation>
     </message>
@@ -4664,14 +4638,6 @@ A tárca biztonsági mentésének visszaállítása sikertelen.</translation>
     <message>
         <source>Failed to write block.</source>
         <translation type="unfinished">Blokk írása nem sikerült.</translation>
-    </message>
-    <message>
-        <source>Failed to write to block index database.</source>
-        <translation type="unfinished">A blokk-index adatbázis írása nem sikerült.</translation>
-    </message>
-    <message>
-        <source>Failed to write to coin database.</source>
-        <translation type="unfinished">Az érme-adatbázis írása nem sikerült.</translation>
     </message>
     <message>
         <source>Failed to write undo data.</source>
@@ -4726,12 +4692,12 @@ A tárca biztonsági mentésének visszaállítása sikertelen.</translation>
         <translation type="unfinished">Érvénytelen P2P jog: '%s'</translation>
     </message>
     <message>
-        <source>Invalid amount for %s=&lt;amount&gt;: '%s' (must be at least %s)</source>
-        <translation type="unfinished">Érvénytelen összeg: %s=&lt;amount&gt;: '%s' (legalább ennyinek kell lennie: %s)</translation>
-    </message>
-    <message>
         <source>Invalid amount for %s=&lt;amount&gt;: '%s'</source>
         <translation type="unfinished">Érvénytelen összeg, %s=&lt;amount&gt;: '%s'</translation>
+    </message>
+    <message>
+        <source>Creating wallet…</source>
+        <translation type="unfinished">Tárca létrehozása...</translation>
     </message>
     <message>
         <source>Invalid amount for -%s=&lt;amount&gt;: '%s'</source>
@@ -4928,10 +4894,6 @@ A tárca biztonsági mentésének visszaállítása sikertelen.</translation>
     <message>
         <source>This is the minimum transaction fee you pay on every transaction.</source>
         <translation type="unfinished">Ez a minimum tranzakciós díj, amelyet tranzakciónként kifizet.</translation>
-    </message>
-    <message>
-        <source>This is the transaction fee you will pay if you send a transaction.</source>
-        <translation type="unfinished">Ez a tranzakció díja, amelyet kifizet, ha tranzakciót indít.</translation>
     </message>
     <message>
         <source>Transaction %s does not belong to this wallet</source>

@@ -537,6 +537,11 @@ Jika dompet ini mengandungi sebarang skrip yang boleh diselesaikan tetapi tidak 
         <source>Migrate Wallet</source>
         <translation type="unfinished">Pindah Dompet</translation>
     </message>
+    <message>
+        <source>Restore Wallet</source>
+        <extracomment>Title of progress window which is displayed when wallets are being restored.</extracomment>
+        <translation type="unfinished">Pulih Dompet</translation>
+    </message>
     </context>
 <context>
     <name>OpenWalletActivity</name>
@@ -616,6 +621,21 @@ Jika dompet ini mengandungi sebarang skrip yang boleh diselesaikan tetapi tidak 
     <message>
         <source>Error</source>
         <translation type="unfinished">Ralat</translation>
+    </message>
+    </context>
+<context>
+    <name>PSBTOperationsDialog</name>
+    <message numerus="yes">
+        <source>Signed %n input(s), but more signatures are still required.</source>
+        <translation type="unfinished">
+            <numerusform />
+        </translation>
+    </message>
+    <message numerus="yes">
+        <source>Transaction has %n unsigned input(s).</source>
+        <translation type="unfinished">
+            <numerusform />
+        </translation>
     </message>
     </context>
 <context>

@@ -92,9 +92,11 @@
         <file alias="uz@Latn">locale/bitcoin_uz@Latn.qm</file>
         <file alias="ve">locale/bitcoin_ve.qm</file>
         <file alias="yi">locale/bitcoin_yi.qm</file>
+        <file alias="yo">locale/bitcoin_yo.qm</file>
         <file alias="yue">locale/bitcoin_yue.qm</file>
         <file alias="zh-Hans">locale/bitcoin_zh-Hans.qm</file>
         <file alias="zh-Hant">locale/bitcoin_zh-Hant.qm</file>
+        <file alias="zh">locale/bitcoin_zh.qm</file>
         <file alias="zh_CN">locale/bitcoin_zh_CN.qm</file>
         <file alias="zh_HK">locale/bitcoin_zh_HK.qm</file>
         <file alias="zh_TW">locale/bitcoin_zh_TW.qm</file>

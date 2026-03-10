@@ -965,6 +965,14 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     </message>
 </context>
 <context>
+    <name>MigrateWalletActivity</name>
+    <message>
+        <source>Restore Wallet</source>
+        <extracomment>Title of progress window which is displayed when wallets are being restored.</extracomment>
+        <translation type="unfinished">საფულის აღდგენა</translation>
+    </message>
+    </context>
+<context>
     <name>OpenWalletActivity</name>
     <message>
         <source>Open wallet failed</source>
@@ -1492,9 +1500,12 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <source>Could not sign any more inputs.</source>
         <translation type="unfinished">მეტი შენატანის ხელმოწერა ვერ მოხერხდა.</translation>
     </message>
-    <message>
-        <source>Signed %1 inputs, but more signatures are still required.</source>
-        <translation type="unfinished">ხელმოწერილია %1 შენატანი, მაგრამ მაინც საჭიროა უფრო მეტი ხელმოწერები.</translation>
+    <message numerus="yes">
+        <source>Signed %n input(s), but more signatures are still required.</source>
+        <translation type="unfinished">
+            <numerusform />
+            <numerusform />
+        </translation>
     </message>
     <message>
         <source>Unknown error processing transaction.</source>
@@ -1541,9 +1552,12 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <source>or</source>
         <translation type="unfinished">ან</translation>
     </message>
-    <message>
-        <source>Transaction has %1 unsigned inputs.</source>
-        <translation type="unfinished">ტრანზაქციას აქვს %1 ხელმოუწერელი შენატანი.</translation>
+    <message numerus="yes">
+        <source>Transaction has %n unsigned input(s).</source>
+        <translation type="unfinished">
+            <numerusform />
+            <numerusform />
+        </translation>
     </message>
     <message>
         <source>Transaction is missing some information about inputs.</source>
@@ -2213,10 +2227,6 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <translation type="unfinished">თანხა აღემატება თქვენს ბალანსს</translation>
     </message>
     <message>
-        <source>The total exceeds your balance when the %1 transaction fee is included.</source>
-        <translation type="unfinished">საკომისიო %1-ის დამატების შემდეგ თანხა აჭარბებს თქვენს ბალანსს</translation>
-    </message>
-    <message>
         <source>Transaction creation failed!</source>
         <translation type="unfinished">შეცდომა ტრანსაქციის შექმნისას!</translation>
     </message>
@@ -2852,10 +2862,6 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <translation type="unfinished">ეს არის წინასწარი სატესტო ვერსია - გამოიყენეთ საკუთარი რისკით - არ გამოიყენოთ მოპოვებისა ან კომერციული მიზნებისათვის</translation>
     </message>
     <message>
-        <source>Warning: We do not appear to fully agree with our peers! You may need to upgrade, or other nodes may need to upgrade.</source>
-        <translation type="unfinished">ყურადღება: ჩვენ არ ვეთანხმებით ყველა პირს. შესაძლოა თქვენ ან სხვა კვანძებს განახლება გჭირდებათ.</translation>
-    </message>
-    <message>
         <source>%s is set very high!</source>
         <translation type="unfinished">%s დაყენებულია ძალიან მაღალზე!</translation>
     </message>
@@ -2878,10 +2884,6 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     <message>
         <source>Done loading</source>
         <translation type="unfinished">ჩატვირთვა დასრულებულია</translation>
-    </message>
-    <message>
-        <source>Error creating %s</source>
-        <translation type="unfinished">შეცდომა%s-ის შექმნისას</translation>
     </message>
     <message>
         <source>Error initializing block database</source>

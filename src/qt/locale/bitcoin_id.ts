@@ -68,10 +68,6 @@
         <translation type="unfinished">Terjadi sebuah kesalahan saat mencoba menyimpan daftar alamat ke %1. Silakan coba lagi.</translation>
     </message>
     <message>
-        <source>Sending addresses - %1</source>
-        <translation type="unfinished">Alamat pengirim - %1</translation>
-    </message>
-    <message>
         <source>Receiving addresses - %1</source>
         <translation type="unfinished">Penerima alamat - %1</translation>
     </message>
@@ -626,10 +622,6 @@
 <context>
     <name>CoinControlDialog</name>
     <message>
-        <source>After Fee:</source>
-        <translation type="unfinished">Dengan Biaya:</translation>
-    </message>
-    <message>
         <source>Change:</source>
         <translation type="unfinished">Kembalian:</translation>
     </message>
@@ -654,10 +646,6 @@
         <translation type="unfinished">Diterima dengan alamat</translation>
     </message>
     <message>
-        <source>Date</source>
-        <translation type="unfinished">Tanggal</translation>
-    </message>
-    <message>
         <source>Confirmations</source>
         <translation type="unfinished">Konfirmasi</translation>
     </message>
@@ -670,40 +658,8 @@
         <translation type="unfinished">Salin Jumlah</translation>
     </message>
     <message>
-        <source>&amp;Copy address</source>
-        <translation type="unfinished">&amp;Salin alamat</translation>
-    </message>
-    <message>
-        <source>Copy &amp;label</source>
-        <translation type="unfinished">Salin &amp;label</translation>
-    </message>
-    <message>
-        <source>Copy &amp;amount</source>
-        <translation type="unfinished">Salin &amp;jumlah</translation>
-    </message>
-    <message>
-        <source>Copy transaction &amp;ID and output index</source>
-        <translation type="unfinished">Copy &amp;ID transaksi dan index keluaran</translation>
-    </message>
-    <message>
-        <source>L&amp;ock unspent</source>
-        <translation type="unfinished">K&amp;unci yang belum digunakan</translation>
-    </message>
-    <message>
-        <source>&amp;Unlock unspent</source>
-        <translation type="unfinished">&amp;Buka kunci yang belum digunakan</translation>
-    </message>
-    <message>
-        <source>Copy quantity</source>
-        <translation type="unfinished">Salin Kuantitas</translation>
-    </message>
-    <message>
         <source>Copy fee</source>
         <translation type="unfinished">Salin biaya</translation>
-    </message>
-    <message>
-        <source>Copy after fee</source>
-        <translation type="unfinished">Salin Setelah Upah</translation>
     </message>
     <message>
         <source>Copy bytes</source>
@@ -779,6 +735,16 @@ Proses migrasi akan mencadangkan dompet sebelum melakukan pemindahan. Fail cadan
     <message>
         <source>Solvable but not watched scripts have been migrated to a new wallet named '%1'.</source>
         <translation type="unfinished">Skrip hanya lihat telah diimigrasikan ke dompet baru yang bernama '%1'.</translation>
+    </message>
+    <message>
+        <source>Restore Wallet</source>
+        <extracomment>Title of progress window which is displayed when wallets are being restored.</extracomment>
+        <translation type="unfinished">Pulihkan Dompet</translation>
+    </message>
+    <message>
+        <source>Restoring Wallet &lt;b&gt;%1&lt;/b&gt;…</source>
+        <extracomment>Descriptive text of the restore wallets progress window which indicates to the user that wallets are currently being restored.</extracomment>
+        <translation type="unfinished">Memulihkan Dompet &lt;b&gt;%1&lt;/b&gt;…</translation>
     </message>
     <message>
         <source>Migration failed</source>
@@ -893,10 +859,6 @@ Proses migrasi akan mencadangkan dompet sebelum melakukan pemindahan. Fail cadan
     <message>
         <source>Disable Private Keys</source>
         <translation type="unfinished">Nonaktifkan private keys</translation>
-    </message>
-    <message>
-        <source>Make a blank wallet. Blank wallets do not initially have private keys or scripts. Private keys and addresses can be imported, or an HD seed can be set, at a later time.</source>
-        <translation type="unfinished">Buat dompet kosong. Dompet kosong pada awalnya tidak memiliki private keys atau skrip pribadi. Private keys dan alamat pribadi dapat diimpor, atau seed HD dapat diatur di kemudian hari.</translation>
     </message>
     <message>
         <source>Make Blank Wallet</source>
@@ -1336,89 +1298,28 @@ Proses migrasi akan mencadangkan dompet sebelum melakukan pemindahan. Fail cadan
         <source>Form</source>
         <translation type="unfinished">Formulir</translation>
     </message>
-    <message>
-        <source>Privacy mode activated for the Overview tab. To unmask the values, uncheck Settings-&gt;Mask values.</source>
-        <translation type="unfinished">Mode privasi diaktivasi untuk tab Overview. Untuk mengunmask nilai-nilai, hapus centang yang ada di Settings&gt;Mask values.</translation>
-    </message>
-</context>
+    </context>
 <context>
     <name>PSBTOperationsDialog</name>
     <message>
         <source>PSBT Operations</source>
         <translation type="unfinished">Operasi PBST</translation>
     </message>
-    <message>
-        <source>Sign Tx</source>
-        <translation type="unfinished">Tanda tangan Tx</translation>
-    </message>
-    <message>
-        <source>Copy to Clipboard</source>
-        <translation type="unfinished">Copy ke Clipboard</translation>
-    </message>
-    <message>
-        <source>Save…</source>
-        <translation type="unfinished">Simpan...</translation>
-    </message>
-    <message>
-        <source>Close</source>
-        <translation type="unfinished">Tutup</translation>
-    </message>
-    <message>
-        <source>Failed to load transaction: %1</source>
-        <translation type="unfinished">Gagal untuk memuat transaksi: %1</translation>
-    </message>
-    <message>
-        <source>Failed to sign transaction: %1</source>
-        <translation type="unfinished">Gagal untuk menandatangani transaksi: %1</translation>
-    </message>
-    <message>
-        <source>Cannot sign inputs while wallet is locked.</source>
-        <translation type="unfinished">Tidak dapat menandatangani input saat dompet terkunci.</translation>
-    </message>
-    <message>
-        <source>Could not sign any more inputs.</source>
-        <translation type="unfinished">Tidak bisa menandatangani lagi input apapun.</translation>
-    </message>
-    <message>
-        <source>Signed %1 inputs, but more signatures are still required.</source>
-        <translation type="unfinished">Menandatangankan %1 input, tetapi tanda tangan lebih banyak masih dibutuhkan.</translation>
-    </message>
-    <message>
-        <source>Signed transaction successfully. Transaction is ready to broadcast.</source>
-        <translation type="unfinished">Berhasil menandatangani transaksi. Transaksi sudah siap untuk di broadcast</translation>
-    </message>
-    <message>
-        <source>Unknown error processing transaction.</source>
-        <translation type="unfinished">Kesalahan yang tidak diketahui ketika memproses transaksi </translation>
-    </message>
-    <message>
-        <source>Transaction broadcast successfully! Transaction ID: %1</source>
-        <translation type="unfinished">Transaksi berhasil di broadcast! ID Transaksi: %1</translation>
-    </message>
-    <message>
-        <source>Transaction broadcast failed: %1</source>
-        <translation type="unfinished">Broadcast transaksi gagal: %1</translation>
-    </message>
-    <message>
-        <source>PSBT copied to clipboard.</source>
-        <translation type="unfinished">PSBT disalin ke clipboard</translation>
-    </message>
-    <message>
-        <source>Save Transaction Data</source>
-        <translation type="unfinished">Simpan data Transaksi</translation>
-    </message>
-    <message>
-        <source>Partially Signed Transaction (Binary)</source>
-        <extracomment>Expanded name of the binary PSBT file format. See: BIP 174.</extracomment>
-        <translation type="unfinished">Transaksi yang Ditandatangani Sebagian (Biner)</translation>
-    </message>
-    <message>
-        <source>PSBT saved to disk.</source>
-        <translation type="unfinished">PSBT disimpan ke disk.</translation>
+    <message numerus="yes">
+        <source>Signed %n input(s), but more signatures are still required.</source>
+        <translation type="unfinished">
+            <numerusform />
+        </translation>
     </message>
     <message>
         <source>Sends %1 to %2</source>
         <translation type="unfinished">Mengirim %1 ke %2</translation>
+    </message>
+    <message numerus="yes">
+        <source>Transaction has %n unsigned input(s).</source>
+        <translation type="unfinished">
+            <numerusform />
+        </translation>
     </message>
     </context>
 <context>
@@ -1427,6 +1328,16 @@ Proses migrasi akan mencadangkan dompet sebelum melakukan pemindahan. Fail cadan
         <source>Age</source>
         <extracomment>Title of Peers Table column which indicates the duration (length of time) since the peer connection started.</extracomment>
         <translation type="unfinished">Umur</translation>
+    </message>
+    <message>
+        <source>Received</source>
+        <extracomment>Title of Peers Table column which indicates the total amount of network information we have received from the peer.</extracomment>
+        <translation type="unfinished">Diterima</translation>
+    </message>
+    <message>
+        <source>Address</source>
+        <extracomment>Title of Peers Table column which contains the IP/Onion/I2P address of the connected peer.</extracomment>
+        <translation type="unfinished">Alamat</translation>
     </message>
     </context>
 <context>
@@ -1508,6 +1419,14 @@ Proses migrasi akan mencadangkan dompet sebelum melakukan pemindahan. Fail cadan
 <context>
     <name>ReceiveCoinsDialog</name>
     <message>
+        <source>Copy &amp;label</source>
+        <translation type="unfinished">Salin &amp;label</translation>
+    </message>
+    <message>
+        <source>Copy &amp;amount</source>
+        <translation type="unfinished">Salin &amp;jumlah</translation>
+    </message>
+    <message>
         <source>Not recommended due to higher fees and less protection against typos.</source>
         <translation type="unfinished">Tidak direkomendasikan karena tingginya biaya dan kurang perlindungan terhadap salah ketik.</translation>
     </message>
@@ -1531,6 +1450,10 @@ Proses migrasi akan mencadangkan dompet sebelum melakukan pemindahan. Fail cadan
 <context>
     <name>RecentRequestsTableModel</name>
     <message>
+        <source>Date</source>
+        <translation type="unfinished">Tanggal</translation>
+    </message>
+    <message>
         <source>(no label)</source>
         <translation type="unfinished">(tidak ada label)</translation>
     </message>
@@ -1546,8 +1469,29 @@ Proses migrasi akan mencadangkan dompet sebelum melakukan pemindahan. Fail cadan
         <translation type="unfinished">Sembunyikan</translation>
     </message>
     <message>
+        <source>Copy amount</source>
+        <translation type="unfinished">Salin Jumlah</translation>
+    </message>
+    <message>
+        <source>Copy fee</source>
+        <translation type="unfinished">Salin biaya</translation>
+    </message>
+    <message>
+        <source>Copy bytes</source>
+        <translation type="unfinished">Salin bytes</translation>
+    </message>
+    <message>
         <source>Copy change</source>
         <translation type="unfinished">Salin Perubahan</translation>
+    </message>
+    <message>
+        <source>Save Transaction Data</source>
+        <translation type="unfinished">Simpan data Transaksi</translation>
+    </message>
+    <message>
+        <source>Partially Signed Transaction (Binary)</source>
+        <extracomment>Expanded name of the binary PSBT file format. See: BIP 174.</extracomment>
+        <translation type="unfinished">Transaksi yang Ditandatangani Sebagian (Biner)</translation>
     </message>
     <message>
         <source>%1 from wallet '%2'</source>
@@ -1611,10 +1555,6 @@ Proses migrasi akan mencadangkan dompet sebelum melakukan pemindahan. Fail cadan
         <source>%1 (Certificate was not verified)</source>
         <translation type="unfinished">%1 (Sertifikat tidak terverifikasi)</translation>
     </message>
-    <message>
-        <source>Amount</source>
-        <translation type="unfinished">Jumlah</translation>
-    </message>
     </context>
 <context>
     <name>TransactionTableModel</name>
@@ -1629,10 +1569,6 @@ Proses migrasi akan mencadangkan dompet sebelum melakukan pemindahan. Fail cadan
         <source>Comma separated file</source>
         <extracomment>Expanded name of the CSV file format. See: https://en.wikipedia.org/wiki/Comma-separated_values.</extracomment>
         <translation type="unfinished">File yang dipisahkan koma</translation>
-    </message>
-    <message>
-        <source>Confirmed</source>
-        <translation type="unfinished">Terkonfirmasi</translation>
     </message>
     <message>
         <source>Address</source>
@@ -1671,6 +1607,10 @@ Proses migrasi akan mencadangkan dompet sebelum melakukan pemindahan. Fail cadan
     </context>
 <context>
     <name>bitcoin-core</name>
+    <message>
+        <source>%s failed to validate the -assumeutxo snapshot state. This indicates a hardware problem, or a bug in the software, or a bad software modification that allowed an invalid snapshot to be loaded. As a result of this, the node will shut down and stop using any state that was built on the snapshot, resetting the chain height from %d to %d. On the next restart, the node will resume syncing from %d without using any snapshot data. Please report this incident to %s, including how you obtained the snapshot. The invalid snapshot chainstate will be left on disk in case it is helpful in diagnosing the issue that caused this error.</source>
+        <translation type="unfinished">%s gagal memvalidasi status snapshot -assumeutxo. Ini mengindikasikan masalah perangkat keras, atau bug pada perangkat lunak, atau modifikasi perangkat lunak yang buruk yang memungkinkan snapshot yang tidak valid dimuat. Sebagai akibatnya, node akan dimatikan dan berhenti menggunakan status apa pun yang dibangun di atas snapshot, mengatur ulang tinggi rantai dari %d ke %d. Pada restart berikutnya, node akan melanjutkan sinkronisasi dari %d tanpa menggunakan data snapshot apa pun. Silakan laporkan kejadian ini ke %s, termasuk bagaimana Anda mendapatkan snapshot tersebut. Chainstate snapshot yang tidak valid akan dibiarkan di disk jika hal itu membantu dalam mendiagnosis masalah yang menyebabkan kesalahan ini.</translation>
+    </message>
     <message>
         <source>%s request to listen on port %u. This port is considered "bad" and thus it is unlikely that any peer will connect to it. See doc/p2p-bad-ports.md for details and a full list.</source>
         <translation type="unfinished">%s meminta mendengarkan di port %u. Port ini dianggap "buruk" dan oleh karena itu tidak mungkin peer lain akan terhubung kesini. Lihat doc/p2p-bad-ports.md untuk detail dan daftar lengkap.</translation>
@@ -1900,10 +1840,6 @@ Tidak dapat memulihkan cadangan dompet..</translation>
     <message>
         <source>Insufficient dbcache for block verification</source>
         <translation type="unfinished">Kekurangan dbcache untuk verifikasi blok</translation>
-    </message>
-    <message>
-        <source>Invalid amount for %s=&lt;amount&gt;: '%s' (must be at least %s)</source>
-        <translation type="unfinished">Jumlah yang tidak valid untuk %s=&lt;amount&gt;: '%s' (harus minimal %s)</translation>
     </message>
     <message>
         <source>Invalid amount for %s=&lt;amount&gt;: '%s'</source>

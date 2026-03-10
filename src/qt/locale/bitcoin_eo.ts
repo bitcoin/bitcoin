@@ -30,6 +30,10 @@
         <translation type="unfinished">Tajpu adreson aŭ etikedon por serĉi</translation>
     </message>
     <message>
+        <source>Copy the currently selected address to the clipboard</source>
+        <translation type="unfinished">Kopii la nune elektita adreso al la tondujo</translation>
+    </message>
+    <message>
         <source>Export the data in the current tab to a file</source>
         <translation type="unfinished">Eksporti la datumojn el la aktuala langeto al dosiero</translation>
     </message>
@@ -482,6 +486,14 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <translation type="unfinished">Monujo-Nomo</translation>
     </message>
     <message>
+        <source>Invalid Wallet Name</source>
+        <translation type="unfinished">Nevalida monuja nomo</translation>
+    </message>
+    <message>
+        <source>Wallet name cannot be empty</source>
+        <translation type="unfinished">La monuja nomo ne povas esti malplena</translation>
+    </message>
+    <message>
         <source>&amp;Window</source>
         <translation type="unfinished">&amp;Fenestro</translation>
     </message>
@@ -902,6 +914,10 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <translation type="unfinished">Formularo</translation>
     </message>
     <message>
+        <source>Number of blocks left</source>
+        <translation type="unfinished">Nombro de restantaj blokoj</translation>
+    </message>
+    <message>
         <source>Last block time</source>
         <translation type="unfinished">Horo de la lasta bloko</translation>
     </message>
@@ -935,7 +951,7 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     <message>
         <source>Paste address from clipboard</source>
         <extracomment>Tooltip text for button that allows you to paste an address that is in your clipboard.</extracomment>
-        <translation type="unfinished">Alglui adreson de tondejo</translation>
+        <translation type="unfinished">Alglui adreson de tondujo</translation>
     </message>
 </context>
 <context>
@@ -1119,6 +1135,13 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <source>Close</source>
         <translation type="unfinished">Fermi</translation>
     </message>
+    <message numerus="yes">
+        <source>Signed %n input(s), but more signatures are still required.</source>
+        <translation type="unfinished">
+            <numerusform />
+            <numerusform />
+        </translation>
+    </message>
     <message>
         <source>own address</source>
         <translation type="unfinished">propra adreso</translation>
@@ -1130,6 +1153,13 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     <message>
         <source>or</source>
         <translation type="unfinished">aŭ</translation>
+    </message>
+    <message numerus="yes">
+        <source>Transaction has %n unsigned input(s).</source>
+        <translation type="unfinished">
+            <numerusform />
+            <numerusform />
+        </translation>
     </message>
     </context>
 <context>
@@ -1564,10 +1594,6 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     <message>
         <source>The amount exceeds your balance.</source>
         <translation type="unfinished">La sumo estas pli granda ol via saldo.</translation>
-    </message>
-    <message>
-        <source>The total exceeds your balance when the %1 transaction fee is included.</source>
-        <translation type="unfinished">La sumo kun la %1 krompago estas pli granda ol via saldo.</translation>
     </message>
     <message>
         <source>Transaction creation failed!</source>
@@ -2062,10 +2088,6 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     <message>
         <source>This is a pre-release test build - use at your own risk - do not use for mining or merchant applications</source>
         <translation type="unfinished">Tiu ĉi estas antaŭeldona testa versio - uzu laŭ via propra risko - ne uzu por minado aŭ por aplikaĵoj por vendistoj</translation>
-    </message>
-    <message>
-        <source>Warning: We do not appear to fully agree with our peers! You may need to upgrade, or other nodes may need to upgrade.</source>
-        <translation type="unfinished">Averto: ŝajne ni ne tute konsentas kun niaj samtavolanoj! Eble vi devas ĝisdatigi vian klienton, aŭ eble aliaj nodoj faru same.</translation>
     </message>
     <message>
         <source>default wallet</source>
