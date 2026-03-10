@@ -709,10 +709,14 @@ public:
  *     feerate diagram increases by at least gain/2), while self-merges do not change it.
  *
  * - How to decide the exact output linearization:
- *   - When there are multiple equal-feerate chunks with no dependencies between them, output a
- *     uniformly random one among the ones with no missing dependent chunks first.
- *   - Within chunks, repeatedly pick a uniformly random transaction among those with no missing
- *     dependencies.
+ *   - When there are multiple equal-feerate chunks with no dependencies between them, pick the
+ *     smallest one first. If there are multiple smallest ones, pick the one that contains the
+ *     last transaction (according to the provided fallback order) last (note that this is not the
+ *     same as picking the chunk with the first transaction first).
+ *   - Within chunks, pick among all transactions without missing dependencies the one with the
+ *     highest individual feerate. If there are multiple ones with the same individual feerate,
+ *     pick the smallest first. If there are multiple with the same fee and size, pick the one
+ *     that sorts first according to the fallback order first.
  */
 template<typename SetType, typename CostModel = SFLDefaultCostModel>
 class SpanningForestState
