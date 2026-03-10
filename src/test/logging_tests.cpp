@@ -110,7 +110,7 @@ BOOST_AUTO_TEST_CASE(logging_timer)
     BOOST_CHECK_EQUAL(micro_timer.LogMsg("msg").substr(0, result_prefix.size()), result_prefix);
 }
 
-BOOST_FIXTURE_TEST_CASE(logging_LogPrintStr, LogSetup)
+BOOST_FIXTURE_TEST_CASE(logging_LogPrint, LogSetup)
 {
     LogInstance().m_log_sourcelocations = true;
 
@@ -134,7 +134,7 @@ BOOST_FIXTURE_TEST_CASE(logging_LogPrintStr, LogSetup)
     std::vector<std::string> expected;
     for (auto& [msg, category, level, prefix, loc] : cases) {
         expected.push_back(tfm::format("[%s:%s] [%s] %s%s", util::RemovePrefix(loc.file_name(), "./"), loc.line(), loc.function_name_short(), prefix, msg));
-        LogInstance().LogPrintStr(msg, std::move(loc), category, level, /*should_ratelimit=*/false);
+        LogInstance().LogPrint({.category = category, .level = level, .should_ratelimit = false, .source_loc = std::move(loc), .message = msg});
     }
     std::vector<std::string> log_lines{ReadDebugLogLines()};
     BOOST_CHECK_EQUAL_COLLECTIONS(log_lines.begin(), log_lines.end(), expected.begin(), expected.end());
