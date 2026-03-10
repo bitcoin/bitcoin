@@ -193,9 +193,7 @@ def address_to_scriptpubkey(address):
         return keyhash_to_p2pkh_script(payload)
     elif version == 196:  # testnet script hash
         return scripthash_to_p2sh_script(payload)
-    # TODO: also support other address formats
-    else:
-        assert False
+    raise ValueError(f"Unsupported address type: {address}")
 
 
 class TestFrameworkScript(unittest.TestCase):
