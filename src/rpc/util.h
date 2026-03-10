@@ -523,6 +523,9 @@ public:
     bool IsValidNumArgs(size_t num_args) const;
     //! Return list of arguments and whether they are named-only.
     std::vector<std::pair<std::string, bool>> GetArgNames() const;
+    const std::string& GetDescription() const { return m_description; }
+    const std::vector<RPCArg>& GetArgs() const { return m_args; }
+    const RPCResults& GetResults() const { return m_results; }
 
     const std::string m_name;
 
