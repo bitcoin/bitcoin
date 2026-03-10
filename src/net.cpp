@@ -115,6 +115,7 @@ static const uint64_t RANDOMIZER_ID_NETWORKKEY = 0x0e8a2b136c592a7dULL; // SHA25
 // Global state variables
 //
 bool fDiscover = true;
+bool fDiscoverSoftDisabled = false;
 bool fListen = true;
 GlobalMutex g_maplocalhost_mutex;
 std::map<CNetAddr, LocalServiceInfo> mapLocalHost GUARDED_BY(g_maplocalhost_mutex);
@@ -282,7 +283,7 @@ bool AddLocal(const CService& addr_, int nScore)
     if (!addr.IsRoutable())
         return false;
 
-    if (!fDiscover && nScore < LOCAL_MANUAL)
+    if (!fDiscover && nScore < LOCAL_MANUAL && !(fDiscoverSoftDisabled && addr.IsCJDNS()))
         return false;
 
     if (!g_reachable_nets.Contains(addr))
@@ -3416,10 +3417,15 @@ bool CConnman::BindListenPort(const CService& addrBind, bilingual_str& strError,
 
 void Discover()
 {
-    if (!fDiscover)
-        return;
+    // When -externalip soft-disabled -discover, still discover CJDNS addresses.
+    const bool cjdns_only = !fDiscover;
+    if (cjdns_only && !(fDiscoverSoftDisabled && g_reachable_nets.Contains(NET_CJDNS))) return;
 
     for (const CNetAddr &addr: GetLocalAddresses()) {
+        // Use HasCJDNSPrefix() rather than IsCJDNS() because addr has not
+        // yet been through MaybeFlipIPv6toCJDNS() (that happens in AddLocal).
+        if (cjdns_only && !addr.HasCJDNSPrefix())
+            continue;
         if (AddLocal(addr, LOCAL_IF) && fLogIPs) {
             LogInfo("%s: %s\n", __func__, addr.ToStringAddr());
         }
@@ -3490,7 +3496,7 @@ bool CConnman::Bind(const CService& addr_, unsigned int flags, NetPermissionFlag
         return false;
     }
 
-    if (addr.IsRoutable() && fDiscover && !(flags & BF_DONT_ADVERTISE) && !NetPermissions::HasFlag(permissions, NetPermissionFlags::NoBan)) {
+    if (addr.IsRoutable() && (fDiscover || (fDiscoverSoftDisabled && addr.IsCJDNS())) && !(flags & BF_DONT_ADVERTISE) && !NetPermissions::HasFlag(permissions, NetPermissionFlags::NoBan)) {
         AddLocal(addr, LOCAL_BIND);
     }
 
