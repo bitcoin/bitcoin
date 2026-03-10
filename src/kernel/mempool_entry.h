@@ -13,8 +13,8 @@
 #include <primitives/transaction.h>
 #include <txgraph.h>
 #include <util/overflow.h>
+#include <util/time.h>
 
-#include <chrono>
 #include <cstddef>
 #include <cstdint>
 #include <functional>
