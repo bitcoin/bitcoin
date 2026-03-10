@@ -92,6 +92,11 @@ class MerkleBlockTest(BitcoinTestFramework):
         assert txid1 in self.nodes[0].verifytxoutproof(proof)
         assert txid2 in self.nodes[1].verifytxoutproof(proof)
 
+        def assert_invalid_proof(invalid_proof):
+            invalid_proof_hex = invalid_proof.serialize().hex()
+            for n in self.nodes:
+                assert not n.verifytxoutproof(invalid_proof_hex)
+
         tweaked_proof = from_hex(CMerkleBlock(), proof)
 
         # Make sure that our serialization/deserialization is working
@@ -103,8 +108,12 @@ class MerkleBlockTest(BitcoinTestFramework):
         tweaked_proof.txn.vHash = [tweaked_proof.header.hashMerkleRoot]
         tweaked_proof.txn.vBits = [True] + [False]*7
 
-        for n in self.nodes:
-            assert not n.verifytxoutproof(tweaked_proof.serialize().hex())
+        assert_invalid_proof(tweaked_proof)
+
+        # Remove the traversal bits entirely so the partial merkle tree cannot be decoded.
+        missing_bits_proof = from_hex(CMerkleBlock(), proof)
+        missing_bits_proof.txn.vBits = []
+        assert_invalid_proof(missing_bits_proof)
 
         # TODO: try more variants, eg transactions at different depths, and
         # verify that the proofs are invalid
