@@ -499,7 +499,7 @@ if config.zip is not None:
         print("+ Removing existing .zip +")
         os.unlink(name + ".zip")
 
-    shutil.make_archive('{}'.format(name), format='zip', root_dir='dist', base_dir='Bitcoin-Qt.app')
+    subprocess.check_call(["zip", "-ry", os.path.abspath(name + ".zip"), 'Bitcoin-Qt.app'], cwd='dist')
 
 # ------------------------------------------------
 
