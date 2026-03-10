@@ -90,6 +90,8 @@ EXTENDED_SCRIPTS = [
     'feature_pruning.py',
     'feature_dbcrash.py',
     'feature_index_prune.py',
+    # Requires Docker to create a bindable fc00::/8 address.
+    'feature_cjdns_externalip.py',
 ]
 
 # Special script to run each bench sanity check
