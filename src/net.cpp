@@ -281,7 +281,7 @@ bool AddLocal(const CService& addr_, int nScore)
     if (!addr.IsRoutable())
         return false;
 
-    if (!fDiscover && nScore < LOCAL_MANUAL)
+    if (!fDiscover && nScore < LOCAL_MANUAL && !addr.IsCJDNS())
         return false;
 
     if (!g_reachable_nets.Contains(addr))
@@ -3345,10 +3345,12 @@ bool CConnman::BindListenPort(const CService& addrBind, bilingual_str& strError,
 
 void Discover()
 {
-    if (!fDiscover)
-        return;
-
+    const bool cjdns_reachable = g_reachable_nets.Contains(NET_CJDNS);
     for (const CNetAddr &addr: GetLocalAddresses()) {
+        // Use HasCJDNSPrefix() rather than IsCJDNS() because addr has not
+        // yet been through MaybeFlipIPv6toCJDNS() (that happens in AddLocal).
+        if (!fDiscover && !(addr.HasCJDNSPrefix() && cjdns_reachable))
+            continue;
         if (AddLocal(addr, LOCAL_IF))
             LogInfo("%s: %s\n", __func__, addr.ToStringAddr());
     }
@@ -3418,7 +3420,7 @@ bool CConnman::Bind(const CService& addr_, unsigned int flags, NetPermissionFlag
         return false;
     }
 
-    if (addr.IsRoutable() && fDiscover && !(flags & BF_DONT_ADVERTISE) && !NetPermissions::HasFlag(permissions, NetPermissionFlags::NoBan)) {
+    if (addr.IsRoutable() && (fDiscover || addr.IsCJDNS()) && !(flags & BF_DONT_ADVERTISE) && !NetPermissions::HasFlag(permissions, NetPermissionFlags::NoBan)) {
         AddLocal(addr, LOCAL_BIND);
     }
 
