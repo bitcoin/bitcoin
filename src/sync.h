@@ -6,10 +6,6 @@
 #ifndef BITCOIN_SYNC_H
 #define BITCOIN_SYNC_H
 
-#ifdef DEBUG_LOCKCONTENTION
-#include <logging/timer.h>
-#endif
-
 #include <threadsafety.h> // IWYU pragma: export
 #include <util/macros.h>
 
@@ -77,6 +73,13 @@ inline void DeleteLock(void* cs) {}
 inline bool LockStackEmpty() { return true; }
 #endif
 
+/*
+ * Called when a mutex fails to lock immediately because it is held by another
+ * thread, or spuriously.
+ */
+#ifdef DEBUG_LOCKCONTENTION
+void LogContention(const char* pszName, const char* pszFile, int nLine);
+#endif
 /**
  * Template mixin that adds -Wthread-safety locking annotations and lock order
  * checking to a subset of the mutex API.
@@ -152,7 +155,7 @@ private:
         EnterCritical(pszName, pszFile, nLine, Base::mutex());
 #ifdef DEBUG_LOCKCONTENTION
         if (Base::try_lock()) return;
-        LOG_TIME_MICROS_WITH_CATEGORY(strprintf("lock contention %s, %s:%d", pszName, pszFile, nLine), BCLog::LOCK);
+        LogContention(pszName, pszFile, nLine);
 #endif
         Base::lock();
     }
