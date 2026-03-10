@@ -8,6 +8,7 @@
 #include <test/util/random.h>
 #include <test/util/common.h>
 #include <test/util/setup_common.h>
+#include <test/util/versionbits.h>
 #include <util/chaintype.h>
 #include <versionbits.h>
 #include <versionbits_impl.h>
@@ -454,9 +455,19 @@ BOOST_FIXTURE_TEST_CASE(versionbits_computeblockversion, BlockVersionTest)
             // not take precedence over STARTED/LOCKED_IN. So all softforks on
             // the same bit might overlap, even when non-overlapping start-end
             // times are picked.
-            const uint32_t dep_mask{uint32_t{1} << chainParams->GetConsensus().vDeployments[dep].bit};
+            const auto& dep_info = chainParams->GetConsensus().vDeployments[dep];
+            const uint32_t dep_mask{uint32_t{1} << dep_info.bit};
             BOOST_CHECK(!(chain_all_vbits & dep_mask));
             chain_all_vbits |= dep_mask;
+            BOOST_CHECK(0 <= dep_info.bit && dep_info.bit < VERSIONBITS_MAX_NUM_BITS);
+            if (chain_type != ChainType::REGTEST) {
+                if (dep == Consensus::DEPLOYMENT_TESTDUMMY) {
+                    BOOST_CHECK_EQUAL(dep_info.nStartTime, Consensus::BIP9Deployment::NEVER_ACTIVE);
+                    BOOST_CHECK_EQUAL(dep_info.nTimeout, Consensus::BIP9Deployment::NO_TIMEOUT);
+                } else {
+                    BOOST_CHECK(dep_info.bit < VERSIONBITS_NUM_BITS);
+                }
+            }
             check_computeblockversion(vbcache, chainParams->GetConsensus(), dep);
         }
     }
