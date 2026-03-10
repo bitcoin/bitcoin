@@ -41,9 +41,9 @@ To overcome this, multiple users can start the download process at the exact
 same time which leads to a high likelihood that their downloaded data will be
 similar enough that they receive the same output at the end of the process.
 This process is regularly coordinated at the [asmap-data](https://github.com/asmap/asmap-data)
-project. If enough participants have joined the effort (5 or more is recommended) and a majority of the
-participants have received the same result, the resulting ASMap file is added
-to the repository for public use. Files will not be merged to the repository
+project. If the result hash that was observed by the most participants is signed
+by 5 participants or more, the resulting ASMap file is added to the repository for
+public use. Files will not be merged to the repository
 without at least two additional reviewers confirming that the process described
 above was followed as expected and that the encoding step yielded the same
 file hash. New files are created on an ongoing basis but without any central planning
