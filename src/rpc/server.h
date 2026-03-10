@@ -107,6 +107,8 @@ public:
     * @returns List of registered commands.
     */
     std::vector<std::string> listCommands() const;
+    /** Return a complete OpenRPC 1.4.1 document for registered commands. */
+    UniValue buildOpenRPCDoc(bool include_hidden = false) const;
 
     /**
      * Return all named arguments that need to be converted by the client from string to another JSON type
