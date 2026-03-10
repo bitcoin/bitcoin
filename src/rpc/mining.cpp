@@ -505,7 +505,8 @@ static RPCHelpMan prioritisetransaction()
                 {
                     {"txid", RPCArg::Type::STR_HEX, RPCArg::Optional::NO, "The transaction id."},
                     {"dummy", RPCArg::Type::NUM, RPCArg::Optional::OMITTED, "API-Compatibility for previous API. Must be zero or null.\n"
-            "                  DEPRECATED. For forward compatibility use named arguments and omit this parameter."},
+            "                  DEPRECATED. For forward compatibility use named arguments and omit this parameter.",
+                        RPCArgOptions{.placeholder = true}},
                     {"fee_delta", RPCArg::Type::NUM, RPCArg::Optional::NO, "The fee value (in satoshis) to add (or subtract, if negative).\n"
             "                  Note, that this value is not a fee rate. It is a value to modify absolute fee of the TX.\n"
             "                  The fee is not actually paid, only the algorithm for selecting transactions into a block\n"
@@ -1055,7 +1056,8 @@ static RPCHelpMan submitblock()
         "See https://en.bitcoin.it/wiki/BIP_0022 for full specification.\n",
         {
             {"hexdata", RPCArg::Type::STR_HEX, RPCArg::Optional::NO, "the hex-encoded block data to submit"},
-            {"dummy", RPCArg::Type::STR, RPCArg::DefaultHint{"ignored"}, "dummy value, for compatibility with BIP22. This value is ignored."},
+            {"dummy", RPCArg::Type::STR, RPCArg::DefaultHint{"ignored"}, "dummy value, for compatibility with BIP22. This value is ignored.",
+                RPCArgOptions{.placeholder = true}},
         },
         {
             RPCResult{"If the block was accepted", RPCResult::Type::NONE, "", ""},

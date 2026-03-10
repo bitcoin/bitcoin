@@ -169,7 +169,8 @@ RPCHelpMan getbalance()
                 "The available balance is what the wallet considers currently spendable, and is\n"
                 "thus affected by options which limit spendability such as -spendzeroconfchange.\n",
                 {
-                    {"dummy", RPCArg::Type::STR, RPCArg::Optional::OMITTED, "Remains for backward compatibility. Must be excluded or set to \"*\"."},
+                    {"dummy", RPCArg::Type::STR, RPCArg::Optional::OMITTED, "Remains for backward compatibility. Must be excluded or set to \"*\".",
+                        RPCArgOptions{.placeholder = true}},
                     {"minconf", RPCArg::Type::NUM, RPCArg::Default{0}, "Only include transactions confirmed at least this many times."},
                     {"include_watchonly", RPCArg::Type::BOOL, RPCArg::Default{false}, "No longer used"},
                     {"avoid_reuse", RPCArg::Type::BOOL, RPCArg::Default{true}, "(only available if avoid_reuse wallet flag is set) Do not include balance in dirty outputs; addresses are considered dirty if they have previously been used in a transaction."},

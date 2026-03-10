@@ -342,13 +342,15 @@ RPCHelpMan sendmany()
                     {"dummy", RPCArg::Type::STR, RPCArg::Default{"\"\""}, "Must be set to \"\" for backwards compatibility.",
                      RPCArgOptions{
                          .oneline_description = "\"\"",
+                         .placeholder = true,
                      }},
                     {"amounts", RPCArg::Type::OBJ_USER_KEYS, RPCArg::Optional::NO, "The addresses and amounts",
                         {
                             {"address", RPCArg::Type::AMOUNT, RPCArg::Optional::NO, "The bitcoin address is the key, the numeric amount (can be string) in " + CURRENCY_UNIT + " is the value"},
                         },
                     },
-                    {"minconf", RPCArg::Type::NUM, RPCArg::Optional::OMITTED, "Ignored dummy value"},
+                    {"minconf", RPCArg::Type::NUM, RPCArg::Optional::OMITTED, "Ignored dummy value",
+                        RPCArgOptions{.placeholder = true}},
                     {"comment", RPCArg::Type::STR, RPCArg::Optional::OMITTED, "A comment"},
                     {"subtractfeefrom", RPCArg::Type::ARR, RPCArg::Optional::OMITTED, "The addresses.\n"
                                        "The fee will be equally deducted from the amount of each selected address.\n"

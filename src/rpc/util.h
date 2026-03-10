@@ -170,6 +170,7 @@ struct RPCArgOptions {
     bool skip_type_check{false};
     std::string oneline_description{};   //!< Should be empty unless it is supposed to override the auto-generated summary line
     std::vector<std::string> type_str{}; //!< Should be empty unless it is supposed to override the auto-generated type strings. Vector length is either 0 or 2, m_opts.type_str.at(0) will override the type of the value in a key-value pair, m_opts.type_str.at(1) will override the type in the argument description.
+    bool placeholder{false};             //!< If set, the argument is retained only for compatibility and should generally be omitted.
     bool hidden{false};                  //!< For testing only
     bool also_positional{false};         //!< If set allows a named-parameter field in an OBJ_NAMED_PARAM options object
                                          //!< to have the same name as a top-level parameter. By default the RPC
