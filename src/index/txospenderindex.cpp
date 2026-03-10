@@ -26,7 +26,6 @@
 #include <cstdio>
 #include <exception>
 #include <ios>
-#include <span>
 #include <string>
 #include <utility>
 #include <vector>
