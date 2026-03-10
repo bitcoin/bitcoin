@@ -344,10 +344,10 @@ void SignTransactionResultToJSON(CMutableTransaction& mtx, bool complete, const 
     }
 }
 
-std::vector<RPCResult> DecodeTxDoc(const std::string& txid_field_doc, bool wallet)
+std::vector<RPCResult> TxDoc(const TxDocOptions& opts)
 {
     return {
-        {RPCResult::Type::STR_HEX, "txid", txid_field_doc},
+        {RPCResult::Type::STR_HEX, "txid", opts.txid_field_doc},
         {RPCResult::Type::STR_HEX, "hash", "The transaction hash (differs from txid for witness transactions)"},
         {RPCResult::Type::NUM, "size", "The serialized transaction size"},
         {RPCResult::Type::NUM, "vsize", "The virtual transaction size (differs from size for witness transactions)"},
@@ -381,7 +381,7 @@ std::vector<RPCResult> DecodeTxDoc(const std::string& txid_field_doc, bool walle
                     {RPCResult::Type::NUM, "n", "index"},
                     {RPCResult::Type::OBJ, "scriptPubKey", "", ScriptPubKeyDoc()},
                 },
-                    wallet ?
+                    opts.wallet ?
                     std::vector<RPCResult>{{RPCResult::Type::BOOL, "ischange", /*optional=*/true, "Output script is change (only present if true)"}} :
                     std::vector<RPCResult>{}
                 )
