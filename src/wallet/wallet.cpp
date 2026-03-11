@@ -2357,15 +2357,6 @@ DBErrors CWallet::PopulateWalletFromDB(bilingual_str& error, std::vector<bilingu
     Assert(m_spk_managers.empty());
     Assert(m_wallet_flags == 0);
     DBErrors nLoadWalletRet = WalletBatch(GetDatabase()).LoadWallet(this);
-    if (nLoadWalletRet == DBErrors::NEED_REWRITE)
-    {
-        if (GetDatabase().Rewrite())
-        {
-            for (const auto& spk_man_pair : m_spk_managers) {
-                spk_man_pair.second->RewriteDB();
-            }
-        }
-    }
 
     if (m_spk_managers.empty()) {
         assert(m_external_spk_managers.empty());
@@ -2393,9 +2384,6 @@ DBErrors CWallet::PopulateWalletFromDB(bilingual_str& error, std::vector<bilingu
         break;
     case DBErrors::EXTERNAL_SIGNER_SUPPORT_REQUIRED:
         error = strprintf(_("Error loading %s: External signer wallet being loaded without external signer support compiled"), wallet_file);
-        break;
-    case DBErrors::NEED_REWRITE:
-        error = strprintf(_("Wallet needed to be rewritten: restart %s to complete"), CLIENT_NAME);
         break;
     case DBErrors::UNKNOWN_DESCRIPTOR:
         error = strprintf(_("Unrecognized descriptor found. Loading wallet %s\n\n"
