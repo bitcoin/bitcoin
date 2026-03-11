@@ -143,15 +143,11 @@ static void ValidateCheckInputsForAllFlags(const CTransaction &tx, script_verify
         // Test the caching
         if (ret && add_to_cache) {
             // Check that we get a cache hit if the tx was valid
-            std::vector<CScriptCheck> scriptchecks;
-            BOOST_CHECK(CheckInputScripts(tx, state, &active_coins_tip, test_flags, CheckInputScriptsFor::Mempool, true, add_to_cache, txdata, validation_cache, &scriptchecks));
-            BOOST_CHECK(scriptchecks.empty());
+            BOOST_CHECK(!GetScriptCacheEntry(tx, test_flags, add_to_cache, validation_cache));
         } else {
             // Check that we get script executions to check, if the transaction
             // was invalid, or we didn't add to cache.
-            std::vector<CScriptCheck> scriptchecks;
-            BOOST_CHECK(CheckInputScripts(tx, state, &active_coins_tip, test_flags, CheckInputScriptsFor::Mempool, true, add_to_cache, txdata, validation_cache, &scriptchecks));
-            BOOST_CHECK_EQUAL(scriptchecks.size(), tx.vin.size());
+            BOOST_CHECK(GetScriptCacheEntry(tx, test_flags, add_to_cache, validation_cache));
         }
     }
 }
@@ -207,12 +203,10 @@ BOOST_FIXTURE_TEST_CASE(checkinputs_test, Dersig100Setup)
 
         BOOST_CHECK(!CheckInputScripts(CTransaction(spend_tx), state, &m_node.chainman->ActiveChainstate().CoinsTip(), SCRIPT_VERIFY_P2SH | SCRIPT_VERIFY_DERSIG, CheckInputScriptsFor::Mempool, true, true, ptd_spend_tx, m_node.chainman->m_validation_cache, nullptr));
 
-        // If we call again asking for scriptchecks (as happens in
-        // ConnectBlock), we should add a script check object for this -- we're
+        // If we call GetScriptCacheEntry instead (as happens in
+        // ConnectBlock), we should get a signal to script check this tx -- we're
         // not caching invalidity (if that changes, delete this test case).
-        std::vector<CScriptCheck> scriptchecks;
-        BOOST_CHECK(CheckInputScripts(CTransaction(spend_tx), state, &m_node.chainman->ActiveChainstate().CoinsTip(), SCRIPT_VERIFY_P2SH | SCRIPT_VERIFY_DERSIG, CheckInputScriptsFor::Mempool, true, true, ptd_spend_tx, m_node.chainman->m_validation_cache, &scriptchecks));
-        BOOST_CHECK_EQUAL(scriptchecks.size(), 1U);
+        BOOST_CHECK(GetScriptCacheEntry(CTransaction(spend_tx), SCRIPT_VERIFY_P2SH | SCRIPT_VERIFY_DERSIG, true, m_node.chainman->m_validation_cache));
 
         // Test that CheckInputScripts returns true iff DERSIG-enforcing flags are
         // not present.  Don't add these checks to the cache, so that we can
@@ -370,12 +364,9 @@ BOOST_FIXTURE_TEST_CASE(checkinputs_test, Dersig100Setup)
         // This transaction is now invalid under segwit, because of the second input.
         BOOST_CHECK(!CheckInputScripts(CTransaction(tx), state, &m_node.chainman->ActiveChainstate().CoinsTip(), SCRIPT_VERIFY_P2SH | SCRIPT_VERIFY_WITNESS, CheckInputScriptsFor::Mempool, true, true, txdata, m_node.chainman->m_validation_cache, nullptr));
 
-        std::vector<CScriptCheck> scriptchecks;
         // Make sure this transaction was not cached (ie because the first
         // input was valid)
-        BOOST_CHECK(CheckInputScripts(CTransaction(tx), state, &m_node.chainman->ActiveChainstate().CoinsTip(), SCRIPT_VERIFY_P2SH | SCRIPT_VERIFY_WITNESS, CheckInputScriptsFor::Mempool, true, true, txdata, m_node.chainman->m_validation_cache, &scriptchecks));
-        // Should get 2 script checks back -- caching is on a whole-transaction basis.
-        BOOST_CHECK_EQUAL(scriptchecks.size(), 2U);
+        BOOST_CHECK(GetScriptCacheEntry(CTransaction(tx), SCRIPT_VERIFY_P2SH | SCRIPT_VERIFY_WITNESS, true, m_node.chainman->m_validation_cache));
     }
 }
 
