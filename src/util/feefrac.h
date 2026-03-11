@@ -7,6 +7,7 @@
 
 #include <span.h>
 #include <util/check.h>
+#include <util/overflow.h>
 
 #include <compare>
 #include <cstdint>
@@ -208,7 +209,7 @@ struct FeeFrac
             if constexpr (RoundDown) {
                 return (uint64_t(fee) * at_size) / uint32_t(size);
             } else {
-                return (uint64_t(fee) * at_size + size - 1U) / uint32_t(size);
+                return CeilDiv(uint64_t(fee) * at_size, uint32_t(size));
             }
         } else {
             // Otherwise, use Mul and Div.

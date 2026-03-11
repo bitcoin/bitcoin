@@ -15,6 +15,7 @@
 #include <utility>
 
 #include <util/check.h>
+#include <util/overflow.h>
 
 /**
  * A memory resource similar to std::pmr::unsynchronized_pool_resource, but
@@ -127,7 +128,7 @@ class PoolResource final
      */
     [[nodiscard]] static constexpr std::size_t NumElemAlignBytes(std::size_t bytes)
     {
-        return (bytes + ELEM_ALIGN_BYTES - 1) / ELEM_ALIGN_BYTES + (bytes == 0);
+        return CeilDiv(bytes, ELEM_ALIGN_BYTES) + (bytes == 0);
     }
 
     /**

@@ -1834,4 +1834,41 @@ BOOST_AUTO_TEST_CASE(mib_string_literal_test)
     BOOST_CHECK_EXCEPTION(operator""_MiB(static_cast<unsigned long long>(max_mib) + 1), std::overflow_error, HasReason("MiB value too large for size_t byte conversion"));
 }
 
+BOOST_AUTO_TEST_CASE(ceil_div_test)
+{
+    // Type combinations used by current CeilDiv callsites.
+    BOOST_CHECK((std::is_same_v<decltype(CeilDiv(uint32_t{0}, 8u)), uint32_t>));
+    BOOST_CHECK((std::is_same_v<decltype(CeilDiv(size_t{0}, 8u)), size_t>));
+    BOOST_CHECK((std::is_same_v<decltype(CeilDiv(unsigned{0}, size_t{1})), size_t>));
+
+    // `common/bloom.cpp` and `cuckoocache.h` patterns.
+    BOOST_CHECK_EQUAL(CeilDiv(uint32_t{3}, 2u), uint32_t{2});
+    BOOST_CHECK_EQUAL(CeilDiv(uint32_t{65}, 64u), uint32_t{2});
+    BOOST_CHECK_EQUAL(CeilDiv(uint32_t{9}, 8u), uint32_t{2});
+
+    // `key_io.cpp`, `rest.cpp`, `merkleblock.cpp`, `strencodings.cpp` patterns.
+    BOOST_CHECK_EQUAL(CeilDiv(size_t{9}, 8u), size_t{2});
+    BOOST_CHECK_EQUAL(CeilDiv(size_t{10}, 3u), size_t{4});
+    BOOST_CHECK_EQUAL(CeilDiv(size_t{11}, 5u), size_t{3});
+    BOOST_CHECK_EQUAL(CeilDiv(size_t{41} * 8, 5u), size_t{66});
+
+    // `flatfile.cpp` mixed unsigned/size_t pattern.
+    BOOST_CHECK_EQUAL(CeilDiv(unsigned{10}, size_t{4}), size_t{3});
+
+    // `util/feefrac.h` fast-path rounding-up pattern.
+    constexpr int64_t fee{12345};
+    constexpr int32_t at_size{67};
+    constexpr int32_t size{10};
+    BOOST_CHECK_EQUAL(CeilDiv(uint64_t(fee) * at_size, uint32_t(size)),
+                      (uint64_t(fee) * at_size + uint32_t(size) - 1) / uint32_t(size));
+
+    // `bitset.h` template parameter pattern.
+    constexpr unsigned bits{129};
+    constexpr size_t digits{std::numeric_limits<size_t>::digits};
+    BOOST_CHECK_EQUAL(CeilDiv(bits, digits), (bits + digits - 1) / digits);
+
+    // `serialize.h` varint scratch-buffer pattern.
+    BOOST_CHECK_EQUAL(CeilDiv(sizeof(uint64_t) * 8, 7u), (sizeof(uint64_t) * 8 + 6) / 7);
+}
+
 BOOST_AUTO_TEST_SUITE_END()
