@@ -40,7 +40,6 @@ void ResetChainman(TestingSetup& setup)
     for (int i = 0; i < 2 * COINBASE_MATURITY; i++) {
         MineBlock(setup.m_node, options);
     }
-    setup.m_node.validation_signals->SyncWithValidationInterfaceQueue();
 }
 } // namespace
 
@@ -84,6 +83,8 @@ FUZZ_TARGET(process_messages, .init = initialize_process_messages)
     connman.SetMsgProc(node.peerman.get());
     connman.SetAddrman(*node.addrman);
 
+    node.validation_signals->RegisterValidationInterface(node.peerman.get());
+
     LOCK(NetEventsInterface::g_msgproc_mutex);
 
     std::vector<CNode*> peers;
@@ -125,6 +126,7 @@ FUZZ_TARGET(process_messages, .init = initialize_process_messages)
         }
     }
     node.validation_signals->SyncWithValidationInterfaceQueue();
+    node.validation_signals->UnregisterValidationInterface(node.peerman.get());
     node.connman->StopNodes();
     if (block_index_size != WITH_LOCK(chainman.GetMutex(), return chainman.BlockIndex().size())) {
         // Reuse the global chainman, but reset it when it is dirty

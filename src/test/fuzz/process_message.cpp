@@ -45,7 +45,6 @@ void ResetChainman(TestingSetup& setup)
         options.include_dummy_extranonce = true;
         MineBlock(setup.m_node, options);
     }
-    setup.m_node.validation_signals->SyncWithValidationInterfaceQueue();
 }
 } // namespace
 
@@ -100,6 +99,9 @@ FUZZ_TARGET(process_message, .init = initialize_process_message)
     if (!LIMIT_TO_MESSAGE_TYPE.empty() && random_message_type != LIMIT_TO_MESSAGE_TYPE) {
         return;
     }
+
+    node.validation_signals->RegisterValidationInterface(node.peerman.get());
+
     CNode& p2p_node = *ConsumeNodeAsUniquePtr(fuzzed_data_provider).release();
 
     connman.AddTestNode(p2p_node);
@@ -125,6 +127,7 @@ FUZZ_TARGET(process_message, .init = initialize_process_message)
         node.peerman->SendMessages(p2p_node);
     }
     node.validation_signals->SyncWithValidationInterfaceQueue();
+    node.validation_signals->UnregisterValidationInterface(node.peerman.get());
     node.connman->StopNodes();
     if (block_index_size != WITH_LOCK(chainman.GetMutex(), return chainman.BlockIndex().size())) {
         // Reuse the global chainman, but reset it when it is dirty
