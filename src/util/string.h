@@ -270,6 +270,7 @@ struct LineReader {
     std::span<const std::byte>::iterator it;
 
     explicit LineReader(std::span<const std::byte> buffer, size_t max_line_length);
+    explicit LineReader(std::string_view str, size_t max_line_length) : LineReader{std::as_bytes(std::span{str}), max_line_length} {}
 
     /**
      * Returns a string from current iterator position up to (but not including) next \n
