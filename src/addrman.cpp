@@ -663,8 +663,8 @@ bool AddrManImpl::Good_(const CService& addr, bool test_before_evict, NodeSecond
         }
         // Output the entry we'd be colliding with, for debugging purposes
         auto colliding_entry = mapInfo.find(vvTried[tried_bucket][tried_bucket_pos]);
-        LogDebug(BCLog::ADDRMAN, "Collision with %s while attempting to move %s to tried table. Collisions=%d\n",
-                 colliding_entry != mapInfo.end() ? colliding_entry->second.ToStringAddrPort() : "",
+        LogDebug(BCLog::ADDRMAN, "Collision with %s while attempting to move %s to tried table. Collisions=%d",
+                 colliding_entry != mapInfo.end() ? colliding_entry->second.ToStringAddrPort() : "<unknown-addr>",
                  addr.ToStringAddrPort(),
                  m_tried_collisions.size());
         return false;

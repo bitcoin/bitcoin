@@ -1969,12 +1969,12 @@ void Chainstate::InvalidChainFound(CBlockIndex* pindexNew)
         m_chainman.RecalculateBestHeader();
     }
 
-    LogInfo("%s: invalid block=%s  height=%d  log2_work=%f  date=%s\n", __func__,
+    LogInfo("%s: invalid block=%s height=%d log2_work=%f date=%s", __func__,
       pindexNew->GetBlockHash().ToString(), pindexNew->nHeight,
       log(pindexNew->nChainWork.getdouble())/log(2.0), FormatISO8601DateTime(pindexNew->GetBlockTime()));
     CBlockIndex *tip = m_chain.Tip();
     assert (tip);
-    LogInfo("%s:  current best=%s  height=%d  log2_work=%f  date=%s\n", __func__,
+    LogInfo("%s: current best=%s height=%d log2_work=%f date=%s", __func__,
       tip->GetBlockHash().ToString(), m_chain.Height(), log(tip->nChainWork.getdouble())/log(2.0),
       FormatISO8601DateTime(tip->GetBlockTime()));
     CheckForkWarningConditions();

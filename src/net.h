@@ -968,20 +968,18 @@ public:
     std::string ConnectionTypeAsString() const { return ::ConnectionTypeAsString(m_conn_type); }
 
     /**
-     * Helper function to optionally log the IP address.
+     * Helper function to log the peer id, optionally including IP address.
      *
-     * @param[in] log_ip whether to include the IP address
-     * @return " peeraddr=..." or ""
+     * @return "peer=..." and optionally ", peeraddr=..."
      */
-    std::string LogIP(bool log_ip) const;
+    std::string LogPeer() const;
 
     /**
      * Helper function to log disconnects.
      *
-     * @param[in] log_ip whether to include the IP address
-     * @return "disconnecting peer=..." and optionally "peeraddr=..."
+     * @return "disconnecting peer=..." and optionally ", peeraddr=..."
      */
-    std::string DisconnectMsg(bool log_ip) const;
+    std::string DisconnectMsg() const;
 
     /** A ping-pong round trip has completed successfully. Update latest and minimum ping times. */
     void PongReceived(std::chrono::microseconds ping_time) {
