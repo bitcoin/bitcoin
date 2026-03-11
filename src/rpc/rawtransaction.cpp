@@ -781,9 +781,8 @@ const RPCResult decodepsbt_inputs{
         {RPCResult::Type::OBJ, "", "",
         {
             {RPCResult::Type::OBJ, "non_witness_utxo", /*optional=*/true, "Decoded network transaction for non-witness UTXOs",
-            {
-                {RPCResult::Type::ELISION, "",""},
-            }},
+                TxDoc({.elision_description="The layout is the same as the output of decoderawtransaction."})
+            },
             {RPCResult::Type::OBJ, "witness_utxo", /*optional=*/true, "Transaction output for witness UTXOs",
             {
                 {RPCResult::Type::NUM, "amount", "The value in " + CURRENCY_UNIT},
@@ -1023,9 +1022,8 @@ static RPCHelpMan decodepsbt()
                     RPCResult::Type::OBJ, "", "",
                     {
                         {RPCResult::Type::OBJ, "tx", "The decoded network-serialized unsigned transaction.",
-                        {
-                            {RPCResult::Type::ELISION, "", "The layout is the same as the output of decoderawtransaction."},
-                        }},
+                            TxDoc({.elision_description="The layout is the same as the output of decoderawtransaction."})
+                        },
                         {RPCResult::Type::ARR, "global_xpubs", "",
                         {
                             {RPCResult::Type::OBJ, "", "",

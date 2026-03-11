@@ -1015,9 +1015,22 @@ void RPCResult::ToSections(Sections& sections, const OuterType outer_type, const
                (this->m_description.empty() ? "" : " " + this->m_description);
     };
 
+    // Ensure at least one elision description exists, if there is any elision
+    const auto elision_has_description{[](const std::vector<RPCResult>& inner) {
+        return std::ranges::none_of(inner, [](const auto& res) { return res.m_opts.print_elision.has_value(); }) ||
+               std::ranges::any_of(inner, [](const auto& res) { return res.m_opts.print_elision.has_value() && !res.m_opts.print_elision->empty(); });
+    }};
+
+    if (m_opts.print_elision) {
+        if (!m_opts.print_elision->empty()) {
+            sections.PushSection({indent + "..." + maybe_separator, *m_opts.print_elision});
+        }
+        return;
+    }
+
     switch (m_type) {
     case Type::ELISION: {
-        // If the inner result is empty, use three dots for elision
+        // Deprecated alias of m_opts.print_elision
         sections.PushSection({indent + "..." + maybe_separator, m_description});
         return;
     }
@@ -1059,6 +1072,7 @@ void RPCResult::ToSections(Sections& sections, const OuterType outer_type, const
             i.ToSections(sections, OuterType::ARR, current_indent + 2);
         }
         CHECK_NONFATAL(!m_inner.empty());
+        CHECK_NONFATAL(elision_has_description(m_inner));
         if (m_type == Type::ARR && m_inner.back().m_type != Type::ELISION) {
             sections.PushSection({indent_next + "...", ""});
         } else {
@@ -1074,6 +1088,7 @@ void RPCResult::ToSections(Sections& sections, const OuterType outer_type, const
             sections.PushSection({indent + maybe_key + "{}", Description("empty JSON object")});
             return;
         }
+        CHECK_NONFATAL(elision_has_description(m_inner));
         sections.PushSection({indent + maybe_key + "{", Description("json object")});
         for (const auto& i : m_inner) {
             i.ToSections(sections, OuterType::OBJ, current_indent + 2);

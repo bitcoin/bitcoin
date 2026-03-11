@@ -294,6 +294,15 @@ struct RPCArg {
 
 struct RPCResultOptions {
     bool skip_type_check{false};
+    /// Whether to treat this as elided in the human-readable description, and
+    /// possibly supply a description for the elision. Normally, there will be
+    /// one string on any of the elided results, for example `Same output as
+    /// verbosity = 1`, and all other elided strings will be empty.
+    ///
+    /// - If nullopt: normal display.
+    /// - If empty string: suppress from help.
+    /// - If non-empty: show "..." with this description.
+    std::optional<std::string> print_elision{std::nullopt};
 };
 // NOLINTNEXTLINE(misc-no-recursion)
 struct RPCResult {

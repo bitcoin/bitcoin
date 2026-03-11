@@ -61,6 +61,8 @@ struct TxDocOptions {
     std::string txid_field_doc{"The transaction id"};
     /// Include wallet-related fields (e.g. ischange on outputs)
     bool wallet{false};
+    /// Treat this as an elided Result in the help
+    std::optional<std::string> elision_description{};
 };
 /** Explain the UniValue "decoded" transaction object, may include extra fields if processed by wallet **/
 std::vector<RPCResult> TxDoc(const TxDocOptions& opts = {});
