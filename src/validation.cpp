@@ -2539,9 +2539,10 @@ bool Chainstate::ConnectBlock(const CBlock& block, BlockValidationState& state, 
     // doesn't invalidate pointers into the vector, and keep txsdata in scope
     // for as long as `control`.
     std::optional<CCheckQueueControl<CScriptCheck>> control;
-    if (auto& queue = m_chainman.GetCheckQueue(); queue.HasThreads() && fScriptChecks) control.emplace(queue);
+    if (fScriptChecks) control.emplace(m_chainman.GetCheckQueue());
 
     std::vector<PrecomputedTransactionData> txsdata(block.vtx.size());
+    std::vector<uint256> script_cache_entries;
 
     std::vector<int> prevheights;
     CAmount nFees = 0;
@@ -2601,22 +2602,18 @@ bool Chainstate::ConnectBlock(const CBlock& block, BlockValidationState& state, 
         if (!tx.IsCoinBase() && fScriptChecks)
         {
             bool fCacheResults = fJustCheck; /* Don't cache results if we're actually connecting blocks (still consult the cache, though) */
-            bool tx_ok;
-            TxValidationState tx_state;
-            // If CheckInputScripts is called with a pointer to a checks vector, the resulting checks are appended to it. In that case
-            // they need to be added to control which runs them asynchronously. Otherwise, CheckInputScripts runs the checks before returning.
-            if (control) {
+            ValidationCache& validation_cache{m_chainman.m_validation_cache};
+            if (auto hashCacheEntry = PrepareScriptChecks(tx, view, flags, fCacheResults, txsdata[i], validation_cache)) {
+                if (fCacheResults) script_cache_entries.push_back(*hashCacheEntry);
+                // Turn all of this transaction's input scripts into script checks and add them to the queue
                 std::vector<CScriptCheck> vChecks;
-                tx_ok = CheckInputScripts(tx, tx_state, view, flags, fCacheResults, fCacheResults, txsdata[i], m_chainman.m_validation_cache, &vChecks);
-                if (tx_ok) control->Add(std::move(vChecks));
-            } else {
-                tx_ok = CheckInputScripts(tx, tx_state, view, flags, fCacheResults, fCacheResults, txsdata[i], m_chainman.m_validation_cache);
-            }
-            if (!tx_ok) {
-                // Any transaction validation failure in ConnectBlock is a block consensus failure
-                state.Invalid(BlockValidationResult::BLOCK_CONSENSUS,
-                              tx_state.GetRejectReason(), tx_state.GetDebugMessage());
-                break;
+                vChecks.reserve(tx.vin.size());
+                PrecomputedTransactionData& txdata{txsdata[i]};
+                for (unsigned int j = 0; j < tx.vin.size(); j++) {
+                    CScriptCheck check(txdata.m_spent_outputs[j], tx, validation_cache.m_signature_cache, j, flags, fCacheResults, &txdata);
+                    vChecks.emplace_back(std::move(check));
+                }
+                control->Add(std::move(vChecks));
             }
         }
 
@@ -2648,6 +2645,11 @@ bool Chainstate::ConnectBlock(const CBlock& block, BlockValidationState& state, 
     if (!state.IsValid()) {
         LogInfo("Block validation error: %s", state.ToString());
         return false;
+    }
+    // Cache script execution results when doing TestBlockValidity (fJustCheck=true),
+    // so they can be reused when the block is actually connected.
+    for (const auto& entry : script_cache_entries) {
+        m_chainman.m_validation_cache.CacheScriptValidation(entry);
     }
     const auto time_4{SteadyClock::now()};
     m_chainman.time_verify += time_4 - time_2;
