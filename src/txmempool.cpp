@@ -88,7 +88,8 @@ std::vector<CTxMemPoolEntry::CTxMemPoolEntryRef> CTxMemPool::GetParents(const CT
     return ret;
 }
 
-void CTxMemPool::UpdateTransactionsFromBlock(const std::vector<Txid>& vHashesToUpdate)
+
+void CTxMemPool::addDependenciesFromBlock(const std::vector<Txid>& vHashesToUpdate)
 {
     AssertLockHeld(cs);
 
@@ -111,7 +112,12 @@ void CTxMemPool::UpdateTransactionsFromBlock(const std::vector<Txid>& vHashesToU
             }
         }
     }
+}
 
+void CTxMemPool::UpdateTransactionsFromBlock(const std::vector<Txid>& vHashesToUpdate)
+{
+    AssertLockHeld(cs);
+    addDependenciesFromBlock(vHashesToUpdate);
     auto txs_to_remove = m_txgraph->Trim(); // Enforce cluster size limits.
     for (auto txptr : txs_to_remove) {
         const CTxMemPoolEntry& entry = *(static_cast<const CTxMemPoolEntry*>(txptr));
