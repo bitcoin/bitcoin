@@ -1468,8 +1468,7 @@ bool CheckInputScripts(const CTransaction& tx, TxValidationState& state,
                        CheckInputScriptsFor check_for,
                        bool cacheSigStore,
                        bool cacheFullScriptStore, PrecomputedTransactionData& txdata,
-                       ValidationCache& validation_cache,
-                       std::vector<CScriptCheck>* pvChecks = nullptr)
+                       ValidationCache& validation_cache)
                        EXCLUSIVE_LOCKS_REQUIRED(cs_main);
 
 std::optional<uint256> GetScriptCacheEntry(const CTransaction& tx, script_verify_flags flags,
