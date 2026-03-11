@@ -211,7 +211,7 @@ namespace BCLog {
             m_print_callbacks.erase(it);
         }
 
-        size_t NumConnections()
+        size_t NumConnections() EXCLUSIVE_LOCKS_REQUIRED(!m_cs)
         {
             StdLockGuard scoped_lock(m_cs);
             return m_print_callbacks.size();
@@ -248,7 +248,7 @@ namespace BCLog {
             StdLockGuard scoped_lock(m_cs);
             m_category_log_levels = levels;
         }
-        void AddCategoryLogLevel(LogFlags category, Level level)
+        void AddCategoryLogLevel(LogFlags category, Level level) EXCLUSIVE_LOCKS_REQUIRED(!m_cs)
         {
             StdLockGuard scoped_lock(m_cs);
             m_category_log_levels[category] = level;
