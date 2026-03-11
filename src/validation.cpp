@@ -137,6 +137,11 @@ const CBlockIndex* Chainstate::FindForkInGlobalIndex(const CBlockLocator& locato
     return m_chain.Genesis();
 }
 
+std::optional<uint256> PrepareScriptChecks(const CTransaction& tx,
+                                           const CCoinsViewCache& inputs, script_verify_flags flags,
+                                           bool cacheFullScriptStore, PrecomputedTransactionData& txdata,
+                                           ValidationCache& validation_cache) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
+
 bool CheckInputScripts(const CTransaction& tx, TxValidationState& state,
                        const CCoinsViewCache& inputs, script_verify_flags flags, bool cacheSigStore,
                        bool cacheFullScriptStore, PrecomputedTransactionData& txdata,
@@ -2066,6 +2071,32 @@ static void EnsureTxData(const CTransaction& tx, const CCoinsViewCache& inputs, 
 }
 
 /**
+ * Check if this transaction's input scripts need to be checked, i.e. they are not cached and
+ * this is not a coinbase transaction. Returning nullopt indicates that checks are not possible
+ * or necessary. Also ensures txdata is complete.
+ *
+ * Non-static (and redeclared) in src/test/txvalidationcache_tests.cpp
+ */
+std::optional<uint256> PrepareScriptChecks(const CTransaction& tx,
+                                           const CCoinsViewCache& inputs, script_verify_flags flags,
+                                           bool cacheFullScriptStore, PrecomputedTransactionData& txdata,
+                                           ValidationCache& validation_cache) EXCLUSIVE_LOCKS_REQUIRED(cs_main)
+{
+    if (tx.IsCoinBase()) return std::nullopt;
+
+    uint256 hashCacheEntry;
+    CSHA256 hasher = validation_cache.ScriptExecutionCacheHasher();
+    hasher.Write(UCharCast(tx.GetWitnessHash().begin()), 32).Write((unsigned char*)&flags, sizeof(flags)).Finalize(hashCacheEntry.begin());
+    if (validation_cache.IsScriptValidated(hashCacheEntry, !cacheFullScriptStore)) {
+        return std::nullopt;
+    }
+
+    EnsureTxData(tx, inputs, txdata);
+
+    return hashCacheEntry;
+}
+
+/**
  * Check whether all of this transaction's input scripts succeed.
  *
  * This involves ECDSA signature checks so can be computationally intensive. This function should
@@ -2090,25 +2121,8 @@ bool CheckInputScripts(const CTransaction& tx, TxValidationState& state,
                        ValidationCache& validation_cache,
                        std::vector<CScriptCheck>* pvChecks)
 {
-    if (tx.IsCoinBase()) return true;
-
-    if (pvChecks) {
-        pvChecks->reserve(tx.vin.size());
-    }
-
-    // First check if script executions have been cached with the same
-    // flags. Note that this assumes that the inputs provided are
-    // correct (ie that the transaction hash which is in tx's prevouts
-    // properly commits to the scriptPubKey in the inputs view of that
-    // transaction).
-    uint256 hashCacheEntry;
-    CSHA256 hasher = validation_cache.ScriptExecutionCacheHasher();
-    hasher.Write(UCharCast(tx.GetWitnessHash().begin()), 32).Write((unsigned char*)&flags, sizeof(flags)).Finalize(hashCacheEntry.begin());
-    if (validation_cache.IsScriptValidated(hashCacheEntry, !cacheFullScriptStore)) {
-        return true;
-    }
-
-    EnsureTxData(tx, inputs, txdata);
+    auto hashCacheEntry = PrepareScriptChecks(tx, inputs, flags, cacheFullScriptStore, txdata, validation_cache);
+    if (!hashCacheEntry) return true;
 
     for (unsigned int i = 0; i < tx.vin.size(); i++) {
 
@@ -2140,7 +2154,7 @@ bool CheckInputScripts(const CTransaction& tx, TxValidationState& state,
     if (cacheFullScriptStore && !pvChecks) {
         // We executed all of the provided scripts, and were told to
         // cache the result. Do so now.
-        validation_cache.CacheScriptValidation(hashCacheEntry);
+        validation_cache.CacheScriptValidation(*hashCacheEntry);
     }
 
     return true;
