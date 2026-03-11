@@ -174,7 +174,7 @@ class ZMQTest (BitcoinTestFramework):
 
         # set subscriber's desired timeout for the test
         for sub in subscribers:
-            sub.socket.set(zmq.RCVTIMEO, recv_timeout*1000)
+            sub.socket.set(zmq.RCVTIMEO, int(recv_timeout * self.options.timeout_factor * 1000))
 
         self.connect_nodes(0, 1)
         if sync_blocks:
