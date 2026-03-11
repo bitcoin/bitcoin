@@ -588,6 +588,9 @@ private:
 
     /* Removal from the mempool also triggers removal of the entry's Ref from txgraph. */
     void removeUnchecked(txiter entry, MemPoolRemovalReason reason) EXCLUSIVE_LOCKS_REQUIRED(cs);
+
+    void addDependenciesFromBlock(const std::vector<Txid>& vHashesToUpdate) EXCLUSIVE_LOCKS_REQUIRED(cs);
+
 public:
     /*
      * CTxMemPool::ChangeSet:
