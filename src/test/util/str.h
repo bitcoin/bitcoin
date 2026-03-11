@@ -6,6 +6,10 @@
 #define BITCOIN_TEST_UTIL_STR_H
 
 #include <string>
+#include <vector>
+
+#include <attributes.h>
+#include <span.h>
 
 /**
  * Increment a string. Useful to enumerate all fixed length strings with
@@ -39,5 +43,13 @@ void ForEachNoDup(CharType (&string)[StringLength], CharType min_char, CharType 
         if (!skip_string) fn();
     }
 }
+
+/**
+ * Returns a span view of the string.
+ *
+ * @param[in] str    the string_view to interpret as bytes
+ * @returns          span of std::byte
+ */
+std::span<const std::byte> StringToBytes(std::string_view str LIFETIMEBOUND);
 
 #endif // BITCOIN_TEST_UTIL_STR_H
