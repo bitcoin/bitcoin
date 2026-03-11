@@ -108,6 +108,18 @@ The following can be set when running make: `make FOO=bar`
 If some packages are not built, for example `make NO_WALLET=1`, the appropriate CMake cache
 variables will be set when generating the Bitcoin Core buildsystem. In this case, `-DENABLE_WALLET=OFF`.
 
+## Compiler Configuration
+
+`CC` and `CXX` control target compilers. `build_CC` and `build_CXX` control
+compilers for native build tools (e.g. `native_capnp`, `native_qt`), which
+default to `gcc`/`g++` on Linux and `clang`/`clang++` on macOS/FreeBSD/OpenBSD
+(see `./depends/builders/*.mk`).
+
+On a system where the default build compiler is not available (e.g. Linux
+without gcc/g++), you could use the following to build all packages using clang:
+
+    make -C depends build_CC=clang build_CXX=clang++ CC=clang CXX=clang++
+
 ## Cross compilation
 
 To build for another arch/OS:
