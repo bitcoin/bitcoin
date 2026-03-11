@@ -160,7 +160,7 @@ class DeploymentInfo(object):
 
     def detectQtPath(self, frameworkDirectory: str):
         parentDir = os.path.dirname(frameworkDirectory)
-        if os.path.exists(os.path.join(parentDir, "share", "qt", "translations")):
+        if os.path.exists(os.path.join(parentDir, "share", "qt", "plugins")):
             self.qtPath = parentDir
         else:
             self.qtPath = os.getenv("QTDIR", None)
