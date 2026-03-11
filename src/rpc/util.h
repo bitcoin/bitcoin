@@ -292,6 +292,9 @@ struct RPCArg {
     std::string ToDescriptionString(bool is_named_arg) const;
 };
 
+struct RPCResultOptions {
+    bool skip_type_check{false};
+};
 // NOLINTNEXTLINE(misc-no-recursion)
 struct RPCResult {
     enum class Type {
@@ -314,7 +317,7 @@ struct RPCResult {
     const std::string m_key_name;         //!< Only used for dicts
     const std::vector<RPCResult> m_inner; //!< Only used for arrays or dicts
     const bool m_optional;
-    const bool m_skip_type_check;
+    const RPCResultOptions m_opts;
     const std::string m_description;
     const std::string m_cond;
 
@@ -324,12 +327,13 @@ struct RPCResult {
         std::string m_key_name,
         bool optional,
         std::string description,
-        std::vector<RPCResult> inner = {})
+        std::vector<RPCResult> inner = {},
+        RPCResultOptions opts = {})
         : m_type{std::move(type)},
           m_key_name{std::move(m_key_name)},
           m_inner{std::move(inner)},
           m_optional{optional},
-          m_skip_type_check{false},
+          m_opts{std::move(opts)},
           m_description{std::move(description)},
           m_cond{std::move(cond)}
     {
@@ -342,8 +346,9 @@ struct RPCResult {
         Type type,
         std::string m_key_name,
         std::string description,
-        std::vector<RPCResult> inner = {})
-        : RPCResult{std::move(cond), type, std::move(m_key_name), /*optional=*/false, std::move(description), std::move(inner)} {}
+        std::vector<RPCResult> inner = {},
+        RPCResultOptions opts = {})
+        : RPCResult{std::move(cond), type, std::move(m_key_name), /*optional=*/false, std::move(description), std::move(inner), std::move(opts)} {}
 
     RPCResult(
         Type type,
@@ -351,12 +356,12 @@ struct RPCResult {
         bool optional,
         std::string description,
         std::vector<RPCResult> inner = {},
-        bool skip_type_check = false)
+        RPCResultOptions opts = {})
         : m_type{std::move(type)},
           m_key_name{std::move(m_key_name)},
           m_inner{std::move(inner)},
           m_optional{optional},
-          m_skip_type_check{skip_type_check},
+          m_opts{std::move(opts)},
           m_description{std::move(description)},
           m_cond{}
     {
@@ -368,8 +373,8 @@ struct RPCResult {
         std::string m_key_name,
         std::string description,
         std::vector<RPCResult> inner = {},
-        bool skip_type_check = false)
-        : RPCResult{type, std::move(m_key_name), /*optional=*/false, std::move(description), std::move(inner), skip_type_check} {}
+        RPCResultOptions opts = {})
+        : RPCResult{type, std::move(m_key_name), /*optional=*/false, std::move(description), std::move(inner), std::move(opts)} {}
 
     /** Append the sections of the result. */
     void ToSections(Sections& sections, OuterType outer_type = OuterType::NONE, int current_indent = 0) const;

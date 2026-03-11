@@ -1130,7 +1130,7 @@ static std::optional<UniValue::VType> ExpectedType(RPCResult::Type type)
 // NOLINTNEXTLINE(misc-no-recursion)
 UniValue RPCResult::MatchesType(const UniValue& result) const
 {
-    if (m_skip_type_check) {
+    if (m_opts.skip_type_check) {
         return true;
     }
 
