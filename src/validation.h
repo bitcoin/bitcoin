@@ -1472,4 +1472,8 @@ bool CheckInputScripts(const CTransaction& tx, TxValidationState& state,
                        std::vector<CScriptCheck>* pvChecks = nullptr)
                        EXCLUSIVE_LOCKS_REQUIRED(cs_main);
 
+std::optional<uint256> GetScriptCacheEntry(const CTransaction& tx, script_verify_flags flags,
+                                           bool cacheFullScriptStore, ValidationCache& validation_cache)
+                                           EXCLUSIVE_LOCKS_REQUIRED(cs_main);
+
 #endif // BITCOIN_VALIDATION_H
