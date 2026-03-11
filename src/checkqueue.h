@@ -196,8 +196,6 @@ public:
             t.join();
         }
     }
-
-    bool HasThreads() const { return !m_worker_threads.empty(); }
 };
 
 /**
