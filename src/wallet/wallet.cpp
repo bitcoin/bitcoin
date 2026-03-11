@@ -27,6 +27,7 @@
 #include <key.h>
 #include <key_io.h>
 #include <logging.h>
+#include <net.h>
 #include <node/types.h>
 #include <outputtype.h>
 #include <policy/feerate.h>
@@ -2033,7 +2034,6 @@ bool CWallet::SubmitTxMemoryPoolAndRelay(CWalletTx& wtx,
         what = "for private broadcast without adding to the mempool";
         break;
     }
-    WalletLogPrintf("Submitting wtx %s %s\n", wtx.GetHash().ToString(), what);
     // We must set TxStateInMempool here. Even though it will also be set later by the
     // entered-mempool callback, if we did not there would be a race where a
     // user could call sendmoney in a loop and hit spurious out of funds errors
@@ -2045,6 +2045,9 @@ bool CWallet::SubmitTxMemoryPoolAndRelay(CWalletTx& wtx,
     // TransactionRemovedFromMempool fires.
     bool ret = chain().broadcastTransaction(wtx.tx, m_default_max_tx_fee, broadcast_method, err_string);
     if (ret) wtx.m_state = TxStateInMempool{};
+    WalletLogPrintf("Submit of wallet transaction txid=%s wtxid=%s %s: %s\n",
+                    wtx.GetHash().ToString(), wtx.GetWitnessHash().ToString(), what,
+                    ret ? "ok" : err_string);
     return ret;
 }
 
@@ -2141,9 +2144,15 @@ void CWallet::ResubmitWalletTransactions(node::TxBroadcast broadcast_method, boo
 
 void MaybeResendWalletTxs(WalletContext& context)
 {
+    ArgsManager& args{*Assert(context.args)};
+    const node::TxBroadcast broadcast_method{
+        args.GetBoolArg("-privatebroadcast", DEFAULT_PRIVATE_BROADCAST)
+        ? node::TxBroadcast::NO_MEMPOOL_PRIVATE_BROADCAST
+        : node::TxBroadcast::MEMPOOL_AND_BROADCAST_TO_ALL};
+
     for (const std::shared_ptr<CWallet>& pwallet : GetWallets(context)) {
         if (!pwallet->ShouldResend()) continue;
-        pwallet->ResubmitWalletTransactions(node::TxBroadcast::MEMPOOL_AND_BROADCAST_TO_ALL, /*force=*/false);
+        pwallet->ResubmitWalletTransactions(broadcast_method, /*force=*/false);
         pwallet->SetNextResend();
     }
 }

@@ -22,8 +22,19 @@ from test_framework.util import (
 )
 
 class ResendWalletTransactionsTest(BitcoinTestFramework):
+    def add_options(self, parser):
+        parser.add_argument("--privatebroadcast", action="store_true", dest="privatebroadcast",
+                            help="Run bitcoind with -privatebroadcast=1", default=False)
+
     def set_test_params(self):
-        self.num_nodes = 1
+        self.extra_args = [
+            [f"-privatebroadcast={1 if self.options.privatebroadcast else 0}"]
+        ]
+        self.num_nodes = len(self.extra_args)
+        if self.options.privatebroadcast:
+            self.disable_autoconnect = False
+            # Make Tor look reachable and any attempts to connect to fail fast.
+            self.extra_args[0].append("-proxy=127.0.0.1:1")
 
     def skip_test_if_missing_module(self):
         self.skip_if_no_wallet()
@@ -69,13 +80,17 @@ class ResendWalletTransactionsTest(BitcoinTestFramework):
         self.log.info("Bump time & check that transaction is rebroadcast")
         # Transaction should be rebroadcast approximately 24 hours in the future,
         # but can range from 12-36. So bump 36 hours to be sure.
-        with node.assert_debug_log(['resubmit 1 unconfirmed transactions'], timeout=2):
+        expected_msgs = ["resubmit 1 unconfirmed transactions"]
+        if self.options.privatebroadcast:
+            expected_msgs.append(f"Requesting 3 new connections due to txid={txid}")
+        with node.assert_debug_log(expected_msgs, timeout=2):
             node.setmocktime(now + 36 * 60 * 60)
             # Tell scheduler to call MaybeResendWalletTxs now.
             node.mockscheduler(60)
         # Give some time for trickle to occur
         node.setmocktime(now + 36 * 60 * 60 + 600)
-        peer_second.wait_for_broadcast([txid])
+        if not self.options.privatebroadcast:
+            peer_second.wait_for_broadcast([txid])
 
         self.log.info("Chain of unconfirmed not-in-mempool txs are rebroadcast")
         # This tests that the node broadcasts the parent transaction before the child transaction.
@@ -107,7 +122,7 @@ class ResendWalletTransactionsTest(BitcoinTestFramework):
             # Sometimes we will get a signature that is a little bit shorter than we expect which causes the
             # feerate to be a bit higher, then the followup to be a bit lower. This results in a replacement
             # that can't be broadcast. We can just skip that and keep grinding.
-            if try_rpc(-26, "insufficient fee, rejecting replacement", node.sendrawtransaction, bumped["hex"]):
+            if try_rpc(-26, "insufficient fee, rejecting replacement", node.submitpackage, [bumped["hex"]]):
                 continue
             # The scheduler queue creates a copy of the added tx after
             # send/bumpfee and re-adds it to the wallet (undoing the next
@@ -127,7 +142,11 @@ class ResendWalletTransactionsTest(BitcoinTestFramework):
 
         evict_time = block_time + 60 * 60 * DEFAULT_MEMPOOL_EXPIRY_HOURS + 5
         # Flush out currently scheduled resubmit attempt now so that there can't be one right between eviction and check.
-        with node.assert_debug_log(['resubmit 2 unconfirmed transactions'], timeout=2):
+        expected_msgs = ["resubmit 2 unconfirmed transactions"]
+        if self.options.privatebroadcast:
+            expected_msgs.append(f"Requesting 3 new connections due to txid={txid}")
+            expected_msgs.append(f"Requesting 3 new connections due to txid={child_txid}")
+        with node.assert_debug_log(expected_msgs, timeout=2):
             node.setmocktime(evict_time)
             node.mockscheduler(60)
 
@@ -137,12 +156,20 @@ class ResendWalletTransactionsTest(BitcoinTestFramework):
         assert_raises_rpc_error(-5, "Transaction not in mempool", node.getmempoolentry, txid)
         assert_raises_rpc_error(-5, "Transaction not in mempool", node.getmempoolentry, child_txid)
 
-        # Rebroadcast and check that parent and child are both in the mempool
-        with node.assert_debug_log(['resubmit 2 unconfirmed transactions'], timeout=2):
+        # Rebroadcast and, if not private broadcast, check that parent and child are both in the mempool
+        expected_msgs = [
+            f"Submit of wallet transaction txid={txid}",
+            f"Submit of wallet transaction txid={child_txid}",
+            # If private broadcast is enabled, then child_txid is refused for broadcast because
+            # it is not acceptable in the mempool because the parent is not in the mempool.
+            f"resubmit {1 if self.options.privatebroadcast else 2} unconfirmed transactions",
+        ]
+        with node.assert_debug_log(expected_msgs, timeout=2):
             node.setmocktime(evict_time + 36 * 60 * 60) # 36 hrs is the upper limit of the resend timer
             node.mockscheduler(60)
-        node.getmempoolentry(txid)
-        node.getmempoolentry(child_txid)
+        if not self.options.privatebroadcast:
+            node.getmempoolentry(txid)
+            node.getmempoolentry(child_txid)
 
 
 if __name__ == '__main__':
