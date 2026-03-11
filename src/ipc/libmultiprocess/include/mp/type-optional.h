@@ -18,7 +18,7 @@ void CustomBuildField(TypeList<std::optional<LocalType>>,
     if (value) {
         output.setHas();
         // FIXME: should std::move value if destvalue is rref?
-        BuildField(TypeList<LocalType>(), invoke_context, output, *value);
+        BuildField(TypeList<LocalType>(), invoke_context, output, *std::forward<Value>(value));
     }
 }
 
