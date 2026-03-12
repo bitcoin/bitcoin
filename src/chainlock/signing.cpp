@@ -75,6 +75,11 @@ void ChainLockSigner::UpdatedBlockTip(const CBlockIndex* pindexNew, const CBlock
 
 void ChainLockSigner::TrySignChainTip()
 {
+    TRY_LOCK(cs_try_sign, locked);
+    if (!locked) {
+        return;
+    }
+
     if (!m_mn_sync.IsBlockchainSynced()) {
         return;
     }

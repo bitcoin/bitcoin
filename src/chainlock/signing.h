@@ -44,6 +44,7 @@ private:
     using BlockTxs = std::unordered_map<uint256, std::shared_ptr<Uint256HashSet>, BlockHasher>;
 
 private:
+    mutable Mutex cs_try_sign;
     mutable Mutex cs_signer;
 
     std::unique_ptr<CScheduler> m_scheduler;
@@ -77,7 +78,7 @@ public:
     void BlockDisconnected(const std::shared_ptr<const CBlock>& block, const CBlockIndex* pindex) override
         EXCLUSIVE_LOCKS_REQUIRED(!cs_signer);
     void UpdatedBlockTip(const CBlockIndex* pindexNew, const CBlockIndex* pindexFork, bool fInitialDownload) override
-        EXCLUSIVE_LOCKS_REQUIRED(!cs_signer);
+        EXCLUSIVE_LOCKS_REQUIRED(!cs_try_sign, !cs_signer);
 
     [[nodiscard]] MessageProcessingResult HandleNewRecoveredSig(const llmq::CRecoveredSig& recoveredSig) override
         EXCLUSIVE_LOCKS_REQUIRED(!cs_signer);
@@ -85,7 +86,7 @@ public:
     void Cleanup() EXCLUSIVE_LOCKS_REQUIRED(!cs_signer);
 
 private:
-    void TrySignChainTip() EXCLUSIVE_LOCKS_REQUIRED(!cs_signer);
+    void TrySignChainTip() EXCLUSIVE_LOCKS_REQUIRED(!cs_try_sign, !cs_signer);
 
     [[nodiscard]] BlockTxs::mapped_type GetBlockTxs(const uint256& blockHash)
         EXCLUSIVE_LOCKS_REQUIRED(!cs_signer);
