@@ -388,8 +388,6 @@ class ChainClusterImpl final : public Cluster
 
     /** Transaction data in chain order. */
     std::vector<TxData> m_txdata;
-    /** The linearization of this cluster. For a chain, this is always [0, 1, 2, ..., n-1]. */
-    std::vector<DepGraphIndex> m_linearization;
     /** Sizes of contiguous chain segments after removals. Only non-empty in NEEDS_SPLIT state;
      *  used by Split() to correctly partition broken chains into separate clusters. */
     std::vector<DepGraphIndex> m_split_segments;
@@ -1695,7 +1693,7 @@ std::vector<ChainClusterImpl::ChunkBound> ChainClusterImpl::ComputeChunks() cons
 {
     std::vector<ChunkBound> chunks;
     for (DepGraphIndex i = 0; i < m_txdata.size(); ++i) {
-        ChunkBound c{i, i + 1, m_txdata[m_linearization[i]].feerate};
+        ChunkBound c{i, i + 1, m_txdata[i].feerate};
         while (!chunks.empty() && c.feerate >> chunks.back().feerate) {
             c.feerate += chunks.back().feerate;
             c.start = chunks.back().start;
@@ -1708,8 +1706,7 @@ std::vector<ChainClusterImpl::ChunkBound> ChainClusterImpl::ComputeChunks() cons
 
 size_t ChainClusterImpl::TotalMemoryUsage() const noexcept
 {
-    return memusage::DynamicUsage(m_txdata) + memusage::DynamicUsage(m_linearization) +
-           memusage::DynamicUsage(m_split_segments) +
+    return memusage::DynamicUsage(m_txdata) + memusage::DynamicUsage(m_split_segments) +
            memusage::MallocUsage(sizeof(ChainClusterImpl)) +
            sizeof(std::unique_ptr<Cluster>);
 }
@@ -1728,7 +1725,6 @@ DepGraphIndex ChainClusterImpl::AppendTransaction(GraphIndex graph_idx, FeePerWe
     Assume(graph_idx != GraphIndex(-1));
     DepGraphIndex ret = m_txdata.size();
     m_txdata.push_back({graph_idx, feerate});
-    m_linearization.push_back(ret);
     return ret;
 }
 
@@ -1746,26 +1742,22 @@ void ChainClusterImpl::AddDependencies(SetType parents, DepGraphIndex child) noe
 
 void ChainClusterImpl::ExtractTransactions(const std::function<void (DepGraphIndex, GraphIndex, FeePerWeight)>& visit1_fn, const std::function<void (DepGraphIndex, GraphIndex, SetType)>& visit2_fn) noexcept
 {
-    // First pass: visit all transactions in linearization order.
-    for (auto pos : m_linearization) {
+    for (DepGraphIndex pos = 0; pos < m_txdata.size(); ++pos) {
         visit1_fn(pos, m_txdata[pos].graph_index, m_txdata[pos].feerate);
     }
-    // Second pass: visit with parent information.
-    for (auto pos : m_linearization) {
+    for (DepGraphIndex pos = 0; pos < m_txdata.size(); ++pos) {
         SetType parents;
         if (pos > 0) parents.Set(pos - 1);
         visit2_fn(pos, m_txdata[pos].graph_index, parents);
     }
-    // Purge this Cluster.
     m_txdata.clear();
-    m_linearization.clear();
     m_split_segments.clear();
 }
 
 int ChainClusterImpl::GetLevel(const TxGraphImpl& graph) const noexcept
 {
     if (!Assume(!m_txdata.empty())) return -1;
-    const auto& entry = graph.m_entries[m_txdata[m_linearization.front()].graph_index];
+    const auto& entry = graph.m_entries[m_txdata[0].graph_index];
     for (int level = 0; level < MAX_LEVELS; ++level) {
         if (entry.m_locator[level].cluster == this) return level;
     }
@@ -1778,7 +1770,7 @@ void ChainClusterImpl::Updated(TxGraphImpl& graph, int level, bool rename) noexc
     if (m_txdata.empty()) return;
 
     // Update all the Locators for this Cluster's Entry objects.
-    for (DepGraphIndex idx : m_linearization) {
+    for (DepGraphIndex idx = 0; idx < m_txdata.size(); ++idx) {
         auto& entry = graph.m_entries[m_txdata[idx].graph_index];
         if (level == 0 && !rename) graph.ClearChunkData(entry);
         entry.m_locator[level].SetPresent(this, idx);
@@ -1801,9 +1793,9 @@ void ChainClusterImpl::Updated(TxGraphImpl& graph, int level, bool rename) noexc
             }
 
             // Determine the m_fallback_order maximum transaction in the chunk.
-            GraphIndex max_element = m_txdata[m_linearization[chunk_start]].graph_index;
+            GraphIndex max_element = m_txdata[chunk_start].graph_index;
             for (DepGraphIndex i = chunk_start + 1; i < chunk_end; ++i) {
-                GraphIndex this_element = m_txdata[m_linearization[i]].graph_index;
+                GraphIndex this_element = m_txdata[i].graph_index;
                 if (graph.m_fallback_order(*graph.m_entries[this_element].m_ref, *graph.m_entries[max_element].m_ref) > 0) {
                     max_element = this_element;
                 }
@@ -1811,8 +1803,7 @@ void ChainClusterImpl::Updated(TxGraphImpl& graph, int level, bool rename) noexc
 
             // Fill in entry data for each transaction in this chunk.
             for (DepGraphIndex i = chunk_start; i < chunk_end; ++i) {
-                GraphIndex graph_idx = m_txdata[m_linearization[i]].graph_index;
-                auto& entry = graph.m_entries[graph_idx];
+                auto& entry = graph.m_entries[m_txdata[i].graph_index];
                 entry.m_main_lin_index = lin_idx++;
                 entry.m_main_chunk_feerate = FeePerWeight::FromFeeFrac(chunk_feerate);
                 entry.m_main_equal_feerate_chunk_prefix_size = equal_feerate_chunk_feerate.size;
@@ -1825,7 +1816,7 @@ void ChainClusterImpl::Updated(TxGraphImpl& graph, int level, bool rename) noexc
                 final_chunk_count = LinearizationIndex(-1);
             }
             if (!rename) {
-                graph.CreateChunkData(m_txdata[m_linearization[chunk_end - 1]].graph_index, final_chunk_count);
+                graph.CreateChunkData(m_txdata[chunk_end - 1].graph_index, final_chunk_count);
             }
         }
     }
@@ -1833,7 +1824,7 @@ void ChainClusterImpl::Updated(TxGraphImpl& graph, int level, bool rename) noexc
 
 void ChainClusterImpl::RemoveChunkData(TxGraphImpl& graph) noexcept
 {
-    for (DepGraphIndex idx : m_linearization) {
+    for (DepGraphIndex idx = 0; idx < m_txdata.size(); ++idx) {
         auto& entry = graph.m_entries[m_txdata[idx].graph_index];
         graph.ClearChunkData(entry);
     }
@@ -1844,7 +1835,6 @@ Cluster* ChainClusterImpl::CopyToStaging(TxGraphImpl& graph) const noexcept
     auto ret = graph.CreateEmptyChainCluster();
     auto ptr = ret.get();
     ptr->m_txdata = m_txdata;
-    ptr->m_linearization = m_linearization;
     graph.InsertCluster(/*level=*/1, std::move(ret), m_quality);
     ptr->Updated(graph, /*level=*/1, /*rename=*/false);
     graph.GetClusterSet(/*level=*/1).m_cluster_usage += ptr->TotalMemoryUsage();
@@ -1877,7 +1867,6 @@ void ChainClusterImpl::Clear(TxGraphImpl& graph, int level) noexcept
         graph.ClearLocator(level, tx.graph_index, m_quality == QualityLevel::OVERSIZED_SINGLETON);
     }
     m_txdata.clear();
-    m_linearization.clear();
     m_split_segments.clear();
 }
 
@@ -1898,7 +1887,6 @@ void ChainClusterImpl::MoveToMain(TxGraphImpl& graph) noexcept
 void ChainClusterImpl::Compact() noexcept
 {
     m_txdata.shrink_to_fit();
-    m_linearization.shrink_to_fit();
     m_split_segments.shrink_to_fit();
 }
 
@@ -1940,17 +1928,15 @@ void ChainClusterImpl::ApplyRemovals(TxGraphImpl& graph, int level, std::span<Gr
         m_split_segments.push_back(current_seg_size);
     }
 
-    // Rebuild m_txdata and m_linearization without removed transactions.
+    // Rebuild m_txdata without removed transactions.
     std::vector<TxData> new_txdata;
     new_txdata.reserve(m_txdata.size());
-    for (auto pos : m_linearization) {
+    for (DepGraphIndex pos = 0; pos < m_txdata.size(); ++pos) {
         if (!removed[pos]) {
             new_txdata.push_back(m_txdata[pos]);
         }
     }
     m_txdata = std::move(new_txdata);
-    m_linearization.resize(m_txdata.size());
-    std::iota(m_linearization.begin(), m_linearization.end(), DepGraphIndex{0});
 
     Compact();
     graph.GetClusterSet(level).m_cluster_usage += TotalMemoryUsage();
@@ -2003,7 +1989,6 @@ bool ChainClusterImpl::Split(TxGraphImpl& graph, int level) noexcept
         offset += seg_size;
     }
     m_txdata.clear();
-    m_linearization.clear();
     m_split_segments.clear();
     return true;
 }
@@ -2014,19 +1999,14 @@ void ChainClusterImpl::Merge(TxGraphImpl& graph, int level, Cluster& other) noex
     // This is used during optimistic chain merge. The caller must verify afterward (in
     // ApplyDependencies) that the result is still a valid chain.
     other.ExtractTransactions([&](DepGraphIndex pos, GraphIndex idx, FeePerWeight feerate) noexcept {
-        DepGraphIndex new_pos = m_txdata.size();
         m_txdata.push_back({idx, feerate});
-        m_linearization.push_back(new_pos);
     }, [&](DepGraphIndex pos, GraphIndex idx, SetType other_parents) noexcept {
-        // Update the transaction's Locator.
         auto& entry = graph.m_entries[idx];
         if (level == 0) graph.ClearChunkData(entry);
-        // Find the new position of this transaction.
-        DepGraphIndex new_pos = DepGraphIndex(-1);
+        DepGraphIndex new_pos = m_txdata.size() - 1;
         for (DepGraphIndex i = 0; i < m_txdata.size(); ++i) {
             if (m_txdata[i].graph_index == idx) { new_pos = i; break; }
         }
-        Assume(new_pos != DepGraphIndex(-1));
         entry.m_locator[level].SetPresent(this, new_pos);
     });
 }
@@ -2068,7 +2048,7 @@ uint64_t ChainClusterImpl::AppendTrimData(std::vector<TrimTxData>& ret, std::vec
     auto prev_index = GraphIndex(-1);
     for (const auto& [chunk_start, chunk_end, chunk_feerate] : chunk_bounds) {
         for (DepGraphIndex i = chunk_start; i < chunk_end; ++i) {
-            auto& tx = m_txdata[m_linearization[i]];
+            auto& tx = m_txdata[i];
             auto& entry = ret.emplace_back();
             entry.m_chunk_feerate = FeePerWeight::FromFeeFrac(chunk_feerate);
             entry.m_index = tx.graph_index;
@@ -2118,12 +2098,12 @@ void ChainClusterImpl::GetDescendantRefs(const TxGraphImpl& graph, std::span<std
 bool ChainClusterImpl::GetClusterRefs(TxGraphImpl& graph, std::span<TxGraph::Ref*> range, LinearizationIndex start_pos) noexcept
 {
     for (auto& ref : range) {
-        Assume(start_pos < m_linearization.size());
-        const auto& entry = graph.m_entries[m_txdata[m_linearization[start_pos++]].graph_index];
+        Assume(start_pos < m_txdata.size());
+        const auto& entry = graph.m_entries[m_txdata[start_pos++].graph_index];
         Assume(entry.m_ref != nullptr);
         ref = entry.m_ref;
     }
-    return start_pos == m_linearization.size();
+    return start_pos == m_txdata.size();
 }
 
 FeePerWeight ChainClusterImpl::GetIndividualFeerate(DepGraphIndex idx) noexcept
@@ -2152,12 +2132,6 @@ void ChainClusterImpl::SetFee(TxGraphImpl& graph, int level, DepGraphIndex idx, 
 
 void ChainClusterImpl::SanityCheck(const TxGraphImpl& graph, int level) const
 {
-    // The linearization must contain every transaction once.
-    assert(m_txdata.size() == m_linearization.size());
-    // Verify linearization is [0, 1, 2, ..., n-1].
-    for (DepGraphIndex i = 0; i < m_linearization.size(); ++i) {
-        assert(m_linearization[i] == i);
-    }
     // m_split_segments should be empty outside of NEEDS_SPLIT state.
     if (!NeedsSplitting()) {
         assert(m_split_segments.empty());
@@ -2186,7 +2160,7 @@ void ChainClusterImpl::SanityCheck(const TxGraphImpl& graph, int level) const
                 chunk_pos = 0;
             }
             for (DepGraphIndex i = chunk_start; i < chunk_end; ++i) {
-                const auto& entry = graph.m_entries[m_txdata[m_linearization[i]].graph_index];
+                const auto& entry = graph.m_entries[m_txdata[i].graph_index];
                 assert(entry.m_main_lin_index == lin_idx++);
                 assert(entry.m_main_chunk_feerate == FeePerWeight::FromFeeFrac(chunk_feerate));
                 assert(entry.m_main_equal_feerate_chunk_prefix_size == equal_feerate_prefix.size);
