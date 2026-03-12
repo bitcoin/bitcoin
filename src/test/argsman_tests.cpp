@@ -36,6 +36,10 @@ BOOST_AUTO_TEST_CASE(util_datadir)
     args.ClearPathCache();
     BOOST_CHECK_EQUAL(dd_norm, args.GetDataDirBase());
 
+    args.ForceSetArg("--datadir", fs::PathToString(dd_norm) + "/");
+    args.ClearPathCache();
+    BOOST_CHECK_EQUAL(dd_norm, args.GetDataDirBase());
+
     args.ForceSetArg("-datadir", fs::PathToString(dd_norm) + "/.");
     args.ClearPathCache();
     BOOST_CHECK_EQUAL(dd_norm, args.GetDataDirBase());
@@ -227,13 +231,13 @@ BOOST_AUTO_TEST_CASE(util_ParseParameters)
 
     BOOST_CHECK(testArgs.ParseParameters(7, argv_test, error));
     // expectation: -ignored is ignored (program name argument),
-    // -a, -b and -ccc end up in map, -d ignored because it is after
-    // a non-option argument (non-GNU option parsing)
-    BOOST_CHECK(testArgs.m_settings.command_line_options.size() == 3 && testArgs.m_settings.ro_config.empty());
+    // -a, -b and -ccc end up in map, also -d since the parser detects
+    // [options] after a non-option argument (GNU-style option parsing)
+    BOOST_CHECK(testArgs.m_settings.command_line_options.size() == 4 && testArgs.m_settings.ro_config.empty());
     BOOST_CHECK(testArgs.IsArgSet("-a") && testArgs.IsArgSet("-b") && testArgs.IsArgSet("-ccc")
-                && !testArgs.IsArgSet("f") && !testArgs.IsArgSet("-d"));
+                && !testArgs.IsArgSet("f") && testArgs.IsArgSet("-d"));
     BOOST_CHECK(testArgs.m_settings.command_line_options.contains("a") && testArgs.m_settings.command_line_options.contains("b") && testArgs.m_settings.command_line_options.contains("ccc")
-                && !testArgs.m_settings.command_line_options.contains("f") && !testArgs.m_settings.command_line_options.contains("d"));
+                && !testArgs.m_settings.command_line_options.contains("f") && testArgs.m_settings.command_line_options.contains("d"));
 
     BOOST_CHECK(testArgs.m_settings.command_line_options["a"].size() == 1);
     BOOST_CHECK(testArgs.m_settings.command_line_options["a"].front().get_str() == "");
