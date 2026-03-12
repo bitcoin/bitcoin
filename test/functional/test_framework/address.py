@@ -8,7 +8,6 @@
 - bech32 segwit v0 P2WPKH and P2WSH addresses.
 - bech32m segwit v1 P2TR addresses."""
 
-import enum
 import unittest
 
 from .script import (
@@ -36,13 +35,6 @@ ADDRESS_BCRT1_UNSPENDABLE = 'bcrt1qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq
 ADDRESS_BCRT1_UNSPENDABLE_DESCRIPTOR = 'addr(bcrt1qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq3xueyj)#juyq9d97'
 # Coins sent to this address can be spent with a witness stack of just OP_TRUE
 ADDRESS_BCRT1_P2WSH_OP_TRUE = 'bcrt1qft5p2uhsdcdc3l2ua4ap5qqfg4pjaqlp250x7us7a8qqhrxrxfsqseac85'
-
-
-class AddressType(enum.Enum):
-    bech32 = 'bech32'
-    p2sh_segwit = 'p2sh-segwit'
-    legacy = 'legacy'  # P2PKH
-
 
 b58chars = '123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz'
 
