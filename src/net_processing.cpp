@@ -272,10 +272,6 @@ struct Peer {
     /** Set to true once initial VERSION message was sent (only relevant for outbound peers). */
     bool m_outbound_version_message_sent GUARDED_BY(NetEventsInterface::g_msgproc_mutex){false};
 
-    /** This peer's reported block height when we connected */
-    // TODO: remove in v32.0, only show reported height once in "receive version message: ..." debug log
-    std::atomic<int> m_starting_height{-1};
-
     /** The pong reply we're expecting, or 0 if no pong expected. */
     std::atomic<uint64_t> m_ping_nonce_sent{0};
     /** When the last ping was sent, or 0 if no ping was ever sent */
@@ -1804,7 +1800,6 @@ bool PeerManagerImpl::GetNodeStateStats(NodeId nodeid, CNodeStateStats& stats) c
     PeerRef peer = GetPeerRef(nodeid);
     if (peer == nullptr) return false;
     stats.their_services = peer->m_their_services;
-    stats.m_starting_height = peer->m_starting_height;
     // It is common for nodes with good ping times to suddenly become lagged,
     // due to a new block arriving or other large transfer.
     // Merely reporting pingtime might fool the caller into thinking the node was still responsive,
@@ -3106,8 +3101,7 @@ void PeerManagerImpl::ProcessHeadersMessage(CNode& pfrom, Peer& peer,
     if (nCount == m_opts.max_headers_result && !have_headers_sync) {
         // Headers message had its maximum size; the peer may have more headers.
         if (MaybeSendGetHeaders(pfrom, GetLocator(pindexLast), peer)) {
-            LogDebug(BCLog::NET, "more getheaders (%d) to end to peer=%d (startheight:%d)\n",
-                    pindexLast->nHeight, pfrom.GetId(), peer.m_starting_height);
+            LogDebug(BCLog::NET, "more getheaders (%d) to end to peer=%d", pindexLast->nHeight, pfrom.GetId());
         }
     }
 
@@ -3675,7 +3669,6 @@ void PeerManagerImpl::ProcessMessage(Peer& peer, CNode& pfrom, const std::string
             LOCK(pfrom.m_subver_mutex);
             pfrom.cleanSubVer = cleanSubVer;
         }
-        peer.m_starting_height = starting_height;
 
         // Only initialize the Peer::TxRelay m_relay_txs data structure if:
         // - this isn't an outbound block-relay-only connection, and
@@ -3697,7 +3690,7 @@ void PeerManagerImpl::ProcessMessage(Peer& peer, CNode& pfrom, const std::string
         const auto mapped_as{m_connman.GetMappedAS(pfrom.addr)};
         LogDebug(BCLog::NET, "receive version message: %s: version %d, blocks=%d, us=%s, txrelay=%d, %s%s",
                   cleanSubVer.empty() ? "<no user agent>" : cleanSubVer, pfrom.nVersion,
-                  peer.m_starting_height, addrMe.ToStringAddrPort(), fRelay, pfrom.LogPeer(),
+                  starting_height, addrMe.ToStringAddrPort(), fRelay, pfrom.LogPeer(),
                   (mapped_as ? strprintf(", mapped_as=%d", mapped_as) : ""));
 
         if (pfrom.IsPrivateBroadcastConn()) {
@@ -3825,11 +3818,10 @@ void PeerManagerImpl::ProcessMessage(Peer& peer, CNode& pfrom, const std::string
 
         auto new_peer_msg = [&]() {
             const auto mapped_as{m_connman.GetMappedAS(pfrom.addr)};
-            return strprintf("New %s peer connected: transport: %s, version: %d, blocks=%d, %s%s",
+            return strprintf("New %s peer connected: transport: %s, version: %d, %s%s",
                 pfrom.ConnectionTypeAsString(),
                 TransportTypeAsString(pfrom.m_transport->GetInfo().transport_type),
-                pfrom.nVersion.load(), peer.m_starting_height,
-                pfrom.LogPeer(),
+                pfrom.nVersion.load(), pfrom.LogPeer(),
                 (mapped_as ? strprintf(", mapped_as=%d", mapped_as) : ""));
         };
 
@@ -5807,7 +5799,7 @@ bool PeerManagerImpl::SendMessages(CNode& node)
                 if (pindexStart->pprev)
                     pindexStart = pindexStart->pprev;
                 if (MaybeSendGetHeaders(node, GetLocator(pindexStart), peer)) {
-                    LogDebug(BCLog::NET, "initial getheaders (%d) to peer=%d (startheight:%d)\n", pindexStart->nHeight, node.GetId(), peer.m_starting_height);
+                    LogDebug(BCLog::NET, "initial getheaders (%d) to peer=%d", pindexStart->nHeight, node.GetId());
 
                     state.fSyncStarted = true;
                     peer.m_headers_sync_timeout = current_time + HEADERS_DOWNLOAD_TIMEOUT_BASE +
