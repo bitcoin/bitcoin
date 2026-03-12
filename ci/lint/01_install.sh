@@ -44,8 +44,7 @@ ${CI_RETRY_EXE} pip3 install \
   lief==0.16.6 \
   mypy==1.19.1 \
   pyzmq==27.1.0 \
-  ruff==0.15.5 \
-  vulture==2.14
+  ruff==0.15.5
 
 SHELLCHECK_VERSION=v0.11.0
 curl -sL "https://github.com/koalaman/shellcheck/releases/download/${SHELLCHECK_VERSION}/shellcheck-${SHELLCHECK_VERSION}.linux.x86_64.tar.xz" | \
