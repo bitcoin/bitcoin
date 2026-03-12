@@ -44,11 +44,11 @@ xip -x Xcode_26.1.1_Apple_silicon.xip
 
 ### Step 2: Generating the SDK tarball from `Xcode.app`
 
-To generate the SDK, run the script [`gen-sdk.py`](./gen-sdk.py) with the
+To generate the SDK, run the script [`gen-sdk`](./gen-sdk) with the
 path to `Xcode.app` (extracted in the previous stage) as the first argument.
 
 ```bash
-./contrib/macdeploy/gen-sdk.py '/path/to/Xcode.app'
+./contrib/macdeploy/gen-sdk '/path/to/Xcode.app'
 ```
 
 The generated archive should be: `Xcode-26.1.1-17B100-extracted-SDK-with-libcxx-headers.tar`.
