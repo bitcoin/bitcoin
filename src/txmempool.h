@@ -257,7 +257,7 @@ public:
      * changing the chain tip. It's necessary to keep both mutexes locked until
      * the mempool is consistent with the new chain tip and fully populated.
      */
-    mutable RecursiveMutex cs;
+    mutable RecursiveMutex cs ACQUIRED_AFTER(::cs_main);
     std::unique_ptr<TxGraph> m_txgraph GUARDED_BY(cs);
     mutable std::unique_ptr<TxGraph::BlockBuilder> m_builder GUARDED_BY(cs);
     indexed_transaction_set mapTx GUARDED_BY(cs);
