@@ -640,4 +640,136 @@ BOOST_AUTO_TEST_CASE(txgraph_chain_merge)
     }
 }
 
+BOOST_AUTO_TEST_CASE(txgraph_chain_split_on_removal)
+{
+    // Tests that removing transactions from the middle of a ChainCluster correctly splits
+    // the chain into disconnected segments, rather than falsely preserving dependencies.
+
+    // Case 1: Chain A→B→C→D, remove B → {A} and {C,D} as separate clusters.
+    {
+        auto graph = MakeTxGraph(50, 100000, HIGH_ACCEPTABLE_COST, PointerComparator);
+        std::vector<TxGraph::Ref> refs(4);
+        graph->AddTransaction(refs[0], FeePerWeight{4, 100}); // A
+        graph->AddTransaction(refs[1], FeePerWeight{3, 100}); // B
+        graph->AddTransaction(refs[2], FeePerWeight{2, 100}); // C
+        graph->AddTransaction(refs[3], FeePerWeight{1, 100}); // D
+        graph->AddDependency(refs[0], refs[1]);
+        graph->AddDependency(refs[1], refs[2]);
+        graph->AddDependency(refs[2], refs[3]);
+        graph->SanityCheck();
+
+        graph->RemoveTransaction(refs[1]);
+        graph->SanityCheck();
+
+        BOOST_CHECK_EQUAL(graph->GetTransactionCount(TxGraph::Level::TOP), 3);
+        const std::vector<const TxGraph::Ref*> a_and_c = {&refs[0], &refs[2]};
+        BOOST_CHECK_EQUAL(graph->CountDistinctClusters(a_and_c, TxGraph::Level::TOP), 2);
+        CheckCluster(*graph, {&refs[2], &refs[3]});
+        CheckAncestors(*graph, refs[0], {&refs[0]});
+        CheckAncestors(*graph, refs[2], {&refs[2]});
+        CheckAncestors(*graph, refs[3], {&refs[2], &refs[3]});
+    }
+
+    // Case 2: Chain A→B→C→D→E, remove B and D → {A}, {C}, {E} as 3 singletons.
+    {
+        auto graph = MakeTxGraph(50, 100000, HIGH_ACCEPTABLE_COST, PointerComparator);
+        std::vector<TxGraph::Ref> refs(5);
+        graph->AddTransaction(refs[0], FeePerWeight{5, 100});
+        graph->AddTransaction(refs[1], FeePerWeight{4, 100});
+        graph->AddTransaction(refs[2], FeePerWeight{3, 100});
+        graph->AddTransaction(refs[3], FeePerWeight{2, 100});
+        graph->AddTransaction(refs[4], FeePerWeight{1, 100});
+        graph->AddDependency(refs[0], refs[1]);
+        graph->AddDependency(refs[1], refs[2]);
+        graph->AddDependency(refs[2], refs[3]);
+        graph->AddDependency(refs[3], refs[4]);
+        graph->SanityCheck();
+
+        graph->RemoveTransaction(refs[1]);
+        graph->RemoveTransaction(refs[3]);
+        graph->SanityCheck();
+
+        BOOST_CHECK_EQUAL(graph->GetTransactionCount(TxGraph::Level::TOP), 3);
+        const std::vector<const TxGraph::Ref*> all = {&refs[0], &refs[2], &refs[4]};
+        BOOST_CHECK_EQUAL(graph->CountDistinctClusters(all, TxGraph::Level::TOP), 3);
+        CheckAncestors(*graph, refs[0], {&refs[0]});
+        CheckAncestors(*graph, refs[2], {&refs[2]});
+        CheckAncestors(*graph, refs[4], {&refs[4]});
+    }
+
+    // Case 3: Chain A→B→C→D→E→F, remove C → {A,B} and {D,E,F} as two chains.
+    {
+        auto graph = MakeTxGraph(50, 100000, HIGH_ACCEPTABLE_COST, PointerComparator);
+        std::vector<TxGraph::Ref> refs(6);
+        graph->AddTransaction(refs[0], FeePerWeight{6, 100});
+        graph->AddTransaction(refs[1], FeePerWeight{5, 100});
+        graph->AddTransaction(refs[2], FeePerWeight{4, 100});
+        graph->AddTransaction(refs[3], FeePerWeight{3, 100});
+        graph->AddTransaction(refs[4], FeePerWeight{2, 100});
+        graph->AddTransaction(refs[5], FeePerWeight{1, 100});
+        graph->AddDependency(refs[0], refs[1]);
+        graph->AddDependency(refs[1], refs[2]);
+        graph->AddDependency(refs[2], refs[3]);
+        graph->AddDependency(refs[3], refs[4]);
+        graph->AddDependency(refs[4], refs[5]);
+        graph->SanityCheck();
+
+        graph->RemoveTransaction(refs[2]);
+        graph->SanityCheck();
+
+        BOOST_CHECK_EQUAL(graph->GetTransactionCount(TxGraph::Level::TOP), 5);
+        const std::vector<const TxGraph::Ref*> b_and_d = {&refs[1], &refs[3]};
+        BOOST_CHECK_EQUAL(graph->CountDistinctClusters(b_and_d, TxGraph::Level::TOP), 2);
+        CheckCluster(*graph, {&refs[0], &refs[1]});
+        CheckCluster(*graph, {&refs[3], &refs[4], &refs[5]});
+        CheckAncestors(*graph, refs[0], {&refs[0]});
+        CheckAncestors(*graph, refs[1], {&refs[0], &refs[1]});
+        CheckAncestors(*graph, refs[3], {&refs[3]});
+        CheckAncestors(*graph, refs[5], {&refs[3], &refs[4], &refs[5]});
+    }
+
+    // Case 4: Chain A→B→C→D, remove A (head) → {B,C,D} stays as one chain.
+    {
+        auto graph = MakeTxGraph(50, 100000, HIGH_ACCEPTABLE_COST, PointerComparator);
+        std::vector<TxGraph::Ref> refs(4);
+        graph->AddTransaction(refs[0], FeePerWeight{4, 100});
+        graph->AddTransaction(refs[1], FeePerWeight{3, 100});
+        graph->AddTransaction(refs[2], FeePerWeight{2, 100});
+        graph->AddTransaction(refs[3], FeePerWeight{1, 100});
+        graph->AddDependency(refs[0], refs[1]);
+        graph->AddDependency(refs[1], refs[2]);
+        graph->AddDependency(refs[2], refs[3]);
+        graph->SanityCheck();
+
+        graph->RemoveTransaction(refs[0]);
+        graph->SanityCheck();
+
+        BOOST_CHECK_EQUAL(graph->GetTransactionCount(TxGraph::Level::TOP), 3);
+        CheckCluster(*graph, {&refs[1], &refs[2], &refs[3]});
+        CheckAncestors(*graph, refs[1], {&refs[1]});
+        CheckAncestors(*graph, refs[3], {&refs[1], &refs[2], &refs[3]});
+    }
+
+    // Case 5: Chain A→B→C→D, remove D (tail) → {A,B,C} stays as one chain.
+    {
+        auto graph = MakeTxGraph(50, 100000, HIGH_ACCEPTABLE_COST, PointerComparator);
+        std::vector<TxGraph::Ref> refs(4);
+        graph->AddTransaction(refs[0], FeePerWeight{4, 100});
+        graph->AddTransaction(refs[1], FeePerWeight{3, 100});
+        graph->AddTransaction(refs[2], FeePerWeight{2, 100});
+        graph->AddTransaction(refs[3], FeePerWeight{1, 100});
+        graph->AddDependency(refs[0], refs[1]);
+        graph->AddDependency(refs[1], refs[2]);
+        graph->AddDependency(refs[2], refs[3]);
+        graph->SanityCheck();
+
+        graph->RemoveTransaction(refs[3]);
+        graph->SanityCheck();
+
+        BOOST_CHECK_EQUAL(graph->GetTransactionCount(TxGraph::Level::TOP), 3);
+        CheckCluster(*graph, {&refs[0], &refs[1], &refs[2]});
+        CheckAncestors(*graph, refs[2], {&refs[0], &refs[1], &refs[2]});
+    }
+}
+
 BOOST_AUTO_TEST_SUITE_END()
