@@ -1,0 +1,227 @@
+#!/usr/bin/env bash
+export LC_ALL=C
+set -e -o pipefail
+
+################
+# Required non-builtin commands should be invocable
+################
+
+check_tools() {
+    for cmd in "$@"; do
+        if ! command -v "$cmd" > /dev/null 2>&1; then
+            echo "ERR: This script requires that '$cmd' is installed and available in your \$PATH"
+            exit 1
+        fi
+    done
+}
+
+check_tools cat diff gpg basename
+
+################
+# Usage
+################
+
+cmd_usage() {
+cat <<EOF
+Synopsis:
+
+    env ASMAP_SIGS_REPO=<path/to/asmap.sigs> \\
+        [ EPOCH=<unix_timestamp> ] \\
+        [ SIGNER=<signer> ] \\
+      ./contrib/asmap/asmap-verify
+
+Example verifying all epochs:
+
+    env ASMAP_SIGS_REPO=/home/user/asmap.sigs \\
+      ./contrib/asmap/asmap-verify
+
+Example verifying a specific epoch:
+
+    env ASMAP_SIGS_REPO=/home/user/asmap.sigs \\
+        EPOCH=1772726379 \\
+      ./contrib/asmap/asmap-verify
+
+Example using a specific signer's attestation as the compare base:
+
+    env ASMAP_SIGS_REPO=/home/user/asmap.sigs \\
+        SIGNER=satoshi \\
+      ./contrib/asmap/asmap-verify
+
+Environment variables:
+
+    ASMAP_SIGS_REPO  Path to the asmap.sigs repository clone
+    EPOCH            (optional) Only verify this epoch; default: verify all epochs
+    SIGNER           (optional) Use this signer's SHA256SUMS as the compare base;
+                     default: use the first one found
+
+EOF
+}
+
+################
+# Required env vars should be non-empty
+################
+
+if [ -z "$ASMAP_SIGS_REPO" ]; then
+    cmd_usage
+    exit 1
+fi
+
+################
+# ASMAP_SIGS_REPO should exist as a directory
+################
+
+if [ ! -d "$ASMAP_SIGS_REPO" ]; then
+cat << EOF
+ERR: The specified ASMAP_SIGS_REPO is not an existent directory:
+
+    '$ASMAP_SIGS_REPO'
+
+Hint: Please clone the asmap.sigs repository and point to it with the
+      ASMAP_SIGS_REPO environment variable.
+
+EOF
+cmd_usage
+exit 1
+fi
+
+builder_keys_dir="$ASMAP_SIGS_REPO/builder-keys"
+
+##############
+##  Verify  ##
+##############
+
+# Usage: verify <compare_base> <current_manifest>
+verify() {
+    local compare_base="$1"
+    local current_manifest="$2"
+    local signer_name
+    signer_name="$(basename "$(dirname "$current_manifest")")"
+
+    if ! gpg --quiet --batch \
+            --verify "${current_manifest}.asc" "$current_manifest" 1>&2; then
+        echo "ERR: Failed to verify GPG signature for signer '${signer_name}'"
+        echo "     Manifest:  '${current_manifest}'"
+        echo "     Signature: '${current_manifest}.asc'"
+        echo ""
+        echo "Hint: Either the signature is invalid or the public key is not in"
+        echo "      your GPG keyring. You can import it with:"
+        echo "          gpg --import '${builder_keys_dir}/${signer_name}.gpg'"
+        echo ""
+        failure=1
+    elif ! diff --report-identical "$compare_base" "$current_manifest" 1>&2; then
+        echo "ERR: The SHA256SUMS attestation differs from the compare base:"
+        echo "    base:    '${compare_base}'"
+        echo "    current: '${current_manifest}'"
+        echo ""
+        failure=1
+    else
+        echo "Verified: '${current_manifest}'"
+        echo ""
+    fi
+}
+
+# Determine which epoch(s) to verify
+if [ -n "$EPOCH" ]; then
+    epoch_dirs=( "$ASMAP_SIGS_REPO/$EPOCH" )
+    if [ ! -d "${epoch_dirs[0]}" ]; then
+        echo "ERR: No epoch directory found for EPOCH='${EPOCH}':"
+        echo "    '${epoch_dirs[0]}'"
+        echo ""
+        exit 1
+    fi
+else
+    shopt -s nullglob
+    epoch_dirs=( "$ASMAP_SIGS_REPO"/*/ )
+    shopt -u nullglob
+    # Exclude builder-keys and any other non-epoch dirs (not purely numeric)
+    filtered_epoch_dirs=()
+    for d in "${epoch_dirs[@]}"; do
+        dir_name="$(basename "$d")"
+        if [[ "$dir_name" =~ ^[0-9]+$ ]]; then
+            filtered_epoch_dirs+=("$d")
+        fi
+    done
+    epoch_dirs=("${filtered_epoch_dirs[@]}")
+fi
+
+if (( ${#epoch_dirs[@]} == 0 )); then
+    echo "ERR: No epoch directories found in '${ASMAP_SIGS_REPO}'"
+    echo ""
+    echo "Hint: Expected directories named with Unix timestamps, e.g.:"
+    echo "      '${ASMAP_SIGS_REPO}/1772726379/'"
+    echo ""
+    exit 1
+fi
+
+total_verified=0
+failure=""
+
+for epoch_dir in "${epoch_dirs[@]}"; do
+    epoch_name="$(basename "$epoch_dir")"
+    echo "===================="
+    echo "Epoch: ${epoch_name}"
+    echo "===================="
+    echo ""
+
+    shopt -s nullglob
+    all_manifests=( "${epoch_dir%/}"/*/SHA256SUMS )
+    shopt -u nullglob
+
+    if (( ${#all_manifests[@]} == 0 )); then
+        echo "WARN: No SHA256SUMS files found in epoch '${epoch_name}', skipping."
+        echo ""
+        continue
+    fi
+
+    # Pick compare base
+    compare_base="${all_manifests[0]}"
+    if [ -n "$SIGNER" ]; then
+        signer_manifest="${epoch_dir%/}/${SIGNER}/SHA256SUMS"
+        if [ -f "$signer_manifest" ]; then
+            echo "Using ${SIGNER}'s attestation as the compare base"
+            compare_base="$signer_manifest"
+        else
+            echo "Unable to find ${SIGNER}'s attestation for epoch '${epoch_name}', using the first one found"
+        fi
+    else
+        echo "No SIGNER provided, using the first attestation found as compare base"
+    fi
+    echo ""
+    echo "--------------------"
+    echo ""
+
+    for current_manifest in "${all_manifests[@]}"; do
+        if [ ! -e "${current_manifest}.asc" ]; then
+            signer_name="$(basename "$(dirname "$current_manifest")")"
+            echo "WARN: No signature file found for signer '${signer_name}' in epoch '${epoch_name}'"
+            echo "      Expected: '${current_manifest}.asc'"
+            echo ""
+            failure=1
+            continue
+        fi
+        verify "$compare_base" "$current_manifest"
+        total_verified=$(( total_verified + 1 ))
+    done
+
+    echo "DONE: Checked ${#all_manifests[@]} attestation(s) for epoch '${epoch_name}'"
+    echo ""
+done
+
+echo "===================="
+echo ""
+
+if (( total_verified == 0 )); then
+    echo "ERR: No attestations could be verified."
+    echo ""
+    exit 1
+fi
+
+if [ -n "$failure" ]; then
+    echo "FAIL: One or more verifications failed. See above for details."
+    echo ""
+    exit 1
+fi
+
+echo "OK: All ${total_verified} attestation(s) verified successfully."
+echo ""
+
