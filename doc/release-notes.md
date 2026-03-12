@@ -1,4 +1,4 @@
-# Dash Core version v23.1.1
+# Dash Core version v23.1.2
 
 This is a new patch version release, bringing GUI improvements, new features, bugfixes, and performance optimizations.
 This release is **optional** for all nodes, although recommended.
@@ -42,6 +42,8 @@ require a reindex.
 - Fixed MN update notifications where the old and new masternode lists were swapped, causing incorrect change detection (dash#7154).
 - Reject identity elements in BLS deserialization and key generation to prevent invalid keys from being accepted (dash#7193).
 - Fixed quorum labels not being correctly reseated when new quorum types are inserted (dash#7191).
+- Skip collecting block txids during IBD to prevent unbounded memory growth in `ChainLockSigner` (dash#7208).
+- Serialize `TrySignChainTip` to prevent concurrent signing races that could split signing shares across different block hashes (dash#7209).
 
 ## Interfaces
 
@@ -51,7 +53,7 @@ require a reindex.
 
 - Replaced two heavy `HashMap` constructions with linear lookups in hot paths where the maps were rarely used, reducing overhead (dash#7176).
 
-# v23.1.1 Change log
+# v23.1.2 Change log
 
 See detailed [set of changes][set-of-changes].
 
@@ -61,6 +63,7 @@ Thanks to everyone who directly contributed to this release:
 
 - Kittywhiskers Van Gogh
 - Konstantin Akimov
+- PastaPastaPasta
 - UdjinM6
 
 As well as everyone that submitted issues, reviewed pull requests and helped
@@ -84,4 +87,4 @@ These releases are considered obsolete. Old release notes can be found here:
 - [v21.0.0](https://github.com/dashpay/dash/blob/master/doc/release-notes/dash/release-notes-21.0.0.md) released Jul/25/2024
 - [v20.1.1](https://github.com/dashpay/dash/blob/master/doc/release-notes/dash/release-notes-20.1.1.md) released April/3/2024
 
-[set-of-changes]: https://github.com/dashpay/dash/compare/v23.1.0...dashpay:v23.1.1
+[set-of-changes]: https://github.com/dashpay/dash/compare/v23.1.0...dashpay:v23.1.2
