@@ -19,9 +19,6 @@ from test_framework.mempool_util import DEFAULT_CLUSTER_LIMIT
 
 MAX_DISCONNECTED_TX_POOL_BYTES = 20_000_000
 
-CUSTOM_ANCESTOR_COUNT = 100
-CUSTOM_DESCENDANT_COUNT = CUSTOM_ANCESTOR_COUNT
-
 class MempoolUpdateFromBlockTest(BitcoinTestFramework):
     def set_test_params(self):
         self.num_nodes = 1
