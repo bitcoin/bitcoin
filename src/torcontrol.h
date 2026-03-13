@@ -31,10 +31,6 @@ constexpr int TOR_REPLY_OK{250};
 constexpr int TOR_REPLY_UNRECOGNIZED{510};
 constexpr int TOR_REPLY_SYNTAX_ERROR{512}; //!< Syntax error in command argument
 
-void StartTorControl(CService onion_service_target);
-void InterruptTorControl();
-void StopTorControl();
-
 CService DefaultOnionServiceTarget(uint16_t port);
 
 /** Reply from Tor, can be single or multi-line */

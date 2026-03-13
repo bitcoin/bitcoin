@@ -730,35 +730,6 @@ fs::path TorController::GetPrivateKeyFile()
     return gArgs.GetDataDirNet() / "onion_v3_private_key";
 }
 
-/****** Thread ********/
-
-/**
- * TODO: TBD if introducing a global is the preferred approach here since we
- * usually try to avoid them. We could let init manage the lifecycle or make
- * this a part of NodeContext maybe instead.
- */
-static std::unique_ptr<TorController> g_tor_controller;
-
-void StartTorControl(CService onion_service_target)
-{
-    assert(!g_tor_controller);
-    g_tor_controller = std::make_unique<TorController>(gArgs.GetArg("-torcontrol", DEFAULT_TOR_CONTROL), onion_service_target);
-}
-
-void InterruptTorControl()
-{
-    if (!g_tor_controller) return;
-    LogInfo("tor: Thread interrupt");
-    g_tor_controller->Interrupt();
-}
-
-void StopTorControl()
-{
-    if (!g_tor_controller) return;
-    g_tor_controller->Join();
-    g_tor_controller.reset();
-}
-
 CService DefaultOnionServiceTarget(uint16_t port)
 {
     struct in_addr onion_service_target;
