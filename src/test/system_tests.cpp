@@ -26,7 +26,18 @@ BOOST_FIXTURE_TEST_SUITE(system_tests, BasicTestingSetup)
 
 static std::vector<std::string> mock_executable(std::string name)
 {
-    return {boost::unit_test::framework::master_test_suite().argv[0], "--log_level=nothing", "--report_level=no", "--run_test=mock_process/" + name};
+    // Invoke the mock_process/* test case with all unsolicited output suppressed.
+    return {
+        boost::unit_test::framework::master_test_suite().argv[0],
+        // Disable false-positive memory leak dumps to stderr
+        // in debug builds when using the Windows UCRT.
+        "--detect_memory_leaks=0",
+        // Disable logging to stdout.
+        "--log_level=nothing",
+        // Disable the test report to stderr.
+        "--report_level=no",
+        "--run_test=mock_process/" + name,
+    };
 }
 
 BOOST_AUTO_TEST_CASE(run_command)
