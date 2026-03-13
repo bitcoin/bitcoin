@@ -99,17 +99,16 @@ static void CoinSelection(benchmark::Bench& bench)
     });
 }
 
-// Copied from src/wallet/test/coinselector_tests.cpp
-static void add_coin(const CAmount& nValue, int nInput, std::vector<OutputGroup>& set)
+static void add_coin(const CAmount& nValue, uint32_t nInput, std::vector<OutputGroup>& set)
 {
     CMutableTransaction tx;
     tx.vout.resize(nInput + 1);
     tx.vout[nInput].nValue = nValue;
     COutput output(COutPoint(tx.GetHash(), nInput), tx.vout.at(nInput), /*depth=*/0, /*input_bytes=*/-1, /*solvable=*/true, /*safe=*/true, /*time=*/0, /*from_me=*/true, /*fees=*/0);
     set.emplace_back();
-    set.back().Insert(std::make_shared<COutput>(output), /*ancestors=*/ 0, /*cluster_count=*/ 0);
+    set.back().Insert(std::make_shared<COutput>(output), /*ancestors=*/0, /*cluster_count=*/0);
 }
-// Copied from src/wallet/test/coinselector_tests.cpp
+
 static CAmount make_hard_case(int utxos, std::vector<OutputGroup>& utxo_pool)
 {
     utxo_pool.clear();
@@ -124,16 +123,11 @@ static CAmount make_hard_case(int utxos, std::vector<OutputGroup>& utxo_pool)
 
 static void BnBExhaustion(benchmark::Bench& bench)
 {
-    // Setup
     std::vector<OutputGroup> utxo_pool;
 
+    CAmount target = make_hard_case(17, utxo_pool);
     bench.run([&] {
-        // Benchmark
-        CAmount target = make_hard_case(17, utxo_pool);
         (void)SelectCoinsBnB(utxo_pool, target, /*cost_of_change=*/0, MAX_STANDARD_TX_WEIGHT); // Should exhaust
-
-        // Cleanup
-        utxo_pool.clear();
     });
 }
 
