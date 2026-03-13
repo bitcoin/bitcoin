@@ -43,6 +43,7 @@ namespace wallet {
 struct CreatedTransactionResult;
 class CCoinControl;
 class CWallet;
+struct ImportDescriptorResult;
 enum class AddressPurpose;
 struct CRecipient;
 struct WalletContext;
@@ -51,6 +52,7 @@ struct WalletContext;
 namespace interfaces {
 
 class Handler;
+struct ImportDescriptorRequest;
 struct WalletAddress;
 struct WalletBalances;
 struct WalletTx;
@@ -209,6 +211,9 @@ public:
         PartiallySignedTransaction& psbtx,
         bool& complete) = 0;
 
+    //! Import descriptors
+    virtual std::vector<wallet::ImportDescriptorResult> importDescriptors(const std::vector<ImportDescriptorRequest>& requests) = 0;
+
     //! Get balances.
     virtual WalletBalances getBalances() = 0;
 
@@ -347,6 +352,17 @@ public:
 
     //! Return pointer to internal context, useful for testing.
     virtual wallet::WalletContext* context() { return nullptr; }
+};
+
+//! Information about a descriptor to be imported.
+struct ImportDescriptorRequest {
+    std::string descriptor;
+    std::optional<std::string> label;
+    int64_t timestamp;
+    std::optional<bool> active;
+    std::optional<bool> internal;
+    std::optional<std::pair<int64_t,int64_t>> range;
+    std::optional<int64_t> next_index;
 };
 
 //! Information about one wallet address.
