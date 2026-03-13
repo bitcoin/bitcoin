@@ -103,14 +103,17 @@ static bool RPCAuthorized(const std::string& strAuth, std::string& strAuthUserna
 
 static bool HTTPReq_JSONRPC(const std::any& context, HTTPRequest* req)
 {
+    LogDebug(BCLog::RPC, "HTTPReq_JSONRPC starting for %s\n", req->GetURI());
     // JSONRPC handles only POST
     if (req->GetRequestMethod() != HTTPRequest::POST) {
+        LogDebug(BCLog::RPC, "HTTPReq_JSONRPC rejected: method not POST\n");
         req->WriteReply(HTTP_BAD_METHOD, "JSONRPC server handles only POST requests");
         return false;
     }
     // Check authorization
     std::pair<bool, std::string> authHeader = req->GetHeader("authorization");
     if (!authHeader.first) {
+        LogDebug(BCLog::RPC, "HTTPReq_JSONRPC rejected: no auth header\n");
         req->WriteHeader("WWW-Authenticate", WWW_AUTH_HEADER_DATA);
         req->WriteReply(HTTP_UNAUTHORIZED);
         return false;
@@ -135,7 +138,9 @@ static bool HTTPReq_JSONRPC(const std::any& context, HTTPRequest* req)
     try {
         // Parse request
         UniValue valRequest;
-        if (!valRequest.read(req->ReadBody()))
+        std::string body = req->ReadBody();
+        LogDebug(BCLog::RPC, "HTTPReq_JSONRPC body read, size=%d\n", body.size());
+        if (!valRequest.read(body))
             throw JSONRPCError(RPC_PARSE_ERROR, "Parse error");
 
         // Set the URI

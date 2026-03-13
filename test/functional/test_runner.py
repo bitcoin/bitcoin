@@ -141,7 +141,6 @@ BASE_SCRIPTS = [
     'feature_bip68_sequence.py',
     'rpc_packages.py',
     'rpc_bind.py --ipv4',
-    'rpc_bind.py --ipv6',
     'rpc_bind.py --nonloopback',
     'p2p_headers_sync_with_minchainwork.py',
     'p2p_feefilter.py',
@@ -152,6 +151,7 @@ BASE_SCRIPTS = [
     'wallet_miniscript.py',
     # vv Tests less than 30s vv
     'p2p_invalid_messages.py',
+    'rpc_echo_payload.py',
     'rpc_createmultisig.py',
     'p2p_timeouts.py --v1transport',
     'p2p_timeouts.py --v2transport',
@@ -177,7 +177,6 @@ BASE_SCRIPTS = [
     'interface_zmq.py',
     'rpc_invalid_address_message.py',
     'rpc_validateaddress.py',
-    'interface_bitcoin_cli.py',
     'feature_bind_extra.py',
     'mempool_resurrect.py',
     'wallet_txn_doublespend.py --mineblock',

@@ -114,14 +114,33 @@ jobs:
           git fetch origin "${GITHUB_BASE_REF}"
           git config user.email "ci@example.com"
           git config user.name "CI"
-      - run: |
-          sudo apt-get update
-          sudo apt-get install clang mold ccache build-essential cmake ninja-build pkgconf python3-zmq libevent-dev libboost-dev libsqlite3-dev systemtap-sdt-dev libzmq3-dev qt6-base-dev qt6-tools-dev qt6-l10n-tools libqrencode-dev capnproto libcapnp-dev -y
-          sudo pip3 install --break-system-packages pycapnp
-      - name: Compile and run tests
+      - name: Start Docker container
         run: |
-          # Run tests on commits after the last merge commit and before the PR head commit
-          git rebase --exec "git merge --no-commit origin/${GITHUB_BASE_REF} && python3 ./.github/ci-test-each-commit-exec.py && git reset --hard" ${{ env.TEST_BASE }}
+          docker run --cap-add=NET_ADMIN --cap-add=NET_RAW -d --name ci-test-container \
+            -v "${{ github.workspace }}:/repo" \
+            -w /repo \
+            -e TEST_BASE \
+            -e GITHUB_BASE_REF \
+            ubuntu:25.10 \
+            tail -f /dev/null
+
+      - name: Bootstrap dependencies inside Docker
+        run: |
+          docker exec ci-test-container apt-get update
+          docker exec ci-test-container apt-get install tcpdump git clang-20 mold ccache build-essential cmake ninja-build pkgconf python3.13-venv python3.13-dev libevent-dev libboost-dev libsqlite3-dev systemtap-sdt-dev libzmq3-dev qt6-base-dev qt6-tools-dev qt6-l10n-tools libqrencode-dev capnproto libcapnp-dev -y
+          docker exec ci-test-container apt-cache policy python3.13
+          docker exec ci-test-container apt-get update
+          #_docker exec ci-test-container apt-get install --allow-downgrades    python3.13=3.13.7-1   python3.13-venv=3.13.7-1   python3.13-dev=3.13.7-1   python3.13-minimal=3.13.7-1   libpython3.13=3.13.7-1   libpython3.13-dev=3.13.7-1   libpython3.13-stdlib=3.13.7-1   libpython3.13-minimal=3.13.7-1  -y
+          #_docker exec ci-test-container cp ./a.patch /usr/lib/python3.13/
+          #_docker exec ci-test-container sh -c "cd /usr/lib/python3.13 && patch -p2 --reverse < ./a.patch"
+          docker exec ci-test-container find /usr/lib/python3.13/ -name "__pycache__" -exec rm -rf {} +
+          docker exec ci-test-container python3.13 -m venv my_project_env
+          docker exec ci-test-container ./my_project_env/bin/pip install --break-system-packages pycapnp pyzmq
+          docker exec ci-test-container git config --global --add safe.directory /repo
+
+      - name: Compile and run tests inside Docker
+        run: |
+          docker exec ci-test-container bash -c 'git rebase --exec "git merge --no-commit origin/${GITHUB_BASE_REF} && ./my_project_env/bin/python ./.github/ci-test-each-commit-exec.py && git reset --hard" "$TEST_BASE"'
 
   macos-native-arm64:
     name: ${{ matrix.job-name }}
@@ -221,7 +240,7 @@ jobs:
 
     env:
       PYTHONUTF8: 1
-      TEST_RUNNER_TIMEOUT_FACTOR: 40
+      TEST_RUNNER_TIMEOUT_FACTOR: 4
 
     strategy:
       fail-fast: false
@@ -405,7 +424,7 @@ jobs:
 
     env:
       PYTHONUTF8: 1
-      TEST_RUNNER_TIMEOUT_FACTOR: 40
+      TEST_RUNNER_TIMEOUT_FACTOR: 4
 
     steps:
       - *ANNOTATION_PR_NUMBER

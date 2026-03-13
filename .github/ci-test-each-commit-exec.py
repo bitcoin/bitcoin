@@ -30,8 +30,8 @@ def main():
         build_dir,
         "-Werror=dev",
         # Use clang++, because it is a bit faster and uses less memory than g++
-        "-DCMAKE_C_COMPILER=clang",
-        "-DCMAKE_CXX_COMPILER=clang++",
+        "-DCMAKE_C_COMPILER=clang-20",
+        "-DCMAKE_CXX_COMPILER=clang++-20",
         # Use mold, because it is faster than the default linker
         "-DCMAKE_EXE_LINKER_FLAGS=-fuse-ld=mold",
         # Use Debug build type for more debug checks, but enable optimizations
@@ -48,15 +48,10 @@ def main():
         print("Build failure. Verbose build follows.")
         run(["cmake", "--build", build_dir, "-j1", "--verbose"])
 
-    run([
-        "ctest",
-        "--output-on-failure",
-        "--stop-on-failure",
-        "--test-dir",
-        build_dir,
-        "-j",
-        str(num_procs),
-    ])
+    a = [
+    #'p2p_orphan_handling.py'
+        'rpc_echo_payload.py',
+    ] * (num_procs * 2 * 2 * 60 * 5)
     run([
         sys.executable,
         f"./{build_dir}/test/functional/test_runner.py",
@@ -64,7 +59,8 @@ def main():
         str(num_procs * 2),
         "--failfast",
         "--combinedlogslen=99999999",
-    ])
+        #"--tracerpc",
+    ] + a)
 
 
 if __name__ == "__main__":

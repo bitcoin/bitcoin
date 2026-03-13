@@ -241,6 +241,7 @@ void JSONRPCRequest::parse(const UniValue& valRequest)
             this->authUser, this->peerAddr);
     else
         LogDebug(BCLog::RPC, "ThreadRPCServer method=%s user=%s\n", SanitizeString(strMethod), this->authUser);
+    LogDebug(BCLog::RPC, "ThreadRPCServer method=%s finished parse\n", SanitizeString(strMethod));
 
     // Parse params
     const UniValue& valParams{request.find_value("params")};

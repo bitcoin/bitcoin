@@ -345,19 +345,23 @@ bool IsDeprecatedRPCEnabled(const std::string& method)
 
 UniValue JSONRPCExec(const JSONRPCRequest& jreq, bool catch_errors)
 {
+    LogDebug(BCLog::RPC, "ThreadRPCServer method=%s starting execution\n", SanitizeString(jreq.strMethod));
     UniValue result;
     if (catch_errors) {
         try {
             result = tableRPC.execute(jreq);
         } catch (UniValue& e) {
+            LogDebug(BCLog::RPC, "ThreadRPCServer method=%s finished execution (with error)\n", SanitizeString(jreq.strMethod));
             return JSONRPCReplyObj(NullUniValue, std::move(e), jreq.id, jreq.m_json_version);
         } catch (const std::exception& e) {
+            LogDebug(BCLog::RPC, "ThreadRPCServer method=%s finished execution (with exception: %s)\n", SanitizeString(jreq.strMethod), e.what());
             return JSONRPCReplyObj(NullUniValue, JSONRPCError(RPC_MISC_ERROR, e.what()), jreq.id, jreq.m_json_version);
         }
     } else {
         result = tableRPC.execute(jreq);
     }
 
+    LogDebug(BCLog::RPC, "ThreadRPCServer method=%s finished execution\n", SanitizeString(jreq.strMethod));
     return JSONRPCReplyObj(std::move(result), NullUniValue, jreq.id, jreq.m_json_version);
 }
 

@@ -220,3 +220,4 @@ class AuthServiceProxy():
             self.__conn = http.client.HTTPSConnection(self.__url.hostname, port, timeout=self.timeout)
         else:
             self.__conn = http.client.HTTPConnection(self.__url.hostname, port, timeout=self.timeout)
+        #self.__conn.set_debuglevel(1)

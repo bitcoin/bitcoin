@@ -188,22 +188,26 @@ std::string RequestMethodString(HTTPRequest::RequestMethod m)
 /** HTTP request callback */
 static void http_request_cb(struct evhttp_request* req, void* arg)
 {
+    LogDebug(BCLog::HTTP, "http_request_cb starting\n");
     evhttp_connection* conn{evhttp_request_get_connection(req)};
     // Track active requests
     {
         g_requests.AddRequest(req);
+        LogDebug(BCLog::HTTP, "http_request tracked\n");
         evhttp_request_set_on_complete_cb(req, [](struct evhttp_request* req, void*) {
+            LogDebug(BCLog::HTTP, "http_request completed\n");
             g_requests.RemoveRequest(req);
         }, nullptr);
         evhttp_connection_set_closecb(conn, [](evhttp_connection* conn, void* arg) {
+            LogDebug(BCLog::HTTP, "http_connection closed\n");
             g_requests.RemoveConnection(conn);
         }, nullptr);
     }
 
-    // Disable reading to work around a libevent bug, fixed in 2.1.9
+    // Disable reading to work around a libevent bug, fixed in 2.1.9?
     // See https://github.com/libevent/libevent/commit/5ff8eb26371c4dc56f384b2de35bea2d87814779
     // and https://github.com/bitcoin/bitcoin/pull/11593.
-    if (event_get_version_number() >= 0x02010600 && event_get_version_number() < 0x02010900) {
+    {
         if (conn) {
             bufferevent* bev = evhttp_connection_get_bufferevent(conn);
             if (bev) {
@@ -259,15 +263,18 @@ static void http_request_cb(struct evhttp_request* req, void* arg)
         }
 
         auto item = [req = hreq, in_path = std::move(path), fn = i->handler]() {
+            std::string uri = req->GetURI();
+            LogDebug(BCLog::HTTP, "http_worker processing request for '%s'\n", uri);
             std::string err_msg;
             try {
                 fn(req.get(), in_path);
+                LogDebug(BCLog::HTTP, "http_worker finished processing request for '%s'\n", uri);
                 return;
             } catch (const std::exception& e) {
-                LogWarning("Unexpected error while processing request for '%s'. Error msg: '%s'", req->GetURI(), e.what());
+                LogWarning("Unexpected error while processing request for '%s'. Error msg: '%s'", uri, e.what());
                 err_msg = e.what();
             } catch (...) {
-                LogWarning("Unknown error while processing request for '%s'", req->GetURI());
+                LogWarning("Unknown error while processing request for '%s'", uri);
                 err_msg = "unknown error";
             }
             // Reply so the client doesn't hang waiting for the response.
@@ -583,6 +590,7 @@ void HTTPRequest::WriteHeader(const std::string& hdr, const std::string& value)
 void HTTPRequest::WriteReply(int nStatus, std::span<const std::byte> reply)
 {
     assert(!replySent && req);
+    LogDebug(BCLog::HTTP, "HTTPRequest::WriteReply status=%d size=%d\n", nStatus, reply.size());
     if (m_interrupt) {
         WriteHeader("Connection", "close");
     }
@@ -592,10 +600,11 @@ void HTTPRequest::WriteReply(int nStatus, std::span<const std::byte> reply)
     evbuffer_add(evb, reply.data(), reply.size());
     auto req_copy = req;
     HTTPEvent* ev = new HTTPEvent(eventBase, true, [req_copy, nStatus]{
+        LogDebug(BCLog::HTTP, "HTTPRequest::WriteReply callback starting status=%d\n", nStatus);
         evhttp_send_reply(req_copy, nStatus, nullptr, nullptr);
         // Re-enable reading from the socket. This is the second part of the libevent
         // workaround above.
-        if (event_get_version_number() >= 0x02010600 && event_get_version_number() < 0x02010900) {
+        {
             evhttp_connection* conn = evhttp_request_get_connection(req_copy);
             if (conn) {
                 bufferevent* bev = evhttp_connection_get_bufferevent(conn);
@@ -604,6 +613,7 @@ void HTTPRequest::WriteReply(int nStatus, std::span<const std::byte> reply)
                 }
             }
         }
+        LogDebug(BCLog::HTTP, "HTTPRequest::WriteReply callback finished\n");
     });
     ev->trigger(nullptr);
     replySent = true;

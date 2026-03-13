@@ -42,6 +42,7 @@ from .util import (
     rpc_url,
     wait_until_helper_internal,
     p2p_port,
+    rpc_port,
     tor_port,
 )
 
@@ -205,6 +206,7 @@ class TestNode():
         self.log = logging.getLogger('TestFramework.node%d' % i)
         # Cache perf subprocesses here by their data output filename.
         self.perf_subprocesses = {}
+        self.tcpdump_process = None
 
         self.p2ps = []
 
@@ -249,6 +251,8 @@ class TestNode():
             # this destructor is called.
             print(self._node_msg("Cleaning up leftover process"), file=sys.stderr)
             self.process.kill()
+        if self.tcpdump_process:
+            self.tcpdump_process.kill()
         if self.ipc_tmp_dir:
             print(self._node_msg(f"Cleaning up ipc directory {str(self.ipc_tmp_dir)!r}"))
             shutil.rmtree(self.ipc_tmp_dir)
@@ -304,8 +308,32 @@ class TestNode():
         self.running = True
         self.log.debug("bitcoind started, waiting for RPC to come up")
 
+        rpc_port_to_watch = rpc_port(self.index)
+        self.tcpdump_process = subprocess.Popen(
+            [
+                "tcpdump",
+                "--interface=lo",
+                "-nn",
+                "--snapshot-length=250",
+                "-A",  # ascii
+                "-l",  # line buffer
+                f"port {rpc_port_to_watch}"
+            ],
+            stderr=subprocess.STDOUT)
+
         if self.start_perf:
             self._start_perf()
+
+    def create_new_rpc_connection(self):
+        """Create an additional RPC connection, likely to be used in a new thread."""
+        rpc = get_rpc_proxy(
+            rpc_url(self.datadir_path, self.index, self.chain, self.rpchost),
+            self.index,
+            timeout=self.rpc_timeout // 2,  # Shorter timeout to allow for one retry in case of ETIMEDOUT
+            coveragedir=self.coverage_dir,
+        )
+        rpc.auth_service_proxy_instance.reuse_http_connections = self.reuse_http_connections
+        return rpc
 
     def wait_for_rpc_connection(self, *, wait_for_import=True):
         """Sets up an RPC connection to the bitcoind process. Returns False if unable to connect."""
@@ -328,13 +356,7 @@ class TestNode():
                 raise FailedToStartError(self._node_msg(
                     f'bitcoind exited with status {self.process.returncode} during initialization. {str_error}'))
             try:
-                rpc = get_rpc_proxy(
-                    rpc_url(self.datadir_path, self.index, self.chain, self.rpchost),
-                    self.index,
-                    timeout=self.rpc_timeout // 2,  # Shorter timeout to allow for one retry in case of ETIMEDOUT
-                    coveragedir=self.coverage_dir,
-                )
-                rpc.auth_service_proxy_instance.reuse_http_connections = self.reuse_http_connections
+                rpc = self.create_new_rpc_connection()
                 rpc.getblockcount()
                 # If the call to getblockcount() succeeds then the RPC connection is up
                 if self.version_is_at_least(190000) and wait_for_import:
@@ -510,6 +532,10 @@ class TestNode():
 
         self.stdout.close()
         self.stderr.close()
+
+        if self.tcpdump_process:
+            self.tcpdump_process.kill()
+            self.tcpdump_process = None
 
         self.running = False
         self.process = None
