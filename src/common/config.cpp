@@ -19,6 +19,7 @@
 #include <filesystem>
 #include <fstream>
 #include <iostream>
+#include <sstream>
 #include <list>
 #include <map>
 #include <memory>
@@ -99,7 +100,7 @@ bool ArgsManager::ReadConfigStream(std::istream& stream, const std::string& file
     }
     for (const std::pair<std::string, std::string>& option : options) {
         KeyInfo key = InterpretKey(option.first);
-        std::optional<unsigned int> flags = GetArgFlags('-' + key.name);
+        std::optional<unsigned int> flags = GetArgFlags_('-' + key.name);
         if (!IsConfSupported(key, error)) return false;
         if (flags) {
             std::optional<common::SettingsValue> value = InterpretValue(key, &option.second, *flags, error);
@@ -119,13 +120,26 @@ bool ArgsManager::ReadConfigStream(std::istream& stream, const std::string& file
     return true;
 }
 
+bool ArgsManager::ReadConfigString(const std::string& str_config)
+{
+    std::istringstream streamConfig(str_config);
+    {
+        LOCK(cs_args);
+        m_settings.ro_config.clear();
+        m_config_sections.clear();
+    }
+    std::string error;
+    return ReadConfigStream(streamConfig, "", error);
+}
+
 bool ArgsManager::ReadConfigFiles(std::string& error, bool ignore_invalid_keys)
 {
     {
         LOCK(cs_args);
         m_settings.ro_config.clear();
         m_config_sections.clear();
-        m_config_path = AbsPathForConfigVal(*this, GetPathArg("-conf", BITCOIN_CONF_FILENAME), /*net_specific=*/false);
+        const auto conf_val = GetPathArg_("-conf", BITCOIN_CONF_FILENAME);
+        m_config_path = (conf_val.is_absolute() || conf_val.empty()) ? conf_val : fsbridge::AbsPathJoin(GetDataDir(/*net_specific=*/false), conf_val);
     }
 
     const auto conf_path{GetConfigFilePath()};

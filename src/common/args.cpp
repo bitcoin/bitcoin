@@ -206,7 +206,7 @@ bool ArgsManager::ParseParameters(int argc, const char* const argv[], std::strin
         if (key[0] != '-') {
             if (!m_accept_any_command && m_command.empty()) {
                 // The first non-dash arg is a registered command
-                std::optional<unsigned int> flags = GetArgFlags(key);
+                std::optional<unsigned int> flags = GetArgFlags_(key);
                 if (!flags || !(*flags & ArgsManager::COMMAND)) {
                     error = strprintf("Invalid command '%s'", argv[i]);
                     return false;
@@ -227,7 +227,7 @@ bool ArgsManager::ParseParameters(int argc, const char* const argv[], std::strin
         // Transform -foo to foo
         key.erase(0, 1);
         KeyInfo keyinfo = InterpretKey(key);
-        std::optional<unsigned int> flags = GetArgFlags('-' + keyinfo.name);
+        std::optional<unsigned int> flags = GetArgFlags_('-' + keyinfo.name);
 
         // Unknown command line options and command line options with dot
         // characters (which are returned from InterpretKey with nonempty
@@ -255,9 +255,9 @@ bool ArgsManager::ParseParameters(int argc, const char* const argv[], std::strin
     return true;
 }
 
-std::optional<unsigned int> ArgsManager::GetArgFlags(const std::string& name) const
+std::optional<unsigned int> ArgsManager::GetArgFlags_(const std::string& name) const
 {
-    LOCK(cs_args);
+    AssertLockHeld(cs_args);
     for (const auto& arg_map : m_available_args) {
         const auto search = arg_map.second.find(name);
         if (search != arg_map.second.end()) {
@@ -267,20 +267,34 @@ std::optional<unsigned int> ArgsManager::GetArgFlags(const std::string& name) co
     return m_default_flags;
 }
 
+std::optional<unsigned int> ArgsManager::GetArgFlags(const std::string& name) const
+{
+    LOCK(cs_args);
+    return GetArgFlags_(name);
+}
+
 void ArgsManager::SetDefaultFlags(std::optional<unsigned int> flags)
 {
     LOCK(cs_args);
     m_default_flags = flags;
 }
 
-fs::path ArgsManager::GetPathArg(std::string arg, const fs::path& default_value) const
+fs::path ArgsManager::GetPathArg_(std::string arg, const fs::path& default_value) const
 {
-    if (IsArgNegated(arg)) return fs::path{};
-    std::string path_str = GetArg(arg, "");
+    AssertLockHeld(cs_args);
+    const auto value = GetSetting_(arg);
+    if (value.isFalse()) return {};
+    std::string path_str = SettingToString(value, "");
     if (path_str.empty()) return default_value;
     fs::path result = fs::PathFromString(path_str).lexically_normal();
     // Remove trailing slash, if present.
     return result.has_filename() ? result : result.parent_path();
+}
+
+fs::path ArgsManager::GetPathArg(std::string arg, const fs::path& default_value) const
+{
+    LOCK(cs_args);
+    return GetPathArg_(std::move(arg), default_value);
 }
 
 fs::path ArgsManager::GetBlocksDirPath() const
@@ -292,14 +306,14 @@ fs::path ArgsManager::GetBlocksDirPath() const
     // this function
     if (!path.empty()) return path;
 
-    if (IsArgSet("-blocksdir")) {
-        path = fs::absolute(GetPathArg("-blocksdir"));
+    if (!GetSetting_("-blocksdir").isNull()) {
+        path = fs::absolute(GetPathArg_("-blocksdir"));
         if (!fs::is_directory(path)) {
             path = "";
             return path;
         }
     } else {
-        path = GetDataDirBase();
+        path = GetDataDir(/*net_specific=*/false);
     }
 
     path /= fs::PathFromString(BaseParams().DataDir());
@@ -308,15 +322,25 @@ fs::path ArgsManager::GetBlocksDirPath() const
     return path;
 }
 
+fs::path ArgsManager::GetDataDirBase() const {
+    LOCK(cs_args);
+    return GetDataDir(/*net_specific=*/false);
+}
+
+fs::path ArgsManager::GetDataDirNet() const {
+    LOCK(cs_args);
+    return GetDataDir(/*net_specific=*/true);
+}
+
 fs::path ArgsManager::GetDataDir(bool net_specific) const
 {
-    LOCK(cs_args);
+    AssertLockHeld(cs_args);
     fs::path& path = net_specific ? m_cached_network_datadir_path : m_cached_datadir_path;
 
     // Used cached path if available
     if (!path.empty()) return path;
 
-    const fs::path datadir{GetPathArg("-datadir")};
+    const fs::path datadir{GetPathArg_("-datadir")};
     if (!datadir.empty()) {
         path = fs::absolute(datadir);
         if (!fs::is_directory(path)) {
@@ -419,7 +443,7 @@ bool ArgsManager::ReadSettingsFile(std::vector<std::string>* errors)
     }
     for (const auto& setting : m_settings.rw_settings) {
         KeyInfo key = InterpretKey(setting.first); // Split setting key into section and argname
-        if (!GetArgFlags('-' + key.name)) {
+        if (!GetArgFlags_('-' + key.name)) {
             LogWarning("Ignoring unknown rw_settings value %s", setting.first);
         }
     }
@@ -555,8 +579,8 @@ INSTANTIATE_INT_TYPE(uint64_t);
 bool ArgsManager::SoftSetArg(const std::string& strArg, const std::string& strValue)
 {
     LOCK(cs_args);
-    if (IsArgSet(strArg)) return false;
-    ForceSetArg(strArg, strValue);
+    if (!GetSetting_(strArg).isNull()) return false;
+    m_settings.forced_settings[SettingName(strArg)] = strValue;
     return true;
 }
 
@@ -620,6 +644,7 @@ void ArgsManager::ClearArgs()
     m_settings = {};
     m_available_args.clear();
     m_network_only_args.clear();
+    m_config_sections.clear();
 }
 
 void ArgsManager::CheckMultipleCLIArgs() const
@@ -629,7 +654,7 @@ void ArgsManager::CheckMultipleCLIArgs() const
     auto cmds = m_available_args.find(OptionsCategory::CLI_COMMANDS);
     if (cmds != m_available_args.end()) {
         for (const auto& [cmd, argspec] : cmds->second) {
-            if (IsArgSet(cmd)) {
+            if (!GetSetting_(cmd).isNull()) {
                 found.push_back(cmd);
             }
         }
@@ -853,15 +878,22 @@ std::variant<ChainType, std::string> ArgsManager::GetChainArg() const
 
 bool ArgsManager::UseDefaultSection(const std::string& arg) const
 {
+    AssertLockHeld(cs_args);
     return m_network == ChainTypeToString(ChainType::MAIN) || !m_network_only_args.contains(arg);
+}
+
+common::SettingsValue ArgsManager::GetSetting_(const std::string& arg) const
+{
+    AssertLockHeld(cs_args);
+    return common::GetSetting(
+        m_settings, m_network, SettingName(arg), !UseDefaultSection(arg),
+        /*ignore_nonpersistent=*/false, /*get_chain_type=*/false);
 }
 
 common::SettingsValue ArgsManager::GetSetting(const std::string& arg) const
 {
     LOCK(cs_args);
-    return common::GetSetting(
-        m_settings, m_network, SettingName(arg), !UseDefaultSection(arg),
-        /*ignore_nonpersistent=*/false, /*get_chain_type=*/false);
+    return GetSetting_(arg);
 }
 
 std::vector<common::SettingsValue> ArgsManager::GetSettingsList(const std::string& arg) const
@@ -875,10 +907,11 @@ void ArgsManager::logArgsPrefix(
     const std::string& section,
     const std::map<std::string, std::vector<common::SettingsValue>>& args) const
 {
+    AssertLockHeld(cs_args);
     std::string section_str = section.empty() ? "" : "[" + section + "] ";
     for (const auto& arg : args) {
         for (const auto& value : arg.second) {
-            std::optional<unsigned int> flags = GetArgFlags('-' + arg.first);
+            std::optional<unsigned int> flags = GetArgFlags_('-' + arg.first);
             if (flags) {
                 std::string value_str = (*flags & SENSITIVE) ? "****" : value.write();
                 LogInfo("%s %s%s=%s\n", prefix, section_str, arg.first, value_str);
