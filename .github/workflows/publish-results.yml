@@ -114,7 +114,7 @@ jobs:
                 .nightly_comparison | to_entries | map(
                   "\(.key) MB: \(.value.pr_mean / 60 | floor) min" +
                   if .value.nightly_mean then
-                    " (nightly: \(.value.nightly_mean / 60 | floor) min, \(.value.nightly_date)) → " +
+                    " (nightly median of \(.value.nightly_count): \(.value.nightly_mean / 60 | floor) min, \(.value.nightly_date_range)) → " +
                     if .value.speedup_percent > 0 then "+\(.value.speedup_percent)% faster"
                     elif .value.speedup_percent < 0 then "\(.value.speedup_percent)% slower"
                     else "same"
@@ -188,7 +188,7 @@ jobs:
             --repo ${{ github.repository }} \
             --body "## Benchmark Results
 
-          **Comparison to nightly master:**
+          **Comparison to nightly master (median of last 7 runs):**
           - ${{ needs.build.outputs.comparison }}
 
           [View detailed results](${{ needs.build.outputs.result-url }})

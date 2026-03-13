@@ -308,6 +308,41 @@ class NightlyHistory:
         # Results are sorted by date, so last one is most recent
         return matching[-1]
 
+    def get_recent_median(
+        self, dbcache: int | str, n: int = 7
+    ) -> tuple[float, list[NightlyResult]] | None:
+        """Get the median mean of the most recent N scheduled results for a dbcache config.
+
+        Args:
+            dbcache: DB cache size in MB (int) or config name like '450', '32000'
+            n: Number of recent results to average
+
+        Returns:
+            Tuple of (median_mean, list_of_results_used), or None if no results found
+        """
+        if isinstance(dbcache, str):
+            try:
+                dbcache = int(dbcache)
+            except ValueError:
+                return None
+
+        matching = [
+            r
+            for r in self.results
+            if r.dbcache == dbcache and r.trigger == "scheduled"
+        ]
+        if not matching:
+            return None
+
+        recent = matching[-n:]
+        sorted_means = sorted(r.mean for r in recent)
+        mid = len(sorted_means) // 2
+        if len(sorted_means) % 2 == 0:
+            median = (sorted_means[mid - 1] + sorted_means[mid]) / 2
+        else:
+            median = sorted_means[mid]
+        return median, recent
+
     def get_chart_data(self) -> list[dict]:
         """Get results in format suitable for chart embedding.
 

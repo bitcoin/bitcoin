@@ -346,8 +346,8 @@ class ReportGenerator:
     ) -> dict[str, dict[str, Any]]:
         """Calculate comparison against nightly baseline.
 
-        Compares PR results against the most recent nightly results for each config.
-        Only considers uninstrumented configs (those without '-true' suffix).
+        Compares PR results against the median of the most recent 7 nightly results
+        for each config. Only considers uninstrumented configs.
 
         Args:
             runs: List of benchmark runs
@@ -360,8 +360,8 @@ class ReportGenerator:
                     "pr_mean": 14500.0,
                     "pr_stddev": 100.0,
                     "nightly_mean": 14800.0,
-                    "nightly_date": "2026-01-05",
-                    "nightly_commit": "abc123...",
+                    "nightly_count": 7,
+                    "nightly_date_range": "2026-01-01 to 2026-01-07",
                     "speedup_percent": 2.0
                 }
             }
@@ -387,25 +387,30 @@ class ReportGenerator:
             pr_mean = run.mean
             pr_stddev = run.stddev
 
-            # Get latest nightly for this config
-            nightly = self.nightly_history.get_latest(config)
+            # Get median of recent nightly results for this config
+            result = self.nightly_history.get_recent_median(config, n=7)
 
-            if nightly:
+            if result:
+                nightly_median, recent_results = result
                 speedup = None
-                if nightly.mean > 0:
-                    speedup = round(((nightly.mean - pr_mean) / nightly.mean) * 100, 1)
+                if nightly_median > 0:
+                    speedup = round(
+                        ((nightly_median - pr_mean) / nightly_median) * 100, 1
+                    )
+
+                # Use the latest result for series key/label and chart positioning
+                latest = recent_results[-1]
 
                 comparison[config] = {
                     "pr_mean": pr_mean,
                     "pr_stddev": pr_stddev,
                     "pr_commit": commit,
-                    "nightly_mean": nightly.mean,
-                    "nightly_stddev": nightly.stddev,
-                    "nightly_date": nightly.date,
-                    "nightly_commit": nightly.commit,
+                    "nightly_mean": nightly_median,
+                    "nightly_count": len(recent_results),
+                    "nightly_date_range": f"{recent_results[0].date} to {recent_results[-1].date}",
                     "speedup_percent": speedup,
-                    "series_key": series_key(nightly),
-                    "series_label": series_label(nightly),
+                    "series_key": series_key(latest),
+                    "series_label": series_label(latest),
                 }
             else:
                 # No nightly data, just record PR result
@@ -414,8 +419,8 @@ class ReportGenerator:
                     "pr_stddev": pr_stddev,
                     "pr_commit": commit,
                     "nightly_mean": None,
-                    "nightly_date": None,
-                    "nightly_commit": None,
+                    "nightly_count": 0,
+                    "nightly_date_range": None,
                     "speedup_percent": None,
                 }
 

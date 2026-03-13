@@ -42,7 +42,7 @@
           <tr class="bg-gray-50">
             <th class="px-4 py-2 text-left">Config</th>
             <th class="px-4 py-2">PR Time</th>
-            <th class="px-4 py-2">Nightly Time (Date)</th>
+            <th class="px-4 py-2">Nightly Median (Date Range)</th>
             <th class="px-4 py-2">Change</th>
           </tr>
         </thead>
@@ -54,8 +54,7 @@
             <td class="px-4 py-2 text-center">
               {% if data.nightly_mean %}
                 {{ "%.1f"|format(data.nightly_mean / 60) }} min
-                ({{ data.nightly_date }}{% if data.nightly_commit %},
-                <a href="{{ repo_url }}/commit/{{ data.nightly_commit }}" target="_blank" class="text-blue-600 hover:underline">{{ data.nightly_commit[:7] }}</a>{% endif %})
+                (median of {{ data.nightly_count }}, {{ data.nightly_date_range }})
               {% else %}
                 No baseline
               {% endif %}
