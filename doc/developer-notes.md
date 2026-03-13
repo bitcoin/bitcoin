@@ -542,6 +542,13 @@ to a function that accepts a `std::string` parameter. An implicit conversion occ
 Use `IWYU pragma: export` very sparingly, as this enforces transitive inclusion of headers
 and undermines the specific purpose of IWYU.
 
+The acceptable cases for using `IWYU pragma: export` are:
+1. Facade headers. For example, see [`compat/compat.h`](/src/compat/compat.h).
+2. Drop-in replacement headers. For example, see [`util/time.h`](/src/util/time.h).
+3. Presenting a complete interface across multiple headers.
+
+A comment explaining the rationale is required for every use of `IWYU pragma: export`.
+
 ### Performance profiling with perf
 
 Profiling is a good way to get a precise idea of where time is being spent in
