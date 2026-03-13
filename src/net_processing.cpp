@@ -290,13 +290,13 @@ struct Peer {
     std::chrono::microseconds m_next_send_feefilter GUARDED_BY(NetEventsInterface::g_msgproc_mutex){0};
 
     struct TxRelay {
-        mutable RecursiveMutex m_bloom_filter_mutex;
+        mutable Mutex m_bloom_filter_mutex;
         /** Whether we relay transactions to this peer. */
         bool m_relay_txs GUARDED_BY(m_bloom_filter_mutex){false};
         /** A bloom filter for which transactions to announce to the peer. See BIP37. */
         std::unique_ptr<CBloomFilter> m_bloom_filter PT_GUARDED_BY(m_bloom_filter_mutex) GUARDED_BY(m_bloom_filter_mutex){nullptr};
 
-        mutable RecursiveMutex m_tx_inventory_mutex;
+        mutable Mutex m_tx_inventory_mutex;
         /** A filter of all the (w)txids that the peer has announced to
          *  us or we have announced to the peer. We use this to avoid announcing
          *  the same (w)txid to a peer that already has the transaction. */
