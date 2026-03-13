@@ -11,31 +11,41 @@
 #include <uint256.h>
 #include <util/check.h>
 
+bool AllowMinDifficultyBlocks(const Consensus::Params& params, int height)
+{
+    if (!params.fPowAllowMinDifficultyBlocks) return false;
+    if (params.min_difficulty_fork_height == 0) return true;
+    return height < params.min_difficulty_fork_height;
+}
+
+std::optional<unsigned int> GetMinDifficultyForkBits(const Consensus::Params& params, int height)
+{
+    if (!params.fPowAllowMinDifficultyBlocks) return std::nullopt;
+    if (params.min_difficulty_fork_height == 0 || height != params.min_difficulty_fork_height) return std::nullopt;
+    arith_uint256 target = UintToArith256(params.powLimit);
+    target /= 1000000;
+    return target.GetCompact();
+}
+
 unsigned int GetNextWorkRequired(const CBlockIndex* pindexLast, const CBlockHeader *pblock, const Consensus::Params& params)
 {
     assert(pindexLast != nullptr);
     unsigned int nProofOfWorkLimit = UintToArith256(params.powLimit).GetCompact();
 
-    // Check if min difficulty blocks are allowed at this height.
-    // nMinDifficultyBlocksForkHeight == 0 means no fork (keep allowing min difficulty blocks).
-    // Otherwise, min difficulty blocks are disabled at and after the fork height.
-    const int nNextHeight = pindexLast->nHeight + 1;
-    const bool fAllowMinDifficultyBlocks = params.fPowAllowMinDifficultyBlocks &&
-        (params.nMinDifficultyBlocksForkHeight == 0 || nNextHeight < params.nMinDifficultyBlocksForkHeight);
+    const int next_height = pindexLast->nHeight + 1;
 
-    // At the fork height, reset difficulty to 1,000,000 to compensate for the
-    // artificially high difficulty caused by min-difficulty blocks.
-    // We use 1,000,000 instead of 1 (powLimit) to avoid a block storm.
-    if (params.nMinDifficultyBlocksForkHeight != 0 && nNextHeight == params.nMinDifficultyBlocksForkHeight) {
-        arith_uint256 target = UintToArith256(params.powLimit);
-        target /= 1000000;
-        return target.GetCompact();
+    // At the fork height, reset difficulty to compensate for the
+    // artificially high difficulty caused by min-difficulty blocks in testnet4.
+    if (auto fork_bits = GetMinDifficultyForkBits(params, next_height)) {
+        return *fork_bits;
     }
+
+    const bool allow_min_difficulty_blocks = AllowMinDifficultyBlocks(params, next_height);
 
     // Only change once per difficulty adjustment interval
     if ((pindexLast->nHeight+1) % params.DifficultyAdjustmentInterval() != 0)
     {
-        if (fAllowMinDifficultyBlocks)
+        if (allow_min_difficulty_blocks)
         {
             // Special difficulty rule for testnet:
             // If the new block's timestamp is more than 2* 10 minutes
@@ -104,17 +114,11 @@ unsigned int CalculateNextWorkRequired(const CBlockIndex* pindexLast, int64_t nF
 // or decrease beyond the permitted limits.
 bool PermittedDifficultyTransition(const Consensus::Params& params, int64_t height, uint32_t old_nbits, uint32_t new_nbits)
 {
-    // Check if min difficulty blocks are allowed at this height.
-    // After the fork height, we enforce proper difficulty validation.
-    const bool fAllowMinDifficultyBlocks = params.fPowAllowMinDifficultyBlocks &&
-        (params.nMinDifficultyBlocksForkHeight == 0 || height < params.nMinDifficultyBlocksForkHeight);
-    if (fAllowMinDifficultyBlocks) return true;
+    if (AllowMinDifficultyBlocks(params, height)) return true;
 
-    // At the fork height, we reset to difficulty 1,000,000, so only that transition is valid
-    if (params.nMinDifficultyBlocksForkHeight != 0 && height == params.nMinDifficultyBlocksForkHeight) {
-        arith_uint256 fork_target = UintToArith256(params.powLimit);
-        fork_target /= 1000000;
-        return new_nbits == fork_target.GetCompact();
+    // At the fork height, only the reset to difficulty 1,000,000 is valid
+    if (auto fork_bits = GetMinDifficultyForkBits(params, height)) {
+        return new_nbits == *fork_bits;
     }
 
     if (height % params.DifficultyAdjustmentInterval() == 0) {

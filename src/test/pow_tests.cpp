@@ -215,14 +215,15 @@ BOOST_AUTO_TEST_CASE(testnet4_min_difficulty_pre_fork)
     const auto& consensus = chainParams->GetConsensus();
 
     // Verify testnet4 has the expected fork height (epoch 75 boundary)
-    BOOST_CHECK_EQUAL(consensus.nMinDifficultyBlocksForkHeight, 151200);
+    const int fork_height = consensus.min_difficulty_fork_height;
+    BOOST_CHECK_EQUAL(fork_height, 151200);
     BOOST_CHECK(consensus.fPowAllowMinDifficultyBlocks);
 
-    const unsigned int nProofOfWorkLimit = UintToArith256(consensus.powLimit).GetCompact();
+    const unsigned int pow_limit = UintToArith256(consensus.powLimit).GetCompact();
 
-    // Create a mock chain at height 151,198 (so next block is 151,199, before fork)
+    // Create a mock chain so next block is fork_height - 1 (before fork)
     CBlockIndex pindexPrev;
-    pindexPrev.nHeight = 151198;
+    pindexPrev.nHeight = fork_height - 2;
     pindexPrev.nTime = 1714777860;  // Some base time
     pindexPrev.nBits = 0x1c00ffff;  // Some non-trivial difficulty
 
@@ -231,10 +232,10 @@ BOOST_AUTO_TEST_CASE(testnet4_min_difficulty_pre_fork)
     CBlockHeader block;
     block.nTime = pindexPrev.nTime + consensus.nPowTargetSpacing * 2 + 1;  // >20 minutes later
 
-    unsigned int nBits = GetNextWorkRequired(&pindexPrev, &block, consensus);
+    unsigned int bits = GetNextWorkRequired(&pindexPrev, &block, consensus);
 
-    // Before fork (height 151,199): min-difficulty should be allowed
-    BOOST_CHECK_EQUAL(nBits, nProofOfWorkLimit);
+    // Before fork: min-difficulty should be allowed
+    BOOST_CHECK_EQUAL(bits, pow_limit);
 }
 
 /* Test that at the fork height, difficulty resets to 1,000,000 */
@@ -242,15 +243,16 @@ BOOST_AUTO_TEST_CASE(testnet4_difficulty_reset_at_fork)
 {
     const auto chainParams = CreateChainParams(*m_node.args, ChainType::TESTNET4);
     const auto& consensus = chainParams->GetConsensus();
+    const int fork_height = consensus.min_difficulty_fork_height;
 
     // Calculate expected difficulty: powLimit / 1,000,000
-    arith_uint256 expectedTarget = UintToArith256(consensus.powLimit);
-    expectedTarget /= 1000000;
-    const unsigned int nExpectedBits = expectedTarget.GetCompact();
+    arith_uint256 expected_target = UintToArith256(consensus.powLimit);
+    expected_target /= 1000000;
+    const unsigned int expected_bits = expected_target.GetCompact();
 
-    // Create a mock chain at height 151,199 (so next block is 151,200, at fork)
+    // Create a mock chain so next block is at fork_height
     CBlockIndex pindexPrev;
-    pindexPrev.nHeight = 151199;
+    pindexPrev.nHeight = fork_height - 1;
     pindexPrev.nTime = 1714777860;
     pindexPrev.nBits = 0x1c00ffff;  // Some non-trivial (high) difficulty
 
@@ -258,10 +260,10 @@ BOOST_AUTO_TEST_CASE(testnet4_difficulty_reset_at_fork)
     CBlockHeader block;
     block.nTime = pindexPrev.nTime + consensus.nPowTargetSpacing;
 
-    unsigned int nBits = GetNextWorkRequired(&pindexPrev, &block, consensus);
+    unsigned int bits = GetNextWorkRequired(&pindexPrev, &block, consensus);
 
-    // At fork (height 151,200): difficulty should reset to 1,000,000
-    BOOST_CHECK_EQUAL(nBits, nExpectedBits);
+    // At fork height: difficulty should reset to 1,000,000
+    BOOST_CHECK_EQUAL(bits, expected_bits);
 }
 
 /* Test that testnet4 min-difficulty blocks are NOT allowed after the fork height */
@@ -269,24 +271,25 @@ BOOST_AUTO_TEST_CASE(testnet4_min_difficulty_post_fork)
 {
     const auto chainParams = CreateChainParams(*m_node.args, ChainType::TESTNET4);
     const auto& consensus = chainParams->GetConsensus();
+    const int fork_height = consensus.min_difficulty_fork_height;
 
-    const unsigned int nProofOfWorkLimit = UintToArith256(consensus.powLimit).GetCompact();
+    const unsigned int pow_limit = UintToArith256(consensus.powLimit).GetCompact();
 
-    // Create a mock chain at height 151,200 (so next block is 151,201, after fork)
+    // Create a mock chain so next block is fork_height + 1 (after fork)
     CBlockIndex pindexPrev;
-    pindexPrev.nHeight = 151200;
+    pindexPrev.nHeight = fork_height;
     pindexPrev.nTime = 1714777860;
     pindexPrev.nBits = 0x1c00ffff;
 
     CBlockHeader block;
     block.nTime = pindexPrev.nTime + consensus.nPowTargetSpacing * 2 + 1;
 
-    unsigned int nBits = GetNextWorkRequired(&pindexPrev, &block, consensus);
+    unsigned int bits = GetNextWorkRequired(&pindexPrev, &block, consensus);
 
-    // After fork (height 151,201): min-difficulty should NOT be allowed
+    // After fork: min-difficulty should NOT be allowed
     // Even with >20 min delay, should return previous block's difficulty
-    BOOST_CHECK_EQUAL(nBits, pindexPrev.nBits);
-    BOOST_CHECK(nBits != nProofOfWorkLimit);
+    BOOST_CHECK_EQUAL(bits, pindexPrev.nBits);
+    BOOST_CHECK(bits != pow_limit);
 }
 
 /* Test PermittedDifficultyTransition for testnet4 before and after fork */
@@ -294,57 +297,70 @@ BOOST_AUTO_TEST_CASE(testnet4_permitted_difficulty_transition)
 {
     const auto chainParams = CreateChainParams(*m_node.args, ChainType::TESTNET4);
     const auto& consensus = chainParams->GetConsensus();
+    const int fork_height = consensus.min_difficulty_fork_height;
 
-    const unsigned int nProofOfWorkLimit = UintToArith256(consensus.powLimit).GetCompact();
+    const unsigned int pow_limit = UintToArith256(consensus.powLimit).GetCompact();
     const unsigned int some_difficulty = 0x1c00ffff;
 
     // Calculate the fork reset difficulty (1,000,000)
-    arith_uint256 forkTarget = UintToArith256(consensus.powLimit);
-    forkTarget /= 1000000;
-    const unsigned int nForkDifficulty = forkTarget.GetCompact();
+    arith_uint256 fork_target = UintToArith256(consensus.powLimit);
+    fork_target /= 1000000;
+    const unsigned int fork_difficulty = fork_target.GetCompact();
 
-    // Before fork (height 151,199): any transition should be permitted
+    // Before fork: any transition should be permitted
     // because fPowAllowMinDifficultyBlocks is true and we're before fork
-    BOOST_CHECK(PermittedDifficultyTransition(consensus, 151199, some_difficulty, nProofOfWorkLimit));
-    BOOST_CHECK(PermittedDifficultyTransition(consensus, 151199, some_difficulty, some_difficulty));
-    BOOST_CHECK(PermittedDifficultyTransition(consensus, 151199, nProofOfWorkLimit, some_difficulty));
+    BOOST_CHECK(PermittedDifficultyTransition(consensus, fork_height - 1, some_difficulty, pow_limit));
+    BOOST_CHECK(PermittedDifficultyTransition(consensus, fork_height - 1, some_difficulty, some_difficulty));
+    BOOST_CHECK(PermittedDifficultyTransition(consensus, fork_height - 1, pow_limit, some_difficulty));
 
-    // At fork (height 151,200): only transition to difficulty 1,000,000 is permitted
-    BOOST_CHECK(PermittedDifficultyTransition(consensus, 151200, some_difficulty, nForkDifficulty));
-    BOOST_CHECK(!PermittedDifficultyTransition(consensus, 151200, some_difficulty, nProofOfWorkLimit));
-    BOOST_CHECK(!PermittedDifficultyTransition(consensus, 151200, some_difficulty, some_difficulty));
+    // At fork: only transition to difficulty 1,000,000 is permitted
+    BOOST_CHECK(PermittedDifficultyTransition(consensus, fork_height, some_difficulty, fork_difficulty));
+    BOOST_CHECK(!PermittedDifficultyTransition(consensus, fork_height, some_difficulty, pow_limit));
+    BOOST_CHECK(!PermittedDifficultyTransition(consensus, fork_height, some_difficulty, some_difficulty));
 
     // After fork: strict rules apply
     // For non-retarget heights, difficulty must stay the same
-    int non_retarget_height = 151201;  // Not divisible by 2016
-    BOOST_CHECK(!PermittedDifficultyTransition(consensus, non_retarget_height, some_difficulty, nProofOfWorkLimit));
-    BOOST_CHECK(PermittedDifficultyTransition(consensus, non_retarget_height, some_difficulty, some_difficulty));
+    BOOST_CHECK(!PermittedDifficultyTransition(consensus, fork_height + 1, some_difficulty, pow_limit));
+    BOOST_CHECK(PermittedDifficultyTransition(consensus, fork_height + 1, some_difficulty, some_difficulty));
 
     // Further after fork: same strict rules
-    non_retarget_height = 152000;
-    BOOST_CHECK(!PermittedDifficultyTransition(consensus, non_retarget_height, some_difficulty, nProofOfWorkLimit));
+    int non_retarget_height = fork_height + 800;
+    BOOST_CHECK(!PermittedDifficultyTransition(consensus, non_retarget_height, some_difficulty, pow_limit));
     BOOST_CHECK(PermittedDifficultyTransition(consensus, non_retarget_height, some_difficulty, some_difficulty));
+
+    // At the next retarget after the fork, the transition must be based on the
+    // fork reset difficulty (1,000,000), not the pre-fork difficulty.
+    const int next_retarget = fork_height + consensus.DifficultyAdjustmentInterval();
+    // Retarget from fork_difficulty: within factor of 4 is permitted
+    BOOST_CHECK(PermittedDifficultyTransition(consensus, next_retarget, fork_difficulty, fork_difficulty));
+    // Transitioning from some unrelated pre-fork difficulty to fork_difficulty is not valid
+    // if it exceeds the 4x adjustment limit
+    BOOST_CHECK(!PermittedDifficultyTransition(consensus, next_retarget, fork_difficulty, pow_limit));
 }
 
-/* Test that regtest is unaffected by the fork (nMinDifficultyBlocksForkHeight = 0) */
+/* Test that regtest is unaffected by the fork (min_difficulty_fork_height = 0) */
 BOOST_AUTO_TEST_CASE(regtest_min_difficulty_unaffected)
 {
     const auto chainParams = CreateChainParams(*m_node.args, ChainType::REGTEST);
     const auto& consensus = chainParams->GetConsensus();
 
-    // Verify regtest has no fork (nMinDifficultyBlocksForkHeight = 0 means disabled)
-    BOOST_CHECK_EQUAL(consensus.nMinDifficultyBlocksForkHeight, 0);
+    // Verify regtest has no fork (min_difficulty_fork_height = 0 means disabled)
+    BOOST_CHECK_EQUAL(consensus.min_difficulty_fork_height, 0);
     BOOST_CHECK(consensus.fPowAllowMinDifficultyBlocks);
 
+    // Use testnet4's fork height to verify regtest is unaffected at those same heights
+    const auto testnet4Params = CreateChainParams(*m_node.args, ChainType::TESTNET4);
+    const int testnet4_fork_height = testnet4Params->GetConsensus().min_difficulty_fork_height;
+
     // PermittedDifficultyTransition should always return true for regtest
-    // regardless of height (even at heights > 151,200)
-    const unsigned int nProofOfWorkLimit = UintToArith256(consensus.powLimit).GetCompact();
+    // regardless of height (even at heights around the testnet4 fork)
+    const unsigned int pow_limit = UintToArith256(consensus.powLimit).GetCompact();
     const unsigned int some_difficulty = 0x1c00ffff;
 
-    BOOST_CHECK(PermittedDifficultyTransition(consensus, 151199, some_difficulty, nProofOfWorkLimit));
-    BOOST_CHECK(PermittedDifficultyTransition(consensus, 151200, some_difficulty, nProofOfWorkLimit));
-    BOOST_CHECK(PermittedDifficultyTransition(consensus, 151201, some_difficulty, nProofOfWorkLimit));
-    BOOST_CHECK(PermittedDifficultyTransition(consensus, 200000, some_difficulty, nProofOfWorkLimit));
+    BOOST_CHECK(PermittedDifficultyTransition(consensus, testnet4_fork_height - 1, some_difficulty, pow_limit));
+    BOOST_CHECK(PermittedDifficultyTransition(consensus, testnet4_fork_height, some_difficulty, pow_limit));
+    BOOST_CHECK(PermittedDifficultyTransition(consensus, testnet4_fork_height + 1, some_difficulty, pow_limit));
+    BOOST_CHECK(PermittedDifficultyTransition(consensus, 200000, some_difficulty, pow_limit));
 }
 
 /* Test that mainnet is unaffected (fPowAllowMinDifficultyBlocks = false) */
@@ -355,15 +371,16 @@ BOOST_AUTO_TEST_CASE(mainnet_min_difficulty_unaffected)
 
     // Mainnet doesn't allow min-difficulty blocks at all
     BOOST_CHECK(!consensus.fPowAllowMinDifficultyBlocks);
-    BOOST_CHECK_EQUAL(consensus.nMinDifficultyBlocksForkHeight, 0);
+    BOOST_CHECK_EQUAL(consensus.min_difficulty_fork_height, 0);
 
     // PermittedDifficultyTransition enforces strict rules on mainnet
     const unsigned int some_difficulty = 0x1c00ffff;
-    const unsigned int nProofOfWorkLimit = UintToArith256(consensus.powLimit).GetCompact();
+    const unsigned int pow_limit = UintToArith256(consensus.powLimit).GetCompact();
 
     // Non-retarget height: difficulty must stay same
+    // (chose an arbitrary non-divisible by 2016 block height)
     int non_retarget_height = 150001;
-    BOOST_CHECK(!PermittedDifficultyTransition(consensus, non_retarget_height, some_difficulty, nProofOfWorkLimit));
+    BOOST_CHECK(!PermittedDifficultyTransition(consensus, non_retarget_height, some_difficulty, pow_limit));
     BOOST_CHECK(PermittedDifficultyTransition(consensus, non_retarget_height, some_difficulty, some_difficulty));
 }
 

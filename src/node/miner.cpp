@@ -397,10 +397,8 @@ std::unique_ptr<CBlockTemplate> WaitAndCreateNewBlock(ChainstateManager& chainma
         // On test networks return a minimum difficulty block after 20 minutes,
         // but only if we haven't reached the fork height that disables this feature.
         const auto& consensus = chainman.GetParams().GetConsensus();
-        const int nNextHeight = chainman.ActiveChain().Tip()->nHeight + 1;
-        const bool fAllowMinDifficulty = allow_min_difficulty &&
-            (consensus.nMinDifficultyBlocksForkHeight == 0 || nNextHeight < consensus.nMinDifficultyBlocksForkHeight);
-        if (!tip_changed && fAllowMinDifficulty) {
+        const int next_height = chainman.ActiveChain().Tip()->nHeight + 1;
+        if (!tip_changed && allow_min_difficulty && AllowMinDifficultyBlocks(consensus, next_height)) {
             const NodeClock::time_point tip_time{std::chrono::seconds{chainman.ActiveChain().Tip()->GetBlockTime()}};
             if (now > tip_time + 20min) {
                 tip_changed = true;
