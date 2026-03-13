@@ -431,3 +431,22 @@ FUZZ_TARGET(coins_view_overlay, .init = initialize_coins_view) EXCLUSIVE_LOCKS_R
     const auto reset_guard{coins_view_cache.StartFetching(block)};
     TestCoinsView(fuzzed_data_provider, coins_view_cache, &backend_cache);
 }
+
+FUZZ_TARGET(coins_view_stacked, .init = initialize_coins_view) EXCLUSIVE_LOCKS_REQUIRED(!g_thread_pool_mutex)
+{
+    StartPoolIfNeeded();
+    FuzzedDataProvider fuzzed_data_provider{buffer.data(), buffer.size()};
+    auto db_params = DBParams{
+        .path = "",
+        .cache_bytes = 1_MiB,
+        .memory_only = true,
+    };
+    CCoinsViewDB backend_base_coins_view{std::move(db_params), CoinsViewOptions{}};
+    CCoinsViewCache backend_cache{&backend_base_coins_view, /*deterministic=*/true};
+    TestCoinsView(fuzzed_data_provider, backend_cache, &backend_base_coins_view);
+    CoinsViewOverlay coins_view_cache{&backend_cache, g_thread_pool, /*deterministic=*/true};
+    CBlock block{BuildRandomBlock(fuzzed_data_provider)};
+    const auto reset_guard{coins_view_cache.StartFetching(block)};
+    TestCoinsView(fuzzed_data_provider, coins_view_cache, &backend_cache);
+    TestCoinsView(fuzzed_data_provider, backend_cache, &backend_base_coins_view);
+}
