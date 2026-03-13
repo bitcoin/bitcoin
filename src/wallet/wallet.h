@@ -302,6 +302,21 @@ struct CRecipient
     bool fSubtractFeeFromAmount;
 };
 
+struct ImportDescriptorResult {
+    enum class FailureReason {
+        NONE,
+        INVALID_DESCRIPTOR,
+        INVALID_PARAMETER,
+        WALLET_ERROR,
+        MISC_ERROR
+    };
+    bool success{false};
+    bool used_default_range{false};
+    FailureReason reason{FailureReason::NONE};
+    std::string error;
+    std::vector<std::string> warnings;
+};
+
 class WalletRescanReserver; //forward declarations for ScanForWalletTransactions/RescanFromTime
 /**
  * A CWallet maintains a set of transactions and balances, and provides the ability to create new transactions.
@@ -582,6 +597,15 @@ public:
 
     //! Upgrade DescriptorCaches
     void UpgradeDescriptorCache() EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
+
+    //! Import a descriptor interface
+    ImportDescriptorResult ImportDescriptor(const std::string& descriptor,
+        bool active,
+        const std::optional<bool>& internal,
+        const std::optional<std::string>& label,
+        int64_t timestamp,
+        const std::optional<std::pair<int64_t, int64_t>>& range,
+        const std::optional<int64_t>& next_index) EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
 
     //! Marks destination as previously spent.
     void LoadAddressPreviouslySpent(const CTxDestination& dest) EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
