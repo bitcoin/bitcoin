@@ -740,10 +740,10 @@ class NetworkThread(threading.Thread):
 
         NetworkThread.listeners = {}
         NetworkThread.protos = {}
-        NetworkThread.network_event_loop = asyncio.SelectorEventLoop() if platform.system() == "Windows" else asyncio.new_event_loop()
 
     def run(self):
         """Start the network thread."""
+        NetworkThread.network_event_loop = asyncio.SelectorEventLoop() if platform.system() == "Windows" else asyncio.new_event_loop()
         self.network_event_loop.run_forever()
 
     def close(self, *, timeout):
