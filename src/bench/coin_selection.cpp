@@ -39,7 +39,7 @@ using wallet::OutputGroup;
 using wallet::SelectCoinsBnB;
 using wallet::TxStateInactive;
 
-static void addCoin(const CAmount& nValue, const CWallet& wallet, std::vector<std::unique_ptr<CWalletTx>>& wtxs)
+static void addCoin(const CAmount& nValue, std::vector<std::unique_ptr<CWalletTx>>& wtxs)
 {
     static int nextLockTime = 0;
     CMutableTransaction tx;
@@ -66,15 +66,15 @@ static void CoinSelection(benchmark::Bench& bench)
 
     // Add coins.
     for (int i = 0; i < 1000; ++i) {
-        addCoin(1000 * COIN, wallet, wtxs);
+        addCoin(1000 * COIN, wtxs);
     }
-    addCoin(3 * COIN, wallet, wtxs);
+    addCoin(3 * COIN, wtxs);
 
     // Create coins
     wallet::CoinsResult available_coins;
     for (const auto& wtx : wtxs) {
         const auto txout = wtx->tx->vout.at(0);
-        available_coins.coins[OutputType::BECH32].emplace_back(COutPoint(wtx->GetHash(), 0), txout, /*depth=*/6 * 24, CalculateMaximumSignedInputSize(txout, &wallet, /*coin_control=*/nullptr), /*solvable=*/true, /*safe=*/true, wtx->GetTxTime(), /*from_me=*/true, /*fees=*/ 0);
+        available_coins.coins[OutputType::BECH32].emplace_back(COutPoint(wtx->GetHash(), 0), txout, /*depth=*/6 * 24, /*input_bytes=*/-1, /*solvable=*/true, /*safe=*/true, wtx->GetTxTime(), /*from_me=*/true, /*fees=*/0);
     }
 
     const CoinEligibilityFilter filter_standard(1, 6, 0);
