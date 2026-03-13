@@ -110,7 +110,7 @@ class IPCMiningTest(BitcoinTestFramework):
         """Test Mining interface methods."""
         self.log.info("Running Mining interface test")
         block_hash_size = 32
-        timeout = 1000.0 # 1000 milliseconds
+        timeout = 1000.0 * self.options.timeout_factor # 1000 milliseconds
 
         async def async_routine():
             ctx, mining = await make_mining_ctx(self)
@@ -132,7 +132,7 @@ class IPCMiningTest(BitcoinTestFramework):
 
             self.log.debug("interrupt() should abort waitTipChanged()")
             async def wait_for_tip():
-                long_timeout = 60000.0  # 1 minute
+                long_timeout = max(timeout, 60000.0)  # at least 1 minute
                 result = (await mining.waitTipChanged(ctx, newblockref.hash, long_timeout)).result
                 # Unlike a timeout, interrupt() returns an empty BlockRef.
                 assert_equal(len(result.hash), 0)
@@ -172,7 +172,7 @@ class IPCMiningTest(BitcoinTestFramework):
         """Test BlockTemplate interface methods."""
         self.log.info("Running BlockTemplate interface test")
         block_header_size = 80
-        timeout = 1000.0 # 1000 milliseconds
+        timeout = 1000.0 * self.options.timeout_factor
 
         async def async_routine():
             ctx, mining = await make_mining_ctx(self)
@@ -285,7 +285,7 @@ class IPCMiningTest(BitcoinTestFramework):
                 self.log.debug("interruptWait should abort the current wait")
                 async def wait_for_block():
                     new_waitoptions = self.capnp_modules['mining'].BlockWaitOptions()
-                    new_waitoptions.timeout = timeout * 60 # 1 minute wait
+                    new_waitoptions.timeout = max(timeout, 60000.0) # at least 1 minute
                     new_waitoptions.feeThreshold = 1
                     template7 = await mining_wait_next_template(template6, stack, ctx, new_waitoptions)
                     assert template7 is None
