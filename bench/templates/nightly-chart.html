@@ -103,12 +103,10 @@
         seriesMap.set(key, {
           label: d.series_label || (d.config + ' dbcache'),
           colorIndex: d.color_index || 0,
-          scheduled: [],
-          manual: []
+          points: []
         });
       }
-      const bucket = (d.trigger === 'manual') ? 'manual' : 'scheduled';
-      seriesMap.get(key)[bucket].push(d);
+      seriesMap.get(key).points.push(d);
     });
 
     const traces = [];
@@ -117,43 +115,26 @@
 
     sortedSeries.forEach(([seriesKey, series]) => {
       const color = getSeriesColor(series.colorIndex);
+      const points = series.points.sort((a, b) => a.date.localeCompare(b.date));
 
-      if (series.scheduled.length > 0) {
-        const points = series.scheduled.sort((a, b) => a.date.localeCompare(b.date));
-        traces.push({
-          name: series.label,
-          x: points.map(d => d.date),
-          y: points.map(d => toMinutes(d.mean)),
-          text: points.map(d => d.commit.slice(0, 8)),
-          customdata: points.map(d => [d.commit, toMinutes(d.stddev || 0)]),
-          hovertemplate: '<b>%{text}</b><br>%{y:.1f} min<br>\u00b1%{customdata[1]:.1f} min<extra>' + series.label + '</extra>',
-          mode: 'lines+markers',
-          line: { color: color, width: 2 },
-          marker: { size: 8 },
-          error_y: {
-            type: 'data',
-            array: points.map(d => toMinutes(d.stddev || 0)),
-            visible: true,
-            color: getErrorColor(color),
-            thickness: 1.5
-          }
-        });
-      }
-
-      if (series.manual.length > 0) {
-        const points = series.manual.sort((a, b) => a.date.localeCompare(b.date));
-        traces.push({
-          name: series.label + ' (manual)',
-          x: points.map(d => d.run_date || d.date),
-          y: points.map(d => toMinutes(d.mean)),
-          text: points.map(d => d.commit.slice(0, 8)),
-          customdata: points.map(d => [d.commit, d.run_date || d.date]),
-          hovertemplate: '<b>%{text}</b><br>%{y:.1f} min<br>run: %{customdata[1]}<extra>' + series.label + ' (manual)</extra>',
-          mode: 'markers',
-          marker: { size: 10, symbol: 'diamond', color: color, line: { color: 'white', width: 1 } },
-          legendgroup: seriesKey
-        });
-      }
+      traces.push({
+        name: series.label,
+        x: points.map(d => d.date),
+        y: points.map(d => toMinutes(d.mean)),
+        text: points.map(d => d.commit.slice(0, 8)),
+        customdata: points.map(d => [d.commit, toMinutes(d.stddev || 0)]),
+        hovertemplate: '<b>%{text}</b><br>%{y:.1f} min<br>\u00b1%{customdata[1]:.1f} min<extra>' + series.label + '</extra>',
+        mode: 'lines+markers',
+        line: { color: color, width: 2 },
+        marker: { size: 8 },
+        error_y: {
+          type: 'data',
+          array: points.map(d => toMinutes(d.stddev || 0)),
+          visible: true,
+          color: getErrorColor(color),
+          thickness: 1.5
+        }
+      });
     });
 
     return traces;
