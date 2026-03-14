@@ -45,7 +45,7 @@ NetworkWidget::NetworkWidget(QWidget* parent) :
                       ui->labelQuorums},
                      {GUIUtil::FontWeight::Bold, 16});
 
-    for (auto* element : {ui->labelChainLocks, ui->labelInstantSend, ui->labelMasternodes}) {
+    for (auto* element : {ui->labelInstantSend, ui->labelMasternodes, ui->labelChainLocks}) {
         element->setContentsMargins(0, 10, 0, 0);
     }
 }
@@ -53,25 +53,6 @@ NetworkWidget::NetworkWidget(QWidget* parent) :
 NetworkWidget::~NetworkWidget()
 {
     delete ui;
-}
-
-void NetworkWidget::showEvent(QShowEvent* event)
-{
-    QWidget::showEvent(event);
-
-    // Sync bottom grid label column width with left grid (deferred to showEvent
-    // so CSS styling and font metrics are fully resolved)
-    int maxLabelWidth{0};
-    for (int row = 0; row < ui->leftGridLayout->rowCount(); ++row) {
-        if (auto* item = ui->leftGridLayout->itemAtPosition(row, 0)) {
-            if (auto* widget = item->widget()) {
-                maxLabelWidth = std::max(maxLabelWidth, widget->sizeHint().width());
-            }
-        }
-    }
-    if (maxLabelWidth > 0) {
-        ui->bottomGridLayout->setColumnMinimumWidth(0, maxLabelWidth);
-    }
 }
 
 void NetworkWidget::setClientModel(ClientModel* model)

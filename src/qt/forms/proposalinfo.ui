@@ -20,6 +20,10 @@
    </sizepolicy>
   </property>
   <layout class="QGridLayout" name="gridLayoutGovernance" columnstretch="0,1,0">
+   <property name="leftMargin"><number>0</number></property>
+   <property name="topMargin"><number>0</number></property>
+   <property name="rightMargin"><number>0</number></property>
+   <property name="bottomMargin"><number>0</number></property>
    <property name="horizontalSpacing">
     <number>12</number>
    </property>

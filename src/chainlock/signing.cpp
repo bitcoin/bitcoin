@@ -75,6 +75,11 @@ void ChainLockSigner::UpdatedBlockTip(const CBlockIndex* pindexNew, const CBlock
 
 void ChainLockSigner::TrySignChainTip()
 {
+    TRY_LOCK(cs_try_sign, locked);
+    if (!locked) {
+        return;
+    }
+
     if (!m_mn_sync.IsBlockchainSynced()) {
         return;
     }
@@ -182,6 +187,10 @@ void ChainLockSigner::BlockDisconnected(const std::shared_ptr<const CBlock>& blo
 
 void ChainLockSigner::BlockConnected(const std::shared_ptr<const CBlock>& block, const CBlockIndex* pindex)
 {
+    if (!m_mn_sync.IsBlockchainSynced()) {
+        return;
+    }
+
     // We need this information later when we try to sign a new tip, so that we can determine if all included TXs are safe.
     const uint256& hash = pindex->GetBlockHash();
 
