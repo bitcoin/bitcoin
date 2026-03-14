@@ -26,6 +26,8 @@ class CEvoDB : public CDBWrapper {
     bool bFlushOnNextRead{false};
     std::function<bool(CDBBatch&)> m_write_batch_hook_for_testing;
     std::function<void()> m_before_read_lock_hook_for_testing;
+    bool m_read_flush_in_progress{false};
+    std::condition_variable_any m_read_flush_cv;
 
     struct PendingState {
         std::list<std::pair<K, V>> writes;
@@ -96,6 +98,9 @@ class CEvoDB : public CDBWrapper {
                 setEraseCache.insert(key);
             }
         }
+        if (!pending.erases.empty()) {
+            bFlushOnNextRead = true;
+        }
     }
 
     bool SubmitBatch(CDBBatch& batch)
@@ -144,12 +149,26 @@ public:
         while (true) {
             RunBeforeReadLockHookForTesting();
             std::unique_lock<RecursiveMutex> lock(cs);
+            while (m_read_flush_in_progress) {
+                m_read_flush_cv.wait(lock);
+            }
             if (bFlushOnNextRead) {
                 bFlushOnNextRead = false;
+                m_read_flush_in_progress = true;
                 lock.unlock();
                 LogPrint(BCLog::SYS, "Evodb::ReadCache flushing cache before read\n");
-                FlushCacheToDisk();
-                continue;
+                const bool flush_ok = FlushCacheToDisk();
+                lock.lock();
+                m_read_flush_in_progress = false;
+                lock.unlock();
+                m_read_flush_cv.notify_all();
+                if (flush_ok) {
+                    continue;
+                }
+                lock.lock();
+            }
+            if (setEraseCache.find(key) != setEraseCache.end()) {
+                return false;
             }
             auto it = mapCache.find(key);
             if (it != mapCache.end()) {
@@ -165,12 +184,23 @@ public:
         while (true) {
             RunBeforeReadLockHookForTesting();
             std::unique_lock<RecursiveMutex> lock(cs);
+            while (m_read_flush_in_progress) {
+                m_read_flush_cv.wait(lock);
+            }
             if (bFlushOnNextRead) {
                 bFlushOnNextRead = false;
+                m_read_flush_in_progress = true;
                 lock.unlock();
                 LogPrint(BCLog::SYS, "Evodb::ReadCache flushing cache before read\n");
-                FlushCacheToDisk();
-                continue;
+                const bool flush_ok = FlushCacheToDisk();
+                lock.lock();
+                m_read_flush_in_progress = false;
+                lock.unlock();
+                m_read_flush_cv.notify_all();
+                if (flush_ok) {
+                    continue;
+                }
+                lock.lock();
             }
             for (const auto& [key, it] : mapCache) {
                 cb(key, it->second);
@@ -248,12 +278,26 @@ public:
         while (true) {
             RunBeforeReadLockHookForTesting();
             std::unique_lock<RecursiveMutex> lock(cs);
+            while (m_read_flush_in_progress) {
+                m_read_flush_cv.wait(lock);
+            }
             if (bFlushOnNextRead) {
                 bFlushOnNextRead = false;
+                m_read_flush_in_progress = true;
                 lock.unlock();
                 LogPrint(BCLog::SYS, "Evodb::ReadCache flushing cache before read\n");
-                FlushCacheToDisk();
-                continue;
+                const bool flush_ok = FlushCacheToDisk();
+                lock.lock();
+                m_read_flush_in_progress = false;
+                lock.unlock();
+                m_read_flush_cv.notify_all();
+                if (flush_ok) {
+                    continue;
+                }
+                lock.lock();
+            }
+            if (setEraseCache.find(key) != setEraseCache.end()) {
+                return false;
             }
             if (mapCache.find(key) != mapCache.end()) {
                 return true;

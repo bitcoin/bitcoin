@@ -2,6 +2,8 @@
 #include <boost/test/unit_test.hpp>
 #include <boost/filesystem.hpp>
 #include <boost/thread.hpp>
+#include <chrono>
+#include <future>
 #include <iostream>
 #include <evo/evodb.h>
 #include <dbwrapper.h>
@@ -604,6 +606,56 @@ BOOST_AUTO_TEST_CASE(TestExistsCacheDoesNotResurrectPendingEraseBeforeReadLock)
     BOOST_CHECK(!evoDB.Read(1, value));
 
     evoDB.SetBeforeReadLockHookForTesting({});
+}
+
+BOOST_AUTO_TEST_CASE(TestConcurrentReadCacheWaitsForEraseTriggeredFlush)
+{
+    auto dbParams = DBParams{
+        .path = "testdb",
+        .cache_bytes = static_cast<size_t>(1 << 20),
+        .memory_only = true};
+    CEvoDB<int, int> evoDB(dbParams, 10);
+
+    evoDB.WriteCache(1, one);
+    BOOST_REQUIRE(evoDB.FlushCacheToDisk());
+    evoDB.EraseCache(1);
+
+    std::promise<void> flush_started;
+    std::shared_future<void> allow_flush = std::async(std::launch::deferred, [] {}).share();
+    std::promise<void> release_flush;
+    allow_flush = release_flush.get_future().share();
+    bool started{false};
+
+    evoDB.SetWriteBatchHookForTesting([&](CDBBatch& batch) {
+        if (!started) {
+            started = true;
+            flush_started.set_value();
+        }
+        allow_flush.wait();
+        return evoDB.WriteBatch(batch, /*fSync=*/true);
+    });
+
+    auto first_reader = std::async(std::launch::async, [&]() {
+        int value;
+        return evoDB.ReadCache(1, value);
+    });
+
+    flush_started.get_future().wait();
+
+    auto second_reader = std::async(std::launch::async, [&]() {
+        int value;
+        return evoDB.ReadCache(1, value);
+    });
+
+    BOOST_CHECK(second_reader.wait_for(std::chrono::milliseconds(100)) == std::future_status::timeout);
+
+    release_flush.set_value();
+    BOOST_CHECK(!first_reader.get());
+    BOOST_CHECK(!second_reader.get());
+
+    int value;
+    BOOST_CHECK(!evoDB.Read(1, value));
+    evoDB.SetWriteBatchHookForTesting({});
 }
 
 BOOST_AUTO_TEST_CASE(TestFlushCacheToDiskRestoresUncommittedWritesAfterPartialFailure)
