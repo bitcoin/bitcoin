@@ -130,6 +130,10 @@ public:
     DBParams GetDBParams() const {
         return m_db_params;
     }
+    bool SubmitBatchForTesting(CDBBatch& batch)
+    {
+        return SubmitBatch(batch);
+    }
     void SetWriteBatchHookForTesting(std::function<bool(CDBBatch&)> hook)
     {
         LOCK(cs);
