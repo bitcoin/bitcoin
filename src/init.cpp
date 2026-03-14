@@ -2411,6 +2411,8 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
     }
 
     chainman.m_load_block = std::thread(&util::TraceThread, "loadblk", [=, &args, &chainman, &node] {
+        // ThreadImport can switch fReindex from true to false, fetch its original state here to use later
+        bool skip_evodb_repair_on_reindex = fReindex || fReindexChainState;
         ThreadImport(chainman, vImportFiles, args);
 
         // force UpdatedBlockTip to initialize nCachedBlockHeight for DS, MN payments and budgets
@@ -2432,7 +2434,7 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
             LogPrintf("Filling coin cache with masternode UTXOs: done in %dms\n", Ticks<std::chrono::milliseconds>(SteadyClock::now() - start));
         }
 
-        if (fReindex || fReindexChainState) {
+        if (skip_evodb_repair_on_reindex) {
             LogPrintf("Skipping evodb repair during reindex\n");
             node.dmnman->CompleteRepair();  // Mark as repaired since we're rebuilding fresh
         } else if (node.dmnman->IsRepaired() && !args.GetBoolArg("-forceevodbrepair", false)) {
