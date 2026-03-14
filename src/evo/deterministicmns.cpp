@@ -187,22 +187,41 @@ bool RewriteSnapshotWindow(
         }
         return true;
     };
-
-    for (const auto& [key, snapshot] : snapshots) {
-        batch.Write(key, snapshot);
-        if (++items == 256) {
-            if (!evo_db.SubmitBatchForTesting(batch)) {
-                restore_original();
-                return false;
-            }
-            batch.Clear();
-            items = 0;
+    auto restore_after_failure = [&](const char* message, const std::string& error = std::string()) {
+        if (error.empty()) {
+            LogPrint(BCLog::SYS, "CDeterministicMNManager::%s -- %s\n", __func__, message);
+        } else {
+            LogPrint(BCLog::SYS, "CDeterministicMNManager::%s -- %s: %s\n", __func__, message, error);
         }
-    }
-
-    if (batch.SizeEstimate() != 0 && !evo_db.SubmitBatchForTesting(batch)) {
-        restore_original();
+        try {
+            restore_original();
+        } catch (const std::exception& e) {
+            LogPrint(BCLog::SYS, "CDeterministicMNManager::%s -- Failed to restore EvoDB after rewrite failure: %s\n", __func__, e.what());
+        } catch (...) {
+            LogPrint(BCLog::SYS, "CDeterministicMNManager::%s -- Failed to restore EvoDB after rewrite failure: unknown exception\n", __func__);
+        }
         return false;
+    };
+
+    try {
+        for (const auto& [key, snapshot] : snapshots) {
+            batch.Write(key, snapshot);
+            if (++items == 256) {
+                if (!evo_db.SubmitBatchForTesting(batch)) {
+                    return restore_after_failure("Failed to write compacted EvoDB batch");
+                }
+                batch.Clear();
+                items = 0;
+            }
+        }
+
+        if (batch.SizeEstimate() != 0 && !evo_db.SubmitBatchForTesting(batch)) {
+            return restore_after_failure("Failed to write final compacted EvoDB batch");
+        }
+    } catch (const std::exception& e) {
+        return restore_after_failure("Exception while rewriting compacted EvoDB", e.what());
+    } catch (...) {
+        return restore_after_failure("Unknown exception while rewriting compacted EvoDB");
     }
 
     if (db_path) {
