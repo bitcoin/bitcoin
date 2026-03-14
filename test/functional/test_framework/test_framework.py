@@ -1089,9 +1089,9 @@ class BitcoinTestFramework(metaclass=BitcoinTestMetaClass):
             raise SkipTest("dash-wallet has not been compiled")
 
     def skip_if_no_bitcoin_util(self):
-        """Skip the running test if bitcoin-util has not been compiled."""
+        """Skip the running test if dash-util has not been compiled."""
         if not self.is_bitcoin_util_compiled():
-            raise SkipTest("bitcoin-util has not been compiled")
+            raise SkipTest("dash-util has not been compiled")
 
     def skip_if_no_cli(self):
         """Skip the running test if dash-cli has not been compiled."""
@@ -1141,8 +1141,8 @@ class BitcoinTestFramework(metaclass=BitcoinTestMetaClass):
         return self.config["components"].getboolean("ENABLE_WALLET_TOOL")
 
     def is_bitcoin_util_compiled(self):
-        """Checks whether bitcoin-util was compiled."""
-        return self.config["components"].getboolean("ENABLE_BITCOIN_UTIL")
+        """Checks whether dash-util was compiled."""
+        return self.config["components"].getboolean("ENABLE_UTIL_TOOL")
 
     def is_zmq_compiled(self):
         """Checks whether the zmq module was compiled."""
