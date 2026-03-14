@@ -44,6 +44,11 @@ require a reindex.
 - Fixed quorum labels not being correctly reseated when new quorum types are inserted (dash#7191).
 - Skip collecting block txids during IBD to prevent unbounded memory growth in `ChainLockSigner` (dash#7208).
 - Serialize `TrySignChainTip` to prevent concurrent signing races that could split signing shares across different block hashes (dash#7209).
+- Properly skip evodb repair when reindexing to prevent unnecessary repair attempts (dash#7222).
+
+## Miscellaneous
+
+- Renamed `bitcoin-util` manpage and test references to `dash-util` (dash#7221).
 
 ## Interfaces
 
