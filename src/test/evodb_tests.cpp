@@ -549,6 +549,63 @@ BOOST_AUTO_TEST_CASE(TestForEachEraseEntryEnumeratesPendingEraseKeys)
     BOOST_CHECK(visited.count(2) == 0);
 }
 
+BOOST_AUTO_TEST_CASE(TestReadCacheDoesNotResurrectPendingEraseBeforeReadLock)
+{
+    auto dbParams = DBParams{
+        .path = "testdb",
+        .cache_bytes = static_cast<size_t>(1 << 20),
+        .memory_only = true};
+    CEvoDB<int, int> evoDB(dbParams, 10);
+
+    evoDB.WriteCache(1, one);
+    BOOST_REQUIRE(evoDB.FlushCacheToDisk());
+
+    bool injected{false};
+    evoDB.SetBeforeReadLockHookForTesting([&]() {
+        if (injected) return;
+        injected = true;
+        evoDB.EraseCache(1);
+    });
+
+    int value;
+    BOOST_CHECK(!evoDB.ReadCache(1, value));
+    BOOST_CHECK(injected);
+    BOOST_CHECK_EQUAL(evoDB.GetMapCache().size(), 0U);
+    BOOST_CHECK_EQUAL(evoDB.GetEraseCacheCopy().size(), 0U);
+    BOOST_CHECK(!evoDB.Read(1, value));
+
+    evoDB.SetBeforeReadLockHookForTesting({});
+}
+
+BOOST_AUTO_TEST_CASE(TestExistsCacheDoesNotResurrectPendingEraseBeforeReadLock)
+{
+    auto dbParams = DBParams{
+        .path = "testdb",
+        .cache_bytes = static_cast<size_t>(1 << 20),
+        .memory_only = true};
+    CEvoDB<int, int> evoDB(dbParams, 10);
+
+    evoDB.WriteCache(1, one);
+    BOOST_REQUIRE(evoDB.FlushCacheToDisk());
+
+    bool injected{false};
+    evoDB.SetBeforeReadLockHookForTesting([&]() {
+        if (injected) return;
+        injected = true;
+        evoDB.EraseCache(1);
+    });
+
+    BOOST_CHECK(!evoDB.ExistsCache(1));
+    BOOST_CHECK(injected);
+    BOOST_CHECK_EQUAL(evoDB.GetMapCache().size(), 0U);
+    BOOST_CHECK_EQUAL(evoDB.GetEraseCacheCopy().size(), 0U);
+
+    int value;
+    BOOST_CHECK(!evoDB.Read(1, value));
+
+    evoDB.SetBeforeReadLockHookForTesting({});
+}
+
 BOOST_AUTO_TEST_CASE(TestFlushCacheToDiskRestoresUncommittedWritesAfterPartialFailure)
 {
     auto dbParams = DBParams{
