@@ -592,6 +592,48 @@ BOOST_AUTO_TEST_CASE(TestFlushCacheToDiskRestoresUncommittedWritesAfterPartialFa
     BOOST_CHECK_EQUAL(value, three);
 }
 
+BOOST_AUTO_TEST_CASE(TestFlushCacheToDiskPreservesFailingWriteChunkBoundary)
+{
+    auto dbParams = DBParams{
+        .path = "testdb",
+        .cache_bytes = static_cast<size_t>(1 << 20),
+        .memory_only = true};
+    CEvoDB<int, int> evoDB(dbParams, 10);
+
+    evoDB.WriteCache(1, one);
+    evoDB.WriteCache(2, two);
+    evoDB.WriteCache(3, three);
+    evoDB.WriteCache(4, four);
+
+    int batch_calls{0};
+    evoDB.SetWriteBatchHookForTesting([&](CDBBatch& batch) {
+        ++batch_calls;
+        if (batch_calls == 1) {
+            return evoDB.WriteBatch(batch, /*fSync=*/true);
+        }
+        return false;
+    });
+
+    BOOST_CHECK(!evoDB.FlushCacheToDisk(/*CHUNK_ITEMS=*/2));
+    BOOST_CHECK_EQUAL(batch_calls, 2);
+
+    int value;
+    BOOST_CHECK(evoDB.Read(1, value));
+    BOOST_CHECK_EQUAL(value, one);
+    BOOST_CHECK(evoDB.Read(2, value));
+    BOOST_CHECK_EQUAL(value, two);
+    BOOST_CHECK(!evoDB.Read(3, value));
+    BOOST_CHECK(!evoDB.Read(4, value));
+
+    BOOST_CHECK_EQUAL(evoDB.GetMapCache().size(), 2U);
+    BOOST_CHECK_EQUAL(evoDB.GetFifoList().size(), 2U);
+    BOOST_CHECK_EQUAL(evoDB.GetEraseCacheCopy().size(), 0U);
+    BOOST_CHECK(evoDB.ReadCache(3, value));
+    BOOST_CHECK_EQUAL(value, three);
+    BOOST_CHECK(evoDB.ReadCache(4, value));
+    BOOST_CHECK_EQUAL(value, four);
+}
+
 BOOST_AUTO_TEST_CASE(TestFlushCacheToDiskRestoresUncommittedErasesAfterPartialFailure)
 {
     auto dbParams = DBParams{
@@ -639,6 +681,53 @@ BOOST_AUTO_TEST_CASE(TestFlushCacheToDiskRestoresUncommittedErasesAfterPartialFa
     evoDB.SetWriteBatchHookForTesting({});
     BOOST_CHECK(evoDB.FlushCacheToDisk(/*CHUNK_ITEMS=*/2));
     BOOST_CHECK(!evoDB.Read(remaining_on_disk, value));
+}
+
+BOOST_AUTO_TEST_CASE(TestFlushCacheToDiskPreservesFailingEraseChunkBoundary)
+{
+    auto dbParams = DBParams{
+        .path = "testdb",
+        .cache_bytes = static_cast<size_t>(1 << 20),
+        .memory_only = true};
+    CEvoDB<int, int> evoDB(dbParams, 10);
+
+    evoDB.WriteCache(1, one);
+    evoDB.WriteCache(2, two);
+    evoDB.WriteCache(3, three);
+    evoDB.WriteCache(4, four);
+    BOOST_REQUIRE(evoDB.FlushCacheToDisk());
+
+    evoDB.EraseCache(1);
+    evoDB.EraseCache(2);
+    evoDB.EraseCache(3);
+    evoDB.EraseCache(4);
+
+    int batch_calls{0};
+    evoDB.SetWriteBatchHookForTesting([&](CDBBatch& batch) {
+        ++batch_calls;
+        if (batch_calls == 1) {
+            return evoDB.WriteBatch(batch, /*fSync=*/true);
+        }
+        return false;
+    });
+
+    BOOST_CHECK(!evoDB.FlushCacheToDisk(/*CHUNK_ITEMS=*/2));
+    BOOST_CHECK_EQUAL(batch_calls, 2);
+
+    auto eraseCache = evoDB.GetEraseCacheCopy();
+    BOOST_CHECK_EQUAL(eraseCache.size(), 2U);
+
+    int value;
+    int keys_on_disk{0};
+    for (const auto key : {1, 2, 3, 4}) {
+        if (eraseCache.count(key) == 1) {
+            BOOST_CHECK(evoDB.Read(key, value));
+            ++keys_on_disk;
+        } else {
+            BOOST_CHECK(!evoDB.Read(key, value));
+        }
+    }
+    BOOST_CHECK_EQUAL(keys_on_disk, 2);
 }
 BOOST_AUTO_TEST_SUITE_END()
 

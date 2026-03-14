@@ -259,12 +259,15 @@ public:
             count++;
             ++write_it;
             if (items == CHUNK_ITEMS) {
+                auto committed_end = write_it;
+                auto failing_begin = committed_end;
+                std::advance(failing_begin, -static_cast<long>(items));
                 if (!flush()) {
-                    pending.writes.erase(pending.writes.begin(), write_it);
+                    pending.writes.erase(pending.writes.begin(), failing_begin);
                     RestorePendingState(std::move(pending));
                     return false;
                 }
-                pending.writes.erase(pending.writes.begin(), write_it);
+                pending.writes.erase(pending.writes.begin(), committed_end);
             }
         }
         if (!flush()) {
@@ -274,18 +277,22 @@ public:
         pending.writes.clear();
 
         items = 0;
+        auto chunk_begin = pending.erases.begin();
         for (auto it = pending.erases.begin(); it != pending.erases.end(); ) {
+            if (items == 0) {
+                chunk_begin = it;
+            }
             batch.Erase(*it);
             ++items;
             count++;
             if (items == CHUNK_ITEMS) {
-                auto next = std::next(it);
+                auto committed_end = std::next(it);
                 if (!flush()) {
-                    pending.erases.erase(pending.erases.begin(), next);
+                    pending.erases.erase(pending.erases.begin(), chunk_begin);
                     RestorePendingState(std::move(pending));
                     return false;
                 }
-                it = pending.erases.erase(pending.erases.begin(), next);
+                it = pending.erases.erase(pending.erases.begin(), committed_end);
                 items = 0;
             } else {
                 ++it;
