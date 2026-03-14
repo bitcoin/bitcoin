@@ -238,6 +238,7 @@ static const CRPCConvertParam vRPCConvertParams[] =
     { "dumptxoutset", 1, "type", ParamFormat::STRING },
     { "dumptxoutset", 2, "options" },
     { "dumptxoutset", 2, "rollback", ParamFormat::JSON_OR_STRING },
+    { "dumptxoutset", 2, "in_memory" },
     { "lockunspent", 0, "unlock" },
     { "lockunspent", 1, "transactions" },
     { "lockunspent", 2, "persistent" },

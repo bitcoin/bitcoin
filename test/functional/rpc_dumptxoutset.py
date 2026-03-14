@@ -43,6 +43,12 @@ class DumptxoutsetTest(BitcoinTestFramework):
         assert_equal(out['base_height'], target_height)
         assert_equal(out['base_hash'], target_hash)
 
+        # Cover the same case as above with an in-memory database
+        out_mem = node.dumptxoutset("txoutset_fork_mem.dat", "rollback", {"rollback": target_height, "in_memory": True})
+        assert_equal(out_mem['base_height'], target_height)
+        assert_equal(out_mem['base_hash'], target_hash)
+
+
     def run_test(self):
         """Test a trivial usage of the dumptxoutset RPC command."""
         node = self.nodes[0]

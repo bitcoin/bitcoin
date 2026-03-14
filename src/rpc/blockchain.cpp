@@ -97,7 +97,8 @@ UniValue CreateRolledBackUTXOSnapshot(
     const CBlockIndex* target,
     AutoFile&& afile,
     const fs::path& path,
-    const fs::path& tmppath);
+    const fs::path& tmppath,
+    bool in_memory);
 
 /* Calculate the difficulty for a given block index.
  */
@@ -3081,6 +3082,7 @@ static RPCMethod dumptxoutset()
                     {"rollback", RPCArg::Type::NUM, RPCArg::Optional::OMITTED,
                         "Height or hash of the block to roll back to before creating the snapshot. Note: The further this number is from the tip, the longer this process will take. Consider setting a higher -rpcclienttimeout value in this case.",
                     RPCArgOptions{.skip_type_check = true, .type_str = {"", "string or numeric"}}},
+                    {"in_memory", RPCArg::Type::BOOL, RPCArg::Default{false}, "If true, the temporary UTXO-set database used during rollback is kept entirely in memory. This can significantly speed up the process but requires sufficient free RAM (over 10 GB on mainnet)."},
                 },
             },
         },
@@ -3098,7 +3100,8 @@ static RPCMethod dumptxoutset()
         RPCExamples{
             HelpExampleCli("-rpcclienttimeout=0 dumptxoutset", "utxo.dat latest") +
             HelpExampleCli("-rpcclienttimeout=0 dumptxoutset", "utxo.dat rollback") +
-            HelpExampleCli("-rpcclienttimeout=0 -named dumptxoutset", R"(utxo.dat rollback=853456)")
+            HelpExampleCli("-rpcclienttimeout=0 -named dumptxoutset", R"(utxo.dat rollback=853456)") +
+            HelpExampleCli("-rpcclienttimeout=0 -named dumptxoutset", R"(utxo.dat rollback=853456 in_memory=true)")
         },
         [](const RPCMethod& self, const JSONRPCRequest& request) -> UniValue
 {
@@ -3164,12 +3167,14 @@ static RPCMethod dumptxoutset()
             temp_prune_lock.emplace(node.chainman->m_blockman, target_index->nHeight);
         }
 
+        const bool in_memory{options.exists("in_memory") ? options["in_memory"].get_bool() : false};
         result = CreateRolledBackUTXOSnapshot(node,
                                               chainstate,
                                               target_index,
                                               std::move(afile),
                                               path,
-                                              temppath);
+                                              temppath,
+                                              in_memory);
     }
 
     if (!fs::is_fifo(path_info)) {
@@ -3206,18 +3211,26 @@ UniValue CreateRolledBackUTXOSnapshot(
     const CBlockIndex* target,
     AutoFile&& afile,
     const fs::path& path,
-    const fs::path& tmppath)
+    const fs::path& tmppath,
+    const bool in_memory)
 {
     // Create a temporary leveldb to store the UTXO set that is being rolled back
     std::string temp_db_name{strprintf("temp_utxo_%d", target->nHeight)};
     fs::path temp_db_path{fsbridge::AbsPathJoin(tmppath.parent_path(), fs::u8path(temp_db_name))};
-    TemporaryUTXODatabase temp_db_cleaner{temp_db_path};
+
+    // Only create the on-disk temp directory when not using in-memory mode
+    std::optional<TemporaryUTXODatabase> temp_db_cleaner;
+    if (!in_memory) {
+        temp_db_cleaner.emplace(temp_db_path);
+    } else {
+        LogInfo("Using in-memory database for UTXO-set rollback (this may require significant RAM).");
+    }
 
     // Create temporary database
     DBParams db_params{
         .path = temp_db_path,
         .cache_bytes = 0,
-        .memory_only = false,
+        .memory_only = in_memory,
         .wipe_data = true,
         .obfuscate = false,
         .options = DBOptions{}
