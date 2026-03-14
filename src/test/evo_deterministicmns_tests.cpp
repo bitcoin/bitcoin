@@ -225,6 +225,25 @@ static bool CheckTransactionSignature(const node::NodeContext& node, const CMuta
     return true;
 }
 
+static uint256 MakeSnapshotKey(int height)
+{
+    return ArithToUint256(arith_uint256(height + 1));
+}
+
+static CDeterministicMNList MakeSnapshot(int height)
+{
+    const uint256 block_hash = MakeSnapshotKey(height);
+    return CDeterministicMNList(block_hash, height, 0);
+}
+
+static void WriteSnapshotRange(CDeterministicMNManager& manager, int start_height, int count)
+{
+    for (int i = 0; i < count; ++i) {
+        const int height = start_height + i;
+        manager.m_evoDb->WriteCache(MakeSnapshotKey(height), MakeSnapshot(height));
+    }
+}
+
 void FuncDIP3Activation(TestChain100Setup& setup)
 {
     auto utxos = BuildSimpleUTXOVec(setup.m_coinbase_txns);
@@ -688,4 +707,45 @@ BOOST_AUTO_TEST_CASE(verify_db_legacy)
     TestChainDIP3Setup setup;
     FuncVerifyDB(setup);
 }
+BOOST_AUTO_TEST_SUITE_END()
+
+BOOST_AUTO_TEST_SUITE(evo_dmn_db_maintenance_tests)
+
+BOOST_AUTO_TEST_CASE(forced_flush_compacts_persisted_snapshots_window)
+{
+    const int cache_limit = CDeterministicMNManager::LIST_CACHE_SIZE;
+    BOOST_REQUIRE_EQUAL(cache_limit % 3, 0);
+    const int sub_flush_batch = cache_limit / 3;
+
+    auto db_params = DBParams{
+        .path = "testdb",
+        .cache_bytes = static_cast<size_t>(1 << 20),
+        .memory_only = true,
+        .wipe_data = true,
+    };
+    CDeterministicMNManager manager(db_params);
+
+    for (int batch = 0; batch < 3; ++batch) {
+        WriteSnapshotRange(manager, batch * sub_flush_batch, sub_flush_batch);
+        BOOST_REQUIRE(manager.FlushCacheToDisk(/*bForceFlush=*/true));
+        BOOST_CHECK_EQUAL(manager.m_evoDb->CountPersistedEntries(), (batch + 1) * sub_flush_batch);
+    }
+
+    // Reproduce the shutdown-growth bug: cache is below 1728, but disk already
+    // holds a full 3-day window. Forced flush must compact instead of appending.
+    WriteSnapshotRange(manager, cache_limit, 1);
+    BOOST_REQUIRE(manager.FlushCacheToDisk(/*bForceFlush=*/true));
+
+    BOOST_CHECK_EQUAL(manager.m_evoDb->CountPersistedEntries(), cache_limit);
+    BOOST_CHECK_EQUAL(manager.m_evoDb->GetReadWriteCacheSize(), 0U);
+    BOOST_CHECK_EQUAL(manager.m_evoDb->GetEraseCacheSize(), 0U);
+
+    CDeterministicMNList snapshot;
+    BOOST_CHECK(!manager.m_evoDb->Read(MakeSnapshotKey(0), snapshot));
+    BOOST_CHECK(manager.m_evoDb->Read(MakeSnapshotKey(1), snapshot));
+    BOOST_CHECK_EQUAL(snapshot.GetHeight(), 1);
+    BOOST_CHECK(manager.m_evoDb->Read(MakeSnapshotKey(cache_limit), snapshot));
+    BOOST_CHECK_EQUAL(snapshot.GetHeight(), cache_limit);
+}
+
 BOOST_AUTO_TEST_SUITE_END()

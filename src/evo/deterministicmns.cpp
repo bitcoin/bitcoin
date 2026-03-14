@@ -21,10 +21,109 @@
 #include <logging.h>
 #include <interfaces/chain.h>
 #include <util/fs.h> 
+
+#include <algorithm>
 bool fMasternodeMode = false;
 int64_t DEFAULT_MAX_RECOVERED_SIGS_AGE = 60 * 60 * 24 * 7; // keep them for a week
 
 std::unique_ptr<CDeterministicMNManager> deterministicMNManager;
+
+namespace {
+using EvoSnapshotEntry = std::pair<uint256, CDeterministicMNList>;
+using EvoEraseSet = std::unordered_set<uint256, StaticSaltedHasher>;
+
+bool SnapshotEntryLess(const EvoSnapshotEntry& a, const EvoSnapshotEntry& b)
+{
+    if (a.second.GetHeight() != b.second.GetHeight()) {
+        return a.second.GetHeight() < b.second.GetHeight();
+    }
+    return a.first < b.first;
+}
+
+bool SnapshotEntryGreater(const EvoSnapshotEntry& a, const EvoSnapshotEntry& b)
+{
+    return SnapshotEntryLess(b, a);
+}
+
+void RetainNewestSnapshot(
+    std::vector<EvoSnapshotEntry>& retained_snapshots,
+    size_t& total_snapshots,
+    EvoSnapshotEntry snapshot)
+{
+    ++total_snapshots;
+
+    if (retained_snapshots.size() < CDeterministicMNManager::LIST_CACHE_SIZE) {
+        retained_snapshots.emplace_back(std::move(snapshot));
+        std::push_heap(retained_snapshots.begin(), retained_snapshots.end(), SnapshotEntryGreater);
+        return;
+    }
+
+    if (SnapshotEntryLess(retained_snapshots.front(), snapshot)) {
+        std::pop_heap(retained_snapshots.begin(), retained_snapshots.end(), SnapshotEntryGreater);
+        retained_snapshots.back() = std::move(snapshot);
+        std::push_heap(retained_snapshots.begin(), retained_snapshots.end(), SnapshotEntryGreater);
+    }
+}
+
+bool CollectNewestPersistedSnapshots(
+    CEvoDB<uint256, CDeterministicMNList, StaticSaltedHasher>& evo_db,
+    const EvoEraseSet& skip_keys,
+    std::vector<EvoSnapshotEntry>& retained_snapshots,
+    size_t& total_snapshots)
+{
+    std::unique_ptr<CDBIterator> cursor(evo_db.NewIterator());
+    if (!cursor) {
+        LogPrint(BCLog::SYS, "CDeterministicMNManager::%s -- Failed to create EvoDB iterator\n", __func__);
+        return false;
+    }
+
+    for (cursor->SeekToFirst(); cursor->Valid(); cursor->Next()) {
+        uint256 key;
+        if (!cursor->GetKey(key)) {
+            continue;
+        }
+        if (skip_keys.count(key) != 0) {
+            continue;
+        }
+
+        CDeterministicMNList snapshot;
+        if (!cursor->GetValue(snapshot)) {
+            LogPrint(BCLog::SYS, "CDeterministicMNManager::%s -- Failed to read EvoDB snapshot for %s\n", __func__, key.ToString());
+            return false;
+        }
+        RetainNewestSnapshot(retained_snapshots, total_snapshots, std::make_pair(key, std::move(snapshot)));
+    }
+
+    return true;
+}
+
+bool RewriteSnapshotWindow(
+    CEvoDB<uint256, CDeterministicMNList, StaticSaltedHasher>& evo_db,
+    const std::vector<EvoSnapshotEntry>& snapshots)
+{
+    evo_db.ResetDB();
+
+    CDBBatch batch(evo_db);
+    std::size_t items{0};
+    for (const auto& [key, snapshot] : snapshots) {
+        batch.Write(key, snapshot);
+        if (++items == 256) {
+            if (!evo_db.WriteBatch(batch, /*sync=*/true)) {
+                return false;
+            }
+            batch.Clear();
+            items = 0;
+        }
+    }
+
+    if (batch.SizeEstimate() != 0 && !evo_db.WriteBatch(batch, /*sync=*/true)) {
+        return false;
+    }
+
+    evo_db.ClearCaches();
+    return true;
+}
+} // namespace
 
 uint64_t CDeterministicMN::GetInternalId() const
 {
@@ -1050,6 +1149,42 @@ bool CDeterministicMNManager::DoMaintenance(bool bForceFlush) {
         m_evoDb->ResetDB();
         bForceFlush = true;
         LogPrint(BCLog::SYS, "CDeterministicMNManager::DoMaintenance Database successfully wiped and recreated.\n");
+    } else if (bForceFlush) {
+        const size_t cache_entry_count{m_evoDb->GetReadWriteCacheSize()};
+        const size_t erase_entry_count{m_evoDb->GetEraseCacheSize()};
+
+        EvoEraseSet skipped_persisted;
+        skipped_persisted.reserve(cache_entry_count + erase_entry_count);
+        m_evoDb->ForEachEraseEntry([&](const uint256& key) {
+            skipped_persisted.insert(key);
+        });
+        m_evoDb->ForEachCachedEntry([&](const uint256& key, const CDeterministicMNList&) {
+            skipped_persisted.insert(key);
+        });
+
+        std::vector<EvoSnapshotEntry> live_snapshots;
+        live_snapshots.reserve(LIST_CACHE_SIZE);
+
+        size_t total_live_snapshots{0};
+        if (!CollectNewestPersistedSnapshots(*m_evoDb, skipped_persisted, live_snapshots, total_live_snapshots)) {
+            return false;
+        }
+        m_evoDb->ForEachCachedEntry([&](const uint256& key, const CDeterministicMNList& snapshot) {
+            RetainNewestSnapshot(live_snapshots, total_live_snapshots, std::make_pair(key, snapshot));
+        });
+
+        if (total_live_snapshots > LIST_CACHE_SIZE) {
+            std::sort(live_snapshots.begin(), live_snapshots.end(), SnapshotEntryLess);
+
+            if (!RewriteSnapshotWindow(*m_evoDb, live_snapshots)) {
+                return false;
+            }
+
+            LogPrint(BCLog::SYS,
+                     "CDeterministicMNManager::%s compacted EvoDB to %zu newest snapshots before forced flush.\n",
+                     __func__, live_snapshots.size());
+            return true;
+        }
     }
     if(bForceFlush) {
         if(!m_evoDb->FlushCacheToDisk()) {
