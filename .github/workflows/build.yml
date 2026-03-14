@@ -20,7 +20,7 @@ concurrency:
 jobs:
   check-skip:
     name: Check skip conditions
-    runs-on: ubuntu-latest
+    runs-on: ${{ vars.RUNNER_AMD64 || 'ubuntu-24.04' }}
     outputs:
       skip: ${{ steps.skip-check.outputs.skip }}
     steps:
