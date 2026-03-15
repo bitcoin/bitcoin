@@ -20,7 +20,8 @@
 #include <common/args.h>
 #include <logging.h>
 #include <interfaces/chain.h>
-#include <util/fs.h> 
+#include <util/fs.h>
+#include <util/fs_helpers.h>
 
 #include <algorithm>
 #include <fstream>
@@ -56,13 +57,18 @@ enum class RewriteMarkerState {
 
 bool WriteRewriteMarker(const fs::path& marker_path, const char* state)
 {
-    std::ofstream marker_file(fs::PathToString(marker_path));
-    if (!marker_file.good()) {
+    FILE* marker_file{fsbridge::fopen(marker_path, "w")};
+    if (!marker_file) {
         return false;
     }
-    marker_file << state;
-    marker_file.flush();
-    return marker_file.good();
+    const bool write_ok = std::fputs(state, marker_file) >= 0;
+    const bool commit_ok = write_ok && FileCommit(marker_file);
+    std::fclose(marker_file);
+    if (!commit_ok) {
+        return false;
+    }
+    DirectoryCommit(marker_path.parent_path());
+    return true;
 }
 
 RewriteMarkerState ReadRewriteMarkerState(const fs::path& marker_path)
