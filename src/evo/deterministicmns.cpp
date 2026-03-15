@@ -97,27 +97,135 @@ bool CollectNewestPersistedSnapshots(
     return true;
 }
 
+bool ReadAllPersistedSnapshots(
+    CEvoDB<uint256, CDeterministicMNList, StaticSaltedHasher>& evo_db,
+    std::vector<EvoSnapshotEntry>& snapshots)
+{
+    std::unique_ptr<CDBIterator> cursor(evo_db.NewIterator());
+    if (!cursor) {
+        LogPrint(BCLog::SYS, "CDeterministicMNManager::%s -- Failed to create EvoDB iterator\n", __func__);
+        return false;
+    }
+
+    for (cursor->SeekToFirst(); cursor->Valid(); cursor->Next()) {
+        uint256 key;
+        if (!cursor->GetKey(key)) {
+            continue;
+        }
+
+        CDeterministicMNList snapshot;
+        if (!cursor->GetValue(snapshot)) {
+            LogPrint(BCLog::SYS, "CDeterministicMNManager::%s -- Failed to read EvoDB snapshot for %s\n", __func__, key.ToString());
+            return false;
+        }
+        snapshots.emplace_back(key, std::move(snapshot));
+    }
+
+    return true;
+}
+
 bool RewriteSnapshotWindow(
     CEvoDB<uint256, CDeterministicMNList, StaticSaltedHasher>& evo_db,
     const std::vector<EvoSnapshotEntry>& snapshots)
 {
-    evo_db.ResetDB();
+    const auto db_path = evo_db.StoragePath();
+    std::vector<EvoSnapshotEntry> memory_only_backup;
+    fs::path backup_path;
+
+    if (db_path) {
+        backup_path = *db_path;
+        backup_path += ".rewrite-backup";
+
+        std::error_code ec;
+        fs::remove_all(backup_path, ec);
+
+        evo_db.CloseDB();
+        fs::rename(*db_path, backup_path, ec);
+        if (ec) {
+            LogPrint(BCLog::SYS, "CDeterministicMNManager::%s -- Failed to back up EvoDB for rewrite: %s\n", __func__, ec.message());
+            evo_db.OpenDB(/*create_new=*/false);
+            return false;
+        }
+        evo_db.OpenDB(/*create_new=*/true);
+    } else {
+        if (!ReadAllPersistedSnapshots(evo_db, memory_only_backup)) {
+            return false;
+        }
+        evo_db.ResetDB();
+    }
 
     CDBBatch batch(evo_db);
     std::size_t items{0};
-    for (const auto& [key, snapshot] : snapshots) {
-        batch.Write(key, snapshot);
-        if (++items == 256) {
-            if (!evo_db.WriteBatch(batch, /*sync=*/true)) {
+    auto restore_original = [&]() {
+        if (db_path) {
+            evo_db.CloseDB();
+
+            std::error_code ec;
+            fs::remove_all(*db_path, ec);
+            fs::rename(backup_path, *db_path, ec);
+            if (ec) {
+                LogPrint(BCLog::SYS, "CDeterministicMNManager::%s -- Failed to restore backed up EvoDB: %s\n", __func__, ec.message());
+            }
+            evo_db.OpenDB(/*create_new=*/false);
+        } else {
+            evo_db.ResetDB();
+            CDBBatch restore_batch(evo_db);
+            std::size_t restore_items{0};
+            for (const auto& [key, snapshot] : memory_only_backup) {
+                restore_batch.Write(key, snapshot);
+                if (++restore_items == 256) {
+                    if (!evo_db.SubmitBatchForTesting(restore_batch)) {
+                        return false;
+                    }
+                    restore_batch.Clear();
+                    restore_items = 0;
+                }
+            }
+            if (restore_batch.SizeEstimate() != 0 && !evo_db.SubmitBatchForTesting(restore_batch)) {
                 return false;
             }
-            batch.Clear();
-            items = 0;
         }
+        return true;
+    };
+    auto restore_after_failure = [&](const char* message, const std::string& error = std::string()) {
+        if (error.empty()) {
+            LogPrint(BCLog::SYS, "CDeterministicMNManager::%s -- %s\n", __func__, message);
+        } else {
+            LogPrint(BCLog::SYS, "CDeterministicMNManager::%s -- %s: %s\n", __func__, message, error);
+        }
+        try {
+            restore_original();
+        } catch (const std::exception& e) {
+            LogPrint(BCLog::SYS, "CDeterministicMNManager::%s -- Failed to restore EvoDB after rewrite failure: %s\n", __func__, e.what());
+        } catch (...) {
+            LogPrint(BCLog::SYS, "CDeterministicMNManager::%s -- Failed to restore EvoDB after rewrite failure: unknown exception\n", __func__);
+        }
+        return false;
+    };
+
+    try {
+        for (const auto& [key, snapshot] : snapshots) {
+            batch.Write(key, snapshot);
+            if (++items == 256) {
+                if (!evo_db.SubmitBatchForTesting(batch)) {
+                    return restore_after_failure("Failed to write compacted EvoDB batch");
+                }
+                batch.Clear();
+                items = 0;
+            }
+        }
+
+        if (batch.SizeEstimate() != 0 && !evo_db.SubmitBatchForTesting(batch)) {
+            return restore_after_failure("Failed to write final compacted EvoDB batch");
+        }
+    } catch (const std::exception& e) {
+        return restore_after_failure("Exception while rewriting compacted EvoDB", e.what());
+    } catch (...) {
+        return restore_after_failure("Unknown exception while rewriting compacted EvoDB");
     }
 
-    if (batch.SizeEstimate() != 0 && !evo_db.WriteBatch(batch, /*sync=*/true)) {
-        return false;
+    if (db_path) {
+        DestroyDB(fs::PathToString(backup_path));
     }
 
     evo_db.ClearCaches();

@@ -8,6 +8,7 @@
 #include <dbwrapper.h>
 #include <sync.h>
 #include <uint256.h>
+#include <functional>
 #include <unordered_map>
 #include <unordered_set>
 #include <list>
@@ -22,6 +23,7 @@ class CEvoDB : public CDBWrapper {
     size_t maxCacheSize{0};
     DBParams m_db_params;
     bool bFlushOnNextRead{false};
+    std::function<bool(CDBBatch&)> m_write_batch_hook_for_testing;
 public:
     mutable RecursiveMutex cs;
     using CDBWrapper::CDBWrapper;
@@ -36,6 +38,17 @@ public:
     }
     DBParams GetDBParams() const {
         return m_db_params;
+    }
+    bool SubmitBatchForTesting(CDBBatch& batch)
+    {
+        if (m_write_batch_hook_for_testing) {
+            return m_write_batch_hook_for_testing(batch);
+        }
+        return WriteBatch(batch, /*sync=*/true);
+    }
+    void SetWriteBatchHookForTesting(std::function<bool(CDBBatch&)> hook)
+    {
+        m_write_batch_hook_for_testing = std::move(hook);
     }
     bool ReadCache(const K& key, V& value) {
         LOCK(cs);
