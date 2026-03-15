@@ -23,6 +23,7 @@
 #include <util/fs.h> 
 
 #include <algorithm>
+#include <fstream>
 bool fMasternodeMode = false;
 int64_t DEFAULT_MAX_RECOVERED_SIGS_AGE = 60 * 60 * 24 * 7; // keep them for a week
 
@@ -39,6 +40,25 @@ fs::path RewriteBackupPath(const fs::path& db_path)
     return backup_path;
 }
 
+fs::path RewriteMarkerPath(const fs::path& db_path)
+{
+    fs::path marker_path{db_path};
+    marker_path += ".rewrite-in-progress";
+    return marker_path;
+}
+
+bool WriteRewriteMarker(const fs::path& marker_path)
+{
+    std::ofstream marker_file(fs::PathToString(marker_path));
+    return marker_file.good();
+}
+
+void RemoveRewriteMarker(const fs::path& marker_path)
+{
+    std::error_code ec;
+    fs::remove(marker_path, ec);
+}
+
 void RecoverRewriteBackupIfPresent(const DBParams& db_params)
 {
     if (db_params.memory_only || db_params.path.empty()) {
@@ -46,22 +66,44 @@ void RecoverRewriteBackupIfPresent(const DBParams& db_params)
     }
 
     const fs::path backup_path{RewriteBackupPath(db_params.path)};
-    if (!fs::exists(backup_path)) {
+    const fs::path marker_path{RewriteMarkerPath(db_params.path)};
+    const bool has_backup{fs::exists(backup_path)};
+    const bool has_marker{fs::exists(marker_path)};
+
+    if (has_backup && has_marker) {
+        std::error_code ec;
+        fs::remove_all(db_params.path, ec);
+        ec.clear();
+        fs::rename(backup_path, db_params.path, ec);
+        if (ec) {
+            LogPrint(BCLog::SYS,
+                     "CDeterministicMNManager::%s -- Failed to recover EvoDB rewrite backup %s -> %s: %s\n",
+                     __func__, fs::PathToString(backup_path), fs::PathToString(db_params.path), ec.message());
+        } else {
+            LogPrint(BCLog::SYS,
+                     "CDeterministicMNManager::%s -- Recovered EvoDB rewrite backup %s -> %s\n",
+                     __func__, fs::PathToString(backup_path), fs::PathToString(db_params.path));
+        }
+        RemoveRewriteMarker(marker_path);
         return;
     }
 
-    std::error_code ec;
-    fs::remove_all(db_params.path, ec);
-    ec.clear();
-    fs::rename(backup_path, db_params.path, ec);
-    if (ec) {
-        LogPrint(BCLog::SYS,
-                 "CDeterministicMNManager::%s -- Failed to recover EvoDB rewrite backup %s -> %s: %s\n",
-                 __func__, fs::PathToString(backup_path), fs::PathToString(db_params.path), ec.message());
-    } else {
-        LogPrint(BCLog::SYS,
-                 "CDeterministicMNManager::%s -- Recovered EvoDB rewrite backup %s -> %s\n",
-                 __func__, fs::PathToString(backup_path), fs::PathToString(db_params.path));
+    if (has_backup) {
+        std::error_code ec;
+        fs::remove_all(backup_path, ec);
+        if (ec) {
+            LogPrint(BCLog::SYS,
+                     "CDeterministicMNManager::%s -- Failed to remove stale EvoDB rewrite backup %s: %s\n",
+                     __func__, fs::PathToString(backup_path), ec.message());
+        } else {
+            LogPrint(BCLog::SYS,
+                     "CDeterministicMNManager::%s -- Removed stale EvoDB rewrite backup %s\n",
+                     __func__, fs::PathToString(backup_path));
+        }
+    }
+
+    if (has_marker) {
+        RemoveRewriteMarker(marker_path);
     }
 }
 
@@ -164,17 +206,27 @@ bool RewriteSnapshotWindow(
     const auto db_path = evo_db.StoragePath();
     std::vector<EvoSnapshotEntry> memory_only_backup;
     fs::path backup_path;
+    fs::path marker_path;
 
     if (db_path) {
         backup_path = RewriteBackupPath(*db_path);
+        marker_path = RewriteMarkerPath(*db_path);
 
         std::error_code ec;
         fs::remove_all(backup_path, ec);
+        RemoveRewriteMarker(marker_path);
 
         evo_db.CloseDB();
         fs::rename(*db_path, backup_path, ec);
         if (ec) {
             LogPrint(BCLog::SYS, "CDeterministicMNManager::%s -- Failed to back up EvoDB for rewrite: %s\n", __func__, ec.message());
+            evo_db.OpenDB(/*create_new=*/false);
+            return false;
+        }
+        if (!WriteRewriteMarker(marker_path)) {
+            LogPrint(BCLog::SYS, "CDeterministicMNManager::%s -- Failed to create rewrite marker %s\n",
+                     __func__, fs::PathToString(marker_path));
+            fs::rename(backup_path, *db_path, ec);
             evo_db.OpenDB(/*create_new=*/false);
             return false;
         }
@@ -199,6 +251,7 @@ bool RewriteSnapshotWindow(
                 LogPrint(BCLog::SYS, "CDeterministicMNManager::%s -- Failed to restore backed up EvoDB: %s\n", __func__, ec.message());
             }
             evo_db.OpenDB(/*create_new=*/false);
+            RemoveRewriteMarker(marker_path);
         } else {
             evo_db.ResetDB();
             CDBBatch restore_batch(evo_db);
@@ -257,6 +310,7 @@ bool RewriteSnapshotWindow(
     }
 
     if (db_path) {
+        RemoveRewriteMarker(marker_path);
         DestroyDB(fs::PathToString(backup_path));
     }
 
