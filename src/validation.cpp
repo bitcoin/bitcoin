@@ -7683,13 +7683,18 @@ bool Chainstate::RestartBTCHeaderNode(bool force_reindex)
         LogPrintf("%s: Managed BTC header node is disabled (-btcheadermanaged=0)\n", __func__);
         return false;
     }
-    StopBTCHeaderNode();
-    return StartBTCHeaderNode(force_reindex);
+    StopBTCHeaderNodeInternal(/*bOnStart=*/false);
+    return StartBTCHeaderNodeInternal(force_reindex);
 }
 
 bool Chainstate::StartBTCHeaderNode(bool force_reindex)
 {
     LOCK(cs_btcheader);
+    return StartBTCHeaderNodeInternal(force_reindex);
+}
+
+bool Chainstate::StartBTCHeaderNodeInternal(bool force_reindex)
+{
 
     if (!gArgs.GetBoolArg("-btcheadermanaged", DEFAULT_BTC_HEADER_MANAGED)) {
         LogPrintf("%s: Managed BTC header node is disabled (-btcheadermanaged=0)\n", __func__);
@@ -7792,6 +7797,11 @@ bool Chainstate::StartBTCHeaderNode(bool force_reindex)
 bool Chainstate::StopBTCHeaderNode(bool bOnStart)
 {
     LOCK(cs_btcheader);
+    return StopBTCHeaderNodeInternal(bOnStart);
+}
+
+bool Chainstate::StopBTCHeaderNodeInternal(bool bOnStart)
+{
 
     if (!gArgs.GetBoolArg("-btcheadermanaged", DEFAULT_BTC_HEADER_MANAGED)) {
         return false;
