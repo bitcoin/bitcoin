@@ -8,6 +8,7 @@
 #include <dbwrapper.h>
 #include <sync.h>
 #include <uint256.h>
+#include <functional>
 #include <unordered_map>
 #include <unordered_set>
 #include <list>
@@ -22,6 +23,7 @@ class CEvoDB : public CDBWrapper {
     size_t maxCacheSize{0};
     DBParams m_db_params;
     bool bFlushOnNextRead{false};
+    std::function<bool(CDBBatch&)> m_write_batch_hook_for_testing;
 public:
     mutable RecursiveMutex cs;
     using CDBWrapper::CDBWrapper;
@@ -37,6 +39,17 @@ public:
     DBParams GetDBParams() const {
         return m_db_params;
     }
+    bool SubmitBatchForTesting(CDBBatch& batch)
+    {
+        if (m_write_batch_hook_for_testing) {
+            return m_write_batch_hook_for_testing(batch);
+        }
+        return WriteBatch(batch, /*sync=*/true);
+    }
+    void SetWriteBatchHookForTesting(std::function<bool(CDBBatch&)> hook)
+    {
+        m_write_batch_hook_for_testing = std::move(hook);
+    }
     bool ReadCache(const K& key, V& value) {
         LOCK(cs);
         if(bFlushOnNextRead) {
@@ -51,23 +64,30 @@ public:
         }
         return Read(key, value);
     }
-    std::unordered_map<K, V, Hasher> GetMapCacheCopy() {
+    template <typename Callback>
+    void ForEachCachedEntry(Callback&& cb) {
         LOCK(cs);
         if(bFlushOnNextRead) {
             bFlushOnNextRead = false;
             LogPrint(BCLog::SYS, "Evodb::ReadCache flushing cache before read\n");
             FlushCacheToDisk();
         }
-        std::unordered_map<K, V, Hasher> cacheCopy;
         for (const auto& [key, it] : mapCache) {
-            cacheCopy[key] = it->second;
+            cb(key, it->second);
         }
-        return cacheCopy;
     }
 
     std::unordered_set<K, Hasher> GetEraseCacheCopy() const {
         LOCK(cs);
         return setEraseCache;
+    }
+
+    template <typename Callback>
+    void ForEachEraseEntry(Callback&& cb) const {
+        LOCK(cs);
+        for (const auto& key : setEraseCache) {
+            cb(key);
+        }
     }
 
     void RestoreCaches(const std::unordered_map<K, V, Hasher>& mapCacheCopy, const std::unordered_set<K, Hasher>& eraseCacheCopy) {
@@ -76,6 +96,14 @@ public:
             WriteCache(key, value);
         }
         setEraseCache = eraseCacheCopy;
+    }
+
+    void ClearCaches() {
+        LOCK(cs);
+        mapCache.clear();
+        fifoList.clear();
+        setEraseCache.clear();
+        bFlushOnNextRead = false;
     }
 
     void WriteCache(const K& key, V&& value) {

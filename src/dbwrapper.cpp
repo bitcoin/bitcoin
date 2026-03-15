@@ -381,29 +381,41 @@ bool CDBWrapper::IsEmpty()
     return !(it->Valid());
 }
 
+void CDBWrapper::CloseDB()
+{
+    delete DBContext().pdb;
+    DBContext().pdb = nullptr;
+}
+
+void CDBWrapper::OpenDB(bool create_new)
+{
+    if (!m_is_memory) {
+        TryCreateDirectories(m_path);
+    }
+
+    HandleError(leveldb::DB::Open(DBContext().options, fs::PathToString(m_path), &DBContext().pdb));
+
+    const bool has_nonzero_key =
+        std::any_of(obfuscate_key.begin(), obfuscate_key.end(),
+                    [](unsigned char b){ return b != 0; });
+
+    if (create_new && has_nonzero_key) {
+        Write(OBFUSCATE_KEY_KEY, obfuscate_key);
+    }
+}
+
 void CDBWrapper::ResetDB()
 {
     const std::string path = fs::PathToString(m_path);
 
     /* 1. Close the old handle – releases LOCK */
-    delete DBContext().pdb;
-    DBContext().pdb = nullptr;
+    CloseDB();
 
     /* 2. Destroy the directory */
     HandleError(leveldb::DestroyDB(path, DBContext().options));
 
     /* 3. Re-open */
-    HandleError(leveldb::DB::Open(DBContext().options, path, &DBContext().pdb));
-
-    /* 4. Restore obfuscation *if* this DB uses it               */
-    const bool has_nonzero_key =
-        std::any_of(obfuscate_key.begin(), obfuscate_key.end(),
-                    [](unsigned char b){ return b != 0; });
-
-    if (has_nonzero_key) {
-        // always write; the DB is brand-new so the key doesn’t exist yet
-        Write(OBFUSCATE_KEY_KEY, obfuscate_key);
-    }
+    OpenDB(/*create_new=*/true);
 }
 
 

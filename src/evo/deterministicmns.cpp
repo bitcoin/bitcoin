@@ -20,11 +20,375 @@
 #include <common/args.h>
 #include <logging.h>
 #include <interfaces/chain.h>
-#include <util/fs.h> 
+#include <util/fs.h>
+#include <util/fs_helpers.h>
+
+#include <algorithm>
+#include <fstream>
 bool fMasternodeMode = false;
 int64_t DEFAULT_MAX_RECOVERED_SIGS_AGE = 60 * 60 * 24 * 7; // keep them for a week
 
 std::unique_ptr<CDeterministicMNManager> deterministicMNManager;
+
+namespace {
+using EvoSnapshotEntry = std::pair<uint256, CDeterministicMNList>;
+using EvoEraseSet = std::unordered_set<uint256, StaticSaltedHasher>;
+
+fs::path RewriteBackupPath(const fs::path& db_path)
+{
+    fs::path backup_path{db_path};
+    backup_path += ".rewrite-backup";
+    return backup_path;
+}
+
+fs::path RewriteMarkerPath(const fs::path& db_path)
+{
+    fs::path marker_path{db_path};
+    marker_path += ".rewrite-in-progress";
+    return marker_path;
+}
+
+enum class RewriteMarkerState {
+    NONE,
+    PREPARED,
+    COMPLETE,
+    UNKNOWN,
+};
+
+bool WriteRewriteMarker(const fs::path& marker_path, const char* state)
+{
+    FILE* marker_file{fsbridge::fopen(marker_path, "w")};
+    if (!marker_file) {
+        return false;
+    }
+    const bool write_ok = std::fputs(state, marker_file) >= 0;
+    const bool commit_ok = write_ok && FileCommit(marker_file);
+    std::fclose(marker_file);
+    if (!commit_ok) {
+        return false;
+    }
+    DirectoryCommit(marker_path.parent_path());
+    return true;
+}
+
+RewriteMarkerState ReadRewriteMarkerState(const fs::path& marker_path)
+{
+    if (!fs::exists(marker_path)) {
+        return RewriteMarkerState::NONE;
+    }
+
+    std::ifstream marker_file(fs::PathToString(marker_path));
+    if (!marker_file.good()) {
+        return RewriteMarkerState::UNKNOWN;
+    }
+
+    std::string state;
+    marker_file >> state;
+    if (state == "prepared") {
+        return RewriteMarkerState::PREPARED;
+    }
+    if (state == "complete") {
+        return RewriteMarkerState::COMPLETE;
+    }
+    return RewriteMarkerState::UNKNOWN;
+}
+
+void RemoveRewriteMarker(const fs::path& marker_path)
+{
+    std::error_code ec;
+    fs::remove(marker_path, ec);
+}
+
+void RecoverRewriteBackupIfPresent(const DBParams& db_params)
+{
+    if (db_params.memory_only || db_params.path.empty()) {
+        return;
+    }
+
+    const fs::path backup_path{RewriteBackupPath(db_params.path)};
+    const fs::path marker_path{RewriteMarkerPath(db_params.path)};
+    const bool has_backup{fs::exists(backup_path)};
+    const RewriteMarkerState marker_state{ReadRewriteMarkerState(marker_path)};
+    const bool has_marker{marker_state != RewriteMarkerState::NONE};
+
+    if (has_backup && has_marker) {
+        if (marker_state == RewriteMarkerState::COMPLETE && fs::exists(db_params.path)) {
+            std::error_code ec;
+            fs::remove_all(backup_path, ec);
+            if (ec) {
+                LogPrint(BCLog::SYS,
+                         "CDeterministicMNManager::%s -- Failed to remove completed EvoDB rewrite backup %s: %s\n",
+                         __func__, fs::PathToString(backup_path), ec.message());
+            } else {
+                LogPrint(BCLog::SYS,
+                         "CDeterministicMNManager::%s -- Kept completed EvoDB rewrite at %s and removed stale backup %s\n",
+                         __func__, fs::PathToString(db_params.path), fs::PathToString(backup_path));
+                RemoveRewriteMarker(marker_path);
+            }
+        } else {
+            std::error_code ec;
+            fs::remove_all(db_params.path, ec);
+            ec.clear();
+            fs::rename(backup_path, db_params.path, ec);
+            if (ec) {
+                LogPrint(BCLog::SYS,
+                         "CDeterministicMNManager::%s -- Failed to recover EvoDB rewrite backup %s -> %s: %s\n",
+                         __func__, fs::PathToString(backup_path), fs::PathToString(db_params.path), ec.message());
+            } else {
+                LogPrint(BCLog::SYS,
+                         "CDeterministicMNManager::%s -- Recovered EvoDB rewrite backup %s -> %s\n",
+                         __func__, fs::PathToString(backup_path), fs::PathToString(db_params.path));
+                RemoveRewriteMarker(marker_path);
+            }
+        }
+        return;
+    }
+
+    if (has_backup) {
+        if (!fs::exists(db_params.path)) {
+            std::error_code ec;
+            fs::rename(backup_path, db_params.path, ec);
+            if (ec) {
+                LogPrint(BCLog::SYS,
+                         "CDeterministicMNManager::%s -- Failed to recover EvoDB backup without marker %s -> %s: %s\n",
+                         __func__, fs::PathToString(backup_path), fs::PathToString(db_params.path), ec.message());
+            } else {
+                LogPrint(BCLog::SYS,
+                         "CDeterministicMNManager::%s -- Recovered EvoDB backup without marker %s -> %s\n",
+                         __func__, fs::PathToString(backup_path), fs::PathToString(db_params.path));
+            }
+        } else {
+            LogPrint(BCLog::SYS,
+                     "CDeterministicMNManager::%s -- Preserving unmatched EvoDB backup %s because live DB %s also exists\n",
+                     __func__, fs::PathToString(backup_path), fs::PathToString(db_params.path));
+        }
+    }
+
+    if (has_marker) {
+        RemoveRewriteMarker(marker_path);
+    }
+}
+
+bool SnapshotEntryLess(const EvoSnapshotEntry& a, const EvoSnapshotEntry& b)
+{
+    if (a.second.GetHeight() != b.second.GetHeight()) {
+        return a.second.GetHeight() < b.second.GetHeight();
+    }
+    return a.first < b.first;
+}
+
+bool SnapshotEntryGreater(const EvoSnapshotEntry& a, const EvoSnapshotEntry& b)
+{
+    return SnapshotEntryLess(b, a);
+}
+
+void RetainNewestSnapshot(
+    std::vector<EvoSnapshotEntry>& retained_snapshots,
+    size_t& total_snapshots,
+    EvoSnapshotEntry snapshot)
+{
+    ++total_snapshots;
+
+    if (retained_snapshots.size() < CDeterministicMNManager::LIST_CACHE_SIZE) {
+        retained_snapshots.emplace_back(std::move(snapshot));
+        std::push_heap(retained_snapshots.begin(), retained_snapshots.end(), SnapshotEntryGreater);
+        return;
+    }
+
+    if (SnapshotEntryLess(retained_snapshots.front(), snapshot)) {
+        std::pop_heap(retained_snapshots.begin(), retained_snapshots.end(), SnapshotEntryGreater);
+        retained_snapshots.back() = std::move(snapshot);
+        std::push_heap(retained_snapshots.begin(), retained_snapshots.end(), SnapshotEntryGreater);
+    }
+}
+
+bool CollectNewestPersistedSnapshots(
+    CEvoDB<uint256, CDeterministicMNList, StaticSaltedHasher>& evo_db,
+    const EvoEraseSet& skip_keys,
+    std::vector<EvoSnapshotEntry>& retained_snapshots,
+    size_t& total_snapshots)
+{
+    std::unique_ptr<CDBIterator> cursor(evo_db.NewIterator());
+    if (!cursor) {
+        LogPrint(BCLog::SYS, "CDeterministicMNManager::%s -- Failed to create EvoDB iterator\n", __func__);
+        return false;
+    }
+
+    for (cursor->SeekToFirst(); cursor->Valid(); cursor->Next()) {
+        uint256 key;
+        if (!cursor->GetKey(key)) {
+            continue;
+        }
+        if (skip_keys.count(key) != 0) {
+            continue;
+        }
+
+        CDeterministicMNList snapshot;
+        if (!cursor->GetValue(snapshot)) {
+            LogPrint(BCLog::SYS, "CDeterministicMNManager::%s -- Failed to read EvoDB snapshot for %s\n", __func__, key.ToString());
+            return false;
+        }
+        RetainNewestSnapshot(retained_snapshots, total_snapshots, std::make_pair(key, std::move(snapshot)));
+    }
+
+    return true;
+}
+
+bool ReadAllPersistedSnapshots(
+    CEvoDB<uint256, CDeterministicMNList, StaticSaltedHasher>& evo_db,
+    std::vector<EvoSnapshotEntry>& snapshots)
+{
+    std::unique_ptr<CDBIterator> cursor(evo_db.NewIterator());
+    if (!cursor) {
+        LogPrint(BCLog::SYS, "CDeterministicMNManager::%s -- Failed to create EvoDB iterator\n", __func__);
+        return false;
+    }
+
+    for (cursor->SeekToFirst(); cursor->Valid(); cursor->Next()) {
+        uint256 key;
+        if (!cursor->GetKey(key)) {
+            continue;
+        }
+
+        CDeterministicMNList snapshot;
+        if (!cursor->GetValue(snapshot)) {
+            LogPrint(BCLog::SYS, "CDeterministicMNManager::%s -- Failed to read EvoDB snapshot for %s\n", __func__, key.ToString());
+            return false;
+        }
+        snapshots.emplace_back(key, std::move(snapshot));
+    }
+
+    return true;
+}
+
+bool RewriteSnapshotWindow(
+    CEvoDB<uint256, CDeterministicMNList, StaticSaltedHasher>& evo_db,
+    const std::vector<EvoSnapshotEntry>& snapshots)
+{
+    const auto db_path = evo_db.StoragePath();
+    std::vector<EvoSnapshotEntry> memory_only_backup;
+    fs::path backup_path;
+    fs::path marker_path;
+
+    if (db_path) {
+        backup_path = RewriteBackupPath(*db_path);
+        marker_path = RewriteMarkerPath(*db_path);
+
+        std::error_code ec;
+        fs::remove_all(backup_path, ec);
+        RemoveRewriteMarker(marker_path);
+        if (!WriteRewriteMarker(marker_path, "prepared")) {
+            LogPrint(BCLog::SYS, "CDeterministicMNManager::%s -- Failed to create rewrite marker %s\n",
+                     __func__, fs::PathToString(marker_path));
+            return false;
+        }
+
+        evo_db.CloseDB();
+        fs::rename(*db_path, backup_path, ec);
+        if (ec) {
+            LogPrint(BCLog::SYS, "CDeterministicMNManager::%s -- Failed to back up EvoDB for rewrite: %s\n", __func__, ec.message());
+            RemoveRewriteMarker(marker_path);
+            evo_db.OpenDB(/*create_new=*/false);
+            return false;
+        }
+        evo_db.OpenDB(/*create_new=*/true);
+    } else {
+        if (!ReadAllPersistedSnapshots(evo_db, memory_only_backup)) {
+            return false;
+        }
+        evo_db.ResetDB();
+    }
+
+    CDBBatch batch(evo_db);
+    std::size_t items{0};
+    auto restore_original = [&]() {
+        if (db_path) {
+            evo_db.CloseDB();
+
+            std::error_code ec;
+            fs::remove_all(*db_path, ec);
+            fs::rename(backup_path, *db_path, ec);
+            if (ec) {
+                LogPrint(BCLog::SYS, "CDeterministicMNManager::%s -- Failed to restore backed up EvoDB: %s\n", __func__, ec.message());
+            } else {
+                RemoveRewriteMarker(marker_path);
+            }
+            evo_db.OpenDB(/*create_new=*/false);
+        } else {
+            evo_db.ResetDB();
+            CDBBatch restore_batch(evo_db);
+            std::size_t restore_items{0};
+            for (const auto& [key, snapshot] : memory_only_backup) {
+                restore_batch.Write(key, snapshot);
+                if (++restore_items == 256) {
+                    if (!evo_db.SubmitBatchForTesting(restore_batch)) {
+                        return false;
+                    }
+                    restore_batch.Clear();
+                    restore_items = 0;
+                }
+            }
+            if (restore_batch.SizeEstimate() != 0 && !evo_db.SubmitBatchForTesting(restore_batch)) {
+                return false;
+            }
+        }
+        return true;
+    };
+    auto restore_after_failure = [&](const char* message, const std::string& error = std::string()) {
+        if (error.empty()) {
+            LogPrint(BCLog::SYS, "CDeterministicMNManager::%s -- %s\n", __func__, message);
+        } else {
+            LogPrint(BCLog::SYS, "CDeterministicMNManager::%s -- %s: %s\n", __func__, message, error);
+        }
+        try {
+            restore_original();
+        } catch (const std::exception& e) {
+            LogPrint(BCLog::SYS, "CDeterministicMNManager::%s -- Failed to restore EvoDB after rewrite failure: %s\n", __func__, e.what());
+        } catch (...) {
+            LogPrint(BCLog::SYS, "CDeterministicMNManager::%s -- Failed to restore EvoDB after rewrite failure: unknown exception\n", __func__);
+        }
+        return false;
+    };
+
+    try {
+        for (const auto& [key, snapshot] : snapshots) {
+            batch.Write(key, snapshot);
+            if (++items == 256) {
+                if (!evo_db.SubmitBatchForTesting(batch)) {
+                    return restore_after_failure("Failed to write compacted EvoDB batch");
+                }
+                batch.Clear();
+                items = 0;
+            }
+        }
+
+        if (batch.SizeEstimate() != 0 && !evo_db.SubmitBatchForTesting(batch)) {
+            return restore_after_failure("Failed to write final compacted EvoDB batch");
+        }
+        if (db_path && !WriteRewriteMarker(marker_path, "complete")) {
+            return restore_after_failure("Failed to update rewrite marker to complete");
+        }
+    } catch (const std::exception& e) {
+        return restore_after_failure("Exception while rewriting compacted EvoDB", e.what());
+    } catch (...) {
+        return restore_after_failure("Unknown exception while rewriting compacted EvoDB");
+    }
+
+    if (db_path) {
+        RemoveRewriteMarker(marker_path);
+        DestroyDB(fs::PathToString(backup_path));
+    }
+
+    evo_db.ClearCaches();
+    return true;
+}
+} // namespace
+
+CDeterministicMNManager::CDeterministicMNManager(const DBParams& db_params)
+{
+    RecoverRewriteBackupIfPresent(db_params);
+    m_evoDb = std::make_unique<CEvoDB<uint256, CDeterministicMNList, StaticSaltedHasher>>(db_params, LIST_CACHE_SIZE);
+}
 
 uint64_t CDeterministicMN::GetInternalId() const
 {
@@ -1050,6 +1414,42 @@ bool CDeterministicMNManager::DoMaintenance(bool bForceFlush) {
         m_evoDb->ResetDB();
         bForceFlush = true;
         LogPrint(BCLog::SYS, "CDeterministicMNManager::DoMaintenance Database successfully wiped and recreated.\n");
+    } else if (bForceFlush) {
+        const size_t cache_entry_count{m_evoDb->GetReadWriteCacheSize()};
+        const size_t erase_entry_count{m_evoDb->GetEraseCacheSize()};
+
+        EvoEraseSet skipped_persisted;
+        skipped_persisted.reserve(cache_entry_count + erase_entry_count);
+        m_evoDb->ForEachEraseEntry([&](const uint256& key) {
+            skipped_persisted.insert(key);
+        });
+        m_evoDb->ForEachCachedEntry([&](const uint256& key, const CDeterministicMNList&) {
+            skipped_persisted.insert(key);
+        });
+
+        std::vector<EvoSnapshotEntry> live_snapshots;
+        live_snapshots.reserve(LIST_CACHE_SIZE);
+
+        size_t total_live_snapshots{0};
+        if (!CollectNewestPersistedSnapshots(*m_evoDb, skipped_persisted, live_snapshots, total_live_snapshots)) {
+            return false;
+        }
+        m_evoDb->ForEachCachedEntry([&](const uint256& key, const CDeterministicMNList& snapshot) {
+            RetainNewestSnapshot(live_snapshots, total_live_snapshots, std::make_pair(key, snapshot));
+        });
+
+        if (total_live_snapshots > LIST_CACHE_SIZE) {
+            std::sort(live_snapshots.begin(), live_snapshots.end(), SnapshotEntryLess);
+
+            if (!RewriteSnapshotWindow(*m_evoDb, live_snapshots)) {
+                return false;
+            }
+
+            LogPrint(BCLog::SYS,
+                     "CDeterministicMNManager::%s compacted EvoDB to %zu newest snapshots before forced flush.\n",
+                     __func__, live_snapshots.size());
+            return true;
+        }
     }
     if(bForceFlush) {
         if(!m_evoDb->FlushCacheToDisk()) {

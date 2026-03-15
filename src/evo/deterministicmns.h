@@ -480,6 +480,7 @@ public:
 };
 class CDeterministicMNManager
 {
+public:
     static constexpr int DISK_SNAPSHOT_PERIOD = 576; // once per day
     static constexpr int DISK_SNAPSHOTS = 3; // keep cache for 3 disk snapshots to have 2 full days covered
     static constexpr int LIST_CACHE_SIZE = DISK_SNAPSHOT_PERIOD * DISK_SNAPSHOTS;
@@ -499,8 +500,7 @@ public:
         std::string dbPath;
     };
     std::unique_ptr<CEvoDB<uint256, CDeterministicMNList, StaticSaltedHasher>> m_evoDb;
-    explicit CDeterministicMNManager(const DBParams& db_params)
-        : m_evoDb(std::make_unique<CEvoDB<uint256, CDeterministicMNList, StaticSaltedHasher>>(db_params, LIST_CACHE_SIZE)) {}
+    explicit CDeterministicMNManager(const DBParams& db_params);
        
     ~CDeterministicMNManager() = default;
 
