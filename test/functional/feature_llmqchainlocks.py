@@ -211,36 +211,58 @@ class LLMQChainLocksTest(DashTestFramework):
         for i in range(1, len(self.nodes)):
             for j in range(i + 1, len(self.nodes)):
                 self.connect_nodes(i, j, wait_for_connect=False)
-        # node 0 creates longer chain of 15 blocks but no chainlocks
-        self.generate(self.nodes[0], 15, sync_fun=self.no_op)
-        bad_cl = self.nodes[0].getbestblockhash()
+        # node 0 creates a longer competing chain but no chainlocks
+        self.generate(self.nodes[0], 16, sync_fun=self.no_op)
         bad_tip = self.nodes[0].getbestblockhash()
-        # node 1 creates shorter chain of 10 blocks which is chainlocked (this is the canonical chain because sentry nodes see it)
+        node0_cl_before = self.nodes[0].getbestchainlock()["blockhash"]
+        # node 1 creates a shorter competing chain which can only form chainlocks on its own side
         node1_mining_addr = self.nodes[1].get_deterministic_priv_key().address
         prev_cl = self.nodes[1].getbestchainlock()["blockhash"]
         self.generatetoaddress(self.nodes[1], 10, node1_mining_addr, sync_fun=self.no_op)
         self.wait_until(lambda: self.nodes[1].getbestchainlock()["blockhash"] != prev_cl, timeout=120)
-        good_cl = self.nodes[1].getbestchainlock()["blockhash"]
-        self.wait_for_chainlocked_block(self.nodes[1], good_cl, timeout=120)
-        assert not self.nodes[0].getblock(bad_cl)["chainlock"]
+        side_cl = self.nodes[1].getbestchainlock()["blockhash"]
+        self.wait_for_chainlocked_block(self.nodes[1], side_cl, timeout=120)
         self.reconnect_isolated_node(self.nodes[0], 1)
         for i in range(1, len(self.nodes)):
             self.connect_nodes(0, i, wait_for_connect=False)
         self.bump_mocktime(5, nodes=self.nodes)
         prev_cl = self.nodes[1].getbestchainlock()["blockhash"]
-        # create a new CLSIG
-        good_tip = self.generatetoaddress(self.nodes[1], 5, node1_mining_addr, sync_fun=self.no_op)[-1]
+        # Create a current-height CLSIG on the minority branch. The branch diverged
+        # more than one sign window back, so node 0 must reject it and stay on its
+        # own longer active chain.
+        self.generatetoaddress(self.nodes[1], 5, node1_mining_addr, sync_fun=self.no_op)
         self.wait_until(lambda: self.nodes[1].getbestchainlock()["blockhash"] != prev_cl, timeout=120)
-        good_cl = self.nodes[1].getbestchainlock()["blockhash"]
-        # since shorter chain was chainlocked and its the canonical valid chain, node with longer chain should switch to it
-        self.wait_for_chainlocked_block(self.nodes[0], good_cl, timeout=120)
-        self.wait_until(lambda: self.nodes[0].getbestblockhash() == good_tip)
-        assert self.nodes[1].getbestblockhash() == good_tip
-        self.log.info("The tip mined while this node was isolated should be marked conflicting now")
+        deep_best = self.nodes[1].getbestchainlock()
+        deep_cl = deep_best["blockhash"]
+        def node0_has_deep_cl_header():
+            try:
+                self.nodes[0].getblockheader(deep_cl)
+                return True
+            except JSONRPCException:
+                return False
+        self.wait_until(node0_has_deep_cl_header, timeout=60)
+        assert_raises_rpc_error(
+            -8,
+            "clsig-window-ancestor-mismatch",
+            self.nodes[0].submitchainlock,
+            deep_best["blockhash"],
+            deep_best["signature"],
+            deep_best["signers"],
+        )
+        self.bump_mocktime(5, nodes=self.nodes)
+        time.sleep(2)
+        assert self.nodes[0].getbestblockhash() == bad_tip
+        assert self.nodes[0].getbestchainlock()["blockhash"] == node0_cl_before
+        # Once the competing branch becomes objectively longer, regular chain-work
+        # selection should recover and sync the network without relying on CLSIG.
+        recovery_tip = self.generatetoaddress(self.nodes[1], 2, node1_mining_addr, sync_fun=self.no_op)[-1]
+        self.wait_until(lambda: self.nodes[0].getbestblockhash() == recovery_tip, timeout=120)
+        assert self.nodes[1].getbestblockhash() == recovery_tip
+        self.log.info("The tip mined while this node was isolated should remain a valid fork when deep CLSIG is rejected")
         found = False
         for tip in self.nodes[0].getchaintips():
             if tip["hash"] == bad_tip:
-                assert tip["status"] == "conflicting"
+                assert tip["status"] == "valid-fork"
                 found = True
                 break
         assert found
