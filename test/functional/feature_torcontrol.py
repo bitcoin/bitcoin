@@ -78,6 +78,8 @@ class MockTorControlServer:
                     continue
         finally:
             conn.close()
+            if self.conn is conn:
+                self.conn = None
 
     def send_raw(self, data):
         if self.conn:
@@ -256,12 +258,69 @@ class TorControlTest(BitcoinTestFramework):
 
         mock_tor.stop()
 
+    def test_networkactive(self):
+        self.log.info("Test that Tor control respects networkactive state")
+
+        tor_port = p2p_port(self.num_nodes + 3)
+        mock_tor = MockTorControlServer(tor_port)
+        mock_tor.start()
+
+        self.restart_node(0, extra_args=[
+            f"-torcontrol=127.0.0.1:{tor_port}",
+            "-listenonion=1",
+            "-networkactive=0",
+            "-debug=tor",
+        ])
+
+        ensure_for(duration=2, f=lambda: len(mock_tor.received_commands) == 0)
+
+        with self.nodes[0].assert_debug_log(expected_msgs=["SetNetworkActive: true\n"]):
+            self.nodes[0].setnetworkactive(state=True)
+
+        self.wait_until(lambda: len(mock_tor.received_commands) >= 4, timeout=10)
+        assert_equal(mock_tor.received_commands[0], "PROTOCOLINFO 1")
+
+        with self.nodes[0].assert_debug_log(expected_msgs=["SetNetworkActive: false\n"]):
+            self.nodes[0].setnetworkactive(state=False)
+
+        self.wait_until(lambda: mock_tor.conn is None or mock_tor.conn.fileno() == -1, timeout=5)
+
+        # Clean up
+        mock_tor.stop()
+
+    def test_networkactive_reactivation_resets_backoff(self):
+        self.log.info("Test that re-activating the network resets torcontrol reconnect backoff")
+
+        tor_port = p2p_port(self.num_nodes + 4)
+        node = self.nodes[0]
+
+        with node.assert_debug_log(expected_msgs=["Retrying in 3.4 seconds"], timeout=10):
+            self.restart_node(0, extra_args=[
+                f"-torcontrol=127.0.0.1:{tor_port}",
+                "-listenonion=1",
+                "-debug=tor",
+            ])
+
+        with node.assert_debug_log(expected_msgs=["SetNetworkActive: false\n"]):
+            node.setnetworkactive(state=False)
+
+        # Give the Tor control thread time to observe the inactive state.
+        ensure_for(duration=2, f=lambda: not node.getnetworkinfo()["networkactive"])
+
+        with node.assert_debug_log(expected_msgs=[
+            "SetNetworkActive: true\n",
+            "Retrying in 1.0 seconds",
+        ], timeout=2):
+            node.setnetworkactive(state=True)
+
     def run_test(self):
         self.test_basic()
         self.test_partial_data()
         self.test_pow_fallback()
         self.test_oversized_line()
         self.test_overmany_lines()
+        self.test_networkactive()
+        self.test_networkactive_reactivation_resets_backoff()
 
 
 if __name__ == '__main__':
