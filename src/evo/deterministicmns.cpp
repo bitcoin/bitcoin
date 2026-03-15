@@ -32,6 +32,39 @@ namespace {
 using EvoSnapshotEntry = std::pair<uint256, CDeterministicMNList>;
 using EvoEraseSet = std::unordered_set<uint256, StaticSaltedHasher>;
 
+fs::path RewriteBackupPath(const fs::path& db_path)
+{
+    fs::path backup_path{db_path};
+    backup_path += ".rewrite-backup";
+    return backup_path;
+}
+
+void RecoverRewriteBackupIfPresent(const DBParams& db_params)
+{
+    if (db_params.memory_only || db_params.path.empty()) {
+        return;
+    }
+
+    const fs::path backup_path{RewriteBackupPath(db_params.path)};
+    if (!fs::exists(backup_path)) {
+        return;
+    }
+
+    std::error_code ec;
+    fs::remove_all(db_params.path, ec);
+    ec.clear();
+    fs::rename(backup_path, db_params.path, ec);
+    if (ec) {
+        LogPrint(BCLog::SYS,
+                 "CDeterministicMNManager::%s -- Failed to recover EvoDB rewrite backup %s -> %s: %s\n",
+                 __func__, fs::PathToString(backup_path), fs::PathToString(db_params.path), ec.message());
+    } else {
+        LogPrint(BCLog::SYS,
+                 "CDeterministicMNManager::%s -- Recovered EvoDB rewrite backup %s -> %s\n",
+                 __func__, fs::PathToString(backup_path), fs::PathToString(db_params.path));
+    }
+}
+
 bool SnapshotEntryLess(const EvoSnapshotEntry& a, const EvoSnapshotEntry& b)
 {
     if (a.second.GetHeight() != b.second.GetHeight()) {
@@ -133,8 +166,7 @@ bool RewriteSnapshotWindow(
     fs::path backup_path;
 
     if (db_path) {
-        backup_path = *db_path;
-        backup_path += ".rewrite-backup";
+        backup_path = RewriteBackupPath(*db_path);
 
         std::error_code ec;
         fs::remove_all(backup_path, ec);
@@ -232,6 +264,12 @@ bool RewriteSnapshotWindow(
     return true;
 }
 } // namespace
+
+CDeterministicMNManager::CDeterministicMNManager(const DBParams& db_params)
+{
+    RecoverRewriteBackupIfPresent(db_params);
+    m_evoDb = std::make_unique<CEvoDB<uint256, CDeterministicMNList, StaticSaltedHasher>>(db_params, LIST_CACHE_SIZE);
+}
 
 uint64_t CDeterministicMN::GetInternalId() const
 {

@@ -500,8 +500,7 @@ public:
         std::string dbPath;
     };
     std::unique_ptr<CEvoDB<uint256, CDeterministicMNList, StaticSaltedHasher>> m_evoDb;
-    explicit CDeterministicMNManager(const DBParams& db_params)
-        : m_evoDb(std::make_unique<CEvoDB<uint256, CDeterministicMNList, StaticSaltedHasher>>(db_params, LIST_CACHE_SIZE)) {}
+    explicit CDeterministicMNManager(const DBParams& db_params);
        
     ~CDeterministicMNManager() = default;
 
