@@ -23,13 +23,15 @@ namespace node {
  * transaction inventory data, each protected by its own mutex.
  */
 struct TxRelay {
-    mutable Mutex m_bloom_filter_mutex;
+private:
+    mutable Mutex m_bloom_filter_mutex ACQUIRED_AFTER(m_tx_inventory_mutex);
+    mutable Mutex m_tx_inventory_mutex ACQUIRED_BEFORE(m_bloom_filter_mutex);
+
+public:
     /** Whether we relay transactions to this peer. */
     bool m_relay_txs GUARDED_BY(m_bloom_filter_mutex){false};
     /** A bloom filter for which transactions to announce to the peer. See BIP37. */
     std::unique_ptr<CBloomFilter> m_bloom_filter PT_GUARDED_BY(m_bloom_filter_mutex) GUARDED_BY(m_bloom_filter_mutex){nullptr};
-
-    mutable Mutex m_tx_inventory_mutex;
     /** A filter of all the (w)txids that the peer has announced to
      *  us or we have announced to the peer. We use this to avoid announcing
      *  the same (w)txid to a peer that already has the transaction. */
@@ -64,11 +66,24 @@ struct TxRelay {
         m_relay_txs = relay_txs;
     }
 
+    Mutex& GetBloomFilterMutex() const LOCK_RETURNED(m_bloom_filter_mutex) { return m_bloom_filter_mutex; }
+
+    template <typename Callable>
+    bool WithBloomFilterIfSet(Callable&& callable) EXCLUSIVE_LOCKS_REQUIRED(!m_bloom_filter_mutex)
+    {
+        LOCK(m_bloom_filter_mutex);
+        if (!m_bloom_filter) return false;
+        callable(*m_bloom_filter);
+        return true;
+    }
+
     void AddKnownTx(const uint256& hash) EXCLUSIVE_LOCKS_REQUIRED(!m_tx_inventory_mutex)
     {
         LOCK(m_tx_inventory_mutex);
         m_tx_inventory_known_filter.insert(hash);
     }
+
+    Mutex& GetTxInventoryMutex() const LOCK_RETURNED(m_tx_inventory_mutex) { return m_tx_inventory_mutex; }
 
     uint64_t GetLastInvSequence() const EXCLUSIVE_LOCKS_REQUIRED(!m_tx_inventory_mutex)
     {
