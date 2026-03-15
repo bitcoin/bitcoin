@@ -89,16 +89,22 @@ void RecoverRewriteBackupIfPresent(const DBParams& db_params)
     }
 
     if (has_backup) {
-        std::error_code ec;
-        fs::remove_all(backup_path, ec);
-        if (ec) {
-            LogPrint(BCLog::SYS,
-                     "CDeterministicMNManager::%s -- Failed to remove stale EvoDB rewrite backup %s: %s\n",
-                     __func__, fs::PathToString(backup_path), ec.message());
+        if (!fs::exists(db_params.path)) {
+            std::error_code ec;
+            fs::rename(backup_path, db_params.path, ec);
+            if (ec) {
+                LogPrint(BCLog::SYS,
+                         "CDeterministicMNManager::%s -- Failed to recover EvoDB backup without marker %s -> %s: %s\n",
+                         __func__, fs::PathToString(backup_path), fs::PathToString(db_params.path), ec.message());
+            } else {
+                LogPrint(BCLog::SYS,
+                         "CDeterministicMNManager::%s -- Recovered EvoDB backup without marker %s -> %s\n",
+                         __func__, fs::PathToString(backup_path), fs::PathToString(db_params.path));
+            }
         } else {
             LogPrint(BCLog::SYS,
-                     "CDeterministicMNManager::%s -- Removed stale EvoDB rewrite backup %s\n",
-                     __func__, fs::PathToString(backup_path));
+                     "CDeterministicMNManager::%s -- Preserving unmatched EvoDB backup %s because live DB %s also exists\n",
+                     __func__, fs::PathToString(backup_path), fs::PathToString(db_params.path));
         }
     }
 

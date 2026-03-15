@@ -890,7 +890,7 @@ BOOST_AUTO_TEST_CASE(rewrite_backup_is_recovered_on_restart)
     BOOST_CHECK(!recovered_manager.m_evoDb->Read(MakeSnapshotKey(999), snapshot));
 }
 
-BOOST_AUTO_TEST_CASE(stale_rewrite_backup_is_ignored_on_restart)
+BOOST_AUTO_TEST_CASE(stale_rewrite_backup_is_preserved_on_restart)
 {
     auto db_params = DBParams{
         .path = "testdb_dmn_rewrite_stale_backup",
@@ -926,10 +926,12 @@ BOOST_AUTO_TEST_CASE(stale_rewrite_backup_is_ignored_on_restart)
     CDeterministicMNManager recovered_manager(reopen_params);
 
     CDeterministicMNList snapshot;
-    BOOST_CHECK(!recovered_manager.m_evoDb->Read(MakeSnapshotKey(0), snapshot));
-    BOOST_CHECK(!recovered_manager.m_evoDb->Read(MakeSnapshotKey(2), snapshot));
     BOOST_CHECK(recovered_manager.m_evoDb->Read(MakeSnapshotKey(999), snapshot));
     BOOST_CHECK_EQUAL(snapshot.GetHeight(), 999);
+
+    fs::path backup_path = db_params.path;
+    backup_path += ".rewrite-backup";
+    BOOST_CHECK(fs::exists(backup_path));
 }
 
 BOOST_AUTO_TEST_CASE(rewrite_marker_without_backup_is_ignored_on_restart)
