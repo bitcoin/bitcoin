@@ -11,6 +11,7 @@
 #include <rpc/blockchain.h>
 #include <node/context.h>
 #include <evo/deterministicmns.h>
+#include <messagesigner.h>
 #include <rpc/server_util.h>
 #include <wallet/rpc/wallet.h>
 #include <util/message.h>
@@ -52,12 +53,19 @@ UniValue VoteWithMasternodes(const std::map<uint256, CKeyID>& key_ids,
         }
 
         CGovernanceVote vote(dmn->collateralOutpoint, hash, eVoteSignal, eVoteOutcome);
-        std::vector<unsigned char> vchSig;
-        const SigningResult sign_result = wallet.SignHash(vote.GetSignatureHash(), CTxDestination(WitnessV0KeyHash(keyID)), vchSig);
-        if (sign_result != SigningResult::OK) {
+        CKey voting_key;
+        if (!wallet.GetKey(keyID, voting_key)) {
             nFailed++;
             statusObj.pushKV("result", "failed");
-            statusObj.pushKV("errorMessage", strprintf("Failure to sign: %s", SigningResultString(sign_result)));
+            statusObj.pushKV("errorMessage", "Private key not available.");
+            resultsObj.pushKV(proTxHash.ToString(), statusObj);
+            continue;
+        }
+        std::vector<unsigned char> vchSig;
+        if (!CHashSigner::SignHash(vote.GetSignatureHash(), voting_key, vchSig)) {
+            nFailed++;
+            statusObj.pushKV("result", "failed");
+            statusObj.pushKV("errorMessage", "Failure to sign.");
             resultsObj.pushKV(proTxHash.ToString(), statusObj);
             continue;
         }

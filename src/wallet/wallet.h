@@ -641,8 +641,6 @@ public:
     SigningResult SignMessage(const std::string& message, const PKHash& pkhash, std::string& str_sig) const;
     // SYSCOIN
     SigningResult SignMessage(const std::string& message, const CTxDestination& dest, std::string& str_sig) const;
-    // SYSCOIN
-    SigningResult SignHash(const uint256& hash, const CTxDestination& dest, std::vector<unsigned char>& vch_sig) const;
     /**
      * Fills out a PSBT with information from the wallet. Fills in UTXOs if we have
      * them. Tries to sign if sign=true. Sets `complete` if the PSBT is now complete

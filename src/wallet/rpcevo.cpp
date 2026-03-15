@@ -926,14 +926,14 @@ static RPCHelpMan protx_update_service()
         FundSpecialTx(*pwallet, tx, ptx, feeSourceDest);
         UpdateSpecialTxInputsHash(tx, ptx);
         ptx.vchSig.clear();
-        std::vector<unsigned char> owner_sig;
         const CTxDestination ownerDest = WitnessV0KeyHash(dmn->pdmnState->keyIDOwner);
-        const SigningResult owner_sign_result = pwallet->SignHash(::SerializeHash(ptx), ownerDest, owner_sig);
-        if (owner_sign_result == SigningResult::PRIVATE_KEY_NOT_AVAILABLE) {
+        CKey owner_key;
+        if (!pwallet->GetKey(dmn->pdmnState->keyIDOwner, owner_key)) {
             throw std::runtime_error(strprintf("Private key for owner address %s not found in your wallet", EncodeDestination(ownerDest)));
         }
-        if (owner_sign_result != SigningResult::OK) {
-            throw std::runtime_error(strprintf("Failed to sign ProUpRegTx payload: %s", SigningResultString(owner_sign_result)));
+        std::vector<unsigned char> owner_sig;
+        if (!CHashSigner::SignHash(::SerializeHash(ptx), owner_key, owner_sig)) {
+            throw std::runtime_error("Failed to sign ProUpRegTx payload.");
         }
         ptx.vchSig = std::move(owner_sig);
         SetTxPayload(tx, ptx);
