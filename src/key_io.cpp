@@ -78,6 +78,14 @@ public:
         return bech32::Encode(bech32::Encoding::BECH32M, m_params.Bech32HRP(), data);
     }
 
+    std::string operator()(const SchnorrKeyHash& kh) const
+    {
+        std::vector<unsigned char> data = {2};
+        data.reserve(1 + CeilDiv(kh.size() * 8, 5u));
+        ConvertBits<8, 5, true>([&](unsigned char c) { data.push_back(c); }, kh.begin(), kh.end());
+        return bech32::Encode(bech32::Encoding::BECH32M, m_params.Bech32HRP(), data);
+    }
+
     std::string operator()(const CNoDestination& no) const { return {}; }
     std::string operator()(const PubKeyDestination& pk) const { return {}; }
 };

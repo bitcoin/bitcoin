@@ -16,6 +16,7 @@
 #include <secp256k1_musig.h>
 #include <secp256k1_recovery.h>
 #include <secp256k1_schnorrsig.h>
+#include <secp256k1_p2skh.h>
 
 static secp256k1_context* secp256k1_context_sign = nullptr;
 
@@ -274,6 +275,21 @@ bool CKey::SignSchnorr(const uint256& hash, std::span<unsigned char> sig, const 
 {
     KeyPair kp = ComputeKeyPair(merkle_root);
     return kp.SignSchnorr(hash, sig, aux);
+}
+
+bool CKey::SignP2SKH(const uint256& hash, std::span<unsigned char> sig64, const uint256& aux) const
+{
+    assert(IsValid());
+    assert(sig64.size() == 64);
+    secp256k1_keypair keypair;
+    if (!secp256k1_keypair_create(secp256k1_context_sign, &keypair, UCharCast(begin()))) return false;
+    // Compute hash160(P.x) at the Bitcoin Core layer (secp256k1 has no RIPEMD160).
+    CKeyID h160 = XOnlyPubKey(GetPubKey()).GetHash160();
+    bool ok = secp256k1_p2skh_sign(secp256k1_context_sign, sig64.data(),
+                                    hash.data(), &keypair,
+                                    UCharCast(h160.begin()), aux.data());
+    memory_cleanse(&keypair, sizeof(keypair));
+    return ok;
 }
 
 bool CKey::Load(const CPrivKey &seckey, const CPubKey &vchPubKey, bool fSkipCheck=false) {

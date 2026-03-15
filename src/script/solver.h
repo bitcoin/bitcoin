@@ -31,6 +31,7 @@ enum class TxoutType {
     WITNESS_V0_SCRIPTHASH,
     WITNESS_V0_KEYHASH,
     WITNESS_V1_TAPROOT,
+    SCHNORR_KEYHASH, //!< OP_2 <hash160(P.x)>: Pay-to-Schnorr-Key-Hash scheme
     WITNESS_UNKNOWN, //!< Only for Witness versions not already defined above
 };
 

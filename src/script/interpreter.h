@@ -145,6 +145,10 @@ enum class script_verify_flag_name : uint8_t {
     // Making unknown public key versions (in BIP 342 scripts) non-standard
     SCRIPT_VERIFY_DISCOURAGE_UPGRADABLE_PUBKEYTYPE,
 
+    // P2SKH (Pay-to-Schnorr-Key-Hash) validation
+    //
+    SCRIPT_VERIFY_P2SKH,
+
     // Constants to point to the highest flag in use. Add new flags above this line.
     //
     SCRIPT_VERIFY_END_MARKER
@@ -237,6 +241,7 @@ struct ScriptExecutionData
 static constexpr size_t WITNESS_V0_SCRIPTHASH_SIZE = 32;
 static constexpr size_t WITNESS_V0_KEYHASH_SIZE = 20;
 static constexpr size_t WITNESS_V1_TAPROOT_SIZE = 32;
+static constexpr size_t P2SKH_PROGRAM_SIZE = 20; //!< hash160(P.x) for the P2SKH scheme
 
 static constexpr uint8_t TAPROOT_LEAF_MASK = 0xfe;
 static constexpr uint8_t TAPROOT_LEAF_TAPSCRIPT = 0xc0;
@@ -280,6 +285,11 @@ public:
     }
 
     virtual bool CheckSchnorrSignature(std::span<const unsigned char> sig, std::span<const unsigned char> pubkey, SigVersion sigversion, ScriptExecutionData& execdata, ScriptError* serror = nullptr) const
+    {
+        return false;
+    }
+
+    virtual bool CheckP2SKHSignature(std::span<const unsigned char> sig, std::span<const unsigned char> pubkey_hash, ScriptExecutionData& execdata, ScriptError* serror = nullptr) const
     {
         return false;
     }
@@ -329,6 +339,7 @@ public:
     GenericTransactionSignatureChecker(const T* txToIn, unsigned int nInIn, const CAmount& amountIn, const PrecomputedTransactionData& txdataIn, MissingDataBehavior mdb) : txTo(txToIn), m_mdb(mdb), nIn(nInIn), amount(amountIn), txdata(&txdataIn) {}
     bool CheckECDSASignature(const std::vector<unsigned char>& scriptSig, const std::vector<unsigned char>& vchPubKey, const CScript& scriptCode, SigVersion sigversion) const override;
     bool CheckSchnorrSignature(std::span<const unsigned char> sig, std::span<const unsigned char> pubkey, SigVersion sigversion, ScriptExecutionData& execdata, ScriptError* serror = nullptr) const override;
+    bool CheckP2SKHSignature(std::span<const unsigned char> sig, std::span<const unsigned char> pubkey_hash, ScriptExecutionData& execdata, ScriptError* serror = nullptr) const override;
     bool CheckLockTime(const CScriptNum& nLockTime) const override;
     bool CheckSequence(const CScriptNum& nSequence) const override;
 };
@@ -352,6 +363,11 @@ public:
     bool CheckSchnorrSignature(std::span<const unsigned char> sig, std::span<const unsigned char> pubkey, SigVersion sigversion, ScriptExecutionData& execdata, ScriptError* serror = nullptr) const override
     {
         return m_checker.CheckSchnorrSignature(sig, pubkey, sigversion, execdata, serror);
+    }
+
+    bool CheckP2SKHSignature(std::span<const unsigned char> sig, std::span<const unsigned char> pubkey_hash, ScriptExecutionData& execdata, ScriptError* serror = nullptr) const override
+    {
+        return m_checker.CheckP2SKHSignature(sig, pubkey_hash, execdata, serror);
     }
 
     bool CheckLockTime(const CScriptNum& nLockTime) const override

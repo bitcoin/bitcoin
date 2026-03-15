@@ -261,6 +261,11 @@ public:
      */
     bool VerifySchnorr(const uint256& msg, std::span<const unsigned char> sigbytes) const;
 
+    /** Compute hash160(this->x) = RIPEMD160(SHA256(x-coordinate)).
+     *  Returns a 20-byte CKeyID. Used for Witness V2 key-path spending.
+     */
+    CKeyID GetHash160() const;
+
     /** Compute the Taproot tweak as specified in BIP341, with *this as internal
      * key:
      *  - if merkle_root == nullptr: H_TapTweak(xonly_pubkey)
@@ -303,6 +308,17 @@ public:
     //! Implement serialization without length prefixes since it is a fixed length
     SERIALIZE_METHODS(XOnlyPubKey, obj) { READWRITE(obj.m_keydata); }
 };
+
+/** P2SKH (Pay-to-Schnorr-Key-Hash) verification: recover the public key from the signature and
+ *  check that hash160(P.x) matches @p pubkey_hash.
+ *
+ *  @param sig64        64-byte signature (R.x || S).
+ *  @param msg          32-byte message hash (sighash).
+ *  @param pubkey_hash  20-byte hash160(P.x) from the locking script.
+ *  @return true if valid.
+ */
+bool P2SKHVerify(std::span<const unsigned char> sig64, const uint256& msg,
+                 std::span<const unsigned char> pubkey_hash);
 
 /** An ElligatorSwift-encoded public key. */
 struct EllSwiftPubKey

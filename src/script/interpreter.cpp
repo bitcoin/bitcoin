@@ -1415,12 +1415,13 @@ void PrecomputedTransactionData::Init(const T& txTo, std::vector<CTxOut>&& spent
     bool uses_bip341_taproot = force;
     for (size_t inpos = 0; inpos < txTo.vin.size() && !(uses_bip143_segwit && uses_bip341_taproot); ++inpos) {
         if (!txTo.vin[inpos].scriptWitness.IsNull()) {
-            if (m_spent_outputs_ready && m_spent_outputs[inpos].scriptPubKey.size() == 2 + WITNESS_V1_TAPROOT_SIZE &&
-                m_spent_outputs[inpos].scriptPubKey[0] == OP_1) {
-                // Treat every witness-bearing spend with 34-byte scriptPubKey that starts with OP_1 as a Taproot
-                // spend. This only works if spent_outputs was provided as well, but if it wasn't, actual validation
-                // will fail anyway. Note that this branch may trigger for scriptPubKeys that aren't actually segwit
-                // but in that case validation will fail as SCRIPT_ERR_WITNESS_UNEXPECTED anyway.
+            if (m_spent_outputs_ready &&
+                ((m_spent_outputs[inpos].scriptPubKey.size() == 2 + WITNESS_V1_TAPROOT_SIZE &&
+                  m_spent_outputs[inpos].scriptPubKey[0] == OP_1) ||
+                 (m_spent_outputs[inpos].scriptPubKey.size() == 2 + P2SKH_PROGRAM_SIZE &&
+                  m_spent_outputs[inpos].scriptPubKey[0] == OP_2))) {
+                // Treat witness-bearing spends of v1 taproot (OP_1 + 32 bytes) or v2 key-hash
+                // (OP_2 + 20 bytes) as requiring BIP341-style sighash precomputation.
                 uses_bip341_taproot = true;
             } else {
                 // Treat every spend that's not known to native witness v1 as a Witness v0 spend. This branch may
@@ -1742,6 +1743,33 @@ bool GenericTransactionSignatureChecker<T>::CheckSchnorrSignature(std::span<cons
 }
 
 template <class T>
+bool GenericTransactionSignatureChecker<T>::CheckP2SKHSignature(std::span<const unsigned char> sig, std::span<const unsigned char> pubkey_hash, ScriptExecutionData& execdata, ScriptError* serror) const
+{
+    // pubkey_hash must be exactly 20 bytes (hash160(P.x)). Caller is responsible for enforcing this.
+    assert(pubkey_hash.size() == P2SKH_PROGRAM_SIZE);
+
+    if (sig.size() != 64 && sig.size() != 65) return set_error(serror, SCRIPT_ERR_SCHNORR_SIG_SIZE);
+
+    uint8_t hashtype = SIGHASH_DEFAULT;
+    if (sig.size() == 65) {
+        hashtype = SpanPopBack(sig);
+        if (hashtype == SIGHASH_DEFAULT) return set_error(serror, SCRIPT_ERR_SCHNORR_SIG_HASHTYPE);
+    }
+
+    uint256 sighash;
+    if (!this->txdata) return HandleMissingData(m_mdb);
+    // Reuse the BIP341 key-path sighash structure (ext_flag=0, no script extension).
+    // Cross-version replay is prevented because the UTXO scriptPubKey (OP_2 + 20 bytes)
+    // is included in the sighash via the spent outputs hash.
+    if (!SignatureHashSchnorr(sighash, execdata, *txTo, nIn, hashtype, SigVersion::TAPROOT, *this->txdata, m_mdb)) {
+        return set_error(serror, SCRIPT_ERR_SCHNORR_SIG_HASHTYPE);
+    }
+
+    if (!P2SKHVerify(sig, sighash, pubkey_hash)) return set_error(serror, SCRIPT_ERR_SCHNORR_SIG);
+    return true;
+}
+
+template <class T>
 bool GenericTransactionSignatureChecker<T>::CheckLockTime(const CScriptNum& nLockTime) const
 {
     // There are two kinds of nLockTime: lock-by-blockheight
@@ -1987,6 +2015,18 @@ static bool VerifyWitnessProgram(const CScriptWitness& witness, int witversion, 
             }
             return set_success(serror);
         }
+    } else if (witversion == 2 && program.size() == P2SKH_PROGRAM_SIZE && !is_p2sh) {
+        // P2SKH key-hash: 20-byte program = hash160(P.x), key-path spend only.
+        if (!(flags & SCRIPT_VERIFY_P2SKH)) return set_success(serror);
+        if (stack.size() == 0) return set_error(serror, SCRIPT_ERR_WITNESS_PROGRAM_WITNESS_EMPTY);
+        // Exactly one stack item required (the 64- or 65-byte signature). No script path.
+        if (stack.size() != 1) return set_error(serror, SCRIPT_ERR_WITNESS_PROGRAM_MISMATCH);
+        execdata.m_annex_present = false;
+        execdata.m_annex_init = true;
+        if (!checker.CheckP2SKHSignature(stack.front(), program, execdata, serror)) {
+            return false; // serror is set
+        }
+        return set_success(serror);
     } else if (!is_p2sh && CScript::IsPayToAnchor(witversion, program)) {
         return true;
     } else {

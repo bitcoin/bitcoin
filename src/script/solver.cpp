@@ -28,6 +28,7 @@ std::string GetTxnOutputType(TxoutType t)
     case TxoutType::WITNESS_V0_KEYHASH: return "witness_v0_keyhash";
     case TxoutType::WITNESS_V0_SCRIPTHASH: return "witness_v0_scripthash";
     case TxoutType::WITNESS_V1_TAPROOT: return "witness_v1_taproot";
+    case TxoutType::SCHNORR_KEYHASH: return "schnorr_keyhash";
     case TxoutType::WITNESS_UNKNOWN: return "witness_unknown";
     } // no default case, so the compiler can warn about missing cases
     assert(false);
@@ -165,6 +166,10 @@ TxoutType Solver(const CScript& scriptPubKey, std::vector<std::vector<unsigned c
         if (witnessversion == 1 && witnessprogram.size() == WITNESS_V1_TAPROOT_SIZE) {
             vSolutionsRet.push_back(std::move(witnessprogram));
             return TxoutType::WITNESS_V1_TAPROOT;
+        }
+        if (witnessversion == 2 && witnessprogram.size() == P2SKH_PROGRAM_SIZE) {
+            vSolutionsRet.push_back(std::move(witnessprogram));
+            return TxoutType::SCHNORR_KEYHASH;
         }
         if (scriptPubKey.IsPayToAnchor()) {
             return TxoutType::ANCHOR;

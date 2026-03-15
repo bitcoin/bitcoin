@@ -173,6 +173,15 @@ public:
      */
     bool SignSchnorr(const uint256& hash, std::span<unsigned char> sig, const uint256* merkle_root, const uint256& aux) const;
 
+    /** Produce a 64-byte P2SKH signature (R.x || S).
+     *  Uses the hash160 key-commitment Schnorr scheme.
+     *  @param hash     32-byte sighash.
+     *  @param sig64    Output buffer of exactly 64 bytes.
+     *  @param aux      32 bytes of auxiliary randomness for nonce derivation.
+     *  @return true on success.
+     */
+    bool SignP2SKH(const uint256& hash, std::span<unsigned char> sig64, const uint256& aux) const;
+
     //! Derive BIP32 child key.
     [[nodiscard]] bool Derive(CKey& keyChild, ChainCode &ccChild, unsigned int nChild, const ChainCode& cc) const;
 

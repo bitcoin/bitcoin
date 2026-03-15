@@ -333,6 +333,13 @@ bool IsWitnessStandard(const CTransaction& tx, const CCoinsViewCache& mapInputs)
                 return false;
             }
         }
+
+        // Witness V2 key-hash spend: exactly one 64- or 65-byte signature, no script path.
+        if (witnessversion == 2 && witnessprogram.size() == P2SKH_PROGRAM_SIZE && !p2sh) {
+            const auto& stack = tx.vin[i].scriptWitness.stack;
+            if (stack.size() != 1) return false;
+            if (stack[0].size() != 64 && stack[0].size() != 65) return false;
+        }
     }
     return true;
 }

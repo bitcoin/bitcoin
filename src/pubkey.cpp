@@ -11,6 +11,7 @@
 #include <secp256k1_extrakeys.h>
 #include <secp256k1_recovery.h>
 #include <secp256k1_schnorrsig.h>
+#include <secp256k1_p2skh.h>
 #include <span.h>
 #include <uint256.h>
 #include <util/strencodings.h>
@@ -427,4 +428,31 @@ bool CExtPubKey::Derive(CExtPubKey &out, unsigned int _nChild, uint256* bip32_tw
         return false;
     }
     return (!secp256k1_ecdsa_signature_normalize(secp256k1_context_static, nullptr, &sig));
+}
+
+CKeyID XOnlyPubKey::GetHash160() const
+{
+    // hash160 = RIPEMD160(SHA256(x-coordinate))
+    return CKeyID(Hash160(m_keydata));
+}
+
+bool P2SKHVerify(std::span<const unsigned char> sig64, const uint256& msg,
+                 std::span<const unsigned char> pubkey_hash)
+{
+    assert(sig64.size() == 64);
+    assert(pubkey_hash.size() == 20);
+
+    // Recover P.x from the signature (secp256k1 cannot compute RIPEMD160 internally).
+    unsigned char recovered_px[32];
+    if (!secp256k1_p2skh_verify(secp256k1_context_static,
+                                 recovered_px,
+                                 sig64.data(),
+                                 msg.begin(),
+                                 pubkey_hash.data())) {
+        return false;
+    }
+
+    // Verify that hash160(recovered P.x) matches the locking script commitment.
+    uint160 computed = Hash160(recovered_px);
+    return std::equal(computed.begin(), computed.end(), pubkey_hash.begin());
 }
