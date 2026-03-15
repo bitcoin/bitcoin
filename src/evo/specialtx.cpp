@@ -9,14 +9,103 @@
 #include <primitives/transaction.h>
 #include <validation.h>
 
+#include <algorithm>
+#include <iterator>
+
 #include <evo/deterministicmns.h>
 #include <evo/specialtx.h>
 #include <util/time.h>
 #include <llmq/quorums_commitment.h>
 #include <llmq/quorums_blockprocessor.h>
+#include <llmq/quorums_chainlocks.h>
+#include <llmq/quorums_btccheckpoints.h>
 #include <logging.h>
 #include <governance/governance.h>
+
 class CCoinsViewCache;
+
+namespace {
+template <typename T, typename ParseFn>
+bool ExtractUniqueTaggedTailObject(const std::vector<unsigned char>& vchData,
+                                   const uint8_t (&magic)[4],
+                                   T& out,
+                                   ParseFn&& parse_fn)
+{
+    bool found{false};
+    T parsed{};
+    for (auto it = vchData.begin(); it != vchData.end();) {
+        it = std::search(it, vchData.end(), std::begin(magic), std::end(magic));
+        if (it == vchData.end()) {
+            break;
+        }
+
+        const auto payload_begin = std::next(it, sizeof(magic));
+        T candidate{};
+        if (parse_fn(payload_begin, vchData.end(), candidate)) {
+            // Multiple decodable tails are ambiguous and thus invalid.
+            if (found) {
+                return false;
+            }
+            parsed = std::move(candidate);
+            found = true;
+        }
+        ++it;
+    }
+
+    if (!found) {
+        return false;
+    }
+    out = std::move(parsed);
+    return true;
+}
+
+} // namespace
+
+bool ExtractBTCCReceipt(const std::vector<unsigned char>& vchData, llmq::CBTCCheckpointSig& receipt)
+{
+    return ExtractUniqueTaggedTailObject(vchData, BTCCHECK_MAGIC_BYTES, receipt,
+                                         [](auto begin, auto end, llmq::CBTCCheckpointSig& candidate) {
+                                             try {
+                                                 CDataStream ds(std::vector<unsigned char>(begin, end), SER_NETWORK, PROTOCOL_VERSION);
+                                                 ds >> candidate;
+                                                 return ds.empty();
+                                             } catch (const std::exception&) {
+                                                 return false;
+                                             }
+                                         });
+}
+
+bool ExtractBTCCReceipt(const CBlock& block, llmq::CBTCCheckpointSig& receipt)
+{
+    if (block.vtx.empty() || !block.vtx[0]) return false;
+    std::vector<unsigned char> vchData;
+    int nOut{-1};
+    if (!GetSyscoinData(*block.vtx[0], vchData, nOut)) return false;
+    return ExtractBTCCReceipt(vchData, receipt);
+}
+
+bool ExtractBTCPREVCommitment(const CBlock& block, uint256& btcPrevHash)
+{
+    if (block.vtx.empty() || !block.vtx[0]) return false;
+    std::vector<unsigned char> vchData;
+    int nOut{-1};
+    if (!GetSyscoinData(*block.vtx[0], vchData, nOut)) return false;
+    constexpr size_t BTCPREV_PAYLOAD_SIZE{32};
+    return ExtractUniqueTaggedTailObject(vchData, BTCPREV_MAGIC_BYTES, btcPrevHash,
+                                         [](auto begin, auto end, uint256& candidate) {
+                                             if (static_cast<size_t>(std::distance(begin, end)) != BTCPREV_PAYLOAD_SIZE) {
+                                                 return false;
+                                             }
+                                             try {
+                                                 CDataStream ds(std::vector<unsigned char>(begin, end), SER_NETWORK, PROTOCOL_VERSION);
+                                                 ds >> candidate;
+                                                 return ds.empty();
+                                             } catch (const std::exception&) {
+                                                 return false;
+                                             }
+                                         });
+}
+
 bool CheckSpecialTx(node::BlockManager &blockman, const CTransaction& tx, const CBlockIndex* pindexPrev, TxValidationState& state, CCoinsViewCache& view, bool fJustCheck, bool check_sigs)
 {
 
@@ -59,6 +148,73 @@ bool ProcessSpecialTxsInBlock(ChainstateManager &chainman, const CBlock& block, 
 
         auto nTime2 = SystemClock::now(); nTimeLoop += nTime2 - nTime1;
         LogPrint(BCLog::BENCHMARK, "        - Loop: %.2fms [%.2fs]\n",  Ticks<MillisecondsDouble>(nTime2 - nTime1), Ticks<SecondsDouble>(nTimeLoop));
+
+        // SYSCOIN: consensus-validated, lagged BTC checkpoint attestation embedded in the coinbase Syscoin-data payload.
+        // Schedule: one checkpoint per 10-block absolute epoch (+2 sign, +7 carrier).
+        // Carrier is required only when its referenced sign height (h-5) is post-activation.
+        {
+            const auto& consensus = Params().GetConsensus();
+            const int32_t height = pindex->nHeight;
+            const int start = consensus.nCLReceiptStartBlock;
+            const int32_t expected = height - BTCCHECK_PROP_BUFFER;
+            const bool receiptRequired = height >= BTCCHECK_PROP_BUFFER &&
+                                        expected >= start &&
+                                        ((height % BTCCHECK_PERIOD) == BTCCHECK_CARRIER_OFFSET);
+            if (receiptRequired) {
+                std::vector<unsigned char> vchData;
+                int nOut{-1};
+                if (!GetSyscoinData(*block.vtx[0], vchData, nOut)) {
+                    LogPrintf("%s -- bad-btcc-output at height=%d block=%s\n", __func__, height, pindex->GetBlockHash().ToString());
+                    return state.Invalid(BlockValidationResult::BLOCK_CONSENSUS, "bad-btcc-output");
+                }
+
+                // SYSCOIN: consensus-validated, lagged BTC checkpoint attestation embedded in the same payload.
+                // Required on carrier heights whose referenced sign height is post-activation (null allowed).
+                llmq::CBTCCheckpointSig btcc;
+                if (!ExtractBTCCReceipt(vchData, btcc)) {
+                    LogPrintf("%s -- bad-btcc-missing at height=%d block=%s data_size=%u\n", __func__, height, pindex->GetBlockHash().ToString(), static_cast<unsigned>(vchData.size()));
+                    return state.Invalid(BlockValidationResult::BLOCK_CONSENSUS, "bad-btcc-missing");
+                }
+
+                // If BTCCHECK is non-null, it must match the (h-5) ancestor referenced by this carrier block.
+                if (!btcc.IsNull()) {
+                    if (btcc.nHeight != expected) {
+                        LogPrintf("%s -- bad-btcc-height at height=%d block=%s btcc_height=%d expected=%d\n",
+                                __func__, height, pindex->GetBlockHash().ToString(), btcc.nHeight, expected);
+                        return state.Invalid(BlockValidationResult::BLOCK_CONSENSUS, "bad-btcc-height");
+                    }
+                    const CBlockIndex* pindexReceipt = pindex->GetAncestor(expected);
+                    if (!pindexReceipt) {
+                        LogPrintf("%s -- bad-btcc-ancestor at height=%d block=%s expected=%d\n",
+                                __func__, height, pindex->GetBlockHash().ToString(), expected);
+                        return state.Invalid(BlockValidationResult::BLOCK_CONSENSUS, "bad-btcc-ancestor");
+                    }
+                    if (btcc.sysHash != pindexReceipt->GetBlockHash()) {
+                        LogPrintf("%s -- bad-btcc-syshash at height=%d block=%s btcc_sys=%s expected_sys=%s\n",
+                                __func__, height, pindex->GetBlockHash().ToString(),
+                                btcc.sysHash.ToString(), pindexReceipt->GetBlockHash().ToString());
+                        return state.Invalid(BlockValidationResult::BLOCK_CONSENSUS, "bad-btcc-syshash");
+                    }
+                    if (pindexReceipt->btcpPrevCommitment.IsNull()) {
+                        LogPrintf("%s -- bad-btcc-btcp at height=%d block=%s expected_height=%d sys=%s\n",
+                                __func__, height, pindex->GetBlockHash().ToString(), expected, btcc.sysHash.ToString());
+                        return state.Invalid(BlockValidationResult::BLOCK_CONSENSUS, "bad-btcc-btcp");
+                    }
+
+                    if (check_sigs) {
+                        if (!llmq::btcCheckpointsHandler) {
+                            LogPrintf("%s -- bad-btcc-nohandler at height=%d block=%s\n", __func__, height, pindex->GetBlockHash().ToString());
+                            return state.Invalid(BlockValidationResult::BLOCK_CHAINLOCK, "bad-btcc-nohandler");
+                        }
+                        if (!llmq::btcCheckpointsHandler->VerifyAggregatedBTCCheckpoint(btcc, pindexReceipt)) {
+                            LogPrintf("%s -- bad-btcc-sig at height=%d block=%s btcc_height=%d btcc_sys=%s\n",
+                                    __func__, height, pindex->GetBlockHash().ToString(), btcc.nHeight, btcc.sysHash.ToString());
+                            return state.Invalid(BlockValidationResult::BLOCK_CHAINLOCK, "bad-btcc-sig");
+                        }
+                    }
+                }
+            }
+        }
 
         if (!llmq::quorumBlockProcessor->ProcessBlock(block, pindex, state, qcTx, fJustCheck, check_sigs)) {
             // pass the state returned by the function above

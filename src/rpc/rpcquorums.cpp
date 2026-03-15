@@ -17,6 +17,7 @@
 #include <llmq/quorums_signing.h>
 #include <llmq/quorums_signing_shares.h>
 #include <llmq/quorums_chainlocks.h>
+#include <llmq/quorums_btccheckpoints.h>
 #include <llmq/quorums_utils.h>
 #include <rpc/util.h>
 #include <net.h>
@@ -723,6 +724,49 @@ static RPCHelpMan getbestchainlock()
     };
 }
 
+static RPCHelpMan getbestbtccheckpoint()
+{
+    return RPCHelpMan{"getbestbtccheckpoint",
+        "\nReturns information about the best BTC checkpoint attestation (btcc). Throws an error if none is known yet.",
+        {},
+        RPCResult{
+            RPCResult::Type::OBJ, "", "",
+            {
+                {RPCResult::Type::STR_HEX, "syshash", "The Syscoin block hash (attested)"},
+                {RPCResult::Type::NUM, "height", "The Syscoin block height (attested)"},
+                {RPCResult::Type::STR_HEX, "signature", "The attestation's BLS signature"},
+                {RPCResult::Type::STR_HEX, "signers", "The attestation's quorum signers"},
+                {RPCResult::Type::BOOL, "known_block", "True if the block is known by our node"},
+            }},
+        RPCExamples{
+            HelpExampleCli("getbestbtccheckpoint", "")
+            + HelpExampleRpc("getbestbtccheckpoint", "")
+        },
+        [&](const RPCHelpMan& self, const node::JSONRPCRequest& request) -> UniValue
+{
+    UniValue result(UniValue::VOBJ);
+
+    const node::NodeContext& node = EnsureAnyNodeContext(request.context);
+    if (!llmq::btcCheckpointsHandler) {
+        throw JSONRPCError(RPC_INTERNAL_ERROR, "BTC checkpoint handler not available");
+    }
+
+    llmq::CBTCCheckpointSig btcc = llmq::btcCheckpointsHandler->GetBestBTCCheckpoint();
+    if (btcc.IsNull()) {
+        throw JSONRPCError(RPC_INTERNAL_ERROR, "Unable to find any BTC checkpoint attestation");
+    }
+    result.pushKV("syshash", btcc.sysHash.GetHex());
+    result.pushKV("height", btcc.nHeight);
+    result.pushKV("signature", btcc.sig.ToString());
+    result.pushKV("signers", llmq::CLLMQUtils::ToHexStr(btcc.signers));
+    ChainstateManager& chainman = EnsureChainman(node);
+    LOCK(cs_main);
+    result.pushKV("known_block", chainman.m_blockman.LookupBlockIndex(btcc.sysHash) != nullptr);
+    return result;
+},
+    };
+}
+
 static RPCHelpMan submitchainlock()
 {
     
@@ -789,6 +833,7 @@ void RegisterQuorumsRPCCommands(CRPCTable &t)
         {"evo", &submitchainlock},
         {"evo", &verifychainlock},
         {"evo", &getbestchainlock},
+        {"evo", &getbestbtccheckpoint},
         {"evo", &gettxchainlocks},
     };
     for (const auto& c : commands) {

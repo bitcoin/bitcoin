@@ -16,8 +16,12 @@ from test_framework.util import (
 from test_framework.auxpow import reverseHex
 from test_framework.auxpow_testing import (
   computeAuxpow,
+  createAuxBlockWithBTCPREVIfRequired,
   getCoinbaseAddr,
+  mineAuxpowBlock,
   mineAuxpowBlockWithMethods,
+  NON_NULL_BTCPREV_HASH_HEX,
+  ZERO_HASH_HEX,
 )
 # SYSCOIN
 from test_framework.messages import (
@@ -31,8 +35,12 @@ class AuxpowMiningTest (SyscoinTestFramework):
 
   def set_test_params (self):
     self.num_nodes = 2
-    # Must set '-dip3params=9000:9000' to create pre-dip3 blocks only
-    self.extra_args = [['-dip3params=9000:9000'],['-dip3params=9000:9000']]
+    # Must set '-dip3params=9000:9000' to create pre-dip3 blocks only.
+    # Enable BTCPREV commitment checks for this test.
+    self.extra_args = [
+      ['-dip3params=9000:9000', '-clreceiptstartheight=0'],
+      ['-dip3params=9000:9000', '-clreceiptstartheight=0'],
+    ]
 
   def add_options (self, parser):
     self.add_wallet_options(parser)
@@ -43,11 +51,28 @@ class AuxpowMiningTest (SyscoinTestFramework):
   def run_test (self):
     # Activate segwit if requested.
     if self.options.segwit:
-      self.generate(self.nodes[0], 500)
+      for _ in range(500):
+        mineAuxpowBlock(self.nodes[0], None)
+      self.sync_all()
 
     # Test with getauxblock and createauxblock/submitauxblock.
     self.test_getauxblock ()
     self.test_create_submit_auxblock ()
+
+  def mine_to_btcp_required_height(self, create, submit):
+    """Advance chain with auxpow blocks so next height is sign-offset mod 10 == 2."""
+    while ((self.nodes[0].getblockcount() + 1) % 10) != 2:
+      mineAuxpowBlockWithMethods(create, submit)
+      self.sync_all()
+
+  def mine_to_getauxblock_safe_window(self):
+    """
+    Advance chain so the next three candidate heights used by test_common
+    (h+1, h+2, h+3) don't hit BTCPREV-required sign-offset heights.
+    """
+    while any(((self.nodes[0].getblockcount() + i) % 10) == 2 for i in (1, 2, 3)):
+      mineAuxpowBlock(self.nodes[0], None)
+      self.sync_all()
 
   def test_common (self, create, submit):
     """
@@ -70,7 +95,8 @@ class AuxpowMiningTest (SyscoinTestFramework):
 
     # If we receive a new block, the old hash will be replaced.
     self.sync_all ()
-    self.generate(self.nodes[1], 1)
+    mineAuxpowBlock(self.nodes[1], None)
+    self.sync_all()
     auxblock2 = create ()
     assert auxblock['hash'] != auxblock2['hash']
     assert_raises_rpc_error (-8, 'block hash unknown', submit,
@@ -82,7 +108,8 @@ class AuxpowMiningTest (SyscoinTestFramework):
 
     # Invalidate the block again, send a transaction and query for the
     # auxblock to solve that contains the transaction.
-    self.generate(self.nodes[0], 1)
+    mineAuxpowBlock(self.nodes[0], None)
+    self.sync_all()
     addr = self.nodes[1].get_deterministic_priv_key ().address
     txid = self.nodes[0].sendtoaddress (addr, 1)
     self.sync_all ()
@@ -156,9 +183,15 @@ class AuxpowMiningTest (SyscoinTestFramework):
     Test the getauxblock method.
     """
 
+    # getauxblock has no btcprevhash argument; keep this section off required heights.
+    self.mine_to_getauxblock_safe_window()
     create = self.nodes[0].getauxblock
     submit = self.nodes[0].getauxblock
     self.test_common (create, submit)
+
+    dummy_btc_prev = "00" * 32
+    submit_with_btcprev = lambda blockhash, auxpow: self.nodes[0].getauxblock(dummy_btc_prev, blockhash, auxpow)
+    self.test_common(create, submit_with_btcprev)
 
     # Ensure that the payout address is changed from one block to the next.
     hash1 = mineAuxpowBlockWithMethods (create, submit)
@@ -187,11 +220,46 @@ class AuxpowMiningTest (SyscoinTestFramework):
     addr1 = self.nodes[0].get_deterministic_priv_key ().address
 
     def create ():
-      return self.nodes[0].createauxblock (addr1)
+      return createAuxBlockWithBTCPREVIfRequired(self.nodes[0], addr1)
     submit = self.nodes[0].submitauxblock
 
     # Run common tests.
     self.test_common (create, submit)
+
+    def create_required():
+      return createAuxBlockWithBTCPREVIfRequired(self.nodes[0], addr1)
+
+    self.mine_to_btcp_required_height(create_required, submit)
+    assert_raises_rpc_error(
+      -8, "btcprevhash is required at this height",
+      self.nodes[0].createauxblock, addr1
+    )
+    assert_raises_rpc_error(
+      -8, "btcprevhash must be of length 64",
+      self.nodes[0].createauxblock, addr1, "1234"
+    )
+
+    # Mismatch case: commit non-zero, but test auxpow builder uses parent prevhash=0.
+    auxblock_bad = self.nodes[0].createauxblock(addr1, "11" * 32)
+    target_bad = reverseHex(auxblock_bad['_target'])
+    apow_bad = computeAuxpow(auxblock_bad['hash'], target_bad, True, auxblock_bad['coinbasescript'])
+    assert not submit(auxblock_bad['hash'], apow_bad)
+
+    # Match case: use a different payout address to force a distinct candidate hash,
+    # then align non-null commitment with auxpow parent prevhash.
+    addr_ok = self.nodes[1].get_deterministic_priv_key().address
+    auxblock_ok = self.nodes[0].createauxblock(addr_ok, NON_NULL_BTCPREV_HASH_HEX)
+    assert auxblock_ok['hash'] != auxblock_bad['hash']
+    target_ok = reverseHex(auxblock_ok['_target'])
+    apow_ok = computeAuxpow(
+      auxblock_ok['hash'],
+      target_ok,
+      True,
+      auxblock_ok['coinbasescript'],
+      NON_NULL_BTCPREV_HASH_HEX,
+    )
+    assert submit(auxblock_ok['hash'], apow_ok)
+    self.sync_all()
 
     # Ensure that the payout address is the one which we specify
     hash1 = mineAuxpowBlockWithMethods (create, submit)
@@ -204,8 +272,8 @@ class AuxpowMiningTest (SyscoinTestFramework):
 
     # Ensure that different payout addresses will generate different auxblocks
     addr2 = self.nodes[1].get_deterministic_priv_key ().address
-    auxblock1 = self.nodes[0].createauxblock(addr1)
-    auxblock2 = self.nodes[0].createauxblock(addr2)
+    auxblock1 = createAuxBlockWithBTCPREVIfRequired(self.nodes[0], addr1)
+    auxblock2 = createAuxBlockWithBTCPREVIfRequired(self.nodes[0], addr2)
     assert auxblock1['hash'] != auxblock2['hash']
 
 if __name__ == '__main__':

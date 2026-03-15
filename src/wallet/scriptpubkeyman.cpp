@@ -2458,6 +2458,40 @@ std::unique_ptr<SigningProvider> DescriptorScriptPubKeyMan::GetSolvingProvider(c
 {
     return GetSigningProvider(script, false);
 }
+// SYSCOIN
+bool DescriptorScriptPubKeyMan::GetKey(const CKeyID& address, CKey& key_out) const
+{
+    LOCK(cs_desc_man);
+    if (const auto it = m_map_keys.find(address); it != m_map_keys.end()) {
+        key_out = it->second;
+        return true;
+    }
+
+    if (const auto it_crypted = m_map_crypted_keys.find(address); it_crypted != m_map_crypted_keys.end()) {
+        if (!m_storage.HasEncryptionKeys() || m_storage.IsLocked()) {
+            return false;
+        }
+
+        const CPubKey& pubkey = it_crypted->second.first;
+        const std::vector<unsigned char>& crypted_secret = it_crypted->second.second;
+        if (DecryptKey(m_storage.GetEncryptionKey(), crypted_secret, pubkey, key_out)) {
+            return true;
+        }
+    }
+
+    // Derived descriptor keys are not materialized in m_map_keys/m_map_crypted.
+    // Resolve the descriptor index by pubkey and derive the key on demand.
+    for (const auto& pubkey_index_pair : m_map_pubkeys) {
+        const CPubKey& indexed_pubkey = pubkey_index_pair.first;
+        if (indexed_pubkey.GetID() != address) continue;
+
+        std::unique_ptr<FlatSigningProvider> derived_provider = GetSigningProvider(pubkey_index_pair.second, /*include_private=*/true);
+        if (!derived_provider) return false;
+        return derived_provider->GetKey(address, key_out);
+    }
+
+    return false;
+}
 
 bool DescriptorScriptPubKeyMan::CanProvide(const CScript& script, SignatureData& sigdata)
 {

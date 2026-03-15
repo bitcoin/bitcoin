@@ -23,7 +23,6 @@ class DIP3V19Test(DashTestFramework):
 
     def skip_test_if_missing_module(self):
         self.skip_if_no_wallet()
-        self.skip_if_no_bdb()
         
     def check_chainlocks_with_distance(self, blocks, distance=5):
         """Check for chainlocks on blocks that are 'distance' blocks behind the tip"""

@@ -10,6 +10,8 @@
 #include <netmessagemaker.h>
 #include <node/interface_ui.h>
 #include <evo/deterministicmns.h>
+#include <llmq/quorums_btccheckpoints.h>
+#include <llmq/quorums_chainlocks.h>
 #include <shutdown.h>
 #include <util/translation.h>
 #include <timedata.h>
@@ -114,7 +116,7 @@ void CMasternodeSync::ProcessMessage(CNode* pfrom, const std::string& strCommand
     }
 }
 
-void CMasternodeSync::ProcessTick(CConnman& connman, const PeerManager& peerman)
+void CMasternodeSync::ProcessTick(CConnman& connman, const PeerManager& peerman, ChainstateManager& chainman)
 {
     static int nTick = 0;
     nTick++;
@@ -138,10 +140,49 @@ void CMasternodeSync::ProcessTick(CConnman& connman, const PeerManager& peerman)
 
     nTimeLastProcess = GetTime();
     const CConnman::NodesSnapshot snap{connman, /* filter = */ FullyConnectedOnly};
+    if (nMode == MASTERNODE_SYNC_BLOCKCHAIN && !ReachedBestHeader()) {
+        const bool fReachedBestHeaderNow = WITH_LOCK(cs_main, {
+            const CBlockIndex* pindexBestHeader = chainman.m_best_header;
+            const CBlockIndex* pindexActiveTip = chainman.ActiveChain().Tip();
+            return pindexBestHeader != nullptr && pindexActiveTip != nullptr && pindexBestHeader == pindexActiveTip;
+        });
+        if (fReachedBestHeaderNow) {
+            fReachedBestHeader = true;
+            LogPrint(BCLog::MNSYNC, "CMasternodeSync::ProcessTick -- reached best header without new tip update\n");
+        }
+    }
 
-    // gradually request the rest of the votes after sync finished
+    // Gradually request the rest of the votes after sync finished and make sure
+    // we recover latest CLSIG/BTCCSIG after startup if local state is still empty.
     if(IsSynced()) {
         governance->RequestGovernanceObjectVotes(snap.Nodes(), connman, peerman);
+        static int64_t nTimeLastSigSyncRequest = 0;
+        const int64_t nNow = GetTime<std::chrono::seconds>().count();
+        const bool fNeedCLSIG = llmq::chainLocksHandler && llmq::chainLocksHandler->GetBestChainLock().IsNull();
+        const bool fNeedBTCCSIG = llmq::btcCheckpointsHandler && llmq::btcCheckpointsHandler->GetBestBTCCheckpoint().IsNull();
+        if ((fNeedCLSIG || fNeedBTCCSIG) && nNow - nTimeLastSigSyncRequest >= MASTERNODE_SYNC_TIMEOUT_SECONDS) {
+            size_t nRequested = 0;
+            for (auto& pnode : snap.Nodes()) {
+                if (!pnode->CanRelay() || pnode->IsInboundConn() || pnode->nVersion < PROTOCOL_VERSION) {
+                    continue;
+                }
+                CNetMsgMaker msgMaker(pnode->GetCommonVersion());
+                if (fNeedCLSIG) {
+                    connman.PushMessage(pnode, msgMaker.Make(NetMsgType::GETCLSIG));
+                }
+                if (fNeedBTCCSIG) {
+                    connman.PushMessage(pnode, msgMaker.Make(NetMsgType::GETBTCCSIG));
+                }
+                ++nRequested;
+            }
+            if (nRequested > 0) {
+                nTimeLastSigSyncRequest = nNow;
+                LogPrint(BCLog::MNSYNC, "CMasternodeSync::ProcessTick -- re-requested %s%s from %d peer(s)\n",
+                    fNeedCLSIG ? "CLSIG" : "",
+                    (fNeedCLSIG && fNeedBTCCSIG) ? "/BTCCSIG" : (fNeedBTCCSIG ? "BTCCSIG" : ""),
+                    nRequested);
+            }
+        }
         return;
     }
 
@@ -171,6 +212,7 @@ void CMasternodeSync::ProcessTick(CConnman& connman, const PeerManager& peerman)
                     if (pNodeTmp->nVersion >= PROTOCOL_VERSION && !pNodeTmp->IsInboundConn() && !fRequestedEarlier) {
                         netfulfilledman->AddFulfilledRequest(pNodeTmp->addr, "mempool-sync");
                         connman.PushMessage(pNodeTmp, msgMaker.Make(NetMsgType::GETCLSIG));
+                        connman.PushMessage(pNodeTmp, msgMaker.Make(NetMsgType::GETBTCCSIG));
                         LogPrint(BCLog::MNSYNC, "CMasternodeSync::ProcessTick -- nTick %d nMode %d -- syncing mempool from peer=%d\n", nTick, nMode, pNodeTmp->GetId());
                     }
                 }
@@ -244,13 +286,17 @@ void CMasternodeSync::ProcessTick(CConnman& connman, const PeerManager& peerman)
                     // Now that the blockchain is synced request the mempool from the connected outbound nodes if possible
                     for (auto pNodeTmp : snap.Nodes()) {
                         bool fRequestedEarlier = netfulfilledman->HasFulfilledRequest(pNodeTmp->addr, "mempool-sync");
-                        if (pNodeTmp->nVersion >= PROTOCOL_VERSION && !pNodeTmp->IsInboundConn() && !fRequestedEarlier) {
-                            netfulfilledman->AddFulfilledRequest(pNodeTmp->addr, "mempool-sync");
-                            if(bShouldSyncMempool) {
-                                connman.PushMessage(pNodeTmp, msgMaker.Make(NetMsgType::MEMPOOL));
+                        if (pNodeTmp->nVersion >= PROTOCOL_VERSION && !pNodeTmp->IsInboundConn()) {
+                            if (!fRequestedEarlier) {
+                                netfulfilledman->AddFulfilledRequest(pNodeTmp->addr, "mempool-sync");
+                                if(bShouldSyncMempool) {
+                                    connman.PushMessage(pNodeTmp, msgMaker.Make(NetMsgType::MEMPOOL));
+                                }
                             }
+                            // Keep CLSIG/BTCCSIG requests independent from mempool-sync bookkeeping.
                             connman.PushMessage(pNodeTmp, msgMaker.Make(NetMsgType::GETCLSIG));
-                            LogPrint(BCLog::MNSYNC, "CMasternodeSync::ProcessTick -- nTick %d nMode %d -- syncing mempool from peer=%d\n", nTick, nMode, pNodeTmp->GetId());
+                            connman.PushMessage(pNodeTmp, msgMaker.Make(NetMsgType::GETBTCCSIG));
+                            LogPrint(BCLog::MNSYNC, "CMasternodeSync::ProcessTick -- nTick %d nMode %d -- requested CLSIG/BTCCSIG from peer=%d\n", nTick, nMode, pNodeTmp->GetId());
                         }
                     }
                 }
@@ -400,9 +446,9 @@ void CMasternodeSync::UpdatedBlockTip(const CBlockIndex *pindexNew, ChainstateMa
                 pindexNew->nHeight, pindexTip->nHeight, fInitialDownload, ReachedBestHeader());
 }
 
-void CMasternodeSync::DoMaintenance(CConnman &connman, const PeerManager& peerman)
+void CMasternodeSync::DoMaintenance(CConnman &connman, const PeerManager& peerman, ChainstateManager& chainman)
 {
     if (ShutdownRequested()) return;
 
-    ProcessTick(connman, peerman);
+    ProcessTick(connman, peerman, chainman);
 }

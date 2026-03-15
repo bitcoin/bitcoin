@@ -69,6 +69,8 @@ const char *QSIGREC="qsigrec";
 const char *QSIGSHARE="qsigshare";
 const char *CLSIG="clsig";
 const char *GETCLSIG="getclsig";
+const char *BTCCSIG="btccsig";
+const char *GETBTCCSIG="getbtccsig";
 const char *MNAUTH="mnauth";
 } // namespace NetMsgType
 
@@ -126,6 +128,8 @@ const static std::vector<std::string> g_all_net_message_types{
     NetMsgType::QSIGSHARE,
     NetMsgType::CLSIG,
     NetMsgType::GETCLSIG,
+    NetMsgType::BTCCSIG,
+    NetMsgType::GETBTCCSIG,
     NetMsgType::MNAUTH,  
     NetMsgType::GETCFILTERS,
     NetMsgType::CFILTER,
@@ -224,6 +228,7 @@ std::string CInv::GetCommand() const
     case MSG_QUORUM_PREMATURE_COMMITMENT:   return cmd.append(NetMsgType::QPCOMMITMENT);
     case MSG_QUORUM_RECOVERED_SIG:          return cmd.append(NetMsgType::QSIGREC);
     case MSG_CLSIG:                         return cmd.append(NetMsgType::CLSIG);
+    case MSG_BTCCSIG:                       return cmd.append(NetMsgType::BTCCSIG);
 
 
     default:

@@ -16,6 +16,7 @@
 
 #include <cstdint>
 #include <iterator>
+#include <limits>
 #include <map>
 #include <memory>
 #include <optional>
@@ -158,6 +159,7 @@ public:
         int dip3startblock{432};
         int dip3enforcement{432};
         int nevmstartblock{2050};
+        int clreceiptstartblock{std::numeric_limits<int>::max()};
 
     };
     // SYSCOIN

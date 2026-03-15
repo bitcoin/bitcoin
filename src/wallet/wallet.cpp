@@ -3546,6 +3546,17 @@ std::unique_ptr<SigningProvider> CWallet::GetSolvingProvider(const CScript& scri
     }
     return nullptr;
 }
+// SYSCOIN
+bool CWallet::GetKey(const CKeyID& key_id, CKey& key_out) const
+{
+    LOCK(cs_wallet);
+    for (const auto& spk_man_pair : m_spk_managers) {
+        if (spk_man_pair.second->GetKey(key_id, key_out)) {
+            return true;
+        }
+    }
+    return false;
+}
 
 std::vector<WalletDescriptor> CWallet::GetWalletDescriptors(const CScript& script) const
 {

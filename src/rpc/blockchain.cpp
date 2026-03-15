@@ -57,6 +57,7 @@
 // SYSCOIN
 #include <wallet/context.h>
 #include <llmq/quorums_chainlocks.h>
+#include <llmq/quorums_btccheckpoints.h>
 #include <llmq/quorums_utils.h>
 #include <llmq/quorums.h>
 #include <llmq/quorums_commitment.h>
@@ -377,6 +378,97 @@ static RPCHelpMan getchainlocks()
     }
     activeChainlock.pushKV("shares", activeChainlockShares);
     result.pushKV("active_chainlock", activeChainlock);
+    return result;
+},
+    };
+}
+
+static RPCHelpMan getbtccheckpoints()
+{
+    return RPCHelpMan{"getbtccheckpoints",
+            "\nReturns information about the active and the most recent BTC checkpoint attestations (btcc).\n"
+            "Throws an error if there is no known btcc yet.\n",
+            {},
+            RPCResult{
+                RPCResult::Type::OBJ, "", "",
+                {
+                    {RPCResult::Type::OBJ, "recent_btccheckpoint", "Most recent btcc information",
+                    {
+                        {RPCResult::Type::STR_HEX, "syshash", "Syscoin block hash"},
+                        {RPCResult::Type::NUM, "height", "Syscoin block height"},
+                        {RPCResult::Type::STR_HEX, "signature", "Signature"},
+                        {RPCResult::Type::BOOL, "known_block", "Block Known"}
+                    }},
+                    {RPCResult::Type::OBJ, "active_btccheckpoint", "Active btcc information",
+                    {
+                        {RPCResult::Type::STR_HEX, "syshash", "Syscoin block hash"},
+                        {RPCResult::Type::NUM, "height", "Syscoin block height"},
+                        {RPCResult::Type::STR, "signers", "Signers"},
+                        {RPCResult::Type::STR_HEX, "signature", "Signature"},
+                        {RPCResult::Type::ARR, "shares", "",
+                        {
+                            {RPCResult::Type::OBJ, "shares", "Shares information",
+                            {
+                                {RPCResult::Type::STR_HEX, "quorumHash", "Quorum Hash"},
+                                {RPCResult::Type::STR, "signers", "Signers"},
+                                {RPCResult::Type::STR_HEX, "signature", "Signature"}
+                            }}
+                        }}
+                    }}
+                }},
+            RPCExamples{
+                HelpExampleCli("getbtccheckpoints", "")
+        + HelpExampleRpc("getbtccheckpoints", "")
+            },
+    [&](const RPCHelpMan& self, const node::JSONRPCRequest& request) -> UniValue
+{
+    ChainstateManager& chainman = EnsureAnyChainman(request.context);
+    if (!llmq::btcCheckpointsHandler) {
+        throw JSONRPCError(RPC_INTERNAL_ERROR, "BTC checkpoint handler not available");
+    }
+
+    UniValue result(UniValue::VOBJ);
+    UniValue recent(UniValue::VOBJ);
+    UniValue active(UniValue::VOBJ);
+    UniValue activeShares(UniValue::VARR);
+
+    llmq::CBTCCheckpointSig sigRecent = llmq::btcCheckpointsHandler->GetMostRecentBTCCheckpoint();
+    if (!sigRecent.IsNull()) {
+        recent.pushKV("syshash", sigRecent.sysHash.GetHex());
+        recent.pushKV("height", sigRecent.nHeight);
+        recent.pushKV("signature", sigRecent.sig.ToString());
+        {
+            LOCK(cs_main);
+            recent.pushKV("known_block", chainman.BlockIndex().count(sigRecent.sysHash) > 0);
+        }
+    }
+    result.pushKV("recent_btccheckpoint", recent);
+
+    llmq::CBTCCheckpointSig sigActive = llmq::btcCheckpointsHandler->GetBestBTCCheckpoint();
+    if (sigRecent.IsNull() && sigActive.IsNull()) {
+        throw JSONRPCError(RPC_INTERNAL_ERROR, "Unable to find any btccheckpoint");
+    }
+    if (sigActive.IsNull()) {
+        active.pushKV("shares", activeShares);
+        result.pushKV("active_btccheckpoint", active);
+        return result;
+    }
+
+    active.pushKV("syshash", sigActive.sysHash.GetHex());
+    active.pushKV("height", sigActive.nHeight);
+    active.pushKV("signers", llmq::CLLMQUtils::ToHexStr(sigActive.signers));
+    active.pushKV("signature", sigActive.sig.ToString());
+
+    const auto shares = llmq::btcCheckpointsHandler->GetBestBTCCheckpointShares();
+    for (const auto& pair : shares) {
+        UniValue s(UniValue::VOBJ);
+        s.pushKV("quorumHash", pair.first->qc->quorumHash.GetHex());
+        s.pushKV("signers", llmq::CLLMQUtils::ToHexStr(pair.second->signers));
+        s.pushKV("signature", pair.second->sig.ToString());
+        activeShares.push_back(s);
+    }
+    active.pushKV("shares", activeShares);
+    result.pushKV("active_btccheckpoint", active);
     return result;
 },
     };
@@ -3090,6 +3182,7 @@ void RegisterBlockchainRPCCommands(CRPCTable& t)
         {"blockchain", &getchainstates},
         // SYSCOIN
         {"blockchain", &getchainlocks},
+        {"blockchain", &getbtccheckpoints},
         {"hidden", &invalidateblock},
         {"hidden", &reconsiderblock},
         {"hidden", &waitfornewblock},

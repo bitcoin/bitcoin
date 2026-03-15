@@ -117,6 +117,7 @@ SYSCOIN_TESTS =\
   test/interfaces_tests.cpp \
   test/key_tests.cpp \
   test/llmq_dkg_tests.cpp \
+  test/llmq_sigshare_cache_tests.cpp \
   test/logging_tests.cpp \
   test/mempool_tests.cpp \
   test/merkle_tests.cpp \

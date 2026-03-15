@@ -30,7 +30,8 @@ public:
 
     std::list<const CZMQAbstractNotifier*> GetActiveNotifiers() const;
 
-    static std::unique_ptr<CZMQNotificationInterface> Create(std::function<bool(CBlock&, const CBlockIndex&)> get_block_by_index);
+    static std::unique_ptr<CZMQNotificationInterface> Create(
+        std::function<bool(CBlock&, const CBlockIndex&)> get_block_by_index);
 
 protected:
     bool Initialize();
@@ -45,7 +46,7 @@ protected:
     // SYSCOIN
     void NotifyGovernanceVote(const uint256& vote) override;
     void NotifyGovernanceObject(const uint256& object) override;
-    void NotifyNEVMBlockConnect(const CNEVMHeader &evmBlock, const CBlock& block, std::string &state, const uint256& nBlockHash, NEVMDataVec &NEVMDataVecOut, const uint32_t& nHeight, bool bSkipValidation, const CDeterministicMNListNEVMAddressDiff &diff) override;
+    void NotifyNEVMBlockConnect(const CNEVMHeader &evmBlock, const CBlock& block, std::string &state, const uint256& nBlockHash, NEVMDataVec &NEVMDataVecOut, const uint32_t& nHeight, bool bSkipValidation, const uint256& btcPrevHashForNEVM, const CDeterministicMNListNEVMAddressDiff &diff) override;
     void NotifyNEVMBlockDisconnect(std::string &state, const uint256& nBlockHash, const CDeterministicMNListNEVMAddressDiff &diff) override;
     void NotifyGetNEVMBlockInfo(uint64_t &nHeight, std::string& state) override;
     void NotifyGetNEVMBlock(CNEVMBlock &evmBlock, std::string& state) override;

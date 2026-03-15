@@ -106,9 +106,41 @@ extern bool fSigNet;
 extern bool fNEVMConnection;
 extern std::atomic_bool fReindexGeth;
 static constexpr uint8_t NEVM_MAGIC_BYTES[4] = {'n', 'e', 'v', 'm'};
+static constexpr uint8_t BTCCHECK_MAGIC_BYTES[4] = {'b', 't', 'c', 'c'};
+static constexpr uint8_t BTCPREV_MAGIC_BYTES[4] = {'b', 't', 'c', 'p'};
+static constexpr bool DEFAULT_BTC_HEADER_MANAGED{true};
+static constexpr bool DEFAULT_BTC_HEADER_POLICY_ON_DEMAND{false};
+static constexpr bool DEFAULT_BTC_HEADER_WATCHDOG{true};
+static constexpr int DEFAULT_BTC_HEADER_WATCHDOG_PROBE_INTERVAL{15};
+static constexpr int DEFAULT_BTC_HEADER_WATCHDOG_RESTART_COOLDOWN{60};
+static constexpr int DEFAULT_BTC_HEADER_WATCHDOG_STALL_TIMEOUT{1800};
+static constexpr int DEFAULT_BTC_HEADER_WATCHDOG_REINDEX_AFTER{3};
+static constexpr int DEFAULT_BTC_HEADER_TIP_MAX_AGE{2 * 60 * 60};      // seconds
+static constexpr int DEFAULT_BTC_HEADER_RECENT_FORK_DEPTH{2};           // blocks from active tip
+static constexpr int DEFAULT_BTC_HEADER_MAX_LAG_BLOCKS{36};             // candidate lag behind active tip
+static constexpr int DEFAULT_BTC_HEADER_TIP_MAX_NO_PROGRESS{1800};      // seconds
+// Keep mainnet managed btcheader defaults off Bitcoin Core regtest ports (18444/18443).
+static constexpr int DEFAULT_BTC_HEADER_MAINNET_P2P_PORT{18544};
+static constexpr int DEFAULT_BTC_HEADER_MAINNET_RPC_PORT{18543};
+static constexpr int DEFAULT_BTC_HEADER_TESTNET_P2P_PORT{19444};
+static constexpr int DEFAULT_BTC_HEADER_TESTNET_RPC_PORT{19443};
+static constexpr int DEFAULT_BTC_HEADER_SIGNET_P2P_PORT{20444};
+static constexpr int DEFAULT_BTC_HEADER_SIGNET_RPC_PORT{20443};
+static constexpr int DEFAULT_BTC_HEADER_REGTEST_P2P_PORT{21444};
+static constexpr int DEFAULT_BTC_HEADER_REGTEST_RPC_PORT{21443};
+
+// SYSCOIN: BTC checkpoint cadence (must remain in sync across miner/specialtx/llmq handler)
+static constexpr int BTCCHECK_PERIOD{10};
+static constexpr int BTCCHECK_SIGN_OFFSET{2};   // within [0, BTCCHECK_PERIOD)
+static constexpr int BTCCHECK_PROP_BUFFER{5};   // blocks between signing and carrier mining
+static constexpr int BTCCHECK_CARRIER_OFFSET{BTCCHECK_SIGN_OFFSET + BTCCHECK_PROP_BUFFER}; // 7
 
 /** Documentation for argument 'checklevel'. */
 extern const std::vector<std::string> CHECKLEVEL_DOC;
+
+// Returns the managed bitcoin-cli base argv used for BTC header policy RPC checks.
+// When managed mode is disabled or uninitialized, this returns false.
+bool GetManagedBTCHeaderRPCCommandArgs(std::vector<std::string>& args_out);
 
 /** Run instances of script checking worker threads */
 void StartScriptCheckWorkerThreads(int threads_num);
@@ -703,6 +735,11 @@ public:
     bool DoGethStartupProcedure();
     bool StartGethNode();
     bool StopGethNode(bool bOnStart = false);
+    bool RestartBTCHeaderNode(bool force_reindex = false);
+    bool DoBTCHeaderStartupProcedure();
+    bool StartBTCHeaderNode(bool force_reindex = false);
+    bool StopBTCHeaderNode(bool bOnStart = false);
+    bool IsManagedBTCHeaderNodeRunning(std::string& reason);
     void EnforceBlock(BlockValidationState& state, const CBlockIndex* pindex)
         EXCLUSIVE_LOCKS_REQUIRED(!m_chainstate_mutex)
         LOCKS_EXCLUDED(cs_main);
@@ -752,6 +789,8 @@ public:
     }
 
 private:
+    bool StartBTCHeaderNodeInternal(bool force_reindex) EXCLUSIVE_LOCKS_REQUIRED(cs_btcheader);
+    bool StopBTCHeaderNodeInternal(bool bOnStart) EXCLUSIVE_LOCKS_REQUIRED(cs_btcheader);
     bool ActivateBestChainStep(BlockValidationState& state, CBlockIndex* pindexMostWork, const std::shared_ptr<const CBlock>& pblock, bool& fInvalidFound, ConnectTrace& connectTrace) EXCLUSIVE_LOCKS_REQUIRED(cs_main, m_mempool->cs);
     bool ConnectTip(BlockValidationState& state, CBlockIndex* pindexNew, const std::shared_ptr<const CBlock>& pblock, ConnectTrace& connectTrace, DisconnectedBlockTransactions& disconnectpool) EXCLUSIVE_LOCKS_REQUIRED(cs_main, m_mempool->cs);
 
@@ -785,7 +824,7 @@ private:
     void UpdateTip(const CBlockIndex* pindexNew)
         EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
     // SYSCOIN
-    bool ConnectNEVMCommitment(BlockValidationState& state, NEVMTxRootMap &mapNEVMTxRoots, const CBlock& block, const uint256& nBlockHash, const uint32_t& nHeight, const bool fJustCheck, PoDAMAPMemory &mapPoDA, const CDeterministicMNListNEVMAddressDiff &diff) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
+    bool ConnectNEVMCommitment(BlockValidationState& state, NEVMTxRootMap &mapNEVMTxRoots, const CBlock& block, const CBlockIndex* pindex, const uint256& nBlockHash, const uint32_t& nHeight, const bool fJustCheck, PoDAMAPMemory &mapPoDA, const CDeterministicMNListNEVMAddressDiff &diff) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
 
     SteadyClock::time_point m_last_write{};
     SteadyClock::time_point m_last_flush{};
@@ -946,6 +985,12 @@ public:
      * By default this only executes fully when using the Regtest chain; see: m_options.check_block_index.
      */
     void CheckBlockIndex();
+
+    // SYSCOIN: Startup hardening for BTCC carrier validation.
+    // Backfill btcpPrevCommitment for recent sign-offset blocks if missing in the block index.
+    // This is intended to run after loading/verifying chainstate, before processing new blocks,
+    // avoiding consensus-path disk reads while remaining tolerant to crashes/upgrades.
+    void BackfillRecentBTCPREVCommitments();
 
     /**
      * Alias for ::cs_main.
@@ -1301,7 +1346,7 @@ extern std::unique_ptr<CBlockIndexDB> pblockindexdb;
 static const unsigned int DEFAULT_RPC_SERIALIZE_VERSION = 1;
 int RPCSerializationFlags();
 bool DisconnectNEVMCommitment(BlockValidationState& state, std::vector<uint256> &vecNEVMBlocks, const CBlock& block, const CDeterministicMNListNEVMAddressDiff &diff) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
-bool GetNEVMData(BlockValidationState& state, const CBlock& block, CNEVMHeader &evmBlock);
+bool GetNEVMData(BlockValidationState& state, const CBlock& block, CNEVMHeader &evmBlock, std::vector<unsigned char>* coinbase_payload = nullptr);
 bool FillNEVMData(CBlock &block);
 bool EraseNEVMData(const NEVMDataVec &NEVMDataVecOut);
 bool ProcessNEVMData(const node::BlockManager& blockman, const CBlock &block, const int64_t &nMedianTime, const int64_t& nTimeNow, PoDAMAPMemory &mapPoDA);

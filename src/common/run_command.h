@@ -6,6 +6,7 @@
 #define SYSCOIN_COMMON_RUN_COMMAND_H
 
 #include <string>
+#include <vector>
 
 class UniValue;
 
@@ -17,5 +18,32 @@ class UniValue;
  * @return parsed JSON
  */
 UniValue RunCommandParseJSON(const std::string& str_command, const std::string& str_std_in="");
+
+/**
+ * Execute a command and return stdout as a raw string.
+ *
+ * @param str_command The command to execute, including any arguments
+ * @param str_std_in string to pass to stdin
+ * @return command stdout
+ */
+std::string RunCommand(const std::string& str_command, const std::string& str_std_in="");
+
+/**
+ * Execute a command (argv form) which returns JSON, and parse the result.
+ *
+ * @param command_and_args Executable path followed by arguments
+ * @param str_std_in string to pass to stdin
+ * @return parsed JSON
+ */
+UniValue RunCommandParseJSON(const std::vector<std::string>& command_and_args, const std::string& str_std_in="");
+
+/**
+ * Execute a command (argv form) and return stdout as a raw string.
+ *
+ * @param command_and_args Executable path followed by arguments
+ * @param str_std_in string to pass to stdin
+ * @return command stdout
+ */
+std::string RunCommand(const std::vector<std::string>& command_and_args, const std::string& str_std_in="");
 
 #endif // SYSCOIN_COMMON_RUN_COMMAND_H

@@ -25,6 +25,7 @@
 #include <masternode/masternodemeta.h>
 #include <rpc/util.h>
 #include <rpc/blockchain.h>
+#include <util/message.h>
 #include <util/translation.h>
 #include <node/context.h>
 #include <node/transaction.h>
@@ -131,18 +132,6 @@ static void SignSpecialTxPayloadByHash(const CMutableTransaction& tx, SpecialTxP
 
     uint256 hash = ::SerializeHash(payload);
     if (!CHashSigner::SignHash(hash, key, payload.vchSig)) {
-        throw JSONRPCError(RPC_INTERNAL_ERROR, "failed to sign special tx");
-    }
-}
-
-template<typename SpecialTxPayload>
-static void SignSpecialTxPayloadByString(const CMutableTransaction& tx, SpecialTxPayload& payload, const CKey& key)
-{
-    UpdateSpecialTxInputsHash(tx, payload);
-    payload.vchSig.clear();
-
-    std::string m = payload.MakeSignString();
-    if (!CMessageSigner::SignMessage(m, payload.vchSig, key)) {
         throw JSONRPCError(RPC_INTERNAL_ERROR, "failed to sign special tx");
     }
 }
@@ -339,16 +328,22 @@ static RPCHelpMan protx_register()
         throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, strprintf("collateral type not supported: %s", ptx.collateralOutpoint.ToStringShort()));
     }
 
-    CKey key;
-    {
-        // lets prove we own the collateral
-        LegacyScriptPubKeyMan& spk_man = EnsureLegacyScriptPubKeyMan(*pwallet, true);
-        LOCK2(pwallet->cs_wallet, spk_man.cs_KeyStore);
-        if (!spk_man.GetKey(keyID, key)) {
-            throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, strprintf("collateral key not in wallet: %s", EncodeDestination(txDest)));
-        }
+    // lets prove we own the collateral
+    UpdateSpecialTxInputsHash(tx, ptx);
+    ptx.vchSig.clear();
+    std::string signature_b64;
+    const SigningResult collateral_sign_result = pwallet->SignMessage(ptx.MakeSignString(), txDest, signature_b64);
+    if (collateral_sign_result == SigningResult::PRIVATE_KEY_NOT_AVAILABLE) {
+        throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, strprintf("collateral key not in wallet: %s", EncodeDestination(txDest)));
     }
-    SignSpecialTxPayloadByString(tx, ptx, key);
+    if (collateral_sign_result != SigningResult::OK) {
+        throw JSONRPCError(RPC_INTERNAL_ERROR, strprintf("failed to sign collateral proof: %s", SigningResultString(collateral_sign_result)));
+    }
+    auto signature_raw = DecodeBase64(signature_b64);
+    if (!signature_raw) {
+        throw JSONRPCError(RPC_INTERNAL_ERROR, "failed to decode collateral signature");
+    }
+    ptx.vchSig = *signature_raw;
     SetTxPayload(tx, ptx);
     return SignAndSendSpecialTx(request, *pwallet, tx, fSubmit);
 },
@@ -916,16 +911,6 @@ static RPCHelpMan protx_update_service()
         }
         
         
-
-        CKey keyOwner;
-        {
-            LegacyScriptPubKeyMan& spk_man = EnsureLegacyScriptPubKeyMan(*pwallet, true);
-            LOCK2(pwallet->cs_wallet, spk_man.cs_KeyStore);
-            if (!spk_man.GetKey(dmn->pdmnState->keyIDOwner, keyOwner)) {
-                throw std::runtime_error(strprintf("Private key for owner address %s not found in your wallet", EncodeDestination(WitnessV0KeyHash(dmn->pdmnState->keyIDOwner))));
-            }
-        }
-
         CMutableTransaction tx;
         tx.nVersion = SYSCOIN_TX_VERSION_MN_UPDATE_REGISTRAR;
 
@@ -939,7 +924,18 @@ static RPCHelpMan protx_update_service()
                 throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, std::string("Invalid Syscoin address: ") + request.params[5].get_str());
         }
         FundSpecialTx(*pwallet, tx, ptx, feeSourceDest);
-        SignSpecialTxPayloadByHash(tx, ptx, keyOwner);
+        UpdateSpecialTxInputsHash(tx, ptx);
+        ptx.vchSig.clear();
+        const CTxDestination ownerDest = WitnessV0KeyHash(dmn->pdmnState->keyIDOwner);
+        CKey owner_key;
+        if (!pwallet->GetKey(dmn->pdmnState->keyIDOwner, owner_key)) {
+            throw std::runtime_error(strprintf("Private key for owner address %s not found in your wallet", EncodeDestination(ownerDest)));
+        }
+        std::vector<unsigned char> owner_sig;
+        if (!CHashSigner::SignHash(::SerializeHash(ptx), owner_key, owner_sig)) {
+            throw std::runtime_error("Failed to sign ProUpRegTx payload.");
+        }
+        ptx.vchSig = std::move(owner_sig);
         SetTxPayload(tx, ptx);
 
         return SignAndSendSpecialTx(request, *pwallet, tx);
@@ -1051,18 +1047,16 @@ static bool CheckWalletOwnsKey(CWallet* pwallet, const CKeyID& keyID) {
     if (!pwallet) {
         return false;
     }
-    LegacyScriptPubKeyMan& spk_man = EnsureLegacyScriptPubKeyMan(*pwallet);
-    LOCK2(pwallet->cs_wallet, spk_man.cs_KeyStore);
-    return spk_man.IsMine(GetScriptForDestination(CTxDestination(WitnessV0KeyHash(keyID))));
+    LOCK(pwallet->cs_wallet);
+    return pwallet->IsMine(GetScriptForDestination(CTxDestination(WitnessV0KeyHash(keyID)))) != ISMINE_NO;
 }
 
 static bool CheckWalletOwnsScript(CWallet* pwallet, const CScript& script) {
     if (!pwallet) {
         return false;
     }
-    LegacyScriptPubKeyMan& spk_man = EnsureLegacyScriptPubKeyMan(*pwallet);
-    LOCK2(pwallet->cs_wallet, spk_man.cs_KeyStore);
-    return spk_man.IsMine(script);
+    LOCK(pwallet->cs_wallet);
+    return pwallet->IsMine(script) != ISMINE_NO;
 }
 UniValue BuildDMNListEntry(CWallet* pwallet, const CDeterministicMN& dmn, int detailed)
 {
@@ -1077,11 +1071,11 @@ UniValue BuildDMNListEntry(CWallet* pwallet, const CDeterministicMN& dmn, int de
         o.pushKV("collateralHeight", dmn.pdmnState->nCollateralHeight);
         o.pushKV("votingAddress", EncodeDestination(voteDest));
         if(pwallet) {
-            LegacyScriptPubKeyMan& spk_man = EnsureLegacyScriptPubKeyMan(*pwallet);
-            LOCK2(pwallet->cs_wallet, spk_man.cs_KeyStore);
+            LOCK(pwallet->cs_wallet);
             CKey keyVoting;
-            spk_man.GetKey(dmn.pdmnState->keyIDVoting, keyVoting);
-            o.pushKV("votingKey", EncodeSecret(keyVoting));
+            if (pwallet->GetKey(dmn.pdmnState->keyIDVoting, keyVoting)) {
+                o.pushKV("votingKey", EncodeSecret(keyVoting));
+            }
             const auto* address_book_entry = pwallet->FindAddressBookEntry(voteDest);
             if (address_book_entry) {
                 o.pushKV("label", address_book_entry->GetLabel());

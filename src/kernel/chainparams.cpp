@@ -189,10 +189,10 @@ public:
         consensus.vDeployments[Consensus::DEPLOYMENT_TAPROOT].min_activation_height = 0; // No activation delay
 
         // The best chain should have at least this much work.
-        consensus.nMinimumChainWork = uint256S("0x00000000000000000000000000000000000000003a1096efcdbc0b3d27e9bd60"); // 2022819
+        consensus.nMinimumChainWork = uint256S("0x00000000000000000000000000000000000000005f7dbe3790a65f440bac51d0"); // 2198735
 
         // By default assume that the signatures in ancestors of this block are valid.
-        consensus.defaultAssumeValid = uint256S("0xfebaa7252e6d98be97f246e4a2447c11ed4665e80418c5b3b7602d12b62d1c72"); // 2022819
+        consensus.defaultAssumeValid = uint256S("0x262e7dbd54af51b6bdaa65638d25ad266cd28fd5fd2e34204a6f051147ac06c0"); // 2198735
         consensus.fStrictChainId = true;
         consensus.nLegacyBlocksBefore = 1;
         consensus.nSYSXAsset = 123456;
@@ -201,6 +201,8 @@ public:
         consensus.vchTokenFreezeMethod = ParseHex("0b8914e27c9a6c88836bc5547f82ccf331142c761f84e9f1d36934a6a31eefad");
         consensus.nBridgeStartBlock = 348000;
         consensus.nNEVMStartBlock = 1317500;
+        // ChainLock receipt activation height (set on deployment to avoid invalidating historical blocks)
+        consensus.nCLReceiptStartBlock = std::numeric_limits<int>::max();
         consensus.nNEVMStartTime = 1638791667;
         consensus.nPODAStartBlock = 1586000;
         consensus.nV19StartBlock = 1586000;
@@ -261,12 +263,6 @@ public:
                 { 5000, uint256S("0xeef3554a3f467bcdc7570f799cecdb262058cecf34d555827c99b5719b1df4f6")},
                 { 10000, uint256S("0xe44257e8e027e8a67fd647c54e1bd6976988d75b416affabe3f82fd87a67f5ff")},
                 { 40000, uint256S("0x4ad1ec207d62fa91485335feaf890150a0f4cf48c39b11e3dbfc22bdecc29dbc")},
-                { 100000, uint256S("0xa54904302fd6fd0ee561cb894f15ad8c21c2601b305ffa9e15ef00df1c50db16")},
-                { 150000, uint256S("0x73850eb99a6c32b4bfd67a26a7466ce3d0b4412d4174590c501e567c99f038fd")},
-                { 200000, uint256S("0xa28fe36c63acb38065dadf09d74de5fdc1dac6433c204b215b37bab312dfab0d")},
-                { 240000, uint256S("0x906918ba0cbfbd6e4e4e00d7d47d08bef3e409f47b59cb5bd3303f5276b88f0f")},
-                { 280000, uint256S("0x651375427865345d37a090ca561c1ed135c6b8dafa591a59f2abf1eb26dfd538")},
-                { 292956, uint256S("0xae6dca1b9dd7adcb8a11c8ea7f9fe72bb47ff6e4156e1d172e2a8612b18a319d")},
                 { 350000, uint256S("0x02501c7feba858c83e005acbf0505a892081288dcf7a8a37bd4fc47d7c24c799")},
                 { 390000, uint256S("0x8654451a7ed5286ba5c830cdf6e65cbbd7a77f650216541bfbe50af04933741b")},
                 { 391285, uint256S("0x76d13e8f08c2b7027251484078f734f91c485727031be6b4c21c42d5e103d0ad")},
@@ -282,6 +278,7 @@ public:
                 { 1632040, uint256S("0x12a436d9fa797ab570d01af510ee0f7ee1fb61361f0bb23e8418014a5f981f72")},
                 { 1989728, uint256S("0xe1b6214ca67cf3e98d8d08d4bad95bcd620fc72c6ea98af3e4b10b28d2a462e5")},
                 { 2022819, uint256S("0xfebaa7252e6d98be97f246e4a2447c11ed4665e80418c5b3b7602d12b62d1c72")},
+                { 2198735, uint256S("0x262e7dbd54af51b6bdaa65638d25ad266cd28fd5fd2e34204a6f051147ac06c0")},
             }
         };
 
@@ -290,10 +287,10 @@ public:
         };
 
         chainTxData = ChainTxData{
-            // Data from rpc: getchaintxstats at block 2022819
-            .nTime    = 1746028449,
-            .nTxCount = 3350017,
-            .dTxRate  = 0.007705991158318447
+            // Data from rpc: getchaintxstats 4096 262e7dbd54af51b6bdaa65638d25ad266cd28fd5fd2e34204a6f051147ac06c0
+            .nTime    = 1772690216,
+            .nTxCount = 3569487,
+            .dTxRate  = 0.00816540239983168
         };
     }
 };
@@ -349,10 +346,10 @@ public:
         consensus.vDeployments[Consensus::DEPLOYMENT_TAPROOT].min_activation_height = 0; // No activation delay
 
         // The best chain should have at least this much work.
-        consensus.nMinimumChainWork = uint256S("0x0000000000000000000000000000000000000000000000000000816881b79523"); // 1527088
+        consensus.nMinimumChainWork = uint256S("0x00000000000000000000000000000000000000000000000000009cc12f400cd4"); // 1702505
 
         // By default assume that the signatures in ancestors of this block are valid.
-        consensus.defaultAssumeValid = uint256S("0x000000121c8f64afc8b01025cbdd1ebce41e088fb2e50a944b61a24f55b72203"); // 1527088
+        consensus.defaultAssumeValid = uint256S("0x0000000830ccbe479a35536fcc03f4face55205f5c1c53cbd43d51030c686a42"); // 1702505
         consensus.nAuxpowStartHeight = 1;
         consensus.nAuxpowChainId = 8;
         consensus.nAuxpowOldChainId = 4096;
@@ -364,6 +361,7 @@ public:
         consensus.vchTokenFreezeMethod = ParseHex("0b8914e27c9a6c88836bc5547f82ccf331142c761f84e9f1d36934a6a31eefad");
         consensus.nBridgeStartBlock = 1000;
         consensus.nNEVMStartBlock = 840000;
+        consensus.nCLReceiptStartBlock = std::numeric_limits<int>::max();
         consensus.nNEVMStartTime = 1632775675;
         consensus.nPODAStartBlock = 1022500;
         consensus.nV19StartBlock = 1063000;
@@ -425,6 +423,8 @@ public:
                 {1023126, uint256S("0x000003820d73f238c939b9c4f87ae1ad6851e346153620a5140c3d4d0a8cb442")},
                 {1023140, uint256S("0x0000002da4aa86462e1c60bbd7d28b89229592bb82828ff487d88a4996c6e0e2")},
                 {1527088, uint256S("0x000000121c8f64afc8b01025cbdd1ebce41e088fb2e50a944b61a24f55b72203")},
+                {1702435, uint256S("0x00000006cef8498652b8367fde475a78cd7da932427fb4053cde52054349553d")},
+                {1702505, uint256S("0x0000000830ccbe479a35536fcc03f4face55205f5c1c53cbd43d51030c686a42")},
             }
         };
 
@@ -432,10 +432,10 @@ public:
             // TODO to be specified in a future patch.
         };
         chainTxData = ChainTxData{
-            // Data from rpc: getchaintxstats
-            .nTime    = 1746030456,
-            .nTxCount = 1652997,
-            .dTxRate  = 0.009174822817254567
+            // Data from rpc: getchaintxstats 4096 0000000830ccbe479a35536fcc03f4face55205f5c1c53cbd43d51030c686a42
+            .nTime    = 1772686761,
+            .nTxCount = 1841989,
+            .dTxRate  = 0.00667203946565072
         };
     }
 };
@@ -603,6 +603,7 @@ public:
         consensus.vchTokenFreezeMethod = ParseHex("0b8914e27c9a6c88836bc5547f82ccf331142c761f84e9f1d36934a6a31eefad");
         consensus.nBridgeStartBlock = 0;
         consensus.nNEVMStartBlock = opts.nevmstartblock;
+        consensus.nCLReceiptStartBlock = opts.clreceiptstartblock;
         consensus.nNEVMStartTime = 0;
         consensus.nPODAStartBlock = 0;
         consensus.nNexusStartBlock = opts.dip3startblock;

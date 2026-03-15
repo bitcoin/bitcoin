@@ -203,6 +203,15 @@ public:
     uint32_t nTime{0};
     uint32_t nBits{0};
     uint32_t nNonce{0};
+    // SYSCOIN: BTC prev-block-hash commitment (BTCPREV) extracted from this block's coinbase payload.
+    // Persisted in the block index so later logic (e.g. BTCC carrier handling / ZMQ forwarding) can
+    // deterministically map sysHash -> BTCPREV without reading block data from disk.
+    uint256 btcpPrevCommitment{};
+    // SYSCOIN: memory-only cache populated after contextual BTCPREV validation so
+    // ConnectBlock can avoid reparsing in the hot path without changing persisted
+    // side-chain index semantics.
+    bool m_btcp_prev_contextually_validated{false};
+    uint256 m_btcp_prev_contextual_commitment{};
 
     //! (memory only) Sequential id assigned to distinguish order in which blocks are received.
     int32_t nSequenceId{0};
@@ -400,7 +409,10 @@ class CDiskBlockIndex : public CBlockIndex
      * Hard-code to the highest client version ever written.
      * SerParams can be used if the field requires any meaning in the future.
      **/
+    // NOTE: This is a legacy, historically-unused on-disk version marker for CDiskBlockIndex records.
+    // Bumping it allows backwards-compatible extension of the serialized format.
     static constexpr int DUMMY_VERSION = 259900;
+    static constexpr int DISK_INDEX_VERSION_BTCPREV = DUMMY_VERSION + 1;
 
 public:
     uint256 hashPrev;
@@ -419,6 +431,11 @@ public:
     {
         LOCK(::cs_main);
         int _nVersion = DUMMY_VERSION;
+        SER_WRITE(obj, {
+            if (!obj.btcpPrevCommitment.IsNull()) {
+                _nVersion = DISK_INDEX_VERSION_BTCPREV;
+            }
+        });
         READWRITE(VARINT_MODE(_nVersion, VarIntMode::NONNEGATIVE_SIGNED));
 
         READWRITE(VARINT_MODE(obj.nHeight, VarIntMode::NONNEGATIVE_SIGNED));
@@ -435,6 +452,9 @@ public:
         READWRITE(obj.nTime);
         READWRITE(obj.nBits);
         READWRITE(obj.nNonce);
+        if (_nVersion >= DISK_INDEX_VERSION_BTCPREV) {
+            READWRITE(obj.btcpPrevCommitment);
+        }
     }
 
     uint256 ConstructBlockHash() const

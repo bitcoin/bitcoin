@@ -12,6 +12,7 @@
 #include <netaddress.h>
 #include <netbase.h>
 #include <netmessagemaker.h>
+#include <protocol.h>
 #include <serialize.h>
 #include <span.h>
 #include <streams.h>
@@ -35,6 +36,13 @@
 using namespace std::literals;
 
 BOOST_FIXTURE_TEST_SUITE(net_tests, RegTestingSetup)
+// SYSCOIN
+BOOST_AUTO_TEST_CASE(cinv_btccsig_command)
+{
+    const CInv inv(MSG_BTCCSIG, uint256::ONEV);
+    BOOST_CHECK_EQUAL(inv.GetCommand(), NetMsgType::BTCCSIG);
+    BOOST_CHECK_EQUAL(inv.ToString(), strprintf("%s %s", NetMsgType::BTCCSIG, uint256::ONEV.ToString()));
+}
 
 BOOST_AUTO_TEST_CASE(cnode_listen_port)
 {

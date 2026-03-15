@@ -483,8 +483,8 @@ class CDeterministicMNManager
 public:
     static constexpr int DISK_SNAPSHOT_PERIOD = 576; // once per day
     static constexpr int DISK_SNAPSHOTS = 3; // keep cache for 3 disk snapshots to have 2 full days covered
+public:
     static constexpr int LIST_CACHE_SIZE = DISK_SNAPSHOT_PERIOD * DISK_SNAPSHOTS;
-
 private:
     Mutex cs;
     // Main thread has indicated we should perform cleanup up to this height

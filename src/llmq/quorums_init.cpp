@@ -12,6 +12,7 @@
 #include <llmq/quorums_signing.h>
 #include <llmq/quorums_signing_shares.h>
 #include <llmq/quorums_chainlocks.h>
+#include <llmq/quorums_btccheckpoints.h>
 #include <consensus/validation.h>
 #include <dbwrapper.h>
 #include <net.h>
@@ -32,10 +33,13 @@ void InitLLMQSystem(const DBParams& quorumCommitmentDB, const DBParams& quorumVe
     quorumSigSharesManager = new CSigSharesManager(connman, peerman);
     quorumSigningManager = new CSigningManager(unitTests, peerman, chainman, fWipe);
     chainLocksHandler = new CChainLocksHandler(connman, peerman, chainman);
+    btcCheckpointsHandler = new CBTCCheckpointsHandler(connman, peerman, chainman);
 }
 
 void DestroyLLMQSystem()
 {
+    delete btcCheckpointsHandler;
+    btcCheckpointsHandler = nullptr;
     delete chainLocksHandler;
     chainLocksHandler = nullptr;
     delete quorumSigningManager;
@@ -75,10 +79,16 @@ void StartLLMQSystem()
     if (chainLocksHandler) {
         chainLocksHandler->Start();
     }
+    if (btcCheckpointsHandler) {
+        btcCheckpointsHandler->Start();
+    }
 }
 
 void StopLLMQSystem()
 {
+    if (btcCheckpointsHandler) {
+        btcCheckpointsHandler->Stop();
+    }
     if (chainLocksHandler) {
         chainLocksHandler->Stop();
     }

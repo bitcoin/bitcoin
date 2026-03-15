@@ -88,6 +88,9 @@ void ReadRegTestArgs(const ArgsManager& args, CChainParams::RegTestOptions& opti
     if (args.IsArgSet("-nevmstartheight")) {
         options.nevmstartblock = args.GetIntArg("-nevmstartheight", 2050);
     }
+    if (args.IsArgSet("-clreceiptstartheight")) {
+        options.clreceiptstartblock = args.GetIntArg("-clreceiptstartheight", std::numeric_limits<int>::max());
+    }
     if (!args.IsArgSet("-vbparams")) return;
 
     for (const std::string& strDeployment : args.GetArgs("-vbparams")) {

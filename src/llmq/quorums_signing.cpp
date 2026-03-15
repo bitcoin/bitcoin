@@ -597,7 +597,9 @@ void CSigningManager::ProcessRecoveredSig(NodeId nodeId, const std::shared_ptr<c
             peerman.AddKnownTx(*peer, hash);
         LOCK(cs_main);
         peerman.ReceivedResponse(nodeId, hash);
-        // make sure CL block exists before accepting recovered sig
+        // ChainLock-specific sanity checks must only apply to actual CLSIG request IDs.
+        // BTCC recovered sigs intentionally sign at a different offset (+BTCCHECK_SIGN_OFFSET), so applying
+        // the CL "mod-5" gate here would reject valid BTCC material and prevent aggregation.
         auto* pindex = chainman.m_blockman.LookupBlockIndex(recoveredSig->getMsgHash());
         if (pindex == nullptr) {
             LogPrintf("CSigningManager::%s -- block of recovered signature (%s) does not exist\n",
@@ -607,23 +609,34 @@ void CSigningManager::ProcessRecoveredSig(NodeId nodeId, const std::shared_ptr<c
                 peerman.Misbehaving(*peer, 10, "invalid recovered signature");
             return;
         }
-        
-        if((pindex->nHeight%SIGN_HEIGHT_OFFSET) != 0) {
-            LogPrintf("CSigningManager::%s -- block height(%d) of recovered signature (%s) is not a factor of 5\n",
-                    __func__, pindex->nHeight, recoveredSig->getId().ToString());
-            peerman.ForgetTxHash(nodeId, hash);
-            if(peer)
-                peerman.Misbehaving(*peer, 10, "invalid recovered signature block height");
-            return;
-        }
-        if (!chainman.ActiveChain().Contains(pindex) || !pindex->IsValid(BLOCK_VALID_SCRIPTS)) {
-            // Should not happen
-            LogPrintf("CSigningManager::%s -- CL block not valid or confirmed in active chain. Block (%s) rejected\n",
+        bool is_chainlock_request = false;
+        bool is_btccheck_request = false;
+        const uint256 clsig_request_id = ::SerializeHash(std::make_tuple(std::string("clsig"), pindex->nHeight, recoveredSig->getQuorumHash()));
+        is_chainlock_request = (clsig_request_id == recoveredSig->getId());
+        const uint256 btcc_request_id = ::SerializeHash(std::make_tuple(std::string("btcc"), pindex->nHeight, recoveredSig->getQuorumHash()));
+        is_btccheck_request = (btcc_request_id == recoveredSig->getId());
+        if (!pindex->IsValid(BLOCK_VALID_SCRIPTS)) {
+            LogPrintf("CSigningManager::%s -- block invalid. Block (%s) rejected\n",
                     __func__, pindex->ToString());
             peerman.ForgetTxHash(nodeId, hash);
             if(peer)
-                peerman.Misbehaving(*peer, 10, "recovered signature of unconfirmed block");
+                peerman.Misbehaving(*peer, 10, "recovered signature of invalid block");
             return;
+        }
+        if (is_chainlock_request) {
+            if((pindex->nHeight%SIGN_HEIGHT_OFFSET) != 0) {
+                LogPrintf("CSigningManager::%s -- block height(%d) of recovered signature (%s) is not a factor of 5\n",
+                        __func__, pindex->nHeight, recoveredSig->getId().ToString());
+                peerman.ForgetTxHash(nodeId, hash);
+                if(peer) peerman.Misbehaving(*peer, 10, "invalid recovered signature block height");
+                return;
+            }
+        } else if (is_btccheck_request) {
+            if ((pindex->nHeight % BTCCHECK_PERIOD) != BTCCHECK_SIGN_OFFSET) {
+                peerman.ForgetTxHash(nodeId, hash);
+                if (peer) peerman.Misbehaving(*peer, 10, "invalid btcc recovered signature height");
+                return;
+            }
         }
     }
 

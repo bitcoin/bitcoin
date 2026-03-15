@@ -19,6 +19,7 @@
 #include <streams.h>
 #include <sync.h>
 #include <uint256.h>
+#include <validation.h>
 #include <version.h>
 #include <zmq/zmqutil.h>
 
@@ -34,6 +35,11 @@
 #include <string>
 #include <utility>
 #include <vector>
+#include <algorithm>
+#include <deque>
+#include <llmq/quorums_chainlocks.h>
+#include <llmq/quorums_btccheckpoints.h>
+#include <evo/specialtx.h>
 #include <evo/deterministicmns.h>
 namespace Consensus {
 struct Params;
@@ -57,6 +63,7 @@ static const char *MSG_HASHGVOTE     = "hashgovernancevote";
 static const char *MSG_HASHGOBJ      = "hashgovernanceobject";
 static const char *MSG_SEQUENCE  = "sequence";
 RecursiveMutex cs_nevm;
+
 // Internal function to send multipart message
 static int zmq_send_multipart(void *sock, const void* data, size_t size, ...)
 {
@@ -353,7 +360,7 @@ bool CZMQAbstractPublishNotifier::NotifyNEVMCommsCommon(const std::string &commM
     }
     return true;
 }
-bool CZMQPublishNEVMBlockConnectNotifier::NotifyNEVMBlockConnect(const CNEVMHeader &evmBlock, const CBlock& block, std::string &state, const uint256& nSYSBlockHash, NEVMDataVec &NEVMDataVecOut, const uint32_t& nHeight, bool bSkipValidation, const CDeterministicMNListNEVMAddressDiff &diff)
+bool CZMQPublishNEVMBlockConnectNotifier::NotifyNEVMBlockConnect(const CNEVMHeader &evmBlock, const CBlock& block, std::string &state, const uint256& nSYSBlockHash, NEVMDataVec &NEVMDataVecOut, const uint32_t& nHeight, bool bSkipValidation, const uint256& btcPrevHashForNEVM, const CDeterministicMNListNEVMAddressDiff &diff)
 {
     LOCK(cs_nevm);
     state = "";
@@ -380,7 +387,8 @@ bool CZMQPublishNEVMBlockConnectNotifier::NotifyNEVMBlockConnect(const CNEVMHead
     uint256 hash = evmBlock.nBlockHash;
     LogPrint(BCLog::ZMQ, "zmq: Publish nevm block connect %s to %s, subscriber %s\n", hash.GetHex(), this->address, this->addresssub);
     CDataStream ss(SER_NETWORK, PROTOCOL_VERSION);
-    ss << evmBlock << block.vchNEVMBlockData << nSYSBlockHash << NEVMDataVecOut << diff;
+
+    ss << evmBlock << block.vchNEVMBlockData << nSYSBlockHash << NEVMDataVecOut << diff << btcPrevHashForNEVM;
     if(!SendZmqMessageNEVM(MSG_NEVMBLOCKCONNECT, &(*ss.begin()), ss.size())) {
         state = "nevm-connect-not-sent";
         return false;
@@ -430,6 +438,7 @@ bool CZMQPublishNEVMBlockDisconnectNotifier::NotifyNEVMBlockDisconnect(std::stri
     }
     std::vector<std::string> parts;
     LogPrint(BCLog::ZMQ, "zmq: Publish nevm block disconnect %s to %s, subscriber %s\n", nSYSBlockHash.GetHex(), this->address, this->addresssub);
+
     CDataStream ss(SER_NETWORK, PROTOCOL_VERSION);
     ss << nSYSBlockHash << diff;
     if(!SendZmqMessageNEVM(MSG_NEVMBLOCKDISCONNECT, &(*ss.begin()), ss.size())) {

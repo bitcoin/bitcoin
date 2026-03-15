@@ -130,7 +130,6 @@ Section /o -un.Main UNSEC0000
     Delete /REBOOTOK $INSTDIR\COPYING.txt
     Delete /REBOOTOK $INSTDIR\readme.txt
     Delete /REBOOTOK $INSTDIR\syscoin.conf
-    Delete /REBOOTOK $INSTDIR@SYSCOIN_GETH@@EXEEXT@
     RMDir /r /REBOOTOK $INSTDIR\share
     RMDir /r /REBOOTOK $INSTDIR\daemon
     DeleteRegValue HKCU "${REGKEY}\Components" Main

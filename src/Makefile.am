@@ -107,6 +107,10 @@ if BUILD_SYSCOIN_TX
   bin_PROGRAMS += syscoin-tx
 endif
 
+if BUILD_SYSCOIN_UTIL
+  bin_PROGRAMS += syscoin-util
+endif
+
 if ENABLE_WALLET
 if BUILD_SYSCOIN_WALLET
   bin_PROGRAMS += syscoin-wallet
@@ -234,6 +238,7 @@ SYSCOIN_CORE_H = \
   llmq/quorums_blockprocessor.h \
   llmq/quorums_commitment.h \
   llmq/quorums_chainlocks.h \
+  llmq/quorums_btccheckpoints.h \
   llmq/quorums_debug.h \
   llmq/quorums_dkgsessionhandler.h \
   llmq/quorums_dkgsessionmgr.h \
@@ -479,6 +484,7 @@ libsyscoin_node_a_SOURCES = \
   llmq/quorums_blockprocessor.cpp \
   llmq/quorums_commitment.cpp \
   llmq/quorums_chainlocks.cpp \
+  llmq/quorums_btccheckpoints.cpp \
   llmq/quorums_debug.cpp \
   llmq/quorums_dkgsessionhandler.cpp \
   llmq/quorums_dkgsessionmgr.cpp \
@@ -1003,6 +1009,28 @@ syscoin_tx_LDADD = \
   $(GMP_LIBS)
 #
 
+# syscoin-util binary #
+syscoin_util_SOURCES = syscoin-util.cpp
+syscoin_util_CPPFLAGS = $(AM_CPPFLAGS) $(SYSCOIN_INCLUDES)
+syscoin_util_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
+syscoin_util_LDFLAGS = $(RELDFLAGS) $(AM_LDFLAGS) $(LIBTOOL_APP_LDFLAGS) $(PTHREAD_FLAGS)
+
+if TARGET_WINDOWS
+syscoin_util_SOURCES += syscoin-util-res.rc
+endif
+
+syscoin_util_LDADD = \
+  $(LIBSYSCOIN_COMMON) \
+  $(LIBSYSCOIN_UTIL) \
+  $(LIBSYSCOIN_CONSENSUS) \
+  $(LIBSYSCOIN_CRYPTO) \
+  $(LIBDASHBLS) \
+  $(LIBSECP256K1) \
+  $(LIBNEVM) \
+  $(LIBUNIVALUE) \
+  $(GMP_LIBS)
+#
+
 # syscoin-wallet binary #
 syscoin_wallet_SOURCES = syscoin-wallet.cpp
 syscoin_wallet_SOURCES += init/syscoin-wallet.cpp
@@ -1036,17 +1064,28 @@ endif
 #
 # syscoin pre-built binaries #
 dist_bin_SCRIPTS =
-# if TARGET_WINDOWS
-# dist_bin_SCRIPTS += bin/windows/sysgeth.exe
-# endif
-# if TARGET_X86_64_DARWIN
-# dist_bin_SCRIPTS += bin/darwin/x86_64/sysgeth
-# endif
-# if TARGET_ARM64_DARWIN
-# dist_bin_SCRIPTS += bin/darwin/arm64/sysgeth
-# endif
+nodist_bin_SCRIPTS =
 if TARGET_X86_64_LINUX
 dist_bin_SCRIPTS += bin/linux/x86_64/sysgeth
+if ENABLE_BTCHEADERNODE_BUILD
+BTCHEADERNODE_BIN_STAMP = bin/btcheadernode/.build-stamp
+nodist_bin_SCRIPTS += \
+  bin/btcheadernode/bin/bitcoind \
+  bin/btcheadernode/bin/bitcoin-cli
+
+$(BTCHEADERNODE_BIN_STAMP): $(top_srcdir)/contrib/btcheadernode/build-bitcoin-header-node.sh \
+	$(top_srcdir)/contrib/btcheadernode/bitcoin.lock \
+	$(top_srcdir)/contrib/btcheadernode/patches/headers-only.diff
+	$(AM_V_at)CC="$(CC)" CXX="$(CXX)" CPPFLAGS="$(CPPFLAGS)" CFLAGS="$(CFLAGS)" CXXFLAGS="$(CXXFLAGS)" LDFLAGS="$(LDFLAGS)" $(top_srcdir)/contrib/btcheadernode/build-bitcoin-header-node.sh --src-root "$(abs_top_srcdir)" --build-root "$(abs_top_builddir)"
+	$(AM_V_at)mkdir -p "$(dir $@)"
+	$(AM_V_at)touch "$@"
+
+bin/btcheadernode/bin/bitcoind: $(BTCHEADERNODE_BIN_STAMP)
+	@test -x "$@"
+
+bin/btcheadernode/bin/bitcoin-cli: $(BTCHEADERNODE_BIN_STAMP)
+	@test -x "$@"
+endif
 endif
 # if TARGET_ARM_LINUX
 # dist_bin_SCRIPTS += bin/linux/arm/sysgeth
@@ -1063,6 +1102,11 @@ CTAES_DIST += crypto/ctaes/README.md
 CTAES_DIST += crypto/ctaes/test.c
 
 CLEANFILES = $(EXTRA_LIBRARIES)
+if TARGET_X86_64_LINUX
+if ENABLE_BTCHEADERNODE_BUILD
+CLEANFILES += bin/btcheadernode/.build-stamp
+endif
+endif
 
 CLEANFILES += *.gcda *.gcno
 CLEANFILES += compat/*.gcda compat/*.gcno

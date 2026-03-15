@@ -1051,6 +1051,21 @@ class MasternodeInfo:
 
 
 class DashTestFramework(SyscoinTestFramework):
+    def add_wallet_options(self, parser, *, descriptors=True, legacy=True):
+        # Dash/MN functional tests are descriptor-only.
+        super().add_wallet_options(parser, descriptors=True, legacy=False)
+
+    def skip_if_no_wallet(self):
+        """Dash/MN tests require descriptor wallets (sqlite)."""
+        self._requires_wallet = True
+        if not self.is_wallet_compiled():
+            raise SkipTest("wallet has not been compiled.")
+        if self.options.descriptors is not True:
+            self.log.info("Dash tests force descriptor wallets; ignoring legacy wallet selection")
+        self.options.descriptors = True
+        self.default_wallet_name = "default_wallet"
+        self.skip_if_no_sqlite()
+
     # Methods to override in subclass test scripts.
     def run_test(self):
         """Tests must override this method to define test logic"""
@@ -1076,6 +1091,8 @@ class DashTestFramework(SyscoinTestFramework):
                 self.extra_args[i].append("-dip3params=30:50")
         for i in range(0, num_nodes):
             self.extra_args[i].append("-mncollateral=100")
+            # Enable CL receipt consensus rules for Syscoin/Dash functional tests.
+            self.extra_args[i].append("-clreceiptstartheight=0")
         # LLMQ default test params (no need to pass -llmqtestparams)
         self.llmq_size = 3
         self.llmq_threshold = 2
@@ -1205,7 +1222,12 @@ class DashTestFramework(SyscoinTestFramework):
         force_finish_mnsync(mninfo.node)
 
     def setup_network(self):
-        self.options.descriptors = False
+        if not self.is_sqlite_compiled():
+            raise SkipTest("sqlite has not been compiled (required for Dash descriptor-wallet tests).")
+        if self.options.descriptors is not True:
+            self.log.info("Dash tests force descriptor wallets; using descriptors")
+        self.options.descriptors = True
+        self.default_wallet_name = "default_wallet"
         self.log.info("Creating and starting controller node")
         self.add_nodes(1, extra_args=[self.extra_args[0]])
         self.start_node(0)
@@ -1300,10 +1322,21 @@ class DashTestFramework(SyscoinTestFramework):
         ret = {**decoded, **ret}
         return ret
 
+    def _throttled_bump_mocktime(self, throttle_key, *, step=1, nodes=None, min_interval=0.5):
+        now = time.time()
+        if not hasattr(self, "_mocktime_bump_last"):
+            self._mocktime_bump_last = {}
+        last = self._mocktime_bump_last.get(throttle_key, 0.0)
+        if now - last >= min_interval:
+            self.bump_mocktime(step, nodes=nodes)
+            self._mocktime_bump_last[throttle_key] = now
+            return True
+        return False
+
     def wait_for_chainlocked_block(self, node, block_hash, expected=True, timeout=60):
         def check_chainlocked_block():
             try:
-                self.bump_mocktime(1)
+                self._throttled_bump_mocktime(f"wait_for_chainlocked_block:{node.index}", step=1)
                 block = node.getblock(block_hash)
                 return block["confirmations"] > 0 and block["chainlock"] is True
             except Exception:
@@ -1320,7 +1353,7 @@ class DashTestFramework(SyscoinTestFramework):
 
     def wait_for_sporks_same(self, timeout=30):
         def check_sporks_same():
-            self.bump_mocktime(1)
+            self._throttled_bump_mocktime("wait_for_sporks_same", step=1)
             sporks = self.nodes[0].spork('show')
             return all(node.spork('show') == sporks for node in self.nodes)
         wait_until_helper_internal(check_sporks_same, timeout=timeout)
@@ -1437,7 +1470,7 @@ class DashTestFramework(SyscoinTestFramework):
 
     def sync_mempools_helper(self, nodes):
         try:
-            self.bump_mocktime(1, nodes=nodes)
+            self._throttled_bump_mocktime("sync_mempools_helper", step=1, nodes=nodes)
             self.sync_mempools(timeout=1, nodes=nodes)
         except:
             return False
@@ -1445,7 +1478,7 @@ class DashTestFramework(SyscoinTestFramework):
 
     def sync_blocks_helper(self, nodes):
         try:
-            self.bump_mocktime(1, nodes=nodes)
+            self._throttled_bump_mocktime("sync_blocks_helper", step=1, nodes=nodes)
             self.sync_blocks(timeout=1, nodes=nodes)
         except:
             return False
@@ -1469,7 +1502,7 @@ class DashTestFramework(SyscoinTestFramework):
 
     def sync_mnsync_helper(self, nodes, mode="all"):
         try:
-            self.bump_mocktime(1, nodes=nodes)
+            self._throttled_bump_mocktime("sync_mnsync_helper", step=1, nodes=nodes)
             self.sync_gov(timeout=1, mode=mode, nodes=nodes)
         except:
             return False
@@ -1505,7 +1538,7 @@ class DashTestFramework(SyscoinTestFramework):
         def wait_func():
             if quorum_hash in self.nodes[0].quorum_list()["quorums"]:
                 return True
-            self.bump_mocktime(2, nodes=nodes)
+            self._throttled_bump_mocktime("wait_for_quorum_list", step=2, nodes=nodes)
             self.generate(self.nodes[0], 1, sync_fun=self.no_op)
             self.wait_until(lambda: self.sync_blocks_helper(nodes=nodes))
             return False
@@ -1539,7 +1572,7 @@ class DashTestFramework(SyscoinTestFramework):
         nodes = [self.nodes[0]] + [mn.node for mn in mninfos_online]
 
         def timeout_func():
-            self.bump_mocktime(1, nodes=nodes)
+            self._throttled_bump_mocktime("mine_quorum_timeout_func", step=1, nodes=nodes)
 
         # move forward to next DKG
         skip_count = 24 - (self.nodes[0].getblockcount() % 24)
@@ -1552,9 +1585,9 @@ class DashTestFramework(SyscoinTestFramework):
         self.log.info("Expected quorum_hash:"+str(q))
         self.log.info("Waiting for phase 1 (init)")
         self.wait_for_quorum_phase(q, 1, expected_members, None, 0, mninfos_online, wait_proc=timeout_func)
-        self.wait_for_quorum_connections(q, expected_connections, mninfos_online, wait_proc=lambda: self.bump_mocktime(1, nodes=nodes))
+        self.wait_for_quorum_connections(q, expected_connections, mninfos_online, wait_proc=lambda: self._throttled_bump_mocktime("mine_quorum_wait_conn", step=1, nodes=nodes))
         if spork23_active:
-            self.wait_for_masternode_probes(mninfos_valid, wait_proc=lambda: self.bump_mocktime(1, nodes=nodes))
+            self.wait_for_masternode_probes(mninfos_valid, wait_proc=lambda: self._throttled_bump_mocktime("mine_quorum_wait_probes", step=1, nodes=nodes))
 
         self.move_blocks(nodes, 2)
 

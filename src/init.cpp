@@ -165,6 +165,9 @@ static constexpr bool DEFAULT_I2P_ACCEPT_INCOMING{true};
 // SYSCOIN
 extern unsigned int fRPCSerialVersion;
 static constexpr bool DEFAULT_STOPAFTERBLOCKIMPORT{false};
+static constexpr int64_t DEFAULT_GETH_STARTUP_TIMEOUT{14400};
+static constexpr int64_t DEFAULT_GETH_STARTUP_RETRY_INTERVAL_MS{2000};
+static constexpr int64_t DEFAULT_GETH_STARTUP_LOG_INTERVAL{30};
 
 #ifdef WIN32
 // Win32 LevelDB doesn't use filedescriptors, and the ones used for
@@ -360,6 +363,7 @@ void Shutdown(NodeContext& node)
         LOCK(cs_main);
         if (node.chainman) {
             // SYSCOIN
+            node.chainman->ActiveChainstate().StopBTCHeaderNode();
             node.chainman->ActiveChainstate().StopGethNode();
             for (Chainstate* chainstate : node.chainman->GetAll()) {
                 if (chainstate->CanFlushToDisk()) {
@@ -542,6 +546,7 @@ void SetupServerArgs(ArgsManager& argsman)
     argsman.AddArg("-txindex", strprintf("Maintain a full transaction index, used by the getrawtransaction rpc call (default: %u)", DEFAULT_TXINDEX), ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
     // SYSCOIN
     argsman.AddArg("-gethcommandline=<port>", strprintf("Geth command line parameters (default: %s)", ""), ArgsManager::ALLOW_ANY, OptionsCategory::RPC);
+    argsman.AddArg("-gethstartuptimeout=<n>", strprintf("Maximum seconds to wait for sysgeth to become ready during startup before NEVM is marked offline (0 = wait indefinitely, default: %d)", DEFAULT_GETH_STARTUP_TIMEOUT), ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
     argsman.AddArg("-sporkaddr=<hex>", strprintf("Override spork address. Only useful for regtest. Using this on mainnet or testnet will ban you."), ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
     argsman.AddArg("-mnconf=<file>", strprintf("Specify masternode configuration file (default: %s)", "masternode.conf"), ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
     argsman.AddArg("-mnconflock=<n>", strprintf("Lock masternodes from masternode configuration file (default: %u)", 1), ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
@@ -553,6 +558,25 @@ void SetupServerArgs(ArgsManager& argsman)
     argsman.AddArg("-hrp=<prefix>", "Bech32 HRP override used for testing only", ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
     argsman.AddArg("-dip19params=<n:m>", "DIP19 params used for testing only", ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
     argsman.AddArg("-nevmstartheight=<n>", "NEVM Start height used for testing only", ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
+    argsman.AddArg("-clreceiptstartheight=<n>", "CL receipt start height used for testing only", ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
+    argsman.AddArg("-btcheadermanaged", strprintf("Automatically start/stop a local Bitcoin headers-only node for BTCC signer policy checks (default: %u)", DEFAULT_BTC_HEADER_MANAGED), ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
+    argsman.AddArg("-btcheaderbinary=<path>", "Path to bitcoind binary used when -btcheadermanaged=1. If unset, syscoin searches common install/build locations.", ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
+    argsman.AddArg("-btcheaderclibinary=<path>", "Path to bitcoin-cli binary used for managed BTC header RPC checks. If unset, syscoin tries the bitcoind directory first.", ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
+    argsman.AddArg("-btcheaderdatadir=<dir>", "Data directory for managed BTC header node (default: <syscoin datadir>/btcheader).", ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
+    argsman.AddArg("-btcheaderport=<port>", strprintf("P2P port for managed BTC header node (default: mainnet=%u, testnet=%u, signet=%u, regtest=%u)", DEFAULT_BTC_HEADER_MAINNET_P2P_PORT, DEFAULT_BTC_HEADER_TESTNET_P2P_PORT, DEFAULT_BTC_HEADER_SIGNET_P2P_PORT, DEFAULT_BTC_HEADER_REGTEST_P2P_PORT), ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
+    argsman.AddArg("-btcheaderrpcport=<port>", strprintf("RPC port for managed BTC header node (default: mainnet=%u, testnet=%u, signet=%u, regtest=%u)", DEFAULT_BTC_HEADER_MAINNET_RPC_PORT, DEFAULT_BTC_HEADER_TESTNET_RPC_PORT, DEFAULT_BTC_HEADER_SIGNET_RPC_PORT, DEFAULT_BTC_HEADER_REGTEST_RPC_PORT), ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
+    argsman.AddArg("-btcheadercommandline=<arg>", "Additional command-line argument passed to managed bitcoind (may be specified multiple times).", ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
+    argsman.AddArg("-btcheadercmd=<cmd>", "External command used to query BTC header-node JSON-RPC for BTCC signer policy checks. The command must accept an appended method+args and return JSON.", ArgsManager::ALLOW_ANY | ArgsManager::SENSITIVE, OptionsCategory::OPTIONS);
+    argsman.AddArg("-btcheaderpolicyondemand", strprintf("Enforce BTCC BTC-header signer policy checks even on mine-blocks-on-demand chains (regtest-style, default: %u)", DEFAULT_BTC_HEADER_POLICY_ON_DEMAND), ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
+    argsman.AddArg("-btcheaderwatchdog", strprintf("Enable BTCC signer watchdog checks for BTC header backend health (default: %u)", DEFAULT_BTC_HEADER_WATCHDOG), ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
+    argsman.AddArg("-btcheaderwatchdogprobeinterval=<n>", strprintf("Seconds between BTCC watchdog backend probes (default: %d)", DEFAULT_BTC_HEADER_WATCHDOG_PROBE_INTERVAL), ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
+    argsman.AddArg("-btcheaderwatchdogrestartcooldown=<n>", strprintf("Minimum seconds between managed BTC header watchdog restart attempts (default: %d)", DEFAULT_BTC_HEADER_WATCHDOG_RESTART_COOLDOWN), ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
+    argsman.AddArg("-btcheaderwatchdogstalltimeout=<n>", strprintf("Seconds without BTC header height progress (during BTC IBD) before watchdog restart is attempted (default: %d)", DEFAULT_BTC_HEADER_WATCHDOG_STALL_TIMEOUT), ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
+    argsman.AddArg("-btcheaderwatchdogreindexafter=<n>", strprintf("After this many consecutive watchdog-managed restart failures, attempt one managed restart with -reindex=1 (0 disables, default: %d)", DEFAULT_BTC_HEADER_WATCHDOG_REINDEX_AFTER), ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
+    argsman.AddArg("-btcheadertipmaxage=<n>", strprintf("Maximum allowed BTC header tip age in seconds before BTCC signing pauses (0 disables, default: %d)", DEFAULT_BTC_HEADER_TIP_MAX_AGE), ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
+    argsman.AddArg("-btcheadertipmaxnoprogress=<n>", strprintf("Maximum seconds without BTC tip-height progress before BTCC signing pauses (0 disables, default: %d)", DEFAULT_BTC_HEADER_TIP_MAX_NO_PROGRESS), ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
+    argsman.AddArg("-btcheadermaxlagblocks=<n>", strprintf("Maximum allowed lag (in BTC blocks) between active tip and candidate BTCPREV before BTCC signing pauses (0 disables, default: %d)", DEFAULT_BTC_HEADER_MAX_LAG_BLOCKS), ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
+    argsman.AddArg("-btcheaderrecentforkdepth=<n>", strprintf("Pause BTCC signing when a non-active BTC chain tip exists within this many blocks of the active tip (0 disables, default: %d)", DEFAULT_BTC_HEADER_RECENT_FORK_DEPTH), ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
     argsman.AddArg("-llmqtestparams=<n:m>", "LLMQ params used for testing only", ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
     argsman.AddArg("-mncollateral=<n>", strprintf("Masternode Collateral required, used for testing only (default: %u)", DEFAULT_MN_COLLATERAL_REQUIRED), ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
     argsman.AddArg("-sporkkey=<key>", strprintf("Private key for use with sporks"), ArgsManager::ALLOW_ANY | ArgsManager::SENSITIVE, OptionsCategory::OPTIONS);
@@ -1762,6 +1786,9 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
             }
             std::tie(status, error) = catch_exceptions([&]{ return VerifyLoadedChainstate(chainman, options);});
             if (status == node::ChainstateLoadStatus::SUCCESS) {
+                // SYSCOIN: ensure recent sign-offset BTCPREV commitments are available in the block index
+                // before we start processing new blocks (prevents false bad-btcc-btcp after crash/upgrade).
+                chainman.BackfillRecentBTCPREVCommitments();
                 fLoaded = true;
                 LogPrintf(" block index %15dms\n", Ticks<std::chrono::milliseconds>(SteadyClock::now() - load_block_index_start_time));
             }
@@ -1809,6 +1836,14 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
     }
 
     fRPCSerialVersion = gArgs.GetIntArg("-rpcserialversion", DEFAULT_RPC_SERIALIZE_VERSION);
+    const bool enforce_btcheader_policy_ondemand = gArgs.GetBoolArg("-btcheaderpolicyondemand", DEFAULT_BTC_HEADER_POLICY_ON_DEMAND);
+    bool btc_header_policy_ready{true};
+    if (fMasternodeMode && (!Params().MineBlocksOnDemand() || enforce_btcheader_policy_ondemand)) {
+        if (!node.chainman->ActiveChainstate().DoBTCHeaderStartupProcedure()) {
+            btc_header_policy_ready = false;
+            LogPrintf("Failed to initialize BTC header policy backend; startup will abort before node enters steady state\n");
+        }
+    }
     if(fNEVMConnection && !fRegTest) {
         if(!node.chainman->ActiveChainstate().DoGethStartupProcedure()) {
             fNEVMConnection = false;
@@ -1816,21 +1851,53 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
         }
     }
     LogPrintf("NEVM connection %d\n", fNEVMConnection? 1: 0);
+    if (fMasternodeMode && (!Params().MineBlocksOnDemand() || enforce_btcheader_policy_ondemand) && !btc_header_policy_ready) {
+        return InitError(Untranslated("Failed to initialize BTC header policy backend. Ensure managed btcheadernode binaries are available (configure with --enable-btcheadernode-build) or set -btcheadermanaged=0 with a valid -btcheadercmd."));
+    }
     if(args.IsArgSet("-hrp"))
         fNEVMConnection = false;
     if(fNEVMConnection && !fRegTest) {
         uiInterface.InitMessage("Loading Geth...");
-        UninterruptibleSleep(std::chrono::milliseconds{5000});
+        const int64_t geth_startup_timeout = std::max<int64_t>(0, args.GetIntArg("-gethstartuptimeout", DEFAULT_GETH_STARTUP_TIMEOUT));
+        const auto wait_start = std::chrono::steady_clock::now();
+        const auto wait_deadline = wait_start + std::chrono::seconds{geth_startup_timeout};
+        auto next_wait_log = wait_start;
         uint64_t nHeightFromGeth{0};
         std::string stateStr;
-        BlockValidationState state;
-        GetMainSignals().NotifyGetNEVMBlockInfo(nHeightFromGeth, stateStr);
-        if(!stateStr.empty()) {
-            state.Invalid(BlockValidationResult::BLOCK_INVALID_HEADER, stateStr);
-            fNEVMConnection = false;
-            LogPrintf("Could not call NotifyGetNEVMBlockInfo, setting fNEVMConnection to false...\n");
+        bool geth_ready{false};
+        while (!ShutdownRequested()) {
+            stateStr.clear();
+            GetMainSignals().NotifyGetNEVMBlockInfo(nHeightFromGeth, stateStr);
+            if (stateStr.empty()) {
+                geth_ready = true;
+                break;
+            }
+
+            const auto now = std::chrono::steady_clock::now();
+            if (now >= next_wait_log) {
+                if (geth_startup_timeout == 0) {
+                    LogPrintf("Waiting for sysgeth startup to complete before NEVM attach (%s)\n", stateStr);
+                } else {
+                    const auto waited = std::chrono::duration_cast<std::chrono::seconds>(now - wait_start).count();
+                    LogPrintf("Waiting for sysgeth startup to complete before NEVM attach (%s), elapsed=%d timeout=%d seconds\n", stateStr, waited, geth_startup_timeout);
+                }
+                next_wait_log = now + std::chrono::seconds{DEFAULT_GETH_STARTUP_LOG_INTERVAL};
+            }
+
+            if (geth_startup_timeout != 0 && now >= wait_deadline) {
+                break;
+            }
+            UninterruptibleSleep(std::chrono::milliseconds{DEFAULT_GETH_STARTUP_RETRY_INTERVAL_MS});
         }
-        if(state.IsValid()) {
+        if (!geth_ready) {
+            fNEVMConnection = false;
+            if (stateStr.empty()) {
+                LogPrintf("Could not call NotifyGetNEVMBlockInfo, setting fNEVMConnection to false...\n");
+            } else {
+                LogPrintf("Could not call NotifyGetNEVMBlockInfo (%s), setting fNEVMConnection to false...\n", stateStr);
+            }
+        }
+        if(geth_ready) {
             int64_t nHeightLocalGeth;
             {
                 LOCK(cs_main);
@@ -1843,19 +1910,44 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
             // local height is higher so we need to rollback to geth height
             if(nHeightFromGeth > 0) {
                 if((int64_t)nHeightFromGeth < nHeightLocalGeth) {
+                    const int64_t geth_lag_blocks = nHeightLocalGeth - (int64_t)nHeightFromGeth;
+                    const int64_t geth_reindex_lag_threshold = CDeterministicMNManager::LIST_CACHE_SIZE;
+                    if (geth_lag_blocks > geth_reindex_lag_threshold) {
+                        bool wrote_reindex_flag{false};
+                        {
+                            LOCK(cs_main);
+                            if (chainman.m_blockman.m_block_tree_db) {
+                                wrote_reindex_flag = chainman.m_blockman.m_block_tree_db->WriteReindexing(true);
+                            }
+                        }
+                        if (wrote_reindex_flag) {
+                            LogPrintf("Persisted reindex marker due to deep geth lag; next restart will reindex automatically.\n");
+                        } else {
+                            LogPrintf("Failed to persist reindex marker due to deep geth lag; restart with -reindex manually.\n");
+                        }
+                        const std::string err = strprintf(
+                            "Geth lag (%d blocks) exceeds deterministic masternode cache horizon (%d). Refusing automatic rollback to avoid deep reorg validation failures. %s",
+                            geth_lag_blocks, geth_reindex_lag_threshold,
+                            wrote_reindex_flag
+                                ? "Reindex marker persisted; restart to continue with automatic reindex (state bootstrap if configured)."
+                                : "Restart with -reindex (and state bootstrap if configured).");
+                        LogPrintf("%s\n", err);
+                        return InitError(Untranslated(err));
+                    }
                     LogPrintf("Geth nHeightFromGeth %d vs nHeightLocalGeth %d, rolling back...\n",nHeightFromGeth, nHeightLocalGeth);
                     nHeightFromGeth += Params().GetConsensus().nNEVMStartBlock;
+                    BlockValidationState rollback_state;
                     CBlockIndex *pblockindex;
                     {
                         LOCK(cs_main);
                         pblockindex = chainman.ActiveChain()[(int)nHeightFromGeth];
                     }
-                    chainman.ActiveChainstate().InvalidateBlock(state, pblockindex, false);
-                    if (state.IsValid()) {
+                    chainman.ActiveChainstate().InvalidateBlock(rollback_state, pblockindex, false);
+                    if (rollback_state.IsValid()) {
                         LOCK(cs_main);
                         chainman.ActiveChainstate().ResetBlockFailureFlags(pblockindex);
                     } else {
-                        LogPrintf("InvalidateBlock failed %s...\n",state.ToString());
+                        LogPrintf("InvalidateBlock failed %s...\n", rollback_state.ToString());
                     }
                 } else if((int64_t)nHeightFromGeth > nHeightLocalGeth) {
                     LogPrintf("Geth nHeightFromGeth %d vs nHeightLocalGeth %d, catching up...\n",nHeightFromGeth, nHeightLocalGeth);
@@ -2003,7 +2095,6 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
         }
         block_notify_genesis_wait_connection.disconnect();
     }
-    // if regtest then make sure geth is shown as synced as well
     if(!fRegTest && !fNEVMConnection && fMasternodeMode) {
         return InitError(Untranslated("You must have an NEVM connection on a masternode. You may need to reindex to ensure you get an NEVM connection properly."));
     }
@@ -2066,7 +2157,7 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
     }
 
     node.scheduler->scheduleEvery([&] { netfulfilledman->DoMaintenance(); }, std::chrono::minutes{1});
-    node.scheduler->scheduleEvery([&] { masternodeSync.DoMaintenance(*node.connman, *node.peerman); }, std::chrono::seconds{1});
+    node.scheduler->scheduleEvery([&] { masternodeSync.DoMaintenance(*node.connman, *node.peerman, *node.chainman); }, std::chrono::seconds{1});
     node.scheduler->scheduleEvery(std::bind(CMasternodeUtils::DoMaintenance, std::ref(*node.connman)), std::chrono::minutes{1});
     node.scheduler->scheduleEvery([&] { governance->DoMaintenance(*node.connman); }, std::chrono::minutes{5});
     if (activeMasternodeManager) {

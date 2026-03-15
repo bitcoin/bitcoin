@@ -187,4 +187,10 @@ xcrun stapler staple Syscoin-Qt.app
 - Notarization requires internet connection
 - Stapled apps work offline
 - Re-sign if you modify the app in any way
-- Universal binaries can be created with `lipo` tool if needed 
+- Universal binaries can be created with `lipo` tool if needed
+
+## Related Documentation
+
+- [Detached Signatures Process](DETACHED-SIGNATURES.md) - For official releases using Guix builds
+- [Release Process](../../doc/release-process.md) - Complete release workflow
+- [Guix Build System](../guix/README.md) - Deterministic build documentation

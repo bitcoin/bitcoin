@@ -1,0 +1,351 @@
+diff --git a/src/init.cpp b/src/init.cpp
+index def3211ef4..58420ea898 100644
+--- a/src/init.cpp
++++ b/src/init.cpp
+@@ -493,6 +493,7 @@ void SetupServerArgs(ArgsManager& argsman, bool can_listen_ipc)
+ #endif
+     argsman.AddArg("-blockreconstructionextratxn=<n>", strprintf("Extra transactions to keep in memory for compact block reconstructions (default: %u)", DEFAULT_BLOCK_RECONSTRUCTION_EXTRA_TXN), ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
+     argsman.AddArg("-blocksonly", strprintf("Whether to reject transactions from network peers. Disables automatic broadcast and rebroadcast of transactions, unless the source peer has the 'forcerelay' permission. RPC transactions are not affected. (default: %u)", DEFAULT_BLOCKSONLY), ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
++    argsman.AddArg("-headersonly", strprintf("Sync and maintain headers only (disables block body download and implies -blocksonly=1). (default: %u)", DEFAULT_HEADERSONLY), ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
+     argsman.AddArg("-coinstatsindex", strprintf("Maintain coinstats index used by the gettxoutsetinfo RPC (default: %u)", DEFAULT_COINSTATSINDEX), ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
+     argsman.AddArg("-conf=<file>", strprintf("Specify path to read-only configuration file. Relative paths will be prefixed by datadir location (only useable from command line, not configuration file) (default: %s)", BITCOIN_CONF_FILENAME), ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
+     argsman.AddArg("-datadir=<dir>", "Specify data directory", ArgsManager::ALLOW_ANY | ArgsManager::DISALLOW_NEGATION, OptionsCategory::OPTIONS);
+@@ -793,6 +794,12 @@ void InitParameterInteraction(ArgsManager& args)
+             LogInfo("parameter interaction: -externalip set -> setting -discover=0\n");
+     }
+ 
++    if (args.GetBoolArg("-headersonly", DEFAULT_HEADERSONLY)) {
++        if (args.SoftSetBoolArg("-blocksonly", true)) {
++            LogInfo("parameter interaction: -headersonly=1 -> setting -blocksonly=1\n");
++        }
++    }
++
+     if (args.GetBoolArg("-blocksonly", DEFAULT_BLOCKSONLY)) {
+         // disable whitelistrelay in blocksonly mode
+         if (args.SoftSetBoolArg("-whitelistrelay", false))
+@@ -1302,7 +1309,8 @@ static ChainstateLoadResult InitAndLoadChainstate(
+     // dependency between validation and index/base, since the latter is not in
+     // libbitcoinkernel.
+     chainman.snapshot_download_completed = [&node]() {
+-        if (!node.chainman->m_blockman.IsPruneMode()) {
++        const bool headers_only_mode = node.args != nullptr && node.args->GetBoolArg("-headersonly", DEFAULT_HEADERSONLY);
++        if (!headers_only_mode && !node.chainman->m_blockman.IsPruneMode()) {
+             LogInfo("[snapshot] re-enabling NODE_NETWORK services");
+             node.connman->AddLocalServices(NODE_NETWORK);
+         }
+@@ -1508,6 +1516,11 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
+ 
+     PeerManager::Options peerman_opts{};
+     ApplyArgsManOptions(args, peerman_opts);
++    const bool headers_only_mode{peerman_opts.headers_only};
++    if (headers_only_mode) {
++        g_local_services = ServiceFlags(g_local_services & ~(NODE_NETWORK | NODE_NETWORK_LIMITED | NODE_COMPACT_FILTERS));
++        LogInfo("Running with -headersonly=1: disabling block-serving service flags");
++    }
+ 
+     {
+ 
+@@ -1837,6 +1850,8 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
+                 chainstate->PruneAndFlush();
+             }
+         }
++    } else if (headers_only_mode) {
++        LogInfo("Running node in headers-only mode; keeping NODE_NETWORK services disabled");
+     } else {
+         // Prior to setting NODE_NETWORK, check if we can provide historical blocks.
+         if (!WITH_LOCK(chainman.GetMutex(), return chainman.BackgroundSyncInProgress())) {
+diff --git a/src/net_processing.cpp b/src/net_processing.cpp
+index 9287a67a04..0bf0c3fdbf 100644
+--- a/src/net_processing.cpp
++++ b/src/net_processing.cpp
+@@ -1842,6 +1842,7 @@ bool PeerManagerImpl::BlockRequestAllowed(const CBlockIndex* pindex)
+ std::optional<std::string> PeerManagerImpl::FetchBlock(NodeId peer_id, const CBlockIndex& block_index)
+ {
+     if (m_chainman.m_blockman.LoadingBlocks()) return "Loading blocks ...";
++    if (m_opts.headers_only) return "Node is running in -headersonly mode";
+ 
+     // Ensure this peer exists and hasn't been disconnected
+     PeerRef peer = GetPeerRef(peer_id);
+@@ -2706,6 +2707,8 @@ bool PeerManagerImpl::MaybeSendGetHeaders(CNode& pfrom, const CBlockLocator& loc
+  */
+ void PeerManagerImpl::HeadersDirectFetchBlocks(CNode& pfrom, const Peer& peer, const CBlockIndex& last_header)
+ {
++    if (m_opts.headers_only) return;
++
+     LOCK(cs_main);
+     CNodeState *nodestate = State(pfrom.GetId());
+ 
+@@ -4323,6 +4326,12 @@ void PeerManagerImpl::ProcessMessage(CNode& pfrom, const std::string& msg_type,
+             return;
+         }
+ 
++        if (m_opts.headers_only) {
++            CBlockHeaderAndShortTxIDs cmpctblock;
++            vRecv >> cmpctblock;
++            return ProcessHeadersMessage(pfrom, *peer, std::vector<CBlockHeader>{cmpctblock.header}, /*via_compact_block=*/true);
++        }
++
+         CBlockHeaderAndShortTxIDs cmpctblock;
+         vRecv >> cmpctblock;
+ 
+@@ -4571,6 +4580,10 @@ void PeerManagerImpl::ProcessMessage(CNode& pfrom, const std::string& msg_type,
+             return;
+         }
+ 
++        if (m_opts.headers_only) {
++            return;
++        }
++
+         BlockTransactions resp;
+         vRecv >> resp;
+ 
+@@ -4626,6 +4639,12 @@ void PeerManagerImpl::ProcessMessage(CNode& pfrom, const std::string& msg_type,
+             return;
+         }
+ 
++        if (m_opts.headers_only) {
++            CBlockHeader header;
++            vRecv >> header;
++            return ProcessHeadersMessage(pfrom, *peer, std::vector<CBlockHeader>{header}, /*via_compact_block=*/false);
++        }
++
+         std::shared_ptr<CBlock> pblock = std::make_shared<CBlock>();
+         vRecv >> TX_WITH_WITNESS(*pblock);
+ 
+@@ -5891,7 +5910,7 @@ bool PeerManagerImpl::SendMessages(CNode* pto)
+         // Message: getdata (blocks)
+         //
+         std::vector<CInv> vGetData;
+-        if (CanServeBlocks(*peer) && ((sync_blocks_and_headers_from_peer && !IsLimitedPeer(*peer)) || !m_chainman.IsInitialBlockDownload()) && state.vBlocksInFlight.size() < MAX_BLOCKS_IN_TRANSIT_PER_PEER) {
++        if (!m_opts.headers_only && CanServeBlocks(*peer) && ((sync_blocks_and_headers_from_peer && !IsLimitedPeer(*peer)) || !m_chainman.IsInitialBlockDownload()) && state.vBlocksInFlight.size() < MAX_BLOCKS_IN_TRANSIT_PER_PEER) {
+             std::vector<const CBlockIndex*> vToDownload;
+             NodeId staller = -1;
+             auto get_inflight_budget = [&state]() {
+diff --git a/src/net_processing.h b/src/net_processing.h
+index 8c140d98ad..5ed0968ba4 100644
+--- a/src/net_processing.h
++++ b/src/net_processing.h
+@@ -36,6 +36,8 @@ class Warnings;
+ 
+ /** Whether transaction reconciliation protocol should be enabled by default. */
+ static constexpr bool DEFAULT_TXRECONCILIATION_ENABLE{false};
++/** Whether to run in headers-only mode (no block body download). */
++static constexpr bool DEFAULT_HEADERSONLY{false};
+ /** Default number of non-mempool transactions to keep around for block reconstruction. Includes
+     orphan, replaced, and rejected transactions. */
+ static const uint32_t DEFAULT_BLOCK_RECONSTRUCTION_EXTRA_TXN{100};
+@@ -87,6 +89,8 @@ public:
+         //! Number of headers sent in one getheaders message result (this is
+         //! a test-only option).
+         uint32_t max_headers_result{MAX_HEADERS_RESULTS};
++        //! Whether this node should avoid downloading block bodies.
++        bool headers_only{DEFAULT_HEADERSONLY};
+     };
+ 
+     static std::unique_ptr<PeerManager> make(CConnman& connman, AddrMan& addrman,
+diff --git a/src/node/peerman_args.cpp b/src/node/peerman_args.cpp
+index 59dc592d66..cef5510784 100644
+--- a/src/node/peerman_args.cpp
++++ b/src/node/peerman_args.cpp
+@@ -23,6 +23,7 @@ void ApplyArgsManOptions(const ArgsManager& argsman, PeerManager::Options& optio
+     if (auto value{argsman.GetBoolArg("-capturemessages")}) options.capture_messages = *value;
+ 
+     if (auto value{argsman.GetBoolArg("-blocksonly")}) options.ignore_incoming_txs = *value;
++    if (auto value{argsman.GetBoolArg("-headersonly")}) options.headers_only = *value;
+ }
+ 
+ } // namespace node
+diff --git a/src/rpc/blockchain.cpp b/src/rpc/blockchain.cpp
+index 4ef863a480..4680bda704 100644
+--- a/src/rpc/blockchain.cpp
++++ b/src/rpc/blockchain.cpp
+@@ -47,6 +47,7 @@
+ #include <util/check.h>
+ #include <util/fs.h>
+ #include <util/strencodings.h>
++#include <util/time.h>
+ #include <util/syserror.h>
+ #include <util/translation.h>
+ #include <validation.h>
+@@ -120,6 +121,28 @@ static int ComputeNextBlockAndDepth(const CBlockIndex& tip, const CBlockIndex& b
+     return &blockindex == &tip ? 1 : -1;
+ }
+ 
++static bool IsHeadersOnlyMode(const JSONRPCRequest& request)
++{
++    const NodeContext& node = EnsureAnyNodeContext(request.context);
++    return node.args != nullptr && node.args->GetBoolArg("-headersonly", DEFAULT_HEADERSONLY);
++}
++
++static const CBlockIndex* GetRPCBestTip(const ChainstateManager& chainman, bool headers_only) EXCLUSIVE_LOCKS_REQUIRED(cs_main)
++{
++    if (headers_only && chainman.m_best_header != nullptr) {
++        return chainman.m_best_header;
++    }
++    return chainman.ActiveChain().Tip();
++}
++
++static bool HeaderTipIsInitialSync(const ChainstateManager& chainman, const CBlockIndex& header_tip)
++{
++    const bool has_minimum_work{header_tip.nChainWork >= chainman.MinimumChainWork()};
++    const auto header_time{NodeSeconds{std::chrono::seconds{header_tip.GetBlockTime()}}};
++    const bool stale{header_time <= (NodeClock::now() - 24h)};
++    return !has_minimum_work || stale;
++}
++
+ static const CBlockIndex* ParseHashOrHeight(const UniValue& param, ChainstateManager& chainman)
+ {
+     LOCK(::cs_main);
+@@ -620,10 +643,11 @@ static RPCHelpMan getblockheader()
+     const CBlockIndex* pblockindex;
+     const CBlockIndex* tip;
+     ChainstateManager& chainman = EnsureAnyChainman(request.context);
++    const bool headers_only{IsHeadersOnlyMode(request)};
+     {
+         LOCK(cs_main);
+         pblockindex = chainman.m_blockman.LookupBlockIndex(hash);
+-        tip = chainman.ActiveChain().Tip();
++        tip = GetRPCBestTip(chainman, headers_only);
+     }
+ 
+     if (!pblockindex) {
+@@ -1375,24 +1399,26 @@ RPCHelpMan getblockchaininfo()
+         [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
+ {
+     ChainstateManager& chainman = EnsureAnyChainman(request.context);
++    const bool headers_only{IsHeadersOnlyMode(request)};
+     LOCK(cs_main);
+     Chainstate& active_chainstate = chainman.ActiveChainstate();
+ 
+-    const CBlockIndex& tip{*CHECK_NONFATAL(active_chainstate.m_chain.Tip())};
+-    const int height{tip.nHeight};
++    const CBlockIndex& active_tip{*CHECK_NONFATAL(active_chainstate.m_chain.Tip())};
++    const CBlockIndex& rpc_tip{*CHECK_NONFATAL(GetRPCBestTip(chainman, headers_only))};
++    const int height{headers_only ? rpc_tip.nHeight : active_tip.nHeight};
+     UniValue obj(UniValue::VOBJ);
+     obj.pushKV("chain", chainman.GetParams().GetChainTypeString());
+     obj.pushKV("blocks", height);
+     obj.pushKV("headers", chainman.m_best_header ? chainman.m_best_header->nHeight : -1);
+-    obj.pushKV("bestblockhash", tip.GetBlockHash().GetHex());
+-    obj.pushKV("bits", strprintf("%08x", tip.nBits));
+-    obj.pushKV("target", GetTarget(tip, chainman.GetConsensus().powLimit).GetHex());
+-    obj.pushKV("difficulty", GetDifficulty(tip));
+-    obj.pushKV("time", tip.GetBlockTime());
+-    obj.pushKV("mediantime", tip.GetMedianTimePast());
+-    obj.pushKV("verificationprogress", chainman.GuessVerificationProgress(&tip));
+-    obj.pushKV("initialblockdownload", chainman.IsInitialBlockDownload());
+-    obj.pushKV("chainwork", tip.nChainWork.GetHex());
++    obj.pushKV("bestblockhash", rpc_tip.GetBlockHash().GetHex());
++    obj.pushKV("bits", strprintf("%08x", rpc_tip.nBits));
++    obj.pushKV("target", GetTarget(rpc_tip, chainman.GetConsensus().powLimit).GetHex());
++    obj.pushKV("difficulty", GetDifficulty(rpc_tip));
++    obj.pushKV("time", rpc_tip.GetBlockTime());
++    obj.pushKV("mediantime", rpc_tip.GetMedianTimePast());
++    obj.pushKV("verificationprogress", chainman.GuessVerificationProgress(&rpc_tip));
++    obj.pushKV("initialblockdownload", headers_only ? HeaderTipIsInitialSync(chainman, rpc_tip) : chainman.IsInitialBlockDownload());
++    obj.pushKV("chainwork", rpc_tip.nChainWork.GetHex());
+     obj.pushKV("size_on_disk", chainman.m_blockman.CalculateCurrentUsage());
+     obj.pushKV("pruned", chainman.m_blockman.IsPruneMode());
+     if (chainman.m_blockman.IsPruneMode()) {
+@@ -1544,35 +1570,56 @@ static RPCHelpMan getchaintips()
+         [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
+ {
+     ChainstateManager& chainman = EnsureAnyChainman(request.context);
++    const bool headers_only{IsHeadersOnlyMode(request)};
+     LOCK(cs_main);
+     CChain& active_chain = chainman.ActiveChain();
++    const CBlockIndex* reference_tip{headers_only ? CHECK_NONFATAL(GetRPCBestTip(chainman, /*headers_only=*/true)) : active_chain.Tip()};
+ 
+-    /*
+-     * Idea: The set of chain tips is the active chain tip, plus orphan blocks which do not have another orphan building off of them.
+-     * Algorithm:
+-     *  - Make one pass through BlockIndex(), picking out the orphan blocks, and also storing a set of the orphan block's pprev pointers.
+-     *  - Iterate through the orphan blocks. If the block isn't pointed to by another orphan, it is a chain tip.
+-     *  - Add the active chain tip
+-     */
+     std::set<const CBlockIndex*, CompareBlocksByHeight> setTips;
+-    std::set<const CBlockIndex*> setOrphans;
+-    std::set<const CBlockIndex*> setPrevs;
++    if (headers_only) {
++        /*
++         * In headers-only mode, use the set of all leaves in BlockIndex()
++         * relative to the selected header-chain reference tip.
++         */
++        std::set<const CBlockIndex*> setPrevs;
++
++        for (const auto& [_, block_index] : chainman.BlockIndex()) {
++            if (block_index.pprev != nullptr) {
++                setPrevs.insert(block_index.pprev);
++            }
++        }
+ 
+-    for (const auto& [_, block_index] : chainman.BlockIndex()) {
+-        if (!active_chain.Contains(&block_index)) {
+-            setOrphans.insert(&block_index);
+-            setPrevs.insert(block_index.pprev);
++        for (const auto& [_, block_index] : chainman.BlockIndex()) {
++            if (!setPrevs.contains(&block_index)) {
++                setTips.insert(&block_index);
++            }
+         }
+-    }
+ 
+-    for (std::set<const CBlockIndex*>::iterator it = setOrphans.begin(); it != setOrphans.end(); ++it) {
+-        if (setPrevs.erase(*it) == 0) {
+-            setTips.insert(*it);
++        // Always report the selected reference tip.
++        setTips.insert(reference_tip);
++    } else {
++        /*
++         * Preserve existing non-headersonly behavior:
++         * active tip + orphan leaves.
++         */
++        std::set<const CBlockIndex*> setOrphans;
++        std::set<const CBlockIndex*> setPrevs;
++
++        for (const auto& [_, block_index] : chainman.BlockIndex()) {
++            if (!active_chain.Contains(&block_index)) {
++                setOrphans.insert(&block_index);
++                setPrevs.insert(block_index.pprev);
++            }
+         }
+-    }
+ 
+-    // Always report the currently active tip.
+-    setTips.insert(active_chain.Tip());
++        for (std::set<const CBlockIndex*>::iterator it = setOrphans.begin(); it != setOrphans.end(); ++it) {
++            if (setPrevs.erase(*it) == 0) {
++                setTips.insert(*it);
++            }
++        }
++
++        setTips.insert(active_chain.Tip());
++    }
+ 
+     /* Construct the output array.  */
+     UniValue res(UniValue::VARR);
+@@ -1581,13 +1628,22 @@ static RPCHelpMan getchaintips()
+         obj.pushKV("height", block->nHeight);
+         obj.pushKV("hash", block->phashBlock->GetHex());
+ 
+-        const int branchLen = block->nHeight - active_chain.FindFork(block)->nHeight;
++        int branchLen{0};
++        if (headers_only) {
++            const CBlockIndex* fork{LastCommonAncestor(block, reference_tip)};
++            branchLen = block->nHeight - (fork ? fork->nHeight : 0);
++        } else {
++            branchLen = block->nHeight - active_chain.FindFork(block)->nHeight;
++        }
+         obj.pushKV("branchlen", branchLen);
+ 
+         std::string status;
+-        if (active_chain.Contains(block)) {
++        if (!headers_only && active_chain.Contains(block)) {
+             // This block is part of the currently active chain.
+             status = "active";
++        } else if (headers_only && block == reference_tip) {
++            // This block is part of the selected header-chain reference tip.
++            status = "active";
+         } else if (block->nStatus & BLOCK_FAILED_MASK) {
+             // This block or one of its ancestors is invalid.
+             status = "invalid";

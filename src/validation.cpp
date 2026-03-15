@@ -14,6 +14,9 @@
 #include <chain.h>
 #include <checkqueue.h>
 #include <clientversion.h>
+#include <common/args.h>
+#include <common/run_command.h>
+#include <llmq/quorums_btccheckpoints.h>
 #include <consensus/amount.h>
 #include <consensus/consensus.h>
 #include <consensus/merkle.h>
@@ -55,6 +58,7 @@
 #include <util/moneystr.h>
 #include <util/rbf.h>
 #include <util/signalinterrupt.h>
+#include <util/chaintype.h>
 #include <util/strencodings.h>
 #include <util/time.h>
 #include <util/trace.h>
@@ -89,7 +93,11 @@
 #ifndef WIN32
 #include <sys/wait.h>
 #include <sys/types.h>
+#include <fcntl.h>
 #include <signal.h>
+#include <spawn.h>
+#include <unistd.h>
+extern char** environ;
 #endif
 // SYSCOIN
 #if ENABLE_ZMQ
@@ -102,10 +110,10 @@
     #include <limits.h>
 #endif
 pid_t gethpid = -1;
-#ifdef WIN32
-HANDLE hProcessGeth = NULL;
-#endif
+pid_t btcheaderpid = -1;
 RecursiveMutex cs_geth;
+RecursiveMutex cs_btcheader;
+std::string g_managed_btcheader_rpc_cmd;
 NEVMMintTxSet setMintTxsMempool;
 std::unordered_map<COutPoint, std::pair<CTransactionRef, CTransactionRef>, SaltedOutpointHasher> mapAssetAllocationConflicts;
 std::map<uint256, int64_t> mapRejectedBlocks GUARDED_BY(cs_main);
@@ -150,6 +158,23 @@ uint256 g_best_block;
 // SYSCOIN
 std::atomic_bool fReindexGeth(false);
 unsigned int fRPCSerialVersion;
+std::vector<std::string> g_managed_btcheader_rpc_args;
+
+bool GetManagedBTCHeaderRPCCommandArgs(std::vector<std::string>& args_out)
+{
+#ifdef WIN32
+    args_out.clear();
+    return false;
+#else
+    LOCK(cs_btcheader);
+    if (g_managed_btcheader_rpc_args.empty()) {
+        return false;
+    }
+    args_out = g_managed_btcheader_rpc_args;
+    return true;
+#endif
+}
+
 const CBlockIndex* Chainstate::FindForkInGlobalIndex(const CBlockLocator& locator) const
 {
     AssertLockHeld(cs_main);
@@ -2195,11 +2220,14 @@ int ApplyTxInUndo(Coin&& undo, CCoinsViewCache& view, const COutPoint& out)
 
     return fClean ? DISCONNECT_OK : DISCONNECT_UNCLEAN;
 }
-bool GetNEVMData(BlockValidationState& state, const CBlock& block, CNEVMHeader &evmBlockHeader) {
+bool GetNEVMData(BlockValidationState& state, const CBlock& block, CNEVMHeader &evmBlockHeader, std::vector<unsigned char>* coinbase_payload) {
     std::vector<unsigned char> vchData;
 	int nOut;
 	if (!GetSyscoinData(*block.vtx[0], vchData, nOut))
 		return state.Invalid(BlockValidationResult::BLOCK_CONSENSUS, "nevm-block-data-output");
+    if (coinbase_payload != nullptr) {
+        *coinbase_payload = vchData;
+    }
     auto pos = std::search(vchData.begin(), vchData.end(), std::begin(NEVM_MAGIC_BYTES), std::end(NEVM_MAGIC_BYTES));
     if(pos == vchData.end() )
         return state.Invalid(BlockValidationResult::BLOCK_CONSENSUS, "nevm-block-tag");
@@ -2213,9 +2241,10 @@ bool GetNEVMData(BlockValidationState& state, const CBlock& block, CNEVMHeader &
     }
     return true;
 }
-bool Chainstate::ConnectNEVMCommitment(BlockValidationState& state, NEVMTxRootMap &mapNEVMTxRoots, const CBlock& block, const uint256& nBlockHash, const uint32_t& nHeight, const bool fJustCheck, PoDAMAPMemory &mapPoDA, const CDeterministicMNListNEVMAddressDiff &diff) {
+bool Chainstate::ConnectNEVMCommitment(BlockValidationState& state, NEVMTxRootMap &mapNEVMTxRoots, const CBlock& block, const CBlockIndex* pindex, const uint256& nBlockHash, const uint32_t& nHeight, const bool fJustCheck, PoDAMAPMemory &mapPoDA, const CDeterministicMNListNEVMAddressDiff &diff) {
     CNEVMHeader nevmBlockHeader;
-    if(!GetNEVMData(state, block, nevmBlockHeader)) {
+    std::vector<unsigned char> coinbase_payload;
+    if(!GetNEVMData(state, block, nevmBlockHeader, &coinbase_payload)) {
         return false; //state filled by GetNEVMData
     }
     if(block.vchNEVMBlockData.empty()) {
@@ -2230,9 +2259,33 @@ bool Chainstate::ConnectNEVMCommitment(BlockValidationState& state, NEVMTxRootMa
     if(bSkipValidation) {
         LogPrintf("ConnectNEVMCommitment: skipping validation result...\n");
     }
+    // Derive the BTC anchor once from consensus-indexed chain state and pass it through
+    // to ZMQ, avoiding BTCC payload parsing in notifier code.
+    uint256 btcPrevHashForNEVM{};
+    {
+        const auto& consensus = m_chainman.GetConsensus();
+        const bool carrier_height = nHeight >= BTCCHECK_PROP_BUFFER &&
+                                    (nHeight % BTCCHECK_PERIOD) == BTCCHECK_CARRIER_OFFSET &&
+                                    (static_cast<int>(nHeight) - BTCCHECK_PROP_BUFFER) >= consensus.nCLReceiptStartBlock;
+        if (carrier_height) {
+            // Only forward a BTC anchor if this carrier block has a non-null BTCC receipt.
+            // (Null receipts are allowed for censorship resistance and must result in no NEVM checkpoint.)
+            llmq::CBTCCheckpointSig btcc;
+            const bool extracted = ExtractBTCCReceipt(coinbase_payload, btcc);
+            if (extracted && !btcc.IsNull()) {
+                if (pindex != nullptr) {
+                    const int expected_height = static_cast<int>(nHeight) - BTCCHECK_PROP_BUFFER;
+                    const CBlockIndex* pindexReceipt = pindex->GetAncestor(expected_height);
+                    if (pindexReceipt != nullptr) {
+                        btcPrevHashForNEVM = pindexReceipt->btcpPrevCommitment;
+                    }
+                }
+            }
+        }
+    }
     std::string stateStr;
     if(fNEVMConnection) {
-        GetMainSignals().NotifyNEVMBlockConnect(nevmBlockHeader, block, stateStr, fJustCheck? uint256(): nBlockHash, NEVMDataVecOut, nHeight, bSkipValidation, diff);
+        GetMainSignals().NotifyNEVMBlockConnect(nevmBlockHeader, block, stateStr, fJustCheck? uint256(): nBlockHash, NEVMDataVecOut, nHeight, bSkipValidation, btcPrevHashForNEVM, diff);
         if(!stateStr.empty()) {
             state.Invalid(BlockValidationResult::BLOCK_INVALID_HEADER, stateStr);
             if(stateStr == "nevm-connect-response-invalid-data" || stateStr == "nevm-response-not-found") {
@@ -2254,7 +2307,7 @@ bool Chainstate::ConnectNEVMCommitment(BlockValidationState& state, NEVMTxRootMa
             if(!bResponse) {
                 if(RestartGethNode()) {
                     // try again after resetting connection
-                    GetMainSignals().NotifyNEVMBlockConnect(nevmBlockHeader, block, stateStr, fJustCheck? uint256(): nBlockHash, NEVMDataVecOut, nHeight, bSkipValidation, diff);
+                    GetMainSignals().NotifyNEVMBlockConnect(nevmBlockHeader, block, stateStr, fJustCheck? uint256(): nBlockHash, NEVMDataVecOut, nHeight, bSkipValidation, btcPrevHashForNEVM, diff);
                     if(!stateStr.empty()) {
                         state.Invalid(BlockValidationResult::BLOCK_INVALID_HEADER, stateStr);
                         if(stateStr == "nevm-connect-response-invalid-data" || stateStr == "nevm-response-not-found") {
@@ -2690,6 +2743,34 @@ bool Chainstate::ConnectBlock(const CBlock& block, BlockValidationState& state, 
         return true;
     }
 
+    // SYSCOIN: Persist BTCPREV commitment in block index only for consensus-relevant
+    // sign-offset BTCC heights. Reuse the contextual-validation cache in the common
+    // accept->connect flow; otherwise fall back to reparsing.
+    if (!fJustCheck) {
+        const auto& consensus = params.GetConsensus();
+        const bool btcp_required = pindex->nHeight >= consensus.nCLReceiptStartBlock &&
+                                   (pindex->nHeight % BTCCHECK_PERIOD) == BTCCHECK_SIGN_OFFSET &&
+                                   block.auxpow;
+        if (btcp_required) {
+            const uint256& btcp_expected = block.auxpow->getParentPrevBlockHash();
+            if (pindex->m_btcp_prev_contextually_validated &&
+                pindex->m_btcp_prev_contextual_commitment == btcp_expected) {
+                if (pindex->btcpPrevCommitment != btcp_expected) {
+                    pindex->btcpPrevCommitment = btcp_expected;
+                    m_blockman.m_dirty_blockindex.insert(pindex);
+                }
+            } else {
+                uint256 btcp;
+                if (ExtractBTCPREVCommitment(block, btcp) &&
+                    btcp == btcp_expected &&
+                    pindex->btcpPrevCommitment != btcp) {
+                    pindex->btcpPrevCommitment = btcp;
+                    m_blockman.m_dirty_blockindex.insert(pindex);
+                }
+            }
+        }
+    }
+
     bool fScriptChecks = true;
     if (!m_chainman.AssumedValidBlock().IsNull()) {
         // We've been configured with the hash of a block which has been externally verified to have a valid history.
@@ -2954,7 +3035,7 @@ bool Chainstate::ConnectBlock(const CBlock& block, BlockValidationState& state, 
     }
 
     bool bRegTestContext = !fRegTest || (fRegTest && fNEVMConnection);
-    if (bRegTestContext && bReverify && pindex->nHeight >= params.GetConsensus().nNEVMStartBlock && !ConnectNEVMCommitment(state, mapNEVMTxRoots, block, blockHash, (uint32_t)pindex->nHeight, fJustCheck, mapPoDA, diff)) {
+    if (bRegTestContext && bReverify && pindex->nHeight >= params.GetConsensus().nNEVMStartBlock && !ConnectNEVMCommitment(state, mapNEVMTxRoots, block, pindex, blockHash, (uint32_t)pindex->nHeight, fJustCheck, mapPoDA, diff)) {
         return false; // state filled by ConnectNEVMCommitment
     }
     const auto time_3{SteadyClock::now()};
@@ -3998,7 +4079,19 @@ bool Chainstate::EnforceBestChainLock(const CBlockIndex* bestChainLockBlockIndex
     LogPrint(BCLog::CHAINLOCKS, "Chainstate::%s -- enforcing block %s via CLSIG\n", __func__, bestChainLockBlockIndex->GetBlockHash().ToString());
     EnforceBlock(state, bestChainLockBlockIndex);
     // no cs_main allowed
-    bool activateNeeded = WITH_LOCK(::cs_main, return m_chain.Tip()->GetAncestor(bestChainLockBlockIndex->nHeight)) != bestChainLockBlockIndex;
+    const bool activateNeeded = WITH_LOCK(::cs_main, return m_chain.Tip()->GetAncestor(bestChainLockBlockIndex->nHeight)) != bestChainLockBlockIndex;
+    if (!activateNeeded) {
+        const auto [tip_hash, tip_height, ancestor_hash] = WITH_LOCK(::cs_main, {
+            const CBlockIndex* tip = m_chain.Tip();
+            const CBlockIndex* ancestor = tip ? tip->GetAncestor(bestChainLockBlockIndex->nHeight) : nullptr;
+            return std::make_tuple(
+                tip ? tip->GetBlockHash().ToString() : std::string("null"),
+                tip ? tip->nHeight : -1,
+                ancestor ? ancestor->GetBlockHash().ToString() : std::string("null"));
+        });
+        LogPrint(BCLog::CHAINLOCKS, "Chainstate::%s -- no activation needed, tip=%s@%d ancestor_at_cl=%s cl=%s@%d\n",
+                __func__, tip_hash, tip_height, ancestor_hash, bestChainLockBlockIndex->GetBlockHash().ToString(), bestChainLockBlockIndex->nHeight);
+    }
     if (activateNeeded) {
         if(!ActivateBestChain(state, nullptr)) {
             LogPrintf("Chainstate::%s -- ActivateBestChain failed: %s\n", __func__, state.ToString());
@@ -4772,7 +4865,27 @@ static bool ContextualCheckBlock(const CBlock& block, BlockValidationState& stat
             }
         }
     }
-
+    // SYSCOIN: BTC prev-hash commitment binding for BTCC sign-offset blocks.
+    // Miners commit BTCPREV into the block's coinbase payload (merkle-root committed).
+    // Consensus verifies that it matches this block's AuxPoW parent prev-block hash.
+    {
+        const Consensus::Params& consensusParams = chainman.GetConsensus();
+        const bool btcpRequired = nHeight >= consensusParams.nCLReceiptStartBlock &&
+                                  (nHeight % BTCCHECK_PERIOD) == BTCCHECK_SIGN_OFFSET;
+        if (btcpRequired && block.auxpow) {
+            uint256 btcPrevHashCommit;
+            if (!ExtractBTCPREVCommitment(block, btcPrevHashCommit)) {
+                return state.Invalid(BlockValidationResult::BLOCK_CONSENSUS, "bad-btcp-missing");
+            }
+            if (btcPrevHashCommit.IsNull()) {
+                return state.Invalid(BlockValidationResult::BLOCK_CONSENSUS, "bad-btcp-null");
+            }
+            const uint256 btcPrevHashExpected = block.auxpow->getParentPrevBlockHash();
+            if (btcPrevHashCommit != btcPrevHashExpected) {
+                return state.Invalid(BlockValidationResult::BLOCK_CONSENSUS, "bad-btcp-mismatch");
+            }
+        }
+    }
     // After the coinbase witness reserved value and commitment are verified,
     // we can check if the block weight passes (before we've checked the
     // coinbase witness, it would be possible for the weight to be too
@@ -5054,6 +5167,17 @@ bool ChainstateManager::AcceptBlock(const std::shared_ptr<const CBlock>& pblock,
             m_blockman.m_dirty_blockindex.insert(pindex);
         }
         return error("%s: %s", __func__, state.ToString());
+    }
+    // SYSCOIN: cache the contextually validated BTCPREV so ConnectBlock can reuse it
+    // without reparsing the coinbase payload in the common accept->connect flow.
+    {
+        const bool btcp_required = pindex->nHeight >= params.GetConsensus().nCLReceiptStartBlock &&
+                                   (pindex->nHeight % BTCCHECK_PERIOD) == BTCCHECK_SIGN_OFFSET &&
+                                   block.auxpow;
+        if (btcp_required) {
+            pindex->m_btcp_prev_contextually_validated = true;
+            pindex->m_btcp_prev_contextual_commitment = block.auxpow->getParentPrevBlockHash();
+        }
     }
     // SYSCOIN ProcessNEVMData/FlushDataToCache so we have the data from processing out-of-order blocks and it reads from disk (recreating PoDA data in block) prior to validation in ConnectTip()
     bool PODAContext = pindex->nHeight >= params.GetConsensus().nPODAStartBlock;
@@ -5410,31 +5534,27 @@ bool Chainstate::RollforwardBlock(const CBlockIndex* pindex, CCoinsViewCache& in
         return error("ReplayBlock(): poda-validation-failed");
     }
     for (const CTransactionRef& tx : block.vtx) {
-        TxValidationState tx_state;
-        CAmount txfee = 0;
-        CAssetsMap mapAssetIn;
-        CAssetsMap mapAssetOut;
         if (!tx->IsCoinBase()) {
-            for (const CTxIn &txin : tx->vin) {
+            const uint256& txHash = tx->GetHash();
+            // Replay must remain idempotent even if the base cache is partially applied.
+            // Avoid strict input re-validation here and just apply effects like upstream replay.
+            if (IsSyscoinMintTx(tx->nVersion)) {
+                const CMintSyscoin mintSyscoin(*tx);
+                if (mintSyscoin.IsNull()) {
+                    return error("%s: invalid mint payload while replaying tx=%s", __func__, txHash.ToString());
+                }
+                setMintTxs.insert(mintSyscoin.nTxHash);
+            }
+            for (const CTxIn& txin : tx->vin) {
                 inputs.SpendCoin(txin.prevout);
             }
-            // SYSCOIN
-            const uint256& txHash = tx->GetHash();
-            if (!Consensus::CheckTxInputs(*tx, tx_state, inputs, pindex->nHeight, txfee, mapAssetIn, mapAssetOut)) {
-                return error("%s: Consensus::CheckTxInputs: %s, %s", __func__, txHash.ToString(), tx_state.ToString());
-            }
-            // just temp var not used in !fJustCheck mode
-            if (!CheckSyscoinInputs(chainParams, *tx, txHash, tx_state, (uint32_t)pindex->nHeight, false, setMintTxs, mapAssetIn, mapAssetOut)) {
-                return error("%s: Consensus::CheckSyscoinInputs: %s, %s", __func__, txHash.ToString(), tx_state.ToString());
-            }
             vecTXIDPairs.emplace_back(txHash, pindex->nHeight);
-
         }
         // Pass check = true as every addition may be an overwrite.
         AddCoins(inputs, *tx, pindex->nHeight, true);
     }
     bool bRegTestContext = !fRegTest || (fRegTest && fNEVMConnection);
-    if (bRegTestContext && pindex->nHeight >= chainParams.nNEVMStartBlock && !ConnectNEVMCommitment(state, mapNEVMTxRoots, block, pindex->GetBlockHash(), pindex->nHeight, false, mapPoDA, diff)) {
+    if (bRegTestContext && pindex->nHeight >= chainParams.nNEVMStartBlock && !ConnectNEVMCommitment(state, mapNEVMTxRoots, block, pindex, pindex->GetBlockHash(), pindex->nHeight, false, mapPoDA, diff)) {
         return error("RollforwardBlock(): ConnectNEVMCommitment() failed at %d, hash=%s state=%s", pindex->nHeight, pindex->GetBlockHash().ToString(), state.ToString());
     }
     return true;
@@ -6104,6 +6224,39 @@ void ChainstateManager::CheckBlockIndex()
     assert(nNodes == forward.size());
 }
 
+// SYSCOIN: fill btcpPrevCommitment for recent sign-offset blocks if missing.
+void ChainstateManager::BackfillRecentBTCPREVCommitments()
+{
+    LOCK(cs_main);
+
+    const auto& consensus = GetConsensus();
+    const int start = consensus.nCLReceiptStartBlock;
+    const int tip = ActiveHeight();
+    if (tip < 0 || tip < start) return;
+
+    // Only need a small window: carriers reference the (h-5) sign-offset block.
+    const int low = std::max(start, tip - (BTCCHECK_PERIOD * 2));
+
+    for (int h = tip; h >= low; --h) {
+        if ((h % BTCCHECK_PERIOD) != BTCCHECK_SIGN_OFFSET) continue;
+        CBlockIndex* pindex = ActiveChain()[h];
+        if (!pindex) continue;
+        if (!pindex->btcpPrevCommitment.IsNull()) continue;
+        if (!(pindex->nStatus & BLOCK_HAVE_DATA)) continue;
+
+        CBlock block;
+        if (!m_blockman.ReadBlockFromDisk(block, *pindex)) continue;
+        if (!block.auxpow) continue;
+
+        uint256 btcp;
+        if (!ExtractBTCPREVCommitment(block, btcp)) continue;
+        if (btcp != block.auxpow->getParentPrevBlockHash()) continue;
+
+        pindex->btcpPrevCommitment = btcp;
+        m_blockman.m_dirty_blockindex.insert(pindex);
+    }
+}
+
 std::string Chainstate::ToString()
 {
     CBlockIndex* tip = m_chain.Tip();
@@ -6120,6 +6273,7 @@ bool Chainstate::ResizeCoinsCaches(size_t coinstip_size, size_t coinsdb_size)
         return true;
     }
     size_t old_coinstip_size = m_coinstip_cache_size_bytes;
+    size_t old_coinsdb_size = m_coinsdb_cache_size_bytes;
     m_coinstip_cache_size_bytes = coinstip_size;
     m_coinsdb_cache_size_bytes = coinsdb_size;
     CoinsDB().ResizeCache(coinsdb_size);
@@ -6132,7 +6286,10 @@ bool Chainstate::ResizeCoinsCaches(size_t coinstip_size, size_t coinsdb_size)
     BlockValidationState state;
     bool ret;
 
-    if (coinstip_size > old_coinstip_size) {
+    // SYSCOIN: consider both coinstip and coinsdb deltas when deciding flush mode.
+    // if (coinstip_size > old_coinstip_size) {
+    const bool any_shrank = coinstip_size < old_coinstip_size || coinsdb_size < old_coinsdb_size;
+    if (!any_shrank) {
         // Likely no need to flush if cache sizes have grown.
         ret = FlushStateToDisk(state, FlushStateMode::IF_NEEDED);
     } else {
@@ -6346,11 +6503,15 @@ bool ChainstateManager::ActivateSnapshot(
     assert(chaintip_loaded);
 
     // Transfer possession of the mempool to the snapshot chainstate.
+    // SYSCOIN: upstream assumes m_active_chainstate is always non-null.
     // Mempool is empty at this point because we're still in IBD.
-    Assert(m_active_chainstate->m_mempool->size() == 0);
+    // Assert(m_active_chainstate->m_mempool->size() == 0);
     Assert(!m_snapshot_chainstate->m_mempool);
-    m_snapshot_chainstate->m_mempool = m_active_chainstate->m_mempool;
-    m_active_chainstate->m_mempool = nullptr;
+    if (m_active_chainstate != nullptr) {
+        Assert(m_active_chainstate->m_mempool == nullptr || m_active_chainstate->m_mempool->size() == 0);
+        m_snapshot_chainstate->m_mempool = m_active_chainstate->m_mempool;
+        m_active_chainstate->m_mempool = nullptr;
+    }
     m_active_chainstate = m_snapshot_chainstate.get();
     m_blockman.m_snapshot_height = this->GetSnapshotBaseHeight();
 
@@ -6881,51 +7042,6 @@ void recursive_copy(const fs::path &src, const fs::path &dst)
     throw std::runtime_error(dst.generic_string() + " not dir or file");
   }
 }
-#ifdef WIN32
-    #include <windows.h>
-    #include <winnt.h>
-    #include <winternl.h>
-    #include <stdio.h>
-    #include <errno.h>
-    #include <assert.h>
-    #include <process.h>
-    pid_t fork(fs::path appIn, std::string arg)
-    {
-        std::string app = fs::PathToString(appIn);
-        std::string appQuoted = strprintf("%s", fs::quoted(app));
-        PROCESS_INFORMATION pi;
-        STARTUPINFOW si;
-        ZeroMemory(&pi, sizeof(pi));
-        ZeroMemory(&si, sizeof(si));
-        GetStartupInfoW (&si);
-        si.cb = sizeof(si);
-        //Prepare CreateProcess args
-        std::wstring appQuoted_w(appQuoted.length(), L' '); // Make room for characters
-        std::copy(appQuoted.begin(), appQuoted.end(), appQuoted_w.begin()); // Copy string to wstring.
-
-        std::wstring app_w(app.length(), L' '); // Make room for characters
-        std::copy(app.begin(), app.end(), app_w.begin()); // Copy string to wstring.
-
-        std::wstring arg_w(arg.length(), L' '); // Make room for characters
-        std::copy(arg.begin(), arg.end(), arg_w.begin()); // Copy string to wstring.
-
-        std::wstring input = appQuoted_w + L" " + arg_w;
-        wchar_t* arg_concat = const_cast<wchar_t*>( input.c_str() );
-        const wchar_t* app_const = app_w.c_str();
-        LogPrintf("CreateProcessW app %s %s\n",app,arg);
-        int result = CreateProcessW(app_const, arg_concat, nullptr, nullptr, FALSE,
-              CREATE_NO_WINDOW, nullptr, nullptr, &si, &pi);
-        if(!result)
-        {
-            LogPrintf("CreateProcess failed (%d)\n", GetLastError());
-            return 0;
-        }
-        pid_t pid = (pid_t)pi.dwProcessId;
-        hProcessGeth = pi.hProcess;
-        CloseHandle(pi.hThread);
-        return pid;
-    }
-#endif
 size_t write_data(void *ptr, size_t size, size_t nmemb, FILE *stream) {
     size_t written = fwrite(ptr, size, nmemb, stream);
     return written;
@@ -7000,26 +7116,8 @@ bool Chainstate::RestartGethNode() {
     }
     return true;
 }
-#ifdef WIN32
-// Convert a wide Unicode string to an UTF8 string
-std::string utf8_encode(const std::wstring &wstr)
-{
-    int size_needed = WideCharToMultiByte(CP_UTF8, 0, &wstr[0], (int)wstr.size(), NULL, 0, NULL, NULL);
-    std::string strTo( size_needed, 0 );
-    WideCharToMultiByte (CP_UTF8, 0, &wstr[0], (int)wstr.size(), &strTo[0], size_needed, NULL, NULL);
-    return strTo;
-}
-#endif
 fs::path FindExecPath(std::string &binArchitectureTag) {
     fs::path fpathDefault;
-    #ifdef WIN32
-        binArchitectureTag = "windows";
-        WCHAR pszExePath[MAX_PATH];
-        GetModuleFileNameW(nullptr, pszExePath, ARRAYSIZE(pszExePath));
-        fpathDefault = fs::u8path(utf8_encode(std::wstring(pszExePath)));
-        fpathDefault = fpathDefault.parent_path();
-        return fpathDefault;
-    #endif
     #ifdef MAC_OSX
         binArchitectureTag = "darwin";
         char buf [PATH_MAX];
@@ -7044,22 +7142,306 @@ fs::path FindExecPath(std::string &binArchitectureTag) {
     return fpathDefault;
 }
 std::string GetGethFilename(){
-    // For Windows:
-    #ifdef WIN32
-       return "sysgeth.exe";
-    #endif
-    #ifdef MAC_OSX
-        // Mac
-        return "sysgeth";
-    #else
-        // Linux
-        return "sysgeth";
-    #endif
+    return "sysgeth";
 }
+
+namespace {
+int GetManagedBTCHeaderDefaultP2PPort(ChainType chain_type)
+{
+    switch (chain_type) {
+    case ChainType::MAIN:
+        return DEFAULT_BTC_HEADER_MAINNET_P2P_PORT;
+    case ChainType::TESTNET:
+        return DEFAULT_BTC_HEADER_TESTNET_P2P_PORT;
+    case ChainType::SIGNET:
+        return DEFAULT_BTC_HEADER_SIGNET_P2P_PORT;
+    case ChainType::REGTEST:
+        return DEFAULT_BTC_HEADER_REGTEST_P2P_PORT;
+    }
+    return DEFAULT_BTC_HEADER_MAINNET_P2P_PORT;
+}
+
+int GetManagedBTCHeaderDefaultRPCPort(ChainType chain_type)
+{
+    switch (chain_type) {
+    case ChainType::MAIN:
+        return DEFAULT_BTC_HEADER_MAINNET_RPC_PORT;
+    case ChainType::TESTNET:
+        return DEFAULT_BTC_HEADER_TESTNET_RPC_PORT;
+    case ChainType::SIGNET:
+        return DEFAULT_BTC_HEADER_SIGNET_RPC_PORT;
+    case ChainType::REGTEST:
+        return DEFAULT_BTC_HEADER_REGTEST_RPC_PORT;
+    }
+    return DEFAULT_BTC_HEADER_MAINNET_RPC_PORT;
+}
+
+bool ParseManagedBTCHeaderPorts(int& p2p_port_out, int& rpc_port_out)
+{
+    const int64_t p2p_port = gArgs.GetIntArg("-btcheaderport", GetManagedBTCHeaderDefaultP2PPort(Params().GetChainType()));
+    const int64_t rpc_port = gArgs.GetIntArg("-btcheaderrpcport", GetManagedBTCHeaderDefaultRPCPort(Params().GetChainType()));
+    if (p2p_port < 1 || p2p_port > 65535) {
+        LogPrintf("Invalid -btcheaderport=%d (must be 1..65535)\n", p2p_port);
+        return false;
+    }
+    if (rpc_port < 1 || rpc_port > 65535) {
+        LogPrintf("Invalid -btcheaderrpcport=%d (must be 1..65535)\n", rpc_port);
+        return false;
+    }
+    p2p_port_out = static_cast<int>(p2p_port);
+    rpc_port_out = static_cast<int>(rpc_port);
+    return true;
+}
+
+std::string GetBTCHeaderNodeFilename()
+{
+#ifdef WIN32
+    return "bitcoind.exe";
+#else
+    return "bitcoind";
+#endif
+}
+
+std::string GetBTCHeaderCliFilename()
+{
+#ifdef WIN32
+    return "bitcoin-cli.exe";
+#else
+    return "bitcoin-cli";
+#endif
+}
+
+void AppendBTCHeaderNetworkArg(std::vector<std::string>& args_out)
+{
+    switch (Params().GetChainType()) {
+    case ChainType::MAIN:
+        break;
+    case ChainType::TESTNET:
+        args_out.emplace_back("-testnet=1");
+        break;
+    case ChainType::SIGNET:
+        args_out.emplace_back("-signet=1");
+        break;
+    case ChainType::REGTEST:
+        args_out.emplace_back("-regtest=1");
+        break;
+    }
+}
+
+void AppendBTCHeaderNetworkArgCli(std::string& cmd_out)
+{
+    switch (Params().GetChainType()) {
+    case ChainType::MAIN:
+        break;
+    case ChainType::TESTNET:
+        cmd_out += " -testnet";
+        break;
+    case ChainType::SIGNET:
+        cmd_out += " -signet";
+        break;
+    case ChainType::REGTEST:
+        cmd_out += " -regtest";
+        break;
+    }
+}
+
+std::vector<std::string> BuildManagedBTCHeaderRPCArgs(const fs::path& cli_binary, const fs::path& data_dir, int rpc_port)
+{
+    std::vector<std::string> args;
+    args.emplace_back(fs::PathToString(cli_binary));
+    args.emplace_back(strprintf("-datadir=%s", fs::PathToString(data_dir)));
+    args.emplace_back(strprintf("-rpcport=%d", rpc_port));
+    AppendBTCHeaderNetworkArg(args);
+    return args;
+}
+
+fs::path ResolveFirstExistingPath(const std::vector<fs::path>& candidates)
+{
+    for (const auto& candidate : candidates) {
+        if (candidate.empty()) continue;
+        fs::path preferred = candidate;
+        preferred.make_preferred();
+        if (fs::exists(preferred)) return preferred;
+    }
+    return fs::path{};
+}
+
+fs::path ResolveManagedBTCHeaderBinaryPath(const fs::path& exec_path, const fs::path& datadir_base, const std::string& filename)
+{
+    const fs::path filename_path = fs::u8path(filename);
+    const std::string configured = gArgs.GetArg("-btcheaderbinary", "");
+    if (!configured.empty()) {
+        const fs::path configured_path = fs::u8path(configured).make_preferred();
+        if (fs::exists(configured_path)) return configured_path;
+        LogPrintf("Configured -btcheaderbinary not found: %s\n", fs::PathToString(configured_path));
+        return fs::path{};
+    }
+
+    return ResolveFirstExistingPath({
+        exec_path / "../Resources" / "btcheadernode" / "bin" / filename_path,
+        exec_path / "bin" / "btcheadernode" / "bin" / filename_path,
+        exec_path / "btcheadernode" / "bin" / filename_path,
+        exec_path / "../Resources" / filename_path,
+        exec_path / filename_path,
+        exec_path / "daemon" / filename_path,
+        datadir_base / "btcheadernode" / "bin" / filename_path,
+        datadir_base / filename_path,
+#ifndef WIN32
+        fs::u8path("/usr/local/bin") / filename_path,
+        fs::u8path("/usr/bin") / filename_path,
+#endif
+    });
+}
+
+fs::path ResolveManagedBTCHeaderCliPath(const fs::path& bitcoind_path, const fs::path& exec_path, const fs::path& datadir_base, const std::string& filename)
+{
+    const fs::path filename_path = fs::u8path(filename);
+    fs::path sibling_cli = bitcoind_path.parent_path();
+    sibling_cli /= filename_path;
+    const std::string configured = gArgs.GetArg("-btcheaderclibinary", "");
+    if (!configured.empty()) {
+        const fs::path configured_path = fs::u8path(configured).make_preferred();
+        if (fs::exists(configured_path)) return configured_path;
+        LogPrintf("Configured -btcheaderclibinary not found: %s\n", fs::PathToString(configured_path));
+        return fs::path{};
+    }
+
+    return ResolveFirstExistingPath({
+        sibling_cli,
+        exec_path / "../Resources" / "btcheadernode" / "bin" / filename_path,
+        exec_path / "bin" / "btcheadernode" / "bin" / filename_path,
+        exec_path / "btcheadernode" / "bin" / filename_path,
+        exec_path / "../Resources" / filename_path,
+        exec_path / filename_path,
+        exec_path / "daemon" / filename_path,
+        datadir_base / "btcheadernode" / "bin" / filename_path,
+        datadir_base / filename_path,
+#ifndef WIN32
+        fs::u8path("/usr/local/bin") / filename_path,
+        fs::u8path("/usr/bin") / filename_path,
+#endif
+    });
+}
+
+std::vector<std::string> SanitizeBTCHeaderNodeCmdLine(const std::vector<std::string>& extra_args, const fs::path& binary_url, const fs::path& data_dir, int p2p_port, int rpc_port, bool force_reindex)
+{
+    std::vector<std::string> cmd;
+    cmd.push_back(fs::PathToString(binary_url));
+    for (const auto& arg : extra_args) cmd.push_back(arg);
+    cmd.push_back("-headersonly=1");
+    cmd.push_back("-server=1");
+    cmd.push_back("-daemon=0");
+    cmd.push_back(strprintf("-datadir=%s", fs::PathToString(data_dir)));
+    cmd.push_back(strprintf("-port=%d", p2p_port));
+    cmd.push_back(strprintf("-rpcport=%d", rpc_port));
+    if (force_reindex) {
+        cmd.push_back("-reindex=1");
+    }
+    AppendBTCHeaderNetworkArg(cmd);
+    return cmd;
+}
+
+std::string BuildManagedBTCHeaderRPCCommand(const fs::path& cli_binary, const fs::path& data_dir, int rpc_port)
+{
+    std::string cmd = strprintf("%s -datadir=%s -rpcport=%d",
+        fs::quoted(fs::PathToString(cli_binary)),
+        fs::quoted(fs::PathToString(data_dir)),
+        rpc_port);
+    AppendBTCHeaderNetworkArgCli(cmd);
+    return cmd;
+}
+
+#ifndef WIN32
+bool SpawnDetachedProcessWithStderrLog(const std::vector<std::string>& cmdline, const fs::path& log_path, pid_t& pid_out, std::string& err_out)
+{
+    pid_out = -1;
+    err_out.clear();
+
+    if (cmdline.empty()) {
+        err_out = "empty-command";
+        return false;
+    }
+
+    const int fd = open(fs::PathToString(log_path).c_str(), O_RDWR | O_CREAT | O_APPEND, 0600);
+    if (fd == -1) {
+        err_out = strprintf("open-log-failed(errno=%d)", errno);
+        return false;
+    }
+
+    posix_spawn_file_actions_t actions;
+    if (posix_spawn_file_actions_init(&actions) != 0) {
+        close(fd);
+        err_out = "spawn-file-actions-init-failed";
+        return false;
+    }
+
+    int action_result = posix_spawn_file_actions_adddup2(&actions, fd, STDERR_FILENO);
+    if (action_result == 0) {
+        action_result = posix_spawn_file_actions_addclose(&actions, fd);
+    }
+    if (action_result != 0) {
+        posix_spawn_file_actions_destroy(&actions);
+        close(fd);
+        err_out = strprintf("spawn-file-actions-config-failed(errno=%d)", action_result);
+        return false;
+    }
+
+    posix_spawnattr_t attr;
+    if (posix_spawnattr_init(&attr) != 0) {
+        posix_spawn_file_actions_destroy(&actions);
+        close(fd);
+        err_out = "spawn-attr-init-failed";
+        return false;
+    }
+
+    short spawn_flags{0};
+#ifdef POSIX_SPAWN_SETSID
+    spawn_flags |= POSIX_SPAWN_SETSID;
+#endif
+    if (spawn_flags != 0) {
+        const int flags_result = posix_spawnattr_setflags(&attr, spawn_flags);
+        if (flags_result != 0) {
+            posix_spawnattr_destroy(&attr);
+            posix_spawn_file_actions_destroy(&actions);
+            close(fd);
+            err_out = strprintf("spawn-attr-setflags-failed(errno=%d)", flags_result);
+            return false;
+        }
+    }
+
+    std::vector<char*> argv;
+    argv.reserve(cmdline.size() + 1);
+    for (const std::string& arg : cmdline) {
+        argv.push_back(const_cast<char*>(arg.c_str()));
+    }
+    argv.push_back(nullptr);
+
+    pid_t child_pid{-1};
+    const int spawn_result = posix_spawn(&child_pid, argv[0], &actions, &attr, argv.data(), ::environ);
+
+    posix_spawnattr_destroy(&attr);
+    posix_spawn_file_actions_destroy(&actions);
+    close(fd);
+
+    if (spawn_result != 0) {
+        err_out = strprintf("spawn-failed(errno=%d)", spawn_result);
+        return false;
+    }
+
+    pid_out = child_pid;
+    return true;
+}
+#endif
+} // namespace
+
 bool Chainstate::StartGethNode()
 {
     LOCK(cs_geth);
 
+#ifdef WIN32
+    LogPrintf("%s: SysGeth management is not supported on WIN32 builds\n", __func__);
+    return false;
+#else
     LogPrintf("%s: Starting SysGeth\n", __func__);
     fs::path gethFilename = fs::u8path(GetGethFilename());
     std::string binArchitectureTag;
@@ -7073,7 +7455,7 @@ bool Chainstate::StartGethNode()
         binaryURL = fpathDefault / gethFilename;
         binaryURL = binaryURL.make_preferred();
         LogPrintf("Could not find sysgeth in %s, trying %s\n", fs::PathToString(binaryURLTmp), fs::PathToString(binaryURL));
-        // current executable path + daemon subdirectory (for windows installer users)
+        // current executable path + daemon subdirectory (legacy layout)
         if(!fs::exists(binaryURL)) {
             fs::path binaryURLTmp = binaryURL;
             binaryURL = fpathDefault / "daemon" / gethFilename;
@@ -7122,73 +7504,25 @@ bool Chainstate::StartGethNode()
     const fs::path dataDir = m_chainman.m_options.datadir / "geth";
     std::vector<std::string> vecCmdLineStr = SanitizeGethCmdLine(m_chainman.GethCommandLine(), binaryURL, dataDir);
     const fs::path log = m_chainman.m_options.datadir / "sysgeth.log";
-
-    #ifndef WIN32
-    // Prevent killed child-processes remaining as "defunct"
-    struct sigaction sa;
-    sa.sa_handler = SIG_DFL;
-    sa.sa_flags = SA_NOCLDWAIT;
-    sigaction(SIGCHLD, &sa, nullptr);
-
-    // Fork the process
-    gethpid = fork();
-    if (gethpid < 0) {
-        LogPrintf("Could not start Geth, pid < 0 %d\n", gethpid);
+    std::string spawn_error;
+    if (!SpawnDetachedProcessWithStderrLog(vecCmdLineStr, log, gethpid, spawn_error)) {
+        LogPrintf("%s: Could not start Geth (%s)\n", __func__, spawn_error);
+        gethpid = -1;
         return false;
     }
-
-    // Child process logic
-    if (gethpid == 0) {
-        if (setsid() < 0) {  // <--- explicitly create new session here
-            LogPrintf("setsid failed\n");
-            exit(EXIT_FAILURE);
-        }
-
-        std::vector<char*> commandVector;
-        commandVector.reserve(vecCmdLineStr.size());
-        for (const std::string &cmdStr: vecCmdLineStr) {
-            commandVector.push_back(const_cast<char*>(cmdStr.c_str()));
-        }
-        commandVector.push_back(nullptr);
-
-        char **command = commandVector.data();
-        LogPrintf("%s: Starting geth with command line: %s...\n", __func__, command[0]);
-
-        int err = open(fs::PathToString(log).c_str(), O_RDWR|O_CREAT|O_APPEND, 0600);
-        if (err == -1) {
-            LogPrintf("Could not open sysgeth.log\n");
-            exit(EXIT_FAILURE);
-        }
-        if (-1 == dup2(err, fileno(stderr))) { 
-            LogPrintf("Cannot redirect stderr for sysgeth\n");
-            exit(EXIT_FAILURE); 
-        }
-        fflush(stderr);
-        close(err);
-
-        execvp(command[0], &command[0]);
-        LogPrintf("Geth not found at %s\n", fs::PathToString(binaryURL));
-        exit(EXIT_FAILURE);
-    }
-    #else
-        std::string commandStr;
-        // the first cmd is the binary file which is not needed as binaryURL is that, in windows we only need params passed as commandStr
-        vecCmdLineStr.erase(vecCmdLineStr.begin());
-        for(const std::string &cmdStr: vecCmdLineStr) {
-            commandStr += cmdStr + " ";
-        }
-        gethpid = fork(binaryURL, commandStr);
-        if( gethpid <= 0 ) {
-            LogPrintf("Geth not found at %s\n", fs::PathToString(binaryURL));
-            return false;
-        }
-    #endif
     if(gethpid > 0)
         LogPrintf("%s: Geth Started with pid %d\n", __func__, gethpid);
     return true;
+#endif
 }
 bool Chainstate::StopGethNode(bool bOnStart)
 {
+    LOCK(cs_geth);
+
+#ifdef WIN32
+    LogPrintf("%s: SysGeth management is not supported on WIN32 builds\n", __func__);
+    return false;
+#else
     if (!fNEVMConnection || fRegTest) {
         return false;
     }
@@ -7199,39 +7533,29 @@ bool Chainstate::StopGethNode(bool bOnStart)
         if (bResponse) {
             LogPrintf("Waiting for sysgeth to shutdown gracefully...\n");
             UninterruptibleSleep(std::chrono::milliseconds{2000});
-            #ifdef WIN32
-            if (hProcessGeth) {
+            if (gethpid > 0) {
                 for (int i = 0; i < 20; ++i) { // wait up to 40 seconds
-                    if (WaitForSingleObject(hProcessGeth, 2000) == WAIT_OBJECT_0) {
-                        CloseHandle(hProcessGeth);
+                    int status = 0;
+                    pid_t result = waitpid(gethpid, &status, WNOHANG);
+
+                    if (result == gethpid) {
+                        if (WIFEXITED(status)) {
+                            LogPrintf("Geth shutdown gracefully with exit code %d.\n", WEXITSTATUS(status));
+                        } else if (WIFSIGNALED(status)) {
+                            LogPrintf("Geth terminated by signal %d.\n", WTERMSIG(status));
+                        }
+                        gethpid = -1;
+                        return true;
+                    } else if (result == -1 && errno == ECHILD) {
+                        LogPrintf("Geth process no longer exists (ECHILD).\n");
+                        gethpid = -1;
                         return true;
                     }
+
                     LogPrintf("Geth shutdown check (%d)\n", i);
+                    UninterruptibleSleep(std::chrono::milliseconds{2000});
                 }
-                CloseHandle(hProcessGeth);
             }
-            #else
-            for (int i = 0; i < 20; ++i) { // wait up to 40 seconds
-                int status = 0;
-                pid_t result = waitpid(gethpid, &status, WNOHANG);
-            
-                if (result == gethpid) {
-                    if (WIFEXITED(status)) {
-                        LogPrintf("Geth shutdown gracefully with exit code %d.\n", WEXITSTATUS(status));
-                        return true;
-                    } else if (WIFSIGNALED(status)) {
-                        LogPrintf("Geth terminated by signal %d.\n", WTERMSIG(status));
-                        return true;  // explicitly treat signal exits as valid shutdowns
-                    }
-                } else if (result == -1 && errno == ECHILD) {
-                    LogPrintf("Geth process no longer exists (ECHILD).\n");
-                    return true;
-                }
-            
-                LogPrintf("Geth shutdown check (%d)\n", i);
-                UninterruptibleSleep(std::chrono::milliseconds{2000});
-            }
-            #endif
         } else {
             LogPrintf("No response from sysgeth on disconnect.\n");
         }
@@ -7239,19 +7563,32 @@ bool Chainstate::StopGethNode(bool bOnStart)
 
     // Only now explicitly kill sysgeth as last resort
     LogPrintf("Graceful shutdown failed; explicitly killing sysgeth...\n");
+    if (gethpid > 0) {
+        if (kill(gethpid, SIGKILL) != 0 && errno != ESRCH) {
+            LogPrintf("Failed to kill sysgeth pid %d (errno=%d)\n", gethpid, errno);
+        }
+        int status = 0;
+        const pid_t result = waitpid(gethpid, &status, 0);
+        if (result == -1 && errno != ECHILD) {
+            LogPrintf("Failed waiting for sysgeth pid %d after SIGKILL (errno=%d)\n", gethpid, errno);
+        }
+        gethpid = -1;
+        return true;
+    }
+
+    // Unknown pid fallback, preserve prior behavior for stale/orphaned processes.
     #ifndef USE_SYSCALL_SANDBOX
     #if HAVE_SYSTEM
     std::string cmd = "pkill -9 -f sysgeth";
-    #ifdef WIN32
-        cmd = "taskkill /F /T /IM sysgeth.exe >nul 2>&1";
-    #endif
     std::thread t(runCommand, cmd);
     if (t.joinable())
         t.join();
     #endif
     #endif
+    gethpid = -1;
 
     return true;
+#endif
 }
 
 bool Chainstate::DoGethStartupProcedure() {
@@ -7334,6 +7671,256 @@ bool Chainstate::DoGethStartupProcedure() {
             return false;
         }
         LogPrintf("%s: Done, waiting for resync...\n", __func__);
+    }
+    return true;
+}
+
+bool Chainstate::RestartBTCHeaderNode(bool force_reindex)
+{
+    LOCK(cs_btcheader);
+
+    if (!gArgs.GetBoolArg("-btcheadermanaged", DEFAULT_BTC_HEADER_MANAGED)) {
+        LogPrintf("%s: Managed BTC header node is disabled (-btcheadermanaged=0)\n", __func__);
+        return false;
+    }
+    StopBTCHeaderNodeInternal(/*bOnStart=*/false);
+    return StartBTCHeaderNodeInternal(force_reindex);
+}
+
+bool Chainstate::StartBTCHeaderNode(bool force_reindex)
+{
+    LOCK(cs_btcheader);
+    return StartBTCHeaderNodeInternal(force_reindex);
+}
+
+bool Chainstate::StartBTCHeaderNodeInternal(bool force_reindex)
+{
+
+    if (!gArgs.GetBoolArg("-btcheadermanaged", DEFAULT_BTC_HEADER_MANAGED)) {
+        LogPrintf("%s: Managed BTC header node is disabled (-btcheadermanaged=0)\n", __func__);
+        return false;
+    }
+
+#ifdef WIN32
+    LogPrintf("%s: Managed BTC header node is not supported on WIN32 builds\n", __func__);
+    return false;
+#else
+    LogPrintf("%s: Starting managed BTC header node\n", __func__);
+
+    int p2p_port{0};
+    int rpc_port{0};
+    if (!ParseManagedBTCHeaderPorts(p2p_port, rpc_port)) {
+        return false;
+    }
+
+    std::string binArchitectureTag;
+    const fs::path exec_path = FindExecPath(binArchitectureTag);
+    const fs::path node_binary = ResolveManagedBTCHeaderBinaryPath(exec_path, m_chainman.m_options.datadir_base, GetBTCHeaderNodeFilename());
+    if (node_binary.empty()) {
+        LogPrintf("%s: Could not locate bitcoind for managed BTC header node. Configure -btcheaderbinary.\n", __func__);
+        return false;
+    }
+
+    const fs::path cli_binary = ResolveManagedBTCHeaderCliPath(node_binary, exec_path, m_chainman.m_options.datadir_base, GetBTCHeaderCliFilename());
+    if (cli_binary.empty()) {
+        LogPrintf("%s: Could not locate bitcoin-cli for managed BTC header node. Configure -btcheaderclibinary.\n", __func__);
+        return false;
+    }
+
+    const fs::path data_dir = gArgs.GetPathArg("-btcheaderdatadir", m_chainman.m_options.datadir / "btcheader");
+    const fs::path log_path = m_chainman.m_options.datadir / "btcheadernode.log";
+    try {
+        fs::create_directories(data_dir);
+    } catch (const fs::filesystem_error& e) {
+        LogPrintf("%s: Failed to create managed BTC header datadir %s (%s)\n", __func__, fs::PathToString(data_dir), e.what());
+        return false;
+    }
+
+    std::vector<std::string> cmdline = SanitizeBTCHeaderNodeCmdLine(gArgs.GetArgs("-btcheadercommandline"), node_binary, data_dir, p2p_port, rpc_port, force_reindex);
+
+    g_managed_btcheader_rpc_args = BuildManagedBTCHeaderRPCArgs(cli_binary, data_dir, rpc_port);
+    g_managed_btcheader_rpc_cmd = BuildManagedBTCHeaderRPCCommand(cli_binary, data_dir, rpc_port);
+    if (gArgs.IsArgSet("-btcheadercmd")) {
+        LogPrintf("%s: Overriding user-provided -btcheadercmd with managed local bitcoin-cli command\n", __func__);
+    }
+    gArgs.ForceSetArg("-btcheadercmd", g_managed_btcheader_rpc_cmd);
+
+    // Best-effort cleanup for stale managed instances from previous unclean exits.
+    if (!g_managed_btcheader_rpc_args.empty()) {
+        std::vector<std::string> stop_cmd = g_managed_btcheader_rpc_args;
+        stop_cmd.emplace_back("stop");
+        try {
+            (void)RunCommandParseJSON(stop_cmd);
+            UninterruptibleSleep(std::chrono::milliseconds{200});
+        } catch (const std::exception&) {
+            // Ignore when no previous node is reachable.
+        }
+    }
+
+    std::string spawn_error;
+    if (!SpawnDetachedProcessWithStderrLog(cmdline, log_path, btcheaderpid, spawn_error)) {
+        LogPrintf("%s: Could not start managed BTC header node (%s)\n", __func__, spawn_error);
+        btcheaderpid = -1;
+        g_managed_btcheader_rpc_cmd.clear();
+        g_managed_btcheader_rpc_args.clear();
+        return false;
+    }
+
+    LogPrintf("%s: Managed BTC header node started with pid %d (reindex=%d)\n", __func__, btcheaderpid, force_reindex ? 1 : 0);
+
+    // Ensure the child stays alive beyond initial spawn, without depending on
+    // external signer support for JSON command execution.
+    for (int i = 0; i < 15; ++i) {
+        int status = 0;
+        const pid_t result = waitpid(btcheaderpid, &status, WNOHANG);
+        if (result == btcheaderpid) {
+            LogPrintf("%s: Managed BTC header node exited early with status %d\n", __func__, status);
+            btcheaderpid = -1;
+            g_managed_btcheader_rpc_cmd.clear();
+            g_managed_btcheader_rpc_args.clear();
+            return false;
+        }
+        if (result == -1 && errno == ECHILD) {
+            LogPrintf("%s: Managed BTC header node exited early (ECHILD)\n", __func__);
+            btcheaderpid = -1;
+            g_managed_btcheader_rpc_cmd.clear();
+            g_managed_btcheader_rpc_args.clear();
+            return false;
+        }
+        UninterruptibleSleep(std::chrono::milliseconds{200});
+    }
+
+    return true;
+#endif
+}
+
+bool Chainstate::StopBTCHeaderNode(bool bOnStart)
+{
+    LOCK(cs_btcheader);
+    return StopBTCHeaderNodeInternal(bOnStart);
+}
+
+bool Chainstate::StopBTCHeaderNodeInternal(bool bOnStart)
+{
+
+    if (!gArgs.GetBoolArg("-btcheadermanaged", DEFAULT_BTC_HEADER_MANAGED)) {
+        return false;
+    }
+
+#ifdef WIN32
+    return false;
+#else
+    if (!bOnStart && !g_managed_btcheader_rpc_args.empty()) {
+        try {
+            std::vector<std::string> stop_cmd = g_managed_btcheader_rpc_args;
+            stop_cmd.emplace_back("stop");
+            (void)RunCommandParseJSON(stop_cmd);
+        } catch (const std::exception& e) {
+            LogPrintf("%s: Managed BTC header node graceful shutdown request failed: %s\n", __func__, e.what());
+        }
+    }
+
+    // Always send SIGTERM for managed restarts, including startup stop path.
+    if (btcheaderpid > 0) {
+        if (kill(btcheaderpid, SIGTERM) != 0 && errno != ESRCH) {
+            LogPrintf("Failed to SIGTERM BTC header node pid %d (errno=%d)\n", btcheaderpid, errno);
+        }
+    }
+
+    if (btcheaderpid > 0) {
+        for (int i = 0; i < 20; ++i) {
+            int status = 0;
+            const pid_t result = waitpid(btcheaderpid, &status, WNOHANG);
+            if (result == btcheaderpid) {
+                if (WIFEXITED(status)) {
+                    LogPrintf("BTC header node shutdown gracefully with exit code %d.\n", WEXITSTATUS(status));
+                } else if (WIFSIGNALED(status)) {
+                    LogPrintf("BTC header node terminated by signal %d.\n", WTERMSIG(status));
+                }
+                btcheaderpid = -1;
+                g_managed_btcheader_rpc_cmd.clear();
+                g_managed_btcheader_rpc_args.clear();
+                return true;
+            }
+            if (result == -1 && errno == ECHILD) {
+                LogPrintf("BTC header node process no longer exists (ECHILD).\n");
+                btcheaderpid = -1;
+                g_managed_btcheader_rpc_cmd.clear();
+                g_managed_btcheader_rpc_args.clear();
+                return true;
+            }
+            LogPrintf("BTC header node shutdown check (%d)\n", i);
+            UninterruptibleSleep(std::chrono::milliseconds{2000});
+        }
+        LogPrintf("Graceful BTC header node shutdown failed; explicitly killing pid %d\n", btcheaderpid);
+        if (kill(btcheaderpid, SIGKILL) != 0) {
+            LogPrintf("Failed to kill BTC header node pid %d (errno=%d)\n", btcheaderpid, errno);
+        }
+        int status = 0;
+        waitpid(btcheaderpid, &status, 0);
+    }
+
+    btcheaderpid = -1;
+    g_managed_btcheader_rpc_cmd.clear();
+    g_managed_btcheader_rpc_args.clear();
+    return true;
+#endif
+}
+
+bool Chainstate::IsManagedBTCHeaderNodeRunning(std::string& reason)
+{
+    LOCK(cs_btcheader);
+
+    if (!gArgs.GetBoolArg("-btcheadermanaged", DEFAULT_BTC_HEADER_MANAGED)) {
+        reason = "managed-disabled";
+        return true;
+    }
+
+#ifdef WIN32
+    reason = "managed-unsupported-win32";
+    return false;
+#else
+    if (btcheaderpid <= 0) {
+        reason = "pid-missing";
+        return false;
+    }
+    if (kill(btcheaderpid, 0) == 0 || errno == EPERM) {
+        reason.clear();
+        return true;
+    }
+    if (errno == ESRCH) {
+        btcheaderpid = -1;
+        g_managed_btcheader_rpc_cmd.clear();
+        g_managed_btcheader_rpc_args.clear();
+        reason = "process-not-found";
+        return false;
+    }
+    reason = strprintf("process-check-failed(errno=%d)", errno);
+    return false;
+#endif
+}
+
+bool Chainstate::DoBTCHeaderStartupProcedure()
+{
+    if (m_chainman.m_interrupt) {
+        return false;
+    }
+
+    if (!gArgs.GetBoolArg("-btcheadermanaged", DEFAULT_BTC_HEADER_MANAGED)) {
+        const std::string cmd = gArgs.GetArg("-btcheadercmd", "");
+        if (cmd.empty()) {
+            LogPrintf("%s: -btcheadermanaged=0 requires -btcheadercmd to be configured\n", __func__);
+            return false;
+        }
+        LogPrintf("%s: Using external -btcheadercmd backend (managed node disabled)\n", __func__);
+        return true;
+    }
+
+    LogPrintf("%s: Restarting managed BTC header node\n", __func__);
+    StopBTCHeaderNode(true);
+    if (!StartBTCHeaderNode()) {
+        LogPrintf("%s: Failed to start managed BTC header node\n", __func__);
+        return false;
     }
     return true;
 }
@@ -7439,11 +8026,15 @@ Chainstate& ChainstateManager::ActivateExistingSnapshot(uint256 base_blockhash)
         std::make_unique<Chainstate>(nullptr, m_blockman, *this, base_blockhash);
     LogPrintf("[snapshot] switching active chainstate to %s\n", m_snapshot_chainstate->ToString());
 
+    // SYSCOIN: upstream assumes m_active_chainstate is always non-null.
     // Mempool is empty at this point because we're still in IBD.
-    Assert(m_active_chainstate->m_mempool->size() == 0);
+    // Assert(m_active_chainstate->m_mempool->size() == 0);
     Assert(!m_snapshot_chainstate->m_mempool);
-    m_snapshot_chainstate->m_mempool = m_active_chainstate->m_mempool;
-    m_active_chainstate->m_mempool = nullptr;
+    if (m_active_chainstate != nullptr) {
+        Assert(m_active_chainstate->m_mempool == nullptr || m_active_chainstate->m_mempool->size() == 0);
+        m_snapshot_chainstate->m_mempool = m_active_chainstate->m_mempool;
+        m_active_chainstate->m_mempool = nullptr;
+    }
     m_active_chainstate = m_snapshot_chainstate.get();
     return *m_snapshot_chainstate;
 }

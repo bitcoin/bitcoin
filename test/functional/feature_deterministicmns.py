@@ -15,7 +15,8 @@ class Masternode(object):
 
 class DIP3Test(SyscoinTestFramework):
     def add_options(self, parser):
-        self.add_wallet_options(parser)
+        # This test is descriptor-only; do not expose legacy wallet mode.
+        self.add_wallet_options(parser, descriptors=True, legacy=False)
 
     def set_test_params(self):
         self.num_initial_mn = 11 # Should be >= 11 to make sure quorums are not always the same MNs
@@ -26,8 +27,11 @@ class DIP3Test(SyscoinTestFramework):
         self.extra_args += ["-mncollateral=100"]
 
     def skip_test_if_missing_module(self):
+        if self.options.descriptors is not True:
+            self.log.info("Deterministic MN test forces descriptor wallets")
+        self.options.descriptors = True
+        self.default_wallet_name = "default_wallet"
         self.skip_if_no_wallet()
-        self.skip_if_no_bdb()
 
     def setup_network(self):
         self.add_nodes(1)
@@ -51,7 +55,7 @@ class DIP3Test(SyscoinTestFramework):
 
     def run_test(self):
         if self.is_wallet_compiled():
-            self.nodes[0].createwallet(self.default_wallet_name, descriptors=False)
+            self.nodes[0].createwallet(self.default_wallet_name, descriptors=True)
         self.log.info("funding controller node")
         while self.nodes[0].getbalance() < (self.num_initial_mn + 3) * 100:
             self.generatetoaddress(self.nodes[0], 10, self.nodes[0].getnewaddress()) # generate enough for collaterals

@@ -226,6 +226,9 @@ public:
 
     virtual std::unique_ptr<SigningProvider> GetSolvingProvider(const CScript& script) const { return nullptr; }
 
+    /** SYSCOIN Retrieve private key material for a key ID when available. */
+    virtual bool GetKey(const CKeyID& address, CKey& key_out) const { return false; }
+
     /** Whether this ScriptPubKeyMan can provide a SigningProvider (via GetSolvingProvider) that, combined with
       * sigdata, can produce solving data.
       */
@@ -641,6 +644,9 @@ public:
     bool CanGetAddresses(bool internal = false) const override;
 
     std::unique_ptr<SigningProvider> GetSolvingProvider(const CScript& script) const override;
+
+    // SYSCOIN
+    bool GetKey(const CKeyID& address, CKey& key_out) const override;
 
     bool CanProvide(const CScript& script, SignatureData& sigdata) override;
 
