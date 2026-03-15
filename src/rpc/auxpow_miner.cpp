@@ -13,6 +13,7 @@
 #include <rpc/blockchain.h>
 #include <rpc/protocol.h>
 #include <rpc/request.h>
+#include <rpc/util.h>
 #include <util/strencodings.h>
 #include <util/time.h>
 #include <validation.h>
@@ -266,16 +267,12 @@ AuxpowMiner::createAuxBlock (const node::JSONRPCRequest& request,
   // createauxblock(address, [btcprevhash]) passes btcprevhash as params[1].
   // getauxblock([btcprevhash]) (wallet RPC) may pass btcprevhash as params[0].
   if (request.params.size() > 1 && !request.params[1].isNull()) {
-      uint256 h;
-      h.SetHex(request.params[1].get_str());
-      btcPrevHash = h;
+      btcPrevHash = ParseHashV(request.params[1], "btcprevhash");
   } else if (request.params.size() == 1 && request.params[0].isStr()) {
       const std::string s = request.params[0].get_str();
       // Heuristic: treat a 32-byte hex string as btcprevhash (wallet getauxblock create path).
       if (s.size() == 64 && IsHex(s)) {
-          uint256 h;
-          h.SetHex(s);
-          btcPrevHash = h;
+          btcPrevHash = ParseHashV(request.params[0], "btcprevhash");
       }
   }
   const int nextHeight = pindexTip ? (pindexTip->nHeight + 1) : 0;

@@ -234,6 +234,10 @@ class AuxpowMiningTest (SyscoinTestFramework):
       -8, "btcprevhash is required at this height",
       self.nodes[0].createauxblock, addr1
     )
+    assert_raises_rpc_error(
+      -8, "btcprevhash must be of length 64",
+      self.nodes[0].createauxblock, addr1, "1234"
+    )
 
     # Mismatch case: commit non-zero, but test auxpow builder uses parent prevhash=0.
     auxblock_bad = self.nodes[0].createauxblock(addr1, "11" * 32)
