@@ -2,8 +2,6 @@
 #include <boost/test/unit_test.hpp>
 #include <boost/filesystem.hpp>
 #include <boost/thread.hpp>
-#include <chrono>
-#include <future>
 #include <iostream>
 #include <evo/evodb.h>
 #include <dbwrapper.h>
@@ -470,292 +468,85 @@ BOOST_AUTO_TEST_CASE(TestUint256KeyUniqueness)
     BOOST_CHECK(mapCache.find(key3) != mapCache.end());
 }
 
-BOOST_AUTO_TEST_CASE(TestReadCacheDoesNotResurrectPendingEraseBeforeReadLock)
+BOOST_AUTO_TEST_CASE(TestForEachCachedEntryEnumeratesCurrentCacheValues)
 {
     auto dbParams = DBParams{
         .path = "testdb",
         .cache_bytes = static_cast<size_t>(1 << 20),
         .memory_only = true};
-    CEvoDB<int, int> evoDB(dbParams, 10);
-
-    evoDB.WriteCache(1, one);
-    BOOST_REQUIRE(evoDB.FlushCacheToDisk());
-
-    bool injected{false};
-    evoDB.SetBeforeReadLockHookForTesting([&]() {
-        if (injected) return;
-        injected = true;
-        evoDB.EraseCache(1);
-    });
-
-    int value;
-    BOOST_CHECK(!evoDB.ReadCache(1, value));
-    BOOST_CHECK(injected);
-    BOOST_CHECK_EQUAL(evoDB.GetMapCache().size(), 0U);
-    BOOST_CHECK_EQUAL(evoDB.GetEraseCacheCopy().size(), 0U);
-    BOOST_CHECK(!evoDB.Read(1, value));
-
-    evoDB.SetBeforeReadLockHookForTesting({});
-}
-
-BOOST_AUTO_TEST_CASE(TestExistsCacheDoesNotResurrectPendingEraseBeforeReadLock)
-{
-    auto dbParams = DBParams{
-        .path = "testdb",
-        .cache_bytes = static_cast<size_t>(1 << 20),
-        .memory_only = true};
-    CEvoDB<int, int> evoDB(dbParams, 10);
-
-    evoDB.WriteCache(1, one);
-    BOOST_REQUIRE(evoDB.FlushCacheToDisk());
-
-    bool injected{false};
-    evoDB.SetBeforeReadLockHookForTesting([&]() {
-        if (injected) return;
-        injected = true;
-        evoDB.EraseCache(1);
-    });
-
-    BOOST_CHECK(!evoDB.ExistsCache(1));
-    BOOST_CHECK(injected);
-    BOOST_CHECK_EQUAL(evoDB.GetMapCache().size(), 0U);
-    BOOST_CHECK_EQUAL(evoDB.GetEraseCacheCopy().size(), 0U);
-
-    int value;
-    BOOST_CHECK(!evoDB.Read(1, value));
-
-    evoDB.SetBeforeReadLockHookForTesting({});
-}
-
-BOOST_AUTO_TEST_CASE(TestConcurrentReadCacheWaitsForEraseTriggeredFlush)
-{
-    auto dbParams = DBParams{
-        .path = "testdb",
-        .cache_bytes = static_cast<size_t>(1 << 20),
-        .memory_only = true};
-    CEvoDB<int, int> evoDB(dbParams, 10);
-
-    evoDB.WriteCache(1, one);
-    BOOST_REQUIRE(evoDB.FlushCacheToDisk());
-    evoDB.EraseCache(1);
-
-    std::promise<void> flush_started;
-    std::shared_future<void> allow_flush = std::async(std::launch::deferred, [] {}).share();
-    std::promise<void> release_flush;
-    allow_flush = release_flush.get_future().share();
-    bool started{false};
-
-    evoDB.SetWriteBatchHookForTesting([&](CDBBatch& batch) {
-        if (!started) {
-            started = true;
-            flush_started.set_value();
-        }
-        allow_flush.wait();
-        return evoDB.WriteBatch(batch, /*fSync=*/true);
-    });
-
-    auto first_reader = std::async(std::launch::async, [&]() {
-        int value;
-        return evoDB.ReadCache(1, value);
-    });
-
-    flush_started.get_future().wait();
-
-    auto second_reader = std::async(std::launch::async, [&]() {
-        int value;
-        return evoDB.ReadCache(1, value);
-    });
-
-    BOOST_CHECK(second_reader.wait_for(std::chrono::milliseconds(100)) == std::future_status::timeout);
-
-    release_flush.set_value();
-    BOOST_CHECK(!first_reader.get());
-    BOOST_CHECK(!second_reader.get());
-
-    int value;
-    BOOST_CHECK(!evoDB.Read(1, value));
-    evoDB.SetWriteBatchHookForTesting({});
-}
-
-BOOST_AUTO_TEST_CASE(TestFlushCacheToDiskRestoresUncommittedWritesAfterPartialFailure)
-{
-    auto dbParams = DBParams{
-        .path = "testdb",
-        .cache_bytes = static_cast<size_t>(1 << 20),
-        .memory_only = true};
-    CEvoDB<int, int> evoDB(dbParams, 10);
+    CEvoDB<int, int> evoDB(dbParams, 3);
 
     evoDB.WriteCache(1, one);
     evoDB.WriteCache(2, two);
+    evoDB.WriteCache(2, four);
     evoDB.WriteCache(3, three);
 
-    int batch_calls{0};
-    evoDB.SetWriteBatchHookForTesting([&](CDBBatch& batch) {
-        ++batch_calls;
-        if (batch_calls == 1) {
-            return evoDB.WriteBatch(batch, /*fSync=*/true);
-        }
-        return false;
+    std::unordered_map<int, int> visited;
+    evoDB.ForEachCachedEntry([&](int key, int value) {
+        visited[key] = value;
     });
 
-    BOOST_CHECK(!evoDB.FlushCacheToDisk(/*CHUNK_ITEMS=*/2));
-    BOOST_CHECK_EQUAL(batch_calls, 2);
+    BOOST_CHECK_EQUAL(visited.size(), 3U);
+    BOOST_CHECK_EQUAL(visited[1], one);
+    BOOST_CHECK_EQUAL(visited[2], four);
+    BOOST_CHECK_EQUAL(visited[3], three);
+}
+
+BOOST_AUTO_TEST_CASE(TestForEachCachedEntryFlushesPendingEraseBeforeIteration)
+{
+    auto dbParams = DBParams{
+        .path = "testdb",
+        .cache_bytes = static_cast<size_t>(1 << 20),
+        .memory_only = true};
+    CEvoDB<int, int> evoDB(dbParams, 3);
+
+    evoDB.WriteCache(1, one);
+    evoDB.WriteCache(2, two);
+    BOOST_REQUIRE(evoDB.FlushCacheToDisk());
+
+    evoDB.WriteCache(3, three);
+    evoDB.EraseCache(1);
+
+    std::unordered_map<int, int> visited;
+    evoDB.ForEachCachedEntry([&](int key, int value) {
+        visited[key] = value;
+    });
+
+    BOOST_CHECK(visited.empty());
+    BOOST_CHECK_EQUAL(evoDB.GetMapCache().size(), 0U);
+    BOOST_CHECK_EQUAL(evoDB.GetEraseCacheCopy().size(), 0U);
 
     int value;
-    BOOST_CHECK(evoDB.Read(1, value));
-    BOOST_CHECK_EQUAL(value, one);
+    BOOST_CHECK(!evoDB.Read(1, value));
     BOOST_CHECK(evoDB.Read(2, value));
     BOOST_CHECK_EQUAL(value, two);
-    BOOST_CHECK(!evoDB.Read(3, value));
-
-    BOOST_CHECK_EQUAL(evoDB.GetMapCache().size(), 1U);
-    BOOST_CHECK_EQUAL(evoDB.GetFifoList().size(), 1U);
-    BOOST_CHECK_EQUAL(evoDB.GetEraseCacheCopy().size(), 0U);
-    BOOST_CHECK(evoDB.ReadCache(3, value));
-    BOOST_CHECK_EQUAL(value, three);
-
-    evoDB.SetWriteBatchHookForTesting({});
-    BOOST_CHECK(evoDB.FlushCacheToDisk(/*CHUNK_ITEMS=*/2));
     BOOST_CHECK(evoDB.Read(3, value));
     BOOST_CHECK_EQUAL(value, three);
 }
 
-BOOST_AUTO_TEST_CASE(TestFlushCacheToDiskPreservesFailingWriteChunkBoundary)
+BOOST_AUTO_TEST_CASE(TestForEachEraseEntryEnumeratesPendingEraseKeys)
 {
     auto dbParams = DBParams{
         .path = "testdb",
         .cache_bytes = static_cast<size_t>(1 << 20),
         .memory_only = true};
-    CEvoDB<int, int> evoDB(dbParams, 10);
+    CEvoDB<int, int> evoDB(dbParams, 3);
 
     evoDB.WriteCache(1, one);
     evoDB.WriteCache(2, two);
     evoDB.WriteCache(3, three);
-    evoDB.WriteCache(4, four);
-
-    int batch_calls{0};
-    evoDB.SetWriteBatchHookForTesting([&](CDBBatch& batch) {
-        ++batch_calls;
-        if (batch_calls == 1) {
-            return evoDB.WriteBatch(batch, /*fSync=*/true);
-        }
-        return false;
-    });
-
-    BOOST_CHECK(!evoDB.FlushCacheToDisk(/*CHUNK_ITEMS=*/2));
-    BOOST_CHECK_EQUAL(batch_calls, 2);
-
-    int value;
-    BOOST_CHECK(evoDB.Read(1, value));
-    BOOST_CHECK_EQUAL(value, one);
-    BOOST_CHECK(evoDB.Read(2, value));
-    BOOST_CHECK_EQUAL(value, two);
-    BOOST_CHECK(!evoDB.Read(3, value));
-    BOOST_CHECK(!evoDB.Read(4, value));
-
-    BOOST_CHECK_EQUAL(evoDB.GetMapCache().size(), 2U);
-    BOOST_CHECK_EQUAL(evoDB.GetFifoList().size(), 2U);
-    BOOST_CHECK_EQUAL(evoDB.GetEraseCacheCopy().size(), 0U);
-    BOOST_CHECK(evoDB.ReadCache(3, value));
-    BOOST_CHECK_EQUAL(value, three);
-    BOOST_CHECK(evoDB.ReadCache(4, value));
-    BOOST_CHECK_EQUAL(value, four);
-}
-
-BOOST_AUTO_TEST_CASE(TestFlushCacheToDiskRestoresUncommittedErasesAfterPartialFailure)
-{
-    auto dbParams = DBParams{
-        .path = "testdb",
-        .cache_bytes = static_cast<size_t>(1 << 20),
-        .memory_only = true};
-    CEvoDB<int, int> evoDB(dbParams, 10);
-
-    evoDB.WriteCache(1, one);
-    evoDB.WriteCache(2, two);
-    evoDB.WriteCache(3, three);
-    BOOST_REQUIRE(evoDB.FlushCacheToDisk());
-
     evoDB.EraseCache(1);
-    evoDB.EraseCache(2);
     evoDB.EraseCache(3);
 
-    int batch_calls{0};
-    evoDB.SetWriteBatchHookForTesting([&](CDBBatch& batch) {
-        ++batch_calls;
-        if (batch_calls == 1) {
-            return evoDB.WriteBatch(batch, /*fSync=*/true);
-        }
-        return false;
+    std::unordered_set<int> visited;
+    evoDB.ForEachEraseEntry([&](int key) {
+        visited.insert(key);
     });
 
-    BOOST_CHECK(!evoDB.FlushCacheToDisk(/*CHUNK_ITEMS=*/2));
-    BOOST_CHECK_EQUAL(batch_calls, 2);
-
-    auto eraseCache = evoDB.GetEraseCacheCopy();
-    BOOST_CHECK_EQUAL(eraseCache.size(), 1U);
-
-    int value;
-    int remaining_on_disk{0};
-    for (const auto key : {1, 2, 3}) {
-        if (eraseCache.count(key) == 1) {
-            BOOST_CHECK(evoDB.Read(key, value));
-            remaining_on_disk = key;
-        } else {
-            BOOST_CHECK(!evoDB.Read(key, value));
-        }
-    }
-    BOOST_CHECK(remaining_on_disk != 0);
-
-    evoDB.SetWriteBatchHookForTesting({});
-    BOOST_CHECK(evoDB.FlushCacheToDisk(/*CHUNK_ITEMS=*/2));
-    BOOST_CHECK(!evoDB.Read(remaining_on_disk, value));
-}
-
-BOOST_AUTO_TEST_CASE(TestFlushCacheToDiskPreservesFailingEraseChunkBoundary)
-{
-    auto dbParams = DBParams{
-        .path = "testdb",
-        .cache_bytes = static_cast<size_t>(1 << 20),
-        .memory_only = true};
-    CEvoDB<int, int> evoDB(dbParams, 10);
-
-    evoDB.WriteCache(1, one);
-    evoDB.WriteCache(2, two);
-    evoDB.WriteCache(3, three);
-    evoDB.WriteCache(4, four);
-    BOOST_REQUIRE(evoDB.FlushCacheToDisk());
-
-    evoDB.EraseCache(1);
-    evoDB.EraseCache(2);
-    evoDB.EraseCache(3);
-    evoDB.EraseCache(4);
-
-    int batch_calls{0};
-    evoDB.SetWriteBatchHookForTesting([&](CDBBatch& batch) {
-        ++batch_calls;
-        if (batch_calls == 1) {
-            return evoDB.WriteBatch(batch, /*fSync=*/true);
-        }
-        return false;
-    });
-
-    BOOST_CHECK(!evoDB.FlushCacheToDisk(/*CHUNK_ITEMS=*/2));
-    BOOST_CHECK_EQUAL(batch_calls, 2);
-
-    auto eraseCache = evoDB.GetEraseCacheCopy();
-    BOOST_CHECK_EQUAL(eraseCache.size(), 2U);
-
-    int value;
-    int keys_on_disk{0};
-    for (const auto key : {1, 2, 3, 4}) {
-        if (eraseCache.count(key) == 1) {
-            BOOST_CHECK(evoDB.Read(key, value));
-            ++keys_on_disk;
-        } else {
-            BOOST_CHECK(!evoDB.Read(key, value));
-        }
-    }
-    BOOST_CHECK_EQUAL(keys_on_disk, 2);
+    BOOST_CHECK_EQUAL(visited.size(), 2U);
+    BOOST_CHECK(visited.count(1) == 1);
+    BOOST_CHECK(visited.count(3) == 1);
+    BOOST_CHECK(visited.count(2) == 0);
 }
 BOOST_AUTO_TEST_SUITE_END()
 

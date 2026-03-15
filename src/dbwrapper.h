@@ -294,8 +294,6 @@ public:
     }
     // SYSCOIN
     std::string GetName() const { return m_name; }
-    void CloseDB();
-    void OpenDB(bool create_new = false);
     void ResetDB();
 };
 

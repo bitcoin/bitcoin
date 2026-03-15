@@ -8,10 +8,8 @@
 #include <dbwrapper.h>
 #include <sync.h>
 #include <uint256.h>
-#include <functional>
 #include <unordered_map>
 #include <unordered_set>
-#include <iterator>
 #include <list>
 #include <utility>
 #include <logging.h>
@@ -24,98 +22,6 @@ class CEvoDB : public CDBWrapper {
     size_t maxCacheSize{0};
     DBParams m_db_params;
     bool bFlushOnNextRead{false};
-    std::function<bool(CDBBatch&)> m_write_batch_hook_for_testing;
-    std::function<void()> m_before_read_lock_hook_for_testing;
-    bool m_read_flush_in_progress{false};
-    std::condition_variable_any m_read_flush_cv;
-
-    struct PendingState {
-        std::list<std::pair<K, V>> writes;
-        std::unordered_set<K, Hasher> erases;
-
-        bool Empty() const
-        {
-            return writes.empty() && erases.empty();
-        }
-    };
-
-    void RunBeforeReadLockHookForTesting()
-    {
-        std::function<void()> hook;
-        {
-            LOCK(cs);
-            hook = m_before_read_lock_hook_for_testing;
-        }
-
-        if (hook) {
-            hook();
-        }
-    }
-
-    PendingState ExtractPendingState()
-    {
-        LOCK(cs);
-        PendingState pending;
-        pending.writes = std::move(fifoList);
-        pending.erases = std::move(setEraseCache);
-        mapCache.clear();
-        fifoList.clear();
-        setEraseCache.clear();
-        return pending;
-    }
-
-    void RebuildMapCache()
-    {
-        mapCache.clear();
-        for (auto it = fifoList.begin(); it != fifoList.end(); ++it) {
-            mapCache[it->first] = it;
-        }
-    }
-
-    void RestorePendingState(PendingState&& pending)
-    {
-        LOCK(cs);
-        if (pending.Empty()) {
-            return;
-        }
-
-        std::list<std::pair<K, V>> restored_writes;
-        for (auto& entry : pending.writes) {
-            if (mapCache.find(entry.first) != mapCache.end() || setEraseCache.find(entry.first) != setEraseCache.end()) {
-                continue;
-            }
-            restored_writes.emplace_back(std::move(entry));
-        }
-
-        if (!restored_writes.empty()) {
-            restored_writes.splice(restored_writes.end(), fifoList);
-            fifoList.swap(restored_writes);
-            RebuildMapCache();
-        }
-
-        for (const auto& key : pending.erases) {
-            if (mapCache.find(key) == mapCache.end()) {
-                setEraseCache.insert(key);
-            }
-        }
-        if (!pending.erases.empty()) {
-            bFlushOnNextRead = true;
-        }
-    }
-
-    bool SubmitBatch(CDBBatch& batch)
-    {
-        std::function<bool(CDBBatch&)> hook;
-        {
-            LOCK(cs);
-            hook = m_write_batch_hook_for_testing;
-        }
-
-        if (hook) {
-            return hook(batch);
-        }
-        return WriteBatch(batch, /*sync=*/true);
-    }
 public:
     mutable RecursiveMutex cs;
     using CDBWrapper::CDBWrapper;
@@ -131,83 +37,44 @@ public:
     DBParams GetDBParams() const {
         return m_db_params;
     }
-    bool SubmitBatchForTesting(CDBBatch& batch)
-    {
-        return SubmitBatch(batch);
-    }
-    void SetWriteBatchHookForTesting(std::function<bool(CDBBatch&)> hook)
-    {
+    bool ReadCache(const K& key, V& value) {
         LOCK(cs);
-        m_write_batch_hook_for_testing = std::move(hook);
-    }
-    void SetBeforeReadLockHookForTesting(std::function<void()> hook)
-    {
-        LOCK(cs);
-        m_before_read_lock_hook_for_testing = std::move(hook);
+        if(bFlushOnNextRead) {
+            bFlushOnNextRead = false;
+            LogPrint(BCLog::SYS, "Evodb::ReadCache flushing cache before read\n");
+            FlushCacheToDisk();
+        }
+        auto it = mapCache.find(key);
+        if (it != mapCache.end()) {
+            value = it->second->second;
+            return true;
+        }
+        return Read(key, value);
     }
     template <typename Callback>
-    decltype(auto) WithConsistentView(Callback&& cb) {
-        while (true) {
-            std::unique_lock<RecursiveMutex> lock(cs);
-            while (m_read_flush_in_progress) {
-                m_read_flush_cv.wait(lock);
-            }
-            if (bFlushOnNextRead) {
-                bFlushOnNextRead = false;
-                m_read_flush_in_progress = true;
-                lock.unlock();
-                LogPrint(BCLog::SYS, "Evodb::ReadCache flushing cache before read\n");
-                const bool flush_ok = FlushCacheToDisk();
-                lock.lock();
-                m_read_flush_in_progress = false;
-                lock.unlock();
-                m_read_flush_cv.notify_all();
-                if (flush_ok) {
-                    continue;
-                }
-                lock.lock();
-            }
-            return cb(mapCache, setEraseCache, maxCacheSize);
+    void ForEachCachedEntry(Callback&& cb) {
+        LOCK(cs);
+        if(bFlushOnNextRead) {
+            bFlushOnNextRead = false;
+            LogPrint(BCLog::SYS, "Evodb::ReadCache flushing cache before read\n");
+            FlushCacheToDisk();
         }
-    }
-    bool ReadCache(const K& key, V& value) {
-        while (true) {
-            RunBeforeReadLockHookForTesting();
-            std::unique_lock<RecursiveMutex> lock(cs);
-            while (m_read_flush_in_progress) {
-                m_read_flush_cv.wait(lock);
-            }
-            if (bFlushOnNextRead) {
-                bFlushOnNextRead = false;
-                m_read_flush_in_progress = true;
-                lock.unlock();
-                LogPrint(BCLog::SYS, "Evodb::ReadCache flushing cache before read\n");
-                const bool flush_ok = FlushCacheToDisk();
-                lock.lock();
-                m_read_flush_in_progress = false;
-                lock.unlock();
-                m_read_flush_cv.notify_all();
-                if (flush_ok) {
-                    continue;
-                }
-                lock.lock();
-            }
-            if (setEraseCache.find(key) != setEraseCache.end()) {
-                return false;
-            }
-            auto it = mapCache.find(key);
-            if (it != mapCache.end()) {
-                value = it->second->second;
-                return true;
-            }
-            lock.unlock();
-            return Read(key, value);
+        for (const auto& [key, it] : mapCache) {
+            cb(key, it->second);
         }
     }
 
     std::unordered_set<K, Hasher> GetEraseCacheCopy() const {
         LOCK(cs);
         return setEraseCache;
+    }
+
+    template <typename Callback>
+    void ForEachEraseEntry(Callback&& cb) const {
+        LOCK(cs);
+        for (const auto& key : setEraseCache) {
+            cb(key);
+        }
     }
 
     void RestoreCaches(const std::unordered_map<K, V, Hasher>& mapCacheCopy, const std::unordered_set<K, Hasher>& eraseCacheCopy) {
@@ -263,36 +130,13 @@ public:
     }
 
     bool ExistsCache(const K& key) {
-        while (true) {
-            RunBeforeReadLockHookForTesting();
-            std::unique_lock<RecursiveMutex> lock(cs);
-            while (m_read_flush_in_progress) {
-                m_read_flush_cv.wait(lock);
-            }
-            if (bFlushOnNextRead) {
-                bFlushOnNextRead = false;
-                m_read_flush_in_progress = true;
-                lock.unlock();
-                LogPrint(BCLog::SYS, "Evodb::ReadCache flushing cache before read\n");
-                const bool flush_ok = FlushCacheToDisk();
-                lock.lock();
-                m_read_flush_in_progress = false;
-                lock.unlock();
-                m_read_flush_cv.notify_all();
-                if (flush_ok) {
-                    continue;
-                }
-                lock.lock();
-            }
-            if (setEraseCache.find(key) != setEraseCache.end()) {
-                return false;
-            }
-            if (mapCache.find(key) != mapCache.end()) {
-                return true;
-            }
-            lock.unlock();
-            return Exists(key);
+        LOCK(cs);
+        if(bFlushOnNextRead) {
+            bFlushOnNextRead = false;
+            LogPrint(BCLog::SYS, "Evodb::ReadCache flushing cache before read\n");
+            FlushCacheToDisk();
         }
+        return (mapCache.find(key) != mapCache.end() || Exists(key));
     }
 
     void EraseCache(const K& key) {
@@ -308,71 +152,46 @@ public:
 
     bool FlushCacheToDisk(std::size_t CHUNK_ITEMS = 256)
     {
-        PendingState pending{ExtractPendingState()};
-        if (pending.Empty()) return true;
+        LOCK(cs);
+        if (mapCache.empty() && setEraseCache.empty()) return true;
 
         CDBBatch batch(*this);
         std::size_t items = 0;
         std::size_t count = 0;
         auto flush = [&]() {
             if (batch.SizeEstimate() == 0) return true;
-            if (!SubmitBatch(batch)) return false;
+            if (!WriteBatch(batch, /*sync=*/true)) return false;
             batch.Clear();
             items = 0;
             return true;
         };
 
-        auto write_it = pending.writes.begin();
-        while (write_it != pending.writes.end()) {
-            batch.Write(write_it->first, write_it->second);
+        while (!fifoList.empty()) {
+            batch.Write(fifoList.front().first, fifoList.front().second);
             ++items;
             count++;
-            ++write_it;
-            if (items == CHUNK_ITEMS) {
-                auto committed_end = write_it;
-                auto failing_begin = committed_end;
-                std::advance(failing_begin, -static_cast<long>(items));
-                if (!flush()) {
-                    pending.writes.erase(pending.writes.begin(), failing_begin);
-                    RestorePendingState(std::move(pending));
-                    return false;
-                }
-                pending.writes.erase(pending.writes.begin(), committed_end);
+            if (items == CHUNK_ITEMS || fifoList.size() == 1) {
+                if (!flush()) return false;
             }
         }
-        if (!flush()) {
-            RestorePendingState(std::move(pending));
-            return false;
-        }
-        pending.writes.clear();
 
         items = 0;
-        auto chunk_begin = pending.erases.begin();
-        for (auto it = pending.erases.begin(); it != pending.erases.end(); ) {
-            if (items == 0) {
-                chunk_begin = it;
-            }
+        for (auto it = setEraseCache.begin(); it != setEraseCache.end(); ) {
             batch.Erase(*it);
             ++items;
             count++;
             if (items == CHUNK_ITEMS) {
-                auto committed_end = std::next(it);
-                if (!flush()) {
-                    pending.erases.erase(pending.erases.begin(), chunk_begin);
-                    RestorePendingState(std::move(pending));
-                    return false;
-                }
-                it = pending.erases.erase(pending.erases.begin(), committed_end);
+                if (!flush()) return false;
+                it = setEraseCache.erase(setEraseCache.begin(), ++it);
                 items = 0;
             } else {
                 ++it;
             }
+            mapCache.erase(fifoList.front().first);
+            fifoList.pop_front();
         }
-        if (!flush()) {
-            RestorePendingState(std::move(pending));
-            return false;
-        }
-        pending.erases.clear();
+        if (!flush()) return false;
+        setEraseCache.clear();
 
         LogPrint(BCLog::SYS,
                 "Flushed %zu items to cache (%s) in %zu-item chunks (sync_each=1)\n",
