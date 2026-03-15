@@ -15,6 +15,7 @@
 #include <cstdint>
 #include <memory>
 #include <set>
+#include <span>
 
 namespace node {
 /**
@@ -51,6 +52,86 @@ struct TxRelay {
 
     /** Minimum fee rate with which to filter transaction announcements to this node. See BIP133. */
     std::atomic<CAmount> m_fee_filter_received{0};
+
+    bool GetRelayTxs() const EXCLUSIVE_LOCKS_REQUIRED(!m_bloom_filter_mutex)
+    {
+        return WITH_LOCK(m_bloom_filter_mutex, return m_relay_txs);
+    }
+
+    void SetRelayTxs(bool relay_txs) EXCLUSIVE_LOCKS_REQUIRED(!m_bloom_filter_mutex)
+    {
+        LOCK(m_bloom_filter_mutex);
+        m_relay_txs = relay_txs;
+    }
+
+    void AddKnownTx(const uint256& hash) EXCLUSIVE_LOCKS_REQUIRED(!m_tx_inventory_mutex)
+    {
+        LOCK(m_tx_inventory_mutex);
+        m_tx_inventory_known_filter.insert(hash);
+    }
+
+    uint64_t GetLastInvSequence() const EXCLUSIVE_LOCKS_REQUIRED(!m_tx_inventory_mutex)
+    {
+        return WITH_LOCK(m_tx_inventory_mutex, return m_last_inv_sequence);
+    }
+
+    void SetSendMempool() EXCLUSIVE_LOCKS_REQUIRED(!m_tx_inventory_mutex)
+    {
+        LOCK(m_tx_inventory_mutex);
+        m_send_mempool = true;
+    }
+
+    void SetBloomFilter(CBloomFilter filter) EXCLUSIVE_LOCKS_REQUIRED(!m_bloom_filter_mutex)
+    {
+        LOCK(m_bloom_filter_mutex);
+        m_bloom_filter = std::make_unique<CBloomFilter>(std::move(filter));
+        m_relay_txs = true;
+    }
+
+    /** Returns false if no bloom filter is set. */
+    bool AddToBloomFilter(std::span<const unsigned char> data) EXCLUSIVE_LOCKS_REQUIRED(!m_bloom_filter_mutex)
+    {
+        LOCK(m_bloom_filter_mutex);
+        if (!m_bloom_filter) return false;
+        m_bloom_filter->insert(data);
+        return true;
+    }
+
+    void ClearBloomFilter() EXCLUSIVE_LOCKS_REQUIRED(!m_bloom_filter_mutex)
+    {
+        LOCK(m_bloom_filter_mutex);
+        m_bloom_filter = nullptr;
+        m_relay_txs = true;
+    }
+
+    struct InventoryStats {
+        uint64_t m_last_inv_seq;
+        size_t m_inv_to_send;
+    };
+
+    InventoryStats GetInventoryStats() const EXCLUSIVE_LOCKS_REQUIRED(!m_tx_inventory_mutex)
+    {
+        LOCK(m_tx_inventory_mutex);
+        return {m_last_inv_sequence, m_tx_inventory_to_send.size()};
+    }
+
+    /** Queue a transaction for relay if the version handshake is complete
+     *  and the peer doesn't already know about it. */
+    void PushInventory(const uint256& hash, const Wtxid& wtxid) EXCLUSIVE_LOCKS_REQUIRED(!m_tx_inventory_mutex)
+    {
+        LOCK(m_tx_inventory_mutex);
+        if (m_next_inv_send_time == 0s) return;
+        if (!m_tx_inventory_known_filter.contains(hash)) {
+            m_tx_inventory_to_send.insert(wtxid);
+        }
+    }
+
+    /** Returns true if the inventory is empty and no send has been scheduled. */
+    bool VerifyInventoryPristine() const EXCLUSIVE_LOCKS_REQUIRED(!m_tx_inventory_mutex)
+    {
+        LOCK(m_tx_inventory_mutex);
+        return m_tx_inventory_to_send.empty() && m_next_inv_send_time == 0s;
+    }
 };
 } // namespace node
 
