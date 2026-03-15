@@ -65,8 +65,7 @@ private:
    */
   const CBlock* getCurrentBlock (ChainstateManager &chainman, const CTxMemPool& mempool,
                                  const CScript& scriptPubKey, uint256& target,
-                                 const std::optional<uint256>& btcPrevHash = std::nullopt,
-                                 bool btcpRequired = false) EXCLUSIVE_LOCKS_REQUIRED(cs);
+                                 const std::optional<uint256>& btcPrevHash = std::nullopt) EXCLUSIVE_LOCKS_REQUIRED(cs);
 
   /**
    * Looks up a previously constructed block by its (hex-encoded) hash.  If the

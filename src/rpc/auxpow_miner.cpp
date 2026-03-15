@@ -131,13 +131,16 @@ void InjectBTCPREVCommitment(CBlock& block, const uint256& btcPrevHash)
 const CBlock*
 AuxpowMiner::getCurrentBlock (ChainstateManager &chainman, const CTxMemPool& mempool,
                               const CScript& scriptPubKey, uint256& target,
-                              const std::optional<uint256>& btcPrevHash, bool btcpRequired)
+                              const std::optional<uint256>& btcPrevHash)
 {
   AssertLockHeld(cs);
   const CBlock* pblockCur = nullptr;
 
   {
     LOCK (cs_main);
+    const int nextHeight = chainman.ActiveChain().Height() + 1;
+    const int start = Params().GetConsensus().nCLReceiptStartBlock;
+    const bool btcpRequired = nextHeight >= start && (nextHeight % BTCCHECK_PERIOD) == BTCCHECK_SIGN_OFFSET;
     CScriptID scriptID (scriptPubKey);
     auto iter = curBlocks.find(scriptID);
     if (iter != curBlocks.end())
@@ -260,7 +263,6 @@ AuxpowMiner::createAuxBlock (const node::JSONRPCRequest& request,
   auxMiningCheck (request);
   // SYSCOIN
   const node::NodeContext& node = request.nodeContext? *request.nodeContext: EnsureAnyNodeContext(request.context);
-  const CBlockIndex* pindexTip = WITH_LOCK(::cs_main, return node.chainman->ActiveChain().Tip(););
   LOCK (cs);
   // SYSCOIN
   std::optional<uint256> btcPrevHash;
@@ -275,18 +277,15 @@ AuxpowMiner::createAuxBlock (const node::JSONRPCRequest& request,
           btcPrevHash = ParseHashV(request.params[0], "btcprevhash");
       }
   }
-  const int nextHeight = pindexTip ? (pindexTip->nHeight + 1) : 0;
-  const int start = Params().GetConsensus().nCLReceiptStartBlock;
-  const bool btcpRequired = nextHeight >= start && (nextHeight % BTCCHECK_PERIOD) == BTCCHECK_SIGN_OFFSET;
-
   const auto& mempool = EnsureAnyMemPool (request.nodeContext? request.nodeContext: request.context);
   uint256 target;
-  const CBlock* pblock = getCurrentBlock (*node.chainman, mempool, scriptPubKey, target, btcPrevHash, btcpRequired);
+  const CBlock* pblock = getCurrentBlock (*node.chainman, mempool, scriptPubKey, target, btcPrevHash);
 
   // SYSCOIN
-  int nActiveHeight = pindexTip->nHeight - 5;
+  CHECK_NONFATAL(pindexPrev != nullptr);
+  int nActiveHeight = pindexPrev->nHeight - 5;
   nActiveHeight -= nActiveHeight % 10;
-  const CBlockIndex* refIndex = pindexTip->GetAncestor(nActiveHeight);
+  const CBlockIndex* refIndex = pindexPrev->GetAncestor(nActiveHeight);
 
   UniValue result(UniValue::VOBJ);
   result.pushKV ("hash", pblock->GetHash ().GetHex ());
