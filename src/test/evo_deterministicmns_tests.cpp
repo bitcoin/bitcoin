@@ -21,6 +21,9 @@
 #include <boost/test/unit_test.hpp>
 #include <test/util/txmempool.h>
 #include <interfaces/chain.h>
+
+#include <chrono>
+#include <future>
 using SimpleUTXOVec = std::vector<std::pair<COutPoint, std::pair<int, CAmount>> >;
 
 static SimpleUTXOVec BuildSimpleUTXOVec(const std::vector<CTransactionRef>& txs)
@@ -839,6 +842,57 @@ BOOST_AUTO_TEST_CASE(forced_flush_rewrite_exception_preserves_existing_snapshots
     BOOST_CHECK_EQUAL(snapshot.GetHeight(), 1);
     BOOST_CHECK(manager.m_evoDb->Read(MakeSnapshotKey(cache_limit), snapshot));
     BOOST_CHECK_EQUAL(snapshot.GetHeight(), cache_limit);
+}
+
+BOOST_AUTO_TEST_CASE(forced_flush_does_not_deadlock_with_read_triggered_flush)
+{
+    auto db_params = DBParams{
+        .path = "",
+        .cache_bytes = static_cast<size_t>(1 << 20),
+        .memory_only = true,
+        .wipe_data = true,
+    };
+    CDeterministicMNManager manager(db_params);
+
+    manager.m_evoDb->WriteCache(MakeSnapshotKey(1), MakeSnapshot(1));
+    BOOST_REQUIRE(manager.m_evoDb->FlushCacheToDisk());
+    manager.m_evoDb->EraseCache(MakeSnapshotKey(1));
+
+    std::promise<void> flush_started;
+    std::promise<void> release_flush;
+    std::shared_future<void> allow_flush{release_flush.get_future().share()};
+    bool started{false};
+
+    manager.m_evoDb->SetWriteBatchHookForTesting([&](CDBBatch& batch) {
+        if (!started) {
+            started = true;
+            flush_started.set_value();
+        }
+        allow_flush.wait();
+        return manager.m_evoDb->WriteBatch(batch, /*fSync=*/true);
+    });
+
+    auto reader = std::async(std::launch::async, [&]() {
+        CDeterministicMNList snapshot;
+        return manager.m_evoDb->ReadCache(MakeSnapshotKey(1), snapshot);
+    });
+
+    flush_started.get_future().wait();
+
+    auto maintenance = std::async(std::launch::async, [&]() {
+        return manager.FlushCacheToDisk(/*bForceFlush=*/true);
+    });
+
+    BOOST_CHECK(maintenance.wait_for(std::chrono::milliseconds(100)) == std::future_status::timeout);
+
+    release_flush.set_value();
+
+    BOOST_CHECK(!reader.get());
+    BOOST_CHECK(maintenance.get());
+
+    CDeterministicMNList snapshot;
+    BOOST_CHECK(!manager.m_evoDb->Read(MakeSnapshotKey(1), snapshot));
+    manager.m_evoDb->SetWriteBatchHookForTesting({});
 }
 
 BOOST_AUTO_TEST_SUITE_END()

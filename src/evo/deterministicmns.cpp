@@ -1252,24 +1252,40 @@ bool CDeterministicMNManager::IsDIP3Enforced(int nHeight)
 }
 
 bool CDeterministicMNManager::DoMaintenance(bool bForceFlush) {
-    LOCK(m_evoDb->cs);
-    if (m_evoDb->IsCacheFull()) {
-        m_evoDb->ResetDB();
-        bForceFlush = true;
-        LogPrint(BCLog::SYS, "CDeterministicMNManager::DoMaintenance Database successfully wiped and recreated.\n");
-    } else if (bForceFlush) {
-        const size_t cache_entry_count{m_evoDb->GetReadWriteCacheSize()};
-        const size_t erase_entry_count{m_evoDb->GetEraseCacheSize()};
+    bool cache_full{false};
+    size_t cache_entry_count{0};
+    size_t erase_entry_count{0};
+    EvoEraseSet skipped_persisted;
+    std::vector<EvoSnapshotEntry> cached_snapshots;
 
-        EvoEraseSet skipped_persisted;
+    m_evoDb->WithConsistentView([&](const auto& map_cache, const auto& erase_cache, size_t max_cache_size) {
+        cache_entry_count = map_cache.size();
+        erase_entry_count = erase_cache.size();
+        cache_full = max_cache_size > 0 && (cache_entry_count + erase_entry_count) >= max_cache_size;
+
+        if (!cache_full && !bForceFlush) {
+            return;
+        }
+
         skipped_persisted.reserve(cache_entry_count + erase_entry_count);
-        m_evoDb->ForEachEraseEntry([&](const uint256& key) {
-            skipped_persisted.insert(key);
-        });
-        m_evoDb->ForEachCachedEntry([&](const uint256& key, const CDeterministicMNList&) {
-            skipped_persisted.insert(key);
-        });
+        cached_snapshots.reserve(cache_entry_count);
 
+        for (const auto& key : erase_cache) {
+            skipped_persisted.insert(key);
+        }
+        for (const auto& [key, it] : map_cache) {
+            skipped_persisted.insert(key);
+            cached_snapshots.emplace_back(key, it->second);
+        }
+    });
+
+    if (cache_full) {
+        if (!RewriteSnapshotWindow(*m_evoDb, cached_snapshots)) {
+            return false;
+        }
+        LogPrint(BCLog::SYS, "CDeterministicMNManager::DoMaintenance Database successfully wiped and recreated.\n");
+        return true;
+    } else if (bForceFlush) {
         std::vector<EvoSnapshotEntry> live_snapshots;
         live_snapshots.reserve(LIST_CACHE_SIZE);
 
@@ -1277,9 +1293,9 @@ bool CDeterministicMNManager::DoMaintenance(bool bForceFlush) {
         if (!CollectNewestPersistedSnapshots(*m_evoDb, skipped_persisted, live_snapshots, total_live_snapshots)) {
             return false;
         }
-        m_evoDb->ForEachCachedEntry([&](const uint256& key, const CDeterministicMNList& snapshot) {
-            RetainNewestSnapshot(live_snapshots, total_live_snapshots, std::make_pair(key, snapshot));
-        });
+        for (const auto& cached_snapshot : cached_snapshots) {
+            RetainNewestSnapshot(live_snapshots, total_live_snapshots, cached_snapshot);
+        }
 
         if (total_live_snapshots > LIST_CACHE_SIZE) {
             std::sort(live_snapshots.begin(), live_snapshots.end(), SnapshotEntryLess);
@@ -1294,7 +1310,7 @@ bool CDeterministicMNManager::DoMaintenance(bool bForceFlush) {
             return true;
         }
     }
-    if(bForceFlush) {
+    if (bForceFlush) {
         if(!m_evoDb->FlushCacheToDisk()) {
             return false;
         }

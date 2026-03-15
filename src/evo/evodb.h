@@ -145,6 +145,31 @@ public:
         LOCK(cs);
         m_before_read_lock_hook_for_testing = std::move(hook);
     }
+    template <typename Callback>
+    decltype(auto) WithConsistentView(Callback&& cb) {
+        while (true) {
+            std::unique_lock<RecursiveMutex> lock(cs);
+            while (m_read_flush_in_progress) {
+                m_read_flush_cv.wait(lock);
+            }
+            if (bFlushOnNextRead) {
+                bFlushOnNextRead = false;
+                m_read_flush_in_progress = true;
+                lock.unlock();
+                LogPrint(BCLog::SYS, "Evodb::ReadCache flushing cache before read\n");
+                const bool flush_ok = FlushCacheToDisk();
+                lock.lock();
+                m_read_flush_in_progress = false;
+                lock.unlock();
+                m_read_flush_cv.notify_all();
+                if (flush_ok) {
+                    continue;
+                }
+                lock.lock();
+            }
+            return cb(mapCache, setEraseCache, maxCacheSize);
+        }
+    }
     bool ReadCache(const K& key, V& value) {
         while (true) {
             RunBeforeReadLockHookForTesting();
@@ -179,47 +204,10 @@ public:
             return Read(key, value);
         }
     }
-    template <typename Callback>
-    void ForEachCachedEntry(Callback&& cb) {
-        while (true) {
-            RunBeforeReadLockHookForTesting();
-            std::unique_lock<RecursiveMutex> lock(cs);
-            while (m_read_flush_in_progress) {
-                m_read_flush_cv.wait(lock);
-            }
-            if (bFlushOnNextRead) {
-                bFlushOnNextRead = false;
-                m_read_flush_in_progress = true;
-                lock.unlock();
-                LogPrint(BCLog::SYS, "Evodb::ReadCache flushing cache before read\n");
-                const bool flush_ok = FlushCacheToDisk();
-                lock.lock();
-                m_read_flush_in_progress = false;
-                lock.unlock();
-                m_read_flush_cv.notify_all();
-                if (flush_ok) {
-                    continue;
-                }
-                lock.lock();
-            }
-            for (const auto& [key, it] : mapCache) {
-                cb(key, it->second);
-            }
-            return;
-        }
-    }
 
     std::unordered_set<K, Hasher> GetEraseCacheCopy() const {
         LOCK(cs);
         return setEraseCache;
-    }
-
-    template <typename Callback>
-    void ForEachEraseEntry(Callback&& cb) const {
-        LOCK(cs);
-        for (const auto& key : setEraseCache) {
-            cb(key);
-        }
     }
 
     void RestoreCaches(const std::unordered_map<K, V, Hasher>& mapCacheCopy, const std::unordered_set<K, Hasher>& eraseCacheCopy) {
