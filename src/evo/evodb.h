@@ -173,6 +173,8 @@ public:
             if (items == CHUNK_ITEMS || fifoList.size() == 1) {
                 if (!flush()) return false;
             }
+            mapCache.erase(fifoList.front().first);
+            fifoList.pop_front();
         }
 
         items = 0;
@@ -187,8 +189,6 @@ public:
             } else {
                 ++it;
             }
-            mapCache.erase(fifoList.front().first);
-            fifoList.pop_front();
         }
         if (!flush()) return false;
         setEraseCache.clear();
