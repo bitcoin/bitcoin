@@ -932,4 +932,39 @@ BOOST_AUTO_TEST_CASE(stale_rewrite_backup_is_ignored_on_restart)
     BOOST_CHECK_EQUAL(snapshot.GetHeight(), 999);
 }
 
+BOOST_AUTO_TEST_CASE(rewrite_marker_without_backup_is_ignored_on_restart)
+{
+    auto db_params = DBParams{
+        .path = "testdb_dmn_rewrite_marker_only",
+        .cache_bytes = static_cast<size_t>(1 << 20),
+        .memory_only = false,
+        .wipe_data = true,
+    };
+
+    {
+        CDeterministicMNManager manager(db_params);
+        WriteSnapshotRange(manager, 0, 3);
+        BOOST_REQUIRE(manager.FlushCacheToDisk(/*bForceFlush=*/true));
+
+        fs::path marker_path = db_params.path;
+        marker_path += ".rewrite-in-progress";
+        std::error_code ec;
+        fs::remove(marker_path, ec);
+
+        std::ofstream marker_file(fs::PathToString(marker_path));
+        BOOST_REQUIRE(marker_file.good());
+        marker_file.close();
+    }
+
+    DBParams reopen_params = db_params;
+    reopen_params.wipe_data = false;
+    CDeterministicMNManager recovered_manager(reopen_params);
+
+    CDeterministicMNList snapshot;
+    BOOST_CHECK(recovered_manager.m_evoDb->Read(MakeSnapshotKey(0), snapshot));
+    BOOST_CHECK_EQUAL(snapshot.GetHeight(), 0);
+    BOOST_CHECK(recovered_manager.m_evoDb->Read(MakeSnapshotKey(2), snapshot));
+    BOOST_CHECK_EQUAL(snapshot.GetHeight(), 2);
+}
+
 BOOST_AUTO_TEST_SUITE_END()

@@ -215,18 +215,17 @@ bool RewriteSnapshotWindow(
         std::error_code ec;
         fs::remove_all(backup_path, ec);
         RemoveRewriteMarker(marker_path);
+        if (!WriteRewriteMarker(marker_path)) {
+            LogPrint(BCLog::SYS, "CDeterministicMNManager::%s -- Failed to create rewrite marker %s\n",
+                     __func__, fs::PathToString(marker_path));
+            return false;
+        }
 
         evo_db.CloseDB();
         fs::rename(*db_path, backup_path, ec);
         if (ec) {
             LogPrint(BCLog::SYS, "CDeterministicMNManager::%s -- Failed to back up EvoDB for rewrite: %s\n", __func__, ec.message());
-            evo_db.OpenDB(/*create_new=*/false);
-            return false;
-        }
-        if (!WriteRewriteMarker(marker_path)) {
-            LogPrint(BCLog::SYS, "CDeterministicMNManager::%s -- Failed to create rewrite marker %s\n",
-                     __func__, fs::PathToString(marker_path));
-            fs::rename(backup_path, *db_path, ec);
+            RemoveRewriteMarker(marker_path);
             evo_db.OpenDB(/*create_new=*/false);
             return false;
         }
