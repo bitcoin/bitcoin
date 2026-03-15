@@ -16,6 +16,7 @@
 #include <memory>
 #include <set>
 #include <span>
+#include <vector>
 
 namespace node {
 /**
@@ -77,10 +78,16 @@ public:
         return true;
     }
 
+    template <typename Tx>
+    bool IsTxRelevantAndUpdate(const Tx& tx) EXCLUSIVE_LOCKS_REQUIRED(m_bloom_filter_mutex)
+    {
+        return !m_bloom_filter || m_bloom_filter->IsRelevantAndUpdate(tx);
+    }
+
     void AddKnownTx(const uint256& hash) EXCLUSIVE_LOCKS_REQUIRED(!m_tx_inventory_mutex)
     {
         LOCK(m_tx_inventory_mutex);
-        m_tx_inventory_known_filter.insert(hash);
+        TxInventoryKnownInsert(hash);
     }
 
     Mutex& GetTxInventoryMutex() const LOCK_RETURNED(m_tx_inventory_mutex) { return m_tx_inventory_mutex; }
@@ -90,10 +97,42 @@ public:
         return WITH_LOCK(m_tx_inventory_mutex, return m_last_inv_sequence);
     }
 
+    void SetLastInvSequence(uint64_t sequence) EXCLUSIVE_LOCKS_REQUIRED(m_tx_inventory_mutex)
+    {
+        m_last_inv_sequence = sequence;
+    }
+
+    bool IsInvSendTimeReached(std::chrono::microseconds current_time) const EXCLUSIVE_LOCKS_REQUIRED(m_tx_inventory_mutex)
+    {
+        return m_next_inv_send_time < current_time;
+    }
+
+    void SetNextInvSendTime(std::chrono::microseconds next_time) EXCLUSIVE_LOCKS_REQUIRED(m_tx_inventory_mutex)
+    {
+        m_next_inv_send_time = next_time;
+    }
+
     void SetSendMempool() EXCLUSIVE_LOCKS_REQUIRED(!m_tx_inventory_mutex)
     {
         LOCK(m_tx_inventory_mutex);
         m_send_mempool = true;
+    }
+
+    bool ConsumeSendMempool() EXCLUSIVE_LOCKS_REQUIRED(m_tx_inventory_mutex)
+    {
+        if (!m_send_mempool) return false;
+        m_send_mempool = false;
+        return true;
+    }
+
+    CAmount GetFeeFilterReceived() const
+    {
+        return m_fee_filter_received.load();
+    }
+
+    void SetFeeFilterReceived(CAmount fee_filter_received)
+    {
+        m_fee_filter_received = fee_filter_received;
     }
 
     void SetBloomFilter(CBloomFilter filter) EXCLUSIVE_LOCKS_REQUIRED(!m_bloom_filter_mutex)
@@ -128,6 +167,48 @@ public:
     {
         LOCK(m_tx_inventory_mutex);
         return {m_last_inv_sequence, m_tx_inventory_to_send.size()};
+    }
+
+    void ClearTxInventoryToSendIfNoRelayTxs() EXCLUSIVE_LOCKS_REQUIRED(m_tx_inventory_mutex, m_bloom_filter_mutex)
+    {
+        if (!m_relay_txs) m_tx_inventory_to_send.clear();
+    }
+
+    using TxInventoryIterator = std::set<Wtxid>::iterator;
+
+    std::vector<TxInventoryIterator> GetTxInventoryToSendIterators() EXCLUSIVE_LOCKS_REQUIRED(m_tx_inventory_mutex)
+    {
+        std::vector<TxInventoryIterator> iters;
+        iters.reserve(m_tx_inventory_to_send.size());
+        for (TxInventoryIterator it = m_tx_inventory_to_send.begin(); it != m_tx_inventory_to_send.end(); ++it) {
+            iters.push_back(it);
+        }
+        return iters;
+    }
+
+    size_t TxInventoryToSendSize() const EXCLUSIVE_LOCKS_REQUIRED(m_tx_inventory_mutex)
+    {
+        return m_tx_inventory_to_send.size();
+    }
+
+    void TxInventoryToSendErase(const Wtxid& wtxid) EXCLUSIVE_LOCKS_REQUIRED(m_tx_inventory_mutex)
+    {
+        m_tx_inventory_to_send.erase(wtxid);
+    }
+
+    void TxInventoryToSendErase(TxInventoryIterator it) EXCLUSIVE_LOCKS_REQUIRED(m_tx_inventory_mutex)
+    {
+        m_tx_inventory_to_send.erase(it);
+    }
+
+    bool TxInventoryKnownContains(const uint256& hash) const EXCLUSIVE_LOCKS_REQUIRED(m_tx_inventory_mutex)
+    {
+        return m_tx_inventory_known_filter.contains(hash);
+    }
+
+    void TxInventoryKnownInsert(const uint256& hash) EXCLUSIVE_LOCKS_REQUIRED(m_tx_inventory_mutex)
+    {
+        m_tx_inventory_known_filter.insert(hash);
     }
 
     /** Queue a transaction for relay if the version handshake is complete
