@@ -47,10 +47,44 @@ fs::path RewriteMarkerPath(const fs::path& db_path)
     return marker_path;
 }
 
-bool WriteRewriteMarker(const fs::path& marker_path)
+enum class RewriteMarkerState {
+    NONE,
+    PREPARED,
+    COMPLETE,
+    UNKNOWN,
+};
+
+bool WriteRewriteMarker(const fs::path& marker_path, const char* state)
 {
     std::ofstream marker_file(fs::PathToString(marker_path));
+    if (!marker_file.good()) {
+        return false;
+    }
+    marker_file << state;
+    marker_file.flush();
     return marker_file.good();
+}
+
+RewriteMarkerState ReadRewriteMarkerState(const fs::path& marker_path)
+{
+    if (!fs::exists(marker_path)) {
+        return RewriteMarkerState::NONE;
+    }
+
+    std::ifstream marker_file(fs::PathToString(marker_path));
+    if (!marker_file.good()) {
+        return RewriteMarkerState::UNKNOWN;
+    }
+
+    std::string state;
+    marker_file >> state;
+    if (state == "prepared") {
+        return RewriteMarkerState::PREPARED;
+    }
+    if (state == "complete") {
+        return RewriteMarkerState::COMPLETE;
+    }
+    return RewriteMarkerState::UNKNOWN;
 }
 
 void RemoveRewriteMarker(const fs::path& marker_path)
@@ -68,22 +102,38 @@ void RecoverRewriteBackupIfPresent(const DBParams& db_params)
     const fs::path backup_path{RewriteBackupPath(db_params.path)};
     const fs::path marker_path{RewriteMarkerPath(db_params.path)};
     const bool has_backup{fs::exists(backup_path)};
-    const bool has_marker{fs::exists(marker_path)};
+    const RewriteMarkerState marker_state{ReadRewriteMarkerState(marker_path)};
+    const bool has_marker{marker_state != RewriteMarkerState::NONE};
 
     if (has_backup && has_marker) {
-        std::error_code ec;
-        fs::remove_all(db_params.path, ec);
-        ec.clear();
-        fs::rename(backup_path, db_params.path, ec);
-        if (ec) {
-            LogPrint(BCLog::SYS,
-                     "CDeterministicMNManager::%s -- Failed to recover EvoDB rewrite backup %s -> %s: %s\n",
-                     __func__, fs::PathToString(backup_path), fs::PathToString(db_params.path), ec.message());
+        if (marker_state == RewriteMarkerState::COMPLETE && fs::exists(db_params.path)) {
+            std::error_code ec;
+            fs::remove_all(backup_path, ec);
+            if (ec) {
+                LogPrint(BCLog::SYS,
+                         "CDeterministicMNManager::%s -- Failed to remove completed EvoDB rewrite backup %s: %s\n",
+                         __func__, fs::PathToString(backup_path), ec.message());
+            } else {
+                LogPrint(BCLog::SYS,
+                         "CDeterministicMNManager::%s -- Kept completed EvoDB rewrite at %s and removed stale backup %s\n",
+                         __func__, fs::PathToString(db_params.path), fs::PathToString(backup_path));
+                RemoveRewriteMarker(marker_path);
+            }
         } else {
-            LogPrint(BCLog::SYS,
-                     "CDeterministicMNManager::%s -- Recovered EvoDB rewrite backup %s -> %s\n",
-                     __func__, fs::PathToString(backup_path), fs::PathToString(db_params.path));
-            RemoveRewriteMarker(marker_path);
+            std::error_code ec;
+            fs::remove_all(db_params.path, ec);
+            ec.clear();
+            fs::rename(backup_path, db_params.path, ec);
+            if (ec) {
+                LogPrint(BCLog::SYS,
+                         "CDeterministicMNManager::%s -- Failed to recover EvoDB rewrite backup %s -> %s: %s\n",
+                         __func__, fs::PathToString(backup_path), fs::PathToString(db_params.path), ec.message());
+            } else {
+                LogPrint(BCLog::SYS,
+                         "CDeterministicMNManager::%s -- Recovered EvoDB rewrite backup %s -> %s\n",
+                         __func__, fs::PathToString(backup_path), fs::PathToString(db_params.path));
+                RemoveRewriteMarker(marker_path);
+            }
         }
         return;
     }
@@ -221,7 +271,7 @@ bool RewriteSnapshotWindow(
         std::error_code ec;
         fs::remove_all(backup_path, ec);
         RemoveRewriteMarker(marker_path);
-        if (!WriteRewriteMarker(marker_path)) {
+        if (!WriteRewriteMarker(marker_path, "prepared")) {
             LogPrint(BCLog::SYS, "CDeterministicMNManager::%s -- Failed to create rewrite marker %s\n",
                      __func__, fs::PathToString(marker_path));
             return false;
@@ -308,6 +358,9 @@ bool RewriteSnapshotWindow(
 
         if (batch.SizeEstimate() != 0 && !evo_db.SubmitBatchForTesting(batch)) {
             return restore_after_failure("Failed to write final compacted EvoDB batch");
+        }
+        if (db_path && !WriteRewriteMarker(marker_path, "complete")) {
+            return restore_after_failure("Failed to update rewrite marker to complete");
         }
     } catch (const std::exception& e) {
         return restore_after_failure("Exception while rewriting compacted EvoDB", e.what());
