@@ -228,6 +228,7 @@ std::string CInv::GetCommand() const
     case MSG_QUORUM_PREMATURE_COMMITMENT:   return cmd.append(NetMsgType::QPCOMMITMENT);
     case MSG_QUORUM_RECOVERED_SIG:          return cmd.append(NetMsgType::QSIGREC);
     case MSG_CLSIG:                         return cmd.append(NetMsgType::CLSIG);
+    case MSG_BTCCSIG:                       return cmd.append(NetMsgType::BTCCSIG);
 
 
     default:
