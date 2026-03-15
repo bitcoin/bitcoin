@@ -285,7 +285,7 @@ static RPCHelpMan getauxblock()
     [&](const RPCHelpMan& self, const node::JSONRPCRequest& request) -> UniValue
 {
     /* RPCHelpMan::Check is not applicable here since we have the
-       custom check for exactly zero or two arguments.  */
+       custom branching for create (0/1 args) and submit (2/3 args).  */
     std::shared_ptr<CWallet> const wallet = GetWalletForJSONRPCRequest(request);
     if (!wallet) return NullUniValue;
     CWallet* const pwallet = wallet.get();
@@ -303,11 +303,15 @@ static RPCHelpMan getauxblock()
     }
 
     /* Submit a block instead.  */
-    assert(request.params.size() == 2);
-    const std::string& hash = request.params[0].get_str();
+    if (request.params.size() != 2 && request.params.size() != 3) {
+        throw JSONRPCError(RPC_INVALID_PARAMETER, "getauxblock expects 0, 1, 2, or 3 arguments");
+    }
+    const size_t hash_index = request.params.size() == 3 ? 1 : 0;
+    const size_t auxpow_index = request.params.size() == 3 ? 2 : 1;
+    const std::string& hash = request.params[hash_index].get_str();
 
     const bool fAccepted
-        = AuxpowMiner::get().submitAuxBlock(request, hash, request.params[1].get_str());
+        = AuxpowMiner::get().submitAuxBlock(request, hash, request.params[auxpow_index].get_str());
     if (fAccepted)
         g_mining_keys.MarkBlockSubmitted(pwallet, hash);
 
