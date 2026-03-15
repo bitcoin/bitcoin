@@ -83,8 +83,8 @@ void RecoverRewriteBackupIfPresent(const DBParams& db_params)
             LogPrint(BCLog::SYS,
                      "CDeterministicMNManager::%s -- Recovered EvoDB rewrite backup %s -> %s\n",
                      __func__, fs::PathToString(backup_path), fs::PathToString(db_params.path));
+            RemoveRewriteMarker(marker_path);
         }
-        RemoveRewriteMarker(marker_path);
         return;
     }
 
@@ -248,9 +248,10 @@ bool RewriteSnapshotWindow(
             fs::rename(backup_path, *db_path, ec);
             if (ec) {
                 LogPrint(BCLog::SYS, "CDeterministicMNManager::%s -- Failed to restore backed up EvoDB: %s\n", __func__, ec.message());
+            } else {
+                RemoveRewriteMarker(marker_path);
             }
             evo_db.OpenDB(/*create_new=*/false);
-            RemoveRewriteMarker(marker_path);
         } else {
             evo_db.ResetDB();
             CDBBatch restore_batch(evo_db);
