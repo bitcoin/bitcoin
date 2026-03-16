@@ -205,6 +205,38 @@ class LLMQChainLocksTest(DashTestFramework):
         cl = self.mine_until_new_chainlock(self.nodes[1], node0_mining_addr, sync_nodes=self.nodes[1:])
         self.wait_for_chainlocked_block(self.nodes[1], cl)
         self.wait_for_chainlocked_block(self.nodes[0], cl)
+
+        self.log.info("Isolate node, mine a shallow fork, and verify a within-window chainlock pulls it back")
+        self.isolate_node(self.nodes[0])
+        for i in range(1, len(self.nodes)):
+            for j in range(i + 1, len(self.nodes)):
+                self.connect_nodes(i, j, wait_for_connect=False)
+        node1_mining_addr = self.nodes[1].get_deterministic_priv_key().address
+        shallow_tip = self.generatetoaddress(self.nodes[0], 4, node0_mining_addr, sync_fun=self.no_op)[-1]
+        assert self.nodes[0].getbestblockhash() == shallow_tip
+        prev_cl = self.nodes[1].getbestchainlock()["blockhash"]
+        shallow_cl = self.mine_until_new_chainlock(self.nodes[1], node1_mining_addr, sync_nodes=self.nodes[1:])
+        self.wait_for_chainlocked_block(self.nodes[1], shallow_cl)
+        assert self.nodes[0].getbestblockhash() == shallow_tip
+        shallow_best = self.nodes[1].getbestchainlock()
+        self.reconnect_isolated_node(self.nodes[0], 1)
+        for i in range(1, len(self.nodes)):
+            self.connect_nodes(0, i, wait_for_connect=False)
+        def node0_has_shallow_cl_header():
+            try:
+                self.nodes[0].getblockheader(shallow_cl)
+                return True
+            except JSONRPCException:
+                return False
+        self.wait_until(node0_has_shallow_cl_header, timeout=60)
+        node_height = self.nodes[0].submitchainlock(
+            shallow_best["blockhash"],
+            shallow_best["signature"],
+            shallow_best["signers"],
+        )
+        assert_equal(shallow_best["height"], node_height)
+        self.wait_for_chainlocked_block(self.nodes[0], shallow_cl, timeout=120)
+        self.wait_until(lambda: self.nodes[0].getbestblockhash() == self.nodes[1].getbestblockhash(), timeout=120)
         
         self.log.info("Isolate node, mine on both parts of the network, and reconnect")
         self.isolate_node(self.nodes[0])
@@ -286,40 +318,63 @@ class LLMQChainLocksTest(DashTestFramework):
         self.wait_until(lambda: self.nodes[0].getbestblockhash() == bad_tip)
         self.wait_until(lambda: self.nodes[1].getbestblockhash() == good_tip)
 
-        self.log.info("Now let the node which is on the wrong chain reorg back to the locked chain")
+        self.log.info("A later honest CLSIG should be rejected while the node remains on the wrong branch")
         self.nodes[0].reconsiderblock(good_tip)
         assert self.nodes[0].getbestblockhash() != good_tip
         prev_cl = self.nodes[1].getbestchainlock()["blockhash"]
         self.generatetoaddress(self.nodes[1], 5, node0_mining_addr, sync_fun=self.no_op)
         self.wait_until(lambda: self.nodes[1].getbestchainlock()["blockhash"] != prev_cl, timeout=120)
-        good_cl = self.nodes[1].getbestchainlock()["blockhash"]
+        rejected_best = self.nodes[1].getbestchainlock()
+        rejected_cl = rejected_best["blockhash"]
+        def node0_has_rejected_cl_header():
+            try:
+                self.nodes[0].getblockheader(rejected_cl)
+                return True
+            except JSONRPCException:
+                return False
+        self.wait_until(node0_has_rejected_cl_header, timeout=60)
+        try:
+            self.nodes[0].submitchainlock(
+                rejected_best["blockhash"],
+                rejected_best["signature"],
+                rejected_best["signers"],
+            )
+            raise AssertionError("Expected later honest CLSIG to be rejected")
+        except JSONRPCException as e:
+            msg = e.error.get("message", "")
+            assert (
+                "clsig-window-ancestor-mismatch" in msg
+                or "mismatch-clsig-height" in msg
+            ), f"Unexpected rejection reason: {msg}"
+        assert self.nodes[0].getbestblockhash() == bad_tip
+
+        self.log.info("Reorg back by normal chain-work once the honest branch overtakes the wrong branch")
+        self.generatetoaddress(self.nodes[1], 7, node0_mining_addr, sync_fun=self.no_op)
+        self.wait_until(lambda: self.nodes[0].getbestblockhash() == self.nodes[1].getbestblockhash(), timeout=120)
+        good_cl = self.mine_until_new_chainlock(self.nodes[1], node0_mining_addr, sync_nodes=self.nodes)
         good_tip = self.nodes[1].getbestblockhash()
         self.wait_for_chainlocked_block(self.nodes[0], good_cl)
-        assert self.nodes[0].getbestblockhash() == good_tip
+        self.wait_until(lambda: self.nodes[0].getbestblockhash() == good_tip, timeout=120)
         found = False
-        foundConflict = False
         forkChain = None
         for tip in self.nodes[0].getchaintips():
             if tip["hash"] == good_tip:
                 assert tip["status"] == "active"
                 found = True
-            if tip["status"] == "conflicting":
-                foundConflict = True
             if tip["status"] == "valid-fork":
                 forkChain = tip["hash"]
 
-        assert found and foundConflict
-        self.log.info("Should switch to the locked tip on invalidate and stay there across restarts until reconsider is called again")
+        assert found and forkChain is not None
+        self.log.info("Should leave the locked tip on invalidate and stay off it across restarts until reconsider is called again")
         self.stop_node(0)
         self.start_node(0)
-        # will set valid-fork to active
         self.nodes[0].invalidateblock(good_cl)
-        assert self.nodes[0].getbestblockhash() == forkChain
+        assert self.nodes[0].getbestblockhash() != good_tip
         self.stop_node(0)
         self.start_node(0)
         force_finish_mnsync(self.nodes[0])
         found = False
-        assert self.nodes[0].getbestblockhash() == forkChain
+        assert self.nodes[0].getbestblockhash() != good_tip
         # reconsider to switch to good_tip but chainlocks should be cleared (invalidate block sets invalid flag on block but not chainlock failure so clear happens)
         self.nodes[0].reconsiderblock(good_cl)
         # back on the good_tip but no locks present anymore
