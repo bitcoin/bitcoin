@@ -102,6 +102,7 @@ extract_strings("${PROJECT_SOURCE_DIR}/src/qt/bitcoinstrings.cpp"
 execute_process(
   COMMAND ${LUPDATE_EXECUTABLE}
     -no-obsolete
+    -sort-messages
     -I ${PROJECT_SOURCE_DIR}/src
     -locations none
     ${ui_files}
