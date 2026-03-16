@@ -120,7 +120,6 @@ class TestNode():
         """
 
         self.index = i
-        self.p2p_conn_index = 1
         self.datadir_path = datadir_path
         self.bitcoinconf = self.datadir_path / "bitcoin.conf"
         self.stdout_dir = self.datadir_path / "stdout"
