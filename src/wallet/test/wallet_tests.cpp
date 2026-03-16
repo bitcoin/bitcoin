@@ -349,6 +349,55 @@ BOOST_FIXTURE_TEST_CASE(LoadReceiveRequests, TestingSetup)
     }
 }
 
+BOOST_FIXTURE_TEST_CASE(ReceiveRequestOperations, TestingSetup)
+{
+    for (DatabaseFormat format : DATABASE_FORMATS) {
+        const std::string name{strprintf("receive-request-ops-%i", format)};
+        TestLoadWallet(name, format, [](std::shared_ptr<CWallet> wallet) EXCLUSIVE_LOCKS_REQUIRED(wallet->cs_wallet) {
+            const std::string address = EncodeDestination(PKHash());
+
+            // Initially empty
+            BOOST_CHECK(GetReceiveRequests(*wallet).empty());
+
+            // Add a receive request and verify returned ID
+            ReceiveRequest req;
+            req.address = address;
+            req.label = "label1";
+            req.message = "msg1";
+            req.amount = 1000;
+            auto id1 = AddReceiveRequest(*wallet, req);
+            BOOST_CHECK(id1.has_value());
+            BOOST_CHECK_EQUAL(*id1, 1);
+
+            // Read it back and verify all fields
+            auto requests = GetReceiveRequests(*wallet);
+            BOOST_CHECK_EQUAL(requests.size(), 1U);
+            BOOST_CHECK_EQUAL(requests[0].id, 1);
+            BOOST_CHECK(requests[0].time > 0);
+            BOOST_CHECK_EQUAL(requests[0].address, address);
+            BOOST_CHECK_EQUAL(requests[0].label, "label1");
+            BOOST_CHECK_EQUAL(requests[0].message, "msg1");
+            BOOST_CHECK_EQUAL(requests[0].amount, 1000);
+
+            // Second request gets incrementing ID
+            auto id2 = AddReceiveRequest(*wallet, req);
+            BOOST_CHECK(id2.has_value());
+            BOOST_CHECK_EQUAL(*id2, 2);
+            BOOST_CHECK_EQUAL(GetReceiveRequests(*wallet).size(), 2U);
+
+            // Invalid address returns nullopt
+            ReceiveRequest bad_req;
+            bad_req.address = "invalid_address";
+            BOOST_CHECK(!AddReceiveRequest(*wallet, bad_req).has_value());
+
+            // Malformed blob in the DB is skipped gracefully
+            wallet->m_address_book[PKHash()].receive_requests["99"] = "MALFORMED";
+            requests = GetReceiveRequests(*wallet);
+            BOOST_CHECK_EQUAL(requests.size(), 2U);
+        });
+    }
+}
+
 class ListCoinsTestingSetup : public TestChain100Setup
 {
 public:
