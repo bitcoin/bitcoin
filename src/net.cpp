@@ -3406,6 +3406,9 @@ void CConnman::SetNetworkActive(bool active)
     if (m_mapport) {
         m_mapport(m_mapport_enabled && active);
     }
+    if (m_tor_control) {
+        m_tor_control(active);
+    }
 
     if (m_client_interface) {
         m_client_interface->NotifyNetworkActiveChanged(fNetworkActive);
@@ -3622,6 +3625,9 @@ bool CConnman::Start(CScheduler& scheduler, const Options& connOptions)
 
     if (m_mapport) {
         m_mapport(m_mapport_enabled && fNetworkActive);
+    }
+    if (m_tor_control) {
+        m_tor_control(fNetworkActive);
     }
 
     return true;
