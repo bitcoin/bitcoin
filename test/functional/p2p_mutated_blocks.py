@@ -68,7 +68,7 @@ class MutatedBlocksTest(BitcoinTestFramework):
                 return False
 
             get_block_txn = honest_relayer.last_message['getblocktxn']
-            return get_block_txn.block_txn_request.blockhash == block.sha256 and \
+            return get_block_txn.block_txn_request.blockhash == block.hash_int and \
                    get_block_txn.block_txn_request.indexes == [1]
         honest_relayer.wait_until(self_transfer_requested, timeout=5)
 
@@ -81,8 +81,8 @@ class MutatedBlocksTest(BitcoinTestFramework):
         # mutated block (as the attacker).
         with self.nodes[0].assert_debug_log(expected_msgs=["Block mutated: bad-txnmrklroot, hashMerkleRoot mismatch"]):
             attacker.send_without_ping(msg_block(mutated_block))
-        # Attacker should get disconnected for sending a mutated block
-        attacker.wait_for_disconnect(timeout=5)
+            # Attacker should get disconnected for sending a mutated block
+            attacker.wait_for_disconnect(timeout=5)
 
         # Block at height 101 should *still* be the only block in-flight from
         # peer 0
@@ -93,9 +93,9 @@ class MutatedBlocksTest(BitcoinTestFramework):
         # The honest relayer should be able to complete relaying the block by
         # sending the blocktxn that was requested.
         block_txn = msg_blocktxn()
-        block_txn.block_transactions = BlockTransactions(blockhash=block.sha256, transactions=[tx])
+        block_txn.block_transactions = BlockTransactions(blockhash=block.hash_int, transactions=[tx])
         honest_relayer.send_and_ping(block_txn)
-        assert_equal(self.nodes[0].getbestblockhash(), block.hash)
+        assert_equal(self.nodes[0].getbestblockhash(), block.hash_hex)
 
         # Check that unexpected-witness mutation check doesn't trigger on a header that doesn't connect to anything
         assert_equal(len(self.nodes[0].getpeerinfo()), 1)
@@ -108,7 +108,7 @@ class MutatedBlocksTest(BitcoinTestFramework):
         assert_equal(len(self.nodes[0].getpeerinfo()), 2)
         with self.nodes[0].assert_debug_log(expected_msgs=["AcceptBlock FAILED (prev-blk-not-found)"]):
             attacker.send_without_ping(msg_block(block_missing_prev))
-        attacker.wait_for_disconnect(timeout=5)
+            attacker.wait_for_disconnect(timeout=5)
 
 
 if __name__ == '__main__':

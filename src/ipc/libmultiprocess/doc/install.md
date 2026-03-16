@@ -1,6 +1,6 @@
 # libmultiprocess Installation
 
-Installation currently requires Cap'n Proto:
+Installation currently requires Cap'n Proto 0.7 or higher:
 
 ```sh
 apt install libcapnp-dev capnproto

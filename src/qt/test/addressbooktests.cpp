@@ -1,4 +1,4 @@
-// Copyright (c) 2017-2022 The Bitcoin Core developers
+// Copyright (c) 2017-present The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -77,20 +77,16 @@ void TestAddAddressesToSendBook(interfaces::Node& node)
     test.m_node.wallet_loader = wallet_loader.get();
     node.setContext(&test.m_node);
     const std::shared_ptr<CWallet> wallet = std::make_shared<CWallet>(node.context()->chain.get(), "", CreateMockableWalletDatabase());
-    wallet->LoadWallet();
     wallet->SetWalletFlag(WALLET_FLAG_DESCRIPTORS);
     {
         LOCK(wallet->cs_wallet);
         wallet->SetupDescriptorScriptPubKeyMans();
     }
 
-    auto build_address = [&wallet]() {
-        CKey key = GenerateRandomKey();
-        CTxDestination dest(GetDestinationForKey(
-            key.GetPubKey(), wallet->m_default_address_type));
-
+    auto build_address{[]() {
+        const WitnessV0KeyHash dest{GenerateRandomKey().GetPubKey()};
         return std::make_pair(dest, QString::fromStdString(EncodeDestination(dest)));
-    };
+    }};
 
     CTxDestination r_key_dest, s_key_dest;
 

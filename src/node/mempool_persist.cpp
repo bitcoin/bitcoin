@@ -1,4 +1,4 @@
-// Copyright (c) 2022 The Bitcoin Core developers
+// Copyright (c) 2022-present The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -16,7 +16,9 @@
 #include <uint256.h>
 #include <util/fs.h>
 #include <util/fs_helpers.h>
+#include <util/obfuscation.h>
 #include <util/signalinterrupt.h>
+#include <util/syserror.h>
 #include <util/time.h>
 #include <validation.h>
 
@@ -58,15 +60,17 @@ bool LoadMempool(CTxMemPool& pool, const fs::path& load_path, Chainstate& active
     try {
         uint64_t version;
         file >> version;
-        std::vector<std::byte> xor_key;
+
         if (version == MEMPOOL_DUMP_VERSION_NO_XOR_KEY) {
-            // Leave XOR-key empty
+            file.SetObfuscation({});
         } else if (version == MEMPOOL_DUMP_VERSION) {
-            file >> xor_key;
+            Obfuscation obfuscation;
+            file >> obfuscation;
+            file.SetObfuscation(obfuscation);
         } else {
             return false;
         }
-        file.SetXor(xor_key);
+
         uint64_t total_txns_to_load;
         file >> total_txns_to_load;
         uint64_t txns_tried = 0;
@@ -106,7 +110,7 @@ bool LoadMempool(CTxMemPool& pool, const fs::path& load_path, Chainstate& active
                     // wallet(s) having loaded it while we were processing
                     // mempool transactions; consider these as valid, instead of
                     // failed, but mark them as 'already there'
-                    if (pool.exists(GenTxid::Txid(tx->GetHash()))) {
+                    if (pool.exists(tx->GetHash())) {
                         ++already_there;
                     } else {
                         ++failed;
@@ -118,7 +122,7 @@ bool LoadMempool(CTxMemPool& pool, const fs::path& load_path, Chainstate& active
             if (active_chainstate.m_chainman.m_interrupt)
                 return false;
         }
-        std::map<uint256, CAmount> mapDeltas;
+        std::map<Txid, CAmount> mapDeltas;
         file >> mapDeltas;
 
         if (opts.apply_fee_delta_priority) {
@@ -127,7 +131,7 @@ bool LoadMempool(CTxMemPool& pool, const fs::path& load_path, Chainstate& active
             }
         }
 
-        std::set<uint256> unbroadcast_txids;
+        std::set<Txid> unbroadcast_txids;
         file >> unbroadcast_txids;
         if (opts.apply_unbroadcast_set) {
             unbroadcast = unbroadcast_txids.size();
@@ -150,9 +154,9 @@ bool DumpMempool(const CTxMemPool& pool, const fs::path& dump_path, FopenFn mock
 {
     auto start = SteadyClock::now();
 
-    std::map<uint256, CAmount> mapDeltas;
+    std::map<Txid, CAmount> mapDeltas;
     std::vector<TxMempoolInfo> vinfo;
-    std::set<uint256> unbroadcast_txids;
+    std::set<Txid> unbroadcast_txids;
 
     static Mutex dump_mutex;
     LOCK(dump_mutex);
@@ -168,7 +172,8 @@ bool DumpMempool(const CTxMemPool& pool, const fs::path& dump_path, FopenFn mock
 
     auto mid = SteadyClock::now();
 
-    AutoFile file{mockable_fopen_function(dump_path + ".new", "wb")};
+    const fs::path file_fspath{dump_path + ".new"};
+    AutoFile file{mockable_fopen_function(file_fspath, "wb")};
     if (file.IsNull()) {
         return false;
     }
@@ -177,12 +182,13 @@ bool DumpMempool(const CTxMemPool& pool, const fs::path& dump_path, FopenFn mock
         const uint64_t version{pool.m_opts.persist_v1_dat ? MEMPOOL_DUMP_VERSION_NO_XOR_KEY : MEMPOOL_DUMP_VERSION};
         file << version;
 
-        std::vector<std::byte> xor_key(8);
         if (!pool.m_opts.persist_v1_dat) {
-            FastRandomContext{}.fillrand(xor_key);
-            file << xor_key;
+            const Obfuscation obfuscation{FastRandomContext{}.randbytes<Obfuscation::KEY_SIZE>()};
+            file << obfuscation;
+            file.SetObfuscation(obfuscation);
+        } else {
+            file.SetObfuscation({});
         }
-        file.SetXor(xor_key);
 
         uint64_t mempool_transactions_to_write(vinfo.size());
         file << mempool_transactions_to_write;
@@ -199,9 +205,14 @@ bool DumpMempool(const CTxMemPool& pool, const fs::path& dump_path, FopenFn mock
         LogInfo("Writing %d unbroadcast transactions to file.\n", unbroadcast_txids.size());
         file << unbroadcast_txids;
 
-        if (!skip_file_commit && !file.Commit())
+        if (!skip_file_commit && !file.Commit()) {
+            (void)file.fclose();
             throw std::runtime_error("Commit failed");
-        file.fclose();
+        }
+        if (file.fclose() != 0) {
+            throw std::runtime_error(
+                strprintf("Error closing %s: %s", fs::PathToString(file_fspath), SysErrorString(errno)));
+        }
         if (!RenameOver(dump_path + ".new", dump_path)) {
             throw std::runtime_error("Rename failed");
         }
@@ -213,6 +224,7 @@ bool DumpMempool(const CTxMemPool& pool, const fs::path& dump_path, FopenFn mock
                   fs::file_size(dump_path));
     } catch (const std::exception& e) {
         LogInfo("Failed to dump mempool: %s. Continuing anyway.\n", e.what());
+        (void)file.fclose();
         return false;
     }
     return true;

@@ -1,4 +1,4 @@
-// Copyright (c) 2025 The Bitcoin Core developers
+// Copyright (c) The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -7,6 +7,8 @@
 
 #include <mp/proxy-io.h>
 #include <mp/util.h>
+
+#include <kj/string.h>
 
 namespace mp {
 template <typename Output>
@@ -25,8 +27,8 @@ void CustomBuildField(TypeList<>,
     // Also store the Thread::Client reference in the callback_threads map so
     // future calls over this connection can reuse it.
     auto [callback_thread, _]{SetThread(
-        thread_context.callback_threads, thread_context.waiter->m_mutex, &connection,
-        [&] { return connection.m_threads.add(kj::heap<ProxyServer<Thread>>(thread_context, std::thread{})); })};
+        GuardedRef{thread_context.waiter->m_mutex, thread_context.callback_threads}, &connection,
+        [&] { return connection.m_threads.add(kj::heap<ProxyServer<Thread>>(connection, thread_context, std::thread{})); })};
 
     // Call remote ThreadMap.makeThread function so server will create a
     // dedicated worker thread to run function calls from this thread. Store the
@@ -43,12 +45,12 @@ void CustomBuildField(TypeList<>,
         return request.send().getResult(); // Nonblocking due to capnp request pipelining.
     }};
     auto [request_thread, _1]{SetThread(
-        thread_context.request_threads, thread_context.waiter->m_mutex,
+        GuardedRef{thread_context.waiter->m_mutex, thread_context.request_threads},
         &connection, make_request_thread)};
 
     auto context = output.init();
-    context.setThread(request_thread->second.m_client);
-    context.setCallbackThread(callback_thread->second.m_client);
+    context.setThread(request_thread->second->m_client);
+    context.setCallbackThread(callback_thread->second->m_client);
 }
 
 //! PassField override for mp.Context arguments. Return asynchronously and call
@@ -61,16 +63,20 @@ auto PassField(Priority<1>, TypeList<>, ServerContext& server_context, const Fn&
 {
     const auto& params = server_context.call_context.getParams();
     Context::Reader context_arg = Accessor::get(params);
-    auto future = kj::newPromiseAndFulfiller<typename ServerContext::CallContext>();
     auto& server = server_context.proxy_server;
     int req = server_context.req;
-    auto invoke = MakeAsyncCallable(
-        [fulfiller = kj::mv(future.fulfiller),
-         call_context = kj::mv(server_context.call_context), &server, req, fn, args...]() mutable {
+    // Keep a reference to the ProxyServer instance by assigning it to the self
+    // variable. ProxyServer instances are reference-counted and if the client
+    // drops its reference and the IPC call is canceled, this variable keeps the
+    // instance alive until the method finishes executing. The self variable
+    // needs to be destroyed on the event loop thread so it is freed in a sync()
+    // call below.
+    auto self = server.thisCap();
+    auto invoke = [self = kj::mv(self), call_context = kj::mv(server_context.call_context), &server, req, fn, args...](CancelMonitor& cancel_monitor) mutable {
+                MP_LOG(*server.m_context.loop, Log::Debug) << "IPC server executing request #" << req;
                 const auto& params = call_context.getParams();
                 Context::Reader context_arg = Accessor::get(params);
                 ServerContext server_context{server, call_context, req};
-                bool disconnected{false};
                 {
                     // Before invoking the function, store a reference to the
                     // callbackThread provided by the client in the
@@ -91,82 +97,121 @@ auto PassField(Priority<1>, TypeList<>, ServerContext& server_context, const Fn&
                     // need to update the map.
                     auto& thread_context = g_thread_context;
                     auto& request_threads = thread_context.request_threads;
-                    auto [request_thread, inserted]{SetThread(
-                        request_threads, thread_context.waiter->m_mutex,
-                        server.m_context.connection,
-                        [&] { return context_arg.getCallbackThread(); })};
+                    ConnThread request_thread;
+                    bool inserted{false};
+                    Mutex cancel_mutex;
+                    Lock cancel_lock{cancel_mutex};
+                    server_context.cancel_lock = &cancel_lock;
+                    server.m_context.loop->sync([&] {
+                        // Detect request being canceled before it executes.
+                        if (cancel_monitor.m_canceled) {
+                            server_context.request_canceled = true;
+                            return;
+                        }
+                        // Detect request being canceled while it executes.
+                        assert(!cancel_monitor.m_on_cancel);
+                        cancel_monitor.m_on_cancel = [&server, &server_context, &cancel_mutex, req]() {
+                            MP_LOG(*server.m_context.loop, Log::Info) << "IPC server request #" << req << " canceled while executing.";
+                            // Lock cancel_mutex here to block the event loop
+                            // thread and prevent it from deleting the request's
+                            // params and response structs while the execution
+                            // thread is accessing them. Because this lock is
+                            // released before the event loop thread does delete
+                            // the structs, the mutex does not provide any
+                            // protection from the event loop deleting the
+                            // structs _before_ the execution thread acquires
+                            // it. So in addition to locking the mutex, the
+                            // execution thread always checks request_canceled
+                            // as well before accessing the structs.
+                            Lock cancel_lock{cancel_mutex};
+                            server_context.request_canceled = true;
+                        };
+                        // Update requests_threads map if not canceled.
+                        std::tie(request_thread, inserted) = SetThread(
+                            GuardedRef{thread_context.waiter->m_mutex, request_threads}, server.m_context.connection,
+                            [&] { return context_arg.getCallbackThread(); });
+                    });
 
-                    // If an entry was inserted into the requests_threads map,
+                    // If an entry was inserted into the request_threads map,
                     // remove it after calling fn.invoke. If an entry was not
                     // inserted, one already existed, meaning this must be a
                     // recursive call (IPC call calling back to the caller which
                     // makes another IPC call), so avoid modifying the map.
                     const bool erase_thread{inserted};
-                    KJ_DEFER({
-                        std::unique_lock<std::mutex> lock(thread_context.waiter->m_mutex);
-                        // Call erase here with a Connection* argument instead
-                        // of an iterator argument, because the `request_thread`
-                        // iterator may be invalid if the connection is closed
-                        // during this function call. More specifically, the
-                        // iterator may be invalid because SetThread adds a
-                        // cleanup callback to the Connection destructor that
-                        // erases the thread from the map, and also because the
-                        // ProxyServer<Thread> destructor calls
-                        // request_threads.clear().
-                        if (erase_thread) {
-                            disconnected = !request_threads.erase(server.m_context.connection);
-                        } else {
-                            disconnected = !request_threads.count(server.m_context.connection);
+                    KJ_DEFER(
+                        // Release the cancel lock before calling loop->sync and
+                        // waiting for the event loop thread, because if a
+                        // cancellation happened, it needs to run the on_cancel
+                        // callback above. It's safe to release cancel_lock at
+                        // this point because the fn.invoke() call below will be
+                        // finished and no longer accessing the params or
+                        // results structs.
+                        cancel_lock.m_lock.unlock();
+                        // Erase the request_threads entry on the event loop
+                        // thread with loop->sync(), so if the connection is
+                        // broken there is not a race between this thread and
+                        // the disconnect handler trying to destroy the thread
+                        // client object.
+                        server.m_context.loop->sync([&] {
+                            auto self_dispose{kj::mv(self)};
+                            if (erase_thread) {
+                            // Look up the thread again without using existing
+                            // iterator since entry may no longer be there after
+                            // a disconnect. Destroy node after releasing
+                            // Waiter::m_mutex, so the ProxyClient<Thread>
+                            // destructor is able to use EventLoop::mutex
+                            // without violating lock order.
+                            ConnThreads::node_type removed;
+                            {
+                                Lock lock(thread_context.waiter->m_mutex);
+                                removed = request_threads.extract(server.m_context.connection);
+                            }
+                            }
+                        });
+                    );
+                    if (server_context.request_canceled) {
+                        MP_LOG(*server.m_context.loop, Log::Info) << "IPC server request #" << req << " canceled before it could be executed";
+                    } else KJ_IF_MAYBE(exception, kj::runCatchingExceptions([&]{
+                        try {
+                            fn.invoke(server_context, args...);
+                        } catch (const InterruptException& e) {
+                            MP_LOG(*server.m_context.loop, Log::Info) << "IPC server request #" << req << " interrupted (" << e.what() << ")";
                         }
-                    });
-                    fn.invoke(server_context, args...);
+                    })) {
+                        MP_LOG(*server.m_context.loop, Log::Error) << "IPC server request #" << req << " uncaught exception (" << kj::str(*exception).cStr() << ")";
+                        throw kj::mv(*exception);
+                    }
+                    // End of scope: if KJ_DEFER was reached, it runs here
                 }
-                if (disconnected) {
-                    // If disconnected is true, the Connection object was
-                    // destroyed during the method call. Deal with this by
-                    // returning without ever fulfilling the promise, which will
-                    // cause the ProxyServer object to leak. This is not ideal,
-                    // but fixing the leak will require nontrivial code changes
-                    // because there is a lot of code assuming ProxyServer
-                    // objects are destroyed before Connection objects.
-                    return;
-                }
-                KJ_IF_MAYBE(exception, kj::runCatchingExceptions([&]() {
-                    server.m_context.connection->m_loop.sync([&] {
-                        auto fulfiller_dispose = kj::mv(fulfiller);
-                        fulfiller_dispose->fulfill(kj::mv(call_context));
-                    });
-                }))
-                {
-                    server.m_context.connection->m_loop.sync([&]() {
-                        auto fulfiller_dispose = kj::mv(fulfiller);
-                        fulfiller_dispose->reject(kj::mv(*exception));
-                    });
-                }
-            });
+                return call_context;
+            };
 
     // Lookup Thread object specified by the client. The specified thread should
     // be a local Thread::Server object, but it needs to be looked up
     // asynchronously with getLocalServer().
     auto thread_client = context_arg.getThread();
-    return server.m_context.connection->m_threads.getLocalServer(thread_client)
-        .then([&server, invoke, req](const kj::Maybe<Thread::Server&>& perhaps) {
+    auto result = server.m_context.connection->m_threads.getLocalServer(thread_client)
+        .then([&server, invoke = kj::mv(invoke), req](const kj::Maybe<Thread::Server&>& perhaps) mutable {
             // Assuming the thread object is found, pass it a pointer to the
             // `invoke` lambda above which will invoke the function on that
             // thread.
             KJ_IF_MAYBE (thread_server, perhaps) {
-                const auto& thread = static_cast<ProxyServer<Thread>&>(*thread_server);
-                server.m_context.connection->m_loop.log()
+                auto& thread = static_cast<ProxyServer<Thread>&>(*thread_server);
+                MP_LOG(*server.m_context.loop, Log::Debug)
                     << "IPC server post request  #" << req << " {" << thread.m_thread_context.thread_name << "}";
-                thread.m_thread_context.waiter->post(std::move(invoke));
+                return thread.template post<typename ServerContext::CallContext>(std::move(invoke));
             } else {
-                server.m_context.connection->m_loop.log()
+                MP_LOG(*server.m_context.loop, Log::Error)
                     << "IPC server error request #" << req << ", missing thread to execute request";
                 throw std::runtime_error("invalid thread handle");
             }
-        })
-        // Wait for the invocation to finish before returning to the caller.
-        .then([invoke_wait = kj::mv(future.promise)]() mutable { return kj::mv(invoke_wait); });
+        });
+    // Use connection m_canceler object to cancel the result promise if the
+    // connection is destroyed. (By default Cap'n Proto does not cancel requests
+    // on disconnect, since it's possible clients might want to make requests
+    // and immediately disconnect without waiting for results, but not want the
+    // requests to be canceled.)
+    return server.m_context.connection->m_canceler.wrap(kj::mv(result));
 }
 } // namespace mp
 

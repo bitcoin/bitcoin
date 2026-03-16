@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (c) 2019-2022 The Bitcoin Core developers
+# Copyright (c) 2019-present The Bitcoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test the importdescriptors RPC.
@@ -22,6 +22,7 @@ from test_framework.authproxy import JSONRPCException
 from test_framework.blocktools import COINBASE_MATURITY
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.descriptors import descsum_create
+from test_framework.script import SEQUENCE_LOCKTIME_TYPE_FLAG
 from test_framework.util import (
     assert_equal,
     assert_raises_rpc_error,
@@ -32,9 +33,6 @@ from test_framework.wallet_util import (
 )
 
 class ImportDescriptorsTest(BitcoinTestFramework):
-    def add_options(self, parser):
-        self.add_wallet_options(parser, legacy=False)
-
     def set_test_params(self):
         self.num_nodes = 2
         # whitelist peers to speed up tx relay / mempool sync
@@ -61,6 +59,7 @@ class ImportDescriptorsTest(BitcoinTestFramework):
         if 'warnings' in result[0]:
             observed_warnings = result[0]['warnings']
         assert_equal("\n".join(sorted(warnings)), "\n".join(sorted(observed_warnings)))
+        self.log.debug(result)
         assert_equal(result[0]['success'], success)
         if error_code is not None:
             assert_equal(result[0]['error']['code'], error_code)
@@ -68,14 +67,14 @@ class ImportDescriptorsTest(BitcoinTestFramework):
 
     def run_test(self):
         self.log.info('Setting up wallets')
-        self.nodes[0].createwallet(wallet_name='w0', disable_private_keys=False, descriptors=True)
+        self.nodes[0].createwallet(wallet_name='w0', disable_private_keys=False)
         w0 = self.nodes[0].get_wallet_rpc('w0')
 
-        self.nodes[1].createwallet(wallet_name='w1', disable_private_keys=True, blank=True, descriptors=True)
+        self.nodes[1].createwallet(wallet_name='w1', disable_private_keys=True, blank=True)
         w1 = self.nodes[1].get_wallet_rpc('w1')
         assert_equal(w1.getwalletinfo()['keypoolsize'], 0)
 
-        self.nodes[1].createwallet(wallet_name="wpriv", disable_private_keys=False, blank=True, descriptors=True)
+        self.nodes[1].createwallet(wallet_name="wpriv", disable_private_keys=False, blank=True)
         wpriv = self.nodes[1].get_wallet_rpc("wpriv")
         assert_equal(wpriv.getwalletinfo()['keypoolsize'], 0)
 
@@ -117,6 +116,9 @@ class ImportDescriptorsTest(BitcoinTestFramework):
                              success=False,
                              error_code=-8,
                              error_message="Internal addresses should not have a label")
+
+        self.log.info("External non-ranged addresses can have labels")
+        self.test_importdesc({**import_request, "internal": False}, success=True)
 
         self.log.info("Internal addresses should be detected as such")
         key = get_generate_key()
@@ -219,6 +221,16 @@ class ImportDescriptorsTest(BitcoinTestFramework):
                               error_code=-8,
                               error_message='Ranged descriptors should not have a label')
 
+        self.log.info("Ranged descriptors cannot have labels - even if range not provided by user and only implied by asterisk (*)")
+        self.test_importdesc({"desc":descsum_create("wpkh(" + xpub + "/100/0/*)"),
+                              "timestamp": "now",
+                              "label": "test",
+                              "active": True},
+                              success=False,
+                              warnings=['Range not given, using default keypool range'],
+                              error_code=-8,
+                              error_message='Ranged descriptors should not have a label')
+
         self.log.info("Private keys required for private keys enabled wallet")
         self.test_importdesc({"desc":descsum_create(desc),
                               "timestamp": "now",
@@ -287,11 +299,11 @@ class ImportDescriptorsTest(BitcoinTestFramework):
         assert_equal(wpriv.getwalletinfo()['keypoolsize'], 21)
 
         self.test_importdesc({**range_request, "range": [5, 10]}, wallet=wpriv, success=False,
-                             error_code=-8, error_message='new range must include current range = [0,20]')
+                             error_code=-4, error_message=f"Could not add descriptor '{range_request['desc']}': new range must include current range = [0,20]")
         self.test_importdesc({**range_request, "range": [0, 10]}, wallet=wpriv, success=False,
-                             error_code=-8, error_message='new range must include current range = [0,20]')
+                             error_code=-4, error_message=f"Could not add descriptor '{range_request['desc']}': new range must include current range = [0,20]")
         self.test_importdesc({**range_request, "range": [5, 20]}, wallet=wpriv, success=False,
-                             error_code=-8, error_message='new range must include current range = [0,20]')
+                             error_code=-4, error_message=f"Could not add descriptor '{range_request['desc']}': new range must include current range = [0,20]")
         assert_equal(wpriv.getwalletinfo()['keypoolsize'], 21)
 
         self.log.info("Check we can change descriptor internal flag")
@@ -431,7 +443,7 @@ class ImportDescriptorsTest(BitcoinTestFramework):
 
         # Make sure that we can use import and use multisig as addresses
         self.log.info('Test that multisigs can be imported, signed for, and getnewaddress\'d')
-        self.nodes[1].createwallet(wallet_name="wmulti_priv", disable_private_keys=False, blank=True, descriptors=True)
+        self.nodes[1].createwallet(wallet_name="wmulti_priv", disable_private_keys=False, blank=True)
         wmulti_priv = self.nodes[1].get_wallet_rpc("wmulti_priv")
         assert_equal(wmulti_priv.getwalletinfo()['keypoolsize'], 0)
 
@@ -475,7 +487,7 @@ class ImportDescriptorsTest(BitcoinTestFramework):
         assert_equal(len(decoded['vin'][0]['txinwitness']), 4)
         self.sync_all()
 
-        self.nodes[1].createwallet(wallet_name="wmulti_pub", disable_private_keys=True, blank=True, descriptors=True)
+        self.nodes[1].createwallet(wallet_name="wmulti_pub", disable_private_keys=True, blank=True)
         wmulti_pub = self.nodes[1].get_wallet_rpc("wmulti_pub")
         assert_equal(wmulti_pub.getwalletinfo()['keypoolsize'], 0)
 
@@ -518,7 +530,7 @@ class ImportDescriptorsTest(BitcoinTestFramework):
         self.nodes[1].loadwallet('wmulti_pub')
 
         self.log.info("Multisig with distributed keys")
-        self.nodes[1].createwallet(wallet_name="wmulti_priv1", descriptors=True)
+        self.nodes[1].createwallet(wallet_name="wmulti_priv1")
         wmulti_priv1 = self.nodes[1].get_wallet_rpc("wmulti_priv1")
         res = wmulti_priv1.importdescriptors([
         {
@@ -541,7 +553,7 @@ class ImportDescriptorsTest(BitcoinTestFramework):
         assert_equal(res[1]['success'], True)
         assert_equal(res[1]['warnings'][0], 'Not all private keys provided. Some wallet functionality may return unexpected errors')
 
-        self.nodes[1].createwallet(wallet_name='wmulti_priv2', blank=True, descriptors=True)
+        self.nodes[1].createwallet(wallet_name='wmulti_priv2', blank=True)
         wmulti_priv2 = self.nodes[1].get_wallet_rpc('wmulti_priv2')
         res = wmulti_priv2.importdescriptors([
         {
@@ -572,7 +584,7 @@ class ImportDescriptorsTest(BitcoinTestFramework):
         self.nodes[1].sendrawtransaction(tx_signed_2['hex'])
 
         self.log.info("We can create and use a huge multisig under P2WSH")
-        self.nodes[1].createwallet(wallet_name='wmulti_priv_big', blank=True, descriptors=True)
+        self.nodes[1].createwallet(wallet_name='wmulti_priv_big', blank=True)
         wmulti_priv_big = self.nodes[1].get_wallet_rpc('wmulti_priv_big')
         xkey = "tprv8ZgxMBicQKsPeZSeYx7VXDDTs3XrTcmZQpRLbAeSQFCQGgKwR4gKpcxHaKdoTNHniv4EPDJNdzA3KxRrrBHcAgth8fU5X4oCndkkxk39iAt/*"
         xkey_int = "tprv8ZgxMBicQKsPeZSeYx7VXDDTs3XrTcmZQpRLbAeSQFCQGgKwR4gKpcxHaKdoTNHniv4EPDJNdzA3KxRrrBHcAgth8fU5X4oCndkkxk39iAt/1/*"
@@ -608,7 +620,7 @@ class ImportDescriptorsTest(BitcoinTestFramework):
         self.log.info("Under P2SH, multisig are standard with up to 15 "
                       "compressed keys")
         self.nodes[1].createwallet(wallet_name='multi_priv_big_legacy',
-                                   blank=True, descriptors=True)
+                                   blank=True)
         multi_priv_big = self.nodes[1].get_wallet_rpc('multi_priv_big_legacy')
         res = multi_priv_big.importdescriptors([
         {
@@ -637,7 +649,7 @@ class ImportDescriptorsTest(BitcoinTestFramework):
         decoded = multi_priv_big.gettransaction(txid=txid, verbose=True)['decoded']
 
         self.log.info("Amending multisig with new private keys")
-        self.nodes[1].createwallet(wallet_name="wmulti_priv3", descriptors=True)
+        self.nodes[1].createwallet(wallet_name="wmulti_priv3")
         wmulti_priv3 = self.nodes[1].get_wallet_rpc("wmulti_priv3")
         res = wmulti_priv3.importdescriptors([
             {
@@ -688,13 +700,13 @@ class ImportDescriptorsTest(BitcoinTestFramework):
                               "range": [0,4000],
                               "next_index": 4000}
 
-        self.nodes[0].createwallet("temp_wallet", blank=True, descriptors=True)
+        self.nodes[0].createwallet("temp_wallet", blank=True)
         temp_wallet = self.nodes[0].get_wallet_rpc("temp_wallet")
         temp_wallet.importdescriptors([descriptor])
         self.generatetoaddress(self.nodes[0], COINBASE_MATURITY + 1, temp_wallet.getnewaddress())
         self.generatetoaddress(self.nodes[0], COINBASE_MATURITY + 1, temp_wallet.getnewaddress())
 
-        self.nodes[0].createwallet("encrypted_wallet", blank=True, descriptors=True, passphrase="passphrase")
+        self.nodes[0].createwallet("encrypted_wallet", blank=True, passphrase="passphrase")
         encrypted_wallet = self.nodes[0].get_wallet_rpc("encrypted_wallet")
 
         descriptor["timestamp"] = 0
@@ -723,9 +735,9 @@ class ImportDescriptorsTest(BitcoinTestFramework):
         assert_equal(temp_wallet.getbalance(), encrypted_wallet.getbalance())
 
         self.log.info("Multipath descriptors")
-        self.nodes[1].createwallet(wallet_name="multipath", descriptors=True, blank=True)
+        self.nodes[1].createwallet(wallet_name="multipath", blank=True)
         w_multipath = self.nodes[1].get_wallet_rpc("multipath")
-        self.nodes[1].createwallet(wallet_name="multipath_split", descriptors=True, blank=True)
+        self.nodes[1].createwallet(wallet_name="multipath_split", blank=True)
         w_multisplit = self.nodes[1].get_wallet_rpc("multipath_split")
         timestamp = int(time.time())
 
@@ -772,6 +784,41 @@ class ImportDescriptorsTest(BitcoinTestFramework):
             assert_equal(w_multipath.getnewaddress(address_type="bech32"), w_multisplit.getnewaddress(address_type="bech32"))
             assert_equal(w_multipath.getrawchangeaddress(address_type="bech32"), w_multisplit.getrawchangeaddress(address_type="bech32"))
         assert_equal(sorted(w_multipath.listdescriptors()["descriptors"], key=lambda x: x["desc"]), sorted(w_multisplit.listdescriptors()["descriptors"], key=lambda x: x["desc"]))
+
+        self.log.info("Test older() safety")
+
+        for flag in [0, SEQUENCE_LOCKTIME_TYPE_FLAG]:
+            self.log.debug("Importing a safe value always works")
+            safe_value = (65535 | flag)
+            self.test_importdesc(
+                {
+                    'desc': descsum_create(f"wsh(and_v(v:pk([12345678/0h/0h]{xpub}/*),older({safe_value})))"),
+                    'active': True,
+                    'range': [0, 2],
+                    'timestamp': 'now'
+                },
+                success=True
+            )
+
+            self.log.debug("Importing an unsafe value results in a warning")
+            unsafe_value = safe_value + 1
+            desc = descsum_create(f"wsh(and_v(v:pk([12345678/0h/0h]{xpub}/*),older({unsafe_value})))")
+            expected_warning = (
+                f"time-based relative locktime: older({unsafe_value}) > (65535 * 512) seconds is unsafe"
+                if flag == SEQUENCE_LOCKTIME_TYPE_FLAG
+                else f"height-based relative locktime: older({unsafe_value}) > 65535 blocks is unsafe"
+            )
+            self.test_importdesc(
+                {
+                    'desc': desc,
+                    'active': True,
+                    'range': [0, 2],
+                    'timestamp': 'now'
+                },
+                success=True,
+                warnings=[expected_warning],
+            )
+
 
 if __name__ == '__main__':
     ImportDescriptorsTest(__file__).main()

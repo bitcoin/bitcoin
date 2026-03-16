@@ -14,10 +14,6 @@
         <translation type="unfinished">&amp;Nueva</translation>
     </message>
     <message>
-        <source>Copy the currently selected address to the system clipboard</source>
-        <translation type="unfinished">Copiar la dirección seleccionada anguaño al portapapeles del sistema</translation>
-    </message>
-    <message>
         <source>&amp;Copy</source>
         <translation type="unfinished">&amp;Copiar</translation>
     </message>
@@ -101,7 +97,11 @@ La firma ye possible solamentu con direcciones del tipu 'legacy'.</translation>
         <source>Receiving addresses - %1</source>
         <translation type="unfinished">Recibiendo direcciones - %1</translation>
     </message>
-    </context>
+    <message>
+        <source>Exporting Failed</source>
+        <translation type="unfinished">Recibiendo direcciones</translation>
+    </message>
+</context>
 <context>
     <name>AddressTableModel</name>
     <message>
@@ -717,6 +717,18 @@ La firma ye possible solamentu con direcciones del tipu 'legacy'.</translation>
         <source>Pre-syncing Headers (%1%)…</source>
         <translation type="unfinished">Presincronizando encabezaos (%1%)…</translation>
     </message>
+    <message>
+        <source>Date: %1
+</source>
+        <translation type="unfinished">Fecha: %1
+</translation>
+    </message>
+    <message>
+        <source>Amount: %1
+</source>
+        <translation type="unfinished">Cantidá: %1
+</translation>
+    </message>
     </context>
 <context>
     <name>CoinControlDialog</name>
@@ -730,6 +742,11 @@ La firma ye possible solamentu con direcciones del tipu 'legacy'.</translation>
     <message>
         <source>Migrate Wallet</source>
         <translation type="unfinished">Migrar cartera</translation>
+    </message>
+    <message>
+        <source>Restore Wallet</source>
+        <extracomment>Title of progress window which is displayed when wallets are being restored.</extracomment>
+        <translation type="unfinished">Restaurar cartera</translation>
     </message>
     </context>
 <context>
@@ -803,6 +820,21 @@ La firma ye possible solamentu con direcciones del tipu 'legacy'.</translation>
     <message>
         <source>Continue</source>
         <translation type="unfinished">Continuar</translation>
+    </message>
+    </context>
+<context>
+    <name>PSBTOperationsDialog</name>
+    <message numerus="yes">
+        <source>Signed %n input(s), but more signatures are still required.</source>
+        <translation type="unfinished">
+            <numerusform />
+        </translation>
+    </message>
+    <message numerus="yes">
+        <source>Transaction has %n unsigned input(s).</source>
+        <translation type="unfinished">
+            <numerusform />
+        </translation>
     </message>
     </context>
 <context>
@@ -885,6 +917,10 @@ La firma ye possible solamentu con direcciones del tipu 'legacy'.</translation>
     <message>
         <source>Address</source>
         <translation type="unfinished">Dirección</translation>
+    </message>
+    <message>
+        <source>Exporting Failed</source>
+        <translation type="unfinished">Recibiendo direcciones</translation>
     </message>
     </context>
 <context>

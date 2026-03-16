@@ -1,11 +1,12 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
-// Copyright (c) 2009-2022 The Bitcoin Core developers
+// Copyright (c) 2009-present The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #ifndef BITCOIN_COINS_H
 #define BITCOIN_COINS_H
 
+#include <attributes.h>
 #include <compressor.h>
 #include <core_memusage.h>
 #include <memusage.h>
@@ -14,10 +15,11 @@
 #include <support/allocators/pool.h>
 #include <uint256.h>
 #include <util/check.h>
+#include <util/overflow.h>
 #include <util/hasher.h>
 
-#include <assert.h>
-#include <stdint.h>
+#include <cassert>
+#include <cstdint>
 
 #include <functional>
 #include <unordered_map>
@@ -102,7 +104,6 @@ using CoinsCachePair = std::pair<const COutPoint, CCoinsCacheEntry>;
  * - unspent, FRESH, DIRTY (e.g. a new coin created in the cache)
  * - unspent, not FRESH, DIRTY (e.g. a coin changed in the cache during a reorg)
  * - unspent, not FRESH, not DIRTY (e.g. an unspent coin fetched from the parent cache)
- * - spent, FRESH, not DIRTY (e.g. a spent coin fetched from the parent cache)
  * - spent, not FRESH, DIRTY (e.g. a coin is spent and spentness needs to be flushed to the parent)
  */
 struct CCoinsCacheEntry
@@ -117,12 +118,6 @@ private:
      * the parent cache for batch writing. This is a performance optimization
      * compared to giving all entries in the cache to the parent and having the
      * parent scan for only modified entries.
-     *
-     * FRESH-but-not-DIRTY coins can not occur in practice, since that would
-     * mean a spent coin exists in the parent CCoinsView and not in the child
-     * CCoinsViewCache. Nevertheless, if a spent coin is retrieved from the
-     * parent cache, the FRESH-but-not-DIRTY coin will be tracked by the linked
-     * list and deleted when Sync or Flush is called on the CCoinsViewCache.
      */
     CoinsCachePair* m_prev{nullptr};
     CoinsCachePair* m_next{nullptr};
@@ -271,11 +266,11 @@ struct CoinsViewCacheCursor
     //! This is an optimization compared to erasing all entries as the cursor iterates them when will_erase is set.
     //! Calling CCoinsMap::clear() afterwards is faster because a CoinsCachePair cannot be coerced back into a
     //! CCoinsMap::iterator to be erased, and must therefore be looked up again by key in the CCoinsMap before being erased.
-    CoinsViewCacheCursor(size_t& usage LIFETIMEBOUND,
-                        CoinsCachePair& sentinel LIFETIMEBOUND,
-                        CCoinsMap& map LIFETIMEBOUND,
-                        bool will_erase) noexcept
-        : m_usage(usage), m_sentinel(sentinel), m_map(map), m_will_erase(will_erase) {}
+    CoinsViewCacheCursor(size_t& dirty_count LIFETIMEBOUND,
+                         CoinsCachePair& sentinel LIFETIMEBOUND,
+                         CCoinsMap& map LIFETIMEBOUND,
+                         bool will_erase) noexcept
+        : m_dirty_count(dirty_count), m_sentinel(sentinel), m_map(map), m_will_erase(will_erase) {}
 
     inline CoinsCachePair* Begin() const noexcept { return m_sentinel.second.Next(); }
     inline CoinsCachePair* End() const noexcept { return &m_sentinel; }
@@ -284,11 +279,12 @@ struct CoinsViewCacheCursor
     inline CoinsCachePair* NextAndMaybeErase(CoinsCachePair& current) noexcept
     {
         const auto next_entry{current.second.Next()};
+        Assume(TrySub(m_dirty_count, current.second.IsDirty()));
         // If we are not going to erase the cache, we must still erase spent entries.
         // Otherwise, clear the state of the entry.
         if (!m_will_erase) {
             if (current.second.coin.IsSpent()) {
-                m_usage -= current.second.coin.DynamicMemoryUsage();
+                assert(current.second.coin.DynamicMemoryUsage() == 0); // scriptPubKey was already cleared in SpendCoin
                 m_map.erase(current.first);
             } else {
                 current.second.SetClean();
@@ -298,8 +294,10 @@ struct CoinsViewCacheCursor
     }
 
     inline bool WillErase(CoinsCachePair& current) const noexcept { return m_will_erase || current.second.coin.IsSpent(); }
+    size_t GetDirtyCount() const noexcept { return m_dirty_count; }
+    size_t GetTotalCount() const noexcept { return m_map.size(); }
 private:
-    size_t& m_usage;
+    size_t& m_dirty_count;
     CoinsCachePair& m_sentinel;
     CCoinsMap& m_map;
     bool m_will_erase;
@@ -310,9 +308,15 @@ class CCoinsView
 {
 public:
     //! Retrieve the Coin (unspent transaction output) for a given outpoint.
+    //! May populate the cache. Use PeekCoin() to perform a non-caching lookup.
     virtual std::optional<Coin> GetCoin(const COutPoint& outpoint) const;
 
+    //! Retrieve the Coin (unspent transaction output) for a given outpoint, without caching results.
+    //! Does not populate the cache. Use GetCoin() to cache the result.
+    virtual std::optional<Coin> PeekCoin(const COutPoint& outpoint) const;
+
     //! Just check whether a given outpoint is unspent.
+    //! May populate the cache. Use PeekCoin() to perform a non-caching lookup.
     virtual bool HaveCoin(const COutPoint &outpoint) const;
 
     //! Retrieve the block hash whose state this CCoinsView currently represents
@@ -326,7 +330,7 @@ public:
 
     //! Do a bulk modification (multiple Coin changes + BestBlock change).
     //! The passed cursor is used to iterate through the coins.
-    virtual bool BatchWrite(CoinsViewCacheCursor& cursor, const uint256& hashBlock);
+    virtual void BatchWrite(CoinsViewCacheCursor& cursor, const uint256& hashBlock);
 
     //! Get a cursor to iterate over the whole state
     virtual std::unique_ptr<CCoinsViewCursor> Cursor() const;
@@ -348,11 +352,12 @@ protected:
 public:
     CCoinsViewBacked(CCoinsView *viewIn);
     std::optional<Coin> GetCoin(const COutPoint& outpoint) const override;
+    std::optional<Coin> PeekCoin(const COutPoint& outpoint) const override;
     bool HaveCoin(const COutPoint &outpoint) const override;
     uint256 GetBestBlock() const override;
     std::vector<uint256> GetHeadBlocks() const override;
     void SetBackend(CCoinsView &viewIn);
-    bool BatchWrite(CoinsViewCacheCursor& cursor, const uint256 &hashBlock) override;
+    void BatchWrite(CoinsViewCacheCursor& cursor, const uint256& hashBlock) override;
     std::unique_ptr<CCoinsViewCursor> Cursor() const override;
     size_t EstimateSize() const override;
 };
@@ -377,6 +382,17 @@ protected:
 
     /* Cached dynamic memory usage for the inner Coin objects. */
     mutable size_t cachedCoinsUsage{0};
+    /* Running count of dirty Coin cache entries. */
+    mutable size_t m_dirty_count{0};
+
+    /**
+     * Discard all modifications made to this cache without flushing to the base view.
+     * This can be used to efficiently reuse a cache instance across multiple operations.
+     */
+    void Reset() noexcept;
+
+    /* Fetch the coin from base. Used for cache misses in FetchCoin. */
+    virtual std::optional<Coin> FetchCoinFromBase(const COutPoint& outpoint) const;
 
 public:
     CCoinsViewCache(CCoinsView *baseIn, bool deterministic = false);
@@ -388,10 +404,11 @@ public:
 
     // Standard CCoinsView methods
     std::optional<Coin> GetCoin(const COutPoint& outpoint) const override;
+    std::optional<Coin> PeekCoin(const COutPoint& outpoint) const override;
     bool HaveCoin(const COutPoint &outpoint) const override;
     uint256 GetBestBlock() const override;
     void SetBestBlock(const uint256 &hashBlock);
-    bool BatchWrite(CoinsViewCacheCursor& cursor, const uint256 &hashBlock) override;
+    void BatchWrite(CoinsViewCacheCursor& cursor, const uint256& hashBlock) override;
     std::unique_ptr<CCoinsViewCursor> Cursor() const override {
         throw std::logic_error("CCoinsViewCache cursor iteration not supported.");
     }
@@ -441,18 +458,18 @@ public:
      * Push the modifications applied to this cache to its base and wipe local state.
      * Failure to call this method or Sync() before destruction will cause the changes
      * to be forgotten.
-     * If false is returned, the state of this cache (and its backing view) will be undefined.
+     * If reallocate_cache is false, the cache will retain the same memory footprint
+     * after flushing and should be destroyed to deallocate.
      */
-    bool Flush();
+    void Flush(bool reallocate_cache = true);
 
     /**
      * Push the modifications applied to this cache to its base while retaining
      * the contents of this cache (except for spent coins, which we erase).
      * Failure to call this method or Flush() before destruction will cause the changes
      * to be forgotten.
-     * If false is returned, the state of this cache (and its backing view) will be undefined.
      */
-    bool Sync();
+    void Sync();
 
     /**
      * Removes the UTXO with the given outpoint from the cache, if it is
@@ -460,8 +477,11 @@ public:
      */
     void Uncache(const COutPoint &outpoint);
 
-    //! Calculate the size of the cache (in number of transaction outputs)
+    //! Size of the cache (in number of transaction outputs)
     unsigned int GetCacheSize() const;
+
+    //! Number of dirty cache entries (transaction outputs)
+    size_t GetDirtyCount() const noexcept { return m_dirty_count; }
 
     //! Calculate the size of the cache (in bytes)
     size_t DynamicMemoryUsage() const;
@@ -479,12 +499,52 @@ public:
     //! Run an internal sanity check on the cache data structure. */
     void SanityCheck() const;
 
+    class ResetGuard
+    {
+    private:
+        friend CCoinsViewCache;
+        CCoinsViewCache& m_cache;
+        explicit ResetGuard(CCoinsViewCache& cache LIFETIMEBOUND) noexcept : m_cache{cache} {}
+
+    public:
+        ResetGuard(const ResetGuard&) = delete;
+        ResetGuard& operator=(const ResetGuard&) = delete;
+        ResetGuard(ResetGuard&&) = delete;
+        ResetGuard& operator=(ResetGuard&&) = delete;
+
+        ~ResetGuard() { m_cache.Reset(); }
+    };
+
+    //! Create a scoped guard that will call `Reset()` on this cache when it goes out of scope.
+    [[nodiscard]] ResetGuard CreateResetGuard() noexcept { return ResetGuard{*this}; }
+
 private:
     /**
      * @note this is marked const, but may actually append to `cacheCoins`, increasing
      * memory usage.
      */
     CCoinsMap::iterator FetchCoin(const COutPoint &outpoint) const;
+};
+
+/**
+ * CCoinsViewCache overlay that avoids populating/mutating parent cache layers on cache misses.
+ *
+ * This is achieved by fetching coins from the base view using PeekCoin() instead of GetCoin(),
+ * so intermediate CCoinsViewCache layers are not filled.
+ *
+ * Used during ConnectBlock() as an ephemeral, resettable top-level view that is flushed only
+ * on success, so invalid blocks don't pollute the underlying cache.
+ */
+class CoinsViewOverlay : public CCoinsViewCache
+{
+private:
+    std::optional<Coin> FetchCoinFromBase(const COutPoint& outpoint) const override
+    {
+        return base->PeekCoin(outpoint);
+    }
+
+public:
+    using CCoinsViewCache::CCoinsViewCache;
 };
 
 //! Utility function to add all of a transaction's outputs to a cache.
@@ -519,6 +579,7 @@ public:
 
     std::optional<Coin> GetCoin(const COutPoint& outpoint) const override;
     bool HaveCoin(const COutPoint &outpoint) const override;
+    std::optional<Coin> PeekCoin(const COutPoint& outpoint) const override;
 
 private:
     /** A list of callbacks to execute upon leveldb read error. */

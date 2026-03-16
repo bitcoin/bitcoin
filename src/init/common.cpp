@@ -1,4 +1,4 @@
-// Copyright (c) 2021-2022 The Bitcoin Core developers
+// Copyright (c) 2021-present The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -31,13 +31,14 @@ void AddLoggingArgs(ArgsManager& argsman)
         "If <category> is not supplied or if <category> is 1 or \"all\", output all debug logging. If <category> is 0 or \"none\", any other categories are ignored. Other valid values for <category> are: " + LogInstance().LogCategoriesString() + ". This option can be specified multiple times to output multiple categories.",
         ArgsManager::ALLOW_ANY, OptionsCategory::DEBUG_TEST);
     argsman.AddArg("-debugexclude=<category>", "Exclude debug and trace logging for a category. Can be used in conjunction with -debug=1 to output debug and trace logging for all categories except the specified category. This option can be specified multiple times to exclude multiple categories. This takes priority over \"-debug\"", ArgsManager::ALLOW_ANY, OptionsCategory::DEBUG_TEST);
-    argsman.AddArg("-logips", strprintf("Include IP addresses in debug output (default: %u)", DEFAULT_LOGIPS), ArgsManager::ALLOW_ANY, OptionsCategory::DEBUG_TEST);
+    argsman.AddArg("-logips", strprintf("Include IP addresses in log output (default: %u)", DEFAULT_LOGIPS), ArgsManager::ALLOW_ANY, OptionsCategory::DEBUG_TEST);
     argsman.AddArg("-loglevel=<level>|<category>:<level>", strprintf("Set the global or per-category severity level for logging categories enabled with the -debug configuration option or the logging RPC. Possible values are %s (default=%s). The following levels are always logged: error, warning, info. If <category>:<level> is supplied, the setting will override the global one and may be specified multiple times to set multiple category-specific levels. <category> can be: %s.", LogInstance().LogLevelsString(), LogInstance().LogLevelToStr(BCLog::DEFAULT_LOG_LEVEL), LogInstance().LogCategoriesString()), ArgsManager::DISALLOW_NEGATION | ArgsManager::DISALLOW_ELISION | ArgsManager::DEBUG_ONLY, OptionsCategory::DEBUG_TEST);
     argsman.AddArg("-logtimestamps", strprintf("Prepend debug output with timestamp (default: %u)", DEFAULT_LOGTIMESTAMPS), ArgsManager::ALLOW_ANY, OptionsCategory::DEBUG_TEST);
     argsman.AddArg("-logthreadnames", strprintf("Prepend debug output with name of the originating thread (default: %u)", DEFAULT_LOGTHREADNAMES), ArgsManager::ALLOW_ANY, OptionsCategory::DEBUG_TEST);
     argsman.AddArg("-logsourcelocations", strprintf("Prepend debug output with name of the originating source location (source file, line number and function name) (default: %u)", DEFAULT_LOGSOURCELOCATIONS), ArgsManager::ALLOW_ANY, OptionsCategory::DEBUG_TEST);
     argsman.AddArg("-logtimemicros", strprintf("Add microsecond precision to debug timestamps (default: %u)", DEFAULT_LOGTIMEMICROS), ArgsManager::ALLOW_ANY | ArgsManager::DEBUG_ONLY, OptionsCategory::DEBUG_TEST);
     argsman.AddArg("-loglevelalways", strprintf("Always prepend a category and level (default: %u)", DEFAULT_LOGLEVELALWAYS), ArgsManager::ALLOW_ANY, OptionsCategory::DEBUG_TEST);
+    argsman.AddArg("-logratelimit", strprintf("Apply rate limiting to unconditional logging to mitigate disk-filling attacks (default: %u)", BCLog::DEFAULT_LOGRATELIMIT), ArgsManager::ALLOW_ANY | ArgsManager::DEBUG_ONLY, OptionsCategory::DEBUG_TEST);
     argsman.AddArg("-printtoconsole", "Send trace/debug info to console (default: 1 when no -daemon. To disable logging to file, set -nodebuglogfile)", ArgsManager::ALLOW_ANY, OptionsCategory::DEBUG_TEST);
     argsman.AddArg("-shrinkdebugfile", "Shrink debug.log file on client startup (default: 1 when no -debug)", ArgsManager::ALLOW_ANY, OptionsCategory::DEBUG_TEST);
 }
@@ -77,19 +78,19 @@ util::Result<void> SetLoggingLevel(const ArgsManager& args)
 
 util::Result<void> SetLoggingCategories(const ArgsManager& args)
 {
-        const std::vector<std::string> categories = args.GetArgs("-debug");
+    const std::vector<std::string> categories = args.GetArgs("-debug");
 
-        // Special-case: Disregard any debugging categories appearing before -debug=0/none
-        const auto last_negated = std::find_if(categories.rbegin(), categories.rend(),
-                                               [](const std::string& cat) { return cat == "0" || cat == "none"; });
+    // Special-case: Disregard any debugging categories appearing before -debug=0/none
+    const auto last_negated = std::find_if(categories.rbegin(), categories.rend(),
+                                           [](const std::string& cat) { return cat == "0" || cat == "none"; });
 
-        const auto categories_to_process = (last_negated == categories.rend()) ? categories : std::ranges::subrange(last_negated.base(), categories.end());
+    const auto categories_to_process = (last_negated == categories.rend()) ? categories : std::ranges::subrange(last_negated.base(), categories.end());
 
-        for (const auto& cat : categories_to_process) {
-            if (!LogInstance().EnableCategory(cat)) {
-                return util::Error{strprintf(_("Unsupported logging category %s=%s."), "-debug", cat)};
-            }
+    for (const auto& cat : categories_to_process) {
+        if (!LogInstance().EnableCategory(cat)) {
+            return util::Error{strprintf(_("Unsupported logging category %s=%s."), "-debug", cat)};
         }
+    }
 
     // Now remove the logging categories which were explicitly excluded
     for (const std::string& cat : args.GetArgs("-debugexclude")) {
@@ -97,6 +98,9 @@ util::Result<void> SetLoggingCategories(const ArgsManager& args)
             return util::Error{strprintf(_("Unsupported logging category %s=%s."), "-debugexclude", cat)};
         }
     }
+
+    LogInfo("Log output may contain privacy-sensitive information. Be cautious when sharing logs.");
+
     return {};
 }
 
@@ -114,10 +118,11 @@ bool StartLogging(const ArgsManager& args)
                 fs::PathToString(LogInstance().m_file_path))));
     }
 
-    if (!LogInstance().m_log_timestamps)
-        LogPrintf("Startup time: %s\n", FormatISO8601DateTime(GetTime()));
-    LogPrintf("Default data directory %s\n", fs::PathToString(GetDefaultDataDir()));
-    LogPrintf("Using data directory %s\n", fs::PathToString(gArgs.GetDataDirNet()));
+    if (!LogInstance().m_log_timestamps) {
+        LogInfo("Startup time: %s", FormatISO8601DateTime(GetTime()));
+    }
+    LogInfo("Default data directory %s", fs::PathToString(GetDefaultDataDir()));
+    LogInfo("Using data directory %s", fs::PathToString(gArgs.GetDataDirNet()));
 
     // Only log conf file usage message if conf file actually exists.
     fs::path config_file_path = args.GetConfigFilePath();
@@ -126,12 +131,12 @@ bool StartLogging(const ArgsManager& args)
     } else if (fs::is_directory(config_file_path)) {
         LogWarning("Config file: %s (is directory, not file)", fs::PathToString(config_file_path));
     } else if (fs::exists(config_file_path)) {
-        LogPrintf("Config file: %s\n", fs::PathToString(config_file_path));
+        LogInfo("Config file: %s", fs::PathToString(config_file_path));
     } else if (args.IsArgSet("-conf")) {
         InitWarning(strprintf(_("The specified config file %s does not exist"), fs::PathToString(config_file_path)));
     } else {
         // Not categorizing as "Warning" because it's the default behavior
-        LogPrintf("Config file: %s (not found, skipping)\n", fs::PathToString(config_file_path));
+        LogInfo("Config file: %s (not found, skipping)", fs::PathToString(config_file_path));
     }
 
     // Log the config arguments to debug.log
@@ -148,6 +153,6 @@ void LogPackageVersion()
 #else
     version_string += " (release build)";
 #endif
-    LogPrintf(CLIENT_NAME " version %s\n", version_string);
+    LogInfo(CLIENT_NAME " version %s", version_string);
 }
 } // namespace init

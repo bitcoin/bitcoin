@@ -14,10 +14,6 @@
         <translation type="unfinished">&amp;Tshiswa</translation>
     </message>
     <message>
-        <source>Copy the currently selected address to the system clipboard</source>
-        <translation type="unfinished">Kopa ḓiresi yo khethiwaho zwa zwino kha bodo ya u ṅwala ya sisiṱeme .</translation>
-    </message>
-    <message>
         <source>&amp;Copy</source>
         <translation type="unfinished">&amp;Kopa</translation>
     </message>
@@ -593,6 +589,21 @@ U ṱanganya ṱhoho (%1%)...</translation>
     <message>
         <source>Continue</source>
         <translation type="unfinished">Bvelaphanḓa</translation>
+    </message>
+    </context>
+<context>
+    <name>PSBTOperationsDialog</name>
+    <message numerus="yes">
+        <source>Signed %n input(s), but more signatures are still required.</source>
+        <translation type="unfinished">
+            <numerusform />
+        </translation>
+    </message>
+    <message numerus="yes">
+        <source>Transaction has %n unsigned input(s).</source>
+        <translation type="unfinished">
+            <numerusform />
+        </translation>
     </message>
     </context>
 <context>

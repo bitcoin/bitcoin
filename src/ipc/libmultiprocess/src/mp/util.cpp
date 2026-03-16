@@ -1,21 +1,25 @@
-// Copyright (c) 2018-2019 The Bitcoin Core developers
+// Copyright (c) The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <mp/config.h>
 #include <mp/util.h>
 
-#include <errno.h>
+#include <cerrno>
+#include <cstdio>
+#include <filesystem>
+#include <iostream>
 #include <kj/common.h>
 #include <kj/string-tree.h>
 #include <pthread.h>
 #include <sstream>
-#include <stdio.h>
 #include <string>
+#include <sys/types.h>
 #include <sys/resource.h>
 #include <sys/socket.h>
 #include <sys/wait.h>
 #include <system_error>
+#include <thread> // NOLINT(misc-include-cleaner) // IWYU pragma: keep
 #include <unistd.h>
 #include <utility>
 #include <vector>
@@ -28,8 +32,21 @@
 #include <pthread_np.h>
 #endif // HAVE_PTHREAD_GETTHREADID_NP
 
+namespace fs = std::filesystem;
+
 namespace mp {
 namespace {
+
+std::vector<char*> MakeArgv(const std::vector<std::string>& args)
+{
+    std::vector<char*> argv;
+    argv.reserve(args.size() + 1);
+    for (const auto& arg : args) {
+        argv.push_back(const_cast<char*>(arg.c_str()));
+    }
+    argv.push_back(nullptr);
+    return argv;
+}
 
 //! Return highest possible file descriptor.
 size_t MaxFd()
@@ -75,12 +92,11 @@ std::string ThreadName(const char* exe_name)
     return std::move(buffer).str();
 }
 
-std::string LogEscape(const kj::StringTree& string)
+std::string LogEscape(const kj::StringTree& string, size_t max_size)
 {
-    const int MAX_SIZE = 1000;
     std::string result;
     string.visit([&](const kj::ArrayPtr<const char>& piece) {
-        if (result.size() > MAX_SIZE) return;
+        if (result.size() > max_size) return;
         for (const char c : piece) {
             if (c == '\\') {
                 result.append("\\\\");
@@ -91,7 +107,7 @@ std::string LogEscape(const kj::StringTree& string)
             } else {
                 result.push_back(c);
             }
-            if (result.size() > MAX_SIZE) {
+            if (result.size() > max_size) {
                 result += "...";
                 break;
             }
@@ -107,37 +123,62 @@ int SpawnProcess(int& pid, FdToArgsFn&& fd_to_args)
         throw std::system_error(errno, std::system_category(), "socketpair");
     }
 
+    // Evaluate the callback and build the argv array before forking.
+    //
+    // The parent process may be multi-threaded and holding internal library
+    // locks at fork time. In that case, running code that allocates memory or
+    // takes locks in the child between fork() and exec() can deadlock
+    // indefinitely. Precomputing arguments in the parent avoids this.
+    const std::vector<std::string> args{fd_to_args(fds[0])};
+    const std::vector<char*> argv{MakeArgv(args)};
+
     pid = fork();
     if (pid == -1) {
         throw std::system_error(errno, std::system_category(), "fork");
     }
-    // Parent process closes the descriptor for socket 0, child closes the descriptor for socket 1.
+    // Parent process closes the descriptor for socket 0, child closes the
+    // descriptor for socket 1. On failure, the parent throws, but the child
+    // must _exit(126) (post-fork child must not throw).
     if (close(fds[pid ? 0 : 1]) != 0) {
-        throw std::system_error(errno, std::system_category(), "close");
+        if (pid) {
+            (void)close(fds[1]);
+            throw std::system_error(errno, std::system_category(), "close");
+        }
+        static constexpr char msg[] = "SpawnProcess(child): close(fds[1]) failed\n";
+        const ssize_t writeResult = ::write(STDERR_FILENO, msg, sizeof(msg) - 1);
+        (void)writeResult;
+        _exit(126);
     }
+
     if (!pid) {
-        // Child process must close all potentially open descriptors, except socket 0.
+        // Child process must close all potentially open descriptors, except
+        // socket 0. Do not throw, allocate, or do non-fork-safe work here.
         const int maxFd = MaxFd();
         for (int fd = 3; fd < maxFd; ++fd) {
             if (fd != fds[0]) {
                 close(fd);
             }
         }
-        ExecProcess(fd_to_args(fds[0]));
+
+        execvp(argv[0], argv.data());
+        // NOTE: perror() is not async-signal-safe; calling it here in a
+        // post-fork child may deadlock in multithreaded parents.
+        // TODO: Report errors to the parent via a pipe (e.g. write errno)
+        // so callers can get diagnostics without relying on perror().
+        perror("execvp failed");
+        _exit(127);
     }
     return fds[1];
 }
 
 void ExecProcess(const std::vector<std::string>& args)
 {
-    std::vector<char*> argv;
-    argv.reserve(args.size());
-    for (const auto& arg : args) {
-        argv.push_back(const_cast<char*>(arg.c_str()));
-    }
-    argv.push_back(nullptr);
+    const std::vector<char*> argv{MakeArgv(args)};
     if (execvp(argv[0], argv.data()) != 0) {
-        perror("execlp failed");
+        perror("execvp failed");
+        if (errno == ENOENT && !args.empty()) {
+            std::cerr << "Missing executable: " << fs::weakly_canonical(args.front()) << '\n';
+        }
         _exit(1);
     }
 }
@@ -145,7 +186,7 @@ void ExecProcess(const std::vector<std::string>& args)
 int WaitProcess(int pid)
 {
     int status;
-    if (::waitpid(pid, &status, 0 /* options */) != pid) {
+    if (::waitpid(pid, &status, /*options=*/0) != pid) {
         throw std::system_error(errno, std::system_category(), "waitpid");
     }
     return status;

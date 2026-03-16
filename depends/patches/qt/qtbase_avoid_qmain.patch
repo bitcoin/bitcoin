@@ -10,7 +10,7 @@ so we can safely disable it.
 
 --- a/qtbase/src/entrypoint/CMakeLists.txt
 +++ b/qtbase/src/entrypoint/CMakeLists.txt
-@@ -104,8 +104,6 @@ if(WIN32)
+@@ -105,8 +105,6 @@ if(WIN32)
              APPEND PROPERTY INTERFACE_QT_MODULE_LDFLAGS "-lmingw32"
          )
  

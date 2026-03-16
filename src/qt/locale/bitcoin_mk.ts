@@ -14,10 +14,6 @@
         <translation type="unfinished">Нова</translation>
     </message>
     <message>
-        <source>Copy the currently selected address to the system clipboard</source>
-        <translation type="unfinished">Копирај ја избраната адреса на системскиот клипборд</translation>
-    </message>
-    <message>
         <source>&amp;Copy</source>
         <translation type="unfinished">Копирај</translation>
     </message>
@@ -892,6 +888,14 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     </message>
     </context>
 <context>
+    <name>MigrateWalletActivity</name>
+    <message>
+        <source>Restore Wallet</source>
+        <extracomment>Title of progress window which is displayed when wallets are being restored.</extracomment>
+        <translation type="unfinished">Обновување на паричникот</translation>
+    </message>
+    </context>
+<context>
     <name>OpenWalletActivity</name>
     <message>
         <source>Open Wallet</source>
@@ -952,6 +956,13 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     </message>
     </context>
 <context>
+    <name>HelpMessageDialog</name>
+    <message>
+        <source>version</source>
+        <translation type="unfinished">верзија</translation>
+    </message>
+    </context>
+<context>
     <name>Intro</name>
     <message>
         <source>Bitcoin</source>
@@ -994,14 +1005,7 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <source>Error</source>
         <translation type="unfinished">Грешка</translation>
     </message>
-    </context>
-<context>
-    <name>HelpMessageDialog</name>
-    <message>
-        <source>version</source>
-        <translation type="unfinished">верзија</translation>
-    </message>
-    </context>
+</context>
 <context>
     <name>OptionsDialog</name>
     <message>
@@ -1040,12 +1044,27 @@ Signing is only possible with addresses of the type 'legacy'.</source>
 <context>
     <name>OverviewPage</name>
     <message>
-        <source>Watch-only:</source>
-        <translation type="unfinished">Само гледање</translation>
-    </message>
-    <message>
         <source>Total:</source>
         <translation type="unfinished">Вкупно:</translation>
+    </message>
+    </context>
+<context>
+    <name>PSBTOperationsDialog</name>
+    <message numerus="yes">
+        <source>Signed %n input(s), but more signatures are still required.</source>
+        <translation type="unfinished">
+            <numerusform />
+            <numerusform />
+            <numerusform />
+        </translation>
+    </message>
+    <message numerus="yes">
+        <source>Transaction has %n unsigned input(s).</source>
+        <translation type="unfinished">
+            <numerusform />
+            <numerusform />
+            <numerusform />
+        </translation>
     </message>
     </context>
 <context>
@@ -1358,6 +1377,10 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     </context>
 <context>
     <name>bitcoin-core</name>
+    <message>
+        <source>default wallet</source>
+        <translation type="unfinished">Паричник по подразбирање</translation>
+    </message>
     <message>
         <source>Insufficient funds</source>
         <translation type="unfinished">Недоволно средства</translation>

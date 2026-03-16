@@ -242,10 +242,9 @@ def verify_schnorr(key, sig, msg):
 
     - key is a 32-byte xonly pubkey (computed using compute_xonly_pubkey).
     - sig is a 64-byte Schnorr signature
-    - msg is a 32-byte message
+    - msg is a variable-length message
     """
     assert len(key) == 32
-    assert len(msg) == 32
     assert len(sig) == 64
 
     P = secp256k1.GE.from_bytes_xonly(key)
@@ -272,7 +271,6 @@ def sign_schnorr(key, msg, aux=None, flip_p=False, flip_r=False):
         aux = bytes(32)
 
     assert len(key) == 32
-    assert len(msg) == 32
     assert len(aux) == 32
 
     sec = int.from_bytes(key, 'big')
@@ -318,7 +316,7 @@ class TestFrameworkKey(unittest.TestCase):
         """Implement the BIP340 test vectors (read from bip340_test_vectors.csv)."""
         num_tests = 0
         vectors_file = os.path.join(os.path.dirname(os.path.realpath(__file__)), 'bip340_test_vectors.csv')
-        with open(vectors_file, newline='', encoding='utf8') as csvfile:
+        with open(vectors_file, newline='') as csvfile:
             reader = csv.reader(csvfile)
             next(reader)
             for row in reader:

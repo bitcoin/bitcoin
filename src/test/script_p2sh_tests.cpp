@@ -1,4 +1,4 @@
-// Copyright (c) 2012-2022 The Bitcoin Core developers
+// Copyright (c) 2012-present The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -363,6 +363,12 @@ BOOST_AUTO_TEST_CASE(AreInputsStandard)
     BOOST_CHECK(::AreInputsStandard(CTransaction(txTo), coins));
     // 22 P2SH sigops for all inputs (1 for vin[0], 6 for vin[3], 15 for vin[4]
     BOOST_CHECK_EQUAL(GetP2SHSigOpCount(CTransaction(txTo), coins), 22U);
+
+    CMutableTransaction coinbase_tx_mut;
+    coinbase_tx_mut.vin.resize(1);
+    CTransaction coinbase_tx{coinbase_tx_mut};
+    BOOST_CHECK(coinbase_tx.IsCoinBase());
+    BOOST_CHECK_EQUAL(GetP2SHSigOpCount(coinbase_tx, coins), 0U);
 
     CMutableTransaction txToNonStd1;
     txToNonStd1.vout.resize(1);

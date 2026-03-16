@@ -1,2 +1,4 @@
 # Suppress warnings triggered in dependencies
 leak:libQt6Widgets
+leak:QDBusConnectionPrivate
+leak:QLayoutPrivate

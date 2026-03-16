@@ -137,7 +137,7 @@
          <item>
           <widget class="QPushButton" name="copySignatureButton_SM">
            <property name="toolTip">
-            <string>Copy the current signature to the system clipboard</string>
+            <string>Copy the current signature to the clipboard</string>
            </property>
            <property name="text">
             <string/>

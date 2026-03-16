@@ -1,4 +1,4 @@
-// Copyright (c) 2018-2022 The Bitcoin Core developers
+// Copyright (c) 2018-present The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -7,14 +7,17 @@
 
 #include <blockfilter.h>
 #include <common/settings.h>
-#include <primitives/transaction.h> // For CTransactionRef
+#include <kernel/chain.h> // IWYU pragma: export
+#include <node/types.h>
+#include <primitives/transaction.h>
 #include <util/result.h>
 
+#include <cstddef>
+#include <cstdint>
 #include <functional>
+#include <map>
 #include <memory>
 #include <optional>
-#include <stddef.h>
-#include <stdint.h>
 #include <string>
 #include <vector>
 
@@ -28,10 +31,12 @@ class Coin;
 class uint256;
 enum class MemPoolRemovalReason;
 enum class RBFTransactionState;
-enum class ChainstateRole;
 struct bilingual_str;
 struct CBlockLocator;
 struct FeeCalculation;
+namespace kernel {
+struct ChainstateRole;
+} // namespace kernel
 namespace node {
 struct NodeContext;
 } // namespace node
@@ -72,22 +77,6 @@ public:
     const FoundBlock* m_next_block = nullptr;
     CBlock* m_data = nullptr;
     mutable bool found = false;
-};
-
-//! Block data sent with blockConnected, blockDisconnected notifications.
-struct BlockInfo {
-    const uint256& hash;
-    const uint256* prev_hash = nullptr;
-    int height = -1;
-    int file_number = -1;
-    unsigned data_pos = 0;
-    const CBlock* data = nullptr;
-    const CBlockUndo* undo_data = nullptr;
-    // The maximum time in the chain up to and including this block.
-    // A timestamp that can only move forward.
-    unsigned int chain_time_max{0};
-
-    BlockInfo(const uint256& hash LIFETIMEBOUND) : hash(hash) {}
 };
 
 //! The action to be taken after updating a settings value.
@@ -141,13 +130,6 @@ public:
     //! Check that the block is available on disk (i.e. has not been
     //! pruned), and contains transactions.
     virtual bool haveBlockOnDisk(int height) = 0;
-
-    //! Get locator for the current chain tip.
-    virtual CBlockLocator getTipLocator() = 0;
-
-    //! Return a locator that refers to a block in the active chain.
-    //! If specified block is not in the active chain, return locator for the latest ancestor that is in the chain.
-    virtual CBlockLocator getActiveChainLocator(const uint256& block_hash) = 0;
 
     //! Return height of the highest block on chain in common with the locator,
     //! which will either be the original block used to create the locator,
@@ -207,21 +189,27 @@ public:
     virtual RBFTransactionState isRBFOptIn(const CTransaction& tx) = 0;
 
     //! Check if transaction is in mempool.
-    virtual bool isInMempool(const uint256& txid) = 0;
+    virtual bool isInMempool(const Txid& txid) = 0;
 
     //! Check if transaction has descendants in mempool.
-    virtual bool hasDescendantsInMempool(const uint256& txid) = 0;
+    virtual bool hasDescendantsInMempool(const Txid& txid) = 0;
 
-    //! Transaction is added to memory pool, if the transaction fee is below the
-    //! amount specified by max_tx_fee, and broadcast to all peers if relay is set to true.
-    //! Return false if the transaction could not be added due to the fee or for another reason.
+    //! Process a local transaction, optionally adding it to the mempool and
+    //! optionally broadcasting it to the network.
+    //! @param[in] tx Transaction to process.
+    //! @param[in] max_tx_fee Don't add the transaction to the mempool or
+    //! broadcast it if its fee is higher than this.
+    //! @param[in] broadcast_method Whether to add the transaction to the
+    //! mempool and how/whether to broadcast it.
+    //! @param[out] err_string Set if an error occurs.
+    //! @return False if the transaction could not be added due to the fee or for another reason.
     virtual bool broadcastTransaction(const CTransactionRef& tx,
-        const CAmount& max_tx_fee,
-        bool relay,
-        std::string& err_string) = 0;
+                                      const CAmount& max_tx_fee,
+                                      node::TxBroadcast broadcast_method,
+                                      std::string& err_string) = 0;
 
-    //! Calculate mempool ancestor and descendant counts for the given transaction.
-    virtual void getTransactionAncestry(const uint256& txid, size_t& ancestors, size_t& descendants, size_t* ancestorsize = nullptr, CAmount* ancestorfees = nullptr) = 0;
+    //! Calculate mempool ancestor and cluster counts for the given transaction.
+    virtual void getTransactionAncestry(const Txid& txid, size_t& ancestors, size_t& cluster_count, size_t* ancestorsize = nullptr, CAmount* ancestorfees = nullptr) = 0;
 
     //! For each outpoint, calculate the fee-bumping cost to spend this outpoint at the specified
     //  feerate, including bumping its ancestors. For example, if the target feerate is 10sat/vbyte
@@ -320,18 +308,35 @@ public:
         virtual ~Notifications() = default;
         virtual void transactionAddedToMempool(const CTransactionRef& tx) {}
         virtual void transactionRemovedFromMempool(const CTransactionRef& tx, MemPoolRemovalReason reason) {}
-        virtual void blockConnected(ChainstateRole role, const BlockInfo& block) {}
+        virtual void blockConnected(const kernel::ChainstateRole& role, const BlockInfo& block) {}
         virtual void blockDisconnected(const BlockInfo& block) {}
         virtual void updatedBlockTip() {}
-        virtual void chainStateFlushed(ChainstateRole role, const CBlockLocator& locator) {}
+        virtual void chainStateFlushed(const kernel::ChainstateRole& role, const CBlockLocator& locator) {}
+    };
+
+    //! Options specifying which chain notifications are required.
+    struct NotifyOptions
+    {
+        //! Include undo data with block connected notifications.
+        bool connect_undo_data = false;
+        //! Include block data with block disconnected notifications.
+        bool disconnect_data = false;
+        //! Include undo data with block disconnected notifications.
+        bool disconnect_undo_data = false;
     };
 
     //! Register handler for notifications.
+    //! Some notifications are asynchronous and may still execute after the handler is disconnected.
+    //! Use waitForNotifications() after the handler is disconnected to ensure all pending notifications
+    //! have been processed.
     virtual std::unique_ptr<Handler> handleNotifications(std::shared_ptr<Notifications> notifications) = 0;
 
     //! Wait for pending notifications to be processed unless block hash points to the current
     //! chain tip.
     virtual void waitForNotificationsIfTipChanged(const uint256& old_tip) = 0;
+
+    //! Wait for all pending notifications up to this point to be processed
+    virtual void waitForNotifications() = 0;
 
     //! Register handler for RPC. Command is not copied, so reference
     //! needs to remain valid until Handler is disconnected.
@@ -339,9 +344,6 @@ public:
 
     //! Check if deprecated RPC is enabled.
     virtual bool rpcEnableDeprecated(const std::string& method) = 0;
-
-    //! Run function after given number of seconds. Cancel any previous calls with same name.
-    virtual void rpcRunLater(const std::string& name, std::function<void()> fn, int64_t seconds) = 0;
 
     //! Get settings value.
     virtual common::SettingsValue getSetting(const std::string& arg) = 0;
@@ -380,7 +382,9 @@ public:
     //! removed transactions and already added new transactions.
     virtual void requestMempoolTransactions(Notifications& notifications) = 0;
 
-    //! Return true if an assumed-valid chain is in use.
+    //! Return true if an assumed-valid snapshot is in use. Note that this
+    //! returns true even after the snapshot is validated, until the next node
+    //! restart.
     virtual bool hasAssumedValidChain() = 0;
 
     //! Get internal node context. Useful for testing, but not
@@ -406,9 +410,6 @@ public:
 
     //! Start client execution and provide a scheduler.
     virtual void start(CScheduler& scheduler) = 0;
-
-    //! Save state to disk.
-    virtual void flush() = 0;
 
     //! Shut down client.
     virtual void stop() = 0;

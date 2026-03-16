@@ -86,20 +86,20 @@ void InsecureRandom_stdshuffle100(benchmark::Bench& bench) { BenchRandom_stdshuf
 
 } // namespace
 
-BENCHMARK(FastRandom_rand64, benchmark::PriorityLevel::HIGH);
-BENCHMARK(FastRandom_rand32, benchmark::PriorityLevel::HIGH);
-BENCHMARK(FastRandom_randbool, benchmark::PriorityLevel::HIGH);
-BENCHMARK(FastRandom_randbits, benchmark::PriorityLevel::HIGH);
-BENCHMARK(FastRandom_randrange100, benchmark::PriorityLevel::HIGH);
-BENCHMARK(FastRandom_randrange1000, benchmark::PriorityLevel::HIGH);
-BENCHMARK(FastRandom_randrange1000000, benchmark::PriorityLevel::HIGH);
-BENCHMARK(FastRandom_stdshuffle100, benchmark::PriorityLevel::HIGH);
+BENCHMARK(FastRandom_rand64);
+BENCHMARK(FastRandom_rand32);
+BENCHMARK(FastRandom_randbool);
+BENCHMARK(FastRandom_randbits);
+BENCHMARK(FastRandom_randrange100);
+BENCHMARK(FastRandom_randrange1000);
+BENCHMARK(FastRandom_randrange1000000);
+BENCHMARK(FastRandom_stdshuffle100);
 
-BENCHMARK(InsecureRandom_rand64, benchmark::PriorityLevel::HIGH);
-BENCHMARK(InsecureRandom_rand32, benchmark::PriorityLevel::HIGH);
-BENCHMARK(InsecureRandom_randbool, benchmark::PriorityLevel::HIGH);
-BENCHMARK(InsecureRandom_randbits, benchmark::PriorityLevel::HIGH);
-BENCHMARK(InsecureRandom_randrange100, benchmark::PriorityLevel::HIGH);
-BENCHMARK(InsecureRandom_randrange1000, benchmark::PriorityLevel::HIGH);
-BENCHMARK(InsecureRandom_randrange1000000, benchmark::PriorityLevel::HIGH);
-BENCHMARK(InsecureRandom_stdshuffle100, benchmark::PriorityLevel::HIGH);
+BENCHMARK(InsecureRandom_rand64);
+BENCHMARK(InsecureRandom_rand32);
+BENCHMARK(InsecureRandom_randbool);
+BENCHMARK(InsecureRandom_randbits);
+BENCHMARK(InsecureRandom_randrange100);
+BENCHMARK(InsecureRandom_randrange1000);
+BENCHMARK(InsecureRandom_randrange1000000);
+BENCHMARK(InsecureRandom_stdshuffle100);

@@ -14,10 +14,6 @@
         <translation type="unfinished">&amp;Newydd</translation>
     </message>
     <message>
-        <source>Copy the currently selected address to the system clipboard</source>
-        <translation type="unfinished">Copio'r cyfeiriad sydd wedi'i ddewis i'r clipfwrdd system</translation>
-    </message>
-    <message>
         <source>&amp;Copy</source>
         <translation type="unfinished">&amp;Copïo</translation>
     </message>
@@ -769,14 +765,6 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <translation type="unfinished">Cyn-syncronïo Penawdau (%1%)…</translation>
     </message>
     <message>
-        <source>Error creating wallet</source>
-        <translation type="unfinished">Gwall wrth greu waled</translation>
-    </message>
-    <message>
-        <source>Cannot create new wallet, the software was compiled without sqlite support (required for descriptor wallets)</source>
-        <translation type="unfinished">Ni all greu waled newydd, cafodd y meddalwedd ei gyfansoddi heb gefnogaeth sqlite (anghenion ar gyfer waledi disgrifiwr)</translation>
-    </message>
-    <message>
         <source>Error: %1</source>
         <translation type="unfinished"> Gwall: %1</translation>
     </message>
@@ -1036,6 +1024,11 @@ Bydd y broses fudo yn creu copi wrth gefn o'r waled cyn mudo. Bydd y ffeil wrth 
         <translation type="unfinished">Mae sgriptiau hydoddadwy ond heb eu gwylio wedi'u symud i waled newydd o'r enw '%1'.</translation>
     </message>
     <message>
+        <source>Restore Wallet</source>
+        <extracomment>Title of progress window which is displayed when wallets are being restored.</extracomment>
+        <translation type="unfinished">Ail-adfer Waled</translation>
+    </message>
+    <message>
         <source>Migration Successful</source>
         <translation type="unfinished">Mudo yn Llwyddiannus</translation>
     </message>
@@ -1116,10 +1109,6 @@ Bydd y broses fudo yn creu copi wrth gefn o'r waled cyn mudo. Bydd y ffeil wrth 
     <message>
         <source>Disable private keys for this wallet. Wallets with private keys disabled will have no private keys and cannot have an HD seed or imported private keys. This is ideal for watch-only wallets.</source>
         <translation type="unfinished">Analluogi allweddi preifat ar gyfer y waled hon. Ni fydd gan waledi ag allweddi preifat anabl unrhyw allweddi preifat ac ni allant gael hedyn HD nac allweddi preifat wedi'u mewnforio. Mae hyn yn ddelfrydol ar gyfer waledi gwylio yn unig.</translation>
-    </message>
-    <message>
-        <source>Make a blank wallet. Blank wallets do not initially have private keys or scripts. Private keys and addresses can be imported, or an HD seed can be set, at a later time.</source>
-        <translation type="unfinished">Gwnewch waled wag. Nid oes gan waledi gwag allweddi preifat na sgriptiau i ddechrau. Gellir mewnforio allweddi preifat a chyfeiriadau, neu gellir gosod hedyn HD, yn ddiweddarach.</translation>
     </message>
     <message>
         <source>Use an external signing device such as a hardware wallet. Configure the external signer script in wallet preferences first.</source>
@@ -1206,7 +1195,18 @@ Bydd y broses fudo yn creu copi wrth gefn o'r waled cyn mudo. Bydd y ffeil wrth 
     </message>
 </context>
 <context>
+    <name>HelpMessageDialog</name>
+    <message>
+        <source>Command-line options</source>
+        <translation type="unfinished">Dewisiadau llinell orchymyn</translation>
+    </message>
+</context>
+<context>
     <name>Intro</name>
+    <message>
+        <source>Welcome</source>
+        <translation type="unfinished">Croeso</translation>
+    </message>
     <message numerus="yes">
         <source>%n GB of space available</source>
         <translation type="unfinished">
@@ -1275,17 +1275,6 @@ Bydd y broses fudo yn creu copi wrth gefn o'r waled cyn mudo. Bydd y ffeil wrth 
     <message>
         <source>Error</source>
         <translation type="unfinished">Gwall</translation>
-    </message>
-    <message>
-        <source>Welcome</source>
-        <translation type="unfinished">Croeso</translation>
-    </message>
-    </context>
-<context>
-    <name>HelpMessageDialog</name>
-    <message>
-        <source>Command-line options</source>
-        <translation type="unfinished">Dewisiadau llinell orchymyn</translation>
     </message>
 </context>
 <context>
@@ -1515,6 +1504,29 @@ Bydd y broses fudo yn creu copi wrth gefn o'r waled cyn mudo. Bydd y ffeil wrth 
     <message>
         <source>Form</source>
         <translation type="unfinished">Ffurflen</translation>
+    </message>
+    </context>
+<context>
+    <name>PSBTOperationsDialog</name>
+    <message numerus="yes">
+        <source>Signed %n input(s), but more signatures are still required.</source>
+        <translation type="unfinished">
+            <numerusform />
+            <numerusform />
+            <numerusform />
+            <numerusform />
+            <numerusform />
+        </translation>
+    </message>
+    <message numerus="yes">
+        <source>Transaction has %n unsigned input(s).</source>
+        <translation type="unfinished">
+            <numerusform />
+            <numerusform />
+            <numerusform />
+            <numerusform />
+            <numerusform />
+        </translation>
     </message>
     </context>
 <context>
@@ -1880,14 +1892,6 @@ Bydd y broses fudo yn creu copi wrth gefn o'r waled cyn mudo. Bydd y ffeil wrth 
         <translation type="unfinished">Methu dod o hyd i UTXO ar gyfer mewnbwn allanol</translation>
     </message>
     <message>
-        <source>Unable to generate initial keys</source>
-        <translation type="unfinished">Methu cynhyrchu allweddi cychwynnol</translation>
-    </message>
-    <message>
-        <source>Unable to generate keys</source>
-        <translation type="unfinished">Methu cynhyrchu allweddi</translation>
-    </message>
-    <message>
         <source>Unable to open %s for writing</source>
         <translation type="unfinished">Methu agor%sar gyfer ysgrifennu</translation>
     </message>
@@ -1898,10 +1902,6 @@ Bydd y broses fudo yn creu copi wrth gefn o'r waled cyn mudo. Bydd y ffeil wrth 
     <message>
         <source>Unable to start HTTP server. See debug log for details.</source>
         <translation type="unfinished">Methu cychwyn gweinydd HTTP. Gweler y log dadfygio am fanylion.</translation>
-    </message>
-    <message>
-        <source>Unable to unload the wallet before migrating</source>
-        <translation type="unfinished">Methu dadlwytho'r waled cyn mudo</translation>
     </message>
     <message>
         <source>Unknown -blockfilterindex value %s.</source>

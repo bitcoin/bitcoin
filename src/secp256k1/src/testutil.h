@@ -11,6 +11,14 @@
 #include "testrand.h"
 #include "util.h"
 
+/* group order of the secp256k1 curve in 32-byte big endian representation */
+static const unsigned char secp256k1_group_order_bytes[32] = {
+    0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff,
+    0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xfe,
+    0xba, 0xae, 0xdc, 0xe6, 0xaf, 0x48, 0xa0, 0x3b,
+    0xbf, 0xd2, 0x5e, 0x8c, 0xd0, 0x36, 0x41, 0x41
+};
+
 static void testutil_random_fe(secp256k1_fe *x) {
     unsigned char bin[32];
     do {
@@ -88,17 +96,13 @@ static void testutil_random_ge_test(secp256k1_ge *ge) {
             break;
         }
     } while(1);
-    ge->infinity = 0;
 }
 
 static void testutil_random_ge_jacobian_test(secp256k1_gej *gej, const secp256k1_ge *ge) {
-    secp256k1_fe z2, z3;
-    testutil_random_fe_non_zero_test(&gej->z);
-    secp256k1_fe_sqr(&z2, &gej->z);
-    secp256k1_fe_mul(&z3, &z2, &gej->z);
-    secp256k1_fe_mul(&gej->x, &ge->x, &z2);
-    secp256k1_fe_mul(&gej->y, &ge->y, &z3);
-    gej->infinity = ge->infinity;
+    secp256k1_fe z;
+    testutil_random_fe_non_zero_test(&z);
+    secp256k1_gej_set_ge(gej, ge);
+    secp256k1_gej_rescale(gej, &z);
 }
 
 static void testutil_random_gej_test(secp256k1_gej *gej) {

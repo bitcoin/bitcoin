@@ -1,5 +1,5 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
-// Copyright (c) 2009-2022 The Bitcoin Core developers
+// Copyright (c) 2009-present The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -89,7 +89,7 @@ static void SetupCliArgs(ArgsManager& argsman)
                              "RPC generatetoaddress nblocks and maxtries arguments. Example: bitcoin-cli -generate 4 1000",
                              DEFAULT_NBLOCKS, DEFAULT_MAX_TRIES),
                    ArgsManager::ALLOW_ANY, OptionsCategory::CLI_COMMANDS);
-    argsman.AddArg("-addrinfo", "Get the number of addresses known to the node, per network and total, after filtering for quality and recency. The total number of addresses known to the node may be higher.", ArgsManager::ALLOW_ANY, OptionsCategory::CLI_COMMANDS);
+    argsman.AddArg("-addrinfo", "Get the number of addresses known to the node, per network and total.", ArgsManager::ALLOW_ANY, OptionsCategory::CLI_COMMANDS);
     argsman.AddArg("-getinfo", "Get general information from the remote server. Note that unlike server-side RPC calls, the output of -getinfo is the result of multiple non-atomic requests. Some entries in the output may represent results from different states (e.g. wallet balance may be as of a different block from the chain state reported)", ArgsManager::ALLOW_ANY, OptionsCategory::CLI_COMMANDS);
     argsman.AddArg("-netinfo", strprintf("Get network peer connection information from the remote server. An optional argument from 0 to %d can be passed for different peers listings (default: 0). If a non-zero value is passed, an additional \"outonly\" (or \"o\") argument can be passed to see outbound peers only. Pass \"help\" (or \"h\") for detailed help documentation.", NETINFO_MAX_LEVEL), ArgsManager::ALLOW_ANY, OptionsCategory::CLI_COMMANDS);
 
@@ -279,33 +279,32 @@ struct AddrinfoRequestHandler : BaseRequestHandler {
         if (!args.empty()) {
             throw std::runtime_error("-addrinfo takes no arguments");
         }
-        UniValue params{RPCConvertValues("getnodeaddresses", std::vector<std::string>{{"0"}})};
-        return JSONRPCRequestObj("getnodeaddresses", params, 1);
+        return JSONRPCRequestObj("getaddrmaninfo", NullUniValue, 1);
     }
 
     UniValue ProcessReply(const UniValue& reply) override
     {
-        if (!reply["error"].isNull()) return reply;
-        const std::vector<UniValue>& nodes{reply["result"].getValues()};
-        if (!nodes.empty() && nodes.at(0)["network"].isNull()) {
-            throw std::runtime_error("-addrinfo requires bitcoind server to be running v22.0 and up");
+        if (!reply["error"].isNull()) {
+            if (reply["error"]["code"].getInt<int>() == RPC_METHOD_NOT_FOUND) {
+                throw std::runtime_error("-addrinfo requires bitcoind v26.0 or later which supports getaddrmaninfo RPC. Please upgrade your node or use bitcoin-cli from the same version.");
+            }
+            return reply;
         }
-        // Count the number of peers known to our node, by network.
-        std::array<uint64_t, NETWORKS.size()> counts{{}};
-        for (const UniValue& node : nodes) {
-            std::string network_name{node["network"].get_str()};
-            const int8_t network_id{NetworkStringToId(network_name)};
-            if (network_id == UNKNOWN_NETWORK) continue;
-            ++counts.at(network_id);
-        }
+        // Process getaddrmaninfo reply
+        const std::vector<std::string>& network_types{reply["result"].getKeys()};
+        const std::vector<UniValue>& addrman_counts{reply["result"].getValues()};
+
         // Prepare result to return to user.
         UniValue result{UniValue::VOBJ}, addresses{UniValue::VOBJ};
-        uint64_t total{0}; // Total address count
-        for (size_t i = 1; i < NETWORKS.size() - 1; ++i) {
-            addresses.pushKV(NETWORKS[i], counts.at(i));
-            total += counts.at(i);
+
+        for (size_t i = 0; i < network_types.size(); ++i) {
+            int addr_count = addrman_counts[i]["total"].getInt<int>();
+            if (network_types[i] == "all_networks") {
+                addresses.pushKV("total", addr_count);
+            } else {
+                addresses.pushKV(network_types[i], addr_count);
+            }
         }
-        addresses.pushKV("total", total);
         result.pushKV("addresses_known", std::move(addresses));
         return JSONRPCReplyObj(std::move(result), NullUniValue, /*id=*/1, JSONRPCVersion::V2);
     }
@@ -367,7 +366,6 @@ struct GetinfoRequestHandler : BaseRequestHandler {
             if (!batch[ID_WALLETINFO]["result"]["unlocked_until"].isNull()) {
                 result.pushKV("unlocked_until", batch[ID_WALLETINFO]["result"]["unlocked_until"]);
             }
-            result.pushKV("paytxfee", batch[ID_WALLETINFO]["result"]["paytxfee"]);
         }
         if (!batch[ID_BALANCES]["result"].isNull()) {
             result.pushKV("balance", batch[ID_BALANCES]["result"]["mine"]["trusted"]);
@@ -452,6 +450,7 @@ private:
         if (conn_type == "block-relay-only") return "block";
         if (conn_type == "manual" || conn_type == "feeler") return conn_type;
         if (conn_type == "addr-fetch") return "addr";
+        if (conn_type == "private-broadcast") return "priv";
         return "";
     }
     std::string FormatServices(const UniValue& services)
@@ -460,6 +459,17 @@ private:
         for (size_t i = 0; i < services.size(); ++i) {
             const std::string s{services[i].get_str()};
             str += s == "NETWORK_LIMITED" ? 'l' : s == "P2P_V2" ? '2' : ToLower(s[0]);
+        }
+        return str;
+    }
+    static std::string ServicesList(const UniValue& services)
+    {
+        std::string str{services.size() ? services[0].get_str() : ""};
+        for (size_t i{1}; i < services.size(); ++i) {
+            str += ", " + services[i].get_str();
+        }
+        for (auto& c: str) {
+            c = (c == '_' ? ' ' : ToLower(c));
         }
         return str;
     }
@@ -472,7 +482,8 @@ public:
     {
         if (!args.empty()) {
             uint8_t n{0};
-            if (ParseUInt8(args.at(0), &n)) {
+            if (const auto res{ToIntegral<uint8_t>(args.at(0))}) {
+                n = *res;
                 m_details_level = std::min(n, NETINFO_MAX_LEVEL);
             } else {
                 throw std::runtime_error(strprintf("invalid -netinfo level argument: %s\nFor more information, run: bitcoin-cli -netinfo help", args.at(0)));
@@ -554,7 +565,8 @@ public:
         }
 
         // Generate report header.
-        std::string result{strprintf("%s client %s%s - server %i%s\n\n", CLIENT_NAME, FormatFullVersion(), ChainToString(), networkinfo["protocolversion"].getInt<int>(), networkinfo["subversion"].get_str())};
+        const std::string services{DetailsRequested() ? strprintf(" - services %s", FormatServices(networkinfo["localservicesnames"])) : ""};
+        std::string result{strprintf("%s client %s%s - server %i%s%s\n\n", CLIENT_NAME, FormatFullVersion(), ChainToString(), networkinfo["protocolversion"].getInt<int>(), networkinfo["subversion"].get_str(), services)};
 
         // Report detailed peer connections list sorted by direction and minimum ping time.
         if (DetailsRequested() && !m_peers.empty()) {
@@ -635,7 +647,10 @@ public:
             }
         }
 
-        // Report local addresses, ports, and scores.
+        // Report local services, addresses, ports, and scores.
+        if (!DetailsRequested()) {
+            result += strprintf("\n\nLocal services: %s", ServicesList(networkinfo["localservicesnames"]));
+        }
         result += "\n\nLocal addresses";
         const std::vector<UniValue>& local_addrs{networkinfo["localaddresses"].getValues()};
         if (local_addrs.empty()) {
@@ -687,6 +702,7 @@ public:
         "           \"manual\" - peer we manually added using RPC addnode or the -addnode/-connect config options\n"
         "           \"feeler\" - short-lived connection for testing addresses\n"
         "           \"addr\"   - address fetch; short-lived connection for requesting addresses\n"
+        "           \"priv\"   - private broadcast; short-lived connection for broadcasting our transactions\n"
         "  net      Network the peer connected through (\"ipv4\", \"ipv6\", \"onion\", \"i2p\", \"cjdns\", or \"npr\" (not publicly routable))\n"
         "  serv     Services offered by the peer\n"
         "           \"n\" - NETWORK: peer can serve the full block chain\n"
@@ -883,8 +899,7 @@ static UniValue CallRPC(BaseRequestHandler* rh, const std::string& strMethod, co
             throw CConnectionFailed("uri-encode failed");
         }
     }
-    int r = evhttp_make_request(evcon.get(), req.get(), EVHTTP_REQ_POST, endpoint.c_str());
-    req.release(); // ownership moved to evcon in above call
+    int r = evhttp_make_request(evcon.get(), req.release(), EVHTTP_REQ_POST, endpoint.c_str());
     if (r != 0) {
         throw CConnectionFailed("send http request failed");
     }
@@ -1113,7 +1128,7 @@ static void ParseGetInfoResult(UniValue& result)
         const std::string proxy = network["proxy"].getValStr();
         if (proxy.empty()) continue;
         // Add proxy to ordered_proxy if has not been processed
-        if (proxy_networks.find(proxy) == proxy_networks.end()) ordered_proxies.push_back(proxy);
+        if (!proxy_networks.contains(proxy)) ordered_proxies.push_back(proxy);
 
         proxy_networks[proxy].push_back(network["name"].getValStr());
     }
@@ -1135,7 +1150,6 @@ static void ParseGetInfoResult(UniValue& result)
         if (!result["unlocked_until"].isNull()) {
             result_string += strprintf("Unlocked until: %s\n", result["unlocked_until"].getValStr());
         }
-        result_string += strprintf("Transaction fee rate (-paytxfee) (%s/kvB): %s\n\n", CURRENCY_UNIT, result["paytxfee"].getValStr());
     }
     if (!result["balance"].isNull()) {
         result_string += strprintf("%sBalance:%s %s\n\n", CYAN, RESET, result["balance"].getValStr());
@@ -1220,7 +1234,7 @@ static int CommandLineRPC(int argc, char *argv[])
         if (gArgs.GetBoolArg("-stdinwalletpassphrase", false)) {
             NO_STDIN_ECHO();
             std::string walletPass;
-            if (args.size() < 1 || args[0].substr(0, 16) != "walletpassphrase") {
+            if (args.size() < 1 || !args[0].starts_with("walletpassphrase")) {
                 throw std::runtime_error("-stdinwalletpassphrase is only applicable for walletpassphrase(change)");
             }
             if (!StdinReady()) {
@@ -1312,10 +1326,6 @@ static int CommandLineRPC(int argc, char *argv[])
 
 MAIN_FUNCTION
 {
-#ifdef WIN32
-    common::WinCmdLineArgs winArgs;
-    std::tie(argc, argv) = winArgs.get();
-#endif
     SetupEnvironment();
     if (!SetupNetworking()) {
         tfm::format(std::cerr, "Error: Initializing networking failed\n");

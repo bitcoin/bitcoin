@@ -2,11 +2,11 @@
              ((gnu packages bash) #:select (bash-minimal))
              (gnu packages bison)
              ((gnu packages certs) #:select (nss-certs))
+             ((gnu packages check) #:select (libfaketime))
              ((gnu packages cmake) #:select (cmake-minimal))
              (gnu packages commencement)
              (gnu packages compression)
              (gnu packages cross-base)
-             (gnu packages file)
              (gnu packages gawk)
              (gnu packages gcc)
              ((gnu packages installers) #:select (nsis-x86_64))
@@ -16,8 +16,10 @@
              (gnu packages ninja)
              (gnu packages pkg-config)
              ((gnu packages python) #:select (python-minimal))
-             ((gnu packages python-build) #:select (python-tomli python-poetry-core))
+             ((gnu packages python-build) #:select (python-poetry-core))
              ((gnu packages python-crypto) #:select (python-asn1crypto))
+             ((gnu packages python-science) #:select (python-scikit-build-core))
+             ((gnu packages python-xyz) #:select (python-pydantic-2))
              ((gnu packages tls) #:select (openssl))
              ((gnu packages version-control) #:select (git-minimal))
              (guix build-system cmake)
@@ -92,16 +94,26 @@ chain for " target " development."))
       (home-page (package-home-page xgcc))
       (license (package-license xgcc)))))
 
-(define base-gcc gcc-13) ;; 13.3.0
+(define base-gcc
+  (package
+    (inherit gcc-14) ;; 14.2.0
+    (version "14.3.0")
+    (source (origin
+              (method url-fetch)
+              (uri (string-append "mirror://gnu/gcc/gcc-"
+                                  version "/gcc-" version ".tar.xz"))
+              (sha256
+               (base32
+                "0fna78ly417g69fdm4i5f3ms96g8xzzjza8gwp41lqr5fqlpgp70"))))))
 
 (define base-linux-kernel-headers linux-libre-headers-6.1)
 
 (define* (make-bitcoin-cross-toolchain target
                                        #:key
-                                       (base-gcc-for-libc linux-base-gcc)
+                                       (base-gcc-for-libc (gcc-libgcc-patches linux-base-gcc))
                                        (base-kernel-headers base-linux-kernel-headers)
                                        (base-libc glibc-2.31)
-                                       (base-gcc linux-base-gcc))
+                                       (base-gcc (gcc-libgcc-patches linux-base-gcc)))
   "Convenience wrapper around MAKE-CROSS-TOOLCHAIN with default values
 desirable for building Bitcoin Core release binaries."
   (make-cross-toolchain target
@@ -110,9 +122,9 @@ desirable for building Bitcoin Core release binaries."
                         base-libc
                         base-gcc))
 
-(define (gcc-mingw-patches gcc)
+(define (gcc-libgcc-patches gcc)
   (package-with-extra-patches gcc
-    (search-our-patches "gcc-remap-guix-store.patch")))
+    (search-our-patches "gcc-remap-guix-store.patch" "gcc-ssa-generation.patch")))
 
 (define (binutils-mingw-patches binutils)
   (package-with-extra-patches binutils
@@ -127,10 +139,10 @@ desirable for building Bitcoin Core release binaries."
   (let* ((xbinutils (binutils-mingw-patches (cross-binutils target)))
          (machine (substring target 0 (string-index target #\-)))
          (pthreads-xlibc (winpthreads-patches (make-mingw-w64 machine
-                                         #:xgcc (cross-gcc target #:xgcc (gcc-mingw-patches base-gcc))
+                                         #:xgcc (cross-gcc target #:xgcc (gcc-libgcc-patches base-gcc))
                                          #:with-winpthreads? #t)))
          (pthreads-xgcc (cross-gcc target
-                                    #:xgcc (gcc-mingw-patches mingw-w64-base-gcc)
+                                    #:xgcc (gcc-libgcc-patches mingw-w64-base-gcc)
                                     #:xbinutils xbinutils
                                     #:libc pthreads-xlibc)))
     ;; Define a meta-package that propagates the resulting XBINUTILS, XLIBC, and
@@ -159,37 +171,34 @@ chain for " target " development."))
 (define-public python-lief
   (package
     (name "python-lief")
-    (version "0.13.2")
+    (version "0.16.6")
     (source (origin
               (method git-fetch)
               (uri (git-reference
                     (url "https://github.com/lief-project/LIEF")
                     (commit version)))
               (file-name (git-file-name name version))
-              (modules '((guix build utils)))
-              (snippet
-               '(begin
-                  ;; Configure build for Python bindings.
-                  (substitute* "api/python/config-default.toml"
-                    (("(ninja         = )true" all m)
-                     (string-append m "false"))
-                    (("(parallel-jobs = )0" all m)
-                     (string-append m (number->string (parallel-job-count)))))))
               (sha256
                (base32
-                "0y48x358ppig5xp97ahcphfipx7cg9chldj2q5zrmn610fmi4zll"))))
-    (build-system python-build-system)
-    (native-inputs (list cmake-minimal python-tomli))
+                "1pq9nagrnkl1x943bqnpiyxmkd9vk99znfxiwqp6vf012b50bz2a"))
+              (patches (search-our-patches "lief-scikit-0-9.patch"))))
+    (build-system pyproject-build-system)
+    (native-inputs (list cmake-minimal
+                         ninja
+                         python-scikit-build-core
+                         python-pydantic-2))
     (arguments
      (list
       #:tests? #f                  ;needs network
       #:phases #~(modify-phases %standard-phases
-                   (add-before 'build 'change-directory
+                   (add-before 'build 'set-pythonpath
                      (lambda _
-                       (chdir "api/python")))
-                   (replace 'build
+                       (setenv "PYTHONPATH"
+                         (string-append (string-append (getcwd) "/api/python/backend")
+                                      ":" (or (getenv "PYTHONPATH") "")))))
+                  (add-after 'set-pythonpath 'change-directory
                      (lambda _
-                       (invoke "python" "setup.py" "build"))))))
+                       (chdir "api/python"))))))
     (home-page "https://github.com/lief-project/LIEF")
     (synopsis "Library to instrument executable formats")
     (description
@@ -210,7 +219,17 @@ and abstract ELF, PE and MachO formats.")
                (base32
                 "1j47vwq4caxfv0xw68kw5yh00qcpbd56d7rq6c483ma3y7s96yyz"))))
     (build-system cmake-build-system)
-    (inputs (list openssl))
+    (arguments
+     (list
+      #:phases
+      #~(modify-phases %standard-phases
+          (replace 'check
+            (lambda* (#:key tests? #:allow-other-keys)
+              (if tests?
+                  (invoke "faketime" "-f" "@2025-01-01 00:00:00" ;; Tests fail after 2025.
+                          "ctest" "--output-on-failure" "--no-tests=error")
+                  (format #t "test suite not run~%")))))))
+    (inputs (list libfaketime openssl))
     (home-page "https://github.com/mtrojnar/osslsigncode")
     (synopsis "Authenticode signing and timestamping tool")
     (description "osslsigncode is a small tool that implements part of the
@@ -423,7 +442,9 @@ inspecting signatures in Mach-O binaries.")
             ;; https://gcc.gnu.org/install/configure.html
             (list "--enable-threads=posix",
                   "--enable-default-ssp=yes",
+                  "--enable-host-bind-now=yes",
                   "--disable-gcov",
+                  "--disable-libgomp",
                   building-on)))))))
 
 (define-public linux-base-gcc
@@ -437,9 +458,14 @@ inspecting signatures in Mach-O binaries.")
             (list "--enable-initfini-array=yes",
                   "--enable-default-ssp=yes",
                   "--enable-default-pie=yes",
+                  "--enable-host-bind-now=yes",
                   "--enable-standard-branch-protection=yes",
                   "--enable-cet=yes",
+                  "--enable-gprofng=no",
                   "--disable-gcov",
+                  "--disable-libgomp",
+                  "--disable-libquadmath",
+                  "--disable-libsanitizer",
                   building-on)))
         ((#:phases phases)
           `(modify-phases ,phases
@@ -456,7 +482,7 @@ inspecting signatures in Mach-O binaries.")
 (define-public glibc-2.31
   (let ((commit "7b27c450c34563a28e634cccb399cd415e71ebfe"))
   (package
-    (inherit glibc) ;; 2.35
+    (inherit glibc) ;; 2.39
     (version "2.31")
     (source (origin
               (method git-fetch)
@@ -467,7 +493,8 @@ inspecting signatures in Mach-O binaries.")
               (sha256
                (base32
                 "017qdpr5id7ddb4lpkzj2li1abvw916m3fc6n7nw28z4h5qbv2n0"))
-              (patches (search-our-patches "glibc-guix-prefix.patch"))))
+              (patches (search-our-patches "glibc-guix-prefix.patch"
+                                           "glibc-riscv-jumptarget.patch"))))
     (arguments
       (substitute-keyword-arguments (package-arguments glibc)
         ((#:configure-flags flags)
@@ -494,36 +521,6 @@ inspecting signatures in Mach-O binaries.")
                    (("^install-others =.*$")
                     (string-append "install-others = " out "/etc/rpc\n")))))))))))))
 
-;; The sponge tool from moreutils.
-(define-public sponge
-  (package
-    (name "sponge")
-    (version "0.69")
-    (source (origin
-              (method url-fetch)
-              (uri (string-append
-                    "https://git.joeyh.name/index.cgi/moreutils.git/snapshot/
-                    moreutils-" version ".tar.gz"))
-              (file-name (string-append "moreutils-" version ".tar.gz"))
-              (sha256
-               (base32
-                "1l859qnzccslvxlh5ghn863bkq2vgmqgnik6jr21b9kc6ljmsy8g"))))
-    (build-system gnu-build-system)
-    (arguments
-     (list #:phases
-           #~(modify-phases %standard-phases
-               (delete 'configure)
-               (replace 'install
-                (lambda* (#:key outputs #:allow-other-keys)
-                  (let ((bin (string-append (assoc-ref outputs "out") "/bin")))
-                  (install-file "sponge" bin)))))
-           #:make-flags
-           #~(list "sponge" (string-append "CC=" #$(cc-for-target)))))
-    (home-page "https://joeyh.name/code/moreutils/")
-    (synopsis "Miscellaneous general-purpose command-line tools")
-    (description "Just sponge")
-    (license license:gpl2+)))
-
 (packages->manifest
  (append
   (list ;; The Basics
@@ -531,7 +528,6 @@ inspecting signatures in Mach-O binaries.")
         which
         coreutils-minimal
         ;; File(system) inspection
-        file
         grep
         diffutils
         findutils
@@ -539,13 +535,12 @@ inspecting signatures in Mach-O binaries.")
         patch
         gawk
         sed
-        sponge
         ;; Compression and archiving
         tar
         gzip
         xz
         ;; Build tools
-        gcc-toolchain-13
+        gcc-toolchain-14
         cmake-minimal
         gnu-make
         ninja
@@ -565,12 +560,12 @@ inspecting signatures in Mach-O binaries.")
           ((string-contains target "-linux-")
            (list bison
                  pkg-config
-                 (list gcc-toolchain-13 "static")
+                 (list gcc-toolchain-14 "static")
                  (make-bitcoin-cross-toolchain target)))
           ((string-contains target "darwin")
-           (list clang-toolchain-18
-                 lld-18
-                 (make-lld-wrapper lld-18 #:lld-as-ld? #t)
+           (list clang-toolchain-19
+                 lld-19
+                 (make-lld-wrapper lld-19 #:lld-as-ld? #t)
                  python-signapple
                  zip))
           (else '())))))

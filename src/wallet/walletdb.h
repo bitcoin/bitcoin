@@ -1,17 +1,18 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
-// Copyright (c) 2009-2022 The Bitcoin Core developers
+// Copyright (c) 2009-present The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #ifndef BITCOIN_WALLET_WALLETDB_H
 #define BITCOIN_WALLET_WALLETDB_H
 
+#include <key.h>
+#include <primitives/transaction_identifier.h>
 #include <script/sign.h>
 #include <wallet/db.h>
 #include <wallet/walletutil.h>
-#include <key.h>
 
-#include <stdint.h>
+#include <cstdint>
 #include <string>
 #include <vector>
 
@@ -21,25 +22,20 @@ class uint256;
 struct CBlockLocator;
 
 namespace wallet {
-class CKeyPool;
 class CMasterKey;
 class CWallet;
 class CWalletTx;
 struct WalletContext;
+
+// Logs information about the database, including available engines, features, and other capabilities
+void LogDBInfo();
 
 /**
  * Overview of wallet database classes:
  *
  * - WalletBatch is an abstract modifier object for the wallet database, and encapsulates a database
  *   batch update as well as methods to act on the database. It should be agnostic to the database implementation.
- *
- * The following classes are implementation specific:
- * - BerkeleyEnvironment is an environment in which the database exists.
- * - BerkeleyDatabase represents a wallet database.
- * - BerkeleyBatch is a low-level database batch update.
  */
-
-static const bool DEFAULT_FLUSHWALLET = true;
 
 /** Error statuses for the wallet database.
  * Values are in order of severity. When multiple errors occur, the most severe (highest value) will be returned.
@@ -48,14 +44,14 @@ enum class DBErrors : int
 {
     LOAD_OK = 0,
     NEED_RESCAN = 1,
-    NEED_REWRITE = 2,
     EXTERNAL_SIGNER_SUPPORT_REQUIRED = 3,
     NONCRITICAL_ERROR = 4,
     TOO_NEW = 5,
     UNKNOWN_DESCRIPTOR = 6,
     LOAD_FAIL = 7,
     UNEXPECTED_LEGACY_ENTRY = 8,
-    CORRUPT = 9,
+    LEGACY_WALLET = 9,
+    CORRUPT = 10,
 };
 
 namespace DBKeys {
@@ -201,10 +197,6 @@ private:
         if (!m_batch->Write(key, value, fOverwrite)) {
             return false;
         }
-        m_database.IncrementUpdateCounter();
-        if (m_database.nUpdateCounter % 1000 == 0) {
-            m_batch->Flush();
-        }
         return true;
     }
 
@@ -214,17 +206,12 @@ private:
         if (!m_batch->Erase(key)) {
             return false;
         }
-        m_database.IncrementUpdateCounter();
-        if (m_database.nUpdateCounter % 1000 == 0) {
-            m_batch->Flush();
-        }
         return true;
     }
 
 public:
-    explicit WalletBatch(WalletDatabase &database, bool _fFlushOnClose = true) :
-        m_batch(database.MakeBatch(_fFlushOnClose)),
-        m_database(database)
+    explicit WalletBatch(WalletDatabase &database) :
+        m_batch(database.MakeBatch())
     {
     }
     WalletBatch(const WalletBatch&) = delete;
@@ -237,15 +224,13 @@ public:
     bool ErasePurpose(const std::string& strAddress);
 
     bool WriteTx(const CWalletTx& wtx);
-    bool EraseTx(uint256 hash);
+    bool EraseTx(Txid hash);
 
-    bool WriteKeyMetadata(const CKeyMetadata& meta, const CPubKey& pubkey, const bool overwrite);
+    bool WriteKeyMetadata(const CKeyMetadata& meta, const CPubKey& pubkey, bool overwrite);
     bool WriteKey(const CPubKey& vchPubKey, const CPrivKey& vchPrivKey, const CKeyMetadata &keyMeta);
     bool WriteCryptedKey(const CPubKey& vchPubKey, const std::vector<unsigned char>& vchCryptedSecret, const CKeyMetadata &keyMeta);
     bool WriteMasterKey(unsigned int nID, const CMasterKey& kMasterKey);
     bool EraseMasterKey(unsigned int id);
-
-    bool WriteCScript(const uint160& hash, const CScript& redeemScript);
 
     bool WriteWatchOnly(const CScript &script, const CKeyMetadata &keymeta);
     bool EraseWatchOnly(const CScript &script);
@@ -257,12 +242,6 @@ public:
     bool IsEncrypted();
 
     bool WriteOrderPosNext(int64_t nOrderPosNext);
-
-    bool ReadPool(int64_t nPool, CKeyPool& keypool);
-    bool WritePool(int64_t nPool, const CKeyPool& keypool);
-    bool ErasePool(int64_t nPool);
-
-    bool WriteMinVersion(int nVersion);
 
     bool WriteDescriptorKey(const uint256& desc_id, const CPubKey& pubkey, const CPrivKey& privkey);
     bool WriteCryptedDescriptorKey(const uint256& desc_id, const CPubKey& pubkey, const std::vector<unsigned char>& secret);
@@ -285,13 +264,13 @@ public:
 
     DBErrors LoadWallet(CWallet* pwallet);
 
-    //! write the hdchain model (external chain child index counter)
-    bool WriteHDChain(const CHDChain& chain);
+    //! Write the given client_version.
+    bool WriteVersion(int client_version) { return m_batch->Write(DBKeys::VERSION, CLIENT_VERSION); }
 
     //! Delete records of the given types
     bool EraseRecords(const std::unordered_set<std::string>& types);
 
-    bool WriteWalletFlags(const uint64_t flags);
+    bool WriteWalletFlags(uint64_t flags);
     //! Begin a new transaction
     bool TxnBegin();
     //! Commit current transaction
@@ -305,7 +284,6 @@ public:
 
 private:
     std::unique_ptr<DatabaseBatch> m_batch;
-    WalletDatabase& m_database;
 
     // External functions listening to the current db txn outcome.
     // Listeners are cleared at the end of the transaction.
@@ -325,9 +303,6 @@ private:
  * @return true if the db txn executed successfully, false otherwise.
  */
 bool RunWithinTxn(WalletDatabase& database, std::string_view process_desc, const std::function<bool(WalletBatch&)>& func);
-
-//! Compacts BDB state so that wallet.dat is self-contained (if there are changes)
-void MaybeCompactWalletDB(WalletContext& context);
 
 bool LoadKey(CWallet* pwallet, DataStream& ssKey, DataStream& ssValue, std::string& strErr);
 bool LoadCryptedKey(CWallet* pwallet, DataStream& ssKey, DataStream& ssValue, std::string& strErr);

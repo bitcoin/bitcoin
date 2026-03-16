@@ -1,12 +1,12 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
-// Copyright (c) 2009-2022 The Bitcoin Core developers
+// Copyright (c) 2009-present The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #ifndef BITCOIN_LOGGING_TIMER_H
 #define BITCOIN_LOGGING_TIMER_H
 
-#include <logging.h>
+#include <util/log.h>
 #include <util/macros.h>
 #include <util/time.h>
 #include <util/types.h>
@@ -53,7 +53,7 @@ public:
         const std::string full_msg = this->LogMsg(msg);
 
         if (m_log_category == BCLog::LogFlags::ALL) {
-            LogPrintf("%s\n", full_msg);
+            LogInfo("%s\n", full_msg);
         } else {
             LogDebug(m_log_category, "%s\n", full_msg);
         }

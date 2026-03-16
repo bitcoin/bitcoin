@@ -1,4 +1,4 @@
-// Copyright (c) 2018-2022 The Bitcoin Core developers
+// Copyright (c) 2018-present The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -6,13 +6,15 @@
 
 #include <rpc/server.h>
 #include <rpc/util.h>
+#include <univalue.h>
 #include <zmq/zmqabstractnotifier.h>
 #include <zmq/zmqnotificationinterface.h>
 
-#include <univalue.h>
-
 #include <list>
+#include <memory>
 #include <string>
+#include <utility>
+#include <vector>
 
 class JSONRPCRequest;
 
@@ -20,8 +22,9 @@ namespace {
 
 static RPCHelpMan getzmqnotifications()
 {
-    return RPCHelpMan{"getzmqnotifications",
-                "\nReturns information about the active ZeroMQ notifications.\n",
+    return RPCHelpMan{
+        "getzmqnotifications",
+        "Returns information about the active ZeroMQ notifications.\n",
                 {},
                 RPCResult{
                     RPCResult::Type::ARR, "", "",

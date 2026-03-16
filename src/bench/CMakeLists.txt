@@ -12,6 +12,7 @@ add_executable(bench_bitcoin
   bech32.cpp
   bip324_ecdh.cpp
   block_assemble.cpp
+  blockencodings.cpp
   ccoins_caching.cpp
   chacha20.cpp
   checkblock.cpp
@@ -35,6 +36,7 @@ add_executable(bench_bitcoin
   mempool_eviction.cpp
   mempool_stress.cpp
   merkle_root.cpp
+  obfuscation.cpp
   parse_hex.cpp
   peer_eviction.cpp
   poly1305.cpp
@@ -48,10 +50,13 @@ add_executable(bench_bitcoin
   sign_transaction.cpp
   streams_findbyte.cpp
   strencodings.cpp
+  txgraph.cpp
+  txorphanage.cpp
   util_time.cpp
   verify_script.cpp
-  xor.cpp
 )
+
+add_windows_application_manifest(bench_bitcoin)
 
 include(TargetDataSources)
 target_raw_data_sources(bench_bitcoin NAMESPACE benchmark::data
@@ -72,6 +77,7 @@ if(ENABLE_WALLET)
       wallet_balance.cpp
       wallet_create.cpp
       wallet_create_tx.cpp
+      wallet_encrypt.cpp
       wallet_loading.cpp
       wallet_ismine.cpp
       wallet_migration.cpp
@@ -79,8 +85,4 @@ if(ENABLE_WALLET)
   target_link_libraries(bench_bitcoin bitcoin_wallet)
 endif()
 
-add_test(NAME bench_sanity_check_high_priority
-  COMMAND bench_bitcoin -sanity-check -priority-level=high
-)
-
-install_binary_component(bench_bitcoin)
+install_binary_component(bench_bitcoin INTERNAL)

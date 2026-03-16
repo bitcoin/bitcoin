@@ -37,7 +37,7 @@ You can then either point to the SDK using the `SDK_PATH` environment variable:
 
 ```sh
 # Extract the SDK tarball to /path/to/parent/dir/of/extracted/SDK/Xcode-<foo>-<bar>-extracted-SDK-with-libcxx-headers
-tar -C /path/to/parent/dir/of/extracted/SDK -xaf /path/to/Xcode-<foo>-<bar>-extracted-SDK-with-libcxx-headers.tar.gz
+tar -C /path/to/parent/dir/of/extracted/SDK -xaf /path/to/Xcode-<foo>-<bar>-extracted-SDK-with-libcxx-headers.tar
 
 # Indicate where to locate the SDK tarball
 export SDK_PATH=/path/to/parent/dir/of/extracted/SDK
@@ -103,6 +103,18 @@ worktree to save disk space:
 ./contrib/guix/guix-clean
 ```
 
+## Gathering shasums of build outputs
+
+After a successful build, the shasums of the build outputs are gathered
+into files named `SHA256SUMS`. These files are located in each of the
+architecture-specific output directories.
+
+To gather all shasums and output them together to console, for e.g.
+inclusion in a Guix pull request comment, run:
+
+``` sh
+source contrib/shell/git-utils.bash && uname -m && find guix-build-$(git_head_version)/output/ -type f -print0 | env LC_ALL=C sort -z | xargs -r0 sha256sum
+```
 
 ## Attesting to build outputs
 
@@ -249,7 +261,7 @@ details.
   Set the path where _extracted_ SDKs can be found. This is passed through to
   the depends tree. Note that this should be set to the _parent_ directory of
   the actual SDK (e.g. `SDK_PATH=$HOME/Downloads/macOS-SDKs` instead of
-  `$HOME/Downloads/macOS-SDKs/Xcode-12.2-12B45b-extracted-SDK-with-libcxx-headers`).
+  `$HOME/Downloads/macOS-SDKs/Xcode-26.1.1-17B100-extracted-SDK-with-libcxx-headers`).
 
   The path that this environment variable points to **must be a directory**, and
   **NOT a symlink to a directory**.
@@ -365,12 +377,6 @@ Where `<PREFIX>` is likely:
 - `/usr/local` if you installed Guix from source and didn't supply any
   prefix-modifying flags to Guix's `./configure`
 
-For dongcarl's substitute server at https://guix.carldong.io, run as root:
-
-```sh
-wget -qO- 'https://guix.carldong.io/signing-key.pub' | guix archive --authorize
-```
-
 #### Removing authorized keys
 
 To remove previously authorized keys, simply edit `/etc/guix/acl` and remove the
@@ -382,28 +388,28 @@ Once its key is authorized, the official Guix build farm at
 https://ci.guix.gnu.org is automatically used unless the `--no-substitutes` flag
 is supplied. This default list of substitute servers is overridable both on a
 `guix-daemon` level and when you invoke `guix` commands. See examples below for
-the various ways of adding dongcarl's substitute server after having [authorized
-his signing key](#step-1-authorize-the-signing-keys).
+the various ways of adding a substitute server after having [authorized
+its signing key](#step-1-authorize-the-signing-keys).
 
 Change the **default list** of substitute servers by starting `guix-daemon` with
 the `--substitute-urls` option (you will likely need to edit your init script):
 
 ```sh
-guix-daemon <cmd> --substitute-urls='https://guix.carldong.io https://ci.guix.gnu.org'
+guix-daemon <cmd> --substitute-urls='https://bordeaux.guix.gnu.org https://ci.guix.gnu.org'
 ```
 
 Override the default list of substitute servers by passing the
 `--substitute-urls` option for invocations of `guix` commands:
 
 ```sh
-guix <cmd> --substitute-urls='https://guix.carldong.io https://ci.guix.gnu.org'
+guix <cmd> --substitute-urls='https://bordeaux.guix.gnu.org https://ci.guix.gnu.org'
 ```
 
 For scripts under `./contrib/guix`, set the `SUBSTITUTE_URLS` environment
 variable:
 
 ```sh
-export SUBSTITUTE_URLS='https://guix.carldong.io https://ci.guix.gnu.org'
+export SUBSTITUTE_URLS='https://bordeaux.guix.gnu.org https://ci.guix.gnu.org'
 ```
 
 ## Option 2: Disabling substitutes on an ad-hoc basis

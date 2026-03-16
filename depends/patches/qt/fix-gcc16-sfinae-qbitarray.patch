@@ -1,0 +1,56 @@
+From 679e8bda1eb0cc98acb981e9a10204bed1c179f2 Mon Sep 17 00:00:00 2001
+From: Giuseppe D'Angelo <giuseppe.dangelo@kdab.com>
+Date: Tue, 20 Jan 2026 15:23:31 +0100
+Subject: [PATCH] qhashfunctions.h: include QBitArray
+
+In qhashfunctions.h we're declaring a std::hash specialization for
+QBitArray. That specialization instantiates
+QNothrowHashable_v<QBitArray>, which checks if qHash(QBitArray) is
+noexcept.
+
+The problem is that there are already qHash(QByteArrayView) and
+qHash(QStringView) around, which will be picked up by overload
+resolution. That, in turn, will try to instantiate the QBAV/QSV
+constructors from a generic container. That instantiation will fail
+because QBitArray is not complete yet.
+
+When we later complete QBitArray, GCC is going to complain.
+
+Therefore, complete QBitArray before attempting SFINAE tricks on it.
+
+As an alternative, I could've moved the std::hash specialization
+to qbitarray.h. However I noticed that qHash(QBitArray) is still
+declared into qhashfunctions.h, i.e. hashing QBitArrays didn't
+require the full type, and therefore moving std::hash would've been
+a potential SIC?
+
+Task-number: QTBUG-143470
+Change-Id: Ie79d15e77d1fb3c86de6d7480a66bddc39f17666
+Reviewed-by: Thiago Macieira <thiago.macieira@intel.com>
+---
+ src/corelib/tools/qhashfunctions.h | 5 +++--
+ 1 file changed, 3 insertions(+), 2 deletions(-)
+
+diff --git a/qtbase/src/corelib/tools/qhashfunctions.h b/qtbase/src/corelib/tools/qhashfunctions.h
+index 8f1394c8ad35..beef80557865 100644
+--- a/qtbase/src/corelib/tools/qhashfunctions.h
++++ b/qtbase/src/corelib/tools/qhashfunctions.h
+@@ -8,6 +8,9 @@
+
+ #include <QtCore/qstring.h>
+ #include <QtCore/qstringfwd.h>
++#ifndef QT_BOOTSTRAPPED
++#include <QtCore/qbitarray.h>
++#endif
+
+ #include <numeric> // for std::accumulate
+ #include <functional> // for std::hash
+@@ -25,8 +28,6 @@
+
+ QT_BEGIN_NAMESPACE
+
+-class QBitArray;
+-
+ #if QT_DEPRECATED_SINCE(6,6)
+ QT_DEPRECATED_VERSION_X_6_6("Use QHashSeed instead")
+ Q_CORE_EXPORT int qGlobalQHashSeed();

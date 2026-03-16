@@ -78,9 +78,16 @@ The codebase is maintained using the "contributor workflow" where everyone
 without exception contributes patch proposals using "pull requests" (PRs). This
 facilitates social contribution, easy testing and peer review.
 
+Pull request authors must fully and confidently understand their own changes
+and must have tested them. Contributors should mention which tests cover their
+changes, or include the manual steps they used to confirm the change.
+Contributors are expected to be prepared to clearly motivate and explain their
+changes. If there is doubt, the pull request may be closed.
+Please refer to the [peer review](#peer-review) section below for more details.
+
 To contribute a patch, the workflow is as follows:
 
-  1. Fork repository ([only for the first time](https://docs.github.com/en/get-started/quickstart/fork-a-repo))
+  1. Fork repository ([only for the first time](https://docs.github.com/en/pull-requests/collaborating-with-pull-requests/working-with-forks/fork-a-repo))
   1. Create topic branch
   1. Commit patches
 
@@ -115,13 +122,14 @@ fixes or code moves with actual code changes.
 
 Make sure each individual commit is hygienic: that it builds successfully on its
 own without warnings, errors, regressions, or test failures.
+This means tests must be updated in the same commit that changes the behavior.
 
 Commit messages should be verbose by default consisting of a short subject line
 (50 chars max), a blank line and detailed explanatory text as separate
 paragraph(s), unless the title alone is self-explanatory (like "Correct typo
 in init.cpp") in which case a single title line is sufficient. Commit messages should be
 helpful to people reading your code in the future, so explain the reasoning for
-your decisions. Further explanation [here](https://chris.beams.io/posts/git-commit/).
+your decisions. Further explanation [here](https://cbea.ms/git-commit/).
 
 If a particular commit references another issue, please add the reference. For
 example: `refs #1234` or `fixes #4321`. Using the `fixes` or `closes` keywords
@@ -176,13 +184,13 @@ subsequent comment to the PR.
 ### Translation changes
 
 Note that translations should not be submitted as pull requests. Please see
-[Translation Process](https://github.com/bitcoin/bitcoin/blob/master/doc/translation_process.md)
+[Translation Process](/doc/translation_process.md)
 for more information on helping with translations.
 
 ### Work in Progress Changes and Requests for Comments
 
 If a pull request is not to be considered for merging (yet), please
-prefix the title with [WIP] or use [Tasks Lists](https://docs.github.com/en/github/writing-on-github/getting-started-with-writing-and-formatting-on-github/basic-writing-and-formatting-syntax#task-lists)
+prefix the title with [WIP] or use [Tasks Lists](https://docs.github.com/en/get-started/writing-on-github/getting-started-with-writing-and-formatting-on-github/basic-writing-and-formatting-syntax#task-lists)
 in the body of the pull request to indicate tasks are pending.
 
 ### Address Feedback
@@ -337,6 +345,11 @@ reviewers that the changes warrant the review effort, and if reviewers are
 "Concept NACK'ing" the PR, the author may need to present arguments and/or do
 research backing their suggested changes.
 
+Moreover, if there is reasonable doubt that the pull request author does not
+fully understand the changes they are submitting themselves, or if it becomes
+clear that they have not tested the changes on a basic level themselves, the
+pull request may be closed immediately.
+
 #### Conceptual Review
 
 A review can be a conceptual review, where the reviewer leaves a comment
@@ -401,7 +414,7 @@ about:
   - It may be because your code is too complex for all but a few people, and those people
     may not have realized your pull request even exists. A great way to find people who
     are qualified and care about the code you are touching is the
-    [Git Blame feature](https://docs.github.com/en/github/managing-files-in-a-repository/managing-files-on-github/tracking-changes-in-a-file). Simply
+    [Git Blame feature](https://docs.github.com/en/repositories/working-with-files/using-files/viewing-and-understanding-files). Simply
     look up who last modified the code you are changing and see if you can find
     them and give them a nudge. Don't be incessant about the nudging, though.
   - Finally, if all else fails, ask on IRC or elsewhere for someone to give your pull request

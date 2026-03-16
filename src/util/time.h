@@ -74,6 +74,12 @@ constexpr auto Ticks(Dur2 d)
 {
     return std::chrono::duration_cast<Dur1>(d).count();
 }
+
+template <typename Duration>
+constexpr int64_t TicksSeconds(Duration d)
+{
+    return int64_t{Ticks<std::chrono::seconds>(d)};
+}
 template <typename Duration, typename Timepoint>
 constexpr auto TicksSinceEpoch(Timepoint t)
 {
@@ -107,6 +113,7 @@ void SetMockTime(int64_t nMockTimeIn);
 
 /** For testing. Set e.g. with the setmocktime rpc, or -mocktime argument */
 void SetMockTime(std::chrono::seconds mock_time_in);
+void SetMockTime(std::chrono::time_point<NodeClock, std::chrono::seconds> mock);
 
 /** For testing */
 std::chrono::seconds GetMockTime();
@@ -134,6 +141,12 @@ T GetTime()
 std::string FormatISO8601DateTime(int64_t nTime);
 std::string FormatISO8601Date(int64_t nTime);
 std::optional<int64_t> ParseISO8601DateTime(std::string_view str);
+
+/**
+ * RFC1123 formatting https://www.rfc-editor.org/rfc/rfc1123#section-5.2.14
+ * Used in HTTP/1.1 responses
+ */
+std::string FormatRFC1123DateTime(int64_t nTime);
 
 /**
  * Convert milliseconds to a struct timeval for e.g. select.

@@ -36,7 +36,7 @@ fn sanity_check(corpora_dir: &Path, fuzz_exe: &Path) -> AppResult {
         let output = Command::new(tool).arg("--help").output();
         match output {
             Ok(output) if output.status.success() => {}
-            _ => Err(exit_help(&format!("The tool {} is not installed", tool)))?,
+            _ => Err(exit_help(&format!("The tool {tool} is not installed")))?,
         }
     }
     if !corpora_dir.is_dir() {
@@ -274,7 +274,7 @@ fn main() -> ExitCode {
     match app() {
         Ok(()) => ExitCode::SUCCESS,
         Err(err) => {
-            eprintln!("⚠️\n{}", err);
+            eprintln!("⚠️\n{err}");
             ExitCode::FAILURE
         }
     }

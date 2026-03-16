@@ -1,4 +1,4 @@
-Without ffile-prefix-map, the debug symbols will contain paths for the
+Without -ffile-prefix-map, the debug symbols will contain paths for the
 guix store which will include the hashes of each package. However, the
 hash for the same package will differ when on different architectures.
 In order to be reproducible regardless of the architecture used to build
@@ -6,7 +6,7 @@ the package, map all guix store prefixes to something fixed, e.g. /usr.
 
 --- a/libgcc/Makefile.in
 +++ b/libgcc/Makefile.in
-@@ -854,7 +854,7 @@ endif
+@@ -857,7 +857,7 @@ endif
  # libgcc_eh.a, only LIB2ADDEH matters.  If we do, only LIB2ADDEHSTATIC and
  # LIB2ADDEHSHARED matter.  (Usually all three are identical.)
  
@@ -14,6 +14,15 @@ the package, map all guix store prefixes to something fixed, e.g. /usr.
 +c_flags := -fexceptions $(shell find /gnu/store -maxdepth 1 -mindepth 1 -type d -exec echo -n " -ffile-prefix-map={}=/usr" \;)
  
  ifeq ($(enable_shared),yes)
+ 
+@@ -880,7 +880,7 @@ endif
+ # Build LIBUNWIND. Use -fno-exceptions so that the unwind library does
+ # not generate calls to __gcc_personality_v0.
+ 
+-c_flags := -fno-exceptions
++c_flags := -fno-exceptions $(shell find /gnu/store -maxdepth 1 -mindepth 1 -type d -exec echo -n " -ffile-prefix-map={}=/usr" \;)
+ 
+ libunwind-objects += $(addsuffix $(objext),$(basename $(notdir $(LIBUNWIND))))
  
 -- 
 2.37.0

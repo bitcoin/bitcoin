@@ -19,16 +19,20 @@ if(POLICY CMP0171)
   cmake_policy(SET CMP0171 NEW)
 endif()
 
+# When adjusting CMake flag variables, we must not override those explicitly
+# set by the user. These are a subset of the CACHE_VARIABLES property.
+get_directory_property(precious_variables CACHE_VARIABLES)
+
 #=============================
 # Project / Package metadata
 #=============================
 set(CLIENT_NAME "Bitcoin Core")
-set(CLIENT_VERSION_MAJOR 29)
+set(CLIENT_VERSION_MAJOR 31)
 set(CLIENT_VERSION_MINOR 99)
 set(CLIENT_VERSION_BUILD 0)
 set(CLIENT_VERSION_RC 0)
 set(CLIENT_VERSION_IS_RELEASE "false")
-set(COPYRIGHT_YEAR "2025")
+set(COPYRIGHT_YEAR "2026")
 
 # During the enabling of the CXX and CXXOBJ languages, we modify
 # CMake's compiler/linker invocation strings by appending the content
@@ -65,10 +69,15 @@ set(CLIENT_BUGREPORT "https://github.com/bitcoin/bitcoin/issues")
 #=============================
 # Language setup
 #=============================
-if(CMAKE_SYSTEM_NAME STREQUAL "Darwin" AND NOT CMAKE_HOST_APPLE)
+if(CMAKE_VERSION VERSION_LESS 4.2 AND CMAKE_SYSTEM_NAME STREQUAL "Darwin" AND NOT CMAKE_HOST_APPLE)
   # We do not use the install_name_tool when cross-compiling for macOS.
+  # However, CMake < 4.2 still searches for Apple's version of the tool,
+  # which causes an error during configuration.
+  # See:
+  # - https://gitlab.kitware.com/cmake/cmake/-/issues/27069
+  # - https://gitlab.kitware.com/cmake/cmake/-/merge_requests/10955
   # So disable this tool check in further enable_language() commands.
-  set(CMAKE_PLATFORM_HAS_INSTALLNAME FALSE)
+  set(CMAKE_INSTALL_NAME_TOOL "${CMAKE_COMMAND} -E true")
 endif()
 enable_language(CXX)
 set(CMAKE_CXX_STANDARD 20)
@@ -90,6 +99,7 @@ endif()
 #=============================
 include(CMakeDependentOption)
 # When adding a new option, end the <help_text> with a full stop for consistency.
+option(BUILD_BITCOIN_BIN "Build bitcoin executable." ON)
 option(BUILD_DAEMON "Build bitcoind executable." ON)
 option(BUILD_GUI "Build bitcoin-qt executable." OFF)
 option(BUILD_CLI "Build bitcoin-cli executable." ON)
@@ -100,6 +110,7 @@ option(BUILD_UTIL "Build bitcoin-util executable." ${BUILD_TESTS})
 
 option(BUILD_UTIL_CHAINSTATE "Build experimental bitcoin-chainstate executable." OFF)
 option(BUILD_KERNEL_LIB "Build experimental bitcoinkernel library." ${BUILD_UTIL_CHAINSTATE})
+cmake_dependent_option(BUILD_KERNEL_TEST "Build tests for the experimental bitcoinkernel library." ON "BUILD_KERNEL_LIB" OFF)
 
 option(ENABLE_WALLET "Enable wallet." ON)
 if(ENABLE_WALLET)
@@ -110,27 +121,10 @@ if(ENABLE_WALLET)
     find_package(SQLite3 3.7.17 REQUIRED)
   endif()
 endif()
-option(WITH_BDB "Enable Berkeley DB (BDB) wallet support." OFF)
-cmake_dependent_option(WARN_INCOMPATIBLE_BDB "Warn when using a Berkeley DB (BDB) version other than 4.8." ON "WITH_BDB" OFF)
-if(WITH_BDB)
-  find_package(BerkeleyDB 4.8 MODULE REQUIRED)
-  set(USE_BDB ON)
-  if(NOT BerkeleyDB_VERSION VERSION_EQUAL 4.8)
-    message(WARNING "Found Berkeley DB (BDB) other than 4.8.\n"
-                    "BDB (legacy) wallets opened by this build will not be portable!"
-    )
-    if(WARN_INCOMPATIBLE_BDB)
-      message(WARNING "If this is intended, pass \"-DWARN_INCOMPATIBLE_BDB=OFF\".\n"
-                      "Passing \"-DWITH_BDB=OFF\" will suppress this warning."
-      )
-    endif()
-  endif()
-endif()
 cmake_dependent_option(BUILD_WALLET_TOOL "Build bitcoin-wallet tool." ${BUILD_TESTS} "ENABLE_WALLET" OFF)
 
-option(ENABLE_HARDENING "Attempt to harden the resulting executables." ON)
 option(REDUCE_EXPORTS "Attempt to reduce exported symbols in the resulting executables." OFF)
-option(WERROR "Treat compiler warnings as errors." OFF)
+option(CMAKE_COMPILE_WARNING_AS_ERROR "Treat compiler warnings as errors." OFF)
 option(WITH_CCACHE "Attempt to use ccache for compiling." ON)
 
 option(WITH_ZMQ "Enable ZMQ notifications." OFF)
@@ -138,12 +132,14 @@ if(WITH_ZMQ)
   find_package(ZeroMQ 4.0.0 MODULE REQUIRED)
 endif()
 
+option(WITH_EMBEDDED_ASMAP "Embed default ASMap data." ON)
+
 option(WITH_USDT "Enable tracepoints for Userspace, Statically Defined Tracing." OFF)
 if(WITH_USDT)
   find_package(USDT MODULE REQUIRED)
 endif()
 
-cmake_dependent_option(ENABLE_EXTERNAL_SIGNER "Enable external signer support." ON "NOT WIN32" OFF)
+option(ENABLE_EXTERNAL_SIGNER "Enable external signer support." ON)
 
 cmake_dependent_option(WITH_QRENCODE "Enable QR code support." ON "BUILD_GUI" OFF)
 if(WITH_QRENCODE)
@@ -151,9 +147,9 @@ if(WITH_QRENCODE)
   set(USE_QRCODE TRUE)
 endif()
 
-cmake_dependent_option(WITH_DBUS "Enable DBus support." ON "CMAKE_SYSTEM_NAME STREQUAL \"Linux\" AND BUILD_GUI" OFF)
+cmake_dependent_option(WITH_DBUS "Enable DBus support." ON "NOT CMAKE_SYSTEM_NAME MATCHES \"(Windows|Darwin)\" AND BUILD_GUI" OFF)
 
-option(ENABLE_IPC "Build multiprocess bitcoin-node and bitcoin-gui executables in addition to monolithic bitcoind and bitcoin-qt executables. Requires libmultiprocess library. Experimental." OFF)
+cmake_dependent_option(ENABLE_IPC "Build multiprocess bitcoin-node and bitcoin-gui executables in addition to monolithic bitcoind and bitcoin-qt executables." ON "NOT WIN32" OFF)
 cmake_dependent_option(WITH_EXTERNAL_LIBMULTIPROCESS "Build with external libmultiprocess library instead of with local git subtree when ENABLE_IPC is enabled. This is not normally recommended, but can be useful for developing libmultiprocess itself." OFF "ENABLE_IPC" OFF)
 if(ENABLE_IPC AND WITH_EXTERNAL_LIBMULTIPROCESS)
   find_package(Libmultiprocess REQUIRED COMPONENTS Lib)
@@ -215,19 +211,23 @@ target_link_libraries(core_interface INTERFACE
 
 if(BUILD_FOR_FUZZING)
   message(WARNING "BUILD_FOR_FUZZING=ON will disable all other targets and force BUILD_FUZZ_BINARY=ON.")
+  set(BUILD_BITCOIN_BIN OFF)
   set(BUILD_DAEMON OFF)
   set(BUILD_CLI OFF)
   set(BUILD_TX OFF)
   set(BUILD_UTIL OFF)
   set(BUILD_UTIL_CHAINSTATE OFF)
   set(BUILD_KERNEL_LIB OFF)
+  set(BUILD_KERNEL_TEST OFF)
   set(BUILD_WALLET_TOOL OFF)
   set(BUILD_GUI OFF)
   set(ENABLE_EXTERNAL_SIGNER OFF)
   set(WITH_ZMQ OFF)
+  set(WITH_EMBEDDED_ASMAP OFF)
   set(BUILD_TESTS OFF)
   set(BUILD_GUI_TESTS OFF)
   set(BUILD_BENCH OFF)
+  set(ENABLE_IPC OFF)
   set(BUILD_FUZZ_BINARY ON)
 
   target_compile_definitions(core_interface INTERFACE
@@ -288,6 +288,10 @@ if(WIN32)
       /Zc:preprocessor
       /Zc:__cplusplus
       /sdl
+    )
+    target_link_options(core_interface INTERFACE
+      # We embed our own manifests.
+      /MANIFEST:NO
     )
     # Improve parallelism in MSBuild.
     # See: https://devblogs.microsoft.com/cppblog/improved-parallelism-in-msbuild/.
@@ -450,6 +454,7 @@ else()
   try_append_cxx_flags("-Wvla" TARGET warn_interface SKIP_LINK)
   try_append_cxx_flags("-Wshadow-field" TARGET warn_interface SKIP_LINK)
   try_append_cxx_flags("-Wthread-safety" TARGET warn_interface SKIP_LINK)
+  try_append_cxx_flags("-Wthread-safety-pointer" TARGET warn_interface SKIP_LINK)
   try_append_cxx_flags("-Wloop-analysis" TARGET warn_interface SKIP_LINK)
   try_append_cxx_flags("-Wredundant-decls" TARGET warn_interface SKIP_LINK)
   try_append_cxx_flags("-Wunused-member-function" TARGET warn_interface SKIP_LINK)
@@ -466,6 +471,8 @@ else()
   try_append_cxx_flags("-Wself-assign" TARGET warn_interface SKIP_LINK)
   try_append_cxx_flags("-Wbidi-chars=any" TARGET warn_interface SKIP_LINK)
   try_append_cxx_flags("-Wundef" TARGET warn_interface SKIP_LINK)
+  try_append_cxx_flags("-Wleading-whitespace=spaces" TARGET warn_interface SKIP_LINK)
+  try_append_cxx_flags("-Wtrailing-whitespace=any" TARGET warn_interface SKIP_LINK)
 
   # Some compilers (gcc) ignore unknown -Wno-* options, but warn about all
   # unknown options if any other warning is produced. Test the -Wfoo case, and
@@ -484,80 +491,82 @@ configure_file(contrib/filter-lcov.py filter-lcov.py USE_SOURCE_PERMISSIONS COPY
 # Don't allow extended (non-ASCII) symbols in identifiers. This is easier for code review.
 try_append_cxx_flags("-fno-extended-identifiers" TARGET core_interface SKIP_LINK)
 
-# Avoiding the `-ffile-prefix-map` compiler option because it implies
-# `-fcoverage-prefix-map` on Clang or `-fprofile-prefix-map` on GCC,
-# which can cause issues with coverage builds, particularly when using
-# Clang in the OSS-Fuzz environment due to its use of other options
-# and a third party script, or with GCC.
-try_append_cxx_flags("-fdebug-prefix-map=A=B" TARGET core_interface SKIP_LINK
-  IF_CHECK_PASSED "-fdebug-prefix-map=${PROJECT_SOURCE_DIR}/src=."
-)
+# Set `-fmacro-prefix-map`, so that source file names are expanded without the
+# src prefix.
 try_append_cxx_flags("-fmacro-prefix-map=A=B" TARGET core_interface SKIP_LINK
   IF_CHECK_PASSED "-fmacro-prefix-map=${PROJECT_SOURCE_DIR}/src=."
 )
 
-# Currently all versions of gcc are subject to a class of bugs, see the
-# gccbug_90348 test case (only reproduces on GCC 11 and earlier) and
+# GCC versions 13.2 (and earlier) are subject to a class of bugs, see
+# https://gcc.gnu.org/bugzilla/show_bug.cgi?id=90348 and the meta bug
 # https://gcc.gnu.org/bugzilla/show_bug.cgi?id=111843. To work around that, set
 # -fstack-reuse=none for all gcc builds. (Only gcc understands this flag).
 try_append_cxx_flags("-fstack-reuse=none" TARGET core_interface)
 
-if(ENABLE_HARDENING)
-  add_library(hardening_interface INTERFACE)
-  target_link_libraries(core_interface INTERFACE hardening_interface)
-  if(MSVC)
-    try_append_linker_flag("/DYNAMICBASE" TARGET hardening_interface)
-    try_append_linker_flag("/HIGHENTROPYVA" TARGET hardening_interface)
-    try_append_linker_flag("/NXCOMPAT" TARGET hardening_interface)
-  else()
+if(MSVC)
+  try_append_linker_flag("/DYNAMICBASE" TARGET core_interface)
+  try_append_linker_flag("/HIGHENTROPYVA" TARGET core_interface)
+  try_append_linker_flag("/NXCOMPAT" TARGET core_interface)
+else()
 
-    # _FORTIFY_SOURCE requires that there is some level of optimization,
-    # otherwise it does nothing and just creates a compiler warning.
-    try_append_cxx_flags("-U_FORTIFY_SOURCE -D_FORTIFY_SOURCE=3"
-      RESULT_VAR cxx_supports_fortify_source
-      SOURCE "int main() {
-              # if !defined __OPTIMIZE__ || __OPTIMIZE__ <= 0
-                #error
-              #endif
-              }"
+  # _FORTIFY_SOURCE requires that there is some level of optimization,
+  # otherwise it does nothing and just creates a compiler warning.
+  try_append_cxx_flags("-U_FORTIFY_SOURCE -D_FORTIFY_SOURCE=3"
+    RESULT_VAR cxx_supports_fortify_source
+    SOURCE "int main() {
+            # if !defined __OPTIMIZE__ || __OPTIMIZE__ <= 0
+              #error
+            #endif
+            }"
+  )
+  if(cxx_supports_fortify_source)
+    target_compile_options(core_interface INTERFACE
+      -U_FORTIFY_SOURCE
+      -D_FORTIFY_SOURCE=3
     )
-    if(cxx_supports_fortify_source)
-      target_compile_options(hardening_interface INTERFACE
-        -U_FORTIFY_SOURCE
-        -D_FORTIFY_SOURCE=3
-      )
-    endif()
-    unset(cxx_supports_fortify_source)
+  endif()
+  unset(cxx_supports_fortify_source)
 
-    try_append_cxx_flags("-Wstack-protector" TARGET hardening_interface SKIP_LINK)
-    try_append_cxx_flags("-fstack-protector-all" TARGET hardening_interface)
-    try_append_cxx_flags("-fcf-protection=full" TARGET hardening_interface)
+  try_append_cxx_flags("-Wstack-protector" TARGET core_interface SKIP_LINK)
+  try_append_cxx_flags("-fstack-protector-all" TARGET core_interface)
+  try_append_cxx_flags("-fcf-protection=full" TARGET core_interface)
 
-    if(MINGW)
-      # stack-clash-protection is a no-op for Windows.
-      # See https://gcc.gnu.org/bugzilla/show_bug.cgi?id=90458 for more details.
-    else()
-      try_append_cxx_flags("-fstack-clash-protection" TARGET hardening_interface)
-    endif()
+  if(MINGW)
+    # stack-clash-protection is a no-op for Windows.
+    # See https://gcc.gnu.org/bugzilla/show_bug.cgi?id=90458 for more details.
+  else()
+    try_append_cxx_flags("-fstack-clash-protection" TARGET core_interface)
+  endif()
 
-    if(CMAKE_SYSTEM_PROCESSOR STREQUAL "aarch64" OR CMAKE_SYSTEM_PROCESSOR STREQUAL "arm64")
-      if(CMAKE_SYSTEM_NAME STREQUAL "Darwin")
-        try_append_cxx_flags("-mbranch-protection=bti" TARGET hardening_interface SKIP_LINK)
-      else()
-        try_append_cxx_flags("-mbranch-protection=standard" TARGET hardening_interface SKIP_LINK)
-      endif()
-    endif()
-
-    try_append_linker_flag("-Wl,--enable-reloc-section" TARGET hardening_interface)
-    try_append_linker_flag("-Wl,--dynamicbase" TARGET hardening_interface)
-    try_append_linker_flag("-Wl,--nxcompat" TARGET hardening_interface)
-    try_append_linker_flag("-Wl,--high-entropy-va" TARGET hardening_interface)
-    try_append_linker_flag("-Wl,-z,relro" TARGET hardening_interface)
-    try_append_linker_flag("-Wl,-z,now" TARGET hardening_interface)
-    try_append_linker_flag("-Wl,-z,separate-code" TARGET hardening_interface)
+  if(CMAKE_SYSTEM_PROCESSOR STREQUAL "aarch64" OR CMAKE_SYSTEM_PROCESSOR STREQUAL "arm64")
     if(CMAKE_SYSTEM_NAME STREQUAL "Darwin")
-      try_append_linker_flag("-Wl,-fixup_chains" TARGET hardening_interface)
+      try_append_cxx_flags("-mbranch-protection=bti" TARGET core_interface SKIP_LINK)
+    else()
+      try_append_cxx_flags("-mbranch-protection=standard" TARGET core_interface SKIP_LINK)
     endif()
+  endif()
+
+  try_append_linker_flag("-Wl,--enable-reloc-section" TARGET core_interface)
+  try_append_linker_flag("-Wl,--dynamicbase" TARGET core_interface)
+  try_append_linker_flag("-Wl,--nxcompat" TARGET core_interface)
+  try_append_linker_flag("-Wl,--high-entropy-va" TARGET core_interface)
+  try_append_linker_flag("-Wl,-z,relro" TARGET core_interface)
+  try_append_linker_flag("-Wl,-z,now" TARGET core_interface)
+  # TODO: This can be dropped once Bitcoin Core no longer supports
+  #       NetBSD 10.0 or if upstream fix is backported.
+  # NetBSD's dynamic linker ld.elf_so < 11.0 supports exactly 2
+  # `PT_LOAD` segments and binaries linked with `-z separate-code`
+  # have 4 `PT_LOAD` segments.
+  # Relevant discussions:
+  # - https://github.com/bitcoin/bitcoin/pull/28724#issuecomment-2589347934
+  # - https://mail-index.netbsd.org/tech-userlevel/2023/01/05/msg013666.html
+  if(CMAKE_SYSTEM_NAME STREQUAL "NetBSD" AND CMAKE_SYSTEM_VERSION VERSION_LESS 11.0)
+    try_append_linker_flag("-Wl,-z,noseparate-code" TARGET core_interface)
+  else()
+    try_append_linker_flag("-Wl,-z,separate-code" TARGET core_interface)
+  endif()
+  if(CMAKE_SYSTEM_NAME STREQUAL "Darwin")
+    try_append_linker_flag("-Wl,-fixup_chains" TARGET core_interface)
   endif()
 endif()
 
@@ -565,19 +574,6 @@ if(REDUCE_EXPORTS)
   set(CMAKE_CXX_VISIBILITY_PRESET hidden)
   try_append_linker_flag("-Wl,--exclude-libs,ALL" TARGET core_interface)
   try_append_linker_flag("-Wl,-no_exported_symbols" VAR CMAKE_EXE_LINKER_FLAGS)
-endif()
-
-if(WERROR)
-  if(MSVC)
-    set(werror_flag "/WX")
-  else()
-    set(werror_flag "-Werror")
-  endif()
-  try_append_cxx_flags(${werror_flag} TARGET core_interface SKIP_LINK RESULT_VAR compiler_supports_werror)
-  if(NOT compiler_supports_werror)
-    message(FATAL_ERROR "WERROR set but ${werror_flag} is not usable.")
-  endif()
-  unset(werror_flag)
 endif()
 
 # Prefer Unix-style package components over frameworks on macOS.
@@ -588,11 +584,9 @@ set(Python3_FIND_FRAMEWORK LAST CACHE STRING "")
 set(Python3_FIND_UNVERSIONED_NAMES FIRST CACHE STRING "")
 mark_as_advanced(Python3_FIND_FRAMEWORK Python3_FIND_UNVERSIONED_NAMES)
 find_package(Python3 3.10 COMPONENTS Interpreter)
-if(Python3_EXECUTABLE)
-  set(PYTHON_COMMAND ${Python3_EXECUTABLE})
-else()
+if(NOT TARGET Python3::Interpreter)
   list(APPEND configure_warnings
-    "Minimum required Python not found. Utils and rpcauth tests are disabled."
+    "Minimum required Python not found."
   )
 endif()
 
@@ -618,29 +612,13 @@ if(CMAKE_VERSION VERSION_GREATER_EQUAL 3.29)
   set(CMAKE_SKIP_TEST_ALL_DEPENDENCY FALSE)
 endif()
 
-# TODO: The `CMAKE_SKIP_BUILD_RPATH` variable setting can be deleted
-#       in the future after reordering Guix script commands to
-#       perform binary checks after the installation step.
-# Relevant discussions:
-# - https://github.com/hebasto/bitcoin/pull/236#issuecomment-2183120953
-# - https://github.com/bitcoin/bitcoin/pull/30312#issuecomment-2191235833
-# NetBSD always requires runtime paths to be set for executables.
-if(CMAKE_SYSTEM_NAME STREQUAL "NetBSD")
-  set(CMAKE_INSTALL_RPATH_USE_LINK_PATH TRUE)
-else()
-  set(CMAKE_SKIP_BUILD_RPATH TRUE)
-  set(CMAKE_SKIP_INSTALL_RPATH TRUE)
-endif()
 add_subdirectory(test)
 add_subdirectory(doc)
 
 add_subdirectory(src)
 
-include(cmake/tests.cmake)
-
 include(Maintenance)
 setup_split_debug_script()
-add_maintenance_targets()
 add_windows_deploy_target()
 add_macos_deploy_target()
 
@@ -648,6 +626,7 @@ message("\n")
 message("Configure summary")
 message("=================")
 message("Executables:")
+message("  bitcoin ............................. ${BUILD_BITCOIN_BIN}")
 message("  bitcoind ............................ ${BUILD_DAEMON}")
 if(BUILD_DAEMON AND ENABLE_IPC)
   set(bitcoin_daemon_status ON)
@@ -668,11 +647,9 @@ message("  bitcoin-util ........................ ${BUILD_UTIL}")
 message("  bitcoin-wallet ...................... ${BUILD_WALLET_TOOL}")
 message("  bitcoin-chainstate (experimental) ... ${BUILD_UTIL_CHAINSTATE}")
 message("  libbitcoinkernel (experimental) ..... ${BUILD_KERNEL_LIB}")
+message("  kernel-test (experimental) .......... ${BUILD_KERNEL_TEST}")
 message("Optional features:")
 message("  wallet support ...................... ${ENABLE_WALLET}")
-if(ENABLE_WALLET)
-  message("   - legacy wallets (Berkeley DB) ..... ${WITH_BDB}")
-endif()
 message("  external signer ..................... ${ENABLE_EXTERNAL_SIGNER}")
 message("  ZeroMQ .............................. ${WITH_ZMQ}")
 if(ENABLE_IPC)
@@ -685,9 +662,10 @@ else()
   set(ipc_status OFF)
 endif()
 message("  IPC ................................. ${ipc_status}")
+message("  Embedded ASMap ...................... ${WITH_EMBEDDED_ASMAP}")
 message("  USDT tracing ........................ ${WITH_USDT}")
 message("  QR code (GUI) ....................... ${WITH_QRENCODE}")
-message("  DBus (GUI, Linux only) .............. ${WITH_DBUS}")
+message("  DBus (GUI) .......................... ${WITH_DBUS}")
 message("Tests:")
 message("  test_bitcoin ........................ ${BUILD_TESTS}")
 message("  test_bitcoin-qt ..................... ${BUILD_GUI_TESTS}")
@@ -703,8 +681,7 @@ message("Cross compiling ....................... ${cross_status}")
 message("C++ compiler .......................... ${CMAKE_CXX_COMPILER_ID} ${CMAKE_CXX_COMPILER_VERSION}, ${CMAKE_CXX_COMPILER}")
 include(FlagsSummary)
 flags_summary()
-message("Attempt to harden executables ......... ${ENABLE_HARDENING}")
-message("Treat compiler warnings as errors ..... ${WERROR}")
+message("Treat compiler warnings as errors ..... ${CMAKE_COMPILE_WARNING_AS_ERROR}")
 message("Use ccache for compiling .............. ${WITH_CCACHE}")
 message("\n")
 if(configure_warnings)
@@ -713,6 +690,7 @@ if(configure_warnings)
       message(WARNING "${warning}")
     endforeach()
     message("  ******\n")
+    message(AUTHOR_WARNING "Warnings have been encountered!")
 endif()
 
 # We want all build properties to be encapsulated properly.

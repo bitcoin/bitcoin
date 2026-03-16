@@ -5,11 +5,13 @@
 #ifndef BITCOIN_UTIL_FEEFRAC_H
 #define BITCOIN_UTIL_FEEFRAC_H
 
-#include <stdint.h>
-#include <compare>
-#include <vector>
 #include <span.h>
 #include <util/check.h>
+#include <util/overflow.h>
+
+#include <compare>
+#include <cstdint>
+#include <vector>
 
 /** Data structure storing a fee and size, ordered by increasing fee/size.
  *
@@ -207,7 +209,7 @@ struct FeeFrac
             if constexpr (RoundDown) {
                 return (uint64_t(fee) * at_size) / uint32_t(size);
             } else {
-                return (uint64_t(fee) * at_size + size - 1U) / uint32_t(size);
+                return CeilDiv(uint64_t(fee) * at_size, uint32_t(size));
             }
         } else {
             // Otherwise, use Mul and Div.

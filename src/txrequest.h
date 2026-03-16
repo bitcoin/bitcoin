@@ -1,4 +1,4 @@
-// Copyright (c) 2020 The Bitcoin Core developers
+// Copyright (c) 2020-present The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -6,13 +6,13 @@
 #define BITCOIN_TXREQUEST_H
 
 #include <primitives/transaction.h>
-#include <net.h> // For NodeId
+#include <net.h>
 #include <uint256.h>
 
 #include <chrono>
+#include <cstdint>
+#include <memory>
 #include <vector>
-
-#include <stdint.h>
 
 /** Data structure to keep track of, and schedule, transaction downloads from peers.
  *
@@ -25,7 +25,7 @@
  * - Which peer announced it (through their NodeId)
  * - The txid or wtxid of the transaction (collectively called "txhash" in what follows)
  * - Whether it was a tx or wtx announcement (see BIP339).
- * - What the earliest permitted time is that that transaction can be requested from that peer (called "reqtime").
+ * - What the earliest permitted time is that the transaction can be requested from that peer (called "reqtime").
  * - Whether it's from a "preferred" peer or not. Which announcements get this flag is determined by the caller, but
  *   this is designed for outbound peers, or other peers that we have a higher level of trust in. Even when the
  *   peers' preferredness changes, the preferred flag of existing announcements from that peer won't change.
@@ -133,7 +133,7 @@ public:
      * from the specified gtxid.
      */
     void ReceivedInv(NodeId peer, const GenTxid& gtxid, bool preferred,
-        std::chrono::microseconds reqtime);
+                     std::chrono::microseconds reqtime);
 
     /** Deletes all announcements for a given peer.
      *
@@ -158,14 +158,13 @@ public:
      *    exists, and for which the specified peer is the best choice among all (reqtime <= now) CANDIDATE
      *    announcements with the same txhash (subject to preferredness rules, and tiebreaking using a deterministic
      *    salted hash of peer and txhash).
-     *  - The selected announcements are converted to GenTxids using their is_wtxid flag, and returned in
-     *    announcement order (even if multiple were added at the same time, or when the clock went backwards while
-     *    they were being added). This is done to minimize disruption from dependent transactions being requested
-     *    out of order: if multiple dependent transactions are announced simultaneously by one peer, and end up
-     *    being requested from them, the requests will happen in announcement order.
+     *  - The selected announcements are returned in announcement order (even if multiple were added at the same
+     *    time, or when the clock went backwards while they were being added). This is done to minimize disruption
+     *    from dependent transactions being requested out of order: if multiple dependent transactions are announced
+     *    simultaneously by one peer, and end up being requested from them, the requests will happen in announcement order.
      */
     std::vector<GenTxid> GetRequestable(NodeId peer, std::chrono::microseconds now,
-        std::vector<std::pair<NodeId, GenTxid>>* expired = nullptr);
+                                        std::vector<std::pair<NodeId, GenTxid>>* expired = nullptr);
 
     /** Marks a transaction as requested, with a specified expiry.
      *

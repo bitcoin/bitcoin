@@ -22,6 +22,7 @@
 #include <test/fuzz/FuzzedDataProvider.h>
 #include <test/fuzz/fuzz.h>
 #include <test/fuzz/util.h>
+#include <util/fees.h>
 #include <util/strencodings.h>
 #include <util/string.h>
 #include <util/translation.h>
@@ -33,8 +34,6 @@
 #include <stdexcept>
 #include <string>
 #include <vector>
-
-enum class FeeEstimateMode;
 
 using common::AmountErrMsg;
 using common::AmountHighWarn;
@@ -146,5 +145,20 @@ FUZZ_TARGET(string)
         const bilingual_str bs1{random_string_1, random_string_2};
         const bilingual_str bs2{random_string_2, random_string_1};
         (void)(bs1 + bs2);
+    }
+    {
+        const ByteUnit all_units[] = {
+            ByteUnit::NOOP,
+            ByteUnit::k,
+            ByteUnit::K,
+            ByteUnit::m,
+            ByteUnit::M,
+            ByteUnit::g,
+            ByteUnit::G,
+            ByteUnit::t,
+            ByteUnit::T
+        };
+        ByteUnit default_multiplier = fuzzed_data_provider.PickValueInArray(all_units);
+        (void)ParseByteUnits(random_string_1, default_multiplier);
     }
 }

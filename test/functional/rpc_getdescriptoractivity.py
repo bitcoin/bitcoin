@@ -31,13 +31,16 @@ class GetBlocksActivityTest(BitcoinTestFramework):
         self.test_confirmed_and_unconfirmed(node, wallet)
         self.test_receive_then_spend(node, wallet)
         self.test_no_address(node, wallet)
+        self.test_required_args(node)
 
     def test_no_activity(self, node):
+        self.log.info("Test that no activity is found for an unused address")
         _, _, addr_1 = getnewdestination()
         result = node.getdescriptoractivity([], [f"addr({addr_1})"], True)
         assert_equal(len(result['activity']), 0)
 
     def test_activity_in_block(self, node, wallet):
+        self.log.info("Test that receive activity is correctly reported in a mined block")
         _, spk_1, addr_1 = getnewdestination(address_type='bech32m')
         txid = wallet.send_to(from_node=node, scriptPubKey=spk_1, amount=1 * COIN)['txid']
         blockhash = self.generate(node, 1)[0]
@@ -67,6 +70,7 @@ class GetBlocksActivityTest(BitcoinTestFramework):
 
 
     def test_no_mempool_inclusion(self, node, wallet):
+        self.log.info("Test that mempool transactions are not included when include_mempool argument is False")
         _, spk_1, addr_1 = getnewdestination()
         wallet.send_to(from_node=node, scriptPubKey=spk_1, amount=1 * COIN)
 
@@ -81,6 +85,7 @@ class GetBlocksActivityTest(BitcoinTestFramework):
         assert_equal(len(result['activity']), 0)
 
     def test_multiple_addresses(self, node, wallet):
+        self.log.info("Test querying multiple addresses returns all activity correctly")
         _, spk_1, addr_1 = getnewdestination()
         _, spk_2, addr_2 = getnewdestination()
         wallet.send_to(from_node=node, scriptPubKey=spk_1, amount=1 * COIN)
@@ -113,6 +118,7 @@ class GetBlocksActivityTest(BitcoinTestFramework):
         assert a2['amount'] == 2.0
 
     def test_invalid_blockhash(self, node, wallet):
+        self.log.info("Test that passing an invalid blockhash raises appropriate RPC error")
         self.generate(node, 20) # Generate to get more fees
 
         _, spk_1, addr_1 = getnewdestination()
@@ -125,6 +131,7 @@ class GetBlocksActivityTest(BitcoinTestFramework):
             node.getdescriptoractivity, [invalid_blockhash], [f"addr({addr_1})"], True)
 
     def test_invalid_descriptor(self, node, wallet):
+        self.log.info("Test that an invalid descriptor raises the correct RPC error")
         blockhash = self.generate(node, 1)[0]
         _, _, addr_1 = getnewdestination()
 
@@ -133,6 +140,7 @@ class GetBlocksActivityTest(BitcoinTestFramework):
             node.getdescriptoractivity, [blockhash], [f"addrx({addr_1})"], True)
 
     def test_confirmed_and_unconfirmed(self, node, wallet):
+        self.log.info("Test that both confirmed and unconfirmed transactions are reported correctly")
         self.generate(node, 20) # Generate to get more fees
 
         _, spk_1, addr_1 = getnewdestination()
@@ -162,6 +170,7 @@ class GetBlocksActivityTest(BitcoinTestFramework):
 
     def test_receive_then_spend(self, node, wallet):
         """Also important because this tests multiple blockhashes."""
+        self.log.info("Test receive and spend activities across different blocks are reported consistently")
         self.generate(node, 20) # Generate to get more fees
 
         sent1 = wallet.send_self_transfer(from_node=node)
@@ -182,6 +191,7 @@ class GetBlocksActivityTest(BitcoinTestFramework):
 
         assert result['activity'][2]['type'] == 'spend'
         assert result['activity'][2]['spend_txid'] == sent2['txid']
+        assert result['activity'][2]['spend_vin'] == 0
         assert result['activity'][2]['prevout_txid'] == sent1['txid']
         assert result['activity'][2]['blockhash'] == blockhash_2
 
@@ -189,11 +199,13 @@ class GetBlocksActivityTest(BitcoinTestFramework):
         assert_equal(result, node.getdescriptoractivity(
             [blockhash_1, blockhash_2], [wallet.get_descriptor()], True))
 
+        self.log.info("Test that duplicated blockhash request does not report duplicated results")
         # Test that duplicating a blockhash yields the same result.
         assert_equal(result, node.getdescriptoractivity(
             [blockhash_1, blockhash_2, blockhash_2], [wallet.get_descriptor()], True))
 
     def test_no_address(self, node, wallet):
+        self.log.info("Test that activity is still reported for scripts without an associated address")
         raw_wallet = MiniWallet(self.nodes[0], mode=MiniWalletMode.RAW_P2PK)
         self.generate(raw_wallet, 100)
 
@@ -220,6 +232,11 @@ class GetBlocksActivityTest(BitcoinTestFramework):
         # sPK lacks address.
         assert_equal(list(a2['output_spk'].keys()), ['asm', 'desc', 'hex', 'type'])
         assert a2['amount'] == Decimal(no_addr_tx["tx"].vout[0].nValue) / COIN
+
+    def test_required_args(self, node):
+        self.log.info("Test that required arguments must be passed")
+        assert_raises_rpc_error(-1, "getdescriptoractivity", node.getdescriptoractivity)
+        assert_raises_rpc_error(-1, "getdescriptoractivity", node.getdescriptoractivity, [])
 
 
 if __name__ == '__main__':

@@ -3,19 +3,15 @@
     <name>AddressBookPage</name>
     <message>
         <source>Right-click to edit address or label</source>
-        <translation type="unfinished">ವಿಳಾಸ ಅಥವಾ ಲೇಬಲ್ ಅನ್ನು ಸಂಪಾದಿಸಲು ಬಲ ಕ್ಲಿಕ್ ಮಾಡಿ</translation>
+        <translation type="unfinished">ವಿಳಾಸ ಅಥವಾ ಲೇಬಲ್ ಅನ್ನು ಪರಿಷ್ಕರಿಸಲು ಬಲ ಕ್ಲಿಕ್ ಮಾಡಿ</translation>
     </message>
     <message>
         <source>Create a new address</source>
-        <translation type="unfinished">ಹೊಸ ವಿಳಾಸವನ್ನು ರಚಿಸಿ</translation>
+        <translation type="unfinished">ಹೊಸ ವಿಳಾಸವನ್ನು ಸೃಷ್ಟಿ ಮಾಡಿ</translation>
     </message>
     <message>
         <source>&amp;New</source>
-        <translation type="unfinished">&amp;ಹೊಸದು</translation>
-    </message>
-    <message>
-        <source>Copy the currently selected address to the system clipboard</source>
-        <translation type="unfinished">ಪ್ರಸ್ತುತ ಆಯ್ಕೆಮಾಡಿದ ವಿಳಾಸವನ್ನು ಸಿಸ್ಟಮ್ ಕ್ಲಿಪ್‌ಬೋರ್ಡ್‌ಗೆ ನಕಲಿಸಿ</translation>
+        <translation type="unfinished">&amp;ಹೊಸ</translation>
     </message>
     <message>
         <source>&amp;Copy</source>
@@ -23,7 +19,7 @@
     </message>
     <message>
         <source>C&amp;lose</source>
-        <translation type="unfinished">ನಕಲು&amp;ಕಳೆದುಕೊಳ್ಳುತ್ತಾರೆ</translation>
+        <translation type="unfinished">ಮುಚ್ಚು</translation>
     </message>
     <message>
         <source>Delete the currently selected address from the list</source>
@@ -32,6 +28,10 @@
     <message>
         <source>Enter address or label to search</source>
         <translation type="unfinished">ಹುಡುಕಲು ವಿಳಾಸ ಅಥವಾ ಲೇಬಲ್ ನಮೂದಿಸಿ.</translation>
+    </message>
+    <message>
+        <source>Copy the currently selected address to the clipboard</source>
+        <translation type="unfinished">ಪ್ರಸ್ತುತ ಆಯ್ಕೆ ಮಾಡಲಾದ ವಿಳಾಸವನ್ನು ಕ್ಲಿಪ್‌ಬೋರ್ಡ್‌ಗೆ ನಕಲಿಸಿ</translation>
     </message>
     <message>
         <source>Export the data in the current tab to a file</source>
@@ -293,6 +293,10 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     <message>
         <source>Error: %1</source>
         <translation type="unfinished">ದೋಷ: %1</translation>
+    </message>
+    <message>
+        <source>%1 didn't yet exit safely…</source>
+        <translation type="unfinished">%1 ಇನ್ನೂ ಸುರಕ್ಷಿತವಾಗಿ ನಿರ್ಗಮಿಸಿಲ್ಲ...</translation>
     </message>
     <message numerus="yes">
         <source>%n second(s)</source>
@@ -584,6 +588,23 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     </message>
     </context>
 <context>
+    <name>PSBTOperationsDialog</name>
+    <message numerus="yes">
+        <source>Signed %n input(s), but more signatures are still required.</source>
+        <translation type="unfinished">
+            <numerusform />
+            <numerusform />
+        </translation>
+    </message>
+    <message numerus="yes">
+        <source>Transaction has %n unsigned input(s).</source>
+        <translation type="unfinished">
+            <numerusform />
+            <numerusform />
+        </translation>
+    </message>
+    </context>
+<context>
     <name>PeerTableModel</name>
     <message>
         <source>Address</source>
@@ -623,6 +644,13 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <translation type="unfinished">(ಲೇಬಲ್ ಇಲ್ಲ)</translation>
     </message>
 </context>
+<context>
+    <name>SignVerifyMessageDialog</name>
+    <message>
+        <source>Copy the current signature to the clipboard</source>
+        <translation type="unfinished">ಪ್ರಸ್ತುತ ಸಹಿಯನ್ನು ಕ್ಲಿಪ್‌ಬೋರ್ಡ್‌ಗೆ ನಕಲಿಸಿ</translation>
+    </message>
+    </context>
 <context>
     <name>TransactionDesc</name>
     <message numerus="yes">
@@ -689,20 +717,12 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <translation type="unfinished">ಬ್ಲಾಕ್ ಡೇಟಾಬೇಸ್ ಭವಿಷ್ಯದಿಂದ ಬಂದಿರುವ ಬ್ಲಾಕ್ ಹೊಂದಿದೆ ಎಂದು ತೋರುತ್ತದೆ. ಇದು ನಿಮ್ಮ ಕಂಪ್ಯೂಟರ್ನ ದಿನಾಂಕ ಮತ್ತು ಸಮಯವು ತಪ್ಪಾಗಿರಬಹುದು. ನಿಮ್ಮ ಕಂಪ್ಯೂಟರ್ನ ದಿನಾಂಕ ಮತ್ತು ಸಮಯ ಸರಿಯಾಗಿದ್ದರೆ, ಬ್ಲಾಕ್ ಡೇಟಾಬೇಸ್ ಮಾತ್ರವೇ ಪುನಃ ನಿರ್ಮಿಸಬೇಕು.</translation>
     </message>
     <message>
-        <source>This error could occur if this wallet was not shutdown cleanly and was last loaded using a build with a newer version of Berkeley DB. If so, please use the software that last loaded this wallet</source>
-        <translation type="unfinished">ಈ ದೋಷ ಕ್ರಿಯೆಗೆ ಕೊನೆಯಾಗಿದ್ದ ಬರ್ಕ್ಲಿ ಡಿಬಿಯುಂಟುವಿನ ಹೊಸ ಸಂಸ್ಕರಣವನ್ನು ಬಳಸಿದ್ದ ಬದಲಾವಣೆಯ ಸಂಗಡ ಈ ವಾಲೆಟ್ ಕ್ರಿಯೆಯನ್ನು ಶುಚಿಗೊಳಿಸಲು ಕೊನೆಗೆ ಆಯ್ಕೆಮಾಡಿದೆಯೇ ಎಂದಾದರೆ, ದಯವಿಟ್ಟು ಈ ವಾಲೆಟ್ ಸೋಫ್ಟ್‌ವೇರ್ ಬಳಸಿದ ಅಂತಿಮ ಬರ್ಷನ್ ಅನ್ನು ಬಳಸಿ.</translation>
-    </message>
-    <message>
         <source>This is the maximum transaction fee you pay (in addition to the normal fee) to prioritize partial spend avoidance over regular coin selection.</source>
         <translation type="unfinished">ನೀವು ಸಾಮಾನ್ಯ ಫೀ ಬಗ್ಗೆ ಹೆಚ್ಚಿನ ಲಾಗಿನ ಸಂದರ್ಶನಕ್ಕಿಂತ ಪಾಂಡ್ರಹಿಸುವುದಕ್ಕಿಂತ ಭಾಗಶಃ ಖರೀದಿ ಟ್ರಾನ್ಸ್ಯಾಕ್ಷನ್ ಆಯ್ಕೆಯನ್ನು ಆಯ್ಕೆಮಾಡುವುದರ ಮೇಲೆ ಪ್ರಾಥಮಿಕತೆಯನ್ನು ಕೊಡುವುದಕ್ಕಾಗಿ ನೀವು ಅಧಿಕವಾದ ಟ್ರಾನ್ಸ್ಯಾಕ್ಷನ್ ಫೀ ಪಾವತಿಸುತ್ತೀರಿ.</translation>
     </message>
     <message>
         <source>Unsupported chainstate database format found. Please restart with -reindex-chainstate. This will rebuild the chainstate database.</source>
         <translation type="unfinished">ಬೆಂಬಲಿಗೆಯ ತರಬೇತಿ ಡೇಟಾಬೇಸ್ ಸ್ವರೂಪ ಅಸಮರ್ಥಿತವಾಗಿದೆ. ದಯವಿಟ್ಟು -reindex-chainstate ನೊಂದಿಗೆ ಮರುಪ್ರಾರಂಭಿಸಿ. ಇದು ಬೆಂಬಲಿಗೆಯ ತರಬೇತಿ ಡೇಟಾಬೇಸ್ ಪೂರ್ತಿಯಾಗಿ ಮರುಸ್ಥಾಪಿಸುತ್ತದೆ.</translation>
-    </message>
-    <message>
-        <source>Wallet created successfully. The legacy wallet type is being deprecated and support for creating and opening legacy wallets will be removed in the future.</source>
-        <translation type="unfinished">ವಾಲೆಟ್ ಯಶಸ್ವಿಯಾಗಿ ರಚಿಸಲಾಗಿದೆ. ಲೆಗೆಸಿ ವಾಲೆಟ್ ಪ್ರಕಾರ ಅಳಿಸಲ್ಪಡುತ್ತಿದೆ ಮತ್ತು ಭವಿಷ್ಯದಲ್ಲಿ ಲೆಗೆಸಿ ವಾಲೆಟ್ಗಳನ್ನು ರಚಿಸಲೂ, ತೆರೆಯಲೂ ಬೆಂಬಲ ನೀಡಲಾಗುವುದಿಲ್ಲ.</translation>
     </message>
     <message>
         <source>Error: Duplicate descriptors created during migration. Your wallet may be corrupted.</source>
@@ -719,6 +739,10 @@ Signing is only possible with addresses of the type 'legacy'.</source>
  </translation>
     </message>
     <message>
+        <source>Option '-checkpoints' is set but checkpoints were removed. This option has no effect.</source>
+        <translation type="unfinished">'-ಚೆಕ್‌ಪಾಯಿಂಟ್‌ಗಳು' ಆಯ್ಕೆಯನ್ನು ಹೊಂದಿಸಲಾಗಿದೆ ಆದರೆ ಚೆಕ್‌ಪಾಯಿಂಟ್‌ಗಳನ್ನು ತೆಗೆದುಹಾಕಲಾಗಿದೆ. ಈ ಆಯ್ಕೆಯು ಯಾವುದೇ ಪರಿಣಾಮವನ್ನು ಬೀರುವುದಿಲ್ಲ.</translation>
+    </message>
+    <message>
         <source>Outbound connections restricted to Tor (-onlynet=onion) but the proxy for reaching the Tor network is explicitly forbidden: -onion=0</source>
         <translation type="unfinished">ಹೊರಗಡೆಯ ಸಂಪರ್ಕಗಳು Tor ಗೆ ಮಿತಿಮೀರಿರುವುದು (-onlynet=onion), ಆದರೆ Tor ನೆಟ್ವರ್ಕ್ ತಲುಪಲು ಪ್ರಾಕ್ಸಿ ಸ್ಪಷ್ಟವಾಗಿ ನಿಷೇಧಿಸಲ್ಪಟ್ಟಿದೆ: -onion=0.</translation>
     </message>
@@ -729,6 +753,50 @@ Signing is only possible with addresses of the type 'legacy'.</source>
  </translation>
     </message>
     <message>
+        <source>Prune: last wallet synchronisation goes beyond pruned data. You need to -reindex (download the whole blockchain again in case of a pruned node)</source>
+        <translation type="unfinished">ಪ್ರೂನ್: ಕೊನೆಯ ವ್ಯಾಲೆಟ್ ಸಿಂಕ್ರೊನೈಸೇಶನ್ ಪ್ರೂನ್ ಮಾಡಿದ ಡೇಟಾವನ್ನು ಮೀರಿದೆ. ನೀವು -ರೀಇಂಡೆಕ್ಸ್ ಮಾಡಬೇಕಾಗುತ್ತದೆ (ಪ್ರೂನ್ ಮಾಡಿದ ನೋಡ್ ಸಂದರ್ಭದಲ್ಲಿ ಇಡೀ ಬ್ಲಾಕ್‌ಚೈನ್ ಅನ್ನು ಮತ್ತೆ ಡೌನ್‌ಲೋಡ್ ಮಾಡಿ)</translation>
+    </message>
+    <message>
+        <source>Specified -blockmaxweight (%d) exceeds consensus maximum block weight (%d)</source>
+        <translation type="unfinished">ನಿರ್ದಿಷ್ಟ -ಬ್ಲಾಕ್‌ಮ್ಯಾಕ್ಸ್‌ವೈಟ್ (%d) ಸಮ್ಮತಿಯ ಗರಿಷ್ಠ ಬ್ಲಾಕ್ ತೂಕವನ್ನು (%d) ಮೀರಿದೆ</translation>
+    </message>
+    <message>
+        <source>Specified -blockreservedweight (%d) exceeds consensus maximum block weight (%d)</source>
+        <translation type="unfinished">ನಿರ್ದಿಷ್ಟ -ಬ್ಲಾಕ್‌ರಿಸರ್ವ್ಡ್‌ವೈಟ್ (%d) ಸಮ್ಮತಿಯ ಗರಿಷ್ಠ ಬ್ಲಾಕ್ ತೂಕವನ್ನು (%d) ಮೀರಿದೆ</translation>
+    </message>
+    <message>
+        <source>Specified -blockreservedweight (%d) is lower than minimum safety value of (%d)</source>
+        <translation type="unfinished">ನಿರ್ದಿಷ್ಟ -ಬ್ಲಾಕ್‌ರಿಸರ್ವ್ಡ್‌ವೈಟ್ (%d) ಕನಿಷ್ಠ ಸುರಕ್ಷತಾ ಮೌಲ್ಯಕ್ಕಿಂತ (%d) ಕಡಿಮೆಯಾಗಿದೆ</translation>
+    </message>
+    <message>
+        <source>Could not generate scriptPubKeys (cache is empty)</source>
+        <translation type="unfinished">ಸ್ಕ್ರಿಪ್ಟ್‌ಪಬ್‌ಕೀಗಳನ್ನು ರಚಿಸಲು ಸಾಧ್ಯವಾಗಲಿಲ್ಲ (ಕ್ಯಾಶ್ ಖಾಲಿಯಾಗಿದೆ)</translation>
+    </message>
+    <message>
+        <source>Could not top up scriptPubKeys</source>
+        <translation type="unfinished">ಸ್ಕ್ರಿಪ್ಟ್‌ಪಬ್‌ಕೀಸ್‌ಗಳನ್ನು ಮರುಪೂರಣ ಮಾಡಲು ಸಾಧ್ಯವಾಗಲಿಲ್ಲ.</translation>
+    </message>
+    <message>
+        <source>Error: Not all address book records were migrated</source>
+        <translation type="unfinished">ದೋಷ: ಎಲ್ಲಾ ವಿಳಾಸ ಪುಸ್ತಕ ದಾಖಲೆಗಳನ್ನು ಸ್ಥಳಾಂತರಿಸಲಾಗಿಲ್ಲ.</translation>
+    </message>
+    <message>
+        <source>Error: Not all transaction records were migrated</source>
+        <translation type="unfinished">ದೋಷ: ಎಲ್ಲಾ ವಹಿವಾಟು ದಾಖಲೆಗಳನ್ನು ಸ್ಥಳಾಂತರಿಸಲಾಗಿಲ್ಲ.</translation>
+    </message>
+    <message>
+        <source>Failed to acquire rescan reserver during wallet initialization</source>
+        <translation type="unfinished">ವಾಲೆಟ್ ಅನ್ನು ಪ್ರಾರಂಭಿಸುವಾಗ ಮರುಸ್ಕ್ಯಾನ್ ರಿಸರ್ವರ್ ಅನ್ನು ಪಡೆದುಕೊಳ್ಳಲು ವಿಫಲವಾಗಿದೆ.</translation>
+    </message>
+    <message>
+        <source>Failed to close block undo file.</source>
+        <translation type="unfinished">ನಿರ್ಬಂಧಿಸುವಿಕೆ ರದ್ದುಗೊಳಿಸುವಿಕೆ ಫೈಲ್ ಅನ್ನು ಮುಚ್ಚಲು ವಿಫಲವಾಗಿದೆ.</translation>
+    </message>
+    <message>
+        <source>Failed to close file when writing block.</source>
+        <translation type="unfinished">ಬ್ಲಾಕ್ ಬರೆಯುವಾಗ ಫೈಲ್ ಅನ್ನು ಮುಚ್ಚಲು ವಿಫಲವಾಗಿದೆ.</translation>
+    </message>
+    <message>
         <source>The wallet will avoid paying less than the minimum relay fee.</source>
         <translation type="unfinished">ನೆಲೆಯ ರೆಲೇ ಶುಲ್ಕದಿಂದ ಕಡಿಮೆ ಶುಲ್ಕವನ್ನು ಕೊಡದಂತೆ ವಾಲೆಟ್ ನುಡಿಮುಟ್ಟುವುದು.</translation>
     </message>
@@ -737,12 +805,20 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <translation type="unfinished">ನೀವು ಪ್ರತಿಯೊಂದು ಟ್ರಾನ್ಸ್ಯಾಕ್ಷನ್ ಮೇಲೆ ಪಾವತಿ ಶುಲ್ಕವನ್ನು ಕೊಡಬೇಕಾದ ಕನಿಷ್ಠ ಶುಲ್ಕ.</translation>
     </message>
     <message>
-        <source>This is the transaction fee you will pay if you send a transaction.</source>
-        <translation type="unfinished">ನೀವು ಟ್ರಾನ್ಸ್ಯಾಕ್ಷನ್ ಕಳುಹಿಸುವಾಗ ನೀವು ಪಾವತಿ ವಿಧಾನದ ಮೂಲಕ ಪಾವತಿ ಶುಲ್ಕವನ್ನು ಪಾವತಿ ಕಳುಹಿಸುವಾಗ ನೀವು ಕೊಡಬೇಕಾದ ಶುಲ್ಕ.</translation>
-    </message>
-    <message>
         <source>Transaction needs a change address, but we can't generate it.</source>
         <translation type="unfinished">ಲೆಕ್ಕಾಚಾರದಲ್ಲಿ ಬದಲಾವಣೆ ವಿನಂತಿಯನ್ನು ಹೊಂದಿರುವ ಟ್ರಾನ್ಸ್ಯಾಕ್ಷನ್ ಕೆಲವು ಬದಲಾವಣೆ ವಿನಂತಿಗಳನ್ನು ಹೊಂದಿದೆ, ಆದರೆ ಅದನ್ನು ಉಂಟುಮಾಡಲು ಆಗದಿದೆ.</translation>
+    </message>
+    <message>
+        <source>Failed to calculate bump fees, because unconfirmed UTXOs depend on an enormous cluster of unconfirmed transactions.</source>
+        <translation type="unfinished">ದೃಢೀಕರಿಸದ UTXOಗಳು ದೃಢೀಕರಿಸದ ವಹಿವಾಟುಗಳ ಅಗಾಧ ಸಮೂಹವನ್ನು ಅವಲಂಬಿಸಿರುವುದರಿಂದ, ಬಂಪ್ ಶುಲ್ಕವನ್ನು ಲೆಕ್ಕಾಚಾರ ಮಾಡಲು ವಿಫಲವಾಗಿದೆ.</translation>
+    </message>
+    <message>
+        <source>Transaction requires one destination of non-zero value, a non-zero feerate, or a pre-selected input</source>
+        <translation type="unfinished">ವಹಿವಾಟಿಗೆ ಶೂನ್ಯವಲ್ಲದ ಮೌಲ್ಯದ ಒಂದು ಗಮ್ಯಸ್ಥಾನ, ಶೂನ್ಯವಲ್ಲದ ದರ ಅಥವಾ ಮೊದಲೇ ಆಯ್ಕೆಮಾಡಿದ ಇನ್‌ಪುಟ್ ಅಗತ್ಯವಿದೆ.</translation>
+    </message>
+    <message>
+        <source>Failed to start indexes, shutting down…</source>
+        <translation type="unfinished">ಸೂಚ್ಯಂಕಗಳನ್ನು ಪ್ರಾರಂಭಿಸಲು ವಿಫಲವಾಗಿದೆ, ಸ್ಥಗಿತಗೊಳಿಸಲಾಗುತ್ತಿದೆ...</translation>
     </message>
     </context>
 </TS>

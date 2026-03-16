@@ -32,9 +32,9 @@ public:
         PeerManager::Options peerman_opts;
         node::ApplyArgsManOptions(*m_node.args, peerman_opts);
         peerman_opts.max_headers_result = FUZZ_MAX_HEADERS_RESULTS;
-        // The peerman's rng is a global that is re-used, so it will be re-used
+        // The peerman's rng is a global that is reused, so it will be reused
         // and may cause non-determinism between runs. This may even influence
-        // the global RNG, because seeding may be done from the gloabl one. For
+        // the global RNG, because seeding may be done from the global one. For
         // now, avoid it influencing the global RNG, and initialize it with a
         // constant instead.
         peerman_opts.deterministic_rng = true;
@@ -70,7 +70,7 @@ void HeadersSyncSetup::ResetAndInitialize()
 
     for (auto conn_type : conn_types) {
         CAddress addr{};
-        m_connections.push_back(new CNode(id++, nullptr, addr, 0, 0, addr, "", conn_type, false));
+        m_connections.push_back(new CNode(id++, nullptr, addr, 0, 0, addr, "", conn_type, false, 0));
         CNode& p2p_node = *m_connections.back();
 
         connman.Handshake(
@@ -97,7 +97,7 @@ void HeadersSyncSetup::SendMessage(FuzzedDataProvider& fuzzed_data_provider, CSe
         connman.ProcessMessagesOnce(connection);
     } catch (const std::ios_base::failure&) {
     }
-    m_node.peerman->SendMessages(&connection);
+    m_node.peerman->SendMessages(connection);
 }
 
 CBlockHeader ConsumeHeader(FuzzedDataProvider& fuzzed_data_provider, const uint256& prev_hash, uint32_t prev_nbits)
@@ -121,7 +121,7 @@ CBlockHeader ConsumeHeader(FuzzedDataProvider& fuzzed_data_provider, const uint2
         arith_uint256 target = ConsumeArithUInt256InRange(fuzzed_data_provider, lower_target, upper_target);
         header.nBits = target.GetCompact();
     }
-    header.nTime = ConsumeTime(fuzzed_data_provider);
+    header.nTime = TicksSinceEpoch<std::chrono::seconds>(ConsumeTime(fuzzed_data_provider));
     header.hashPrevBlock = prev_hash;
     header.nVersion = fuzzed_data_provider.ConsumeIntegral<int32_t>();
     return header;
@@ -139,7 +139,7 @@ CBlock ConsumeBlock(FuzzedDataProvider& fuzzed_data_provider, const uint256& pre
     tx.vout[0].nValue = 0;
     tx.vin[0].scriptSig.resize(2);
     block.vtx.push_back(MakeTransactionRef(tx));
-    block.hashMerkleRoot = block.vtx[0]->GetHash();
+    block.hashMerkleRoot = block.vtx[0]->GetHash().ToUint256();
     return block;
 }
 
@@ -172,7 +172,7 @@ FUZZ_TARGET(p2p_headers_presync, .init = initialize)
     FuzzedDataProvider fuzzed_data_provider{buffer.data(), buffer.size()};
     // The steady clock is currently only used for logging, so a constant
     // time-point seems acceptable for now.
-    ElapseSteady elapse_steady{};
+    SteadyClockContext steady_ctx{};
 
     ChainstateManager& chainman = *g_testing_setup->m_node.chainman;
     CBlockHeader base{chainman.GetParams().GenesisBlock()};

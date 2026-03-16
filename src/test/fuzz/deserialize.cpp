@@ -1,4 +1,4 @@
-// Copyright (c) 2009-2021 The Bitcoin Core developers
+// Copyright (c) 2009-present The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -17,6 +17,7 @@
 #include <net.h>
 #include <netbase.h>
 #include <netgroup.h>
+#include <node/blockstorage.h>
 #include <node/utxo_snapshot.h>
 #include <primitives/block.h>
 #include <protocol.h>
@@ -29,11 +30,12 @@
 #include <test/util/setup_common.h>
 #include <undo.h>
 
+#include <cstdint>
 #include <exception>
 #include <optional>
 #include <stdexcept>
-#include <stdint.h>
 
+using kernel::CBlockFileInfo;
 using node::SnapshotMetadata;
 
 namespace {
@@ -79,9 +81,8 @@ T Deserialize(DataStream&& ds, const P& params)
 template <typename T, typename P>
 void DeserializeFromFuzzingInput(FuzzBufferType buffer, T&& obj, const P& params)
 {
-    DataStream ds{buffer};
     try {
-        ds >> params(obj);
+        SpanReader{buffer} >> params(obj);
     } catch (const std::ios_base::failure&) {
         throw invalid_fuzzing_input_exception();
     }
@@ -107,9 +108,8 @@ T Deserialize(DataStream ds)
 template <typename T>
 void DeserializeFromFuzzingInput(FuzzBufferType buffer, T&& obj)
 {
-    DataStream ds{buffer};
     try {
-        ds >> obj;
+        SpanReader{buffer} >> obj;
     } catch (const std::ios_base::failure&) {
         throw invalid_fuzzing_input_exception();
     }

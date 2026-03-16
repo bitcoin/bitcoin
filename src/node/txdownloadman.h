@@ -1,4 +1,4 @@
-// Copyright (c) 2024 The Bitcoin Core developers
+// Copyright (c) 2024-present The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -6,8 +6,8 @@
 #define BITCOIN_NODE_TXDOWNLOADMAN_H
 
 #include <net.h>
+#include <node/txorphanage.h>
 #include <policy/packages.h>
-#include <txorphanage.h>
 
 #include <cstdint>
 #include <memory>
@@ -41,8 +41,6 @@ struct TxDownloadOptions {
     const CTxMemPool& m_mempool;
     /** RNG provided by caller. */
     FastRandomContext& m_rng;
-    /** Maximum number of transactions allowed in orphanage. */
-    const uint32_t m_max_orphan_txs;
     /** Instantiate TxRequestTracker as deterministic (used for tests). */
     bool m_deterministic_txrequest{false};
 };
@@ -143,7 +141,7 @@ public:
     std::vector<GenTxid> GetRequestsToSend(NodeId nodeid, std::chrono::microseconds current_time);
 
     /** Should be called when a notfound for a tx has been received. */
-    void ReceivedNotFound(NodeId nodeid, const std::vector<uint256>& txhashes);
+    void ReceivedNotFound(NodeId nodeid, const std::vector<GenTxid>& gtxids);
 
     /** Respond to successful transaction submission to mempool */
     void MempoolAcceptedTx(const CTransactionRef& tx);
@@ -172,7 +170,7 @@ public:
     void CheckIsEmpty(NodeId nodeid) const;
 
     /** Wrapper for TxOrphanage::GetOrphanTransactions */
-    std::vector<TxOrphanage::OrphanTxBase> GetOrphanTransactions() const;
+    std::vector<TxOrphanage::OrphanInfo> GetOrphanTransactions() const;
 };
 } // namespace node
 #endif // BITCOIN_NODE_TXDOWNLOADMAN_H

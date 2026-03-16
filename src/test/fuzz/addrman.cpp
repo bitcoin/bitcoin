@@ -1,4 +1,4 @@
-// Copyright (c) 2020-2022 The Bitcoin Core developers
+// Copyright (c) 2020-present The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -14,12 +14,12 @@
 #include <test/fuzz/util.h>
 #include <test/fuzz/util/net.h>
 #include <test/util/setup_common.h>
-#include <time.h>
 #include <util/asmap.h>
 #include <util/chaintype.h>
 
 #include <cassert>
 #include <cstdint>
+#include <ctime>
 #include <optional>
 #include <string>
 #include <vector>
@@ -144,23 +144,23 @@ FUZZ_TARGET(addrman, .init = initialize_addrman)
                     addresses.push_back(ConsumeAddress(fuzzed_data_provider));
                 }
                 auto net_addr = ConsumeNetAddr(fuzzed_data_provider);
-                auto time_penalty = std::chrono::seconds{ConsumeTime(fuzzed_data_provider, 0, 100000000)};
+                auto time_penalty = ConsumeDuration(fuzzed_data_provider, /*min=*/0s, /*max=*/100000000s);
                 addr_man.Add(addresses, net_addr, time_penalty);
             },
             [&] {
                 auto addr = ConsumeService(fuzzed_data_provider);
-                auto time = NodeSeconds{std::chrono::seconds{ConsumeTime(fuzzed_data_provider)}};
+                auto time = ConsumeTime(fuzzed_data_provider);
                 addr_man.Good(addr, time);
             },
             [&] {
                 auto addr = ConsumeService(fuzzed_data_provider);
                 auto count_failure = fuzzed_data_provider.ConsumeBool();
-                auto time = NodeSeconds{std::chrono::seconds{ConsumeTime(fuzzed_data_provider)}};
+                auto time = ConsumeTime(fuzzed_data_provider);
                 addr_man.Attempt(addr, count_failure, time);
             },
             [&] {
                 auto addr = ConsumeService(fuzzed_data_provider);
-                auto time = NodeSeconds{std::chrono::seconds{ConsumeTime(fuzzed_data_provider)}};
+                auto time = ConsumeTime(fuzzed_data_provider);
                 addr_man.Connected(addr, time);
             },
             [&] {

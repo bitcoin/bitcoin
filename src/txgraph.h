@@ -3,8 +3,11 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <compare>
-#include <stdint.h>
+#include <cstdint>
+#include <functional>
 #include <memory>
+#include <optional>
+#include <utility>
 #include <vector>
 
 #include <util/feefrac.h>
@@ -58,14 +61,21 @@ public:
      */
     class Ref;
 
+    enum class Level {
+        TOP, //!< Refers to staging if it exists, main otherwise.
+        MAIN //!< Always refers to the main graph, whether staging is present or not.
+    };
+
     /** Virtual destructor, so inheriting is safe. */
     virtual ~TxGraph() = default;
-    /** Construct a new transaction with the specified feerate, and return a Ref to it.
-     *  If a staging graph exists, the new transaction is only created there. In all
-     *  further calls, only Refs created by AddTransaction() are allowed to be passed to this
-     *  TxGraph object (or empty Ref objects). Ref objects may outlive the TxGraph they were
-     *  created for. */
-    [[nodiscard]] virtual Ref AddTransaction(const FeePerWeight& feerate) noexcept = 0;
+    /** Initialize arg (which must be an empty Ref) to refer to a new transaction in this graph
+     *  with the specified feerate.
+     *
+     *  If a staging graph exists, the new transaction is only created there. feerate.size must be
+     *  strictly positive. In all further calls, only Refs passed to AddTransaction() are allowed
+     *  to be passed to this TxGraph object (or empty Ref objects). Ref objects may outlive the
+     *  TxGraph they were added to. */
+    virtual void AddTransaction(Ref& arg, const FeePerWeight& feerate) noexcept = 0;
     /** Remove the specified transaction. If a staging graph exists, the removal only happens
      *  there. This is a no-op if the transaction was already removed.
      *
@@ -92,9 +102,10 @@ public:
     virtual void SetTransactionFee(const Ref& arg, int64_t fee) noexcept = 0;
 
     /** TxGraph is internally lazy, and will not compute many things until they are needed.
-     *  Calling DoWork will compute everything now, so that future operations are fast. This can be
-     *  invoked while oversized. */
-    virtual void DoWork() noexcept = 0;
+     *  Calling DoWork will perform some work now (controlled by max_cost) so that future operations
+     *  are fast, if there is any. Returns whether all currently-available work is done. This can
+     *  be invoked while oversized, but oversized graphs will be skipped by this call. */
+    virtual bool DoWork(uint64_t max_cost) noexcept = 0;
 
     /** Create a staging graph (which cannot exist already). This acts as if a full copy of
      *  the transaction graph is made, upon which further modifications are made. This copy can
@@ -109,16 +120,14 @@ public:
     virtual bool HaveStaging() const noexcept = 0;
 
     /** Determine whether the graph is oversized (contains a connected component of more than the
-     *  configured maximum cluster count). If main_only is false and a staging graph exists, it is
-     *  queried; otherwise the main graph is queried. Some of the functions below are not available
+     *  configured maximum cluster count). Some of the functions below are not available
      *  for oversized graphs. The mutators above are always available. Removing a transaction by
      *  destroying its Ref while staging exists will not clear main's oversizedness until staging
      *  is aborted or committed. */
-    virtual bool IsOversized(bool main_only = false) noexcept = 0;
-    /** Determine whether arg exists in the graph (i.e., was not removed). If main_only is false
-     *  and a staging graph exists, it is queried; otherwise the main graph is queried. This is
+    virtual bool IsOversized(Level level) noexcept = 0;
+    /** Determine whether arg exists in the graph (i.e., was not removed). This is
      *  available even for oversized graphs. */
-    virtual bool Exists(const Ref& arg, bool main_only = false) noexcept = 0;
+    virtual bool Exists(const Ref& arg, Level level) noexcept = 0;
     /** Get the individual transaction feerate of transaction arg. Returns the empty FeePerWeight
      *  if arg does not exist in either main or staging. This is available even for oversized
      *  graphs. */
@@ -128,40 +137,80 @@ public:
      *  oversized. */
     virtual FeePerWeight GetMainChunkFeerate(const Ref& arg) noexcept = 0;
     /** Get pointers to all transactions in the cluster which arg is in. The transactions are
-     *  returned in graph order. If main_only is false and a staging graph exists, it is queried;
-     *  otherwise the main graph is queried. The queried graph must not be oversized. Returns {} if
+     *  returned in graph order. The queried graph must not be oversized. Returns {} if
      *  arg does not exist in the queried graph. */
-    virtual std::vector<Ref*> GetCluster(const Ref& arg, bool main_only = false) noexcept = 0;
+    virtual std::vector<Ref*> GetCluster(const Ref& arg, Level level) noexcept = 0;
     /** Get pointers to all ancestors of the specified transaction (including the transaction
-     *  itself), in unspecified order. If main_only is false and a staging graph exists, it is
-     *  queried; otherwise the main graph is queried. The queried graph must not be oversized.
+     *  itself), in unspecified order. The queried graph must not be oversized.
      *  Returns {} if arg does not exist in the graph. */
-    virtual std::vector<Ref*> GetAncestors(const Ref& arg, bool main_only = false) noexcept = 0;
+    virtual std::vector<Ref*> GetAncestors(const Ref& arg, Level level) noexcept = 0;
     /** Get pointers to all descendants of the specified transaction (including the transaction
-     *  itself), in unspecified order. If main_only is false and a staging graph exists, it is
-     *  queried; otherwise the main graph is queried. The queried graph must not be oversized.
+     *  itself), in unspecified order. The queried graph must not be oversized.
      *  Returns {} if arg does not exist in the graph. */
-    virtual std::vector<Ref*> GetDescendants(const Ref& arg, bool main_only = false) noexcept = 0;
+    virtual std::vector<Ref*> GetDescendants(const Ref& arg, Level level) noexcept = 0;
     /** Like GetAncestors, but return the Refs for all transactions in the union of the provided
      *  arguments' ancestors (each transaction is only reported once). Refs that do not exist in
      *  the queried graph are ignored. Null refs are not allowed. */
-    virtual std::vector<Ref*> GetAncestorsUnion(std::span<const Ref* const> args, bool main_only = false) noexcept = 0;
+    virtual std::vector<Ref*> GetAncestorsUnion(std::span<const Ref* const> args, Level level) noexcept = 0;
     /** Like GetDescendants, but return the Refs for all transactions in the union of the provided
      *  arguments' descendants (each transaction is only reported once). Refs that do not exist in
      *  the queried graph are ignored. Null refs are not allowed. */
-    virtual std::vector<Ref*> GetDescendantsUnion(std::span<const Ref* const> args, bool main_only = false) noexcept = 0;
-    /** Get the total number of transactions in the graph. If main_only is false and a staging
-     *  graph exists, it is queried; otherwise the main graph is queried. This is available even
+    virtual std::vector<Ref*> GetDescendantsUnion(std::span<const Ref* const> args, Level level) noexcept = 0;
+    /** Get the total number of transactions in the graph. This is available even
      *  for oversized graphs. */
-    virtual GraphIndex GetTransactionCount(bool main_only = false) noexcept = 0;
+    virtual GraphIndex GetTransactionCount(Level level) noexcept = 0;
     /** Compare two transactions according to their order in the main graph. Both transactions must
      *  be in the main graph. The main graph must not be oversized. */
     virtual std::strong_ordering CompareMainOrder(const Ref& a, const Ref& b) noexcept = 0;
-    /** Count the number of distinct clusters that the specified transactions belong to. If
-     *  main_only is false and a staging graph exists, staging clusters are counted. Otherwise,
-     *  main clusters are counted. Refs that do not exist in the queried graph are ignored. Refs
-     *  can not be null. The queried graph must not be oversized. */
-    virtual GraphIndex CountDistinctClusters(std::span<const Ref* const>, bool main_only = false) noexcept = 0;
+    /** Count the number of distinct clusters that the specified transactions belong to. Refs that
+     *  do not exist in the queried graph are ignored. Refs can not be null. The queried graph must
+     *  not be oversized. */
+    virtual GraphIndex CountDistinctClusters(std::span<const Ref* const>, Level level) noexcept = 0;
+    /** For both main and staging (which must both exist and not be oversized), return the combined
+     *  respective feerate diagrams, including chunks from all clusters, but excluding clusters
+     *  that appear identically in both. Use FeeFrac rather than FeePerWeight so CompareChunks is
+     *  usable without type-conversion. */
+    virtual std::pair<std::vector<FeeFrac>, std::vector<FeeFrac>> GetMainStagingDiagrams() noexcept = 0;
+    /** Remove transactions (including their own descendants) according to a fast but best-effort
+     *  strategy such that the TxGraph's cluster and size limits are respected. Applies to staging
+     *  if it exists, and to main otherwise. Returns the list of all removed transactions in
+     *  unspecified order. This has no effect unless the relevant graph is oversized. */
+    virtual std::vector<Ref*> Trim() noexcept = 0;
+
+    /** Interface returned by GetBlockBuilder. */
+    class BlockBuilder
+    {
+    protected:
+        /** Make constructor non-public (use TxGraph::GetBlockBuilder()). */
+        BlockBuilder() noexcept = default;
+    public:
+        /** Support safe inheritance. */
+        virtual ~BlockBuilder() = default;
+        /** Get the chunk that is currently suggested to be included, plus its feerate, if any. */
+        virtual std::optional<std::pair<std::vector<Ref*>, FeePerWeight>> GetCurrentChunk() noexcept = 0;
+        /** Mark the current chunk as included, and progress to the next one. */
+        virtual void Include() noexcept = 0;
+        /** Mark the current chunk as skipped, and progress to the next one. Further chunks from
+         *  the same cluster as the current one will not be reported anymore. */
+        virtual void Skip() noexcept = 0;
+    };
+
+    /** Construct a block builder, drawing chunks in order, from the main graph, which cannot be
+     *  oversized. While the returned object exists, no mutators on the main graph are allowed.
+     *  The BlockBuilder object must not outlive the TxGraph it was created with. */
+    virtual std::unique_ptr<BlockBuilder> GetBlockBuilder() noexcept = 0;
+    /** Get the last chunk in the main graph, i.e., the last chunk that would be returned by a
+     *  BlockBuilder created now, together with its feerate. The chunk is returned in
+     *  reverse-topological order, so every element is preceded by all its descendants. The main
+     *  graph must not be oversized. If the graph is empty, {{}, FeePerWeight{}} is returned. */
+    virtual std::pair<std::vector<Ref*>, FeePerWeight> GetWorstMainChunk() noexcept = 0;
+
+    /** Get the approximate memory usage for this object, just counting the main graph. If a
+     *  staging graph is present, return a number corresponding to memory usage after
+     *  AbortStaging() would be called. BlockBuilders' memory usage, memory usage of internally
+     *  queued operations, and memory due to temporary caches, is not included here. Can always be
+     *  called. */
+    virtual size_t GetMainMemoryUsage() noexcept = 0;
 
     /** Perform an internal consistency check on this object. */
     virtual void SanityCheck() const = 0;
@@ -189,14 +238,13 @@ public:
         /** Index into the Graph's m_entries. Only used if m_graph != nullptr. */
         GraphIndex m_index = GraphIndex(-1);
     public:
-        /** Construct an empty Ref. Non-empty Refs can only be created using
-         *  TxGraph::AddTransaction. */
+        /** Construct an empty Ref. It can be initialized through TxGraph::AddTransaction. */
         Ref() noexcept = default;
         /** Destroy this Ref. If it is not empty, the corresponding transaction is removed (in both
          *  main and staging, if it exists). */
         virtual ~Ref();
-        // Support moving a Ref.
-        Ref& operator=(Ref&& other) noexcept;
+        // Support move-constructing a Ref.
+        Ref& operator=(Ref&& other) noexcept = delete;
         Ref(Ref&& other) noexcept;
         // Do not permit copy constructing or copy assignment. A TxGraph entry can have at most one
         // Ref pointing to it.
@@ -205,8 +253,21 @@ public:
     };
 };
 
-/** Construct a new TxGraph with the specified limit on transactions within a cluster. That
- *  number cannot exceed MAX_CLUSTER_COUNT_LIMIT. */
-std::unique_ptr<TxGraph> MakeTxGraph(unsigned max_cluster_count) noexcept;
+/** Construct a new TxGraph with the specified limit on the number of transactions within a cluster,
+ *  and on the sum of transaction sizes within a cluster.
+ *
+ * - max_cluster_count cannot exceed MAX_CLUSTER_COUNT_LIMIT.
+ * - acceptable_cost controls how much linearization optimization work will be performed per
+ *   cluster before they are considered to be of acceptable quality.
+ * - fallback_order determines how to break tie-breaks between transactions:
+ *   fallback_order(a, b) < 0 means a is "better" than b, and will (in case of ties) be placed
+ *   first. This ordering must be stable over the transactions' lifetimes.
+ */
+std::unique_ptr<TxGraph> MakeTxGraph(
+    unsigned max_cluster_count,
+    uint64_t max_cluster_size,
+    uint64_t acceptable_cost,
+    const std::function<std::strong_ordering(const TxGraph::Ref&, const TxGraph::Ref&)>& fallback_order
+) noexcept;
 
 #endif // BITCOIN_TXGRAPH_H

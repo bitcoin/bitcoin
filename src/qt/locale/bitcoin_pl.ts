@@ -14,10 +14,6 @@
         <translation type="unfinished">&amp;Nowy</translation>
     </message>
     <message>
-        <source>Copy the currently selected address to the system clipboard</source>
-        <translation type="unfinished">Skopiuj wybrany adres do schowka systemowego</translation>
-    </message>
-    <message>
         <source>&amp;Copy</source>
         <translation type="unfinished">&amp;Kopiuj</translation>
     </message>
@@ -32,6 +28,10 @@
     <message>
         <source>Enter address or label to search</source>
         <translation type="unfinished">Wprowadź adres lub etykietę aby wyszukać</translation>
+    </message>
+    <message>
+        <source>Copy the currently selected address to the clipboard</source>
+        <translation type="unfinished">Skopiuj aktualnie zaznaczony adres do schowka</translation>
     </message>
     <message>
         <source>Export the data in the current tab to a file</source>
@@ -51,29 +51,55 @@
     </message>
     <message>
         <source>Choose the address to receive coins with</source>
-        <translation type="unfinished">Wybierz adres, na który chcesz otrzymywać monety</translation>
+        <translation type="unfinished">Wybierz adres, na który chcesz otrzymać monety</translation>
     </message>
     <message>
         <source>C&amp;hoose</source>
-        <translation type="unfinished">Wybierz</translation>
+        <translation type="unfinished">W&amp;ybierz</translation>
+    </message>
+    <message>
+        <source>These are your Bitcoin addresses for sending payments. Always check the amount and the receiving address before sending coins.</source>
+        <translation type="unfinished">To są twoje adresy Bitcoin do wysyłania płatności. Zawsze sprawdzaj kwotę oraz adres odbiorczy przed wysłaniem monet.</translation>
     </message>
     <message>
         <source>These are your Bitcoin addresses for receiving payments. Use the 'Create new receiving address' button in the receive tab to create new addresses.
 Signing is only possible with addresses of the type 'legacy'.</source>
-        <translation type="unfinished">To są twoje adresy Bitcoin do otrzymywania płatności. Użyj przycisku 'Utwórz nowy adres odbioru' na karcie odbioru, aby utworzyć nowe adresy.
-Podpisywanie jest możliwe tylko z adresami typu 'legacy'.</translation>
+        <translation type="unfinished">To są twoje adresy Bitcoin do odbierania płatności. Użyj przycisku „Utwórz nowy adres odbiorczy” w zakładce odbierania, aby utworzyć nowe adresy. 
+Podpisywanie jest możliwe tylko z adresami typu „legacy”.</translation>
     </message>
     <message>
-        <source>Sending addresses - %1</source>
-        <translation type="unfinished">Wysyłające adresy - %1</translation>
+        <source>&amp;Copy Address</source>
+        <translation type="unfinished">&amp;Kopiuj adres</translation>
+    </message>
+    <message>
+        <source>Copy &amp;Label</source>
+        <translation type="unfinished">Kopiuj &amp;etykietę</translation>
+    </message>
+    <message>
+        <source>&amp;Edit</source>
+        <translation type="unfinished">&amp;Edytuj</translation>
+    </message>
+    <message>
+        <source>Export Address List</source>
+        <translation type="unfinished">Eksportuj listę adresów</translation>
+    </message>
+    <message>
+        <source>Comma separated file</source>
+        <extracomment>Expanded name of the CSV file format. See: https://en.wikipedia.org/wiki/Comma-separated_values.</extracomment>
+        <translation type="unfinished">Plik rozdzielany przecinkami</translation>
+    </message>
+    <message>
+        <source>There was an error trying to save the address list to %1. Please try again.</source>
+        <extracomment>An error message. %1 is a stand-in argument for the name of the file we attempted to save to.</extracomment>
+        <translation type="unfinished">Wystąpił błąd podczas próby zapisania listy adresów do %1. Spróbuj ponownie.</translation>
     </message>
     <message>
         <source>Receiving addresses - %1</source>
-        <translation type="unfinished">Odbierające adresy - %1</translation>
+        <translation type="unfinished">Adresy odbiorcze - %1</translation>
     </message>
     <message>
         <source>Exporting Failed</source>
-        <translation type="unfinished">Eksportowanie nie powiodło się </translation>
+        <translation type="unfinished">Eksportowanie nie powiodło się</translation>
     </message>
 </context>
 <context>
@@ -95,11 +121,11 @@ Podpisywanie jest możliwe tylko z adresami typu 'legacy'.</translation>
     <name>AskPassphraseDialog</name>
     <message>
         <source>Passphrase Dialog</source>
-        <translation type="unfinished">Okienko Hasła </translation>
+        <translation type="unfinished">Okienko Hasła</translation>
     </message>
     <message>
         <source>Enter passphrase</source>
-        <translation type="unfinished"> Wpisz hasło </translation>
+        <translation type="unfinished">Wpisz hasło</translation>
     </message>
     <message>
         <source>New passphrase</source>
@@ -107,43 +133,51 @@ Podpisywanie jest możliwe tylko z adresami typu 'legacy'.</translation>
     </message>
     <message>
         <source>Repeat new passphrase</source>
-        <translation type="unfinished"> Powtórz nowe hasło </translation>
+        <translation type="unfinished">Powtórz nowe hasło</translation>
     </message>
     <message>
         <source>Show passphrase</source>
-        <translation type="unfinished">Pokaż hasło </translation>
+        <translation type="unfinished">Pokaż hasło</translation>
     </message>
     <message>
         <source>Encrypt wallet</source>
-        <translation type="unfinished">Zaszyfruj portfel </translation>
+        <translation type="unfinished">Zaszyfruj portfel</translation>
+    </message>
+    <message>
+        <source>This operation needs your wallet passphrase to unlock the wallet.</source>
+        <translation type="unfinished">Ta operacja wymaga hasła do twojego portfela, aby go odblokować.</translation>
+    </message>
+    <message>
+        <source>Unlock wallet</source>
+        <translation type="unfinished">Odblokuj portfel</translation>
     </message>
     <message>
         <source>Change passphrase</source>
-        <translation type="unfinished">Zmień hasło </translation>
+        <translation type="unfinished">Zmień hasło</translation>
     </message>
     <message>
         <source>Confirm wallet encryption</source>
-        <translation type="unfinished">Potwierdź szyfrowanie portfela </translation>
+        <translation type="unfinished">Potwierdź szyfrowanie portfela</translation>
     </message>
     <message>
         <source>Warning: If you encrypt your wallet and lose your passphrase, you will &lt;b&gt;LOSE ALL OF YOUR BITCOINS&lt;/b&gt;!</source>
-        <translation type="unfinished">hasłoOstrzeżenie: Jeśli zaszyfrujesz swój portfel i zgubisz hasło - &lt;b&gt;STRACISZ WSZYSTKIE SWOJE BITCONY&lt;/b&gt;!</translation>
+        <translation type="unfinished">Uwaga: Jeśli zaszyfrujesz swój portfel i zgubisz swoje hasło, &lt;b&gt;STRACISZ WSZYSTKIE SWOJE BITCOINY&lt;/b&gt;!</translation>
     </message>
     <message>
         <source>Are you sure you wish to encrypt your wallet?</source>
-        <translation type="unfinished">Jesteś pewien, że chcesz zaszyfrować swój portfel? </translation>
+        <translation type="unfinished">Czy na pewno chcesz zaszyfrować swój portfel?</translation>
     </message>
     <message>
         <source>Wallet encrypted</source>
-        <translation type="unfinished">Portfel zaszyfrowany </translation>
+        <translation type="unfinished">Portfel zaszyfrowany</translation>
     </message>
     <message>
         <source>Enter the new passphrase for the wallet.&lt;br/&gt;Please use a passphrase of &lt;b&gt;ten or more random characters&lt;/b&gt;, or &lt;b&gt;eight or more words&lt;/b&gt;.</source>
-        <translation type="unfinished">Wprowadź nowe hasło do portfela.&lt;br/&gt; Hasło powinno zawierać co najmniej &lt;b&gt;10 losowych znaków&lt;/b&gt; lub&lt;b&gt; co najmniej 8 słów&lt;/b&gt;.</translation>
+        <translation type="unfinished">Wprowadź nowe hasło dla portfela.&lt;br/&gt;Użyj hasła składającego się z &lt;b&gt;dziesięciu lub więcej losowych znaków&lt;/b&gt;, lub &lt;b&gt;ośmiu lub więcej słów&lt;/b&gt;.</translation>
     </message>
     <message>
         <source>Enter the old passphrase and new passphrase for the wallet.</source>
-        <translation type="unfinished">Wprowadź stare i nowe hasło portfela. </translation>
+        <translation type="unfinished">Wprowadź stare i nowe hasło portfela.</translation>
     </message>
     <message>
         <source>Continue</source>
@@ -159,7 +193,7 @@ Podpisywanie jest możliwe tylko z adresami typu 'legacy'.</translation>
     </message>
     <message>
         <source>Wallet to be encrypted</source>
-        <translation type="unfinished">Portfel do zaszyfrowania </translation>
+        <translation type="unfinished">Portfel do zaszyfrowania</translation>
     </message>
     <message>
         <source>Your wallet is about to be encrypted. </source>
@@ -218,26 +252,26 @@ Podpisywanie jest możliwe tylko z adresami typu 'legacy'.</translation>
     <name>BanTableModel</name>
     <message>
         <source>IP/Netmask</source>
-        <translation type="unfinished">IP / maska podsieci</translation>
+        <translation type="unfinished">IP/maska sieci</translation>
     </message>
     <message>
         <source>Banned Until</source>
-        <translation type="unfinished">Blokada do</translation>
+        <translation type="unfinished">Zablokowany do</translation>
     </message>
 </context>
 <context>
     <name>BitcoinApplication</name>
     <message>
         <source>Settings file %1 might be corrupt or invalid.</source>
-        <translation type="unfinished">Plik ustawień 1%1 może być uszkodzony lub nieprawidłowy</translation>
+        <translation type="unfinished">Plik ustawień %1 może być uszkodzony lub nieprawidłowy</translation>
     </message>
     <message>
         <source>Runaway exception</source>
-        <translation type="unfinished">Błąd zapisu do portfela</translation>
+        <translation type="unfinished">Nieobsługiwany wyjątek</translation>
     </message>
     <message>
         <source>A fatal error occurred. %1 can no longer continue safely and will quit.</source>
-        <translation type="unfinished">Wystąpił fatalny błąd. %1 nie może być kontynuowany i zostanie zakończony.</translation>
+        <translation type="unfinished">Wystąpił krytyczny błąd. %1 nie może już bezpiecznie kontynuować i zostanie zamknięty.</translation>
     </message>
     <message>
         <source>Internal error</source>
@@ -245,7 +279,7 @@ Podpisywanie jest możliwe tylko z adresami typu 'legacy'.</translation>
     </message>
     <message>
         <source>An internal error occurred. %1 will attempt to continue safely. This is an unexpected bug which can be reported as described below.</source>
-        <translation type="unfinished">Wystąpił krytyczny błąd. %1 będzie próbować bezpiecznie pracować. Jest to niespodziewany błąd, który może zostać zgłoszony w sposób opisany poniżej.</translation>
+        <translation type="unfinished">Wystąpił wewnętrzny błąd. %1 spróbuje bezpiecznie kontynuować działanie. To nieoczekiwany błąd, który można zgłosić w sposób opisany poniżej.</translation>
     </message>
 </context>
 <context>
@@ -258,7 +292,7 @@ Podpisywanie jest możliwe tylko z adresami typu 'legacy'.</translation>
     <message>
         <source>A fatal error occurred. Check that settings file is writable, or try running with -nosettings.</source>
         <extracomment>Explanatory text shown on startup when the settings file could not be written. Prompts user to check that we have the ability to write to the file. Explains that the user has the option of running without a settings file.</extracomment>
-        <translation type="unfinished">Wystąpił krytyczny błąd. Upewnij się, że plik ustawień można nadpisać lub uruchom klienta z parametrem -nosettings.</translation>
+        <translation type="unfinished">Wystąpił krytyczny błąd. Upewnij się, że plik ustawień można zapisać lub uruchom klienta z parametrem -nosettings.</translation>
     </message>
     <message>
         <source>Error: %1</source>
@@ -266,11 +300,11 @@ Podpisywanie jest możliwe tylko z adresami typu 'legacy'.</translation>
     </message>
     <message>
         <source>%1 didn't yet exit safely…</source>
-        <translation type="unfinished">%1 jeszcze się bezpiecznie nie zamknął...</translation>
+        <translation type="unfinished">%1 jeszcze się bezpiecznie nie zamknął…</translation>
     </message>
     <message>
         <source>unknown</source>
-        <translation type="unfinished">nieznane</translation>
+        <translation type="unfinished">nieznany</translation>
     </message>
     <message>
         <source>Embedded "%1"</source>
@@ -294,17 +328,17 @@ Podpisywanie jest możliwe tylko z adresami typu 'legacy'.</translation>
     </message>
     <message>
         <source>Unroutable</source>
-        <translation type="unfinished">Nie można wytyczyć</translation>
+        <translation type="unfinished">Nie można wytyczyć trasy</translation>
     </message>
     <message>
         <source>Inbound</source>
         <extracomment>An inbound connection from a peer. An inbound connection is a connection initiated by a peer.</extracomment>
-        <translation type="unfinished">Wejściowy</translation>
+        <translation type="unfinished">Przychodzące</translation>
     </message>
     <message>
         <source>Outbound</source>
         <extracomment>An outbound connection to a peer. An outbound connection is a connection initiated by us.</extracomment>
-        <translation type="unfinished">Wyjściowy</translation>
+        <translation type="unfinished">Wychodzące</translation>
     </message>
     <message>
         <source>Full Relay</source>
@@ -314,22 +348,27 @@ Podpisywanie jest możliwe tylko z adresami typu 'legacy'.</translation>
     <message>
         <source>Block Relay</source>
         <extracomment>Peer connection type that relays network information about blocks and not transactions or addresses.</extracomment>
-        <translation type="unfinished">Przekaźnik Blokowy</translation>
+        <translation type="unfinished">Przekaźnik Bloków</translation>
     </message>
     <message>
         <source>Manual</source>
         <extracomment>Peer connection type established manually through one of several methods.</extracomment>
-        <translation type="unfinished">Ręczny</translation>
+        <translation type="unfinished">Ręczne</translation>
     </message>
     <message>
         <source>Feeler</source>
         <extracomment>Short-lived peer connection type that tests the aliveness of known addresses.</extracomment>
-        <translation type="unfinished">Szczelinomierz</translation>
+        <translation type="unfinished">Połączenie testowe</translation>
     </message>
     <message>
         <source>Address Fetch</source>
         <extracomment>Short-lived peer connection type that solicits known addresses from a peer.</extracomment>
         <translation type="unfinished">Pobieranie adresu</translation>
+    </message>
+    <message>
+        <source>Private Broadcast</source>
+        <extracomment>Short-lived peer connection type that is used for broadcasting privacy-sensitive data.</extracomment>
+        <translation type="unfinished">Prywatna transmisja</translation>
     </message>
     <message>
         <source>None</source>
@@ -343,7 +382,7 @@ Podpisywanie jest możliwe tylko z adresami typu 'legacy'.</translation>
         <source>%n second(s)</source>
         <translation type="unfinished">
             <numerusform>%n sekunda</numerusform>
-            <numerusform>%n sekund</numerusform>
+            <numerusform>%n sekundy</numerusform>
             <numerusform>%n sekund</numerusform>
         </translation>
     </message>
@@ -351,7 +390,7 @@ Podpisywanie jest możliwe tylko z adresami typu 'legacy'.</translation>
         <source>%n minute(s)</source>
         <translation type="unfinished">
             <numerusform>%n minuta</numerusform>
-            <numerusform>%n minut</numerusform>
+            <numerusform>%n minuty</numerusform>
             <numerusform>%n minut</numerusform>
         </translation>
     </message>
@@ -359,7 +398,7 @@ Podpisywanie jest możliwe tylko z adresami typu 'legacy'.</translation>
         <source>%n hour(s)</source>
         <translation type="unfinished">
             <numerusform>%n godzina</numerusform>
-            <numerusform>%n godzin</numerusform>
+            <numerusform>%n godziny</numerusform>
             <numerusform>%n godzin</numerusform>
         </translation>
     </message>
@@ -376,7 +415,7 @@ Podpisywanie jest możliwe tylko z adresami typu 'legacy'.</translation>
         <translation type="unfinished">
             <numerusform>%n tydzień</numerusform>
             <numerusform>%n tygodnie</numerusform>
-            <numerusform>%n tygodnie</numerusform>
+            <numerusform>%n tygodni</numerusform>
         </translation>
     </message>
     <message>
@@ -388,7 +427,7 @@ Podpisywanie jest możliwe tylko z adresami typu 'legacy'.</translation>
         <translation type="unfinished">
             <numerusform>%n rok</numerusform>
             <numerusform>%n lata</numerusform>
-            <numerusform>%n lata</numerusform>
+            <numerusform>%n lat</numerusform>
         </translation>
     </message>
     <message>
@@ -400,7 +439,7 @@ Podpisywanie jest możliwe tylko z adresami typu 'legacy'.</translation>
     <name>BitcoinGUI</name>
     <message>
         <source>&amp;Overview</source>
-        <translation type="unfinished">P&amp;odsumowanie</translation>
+        <translation type="unfinished">&amp;Przegląd</translation>
     </message>
     <message>
         <source>Show general overview of wallet</source>
@@ -436,7 +475,7 @@ Podpisywanie jest możliwe tylko z adresami typu 'legacy'.</translation>
     </message>
     <message>
         <source>Show information about Qt</source>
-        <translation type="unfinished">Pokazuje informacje o Qt</translation>
+        <translation type="unfinished">Pokaż informacje o Qt</translation>
     </message>
     <message>
         <source>Modify configuration options for %1</source>
@@ -469,7 +508,7 @@ Podpisywanie jest możliwe tylko z adresami typu 'legacy'.</translation>
     </message>
     <message>
         <source>Backup wallet to another location</source>
-        <translation type="unfinished">Zapasowy portfel w innej lokalizacji</translation>
+        <translation type="unfinished">Zrób kopię zapasową portfela w innej lokalizacji</translation>
     </message>
     <message>
         <source>Change the passphrase used for wallet encryption</source>
@@ -477,7 +516,7 @@ Podpisywanie jest możliwe tylko z adresami typu 'legacy'.</translation>
     </message>
     <message>
         <source>&amp;Send</source>
-        <translation type="unfinished">Wyślij</translation>
+        <translation type="unfinished">&amp;Wyślij</translation>
     </message>
     <message>
         <source>&amp;Receive</source>
@@ -485,11 +524,11 @@ Podpisywanie jest możliwe tylko z adresami typu 'legacy'.</translation>
     </message>
     <message>
         <source>&amp;Options…</source>
-        <translation type="unfinished">&amp;Opcje...</translation>
+        <translation type="unfinished">&amp;Opcje…</translation>
     </message>
     <message>
         <source>&amp;Encrypt Wallet…</source>
-        <translation type="unfinished">Zaszyfruj portf&amp;el...</translation>
+        <translation type="unfinished">Zaszyfruj portf&amp;el…</translation>
     </message>
     <message>
         <source>Encrypt the private keys that belong to your wallet</source>
@@ -497,47 +536,51 @@ Podpisywanie jest możliwe tylko z adresami typu 'legacy'.</translation>
     </message>
     <message>
         <source>&amp;Backup Wallet…</source>
-        <translation type="unfinished">Utwórz kopię zapasową portfela...</translation>
+        <translation type="unfinished">Utwórz kopię &amp;zapasową portfela…</translation>
     </message>
     <message>
         <source>&amp;Change Passphrase…</source>
-        <translation type="unfinished">&amp;Zmień hasło...</translation>
+        <translation type="unfinished">&amp;Zmień hasło…</translation>
     </message>
     <message>
         <source>Sign &amp;message…</source>
-        <translation type="unfinished">Podpisz &amp;wiadomość...</translation>
+        <translation type="unfinished">Podpisz &amp;wiadomość…</translation>
     </message>
     <message>
         <source>Sign messages with your Bitcoin addresses to prove you own them</source>
-        <translation type="unfinished">Podpisz wiadomości swoim adresem, aby udowodnić jego posiadanie</translation>
+        <translation type="unfinished">Podpisz wiadomości swoimi adresami Bitcoin, aby potwierdzić, że je posiadasz.</translation>
     </message>
     <message>
         <source>&amp;Verify message…</source>
-        <translation type="unfinished">&amp;Zweryfikuj wiadomość...</translation>
+        <translation type="unfinished">&amp;Zweryfikuj wiadomość…</translation>
     </message>
     <message>
         <source>Verify messages to ensure they were signed with specified Bitcoin addresses</source>
-        <translation type="unfinished">Zweryfikuj wiadomość,  aby upewnić się, że została podpisana podanym adresem bitcoinowym.</translation>
+        <translation type="unfinished">Zweryfikuj wiadomości, aby upewnić się, że zostały podpisane określonymi adresami bitcoinowymi.</translation>
     </message>
     <message>
         <source>&amp;Load PSBT from file…</source>
-        <translation type="unfinished">Wczytaj PSBT z pliku...</translation>
+        <translation type="unfinished">&amp;Wczytaj PSBT z pliku…</translation>
     </message>
     <message>
         <source>Open &amp;URI…</source>
-        <translation type="unfinished">Otwórz &amp;URI...</translation>
+        <translation type="unfinished">Otwórz &amp;URI…</translation>
     </message>
     <message>
         <source>Close Wallet…</source>
-        <translation type="unfinished">Zamknij portfel...</translation>
+        <translation type="unfinished">Zamknij portfel…</translation>
     </message>
     <message>
         <source>Create Wallet…</source>
-        <translation type="unfinished">Utwórz portfel...</translation>
+        <translation type="unfinished">Stwórz portfel…</translation>
     </message>
     <message>
         <source>Close All Wallets…</source>
-        <translation type="unfinished">Zamknij wszystkie portfele ...</translation>
+        <translation type="unfinished">Zamknij wszystkie portfele…</translation>
+    </message>
+    <message>
+        <source>Restore and Migrate Wallet File…</source>
+        <translation type="unfinished">Przywróć i migruj plik portfela…</translation>
     </message>
     <message>
         <source>&amp;File</source>
@@ -545,7 +588,7 @@ Podpisywanie jest możliwe tylko z adresami typu 'legacy'.</translation>
     </message>
     <message>
         <source>&amp;Settings</source>
-        <translation type="unfinished">P&amp;referencje</translation>
+        <translation type="unfinished">U&amp;stawienia</translation>
     </message>
     <message>
         <source>&amp;Help</source>
@@ -557,27 +600,27 @@ Podpisywanie jest możliwe tylko z adresami typu 'legacy'.</translation>
     </message>
     <message>
         <source>Syncing Headers (%1%)…</source>
-        <translation type="unfinished">Synchronizuję nagłówki (%1%)…</translation>
+        <translation type="unfinished">Synchronizowanie nagłówków (%1%)…</translation>
     </message>
     <message>
         <source>Synchronizing with network…</source>
-        <translation type="unfinished">Synchronizacja z siecią...</translation>
+        <translation type="unfinished">Synchronizacja z siecią…</translation>
     </message>
     <message>
         <source>Indexing blocks on disk…</source>
-        <translation type="unfinished">Indeksowanie bloków...</translation>
+        <translation type="unfinished">Indeksowanie bloków…</translation>
     </message>
     <message>
         <source>Processing blocks on disk…</source>
-        <translation type="unfinished">Przetwarzanie bloków...</translation>
+        <translation type="unfinished">Przetwarzanie bloków…</translation>
     </message>
     <message>
         <source>Connecting to peers…</source>
-        <translation type="unfinished">Łączenie z uczestnikami sieci...</translation>
+        <translation type="unfinished">Łączenie z uczestnikami sieci…</translation>
     </message>
     <message>
         <source>Request payments (generates QR codes and bitcoin: URIs)</source>
-        <translation type="unfinished">Zażądaj płatności (wygeneruj QE code i bitcoin: URI)</translation>
+        <translation type="unfinished">Żądaj płatności (generuje kod QR oraz bitcoinowe URI)</translation>
     </message>
     <message>
         <source>Show the list of used sending addresses and labels</source>
@@ -595,8 +638,8 @@ Podpisywanie jest możliwe tylko z adresami typu 'legacy'.</translation>
         <source>Processed %n block(s) of transaction history.</source>
         <translation type="unfinished">
             <numerusform>Przetworzono %n blok historii transakcji.</numerusform>
-            <numerusform>Przetworzono 1%n bloków historii transakcji.</numerusform>
-            <numerusform>Przetworzono 1%n bloków historii transakcji.</numerusform>
+            <numerusform>Przetworzono %n bloki historii transakcji.</numerusform>
+            <numerusform>Przetworzono %n bloków historii transakcji.</numerusform>
         </translation>
     </message>
     <message>
@@ -605,7 +648,7 @@ Podpisywanie jest możliwe tylko z adresami typu 'legacy'.</translation>
     </message>
     <message>
         <source>Catching up…</source>
-        <translation type="unfinished">Synchronizuję...</translation>
+        <translation type="unfinished">Synchronizuję…</translation>
     </message>
     <message>
         <source>Last received block was generated %1 ago.</source>
@@ -637,7 +680,7 @@ Podpisywanie jest możliwe tylko z adresami typu 'legacy'.</translation>
     </message>
     <message>
         <source>Load PSBT from &amp;clipboard…</source>
-        <translation type="unfinished">Wczytaj PSBT ze schowka...</translation>
+        <translation type="unfinished">Wczytaj PSBT ze &amp;schowka…</translation>
     </message>
     <message>
         <source>Load Partially Signed Bitcoin Transaction from clipboard</source>
@@ -657,11 +700,11 @@ Podpisywanie jest możliwe tylko z adresami typu 'legacy'.</translation>
     </message>
     <message>
         <source>&amp;Receiving addresses</source>
-        <translation type="unfinished">&amp;Adresy odbioru</translation>
+        <translation type="unfinished">Ad&amp;resy odbiorcze</translation>
     </message>
     <message>
         <source>Open a bitcoin: URI</source>
-        <translation type="unfinished">Otwórz URI</translation>
+        <translation type="unfinished">Otwórz URI bitcoin:</translation>
     </message>
     <message>
         <source>Open Wallet</source>
@@ -678,7 +721,7 @@ Podpisywanie jest możliwe tylko z adresami typu 'legacy'.</translation>
     <message>
         <source>Restore Wallet…</source>
         <extracomment>Name of the menu item that restores wallet from a backup file.</extracomment>
-        <translation type="unfinished">Przywróć Portfel…</translation>
+        <translation type="unfinished">Przywróć portfel…</translation>
     </message>
     <message>
         <source>Restore a wallet from a backup file</source>
@@ -691,23 +734,23 @@ Podpisywanie jest możliwe tylko z adresami typu 'legacy'.</translation>
     </message>
     <message>
         <source>Migrate Wallet</source>
-        <translation type="unfinished">Przenieś Portfel</translation>
+        <translation type="unfinished">Migruj Portfel</translation>
     </message>
     <message>
         <source>Migrate a wallet</source>
-        <translation type="unfinished">Przenieś portfel</translation>
+        <translation type="unfinished">Migruj Portfel</translation>
     </message>
     <message>
         <source>Show the %1 help message to get a list with possible Bitcoin command-line options</source>
-        <translation type="unfinished">Pokaż pomoc %1 aby zobaczyć listę wszystkich opcji lnii poleceń.</translation>
+        <translation type="unfinished">Pokaż pomoc dla %1 aby zobaczyć listę możliwych opcji wiersza poleceń</translation>
     </message>
     <message>
         <source>&amp;Mask values</source>
-        <translation type="unfinished">&amp;Schowaj wartości</translation>
+        <translation type="unfinished">&amp;Ukryj kwoty</translation>
     </message>
     <message>
         <source>Mask the values in the Overview tab</source>
-        <translation type="unfinished">Schowaj wartości w zakładce Podsumowanie</translation>
+        <translation type="unfinished">Maskuj wartości w zakładce Przegląd</translation>
     </message>
     <message>
         <source>No wallets available</source>
@@ -734,6 +777,23 @@ Podpisywanie jest możliwe tylko z adresami typu 'legacy'.</translation>
         <translation type="unfinished">Nazwa portfela</translation>
     </message>
     <message>
+        <source>Invalid Wallet Name</source>
+        <translation type="unfinished">Nieprawidłowa nazwa portfela</translation>
+    </message>
+    <message>
+        <source>Wallet name cannot be empty</source>
+        <translation type="unfinished">Nazwa portfela nie może być pusta</translation>
+    </message>
+    <message>
+        <source>Restore and Migrate Wallet Backup</source>
+        <translation type="unfinished">Przywróć i migruj kopię zapasową portfela</translation>
+    </message>
+    <message>
+        <source>Restore and Migrate Wallet</source>
+        <extracomment>Title of pop-up window shown when the user is attempting to restore a wallet.</extracomment>
+        <translation type="unfinished">Przywróć i migruj portfel</translation>
+    </message>
+    <message>
         <source>&amp;Window</source>
         <translation type="unfinished">&amp;Okno</translation>
     </message>
@@ -753,19 +813,23 @@ Podpisywanie jest możliwe tylko z adresami typu 'legacy'.</translation>
         <source>&amp;Hide</source>
         <translation type="unfinished">&amp;Ukryj</translation>
     </message>
+    <message>
+        <source>S&amp;how</source>
+        <translation type="unfinished">&amp;Wyświetl</translation>
+    </message>
     <message numerus="yes">
         <source>%n active connection(s) to Bitcoin network.</source>
         <extracomment>A substring of the tooltip.</extracomment>
         <translation type="unfinished">
             <numerusform>%n aktywne połączenie z siecią Bitcoin.</numerusform>
-            <numerusform>%n aktywnych połączeń z siecią Bitcoin.</numerusform>
+            <numerusform>%n aktywne połączenia z siecią Bitcoin.</numerusform>
             <numerusform>%n aktywnych połączeń z siecią Bitcoin.</numerusform>
         </translation>
     </message>
     <message>
         <source>Click for more actions.</source>
         <extracomment>A substring of the tooltip. "More actions" are available via the context menu.</extracomment>
-        <translation type="unfinished">Kliknij po więcej funkcji.</translation>
+        <translation type="unfinished">Kliknij aby uzyskać więcej funkcji.</translation>
     </message>
     <message>
         <source>Show Peers tab</source>
@@ -784,15 +848,7 @@ Podpisywanie jest możliwe tylko z adresami typu 'legacy'.</translation>
     </message>
     <message>
         <source>Pre-syncing Headers (%1%)…</source>
-        <translation type="unfinished">Synchronizuję nagłówki (%1%)…</translation>
-    </message>
-    <message>
-        <source>Error creating wallet</source>
-        <translation type="unfinished">Błąd podczas tworzenia portfela</translation>
-    </message>
-    <message>
-        <source>Cannot create new wallet, the software was compiled without sqlite support (required for descriptor wallets)</source>
-        <translation type="unfinished">Nie można stworzyć nowego protfela, program skompilowano bez wsparcia sqlite (wymaganego dla deskryptorów potfeli)</translation>
+        <translation type="unfinished">Wstępne synchronizowanie nagłówków (%1%)…</translation>
     </message>
     <message>
         <source>Error: %1</source>
@@ -856,7 +912,7 @@ Podpisywanie jest możliwe tylko z adresami typu 'legacy'.</translation>
     </message>
     <message>
         <source>Private key &lt;b&gt;disabled&lt;/b&gt;</source>
-        <translation type="unfinished">Klucz prywatny&lt;b&gt;dezaktywowany&lt;/b&gt;</translation>
+        <translation type="unfinished">Klucz prywatny &lt;b&gt;dezaktywowany&lt;/b&gt;</translation>
     </message>
     <message>
         <source>Wallet is &lt;b&gt;encrypted&lt;/b&gt; and currently &lt;b&gt;unlocked&lt;/b&gt;</source>
@@ -906,11 +962,11 @@ Podpisywanie jest możliwe tylko z adresami typu 'legacy'.</translation>
     </message>
     <message>
         <source>Change:</source>
-        <translation type="unfinished">Zmiana:</translation>
+        <translation type="unfinished">Reszta:</translation>
     </message>
     <message>
         <source>(un)select all</source>
-        <translation type="unfinished">zaznacz/odznacz wszytsko</translation>
+        <translation type="unfinished">zaznacz/odznacz wszystko</translation>
     </message>
     <message>
         <source>Tree mode</source>
@@ -938,27 +994,27 @@ Podpisywanie jest możliwe tylko z adresami typu 'legacy'.</translation>
     </message>
     <message>
         <source>Confirmations</source>
-        <translation type="unfinished">Potwierdzenie</translation>
+        <translation type="unfinished">Potwierdzenia</translation>
     </message>
     <message>
         <source>Confirmed</source>
-        <translation type="unfinished">Potwerdzone</translation>
+        <translation type="unfinished">Potwierdzone</translation>
     </message>
     <message>
         <source>Copy amount</source>
-        <translation type="unfinished">Kopiuj kwote</translation>
+        <translation type="unfinished">Kopiuj &amp;kwotę</translation>
     </message>
     <message>
         <source>&amp;Copy address</source>
-        <translation type="unfinished">Kopiuj adres</translation>
+        <translation type="unfinished">&amp;Kopiuj adres</translation>
     </message>
     <message>
         <source>Copy &amp;label</source>
-        <translation type="unfinished">Kopiuj etykietę</translation>
+        <translation type="unfinished">Kopiuj &amp;etykietę</translation>
     </message>
     <message>
         <source>Copy &amp;amount</source>
-        <translation type="unfinished">Kopiuj kwotę</translation>
+        <translation type="unfinished">Kopiuj &amp;kwotę</translation>
     </message>
     <message>
         <source>Copy transaction &amp;ID and output index</source>
@@ -982,11 +1038,11 @@ Podpisywanie jest możliwe tylko z adresami typu 'legacy'.</translation>
     </message>
     <message>
         <source>Copy after fee</source>
-        <translation type="unfinished">Skopiuj ilość po opłacie</translation>
+        <translation type="unfinished">Kopiuj ilość po opłacie</translation>
     </message>
     <message>
         <source>Copy bytes</source>
-        <translation type="unfinished">Skopiuj ilość bajtów</translation>
+        <translation type="unfinished">Skopiuj bajty</translation>
     </message>
     <message>
         <source>Copy change</source>
@@ -1018,16 +1074,16 @@ Podpisywanie jest możliwe tylko z adresami typu 'legacy'.</translation>
     <message>
         <source>Create Wallet</source>
         <extracomment>Title of window indicating the progress of creation of a new wallet.</extracomment>
-        <translation type="unfinished">Stwórz potrfel</translation>
+        <translation type="unfinished">Stwórz portfel</translation>
     </message>
     <message>
         <source>Creating Wallet &lt;b&gt;%1&lt;/b&gt;…</source>
         <extracomment>Descriptive text of the create wallet progress window which indicates to the user which wallet is currently being created.</extracomment>
-        <translation type="unfinished">Tworzenie portfela &lt;b&gt;%1&lt;/b&gt;...</translation>
+        <translation type="unfinished">Tworzenie portfela &lt;b&gt;%1&lt;/b&gt;…</translation>
     </message>
     <message>
         <source>Create wallet failed</source>
-        <translation type="unfinished">Nieudane tworzenie potrfela</translation>
+        <translation type="unfinished">Utworzenie portfela nie powiodło się</translation>
     </message>
     <message>
         <source>Create wallet warning</source>
@@ -1047,23 +1103,23 @@ Podpisywanie jest możliwe tylko z adresami typu 'legacy'.</translation>
     <message>
         <source>Load Wallets</source>
         <extracomment>Title of progress window which is displayed when wallets are being loaded.</extracomment>
-        <translation type="unfinished"> Ładuj portfele</translation>
+        <translation type="unfinished">Ładuj portfele</translation>
     </message>
     <message>
         <source>Loading wallets…</source>
         <extracomment>Descriptive text of the load wallets progress window which indicates to the user that wallets are currently being loaded.</extracomment>
-        <translation type="unfinished">Ładowanie portfeli...</translation>
+        <translation type="unfinished">Ładowanie portfeli…</translation>
     </message>
 </context>
 <context>
     <name>MigrateWalletActivity</name>
     <message>
         <source>Migrate wallet</source>
-        <translation type="unfinished">Przenieś portfel</translation>
+        <translation type="unfinished">Migruj Portfel</translation>
     </message>
     <message>
         <source>Are you sure you wish to migrate the wallet &lt;i&gt;%1&lt;/i&gt;?</source>
-        <translation type="unfinished">Na pewno chcesz przenieść portfel &lt;i&gt;%1&lt;/i&gt;?</translation>
+        <translation type="unfinished">Na pewno chcesz przeprowadzić migrację portfela &lt;i&gt;%1&lt;/i&gt;?</translation>
     </message>
     <message>
         <source>Migrating the wallet will convert this wallet to one or more descriptor wallets. A new wallet backup will need to be made.
@@ -1072,38 +1128,72 @@ If this wallet contains any solvable but not watched scripts, a different and ne
 
 The migration process will create a backup of the wallet before migrating. This backup file will be named &lt;wallet name&gt;-&lt;timestamp&gt;.legacy.bak and can be found in the directory for this wallet. In the event of an incorrect migration, the backup can be restored with the "Restore Wallet" functionality.</source>
         <translation type="unfinished">Migracja portfela przekonwertuje ten portfel na jeden lub więcej portfeli opisowych. Należy utworzyć nową kopię zapasową portfela.
-Jeśli ten portfel zawiera jakiekolwiek skrypty tylko do odczytu, zostanie utworzony nowy portfel, który zawiera te skrypty tylko do odczytu.
-Jeśli ten portfel zawiera jakiekolwiek skrypty rozwiązywalne, ale nie obserwowane, zostanie utworzony inny i nowy portfel, który zawiera te skrypty.
+Jeśli ten portfel zawiera jakiekolwiek skrypty tylko do odczytu (watchonly), zostanie utworzony nowy portfel, który zawiera takie skrypty.
+Jeśli ten portfel zawiera jakiekolwiek skrypty rozwiązywalne, ale nie obserwowane, zostanie utworzony inny i nowy portfel, który zawiera takie skrypty.
 
-Proces migracji utworzy kopię zapasową portfela przed migracją. Plik kopii zapasowej będzie nosił nazwę &lt;nazwa portfela&gt;-&lt;znacznik czasu&gt;.legacy.bak i można go znaleźć w katalogu tego portfela. W przypadku nieprawidłowej migracji kopię zapasową można przywrócić za pomocą funkcji "Przywróć portfel".</translation>
+Proces migracji utworzy kopię zapasową portfela przed migracją. Plik kopii zapasowej będzie nosił nazwę &lt;wallet name&gt;-&lt;timestamp&gt;.legacy.bak i można go znaleźć w katalogu tego portfela. W przypadku nieprawidłowej migracji kopię zapasową można przywrócić za pomocą funkcji "Przywróć portfel".</translation>
     </message>
     <message>
         <source>Migrate Wallet</source>
-        <translation type="unfinished">Przenieś Portfel</translation>
+        <translation type="unfinished">Migruj Portfel</translation>
     </message>
     <message>
         <source>Migrating Wallet &lt;b&gt;%1&lt;/b&gt;…</source>
-        <translation type="unfinished">Przenoszenie portfela &lt;b&gt;%1&lt;/b&gt;...</translation>
+        <translation type="unfinished">Przenoszenie portfela &lt;b&gt;%1&lt;/b&gt;…</translation>
     </message>
     <message>
         <source>The wallet '%1' was migrated successfully.</source>
-        <translation type="unfinished">Portfel '%1' został poprawnie przeniesiony.</translation>
+        <translation type="unfinished">Portfel '%1' został poprawnie przemigrowany.</translation>
     </message>
     <message>
         <source>Watchonly scripts have been migrated to a new wallet named '%1'.</source>
-        <translation type="unfinished">Skrypty tylko do odczytu zostały przeniesione do nowego portfela '%1'</translation>
+        <translation type="unfinished">Skrypty tylko do odczytu zostały przemigrowane do nowego portfela '%1'.</translation>
     </message>
     <message>
         <source>Solvable but not watched scripts have been migrated to a new wallet named '%1'.</source>
-        <translation type="unfinished">Sprawne, ale nie oglądane skrypty tylko do odczytu zostały przeniesione do nowego portfela '%1'</translation>
+        <translation type="unfinished">Rozwiązywalne, ale nie obserwowane skrypty zostały przemigrowane do nowego portfela '%1'</translation>
+    </message>
+    <message>
+        <source>Restore and Migrate wallet</source>
+        <translation type="unfinished">Przywróć i przeprowadź migrację portfela</translation>
+    </message>
+    <message>
+        <source>Are you sure you wish to restore the wallet file &lt;i&gt;%1&lt;/i&gt; to &lt;i&gt;%2&lt;/i&gt; and migrate it?</source>
+        <translation type="unfinished">Czy na pewno chcesz przywrócić plik portfela &lt;i&gt;%1&lt;/i&gt; do &lt;i&gt;%2&lt;/i&gt; i przeprowadzić migrację?</translation>
+    </message>
+    <message>
+        <source>Restoring the wallet will copy the backup file to the wallets directory and place it in the standard wallet directory layout. The original file will not be modified.
+
+Migrating the wallet will convert the restored wallet to one or more descriptor wallets. A new wallet backup will need to be made.
+If this wallet contains any watchonly scripts, a new wallet will be created which contains those watchonly scripts.
+If this wallet contains any solvable but not watched scripts, a different and new wallet will be created which contains those scripts.
+
+The migration process will create a backup of the wallet before migrating. This backup file will be named &lt;wallet name&gt;-&lt;timestamp&gt;.legacy.bak and can be found in the directory for this wallet. In the event of an incorrect migration, the backup can be restored with the "Restore Wallet" functionality.</source>
+        <translation type="unfinished">Przywracanie portfela spowoduje skopiowanie pliku kopii zapasowej do katalogu wallets i umieszczenie go w standardowej strukturze katalogów portfela. Oryginalny plik nie zostanie zmodyfikowany.
+
+Migracja portfela spowoduje konwersję przywróconego portfela do jednego lub większej liczby portfeli deskryptorowych. Konieczne będzie utworzenie nowej kopii zapasowej portfela.
+Jeśli ten portfel zawiera jakiekolwiek skrypty watchonly, zostanie utworzony nowy portfel zawierający je.
+Jeśli ten portfel zawiera jakiekolwiek skrypty rozwiązywalne (solvable), ale nie obserwowane, zostanie utworzony inny, nowy portfel zawierający te skrypty.
+
+Proces migracji utworzy kopię zapasową portfela przed rozpoczęciem migracji. Plik kopii zapasowej będzie nazwany &lt;wallet name&gt;-&lt;timestamp&gt;.legacy.bak i będzie dostępny w katalogu tego portfela. W przypadku nieprawidłowej migracji kopię zapasową można przywrócić za pomocą funkcji „Przywróć portfel”.</translation>
+    </message>
+    <message>
+        <source>Restore Wallet</source>
+        <extracomment>Title of progress window which is displayed when wallets are being restored.</extracomment>
+        <translation type="unfinished">Przywróć portfel</translation>
+    </message>
+    <message>
+        <source>Restoring Wallet &lt;b&gt;%1&lt;/b&gt;…</source>
+        <extracomment>Descriptive text of the restore wallets progress window which indicates to the user that wallets are currently being restored.</extracomment>
+        <translation type="unfinished">Przywracanie portfela &lt;b&gt;%1&lt;/b&gt;…</translation>
     </message>
     <message>
         <source>Migration failed</source>
-        <translation type="unfinished">Przeniesienie nie powiodło się</translation>
+        <translation type="unfinished">Migracja nie powiodła się</translation>
     </message>
     <message>
         <source>Migration Successful</source>
-        <translation type="unfinished">Przeniesienie powiodło się</translation>
+        <translation type="unfinished">Migracja powiodła się</translation>
     </message>
 </context>
 <context>
@@ -1114,7 +1204,7 @@ Proces migracji utworzy kopię zapasową portfela przed migracją. Plik kopii za
     </message>
     <message>
         <source>Open wallet warning</source>
-        <translation type="unfinished">Ostrzeżenie przy otworzeniu potrfela</translation>
+        <translation type="unfinished">Ostrzeżenie podczas otwierania portfela</translation>
     </message>
     <message>
         <source>Open Wallet</source>
@@ -1124,7 +1214,7 @@ Proces migracji utworzy kopię zapasową portfela przed migracją. Plik kopii za
     <message>
         <source>Opening Wallet &lt;b&gt;%1&lt;/b&gt;…</source>
         <extracomment>Descriptive text of the open wallet progress window which indicates to the user which wallet is currently being opened.</extracomment>
-        <translation type="unfinished">Otwieranie portfela &lt;b&gt;%1&lt;/b&gt;...</translation>
+        <translation type="unfinished">Otwieranie portfela &lt;b&gt;%1&lt;/b&gt;…</translation>
     </message>
 </context>
 <context>
@@ -1137,22 +1227,22 @@ Proces migracji utworzy kopię zapasową portfela przed migracją. Plik kopii za
     <message>
         <source>Restoring Wallet &lt;b&gt;%1&lt;/b&gt;…</source>
         <extracomment>Descriptive text of the restore wallets progress window which indicates to the user that wallets are currently being restored.</extracomment>
-        <translation type="unfinished">Odtwarzanie portfela &lt;b&gt;%1&lt;/b&gt;...</translation>
+        <translation type="unfinished">Przywracanie portfela &lt;b&gt;%1&lt;/b&gt;…</translation>
     </message>
     <message>
         <source>Restore wallet failed</source>
         <extracomment>Title of message box which is displayed when the wallet could not be restored.</extracomment>
-        <translation type="unfinished">Odtworzenie portfela nieudane</translation>
+        <translation type="unfinished">Przywracanie portfela nie powiodło się</translation>
     </message>
     <message>
         <source>Restore wallet warning</source>
         <extracomment>Title of message box which is displayed when the wallet is restored with some warning.</extracomment>
-        <translation type="unfinished">Ostrzeżenie przy odtworzeniu portfela</translation>
+        <translation type="unfinished">Ostrzeżenie podczas przywracania portfela</translation>
     </message>
     <message>
         <source>Restore wallet message</source>
         <extracomment>Title of message box which is displayed when the wallet is successfully restored.</extracomment>
-        <translation type="unfinished">Wiadomość przy odtwarzaniu portfela</translation>
+        <translation type="unfinished">Wiadomość podczas przywracania portfela</translation>
     </message>
 </context>
 <context>
@@ -1167,7 +1257,7 @@ Proces migracji utworzy kopię zapasową portfela przed migracją. Plik kopii za
     </message>
     <message>
         <source>Closing the wallet for too long can result in having to resync the entire chain if pruning is enabled.</source>
-        <translation type="unfinished">Zamknięcie portfela na zbyt długo może skutkować koniecznością ponownego załadowania całego łańcucha, jeżeli jest włączony pruning.</translation>
+        <translation type="unfinished">Zamknięcie portfela na zbyt długo może skutkować koniecznością ponownego załadowania całego łańcucha, jeżeli jest włączone przycinanie (pruning).</translation>
     </message>
     <message>
         <source>Close all wallets</source>
@@ -1175,14 +1265,14 @@ Proces migracji utworzy kopię zapasową portfela przed migracją. Plik kopii za
     </message>
     <message>
         <source>Are you sure you wish to close all wallets?</source>
-        <translation type="unfinished">Na pewno zamknąć wszystkie portfe?</translation>
+        <translation type="unfinished">Czy na pewno chcesz zamknąć wszystkie portfele?</translation>
     </message>
 </context>
 <context>
     <name>CreateWalletDialog</name>
     <message>
         <source>Create Wallet</source>
-        <translation type="unfinished">Stwórz potrfel</translation>
+        <translation type="unfinished">Stwórz portfel</translation>
     </message>
     <message>
         <source>You are one step away from creating your new wallet!</source>
@@ -1190,7 +1280,7 @@ Proces migracji utworzy kopię zapasową portfela przed migracją. Plik kopii za
     </message>
     <message>
         <source>Please provide a name and, if desired, enable any advanced options</source>
-        <translation type="unfinished">Proszę podać nazwę, i jeśli potrzeba, włącz zaawansowane ustawienia.</translation>
+        <translation type="unfinished">Podaj nazwę i, jeśli chcesz, włącz dowolne opcje zaawansowane</translation>
     </message>
     <message>
         <source>Wallet Name</source>
@@ -1221,12 +1311,12 @@ Proces migracji utworzy kopię zapasową portfela przed migracją. Plik kopii za
         <translation type="unfinished">Wyłącz klucze prywatne</translation>
     </message>
     <message>
-        <source>Make a blank wallet. Blank wallets do not initially have private keys or scripts. Private keys and addresses can be imported, or an HD seed can be set, at a later time.</source>
-        <translation type="unfinished">Stwórz czysty portfel. Portfel taki początkowo nie zawiera żadnych kluczy prywatnych ani skryptów. Później mogą zostać zaimportowane klucze prywatne, adresy lub będzie można ustawić seed HD.</translation>
+        <source>Make a blank wallet. Blank wallets do not initially have private keys or scripts. Private keys and addresses can be imported using descriptors at a later time.</source>
+        <translation type="unfinished">Utwórz pusty portfel. Puste portfele początkowo nie zawierają kluczy prywatnych ani skryptów. Klucze prywatne i adresy można zaimportować później za pomocą deskryptorów.</translation>
     </message>
     <message>
         <source>Make Blank Wallet</source>
-        <translation type="unfinished">Stwórz czysty portfel</translation>
+        <translation type="unfinished">Stwórz pusty portfel</translation>
     </message>
     <message>
         <source>Use an external signing device such as a hardware wallet. Configure the external signer script in wallet preferences first.</source>
@@ -1234,7 +1324,7 @@ Proces migracji utworzy kopię zapasową portfela przed migracją. Plik kopii za
     </message>
     <message>
         <source>External signer</source>
-        <translation type="unfinished">Zewnętrzny sygnatariusz</translation>
+        <translation type="unfinished">Zewnętrzne urządzenie podpisujące</translation>
     </message>
     <message>
         <source>Create</source>
@@ -1243,7 +1333,7 @@ Proces migracji utworzy kopię zapasową portfela przed migracją. Plik kopii za
     <message>
         <source>Compiled without external signing support (required for external signing)</source>
         <extracomment>"External signing" means using devices such as hardware wallets.</extracomment>
-        <translation type="unfinished">Skompilowany bez obsługi podpisywania zewnętrznego (wymagany do podpisywania zewnętrzengo)</translation>
+        <translation type="unfinished">Skompilowano bez obsługi zewnętrznego podpisywania (wymaganego do zewnętrznego podpisywania)</translation>
     </message>
 </context>
 <context>
@@ -1325,68 +1415,33 @@ Proces migracji utworzy kopię zapasową portfela przed migracją. Plik kopii za
     </message>
 </context>
 <context>
+    <name>HelpMessageDialog</name>
+    <message>
+        <source>version</source>
+        <translation type="unfinished">wersja</translation>
+    </message>
+    <message>
+        <source>About %1</source>
+        <translation type="unfinished">Informacje o %1</translation>
+    </message>
+    <message>
+        <source>Command-line options</source>
+        <translation type="unfinished">Opcje wiersza poleceń</translation>
+    </message>
+</context>
+<context>
+    <name>ShutdownWindow</name>
+    <message>
+        <source>%1 is shutting down…</source>
+        <translation type="unfinished">%1 zamyka się…</translation>
+    </message>
+    <message>
+        <source>Do not shut down the computer until this window disappears.</source>
+        <translation type="unfinished">Nie wyłączaj komputera dopóki to okno nie zniknie.</translation>
+    </message>
+</context>
+<context>
     <name>Intro</name>
-    <message numerus="yes">
-        <source>%n GB of space available</source>
-        <translation type="unfinished">
-            <numerusform>%n GB dostępnej przestrzeni dyskowej </numerusform>
-            <numerusform>%n GB dostępnej przestrzeni dyskowej </numerusform>
-            <numerusform>%n GB dostępnej przestrzeni dyskowej </numerusform>
-        </translation>
-    </message>
-    <message numerus="yes">
-        <source>(of %n GB needed)</source>
-        <translation type="unfinished">
-            <numerusform>(z %n GB potrzebnych)</numerusform>
-            <numerusform>(z %n GB potrzebnych)</numerusform>
-            <numerusform>(z %n GB potrzebnych)</numerusform>
-        </translation>
-    </message>
-    <message numerus="yes">
-        <source>(%n GB needed for full chain)</source>
-        <translation type="unfinished">
-            <numerusform>(%n GB potrzebny na pełny łańcuch)</numerusform>
-            <numerusform>(%n GB potrzebne na pełny łańcuch)</numerusform>
-            <numerusform>(%n GB potrzebnych na pełny łańcuch)</numerusform>
-        </translation>
-    </message>
-    <message>
-        <source>Choose data directory</source>
-        <translation type="unfinished">Wybierz folder danych</translation>
-    </message>
-    <message>
-        <source>At least %1 GB of data will be stored in this directory, and it will grow over time.</source>
-        <translation type="unfinished">Co najmniej %1 GB danych, zostanie zapisane w tym katalogu, dane te będą przyrastały w czasie.</translation>
-    </message>
-    <message>
-        <source>Approximately %1 GB of data will be stored in this directory.</source>
-        <translation type="unfinished">Około %1 GB danych zostanie zapisane w tym katalogu.</translation>
-    </message>
-    <message numerus="yes">
-        <source>(sufficient to restore backups %n day(s) old)</source>
-        <extracomment>Explanatory text on the capability of the current prune target.</extracomment>
-        <translation type="unfinished">
-            <numerusform>(wystarcza do przywrócenia kopii zapasowych sprzed %n dnia)</numerusform>
-            <numerusform>(wystarcza do przywrócenia kopii zapasowych sprzed %n dni)</numerusform>
-            <numerusform>(wystarcza do przywrócenia kopii zapasowych sprzed %n dni)</numerusform>
-        </translation>
-    </message>
-    <message>
-        <source>%1 will download and store a copy of the Bitcoin block chain.</source>
-        <translation type="unfinished">%1 pobierze i zapisze lokalnie kopię łańcucha bloków Bitcoin.</translation>
-    </message>
-    <message>
-        <source>The wallet will also be stored in this directory.</source>
-        <translation type="unfinished">Portfel również zostanie zapisany w tym katalogu.</translation>
-    </message>
-    <message>
-        <source>Error: Specified data directory "%1" cannot be created.</source>
-        <translation type="unfinished">Błąd: podany folder danych «%1» nie mógł zostać utworzony.</translation>
-    </message>
-    <message>
-        <source>Error</source>
-        <translation type="unfinished">Błąd</translation>
-    </message>
     <message>
         <source>Welcome</source>
         <translation type="unfinished">Witaj</translation>
@@ -1408,20 +1463,16 @@ Proces migracji utworzy kopię zapasową portfela przed migracją. Plik kopii za
         <translation type="unfinished">Wyłączenie tej opcji spowoduje konieczność pobrania całego łańcucha bloków. Szybciej jest najpierw pobrać cały łańcuch a następnie go przyciąć (prune). Wyłącza niektóre zaawansowane funkcje.</translation>
     </message>
     <message>
-        <source> GB</source>
-        <translation type="unfinished">GB</translation>
-    </message>
-    <message>
         <source>This initial synchronisation is very demanding, and may expose hardware problems with your computer that had previously gone unnoticed. Each time you run %1, it will continue downloading where it left off.</source>
         <translation type="unfinished">Wstępna synchronizacja jest bardzo wymagająca i może ujawnić wcześniej niezauważone problemy sprzętowe. Za każdym uruchomieniem %1 pobieranie będzie kontynuowane od miejsca w którym zostało zatrzymane.</translation>
     </message>
     <message>
         <source>When you click OK, %1 will begin to download and process the full %4 block chain (%2 GB) starting with the earliest transactions in %3 when %4 initially launched.</source>
-        <translation type="unfinished">Gdy naciśniesz OK, %1 zacznie się pobieranie i przetwarzanie całego %4 łańcucha bloków (%2GB) zaczynając od najwcześniejszych transakcji w %3 gdy %4 został uruchomiony.</translation>
+        <translation type="unfinished">Kiedy klikniesz OK, %1 rozpocznie pobieranie i przetwarzanie pełnego łańcucha bloków %4 (%2 GB), zaczynając od najwcześniejszych transakcji z %3, gdy %4 został po raz pierwszy uruchomiony.</translation>
     </message>
     <message>
         <source>If you have chosen to limit block chain storage (pruning), the historical data must still be downloaded and processed, but will be deleted afterward to keep your disk usage low.</source>
-        <translation type="unfinished">Jeśli wybrałeś opcję ograniczenia przechowywania łańcucha bloków (przycinanie) dane historyczne cały czas będą musiały być pobrane i przetworzone, jednak po tym zostaną usunięte aby ograniczyć użycie dysku.</translation>
+        <translation type="unfinished">Jeśli wybrałeś opcję przycinania (pruning) dane historyczne cały czas będą musiały być pobrane i przetworzone, jednak po tym zostaną usunięte aby ograniczyć użycie dysku.</translation>
     </message>
     <message>
         <source>Use the default data directory</source>
@@ -1431,31 +1482,66 @@ Proces migracji utworzy kopię zapasową portfela przed migracją. Plik kopii za
         <source>Use a custom data directory:</source>
         <translation type="unfinished">Użyj wybranego folderu dla danych</translation>
     </message>
-</context>
-<context>
-    <name>HelpMessageDialog</name>
-    <message>
-        <source>version</source>
-        <translation type="unfinished">wersja</translation>
+    <message numerus="yes">
+        <source>%n GB of space available</source>
+        <translation type="unfinished">
+            <numerusform>%n GB dostępnej przestrzeni dyskowej</numerusform>
+            <numerusform>%n GB dostępnej przestrzeni dyskowej</numerusform>
+            <numerusform>%n GB dostępnej przestrzeni dyskowej</numerusform>
+        </translation>
+    </message>
+    <message numerus="yes">
+        <source>(of %n GB needed)</source>
+        <translation type="unfinished">
+            <numerusform>(z %n GB potrzebnych)</numerusform>
+            <numerusform>(z %n GB potrzebnych)</numerusform>
+            <numerusform>(z %n GB potrzebnych)</numerusform>
+        </translation>
+    </message>
+    <message numerus="yes">
+        <source>(%n GB needed for full chain)</source>
+        <translation type="unfinished">
+            <numerusform>(%n GB potrzebnych na pełny łańcuch)</numerusform>
+            <numerusform>(%n GB potrzebnych na pełny łańcuch)</numerusform>
+            <numerusform>(%n GB potrzebnych na pełny łańcuch)</numerusform>
+        </translation>
     </message>
     <message>
-        <source>About %1</source>
-        <translation type="unfinished">Informacje o %1</translation>
+        <source>Choose data directory</source>
+        <translation type="unfinished">Wybierz folder danych</translation>
     </message>
     <message>
-        <source>Command-line options</source>
-        <translation type="unfinished">Opcje konsoli</translation>
-    </message>
-</context>
-<context>
-    <name>ShutdownWindow</name>
-    <message>
-        <source>%1 is shutting down…</source>
-        <translation type="unfinished">%1 się zamyka...</translation>
+        <source>At least %1 GB of data will be stored in this directory, and it will grow over time.</source>
+        <translation type="unfinished">Co najmniej %1 GB danych zostanie zapisane w tym katalogu, a ich rozmiar będzie rósł w czasie.</translation>
     </message>
     <message>
-        <source>Do not shut down the computer until this window disappears.</source>
-        <translation type="unfinished">Nie wyłączaj komputera dopóki to okno nie zniknie.</translation>
+        <source>Approximately %1 GB of data will be stored in this directory.</source>
+        <translation type="unfinished">Około %1 GB danych zostanie zapisane w tym katalogu.</translation>
+    </message>
+    <message numerus="yes">
+        <source>(sufficient to restore backups %n day(s) old)</source>
+        <extracomment>Explanatory text on the capability of the current prune target.</extracomment>
+        <translation type="unfinished">
+            <numerusform>(wystarcza do przywrócenia kopii zapasowych sprzed %n dnia)</numerusform>
+            <numerusform>(wystarcza do przywrócenia kopii zapasowych sprzed %n dni)</numerusform>
+            <numerusform>(wystarcza do przywrócenia kopii zapasowych sprzed %n dni)</numerusform>
+        </translation>
+    </message>
+    <message>
+        <source>%1 will download and store a copy of the Bitcoin block chain.</source>
+        <translation type="unfinished">%1 pobierze i przechowa kopię łańcucha bloków Bitcoina.</translation>
+    </message>
+    <message>
+        <source>The wallet will also be stored in this directory.</source>
+        <translation type="unfinished">Portfel również zostanie zapisany w tym katalogu.</translation>
+    </message>
+    <message>
+        <source>Error: Specified data directory "%1" cannot be created.</source>
+        <translation type="unfinished">Błąd: podany folder danych "%1" nie mógł zostać utworzony.</translation>
+    </message>
+    <message>
+        <source>Error</source>
+        <translation type="unfinished">Błąd</translation>
     </message>
 </context>
 <context>
@@ -1466,7 +1552,7 @@ Proces migracji utworzy kopię zapasową portfela przed migracją. Plik kopii za
     </message>
     <message>
         <source>Recent transactions may not yet be visible, and therefore your wallet's balance might be incorrect. This information will be correct once your wallet has finished synchronizing with the bitcoin network, as detailed below.</source>
-        <translation type="unfinished">Świeże transakcje mogą nie być jeszcze widoczne, a zatem saldo portfela może być nieprawidłowe. Te detale będą poprawne, gdy portfel zakończy synchronizację z siecią bitcoin, zgodnie z poniższym opisem.</translation>
+        <translation type="unfinished">Najnowsze transakcje mogą jeszcze nie być widoczne, dlatego saldo twojego portfela może być nieprawidłowe. Informacje te będą poprawne, gdy twój portfel zakończy synchronizację z siecią bitcoin, jak opisano poniżej.</translation>
     </message>
     <message>
         <source>Attempting to spend bitcoins that are affected by not-yet-displayed transactions will not be accepted by the network.</source>
@@ -1478,11 +1564,11 @@ Proces migracji utworzy kopię zapasową portfela przed migracją. Plik kopii za
     </message>
     <message>
         <source>Unknown…</source>
-        <translation type="unfinished">Nieznany...</translation>
+        <translation type="unfinished">Nieznany…</translation>
     </message>
     <message>
         <source>calculating…</source>
-        <translation type="unfinished">obliczanie...</translation>
+        <translation type="unfinished">obliczanie…</translation>
     </message>
     <message>
         <source>Last block time</source>
@@ -1505,27 +1591,23 @@ Proces migracji utworzy kopię zapasową portfela przed migracją. Plik kopii za
         <translation type="unfinished">Ukryj</translation>
     </message>
     <message>
-        <source>Esc</source>
-        <translation type="unfinished">Wyjdź</translation>
-    </message>
-    <message>
         <source>%1 is currently syncing.  It will download headers and blocks from peers and validate them until reaching the tip of the block chain.</source>
-        <translation type="unfinished">%1 jest w trakcie synchronizacji. Trwa pobieranie i weryfikacja nagłówków oraz bloków z sieci w celu uzyskania aktualnego stanu łańcucha.</translation>
+        <translation type="unfinished">%1 jest w trakcie synchronizacji. Będzie pobierał oraz weryfikował nagłówki i bloki z sieci w celu uzyskania aktualnego stanu łańcucha.</translation>
     </message>
     <message>
         <source>Unknown. Syncing Headers (%1, %2%)…</source>
-        <translation type="unfinished">nieznany, Synchronizowanie nagłówków (1%1, 2%2%)</translation>
+        <translation type="unfinished">Nieznany. Synchronizowanie nagłówków (%1, %2%)</translation>
     </message>
     <message>
         <source>Unknown. Pre-syncing Headers (%1, %2%)…</source>
-        <translation type="unfinished">Nieznane. Synchronizowanie nagłówków (%1, %2%)...</translation>
+        <translation type="unfinished">Nieznane. Wstępne synchronizowanie nagłówków (%1, %2%)…</translation>
     </message>
 </context>
 <context>
     <name>OpenURIDialog</name>
     <message>
         <source>Open bitcoin URI</source>
-        <translation type="unfinished">Otwórz URI</translation>
+        <translation type="unfinished">Otwórz bitcoin URI</translation>
     </message>
     <message>
         <source>Paste address from clipboard</source>
@@ -1541,7 +1623,7 @@ Proces migracji utworzy kopię zapasową portfela przed migracją. Plik kopii za
     </message>
     <message>
         <source>&amp;Main</source>
-        <translation type="unfinished">Główne</translation>
+        <translation type="unfinished">&amp;Główne</translation>
     </message>
     <message>
         <source>Automatically start %1 after logging in to the system.</source>
@@ -1553,19 +1635,28 @@ Proces migracji utworzy kopię zapasową portfela przed migracją. Plik kopii za
     </message>
     <message>
         <source>Enabling pruning significantly reduces the disk space required to store transactions. All blocks are still fully validated. Reverting this setting requires re-downloading the entire blockchain.</source>
-        <translation type="unfinished">Włączenie czyszczenia znacznie zmniejsza ilość miejsca na dysku wymaganego do przechowywania transakcji. Wszystkie bloki są nadal w pełni zweryfikowane. Przywrócenie tego ustawienia wymaga ponownego pobrania całego łańcucha bloków.</translation>
+        <translation type="unfinished">Włączenie przycinania (pruning) znacznie zmniejsza ilość miejsca na dysku wymaganego do przechowywania transakcji. Wszystkie bloki są nadal w pełni zweryfikowane. Przywrócenie tego ustawienia wymaga ponownego pobrania całego łańcucha bloków.</translation>
+    </message>
+    <message>
+        <source>Maximum database cache size. Make sure you have enough RAM. A larger cache can contribute to faster sync, after which the benefit is less pronounced for most use cases. Lowering the cache size will reduce memory usage. Unused mempool memory is shared for this cache.</source>
+        <extracomment>Tooltip text for Options window setting that sets the size of the database cache. Explains the corresponding effects of increasing/decreasing this value.</extracomment>
+        <translation type="unfinished">Maksymalna wielkość pamięci podręcznej dla bazy danych. Upewnij się, że masz odpowiednią ilość pamięci RAM. Większa ilość pamięci podręcznej może przyśpieszyć synchronizację, z mniejszym wpływem w większości przypadków. Zmniejszenie wielkości tej pamięci zredukuje użycie pamięci. Nieużywana pamięć mempool jest współdzielona z cache.</translation>
     </message>
     <message>
         <source>Size of &amp;database cache</source>
-        <translation type="unfinished">Wielkość bufora bazy &amp;danych</translation>
+        <translation type="unfinished">Wielkość pamięci podręcznej bazy &amp;danych</translation>
     </message>
     <message>
         <source>Number of script &amp;verification threads</source>
-        <translation type="unfinished">Liczba wątków &amp;weryfikacji skryptu</translation>
+        <translation type="unfinished">Liczba wątków &amp;weryfikacji skryptów</translation>
     </message>
     <message>
         <source>Full path to a %1 compatible script (e.g. C:\Downloads\hwi.exe or /Users/you/Downloads/hwi.py). Beware: malware can steal your coins!</source>
-        <translation type="unfinished">Pełna ścieżka do skryptu zgodnego z %1 (np. C:\Downloads\hwi.exe lub /Users/you/Downloads/hwi.py). Uwaga: złośliwe oprogramowanie może ukraść Twoje monety!</translation>
+        <translation type="unfinished">Pełna ścieżka do skryptu zgodnego z %1 (np. C:\Downloads\hwi.exe lub /Users/ty/Downloads/hwi.py). Uwaga: złośliwe oprogramowanie może ukraść Twoje monety!</translation>
+    </message>
+    <message>
+        <source>Automatically open the Bitcoin client port on the router. This only works when your router supports PCP or NAT-PMP and it is enabled. The external port could be random.</source>
+        <translation type="unfinished">Automatycznie przekieruj porty dla klienta Bitcoin na routerze. Ta opcja działa tylko i wyłącznie, jeżeli twój router wspiera PCP lub NAT-PMP oraz jest ono włączone. Zewnętrzny port może być losowy.</translation>
     </message>
     <message>
         <source>Map port using PCP or NA&amp;T-PMP</source>
@@ -1589,11 +1680,11 @@ Proces migracji utworzy kopię zapasową portfela przed migracją. Plik kopii za
     </message>
     <message>
         <source>Options set in this dialog are overridden by the command line:</source>
-        <translation type="unfinished">Opcje ustawione w tym oknie są nadpisane przez linię komend:</translation>
+        <translation type="unfinished">Opcje ustawione w tym oknie są nadpisane przez wiersz poleceń:</translation>
     </message>
     <message>
         <source>Open the %1 configuration file from the working directory.</source>
-        <translation type="unfinished">Otwiera %1 plik konfiguracyjny z czynnego katalogu.</translation>
+        <translation type="unfinished">Otwiera plik konfiguracyjny %1 z czynnego katalogu.</translation>
     </message>
     <message>
         <source>Open Configuration File</source>
@@ -1605,7 +1696,7 @@ Proces migracji utworzy kopię zapasową portfela przed migracją. Plik kopii za
     </message>
     <message>
         <source>&amp;Reset Options</source>
-        <translation type="unfinished">Z&amp;resetuj ustawienia</translation>
+        <translation type="unfinished">&amp;Resetuj opcje</translation>
     </message>
     <message>
         <source>&amp;Network</source>
@@ -1640,17 +1731,17 @@ Proces migracji utworzy kopię zapasową portfela przed migracją. Plik kopii za
     </message>
     <message>
         <source>W&amp;allet</source>
-        <translation type="unfinished">Portfel</translation>
+        <translation type="unfinished">P&amp;ortfel</translation>
     </message>
     <message>
         <source>Whether to set subtract fee from amount as default or not.</source>
         <extracomment>Tooltip text for Options window setting that sets subtracting the fee from a sending amount as default.</extracomment>
-        <translation type="unfinished">Czy ustawić opłatę odejmowaną od kwoty jako domyślną, czy nie.</translation>
+        <translation type="unfinished">Ustawić domyślne odejmowanie opłaty od kwoty czy nie.</translation>
     </message>
     <message>
         <source>Subtract &amp;fee from amount by default</source>
         <extracomment>An Options window setting to set subtracting the fee from a sending amount as default.</extracomment>
-        <translation type="unfinished">Domyślnie odejmij opłatę od kwoty</translation>
+        <translation type="unfinished">Domyślnie odejmuj &amp;opłatę od kwoty</translation>
     </message>
     <message>
         <source>Expert</source>
@@ -1658,7 +1749,7 @@ Proces migracji utworzy kopię zapasową portfela przed migracją. Plik kopii za
     </message>
     <message>
         <source>Enable coin &amp;control features</source>
-        <translation type="unfinished">Włącz funk&amp;cje kontoli monet</translation>
+        <translation type="unfinished">Włącz funk&amp;cje kontroli monet</translation>
     </message>
     <message>
         <source>If you disable the spending of unconfirmed change, the change from a transaction cannot be used until that transaction has at least one confirmation. This also affects how your balance is computed.</source>
@@ -1671,12 +1762,12 @@ Proces migracji utworzy kopię zapasową portfela przed migracją. Plik kopii za
     <message>
         <source>Enable &amp;PSBT controls</source>
         <extracomment>An options window setting to enable PSBT controls.</extracomment>
-        <translation type="unfinished">Włącz ustawienia &amp;PSBT</translation>
+        <translation type="unfinished">Włącz kontrolki &amp;PSBT</translation>
     </message>
     <message>
         <source>Whether to show PSBT controls.</source>
         <extracomment>Tooltip text for options window setting that enables PSBT controls.</extracomment>
-        <translation type="unfinished">Czy wyświetlać opcje PSBT.</translation>
+        <translation type="unfinished">Czy pokazywać kontrolki PSBT.</translation>
     </message>
     <message>
         <source>External Signer (e.g. hardware wallet)</source>
@@ -1684,7 +1775,7 @@ Proces migracji utworzy kopię zapasową portfela przed migracją. Plik kopii za
     </message>
     <message>
         <source>&amp;External signer script path</source>
-        <translation type="unfinished">&amp;Ścieżka zewnętrznego skryptu podpisującego</translation>
+        <translation type="unfinished">Ści&amp;eżka zewnętrznego skryptu podpisującego</translation>
     </message>
     <message>
         <source>Accept connections from outside.</source>
@@ -1708,7 +1799,7 @@ Proces migracji utworzy kopię zapasową portfela przed migracją. Plik kopii za
     </message>
     <message>
         <source>Port of the proxy (e.g. 9050)</source>
-        <translation type="unfinished">Port proxy (np. 9050)</translation>
+        <translation type="unfinished">Port serwera proxy (np. 9050)</translation>
     </message>
     <message>
         <source>Used for reaching peers via:</source>
@@ -1728,7 +1819,7 @@ Proces migracji utworzy kopię zapasową portfela przed migracją. Plik kopii za
     </message>
     <message>
         <source>Show only a tray icon after minimizing the window.</source>
-        <translation type="unfinished">Pokazuj tylko ikonę przy zegarku po zminimalizowaniu okna.</translation>
+        <translation type="unfinished">Pokaż tylko ikonę w zasobniku po zminimalizowaniu okna.</translation>
     </message>
     <message>
         <source>&amp;Minimize to the tray instead of the taskbar</source>
@@ -1744,11 +1835,11 @@ Proces migracji utworzy kopię zapasową portfela przed migracją. Plik kopii za
     </message>
     <message>
         <source>User Interface &amp;language:</source>
-        <translation type="unfinished">Język &amp;użytkownika:</translation>
+        <translation type="unfinished">&amp;Język interfejsu użytkownika:</translation>
     </message>
     <message>
         <source>The user interface language can be set here. This setting will take effect after restarting %1.</source>
-        <translation type="unfinished">Można tu ustawić język interfejsu uzytkownika. Ustawienie przyniesie skutek po ponownym uruchomieniu %1.</translation>
+        <translation type="unfinished">Można tu ustawić język interfejsu użytkownika. Ustawienie przyniesie skutek po ponownym uruchomieniu %1.</translation>
     </message>
     <message>
         <source>&amp;Unit to show amounts in:</source>
@@ -1756,7 +1847,7 @@ Proces migracji utworzy kopię zapasową portfela przed migracją. Plik kopii za
     </message>
     <message>
         <source>Choose the default subdivision unit to show in the interface and when sending coins.</source>
-        <translation type="unfinished">Wybierz podział jednostki pokazywany w interfejsie  oraz podczas wysyłania monet</translation>
+        <translation type="unfinished">Wybierz domyślną jednostkę podziału wyświetlaną w interfejsie oraz podczas wysyłania monet.</translation>
     </message>
     <message>
         <source>Third-party URLs (e.g. a block explorer) that appear in the transactions tab as context menu items. %s in the URL is replaced by transaction hash. Multiple URLs are separated by vertical bar |.</source>
@@ -1768,7 +1859,7 @@ Proces migracji utworzy kopię zapasową portfela przed migracją. Plik kopii za
     </message>
     <message>
         <source>Whether to show coin control features or not.</source>
-        <translation type="unfinished">Wybierz pokazywanie lub nie funkcji kontroli monet.</translation>
+        <translation type="unfinished">Czy wyświetlać funkcje kontroli monet, czy nie.</translation>
     </message>
     <message>
         <source>Connect to the Bitcoin network through a separate SOCKS5 proxy for Tor onion services.</source>
@@ -1776,7 +1867,7 @@ Proces migracji utworzy kopię zapasową portfela przed migracją. Plik kopii za
     </message>
     <message>
         <source>Use separate SOCKS&amp;5 proxy to reach peers via Tor onion services:</source>
-        <translation type="unfinished">Użyj oddzielnego proxy SOCKS&amp;5 aby osiągnąć węzły w ukrytych usługach Tor:</translation>
+        <translation type="unfinished">Użyj oddzielnego proxy SOCKS&amp;5, aby połączyć się z węzłami poprzez usługi onion w sieci Tor:</translation>
     </message>
     <message>
         <source>&amp;Cancel</source>
@@ -1785,7 +1876,7 @@ Proces migracji utworzy kopię zapasową portfela przed migracją. Plik kopii za
     <message>
         <source>Compiled without external signing support (required for external signing)</source>
         <extracomment>"External signing" means using devices such as hardware wallets.</extracomment>
-        <translation type="unfinished">Skompilowany bez obsługi podpisywania zewnętrznego (wymagany do podpisywania zewnętrzengo)</translation>
+        <translation type="unfinished">Skompilowano bez obsługi zewnętrznego podpisywania (wymaganego do zewnętrznego podpisywania)</translation>
     </message>
     <message>
         <source>default</source>
@@ -1798,12 +1889,12 @@ Proces migracji utworzy kopię zapasową portfela przed migracją. Plik kopii za
     <message>
         <source>Confirm options reset</source>
         <extracomment>Window title text of pop-up window shown when the user has chosen to reset options.</extracomment>
-        <translation type="unfinished">Potwierdź reset ustawień</translation>
+        <translation type="unfinished">Potwierdź reset opcji</translation>
     </message>
     <message>
         <source>Client restart required to activate changes.</source>
         <extracomment>Text explaining that the settings changed will not come into effect until the client is restarted.</extracomment>
-        <translation type="unfinished">Wymagany restart programu, aby uaktywnić zmiany.</translation>
+        <translation type="unfinished">Wymagane ponowne uruchomienie klienta, aby aktywować zmiany.</translation>
     </message>
     <message>
         <source>Current settings will be backed up at "%1".</source>
@@ -1813,7 +1904,7 @@ Proces migracji utworzy kopię zapasową portfela przed migracją. Plik kopii za
     <message>
         <source>Client will be shut down. Do you want to proceed?</source>
         <extracomment>Text asking the user to confirm if they would like to proceed with a client shutdown.</extracomment>
-        <translation type="unfinished">Program zostanie wyłączony. Czy chcesz kontynuować?</translation>
+        <translation type="unfinished">Klient zostanie zamknięty. Czy chcesz kontynuować?</translation>
     </message>
     <message>
         <source>Configuration options</source>
@@ -1823,7 +1914,7 @@ Proces migracji utworzy kopię zapasową portfela przed migracją. Plik kopii za
     <message>
         <source>The configuration file is used to specify advanced user options which override GUI settings. Additionally, any command-line options will override this configuration file.</source>
         <extracomment>Explanatory text about the priority order of instructions considered by client. The order from high to low being: command-line, configuration file, GUI settings.</extracomment>
-        <translation type="unfinished">Plik konfiguracyjny jest używany celem zdefiniowania zaawansowanych opcji nadpisujących ustawienia aplikacji okienkowej (GUI). Parametry zdefiniowane z poziomu linii poleceń nadpisują parametry określone w tym pliku.</translation>
+        <translation type="unfinished">Plik konfiguracyjny jest używany celem zdefiniowania zaawansowanych opcji nadpisujących ustawienia aplikacji okienkowej (GUI). Parametry zdefiniowane z poziomu wiersza poleceń nadpisują parametry określone w tym pliku.</translation>
     </message>
     <message>
         <source>Continue</source>
@@ -1839,15 +1930,15 @@ Proces migracji utworzy kopię zapasową portfela przed migracją. Plik kopii za
     </message>
     <message>
         <source>The configuration file could not be opened.</source>
-        <translation type="unfinished">Plik z konfiguracją nie mógł być otworzony.</translation>
+        <translation type="unfinished">Nie można otworzyć pliku konfiguracyjnego.</translation>
     </message>
     <message>
         <source>This change would require a client restart.</source>
-        <translation type="unfinished">Ta zmiana może wymagać ponownego uruchomienia klienta.</translation>
+        <translation type="unfinished">Ta zmiana wymaga ponownego uruchomienia klienta.</translation>
     </message>
     <message>
         <source>The supplied proxy address is invalid.</source>
-        <translation type="unfinished">Adres podanego proxy jest nieprawidłowy</translation>
+        <translation type="unfinished">Adres podanego proxy jest nieprawidłowy.</translation>
     </message>
 </context>
 <context>
@@ -1868,16 +1959,12 @@ Proces migracji utworzy kopię zapasową portfela przed migracją. Plik kopii za
         <translation type="unfinished">Wyświetlana informacja może być nieaktualna. Twój portfel synchronizuje się automatycznie z siecią bitcoin, zaraz po tym jak uzyskano połączenie, ale proces ten nie został jeszcze ukończony.</translation>
     </message>
     <message>
-        <source>Watch-only:</source>
-        <translation type="unfinished">Tylko podglądaj:</translation>
-    </message>
-    <message>
         <source>Available:</source>
         <translation type="unfinished">Dostępne:</translation>
     </message>
     <message>
         <source>Your current spendable balance</source>
-        <translation type="unfinished">Twoje obecne saldo</translation>
+        <translation type="unfinished">Twoje obecne dostępne saldo</translation>
     </message>
     <message>
         <source>Pending:</source>
@@ -1893,7 +1980,7 @@ Proces migracji utworzy kopię zapasową portfela przed migracją. Plik kopii za
     </message>
     <message>
         <source>Mined balance that has not yet matured</source>
-        <translation type="unfinished">Balans wydobytych monet, które jeszcze nie dojrzały</translation>
+        <translation type="unfinished">Saldo wydobytych monet, które jeszcze nie dojrzały</translation>
     </message>
     <message>
         <source>Balances</source>
@@ -1908,32 +1995,12 @@ Proces migracji utworzy kopię zapasową portfela przed migracją. Plik kopii za
         <translation type="unfinished">Twoje obecne saldo</translation>
     </message>
     <message>
-        <source>Your current balance in watch-only addresses</source>
-        <translation type="unfinished">Twoje obecne saldo na podglądanym adresie</translation>
-    </message>
-    <message>
-        <source>Spendable:</source>
-        <translation type="unfinished">Możliwe do wydania:</translation>
-    </message>
-    <message>
         <source>Recent transactions</source>
-        <translation type="unfinished">Ostatnie transakcje</translation>
-    </message>
-    <message>
-        <source>Unconfirmed transactions to watch-only addresses</source>
-        <translation type="unfinished">Niepotwierdzone transakcje na podglądanych adresach</translation>
-    </message>
-    <message>
-        <source>Mined balance in watch-only addresses that has not yet matured</source>
-        <translation type="unfinished">Wykopane monety na podglądanych adresach które jeszcze nie dojrzały</translation>
-    </message>
-    <message>
-        <source>Current total balance in watch-only addresses</source>
-        <translation type="unfinished">Łączna kwota na podglądanych adresach</translation>
+        <translation type="unfinished">Najnowsze transakcje</translation>
     </message>
     <message>
         <source>Privacy mode activated for the Overview tab. To unmask the values, uncheck Settings-&gt;Mask values.</source>
-        <translation type="unfinished">Tryb Prywatny został włączony dla zakładki Podgląd. By odkryć wartości, odznacz Ustawienia-&gt;Ukrywaj wartości.</translation>
+        <translation type="unfinished">Tryb Prywatny został włączony dla zakładki Podgląd. By odkryć wartości, odznacz Ustawienia-&gt;Ukryj kwoty.</translation>
     </message>
 </context>
 <context>
@@ -1944,19 +2011,19 @@ Proces migracji utworzy kopię zapasową portfela przed migracją. Plik kopii za
     </message>
     <message>
         <source>Sign Tx</source>
-        <translation type="unfinished">Podpisz transakcję (Tx)</translation>
+        <translation type="unfinished">Podpisz Transakcję</translation>
     </message>
     <message>
         <source>Broadcast Tx</source>
-        <translation type="unfinished">Rozgłoś transakcję (Tx)</translation>
+        <translation type="unfinished">Rozgłoś Transakcję</translation>
     </message>
     <message>
         <source>Copy to Clipboard</source>
-        <translation type="unfinished">Kopiuj do schowka</translation>
+        <translation type="unfinished">Skopiuj do schowka</translation>
     </message>
     <message>
         <source>Save…</source>
-        <translation type="unfinished">Zapisz...</translation>
+        <translation type="unfinished">Zapisz…</translation>
     </message>
     <message>
         <source>Close</source>
@@ -1978,25 +2045,33 @@ Proces migracji utworzy kopię zapasową portfela przed migracją. Plik kopii za
         <source>Could not sign any more inputs.</source>
         <translation type="unfinished">Nie udało się podpisać więcej wejść.</translation>
     </message>
-    <message>
-        <source>Signed %1 inputs, but more signatures are still required.</source>
-        <translation type="unfinished">Podpisano %1 wejść, ale potrzebnych jest więcej podpisów.</translation>
+    <message numerus="yes">
+        <source>Signed %n input(s), but more signatures are still required.</source>
+        <translation type="unfinished">
+            <numerusform>Podpisano %n wejście, ale nadal wymagane są kolejne podpisy.</numerusform>
+            <numerusform>Podpisano %n wejścia, ale nadal wymagane są kolejne podpisy.</numerusform>
+            <numerusform>Podpisano %n wejść, ale nadal wymagane są kolejne podpisy.</numerusform>
+        </translation>
     </message>
     <message>
         <source>Signed transaction successfully. Transaction is ready to broadcast.</source>
-        <translation type="unfinished">transakcja</translation>
+        <translation type="unfinished">Transakcja została pomyślnie podpisana. Transakcja jest gotowa do rozgłoszenia.</translation>
     </message>
     <message>
         <source>Unknown error processing transaction.</source>
         <translation type="unfinished">Nieznany błąd podczas przetwarzania transakcji.</translation>
     </message>
     <message>
+        <source>Transaction broadcast successfully! Transaction ID: %1</source>
+        <translation type="unfinished">Transakcja została pomyślnie rozgłoszona! Identyfikator transakcji: %1</translation>
+    </message>
+    <message>
         <source>Transaction broadcast failed: %1</source>
-        <translation type="unfinished">Nie udało się rozgłosić transakscji: %1</translation>
+        <translation type="unfinished">Nie udało się rozgłosić transakcji: %1</translation>
     </message>
     <message>
         <source>PSBT copied to clipboard.</source>
-        <translation type="unfinished">PSBT skopiowane do schowka</translation>
+        <translation type="unfinished">PSBT skopiowano do schowka</translation>
     </message>
     <message>
         <source>Save Transaction Data</source>
@@ -2009,7 +2084,7 @@ Proces migracji utworzy kopię zapasową portfela przed migracją. Plik kopii za
     </message>
     <message>
         <source>PSBT saved to disk.</source>
-        <translation type="unfinished">PSBT zapisane na dysk.</translation>
+        <translation type="unfinished">PSBT zapisano na dysk.</translation>
     </message>
     <message>
         <source>Sends %1 to %2</source>
@@ -2025,7 +2100,7 @@ Proces migracji utworzy kopię zapasową portfela przed migracją. Plik kopii za
     </message>
     <message>
         <source>Pays transaction fee: </source>
-        <translation type="unfinished">Opłata transakcyjna:</translation>
+        <translation type="unfinished">Opłata transakcyjna: </translation>
     </message>
     <message>
         <source>Total Amount</source>
@@ -2035,9 +2110,13 @@ Proces migracji utworzy kopię zapasową portfela przed migracją. Plik kopii za
         <source>or</source>
         <translation type="unfinished">lub</translation>
     </message>
-    <message>
-        <source>Transaction has %1 unsigned inputs.</source>
-        <translation type="unfinished">Transakcja ma %1 niepodpisane wejścia.</translation>
+    <message numerus="yes">
+        <source>Transaction has %n unsigned input(s).</source>
+        <translation type="unfinished">
+            <numerusform>Transakcja ma %n niepodpisane wejście.</numerusform>
+            <numerusform>Transakcja ma %n niepodpisane wejścia.</numerusform>
+            <numerusform>Transakcja ma %n niepodpisanych wejść.</numerusform>
+        </translation>
     </message>
     <message>
         <source>Transaction is missing some information about inputs.</source>
@@ -2053,11 +2132,11 @@ Proces migracji utworzy kopię zapasową portfela przed migracją. Plik kopii za
     </message>
     <message>
         <source>(But this wallet cannot sign transactions.)</source>
-        <translation type="unfinished">(Ale ten portfel nie może podipisać transakcji.)</translation>
+        <translation type="unfinished">(Ale ten portfel nie może podpisywać transakcji.)</translation>
     </message>
     <message>
         <source>(But this wallet does not have the right keys.)</source>
-        <translation type="unfinished">(Ale ten portfel nie posiada wlaściwych kluczy.)</translation>
+        <translation type="unfinished">(Ale ten portfel nie posiada właściwych kluczy.)</translation>
     </message>
     <message>
         <source>Transaction is fully signed and ready for broadcast.</source>
@@ -2075,10 +2154,6 @@ Proces migracji utworzy kopię zapasową portfela przed migracją. Plik kopii za
         <translation type="unfinished">Błąd żądania płatności</translation>
     </message>
     <message>
-        <source>Cannot start bitcoin: click-to-pay handler</source>
-        <translation type="unfinished">Nie można uruchomić protokołu bitcoin: kliknij-by-zapłacić</translation>
-    </message>
-    <message>
         <source>URI handling</source>
         <translation type="unfinished">Obsługa URI</translation>
     </message>
@@ -2090,17 +2165,17 @@ Proces migracji utworzy kopię zapasową portfela przed migracją. Plik kopii za
         <source>Cannot process payment request because BIP70 is not supported.
 Due to widespread security flaws in BIP70 it's strongly recommended that any merchant instructions to switch wallets be ignored.
 If you are receiving this error you should request the merchant provide a BIP21 compatible URI.</source>
-        <translation type="unfinished">Nie można przetworzyć żądanie zapłaty poniewasz BIP70 nie jest obsługiwany.
-Ze względu na wady bezpieczeństwa w BIP70 jest zalecane ignorować wszelkich instrukcji od sprzedawcę dotyczących zmiany portfela.
-Jeśli pojawia się ten błąd, poproś sprzedawcę o podanie URI zgodnego z BIP21. </translation>
+        <translation type="unfinished">Nie można przetworzyć żądania płatności, ponieważ BIP70 nie jest obsługiwany.
+Ze względu na powszechne luki bezpieczeństwa w BIP70, zdecydowanie zaleca się ignorowanie wszelkich instrukcji sprzedawcy dotyczących zmiany portfela.
+Jeśli otrzymujesz ten błąd, poproś sprzedawcę o udostępnienie URI zgodnego z BIP21.</translation>
     </message>
     <message>
         <source>URI cannot be parsed! This can be caused by an invalid Bitcoin address or malformed URI parameters.</source>
-        <translation type="unfinished">Nie można przeanalizować identyfikatora URI! Może to być spowodowane nieważnym adresem Bitcoin lub nieprawidłowymi parametrami URI.</translation>
+        <translation type="unfinished">Nie można zinterpretować identyfikatora URI! Może to być spowodowane nieprawidłowym adresem Bitcoin lub niepoprawnymi parametrami URI.</translation>
     </message>
     <message>
         <source>Payment request file handling</source>
-        <translation type="unfinished">Przechwytywanie plików żądania płatności</translation>
+        <translation type="unfinished">Obsługa plików żądań płatności</translation>
     </message>
 </context>
 <context>
@@ -2113,7 +2188,7 @@ Jeśli pojawia się ten błąd, poproś sprzedawcę o podanie URI zgodnego z BIP
     <message>
         <source>Peer</source>
         <extracomment>Title of Peers Table column which contains a unique number used to identify a connection.</extracomment>
-        <translation type="unfinished">Rówieśnik</translation>
+        <translation type="unfinished">Węzeł zdalny</translation>
     </message>
     <message>
         <source>Age</source>
@@ -2128,12 +2203,12 @@ Jeśli pojawia się ten błąd, poproś sprzedawcę o podanie URI zgodnego z BIP
     <message>
         <source>Sent</source>
         <extracomment>Title of Peers Table column which indicates the total amount of network information we have sent to the peer.</extracomment>
-        <translation type="unfinished">Wysłane</translation>
+        <translation type="unfinished">Wysłano</translation>
     </message>
     <message>
         <source>Received</source>
         <extracomment>Title of Peers Table column which indicates the total amount of network information we have received from the peer.</extracomment>
-        <translation type="unfinished">Otrzymane</translation>
+        <translation type="unfinished">Otrzymano</translation>
     </message>
     <message>
         <source>Address</source>
@@ -2153,12 +2228,12 @@ Jeśli pojawia się ten błąd, poproś sprzedawcę o podanie URI zgodnego z BIP
     <message>
         <source>Inbound</source>
         <extracomment>An Inbound Connection from a Peer.</extracomment>
-        <translation type="unfinished">Wejściowy</translation>
+        <translation type="unfinished">Przychodzące</translation>
     </message>
     <message>
         <source>Outbound</source>
         <extracomment>An Outbound Connection to a Peer.</extracomment>
-        <translation type="unfinished">Wyjściowy</translation>
+        <translation type="unfinished">Wychodzące</translation>
     </message>
 </context>
 <context>
@@ -2220,6 +2295,10 @@ Jeśli pojawia się ten błąd, poproś sprzedawcę o podanie URI zgodnego z BIP
         <translation type="unfinished">Użyj opcji '%1' aby wskazać niestandardową lokalizację katalogu danych.</translation>
     </message>
     <message>
+        <source>Blocksdir</source>
+        <translation type="unfinished">Katalog z blokami</translation>
+    </message>
+    <message>
         <source>To specify a non-default location of the blocks directory use the '%1' option.</source>
         <translation type="unfinished">Użyj opcji '%1' aby wskazać niestandardową lokalizację katalogu bloków.</translation>
     </message>
@@ -2245,7 +2324,7 @@ Jeśli pojawia się ten błąd, poproś sprzedawcę o podanie URI zgodnego z BIP
     </message>
     <message>
         <source>Network addresses that your Bitcoin node is currently using to communicate with other nodes.</source>
-        <translation type="unfinished">Adresy sieciowe wykorzystywane przez twój węzeł Bitcin do komunikowania się z pozostałymi węzłami.</translation>
+        <translation type="unfinished">Adresy sieciowe wykorzystywane przez twój węzeł Bitcoin do komunikowania się z pozostałymi węzłami.</translation>
     </message>
     <message>
         <source>Block chain</source>
@@ -2257,7 +2336,7 @@ Jeśli pojawia się ten błąd, poproś sprzedawcę o podanie URI zgodnego z BIP
     </message>
     <message>
         <source>Current number of transactions</source>
-        <translation type="unfinished">Obecna liczba transakcji</translation>
+        <translation type="unfinished">Bieżąca liczba transakcji</translation>
     </message>
     <message>
         <source>Memory usage</source>
@@ -2265,7 +2344,7 @@ Jeśli pojawia się ten błąd, poproś sprzedawcę o podanie URI zgodnego z BIP
     </message>
     <message>
         <source>Wallet: </source>
-        <translation type="unfinished">Portfel:</translation>
+        <translation type="unfinished">Portfel: </translation>
     </message>
     <message>
         <source>(none)</source>
@@ -2273,11 +2352,11 @@ Jeśli pojawia się ten błąd, poproś sprzedawcę o podanie URI zgodnego z BIP
     </message>
     <message>
         <source>Received</source>
-        <translation type="unfinished">Otrzymane</translation>
+        <translation type="unfinished">Otrzymano</translation>
     </message>
     <message>
         <source>Sent</source>
-        <translation type="unfinished">Wysłane</translation>
+        <translation type="unfinished">Wysłano</translation>
     </message>
     <message>
         <source>&amp;Peers</source>
@@ -2300,10 +2379,6 @@ Jeśli pojawia się ten błąd, poproś sprzedawcę o podanie URI zgodnego z BIP
         <translation type="unfinished">Wersja warstwy transportowej: %1</translation>
     </message>
     <message>
-        <source>Transport</source>
-        <translation type="unfinished">Transfer</translation>
-    </message>
-    <message>
         <source>Session ID</source>
         <translation type="unfinished">ID sesji</translation>
     </message>
@@ -2313,15 +2388,11 @@ Jeśli pojawia się ten błąd, poproś sprzedawcę o podanie URI zgodnego z BIP
     </message>
     <message>
         <source>Whether we relay transactions to this peer.</source>
-        <translation type="unfinished">Czy przekazujemy transakcje do tego peera.</translation>
+        <translation type="unfinished">Czy przekazujemy transakcje temu węzłowi.</translation>
     </message>
     <message>
         <source>Transaction Relay</source>
-        <translation type="unfinished">Przekazywanie transakcji</translation>
-    </message>
-    <message>
-        <source>Starting Block</source>
-        <translation type="unfinished">Blok startowy</translation>
+        <translation type="unfinished">Przekaźnik transakcji</translation>
     </message>
     <message>
         <source>Synced Headers</source>
@@ -2333,35 +2404,35 @@ Jeśli pojawia się ten błąd, poproś sprzedawcę o podanie URI zgodnego z BIP
     </message>
     <message>
         <source>Last Transaction</source>
-        <translation type="unfinished">Ostatnia Transakcja</translation>
+        <translation type="unfinished">Ostatnia transakcja</translation>
     </message>
     <message>
         <source>The mapped Autonomous System used for diversifying peer selection.</source>
-        <translation type="unfinished">Zmapowany autonomiczny system (ang. asmap) używany do dywersyfikacji wyboru węzłów.</translation>
+        <translation type="unfinished">Zmapowany system autonomiczny (ang. asmap) używany do dywersyfikacji wyboru węzłów.</translation>
     </message>
     <message>
         <source>Mapped AS</source>
-        <translation type="unfinished">Zmapowany autonomiczny system (ang. asmap)</translation>
+        <translation type="unfinished">Zmapowany system autonomiczny</translation>
     </message>
     <message>
         <source>Whether we relay addresses to this peer.</source>
         <extracomment>Tooltip text for the Address Relay field in the peer details area, which displays whether we relay addresses to this peer (Yes/No).</extracomment>
-        <translation type="unfinished">Czy przekazujemy adresy do tego peera.</translation>
+        <translation type="unfinished">Czy przekazujemy adresy do tego węzła zdalnego.</translation>
     </message>
     <message>
         <source>Address Relay</source>
         <extracomment>Text title for the Address Relay field in the peer details area, which displays whether we relay addresses to this peer (Yes/No).</extracomment>
-        <translation type="unfinished">Adres Przekaźnika</translation>
+        <translation type="unfinished">Przekaźnik adresów</translation>
     </message>
     <message>
         <source>The total number of addresses received from this peer that were processed (excludes addresses that were dropped due to rate-limiting).</source>
         <extracomment>Tooltip text for the Addresses Processed field in the peer details area, which displays the total number of addresses received from this peer that were processed (excludes addresses that were dropped due to rate-limiting).</extracomment>
-        <translation type="unfinished">Całkowita liczba adresów otrzymanych od tego węzła, które zostały przetworzone (wyklucza adresy, które zostały odrzucone ze względu na ograniczenie szybkości).</translation>
+        <translation type="unfinished">Łączna liczba adresów otrzymanych od tego węzła, które zostały przetworzone (z wyłączeniem adresów odrzuconych z powodu ograniczenia prędkości).</translation>
     </message>
     <message>
         <source>The total number of addresses received from this peer that were dropped (not processed) due to rate-limiting.</source>
         <extracomment>Tooltip text for the Addresses Rate-Limited field in the peer details area, which displays the total number of addresses received from this peer that were dropped (not processed) due to rate-limiting.</extracomment>
-        <translation type="unfinished">Całkowita liczba adresów otrzymanych od tego węzła, które zostały odrzucone (nieprzetworzone) z powodu ograniczenia szybkości.</translation>
+        <translation type="unfinished">Łączna liczba adresów otrzymanych od tego węzła, które zostały odrzucone (nieprzetworzone) z powodu ograniczenia prędkości.</translation>
     </message>
     <message>
         <source>Addresses Processed</source>
@@ -2371,7 +2442,7 @@ Jeśli pojawia się ten błąd, poproś sprzedawcę o podanie URI zgodnego z BIP
     <message>
         <source>Addresses Rate-Limited</source>
         <extracomment>Text title for the Addresses Rate-Limited field in the peer details area, which displays the total number of addresses received from this peer that were dropped (not processed) due to rate-limiting.</extracomment>
-        <translation type="unfinished">Wskaźnik-Ograniczeń Adresów</translation>
+        <translation type="unfinished">Adresy ograniczone limitem</translation>
     </message>
     <message>
         <source>User Agent</source>
@@ -2383,7 +2454,7 @@ Jeśli pojawia się ten błąd, poproś sprzedawcę o podanie URI zgodnego z BIP
     </message>
     <message>
         <source>Current block height</source>
-        <translation type="unfinished">Obecna ilość bloków</translation>
+        <translation type="unfinished">Bieżąca wysokość bloku</translation>
     </message>
     <message>
         <source>Open the %1 debug log file from the current data directory. This can take a few seconds for large log files.</source>
@@ -2423,7 +2494,7 @@ Jeśli pojawia się ten błąd, poproś sprzedawcę o podanie URI zgodnego z BIP
     </message>
     <message>
         <source>High bandwidth BIP152 compact block relay: %1</source>
-        <translation type="unfinished">Kompaktowy przekaźnik blokowy BIP152 o dużej przepustowości: 1 %1</translation>
+        <translation type="unfinished">Przekaźnik skompaktowanych bloków o wysokiej przepustowości BIP152: %1</translation>
     </message>
     <message>
         <source>High Bandwidth</source>
@@ -2439,12 +2510,12 @@ Jeśli pojawia się ten błąd, poproś sprzedawcę o podanie URI zgodnego z BIP
     </message>
     <message>
         <source>Last Block</source>
-        <translation type="unfinished">Ostatni Blok</translation>
+        <translation type="unfinished">Ostatni blok</translation>
     </message>
     <message>
         <source>Elapsed time since a novel transaction accepted into our mempool was received from this peer.</source>
         <extracomment>Tooltip text for the Last Transaction field in the peer details area.</extracomment>
-        <translation type="unfinished">Czas, który upłynął od otrzymania nowej transakcji przyjętej do naszej pamięci od tego partnera.</translation>
+        <translation type="unfinished">Czas, który upłynął od otrzymania nowej transakcji przyjętej do naszego mempoola od tego partnera.</translation>
     </message>
     <message>
         <source>Last Send</source>
@@ -2456,19 +2527,19 @@ Jeśli pojawia się ten błąd, poproś sprzedawcę o podanie URI zgodnego z BIP
     </message>
     <message>
         <source>Ping Time</source>
-        <translation type="unfinished">Czas odpowiedzi</translation>
+        <translation type="unfinished">Czas pingu</translation>
     </message>
     <message>
         <source>The duration of a currently outstanding ping.</source>
-        <translation type="unfinished">Czas trwania nadmiarowego pingu</translation>
+        <translation type="unfinished">Czas trwania aktualnie oczekującego pinga.</translation>
     </message>
     <message>
         <source>Ping Wait</source>
-        <translation type="unfinished">Czas odpowiedzi</translation>
+        <translation type="unfinished">Oczekiwanie na ping</translation>
     </message>
     <message>
         <source>Min Ping</source>
-        <translation type="unfinished">Minimalny czas odpowiedzi</translation>
+        <translation type="unfinished">Minimalny ping</translation>
     </message>
     <message>
         <source>Time Offset</source>
@@ -2488,15 +2559,15 @@ Jeśli pojawia się ten błąd, poproś sprzedawcę o podanie URI zgodnego z BIP
     </message>
     <message>
         <source>&amp;Network Traffic</source>
-        <translation type="unfinished">&amp;Ruch sieci</translation>
+        <translation type="unfinished">&amp;Ruch sieciowy</translation>
     </message>
     <message>
         <source>Totals</source>
-        <translation type="unfinished">Kwota ogólna</translation>
+        <translation type="unfinished">Razem</translation>
     </message>
     <message>
         <source>Debug log file</source>
-        <translation type="unfinished">Plik logowania debugowania</translation>
+        <translation type="unfinished">Plik dziennika debugowania</translation>
     </message>
     <message>
         <source>Clear console</source>
@@ -2513,7 +2584,7 @@ Jeśli pojawia się ten błąd, poproś sprzedawcę o podanie URI zgodnego z BIP
     <message>
         <source>Inbound: initiated by peer</source>
         <extracomment>Explanatory text for an inbound peer connection.</extracomment>
-        <translation type="unfinished">Przychodzące: zainicjowane przez węzeł</translation>
+        <translation type="unfinished">Połączenie przychodzące: zainicjowane przez węzeł zdalny</translation>
     </message>
     <message>
         <source>Outbound Full Relay: default</source>
@@ -2523,22 +2594,27 @@ Jeśli pojawia się ten błąd, poproś sprzedawcę o podanie URI zgodnego z BIP
     <message>
         <source>Outbound Block Relay: does not relay transactions or addresses</source>
         <extracomment>Explanatory text for an outbound peer connection that relays network information about blocks and not transactions or addresses.</extracomment>
-        <translation type="unfinished">Outbound Block Relay: nie przekazuje transakcji ani adresów</translation>
+        <translation type="unfinished">Wychodzący przekaźnik bloków: nie przekazuje transakcji ani adresów</translation>
     </message>
     <message>
         <source>Outbound Manual: added using RPC %1 or %2/%3 configuration options</source>
         <extracomment>Explanatory text for an outbound peer connection that was established manually through one of several methods. The numbered arguments are stand-ins for the methods available to establish manual connections.</extracomment>
-        <translation type="unfinished">Outbound Manual: dodano przy użyciu opcji konfiguracyjnych RPC 1%1 lub 2%2/3%3</translation>
+        <translation type="unfinished">Połączenie wychodzące ręczne: dodano przy użyciu opcji konfiguracyjnych RPC %1 lub %2/%3</translation>
     </message>
     <message>
         <source>Outbound Feeler: short-lived, for testing addresses</source>
         <extracomment>Explanatory text for a short-lived outbound peer connection that is used to test the aliveness of known addresses.</extracomment>
-        <translation type="unfinished">Outbound Feeler: krótkotrwały, do testowania adresów</translation>
+        <translation type="unfinished">Wychodzące połączenie testowe: krótkotrwałe, do testowania adresów</translation>
     </message>
     <message>
         <source>Outbound Address Fetch: short-lived, for soliciting addresses</source>
         <extracomment>Explanatory text for a short-lived outbound peer connection that is used to request addresses from a peer.</extracomment>
         <translation type="unfinished">Pobieranie adresu wychodzącego: krótkotrwałe, do pozyskiwania adresów</translation>
+    </message>
+    <message>
+        <source>Private broadcast: short-lived, for broadcasting privacy-sensitive transactions</source>
+        <extracomment>Explanatory text for a short-lived outbound peer connection that is used to broadcast privacy-sensitive data (like our transactions).</extracomment>
+        <translation type="unfinished">Prywatna transmisja: krótkotrwała, do rozgłaszania transakcji wymagających prywatności</translation>
     </message>
     <message>
         <source>detecting: peer could be v1 or v2</source>
@@ -2561,7 +2637,7 @@ Jeśli pojawia się ten błąd, poproś sprzedawcę o podanie URI zgodnego z BIP
     </message>
     <message>
         <source>the peer selected us for high bandwidth relay</source>
-        <translation type="unfinished">peer wybrał nas do przekaźnika o dużej przepustowości</translation>
+        <translation type="unfinished">węzeł zdalny wybrał nas do przesyłu danych o wysokiej przepustowości</translation>
     </message>
     <message>
         <source>no high bandwidth relay selected</source>
@@ -2570,7 +2646,7 @@ Jeśli pojawia się ten błąd, poproś sprzedawcę o podanie URI zgodnego z BIP
     <message>
         <source>&amp;Copy address</source>
         <extracomment>Context menu action to copy the address of a peer.</extracomment>
-        <translation type="unfinished">Kopiuj adres</translation>
+        <translation type="unfinished">&amp;Kopiuj adres</translation>
     </message>
     <message>
         <source>&amp;Disconnect</source>
@@ -2582,7 +2658,7 @@ Jeśli pojawia się ten błąd, poproś sprzedawcę o podanie URI zgodnego z BIP
     </message>
     <message>
         <source>1 d&amp;ay</source>
-        <translation type="unfinished">1 dzień</translation>
+        <translation type="unfinished">1 d&amp;zień</translation>
     </message>
     <message>
         <source>1 &amp;week</source>
@@ -2595,7 +2671,7 @@ Jeśli pojawia się ten błąd, poproś sprzedawcę o podanie URI zgodnego z BIP
     <message>
         <source>&amp;Copy IP/Netmask</source>
         <extracomment>Context menu action to copy the IP/Netmask of a banned peer. IP/Netmask is the combination of a peer's IP address and its Netmask. For IP address, see: https://en.wikipedia.org/wiki/IP_address.</extracomment>
-        <translation type="unfinished">Skopiuj IP/Maskę Sieci</translation>
+        <translation type="unfinished">&amp;Kopiuj IP/Maskę sieci</translation>
     </message>
     <message>
         <source>&amp;Unban</source>
@@ -2603,7 +2679,7 @@ Jeśli pojawia się ten błąd, poproś sprzedawcę o podanie URI zgodnego z BIP
     </message>
     <message>
         <source>Network activity disabled</source>
-        <translation type="unfinished">Aktywność sieciowa wyłączona</translation>
+        <translation type="unfinished">Aktywność sieciowa została wyłączona</translation>
     </message>
     <message>
         <source>None</source>
@@ -2615,7 +2691,7 @@ Jeśli pojawia się ten błąd, poproś sprzedawcę o podanie URI zgodnego z BIP
     </message>
     <message>
         <source>Node window - [%1]</source>
-        <translation type="unfinished">Okno węzła  - [%1]</translation>
+        <translation type="unfinished">Okno węzła - [%1]</translation>
     </message>
     <message>
         <source>Executing command using "%1" wallet</source>
@@ -2641,7 +2717,11 @@ Aby uzyskać więcej informacji na temat używania tej konsoli wpisz %6.
     <message>
         <source>Executing…</source>
         <extracomment>A console message indicating an entered command is currently being executed.</extracomment>
-        <translation type="unfinished">Wykonuję...</translation>
+        <translation type="unfinished">Wykonuję…</translation>
+    </message>
+    <message>
+        <source>(peer: %1)</source>
+        <translation type="unfinished">(węzeł: %1)</translation>
     </message>
     <message>
         <source>via %1</source>
@@ -2665,7 +2745,7 @@ Aby uzyskać więcej informacji na temat używania tej konsoli wpisz %6.
     </message>
     <message>
         <source>Ban for</source>
-        <translation type="unfinished">Zbanuj na</translation>
+        <translation type="unfinished">Ban na</translation>
     </message>
     <message>
         <source>Never</source>
@@ -2680,7 +2760,7 @@ Aby uzyskać więcej informacji na temat używania tej konsoli wpisz %6.
     <name>ReceiveCoinsDialog</name>
     <message>
         <source>&amp;Amount:</source>
-        <translation type="unfinished">&amp;Ilość:</translation>
+        <translation type="unfinished">&amp;Kwota:</translation>
     </message>
     <message>
         <source>&amp;Label:</source>
@@ -2704,11 +2784,11 @@ Aby uzyskać więcej informacji na temat używania tej konsoli wpisz %6.
     </message>
     <message>
         <source>An optional amount to request. Leave this empty or zero to not request a specific amount.</source>
-        <translation type="unfinished">Opcjonalna kwota by zażądać. Zostaw puste lub zero by nie zażądać konkretnej kwoty.</translation>
+        <translation type="unfinished">Opcjonalna kwota do zażądania. Zostaw puste lub zero, aby nie zażądać konkretnej kwoty.</translation>
     </message>
     <message>
         <source>An optional label to associate with the new receiving address (used by you to identify an invoice).  It is also attached to the payment request.</source>
-        <translation type="unfinished">Dodatkowa etykieta powiązana z nowym adresem do odbierania płatności (używanym w celu odnalezienia faktury). Jest również powiązana z żądaniem płatności.</translation>
+        <translation type="unfinished">Opcjonalna etykieta do powiązania z nowym adresem odbiorczym (używana przez ciebie do identyfikacji faktury). Jest również dołączana do żądania płatności.</translation>
     </message>
     <message>
         <source>An optional message that is attached to the payment request and may be displayed to the sender.</source>
@@ -2716,7 +2796,7 @@ Aby uzyskać więcej informacji na temat używania tej konsoli wpisz %6.
     </message>
     <message>
         <source>&amp;Create new receiving address</source>
-        <translation type="unfinished">&amp;Stwórz nowy adres odbiorczy</translation>
+        <translation type="unfinished">&amp;Utwórz nowy adres odbiorczy</translation>
     </message>
     <message>
         <source>Clear all fields of the form.</source>
@@ -2728,7 +2808,7 @@ Aby uzyskać więcej informacji na temat używania tej konsoli wpisz %6.
     </message>
     <message>
         <source>Requested payments history</source>
-        <translation type="unfinished">Żądanie historii płatności</translation>
+        <translation type="unfinished">Żądana historia płatności</translation>
     </message>
     <message>
         <source>Show the selected request (does the same as double clicking an entry)</source>
@@ -2752,19 +2832,19 @@ Aby uzyskać więcej informacji na temat używania tej konsoli wpisz %6.
     </message>
     <message>
         <source>&amp;Copy address</source>
-        <translation type="unfinished">Kopiuj adres</translation>
+        <translation type="unfinished">&amp;Kopiuj adres</translation>
     </message>
     <message>
         <source>Copy &amp;label</source>
-        <translation type="unfinished">Kopiuj etykietę</translation>
+        <translation type="unfinished">Kopiuj &amp;etykietę</translation>
     </message>
     <message>
         <source>Copy &amp;message</source>
-        <translation type="unfinished">Skopiuj wiado&amp;mość</translation>
+        <translation type="unfinished">Kopiuj wiado&amp;mość</translation>
     </message>
     <message>
         <source>Copy &amp;amount</source>
-        <translation type="unfinished">Kopiuj kwotę</translation>
+        <translation type="unfinished">Kopiuj &amp;kwotę</translation>
     </message>
     <message>
         <source>Not recommended due to higher fees and less protection against typos.</source>
@@ -2784,7 +2864,7 @@ Aby uzyskać więcej informacji na temat używania tej konsoli wpisz %6.
     </message>
     <message>
         <source>Could not unlock wallet.</source>
-        <translation type="unfinished">Nie można było odblokować portfela.</translation>
+        <translation type="unfinished">Nie udało się odblokować portfela.</translation>
     </message>
     <message>
         <source>Could not generate new %1 address</source>
@@ -2795,7 +2875,7 @@ Aby uzyskać więcej informacji na temat używania tej konsoli wpisz %6.
     <name>ReceiveRequestDialog</name>
     <message>
         <source>Request payment to …</source>
-        <translation type="unfinished">Żądaj płatności do ...</translation>
+        <translation type="unfinished">Żądaj płatności do …</translation>
     </message>
     <message>
         <source>Address:</source>
@@ -2827,7 +2907,7 @@ Aby uzyskać więcej informacji na temat używania tej konsoli wpisz %6.
     </message>
     <message>
         <source>&amp;Verify</source>
-        <translation type="unfinished">Zweryfikuj</translation>
+        <translation type="unfinished">Z&amp;weryfikuj</translation>
     </message>
     <message>
         <source>Verify this address on e.g. a hardware wallet screen</source>
@@ -2835,7 +2915,7 @@ Aby uzyskać więcej informacji na temat używania tej konsoli wpisz %6.
     </message>
     <message>
         <source>&amp;Save Image…</source>
-        <translation type="unfinished">Zapi&amp;sz Obraz...</translation>
+        <translation type="unfinished">Zapi&amp;sz Obraz…</translation>
     </message>
     <message>
         <source>Payment information</source>
@@ -2917,15 +2997,15 @@ Aby uzyskać więcej informacji na temat używania tej konsoli wpisz %6.
     </message>
     <message>
         <source>Change:</source>
-        <translation type="unfinished">Zmiana:</translation>
+        <translation type="unfinished">Reszta:</translation>
     </message>
     <message>
         <source>If this is activated, but the change address is empty or invalid, change will be sent to a newly generated address.</source>
-        <translation type="unfinished">Kiedy ta opcja jest wybrana, to jeżeli adres reszty jest pusty lub nieprawidłowy, to reszta będzie wysyłana na nowo wygenerowany adres,</translation>
+        <translation type="unfinished">Kiedy ta opcja jest wybrana, to jeżeli adres reszty jest pusty lub nieprawidłowy, to reszta będzie wysyłana na nowo wygenerowany adres.</translation>
     </message>
     <message>
         <source>Custom change address</source>
-        <translation type="unfinished">Niestandardowe zmiany adresu</translation>
+        <translation type="unfinished">Niestandardowy adres reszty</translation>
     </message>
     <message>
         <source>Transaction Fee:</source>
@@ -2933,8 +3013,7 @@ Aby uzyskać więcej informacji na temat używania tej konsoli wpisz %6.
     </message>
     <message>
         <source>Using the fallbackfee can result in sending a transaction that will take several hours or days (or never) to confirm. Consider choosing your fee manually or wait until you have validated the complete chain.</source>
-        <translation type="unfinished">206/5000
-Korzystanie z opłaty domyślnej może skutkować wysłaniem transakcji, która potwierdzi się w kilka godzin lub dni (lub nigdy). Rozważ wybranie opłaty ręcznie lub poczekaj, aż sprawdzisz poprawność całego łańcucha.</translation>
+        <translation type="unfinished">Korzystanie z opłaty domyślnej (fallbackfee) może skutkować wysłaniem transakcji, która potwierdzi się w kilka godzin lub dni (lub nigdy). Rozważ wybranie opłaty ręcznie lub poczekaj, aż sprawdzisz poprawność całego łańcucha.</translation>
     </message>
     <message>
         <source>Warning: Fee estimation is currently not possible.</source>
@@ -2974,7 +3053,7 @@ Korzystanie z opłaty domyślnej może skutkować wysłaniem transakcji, która 
     </message>
     <message>
         <source>Choose…</source>
-        <translation type="unfinished">Wybierz...</translation>
+        <translation type="unfinished">Wybierz…</translation>
     </message>
     <message>
         <source>Hide transaction fee settings</source>
@@ -2986,7 +3065,7 @@ Korzystanie z opłaty domyślnej może skutkować wysłaniem transakcji, która 
 Note:  Since the fee is calculated on a per-byte basis, a fee rate of "100 satoshis per kvB" for a transaction size of 500 virtual bytes (half of 1 kvB) would ultimately yield a fee of only 50 satoshis.</source>
         <translation type="unfinished">Określ niestandardową opłatę za kB (1000 bajtów) wirtualnego rozmiaru transakcji.
 
-Uwaga: Ponieważ opłata jest naliczana za każdy bajt, opłata "100 satoshi za kB" w przypadku transakcji o wielkości 500 bajtów (połowa 1 kB) ostatecznie da opłatę w wysokości tylko 50 satoshi.</translation>
+Uwaga: Ponieważ opłata jest naliczana za każdy bajt, opłata "100 satoshi za kvB" w przypadku transakcji o wielkości 500 bajtów (połowa 1 kvB) ostatecznie da opłatę w wysokości tylko 50 satoshi.</translation>
     </message>
     <message>
         <source>When there is less transaction volume than space in the blocks, miners as well as relaying nodes may enforce a minimum fee. Paying only this minimum fee is just fine, but be aware that this can result in a never confirming transaction once there is more demand for bitcoin transactions than the network can process.</source>
@@ -2998,7 +3077,7 @@ Uwaga: Ponieważ opłata jest naliczana za każdy bajt, opłata "100 satoshi za 
     </message>
     <message>
         <source>(Smart fee not initialized yet. This usually takes a few blocks…)</source>
-        <translation type="unfinished">(Sprytne opłaty nie są jeszcze zainicjowane. Trwa to zwykle kilka bloków...)</translation>
+        <translation type="unfinished">(Sprytne opłaty nie są jeszcze zainicjowane. Trwa to zwykle kilka bloków…)</translation>
     </message>
     <message>
         <source>Confirmation time target:</source>
@@ -3010,7 +3089,7 @@ Uwaga: Ponieważ opłata jest naliczana za każdy bajt, opłata "100 satoshi za 
     </message>
     <message>
         <source>With Replace-By-Fee (BIP-125) you can increase a transaction's fee after it is sent. Without this, a higher fee may be recommended to compensate for increased transaction delay risk.</source>
-        <translation type="unfinished">Dzięki podmień-przez-opłatę (RBF, BIP-125) możesz podnieść opłatę transakcyjną już wysłanej transakcji. Bez tego, może być rekomendowana większa opłata aby zmniejszyć ryzyko opóźnienia zatwierdzenia transakcji.</translation>
+        <translation type="unfinished">Dzięki Replace-By-Fee (RBF, BIP-125) możesz podnieść opłatę transakcyjną już wysłanej transakcji. Bez tego, może być rekomendowana większa opłata aby zmniejszyć ryzyko opóźnienia zatwierdzenia transakcji.</translation>
     </message>
     <message>
         <source>Clear &amp;All</source>
@@ -3030,11 +3109,11 @@ Uwaga: Ponieważ opłata jest naliczana za każdy bajt, opłata "100 satoshi za 
     </message>
     <message>
         <source>Copy quantity</source>
-        <translation type="unfinished">Skopiuj ilość</translation>
+        <translation type="unfinished">Kopiuj ilość</translation>
     </message>
     <message>
         <source>Copy amount</source>
-        <translation type="unfinished">Kopiuj kwote</translation>
+        <translation type="unfinished">Kopiuj &amp;kwotę</translation>
     </message>
     <message>
         <source>Copy fee</source>
@@ -3042,11 +3121,11 @@ Uwaga: Ponieważ opłata jest naliczana za każdy bajt, opłata "100 satoshi za 
     </message>
     <message>
         <source>Copy after fee</source>
-        <translation type="unfinished">Skopiuj ilość po opłacie</translation>
+        <translation type="unfinished">Kopiuj ilość po opłacie</translation>
     </message>
     <message>
         <source>Copy bytes</source>
-        <translation type="unfinished">Skopiuj ilość bajtów</translation>
+        <translation type="unfinished">Skopiuj bajty</translation>
     </message>
     <message>
         <source>Copy change</source>
@@ -3054,7 +3133,7 @@ Uwaga: Ponieważ opłata jest naliczana za każdy bajt, opłata "100 satoshi za 
     </message>
     <message>
         <source>%1 (%2 blocks)</source>
-        <translation type="unfinished">%1 (%2 bloków)github.com </translation>
+        <translation type="unfinished">%1 (%2 bloków)</translation>
     </message>
     <message>
         <source>Sign on device</source>
@@ -3080,7 +3159,7 @@ Uwaga: Ponieważ opłata jest naliczana za każdy bajt, opłata "100 satoshi za 
     </message>
     <message>
         <source>%1 to '%2'</source>
-        <translation type="unfinished">%1 do '%2'8f0451c0-ec7d-4357-a370-eff72fb0685f</translation>
+        <translation type="unfinished">%1 do '%2'</translation>
     </message>
     <message>
         <source>%1 to %2</source>
@@ -3088,7 +3167,7 @@ Uwaga: Ponieważ opłata jest naliczana za każdy bajt, opłata "100 satoshi za 
     </message>
     <message>
         <source>To review recipient list click "Show Details…"</source>
-        <translation type="unfinished">Aby przejrzeć listę odbiorców kliknij "Pokaż szczegóły..."</translation>
+        <translation type="unfinished">Aby przejrzeć listę odbiorców kliknij "Pokaż szczegóły…"</translation>
     </message>
     <message>
         <source>Sign failed</source>
@@ -3097,12 +3176,12 @@ Uwaga: Ponieważ opłata jest naliczana za każdy bajt, opłata "100 satoshi za 
     <message>
         <source>External signer not found</source>
         <extracomment>"External signer" means using devices such as hardware wallets.</extracomment>
-        <translation type="unfinished">Nie znaleziono zewnętrznego sygnatariusza </translation>
+        <translation type="unfinished">Nie znaleziono zewnętrznego urządzenia podpisującego</translation>
     </message>
     <message>
         <source>External signer failure</source>
         <extracomment>"External signer" means using devices such as hardware wallets.</extracomment>
-        <translation type="unfinished">Błąd zewnętrznego sygnatariusza </translation>
+        <translation type="unfinished">Błąd zewnętrznego urządzenia podpisującego</translation>
     </message>
     <message>
         <source>Save Transaction Data</source>
@@ -3120,7 +3199,7 @@ Uwaga: Ponieważ opłata jest naliczana za każdy bajt, opłata "100 satoshi za 
     </message>
     <message>
         <source>External balance:</source>
-        <translation type="unfinished">Zewnętrzny balans:</translation>
+        <translation type="unfinished">Zewnętrzne saldo:</translation>
     </message>
     <message>
         <source>or</source>
@@ -3128,7 +3207,7 @@ Uwaga: Ponieważ opłata jest naliczana za każdy bajt, opłata "100 satoshi za 
     </message>
     <message>
         <source>You can increase the fee later (signals Replace-By-Fee, BIP-125).</source>
-        <translation type="unfinished">Możesz później zwiększyć opłatę (sygnalizuje podmień-przez-opłatę (RBF), BIP 125).</translation>
+        <translation type="unfinished">Możesz później zwiększyć opłatę (sygnalizuje Replace-By-Fee(RBF), BIP-125).</translation>
     </message>
     <message>
         <source>Please, review your transaction proposal. This will produce a Partially Signed Bitcoin Transaction (PSBT) which you can save or copy and then sign with e.g. an offline %1 wallet, or a PSBT-compatible hardware wallet.</source>
@@ -3147,7 +3226,7 @@ Uwaga: Ponieważ opłata jest naliczana za każdy bajt, opłata "100 satoshi za 
     <message>
         <source>Please, review your transaction. You can create and send this transaction or create a Partially Signed Bitcoin Transaction (PSBT), which you can save or copy and then sign with, e.g., an offline %1 wallet, or a PSBT-compatible hardware wallet.</source>
         <extracomment>Text to inform a user attempting to create a transaction of their current options. At this stage, a user can send their transaction or create a PSBT. This string is displayed when both private keys and PSBT controls are enabled.</extracomment>
-        <translation type="unfinished">Proszę przejrzeć propozycję transakcji. Zostanie utworzona częściowo podpisana transakcja (ang. PSBT), którą można skopiować, a następnie podpisać np. offline z portfelem %1 lub z innym portfelem zgodnym z PSBT.</translation>
+        <translation type="unfinished">Proszę przejrzeć transakcję. Możesz utworzyć i wysłać tę transakcję lub utworzyć częściowo podpisaną transakcję Bitcoin (PSBT), którą możesz zapisać lub skopiować, a następnie podpisać np. offline z portfelem %1 lub z kompatybilnym sprzętowo portfelem PSBT.</translation>
     </message>
     <message>
         <source>Please, review your transaction.</source>
@@ -3160,7 +3239,7 @@ Uwaga: Ponieważ opłata jest naliczana za każdy bajt, opłata "100 satoshi za 
     </message>
     <message>
         <source>Not signalling Replace-By-Fee, BIP-125.</source>
-        <translation type="unfinished">Nie sygnalizuje podmień-przez-opłatę (RBF), BIP-125</translation>
+        <translation type="unfinished">Nie sygnalizuje Replace-By-Fee (RBF), BIP-125</translation>
     </message>
     <message>
         <source>Total Amount</source>
@@ -3178,19 +3257,15 @@ Uwaga: Ponieważ opłata jest naliczana za każdy bajt, opłata "100 satoshi za 
     </message>
     <message>
         <source>PSBT saved to disk</source>
-        <translation type="unfinished">PSBT zapisana na dysk</translation>
+        <translation type="unfinished">PSBT zapisano na dysk</translation>
     </message>
     <message>
         <source>Confirm send coins</source>
         <translation type="unfinished">Potwierdź wysyłanie monet</translation>
     </message>
     <message>
-        <source>Watch-only balance:</source>
-        <translation type="unfinished">Kwota na obserwowanych kontach:</translation>
-    </message>
-    <message>
         <source>The recipient address is not valid. Please recheck.</source>
-        <translation type="unfinished">Adres odbiorcy jest nieprawidłowy, proszę sprawić ponownie.</translation>
+        <translation type="unfinished">Adres odbiorcy jest nieprawidłowy, proszę sprawdzić ponownie.</translation>
     </message>
     <message>
         <source>The amount to pay must be larger than 0.</source>
@@ -3201,12 +3276,8 @@ Uwaga: Ponieważ opłata jest naliczana za każdy bajt, opłata "100 satoshi za 
         <translation type="unfinished">Kwota przekracza twoje saldo.</translation>
     </message>
     <message>
-        <source>The total exceeds your balance when the %1 transaction fee is included.</source>
-        <translation type="unfinished">Suma przekracza twoje saldo, gdy doliczymy %1 prowizji transakcyjnej.</translation>
-    </message>
-    <message>
         <source>Duplicate address found: addresses should only be used once each.</source>
-        <translation type="unfinished">Duplikat adres-u znaleziony: adresy powinny zostać użyte tylko raz.</translation>
+        <translation type="unfinished">Znaleziono zduplikowany adres: adresy powinny zostać użyte tylko raz.</translation>
     </message>
     <message>
         <source>Transaction creation failed!</source>
@@ -3219,9 +3290,9 @@ Uwaga: Ponieważ opłata jest naliczana za każdy bajt, opłata "100 satoshi za 
     <message numerus="yes">
         <source>Estimated to begin confirmation within %n block(s).</source>
         <translation type="unfinished">
-            <numerusform>Szacuje się, że potwierdzenie rozpocznie się w %n bloku.</numerusform>
-            <numerusform>Szacuje się, że potwierdzenie rozpocznie się w %n bloków.</numerusform>
-            <numerusform>Szacuje się, że potwierdzenie rozpocznie się w %n bloków.</numerusform>
+            <numerusform>Estimated to begin confirmation within %n block(s).</numerusform>
+            <numerusform>Estimated to begin confirmation within %n block(s).</numerusform>
+            <numerusform>Estimated to begin confirmation within %n block(s).</numerusform>
         </translation>
     </message>
     <message>
@@ -3253,7 +3324,7 @@ Uwaga: Ponieważ opłata jest naliczana za każdy bajt, opłata "100 satoshi za 
     </message>
     <message>
         <source>Pay &amp;To:</source>
-        <translation type="unfinished">Zapłać &amp;dla:</translation>
+        <translation type="unfinished">Płatność &amp;dla:</translation>
     </message>
     <message>
         <source>&amp;Label:</source>
@@ -3281,11 +3352,11 @@ Uwaga: Ponieważ opłata jest naliczana za każdy bajt, opłata "100 satoshi za 
     </message>
     <message>
         <source>The fee will be deducted from the amount being sent. The recipient will receive less bitcoins than you enter in the amount field. If multiple recipients are selected, the fee is split equally.</source>
-        <translation type="unfinished">Opłata zostanie odjęta od kwoty wysyłane.Odbiorca otrzyma mniej niż bitcoins wpisz w polu kwoty. Jeśli wybrano kilku odbiorców, opłata jest podzielona równo.</translation>
+        <translation type="unfinished">Opłata zostanie odjęta od kwoty wysyłanej. Odbiorca otrzyma mniej bitcoinów, niż wpiszesz w polu kwoty. Jeśli wybrano wielu odbiorców, opłata zostanie podzielona równo.</translation>
     </message>
     <message>
         <source>S&amp;ubtract fee from amount</source>
-        <translation type="unfinished">Odejmij od wysokości opłaty</translation>
+        <translation type="unfinished">&amp;Odejmij opłatę od kwoty</translation>
     </message>
     <message>
         <source>Use available balance</source>
@@ -3350,8 +3421,8 @@ Uwaga: Ponieważ opłata jest naliczana za każdy bajt, opłata "100 satoshi za 
         <translation type="unfinished">Podpis</translation>
     </message>
     <message>
-        <source>Copy the current signature to the system clipboard</source>
-        <translation type="unfinished">Kopiuje aktualny podpis do schowka systemowego</translation>
+        <source>Copy the current signature to the clipboard</source>
+        <translation type="unfinished">Skopiuj aktualny podpis do schowka</translation>
     </message>
     <message>
         <source>Sign the message to prove you own this Bitcoin address</source>
@@ -3375,8 +3446,7 @@ Uwaga: Ponieważ opłata jest naliczana za każdy bajt, opłata "100 satoshi za 
     </message>
     <message>
         <source>Enter the receiver's address, message (ensure you copy line breaks, spaces, tabs, etc. exactly) and signature below to verify the message. Be careful not to read more into the signature than what is in the signed message itself, to avoid being tricked by a man-in-the-middle attack. Note that this only proves the signing party receives with the address, it cannot prove sendership of any transaction!</source>
-        <translation type="unfinished">Wpisz adres, wiadomość oraz sygnaturę (podpis) odbiorcy (upewnij się, że dokładnie skopiujesz wszystkie zakończenia linii, spacje, tabulacje itp.).  Uważaj by nie dodać więcej do podpisu niż do samej podpisywanej wiadomości by uniknąć ataku man-in-the-middle. 
-Zwróć uwagę, że poprawnie zweryfikowana wiadomość potwierdza to, że nadawca posiada klucz do adresu, natomiast nie potwierdza to, że poprawne wysłanie jakiejkolwiek transakcji!</translation>
+        <translation type="unfinished">Wpisz poniżej adres odbiorcy, wiadomość (upewnij się, że dokładnie skopiujesz podziały wierszy, spacje, tabulatory itp.) oraz podpis, aby zweryfikować wiadomość. Uważaj, aby nie doszukiwać się w podpisie więcej, niż wynika z samej podpisanej wiadomości, aby nie dać się oszukać atakiem typu man-in-the-middle. Zwróć uwagę, że dowodzi to jedynie, iż podpisujący kontroluje ten adres; nie dowodzi wysłania żadnej transakcji!</translation>
     </message>
     <message>
         <source>The Bitcoin address the message was signed with</source>
@@ -3388,11 +3458,11 @@ Zwróć uwagę, że poprawnie zweryfikowana wiadomość potwierdza to, że nadaw
     </message>
     <message>
         <source>The signature given when the message was signed</source>
-        <translation type="unfinished">Sygnatura podawana przy podpisywaniu wiadomości</translation>
+        <translation type="unfinished">Podpis podawany przy podpisywaniu wiadomości</translation>
     </message>
     <message>
         <source>Verify the message to ensure it was signed with the specified Bitcoin address</source>
-        <translation type="unfinished">Zweryfikuj wiadomość,  aby upewnić się, że została podpisana odpowiednim adresem Bitcoin.</translation>
+        <translation type="unfinished">Zweryfikuj wiadomość, aby upewnić się, że została podpisana podanym adresem Bitcoin.</translation>
     </message>
     <message>
         <source>Verify &amp;Message</source>
@@ -3404,7 +3474,7 @@ Zwróć uwagę, że poprawnie zweryfikowana wiadomość potwierdza to, że nadaw
     </message>
     <message>
         <source>Click "Sign Message" to generate signature</source>
-        <translation type="unfinished">Kliknij "Podpisz Wiadomość" żeby uzyskać podpis</translation>
+        <translation type="unfinished">Kliknij "Podpisz Wiadomość" żeby wygenerować podpis</translation>
     </message>
     <message>
         <source>The entered address is invalid.</source>
@@ -3412,7 +3482,7 @@ Zwróć uwagę, że poprawnie zweryfikowana wiadomość potwierdza to, że nadaw
     </message>
     <message>
         <source>Please check the address and try again.</source>
-        <translation type="unfinished">Proszę sprawdzić adres i spróbować ponownie.</translation>
+        <translation type="unfinished">Sprawdź adres i spróbuj ponownie.</translation>
     </message>
     <message>
         <source>The entered address does not refer to a legacy (P2PKH) key. Message signing for SegWit and other non-P2PKH address types is not supported in this version of %1. Please check the address and try again.</source>
@@ -3480,12 +3550,12 @@ Zwróć uwagę, że poprawnie zweryfikowana wiadomość potwierdza to, że nadaw
     <message>
         <source>0/unconfirmed, in memory pool</source>
         <extracomment>Text explaining the current status of a transaction, shown in the status field of the details window for this transaction. This status represents an unconfirmed transaction that is in the memory pool.</extracomment>
-        <translation type="unfinished">0/niepotwierdzone, w kolejce w pamięci</translation>
+        <translation type="unfinished">0/niepotwierdzone, jest w puli pamięci</translation>
     </message>
     <message>
         <source>0/unconfirmed, not in memory pool</source>
         <extracomment>Text explaining the current status of a transaction, shown in the status field of the details window for this transaction. This status represents an unconfirmed transaction that is not in the memory pool.</extracomment>
-        <translation type="unfinished">0/niepotwierdzone, nie wysłane do kolejki w pamięci</translation>
+        <translation type="unfinished">0/niepotwierdzone, nie ma w puli pamięci</translation>
     </message>
     <message>
         <source>abandoned</source>
@@ -3495,7 +3565,7 @@ Zwróć uwagę, że poprawnie zweryfikowana wiadomość potwierdza to, że nadaw
     <message>
         <source>%1/unconfirmed</source>
         <extracomment>Text explaining the current status of a transaction, shown in the status field of the details window for this transaction. This status represents a transaction confirmed in at least one block, but less than 6 blocks.</extracomment>
-        <translation type="unfinished">%1/niezatwierdzone</translation>
+        <translation type="unfinished">%1/niepotwierdzone</translation>
     </message>
     <message>
         <source>%1 confirmations</source>
@@ -3520,7 +3590,7 @@ Zwróć uwagę, że poprawnie zweryfikowana wiadomość potwierdza to, że nadaw
     </message>
     <message>
         <source>unknown</source>
-        <translation type="unfinished">nieznane</translation>
+        <translation type="unfinished">nieznany</translation>
     </message>
     <message>
         <source>To</source>
@@ -3529,10 +3599,6 @@ Zwróć uwagę, że poprawnie zweryfikowana wiadomość potwierdza to, że nadaw
     <message>
         <source>own address</source>
         <translation type="unfinished">własny adres</translation>
-    </message>
-    <message>
-        <source>watch-only</source>
-        <translation type="unfinished">tylko-obserwowany</translation>
     </message>
     <message>
         <source>label</source>
@@ -3556,15 +3622,15 @@ Zwróć uwagę, że poprawnie zweryfikowana wiadomość potwierdza to, że nadaw
     </message>
     <message>
         <source>Debit</source>
-        <translation type="unfinished">Debet</translation>
+        <translation type="unfinished">Obciążenie</translation>
     </message>
     <message>
         <source>Total debit</source>
-        <translation type="unfinished">Łączne obciążenie</translation>
+        <translation type="unfinished">Obciążenia ogółem</translation>
     </message>
     <message>
         <source>Total credit</source>
-        <translation type="unfinished">Łączne uznanie</translation>
+        <translation type="unfinished">Suma uznań</translation>
     </message>
     <message>
         <source>Transaction fee</source>
@@ -3604,7 +3670,7 @@ Zwróć uwagę, że poprawnie zweryfikowana wiadomość potwierdza to, że nadaw
     </message>
     <message>
         <source>Merchant</source>
-        <translation type="unfinished">Kupiec</translation>
+        <translation type="unfinished">Sprzedawca</translation>
     </message>
     <message>
         <source>Generated coins must mature %1 blocks before they can be spent. When you generated this block, it was broadcast to the network to be added to the block chain. If it fails to get into the chain, its state will change to "not accepted" and it won't be spendable. This may occasionally happen if another node generates a block within a few seconds of yours.</source>
@@ -3698,15 +3764,11 @@ Zwróć uwagę, że poprawnie zweryfikowana wiadomość potwierdza to, że nadaw
     </message>
     <message>
         <source>Sent to</source>
-        <translation type="unfinished">Wysłane do</translation>
+        <translation type="unfinished">Wysłano do</translation>
     </message>
     <message>
         <source>Mined</source>
         <translation type="unfinished">Wydobyto</translation>
-    </message>
-    <message>
-        <source>watch-only</source>
-        <translation type="unfinished">tylko-obserwowany</translation>
     </message>
     <message>
         <source>(n/a)</source>
@@ -3727,10 +3789,6 @@ Zwróć uwagę, że poprawnie zweryfikowana wiadomość potwierdza to, że nadaw
     <message>
         <source>Type of transaction.</source>
         <translation type="unfinished">Rodzaj transakcji.</translation>
-    </message>
-    <message>
-        <source>Whether or not a watch-only address is involved in this transaction.</source>
-        <translation type="unfinished">Czy adres tylko-obserwowany jest lub nie użyty w tej transakcji.</translation>
     </message>
     <message>
         <source>User-defined intent/purpose of the transaction.</source>
@@ -3801,19 +3859,19 @@ Zwróć uwagę, że poprawnie zweryfikowana wiadomość potwierdza to, że nadaw
     </message>
     <message>
         <source>Copy &amp;label</source>
-        <translation type="unfinished">Kopiuj etykietę</translation>
+        <translation type="unfinished">Kopiuj &amp;etykietę</translation>
     </message>
     <message>
         <source>Copy &amp;amount</source>
-        <translation type="unfinished">Kopiuj kwotę</translation>
+        <translation type="unfinished">Kopiuj &amp;kwotę</translation>
     </message>
     <message>
         <source>Copy transaction &amp;ID</source>
-        <translation type="unfinished">transakcjaSkopiuj &amp;ID transakcji</translation>
+        <translation type="unfinished">Kopiuj &amp;ID transakcji</translation>
     </message>
     <message>
         <source>Copy &amp;raw transaction</source>
-        <translation type="unfinished">Kopiuj &amp;raw transakcje</translation>
+        <translation type="unfinished">Kopiuj su&amp;rową transakcję</translation>
     </message>
     <message>
         <source>Copy full transaction &amp;details</source>
@@ -3825,15 +3883,15 @@ Zwróć uwagę, że poprawnie zweryfikowana wiadomość potwierdza to, że nadaw
     </message>
     <message>
         <source>Increase transaction &amp;fee</source>
-        <translation type="unfinished">Zwiększ opłatę transakcji</translation>
+        <translation type="unfinished">Zwiększ &amp;opłatę transakcji</translation>
     </message>
     <message>
         <source>A&amp;bandon transaction</source>
-        <translation type="unfinished">Porzuć transakcję</translation>
+        <translation type="unfinished">&amp;Porzuć transakcję</translation>
     </message>
     <message>
         <source>&amp;Edit address label</source>
-        <translation type="unfinished">Wy&amp;edytuj adres etykiety</translation>
+        <translation type="unfinished">&amp;Edytuj etykietę adresu</translation>
     </message>
     <message>
         <source>Show in %1</source>
@@ -3846,11 +3904,7 @@ Zwróć uwagę, że poprawnie zweryfikowana wiadomość potwierdza to, że nadaw
     </message>
     <message>
         <source>Confirmed</source>
-        <translation type="unfinished">Potwerdzone</translation>
-    </message>
-    <message>
-        <source>Watch-only</source>
-        <translation type="unfinished">Tylko-obserwowany</translation>
+        <translation type="unfinished">Potwierdzone</translation>
     </message>
     <message>
         <source>Date</source>
@@ -3899,8 +3953,9 @@ Zwróć uwagę, że poprawnie zweryfikowana wiadomość potwierdza to, że nadaw
         <source>No wallet has been loaded.
 Go to File &gt; Open Wallet to load a wallet.
 - OR -</source>
-        <translation type="unfinished">Portfel nie został wybrany.
-Przejdź do Plik &gt; Otwórz Portfel aby wgrać portfel.</translation>
+        <translation type="unfinished">Nie załadowano żadnego portfela.
+Przejdź do Plik &gt; Otwórz Portfel, aby wczytać portfel.
+- LUB -</translation>
     </message>
     <message>
         <source>Create a new wallet</source>
@@ -3912,7 +3967,7 @@ Przejdź do Plik &gt; Otwórz Portfel aby wgrać portfel.</translation>
     </message>
     <message>
         <source>Unable to decode PSBT from clipboard (invalid base64)</source>
-        <translation type="unfinished">Nie udało się załadować częściowo podpisanej transakcji (nieważny base64)</translation>
+        <translation type="unfinished">Nie udało się zdekodować PSBT ze schowka (nieprawidłowy base64)</translation>
     </message>
     <message>
         <source>Load Transaction Data</source>
@@ -3924,7 +3979,7 @@ Przejdź do Plik &gt; Otwórz Portfel aby wgrać portfel.</translation>
     </message>
     <message>
         <source>PSBT file must be smaller than 100 MiB</source>
-        <translation type="unfinished">PSBT musi być mniejsze niż 100MB</translation>
+        <translation type="unfinished">Plik PSBT musi być mniejszy niż 100 MiB</translation>
     </message>
     <message>
         <source>Unable to decode PSBT</source>
@@ -3964,7 +4019,7 @@ Przejdź do Plik &gt; Otwórz Portfel aby wgrać portfel.</translation>
     </message>
     <message>
         <source>Warning: This may pay the additional fee by reducing change outputs or adding inputs, when necessary. It may add a new change output if one does not already exist. These changes may potentially leak privacy.</source>
-        <translation type="unfinished">Ostrzeżenie: Może to spowodować uiszczenie dodatkowej opłaty poprzez zmniejszenie zmian wyjść lub dodanie danych wejściowych, jeśli jest to konieczne. Może dodać nowe wyjście zmiany, jeśli jeszcze nie istnieje. Te zmiany mogą potencjalnie spowodować utratę prywatności.</translation>
+        <translation type="unfinished">Ostrzeżenie: Może to spowodować uiszczenie dodatkowej opłaty poprzez zmniejszenie wyjść reszty lub dodanie wejść, jeśli jest to konieczne. Może dodać nowe wyjście reszty, jeśli jeszcze nie istnieje. Zmiany te mogą potencjalnie naruszyć prywatność.</translation>
     </message>
     <message>
         <source>Confirm fee bump</source>
@@ -3980,7 +4035,7 @@ Przejdź do Plik &gt; Otwórz Portfel aby wgrać portfel.</translation>
     </message>
     <message>
         <source>Fee-bump PSBT copied to clipboard</source>
-        <translation type="unfinished">PSBT skopiowane do schowka</translation>
+        <translation type="unfinished">PSBT z podbitymi opłatami skopiowane do schowka</translation>
     </message>
     <message>
         <source>Can't sign transaction.</source>
@@ -4016,7 +4071,7 @@ Przejdź do Plik &gt; Otwórz Portfel aby wgrać portfel.</translation>
     <message>
         <source>Wallet Data</source>
         <extracomment>Name of the wallet data file format.</extracomment>
-        <translation type="unfinished">Informacje portfela</translation>
+        <translation type="unfinished">Dane portfela</translation>
     </message>
     <message>
         <source>Backup Failed</source>
@@ -4046,16 +4101,12 @@ Przejdź do Plik &gt; Otwórz Portfel aby wgrać portfel.</translation>
         <translation type="unfinished">Deweloperzy %s</translation>
     </message>
     <message>
-        <source>%s corrupt. Try using the wallet tool bitcoin-wallet to salvage or restoring a backup.</source>
-        <translation type="unfinished">%s jest uszkodzony. Spróbuj użyć narzędzia bitcoin-portfel, aby uratować portfel lub przywrócić kopię zapasową.</translation>
+        <source>%s failed to validate the -assumeutxo snapshot state. This indicates a hardware problem, or a bug in the software, or a bad software modification that allowed an invalid snapshot to be loaded. As a result of this, the node will shut down and stop using any state that was built on the snapshot, resetting the chain height from %d to %d. On the next restart, the node will resume syncing from %d without using any snapshot data. Please report this incident to %s, including how you obtained the snapshot. The invalid snapshot chainstate will be left on disk in case it is helpful in diagnosing the issue that caused this error.</source>
+        <translation type="unfinished">%s nie zdołał zwalidować stanu migawki -assumeutxo. Wskazuje to na problem ze sprzętem, błąd w oprogramowaniu lub nieprawidłową modyfikacją programu, która zezwoliła na załadowanie nieprawidłowej migawki. Z tego powodu węzeł zostanie zamknięty i przestanie używać danych zbudowanych na bazie migawki, resetując wysokość łańcucha z %d do %d. Po ponownym uruchomieniu, węzeł wznowi synchronizację od %d, bez wykorzystania jakichkolwiek danych z migawki. Prosimy zgłosić ten incydent do %s, wliczając w to jak wszedłeś w posiadanie tej migawki. Nieprawidłowy stan łańcucha w oparciu o tą migawkę zostanie zachowany na dysku w przypadku, gdyby okazał się przydatny w diagnostyce problemu, który spowodował ten błąd.</translation>
     </message>
     <message>
-        <source>Cannot downgrade wallet from version %i to version %i. Wallet version unchanged.</source>
-        <translation type="unfinished">Nie można zmienić wersji portfela z wersji %ina wersje %i. Wersja portfela pozostaje niezmieniona.</translation>
-    </message>
-    <message>
-        <source>Cannot upgrade a non HD split wallet from version %i to version %i without upgrading to support pre-split keypool. Please use version %i or no version specified.</source>
-        <translation type="unfinished">Nie można zaktualizować portfela dzielonego innego niż HD z wersji 1%i do wersji 1%i bez aktualizacji w celu obsługi wstępnie podzielonej puli kluczy. Użyj wersji 1%i lub nie określono wersji.</translation>
+        <source>%s request to listen on port %u. This port is considered "bad" and thus it is unlikely that any peer will connect to it. See doc/p2p-bad-ports.md for details and a full list.</source>
+        <translation type="unfinished">%s żąda nasłuchiwania na porcie %u. Ten port jest uznany za "zły" i dlatego jest mało prawdopodobne, że jakikolwiek węzeł połączy się z nim. Zobacz doc/p2p-bad-ports.md, aby uzyskać szczegóły i pełną listę.</translation>
     </message>
     <message>
         <source>Disk space for %s may not accommodate the block files. Approximately %u GB of data will be stored in this directory.</source>
@@ -4067,11 +4118,15 @@ Przejdź do Plik &gt; Otwórz Portfel aby wgrać portfel.</translation>
     </message>
     <message>
         <source>Error loading wallet. Wallet requires blocks to be downloaded, and software does not currently support loading wallets while blocks are being downloaded out of order when using assumeutxo snapshots. Wallet should be able to load successfully after node sync reaches height %s</source>
-        <translation type="unfinished">Błąd ładowania portfela. Portfel wymaga ściągnięcia bloków, a oprogramowanie obecnie nie wspiera ładowania portfeli podczas ściągania bloków poza kolejnością gdy używa się zrzutów assumeutxo. Portfel powinien załadować się poprawnie po osiągnięciu przez węzeł synchronizacji%s</translation>
+        <translation type="unfinished">Błąd podczas ładowania portfela. Portfel wymaga pobranych bloków, a oprogramowanie obecnie nie obsługuje ładowania portfeli podczas pobierania bloków w nieprawidłowej kolejności przy użyciu snapshotów assumeutxo. Portfel powinien załadować się poprawnie po osiągnięciu przez węzeł wysokości bloku %s</translation>
     </message>
     <message>
         <source>Error reading %s! Transaction data may be missing or incorrect. Rescanning wallet.</source>
-        <translation type="unfinished">Błąd odczytu 1%s! Może brakować danych transakcji lub mogą być one nieprawidłowe. Ponowne skanowanie portfela.</translation>
+        <translation type="unfinished">Błąd odczytu %s! Może brakować danych transakcji lub mogą być one nieprawidłowe. Ponowne skanowanie portfela.</translation>
+    </message>
+    <message>
+        <source>Error starting/committing db txn for wallet transactions removal process</source>
+        <translation type="unfinished">Wystąpił błąd podczas uruchamiania/przesyłania bazy danych transakcji dla procesu usuwania transakcji w portfelu</translation>
     </message>
     <message>
         <source>Error: Dumpfile format record is incorrect. Got "%s", expected "format".</source>
@@ -4079,27 +4134,23 @@ Przejdź do Plik &gt; Otwórz Portfel aby wgrać portfel.</translation>
     </message>
     <message>
         <source>Error: Dumpfile identifier record is incorrect. Got "%s", expected "%s".</source>
-        <translation type="unfinished">Błąd: rekord identyfikatora pliku zrzutu jest nieprawidłowy. Otrzymano „1%s”, oczekiwano „1%s”.</translation>
+        <translation type="unfinished">Błąd: rekord identyfikatora pliku zrzutu jest nieprawidłowy. Otrzymano "%s", oczekiwano "%s".</translation>
     </message>
     <message>
         <source>Error: Dumpfile version is not supported. This version of bitcoin-wallet only supports version 1 dumpfiles. Got dumpfile with version %s</source>
-        <translation type="unfinished">Błąd: wersja pliku zrzutu nie jest obsługiwana. Ta wersja bitcoin-wallet obsługuje tylko pliki zrzutów w wersji 1. Mam plik zrzutu w wersji 1%s</translation>
-    </message>
-    <message>
-        <source>Error: Legacy wallets only support the "legacy", "p2sh-segwit", and "bech32" address types</source>
-        <translation type="unfinished">Błąd: starsze portfele obsługują tylko typy adresów „legacy”, „p2sh-segwit” i „bech32”</translation>
+        <translation type="unfinished">Błąd: wersja pliku zrzutu nie jest obsługiwana. Ta wersja bitcoin-wallet obsługuje tylko pliki zrzutu w wersji 1. Otrzymano plik zrzutu w wersji %s</translation>
     </message>
     <message>
         <source>Error: Unable to produce descriptors for this legacy wallet. Make sure to provide the wallet's passphrase if it is encrypted.</source>
-        <translation type="unfinished">Błąd: Nie można wygenerować deskryptorów dla tego starego portfela. Upewnij się najpierw, że portfel jest odblokowany.</translation>
+        <translation type="unfinished">Błąd: Nie można wygenerować deskryptorów dla tego portfela typu legacy. Upewnij się, że podano hasło portfela, jeśli jest on zaszyfrowany.</translation>
     </message>
     <message>
         <source>File %s already exists. If you are sure this is what you want, move it out of the way first.</source>
-        <translation type="unfinished">Plik 1%s już istnieje. Jeśli jesteś pewien, że tego chcesz, najpierw usuń to z drogi.</translation>
+        <translation type="unfinished">Plik %s już istnieje. Jeśli jesteś pewien, że tego chcesz, najpierw usuń to z drogi.</translation>
     </message>
     <message>
         <source>Invalid or corrupt peers.dat (%s). If you believe this is a bug, please report it to %s. As a workaround, you can move the file (%s) out of the way (rename, move, or delete) to have a new one created on the next start.</source>
-        <translation type="unfinished">Nieprawidłowy lub uszkodzony plik peers.dat (1%s). Jeśli uważasz, że to błąd, zgłoś go do 1%s. Jako obejście, możesz przenieść plik (1%s) z drogi (zmień nazwę, przenieś lub usuń), aby przy następnym uruchomieniu utworzyć nowy.</translation>
+        <translation type="unfinished">Nieprawidłowy lub uszkodzony plik peers.dat (%s). Jeśli uważasz, że to błąd, zgłoś go do %s. Jako obejście, możesz przenieść plik (%s) z drogi (zmień nazwę, przenieś lub usuń), aby przy następnym uruchomieniu utworzyć nowy.</translation>
     </message>
     <message>
         <source>Invalid value detected for '-wallet' or '-nowallet'. '-wallet' requires a string value, while '-nowallet' accepts only '1' to disable all wallets</source>
@@ -4107,35 +4158,23 @@ Przejdź do Plik &gt; Otwórz Portfel aby wgrać portfel.</translation>
     </message>
     <message>
         <source>No dump file provided. To use createfromdump, -dumpfile=&lt;filename&gt; must be provided.</source>
-        <translation type="unfinished">Nie dostarczono pliku zrzutu. Aby użyć funkcji createfromdump, należy podać -dumpfile=&lt;filename&gt;.</translation>
+        <translation type="unfinished">Nie dostarczono pliku zrzutu. Aby użyć createfromdump, należy podać -dumpfile=&lt;filename&gt;.</translation>
     </message>
     <message>
         <source>No dump file provided. To use dump, -dumpfile=&lt;filename&gt; must be provided.</source>
-        <translation type="unfinished">Nie dostarczono pliku zrzutu. Aby użyć funkcji createfromdump, należy podać -dumpfile=1.</translation>
-    </message>
-    <message>
-        <source>No wallet file format provided. To use createfromdump, -format=&lt;format&gt; must be provided.</source>
-        <translation type="unfinished">Nie dostarczono pliku zrzutu. Aby użyć funkcji createfromdump, należy podać -dumpfile=&lt;format&gt;.</translation>
-    </message>
-    <message>
-        <source>Option '-upnp' is set but UPnP support was dropped in version 29.0. Consider using '-natpmp' instead.</source>
-        <translation type="unfinished">Opcja '-upnp' jest włączona, lecz wsparcie UPnP zostało porzucone w wersji 29.0. Rozpatrz w zamian użycie '-natpmp'.</translation>
+        <translation type="unfinished">Nie dostarczono pliku zrzutu. Aby użyć zrzutu, należy podać -dumpfile=&lt;filename&gt;.</translation>
     </message>
     <message>
         <source>Please contribute if you find %s useful. Visit %s for further information about the software.</source>
-        <translation type="unfinished">Wspomóż proszę, jeśli uznasz %s za użyteczne. Odwiedź  %s, aby uzyskać więcej informacji o tym oprogramowaniu.</translation>
+        <translation type="unfinished">Wspomóż proszę, jeśli uznasz %s za użyteczne. Odwiedź %s, aby uzyskać więcej informacji o tym oprogramowaniu.</translation>
     </message>
     <message>
         <source>Prune configured below the minimum of %d MiB.  Please use a higher number.</source>
-        <translation type="unfinished">Przycinanie skonfigurowano poniżej minimalnych %d MiB. Proszę użyć wyższej liczby.</translation>
+        <translation type="unfinished">Przycinanie (pruning) skonfigurowano poniżej minimalnych %d MiB. Proszę użyć wyższej liczby.</translation>
     </message>
     <message>
         <source>Prune mode is incompatible with -reindex-chainstate. Use full -reindex instead.</source>
-        <translation type="unfinished">Tryb przycięty jest niekompatybilny z -reindex-chainstate. Użyj pełnego  -reindex.</translation>
-    </message>
-    <message>
-        <source>Prune: last wallet synchronisation goes beyond pruned data. You need to -reindex (download the whole blockchain again in case of pruned node)</source>
-        <translation type="unfinished">Prune: ostatnia synchronizacja portfela jest za danymi. Muszisz -reindexować (pobrać cały ciąg bloków ponownie w przypadku przyciętego węzła)</translation>
+        <translation type="unfinished">Tryb przycięty jest niekompatybilny z -reindex-chainstate. Użyj pełnego -reindex.</translation>
     </message>
     <message>
         <source>Rename of '%s' -&gt; '%s' failed. You should resolve this by manually moving or deleting the invalid snapshot directory %s, otherwise you will encounter the same error again on the next startup.</source>
@@ -4152,10 +4191,6 @@ Przejdź do Plik &gt; Otwórz Portfel aby wgrać portfel.</translation>
     <message>
         <source>The transaction amount is too small to send after the fee has been deducted</source>
         <translation type="unfinished">Zbyt niska kwota transakcji do wysłania po odjęciu opłaty</translation>
-    </message>
-    <message>
-        <source>This error could occur if this wallet was not shutdown cleanly and was last loaded using a build with a newer version of Berkeley DB. If so, please use the software that last loaded this wallet</source>
-        <translation type="unfinished">Ten błąd mógł wystąpić jeżeli portfel nie został poprawnie zamknięty oraz był ostatnio załadowany przy użyciu buildu z nowszą wersją Berkley DB. Jeżeli tak, proszę użyć oprogramowania które ostatnio załadowało ten portfel</translation>
     </message>
     <message>
         <source>This is a pre-release test build - use at your own risk - do not use for mining or merchant applications</source>
@@ -4175,43 +4210,23 @@ Przejdź do Plik &gt; Otwórz Portfel aby wgrać portfel.</translation>
     </message>
     <message>
         <source>Total length of network version string (%i) exceeds maximum length (%i). Reduce the number or size of uacomments.</source>
-        <translation type="unfinished">Całkowita długość łańcucha wersji (%i) przekracza maksymalną dopuszczalną długość (%i). Zmniejsz ilość lub rozmiar parametru uacomment.</translation>
+        <translation type="unfinished">Całkowita długość ciągu wersji sieci (%i) przekracza maksymalną długość (%i). Zmniejsz liczbę lub rozmiar uacomments.</translation>
     </message>
     <message>
         <source>Unable to replay blocks. You will need to rebuild the database using -reindex-chainstate.</source>
         <translation type="unfinished">Nie można przetworzyć bloków. Konieczne będzie przebudowanie bazy danych za pomocą -reindex-chainstate.</translation>
     </message>
     <message>
-        <source>Unknown wallet file format "%s" provided. Please provide one of "bdb" or "sqlite".</source>
-        <translation type="unfinished">Podano nieznany typ pliku portfela "%s". Proszę podać jeden z "bdb" lub "sqlite".</translation>
-    </message>
-    <message>
         <source>Unsupported category-specific logging level %1$s=%2$s. Expected %1$s=&lt;category&gt;:&lt;loglevel&gt;. Valid categories: %3$s. Valid loglevels: %4$s.</source>
-        <translation type="unfinished">Nieobsługiwany poziom rejestrowania specyficzny dla kategorii %1$s=%2$s. Oczekiwano %1$s=&lt;category&gt;:&lt;loglevel&gt;. Poprawne kategorie %3$s. Poprawne poziomy logowania: %4 $s.</translation>
+        <translation type="unfinished">Nieobsługiwany poziom logowania specyficzny dla kategorii %1$s=%2$s. Oczekiwano %1$s=&lt;category&gt;:&lt;loglevel&gt;. Poprawne kategorie %3$s. Poprawne poziomy logowania: %4$s.</translation>
     </message>
     <message>
         <source>Unsupported chainstate database format found. Please restart with -reindex-chainstate. This will rebuild the chainstate database.</source>
         <translation type="unfinished">Znaleziono nieobsługiwany format bazy danych chainstate. Proszę uruchomić ponownie z opcją -reindex-chainstate. To odbuduje bazę danych chainstate.</translation>
     </message>
     <message>
-        <source>Wallet created successfully. The legacy wallet type is being deprecated and support for creating and opening legacy wallets will be removed in the future.</source>
-        <translation type="unfinished">Portfel stworzony pomyślnie. Starszy typ portfela jest przestarzały, a obsługa tworzenia i otwierania starszych portfeli zostanie usunięta w przyszłości.</translation>
-    </message>
-    <message>
-        <source>Wallet loaded successfully. The legacy wallet type is being deprecated and support for creating and opening legacy wallets will be removed in the future. Legacy wallets can be migrated to a descriptor wallet with migratewallet.</source>
-        <translation type="unfinished">Portfel został załadowany pomyślnie. Starszy typ portfela jest przestarzały, a obsługa tworzenia i otwierania starszych portfeli zostanie usunięta w przyszłości. Starsze portfele można migrować do portfela deskryptora za pomocą migratewallet.</translation>
-    </message>
-    <message>
-        <source>Warning: Dumpfile wallet format "%s" does not match command line specified format "%s".</source>
-        <translation type="unfinished">Ostrzeżenie: Format portfela Dumpfile "%s" nie pasuje do formatu określonego w wierszu poleceń "%s".</translation>
-    </message>
-    <message>
         <source>Warning: Private keys detected in wallet {%s} with disabled private keys</source>
-        <translation type="unfinished">Uwaga: Wykryto klucze prywatne w portfelu [%s] który ma wyłączone klucze prywatne</translation>
-    </message>
-    <message>
-        <source>Warning: We do not appear to fully agree with our peers! You may need to upgrade, or other nodes may need to upgrade.</source>
-        <translation type="unfinished">Uwaga: Wygląda na to, że nie ma pełnej zgodności z naszymi węzłami! Możliwe, że potrzebujesz aktualizacji bądź inne węzły jej potrzebują</translation>
+        <translation type="unfinished">Ostrzeżenie: Wykryto klucze prywatne w portfelu {%s} z wyłączonymi kluczami prywatnymi</translation>
     </message>
     <message>
         <source>Witness data for blocks after height %d requires validation. Please restart with -reindex.</source>
@@ -4230,6 +4245,10 @@ Przejdź do Plik &gt; Otwórz Portfel aby wgrać portfel.</translation>
         <translation type="unfinished">-maxmempool musi być przynajmniej %d MB</translation>
     </message>
     <message>
+        <source>Cannot obtain a lock on directory %s. %s is probably already running.</source>
+        <translation type="unfinished">Nie można uzyskać blokady w katalogu %s. %s najprawdopodobniej jest już uruchomiony.</translation>
+    </message>
+    <message>
         <source>Cannot resolve -%s address: '%s'</source>
         <translation type="unfinished">Nie można rozpoznać -%s adresu: '%s'</translation>
     </message>
@@ -4243,7 +4262,7 @@ Przejdź do Plik &gt; Otwórz Portfel aby wgrać portfel.</translation>
     </message>
     <message>
         <source>%s is set very high! Fees this large could be paid on a single transaction.</source>
-        <translation type="unfinished">%sto bardzo dużo!  Tak duże opłaty można uiścić w ramach jednej transakcji.</translation>
+        <translation type="unfinished">%s jest ustawione bardzo wysoko! Tak duże opłaty można uiścić w ramach jednej transakcji.</translation>
     </message>
     <message>
         <source>Cannot provide specific connections and have addrman find outgoing connections at the same time.</source>
@@ -4254,8 +4273,12 @@ Przejdź do Plik &gt; Otwórz Portfel aby wgrać portfel.</translation>
         <translation type="unfinished">Błąd ładowania %s: Ładowanie portfela zewnętrznego podpisu bez skompilowania wsparcia dla zewnętrznego podpisu.</translation>
     </message>
     <message>
+        <source>Error reading %s! All keys read correctly, but transaction data or address metadata may be missing or incorrect.</source>
+        <translation type="unfinished">Błąd podczas odczytywania %s! Wszystkie klucze zostały odczytane poprawnie, ale może brakować danych transakcji lub wpisów w książce adresowej, albo mogą one być nieprawidłowe.</translation>
+    </message>
+    <message>
         <source>Error: Address book data in wallet cannot be identified to belong to migrated wallets</source>
-        <translation type="unfinished">Błąd: Dane książki adresowej w portfelu nie można zidentyfikować jako należące do migrowanego portfela</translation>
+        <translation type="unfinished">Błąd: Danych książki adresowej w portfelu nie można zidentyfikować jako należących do zmigrowanych portfeli</translation>
     </message>
     <message>
         <source>Error: Duplicate descriptors created during migration. Your wallet may be corrupted.</source>
@@ -4263,11 +4286,13 @@ Przejdź do Plik &gt; Otwórz Portfel aby wgrać portfel.</translation>
     </message>
     <message>
         <source>Error: Transaction %s in wallet cannot be identified to belong to migrated wallets</source>
-        <translation type="unfinished">Błąd: Transakcja %s w portfelu nie może być zidentyfikowana jako należąca do zmigrowanych portfeli</translation>
+        <translation type="unfinished">Błąd: Transakcja %s w portfelu nie może być zidentyfikowana jako należąca do przemigrowanych portfeli</translation>
     </message>
     <message>
-        <source>Failed to calculate bump fees, because unconfirmed UTXOs depend on enormous cluster of unconfirmed transactions.</source>
-        <translation type="unfinished">Nie udało się obliczyć opłat za uderzenia, ponieważ niepotwierdzone UTXO zależą od ogromnego skupiska niepotwierdzonych transakcji.</translation>
+        <source>Failed to remove snapshot chainstate dir (%s). Manually remove it before restarting.
+</source>
+        <translation type="unfinished">Nie udało się usunąć katalogu snapshot chainstate (%s). Usuń go ręcznie przed ponownym uruchomieniem.
+</translation>
     </message>
     <message>
         <source>Failed to rename invalid peers.dat file. Please move or delete it and try again.</source>
@@ -4275,7 +4300,7 @@ Przejdź do Plik &gt; Otwórz Portfel aby wgrać portfel.</translation>
     </message>
     <message>
         <source>Fee estimation failed. Fallbackfee is disabled. Wait a few blocks or enable %s.</source>
-        <translation type="unfinished">Estymacja opłat nieudana. Domyślna opłata jest wyłączona. Poczekaj kilka bloków lub włącz  -%s.</translation>
+        <translation type="unfinished">Estymacja opłat nie powiodła się. Fallbackfee jest wyłączone. Poczekaj kilka bloków lub włącz %s.</translation>
     </message>
     <message>
         <source>Flushing block file to disk failed. This is likely the result of an I/O error.</source>
@@ -4283,7 +4308,11 @@ Przejdź do Plik &gt; Otwórz Portfel aby wgrać portfel.</translation>
     </message>
     <message>
         <source>Flushing undo file to disk failed. This is likely the result of an I/O error.</source>
-        <translation type="unfinished">Zrzut pliku odtwarzającego na dysk się nie powiódł. To najpewniej wynik błędu wejścia/wyjścia.</translation>
+        <translation type="unfinished">Opróżnienie buforów pliku cofania na dysk nie powiodło się. Prawdopodobnie jest to wynik błędu operacji wejścia/wyjścia (I/O).</translation>
+    </message>
+    <message>
+        <source>Incompatible options: -dnsseed=1 was explicitly specified, but -onlynet forbids connections to IPv4/IPv6</source>
+        <translation type="unfinished">Niezgodne opcje: -dnsseed=1 zostało jawnie określone, ale -onlynet zabrania połączeń z IPv4/IPv6.</translation>
     </message>
     <message>
         <source>Invalid amount for %s=&lt;amount&gt;: '%s' (must be at least the minrelay fee of %s to prevent stuck transactions)</source>
@@ -4298,6 +4327,10 @@ Przejdź do Plik &gt; Otwórz Portfel aby wgrać portfel.</translation>
         <translation type="unfinished">Maksymalna waga transakcji jest zbyt niska, nie wystarczy na wyjście reszty</translation>
     </message>
     <message>
+        <source>Option '-checkpoints' is set but checkpoints were removed. This option has no effect.</source>
+        <translation type="unfinished">Opcja "-checkpoints" jest zaznaczona, ale punkty zaczepienia zostały usunięte. Ta opcja nie ma efektu.</translation>
+    </message>
+    <message>
         <source>Outbound connections restricted to CJDNS (-onlynet=cjdns) but -cjdnsreachable is not provided</source>
         <translation type="unfinished">Połączenia wychodzące ograniczone do CJDNS (-onlynet=cjdns), ale nie podano -cjdnsreachable</translation>
     </message>
@@ -4307,19 +4340,65 @@ Przejdź do Plik &gt; Otwórz Portfel aby wgrać portfel.</translation>
     </message>
     <message>
         <source>Outbound connections restricted to Tor (-onlynet=onion) but the proxy for reaching the Tor network is not provided: none of -proxy, -onion or -listenonion is given</source>
-        <translation type="unfinished">Połączenia wychodzące ograniczone do Tor (-onlynet=onion), lecz nie zostało zapewnione proxy do łączenia z siecią Tor: nie podano ani -proxy ani -onion ani -listeonion</translation>
+        <translation type="unfinished">Połączenia wychodzące ograniczone do Tor (-onlynet=onion), lecz nie zostało zapewnione proxy do łączenia z siecią Tor: nie podano ani -proxy ani -onion ani -listenonion</translation>
     </message>
     <message>
         <source>Outbound connections restricted to i2p (-onlynet=i2p) but -i2psam is not provided</source>
         <translation type="unfinished">Połączenia wychodzące ograniczone do i2p (-onlynet=i2p), lecz nie podano -i2psam</translation>
     </message>
     <message>
+        <source>Prune: last wallet synchronisation goes beyond pruned data. You need to -reindex (download the whole blockchain again in case of a pruned node)</source>
+        <translation type="unfinished">Tryb przycinania: ostatnia synchronizacja portfela wykracza poza przycięte dane. Musisz użyć opcji -reindex (pobierz ponownie cały łańcuch bloków w przypadku przyciętego węzła).</translation>
+    </message>
+    <message>
+        <source>Rename of '%s' -&gt; '%s' failed. Cannot clean up the background chainstate leveldb directory.</source>
+        <translation type="unfinished">Zmiana nazwy z '%s' na '%s' nie powiodła się. Nie można wyczyścić katalogu chainstate leveldb. </translation>
+    </message>
+    <message>
+        <source>Specified -blockmaxweight (%d) exceeds consensus maximum block weight (%d)</source>
+        <translation type="unfinished">Podany -blockmaxweight (%d) przekracza maksymalną wagę bloku dopuszczoną przez konsensus (%d)</translation>
+    </message>
+    <message>
+        <source>Specified -blockreservedweight (%d) exceeds consensus maximum block weight (%d)</source>
+        <translation type="unfinished">Podany -blockreservedweight (%d) przekracza maksymalną wagę bloku dopuszczoną przez konsensus (%d)</translation>
+    </message>
+    <message>
+        <source>Specified -blockreservedweight (%d) is lower than minimum safety value of (%d)</source>
+        <translation type="unfinished">Podany -blockreservedweight (%d) jest niższy niż minimalna bezpieczna wartrość (%d)</translation>
+    </message>
+    <message>
+        <source>The combination of the pre-selected inputs and the wallet automatic inputs selection exceeds the transaction maximum weight. Please try sending a smaller amount or manually consolidating your wallet's UTXOs</source>
+        <translation type="unfinished">Połączenie wcześniej wybranych wejść z automatycznym doborem wejść przez portfel przekracza maksymalną wagę transakcji. Spróbuj wysłać mniejszą kwotę lub ręcznie scal UTXO swojego portfela.</translation>
+    </message>
+    <message>
+        <source>The inputs size exceeds the maximum weight. Please try sending a smaller amount or manually consolidating your wallet's UTXOs</source>
+        <translation type="unfinished">Rozmiar wejść przekracza maksymalną wagę. Spróbuj wysłać mniejszą kwotę lub ręcznie scal UTXO swojego portfela</translation>
+    </message>
+    <message>
         <source>The preselected coins total amount does not cover the transaction target. Please allow other inputs to be automatically selected or include more coins manually</source>
         <translation type="unfinished">Suma wstępnie wybranych monet nie pokrywa kwoty transakcji. Zezwól na automatyczne wybranie wejść lub ręcznie dołącz więcej monet</translation>
     </message>
     <message>
-        <source>Transaction requires one destination of non-0 value, a non-0 feerate, or a pre-selected input</source>
-        <translation type="unfinished">Transakcja wymagana jednego celu o niezerowej wartości, niezerowej opłacie lub wstępnie wybranego wejścia</translation>
+        <source>UTXO snapshot failed to validate. Restart to resume normal initial block download, or try loading a different snapshot.</source>
+        <translation type="unfinished">Nie udało się zweryfikować migawki UTXO. Uruchom ponownie, aby wznowić normalne początkowe pobieranie bloków, lub spróbuj załadować inną migawkę.</translation>
+    </message>
+    <message>
+        <source>Unconfirmed UTXOs are available, but spending them creates a chain of transactions that will be rejected by the mempool</source>
+        <translation type="unfinished">Niepotwierdzone UTXO są dostępne, ale ich wydanie tworzy łańcuch transakcji, który zostanie odrzucony przez mempool.</translation>
+    </message>
+    <message>
+        <source>Unexpected legacy entry in descriptor wallet found. Loading wallet %s
+
+The wallet might have been tampered with or created with malicious intent.
+</source>
+        <translation type="unfinished">W portfelu typu descriptor znaleziono nieoczekiwany wpis typu legacy. Ładowanie portfela %s
+
+Portfel mógł zostać naruszony lub utworzony w złośliwym celu.
+</translation>
+    </message>
+    <message>
+        <source>Your computer's date and time appear to be more than %d minutes out of sync with the network, this may lead to consensus failure. After you've confirmed your computer's clock, this message should no longer appear when you restart your node. Without a restart, it should stop showing automatically after you've connected to a sufficient number of new outbound peers, which may take some time. You can inspect the `timeoffset` field of the `getpeerinfo` and `getnetworkinfo` RPC methods to get more info.</source>
+        <translation type="unfinished">Data i godzina Twojego komputera wydają się być przesunięte o więcej %d minut względem sieci, co może prowadzić do błędów konsensusu. Po upewnieniu się, że zegar Twojego komputera jest poprawny, ta wiadomość nie powinna się już pojawiać po ponownym uruchomieniu Twojego węzła. Bez ponownego uruchamiania komunikat powinien zniknąć automatycznie po nawiązaniu przez węzeł wystarczającej liczby nowych połączeń wychodzących, co może zająć trochę czasu. Możesz sprawdzić pole `timeoffset` w metodach RPC `getpeerinfo` oraz `getnetworkinfo`, aby uzyskać więcej informacji.</translation>
     </message>
     <message>
         <source>
@@ -4334,12 +4413,32 @@ Unable to restore backup of wallet.</source>
 Nie można przywrócić kopii zapasowej portfela</translation>
     </message>
     <message>
+        <source>default wallet</source>
+        <translation type="unfinished">domyślny portfel</translation>
+    </message>
+    <message>
+        <source>whitebind may only be used for incoming connections ("out" was passed)</source>
+        <translation type="unfinished">whitebind może być używane tylko do połączeń przychodzących (przekazano "out")</translation>
+    </message>
+    <message>
         <source>A fatal internal error occurred, see debug.log for details: </source>
         <translation type="unfinished">Wystąpił krytyczny błąd wewnętrzny, sprawdź szczegóły w debug.log:</translation>
     </message>
     <message>
+        <source>Assumeutxo data not found for the given blockhash '%s'.</source>
+        <translation type="unfinished">Dane assumeutxo nie zostały znalezione dla podanego blockhasha '%s'.</translation>
+    </message>
+    <message>
         <source>Block verification was interrupted</source>
-        <translation type="unfinished">Weryfikacja bloku została przerwana</translation>
+        <translation type="unfinished">Weryfikacja bloków została przerwana</translation>
+    </message>
+    <message>
+        <source>Can't spend unconfirmed version %d pre-selected input with a version 3 tx</source>
+        <translation type="unfinished">Nie można wydać niepotwierdzonego, wstępnie wybranego wejścia w wersji %d za pomocą transakcji w wersji 3</translation>
+    </message>
+    <message>
+        <source>Can't spend unconfirmed version 3 pre-selected input with a version %d tx</source>
+        <translation type="unfinished">Nie można wydać niepotwierdzonego, wstępnie wybranego wejścia w wersji 3 za pomocą transakcji w wersji %d</translation>
     </message>
     <message>
         <source>Cannot write to directory '%s'; check permissions.</source>
@@ -4355,7 +4454,7 @@ Nie można przywrócić kopii zapasowej portfela</translation>
     </message>
     <message>
         <source>Corrupt block found indicating potential hardware failure.</source>
-        <translation type="unfinished">Znaleziono uszkodzony blok wskazujący na możliwy błąd sprzętowy.</translation>
+        <translation type="unfinished">Wykryto uszkodzony blok, co może wskazywać na awarię sprzętu.</translation>
     </message>
     <message>
         <source>Corrupted block database detected</source>
@@ -4366,8 +4465,20 @@ Nie można przywrócić kopii zapasowej portfela</translation>
         <translation type="unfinished">Nie można odnaleźć pliku asmap %s</translation>
     </message>
     <message>
+        <source>Could not generate scriptPubKeys (cache is empty)</source>
+        <translation type="unfinished">Nie można wygenerować scriptPubKeys (pamięć podręczna jest pusta)</translation>
+    </message>
+    <message>
         <source>Could not parse asmap file %s</source>
-        <translation type="unfinished">Nie można przetworzyć pliku asmap %s</translation>
+        <translation type="unfinished">Nie można zainterpretować pliku asmap %s</translation>
+    </message>
+    <message>
+        <source>Could not read embedded asmap data</source>
+        <translation type="unfinished">Nie można odczytać osadzonych danych asmap</translation>
+    </message>
+    <message>
+        <source>Could not top up scriptPubKeys</source>
+        <translation type="unfinished">Nie można uzupełnić scriptPubKeys</translation>
     </message>
     <message>
         <source>Disk space is too low!</source>
@@ -4386,24 +4497,16 @@ Nie można przywrócić kopii zapasowej portfela</translation>
         <translation type="unfinished">Błąd kontroli poprawności kryptografii krzywych eliptycznych. %s wyłącza się.</translation>
     </message>
     <message>
-        <source>Error creating %s</source>
-        <translation type="unfinished">Błąd podczas tworzenia %s</translation>
+        <source>Embedded asmap data not available</source>
+        <translation type="unfinished">Osadzone dane asmap są niedostępne</translation>
     </message>
     <message>
         <source>Error initializing block database</source>
         <translation type="unfinished">Błąd inicjowania bazy danych bloków</translation>
     </message>
     <message>
-        <source>Error initializing wallet database environment %s!</source>
-        <translation type="unfinished">Błąd inicjowania środowiska bazy portfela %s!</translation>
-    </message>
-    <message>
         <source>Error loading %s</source>
         <translation type="unfinished">Błąd ładowania %s</translation>
-    </message>
-    <message>
-        <source>Error loading %s: Private keys can only be disabled during creation</source>
-        <translation type="unfinished">Błąd ładowania %s: Klucze prywatne mogą być wyłączone tylko podczas tworzenia</translation>
     </message>
     <message>
         <source>Error loading %s: Wallet corrupted</source>
@@ -4455,7 +4558,7 @@ Nie można przywrócić kopii zapasowej portfela</translation>
     </message>
     <message>
         <source>Error: Dumpfile checksum does not match. Computed %s, expected %s</source>
-        <translation type="unfinished">Błąd: Plik zrzutu suma kontrolna nie pasuje. Obliczone %s,  spodziewane %s</translation>
+        <translation type="unfinished">Błąd: Suma kontrolna pliku zrzutu nie zgadza się. Obliczona %s, oczekiwana %s</translation>
     </message>
     <message>
         <source>Error: Failed to create new watchonly wallet</source>
@@ -4463,23 +4566,31 @@ Nie można przywrócić kopii zapasowej portfela</translation>
     </message>
     <message>
         <source>Error: Got key that was not hex: %s</source>
-        <translation type="unfinished">Błąd: Otrzymana wartość nie jest szestnastkowa%s</translation>
+        <translation type="unfinished">Błąd: Otrzymano klucz, który nie jest szesnastkowy: %s</translation>
     </message>
     <message>
         <source>Error: Got value that was not hex: %s</source>
-        <translation type="unfinished">Błąd: Otrzymana wartość nie jest szestnastkowa%s</translation>
+        <translation type="unfinished">Błąd: Otrzymano wartość, która nie jest szesnastkowa: %s</translation>
     </message>
     <message>
         <source>Error: Keypool ran out, please call keypoolrefill first</source>
-        <translation type="unfinished">Błąd: Pula kluczy jest pusta, odwołaj się do puli kluczy.</translation>
+        <translation type="unfinished">Błąd: Pula kluczy jest pusta, najpierw wywołaj funkcję keypoolrefill.</translation>
     </message>
     <message>
         <source>Error: Missing checksum</source>
-        <translation type="unfinished">Bład: Brak suma kontroly</translation>
+        <translation type="unfinished">Błąd: Brakuje sumy kontrolnej</translation>
     </message>
     <message>
         <source>Error: No %s addresses available.</source>
-        <translation type="unfinished">Błąd: %s adres nie dostępny</translation>
+        <translation type="unfinished">Błąd: Brak dostępnych adresów %s</translation>
+    </message>
+    <message>
+        <source>Error: Not all address book records were migrated</source>
+        <translation type="unfinished">Błąd: Nie wszystkie wpisy z książki adresowej zostały przeniesione</translation>
+    </message>
+    <message>
+        <source>Error: Not all transaction records were migrated</source>
+        <translation type="unfinished">Błąd: Nie wszystkie wpisy transakcji zostały przeniesione</translation>
     </message>
     <message>
         <source>Error: This wallet already uses SQLite</source>
@@ -4499,7 +4610,7 @@ Nie można przywrócić kopii zapasowej portfela</translation>
     </message>
     <message>
         <source>Error: Unable to parse version %u as a uint32_t</source>
-        <translation type="unfinished">Błąd: Nie można zapisać wersji %u jako uint32_t</translation>
+        <translation type="unfinished">Błąd: Nie można zinterpretować wersji %u jako uint32_t</translation>
     </message>
     <message>
         <source>Error: Unable to read all records in the database</source>
@@ -4522,12 +4633,28 @@ Nie można przywrócić kopii zapasowej portfela</translation>
         <translation type="unfinished">Błąd: Wpisanie rekordu do nowego portfela jest niemożliwe</translation>
     </message>
     <message>
-        <source>Error: database transaction cannot be executed for wallet %s</source>
-        <translation type="unfinished">Błąd: transakcja bazy danych nie może zostać wykonana dla portfela%s</translation>
+        <source>Error: Unable to write solvable wallet best block locator record</source>
+        <translation type="unfinished">Błąd: Nie można zapisać rekordu lokalizatora najlepszego bloku w rozwiązywalnym portfelu.</translation>
     </message>
     <message>
-        <source>Failed to connect best block (%s).</source>
-        <translation type="unfinished">Nie udało się połączyć najlepszego bloku (%s).</translation>
+        <source>Error: Unable to write watchonly wallet best block locator record</source>
+        <translation type="unfinished">Błąd: nie można zapisać rekordu lokalizatora najlepszego bloku portfela tylko do obserwacji</translation>
+    </message>
+    <message>
+        <source>Error: database transaction cannot be executed for wallet %s</source>
+        <translation type="unfinished">Błąd: transakcja bazy danych nie może zostać wykonana dla portfela %s</translation>
+    </message>
+    <message>
+        <source>Failed to acquire rescan reserver during wallet initialization</source>
+        <translation type="unfinished">Nie udało się uzyskać rezerwacji ponownego skanowania podczas inicjalizacji portfela.</translation>
+    </message>
+    <message>
+        <source>Failed to close block undo file.</source>
+        <translation type="unfinished">Nie udało się zamknąć pliku cofania bloków.</translation>
+    </message>
+    <message>
+        <source>Failed to close file when writing block.</source>
+        <translation type="unfinished">Nie udało się zamknąć pliku podczas zapisu bloku.</translation>
     </message>
     <message>
         <source>Failed to disconnect block.</source>
@@ -4543,11 +4670,7 @@ Nie można przywrócić kopii zapasowej portfela</translation>
     </message>
     <message>
         <source>Failed to rescan the wallet during initialization</source>
-        <translation type="unfinished">Nie udało się ponownie przeskanować portfela podczas inicjalizacji.</translation>
-    </message>
-    <message>
-        <source>Failed to start indexes, shutting down..</source>
-        <translation type="unfinished">Nie udało się uruchomić indeksów, zamykanie...</translation>
+        <translation type="unfinished">Nie udało się ponownie przeskanować portfela podczas inicjalizacji</translation>
     </message>
     <message>
         <source>Failed to verify database</source>
@@ -4558,16 +4681,8 @@ Nie można przywrócić kopii zapasowej portfela</translation>
         <translation type="unfinished">Nie udało się zapisać bloku.</translation>
     </message>
     <message>
-        <source>Failed to write to block index database.</source>
-        <translation type="unfinished">Nie udało się zapisać do bazy indeksu bloków.</translation>
-    </message>
-    <message>
-        <source>Failed to write to coin database.</source>
-        <translation type="unfinished">Nie udało się zapisać do bazy monet.</translation>
-    </message>
-    <message>
         <source>Failed to write undo data.</source>
-        <translation type="unfinished">Nie udało się zapisać danych odtwarzających.</translation>
+        <translation type="unfinished">Nie udało się zapisać danych cofających.</translation>
     </message>
     <message>
         <source>Failure removing transaction: %s</source>
@@ -4579,15 +4694,11 @@ Nie można przywrócić kopii zapasowej portfela</translation>
     </message>
     <message>
         <source>Ignoring duplicate -wallet %s.</source>
-        <translation type="unfinished">Ignorowanie duplikatu -wallet %s</translation>
-    </message>
-    <message>
-        <source>Importing…</source>
-        <translation type="unfinished">Importowanie...</translation>
+        <translation type="unfinished">Ignorowanie zduplikowanej opcji -wallet %s</translation>
     </message>
     <message>
         <source>Incorrect or no genesis block found. Wrong datadir for network?</source>
-        <translation type="unfinished">Nieprawidłowy lub brak bloku genezy. Błędny folder_danych dla sieci?</translation>
+        <translation type="unfinished">Niepoprawny lub brakujący blok genesis. Niewłaściwy katalog danych dla sieci?</translation>
     </message>
     <message>
         <source>Initialization sanity check failed. %s is shutting down.</source>
@@ -4607,11 +4718,11 @@ Nie można przywrócić kopii zapasowej portfela</translation>
     </message>
     <message>
         <source>Invalid -i2psam address or hostname: '%s'</source>
-        <translation type="unfinished">Niewłaściwy adres -i2psam lub nazwa hosta: '%s'</translation>
+        <translation type="unfinished">Nieprawidłowy adres -i2psam lub nazwa hosta: '%s'</translation>
     </message>
     <message>
         <source>Invalid -onion address or hostname: '%s'</source>
-        <translation type="unfinished">Niewłaściwy adres -onion lub nazwa hosta: '%s'</translation>
+        <translation type="unfinished">Nieprawidłowy adres -onion lub nazwa hosta: '%s'</translation>
     </message>
     <message>
         <source>Invalid -proxy address or hostname: '%s'</source>
@@ -4622,12 +4733,24 @@ Nie można przywrócić kopii zapasowej portfela</translation>
         <translation type="unfinished">Nieprawidłowe uprawnienia P2P: '%s'</translation>
     </message>
     <message>
-        <source>Invalid amount for %s=&lt;amount&gt;: '%s' (must be at least %s)</source>
-        <translation type="unfinished">Nieprawidłowa kwota dla %s=&lt;amount&gt;: '%s' (musi być co najmniej %s)</translation>
-    </message>
-    <message>
         <source>Invalid amount for %s=&lt;amount&gt;: '%s'</source>
         <translation type="unfinished">Nieprawidłowa kwota dla %s=&lt;amount&gt;: '%s'</translation>
+    </message>
+    <message>
+        <source>A %zu MiB dbcache may be too large for a system memory of only %zu MiB.</source>
+        <translation type="unfinished">dbcache o rozmiarze %zu MiB może być zbyt duży dla systemu z pamięcią wynoszącą tylko %zu MiB.</translation>
+    </message>
+    <message>
+        <source>Creating wallet…</source>
+        <translation type="unfinished">Tworzenie portfela…</translation>
+    </message>
+    <message>
+        <source>Duplicate binding configuration for address %s. Please check your -bind, -bind=...=onion and -whitebind settings.</source>
+        <translation type="unfinished">Zduplikowana konfiguracja powiązania dla adresu %s. Sprawdź ustawienia -bind, -bind=...=onion oraz -whitebind.</translation>
+    </message>
+    <message>
+        <source>Error creating %s: Could not write version metadata.</source>
+        <translation type="unfinished">Błąd tworzenia %s: Nie można zapisać metadanych wersji.</translation>
     </message>
     <message>
         <source>Invalid amount for -%s=&lt;amount&gt;: '%s'</source>
@@ -4639,11 +4762,7 @@ Nie można przywrócić kopii zapasowej portfela</translation>
     </message>
     <message>
         <source>Invalid port specified in %s: '%s'</source>
-        <translation type="unfinished">Nieprawidłowa maska sieci określona w %s: '%s'</translation>
-    </message>
-    <message>
-        <source>Invalid pre-selected input %s</source>
-        <translation type="unfinished">Niepoprawne wstępnie wybrane dane wejściowe %s</translation>
+        <translation type="unfinished">Nieprawidłowy port podany w %s: '%s'</translation>
     </message>
     <message>
         <source>Listening for incoming connections failed (listen returned error %s)</source>
@@ -4651,19 +4770,19 @@ Nie można przywrócić kopii zapasowej portfela</translation>
     </message>
     <message>
         <source>Loading P2P addresses…</source>
-        <translation type="unfinished">Ładowanie adresów P2P...</translation>
+        <translation type="unfinished">Ładowanie adresów P2P…</translation>
     </message>
     <message>
         <source>Loading banlist…</source>
-        <translation type="unfinished">Ładowanie listy zablokowanych...</translation>
+        <translation type="unfinished">Ładowanie listy zablokowanych…</translation>
     </message>
     <message>
         <source>Loading block index…</source>
-        <translation type="unfinished">Ładowanie indeksu bloku...</translation>
+        <translation type="unfinished">Ładowanie indeksu bloku…</translation>
     </message>
     <message>
         <source>Loading wallet…</source>
-        <translation type="unfinished">Ładowanie portfela...</translation>
+        <translation type="unfinished">Ładowanie portfela…</translation>
     </message>
     <message>
         <source>Maximum transaction weight must be between %d and %d</source>
@@ -4695,7 +4814,27 @@ Nie można przywrócić kopii zapasowej portfela</translation>
     </message>
     <message>
         <source>Only direction was set, no permissions: '%s'</source>
-        <translation type="unfinished">Tylko kierunek został ustalony, brak uprawnień: `%s`</translation>
+        <translation type="unfinished">Tylko kierunek został ustalony, brak uprawnień: '%s'</translation>
+    </message>
+    <message>
+        <source>Option '-limitancestorsize' is given but ancestor size limits have been replaced with cluster size limits (see -limitclustersize). This option has no effect.</source>
+        <translation type="unfinished">Podano opcję „-limitancestorsize”, ale limity rozmiaru przodków zostały zastąpione limitami rozmiaru klastra (zobacz -limitclustersize). Ta opcja nie ma żadnego wpływu.</translation>
+    </message>
+    <message>
+        <source>Option '-limitdescendantsize' is given but descendant size limits have been replaced with cluster size limits (see -limitclustersize). This option has no effect.</source>
+        <translation type="unfinished">Podano opcję „-limitdescendantsize”, ale limity rozmiaru potomków zostały zastąpione limitami rozmiaru klastra (zobacz -limitclustersize). Ta opcja nie ma żadnego wpływu.</translation>
+    </message>
+    <message>
+        <source>Private broadcast of own transactions requested (-privatebroadcast) and -proxyrandomize is disabled. Tor circuits for private broadcast connections may be correlated to other connections over Tor. For maximum privacy set -proxyrandomize=1.</source>
+        <translation type="unfinished">Zażądano prywatnej transmisji własnych transakcji (-privatebroadcast), a opcja -proxyrandomize jest wyłączona. Obwody Tor używane do połączeń prywatnej transmisji mogą zostać powiązane z innymi połączeniami przez Tor. Aby uzyskać maksymalną prywatność, ustaw -proxyrandomize=1.</translation>
+    </message>
+    <message>
+        <source>Private broadcast of own transactions requested (-privatebroadcast), but -connect is also configured. They are incompatible because the private broadcast needs to open new connections to randomly chosen Tor or I2P peers. Consider using -maxconnections=0 -addnode=... instead</source>
+        <translation type="unfinished">Zażądano prywatnej transmisji własnych transakcji (-privatebroadcast), ale skonfigurowano również opcję -connect. Są one niekompatybilne, ponieważ prywatna transmisja wymaga otwierania nowych połączeń z losowo wybranymi węzłami Tor lub I2P. Zamiast tego użyj -maxconnections=0 -addnode=...</translation>
+    </message>
+    <message>
+        <source>Private broadcast of own transactions requested (-privatebroadcast), but none of Tor or I2P networks is reachable</source>
+        <translation type="unfinished">Zażądano prywatnej transmisji własnych transakcji (-privatebroadcast), ale żadna z sieci Tor ani I2P nie jest osiągalna.</translation>
     </message>
     <message>
         <source>Prune cannot be configured with a negative value.</source>
@@ -4704,6 +4843,10 @@ Nie można przywrócić kopii zapasowej portfela</translation>
     <message>
         <source>Prune mode is incompatible with -txindex.</source>
         <translation type="unfinished">Tryb ograniczony jest niekompatybilny z -txindex.</translation>
+    </message>
+    <message>
+        <source>Prune mode is incompatible with -txospenderindex.</source>
+        <translation type="unfinished">Tryb przycinania jest niezgodny z -txospenderindex.</translation>
     </message>
     <message>
         <source>Pruning blockstore…</source>
@@ -4794,6 +4937,10 @@ Nie można przywrócić kopii zapasowej portfela</translation>
         <translation type="unfinished">Błąd systemowy podczas zapisywania bloku na dysk: %s</translation>
     </message>
     <message>
+        <source>The %s path uses exFAT, which is known to have intermittent corruption problems on macOS. Move this directory to a different filesystem to avoid data loss.</source>
+        <translation type="unfinished">Ścieżka %s używa systemu plików exFAT, który na macOS jest znany ze sporadycznych problemów z uszkodzeniem danych. Przenieś ten katalog na inny system plików, aby uniknąć utraty danych.</translation>
+    </message>
+    <message>
         <source>The source code is available from %s.</source>
         <translation type="unfinished">Kod źródłowy dostępny jest z %s.</translation>
     </message>
@@ -4802,16 +4949,24 @@ Nie można przywrócić kopii zapasowej portfela</translation>
         <translation type="unfinished">Podany plik konfiguracyjny %s nie istnieje</translation>
     </message>
     <message>
+        <source>The total exceeds your balance when the %s transaction fee is included.</source>
+        <translation type="unfinished">Suma przekracza twoje saldo po uwzględnieniu opłaty transakcyjnej %s.</translation>
+    </message>
+    <message>
         <source>The transaction amount is too small to pay the fee</source>
         <translation type="unfinished">Zbyt niska kwota transakcji by zapłacić opłatę</translation>
     </message>
     <message>
+        <source>The transactions removal process can only be executed within a db txn</source>
+        <translation type="unfinished">Proces usuwania transakcji może być wykonany tylko w ramach transakcji bazy danych</translation>
+    </message>
+    <message>
         <source>The wallet will avoid paying less than the minimum relay fee.</source>
-        <translation type="unfinished">Portfel będzie unikał płacenia mniejszej niż przekazana opłaty.</translation>
+        <translation type="unfinished">Portfel będzie unikał płacenia mniej niż minimalna opłata za przekazywanie transakcji.</translation>
     </message>
     <message>
         <source>There is no ScriptPubKeyManager for this address</source>
-        <translation type="unfinished">Nie istnieje ScriptPubKeyManager dla tego adresu</translation>
+        <translation type="unfinished">Brak ScriptPubKeyManagera dla tego adresu</translation>
     </message>
     <message>
         <source>This is experimental software.</source>
@@ -4820,10 +4975,6 @@ Nie można przywrócić kopii zapasowej portfela</translation>
     <message>
         <source>This is the minimum transaction fee you pay on every transaction.</source>
         <translation type="unfinished">Minimalna opłata transakcyjna którą płacisz przy każdej transakcji.</translation>
-    </message>
-    <message>
-        <source>This is the transaction fee you will pay if you send a transaction.</source>
-        <translation type="unfinished">To jest opłata transakcyjna którą zapłacisz jeśli wyślesz transakcję.</translation>
     </message>
     <message>
         <source>Transaction %s does not belong to this wallet</source>
@@ -4835,7 +4986,7 @@ Nie można przywrócić kopii zapasowej portfela</translation>
     </message>
     <message>
         <source>Transaction amounts must not be negative</source>
-        <translation type="unfinished">Kwota transakcji musi być dodatnia</translation>
+        <translation type="unfinished">Kwota transakcji nie może być ujemna</translation>
     </message>
     <message>
         <source>Transaction change output index out of range</source>
@@ -4870,14 +5021,6 @@ Nie można przywrócić kopii zapasowej portfela</translation>
         <translation type="unfinished">Nie mogę znaleźć UTXO dla zewnętrznego wejścia</translation>
     </message>
     <message>
-        <source>Unable to generate initial keys</source>
-        <translation type="unfinished">Nie można wygenerować kluczy początkowych</translation>
-    </message>
-    <message>
-        <source>Unable to generate keys</source>
-        <translation type="unfinished">Nie można wygenerować kluczy</translation>
-    </message>
-    <message>
         <source>Unable to open %s for writing</source>
         <translation type="unfinished">Nie można otworzyć %s w celu zapisu</translation>
     </message>
@@ -4888,10 +5031,6 @@ Nie można przywrócić kopii zapasowej portfela</translation>
     <message>
         <source>Unable to start HTTP server. See debug log for details.</source>
         <translation type="unfinished">Uruchomienie serwera HTTP nie powiodło się. Zobacz dziennik debugowania, aby uzyskać więcej szczegółów.</translation>
-    </message>
-    <message>
-        <source>Unable to unload the wallet before migrating</source>
-        <translation type="unfinished">Nie mogę zamknąć portfela przed migracją</translation>
     </message>
     <message>
         <source>Unknown -blockfilterindex value %s.</source>
@@ -4919,19 +5058,51 @@ Nie można przywrócić kopii zapasowej portfela</translation>
     </message>
     <message>
         <source>Unsupported global logging level %s=%s. Valid values: %s.</source>
-        <translation type="unfinished">Niewspierany globalny poziom logowania%s=%s. Poprawne wartości: %s.</translation>
+        <translation type="unfinished">Niewspierany globalny poziom logowania %s=%s. Poprawne wartości: %s.</translation>
     </message>
     <message>
         <source>Wallet file creation failed: %s</source>
         <translation type="unfinished">Utworzenie pliku portfela nie powiodło się: %s</translation>
     </message>
     <message>
+        <source>Warning: Found invalid chain more than 6 blocks longer than our best chain. This could be due to database corruption or consensus incompatibility with peers.</source>
+        <translation type="unfinished">Ostrzeżenie: Wykryto nieprawidłowy łańcuch dłuższy o ponad 6 bloków niż nasz najlepszy łańcuch. Może to być spowodowane uszkodzeniem bazy danych lub niezgodnością zasad konsensusu z innymi węzłami.</translation>
+    </message>
+    <message>
         <source>acceptstalefeeestimates is not supported on %s chain.</source>
-        <translation type="unfinished">akceptowalne nieaktualne szacunki opłat nie są wspierane na łańcuchu %s</translation>
+        <translation type="unfinished">opcja acceptstalefeeestimates nie jest wspierana na łańcuchu %s.</translation>
     </message>
     <message>
         <source>Unsupported logging category %s=%s.</source>
         <translation type="unfinished">Nieobsługiwana kategoria rejestrowania %s=%s.</translation>
+    </message>
+    <message>
+        <source>Error loading %s: Wallet is a legacy wallet. Please migrate to a descriptor wallet using the migration tool (migratewallet RPC).</source>
+        <translation type="unfinished">Błąd podczas ładowania %s: portfel jest portfelem typu legacy. Proszę przeprowadzić migrację do portfela opartego na deskryptorach za pomocą narzędzia migracyjnego (RPC migratewallet).</translation>
+    </message>
+    <message>
+        <source>Error: Dumpfile specifies an unsupported database format (%s). Only sqlite database dumps are supported</source>
+        <translation type="unfinished">Błąd: Plik zrzutu określa nieobsługiwany format bazy danych (%s). Obsługiwane są tylko zrzuty baz danych w formacie sqlite.</translation>
+    </message>
+    <message>
+        <source>Failed to calculate bump fees, because unconfirmed UTXOs depend on an enormous cluster of unconfirmed transactions.</source>
+        <translation type="unfinished">Nie udało się obliczyć zwiększonej opłaty, ponieważ niepotwierdzone UTXO zależą od ogromnego skupiska niepotwierdzonych transakcji.</translation>
+    </message>
+    <message>
+        <source>Transaction requires one destination of non-zero value, a non-zero feerate, or a pre-selected input</source>
+        <translation type="unfinished">Transakcja wymaga jednego adresu docelowego o niezerowej wartości, niezerowej stawki opłaty lub wstępnie wybranego wejścia</translation>
+    </message>
+    <message>
+        <source>Unrecognized descriptor found. Loading wallet %s
+
+The wallet might have been created on a newer version.
+Please try running the latest software version.
+</source>
+        <translation type="unfinished">Wykryto nierozpoznany deskryptor. Ładowanie portfela %s
+
+Portfel mógł zostać utworzony w nowszej wersji oprogramowania.
+Spróbuj uruchomić najnowszą wersję programu.
+</translation>
     </message>
     <message>
         <source>Do you want to rebuild the databases now?</source>
@@ -4954,8 +5125,20 @@ Nie można przywrócić kopii zapasowej portfela</translation>
         <translation type="unfinished">Błąd: nie można usunąć zapisów starszych portfeli</translation>
     </message>
     <message>
+        <source>Failed to start indexes, shutting down…</source>
+        <translation type="unfinished">Nie udało się uruchomić indeksów, trwa zamykanie…</translation>
+    </message>
+    <message>
+        <source>Invalid -proxy address or hostname, ends with '=': '%s'</source>
+        <translation type="unfinished">Nieprawidłowy adres lub nazwa hosta dla -proxy, kończy się znakiem '=': '%s'</translation>
+    </message>
+    <message>
         <source>Not enough file descriptors available. %d available, %d required.</source>
-        <translation type="unfinished">Zbyt mało dostępnych deskryptorów plików. %d dostępnych, %d wymaganych. </translation>
+        <translation type="unfinished">Zbyt mało dostępnych deskryptorów plików. %d dostępnych, %d wymaganych.</translation>
+    </message>
+    <message>
+        <source>Unrecognized network in -proxy='%s': '%s'</source>
+        <translation type="unfinished">Nierozpoznana sieć w -proxy='%s': '%s'</translation>
     </message>
     <message>
         <source>User Agent comment (%s) contains unsafe characters.</source>
@@ -4963,11 +5146,11 @@ Nie można przywrócić kopii zapasowej portfela</translation>
     </message>
     <message>
         <source>Verifying blocks…</source>
-        <translation type="unfinished">Weryfikowanie bloków...</translation>
+        <translation type="unfinished">Sprawdzanie bloków…</translation>
     </message>
     <message>
         <source>Verifying wallet(s)…</source>
-        <translation type="unfinished">Weryfikowanie porfela(li)...</translation>
+        <translation type="unfinished">Sprawdzanie portfela / portfeli…</translation>
     </message>
     <message>
         <source>Wallet needed to be rewritten: restart %s to complete</source>

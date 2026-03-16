@@ -1,4 +1,4 @@
-// Copyright (c) 2025 The Bitcoin Core developers
+// Copyright (c) The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -44,7 +44,7 @@ void CustomBuildField(TypeList<std::shared_ptr<Impl>>,
 {
     if (value) {
         using Interface = typename decltype(output.get())::Calls;
-        output.set(CustomMakeProxyServer<Interface, Impl>(invoke_context, std::move(value)));
+        output.set(CustomMakeProxyServer<Interface, Impl>(invoke_context, std::forward<Value>(value)));
     }
 }
 

@@ -1,3 +1,18 @@
-# Nothing for now.
 [
+  # Compiler intrinsics.
+  # See: https://github.com/include-what-you-use/include-what-you-use/issues/1764.
+  { "include": [ "<emmintrin.h>", "private", "<immintrin.h>", "public" ] },
+  { "include": [ "<smmintrin.h>", "private", "<immintrin.h>", "public" ] },
+  { "include": [ "<tmmintrin.h>", "private", "<immintrin.h>", "public" ] },
+
+  # libc symbols.
+  # See: https://github.com/include-what-you-use/include-what-you-use/issues/1809.
+  { "symbol": ["AT_HWCAP", "private", "<sys/auxv.h>", "public"] },
+  { "symbol": ["AT_HWCAP2", "private", "<sys/auxv.h>", "public"] },
+
+  # Workarounds for IWYU issues.
+  # See: https://github.com/include-what-you-use/include-what-you-use/issues/1616.
+  { "symbol": ["std::pair", "private", "<utility>", "public"] },
+  # See: https://github.com/include-what-you-use/include-what-you-use/issues/1863.
+  { "symbol": ["std::vector", "private", "<vector>", "public"] },
 ]

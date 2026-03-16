@@ -62,8 +62,8 @@ int secp256k1_ecdh(const secp256k1_context* ctx, unsigned char *output, const se
 
     ret = hashfp(output, x, y, data);
 
-    secp256k1_memclear(x, sizeof(x));
-    secp256k1_memclear(y, sizeof(y));
+    secp256k1_memclear_explicit(x, sizeof(x));
+    secp256k1_memclear_explicit(y, sizeof(y));
     secp256k1_scalar_clear(&s);
     secp256k1_ge_clear(&pt);
     secp256k1_gej_clear(&res);

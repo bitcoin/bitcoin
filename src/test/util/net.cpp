@@ -31,7 +31,7 @@ void ConnmanTestMsg::Handshake(CNode& node,
     auto& connman{*this};
 
     peerman.InitializeNode(node, local_services);
-    peerman.SendMessages(&node);
+    peerman.SendMessages(node);
     FlushSendBuffer(node); // Drop the version message added by SendMessages.
 
     CSerializedNetMsg msg_version{
@@ -52,7 +52,7 @@ void ConnmanTestMsg::Handshake(CNode& node,
     (void)connman.ReceiveMsgFrom(node, std::move(msg_version));
     node.fPauseSend = false;
     connman.ProcessMessagesOnce(node);
-    peerman.SendMessages(&node);
+    peerman.SendMessages(node);
     FlushSendBuffer(node); // Drop the verack message added by SendMessages.
     if (node.fDisconnect) return;
     assert(node.nVersion == version);
@@ -66,9 +66,26 @@ void ConnmanTestMsg::Handshake(CNode& node,
         (void)connman.ReceiveMsgFrom(node, std::move(msg_verack));
         node.fPauseSend = false;
         connman.ProcessMessagesOnce(node);
-        peerman.SendMessages(&node);
+        peerman.SendMessages(node);
         assert(node.fSuccessfullyConnected == true);
     }
+}
+
+void ConnmanTestMsg::ResetAddrCache() { m_addr_response_caches = {}; }
+
+void ConnmanTestMsg::ResetMaxOutboundCycle()
+{
+    LOCK(m_total_bytes_sent_mutex);
+    nMaxOutboundCycleStartTime = 0s;
+    nMaxOutboundTotalBytesSentInCycle = 0;
+}
+
+void ConnmanTestMsg::Reset()
+{
+    ResetAddrCache();
+    ResetMaxOutboundCycle();
+    m_private_broadcast.m_outbound_tor_ok_at_least_once.store(false);
+    m_private_broadcast.m_num_to_open.store(0);
 }
 
 void ConnmanTestMsg::NodeReceiveMsgBytes(CNode& node, std::span<const uint8_t> msg_bytes, bool& complete) const
@@ -107,7 +124,7 @@ bool ConnmanTestMsg::ReceiveMsgFrom(CNode& node, CSerializedNetMsg&& ser_msg) co
 
 CNode* ConnmanTestMsg::ConnectNodePublic(PeerManager& peerman, const char* pszDest, ConnectionType conn_type)
 {
-    CNode* node = ConnectNode(CAddress{}, pszDest, /*fCountFailure=*/false, conn_type, /*use_v2transport=*/true);
+    CNode* node = ConnectNode(CAddress{}, pszDest, /*fCountFailure=*/false, conn_type, /*use_v2transport=*/true, /*proxy_override=*/std::nullopt);
     if (!node) return nullptr;
     node->SetCommonVersion(PROTOCOL_VERSION);
     peerman.InitializeNode(*node, ServiceFlags(NODE_NETWORK | NODE_WITNESS));

@@ -1,4 +1,4 @@
-// Copyright (c) 2019-2022 The Bitcoin Core developers
+// Copyright (c) 2019-present The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -32,6 +32,17 @@ FUZZ_TARGET(psbt)
         return;
     }
     const PartiallySignedTransaction psbt = psbt_mut;
+
+    // A PSBT must roundtrip.
+    PartiallySignedTransaction psbt_roundtrip;
+    std::vector<uint8_t> psbt_ser;
+    VectorWriter{psbt_ser, 0, psbt};
+    SpanReader{psbt_ser} >> psbt_roundtrip;
+
+    // And be stable across roundtrips.
+    std::vector<uint8_t> roundtrip_ser;
+    VectorWriter{roundtrip_ser, 0, psbt_roundtrip};
+    Assert(psbt_ser == roundtrip_ser);
 
     const PSBTAnalysis analysis = AnalyzePSBT(psbt);
     (void)PSBTRoleName(analysis.next);

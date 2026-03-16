@@ -1,4 +1,4 @@
-// Copyright (c) 2021-2022 The Bitcoin Core developers
+// Copyright (c) 2021-present The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -39,6 +39,7 @@ public:
     // bitcoin-node accepts the option, and bitcoin-gui accepts all bitcoin-node
     // options and will start the node with those options.
     bool canListenIpc() override { return true; }
+    const char* exeName() override { return EXE_NAME; }
     node::NodeContext m_node;
     std::unique_ptr<interfaces::Ipc> m_ipc;
 };

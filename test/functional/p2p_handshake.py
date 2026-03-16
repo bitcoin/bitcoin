@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (c) 2024 The Bitcoin Core developers
+# Copyright (c) 2024-present The Bitcoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """
@@ -16,6 +16,7 @@ from test_framework.messages import (
     NODE_NONE,
     NODE_P2P_V2,
     NODE_WITNESS,
+    msg_verack,
 )
 from test_framework.p2p import P2PInterface
 from test_framework.util import p2p_port
@@ -72,6 +73,13 @@ class P2PHandshakeTest(BitcoinTestFramework):
 
     def run_test(self):
         node = self.nodes[0]
+
+        self.log.info("Check that redundant verack message is ignored")
+        verack_conn = node.add_p2p_connection(P2PInterface())
+        with node.assert_debug_log(["ignoring redundant verack message"]):
+            verack_conn.send_and_ping(msg_verack())
+        node.disconnect_p2ps()
+
         self.log.info("Check that lacking desired service flags leads to disconnect (non-pruned peers)")
         self.test_desirable_service_flags(node, [NODE_NONE, NODE_NETWORK, NODE_WITNESS],
                                           DESIRABLE_SERVICE_FLAGS_FULL, expect_disconnect=True)

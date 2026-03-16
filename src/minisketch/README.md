@@ -66,7 +66,7 @@ Below we compare the PinSketch algorithm (which `libminisketch` is an implementa
 * **Difference type:** PinSketch can only compute the symmetric difference from a merged sketch, while CPISync and IBLT can distinguish which side certain elements were missing on. When the decoder has access to one of the sets, this generally doesn't matter, as he can look up each of the elements in the symmetric difference with one of the sets.
 * **Secure sketch:** Whether the sketch satisfies the definition of a secure sketch<sup>[[1]](#myfootnote1)</sup>, which implies a minimal amount about a set can be extracted from a sketch by anyone who does not know most of the elements already. This makes the algorithm appropriate for applications like fingerprint authentication.
 
-## Building
+## Building with Autotools
 
 The build system is very rudimentary for now, and [improvements](https://github.com/bitcoin-core/minisketch/pulls) are welcome.
 
@@ -76,6 +76,44 @@ The following may work and produce a `libminisketch.a` file you can link against
 git clone https://github.com/bitcoin-core/minisketch
 cd minisketch
 ./autogen.sh && ./configure && make
+```
+
+## Building with CMake
+
+To maintain a pristine source tree, CMake encourages performing an out-of-source build by using a separate dedicated build directory.
+
+### Building on POSIX systems
+
+The following commands will produce the same `libminisketch.a` file as in the example [above](#building-with-autotools):
+
+```bash
+cmake -B build -DCMAKE_CXX_FLAGS="-g -O2"  # Generate a build system in subdirectory "build"
+cmake --build build                        # Run the actual build process
+ctest --test-dir build                     # Run the test suite
+sudo cmake --install build                 # Install the library into the system (optional)
+```
+
+Run `cmake -B build -LH` or `ccmake -B build` to see the full list of configurable build options.
+
+### Cross compiling
+
+The following example works on modern Ubuntu/Debian systems:
+
+```bash
+sudo apt install g++-mingw-w64-x86-64-posix
+cmake -B build -DCMAKE_SYSTEM_NAME=Windows -DCMAKE_CXX_COMPILER=x86_64-w64-mingw32-g++-posix
+cmake --build build
+```
+
+### Building on Windows
+
+The following example assumes the use of Visual Studio 2022 and CMake v3.21 or newer.
+
+In "Developer Command Prompt for VS 2022":
+
+```cmd
+cmake -B build
+cmake --build build --config Release
 ```
 
 ## Usage
@@ -167,7 +205,7 @@ The order of the output is arbitrary and will differ on different runs of minisk
 
 ## Applications
 
-Communications efficient set reconciliation has been proposed to optimize Bitcoin transaction distribution<sup>[[8]](#myfootnote8)</sup>, which would allow Bitcoin nodes to have many more peers while reducing bandwidth usage. It could also be used for Bitcoin block distribution<sup>[[9]](#myfootnote9)</sup>, particularly for very low bandwidth links such as satellite.  A similar approach (CPISync) is used by PGP SKS keyservers to synchronize their databases efficiently. Secure sketches can also be used as helper data to reliably extract a consistent cryptographic key from fuzzy biometric data while leaking minimal information<sup>[[1]](#myfootnote1)</sup>. They can be combined with [dcnets](https://en.wikipedia.org/wiki/Dining_cryptographers_problem) to create cryptographic multiparty anonymous communication<sup>[[10]](#myfootnote10)</sup>. 
+Communications efficient set reconciliation has been proposed to optimize Bitcoin transaction distribution<sup>[[8]](#myfootnote8)</sup>, which would allow Bitcoin nodes to have many more peers while reducing bandwidth usage. It could also be used for Bitcoin block distribution<sup>[[9]](#myfootnote9)</sup>, particularly for very low bandwidth links such as satellite.  A similar approach (CPISync) is used by PGP SKS keyservers to synchronize their databases efficiently. Secure sketches can also be used as helper data to reliably extract a consistent cryptographic key from fuzzy biometric data while leaking minimal information<sup>[[1]](#myfootnote1)</sup>. They can be combined with [dcnets](https://en.wikipedia.org/wiki/Dining_cryptographers_problem) to create cryptographic multiparty anonymous communication<sup>[[10]](#myfootnote10)</sup>.
 
 ## Implementation notes
 

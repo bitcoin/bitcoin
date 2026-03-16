@@ -1,4 +1,4 @@
-// Copyright (c) 2011-2022 The Bitcoin Core developers
+// Copyright (c) 2011-present The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -30,6 +30,7 @@ static void AssembleBlock(benchmark::Bench& bench)
     witness.stack.push_back(WITNESS_STACK_ELEM_OP_TRUE);
     BlockAssembler::Options options;
     options.coinbase_output_script = P2WSH_OP_TRUE;
+    options.include_dummy_extranonce = true;
 
     // Collect some loose transactions that spend the coinbases of our mined blocks
     constexpr size_t NUM_BLOCKS{200};
@@ -69,5 +70,5 @@ static void BlockAssemblerAddPackageTxns(benchmark::Bench& bench)
     });
 }
 
-BENCHMARK(AssembleBlock, benchmark::PriorityLevel::HIGH);
-BENCHMARK(BlockAssemblerAddPackageTxns, benchmark::PriorityLevel::LOW);
+BENCHMARK(AssembleBlock);
+BENCHMARK(BlockAssemblerAddPackageTxns);

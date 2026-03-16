@@ -1,4 +1,4 @@
-// Copyright (c) 2018-2022 The Bitcoin Core developers
+// Copyright (c) 2018-present The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -6,13 +6,24 @@
 #define BITCOIN_INDEX_BLOCKFILTERINDEX_H
 
 #include <attributes.h>
-#include <blockfilter.h>
-#include <chain.h>
 #include <flatfile.h>
 #include <index/base.h>
+#include <interfaces/chain.h>
+#include <sync.h>
+#include <uint256.h>
 #include <util/hasher.h>
 
+#include <cstddef>
+#include <cstdint>
+#include <functional>
+#include <memory>
+#include <optional>
 #include <unordered_map>
+#include <vector>
+
+class BlockFilter;
+class CBlockIndex;
+enum class BlockFilterType : uint8_t;
 
 static const char* const DEFAULT_BLOCKFILTERINDEX = "0";
 
@@ -40,7 +51,7 @@ private:
 
     Mutex m_cs_headers_cache;
     /** cache of block hash to filter header, to avoid disk access when responding to getcfcheckpt. */
-    std::unordered_map<uint256, uint256, FilterHeaderHasher> m_headers_cache GUARDED_BY(m_cs_headers_cache);
+    std::unordered_map<uint256, uint256, BlockHasher> m_headers_cache GUARDED_BY(m_cs_headers_cache);
 
     // Last computed header to avoid disk reads on every new block.
     uint256 m_last_header{};
@@ -58,7 +69,7 @@ protected:
 
     bool CustomAppend(const interfaces::BlockInfo& block) override;
 
-    bool CustomRewind(const interfaces::BlockRef& current_tip, const interfaces::BlockRef& new_tip) override;
+    bool CustomRemove(const interfaces::BlockInfo& block) override;
 
     BaseIndex::DB& GetDB() const LIFETIMEBOUND override { return *m_db; }
 
@@ -66,6 +77,8 @@ public:
     /** Constructs the index, which becomes available to be queried. */
     explicit BlockFilterIndex(std::unique_ptr<interfaces::Chain> chain, BlockFilterType filter_type,
                               size_t n_cache_size, bool f_memory = false, bool f_wipe = false);
+
+    interfaces::Chain::NotifyOptions CustomOptions() override;
 
     BlockFilterType GetFilterType() const { return m_filter_type; }
 

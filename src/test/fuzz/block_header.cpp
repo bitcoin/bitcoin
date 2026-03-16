@@ -1,4 +1,4 @@
-// Copyright (c) 2020 The Bitcoin Core developers
+// Copyright (c) 2020-present The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -33,10 +33,10 @@ FUZZ_TARGET(block_header)
         mut_block_header.SetNull();
         assert(mut_block_header.IsNull());
         CBlock block{*block_header};
-        assert(block.GetBlockHeader().GetHash() == block_header->GetHash());
+        assert(block.GetHash() == block_header->GetHash());
         (void)block.ToString();
         block.SetNull();
-        assert(block.GetBlockHeader().GetHash() == mut_block_header.GetHash());
+        assert(block.GetHash() == mut_block_header.GetHash());
     }
     {
         std::optional<CBlockLocator> block_locator = ConsumeDeserializable<CBlockLocator>(fuzzed_data_provider);

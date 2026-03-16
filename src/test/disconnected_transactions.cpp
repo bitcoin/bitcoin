@@ -1,4 +1,4 @@
-// Copyright (c) 2023 The Bitcoin Core developers
+// Copyright (c) 2023-present The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 //
@@ -22,7 +22,7 @@ BOOST_AUTO_TEST_CASE(disconnectpool_memory_limits)
     // is within an expected range.
 
     // Overhead for the hashmap depends on number of buckets
-    std::unordered_map<uint256, CTransaction*, SaltedTxidHasher> temp_map;
+    std::unordered_map<Txid, CTransaction*, SaltedTxidHasher> temp_map;
     temp_map.reserve(1);
     const size_t MAP_1{memusage::DynamicUsage(temp_map)};
     temp_map.reserve(100);

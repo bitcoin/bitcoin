@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (c) 2020 The Bitcoin Core developers
+# Copyright (c) 2020-present The Bitcoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test GETDATA processing behavior"""
@@ -19,8 +19,7 @@ class P2PStoreBlock(P2PInterface):
         self.blocks = defaultdict(int)
 
     def on_block(self, message):
-        message.block.calc_sha256()
-        self.blocks[message.block.sha256] += 1
+        self.blocks[message.block.hash_int] += 1
 
 
 class GetdataTest(BitcoinTestFramework):

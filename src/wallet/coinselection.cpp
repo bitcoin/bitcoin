@@ -1,4 +1,4 @@
-// Copyright (c) 2017-2022 The Bitcoin Core developers
+// Copyright (c) 2017-present The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -589,15 +589,15 @@ util::Result<SelectionResult> SelectCoinsSRD(const std::vector<OutputGroup>& utx
 
 /** Find a subset of the OutputGroups that is at least as large as, but as close as possible to, the
  * target amount; solve subset sum.
- * param@[in]   groups          OutputGroups to choose from, sorted by value in descending order.
- * param@[in]   nTotalLower     Total (effective) value of the UTXOs in groups.
- * param@[in]   nTargetValue    Subset sum target, not including change.
- * param@[out]  vfBest          Boolean vector representing the subset chosen that is closest to
+ * @param[in]   groups          OutputGroups to choose from, sorted by value in descending order.
+ * @param[in]   nTotalLower     Total (effective) value of the UTXOs in groups.
+ * @param[in]   nTargetValue    Subset sum target, not including change.
+ * @param[out]  vfBest          Boolean vector representing the subset chosen that is closest to
  *                              nTargetValue, with indices corresponding to groups. If the ith
  *                              entry is true, that means the ith group in groups was selected.
- * param@[out]  nBest           Total amount of subset chosen that is closest to nTargetValue.
- * paramp[in]   max_selection_weight  The maximum allowed weight for a selection result to be valid.
- * param@[in]   iterations      Maximum number of tries.
+ * @param[out]  nBest           Total amount of subset chosen that is closest to nTargetValue.
+ * @param[in]   max_selection_weight  The maximum allowed weight for a selection result to be valid.
+ * @param[in]   iterations      Maximum number of tries.
  */
 static void ApproximateBestSubset(FastRandomContext& insecure_rand, const std::vector<OutputGroup>& groups,
                                   const CAmount& nTotalLower, const CAmount& nTargetValue,
@@ -752,7 +752,7 @@ util::Result<SelectionResult> KnapsackSolver(std::vector<OutputGroup>& groups, c
 
  ******************************************************************************/
 
-void OutputGroup::Insert(const std::shared_ptr<COutput>& output, size_t ancestors, size_t descendants) {
+void OutputGroup::Insert(const std::shared_ptr<COutput>& output, size_t ancestors, size_t cluster_count) {
     m_outputs.push_back(output);
     auto& coin = *m_outputs.back();
 
@@ -770,9 +770,9 @@ void OutputGroup::Insert(const std::shared_ptr<COutput>& output, size_t ancestor
     // the sum, rather than the max; this will overestimate in the cases where multiple inputs
     // have common ancestors
     m_ancestors += ancestors;
-    // descendants is the count as seen from the top ancestor, not the descendants as seen from the
-    // coin itself; thus, this value is counted as the max, not the sum
-    m_descendants = std::max(m_descendants, descendants);
+    // This is the maximum cluster count among all outputs. If these outputs are from distinct clusters but spent in the
+    // same transaction, their clusters will be merged, potentially exceeding the mempool's max cluster count.
+    m_max_cluster_count = std::max(m_max_cluster_count, cluster_count);
 
     if (output->input_bytes > 0) {
         m_weight += output->input_bytes * WITNESS_SCALE_FACTOR;
@@ -783,7 +783,7 @@ bool OutputGroup::EligibleForSpending(const CoinEligibilityFilter& eligibility_f
 {
     return m_depth >= (m_from_me ? eligibility_filter.conf_mine : eligibility_filter.conf_theirs)
         && m_ancestors <= eligibility_filter.max_ancestors
-        && m_descendants <= eligibility_filter.max_descendants;
+        && m_max_cluster_count <= eligibility_filter.max_cluster_count;
 }
 
 CAmount OutputGroup::GetSelectionAmount() const
@@ -908,7 +908,7 @@ void SelectionResult::AddInput(const OutputGroup& group)
     m_weight += group.m_weight;
 }
 
-void SelectionResult::AddInputs(const std::set<std::shared_ptr<COutput>>& inputs, bool subtract_fee_outputs)
+void SelectionResult::AddInputs(const OutputSet& inputs, bool subtract_fee_outputs)
 {
     // As it can fail, combine inputs first
     InsertInputs(inputs);
@@ -933,7 +933,7 @@ void SelectionResult::Merge(const SelectionResult& other)
     m_weight += other.m_weight;
 }
 
-const std::set<std::shared_ptr<COutput>>& SelectionResult::GetInputSet() const
+const OutputSet& SelectionResult::GetInputSet() const
 {
     return m_selected_inputs;
 }

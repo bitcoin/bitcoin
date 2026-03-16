@@ -1,4 +1,4 @@
-// Copyright (c) 2021-2022 The Bitcoin Core developers
+// Copyright (c) 2021-present The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -13,11 +13,11 @@
 
 #include <cstdint>
 #include <cstdlib>
-#include <errno.h>
+#include <cstring>
+#include <cerrno>
 #include <exception>
 #include <iostream>
 #include <stdexcept>
-#include <string.h>
 #include <sys/socket.h>
 #include <sys/un.h>
 #include <unistd.h>
@@ -55,9 +55,11 @@ public:
         // in combination with other arguments because the parent process
         // should be able to control the child process through the IPC protocol
         // without passing information out of band.
-        if (!ParseInt32(argv[2], &fd)) {
+        const auto maybe_fd{ToIntegral<int32_t>(argv[2])};
+        if (!maybe_fd) {
             throw std::runtime_error(strprintf("Invalid -ipcfd number '%s'", argv[2]));
         }
+        fd = *maybe_fd;
         return true;
     }
     int connect(const fs::path& data_dir,
@@ -114,7 +116,7 @@ int ProcessImpl::connect(const fs::path& data_dir,
     }
     int connect_error = errno;
     if (::close(fd) != 0) {
-        LogPrintf("Error closing file descriptor %i '%s': %s\n", fd, address, SysErrorString(errno));
+        LogWarning("Error closing file descriptor %i '%s': %s", fd, address, SysErrorString(errno));
     }
     throw std::system_error(connect_error, std::system_category());
 }
@@ -145,7 +147,7 @@ int ProcessImpl::bind(const fs::path& data_dir, const std::string& exe_name, std
     }
     int bind_error = errno;
     if (::close(fd) != 0) {
-        LogPrintf("Error closing file descriptor %i: %s\n", fd, SysErrorString(errno));
+        LogWarning("Error closing file descriptor %i: %s", fd, SysErrorString(errno));
     }
     throw std::system_error(bind_error, std::system_category());
 }

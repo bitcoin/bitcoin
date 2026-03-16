@@ -1,10 +1,30 @@
 package=boost
-$(package)_version=1.81.0
-$(package)_download_path=https://archives.boost.io/release/$($(package)_version)/source/
-$(package)_file_name=boost_$(subst .,_,$($(package)_version)).tar.gz
-$(package)_sha256_hash=205666dea9f6a7cfed87c7a6dfbeb52a2c1b9de55712c9c1a87735d7181452b6
+$(package)_version = 1.90.0
+$(package)_download_path = https://github.com/boostorg/boost/releases/download/boost-$($(package)_version)
+$(package)_file_name = boost-$($(package)_version)-cmake.tar.gz
+$(package)_sha256_hash = 913ca43d49e93d1b158c9862009add1518a4c665e7853b349a6492d158b036d4
+$(package)_build_subdir = build
+
+define $(package)_set_vars
+  $(package)_config_opts = -DBOOST_INCLUDE_LIBRARIES="multi_index;signals2;test"
+  $(package)_config_opts += -DBOOST_TEST_HEADERS_ONLY=ON
+  $(package)_config_opts += -DBOOST_ENABLE_MPI=OFF
+  $(package)_config_opts += -DBOOST_ENABLE_PYTHON=OFF
+  $(package)_config_opts += -DBOOST_INSTALL_LAYOUT=system
+  $(package)_config_opts += -DBUILD_TESTING=OFF
+  $(package)_config_opts += -DCMAKE_DISABLE_FIND_PACKAGE_ICU=ON
+  # Install to a unique path to prevent accidental inclusion via other dependencies' -I flags.
+  $(package)_config_opts += -DCMAKE_INSTALL_INCLUDEDIR=$(package)/include
+endef
+
+define $(package)_config_cmds
+  $($(package)_cmake) -S .. -B .
+endef
 
 define $(package)_stage_cmds
-  mkdir -p $($(package)_staging_prefix_dir)/include && \
-  cp -r boost $($(package)_staging_prefix_dir)/include
+  $(MAKE) DESTDIR=$($(package)_staging_dir) install
+endef
+
+define $(package)_postprocess_cmds
+  rm -rf share
 endef

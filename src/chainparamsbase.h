@@ -1,4 +1,4 @@
-// Copyright (c) 2014-2020 The Bitcoin Core developers
+// Copyright (c) 2014-present The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -35,7 +35,7 @@ private:
 /**
  * Creates and returns a std::unique_ptr<CBaseChainParams> of the chosen chain.
  */
-std::unique_ptr<CBaseChainParams> CreateBaseChainParams(const ChainType chain);
+std::unique_ptr<CBaseChainParams> CreateBaseChainParams(ChainType chain);
 
 /**
  *Set the arguments for chainparams
@@ -49,7 +49,7 @@ void SetupChainParamsBaseOptions(ArgsManager& argsman);
 const CBaseChainParams& BaseParams();
 
 /** Sets the params returned by Params() to those for the given chain. */
-void SelectBaseParams(const ChainType chain);
+void SelectBaseParams(ChainType chain);
 
 /** List of possible chain / network names  */
 #define LIST_CHAIN_NAMES "main, test, testnet4, signet, regtest"

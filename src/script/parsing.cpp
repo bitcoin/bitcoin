@@ -12,10 +12,10 @@
 
 namespace script {
 
-bool Const(const std::string& str, std::span<const char>& sp)
+bool Const(const std::string& str, std::span<const char>& sp, bool skip)
 {
     if ((size_t)sp.size() >= str.size() && std::equal(str.begin(), str.end(), sp.begin())) {
-        sp = sp.subspan(str.size());
+        if (skip) sp = sp.subspan(str.size());
         return true;
     }
     return false;

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (c) 2022 The Bitcoin Core developers
+# Copyright (c) 2022-present The Bitcoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -17,6 +17,7 @@ from test_framework.util import (
     assert_equal,
     assert_greater_than,
     assert_raises_rpc_error,
+    bpf_cflags,
 )
 
 coinselection_tracepoints_program = """
@@ -106,9 +107,6 @@ int trace_aps_create_tx(struct pt_regs *ctx) {
 
 
 class CoinSelectionTracepointTest(BitcoinTestFramework):
-    def add_options(self, parser):
-        self.add_wallet_options(parser)
-
     def set_test_params(self):
         self.num_nodes = 1
         self.setup_clean_chain = True
@@ -119,6 +117,7 @@ class CoinSelectionTracepointTest(BitcoinTestFramework):
         self.skip_if_no_python_bcc()
         self.skip_if_no_bpf_permissions()
         self.skip_if_no_wallet()
+        self.skip_if_running_under_valgrind()
 
     def get_tracepoints(self, expected_types):
         events = []
@@ -175,7 +174,7 @@ class CoinSelectionTracepointTest(BitcoinTestFramework):
         ctx.enable_probe(probe="coin_selection:normal_create_tx_internal", fn_name="trace_normal_create_tx")
         ctx.enable_probe(probe="coin_selection:attempting_aps_create_tx", fn_name="trace_attempt_aps")
         ctx.enable_probe(probe="coin_selection:aps_create_tx_internal", fn_name="trace_aps_create_tx")
-        self.bpf = BPF(text=coinselection_tracepoints_program, usdt_contexts=[ctx], debug=0, cflags=["-Wno-error=implicit-function-declaration"])
+        self.bpf = BPF(text=coinselection_tracepoints_program, usdt_contexts=[ctx], debug=0, cflags=bpf_cflags())
 
         self.log.info("Prepare wallets")
         self.generate(self.nodes[0], 101)

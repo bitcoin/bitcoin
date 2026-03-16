@@ -1,4 +1,4 @@
-// Copyright (c) 2019-2022 The Bitcoin Core developers
+// Copyright (c) 2019-present The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -78,7 +78,7 @@ bool ReadSettings(const fs::path& path, std::map<std::string, SettingsValue>& va
     if (!fs::exists(path)) return true;
 
     std::ifstream file;
-    file.open(path);
+    file.open(path.std_path());
     if (!file.is_open()) {
       errors.emplace_back(strprintf("%s. Please check permissions.", fs::PathToString(path)));
       return false;
@@ -133,7 +133,7 @@ bool WriteSettings(const fs::path& path,
         out.pushKVEnd(value.first, value.second);
     }
     std::ofstream file;
-    file.open(path);
+    file.open(path.std_path());
     if (file.fail()) {
         errors.emplace_back(strprintf("Error: Unable to open settings file %s for writing", fs::PathToString(path)));
         return false;

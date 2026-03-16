@@ -35,7 +35,7 @@ std::unique_ptr<CWallet> CreateSyncedWallet(interfaces::Chain& chain, CChain& cc
         assert(descs.size() == 1);
         auto& desc = descs.at(0);
         WalletDescriptor w_desc(std::move(desc), 0, 0, 1, 1);
-        if (!wallet->AddWalletDescriptor(w_desc, provider, "", false)) assert(false);
+        Assert(wallet->AddWalletDescriptor(w_desc, provider, "", false));
     }
     WalletRescanReserver reserver(*wallet);
     reserver.reserve();
@@ -47,11 +47,36 @@ std::unique_ptr<CWallet> CreateSyncedWallet(interfaces::Chain& chain, CChain& cc
     return wallet;
 }
 
-std::shared_ptr<CWallet> TestLoadWallet(std::unique_ptr<WalletDatabase> database, WalletContext& context, uint64_t create_flags)
+std::shared_ptr<CWallet> TestCreateWallet(std::unique_ptr<WalletDatabase> database, WalletContext& context, uint64_t create_flags)
+{
+    bilingual_str _error;
+    std::vector<bilingual_str> _warnings;
+    auto wallet = CWallet::CreateNew(context, "", std::move(database), create_flags, _error, _warnings);
+    NotifyWalletLoaded(context, wallet);
+    if (context.chain) {
+        wallet->postInitProcess();
+    }
+    return wallet;
+}
+
+std::shared_ptr<CWallet> TestCreateWallet(WalletContext& context)
+{
+    DatabaseOptions options;
+    options.require_create = true;
+    options.create_flags = WALLET_FLAG_DESCRIPTORS;
+    DatabaseStatus status;
+    bilingual_str error;
+    std::vector<bilingual_str> warnings;
+    auto database = MakeWalletDatabase("", options, status, error);
+    return TestCreateWallet(std::move(database), context, options.create_flags);
+}
+
+
+std::shared_ptr<CWallet> TestLoadWallet(std::unique_ptr<WalletDatabase> database, WalletContext& context)
 {
     bilingual_str error;
     std::vector<bilingual_str> warnings;
-    auto wallet = CWallet::Create(context, "", std::move(database), create_flags, error, warnings);
+    auto wallet = CWallet::LoadExisting(context, "", std::move(database), error, warnings);
     NotifyWalletLoaded(context, wallet);
     if (context.chain) {
         wallet->postInitProcess();
@@ -62,12 +87,12 @@ std::shared_ptr<CWallet> TestLoadWallet(std::unique_ptr<WalletDatabase> database
 std::shared_ptr<CWallet> TestLoadWallet(WalletContext& context)
 {
     DatabaseOptions options;
-    options.create_flags = WALLET_FLAG_DESCRIPTORS;
+    options.require_existing = true;
     DatabaseStatus status;
     bilingual_str error;
     std::vector<bilingual_str> warnings;
     auto database = MakeWalletDatabase("", options, status, error);
-    return TestLoadWallet(std::move(database), context, options.create_flags);
+    return TestLoadWallet(std::move(database), context);
 }
 
 void TestUnloadWallet(std::shared_ptr<CWallet>&& wallet)
@@ -163,7 +188,7 @@ bool MockableBatch::HasKey(DataStream&& key)
         return false;
     }
     SerializeData key_data{key.begin(), key.end()};
-    return m_records.count(key_data) > 0;
+    return m_records.contains(key_data);
 }
 
 bool MockableBatch::ErasePrefix(std::span<const std::byte> prefix)
@@ -193,7 +218,7 @@ MockableDatabase& GetMockableDatabase(CWallet& wallet)
     return dynamic_cast<MockableDatabase&>(wallet.GetDatabase());
 }
 
-wallet::ScriptPubKeyMan* CreateDescriptor(CWallet& keystore, const std::string& desc_str, const bool success)
+wallet::DescriptorScriptPubKeyMan* CreateDescriptor(CWallet& keystore, const std::string& desc_str, const bool success)
 {
     keystore.SetWalletFlag(WALLET_FLAG_DESCRIPTORS);
 
@@ -209,7 +234,7 @@ wallet::ScriptPubKeyMan* CreateDescriptor(CWallet& keystore, const std::string& 
     WalletDescriptor w_desc(std::move(desc), timestamp, range_start, range_end, next_index);
 
     LOCK(keystore.cs_wallet);
-
-    return Assert(keystore.AddWalletDescriptor(w_desc, keys,/*label=*/"", /*internal=*/false));
+    auto spkm = Assert(keystore.AddWalletDescriptor(w_desc, keys,/*label=*/"", /*internal=*/false));
+    return &spkm.value().get();
 };
 } // namespace wallet

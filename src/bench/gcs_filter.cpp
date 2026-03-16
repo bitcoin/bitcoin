@@ -1,4 +1,4 @@
-// Copyright (c) 2018-2022 The Bitcoin Core developers
+// Copyright (c) 2018-present The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -86,8 +86,8 @@ static void GCSFilterMatch(benchmark::Bench& bench)
         filter.Match(GCSFilter::Element());
     });
 }
-BENCHMARK(GCSBlockFilterGetHash, benchmark::PriorityLevel::HIGH);
-BENCHMARK(GCSFilterConstruct, benchmark::PriorityLevel::HIGH);
-BENCHMARK(GCSFilterDecode, benchmark::PriorityLevel::HIGH);
-BENCHMARK(GCSFilterDecodeSkipCheck, benchmark::PriorityLevel::HIGH);
-BENCHMARK(GCSFilterMatch, benchmark::PriorityLevel::HIGH);
+BENCHMARK(GCSBlockFilterGetHash);
+BENCHMARK(GCSFilterConstruct);
+BENCHMARK(GCSFilterDecode);
+BENCHMARK(GCSFilterDecodeSkipCheck);
+BENCHMARK(GCSFilterMatch);

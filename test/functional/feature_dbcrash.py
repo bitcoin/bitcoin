@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (c) 2017-2022 The Bitcoin Core developers
+# Copyright (c) 2017-present The Bitcoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test recovery from a crash during chainstate writing.
@@ -53,7 +53,6 @@ class ChainstateWriteCrashTest(BitcoinTestFramework):
 
         # Set -maxmempool=0 to turn off mempool memory sharing with dbcache
         self.base_args = [
-            "-limitdescendantsize=0",
             "-maxmempool=0",
             "-dbbatchsize=200000",
         ]
@@ -77,8 +76,8 @@ class ChainstateWriteCrashTest(BitcoinTestFramework):
     def restart_node(self, node_index, expected_tip):
         """Start up a given node id, wait for the tip to reach the given block hash, and calculate the utxo hash.
 
-        Exceptions on startup should indicate node crash (due to -dbcrashratio), in which case we try again. Give up
-        after 60 seconds. Returns the utxo hash of the given node."""
+        Exceptions during startup or subsequent RPC calls should indicate a node crash (due to -dbcrashratio), in which case we try again. Give up
+        after a timeout. Returns the utxo hash of the given node."""
 
         time_start = time.time()
         while time.time() - time_start < 120:
@@ -94,12 +93,11 @@ class ChainstateWriteCrashTest(BitcoinTestFramework):
                 # should raise an exception if bitcoind doesn't exit.
                 self.wait_for_node_exit(node_index, timeout=10)
             self.crashed_on_restart += 1
-            time.sleep(1)
 
         # If we got here, bitcoind isn't coming back up on restart.  Could be a
         # bug in bitcoind, or we've gotten unlucky with our dbcrash ratio --
         # perhaps we generated a test case that blew up our cache?
-        # TODO: If this happens a lot, we should try to restart without -dbcrashratio
+        # If this happens, the test should try to restart without -dbcrashratio
         # and make sure that recovery happens.
         raise AssertionError(f"Unable to successfully restart node {node_index} in allotted time")
 

@@ -50,23 +50,12 @@ void initialize_spkm()
     MOCKED_DESC_CONVERTER.Init();
 }
 
-/**
- * Key derivation is expensive. Deriving deep derivation paths take a lot of compute and we'd rather spend time
- * elsewhere in this target, like on actually fuzzing the DescriptorScriptPubKeyMan. So rule out strings which could
- * correspond to a descriptor containing a too large derivation path.
- */
-static bool TooDeepDerivPath(std::string_view desc)
-{
-    const FuzzBufferType desc_buf{reinterpret_cast<const unsigned char *>(desc.data()), desc.size()};
-    return HasDeepDerivPath(desc_buf);
-}
-
 static std::optional<std::pair<WalletDescriptor, FlatSigningProvider>> CreateWalletDescriptor(FuzzedDataProvider& fuzzed_data_provider)
 {
     const std::string mocked_descriptor{fuzzed_data_provider.ConsumeRandomLengthString()};
-    if (TooDeepDerivPath(mocked_descriptor)) return {};
     const auto desc_str{MOCKED_DESC_CONVERTER.GetDescriptor(mocked_descriptor)};
     if (!desc_str.has_value()) return std::nullopt;
+    if (IsTooExpensive(MakeUCharSpan(*desc_str))) return {};
 
     FlatSigningProvider keys;
     std::string error;
@@ -80,8 +69,9 @@ static std::optional<std::pair<WalletDescriptor, FlatSigningProvider>> CreateWal
 static DescriptorScriptPubKeyMan* CreateDescriptor(WalletDescriptor& wallet_desc, FlatSigningProvider& keys, CWallet& keystore)
 {
     LOCK(keystore.cs_wallet);
-    keystore.AddWalletDescriptor(wallet_desc, keys, /*label=*/"", /*internal=*/false);
-    return keystore.GetDescriptorScriptPubKeyMan(wallet_desc);
+    auto spk_manager_res = keystore.AddWalletDescriptor(wallet_desc, keys, /*label=*/"", /*internal=*/false);
+    if (!spk_manager_res) return nullptr;
+    return &spk_manager_res.value().get();
 };
 
 FUZZ_TARGET(scriptpubkeyman, .init = initialize_spkm)
@@ -123,15 +113,14 @@ FUZZ_TARGET(scriptpubkeyman, .init = initialize_spkm)
             fuzzed_data_provider,
             [&] {
                 const CScript script{ConsumeScript(fuzzed_data_provider)};
-                auto is_mine{spk_manager->IsMine(script)};
-                if (is_mine == isminetype::ISMINE_SPENDABLE) {
-                    assert(spk_manager->GetScriptPubKeys().count(script));
+                if (spk_manager->IsMine(script)) {
+                    assert(spk_manager->GetScriptPubKeys().contains(script));
                 }
             },
             [&] {
                 auto spks{spk_manager->GetScriptPubKeys()};
                 for (const CScript& spk : spks) {
-                    assert(spk_manager->IsMine(spk) == ISMINE_SPENDABLE);
+                    assert(spk_manager->IsMine(spk));
                     CTxDestination dest;
                     bool extract_dest{ExtractDestination(spk, dest)};
                     if (extract_dest) {
@@ -188,7 +177,8 @@ FUZZ_TARGET(scriptpubkeyman, .init = initialize_spkm)
                 }
                 auto psbt{*opt_psbt};
                 const PrecomputedTransactionData txdata{PrecomputePSBTData(psbt)};
-                const int sighash_type{fuzzed_data_provider.ConsumeIntegralInRange<int>(0, 150)};
+                std::optional<int> sighash_type{fuzzed_data_provider.ConsumeIntegralInRange<int>(0, 151)};
+                if (sighash_type == 151) sighash_type = std::nullopt;
                 auto sign  = fuzzed_data_provider.ConsumeBool();
                 auto bip32derivs = fuzzed_data_provider.ConsumeBool();
                 auto finalize = fuzzed_data_provider.ConsumeBool();

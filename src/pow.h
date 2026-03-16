@@ -1,5 +1,5 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
-// Copyright (c) 2009-2022 The Bitcoin Core developers
+// Copyright (c) 2009-present The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -8,7 +8,7 @@
 
 #include <consensus/params.h>
 
-#include <stdint.h>
+#include <cstdint>
 
 class CBlockHeader;
 class CBlockIndex;
@@ -24,7 +24,7 @@ class arith_uint256;
  * @return              the proof-of-work target or nullopt if the nBits value
  *                      is invalid (due to overflow or exceeding pow_limit)
  */
-std::optional<arith_uint256> DeriveTarget(unsigned int nBits, const uint256 pow_limit);
+std::optional<arith_uint256> DeriveTarget(unsigned int nBits, uint256 pow_limit);
 
 unsigned int GetNextWorkRequired(const CBlockIndex* pindexLast, const CBlockHeader *pblock, const Consensus::Params&);
 unsigned int CalculateNextWorkRequired(const CBlockIndex* pindexLast, int64_t nFirstBlockTime, const Consensus::Params&);

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (c) 2016-2022 The Bitcoin Core developers
+# Copyright (c) 2016-present The Bitcoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Encode and decode Bitcoin addresses.
@@ -8,7 +8,6 @@
 - bech32 segwit v0 P2WPKH and P2WSH addresses.
 - bech32m segwit v1 P2TR addresses."""
 
-import enum
 import unittest
 
 from .script import (
@@ -36,13 +35,6 @@ ADDRESS_BCRT1_UNSPENDABLE = 'bcrt1qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq
 ADDRESS_BCRT1_UNSPENDABLE_DESCRIPTOR = 'addr(bcrt1qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq3xueyj)#juyq9d97'
 # Coins sent to this address can be spent with a witness stack of just OP_TRUE
 ADDRESS_BCRT1_P2WSH_OP_TRUE = 'bcrt1qft5p2uhsdcdc3l2ua4ap5qqfg4pjaqlp250x7us7a8qqhrxrxfsqseac85'
-
-
-class AddressType(enum.Enum):
-    bech32 = 'bech32'
-    p2sh_segwit = 'p2sh-segwit'
-    legacy = 'legacy'  # P2PKH
-
 
 b58chars = '123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz'
 
@@ -193,9 +185,7 @@ def address_to_scriptpubkey(address):
         return keyhash_to_p2pkh_script(payload)
     elif version == 196:  # testnet script hash
         return scripthash_to_p2sh_script(payload)
-    # TODO: also support other address formats
-    else:
-        assert False
+    raise ValueError(f"Unsupported address type: {address}")
 
 
 class TestFrameworkScript(unittest.TestCase):

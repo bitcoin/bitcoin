@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (c) 2020-2022 The Bitcoin Core developers
+# Copyright (c) 2020-present The Bitcoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Parse message capture binary files.  To be used in conjunction with -capturemessages."""
@@ -205,7 +205,7 @@ def main():
 
     jsonrep = json.dumps(messages)
     if output:
-        with open(str(output), 'w+', encoding="utf8") as f_out:
+        with open(str(output), 'w+') as f_out:
             f_out.write(jsonrep)
     else:
         print(jsonrep)

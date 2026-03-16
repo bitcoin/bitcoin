@@ -14,10 +14,6 @@
         <translation type="unfinished">&amp;Жаңа</translation>
     </message>
     <message>
-        <source>Copy the currently selected address to the system clipboard</source>
-        <translation type="unfinished">Таңдалған мекенжайды жүйенің айырбастау буферіне көшіру</translation>
-    </message>
-    <message>
         <source>&amp;Copy</source>
         <translation type="unfinished">&amp;Көшіру</translation>
     </message>
@@ -250,13 +246,11 @@
         <source>%n second(s)</source>
         <translation type="unfinished">
             <numerusform />
-            <numerusform />
         </translation>
     </message>
     <message numerus="yes">
         <source>%n minute(s)</source>
         <translation type="unfinished">
-            <numerusform />
             <numerusform />
         </translation>
     </message>
@@ -264,20 +258,17 @@
         <source>%n hour(s)</source>
         <translation type="unfinished">
             <numerusform />
-            <numerusform />
         </translation>
     </message>
     <message numerus="yes">
         <source>%n day(s)</source>
         <translation type="unfinished">
             <numerusform />
-            <numerusform />
         </translation>
     </message>
     <message numerus="yes">
         <source>%n week(s)</source>
         <translation type="unfinished">
-            <numerusform />
             <numerusform />
         </translation>
     </message>
@@ -288,7 +279,6 @@
     <message numerus="yes">
         <source>%n year(s)</source>
         <translation type="unfinished">
-            <numerusform />
             <numerusform />
         </translation>
     </message>
@@ -476,12 +466,11 @@
         <source>Processed %n block(s) of transaction history.</source>
         <translation type="unfinished">
             <numerusform />
-            <numerusform />
         </translation>
     </message>
     <message>
         <source>%1 behind</source>
-        <translation type="unfinished">%1 қалмады</translation>
+        <translation type="unfinished">%1 артта</translation>
     </message>
     <message>
         <source>Catching up…</source>
@@ -489,7 +478,7 @@
     </message>
     <message>
         <source>Error</source>
-        <translation type="unfinished">қате</translation>
+        <translation type="unfinished">Қате</translation>
     </message>
     <message>
         <source>Warning</source>
@@ -497,7 +486,7 @@
     </message>
     <message>
         <source>Information</source>
-        <translation type="unfinished">Информация</translation>
+        <translation type="unfinished">Ақпарат</translation>
     </message>
     <message>
         <source>Up to date</source>
@@ -523,7 +512,6 @@
         <source>%n active connection(s) to Bitcoin network.</source>
         <extracomment>A substring of the tooltip.</extracomment>
         <translation type="unfinished">
-            <numerusform />
             <numerusform />
         </translation>
     </message>
@@ -599,6 +587,10 @@
 <context>
     <name>Intro</name>
     <message>
+        <source>This initial synchronisation is very demanding, and may expose hardware problems with your computer that had previously gone unnoticed. Each time you run %1, it will continue downloading where it left off.</source>
+        <translation type="unfinished">Бастапқы синхронизация өте қымбат және компьютеріңіздің байқалмаған жабдық мәселелерін ашуы мүмкін. %1 қосылған сайын, жүктеу тоқтатылған жерден бастап жалғасады.</translation>
+    </message>
+    <message>
         <source>Bitcoin</source>
         <translation type="unfinished">Биткоин</translation>
     </message>
@@ -606,13 +598,11 @@
         <source>%n GB of space available</source>
         <translation type="unfinished">
             <numerusform />
-            <numerusform />
         </translation>
     </message>
     <message numerus="yes">
         <source>(of %n GB needed)</source>
         <translation type="unfinished">
-            <numerusform />
             <numerusform />
         </translation>
     </message>
@@ -620,14 +610,12 @@
         <source>(%n GB needed for full chain)</source>
         <translation type="unfinished">
             <numerusform />
-            <numerusform />
         </translation>
     </message>
     <message numerus="yes">
         <source>(sufficient to restore backups %n day(s) old)</source>
         <extracomment>Explanatory text on the capability of the current prune target.</extracomment>
         <translation type="unfinished">
-            <numerusform />
             <numerusform />
         </translation>
     </message>
@@ -639,11 +627,7 @@
         <source>Error</source>
         <translation type="unfinished">Қате</translation>
     </message>
-    <message>
-        <source>This initial synchronisation is very demanding, and may expose hardware problems with your computer that had previously gone unnoticed. Each time you run %1, it will continue downloading where it left off.</source>
-        <translation type="unfinished">Бастапқы синхронизация өте қымбат және компьютеріңіздің байқалмаған жабдық мәселелерін ашуы мүмкін. %1 қосылған сайын, жүктеу тоқтатылған жерден бастап жалғасады.</translation>
-    </message>
-    </context>
+</context>
 <context>
     <name>OptionsDialog</name>
     <message>
@@ -665,6 +649,21 @@
     <message>
         <source>Error</source>
         <translation type="unfinished">Қате</translation>
+    </message>
+    </context>
+<context>
+    <name>PSBTOperationsDialog</name>
+    <message numerus="yes">
+        <source>Signed %n input(s), but more signatures are still required.</source>
+        <translation type="unfinished">
+            <numerusform />
+        </translation>
+    </message>
+    <message numerus="yes">
+        <source>Transaction has %n unsigned input(s).</source>
+        <translation type="unfinished">
+            <numerusform />
+        </translation>
     </message>
     </context>
 <context>
@@ -756,7 +755,6 @@
         <source>Estimated to begin confirmation within %n block(s).</source>
         <translation type="unfinished">
             <numerusform />
-            <numerusform />
         </translation>
     </message>
     <message>
@@ -791,7 +789,6 @@
     <message numerus="yes">
         <source>matures in %n more block(s)</source>
         <translation type="unfinished">
-            <numerusform />
             <numerusform />
         </translation>
     </message>

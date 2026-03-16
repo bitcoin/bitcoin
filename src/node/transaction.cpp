@@ -1,5 +1,5 @@
 // Copyright (c) 2010 Satoshi Nakamoto
-// Copyright (c) 2009-2021 The Bitcoin Core developers
+// Copyright (c) 2009-present The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -15,8 +15,6 @@
 #include <validationinterface.h>
 #include <node/transaction.h>
 
-#include <future>
-
 namespace node {
 static TransactionError HandleATMPError(const TxValidationState& state, std::string& err_string_out)
 {
@@ -31,7 +29,12 @@ static TransactionError HandleATMPError(const TxValidationState& state, std::str
     }
 }
 
-TransactionError BroadcastTransaction(NodeContext& node, const CTransactionRef tx, std::string& err_string, const CAmount& max_tx_fee, bool relay, bool wait_callback)
+TransactionError BroadcastTransaction(NodeContext& node,
+                                      const CTransactionRef tx,
+                                      std::string& err_string,
+                                      const CAmount& max_tx_fee,
+                                      TxBroadcast broadcast_method,
+                                      bool wait_callback)
 {
     // BroadcastTransaction can be called by RPC or by the wallet.
     // chainman, mempool and peerman are initialized before the RPC server and wallet are started
@@ -40,9 +43,8 @@ TransactionError BroadcastTransaction(NodeContext& node, const CTransactionRef t
     assert(node.mempool);
     assert(node.peerman);
 
-    std::promise<void> promise;
     Txid txid = tx->GetHash();
-    uint256 wtxid = tx->GetWitnessHash();
+    Wtxid wtxid = tx->GetWitnessHash();
     bool callback_set = false;
 
     {
@@ -62,35 +64,46 @@ TransactionError BroadcastTransaction(NodeContext& node, const CTransactionRef t
             // There's already a transaction in the mempool with this txid. Don't
             // try to submit this transaction to the mempool (since it'll be
             // rejected as a TX_CONFLICT), but do attempt to reannounce the mempool
-            // transaction if relay=true.
+            // transaction if broadcast_method is not TxBroadcast::MEMPOOL_NO_BROADCAST.
             //
             // The mempool transaction may have the same or different witness (and
             // wtxid) as this transaction. Use the mempool's wtxid for reannouncement.
             wtxid = mempool_tx->GetWitnessHash();
         } else {
             // Transaction is not already in the mempool.
-            if (max_tx_fee > 0) {
+            const bool check_max_fee{max_tx_fee > 0};
+            if (check_max_fee || broadcast_method == TxBroadcast::NO_MEMPOOL_PRIVATE_BROADCAST) {
                 // First, call ATMP with test_accept and check the fee. If ATMP
                 // fails here, return error immediately.
                 const MempoolAcceptResult result = node.chainman->ProcessTransaction(tx, /*test_accept=*/ true);
                 if (result.m_result_type != MempoolAcceptResult::ResultType::VALID) {
                     return HandleATMPError(result.m_state, err_string);
-                } else if (result.m_base_fees.value() > max_tx_fee) {
+                } else if (check_max_fee && result.m_base_fees.value() > max_tx_fee) {
                     return TransactionError::MAX_FEE_EXCEEDED;
                 }
             }
-            // Try to submit the transaction to the mempool.
-            const MempoolAcceptResult result = node.chainman->ProcessTransaction(tx, /*test_accept=*/ false);
-            if (result.m_result_type != MempoolAcceptResult::ResultType::VALID) {
-                return HandleATMPError(result.m_state, err_string);
-            }
 
-            // Transaction was accepted to the mempool.
+            switch (broadcast_method) {
+            case TxBroadcast::MEMPOOL_NO_BROADCAST:
+            case TxBroadcast::MEMPOOL_AND_BROADCAST_TO_ALL:
+                // Try to submit the transaction to the mempool.
+                {
+                    const MempoolAcceptResult result =
+                        node.chainman->ProcessTransaction(tx, /*test_accept=*/false);
+                    if (result.m_result_type != MempoolAcceptResult::ResultType::VALID) {
+                        return HandleATMPError(result.m_state, err_string);
+                    }
+                }
+                // Transaction was accepted to the mempool.
 
-            if (relay) {
-                // the mempool tracks locally submitted transactions to make a
-                // best-effort of initial broadcast
-                node.mempool->AddUnbroadcastTx(txid);
+                if (broadcast_method == TxBroadcast::MEMPOOL_AND_BROADCAST_TO_ALL) {
+                    // the mempool tracks locally submitted transactions to make a
+                    // best-effort of initial broadcast
+                    node.mempool->AddUnbroadcastTx(txid);
+                }
+                break;
+            case TxBroadcast::NO_MEMPOOL_PRIVATE_BROADCAST:
+                break;
             }
 
             if (wait_callback && node.validation_signals) {
@@ -102,9 +115,6 @@ TransactionError BroadcastTransaction(NodeContext& node, const CTransactionRef t
                 // with a transaction to/from their wallet, immediately call some
                 // wallet RPC, and get a stale result because callbacks have not
                 // yet been processed.
-                node.validation_signals->CallFunctionInValidationInterfaceQueue([&promise] {
-                    promise.set_value();
-                });
                 callback_set = true;
             }
         }
@@ -113,17 +123,24 @@ TransactionError BroadcastTransaction(NodeContext& node, const CTransactionRef t
     if (callback_set) {
         // Wait until Validation Interface clients have been notified of the
         // transaction entering the mempool.
-        promise.get_future().wait();
+        node.validation_signals->SyncWithValidationInterfaceQueue();
     }
 
-    if (relay) {
-        node.peerman->RelayTransaction(txid, wtxid);
+    switch (broadcast_method) {
+    case TxBroadcast::MEMPOOL_NO_BROADCAST:
+        break;
+    case TxBroadcast::MEMPOOL_AND_BROADCAST_TO_ALL:
+        node.peerman->InitiateTxBroadcastToAll(txid, wtxid);
+        break;
+    case TxBroadcast::NO_MEMPOOL_PRIVATE_BROADCAST:
+        node.peerman->InitiateTxBroadcastPrivate(tx);
+        break;
     }
 
     return TransactionError::OK;
 }
 
-CTransactionRef GetTransaction(const CBlockIndex* const block_index, const CTxMemPool* const mempool, const uint256& hash, uint256& hashBlock, const BlockManager& blockman)
+CTransactionRef GetTransaction(const CBlockIndex* const block_index, const CTxMemPool* const mempool, const Txid& hash, const BlockManager& blockman, uint256& hashBlock)
 {
     if (mempool && !block_index) {
         CTransactionRef ptx = mempool->get(hash);

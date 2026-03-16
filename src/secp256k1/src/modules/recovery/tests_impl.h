@@ -7,6 +7,8 @@
 #ifndef SECP256K1_MODULE_RECOVERY_TESTS_H
 #define SECP256K1_MODULE_RECOVERY_TESTS_H
 
+#include "../../unit_test.h"
+
 static int recovery_test_nonce_function(unsigned char *nonce32, const unsigned char *msg32, const unsigned char *key32, const unsigned char *algo16, void *data, unsigned int counter) {
     (void) msg32;
     (void) key32;
@@ -28,7 +30,7 @@ static int recovery_test_nonce_function(unsigned char *nonce32, const unsigned c
     return testrand_bits(1);
 }
 
-static void test_ecdsa_recovery_api(void) {
+static void test_ecdsa_recovery_api_internal(void) {
     /* Setup contexts that just count errors */
     secp256k1_pubkey pubkey;
     secp256k1_pubkey recpubkey;
@@ -92,7 +94,7 @@ static void test_ecdsa_recovery_api(void) {
     CHECK(secp256k1_ecdsa_recoverable_signature_parse_compact(CTX, &recsig, sig, recid) == 0);
 }
 
-static void test_ecdsa_recovery_end_to_end(void) {
+static void test_ecdsa_recovery_end_to_end_internal(void) {
     unsigned char extra[32] = {0x00};
     unsigned char privkey[32];
     unsigned char message[32];
@@ -324,15 +326,14 @@ static void test_ecdsa_recovery_edge_cases(void) {
     }
 }
 
-static void run_recovery_tests(void) {
-    int i;
-    for (i = 0; i < COUNT; i++) {
-        test_ecdsa_recovery_api();
-    }
-    for (i = 0; i < 64*COUNT; i++) {
-        test_ecdsa_recovery_end_to_end();
-    }
-    test_ecdsa_recovery_edge_cases();
-}
+/* --- Test registry --- */
+REPEAT_TEST(test_ecdsa_recovery_api)
+REPEAT_TEST_MULT(test_ecdsa_recovery_end_to_end, 64)
+
+static const struct tf_test_entry tests_recovery[] = {
+    CASE1(test_ecdsa_recovery_api),
+    CASE1(test_ecdsa_recovery_end_to_end),
+    CASE1(test_ecdsa_recovery_edge_cases)
+};
 
 #endif /* SECP256K1_MODULE_RECOVERY_TESTS_H */

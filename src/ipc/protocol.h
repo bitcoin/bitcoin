@@ -1,4 +1,4 @@
-// Copyright (c) 2021 The Bitcoin Core developers
+// Copyright (c) 2021-present The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -57,6 +57,9 @@ public:
     //! available, but should not be necessary in normal code which starts
     //! clients and servers independently.
     virtual void serve(int fd, const char* exe_name, interfaces::Init& init, const std::function<void()>& ready_fn = {}) = 0;
+
+    //! Disconnect any incoming connections that are still connected.
+    virtual void disconnectIncoming() = 0;
 
     //! Add cleanup callback to interface that will run when the interface is
     //! deleted.

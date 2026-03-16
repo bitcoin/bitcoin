@@ -1,4 +1,4 @@
-// Copyright (c) 2023 The Bitcoin Core developers
+// Copyright (c) 2023-present The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -21,9 +21,8 @@
 
 static CBlock CreateTestBlock()
 {
-    DataStream stream{benchmark::data::block413567};
     CBlock block;
-    stream >> TX_WITH_WITNESS(block);
+    SpanReader{benchmark::data::block413567} >> TX_WITH_WITNESS(block);
     return block;
 }
 
@@ -42,10 +41,12 @@ static void ReadBlockBench(benchmark::Bench& bench)
 {
     const auto testing_setup{MakeNoLogFileContext<const TestingSetup>(ChainType::MAIN)};
     auto& blockman{testing_setup->m_node.chainman->m_blockman};
-    const auto pos{blockman.WriteBlock(CreateTestBlock(), 413'567)};
-    CBlock block;
+    const auto& test_block{CreateTestBlock()};
+    const auto& expected_hash{test_block.GetHash()};
+    const auto& pos{blockman.WriteBlock(test_block, 413'567)};
     bench.run([&] {
-        const auto success{blockman.ReadBlock(block, pos)};
+        CBlock block;
+        const auto success{blockman.ReadBlock(block, pos, expected_hash)};
         assert(success);
     });
 }
@@ -55,14 +56,12 @@ static void ReadRawBlockBench(benchmark::Bench& bench)
     const auto testing_setup{MakeNoLogFileContext<const TestingSetup>(ChainType::MAIN)};
     auto& blockman{testing_setup->m_node.chainman->m_blockman};
     const auto pos{blockman.WriteBlock(CreateTestBlock(), 413'567)};
-    std::vector<uint8_t> block_data;
-    blockman.ReadRawBlock(block_data, pos); // warmup
     bench.run([&] {
-        const auto success{blockman.ReadRawBlock(block_data, pos)};
-        assert(success);
+        const auto res{blockman.ReadRawBlock(pos)};
+        assert(res);
     });
 }
 
-BENCHMARK(WriteBlockBench, benchmark::PriorityLevel::HIGH);
-BENCHMARK(ReadBlockBench, benchmark::PriorityLevel::HIGH);
-BENCHMARK(ReadRawBlockBench, benchmark::PriorityLevel::HIGH);
+BENCHMARK(WriteBlockBench);
+BENCHMARK(ReadBlockBench);
+BENCHMARK(ReadRawBlockBench);

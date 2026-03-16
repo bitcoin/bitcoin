@@ -1,42 +1,33 @@
-// Copyright (c) 2015-2022 The Bitcoin Core developers
+// Copyright (c) 2015-present The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <zmq/zmqpublishnotifier.h>
 
 #include <chain.h>
-#include <chainparams.h>
 #include <crypto/common.h>
-#include <kernel/cs_main.h>
 #include <logging.h>
 #include <netaddress.h>
 #include <netbase.h>
-#include <node/blockstorage.h>
-#include <primitives/block.h>
 #include <primitives/transaction.h>
-#include <rpc/server.h>
 #include <serialize.h>
 #include <streams.h>
-#include <sync.h>
 #include <uint256.h>
+#include <util/check.h>
 #include <zmq/zmqutil.h>
 
 #include <zmq.h>
 
-#include <cassert>
 #include <cstdarg>
 #include <cstddef>
 #include <cstdint>
 #include <cstring>
 #include <map>
 #include <optional>
+#include <span>
 #include <string>
 #include <utility>
 #include <vector>
-
-namespace Consensus {
-struct Params;
-}
 
 static std::multimap<std::string, CZMQAbstractPublishNotifier*> mapPublishNotifiers;
 
@@ -230,7 +221,7 @@ bool CZMQPublishHashBlockNotifier::NotifyBlock(const CBlockIndex *pindex)
 
 bool CZMQPublishHashTransactionNotifier::NotifyTransaction(const CTransaction &transaction)
 {
-    uint256 hash = transaction.GetHash();
+    uint256 hash = transaction.GetHash().ToUint256();
     LogDebug(BCLog::ZMQ, "Publish hashtx %s to %s\n", hash.GetHex(), this->address);
     uint8_t data[32];
     for (unsigned int i = 0; i < 32; i++) {
@@ -243,7 +234,7 @@ bool CZMQPublishRawBlockNotifier::NotifyBlock(const CBlockIndex *pindex)
 {
     LogDebug(BCLog::ZMQ, "Publish rawblock %s to %s\n", pindex->GetBlockHash().GetHex(), this->address);
 
-    std::vector<uint8_t> block{};
+    std::vector<std::byte> block{};
     if (!m_get_block_by_index(block, *pindex)) {
         zmqError("Can't read block from disk");
         return false;
@@ -254,7 +245,7 @@ bool CZMQPublishRawBlockNotifier::NotifyBlock(const CBlockIndex *pindex)
 
 bool CZMQPublishRawTransactionNotifier::NotifyTransaction(const CTransaction &transaction)
 {
-    uint256 hash = transaction.GetHash();
+    uint256 hash = transaction.GetHash().ToUint256();
     LogDebug(BCLog::ZMQ, "Publish rawtx %s to %s\n", hash.GetHex(), this->address);
     DataStream ss;
     ss << TX_WITH_WITNESS(transaction);
@@ -290,14 +281,14 @@ bool CZMQPublishSequenceNotifier::NotifyBlockDisconnect(const CBlockIndex *pinde
 
 bool CZMQPublishSequenceNotifier::NotifyTransactionAcceptance(const CTransaction &transaction, uint64_t mempool_sequence)
 {
-    uint256 hash = transaction.GetHash();
+    uint256 hash = transaction.GetHash().ToUint256();
     LogDebug(BCLog::ZMQ, "Publish hashtx mempool acceptance %s to %s\n", hash.GetHex(), this->address);
     return SendSequenceMsg(*this, hash, /* Mempool (A)cceptance */ 'A', mempool_sequence);
 }
 
 bool CZMQPublishSequenceNotifier::NotifyTransactionRemoval(const CTransaction &transaction, uint64_t mempool_sequence)
 {
-    uint256 hash = transaction.GetHash();
+    uint256 hash = transaction.GetHash().ToUint256();
     LogDebug(BCLog::ZMQ, "Publish hashtx mempool removal %s to %s\n", hash.GetHex(), this->address);
     return SendSequenceMsg(*this, hash, /* Mempool (R)emoval */ 'R', mempool_sequence);
 }

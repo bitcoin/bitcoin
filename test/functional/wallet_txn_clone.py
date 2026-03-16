@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (c) 2014-2022 The Bitcoin Core developers
+# Copyright (c) 2014-present The Bitcoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test the wallet accounts properly when there are cloned transactions with malleated scriptsigs."""
@@ -18,15 +18,12 @@ class TxnMallTest(BitcoinTestFramework):
     def set_test_params(self):
         self.num_nodes = 3
         self.supports_cli = False
-        self.extra_args = [[
-            "-deprecatedrpc=settxfee"
-        ] for i in range(self.num_nodes)]
+        self.extra_args = [[] for i in range(self.num_nodes)]
 
     def skip_test_if_missing_module(self):
         self.skip_if_no_wallet()
 
     def add_options(self, parser):
-        self.add_wallet_options(parser)
         parser.add_argument("--mineblock", dest="mine_block", default=False, action="store_true",
                             help="Test double-spend of 1-confirmed transaction")
         parser.add_argument("--segwit", dest="segwit", default=False, action="store_true",
@@ -40,7 +37,7 @@ class TxnMallTest(BitcoinTestFramework):
     def spend_utxo(self, utxo, outputs):
         inputs = [utxo]
         tx = self.nodes[0].createrawtransaction(inputs, outputs)
-        tx = self.nodes[0].fundrawtransaction(tx)
+        tx = self.nodes[0].fundrawtransaction(tx, fee_rate=100)
         tx = self.nodes[0].signrawtransactionwithwallet(tx['hex'])
         return self.nodes[0].sendrawtransaction(tx['hex'])
 
@@ -54,8 +51,6 @@ class TxnMallTest(BitcoinTestFramework):
         starting_balance = 1250
         for i in range(3):
             assert_equal(self.nodes[i].getbalance(), starting_balance)
-
-        self.nodes[0].settxfee(.001)
 
         node0_address1 = self.nodes[0].getnewaddress(address_type=output_type)
         node0_utxo1 = self.create_outpoints(self.nodes[0], outputs=[{node0_address1: 1219}])[0]

@@ -1,4 +1,4 @@
-// Copyright (c) 2018-2021 The Bitcoin Core developers
+// Copyright (c) 2018-present The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -19,7 +19,7 @@ bool CCoinControl::HasSelected() const
 
 bool CCoinControl::IsSelected(const COutPoint& outpoint) const
 {
-    return m_selected.count(outpoint) > 0;
+    return m_selected.contains(outpoint);
 }
 
 bool CCoinControl::IsExternalSelected(const COutPoint& outpoint) const

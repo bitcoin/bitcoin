@@ -1,8 +1,8 @@
 package=libXau
-$(package)_version=1.0.9
+$(package)_version=1.0.12
 $(package)_download_path=https://xorg.freedesktop.org/releases/individual/lib/
 $(package)_file_name=$(package)-$($(package)_version).tar.gz
-$(package)_sha256_hash=1f123d8304b082ad63a9e89376400a3b1d4c29e67e3ea07b3f659cccca690eea
+$(package)_sha256_hash=2402dd938da4d0a332349ab3d3586606175e19cb32cb9fe013c19f1dc922dcee
 $(package)_dependencies=xproto
 
 # When updating this package, check the default value of

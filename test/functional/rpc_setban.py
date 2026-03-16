@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (c) 2015-2021 The Bitcoin Core developers
+# Copyright (c) 2015-present The Bitcoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test the setban rpc call."""
@@ -24,7 +24,7 @@ class SetBanTests(BitcoinTestFramework):
         # Node 0 connects to Node 1, check that the noban permission is not granted
         self.connect_nodes(0, 1)
         peerinfo = self.nodes[1].getpeerinfo()[0]
-        assert not "noban" in peerinfo["permissions"]
+        assert "noban" not in peerinfo["permissions"]
 
         # Node 0 get banned by Node 1
         self.nodes[1].setban("127.0.0.1", "add")
@@ -51,7 +51,7 @@ class SetBanTests(BitcoinTestFramework):
         self.restart_node(1, [])
         self.connect_nodes(0, 1)
         peerinfo = self.nodes[1].getpeerinfo()[0]
-        assert not "noban" in peerinfo["permissions"]
+        assert "noban" not in peerinfo["permissions"]
 
         self.log.info("Test that a non-IP address can be banned/unbanned")
         node = self.nodes[1]

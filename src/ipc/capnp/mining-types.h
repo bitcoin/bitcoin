@@ -1,4 +1,4 @@
-// Copyright (c) 2024 The Bitcoin Core developers
+// Copyright (c) 2024-present The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -14,13 +14,7 @@
 #include <validation.h>
 
 namespace mp {
-// Custom serialization for BlockValidationState.
-void CustomBuildMessage(InvokeContext& invoke_context,
-                        const BlockValidationState& src,
-                        ipc::capnp::messages::BlockValidationState::Builder&& builder);
-void CustomReadMessage(InvokeContext& invoke_context,
-                       const ipc::capnp::messages::BlockValidationState::Reader& reader,
-                       BlockValidationState& dest);
+// Custom serializations
 } // namespace mp
 
 #endif // BITCOIN_IPC_CAPNP_MINING_TYPES_H

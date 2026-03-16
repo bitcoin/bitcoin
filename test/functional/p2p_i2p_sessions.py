@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (c) 2022-2022 The Bitcoin Core developers
+# Copyright (c) 2022-present The Bitcoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """
@@ -23,12 +23,12 @@ class I2PSessions(BitcoinTestFramework):
 
         self.log.info("Ensure we create a persistent session when -i2pacceptincoming=1")
         node0 = self.nodes[0]
-        with node0.assert_debug_log(expected_msgs=["Creating persistent SAM session"]):
+        with node0.assert_debug_log(expected_msgs=["Creating persistent I2P SAM session"]):
             node0.addnode(node=addr, command="onetry")
 
         self.log.info("Ensure we create a transient session when -i2pacceptincoming=0")
         node1 = self.nodes[1]
-        with node1.assert_debug_log(expected_msgs=["Creating transient SAM session"]):
+        with node1.assert_debug_log(expected_msgs=["Creating transient I2P SAM session"]):
             node1.addnode(node=addr, command="onetry")
 
 

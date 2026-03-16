@@ -1,5 +1,5 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
-// Copyright (c) 2009-2022 The Bitcoin Core developers
+// Copyright (c) 2009-present The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -38,18 +38,18 @@
 #include <sys/utsname.h>
 #include <unistd.h>
 #endif
-#if HAVE_DECL_GETIFADDRS && HAVE_DECL_FREEIFADDRS
+#ifdef HAVE_IFADDRS
 #include <ifaddrs.h>
 #endif
 #ifdef HAVE_SYSCTL
 #include <sys/sysctl.h>
-#ifdef HAVE_VM_VM_PARAM_H
+#if __has_include(<vm/vm_param.h>)
 #include <vm/vm_param.h>
 #endif
-#ifdef HAVE_SYS_RESOURCES_H
+#if __has_include(<sys/resources.h>)
 #include <sys/resources.h>
 #endif
-#ifdef HAVE_SYS_VMMETER_H
+#if __has_include(<sys/vmmeter.h>)
 #include <sys/vmmeter.h>
 #endif
 #endif
@@ -57,8 +57,12 @@
 #include <sys/auxv.h>
 #endif
 
-#ifndef _MSC_VER
-extern char** environ; // NOLINT(readability-redundant-declaration): Necessary on some platforms
+#if defined(__APPLE__) || \
+    defined(__FreeBSD__) || \
+    defined(__NetBSD__) || \
+    defined(__OpenBSD__) || \
+    defined(__illumos__)
+extern char** environ; // Necessary on the above platforms
 #endif
 
 namespace {
@@ -330,7 +334,7 @@ void RandAddStaticEnv(CSHA512& hasher)
     }
 #endif
 
-#if HAVE_DECL_GETIFADDRS && HAVE_DECL_FREEIFADDRS
+#ifdef HAVE_IFADDRS
     // Network interfaces
     struct ifaddrs *ifad = nullptr;
     getifaddrs(&ifad);

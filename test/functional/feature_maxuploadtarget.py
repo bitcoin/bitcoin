@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (c) 2015-2022 The Bitcoin Core developers
+# Copyright (c) 2015-present The Bitcoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test behavior of -maxuploadtarget.
@@ -41,8 +41,7 @@ class TestP2PConn(P2PInterface):
         pass
 
     def on_block(self, message):
-        message.block.calc_sha256()
-        self.block_receive_map[message.block.sha256] += 1
+        self.block_receive_map[message.block.hash_int] += 1
 
 class MaxUploadTest(BitcoinTestFramework):
 
@@ -51,9 +50,7 @@ class MaxUploadTest(BitcoinTestFramework):
         self.num_nodes = 1
         self.extra_args = [[
             f"-maxuploadtarget={UPLOAD_TARGET_MB}M",
-            "-datacarriersize=100000",
         ]]
-        self.supports_cli = False
 
     def assert_uploadtarget_state(self, *, target_reached, serve_historical_blocks):
         """Verify the node's current upload target state via the `getnettotals` RPC call."""

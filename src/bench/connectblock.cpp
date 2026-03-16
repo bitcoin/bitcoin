@@ -1,4 +1,4 @@
-// Copyright (c) 2025 The Bitcoin Core developers
+// Copyright (c) 2025-present The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -126,6 +126,6 @@ static void ConnectBlockAllEcdsa(benchmark::Bench& bench)
     BenchmarkConnectBlock(bench, keys, outputs, *test_setup);
 }
 
-BENCHMARK(ConnectBlockAllSchnorr, benchmark::PriorityLevel::HIGH);
-BENCHMARK(ConnectBlockMixedEcdsaSchnorr, benchmark::PriorityLevel::HIGH);
-BENCHMARK(ConnectBlockAllEcdsa, benchmark::PriorityLevel::HIGH);
+BENCHMARK(ConnectBlockAllSchnorr);
+BENCHMARK(ConnectBlockMixedEcdsaSchnorr);
+BENCHMARK(ConnectBlockAllEcdsa);

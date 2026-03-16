@@ -1,4 +1,4 @@
-# Copyright (c) 2021 The Bitcoin Core developers
+# Copyright (c) 2021-present The Bitcoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -19,5 +19,8 @@ using Mining = import "mining.capnp";
 interface Init $Proxy.wrap("interfaces::Init") {
     construct @0 (threadMap: Proxy.ThreadMap) -> (threadMap :Proxy.ThreadMap);
     makeEcho @1 (context :Proxy.Context) -> (result :Echo.Echo);
-    makeMining @2 (context :Proxy.Context) -> (result :Mining.Mining);
+    makeMining @3 (context :Proxy.Context) -> (result :Mining.Mining);
+
+    # DEPRECATED: no longer supported; server returns an error.
+    makeMiningOld2 @2 () -> ();
 }

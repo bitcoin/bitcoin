@@ -1,4 +1,4 @@
-// Copyright (c) 2020-2021 The Bitcoin Core developers
+// Copyright (c) 2020-present The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -43,7 +43,7 @@ FUZZ_TARGET(merkleblock)
             partial_merkle_tree = merkle_block.txn;
         });
     (void)partial_merkle_tree.GetNumTransactions();
-    std::vector<uint256> matches;
+    std::vector<Txid> matches;
     std::vector<unsigned int> indices;
     (void)partial_merkle_tree.ExtractMatches(matches, indices);
 }

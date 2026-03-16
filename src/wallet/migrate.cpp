@@ -1,15 +1,20 @@
+// Copyright (c) 2024-present The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <compat/byteswap.h>
-#include <crypto/common.h> // For ReadBE32
+#include <crypto/common.h>
 #include <logging.h>
 #include <streams.h>
 #include <util/translation.h>
 #include <wallet/migrate.h>
 
+#include <array>
+#include <cstddef>
 #include <optional>
+#include <stdexcept>
 #include <variant>
+#include <vector>
 
 namespace wallet {
 // Magic bytes in both endianness's
@@ -45,7 +50,7 @@ enum class RecordType : uint8_t {
     KEYDATA = 1,
     // DUPLICATE = 2,       Unused as our databases do not support duplicate records
     OVERFLOW_DATA = 3,
-    DELETE = 0x80, // Indicate this record is deleted. This is OR'd with the real type.
+    DELETE_FLAG = 0x80, // Indicate this record is deleted. This is OR'd with the real type.
 };
 
 enum class BTreeFlags : uint32_t {
@@ -203,8 +208,8 @@ class RecordHeader
 {
 public:
     uint16_t len;    // Key/data item length
-    RecordType type; // Page type (BDB has this include a DELETE FLAG that we track separately)
-    bool deleted;    // Whether the DELETE flag was set on type
+    RecordType type; // Page type (BDB has this; includes a DELETE_FLAG that we track separately)
+    bool deleted;    // Whether the DELETE_FLAG was set on type
 
     static constexpr size_t SIZE = 3; // The record header is 3 bytes
 
@@ -220,8 +225,8 @@ public:
 
         uint8_t uint8_type;
         s >> uint8_type;
-        type = static_cast<RecordType>(uint8_type & ~static_cast<uint8_t>(RecordType::DELETE));
-        deleted = uint8_type & static_cast<uint8_t>(RecordType::DELETE);
+        type = static_cast<RecordType>(uint8_type & ~static_cast<uint8_t>(RecordType::DELETE_FLAG));
+        deleted = uint8_type & static_cast<uint8_t>(RecordType::DELETE_FLAG);
 
         if (other_endian) {
             len = internal_bswap_16(len);
@@ -539,8 +544,7 @@ void BerkeleyRODatabase::Open()
     page_size = outer_meta.pagesize;
 
     // Verify the size of the file is a multiple of the page size
-    db_file.seek(0, SEEK_END);
-    int64_t size = db_file.tell();
+    const int64_t size{db_file.size()};
 
     // Since BDB stores everything in a page, the file size should be a multiple of the page size;
     // However, BDB doesn't actually check that this is the case, and enforcing this check results
@@ -699,7 +703,7 @@ void BerkeleyRODatabase::Open()
     }
 }
 
-std::unique_ptr<DatabaseBatch> BerkeleyRODatabase::MakeBatch(bool flush_on_close)
+std::unique_ptr<DatabaseBatch> BerkeleyRODatabase::MakeBatch()
 {
     return std::make_unique<BerkeleyROBatch>(*this);
 }
@@ -714,15 +718,15 @@ bool BerkeleyRODatabase::Backup(const std::string& dest) const
     }
     try {
         if (fs::exists(dst) && fs::equivalent(src, dst)) {
-            LogPrintf("cannot backup to wallet source file %s\n", fs::PathToString(dst));
+            LogWarning("cannot backup to wallet source file %s", fs::PathToString(dst));
             return false;
         }
 
         fs::copy_file(src, dst, fs::copy_options::overwrite_existing);
-        LogPrintf("copied %s to %s\n", fs::PathToString(m_filepath), fs::PathToString(dst));
+        LogInfo("copied %s to %s\n", fs::PathToString(m_filepath), fs::PathToString(dst));
         return true;
     } catch (const fs::filesystem_error& e) {
-        LogPrintf("error copying %s to %s - %s\n", fs::PathToString(m_filepath), fs::PathToString(dst), fsbridge::get_filesystem_error_message(e));
+        LogWarning("error copying %s to %s - %s\n", fs::PathToString(m_filepath), fs::PathToString(dst), e.code().message());
         return false;
     }
 }
@@ -743,7 +747,7 @@ bool BerkeleyROBatch::ReadKey(DataStream&& key, DataStream& value)
 bool BerkeleyROBatch::HasKey(DataStream&& key)
 {
     SerializeData key_data{key.begin(), key.end()};
-    return m_database.m_records.count(key_data) > 0;
+    return m_database.m_records.contains(key_data);
 }
 
 BerkeleyROCursor::BerkeleyROCursor(const BerkeleyRODatabase& database, std::span<const std::byte> prefix)

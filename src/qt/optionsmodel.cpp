@@ -1,4 +1,4 @@
-// Copyright (c) 2011-2022 The Bitcoin Core developers
+// Copyright (c) 2011-present The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -17,17 +17,16 @@
 #include <netbase.h>
 #include <node/caches.h>
 #include <node/chainstatemanager_args.h>
+#include <univalue.h>
 #include <util/string.h>
-#include <validation.h>    // For DEFAULT_SCRIPTCHECK_THREADS
-#include <wallet/wallet.h> // For DEFAULT_SPEND_ZEROCONF_CHANGE
+#include <validation.h>
+#include <wallet/wallet.h>
 
 #include <QDebug>
 #include <QLatin1Char>
 #include <QSettings>
 #include <QStringList>
 #include <QVariant>
-
-#include <univalue.h>
 
 const char *DEFAULT_GUI_PROXY_HOST = "127.0.0.1";
 
@@ -89,14 +88,14 @@ static common::SettingsValue PruneSetting(bool prune_enabled, int prune_size_gb)
 static bool PruneEnabled(const common::SettingsValue& prune_setting)
 {
     // -prune=1 setting is manual pruning mode, so disabled for purposes of the gui
-    return SettingToInt(prune_setting, 0) > 1;
+    return SettingTo<int64_t>(prune_setting, 0) > 1;
 }
 
 //! Get pruning size value to show in GUI from bitcoin -prune setting. If
 //! pruning is not enabled, just show default recommended pruning size (2GB).
 static int PruneSizeGB(const common::SettingsValue& prune_setting)
 {
-    int value = SettingToInt(prune_setting, 0);
+    int value = SettingTo<int64_t>(prune_setting, 0);
     return value > 1 ? PruneMiBtoGB(value) : DEFAULT_PRUNE_TARGET_GB;
 }
 
@@ -470,9 +469,9 @@ QVariant OptionsModel::getOption(OptionID option, const std::string& suffix) con
                suffix.empty()          ? getOption(option, "-prev") :
                                          DEFAULT_PRUNE_TARGET_GB;
     case DatabaseCache:
-        return qlonglong(SettingToInt(setting(), DEFAULT_DB_CACHE >> 20));
+        return qlonglong(SettingTo<int64_t>(setting(), node::GetDefaultDBCache() >> 20));
     case ThreadsScriptVerif:
-        return qlonglong(SettingToInt(setting(), DEFAULT_SCRIPTCHECK_THREADS));
+        return qlonglong(SettingTo<int64_t>(setting(), DEFAULT_SCRIPTCHECK_THREADS));
     case Listen:
         return SettingToBool(setting(), DEFAULT_LISTEN);
     case Server:

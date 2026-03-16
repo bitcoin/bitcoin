@@ -1,4 +1,4 @@
-// Copyright (c) 2019 The Bitcoin Core developers
+// Copyright (c) The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -6,18 +6,18 @@
 #define MP_UTIL_H
 
 #include <capnp/schema.h>
+#include <cassert>
 #include <cstddef>
+#include <cstring>
+#include <exception>
 #include <functional>
-#include <future>
-#include <kj/common.h>
-#include <kj/exception.h>
 #include <kj/string-tree.h>
-#include <memory>
-#include <string.h>
+#include <mutex>
 #include <string>
 #include <tuple>
 #include <type_traits>
 #include <utility>
+#include <variant>
 #include <vector>
 
 namespace mp {
@@ -130,6 +130,70 @@ const char* TypeName()
     return short_name ? short_name + 1 : display_name;
 }
 
+//! Convenient wrapper around std::variant<T*, T>
+template <typename T>
+struct PtrOrValue {
+    std::variant<T*, T> data;
+
+    template <typename... Args>
+    PtrOrValue(T* ptr, Args&&... args) : data(ptr ? ptr : std::variant<T*, T>{std::in_place_type<T>, std::forward<Args>(args)...}) {}
+
+    T& operator*() { return data.index() ? std::get<T>(data) : *std::get<T*>(data); }
+    T* operator->() { return &**this; }
+    T& operator*() const { return data.index() ? std::get<T>(data) : *std::get<T*>(data); }
+    T* operator->() const { return &**this; }
+};
+
+// Annotated mutex and lock class (https://clang.llvm.org/docs/ThreadSafetyAnalysis.html)
+#if defined(__clang__) && (!defined(SWIG))
+#define MP_TSA(x)   __attribute__((x))
+#else
+#define MP_TSA(x)   // no-op
+#endif
+
+#define MP_CAPABILITY(x)        MP_TSA(capability(x))
+#define MP_SCOPED_CAPABILITY    MP_TSA(scoped_lockable)
+#define MP_REQUIRES(x)          MP_TSA(requires_capability(x))
+#define MP_ACQUIRE(...)         MP_TSA(acquire_capability(__VA_ARGS__))
+#define MP_RELEASE(...)         MP_TSA(release_capability(__VA_ARGS__))
+#define MP_ASSERT_CAPABILITY(x) MP_TSA(assert_capability(x))
+#define MP_GUARDED_BY(x)        MP_TSA(guarded_by(x))
+#define MP_NO_TSA               MP_TSA(no_thread_safety_analysis)
+
+class MP_CAPABILITY("mutex") Mutex {
+public:
+    void lock() MP_ACQUIRE() { m_mutex.lock(); }
+    void unlock() MP_RELEASE() { m_mutex.unlock(); }
+
+    std::mutex m_mutex;
+};
+
+class MP_SCOPED_CAPABILITY Lock {
+public:
+    explicit Lock(Mutex& m) MP_ACQUIRE(m) : m_lock(m.m_mutex) {}
+    ~Lock() MP_RELEASE() = default;
+    void unlock() MP_RELEASE() { m_lock.unlock(); }
+    void lock() MP_ACQUIRE() { m_lock.lock(); }
+    void assert_locked(Mutex& mutex) MP_ASSERT_CAPABILITY() MP_ASSERT_CAPABILITY(mutex)
+    {
+        assert(m_lock.mutex() == &mutex.m_mutex);
+        assert(m_lock);
+    }
+
+    std::unique_lock<std::mutex> m_lock;
+};
+
+template<typename T>
+struct GuardedRef
+{
+    Mutex& mutex;
+    T& ref MP_GUARDED_BY(mutex);
+};
+
+// CTAD for Clang 16: GuardedRef{mutex, x} -> GuardedRef<decltype(x)>
+template <class U>
+GuardedRef(Mutex&, U&) -> GuardedRef<U>;
+
 //! Analog to std::lock_guard that unlocks instead of locks.
 template <typename Lock>
 struct UnlockGuard
@@ -146,44 +210,36 @@ void Unlock(Lock& lock, Callback&& callback)
     callback();
 }
 
-//! Needed for libc++/macOS compatibility. Lets code work with shared_ptr nothrow declaration
-//! https://github.com/capnproto/capnproto/issues/553#issuecomment-328554603
-template <typename T>
-struct DestructorCatcher
-{
-    T value;
-    template <typename... Params>
-    DestructorCatcher(Params&&... params) : value(kj::fwd<Params>(params)...)
-    {
-    }
-    ~DestructorCatcher() noexcept try {
-    } catch (const kj::Exception& e) { // NOLINT(bugprone-empty-catch)
-    }
-};
-
-//! Wrapper around callback function for compatibility with std::async.
+//! Invoke a function and run a follow-up action before returning the original
+//! result.
 //!
-//! std::async requires callbacks to be copyable and requires noexcept
-//! destructors, but this doesn't work well with kj types which are generally
-//! move-only and not noexcept.
-template <typename Callable>
-struct AsyncCallable
+//! This can be used similarly to KJ_DEFER to run cleanup code, but works better
+//! if the cleanup function can throw because it avoids clang bug
+//! https://github.com/llvm/llvm-project/issues/12658 which skips calling
+//! destructors in that case and can lead to memory leaks. Also, if both
+//! functions throw, this lets one exception take precedence instead of
+//! terminating due to having two active exceptions.
+template <typename Fn, typename After>
+decltype(auto) TryFinally(Fn&& fn, After&& after)
 {
-    AsyncCallable(Callable&& callable) : m_callable(std::make_shared<DestructorCatcher<Callable>>(std::move(callable)))
-    {
+    bool success{false};
+    using R = std::invoke_result_t<Fn>;
+    try {
+        if constexpr (std::is_void_v<R>) {
+            std::forward<Fn>(fn)();
+            success = true;
+            std::forward<After>(after)();
+            return;
+        } else {
+            decltype(auto) result = std::forward<Fn>(fn)();
+            success = true;
+            std::forward<After>(after)();
+            return result;
+        }
+    } catch (...) {
+        if (!success) std::forward<After>(after)();
+        throw;
     }
-    AsyncCallable(const AsyncCallable&) = default;
-    AsyncCallable(AsyncCallable&&) = default;
-    ~AsyncCallable() noexcept = default;
-    ResultOf<Callable> operator()() const { return (m_callable->value)(); }
-    mutable std::shared_ptr<DestructorCatcher<Callable>> m_callable;
-};
-
-//! Construct AsyncCallable object.
-template <typename Callable>
-AsyncCallable<std::remove_reference_t<Callable>> MakeAsyncCallable(Callable&& callable)
-{
-    return std::move(callable);
 }
 
 //! Format current thread name as "{exe_name}-{$pid}/{thread_name}-{$tid}".
@@ -191,20 +247,23 @@ std::string ThreadName(const char* exe_name);
 
 //! Escape binary string for use in log so it doesn't trigger unicode decode
 //! errors in python unit tests.
-std::string LogEscape(const kj::StringTree& string);
+std::string LogEscape(const kj::StringTree& string, size_t max_size);
 
 //! Callback type used by SpawnProcess below.
 using FdToArgsFn = std::function<std::vector<std::string>(int fd)>;
 
 //! Spawn a new process that communicates with the current process over a socket
 //! pair. Returns pid through an output argument, and file descriptor for the
-//! local side of the socket. Invokes fd_to_args callback with the remote file
-//! descriptor number which returns the command line arguments that should be
-//! used to execute the process, and which should have the remote file
-//! descriptor embedded in whatever format the child process expects.
+//! local side of the socket.
+//! The fd_to_args callback is invoked in the parent process before fork().
+//! It must not rely on child pid/state, and must return the command line
+//! arguments that should be used to execute the process. Embed the remote file
+//! descriptor number in whatever format the child process expects.
 int SpawnProcess(int& pid, FdToArgsFn&& fd_to_args);
 
 //! Call execvp with vector args.
+//! Not safe to call in a post-fork child of a multi-threaded process.
+//! Currently only used by mpgen at build time.
 void ExecProcess(const std::vector<std::string>& args);
 
 //! Wait for a process to exit and return its exit code.
@@ -215,6 +274,69 @@ inline char* CharCast(unsigned char* c) { return (char*)c; }
 inline const char* CharCast(const char* c) { return c; }
 inline const char* CharCast(const unsigned char* c) { return (const char*)c; }
 
+//! Exception thrown from code executing an IPC call that is interrupted.
+struct InterruptException final : std::exception {
+    explicit InterruptException(std::string message) : m_message(std::move(message)) {}
+    const char* what() const noexcept override { return m_message.c_str(); }
+    std::string m_message;
+};
+
+class CancelProbe;
+
+//! Helper class that detects when a promise is canceled. Used to detect
+//! canceled requests and prevent potential crashes on unclean disconnects.
+//!
+//! In the future, this could also be used to support a way for wrapped C++
+//! methods to detect cancellation (like approach #4 in
+//! https://github.com/bitcoin/bitcoin/issues/33575).
+class CancelMonitor
+{
+public:
+    inline ~CancelMonitor();
+    inline void promiseDestroyed(CancelProbe& probe);
+
+    bool m_canceled{false};
+    std::function<void()> m_on_cancel;
+    CancelProbe* m_probe{nullptr};
+};
+
+//! Helper object to attach to a promise and update a CancelMonitor.
+class CancelProbe
+{
+public:
+    CancelProbe(CancelMonitor& monitor) : m_monitor(&monitor)
+    {
+        assert(!monitor.m_probe);
+        monitor.m_probe = this;
+    }
+    ~CancelProbe()
+    {
+        if (m_monitor) m_monitor->promiseDestroyed(*this);
+    }
+    CancelMonitor* m_monitor;
+};
+
+CancelMonitor::~CancelMonitor()
+{
+    if (m_probe) {
+        assert(m_probe->m_monitor == this);
+        m_probe->m_monitor = nullptr;
+        m_probe = nullptr;
+    }
+}
+
+void CancelMonitor::promiseDestroyed(CancelProbe& probe)
+{
+    // If promise is being destroyed, assume the promise has been canceled. In
+    // theory this method could be called when a promise was fulfilled or
+    // rejected rather than canceled, but it's safe to assume that's not the
+    // case because the CancelMonitor class is meant to be used inside code
+    // fulfilling or rejecting the promise and destroyed before doing so.
+    assert(m_probe == &probe);
+    m_canceled = true;
+    if (m_on_cancel) m_on_cancel();
+    m_probe = nullptr;
+}
 } // namespace mp
 
 #endif // MP_UTIL_H

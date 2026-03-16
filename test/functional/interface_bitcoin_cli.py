@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (c) 2017-2022 The Bitcoin Core developers
+# Copyright (c) 2017-present The Bitcoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test bitcoin-cli"""
@@ -73,18 +73,51 @@ def cli_get_info_string_to_dict(cli_get_info_string):
 
 
 class TestBitcoinCli(BitcoinTestFramework):
-    def add_options(self, parser):
-        self.add_wallet_options(parser)
-
     def set_test_params(self):
         self.setup_clean_chain = True
         self.num_nodes = 1
+        self.uses_wallet = None
 
     def skip_test_if_missing_module(self):
         self.skip_if_no_cli()
 
+    def test_netinfo(self):
+        """Test -netinfo output format."""
+        self.log.info("Test -netinfo header and separate local services line")
+        out = self.nodes[0].cli('-netinfo').send_cli().splitlines()
+        assert out[0].startswith(f"{self.config['environment']['CLIENT_NAME']} client ")
+        assert any(re.match(r"^Local services:.+network", line) for line in out)
+
+        self.log.info("Test -netinfo local services are moved to header if details are requested")
+        det = self.nodes[0].cli('-netinfo', '1').send_cli().splitlines()
+        self.log.debug(f"Test -netinfo 1 header output: {det[0]}")
+        assert re.match(rf"^{re.escape(self.config['environment']['CLIENT_NAME'])} client.+services nwl2?$", det[0])
+        assert not any(line.startswith("Local services:") for line in det)
+
+    def test_echojson_positional_equals(self):
+        """Test JSON parameter parsing containing '=' with -named echojson"""
+        self.log.info("Test JSON parameter parsing containing '=' is handled correctly with -named")
+
+        # This should be treated as a positional JSON argument, not as a named
+        result = self.nodes[0].cli("-named", "echojson", '["key=value"]').send_cli()
+        assert_equal(result, [["key=value"]])
+
+        result = self.nodes[0].cli("-named", "echojson", '["key=value", "another=test"]').send_cli()
+        assert_equal(result, [["key=value", "another=test"]])
+
+        result = self.nodes[0].cli("-named", "echojson", '["data=test"]', "42").send_cli()
+        expected = [["data=test"], 42]
+        assert_equal(result, expected)
+
+        # This should be treated as a named parameter, as arg0 and arg1 are valid parameter names
+        result = self.nodes[0].cli("-named", "echojson", 'arg0=["data=test"]', 'arg1=42').send_cli()
+        expected = [["data=test"], 42]
+        assert_equal(result, expected)
+
     def run_test(self):
         """Main test logic"""
+        self.test_echojson_positional_equals()
+
         self.generate(self.nodes[0], BLOCKS)
 
         self.log.info("Compare responses from getblockchaininfo RPC and `bitcoin-cli getblockchaininfo`")
@@ -180,7 +213,7 @@ class TestBitcoinCli(BitcoinTestFramework):
         assert_raises_process_error(1, "Invalid value for -color option. Valid values: always, auto, never.", self.nodes[0].cli('-getinfo', '-color=foo').send_cli)
 
         self.log.info("Test -getinfo returns expected network and blockchain info")
-        if self.is_specified_wallet_compiled():
+        if self.is_wallet_compiled():
             self.import_deterministic_coinbase_privkeys()
             self.nodes[0].encryptwallet(password)
         cli_get_info_string = self.nodes[0].cli('-getinfo').send_cli()
@@ -206,7 +239,7 @@ class TestBitcoinCli(BitcoinTestFramework):
         cli_get_info = cli_get_info_string_to_dict(cli_get_info_string)
         assert_equal(cli_get_info["Proxies"], "127.0.0.1:9050 (ipv4, ipv6, onion, cjdns), 127.0.0.1:7656 (i2p)")
 
-        if self.is_specified_wallet_compiled():
+        if self.is_wallet_compiled():
             self.log.info("Test -getinfo and bitcoin-cli getwalletinfo return expected wallet info")
             # Explicitly set the output type in order to have consistent tx vsize / fees
             # for both legacy and descriptor wallets (disables the change address type detection algorithm)
@@ -216,7 +249,6 @@ class TestBitcoinCli(BitcoinTestFramework):
             wallet_info = self.nodes[0].getwalletinfo()
             assert_equal(int(cli_get_info['Keypool size']), wallet_info['keypoolsize'])
             assert_equal(int(cli_get_info['Unlocked until']), wallet_info['unlocked_until'])
-            assert_equal(Decimal(cli_get_info['Transaction fee rate (-paytxfee) (BTC/kvB)']), wallet_info['paytxfee'])
             assert_equal(Decimal(cli_get_info['Min tx relay fee rate (BTC/kvB)']), network_info['relayfee'])
             assert_equal(self.nodes[0].cli.getwalletinfo(), wallet_info)
 
@@ -378,6 +410,8 @@ class TestBitcoinCli(BitcoinTestFramework):
         else:
             self.log.info("*** Wallet not compiled; cli getwalletinfo and -getinfo wallet tests skipped")
             self.generate(self.nodes[0], 25)  # maintain block parity with the wallet_compiled conditional branch
+
+        self.test_netinfo()
 
         self.log.info("Test -version with node stopped")
         self.stop_node(0)

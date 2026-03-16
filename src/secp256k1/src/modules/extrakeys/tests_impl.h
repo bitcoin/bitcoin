@@ -8,6 +8,7 @@
 #define SECP256K1_MODULE_EXTRAKEYS_TESTS_H
 
 #include "../../../include/secp256k1_extrakeys.h"
+#include "../../unit_test.h"
 
 static void test_xonly_pubkey(void) {
     secp256k1_pubkey pk;
@@ -467,17 +468,17 @@ static void test_keypair_add(void) {
     }
 }
 
-static void run_extrakeys_tests(void) {
+/* --- Test registry --- */
+static const struct tf_test_entry tests_extrakeys[] = {
     /* xonly key test cases */
-    test_xonly_pubkey();
-    test_xonly_pubkey_tweak();
-    test_xonly_pubkey_tweak_check();
-    test_xonly_pubkey_tweak_recursive();
-    test_xonly_pubkey_comparison();
-
+    CASE1(test_xonly_pubkey),
+    CASE1(test_xonly_pubkey_tweak),
+    CASE1(test_xonly_pubkey_tweak_check),
+    CASE1(test_xonly_pubkey_tweak_recursive),
+    CASE1(test_xonly_pubkey_comparison),
     /* keypair tests */
-    test_keypair();
-    test_keypair_add();
-}
+    CASE1(test_keypair),
+    CASE1(test_keypair_add),
+};
 
 #endif

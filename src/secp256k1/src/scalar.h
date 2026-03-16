@@ -48,7 +48,7 @@ static void secp256k1_scalar_get_b32(unsigned char *bin, const secp256k1_scalar*
 /** Add two scalars together (modulo the group order). Returns whether it overflowed. */
 static int secp256k1_scalar_add(secp256k1_scalar *r, const secp256k1_scalar *a, const secp256k1_scalar *b);
 
-/** Conditionally add a power of two to a scalar. The result is not allowed to overflow. */
+/** Conditionally add a power of two to a scalar. The result is not allowed to overflow. Flag must be 0 or 1. */
 static void secp256k1_scalar_cadd_bit(secp256k1_scalar *r, unsigned int bit, int flag);
 
 /** Multiply two scalars (modulo the group order). */
@@ -78,7 +78,7 @@ static int secp256k1_scalar_is_even(const secp256k1_scalar *a);
 /** Check whether a scalar is higher than the group order divided by 2. */
 static int secp256k1_scalar_is_high(const secp256k1_scalar *a);
 
-/** Conditionally negate a number, in constant time.
+/** Conditionally negate a number, in constant time. Flag must be 0 or 1.
  * Returns -1 if the number was negated, 1 otherwise */
 static int secp256k1_scalar_cond_negate(secp256k1_scalar *a, int flag);
 
@@ -95,7 +95,7 @@ static void secp256k1_scalar_split_lambda(secp256k1_scalar * SECP256K1_RESTRICT 
 /** Multiply a and b (without taking the modulus!), divide by 2**shift, and round to the nearest integer. Shift must be at least 256. */
 static void secp256k1_scalar_mul_shift_var(secp256k1_scalar *r, const secp256k1_scalar *a, const secp256k1_scalar *b, unsigned int shift);
 
-/** If flag is true, set *r equal to *a; otherwise leave it. Constant-time.  Both *r and *a must be initialized.*/
+/** If flag is 1, set *r equal to *a; if flag is 0, leave it. Constant-time.  Both *r and *a must be initialized. Flag must be 0 or 1. */
 static void secp256k1_scalar_cmov(secp256k1_scalar *r, const secp256k1_scalar *a, int flag);
 
 /** Check invariants on a scalar (no-op unless VERIFY is enabled). */

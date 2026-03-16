@@ -130,7 +130,7 @@ SECP256K1_API int secp256k1_ellswift_decode(
  *
  *  Returns: 1: secret was valid, public key was stored.
  *           0: secret was invalid, try again.
- *  Args:    ctx:        pointer to a context object
+ *  Args:    ctx:        pointer to a context object (not secp256k1_context_static)
  *  Out:     ell64:      pointer to a 64-byte array to receive the ElligatorSwift
  *                       public key
  *  In:      seckey32:   pointer to a 32-byte secret key

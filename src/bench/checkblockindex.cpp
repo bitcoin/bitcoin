@@ -19,4 +19,4 @@ static void CheckBlockIndex(benchmark::Bench& bench)
 }
 
 
-BENCHMARK(CheckBlockIndex, benchmark::PriorityLevel::HIGH);
+BENCHMARK(CheckBlockIndex);

@@ -8,8 +8,6 @@ To quickly get started fuzzing Bitcoin Core using [libFuzzer](https://llvm.org/d
 $ git clone https://github.com/bitcoin/bitcoin
 $ cd bitcoin/
 $ cmake --preset=libfuzzer
-# macOS users: If you have problem with this step then make sure to read "macOS hints for
-# libFuzzer" on https://github.com/bitcoin/bitcoin/blob/master/doc/fuzzing.md#macos-hints-for-libfuzzer
 $ cmake --build build_fuzz
 $ FUZZ=process_message build_fuzz/bin/fuzz
 # abort fuzzing using ctrl-c
@@ -19,7 +17,12 @@ One can use `--preset=libfuzzer-nosan` to do the same without common sanitizers 
 See [further](#run-without-sanitizers-for-increased-throughput) for more information.
 
 There is also a runner script to execute all fuzz targets. Refer to
-`./test/fuzz/test_runner.py --help` for more details.
+`./build_fuzz/test/fuzz/test_runner.py --help` for more details.
+
+For source-based coverage reports, see [developer notes](/doc/developer-notes.md#compiling-for-fuzz-coverage).
+
+macOS users: We recommend fuzzing on Linux, see [macOS notes](#macos-notes) for
+more information.
 
 ## Overview of Bitcoin Core fuzzing
 
@@ -27,7 +30,7 @@ There is also a runner script to execute all fuzz targets. Refer to
 
 ## Fuzzing harnesses and output
 
-[`process_message`](https://github.com/bitcoin/bitcoin/blob/master/src/test/fuzz/process_message.cpp) is a fuzzing harness for the [`ProcessMessage(...)` function (`net_processing`)](https://github.com/bitcoin/bitcoin/blob/master/src/net_processing.cpp). The available fuzzing harnesses are found in [`src/test/fuzz/`](https://github.com/bitcoin/bitcoin/tree/master/src/test/fuzz).
+[`process_message`](/src/test/fuzz/process_message.cpp) is a fuzzing harness for the [`ProcessMessage(...)` function (`net_processing`)](/src/net_processing.cpp). The available fuzzing harnesses are found in [`src/test/fuzz/`](/src/test/fuzz).
 
 The fuzzer will output `NEW` every time it has created a test input that covers new areas of the code under test. For more information on how to interpret the fuzzer output, see the [libFuzzer documentation](https://llvm.org/docs/LibFuzzer.html).
 
@@ -79,7 +82,7 @@ of the test. Just make sure to use double-dash to distinguish them from the
 fuzzer's own arguments:
 
 ```sh
-$ FUZZ=address_deserialize_v2 build_fuzz/bin/fuzz -runs=1 fuzz_corpora/address_deserialize_v2 --checkaddrman=5 --printtoconsole=1
+$ FUZZ=address_deserialize build_fuzz/bin/fuzz -runs=1 fuzz_corpora/address_deserialize --checkaddrman=5 --printtoconsole=1
 ```
 
 ## Fuzzing corpora
@@ -150,29 +153,45 @@ If you find coverage increasing inputs when fuzzing you are highly encouraged to
 
 Every single pull request submitted against the Bitcoin Core repo is automatically tested against all inputs in the [`bitcoin-core/qa-assets`](https://github.com/bitcoin-core/qa-assets) repo. Contributing new coverage increasing inputs is an easy way to help make Bitcoin Core more robust.
 
-## macOS hints for libFuzzer
+## Building and debugging fuzz tests
 
-The default Clang/LLVM version supplied by Apple on macOS does not include
-fuzzing libraries, so macOS users will need to install a full version, for
-example using `brew install llvm`.
+There are 3 ways fuzz tests can be built:
 
-You may also need to take care of giving the correct path for `clang` and
-`clang++`, like `CC=/path/to/clang CXX=/path/to/clang++` if the non-systems
-`clang` does not come first in your path.
+1. With `-DBUILD_FOR_FUZZING=ON` which forces on fuzz determinism (skipping
+   proof of work checks, disabling random number seeding, disabling clock time)
+   and causes `Assume()` checks to abort on failure.
 
-Using `lld` is required due to issues with Apple's `ld` and `LLVM`.
+   This is the normal way to run fuzz tests and generate new inputs. Because
+   determinism is hardcoded on in this build, only the fuzz binary can be built
+   and all other binaries are disabled.
 
-Full configuration step for macOS:
+2. With `-DBUILD_FUZZ_BINARY=ON -DCMAKE_BUILD_TYPE=Debug` which causes
+   `Assume()` checks to abort on failure, and enables fuzz determinism, but
+   makes it optional.
 
-```sh
-$ brew install llvm lld
-$ cmake --preset=libfuzzer \
-   -DCMAKE_C_COMPILER="$(brew --prefix llvm)/bin/clang" \
-   -DCMAKE_CXX_COMPILER="$(brew --prefix llvm)/bin/clang++" \
-   -DCMAKE_EXE_LINKER_FLAGS="-fuse-ld=lld"
-```
+   Determinism is turned on in the fuzz binary by default, but can be turned off
+   by setting the `FUZZ_NONDETERMINISM` environment variable to any value, which
+   may be useful for running fuzz tests with code that deterministic execution
+   would otherwise skip.
 
-Read the [libFuzzer documentation](https://llvm.org/docs/LibFuzzer.html) for more information. This [libFuzzer tutorial](https://github.com/google/fuzzing/blob/master/tutorial/libFuzzerTutorial.md) might also be of interest.
+   Since `BUILD_FUZZ_BINARY`, unlike `BUILD_FOR_FUZZING`, does not hardcode on
+   determinism, this allows non-fuzz binaries to coexist in the same build,
+   making it possible to reproduce fuzz test failures in a normal build.
+
+3. With `-DBUILD_FUZZ_BINARY=ON -DCMAKE_BUILD_TYPE=Release`. In this build, the
+   fuzz binary will build but refuse to run, because in release builds
+   determinism is forced off and `Assume()` checks do not abort, so running the
+   tests would not be useful. This build is only useful for ensuring fuzz tests
+   compile and link.
+
+## macOS notes
+
+Support for fuzzing on macOS is not officially maintained by this project. If
+you are running into issues on macOS, we recommend fuzzing on Linux instead for
+best results. On macOS this can be done within Docker or a virtual machine.
+
+Reproducing and debugging fuzz testcases on macOS is supported, by building the
+fuzz binary without support for any specific fuzzing engine.
 
 # Fuzzing Bitcoin Core using afl++
 
@@ -186,14 +205,12 @@ $ cd bitcoin/
 $ git clone https://github.com/AFLplusplus/AFLplusplus
 $ make -C AFLplusplus/ source-only
 # If afl-clang-lto is not available, see
-# https://github.com/AFLplusplus/AFLplusplus#a-selecting-the-best-afl-compiler-for-instrumenting-the-target
+# https://github.com/AFLplusplus/AFLplusplus/blob/stable/docs/fuzzing_in_depth.md#a-selecting-the-best-afl-compiler-for-instrumenting-the-target
 $ cmake -B build_fuzz \
    -DCMAKE_C_COMPILER="$(pwd)/AFLplusplus/afl-clang-lto" \
    -DCMAKE_CXX_COMPILER="$(pwd)/AFLplusplus/afl-clang-lto++" \
    -DBUILD_FOR_FUZZING=ON
 $ cmake --build build_fuzz
-# For macOS you may need to ignore x86 compilation checks when running "cmake --build". If so,
-# try compiling using: AFL_NO_X86=1 cmake --build build_fuzz
 $ mkdir -p inputs/ outputs/
 $ echo A > inputs/thin-air-input
 $ FUZZ=bech32 ./AFLplusplus/afl-fuzz -i inputs/ -o outputs/ -- build_fuzz/bin/fuzz

@@ -1,4 +1,4 @@
-// Copyright (c) 2011-2022 The Bitcoin Core developers
+// Copyright (c) 2011-present The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -64,7 +64,7 @@
 #include <QSize>
 #include <QStandardPaths>
 #include <QString>
-#include <QTextDocument> // for Qt::mightBeRichText
+#include <QTextDocument>
 #include <QThread>
 #include <QUrlQuery>
 #include <QtGlobal>
@@ -405,26 +405,19 @@ bool isObscured(QWidget *w)
 
 void bringToFront(QWidget* w)
 {
-    if (w) {
-        if (QGuiApplication::platformName() == "wayland") {
-            auto flags = w->windowFlags();
-            w->setWindowFlags(flags|Qt::WindowStaysOnTopHint);
-            w->show();
-            w->setWindowFlags(flags);
-            w->show();
-        } else {
 #ifdef Q_OS_MACOS
-            ForceActivation();
+    ForceActivation();
 #endif
-            // activateWindow() (sometimes) helps with keyboard focus on Windows
-            if (w->isMinimized()) {
-                w->showNormal();
-            } else {
-                w->show();
-            }
-            w->activateWindow();
-            w->raise();
+
+    if (w) {
+        // activateWindow() (sometimes) helps with keyboard focus on Windows
+        if (w->isMinimized()) {
+            w->showNormal();
+        } else {
+            w->show();
         }
+        w->activateWindow();
+        w->raise();
     }
 }
 
@@ -435,7 +428,7 @@ void handleCloseWindowShortcut(QWidget* w)
 
 void openDebugLogfile()
 {
-    fs::path pathDebug = gArgs.GetDataDirNet() / "debug.log";
+    fs::path pathDebug = LogInstance().m_file_path;
 
     /* Open debug.log with the associated application */
     if (fs::exists(pathDebug))
@@ -447,7 +440,7 @@ bool openBitcoinConf()
     fs::path pathConfig = gArgs.GetConfigFilePath();
 
     /* Create the file */
-    std::ofstream configFile{pathConfig, std::ios_base::app};
+    std::ofstream configFile{pathConfig.std_path(), std::ios_base::app};
 
     if (!configFile.good())
         return false;
@@ -607,7 +600,7 @@ fs::path static GetAutostartFilePath()
 
 bool GetStartOnSystemStartup()
 {
-    std::ifstream optionFile{GetAutostartFilePath()};
+    std::ifstream optionFile{GetAutostartFilePath().std_path()};
     if (!optionFile.good())
         return false;
     // Scan through file for "Hidden=true":
@@ -639,7 +632,7 @@ bool SetStartOnSystemStartup(bool fAutoStart)
 
         fs::create_directories(GetAutostartDir());
 
-        std::ofstream optionFile{GetAutostartFilePath(), std::ios_base::out | std::ios_base::trunc};
+        std::ofstream optionFile{GetAutostartFilePath().std_path(), std::ios_base::out | std::ios_base::trunc};
         if (!optionFile.good())
             return false;
         ChainType chain = gArgs.GetChainType();
@@ -729,6 +722,8 @@ QString ConnectionTypeToQString(ConnectionType conn_type, bool prepend_direction
     case ConnectionType::FEELER: return prefix + QObject::tr("Feeler");
     //: Short-lived peer connection type that solicits known addresses from a peer.
     case ConnectionType::ADDR_FETCH: return prefix + QObject::tr("Address Fetch");
+    //: Short-lived peer connection type that is used for broadcasting privacy-sensitive data.
+    case ConnectionType::PRIVATE_BROADCAST: return prefix + QObject::tr("Private Broadcast");
     } // no default case, so the compiler can warn about missing cases
     assert(false);
 }

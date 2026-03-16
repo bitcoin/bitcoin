@@ -11,9 +11,10 @@
 #include <cstdint>
 #include <cstring>
 #include <locale>
+#include <optional>
 #include <sstream>
-#include <string>      // IWYU pragma: export
-#include <string_view> // IWYU pragma: export
+#include <string>
+#include <string_view>
 #include <vector>
 
 namespace util {
@@ -100,18 +101,30 @@ void ReplaceAll(std::string& in_out, const std::string& search, const std::strin
  *
  * If sep does not occur in sp, a singleton with the entirety of sp is returned.
  *
+ * @param[in] include_sep Whether to include the separator at the end of the left side of the splits.
+ *
  * Note that this function does not care about braces, so splitting
  * "foo(bar(1),2),3) on ',' will return {"foo(bar(1)", "2)", "3)"}.
+ *
+ * If include_sep == true, splitting "foo(bar(1),2),3) on ','
+ * will return:
+ *  - foo(bar(1),
+ *  - 2),
+ *  - 3)
  */
 template <typename T = std::span<const char>>
-std::vector<T> Split(const std::span<const char>& sp, std::string_view separators)
+std::vector<T> Split(const std::span<const char>& sp, std::string_view separators, bool include_sep = false)
 {
     std::vector<T> ret;
     auto it = sp.begin();
     auto start = it;
     while (it != sp.end()) {
         if (separators.find(*it) != std::string::npos) {
-            ret.emplace_back(start, it);
+            if (include_sep) {
+                ret.emplace_back(start, it + 1);
+            } else {
+                ret.emplace_back(start, it);
+            }
             start = it + 1;
         }
         ++it;
@@ -128,9 +141,9 @@ std::vector<T> Split(const std::span<const char>& sp, std::string_view separator
  * "foo(bar(1),2),3) on ',' will return {"foo(bar(1)", "2)", "3)"}.
  */
 template <typename T = std::span<const char>>
-std::vector<T> Split(const std::span<const char>& sp, char sep)
+std::vector<T> Split(const std::span<const char>& sp, char sep, bool include_sep = false)
 {
-    return Split<T>(sp, std::string_view{&sep, 1});
+    return Split<T>(sp, std::string_view{&sep, 1}, include_sep);
 }
 
 [[nodiscard]] inline std::vector<std::string> SplitString(std::string_view str, char sep)
@@ -168,7 +181,7 @@ std::vector<T> Split(const std::span<const char>& sp, char sep)
 
 [[nodiscard]] inline std::string_view RemovePrefixView(std::string_view str, std::string_view prefix)
 {
-    if (str.substr(0, prefix.size()) == prefix) {
+    if (str.starts_with(prefix)) {
         return str.substr(prefix.size());
     }
     return str;
@@ -248,6 +261,40 @@ template <typename T1, size_t PREFIX_LEN>
     return obj.size() >= PREFIX_LEN &&
            std::equal(std::begin(prefix), std::end(prefix), std::begin(obj));
 }
+
+struct LineReader {
+    const std::span<const std::byte>::iterator start;
+    const std::span<const std::byte>::iterator end;
+    const size_t max_line_length;
+    std::span<const std::byte>::iterator it;
+
+    explicit LineReader(std::span<const std::byte> buffer, size_t max_line_length);
+
+    /**
+     * Returns a string from current iterator position up to (but not including) next \n
+     * and advances iterator to the character following the \n on success.
+     * Will not return a line longer than max_line_length.
+     * @returns the next string from the buffer.
+     *          std::nullopt if end of buffer is reached without finding a \n.
+     * @throws a std::runtime_error if max_line_length + 1 bytes are read without finding \n.
+     */
+    std::optional<std::string> ReadLine();
+
+    /**
+     * Returns string from current iterator position of specified length
+     * if possible and advances iterator on success.
+     * May exceed max_line_length but will not read past end of buffer.
+     * @param[in]   len     The number of bytes to read from the buffer
+     * @returns a string of the expected length.
+     * @throws a std::runtime_error if there is not enough data in the buffer.
+     */
+    std::string ReadLength(size_t len);
+
+    /**
+     * Returns remaining size of bytes in buffer
+     */
+    size_t Remaining() const;
+};
 } // namespace util
 
 #endif // BITCOIN_UTIL_STRING_H

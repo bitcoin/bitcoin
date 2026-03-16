@@ -14,10 +14,6 @@
         <translation type="unfinished">Новы</translation>
     </message>
     <message>
-        <source>Copy the currently selected address to the system clipboard</source>
-        <translation type="unfinished">Капіяваць пазначаны адрас у сістэмны буфер абмену</translation>
-    </message>
-    <message>
         <source>&amp;Copy</source>
         <translation type="unfinished">Капіяваць</translation>
     </message>
@@ -591,7 +587,18 @@
     </message>
     </context>
 <context>
+    <name>HelpMessageDialog</name>
+    <message>
+        <source>Command-line options</source>
+        <translation type="unfinished">Опцыі каманднага радка</translation>
+    </message>
+</context>
+<context>
     <name>Intro</name>
+    <message>
+        <source>Welcome</source>
+        <translation type="unfinished">Вітаем</translation>
+    </message>
     <message>
         <source>Bitcoin</source>
         <translation type="unfinished">Біткойн</translation>
@@ -633,17 +640,6 @@
         <source>Error</source>
         <translation type="unfinished">Памылка</translation>
     </message>
-    <message>
-        <source>Welcome</source>
-        <translation type="unfinished">Вітаем</translation>
-    </message>
-    </context>
-<context>
-    <name>HelpMessageDialog</name>
-    <message>
-        <source>Command-line options</source>
-        <translation type="unfinished">Опцыі каманднага радка</translation>
-    </message>
 </context>
 <context>
     <name>ModalOverlay</name>
@@ -680,6 +676,25 @@
     <message>
         <source>Form</source>
         <translation type="unfinished">Форма</translation>
+    </message>
+    </context>
+<context>
+    <name>PSBTOperationsDialog</name>
+    <message numerus="yes">
+        <source>Signed %n input(s), but more signatures are still required.</source>
+        <translation type="unfinished">
+            <numerusform />
+            <numerusform />
+            <numerusform />
+        </translation>
+    </message>
+    <message numerus="yes">
+        <source>Transaction has %n unsigned input(s).</source>
+        <translation type="unfinished">
+            <numerusform />
+            <numerusform />
+            <numerusform />
+        </translation>
     </message>
     </context>
 <context>
@@ -1092,10 +1107,6 @@
     <message>
         <source>Error initializing block database</source>
         <translation type="unfinished">Памылка ініцыялізацыі базвы звестак блокаў</translation>
-    </message>
-    <message>
-        <source>Error initializing wallet database environment %s!</source>
-        <translation type="unfinished">Памалка ініцыялізацыі асяроддзя базы звестак гаманца %s!</translation>
     </message>
     <message>
         <source>Error loading block database</source>

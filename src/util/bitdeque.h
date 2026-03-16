@@ -1,4 +1,4 @@
-// Copyright (c) 2022 The Bitcoin Core developers
+// Copyright (c) 2022-present The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -11,6 +11,7 @@
 #include <limits>
 #include <stdexcept>
 #include <tuple>
+#include <util/overflow.h>
 
 /** Class that mimics std::deque<bool>, but with std::vector<bool>'s bit packing.
  *
@@ -99,12 +100,8 @@ class bitdeque
         friend Iterator operator+(Iterator x, difference_type dist) { x += dist; return x; }
         friend Iterator operator+(difference_type dist, Iterator x) { x += dist; return x; }
         friend Iterator operator-(Iterator x, difference_type dist) { x -= dist; return x; }
-        friend bool operator<(const Iterator& x, const Iterator& y) { return std::tie(x.m_it, x.m_bitpos) < std::tie(y.m_it, y.m_bitpos); }
-        friend bool operator>(const Iterator& x, const Iterator& y) { return std::tie(x.m_it, x.m_bitpos) > std::tie(y.m_it, y.m_bitpos); }
-        friend bool operator<=(const Iterator& x, const Iterator& y) { return std::tie(x.m_it, x.m_bitpos) <= std::tie(y.m_it, y.m_bitpos); }
-        friend bool operator>=(const Iterator& x, const Iterator& y) { return std::tie(x.m_it, x.m_bitpos) >= std::tie(y.m_it, y.m_bitpos); }
+        friend auto operator<=>(const Iterator& x, const Iterator& y) { return std::tie(x.m_it, x.m_bitpos) <=> std::tie(y.m_it, y.m_bitpos); }
         friend bool operator==(const Iterator& x, const Iterator& y) { return x.m_it == y.m_it && x.m_bitpos == y.m_bitpos; }
-        friend bool operator!=(const Iterator& x, const Iterator& y) { return x.m_it != y.m_it || x.m_bitpos != y.m_bitpos; }
         reference operator*() const { return (*m_it)[m_bitpos]; }
         reference operator[](difference_type pos) const { return *(*this + pos); }
     };
@@ -215,7 +212,7 @@ public:
     void assign(size_type count, bool val)
     {
         m_deque.clear();
-        m_deque.resize((count + BITS_PER_WORD - 1) / BITS_PER_WORD);
+        m_deque.resize(CeilDiv(count, size_type{BITS_PER_WORD}));
         m_pad_begin = 0;
         m_pad_end = 0;
         if (val) {

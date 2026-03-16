@@ -1,7 +1,8 @@
-// Copyright (c) 2012-2022 The Bitcoin Core developers
+// Copyright (c) 2012-present The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
+#include <compat/compat.h>
 #include <net_permissions.h>
 #include <netaddress.h>
 #include <netbase.h>
@@ -9,15 +10,18 @@
 #include <protocol.h>
 #include <serialize.h>
 #include <streams.h>
+#include <test/util/common.h>
 #include <test/util/setup_common.h>
 #include <util/strencodings.h>
 #include <util/translation.h>
 
 #include <string>
+#include <numeric>
 
 #include <boost/test/unit_test.hpp>
 
 using namespace std::literals;
+using namespace util::hex_literals;
 
 BOOST_FIXTURE_TEST_SUITE(netbase_tests, BasicTestingSetup)
 
@@ -150,7 +154,6 @@ BOOST_AUTO_TEST_CASE(embedded_test)
 
 BOOST_AUTO_TEST_CASE(subnet_test)
 {
-
     BOOST_CHECK(LookupSubNet("1.2.3.0/24") == LookupSubNet("1.2.3.0/255.255.255.0"));
     BOOST_CHECK(LookupSubNet("1.2.3.0/24") != LookupSubNet("1.2.4.0/255.255.255.0"));
     BOOST_CHECK(LookupSubNet("1.2.3.0/24").Match(ResolveIP("1.2.3.4")));
@@ -185,6 +188,7 @@ BOOST_AUTO_TEST_CASE(subnet_test)
     // Check valid/invalid
     BOOST_CHECK(LookupSubNet("1.2.3.0/0").IsValid());
     BOOST_CHECK(!LookupSubNet("1.2.3.0/-1").IsValid());
+    BOOST_CHECK(!LookupSubNet("1.2.3.0/+24").IsValid());
     BOOST_CHECK(LookupSubNet("1.2.3.0/32").IsValid());
     BOOST_CHECK(!LookupSubNet("1.2.3.0/33").IsValid());
     BOOST_CHECK(!LookupSubNet("1.2.3.0/300").IsValid());
@@ -323,7 +327,7 @@ BOOST_AUTO_TEST_CASE(subnet_test)
 
 BOOST_AUTO_TEST_CASE(netbase_getgroup)
 {
-    NetGroupManager netgroupman{std::vector<bool>()}; // use /16
+    auto netgroupman{NetGroupManager::NoAsmap()}; // use /16
     BOOST_CHECK(netgroupman.GetGroup(ResolveIP("127.0.0.1")) == std::vector<unsigned char>({0})); // Local -> !Routable()
     BOOST_CHECK(netgroupman.GetGroup(ResolveIP("257.0.0.1")) == std::vector<unsigned char>({0})); // !Valid -> !Routable()
     BOOST_CHECK(netgroupman.GetGroup(ResolveIP("10.0.0.1")) == std::vector<unsigned char>({0})); // RFC1918 -> !Routable()
@@ -346,17 +350,20 @@ BOOST_AUTO_TEST_CASE(netbase_parsenetwork)
     BOOST_CHECK_EQUAL(ParseNetwork("ipv4"), NET_IPV4);
     BOOST_CHECK_EQUAL(ParseNetwork("ipv6"), NET_IPV6);
     BOOST_CHECK_EQUAL(ParseNetwork("onion"), NET_ONION);
-    BOOST_CHECK_EQUAL(ParseNetwork("tor"), NET_ONION);
     BOOST_CHECK_EQUAL(ParseNetwork("cjdns"), NET_CJDNS);
 
     BOOST_CHECK_EQUAL(ParseNetwork("IPv4"), NET_IPV4);
     BOOST_CHECK_EQUAL(ParseNetwork("IPv6"), NET_IPV6);
     BOOST_CHECK_EQUAL(ParseNetwork("ONION"), NET_ONION);
-    BOOST_CHECK_EQUAL(ParseNetwork("TOR"), NET_ONION);
     BOOST_CHECK_EQUAL(ParseNetwork("CJDNS"), NET_CJDNS);
 
+    // "tor" as a network specification was deprecated in 60dc8e4208 in favor of
+    // "onion" and later removed.
+    BOOST_CHECK_EQUAL(ParseNetwork("tor"), NET_UNROUTABLE);
+    BOOST_CHECK_EQUAL(ParseNetwork("TOR"), NET_UNROUTABLE);
+
     BOOST_CHECK_EQUAL(ParseNetwork(":)"), NET_UNROUTABLE);
-    BOOST_CHECK_EQUAL(ParseNetwork("tÖr"), NET_UNROUTABLE);
+    BOOST_CHECK_EQUAL(ParseNetwork("oniÖn"), NET_UNROUTABLE);
     BOOST_CHECK_EQUAL(ParseNetwork("\xfe\xff"), NET_UNROUTABLE);
     BOOST_CHECK_EQUAL(ParseNetwork(""), NET_UNROUTABLE);
 }
@@ -497,17 +504,17 @@ BOOST_AUTO_TEST_CASE(netbase_dont_resolve_strings_with_embedded_nul_characters)
 
 static const std::vector<CAddress> fixture_addresses({
     CAddress{
-        CService(CNetAddr(in6_addr(IN6ADDR_LOOPBACK_INIT)), 0 /* port */),
+        CService(CNetAddr(in6_addr(COMPAT_IN6ADDR_LOOPBACK_INIT)), 0 /* port */),
         NODE_NONE,
         NodeSeconds{0x4966bc61s}, /* Fri Jan  9 02:54:25 UTC 2009 */
     },
     CAddress{
-        CService(CNetAddr(in6_addr(IN6ADDR_LOOPBACK_INIT)), 0x00f1 /* port */),
+        CService(CNetAddr(in6_addr(COMPAT_IN6ADDR_LOOPBACK_INIT)), 0x00f1 /* port */),
         NODE_NETWORK,
         NodeSeconds{0x83766279s}, /* Tue Nov 22 11:22:33 UTC 2039 */
     },
     CAddress{
-        CService(CNetAddr(in6_addr(IN6ADDR_LOOPBACK_INIT)), 0xf1f2 /* port */),
+        CService(CNetAddr(in6_addr(COMPAT_IN6ADDR_LOOPBACK_INIT)), 0xf1f2 /* port */),
         static_cast<ServiceFlags>(NODE_WITNESS | NODE_COMPACT_FILTERS | NODE_NETWORK_LIMITED),
         NodeSeconds{0xffffffffs}, /* Sun Feb  7 06:28:15 UTC 2106 */
     },
@@ -569,10 +576,9 @@ BOOST_AUTO_TEST_CASE(caddress_serialize_v1)
 
 BOOST_AUTO_TEST_CASE(caddress_unserialize_v1)
 {
-    DataStream s{ParseHex(stream_addrv1_hex)};
     std::vector<CAddress> addresses_unserialized;
 
-    s >> CAddress::V1_NETWORK(addresses_unserialized);
+    SpanReader{ParseHex(stream_addrv1_hex)} >> CAddress::V1_NETWORK(addresses_unserialized);
     BOOST_CHECK(fixture_addresses == addresses_unserialized);
 }
 
@@ -586,10 +592,9 @@ BOOST_AUTO_TEST_CASE(caddress_serialize_v2)
 
 BOOST_AUTO_TEST_CASE(caddress_unserialize_v2)
 {
-    DataStream s{ParseHex(stream_addrv2_hex)};
     std::vector<CAddress> addresses_unserialized;
 
-    s >> CAddress::V2_NETWORK(addresses_unserialized);
+    SpanReader{ParseHex(stream_addrv2_hex)} >> CAddress::V2_NETWORK(addresses_unserialized);
     BOOST_CHECK(fixture_addresses == addresses_unserialized);
 }
 
@@ -603,14 +608,53 @@ BOOST_AUTO_TEST_CASE(isbadport)
     BOOST_CHECK(!IsBadPort(443));
     BOOST_CHECK(!IsBadPort(8333));
 
-    // Check all ports, there must be 80 bad ports in total.
-    size_t total_bad_ports{0};
-    for (uint16_t port = std::numeric_limits<uint16_t>::max(); port > 0; --port) {
-        if (IsBadPort(port)) {
-            ++total_bad_ports;
-        }
-    }
-    BOOST_CHECK_EQUAL(total_bad_ports, 80);
+    // Check all possible ports and ensure we only flag the expected amount as bad
+    std::list<int> ports(std::numeric_limits<uint16_t>::max());
+    std::iota(ports.begin(), ports.end(), 1);
+    BOOST_CHECK_EQUAL(std::ranges::count_if(ports, IsBadPort), 85);
+}
+
+
+BOOST_AUTO_TEST_CASE(asmap_test_vectors)
+{
+    // Randomly generated encoded ASMap with 128 ranges, up to 20-bit AS numbers.
+    constexpr auto ASMAP_DATA{
+        "fd38d50f7d5d665357f64bba6bfc190d6078a7e68e5d3ac032edf47f8b5755f87881bfd3633d9aa7c1fa279b3"
+        "6fe26c63bbc9de44e0f04e5a382d8e1cddbe1c26653bc939d4327f287e8b4d1f8aff33176787cb0ff7cb28e3f"
+        "daef0f8f47357f801c9f7ff7a99f7f9c9f99de7f3156ae00f23eb27a303bc486aa3ccc31ec19394c2f8a53ddd"
+        "ea3cc56257f3b7e9b1f488be9c1137db823759aa4e071eef2e984aaf97b52d5f88d0f373dd190fe45e06efef1"
+        "df7278be680a73a74c76db4dd910f1d30752c57fe2bc9f079f1a1e1b036c2a69219f11c5e11980a3fa51f4f82"
+        "d36373de73b1863a8c27e36ae0e4f705be3d76ecff038a75bc0f92ba7e7f6f4080f1c47c34d095367ecf4406c"
+        "1e3bbc17ba4d6f79ea3f031b876799ac268b1e0ea9babf0f9a8e5f6c55e363c6363df46afc696d7afceaf49b6"
+        "e62df9e9dc27e70664cafe5c53df66dd0b8237678ada90e73f05ec60e6f6e96c3cbb1ea2f9dece115d5bdba10"
+        "33e53662a7d72a29477b5beb35710591d3e23e5f0379baea62ffdee535bcdf879cbf69b88d7ea37c8015381cf"
+        "63dc33d28f757a4a5e15d6a08"_hex};
+
+    // Construct NetGroupManager with this data.
+    auto netgroup{NetGroupManager::WithEmbeddedAsmap(ASMAP_DATA)};
+    BOOST_CHECK(netgroup.UsingASMap());
+
+    // Check some randomly-generated IPv6 addresses in it (biased towards the very beginning and
+    // very end of the 128-bit range).
+    BOOST_CHECK_EQUAL(netgroup.GetMappedAS(*LookupHost("0:1559:183:3728:224c:65a5:62e6:e991", false)), 961340);
+    BOOST_CHECK_EQUAL(netgroup.GetMappedAS(*LookupHost("d0:d493:faa0:8609:e927:8b75:293c:f5a4", false)), 961340);
+    BOOST_CHECK_EQUAL(netgroup.GetMappedAS(*LookupHost("2a0:26f:8b2c:2ee7:c7d1:3b24:4705:3f7f", false)), 693761);
+    BOOST_CHECK_EQUAL(netgroup.GetMappedAS(*LookupHost("a77:7cd4:4be5:a449:89f2:3212:78c6:ee38", false)), 0);
+    BOOST_CHECK_EQUAL(netgroup.GetMappedAS(*LookupHost("1336:1ad6:2f26:4fe3:d809:7321:6e0d:4615", false)), 672176);
+    BOOST_CHECK_EQUAL(netgroup.GetMappedAS(*LookupHost("1d56:abd0:a52f:a8d5:d5a7:a610:581d:d792", false)), 499880);
+    BOOST_CHECK_EQUAL(netgroup.GetMappedAS(*LookupHost("378e:7290:54e5:bd36:4760:971c:e9b9:570d", false)), 0);
+    BOOST_CHECK_EQUAL(netgroup.GetMappedAS(*LookupHost("406c:820b:272a:c045:b74e:fc0a:9ef2:cecc", false)), 248495);
+    BOOST_CHECK_EQUAL(netgroup.GetMappedAS(*LookupHost("46c2:ae07:9d08:2d56:d473:2bc7:57e3:20ac", false)), 248495);
+    BOOST_CHECK_EQUAL(netgroup.GetMappedAS(*LookupHost("50d2:3db6:52fa:2e7:12ec:5bc4:1bd1:49f9", false)), 124471);
+    BOOST_CHECK_EQUAL(netgroup.GetMappedAS(*LookupHost("53e1:1812:ffa:dccf:f9f2:64be:75fa:795", false)), 539993);
+    BOOST_CHECK_EQUAL(netgroup.GetMappedAS(*LookupHost("544d:eeba:3990:35d1:ad66:f9a3:576d:8617", false)), 374443);
+    BOOST_CHECK_EQUAL(netgroup.GetMappedAS(*LookupHost("6a53:40dc:8f1d:3ffa:efeb:3aa3:df88:b94b", false)), 435070);
+    BOOST_CHECK_EQUAL(netgroup.GetMappedAS(*LookupHost("87aa:d1c9:9edb:91e7:aab1:9eb9:baa0:de18", false)), 244121);
+    BOOST_CHECK_EQUAL(netgroup.GetMappedAS(*LookupHost("9f00:48fa:88e3:4b67:a6f3:e6d2:5cc1:5be2", false)), 862116);
+    BOOST_CHECK_EQUAL(netgroup.GetMappedAS(*LookupHost("c49f:9cc6:86ad:ba08:4580:315e:dbd1:8a62", false)), 969411);
+    BOOST_CHECK_EQUAL(netgroup.GetMappedAS(*LookupHost("dff5:8021:61d:b17d:406d:7888:fdac:4a20", false)), 969411);
+    BOOST_CHECK_EQUAL(netgroup.GetMappedAS(*LookupHost("e888:6791:2960:d723:bcfd:47e1:2d8c:599f", false)), 824019);
+    BOOST_CHECK_EQUAL(netgroup.GetMappedAS(*LookupHost("ffff:d499:8c4b:4941:bc81:d5b9:b51e:85a8", false)), 824019);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

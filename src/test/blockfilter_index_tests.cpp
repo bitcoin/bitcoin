@@ -1,4 +1,4 @@
-// Copyright (c) 2017-2022 The Bitcoin Core developers
+// Copyright (c) 2017-present The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -12,11 +12,12 @@
 #include <node/miner.h>
 #include <pow.h>
 #include <test/util/blockfilter.h>
-#include <test/util/index.h>
+#include <test/util/common.h>
 #include <test/util/setup_common.h>
 #include <validation.h>
 
 #include <boost/test/unit_test.hpp>
+#include <future>
 
 using node::BlockAssembler;
 using node::BlockManager;
@@ -69,6 +70,7 @@ CBlock BuildChainTestingSetup::CreateBlock(const CBlockIndex* prev,
 {
     BlockAssembler::Options options;
     options.coinbase_output_script = scriptPubKey;
+    options.include_dummy_extranonce = true;
     std::unique_ptr<CBlockTemplate> pblocktemplate = BlockAssembler{m_node.chainman->ActiveChainstate(), m_node.mempool.get(), options}.CreateNewBlock();
     CBlock& block = pblocktemplate->block;
     block.hashPrevBlock = prev->GetBlockHash();
@@ -81,6 +83,7 @@ CBlock BuildChainTestingSetup::CreateBlock(const CBlockIndex* prev,
     }
     {
         CMutableTransaction tx_coinbase{*block.vtx.at(0)};
+        tx_coinbase.nLockTime = static_cast<uint32_t>(prev->nHeight);
         tx_coinbase.vin.at(0).scriptSig = CScript{} << prev->nHeight + 1;
         block.vtx.at(0) = MakeTransactionRef(std::move(tx_coinbase));
         block.hashMerkleRoot = BlockMerkleRoot(block);
@@ -101,10 +104,9 @@ bool BuildChainTestingSetup::BuildChain(const CBlockIndex* pindex,
     chain.resize(length);
     for (auto& block : chain) {
         block = std::make_shared<CBlock>(CreateBlock(pindex, no_txns, coinbase_script_pub_key));
-        CBlockHeader header = block->GetBlockHeader();
 
         BlockValidationState state;
-        if (!Assert(m_node.chainman)->ProcessNewBlockHeaders({{header}}, true, state, &pindex)) {
+        if (!Assert(m_node.chainman)->ProcessNewBlockHeaders({{*block}}, true, state, &pindex)) {
             return false;
         }
     }
@@ -142,10 +144,7 @@ BOOST_FIXTURE_TEST_CASE(blockfilter_index_initial_sync, BuildChainTestingSetup)
     // BlockUntilSyncedToCurrentChain should return false before index is started.
     BOOST_CHECK(!filter_index.BlockUntilSyncedToCurrentChain());
 
-    BOOST_REQUIRE(filter_index.StartBackgroundSync());
-
-    // Allow filter index to catch up with the block index.
-    IndexWaitSynced(filter_index, *Assert(m_node.shutdown_signal));
+    filter_index.Sync();
 
     // Check that filter index has all blocks that were in the chain before it started.
     {
@@ -306,6 +305,83 @@ BOOST_FIXTURE_TEST_CASE(blockfilter_index_init_destroy, BasicTestingSetup)
 
     filter_index = GetBlockFilterIndex(BlockFilterType::BASIC);
     BOOST_CHECK(filter_index == nullptr);
+}
+
+class IndexReorgCrash : public BaseIndex
+{
+private:
+    std::unique_ptr<BaseIndex::DB> m_db;
+    std::shared_future<void> m_blocker;
+    int m_blocking_height;
+
+public:
+    explicit IndexReorgCrash(std::unique_ptr<interfaces::Chain> chain, std::shared_future<void> blocker,
+                             int blocking_height) : BaseIndex(std::move(chain), "test index"), m_blocker(blocker),
+                                                    m_blocking_height(blocking_height)
+    {
+        const fs::path path = gArgs.GetDataDirNet() / "index";
+        fs::create_directories(path);
+        m_db = std::make_unique<BaseIndex::DB>(path / "db", /*n_cache_size=*/0, /*f_memory=*/true, /*f_wipe=*/false);
+    }
+
+    bool AllowPrune() const override { return false; }
+    BaseIndex::DB& GetDB() const override { return *m_db; }
+
+    bool CustomAppend(const interfaces::BlockInfo& block) override
+    {
+        // Simulate a delay so new blocks can get connected during the initial sync
+        if (block.height == m_blocking_height) m_blocker.wait();
+
+        // Move mock time forward so the best index gets updated only when we are not at the blocking height
+        if (block.height == m_blocking_height - 1 || block.height > m_blocking_height) {
+            SetMockTime(GetTime<std::chrono::seconds>() + 31s);
+        }
+
+        return true;
+    }
+};
+
+BOOST_FIXTURE_TEST_CASE(index_reorg_crash, BuildChainTestingSetup)
+{
+    // Enable mock time
+    SetMockTime(GetTime<std::chrono::minutes>());
+
+    std::promise<void> promise;
+    std::shared_future<void> blocker(promise.get_future());
+    int blocking_height = WITH_LOCK(cs_main, return m_node.chainman->ActiveChain().Tip()->nHeight);
+
+    IndexReorgCrash index(interfaces::MakeChain(m_node), blocker, blocking_height);
+    BOOST_REQUIRE(index.Init());
+    BOOST_REQUIRE(index.StartBackgroundSync());
+
+    auto func_wait_until = [&](int height, std::chrono::milliseconds timeout) {
+        auto deadline = std::chrono::steady_clock::now() + timeout;
+        while (index.GetSummary().best_block_height < height) {
+            if (std::chrono::steady_clock::now() > deadline) {
+                BOOST_FAIL(strprintf("Timeout waiting for index height %d (current: %d)", height, index.GetSummary().best_block_height));
+                return;
+            }
+            std::this_thread::sleep_for(100ms);
+        }
+    };
+
+    // Wait until the index is one block before the fork point
+    func_wait_until(blocking_height - 1, /*timeout=*/5s);
+
+    // Create a fork to trigger the reorg
+    std::vector<std::shared_ptr<CBlock>> fork;
+    const CBlockIndex* prev_tip = WITH_LOCK(cs_main, return m_node.chainman->ActiveChain().Tip()->pprev);
+    BOOST_REQUIRE(BuildChain(prev_tip, GetScriptForDestination(PKHash(GenerateRandomKey().GetPubKey())), 3, fork));
+
+    for (const auto& block : fork) {
+        BOOST_REQUIRE(m_node.chainman->ProcessNewBlock(block, /*force_processing=*/true, /*min_pow_checked=*/true, nullptr));
+    }
+
+    // Unblock the index thread so it can process the reorg
+    promise.set_value();
+    // Wait for the index to reach the new tip
+    func_wait_until(blocking_height + 2, 5s);
+    index.Stop();
 }
 
 BOOST_AUTO_TEST_SUITE_END()

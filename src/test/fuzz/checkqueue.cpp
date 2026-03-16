@@ -1,4 +1,4 @@
-// Copyright (c) 2020-2022 The Bitcoin Core developers
+// Copyright (c) 2020-present The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -49,7 +49,7 @@ FUZZ_TARGET(checkqueue)
         (void)check_queue_1.Complete();
     }
 
-    CCheckQueueControl<DumbCheck> check_queue_control{&check_queue_2};
+    CCheckQueueControl<DumbCheck> check_queue_control{check_queue_2};
     if (fuzzed_data_provider.ConsumeBool()) {
         check_queue_control.Add(std::move(checks_2));
     }

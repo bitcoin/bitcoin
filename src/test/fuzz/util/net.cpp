@@ -1,4 +1,4 @@
-// Copyright (c) 2009-2022 The Bitcoin Core developers
+// Copyright (c) 2009-present The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -20,6 +20,7 @@
 #include <cstdint>
 #include <cstdlib>
 #include <cstring>
+#include <ranges>
 #include <thread>
 #include <vector>
 
@@ -311,6 +312,33 @@ std::unique_ptr<Sock> FuzzedSock::Accept(sockaddr* addr, socklen_t* addr_len) co
     if (m_fuzzed_data_provider.ConsumeBool()) {
         SetFuzzedErrNo(m_fuzzed_data_provider, accept_errnos);
         return std::unique_ptr<FuzzedSock>();
+    }
+    if (addr != nullptr) {
+        // Set a fuzzed address in the output argument addr.
+        memset(addr, 0x00, *addr_len);
+        if (m_fuzzed_data_provider.ConsumeBool()) {
+            // IPv4
+            const socklen_t write_len = static_cast<socklen_t>(sizeof(sockaddr_in));
+            if (*addr_len >= write_len) {
+                *addr_len = write_len;
+                auto addr4 = reinterpret_cast<sockaddr_in*>(addr);
+                addr4->sin_family = AF_INET;
+                const auto sin_addr_bytes{m_fuzzed_data_provider.ConsumeBytes<std::byte>(sizeof(addr4->sin_addr))};
+                std::ranges::copy(sin_addr_bytes, reinterpret_cast<std::byte*>(&addr4->sin_addr));
+                addr4->sin_port = m_fuzzed_data_provider.ConsumeIntegralInRange<uint16_t>(1, 65535);
+            }
+        } else {
+            // IPv6
+            const socklen_t write_len = static_cast<socklen_t>(sizeof(sockaddr_in6));
+            if (*addr_len >= write_len) {
+                *addr_len = write_len;
+                auto addr6 = reinterpret_cast<sockaddr_in6*>(addr);
+                addr6->sin6_family = AF_INET6;
+                const auto sin_addr_bytes{m_fuzzed_data_provider.ConsumeBytes<std::byte>(sizeof(addr6->sin6_addr))};
+                std::ranges::copy(sin_addr_bytes, reinterpret_cast<std::byte*>(&addr6->sin6_addr));
+                addr6->sin6_port = m_fuzzed_data_provider.ConsumeIntegralInRange<uint16_t>(1, 65535);
+            }
+        }
     }
     return std::make_unique<FuzzedSock>(m_fuzzed_data_provider);
 }

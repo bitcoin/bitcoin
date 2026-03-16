@@ -1,4 +1,4 @@
-// Copyright (c) 2019 The Bitcoin Core developers
+// Copyright (c) The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -37,20 +37,45 @@ struct StructField
     }
     Struct& m_struct;
 
-    // clang-format off
-    template<typename A = Accessor> auto get() const -> decltype(A::get(this->m_struct)) { return A::get(this->m_struct); }
-    template<typename A = Accessor> auto has() const -> std::enable_if_t<A::optional, bool> { return A::getHas(m_struct); }
-    template<typename A = Accessor> auto has() const -> std::enable_if_t<!A::optional && A::boxed, bool> { return A::has(m_struct); }
-    template<typename A = Accessor> auto has() const -> std::enable_if_t<!A::optional && !A::boxed, bool> { return true; }
-    template<typename A = Accessor> auto want() const -> std::enable_if_t<A::requested, bool> { return A::getWant(m_struct); }
-    template<typename A = Accessor> auto want() const -> std::enable_if_t<!A::requested, bool> { return true; }
-    template<typename A = Accessor, typename... Args> decltype(auto) set(Args&&... args) const { return A::set(this->m_struct, std::forward<Args>(args)...); }
-    template<typename A = Accessor, typename... Args> decltype(auto) init(Args&&... args) const { return A::init(this->m_struct, std::forward<Args>(args)...); }
-    template<typename A = Accessor> auto setHas() const -> std::enable_if_t<A::optional> { return A::setHas(m_struct); }
-    template<typename A = Accessor> auto setHas() const -> std::enable_if_t<!A::optional> { }
-    template<typename A = Accessor> auto setWant() const -> std::enable_if_t<A::requested> { return A::setWant(m_struct); }
-    template<typename A = Accessor> auto setWant() const -> std::enable_if_t<!A::requested> { }
-    // clang-format on
+    decltype(auto) get() const { return Accessor::get(this->m_struct); }
+
+    bool has() const {
+      if constexpr (Accessor::optional) {
+        return Accessor::getHas(m_struct);
+      } else if constexpr (Accessor::boxed) {
+        return Accessor::has(m_struct);
+      } else {
+        return true;
+      }
+    }
+
+    bool want() const {
+      if constexpr (Accessor::requested) {
+        return Accessor::getWant(m_struct);
+      } else {
+        return true;
+      }
+    }
+
+    template <typename... Args> decltype(auto) set(Args &&...args) const {
+      return Accessor::set(this->m_struct, std::forward<Args>(args)...);
+    }
+
+    template <typename... Args> decltype(auto) init(Args &&...args) const {
+      return Accessor::init(this->m_struct, std::forward<Args>(args)...);
+    }
+
+    void setHas() const {
+      if constexpr (Accessor::optional) {
+        Accessor::setHas(m_struct);
+      }
+    }
+
+    void setWant() const {
+      if constexpr (Accessor::requested) {
+        Accessor::setWant(m_struct);
+      }
+    }
 };
 
 
@@ -62,14 +87,14 @@ struct StructField
 // actually construct the read destination object. For example, if a std::string
 // is being read, the ReadField call will call the custom emplace_fn with char*
 // and size_t arguments, and the emplace function can decide whether to call the
-// constructor via the operator or make_shared or emplace or just return a
+// constructor via the operator, make_shared, emplace or just return a
 // temporary string that is moved from.
 template <typename LocalType, typename EmplaceFn>
 struct ReadDestEmplace
 {
-    ReadDestEmplace(TypeList<LocalType>, EmplaceFn&& emplace_fn) : m_emplace_fn(emplace_fn) {}
+    ReadDestEmplace(TypeList<LocalType>, EmplaceFn emplace_fn) : m_emplace_fn(std::move(emplace_fn)) {}
 
-    //! Simple case. If ReadField impementation calls this construct() method
+    //! Simple case. If ReadField implementation calls this construct() method
     //! with constructor arguments, just pass them on to the emplace function.
     template <typename... Args>
     decltype(auto) construct(Args&&... args)
@@ -98,7 +123,7 @@ struct ReadDestEmplace
             return temp;
         }
     }
-    EmplaceFn& m_emplace_fn;
+    EmplaceFn m_emplace_fn;
 };
 
 //! Helper function to create a ReadDestEmplace object that constructs a
@@ -106,7 +131,7 @@ struct ReadDestEmplace
 template <typename LocalType>
 auto ReadDestTemp()
 {
-    return ReadDestEmplace{TypeList<LocalType>(), [&](auto&&... args) -> decltype(auto) {
+    return ReadDestEmplace{TypeList<LocalType>(), [](auto&&... args) -> decltype(auto) {
         return LocalType{std::forward<decltype(args)>(args)...};
     }};
 }
@@ -166,7 +191,7 @@ void ThrowField(TypeList<std::exception>, InvokeContext& invoke_context, Input&&
 }
 
 template <typename... Values>
-bool CustomHasValue(InvokeContext& invoke_context, Values&&... value)
+bool CustomHasValue(InvokeContext& invoke_context, const Values&... value)
 {
     return true;
 }
@@ -174,17 +199,17 @@ bool CustomHasValue(InvokeContext& invoke_context, Values&&... value)
 template <typename... LocalTypes, typename Context, typename... Values, typename Output>
 void BuildField(TypeList<LocalTypes...>, Context& context, Output&& output, Values&&... values)
 {
-    if (CustomHasValue(context, std::forward<Values>(values)...)) {
+    if (CustomHasValue(context, values...)) {
         CustomBuildField(TypeList<LocalTypes...>(), Priority<3>(), context, std::forward<Values>(values)...,
             std::forward<Output>(output));
     }
 }
 
-// Adapter to let BuildField overloads methods work set & init list elements as
-// if they were fields of a struct. If BuildField is changed to use some kind of
-// accessor class instead of calling method pointers, then then maybe this could
-// go away or be simplified, because would no longer be a need to return
-// ListOutput method pointers emulating capnp struct method pointers..
+// Adapter that allows BuildField overloads to work with, set, and initialize list
+// elements as if they were fields of a struct. If BuildField is changed to use some
+// kind of accessor class instead of calling method pointers, then maybe this could
+// go away or be simplified, because there would no longer be a need to return
+// ListOutput method pointers emulating capnp struct method pointers.
 template <typename ListType>
 struct ListOutput;
 
@@ -249,7 +274,7 @@ void MaybeReadField(std::false_type, Args&&...)
 }
 
 template <typename LocalType, typename Value, typename Output>
-void MaybeSetWant(TypeList<LocalType*>, Priority<1>, Value&& value, Output&& output)
+void MaybeSetWant(TypeList<LocalType*>, Priority<1>, const Value& value, Output&& output)
 {
     if (value) {
         output.setWant();
@@ -257,7 +282,7 @@ void MaybeSetWant(TypeList<LocalType*>, Priority<1>, Value&& value, Output&& out
 }
 
 template <typename LocalTypes, typename... Args>
-void MaybeSetWant(LocalTypes, Priority<0>, Args&&...)
+void MaybeSetWant(LocalTypes, Priority<0>, const Args&...)
 {
 }
 
@@ -301,18 +326,18 @@ template <typename Derived, size_t N = 0>
 struct IterateFieldsHelper
 {
     template <typename Arg1, typename Arg2, typename ParamList, typename NextFn, typename... NextFnArgs>
-    void handleChain(Arg1&& arg1, Arg2&& arg2, ParamList, NextFn&& next_fn, NextFnArgs&&... next_fn_args)
+    void handleChain(Arg1& arg1, Arg2& arg2, ParamList, NextFn&& next_fn, NextFnArgs&&... next_fn_args)
     {
         using S = Split<N, ParamList>;
-        handleChain(std::forward<Arg1>(arg1), std::forward<Arg2>(arg2), typename S::First());
-        next_fn.handleChain(std::forward<Arg1>(arg1), std::forward<Arg2>(arg2), typename S::Second(),
+        handleChain(arg1, arg2, typename S::First());
+        next_fn.handleChain(arg1, arg2, typename S::Second(),
             std::forward<NextFnArgs>(next_fn_args)...);
     }
 
     template <typename Arg1, typename Arg2, typename ParamList>
-    void handleChain(Arg1&& arg1, Arg2&& arg2, ParamList)
+    void handleChain(Arg1& arg1, Arg2& arg2, ParamList)
     {
-        static_cast<Derived*>(this)->handleField(std::forward<Arg1>(arg1), std::forward<Arg2>(arg2), ParamList());
+        static_cast<Derived*>(this)->handleField(arg1, arg2, ParamList());
     }
 private:
     IterateFieldsHelper() = default;
@@ -360,34 +385,28 @@ struct ClientException
 template <typename Accessor, typename... Types>
 struct ClientParam
 {
-    ClientParam(Types&&... values) : m_values(values...) {}
+    ClientParam(Types&&... values) : m_values{std::forward<Types>(values)...} {}
 
     struct BuildParams : IterateFieldsHelper<BuildParams, sizeof...(Types)>
     {
-        template <typename... Args>
-        void handleField(Args&&... args)
+        template <typename Params, typename ParamList>
+        void handleField(ClientInvokeContext& invoke_context, Params& params, ParamList)
         {
-            callBuild<0>(std::forward<Args>(args)...);
-        }
+            auto const fun = [&]<typename... Values>(Values&&... values) {
+                MaybeSetWant(
+                    ParamList(), Priority<1>(), values..., Make<StructField, Accessor>(params));
+                MaybeBuildField(std::integral_constant<bool, Accessor::in>(), ParamList(), invoke_context,
+                    Make<StructField, Accessor>(params), std::forward<Values>(values)...);
+            };
 
-        // TODO Possible optimization to speed up compile time:
-        // https://stackoverflow.com/a/7858971 Using enable_if below to check
-        // position when unpacking tuple might be slower than pattern matching
-        // approach in the stack overflow solution
-        template <size_t I, typename... Args>
-        auto callBuild(Args&&... args) -> std::enable_if_t<(I < sizeof...(Types))>
-        {
-            callBuild<I + 1>(std::forward<Args>(args)..., std::get<I>(m_client_param->m_values));
-        }
-
-        template <size_t I, typename Params, typename ParamList, typename... Values>
-        auto callBuild(ClientInvokeContext& invoke_context, Params& params, ParamList, Values&&... values) ->
-            std::enable_if_t<(I == sizeof...(Types))>
-        {
-            MaybeBuildField(std::integral_constant<bool, Accessor::in>(), ParamList(), invoke_context,
-                Make<StructField, Accessor>(params), std::forward<Values>(values)...);
-            MaybeSetWant(
-                ParamList(), Priority<1>(), std::forward<Values>(values)..., Make<StructField, Accessor>(params));
+            // Note: The m_values tuple just consists of lvalue and rvalue
+            // references, so calling std::move doesn't change the tuple, it
+            // just causes std::apply to call the std::get overload that returns
+            // && instead of &, so rvalue references are preserved and not
+            // turned into lvalue references. This allows the BuildField call to
+            // move from the argument if it is an rvalue reference or was passed
+            // by value.
+            std::apply(fun, std::move(m_client_param->m_values));
         }
 
         BuildParams(ClientParam* client_param) : m_client_param(client_param) {}
@@ -396,24 +415,15 @@ struct ClientParam
 
     struct ReadResults : IterateFieldsHelper<ReadResults, sizeof...(Types)>
     {
-        template <typename... Args>
-        void handleField(Args&&... args)
+        template <typename Results, typename... Params>
+        void handleField(ClientInvokeContext& invoke_context, Results& results, TypeList<Params...>)
         {
-            callRead<0>(std::forward<Args>(args)...);
-        }
+            auto const fun = [&]<typename... Values>(Values&&... values) {
+                MaybeReadField(std::integral_constant<bool, Accessor::out>(), TypeList<Decay<Params>...>(), invoke_context,
+                    Make<StructField, Accessor>(results), ReadDestUpdate(values)...);
+            };
 
-        template <int I, typename... Args>
-        auto callRead(Args&&... args) -> std::enable_if_t<(I < sizeof...(Types))>
-        {
-            callRead<I + 1>(std::forward<Args>(args)..., std::get<I>(m_client_param->m_values));
-        }
-
-        template <int I, typename Results, typename... Params, typename... Values>
-        auto callRead(ClientInvokeContext& invoke_context, Results& results, TypeList<Params...>, Values&&... values)
-            -> std::enable_if_t<I == sizeof...(Types)>
-        {
-            MaybeReadField(std::integral_constant<bool, Accessor::out>(), TypeList<Decay<Params>...>(), invoke_context,
-                Make<StructField, Accessor>(results), ReadDestUpdate(values)...);
+            std::apply(fun, m_client_param->m_values);
         }
 
         ReadResults(ClientParam* client_param) : m_client_param(client_param) {}
@@ -435,9 +445,36 @@ struct ServerCall
     template <typename ServerContext, typename... Args>
     decltype(auto) invoke(ServerContext& server_context, TypeList<>, Args&&... args) const
     {
-        return ProxyServerMethodTraits<typename decltype(server_context.call_context.getParams())::Reads>::invoke(
-            server_context,
-            std::forward<Args>(args)...);
+        // If cancel_lock is set, release it while executing the method, and
+        // reacquire it afterwards. The lock is needed to prevent params and
+        // response structs from being deleted by the event loop thread if the
+        // request is canceled, so it is only needed before and after method
+        // execution. It is important to release the lock during execution
+        // because the method can take arbitrarily long to return and the event
+        // loop will need the lock itself in on_cancel if the call is canceled.
+        if (server_context.cancel_lock) server_context.cancel_lock->m_lock.unlock();
+        return TryFinally(
+            [&]() -> decltype(auto) {
+                return ProxyServerMethodTraits<
+                    typename decltype(server_context.call_context.getParams())::Reads
+                >::invoke(server_context, std::forward<Args>(args)...);
+            },
+            [&] {
+                if (server_context.cancel_lock) server_context.cancel_lock->m_lock.lock();
+                // If the IPC request was canceled, throw InterruptException
+                // because there is no point continuing and trying to fill the
+                // call_context.getResults() struct. It's also important to stop
+                // executing because the connection may have been destroyed as
+                // described in https://github.com/bitcoin/bitcoin/issues/34250
+                // and there could be invalid references to the destroyed
+                // Connection object if this continued.
+                // If the IPC method itself threw an exception, the
+                // InterruptException thrown below will take precedence over it.
+                // Since the call has been canceled that exception can't be
+                // returned to the caller, so it needs to be discarded like
+                // other result values.
+                if (server_context.request_canceled) throw InterruptException{"canceled"};
+            });
     }
 };
 
@@ -558,7 +595,7 @@ template <typename Client>
 void clientDestroy(Client& client)
 {
     if (client.m_context.connection) {
-        client.m_context.connection->m_loop.log() << "IPC client destroy " << typeid(client).name();
+        MP_LOG(*client.m_context.loop, Log::Info) << "IPC client destroy " << typeid(client).name();
     } else {
         KJ_LOG(INFO, "IPC interrupted client destroy", typeid(client).name());
     }
@@ -567,14 +604,14 @@ void clientDestroy(Client& client)
 template <typename Server>
 void serverDestroy(Server& server)
 {
-    server.m_context.connection->m_loop.log() << "IPC server destroy " << typeid(server).name();
+    MP_LOG(*server.m_context.loop, Log::Info) << "IPC server destroy " << typeid(server).name();
 }
 
 //! Entry point called by generated client code that looks like:
 //!
 //! ProxyClient<ClassName>::M0::Result ProxyClient<ClassName>::methodName(M0::Param<0> arg0, M0::Param<1> arg1) {
 //!     typename M0::Result result;
-//!     clientInvoke(*this, &InterfaceName::Client::methodNameRequest, MakeClientParam<...>(arg0), MakeClientParam<...>(arg1), MakeClientParam<...>(result));
+//!     clientInvoke(*this, &InterfaceName::Client::methodNameRequest, MakeClientParam<...>(M0::Fwd<0>(arg0)), MakeClientParam<...>(M0::Fwd<1>(arg1)), MakeClientParam<...>(result));
 //!     return result;
 //! }
 //!
@@ -582,12 +619,9 @@ void serverDestroy(Server& server)
 template <typename ProxyClient, typename GetRequest, typename... FieldObjs>
 void clientInvoke(ProxyClient& proxy_client, const GetRequest& get_request, FieldObjs&&... fields)
 {
-    if (!proxy_client.m_context.connection) {
-        throw std::logic_error("clientInvoke call made after disconnect");
-    }
     if (!g_thread_context.waiter) {
         assert(g_thread_context.thread_name.empty());
-        g_thread_context.thread_name = ThreadName(proxy_client.m_context.connection->m_loop.m_exe_name);
+        g_thread_context.thread_name = ThreadName(proxy_client.m_context.loop->m_exe_name);
         // If next assert triggers, it means clientInvoke is being called from
         // the capnp event loop thread. This can happen when a ProxyServer
         // method implementation that runs synchronously on the event loop
@@ -598,71 +632,86 @@ void clientInvoke(ProxyClient& proxy_client, const GetRequest& get_request, Fiel
         // declaration so the server method runs in a dedicated thread.
         assert(!g_thread_context.loop_thread);
         g_thread_context.waiter = std::make_unique<Waiter>();
-        proxy_client.m_context.connection->m_loop.logPlain()
+        MP_LOGPLAIN(*proxy_client.m_context.loop, Log::Info)
             << "{" << g_thread_context.thread_name
             << "} IPC client first request from current thread, constructing waiter";
     }
-    ClientInvokeContext invoke_context{*proxy_client.m_context.connection, g_thread_context};
+    ThreadContext& thread_context{g_thread_context};
+    std::optional<ClientInvokeContext> invoke_context; // Must outlive waiter->wait() call below
     std::exception_ptr exception;
     std::string kj_exception;
     bool done = false;
-    proxy_client.m_context.connection->m_loop.sync([&]() {
+    const char* disconnected = nullptr;
+    proxy_client.m_context.loop->sync([&]() {
+        if (!proxy_client.m_context.connection) {
+            const Lock lock(thread_context.waiter->m_mutex);
+            done = true;
+            disconnected = "IPC client method called after disconnect.";
+            thread_context.waiter->m_cv.notify_all();
+            return;
+        }
+
         auto request = (proxy_client.m_client.*get_request)(nullptr);
         using Request = CapRequestTraits<decltype(request)>;
         using FieldList = typename ProxyClientMethodTraits<typename Request::Params>::Fields;
-        IterateFields().handleChain(invoke_context, request, FieldList(), typename FieldObjs::BuildParams{&fields}...);
-        proxy_client.m_context.connection->m_loop.logPlain()
-            << "{" << invoke_context.thread_context.thread_name << "} IPC client send "
-            << TypeName<typename Request::Params>() << " " << LogEscape(request.toString());
+        invoke_context.emplace(*proxy_client.m_context.connection, thread_context);
+        IterateFields().handleChain(*invoke_context, request, FieldList(), typename FieldObjs::BuildParams{&fields}...);
+        MP_LOGPLAIN(*proxy_client.m_context.loop, Log::Debug)
+            << "{" << thread_context.thread_name << "} IPC client send "
+            << TypeName<typename Request::Params>();
+        MP_LOGPLAIN(*proxy_client.m_context.loop, Log::Trace)
+            << "send data: " << LogEscape(request.toString(), proxy_client.m_context.loop->m_log_opts.max_chars);
 
-        proxy_client.m_context.connection->m_loop.m_task_set->add(request.send().then(
+        proxy_client.m_context.loop->m_task_set->add(request.send().then(
             [&](::capnp::Response<typename Request::Results>&& response) {
-                proxy_client.m_context.connection->m_loop.logPlain()
-                    << "{" << invoke_context.thread_context.thread_name << "} IPC client recv "
-                    << TypeName<typename Request::Results>() << " " << LogEscape(response.toString());
+                MP_LOGPLAIN(*proxy_client.m_context.loop, Log::Debug)
+                    << "{" << thread_context.thread_name << "} IPC client recv "
+                    << TypeName<typename Request::Results>();
+                MP_LOGPLAIN(*proxy_client.m_context.loop, Log::Trace)
+                    << "recv data: " << LogEscape(response.toString(), proxy_client.m_context.loop->m_log_opts.max_chars);
                 try {
                     IterateFields().handleChain(
-                        invoke_context, response, FieldList(), typename FieldObjs::ReadResults{&fields}...);
+                        *invoke_context, response, FieldList(), typename FieldObjs::ReadResults{&fields}...);
                 } catch (...) {
                     exception = std::current_exception();
                 }
-                const std::unique_lock<std::mutex> lock(invoke_context.thread_context.waiter->m_mutex);
+                const Lock lock(thread_context.waiter->m_mutex);
                 done = true;
-                invoke_context.thread_context.waiter->m_cv.notify_all();
+                thread_context.waiter->m_cv.notify_all();
             },
             [&](const ::kj::Exception& e) {
-                kj_exception = kj::str("kj::Exception: ", e).cStr();
-                proxy_client.m_context.connection->m_loop.logPlain()
-                    << "{" << invoke_context.thread_context.thread_name << "} IPC client exception " << kj_exception;
-                const std::unique_lock<std::mutex> lock(invoke_context.thread_context.waiter->m_mutex);
+                if (e.getType() == ::kj::Exception::Type::DISCONNECTED) {
+                    disconnected = "IPC client method call interrupted by disconnect.";
+                } else {
+                    kj_exception = kj::str("kj::Exception: ", e).cStr();
+                    MP_LOGPLAIN(*proxy_client.m_context.loop, Log::Info)
+                        << "{" << thread_context.thread_name << "} IPC client exception " << kj_exception;
+                }
+                const Lock lock(thread_context.waiter->m_mutex);
                 done = true;
-                invoke_context.thread_context.waiter->m_cv.notify_all();
+                thread_context.waiter->m_cv.notify_all();
             }));
     });
 
-    std::unique_lock<std::mutex> lock(invoke_context.thread_context.waiter->m_mutex);
-    invoke_context.thread_context.waiter->wait(lock, [&done]() { return done; });
+    Lock lock(thread_context.waiter->m_mutex);
+    thread_context.waiter->wait(lock, [&done]() { return done; });
     if (exception) std::rethrow_exception(exception);
-    if (!kj_exception.empty()) proxy_client.m_context.connection->m_loop.raise() << kj_exception;
+    if (!kj_exception.empty()) MP_LOGPLAIN(*proxy_client.m_context.loop, Log::Raise) << kj_exception;
+    if (disconnected) MP_LOGPLAIN(*proxy_client.m_context.loop, Log::Raise) << disconnected;
 }
 
 //! Invoke callable `fn()` that may return void. If it does return void, replace
 //! return value with value of `ret()`. This is useful for avoiding code
 //! duplication and branching in generic code that forwards calls to functions.
 template <typename Fn, typename Ret>
-auto ReplaceVoid(Fn&& fn, Ret&& ret) ->
-    std::enable_if_t<std::is_same_v<void, decltype(fn())>, decltype(ret())>
+auto ReplaceVoid(Fn&& fn, Ret&& ret)
 {
-    fn();
-    return ret();
-}
-
-//! Overload of above for non-void `fn()` case.
-template <typename Fn, typename Ret>
-auto ReplaceVoid(Fn&& fn, Ret&& ret) ->
-    std::enable_if_t<!std::is_same_v<void, decltype(fn())>, decltype(fn())>
-{
-    return fn();
+    if constexpr (std::is_same_v<decltype(fn()), void>) {
+        fn();
+        return ret();
+    } else {
+        return fn();
+    }
 }
 
 extern std::atomic<int> server_reqs;
@@ -682,8 +731,10 @@ kj::Promise<void> serverInvoke(Server& server, CallContext& call_context, Fn fn)
     using Results = typename decltype(call_context.getResults())::Builds;
 
     int req = ++server_reqs;
-    server.m_context.connection->m_loop.log() << "IPC server recv request  #" << req << " "
-                                     << TypeName<typename Params::Reads>() << " " << LogEscape(params.toString());
+    MP_LOG(*server.m_context.loop, Log::Debug) << "IPC server recv request  #" << req << " "
+                                     << TypeName<typename Params::Reads>();
+    MP_LOG(*server.m_context.loop, Log::Trace) << "request data: "
+        << LogEscape(params.toString(), server.m_context.loop->m_log_opts.max_chars);
 
     try {
         using ServerContext = ServerInvokeContext<Server, CallContext>;
@@ -699,14 +750,15 @@ kj::Promise<void> serverInvoke(Server& server, CallContext& call_context, Fn fn)
         return ReplaceVoid([&]() { return fn.invoke(server_context, ArgList()); },
             [&]() { return kj::Promise<CallContext>(kj::mv(call_context)); })
             .then([&server, req](CallContext call_context) {
-                server.m_context.connection->m_loop.log() << "IPC server send response #" << req << " " << TypeName<Results>()
-                                                 << " " << LogEscape(call_context.getResults().toString());
+                MP_LOG(*server.m_context.loop, Log::Debug) << "IPC server send response #" << req << " " << TypeName<Results>();
+                MP_LOG(*server.m_context.loop, Log::Trace) << "response data: "
+                    << LogEscape(call_context.getResults().toString(), server.m_context.loop->m_log_opts.max_chars);
             });
     } catch (const std::exception& e) {
-        server.m_context.connection->m_loop.log() << "IPC server unhandled exception: " << e.what();
+        MP_LOG(*server.m_context.loop, Log::Error) << "IPC server unhandled exception: " << e.what();
         throw;
     } catch (...) {
-        server.m_context.connection->m_loop.log() << "IPC server unhandled exception";
+        MP_LOG(*server.m_context.loop, Log::Error) << "IPC server unhandled exception";
         throw;
     }
 }

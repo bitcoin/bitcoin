@@ -1,4 +1,4 @@
-// Copyright (c) 2020-2022 The Bitcoin Core developers
+// Copyright (c) 2020-present The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -24,7 +24,7 @@
 static constexpr size_t NUM_SOURCES = 64;
 static constexpr size_t NUM_ADDRESSES_PER_SOURCE = 256;
 
-static NetGroupManager EMPTY_NETGROUPMAN{std::vector<bool>()};
+static auto EMPTY_NETGROUPMAN{NetGroupManager::NoAsmap()};
 static constexpr uint32_t ADDRMAN_CONSISTENCY_CHECK_RATIO{0};
 
 static std::vector<CAddress> g_sources;
@@ -175,9 +175,9 @@ static void AddrManAddThenGood(benchmark::Bench& bench)
     });
 }
 
-BENCHMARK(AddrManAdd, benchmark::PriorityLevel::HIGH);
-BENCHMARK(AddrManSelect, benchmark::PriorityLevel::HIGH);
-BENCHMARK(AddrManSelectFromAlmostEmpty, benchmark::PriorityLevel::HIGH);
-BENCHMARK(AddrManSelectByNetwork, benchmark::PriorityLevel::HIGH);
-BENCHMARK(AddrManGetAddr, benchmark::PriorityLevel::HIGH);
-BENCHMARK(AddrManAddThenGood, benchmark::PriorityLevel::HIGH);
+BENCHMARK(AddrManAdd);
+BENCHMARK(AddrManSelect);
+BENCHMARK(AddrManSelectFromAlmostEmpty);
+BENCHMARK(AddrManSelectByNetwork);
+BENCHMARK(AddrManGetAddr);
+BENCHMARK(AddrManAddThenGood);

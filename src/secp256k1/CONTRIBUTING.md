@@ -74,6 +74,7 @@ In addition, libsecp256k1 tries to maintain the following coding conventions:
 * User-facing comment lines in headers should be limited to 80 chars if possible.
 * All identifiers in file scope should start with `secp256k1_`.
 * Avoid trailing whitespace.
+* Use the constants `EXIT_SUCCESS`/`EXIT_FAILURE` (defined in `stdlib.h`) to indicate program execution status for examples and other binaries.
 
 ### Tests
 
@@ -91,12 +92,14 @@ Run the tests:
 
 To create a report, `gcovr` is recommended, as it includes branch coverage reporting:
 
-    $ gcovr --exclude 'src/bench*' --print-summary
+    $ gcovr --gcov-ignore-parse-errors=all --merge-mode-functions=separate --exclude 'src/bench*' --exclude 'src/modules/.*/bench_impl.h' --print-summary
 
 To create a HTML report with coloured and annotated source code:
 
     $ mkdir -p coverage
-    $ gcovr --exclude 'src/bench*' --html --html-details -o coverage/coverage.html
+    $ gcovr --gcov-ignore-parse-errors=all --merge-mode-functions=separate --exclude 'src/bench*' --exclude 'src/modules/.*/bench_impl.h' --html --html-details -o coverage/coverage.html
+
+On `gcovr` >=8.3, `--gcov-ignore-parse-errors=all` can be replaced with `--gcov-suspicious-hits-threshold=140737488355330`.
 
 #### Exhaustive tests
 

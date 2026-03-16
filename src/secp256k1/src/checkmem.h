@@ -48,7 +48,17 @@
 #  if __has_feature(memory_sanitizer)
 #    include <sanitizer/msan_interface.h>
 #    define SECP256K1_CHECKMEM_ENABLED 1
-#    define SECP256K1_CHECKMEM_UNDEFINE(p, len) __msan_allocated_memory((p), (len))
+#    if defined(__clang__) && ((__clang_major__ == 21 && __clang_minor__ >= 1) || __clang_major__ >= 22)
+#      define SECP256K1_CHECKMEM_UNDEFINE(p, len) do { \
+         /* Work around https://github.com/llvm/llvm-project/issues/160094 */ \
+         _Pragma("clang diagnostic push") \
+         _Pragma("clang diagnostic ignored \"-Wuninitialized-const-pointer\"") \
+         __msan_allocated_memory((p), (len)); \
+         _Pragma("clang diagnostic pop") \
+         } while(0)
+#    else
+#      define SECP256K1_CHECKMEM_UNDEFINE(p, len) __msan_allocated_memory((p), (len))
+#    endif
 #    define SECP256K1_CHECKMEM_DEFINE(p, len) __msan_unpoison((p), (len))
 #    define SECP256K1_CHECKMEM_MSAN_DEFINE(p, len) __msan_unpoison((p), (len))
 #    define SECP256K1_CHECKMEM_CHECK(p, len) __msan_check_mem_is_initialized((p), (len))
@@ -68,10 +78,15 @@
 #  if defined(__clang__) && defined(__APPLE__)
 #    pragma clang diagnostic push
 #    pragma clang diagnostic ignored "-Wreserved-identifier"
+#  elif defined(__GNUC__) && (__GNUC__ >= 15)
+#    pragma GCC diagnostic push
+#    pragma GCC diagnostic ignored "-Wtrailing-whitespace"
 #  endif
 #    include <valgrind/memcheck.h>
 #  if defined(__clang__) && defined(__APPLE__)
 #    pragma clang diagnostic pop
+#  elif defined(__GNUC__) && (__GNUC__ >= 15)
+#    pragma GCC diagnostic pop
 #  endif
 #    define SECP256K1_CHECKMEM_ENABLED 1
 #    define SECP256K1_CHECKMEM_UNDEFINE(p, len) VALGRIND_MAKE_MEM_UNDEFINED((p), (len))

@@ -1,5 +1,5 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
-// Copyright (c) 2009-2020 The Bitcoin Core developers
+// Copyright (c) 2009-present The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -14,6 +14,7 @@ typedef enum ScriptError_t
     SCRIPT_ERR_UNKNOWN_ERROR,
     SCRIPT_ERR_EVAL_FALSE,
     SCRIPT_ERR_OP_RETURN,
+    SCRIPT_ERR_SCRIPTNUM,
 
     /* Max sizes */
     SCRIPT_ERR_SCRIPT_SIZE,
@@ -77,6 +78,7 @@ typedef enum ScriptError_t
     SCRIPT_ERR_TAPSCRIPT_VALIDATION_WEIGHT,
     SCRIPT_ERR_TAPSCRIPT_CHECKMULTISIG,
     SCRIPT_ERR_TAPSCRIPT_MINIMALIF,
+    SCRIPT_ERR_TAPSCRIPT_EMPTY_PUBKEY,
 
     /* Constant scriptCode */
     SCRIPT_ERR_OP_CODESEPARATOR,
@@ -85,8 +87,6 @@ typedef enum ScriptError_t
     SCRIPT_ERR_ERROR_COUNT
 } ScriptError;
 
-#define SCRIPT_ERR_LAST SCRIPT_ERR_ERROR_COUNT
-
-std::string ScriptErrorString(const ScriptError error);
+std::string ScriptErrorString(ScriptError error);
 
 #endif // BITCOIN_SCRIPT_SCRIPT_ERROR_H

@@ -11,14 +11,15 @@
 #include <test/fuzz/FuzzedDataProvider.h>
 #include <test/fuzz/fuzz.h>
 #include <test/fuzz/util.h>
+#include <test/fuzz/util/descriptor.h>
 #include <util/strencodings.h>
 
 #include <algorithm>
+#include <optional>
 
 namespace {
 
 using Fragment = miniscript::Fragment;
-using NodeRef = miniscript::NodeRef<CPubKey>;
 using Node = miniscript::Node<CPubKey>;
 using Type = miniscript::Type;
 using MsCtx = miniscript::MiniscriptContext;
@@ -124,10 +125,14 @@ struct ParserContext {
         return a < b;
     }
 
-    std::optional<std::string> ToString(const Key& key) const
+    std::optional<std::string> ToString(const Key& key, bool& has_priv_key) const
     {
+        has_priv_key = false;
         auto it = TEST_DATA.dummy_key_idx_map.find(key);
-        if (it == TEST_DATA.dummy_key_idx_map.end()) return {};
+        if (it == TEST_DATA.dummy_key_idx_map.end()) {
+            return HexStr(key);
+        }
+        has_priv_key = true;
         uint8_t idx = it->second;
         return HexStr(std::span{&idx, 1});
     }
@@ -149,10 +154,9 @@ struct ParserContext {
         return {h.begin(), h.end()};
     }
 
-    template<typename I>
-    std::optional<Key> FromString(I first, I last) const {
-        if (last - first != 2) return {};
-        auto idx = ParseHex(std::string(first, last));
+    std::optional<Key> FromString(std::span<const char>& in) const {
+        if (in.size() != 2) return {};
+        auto idx = ParseHex(std::string(in.begin(), in.end()));
         if (idx.size() != 1) return {};
         return TEST_DATA.dummy_keys[idx[0]];
     }
@@ -311,11 +315,6 @@ const struct KeyComparator {
 // A dummy scriptsig to pass to VerifyScript (we always use Segwit v0).
 const CScript DUMMY_SCRIPTSIG;
 
-//! Construct a miniscript node as a shared_ptr.
-template<typename... Args> NodeRef MakeNodeRef(Args&&... args) {
-    return miniscript::MakeNodeRef<CPubKey>(miniscript::internal::NoDupCheck{}, std::forward<Args>(args)...);
-}
-
 /** Information about a yet to be constructed Miniscript node. */
 struct NodeInfo {
     //! The type of this node
@@ -390,7 +389,6 @@ std::optional<NodeInfo> ConsumeNodeStable(MsCtx script_ctx, FuzzedDataProvider& 
     bool allow_K = (type_needed == ""_mst) || (type_needed << "K"_mst);
     bool allow_V = (type_needed == ""_mst) || (type_needed << "V"_mst);
     bool allow_W = (type_needed == ""_mst) || (type_needed << "W"_mst);
-    static constexpr auto B{"B"_mst}, K{"K"_mst}, V{"V"_mst}, W{"W"_mst};
 
     switch (provider.ConsumeIntegral<uint8_t>()) {
         case 0:
@@ -440,22 +438,22 @@ std::optional<NodeInfo> ConsumeNodeStable(MsCtx script_ctx, FuzzedDataProvider& 
         }
         case 11:
             if (!(allow_B || allow_K || allow_V)) return {};
-            return {{{B, type_needed, type_needed}, Fragment::ANDOR}};
+            return {{{"B"_mst, type_needed, type_needed}, Fragment::ANDOR}};
         case 12:
             if (!(allow_B || allow_K || allow_V)) return {};
-            return {{{V, type_needed}, Fragment::AND_V}};
+            return {{{"V"_mst, type_needed}, Fragment::AND_V}};
         case 13:
             if (!allow_B) return {};
-            return {{{B, W}, Fragment::AND_B}};
+            return {{{"B"_mst, "W"_mst}, Fragment::AND_B}};
         case 15:
             if (!allow_B) return {};
-            return {{{B, W}, Fragment::OR_B}};
+            return {{{"B"_mst, "W"_mst}, Fragment::OR_B}};
         case 16:
             if (!allow_V) return {};
-            return {{{B, V}, Fragment::OR_C}};
+            return {{{"B"_mst, "V"_mst}, Fragment::OR_C}};
         case 17:
             if (!allow_B) return {};
-            return {{{B, B}, Fragment::OR_D}};
+            return {{{"B"_mst, "B"_mst}, Fragment::OR_D}};
         case 18:
             if (!(allow_B || allow_K || allow_V)) return {};
             return {{{type_needed, type_needed}, Fragment::OR_I}};
@@ -472,25 +470,25 @@ std::optional<NodeInfo> ConsumeNodeStable(MsCtx script_ctx, FuzzedDataProvider& 
         }
         case 20:
             if (!allow_W) return {};
-            return {{{B}, Fragment::WRAP_A}};
+            return {{{"B"_mst}, Fragment::WRAP_A}};
         case 21:
             if (!allow_W) return {};
-            return {{{B}, Fragment::WRAP_S}};
+            return {{{"B"_mst}, Fragment::WRAP_S}};
         case 22:
             if (!allow_B) return {};
-            return {{{K}, Fragment::WRAP_C}};
+            return {{{"K"_mst}, Fragment::WRAP_C}};
         case 23:
             if (!allow_B) return {};
-            return {{{V}, Fragment::WRAP_D}};
+            return {{{"V"_mst}, Fragment::WRAP_D}};
         case 24:
             if (!allow_V) return {};
-            return {{{B}, Fragment::WRAP_V}};
+            return {{{"B"_mst}, Fragment::WRAP_V}};
         case 25:
             if (!allow_B) return {};
-            return {{{B}, Fragment::WRAP_J}};
+            return {{{"B"_mst}, Fragment::WRAP_J}};
         case 26:
             if (!allow_B) return {};
-            return {{{B}, Fragment::WRAP_N}};
+            return {{{"B"_mst}, Fragment::WRAP_N}};
         case 27: {
             if (!allow_B || !IsTapscript(script_ctx)) return {};
             const auto k = provider.ConsumeIntegral<uint16_t>();
@@ -528,23 +526,20 @@ struct SmartInfo
     {
         /* Construct a set of interesting type requirements to reason with (sections of BKVWzondu). */
         std::vector<Type> types;
-        static constexpr auto B_mst{"B"_mst}, K_mst{"K"_mst}, V_mst{"V"_mst}, W_mst{"W"_mst};
-        static constexpr auto d_mst{"d"_mst}, n_mst{"n"_mst}, o_mst{"o"_mst}, u_mst{"u"_mst}, z_mst{"z"_mst};
-        static constexpr auto NONE_mst{""_mst};
         for (int base = 0; base < 4; ++base) { /* select from B,K,V,W */
-            Type type_base = base == 0 ? B_mst : base == 1 ? K_mst : base == 2 ? V_mst : W_mst;
+            Type type_base = base == 0 ? "B"_mst : base == 1 ? "K"_mst : base == 2 ? "V"_mst : "W"_mst;
             for (int zo = 0; zo < 3; ++zo) { /* select from z,o,(none) */
-                Type type_zo = zo == 0 ? z_mst : zo == 1 ? o_mst : NONE_mst;
+                Type type_zo = zo == 0 ? "z"_mst : zo == 1 ? "o"_mst : ""_mst;
                 for (int n = 0; n < 2; ++n) { /* select from (none),n */
                     if (zo == 0 && n == 1) continue; /* z conflicts with n */
                     if (base == 3 && n == 1) continue; /* W conflicts with n */
-                    Type type_n = n == 0 ? NONE_mst : n_mst;
+                    Type type_n = n == 0 ? ""_mst : "n"_mst;
                     for (int d = 0; d < 2; ++d) { /* select from (none),d */
                         if (base == 2 && d == 1) continue; /* V conflicts with d */
-                        Type type_d = d == 0 ? NONE_mst : d_mst;
+                        Type type_d = d == 0 ? ""_mst : "d"_mst;
                         for (int u = 0; u < 2; ++u) { /* select from (none),u */
                             if (base == 2 && u == 1) continue; /* V conflicts with u */
-                            Type type_u = u == 0 ? NONE_mst : u_mst;
+                            Type type_u = u == 0 ? ""_mst : "u"_mst;
                             Type type = type_base | type_zo | type_n | type_d | type_u;
                             types.push_back(type);
                         }
@@ -686,12 +681,12 @@ struct SmartInfo
         /* Find which types are useful. The fuzzer logic only cares about constructing
          * B,V,K,W nodes, so any type that isn't needed in any recipe (directly or
          * indirectly) for the construction of those is uninteresting. */
-        std::set<Type> useful_types{B_mst, V_mst, K_mst, W_mst};
+        std::set<Type> useful_types{"B"_mst, "V"_mst, "K"_mst, "W"_mst};
         // Find the transitive closure by adding types until the set of types does not change.
         while (true) {
             size_t set_size = useful_types.size();
             for (const auto& [type, recipes] : table) {
-                if (useful_types.count(type) != 0) {
+                if (useful_types.contains(type)) {
                     for (const auto& [_, subtypes] : recipes) {
                         for (auto subtype : subtypes) useful_types.insert(subtype);
                     }
@@ -701,7 +696,7 @@ struct SmartInfo
         }
         // Remove all rules that construct uninteresting types.
         for (auto type_it = table.begin(); type_it != table.end();) {
-            if (useful_types.count(type_it->first) == 0) {
+            if (!useful_types.contains(type_it->first)) {
                 type_it = table.erase(type_it);
             } else {
                 ++type_it;
@@ -714,7 +709,7 @@ struct SmartInfo
          * because they can only be constructed using recipes that involve otherwise
          * non-constructible types, or because they require infinite recursion. */
         std::set<Type> constructible_types{};
-        auto known_constructible = [&](Type type) { return constructible_types.count(type) != 0; };
+        auto known_constructible = [&](Type type) { return constructible_types.contains(type); };
         // Find the transitive closure by adding types until the set of types does not change.
         while (true) {
             size_t set_size = constructible_types.size();
@@ -851,14 +846,15 @@ std::optional<NodeInfo> ConsumeNodeSmart(MsCtx script_ctx, FuzzedDataProvider& p
  * Generate a Miniscript node based on the fuzzer's input.
  *
  * - ConsumeNode is a function object taking a Type, and returning an std::optional<NodeInfo>.
- * - root_type is the required type properties of the constructed NodeRef.
+ * - root_type is the required type properties of the constructed Node.
  * - strict_valid sets whether ConsumeNode is expected to guarantee a NodeInfo that results in
- *   a NodeRef whose Type() matches the type fed to ConsumeNode.
+ *   a Node whose Type() matches the type fed to ConsumeNode.
  */
-template<typename F>
-NodeRef GenNode(MsCtx script_ctx, F ConsumeNode, Type root_type, bool strict_valid = false) {
+template <typename F>
+std::optional<Node> GenNode(MsCtx script_ctx, F ConsumeNode, Type root_type, bool strict_valid = false)
+{
     /** A stack of miniscript Nodes being built up. */
-    std::vector<NodeRef> stack;
+    std::vector<Node> stack;
     /** The queue of instructions. */
     std::vector<std::pair<Type, std::optional<NodeInfo>>> todo{{root_type, {}}};
     /** Predict the number of (static) script ops. */
@@ -961,36 +957,36 @@ NodeRef GenNode(MsCtx script_ctx, F ConsumeNode, Type root_type, bool strict_val
         } else {
             // The back of todo has fragment and number of children decided, and
             // those children have been constructed at the back of stack. Pop
-            // that entry off todo, and use it to construct a new NodeRef on
+            // that entry off todo, and use it to construct a new Node on
             // stack.
             NodeInfo& info = *todo.back().second;
             // Gather children from the back of stack.
-            std::vector<NodeRef> sub;
+            std::vector<Node> sub;
             sub.reserve(info.subtypes.size());
             for (size_t i = 0; i < info.subtypes.size(); ++i) {
                 sub.push_back(std::move(*(stack.end() - info.subtypes.size() + i)));
             }
             stack.erase(stack.end() - info.subtypes.size(), stack.end());
-            // Construct new NodeRef.
-            NodeRef node;
-            if (info.keys.empty()) {
-                node = MakeNodeRef(script_ctx, info.fragment, std::move(sub), std::move(info.hash), info.k);
-            } else {
+            // Construct new Node.
+            Node node{[&] {
+                if (info.keys.empty()) {
+                    return Node{miniscript::internal::NoDupCheck{}, script_ctx, info.fragment, std::move(sub), std::move(info.hash), info.k};
+                }
                 assert(sub.empty());
                 assert(info.hash.empty());
-                node = MakeNodeRef(script_ctx, info.fragment, std::move(info.keys), info.k);
-            }
+                return Node{miniscript::internal::NoDupCheck{}, script_ctx, info.fragment, std::move(info.keys), info.k};
+            }()};
             // Verify acceptability.
-            if (!node || (node->GetType() & "KVWB"_mst) == ""_mst) {
+            if ((node.GetType() & "KVWB"_mst) == ""_mst) {
                 assert(!strict_valid);
                 return {};
             }
             if (!(type_needed == ""_mst)) {
-                assert(node->GetType() << type_needed);
+                assert(node.GetType() << type_needed);
             }
-            if (!node->IsValid()) return {};
+            if (!node.IsValid()) return {};
             // Update resource predictions.
-            if (node->fragment == Fragment::WRAP_V && node->subs[0]->GetType() << "x"_mst) {
+            if (node.Fragment() == Fragment::WRAP_V && node.Subs()[0].GetType() << "x"_mst) {
                 ops += 1;
                 scriptsize += 1;
             }
@@ -1004,9 +1000,9 @@ NodeRef GenNode(MsCtx script_ctx, F ConsumeNode, Type root_type, bool strict_val
         }
     }
     assert(stack.size() == 1);
-    assert(stack[0]->GetStaticOps() == ops);
-    assert(stack[0]->ScriptSize() == scriptsize);
-    stack[0]->DuplicateKeyCheck(KEY_COMP);
+    assert(stack[0].GetStaticOps() == ops);
+    assert(stack[0].ScriptSize() == scriptsize);
+    stack[0].DuplicateKeyCheck(KEY_COMP);
     return std::move(stack[0]);
 }
 
@@ -1031,7 +1027,7 @@ void SatisfactionToWitness(MsCtx ctx, CScriptWitness& witness, const CScript& sc
 }
 
 /** Perform various applicable tests on a miniscript Node. */
-void TestNode(const MsCtx script_ctx, const NodeRef& node, FuzzedDataProvider& provider)
+void TestNode(const MsCtx script_ctx, const std::optional<Node>& node, FuzzedDataProvider& provider)
 {
     if (!node) return;
 
@@ -1124,7 +1120,7 @@ void TestNode(const MsCtx script_ctx, const NodeRef& node, FuzzedDataProvider& p
         assert(mal_success);
         assert(stack_nonmal == stack_mal);
         // Compute witness size (excluding script push, control block, and witness count encoding).
-        const size_t wit_size = GetSerializeSize(stack_nonmal) - GetSizeOfCompactSize(stack_nonmal.size());
+        const uint64_t wit_size{GetSerializeSize(stack_nonmal) - GetSizeOfCompactSize(stack_nonmal.size())};
         assert(wit_size <= *node->GetWitnessSize());
 
         // Test non-malleable satisfaction.
@@ -1166,28 +1162,28 @@ void TestNode(const MsCtx script_ctx, const NodeRef& node, FuzzedDataProvider& p
         return sig_ptr != nullptr && sig_ptr->second;
     };
     bool satisfiable = node->IsSatisfiable([&](const Node& node) -> bool {
-        switch (node.fragment) {
+        switch (node.Fragment()) {
         case Fragment::PK_K:
         case Fragment::PK_H:
-            return is_key_satisfiable(node.keys[0]);
+            return is_key_satisfiable(node.Keys()[0]);
         case Fragment::MULTI:
         case Fragment::MULTI_A: {
-            size_t sats = std::count_if(node.keys.begin(), node.keys.end(), [&](const auto& key) {
+            size_t sats = std::ranges::count_if(node.Keys(), [&](const auto& key) {
                 return size_t(is_key_satisfiable(key));
             });
-            return sats >= node.k;
+            return sats >= node.K();
         }
         case Fragment::OLDER:
         case Fragment::AFTER:
-            return node.k & 1;
+            return node.K() & 1;
         case Fragment::SHA256:
-            return TEST_DATA.sha256_preimages.count(node.data);
+            return TEST_DATA.sha256_preimages.contains(node.Data());
         case Fragment::HASH256:
-            return TEST_DATA.hash256_preimages.count(node.data);
+            return TEST_DATA.hash256_preimages.contains(node.Data());
         case Fragment::RIPEMD160:
-            return TEST_DATA.ripemd160_preimages.count(node.data);
+            return TEST_DATA.ripemd160_preimages.contains(node.Data());
         case Fragment::HASH160:
-            return TEST_DATA.hash160_preimages.count(node.data);
+            return TEST_DATA.hash160_preimages.contains(node.Data());
         default:
             assert(false);
         }
@@ -1238,9 +1234,12 @@ FUZZ_TARGET(miniscript_smart, .init = FuzzInitSmart)
 /* Fuzz tests that test parsing from a string, and roundtripping via string. */
 FUZZ_TARGET(miniscript_string, .init = FuzzInit)
 {
+    constexpr auto is_too_expensive{[](std::span<const uint8_t> buf) { return HasTooManySubFrag(buf) || HasTooManyWrappers(buf); }};
+
     if (buffer.empty()) return;
     FuzzedDataProvider provider(buffer.data(), buffer.size());
     auto str = provider.ConsumeBytesAsString(provider.remaining_bytes() - 1);
+    if (is_too_expensive(MakeUCharSpan(str))) return;
     const ParserContext parser_ctx{(MsCtx)provider.ConsumeBool()};
     auto parsed = miniscript::FromString(str, parser_ctx);
     if (!parsed) return;

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (c) 2014-2022 The Bitcoin Core developers
+# Copyright (c) 2014-present The Bitcoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test the importprunedfunds and removeprunedfunds RPCs."""
@@ -14,15 +14,14 @@ from test_framework.messages import (
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import (
     assert_equal,
+    assert_not_equal,
     assert_raises_rpc_error,
+    wallet_importprivkey,
 )
 from test_framework.wallet_util import generate_keypair
 
 
 class ImportPrunedFundsTest(BitcoinTestFramework):
-    def add_options(self, parser):
-        self.add_wallet_options(parser)
-
     def set_test_params(self):
         self.setup_clean_chain = True
         self.num_nodes = 2
@@ -41,7 +40,7 @@ class ImportPrunedFundsTest(BitcoinTestFramework):
         # privkey
         address3_privkey, address3_pubkey = generate_keypair(wif=True)
         address3 = key_to_p2wpkh(address3_pubkey)
-        self.nodes[0].importprivkey(address3_privkey)
+        wallet_importprivkey(self.nodes[0], address3_privkey, "now")
 
         # Check only one address
         address_info = self.nodes[0].getaddressinfo(address1)
@@ -54,15 +53,12 @@ class ImportPrunedFundsTest(BitcoinTestFramework):
 
         # Address Test - before import
         address_info = self.nodes[1].getaddressinfo(address1)
-        assert_equal(address_info['iswatchonly'], False)
         assert_equal(address_info['ismine'], False)
 
         address_info = self.nodes[1].getaddressinfo(address2)
-        assert_equal(address_info['iswatchonly'], False)
         assert_equal(address_info['ismine'], False)
 
         address_info = self.nodes[1].getaddressinfo(address3)
-        assert_equal(address_info['iswatchonly'], False)
         assert_equal(address_info['ismine'], False)
 
         # Send funds to self
@@ -92,13 +88,13 @@ class ImportPrunedFundsTest(BitcoinTestFramework):
         # Import with affiliated address with no rescan
         self.nodes[1].createwallet('wwatch', disable_private_keys=True)
         wwatch = self.nodes[1].get_wallet_rpc('wwatch')
-        wwatch.importaddress(address=address2, rescan=False)
+        wwatch.importdescriptors([{"desc": self.nodes[0].getaddressinfo(address2)["desc"], "timestamp": "now"}])
         wwatch.importprunedfunds(rawtransaction=rawtxn2, txoutproof=proof2)
-        assert [tx for tx in wwatch.listtransactions(include_watchonly=True) if tx['txid'] == txnid2]
+        assert [tx for tx in wwatch.listtransactions() if tx['txid'] == txnid2]
 
         # Import with private key with no rescan
         w1 = self.nodes[1].get_wallet_rpc(self.default_wallet_name)
-        w1.importprivkey(privkey=address3_privkey, rescan=False)
+        wallet_importprivkey(w1, address3_privkey, "now")
         w1.importprunedfunds(rawtxn3, proof3)
         assert [tx for tx in w1.listtransactions() if tx['txid'] == txnid3]
         balance3 = w1.getbalance()
@@ -106,28 +102,21 @@ class ImportPrunedFundsTest(BitcoinTestFramework):
 
         # Addresses Test - after import
         address_info = w1.getaddressinfo(address1)
-        assert_equal(address_info['iswatchonly'], False)
         assert_equal(address_info['ismine'], False)
         address_info = wwatch.getaddressinfo(address2)
-        if self.options.descriptors:
-            assert_equal(address_info['iswatchonly'], False)
-            assert_equal(address_info['ismine'], True)
-        else:
-            assert_equal(address_info['iswatchonly'], True)
-            assert_equal(address_info['ismine'], False)
+        assert_equal(address_info['ismine'], True)
         address_info = w1.getaddressinfo(address3)
-        assert_equal(address_info['iswatchonly'], False)
         assert_equal(address_info['ismine'], True)
 
         # Remove transactions
         assert_raises_rpc_error(-4, f'Transaction {txnid1} does not belong to this wallet', w1.removeprunedfunds, txnid1)
-        assert not [tx for tx in w1.listtransactions(include_watchonly=True) if tx['txid'] == txnid1]
+        assert not [tx for tx in w1.listtransactions() if tx['txid'] == txnid1]
 
         wwatch.removeprunedfunds(txnid2)
-        assert not [tx for tx in wwatch.listtransactions(include_watchonly=True) if tx['txid'] == txnid2]
+        assert not [tx for tx in wwatch.listtransactions() if tx['txid'] == txnid2]
 
         w1.removeprunedfunds(txnid3)
-        assert not [tx for tx in w1.listtransactions(include_watchonly=True) if tx['txid'] == txnid3]
+        assert not [tx for tx in w1.listtransactions() if tx['txid'] == txnid3]
 
         # Check various RPC parameter validation errors
         assert_raises_rpc_error(-22, "TX decode failed", w1.importprunedfunds, b'invalid tx'.hex(), proof1)
@@ -140,6 +129,33 @@ class ImportPrunedFundsTest(BitcoinTestFramework):
         mb = from_hex(CMerkleBlock(), proof1)
         mb.header.nTime += 1  # modify arbitrary block header field to change block hash
         assert_raises_rpc_error(-5, "Block not found in chain", w1.importprunedfunds, rawtxn1, mb.serialize().hex())
+
+        self.log.info("Test removeprunedfunds with conflicting transactions")
+        node = self.nodes[0]
+
+        # Create a transaction
+        utxo = node.listunspent()[0]
+        addr = node.getnewaddress()
+        tx1_id = node.send(outputs=[{addr: 1}], inputs=[utxo])["txid"]
+        tx1_fee = node.gettransaction(tx1_id)["fee"]
+
+        # Create a conflicting tx with a larger fee (tx1_fee is negative)
+        output_value = utxo["amount"] + tx1_fee - Decimal("0.00001")
+        raw_tx2 = node.createrawtransaction(inputs=[utxo], outputs=[{addr: output_value}])
+        signed_tx2 = node.signrawtransactionwithwallet(raw_tx2)
+        tx2_id = node.sendrawtransaction(signed_tx2["hex"])
+        assert_not_equal(tx2_id, tx1_id)
+
+        # Both txs should be in the wallet, tx2 replaced tx1 in mempool
+        assert tx1_id in [tx["txid"] for tx in node.listtransactions()]
+        assert tx2_id in [tx["txid"] for tx in node.listtransactions()]
+
+        # Remove the replaced tx from wallet
+        node.removeprunedfunds(tx1_id)
+
+        # The UTXO should still be considered spent (by tx2)
+        available_utxos = [u["txid"] for u in node.listunspent(minconf=0)]
+        assert utxo["txid"] not in available_utxos, "UTXO should still be spent by conflicting tx"
 
 
 if __name__ == '__main__':

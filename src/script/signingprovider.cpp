@@ -52,6 +52,31 @@ bool HidingSigningProvider::GetTaprootBuilder(const XOnlyPubKey& output_key, Tap
 {
     return m_provider->GetTaprootBuilder(output_key, builder);
 }
+std::vector<CPubKey> HidingSigningProvider::GetMuSig2ParticipantPubkeys(const CPubKey& pubkey) const
+{
+    if (m_hide_origin) return {};
+    return m_provider->GetMuSig2ParticipantPubkeys(pubkey);
+}
+
+std::map<CPubKey, std::vector<CPubKey>> HidingSigningProvider::GetAllMuSig2ParticipantPubkeys() const
+{
+    return m_provider->GetAllMuSig2ParticipantPubkeys();
+}
+
+void HidingSigningProvider::SetMuSig2SecNonce(const uint256& id, MuSig2SecNonce&& nonce) const
+{
+    m_provider->SetMuSig2SecNonce(id, std::move(nonce));
+}
+
+std::optional<std::reference_wrapper<MuSig2SecNonce>> HidingSigningProvider::GetMuSig2SecNonce(const uint256& session_id) const
+{
+    return m_provider->GetMuSig2SecNonce(session_id);
+}
+
+void HidingSigningProvider::DeleteMuSig2Session(const uint256& session_id) const
+{
+    m_provider->DeleteMuSig2Session(session_id);
+}
 
 bool FlatSigningProvider::GetCScript(const CScriptID& scriptid, CScript& script) const { return LookupHelper(scripts, scriptid, script); }
 bool FlatSigningProvider::GetPubKey(const CKeyID& keyid, CPubKey& pubkey) const { return LookupHelper(pubkeys, keyid, pubkey); }
@@ -82,6 +107,40 @@ bool FlatSigningProvider::GetTaprootBuilder(const XOnlyPubKey& output_key, Tapro
     return LookupHelper(tr_trees, output_key, builder);
 }
 
+std::vector<CPubKey> FlatSigningProvider::GetMuSig2ParticipantPubkeys(const CPubKey& pubkey) const
+{
+    std::vector<CPubKey> participant_pubkeys;
+    LookupHelper(aggregate_pubkeys, pubkey, participant_pubkeys);
+    return participant_pubkeys;
+}
+
+std::map<CPubKey, std::vector<CPubKey>> FlatSigningProvider::GetAllMuSig2ParticipantPubkeys() const
+{
+    return aggregate_pubkeys;
+}
+
+void FlatSigningProvider::SetMuSig2SecNonce(const uint256& session_id, MuSig2SecNonce&& nonce) const
+{
+    if (!Assume(musig2_secnonces)) return;
+    auto [it, inserted] = musig2_secnonces->try_emplace(session_id, std::move(nonce));
+    // No secnonce should exist for this session yet.
+    Assert(inserted);
+}
+
+std::optional<std::reference_wrapper<MuSig2SecNonce>> FlatSigningProvider::GetMuSig2SecNonce(const uint256& session_id) const
+{
+    if (!Assume(musig2_secnonces)) return std::nullopt;
+    const auto& it = musig2_secnonces->find(session_id);
+    if (it == musig2_secnonces->end()) return std::nullopt;
+    return it->second;
+}
+
+void FlatSigningProvider::DeleteMuSig2Session(const uint256& session_id) const
+{
+    if (!Assume(musig2_secnonces)) return;
+    musig2_secnonces->erase(session_id);
+}
+
 FlatSigningProvider& FlatSigningProvider::Merge(FlatSigningProvider&& b)
 {
     scripts.merge(b.scripts);
@@ -89,6 +148,9 @@ FlatSigningProvider& FlatSigningProvider::Merge(FlatSigningProvider&& b)
     keys.merge(b.keys);
     origins.merge(b.origins);
     tr_trees.merge(b.tr_trees);
+    aggregate_pubkeys.merge(b.aggregate_pubkeys);
+    // We shouldn't be merging 2 different sessions, just overwrite with b's sessions.
+    if (!musig2_secnonces) musig2_secnonces = b.musig2_secnonces;
     return *this;
 }
 
@@ -136,7 +198,7 @@ bool FillableSigningProvider::AddKeyPubKey(const CKey& key, const CPubKey &pubke
 bool FillableSigningProvider::HaveKey(const CKeyID &address) const
 {
     LOCK(cs_KeyStore);
-    return mapKeys.count(address) > 0;
+    return mapKeys.contains(address);
 }
 
 std::set<CKeyID> FillableSigningProvider::GetKeys() const
@@ -175,7 +237,7 @@ bool FillableSigningProvider::AddCScript(const CScript& redeemScript)
 bool FillableSigningProvider::HaveCScript(const CScriptID& hash) const
 {
     LOCK(cs_KeyStore);
-    return mapScripts.count(hash) > 0;
+    return mapScripts.contains(hash);
 }
 
 std::set<CScriptID> FillableSigningProvider::GetCScripts() const

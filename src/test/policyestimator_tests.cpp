@@ -2,8 +2,8 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include <policy/fees.h>
-#include <policy/fees_args.h>
+#include <policy/fees/block_policy_estimator.h>
+#include <policy/fees/block_policy_estimator_args.h>
 #include <policy/policy.h>
 #include <test/util/txmempool.h>
 #include <txmempool.h>
@@ -37,7 +37,7 @@ BOOST_AUTO_TEST_CASE(BlockPolicyEstimates)
     // added to the mempool by their associate fee
     // txHashes[j] is populated with transactions either of
     // fee = basefee * (j+1)
-    std::vector<uint256> txHashes[10];
+    std::vector<Txid> txHashes[10];
 
     // Create a transaction template
     CScript garbage;
@@ -63,9 +63,9 @@ BOOST_AUTO_TEST_CASE(BlockPolicyEstimates)
                 tx.vin[0].prevout.n = 10000*blocknum+100*j+k; // make transaction unique
                 {
                     LOCK2(cs_main, mpool.cs);
-                    AddToMempool(mpool, entry.Fee(feeV[j]).Time(Now<NodeSeconds>()).Height(blocknum).FromTx(tx));
+                    TryAddToMempool(mpool, entry.Fee(feeV[j]).Time(Now<NodeSeconds>()).Height(blocknum).FromTx(tx));
                     // Since TransactionAddedToMempool callbacks are generated in ATMP,
-                    // not AddToMempool, we cheat and create one manually here
+                    // not TryAddToMempool, we cheat and create one manually here
                     const int64_t virtual_size = GetVirtualTransactionSize(*MakeTransactionRef(tx));
                     const NewMempoolTransactionInfo tx_info{NewMempoolTransactionInfo(MakeTransactionRef(tx),
                                                                                       feeV[j],
@@ -77,8 +77,7 @@ BOOST_AUTO_TEST_CASE(BlockPolicyEstimates)
                                                                                       /*has_no_mempool_parents=*/true)};
                     m_node.validation_signals->TransactionAddedToMempool(tx_info, mpool.GetAndIncrementSequence());
                 }
-                uint256 hash = tx.GetHash();
-                txHashes[j].push_back(hash);
+                txHashes[j].push_back(tx.GetHash());
             }
         }
         //Create blocks where higher fee txs are included more often
@@ -164,9 +163,9 @@ BOOST_AUTO_TEST_CASE(BlockPolicyEstimates)
                 tx.vin[0].prevout.n = 10000*blocknum+100*j+k;
                 {
                     LOCK2(cs_main, mpool.cs);
-                    AddToMempool(mpool, entry.Fee(feeV[j]).Time(Now<NodeSeconds>()).Height(blocknum).FromTx(tx));
+                    TryAddToMempool(mpool, entry.Fee(feeV[j]).Time(Now<NodeSeconds>()).Height(blocknum).FromTx(tx));
                     // Since TransactionAddedToMempool callbacks are generated in ATMP,
-                    // not AddToMempool, we cheat and create one manually here
+                    // not TryAddToMempool, we cheat and create one manually here
                     const int64_t virtual_size = GetVirtualTransactionSize(*MakeTransactionRef(tx));
                     const NewMempoolTransactionInfo tx_info{NewMempoolTransactionInfo(MakeTransactionRef(tx),
                                                                                       feeV[j],
@@ -178,8 +177,7 @@ BOOST_AUTO_TEST_CASE(BlockPolicyEstimates)
                                                                                       /*has_no_mempool_parents=*/true)};
                     m_node.validation_signals->TransactionAddedToMempool(tx_info, mpool.GetAndIncrementSequence());
                 }
-                uint256 hash = tx.GetHash();
-                txHashes[j].push_back(hash);
+                txHashes[j].push_back(tx.GetHash());
             }
         }
         {
@@ -228,9 +226,9 @@ BOOST_AUTO_TEST_CASE(BlockPolicyEstimates)
                 tx.vin[0].prevout.n = 10000*blocknum+100*j+k;
                 {
                     LOCK2(cs_main, mpool.cs);
-                    AddToMempool(mpool, entry.Fee(feeV[j]).Time(Now<NodeSeconds>()).Height(blocknum).FromTx(tx));
+                    TryAddToMempool(mpool, entry.Fee(feeV[j]).Time(Now<NodeSeconds>()).Height(blocknum).FromTx(tx));
                     // Since TransactionAddedToMempool callbacks are generated in ATMP,
-                    // not AddToMempool, we cheat and create one manually here
+                    // not TryAddToMempool, we cheat and create one manually here
                     const int64_t virtual_size = GetVirtualTransactionSize(*MakeTransactionRef(tx));
                     const NewMempoolTransactionInfo tx_info{NewMempoolTransactionInfo(MakeTransactionRef(tx),
                                                                                       feeV[j],
@@ -242,8 +240,7 @@ BOOST_AUTO_TEST_CASE(BlockPolicyEstimates)
                                                                                       /*has_no_mempool_parents=*/true)};
                     m_node.validation_signals->TransactionAddedToMempool(tx_info, mpool.GetAndIncrementSequence());
                 }
-                uint256 hash = tx.GetHash();
-                CTransactionRef ptx = mpool.get(hash);
+                CTransactionRef ptx = mpool.get(tx.GetHash());
                 if (ptx)
                     block.push_back(ptx);
 

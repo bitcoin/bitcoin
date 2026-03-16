@@ -1,4 +1,4 @@
-// Copyright (c) 2020-2022 The Bitcoin Core developers
+// Copyright (c) 2020-present The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -30,7 +30,7 @@ FUZZ_TARGET(chain)
         (void)disk_block_index->GetMedianTimePast();
         (void)disk_block_index->GetUndoPos();
         (void)disk_block_index->HaveNumChainTxs();
-        (void)disk_block_index->IsValid();
+        (void)disk_block_index->IsValid(BLOCK_VALID_TRANSACTIONS);
     }
 
     const CBlockHeader block_header = disk_block_index->GetBlockHeader();
@@ -50,8 +50,6 @@ FUZZ_TARGET(chain)
             BlockStatus::BLOCK_HAVE_UNDO,
             BlockStatus::BLOCK_HAVE_MASK,
             BlockStatus::BLOCK_FAILED_VALID,
-            BlockStatus::BLOCK_FAILED_CHILD,
-            BlockStatus::BLOCK_FAILED_MASK,
             BlockStatus::BLOCK_OPT_WITNESS,
         });
         if (block_status & ~BLOCK_VALID_MASK) {

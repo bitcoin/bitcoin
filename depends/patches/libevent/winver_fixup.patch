@@ -1,0 +1,122 @@
+Cherry-picked from a14ff91254f40cf36e0fee199e26fb11260fab49.
+
+move _WIN32_WINNT defintions before first #include
+
+_WIN32_WINNT and WIN32_LEAN_AND_MEAN need to be defined
+before the windows.h is included for the first time.
+Avoid the confusion of indirect #include by defining
+before any.
+
+diff --git a/event_iocp.c b/event_iocp.c
+index 6b2a2e15..4955e426 100644
+--- a/event_iocp.c
++++ b/event_iocp.c
+@@ -23,12 +23,14 @@
+  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
+  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+  */
+-#include "evconfig-private.h"
+ 
+ #ifndef _WIN32_WINNT
+ /* Minimum required for InitializeCriticalSectionAndSpinCount */
+ #define _WIN32_WINNT 0x0403
+ #endif
++
++#include "evconfig-private.h"
++
+ #include <winsock2.h>
+ #include <windows.h>
+ #include <process.h>
+diff --git a/evthread_win32.c b/evthread_win32.c
+index 2ec80560..8647f72b 100644
+--- a/evthread_win32.c
++++ b/evthread_win32.c
+@@ -23,18 +23,21 @@
+  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
+  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+  */
+-#include "event2/event-config.h"
+-#include "evconfig-private.h"
+ 
+ #ifdef _WIN32
+ #ifndef _WIN32_WINNT
+ /* Minimum required for InitializeCriticalSectionAndSpinCount */
+ #define _WIN32_WINNT 0x0403
+ #endif
+-#include <winsock2.h>
+ #define WIN32_LEAN_AND_MEAN
++#endif
++
++#include "event2/event-config.h"
++#include "evconfig-private.h"
++
++#ifdef _WIN32
++#include <winsock2.h>
+ #include <windows.h>
+-#undef WIN32_LEAN_AND_MEAN
+ #include <sys/locking.h>
+ #endif
+ 
+diff --git a/evutil.c b/evutil.c
+index 9817f086..8537ffe8 100644
+--- a/evutil.c
++++ b/evutil.c
+@@ -24,6 +24,14 @@
+  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+  */
+ 
++#ifdef _WIN32
++#ifndef _WIN32_WINNT
++/* For structs needed by GetAdaptersAddresses */
++#define _WIN32_WINNT 0x0501
++#endif
++#define WIN32_LEAN_AND_MEAN
++#endif
++
+ #include "event2/event-config.h"
+ #include "evconfig-private.h"
+ 
+@@ -31,15 +39,10 @@
+ #include <winsock2.h>
+ #include <winerror.h>
+ #include <ws2tcpip.h>
+-#define WIN32_LEAN_AND_MEAN
+ #include <windows.h>
+-#undef WIN32_LEAN_AND_MEAN
+ #include <io.h>
+ #include <tchar.h>
+ #include <process.h>
+-#undef _WIN32_WINNT
+-/* For structs needed by GetAdaptersAddresses */
+-#define _WIN32_WINNT 0x0501
+ #include <iphlpapi.h>
+ #include <netioapi.h>
+ #endif
+diff --git a/listener.c b/listener.c
+index f5c00c9c..d1080e76 100644
+--- a/listener.c
++++ b/listener.c
+@@ -24,16 +24,19 @@
+  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+  */
+ 
++#ifdef _WIN32
++#ifndef _WIN32_WINNT
++/* Minimum required for InitializeCriticalSectionAndSpinCount */
++#define _WIN32_WINNT 0x0403
++#endif
++#endif
++
+ #include "event2/event-config.h"
+ #include "evconfig-private.h"
+ 
+ #include <sys/types.h>
+ 
+ #ifdef _WIN32
+-#ifndef _WIN32_WINNT
+-/* Minimum required for InitializeCriticalSectionAndSpinCount */
+-#define _WIN32_WINNT 0x0403
+-#endif
+ #include <winsock2.h>
+ #include <winerror.h>
+ #include <ws2tcpip.h>

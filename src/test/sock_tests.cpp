@@ -1,9 +1,10 @@
-// Copyright (c) 2021-2022 The Bitcoin Core developers
+// Copyright (c) 2021-present The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <common/system.h>
 #include <compat/compat.h>
+#include <test/util/common.h>
 #include <test/util/setup_common.h>
 #include <util/sock.h>
 #include <util/threadinterrupt.h>
@@ -24,7 +25,7 @@ static bool SocketIsClosed(const SOCKET& s)
     // wrongly pretend that the socket is not closed.
     int type;
     socklen_t len = sizeof(type);
-    return getsockopt(s, SOL_SOCKET, SO_TYPE, (sockopt_arg_type)&type, &len) == SOCKET_ERROR;
+    return getsockopt(s, SOL_SOCKET, SO_TYPE, reinterpret_cast<char*>(&type), &len) == SOCKET_ERROR;
 }
 
 static SOCKET CreateSocket()

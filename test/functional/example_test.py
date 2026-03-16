@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (c) 2017-2022 The Bitcoin Core developers
+# Copyright (c) 2017-present The Bitcoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """An example functional test
@@ -57,8 +57,7 @@ class BaseNode(P2PInterface):
         """Override the standard on_block callback
 
         Store the hash of a received block in the dictionary."""
-        message.block.calc_sha256()
-        self.block_receive_map[message.block.sha256] += 1
+        self.block_receive_map[message.block.hash_int] += 1
 
     def on_inv(self, message):
         """Override the standard on_inv callback"""
@@ -78,9 +77,6 @@ class ExampleTest(BitcoinTestFramework):
 
     # Override the set_test_params(), skip_test_if_missing_module(), add_options(), setup_chain(), setup_network()
     # and setup_nodes() methods to customize the test setup as required.
-
-    def add_options(self, parser):
-        self.add_wallet_options(parser)
 
     def set_test_params(self):
         """Override test parameters for your individual test.
@@ -185,7 +181,7 @@ class ExampleTest(BitcoinTestFramework):
             block_message = msg_block(block)
             # Send message is used to send a P2P message to the node over our P2PInterface
             peer_messaging.send_without_ping(block_message)
-            self.tip = block.sha256
+            self.tip = block.hash_int
             blocks.append(self.tip)
             self.block_time += 1
             height += 1

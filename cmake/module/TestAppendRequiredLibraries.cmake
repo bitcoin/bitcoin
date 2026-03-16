@@ -38,8 +38,7 @@ function(test_append_socket_library target)
       message(FATAL_ERROR "Cannot figure out how to use getifaddrs/freeifaddrs.")
     endif()
   endif()
-  set(HAVE_DECL_GETIFADDRS TRUE PARENT_SCOPE)
-  set(HAVE_DECL_FREEIFADDRS TRUE PARENT_SCOPE)
+  set(HAVE_IFADDRS TRUE PARENT_SCOPE)
 endfunction()
 
 # Clang, when building for 32-bit,

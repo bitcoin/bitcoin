@@ -55,7 +55,7 @@ public:
 
     void ComputeEntrySchnorr(uint256& entry, const uint256 &hash, std::span<const unsigned char> sig, const XOnlyPubKey& pubkey) const;
 
-    bool Get(const uint256& entry, const bool erase);
+    bool Get(const uint256& entry, bool erase);
 
     void Set(const uint256& entry);
 };

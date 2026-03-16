@@ -11,7 +11,7 @@ $(package)_dependencies=libxcb
 # a different build system (Meson)
 define $(package)_set_vars
 $(package)_config_opts = --enable-option-checking --disable-dependency-tracking
-$(package)_config_opts += --disable-static --disable-docs
+$(package)_config_opts += --disable-shared --disable-docs
 $(package)_cflags += -Wno-error=array-bounds
 endef
 

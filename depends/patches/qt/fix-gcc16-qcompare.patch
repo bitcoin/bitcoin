@@ -1,0 +1,206 @@
+From 7fccc79dd5744ea837ffe200bbfc9f2756870220 Mon Sep 17 00:00:00 2001
+From: Thiago Macieira <thiago.macieira@intel.com>
+Date: Wed, 14 Jan 2026 08:57:22 -0800
+Subject: [PATCH] QtCompare: adapt to GCC 16 breaking ABI for
+ std::partial_ordering
+
+They changed[1] the stored value of the unordered constant from 2 to
+-SCHAR_MAX-1 (0x80). This commit hardens the check for all three
+std::*_ordering types and in all compilers, even though only the
+unordered value has been observed to be a problem.
+
+For:
+
+ std::partial_ordering f(Qt::partial_ordering o) { return o; }
+
+With GCC < 16, this remains a plain bitcast. For GCC >= 16, this now
+generates:
+        cmpb    $2, %dil
+        movl    $-128, %eax
+        cmovne  %edi, %eax
+
+Hopefully, when this is used in context, the comparisons will be elided
+through constant propagation.
+
+[1] https://gcc.gnu.org/git/?p=gcc.git;a=commit;h=fcb3009a32dc33906934a2360e556dfeb98980cf
+
+Pick-to: 6.11 6.10 6.8 6.5
+Change-Id: I04bc40f0aeef5c0c778dfffdaea0bf68c5719462
+Reviewed-by: Volker Hilsheimer <volker.hilsheimer@qt.io>
+Reviewed-by: Edward Welbourne <edward.welbourne@qt.io>
+---
+ src/corelib/global/qcompare.cpp               |  2 +
+ src/corelib/global/qcompare.h                 | 60 ++++++++++++++-----
+ .../corelib/global/qcompare/tst_qcompare.cpp  |  2 +
+ 3 files changed, 50 insertions(+), 14 deletions(-)
+
+diff --git a/qtbase/src/corelib/global/qcompare.cpp b/qtbase/src/corelib/global/qcompare.cpp
+index 8106a84ddcd7..7f7facafbb87 100644
+--- a/qtbase/src/corelib/global/qcompare.cpp
++++ b/qtbase/src/corelib/global/qcompare.cpp
+@@ -18,7 +18,9 @@ QT_BEGIN_NAMESPACE
+     static_assert(std::bit_cast<std:: type ## _ordering>(Qt:: type ## _ordering:: flag) \
+                   == std:: type ## _ordering :: flag) \
+     /* end */
++#if !defined(__GLIBCXX__)
+ CHECK(partial, unordered);
++#endif
+ CHECK(partial, less);
+ CHECK(partial, greater);
+ CHECK(partial, equivalent);
+diff --git a/qtbase/src/corelib/global/qcompare.h b/qtbase/src/corelib/global/qcompare.h
+index d82cf5ab4a4e..7eee69db66a3 100644
+--- a/qtbase/src/corelib/global/qcompare.h
++++ b/qtbase/src/corelib/global/qcompare.h
+@@ -36,6 +36,15 @@ enum class Ordering : CompareUnderlyingType
+ 
+ enum class Uncomparable : CompareUnderlyingType
+ {
++    // We choose the value of our Uncomparable to be the same that the C++
++    // Standard Library chooses for its own std::partial_ordering::unordered,
++    // so we can convert from their type to ours via simple std::bit_cast.
++#if 0
++    // GCC 16 broke ABI, so we cannot use the std::*_ordering types
++    // in our ABI until we drop support for GCC 15 and earlier. When that
++    // happens and std::bit_cast is guaranteed, this can be simplified to:
++    Unordered = std::bit_cast<CompareUnderlyingType>(std::partial_ordering::unordered);
++#else
+     Unordered =
+         #if defined(_LIBCPP_VERSION) // libc++
+                 -127
+@@ -44,12 +53,26 @@ enum class Uncomparable : CompareUnderlyingType
+         #else                        // assume MSSTL
+                 -128
+         #endif
++#endif // future Qt
+ };
+ 
+ } // namespace QtPrivate
+ 
+ namespace QtOrderingPrivate {
+ 
++using QtPrivate::Ordering;
++using QtPrivate::Uncomparable;
++
++#if defined(__cpp_lib_bit_cast) && defined(__cpp_lib_three_way_comparison)
++inline constexpr bool OrderingValuesAreEqual =
++        std::bit_cast<Ordering>(std::weak_ordering::equivalent) == Ordering::Equivalent &&
++        std::bit_cast<Ordering>(std::strong_ordering::equal) == Ordering::Equal &&
++        std::bit_cast<Ordering>(std::strong_ordering::less) == Ordering::Less &&
++        std::bit_cast<Ordering>(std::strong_ordering::greater) == Ordering::Greater;
++inline constexpr bool UnorderedValueIsEqual =
++        std::bit_cast<Uncomparable>(std::partial_ordering::unordered) == Uncomparable::Unordered;
++#endif
++
+ template <typename O>
+ constexpr O reversed(O o) noexcept
+ {
+@@ -61,6 +84,9 @@ constexpr O reversed(O o) noexcept
+ 
+ } // namespace QtOrderingPrivate
+ 
++QT_WARNING_PUSH
++QT_WARNING_DISABLE_MSVC(4702)   // unreachable code
++
+ namespace Qt {
+ 
+ class weak_ordering;
+@@ -157,12 +183,18 @@ public:
+     constexpr Q_IMPLICIT operator std::partial_ordering() const noexcept
+     {
+         static_assert(sizeof(*this) == sizeof(std::partial_ordering));
+-#ifdef __cpp_lib_bit_cast
+-        return std::bit_cast<std::partial_ordering>(*this);
+-#else
+         using O = QtPrivate::Ordering;
+         using U = QtPrivate::Uncomparable;
+         using R = std::partial_ordering;
++#ifdef __cpp_lib_bit_cast
++        if constexpr (QtOrderingPrivate::OrderingValuesAreEqual) {
++            if constexpr (!QtOrderingPrivate::UnorderedValueIsEqual) {
++                if (m_order == qToUnderlying(U::Unordered))
++                    return R::unordered;
++            }
++            return std::bit_cast<R>(*this);
++        }
++#endif // __cpp_lib_bit_cast
+         switch (m_order) {
+         case qToUnderlying(O::Less):        return R::less;
+         case qToUnderlying(O::Greater):     return R::greater;
+@@ -170,7 +202,6 @@ public:
+         case qToUnderlying(U::Unordered):   return R::unordered;
+         }
+         Q_UNREACHABLE_RETURN(R::unordered);
+-#endif // __cpp_lib_bit_cast
+     }
+ 
+     friend constexpr bool operator==(partial_ordering lhs, std::partial_ordering rhs) noexcept
+@@ -349,18 +380,18 @@ public:
+     constexpr Q_IMPLICIT operator std::weak_ordering() const noexcept
+     {
+         static_assert(sizeof(*this) == sizeof(std::weak_ordering));
+-#ifdef __cpp_lib_bit_cast
+-        return std::bit_cast<std::weak_ordering>(*this);
+-#else
+         using O = QtPrivate::Ordering;
+         using R = std::weak_ordering;
++#ifdef __cpp_lib_bit_cast
++        if constexpr (QtOrderingPrivate::OrderingValuesAreEqual)
++            return std::bit_cast<R>(*this);
++#endif // __cpp_lib_bit_cast
+         switch (m_order) {
+         case qToUnderlying(O::Less):          return R::less;
+         case qToUnderlying(O::Greater):       return R::greater;
+         case qToUnderlying(O::Equivalent):    return R::equivalent;
+         }
+         Q_UNREACHABLE_RETURN(R::equivalent);
+-#endif // __cpp_lib_bit_cast
+     }
+ 
+     friend constexpr bool operator==(weak_ordering lhs, std::weak_ordering rhs) noexcept
+@@ -547,18 +578,18 @@ public:
+     constexpr Q_IMPLICIT operator std::strong_ordering() const noexcept
+     {
+         static_assert(sizeof(*this) == sizeof(std::strong_ordering));
+-#ifdef __cpp_lib_bit_cast
+-        return std::bit_cast<std::strong_ordering>(*this);
+-#else
+         using O = QtPrivate::Ordering;
+         using R = std::strong_ordering;
++#ifdef __cpp_lib_bit_cast
++        if constexpr (QtOrderingPrivate::OrderingValuesAreEqual)
++            return std::bit_cast<R>(*this);
++#endif // __cpp_lib_bit_cast
+         switch (m_order) {
+         case qToUnderlying(O::Less):    return R::less;
+         case qToUnderlying(O::Greater): return R::greater;
+         case qToUnderlying(O::Equal):   return R::equal;
+         }
+         Q_UNREACHABLE_RETURN(R::equal);
+-#endif // __cpp_lib_bit_cast
+     }
+ 
+     friend constexpr bool operator==(strong_ordering lhs, std::strong_ordering rhs) noexcept
+@@ -625,6 +656,8 @@ inline constexpr strong_ordering strong_ordering::greater(QtPrivate::Ordering::G
+ 
+ } // namespace Qt
+ 
++QT_WARNING_POP
++
+ QT_BEGIN_INCLUDE_NAMESPACE
+ 
+ // This is intentionally included after Qt::*_ordering types and before
+diff --git a/qtbase/tests/auto/corelib/global/qcompare/tst_qcompare.cpp b/qtbase/tests/auto/corelib/global/qcompare/tst_qcompare.cpp
+index b79a6661db33..ff5920134cc8 100644
+--- a/qtbase/tests/auto/corelib/global/qcompare/tst_qcompare.cpp
++++ b/qtbase/tests/auto/corelib/global/qcompare/tst_qcompare.cpp
+@@ -185,7 +185,9 @@ void tst_QCompare::stdQtBinaryCompatibility()
+         QCOMPARE_EQ(valueOf( Qt:: type ## _ordering :: flag), \
+                     valueOf(std:: type ## _ordering :: flag)) \
+         /* end */
++#  if !defined(__GLIBCXX__) || QT_VERSION >= QT_VERSION_CHECK(7, 0, 0)
+     CHECK(partial, unordered);
++#  endif
+     CHECK(partial, less);
+     CHECK(partial, greater);
+     CHECK(partial, equivalent);

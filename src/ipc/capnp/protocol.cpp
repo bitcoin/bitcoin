@@ -1,4 +1,4 @@
-// Copyright (c) 2021 The Bitcoin Core developers
+// Copyright (c) 2021-present The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -16,8 +16,8 @@
 #include <mp/util.h>
 #include <util/threadnames.h>
 
-#include <assert.h>
-#include <errno.h>
+#include <cassert>
+#include <cerrno>
 #include <future>
 #include <memory>
 #include <mutex>
@@ -30,10 +30,42 @@
 namespace ipc {
 namespace capnp {
 namespace {
-void IpcLogFn(bool raise, std::string message)
+
+mp::Log GetRequestedIPCLogLevel()
 {
-    LogDebug(BCLog::IPC, "%s\n", message);
-    if (raise) throw Exception(message);
+    if (LogAcceptCategory(BCLog::IPC, BCLog::Level::Trace)) return mp::Log::Trace;
+    if (LogAcceptCategory(BCLog::IPC, BCLog::Level::Debug)) return mp::Log::Debug;
+
+    // Info, Warning, and Error are logged unconditionally
+    return mp::Log::Info;
+}
+
+void IpcLogFn(mp::LogMessage message)
+{
+    switch (message.level) {
+    case mp::Log::Trace:
+        LogTrace(BCLog::IPC, "%s", message.message);
+        return;
+    case mp::Log::Debug:
+        LogDebug(BCLog::IPC, "%s", message.message);
+        return;
+    case mp::Log::Info:
+        LogInfo("ipc: %s", message.message);
+        return;
+    case mp::Log::Warning:
+        LogWarning("ipc: %s", message.message);
+        return;
+    case mp::Log::Error:
+        LogError("ipc: %s", message.message);
+        return;
+    case mp::Log::Raise:
+        LogError("ipc: %s", message.message);
+        throw Exception(message.message);
+    } // no default case, so the compiler can warn about missing cases
+
+    // Be conservative and assume that if MP ever adds a new log level, it
+    // should only be shown at our most verbose level.
+    LogTrace(BCLog::IPC, "%s", message.message);
 }
 
 class CapnpProtocol : public Protocol
@@ -41,10 +73,7 @@ class CapnpProtocol : public Protocol
 public:
     ~CapnpProtocol() noexcept(true)
     {
-        if (m_loop) {
-            std::unique_lock<std::mutex> lock(m_loop->m_mutex);
-            m_loop->removeClient(lock);
-        }
+        m_loop_ref.reset();
         if (m_loop_thread.joinable()) m_loop_thread.join();
         assert(!m_loop);
     };
@@ -65,11 +94,26 @@ public:
     {
         assert(!m_loop);
         mp::g_thread_context.thread_name = mp::ThreadName(exe_name);
-        m_loop.emplace(exe_name, &IpcLogFn, &m_context);
+        mp::LogOptions opts = {
+            .log_fn = IpcLogFn,
+            .log_level = GetRequestedIPCLogLevel()
+        };
+        m_loop.emplace(exe_name, std::move(opts), &m_context);
         if (ready_fn) ready_fn();
         mp::ServeStream<messages::Init>(*m_loop, fd, init);
+        m_parent_connection = &m_loop->m_incoming_connections.back();
         m_loop->loop();
         m_loop.reset();
+    }
+    void disconnectIncoming() override
+    {
+        if (!m_loop) return;
+        // Delete incoming connections, except the connection to a parent
+        // process (if there is one), since a parent process should be able to
+        // monitor and control this process, even during shutdown.
+        m_loop->sync([&] {
+            m_loop->m_incoming_connections.remove_if([this](mp::Connection& c) { return &c != m_parent_connection; });
+        });
     }
     void addCleanup(std::type_index type, void* iface, std::function<void()> cleanup) override
     {
@@ -82,11 +126,12 @@ public:
         std::promise<void> promise;
         m_loop_thread = std::thread([&] {
             util::ThreadRename("capnp-loop");
-            m_loop.emplace(exe_name, &IpcLogFn, &m_context);
-            {
-                std::unique_lock<std::mutex> lock(m_loop->m_mutex);
-                m_loop->addClient(lock);
-            }
+            mp::LogOptions opts = {
+                .log_fn = IpcLogFn,
+                .log_level = GetRequestedIPCLogLevel()
+            };
+            m_loop.emplace(exe_name, std::move(opts), &m_context);
+            m_loop_ref.emplace(*m_loop);
             promise.set_value();
             m_loop->loop();
             m_loop.reset();
@@ -95,7 +140,14 @@ public:
     }
     Context m_context;
     std::thread m_loop_thread;
+    //! EventLoop object which manages I/O events for all connections.
     std::optional<mp::EventLoop> m_loop;
+    //! Reference to the same EventLoop. Increments the loop’s refcount on
+    //! creation, decrements on destruction. The loop thread exits when the
+    //! refcount reaches 0. Other IPC objects also hold their own EventLoopRef.
+    std::optional<mp::EventLoopRef> m_loop_ref;
+    //! Connection to parent, if this is a child process spawned by a parent process.
+    mp::Connection* m_parent_connection{nullptr};
 };
 } // namespace
 

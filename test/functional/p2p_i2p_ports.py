@@ -1,21 +1,22 @@
 #!/usr/bin/env python3
-# Copyright (c) 2021-2021 The Bitcoin Core developers
+# Copyright (c) 2021-present The Bitcoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """
 Test ports handling for I2P hosts
 """
 
-
 from test_framework.test_framework import BitcoinTestFramework
+from test_framework.util import p2p_port
 
-PROXY = "127.0.0.1:60000"
 
 class I2PPorts(BitcoinTestFramework):
     def set_test_params(self):
         self.num_nodes = 1
+        # Use the p2p port of the non-existing next node as the proxy port
+        self.proxy = f"127.0.0.1:{p2p_port(self.num_nodes)}"
         # The test assumes that an I2P SAM proxy is not listening here.
-        self.extra_args = [[f"-i2psam={PROXY}"]]
+        self.extra_args = [[f"-i2psam={self.proxy}"]]
 
     def run_test(self):
         node = self.nodes[0]
@@ -27,7 +28,7 @@ class I2PPorts(BitcoinTestFramework):
 
         self.log.info("Ensure we try to connect if port=0 and get an error due to missing I2P proxy")
         addr = "h3r6bkn46qxftwja53pxiykntegfyfjqtnzbm6iv6r5mungmqgmq.b32.i2p:0"
-        with node.assert_debug_log(expected_msgs=[f"Error connecting to {addr}: Cannot connect to {PROXY}"]):
+        with node.assert_debug_log(expected_msgs=[f"Error connecting to {addr}: Cannot connect to {self.proxy}"]):
             node.addnode(node=addr, command="onetry")
 
 

@@ -1,4 +1,4 @@
-// Copyright (c) 2011-2022 The Bitcoin Core developers
+// Copyright (c) 2011-present The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -59,7 +59,7 @@ void PSBTOperationsDialog::openWithPSBT(PartiallySignedTransaction psbtx)
     bool complete = FinalizePSBT(psbtx); // Make sure all existing signatures are fully combined before checking for completeness.
     if (m_wallet_model) {
         size_t n_could_sign;
-        const auto err{m_wallet_model->wallet().fillPSBT(SIGHASH_ALL, /*sign=*/false, /*bip32derivs=*/true, &n_could_sign, m_transaction_data, complete)};
+        const auto err{m_wallet_model->wallet().fillPSBT(std::nullopt, /*sign=*/false, /*bip32derivs=*/true, &n_could_sign, m_transaction_data, complete)};
         if (err) {
             showStatus(tr("Failed to load transaction: %1")
                            .arg(QString::fromStdString(PSBTErrorString(*err).translated)),
@@ -83,7 +83,7 @@ void PSBTOperationsDialog::signTransaction()
 
     WalletModel::UnlockContext ctx(m_wallet_model->requestUnlock());
 
-    const auto err{m_wallet_model->wallet().fillPSBT(SIGHASH_DEFAULT, /*sign=*/true, /*bip32derivs=*/true, &n_signed, m_transaction_data, complete)};
+    const auto err{m_wallet_model->wallet().fillPSBT(std::nullopt, /*sign=*/true, /*bip32derivs=*/true, &n_signed, m_transaction_data, complete)};
 
     if (err) {
         showStatus(tr("Failed to sign transaction: %1")
@@ -98,7 +98,7 @@ void PSBTOperationsDialog::signTransaction()
     } else if (!complete && n_signed < 1) {
         showStatus(tr("Could not sign any more inputs."), StatusLevel::WARN);
     } else if (!complete) {
-        showStatus(tr("Signed %1 inputs, but more signatures are still required.").arg(n_signed),
+        showStatus(tr("Signed %n input(s), but more signatures are still required.", "", n_signed),
             StatusLevel::INFO);
     } else {
         showStatus(tr("Signed transaction successfully. Transaction is ready to broadcast."),
@@ -219,7 +219,7 @@ QString PSBTOperationsDialog::renderTransaction(const PartiallySignedTransaction
     size_t num_unsigned = CountPSBTUnsignedInputs(psbtx);
     if (num_unsigned > 0) {
         tx_description.append("<br><br>");
-        tx_description.append(tr("Transaction has %1 unsigned inputs.").arg(QString::number(num_unsigned)));
+        tx_description.append(tr("Transaction has %n unsigned input(s).", "", num_unsigned));
     }
 
     return tx_description;
@@ -251,7 +251,7 @@ size_t PSBTOperationsDialog::couldSignInputs(const PartiallySignedTransaction &p
 
     size_t n_signed;
     bool complete;
-    const auto err{m_wallet_model->wallet().fillPSBT(SIGHASH_ALL, /*sign=*/false, /*bip32derivs=*/false, &n_signed, m_transaction_data, complete)};
+    const auto err{m_wallet_model->wallet().fillPSBT(std::nullopt, /*sign=*/false, /*bip32derivs=*/false, &n_signed, m_transaction_data, complete)};
 
     if (err) {
         return 0;
