@@ -105,6 +105,7 @@ execute_process(
     -sort-messages
     -I ${PROJECT_SOURCE_DIR}/src
     -locations none
+    -target-language en
     ${ui_files}
     ${qt_translatable_sources}
     ${PROJECT_SOURCE_DIR}/src/qt/bitcoinstrings.cpp
