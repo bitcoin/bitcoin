@@ -103,7 +103,7 @@ execute_process(
   COMMAND ${LUPDATE_EXECUTABLE}
     -no-obsolete
     -I ${PROJECT_SOURCE_DIR}/src
-    -locations relative
+    -locations none
     ${ui_files}
     ${qt_translatable_sources}
     ${PROJECT_SOURCE_DIR}/src/qt/bitcoinstrings.cpp
