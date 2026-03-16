@@ -271,6 +271,29 @@ class TorControlTest(BitcoinTestFramework):
 
         mock_tor.stop()
 
+    def test_networkactive_race_during_backoff(self):
+        self.log.info("Test that a rapid off->on cycle during reconnect backoff resets the backoff")
+
+        node = self.nodes[0]
+
+        # Nothing listens on this port, so each connection attempt fails.
+        with node.assert_debug_log(expected_msgs=["retrying in 3.38 s"], timeout=10):
+            self.restart_node(0, extra_args=[
+                "-torcontrol=127.0.0.1:1",
+                "-listenonion=1",
+                "-debug=tor",
+            ])
+
+        # Toggle network activity while the controller is in the reconnect
+        # sleep, after the backoff has already grown.
+        with node.assert_debug_log(
+            expected_msgs=["retrying in 1.00 s"],
+            unexpected_msgs=["retrying in 3.38 s"],
+            timeout=5,
+        ):
+            node.setnetworkactive(state=False)
+            node.setnetworkactive(state=True)
+
     def run_test(self):
         self.test_basic()
         self.test_partial_data()
@@ -278,6 +301,7 @@ class TorControlTest(BitcoinTestFramework):
         self.test_oversized_line()
         self.test_overmany_lines()
         self.test_reconnect_backoff()
+        self.test_networkactive_race_during_backoff()
 
 
 if __name__ == '__main__':
