@@ -144,10 +144,7 @@ PartiallySignedTransaction ProcessPSBT(const std::string& psbt_string, const std
 
     // Fetch previous transactions:
     // First, look in the txindex and the mempool
-    for (unsigned int i = 0; i < psbtx.tx->vin.size(); ++i) {
-        PSBTInput& psbt_input = psbtx.inputs.at(i);
-        const CTxIn& tx_in = psbtx.tx->vin.at(i);
-
+    for (PSBTInput& psbt_input : psbtx.inputs) {
         // The `non_witness_utxo` is the whole previous transaction
         if (psbt_input.non_witness_utxo) continue;
 
@@ -156,11 +153,11 @@ PartiallySignedTransaction ProcessPSBT(const std::string& psbt_string, const std
         // Look in the txindex
         if (g_txindex) {
             uint256 block_hash;
-            g_txindex->FindTx(tx_in.prevout.hash, block_hash, tx);
+            g_txindex->FindTx(psbt_input.prev_txid, block_hash, tx);
         }
         // If we still don't have it look in the mempool
         if (!tx) {
-            tx = node.mempool->get(tx_in.prevout.hash);
+            tx = node.mempool->get(psbt_input.prev_txid);
         }
         if (tx) {
             psbt_input.non_witness_utxo = tx;
@@ -172,9 +169,7 @@ PartiallySignedTransaction ProcessPSBT(const std::string& psbt_string, const std
     // If we still haven't found all of the inputs, look for the missing ones in the utxo set
     if (!coins.empty()) {
         FindCoins(node, coins);
-        for (unsigned int i = 0; i < psbtx.tx->vin.size(); ++i) {
-            PSBTInput& input = psbtx.inputs.at(i);
-
+        for (PSBTInput& input : psbtx.inputs) {
             // If there are still missing utxos, add them if they were found in the utxo set
             if (!input.non_witness_utxo) {
                 const Coin& coin = coins.at(input.GetOutPoint());
@@ -187,7 +182,7 @@ PartiallySignedTransaction ProcessPSBT(const std::string& psbt_string, const std
 
     const PrecomputedTransactionData& txdata = PrecomputePSBTData(psbtx);
 
-    for (unsigned int i = 0; i < psbtx.tx->vin.size(); ++i) {
+    for (unsigned int i = 0; i < psbtx.inputs.size(); ++i) {
         if (PSBTInputSigned(psbtx.inputs.at(i))) {
             continue;
         }
@@ -203,7 +198,7 @@ PartiallySignedTransaction ProcessPSBT(const std::string& psbt_string, const std
     }
 
     // Update script/keypath information using descriptor data.
-    for (unsigned int i = 0; i < psbtx.tx->vout.size(); ++i) {
+    for (unsigned int i = 0; i < psbtx.outputs.size(); ++i) {
         UpdatePSBTOutput(provider, psbtx, i);
     }
 
@@ -1135,7 +1130,7 @@ static RPCHelpMan decodepsbt()
             have_a_utxo = true;
         }
         if (input.non_witness_utxo) {
-            txout = input.non_witness_utxo->vout[psbtx.tx->vin[i].prevout.n];
+            txout = input.non_witness_utxo->vout[input.prev_out];
 
             UniValue non_wit(UniValue::VOBJ);
             TxToUniv(*input.non_witness_utxo, /*block_hash=*/uint256(), /*entry=*/non_wit, /*include_hex=*/false);
@@ -1494,8 +1489,8 @@ static RPCHelpMan decodepsbt()
         outputs.push_back(std::move(out));
 
         // Fee calculation
-        if (MoneyRange(psbtx.tx->vout[i].nValue) && MoneyRange(output_value + psbtx.tx->vout[i].nValue)) {
-            output_value += psbtx.tx->vout[i].nValue;
+        if (MoneyRange(output.amount) && MoneyRange(output_value + output.amount)) {
+            output_value += output.amount;
         } else {
             // Hack to just not show fee later
             have_all_utxos = false;
@@ -1815,13 +1810,13 @@ static RPCHelpMan joinpsbts()
 
     // Merge
     for (auto& psbt : psbtxs) {
-        for (unsigned int i = 0; i < psbt.tx->vin.size(); ++i) {
-            if (!merged_psbt.AddInput(psbt.inputs[i])) {
-                throw JSONRPCError(RPC_INVALID_PARAMETER, strprintf("Input %s:%d exists in multiple PSBTs", psbt.tx->vin[i].prevout.hash.ToString(), psbt.tx->vin[i].prevout.n));
+        for (const PSBTInput& input : psbt.inputs) {
+            if (!merged_psbt.AddInput(input)) {
+                throw JSONRPCError(RPC_INVALID_PARAMETER, strprintf("Input %s:%d exists in multiple PSBTs", input.prev_txid.ToString(), input.prev_out));
             }
         }
-        for (unsigned int i = 0; i < psbt.tx->vout.size(); ++i) {
-            merged_psbt.AddOutput(psbt.outputs[i]);
+        for (const PSBTOutput& output : psbt.outputs) {
+            merged_psbt.AddOutput(output);
         }
         for (auto& xpub_pair : psbt.m_xpubs) {
             if (!merged_psbt.m_xpubs.contains(xpub_pair.first)) {
