@@ -1017,14 +1017,23 @@ void RPCResult::ToSections(Sections& sections, const OuterType outer_type, const
 
     // Ensure at least one elision description exists, if there is any elision
     const auto elision_has_description{[](const std::vector<RPCResult>& inner) {
-        return std::ranges::none_of(inner, [](const auto& res) { return res.m_opts.print_elision.has_value(); }) ||
-               std::ranges::any_of(inner, [](const auto& res) { return res.m_opts.print_elision.has_value() && !res.m_opts.print_elision->empty(); });
+        const auto is_elided = [](const RPCResult& res) {
+            return !std::holds_alternative<HelpElisionNone>(res.m_opts.print_elision);
+        };
+        const auto has_summary_text = [](const RPCResult& res) {
+            const auto* text = std::get_if<std::string>(&res.m_opts.print_elision);
+            return text && !text->empty();
+        };
+        return std::ranges::none_of(inner, is_elided) || std::ranges::any_of(inner, has_summary_text);
     }};
 
-    if (m_opts.print_elision) {
-        if (!m_opts.print_elision->empty()) {
-            sections.PushSection({indent + "..." + maybe_separator, *m_opts.print_elision});
+    if (const auto* text = std::get_if<std::string>(&m_opts.print_elision)) {
+        if (!text->empty()) {
+            sections.PushSection({indent + "..." + maybe_separator, *text});
         }
+        return;
+    }
+    if (std::holds_alternative<HelpElisionSkip>(m_opts.print_elision)) {
         return;
     }
 
@@ -1417,4 +1426,21 @@ uint256 GetTarget(const CBlockIndex& blockindex, const uint256 pow_limit)
 {
     arith_uint256 target{*CHECK_NONFATAL(DeriveTarget(blockindex.nBits, pow_limit))};
     return ArithToUint256(target);
+}
+
+std::vector<RPCResult> ElideGroup(std::vector<RPCResult> fields, std::string summary)
+{
+    if (fields.empty()) return fields;
+    std::vector<RPCResult> result;
+    result.reserve(fields.size());
+    for (size_t i = 0; i < fields.size(); ++i) {
+        RPCResultOptions opts = fields[i].m_opts;
+        if (i == 0) {
+            opts.print_elision = summary;
+        } else {
+            opts.print_elision = HelpElisionSkip{};
+        }
+        result.emplace_back(fields[i], std::move(opts));
+    }
+    return result;
 }
