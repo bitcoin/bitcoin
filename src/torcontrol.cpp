@@ -374,11 +374,56 @@ void TorController::Join()
     }
 }
 
+void TorController::SetNetworkActive(bool active)
+{
+    if (m_network_active.exchange(active) != active) {
+        m_network_active_change_count.fetch_add(1);
+    }
+}
+
+bool TorController::SleepWithNetworkPolling(std::chrono::milliseconds timeout, uint64_t expected_change_count)
+{
+    constexpr auto POLL_INTERVAL{std::chrono::milliseconds{100}};
+
+    for (auto remaining{timeout}; remaining > 0ms;) {
+        if (m_network_active_change_count.load() != expected_change_count) {
+            return true;
+        }
+        const auto sleep_time{std::min(remaining, POLL_INTERVAL)};
+        if (!m_interrupt.sleep_for(sleep_time)) {
+            return false;
+        }
+        remaining -= sleep_time;
+        if (m_network_active_change_count.load() != expected_change_count) {
+            return true;
+        }
+    }
+    return true;
+}
+
 void TorController::ThreadControl()
 {
     LogDebug(BCLog::TOR, "Entering Tor control thread");
+    bool was_network_active{false};
 
     while (!m_interrupt) {
+        const bool network_active{m_network_active.load()};
+        if (network_active && !was_network_active) {
+            m_reconnect_timeout = RECONNECT_TIMEOUT_START;
+        }
+        was_network_active = network_active;
+
+        if (!network_active) {
+            if (m_conn.IsConnected()) {
+                disconnected_cb(m_conn);
+            }
+            const auto change_count{m_network_active_change_count.load()};
+            if (!SleepWithNetworkPolling(std::chrono::milliseconds{100}, change_count) && m_interrupt) {
+                break;
+            }
+            continue;
+        }
+
         // Try to connect if not connected already
         if (!m_conn.IsConnected()) {
             LogDebug(BCLog::TOR, "Attempting to connect to Tor control port %s", m_tor_control_center);
@@ -390,8 +435,12 @@ void TorController::ThreadControl()
                 }
                 // Wait before retrying with exponential backoff
                 LogDebug(BCLog::TOR, "Retrying in %.1f seconds", m_reconnect_timeout.count());
-                if (!m_interrupt.sleep_for(std::chrono::duration_cast<std::chrono::milliseconds>(m_reconnect_timeout))) {
+                const auto change_count{m_network_active_change_count.load()};
+                if (!SleepWithNetworkPolling(std::chrono::duration_cast<std::chrono::milliseconds>(m_reconnect_timeout), change_count) && m_interrupt) {
                     break;
+                }
+                if (!m_network_active) {
+                    continue;
                 }
                 m_reconnect_timeout = std::min(m_reconnect_timeout * RECONNECT_TIMEOUT_EXP, RECONNECT_TIMEOUT_MAX);
                 continue;
@@ -724,6 +773,11 @@ void TorController::disconnected_cb(TorControlConnection& _conn)
     m_service = CService();
     if (!m_reconnect)
         return;
+    if (!m_network_active) {
+        LogDebug(BCLog::TOR, "Network inactive, not reconnecting to Tor control port");
+        _conn.Disconnect();
+        return;
+    }
 
     LogDebug(BCLog::TOR, "Not connected to Tor control port %s, will retry", m_tor_control_center);
     _conn.Disconnect();

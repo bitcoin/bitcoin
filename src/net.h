@@ -1098,6 +1098,7 @@ public:
         bool m_capture_messages = false;
         std::function<void(bool)> m_mapport;
         bool m_mapport_enabled = false;
+        std::function<void(bool)> m_tor_control;
     };
 
     void Init(const Options& connOptions) EXCLUSIVE_LOCKS_REQUIRED(!m_added_nodes_mutex, !m_total_bytes_sent_mutex)
@@ -1138,6 +1139,7 @@ public:
         m_capture_messages = connOptions.m_capture_messages;
         m_mapport = connOptions.m_mapport;
         m_mapport_enabled = connOptions.m_mapport_enabled;
+        m_tor_control = connOptions.m_tor_control;
     }
 
     // test only
@@ -1597,6 +1599,7 @@ private:
     std::atomic<bool> fNetworkActive{true};
     std::function<void(bool)> m_mapport;
     std::atomic_bool m_mapport_enabled{false};
+    std::function<void(bool)> m_tor_control;
     bool fAddressesInitialized{false};
     std::reference_wrapper<AddrMan> addrman;
     const NetGroupManager& m_netgroupman;
