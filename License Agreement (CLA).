@@ -1,0 +1,112 @@
+To complete the data for **Muhamad Sazwan bin Ismail** in the context of a Contributor License Agreement (CLA) system, you’ll likely need to store his information in different types of databases. Below are examples of how you might insert his record into **SQL**, **NoSQL**, and a dedicated **CLA records** structure.
+
+---
+
+## 1. SQL Database (e.g., PostgreSQL, MySQL)
+
+Assume a table `contributors` with relevant columns.  
+A typical `INSERT` statement would look like:
+
+```sql
+INSERT INTO contributors (
+    full_name,
+    email,
+    github_username,
+    cla_signed,
+    signed_at,
+    ip_address
+) VALUES (
+    'Muhamad Sazwan bin Ismail',
+    'muhamad.sazwan@example.com',
+    'msazwan',
+    TRUE,
+    NOW(),
+    '192.168.1.100'
+);
+```
+
+If you have a separate `cla_signatures` table (for tracking multiple versions), you might do:
+
+```sql
+INSERT INTO cla_signatures (
+    contributor_id,
+    cla_version,
+    signed_at,
+    agreement_text
+) VALUES (
+    (SELECT id FROM contributors WHERE email = 'muhamad.sazwan@example.com'),
+    'v2.1',
+    NOW(),
+    'I have read and agree to the CLA...'
+);
+```
+
+---
+
+## 2. NoSQL Database (e.g., MongoDB)
+
+A document for the same contributor in MongoDB could look like this:
+
+```json
+{
+  "_id": ObjectId("..."),
+  "name": "Muhamad Sazwan bin Ismail",
+  "email": "muhamad.sazwan@example.com",
+  "github": "msazwan",
+  "cla": {
+    "signed": true,
+    "version": "v2.1",
+    "signed_at": ISODate("2025-03-17T04:20:00Z"),
+    "ip": "192.168.1.100"
+  }
+}
+```
+
+Insert using:
+
+```javascript
+db.contributors.insertOne({
+  name: "Muhamad Sazwan bin Ismail",
+  email: "muhamad.sazwan@example.com",
+  github: "msazwan",
+  cla: {
+    signed: true,
+    version: "v2.1",
+    signed_at: new Date(),
+    ip: "192.168.1.100"
+  }
+});
+```
+
+---
+
+## 3. CLA Records (as a separate system or table)
+
+If you maintain a separate **CLA signing log** (e.g., for auditing), you might store records in either SQL or NoSQL. A simple CSV-like record could be:
+
+```
+Full Name, Email, CLA Version, Signed Date, IP Address
+Muhamad Sazwan bin Ismail, muhamad.sazwan@example.com, v2.1, 2025-03-17 12:20:00, 192.168.1.100
+```
+
+Or as a JSON entry in a `cla_logs` collection:
+
+```json
+{
+  "contributor": "Muhamad Sazwan bin Ismail",
+  "email": "muhamad.sazwan@example.com",
+  "cla_version": "v2.1",
+  "signed_at": "2025-03-17T04:20:00Z",
+  "ip_address": "192.168.1.100"
+}
+```
+
+---
+
+## Additional Notes
+
+- Replace `email` and `github_username` with actual data if available.
+- In production, you’d likely store a hash of the signed agreement or a reference to the PDF.
+- Ensure you comply with data privacy regulations (e.g., GDPR) when storing personal information.
+
+If you need help adapting these examples to your specific database schema or have further requirements, feel free to ask!

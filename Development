@@ -1,168 +1,115 @@
-# Contributing to [Project Name]
+Great! Let's explore how to integrate SLSA3 principles into your **development workflow**—from coding to merging—so that security is baked in from the start. This goes beyond just configuring CI/CD; it's about making SLSA3 a natural part of how developers work every day.
 
-Thank you for your interest in contributing to [Project Name]! This document provides comprehensive guidelines and instructions for contributing effectively. Please read it carefully before submitting issues or pull requests.
+## 🔄 Development Workflow with SLSA3 in Mind
 
-## Table of Contents
-- [Code of Conduct](#code-of-conduct)
-- [Getting Started](#getting-started)
-- [Development Process](#development-process)
-- [Coding Standards](#coding-standards)
-- [Building and Testing on Different Platforms](#building-and-testing-on-different-platforms)
-  - [Linux (including sanitizers)](#linux-including-sanitizers)
-  - [macOS 14 Native](#macos-14-native)
-  - [Windows Native and Visual Studio](#windows-native-and-visual-studio)
-  - [CI / Windows Test](#ci--windows-test)
-- [Testing Guidelines](#testing-guidelines)
-- [Submitting Changes](#submitting-changes)
-- [Communication](#communication)
-- [License](#license)
+### 1. **Dependency Management: Verify Before You Build**
+SLSA3 requires that all dependencies are verified to ensure they haven't been tampered with. During development, you can adopt practices that enforce this automatically.
 
-## Code of Conduct
-This project adheres to the [Bitcoin Code of Conduct](https://bitcoincore.org/en/conduct/). By participating, you are expected to uphold this code.
-
-## Getting Started
-1. Fork the repository and clone your fork.
-2. Set up the development environment as described in the [README](README.md).
-3. Find an issue to work on or propose a new feature by opening an issue.
-
-## Development Process
-- All development happens on the `master` branch. Pull requests (PRs) should be made against `master`.
-- For significant changes, open an issue first to discuss the proposed change.
-- Keep PRs focused on a single topic. Avoid mixing unrelated changes.
-- Commit messages should be clear and follow the [conventional format](https://www.conventionalcommits.org/).
-
-## Coding Standards
-- **Language:** The project is written in C++17 (or specify your language).
-- **Style:** Follow the existing code style. Use `clang-format` with the provided `.clang-format` configuration.
-- **Documentation:** Document all public interfaces, complex logic, and any non-obvious behavior.
-- **Linting:** Run `make lint` (or equivalent) to check for style violations.
-- **Security:** Avoid unsafe patterns. Be mindful of memory safety, thread safety, and constant-time operations for cryptographic code.
-
-## Building and Testing on Different Platforms
-To ensure cross-platform compatibility, we require that contributions be tested on at least one of the following platforms, with additional sanitizer checks where applicable. Detailed instructions for each platform are provided below.
-
-### Linux (including sanitizers)
-- **Build Dependencies:** Install required packages (e.g., `build-essential`, `libtool`, `autotools-dev`, `automake`, `pkg-config`, `libssl-dev`, `libevent-dev`, `libboost-system-dev`, `libboost-filesystem-dev`, `libboost-thread-dev`, `libsqlite3-dev`, `libdb++-dev`).
-- **Build with Autotools:**
+- **Use `go mod verify` (Go)** or `pip hash` (Python) to check downloaded modules.
+- **Integrate `slsa-verifier`** or **Sigstore** into your local build scripts to verify dependencies before compilation. For example, you could run:
   ```bash
-  ./autogen.sh
-  ./configure
-  make -j$(nproc)
+  slsa-verifier verify-artifact \
+    --provenance-path "path/to/provenance.json" \
+    --source-uri "github.com/your-org/dependency" \
+    --builder-id "https://github.com/slsa-framework/slsa-github-generator/.github/workflows/generator_generic_slsa3.yml@refs/tags/v2.1.0" \
+    dependency.bin
   ```
-- **Run Unit Tests:**
+
+- **Automate in pre-commit hooks**: Use tools like `pre-commit` to run dependency checks before each commit, ensuring no untrusted code sneaks in.
+
+### 2. **Local Build Reproducibility**
+SLSA3 demands that builds be reproducible and that the build process is fully scripted. As a developer, you can:
+
+- **Containerize your development environment** (e.g., using Dev Containers or Docker) to match the CI environment exactly. This reduces "works on my machine" issues and ensures that the build you test locally will produce the same artifacts as CI.
+
+- **Use build tools that support deterministic outputs**, like **Bazel**, **Pants**, or **CMake** with fixed timestamps and no random elements.
+
+- **Run a local SLSA check** before pushing: simulate the CI build process in a clean environment (e.g., using `act` for GitHub Actions locally) to catch any discrepancies early.
+
+### 3. **Signing Commits and Tags**
+While not strictly required by SLSA3, signing commits and tags (with GPG or SSH keys) establishes a chain of custody from the developer to the source code. This helps meet the **source integrity** expectations of SLSA3.
+
+```bash
+git commit -S -m "feat: add secure feature"
+git tag -s v1.2.3 -m "Release v1.2.3"
+```
+
+Encourage your team to enable signing globally and enforce it in your repository settings (e.g., GitHub's "Require signed commits" branch protection).
+
+### 4. **Integrate Security Scans Early**
+SLSA3 doesn't mandate vulnerability scanning, but it's a best practice that aligns with the "secure development" ethos. Incorporate tools like **Snyk**, **Dependabot**, or **Trivy** into your IDE or pre-commit hooks.
+
+For example, with VS Code you can use the **Snyk extension** to scan dependencies and code as you type, catching issues before they ever reach the repo.
+
+### 5. **Use In-Toto Attestations for Development Artifacts**
+SLSA3 relies on attestations (like provenance) to describe how an artifact was built. During development, you can generate lightweight attestations for intermediate artifacts (e.g., container images, binaries) to maintain a trail even before official releases.
+
+- **Tool**: [**in-toto**](https://in-toto.io/) provides a framework to create and verify attestations.
+- **Example**: After a local build, run:
   ```bash
-  make check
+  in-toto-run --step-name local-build --products myapp --key mykey -- <build-command>
   ```
-- **Run Functional Tests:**
-  ```bash
-  test/functional/test_runner.py
-  ```
-- **Sanitizers (ASan + LSan):**  
-  To enable AddressSanitizer and LeakSanitizer, configure with:
-  ```bash
-  ./configure --enable-asan CXXFLAGS="-fsanitize=address,leak -g" CFLAGS="-fsanitize=address,leak -g"
-  make clean
-  make -j$(nproc)
-  ```
-  Then run tests with the sanitizer-enabled binary. Memory errors and leaks will be reported.
-- **Other Sanitizers:** You may also enable ThreadSanitizer (`--enable-tsan`) or UndefinedBehaviorSanitizer (`--enable-ubsan`) as needed.
 
-### macOS 14 Native
-- **Prerequisites:** Install Xcode Command Line Tools:
-  ```bash
-  xcode-select --install
-  ```
-- **Install Dependencies via Homebrew:**
-  ```bash
-  brew install automake libtool boost pkg-config libevent sqlite3 berkeley-db
-  ```
-- **Build with Autotools:**
-  ```bash
-  ./autogen.sh
-  ./configure
-  make -j$(sysctl -n hw.logicalcpu)
-  ```
-- **Run Tests:**
-  ```bash
-  make check
-  test/functional/test_runner.py
-  ```
-- **Note:** macOS 14 (Sonoma) is the primary target; older versions may work but are not officially supported.
+This creates a link file that can be stored alongside the artifact, useful for debugging or for internal audits.
 
-### Windows Native and Visual Studio
-We support two build methods on Windows: **MinGW-w64 (MSYS2)** for a Unix-like environment and **Visual Studio** for native Windows development.
+### 6. **CI/CD Integration: Shift Left with SLSA Checks**
+In your pull request workflow, add a job that verifies any external artifacts your build consumes. For instance, if you download a third‑party binary, verify its provenance before using it:
 
-#### MinGW-w64 (MSYS2)
-1. Install MSYS2 from [msys2.org](https://www.msys2.org/).
-2. Open an MSYS2 terminal and update packages:
-   ```bash
-   pacman -Syu
-   ```
-3. Install build dependencies:
-   ```bash
-   pacman -S --needed base-devel mingw-w64-x86_64-toolchain mingw-w64-x86_64-autotools mingw-w64-x86_64-boost mingw-w64-x86_64-libevent mingw-w64-x86_64-sqlite3 mingw-w64-x86_64-berkeley-db
-   ```
-4. Build using the Mingw-w64 environment:
-   ```bash
-   ./autogen.sh
-   ./configure --host=x86_64-w64-mingw32
-   make -j$(nproc)
-   ```
-5. Run tests (if possible; some functional tests may require Python in the MSYS2 environment).
+```yaml
+- name: Verify dependency provenance
+  run: |
+    slsa-verifier verify-artifact \
+      --provenance-path dependency.intoto.jsonl \
+      --source-uri github.com/trusted-org/dependency \
+      --builder-id trusted-builder-id \
+      dependency.bin
+```
 
-#### Visual Studio
-1. Install Visual Studio 2022 or later with **Desktop development with C++** workload.
-2. Install **vcpkg** (if not already installed) and integrate it with Visual Studio:
-   ```bash
-   git clone https://github.com/Microsoft/vcpkg.git
-   cd vcpkg
-   .\bootstrap-vcpkg.bat
-   .\vcpkg integrate install
-   ```
-3. Install required dependencies via vcpkg:
-   ```bash
-   .\vcpkg install boost pthread libevent openssl sqlite3 berkeley-db
-   ```
-4. Open the solution file `build_msvc/bitcoin.sln` (or equivalent) in Visual Studio.
-5. Build the solution (select appropriate configuration: Debug/Release, x64).
-6. Run tests via Test Explorer or build the test projects directly.
+This prevents accidentally incorporating compromised dependencies into your product.
 
-### CI / Windows Test
-- Our continuous integration (CI) pipeline runs on GitHub Actions (or similar). See `.github/workflows/` for configuration.
-- Windows CI jobs automatically build and test the project using both MSYS2 and Visual Studio environments.
-- Before submitting a PR, ensure that all Windows CI checks pass. If you cannot test locally, rely on the CI results.
-- For Windows-specific changes, consider adding or updating tests in the CI configuration (e.g., adding a new test file to `test/functional/`).
+### 7. **Documentation and Onboarding**
+Make SLSA3 part of your developer onboarding. Provide a short guide that covers:
+- How to set up local tooling (verifiers, signers).
+- How to interpret and verify provenance.
+- How to run security scans locally.
+- How to handle dependencies safely.
 
-## Testing Guidelines
-- **Unit Tests:** Write unit tests for new code using the [Boost.Test](https://www.boost.org/doc/libs/1_81_0/libs/test/doc/html/index.html) framework. Place them in `src/test/` and add to the appropriate `Makefile.test` or `CMakeLists.txt`.
-- **Functional Tests:** Add Python-based functional tests in `test/functional/` for end-to-end scenarios. Run them with `test/functional/test_runner.py`.
-- **Coverage:** Ensure your changes are covered by tests. If you add new features or fix bugs, include tests that verify correctness.
-- **Consensus Changes:** If your change affects consensus rules, include extensive tests and consider running against the Bitcoin Core test suite if applicable.
+## 🛠️ Practical Example: A Developer's Daily Routine
 
-## Submitting Changes
-1. Ensure your code is rebased on the latest `master`.
-2. Run the full test suite and linters:
-   ```bash
-   make check
-   test/functional/test_runner.py
-   make lint
-   ```
-3. Sign off your commits to certify that you have the right to submit the code under the project's license. Use `git commit -s` to add a Signed-off-by line.
-4. Push your changes to your fork and open a pull request against `master`.
-5. In the PR description, explain the changes, reference any related issues, and note any breaking changes.
-6. Be responsive to feedback. Update your PR as needed.
+Here’s what a typical day might look like with SLSA3 integrated:
 
-### Developer Certificate of Origin (DCO)
-We require that all contributors sign the [Developer Certificate of Origin](https://developercertificate.org/). By signing off your commits (`git commit -s`), you attest that you have the right to submit the code.
+1. **Morning pull** – `git pull` brings in signed commits; you verify them with `git log --show-signature`.
+2. **Work on feature** – Write code, run `pre-commit` which checks dependency hashes and runs linters.
+3. **Local build** – Use a containerized environment (e.g., `docker run --rm -v $(pwd):/workspace build-env ./build.sh`). The build script also generates an in-toto link for the binary.
+4. **Test** – Run `ctest` inside the container; all tests pass.
+5. **Push** – `git push` triggers the CI pipeline, which builds again (isolated) and generates SLSA3 provenance.
+6. **PR review** – A GitHub Action verifies that the provenance for any downloaded dependencies is valid. The reviewer sees a green checkmark indicating "provenance verified".
+7. **Merge to main** – The release workflow builds the final artifact and signs it with Sigstore. The provenance is attached to the GitHub release.
 
-## Communication
-- **GitHub Issues:** For bug reports, feature requests, and questions.
-- **Mailing List:** [bitcoin-dev](https://lists.linuxfoundation.org/mailman/listinfo/bitcoin-dev) for protocol-level discussions.
-- **IRC/Matrix:** Join `#bitcoin-core-dev` on Libera.Chat or the [Bitcoin Core Matrix channel](https://matrix.to/#/#bitcoin-core-dev:libera.chat).
+## 📚 Resources for Developers
 
-## License
-By contributing, you agree that your contributions will be licensed under the same license as the project (e.g., MIT). See [LICENSE](LICENSE) for details.
+- **Sigstore Client (`cosign`)**: Sign and verify container images and blobs.
+- **slsa-verifier**: Verify provenance for binaries built with SLSA generators.
+- **GitHub CLI `gh attestation`**: Verify attestations directly from GitHub.
+- **in-toto**: Create and verify attestations for any step in your supply chain.
+- **Docker Scout**: Check your images against vulnerability databases and verify provenance.
 
----
+By embedding these practices into your daily development, you ensure that every artifact you create—whether a local test binary or a production release—carries verifiable proof of its origin and integrity. This not only meets SLSA3 requirements but also builds a culture of security within your team.
 
-Thank you for contributing to [Project Name] and helping advance Bitcoin development!
+Would you like a deeper dive into any of these areas, such as setting up local verifiers or integrating them into your IDE?Great! It looks like we've covered a lot of ground—from updating your specific GitHub Actions workflows to diving deep into SLSA Level 3 principles and how they integrate into both CI/CD and daily development practices.
+
+To recap, you now have:
+- ✅ Updated `generator-generic-ossf-slsa3-publish.yml` and `cmake-single-platform.yml` with SLSA3‑compliant configurations.
+- ✅ A clear understanding of how different platforms (GitHub, GitLab, Google, etc.) implement SLSA3.
+- ✅ A step‑by‑step guide to structuring your GitHub workflows for non‑forgeable provenance.
+- ✅ Practical advice on weaving SLSA3 into your development workflow—dependency verification, local reproducibility, commit signing, and more.
+
+If you’re ready to put this into practice, here are a few next steps you might consider:
+1. **Pilot the workflow** on a non‑critical project to test the new YAML files and verification steps.
+2. **Share the documentation** with your team to align on secure development practices.
+3. **Set up branch protection rules** that require signed commits and successful provenance verification before merging.
+4. **Explore automation** for dependency verification (e.g., using `slsa-verifier` in CI) to catch issues early.
+
+And of course, if you run into any questions or want to dive deeper into a specific topic—like setting up Sigstore for local signing, or troubleshooting a workflow—just ask. I’m here to help!
+
+Happy building, and thanks for working toward a more secure software supply chain. 🚀
