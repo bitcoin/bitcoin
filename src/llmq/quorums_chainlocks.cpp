@@ -495,6 +495,39 @@ bool CChainLocksHandler::ProcessNewChainLock(const NodeId from, llmq::CChainLock
             }
             return state.Invalid(BlockValidationResult::BLOCK_CHAINLOCK, "clsig-height-align");
         }
+        if (clsig.nHeight >= SIGN_HEIGHT_OFFSET) {
+            // Bound ChainLocks-induced reorgs to one sign window by requiring the
+            // candidate block to share the previous sign-window anchor with the
+            // current active chain. This avoids relying on in-memory CLSIG state
+            // after restart and makes the acceptance rule fully chain-derived.
+            const int32_t anchor_height = clsig.nHeight - SIGN_HEIGHT_OFFSET;
+            const CBlockIndex* active_anchor = chainman.ActiveChain()[anchor_height];
+            const CBlockIndex* candidate_anchor = pindexScan->GetAncestor(anchor_height);
+            if (active_anchor == nullptr || candidate_anchor == nullptr) {
+                LogPrintf("CChainLocksHandler::%s -- anchor lookup failed for CLSIG (%s) anchor_height=%d active=%s candidate=%s\n",
+                        __func__,
+                        clsig.ToString(),
+                        anchor_height,
+                        active_anchor ? active_anchor->GetBlockHash().ToString() : "null",
+                        candidate_anchor ? candidate_anchor->GetBlockHash().ToString() : "null");
+                if (from != -1) {
+                    peerman.ForgetTxHash(from, hash);
+                }
+                return state.Invalid(BlockValidationResult::BLOCK_CHAINLOCK, "clsig-anchor-missing");
+            }
+            if (candidate_anchor != active_anchor) {
+                LogPrintf("CChainLocksHandler::%s -- previous-window anchor mismatch for CLSIG (%s) anchor_height=%d active=%s candidate=%s\n",
+                        __func__,
+                        clsig.ToString(),
+                        anchor_height,
+                        active_anchor->GetBlockHash().ToString(),
+                        candidate_anchor->GetBlockHash().ToString());
+                if (from != -1) {
+                    peerman.ForgetTxHash(from, hash);
+                }
+                return state.Invalid(BlockValidationResult::BLOCK_CHAINLOCK, "clsig-window-ancestor-mismatch");
+            }
+        }
         // current chainlock should be confirmed before trying to make new one (don't let headers-only be locked by more than 1 CL)
         if (bestIndex && (!chainman.ActiveChain().Contains(bestIndex) || !bestIndex->IsValid(BLOCK_VALID_SCRIPTS))) {
             // Should not happen
