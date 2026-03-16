@@ -7,7 +7,6 @@ cmake_minimum_required(VERSION 3.22)
 set(input_variables
   PROJECT_SOURCE_DIR
   COPYRIGHT_HOLDERS
-  LCONVERT_EXECUTABLE
   LUPDATE_EXECUTABLE
   XGETTEXT_EXECUTABLE
 )
@@ -111,20 +110,3 @@ execute_process(
     -ts ${PROJECT_SOURCE_DIR}/src/qt/locale/bitcoin_en.ts
   COMMAND_ERROR_IS_FATAL ANY
 )
-
-execute_process(
-  COMMAND ${LCONVERT_EXECUTABLE}
-    -drop-translations
-    -o ${PROJECT_SOURCE_DIR}/src/qt/locale/bitcoin_en.xlf
-    -i ${PROJECT_SOURCE_DIR}/src/qt/locale/bitcoin_en.ts
-  COMMAND_ERROR_IS_FATAL ANY
-)
-
-file(READ "${PROJECT_SOURCE_DIR}/src/qt/locale/bitcoin_en.xlf" bitcoin_en)
-string(REPLACE "source-language=\"en\" target-language=\"en\""
-  "source-language=\"en\"" bitcoin_en "${bitcoin_en}"
-)
-string(REGEX REPLACE " *<target xml:space=\"preserve\"></target>\n"
-  "" bitcoin_en "${bitcoin_en}"
-)
-file(WRITE "${PROJECT_SOURCE_DIR}/src/qt/locale/bitcoin_en.xlf" "${bitcoin_en}")
