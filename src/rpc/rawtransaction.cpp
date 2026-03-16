@@ -1649,14 +1649,7 @@ static RPCMethod createpsbt()
     CMutableTransaction rawTx = ConstructTransaction(request.params[0], request.params[1], request.params[2], rbf, self.Arg<uint32_t>("version"));
 
     // Make a blank psbt
-    PartiallySignedTransaction psbtx;
-    psbtx.tx = rawTx;
-    for (unsigned int i = 0; i < rawTx.vin.size(); ++i) {
-        psbtx.inputs.emplace_back(0);
-    }
-    for (unsigned int i = 0; i < rawTx.vout.size(); ++i) {
-        psbtx.outputs.emplace_back(0);
-    }
+    PartiallySignedTransaction psbtx(rawTx);
 
     // Serialize the PSBT
     DataStream ssTx{};
@@ -1717,14 +1710,7 @@ static RPCMethod converttopsbt()
     }
 
     // Make a blank psbt
-    PartiallySignedTransaction psbtx;
-    psbtx.tx = tx;
-    for (unsigned int i = 0; i < tx.vin.size(); ++i) {
-        psbtx.inputs.emplace_back(0);
-    }
-    for (unsigned int i = 0; i < tx.vout.size(); ++i) {
-        psbtx.outputs.emplace_back(0);
-    }
+    PartiallySignedTransaction psbtx(tx);
 
     // Serialize the PSBT
     DataStream ssTx{};
