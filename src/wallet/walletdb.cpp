@@ -13,10 +13,12 @@
 #include <protocol.h>
 #include <script/script.h>
 #include <serialize.h>
+#include <streams.h>
 #include <sync.h>
 #include <util/bip32.h>
 #include <util/check.h>
 #include <util/fs.h>
+#include <util/strencodings.h>
 #include <util/time.h>
 #include <util/translation.h>
 #include <wallet/migrate.h>
@@ -965,8 +967,17 @@ static DBErrors LoadAddressBookRecords(CWallet* pwallet, DatabaseBatch& batch) E
             pwallet->LoadAddressPreviouslySpent(dest);
         } else if (strKey.starts_with("rr")) {
             // Load "rr##" keys where ## is a decimal number, and strValue
-            // is a serialized RecentRequestEntry object.
-            pwallet->LoadAddressReceiveRequest(dest, strKey.substr(2), strValue);
+            // is a serialized receive request.
+            auto id = ToIntegral<int64_t>(strKey.substr(2));
+            if (!id || *id < 0) return DBErrors::NONCRITICAL_ERROR;
+            try {
+                ReceiveRequest req;
+                SpanReader{MakeByteSpan(strValue)} >> req;
+                req.id = *id;
+                pwallet->LoadAddressReceiveRequest(dest, std::move(req));
+            } catch (const std::exception& e) {
+                pwallet->WalletLogPrintf("Warning: could not deserialize receive request '%s': %s\n", strKey, e.what());
+            }
         }
         return DBErrors::LOAD_OK;
     });
@@ -1223,14 +1234,16 @@ bool WalletBatch::WriteAddressPreviouslySpent(const CTxDestination& dest, bool p
     return previously_spent ? WriteIC(key, std::string("1")) : EraseIC(key);
 }
 
-bool WalletBatch::WriteAddressReceiveRequest(const CTxDestination& dest, const std::string& id, const std::string& receive_request)
+bool WalletBatch::WriteAddressReceiveRequest(const CTxDestination& dest, const ReceiveRequest& request)
 {
-    return WriteIC(std::make_pair(DBKeys::DESTDATA, std::make_pair(EncodeDestination(dest), "rr" + id)), receive_request);
+    DataStream ss{};
+    ss << request;
+    return WriteIC(std::make_pair(DBKeys::DESTDATA, std::make_pair(EncodeDestination(dest), "rr" + util::ToString(request.id))), ss.str());
 }
 
-bool WalletBatch::EraseAddressReceiveRequest(const CTxDestination& dest, const std::string& id)
+bool WalletBatch::EraseAddressReceiveRequest(const CTxDestination& dest, int64_t id)
 {
-    return EraseIC(std::make_pair(DBKeys::DESTDATA, std::make_pair(EncodeDestination(dest), "rr" + id)));
+    return EraseIC(std::make_pair(DBKeys::DESTDATA, std::make_pair(EncodeDestination(dest), "rr" + util::ToString(id))));
 }
 
 bool WalletBatch::EraseAddressData(const CTxDestination& dest)

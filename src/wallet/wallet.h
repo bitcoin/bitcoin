@@ -233,6 +233,29 @@ public:
 };
 
 /**
+ * Receive request data stored in the wallet database.
+ * SERIALIZE_METHODS preserves the legacy on-disk format for backward compatibility.
+ * Unused legacy fields (sPaymentRequest, authenticatedMerchant) are written as
+ * empty strings.
+ */
+struct ReceiveRequest
+{
+    int64_t id{0};
+    unsigned int time{0};
+    std::string address;
+    std::string label;
+    std::string message;
+    CAmount amount{0};
+
+    SERIALIZE_METHODS(ReceiveRequest, obj)
+    {
+        int outer_ver{1}, inner_ver{1};
+        std::string s_payment_request, authenticated_merchant;
+        READWRITE(outer_ver, obj.id, obj.time, inner_ver, obj.address, obj.label, obj.amount, obj.message, s_payment_request, authenticated_merchant);
+    }
+};
+
+/**
  * Address book data.
  */
 struct CAddressBookData
@@ -263,13 +286,11 @@ struct CAddressBookData
     bool previously_spent{false};
 
     /**
-     * Map containing data about previously generated receive requests
-     * requesting funds to be sent to this address. Only present for IsMine
-     * addresses. Map keys are decimal numbers uniquely identifying each
-     * request, and map values are serialized RecentRequestEntry objects
-     * containing BIP21 URI information including message and amount.
+     * Map of receive requests for this address, keyed by unique request ID.
+     * Only present for IsMine addresses. Values contain BIP21 URI information
+     * including label, message, and amount.
      */
-    std::map<std::string, std::string> receive_requests{};
+    std::map<int64_t, ReceiveRequest> receive_requests{};
 
     /** Accessor methods. */
     bool IsChange() const { return !label.has_value(); }
@@ -505,6 +526,9 @@ public:
     std::map<CTxDestination, CAddressBookData> m_address_book GUARDED_BY(cs_wallet);
     const CAddressBookData* FindAddressBookEntry(const CTxDestination&, bool allow_change = false) const EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
 
+    /** Next available receive request ID, computed on wallet load. */
+    int64_t m_next_receive_request_id GUARDED_BY(cs_wallet) = 0;
+
     /** Set of Coins owned by this wallet that we won't try to spend from. A
      * Coin may be locked if it has already been used to fund a transaction
      * that hasn't confirmed yet. We wouldn't consider the Coin spent already,
@@ -585,9 +609,6 @@ public:
 
     //! Marks destination as previously spent.
     void LoadAddressPreviouslySpent(const CTxDestination& dest) EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
-    //! Appends payment request to destination.
-    void LoadAddressReceiveRequest(const CTxDestination& dest, const std::string& id, const std::string& request) EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
-
     //! Holds a timestamp at which point the wallet is scheduled (externally) to be relocked. Caller must arrange for actual relocking to occur via Lock().
     int64_t nRelockTime GUARDED_BY(cs_wallet){0};
 
@@ -808,9 +829,9 @@ public:
     bool IsAddressPreviouslySpent(const CTxDestination& dest) const EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
     bool SetAddressPreviouslySpent(WalletBatch& batch, const CTxDestination& dest, bool used) EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
 
-    std::vector<std::string> GetAddressReceiveRequests() const EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
-    bool SetAddressReceiveRequest(WalletBatch& batch, const CTxDestination& dest, const std::string& id, const std::string& value) EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
-    bool EraseAddressReceiveRequest(WalletBatch& batch, const CTxDestination& dest, const std::string& id) EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
+    void LoadAddressReceiveRequest(const CTxDestination& dest, ReceiveRequest request) EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
+    bool SetAddressReceiveRequest(WalletBatch& batch, const CTxDestination& dest, const ReceiveRequest& request) EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
+    bool EraseAddressReceiveRequest(WalletBatch& batch, const CTxDestination& dest, int64_t id) EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
 
     unsigned int GetKeyPoolSize() const EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
 

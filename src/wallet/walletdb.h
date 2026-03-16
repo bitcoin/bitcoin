@@ -25,6 +25,7 @@ namespace wallet {
 class CMasterKey;
 class CWallet;
 class CWalletTx;
+struct ReceiveRequest;
 struct WalletContext;
 
 // Logs information about the database, including available engines, features, and other capabilities
@@ -255,8 +256,8 @@ public:
     bool EraseLockedUTXO(const COutPoint& output);
 
     bool WriteAddressPreviouslySpent(const CTxDestination& dest, bool previously_spent);
-    bool WriteAddressReceiveRequest(const CTxDestination& dest, const std::string& id, const std::string& receive_request);
-    bool EraseAddressReceiveRequest(const CTxDestination& dest, const std::string& id);
+    bool WriteAddressReceiveRequest(const CTxDestination& dest, const ReceiveRequest& request);
+    bool EraseAddressReceiveRequest(const CTxDestination& dest, int64_t id);
     bool EraseAddressData(const CTxDestination& dest);
 
     bool WriteActiveScriptPubKeyMan(uint8_t type, const uint256& id, bool internal);

@@ -2881,9 +2881,10 @@ void CWallet::LoadAddressPreviouslySpent(const CTxDestination& dest)
     m_address_book[dest].previously_spent = true;
 }
 
-void CWallet::LoadAddressReceiveRequest(const CTxDestination& dest, const std::string& id, const std::string& request)
+void CWallet::LoadAddressReceiveRequest(const CTxDestination& dest, ReceiveRequest request)
 {
-    m_address_book[dest].receive_requests[id] = request;
+    if (request.id >= m_next_receive_request_id) m_next_receive_request_id = request.id + 1;
+    m_address_book[dest].receive_requests[request.id] = std::move(request);
 }
 
 bool CWallet::IsAddressPreviouslySpent(const CTxDestination& dest) const
@@ -2892,25 +2893,14 @@ bool CWallet::IsAddressPreviouslySpent(const CTxDestination& dest) const
     return false;
 }
 
-std::vector<std::string> CWallet::GetAddressReceiveRequests() const
+bool CWallet::SetAddressReceiveRequest(WalletBatch& batch, const CTxDestination& dest, const ReceiveRequest& request)
 {
-    std::vector<std::string> values;
-    for (const auto& [dest, entry] : m_address_book) {
-        for (const auto& [id, request] : entry.receive_requests) {
-            values.emplace_back(request);
-        }
-    }
-    return values;
-}
-
-bool CWallet::SetAddressReceiveRequest(WalletBatch& batch, const CTxDestination& dest, const std::string& id, const std::string& value)
-{
-    if (!batch.WriteAddressReceiveRequest(dest, id, value)) return false;
-    m_address_book[dest].receive_requests[id] = value;
+    if (!batch.WriteAddressReceiveRequest(dest, request)) return false;
+    LoadAddressReceiveRequest(dest, request);
     return true;
 }
 
-bool CWallet::EraseAddressReceiveRequest(WalletBatch& batch, const CTxDestination& dest, const std::string& id)
+bool CWallet::EraseAddressReceiveRequest(WalletBatch& batch, const CTxDestination& dest, int64_t id)
 {
     if (!batch.EraseAddressReceiveRequest(dest, id)) return false;
     m_address_book[dest].receive_requests.erase(id);
@@ -4050,7 +4040,7 @@ util::Result<void> CWallet::ApplyMigrationData(WalletBatch& local_wallet_batch, 
         if (entry.purpose) batch.WritePurpose(address, PurposeToString(*entry.purpose));
         if (entry.label) batch.WriteName(address, *entry.label);
         for (const auto& [id, request] : entry.receive_requests) {
-            batch.WriteAddressReceiveRequest(dest, id, request);
+            batch.WriteAddressReceiveRequest(dest, request);
         }
         if (entry.previously_spent) batch.WriteAddressPreviouslySpent(dest, true);
     };

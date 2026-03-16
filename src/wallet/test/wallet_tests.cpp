@@ -321,18 +321,31 @@ BOOST_FIXTURE_TEST_CASE(LoadReceiveRequests, TestingSetup)
             WalletBatch batch{wallet->GetDatabase()};
             BOOST_CHECK(batch.WriteAddressPreviouslySpent(PKHash(), true));
             BOOST_CHECK(batch.WriteAddressPreviouslySpent(ScriptHash(), true));
-            BOOST_CHECK(wallet->SetAddressReceiveRequest(batch, PKHash(), "0", "val_rr00"));
-            BOOST_CHECK(wallet->EraseAddressReceiveRequest(batch, PKHash(), "0"));
-            BOOST_CHECK(wallet->SetAddressReceiveRequest(batch, PKHash(), "1", "val_rr10"));
-            BOOST_CHECK(wallet->SetAddressReceiveRequest(batch, PKHash(), "1", "val_rr11"));
-            BOOST_CHECK(wallet->SetAddressReceiveRequest(batch, ScriptHash(), "2", "val_rr20"));
+
+            ReceiveRequest req0{.id = 0, .time = 100, .address = "a0", .label = {}, .message = {}, .amount = 0};
+            BOOST_CHECK(wallet->SetAddressReceiveRequest(batch, PKHash(), req0));
+            BOOST_CHECK(wallet->EraseAddressReceiveRequest(batch, PKHash(), 0));
+
+            ReceiveRequest req1{.id = 1, .time = 101, .address = "a1", .label = "l1", .message = {}, .amount = 0};
+            BOOST_CHECK(wallet->SetAddressReceiveRequest(batch, PKHash(), req1));
+            // Overwrite with updated label
+            req1.label = "l1_updated";
+            BOOST_CHECK(wallet->SetAddressReceiveRequest(batch, PKHash(), req1));
+
+            ReceiveRequest req2{.id = 2, .time = 102, .address = "a2", .label = {}, .message = {}, .amount = 0};
+            BOOST_CHECK(wallet->SetAddressReceiveRequest(batch, ScriptHash(), req2));
         });
         TestLoadWallet(name, format, [](std::shared_ptr<CWallet> wallet) EXCLUSIVE_LOCKS_REQUIRED(wallet->cs_wallet) {
             BOOST_CHECK(wallet->IsAddressPreviouslySpent(PKHash()));
             BOOST_CHECK(wallet->IsAddressPreviouslySpent(ScriptHash()));
-            auto requests = wallet->GetAddressReceiveRequests();
-            auto erequests = {"val_rr11", "val_rr20"};
-            BOOST_CHECK_EQUAL_COLLECTIONS(requests.begin(), requests.end(), std::begin(erequests), std::end(erequests));
+            const auto& pk_reqs = wallet->m_address_book[PKHash()].receive_requests;
+            BOOST_CHECK_EQUAL(pk_reqs.size(), 1U);
+            BOOST_CHECK_EQUAL(pk_reqs.at(1).label, "l1_updated");
+            const auto& sh_reqs = wallet->m_address_book[ScriptHash()].receive_requests;
+            BOOST_CHECK_EQUAL(sh_reqs.size(), 1U);
+            BOOST_CHECK_EQUAL(sh_reqs.at(2).address, "a2");
+            // Verify cached next ID was computed from loaded data
+            BOOST_CHECK_EQUAL(wallet->m_next_receive_request_id, 3);
             RunWithinTxn(wallet->GetDatabase(), /*process_desc=*/"test", [](WalletBatch& batch){
                 BOOST_CHECK(batch.WriteAddressPreviouslySpent(PKHash(), false));
                 BOOST_CHECK(batch.EraseAddressData(ScriptHash()));
@@ -342,9 +355,63 @@ BOOST_FIXTURE_TEST_CASE(LoadReceiveRequests, TestingSetup)
         TestLoadWallet(name, format, [](std::shared_ptr<CWallet> wallet) EXCLUSIVE_LOCKS_REQUIRED(wallet->cs_wallet) {
             BOOST_CHECK(!wallet->IsAddressPreviouslySpent(PKHash()));
             BOOST_CHECK(!wallet->IsAddressPreviouslySpent(ScriptHash()));
-            auto requests = wallet->GetAddressReceiveRequests();
-            auto erequests = {"val_rr11"};
-            BOOST_CHECK_EQUAL_COLLECTIONS(requests.begin(), requests.end(), std::begin(erequests), std::end(erequests));
+            const auto& pk_reqs = wallet->m_address_book[PKHash()].receive_requests;
+            BOOST_CHECK_EQUAL(pk_reqs.size(), 1U);
+            BOOST_CHECK_EQUAL(pk_reqs.at(1).label, "l1_updated");
+        });
+    }
+}
+
+BOOST_FIXTURE_TEST_CASE(ReceiveRequestOperations, TestingSetup)
+{
+    for (DatabaseFormat format : DATABASE_FORMATS) {
+        const std::string name{strprintf("receive-request-ops-%i", format)};
+        TestLoadWallet(name, format, [](std::shared_ptr<CWallet> wallet) EXCLUSIVE_LOCKS_REQUIRED(wallet->cs_wallet) {
+            const std::string address = EncodeDestination(PKHash());
+            WalletBatch batch{wallet->GetDatabase()};
+
+            // Initially empty
+            BOOST_CHECK(wallet->m_address_book[PKHash()].receive_requests.empty());
+            BOOST_CHECK_EQUAL(wallet->m_next_receive_request_id, 0);
+
+            // Add a receive request using cached ID
+            ReceiveRequest req;
+            req.id = wallet->m_next_receive_request_id;
+            req.time = 12345;
+            req.address = address;
+            req.label = "label1";
+            req.message = "msg1";
+            req.amount = 1000;
+            BOOST_CHECK(wallet->SetAddressReceiveRequest(batch, PKHash(), req));
+
+            // Verify cached ID was advanced
+            BOOST_CHECK_EQUAL(wallet->m_next_receive_request_id, 1);
+
+            // Read it back and verify all fields
+            const auto& requests = wallet->m_address_book[PKHash()].receive_requests;
+            BOOST_CHECK_EQUAL(requests.size(), 1U);
+            BOOST_CHECK_EQUAL(requests.at(0).id, 0);
+            BOOST_CHECK_EQUAL(requests.at(0).time, 12345U);
+            BOOST_CHECK_EQUAL(requests.at(0).address, address);
+            BOOST_CHECK_EQUAL(requests.at(0).label, "label1");
+            BOOST_CHECK_EQUAL(requests.at(0).message, "msg1");
+            BOOST_CHECK_EQUAL(requests.at(0).amount, 1000);
+
+            // Second request gets next cached ID
+            ReceiveRequest req2;
+            req2.id = wallet->m_next_receive_request_id;
+            req2.time = 12346;
+            req2.address = address;
+            req2.label = "label2";
+            req2.amount = 2000;
+            BOOST_CHECK(wallet->SetAddressReceiveRequest(batch, PKHash(), req2));
+            BOOST_CHECK_EQUAL(wallet->m_next_receive_request_id, 2);
+            BOOST_CHECK_EQUAL(requests.size(), 2U);
+
+            // Erase works
+            BOOST_CHECK(wallet->EraseAddressReceiveRequest(batch, PKHash(), 0));
+            BOOST_CHECK_EQUAL(requests.size(), 1U);
+            BOOST_CHECK_EQUAL(requests.at(1).label, "label2");
         });
     }
 }
