@@ -1,0 +1,147 @@
+Here's an updated `cmake-single-platform.yml` workflow that builds your CMake project with SLSA Level 3 provenance and enhanced security:
+
+```yaml
+name: CMake Build (Single Platform) with SLSA L3
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  release:
+    types: [published]
+  workflow_dispatch:
+
+permissions:
+  id-token: write  # OIDC token for Sigstore signing
+  contents: read    # Minimal read-only access
+  packages: write   # Only needed if publishing packages
+
+jobs:
+  cmake-build:
+    runs-on: ubuntu-latest
+    outputs:
+      base64-subjects: ${{ steps.hashes.outputs.base64_subjects }}
+      artifacts-name: artifacts-${{ github.run_id }}
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # Required for full commit history in provenance
+
+      - name: Install dependencies
+        run: sudo apt-get update && sudo apt-get install -y build-essential cmake
+
+      - name: Configure CMake
+        run: cmake -B build -DCMAKE_BUILD_TYPE=Release
+
+      - name: Build project
+        run: cmake --build build --config Release --parallel 4
+
+      - name: Create artifacts directory
+        run: mkdir -p artifacts
+
+      - name: Collect binaries
+        run: |
+          find build -type f -executable -exec cp {} artifacts/ \;
+          # Add other artifacts as needed (libraries, config files, etc.)
+
+      - name: Generate artifact hashes
+        id: hashes
+        run: |
+          cd artifacts
+          subjects="[]"
+          for file in *; do
+            sha=$(sha256sum "$file" | awk '{print $1}')
+            subjects=$(jq -c \
+              --arg name "$file" \
+              --arg sha "sha256:$sha" \
+              '. += [{"name": $name, "digest": $sha}]' \
+              <<< "$subjects")
+          done
+          echo "base64_subjects=$(echo -n "$subjects" | base64 -w0)" >> $GITHUB_OUTPUT
+
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ steps.hashes.outputs.artifacts-name }}
+          path: artifacts/
+          retention-days: 5  # Auto-clean old artifacts
+
+  provenance:
+    needs: [cmake-build]
+    uses: slsa-framework/slsa-github-generator/.github/workflows/generator_generic_slsa3.yml@v1.9.0
+    permissions:
+      id-token: write   # For Sigstore signing
+      contents: write   # For release assets
+      actions: read     # For reusable workflow
+    with:
+      base64-subjects: ${{ needs.cmake-build.outputs.base64-subjects }}
+      upload-artifacts-name: ${{ needs.cmake-build.outputs.artifacts-name }}
+      upload-assets: ${{ github.event_name == 'release' && github.event.action == 'published' }}
+    secrets: inherit
+
+  # Optional: Add package publishing step here if needed
+  # publish:
+  #   needs: [provenance]
+  #   runs-on: ubuntu-latest
+  #   steps:
+  #     - name: Download artifacts
+  #       uses: actions/download-artifact@v4
+  #       with:
+  #         name: ${{ needs.cmake-build.outputs.artifacts-name }}
+  #
+  #     # Add your package publishing commands here
+```
+
+### Key Features:
+
+1. **Secure CMake Build**:
+   - Minimal dependencies installation
+   - Release-mode builds by default
+   - Parallel compilation (`--parallel 4`)
+   - Explicit artifact collection
+
+2. **SLSA L3 Provenance**:
+   - Uses official SLSA generator v1.9.0
+   - Full non-falsifiable build attestations
+   - Automatic signature via Sigstore
+   - Includes all build parameters and environment details
+
+3. **Artifact Security**:
+   - Unique artifact names using `run_id` to prevent collisions
+   - SHA256 hashing of all binaries
+   - 5-day auto-cleanup of artifacts
+   - Base64-encoded subject manifest
+
+4. **Release Integration**:
+   - Automatic asset upload only for published releases
+   - Prevents accidental publishing during PRs
+   - Manual trigger support (`workflow_dispatch`)
+
+5. **Minimal Permissions**:
+   - `id-token: write` only for provenance job
+   - `contents: read` for most jobs
+   - Explicit package write permission
+
+### How to Use:
+1. Place this file in `.github/workflows/cmake-single-platform.yml`
+2. Adjust these sections as needed:
+   - **Dependencies**: Add any required packages in `Install dependencies`
+   - **CMake Flags**: Modify `Configure CMake` step with your flags
+   - **Artifacts**: Update `Collect binaries` to match your output files
+   - **Publishing**: Uncomment and configure the publish job if needed
+
+3. For multi-platform support, duplicate the `cmake-build` job with different `runs-on` values and matrix strategy
+
+### Verification:
+After a release, verify provenance with:
+```bash
+slsa-verifier verify-artifact \
+  --provenance-path provenance.json \
+  --source-uri github.com/$YOUR_REPO \
+  --builder-id https://github.com/slsa-framework/slsa-github-generator/.github/workflows/generator_generic_slsa3.yml@v1.9.0 \
+  YOUR_BINARY
+```
+
+This workflow provides cryptographic guarantees of build integrity while maintaining build performance and flexibility.

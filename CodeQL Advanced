@@ -1,0 +1,714 @@
+Configuring CodeQL in advanced setup gives you granular control to customize scanning for your project's specific needs, going far beyond what default setup offers. You can fine-tune everything from scan triggers and operating systems to creating your own security queries.
+
+Here's a comparison to help you understand the core differences:
+
+| Feature | Default Setup | Advanced Setup |
+| :--- | :--- | :--- |
+| **Control** | Automated, minimal input | Full manual control |
+| **Configuration** | Simple UI-based | Editing YAML workflow files |
+| **Customization** | Limited | Extensive (triggers, OS, queries, etc.) |
+| **Workflow Location** | Automatically managed | `.github/workflows/` directory |
+| **Best For** | Quick start, standard needs | Complex projects, specific requirements |
+
+### ⚙️ Configure the Advanced Workflow
+
+The advanced setup revolves around modifying a CodeQL workflow file (typically `codeql-analysis.yml`) located in your repository's `.github/workflows` directory.
+
+**Set Scanning Triggers and Frequency**
+You can configure the workflow to run on specific events, on a schedule, or both. This is defined using the `on` key in the YAML file.
+
+- **Scan on Push and Pull Requests**: This is the standard practice for catching vulnerabilities as they are introduced. You can specify which branches to monitor.
+- **Avoid Unnecessary Scans**: Use `paths-ignore` to skip scanning PRs that only change certain files (like documentation), saving resources.
+- **Schedule Scans**: Run periodic scans (e.g., weekly) to catch new vulnerabilities from updated CodeQL queries, even during inactive periods.
+
+```yaml
+on:
+  push:
+    branches: [ main, protected ]
+  pull_request:
+    branches: [ main ]
+    paths-ignore: 
+      - '**/*.md'
+      - '**/*.txt'
+  schedule:
+    - cron: '20 14 * * 1'  # Every Monday at 14:20 UTC
+```
+
+**Specify the Operating System and Languages**
+The `runs-on` key determines the OS of the runner. CodeQL supports `ubuntu-latest`, `windows-latest`, and `macos-latest`.
+
+- **For Swift code**, CodeQL uses macOS runners by default, which are more expensive. You can configure it to use a different runner for all steps except the build.
+- Use a **matrix strategy** to analyze multiple languages efficiently in parallel jobs. For compiled languages like Java, you may need to include custom build steps.
+
+```yaml
+jobs:
+  analyze:
+    name: Analyze
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        language: [ 'javascript', 'python', 'java' ]
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      - name: Initialize CodeQL
+        uses: github/codeql-action/init@v4
+        with:
+          languages: ${{ matrix.language }}
+```
+
+### 🔍 Develop Custom Queries
+
+Advanced setup allows you to extend analysis by running additional queries, including those you write yourself.
+
+**Create a Query Pack**
+CodeQL queries are organized into "packs". To start writing your own, create a new pack using the CodeQL CLI, which generates a `qlpack.yml` file.
+```bash
+codeql pack init <scope>/<name>
+```
+You then need to add dependencies for the standard library of the language you want to analyze.
+```bash
+codeql pack add codeql/javascript-all
+```
+
+**Understand QL Basics**
+QL is a declarative, logic programming language. A basic query follows this structure:
+```ql
+from /* ... variable declarations ... */
+where /* ... logical conditions ... */
+select /* ... expressions to output ... */
+```
+
+**Write and Refine Queries**
+- **Leverage Standard Libraries**: Use existing classes and predicates from the extensive CodeQL libraries to build upon.
+- **Use Debugging Tools**: If a query doesn't work as expected, techniques like creating a minimal code example, using Quick Evaluation in VS Code, viewing the AST, and generating partial path graphs are invaluable for diagnosing issues.
+- **Add Query Metadata**: Include a comment block with metadata like `@name`, `@description`, and `@kind` so the results are properly displayed in GitHub.
+
+### 🚀 Implement at Scale and Customize Further
+
+- **Scale Across an Organization**: For organizations needing advanced setup on many repositories, you can use a bulk configuration script to add the workflow across a group of repos efficiently.
+- **Extend Analysis with Model Packs**: For code that uses custom or niche frameworks not recognized by standard queries, you can specify published **CodeQL model packs** (currently in preview for C/C++, C#, Java/Kotlin, Python, Ruby, and Rust) to extend coverage.
+- **Specify a Custom Database Location**: While usually handled automatically, you can define where the CodeQL database is stored using the `db-location` parameter under the `init` action, which is useful for custom workflow steps.
+
+I hope this gives you a comprehensive roadmap for leveraging the advanced capabilities of CodeQL. Which aspect are you most interested in implementing first? If you're working with a specific programming language or framework, I might be able to offer more tailored guidance.
+# CodeQL Advanced Implementation Guide
+
+## 🚀 Advanced CodeQL Configuration
+
+### Multi-Language Enterprise Setup
+
+```yaml
+# .github/workflows/advanced-codeql.yml
+name: "Advanced CodeQL Analysis"
+
+on:
+  push:
+    branches: [ main, develop, release/* ]
+    paths-ignore:
+      - '**/*.md'
+      - '**/*.docs'
+      - '**/test/**'
+      - '**/spec/**'
+  pull_request:
+    branches: [ main, develop ]
+    paths:
+      - 'src/**'
+      - 'lib/**'
+      - '**.java'
+      - '**.js'
+      - '**.ts'
+      - '**.py'
+      - '**.go'
+  schedule:
+    - cron: '0 2 * * 1'  # Weekly on Monday at 2 AM UTC
+  workflow_dispatch:
+    inputs:
+      severity:
+        description: 'Minimum severity level'
+        required: true
+        default: 'error'
+        type: choice
+        options:
+        - error
+        - warning
+        - note
+
+env:
+  CODEQL_ACTION_DISABLE_SETUP: false
+  CODEQL_EXTRACTOR_JAVA_AGENT_DISABLE_KOTLIN: false
+  CODEQL_POWERFUL_ANALYSIS: true
+
+jobs:
+  analyze:
+    name: Advanced CodeQL Analysis
+    runs-on: ubuntu-latest
+    
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+        - language: java-kotlin
+          build-mode: autobuild
+        - language: javascript
+          build-mode: none
+        - language: python
+          build-mode: none
+        - language: go
+          build-mode: autobuild
+        - language: cpp
+          build-mode: manual
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 0  # Full history for better analysis
+
+    - name: Initialize CodeQL
+      uses: github/codeql-action/init@v3
+      with:
+        languages: ${{ matrix.language }}
+        queries: +security-and-quality,security-extended
+        config-file: ./.github/codeql/codeql-config.yml
+        tools: latest
+
+    - name: Autobuild (if needed)
+      if: matrix.build-mode == 'autobuild'
+      uses: github/codeql-action/autobuild@v3
+
+    - name: Manual Build (C/C++)
+      if: matrix.language == 'cpp' && matrix.build-mode == 'manual'
+      run: |
+        mkdir build && cd build
+        cmake ..
+        make -j4
+
+    - name: Perform CodeQL Analysis
+      uses: github/codeql-action/analyze@v3
+      with:
+        category: "/language:${{ matrix.language }}"
+        output: sarif-results
+        upload-database: true
+        skip-queries: ${{ github.event_name == 'schedule' && 'security' || '' }}
+      env:
+        CODEQL_ACTION_DISABLE_SETUP: false
+
+  custom-queries:
+    name: Custom Query Analysis
+    runs-on: ubuntu-latest
+    needs: analyze
+    
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+
+    - name: Initialize CodeQL
+      uses: github/codeql-action/init@v3
+      with:
+        languages: javascript, python
+        queries: ./.github/codeql/custom-queries.qls
+        packs: codeql/custom-queries
+
+    - name: Run Custom Queries
+      uses: github/codeql-action/analyze@v3
+      with:
+        category: "custom"
+
+  security-dashboard:
+    name: Security Dashboard Update
+    runs-on: ubuntu-latest
+    needs: [analyze, custom-queries]
+    if: always()
+    
+    steps:
+    - name: Upload Results to Security Dashboard
+      uses: github/codeql-action/upload-sarif@v3
+      with:
+        sarif_file: sarif-results
+        wait-for-processing: true
+
+    - name: Generate Security Report
+      run: |
+        echo "## CodeQL Security Analysis Report" >> $GITHUB_STEP_SUMMARY
+        echo "| Language | Critical | High | Medium | Low |" >> $GITHUB_STEP_SUMMARY
+        echo "|----------|----------|------|--------|-----|" >> $GITHUB_STEP_SUMMARY
+        echo "| Complete | - | - | - | - |" >> $GITHUB_STEP_SUMMARY
+```
+
+## 🔧 Advanced Configuration Files
+
+### CodeQL Configuration
+```yaml
+# .github/codeql/codeql-config.yml
+name: "Advanced CodeQL Configuration"
+
+query-filters:
+- exclude:
+    id: java/example/too-many-loops
+- include:
+    tags:
+    - security
+    - external/cwe/cwe-798
+    - external/cwe/cwe-259
+
+paths:
+- src
+- lib
+- app
+
+paths-ignore:
+- test
+- spec
+- node_modules
+- vendor
+- build
+- dist
+
+languages:
+  java:
+    build-command:
+    - mvn compile -DskipTests
+    - gradle build -x test
+    
+  javascript:
+    build-command: npm run build
+    
+  python:
+    build-command: python -m py_compile **/*.py
+
+queries:
+  uses: ./.github/codeql/query-suites.yml
+
+packs:
+- codeql/java-queries
+- codeql/javascript-queries
+- codeql/python-queries
+- organization/custom-security-queries
+
+database:
+  location: ./.codeql/databases
+  cleanup: true
+```
+
+### Custom Query Suites
+```yql
+# .github/codeql/query-suites.qls
+- description: "Custom Security Queries"
+- queries: .
+  from: custom-security-queries.qls
+- include:
+    tags:
+    - security
+    - external/cwe/cwe-89
+    - external/cwe/cwe-78
+    - external/cwe/cwe-79
+- exclude:
+    precision: very-low
+```
+
+## 🛠️ Custom Query Development
+
+### Advanced QL Query Structure
+```ql
+// .github/codeql/custom-queries/SQLInjection.ql
+/**
+ * @name Potential SQL Injection
+ * @description Detects potential SQL injection vulnerabilities in Java code
+ * @kind path-problem
+ * @problem.severity error
+ * @precision high
+ * @id java/sql-injection
+ * @tags security
+ *       external/cwe/cwe-89
+ */
+
+import java
+import semmle.code.java.dataflow.DataFlow
+import semmle.code.java.dataflow.TaintTracking
+import DataFlow::PathGraph
+
+class SqlInjectionConfig extends TaintTracking::Configuration {
+  SqlInjectionConfig() { this = "SqlInjectionConfig" }
+  
+  override predicate isSource(DataFlow::Node source) {
+    exists(MethodAccess ma |
+      ma.getMethod().hasName("getParameter") and
+      source.asExpr() = ma
+    )
+  }
+  
+  override predicate isSink(DataFlow::Node sink) {
+    exists(MethodAccess ma |
+      ma.getMethod().hasName("executeQuery") and
+      sink.asExpr() = ma.getArgument(0)
+    )
+  }
+  
+  override predicate isSanitizer(DataFlow::Node sanitizer) {
+    exists(MethodAccess ma |
+      ma.getMethod().hasName("escapeSql") and
+      sanitizer.asExpr() = ma
+    )
+  }
+}
+
+from SqlInjectionConfig config, DataFlow::PathNode source, DataFlow::PathNode sink
+where config.hasFlowPath(source, sink)
+select sink.getNode(), source, sink, "Potential SQL injection vulnerability"
+```
+
+### Complex Data Flow Analysis
+```ql
+// .github/codeql/custom-queries/AdvancedTaintTracking.ql
+import java
+import semmle.code.java.dataflow.DataFlow
+import semmle.code.java.dataflow.TaintTracking
+
+class UserInputSource extends DataFlow::ExprNode {
+  UserInputSource() {
+    exists(Method m |
+      m.hasName("getParameter") or
+      m.hasName("getHeader") or
+      m.hasName("getCookie") or
+      m.hasName("getAttribute")
+    |
+      this.asExpr() = m.getACall()
+    )
+  }
+}
+
+class DangerousSink extends DataFlow::ExprNode {
+  DangerousSink() {
+    // File operations
+    exists(Method m | m.hasName("write") | this.asExpr() = m.getACall()) or
+    // Database operations
+    exists(Method m | m.hasName("execute") | this.asExpr() = m.getACall()) or
+    // Command execution
+    exists(Method m | m.hasName("exec") | this.asExpr() = m.getACall())
+  }
+}
+
+class SanitizerMethod extends DataFlow::ExprNode {
+  SanitizerMethod() {
+    exists(Method m |
+      m.hasName("validateInput") or
+      m.hasName("sanitize") or
+      m.hasName("escapeHtml")
+    |
+      this.asExpr() = m.getACall()
+    )
+  }
+}
+
+from UserInputSource source, DangerousSink sink
+where DataFlow::localFlow(source, sink)
+select sink, "User input flows to dangerous sink without sanitization"
+```
+
+## 🔍 Advanced Query Patterns
+
+### Performance Optimization Queries
+```ql
+// .github/codeql/custom-queries/PerformanceIssues.ql
+import java
+import semmle.code.java.dataflow.DataFlow
+
+class ExpensiveOperationInLoop extends DataFlow::Configuration {
+  ExpensiveOperationInLoop() { this = "ExpensiveOperationInLoop" }
+  
+  override predicate isSource(DataFlow::Node source) {
+    exists(Method m |
+      m.hasName("compile") or
+      m.hasName("createConnection") or
+      m.hasName("parseXML")
+    |
+      source.asExpr() = m.getACall()
+    )
+  }
+  
+  override predicate isSink(DataFlow::Node sink) {
+    exists(LoopStmt loop | sink.asExpr() = loop.getCondition())
+  }
+}
+
+from ExpensiveOperationInLoop config, DataFlow::PathNode source, DataFlow::PathNode sink
+where config.hasFlowPath(source, sink)
+select sink.getNode(), source, sink, "Expensive operation inside loop may cause performance issues"
+```
+
+### Security Configuration Queries
+```ql
+// .github/codeql/custom-queries/SecurityMisconfiguration.ql
+import java
+
+class InsecureConfiguration extends RefType {
+  InsecureConfiguration() {
+    this.hasQualifiedName("org.springframework.security.config.annotation.web", "WebSecurityConfigurerAdapter")
+  }
+}
+
+from InsecureConfiguration config, Method m
+where
+  m.getDeclaringType() = config and
+  m.overridesOrInstantiates*(m.getDeclaringType().getAMethod()) and
+  not exists(MethodAccess ma | 
+    ma.getMethod().hasName("csrf") and
+    ma.getAnArgument().toString().matches("%disable%")
+  )
+select m, "Security configuration might be missing CSRF protection"
+```
+
+## 📊 Advanced Analysis Pipeline
+
+### Multi-Stage Analysis Workflow
+```yaml
+# .github/workflows/codeql-pipeline.yml
+name: "CodeQL Security Pipeline"
+
+on:
+  push:
+    branches: [ main ]
+  schedule:
+    - cron: '0 0 * * 0'  # Weekly
+
+jobs:
+  code-scanning:
+    name: Code Scanning
+    uses: ./.github/workflows/codeql-advanced.yml
+    secrets: inherit
+
+  dependency-scanning:
+    name: Dependency Vulnerability Scan
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+    - name: Run OWASP Dependency Check
+      uses: dependency-check/Dependency-Check_Action@main
+      with:
+        project: 'my-project'
+        path: '.'
+        format: 'HTML'
+        out: 'reports'
+
+  container-scanning:
+    name: Container Image Scanning
+    runs-on: ubuntu-latest
+    steps:
+    - name: Run Trivy Vulnerability Scanner
+      uses: aquasecurity/trivy-action@master
+      with:
+        scan-type: 'fs'
+        scan-ref: '.'
+        format: 'sarif'
+        output: 'trivy-results.sarif'
+
+  security-report:
+    name: Generate Security Report
+    runs-on: ubuntu-latest
+    needs: [code-scanning, dependency-scanning, container-scanning]
+    steps:
+    - name: Aggregate Results
+      run: |
+        python .github/scripts/aggregate-security-report.py
+    - name: Upload Security Report
+      uses: actions/upload-artifact@v4
+      with:
+        name: security-report
+        path: security-report.html
+```
+
+## 🔒 Advanced Security Queries
+
+### Authentication & Authorization
+```ql
+// .github/codeql/custom-queries/AuthBypass.ql
+import java
+
+class AuthenticationBypass extends Method {
+  AuthenticationBypass() {
+    this.getAnAnnotation().getType().hasQualifiedName("org.springframework.web.bind.annotation", "RequestMapping") and
+    not exists(MethodAccess ma |
+      ma.getMethod().hasName("isAuthenticated") or
+      ma.getMethod().hasName("hasRole")
+    )
+  }
+}
+
+from AuthenticationBypass method
+select method, "Endpoint might be missing authentication check"
+```
+
+### Cryptography Issues
+```ql
+// .github/codeql/custom-queries/WeakCrypto.ql
+import java
+
+class WeakCryptoAlgorithm extends MethodAccess {
+  WeakCryptoAlgorithm() {
+    this.getMethod().hasName("getInstance") and
+    (
+      this.getArgument(0).toString().matches("%DES%") or
+      this.getArgument(0).toString().matches("%RC4%") or
+      this.getArgument(0).toString().matches("%MD5%")
+    )
+  }
+}
+
+from WeakCryptoAlgorithm crypto
+select crypto, "Use of weak cryptographic algorithm detected"
+```
+
+## 📈 Performance Optimization
+
+### Query Performance Configuration
+```yaml
+# .github/codeql/performance-config.yml
+optimization:
+  max-paths: 1000
+  timeout: 300
+  memory: 8192
+
+analysis:
+  mode: deep
+  threads: 4
+  
+caching:
+  enabled: true
+  location: ./.codeql/cache
+  cleanup-age: 30d
+
+logging:
+  level: INFO
+  queries: true
+  performance: true
+```
+
+### Custom Performance Queries
+```ql
+// .github/codeql/custom-queries/MemoryLeaks.ql
+import java
+
+class PotentialMemoryLeak extends Method {
+  PotentialMemoryLeak() {
+    this.getName().matches("create%") and
+    not exists(Method destructor |
+      destructor.getName().matches("destroy%") or
+      destructor.getName().matches("close%") and
+      destructor.getDeclaringType() = this.getDeclaringType()
+    )
+  }
+}
+
+from PotentialMemoryLeak method
+select method, "Potential memory leak: creation method without corresponding cleanup method"
+```
+
+## 🎯 Advanced Integration
+
+### CI/CD Pipeline Integration
+```yaml
+# .github/workflows/security-gates.yml
+name: "Security Quality Gates"
+
+on:
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  security-gate:
+    name: Security Quality Gate
+    runs-on: ubuntu-latest
+    steps:
+    - name: Run CodeQL Analysis
+      uses: github/codeql-action/analyze@v3
+      with:
+        output: sarif-results
+        
+    - name: Check Security Thresholds
+      run: |
+        python .github/scripts/check-security-gates.py
+        
+    - name: Fail on Critical Issues
+      if: steps.security-check.outputs.critical_issues > 0
+      run: |
+        echo "❌ Critical security issues found. Blocking merge."
+        exit 1
+```
+
+### Custom Scripts for Analysis
+```python
+# .github/scripts/aggregate-security-report.py
+#!/usr/bin/env python3
+import json
+import sys
+from pathlib import Path
+
+def load_sarif_results(file_path):
+    with open(file_path, 'r') as f:
+        return json.load(f)
+
+def analyze_severity_distribution(results):
+    severity_count = {
+        'error': 0,
+        'warning': 0,
+        'note': 0
+    }
+    
+    for run in results.get('runs', []):
+        for result in run.get('results', []):
+            level = result.get('level', 'warning')
+            severity_count[level] += 1
+            
+    return severity_count
+
+def generate_report(severity_distribution):
+    report = f"""
+# Security Analysis Report
+## Summary
+- Critical Issues: {severity_distribution['error']}
+- Warnings: {severity_distribution['warning']}
+- Recommendations: {severity_distribution['note']}
+
+## Quality Gates
+{'❌ FAIL' if severity_distribution['error'] > 0 else '✅ PASS'} - No Critical Issues
+{'⚠️ WARN' if severity_distribution['warning'] > 10 else '✅ PASS'} - Warning Threshold
+"""
+    return report
+
+if __name__ == "__main__":
+    results_dir = Path("sarif-results")
+    all_results = []
+    
+    for sarif_file in results_dir.glob("*.sarif"):
+        all_results.extend(load_sarif_results(sarif_file))
+    
+    severity = analyze_severity_distribution(all_results)
+    report = generate_report(severity)
+    
+    with open("security-report.md", "w") as f:
+        f.write(report)
+    
+    print("Security report generated successfully")
+```
+
+This advanced CodeQL implementation provides:
+
+## 🚀 Key Features
+
+1. **Multi-Language Support** - Java, JavaScript, Python, Go, C++
+2. **Custom Query Development** - Advanced security and performance queries
+3. **Performance Optimization** - Caching, parallel execution, resource management
+4. **Security Quality Gates** - Automated security thresholds and blocking
+5. **Comprehensive Reporting** - Aggregated security dashboards
+6. **Enterprise Integration** - CI/CD pipeline integration with quality gates
+
+## 💡 Advanced Use Cases
+
+- **Custom Security Rules** - Organization-specific security requirements
+- **Performance Analysis** - Code performance and memory leak detection
+- **Architecture Validation** - Code structure and design pattern validation
+- **Compliance Checking** - Regulatory and compliance requirements
+- **Dependency Analysis** - Third-party library security assessment
+
+This setup enables enterprise-grade code security analysis with custom rules, performance optimization, and comprehensive reporting!
