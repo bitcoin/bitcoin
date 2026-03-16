@@ -353,6 +353,8 @@ public:
         Unserialize(s);
     }
 
+    bool operator==(const PSBTInput&) const = default;
+
     template <typename Stream>
     inline void Serialize(Stream& s) const {
         // Write the utxo
@@ -973,6 +975,8 @@ public:
         assert(m_psbt_version == 2);
         Unserialize(s);
     }
+
+    bool operator==(const PSBTOutput&) const = default;
 
     template <typename Stream>
     inline void Serialize(Stream& s) const {

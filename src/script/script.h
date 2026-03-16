@@ -587,6 +587,8 @@ struct CScriptWitness
     void SetNull() { stack.clear(); stack.shrink_to_fit(); }
 
     std::string ToString() const;
+
+    bool operator==(const CScriptWitness&) const = default;
 };
 
 /** A reference to a CScript: the Hash160 of its serialization */
