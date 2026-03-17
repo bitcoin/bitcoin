@@ -15,7 +15,13 @@ check_tools() {
     done
 }
 
-check_tools cat diff gpg basename
+check_tools cat diff basename
+
+GPG=${GPG:-gpg}
+
+# shellcheck disable=SC2206
+GPG_ARRAY=($GPG)
+check_tools "${GPG_ARRAY[0]}"
 
 ################
 # Usage
@@ -97,7 +103,7 @@ verify() {
     local signer_name
     signer_name="$(basename "$(dirname "$current_manifest")")"
 
-    if ! gpg --quiet --batch \
+    if ! ${GPG} --quiet --batch \
             --verify "${current_manifest}.asc" "$current_manifest" 1>&2; then
         echo "ERR: Failed to verify GPG signature for signer '${signer_name}'"
         echo "     Manifest:  '${current_manifest}'"
@@ -105,7 +111,7 @@ verify() {
         echo ""
         echo "Hint: Either the signature is invalid or the public key is not in"
         echo "      your GPG keyring. You can import it with:"
-        echo "          gpg --import '${builder_keys_dir}/${signer_name}.gpg'"
+        echo "         ${GPG} --import '${builder_keys_dir}/${signer_name}.gpg'"
         echo ""
         failure=1
     elif ! diff --report-identical "$compare_base" "$current_manifest" 1>&2; then
