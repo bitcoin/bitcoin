@@ -9,6 +9,7 @@
 #include <policy/policy.h>
 #include <script/signingprovider.h>
 #include <util/check.h>
+#include <util/result.h>
 #include <util/strencodings.h>
 
 using common::PSBTError;
@@ -599,17 +600,17 @@ bool FinalizeAndExtractPSBT(PartiallySignedTransaction& psbtx, CMutableTransacti
     return true;
 }
 
-bool CombinePSBTs(PartiallySignedTransaction& out, const std::vector<PartiallySignedTransaction>& psbtxs)
+std::optional<PartiallySignedTransaction> CombinePSBTs(const std::vector<PartiallySignedTransaction>& psbtxs)
 {
-    out = psbtxs[0]; // Copy the first one
+    PartiallySignedTransaction out = psbtxs[0]; // Copy the first one
 
     // Merge
     for (auto it = std::next(psbtxs.begin()); it != psbtxs.end(); ++it) {
         if (!out.Merge(*it)) {
-            return false;
+            return std::nullopt;
         }
     }
-    return true;
+    return out;
 }
 
 std::string PSBTRoleName(PSBTRole role) {
@@ -623,30 +624,27 @@ std::string PSBTRoleName(PSBTRole role) {
     assert(false);
 }
 
-bool DecodeBase64PSBT(PartiallySignedTransaction& psbt, const std::string& base64_tx, std::string& error)
+util::Result<PartiallySignedTransaction> DecodeBase64PSBT(const std::string& base64_tx)
 {
     auto tx_data = DecodeBase64(base64_tx);
     if (!tx_data) {
-        error = "invalid base64";
-        return false;
+        return util::Error{Untranslated("invalid base64")};
     }
-    return DecodeRawPSBT(psbt, MakeByteSpan(*tx_data), error);
+    return DecodeRawPSBT(MakeByteSpan(*tx_data));
 }
 
-bool DecodeRawPSBT(PartiallySignedTransaction& psbt, std::span<const std::byte> tx_data, std::string& error)
+util::Result<PartiallySignedTransaction> DecodeRawPSBT(std::span<const std::byte> tx_data)
 {
     SpanReader ss_data{tx_data};
     try {
-        ss_data >> psbt;
+        PartiallySignedTransaction psbt(deserialize, ss_data);
         if (!ss_data.empty()) {
-            error = "extra data after PSBT";
-            return false;
+            return util::Error{Untranslated("extra data after PSBT")};
         }
+        return psbt;
     } catch (const std::exception& e) {
-        error = e.what();
-        return false;
+        return util::Error{Untranslated(e.what())};
     }
-    return true;
 }
 
 uint32_t PartiallySignedTransaction::GetVersion() const

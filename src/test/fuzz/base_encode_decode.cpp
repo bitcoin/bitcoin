@@ -90,8 +90,5 @@ FUZZ_TARGET(psbt_base64_decode)
 {
     const std::string random_string{buffer.begin(), buffer.end()};
 
-    PartiallySignedTransaction psbt;
-    std::string error;
-    const bool ok{DecodeBase64PSBT(psbt, random_string, error)};
-    assert(ok == error.empty());
+    util::Result<PartiallySignedTransaction> psbt = DecodeBase64PSBT(random_string);
 }

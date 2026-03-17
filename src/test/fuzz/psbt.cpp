@@ -25,19 +25,19 @@ FUZZ_TARGET(psbt)
 {
     SeedRandomStateForTest(SeedRand::ZEROS);
     FuzzedDataProvider fuzzed_data_provider{buffer.data(), buffer.size()};
-    PartiallySignedTransaction psbt_mut;
-    std::string error;
     auto str = fuzzed_data_provider.ConsumeRandomLengthString();
-    if (!DecodeRawPSBT(psbt_mut, MakeByteSpan(str), error)) {
+    util::Result<PartiallySignedTransaction> psbt_res = DecodeRawPSBT(MakeByteSpan(str));
+    if (!psbt_res) {
         return;
     }
+    PartiallySignedTransaction psbt_mut = *psbt_res;
     const PartiallySignedTransaction psbt = psbt_mut;
 
     // A PSBT must roundtrip.
-    PartiallySignedTransaction psbt_roundtrip;
     std::vector<uint8_t> psbt_ser;
     VectorWriter{psbt_ser, 0, psbt};
-    SpanReader{psbt_ser} >> psbt_roundtrip;
+    SpanReader reader{psbt_ser};
+    PartiallySignedTransaction psbt_roundtrip(deserialize, reader);
 
     // And be stable across roundtrips.
     std::vector<uint8_t> roundtrip_ser;
@@ -85,16 +85,19 @@ FUZZ_TARGET(psbt)
         const PartiallySignedTransaction psbt_from_tx{result};
     }
 
-    PartiallySignedTransaction psbt_merge;
+    PartiallySignedTransaction psbt_merge = psbt;
     str = fuzzed_data_provider.ConsumeRandomLengthString();
-    if (!DecodeRawPSBT(psbt_merge, MakeByteSpan(str), error)) {
-        psbt_merge = psbt;
+    util::Result<PartiallySignedTransaction> psbt_merge_res = DecodeRawPSBT(MakeByteSpan(str));
+    if (psbt_merge_res) {
+        psbt_merge = *psbt_merge_res;
     }
     psbt_mut = psbt;
     (void)psbt_mut.Merge(psbt_merge);
     psbt_mut = psbt;
-    (void)CombinePSBTs(psbt_mut, {psbt_mut, psbt_merge});
-    psbt_mut = psbt;
+    std::optional<PartiallySignedTransaction> comb_res = CombinePSBTs({psbt_mut, psbt_merge});
+    if (comb_res) {
+        psbt_mut = *comb_res;
+    }
     for (unsigned int i = 0; i < psbt_merge.tx->vin.size(); ++i) {
         (void)psbt_mut.AddInput(psbt_merge.tx->vin[i], psbt_merge.inputs[i]);
     }
