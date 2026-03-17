@@ -3964,12 +3964,12 @@ ServiceFlags CConnman::GetLocalServices() const
     return m_local_services;
 }
 
-static std::unique_ptr<Transport> MakeTransport(NodeId id, bool use_v2transport, bool inbound) noexcept
+static util::NotNull<std::unique_ptr<Transport>> MakeTransport(NodeId id, bool use_v2transport, bool inbound) noexcept
 {
     if (use_v2transport) {
-        return std::make_unique<V2Transport>(id, /*initiating=*/!inbound);
+        return util::NotNull<std::unique_ptr<Transport>>{std::make_unique<V2Transport>(id, /*initiating=*/!inbound)};
     } else {
-        return std::make_unique<V1Transport>(id);
+        return util::NotNull<std::unique_ptr<Transport>>{std::make_unique<V1Transport>(id)};
     }
 }
 
