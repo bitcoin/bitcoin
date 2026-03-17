@@ -30,6 +30,34 @@ BOOST_AUTO_TEST_CASE(check_nullptr)
     BOOST_CHECK_EXCEPTION(util::NotNull{ThrowingMoveNullPtr{}}, NonFatalCheckError, HasReason{"Internal bug detected: ptr_ != nullptr"});
 }
 
+BOOST_AUTO_TEST_CASE(check_nocopy_ptr)
+{
+    struct NoCopyPtr {
+        NoCopyPtr() = default;
+        NoCopyPtr(const NoCopyPtr& other) = delete;
+        NoCopyPtr(NoCopyPtr&& other) = default;
+        bool operator==(std::nullptr_t) const { return false; }
+        int* p{};
+    };
+
+    {
+        NoCopyPtr no_copy_ptr{};
+        util::NotNull no_copy{std::move(no_copy_ptr)};
+        NoCopyPtr extract{std::move(no_copy)};
+        (void)extract;
+    }
+    {
+        util::NotNull no_copy{NoCopyPtr{}};
+        NoCopyPtr extract{std::move(no_copy).get()};
+        (void)extract;
+    }
+    {
+        util::NotNull no_copy{NoCopyPtr{}};
+        auto extract{std::move(no_copy).get()};
+        static_assert(std::is_same_v<decltype(extract), NoCopyPtr>);
+    }
+}
+
 BOOST_AUTO_TEST_CASE(check_derived)
 {
     struct MyBase {
@@ -43,6 +71,22 @@ BOOST_AUTO_TEST_CASE(check_derived)
     util::NotNull<MyBase*> q(&base);
     q = p;
     BOOST_CHECK_EQUAL(q, p);
+
+    util::NotNull nn_derived{std::make_unique<MyDerived>()};
+    util::NotNull nn_base{std::make_unique<MyBase>()};
+    nn_base = std::move(nn_derived);
+    std::unique_ptr<MyBase> base_inner{std::move(nn_base)};
+}
+
+BOOST_AUTO_TEST_CASE(check_move)
+{
+    auto a{std::make_unique<int>()};
+    util::NotNull box{std::move(a)};
+    auto new_box{std::move(box)};
+
+    auto b{std::make_shared<int>()};
+    util::NotNull arc{b};
+    auto new_arc{std::move(arc)};
 }
 
 BOOST_AUTO_TEST_CASE(check_swap)
