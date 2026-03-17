@@ -426,6 +426,21 @@ class PSBTTest(BitcoinTestFramework):
 
         self.log.info("PSBT parameter handling test completed successfully")
 
+    def test_psbt_roundtrip(self):
+        self.log.info("Test that PSBTs roundtrip when RPC does nothing")
+        utxo = self.nodes[0].listunspent()[0]
+        psbt = self.nodes[0].walletcreatefundedpsbt(inputs=[utxo], outputs=[{self.nodes[0].getnewaddress(): utxo["amount"] / 2}])["psbt"]
+
+        rt_psbts = [
+            self.nodes[0].combinepsbt([psbt, psbt]),
+            self.nodes[0].finalizepsbt(psbt)["psbt"],
+            self.nodes[0].utxoupdatepsbt(psbt),
+            self.nodes[0].descriptorprocesspsbt(psbt, [])["psbt"],
+            self.nodes[0].walletprocesspsbt(psbt, sign=False)["psbt"],
+        ]
+        for p in rt_psbts:
+            assert_equal(psbt, p)
+
     def run_test(self):
         # Create and fund a raw tx for sending 10 BTC
         psbtx1 = self.nodes[0].walletcreatefundedpsbt([], {self.nodes[2].getnewaddress():10})['psbt']
@@ -1280,6 +1295,7 @@ class PSBTTest(BitcoinTestFramework):
             self.test_sighash_mismatch()
         self.test_sighash_adding()
         self.test_psbt_named_parameter_handling()
+        self.test_psbt_roundtrip()
 
 if __name__ == '__main__':
     PSBTTest(__file__).main()
