@@ -24,7 +24,8 @@ PSBTAnalysis AnalyzePSBT(PartiallySignedTransaction psbtx)
 
     result.inputs.resize(psbtx.inputs.size());
 
-    const PrecomputedTransactionData txdata = PrecomputePSBTData(psbtx);
+    // PrecomputePSBTData calls GetUnsignedTx() which we checked already works
+    const PrecomputedTransactionData txdata = *PrecomputePSBTData(psbtx);
 
     for (unsigned int i = 0; i < psbtx.inputs.size(); ++i) {
         PSBTInput& input = psbtx.inputs[i];
