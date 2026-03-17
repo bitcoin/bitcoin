@@ -261,8 +261,9 @@ static inline void ExpectedKeySize(const std::string& key_name, const std::vecto
 }
 
 /** A structure for PSBTs which contain per-input information */
-struct PSBTInput
+class PSBTInput
 {
+public:
     CTransactionRef non_witness_utxo;
     CTxOut witness_utxo;
     CScript redeem_script;
@@ -791,8 +792,9 @@ struct PSBTInput
 };
 
 /** A structure for PSBTs which contains per output information */
-struct PSBTOutput
+class PSBTOutput
 {
+public:
     CScript redeem_script;
     CScript witness_script;
     std::map<CPubKey, KeyOriginInfo> hd_keypaths;
@@ -1027,8 +1029,9 @@ struct PSBTOutput
 };
 
 /** A version of CTransaction with the PSBT format*/
-struct PartiallySignedTransaction
+class PartiallySignedTransaction
 {
+public:
     std::optional<CMutableTransaction> tx;
     // We use a vector of CExtPubKey in the event that there happens to be the same KeyOriginInfos for different CExtPubKeys
     // Note that this map swaps the key and values from the serialization
