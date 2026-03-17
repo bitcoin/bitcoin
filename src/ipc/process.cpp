@@ -68,29 +68,44 @@ public:
     int bind(const fs::path& data_dir, const std::string& exe_name, std::string& address) override;
 };
 
+static bool ParseUnixAddress(std::string& address, const fs::path& data_dir, const std::string& dest_exe_name, struct sockaddr_storage& addr_storage, socklen_t& addr_len, std::string& error)
+{
+    fs::path path;
+    if (address.size() <= 5) {
+        path = data_dir / fs::PathFromString(strprintf("%s.sock", RemovePrefixView(dest_exe_name, "bitcoin-")));
+    } else {
+        path = data_dir / fs::PathFromString(address.substr(5));
+    }
+
+    std::string path_str = fs::PathToString(path);
+    address = strprintf("unix:%s", path_str);
+
+    struct sockaddr_un addr;
+    memset(&addr, 0, sizeof(addr));
+
+    if (path_str.size() >= sizeof(addr.sun_path)) {
+        error = strprintf("Unix address path %s exceeded maximum socket path length", fs::quoted(fs::PathToString(path)));
+        return false;
+    }
+
+    addr.sun_family = AF_UNIX;
+    strncpy(addr.sun_path, path_str.c_str(), sizeof(addr.sun_path)-1);
+
+    memcpy(&addr_storage, &addr, sizeof(addr));
+
+    addr_len = sizeof(addr);
+    return true;
+}
+
 static bool ParseAddress(std::string& address,
                   const fs::path& data_dir,
                   const std::string& dest_exe_name,
-                  struct sockaddr_un& addr,
+                  struct sockaddr_storage& addr,
+                  socklen_t& addr_len,
                   std::string& error)
 {
     if (address == "unix" || address.starts_with("unix:")) {
-        fs::path path;
-        if (address.size() <= 5) {
-            path = data_dir / fs::PathFromString(strprintf("%s.sock", RemovePrefixView(dest_exe_name, "bitcoin-")));
-        } else {
-            path = data_dir / fs::PathFromString(address.substr(5));
-        }
-        std::string path_str = fs::PathToString(path);
-        address = strprintf("unix:%s", path_str);
-        if (path_str.size() >= sizeof(addr.sun_path)) {
-            error = strprintf("Unix address path %s exceeded maximum socket path length", fs::quoted(fs::PathToString(path)));
-            return false;
-        }
-        memset(&addr, 0, sizeof(addr));
-        addr.sun_family = AF_UNIX;
-        strncpy(addr.sun_path, path_str.c_str(), sizeof(addr.sun_path)-1);
-        return true;
+        return ParseUnixAddress(address, data_dir, dest_exe_name, addr, addr_len, error);
     }
 
     error = strprintf("Unrecognized address '%s'", address);
@@ -101,17 +116,19 @@ int ProcessImpl::connect(const fs::path& data_dir,
                          const std::string& dest_exe_name,
                          std::string& address)
 {
-    struct sockaddr_un addr;
+    struct sockaddr_storage addr;
+    socklen_t addr_len;
     std::string error;
-    if (!ParseAddress(address, data_dir, dest_exe_name, addr, error)) {
+    if (!ParseAddress(address, data_dir, dest_exe_name, addr, addr_len, error)) {
         throw std::invalid_argument(error);
     }
 
     int fd;
-    if ((fd = ::socket(addr.sun_family, SOCK_STREAM, 0)) == -1) {
+    if ((fd = ::socket(addr.ss_family, SOCK_STREAM, 0)) == -1) {
         throw std::system_error(errno, std::system_category());
     }
-    if (::connect(fd, (struct sockaddr*)&addr, sizeof(addr)) == 0) {
+
+    if (::connect(fd, (struct sockaddr*)&addr, addr_len) == 0) {
         return fd;
     }
     int connect_error = errno;
@@ -123,14 +140,17 @@ int ProcessImpl::connect(const fs::path& data_dir,
 
 int ProcessImpl::bind(const fs::path& data_dir, const std::string& exe_name, std::string& address)
 {
-    struct sockaddr_un addr;
+    struct sockaddr_storage addr;
+    socklen_t addr_len;
     std::string error;
-    if (!ParseAddress(address, data_dir, exe_name, addr, error)) {
+
+    if (!ParseAddress(address, data_dir, exe_name, addr, addr_len, error)) {
         throw std::invalid_argument(error);
     }
 
-    if (addr.sun_family == AF_UNIX) {
-        fs::path path = addr.sun_path;
+    if (addr.ss_family == AF_UNIX) {
+        const struct sockaddr_un* addr_un = reinterpret_cast<const struct sockaddr_un*>(&addr);
+        fs::path path = addr_un->sun_path;
         if (path.has_parent_path()) fs::create_directories(path.parent_path());
         if (fs::symlink_status(path).type() == fs::file_type::socket) {
             fs::remove(path);
@@ -138,11 +158,11 @@ int ProcessImpl::bind(const fs::path& data_dir, const std::string& exe_name, std
     }
 
     int fd;
-    if ((fd = ::socket(addr.sun_family, SOCK_STREAM, 0)) == -1) {
+    if ((fd = ::socket(addr.ss_family, SOCK_STREAM, 0)) == -1) {
         throw std::system_error(errno, std::system_category());
     }
 
-    if (::bind(fd, (struct sockaddr*)&addr, sizeof(addr)) == 0) {
+    if (::bind(fd, (struct sockaddr*)&addr, addr_len) == 0) {
         return fd;
     }
     int bind_error = errno;
