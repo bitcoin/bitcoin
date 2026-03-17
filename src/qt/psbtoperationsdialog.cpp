@@ -59,7 +59,7 @@ void PSBTOperationsDialog::openWithPSBT(PartiallySignedTransaction psbtx)
     bool complete = FinalizePSBT(psbtx); // Make sure all existing signatures are fully combined before checking for completeness.
     if (m_wallet_model) {
         size_t n_could_sign;
-        const auto err{m_wallet_model->wallet().fillPSBT(std::nullopt, /*sign=*/false, /*bip32derivs=*/true, &n_could_sign, m_transaction_data, complete)};
+        const auto err{m_wallet_model->wallet().fillPSBT(std::nullopt, /*sign=*/false, /*bip32derivs=*/true, &n_could_sign, *m_transaction_data, complete)};
         if (err) {
             showStatus(tr("Failed to load transaction: %1")
                            .arg(QString::fromStdString(PSBTErrorString(*err).translated)),
@@ -83,7 +83,7 @@ void PSBTOperationsDialog::signTransaction()
 
     WalletModel::UnlockContext ctx(m_wallet_model->requestUnlock());
 
-    const auto err{m_wallet_model->wallet().fillPSBT(std::nullopt, /*sign=*/true, /*bip32derivs=*/true, &n_signed, m_transaction_data, complete)};
+    const auto err{m_wallet_model->wallet().fillPSBT(std::nullopt, /*sign=*/true, /*bip32derivs=*/true, &n_signed, *m_transaction_data, complete)};
 
     if (err) {
         showStatus(tr("Failed to sign transaction: %1")
@@ -110,7 +110,7 @@ void PSBTOperationsDialog::signTransaction()
 void PSBTOperationsDialog::broadcastTransaction()
 {
     CMutableTransaction mtx;
-    if (!FinalizeAndExtractPSBT(m_transaction_data, mtx)) {
+    if (!FinalizeAndExtractPSBT(*m_transaction_data, mtx)) {
         // This is never expected to fail unless we were given a malformed PSBT
         // (e.g. with an invalid signature.)
         showStatus(tr("Unknown error processing transaction."), StatusLevel::ERR);
@@ -133,19 +133,19 @@ void PSBTOperationsDialog::broadcastTransaction()
 
 void PSBTOperationsDialog::copyToClipboard() {
     DataStream ssTx{};
-    ssTx << m_transaction_data;
+    ssTx << *m_transaction_data;
     GUIUtil::setClipboard(EncodeBase64(ssTx.str()).c_str());
     showStatus(tr("PSBT copied to clipboard."), StatusLevel::INFO);
 }
 
 void PSBTOperationsDialog::saveTransaction() {
     DataStream ssTx{};
-    ssTx << m_transaction_data;
+    ssTx << *m_transaction_data;
 
     QString selected_filter;
     QString filename_suggestion = "";
     bool first = true;
-    for (const CTxOut& out : m_transaction_data.tx->vout) {
+    for (const CTxOut& out : m_transaction_data->tx->vout) {
         if (!first) {
             filename_suggestion.append("-");
         }
@@ -171,8 +171,8 @@ void PSBTOperationsDialog::saveTransaction() {
 }
 
 void PSBTOperationsDialog::updateTransactionDisplay() {
-    m_ui->transactionDescription->setText(renderTransaction(m_transaction_data));
-    showTransactionStatus(m_transaction_data);
+    m_ui->transactionDescription->setText(renderTransaction(*m_transaction_data));
+    showTransactionStatus(*m_transaction_data);
 }
 
 QString PSBTOperationsDialog::renderTransaction(const PartiallySignedTransaction &psbtx)
@@ -251,7 +251,7 @@ size_t PSBTOperationsDialog::couldSignInputs(const PartiallySignedTransaction &p
 
     size_t n_signed;
     bool complete;
-    const auto err{m_wallet_model->wallet().fillPSBT(std::nullopt, /*sign=*/false, /*bip32derivs=*/false, &n_signed, m_transaction_data, complete)};
+    const auto err{m_wallet_model->wallet().fillPSBT(std::nullopt, /*sign=*/false, /*bip32derivs=*/false, &n_signed, *m_transaction_data, complete)};
 
     if (err) {
         return 0;
