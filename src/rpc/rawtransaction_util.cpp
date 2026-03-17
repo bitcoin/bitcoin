@@ -346,6 +346,52 @@ void SignTransactionResultToJSON(CMutableTransaction& mtx, bool complete, const 
 
 std::vector<RPCResult> TxDoc(const TxDocOptions& opts)
 {
+    auto vin_inner = std::vector<RPCResult>{
+        {RPCResult::Type::STR_HEX, "coinbase", /*optional=*/true, "The coinbase value (only if coinbase transaction)"},
+        {RPCResult::Type::STR_HEX, "txid", /*optional=*/true, "The transaction id (if not coinbase transaction)"},
+        {RPCResult::Type::NUM, "vout", /*optional=*/true, "The output number (if not coinbase transaction)"},
+        {RPCResult::Type::OBJ, "scriptSig", /*optional=*/true, "The script (if not coinbase transaction)",
+        {
+            {RPCResult::Type::STR, "asm", "Disassembly of the signature script"},
+            {RPCResult::Type::STR_HEX, "hex", "The raw signature script bytes, hex-encoded"},
+        }},
+        {RPCResult::Type::ARR, "txinwitness", /*optional=*/true, "",
+        {
+            {RPCResult::Type::STR_HEX, "hex", "hex-encoded witness data (if any)"},
+        }},
+    };
+    if (opts.prevout) {
+        vin_inner.emplace_back(RPCResult::Type::OBJ, "prevout", /*optional=*/true,
+        "The previous output, omitted if block undo data is not available",
+        std::vector<RPCResult>{
+            {RPCResult::Type::BOOL, "generated", "Coinbase or not"},
+            {RPCResult::Type::NUM, "height", "The height of the prevout"},
+            {RPCResult::Type::STR_AMOUNT, "value", "The value in " + CURRENCY_UNIT},
+            {RPCResult::Type::OBJ, "scriptPubKey", "", ScriptPubKeyDoc()},
+        });
+    }
+    vin_inner.emplace_back(RPCResult::Type::NUM, "sequence", "The script sequence number");
+
+    if (opts.vin_inner_elision) {
+        vin_inner = ElideGroup(std::move(vin_inner), *opts.vin_inner_elision);
+        if (opts.prevout) {
+            // prevout remains visible even when other fields are elided
+            std::vector<RPCResult> new_vin;
+            new_vin.reserve(vin_inner.size());
+            for (const auto& r : vin_inner) {
+                if (r.m_key_name == "prevout") {
+                    RPCResultOptions unopts = r.m_opts;
+                    unopts.help_elision = HelpElision::NONE;
+                    unopts.help_elision_text.clear();
+                    new_vin.emplace_back(r, std::move(unopts));
+                } else {
+                    new_vin.push_back(r);
+                }
+            }
+            vin_inner = std::move(new_vin);
+        }
+    }
+
     auto fields = std::vector<RPCResult>{
         {RPCResult::Type::STR_HEX, "txid", opts.txid_field_doc},
         {RPCResult::Type::STR_HEX, "hash", "The transaction hash (differs from txid for witness transactions)"},
@@ -356,22 +402,7 @@ std::vector<RPCResult> TxDoc(const TxDocOptions& opts)
         {RPCResult::Type::NUM_TIME, "locktime", "The lock time"},
         {RPCResult::Type::ARR, "vin", "",
         {
-            {RPCResult::Type::OBJ, "", "",
-            {
-                {RPCResult::Type::STR_HEX, "coinbase", /*optional=*/true, "The coinbase value (only if coinbase transaction)"},
-                {RPCResult::Type::STR_HEX, "txid", /*optional=*/true, "The transaction id (if not coinbase transaction)"},
-                {RPCResult::Type::NUM, "vout", /*optional=*/true, "The output number (if not coinbase transaction)"},
-                {RPCResult::Type::OBJ, "scriptSig", /*optional=*/true, "The script (if not coinbase transaction)",
-                {
-                    {RPCResult::Type::STR, "asm", "Disassembly of the signature script"},
-                    {RPCResult::Type::STR_HEX, "hex", "The raw signature script bytes, hex-encoded"},
-                }},
-                {RPCResult::Type::ARR, "txinwitness", /*optional=*/true, "",
-                {
-                    {RPCResult::Type::STR_HEX, "hex", "hex-encoded witness data (if any)"},
-                }},
-                {RPCResult::Type::NUM, "sequence", "The script sequence number"},
-            }},
+            {RPCResult::Type::OBJ, "", "", std::move(vin_inner)},
         }},
         {RPCResult::Type::ARR, "vout", "",
         {
@@ -388,8 +419,29 @@ std::vector<RPCResult> TxDoc(const TxDocOptions& opts)
         }},
     };
 
-    if (opts.elision_description) {
-        fields = ElideGroup(std::move(fields), *opts.elision_description);
+    if (opts.elision_description || opts.elision_description_silent) {
+        const bool silent = opts.elision_description_silent;
+        std::vector<RPCResult> new_fields;
+        new_fields.reserve(fields.size());
+        bool first = true;
+        for (const auto& f : fields) {
+            if (f.m_key_name == "vin" && opts.vin_inner_elision) {
+                new_fields.push_back(f);
+                continue;
+            }
+            if (!silent && first) {
+                RPCResultOptions eopts = f.m_opts;
+                eopts.help_elision = HelpElision::START;
+                eopts.help_elision_text = *opts.elision_description;
+                new_fields.emplace_back(f, std::move(eopts));
+                first = false;
+            } else {
+                RPCResultOptions eopts = f.m_opts;
+                eopts.help_elision = HelpElision::SKIP;
+                new_fields.emplace_back(f, std::move(eopts));
+            }
+        }
+        fields = std::move(new_fields);
     }
 
     return fields;
