@@ -207,7 +207,7 @@ public:
         setEraseCache.clear();
 
         LogPrint(BCLog::SYS,
-                "Flushed %zu items to cache (%s) in %zu-item chunks (sync_each=1)\n",
+                "Flushed %zu items to disk (%s) in %zu-item chunks\n",
                 count, GetName().c_str(), CHUNK_ITEMS);
         return true;
     }
