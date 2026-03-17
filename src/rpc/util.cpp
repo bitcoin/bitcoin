@@ -1023,9 +1023,7 @@ void RPCResult::ToSections(Sections& sections, const OuterType outer_type, const
     }};
 
     if (const auto* text = std::get_if<std::string>(&m_opts.print_elision)) {
-        if (!text->empty()) {
-            sections.PushSection({indent + "..." + maybe_separator, *text});
-        }
+        sections.PushSection({indent + "..." + maybe_separator, *text});
         return;
     }
     if (std::holds_alternative<HelpElisionSkip>(m_opts.print_elision)) {
@@ -1077,7 +1075,7 @@ void RPCResult::ToSections(Sections& sections, const OuterType outer_type, const
         }
         CHECK_NONFATAL(!m_inner.empty());
         CHECK_NONFATAL(elision_has_description(m_inner));
-        if (m_type == Type::ARR && m_inner.back().m_type != Type::ELISION) {
+        if (m_type == Type::ARR && m_inner.back().m_type != Type::ELISION && !std::holds_alternative<std::string>(m_inner.back().m_opts.print_elision)) {
             sections.PushSection({indent_next + "...", ""});
         } else {
             // Remove final comma, which would be invalid JSON
