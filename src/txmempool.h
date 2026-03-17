@@ -22,6 +22,7 @@
 #include <txgraph.h>
 #include <util/feefrac.h>
 #include <util/hasher.h>
+#include <util/pointers.h>
 #include <util/result.h>
 
 #include <boost/multi_index/hashed_index.hpp>
@@ -692,10 +693,11 @@ public:
         friend class CTxMemPool;
     };
 
-    std::unique_ptr<ChangeSet> GetChangeSet() EXCLUSIVE_LOCKS_REQUIRED(cs) {
+    util::NotNull<std::unique_ptr<ChangeSet>> GetChangeSet() EXCLUSIVE_LOCKS_REQUIRED(cs)
+    {
         Assume(!m_have_changeset);
         m_have_changeset = true;
-        return std::make_unique<ChangeSet>(this);
+        return util::NotNull{std::make_unique<ChangeSet>(this)};
     }
 
     bool m_have_changeset GUARDED_BY(cs){false};
