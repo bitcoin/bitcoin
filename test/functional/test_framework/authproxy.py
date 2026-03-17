@@ -169,6 +169,7 @@ class AuthServiceProxy():
         try:
             http_response = self.__conn.getresponse()
         except socket.timeout:
+            self.__conn.close() # close the connection if the request timed out
             raise JSONRPCException({
                 'code': -344,
                 'message': '%r RPC took longer than %f seconds. Consider '
