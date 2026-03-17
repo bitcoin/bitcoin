@@ -343,7 +343,8 @@ RPCHelpMan importdescriptors()
                             }},
                             {RPCResult::Type::OBJ, "error", /*optional=*/true, "",
                             {
-                                {RPCResult::Type::ELISION, "", "JSONRPC error"},
+                                {RPCResult::Type::NUM, "code", "JSONRPC error code"},
+                                {RPCResult::Type::STR, "message", "JSONRPC error message"},
                             }},
                         }},
                     }
