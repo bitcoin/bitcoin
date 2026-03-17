@@ -1193,6 +1193,7 @@ UniValue RPCResult::MatchesType(const UniValue& result) const
         }
 
         for (const auto& doc_entry : m_inner) {
+            if (doc_entry.m_opts.skip_type_check) continue;
             const auto result_it{result_obj.find(doc_entry.m_key_name)};
             if (result_it == result_obj.end()) {
                 if (!doc_entry.m_optional) {
