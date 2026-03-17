@@ -1015,16 +1015,11 @@ void RPCResult::ToSections(Sections& sections, const OuterType outer_type, const
                (this->m_description.empty() ? "" : " " + this->m_description);
     };
 
-    // Ensure at least one elision description exists, if there is any elision
+    // Ensure at least one visible field exists when elision is used
     const auto elision_has_description{[](const std::vector<RPCResult>& inner) {
-        const auto is_elided = [](const RPCResult& res) {
-            return !std::holds_alternative<HelpElisionNone>(res.m_opts.print_elision);
-        };
-        const auto has_summary_text = [](const RPCResult& res) {
-            const auto* text = std::get_if<std::string>(&res.m_opts.print_elision);
-            return text && !text->empty();
-        };
-        return std::ranges::none_of(inner, is_elided) || std::ranges::any_of(inner, has_summary_text);
+        return std::ranges::any_of(inner, [](const auto& res) {
+            return !std::holds_alternative<HelpElisionSkip>(res.m_opts.print_elision);
+        });
     }};
 
     if (const auto* text = std::get_if<std::string>(&m_opts.print_elision)) {
