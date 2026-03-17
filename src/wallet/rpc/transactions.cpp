@@ -521,6 +521,33 @@ RPCMethod listtransactions()
     };
 }
 
+static std::vector<RPCResult> ListSinceBlockTxFields()
+{
+    return Cat<std::vector<RPCResult>>(
+        {
+            {RPCResult::Type::STR, "address", /*optional=*/true, "The bitcoin address of the transaction (not returned if the output does not have an address, e.g. OP_RETURN null data)."},
+            {RPCResult::Type::STR, "category", "The transaction category.\n"
+                "\"send\"                  Transactions sent.\n"
+                "\"receive\"               Non-coinbase transactions received.\n"
+                "\"generate\"              Coinbase transactions received with more than 100 confirmations.\n"
+                "\"immature\"              Coinbase transactions received with 100 or fewer confirmations.\n"
+                "\"orphan\"                Orphaned coinbase transactions received."},
+            {RPCResult::Type::STR_AMOUNT, "amount", "The amount in " + CURRENCY_UNIT + ". This is negative for the 'send' category, and is positive\n"
+                "for all other categories"},
+            {RPCResult::Type::NUM, "vout", "the vout value"},
+            {RPCResult::Type::STR_AMOUNT, "fee", /*optional=*/true, "The amount of the fee in " + CURRENCY_UNIT + ". This is negative and only available for the\n"
+                 "'send' category of transactions."},
+        },
+        Cat(
+            TransactionDescriptionString(),
+            std::vector<RPCResult>{
+                {RPCResult::Type::BOOL, "abandoned", "'true' if the transaction has been abandoned (inputs are respendable)."},
+                {RPCResult::Type::STR, "label", /*optional=*/true, "A comment for the address/transaction, if any"},
+            }
+        )
+    );
+}
+
 RPCMethod listsinceblock()
 {
     return RPCMethod{
@@ -542,30 +569,13 @@ RPCMethod listsinceblock()
                     {
                         {RPCResult::Type::ARR, "transactions", "",
                         {
-                            {RPCResult::Type::OBJ, "", "", Cat(Cat<std::vector<RPCResult>>(
-                            {
-                                {RPCResult::Type::STR, "address",  /*optional=*/true, "The bitcoin address of the transaction (not returned if the output does not have an address, e.g. OP_RETURN null data)."},
-                                {RPCResult::Type::STR, "category", "The transaction category.\n"
-                                    "\"send\"                  Transactions sent.\n"
-                                    "\"receive\"               Non-coinbase transactions received.\n"
-                                    "\"generate\"              Coinbase transactions received with more than 100 confirmations.\n"
-                                    "\"immature\"              Coinbase transactions received with 100 or fewer confirmations.\n"
-                                    "\"orphan\"                Orphaned coinbase transactions received."},
-                                {RPCResult::Type::STR_AMOUNT, "amount", "The amount in " + CURRENCY_UNIT + ". This is negative for the 'send' category, and is positive\n"
-                                    "for all other categories"},
-                                {RPCResult::Type::NUM, "vout", "the vout value"},
-                                {RPCResult::Type::STR_AMOUNT, "fee", /*optional=*/true, "The amount of the fee in " + CURRENCY_UNIT + ". This is negative and only available for the\n"
-                                     "'send' category of transactions."},
-                            },
-                            TransactionDescriptionString()),
-                            {
-                                {RPCResult::Type::BOOL, "abandoned", "'true' if the transaction has been abandoned (inputs are respendable)."},
-                                {RPCResult::Type::STR, "label", /*optional=*/true, "A comment for the address/transaction, if any"},
-                            })},
+                            {RPCResult::Type::OBJ, "", "", ListSinceBlockTxFields()},
                         }},
                         {RPCResult::Type::ARR, "removed", /*optional=*/true, "<structure is the same as \"transactions\" above, only present if include_removed=true>\n"
-                            "Note: transactions that were re-added in the active chain will appear as-is in this array, and may thus have a positive confirmation count."
-                        , {{RPCResult::Type::ELISION, "", ""},}},
+                            "Note: transactions that were re-added in the active chain will appear as-is in this array, and may thus have a positive confirmation count.",
+                        {
+                            {RPCResult::Type::OBJ, "", "", ListSinceBlockTxFields(), {.help_elision=HelpElision::START, .help_elision_text=""}},
+                        }},
                         {RPCResult::Type::STR_HEX, "lastblock", "The hash of the block (target_confirmations-1) from the best block on the main chain, or the genesis hash if the referenced block does not exist yet. This is typically used to feed back into listsinceblock the next time you call it. So you would generally use a target_confirmations of say 6, so you will be continually re-notified of transactions until they've reached 6 confirmations plus any new ones"},
                     }
                 },
