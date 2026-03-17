@@ -40,6 +40,8 @@ import sys
 
 from subprocess import check_output, CalledProcessError
 
+from lint_ignore_dirs import SHARED_EXCLUDED_SUBTREES
+
 
 KNOWN_VIOLATIONS = [
     "src/dbwrapper.cpp:.*vsnprintf",
@@ -50,13 +52,8 @@ KNOWN_VIOLATIONS = [
 ]
 
 REGEXP_EXTERNAL_DEPENDENCIES_EXCLUSIONS = [
-    "src/crypto/ctaes/",
-    "src/ipc/libmultiprocess/",
-    "src/leveldb/",
-    "src/secp256k1/",
-    "src/minisketch/",
     "src/tinyformat.h",
-]
+] + SHARED_EXCLUDED_SUBTREES
 
 LOCALE_DEPENDENT_FUNCTIONS = [
     "alphasort",    # LC_COLLATE (via strcoll)

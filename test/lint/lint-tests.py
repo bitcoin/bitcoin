@@ -20,6 +20,7 @@ def grep_boost_fixture_test_suite():
         "-E",
         r"^BOOST_FIXTURE_TEST_SUITE\(",
         "--",
+        "src/ipc/test/**.cpp",
         "src/test/**.cpp",
         "src/wallet/test/**.cpp",
     ]

@@ -24,26 +24,6 @@
 #include <cmath>
 #include <optional>
 
-/** Over how many buckets entries with tried addresses from a single group (/16 for IPv4) are spread */
-static constexpr uint32_t ADDRMAN_TRIED_BUCKETS_PER_GROUP{8};
-/** Over how many buckets entries with new addresses originating from a single group are spread */
-static constexpr uint32_t ADDRMAN_NEW_BUCKETS_PER_SOURCE_GROUP{64};
-/** Maximum number of times an address can occur in the new table */
-static constexpr int32_t ADDRMAN_NEW_BUCKETS_PER_ADDRESS{8};
-/** How old addresses can maximally be */
-static constexpr auto ADDRMAN_HORIZON{30 * 24h};
-/** After how many failed attempts we give up on a new node */
-static constexpr int32_t ADDRMAN_RETRIES{3};
-/** How many successive failures are allowed ... */
-static constexpr int32_t ADDRMAN_MAX_FAILURES{10};
-/** ... in at least this duration */
-static constexpr auto ADDRMAN_MIN_FAIL{7 * 24h};
-/** How recent a successful connection should be before we allow an address to be evicted from tried */
-static constexpr auto ADDRMAN_REPLACEMENT{4h};
-/** The maximum number of tried addr collisions to store */
-static constexpr size_t ADDRMAN_SET_TRIED_COLLISION_SIZE{10};
-/** The maximum time we'll spend trying to resolve a tried table collision */
-static constexpr auto ADDRMAN_TEST_WINDOW{40min};
 
 int AddrInfo::GetTriedBucket(const uint256& nKey, const NetGroupManager& netgroupman) const
 {
