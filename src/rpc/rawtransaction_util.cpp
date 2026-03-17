@@ -346,6 +346,9 @@ void SignTransactionResultToJSON(CMutableTransaction& mtx, bool complete, const 
 
 std::vector<RPCResult> TxDoc(const TxDocOptions& opts)
 {
+    const std::string fee_doc{opts.fee_doc.value_or(
+        "transaction fee in " + CURRENCY_UNIT + ", omitted if block undo data is not available")};
+
     auto vin_inner = std::vector<RPCResult>{
         {RPCResult::Type::STR_HEX, "coinbase", /*optional=*/true, "The coinbase value (only if coinbase transaction)"},
         {RPCResult::Type::STR_HEX, "txid", /*optional=*/true, "The transaction id (if not coinbase transaction)"},
@@ -361,14 +364,15 @@ std::vector<RPCResult> TxDoc(const TxDocOptions& opts)
         }},
     };
     if (opts.prevout) {
-        vin_inner.emplace_back(RPCResult::Type::OBJ, "prevout", /*optional=*/true,
-        "The previous output, omitted if block undo data is not available",
-        std::vector<RPCResult>{
-            {RPCResult::Type::BOOL, "generated", "Coinbase or not"},
-            {RPCResult::Type::NUM, "height", "The height of the prevout"},
-            {RPCResult::Type::STR_AMOUNT, "value", "The value in " + CURRENCY_UNIT},
-            {RPCResult::Type::OBJ, "scriptPubKey", "", ScriptPubKeyDoc()},
-        });
+        vin_inner.emplace_back(
+            RPCResult::Type::OBJ, "prevout", /*optional=*/true, opts.prevout_doc,
+            std::vector<RPCResult>{
+                {RPCResult::Type::BOOL, "generated", "Coinbase or not"},
+                {RPCResult::Type::NUM, "height", "The height of the prevout"},
+                {RPCResult::Type::STR_AMOUNT, "value", "The value in " + CURRENCY_UNIT},
+                {RPCResult::Type::OBJ, "scriptPubKey", "", ScriptPubKeyDoc()},
+            }
+        );
     }
     vin_inner.emplace_back(RPCResult::Type::NUM, "sequence", "The script sequence number");
 
@@ -402,7 +406,7 @@ std::vector<RPCResult> TxDoc(const TxDocOptions& opts)
         {RPCResult::Type::NUM_TIME, "locktime", "The lock time"},
         {RPCResult::Type::ARR, "vin", "",
         {
-            {RPCResult::Type::OBJ, "", "", std::move(vin_inner)},
+            {RPCResult::Type::OBJ, "", opts.vin_inner_elision ? opts.vin_item_doc : "", std::move(vin_inner)},
         }},
         {RPCResult::Type::ARR, "vout", "",
         {
@@ -419,12 +423,19 @@ std::vector<RPCResult> TxDoc(const TxDocOptions& opts)
         }},
     };
 
+    if (opts.fee) fields.emplace_back(RPCResult::Type::NUM, "fee", /*optional=*/true, fee_doc);
+    if (opts.hex) fields.emplace_back(RPCResult::Type::STR_HEX, "hex", "The hex-encoded transaction data");
+
     if (opts.elision_description || opts.elision_description_silent) {
         const bool silent = opts.elision_description_silent;
         std::vector<RPCResult> new_fields;
         new_fields.reserve(fields.size());
         bool first = true;
         for (const auto& f : fields) {
+            if (!silent && f.m_key_name == "fee") {
+                new_fields.push_back(f);
+                continue;
+            }
             if (f.m_key_name == "vin" && opts.vin_inner_elision) {
                 new_fields.push_back(f);
                 continue;
