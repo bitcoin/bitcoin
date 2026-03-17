@@ -1073,6 +1073,9 @@ public:
     std::map<std::vector<unsigned char>, std::vector<unsigned char>> unknown;
     std::set<PSBTProprietary> m_proprietary;
 
+    uint32_t tx_version;
+    std::optional<uint32_t> fallback_locktime;
+
     bool IsNull() const;
     uint32_t GetVersion() const;
 
@@ -1203,6 +1206,8 @@ public:
                             throw std::ios_base::failure("Unsigned tx does not have empty scriptSigs and scriptWitnesses.");
                         }
                     }
+                    tx_version = tx->version;
+                    fallback_locktime = tx->nLockTime;
                     break;
                 }
                 case PSBT_GLOBAL_XPUB:
