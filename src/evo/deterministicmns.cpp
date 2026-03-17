@@ -1418,6 +1418,13 @@ bool CDeterministicMNManager::DoMaintenance(bool bForceFlush) {
         const size_t cache_entry_count{m_evoDb->GetReadWriteCacheSize()};
         const size_t erase_entry_count{m_evoDb->GetEraseCacheSize()};
 
+        // Shutdown can call the forced flush path twice. If the first pass already
+        // persisted all dirty EvoDB state, avoid rescanning and rewriting the
+        // persisted snapshot window again on the second pass.
+        if (cache_entry_count == 0 && erase_entry_count == 0) {
+            return true;
+        }
+
         EvoEraseSet skipped_persisted;
         skipped_persisted.reserve(cache_entry_count + erase_entry_count);
         m_evoDb->ForEachEraseEntry([&](const uint256& key) {

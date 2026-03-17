@@ -341,16 +341,18 @@ void Shutdown(NodeContext& node)
     GetMainSignals().FlushBackgroundCallbacks();
 
     // Stop and delete all indexes only after flushing background callbacks.
-    if (g_txindex) {
-        g_txindex->Stop();
-        g_txindex.reset();
+    {
+        if (g_txindex) {
+            g_txindex->Stop();
+            g_txindex.reset();
+        }
+        if (g_coin_stats_index) {
+            g_coin_stats_index->Stop();
+            g_coin_stats_index.reset();
+        }
+        ForEachBlockFilterIndex([](BlockFilterIndex& index) { index.Stop(); });
+        DestroyAllBlockFilterIndexes();
     }
-    if (g_coin_stats_index) {
-        g_coin_stats_index->Stop();
-        g_coin_stats_index.reset();
-    }
-    ForEachBlockFilterIndex([](BlockFilterIndex& index) { index.Stop(); });
-    DestroyAllBlockFilterIndexes();
     UninterruptibleSleep(std::chrono::milliseconds{100});
 
     // Any future callbacks will be dropped. This should absolutely be safe - if
@@ -374,16 +376,18 @@ void Shutdown(NodeContext& node)
         }
         UninterruptibleSleep(std::chrono::milliseconds{200});
 
-        pnevmtxrootsdb.reset();
-        pnevmtxmintdb.reset();
-        pblockindexdb.reset();
-        pnevmdatadb.reset();
-        pnevmdatablobdb.reset();
-        llmq::DestroyLLMQSystem();
-        deterministicMNManager.reset();
-        netfulfilledman.reset();
-        sporkManager.reset();
-        mmetaman.reset();
+        {
+            pnevmtxrootsdb.reset();
+            pnevmtxmintdb.reset();
+            pblockindexdb.reset();
+            pnevmdatadb.reset();
+            pnevmdatablobdb.reset();
+            llmq::DestroyLLMQSystem();
+            deterministicMNManager.reset();
+            netfulfilledman.reset();
+            sporkManager.reset();
+            mmetaman.reset();
+        }
 
     }
     for (const auto& client : node.chain_clients) {
