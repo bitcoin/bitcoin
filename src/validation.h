@@ -1349,7 +1349,7 @@ extern std::unique_ptr<CBlockIndexDB> pblockindexdb;
 // SYSCOIN
 static const unsigned int DEFAULT_RPC_SERIALIZE_VERSION = 1;
 int RPCSerializationFlags();
-bool DisconnectNEVMCommitment(BlockValidationState& state, std::vector<uint256> &vecNEVMBlocks, const CBlock& block, const uint32_t& nHeight, const uint256& nBlockHash, const CDeterministicMNListNEVMAddressDiff &diff) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
+bool DisconnectNEVMCommitment(ChainstateManager& chainman, BlockValidationState& state, std::vector<uint256> &vecNEVMBlocks, const CBlock& block, const uint32_t& nHeight, const uint256& nBlockHash, const CDeterministicMNListNEVMAddressDiff &diff) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
 bool GetNEVMData(BlockValidationState& state, const CBlock& block, CNEVMHeader &evmBlock, std::vector<unsigned char>* coinbase_payload = nullptr);
 bool FillNEVMData(CBlock &block);
 bool EraseNEVMData(const NEVMDataVec &NEVMDataVecOut);
