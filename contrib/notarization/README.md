@@ -14,7 +14,7 @@ This guide explains how to sign and notarize Syscoin QT binaries for macOS distr
 
 ## Quick Start
 
-For Syscoin 5.0.5 release:
+For Syscoin 5.1.0 release:
 
 ### Option 1: Run all steps automatically
 ```bash
@@ -25,13 +25,13 @@ xcrun notarytool store-credentials "syscoin-notary" \
     --team-id "ZF84YCPK58"
 
 # Run all steps
-./notarize-all.sh 5.0.5
+./notarize-all.sh 5.1.0
 ```
 
 ### Option 2: Run steps individually
 ```bash
 # 1. Sign the binaries
-./sign-mac-binaries.sh 5.0.5
+./sign-mac-binaries.sh 5.1.0
 
 # 2. Set up Apple ID credentials (one-time)
 export APPLE_ID="your-email@example.com"
@@ -40,10 +40,10 @@ xcrun notarytool store-credentials "syscoin-notary" \
     --team-id "ZF84YCPK58"
 
 # 3. Notarize the signed binaries
-./notarize-mac-binaries.sh 5.0.5
+./notarize-mac-binaries.sh 5.1.0
 
 # 4. Staple the notarization tickets
-./staple-notarization.sh 5.0.5
+./staple-notarization.sh 5.1.0
 ```
 
 ## Detailed Steps
@@ -68,7 +68,7 @@ The `sign-mac-binaries.sh` script will:
 
 ```bash
 ./sign-mac-binaries.sh <version>
-# Example: ./sign-mac-binaries.sh 5.0.5
+# Example: ./sign-mac-binaries.sh 5.1.0
 ```
 
 This creates:
@@ -101,7 +101,7 @@ To create an app-specific password:
 
 ```bash
 ./notarize-mac-binaries.sh <version>
-# Example: ./notarize-mac-binaries.sh 5.0.5
+# Example: ./notarize-mac-binaries.sh 5.1.0
 ```
 
 This will:
@@ -113,7 +113,7 @@ This will:
 
 ```bash
 ./staple-notarization.sh <version>
-# Example: ./staple-notarization.sh 5.0.5
+# Example: ./staple-notarization.sh 5.1.0
 ```
 
 This creates the final distribution packages:

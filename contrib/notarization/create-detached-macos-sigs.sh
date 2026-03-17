@@ -5,7 +5,7 @@ set -e
 # Check for version parameter
 if [ -z "$1" ]; then
     echo "Usage: $0 <version> [cert-path]"
-    echo "Example: $0 5.0.5 /path/to/codesign.p12"
+    echo "Example: $0 5.1.0 /path/to/codesign.p12"
     echo ""
     echo "This script creates detached signatures for macOS binaries from Guix builds."
     echo "If cert-path is not provided, it will use the certificate from Keychain."

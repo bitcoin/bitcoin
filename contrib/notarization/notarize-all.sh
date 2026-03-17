@@ -4,7 +4,7 @@ set -e
 
 if [ -z "$1" ]; then
     echo "Usage: $0 <version>"
-    echo "Example: $0 5.0.5"
+    echo "Example: $0 5.1.0"
     echo ""
     echo "This script will run all notarization steps:"
     echo "1. Sign the binaries"
