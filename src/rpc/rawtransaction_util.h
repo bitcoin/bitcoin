@@ -65,7 +65,16 @@ struct TxDocOptions {
     std::optional<std::string> elision_description{};
     /// Include prevout field
     bool prevout{false};
-
+    /// Include fee field
+    bool fee{false};
+    /// Include hex field
+    bool hex{false};
+    /// Customize the vin item object's description
+    std::string vin_item_doc{"utxo being spent"};
+    /// Customize the prevout field's description
+    std::string prevout_doc{"The previous output, omitted if block undo data is not available"};
+    /// Customize the fee field's description
+    std::optional<std::string> fee_doc{};
     /// When true, silently elide all top-level fields with no summary text.
     /// Mutually exclusive with elision_description.
     bool elision_description_silent{false};
