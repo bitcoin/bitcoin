@@ -112,14 +112,13 @@ bool ExternalSigner::SignTransaction(PartiallySignedTransaction& psbtx, std::str
         return false;
     }
 
-    PartiallySignedTransaction signer_psbtx;
-    std::string signer_psbt_error;
-    if (!DecodeBase64PSBT(signer_psbtx, signer_result.find_value("psbt").get_str(), signer_psbt_error)) {
-        error = strprintf("TX decode failed %s", signer_psbt_error);
+    util::Result<PartiallySignedTransaction> signer_psbtx = DecodeBase64PSBT(signer_result.find_value("psbt").get_str());
+    if (!signer_psbtx) {
+        error = strprintf("TX decode failed %s", util::ErrorString(signer_psbtx).original);
         return false;
     }
 
-    psbtx = signer_psbtx;
+    psbtx = *signer_psbtx;
 
     return true;
 }
