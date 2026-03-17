@@ -72,11 +72,11 @@ public:
     void SwitchToNextAsset(CConnman& connman);
 
     void ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStream& vRecv) const;
-    void ProcessTick(CConnman& connman, const PeerManager& peerman, ChainstateManager& chainman);
+    void ProcessTick(CConnman& connman, const PeerManager& peerman);
     void NotifyHeaderTip(const CBlockIndex *pindexNew);
     void UpdatedBlockTip(const CBlockIndex *pindexNew, ChainstateManager& chainman, bool fInitialDownload);
 
-    void DoMaintenance(CConnman &connman, const PeerManager& peerman, ChainstateManager& chainman);
+    void DoMaintenance(CConnman &connman, const PeerManager& peerman);
 };
 
 #endif // SYSCOIN_MASTERNODE_MASTERNODESYNC_H

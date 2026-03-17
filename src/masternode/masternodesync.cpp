@@ -116,7 +116,7 @@ void CMasternodeSync::ProcessMessage(CNode* pfrom, const std::string& strCommand
     }
 }
 
-void CMasternodeSync::ProcessTick(CConnman& connman, const PeerManager& peerman, ChainstateManager& chainman)
+void CMasternodeSync::ProcessTick(CConnman& connman, const PeerManager& peerman)
 {
     static int nTick = 0;
     nTick++;
@@ -140,18 +140,6 @@ void CMasternodeSync::ProcessTick(CConnman& connman, const PeerManager& peerman,
 
     nTimeLastProcess = GetTime();
     const CConnman::NodesSnapshot snap{connman, /* filter = */ FullyConnectedOnly};
-    if (nMode == MASTERNODE_SYNC_BLOCKCHAIN && !ReachedBestHeader()) {
-        const bool fReachedBestHeaderNow = WITH_LOCK(cs_main, {
-            const CBlockIndex* pindexBestHeader = chainman.m_best_header;
-            const CBlockIndex* pindexActiveTip = chainman.ActiveChain().Tip();
-            return pindexBestHeader != nullptr && pindexActiveTip != nullptr && pindexBestHeader == pindexActiveTip;
-        });
-        if (fReachedBestHeaderNow) {
-            fReachedBestHeader = true;
-            LogPrint(BCLog::MNSYNC, "CMasternodeSync::ProcessTick -- reached best header without new tip update\n");
-        }
-    }
-
     // Gradually request the rest of the votes after sync finished and make sure
     // we recover latest CLSIG/BTCCSIG after startup if local state is still empty.
     if(IsSynced()) {
@@ -446,9 +434,9 @@ void CMasternodeSync::UpdatedBlockTip(const CBlockIndex *pindexNew, ChainstateMa
                 pindexNew->nHeight, pindexTip->nHeight, fInitialDownload, ReachedBestHeader());
 }
 
-void CMasternodeSync::DoMaintenance(CConnman &connman, const PeerManager& peerman, ChainstateManager& chainman)
+void CMasternodeSync::DoMaintenance(CConnman &connman, const PeerManager& peerman)
 {
     if (ShutdownRequested()) return;
 
-    ProcessTick(connman, peerman, chainman);
+    ProcessTick(connman, peerman);
 }
