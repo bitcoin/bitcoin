@@ -29,6 +29,7 @@ def format_config_display(
     dbcache: int,
     machine_id: str | None = None,
     instrumentation: str | None = None,
+    noassumevalid: bool = False,
 ) -> str:
     """Format config for display.
 
@@ -36,6 +37,7 @@ def format_config_display(
         dbcache: DB cache size in MB
         machine_id: Machine ID (e.g., "amd64", "arm64")
         instrumentation: Instrumentation mode (e.g., "instrumented", "uninstrumented")
+        noassumevalid: Whether assumevalid=0 was used
 
     Returns:
         Display string like "dbcache=450MB (amd64, instrumented)"
@@ -45,8 +47,8 @@ def format_config_display(
         'dbcache=450MB'
         >>> format_config_display(32000, "amd64")
         'dbcache=32GB (amd64)'
-        >>> format_config_display(450, "arm64", "instrumented")
-        'dbcache=450MB (arm64, instrumented)'
+        >>> format_config_display(450, noassumevalid=True)
+        'dbcache=450MB (assumevalid=0)'
     """
     # Format dbcache with unit
     if dbcache >= 1000:
@@ -60,29 +62,35 @@ def format_config_display(
         parts.append(machine_id)
     if instrumentation and instrumentation != "uninstrumented":
         parts.append(instrumentation)
+    if noassumevalid:
+        parts.append("assumevalid=0")
 
     if parts:
         return f"dbcache={cache_str} ({', '.join(parts)})"
     return f"dbcache={cache_str}"
 
 
-def parse_network_name(network: str) -> tuple[int, str]:
-    """Parse a network/config name to extract dbcache and instrumentation.
+def parse_network_name(network: str) -> tuple[int, str, bool]:
+    """Parse a network/config name to extract dbcache, instrumentation, and noassumevalid.
 
     Args:
-        network: Network name like "450-uninstrumented", "32000-instrumented", "450", "32000"
+        network: Network name like "450-uninstrumented", "noav-32000-uninstrumented", "450"
 
     Returns:
-        Tuple of (dbcache_int, instrumentation_str)
+        Tuple of (dbcache_int, instrumentation_str, noassumevalid_bool)
 
     Examples:
         >>> parse_network_name("450-uninstrumented")
-        (450, 'uninstrumented')
-        >>> parse_network_name("32000-instrumented")
-        (32000, 'instrumented')
+        (450, 'uninstrumented', False)
+        >>> parse_network_name("noav-32000-uninstrumented")
+        (32000, 'uninstrumented', True)
         >>> parse_network_name("450")
-        (450, 'uninstrumented')
+        (450, 'uninstrumented', False)
     """
+    noassumevalid = network.startswith("noav-")
+    if noassumevalid:
+        network = network[len("noav-"):]
+
     parts = network.split("-")
     try:
         dbcache = int(parts[0])
@@ -90,7 +98,7 @@ def parse_network_name(network: str) -> tuple[int, str]:
         dbcache = 0
 
     instrumentation = parts[1] if len(parts) > 1 else "uninstrumented"
-    return dbcache, instrumentation
+    return dbcache, instrumentation, noassumevalid
 
 
 @dataclass
@@ -467,9 +475,9 @@ class ReportGenerator:
 
         runs_data = []
         for run in sorted_runs:
-            dbcache, instrumentation = parse_network_name(run.network)
+            dbcache, instrumentation, noassumevalid = parse_network_name(run.network)
             config_display = format_config_display(
-                dbcache, instrumentation=instrumentation
+                dbcache, instrumentation=instrumentation, noassumevalid=noassumevalid
             )
             runs_data.append(
                 {
@@ -522,14 +530,18 @@ class ReportGenerator:
         pr_chart_data = []
 
         for config, data in sorted(nightly_comparison.items()):
+            noassumevalid = config.startswith("noav-")
+            raw = config[len("noav-"):] if noassumevalid else config
             try:
-                dbcache = int(config)
+                dbcache = int(raw)
             except ValueError:
                 dbcache = 0
 
             result[config] = {
                 **data,
-                "config_display": format_config_display(dbcache),
+                "config_display": format_config_display(
+                    dbcache, noassumevalid=noassumevalid
+                ),
             }
 
             if data.get("nightly_mean"):

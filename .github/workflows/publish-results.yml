@@ -12,8 +12,8 @@ jobs:
       contents: write
       checks: read
     env:
-      # Matrix entries from configs/pr.toml: dbcache=[450,32000] x instrumentation=[uninstrumented,instrumented]
-      NETWORKS: "450-uninstrumented,450-instrumented,32000-uninstrumented,32000-instrumented"
+      # Matrix entries from configs/pr.toml + pr-noassumevalid.toml
+      NETWORKS: "450-uninstrumented,450-instrumented,32000-uninstrumented,32000-instrumented,noav-450-uninstrumented,noav-32000-uninstrumented"
     outputs:
       comparison: ${{ steps.generate.outputs.comparison }}
       pr-number: ${{ steps.metadata.outputs.pr-number }}

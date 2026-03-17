@@ -97,3 +97,73 @@ jobs:
         with:
           name: run-metadata-${{ matrix.name }}
           path: ${{ runner.temp }}/contexts/
+
+  benchmark-noav:
+    needs: build-binary
+    strategy:
+      matrix:
+        name: [450-uninstrumented, 32000-uninstrumented]
+    runs-on: [self-hosted, linux, x64]
+    timeout-minutes: 600
+    env:
+      ORIGINAL_DATADIR: /data/pruned-840k
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+
+      - name: Download binaries
+        uses: actions/download-artifact@v4
+        with:
+          name: bitcoind-binaries
+          path: ${{ runner.temp }}/binaries
+
+      - name: Set binary permissions
+        run: |
+          chmod +x ${{ runner.temp }}/binaries/pr/bitcoind
+
+      - name: Run benchmark
+        run: |
+          nix develop --command python3 bench.py run \
+            --benchmark-config bench/configs/pr-noassumevalid.toml \
+            --matrix-entry ${{ matrix.name }} \
+            --datadir $ORIGINAL_DATADIR \
+            --tmp-datadir ${{ runner.temp }}/datadir \
+            --output-dir ${{ runner.temp }}/output \
+            pr:${{ runner.temp }}/binaries/pr/bitcoind
+
+      - name: Upload results
+        uses: actions/upload-artifact@v4
+        with:
+          name: result-noav-${{ matrix.name }}
+          path: ${{ runner.temp }}/output/results.json
+
+      - name: Upload flamegraphs
+        uses: actions/upload-artifact@v4
+        with:
+          name: flamegraph-noav-${{ matrix.name }}
+          path: ${{ runner.temp }}/output/*-flamegraph.svg
+          if-no-files-found: ignore
+
+      - name: Upload debug logs
+        uses: actions/upload-artifact@v4
+        with:
+          name: debug-logs-noav-${{ matrix.name }}
+          path: ${{ runner.temp }}/output/*-debug.log
+          if-no-files-found: ignore
+
+      - name: Write context metadata
+        env:
+          GITHUB_CONTEXT: ${{ toJSON(github) }}
+          RUNNER_CONTEXT: ${{ toJSON(runner) }}
+        run: |
+          mkdir -p ${{ runner.temp }}/contexts
+          echo "$GITHUB_CONTEXT" | nix develop --command jq "del(.token)" > ${{ runner.temp }}/contexts/github.json
+          echo "$RUNNER_CONTEXT" > ${{ runner.temp }}/contexts/runner.json
+
+      - name: Upload context metadata
+        uses: actions/upload-artifact@v4
+        with:
+          name: run-metadata-noav-${{ matrix.name }}
+          path: ${{ runner.temp }}/contexts/
