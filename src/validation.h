@@ -962,6 +962,8 @@ private:
         return cs && !cs->m_disabled;
     }
 
+    std::atomic<uint32_t> m_skip_external_nevm_notifies_until_height{0};
+
 public:
     using Options = kernel::ChainstateManagerOpts;
 
@@ -979,6 +981,8 @@ public:
     kernel::Notifications& GetNotifications() const { return m_options.notifications; };
     // SYSCOIN
     std::vector<std::string> GethCommandLine() const { return m_options.geth_commandline; };
+    void SetSkipExternalNEVMNotifiesUntilHeight(uint32_t height) { m_skip_external_nevm_notifies_until_height = height; }
+    uint32_t GetSkipExternalNEVMNotifiesUntilHeight() const { return m_skip_external_nevm_notifies_until_height.load(); }
     /**
      * Make various assertions about the state of the block index.
      *
@@ -1345,7 +1349,7 @@ extern std::unique_ptr<CBlockIndexDB> pblockindexdb;
 // SYSCOIN
 static const unsigned int DEFAULT_RPC_SERIALIZE_VERSION = 1;
 int RPCSerializationFlags();
-bool DisconnectNEVMCommitment(BlockValidationState& state, std::vector<uint256> &vecNEVMBlocks, const CBlock& block, const CDeterministicMNListNEVMAddressDiff &diff) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
+bool DisconnectNEVMCommitment(BlockValidationState& state, std::vector<uint256> &vecNEVMBlocks, const CBlock& block, const uint32_t& nHeight, const uint256& nBlockHash, const CDeterministicMNListNEVMAddressDiff &diff) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
 bool GetNEVMData(BlockValidationState& state, const CBlock& block, CNEVMHeader &evmBlock, std::vector<unsigned char>* coinbase_payload = nullptr);
 bool FillNEVMData(CBlock &block);
 bool EraseNEVMData(const NEVMDataVec &NEVMDataVecOut);

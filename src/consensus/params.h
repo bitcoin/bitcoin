@@ -172,6 +172,7 @@ struct Params {
     int nPODAStartBlock;
     int nNexusStartBlock;
     int nV19StartBlock;
+    int nNEVMBootstrapBypassHeight{0};
     uint64_t nMinMNSubsidySats;
         
     int nSuperblockStartBlock;

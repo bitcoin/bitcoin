@@ -207,6 +207,7 @@ public:
         consensus.nPODAStartBlock = 1586000;
         consensus.nV19StartBlock = 1586000;
         consensus.nNexusStartBlock = 2010345;
+        consensus.nNEVMBootstrapBypassHeight = 2198529;
         consensus.DIP0003Height = 1004200;
         consensus.DIP0003EnforcementHeight = 1004200;
         /**
@@ -366,6 +367,7 @@ public:
         consensus.nPODAStartBlock = 1022500;
         consensus.nV19StartBlock = 1063000;
         consensus.nNexusStartBlock = 1505000;
+        consensus.nNEVMBootstrapBypassHeight = 1702236;
         consensus.DIP0003Height = 545000;
         consensus.DIP0003EnforcementHeight = 545000;
         pchMessageStart[0] = 0xce;

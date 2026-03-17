@@ -1911,6 +1911,21 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
                 }
             }
             LogPrintf("Geth nHeightFromGeth %d nHeightLocalGeth %d\n", nHeightFromGeth, nHeightLocalGeth);
+            {
+                const auto& consensus = Params().GetConsensus();
+                const auto& cmdLine = chainman.GethCommandLine();
+                const bool bootstrap_disabled = std::find(cmdLine.begin(), cmdLine.end(), "--syscoin.statebootstrap.disable") != cmdLine.end();
+                const uint32_t bypass_height = !bootstrap_disabled &&
+                                               consensus.nNEVMBootstrapBypassHeight > 0 &&
+                                               nHeightFromGeth > 0 &&
+                                               (nHeightFromGeth + consensus.nNEVMStartBlock - 1) >= consensus.nNEVMBootstrapBypassHeight
+                                                   ? consensus.nNEVMBootstrapBypassHeight
+                                                   : 0;
+                chainman.SetSkipExternalNEVMNotifiesUntilHeight(bypass_height);
+                if (bypass_height > 0) {
+                    LogPrintf("Skipping external NEVM notify calls through bootstrap base height %u\n", bypass_height);
+                }
+            }
             // local height is higher so we need to rollback to geth height
             if(nHeightFromGeth > 0) {
                 if((int64_t)nHeightFromGeth < nHeightLocalGeth) {

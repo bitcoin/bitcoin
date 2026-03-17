@@ -2241,6 +2241,16 @@ bool GetNEVMData(BlockValidationState& state, const CBlock& block, CNEVMHeader &
     }
     return true;
 }
+
+static bool ShouldBypassExternalNEVMNotifyCalls(const ChainstateManager& chainman, uint32_t nHeight)
+{
+    if (!fNEVMConnection || fRegTest) {
+        return false;
+    }
+    const uint32_t bypass_height = chainman.GetSkipExternalNEVMNotifiesUntilHeight();
+    return bypass_height > 0 && nHeight <= bypass_height;
+}
+
 bool Chainstate::ConnectNEVMCommitment(BlockValidationState& state, NEVMTxRootMap &mapNEVMTxRoots, const CBlock& block, const CBlockIndex* pindex, const uint256& nBlockHash, const uint32_t& nHeight, const bool fJustCheck, PoDAMAPMemory &mapPoDA, const CDeterministicMNListNEVMAddressDiff &diff) {
     CNEVMHeader nevmBlockHeader;
     std::vector<unsigned char> coinbase_payload;
@@ -2284,7 +2294,8 @@ bool Chainstate::ConnectNEVMCommitment(BlockValidationState& state, NEVMTxRootMa
         }
     }
     std::string stateStr;
-    if(fNEVMConnection) {
+    const bool bypass_external_notify = ShouldBypassExternalNEVMNotifyCalls(m_chainman, nHeight);
+    if(fNEVMConnection && !bypass_external_notify) {
         GetMainSignals().NotifyNEVMBlockConnect(nevmBlockHeader, block, stateStr, fJustCheck? uint256(): nBlockHash, NEVMDataVecOut, nHeight, bSkipValidation, btcPrevHashForNEVM, diff);
         if(!stateStr.empty()) {
             state.Invalid(BlockValidationResult::BLOCK_INVALID_HEADER, stateStr);
@@ -2334,12 +2345,12 @@ bool Chainstate::ConnectNEVMCommitment(BlockValidationState& state, NEVMTxRootMa
 
     return res;
 }
-bool DisconnectNEVMCommitment(BlockValidationState& state, std::vector<uint256> &vecNEVMBlocks, const CBlock& block, const uint256& nBlockHash, const CDeterministicMNListNEVMAddressDiff &diff) {
+bool DisconnectNEVMCommitment(BlockValidationState& state, std::vector<uint256> &vecNEVMBlocks, const CBlock& block, const uint32_t& nHeight, const uint256& nBlockHash, const CDeterministicMNListNEVMAddressDiff &diff) {
     CNEVMHeader evmBlock;
     if(!GetNEVMData(state, block, evmBlock)) {
         return false; // state filled by GetNEVMData
     }
-    if(fNEVMConnection) {
+    if(fNEVMConnection && !ShouldBypassExternalNEVMNotifyCalls(m_chainman, nHeight)) {
         std::string stateStr;
         GetMainSignals().NotifyNEVMBlockDisconnect(stateStr, nBlockHash, diff);
         if(!stateStr.empty()) {
@@ -2569,7 +2580,7 @@ DisconnectResult Chainstate::DisconnectBlock(const CBlock& block, const CBlockIn
     }
     BlockValidationState state;
     bool bRegTestContext = !fRegTest || (fRegTest && fNEVMConnection);
-    if(bRegTestContext && bReverify && pindex->nHeight >= params.nNEVMStartBlock && !DisconnectNEVMCommitment(state, vecNEVMBlocks, block, block.GetHash(), diffNEVM)) {
+    if(bRegTestContext && bReverify && pindex->nHeight >= params.nNEVMStartBlock && !DisconnectNEVMCommitment(state, vecNEVMBlocks, block, pindex->nHeight, block.GetHash(), diffNEVM)) {
         const std::string errStr = strprintf("DisconnectBlock(): NEVM block failed to disconnect: %s\n", state.ToString().c_str());
         error(errStr.c_str());
         return DISCONNECT_FAILED;
