@@ -429,7 +429,7 @@ void UpdatePSBTOutput(const SigningProvider& provider, PartiallySignedTransactio
     psbt_out.FromSignatureData(sigdata);
 }
 
-PrecomputedTransactionData PrecomputePSBTData(const PartiallySignedTransaction& psbt)
+std::optional<PrecomputedTransactionData> PrecomputePSBTData(const PartiallySignedTransaction& psbt)
 {
     const CMutableTransaction& tx = *psbt.tx;
     bool have_all_spent_outputs = true;
@@ -602,7 +602,11 @@ bool FinalizePSBT(PartiallySignedTransaction& psbtx)
     //   PartiallySignedTransaction did not understand them), this will combine them into a final
     //   script.
     bool complete = true;
-    const PrecomputedTransactionData txdata = PrecomputePSBTData(psbtx);
+    std::optional<PrecomputedTransactionData> txdata_res = PrecomputePSBTData(psbtx);
+    if (!txdata_res) {
+        return false;
+    }
+    const PrecomputedTransactionData& txdata = *txdata_res;
     for (unsigned int i = 0; i < psbtx.inputs.size(); ++i) {
         PSBTInput& input = psbtx.inputs.at(i);
         complete &= (SignPSBTInput(DUMMY_SIGNING_PROVIDER, psbtx, i, &txdata, input.sighash_type, nullptr, true) == PSBTError::OK);
