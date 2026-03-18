@@ -2739,7 +2739,7 @@ static RPCHelpMan getdescriptoractivity()
                         {RPCResult::Type::OBJ, "output_spk", "", ScriptPubKeyDoc()},
                     }},
                     // TODO is the skip_type_check avoidable with a heterogeneous ARR?
-                }, /*skip_type_check=*/true},
+                }, {.skip_type_check=true}, },
             },
         },
         RPCExamples{

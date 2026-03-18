@@ -705,7 +705,7 @@ RPCHelpMan gettransaction()
                         {RPCResult::Type::STR_HEX, "hex", "Raw data for transaction"},
                         {RPCResult::Type::OBJ, "decoded", /*optional=*/true, "The decoded transaction (only present when `verbose` is passed)",
                         {
-                            DecodeTxDoc(/*txid_field_doc=*/"The transaction id", /*wallet=*/true),
+                            TxDoc({.wallet = true}),
                         }},
                         RESULT_LAST_PROCESSED_BLOCK,
                     })

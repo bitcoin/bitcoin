@@ -248,7 +248,7 @@ static RPCHelpMan getrawtransaction()
                              {RPCResult::Type::NUM, "time", /*optional=*/true, "Same as \"blocktime\""},
                              {RPCResult::Type::STR_HEX, "hex", "The serialized, hex-encoded data for 'txid'"},
                          },
-                         DecodeTxDoc(/*txid_field_doc=*/"The transaction id (same as provided)", /*wallet=*/false)),
+                         TxDoc({.txid_field_doc="The transaction id (same as provided)"})),
                     },
                     RPCResult{"for verbosity = 2",
                         RPCResult::Type::OBJ, "", "",
@@ -422,7 +422,7 @@ static RPCHelpMan decoderawtransaction()
                 },
                 RPCResult{
                     RPCResult::Type::OBJ, "", "",
-                    DecodeTxDoc(/*txid_field_doc=*/"The transaction id", /*wallet=*/false),
+                    TxDoc(),
                 },
                 RPCExamples{
                     HelpExampleCli("decoderawtransaction", "\"hexstring\"")
@@ -781,9 +781,8 @@ const RPCResult decodepsbt_inputs{
         {RPCResult::Type::OBJ, "", "",
         {
             {RPCResult::Type::OBJ, "non_witness_utxo", /*optional=*/true, "Decoded network transaction for non-witness UTXOs",
-            {
-                {RPCResult::Type::ELISION, "",""},
-            }},
+                TxDoc({.elision_description="The layout is the same as the output of decoderawtransaction."})
+            },
             {RPCResult::Type::OBJ, "witness_utxo", /*optional=*/true, "Transaction output for witness UTXOs",
             {
                 {RPCResult::Type::NUM, "amount", "The value in " + CURRENCY_UNIT},
@@ -1023,9 +1022,8 @@ static RPCHelpMan decodepsbt()
                     RPCResult::Type::OBJ, "", "",
                     {
                         {RPCResult::Type::OBJ, "tx", "The decoded network-serialized unsigned transaction.",
-                        {
-                            {RPCResult::Type::ELISION, "", "The layout is the same as the output of decoderawtransaction."},
-                        }},
+                            TxDoc({.elision_description="The layout is the same as the output of decoderawtransaction."})
+                        },
                         {RPCResult::Type::ARR, "global_xpubs", "",
                         {
                             {RPCResult::Type::OBJ, "", "",

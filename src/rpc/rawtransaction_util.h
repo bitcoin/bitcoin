@@ -56,7 +56,15 @@ void AddOutputs(CMutableTransaction& rawTx, const UniValue& outputs_in);
 /** Create a transaction from univalue parameters */
 CMutableTransaction ConstructTransaction(const UniValue& inputs_in, const UniValue& outputs_in, const UniValue& locktime, std::optional<bool> rbf, uint32_t version);
 
+struct TxDocOptions {
+    /// The description of the txid field
+    std::string txid_field_doc{"The transaction id"};
+    /// Include wallet-related fields (e.g. ischange on outputs)
+    bool wallet{false};
+    /// Treat this as an elided Result in the help
+    std::optional<std::string> elision_description{};
+};
 /** Explain the UniValue "decoded" transaction object, may include extra fields if processed by wallet **/
-std::vector<RPCResult> DecodeTxDoc(const std::string& txid_field_doc, bool wallet);
+std::vector<RPCResult> TxDoc(const TxDocOptions& opts = {});
 
 #endif // BITCOIN_RPC_RAWTRANSACTION_UTIL_H
