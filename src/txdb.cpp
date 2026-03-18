@@ -106,7 +106,6 @@ std::vector<uint256> CCoinsViewDB::GetHeadBlocks() const {
 void CCoinsViewDB::BatchWrite(CoinsViewCacheCursor& cursor, const uint256& block_hash)
 {
     CDBBatch batch(*m_db);
-    size_t count = 0;
     const size_t dirty_count{cursor.GetDirtyCount()};
     assert(!block_hash.IsNull());
 
@@ -135,15 +134,13 @@ void CCoinsViewDB::BatchWrite(CoinsViewCacheCursor& cursor, const uint256& block
     batch.Write(DB_HEAD_BLOCKS, Vector(block_hash, old_tip));
 
     for (auto it{cursor.Begin()}; it != cursor.End();) {
-        if (it->second.IsDirty()) {
-            CoinEntry entry(&it->first);
-            if (it->second.coin.IsSpent()) {
-                batch.Erase(entry);
-            } else {
-                batch.Write(entry, it->second.coin);
-            }
+        assert(it->second.IsDirty());
+        CoinEntry entry(&it->first);
+        if (it->second.coin.IsSpent()) {
+            batch.Erase(entry);
+        } else {
+            batch.Write(entry, it->second.coin);
         }
-        count++;
         it = cursor.NextAndMaybeErase(*it);
         if (batch.ApproximateSize() > m_options.batch_write_bytes) {
             LogDebug(BCLog::COINDB, "Writing partial batch of %.2f MiB\n", batch.ApproximateSize() * (1.0 / 1048576.0));
@@ -166,7 +163,7 @@ void CCoinsViewDB::BatchWrite(CoinsViewCacheCursor& cursor, const uint256& block
 
     LogDebug(BCLog::COINDB, "Writing final batch of %.2f MiB\n", batch.ApproximateSize() * (1.0 / 1048576.0));
     m_db->WriteBatch(batch);
-    LogDebug(BCLog::COINDB, "Committed %u changed transaction outputs (out of %u) to coin database...", (unsigned int)dirty_count, (unsigned int)count);
+    LogDebug(BCLog::COINDB, "Committed %u changed transaction outputs to coin database...", dirty_count);
 }
 
 size_t CCoinsViewDB::EstimateSize() const
