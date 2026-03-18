@@ -210,6 +210,18 @@ void PSBTInput::FromSignatureData(const SignatureData& sigdata)
     for (const auto& [agg_key_lh, psigs] : sigdata.musig2_partial_sigs) {
         m_musig2_partial_sigs[agg_key_lh].insert(psigs.begin(), psigs.end());
     }
+    for (const auto& [hash, preimage] : sigdata.ripemd160_preimages) {
+        ripemd160_preimages.emplace(std::vector<unsigned char>(hash.begin(), hash.end()), preimage);
+    }
+    for (const auto& [hash, preimage] : sigdata.sha256_preimages) {
+        sha256_preimages.emplace(std::vector<unsigned char>(hash.begin(), hash.end()), preimage);
+    }
+    for (const auto& [hash, preimage] : sigdata.hash160_preimages) {
+        hash160_preimages.emplace(std::vector<unsigned char>(hash.begin(), hash.end()), preimage);
+    }
+    for (const auto& [hash, preimage] : sigdata.hash256_preimages) {
+        hash256_preimages.emplace(std::vector<unsigned char>(hash.begin(), hash.end()), preimage);
+    }
 }
 
 void PSBTInput::Merge(const PSBTInput& input)
@@ -268,6 +280,7 @@ void PSBTOutput::FillSignatureData(SignatureData& sigdata) const
 
         sigdata.tr_spenddata.internal_key = m_tap_internal_key;
         sigdata.tr_spenddata.Merge(spenddata);
+        sigdata.tr_builder = builder;
     }
     for (const auto& [pubkey, leaf_origin] : m_tap_bip32_paths) {
         sigdata.taproot_misc_pubkeys.emplace(pubkey, leaf_origin);
