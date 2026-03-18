@@ -2039,6 +2039,18 @@ ValidationCache::ValidationCache(const size_t script_execution_cache_bytes, cons
               approx_size_bytes >> 20, script_execution_cache_bytes >> 20, num_elems);
 }
 
+bool ValidationCache::IsScriptValidated(const uint256& entry, bool erase)
+{
+    AssertLockHeld(cs_main); //TODO: Remove this requirement by making CuckooCache not require external locks
+    return m_script_execution_cache.contains(entry, erase);
+}
+
+void ValidationCache::CacheScriptValidation(const uint256& entry)
+{
+    AssertLockHeld(cs_main); //TODO: Remove this requirement by making CuckooCache not require external locks
+    m_script_execution_cache.insert(entry);
+}
+
 /**
  * Check whether all of this transaction's input scripts succeed.
  *
@@ -2078,8 +2090,7 @@ bool CheckInputScripts(const CTransaction& tx, TxValidationState& state,
     uint256 hashCacheEntry;
     CSHA256 hasher = validation_cache.ScriptExecutionCacheHasher();
     hasher.Write(UCharCast(tx.GetWitnessHash().begin()), 32).Write((unsigned char*)&flags, sizeof(flags)).Finalize(hashCacheEntry.begin());
-    AssertLockHeld(cs_main); //TODO: Remove this requirement by making CuckooCache not require external locks
-    if (validation_cache.m_script_execution_cache.contains(hashCacheEntry, !cacheFullScriptStore)) {
+    if (validation_cache.IsScriptValidated(hashCacheEntry, !cacheFullScriptStore)) {
         return true;
     }
 
@@ -2127,7 +2138,7 @@ bool CheckInputScripts(const CTransaction& tx, TxValidationState& state,
     if (cacheFullScriptStore && !pvChecks) {
         // We executed all of the provided scripts, and were told to
         // cache the result. Do so now.
-        validation_cache.m_script_execution_cache.insert(hashCacheEntry);
+        validation_cache.CacheScriptValidation(hashCacheEntry);
     }
 
     return true;
