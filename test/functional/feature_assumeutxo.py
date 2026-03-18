@@ -38,6 +38,7 @@ from test_framework.util import (
     assert_equal,
     assert_not_equal,
     assert_raises_rpc_error,
+    dumb_sync_blocks,
     ensure_for,
     sha256sum_file,
     try_rpc,
@@ -631,30 +632,17 @@ class AssumeutxoTest(BitcoinTestFramework):
 
         PAUSE_HEIGHT = FINAL_HEIGHT - 40
 
-        self.log.info("Restarting node to stop at height %d", PAUSE_HEIGHT)
-        self.restart_node(1, extra_args=[
-            f"-stopatheight={PAUSE_HEIGHT}", *self.extra_args[1]])
-
-        # Upon restart during snapshot tip sync, the node must remain in 'limited' mode.
+        self.log.info(f"Sync node up to height {PAUSE_HEIGHT}")
+        # During snapshot tip sync, the node must remain in 'limited' mode.
         self.assert_only_network_limited_service(n1)
-
-        # Finally connect the nodes and let them sync.
-        #
-        # Set `wait_for_connect=False` to avoid a race between performing connection
-        # assertions and the -stopatheight tripping.
-        self.connect_nodes(0, 1, wait_for_connect=False)
-
-        n1.wait_until_stopped(timeout=5)
+        dumb_sync_blocks(src=n0, dst=n1, height=PAUSE_HEIGHT)
 
         self.log.info("Checking that blocks are segmented on disk")
         assert self.has_blockfile(n1, "00000"), "normal blockfile missing"
         assert self.has_blockfile(n1, "00001"), "assumed blockfile missing"
         assert not self.has_blockfile(n1, "00002"), "too many blockfiles"
 
-        self.log.info("Restarted node before snapshot validation completed, reloading...")
-        self.restart_node(1, extra_args=self.extra_args[1])
-
-        # Upon restart, the node must remain in 'limited' mode
+        # The node must remain in 'limited' mode
         self.assert_only_network_limited_service(n1)
 
         # Send snapshot block to n1 out of order. This makes the test less
