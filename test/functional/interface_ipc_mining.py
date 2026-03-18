@@ -4,6 +4,7 @@
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test the IPC (multiprocess) Mining interface."""
 import asyncio
+import shutil
 import time
 from contextlib import AsyncExitStack
 from io import BytesIO
@@ -403,6 +404,42 @@ class IPCMiningTest(BitcoinTestFramework):
 
         asyncio.run(capnp.run(async_routine()))
 
+    def run_low_height_test(self):
+        """Test that IPC createNewBlock() works at low block heights on a
+        clean chain. Currently fails with bad-cb-length and falls back to RPC."""
+        self.log.info("Running low block height test")
+
+        node = self.nodes[0]
+        self.stop_node(0)
+        # Clear chain data to start from genesis
+        shutil.rmtree(node.chain_path)
+        node.start()
+        node.wait_for_rpc_connection()
+        assert_equal(node.getblockcount(), 0)
+
+        async def async_routine():
+            ctx, mining = await make_mining_ctx(self)
+            opts = self.capnp_modules['mining'].BlockCreateOptions()
+
+            async with AsyncExitStack() as stack:
+                self.log.debug("Verify createNewBlock() fails at height 0 (bad-cb-length)")
+                try:
+                    # Disable cooldown to avoid hanging in the IBD loop on a fresh chain
+                    await mining_create_block_template(mining, stack, ctx, opts, cooldown=False)
+                    raise AssertionError("createNewBlock() should have failed at height 0")
+                except capnp.lib.capnp.KjException as e:
+                    assert_capnp_failed(e, "remote exception: std::exception: TestBlockValidity failed: bad-cb-length")
+
+                self.log.debug("Mine 16 blocks via generate RPC to pass BIP34 height threshold")
+                self.generate(node, 16, sync_fun=self.no_op)
+                assert_equal(node.getblockcount(), 16)
+
+                self.log.debug("Verify createNewBlock() now succeeds at height 16")
+                template = await mining_create_block_template(mining, stack, ctx, opts, cooldown=False)
+                assert template is not None
+
+        asyncio.run(capnp.run(async_routine()))
+
     def run_test(self):
         self.miniwallet = MiniWallet(self.nodes[0])
         self.default_block_create_options = self.capnp_modules['mining'].BlockCreateOptions()
@@ -411,6 +448,9 @@ class IPCMiningTest(BitcoinTestFramework):
         self.run_block_template_test()
         self.run_coinbase_and_submission_test()
         self.run_ipc_option_override_test()
+
+        # Needs to run last
+        self.run_low_height_test()
 
 
 if __name__ == '__main__':
