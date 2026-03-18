@@ -17,7 +17,6 @@ clang_prog=$(shell $(SHELL) $(.SHELLFLAGS) "command -v clang")
 clangxx_prog=$(shell $(SHELL) $(.SHELLFLAGS) "command -v clang++")
 
 darwin_AR=$(shell $(SHELL) $(.SHELLFLAGS) "command -v llvm-ar")
-darwin_DSYMUTIL=$(shell $(SHELL) $(.SHELLFLAGS) "command -v dsymutil")
 darwin_NM=$(shell $(SHELL) $(.SHELLFLAGS) "command -v llvm-nm")
 darwin_OBJCOPY=$(shell $(SHELL) $(.SHELLFLAGS) "command -v llvm-objcopy")
 darwin_OBJDUMP=$(shell $(SHELL) $(.SHELLFLAGS) "command -v llvm-objdump")
