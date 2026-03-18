@@ -15,6 +15,8 @@ import urllib.parse
 RPCSERVERTIMEOUT = 2
 # Set in httpserver.cpp and passed to libevent evhttp_set_max_headers_size()
 MAX_HEADERS_SIZE = 8192
+# Set in serialize.h and passed to libevent evhttp_set_max_body_size()
+MAX_SIZE = 0x02000000
 
 
 class BitcoinHTTPConnection:
@@ -44,6 +46,9 @@ class BitcoinHTTPConnection:
 
     def set_timeout(self, seconds):
         self.conn.sock.settimeout(seconds)
+
+    def add_header(self, key, value):
+        self.headers.update({key: value})
 
     def _request(self, method, path, data, connection_header, **kwargs):
         headers = self.headers.copy()
@@ -166,6 +171,57 @@ class HTTPBasicsTest (BitcoinTestFramework):
         response2 = conn.get(f'/{"x" * MAX_HEADERS_SIZE}')
         assert_equal(response2.status, http.client.BAD_REQUEST)
 
+        # Compute how many short header lines need to be added to http.client
+        # default headers to make / break the total limit in a single request.
+        header_line_length = len("header_0000: foo\r\n")
+        headers_below_limit = (MAX_HEADERS_SIZE - 1000) // header_line_length
+        headers_above_limit = MAX_HEADERS_SIZE // header_line_length
+
+        # This is a libevent mystery:
+        # libevent does not reject the request until it is more than
+        # 1,000 bytes above the configured limit.
+        headers_above_limit += 1000 // header_line_length
+
+        # Many small header lines is ok
+        conn = BitcoinHTTPConnection(self.nodes[2])
+        for i in range(headers_below_limit):
+            conn.add_header(f"header_{i:04}", "foo")
+        response3 = conn.get('/x')
+        assert_equal(response3.status, http.client.NOT_FOUND)
+
+        # Too many small header lines exceeds total headers size allowed
+        conn = BitcoinHTTPConnection(self.nodes[2])
+        for i in range(headers_above_limit):
+            conn.add_header(f"header_{i:04}", "foo")
+        response3 = conn.get('/x')
+        assert_equal(response3.status, http.client.BAD_REQUEST)
+
+        # Compute how much data we can add to a request message body
+        # to make / break the limit.
+        base_request_body_size = len('{"jsonrpc": "2.0", "id": "0", "method": "submitblock", "params": [""]}}')
+        bytes_below_limit = MAX_SIZE - base_request_body_size
+        bytes_above_limit = MAX_SIZE - base_request_body_size + 2
+
+        # Large request body size is ok
+        conn = BitcoinHTTPConnection(self.nodes[0])
+        response4 = conn.post('/', f'{{"jsonrpc": "2.0", "id": "0", "method": "submitblock", "params": ["{"0" * bytes_below_limit}"]}}')
+        assert_equal(response4.status, http.client.OK)
+
+        conn = BitcoinHTTPConnection(self.nodes[1])
+        try:
+            # Excessive body size is invalid
+            response5 = conn.post('/', f'{{"jsonrpc": "2.0", "id": "0", "method": "submitblock", "params": ["{"0" * bytes_above_limit}"]}}')
+
+            # The server will send a 400 response and disconnect but
+            # due to a race condition, the python client may or may not
+            # receive the response before detecting the broken socket.
+            response5.read()
+            assert_equal(response5.status, http.client.BAD_REQUEST)
+            assert conn.sock_closed()
+            self.log.debug("Server sent response before terminating connection")
+        except (BrokenPipeError, ConnectionResetError, ConnectionAbortedError):
+            self.log.debug("Server terminated connection immediately")
+
 
     def check_pipelining(self):
         """
@@ -227,6 +283,38 @@ class HTTPBasicsTest (BitcoinTestFramework):
             encode_chunked=True)
         response1 = conn.recv_raw()
         assert b'{"result":"high-hash","error":null}\n' in response1
+
+        self.log.info("Check excessive size HTTP request encoded with chunked transfer")
+        conn = BitcoinHTTPConnection(self.nodes[0])
+        headers_chunked = conn.headers.copy()
+        headers_chunked.update({"Transfer-encoding": "chunked"})
+        body_chunked = [
+            b'{"method": "submitblock", "params": ["',
+            b'0' * 10000000,
+            b'1' * 10000000,
+            b'2' * 10000000,
+            b'3' * 10000000,
+            b'"]}'
+        ]
+        try:
+            conn.conn.request(
+                method='POST',
+                url='/',
+                body=iter(body_chunked),
+                headers=headers_chunked,
+                encode_chunked=True)
+
+            # The server will send a 400 response and disconnect but
+            # due to a race condition, the python client may or may not
+            # receive the response before detecting the broken socket.
+            response2 = conn.conn.getresponse()
+            response2.read()
+            assert_equal(response2.status, http.client.BAD_REQUEST)
+            assert conn.sock_closed()
+            self.log.debug("Server sent response before terminating connection")
+        except (BrokenPipeError, ConnectionResetError, ConnectionAbortedError):
+            # ...or just immediately disconnect
+            self.log.debug("Server terminated connection immediately")
 
 
     def check_idle_timeout(self):
