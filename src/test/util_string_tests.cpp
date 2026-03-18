@@ -195,9 +195,13 @@ BOOST_AUTO_TEST_CASE(line_reader_test)
         // Check three lines terminated by \n and \r\n, trimming whitespace
         const std::vector<std::byte> input{StringToBuffer("once upon a time\n there was a dog \r\nwho liked food\n")};
         LineReader reader(input, /*max_line_length=*/128);
+        BOOST_CHECK_EQUAL(reader.Consumed(), 0);
+        BOOST_CHECK_EQUAL(reader.Remaining(), 51);
         std::optional<std::string> line1{reader.ReadLine()};
+        BOOST_CHECK_EQUAL(reader.Consumed(), 17);
         BOOST_CHECK_EQUAL(reader.Remaining(), 34);
         std::optional<std::string> line2{reader.ReadLine()};
+        BOOST_CHECK_EQUAL(reader.Consumed(), 36);
         BOOST_CHECK_EQUAL(reader.Remaining(), 15);
         std::optional<std::string> line3{reader.ReadLine()};
         std::optional<std::string> line4{reader.ReadLine()};
@@ -208,6 +212,8 @@ BOOST_AUTO_TEST_CASE(line_reader_test)
         BOOST_CHECK_EQUAL(line1.value(), "once upon a time");
         BOOST_CHECK_EQUAL(line2.value(), "there was a dog");
         BOOST_CHECK_EQUAL(line3.value(), "who liked food");
+        BOOST_CHECK_EQUAL(reader.Consumed(), 51);
+        BOOST_CHECK_EQUAL(reader.Remaining(), 0);
     }
     {
         // Do not exceed max_line_length + 1 while searching for \n

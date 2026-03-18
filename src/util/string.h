@@ -295,6 +295,11 @@ struct LineReader {
      * Returns remaining size of bytes in buffer
      */
     size_t Remaining() const;
+
+    /**
+     * Returns number of bytes already read from buffer
+     */
+    size_t Consumed() const;
 };
 } // namespace util
 

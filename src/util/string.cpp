@@ -70,4 +70,9 @@ size_t LineReader::Remaining() const
 {
     return std::distance(it, end);
 }
+
+size_t LineReader::Consumed() const
+{
+    return std::distance(start, it);
+}
 } // namespace util
