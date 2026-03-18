@@ -34,10 +34,12 @@ unsigned int GetNextWorkRequired(const CBlockIndex* pindexLast, const CBlockHead
 
     const int next_height = pindexLast->nHeight + 1;
 
-    // At the fork height, reset difficulty to compensate for the
-    // artificially high difficulty caused by min-difficulty blocks in testnet4.
-    if (auto fork_bits = GetMinDifficultyForkBits(params, next_height)) {
-        return *fork_bits;
+    if (params.fPowAllowMinDifficultyBlocks) {
+        // At the fork height, reset difficulty to compensate for the
+        // artificially high difficulty caused by min-difficulty blocks in testnet4.
+        if (auto fork_bits = GetMinDifficultyForkBits(params, next_height)) {
+            return *fork_bits;
+        }
     }
 
     const bool allow_min_difficulty_blocks = AllowMinDifficultyBlocks(params, next_height);
@@ -114,11 +116,13 @@ unsigned int CalculateNextWorkRequired(const CBlockIndex* pindexLast, int64_t nF
 // or decrease beyond the permitted limits.
 bool PermittedDifficultyTransition(const Consensus::Params& params, int64_t height, uint32_t old_nbits, uint32_t new_nbits)
 {
-    if (AllowMinDifficultyBlocks(params, height)) return true;
+    if (params.fPowAllowMinDifficultyBlocks) {
+        if (AllowMinDifficultyBlocks(params, height)) return true;
 
-    // At the fork height, only the reset to difficulty 1,000,000 is valid
-    if (auto fork_bits = GetMinDifficultyForkBits(params, height)) {
-        return new_nbits == *fork_bits;
+        // At the fork height, only the reset to difficulty 1,000,000 is valid
+        if (auto fork_bits = GetMinDifficultyForkBits(params, height)) {
+            return new_nbits == *fork_bits;
+        }
     }
 
     if (height % params.DifficultyAdjustmentInterval() == 0) {
