@@ -16,12 +16,14 @@ from test_framework.util import (
 
 class RPCGenerateTest(BitcoinTestFramework):
     def set_test_params(self):
-        self.num_nodes = 1
+        self.num_nodes = 2
+        self.extra_args = [["-par=1"], ["-par=2"]]
 
     def run_test(self):
         self.test_generatetoaddress()
         self.test_generate()
         self.test_generateblock()
+        self.test_generateblock_thread_modes()
 
     def test_generatetoaddress(self):
         self.generatetoaddress(self.nodes[0], 1, 'mneYUmWYsuk7kySiURxCi3AGxrAqZxLgPZ')
@@ -133,6 +135,21 @@ class RPCGenerateTest(BitcoinTestFramework):
 
         self.log.info("Test rpc generate is a hidden command not discoverable in general help")
         assert message not in self.nodes[0].help()
+
+    def test_generateblock_thread_modes(self):
+        for node, mode in zip(self.nodes, ("single-threaded", "multi-threaded")):
+            miniwallet = MiniWallet(node)
+            address = miniwallet.get_address()
+
+            self.log.info(f"Generate and submit a block with a scripted tx on the {mode} path")
+            generated_block = self.generateblock(node, output=address, transactions=[miniwallet.create_self_transfer()["hex"]], submit=False)
+            assert_equal(node.submitblock(hexdata=generated_block["hex"]), None)
+            assert_equal(generated_block["hash"], node.getbestblockhash())
+
+            self.log.info(f"Fail to generate an out-of-order block on the {mode} path")
+            txid1 = miniwallet.send_self_transfer(from_node=node)["txid"]
+            rawtx2 = miniwallet.create_self_transfer(utxo_to_spend=miniwallet.get_utxo(txid=txid1))["hex"]
+            assert_raises_rpc_error(-25, "TestBlockValidity failed: bad-txns-inputs-missingorspent", self.generateblock, node, address, [rawtx2, txid1])
 
 
 if __name__ == "__main__":

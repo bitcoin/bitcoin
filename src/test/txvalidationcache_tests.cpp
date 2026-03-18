@@ -16,8 +16,8 @@
 #include <boost/test/unit_test.hpp>
 
 struct Dersig100Setup : public TestChain100Setup {
-    Dersig100Setup()
-        : TestChain100Setup{ChainType::REGTEST, {.extra_args = {"-testactivationheight=dersig@102"}}} {}
+    Dersig100Setup(std::optional<int> worker_threads_num = {})
+        : TestChain100Setup{ChainType::REGTEST, {.extra_args = {"-testactivationheight=dersig@102"}, .worker_threads_num = worker_threads_num}} {}
 };
 
 bool CheckInputScripts(const CTransaction& tx, TxValidationState& state,
@@ -27,6 +27,43 @@ bool CheckInputScripts(const CTransaction& tx, TxValidationState& state,
                        std::vector<CScriptCheck>* pvChecks) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
 
 BOOST_AUTO_TEST_SUITE(txvalidationcache_tests)
+
+BOOST_AUTO_TEST_CASE(tbv_caches_scripts_only_single_threaded)
+{
+    std::vector<std::pair<int, bool>> pairs{
+        {/*worker_threads_num=*/0, /*expect_cached=*/true},
+        {/*worker_threads_num=*/1, /*expect_cached=*/false}};
+    for (const auto& [worker_threads_num, expect_cached] : pairs) {
+        Dersig100Setup setup{worker_threads_num};
+        LOCK(cs_main);
+
+        auto& chainstate = setup.m_node.chainman->ActiveChainstate();
+        const CScript script_pub_key{CScript() << ToByteVector(setup.coinbaseKey.GetPubKey()) << OP_CHECKSIG};
+        const CMutableTransaction spend_tx{setup.CreateValidMempoolTransaction(
+            setup.m_coinbase_txns[0], /*input_vout=*/0, /*input_height=*/0,
+            setup.coinbaseKey, script_pub_key, 11 * CENT, /*submit=*/false)};
+        const CBlock block{setup.CreateBlock({spend_tx}, script_pub_key, chainstate)};
+
+        const BlockValidationState state{TestBlockValidity(chainstate, block, /*check_pow=*/false, /*check_merkle_root=*/false)};
+        BOOST_REQUIRE(state.IsValid());
+
+        CBlockIndex next_block_index{block};
+        const uint256 block_hash{block.GetHash()};
+        next_block_index.pprev = chainstate.m_chain.Tip();
+        next_block_index.nHeight = next_block_index.pprev->nHeight + 1;
+        next_block_index.phashBlock = &block_hash;
+
+        TxValidationState tx_state;
+        PrecomputedTransactionData txdata;
+        std::vector<CScriptCheck> script_checks;
+        BOOST_REQUIRE(CheckInputScripts(CTransaction{spend_tx}, tx_state, chainstate.CoinsTip(),
+                                        GetBlockScriptFlags(next_block_index, *setup.m_node.chainman),
+                                        /*cacheSigStore=*/true, /*cacheFullScriptStore=*/true, txdata,
+                                        setup.m_node.chainman->m_validation_cache, &script_checks));
+        BOOST_REQUIRE(tx_state.IsValid());
+        BOOST_CHECK_EQUAL(script_checks.empty(), expect_cached);
+    }
+}
 
 BOOST_FIXTURE_TEST_CASE(tx_mempool_block_doublespend, Dersig100Setup)
 {
