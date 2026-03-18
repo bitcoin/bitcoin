@@ -551,6 +551,11 @@ public:
     {
         return OutPointView{btck_transaction_input_get_out_point(impl())};
     }
+
+    uint32_t GetSequence() const
+    {
+        return btck_transaction_input_get_sequence(impl());
+    }
 };
 
 class TransactionInputView : public View<btck_TransactionInput>, public TransactionInputApi<TransactionInputView>

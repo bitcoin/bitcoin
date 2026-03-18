@@ -1515,6 +1515,15 @@ BITCOINKERNEL_API const btck_TransactionOutPoint* BITCOINKERNEL_WARN_UNUSED_RESU
     const btck_TransactionInput* transaction_input) BITCOINKERNEL_ARG_NONNULL(1);
 
 /**
+ * @brief Get a transaction input's nSequence value.
+ *
+ * @param[in] transaction_input Non-null.
+ * @return                      The nSequence value.
+ */
+BITCOINKERNEL_API uint32_t BITCOINKERNEL_WARN_UNUSED_RESULT btck_transaction_input_get_sequence(
+    const btck_TransactionInput* transaction_input) BITCOINKERNEL_ARG_NONNULL(1);
+
+/**
  * Destroy the transaction input.
  */
 BITCOINKERNEL_API void btck_transaction_input_destroy(btck_TransactionInput* transaction_input);

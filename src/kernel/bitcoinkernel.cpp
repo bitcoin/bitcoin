@@ -697,6 +697,11 @@ const btck_TransactionOutPoint* btck_transaction_input_get_out_point(const btck_
     return btck_TransactionOutPoint::ref(&btck_TransactionInput::get(input).prevout);
 }
 
+uint32_t btck_transaction_input_get_sequence(const btck_TransactionInput* input)
+{
+    return btck_TransactionInput::get(input).nSequence;
+}
+
 void btck_transaction_input_destroy(btck_TransactionInput* input)
 {
     delete input;
