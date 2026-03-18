@@ -577,6 +577,15 @@ BITCOINKERNEL_API size_t BITCOINKERNEL_WARN_UNUSED_RESULT btck_transaction_count
     const btck_Transaction* transaction) BITCOINKERNEL_ARG_NONNULL(1);
 
 /**
+ * @brief Get a transaction's nLockTime value.
+ *
+ * @param[in] transaction Non-null.
+ * @return                The nLockTime value.
+ */
+BITCOINKERNEL_API uint32_t BITCOINKERNEL_WARN_UNUSED_RESULT btck_transaction_get_locktime(
+    const btck_Transaction* transaction) BITCOINKERNEL_ARG_NONNULL(1);
+
+/**
  * @brief Get the txid of a transaction. The returned txid is not owned and
  * depends on the lifetime of the transaction.
  *

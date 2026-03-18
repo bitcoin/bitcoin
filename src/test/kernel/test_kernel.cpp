@@ -401,6 +401,7 @@ BOOST_AUTO_TEST_CASE(btck_transaction_tests)
 
     BOOST_CHECK_EQUAL(tx.CountOutputs(), 2);
     BOOST_CHECK_EQUAL(tx.CountInputs(), 1);
+    BOOST_CHECK_EQUAL(tx.GetLocktime(), 510826);
     auto broken_tx_data{std::span<std::byte>{tx_data.begin(), tx_data.begin() + 10}};
     BOOST_CHECK_THROW(Transaction{broken_tx_data}, std::runtime_error);
     auto output{tx.GetOutput(tx.CountOutputs() - 1)};
