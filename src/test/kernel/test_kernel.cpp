@@ -1177,3 +1177,59 @@ BOOST_AUTO_TEST_CASE(btck_chainman_regtest_tests)
     fs::remove_all(test_directory.m_directory / "blocks" / "rev00000.dat");
     BOOST_CHECK_THROW(chainman->ReadBlockSpentOutputs(tip), std::runtime_error);
 }
+
+BOOST_AUTO_TEST_CASE(btck_block_locator_tests)
+{
+    // Serialized CBlockLocator format: 4-byte version | 1-byte compact count | count * 32-byte hashes.
+    auto locator_count{[](const std::vector<std::byte>& b) -> size_t {
+        return static_cast<uint8_t>(b[4]);
+    }};
+    auto locator_hash{[](const std::vector<std::byte>& b, size_t i) {
+        std::array<std::byte, 32> hash;
+        std::memcpy(hash.data(), b.data() + 5 + i * 32, 32);
+        return hash;
+    }};
+
+    // The genesis block is always the active tip on a fresh chainstate.
+    {
+        auto test_directory{TestDirectory{"locator_genesis_only"}};
+        auto notifications{std::make_shared<TestKernelNotifications>()};
+        auto context{create_context(notifications, ChainType::REGTEST)};
+        auto chainman{create_chainman(
+            test_directory, /*reindex=*/false, /*wipe_chainstate=*/false,
+            /*block_tree_db_in_memory=*/true, /*chainstate_db_in_memory=*/true,
+            context)};
+        auto locator{chainman->GetLocator()};
+        BOOST_REQUIRE(locator.has_value());
+        auto locator_bytes{locator->ToBytes()};
+        BOOST_CHECK_EQUAL(locator_count(locator_bytes), 1);
+        auto genesis_hash{chainman->GetBestEntry().GetHash().ToBytes()};
+        BOOST_CHECK(locator_hash(locator_bytes, 0) == genesis_hash);
+    }
+
+    // After IBD the locator must contain more than one hash and start at the new tip.
+    {
+        auto test_directory{TestDirectory{"locator_regtest"}};
+        auto notifications{std::make_shared<TestKernelNotifications>()};
+        auto context{create_context(notifications, ChainType::REGTEST)};
+        auto chainman{create_chainman(
+            test_directory, /*reindex=*/false, /*wipe_chainstate=*/false,
+            /*block_tree_db_in_memory=*/true, /*chainstate_db_in_memory=*/true,
+            context)};
+        for (const auto& raw_block : REGTEST_BLOCK_DATA) {
+            Block block{hex_string_to_byte_vec(raw_block)};
+            bool new_block{false};
+            BOOST_CHECK(chainman->ProcessBlock(block, &new_block));
+            BOOST_CHECK(new_block);
+        }
+
+        auto locator{chainman->GetLocator()};
+        BOOST_REQUIRE(locator.has_value());
+        auto locator_bytes{locator->ToBytes()};
+        BOOST_CHECK(locator_count(locator_bytes) > 1);
+
+        // Verify the tip hash independently rather than relying on GetBestEntry().
+        Block last_block{hex_string_to_byte_vec(REGTEST_BLOCK_DATA.back())};
+        BOOST_CHECK(locator_hash(locator_bytes, 0) == last_block.GetHash().ToBytes());
+    }
+}

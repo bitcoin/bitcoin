@@ -218,6 +218,15 @@ typedef struct btck_ChainstateManager btck_ChainstateManager;
 typedef struct btck_Block btck_Block;
 
 /**
+ * Opaque data structure for holding a block locator.
+ *
+ * A locator is an ordered list of block hashes spaced exponentially further
+ * back from the active chain tip. Peers use it to find their last common
+ * ancestor with the local chain without exchanging every block hash.
+ */
+typedef struct btck_BlockLocator btck_BlockLocator;
+
+/**
  * Opaque data structure for holding the state of a block during validation.
  *
  * Contains information indicating whether validation was successful, and if not
@@ -1193,6 +1202,35 @@ BITCOINKERNEL_API const btck_Chain* BITCOINKERNEL_WARN_UNUSED_RESULT btck_chains
 BITCOINKERNEL_API const btck_BlockTreeEntry* BITCOINKERNEL_WARN_UNUSED_RESULT btck_chainstate_manager_get_block_tree_entry_by_hash(
     const btck_ChainstateManager* chainstate_manager,
     const btck_BlockHash* block_hash) BITCOINKERNEL_ARG_NONNULL(1, 2);
+
+/**
+ * @brief Get the active chain tip's block locator.
+ *
+ * @param[in] chainstate_manager Non-null.
+ * @return A new btck_BlockLocator, or null on error.
+ */
+BITCOINKERNEL_API btck_BlockLocator* BITCOINKERNEL_WARN_UNUSED_RESULT
+btck_chainstate_manager_get_locator(
+    const btck_ChainstateManager* chainstate_manager) BITCOINKERNEL_ARG_NONNULL(1);
+
+/**
+ * @brief Serialize a block locator into bytes.
+ *
+ * @param[in] locator    Non-null.
+ * @param[in] writer     Non-null, callback to a write bytes function.
+ * @param[in] user_data  Holds a user-defined opaque structure that will be
+ *                       passed back through the writer callback.
+ * @return               0 on success.
+ */
+BITCOINKERNEL_API int btck_block_locator_to_bytes(
+    const btck_BlockLocator* locator,
+    btck_WriteBytes writer,
+    void* user_data) BITCOINKERNEL_ARG_NONNULL(1, 2);
+
+/**
+ * Destroy the block locator.
+ */
+BITCOINKERNEL_API void btck_block_locator_destroy(btck_BlockLocator* locator);
 
 /**
  * Destroy the chainstate manager.

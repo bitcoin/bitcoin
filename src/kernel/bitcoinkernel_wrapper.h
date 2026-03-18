@@ -1187,6 +1187,17 @@ public:
     MAKE_RANGE_METHOD(TxsSpentOutputs, BlockSpentOutputs, &BlockSpentOutputs::Count, &BlockSpentOutputs::GetTxSpentOutputs, *this)
 };
 
+class BlockLocator : UniqueHandle<btck_BlockLocator, btck_block_locator_destroy>
+{
+public:
+    explicit BlockLocator(btck_BlockLocator* ptr) : UniqueHandle{ptr} {}
+
+    std::vector<std::byte> ToBytes() const
+    {
+        return write_bytes(get(), btck_block_locator_to_bytes);
+    }
+};
+
 class ChainMan : UniqueHandle<btck_ChainstateManager, btck_chainstate_manager_destroy>
 {
 public:
@@ -1237,6 +1248,13 @@ public:
     BlockTreeEntry GetBestEntry() const
     {
         return btck_chainstate_manager_get_best_entry(get());
+    }
+
+    std::optional<BlockLocator> GetLocator() const
+    {
+        auto* locator{btck_chainstate_manager_get_locator(get())};
+        if (!locator) return std::nullopt;
+        return BlockLocator{locator};
     }
 
     std::optional<Block> ReadBlock(const BlockTreeEntry& entry) const

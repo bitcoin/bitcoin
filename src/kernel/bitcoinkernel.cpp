@@ -142,6 +142,7 @@ struct Handle {
 struct btck_BlockTreeEntry: Handle<btck_BlockTreeEntry, CBlockIndex> {};
 struct btck_Block : Handle<btck_Block, std::shared_ptr<const CBlock>> {};
 struct btck_BlockValidationState : Handle<btck_BlockValidationState, BlockValidationState> {};
+struct btck_BlockLocator : Handle<btck_BlockLocator, CBlockLocator> {};
 
 namespace {
 
@@ -1393,4 +1394,33 @@ uint32_t btck_block_header_get_nonce(const btck_BlockHeader* header)
 void btck_block_header_destroy(btck_BlockHeader* header)
 {
     delete header;
+}
+
+btck_BlockLocator* btck_chainstate_manager_get_locator(const btck_ChainstateManager* chainstate_manager)
+{
+    try {
+        auto& chainman = btck_ChainstateManager::get(chainstate_manager).m_chainman;
+        const CBlockIndex* tip{
+            Assert(WITH_LOCK(chainman->GetMutex(), return chainman->ActiveTip()))};
+        return btck_BlockLocator::create(GetLocator(tip));
+    } catch (const std::exception& e) {
+        LogError("Failed to get block locator: %s", e.what());
+        return nullptr;
+    }
+}
+
+int btck_block_locator_to_bytes(const btck_BlockLocator* locator, btck_WriteBytes writer, void* user_data)
+{
+    try {
+        WriterStream ws{writer, user_data};
+        ws << btck_BlockLocator::get(locator);
+        return 0;
+    } catch (...) {
+        return -1;
+    }
+}
+
+void btck_block_locator_destroy(btck_BlockLocator* locator)
+{
+    delete locator;
 }
