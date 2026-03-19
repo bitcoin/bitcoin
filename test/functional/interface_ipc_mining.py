@@ -7,7 +7,7 @@ import asyncio
 import time
 from contextlib import AsyncExitStack
 from io import BytesIO
-from test_framework.blocktools import NULL_OUTPOINT
+from test_framework.blocktools import NULL_OUTPOINT, script_BIP34_coinbase_height
 from test_framework.messages import (
     MAX_BLOCK_WEIGHT,
     CBlockHeader,
@@ -19,10 +19,6 @@ from test_framework.messages import (
     COIN,
     from_hex,
     msg_headers,
-)
-from test_framework.script import (
-    CScript,
-    CScriptNum,
 )
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import (
@@ -79,8 +75,8 @@ class IPCMiningTest(BitcoinTestFramework):
 
         # Verify there's no dummy extraNonce in the coinbase scriptSig
         current_block_height = self.nodes[0].getchaintips()[0]["height"]
-        expected_scriptsig = CScript([CScriptNum(current_block_height + 1)])
-        assert_equal(coinbase_res.scriptSigPrefix.hex(), expected_scriptsig.hex())
+        bip34_prefix = script_BIP34_coinbase_height(current_block_height + 1, padding=False)
+        assert_equal(coinbase_res.scriptSigPrefix, bip34_prefix)
 
         # Typically a mining pool appends its name and an extraNonce
         coinbase_tx.vin[0].scriptSig = coinbase_res.scriptSigPrefix
