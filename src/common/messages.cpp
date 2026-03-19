@@ -6,7 +6,6 @@
 #include <common/messages.h>
 #include <common/types.h>
 #include <node/types.h>
-#include <policy/fees/block_policy_estimator.h>
 #include <tinyformat.h>
 #include <util/fees.h>
 #include <util/strencodings.h>
@@ -24,25 +23,6 @@ using node::TransactionError;
 using util::Join;
 
 namespace common {
-std::string StringForFeeReason(FeeReason reason)
-{
-    static const std::map<FeeReason, std::string> fee_reason_strings = {
-        {FeeReason::NONE, "None"},
-        {FeeReason::HALF_ESTIMATE, "Half Target 60% Threshold"},
-        {FeeReason::FULL_ESTIMATE, "Target 85% Threshold"},
-        {FeeReason::DOUBLE_ESTIMATE, "Double Target 95% Threshold"},
-        {FeeReason::CONSERVATIVE, "Conservative Double Target longer horizon"},
-        {FeeReason::MEMPOOL_MIN, "Mempool Min Fee"},
-        {FeeReason::FALLBACK, "Fallback fee"},
-        {FeeReason::REQUIRED, "Minimum Required Fee"},
-    };
-    auto reason_string = fee_reason_strings.find(reason);
-
-    if (reason_string == fee_reason_strings.end()) return "Unknown";
-
-    return reason_string->second;
-}
-
 const std::vector<std::pair<std::string, FeeEstimateMode>>& FeeModeMap()
 {
     static const std::vector<std::pair<std::string, FeeEstimateMode>> FEE_MODES = {

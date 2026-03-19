@@ -68,6 +68,8 @@ enum class FeeReason {
     REQUIRED,
 };
 
+std::string StringForFeeReason(FeeReason reason);
+
 /* Used to return detailed information about a feerate bucket */
 struct EstimatorBucket
 {
