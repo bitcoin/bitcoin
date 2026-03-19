@@ -727,24 +727,39 @@ BOOST_AUTO_TEST_CASE(fixed_tests)
 }
 
 // Confirm that ~Node(), Node::Clone() and operator=(Node&&) are stack-safe.
-BOOST_AUTO_TEST_CASE(node_deep_destruct)
+BOOST_AUTO_TEST_CASE(node_stress_stack)
 {
     using miniscript::internal::NoDupCheck;
     using miniscript::Fragment;
     using NodeU32 = miniscript::Node<uint32_t>;
 
-    constexpr auto ctx{miniscript::MiniscriptContext::P2WSH};
+    const auto compute_depth{[] (const NodeU32& node) -> size_t {
+        size_t depth{0};
+        for (const auto* n{&node}; !n->Subs().empty(); n = &n->Subs().front()) {
+            ++depth;
+        }
+        return depth;
+    }};
 
+    constexpr auto ctx{miniscript::MiniscriptContext::TAPSCRIPT};
     NodeU32 root{NoDupCheck{}, ctx, Fragment::JUST_1};
-    for (uint32_t i{0}; i < 200'000; ++i) {
-        root = NodeU32{NoDupCheck{}, ctx, Fragment::WRAP_S, Vector(std::move(root))};
+    // Some CI jobs run with CI_LIMIT_STACK_SIZE which reduces the stack size
+    // via ulimit to 512 kbytes. When tested with ~Node()=default (stack-unsafe)
+    // implementations the test has been shown to fail for the below depth.
+    // The test may pass locally despite stack-unsafe implementations unless the
+    // stack is reduced in a similar way or the depth is temporarily increased.
+    constexpr size_t depth{200'000};
+    for (size_t i{0}; i < depth; ++i) {
+        root = NodeU32{NoDupCheck{}, ctx, Fragment::WRAP_N, Vector(std::move(root))};
     }
-    BOOST_CHECK_EQUAL(root.ScriptSize(), 200'001);
+    BOOST_CHECK(root.IsValid());
+    BOOST_CHECK_EQUAL(compute_depth(root), depth);
 
     auto clone{root.Clone()};
-    BOOST_CHECK_EQUAL(clone.ScriptSize(), root.ScriptSize());
+    BOOST_CHECK_EQUAL(compute_depth(clone), depth);
 
     clone = std::move(root);
+    BOOST_CHECK_EQUAL(compute_depth(clone), depth);
 }
 
 BOOST_AUTO_TEST_SUITE_END()
