@@ -8,6 +8,7 @@ import os
 import shlex
 import subprocess
 import sys
+import time
 from pathlib import Path
 
 sys.path.append(str(Path(__file__).resolve().parent.parent / "test"))
@@ -73,7 +74,12 @@ def generate(ci_type):
         "--preset",
         "vs2026",
     ] + GENERATE_OPTIONS[ci_type]
-    run(command)
+    if run(command, check=False).returncode != 0:
+        print("=== ⚠️ ===")
+        print("Generate failure! Network issue? Retry once ...")
+        time.sleep(12)
+        print("=== ⚠️ ===")
+        run(command)
 
 
 def build(_ci_type):
