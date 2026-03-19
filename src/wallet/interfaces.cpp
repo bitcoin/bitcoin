@@ -26,6 +26,7 @@
 #include <wallet/load.h>
 #include <wallet/receive.h>
 #include <wallet/rpc/wallet.h>
+#include <wallet/types.h>
 #include <wallet/spend.h>
 #include <wallet/wallet.h>
 
@@ -465,17 +466,11 @@ public:
         return result;
     }
     CAmount getRequiredFee(unsigned int tx_bytes) override { return GetRequiredFee(*m_wallet, tx_bytes); }
-    CAmount getMinimumFee(unsigned int tx_bytes,
-        const CCoinControl& coin_control,
-        int* returned_target,
-        FeeReason* reason) override
+    std::tuple<CAmount, int, FeeSource> getMinimumFee(unsigned int tx_bytes,
+        const CCoinControl& coin_control) override
     {
-        FeeCalculation fee_calc;
-        CAmount result;
-        result = GetMinimumFee(*m_wallet, tx_bytes, coin_control, &fee_calc);
-        if (returned_target) *returned_target = fee_calc.returnedTarget;
-        if (reason) *reason = fee_calc.reason;
-        return result;
+        auto res{GetMinimumFeeRate(*m_wallet, coin_control)};
+        return {GetMinimumFee(res, tx_bytes), res.returned_target, res.fee_source};
     }
     unsigned int getConfirmTarget() override { return m_wallet->m_confirm_target; }
     bool hdEnabled() override { return m_wallet->IsHDEnabled(); }

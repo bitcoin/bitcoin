@@ -33,7 +33,7 @@ enum class MemPoolRemovalReason;
 enum class RBFTransactionState;
 struct bilingual_str;
 struct CBlockLocator;
-struct FeeCalculation;
+struct FeeRateEstimatorResult;
 namespace kernel {
 struct ChainstateRole;
 } // namespace kernel
@@ -256,11 +256,11 @@ public:
     //! Check if transaction will pass the mempool's chain limits.
     virtual util::Result<void> checkChainLimits(const CTransactionRef& tx) = 0;
 
-    //! Estimate smart fee.
-    virtual CFeeRate estimateSmartFee(int num_blocks, bool conservative, FeeCalculation* calc = nullptr) = 0;
+    //! Estimate a fee rate.
+    virtual FeeRateEstimatorResult getFeeRateEstimate(int num_blocks, bool conservative) = 0;
 
     //! Fee estimator max target.
-    virtual unsigned int estimateMaxBlocks() = 0;
+    virtual unsigned int maximumFeeEstimationTargetBlocks() = 0;
 
     //! Mempool minimum fee.
     virtual CFeeRate mempoolMinFee() = 0;
