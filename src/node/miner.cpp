@@ -189,12 +189,11 @@ std::unique_ptr<CBlockTemplate> BlockAssembler::CreateNewBlock()
     // and in a typical setup a pool name or realistic extraNonce already makes
     // the scriptSig long enough.
     coinbase_tx.script_sig_prefix = coinbaseTx.vin[0].scriptSig;
-    if (nHeight <= 16 || m_options.include_dummy_extranonce) {
+    if (nHeight <= 16) {
         // For blocks at heights <= 16, the BIP34-encoded height alone is only
         // one byte. Consensus requires coinbase scriptSigs to be at least two
         // bytes long (bad-cb-length), so an OP_0 is always appended at those
-        // heights. At greater heights it is only added when the caller
-        // requests it (e.g. RPC and test code that rely on stable hashes).
+        // heights.
         coinbaseTx.vin[0].scriptSig << OP_0;
     }
     Assert(nHeight > 0);
