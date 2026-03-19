@@ -3142,13 +3142,10 @@ CBlockIndex* Chainstate::FindMostWorkChain()
                 CBlockIndex *pindexFailed = pindexNew;
                 // Remove the entire chain from the set.
                 while (pindexTest != pindexFailed) {
-                    if (fFailedChain) {
-                        pindexFailed->nStatus |= BLOCK_FAILED_VALID;
-                        m_blockman.m_dirty_blockindex.insert(pindexFailed);
-                    } else if (fMissingData) {
-                        // If we're missing data, then add back to m_blocks_unlinked,
-                        // so that if the block arrives in the future we can try adding
-                        // to setBlockIndexCandidates again.
+                    if (fMissingData && !fFailedChain) {
+                        // If we're missing data and not a descendant of an invalid block,
+                        // then add back to m_blocks_unlinked, so that if the block arrives in the future
+                        // we can try adding to setBlockIndexCandidates again.
                         m_blockman.m_blocks_unlinked.insert(
                             std::make_pair(pindexFailed->pprev, pindexFailed));
                     }
