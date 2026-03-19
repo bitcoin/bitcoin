@@ -761,6 +761,21 @@ Please see the following links for more details:
 - A commit to skip this test is included since Guix 1.4.0:
 [codeberg/guix@6ba1058](https://codeberg.org/guix/guix/commit/6ba1058df0c4ce5611c2367531ae5c3cdc729ab4)
 
+## zdiff3
+
+[Currently](https://issues.guix.gnu.org/72942) `guix` builds may fail if the
+global git config has `merge.conflictstyle` set to `zdiff3` as follows:
+
+```
+Updating channel 'guix' from Git repository at 'https://codeberg.org/guix/guix.git'...
+guix time-machine: error: Git error: unknown style 'zdiff3' given for 'merge.conflictstyle'
+```
+
+This can be fixed by setting `merge.conflictstyle` to `diff3`:
+
+```bash
+git config --global merge.conflictstyle diff3
+```
 
 [install-script]: #options-1-and-2-using-the-official-shell-installer-script-or-binary-tarball
 [install-bin-tarball]: #options-1-and-2-using-the-official-shell-installer-script-or-binary-tarball
@@ -782,7 +797,9 @@ an irreversible way, you may want to completely purge Guix from your system and
 start over.
 
 1. Uninstall Guix itself according to the way you installed it (e.g. `sudo apt
-   purge guix` for Ubuntu packaging, `sudo make uninstall` for a build from source).
+   purge guix` for Ubuntu packaging, `sudo make uninstall` for a build from
+   source, or running the GUIX [install script][install-script] with the
+   `--uninstall` [flag](https://guix.gnu.org/manual/devel/en/guix.html#index-uninstalling-Guix)).
 2. Remove all build users and groups
 
    You may check for relevant users and groups using:
