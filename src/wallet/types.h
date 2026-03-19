@@ -14,12 +14,13 @@
 #ifndef BITCOIN_WALLET_TYPES_H
 #define BITCOIN_WALLET_TYPES_H
 
-#include <policy/fees/block_policy_estimator.h>
+#include <policy/feerate.h>
+#include <util/fees.h>
 
 namespace wallet {
 struct MinimumFeeRateResult {
     CFeeRate fee_rate;
-    FeeReason fee_reason = FeeReason::NONE;
+    FeeSource fee_source = FeeSource::USER_SPECIFIED;
     int returned_target = 0;
 };
 
@@ -41,11 +42,11 @@ struct CreatedTransactionResult
 {
     CTransactionRef tx;
     CAmount fee;
-    FeeReason fee_reason;
+    FeeSource fee_source;
     std::optional<unsigned int> change_pos;
 
-    CreatedTransactionResult(CTransactionRef _tx, CAmount _fee, std::optional<unsigned int> _change_pos, FeeReason _fee_reason)
-        : tx(_tx), fee(_fee), fee_reason(_fee_reason), change_pos(_change_pos) {}
+    CreatedTransactionResult(CTransactionRef _tx, CAmount _fee, std::optional<unsigned int> _change_pos, FeeSource _fee_source)
+        : tx(_tx), fee(_fee), fee_source(_fee_source), change_pos(_change_pos) {}
 };
 
 } // namespace wallet

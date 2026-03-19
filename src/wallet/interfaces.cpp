@@ -470,12 +470,12 @@ public:
     CAmount getMinimumFee(unsigned int tx_bytes,
         const CCoinControl& coin_control,
         int* returned_target,
-        FeeReason* reason) override
+        FeeSource* source) override
     {
         auto min_fee_rate{GetMinimumFeeRate(*m_wallet, coin_control)};
         auto result = GetMinimumFee(min_fee_rate, tx_bytes);
         if (returned_target) *returned_target = min_fee_rate.returned_target;
-        if (reason) *reason = min_fee_rate.fee_reason;
+        if (source) *source = min_fee_rate.fee_source;
         return result;
     }
     unsigned int getConfirmTarget() override { return m_wallet->m_confirm_target; }
