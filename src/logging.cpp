@@ -85,8 +85,7 @@ bool BCLog::Logger::StartLogging()
     }
     while (!m_msgs_before_open.empty()) {
         const auto& buflog = m_msgs_before_open.front();
-        std::string s{buflog.entry.message};
-        FormatLogStrInPlace(s, static_cast<BCLog::LogFlags>(buflog.entry.category), buflog.entry.level, buflog.entry.source_loc, buflog.entry.thread_name, buflog.entry.timestamp, buflog.mocktime);
+        std::string s{Format(buflog.entry, buflog.mocktime)};
         m_msgs_before_open.pop_front();
 
         if (m_print_to_file) FileWriteStr(s, m_fileout);
@@ -410,21 +409,23 @@ BCLog::LogRateLimiter::Status BCLog::LogRateLimiter::Consume(
     return status;
 }
 
-void BCLog::Logger::FormatLogStrInPlace(std::string& str, BCLog::LogFlags category, BCLog::Level level, const SourceLocation& source_loc, std::string_view threadname, SystemClock::time_point now, std::chrono::seconds mocktime) const
+std::string BCLog::Logger::Format(const util::log::Entry& entry, std::chrono::seconds mocktime) const
 {
-    if (!str.ends_with('\n')) str.push_back('\n');
-
-    str.insert(0, GetLogPrefix(category, level));
-
-    if (m_log_sourcelocations) {
-        str.insert(0, strprintf("[%s:%d] [%s] ", RemovePrefixView(source_loc.file_name(), "./"), source_loc.line(), source_loc.function_name_short()));
-    }
+    std::string result{LogTimestampStr(entry.timestamp, mocktime)};
 
     if (m_log_threadnames) {
-        str.insert(0, strprintf("[%s] ", (threadname.empty() ? "unknown" : threadname)));
+        result += strprintf("[%s] ", (entry.thread_name.empty() ? "unknown" : entry.thread_name));
     }
 
-    str.insert(0, LogTimestampStr(now, mocktime));
+    if (m_log_sourcelocations) {
+        result += strprintf("[%s:%d] [%s] ", RemovePrefixView(entry.source_loc.file_name(), "./"), entry.source_loc.line(), entry.source_loc.function_name_short());
+    }
+
+    result += GetLogPrefix(static_cast<LogFlags>(entry.category), entry.level);
+    result += LogEscapeMessage(entry.message);
+
+    if (!result.ends_with('\n')) result += '\n';
+    return result;
 }
 
 void BCLog::Logger::LogPrintStr(util::log::Entry&& entry)
@@ -436,8 +437,6 @@ void BCLog::Logger::LogPrintStr(util::log::Entry&& entry)
 // NOLINTNEXTLINE(misc-no-recursion)
 void BCLog::Logger::LogPrintStr_(util::log::Entry&& entry)
 {
-    std::string str_prefixed = LogEscapeMessage(entry.message);
-
     if (m_buffering) {
         {
             BufferedLog buf{
@@ -461,10 +460,10 @@ void BCLog::Logger::LogPrintStr_(util::log::Entry&& entry)
         return;
     }
 
-    FormatLogStrInPlace(str_prefixed, static_cast<LogFlags>(entry.category), entry.level, entry.source_loc, entry.thread_name, entry.timestamp, GetMockTime());
+    std::string log_msg{Format(entry, GetMockTime())};
     bool ratelimit{false};
     if (entry.should_ratelimit && m_limiter) {
-        auto status{m_limiter->Consume(entry.source_loc, str_prefixed)};
+        auto status{m_limiter->Consume(entry.source_loc, log_msg)};
         if (status == LogRateLimiter::Status::NEWLY_SUPPRESSED) {
             // NOLINTNEXTLINE(misc-no-recursion)
             LogPrintStr_({
@@ -489,16 +488,16 @@ void BCLog::Logger::LogPrintStr_(util::log::Entry&& entry)
     // To avoid confusion caused by dropped log messages when debugging an issue,
     // we prefix log lines with "[*]" when there are any suppressed source locations.
     if (m_limiter && m_limiter->SuppressionsActive()) {
-        str_prefixed.insert(0, "[*] ");
+        log_msg.insert(0, "[*] ");
     }
 
     if (m_print_to_console) {
         // print to console
-        fwrite(str_prefixed.data(), 1, str_prefixed.size(), stdout);
+        fwrite(log_msg.data(), 1, log_msg.size(), stdout);
         fflush(stdout);
     }
     for (const auto& cb : m_print_callbacks) {
-        cb(str_prefixed);
+        cb(log_msg);
     }
     if (m_print_to_file && !ratelimit) {
         assert(m_fileout != nullptr);
@@ -513,7 +512,7 @@ void BCLog::Logger::LogPrintStr_(util::log::Entry&& entry)
                 m_fileout = new_fileout;
             }
         }
-        FileWriteStr(str_prefixed, m_fileout);
+        FileWriteStr(log_msg, m_fileout);
     }
 }
 
