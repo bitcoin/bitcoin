@@ -50,18 +50,19 @@ std::string StringForFeeEstimateHorizon(FeeEstimateHorizon horizon)
 
 std::string StringForFeeReason(FeeReason reason)
 {
-    static const std::map<FeeReason, std::string> fee_reason_strings = {
-        {FeeReason::NONE, "None"},
-        {FeeReason::HALF_ESTIMATE, "Half Target 60% Threshold"},
-        {FeeReason::FULL_ESTIMATE, "Target 85% Threshold"},
-        {FeeReason::DOUBLE_ESTIMATE, "Double Target 95% Threshold"},
-        {FeeReason::CONSERVATIVE, "Conservative Double Target longer horizon"},
-    };
-    auto reason_string = fee_reason_strings.find(reason);
-
-    if (reason_string == fee_reason_strings.end()) return "Unknown";
-
-    return reason_string->second;
+    switch (reason) {
+    case FeeReason::NONE:
+        return "None";
+    case FeeReason::HALF_ESTIMATE:
+        return "Half Target 60% Threshold";
+    case FeeReason::FULL_ESTIMATE:
+        return "Target 85% Threshold";
+    case FeeReason::DOUBLE_ESTIMATE:
+        return "Double Target 95% Threshold";
+    case FeeReason::CONSERVATIVE:
+        return "Conservative Double Target longer horizon";
+    } // no default case, so the compiler can warn about missing cases
+    assert(false);
 }
 
 namespace {
