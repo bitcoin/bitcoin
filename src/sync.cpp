@@ -4,6 +4,7 @@
 
 #include <sync.h>
 
+#include <logging/timer.h>
 #include <tinyformat.h>
 #include <util/log.h>
 #include <util/strencodings.h>
@@ -18,6 +19,19 @@
 #include <unordered_map>
 #include <utility>
 #include <vector>
+
+#ifdef DEBUG_LOCKCONTENTION
+
+template <typename LockType>
+void ContendedLock(std::string_view name, std::string_view file, int nLine, LockType& lock)
+{
+    LOG_TIME_MICROS_WITH_CATEGORY(strprintf("lock contention %s, %s:%d", name, file, nLine), BCLog::LOCK);
+    lock.lock();
+}
+template void ContendedLock(std::string_view name, std::string_view file, int nLine, std::unique_lock<std::mutex>& lock);
+template void ContendedLock(std::string_view name, std::string_view file, int nLine, std::unique_lock<std::recursive_mutex>& lock);
+
+#endif
 
 #ifdef DEBUG_LOCKORDER
 //

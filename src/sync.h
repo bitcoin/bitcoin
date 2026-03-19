@@ -6,10 +6,6 @@
 #ifndef BITCOIN_SYNC_H
 #define BITCOIN_SYNC_H
 
-#ifdef DEBUG_LOCKCONTENTION
-#include <logging/timer.h>
-#endif
-
 #include <threadsafety.h> // IWYU pragma: export
 #include <util/macros.h>
 
@@ -75,6 +71,16 @@ template <typename MutexType>
 void AssertLockNotHeldInternal(const char* pszName, const char* pszFile, int nLine, MutexType* cs) LOCKS_EXCLUDED(cs) {}
 inline void DeleteLock(void* cs) {}
 inline bool LockStackEmpty() { return true; }
+#endif
+
+/*
+ * Called when a mutex fails to lock immediately because it is held by another
+ * thread, or spuriously. Responsible for locking the lock before returning.
+ */
+#ifdef DEBUG_LOCKCONTENTION
+
+template <typename LockType>
+void ContendedLock(std::string_view name, std::string_view file, int nLine, LockType& lock);
 #endif
 
 /**
@@ -151,10 +157,12 @@ private:
     {
         EnterCritical(pszName, pszFile, nLine, Base::mutex());
 #ifdef DEBUG_LOCKCONTENTION
-        if (Base::try_lock()) return;
-        LOG_TIME_MICROS_WITH_CATEGORY(strprintf("lock contention %s, %s:%d", pszName, pszFile, nLine), BCLog::LOCK);
-#endif
+        if (!Base::try_lock()) {
+            ContendedLock(pszName, pszFile, nLine, static_cast<Base&>(*this));
+        }
+#else
         Base::lock();
+#endif
     }
 
     bool TryEnter(const char* pszName, const char* pszFile, int nLine)
