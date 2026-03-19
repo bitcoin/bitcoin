@@ -2,6 +2,7 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
+#include <policy/fees/block_policy_estimator.h>
 #include <test/fuzz/FuzzedDataProvider.h>
 #include <test/fuzz/fuzz.h>
 #include <test/fuzz/util.h>
@@ -115,11 +116,18 @@ FUZZ_TARGET(wallet_fees, .init = initialize_setup)
     if (fuzzed_data_provider.ConsumeBool()) {
         coin_control.m_fee_mode = fuzzed_data_provider.ConsumeBool() ? FeeEstimateMode::CONSERVATIVE : FeeEstimateMode::ECONOMICAL;
     }
-
-    FeeCalculation fee_calculation;
-    FeeCalculation* maybe_fee_calculation{fuzzed_data_provider.ConsumeBool() ? nullptr : &fee_calculation};
-    (void)GetMinimumFeeRate(wallet, coin_control, maybe_fee_calculation);
-    (void)GetMinimumFee(wallet, tx_bytes, coin_control, maybe_fee_calculation);
+    MinimumFeeRateResult min_fee_rate;
+    if (fuzzed_data_provider.ConsumeBool()) {
+        min_fee_rate.fee_rate = CFeeRate{ConsumeMoney(fuzzed_data_provider, /*max=*/COIN)};
+    }
+    if (fuzzed_data_provider.ConsumeBool()) {
+        min_fee_rate.returned_target = fuzzed_data_provider.ConsumeIntegralInRange<int>(0, 999'000);
+    }
+    if (fuzzed_data_provider.ConsumeBool()) {
+        min_fee_rate.fee_reason = fuzzed_data_provider.PickValueInArray({FeeReason::NONE, FeeReason::HALF_ESTIMATE, FeeReason::FULL_ESTIMATE, FeeReason::DOUBLE_ESTIMATE, FeeReason::CONSERVATIVE, FeeReason::MEMPOOL_MIN, FeeReason::FALLBACK, FeeReason::REQUIRED});
+    }
+    (void)GetMinimumFeeRate(wallet, coin_control);
+    (void)GetMinimumFee(min_fee_rate, tx_bytes);
 }
 } // namespace
 } // namespace wallet
