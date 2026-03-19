@@ -533,6 +533,11 @@ const btck_TransactionInput* btck_transaction_get_input_at(const btck_Transactio
     return btck_TransactionInput::ref(&btck_Transaction::get(transaction)->vin[input_index]);
 }
 
+uint32_t btck_transaction_get_locktime(const btck_Transaction* transaction)
+{
+    return btck_Transaction::get(transaction)->nLockTime;
+}
+
 const btck_Txid* btck_transaction_get_txid(const btck_Transaction* transaction)
 {
     return btck_Txid::ref(&btck_Transaction::get(transaction)->GetHash());
@@ -690,6 +695,11 @@ btck_TransactionInput* btck_transaction_input_copy(const btck_TransactionInput* 
 const btck_TransactionOutPoint* btck_transaction_input_get_out_point(const btck_TransactionInput* input)
 {
     return btck_TransactionOutPoint::ref(&btck_TransactionInput::get(input).prevout);
+}
+
+uint32_t btck_transaction_input_get_sequence(const btck_TransactionInput* input)
+{
+    return btck_TransactionInput::get(input).nSequence;
 }
 
 void btck_transaction_input_destroy(btck_TransactionInput* input)

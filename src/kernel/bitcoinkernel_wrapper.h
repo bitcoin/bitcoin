@@ -551,6 +551,11 @@ public:
     {
         return OutPointView{btck_transaction_input_get_out_point(impl())};
     }
+
+    uint32_t GetSequence() const
+    {
+        return btck_transaction_input_get_sequence(impl());
+    }
 };
 
 class TransactionInputView : public View<btck_TransactionInput>, public TransactionInputApi<TransactionInputView>
@@ -594,6 +599,11 @@ public:
     TransactionInputView GetInput(size_t index) const
     {
         return TransactionInputView{btck_transaction_get_input_at(impl(), index)};
+    }
+
+    uint32_t GetLocktime() const
+    {
+        return btck_transaction_get_locktime(impl());
     }
 
     TxidView Txid() const
