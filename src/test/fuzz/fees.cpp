@@ -8,10 +8,13 @@
 #include <test/fuzz/FuzzedDataProvider.h>
 #include <test/fuzz/fuzz.h>
 #include <test/fuzz/util.h>
+#include <util/fees.h>
 
 #include <cstdint>
 #include <string>
 #include <vector>
+
+using common::StringForFeeSource;
 
 FUZZ_TARGET(fees)
 {
@@ -26,4 +29,6 @@ FUZZ_TARGET(fees)
     }
     const FeeReason fee_reason = fuzzed_data_provider.PickValueInArray({FeeReason::NONE, FeeReason::HALF_ESTIMATE, FeeReason::FULL_ESTIMATE, FeeReason::DOUBLE_ESTIMATE, FeeReason::CONSERVATIVE, FeeReason::MEMPOOL_MIN, FeeReason::FALLBACK, FeeReason::REQUIRED});
     (void)StringForFeeReason(fee_reason);
+    const FeeSource fee_source = fuzzed_data_provider.PickValueInArray({FeeSource::FEE_RATE_ESTIMATOR, FeeSource::MEMPOOL_MIN, FeeSource::USER_SPECIFIED, FeeSource::FALLBACK, FeeSource::REQUIRED});
+    (void)StringForFeeSource(fee_source);
 }
