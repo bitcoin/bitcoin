@@ -238,34 +238,6 @@ BOOST_AUTO_TEST_CASE(testnet4_min_difficulty_pre_fork)
     BOOST_CHECK_EQUAL(bits, pow_limit);
 }
 
-/* Test that at the fork height, difficulty resets to 1,000,000 */
-BOOST_AUTO_TEST_CASE(testnet4_difficulty_reset_at_fork)
-{
-    const auto chainParams = CreateChainParams(*m_node.args, ChainType::TESTNET4);
-    const auto& consensus = chainParams->GetConsensus();
-    const int fork_height = consensus.min_difficulty_fork_height;
-
-    // Calculate expected difficulty: powLimit / 1,000,000
-    arith_uint256 expected_target = UintToArith256(consensus.powLimit);
-    expected_target /= 1000000;
-    const unsigned int expected_bits = expected_target.GetCompact();
-
-    // Create a mock chain so next block is at fork_height
-    CBlockIndex pindexPrev;
-    pindexPrev.nHeight = fork_height - 1;
-    pindexPrev.nTime = 1714777860;
-    pindexPrev.nBits = 0x1c00ffff;  // Some non-trivial (high) difficulty
-
-    // Block header doesn't matter for the reset - it happens unconditionally at fork height
-    CBlockHeader block;
-    block.nTime = pindexPrev.nTime + consensus.nPowTargetSpacing;
-
-    unsigned int bits = GetNextWorkRequired(&pindexPrev, &block, consensus);
-
-    // At fork height: difficulty should reset to 1,000,000
-    BOOST_CHECK_EQUAL(bits, expected_bits);
-}
-
 /* Test that testnet4 min-difficulty blocks are NOT allowed after the fork height */
 BOOST_AUTO_TEST_CASE(testnet4_min_difficulty_post_fork)
 {
@@ -302,40 +274,23 @@ BOOST_AUTO_TEST_CASE(testnet4_permitted_difficulty_transition)
     const unsigned int pow_limit = UintToArith256(consensus.powLimit).GetCompact();
     const unsigned int some_difficulty = 0x1c00ffff;
 
-    // Calculate the fork reset difficulty (1,000,000)
-    arith_uint256 fork_target = UintToArith256(consensus.powLimit);
-    fork_target /= 1000000;
-    const unsigned int fork_difficulty = fork_target.GetCompact();
-
     // Before fork: any transition should be permitted
     // because fPowAllowMinDifficultyBlocks is true and we're before fork
     BOOST_CHECK(PermittedDifficultyTransition(consensus, fork_height - 1, some_difficulty, pow_limit));
     BOOST_CHECK(PermittedDifficultyTransition(consensus, fork_height - 1, some_difficulty, some_difficulty));
     BOOST_CHECK(PermittedDifficultyTransition(consensus, fork_height - 1, pow_limit, some_difficulty));
 
-    // At fork: only transition to difficulty 1,000,000 is permitted
-    BOOST_CHECK(PermittedDifficultyTransition(consensus, fork_height, some_difficulty, fork_difficulty));
-    BOOST_CHECK(!PermittedDifficultyTransition(consensus, fork_height, some_difficulty, pow_limit));
-    BOOST_CHECK(!PermittedDifficultyTransition(consensus, fork_height, some_difficulty, some_difficulty));
-
-    // After fork: strict rules apply
+    // At and after fork: strict rules apply
     // For non-retarget heights, difficulty must stay the same
+    BOOST_CHECK(!PermittedDifficultyTransition(consensus, fork_height, some_difficulty, pow_limit));
+    BOOST_CHECK(PermittedDifficultyTransition(consensus, fork_height, some_difficulty, some_difficulty));
+
     BOOST_CHECK(!PermittedDifficultyTransition(consensus, fork_height + 1, some_difficulty, pow_limit));
     BOOST_CHECK(PermittedDifficultyTransition(consensus, fork_height + 1, some_difficulty, some_difficulty));
 
-    // Further after fork: same strict rules
     int non_retarget_height = fork_height + 800;
     BOOST_CHECK(!PermittedDifficultyTransition(consensus, non_retarget_height, some_difficulty, pow_limit));
     BOOST_CHECK(PermittedDifficultyTransition(consensus, non_retarget_height, some_difficulty, some_difficulty));
-
-    // At the next retarget after the fork, the transition must be based on the
-    // fork reset difficulty (1,000,000), not the pre-fork difficulty.
-    const int next_retarget = fork_height + consensus.DifficultyAdjustmentInterval();
-    // Retarget from fork_difficulty: within factor of 4 is permitted
-    BOOST_CHECK(PermittedDifficultyTransition(consensus, next_retarget, fork_difficulty, fork_difficulty));
-    // Transitioning from some unrelated pre-fork difficulty to fork_difficulty is not valid
-    // if it exceeds the 4x adjustment limit
-    BOOST_CHECK(!PermittedDifficultyTransition(consensus, next_retarget, fork_difficulty, pow_limit));
 }
 
 /* Test that regtest is unaffected by the fork (min_difficulty_fork_height = 0) */

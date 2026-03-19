@@ -34,14 +34,6 @@ std::optional<arith_uint256> DeriveTarget(unsigned int nBits, uint256 pow_limit)
  */
 bool AllowMinDifficultyBlocks(const Consensus::Params& params, int height);
 
-/**
- * At the testnet4 fork height where min-difficulty blocks are disabled,
- * difficulty resets to powLimit / 1,000,000 to compensate for the artificially
- * high difficulty caused by min-difficulty blocks, without causing a block storm.
- * Returns the compact target if this height is the fork height, or std::nullopt otherwise.
- */
-std::optional<unsigned int> GetMinDifficultyForkBits(const Consensus::Params& params, int height);
-
 unsigned int GetNextWorkRequired(const CBlockIndex* pindexLast, const CBlockHeader *pblock, const Consensus::Params&);
 unsigned int CalculateNextWorkRequired(const CBlockIndex* pindexLast, int64_t nFirstBlockTime, const Consensus::Params&);
 
