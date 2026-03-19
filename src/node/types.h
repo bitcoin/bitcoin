@@ -72,13 +72,6 @@ struct BlockCreateOptions {
      * coinbase_max_additional_weight and coinbase_output_max_additional_sigops.
      */
     CScript coinbase_output_script{CScript() << OP_TRUE};
-    /**
-     * Whether to include an OP_0 as a dummy extraNonce in the template's coinbase
-     *
-     * TODO: this can be dropped after regenerating hardcoded block and transaction
-     *       hashes in the test suite.
-     */
-    bool include_dummy_extranonce{false};
 };
 
 struct BlockWaitOptions {
