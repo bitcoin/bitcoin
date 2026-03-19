@@ -4,12 +4,15 @@
 
 #include <dbwrapper.h>
 #include <logging.h>
+#include <random.h>
 #include <sync.h>
 #include <test/fuzz/FuzzedDataProvider.h>
 #include <test/fuzz/fuzz.h>
 #include <test/fuzz/util.h>
 #include <test/util/random.h>
 #include <util/byte_units.h>
+#include <util/check.h>
+#include <util/threadpool.h>
 
 #include <leveldb/env.h>
 #include <leveldb/helpers/memenv/memenv.h>
@@ -18,10 +21,16 @@
 #include <cassert>
 #include <cstdint>
 #include <deque>
+#include <functional>
+#include <future>
+#include <latch>
 #include <map>
 #include <memory>
 #include <numeric>
+#include <optional>
+#include <ranges>
 #include <set>
+#include <string>
 #include <vector>
 
 namespace {
@@ -113,6 +122,16 @@ struct SerializedU16Cmp {
 void initialize_dbwrapper()
 {
     LogInstance().DisableLogging();
+}
+
+constexpr size_t NUM_WORKERS{16};
+ThreadPool g_pool{"dbfuzz"};
+
+void initialize_dbwrapper_concurrent_reads()
+{
+    LogInstance().DisableLogging();
+    // Will not work with fork. Different threads will cause deadlock via latch.
+    g_pool.Start(NUM_WORKERS);
 }
 
 } // namespace
@@ -259,6 +278,92 @@ FUZZ_TARGET(dbwrapper, .init = initialize_dbwrapper)
                 det_env.RunOne();
             });
     }
+
+    det_env.DrainWork();
+}
+
+FUZZ_TARGET(dbwrapper_concurrent_reads, .init = initialize_dbwrapper_concurrent_reads)
+{
+    SeedRandomStateForTest(SeedRand::ZEROS);
+
+    FuzzedDataProvider provider{buffer.data(), buffer.size()};
+    const size_t num_threads{provider.ConsumeIntegralInRange<uint8_t>(2, NUM_WORKERS)};
+
+    const auto memenv{std::unique_ptr<leveldb::Env>{leveldb::NewMemEnv(leveldb::Env::Default())}};
+    DeterministicEnv det_env{memenv.get()};
+
+    CDBWrapper db{DBParams{
+        .path = "",
+        .cache_bytes = 256 * 1024,
+        .obfuscate = true,
+        .testing_env = &det_env,
+        .max_file_size = 256 * 1024,
+    }};
+
+    // Seed the DB. Drain work between each to prevent deadlock.
+    // With write_buffer_size=64KB, ~860 entries fill a memtable,
+    // 4 flushes trigger L0→L1 compaction.
+    FastRandomContext rng{/*fDeterministic=*/true};
+    const size_t num_entries{provider.ConsumeIntegralInRange<size_t>(100, 5'000)};
+    std::vector<std::string> keys;
+    keys.reserve(num_entries);
+    constexpr size_t SEED_BATCH_SIZE{400};
+    for (size_t start{0}; start < num_entries; start += SEED_BATCH_SIZE) {
+        CDBBatch batch{db};
+        const size_t end{std::min(start + SEED_BATCH_SIZE, num_entries)};
+        for (size_t i{start}; i < end; ++i) {
+            auto k{rng.rand256().ToString()};
+            const auto v{rng.rand256().ToString()};
+            batch.Write(k, v);
+            keys.push_back(std::move(k));
+        }
+        det_env.DrainWork();
+        db.WriteBatch(batch, /*fSync=*/true);
+    }
+
+    while (det_env.HasPending() && provider.ConsumeBool()) {
+        det_env.RunOne();
+    }
+
+    // Build query list from seeded keys and random strings.
+    std::vector<std::string> queries;
+    LIMITED_WHILE(provider.ConsumeBool(), 2000) {
+        if (provider.ConsumeBool()) {
+            queries.push_back(keys[provider.ConsumeIntegralInRange<size_t>(0, keys.size() - 1)]);
+        } else {
+            queries.push_back(provider.ConsumeRandomLengthString(64));
+        }
+    }
+
+    // Baseline read on a single thread
+    using Results = std::vector<std::optional<std::string>>;
+    const auto num_queries{queries.size()};
+    Results baseline(num_queries);
+    for (const auto i : std::views::iota(size_t{0}, num_queries)) {
+        std::string v;
+        if (db.Read(queries[i], v)) baseline[i].emplace(std::move(v));
+    }
+
+    // Workers + main thread synchronize on the latch.
+    std::latch start_latch{static_cast<ptrdiff_t>(num_threads + 1)};
+
+    std::vector<std::function<Results()>> tasks(num_threads, [&]() -> Results {
+        Results results(num_queries);
+        start_latch.arrive_and_wait();
+        for (const auto i : std::views::iota(size_t{0}, num_queries)) {
+            if (std::string v; db.Read(queries[i], v)) results[i].emplace(std::move(v));
+        }
+        return results;
+    });
+
+    auto futures{*Assert(g_pool.Submit(std::move(tasks)))};
+
+    // Release the latch and immediately run compaction on the main
+    // thread, racing against the worker reads.
+    start_latch.arrive_and_wait();
+    det_env.DrainWork();
+
+    for (auto& fut : futures) assert(fut.get() == baseline);
 
     det_env.DrainWork();
 }
