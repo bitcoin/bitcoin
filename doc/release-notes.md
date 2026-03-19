@@ -41,6 +41,10 @@ Notable changes
 
 - #34093 netif: fix compilation warning in QueryDefaultGatewayImpl()
 
+### Build
+
+- #34848 cmake: Migrate away from deprecated SQLite3 target
+
 ### Doc
 
 - #34510 doc: fix broken bpftrace installation link
@@ -52,6 +56,7 @@ Credits
 
 Thanks to everyone who directly contributed to this release:
 
+- Daniel Pfeifer
 - Hennadii Stepanov
 - jayvaliya
 - MarcoFalke
