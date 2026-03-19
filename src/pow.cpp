@@ -18,30 +18,12 @@ bool AllowMinDifficultyBlocks(const Consensus::Params& params, int height)
     return height < params.min_difficulty_fork_height;
 }
 
-std::optional<unsigned int> GetMinDifficultyForkBits(const Consensus::Params& params, int height)
-{
-    if (!params.fPowAllowMinDifficultyBlocks) return std::nullopt;
-    if (params.min_difficulty_fork_height == 0 || height != params.min_difficulty_fork_height) return std::nullopt;
-    arith_uint256 target = UintToArith256(params.powLimit);
-    target /= 1000000;
-    return target.GetCompact();
-}
-
 unsigned int GetNextWorkRequired(const CBlockIndex* pindexLast, const CBlockHeader *pblock, const Consensus::Params& params)
 {
     assert(pindexLast != nullptr);
     unsigned int nProofOfWorkLimit = UintToArith256(params.powLimit).GetCompact();
 
     const int next_height = pindexLast->nHeight + 1;
-
-    if (params.fPowAllowMinDifficultyBlocks) {
-        // At the fork height, reset difficulty to compensate for the
-        // artificially high difficulty caused by min-difficulty blocks in testnet4.
-        if (auto fork_bits = GetMinDifficultyForkBits(params, next_height)) {
-            return *fork_bits;
-        }
-    }
-
     const bool allow_min_difficulty_blocks = AllowMinDifficultyBlocks(params, next_height);
 
     // Only change once per difficulty adjustment interval
@@ -116,14 +98,7 @@ unsigned int CalculateNextWorkRequired(const CBlockIndex* pindexLast, int64_t nF
 // or decrease beyond the permitted limits.
 bool PermittedDifficultyTransition(const Consensus::Params& params, int64_t height, uint32_t old_nbits, uint32_t new_nbits)
 {
-    if (params.fPowAllowMinDifficultyBlocks) {
-        if (AllowMinDifficultyBlocks(params, height)) return true;
-
-        // At the fork height, only the reset to difficulty 1,000,000 is valid
-        if (auto fork_bits = GetMinDifficultyForkBits(params, height)) {
-            return new_nbits == *fork_bits;
-        }
-    }
+    if (AllowMinDifficultyBlocks(params, height)) return true;
 
     if (height % params.DifficultyAdjustmentInterval() == 0) {
         int64_t smallest_timespan = params.nPowTargetTimespan/4;
