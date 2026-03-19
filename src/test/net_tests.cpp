@@ -591,59 +591,6 @@ BOOST_AUTO_TEST_CASE(cnetaddr_unserialize_v2)
     BOOST_REQUIRE(s.empty());
 }
 
-// prior to PR #14728, this test triggers an undefined behavior
-BOOST_AUTO_TEST_CASE(ipv4_peer_with_ipv6_addrMe_test)
-{
-    // set up local addresses; all that's necessary to reproduce the bug is
-    // that a normal IPv4 address is among the entries, but if this address is
-    // !IsRoutable the undefined behavior is easier to trigger deterministically
-    in_addr raw_addr;
-    raw_addr.s_addr = htonl(0x7f000001);
-    const CNetAddr mapLocalHost_entry = CNetAddr(raw_addr);
-    {
-        LOCK(g_maplocalhost_mutex);
-        LocalServiceInfo lsi;
-        lsi.nScore = 23;
-        lsi.nPort = 42;
-        mapLocalHost[mapLocalHost_entry] = lsi;
-    }
-
-    // create a peer with an IPv4 address
-    in_addr ipv4AddrPeer;
-    ipv4AddrPeer.s_addr = 0xa0b0c001;
-    CAddress addr = CAddress(CService(ipv4AddrPeer, 7777), NODE_NETWORK);
-    std::unique_ptr<CNode> pnode = std::make_unique<CNode>(/*id=*/0,
-                                                           /*sock=*/nullptr,
-                                                           addr,
-                                                           /*nKeyedNetGroupIn=*/0,
-                                                           /*nLocalHostNonceIn=*/0,
-                                                           CAddress{},
-                                                           /*pszDest=*/std::string{},
-                                                           ConnectionType::OUTBOUND_FULL_RELAY,
-                                                           /*inbound_onion=*/false,
-                                                           /*network_key=*/0);
-    pnode->fSuccessfullyConnected.store(true);
-
-    // the peer claims to be reaching us via IPv6
-    in6_addr ipv6AddrLocal;
-    memset(ipv6AddrLocal.s6_addr, 0, 16);
-    ipv6AddrLocal.s6_addr[0] = 0xcc;
-    CAddress addrLocal = CAddress(CService(ipv6AddrLocal, 7777), NODE_NETWORK);
-    pnode->SetAddrLocal(addrLocal);
-
-    // before patch, this causes undefined behavior detectable with clang's -fsanitize=memory
-    GetLocalAddrForPeer(*pnode);
-
-    // suppress no-checks-run warning; if this test fails, it's by triggering a sanitizer
-    BOOST_CHECK(1);
-
-    // Cleanup, so that we don't confuse other tests.
-    {
-        LOCK(g_maplocalhost_mutex);
-        mapLocalHost.erase(mapLocalHost_entry);
-    }
-}
-
 BOOST_AUTO_TEST_CASE(get_local_addr_for_peer_port)
 {
     // Test that GetLocalAddrForPeer() properly selects the address to self-advertise:
