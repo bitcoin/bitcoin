@@ -64,7 +64,7 @@ class IPCMiningTest(BitcoinTestFramework):
         # as it is being called before knowing whether capnp is available).
         self.capnp_modules = load_capnp_modules(self.config)
 
-    async def build_coinbase_test(self, template, ctx, miniwallet):
+    async def build_coinbase_test(self, template, ctx, miniwallet, extra_nonce=b""):
         self.log.debug("Build coinbase transaction using getCoinbaseTx()")
         assert template is not None
         coinbase_res = await mining_get_coinbase_tx(template, ctx)
@@ -80,7 +80,7 @@ class IPCMiningTest(BitcoinTestFramework):
         assert_equal(coinbase_res.scriptSigPrefix, bip34_prefix)
 
         # Typically a mining pool appends its name and an extraNonce
-        coinbase_tx.vin[0].scriptSig = coinbase_res.scriptSigPrefix
+        coinbase_tx.vin[0].scriptSig = coinbase_res.scriptSigPrefix + extra_nonce
 
         # We currently always provide a coinbase witness, even for empty
         # blocks, but this may change, so always check:
@@ -406,7 +406,12 @@ class IPCMiningTest(BitcoinTestFramework):
 
     def run_low_height_test(self):
         """Test that IPC createNewBlock() works at low block heights on a
-        clean chain. Currently fails with bad-cb-length and falls back to RPC."""
+        clean chain, in particular with regard to bad-cb-length.
+
+        createNewBlock pads the scriptSig with a dummy extranonce to pass
+        its internal CheckBlock(). This dummy is omitted from the
+        getCoinbaseTx() script_sig_prefix field. The client provides its
+        own extraNonce via submitSolution()."""
         self.log.info("Running low block height test")
 
         node = self.nodes[0]
@@ -417,26 +422,24 @@ class IPCMiningTest(BitcoinTestFramework):
         node.wait_for_rpc_connection()
         assert_equal(node.getblockcount(), 0)
 
+        miniwallet = MiniWallet(node)
+
         async def async_routine():
             ctx, mining = await make_mining_ctx(self)
             opts = self.capnp_modules['mining'].BlockCreateOptions()
 
             async with AsyncExitStack() as stack:
-                self.log.debug("Verify createNewBlock() fails at height 0 (bad-cb-length)")
-                try:
-                    # Disable cooldown to avoid hanging in the IBD loop on a fresh chain
-                    await mining_create_block_template(mining, stack, ctx, opts, cooldown=False)
-                    raise AssertionError("createNewBlock() should have failed at height 0")
-                except capnp.lib.capnp.KjException as e:
-                    assert_capnp_failed(e, "remote exception: std::exception: TestBlockValidity failed: bad-cb-length")
-
-                self.log.debug("Mine 16 blocks via generate RPC to pass BIP34 height threshold")
-                self.generate(node, 16, sync_fun=self.no_op)
-                assert_equal(node.getblockcount(), 16)
-
-                self.log.debug("Verify createNewBlock() now succeeds at height 16")
+                # Disable cooldown to avoid hanging in the IBD loop on a fresh chain
                 template = await mining_create_block_template(mining, stack, ctx, opts, cooldown=False)
                 assert template is not None
+                block = await mining_get_block(template, ctx)
+                coinbase = await self.build_coinbase_test(template, ctx, miniwallet, extra_nonce=b'\xaa\xbb\xcc\xdd')
+                block.vtx[0] = coinbase
+                block.hashMerkleRoot = block.calc_merkle_root()
+                block.solve()
+                submitted = (await template.submitSolution(ctx, block.nVersion, block.nTime, block.nNonce, coinbase.serialize())).result
+                assert_equal(submitted, True)
+                assert_equal(node.getblockcount(), 1)
 
         asyncio.run(capnp.run(async_routine()))
 
