@@ -17,6 +17,12 @@
 #include <policy/fees/block_policy_estimator.h>
 
 namespace wallet {
+struct MinimumFeeRateResult {
+    CFeeRate fee_rate;
+    FeeReason fee_reason = FeeReason::NONE;
+    int returned_target = 0;
+};
+
 /**
  * Address purpose field that has been been stored with wallet sending and
  * receiving addresses since BIP70 payment protocol support was added in
@@ -35,11 +41,11 @@ struct CreatedTransactionResult
 {
     CTransactionRef tx;
     CAmount fee;
-    FeeCalculation fee_calc;
+    FeeReason fee_reason;
     std::optional<unsigned int> change_pos;
 
-    CreatedTransactionResult(CTransactionRef _tx, CAmount _fee, std::optional<unsigned int> _change_pos, const FeeCalculation& _fee_calc)
-            : tx(_tx), fee(_fee), fee_calc(_fee_calc), change_pos(_change_pos) {}
+    CreatedTransactionResult(CTransactionRef _tx, CAmount _fee, std::optional<unsigned int> _change_pos, FeeReason _fee_reason)
+        : tx(_tx), fee(_fee), fee_reason(_fee_reason), change_pos(_change_pos) {}
 };
 
 } // namespace wallet
