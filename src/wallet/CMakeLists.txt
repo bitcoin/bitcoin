@@ -49,8 +49,7 @@ if(USE_SQLITE)
   target_sources(bitcoin_wallet PRIVATE sqlite.cpp)
   target_link_libraries(bitcoin_wallet
     PRIVATE
-      $<TARGET_NAME_IF_EXISTS:unofficial::sqlite3::sqlite3>
-      $<TARGET_NAME_IF_EXISTS:SQLite::SQLite3>
+      SQLite3::SQLite3
   )
 endif()
 if(USE_BDB)
