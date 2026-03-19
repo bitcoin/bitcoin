@@ -169,8 +169,11 @@ public:
         SetClean();
     }
 
-    static void SetDirty(CoinsCachePair& pair, CoinsCachePair& sentinel) noexcept { AddFlags(DIRTY, pair, sentinel); }
-    static void SetFresh(CoinsCachePair& pair, CoinsCachePair& sentinel) noexcept { AddFlags(FRESH, pair, sentinel); }
+    static void SetDirty(CoinsCachePair& pair, CoinsCachePair& sentinel, bool fresh = false) noexcept
+    {
+        AddFlags(DIRTY | (fresh ? FRESH : 0), pair, sentinel);
+    }
+    static void SetFresh(CoinsCachePair& pair, CoinsCachePair& sentinel) noexcept { AddFlags(FRESH, pair, sentinel); } // TODO also remove from tests
 
     void SetClean() noexcept
     {
