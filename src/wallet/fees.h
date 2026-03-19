@@ -10,7 +10,6 @@
 #include <wallet/types.h>
 
 class CFeeRate;
-struct FeeCalculation;
 
 namespace wallet {
 class CCoinControl;

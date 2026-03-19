@@ -9,6 +9,7 @@
 #include <test/util/setup_common.h>
 #include <test/util/time.h>
 #include <test/util/txmempool.h>
+#include <util/fees.h>
 #include <validation.h>
 #include <wallet/coincontrol.h>
 #include <wallet/fees.h>
@@ -124,7 +125,7 @@ FUZZ_TARGET(wallet_fees, .init = initialize_setup)
         min_fee_rate.returned_target = fuzzed_data_provider.ConsumeIntegralInRange<int>(0, 999'000);
     }
     if (fuzzed_data_provider.ConsumeBool()) {
-        min_fee_rate.fee_reason = fuzzed_data_provider.PickValueInArray({FeeReason::NONE, FeeReason::HALF_ESTIMATE, FeeReason::FULL_ESTIMATE, FeeReason::DOUBLE_ESTIMATE, FeeReason::CONSERVATIVE, FeeReason::MEMPOOL_MIN, FeeReason::FALLBACK, FeeReason::REQUIRED});
+        min_fee_rate.fee_source = fuzzed_data_provider.PickValueInArray({FeeSource::FEE_RATE_ESTIMATOR, FeeSource::MEMPOOL_MIN, FeeSource::USER_SPECIFIED, FeeSource::FALLBACK, FeeSource::REQUIRED});
     }
     (void)GetMinimumFeeRate(wallet, coin_control);
     (void)GetMinimumFee(min_fee_rate, tx_bytes);
