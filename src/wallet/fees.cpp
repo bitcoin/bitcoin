@@ -3,8 +3,8 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
+#include <policy/fees/block_policy_estimator.h>
 #include <wallet/fees.h>
-
 #include <wallet/coincontrol.h>
 #include <wallet/wallet.h>
 
@@ -54,20 +54,20 @@ MinimumFeeRateResult GetMinimumFeeRate(const CWallet& wallet, const CCoinControl
         if (res.fee_rate == CFeeRate(0)) {
             // if we don't have enough data for estimateSmartFee, then use fallback fee
             res.fee_rate = wallet.m_fallback_fee;
-            res.fee_reason = FeeReason::FALLBACK;
+            res.fee_source = FeeSource::FALLBACK;
 
             // directly return if fallback fee is disabled (feerate 0 == disabled)
             if (wallet.m_fallback_fee == CFeeRate(0)) return res;
         } else {
             res.returned_target = feeCalc.returnedTarget;
-            res.fee_reason = feeCalc.reason;
+            res.fee_source = FeeSource::FEE_RATE_ESTIMATOR;
         }
 
         // Obey mempool min fee when using smart fee estimation
         CFeeRate min_mempool_feerate = wallet.chain().mempoolMinFee();
         if (res.fee_rate < min_mempool_feerate) {
             res.fee_rate = min_mempool_feerate;
-            res.fee_reason = FeeReason::MEMPOOL_MIN;
+            res.fee_source = FeeSource::MEMPOOL_MIN;
         }
     }
 
@@ -75,7 +75,7 @@ MinimumFeeRateResult GetMinimumFeeRate(const CWallet& wallet, const CCoinControl
     CFeeRate required_feerate = GetRequiredFeeRate(wallet);
     if (required_feerate > res.fee_rate) {
         res.fee_rate = required_feerate;
-        res.fee_reason = FeeReason::REQUIRED;
+        res.fee_source = FeeSource::REQUIRED;
     }
     return res;
 }

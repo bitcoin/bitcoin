@@ -4,6 +4,7 @@
 
 #include <algorithm>
 #include <common/args.h>
+#include <common/messages.h>
 #include <common/system.h>
 #include <consensus/amount.h>
 #include <consensus/validation.h>
@@ -31,6 +32,7 @@
 
 #include <cmath>
 
+using common::StringForFeeSource;
 using common::TransactionErrorString;
 using interfaces::FoundBlock;
 using node::TransactionError;
@@ -1159,7 +1161,7 @@ static util::Result<CreatedTransactionResult> CreateTransactionInternal(
     if (coin_control.m_feerate && coin_selection_params.m_effective_feerate > *coin_control.m_feerate) {
         return util::Error{strprintf(_("Fee rate (%s) is lower than the minimum fee rate setting (%s)"), coin_control.m_feerate->ToString(FeeRateFormat::SAT_VB), coin_selection_params.m_effective_feerate.ToString(FeeRateFormat::SAT_VB))};
     }
-    if (min_fee_rate.fee_reason == FeeReason::FALLBACK && !wallet.m_allow_fallback_fee) {
+    if (min_fee_rate.fee_source == FeeSource::FALLBACK && !wallet.m_allow_fallback_fee) {
         // eventually allow a fallback fee
         return util::Error{strprintf(_("Fee estimation failed. Fallbackfee is disabled. Wait a few blocks or enable %s."), "-fallbackfee")};
     }
@@ -1424,9 +1426,9 @@ static util::Result<CreatedTransactionResult> CreateTransactionInternal(
     reservedest.KeepDestination();
 
     wallet.WalletLogPrintf("Coin Selection: Algorithm:%s, Waste Metric Score:%d\n", GetAlgorithmName(result.GetAlgo()), result.GetWaste());
-    wallet.WalletLogPrintf("Fee Calculation: Fee:%d Bytes:%u\n",
-                           current_fee, nBytes); // FIXME log fee_source
-    return CreatedTransactionResult(tx, current_fee, change_pos, min_fee_rate.fee_reason);
+    wallet.WalletLogPrintf("Fee Calculation: Fee:%d Bytes:%u, Source: %s \n",
+                           current_fee, nBytes, StringForFeeSource(min_fee_rate.fee_source));
+    return CreatedTransactionResult(tx, current_fee, change_pos, min_fee_rate.fee_source);
 }
 
 util::Result<CreatedTransactionResult> CreateTransaction(

@@ -27,6 +27,7 @@
 using common::FeeModeFromString;
 using common::FeeModesDetail;
 using common::InvalidEstimateModeErrorMessage;
+using common::StringForFeeSource;
 using common::TransactionErrorString;
 using node::TransactionError;
 
@@ -190,7 +191,7 @@ UniValue SendMoney(CWallet& wallet, const CCoinControl &coin_control, std::vecto
     if (verbose) {
         UniValue entry(UniValue::VOBJ);
         entry.pushKV("txid", tx->GetHash().GetHex());
-        entry.pushKV("fee_reason", ""); // FIXME Return fee_source
+        entry.pushKV("fee_reason", StringForFeeSource(res->fee_source));
         return entry;
     }
     return tx->GetHash().GetHex();
@@ -267,7 +268,7 @@ RPCHelpMan sendtoaddress()
                         RPCResult::Type::OBJ, "", "",
                         {
                             {RPCResult::Type::STR_HEX, "txid", "The transaction id."},
-                            {RPCResult::Type::STR, "fee_reason", "The transaction fee reason."}
+                            {RPCResult::Type::STR, "fee_reason", "(DEPRECATED) The transaction fee source. (The key is not renamed to fee_source to maintain backward compatibility during the deprecation period)"}
                         },
                     },
                 },
@@ -374,7 +375,7 @@ RPCHelpMan sendmany()
                         {
                             {RPCResult::Type::STR_HEX, "txid", "The transaction id for the send. Only 1 transaction is created regardless of\n"
                 "the number of addresses."},
-                            {RPCResult::Type::STR, "fee_reason", "The transaction fee reason."}
+                            {RPCResult::Type::STR, "fee_reason", "(DEPRECATED) The transaction fee source. (The key is not renamed to fee_source to maintain backward compatibility during the deprecation period)"}
                         },
                     },
                 },
@@ -1429,13 +1430,13 @@ RPCHelpMan sendall()
 
             const bool rbf{options.exists("replaceable") ? options["replaceable"].get_bool() : pwallet->m_signal_rbf};
 
-            auto [fee_rate, fee_reason, returned_target] = GetMinimumFeeRate(*pwallet, coin_control);
+            auto [fee_rate, fee_source, returned_target] = GetMinimumFeeRate(*pwallet, coin_control);
             // Do not, ever, assume that it's fine to change the fee rate if the user has explicitly
             // provided one
             if (coin_control.m_feerate && fee_rate > *coin_control.m_feerate) {
                 throw JSONRPCError(RPC_INVALID_PARAMETER, strprintf("Fee rate (%s) is lower than the minimum fee rate setting (%s)", coin_control.m_feerate->ToString(FeeRateFormat::SAT_VB), fee_rate.ToString(FeeRateFormat::SAT_VB)));
             }
-            if (fee_reason == FeeReason::FALLBACK && !pwallet->m_allow_fallback_fee) {
+            if (fee_source == FeeSource::FALLBACK && !pwallet->m_allow_fallback_fee) {
                 // eventually allow a fallback fee
                 throw JSONRPCError(RPC_WALLET_ERROR, "Fee estimation failed. Fallbackfee is disabled. Wait a few blocks or enable -fallbackfee.");
             }
