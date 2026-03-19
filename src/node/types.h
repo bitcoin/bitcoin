@@ -74,6 +74,9 @@ struct BlockCreateOptions {
     CScript coinbase_output_script{CScript() << OP_TRUE};
     /**
      * Whether to include an OP_0 as a dummy extraNonce in the template's coinbase
+     *
+     * TODO: this can be dropped after regenerating hardcoded block and transaction
+     *       hashes in the test suite.
      */
     bool include_dummy_extranonce{false};
 };
@@ -125,7 +128,9 @@ struct CoinbaseTx {
      * Prefix which needs to be placed at the beginning of the scriptSig.
      * Clients may append extra data to this as long as the overall scriptSig
      * size is 100 bytes or less, to avoid the block being rejected with
-     * "bad-cb-length" error.
+     * "bad-cb-length" error. At heights <= 16 the BIP 34 height push is only
+     * one byte long, so clients must append at least one additional byte to
+     * meet the consensus minimum scriptSig length of two bytes.
      *
      * Currently with BIP 34, the prefix is guaranteed to be less than 8 bytes,
      * but future soft forks could require longer prefixes.
