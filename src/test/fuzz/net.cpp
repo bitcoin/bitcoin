@@ -88,8 +88,7 @@ FUZZ_TARGET(local_address, .init = initialize_net)
     CAddress address{ConsumeAddress(fuzzed_data_provider)};
     CNode node{ConsumeNode(fuzzed_data_provider)};
     {
-        LOCK(g_maplocalhost_mutex);
-        mapLocalHost.clear();
+        ClearLocal();
     }
     LIMITED_WHILE(fuzzed_data_provider.ConsumeBool(), 10000) {
         CallOneOf(
