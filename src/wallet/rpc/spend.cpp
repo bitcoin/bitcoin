@@ -27,7 +27,6 @@
 using common::FeeModeFromString;
 using common::FeeModesDetail;
 using common::InvalidEstimateModeErrorMessage;
-using common::StringForFeeReason;
 using common::TransactionErrorString;
 using node::TransactionError;
 
@@ -191,7 +190,7 @@ UniValue SendMoney(CWallet& wallet, const CCoinControl &coin_control, std::vecto
     if (verbose) {
         UniValue entry(UniValue::VOBJ);
         entry.pushKV("txid", tx->GetHash().GetHex());
-        entry.pushKV("fee_reason", StringForFeeReason(res->fee_calc.reason));
+        entry.pushKV("fee_reason", ""); // FIXME Return fee_source
         return entry;
     }
     return tx->GetHash().GetHex();

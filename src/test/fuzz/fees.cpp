@@ -13,8 +13,6 @@
 #include <string>
 #include <vector>
 
-using common::StringForFeeReason;
-
 FUZZ_TARGET(fees)
 {
     FuzzedDataProvider fuzzed_data_provider(buffer.data(), buffer.size());
