@@ -121,7 +121,7 @@ std::string ScriptErrorString(const ScriptError serror)
             return "Script number overflowed or is non-minimally encoded";
         case SCRIPT_ERR_UNKNOWN_ERROR:
         case SCRIPT_ERR_ERROR_COUNT:
-        default: break;
-    }
+            break;
+    } // no default case, so the compiler can warn about missing cases
     return "unknown error";
 }

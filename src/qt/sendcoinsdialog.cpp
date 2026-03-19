@@ -749,12 +749,9 @@ void SendCoinsDialog::processSendCoinsReturn(const WalletModel::SendCoinsReturn 
     case WalletModel::AbsurdFee:
         msgParams.first = tr("A fee higher than %1 is considered an absurdly high fee.").arg(BitcoinUnits::formatWithUnit(model->getOptionsModel()->getDisplayUnit(), model->wallet().getDefaultMaxTxFee()));
         break;
-    // included to prevent a compiler warning.
     case WalletModel::OK:
-    default:
         return;
-    }
-
+    } // no default case, so the compiler can warn about missing cases
     Q_EMIT message(tr("Send Coins"), msgParams.first, msgParams.second);
 }
 

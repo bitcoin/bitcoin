@@ -42,12 +42,15 @@ static void SignTransactionSingleInput(benchmark::Bench& bench, InputType input_
         keystore.pubkeys.emplace(key_id, pubkey);
 
         // Create specified locking script type
-        CScript prev_spk;
-        switch (input_type) {
-        case InputType::P2WPKH: prev_spk = GetScriptForDestination(WitnessV0KeyHash(pubkey)); break;
-        case InputType::P2TR:   prev_spk = GetScriptForDestination(WitnessV1Taproot(XOnlyPubKey{pubkey})); break;
-        default: assert(false);
-        }
+        CScript prev_spk = [&]() {
+            switch (input_type) {
+            case InputType::P2WPKH:
+                return GetScriptForDestination(WitnessV0KeyHash(pubkey));
+            case InputType::P2TR:
+                return GetScriptForDestination(WitnessV1Taproot(XOnlyPubKey{pubkey}));
+            } // no default case, so the compiler can warn about missing cases
+            assert(false);
+        }();
         prev_spks.push_back(prev_spk);
     }
 

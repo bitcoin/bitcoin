@@ -153,8 +153,7 @@ void SignVerifyMessageDialog::on_signMessageButton_SM_clicked()
         case SigningResult::SIGNING_FAILED:
             error = tr("Message signing failed.");
             break;
-        // no default case, so the compiler can warn about missing cases
-    }
+    } // no default case, so the compiler can warn about missing cases
 
     if (res != SigningResult::OK) {
         ui->statusLabel_SM->setStyleSheet("QLabel { color: red; }");

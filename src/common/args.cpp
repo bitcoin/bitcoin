@@ -717,9 +717,9 @@ std::string ArgsManager::GetHelpMessage() const
             case OptionsCategory::CLI_COMMANDS:
                 usage += HelpMessageGroup("CLI Commands:");
                 break;
-            default:
+            case OptionsCategory::HIDDEN:
                 break;
-        }
+        } // no default case, so the compiler can warn about missing cases
 
         // When we get to the hidden options, stop
         if (arg_map.first == OptionsCategory::HIDDEN) break;

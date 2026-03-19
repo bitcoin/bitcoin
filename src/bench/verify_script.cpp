@@ -41,12 +41,13 @@ static void VerifyScriptBench(benchmark::Bench& bench, ScriptType script_type)
     keystore.pubkeys.emplace(key_id, pubkey);
 
     // Create crediting and spending transactions with provided input type
-    CTxDestination dest;
-    switch (script_type) {
-    case ScriptType::P2WPKH: dest = WitnessV0KeyHash(pubkey); break;
-    case ScriptType::P2TR:   dest = WitnessV1Taproot(XOnlyPubKey{pubkey}); break;
-    default: assert(false);
-    }
+    const auto dest{[&]() -> CTxDestination {
+        switch (script_type) {
+        case ScriptType::P2WPKH: return WitnessV0KeyHash(pubkey);
+        case ScriptType::P2TR: return WitnessV1Taproot(XOnlyPubKey{pubkey});
+        } // no default case, so the compiler can warn about missing cases
+        assert(false);
+    }()};
     const CMutableTransaction& txCredit = BuildCreditingTransaction(GetScriptForDestination(dest), 1);
     CMutableTransaction txSpend = BuildSpendingTransaction(/*scriptSig=*/{}, /*scriptWitness=*/{}, CTransaction(txCredit));
 

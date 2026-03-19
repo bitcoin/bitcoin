@@ -967,8 +967,7 @@ std::string GetAlgorithmName(const SelectionAlgorithm algo)
     case SelectionAlgorithm::SRD: return "srd";
     case SelectionAlgorithm::CG: return "cg";
     case SelectionAlgorithm::MANUAL: return "manual";
-    // No default case to allow for compiler to warn
-    }
+    } // no default case, so the compiler can warn about missing cases
     assert(false);
 }
 

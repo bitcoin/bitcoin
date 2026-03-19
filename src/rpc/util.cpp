@@ -583,29 +583,29 @@ RPCHelpMan::RPCHelpMan(std::string name, std::string description, std::vector<RP
         // Default value type should match argument type only when defined
         if (arg.m_fallback.index() == 2) {
             const RPCArg::Type type = arg.m_type;
-            switch (std::get<RPCArg::Default>(arg.m_fallback).getType()) {
-            case UniValue::VOBJ:
-                CHECK_NONFATAL(type == RPCArg::Type::OBJ);
-                break;
-            case UniValue::VARR:
-                CHECK_NONFATAL(type == RPCArg::Type::ARR);
-                break;
-            case UniValue::VSTR:
-                CHECK_NONFATAL(type == RPCArg::Type::STR || type == RPCArg::Type::STR_HEX || type == RPCArg::Type::AMOUNT);
-                break;
-            case UniValue::VNUM:
-                CHECK_NONFATAL(type == RPCArg::Type::NUM || type == RPCArg::Type::AMOUNT || type == RPCArg::Type::RANGE);
-                break;
-            case UniValue::VBOOL:
-                CHECK_NONFATAL(type == RPCArg::Type::BOOL);
-                break;
-            case UniValue::VNULL:
-                // Null values are accepted in all arguments
-                break;
-            default:
+            [&]() {
+                switch (std::get<RPCArg::Default>(arg.m_fallback).getType()) {
+                case UniValue::VOBJ:
+                    CHECK_NONFATAL(type == RPCArg::Type::OBJ);
+                    return;
+                case UniValue::VARR:
+                    CHECK_NONFATAL(type == RPCArg::Type::ARR);
+                    return;
+                case UniValue::VSTR:
+                    CHECK_NONFATAL(type == RPCArg::Type::STR || type == RPCArg::Type::STR_HEX || type == RPCArg::Type::AMOUNT);
+                    return;
+                case UniValue::VNUM:
+                    CHECK_NONFATAL(type == RPCArg::Type::NUM || type == RPCArg::Type::AMOUNT || type == RPCArg::Type::RANGE);
+                    return;
+                case UniValue::VBOOL:
+                    CHECK_NONFATAL(type == RPCArg::Type::BOOL);
+                    return;
+                case UniValue::VNULL:
+                    // Null values are accepted in all arguments
+                    return;
+                } // no default case, so the compiler can warn about missing cases
                 NONFATAL_UNREACHABLE();
-                break;
-            }
+            }();
         }
     }
 }
