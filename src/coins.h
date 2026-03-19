@@ -173,7 +173,6 @@ public:
     {
         AddFlags(DIRTY | (fresh ? FRESH : 0), pair, sentinel);
     }
-    static void SetFresh(CoinsCachePair& pair, CoinsCachePair& sentinel) noexcept { AddFlags(FRESH, pair, sentinel); } // TODO also remove from tests
 
     void SetClean() noexcept
     {
@@ -186,14 +185,12 @@ public:
     bool IsDirty() const noexcept { return m_flags & DIRTY; }
     bool IsFresh() const noexcept { return m_flags & FRESH; }
 
-    //! Only call Next when this entry is DIRTY, FRESH, or both
     CoinsCachePair* Next() const noexcept
     {
         Assume(m_flags);
         return m_next;
     }
 
-    //! Only call Prev when this entry is DIRTY, FRESH, or both
     CoinsCachePair* Prev() const noexcept
     {
         Assume(m_flags);
