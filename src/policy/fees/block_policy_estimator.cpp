@@ -48,6 +48,25 @@ std::string StringForFeeEstimateHorizon(FeeEstimateHorizon horizon)
     assert(false);
 }
 
+std::string StringForFeeReason(FeeReason reason)
+{
+    static const std::map<FeeReason, std::string> fee_reason_strings = {
+        {FeeReason::NONE, "None"},
+        {FeeReason::HALF_ESTIMATE, "Half Target 60% Threshold"},
+        {FeeReason::FULL_ESTIMATE, "Target 85% Threshold"},
+        {FeeReason::DOUBLE_ESTIMATE, "Double Target 95% Threshold"},
+        {FeeReason::CONSERVATIVE, "Conservative Double Target longer horizon"},
+        {FeeReason::MEMPOOL_MIN, "Mempool Min Fee"},
+        {FeeReason::FALLBACK, "Fallback fee"},
+        {FeeReason::REQUIRED, "Minimum Required Fee"},
+    };
+    auto reason_string = fee_reason_strings.find(reason);
+
+    if (reason_string == fee_reason_strings.end()) return "Unknown";
+
+    return reason_string->second;
+}
+
 namespace {
 
 struct EncodedDoubleFormatter
@@ -872,11 +891,12 @@ CFeeRate CBlockPolicyEstimator::estimateSmartFee(int confTarget, FeeCalculation 
 {
     LOCK(m_cs_fee_estimator);
 
-    if (feeCalc) {
-        feeCalc->desiredTarget = confTarget;
-        feeCalc->returnedTarget = confTarget;
-        feeCalc->best_height = nBestSeenHeight;
-    }
+    FeeCalculation temp_fee_calc;
+    if (!feeCalc) feeCalc = &temp_fee_calc;
+
+    feeCalc->desiredTarget = confTarget;
+    feeCalc->returnedTarget = confTarget;
+    feeCalc->best_height = nBestSeenHeight;
 
     double median = -1;
     EstimationResult tempResult;
@@ -951,6 +971,15 @@ CFeeRate CBlockPolicyEstimator::estimateSmartFee(int confTarget, FeeCalculation 
     }
 
     if (median < 0) return CFeeRate(0); // error condition
+
+    LogDebug(BCLog::ESTIMATEFEE, "estimateSmartFee Selected feerate :%g Tgt:%d (requested %d) Reason:\"%s\" Decay %.5f: Estimation: (%g - %g) %.2f%% %.1f/(%.1f %d mem %.1f out) Fail: (%g - %g) %.2f%% %.1f/(%.1f %d mem %.1f out)\n",
+             median, feeCalc->returnedTarget, feeCalc->desiredTarget, StringForFeeReason(feeCalc->reason), feeCalc->est.decay,
+             feeCalc->est.pass.start, feeCalc->est.pass.end,
+             (feeCalc->est.pass.totalConfirmed + feeCalc->est.pass.inMempool + feeCalc->est.pass.leftMempool) > 0.0 ? 100 * feeCalc->est.pass.withinTarget / (feeCalc->est.pass.totalConfirmed + feeCalc->est.pass.inMempool + feeCalc->est.pass.leftMempool) : 0.0,
+             feeCalc->est.pass.withinTarget, feeCalc->est.pass.totalConfirmed, feeCalc->est.pass.inMempool, feeCalc->est.pass.leftMempool,
+             feeCalc->est.fail.start, feeCalc->est.fail.end,
+             (feeCalc->est.fail.totalConfirmed + feeCalc->est.fail.inMempool + feeCalc->est.fail.leftMempool) > 0.0 ? 100 * feeCalc->est.fail.withinTarget / (feeCalc->est.fail.totalConfirmed + feeCalc->est.fail.inMempool + feeCalc->est.fail.leftMempool) : 0.0,
+             feeCalc->est.fail.withinTarget, feeCalc->est.fail.totalConfirmed, feeCalc->est.fail.inMempool, feeCalc->est.fail.leftMempool);
 
     return CFeeRate(llround(median));
 }
