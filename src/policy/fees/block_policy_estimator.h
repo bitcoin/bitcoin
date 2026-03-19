@@ -63,9 +63,6 @@ enum class FeeReason {
     FULL_ESTIMATE,
     DOUBLE_ESTIMATE,
     CONSERVATIVE,
-    MEMPOOL_MIN,
-    FALLBACK,
-    REQUIRED,
 };
 
 std::string StringForFeeReason(FeeReason reason);

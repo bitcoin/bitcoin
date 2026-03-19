@@ -56,9 +56,6 @@ std::string StringForFeeReason(FeeReason reason)
         {FeeReason::FULL_ESTIMATE, "Target 85% Threshold"},
         {FeeReason::DOUBLE_ESTIMATE, "Double Target 95% Threshold"},
         {FeeReason::CONSERVATIVE, "Conservative Double Target longer horizon"},
-        {FeeReason::MEMPOOL_MIN, "Mempool Min Fee"},
-        {FeeReason::FALLBACK, "Fallback fee"},
-        {FeeReason::REQUIRED, "Minimum Required Fee"},
     };
     auto reason_string = fee_reason_strings.find(reason);
 
