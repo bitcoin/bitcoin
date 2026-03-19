@@ -720,8 +720,8 @@ static RPCMethod getnetworkinfo()
     }
     UniValue localAddresses(UniValue::VARR);
     {
-        LOCK(g_maplocalhost_mutex);
-        for (const std::pair<const CNetAddr, LocalServiceInfo> &item : mapLocalHost)
+        auto addresses = getNetLocalAddresses();
+        for (const std::pair<const CNetAddr, LocalServiceInfo> &item : addresses)
         {
             UniValue rec(UniValue::VOBJ);
             rec.pushKV("address", item.first.ToStringAddr());
