@@ -7,7 +7,7 @@ To quickly get started fuzzing Bitcoin Core using [libFuzzer](https://llvm.org/d
 ```sh
 $ git clone https://github.com/bitcoin/bitcoin
 $ cd bitcoin/
-$ cmake --preset=libfuzzer
+$ cmake --preset=libfuzzer -B build_fuzz
 $ cmake --build build_fuzz
 $ FUZZ=process_message build_fuzz/bin/fuzz
 # abort fuzzing using ctrl-c
