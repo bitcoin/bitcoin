@@ -21,7 +21,7 @@
 // General test values
 int NUM_WORKERS_DEFAULT = 0;
 constexpr char POOL_NAME[] = "test";
-constexpr auto WAIT_TIMEOUT = 120s;
+constexpr auto TEST_WAIT_TIMEOUT = 120s;
 
 struct ThreadPoolFixture {
     ThreadPoolFixture() {
@@ -51,7 +51,7 @@ BOOST_FIXTURE_TEST_SUITE(threadpool_tests, ThreadPoolFixture)
 #define WAIT_FOR(futures)                                                         \
     do {                                                                          \
         for (const auto& f : futures) {                                           \
-            BOOST_REQUIRE(f.wait_for(WAIT_TIMEOUT) == std::future_status::ready); \
+            BOOST_REQUIRE(f.wait_for(TEST_WAIT_TIMEOUT) == std::future_status::ready); \
         }                                                                         \
     } while (0)
 
@@ -180,7 +180,7 @@ BOOST_AUTO_TEST_CASE(wait_for_task_to_finish)
         UninterruptibleSleep(200ms);
         flag.store(true, std::memory_order_release);
     });
-    BOOST_CHECK(future.wait_for(WAIT_TIMEOUT) == std::future_status::ready);
+    BOOST_CHECK(future.wait_for(TEST_WAIT_TIMEOUT) == std::future_status::ready);
     BOOST_CHECK(flag.load(std::memory_order_acquire));
 }
 
