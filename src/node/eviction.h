@@ -17,7 +17,7 @@ typedef int64_t NodeId;
 
 struct NodeEvictionCandidate {
     NodeId id;
-    std::chrono::seconds m_connected;
+    NodeClock::time_point m_connected;
     NodeClock::duration m_min_ping_time;
     std::chrono::seconds m_last_block_time;
     std::chrono::seconds m_last_tx_time;

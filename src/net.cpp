@@ -566,7 +566,7 @@ void CNode::CloseSocketDisconnect()
             m_addr_name.c_str(),
             ConnectionTypeAsString().c_str(),
             ConnectedThroughNetwork(),
-            Ticks<std::chrono::seconds>(m_connected));
+            TicksSinceEpoch<std::chrono::seconds>(m_connected));
     }
     m_i2p_sam_session.reset();
 }
@@ -1727,7 +1727,7 @@ bool CConnman::AttemptToEvictConnection()
                 pnode->m_addr_name.c_str(),
                 pnode->ConnectionTypeAsString().c_str(),
                 pnode->ConnectedThroughNetwork(),
-                Ticks<std::chrono::seconds>(pnode->m_connected));
+                TicksSinceEpoch<std::chrono::seconds>(pnode->m_connected));
             pnode->fDisconnect = true;
             return true;
         }
@@ -2007,7 +2007,7 @@ void CConnman::NotifyNumConnectionsChanged()
 
 bool CConnman::ShouldRunInactivityChecks(const CNode& node, NodeClock::time_point now) const
 {
-    return node.m_connected + m_peer_connect_timeout < now.time_since_epoch();
+    return node.m_connected + m_peer_connect_timeout < now;
 }
 
 bool CConnman::InactivityCheck(const CNode& node, NodeClock::time_point now) const
@@ -3987,7 +3987,7 @@ CNode::CNode(NodeId idIn,
     : m_transport{MakeTransport(idIn, node_opts.use_v2transport, conn_type_in == ConnectionType::INBOUND)},
       m_permission_flags{node_opts.permission_flags},
       m_sock{sock},
-      m_connected{GetTime<std::chrono::seconds>()},
+      m_connected{NodeClock::now()},
       addr{addrIn},
       addrBind{addrBindIn},
       m_addr_name{addrNameIn.empty() ? addr.ToStringAddrPort() : addrNameIn},

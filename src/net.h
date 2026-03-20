@@ -196,7 +196,7 @@ public:
     NodeClock::time_point m_last_recv;
     std::chrono::seconds m_last_tx_time;
     std::chrono::seconds m_last_block_time;
-    std::chrono::seconds m_connected;
+    NodeClock::time_point m_connected;
     std::string m_addr_name;
     int nVersion;
     std::string cleanSubVer;
@@ -710,7 +710,7 @@ public:
     std::atomic<NodeClock::time_point> m_last_send{NodeClock::epoch};
     std::atomic<NodeClock::time_point> m_last_recv{NodeClock::epoch};
     //! Unix epoch time at peer connection
-    const std::chrono::seconds m_connected;
+    const NodeClock::time_point m_connected;
     // Address of this peer
     const CAddress addr;
     // Bind address of our side of the connection
