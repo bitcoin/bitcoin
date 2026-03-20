@@ -210,8 +210,8 @@ public:
     uint64_t nRecvBytes;
     mapMsgTypeSize mapRecvBytesPerMsgType;
     NetPermissionFlags m_permission_flags;
-    std::chrono::microseconds m_last_ping_time;
-    std::chrono::microseconds m_min_ping_time;
+    NodeClock::duration m_last_ping_time;
+    NodeClock::duration m_min_ping_time;
     // Our address, as reported by the peer
     std::string addrLocal;
     // Address of this peer
@@ -890,11 +890,11 @@ public:
     std::atomic<std::chrono::seconds> m_last_tx_time{0s};
 
     /// Last measured round-trip duration. Used only for stats.
-    std::atomic<std::chrono::microseconds> m_last_ping_time{0us};
+    std::atomic<NodeClock::duration> m_last_ping_time{0us};
 
     /// Lowest measured round-trip duration. Used as an inbound peer eviction
     /// criterion in CConnman::AttemptToEvictConnection.
-    std::atomic<std::chrono::microseconds> m_min_ping_time{std::chrono::microseconds::max()};
+    std::atomic<NodeClock::duration> m_min_ping_time{NodeClock::duration::max()};
 
     CNode(NodeId id,
           std::shared_ptr<Sock> sock,
@@ -981,7 +981,8 @@ public:
     std::string DisconnectMsg() const;
 
     /// A ping-pong round trip has completed successfully. Update latest and minimum ping durations.
-    void PongReceived(std::chrono::microseconds ping_time) {
+    void PongReceived(NodeClock::duration ping_time)
+    {
         m_last_ping_time = ping_time;
         m_min_ping_time = std::min(m_min_ping_time.load(), ping_time);
     }

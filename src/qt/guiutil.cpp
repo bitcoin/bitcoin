@@ -767,9 +767,9 @@ QString formatServicesStr(quint64 mask)
         return QObject::tr("None");
 }
 
-QString formatPingTime(std::chrono::microseconds ping_time)
+QString formatPingTime(NodeClock::duration ping_time)
 {
-    return (ping_time == std::chrono::microseconds::max() || ping_time == 0us) ?
+    return (ping_time == decltype(CNode::m_min_ping_time.load())::max() || ping_time == 0us) ?
         QObject::tr("N/A") :
         QObject::tr("%1 ms").arg(QString::number(Ticks<std::chrono::milliseconds>(ping_time)));
 }
