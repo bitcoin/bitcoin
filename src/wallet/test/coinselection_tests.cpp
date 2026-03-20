@@ -159,7 +159,7 @@ BOOST_AUTO_TEST_CASE(bnb_test)
         // Test skipping of equivalent input sets
         std::vector<OutputGroup> clone_pool;
         AddCoins(clone_pool, {2 * CENT, 7 * CENT, 7 * CENT}, cs_params);
-        AddDuplicateCoins(clone_pool, 50'000, 5 * CENT, cs_params);
+        AddDuplicateCoins(clone_pool, /*count=*/50'000, /*amount=*/5 * CENT, cs_params);
         TestBnBSuccess("Skip equivalent input sets", clone_pool, /*selection_target=*/16 * CENT, /*expected_input_amounts=*/{2 * CENT, 7 * CENT, 7 * CENT}, cs_params);
 
         /* Test BnB attempt limit (`TOTAL_TRIES`)
@@ -265,6 +265,11 @@ BOOST_AUTO_TEST_CASE(srd_test)
         TestSRDFail("Undershoot minimum change by one sat", utxo_pool, /*selection_target=*/9 * CENT - cs_params.m_change_fee - CHANGE_LOWER + 1, cs_params);
         TestSRDFail("Spend more than available", utxo_pool, /*selection_target=*/9 * CENT + 1, cs_params);
         TestSRDFail("Spend everything", utxo_pool, /*selection_target=*/9 * CENT, cs_params);
+
+        AddDuplicateCoins(utxo_pool, /*count=*/100, /*amount=*/5 * CENT, cs_params);
+        AddDuplicateCoins(utxo_pool, /*count=*/3, /*amount=*/7 * CENT, cs_params);
+        TestSRDSuccess("Select most valuable UTXOs for acceptable weight", utxo_pool, /*selection_target=*/20 * CENT, cs_params, /*max_selection_weight=*/4 * 4 * (P2WPKH_INPUT_VSIZE - 1 ));
+        TestSRDFail("No acceptable weight possible", utxo_pool, /*selection_target=*/25 * CENT, cs_params, /*max_selection_weight=*/4 * 3 * (P2WPKH_INPUT_VSIZE), /*expect_max_weight_exceeded=*/true);
     }
 }
 
