@@ -165,4 +165,60 @@ BOOST_AUTO_TEST_CASE(stale_unpicked_tx)
     BOOST_CHECK_EQUAL(stale_state[0], tx);
 }
 
+BOOST_AUTO_TEST_CASE(mark_received)
+{
+    PrivateBroadcast pb;
+
+    const auto missing_tx{MakeDummyTx(/*id=*/999, /*num_witness=*/0)};
+    const auto tx{MakeDummyTx(/*id=*/42, /*num_witness=*/0)};
+    in_addr ipv4_addr;
+    ipv4_addr.s_addr = 0xa0b0c003;
+    const CService received_from{ipv4_addr, 3333};
+
+    // Missing transaction returns nullopt.
+    BOOST_CHECK(!pb.MarkReceived(missing_tx, received_from).has_value());
+
+    BOOST_REQUIRE(pb.Add(tx));
+
+    const NodeId recipient1{1};
+    const CService addr1{ipv4_addr, 1111};
+    BOOST_REQUIRE(pb.PickTxForSend(/*will_send_to_nodeid=*/recipient1, /*will_send_to_address=*/addr1).has_value());
+    const NodeId recipient2{2};
+    const CService addr2{ipv4_addr, 2222};
+    BOOST_REQUIRE(pb.PickTxForSend(/*will_send_to_nodeid=*/recipient2, /*will_send_to_address=*/addr2).has_value());
+    pb.NodeConfirmedReception(recipient1);
+
+    // MarkReceived succeeds and returns the number of confirmed sends.
+    BOOST_CHECK_EQUAL(pb.MarkReceived(tx, received_from).value(), 1);
+
+    {
+        const auto infos{pb.GetBroadcastInfo()};
+        const auto info{FindTxInfo(infos, tx)};
+        BOOST_CHECK(info->received.has_value());
+        BOOST_CHECK_EQUAL(info->received->from.ToStringAddrPort(), received_from.ToStringAddrPort());
+    }
+    BOOST_CHECK(!pb.HavePendingTransactions());
+    BOOST_CHECK(!pb.PickTxForSend(/*will_send_to_nodeid=*/recipient2, /*will_send_to_address=*/addr2).has_value());
+
+    // Subsequent MarkReceived returns nullopt and does not overwrite.
+    in_addr ipv4_addr2;
+    ipv4_addr2.s_addr = 0xa0b0c099;
+    const CService received_from2{ipv4_addr2, 4444};
+    BOOST_CHECK(!pb.MarkReceived(tx, received_from2).has_value());
+
+    {
+        const auto infos{pb.GetBroadcastInfo()};
+        const auto info{FindTxInfo(infos, tx)};
+        BOOST_CHECK_EQUAL(info->received->from.ToStringAddrPort(), received_from.ToStringAddrPort());
+        BOOST_CHECK(!pb.HavePendingTransactions());
+    }
+
+    // Re-adding after received clears the received state and makes it pending again.
+    BOOST_CHECK(pb.Add(tx));
+    BOOST_CHECK(pb.HavePendingTransactions());
+    const auto infos{pb.GetBroadcastInfo()};
+    const auto info{FindTxInfo(infos, tx)};
+    BOOST_CHECK(!info->received.has_value());
+}
+
 BOOST_AUTO_TEST_SUITE_END()
