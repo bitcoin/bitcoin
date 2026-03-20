@@ -236,6 +236,15 @@ BOOST_AUTO_TEST_CASE(bnb_feerate_sensitivity_test)
     TestBnBSuccess("Prefer two light inputs over two heavy inputs at high feerates", high_feerate_pool, /*selection_target=*/13 * CENT, /*expected_input_amounts=*/{3 * CENT, 10 * CENT}, high_feerate_params);
 }
 
+static void TestSRDSuccess(std::string test_title, std::vector<OutputGroup>& utxo_pool, const CAmount& selection_target, const CoinSelectionParams& cs_params = default_cs_params, const int max_selection_weight = MAX_STANDARD_TX_WEIGHT)
+{
+    CAmount expected_min_amount = selection_target + cs_params.m_change_fee + CHANGE_LOWER;
+
+    const auto result = SelectCoinsSRD(utxo_pool, selection_target, cs_params.m_change_fee, cs_params.rng_fast, max_selection_weight);
+    BOOST_CHECK_MESSAGE(result, "Falsy result in SRD-Success: " + test_title);
+    BOOST_CHECK_MESSAGE(result->GetSelectedValue() >= expected_min_amount, strprintf("Selected amount is lower than expected in SRD-Success: %s. Expected %d, but got %d", test_title, expected_min_amount, result->GetSelectedValue()));
+}
+
 static void TestSRDFail(std::string test_title, std::vector<OutputGroup>& utxo_pool, const CAmount& selection_target, const CoinSelectionParams& cs_params = default_cs_params, int max_selection_weight = MAX_STANDARD_TX_WEIGHT, const bool expect_max_weight_exceeded = false)
 {
     const auto result = SelectCoinsSRD(utxo_pool, selection_target, cs_params.m_change_fee, cs_params.rng_fast, max_selection_weight);
@@ -255,6 +264,14 @@ BOOST_AUTO_TEST_CASE(srd_test)
 
         AddCoins(utxo_pool, {1 * CENT, 3 * CENT, 5 * CENT}, cs_params);
 
+        TestSRDSuccess("Select 21k sats", utxo_pool, /*selection_target=*/21'000, cs_params);
+        TestSRDSuccess("Select 1 CENT", utxo_pool, /*selection_target=*/1 * CENT, cs_params);
+        TestSRDSuccess("Select 3.125 CENT", utxo_pool, /*selection_target=*/3'125'000, cs_params);
+        TestSRDSuccess("Select 4 CENT", utxo_pool, /*selection_target=*/4 * CENT, cs_params);
+        TestSRDSuccess("Select 7 CENT", utxo_pool, /*selection_target=*/7 * CENT, cs_params);
+
+        // The minimum change amount for SRD is the feerate dependent `change_fee` plus CHANGE_LOWER
+        TestSRDSuccess("Create minimum change", utxo_pool, /*selection_target=*/9 * CENT - cs_params.m_change_fee - CHANGE_LOWER, cs_params);
         TestSRDFail("Undershoot minimum change by one sat", utxo_pool, /*selection_target=*/9 * CENT - cs_params.m_change_fee - CHANGE_LOWER + 1, cs_params);
         TestSRDFail("Spend more than available", utxo_pool, /*selection_target=*/9 * CENT + 1, cs_params);
         TestSRDFail("Spend everything", utxo_pool, /*selection_target=*/9 * CENT, cs_params);
