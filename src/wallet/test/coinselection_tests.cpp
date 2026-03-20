@@ -283,6 +283,13 @@ BOOST_AUTO_TEST_CASE(srd_test)
         AddDuplicateCoins(utxo_pool, /*count=*/3, /*amount=*/7 * CENT, cs_params);
         TestSRDSuccess("Select most valuable UTXOs for acceptable weight", utxo_pool, /*selection_target=*/20 * CENT, cs_params, /*max_selection_weight=*/4 * 4 * (P2WPKH_INPUT_VSIZE - 1 ));
         TestSRDFail("No acceptable weight possible", utxo_pool, /*selection_target=*/25 * CENT, cs_params, /*max_selection_weight=*/4 * 3 * P2WPKH_INPUT_VSIZE, /*expect_max_weight_exceeded=*/true);
+
+        // Create UTXO pool with UTXOs of same effective value but different weights
+        std::vector<OutputGroup> mixed_weight_pool;
+        AddDuplicateCoins(mixed_weight_pool, /*count=*/100, /*amount=*/5 * CENT, cs_params);
+        mixed_weight_pool.push_back(MakeCoin(5 * CENT, true, cs_params, /*custom_spending_vsize=*/P2WPKH_INPUT_VSIZE - 1));
+        TestSRDSuccess("Tie-break same effective value with lower weight", utxo_pool, /*selection_target=*/9 * CENT, cs_params,
+        /*max_selection_weight=*/4 * 3 * (P2WPKH_INPUT_VSIZE - 1));
     }
 }
 
