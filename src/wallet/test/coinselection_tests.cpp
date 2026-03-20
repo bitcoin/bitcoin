@@ -18,6 +18,21 @@ static FastRandomContext default_rand;
 static const int P2WPKH_INPUT_VSIZE = 68;
 static const int P2WPKH_OUTPUT_VSIZE = 31;
 
+/**
+ * This set of feerates is used in the tests to test edge cases around the
+ * default minimum feerate and other potential special cases:
+ * - zero: 0 s/kvB
+ * - minimum non-zero s/kvB: 1 s/kvB
+ * - just below the new default minimum feerate: 99 s/kvB
+ * - new default minimum feerate: 100 s/kvB
+ * - old default minimum feerate: 1000 s/kvB
+ * - a few non-round realistic feerates around default minimum feerate,
+ * dust feerate, and default LTFRE: 315 s/kvB, 2345 s/kvB, and
+ * 10'292 s/kvB
+ * - a high feerate that has been exceeded occasionally: 59'764 s/kvB
+ * - a huge feerate that is extremely uncommon: 1'500'000 s/kvB */
+static const std::vector<int> FEERATES = {0, 1, 99, 100, 315, 1'000, 2'345, 10'292, 59'764, 1'500'000};
+
 /** Default coin selection parameters allow us to only explicitly set
  * parameters when a diverging value is relevant in the context of a test,
  * without reiterating the defaults in every test. We use P2WPKH input and
@@ -123,9 +138,7 @@ static void TestBnBFail(std::string test_title, std::vector<OutputGroup>& utxo_p
 
 BOOST_AUTO_TEST_CASE(bnb_test)
 {
-    std::vector<int> feerates = {0, 1, 5'000, 10'000, 25'000, 59'764, 500'000, 999'000, 1'500'000};
-
-    for (int feerate : feerates) {
+    for (int feerate : FEERATES) {
         std::vector<OutputGroup> utxo_pool;
 
         const CoinSelectionParams cs_params = init_cs_params(feerate);
