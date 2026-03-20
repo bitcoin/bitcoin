@@ -253,15 +253,11 @@ jobs:
           py -3 --version
           bash --version
 
-      - name: Set VCPKG_ROOT
-        run: |
-          echo "VCPKG_ROOT=${VCPKG_INSTALLATION_ROOT}" >> "$GITHUB_ENV"
-
       - name: Restore vcpkg tools cache
         id: vcpkg-tools-cache
         uses: actions/cache/restore@v5
         with:
-          path: C:/vcpkg/downloads/tools
+          path: ~/AppData/Local/vcpkg/downloads/tools
           key: ${{ github.job }}-vcpkg-tools-${{ github.run_id }}
           restore-keys: ${{ github.job }}-vcpkg-tools-
 
@@ -288,7 +284,7 @@ jobs:
         # Only save cache from one job as they share tools. If the matrix is expanded to jobs with unique tools, this may need amending.
         if: github.event_name != 'pull_request' && github.ref_name == github.event.repository.default_branch && steps.vcpkg-tools-cache.outputs.cache-hit != 'true' && matrix.job-type == 'standard'
         with:
-          path: C:/vcpkg/downloads/tools
+          path: ~/AppData/Local/vcpkg/downloads/tools
           key: ${{ github.job }}-vcpkg-tools-${{ github.run_id }}
 
       - name: Build
