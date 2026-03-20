@@ -126,6 +126,7 @@ static void TestBnBSuccess(std::string test_title, std::vector<OutputGroup>& utx
     BOOST_CHECK_MESSAGE(result, "Falsy result in BnB-Success: " + test_title);
     BOOST_CHECK_MESSAGE(HaveEquivalentValues(expected_result, *result), strprintf("Result mismatch in BnB-Success: %s. Expected %s, but got %s", test_title, InputAmountsToString(expected_result), InputAmountsToString(*result)));
     BOOST_CHECK_MESSAGE(result->GetSelectedValue() == expected_amount, strprintf("Selected amount mismatch in BnB-Success: %s. Expected %d, but got %d", test_title, expected_amount, result->GetSelectedValue()));
+    BOOST_CHECK_MESSAGE(result->GetWeight() <= max_selection_weight, strprintf("Selected weight is higher than permitted in BnB-Success: %s. Expected %d, but got %d", test_title, max_selection_weight, result->GetWeight()));
 }
 
 static void TestBnBFail(std::string test_title, std::vector<OutputGroup>& utxo_pool, const CAmount& selection_target, const CoinSelectionParams& cs_params = default_cs_params, int max_selection_weight = MAX_STANDARD_TX_WEIGHT, const bool expect_max_weight_exceeded = false)
@@ -172,7 +173,7 @@ BOOST_AUTO_TEST_CASE(bnb_test)
         // Test skipping of equivalent input sets
         std::vector<OutputGroup> clone_pool;
         AddCoins(clone_pool, {2 * CENT, 7 * CENT, 7 * CENT}, cs_params);
-        AddDuplicateCoins(clone_pool, 50'000, 5 * CENT, cs_params);
+        AddDuplicateCoins(clone_pool, /*count=*/50'000, /*amount=*/5 * CENT, cs_params);
         TestBnBSuccess("Skip equivalent input sets", clone_pool, /*selection_target=*/16 * CENT, /*expected_input_amounts=*/{2 * CENT, 7 * CENT, 7 * CENT}, cs_params);
 
         /* Test BnB attempt limit (`TOTAL_TRIES`)
@@ -244,6 +245,7 @@ static void TestSRDSuccess(std::string test_title, std::vector<OutputGroup>& utx
     BOOST_CHECK_MESSAGE(result, "Falsy result in SRD-Success: " + test_title);
     const CAmount selected_effective_value = result->GetSelectedEffectiveValue();
     BOOST_CHECK_MESSAGE(selected_effective_value >= expected_min_amount, strprintf("Selected effective value is lower than expected in SRD-Success: %s. Expected %d, but got %d", test_title, expected_min_amount, selected_effective_value));
+    BOOST_CHECK_MESSAGE(result->GetWeight() <= max_selection_weight, strprintf("Selected weight is higher than permitted in SRD-Success: %s. Expected %d, but got %d", test_title, max_selection_weight, result->GetWeight()));
 }
 
 static void TestSRDFail(std::string test_title, std::vector<OutputGroup>& utxo_pool, const CAmount& selection_target, const CoinSelectionParams& cs_params = default_cs_params, int max_selection_weight = MAX_STANDARD_TX_WEIGHT, const bool expect_max_weight_exceeded = false)
@@ -276,6 +278,11 @@ BOOST_AUTO_TEST_CASE(srd_test)
         TestSRDFail("Undershoot minimum change by one sat", utxo_pool, /*selection_target=*/9 * CENT - cs_params.m_change_fee - CHANGE_LOWER + 1, cs_params);
         TestSRDFail("Spend more than available", utxo_pool, /*selection_target=*/9 * CENT + 1, cs_params);
         TestSRDFail("Spend everything", utxo_pool, /*selection_target=*/9 * CENT, cs_params);
+
+        AddDuplicateCoins(utxo_pool, /*count=*/100, /*amount=*/5 * CENT, cs_params);
+        AddDuplicateCoins(utxo_pool, /*count=*/3, /*amount=*/7 * CENT, cs_params);
+        TestSRDSuccess("Select most valuable UTXOs for acceptable weight", utxo_pool, /*selection_target=*/20 * CENT, cs_params, /*max_selection_weight=*/4 * 4 * (P2WPKH_INPUT_VSIZE - 1 ));
+        TestSRDFail("No acceptable weight possible", utxo_pool, /*selection_target=*/25 * CENT, cs_params, /*max_selection_weight=*/4 * 3 * P2WPKH_INPUT_VSIZE, /*expect_max_weight_exceeded=*/true);
     }
 }
 
