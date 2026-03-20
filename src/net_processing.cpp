@@ -1564,7 +1564,7 @@ void PeerManagerImpl::PushNodeVersion(CNode& pnode, const Peer& peer)
     } else {
         const CAddress& addr{pnode.addr};
         my_services = peer.m_our_services;
-        my_time = count_seconds(GetTime<std::chrono::seconds>());
+        my_time = TicksSinceEpoch<std::chrono::seconds>(NodeClock::now());
         your_services = addr.nServices;
         your_addr = addr.IsRoutable() && !IsProxy(addr) && addr.IsAddrV1Compatible() ? CService{addr} : CService{};
         my_user_agent = strSubVersion;
