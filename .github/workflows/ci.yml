@@ -253,10 +253,6 @@ jobs:
           py -3 --version
           bash --version
 
-      - name: Using vcpkg with MSBuild
-        run: |
-          echo "set(VCPKG_BUILD_TYPE release)" >> "${VCPKG_INSTALLATION_ROOT}/triplets/x64-windows.cmake"
-
       - name: Set VCPKG_ROOT
         run: |
           echo "VCPKG_ROOT=${VCPKG_INSTALLATION_ROOT}" >> "$GITHUB_ENV"
