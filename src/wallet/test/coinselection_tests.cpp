@@ -123,7 +123,7 @@ static void TestBnBFail(std::string test_title, std::vector<OutputGroup>& utxo_p
 
 BOOST_AUTO_TEST_CASE(bnb_test)
 {
-    std::vector<int> feerates = {0, 1, 5'000, 10'000, 25'000, 59'764, 500'000, 999'000, 1'500'000};
+    std::vector<int> feerates = {0, 1, 99, 100, 315, 1'000, 2'345, 10'292, 59'764, 1'500'000};
 
     for (int feerate : feerates) {
         std::vector<OutputGroup> utxo_pool;
