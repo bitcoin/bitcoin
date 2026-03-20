@@ -223,5 +223,32 @@ BOOST_AUTO_TEST_CASE(bnb_feerate_sensitivity_test)
     TestBnBSuccess("Prefer two light inputs over two heavy inputs at high feerates", high_feerate_pool, /*selection_target=*/13 * CENT, /*expected_input_amounts=*/{3 * CENT, 10 * CENT}, high_feerate_params);
 }
 
+static void TestSRDFail(std::string test_title, std::vector<OutputGroup>& utxo_pool, const CAmount& selection_target, const CoinSelectionParams& cs_params = default_cs_params, int max_selection_weight = MAX_STANDARD_TX_WEIGHT, const bool expect_max_weight_exceeded = false)
+{
+    const auto result = SelectCoinsSRD(utxo_pool, selection_target, cs_params.m_change_fee, cs_params.rng_fast, max_selection_weight);
+    BOOST_CHECK_MESSAGE(!result, "SRD-Fail: " + test_title);
+    bool max_weight_exceeded = util::ErrorString(result).original.find("The inputs size exceeds the maximum weight") != std::string::npos;
+    BOOST_CHECK(expect_max_weight_exceeded == max_weight_exceeded);
+}
+
+BOOST_AUTO_TEST_CASE(srd_test)
+{
+    std::vector<int> feerates = {0, 1, 99, 100, 315, 1'000, 2'345, 10'292, 59'764, 1'500'000};
+
+    for (int feerate : feerates) {
+        std::vector<OutputGroup> utxo_pool;
+
+        CoinSelectionParams cs_params = init_cs_params(feerate);
+
+        TestSRDFail("Empty UTXO pool", utxo_pool, /*selection_target=*/1 * CENT, cs_params);
+
+        AddCoins(utxo_pool, {1 * CENT, 3 * CENT, 5 * CENT}, cs_params);
+
+        TestSRDFail("Undershoot minimum change by one sat", utxo_pool, /*selection_target=*/9 * CENT - cs_params.m_change_fee - CHANGE_LOWER + 1, cs_params);
+        TestSRDFail("Spend more than available", utxo_pool, /*selection_target=*/9 * CENT + 1, cs_params);
+        TestSRDFail("Spend everything", utxo_pool, /*selection_target=*/9 * CENT, cs_params);
+    }
+}
+
 BOOST_AUTO_TEST_SUITE_END()
 } // namespace wallet
