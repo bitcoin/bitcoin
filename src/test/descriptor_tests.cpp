@@ -1277,6 +1277,122 @@ BOOST_AUTO_TEST_CASE(descriptor_test)
     // Fuzzer crash test cases
     CheckUnparsable("pk(musig(dd}uue/00/)k(", "pk(musig(dd}uue/00/)k(", "'pk(musig(dd}uue/00/)k(' is not a valid descriptor function");
     CheckUnparsable("tr(musig(tuus(oldepk(gg)ggggfgg)<,z(((((((((((((((((((((st)", "tr(musig(tuus(oldepk(gg)ggggfgg)<,z(((((((((((((((((((((st)","tr(): Too many ')' in musig() expression");
+
+    // Regression tests for issue #34273 and the follow-up fixes around
+    // musig() duplicate checking and origin tracking.
+    {
+        const std::string internal_key =
+            "xpub661MyMwAqRbcFW31YEwpkMuc5THy2PSt5bDMsktWQcFF8syAmRUapSCGu8ED9W6oDMSgv6Zz8idoc4a6mr8BDzTJY47LJhkJ8UB7WEGuduB";
+        const std::string hardened_xprv =
+            "xprv9s21ZrQH143K31xYSDQpPDxsXRTUcvj2iNHm5NUtrGiGG5e2DtALGdso3pGz6ssrdK4PFmM8NSpSBHNqPqm55Qn3LqFtT2emdEXVYsCzC2U/0h";
+        const std::string xpub_a =
+            "xpub6ERApfZwUNrhLCkDtcHTcxd75RbzS1ed54G1LkBUHQVHQKqhMkhgbmJbZRkrgZw4koxb5JaHWkY4ALHY2grBGRjaDMzQLcgJvLJuZZvRcEL";
+        const std::string xpub_b =
+            "xpub68NZiKmJWnxxS6aaHmn81bvJeTESw724CRDs6HbuccFQN9Ku14VQrADWgqbhhTHBaohPX4CjNLf9fq9MYo6oDaPPLPxSb7gwQN3ih19Zm4Y";
+        const std::string xpub_c =
+            "xpub661MyMwAqRbcGDZQUKLqmWodYLcoBQnQH33yYkkF3jjxeLvY8qr2wWGEWkiKFaaQfJCoi3HeEq3Dc5DptfbCyjD38fNhSqtKc1UHaP4ba3t";
+
+        {
+            FlatSigningProvider keys;
+            std::string error;
+            auto descs = Parse(
+                "tr(" + internal_key +
+                ",and_v(v:pk(musig(" + hardened_xprv + "," + xpub_a +
+                ")/0/*),pk(musig(" + hardened_xprv + "," + xpub_a +
+                ")/1/*)))",
+                keys, error, /*require_checksum=*/false);
+            BOOST_CHECK_MESSAGE(!descs.empty(),
+                "Hardened-path musig with distinct derivation falsely flagged as duplicate: " + error);
+        }
+
+        {
+            FlatSigningProvider keys;
+            std::string error;
+            auto descs = Parse(
+                "tr(" + internal_key +
+                ",and_v(v:pk(musig(" + hardened_xprv + "," + xpub_a +
+                ")/0/*),pk(musig(" + hardened_xprv + "," + xpub_a +
+                ")/0/*)))",
+                keys, error, /*require_checksum=*/false);
+            BOOST_CHECK_MESSAGE(descs.empty(),
+                "Identical musig expressions must be detected as duplicates");
+            BOOST_CHECK_MESSAGE(error.find("duplicate public keys") != std::string::npos,
+                "Expected 'duplicate public keys' error, got: " + error);
+        }
+
+        {
+            FlatSigningProvider keys;
+            std::string error;
+            auto descs = Parse(
+                "tr(" + internal_key +
+                ",and_v(v:pk(musig(" + hardened_xprv + "," + xpub_a +
+                ")),pk(musig(" + xpub_a + "," + hardened_xprv +
+                "))))",
+                keys, error, /*require_checksum=*/false);
+            BOOST_CHECK_MESSAGE(descs.empty(),
+                "musig() participant reordering must still be detected as a duplicate");
+            BOOST_CHECK_MESSAGE(error.find("duplicate public keys") != std::string::npos,
+                "Expected 'duplicate public keys' error for reordered musig keys, got: " + error);
+        }
+
+        {
+            FlatSigningProvider keys;
+            std::string error;
+            auto descs = Parse(
+                "wsh(and_v(v:pk(0379e45b3cf75f9c5f9befd8e9506fb962f6a9d185ac87001ec44a8d3df8d4a9e3),"
+                "pk(" + xpub_b + "/0)))",
+                keys, error, /*require_checksum=*/false);
+            BOOST_CHECK_MESSAGE(descs.empty(),
+                "Equivalent raw and derived pubkeys must still be detected as duplicates");
+            BOOST_CHECK_MESSAGE(error.find("duplicate public keys") != std::string::npos,
+                "Expected 'duplicate public keys' error for equivalent pubkeys, got: " + error);
+        }
+
+        {
+            FlatSigningProvider keys;
+            std::string error;
+            auto descs = Parse(
+                "tr(" + internal_key +
+                ",and_v(v:pk(musig([03c88353/86h/1h/0h]" + xpub_a +
+                ",[857c9a7c/86h/1h/0h]" + xpub_b +
+                ",[9f4a3b9c/86h/1h/0h]" + xpub_c +
+                ")/0/*),pk(musig([03c88353/86h/1h/0h]" + xpub_a +
+                ",[857c9a7c/86h/1h/0h]" + xpub_b +
+                ",[9f4a3b9c/86h/1h/0h]" + xpub_c +
+                ")/2/*)))",
+                keys, error, /*require_checksum=*/false);
+            BOOST_REQUIRE_MESSAGE(!descs.empty(), error);
+
+            DescriptorCache cache;
+            std::vector<CScript> scripts, scripts_cached;
+            FlatSigningProvider provider, provider_cached;
+            BOOST_REQUIRE(descs.at(0)->Expand(0, DUMMY_SIGNING_PROVIDER, scripts, provider, &cache));
+            BOOST_REQUIRE(descs.at(0)->ExpandFromCache(0, cache, scripts_cached, provider_cached));
+
+            const std::vector<uint32_t> expected_origin{
+                86 | 0x80000000UL,
+                1 | 0x80000000UL,
+                0 | 0x80000000UL,
+            };
+            const auto check_participant_origins = [&](const FlatSigningProvider& signing_provider) {
+                BOOST_REQUIRE_EQUAL(signing_provider.aggregate_pubkeys.size(), 1U);
+                std::set<CKeyID> participant_ids;
+                for (const auto& [_, participants] : signing_provider.aggregate_pubkeys) {
+                    BOOST_REQUIRE_EQUAL(participants.size(), 3U);
+                    for (const auto& participant : participants) {
+                        KeyOriginInfo info;
+                        BOOST_REQUIRE(signing_provider.GetKeyOrigin(participant.GetID(), info));
+                        BOOST_CHECK_EQUAL_COLLECTIONS(info.path.begin(), info.path.end(), expected_origin.begin(), expected_origin.end());
+                        participant_ids.insert(participant.GetID());
+                    }
+                }
+                BOOST_CHECK_EQUAL(participant_ids.size(), 3U);
+            };
+
+            check_participant_origins(provider);
+            check_participant_origins(provider_cached);
+        }
+    }
 }
 
 BOOST_AUTO_TEST_CASE(descriptor_literal_null_byte)
