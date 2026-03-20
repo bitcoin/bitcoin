@@ -743,10 +743,9 @@ QString formatDurationStr(std::chrono::nanoseconds dur)
     return str_list.join(" ");
 }
 
-QString FormatPeerAge(std::chrono::seconds time_connected)
+QString FormatPeerAge(NodeClock::time_point connected)
 {
-    const auto time_now{GetTime<std::chrono::seconds>()};
-    const auto age{time_now - time_connected};
+    const auto age{NodeClock::now() - connected};
     if (age >= 24h) return QObject::tr("%1 d").arg(age / 24h);
     if (age >= 1h) return QObject::tr("%1 h").arg(age / 1h);
     if (age >= 1min) return QObject::tr("%1 m").arg(age / 1min);

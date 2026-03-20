@@ -232,7 +232,7 @@ namespace GUIUtil
     QString formatDurationStr(std::chrono::nanoseconds dur);
 
     /** Convert peer connection time to a QString denominated in the most relevant unit. */
-    QString FormatPeerAge(std::chrono::seconds time_connected);
+    QString FormatPeerAge(NodeClock::time_point connected);
 
     /** Format CNodeStats.nServices bitmask into a user-readable string */
     QString formatServicesStr(quint64 mask);

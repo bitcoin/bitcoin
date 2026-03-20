@@ -23,7 +23,7 @@ FUZZ_TARGET(node_eviction)
     {
         eviction_candidates.push_back({
             /*id=*/fuzzed_data_provider.ConsumeIntegral<NodeId>(),
-            /*m_connected=*/ConsumeTime(fuzzed_data_provider).time_since_epoch(),
+            /*m_connected=*/ConsumeTime(fuzzed_data_provider),
             /*m_min_ping_time=*/ConsumeDuration<decltype(NodeEvictionCandidate::m_min_ping_time)>(fuzzed_data_provider, /*min=*/std::chrono::years{-1}, /*max=*/decltype(CNode::m_min_ping_time.load())::max()),
             /*m_last_block_time=*/ConsumeTime(fuzzed_data_provider).time_since_epoch(),
             /*m_last_tx_time=*/ConsumeTime(fuzzed_data_provider).time_since_epoch(),

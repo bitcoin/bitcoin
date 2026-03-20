@@ -561,7 +561,7 @@ private:
     void ConsiderEviction(CNode& pto, Peer& peer, std::chrono::seconds time_in_seconds) EXCLUSIVE_LOCKS_REQUIRED(cs_main, g_msgproc_mutex);
 
     /** If we have extra outbound peers, try to disconnect the one with the oldest block announcement */
-    void EvictExtraOutboundPeers(std::chrono::seconds now) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
+    void EvictExtraOutboundPeers(NodeClock::time_point now) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
 
     /** Retrieve unbroadcast transactions from the mempool and reattempt sending to peers */
     void ReattemptInitialBroadcast(CScheduler& scheduler) EXCLUSIVE_LOCKS_REQUIRED(!m_peer_mutex);
@@ -5261,7 +5261,7 @@ void PeerManagerImpl::ConsiderEviction(CNode& pto, Peer& peer, std::chrono::seco
     }
 }
 
-void PeerManagerImpl::EvictExtraOutboundPeers(std::chrono::seconds now)
+void PeerManagerImpl::EvictExtraOutboundPeers(NodeClock::time_point now)
 {
     // If we have any extra block-relay-only peers, disconnect the youngest unless
     // it's given us a block -- in which case, compare with the second-youngest, and
@@ -5302,7 +5302,7 @@ void PeerManagerImpl::EvictExtraOutboundPeers(std::chrono::seconds now)
                 return true;
             } else {
                 LogDebug(BCLog::NET, "keeping block-relay-only peer=%d chosen for eviction (connect time: %d, blocks_in_flight: %d)\n",
-                         pnode->GetId(), count_seconds(pnode->m_connected), node_state->vBlocksInFlight.size());
+                         pnode->GetId(), TicksSinceEpoch<std::chrono::seconds>(pnode->m_connected), node_state->vBlocksInFlight.size());
             }
             return false;
         });
@@ -5353,7 +5353,7 @@ void PeerManagerImpl::EvictExtraOutboundPeers(std::chrono::seconds now)
                     return true;
                 } else {
                     LogDebug(BCLog::NET, "keeping outbound peer=%d chosen for eviction (connect time: %d, blocks_in_flight: %d)\n",
-                             pnode->GetId(), count_seconds(pnode->m_connected), state.vBlocksInFlight.size());
+                             pnode->GetId(), TicksSinceEpoch<std::chrono::seconds>(pnode->m_connected), state.vBlocksInFlight.size());
                     return false;
                 }
             });
@@ -5373,9 +5373,10 @@ void PeerManagerImpl::CheckForStaleTipAndEvictPeers()
 {
     LOCK(cs_main);
 
+    const auto current_time{NodeClock::now()};
     auto now{GetTime<std::chrono::seconds>()};
 
-    EvictExtraOutboundPeers(now);
+    EvictExtraOutboundPeers(current_time);
 
     if (now > m_stale_tip_check_time) {
         // Check whether our tip is stale, and if so, allow using an extra
@@ -5740,7 +5741,7 @@ bool PeerManagerImpl::SendMessages(CNode& node)
     // Also in CConnman::PushMessage() we make sure that unwanted messages are
     // not sent. This here is just an optimization.
     if (node.IsPrivateBroadcastConn()) {
-        if (node.m_connected + PRIVATE_BROADCAST_MAX_CONNECTION_LIFETIME < current_time) {
+        if (node.m_connected + PRIVATE_BROADCAST_MAX_CONNECTION_LIFETIME < now) {
             LogDebug(BCLog::PRIVBROADCAST, "Disconnecting: did not complete the transaction send within %d seconds, %s",
                      count_seconds(PRIVATE_BROADCAST_MAX_CONNECTION_LIFETIME), node.LogPeer());
             node.fDisconnect = true;
@@ -5748,7 +5749,7 @@ bool PeerManagerImpl::SendMessages(CNode& node)
         return true;
     }
 
-    if (node.IsAddrFetchConn() && current_time - node.m_connected > 10 * AVG_ADDRESS_BROADCAST_INTERVAL) {
+    if (node.IsAddrFetchConn() && now - node.m_connected > 10 * AVG_ADDRESS_BROADCAST_INTERVAL) {
         LogDebug(BCLog::NET, "addrfetch connection timeout, %s", node.DisconnectMsg());
         node.fDisconnect = true;
         return true;
