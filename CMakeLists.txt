@@ -253,19 +253,21 @@ target_compile_definitions(core_interface_debug INTERFACE
 
 if(WIN32)
   #[=[
-  This build system supports two ways to build binaries for Windows.
+  This build system supports two ways to build binaries for Windows:
 
-  1. Building on Windows using MSVC.
-  Implementation notes:
-  - /DWIN32 and /D_WINDOWS definitions are included into the CMAKE_CXX_FLAGS_INIT
-    and CMAKE_CXX_FLAGS_INIT variables by default.
-  - A run-time library is selected using the CMAKE_MSVC_RUNTIME_LIBRARY variable.
-  - MSVC-specific options, for example, /Zc:__cplusplus, are additionally required.
+  1. Building on Windows using clang-cl.exe, which is compatible with MSVC’s cl.exe.
+     This case is handled when the MSVC variable is true.
+     Implementation notes:
+     - /DWIN32 and /D_WINDOWS definitions are included in the CMAKE_C_FLAGS_INIT
+       and CMAKE_CXX_FLAGS_INIT variables by default.
+     - The run-time library is selected using the CMAKE_MSVC_RUNTIME_LIBRARY variable.
+     - MSVC-specific options (e.g., /Zc:__cplusplus) are required for standard compliance.
 
   2. Cross-compiling using MinGW.
-  Implementation notes:
-  - WIN32 and _WINDOWS definitions must be provided explicitly.
-  - A run-time library must be specified explicitly using _MT definition.
+     This case is handled when the MINGW variable is true.
+     Implementation notes:
+     - WIN32 and _WINDOWS definitions must be provided explicitly.
+     - The run-time library must be configured explicitly via the _MT definition.
   ]=]
 
   target_compile_definitions(core_interface INTERFACE
@@ -293,21 +295,21 @@ if(WIN32)
       /Zc:__cplusplus
       /sdl
     )
-    if(CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
-      if(CMAKE_SYSTEM_PROCESSOR STREQUAL "AMD64")
-        set(system_arch_suffix x86_64)
-      elseif(CMAKE_SYSTEM_PROCESSOR STREQUAL "ARM64")
-        set(system_arch_suffix aarch64)
-      else()
-        message(FATAL_ERROR "Unsupported architecture: ${CMAKE_SYSTEM_PROCESSOR}")
-      endif()
-      # __int128 division when using clang-cl requires the builtins library.
-      # See https://clang.llvm.org/docs/UsersManual.html#finding-clang-runtime-libraries.
-      target_link_libraries(core_interface INTERFACE
-        clang_rt.builtins-${system_arch_suffix}
-      )
-      unset(system_arch_suffix)
+
+    if(CMAKE_SYSTEM_PROCESSOR STREQUAL "AMD64")
+      set(system_arch_suffix x86_64)
+    elseif(CMAKE_SYSTEM_PROCESSOR STREQUAL "ARM64")
+      set(system_arch_suffix aarch64)
+    else()
+      message(FATAL_ERROR "Unsupported architecture: ${CMAKE_SYSTEM_PROCESSOR}")
     endif()
+    # __int128 division when using clang-cl requires the builtins library.
+    # See https://clang.llvm.org/docs/UsersManual.html#finding-clang-runtime-libraries.
+    target_link_libraries(core_interface INTERFACE
+      clang_rt.builtins-${system_arch_suffix}
+    )
+    unset(system_arch_suffix)
+
     target_link_options(core_interface INTERFACE
       # We embed our own manifests.
       /MANIFEST:NO
@@ -332,14 +334,10 @@ if(WIN32)
     # As a best effort, target Windows 8.
     try_append_linker_flag("-Wl,--major-subsystem-version,6" TARGET core_interface)
     try_append_linker_flag("-Wl,--minor-subsystem-version,2" TARGET core_interface)
-  endif()
 
-  # Workaround producing large object files, which cannot be handled by the assembler.
-  # More likely to happen with no, or lower levels of optimisation.
-  # See discussion in https://github.com/bitcoin/bitcoin/issues/28109.
-  if(CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
-    try_append_cxx_flags("/bigobj" TARGET core_interface_debug SKIP_LINK)
-  else()
+    # Workaround producing large object files, which cannot be handled by the assembler.
+    # More likely to happen with no, or lower levels of optimisation.
+    # See discussion in https://github.com/bitcoin/bitcoin/issues/28109.
     try_append_cxx_flags("-Wa,-mbig-obj" TARGET core_interface_debug SKIP_LINK)
   endif()
 endif()
@@ -453,7 +451,11 @@ include(cmake/ccache.cmake)
 add_library(warn_interface INTERFACE)
 target_link_libraries(core_interface INTERFACE warn_interface)
 if(MSVC)
-  # For both MSVC's cl.exe and clang-cl compilers.
+  # clang-cl maps some options to Clang's core options as follows:
+  #   /W1 or /W2 or /W3 --> -Wall
+  #   /W4 --> -Wall and -Wextra
+  #   /Wall --> -Weverything
+  # See https://clang.llvm.org/docs/UsersManual.html.
   try_append_cxx_flags("/W3" TARGET warn_interface SKIP_LINK)  # Enables -Wall Clang's core option.
   target_compile_definitions(warn_interface INTERFACE
     _CRT_SECURE_NO_WARNINGS
@@ -462,49 +464,40 @@ if(MSVC)
 else()
   try_append_cxx_flags("-Wall" TARGET warn_interface SKIP_LINK)
 endif()
-if(CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
-  try_append_cxx_flags("/wd4018" TARGET warn_interface SKIP_LINK)
-  try_append_cxx_flags("/wd4146" TARGET warn_interface SKIP_LINK)
-  try_append_cxx_flags("/wd4244" TARGET warn_interface SKIP_LINK)
-  try_append_cxx_flags("/wd4267" TARGET warn_interface SKIP_LINK)
-  try_append_cxx_flags("/wd4715" TARGET warn_interface SKIP_LINK)
-  try_append_cxx_flags("/wd4805" TARGET warn_interface SKIP_LINK)
-else()
-  try_append_cxx_flags("-Wextra" TARGET warn_interface SKIP_LINK)
-  try_append_cxx_flags("-Wgnu" TARGET warn_interface SKIP_LINK)
-  try_append_cxx_flags("-Wcovered-switch-default" TARGET warn_interface SKIP_LINK)
-  # Some compilers will ignore -Wformat-security without -Wformat, so just combine the two here.
-  try_append_cxx_flags("-Wformat -Wformat-security" TARGET warn_interface SKIP_LINK)
-  try_append_cxx_flags("-Wvla" TARGET warn_interface SKIP_LINK)
-  try_append_cxx_flags("-Wshadow-field" TARGET warn_interface SKIP_LINK)
-  try_append_cxx_flags("-Wthread-safety" TARGET warn_interface SKIP_LINK)
-  try_append_cxx_flags("-Wthread-safety-pointer" TARGET warn_interface SKIP_LINK)
-  try_append_cxx_flags("-Wloop-analysis" TARGET warn_interface SKIP_LINK)
-  try_append_cxx_flags("-Wredundant-decls" TARGET warn_interface SKIP_LINK)
-  try_append_cxx_flags("-Wunused-member-function" TARGET warn_interface SKIP_LINK)
-  try_append_cxx_flags("-Wdate-time" TARGET warn_interface SKIP_LINK)
-  try_append_cxx_flags("-Wconditional-uninitialized" TARGET warn_interface SKIP_LINK)
-  try_append_cxx_flags("-Wduplicated-branches" TARGET warn_interface SKIP_LINK)
-  try_append_cxx_flags("-Wduplicated-cond" TARGET warn_interface SKIP_LINK)
-  try_append_cxx_flags("-Wlogical-op" TARGET warn_interface SKIP_LINK)
-  try_append_cxx_flags("-Woverloaded-virtual" TARGET warn_interface SKIP_LINK)
-  try_append_cxx_flags("-Wsuggest-override" TARGET warn_interface SKIP_LINK)
-  try_append_cxx_flags("-Wimplicit-fallthrough" TARGET warn_interface SKIP_LINK)
-  try_append_cxx_flags("-Wunreachable-code" TARGET warn_interface SKIP_LINK)
-  try_append_cxx_flags("-Wdocumentation" TARGET warn_interface SKIP_LINK)
-  try_append_cxx_flags("-Wself-assign" TARGET warn_interface SKIP_LINK)
-  try_append_cxx_flags("-Wbidi-chars=any" TARGET warn_interface SKIP_LINK)
-  try_append_cxx_flags("-Wundef" TARGET warn_interface SKIP_LINK)
-  try_append_cxx_flags("-Wleading-whitespace=spaces" TARGET warn_interface SKIP_LINK)
-  try_append_cxx_flags("-Wtrailing-whitespace=any" TARGET warn_interface SKIP_LINK)
+try_append_cxx_flags("-Wextra" TARGET warn_interface SKIP_LINK)
+try_append_cxx_flags("-Wgnu" TARGET warn_interface SKIP_LINK)
+try_append_cxx_flags("-Wcovered-switch-default" TARGET warn_interface SKIP_LINK)
+# Some compilers will ignore -Wformat-security without -Wformat, so just combine the two here.
+try_append_cxx_flags("-Wformat -Wformat-security" TARGET warn_interface SKIP_LINK)
+try_append_cxx_flags("-Wvla" TARGET warn_interface SKIP_LINK)
+try_append_cxx_flags("-Wshadow-field" TARGET warn_interface SKIP_LINK)
+try_append_cxx_flags("-Wthread-safety" TARGET warn_interface SKIP_LINK)
+try_append_cxx_flags("-Wthread-safety-pointer" TARGET warn_interface SKIP_LINK)
+try_append_cxx_flags("-Wloop-analysis" TARGET warn_interface SKIP_LINK)
+try_append_cxx_flags("-Wredundant-decls" TARGET warn_interface SKIP_LINK)
+try_append_cxx_flags("-Wunused-member-function" TARGET warn_interface SKIP_LINK)
+try_append_cxx_flags("-Wdate-time" TARGET warn_interface SKIP_LINK)
+try_append_cxx_flags("-Wconditional-uninitialized" TARGET warn_interface SKIP_LINK)
+try_append_cxx_flags("-Wduplicated-branches" TARGET warn_interface SKIP_LINK)
+try_append_cxx_flags("-Wduplicated-cond" TARGET warn_interface SKIP_LINK)
+try_append_cxx_flags("-Wlogical-op" TARGET warn_interface SKIP_LINK)
+try_append_cxx_flags("-Woverloaded-virtual" TARGET warn_interface SKIP_LINK)
+try_append_cxx_flags("-Wsuggest-override" TARGET warn_interface SKIP_LINK)
+try_append_cxx_flags("-Wimplicit-fallthrough" TARGET warn_interface SKIP_LINK)
+try_append_cxx_flags("-Wunreachable-code" TARGET warn_interface SKIP_LINK)
+try_append_cxx_flags("-Wdocumentation" TARGET warn_interface SKIP_LINK)
+try_append_cxx_flags("-Wself-assign" TARGET warn_interface SKIP_LINK)
+try_append_cxx_flags("-Wbidi-chars=any" TARGET warn_interface SKIP_LINK)
+try_append_cxx_flags("-Wundef" TARGET warn_interface SKIP_LINK)
+try_append_cxx_flags("-Wleading-whitespace=spaces" TARGET warn_interface SKIP_LINK)
+try_append_cxx_flags("-Wtrailing-whitespace=any" TARGET warn_interface SKIP_LINK)
 
-  # Some compilers (gcc) ignore unknown -Wno-* options, but warn about all
-  # unknown options if any other warning is produced. Test the -Wfoo case, and
-  # set the -Wno-foo case if it works.
-  try_append_cxx_flags("-Wunused-parameter" TARGET warn_interface SKIP_LINK
-    IF_CHECK_PASSED "-Wno-unused-parameter"
-  )
-endif()
+# Some compilers (gcc) ignore unknown -Wno-* options, but warn about all
+# unknown options if any other warning is produced. Test the -Wfoo case, and
+# set the -Wno-foo case if it works.
+try_append_cxx_flags("-Wunused-parameter" TARGET warn_interface SKIP_LINK
+  IF_CHECK_PASSED "-Wno-unused-parameter"
+)
 
 configure_file(cmake/script/Coverage.cmake Coverage.cmake USE_SOURCE_PERMISSIONS COPYONLY)
 configure_file(cmake/script/CoverageFuzz.cmake CoverageFuzz.cmake USE_SOURCE_PERMISSIONS COPYONLY)
