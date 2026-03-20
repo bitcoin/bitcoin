@@ -192,8 +192,8 @@ class CNodeStats
 {
 public:
     NodeId nodeid;
-    std::chrono::seconds m_last_send;
-    std::chrono::seconds m_last_recv;
+    NodeClock::time_point m_last_send;
+    NodeClock::time_point m_last_recv;
     std::chrono::seconds m_last_tx_time;
     std::chrono::seconds m_last_block_time;
     std::chrono::seconds m_connected;
@@ -707,8 +707,8 @@ public:
 
     uint64_t nRecvBytes GUARDED_BY(cs_vRecv){0};
 
-    std::atomic<std::chrono::seconds> m_last_send{0s};
-    std::atomic<std::chrono::seconds> m_last_recv{0s};
+    std::atomic<NodeClock::time_point> m_last_send{NodeClock::epoch};
+    std::atomic<NodeClock::time_point> m_last_recv{NodeClock::epoch};
     //! Unix epoch time at peer connection
     const std::chrono::seconds m_connected;
     // Address of this peer
@@ -1396,7 +1396,7 @@ public:
     void WakeMessageHandler() EXCLUSIVE_LOCKS_REQUIRED(!mutexMsgProc);
 
     /** Return true if we should disconnect the peer for failing an inactivity check. */
-    bool ShouldRunInactivityChecks(const CNode& node, std::chrono::microseconds now) const;
+    bool ShouldRunInactivityChecks(const CNode& node, NodeClock::time_point now) const;
 
     bool MultipleManualOrFullOutboundConns(Network net) const EXCLUSIVE_LOCKS_REQUIRED(m_nodes_mutex);
 
@@ -1447,7 +1447,7 @@ private:
     void DisconnectNodes() EXCLUSIVE_LOCKS_REQUIRED(!m_reconnections_mutex, !m_nodes_mutex);
     void NotifyNumConnectionsChanged();
     /** Return true if the peer is inactive and should be disconnected. */
-    bool InactivityCheck(const CNode& node, std::chrono::microseconds now) const;
+    bool InactivityCheck(const CNode& node, NodeClock::time_point now) const;
 
     /**
      * Generate a collection of sockets to check for IO readiness.

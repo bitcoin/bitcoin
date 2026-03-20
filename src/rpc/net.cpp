@@ -242,8 +242,8 @@ static RPCHelpMan getpeerinfo()
         obj.pushKV("relaytxes", statestats.m_relay_txs);
         obj.pushKV("last_inv_sequence", statestats.m_last_inv_seq);
         obj.pushKV("inv_to_send", statestats.m_inv_to_send);
-        obj.pushKV("lastsend", count_seconds(stats.m_last_send));
-        obj.pushKV("lastrecv", count_seconds(stats.m_last_recv));
+        obj.pushKV("lastsend", TicksSinceEpoch<std::chrono::seconds>(stats.m_last_send));
+        obj.pushKV("lastrecv", TicksSinceEpoch<std::chrono::seconds>(stats.m_last_recv));
         obj.pushKV("last_transaction", count_seconds(stats.m_last_tx_time));
         obj.pushKV("last_block", count_seconds(stats.m_last_block_time));
         obj.pushKV("bytessent", stats.nSendBytes);
