@@ -308,4 +308,111 @@ BOOST_AUTO_TEST_CASE(rejection_at_cap)
     BOOST_CHECK_EQUAL(pb.GetBroadcastInfo().size(), num_cap);
 }
 
+BOOST_AUTO_TEST_CASE(eviction_at_cap)
+{
+    FakeNodeClock clock{};
+
+    constexpr size_t num_cap{3};
+    PrivateBroadcast pb{num_cap, /*max_send_attempts=*/1};
+
+    in_addr ipv4_addr;
+    ipv4_addr.s_addr = 0xa0b0c001;
+    const CService addr{ipv4_addr, 1111};
+
+    const auto present{[&pb](const CTransactionRef& tx) {
+        const auto infos{pb.GetBroadcastInfo()};
+        return std::ranges::any_of(infos, [&tx](const auto& info) { return info.tx->GetWitnessHash() == tx->GetWitnessHash(); });
+    }};
+
+    const auto exhausted{MakeDummyTx(/*id=*/0, /*num_witness=*/0)};
+    BOOST_REQUIRE_EQUAL(pb.Add(exhausted), PrivateBroadcast::AddResult::Added);
+    BOOST_REQUIRE_EQUAL(pb.PickTxForSend(/*will_send_to_nodeid=*/0, /*will_send_to_address=*/addr).value(), exhausted);
+    clock += 1min;
+
+    const auto pending{MakeDummyTx(/*id=*/1, /*num_witness=*/0)};
+    BOOST_REQUIRE_EQUAL(pb.Add(pending), PrivateBroadcast::AddResult::Added);
+    clock += 1min;
+
+    const auto received{MakeDummyTx(/*id=*/2, /*num_witness=*/0)};
+    BOOST_REQUIRE_EQUAL(pb.Add(received), PrivateBroadcast::AddResult::Added);
+    BOOST_REQUIRE(pb.MarkReceived(received, addr).has_value());
+    clock += 1min;
+
+    // At the cap the oldest transaction that is no longer pending is evicted.
+    BOOST_CHECK_EQUAL(pb.Add(MakeDummyTx(/*id=*/3, /*num_witness=*/0)), PrivateBroadcast::AddResult::Added);
+    BOOST_CHECK_EQUAL(pb.GetBroadcastInfo().size(), num_cap);
+    BOOST_CHECK(!present(exhausted));
+
+    // `received` is evicted next, even though `pending` is older: transactions that are
+    // still pending are never evicted.
+    BOOST_CHECK_EQUAL(pb.Add(MakeDummyTx(/*id=*/4, /*num_witness=*/0)), PrivateBroadcast::AddResult::Added);
+    BOOST_CHECK(!present(received));
+    BOOST_CHECK(present(pending));
+}
+
+BOOST_AUTO_TEST_CASE(mark_received)
+{
+    FakeNodeClock clock{};
+
+    PrivateBroadcast pb;
+
+    const auto missing_tx{MakeDummyTx(/*id=*/999, /*num_witness=*/0)};
+    const auto tx{MakeDummyTx(/*id=*/42, /*num_witness=*/0)};
+    in_addr ipv4_addr;
+    ipv4_addr.s_addr = 0xa0b0c003;
+    const CService received_from{ipv4_addr, 3333};
+
+    // Missing transaction returns nullopt.
+    BOOST_CHECK(!pb.MarkReceived(missing_tx, received_from).has_value());
+
+    BOOST_REQUIRE_EQUAL(pb.Add(tx), PrivateBroadcast::AddResult::Added);
+
+    const NodeId recipient1{1};
+    const CService addr1{ipv4_addr, 1111};
+    BOOST_REQUIRE(pb.PickTxForSend(/*will_send_to_nodeid=*/recipient1, /*will_send_to_address=*/addr1).has_value());
+    const NodeId recipient2{2};
+    const CService addr2{ipv4_addr, 2222};
+    BOOST_REQUIRE(pb.PickTxForSend(/*will_send_to_nodeid=*/recipient2, /*will_send_to_address=*/addr2).has_value());
+    pb.NodeConfirmedReception(recipient1);
+
+    // MarkReceived succeeds and returns the number of confirmed sends.
+    BOOST_CHECK_EQUAL(pb.MarkReceived(tx, received_from).value(), 1);
+
+    {
+        const auto infos{pb.GetBroadcastInfo()};
+        const auto info{FindTxInfo(infos, tx)};
+        BOOST_CHECK(info->received_by_us.has_value());
+        BOOST_CHECK_EQUAL(info->received_by_us->from.ToStringAddrPort(), received_from.ToStringAddrPort());
+    }
+    BOOST_CHECK(!pb.HavePendingTransactions());
+    // Use a fresh node id: sending more than one transaction to the same node is not allowed.
+    BOOST_CHECK(!pb.PickTxForSend(/*will_send_to_nodeid=*/3, /*will_send_to_address=*/addr2).has_value());
+
+    // Subsequent MarkReceived returns nullopt and does not overwrite.
+    in_addr ipv4_addr2;
+    ipv4_addr2.s_addr = 0xa0b0c099;
+    const CService received_from2{ipv4_addr2, 4444};
+    BOOST_CHECK(!pb.MarkReceived(tx, received_from2).has_value());
+
+    {
+        const auto infos{pb.GetBroadcastInfo()};
+        const auto info{FindTxInfo(infos, tx)};
+        BOOST_CHECK_EQUAL(info->received_by_us->from.ToStringAddrPort(), received_from.ToStringAddrPort());
+        BOOST_CHECK(!pb.HavePendingTransactions());
+    }
+
+    // Re-adding after received clears the received state, resets time_added,
+    // and makes it pending again.
+    clock += PrivateBroadcast::INITIAL_STALE_DURATION + 1min;
+    BOOST_CHECK_EQUAL(pb.Add(tx), PrivateBroadcast::AddResult::Added);
+    BOOST_CHECK(pb.HavePendingTransactions());
+    const auto infos{pb.GetBroadcastInfo()};
+    const auto info{FindTxInfo(infos, tx)};
+    BOOST_CHECK(!info->received_by_us.has_value());
+
+    // The re-added tx should NOT be immediately stale despite the elapsed time,
+    // because time_added was reset.
+    BOOST_CHECK_EQUAL(pb.GetStale().size(), 0);
+}
+
 BOOST_AUTO_TEST_SUITE_END()
