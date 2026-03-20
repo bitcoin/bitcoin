@@ -1555,4 +1555,47 @@ BOOST_AUTO_TEST_CASE(v2transport_test)
     }
 }
 
+BOOST_AUTO_TEST_CASE(addlocal_onlynet_externalip)
+{
+    // Test that `-externalip` addresses bypass `-onlynet`, but score alone does
+    // not.
+
+    CAddress addr_onion;
+    BOOST_REQUIRE(addr_onion.SetSpecial("pg6mmjiyjmcrsslvykfwnntlaru7p5svn6y2ymmju6nubxndf4pscryd.onion"));
+    BOOST_REQUIRE(addr_onion.IsValid());
+    BOOST_REQUIRE(addr_onion.IsTor());
+
+    const auto reachable_nets_at_start{g_reachable_nets.All()};
+    const bool discover_orig{fDiscover};
+
+    // Simulate using -onlynet=ipv4 -externalip=<onion>
+    g_reachable_nets.RemoveAll();
+    g_reachable_nets.Add(NET_IPV4);
+    fDiscover = false;
+
+    // Now AddLocal with a non-manual score should fail for an unreachable network.
+    BOOST_CHECK(!AddLocal(addr_onion, LOCAL_BIND));
+    BOOST_CHECK(!IsLocal(addr_onion));
+
+    BOOST_CHECK(!AddLocal(addr_onion, LOCAL_MANUAL));
+    BOOST_CHECK(!IsLocal(addr_onion));
+
+    // Whereas AddLocal for -externalip should succeed.
+    BOOST_CHECK(AddLocal(addr_onion, LOCAL_MANUAL, /*fExternalIP=*/true));
+    BOOST_CHECK(IsLocal(addr_onion));
+
+    // Normal AddLocal on a reachable network still works.
+    const CNetAddr addr_ipv4{LookupHost("1.2.3.4", false).value()};
+    BOOST_CHECK(AddLocal(addr_ipv4, LOCAL_MANUAL));
+    BOOST_CHECK(IsLocal(CService{addr_ipv4, GetListenPort()}));
+
+    RemoveLocal(CService{addr_ipv4, GetListenPort()});
+    RemoveLocal(addr_onion);
+    g_reachable_nets.RemoveAll();
+    for (const auto& net : reachable_nets_at_start) {
+        g_reachable_nets.Add(net);
+    }
+    fDiscover = discover_orig;
+}
+
 BOOST_AUTO_TEST_SUITE_END()
