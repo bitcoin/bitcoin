@@ -3,7 +3,7 @@
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or https://www.opensource.org/licenses/mit-license.php.
 
-"""Test wallet-reindex interaction"""
+"""Test wallet birthtime updates during wallet scanning"""
 
 import time
 
@@ -12,9 +12,8 @@ from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import (
     assert_equal,
 )
-BLOCK_TIME = 60 * 10
 
-class WalletReindexTest(BitcoinTestFramework):
+class WalletBirthTimeTest(BitcoinTestFramework):
     def set_test_params(self):
         self.num_nodes = 1
         self.setup_clean_chain = True
@@ -22,71 +21,69 @@ class WalletReindexTest(BitcoinTestFramework):
     def skip_test_if_missing_module(self):
         self.skip_if_no_wallet()
 
-    def advance_time(self, node, secs):
-        self.node_time += secs
-        node.setmocktime(self.node_time)
-
     # Verify the wallet updates the birth time accordingly when it detects a transaction
     # with a time older than the oldest descriptor timestamp.
     # This could happen when the user blindly imports a descriptor with 'timestamp=now'.
-    def birthtime_test(self, node, miner_wallet):
-        self.log.info("Test birth time update during tx scanning")
+    def birthtime_test(self, node):
+        self.log.info("Test birth time update during wallet rescan")
+        node.setmocktime(int(time.time()))
+
+        BLOCK_TIME = 60 * 10 # 10 mins
+        TX_CONFIRMATIONS = BLOCKS_TO_GENERATE = 20
+        AMOUNT_SENT = AMOUNT_RECEIVED = 2 # BTC
+
+        # Fund miner wallet
+        node.createwallet(wallet_name='miner')
+        miner_wallet = node.get_wallet_rpc('miner')
+        # Generate (COINBASE_MATURITY + 1) blocks, 1 extra so that the wallet can readily spend
+        self.generatetoaddress(node, COINBASE_MATURITY + 1, miner_wallet.getnewaddress())
+
         # Fund address to test
         wallet_addr = miner_wallet.getnewaddress()
-        tx_id = miner_wallet.sendtoaddress(wallet_addr, 2)
+        addr_desc = miner_wallet.getaddressinfo(wallet_addr)["desc"]
+        tx_id = miner_wallet.sendtoaddress(wallet_addr, AMOUNT_SENT)
 
-        # Generate 50 blocks, one every 10 min to surpass the 2 hours rescan window the wallet has
-        for _ in range(50):
+        # This wallet is not needed anymore, unload it here so that the following
+        # block generations need not cause this wallet to process those notifications.
+        miner_wallet.unloadwallet()
+
+        # Generate enough blocks every 10 mins to surpass the 2 hours rescan window the wallet has.
+        # 20 blocks every 10 mins equals 3hrs 20mins from now till last block - 20 mins more than
+        # the start time of wallet to scan from while importing a descriptor with "now" timestamp.
+        for _ in range(BLOCKS_TO_GENERATE):
             self.generate(node, 1)
-            self.advance_time(node, BLOCK_TIME)
+            node.bumpmocktime(BLOCK_TIME)
 
-        # Now create a new wallet, and import the descriptor
-        node.createwallet(wallet_name='watch_only', disable_private_keys=True, load_on_startup=True)
+        # Now create a new wallet to import the descriptor in
+        node.createwallet(wallet_name='watch_only', disable_private_keys=True)
         wallet_watch_only = node.get_wallet_rpc('watch_only')
         # Blank wallets don't have a birth time
         assert 'birthtime' not in wallet_watch_only.getwalletinfo()
 
-        # Import address with timestamp=now.
-        wallet_watch_only.importdescriptors([{"desc": miner_wallet.getaddressinfo(wallet_addr)["desc"], "timestamp": "now"}])
+        # Import descriptor with timestamp=now
+        wallet_watch_only.importdescriptors([{"desc": addr_desc, "timestamp": "now"}])
         assert_equal(len(wallet_watch_only.listtransactions()), 0)
-
-        # Depending on the wallet type, the birth time changes.
-        wallet_birthtime = wallet_watch_only.getwalletinfo()['birthtime']
-        # As blocks were generated every 10 min, the chain MTP timestamp is node_time - 60 min.
-        assert_equal(self.node_time - BLOCK_TIME * 6, wallet_birthtime)
+        # As blocks were generated every 10 min, the chain MTP timestamp is (node.mocktime - 60 min).
+        assert_equal(wallet_watch_only.getwalletinfo()['birthtime'], node.mocktime - BLOCK_TIME * 6)
 
         # Rescan the wallet to detect the missing transaction
         wallet_watch_only.rescanblockchain()
-        assert_equal(wallet_watch_only.gettransaction(tx_id)['confirmations'], 50)
-        assert_equal(wallet_watch_only.getbalances()['mine']['trusted'], 2)
 
-        self.log.info("Reindex ...")  # restart_node waits for it to finish
-        self.restart_node(0, extra_args=[ f'-mocktime={self.node_time}'])
+        assert_equal(len(wallet_watch_only.listtransactions()), 1)
+        assert_equal(wallet_watch_only.getbalances()['mine']['trusted'], AMOUNT_RECEIVED)
 
-        # Verify the transaction is still 'confirmed' after reindex
-        wallet_watch_only = node.get_wallet_rpc('watch_only')
         tx_info = wallet_watch_only.gettransaction(tx_id)
-        assert_equal(tx_info['confirmations'], 50)
-
-        # Depending on the wallet type, the birth time changes.
-        # For descriptors, verify the wallet updated the birth time to the transaction time
-        assert_equal(tx_info['time'], wallet_watch_only.getwalletinfo()['birthtime'])
+        assert_equal(tx_info['confirmations'], TX_CONFIRMATIONS)
+        # Verify the wallet updated the birth time to the transaction time
+        assert_equal(wallet_watch_only.getwalletinfo()['birthtime'], tx_info['time'])
 
         wallet_watch_only.unloadwallet()
 
     def run_test(self):
         node = self.nodes[0]
-        self.node_time = int(time.time())
-        node.setmocktime(self.node_time)
 
-        # Fund miner
-        node.createwallet(wallet_name='miner', load_on_startup=True)
-        miner_wallet = node.get_wallet_rpc('miner')
-        self.generatetoaddress(node, COINBASE_MATURITY + 10, miner_wallet.getnewaddress())
-
-        # Tests
-        self.birthtime_test(node, miner_wallet)
+        self.birthtime_test(node)
 
 
 if __name__ == '__main__':
-    WalletReindexTest(__file__).main()
+    WalletBirthTimeTest(__file__).main()
