@@ -14,7 +14,7 @@ from test_framework.util import (
 )
 BLOCK_TIME = 60 * 10
 
-class WalletReindexTest(BitcoinTestFramework):
+class WalletBirthTimeTest(BitcoinTestFramework):
     def set_test_params(self):
         self.num_nodes = 1
         self.setup_clean_chain = True
@@ -89,4 +89,4 @@ class WalletReindexTest(BitcoinTestFramework):
 
 
 if __name__ == '__main__':
-    WalletReindexTest(__file__).main()
+    WalletBirthTimeTest(__file__).main()
