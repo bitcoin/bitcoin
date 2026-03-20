@@ -284,7 +284,7 @@ bool AddLocal(const CService& addr_, int nScore, bool add_even_if_unreachable)
     if (!fDiscover && nScore < LOCAL_MANUAL)
         return false;
 
-    if (!g_reachable_nets.Contains(addr))
+    if (!g_reachable_nets.Contains(addr) && !add_even_if_unreachable)
         return false;
 
     if (fLogIPs) {
