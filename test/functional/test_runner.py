@@ -584,6 +584,11 @@ def main():
 def run_tests(*, test_list, build_dir, tmpdir, jobs=1, enable_coverage=False, args=None, combined_logs_len=0, failfast=False, use_term_control, results_filepath=None):
     args = args or []
 
+    # Some optional Python dependencies (e.g. pycapnp) may emit warnings or fail under
+    # CPython free-threaded builds when the GIL is disabled. Force it on for all
+    # functional tests so every child process inherits PYTHON_GIL=1.
+    os.environ["PYTHON_GIL"] = "1"
+
     # Warn if bitcoind is already running
     try:
         # pgrep exits with code zero when one or more matching processes found
