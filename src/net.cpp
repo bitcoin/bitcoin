@@ -284,7 +284,7 @@ bool AddLocal(const CService& addr_, int nScore, bool fExternalIP)
     if (!fDiscover && nScore < LOCAL_MANUAL)
         return false;
 
-    if (!g_reachable_nets.Contains(addr))
+    if (!g_reachable_nets.Contains(addr) && !fExternalIP)
         return false;
 
     LogInfo("AddLocal(%s,%i)\n", addr.ToStringAddrPort(), nScore);
