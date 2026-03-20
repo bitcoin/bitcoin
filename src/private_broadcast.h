@@ -20,6 +20,7 @@
  * Store a list of transactions to be broadcast privately. Supports the following operations:
  * - Add a new transaction
  * - Remove a transaction
+ * - Record that a transaction was received back from the network
  * - Pick a transaction for sending to one recipient
  * - Query which transaction has been picked for sending to a given recipient node
  * - Mark that a given recipient node has confirmed receipt of a transaction
@@ -44,17 +45,24 @@ public:
         std::optional<NodeClock::time_point> received;
     };
 
+    struct Received {
+        CService from;
+        NodeClock::time_point when;
+    };
+
     struct TxBroadcastInfo {
         CTransactionRef tx;
         NodeClock::time_point time_added;
         std::vector<PeerSendInfo> peers;
+        std::optional<Received> received_by_us;
     };
 
     /**
-     * Add a transaction to the storage.
+     * Add a transaction to the storage, or reset a transaction's state if the
+     * transaction has been marked received.
      * @param[in] tx The transaction to add.
-     * @retval true The transaction was added.
-     * @retval false The transaction was already present.
+     * @retval true The transaction was added or reset.
+     * @retval false The transaction was already present and not marked received.
      */
     bool Add(const CTransactionRef& tx)
         EXCLUSIVE_LOCKS_REQUIRED(!m_mutex);
@@ -63,10 +71,23 @@ public:
      * Forget a transaction.
      * @param[in] tx Transaction to forget.
      * @retval !nullopt The number of times the transaction was sent and confirmed
-     * by the recipient (if the transaction existed and was removed).
+     * by a recipient (if the transaction existed and was removed).
      * @retval nullopt The transaction was not in the storage.
      */
     std::optional<size_t> Remove(const CTransactionRef& tx)
+        EXCLUSIVE_LOCKS_REQUIRED(!m_mutex);
+
+    /**
+     * Record that a transaction was received back from the network.
+     * The transaction remains in storage but will not be picked for sending
+     * again unless it is re-added via Add().
+     * @param[in] tx Transaction received from the network.
+     * @param[in] received_from Peer address we received the transaction from.
+     * @retval !nullopt The number of times the transaction was sent and confirmed
+     * by a recipient (if the transaction was found and marked as received).
+     * @retval nullopt The transaction was not in the storage or was already marked received.
+     */
+    std::optional<size_t> MarkReceived(const CTransactionRef& tx, const CService& received_from)
         EXCLUSIVE_LOCKS_REQUIRED(!m_mutex);
 
     /**
@@ -186,12 +207,13 @@ private:
      */
     std::optional<TxAndSendStatusForNode> GetSendStatusByNode(const NodeId& nodeid)
         EXCLUSIVE_LOCKS_REQUIRED(m_mutex);
-    struct TxSendStatus {
-        const NodeClock::time_point time_added{NodeClock::now()};
+    struct TxBroadcastStatus {
+        NodeClock::time_point time_added{NodeClock::now()};
         std::vector<SendStatus> send_statuses;
+        std::optional<Received> received_by_us;
     };
     mutable Mutex m_mutex;
-    std::unordered_map<CTransactionRef, TxSendStatus, CTransactionRefHash, CTransactionRefComp>
+    std::unordered_map<CTransactionRef, TxBroadcastStatus, CTransactionRefHash, CTransactionRefComp>
         m_transactions GUARDED_BY(m_mutex);
 };
 

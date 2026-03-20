@@ -4404,7 +4404,7 @@ void PeerManagerImpl::ProcessMessage(Peer& peer, CNode& pfrom, const std::string
         const uint256& hash = peer.m_wtxid_relay ? wtxid.ToUint256() : txid.ToUint256();
         AddKnownTx(peer, hash);
 
-        if (const auto num_broadcasted{m_tx_for_private_broadcast.Remove(ptx)}) {
+        if (const auto num_broadcasted{m_tx_for_private_broadcast.MarkReceived(ptx, CService{pfrom.addr})}) {
             LogDebug(BCLog::PRIVBROADCAST, "Received our privately broadcast transaction (txid=%s) from the "
                                            "network from %s; stopping private broadcast attempts",
                      txid.ToString(), pfrom.LogPeer());
