@@ -885,6 +885,13 @@ const btck_BlockTreeEntry* btck_block_tree_entry_get_previous(const btck_BlockTr
     return btck_BlockTreeEntry::ref(btck_BlockTreeEntry::get(entry).pprev);
 }
 
+const btck_BlockTreeEntry* btck_block_tree_entry_get_ancestor(const btck_BlockTreeEntry* block_tree_entry, int height)
+{
+    const auto* ancestor{btck_BlockTreeEntry::get(block_tree_entry).GetAncestor(height)};
+    assert(ancestor);
+    return btck_BlockTreeEntry::ref(ancestor);
+}
+
 btck_BlockValidationState* btck_block_validation_state_create()
 {
     return btck_BlockValidationState::create();

@@ -882,6 +882,12 @@ public:
     {
         return BlockHeader{btck_block_tree_entry_get_block_header(get())};
     }
+
+    BlockTreeEntry GetAncestor(int height) const
+    {
+        return BlockTreeEntry{btck_block_tree_entry_get_ancestor(get(), height)};
+    }
+
 };
 
 class KernelNotifications
