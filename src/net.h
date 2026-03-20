@@ -164,8 +164,8 @@ enum
 std::optional<CService> GetLocalAddrForPeer(CNode& node);
 
 void ClearLocal();
-bool AddLocal(const CService& addr, int nScore = LOCAL_NONE);
-bool AddLocal(const CNetAddr& addr, int nScore = LOCAL_NONE);
+bool AddLocal(const CService& addr, int nScore = LOCAL_NONE, bool fExternalIP = false);
+bool AddLocal(const CNetAddr& addr, int nScore = LOCAL_NONE, bool fExternalIP = false);
 void RemoveLocal(const CService& addr);
 bool SeenLocal(const CService& addr);
 bool IsLocal(const CService& addr);

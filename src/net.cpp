@@ -274,7 +274,7 @@ void ClearLocal()
 }
 
 // learn a new local address
-bool AddLocal(const CService& addr_, int nScore)
+bool AddLocal(const CService& addr_, int nScore, bool fExternalIP)
 {
     CService addr{MaybeFlipIPv6toCJDNS(addr_)};
 
@@ -302,9 +302,9 @@ bool AddLocal(const CService& addr_, int nScore)
     return true;
 }
 
-bool AddLocal(const CNetAddr &addr, int nScore)
+bool AddLocal(const CNetAddr& addr, int nScore, bool fExternalIP)
 {
-    return AddLocal(CService(addr, GetListenPort()), nScore);
+    return AddLocal(CService(addr, GetListenPort()), nScore, fExternalIP);
 }
 
 void RemoveLocal(const CService& addr)
