@@ -63,6 +63,21 @@ FUZZ_TARGET(private_broadcast)
         return entry.second < max_send_attempts;
     }};
 
+    // Forget the sends recorded for a transaction that is no longer tracked or whose state
+    // was reset. Returns how many of those nodes had confirmed reception.
+    const auto forget_sends{[&nodes_sent_to, &nodes_that_confirmed_reception](const CTransactionRef& tx) {
+        size_t num_confirmed{0};
+        for (auto it = nodes_sent_to.begin(); it != nodes_sent_to.end();) {
+            if (CTransactionRefComp{}(it->second, tx)) {
+                if (nodes_that_confirmed_reception.erase(it->first) > 0) ++num_confirmed;
+                it = nodes_sent_to.erase(it);
+            } else {
+                ++it;
+            }
+        }
+        return num_confirmed;
+    }};
+
     const auto ExistentOrNewNodeId = [&next_nodeid, &fdp](){
         if (next_nodeid == 0 || fdp.ConsumeBool()) {
             return next_nodeid++;
@@ -91,17 +106,29 @@ FUZZ_TARGET(private_broadcast)
                     } else {
                         Assert(res == PrivateBroadcast::AddResult::Added);
                         tx_it->second = 0;
-                        for (auto it = nodes_sent_to.begin(); it != nodes_sent_to.end();) {
-                            if (CTransactionRefComp{}(it->second, tx)) {
-                                nodes_that_confirmed_reception.erase(it->first);
-                                it = nodes_sent_to.erase(it);
-                            } else {
-                                ++it;
-                            }
-                        }
+                        forget_sends(tx);
                     }
                 } else if (transactions.size() >= cap) {
-                    Assert(res == PrivateBroadcast::AddResult::QueueFull);
+                    if (std::ranges::all_of(transactions, is_pending)) {
+                        Assert(res == PrivateBroadcast::AddResult::QueueFull);
+                    } else {
+                        Assert(res == PrivateBroadcast::AddResult::Added);
+
+                        // Find the evicted transaction: the only one no longer in the queue.
+                        const auto info{pb.GetBroadcastInfo()};
+                        std::unordered_set<CTransactionRef, CTransactionRefHash, CTransactionRefComp> in_queue;
+                        in_queue.reserve(info.size());
+                        for (const auto& e : info) in_queue.insert(e.tx);
+                        const auto evicted{std::ranges::find_if(transactions, [&in_queue](const auto& entry) {
+                            return !in_queue.contains(entry.first);
+                        })};
+                        Assert(evicted != transactions.end());
+                        Assert(!is_pending(*evicted)); // pending transactions are never evicted
+
+                        forget_sends(evicted->first);
+                        transactions.erase(evicted);
+                        transactions.emplace(tx, 0);
+                    }
                 } else {
                     Assert(res == PrivateBroadcast::AddResult::Added);
                     transactions.emplace(tx, 0);
@@ -114,20 +141,7 @@ FUZZ_TARGET(private_broadcast)
                 const auto transactions_it{PickIterator(fdp, transactions)};
                 const CTransactionRef& tx{transactions_it->first};
 
-                size_t num_nodes_that_confirmed_tx{0};
-
-                // Remove relevant entries from nodes_sent_to[] and nodes_that_confirmed_reception[] if any.
-                for (auto it = nodes_sent_to.begin(); it != nodes_sent_to.end();) {
-                    const NodeId nodeid{it->first};
-                    if (CTransactionRefComp{}(it->second, tx)) {
-                        it = nodes_sent_to.erase(it);
-                        if (nodes_that_confirmed_reception.erase(nodeid) > 0) {
-                            ++num_nodes_that_confirmed_tx;
-                        }
-                    } else {
-                        ++it;
-                    }
-                }
+                const size_t num_nodes_that_confirmed_tx{forget_sends(tx)};
 
                 const auto opt_num_confirmed{pb.Remove(tx)};
 
