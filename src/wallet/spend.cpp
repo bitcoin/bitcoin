@@ -939,7 +939,7 @@ util::Result<SelectionResult> AutomaticCoinSelection(const CWallet& wallet, Coin
             if (group.m_ancestors >= max_ancestors || group.m_max_cluster_count >= max_cluster_count) total_unconf_long_chain += group.GetSelectionAmount();
         }
 
-        if (CAmount total_amount = available_coins.GetTotalAmount() - total_discarded < value_to_select) {
+        if (CAmount total_amount = available_coins.GetTotalAmount() - total_discarded; total_amount < value_to_select) {
             // Special case, too-long-mempool cluster.
             if (total_amount + total_unconf_long_chain > value_to_select) {
                 return util::Error{_("Unconfirmed UTXOs are available, but spending them creates a chain of transactions that will be rejected by the mempool")};
