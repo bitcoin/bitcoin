@@ -300,4 +300,26 @@ BOOST_AUTO_TEST_CASE(blockmanager_flush_block_file)
     BOOST_CHECK_EQUAL(read_block.nVersion, 2);
 }
 
+BOOST_FIXTURE_TEST_CASE(prune_lock_update_and_delete, TestingSetup)
+{
+    LOCK(::cs_main);
+    auto& chainman{*Assert(m_node.chainman)};
+    auto& blockman{chainman.m_blockman};
+
+    // Create a prune lock
+    blockman.UpdatePruneLock("test_lock", node::PruneLockInfo{.height_first = 100});
+
+    // Update it to a new height
+    blockman.UpdatePruneLock("test_lock", node::PruneLockInfo{.height_first = 200});
+
+    // Delete existing prune lock
+    BOOST_CHECK(blockman.DeletePruneLock("test_lock"));
+
+    // Verify deletion worked by trying to delete the same lock again
+    BOOST_CHECK(!blockman.DeletePruneLock("test_lock"));
+
+    // Deleting a non-existent lock returns false
+    BOOST_CHECK(!blockman.DeletePruneLock("nonexistent"));
+}
+
 BOOST_AUTO_TEST_SUITE_END()
