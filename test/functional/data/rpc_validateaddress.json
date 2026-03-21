@@ -39,13 +39,13 @@
       },
       {
         "address": "tb1qrp33g0q5c5txsp9arysrx4k6zdkfs4nce4xj0gdcccefvpysxf3q0sL5k7",
-        "error": "Bech32 address decoded with error: Invalid character or mixed case",
+        "error": "Bech32 address is mixed case",
         "error_locations": [58],
         "comment": "tb1, Mixed case"
       },
       {
         "address": "BC1QW508D6QEJXTDG4Y5R3ZARVARY0C5XW7KV8F3t4",
-        "error": "Bech32 address decoded with error: Invalid character or mixed case",
+        "error": "Bech32 address is mixed case",
         "error_locations": [40],
         "comment": "bc1, Mixed case, not in BIP 173 test vectors"
       },
@@ -161,7 +161,7 @@
       },
       {
         "address": "tb1p0xlxvlhemja6c4dqv22uapctqupfhlxm9h8z3k2e72q4k9hcz7vq47Zagq",
-        "error": "Bech32 address decoded with error: Invalid character or mixed case",
+        "error": "Bech32 address is mixed case",
         "error_locations": [58],
         "comment": "tb1, Mixed case"
       },
