@@ -44,6 +44,9 @@ struct DBParams {
     bool obfuscate = false;
     //! Passed-through options.
     DBOptions options{};
+    //! Maximum LevelDB SST file size. Larger values reduce the frequency
+    //! of compactions but increase their duration.
+    size_t max_file_size = DBWRAPPER_MAX_FILE_SIZE;
 };
 
 class dbwrapper_error : public std::runtime_error
