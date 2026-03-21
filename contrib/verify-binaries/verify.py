@@ -365,12 +365,12 @@ def verify_shasums_signature(
     if args.trusted_keys:
         trusted_keys |= set(args.trusted_keys.split(','))
 
-    # Tally signatures and make sure we have enough goods to fulfill
+    # Tally signatures and make sure we have enough trusted signatures to fulfill
     # our threshold.
     good_trusted = [sig for sig in good if sig.trusted or sig.key in trusted_keys]
     good_untrusted = [sig for sig in good if sig not in good_trusted]
-    num_trusted = len(good_trusted) + len(good_untrusted)
-    log.info(f"got {num_trusted} good signatures")
+    num_trusted = len(good_trusted)
+    log.info(f"got {num_trusted} trusted signatures")
 
     if num_trusted < min_good_sigs:
         log.info("Maybe you need to import "
