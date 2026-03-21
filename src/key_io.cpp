@@ -185,27 +185,50 @@ CTxDestination DecodeDestination(const std::string& str, const CChainParams& par
                 std::equal(pubkey_prefix.begin(), pubkey_prefix.end(), data.begin()))) {
             error_str = "Invalid length for Base58 address (P2PKH or P2SH)";
         } else {
-            error_str = "Invalid or unsupported Base58-encoded address.";
+            std::vector<std::string_view> encoded_prefixes;
+            const std::vector<std::string_view>& pubkey_prefixes = params.Base58EncodedPrefix(CChainParams::PUBKEY_ADDRESS);
+            const std::vector<std::string_view>& script_prefixes = params.Base58EncodedPrefix(CChainParams::SCRIPT_ADDRESS);
+            encoded_prefixes.insert(encoded_prefixes.end(), script_prefixes.begin(), script_prefixes.end());
+            encoded_prefixes.insert(encoded_prefixes.end(), pubkey_prefixes.begin(), pubkey_prefixes.end());
+
+            std::string base58_address_prefixes;
+            for (size_t i = 0; i < encoded_prefixes.size(); ++i) {
+                if (i > 0) {
+                    base58_address_prefixes += (i == encoded_prefixes.size() - 1) ? ", or " : ", ";
+                }
+                base58_address_prefixes += std::string(encoded_prefixes[i]);
+            }
+            error_str = strprintf("Invalid Base58 address. Expected prefix %s", base58_address_prefixes);
         }
         return CNoDestination();
     } else {
-        // Try Base58 decoding without the checksum, using a much larger max length
-        bool is_base58 = DecodeBase58(str, data, 100);
+        std::string str_lower = ToLower(str);
+        bool is_mixed_case = (str_lower != str && ToUpper(str) != str);
+        auto [bech32_error, bech32_error_loc] = bech32::LocateErrors(str);
 
-        // Perform Bech32 error location with a larger limit to handle longer strings
-        auto res = bech32::LocateErrors(str, bech32::CharLimit(std::max(str.size(), size_t(90))));
-
-        if (!is_base58 && !res.first.empty()) {
-            // Not valid Base58 and we have a Bech32 error
-            error_str = "Bech32 address decoded with error: " + res.first;
-            if (error_locations) *error_locations = std::move(res.second);
-        } else if (is_base58) {
-            // Valid Base58 characters but invalid checksum
-            error_str = "Invalid checksum or length of Base58 address (P2PKH or P2SH)";
-        } else {
-            // Fallback error
-            error_str = "Invalid or unsupported Segwit (Bech32) or Base58 encoding.";
+        // Attempt bech32 read as lower if case is mixed, fall through if decode isn't mixed
+        if (bech32_error == "Invalid character or mixed case" && is_mixed_case) {
+            auto [bech32_encoding, _bech32_hrp, _bech32_chars] = bech32::Decode(str_lower );
+            if (bech32_encoding != bech32::Encoding::INVALID) {
+                error_str = "Bech32 address is mixed case";
+                if (error_locations) {
+                    *error_locations = std::move(bech32_error_loc);
+                }
+                return CNoDestination();
+            }
         }
+        // Try Base58 decoding without the checksum, using a much larger max length
+        if (!DecodeBase58(str, data, 100)) {
+            // If bech32 decoding failed due to invalid base32 chars, address format is ambiguous; otherwise, report bech32 error
+            bool invalidBech32Chars = (bech32_error == "Invalid Base 32 character");
+            error_str = invalidBech32Chars ? "Address is not valid Base58 or Bech32" : "Bech32 address decoded with error: " + bech32_error;
+            if (error_locations) {
+                *error_locations = std::move(bech32_error_loc);
+            }
+        } else {
+            error_str = bech32_error.find("checksum") != std::string::npos ? "Invalid checksum" : "Invalid checksum or length of Base58 address (P2PKH or P2SH)";
+        }
+
         return CNoDestination();
     }
 }
