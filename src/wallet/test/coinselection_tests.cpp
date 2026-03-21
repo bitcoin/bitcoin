@@ -225,5 +225,51 @@ BOOST_AUTO_TEST_CASE(bnb_feerate_sensitivity_test)
     TestBnBSuccess("Prefer two light inputs over two heavy inputs at high feerates", high_feerate_pool, /*selection_target=*/13 * CENT, /*expected_input_amounts=*/{3 * CENT, 10 * CENT}, high_feerate_params);
 }
 
+BOOST_AUTO_TEST_CASE(coin_grinder_total_tries_test)
+{
+    /* Test CoinGrinder attempt limit (TOTAL_TRIES)
+     *
+     * CoinGrinder searches for the minimum-weight input set that meets the target. TOTAL_TRIES (100,000) limits
+     * iterations to prevent excessive computation on large UTXO pools. We create a pool of UTXOs with unique effective
+     * values but identical weights. Since all k-coin subsets have the same total weight, CoinGrinder cannot prune based
+     * on weight improvements and must enumerate subsets looking for the lowest excess amount.
+     *
+     * With the chosen selection_target and change_target, exactly 9 coins are needed: 8 coins cannot reach
+     * selection_target + m_min_change_target, so only 9-coin combinations are valid. We set max_selection_weight to
+     * exactly 9 input weights so that 10-coin combinations exceed the weight limit.
+     *
+     * With 17 UTXOs, the search space is small enough to complete within TOTAL_TRIES.
+     * With 18 UTXOs, the search space exceeds TOTAL_TRIES, triggering the attempt limit.
+     */
+
+    CAmount selection_target = 8 * COIN;
+    CAmount change_target = default_cs_params.m_min_change_target;
+    int max_selection_weight = 9 * 4 * P2WPKH_INPUT_VSIZE;
+
+    // With 17 UTXOs, CoinGrinder completes without hitting TOTAL_TRIES
+    {
+        std::vector<OutputGroup> utxo_pool;
+        for (int i = 0; i < 17; ++i) {
+            utxo_pool.push_back(MakeCoin(1 * COIN + i));
+        }
+
+        auto result = CoinGrinder(utxo_pool, selection_target, change_target, max_selection_weight);
+        BOOST_CHECK(result);
+        BOOST_CHECK(result->GetAlgoCompleted());
+    }
+
+    // With 18 UTXOs, CoinGrinder hits TOTAL_TRIES before completing the search
+    {
+        std::vector<OutputGroup> utxo_pool;
+        for (int i = 0; i < 18; ++i) {
+            utxo_pool.push_back(MakeCoin(1 * COIN + i));
+        }
+
+        auto result = CoinGrinder(utxo_pool, selection_target, change_target, max_selection_weight);
+        BOOST_CHECK(result);
+        BOOST_CHECK(!result->GetAlgoCompleted());
+    }
+}
+
 BOOST_AUTO_TEST_SUITE_END()
 } // namespace wallet
