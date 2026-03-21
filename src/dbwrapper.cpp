@@ -224,7 +224,10 @@ CDBWrapper::CDBWrapper(const DBParams& params)
     DBContext().options = GetOptions(params.cache_bytes);
     DBContext().options.create_if_missing = true;
     DBContext().options.max_file_size = params.max_file_size;
-    if (params.memory_only) {
+    assert(!(params.testing_env && params.memory_only));
+    if (params.testing_env) {
+        DBContext().options.env = params.testing_env;
+    } else if (params.memory_only) {
         DBContext().penv = leveldb::NewMemEnv(leveldb::Env::Default());
         DBContext().options.env = DBContext().penv;
     } else {

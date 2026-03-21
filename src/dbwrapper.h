@@ -19,6 +19,10 @@
 #include <stdexcept>
 #include <string>
 
+namespace leveldb {
+class Env;
+} // namespace leveldb
+
 static const size_t DBWRAPPER_PREALLOC_KEY_SIZE = 64;
 static const size_t DBWRAPPER_PREALLOC_VALUE_SIZE = 1024;
 static const size_t DBWRAPPER_MAX_FILE_SIZE = 32 << 20; // 32 MiB
@@ -44,6 +48,9 @@ struct DBParams {
     bool obfuscate = false;
     //! Passed-through options.
     DBOptions options{};
+    //! If non-null, use this as the leveldb::Env instead of the default.
+    //! Caller retains ownership.
+    leveldb::Env* testing_env = nullptr;
     //! Maximum LevelDB SST file size. Larger values reduce the frequency
     //! of compactions but increase their duration.
     size_t max_file_size = DBWRAPPER_MAX_FILE_SIZE;
