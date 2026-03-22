@@ -29,7 +29,7 @@ std::optional<arith_uint256> DeriveTarget(unsigned int nBits, uint256 pow_limit)
 /**
  * Whether min-difficulty blocks are allowed at the given height.
  * Used for the testnet4 hard fork that disables min-difficulty blocks
- * at height 151,200 (consensus.min_difficulty_fork_height).
+ * at height 201,600 (consensus.min_difficulty_fork_height).
  * Returns false on networks where fPowAllowMinDifficultyBlocks is false (e.g. mainnet).
  */
 bool AllowMinDifficultyBlocks(const Consensus::Params& params, int height);
