@@ -214,9 +214,9 @@ BOOST_AUTO_TEST_CASE(testnet4_min_difficulty_pre_fork)
     const auto chainParams = CreateChainParams(*m_node.args, ChainType::TESTNET4);
     const auto& consensus = chainParams->GetConsensus();
 
-    // Verify testnet4 has the expected fork height (epoch 75 boundary)
+    // Verify testnet4 has the expected fork height (epoch 100 boundary)
     const int fork_height = consensus.min_difficulty_fork_height;
-    BOOST_CHECK_EQUAL(fork_height, 151200);
+    BOOST_CHECK_EQUAL(fork_height, 201600);
     BOOST_CHECK(consensus.fPowAllowMinDifficultyBlocks);
 
     const unsigned int pow_limit = UintToArith256(consensus.powLimit).GetCompact();
@@ -333,8 +333,7 @@ BOOST_AUTO_TEST_CASE(mainnet_min_difficulty_unaffected)
     const unsigned int pow_limit = UintToArith256(consensus.powLimit).GetCompact();
 
     // Non-retarget height: difficulty must stay same
-    // (chose an arbitrary non-divisible by 2016 block height)
-    int non_retarget_height = 150001;
+    int non_retarget_height = consensus.DifficultyAdjustmentInterval() + 1;
     BOOST_CHECK(!PermittedDifficultyTransition(consensus, non_retarget_height, some_difficulty, pow_limit));
     BOOST_CHECK(PermittedDifficultyTransition(consensus, non_retarget_height, some_difficulty, some_difficulty));
 }
