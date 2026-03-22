@@ -16,12 +16,36 @@
 #include <validationinterface.h>
 #include <validation.h>
 
+// ConnectedBlock is defined in validation.cpp; duplicate the definition here.
+struct ConnectedBlock {
+    const CBlockIndex* pindex;
+    std::shared_ptr<const CBlock> pblock;
+};
+
+// Forward declarations for internal validation.cpp functions (static removed there).
+bool ContextualCheckBlockHeader(const CBlockHeader& block, BlockValidationState& state, node::BlockManager& blockman, const ChainstateManager& chainman, const CBlockIndex* pindexPrev) EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
+bool ContextualCheckBlock(const CBlock& block, BlockValidationState& state, const ChainstateManager& chainman, const CBlockIndex* pindexPrev);
+
 
 #define DEBUGOUTPUT(x) //(x);
 
 
 namespace {
 
+/**
+ * Class to expose protected Chainstate methods for testing.
+ */
+struct TestChainstate : public Chainstate {
+    bool CallActivateBestChainStep(BlockValidationState& state, CBlockIndex* pindexMostWork, const std::shared_ptr<const CBlock>& pblock, bool& fInvalidFound, std::vector<ConnectedBlock>& connected_blocks) EXCLUSIVE_LOCKS_REQUIRED(cs_main, m_mempool->cs)
+    {
+        return ActivateBestChainStep(state, pindexMostWork, pblock, fInvalidFound, connected_blocks);
+    }
+
+    void CallMaybeUpdateMempoolForReorg(DisconnectedBlockTransactions& disconnectpool, bool fAddToMempool) EXCLUSIVE_LOCKS_REQUIRED(cs_main, m_mempool->cs)
+    {
+        MaybeUpdateMempoolForReorg(disconnectpool, fAddToMempool);
+    }
+};
 
 /** Testing setup used by the three harnesses */
 TestingSetup* test_setup{nullptr};
@@ -38,6 +62,8 @@ static const CScript P2SH_OP_TRUE_UNLOCK = CScript() << MakeUCharSpan(CScript() 
 /** Static TAPROOT_OP_TRUE script and its witness */
 static CScript TAPROOT_OP_TRUE;
 static std::vector<std::vector<uint8_t>> TAPROOT_OP_TRUE_WITNESS;
+/** Static hold whether the environment needs to be reinitialized */
+static bool dirtyEnv = false;
 
 /**
  * Initialize TAPROOT_OP_TRUE and TAPROOT_OP_TRUE_WITNESS static variable
@@ -446,12 +472,196 @@ CBlock ConsumeBlock(FuzzedDataProvider& fuzzed_data_provider, const CBlock& prev
 
 
 
+/**
+ * Clear the mempool from any pending transaction.
+ * Used in reinitEnv and Cleanup class to reset the environment.
+ */
+void clearMemPool() {
+    CTxMemPool* mempool = test_setup->m_node.chainman->ActiveChainstate().GetMempool();
+    Assert(mempool);
+    LOCK(mempool->cs);
+    while (mempool->size() > 0) {
+        const CTxMemPoolEntry& entry = *(mempool->mapTx.begin());
+        mempool->removeRecursive(entry.GetTx(), MemPoolRemovalReason::EXPIRY);
+    }
+}
+
+/**
+ * Reinitialize the environment to the original state.
+ * Used in Cleanup class to reset the environment when needed.
+ */
+[[maybe_unused]] void reinitEnv() {
+    clearMemPool();
+    test_setup->m_node.chainman.reset();
+    test_setup->m_make_chainman();
+
+    test_setup->LoadVerifyActivateChainstate();
+    for (const auto& b : listBlocks) {
+        if (b == listBlocks.front()) continue;
+        ProcessBlock(test_setup->m_node, b);
+    }
+    /** disable dirtyEnv flag as the state has been restored */
+    dirtyEnv = false;
+}
+
+/**
+ * Class to manage the test environment state. Especially,
+ * it is in charge of disconnecting blocks added during the
+ * fuzzing iteration and to restore the mempool to a clean state.
+ */
+class Cleanup {
+    /** Hash of chain tip */
+    uint256 tipHash;
+    /** Whether to clean the environment at the end of an iteration */
+    [[maybe_unused]] bool forceClean;
+public:
+    Cleanup(bool forceClean_=false) : forceClean(forceClean_) {
+        SeedRandomStateForTest(SeedRand::ZEROS);
+        SetMockTime(listBlocks.back()->GetBlockTime() + 2);
+
+        /** keep the current tip for reference */
+        tipHash = listBlocks.back()->GetHash();
+
+        if (forceClean) {
+            /** If the environment is dirty, reinitialize it */
+            if (dirtyEnv) {
+                reinitEnv();
+            }
+            /** Make sure current chain tip matches listBlocks one */
+            Assert(test_setup->m_node.chainman->ActiveTip()->GetBlockHash() == tipHash);
+        } else if (test_setup->m_node.chainman->ActiveTip()->GetBlockHash() != tipHash) {
+            DEBUGOUTPUT(std::cout << "Reset by wrong tip" << std::endl);
+            reinitEnv();
+        }
+        /** Both Tips should be in sync */
+        Assert(test_setup->m_node.chainman->ActiveTip()->GetBlockHash() == tipHash);
+    }
+
+    ~Cleanup() {
+        /**  Cleanup mempool and disconnect blocks added during the fuzzing iteration */
+        Assert(!test_setup->m_interrupt);
+        clearMemPool();
+
+
+        if (forceClean || dirtyEnv) {  /** if clean is forced or the environment is dirty */
+            reinitEnv();
+        } else {  /** Otherwise under normal conditions, just disconnect all blocks added */
+            TestChainstate& active_chainstate = static_cast<TestChainstate&>(test_setup->m_node.chainman->ActiveChainstate());
+            while (active_chainstate.m_chain.Tip()->nHeight >= (int) listBlocks.size()) {
+                DisconnectedBlockTransactions disconnectpool{MAX_DISCONNECTED_TX_POOL_BYTES};
+                std::vector<ConnectedBlock> connected_blocks;
+                BlockValidationState state;
+                bool disconnectSuccess = active_chainstate.DisconnectTip(state, &disconnectpool);
+                active_chainstate.CallMaybeUpdateMempoolForReorg(disconnectpool, false);
+                if (!disconnectSuccess) break;
+            }
+        }
+
+        Assert(!test_setup->m_interrupt);
+    }
+};
+
+/**
+ * Write a block into the BlockManager through ChainstateManager.
+ * Perform all the necessary checks that are performed on the block
+ * when it is being received through P2P (CheckBlock etc.).
+ * It is solely used by activate_best_chain_step.
+ */
+static CBlockIndex* writeBlock(const CBlock& block) EXCLUSIVE_LOCKS_REQUIRED(::cs_main) {
+    /** Get the ChainstateManager from the global test_setup object */
+    ChainstateManager& csm = *test_setup->m_node.chainman;
+
+    /** Search if the block hash already exists, (which the fuzzer duplicated it) */
+    CBlockIndex* blockIndex = csm.m_blockman.LookupBlockIndex(block.GetHash());
+
+    /** If it does not exists write it into the ChainstateManager. */
+    if (blockIndex == nullptr) {
+        BlockValidationState state;
+
+        CBlockIndex* bestBlock = csm.m_best_header;
+        blockIndex = csm.m_blockman.AddToBlockIndex(block, bestBlock);
+        /* bestBlock equals blockIndex meaning it has properly been added
+        *  and the block had accumulated more proof of work than the current best header.
+        *  Thus early reject block otherwise.
+        */
+        if(bestBlock != blockIndex){
+            DEBUGOUTPUT(std::cout << "Fail to add block to BlockManager or insufficient PoW" << std::endl);
+            return nullptr;
+        }
+
+        FlatFilePos pos = csm.m_blockman.WriteBlock(block, blockIndex->nHeight);
+        Assert(!pos.IsNull());
+        csm.ReceivedBlockTransactions(block, blockIndex, pos);
+        csm.ActiveChainstate().ForceFlushStateToDisk(); /** Force writing it to disk as blocks are always read from disk */
+
+        /** Mark environment as dirty as Block cannot be removed from BlockManager.
+         * Thus reproducibility purposes make sure the same input will follow same path. */
+        dirtyEnv = true;
+    }
+
+    /** Here and onward the block has been added to the BlockManager */
+    Assert(blockIndex != nullptr);
+    BlockValidationState state;
+
+    /** Perform all the policy & consensus checks on the block */
+    const auto& consensus = test_setup->m_node.chainman->GetConsensus();
+    if (!ContextualCheckBlockHeader(block, state, csm.m_blockman, csm, blockIndex->pprev) ||
+        !CheckBlock(block, state, consensus) ||
+        !ContextualCheckBlock(block, state, csm, blockIndex->pprev)) {
+
+        DEBUGOUTPUT(std::cout << "Reject existing block as already invalid block: " << state.GetRejectReason() << std::endl);
+        /** Early reject the block if it is not valid */
+        return nullptr;
+    }
+    return blockIndex;
+}
+
+/**
+ * Write and activate a block into the ChainstateManager.
+ * It is solely used by activate_best_chain.
+ */
+static CBlockIndex* writeAndActivateBlock(const CBlock& block) EXCLUSIVE_LOCKS_REQUIRED(::cs_main) {
+    /** Retrieve the ChainstateManager from the global test_setup object */
+    ChainstateManager& csm = *test_setup->m_node.chainman;
+
+    /** Search if the block hash already exists */
+    CBlockIndex* blockIndex = csm.m_blockman.LookupBlockIndex(block.GetHash());
+
+    /** If it does not exists, write and activate it through AcceptBlock */
+    if (blockIndex == nullptr) {
+        BlockValidationState state;
+
+        bool isNewBlock = false;
+        if (!csm.AcceptBlock(std::make_shared<CBlock>(block), state, &blockIndex, true, nullptr, &isNewBlock, true)) {
+            DEBUGOUTPUT(std::cout << "Fail to writeAndActivateBlock : State: " << state.ToString() << std::endl);
+            return nullptr;
+        }
+        dirtyEnv = true;
+    } else {
+        /** If it already exists, perform all the policy & consensus checks on the block */
+        BlockValidationState state;
+        const auto& consensus = test_setup->m_node.chainman->GetConsensus();
+        if (!ContextualCheckBlockHeader(block, state, csm.m_blockman, csm, blockIndex->pprev) ||
+            !CheckBlock(block, state, consensus) ||
+            !ContextualCheckBlock(block, state, csm, blockIndex->pprev)) {
+
+            DEBUGOUTPUT(std::cout << "Reject existing block as already invalid block: " << state.GetRejectReason() << std::endl);
+            return nullptr;
+        }
+    }
+    Assert(blockIndex != nullptr);
+    return blockIndex;
+}
+
+} // namespace
+
+
+
 FUZZ_TARGET(connect_block, .init = initialize_connect_block)
 {
     LOCK(::cs_main);
     /** Initialize Cleanup class that will automatically restore the environment when exiting the scope */
-    SeedRandomStateForTest(SeedRand::ZEROS);
-    SetMockTime(listBlocks.back()->GetBlockTime() + 2);
+    Cleanup cleanEnvAtExit {};
 
     /** Initialize data provider */
     FuzzedDataProvider fuzzed_data_provider(buffer.data(), buffer.size());
@@ -502,4 +712,258 @@ FUZZ_TARGET(connect_block, .init = initialize_connect_block)
     }
 }
 
+
+FUZZ_TARGET(activate_best_chain_step, .init = initialize_connect_block) {
+
+    LOCK(::cs_main);
+    /** Initialize Cleanup class that will automatically restore the environment when exiting the scope */
+    Cleanup cleanEnvAtExit {};
+
+    /** Initialize data provider */
+    FuzzedDataProvider fuzzed_data_provider(buffer.data(), buffer.size());
+
+    /** Retrieve the active chain */
+    TestChainstate& active_chainstate = static_cast<TestChainstate&>(test_setup->m_node.chainman->ActiveChainstate());
+    CBlockIndex* active_tip = active_chainstate.m_chain.Tip();
+    DEBUGOUTPUT(std::cout << "Begin with height: " << active_tip->nHeight << std::endl);
+
+    /** Step 1: Read few blocks and add them to the chain */
+    std::vector<CTxIn> additionalUTXO;
+    std::shared_ptr<const CBlock> currentBlock = listBlocks.back();
+    CBlockIndex* originTip = active_chainstate.m_chain.Tip();
+    CBlockIndex* currentTipIndex = originTip;
+
+    /** Read up to 3 blocks */
+    LIMITED_WHILE(fuzzed_data_provider.ConsumeBool(), 3) {
+        int i = 3 - _count; /** Retrieve ith from LIMITED_WHILE _count macro */
+        CBlock block = ConsumeBlock(fuzzed_data_provider, *currentBlock, active_tip->nHeight + 1 + i, additionalUTXO, true);
+        CBlockIndex* blockIndex = writeBlock(block); /** Write the block in the ChainstateManager */
+        if (!blockIndex) return; /** If block is invalid early return */
+
+        /** Make sure the block read build upon the current tip
+         * If invalid may trigger an assert in ChainstateManager::CheckBlockIndex() */
+        if (blockIndex->pprev != currentTipIndex) {
+            DEBUGOUTPUT(std::cout << "Block invalid (pprev)" << std::endl);
+            return;
+        }
+
+        DEBUGOUTPUT(std::cout << "Step1 NewBlock: "<< block.GetHash().ToString() << std::endl);
+        /** Keep the current block and its index */
+        currentBlock = std::make_shared<CBlock>(block);
+        currentTipIndex = blockIndex;
+    }
+
+    /** Step2: switch to this branch by calling ActivateBestChainStep iteratively */
+    do {
+        LOCK(active_chainstate.MempoolMutex());
+        DisconnectedBlockTransactions disconnectpool{MAX_DISCONNECTED_TX_POOL_BYTES};
+        std::vector<ConnectedBlock> connected_blocks;
+        BlockValidationState state;
+
+        bool foundInvalid = false;
+
+        if (!active_chainstate.CallActivateBestChainStep(state, currentTipIndex, currentBlock, foundInvalid, connected_blocks)) {
+            DEBUGOUTPUT(std::cout << "Step2 Fail : " << state.GetRejectReason() << std::endl);
+            return;
+        }
+        if (foundInvalid) {
+            DEBUGOUTPUT(std::cout << "Step2 Invalid" << std::endl);
+            return;
+        }
+        DEBUGOUTPUT(std::cout << "Step2 Success : " << active_chainstate.m_chain.Tip()->nHeight << std::endl);
+    } while (active_chainstate.m_chain.Tip()->nHeight < currentTipIndex->nHeight);
+
+    /** Step 3: create a fork from the same origin than step1 and add them to the chain */
+    additionalUTXO.clear(); /** Clear additionalUTXO so that no TX will pick UTXO from the other branch */
+    currentBlock = listBlocks.back();
+    currentTipIndex = originTip;
+
+    /** Read up to 5 blocks in the second branch */
+    LIMITED_WHILE(fuzzed_data_provider.ConsumeBool(), 5) {
+        int i = 5 - _count; /** Retrieve ith from LIMITED_WHILE _count macro */
+        CBlock block = ConsumeBlock(fuzzed_data_provider, *currentBlock, originTip->nHeight + 1 + i, additionalUTXO, true);
+        CBlockIndex* blockIndex = writeBlock(block);
+        if (!blockIndex) return;
+        // if no pprev, we may trigger an assert in ChainstateManager::CheckBlockIndex()
+        if (blockIndex->pprev != currentTipIndex) {
+            DEBUGOUTPUT(std::cout << "Block invalid (pprev)" << std::endl);
+            return;
+        }
+
+        DEBUGOUTPUT(std::cout << "Step3 NewBlock: "<< block.GetHash().ToString() << std::endl);
+        currentBlock = std::make_shared<CBlock>(block);
+        currentTipIndex = blockIndex;
+    }
+
+    /** Step4: If reach here try switching to the new branch (hopefully longer) and rollback the previous one */
+    do {
+        LOCK(active_chainstate.MempoolMutex());
+        DisconnectedBlockTransactions disconnectpool{MAX_DISCONNECTED_TX_POOL_BYTES};
+        std::vector<ConnectedBlock> connected_blocks;
+        BlockValidationState state;
+
+        bool foundInvalid = false;
+
+        if (!active_chainstate.CallActivateBestChainStep(state, currentTipIndex, currentBlock, foundInvalid, connected_blocks)) {
+            DEBUGOUTPUT(std::cout << "Step4 Fail : " << state.GetRejectReason() << std::endl);
+            return;
+        }
+        if (foundInvalid) {
+            DEBUGOUTPUT(std::cout << "Step4 Invalid" << std::endl);
+            return;
+        }
+        DEBUGOUTPUT(std::cout << "Step4 Success : " << active_chainstate.m_chain.Tip()->nHeight << std::endl);
+    } while (active_chainstate.m_chain.Tip()->nHeight < currentTipIndex->nHeight);
+}
+
+
+
+FUZZ_TARGET(activate_best_chain, .init = initialize_connect_block) {
+
+    /** Instantiate Cleanup object with forceClean=true */
+    Cleanup cleanEnvAtExit {true};
+
+    /** Initialize data provider */
+    FuzzedDataProvider fuzzed_data_provider(buffer.data(), buffer.size());
+
+    /** Retrieve the active chain */
+    TestChainstate& active_chainstate = static_cast<TestChainstate&>(test_setup->m_node.chainman->ActiveChainstate());
+    DEBUGOUTPUT(std::cout << "Begin with height: " << active_chainstate.m_chain.Tip()->nHeight << std::endl);
+
+    BlockValidationState state;
+    std::vector<CTxIn> additionalUTXO;
+    const auto& consensus = test_setup->m_node.chainman->GetConsensus();
+    ChainstateManager& csm = *test_setup->m_node.chainman;
+
+
+    /** Step 1: Read few block from the input to create the first branch */
+    std::vector<std::shared_ptr<CBlock>> branch1;
+    std::vector<std::unique_ptr<CBlockIndex>> tmpIndex;
+    std::shared_ptr<const CBlock> currentBlock = listBlocks.back();
+    CBlockIndex* originTip = active_chainstate.m_chain.Tip();
+    CBlockIndex* currentTipIndex = originTip;
+
+    LIMITED_WHILE(fuzzed_data_provider.ConsumeBool(), 3) {
+        int i = 3 - _count; /** Retrieve ith from LIMITED_WHILE _count macro */
+        LOCK(::cs_main);
+        branch1.push_back(std::make_shared<CBlock>(ConsumeBlock(fuzzed_data_provider, *currentBlock,
+                originTip->nHeight + 1 + i, additionalUTXO, true)));
+        currentBlock = branch1.back();
+        DEBUGOUTPUT(std::cout << *currentBlock->ToString().c_str() << std::endl);
+        if (!ContextualCheckBlockHeader(*currentBlock, state, csm.m_blockman, csm, currentTipIndex) ||
+            !CheckBlock(*currentBlock, state, consensus) ||
+            !ContextualCheckBlock(*currentBlock, state, csm, currentTipIndex)) {
+            /** do not test invalid block, as they will never be written on disk.
+            * If an invalid block is written, it may raise an error when trying to
+            * read it
+            */
+            DEBUGOUTPUT(std::cout << "Block invalid: " << state.GetRejectReason() << std::endl);
+            return;
+        }
+        DEBUGOUTPUT(std::cout << "Step1 generate valid block: " << currentBlock->GetHash().ToString() << std::endl);
+        /** Use a vector instead of a unique ptr for pprev to remain valid  */
+        tmpIndex.emplace_back(std::make_unique<CBlockIndex>(*currentBlock));
+        tmpIndex.back()->nHeight = currentTipIndex->nHeight + 1;
+        tmpIndex.back()->pprev = currentTipIndex;
+        currentTipIndex = tmpIndex.back().get();
+    }
+
+    /** Step 2: Read a second branch from the input (longer than the first branch).
+     * Restart from the originTip to build the second branch.
+     */
+    std::vector<std::shared_ptr<CBlock>> branch2;
+    additionalUTXO.clear(); /** Clear additionalUTXO so that no TX will pick UTXO from the other branch */
+    tmpIndex.clear();
+    currentBlock = listBlocks.back();
+    currentTipIndex = originTip;
+
+    /** Read blocks for the second branch. Make sure it is longer than the first branch */
+    LIMITED_WHILE(fuzzed_data_provider.ConsumeBool() || branch2.size() <= branch1.size(), 5) {
+        int i = 5 - _count; /** Retrieve ith from LIMITED_WHILE _count macro */
+
+        LOCK(::cs_main);
+        branch2.push_back(std::make_shared<CBlock>(ConsumeBlock(fuzzed_data_provider, *currentBlock,
+                originTip->nHeight + 1 + i, additionalUTXO, true)));
+        currentBlock = branch2.back();
+        DEBUGOUTPUT(std::cout << *currentBlock->ToString().c_str() << std::endl);
+        if (!ContextualCheckBlockHeader(*currentBlock, state, csm.m_blockman, csm, currentTipIndex) ||
+            !CheckBlock(*currentBlock, state, consensus) ||
+            !ContextualCheckBlock(*currentBlock, state, csm, currentTipIndex)) {
+
+            DEBUGOUTPUT(std::cout << "Block invalid: " << state.GetRejectReason() << std::endl);
+            return;
+        }
+        DEBUGOUTPUT(std::cout << "Step2 generate valid block: " << currentBlock->GetHash().ToString() << std::endl);
+        tmpIndex.emplace_back(std::make_unique<CBlockIndex>(*currentBlock));
+        tmpIndex.back()->nHeight = currentTipIndex->nHeight + 1;
+        tmpIndex.back()->pprev = currentTipIndex;
+        currentTipIndex = tmpIndex.back().get();
+    }
+
+
+    /**
+     * Step3: add first branch in the blockManager
+     * (Do not add in the previous loop to avoid writing blocks on disk if
+     * the branch turns out not to be relevant)
+    */
+    currentTipIndex = originTip;
+
+    /** Iterate all blocks of the first branch and activate them through ChainstateManager */
+    for (const auto& block: branch1) {
+        LOCK(::cs_main);
+        CBlockIndex* blockIndex = writeAndActivateBlock(*block);
+        if (!blockIndex) return; /** If block is invalid early return */
+        if (blockIndex->pprev != currentTipIndex) {
+            DEBUGOUTPUT(std::cout << "Step3 block invalid (pprev) : " << block->GetHash().ToString() << std::endl);
+            return;
+        }
+        currentTipIndex = blockIndex;
+        currentBlock = block;
+    }
+
+    /** Step4: switch to branch1 */
+    if (!active_chainstate.ActivateBestChain(state, currentBlock)) {
+        DEBUGOUTPUT(std::cout << "Step4 Fail : " << state.GetRejectReason() << std::endl);
+        return;
+    }
+
+    /** Check that we have been able to switch to branch1 */
+    DEBUGOUTPUT({
+        if (active_chainstate.m_chain.Tip() != currentTipIndex) {
+            std::cout << "Step4 Fail to switch to our new Tip : " << active_chainstate.m_chain.Tip()->nHeight << std::endl;
+        } else {
+            std::cout << "Step4 Success : " << active_chainstate.m_chain.Tip()->nHeight << std::endl;
+        }
+    });
+
+    /** Step5: add second branch in the blockManager */
+    currentTipIndex = originTip;
+
+    for (const auto& block: branch2) {
+        LOCK(::cs_main);
+        CBlockIndex* blockIndex = writeAndActivateBlock(*block);
+        if (!blockIndex) return;
+        // if no pprev, we may trigger an assert in ChainstateManager::CheckBlockIndex()
+        if (blockIndex->pprev != currentTipIndex) {
+            DEBUGOUTPUT(std::cout << "Step5 block invalid (pprev) : " << block->GetHash().ToString() << std::endl);
+            return;
+        }
+        currentTipIndex = blockIndex;
+        currentBlock = block;
+    }
+
+    /** Step6: switch to branch2 */
+    if (!active_chainstate.ActivateBestChain(state, currentBlock)) {
+        DEBUGOUTPUT(std::cout << "Step6 Fail : " << state.GetRejectReason() << std::endl);
+        return;
+    }
+
+    /** Check that we have been able to switch to branch2 */
+    DEBUGOUTPUT({
+        if (active_chainstate.m_chain.Tip() != currentTipIndex) {
+            std::cout << "Step6 Fail to switch to our new Tip" << std::endl;
+        } else {
+            std::cout << "Step6 Success : " << active_chainstate.m_chain.Tip()->nHeight << std::endl;
+        }
+    });
 }
