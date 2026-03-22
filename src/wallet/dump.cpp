@@ -6,6 +6,7 @@
 
 #include <common/args.h>
 #include <util/fs.h>
+#include <util/threadpool.h>
 #include <util/translation.h>
 #include <wallet/wallet.h>
 #include <wallet/walletdb.h>
