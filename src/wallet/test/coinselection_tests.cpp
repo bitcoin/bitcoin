@@ -268,6 +268,9 @@ BOOST_AUTO_TEST_CASE(coin_grinder_total_tries_test)
         auto result = CoinGrinder(utxo_pool, selection_target, change_target, max_selection_weight);
         BOOST_CHECK(result);
         BOOST_CHECK(!result->GetAlgoCompleted());
+         size_t expected_attempts = 100'000;
+        BOOST_CHECK_MESSAGE(result->GetSelectionsEvaluated() == expected_attempts, strprintf("Expected %i attempts, but got %i", expected_attempts, res->GetSelectionsEvaluated()));
+    }
     }
 }
 
