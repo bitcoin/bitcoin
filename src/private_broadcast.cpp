@@ -7,9 +7,6 @@
 
 #include <algorithm>
 
-/// If a transaction is not received back from the network for this duration
-/// after it is broadcast, then we consider it stale / for rebroadcasting.
-static constexpr auto STALE_DURATION{1min};
 
 bool PrivateBroadcast::Add(const CTransactionRef& tx)
     EXCLUSIVE_LOCKS_REQUIRED(!m_mutex)
@@ -93,12 +90,14 @@ std::vector<CTransactionRef> PrivateBroadcast::GetStale() const
     EXCLUSIVE_LOCKS_REQUIRED(!m_mutex)
 {
     LOCK(m_mutex);
-    const auto stale_time{NodeClock::now() - STALE_DURATION};
+    const auto now{NodeClock::now()};
     std::vector<CTransactionRef> stale;
     for (const auto& [tx, state] : m_transactions) {
         const Priority p{DerivePriority(state.send_statuses)};
-        if (p.last_confirmed < stale_time) {
-            stale.push_back(tx);
+        if (p.num_confirmed == 0) {
+            if (state.time_added < now - INITIAL_STALE_DURATION) stale.push_back(tx);
+        } else {
+            if (p.last_confirmed < now - STALE_DURATION) stale.push_back(tx);
         }
     }
     return stale;
@@ -117,7 +116,7 @@ std::vector<PrivateBroadcast::TxBroadcastInfo> PrivateBroadcast::GetBroadcastInf
         for (const auto& status : state.send_statuses) {
             peers.emplace_back(PeerSendInfo{.address = status.address, .sent = status.picked, .received = status.confirmed});
         }
-        entries.emplace_back(TxBroadcastInfo{.tx = tx, .peers = std::move(peers)});
+        entries.emplace_back(TxBroadcastInfo{.tx = tx, .time_added = state.time_added, .peers = std::move(peers)});
     }
 
     return entries;
