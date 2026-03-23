@@ -111,6 +111,7 @@ BASE_SCRIPTS = [
     'p2p_node_network_limited.py --v2transport',
     # vv Tests less than 2m vv
     'mining_getblocktemplate_longpoll.py',
+    'feature_rpc_p2p_backpressure_ab.py',
     'p2p_segwit.py',
     'feature_maxuploadtarget.py',
     'feature_assumeutxo.py',
