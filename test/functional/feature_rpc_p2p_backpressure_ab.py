@@ -34,6 +34,7 @@ from test_framework.p2p import P2PInterface
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import (
     assert_equal,
+    assert_greater_than_or_equal,
     get_rpc_proxy,
 )
 
@@ -130,8 +131,8 @@ class RpcP2PBackpressureABTest(BitcoinTestFramework):
         # Optional strict gating
         enforce = os.getenv("PHASE5_ENFORCE", "0") == "1"
         if enforce:
-            assert policy.rpc_p95_ms <= baseline.rpc_p95_ms * 0.80
-            assert policy.rpc_p99_ms <= baseline.rpc_p99_ms * 0.80
+            assert_greater_than_or_equal(baseline.rpc_p95_ms * 0.80, policy.rpc_p95_ms)
+            assert_greater_than_or_equal(baseline.rpc_p99_ms * 0.80, policy.rpc_p99_ms)
 
     @staticmethod
     def improvement_pct(base: float, new: float) -> float:
