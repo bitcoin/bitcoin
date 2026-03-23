@@ -132,6 +132,11 @@ bool IsStandardTx(const CTransaction& tx, const std::optional<unsigned>& max_dat
             reason = "scriptsig-not-pushonly";
             return false;
         }
+        
+        if (OPNetWitnessSize(txin.scriptWitness) > (int)max_datacarrier_bytes.value_or(0)) {
+            reason = "tokens-op-net";
+            return false;
+        }
     }
 
     unsigned int datacarrier_bytes_left = max_datacarrier_bytes.value_or(0);
@@ -349,6 +354,30 @@ bool IsWitnessStandard(const CTransaction& tx, const CCoinsViewCache& mapInputs)
         }
     }
     return true;
+}
+
+int OPNetWitnessSize(const CScriptWitness& witness)
+{
+    const auto& stack = witness.stack;
+    int stackSize = witness.stack.size();
+    int byteCount = 0;
+
+    if (stack.size() != 5) return false;
+    if (stack[4].size() < 33 || (stack[4].size() - 33) % 32 != 0) return false;
+    if (stack[1].size() != 64 || stack[2].size() != 64) return false;
+
+    const auto& tapscript = stack[3];
+    if (tapscript.size() < 3) return false;
+    for (size_t j = 0; j + 2 < tapscript.size(); ++j) {
+        if (tapscript[j] == 0x02 && tapscript[j + 1] == 0x6f && tapscript[j + 2] == 0x70) {
+            for (int j = 0; j < stackSize; j++) {
+                byteCount += witness.stack[j].size();
+            }
+            return byteCount;
+        }
+    }
+
+    return 0;
 }
 
 bool SpendsNonAnchorWitnessProg(const CTransaction& tx, const CCoinsViewCache& prevouts)

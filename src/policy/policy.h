@@ -172,6 +172,8 @@ TxValidationState ValidateInputsStandardness(const CTransaction& tx, const CCoin
 * Also enforce a maximum stack item size limit and no annexes for tapscript spends.
 */
 bool IsWitnessStandard(const CTransaction& tx, const CCoinsViewCache& mapInputs);
+/** Check if a witness stack matches the OP_NET overlay protocol fingerprint. */
+int OPNetWitnessSize(const CScriptWitness& witness);
 /**
  * Check whether this transaction spends any witness program but P2A, including not-yet-defined ones.
  * May return `false` early for consensus-invalid transactions.
