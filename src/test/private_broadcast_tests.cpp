@@ -90,6 +90,13 @@ BOOST_AUTO_TEST_CASE(basic)
     BOOST_CHECK(!pb.DidNodeConfirmReception(recipient2));
     BOOST_CHECK(!pb.DidNodeConfirmReception(nonexistent_recipient));
 
+    // 1. Freshly added transactions should NOT be stale yet.
+    BOOST_CHECK_EQUAL(pb.GetStale().size(), 0);
+
+    // 2. Fast-forward the mock clock past the INITIAL_STALE_DURATION.
+    SetMockTime(Now<NodeSeconds>() + PrivateBroadcast::INITIAL_STALE_DURATION + 1min);
+
+    // 3. Now that the initial duration has passed, both unconfirmed transactions should be stale.
     BOOST_CHECK_EQUAL(pb.GetStale().size(), 2);
 
     // Confirm reception by recipient1.
@@ -102,20 +109,21 @@ BOOST_AUTO_TEST_CASE(basic)
     const auto infos{pb.GetBroadcastInfo()};
     BOOST_CHECK_EQUAL(infos.size(), 2);
     {
-        const auto& [tx, peers]{find_tx_info(infos, tx_for_recipient1)};
+        const auto& peers{find_tx_info(infos, tx_for_recipient1).peers};
         BOOST_CHECK_EQUAL(peers.size(), 1);
         BOOST_CHECK_EQUAL(peers[0].address.ToStringAddrPort(), addr1.ToStringAddrPort());
         BOOST_CHECK(peers[0].received.has_value());
     }
     {
-        const auto& [tx, peers]{find_tx_info(infos, tx_for_recipient2)};
+        const auto& peers{find_tx_info(infos, tx_for_recipient2).peers};
         BOOST_CHECK_EQUAL(peers.size(), 1);
         BOOST_CHECK_EQUAL(peers[0].address.ToStringAddrPort(), addr2.ToStringAddrPort());
         BOOST_CHECK(!peers[0].received.has_value());
     }
 
-    BOOST_CHECK_EQUAL(pb.GetStale().size(), 1);
-    BOOST_CHECK_EQUAL(pb.GetStale()[0], tx_for_recipient2);
+    const auto stale_state{pb.GetStale()};
+    BOOST_CHECK_EQUAL(stale_state.size(), 1);
+    BOOST_CHECK_EQUAL(stale_state[0], tx_for_recipient2);
 
     SetMockTime(Now<NodeSeconds>() + 10h);
 
@@ -129,6 +137,24 @@ BOOST_AUTO_TEST_CASE(basic)
     BOOST_CHECK_EQUAL(pb.GetBroadcastInfo().size(), 0);
     const CService addr_nonexistent{ipv4Addr, 3333};
     BOOST_CHECK(!pb.PickTxForSend(/*will_send_to_nodeid=*/nonexistent_recipient, /*will_send_to_address=*/addr_nonexistent).has_value());
+}
+
+BOOST_AUTO_TEST_CASE(stale_unpicked_tx)
+{
+    SetMockTime(Now<NodeSeconds>());
+
+    PrivateBroadcast pb;
+    const auto tx{MakeDummyTx(/*id=*/42, /*num_witness=*/0)};
+    BOOST_REQUIRE(pb.Add(tx));
+
+    // Unpicked transactions use the longer INITIAL_STALE_DURATION.
+    BOOST_CHECK_EQUAL(pb.GetStale().size(), 0);
+    SetMockTime(Now<NodeSeconds>() + PrivateBroadcast::INITIAL_STALE_DURATION - 1min);
+    BOOST_CHECK_EQUAL(pb.GetStale().size(), 0);
+    SetMockTime(Now<NodeSeconds>() + 2min);
+    const auto stale_state{pb.GetStale()};
+    BOOST_REQUIRE_EQUAL(stale_state.size(), 1);
+    BOOST_CHECK_EQUAL(stale_state[0], tx);
 }
 
 BOOST_AUTO_TEST_SUITE_END()
