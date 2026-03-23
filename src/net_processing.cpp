@@ -213,6 +213,24 @@ struct QueuedBlock {
 };
 
 /**
+ * @brief Metadata for tracking block announcements (Phase 2: #21803 diagnostics)
+ *
+ * Used to compute announce-to-receive and request-to-receive latencies
+ * for BlockSourceResolvedEvent.
+ */
+struct BlockAnnounceMeta {
+    int64_t first_announce_us{0};           ///< Timestamp of first announcement
+    NodeId first_announce_peer{-1};         ///< Peer that first announced this block
+    node::BlockAnnounceVia first_announce_via{node::BlockAnnounceVia::Inv};
+    int first_announce_height{-1};          ///< Height at first announcement (-1 if unknown)
+    int64_t first_request_us{0};            ///< Timestamp of first request
+    NodeId first_requested_peer{-1};        ///< Peer we first requested from
+    size_t total_requests{0};               ///< Total number of requests made
+    size_t announce_count{0};               ///< Number of announcements received
+    int64_t last_update_us{0};              ///< Last update timestamp
+};
+
+/**
  * Data structure for an individual peer. This struct is not protected by
  * cs_main since it does not contain validation-critical data.
  *
@@ -900,6 +918,15 @@ private:
      */
     void RemoveBlockRequest(const uint256& hash, std::optional<NodeId> from_peer) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
 
+    /** Emit BlockSourceResolved event and cleanup announce metadata (Phase 2: #21803) */
+    void EmitBlockSourceResolved(const uint256& hash, NodeId source_peer_id) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
+
+    /** Update or create block announce metadata (Phase 2: #21803) */
+    void UpdateBlockAnnounceMeta(const uint256& hash, NodeId peer_id, node::BlockAnnounceVia via, int height) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
+
+    /** Record block request in announce metadata (Phase 2: #21803) */
+    void RecordBlockRequest(const uint256& hash, NodeId peer_id) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
+
     /* Mark a block as in flight
      * Returns false, still setting pit, if the block was already in flight from the same peer
      * pit will only be valid as long as the same cs_main lock is being held
@@ -948,6 +975,9 @@ private:
     /* Multimap used to preserve insertion order */
     typedef std::multimap<uint256, std::pair<NodeId, std::list<QueuedBlock>::iterator>> BlockDownloadMap;
     BlockDownloadMap mapBlocksInFlight GUARDED_BY(cs_main);
+
+    /** Block announcement metadata for Phase 2 diagnostics (#21803) */
+    std::map<uint256, BlockAnnounceMeta> m_block_announce_meta GUARDED_BY(cs_main);
 
     /** When our tip was last updated. */
     std::atomic<std::chrono::seconds> m_last_tip_update{0s};
@@ -1229,6 +1259,18 @@ void PeerManagerImpl::RemoveBlockRequest(const uint256& hash, std::optional<Node
         }
         state.m_stalling_since = 0us;
 
+        // Phase 2: Emit OnBlockInFlight(Remove) before erasing
+        if (m_opts.stdio_bus_hooks && m_opts.stdio_bus_hooks->Enabled()) {
+            node::BlockInFlightEvent ev;
+            ev.hash = hash;
+            ev.peer_id = node_id;
+            ev.action = node::InFlightAction::Remove;
+            ev.inflight_count = mapBlocksInFlight.count(hash) - 1; // After this erase
+            ev.peer_inflight_count = state.vBlocksInFlight.size();
+            ev.timestamp_us = node::GetMonotonicTimeUs();
+            m_opts.stdio_bus_hooks->OnBlockInFlight(ev);
+        }
+
         range.first = mapBlocksInFlight.erase(range.first);
     }
 }
@@ -1266,7 +1308,105 @@ bool PeerManagerImpl::BlockRequested(NodeId nodeid, const CBlockIndex& block, st
     if (pit) {
         *pit = &itInFlight->second.second;
     }
+
+    // Phase 2: Record block request and emit OnBlockInFlight(Add)
+    RecordBlockRequest(hash, nodeid);
+    if (m_opts.stdio_bus_hooks && m_opts.stdio_bus_hooks->Enabled()) {
+        node::BlockInFlightEvent ev;
+        ev.hash = hash;
+        ev.peer_id = nodeid;
+        ev.action = node::InFlightAction::Add;
+        ev.inflight_count = mapBlocksInFlight.count(hash);
+        ev.peer_inflight_count = state->vBlocksInFlight.size();
+        ev.timestamp_us = node::GetMonotonicTimeUs();
+        m_opts.stdio_bus_hooks->OnBlockInFlight(ev);
+    }
+
     return true;
+}
+
+// ============================================================================
+// Phase 2: Block Processing Delay Diagnostics (#21803) - Helper Methods
+// ============================================================================
+
+void PeerManagerImpl::UpdateBlockAnnounceMeta(const uint256& hash, NodeId peer_id, node::BlockAnnounceVia via, int height)
+{
+    AssertLockHeld(cs_main);
+    int64_t now_us = node::GetMonotonicTimeUs();
+
+    auto& meta = m_block_announce_meta[hash];
+    meta.announce_count++;
+    meta.last_update_us = now_us;
+
+    // Only record first announcement
+    if (meta.first_announce_us == 0) {
+        meta.first_announce_us = now_us;
+        meta.first_announce_peer = peer_id;
+        meta.first_announce_via = via;
+        meta.first_announce_height = height;
+    }
+}
+
+void PeerManagerImpl::RecordBlockRequest(const uint256& hash, NodeId peer_id)
+{
+    AssertLockHeld(cs_main);
+    int64_t now_us = node::GetMonotonicTimeUs();
+
+    auto it = m_block_announce_meta.find(hash);
+    if (it != m_block_announce_meta.end()) {
+        it->second.total_requests++;
+        it->second.last_update_us = now_us;
+
+        // Only record first request
+        if (it->second.first_request_us == 0) {
+            it->second.first_request_us = now_us;
+            it->second.first_requested_peer = peer_id;
+        }
+    } else {
+        // Block requested without prior announcement (rare, but possible)
+        auto& meta = m_block_announce_meta[hash];
+        meta.first_request_us = now_us;
+        meta.first_requested_peer = peer_id;
+        meta.total_requests = 1;
+        meta.last_update_us = now_us;
+    }
+}
+
+void PeerManagerImpl::EmitBlockSourceResolved(const uint256& hash, NodeId source_peer_id)
+{
+    AssertLockHeld(cs_main);
+
+    if (!m_opts.stdio_bus_hooks || !m_opts.stdio_bus_hooks->Enabled()) {
+        m_block_announce_meta.erase(hash);
+        return;
+    }
+
+    int64_t now_us = node::GetMonotonicTimeUs();
+
+    node::BlockSourceResolvedEvent ev;
+    ev.hash = hash;
+    ev.source_peer_id = source_peer_id;
+    ev.timestamp_us = now_us;
+
+    auto it = m_block_announce_meta.find(hash);
+    if (it != m_block_announce_meta.end()) {
+        const auto& meta = it->second;
+        ev.first_requested_peer_id = meta.first_requested_peer;
+        ev.announce_to_receive_us = meta.first_announce_us > 0 ? now_us - meta.first_announce_us : -1;
+        ev.request_to_receive_us = meta.first_request_us > 0 ? now_us - meta.first_request_us : -1;
+        ev.total_requests = meta.total_requests;
+    } else {
+        // No metadata tracked (block received without tracked announce/request)
+        ev.first_requested_peer_id = -1;
+        ev.announce_to_receive_us = -1;
+        ev.request_to_receive_us = -1;
+        ev.total_requests = 0;
+    }
+
+    m_opts.stdio_bus_hooks->OnBlockSourceResolved(ev);
+
+    // Cleanup metadata
+    m_block_announce_meta.erase(hash);
 }
 
 void PeerManagerImpl::MaybeSetPeerAsAnnouncingHeaderAndIDs(NodeId nodeid)
@@ -1525,6 +1665,18 @@ void PeerManagerImpl::FindNextBlocks(std::vector<const CBlockIndex*>& vBlocks, c
                 if (vBlocks.size() == 0 && waitingfor != peer.m_id) {
                     // We aren't able to fetch anything, but we would be if the download window was one larger.
                     if (nodeStaller) *nodeStaller = waitingfor;
+
+                    // Phase 2: Emit OnStallerDetected (WindowBlocked stage)
+                    if (m_opts.stdio_bus_hooks && m_opts.stdio_bus_hooks->Enabled()) {
+                        node::StallerDetectedEvent ev;
+                        ev.hash = pindex->GetBlockHash();
+                        ev.staller_peer_id = waitingfor;
+                        ev.waiting_peer_id = peer.m_id;
+                        ev.window_end_height = nWindowEnd;
+                        ev.stall_duration_us = 0; // Not yet stalling, just detected
+                        ev.timestamp_us = node::GetMonotonicTimeUs();
+                        m_opts.stdio_bus_hooks->OnStallerDetected(ev);
+                    }
                 }
                 return;
             }
@@ -3098,6 +3250,24 @@ void PeerManagerImpl::ProcessHeadersMessage(CNode& pfrom, Peer& peer,
 
     if (processed && received_new_header) {
         LogBlockHeader(*pindexLast, pfrom, /*via_compact_block=*/false);
+
+        // Phase 2: Emit OnBlockAnnounce for new header via HEADERS message
+        if (m_opts.stdio_bus_hooks && m_opts.stdio_bus_hooks->Enabled()) {
+            LOCK(cs_main);
+            node::BlockAnnounceEvent ev;
+            ev.hash = pindexLast->GetBlockHash();
+            ev.peer_id = pfrom.GetId();
+            ev.via = node::BlockAnnounceVia::Headers;
+            // Calculate chainwork delta relative to our tip
+            const CBlockIndex* tip = m_chainman.ActiveChain().Tip();
+            ev.chainwork_delta = tip ? static_cast<int64_t>((pindexLast->nChainWork > tip->nChainWork) ? (pindexLast->nChainWork - tip->nChainWork).GetLow64() : 0) : 0;
+            ev.height = pindexLast->nHeight;
+            ev.timestamp_us = node::GetMonotonicTimeUs();
+            m_opts.stdio_bus_hooks->OnBlockAnnounce(ev);
+
+            // Update announce metadata
+            UpdateBlockAnnounceMeta(ev.hash, pfrom.GetId(), node::BlockAnnounceVia::Headers, pindexLast->nHeight);
+        }
     }
 
     // Consider fetching more headers if we are not using our headers-sync mechanism.
@@ -3503,6 +3673,10 @@ void PeerManagerImpl::ProcessCompactBlockTxns(CNode& pfrom, Peer& peer, const Bl
         } else {
             // Block is okay for further processing
             RemoveBlockRequest(block_transactions.blockhash, pfrom.GetId()); // it is now an empty pointer
+
+            // Phase 2: Emit BlockSourceResolved event
+            EmitBlockSourceResolved(block_transactions.blockhash, pfrom.GetId());
+
             fBlockRead = true;
             // mapBlockSource is used for potentially punishing peers and
             // updating which peers send us compact blocks, so the race
@@ -4511,6 +4685,22 @@ void PeerManagerImpl::ProcessMessage(Peer& peer, CNode& pfrom, const std::string
         Assert(pindex);
         if (received_new_header) {
             LogBlockHeader(*pindex, pfrom, /*via_compact_block=*/true);
+
+            // Phase 2: Emit OnBlockAnnounce for new header via CMPCTBLOCK
+            if (m_opts.stdio_bus_hooks && m_opts.stdio_bus_hooks->Enabled()) {
+                LOCK(cs_main);
+                node::BlockAnnounceEvent ev;
+                ev.hash = pindex->GetBlockHash();
+                ev.peer_id = pfrom.GetId();
+                ev.via = node::BlockAnnounceVia::CompactBlock;
+                const CBlockIndex* tip = m_chainman.ActiveChain().Tip();
+                ev.chainwork_delta = tip ? static_cast<int64_t>((pindex->nChainWork > tip->nChainWork) ? (pindex->nChainWork - tip->nChainWork).GetLow64() : 0) : 0;
+                ev.height = pindex->nHeight;
+                ev.timestamp_us = node::GetMonotonicTimeUs();
+                m_opts.stdio_bus_hooks->OnBlockAnnounce(ev);
+
+                UpdateBlockAnnounceMeta(ev.hash, pfrom.GetId(), node::BlockAnnounceVia::CompactBlock, pindex->nHeight);
+            }
         }
 
         bool fProcessBLOCKTXN = false;
@@ -4613,11 +4803,37 @@ void PeerManagerImpl::ProcessMessage(Peer& peer, CNode& pfrom, const std::string
                 }
                 if (req.indexes.empty()) {
                     fProcessBLOCKTXN = true;
+
+                    // Phase 2: Emit OnCompactBlockDecision(Reconstruct)
+                    if (m_opts.stdio_bus_hooks && m_opts.stdio_bus_hooks->Enabled()) {
+                        node::CompactBlockDecisionEvent ev;
+                        ev.hash = pindex->GetBlockHash();
+                        ev.peer_id = pfrom.GetId();
+                        ev.action = node::CompactBlockAction::Reconstruct;
+                        ev.missing_tx_count = 0;
+                        ev.first_in_flight = first_in_flight;
+                        ev.is_highbandwidth = pfrom.m_bip152_highbandwidth_to;
+                        ev.timestamp_us = node::GetMonotonicTimeUs();
+                        m_opts.stdio_bus_hooks->OnCompactBlockDecision(ev);
+                    }
                 } else if (first_in_flight) {
                     // We will try to round-trip any compact blocks we get on failure,
                     // as long as it's first...
                     req.blockhash = pindex->GetBlockHash();
                     MakeAndPushMessage(pfrom, NetMsgType::GETBLOCKTXN, req);
+
+                    // Phase 2: Emit OnCompactBlockDecision(GetBlockTxn)
+                    if (m_opts.stdio_bus_hooks && m_opts.stdio_bus_hooks->Enabled()) {
+                        node::CompactBlockDecisionEvent ev;
+                        ev.hash = pindex->GetBlockHash();
+                        ev.peer_id = pfrom.GetId();
+                        ev.action = node::CompactBlockAction::GetBlockTxn;
+                        ev.missing_tx_count = req.indexes.size();
+                        ev.first_in_flight = true;
+                        ev.is_highbandwidth = pfrom.m_bip152_highbandwidth_to;
+                        ev.timestamp_us = node::GetMonotonicTimeUs();
+                        m_opts.stdio_bus_hooks->OnCompactBlockDecision(ev);
+                    }
                 } else if (pfrom.m_bip152_highbandwidth_to &&
                     (!pfrom.IsInboundConn() ||
                     IsBlockRequestedFromOutbound(blockhash) ||
@@ -4631,6 +4847,19 @@ void PeerManagerImpl::ProcessMessage(Peer& peer, CNode& pfrom, const std::string
                 } else {
                     // Give up for this peer and wait for other peer(s)
                     RemoveBlockRequest(pindex->GetBlockHash(), pfrom.GetId());
+
+                    // Phase 2: Emit OnCompactBlockDecision(Wait)
+                    if (m_opts.stdio_bus_hooks && m_opts.stdio_bus_hooks->Enabled()) {
+                        node::CompactBlockDecisionEvent ev;
+                        ev.hash = pindex->GetBlockHash();
+                        ev.peer_id = pfrom.GetId();
+                        ev.action = node::CompactBlockAction::Wait;
+                        ev.missing_tx_count = req.indexes.size();
+                        ev.first_in_flight = false;
+                        ev.is_highbandwidth = pfrom.m_bip152_highbandwidth_to;
+                        ev.timestamp_us = node::GetMonotonicTimeUs();
+                        m_opts.stdio_bus_hooks->OnCompactBlockDecision(ev);
+                    }
                 }
             } else {
                 // This block is either already in flight from a different
@@ -4688,6 +4917,9 @@ void PeerManagerImpl::ProcessMessage(Peer& peer, CNode& pfrom, const std::string
             {
                 LOCK(cs_main);
                 mapBlockSource.emplace(pblock->GetHash(), std::make_pair(pfrom.GetId(), false));
+
+                // Phase 2: Emit BlockSourceResolved for optimistic reconstruction
+                EmitBlockSourceResolved(pblock->GetHash(), pfrom.GetId());
             }
             // Setting force_processing to true means that we bypass some of
             // our anti-DoS protections in AcceptBlock, which filters
@@ -4747,6 +4979,17 @@ void PeerManagerImpl::ProcessMessage(Peer& peer, CNode& pfrom, const std::string
             ReadCompactSize(vRecv); // ignore tx count; assume it is 0.
         }
 
+        // stdio_bus hook: OnHeaders (shadow mode observability)
+        if (m_opts.stdio_bus_hooks->Enabled() && !headers.empty()) {
+            node::HeadersEvent ev{
+                .peer_id = pfrom.GetId(),
+                .count = headers.size(),
+                .first_prev_hash = headers[0].hashPrevBlock,
+                .received_us = node::GetMonotonicTimeUs()
+            };
+            m_opts.stdio_bus_hooks->OnHeaders(ev);
+        }
+
         ProcessHeadersMessage(pfrom, peer, std::move(headers), /*via_compact_block=*/false);
 
         // Check if the headers presync progress needs to be reported to validation.
@@ -4779,6 +5022,20 @@ void PeerManagerImpl::ProcessMessage(Peer& peer, CNode& pfrom, const std::string
 
         LogDebug(BCLog::NET, "received block %s peer=%d\n", pblock->GetHash().ToString(), pfrom.GetId());
 
+        // stdio_bus hook: OnBlockReceived (shadow mode observability)
+        if (m_opts.stdio_bus_hooks->Enabled()) {
+            const CBlockIndex* prev_idx{WITH_LOCK(m_chainman.GetMutex(), return m_chainman.m_blockman.LookupBlockIndex(pblock->hashPrevBlock))};
+            node::BlockReceivedEvent ev{
+                .peer_id = pfrom.GetId(),
+                .hash = pblock->GetHash(),
+                .height = prev_idx ? prev_idx->nHeight + 1 : -1,
+                .size_bytes = ::GetSerializeSize(TX_WITH_WITNESS(*pblock)),
+                .tx_count = pblock->vtx.size(),
+                .received_us = node::GetMonotonicTimeUs()
+            };
+            m_opts.stdio_bus_hooks->OnBlockReceived(ev);
+        }
+
         const CBlockIndex* prev_block{WITH_LOCK(m_chainman.GetMutex(), return m_chainman.m_blockman.LookupBlockIndex(pblock->hashPrevBlock))};
 
         // Check for possible mutation if it connects to something we know so we can check for DEPLOYMENT_SEGWIT being active
@@ -4799,6 +5056,10 @@ void PeerManagerImpl::ProcessMessage(Peer& peer, CNode& pfrom, const std::string
             // need it even when it's not a candidate for a new best tip.
             forceProcessing = IsBlockRequested(hash);
             RemoveBlockRequest(hash, pfrom.GetId());
+
+            // Phase 2: Emit BlockSourceResolved event
+            EmitBlockSourceResolved(hash, pfrom.GetId());
+
             // mapBlockSource is only used for punishing peers and setting
             // which peers send us compact blocks, so the race between here and
             // cs_main in ProcessNewBlock is fine.
@@ -5173,6 +5434,17 @@ bool PeerManagerImpl::ProcessMessages(CNode& node, std::atomic<bool>& interruptM
         msg.m_recv.size(),
         msg.m_recv.data()
     );
+
+    // stdio_bus hook: OnMessage (shadow mode observability)
+    if (m_opts.stdio_bus_hooks->Enabled()) {
+        node::MessageEvent ev{
+            .peer_id = node.GetId(),
+            .msg_type = msg.m_type,
+            .size_bytes = msg.m_recv.size(),
+            .received_us = node::GetMonotonicTimeUs()
+        };
+        m_opts.stdio_bus_hooks->OnMessage(ev);
+    }
 
     if (m_opts.capture_messages) {
         CaptureMessage(node.addr, msg.m_type, MakeUCharSpan(msg.m_recv), /*is_incoming=*/true);
@@ -6097,6 +6369,22 @@ bool PeerManagerImpl::SendMessages(CNode& node)
             // the download window should be much larger than the to-be-downloaded set of blocks, so disconnection
             // should only happen during initial block download.
             LogInfo("Peer is stalling block download, %s", node.DisconnectMsg());
+
+            // Phase 2: Emit OnStallerDetected (TimeoutDisconnect stage)
+            if (m_opts.stdio_bus_hooks && m_opts.stdio_bus_hooks->Enabled()) {
+                node::StallerDetectedEvent ev;
+                // Get the block hash that's being stalled on (first in-flight block for this peer)
+                if (!state.vBlocksInFlight.empty()) {
+                    ev.hash = state.vBlocksInFlight.front().pindex->GetBlockHash();
+                    ev.window_end_height = state.vBlocksInFlight.front().pindex->nHeight;
+                }
+                ev.staller_peer_id = node.GetId();
+                ev.waiting_peer_id = -1; // We are the staller being disconnected
+                ev.stall_duration_us = std::chrono::duration_cast<std::chrono::microseconds>(current_time - state.m_stalling_since).count();
+                ev.timestamp_us = node::GetMonotonicTimeUs();
+                m_opts.stdio_bus_hooks->OnStallerDetected(ev);
+            }
+
             node.fDisconnect = true;
             // Increase timeout for the next peer so that we don't disconnect multiple peers if our own
             // bandwidth is insufficient.
@@ -6116,6 +6404,19 @@ bool PeerManagerImpl::SendMessages(CNode& node)
             int nOtherPeersWithValidatedDownloads = m_peers_downloading_from - 1;
             if (current_time > state.m_downloading_since + std::chrono::seconds{consensusParams.nPowTargetSpacing} * (BLOCK_DOWNLOAD_TIMEOUT_BASE + BLOCK_DOWNLOAD_TIMEOUT_PER_PEER * nOtherPeersWithValidatedDownloads)) {
                 LogInfo("Timeout downloading block %s, %s", queuedBlock.pindex->GetBlockHash().ToString(), node.DisconnectMsg());
+
+                // Phase 2: Emit OnBlockInFlight(Timeout)
+                if (m_opts.stdio_bus_hooks && m_opts.stdio_bus_hooks->Enabled()) {
+                    node::BlockInFlightEvent ev;
+                    ev.hash = queuedBlock.pindex->GetBlockHash();
+                    ev.peer_id = node.GetId();
+                    ev.action = node::InFlightAction::Timeout;
+                    ev.inflight_count = mapBlocksInFlight.count(ev.hash);
+                    ev.peer_inflight_count = state.vBlocksInFlight.size();
+                    ev.timestamp_us = node::GetMonotonicTimeUs();
+                    m_opts.stdio_bus_hooks->OnBlockInFlight(ev);
+                }
+
                 node.fDisconnect = true;
                 return true;
             }
@@ -6185,6 +6486,22 @@ bool PeerManagerImpl::SendMessages(CNode& node)
             for (const CBlockIndex *pindex : vToDownload) {
                 uint32_t nFetchFlags = GetFetchFlags(peer);
                 vGetData.emplace_back(MSG_BLOCK | nFetchFlags, pindex->GetBlockHash());
+
+                // Phase 2: Emit OnBlockRequestDecision before BlockRequested
+                if (m_opts.stdio_bus_hooks && m_opts.stdio_bus_hooks->Enabled()) {
+                    node::BlockRequestDecisionEvent ev;
+                    ev.hash = pindex->GetBlockHash();
+                    ev.peer_id = node.GetId();
+                    ev.reason = node::BlockRequestReason::ParallelDownload;
+                    ev.is_preferred_peer = state.fPreferredDownload;
+                    ev.first_in_flight = (mapBlocksInFlight.count(ev.hash) == 0);
+                    ev.already_in_flight = mapBlocksInFlight.count(ev.hash);
+                    ev.can_direct_fetch = true; // We're in the download path
+                    ev.is_limited_peer = IsLimitedPeer(peer);
+                    ev.timestamp_us = node::GetMonotonicTimeUs();
+                    m_opts.stdio_bus_hooks->OnBlockRequestDecision(ev);
+                }
+
                 BlockRequested(node.GetId(), *pindex);
                 LogDebug(BCLog::NET, "Requesting block %s (%d) peer=%d\n", pindex->GetBlockHash().ToString(),
                     pindex->nHeight, node.GetId());
@@ -6193,6 +6510,22 @@ bool PeerManagerImpl::SendMessages(CNode& node)
                 if (State(staller)->m_stalling_since == 0us) {
                     State(staller)->m_stalling_since = current_time;
                     LogDebug(BCLog::NET, "Stall started peer=%d\n", staller);
+
+                    // Phase 2: Emit OnStallerDetected (StallStarted stage)
+                    if (m_opts.stdio_bus_hooks && m_opts.stdio_bus_hooks->Enabled()) {
+                        CNodeState* staller_state = State(staller);
+                        node::StallerDetectedEvent ev;
+                        // Get the block hash that's causing the stall
+                        if (staller_state && !staller_state->vBlocksInFlight.empty()) {
+                            ev.hash = staller_state->vBlocksInFlight.front().pindex->GetBlockHash();
+                            ev.window_end_height = staller_state->vBlocksInFlight.front().pindex->nHeight;
+                        }
+                        ev.staller_peer_id = staller;
+                        ev.waiting_peer_id = node.GetId();
+                        ev.stall_duration_us = 0; // Just started
+                        ev.timestamp_us = node::GetMonotonicTimeUs();
+                        m_opts.stdio_bus_hooks->OnStallerDetected(ev);
+                    }
                 }
             }
         }

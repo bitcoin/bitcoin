@@ -58,6 +58,7 @@
 #include <node/mempool_persist_args.h>
 #include <node/miner.h>
 #include <node/peerman_args.h>
+#include <node/stdio_bus_observer.h>
 #include <policy/feerate.h>
 #include <policy/fees/block_policy_estimator.h>
 #include <policy/fees/block_policy_estimator_args.h>
@@ -209,6 +210,9 @@ static void RemovePidFile(const ArgsManager& args)
 }
 
 static std::optional<util::SignalInterrupt> g_shutdown;
+
+// Global stdio_bus validation observer (similar to g_zmq_notification_interface)
+static std::unique_ptr<node::StdioBusValidationObserver> g_stdio_bus_observer;
 
 void InitContext(NodeContext& node)
 {
@@ -398,6 +402,12 @@ void Shutdown(NodeContext& node)
         g_zmq_notification_interface.reset();
     }
 #endif
+
+    // Cleanup stdio_bus observer
+    if (g_stdio_bus_observer) {
+        if (node.validation_signals) node.validation_signals->UnregisterValidationInterface(g_stdio_bus_observer.get());
+        g_stdio_bus_observer.reset();
+    }
 
     node.chain_clients.clear();
     if (node.validation_signals) {
@@ -658,6 +668,7 @@ void SetupServerArgs(ArgsManager& argsman, bool can_listen_ipc)
     argsman.AddArg("-limitclustercount=<n>", strprintf("Do not accept transactions into mempool which are directly or indirectly connected to <n> or more other unconfirmed transactions (default: %u, maximum: %u)", DEFAULT_CLUSTER_LIMIT, MAX_CLUSTER_COUNT_LIMIT), ArgsManager::ALLOW_ANY | ArgsManager::DEBUG_ONLY, OptionsCategory::DEBUG_TEST);
     argsman.AddArg("-limitclustersize=<n>", strprintf("Do not accept transactions whose virtual size with all in-mempool connected transactions exceeds <n> kilobytes (default: %u)", DEFAULT_CLUSTER_SIZE_LIMIT_KVB), ArgsManager::ALLOW_ANY | ArgsManager::DEBUG_ONLY, OptionsCategory::DEBUG_TEST);
     argsman.AddArg("-capturemessages", "Capture all P2P messages to disk", ArgsManager::ALLOW_ANY | ArgsManager::DEBUG_ONLY, OptionsCategory::DEBUG_TEST);
+    argsman.AddArg("-stdiobus=<mode>", "Enable stdio_bus integration for observability (off, shadow, active; default: off). Shadow mode observes without behavior change.", ArgsManager::ALLOW_ANY | ArgsManager::DEBUG_ONLY, OptionsCategory::DEBUG_TEST);
     argsman.AddArg("-mocktime=<n>", "Replace actual time with " + UNIX_EPOCH_TIME + " (default: 0)", ArgsManager::ALLOW_ANY | ArgsManager::DEBUG_ONLY, OptionsCategory::DEBUG_TEST);
     argsman.AddArg("-maxsigcachesize=<n>", strprintf("Limit sum of signature cache and script execution cache sizes to <n> MiB (default: %u)", DEFAULT_VALIDATION_CACHE_BYTES >> 20), ArgsManager::ALLOW_ANY | ArgsManager::DEBUG_ONLY, OptionsCategory::DEBUG_TEST);
     argsman.AddArg("-maxtipage=<n>",
@@ -1823,6 +1834,13 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
         validation_signals.RegisterValidationInterface(g_zmq_notification_interface.get());
     }
 #endif
+
+    // Register stdio_bus validation observer if enabled
+    if (peerman_opts.stdio_bus_mode != node::StdioBusMode::Off) {
+        g_stdio_bus_observer = std::make_unique<node::StdioBusValidationObserver>(peerman_opts.stdio_bus_hooks);
+        validation_signals.RegisterValidationInterface(g_stdio_bus_observer.get());
+        LogInfo("stdio_bus validation observer registered");
+    }
 
     // ********************************************************* Step 7: load block chain
 

@@ -15,6 +15,7 @@
 #include <uint256.h>
 #include <util/expected.h>
 #include <validationinterface.h>
+#include <node/stdio_bus_hooks.h>
 
 #include <atomic>
 #include <chrono>
@@ -93,6 +94,10 @@ public:
         uint32_t max_headers_result{MAX_HEADERS_RESULTS};
         //! Whether private broadcast is used for sending transactions.
         bool private_broadcast{DEFAULT_PRIVATE_BROADCAST};
+        //! stdio_bus mode (default: Off)
+        node::StdioBusMode stdio_bus_mode{node::StdioBusMode::Off};
+        //! stdio_bus hooks for observability (always valid, NoOp by default)
+        std::shared_ptr<node::StdioBusHooks> stdio_bus_hooks{std::make_shared<node::NoOpStdioBusHooks>()};
     };
 
     static std::unique_ptr<PeerManager> make(CConnman& connman, AddrMan& addrman,
