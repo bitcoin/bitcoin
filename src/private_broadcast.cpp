@@ -25,7 +25,7 @@ std::optional<size_t> PrivateBroadcast::Remove(const CTransactionRef& tx)
     LOCK(m_mutex);
     const auto handle{m_transactions.extract(tx)};
     if (handle) {
-        const auto p{DerivePriority(handle.mapped())};
+        const auto p{DerivePriority(handle.mapped().send_statuses)};
         return p.num_confirmed;
     }
     return std::nullopt;
@@ -39,11 +39,11 @@ std::optional<CTransactionRef> PrivateBroadcast::PickTxForSend(const NodeId& wil
     const auto it{std::ranges::max_element(
             m_transactions,
             [](const auto& a, const auto& b) { return a < b; },
-            [](const auto& el) { return DerivePriority(el.second); })};
+            [](const auto& el) { return DerivePriority(el.second.send_statuses); })};
 
     if (it != m_transactions.end()) {
-        auto& [tx, sent_to]{*it};
-        sent_to.emplace_back(will_send_to_nodeid, will_send_to_address, NodeClock::now());
+        auto& [tx, state]{*it};
+        state.send_statuses.emplace_back(will_send_to_nodeid, will_send_to_address, NodeClock::now());
         return tx;
     }
 
@@ -95,8 +95,8 @@ std::vector<CTransactionRef> PrivateBroadcast::GetStale() const
     LOCK(m_mutex);
     const auto stale_time{NodeClock::now() - STALE_DURATION};
     std::vector<CTransactionRef> stale;
-    for (const auto& [tx, send_status] : m_transactions) {
-        const Priority p{DerivePriority(send_status)};
+    for (const auto& [tx, state] : m_transactions) {
+        const Priority p{DerivePriority(state.send_statuses)};
         if (p.last_confirmed < stale_time) {
             stale.push_back(tx);
         }
@@ -111,10 +111,10 @@ std::vector<PrivateBroadcast::TxBroadcastInfo> PrivateBroadcast::GetBroadcastInf
     std::vector<TxBroadcastInfo> entries;
     entries.reserve(m_transactions.size());
 
-    for (const auto& [tx, sent_to] : m_transactions) {
+    for (const auto& [tx, state] : m_transactions) {
         std::vector<PeerSendInfo> peers;
-        peers.reserve(sent_to.size());
-        for (const auto& status : sent_to) {
+        peers.reserve(state.send_statuses.size());
+        for (const auto& status : state.send_statuses) {
             peers.emplace_back(PeerSendInfo{.address = status.address, .sent = status.picked, .received = status.confirmed});
         }
         entries.emplace_back(TxBroadcastInfo{.tx = tx, .peers = std::move(peers)});
@@ -141,8 +141,8 @@ std::optional<PrivateBroadcast::TxAndSendStatusForNode> PrivateBroadcast::GetSen
     EXCLUSIVE_LOCKS_REQUIRED(m_mutex)
 {
     AssertLockHeld(m_mutex);
-    for (auto& [tx, sent_to] : m_transactions) {
-        for (auto& send_status : sent_to) {
+    for (auto& [tx, state] : m_transactions) {
+        for (auto& send_status : state.send_statuses) {
             if (send_status.nodeid == nodeid) {
                 return TxAndSendStatusForNode{.tx = tx, .send_status = send_status};
             }
