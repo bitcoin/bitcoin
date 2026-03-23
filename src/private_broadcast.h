@@ -177,9 +177,12 @@ private:
      */
     std::optional<TxAndSendStatusForNode> GetSendStatusByNode(const NodeId& nodeid)
         EXCLUSIVE_LOCKS_REQUIRED(m_mutex);
-
+    struct TxSendStatus {
+        const NodeClock::time_point time_added{NodeClock::now()};
+        std::vector<SendStatus> send_statuses;
+    };
     mutable Mutex m_mutex;
-    std::unordered_map<CTransactionRef, std::vector<SendStatus>, CTransactionRefHash, CTransactionRefComp>
+    std::unordered_map<CTransactionRef, TxSendStatus, CTransactionRefHash, CTransactionRefComp>
         m_transactions GUARDED_BY(m_mutex);
 };
 
