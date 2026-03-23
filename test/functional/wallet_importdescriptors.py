@@ -734,6 +734,23 @@ class ImportDescriptorsTest(BitcoinTestFramework):
 
         assert_equal(temp_wallet.getbalance(), encrypted_wallet.getbalance())
 
+        self.log.info("Test that batch validation catches errors before importing any descriptors")
+        self.nodes[1].createwallet(wallet_name="batch_validation", disable_private_keys=True, blank=True)
+        w_batch = self.nodes[1].get_wallet_rpc("batch_validation")
+        key = get_generate_key()
+        valid_desc = descsum_create("pkh(" + key.pubkey + ")")
+        result = w_batch.importdescriptors([
+            {"desc": valid_desc, "timestamp": 0},
+            {"desc": valid_desc, "timestamp": 0, "internal": True, "label": "bad"},
+        ])
+        # Both should fail: second due to validation error, first because batch was aborted
+        assert_equal(result[0]["success"], False)
+        assert_equal(result[1]["success"], False)
+        assert "Internal addresses should not have a label" in result[1]["error"]["message"]
+        assert "another descriptor in the batch failed validation" in result[0]["error"]["message"]
+        # Verify the valid descriptor was NOT imported
+        assert_equal(len(w_batch.listdescriptors()["descriptors"]), 0)
+
         self.log.info("Multipath descriptors")
         self.nodes[1].createwallet(wallet_name="multipath", blank=True)
         w_multipath = self.nodes[1].get_wallet_rpc("multipath")
