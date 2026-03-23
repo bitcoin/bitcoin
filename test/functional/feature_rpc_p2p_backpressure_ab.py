@@ -3,7 +3,7 @@
 # Distributed under the MIT software license.
 
 """
-A/B test for Phase 5 backpressure policy (#18678).
+A/B test backpressure policy
 
 Run A: -experimental-rpc-priority=0
 Run B: -experimental-rpc-priority=1
