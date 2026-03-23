@@ -9,7 +9,6 @@
 #include <core_io.h>
 #include <streams.h>
 #include <sync.h>
-#include <threadsafety.h>
 #include <util/fs.h>
 #include <validation.h>
 

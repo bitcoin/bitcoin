@@ -7,7 +7,7 @@
 
 #include <consensus/amount.h>
 #include <primitives/transaction.h>
-#include <threadsafety.h>
+#include <sync.h>
 #include <txmempool.h>
 #include <util/feefrac.h>
 

@@ -9,7 +9,6 @@
 #include <primitives/transaction.h>
 #include <primitives/transaction_identifier.h>
 #include <sync.h>
-#include <threadsafety.h>
 #include <util/time.h>
 
 #include <optional>

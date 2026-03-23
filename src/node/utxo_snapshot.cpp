@@ -15,7 +15,6 @@
 #include <cassert>
 #include <cstdio>
 #include <optional>
-#include <span>
 #include <string>
 
 namespace node {

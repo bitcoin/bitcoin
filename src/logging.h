@@ -8,9 +8,9 @@
 
 #include <crypto/siphash.h>
 #include <logging/categories.h> // IWYU pragma: export
-#include <threadsafety.h>
 #include <util/fs.h>
 #include <util/log.h> // IWYU pragma: export
+#include <util/stdmutex.h>
 #include <util/string.h>
 #include <util/time.h>
 

@@ -13,10 +13,10 @@
 #include <node/connection_types.h>
 #include <node/eviction.h>
 #include <protocol.h>
+#include <sync.h>
 #include <test/fuzz/FuzzedDataProvider.h>
 #include <test/fuzz/util.h>
 #include <test/util/net.h>
-#include <threadsafety.h>
 #include <util/asmap.h>
 #include <util/sock.h>
 

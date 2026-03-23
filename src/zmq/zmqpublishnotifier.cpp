@@ -24,7 +24,6 @@
 #include <cstring>
 #include <map>
 #include <optional>
-#include <span>
 #include <string>
 #include <utility>
 #include <vector>

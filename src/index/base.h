@@ -9,7 +9,7 @@
 #include <dbwrapper.h>
 #include <interfaces/chain.h>
 #include <kernel/cs_main.h>
-#include <threadsafety.h>
+#include <sync.h>
 #include <uint256.h>
 #include <util/fs.h>
 #include <util/threadinterrupt.h>
