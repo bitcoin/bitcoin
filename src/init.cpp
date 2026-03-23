@@ -58,6 +58,7 @@
 #include <node/mempool_persist_args.h>
 #include <node/miner.h>
 #include <node/peerman_args.h>
+#include <node/rpc_load_monitor.h>
 #include <policy/feerate.h>
 #include <policy/fees/block_policy_estimator.h>
 #include <policy/fees/block_policy_estimator_args.h>
@@ -695,6 +696,11 @@ void SetupServerArgs(ArgsManager& argsman, bool can_listen_ipc)
                    OptionsCategory::NODE_RELAY);
     argsman.AddArg("-whitelistforcerelay", strprintf("Add 'forcerelay' permission to whitelisted peers with default permissions. This will relay transactions even if the transactions were already in the mempool. (default: %d)", DEFAULT_WHITELISTFORCERELAY), ArgsManager::ALLOW_ANY, OptionsCategory::NODE_RELAY);
     argsman.AddArg("-whitelistrelay", strprintf("Add 'relay' permission to whitelisted peers with default permissions. This will accept relayed transactions even when not relaying transactions (default: %d)", DEFAULT_WHITELISTRELAY), ArgsManager::ALLOW_ANY, OptionsCategory::NODE_RELAY);
+    argsman.AddArg("-experimental-rpc-priority",
+                   "Enable experimental RPC-aware P2P backpressure policy. When enabled, low-priority "
+                   "P2P messages (tx relay, addr gossip) may be deferred during RPC queue overload to "
+                   "improve RPC latency. (default: 0)",
+                   ArgsManager::ALLOW_ANY, OptionsCategory::NODE_RELAY);
 
 
     argsman.AddArg("-blockmaxweight=<n>", strprintf("Set maximum BIP141 block weight (default: %d)", DEFAULT_BLOCK_MAX_WEIGHT), ArgsManager::ALLOW_ANY | ArgsManager::DEBUG_ONLY, OptionsCategory::BLOCK_CREATION);
@@ -1891,6 +1897,15 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
 
     ChainstateManager& chainman = *Assert(node.chainman);
     auto& kernel_notifications{*Assert(node.notifications)};
+
+    // Create RPC load monitor for backpressure coordination
+    std::shared_ptr<node::RpcLoadMonitor> rpc_load_monitor;
+    if (peerman_opts.experimental_rpc_priority) {
+        rpc_load_monitor = std::make_shared<node::AtomicRpcLoadMonitor>();
+        SetHttpServerRpcLoadMonitor(rpc_load_monitor);
+        peerman_opts.rpc_load_monitor = rpc_load_monitor;
+        LogInfo("Experimental RPC priority backpressure enabled\n");
+    }
 
     assert(!node.peerman);
     node.peerman = PeerManager::make(*node.connman, *node.addrman,

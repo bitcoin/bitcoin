@@ -11,6 +11,7 @@
 #include <logging.h>
 #include <netbase.h>
 #include <node/interface_ui.h>
+#include <node/rpc_load_monitor.h>
 #include <rpc/protocol.h>
 #include <sync.h>
 #include <util/check.h>
@@ -77,6 +78,8 @@ static std::vector<evhttp_bound_socket *> boundSockets;
 //! Http thread pool - future: encapsulate in HttpContext
 static ThreadPool g_threadpool_http("http");
 static int g_max_queue_depth{100};
+//! RPC load monitor for backpressure coordination
+static std::shared_ptr<node::RpcLoadMonitor> g_rpc_load_monitor{nullptr};
 
 /**
  * @brief Helps keep track of open `evhttp_connection`s with active `evhttp_requests`
@@ -282,6 +285,12 @@ static void http_request_cb(struct evhttp_request* req, void* arg)
             LogWarning("HTTP request rejected during server shutdown: '%s'", SubmitErrorString(res.error()));
             hreq->WriteReply(HTTP_SERVICE_UNAVAILABLE, "Request rejected during server shutdown");
             return;
+        }
+        // Update RPC load monitor after successful enqueue (backpressure)
+        if (g_rpc_load_monitor) {
+            g_rpc_load_monitor->OnQueueDepthSample(
+                static_cast<int>(g_threadpool_http.WorkQueueSize()),
+                g_max_queue_depth);
         }
     } else {
         hreq->WriteReply(HTTP_NOT_FOUND);
@@ -489,6 +498,11 @@ void StopHTTPServer()
         eventBase = nullptr;
     }
     LogDebug(BCLog::HTTP, "Stopped HTTP server\n");
+}
+
+void SetHttpServerRpcLoadMonitor(std::shared_ptr<node::RpcLoadMonitor> monitor)
+{
+    g_rpc_load_monitor = std::move(monitor);
 }
 
 struct event_base* EventBase()

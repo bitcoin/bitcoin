@@ -25,6 +25,8 @@ void ApplyArgsManOptions(const ArgsManager& argsman, PeerManager::Options& optio
     if (auto value{argsman.GetBoolArg("-blocksonly")}) options.ignore_incoming_txs = *value;
 
     if (auto value{argsman.GetBoolArg("-privatebroadcast")}) options.private_broadcast = *value;
+
+    if (auto value{argsman.GetBoolArg("-experimental-rpc-priority")}) options.experimental_rpc_priority = *value;
 }
 
 } // namespace node

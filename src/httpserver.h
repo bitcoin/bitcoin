@@ -6,9 +6,14 @@
 #define BITCOIN_HTTPSERVER_H
 
 #include <functional>
+#include <memory>
 #include <optional>
 #include <span>
 #include <string>
+
+namespace node {
+class RpcLoadMonitor;
+} // namespace node
 
 namespace util {
 class SignalInterrupt;
@@ -45,6 +50,9 @@ void StartHTTPServer();
 void InterruptHTTPServer();
 /** Stop HTTP server */
 void StopHTTPServer();
+
+/** Set RPC load monitor for backpressure coordination */
+void SetHttpServerRpcLoadMonitor(std::shared_ptr<node::RpcLoadMonitor> monitor);
 
 /** Change logging level for libevent. */
 void UpdateHTTPServerLogging(bool enable);

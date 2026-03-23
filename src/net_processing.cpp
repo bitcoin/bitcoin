@@ -202,6 +202,21 @@ static constexpr size_t NUM_PRIVATE_BROADCAST_PER_TX{3};
 /** Private broadcast connections must complete within this time. Disconnect the peer if it takes longer. */
 static constexpr auto PRIVATE_BROADCAST_MAX_CONNECTION_LIFETIME{3min};
 
+/**
+ * Check if a P2P message type is low-priority for backpressure throttling.
+ * Low-priority messages can be deferred when RPC queue is overloaded.
+ */
+static bool IsLowPriorityMessage(const std::string& msg_type)
+{
+    return msg_type == NetMsgType::TX ||
+           msg_type == NetMsgType::MEMPOOL ||
+           msg_type == NetMsgType::ADDR ||
+           msg_type == NetMsgType::ADDRV2 ||
+           msg_type == NetMsgType::GETADDR ||
+           msg_type == NetMsgType::INV ||
+           msg_type == NetMsgType::GETDATA;
+}
+
 // Internal stuff
 namespace {
 /** Blocks that are in flight, and that are in the queue to be downloaded. */
@@ -5164,6 +5179,20 @@ bool PeerManagerImpl::ProcessMessages(CNode& node, std::atomic<bool>& interruptM
 
     CNetMessage& msg{poll_result->first};
     bool fMoreWork = poll_result->second;
+
+    // --- Backpressure gate ---
+    // When RPC queue is overloaded, defer low-priority P2P messages to reduce interference.
+    if (m_opts.experimental_rpc_priority && m_opts.rpc_load_monitor) {
+        const auto rpc_state = m_opts.rpc_load_monitor->GetState();
+        if (rpc_state != node::RpcLoadState::NORMAL && IsLowPriorityMessage(msg.m_type)) {
+            // Defer message to back of queue - will be processed when RPC load decreases
+            node.RequeueMessageForProcessing(std::move(poll_result->first));
+            LogDebug(BCLog::NET, "Backpressure: deferred %s from peer=%d (RPC state=%d)\n",
+                     msg.m_type, node.GetId(), static_cast<int>(rpc_state));
+            return true; // More work remains
+        }
+    }
+    // --- End backpressure gate ---
 
     TRACEPOINT(net, inbound_message,
         node.GetId(),

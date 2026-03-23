@@ -760,6 +760,11 @@ public:
     std::optional<std::pair<CNetMessage, bool>> PollMessage()
         EXCLUSIVE_LOCKS_REQUIRED(!m_msg_process_queue_mutex);
 
+    /** Requeue a message to the back of the processing queue.
+     * Used to defer low-priority messages when RPC queue is overloaded. */
+    void RequeueMessageForProcessing(CNetMessage&& msg)
+        EXCLUSIVE_LOCKS_REQUIRED(!m_msg_process_queue_mutex);
+
     /** Account for the total size of a sent message in the per msg type connection stats. */
     void AccountForSentBytes(const std::string& msg_type, size_t sent_bytes)
         EXCLUSIVE_LOCKS_REQUIRED(cs_vSend)

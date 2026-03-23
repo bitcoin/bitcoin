@@ -4042,6 +4042,18 @@ std::optional<std::pair<CNetMessage, bool>> CNode::PollMessage()
     return std::make_pair(std::move(msgs.front()), !m_msg_process_queue.empty());
 }
 
+void CNode::RequeueMessageForProcessing(CNetMessage&& msg)
+{
+    LOCK(m_msg_process_queue_mutex);
+
+    const size_t added = msg.GetMemoryUsage();
+    m_msg_process_queue.push_back(std::move(msg));
+    m_msg_process_queue_size += added;
+
+    // Keep existing recv-flood semantics.
+    fPauseRecv = m_msg_process_queue_size > m_recv_flood_size;
+}
+
 bool CConnman::NodeFullyConnected(const CNode* pnode)
 {
     return pnode && pnode->fSuccessfullyConnected && !pnode->fDisconnect;

@@ -15,6 +15,7 @@
 #include <uint256.h>
 #include <util/expected.h>
 #include <validationinterface.h>
+#include <node/rpc_load_monitor.h>
 
 #include <atomic>
 #include <chrono>
@@ -93,6 +94,10 @@ public:
         uint32_t max_headers_result{MAX_HEADERS_RESULTS};
         //! Whether private broadcast is used for sending transactions.
         bool private_broadcast{DEFAULT_PRIVATE_BROADCAST};
+        //! Enable experimental RPC priority backpressure
+        bool experimental_rpc_priority{false};
+        //! RPC load monitor for backpressure decisions (nullptr if disabled)
+        std::shared_ptr<node::RpcLoadMonitor> rpc_load_monitor{nullptr};
     };
 
     static std::unique_ptr<PeerManager> make(CConnman& connman, AddrMan& addrman,
