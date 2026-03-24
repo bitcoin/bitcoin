@@ -54,7 +54,6 @@ class CChainParams;
 class CNode;
 class CScheduler;
 struct bilingual_str;
-struct LocalServiceInfo;
 
 /** Time after which to disconnect, after waiting for a ping response (or inactivity). */
 static constexpr std::chrono::minutes TIMEOUT_INTERVAL{20};
@@ -158,8 +157,6 @@ extern bool fListen;
 
 /** Subversion as sent to the P2P network in `version` messages */
 extern std::string strSubVersion;
-extern GlobalMutex g_maplocalhost_mutex;
-extern std::map<CNetAddr, LocalServiceInfo> mapLocalHost GUARDED_BY(g_maplocalhost_mutex);
 
 extern const std::string NET_MESSAGE_TYPE_OTHER;
 using mapMsgTypeSize = std::map</* message type */ std::string, /* total bytes */ uint64_t>;

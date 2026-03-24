@@ -8,6 +8,9 @@
 #include <logging.h>
 #include <net.h>
 
+static GlobalMutex g_maplocalhost_mutex;
+static std::map<CNetAddr, LocalServiceInfo> mapLocalHost GUARDED_BY(g_maplocalhost_mutex);
+
 // Determine the "best" local address for a particular peer.
 [[nodiscard]] std::optional<CService> GetLocalAddress(const CAddress& addr, const Network& connected_through)
 {
