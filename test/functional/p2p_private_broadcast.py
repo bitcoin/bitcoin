@@ -530,9 +530,12 @@ class P2PPrivateBroadcast(BitcoinTestFramework):
             # the RPC should throw.
             "-torcontrol=127.0.0.1:1",
             "-listenonion",
+            f"-bind=127.0.0.1:{tor_port(0)}=onion",
         ])
         assert_raises_rpc_error(-1, "none of the Tor or I2P networks is reachable",
                                 tx_originator.sendrawtransaction, hexstring=txs[0]["hex"], maxfeerate=0.1)
+
+        self.restart_node(0)
 
 
 if __name__ == "__main__":
