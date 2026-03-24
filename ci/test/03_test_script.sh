@@ -224,7 +224,7 @@ if [[ "${RUN_IWYU}" == true ]]; then
              -Xiwyu --check_also="*/primitives/*.h" \
              2>&1 | tee /tmp/iwyu_ci.out
     python3 "/include-what-you-use/fix_includes.py" --nosafe_headers < /tmp/iwyu_ci.out
-    git diff -U1 | ./contrib/devtools/clang-format-diff.py -binary="clang-format-${TIDY_LLVM_V}" -p1 -i -v
+    git diff -U1 | ./contrib/devtools/clang-format-diff.py -binary="clang-format-${IWYU_LLVM_V}" -p1 -i -v
   }
 
   run_iwyu "compile_commands_iwyu_errors.json"
