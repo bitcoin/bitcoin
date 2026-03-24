@@ -156,6 +156,7 @@ ifneq ($(LTO),)
 $(package)_config_opts_linux += -ltcg
 endif
 $(package)_config_opts_freebsd := $$($(package)_config_opts_linux)
+$(package)_config_opts_freebsd += -no-feature-inotify
 
 $(package)_config_opts_mingw32 := -no-dbus
 $(package)_config_opts_mingw32 += -no-feature-freetype
