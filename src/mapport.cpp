@@ -8,6 +8,7 @@
 #include <common/netif.h>
 #include <common/pcp.h>
 #include <common/system.h>
+#include <local_addresses.h>
 #include <logging.h>
 #include <net.h>
 #include <netaddress.h>

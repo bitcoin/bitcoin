@@ -23,6 +23,7 @@
 #include <headerssync.h>
 #include <index/blockfilterindex.h>
 #include <kernel/types.h>
+#include <local_addresses.h>
 #include <logging.h>
 #include <merkleblock.h>
 #include <net.h>

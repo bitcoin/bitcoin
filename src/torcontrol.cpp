@@ -10,6 +10,7 @@
 #include <common/args.h>
 #include <compat/compat.h>
 #include <crypto/hmac_sha256.h>
+#include <local_addresses.h>
 #include <logging.h>
 #include <net.h>
 #include <netaddress.h>

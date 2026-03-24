@@ -17,6 +17,7 @@
 #include <common/system.h>
 #include <interfaces/handler.h>
 #include <interfaces/node.h>
+#include <local_addresses.h>
 #include <net.h>
 #include <netbase.h>
 #include <util/threadnames.h>

@@ -10,6 +10,7 @@
 #include <chainparams.h>
 #include <common/system.h>
 #include <interfaces/node.h>
+#include <local_addresses.h>
 #include <node/connection_types.h>
 #include <qt/bantablemodel.h>
 #include <qt/clientmodel.h>

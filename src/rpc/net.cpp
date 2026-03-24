@@ -10,6 +10,7 @@
 #include <chainparams.h>
 #include <clientversion.h>
 #include <core_io.h>
+#include <local_addresses.h>
 #include <net_permissions.h>
 #include <net_processing.h>
 #include <net_types.h>

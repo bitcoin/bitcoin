@@ -54,6 +54,7 @@ class CChainParams;
 class CNode;
 class CScheduler;
 struct bilingual_str;
+struct LocalServiceInfo;
 
 /** Time after which to disconnect, after waiting for a ping response (or inactivity). */
 static constexpr std::chrono::minutes TIMEOUT_INTERVAL{20};
@@ -149,38 +150,14 @@ void Discover();
 
 uint16_t GetListenPort();
 
-enum
-{
-    LOCAL_NONE,   // unknown
-    LOCAL_IF,     // address a local interface listens on
-    LOCAL_BIND,   // address explicit bound to
-    LOCAL_MAPPED, // address reported by PCP
-    LOCAL_MANUAL, // address explicitly specified (-externalip=)
-
-    LOCAL_MAX
-};
-
 /** Returns a local address that we should advertise to this peer. */
 std::optional<CService> GetLocalAddrForPeer(CNode& node);
-
-void ClearLocal();
-bool AddLocal(const CService& addr, int nScore = LOCAL_NONE);
-void RemoveLocal(const CService& addr);
-bool SeenLocal(const CService& addr);
-bool IsLocal(const CService& addr);
-std::optional<CService> GetLocalAddress(const CAddress& addr, const Network& connected_through);
 
 extern bool fDiscover;
 extern bool fListen;
 
 /** Subversion as sent to the P2P network in `version` messages */
 extern std::string strSubVersion;
-
-struct LocalServiceInfo {
-    int nScore;
-    uint16_t nPort;
-};
-
 extern GlobalMutex g_maplocalhost_mutex;
 extern std::map<CNetAddr, LocalServiceInfo> mapLocalHost GUARDED_BY(g_maplocalhost_mutex);
 

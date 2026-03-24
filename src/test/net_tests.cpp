@@ -6,6 +6,7 @@
 #include <clientversion.h>
 #include <common/args.h>
 #include <compat/compat.h>
+#include <local_addresses.h>
 #include <net.h>
 #include <net_processing.h>
 #include <netaddress.h>

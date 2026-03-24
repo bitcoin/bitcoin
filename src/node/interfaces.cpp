@@ -26,6 +26,7 @@
 #include <kernel/chain.h>
 #include <kernel/context.h>
 #include <kernel/mempool_entry.h>
+#include <local_addresses.h>
 #include <logging.h>
 #include <mapport.h>
 #include <net.h>
