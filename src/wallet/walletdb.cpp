@@ -19,7 +19,7 @@
 #include <util/fs.h>
 #include <util/time.h>
 #include <util/translation.h>
-#include <wallet/migrate.h>
+#include <wallet/legacybdb.h>
 #include <wallet/sqlite.h>
 #include <wallet/wallet.h>
 
