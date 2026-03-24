@@ -888,40 +888,42 @@ bool MemPoolAccept::PreChecks(ATMPArgs& args, Workspace& ws)
         return state.Invalid(TxValidationResult::TX_PREMATURE_SPEND, "non-BIP68-final");
     }
 
-    // The mempool holds txs for the next block, so pass height+1 to CheckTxInputs
-    auto check_tx_inputs_res = m_view.AccessCoins(tx, [&tx, &state, &ws, this](auto&& coins) {
-        return Consensus::CheckTxInputs(tx, state, m_view, std::span{coins}, m_active_chainstate.m_chain.Height() + 1, ws.m_base_fees);
-    });
-    if (!check_tx_inputs_res) {
-        return false; // state filled in by CheckTxInputs
-    }
-
-    if (m_pool.m_opts.require_standard) {
-        state = ValidateInputsStandardness(tx, m_view);
-        if (state.IsInvalid()) {
-            return false;
-        }
-    }
-
-    // Check for non-standard witnesses.
-    if (tx.HasWitness() && m_pool.m_opts.require_standard && !IsWitnessStandard(tx, m_view)) {
-        return state.Invalid(TxValidationResult::TX_WITNESS_MUTATED, "bad-witness-nonstandard");
-    }
-
-    int64_t nSigOpsCost = m_view.AccessCoins(tx, [&tx](auto&& coins) {
-        return GetTransactionSigOpCost(tx, coins, STANDARD_SCRIPT_VERIFY_FLAGS);
-    });
-
-    // Keep track of transactions that spend a coinbase, which we re-scan
-    // during reorgs to ensure COINBASE_MATURITY is still met.
+    int64_t nSigOpsCost = 0;
     bool fSpendsCoinbase = false;
-    for (const CTxIn &txin : tx.vin) {
-        const Coin &coin = m_view.AccessCoin(txin.prevout);
-        if (coin.IsCoinBase()) {
-            fSpendsCoinbase = true;
-            break;
+    // Wrap access to required coins in their own scope to avoid coin lifetime extension issues
+    auto res = m_view.AccessCoins(tx, [&, this](auto&& coins) {
+        // The mempool holds txs for the next block, so pass height+1 to CheckTxInputs
+        if (!Consensus::CheckTxInputs(tx, state, m_view, std::span{coins}, m_active_chainstate.m_chain.Height() + 1, ws.m_base_fees)) {
+            return false; // state filled in by CheckTxInputs
         }
-    }
+
+        if (m_pool.m_opts.require_standard) {
+            state = ValidateInputsStandardness(tx, m_view);
+            if (state.IsInvalid()) {
+                return false;
+            }
+        }
+
+        // Check for non-standard witnesses.
+        if (tx.HasWitness() && m_pool.m_opts.require_standard && !IsWitnessStandard(tx, m_view)) {
+            return state.Invalid(TxValidationResult::TX_WITNESS_MUTATED, "bad-witness-nonstandard");
+        }
+
+        nSigOpsCost = GetTransactionSigOpCost(tx, coins, STANDARD_SCRIPT_VERIFY_FLAGS);
+
+        // Keep track of transactions that spend a coinbase, which we re-scan
+        // during reorgs to ensure COINBASE_MATURITY is still met.
+        for (const Coin& coin : coins) {
+            if (coin.IsCoinBase()) {
+                fSpendsCoinbase = true;
+                break;
+            }
+        }
+
+        return true;
+    });
+
+    if (!res) return res;
 
     // Set entry_sequence to 0 when bypass_limits is used; this allows txs from a block
     // reorg to be marked earlier than any child txs that were already in the mempool.
