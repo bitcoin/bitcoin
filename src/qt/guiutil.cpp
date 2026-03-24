@@ -771,7 +771,7 @@ QString formatPingTime(std::chrono::microseconds ping_time)
 {
     return (ping_time == std::chrono::microseconds::max() || ping_time == 0us) ?
         QObject::tr("N/A") :
-        QObject::tr("%1 ms").arg(QString::number((int)(count_microseconds(ping_time) / 1000), 10));
+        QObject::tr("%1 ms").arg(QString::number(Ticks<std::chrono::milliseconds>(ping_time)));
 }
 
 QString formatTimeOffset(int64_t time_offset)
