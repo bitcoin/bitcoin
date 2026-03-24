@@ -59,7 +59,7 @@ bool LocalAddressManager::Add(const CService& addr_, int nScore)
         return false;
 
     if (fLogIPs) {
-        LogInfo("AddLocal(%s,%i)\n", addr.ToStringAddrPort(), nScore);
+        LogInfo("LocalAddressManager: Adding %s (Score: %i)\n", addr.ToStringAddrPort(), nScore);
     }
 
     {
@@ -79,7 +79,7 @@ void LocalAddressManager::Remove(const CService& addr)
 {
     LOCK(m_mutex);
     if (fLogIPs) {
-        LogInfo("RemoveLocal(%s)\n", addr.ToStringAddrPort());
+        LogInfo("LocalAddressManager: Removing %s\n", addr.ToStringAddrPort());
     }
     m_addresses.erase(addr);
 }
