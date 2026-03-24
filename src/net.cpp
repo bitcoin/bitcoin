@@ -166,7 +166,7 @@ uint16_t GetListenPort()
 {
     if (!fListen) return std::nullopt;
 
-    std::optional<CService> addr;
+    std::optional<CService> ret;
     int nBestScore = -1;
     int nBestReachability = -1;
     {
@@ -182,13 +182,13 @@ uint16_t GetListenPort()
             const int nScore{local_service_info.nScore};
             const int nReachability{local_addr.GetReachabilityFrom(peer.addr)};
             if (nReachability > nBestReachability || (nReachability == nBestReachability && nScore > nBestScore)) {
-                addr.emplace(CService{local_addr, local_service_info.nPort});
+                ret.emplace(CService{local_addr, local_service_info.nPort});
                 nBestReachability = nReachability;
                 nBestScore = nScore;
             }
         }
     }
-    return addr;
+    return ret;
 }
 
 //! Convert the serialized seeds into usable address objects.
