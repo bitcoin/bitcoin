@@ -127,6 +127,7 @@ class TorControlTest(BitcoinTestFramework):
         assert_equal(mock_tor.received_commands[1], "AUTHENTICATE")
         assert_equal(mock_tor.received_commands[2], "GETINFO net/listeners/socks")
         assert mock_tor.received_commands[3].startswith("ADD_ONION ")
+        assert "PoWDefensesEnabled=1" in mock_tor.received_commands[3]
 
         # Clean up
         mock_tor.stop()
@@ -169,9 +170,50 @@ class TorControlTest(BitcoinTestFramework):
         # Clean up
         mock_tor.stop()
 
+    def test_pow_fallback(self):
+        self.log.info("Test that ADD_ONION retries without PoW on 512 error")
+
+        tor_port = p2p_port(self.num_nodes + 3)
+
+        class NoPowServer(MockTorControlServer):
+            def _get_response(self, command):
+                if command.startswith("ADD_ONION"):
+                    if "PoWDefensesEnabled=1" in command:
+                        return "512 Unrecognized option\r\n"
+                    else:
+                        return (
+                            "250-ServiceID=testserviceid1234567890123456789012345678901234567890123456\r\n"
+                            "250 OK\r\n"
+                        )
+                return super()._get_response(command)
+
+        mock_tor = NoPowServer(tor_port)
+        mock_tor.start()
+
+        self.restart_node(0, extra_args=[
+            f"-torcontrol=127.0.0.1:{tor_port}",
+            "-listenonion=1",
+            "-debug=tor",
+        ])
+
+        # Expect: PROTOCOLINFO, AUTHENTICATE, GETINFO, ADD_ONION (with PoW), ADD_ONION (without PoW)
+        self.wait_until(lambda: len(mock_tor.received_commands) >= 5, timeout=10)
+
+        # First ADD_ONION should have PoW enabled
+        assert mock_tor.received_commands[3].startswith("ADD_ONION ")
+        assert "PoWDefensesEnabled=1" in mock_tor.received_commands[3]
+
+        # Retry should be ADD_ONION without PoW
+        assert mock_tor.received_commands[4].startswith("ADD_ONION ")
+        assert "PoWDefensesEnabled=1" not in mock_tor.received_commands[4]
+
+        # Clean up
+        mock_tor.stop()
+
     def run_test(self):
         self.test_basic()
         self.test_partial_data()
+        self.test_pow_fallback()
 
 if __name__ == '__main__':
     TorControlTest(__file__).main()
