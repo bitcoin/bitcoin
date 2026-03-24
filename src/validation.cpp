@@ -4889,7 +4889,7 @@ void Chainstate::PopulateBlockIndexCandidates()
         // With assumeutxo, the snapshot block is a candidate for the tip, but it
         // may not have BLOCK_VALID_TRANSACTIONS (e.g. if we haven't yet downloaded
         // the block), so we special-case it here.
-        if (pindex == SnapshotBase() || pindex == TargetBlock() ||
+        if (pindex == SnapshotBase() ||
                 (pindex->IsValid(BLOCK_VALID_TRANSACTIONS) &&
                  (pindex->HaveNumChainTxs() || pindex->pprev == nullptr))) {
             TryAddBlockIndexCandidate(pindex);
