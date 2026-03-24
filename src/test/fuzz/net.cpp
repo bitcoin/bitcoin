@@ -83,6 +83,8 @@ FUZZ_TARGET(local_address, .init = initialize_net)
     FuzzedDataProvider fuzzed_data_provider(buffer.data(), buffer.size());
     NodeClockContext clock_ctx{ConsumeTime(fuzzed_data_provider)};
     CService service{ConsumeService(fuzzed_data_provider)};
+    Network network{ConsumeNetwork(fuzzed_data_provider)};
+    CAddress address{ConsumeAddress(fuzzed_data_provider)};
     CNode node{ConsumeNode(fuzzed_data_provider)};
     {
         LOCK(g_maplocalhost_mutex);
@@ -93,6 +95,8 @@ FUZZ_TARGET(local_address, .init = initialize_net)
             fuzzed_data_provider,
             [&] {
                 service = ConsumeService(fuzzed_data_provider);
+                address = ConsumeAddress(fuzzed_data_provider);
+                network = ConsumeNetwork(fuzzed_data_provider);
             },
             [&] {
                 const bool added{AddLocal(service, fuzzed_data_provider.ConsumeIntegralInRange<int>(0, LOCAL_MAX - 1))};
@@ -111,7 +115,7 @@ FUZZ_TARGET(local_address, .init = initialize_net)
                 (void)IsLocal(service);
             },
             [&] {
-                (void)GetLocalAddress(node);
+                (void)GetLocalAddress(address, network);
             });
     }
 }

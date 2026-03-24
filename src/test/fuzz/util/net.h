@@ -252,6 +252,11 @@ inline CService ConsumeService(FuzzedDataProvider& fuzzed_data_provider) noexcep
     return {ConsumeNetAddr(fuzzed_data_provider), fuzzed_data_provider.ConsumeIntegral<uint16_t>()};
 }
 
+inline Network ConsumeNetwork(FuzzedDataProvider& fuzzed_data_provider) noexcept
+{
+    return (Network)fuzzed_data_provider.ConsumeIntegralInRange<int>(NET_UNROUTABLE, NET_MAX);
+}
+
 inline std::vector<CService> ConsumeServiceVector(FuzzedDataProvider& fuzzed_data_provider,
                                                   size_t max_vector_size = 5) noexcept
 {

@@ -169,7 +169,7 @@ bool AddLocal(const CNetAddr& addr, int nScore = LOCAL_NONE);
 void RemoveLocal(const CService& addr);
 bool SeenLocal(const CService& addr);
 bool IsLocal(const CService& addr);
-std::optional<CService> GetLocalAddress(const CNode& peer);
+std::optional<CService> GetLocalAddress(const CAddress& addr, const Network& connected_through);
 
 extern bool fDiscover;
 extern bool fListen;
