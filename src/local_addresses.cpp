@@ -8,8 +8,6 @@
 #include <logging.h>
 #include <net.h>
 
-static GlobalMutex g_maplocalhost_mutex;
-static std::map<CNetAddr, LocalServiceInfo> mapLocalHost GUARDED_BY(g_maplocalhost_mutex);
 std::unique_ptr<LocalAddressManager> g_localaddressman{std::make_unique<LocalAddressManager>()};
 
 [[nodiscard]] std::optional<CService> LocalAddressManager::Get(const CAddress& addr, const Network& connected_through) const
@@ -20,8 +18,8 @@ std::unique_ptr<LocalAddressManager> g_localaddressman{std::make_unique<LocalAdd
     int nBestScore = -1;
     int nBestReachability = -1;
     {
-        LOCK(g_maplocalhost_mutex);
-        for (const auto& [local_addr, local_service_info] : mapLocalHost) {
+        LOCK(m_mutex);
+        for (const auto& [local_addr, local_service_info] : m_addresses) {
             // For privacy reasons, don't advertise our privacy-network address
             // to other networks and don't advertise our other-network address
             // to privacy networks.
@@ -43,8 +41,8 @@ std::unique_ptr<LocalAddressManager> g_localaddressman{std::make_unique<LocalAdd
 
 void LocalAddressManager::Clear()
 {
-    LOCK(g_maplocalhost_mutex);
-    return mapLocalHost.clear();
+    LOCK(m_mutex);
+    return m_addresses.clear();
 }
 
 bool LocalAddressManager::Add(const CService& addr_, int nScore)
@@ -65,8 +63,8 @@ bool LocalAddressManager::Add(const CService& addr_, int nScore)
     }
 
     {
-        LOCK(g_maplocalhost_mutex);
-        const auto [it, is_newly_added] = mapLocalHost.emplace(addr, LocalServiceInfo());
+        LOCK(m_mutex);
+        const auto [it, is_newly_added] = m_addresses.emplace(addr, LocalServiceInfo());
         LocalServiceInfo &info = it->second;
         if (is_newly_added || nScore >= info.nScore) {
             info.nScore = nScore + (is_newly_added ? 0 : 1);
@@ -79,38 +77,37 @@ bool LocalAddressManager::Add(const CService& addr_, int nScore)
 
 void LocalAddressManager::Remove(const CService& addr)
 {
-    LOCK(g_maplocalhost_mutex);
+    LOCK(m_mutex);
     if (fLogIPs) {
         LogInfo("RemoveLocal(%s)\n", addr.ToStringAddrPort());
     }
-
-    mapLocalHost.erase(addr);
+    m_addresses.erase(addr);
 }
 
 bool LocalAddressManager::Seen(const CService& addr)
 {
-    LOCK(g_maplocalhost_mutex);
-    const auto it = mapLocalHost.find(addr);
-    if (it == mapLocalHost.end()) return false;
+    LOCK(m_mutex);
+    const auto it = m_addresses.find(addr);
+    if (it == m_addresses.end()) return false;
     ++it->second.nScore;
     return true;
 }
 
 bool LocalAddressManager::Contains(const CService& addr) const
 {
-    LOCK(g_maplocalhost_mutex);
-    return mapLocalHost.contains(addr);
+    LOCK(m_mutex);
+    return m_addresses.contains(addr);
 }
 
 int LocalAddressManager::GetnScore(const CService& addr) const
 {
-    LOCK(g_maplocalhost_mutex);
-    const auto it = mapLocalHost.find(addr);
-    return (it != mapLocalHost.end()) ? it->second.nScore : 0;
+    LOCK(m_mutex);
+    const auto it = m_addresses.find(addr);
+    return (it != m_addresses.end()) ? it->second.nScore : 0;
 }
 
 LocalAddressManager::map_type LocalAddressManager::GetAll() const
 {
-    LOCK(g_maplocalhost_mutex);
-    return mapLocalHost;
+    LOCK(m_mutex);
+    return m_addresses;
 }

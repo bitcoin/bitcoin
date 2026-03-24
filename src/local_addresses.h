@@ -7,6 +7,7 @@
 #define BITCOIN_LOCAL_ADDRESSES_H
 
 #include <netaddress.h>
+#include <sync.h>
 
 #include <optional>
 #include <map>
@@ -35,24 +36,28 @@ public:
     using map_type = std::map<CNetAddr, LocalServiceInfo>;
 
     // learn a new local address
-    bool Add(const CService& addr_, int nScore = LOCAL_NONE);
+    bool Add(const CService& addr_, int nScore = LOCAL_NONE) EXCLUSIVE_LOCKS_REQUIRED(!m_mutex);
 
-    void Remove(const CService& addr);
+    void Remove(const CService& addr) EXCLUSIVE_LOCKS_REQUIRED(!m_mutex);
 
     /** vote for a local address */
-    bool Seen(const CService& addr);
+    bool Seen(const CService& addr) EXCLUSIVE_LOCKS_REQUIRED(!m_mutex);
 
     /** check whether a given address is potentially local */
-    bool Contains(const CService& addr) const;
+    bool Contains(const CService& addr) const EXCLUSIVE_LOCKS_REQUIRED(!m_mutex);
 
     // Determine the "best" local address for a particular peer.
-    [[nodiscard]] std::optional<CService> Get(const CAddress& addr, const Network& connected_through) const;
+    [[nodiscard]] std::optional<CService> Get(const CAddress& addr, const Network& connected_through) const EXCLUSIVE_LOCKS_REQUIRED(!m_mutex);
 
-    void Clear();
+    void Clear() EXCLUSIVE_LOCKS_REQUIRED(!m_mutex);
 
-    int GetnScore(const CService& addr) const;
+    int GetnScore(const CService& addr) const EXCLUSIVE_LOCKS_REQUIRED(!m_mutex);
 
-    map_type GetAll() const;
+    map_type GetAll() const EXCLUSIVE_LOCKS_REQUIRED(!m_mutex);
+
+private:
+    mutable Mutex m_mutex;
+    map_type m_addresses GUARDED_BY(m_mutex);
 };
 
 extern std::unique_ptr<LocalAddressManager> g_localaddressman;
