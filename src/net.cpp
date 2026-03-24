@@ -213,13 +213,9 @@ static std::vector<CAddress> ConvertSeeds(const std::vector<uint8_t> &vSeedsIn)
     return vSeedsOut;
 }
 
-// Determine the "best" local address for a particular peer.
-// If none, return the unroutable 0.0.0.0 but filled in with
-// the normal parameters, since the IP may be changed to a useful
-// one by discovery.
-CService GetLocalAddress(const CNode& peer)
+std::optional<CService> GetLocalAddress(const CNode& peer)
 {
-    return GetLocal(peer.addr, peer.ConnectedThroughNetwork()).value_or(CService{CNetAddr(), GetListenPort()});
+    return GetLocal(peer.addr, peer.ConnectedThroughNetwork());
 }
 
 static int GetnScore(const CService& addr)
@@ -239,7 +235,12 @@ static int GetnScore(const CService& addr)
 
 std::optional<CService> GetLocalAddrForPeer(CNode& node)
 {
-    CService addrLocal{GetLocalAddress(node)};
+    // Determine the "best" local address for a particular peer.
+    // If none, use the unroutable 0.0.0.0 but filled in with
+    // the normal parameters, since the IP may be changed to a useful
+    // one by discovery.
+    CService addrLocal{GetLocalAddress(node).value_or(CService{CNetAddr(), GetListenPort()})};
+
     // If discovery is enabled, sometimes give our peer the address it
     // tells us that it sees us as in case it has a better idea of our
     // address than we do.

@@ -966,19 +966,19 @@ BOOST_AUTO_TEST_CASE(advertise_local_address)
     BOOST_CHECK(GetLocalAddress(*peer_ipv6_tunnel) == addr_ipv4);
     BOOST_CHECK(GetLocalAddress(*peer_teredo) == addr_ipv4);
     BOOST_CHECK(GetLocalAddress(*peer_cjdns) == addr_ipv4);
-    BOOST_CHECK(!GetLocalAddress(*peer_onion).IsValid());
-    BOOST_CHECK(!GetLocalAddress(*peer_inbound_onion).IsValid());
-    BOOST_CHECK(!GetLocalAddress(*peer_i2p).IsValid());
+    BOOST_CHECK(!GetLocalAddress(*peer_onion));
+    BOOST_CHECK(!GetLocalAddress(*peer_inbound_onion));
+    BOOST_CHECK(!GetLocalAddress(*peer_i2p));
     RemoveLocal(addr_ipv4);
 
     // local privacy addresses - don't advertise to clearnet peers
     AddLocal(addr_onion);
     AddLocal(addr_i2p);
-    BOOST_CHECK(!GetLocalAddress(*peer_ipv4).IsValid());
-    BOOST_CHECK(!GetLocalAddress(*peer_ipv6).IsValid());
-    BOOST_CHECK(!GetLocalAddress(*peer_ipv6_tunnel).IsValid());
-    BOOST_CHECK(!GetLocalAddress(*peer_teredo).IsValid());
-    BOOST_CHECK(!GetLocalAddress(*peer_cjdns).IsValid());
+    BOOST_CHECK(!GetLocalAddress(*peer_ipv4));
+    BOOST_CHECK(!GetLocalAddress(*peer_ipv6));
+    BOOST_CHECK(!GetLocalAddress(*peer_ipv6_tunnel));
+    BOOST_CHECK(!GetLocalAddress(*peer_teredo));
+    BOOST_CHECK(!GetLocalAddress(*peer_cjdns));
     BOOST_CHECK(GetLocalAddress(*peer_onion) == addr_onion);
     BOOST_CHECK(GetLocalAddress(*peer_inbound_onion) == addr_onion);
     BOOST_CHECK(GetLocalAddress(*peer_i2p) == addr_i2p);
