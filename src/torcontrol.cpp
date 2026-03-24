@@ -363,7 +363,7 @@ TorController::~TorController()
     Interrupt();
     Join();
     if (m_service.IsValid()) {
-        RemoveLocal(m_service);
+        g_localaddressman->Remove(m_service);
     }
 }
 
@@ -532,7 +532,7 @@ void TorController::add_onion_cb(TorControlConnection& _conn, const TorControlRe
         } else {
             LogWarning("tor: Error writing service private key to %s", fs::PathToString(GetPrivateKeyFile()));
         }
-        AddLocal(m_service, LOCAL_MANUAL);
+        g_localaddressman->Add(m_service, LOCAL_MANUAL);
         // ... onion requested - keep connection open
     } else if (reply.code == TOR_REPLY_UNRECOGNIZED) {
         LogWarning("tor: Add onion failed with unrecognized command (You probably need to upgrade Tor)");
@@ -726,7 +726,7 @@ void TorController::disconnected_cb(TorControlConnection& _conn)
 {
     // Stop advertising service when disconnected
     if (m_service.IsValid())
-        RemoveLocal(m_service);
+        g_localaddressman->Remove(m_service);
     m_service = CService();
     if (!m_reconnect)
         return;

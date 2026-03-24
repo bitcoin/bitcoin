@@ -1808,7 +1808,7 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
     for (const std::string& strAddr : args.GetArgs("-externalip")) {
         const std::optional<CService> addrLocal{Lookup(strAddr, GetListenPort(), fNameLookup)};
         if (addrLocal.has_value() && addrLocal->IsValid())
-            AddLocal(addrLocal.value(), LOCAL_MANUAL);
+            g_localaddressman->Add(addrLocal.value(), LOCAL_MANUAL);
         else
             return InitError(ResolveErrMsg("externalip", strAddr));
     }

@@ -3653,7 +3653,7 @@ void PeerManagerImpl::ProcessMessage(Peer& peer, CNode& pfrom, const std::string
 
         if (pfrom.IsInboundConn() && addrMe.IsRoutable())
         {
-            SeenLocal(addrMe);
+            g_localaddressman->Seen(addrMe);
         }
 
         // Inbound peers send us their version message when they connect.

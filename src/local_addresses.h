@@ -62,23 +62,4 @@ private:
 
 extern std::unique_ptr<LocalAddressManager> g_localaddressman;
 
-
-// Temporary forwarding functions
-
-inline void ClearLocal() { return g_localaddressman->Clear(); }
-
-inline bool AddLocal(const CService& addr, int nScore = LOCAL_NONE) { return g_localaddressman->Add(addr, nScore); }
-
-inline void RemoveLocal(const CService& addr) { return g_localaddressman->Remove(addr); }
-
-inline bool SeenLocal(const CService& addr) { return g_localaddressman->Seen(addr); }
-
-inline bool IsLocal(const CService& addr) { return g_localaddressman->Contains(addr); }
-
-inline std::optional<CService> GetLocalAddress(const CAddress& addr, const Network& network) { return g_localaddressman->Get(addr, network); }
-
-inline int GetnScore(const CService& addr) { return g_localaddressman->GetnScore(addr); }
-
-inline LocalAddressManager::map_type getNetLocalAddresses() { return g_localaddressman->GetAll(); }
-
 #endif // BITCOIN_LOCAL_ADDRESSES_H
