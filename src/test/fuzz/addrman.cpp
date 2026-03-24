@@ -145,7 +145,7 @@ FUZZ_TARGET(addrman, .init = initialize_addrman)
                     addresses.push_back(ConsumeAddress(fuzzed_data_provider));
                 }
                 auto net_addr = ConsumeNetAddr(fuzzed_data_provider);
-                auto time_penalty = ConsumeDuration(fuzzed_data_provider, /*min=*/0s, /*max=*/100000000s);
+                auto time_penalty = ConsumeDuration<std::chrono::seconds>(fuzzed_data_provider, /*min=*/0s, /*max=*/100000000s);
                 addr_man.Add(addresses, net_addr, time_penalty);
             },
             [&] {

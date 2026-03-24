@@ -140,7 +140,16 @@ template <typename WeakEnumType, size_t size>
 [[nodiscard]] CAmount ConsumeMoney(FuzzedDataProvider& fuzzed_data_provider, const std::optional<CAmount>& max = std::nullopt) noexcept;
 
 [[nodiscard]] NodeSeconds ConsumeTime(FuzzedDataProvider& fuzzed_data_provider, const std::optional<int64_t>& min = std::nullopt, const std::optional<int64_t>& max = std::nullopt) noexcept;
-[[nodiscard]] std::chrono::seconds ConsumeDuration(FuzzedDataProvider& fuzzed_data_provider, std::chrono::seconds min, std::chrono::seconds max) noexcept;
+
+template <class Dur>
+// Having the compiler infer the template argument from the function argument
+// is dangerous, because the desired return value generally has a different
+// type than the function argument. So std::common_type is used to force the
+// call site to specify the type of the return value.
+[[nodiscard]] Dur ConsumeDuration(FuzzedDataProvider& fuzzed_data_provider, std::common_type_t<Dur> min, std::common_type_t<Dur> max) noexcept
+{
+    return Dur{fuzzed_data_provider.ConsumeIntegralInRange(min.count(), max.count())};
+}
 
 [[nodiscard]] CMutableTransaction ConsumeTransaction(FuzzedDataProvider& fuzzed_data_provider, const std::optional<std::vector<Txid>>& prevout_txids, int max_num_in = 10, int max_num_out = 10) noexcept;
 
