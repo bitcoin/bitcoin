@@ -1194,8 +1194,14 @@ public:
     /** Check whether we are doing an initial block download (synchronizing from disk or network) */
     bool IsInitialBlockDownload() const noexcept;
 
-    /** Guess verification progress (as a fraction between 0.0=genesis and 1.0=current tip). */
+    /** Guess verification progress (as a fraction between 0.0=genesis and 1.0=current tip).
+    * This is also the case in the assumeutxo context, meaning that the progress reported for
+    * the snapshot chainstate may suggest that all historical blocks have already been verified
+    * even though that may not actually be the case. */
     double GuessVerificationProgress(const CBlockIndex* pindex) const EXCLUSIVE_LOCKS_REQUIRED(GetMutex());
+
+    /** Guess background verification progress in case assume-utxo was used (as a fraction between 0.0=genesis and 1.0=snapshot blocks). */
+    double GetBackgroundVerificationProgress(const CBlockIndex& pindex) const EXCLUSIVE_LOCKS_REQUIRED(GetMutex());
 
     /**
      * Import blocks from an external file

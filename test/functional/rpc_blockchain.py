@@ -170,6 +170,9 @@ class BlockchainTest(BitcoinTestFramework):
         assert res['pruned']
         assert not res['automatic_pruning']
 
+        # check background validation is not present when we are not using assumeutxo
+        assert "backgroundvalidation" not in res.keys()
+
         self.restart_node(0, ['-stopatheight=207'])
         res = self.nodes[0].getblockchaininfo()
         # should have exact keys
