@@ -36,6 +36,7 @@ bool SeenLocal(const CService& addr);
 bool IsLocal(const CService& addr);
 std::optional<CService> GetLocalAddress(const CAddress& addr, const Network& connected_through);
 int GetnScore(const CService& addr);
+std::map<CNetAddr, LocalServiceInfo> getNetLocalAddresses();
 
 
 #endif // BITCOIN_LOCAL_ADDRESSES_H
