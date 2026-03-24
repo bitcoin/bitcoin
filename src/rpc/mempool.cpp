@@ -1055,7 +1055,6 @@ UniValue MempoolInfoToJSON(const CTxMemPool& pool)
     ret.pushKV("minrelaytxfee", ValueFromAmount(pool.m_opts.min_relay_feerate.GetFeePerK()));
     ret.pushKV("incrementalrelayfee", ValueFromAmount(pool.m_opts.incremental_relay_feerate.GetFeePerK()));
     ret.pushKV("unbroadcastcount", pool.GetUnbroadcastTxs().size());
-    ret.pushKV("fullrbf", true);
     ret.pushKV("permitbaremultisig", pool.m_opts.permit_bare_multisig);
     ret.pushKV("maxdatacarriersize", pool.m_opts.max_datacarrier_bytes.value_or(0));
     ret.pushKV("limitclustercount", pool.m_opts.limits.cluster_count);
@@ -1082,7 +1081,6 @@ static RPCHelpMan getmempoolinfo()
                 {RPCResult::Type::STR_AMOUNT, "minrelaytxfee", "Current minimum relay fee for transactions"},
                 {RPCResult::Type::NUM, "incrementalrelayfee", "minimum fee rate increment for mempool limiting or replacement in " + CURRENCY_UNIT + "/kvB"},
                 {RPCResult::Type::NUM, "unbroadcastcount", "Current number of transactions that haven't passed initial broadcast yet"},
-                {RPCResult::Type::BOOL, "fullrbf", "True if the mempool accepts RBF without replaceability signaling inspection (DEPRECATED)"},
                 {RPCResult::Type::BOOL, "permitbaremultisig", "True if the mempool accepts transactions with bare multisig outputs"},
                 {RPCResult::Type::NUM, "maxdatacarriersize", "Maximum number of bytes that can be used by OP_RETURN outputs in the mempool"},
                 {RPCResult::Type::NUM, "limitclustercount", "Maximum number of transactions that can be in a cluster (configured by -limitclustercount)"},
