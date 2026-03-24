@@ -228,8 +228,8 @@ namespace GUIUtil
     /** Convert enum ConnectionType to QString */
     QString ConnectionTypeToQString(ConnectionType conn_type, bool prepend_direction);
 
-    /** Convert seconds into a QString with days, hours, mins, secs */
-    QString formatDurationStr(std::chrono::seconds dur);
+    /// Convert a duration into a QString with days, hours, mins, secs. This ignores sub-seconds.
+    QString formatDurationStr(std::chrono::nanoseconds dur);
 
     /** Convert peer connection time to a QString denominated in the most relevant unit. */
     QString FormatPeerAge(std::chrono::seconds time_connected);

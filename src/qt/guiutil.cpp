@@ -728,7 +728,7 @@ QString ConnectionTypeToQString(ConnectionType conn_type, bool prepend_direction
     assert(false);
 }
 
-QString formatDurationStr(std::chrono::seconds dur)
+QString formatDurationStr(std::chrono::nanoseconds dur)
 {
     const auto d{std::chrono::duration_cast<std::chrono::days>(dur)};
     const auto h{std::chrono::duration_cast<std::chrono::hours>(dur - d)};
