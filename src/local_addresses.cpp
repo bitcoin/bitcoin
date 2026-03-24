@@ -101,3 +101,10 @@ bool IsLocal(const CService& addr)
     LOCK(g_maplocalhost_mutex);
     return mapLocalHost.contains(addr);
 }
+
+int GetnScore(const CService& addr)
+{
+    LOCK(g_maplocalhost_mutex);
+    const auto it = mapLocalHost.find(addr);
+    return (it != mapLocalHost.end()) ? it->second.nScore : 0;
+}

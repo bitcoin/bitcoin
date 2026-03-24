@@ -184,13 +184,6 @@ static std::vector<CAddress> ConvertSeeds(const std::vector<uint8_t> &vSeedsIn)
     return vSeedsOut;
 }
 
-static int GetnScore(const CService& addr)
-{
-    LOCK(g_maplocalhost_mutex);
-    const auto it = mapLocalHost.find(addr);
-    return (it != mapLocalHost.end()) ? it->second.nScore : 0;
-}
-
 // Is our peer's addrLocal potentially useful as an external IP source?
 [[nodiscard]] static bool IsPeerAddrLocalGood(CNode *pnode)
 {
