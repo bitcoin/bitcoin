@@ -595,7 +595,7 @@ BOOST_AUTO_TEST_CASE(get_local_addr_for_peer_port)
 {
     // Test that GetLocalAddrForPeer() properly selects the address to self-advertise:
     //
-    // 1. GetLocalAddrForPeer() calls GetLocalAddress() which returns an address that is
+    // 1. GetLocalAddrForPeer() gets an address from LocalAddressManager that is
     //    not routable.
     // 2. GetLocalAddrForPeer() overrides the address with whatever the peer has told us
     //    he sees us as.
@@ -741,12 +741,13 @@ BOOST_AUTO_TEST_CASE(LocalAddress_BasicLifecycle)
 
     g_reachable_nets.Add(NET_IPV4);
 
-    BOOST_CHECK(!IsLocal(addr));
-    BOOST_CHECK(AddLocal(addr, 1000));
-    BOOST_CHECK(IsLocal(addr));
+    LocalAddressManager localaddressman;
+    BOOST_CHECK(!localaddressman.Contains(addr));
+    BOOST_CHECK(localaddressman.Add(addr, 1000));
+    BOOST_CHECK(localaddressman.Contains(addr));
 
-    RemoveLocal(addr);
-    BOOST_CHECK(!IsLocal(addr));
+    localaddressman.Remove(addr);
+    BOOST_CHECK(!localaddressman.Contains(addr));
 }
 
 BOOST_AUTO_TEST_CASE(initial_advertise_from_version_message)
@@ -886,55 +887,54 @@ BOOST_AUTO_TEST_CASE(advertise_local_address)
     BOOST_REQUIRE(addr_cjdns.IsValid());
     BOOST_REQUIRE(addr_cjdns.IsCJDNS());
 
+    {
     // one local clearnet address - advertise to all but privacy peers
-    AddLocal(addr_ipv4);
-    BOOST_CHECK(GetLocalAddress(addr_ipv4, addr_ipv4.GetNetClass()) == addr_ipv4);
-    BOOST_CHECK(GetLocalAddress(addr_ipv6, addr_ipv6.GetNetClass()) == addr_ipv4);
-    BOOST_CHECK(GetLocalAddress(addr_ipv6_tunnel, addr_ipv6_tunnel.GetNetClass()) == addr_ipv4);
-    BOOST_CHECK(GetLocalAddress(addr_teredo, addr_teredo.GetNetClass()) == addr_ipv4);
-    BOOST_CHECK(GetLocalAddress(addr_cjdns, addr_cjdns.GetNetClass()) == addr_ipv4);
-    BOOST_CHECK(!GetLocalAddress(addr_onion, addr_onion.GetNetClass()));
-    BOOST_CHECK(!GetLocalAddress(addr_ipv4, NET_ONION));
-    BOOST_CHECK(!GetLocalAddress(addr_i2p, addr_i2p.GetNetClass()));
-    RemoveLocal(addr_ipv4);
+    LocalAddressManager localaddressman;
+    localaddressman.Add(addr_ipv4);
+    BOOST_CHECK(localaddressman.Get(addr_ipv4, addr_ipv4.GetNetClass()) == addr_ipv4);
+    BOOST_CHECK(localaddressman.Get(addr_ipv6, addr_ipv6.GetNetClass()) == addr_ipv4);
+    BOOST_CHECK(localaddressman.Get(addr_ipv6_tunnel, addr_ipv6_tunnel.GetNetClass()) == addr_ipv4);
+    BOOST_CHECK(localaddressman.Get(addr_teredo, addr_teredo.GetNetClass()) == addr_ipv4);
+    BOOST_CHECK(localaddressman.Get(addr_cjdns, addr_cjdns.GetNetClass()) == addr_ipv4);
+    BOOST_CHECK(!localaddressman.Get(addr_onion, addr_onion.GetNetClass()));
+    BOOST_CHECK(!localaddressman.Get(addr_ipv4, NET_ONION));
+    BOOST_CHECK(!localaddressman.Get(addr_i2p, addr_i2p.GetNetClass()));
+    }
 
+    {
     // local privacy addresses - don't advertise to clearnet peers
-    AddLocal(addr_onion);
-    AddLocal(addr_i2p);
-    BOOST_CHECK(!GetLocalAddress(addr_ipv4, addr_ipv4.GetNetClass()));
-    BOOST_CHECK(!GetLocalAddress(addr_ipv6, addr_ipv6.GetNetClass()));
-    BOOST_CHECK(!GetLocalAddress(addr_ipv6_tunnel, addr_ipv6_tunnel.GetNetClass()));
-    BOOST_CHECK(!GetLocalAddress(addr_teredo, addr_teredo.GetNetClass()));
-    BOOST_CHECK(!GetLocalAddress(addr_cjdns, addr_cjdns.GetNetClass()));
-    BOOST_CHECK(GetLocalAddress(addr_onion, addr_onion.GetNetClass()) == addr_onion);
-    BOOST_CHECK(GetLocalAddress(addr_ipv4, NET_ONION) == addr_onion);
-    BOOST_CHECK(GetLocalAddress(addr_i2p, addr_i2p.GetNetClass()) == addr_i2p);
-    RemoveLocal(addr_onion);
-    RemoveLocal(addr_i2p);
+    LocalAddressManager localaddressman;
+    localaddressman.Add(addr_onion);
+    localaddressman.Add(addr_i2p);
+    BOOST_CHECK(!localaddressman.Get(addr_ipv4, addr_ipv4.GetNetClass()));
+    BOOST_CHECK(!localaddressman.Get(addr_ipv6, addr_ipv6.GetNetClass()));
+    BOOST_CHECK(!localaddressman.Get(addr_ipv6_tunnel, addr_ipv6_tunnel.GetNetClass()));
+    BOOST_CHECK(!localaddressman.Get(addr_teredo, addr_teredo.GetNetClass()));
+    BOOST_CHECK(!localaddressman.Get(addr_cjdns, addr_cjdns.GetNetClass()));
+    BOOST_CHECK(localaddressman.Get(addr_onion, addr_onion.GetNetClass()) == addr_onion);
+    BOOST_CHECK(localaddressman.Get(addr_ipv4, NET_ONION) == addr_onion);
+    BOOST_CHECK(localaddressman.Get(addr_i2p, addr_i2p.GetNetClass()) == addr_i2p);
+    }
 
+    {
     // local addresses from all networks
-    AddLocal(addr_ipv4);
-    AddLocal(addr_ipv6);
-    AddLocal(addr_ipv6_tunnel);
-    AddLocal(addr_teredo);
-    AddLocal(addr_onion);
-    AddLocal(addr_i2p);
-    AddLocal(addr_cjdns);
-    BOOST_CHECK(GetLocalAddress(addr_ipv4, addr_ipv4.GetNetClass()) == addr_ipv4);
-    BOOST_CHECK(GetLocalAddress(addr_ipv6, addr_ipv6.GetNetClass()) == addr_ipv6);
-    BOOST_CHECK(GetLocalAddress(addr_ipv6_tunnel, addr_ipv6_tunnel.GetNetClass()) == addr_ipv6);
-    BOOST_CHECK(GetLocalAddress(addr_teredo, addr_teredo.GetNetClass()) == addr_ipv4);
-    BOOST_CHECK(GetLocalAddress(addr_onion, addr_onion.GetNetClass()) == addr_onion);
-    BOOST_CHECK(GetLocalAddress(addr_ipv4, NET_ONION) == addr_onion);
-    BOOST_CHECK(GetLocalAddress(addr_i2p, addr_i2p.GetNetClass()) == addr_i2p);
-    BOOST_CHECK(GetLocalAddress(addr_cjdns, addr_cjdns.GetNetClass()) == addr_cjdns);
-    RemoveLocal(addr_ipv4);
-    RemoveLocal(addr_ipv6);
-    RemoveLocal(addr_ipv6_tunnel);
-    RemoveLocal(addr_teredo);
-    RemoveLocal(addr_onion);
-    RemoveLocal(addr_i2p);
-    RemoveLocal(addr_cjdns);
+    LocalAddressManager localaddressman;
+    localaddressman.Add(addr_ipv4);
+    localaddressman.Add(addr_ipv6);
+    localaddressman.Add(addr_ipv6_tunnel);
+    localaddressman.Add(addr_teredo);
+    localaddressman.Add(addr_onion);
+    localaddressman.Add(addr_i2p);
+    localaddressman.Add(addr_cjdns);
+    BOOST_CHECK(localaddressman.Get(addr_ipv4, addr_ipv4.GetNetClass()) == addr_ipv4);
+    BOOST_CHECK(localaddressman.Get(addr_ipv6, addr_ipv6.GetNetClass()) == addr_ipv6);
+    BOOST_CHECK(localaddressman.Get(addr_ipv6_tunnel, addr_ipv6_tunnel.GetNetClass()) == addr_ipv6);
+    BOOST_CHECK(localaddressman.Get(addr_teredo, addr_teredo.GetNetClass()) == addr_ipv4);
+    BOOST_CHECK(localaddressman.Get(addr_onion, addr_onion.GetNetClass()) == addr_onion);
+    BOOST_CHECK(localaddressman.Get(addr_ipv4, NET_ONION) == addr_onion);
+    BOOST_CHECK(localaddressman.Get(addr_i2p, addr_i2p.GetNetClass()) == addr_i2p);
+    BOOST_CHECK(localaddressman.Get(addr_cjdns, addr_cjdns.GetNetClass()) == addr_cjdns);
+    }
 }
 
 namespace {
