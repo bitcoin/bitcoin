@@ -494,7 +494,7 @@ CNode* CConnman::ConnectNode(CAddress addrConnect,
             if (const auto name_proxy = GetNameProxy()) {
                 std::string host;
                 uint16_t port{default_port};
-                SplitHostPort(std::string(pszDest), port, host);
+                SplitHostPort(pszDest, port, host);
                 bool proxyConnectionFailed;
                 sock = ConnectThroughProxy(*name_proxy, host, port, proxyConnectionFailed);
             }
