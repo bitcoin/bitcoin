@@ -7,6 +7,7 @@
 #include <logging/timer.h>
 #include <tinyformat.h>
 #include <util/log.h>
+#include <util/stdmutex.h>
 #include <util/strencodings.h>
 #include <util/threadnames.h>
 
@@ -87,10 +88,10 @@ using LockOrders = std::map<LockPair, LockStack>;
 using InvLockOrders = std::set<LockPair>;
 
 struct LockData {
-    LockStacks m_lock_stacks;
-    LockOrders lockorders;
-    InvLockOrders invlockorders;
-    std::mutex dd_mutex;
+    LockStacks m_lock_stacks GUARDED_BY(dd_mutex);
+    LockOrders lockorders GUARDED_BY(dd_mutex);
+    InvLockOrders invlockorders GUARDED_BY(dd_mutex);
+    StdMutex dd_mutex;
 };
 
 LockData& GetLockData() {
@@ -166,7 +167,7 @@ static void push_lock(MutexType* c, const CLockLocation& locklocation)
         std::is_base_of_v<std::recursive_mutex, MutexType>;
 
     LockData& lockdata = GetLockData();
-    std::lock_guard<std::mutex> lock(lockdata.dd_mutex);
+    STDLOCK(lockdata.dd_mutex);
 
     LockStack& lock_stack = lockdata.m_lock_stacks[std::this_thread::get_id()];
     lock_stack.emplace_back(c, locklocation);
@@ -206,7 +207,7 @@ static void push_lock(MutexType* c, const CLockLocation& locklocation)
 static void pop_lock()
 {
     LockData& lockdata = GetLockData();
-    std::lock_guard<std::mutex> lock(lockdata.dd_mutex);
+    STDLOCK(lockdata.dd_mutex);
 
     LockStack& lock_stack = lockdata.m_lock_stacks[std::this_thread::get_id()];
     lock_stack.pop_back();
@@ -226,7 +227,7 @@ template void EnterCritical(const char*, const char*, int, std::recursive_mutex*
 void CheckLastCritical(void* cs, std::string& lockname, const char* guardname, const char* file, int line)
 {
     LockData& lockdata = GetLockData();
-    std::lock_guard<std::mutex> lock(lockdata.dd_mutex);
+    STDLOCK(lockdata.dd_mutex);
 
     const LockStack& lock_stack = lockdata.m_lock_stacks[std::this_thread::get_id()];
     if (!lock_stack.empty()) {
@@ -257,7 +258,7 @@ void LeaveCritical()
 static std::string LocksHeld()
 {
     LockData& lockdata = GetLockData();
-    std::lock_guard<std::mutex> lock(lockdata.dd_mutex);
+    STDLOCK(lockdata.dd_mutex);
 
     const LockStack& lock_stack = lockdata.m_lock_stacks[std::this_thread::get_id()];
     std::string result;
@@ -269,7 +270,7 @@ static std::string LocksHeld()
 static bool LockHeld(void* mutex)
 {
     LockData& lockdata = GetLockData();
-    std::lock_guard<std::mutex> lock(lockdata.dd_mutex);
+    STDLOCK(lockdata.dd_mutex);
 
     const LockStack& lock_stack = lockdata.m_lock_stacks[std::this_thread::get_id()];
     for (const LockStackItem& i : lock_stack) {
@@ -302,7 +303,7 @@ template void AssertLockNotHeldInternal(const char*, const char*, int, Recursive
 void DeleteLock(void* cs)
 {
     LockData& lockdata = GetLockData();
-    std::lock_guard<std::mutex> lock(lockdata.dd_mutex);
+    STDLOCK(lockdata.dd_mutex);
     const LockPair item = std::make_pair(cs, nullptr);
     LockOrders::iterator it = lockdata.lockorders.lower_bound(item);
     while (it != lockdata.lockorders.end() && it->first.first == cs) {
@@ -321,7 +322,7 @@ void DeleteLock(void* cs)
 bool LockStackEmpty()
 {
     LockData& lockdata = GetLockData();
-    std::lock_guard<std::mutex> lock(lockdata.dd_mutex);
+    STDLOCK(lockdata.dd_mutex);
     const auto it = lockdata.m_lock_stacks.find(std::this_thread::get_id());
     if (it == lockdata.m_lock_stacks.end()) {
         return true;
