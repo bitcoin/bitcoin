@@ -7,7 +7,6 @@ import asyncio
 import time
 from contextlib import AsyncExitStack
 from io import BytesIO
-import platform
 from test_framework.blocktools import NULL_OUTPOINT
 from test_framework.messages import (
     MAX_BLOCK_WEIGHT,
@@ -37,11 +36,12 @@ from test_framework.ipc_util import (
     destroying,
     mining_create_block_template,
     load_capnp_modules,
-    make_capnp_init_ctx,
     mining_get_block,
     mining_get_coinbase_tx,
     mining_wait_next_template,
     wait_and_do,
+    make_mining_ctx,
+    assert_capnp_failed
 )
 
 # Test may be skipped and not have capnp installed
@@ -106,21 +106,14 @@ class IPCMiningTest(BitcoinTestFramework):
         coinbase_tx.nLockTime = coinbase_res.lockTime
         return coinbase_tx
 
-    async def make_mining_ctx(self):
-        """Create IPC context and Mining proxy object."""
-        ctx, init = await make_capnp_init_ctx(self)
-        self.log.debug("Create Mining proxy object")
-        mining = init.makeMining(ctx).result
-        return ctx, mining
-
     def run_mining_interface_test(self):
         """Test Mining interface methods."""
         self.log.info("Running Mining interface test")
         block_hash_size = 32
-        timeout = 1000.0 # 1000 milliseconds
+        timeout = 1000.0 * self.options.timeout_factor # 1000 milliseconds
 
         async def async_routine():
-            ctx, mining = await self.make_mining_ctx()
+            ctx, mining = await make_mining_ctx(self)
             blockref = await mining.getTip(ctx)
             current_block_height = self.nodes[0].getchaintips()[0]["height"]
             assert_equal(blockref.result.height, current_block_height)
@@ -139,7 +132,7 @@ class IPCMiningTest(BitcoinTestFramework):
 
             self.log.debug("interrupt() should abort waitTipChanged()")
             async def wait_for_tip():
-                long_timeout = 60000.0  # 1 minute
+                long_timeout = max(timeout, 60000.0)  # at least 1 minute
                 result = (await mining.waitTipChanged(ctx, newblockref.hash, long_timeout)).result
                 # Unlike a timeout, interrupt() returns an empty BlockRef.
                 assert_equal(len(result.hash), 0)
@@ -159,7 +152,7 @@ class IPCMiningTest(BitcoinTestFramework):
         async def async_routine():
             while True:
                 try:
-                    ctx, mining = await self.make_mining_ctx()
+                    ctx, mining = await make_mining_ctx(self)
                     break
                 except (ConnectionRefusedError, FileNotFoundError):
                     # Poll quickly to connect as soon as socket becomes
@@ -179,10 +172,10 @@ class IPCMiningTest(BitcoinTestFramework):
         """Test BlockTemplate interface methods."""
         self.log.info("Running BlockTemplate interface test")
         block_header_size = 80
-        timeout = 1000.0 # 1000 milliseconds
+        timeout = 1000.0 * self.options.timeout_factor
 
         async def async_routine():
-            ctx, mining = await self.make_mining_ctx()
+            ctx, mining = await make_mining_ctx(self)
 
             async with AsyncExitStack() as stack:
                 self.log.debug("createNewBlock() should wait if tip is still updating")
@@ -198,6 +191,25 @@ class IPCMiningTest(BitcoinTestFramework):
                 # even without the cooldown, so this can miss regressions but avoids
                 # spurious failures.
                 assert_greater_than_or_equal(time.time() - start, 0.9)
+
+                self.log.debug("createNewBlock() should wake up promptly after tip advances")
+                success = False
+                duration = 0.0
+                async def wait_fn():
+                    nonlocal success, duration
+                    start = time.time()
+                    res = await mining.createNewBlock(ctx, self.default_block_create_options)
+                    duration = time.time() - start
+                    success = res._has("result")
+                def do_fn():
+                    block_hex = self.nodes[1].getblock(node1_block_hash, False)
+                    self.nodes[0].submitblock(block_hex)
+                await wait_and_do(wait_fn(), do_fn)
+                assert_equal(success, True)
+                if self.options.timeout_factor <= 1:
+                    assert duration < 3.0, f"createNewBlock took {duration:.2f}s, did not wake up promptly after tip advances"
+                else:
+                    self.log.debug("Skipping strict wake-up duration check because timeout_factor > 1")
 
                 self.log.debug("interrupt() should abort createNewBlock() during cooldown")
                 async def create_block():
@@ -273,7 +285,7 @@ class IPCMiningTest(BitcoinTestFramework):
                 self.log.debug("interruptWait should abort the current wait")
                 async def wait_for_block():
                     new_waitoptions = self.capnp_modules['mining'].BlockWaitOptions()
-                    new_waitoptions.timeout = timeout * 60 # 1 minute wait
+                    new_waitoptions.timeout = max(timeout, 60000.0) # at least 1 minute
                     new_waitoptions.feeThreshold = 1
                     template7 = await mining_wait_next_template(template6, stack, ctx, new_waitoptions)
                     assert template7 is None
@@ -290,7 +302,7 @@ class IPCMiningTest(BitcoinTestFramework):
         self.restart_node(0, extra_args=[f"-blockreservedweight={MAX_BLOCK_WEIGHT}"])
 
         async def async_routine():
-            ctx, mining = await self.make_mining_ctx()
+            ctx, mining = await make_mining_ctx(self)
             self.miniwallet.send_self_transfer(fee_rate=10, from_node=self.nodes[0])
 
             async with AsyncExitStack() as stack:
@@ -313,15 +325,7 @@ class IPCMiningTest(BitcoinTestFramework):
                 await mining.createNewBlock(ctx, opts)
                 raise AssertionError("createNewBlock unexpectedly succeeded")
             except capnp.lib.capnp.KjException as e:
-                if e.description == "remote exception: unknown non-KJ exception of type: kj::Exception":
-                    # macOS + REDUCE_EXPORTS bug: Cap'n Proto fails to recognize
-                    # its own exception type and returns a generic error instead.
-                    # https://github.com/bitcoin/bitcoin/pull/34422#discussion_r2863852691
-                    # Assert this only occurs on Darwin until fixed.
-                    assert_equal(platform.system(), "Darwin")
-                else:
-                    assert_equal(e.description, "remote exception: std::exception: block_reserved_weight (0) must be at least 2000 weight units")
-                assert_equal(e.type, "FAILED")
+                assert_capnp_failed(e, "remote exception: std::exception: block_reserved_weight (0) must be at least 2000 weight units")
 
         asyncio.run(capnp.run(async_routine()))
 
@@ -330,7 +334,7 @@ class IPCMiningTest(BitcoinTestFramework):
         self.log.info("Running coinbase construction and submission test")
 
         async def async_routine():
-            ctx, mining = await self.make_mining_ctx()
+            ctx, mining = await make_mining_ctx(self)
 
             current_block_height = self.nodes[0].getchaintips()[0]["height"]
             check_opts = self.capnp_modules['mining'].BlockCheckOptions()
@@ -344,6 +348,13 @@ class IPCMiningTest(BitcoinTestFramework):
                 block.vtx[0] = coinbase
                 block.hashMerkleRoot = block.calc_merkle_root()
                 original_version = block.nVersion
+
+                self.log.debug("Submit solution that can't be deserialized")
+                try:
+                    await template.submitSolution(ctx, 0, 0, 0, b"")
+                    raise AssertionError("submitSolution unexpectedly succeeded")
+                except capnp.lib.capnp.KjException as e:
+                    assert_capnp_failed(e, "remote exception: std::exception: SpanReader::read(): end of data:")
 
                 self.log.debug("Submit a block with a bad version")
                 block.nVersion = 0
