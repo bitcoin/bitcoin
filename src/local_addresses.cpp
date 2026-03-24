@@ -10,9 +10,9 @@
 
 static GlobalMutex g_maplocalhost_mutex;
 static std::map<CNetAddr, LocalServiceInfo> mapLocalHost GUARDED_BY(g_maplocalhost_mutex);
+std::unique_ptr<LocalAddressManager> g_localaddressman{std::make_unique<LocalAddressManager>()};
 
-// Determine the "best" local address for a particular peer.
-[[nodiscard]] std::optional<CService> GetLocalAddress(const CAddress& addr, const Network& connected_through)
+[[nodiscard]] std::optional<CService> LocalAddressManager::Get(const CAddress& addr, const Network& connected_through) const
 {
     if (!fListen) return std::nullopt;
 
@@ -41,14 +41,13 @@ static std::map<CNetAddr, LocalServiceInfo> mapLocalHost GUARDED_BY(g_maplocalho
     return ret;
 }
 
-void ClearLocal()
+void LocalAddressManager::Clear()
 {
     LOCK(g_maplocalhost_mutex);
     return mapLocalHost.clear();
 }
 
-// learn a new local address
-bool AddLocal(const CService& addr_, int nScore)
+bool LocalAddressManager::Add(const CService& addr_, int nScore)
 {
     CService addr{MaybeFlipIPv6toCJDNS(addr_)};
 
@@ -78,7 +77,7 @@ bool AddLocal(const CService& addr_, int nScore)
     return true;
 }
 
-void RemoveLocal(const CService& addr)
+void LocalAddressManager::Remove(const CService& addr)
 {
     LOCK(g_maplocalhost_mutex);
     if (fLogIPs) {
@@ -88,8 +87,7 @@ void RemoveLocal(const CService& addr)
     mapLocalHost.erase(addr);
 }
 
-/** vote for a local address */
-bool SeenLocal(const CService& addr)
+bool LocalAddressManager::Seen(const CService& addr)
 {
     LOCK(g_maplocalhost_mutex);
     const auto it = mapLocalHost.find(addr);
@@ -98,21 +96,20 @@ bool SeenLocal(const CService& addr)
     return true;
 }
 
-/** check whether a given address is potentially local */
-bool IsLocal(const CService& addr)
+bool LocalAddressManager::Contains(const CService& addr) const
 {
     LOCK(g_maplocalhost_mutex);
     return mapLocalHost.contains(addr);
 }
 
-int GetnScore(const CService& addr)
+int LocalAddressManager::GetnScore(const CService& addr) const
 {
     LOCK(g_maplocalhost_mutex);
     const auto it = mapLocalHost.find(addr);
     return (it != mapLocalHost.end()) ? it->second.nScore : 0;
 }
 
-std::map<CNetAddr, LocalServiceInfo> getNetLocalAddresses()
+LocalAddressManager::map_type LocalAddressManager::GetAll() const
 {
     LOCK(g_maplocalhost_mutex);
     return mapLocalHost;
