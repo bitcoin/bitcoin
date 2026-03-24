@@ -13,6 +13,7 @@
 #include <wallet/context.h>
 #include <wallet/receive.h>
 #include <wallet/test/util.h>
+#include <wallet/migration.h>
 #include <wallet/wallet.h>
 
 #include <optional>
