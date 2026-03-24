@@ -162,7 +162,7 @@ uint16_t GetListenPort()
 }
 
 // Determine the "best" local address for a particular peer.
-[[nodiscard]] static std::optional<CService> GetLocal(const CNode& peer)
+[[nodiscard]] static std::optional<CService> GetLocal(const CAddress& addr, const Network& connected_through)
 {
     if (!fListen) return std::nullopt;
 
@@ -175,12 +175,12 @@ uint16_t GetListenPort()
             // For privacy reasons, don't advertise our privacy-network address
             // to other networks and don't advertise our other-network address
             // to privacy networks.
-            if (local_addr.GetNetwork() != peer.ConnectedThroughNetwork()
-                && (local_addr.IsPrivacyNet() || peer.IsConnectedThroughPrivacyNet())) {
+            if (Network local_addr_net = local_addr.GetNetwork();
+                local_addr_net != connected_through && (IsPrivacyNetwork(local_addr_net) || IsPrivacyNetwork(connected_through))) {
                 continue;
             }
             const int nScore{local_service_info.nScore};
-            const int nReachability{local_addr.GetReachabilityFrom(peer.addr)};
+            const int nReachability{local_addr.GetReachabilityFrom(addr)};
             if (nReachability > nBestReachability || (nReachability == nBestReachability && nScore > nBestScore)) {
                 ret.emplace(CService{local_addr, local_service_info.nPort});
                 nBestReachability = nReachability;
@@ -219,7 +219,7 @@ static std::vector<CAddress> ConvertSeeds(const std::vector<uint8_t> &vSeedsIn)
 // one by discovery.
 CService GetLocalAddress(const CNode& peer)
 {
-    return GetLocal(peer).value_or(CService{CNetAddr(), GetListenPort()});
+    return GetLocal(peer.addr, peer.ConnectedThroughNetwork()).value_or(CService{CNetAddr(), GetListenPort()});
 }
 
 static int GetnScore(const CService& addr)
