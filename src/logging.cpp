@@ -5,9 +5,11 @@
 
 #include <logging.h>
 #include <memusage.h>
+#include <cstdio>
 #include <util/check.h>
 #include <util/fs.h>
 #include <util/string.h>
+#include <util/syserror.h>
 #include <util/threadnames.h>
 #include <util/time.h>
 
@@ -16,12 +18,28 @@
 #include <map>
 #include <optional>
 #include <utility>
+#include <cerrno>
 
 using util::Join;
 using util::RemovePrefixView;
 
 const char * const DEFAULT_DEBUGLOGFILE = "debug.log";
 constexpr auto MAX_USER_SETABLE_SEVERITY_LEVEL{BCLog::Level::Info};
+
+// Report a log I/O failure without re-entering the logger.
+// Used when opening/closing the active log file. We intentionally write to
+// stderr (and not Log*), because this may be called while the logger mutex
+// is held or while the log file is failing. Do not call Log* from here.
+namespace {
+    void ReportLogIOError(const char* what, const fs::path& p) noexcept {
+        const int e = errno;
+        const std::string path = fs::PathToString(p);
+        const std::string err  = SysErrorString(e);
+        const std::string msg  = strprintf("log: %s(\"%s\") failed: %s (%d)\n",what, path, err, e);
+        fwrite(msg.data(), 1, msg.size(), stderr);
+        fflush(stderr);
+    }
+} // namespace
 
 BCLog::Logger& LogInstance()
 {
@@ -97,15 +115,20 @@ bool BCLog::Logger::StartLogging()
 
 void BCLog::Logger::DisconnectTestLogger()
 {
-    StdLockGuard scoped_lock(m_cs);
-    m_buffering = true;
-    if (m_fileout != nullptr) fclose(m_fileout);
-    m_fileout = nullptr;
-    m_print_callbacks.clear();
-    m_max_buffer_memusage = DEFAULT_MAX_LOG_BUFFER;
-    m_cur_buffer_memusage = 0;
-    m_buffer_lines_discarded = 0;
-    m_msgs_before_open.clear();
+    FILE* f = nullptr;
+    {
+        StdLockGuard scoped_lock(m_cs);
+        m_buffering = true;
+        f = std::exchange(m_fileout, nullptr);
+        m_print_callbacks.clear();
+        m_max_buffer_memusage = DEFAULT_MAX_LOG_BUFFER;
+        m_cur_buffer_memusage = 0;
+        m_buffer_lines_discarded = 0;
+        m_msgs_before_open.clear();
+    }
+    if (f && fclose(f) != 0) {
+        ReportLogIOError("fclose", m_file_path);
+    }
 }
 
 void BCLog::Logger::DisableLogging()
@@ -503,8 +526,11 @@ void BCLog::Logger::LogPrintStr_(std::string_view str, SourceLocation&& source_l
             FILE* new_fileout = fsbridge::fopen(m_file_path, "a");
             if (new_fileout) {
                 setbuf(new_fileout, nullptr); // unbuffered
-                fclose(m_fileout);
+                FILE* oldf = m_fileout;
                 m_fileout = new_fileout;
+                if (oldf && fclose(oldf) != 0) {
+                    ReportLogIOError("fclose", m_file_path);
+                }
             }
         }
         FileWriteStr(str_prefixed, m_fileout);
@@ -539,17 +565,24 @@ void BCLog::Logger::ShrinkDebugFile()
             return;
         }
         int nBytes = fread(vch.data(), 1, vch.size(), file);
-        fclose(file);
+        if (fclose(file) != 0){
+            ReportLogIOError("fclose", m_file_path);
+        }
 
         file = fsbridge::fopen(m_file_path, "w");
         if (file)
         {
             fwrite(vch.data(), 1, nBytes, file);
-            fclose(file);
+            if (fclose(file) != 0){
+                ReportLogIOError("fclose", m_file_path);
+            }
         }
     }
-    else if (file != nullptr)
-        fclose(file);
+    else if (file != nullptr){
+        if (fclose(file) != 0){
+            ReportLogIOError("fclose", m_file_path);
+        }
+    }
 }
 
 void BCLog::LogRateLimiter::Reset()
