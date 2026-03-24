@@ -21,16 +21,16 @@
 #include <vector>
 
 /**
- * Identical to TestingSetup but excludes lock contention logging if
+ * Identical to BasicTestingSetup but excludes lock contention logging if
  * `DEBUG_LOCKCONTENTION` is defined, as some of these tests are designed to be
  * heavily contested to trigger race conditions or other issues.
  */
-struct NoLockLoggingTestingSetup : public TestingSetup {
+struct NoLockLoggingTestingSetup : public BasicTestingSetup {
     NoLockLoggingTestingSetup()
 #ifdef DEBUG_LOCKCONTENTION
-        : TestingSetup{ChainType::MAIN, {.extra_args = { "-debugexclude=lock" } }} {}
+        : BasicTestingSetup{ChainType::MAIN, {.extra_args = { "-debugexclude=lock" } }} {}
 #else
-        : TestingSetup{ChainType::MAIN} {}
+        : BasicTestingSetup{ChainType::MAIN} {}
 #endif
 };
 
