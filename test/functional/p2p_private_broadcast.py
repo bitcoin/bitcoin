@@ -534,6 +534,10 @@ class P2PPrivateBroadcast(BitcoinTestFramework):
         assert_raises_rpc_error(-1, "none of the Tor or I2P networks is reachable",
                                 tx_originator.sendrawtransaction, hexstring=txs[0]["hex"], maxfeerate=0.1)
 
+        # Restart node 0 with original args so that cleanup does not fail due to
+        # the warning about missing dedicated onion bind on stderr.
+        self.restart_node(0, expected_stderr="Warning: The Tor onion service is being directed to a -bind address without a dedicated onion socket (-bind=<addr>=onion). Incoming Tor connections will not be identified as onion connections.")
+
 
 if __name__ == "__main__":
     P2PPrivateBroadcast(__file__).main()

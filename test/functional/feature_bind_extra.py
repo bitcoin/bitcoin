@@ -21,6 +21,7 @@ from test_framework.util import (
     assert_equal,
     p2p_port,
     rpc_port,
+    tor_port,
 )
 
 class BindExtraTest(BitcoinTestFramework):
@@ -93,6 +94,19 @@ class BindExtraTest(BitcoinTestFramework):
             binds = set(filter(lambda e: e[1] != rpc_port(i), binds))
             assert_equal(binds, set(expected_services))
 
+        self.stop_node(0)
+
+        warn_msg = ("Warning: The Tor onion service is being directed to a -bind address without a "
+                    "dedicated onion socket (-bind=<addr>=onion). Incoming Tor connections will not "
+                    "be identified as onion connections.")
+
+        self.log.info("Test -bind without dedicated onion bind warns when -listenonion=1")
+        bind_port = p2p_port(self.num_nodes)
+        self.start_node(0, extra_args=[f"-bind=127.0.0.1:{bind_port}", "-listenonion=1"])
+        self.stop_node(0, expected_stderr=warn_msg)
+
+        self.log.info("Test -bind with dedicated onion bind does not warn when -listenonion=1")
+        self.start_node(0, extra_args=[f"-bind=127.0.0.1:{bind_port}", f"-bind=127.0.0.1:{tor_port(0)}=onion", "-listenonion=1"])
         self.stop_node(0)
 
         addr = "127.0.0.1:11012"

@@ -2182,6 +2182,11 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
     }
 
     if (listenonion) {
+        if (connOptions.onion_binds.empty() && !connOptions.vBinds.empty()) {
+            InitWarning(_("The Tor onion service is being directed to a -bind address without a "
+                          "dedicated onion socket (-bind=<addr>=onion). Incoming Tor connections "
+                          "will not be identified as onion connections."));
+        }
         if (connOptions.onion_binds.size() > 1) {
             InitWarning(strprintf(_("More than one onion bind address is provided. Using %s "
                                     "for the automatically created Tor onion service."),
