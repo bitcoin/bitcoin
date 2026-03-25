@@ -488,7 +488,19 @@ with open(os.path.join(applicationBundle.resourcesPath, "qt.conf"), "wb") as f:
 # ------------------------------------------------
 
 if platform.system() == "Darwin":
-    subprocess.check_call(f"codesign --deep --force --sign - {target}", shell=True)
+    # The earlier strip and install_name_tool calls invalidated existing framework
+    # and plugin code signatures.
+    print("+ Signing app bundle +")
+    sign_targets = [
+        path
+        for pattern in ("Frameworks/*", "PlugIns/*/*")
+        for path in Path(target, "Contents").glob(pattern)
+        if path.is_file() or path.name.endswith(".framework")
+    ]
+    # Sign the app bundle last
+    sign_targets.append(Path(target))
+    for sign_target in sign_targets:
+        subprocess.check_call(["codesign", "--force", "--sign", "-", sign_target.as_posix()])
 
 # ------------------------------------------------
 
