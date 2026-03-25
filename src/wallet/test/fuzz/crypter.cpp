@@ -11,11 +11,9 @@
 namespace wallet {
 namespace {
 
-const TestingSetup* g_setup;
 void initialize_crypter()
 {
     static const auto testing_setup = MakeNoLogFileContext<const TestingSetup>();
-    g_setup = testing_setup.get();
 }
 
 FUZZ_TARGET(crypter, .init = initialize_crypter)

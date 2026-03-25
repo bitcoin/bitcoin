@@ -38,18 +38,13 @@
 using kernel::CBlockFileInfo;
 using node::SnapshotMetadata;
 
-namespace {
-const BasicTestingSetup* g_setup;
-} // namespace
-
 void initialize_deserialize()
 {
     static const auto testing_setup = MakeNoLogFileContext<>();
-    g_setup = testing_setup.get();
 }
 
 #define FUZZ_TARGET_DESERIALIZE(name, code)                \
-    FUZZ_TARGET(name, .init = initialize_deserialize)         \
+    FUZZ_TARGET(name, .init = initialize_deserialize)      \
     {                                                      \
         try {                                              \
             code                                           \
