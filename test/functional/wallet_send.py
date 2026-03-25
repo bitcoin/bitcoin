@@ -31,10 +31,7 @@ class WalletSendTest(BitcoinTestFramework):
         # whitelist peers to speed up tx relay / mempool sync
         self.noban_tx_relay = True
         self.supports_cli = False
-        self.extra_args = [
-            ["-walletrbf=1", "-datacarriersize=16"],
-            ["-walletrbf=1", "-datacarriersize=16"]
-        ]
+        self.extra_args = [["-walletrbf=1", "-datacarriersize=16", "-deprecatedrpc=bip125"]] * self.num_nodes
         getcontext().prec = 8 # Satoshi precision for Decimal
 
     def skip_test_if_missing_module(self):
