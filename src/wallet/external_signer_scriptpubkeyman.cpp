@@ -88,7 +88,6 @@ std::optional<PSBTError> ExternalSignerScriptPubKeyMan::FillPSBT(PartiallySigned
     // Already complete if every input is now signed
     bool complete = true;
     for (const auto& input : psbt.inputs) {
-        // TODO: for multisig wallets, we should only care if all _our_ inputs are signed
         complete &= PSBTInputSigned(input);
     }
     if (complete) return {};
@@ -104,7 +103,7 @@ std::optional<PSBTError> ExternalSignerScriptPubKeyMan::FillPSBT(PartiallySigned
         LogWarning("Failed to sign: %s\n", failure_reason);
         return PSBTError::EXTERNAL_SIGNER_FAILED;
     }
-    if (finalize) FinalizePSBT(psbt); // This won't work in a multisig setup
+    if (finalize) FinalizePSBT(psbt);
     return {};
 }
 } // namespace wallet
