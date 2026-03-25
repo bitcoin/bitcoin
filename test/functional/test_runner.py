@@ -398,6 +398,8 @@ NON_SCRIPTS = [
     "combine_logs.py",
     "create_cache.py",
     "test_runner.py",
+    # Requires a bindable fc00::/8 address via Docker bridge (not available in CI containers).
+    "feature_cjdns_externalip.py",
 ]
 
 def main():

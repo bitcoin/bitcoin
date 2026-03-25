@@ -801,6 +801,36 @@ BOOST_AUTO_TEST_CASE(LocalAddress_BasicLifecycle)
     BOOST_CHECK(!IsLocal(addr));
 }
 
+BOOST_AUTO_TEST_CASE(addlocal_cjdns_without_discover)
+{
+    // Test that AddLocal() accepts CJDNS addresses even when fDiscover is false
+    // (which happens when -externalip is set).
+    g_reachable_nets.Add(NET_CJDNS);
+
+    CService cjdns_addr{MaybeFlipIPv6toCJDNS(Lookup("fc00:1122:3344:5566:7788:9900:aabb:ccdd", 8333, false).value())};
+    BOOST_REQUIRE(cjdns_addr.IsCJDNS());
+
+    CService ipv4_addr{UtilBuildAddress(0x003, 0x001, 0x001, 0x001), 8333}; // 3.1.1.1:8333
+    g_reachable_nets.Add(NET_IPV4);
+
+    // With fDiscover=true both are accepted (sanity check).
+    fDiscover = true;
+    BOOST_CHECK(AddLocal(cjdns_addr, LOCAL_IF));
+    BOOST_CHECK(AddLocal(ipv4_addr, LOCAL_IF));
+    RemoveLocal(cjdns_addr);
+    RemoveLocal(ipv4_addr);
+
+    // With fDiscover=false, CJDNS should still be accepted but IPv4 should not.
+    fDiscover = false;
+    BOOST_CHECK(AddLocal(cjdns_addr, LOCAL_IF));
+    BOOST_CHECK(!AddLocal(ipv4_addr, LOCAL_IF));
+    RemoveLocal(cjdns_addr);
+
+    // Cleanup
+    fDiscover = true;
+    g_reachable_nets.Reset();
+}
+
 BOOST_AUTO_TEST_CASE(initial_advertise_from_version_message)
 {
     LOCK(NetEventsInterface::g_msgproc_mutex);
