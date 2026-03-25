@@ -33,6 +33,7 @@
 #include <cassert>
 #include <compare>
 #include <cstdint>
+#include <functional>
 #include <memory>
 #include <optional>
 #include <stdexcept>

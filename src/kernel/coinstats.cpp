@@ -20,10 +20,10 @@
 #include <util/overflow.h>
 #include <validation.h>
 
+#include <cstddef>
 #include <map>
 #include <memory>
 #include <utility>
-#include <version>
 
 namespace kernel {
 
