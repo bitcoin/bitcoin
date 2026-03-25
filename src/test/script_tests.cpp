@@ -1455,6 +1455,14 @@ BOOST_AUTO_TEST_CASE(script_IsPushOnly_on_invalid_scripts)
     BOOST_CHECK(!CScript(direct, direct+sizeof(direct)).IsPushOnly());
 }
 
+BOOST_AUTO_TEST_CASE(script_CheckMinimalPush_boundary)
+{
+    // Test the boundary at exactly 65535 bytes: must use OP_PUSHDATA2, not OP_PUSHDATA4.
+    std::vector<unsigned char> data(65535, '\x42');
+    BOOST_CHECK(CheckMinimalPush(data, OP_PUSHDATA2));
+    BOOST_CHECK(!CheckMinimalPush(data, OP_PUSHDATA4));
+}
+
 BOOST_AUTO_TEST_CASE(script_GetScriptAsm)
 {
     BOOST_CHECK_EQUAL("OP_CHECKLOCKTIMEVERIFY", ScriptToAsmStr(CScript() << OP_NOP2, true));
