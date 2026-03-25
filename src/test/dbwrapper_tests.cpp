@@ -239,6 +239,56 @@ BOOST_AUTO_TEST_CASE(dbwrapper_read_throws_on_db_error)
     const auto db{make_db(path, /*force_compact=*/false)};
     uint256 result;
     BOOST_CHECK_EXCEPTION(db.Read(key, result), dbwrapper_error, HasReason("Fatal LevelDB error"));
+
+    // TryRead() must return DatabaseError (without throwing).
+    CDBWrapper::ReadStatus status = db.TryRead(key, result);
+    BOOST_REQUIRE(!status);
+    BOOST_CHECK(status.error().status == CDBWrapper::ReadFailure::Code::DatabaseError);
+    BOOST_CHECK(status.error().err_msg.find("Fatal LevelDB error") != std::string::npos);
+}
+
+// Exercise TryRead() return values directly: found, absent and DeserializationError.
+// DatabaseError is tested inside 'dbwrapper_read_throws_on_db_error' test
+BOOST_AUTO_TEST_CASE(dbwrapper_tryread)
+{
+    for (const bool obfuscate : {false, true}) {
+        const fs::path path{m_args.GetDataDirBase() / (obfuscate ? "dbwrapper_tryread_obf" : "dbwrapper_tryread_noobf")};
+        CDBWrapper dbw({.path = path, .cache_bytes = 1 << 20, .wipe_data = true, .obfuscate = obfuscate});
+
+        constexpr uint8_t key_ok{'A'};
+        constexpr uint8_t key_missing{'B'};
+        constexpr uint8_t key_bad{'C'};
+
+        uint256 written_value{m_rng.rand256()};
+        dbw.Write(key_ok, written_value);
+        dbw.Write(key_bad, uint8_t{0xFF});
+
+        // Found: key exists, value deserializes correctly
+        {
+            uint256 read_value;
+            CDBWrapper::ReadStatus status = dbw.TryRead(key_ok, read_value);
+            BOOST_REQUIRE(status);
+            BOOST_CHECK(status.value());
+            BOOST_CHECK_EQUAL(read_value, written_value);
+        }
+
+        // Absent: key does not exist
+        {
+            uint256 read_value;
+            CDBWrapper::ReadStatus status = dbw.TryRead(key_missing, read_value);
+            BOOST_REQUIRE(status);
+            BOOST_CHECK(!status.value());
+        }
+
+        // DeserializationError: key exists but stored value is too short
+        {
+            uint256 read_value;
+            CDBWrapper::ReadStatus status = dbw.TryRead(key_bad, read_value);
+            BOOST_REQUIRE(!status);
+            BOOST_CHECK(status.error().status == CDBWrapper::ReadFailure::Code::DeserializationError);
+            BOOST_CHECK(!status.error().err_msg.empty());
+        }
+    }
 }
 
 BOOST_AUTO_TEST_CASE(dbwrapper_iterator)
