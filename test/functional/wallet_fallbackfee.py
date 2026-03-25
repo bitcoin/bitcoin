@@ -4,9 +4,14 @@
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test wallet fallbackfee."""
 
+from decimal import Decimal
+
 from test_framework.blocktools import COINBASE_MATURITY
 from test_framework.test_framework import BitcoinTestFramework
-from test_framework.util import assert_raises_rpc_error
+from test_framework.util import assert_equal, assert_raises_rpc_error
+
+HIGH_TX_FEE_PER_KB = Decimal('0.01')
+
 
 class WalletFallbackFeeTest(BitcoinTestFramework):
     def set_test_params(self):
@@ -15,6 +20,18 @@ class WalletFallbackFeeTest(BitcoinTestFramework):
 
     def skip_test_if_missing_module(self):
         self.skip_if_no_wallet()
+
+    def sending_succeeds(self, node):
+        # Check that fallback fee is being used as a test-of-the-test.
+        assert_equal(
+            node.sendtoaddress(node.getnewaddress(), 1, verbose=True)['fee_reason'],
+            "Fallback fee"
+        )
+        node.fundrawtransaction(node.createrawtransaction([], {node.getnewaddress(): 1}))
+        assert_equal(
+            node.sendmany("", {node.getnewaddress(): 1}, verbose=True)["fee_reason"],
+            "Fallback fee"
+        )
 
     def sending_fails(self, node):
         assert_raises_rpc_error(-6, "Fee estimation failed", lambda: node.sendtoaddress(node.getnewaddress(), 1))
@@ -25,12 +42,24 @@ class WalletFallbackFeeTest(BitcoinTestFramework):
         node = self.nodes[0]
         self.generate(node, COINBASE_MATURITY + 1)
 
-        # sending a transaction without fee estimations must be possible by default on regtest
-        node.sendtoaddress(node.getnewaddress(), 1)
+        # By default, the test framework sets a fallback fee for nodes,
+        # in order to test default behavior, comment this line out.
+        node.replace_in_config([("fallbackfee=", "#fallbackfee=")])
+        self.restart_node(0)
+
+        # Sending a transaction with no -fallbackfee setting fails, since the
+        # default value is 0.
+        self.sending_fails(node)
 
         # Sending a tx with explicitly disabled fallback fee fails.
         self.restart_node(0, extra_args=["-fallbackfee=0"])
         self.sending_fails(node)
+
+        # Sending a transaction with a fallback fee set succeeds. Use the
+        # largest fallbackfee value that doesn't trigger a warning.
+        self.restart_node(0, extra_args=[f"-fallbackfee={HIGH_TX_FEE_PER_KB}"])
+        self.sending_succeeds(node)
+        self.stop_node(0, expected_stderr='')
 
 
 if __name__ == '__main__':
