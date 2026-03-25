@@ -158,7 +158,7 @@ fi
 
 if [[ "$CI_OS_NAME" == "macos" && "${GOAL}" = "install deploy" ]]; then
   unzip "${BASE_BUILD_DIR}/bitcoin-macos-app.zip" -d "${BASE_BUILD_DIR}/deploy"
-  if ! ( codesign --verify "${BASE_BUILD_DIR}/deploy/Bitcoin-Qt.app" ); then
+  if ! ( codesign --verify --strict "${BASE_BUILD_DIR}/deploy/Bitcoin-Qt.app" ); then
     echo "Codesigning failed."
     false
   fi
