@@ -11,6 +11,7 @@ from test_framework.util import assert_equal
 from test_framework.ipc_util import (
     load_capnp_modules,
     make_capnp_init_ctx,
+    make_mining_ctx,
 )
 
 # Test may be skipped and not have capnp installed
@@ -55,9 +56,7 @@ class IPCInterfaceTest(BitcoinTestFramework):
         block_hash_size = 32
 
         async def async_routine():
-            ctx, init = await make_capnp_init_ctx(self)
-            self.log.debug("Create Mining proxy object")
-            mining = init.makeMining(ctx).result
+            ctx, mining = await make_mining_ctx(self)
             self.log.debug("Test simple inspectors")
             assert (await mining.isTestChain(ctx)).result
             assert not (await mining.isInitialBlockDownload(ctx)).result
@@ -95,10 +94,7 @@ class IPCInterfaceTest(BitcoinTestFramework):
         disconnected_log_check = ExitStack()
 
         async def async_routine():
-            ctx, init = await make_capnp_init_ctx(self)
-            self.log.debug("Create Mining proxy object")
-            mining = init.makeMining(ctx).result
-
+            ctx, mining = await make_mining_ctx(self)
             self.log.debug("Create a template")
             opts = self.capnp_modules['mining'].BlockCreateOptions()
             template = (await mining.createNewBlock(ctx, opts)).result
@@ -131,10 +127,7 @@ class IPCInterfaceTest(BitcoinTestFramework):
         timeout = self.rpc_timeout * 1000.0
 
         async def async_routine():
-            ctx, init = await make_capnp_init_ctx(self)
-            self.log.debug("Create Mining proxy object")
-            mining = init.makeMining(ctx).result
-
+            ctx, mining = await make_mining_ctx(self)
             self.log.debug("Create a template")
             opts = self.capnp_modules['mining'].BlockCreateOptions()
             template = (await mining.createNewBlock(ctx, opts)).result

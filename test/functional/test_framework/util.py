@@ -726,7 +726,7 @@ def dumb_sync_blocks(*, src, dst, height=None):
     height = height or src.getblockcount()
     for i in range(dst.getblockcount() + 1, height + 1):
         block_hash = src.getblockhash(i)
-        block = src.getblock(blockhash=block_hash, verbose=0)
+        block = src.getblock(blockhash=block_hash, verbosity=0)
         dst.submitblock(block)
     assert_equal(dst.getblockcount(), height)
 
