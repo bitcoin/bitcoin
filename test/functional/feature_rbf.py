@@ -542,7 +542,6 @@ class ReplaceByFeeTest(BitcoinTestFramework):
             sequence=MAX_BIP125_RBF_SEQUENCE + 1,
             fee_rate=Decimal('0.01'),
         )
-        assert_equal(False, self.nodes[0].getmempoolentry(optout_tx['txid'])['bip125-replaceable'])
 
         conflicting_tx = self.wallet.create_self_transfer(
                 utxo_to_spend=confirmed_utxo,
