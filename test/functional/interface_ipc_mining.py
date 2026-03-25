@@ -4,6 +4,7 @@
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test the IPC (multiprocess) Mining interface."""
 import asyncio
+import re
 import time
 from contextlib import AsyncExitStack
 from io import BytesIO
@@ -105,6 +106,28 @@ class IPCMiningTest(BitcoinTestFramework):
 
         coinbase_tx.nLockTime = coinbase_res.lockTime
         return coinbase_tx
+
+    async def assert_create_fails(self, ctx, mining, opts, expected_msg):
+        """Assert that createNewBlock fails with the expected remote exception."""
+        try:
+            await mining.createNewBlock(ctx, opts)
+            raise AssertionError("createNewBlock unexpectedly succeeded")
+        except capnp.lib.capnp.KjException as e:
+            if e.type == "DISCONNECTED":
+                # The remote exception isn't caught currently and leads to a
+                # std::terminate call. In that case, verify the expected message
+                # via bitcoind stderr before restarting.
+                # This bug is fixed with
+                # https://github.com/bitcoin-core/libmultiprocess/pull/218
+                assert_equal(e.description, "Peer disconnected.")
+                self.nodes[0].wait_until_stopped(
+                    expected_ret_code=(-11, -6, 1, 66),
+                    expected_stderr=re.compile(re.escape(expected_msg)),
+                )
+                self.start_node(0)
+            else:
+                # Not expected until bitcoin-core/libmultiprocess#218
+                assert_capnp_failed(e, f"remote exception: std::exception: {expected_msg}")
 
     def run_mining_interface_test(self):
         """Test Mining interface methods."""
@@ -322,11 +345,8 @@ class IPCMiningTest(BitcoinTestFramework):
 
             self.log.debug("Enforce minimum reserved weight for IPC clients too")
             opts.blockReservedWeight = 0
-            try:
-                await mining.createNewBlock(ctx, opts)
-                raise AssertionError("createNewBlock unexpectedly succeeded")
-            except capnp.lib.capnp.KjException as e:
-                assert_capnp_failed(e, "remote exception: std::exception: block_reserved_weight (0) must be at least 2000 weight units")
+            await self.assert_create_fails(ctx, mining, opts,
+                "block_reserved_weight (0) must be at least 2000 weight units")
 
         asyncio.run(capnp.run(async_routine()))
 
