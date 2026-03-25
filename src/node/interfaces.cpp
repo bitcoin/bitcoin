@@ -653,6 +653,7 @@ public:
         }
         return false;
     }
+    // TODO: Remove this function when its only usage is removed from the wallet
     RBFTransactionState isRBFOptIn(const CTransaction& tx) override
     {
         if (!m_node.mempool) return IsRBFOptInEmptyMempool(tx);
