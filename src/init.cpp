@@ -118,12 +118,14 @@
 #include <functional>
 #include <limits>
 #include <list>
+#include <map>
 #include <memory>
 #include <new>
 #include <optional>
 #include <set>
 #include <span>
 #include <string>
+#include <string_view>
 #include <system_error>
 #include <thread>
 #include <tuple>
@@ -538,6 +540,7 @@ void SetupServerArgs(ArgsManager& argsman, bool can_listen_ipc)
     argsman.AddArg("-prune=<n>", strprintf("Reduce storage requirements by enabling pruning (deleting) of old blocks. This allows the pruneblockchain RPC to be called to delete specific blocks and enables automatic pruning of old blocks if a target size in MiB is provided. This mode is incompatible with -txindex. "
             "Warning: Reverting this setting requires re-downloading the entire blockchain. Wallets and indexes should be loaded at startup and kept active while pruning is enabled so they stay synchronized before old block data is deleted; wallets or indexes that fall behind pruned data may require a reindex. "
             "(default: 0 = disable pruning blocks, 1 = allow manual pruning via RPC, >=%u = automatically prune block files to stay under the specified target size in MiB)", MIN_DISK_SPACE_FOR_BLOCK_FILES / 1_MiB), ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
+    argsman.AddArg("-prunelock=<id>[:<height>]", "Creates a prune lock with the specified id at startup that prevents block data at or above the given height from being pruned (default height: 0, which prevents all pruning). Requires -prune. The lock can be updated or removed at runtime with the setprunelock RPC using the same id. Can be specified multiple times. If the same id is specified multiple times, the lowest height is used. A prune lock can keep block files from being pruned, so the target size specified by -prune may be exceeded.", ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
     argsman.AddArg("-reindex", "If enabled, wipe chain state and block index, and rebuild them from blk*.dat files on disk. Also wipe and rebuild other optional indexes that are active. If an assumeutxo snapshot was loaded, its chainstate will be wiped as well. The snapshot can then be reloaded via RPC.", ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
     argsman.AddArg("-reindex-chainstate", "If enabled, wipe chain state, and rebuild it from blk*.dat files on disk. If an assumeutxo snapshot was loaded, its chainstate will be wiped as well. The snapshot can then be reloaded via RPC.", ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
     argsman.AddArg("-settings=<file>", strprintf("Specify path to dynamic settings data file. Can be disabled with -nosettings. File is written at runtime and not meant to be edited by users (use %s instead for custom settings). Relative paths will be prefixed by datadir location. (default: %s)", BITCOIN_CONF_FILENAME, BITCOIN_SETTINGS_FILENAME), ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
@@ -943,6 +946,17 @@ bool AppInitBasicSetup(const ArgsManager& args, std::atomic<int>& exit_status)
     return true;
 }
 
+static std::optional<std::pair<std::string, int>> ParsePruneLockArg(std::string_view arg)
+{
+    const auto sep{arg.find(':')};
+    const std::string_view id{arg.substr(0, sep)};
+    if (!node::IsValidPruneLockId(id)) return std::nullopt;
+    if (sep == std::string_view::npos) return std::pair{std::string{id}, 0};
+    const auto height{ToIntegral<int>(arg.substr(sep + 1))};
+    if (!height || *height < 0) return std::nullopt;
+    return std::pair{std::string{id}, *height};
+}
+
 bool AppInitParameterInteraction(const ArgsManager& args)
 {
     const CChainParams& chainparams = Params();
@@ -1032,6 +1046,16 @@ bool AppInitParameterInteraction(const ArgsManager& args)
             return InitError(_("Prune mode is incompatible with -txospenderindex."));
         if (args.GetBoolArg("-reindex-chainstate", false)) {
             return InitError(_("Prune mode is incompatible with -reindex-chainstate. Use full -reindex instead."));
+        }
+    }
+
+    if (!args.GetArgs("-prunelock").empty() && !args.GetIntArg("-prune", 0)) {
+        return InitError(Untranslated("-prunelock is only possible in prune mode. Set -prune to enable."));
+    }
+
+    for (const std::string& arg : args.GetArgs("-prunelock")) {
+        if (!ParsePruneLockArg(arg)) {
+            return InitError(Untranslated(strprintf("Invalid -prunelock value '%s'. Expected <id>[:<height>], where the id consists of alphanumeric characters, '.', '-' or '_' and the height is not negative.", arg)));
         }
     }
 
@@ -2042,6 +2066,19 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
     // if pruning, perform the initial blockstore prune
     // after any wallet rescanning has taken place.
     if (chainman.m_blockman.IsPruneMode()) {
+        std::map<std::string, int> prune_lock_heights;
+        for (const std::string& arg : args.GetArgs("-prunelock")) {
+            const auto [id, height]{*Assert(ParsePruneLockArg(arg))};
+            auto& lock_height{prune_lock_heights.try_emplace(id, height).first->second};
+            lock_height = std::min(lock_height, height);
+        }
+        for (const auto& [id, height] : prune_lock_heights) {
+            node::PruneLockInfo lock_info;
+            lock_info.height_first = height;
+            WITH_LOCK(::cs_main, chainman.m_blockman.UpdatePruneLock(node::PRUNE_LOCK_USER_PREFIX + id, lock_info));
+            LogInfo("Initial prune lock \"%s\" set at height %d", id, height);
+        }
+
         if (chainman.m_blockman.m_blockfiles_indexed) {
             LOCK(cs_main);
             for (const auto& chainstate : chainman.m_chainstates) {
