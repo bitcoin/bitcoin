@@ -57,6 +57,9 @@ class AnchorsTest(BitcoinTestFramework):
             else:
                 inbound_nodes_port.append(hex(int(addr_split[1]))[2:])
 
+        self.log.info("Disabling network activity should not affect the anchors")
+        self.nodes[0].setnetworkactive(False)
+
         self.log.debug("Stop node")
         self.stop_node(0)
 
