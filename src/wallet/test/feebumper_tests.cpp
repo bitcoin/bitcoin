@@ -117,7 +117,7 @@ BOOST_FIXTURE_TEST_CASE(feerate_check_handles_combined_bump_fee_unavailable, Tes
     CMutableTransaction bumped_tx;
     const Result result = CreateRateBumpTransaction(*wallet, original_txid, coin_control, errors, old_fee, new_fee, bumped_tx, /*require_mine=*/true, /*outputs=*/{}, /*original_change_index=*/std::nullopt);
 
-    BOOST_CHECK(result == Result::WALLET_ERROR);
+    BOOST_CHECK_EQUAL(static_cast<int>(result), static_cast<int>(Result::WALLET_ERROR));
     BOOST_REQUIRE_EQUAL(errors.size(), 1U);
     BOOST_CHECK_EQUAL(errors[0].original, "Failed to calculate bump fees, because unconfirmed UTXOs depend on an enormous cluster of unconfirmed transactions.");
 }
