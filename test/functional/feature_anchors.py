@@ -57,6 +57,10 @@ class AnchorsTest(BitcoinTestFramework):
             else:
                 inbound_nodes_port.append(hex(int(addr_split[1]))[2:])
 
+        self.log.info("Disabling network activity should not affect the anchors")
+        self.nodes[0].setnetworkactive(False)
+        self.wait_until(lambda: len(self.nodes[0].getpeerinfo()) == 0)
+
         self.log.debug("Stop node")
         self.stop_node(0)
 
@@ -137,9 +141,21 @@ class AnchorsTest(BitcoinTestFramework):
             new_data_hash = hash256(new_data)
             file_handler.write(new_data + new_data_hash)
 
+        self.log.info("Check that starting with the network disabled preserves the anchors")
+        self.restart_node(0, extra_args=["-networkactive=0"])
+        self.stop_node(0)
+
         self.log.info("Restarting node attempts to reconnect to anchors")
         with self.nodes[0].assert_debug_log([f"Trying to make an anchor connection to {ONION_ADDR}"], timeout=2):
             self.start_node(0, extra_args=[f"-onion={onion_conf.addr[0]}:{onion_conf.addr[1]}"])
+
+        self.log.info("Check that anchors are tried once the network is re-enabled")
+        self.stop_node(0)
+        with open(node_anchors_path, "wb") as file_handler:
+            file_handler.write(new_data + new_data_hash)
+        self.start_node(0, extra_args=["-networkactive=0", f"-onion={onion_conf.addr[0]}:{onion_conf.addr[1]}"])
+        with self.nodes[0].assert_debug_log([f"Trying to make an anchor connection to {ONION_ADDR}"], timeout=2):
+            self.nodes[0].setnetworkactive(True)
 
 
 if __name__ == "__main__":
