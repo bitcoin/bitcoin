@@ -7,10 +7,15 @@
 
 #include <cstddef>
 #include <cstdint>
+#include <optional>
+#include <utility>
 #include <vector>
 
 #include <serialize.h>
 #include <uint256.h>
+#include <util/fs.h>
+
+class CChainParams;
 
 namespace node {
 
@@ -71,6 +76,45 @@ struct MsgUTXOSet {
         READWRITE(obj.proof_hashes);
         READWRITE(obj.data);
     }
+};
+
+/** Sidecar file with leaf hashes and Merkle root */
+struct ChunkMerkleCache {
+    uint64_t snapshot_file_size{0};
+    std::vector<uint256> leaf_hashes;
+    uint256 merkle_root;
+
+    SERIALIZE_METHODS(ChunkMerkleCache, obj)
+    {
+        READWRITE(obj.snapshot_file_size);
+        READWRITE(obj.leaf_hashes);
+        READWRITE(obj.merkle_root);
+    }
+};
+
+/** Serves UTXO set chunks and Merkle proofs for snapshot files in the share dir */
+class UTXOSetShareProvider
+{
+public:
+    /** Scan share dir for valid snapshot files, load or compute sidecar
+     *  caches. Returns the number of snapshots ready to serve. */
+    size_t Initialize(const fs::path& share_dir, const CChainParams& params);
+
+    /** Get info entries for all available snapshots */
+    std::vector<UTXOSetInfoEntry> GetInfoEntries() const;
+
+    /** Read a chunk from the snapshot identified by (height, block_hash).
+     *  Returns {chunk_data, merkle_proof}, or nullopt if not found. */
+    std::optional<std::pair<std::vector<unsigned char>, std::vector<uint256>>> GetChunk(uint32_t height, const uint256& block_hash, uint32_t chunk_index) const;
+
+private:
+    struct SnapshotData {
+        fs::path path;
+        UTXOSetInfoEntry info;
+        std::vector<uint256> leaf_hashes;
+    };
+
+    std::vector<SnapshotData> m_snapshots;
 };
 
 } // namespace node
