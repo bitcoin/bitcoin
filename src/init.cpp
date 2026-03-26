@@ -276,7 +276,9 @@ void Interrupt(NodeContext& node)
     InterruptHTTPRPC();
     InterruptRPC();
     InterruptREST();
-    InterruptTorControl();
+    if (node.tor_controller) {
+        node.tor_controller->Interrupt();
+    }
     InterruptMapPort();
     if (node.connman)
         node.connman->Interrupt();
@@ -319,7 +321,10 @@ void Shutdown(NodeContext& node)
     if (node.peerman && node.validation_signals) node.validation_signals->UnregisterValidationInterface(node.peerman.get());
     if (node.connman) node.connman->Stop();
 
-    StopTorControl();
+    if (node.tor_controller) {
+        node.tor_controller->Join();
+        node.tor_controller.reset();
+    }
 
     if (node.background_init_thread.joinable()) node.background_init_thread.join();
     // After everything has been shut down, but before things get flushed, stop the
@@ -2093,9 +2098,6 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
     LogInfo("nBestHeight = %d", chain_active_height);
     if (node.peerman) node.peerman->SetBestBlock(chain_active_height, std::chrono::seconds{best_block_time});
 
-    // Map ports with NAT-PMP
-    StartMapPort(args.GetBoolArg("-natpmp", DEFAULT_NATPMP));
-
     CConnman::Options connOptions;
     connOptions.m_local_services = g_local_services;
     connOptions.m_max_automatic_connections = nMaxConnections;
@@ -2110,6 +2112,11 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
     connOptions.whitelist_forcerelay = args.GetBoolArg("-whitelistforcerelay", DEFAULT_WHITELISTFORCERELAY);
     connOptions.whitelist_relay = args.GetBoolArg("-whitelistrelay", DEFAULT_WHITELISTRELAY);
     connOptions.m_capture_messages = args.GetBoolArg("-capturemessages", false);
+    connOptions.m_mapport = EnableMapPort;
+    connOptions.m_mapport_enabled = args.GetBoolArg("-natpmp", DEFAULT_NATPMP);
+    connOptions.m_tor_control = [&node](bool enable) {
+        if (node.tor_controller) node.tor_controller->SetNetworkActive(enable);
+    };
 
     // Port to bind to if `-bind=addr` is provided without a `:port` suffix.
     const uint16_t default_bind_port =
@@ -2187,7 +2194,7 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
                                     "for the automatically created Tor onion service."),
                                   onion_service_target.ToStringAddrPort()));
         }
-        StartTorControl(onion_service_target);
+        node.tor_controller = std::make_unique<TorController>(gArgs.GetArg("-torcontrol", DEFAULT_TOR_CONTROL), onion_service_target);
     }
 
     if (connOptions.bind_on_any) {
