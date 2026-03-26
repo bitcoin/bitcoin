@@ -613,14 +613,17 @@ static UniValue GetNetworksInfo()
     for (int n = 0; n < NET_MAX; ++n) {
         enum Network network = static_cast<enum Network>(n);
         if (network == NET_UNROUTABLE || network == NET_INTERNAL) continue;
-        Proxy proxy;
         UniValue obj(UniValue::VOBJ);
-        GetProxy(network, proxy);
         obj.pushKV("name", GetNetworkName(network));
         obj.pushKV("limited", !g_reachable_nets.Contains(network));
         obj.pushKV("reachable", g_reachable_nets.Contains(network));
-        obj.pushKV("proxy", proxy.IsValid() ? proxy.ToString() : std::string());
-        obj.pushKV("proxy_randomize_credentials", proxy.m_tor_stream_isolation);
+        if (const auto proxy = GetProxy(network)) {
+            obj.pushKV("proxy", proxy->ToString());
+            obj.pushKV("proxy_randomize_credentials", proxy->m_tor_stream_isolation);
+        } else {
+            obj.pushKV("proxy", std::string());
+            obj.pushKV("proxy_randomize_credentials", false);
+        }
         networks.push_back(std::move(obj));
     }
     return networks;

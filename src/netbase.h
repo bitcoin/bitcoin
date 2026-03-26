@@ -14,6 +14,7 @@
 #include <cstdint>
 #include <functional>
 #include <memory>
+#include <optional>
 #include <string>
 #include <type_traits>
 #include <unordered_set>
@@ -179,7 +180,7 @@ std::string GetNetworkName(enum Network net);
 /** Return a vector of publicly routable Network names; optionally append NET_UNROUTABLE. */
 std::vector<std::string> GetNetworkNames(bool append_unroutable = false);
 bool SetProxy(enum Network net, const Proxy &addrProxy);
-bool GetProxy(enum Network net, Proxy &proxyInfoOut);
+std::optional<Proxy> GetProxy(enum Network net);
 bool IsProxy(const CNetAddr &addr);
 /**
  * Set the name proxy to use for all connections to nodes specified by a
@@ -199,7 +200,7 @@ bool IsProxy(const CNetAddr &addr);
  */
 bool SetNameProxy(const Proxy &addrProxy);
 bool HaveNameProxy();
-bool GetNameProxy(Proxy &nameProxyOut);
+std::optional<Proxy> GetNameProxy();
 
 using DNSLookupFn = std::function<std::vector<CNetAddr>(const std::string&, bool)>;
 extern DNSLookupFn g_dns_lookup;

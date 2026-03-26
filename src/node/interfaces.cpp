@@ -187,7 +187,7 @@ public:
         args().WriteSettingsFile();
     }
     void mapPort(bool enable) override { StartMapPort(enable); }
-    bool getProxy(Network net, Proxy& proxy_info) override { return GetProxy(net, proxy_info); }
+    std::optional<Proxy> getProxy(Network net) override { return GetProxy(net); }
     size_t getNodeCount(ConnectionDirection flags) override
     {
         return m_context->connman ? m_context->connman->GetNodeCount(flags) : 0;
