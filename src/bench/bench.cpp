@@ -20,8 +20,6 @@
 
 using namespace std::chrono_literals;
 
-const std::function<void(const std::string&)> G_TEST_LOG_FUN{};
-
 /**
  * Retrieves the available test setup command line arguments that may be used
  * in the benchmark. They will be used only if the benchmark utilizes a
