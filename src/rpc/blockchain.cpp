@@ -30,6 +30,7 @@
 #include <node/blockstorage.h>
 #include <node/context.h>
 #include <node/transaction.h>
+#include <node/utxo_set_share.h>
 #include <node/utxo_snapshot.h>
 #include <node/warnings.h>
 #include <primitives/transaction.h>
@@ -3450,6 +3451,74 @@ static RPCMethod loadtxoutset()
     };
 }
 
+static RPCMethod downloadutxoset()
+{
+    return RPCMethod{
+        "downloadutxoset",
+        "Download a UTXO set snapshot from peers through P2P network.\n"
+        "The download happens asynchronously in the background. Once complete, the snapshot is automatically activated. "
+        "The snapshot is saved to the share directory inside the data dir, so the node can re-serve it to other peers.",
+        {
+            {"height", RPCArg::Type::NUM, RPCArg::Optional::NO, "The block height of the UTXO set to download."},
+        },
+        RPCResult{
+            RPCResult::Type::OBJ, "", "",
+                {
+                    {RPCResult::Type::NUM, "height", "the target snapshot height"},
+                    {RPCResult::Type::STR_HEX, "blockhash", "the target block hash"},
+                    {RPCResult::Type::STR, "path", "the output file path"},
+                }
+        },
+        RPCExamples{
+            HelpExampleCli("downloadutxoset", "840000")
+        },
+        [](const RPCMethod& self, const JSONRPCRequest& request) -> UniValue
+{
+    NodeContext& node{EnsureAnyNodeContext(request.context)};
+    ChainstateManager& chainman{EnsureChainman(node)};
+
+    const int height{self.Arg<int>("height")};
+    auto au_data{chainman.GetParams().AssumeutxoForHeight(height)};
+    if (!au_data) {
+        throw JSONRPCError(RPC_INVALID_PARAMETER, strprintf("No assumeutxo data for height %d", height));
+    }
+
+    {
+        LOCK(::cs_main);
+        if (chainman.ActiveChainstate().m_from_snapshot_blockhash) {
+            throw JSONRPCError(RPC_MISC_ERROR, "A snapshot-based chainstate is already active");
+        }
+        const CBlockIndex* snapshot_block{chainman.m_blockman.LookupBlockIndex(au_data->blockhash)};
+        if (!snapshot_block) {
+            throw JSONRPCError(RPC_MISC_ERROR, strprintf("The base block header (%s) must appear in the headers chain. Make sure all headers are syncing, and call downloadutxoset again",
+                au_data->blockhash.ToString()));
+        }
+        if (!chainman.m_best_header || chainman.m_best_header->GetAncestor(snapshot_block->nHeight) != snapshot_block) {
+            throw JSONRPCError(RPC_MISC_ERROR, "The base block header is not in the best headers chain. Make sure all headers are syncing, and call downloadutxoset again");
+        }
+    }
+
+    if (!node.utxo_set_download_manager) {
+        throw JSONRPCError(RPC_MISC_ERROR, "UTXO set download is not available");
+    }
+
+    const fs::path share_dir{EnsureArgsman(node).GetDataDirNet() / "share"};
+    fs::create_directories(share_dir);
+    const fs::path output_path{share_dir / fs::u8path(strprintf("utxo-%d.dat", height))};
+
+    if (!node.utxo_set_download_manager->StartDownload(au_data->blockhash, *au_data, output_path)) {
+        throw JSONRPCError(RPC_MISC_ERROR, "Failed to start download. A download may already be in progress.");
+    }
+
+    UniValue result(UniValue::VOBJ);
+    result.pushKV("height", height);
+    result.pushKV("blockhash", au_data->blockhash.ToString());
+    result.pushKV("path", fs::PathToString(output_path));
+    return result;
+},
+    };
+}
+
 const std::vector<RPCResult> RPCHelpForChainstate{
     {RPCResult::Type::NUM, "blocks", "number of blocks in this chainstate"},
     {RPCResult::Type::STR_HEX, "bestblockhash", "blockhash of the tip"},
@@ -3549,6 +3618,7 @@ void RegisterBlockchainRPCCommands(CRPCTable& t)
         {"blockchain", &getblockfilter},
         {"blockchain", &dumptxoutset},
         {"blockchain", &loadtxoutset},
+        {"blockchain", &downloadutxoset},
         {"blockchain", &getchainstates},
         {"hidden", &invalidateblock},
         {"hidden", &reconsiderblock},

@@ -38,6 +38,7 @@
 #include <node/txorphanage.h>
 #include <node/txreconciliation.h>
 #include <node/utxo_set_share.h>
+#include <node/utxo_snapshot.h>
 #include <node/warnings.h>
 #include <policy/feerate.h>
 #include <policy/fees/block_policy_estimator.h>
@@ -129,6 +130,8 @@ static const unsigned int MAX_INV_SZ = 50000;
 static const unsigned int MAX_GETDATA_SZ = 1000;
 /** Number of blocks that can be requested at any given time from a single peer. */
 static const int MAX_BLOCKS_IN_TRANSIT_PER_PEER = 16;
+/** Maximum number of UTXO set chunk requests in flight per peer */
+static constexpr int MAX_UTXO_CHUNKS_IN_FLIGHT_PER_PEER{5};
 /** Default time during which a peer must stall block download progress before being disconnected.
  * the actual timeout is increased temporarily if peers are disconnected for hitting the timeout */
 static constexpr auto BLOCK_STALLING_TIMEOUT_DEFAULT{2s};
@@ -415,6 +418,9 @@ struct Peer {
     /** Time offset computed during the version handshake based on the
      * timestamp the peer sent in the version message. */
     std::atomic<std::chrono::seconds> m_time_offset{0s};
+
+    /** Whether we have registered this peer for UTXO set interaction */
+    bool m_sent_getutxostinf GUARDED_BY(NetEventsInterface::g_msgproc_mutex){false};
 
     explicit Peer(NodeId id, ServiceFlags our_services, bool is_inbound)
         : m_id{id}
@@ -758,6 +764,7 @@ private:
     FeeFilterRounder m_fee_filter_rounder GUARDED_BY(NetEventsInterface::g_msgproc_mutex);
 
     const CChainParams& m_chainparams;
+    CScheduler* m_scheduler{nullptr};
     CConnman& m_connman;
     AddrMan& m_addrman;
     /** Pointer to this node's banman. May be nullptr - check existence before dereferencing. */
@@ -1081,6 +1088,9 @@ private:
 
     /** Handle a getutxoset request. Responds with a single chunk and its Merkle proof. */
     void ProcessGetUTXOSet(CNode& node, Peer& peer, DataStream& vRecv) EXCLUSIVE_LOCKS_REQUIRED(g_msgproc_mutex);
+
+    /** Activate a completed UTXO set download. Runs on the scheduler thread. */
+    void MaybeActivateDownloadedSnapshot();
 
     /** Checks if address relay is permitted with peer. If needed, initializes
      * the m_addr_known bloom filter and sets m_addr_relay_enabled to true.
@@ -1717,6 +1727,7 @@ void PeerManagerImpl::FinalizeNode(const CNode& node)
         m_txdownloadman.DisconnectedPeer(nodeid);
     }
     if (m_txreconciliation) m_txreconciliation->ForgetPeer(nodeid);
+    if (m_opts.utxo_set_download_manager) m_opts.utxo_set_download_manager->RequeueChunksForPeer(nodeid);
     m_num_preferred_download_peers -= state->fPreferredDownload;
     m_peers_downloading_from -= (!state->vBlocksInFlight.empty());
     assert(m_peers_downloading_from >= 0);
@@ -2032,6 +2043,8 @@ PeerManagerImpl::PeerManagerImpl(CConnman& connman, AddrMan& addrman,
 
 void PeerManagerImpl::StartScheduledTasks(CScheduler& scheduler)
 {
+    m_scheduler = &scheduler;
+
     // Stale tip checking and peer eviction are on two different timers, but we
     // don't want them to get out of sync due to drift in the scheduler, so we
     // combine them in one function and schedule at the quicker (peer-eviction)
@@ -2045,6 +2058,13 @@ void PeerManagerImpl::StartScheduledTasks(CScheduler& scheduler)
 
     if (m_opts.private_broadcast) {
         scheduler.scheduleFromNow([&] { ReattemptPrivateBroadcast(scheduler); }, 0min);
+    }
+
+    if (m_opts.utxo_set_download_manager) {
+        scheduler.scheduleEvery([this] {
+            m_opts.utxo_set_download_manager->HandleTimeouts(
+                std::chrono::time_point_cast<std::chrono::seconds>(SteadyClock::now()));
+        }, 10s);
     }
 }
 
@@ -3440,7 +3460,6 @@ void PeerManagerImpl::ProcessGetUTXOSetInfo(CNode& node, Peer& peer)
 void PeerManagerImpl::ProcessGetUTXOSet(CNode& node, Peer& peer, DataStream& vRecv)
 {
     if (!(peer.m_our_services & NODE_UTXO_SET)) return;
-
     node::MsgGetUTXOSet request;
     vRecv >> request;
 
@@ -3462,6 +3481,38 @@ void PeerManagerImpl::ProcessGetUTXOSet(CNode& node, Peer& peer, DataStream& vRe
     response.data = std::move(data);
 
     MakeAndPushMessage(node, NetMsgType::UTXOSET, response);
+}
+
+void PeerManagerImpl::MaybeActivateDownloadedSnapshot()
+{
+    if (!m_opts.utxo_set_download_manager) return;
+    if (m_opts.utxo_set_download_manager->GetState() != node::UTXOSetDownloadManager::State::COMPLETE) return;
+
+    const fs::path path{m_opts.utxo_set_download_manager->GetOutputPath()};
+    AutoFile afile{fsbridge::fopen(path, "rb")};
+    if (afile.IsNull()) {
+        LogWarning("Failed to open downloaded UTXO set: %s", fs::PathToString(path));
+        return;
+    }
+
+    node::SnapshotMetadata metadata{m_chainparams.MessageStart()};
+    try {
+        afile >> metadata;
+    } catch (const std::ios_base::failure& e) {
+        LogWarning("Failed to parse downloaded UTXO set metadata: %s", e.what());
+        return;
+    }
+
+    auto activation_result{m_chainman.ActivateSnapshot(afile, metadata, /*in_memory=*/false)};
+    if (!activation_result) {
+        LogWarning("Failed to activate downloaded UTXO set: %s", util::ErrorString(activation_result).original);
+        return;
+    }
+
+    m_connman.RemoveLocalServices(NODE_NETWORK);
+    m_connman.AddLocalServices(NODE_NETWORK_LIMITED);
+
+    LogInfo("Downloaded UTXO set activated at height %d", (*activation_result)->nHeight);
 }
 
 void PeerManagerImpl::ProcessBlock(CNode& node, const std::shared_ptr<const CBlock>& block, bool force_processing, bool min_pow_checked)
@@ -5108,7 +5159,11 @@ void PeerManagerImpl::ProcessMessage(Peer& peer, CNode& pfrom, const std::string
     }
 
     if (msg_type == NetMsgType::UTXOSETINFO) {
-        // Client-side handling (implemented later)
+        if (!m_opts.utxo_set_download_manager) return;
+        if (!peer.m_sent_getutxostinf) return;
+        std::vector<node::UTXOSetInfoEntry> entries;
+        vRecv >> entries;
+        m_opts.utxo_set_download_manager->ProcessUTXOSetInfo(pfrom.GetId(), entries);
         return;
     }
 
@@ -5118,7 +5173,21 @@ void PeerManagerImpl::ProcessMessage(Peer& peer, CNode& pfrom, const std::string
     }
 
     if (msg_type == NetMsgType::UTXOSET) {
-        // Client-side handling (implemented later)
+        if (!m_opts.utxo_set_download_manager) return;
+        if (m_opts.utxo_set_download_manager->GetState() != node::UTXOSetDownloadManager::State::DOWNLOADING) return;
+        if (!m_opts.utxo_set_download_manager->PeerHasInflightChunks(pfrom.GetId())) return;
+        node::MsgUTXOSet msg;
+        vRecv >> msg;
+        if (!m_opts.utxo_set_download_manager->ProcessUTXOSetChunk(pfrom.GetId(), msg)) {
+            LogDebug(BCLog::UTXOSETSHARE, "Invalid UTXO set chunk from peer=%d, disconnecting", pfrom.GetId());
+            pfrom.fDisconnect = true;
+            return;
+        }
+
+        // When download completes, activate on the scheduler thread
+        if (m_opts.utxo_set_download_manager->GetState() == node::UTXOSetDownloadManager::State::COMPLETE) {
+            m_scheduler->scheduleFromNow([this] { MaybeActivateDownloadedSnapshot(); }, 0s);
+        }
         return;
     }
 
@@ -6278,5 +6347,28 @@ bool PeerManagerImpl::SendMessages(CNode& node)
             MakeAndPushMessage(node, NetMsgType::GETDATA, vGetData);
     } // release cs_main
     MaybeSendFeefilter(node, peer, current_time);
+
+    // Drive UTXO set download: request chunks from peers with NODE_UTXO_SET
+    if (m_opts.utxo_set_download_manager && (peer.m_their_services & NODE_UTXO_SET)) {
+        auto* dm{m_opts.utxo_set_download_manager};
+        auto state{dm->GetState()};
+
+        if (!peer.m_sent_getutxostinf) {
+            if (state == node::UTXOSetDownloadManager::State::DISCOVERING) {
+                MakeAndPushMessage(node, NetMsgType::GETUTXOSETINFO);
+                peer.m_sent_getutxostinf = true;
+            }
+        }
+
+        if (state == node::UTXOSetDownloadManager::State::DOWNLOADING) {
+            int in_flight{dm->CountInFlightForPeer(node.GetId())};
+            for (int i{in_flight}; i < MAX_UTXO_CHUNKS_IN_FLIGHT_PER_PEER; ++i) {
+                auto req{dm->GetNextChunkRequest(node.GetId())};
+                if (!req) break;
+                MakeAndPushMessage(node, NetMsgType::GETUTXOSET, *req);
+            }
+        }
+    }
+
     return true;
 }

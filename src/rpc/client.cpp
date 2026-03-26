@@ -381,6 +381,7 @@ static const CRPCConvertParam vRPCConvertParams[] =
     { "encryptwallet", 0, "passphrase", ParamFormat::STRING },
     { "getaddressesbylabel", 0, "label", ParamFormat::STRING },
     { "loadtxoutset", 0, "path", ParamFormat::STRING },
+    { "downloadutxoset", 0, "height" },
     { "migratewallet", 0, "wallet_name", ParamFormat::STRING },
     { "migratewallet", 1, "passphrase", ParamFormat::STRING },
     { "setlabel", 1, "label", ParamFormat::STRING },

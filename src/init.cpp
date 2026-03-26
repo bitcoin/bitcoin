@@ -1912,6 +1912,10 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
         }
     }
 
+    // Create UTXO set download manager
+    node.utxo_set_download_manager = std::make_unique<node::UTXOSetDownloadManager>();
+    peerman_opts.utxo_set_download_manager = node.utxo_set_download_manager.get();
+
     assert(!node.peerman);
     node.peerman = PeerManager::make(*node.connman, *node.addrman,
                                      node.banman.get(), chainman,
