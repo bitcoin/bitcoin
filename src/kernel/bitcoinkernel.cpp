@@ -1298,19 +1298,18 @@ int btck_chainstate_manager_process_block(
     return result ? 0 : -1;
 }
 
-int btck_chainstate_manager_process_block_header(
+btck_BlockValidationState* btck_chainstate_manager_process_block_header(
     btck_ChainstateManager* chainstate_manager,
-    const btck_BlockHeader* header,
-    btck_BlockValidationState* state)
+    const btck_BlockHeader* header)
 {
     try {
         auto& chainman = btck_ChainstateManager::get(chainstate_manager).m_chainman;
-        auto result = chainman->ProcessNewBlockHeaders({&btck_BlockHeader::get(header), 1}, /*min_pow_checked=*/true, btck_BlockValidationState::get(state), /*ppindex=*/nullptr);
+        auto state = chainman->ProcessNewBlockHeaders({&btck_BlockHeader::get(header), 1}, /*min_pow_checked=*/true, /*ppindex=*/nullptr);
 
-        return result ? 0 : -1;
+        return btck_BlockValidationState::create(state);
     } catch (const std::exception& e) {
         LogError("Failed to process block header: %s", e.what());
-        return -1;
+        return nullptr;
     }
 }
 
