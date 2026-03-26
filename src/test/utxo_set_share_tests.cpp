@@ -181,4 +181,116 @@ BOOST_AUTO_TEST_CASE(provider_init_and_serve)
     BOOST_CHECK_EQUAL(entries2[0].merkle_root.ToString(), entries[0].merkle_root.ToString());
 }
 
+BOOST_AUTO_TEST_CASE(download_manager_lifecycle)
+{
+    // Use a provider-served snapshot as the source, then download it
+    // through the download manager to verify the full lifecycle.
+    auto regtest_params{CChainParams::RegTest({})};
+    auto au_data{regtest_params->AssumeutxoForHeight(110)};
+    BOOST_REQUIRE(au_data.has_value());
+
+    fs::path share_dir{m_path_root / "share_test"};
+    fs::create_directories(share_dir);
+
+    // Make a small snapshot
+    fs::path src_path{share_dir / "source.dat"};
+    {
+        AutoFile file{fsbridge::fopen(src_path, "wb")};
+        BOOST_REQUIRE(!file.IsNull());
+        node::SnapshotMetadata metadata(regtest_params->MessageStart(), au_data->blockhash, /*coins_count=*/1);
+        file << metadata;
+        std::vector<unsigned char> body{m_rng.randbytes(node::UTXO_SET_CHUNK_SIZE * 2 + 100)};
+        file.write(MakeByteSpan(body));
+        BOOST_REQUIRE(file.fclose() == 0);
+    }
+
+    node::UTXOSetShareProvider provider;
+    BOOST_REQUIRE_EQUAL(provider.Initialize(share_dir, *regtest_params), 1U);
+    auto info_entries{provider.GetInfoEntries()};
+    BOOST_REQUIRE_EQUAL(info_entries.size(), 1U);
+
+    fs::path output_path{m_path_root / "downloaded.dat"};
+    node::UTXOSetDownloadManager dm;
+    BOOST_CHECK(dm.StartDownload(au_data->blockhash, *au_data, output_path));
+    BOOST_CHECK(dm.GetState() == node::UTXOSetDownloadManager::State::DISCOVERING);
+
+    // No requests yet
+    BOOST_CHECK(!dm.GetNextChunkRequest(1).has_value());
+
+    // Serve info to peer
+    dm.ProcessUTXOSetInfo(1, info_entries);
+    BOOST_CHECK(dm.GetState() == node::UTXOSetDownloadManager::State::DOWNLOADING);
+
+    // Download the chunks
+    uint32_t total_chunks{static_cast<uint32_t>((info_entries[0].data_length + node::UTXO_SET_CHUNK_SIZE - 1) / node::UTXO_SET_CHUNK_SIZE)};
+    for (uint32_t i = 0; i < total_chunks; ++i) {
+        auto req{dm.GetNextChunkRequest(1)};
+        BOOST_REQUIRE(req.has_value());
+        BOOST_CHECK_EQUAL(req->chunk_index, i);
+
+        auto chunk_result{provider.GetChunk(req->height, req->block_hash, req->chunk_index)};
+        BOOST_REQUIRE(chunk_result.has_value());
+
+        node::MsgUTXOSet msg;
+        msg.height = req->height;
+        msg.block_hash = req->block_hash;
+        msg.chunk_index = req->chunk_index;
+        msg.proof_hashes = std::move(chunk_result->second);
+        msg.data = std::move(chunk_result->first);
+
+        BOOST_CHECK(dm.ProcessUTXOSetChunk(1, msg));
+    }
+
+    BOOST_CHECK(!dm.GetNextChunkRequest(1).has_value());
+    BOOST_CHECK(dm.GetState() == node::UTXOSetDownloadManager::State::COMPLETE);
+    BOOST_CHECK(fs::exists(output_path));
+}
+
+BOOST_AUTO_TEST_CASE(download_manager_invalid_proof)
+{
+    auto regtest_params{CChainParams::RegTest({})};
+    auto au_data{regtest_params->AssumeutxoForHeight(110)};
+    BOOST_REQUIRE(au_data.has_value());
+
+    fs::path share_dir{m_path_root / "share_test2"};
+    fs::create_directories(share_dir);
+
+    fs::path src_path{share_dir / "source2.dat"};
+    {
+        AutoFile file{fsbridge::fopen(src_path, "wb")};
+        BOOST_REQUIRE(!file.IsNull());
+        node::SnapshotMetadata metadata(regtest_params->MessageStart(), au_data->blockhash, /*coins_count=*/1);
+        file << metadata;
+        std::vector<unsigned char> body{m_rng.randbytes(1000)};
+        file.write(MakeByteSpan(body));
+        BOOST_REQUIRE(file.fclose() == 0);
+    }
+
+    node::UTXOSetShareProvider provider;
+    BOOST_REQUIRE_EQUAL(provider.Initialize(share_dir, *regtest_params), 1U);
+    auto info_entries{provider.GetInfoEntries()};
+
+    fs::path output_path{m_path_root / "downloaded2.dat"};
+    node::UTXOSetDownloadManager dm;
+    dm.StartDownload(au_data->blockhash, *au_data, output_path);
+    dm.ProcessUTXOSetInfo(1, info_entries);
+
+    auto req{dm.GetNextChunkRequest(1)};
+    BOOST_REQUIRE(req.has_value());
+
+    auto chunk_result{provider.GetChunk(req->height, req->block_hash, req->chunk_index)};
+    BOOST_REQUIRE(chunk_result.has_value());
+
+    node::MsgUTXOSet msg;
+    msg.height = req->height;
+    msg.block_hash = req->block_hash;
+    msg.chunk_index = req->chunk_index;
+    msg.proof_hashes = std::move(chunk_result->second);
+    msg.data = std::move(chunk_result->first);
+    // Tamper with the data
+    msg.data[0] ^= 0xff;
+
+    BOOST_CHECK(!dm.ProcessUTXOSetChunk(1, msg));
+}
+
 BOOST_AUTO_TEST_SUITE_END()

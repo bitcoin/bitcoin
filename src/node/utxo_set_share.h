@@ -7,15 +7,19 @@
 
 #include <cstddef>
 #include <cstdint>
+#include <chrono>
 #include <optional>
 #include <utility>
 #include <vector>
 
 #include <serialize.h>
+#include <sync.h>
 #include <uint256.h>
 #include <util/fs.h>
+#include <util/time.h>
 
 class CChainParams;
+struct AssumeutxoData;
 
 namespace node {
 
@@ -115,6 +119,72 @@ private:
     };
 
     std::vector<SnapshotData> m_snapshots;
+};
+
+/** Manages downloading a UTXO set snapshot from peers */
+class UTXOSetDownloadManager
+{
+public:
+    enum class State { IDLE, DISCOVERING, DOWNLOADING, COMPLETE, FAILED };
+
+    /** Begin a download targeting the given assumeutxo snapshot.
+     *  Output is written to output_path. */
+    bool StartDownload(const uint256& target_blockhash,
+                       const AssumeutxoData& au_data,
+                       const fs::path& output_path) EXCLUSIVE_LOCKS_REQUIRED(!m_mutex);
+
+    /** Process a utxosetinfo response from a peer. Selects the matching
+     *  entry and transitions to DOWNLOADING if valid. */
+    void ProcessUTXOSetInfo(int64_t peer_id,
+                            const std::vector<UTXOSetInfoEntry>& entries) EXCLUSIVE_LOCKS_REQUIRED(!m_mutex);
+
+    /** Process a received chunk. Verifies the Merkle proof and writes to
+     *  the output file. Returns false if the proof is invalid. */
+    bool ProcessUTXOSetChunk(int64_t peer_id, const MsgUTXOSet& chunk) EXCLUSIVE_LOCKS_REQUIRED(!m_mutex);
+
+    /** Get the next chunk request to send to a peer, or nullopt if none
+     *  available. Marks the chunk as in-flight for this peer. */
+    std::optional<MsgGetUTXOSet> GetNextChunkRequest(int64_t peer_id) EXCLUSIVE_LOCKS_REQUIRED(!m_mutex);
+
+    /** Re-queue any in-flight chunks assigned to this peer */
+    void RequeueChunksForPeer(int64_t peer_id) EXCLUSIVE_LOCKS_REQUIRED(!m_mutex);
+
+    /** Re-assign chunks that have been in-flight for too long */
+    void HandleTimeouts(SteadySeconds now) EXCLUSIVE_LOCKS_REQUIRED(!m_mutex);
+
+    /** Whether peer has any chunks currently assigned to it */
+    bool PeerHasInflightChunks(int64_t peer_id) const EXCLUSIVE_LOCKS_REQUIRED(!m_mutex);
+
+    /** Count chunks currently in-flight for a given peer */
+    int CountInFlightForPeer(int64_t peer_id) const EXCLUSIVE_LOCKS_REQUIRED(!m_mutex);
+
+    State GetState() const EXCLUSIVE_LOCKS_REQUIRED(!m_mutex);
+    fs::path GetOutputPath() const EXCLUSIVE_LOCKS_REQUIRED(!m_mutex);
+
+private:
+    enum class ChunkState { NEEDED, IN_FLIGHT, DONE };
+
+    struct ChunkInfo {
+        ChunkState state{ChunkState::NEEDED};
+        int64_t assigned_peer{-1};
+        SteadySeconds request_time{};
+    };
+
+    mutable Mutex m_mutex;
+
+    State m_state GUARDED_BY(m_mutex){State::IDLE};
+    fs::path m_output_path GUARDED_BY(m_mutex);
+
+    // Target snapshot info
+    uint256 m_target_blockhash GUARDED_BY(m_mutex);
+    uint32_t m_target_height GUARDED_BY(m_mutex){0};
+    uint64_t m_data_length GUARDED_BY(m_mutex){0};
+    uint256 m_merkle_root GUARDED_BY(m_mutex);
+    uint32_t m_total_chunks GUARDED_BY(m_mutex){0};
+
+    std::vector<ChunkInfo> m_chunks GUARDED_BY(m_mutex);
+    uint32_t m_chunks_done GUARDED_BY(m_mutex){0};
+    static constexpr std::chrono::seconds CHUNK_TIMEOUT{60};
 };
 
 } // namespace node

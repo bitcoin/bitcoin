@@ -225,4 +225,201 @@ std::optional<std::pair<std::vector<unsigned char>, std::vector<uint256>>> UTXOS
     return std::make_pair(std::move(data), std::move(proof));
 }
 
+bool UTXOSetDownloadManager::StartDownload(const uint256& target_blockhash,
+                                           const AssumeutxoData& au_data,
+                                           const fs::path& output_path)
+{
+    LOCK(m_mutex);
+    if (m_state != State::IDLE) return false;
+
+    m_target_blockhash = target_blockhash;
+    m_target_height = au_data.height;
+    m_output_path = output_path;
+    m_state = State::DISCOVERING;
+
+    LogInfo("UTXO set download started for height %d, blockhash=%s", m_target_height, m_target_blockhash.ToString());
+    return true;
+}
+
+void UTXOSetDownloadManager::ProcessUTXOSetInfo(int64_t peer_id,
+                                                const std::vector<UTXOSetInfoEntry>& entries)
+{
+    LOCK(m_mutex);
+    if (m_state != State::DISCOVERING) return;
+
+    for (const auto& entry : entries) {
+        if (entry.block_hash != m_target_blockhash) continue;
+        if (entry.data_length <= 1) continue;
+
+        m_data_length = entry.data_length;
+        m_merkle_root = entry.merkle_root;
+        m_total_chunks = static_cast<uint32_t>((m_data_length - 1) / UTXO_SET_CHUNK_SIZE + 1);
+        m_chunks.assign(m_total_chunks, ChunkInfo{});
+        m_chunks_done = 0;
+        m_state = State::DOWNLOADING;
+
+        AutoFile file{fsbridge::fopen(m_output_path, "wb")};
+        if (file.IsNull()) {
+            LogWarning("Failed to create output file %s", fs::PathToString(m_output_path));
+            m_state = State::FAILED;
+            return;
+        }
+
+        LogInfo("UTXO set download: %d chunks to download (%d bytes), merkle_root=%s, from peer=%d",
+                m_total_chunks, m_data_length, m_merkle_root.ToString(), peer_id);
+        return;
+    }
+
+    LogDebug(BCLog::UTXOSETSHARE, "No matching UTXO set info from peer=%d", peer_id);
+}
+
+bool UTXOSetDownloadManager::ProcessUTXOSetChunk(int64_t peer_id, const MsgUTXOSet& chunk)
+{
+    fs::path output_path;
+    uint64_t offset;
+
+    {
+        LOCK(m_mutex);
+        if (m_state != State::DOWNLOADING) return true;
+
+        if (chunk.height != m_target_height ||
+            chunk.block_hash != m_target_blockhash ||
+            chunk.chunk_index >= m_total_chunks) {
+            return false;
+        }
+
+        // Validate chunk data size against what data_length implies
+        uint64_t expected_size{UTXO_SET_CHUNK_SIZE};
+        if (chunk.chunk_index == m_total_chunks - 1) {
+            expected_size = m_data_length - (m_total_chunks - 1) * UTXO_SET_CHUNK_SIZE;
+        }
+        if (chunk.data.size() != expected_size) {
+            LogDebug(BCLog::UTXOSETSHARE, "Unexpected chunk size %zu (expected %zu) for chunk %d from peer=%d", chunk.data.size(), expected_size, chunk.chunk_index, peer_id);
+            return false;
+        }
+
+        auto& ci = m_chunks[chunk.chunk_index];
+        if (ci.state == ChunkState::DONE) return true; // duplicate, ignore
+
+        // Verify Merkle proof
+        uint256 leaf_hash{Hash(chunk.data)};
+        if (!VerifyChunkMerkleProof(leaf_hash, chunk.proof_hashes, chunk.chunk_index, m_total_chunks, m_merkle_root)) {
+            LogDebug(BCLog::UTXOSETSHARE, "Invalid Merkle proof for chunk %d from peer=%d", chunk.chunk_index, peer_id);
+            return false;
+        }
+
+        ci.state = ChunkState::DONE;
+        ci.assigned_peer = -1;
+        ++m_chunks_done;
+
+        LogDebug(BCLog::UTXOSETSHARE, "Chunk %d/%d verified (peer=%d)", m_chunks_done, m_total_chunks, peer_id);
+
+        output_path = m_output_path;
+        offset = chunk.chunk_index * UTXO_SET_CHUNK_SIZE;
+    }
+
+    // Write chunk data to file outside the lock
+    AutoFile file{fsbridge::fopen(output_path, "rb+")};
+    if (file.IsNull()) {
+        LOCK(m_mutex);
+        m_state = State::FAILED;
+        return true;
+    }
+    file.seek(offset, SEEK_SET);
+    file.write(MakeByteSpan(chunk.data));
+    if (!file.Commit() || file.fclose() != 0) {
+        LOCK(m_mutex);
+        m_state = State::FAILED;
+        return true;
+    }
+
+    // Re-lock to check if all chunks are now written
+    LOCK(m_mutex);
+    if (m_state != State::DOWNLOADING) return true;
+    if (m_chunks_done == m_total_chunks) {
+        m_state = State::COMPLETE;
+        LogInfo("UTXO set download complete: %s", fs::PathToString(m_output_path));
+    }
+
+    return true;
+}
+
+std::optional<MsgGetUTXOSet> UTXOSetDownloadManager::GetNextChunkRequest(int64_t peer_id)
+{
+    LOCK(m_mutex);
+    if (m_state != State::DOWNLOADING) return std::nullopt;
+
+    for (uint32_t i = 0; i < m_total_chunks; ++i) {
+        if (m_chunks[i].state == ChunkState::NEEDED) {
+            m_chunks[i].state = ChunkState::IN_FLIGHT;
+            m_chunks[i].assigned_peer = peer_id;
+            m_chunks[i].request_time = std::chrono::time_point_cast<std::chrono::seconds>(SteadyClock::now());
+
+            MsgGetUTXOSet req;
+            req.height = m_target_height;
+            req.block_hash = m_target_blockhash;
+            req.chunk_index = i;
+            return req;
+        }
+    }
+    return std::nullopt;
+}
+
+void UTXOSetDownloadManager::RequeueChunksForPeer(int64_t peer_id)
+{
+    LOCK(m_mutex);
+    for (auto& ci : m_chunks) {
+        if (ci.state == ChunkState::IN_FLIGHT && ci.assigned_peer == peer_id) {
+            ci.state = ChunkState::NEEDED;
+            ci.assigned_peer = -1;
+        }
+    }
+}
+
+void UTXOSetDownloadManager::HandleTimeouts(SteadySeconds now)
+{
+    LOCK(m_mutex);
+    if (m_state != State::DOWNLOADING) return;
+
+    for (auto& ci : m_chunks) {
+        if (ci.state == ChunkState::IN_FLIGHT && (now - ci.request_time) > CHUNK_TIMEOUT) {
+            LogDebug(BCLog::UTXOSETSHARE, "Chunk timed out from peer=%d, re-queuing", ci.assigned_peer);
+            ci.state = ChunkState::NEEDED;
+            ci.assigned_peer = -1;
+        }
+    }
+}
+
+bool UTXOSetDownloadManager::PeerHasInflightChunks(int64_t peer_id) const
+{
+    LOCK(m_mutex);
+    if (m_state != State::DOWNLOADING) return false;
+    for (const auto& ci : m_chunks) {
+        if (ci.state == ChunkState::IN_FLIGHT && ci.assigned_peer == peer_id) return true;
+    }
+    return false;
+}
+
+int UTXOSetDownloadManager::CountInFlightForPeer(int64_t peer_id) const
+{
+    LOCK(m_mutex);
+    int count{0};
+    for (const auto& ci : m_chunks) {
+        if (ci.state == ChunkState::IN_FLIGHT && ci.assigned_peer == peer_id) ++count;
+    }
+    return count;
+}
+
+UTXOSetDownloadManager::State UTXOSetDownloadManager::GetState() const
+{
+    LOCK(m_mutex);
+    return m_state;
+}
+
+fs::path UTXOSetDownloadManager::GetOutputPath() const
+{
+    LOCK(m_mutex);
+    return m_output_path;
+}
+
 } // namespace node
