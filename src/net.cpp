@@ -3364,6 +3364,10 @@ void CConnman::SetNetworkActive(bool active)
 
     fNetworkActive = active;
 
+    if (!fNetworkActive) {
+        m_anchors = GetCurrentBlockRelayOnlyConns();
+    }
+
     if (m_client_interface) {
         m_client_interface->NotifyNetworkActiveChanged(fNetworkActive);
     }
