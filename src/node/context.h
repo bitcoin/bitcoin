@@ -42,6 +42,7 @@ class SignalInterrupt;
 
 namespace node {
 class KernelNotifications;
+class UTXOSetShareProvider;
 class Warnings;
 
 //! NodeContext struct containing references to chain state and connection
@@ -91,6 +92,8 @@ struct NodeContext {
     std::atomic<int> exit_status{EXIT_SUCCESS};
     //! Manages all the node warnings
     std::unique_ptr<node::Warnings> warnings;
+    //! Serves UTXO set chunks to peers
+    std::unique_ptr<UTXOSetShareProvider> utxo_set_share_provider;
     std::thread background_init_thread;
 
     //! Declare default constructor and destructor that are not inline, so code
