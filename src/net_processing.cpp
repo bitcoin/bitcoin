@@ -37,6 +37,7 @@
 #include <node/txdownloadman.h>
 #include <node/txorphanage.h>
 #include <node/txreconciliation.h>
+#include <node/utxo_set_share.h>
 #include <node/warnings.h>
 #include <policy/feerate.h>
 #include <policy/fees/block_policy_estimator.h>
@@ -1074,6 +1075,12 @@ private:
      * @param[in]   vRecv           The raw message received
      */
     void ProcessGetCFCheckPt(CNode& node, Peer& peer, DataStream& vRecv);
+
+    /** Handle a getutxostinf request. Responds with utxosetinfo listing available snapshots. */
+    void ProcessGetUTXOSetInfo(CNode& node, Peer& peer);
+
+    /** Handle a getutxoset request. Responds with a single chunk and its Merkle proof. */
+    void ProcessGetUTXOSet(CNode& node, Peer& peer, DataStream& vRecv) EXCLUSIVE_LOCKS_REQUIRED(g_msgproc_mutex);
 
     /** Checks if address relay is permitted with peer. If needed, initializes
      * the m_addr_known bloom filter and sets m_addr_relay_enabled to true.
@@ -3422,6 +3429,41 @@ void PeerManagerImpl::ProcessGetCFCheckPt(CNode& node, Peer& peer, DataStream& v
               headers);
 }
 
+void PeerManagerImpl::ProcessGetUTXOSetInfo(CNode& node, Peer& peer)
+{
+    if (!(peer.m_our_services & NODE_UTXO_SET)) return;
+
+    auto entries{m_opts.utxo_set_share_provider->GetInfoEntries()};
+    MakeAndPushMessage(node, NetMsgType::UTXOSETINFO, entries);
+}
+
+void PeerManagerImpl::ProcessGetUTXOSet(CNode& node, Peer& peer, DataStream& vRecv)
+{
+    if (!(peer.m_our_services & NODE_UTXO_SET)) return;
+
+    node::MsgGetUTXOSet request;
+    vRecv >> request;
+
+    auto result{m_opts.utxo_set_share_provider->GetChunk(request.height, request.block_hash, request.chunk_index)};
+    if (!result) {
+        LogDebug(BCLog::UTXOSETSHARE, "Invalid getutxoset request: chunk %d for height=%d from peer=%d, disconnecting",
+                 request.chunk_index, request.height, node.GetId());
+        node.fDisconnect = true;
+        return;
+    }
+
+    auto& [data, proof] = *result;
+
+    node::MsgUTXOSet response;
+    response.height = request.height;
+    response.block_hash = request.block_hash;
+    response.chunk_index = request.chunk_index;
+    response.proof_hashes = std::move(proof);
+    response.data = std::move(data);
+
+    MakeAndPushMessage(node, NetMsgType::UTXOSET, response);
+}
+
 void PeerManagerImpl::ProcessBlock(CNode& node, const std::shared_ptr<const CBlock>& block, bool force_processing, bool min_pow_checked)
 {
     bool new_block{false};
@@ -5057,6 +5099,26 @@ void PeerManagerImpl::ProcessMessage(Peer& peer, CNode& pfrom, const std::string
 
     if (msg_type == NetMsgType::GETCFCHECKPT) {
         ProcessGetCFCheckPt(pfrom, peer, vRecv);
+        return;
+    }
+
+    if (msg_type == NetMsgType::GETUTXOSETINFO) {
+        ProcessGetUTXOSetInfo(pfrom, peer);
+        return;
+    }
+
+    if (msg_type == NetMsgType::UTXOSETINFO) {
+        // Client-side handling (implemented later)
+        return;
+    }
+
+    if (msg_type == NetMsgType::GETUTXOSET) {
+        ProcessGetUTXOSet(pfrom, peer, vRecv);
+        return;
+    }
+
+    if (msg_type == NetMsgType::UTXOSET) {
+        // Client-side handling (implemented later)
         return;
     }
 
