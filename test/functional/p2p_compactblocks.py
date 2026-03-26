@@ -424,6 +424,23 @@ class CompactBlocksTest(BitcoinTestFramework):
         block.solve()
         return block
 
+    # Build a block with independent spends so individual transactions can be
+    # selectively preloaded into the mempool.
+    def build_block_with_independent_transactions(self, node, utxos):
+        block = self.build_block_on_tip(node)
+        next_utxos = []
+
+        for utxo in utxos:
+            tx = CTransaction()
+            tx.vin.append(CTxIn(COutPoint(utxo[0], utxo[1]), b''))
+            tx.vout.append(CTxOut(utxo[2] - 1000, CScript([OP_TRUE, OP_DROP] * 15 + [OP_TRUE])))
+            next_utxos.append([tx.txid_int, 0, tx.vout[0].nValue])
+            block.vtx.append(tx)
+
+        block.hashMerkleRoot = block.calc_merkle_root()
+        block.solve()
+        return block, next_utxos
+
     # Test that we only receive getblocktxn requests for transactions that the
     # node needs, and that responding to them causes the block to be
     # reconstructed.
@@ -506,6 +523,46 @@ class CompactBlocksTest(BitcoinTestFramework):
         with p2p_lock:
             # Shouldn't have gotten a request for any transaction
             assert "getblocktxn" not in test_node.last_message
+
+    def test_shortid_collision_recovery(self, test_node):
+        node = self.nodes[0]
+        utxos = [self.utxos.pop(0) for _ in range(5)]
+        block, next_utxos = self.build_block_with_independent_transactions(node, utxos)
+
+        # Preload every non-colliding transaction so only the collided entries
+        # need to be requested.
+        for tx in [block.vtx[1], block.vtx[3], block.vtx[5]]:
+            test_node.send_without_ping(msg_tx(tx))
+        test_node.sync_with_ping()
+
+        mempool = node.getrawmempool()
+        for tx in [block.vtx[1], block.vtx[3], block.vtx[5]]:
+            assert tx.txid_hex in mempool
+
+        comp_block = HeaderAndShortIDs()
+        comp_block.initialize_from_block(block, prefill_list=[0], use_witness=True)
+        # With only the coinbase prefilled, shortids[1] and shortids[3]
+        # correspond to transactions at absolute indexes 2 and 4.
+        comp_block.shortids[3] = comp_block.shortids[1]
+
+        with p2p_lock:
+            test_node.last_message.pop("getblocktxn", None)
+            test_node.last_message.pop("getdata", None)
+
+        test_node.send_and_ping(msg_cmpctblock(comp_block.to_p2p()))
+
+        with p2p_lock:
+            assert "getdata" not in test_node.last_message
+            assert "getblocktxn" in test_node.last_message
+            absolute_indexes = test_node.last_message["getblocktxn"].block_txn_request.to_absolute()
+        assert_equal(absolute_indexes, [2, 4])
+
+        msg = msg_blocktxn()
+        msg.block_transactions = BlockTransactions(block.hash_int, [block.vtx[2], block.vtx[4]])
+        test_node.send_and_ping(msg)
+        assert_equal(node.getbestblockhash(), block.hash_hex)
+
+        self.utxos.extend(next_utxos)
 
     # Incorrectly responding to a getblocktxn shouldn't cause the block to be
     # permanently failed.
@@ -979,6 +1036,9 @@ class CompactBlocksTest(BitcoinTestFramework):
 
         self.log.info("Testing getblocktxn requests (segwit node)...")
         self.test_getblocktxn_requests(self.segwit_node)
+
+        self.log.info("Testing compact block short-id collision recovery...")
+        self.test_shortid_collision_recovery(self.segwit_node)
 
         self.log.info("Testing getblocktxn handler (segwit node should return witnesses)...")
         self.test_getblocktxn_handler(self.segwit_node)
