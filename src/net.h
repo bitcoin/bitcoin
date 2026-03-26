@@ -1166,7 +1166,7 @@ public:
     void Interrupt() EXCLUSIVE_LOCKS_REQUIRED(!mutexMsgProc);
     bool GetNetworkActive() const { return fNetworkActive; };
     bool GetUseAddrmanOutgoing() const { return m_use_addrman_outgoing; };
-    void SetNetworkActive(bool active) EXCLUSIVE_LOCKS_REQUIRED(!m_anchors_mutex);
+    void SetNetworkActive(bool active) EXCLUSIVE_LOCKS_REQUIRED(!m_anchors_mutex, !m_nodes_mutex);
 
     /**
      * Open a new P2P connection and initialize it with the PeerManager at `m_msgproc`.

@@ -3410,6 +3410,12 @@ void CConnman::SetNetworkActive(bool active)
         return;
     }
 
+    if (!active) {
+        auto anchors = GetCurrentBlockRelayOnlyConns();
+        LOCK(m_anchors_mutex);
+        m_anchors = std::move(anchors);
+    }
+
     fNetworkActive = active;
 
     if (m_client_interface) {
