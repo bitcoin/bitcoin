@@ -2787,7 +2787,10 @@ void CConnman::ThreadOpenConnections(const std::vector<std::string> connect, std
         // block-relay-only peer (to confirm our tip is current, see below) or the next_feeler
         // timer to decide if we should open a FEELER.
 
-        const bool have_anchors{WITH_LOCK(m_anchors_mutex, return !m_anchors.empty())};
+        // Only consume anchors while the network is active; otherwise they would be
+        // popped and then dropped by OpenNetworkConnection(), losing them for the
+        // next activation and for the dump at shutdown.
+        const bool have_anchors{fNetworkActive && WITH_LOCK(m_anchors_mutex, return !m_anchors.empty())};
         if (have_anchors && (nOutboundBlockRelay < m_max_outbound_block_relay)) {
             conn_type = ConnectionType::BLOCK_RELAY;
             anchor = true;
@@ -3465,6 +3468,21 @@ void CConnman::SetNetworkActive(bool active)
 
     if (fNetworkActive == active) {
         return;
+    }
+
+    if (!active) {
+        // Remember the current block-relay-only peers so they can be retried
+        // once the network is re-enabled, or dumped at shutdown. Keep any
+        // not-yet-tried anchors if there are no such peers.
+        auto anchors = GetCurrentBlockRelayOnlyConns();
+        if (anchors.size() > MAX_BLOCK_RELAY_ONLY_ANCHORS) {
+            // Keep the oldest peers, as when saving anchors at shutdown.
+            anchors.resize(MAX_BLOCK_RELAY_ONLY_ANCHORS);
+        }
+        if (!anchors.empty()) {
+            LOCK(m_anchors_mutex);
+            m_anchors = std::move(anchors);
+        }
     }
 
     fNetworkActive = active;
