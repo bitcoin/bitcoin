@@ -264,6 +264,26 @@ inline constexpr const char* WTXIDRELAY{"wtxidrelay"};
  * txreconciliation, as described by BIP 330.
  */
 inline constexpr const char* SENDTXRCNCL{"sendtxrcncl"};
+/**
+ * getutxostinf requests a list of available UTXO set snapshots from a peer.
+ * Only available with service bit NODE_UTXO_SET.
+ */
+inline constexpr const char* GETUTXOSETINFO{"getutxostinf"};
+/**
+ * utxosetinfo is a response to a getutxostinf request containing a list of
+ * available UTXO set snapshots that the peer can serve.
+ */
+inline constexpr const char* UTXOSETINFO{"utxosetinfo"};
+/**
+ * getutxoset requests a single chunk of UTXO set data from a peer.
+ * Only available with service bit NODE_UTXO_SET.
+ */
+inline constexpr const char* GETUTXOSET{"getutxoset"};
+/**
+ * utxoset is a response to a getutxoset request containing one chunk of
+ * UTXO set data with its Merkle proof.
+ */
+inline constexpr const char* UTXOSET{"utxoset"};
 }; // namespace NetMsgType
 
 /** All known message types (see above). Keep this in the same order as the list of messages above. */
@@ -303,6 +323,10 @@ inline const std::array ALL_NET_MESSAGE_TYPES{std::to_array<std::string>({
     NetMsgType::CFCHECKPT,
     NetMsgType::WTXIDRELAY,
     NetMsgType::SENDTXRCNCL,
+    NetMsgType::GETUTXOSETINFO,
+    NetMsgType::UTXOSETINFO,
+    NetMsgType::GETUTXOSET,
+    NetMsgType::UTXOSET,
 })};
 
 /** nServices flags */
@@ -328,6 +352,10 @@ enum ServiceFlags : uint64_t {
 
     // NODE_P2P_V2 means the node supports BIP324 transport
     NODE_P2P_V2 = (1 << 11),
+
+    // NODE_UTXO_SET means the node can serve a complete UTXO set for at
+    // least one assumeutxo height.
+    NODE_UTXO_SET = (1 << 12),
 
     // Bits 24-31 are reserved for temporary experiments. Just pick a bit that
     // isn't getting used, or one not being used much, and notify the
