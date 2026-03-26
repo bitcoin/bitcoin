@@ -75,19 +75,17 @@ BOOST_FIXTURE_TEST_CASE(feerate_check_handles_combined_bump_fee_unavailable, Tes
 
     std::vector<CTransactionRef> tip_txs;
     TestMemPoolEntryHelper entry;
-    {
-        LOCK2(cs_main, pool.cs);
-        for (int cluster = 0; cluster < 10; ++cluster) {
-            CTransactionRef last_tx = m_coinbase_txns.at(cluster);
-            const int chain_length = cluster == 0 ? 51 : 50; // 501 total txs across all clusters.
-            for (int i = 0; i < chain_length; ++i) {
-                const auto tx = MakeMempoolTx({COutPoint{last_tx->GetHash(), 0}}, script_pub_key);
-                TryAddToMempool(pool, entry.Fee(CENT).FromTx(tx));
-                last_tx = tx;
-            }
-            tip_txs.push_back(last_tx);
+    for (int cluster = 0; cluster < 10; ++cluster) {
+        CTransactionRef last_tx = m_coinbase_txns.at(cluster);
+        const int chain_length = cluster == 0 ? 51 : 50; // 501 total txs across all clusters.
+        for (int i = 0; i < chain_length; ++i) {
+            const auto tx = MakeMempoolTx({COutPoint{last_tx->GetHash(), 0}}, script_pub_key);
+            TryAddToMempool(pool, entry.Fee(CENT).FromTx(tx));
+            last_tx = tx;
         }
+        tip_txs.push_back(last_tx);
     }
+    BOOST_REQUIRE_EQUAL(pool.size(), 501U);
 
     CMutableTransaction original_tx;
     for (const auto& tip_tx : tip_txs) {
