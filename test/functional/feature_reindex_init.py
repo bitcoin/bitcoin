@@ -7,7 +7,6 @@
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import assert_equal
 import os
-import shutil
 
 
 class ReindexInitTest(BitcoinTestFramework):
@@ -19,7 +18,7 @@ class ReindexInitTest(BitcoinTestFramework):
         self.stop_nodes()
 
         self.log.info("Removing the block index leads to init error")
-        shutil.rmtree(node.blocks_path / "index")
+        self.cleanup_folder(node.blocks_path / "index")
         node.assert_start_raises_init_error(
             expected_msg=f"Error initializing block database.{os.linesep}"
             "Please restart with -reindex or -reindex-chainstate to recover.",

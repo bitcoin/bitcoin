@@ -1175,8 +1175,8 @@ BOOST_AUTO_TEST_CASE(btck_chainman_regtest_tests)
     BOOST_CHECK_EQUAL(count, chain.CountEntries());
 
 
-    fs::remove_all(test_directory.m_directory / "blocks" / "blk00000.dat");
+    fs::remove(test_directory.m_directory / "blocks" / "blk00000.dat");
     BOOST_CHECK(!chainman->ReadBlock(tip_2).has_value());
-    fs::remove_all(test_directory.m_directory / "blocks" / "rev00000.dat");
+    fs::remove(test_directory.m_directory / "blocks" / "rev00000.dat");
     BOOST_CHECK_THROW(chainman->ReadBlockSpentOutputs(tip), std::runtime_error);
 }
