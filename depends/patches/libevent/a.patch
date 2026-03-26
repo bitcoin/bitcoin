@@ -1,0 +1,32 @@
+diff --git a/http.c b/http.c
+index 04f089bc..0a51addc 100644
+--- a/http.c
++++ b/http.c
+@@ -1138,6 +1138,15 @@ evhttp_read_cb(struct bufferevent *bufev, void *arg)
+ 	event_deferred_cb_cancel_(get_deferred_queue(evcon),
+ 	    &evcon->read_more_deferred_cb);
+ 
++/* REPRODUCER: Force the thread to stall right as Request 5 arrives.
++ * This simulates a slow thread context-switch, giving Python 50ms 
++ * to blast the entire 780KB body into the Linux kernel TCP buffer.
++ * When we wake up, bufferevent will gulp the Headers + 64KB of body 
++ * all at once, hitting the watermark and causing the circular wait deadlock. */
++if (evcon->state == EVCON_READING_FIRSTLINE) {
++usleep(50000);//50ms
++}
++
+ 	switch (evcon->state) {
+ 	case EVCON_READING_FIRSTLINE:
+ 		evhttp_read_firstline(evcon, req);
+@@ -2266,6 +2275,11 @@ evhttp_get_body(struct evhttp_connection *evcon, struct evhttp_request *req)
+ 		case NO: break;
+ 	}
+ 
++	//if (req->ntoread > 0) {
++	//	/* We are ready to read the body. */
++	//	usleep(5000); // Sleep for 5 milliseconds
++	//}
++
+ 	evhttp_read_body(evcon, req);
+ 	/* note the request may have been freed in evhttp_read_body */
+ }
