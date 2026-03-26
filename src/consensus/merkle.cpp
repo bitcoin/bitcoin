@@ -163,7 +163,7 @@ static void MerkleComputation(const std::vector<uint256>& leaves, uint32_t leaf_
     }
 }
 
-static std::vector<uint256> ComputeMerklePath(const std::vector<uint256>& leaves, uint32_t position) {
+std::vector<uint256> ComputeMerklePath(const std::vector<uint256>& leaves, uint32_t position) {
     std::vector<uint256> ret;
     MerkleComputation(leaves, position, ret);
     return ret;
