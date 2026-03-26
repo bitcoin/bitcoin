@@ -152,6 +152,7 @@ BASE_SCRIPTS = [
     'wallet_miniscript.py',
     # vv Tests less than 30s vv
     'p2p_invalid_messages.py',
+    'rpc_echo_payload.py',
     'rpc_createmultisig.py',
     'p2p_timeouts.py --v1transport',
     'p2p_timeouts.py --v2transport',
