@@ -301,6 +301,17 @@ class TestNode():
         if self.start_perf:
             self._start_perf()
 
+    def create_new_rpc_connection(self):
+        """Create an additional RPC connection, likely to be used in a new thread."""
+        rpc = get_rpc_proxy(
+            rpc_url(self.datadir_path, self.index, self.chain, self.rpchost),
+            self.index,
+            timeout=self.rpc_timeout // 2,  # Shorter timeout to allow for one retry in case of ETIMEDOUT
+            coveragedir=self.coverage_dir,
+        )
+        rpc.auth_service_proxy_instance.reuse_http_connections = self.reuse_http_connections
+        return rpc
+
     def wait_for_rpc_connection(self, *, wait_for_import=True):
         """Sets up an RPC connection to the bitcoind process. Returns False if unable to connect."""
         # Poll at a rate of four times per second
@@ -322,13 +333,7 @@ class TestNode():
                 raise FailedToStartError(self._node_msg(
                     f'bitcoind exited with status {self.process.returncode} during initialization. {str_error}'))
             try:
-                rpc = get_rpc_proxy(
-                    rpc_url(self.datadir_path, self.index, self.chain, self.rpchost),
-                    self.index,
-                    timeout=self.rpc_timeout // 2,  # Shorter timeout to allow for one retry in case of ETIMEDOUT
-                    coveragedir=self.coverage_dir,
-                )
-                rpc.auth_service_proxy_instance.reuse_http_connections = self.reuse_http_connections
+                rpc = self.create_new_rpc_connection()
                 rpc.getblockcount()
                 # If the call to getblockcount() succeeds then the RPC connection is up
                 if self.version_is_at_least(190000) and wait_for_import:
