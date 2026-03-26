@@ -6,7 +6,12 @@
 #include <policy/policy.h>
 #include <primitives/transaction.h>
 #include <script/script.h>
+#include <test/util/txmempool.h>
+#include <txmempool.h>
+#include <util/rbf.h>
 #include <util/strencodings.h>
+#include <validation.h>
+#include <wallet/coincontrol.h>
 #include <wallet/feebumper.h>
 #include <wallet/test/util.h>
 #include <wallet/test/wallet_test_fixture.h>
@@ -49,6 +54,74 @@ BOOST_AUTO_TEST_CASE(external_max_weight_test)
     CheckMaxWeightComputation("", {"3042021f0f8906f0394979d5b737134773e5b88bf036c7d63542301d600ab677ba5a59021f0e9fe07e62c113045fa1c1532e2914720e8854d189c4f5b8c88f57956b704401", "0359edba11ed1a0568094a6296a16c4d5ee4c8cfe2f5e2e6826871b5ecf8188f79"}, "00149961a78658030cc824af4c54fbf5294bec0cabdd", 272);
     // P2WSH HTLC
     CheckMaxWeightComputation("", {"3042021f5c4c29e6b686aae5b6d0751e90208592ea96d26bc81d78b0d3871a94a21fa8021f74dc2f971e438ccece8699c8fd15704c41df219ab37b63264f2147d15c34d801", "01", "6321024cf55e52ec8af7866617dc4e7ff8433758e98799906d80e066c6f32033f685f967029000b275210214827893e2dcbe4ad6c20bd743288edad21100404eb7f52ccd6062fd0e7808f268ac"}, "002089e84892873c679b1129edea246e484fd914c2601f776d4f2f4a001eb8059703", 318);
+}
+
+static CTransactionRef MakeMempoolTx(const std::vector<COutPoint>& inputs, const CScript& script_pub_key)
+{
+    CMutableTransaction tx;
+    tx.vin.reserve(inputs.size());
+    for (const auto& input : inputs) {
+        tx.vin.emplace_back(input);
+    }
+    tx.vout.emplace_back(COIN, script_pub_key);
+    return MakeTransactionRef(tx);
+}
+
+BOOST_FIXTURE_TEST_CASE(feerate_check_handles_combined_bump_fee_unavailable, TestChain100Setup)
+{
+    auto wallet = CreateSyncedWallet(*m_node.chain, WITH_LOCK(Assert(m_node.chainman)->GetMutex(), return m_node.chainman->ActiveChain()), coinbaseKey);
+    CTxMemPool& pool = *Assert(m_node.mempool);
+    const CScript script_pub_key = GetScriptForRawPubKey(coinbaseKey.GetPubKey());
+
+    std::vector<CTransactionRef> tip_txs;
+    TestMemPoolEntryHelper entry;
+    {
+        LOCK2(cs_main, pool.cs);
+        for (int cluster = 0; cluster < 10; ++cluster) {
+            CTransactionRef last_tx = m_coinbase_txns.at(cluster);
+            const int chain_length = cluster == 0 ? 51 : 50; // 501 total txs across all clusters.
+            for (int i = 0; i < chain_length; ++i) {
+                const auto tx = MakeMempoolTx({COutPoint{last_tx->GetHash(), 0}}, script_pub_key);
+                TryAddToMempool(pool, entry.Fee(CENT).FromTx(tx));
+                last_tx = tx;
+            }
+            tip_txs.push_back(last_tx);
+        }
+    }
+
+    CMutableTransaction original_tx;
+    for (const auto& tip_tx : tip_txs) {
+        original_tx.vin.emplace_back(COutPoint{tip_tx->GetHash(), 0}, CScript{}, MAX_BIP125_RBF_SEQUENCE);
+    }
+    original_tx.vout.emplace_back(5 * COIN, script_pub_key);
+    const auto original_tx_ref = MakeTransactionRef(original_tx);
+    const Txid original_txid = original_tx_ref->GetHash();
+
+    {
+        LOCK(wallet->cs_wallet);
+        for (const auto& tip_tx : tip_txs) {
+            wallet->AddToWallet(tip_tx, TxStateInactive{}, [](CWalletTx& wtx, bool /*new_tx*/) {
+                wtx.m_state = TxStateInactive{};
+                return true;
+            });
+        }
+        wallet->AddToWallet(original_tx_ref, TxStateInactive{}, [](CWalletTx& wtx, bool /*new_tx*/) {
+            wtx.m_state = TxStateInactive{};
+            return true;
+        });
+    }
+
+    CCoinControl coin_control;
+    coin_control.m_feerate = CFeeRate(2'000);
+    std::vector<bilingual_str> errors;
+    CAmount old_fee{0};
+    CAmount new_fee{0};
+    CMutableTransaction bumped_tx;
+    const Result result = CreateRateBumpTransaction(*wallet, original_txid, coin_control, errors, old_fee, new_fee, bumped_tx, /*require_mine=*/true, /*outputs=*/{}, /*original_change_index=*/std::nullopt);
+
+    BOOST_CHECK(result == Result::WALLET_ERROR);
+    BOOST_REQUIRE_EQUAL(errors.size(), 1U);
+    BOOST_CHECK_EQUAL(errors[0].original, "Failed to calculate bump fees, because unconfirmed UTXOs depend on an enormous cluster of unconfirmed transactions.");
 }
 
 BOOST_AUTO_TEST_SUITE_END()
