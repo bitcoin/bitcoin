@@ -91,12 +91,25 @@ ReadStatus PartiallyDownloadedBlock::InitData(const CBlockHeaderAndShortTxIDs& c
     // Because well-formed cmpctblock messages will have a (relatively) uniform distribution
     // of short IDs, any highly-uneven distribution of elements can be safely treated as a
     // READ_STATUS_FAILED.
-    std::unordered_map<uint64_t, uint16_t> shorttxids(cmpctblock.shorttxids.size());
+    std::unordered_map<uint64_t, uint32_t> shorttxids(cmpctblock.shorttxids.size());
+    static constexpr uint32_t SHORTID_COLLISION{std::numeric_limits<uint16_t>::max() + 1U};
+    size_t shorttxids_unique_count{0};
     uint16_t index_offset = 0;
     for (size_t i = 0; i < cmpctblock.shorttxids.size(); i++) {
         while (txn_available[i + index_offset])
             index_offset++;
-        shorttxids[cmpctblock.shorttxids[i]] = i + index_offset;
+        const auto [idit, inserted] = shorttxids.emplace(cmpctblock.shorttxids[i], i + index_offset);
+        if (!inserted) {
+            // Leave all transactions sharing a short ID unavailable so they are
+            // requested explicitly with getblocktxn instead of failing the
+            // entire compact block reconstruction attempt.
+            if (idit->second != SHORTID_COLLISION) {
+                idit->second = SHORTID_COLLISION;
+                --shorttxids_unique_count;
+            }
+            continue;
+        }
+        ++shorttxids_unique_count;
         // To determine the chance that the number of entries in a bucket exceeds N,
         // we use the fact that the number of elements in a single bucket is
         // binomially distributed (with n = the number of shorttxids S, and p =
@@ -110,18 +123,14 @@ ReadStatus PartiallyDownloadedBlock::InitData(const CBlockHeaderAndShortTxIDs& c
         if (shorttxids.bucket_size(shorttxids.bucket(cmpctblock.shorttxids[i])) > 12)
             return READ_STATUS_FAILED;
     }
-    // TODO: in the shortid-collision case, we should instead request both transactions
-    // which collided. Falling back to full-block-request here is overkill.
-    if (shorttxids.size() != cmpctblock.shorttxids.size())
-        return READ_STATUS_FAILED; // Short ID collision
 
     std::vector<bool> have_txn(txn_available.size());
     {
     LOCK(pool->cs);
     for (const auto& [wtxid, txit] : pool->txns_randomized) {
         uint64_t shortid = cmpctblock.GetShortID(wtxid);
-        std::unordered_map<uint64_t, uint16_t>::iterator idit = shorttxids.find(shortid);
-        if (idit != shorttxids.end()) {
+        std::unordered_map<uint64_t, uint32_t>::iterator idit = shorttxids.find(shortid);
+        if (idit != shorttxids.end() && idit->second != SHORTID_COLLISION) {
             if (!have_txn[idit->second]) {
                 txn_available[idit->second] = txit->GetSharedTx();
                 have_txn[idit->second]  = true;
@@ -139,15 +148,15 @@ ReadStatus PartiallyDownloadedBlock::InitData(const CBlockHeaderAndShortTxIDs& c
         // Though ideally we'd continue scanning for the two-txn-match-shortid case,
         // the performance win of an early exit here is too good to pass up and worth
         // the extra risk.
-        if (mempool_count == shorttxids.size())
+        if (mempool_count == shorttxids_unique_count)
             break;
     }
     }
 
     for (size_t i = 0; i < extra_txn.size(); i++) {
         uint64_t shortid = cmpctblock.GetShortID(extra_txn[i].first);
-        std::unordered_map<uint64_t, uint16_t>::iterator idit = shorttxids.find(shortid);
-        if (idit != shorttxids.end()) {
+        std::unordered_map<uint64_t, uint32_t>::iterator idit = shorttxids.find(shortid);
+        if (idit != shorttxids.end() && idit->second != SHORTID_COLLISION) {
             if (!have_txn[idit->second]) {
                 txn_available[idit->second] = extra_txn[i].second;
                 have_txn[idit->second]  = true;
@@ -171,7 +180,7 @@ ReadStatus PartiallyDownloadedBlock::InitData(const CBlockHeaderAndShortTxIDs& c
         // Though ideally we'd continue scanning for the two-txn-match-shortid case,
         // the performance win of an early exit here is too good to pass up and worth
         // the extra risk.
-        if (mempool_count == shorttxids.size())
+        if (mempool_count == shorttxids_unique_count)
             break;
     }
 

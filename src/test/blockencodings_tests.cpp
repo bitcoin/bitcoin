@@ -355,6 +355,36 @@ BOOST_AUTO_TEST_CASE(ReceiveWithExtraTransactions) {
     }
 }
 
+BOOST_AUTO_TEST_CASE(ShortIDCollisionRecoveryTest)
+{
+    CTxMemPool& pool = *Assert(m_node.mempool);
+    auto rand_ctx(FastRandomContext(uint256{42}));
+    const CBlock block(BuildBlockTestCase(rand_ctx));
+
+    TestHeaderAndShortIDs shortIDs(block, rand_ctx);
+    BOOST_REQUIRE_EQUAL(shortIDs.shorttxids.size(), 2U);
+    shortIDs.shorttxids[1] = shortIDs.shorttxids[0];
+
+    DataStream stream{};
+    stream << shortIDs;
+
+    CBlockHeaderAndShortTxIDs shortIDs2;
+    stream >> shortIDs2;
+
+    PartiallyDownloadedBlock partialBlock(&pool);
+    BOOST_CHECK(partialBlock.InitData(shortIDs2, empty_extra_txn) == READ_STATUS_OK);
+    BOOST_CHECK(partialBlock.IsTxAvailable(0));
+    BOOST_CHECK(!partialBlock.IsTxAvailable(1));
+    BOOST_CHECK(!partialBlock.IsTxAvailable(2));
+
+    CBlock reconstructed;
+    BOOST_CHECK(partialBlock.FillBlock(reconstructed, {block.vtx[1], block.vtx[2]}, /*segwit_active=*/true) == READ_STATUS_OK);
+    bool mutated;
+    BOOST_CHECK_EQUAL(block.GetHash().ToString(), reconstructed.GetHash().ToString());
+    BOOST_CHECK_EQUAL(block.hashMerkleRoot.ToString(), BlockMerkleRoot(reconstructed, &mutated).ToString());
+    BOOST_CHECK(!mutated);
+}
+
 BOOST_AUTO_TEST_CASE(TransactionsRequestSerializationTest) {
     BlockTransactionsRequest req1;
     req1.blockhash = m_rng.rand256();
