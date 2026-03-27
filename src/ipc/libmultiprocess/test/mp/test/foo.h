@@ -45,6 +45,9 @@ struct FooMutable
     std::string message;
 };
 
+using FooData = std::vector<char>;
+using FooDataRef = std::shared_ptr<const FooData>;
+
 class FooCallback
 {
 public:
@@ -80,6 +83,7 @@ public:
     void passMutable(FooMutable& foo) { foo.message += " call"; }
     FooEnum passEnum(FooEnum foo) { return foo; }
     int passFn(std::function<int()> fn) { return fn(); }
+    std::vector<FooDataRef> passDataPointers(std::vector<FooDataRef> values) { return values; }
     std::shared_ptr<FooCallback> m_callback;
     void callFn() { assert(m_fn); m_fn(); }
     void callFnAsync() { assert(m_fn); m_fn(); }

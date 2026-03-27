@@ -340,6 +340,22 @@ public:
 
     //! External context pointer.
     void* m_context;
+
+    //! Hook called when ProxyServer<ThreadMap>::makeThread() is called.
+    std::function<void()> testing_hook_makethread;
+
+    //! Hook called on the worker thread inside makeThread(), after the thread
+    //! context is set up and thread_context promise is fulfilled, but before it
+    //! starts waiting for requests.
+    std::function<void()> testing_hook_makethread_created;
+
+    //! Hook called on the worker thread when it starts to execute an async
+    //! request. Used by tests to control timing or inject behavior at this
+    //! point in execution.
+    std::function<void()> testing_hook_async_request_start;
+
+    //! Hook called on the worker thread just before returning results.
+    std::function<void()> testing_hook_async_request_done;
 };
 
 //! Single element task queue used to handle recursive capnp calls. (If the
@@ -814,6 +830,7 @@ void _Serve(EventLoop& loop, kj::Own<kj::AsyncIoStream>&& stream, InitImpl& init
         return kj::heap<ProxyServer<InitInterface>>(std::shared_ptr<InitImpl>(&init, [](InitImpl*){}), connection);
     });
     auto it = loop.m_incoming_connections.begin();
+    MP_LOG(loop, Log::Info) << "IPC server: socket connected.";
     it->onDisconnect([&loop, it] {
         MP_LOG(loop, Log::Info) << "IPC server: socket disconnected.";
         loop.m_incoming_connections.erase(it);

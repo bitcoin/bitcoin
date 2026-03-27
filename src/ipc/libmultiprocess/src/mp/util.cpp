@@ -81,7 +81,7 @@ std::string ThreadName(const char* exe_name)
     buffer << syscall(SYS_gettid);
 #elif defined(HAVE_PTHREAD_THREADID_NP)
     uint64_t tid = 0;
-    pthread_threadid_np(NULL, &tid);
+    pthread_threadid_np(nullptr, &tid);
     buffer << tid;
 #elif defined(HAVE_PTHREAD_GETTHREADID_NP)
     buffer << pthread_getthreadid_np();
@@ -102,7 +102,7 @@ std::string LogEscape(const kj::StringTree& string, size_t max_size)
                 result.append("\\\\");
             } else if (c < 0x20 || c > 0x7e) {
                 char escape[4];
-                snprintf(escape, 4, "\\%02x", c);
+                snprintf(escape, sizeof(escape), "\\%02x", static_cast<unsigned char>(c));
                 result.append(escape);
             } else {
                 result.push_back(c);
