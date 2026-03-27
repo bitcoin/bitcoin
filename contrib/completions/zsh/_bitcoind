@@ -1,0 +1,51 @@
+#compdef bitcoind bitcoin-qt
+
+# zsh completion for bitcoind(1) and bitcoin-qt(1)
+# Copyright (c) 2026-present The Bitcoin Core developers
+# Distributed under the MIT software license, see the accompanying
+# file COPYING or http://www.opensource.org/licenses/mit-license.php.
+
+_bitcoind() {
+    local cur="$words[CURRENT]"
+    local bitcoind="$words[1]"
+
+    case "$cur" in
+        -conf=*|-pid=*|-loadblock=*|-rpccookiefile=*|-wallet=*)
+            compset -P '*='
+            _files
+            return 0
+            ;;
+        -datadir=*)
+            compset -P '*='
+            _files -/
+            return 0
+            ;;
+        -*=*)
+            # prevent nonsense completions
+            return 0
+            ;;
+        *)
+            # only parse -help if sensible
+            if [[ -z "$cur" || "$cur" == -* ]]; then
+                local helpopts
+                helpopts=$($bitcoind -help 2>&1 | awk '$1 ~ /^-/ { sub(/=.*/, "="); print $1 }')
+                local -a opts
+                opts=(${(f)helpopts})
+                # suppress trailing space for options that expect a value
+                compadd -S '' -- ${(M)opts:#*=}
+                compadd -- ${opts:#*=}
+            fi
+            return 0
+            ;;
+    esac
+}
+
+_bitcoind "$@"
+
+# Local variables:
+# mode: shell-script
+# sh-basic-offset: 4
+# sh-indent-comment: t
+# indent-tabs-mode: nil
+# End:
+# ex: ts=4 sw=4 et filetype=zsh

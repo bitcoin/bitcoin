@@ -1,0 +1,56 @@
+#compdef bitcoin-wallet
+
+# zsh completion for bitcoin-wallet(1)
+# Copyright (c) 2026-present The Bitcoin Core developers
+# Distributed under the MIT software license, see the accompanying
+# file COPYING or http://www.opensource.org/licenses/mit-license.php.
+
+_bitcoin-wallet() {
+    local cur="$words[CURRENT]"
+    local bitcoin_wallet="$words[1]"
+
+    case "$cur" in
+        -dumpfile=*|-wallet=*)
+            compset -P '*='
+            _files
+            return 0
+            ;;
+        -datadir=*)
+            compset -P '*='
+            _files -/
+            return 0
+            ;;
+        -*=*)
+            return 0
+            ;;
+    esac
+
+    if (( CURRENT == 2 )) || [[ "$words[CURRENT-1]" == -* && "$words[CURRENT-1]" != "-help" && "$words[CURRENT-1]" != "-help-debug" ]]; then
+        # options and commands
+        local helpopts
+        helpopts=$($bitcoin_wallet -help 2>&1 | awk '$1 ~ /^-/ { sub(/=.*/, "="); print $1 }')
+        local -a opts
+        opts=(${(f)helpopts})
+        compadd -S '' -- ${(M)opts:#*=}
+        compadd -- ${opts:#*=}
+
+        # also show commands when no subcommand given yet
+        local helpcmds
+        helpcmds=$($bitcoin_wallet -help | awk '/^Commands:/{found=1; next} found && /^  [a-z]/ { print $1 }')
+        local -a cmds
+        cmds=(${(f)helpcmds})
+        compadd -- "${cmds[@]}"
+    fi
+
+    return 0
+}
+
+_bitcoin-wallet "$@"
+
+# Local variables:
+# mode: shell-script
+# sh-basic-offset: 4
+# sh-indent-comment: t
+# indent-tabs-mode: nil
+# End:
+# ex: ts=4 sw=4 et filetype=zsh

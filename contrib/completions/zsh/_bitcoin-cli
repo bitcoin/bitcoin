@@ -1,0 +1,141 @@
+#compdef bitcoin-cli
+
+# zsh completion for bitcoin-cli(1)
+# Copyright (c) 2026-present The Bitcoin Core developers
+# Distributed under the MIT software license, see the accompanying
+# file COPYING or http://www.opensource.org/licenses/mit-license.php.
+
+# call bitcoin-cli for RPC, forwarding relevant connection args
+_bitcoin_rpc() {
+    local rpcargs=()
+    local i
+    for i in $words; do
+        case "$i" in
+            -conf=*|-datadir=*|-regtest|-rpc*|-testnet|-testnet4)
+                rpcargs+=("$i")
+                ;;
+        esac
+    done
+    $bitcoin_cli "${rpcargs[@]}" "$@"
+}
+
+_bitcoin-cli() {
+    local cur="$words[CURRENT]"
+    local bitcoin_cli="$words[1]"
+
+    # Context-sensitive completions based on argument position.
+    # bash uses 0-indexed cword/words; zsh uses 1-indexed CURRENT/words.
+    # bash words[cword-N] becomes zsh words[CURRENT-N] (offsets cancel out),
+    # and bash (cword > N) becomes zsh (CURRENT > N+1).
+
+    if (( CURRENT > 6 )); then
+        case ${words[CURRENT-5]} in
+            sendtoaddress)
+                compadd -- true false
+                return 0
+                ;;
+        esac
+    fi
+
+    if (( CURRENT > 5 )); then
+        case ${words[CURRENT-4]} in
+            listtransactions|setban)
+                compadd -- true false
+                return 0
+                ;;
+            signrawtransactionwithkey|signrawtransactionwithwallet)
+                compadd -- ALL NONE SINGLE 'ALL|ANYONECANPAY' 'NONE|ANYONECANPAY' 'SINGLE|ANYONECANPAY'
+                return 0
+                ;;
+        esac
+    fi
+
+    if (( CURRENT > 4 )); then
+        case ${words[CURRENT-3]} in
+            getbalance|gettxout|listreceivedbyaddress|listsinceblock)
+                compadd -- true false
+                return 0
+                ;;
+        esac
+    fi
+
+    if (( CURRENT > 3 )); then
+        case ${words[CURRENT-2]} in
+            addnode)
+                compadd -- add remove onetry
+                return 0
+                ;;
+            setban)
+                compadd -- add remove
+                return 0
+                ;;
+            fundrawtransaction|getblock|getblockheader|getmempoolancestors|getmempooldescendants|getrawtransaction|gettransaction|listreceivedbyaddress|sendrawtransaction)
+                compadd -- true false
+                return 0
+                ;;
+        esac
+    fi
+
+    case "$words[CURRENT-1]" in
+        backupwallet)
+            _files
+            return 0
+            ;;
+        getaddednodeinfo|getrawmempool|lockunspent)
+            compadd -- true false
+            return 0
+            ;;
+        getbalance|getnewaddress|listtransactions|sendmany)
+            return 0
+            ;;
+    esac
+
+    case "$cur" in
+        -conf=*)
+            compset -P '*='
+            _files
+            return 0
+            ;;
+        -datadir=*)
+            compset -P '*='
+            _files -/
+            return 0
+            ;;
+        -*=*)
+            # prevent nonsense completions
+            return 0
+            ;;
+        *)
+            local -a opts
+
+            # only parse -help if sensible
+            if [[ -z "$cur" || "$cur" == -* ]]; then
+                local helpopts
+                helpopts=$($bitcoin_cli -help 2>&1 | awk '$1 ~ /^-/ { sub(/=.*/, "="); print $1 }')
+                opts+=(${(f)helpopts})
+            fi
+
+            # only parse help if sensible
+            if [[ -z "$cur" || "$cur" == [a-z]* ]]; then
+                local commands
+                commands=$(_bitcoin_rpc help 2>/dev/null | awk '$1 ~ /^[a-z]/ { print $1 }')
+                opts+=(${(f)commands})
+            fi
+
+            # suppress trailing space for options that expect a value
+            compadd -S '' -- ${(M)opts:#*=}
+            compadd -- ${opts:#*=}
+            return 0
+            ;;
+    esac
+}
+
+_bitcoin-cli "$@"
+
+# Local variables:
+# mode: shell-script
+# sh-basic-offset: 4
+# sh-indent-comment: t
+# indent-tabs-mode: nil
+# End:
+# ex: ts=4 sw=4 et filetype=zsh
