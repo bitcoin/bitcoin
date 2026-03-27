@@ -47,6 +47,9 @@ env:
   SYMBOL_CHECK: 'yes'
   # Compile and run the examples.
   EXAMPLES: 'yes'
+  # Disable Docker build summary generation.
+  # See https://github.com/docker/build-push-action/blob/master/README.md#environment-variables.
+  DOCKER_BUILD_SUMMARY: false
 
 jobs:
   docker_cache:
@@ -67,17 +70,17 @@ jobs:
     steps:
       - name: Get cache validity period
         id: cache_timestamp
-        run: echo "period=$(($(date +%V) / 4))" >> "$GITHUB_OUTPUT"
+        run: echo "period=$((10#$(date +%V) / 4))" >> "$GITHUB_OUTPUT"
 
       - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
+        uses: docker/setup-buildx-action@v4
         with:
           # See: https://github.com/moby/buildkit/issues/3969.
           driver-opts: |
             network=host
 
       - name: Build container
-        uses: docker/build-push-action@v6
+        uses: docker/build-push-action@v7
         with:
           file: ./ci/linux-debian.Dockerfile
           cache-from: type=gha,scope=${{ runner.arch }}-${{ steps.cache_timestamp.outputs.period }}
@@ -511,7 +514,7 @@ jobs:
       matrix:
         env_vars:
           - { WIDEMUL: 'int64',  RECOVERY: 'yes', ECDH: 'yes', EXTRAKEYS: 'yes', SCHNORRSIG: 'yes', MUSIG: 'yes', ELLSWIFT: 'yes' }
-          - { WIDEMUL: 'int128_struct', ECMULTGENPRECISION: 2, ECMULTWINDOW: 4 }
+          - { WIDEMUL: 'int128_struct', ECMULTGENKB: 2, ECMULTWINDOW: 4 }
           - { WIDEMUL: 'int128',                  ECDH: 'yes', EXTRAKEYS: 'yes', SCHNORRSIG: 'yes', MUSIG: 'yes', ELLSWIFT: 'yes' }
           - { WIDEMUL: 'int128', RECOVERY: 'yes' }
           - { WIDEMUL: 'int128', RECOVERY: 'yes', ECDH: 'yes', EXTRAKEYS: 'yes', SCHNORRSIG: 'yes', MUSIG: 'yes', ELLSWIFT: 'yes' }
