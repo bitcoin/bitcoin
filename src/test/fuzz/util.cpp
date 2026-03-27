@@ -36,12 +36,7 @@ NodeSeconds ConsumeTime(FuzzedDataProvider& fuzzed_data_provider, const std::opt
     // Avoid t=0 (1970-01-01T00:00:00Z) since SetMockTime(0) disables mocktime.
     static const int64_t time_min{ParseISO8601DateTime("2000-01-01T00:00:01Z").value()};
     static const int64_t time_max{ParseISO8601DateTime("2100-12-31T23:59:59Z").value()};
-    return NodeSeconds{ConsumeDuration(fuzzed_data_provider, min.value_or(time_min) * 1s, max.value_or(time_max) * 1s)};
-}
-
-std::chrono::seconds ConsumeDuration(FuzzedDataProvider& fuzzed_data_provider, std::chrono::seconds min, std::chrono::seconds max) noexcept
-{
-    return 1s * fuzzed_data_provider.ConsumeIntegralInRange<int64_t>(min.count(), max.count());
+    return NodeSeconds{ConsumeDuration<std::chrono::seconds>(fuzzed_data_provider, min.value_or(time_min) * 1s, max.value_or(time_max) * 1s)};
 }
 
 CMutableTransaction ConsumeTransaction(FuzzedDataProvider& fuzzed_data_provider, const std::optional<std::vector<Txid>>& prevout_txids, const int max_num_in, const int max_num_out) noexcept
