@@ -293,4 +293,85 @@ BOOST_AUTO_TEST_CASE(download_manager_invalid_proof)
     BOOST_CHECK(!dm.ProcessUTXOSetChunk(1, msg));
 }
 
+BOOST_AUTO_TEST_CASE(download_manager_rejects_bad_merkle_root)
+{
+    auto regtest_params{CChainParams::RegTest({})};
+    auto au_data{regtest_params->AssumeutxoForHeight(110)};
+    BOOST_REQUIRE(au_data.has_value());
+
+    fs::path share_dir{m_path_root / "share_test3"};
+    fs::create_directories(share_dir);
+
+    fs::path src_path{share_dir / "source3.dat"};
+    {
+        AutoFile file{fsbridge::fopen(src_path, "wb")};
+        BOOST_REQUIRE(!file.IsNull());
+        node::SnapshotMetadata metadata(regtest_params->MessageStart(), au_data->blockhash, /*coins_count=*/1);
+        file << metadata;
+        std::vector<unsigned char> body{m_rng.randbytes(1000)};
+        file.write(MakeByteSpan(body));
+        BOOST_REQUIRE(file.fclose() == 0);
+    }
+
+    node::UTXOSetShareProvider provider;
+    BOOST_REQUIRE_EQUAL(provider.Initialize(share_dir, *regtest_params), 1U);
+    auto info_entries{provider.GetInfoEntries()};
+    BOOST_REQUIRE_EQUAL(info_entries.size(), 1U);
+
+    // Create au_data with a specific non-null chunk_merkle_root that differs
+    // from what the provider computed
+    AssumeutxoData custom_au_data{*au_data};
+    custom_au_data.chunk_merkle_root = uint256{"0000000000000000000000000000000000000000000000000000000000000001"};
+
+    fs::path output_path{m_path_root / "downloaded3.dat"};
+    node::UTXOSetDownloadManager dm;
+    BOOST_CHECK(dm.StartDownload(au_data->blockhash, custom_au_data, output_path));
+
+    // Feed info with the provider's actual merkle root — should be rejected
+    // because it doesn't match the expected chunk_merkle_root.
+    dm.ProcessUTXOSetInfo(1, info_entries);
+    BOOST_CHECK(dm.GetState() == node::UTXOSetDownloadManager::State::DISCOVERING);
+
+    // Now feed info with the correct merkle root
+    auto fixed_entries{info_entries};
+    fixed_entries[0].merkle_root = custom_au_data.chunk_merkle_root;
+    dm.ProcessUTXOSetInfo(1, fixed_entries);
+    BOOST_CHECK(dm.GetState() == node::UTXOSetDownloadManager::State::DOWNLOADING);
+}
+
+BOOST_AUTO_TEST_CASE(download_manager_skips_validation_when_null)
+{
+    // When chunk_merkle_root is null any merkle_root from
+    // the peer is be accepted.
+    auto regtest_params{CChainParams::RegTest({})};
+    auto au_data{regtest_params->AssumeutxoForHeight(110)};
+    BOOST_REQUIRE(au_data.has_value());
+    BOOST_CHECK(au_data->chunk_merkle_root.IsNull());
+
+    fs::path share_dir{m_path_root / "share_test4"};
+    fs::create_directories(share_dir);
+
+    fs::path src_path{share_dir / "source4.dat"};
+    {
+        AutoFile file{fsbridge::fopen(src_path, "wb")};
+        BOOST_REQUIRE(!file.IsNull());
+        node::SnapshotMetadata metadata(regtest_params->MessageStart(), au_data->blockhash, /*coins_count=*/1);
+        file << metadata;
+        std::vector<unsigned char> body{m_rng.randbytes(1000)};
+        file.write(MakeByteSpan(body));
+        BOOST_REQUIRE(file.fclose() == 0);
+    }
+
+    node::UTXOSetShareProvider provider;
+    BOOST_REQUIRE_EQUAL(provider.Initialize(share_dir, *regtest_params), 1U);
+    auto info_entries{provider.GetInfoEntries()};
+
+    fs::path output_path{m_path_root / "downloaded4.dat"};
+    node::UTXOSetDownloadManager dm;
+    BOOST_CHECK(dm.StartDownload(au_data->blockhash, *au_data, output_path));
+
+    dm.ProcessUTXOSetInfo(1, info_entries);
+    BOOST_CHECK(dm.GetState() == node::UTXOSetDownloadManager::State::DOWNLOADING);
+}
+
 BOOST_AUTO_TEST_SUITE_END()

@@ -233,6 +233,7 @@ bool UTXOSetDownloadManager::StartDownload(const uint256& target_blockhash,
     if (m_state != State::IDLE) return false;
 
     m_target_blockhash = target_blockhash;
+    m_expected_chunk_merkle_root = au_data.chunk_merkle_root;
     m_target_height = au_data.height;
     m_output_path = output_path;
     m_state = State::DISCOVERING;
@@ -250,6 +251,14 @@ void UTXOSetDownloadManager::ProcessUTXOSetInfo(int64_t peer_id,
     for (const auto& entry : entries) {
         if (entry.block_hash != m_target_blockhash) continue;
         if (entry.data_length <= 1) continue;
+        if (!m_expected_chunk_merkle_root.IsNull() &&
+            entry.merkle_root != m_expected_chunk_merkle_root) {
+            LogDebug(BCLog::UTXOSETSHARE,
+                     "Rejecting utxosetinfo from peer=%d: merkle_root %s does not match expected %s",
+                     peer_id, entry.merkle_root.ToString(),
+                     m_expected_chunk_merkle_root.ToString());
+            continue;
+        }
 
         m_data_length = entry.data_length;
         m_merkle_root = entry.merkle_root;

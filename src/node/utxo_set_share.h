@@ -177,6 +177,7 @@ private:
 
     // Target snapshot info
     uint256 m_target_blockhash GUARDED_BY(m_mutex);
+    uint256 m_expected_chunk_merkle_root GUARDED_BY(m_mutex);
     uint32_t m_target_height GUARDED_BY(m_mutex){0};
     uint64_t m_data_length GUARDED_BY(m_mutex){0};
     uint256 m_merkle_root GUARDED_BY(m_mutex);
