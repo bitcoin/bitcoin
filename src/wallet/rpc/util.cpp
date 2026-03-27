@@ -32,14 +32,13 @@ bool GetAvoidReuseFlag(const CWallet& wallet, const UniValue& param) {
 
 std::string EnsureUniqueWalletName(const JSONRPCRequest& request, std::optional<std::string_view> wallet_name)
 {
-    std::string endpoint_wallet;
-    if (GetWalletNameFromJSONRPCRequest(request, endpoint_wallet)) {
+    if (auto endpoint_wallet{GetWalletNameFromJSONRPCRequest(request)}) {
         // wallet endpoint was used
-        if (wallet_name && *wallet_name != endpoint_wallet) {
+        if (wallet_name && *wallet_name != *endpoint_wallet) {
             throw JSONRPCError(RPC_INVALID_PARAMETER,
                 "The RPC endpoint wallet and the wallet name parameter specify different wallets");
         }
-        return endpoint_wallet;
+        return *endpoint_wallet;
     }
 
     // Not a wallet endpoint; parameter must be provided
@@ -51,14 +50,13 @@ std::string EnsureUniqueWalletName(const JSONRPCRequest& request, std::optional<
     return std::string{*wallet_name};
 }
 
-bool GetWalletNameFromJSONRPCRequest(const JSONRPCRequest& request, std::string& wallet_name)
+std::optional<std::string> GetWalletNameFromJSONRPCRequest(const JSONRPCRequest& request)
 {
     if (request.URI.starts_with(WALLET_ENDPOINT_BASE)) {
         // wallet endpoint was used
-        wallet_name = UrlDecode(std::string_view{request.URI}.substr(WALLET_ENDPOINT_BASE.size()));
-        return true;
+        return UrlDecode(std::string_view{request.URI}.substr(WALLET_ENDPOINT_BASE.size()));
     }
-    return false;
+    return std::nullopt;
 }
 
 std::shared_ptr<CWallet> GetWalletForJSONRPCRequest(const JSONRPCRequest& request)
@@ -66,9 +64,8 @@ std::shared_ptr<CWallet> GetWalletForJSONRPCRequest(const JSONRPCRequest& reques
     CHECK_NONFATAL(request.mode == JSONRPCRequest::EXECUTE);
     WalletContext& context = EnsureWalletContext(request.context);
 
-    std::string wallet_name;
-    if (GetWalletNameFromJSONRPCRequest(request, wallet_name)) {
-        std::shared_ptr<CWallet> pwallet = GetWallet(context, wallet_name);
+    if (auto wallet_name{GetWalletNameFromJSONRPCRequest(request)}) {
+        std::shared_ptr<CWallet> pwallet{GetWallet(context, *wallet_name)};
         if (!pwallet) throw JSONRPCError(RPC_WALLET_NOT_FOUND, "Requested wallet does not exist or is not loaded");
         return pwallet;
     }

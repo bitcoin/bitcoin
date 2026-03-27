@@ -39,7 +39,7 @@ static const RPCResult RESULT_LAST_PROCESSED_BLOCK { RPCResult::Type::OBJ, "last
  * @return nullptr if no wallet should be used, or a pointer to the CWallet
  */
 std::shared_ptr<CWallet> GetWalletForJSONRPCRequest(const JSONRPCRequest& request);
-bool GetWalletNameFromJSONRPCRequest(const JSONRPCRequest& request, std::string& wallet_name);
+std::optional<std::string> GetWalletNameFromJSONRPCRequest(const JSONRPCRequest& request);
 /**
  * Ensures that a wallet name is specified across the endpoint and wallet_name.
  * Throws `RPC_INVALID_PARAMETER` if none or different wallet names are specified.
