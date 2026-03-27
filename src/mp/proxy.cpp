@@ -411,13 +411,16 @@ ProxyServer<ThreadMap>::ProxyServer(Connection& connection) : m_connection(conne
 
 kj::Promise<void> ProxyServer<ThreadMap>::makeThread(MakeThreadContext context)
 {
+    EventLoop& loop{*m_connection.m_loop};
+    if (loop.testing_hook_makethread) loop.testing_hook_makethread();
     const std::string from = context.getParams().getName();
     std::promise<ThreadContext*> thread_context;
-    std::thread thread([&thread_context, from, this]() {
-        g_thread_context.thread_name = ThreadName(m_connection.m_loop->m_exe_name) + " (from " + from + ")";
+    std::thread thread([&loop, &thread_context, from]() {
+        g_thread_context.thread_name = ThreadName(loop.m_exe_name) + " (from " + from + ")";
         g_thread_context.waiter = std::make_unique<Waiter>();
-        thread_context.set_value(&g_thread_context);
         Lock lock(g_thread_context.waiter->m_mutex);
+        thread_context.set_value(&g_thread_context);
+        if (loop.testing_hook_makethread_created) loop.testing_hook_makethread_created();
         // Wait for shutdown signal from ProxyServer<Thread> destructor (signal
         // is just waiter getting set to null.)
         g_thread_context.waiter->wait(lock, [] { return !g_thread_context.waiter; });
