@@ -3513,7 +3513,9 @@ bool CConnman::Start(CScheduler& scheduler, const Options& connOptions)
         if (m_anchors.size() > MAX_BLOCK_RELAY_ONLY_ANCHORS) {
             m_anchors.resize(MAX_BLOCK_RELAY_ONLY_ANCHORS);
         }
-        LogInfo("%i block-relay-only anchors will be tried for connections.\n", m_anchors.size());
+        if (fNetworkActive) {
+            LogInfo("%i block-relay-only anchors will be tried for connections.\n", m_anchors.size());
+        }
     }
 
     if (m_client_interface) {
