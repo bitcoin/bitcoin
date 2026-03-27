@@ -548,14 +548,7 @@ class BitcoinTestFramework(metaclass=BitcoinTestMetaClass):
     def wait_for_node_exit(self, i, timeout):
         self.nodes[i].process.wait(timeout)
 
-    def connect_nodes(self, a, b, *, peer_advertises_v2=None, wait_for_connect: bool = True):
-        """
-        Kwargs:
-            wait_for_connect: if True, block until the nodes are verified as connected. You might
-                want to disable this when using -stopatheight with one of the connected nodes,
-                since there will be a race between the actual connection and performing
-                the assertions before one node shuts down.
-        """
+    def connect_nodes(self, a, b, *, peer_advertises_v2=None):
         from_connection = self.nodes[a]
         to_connection = self.nodes[b]
 
@@ -580,9 +573,6 @@ class BitcoinTestFramework(metaclass=BitcoinTestMetaClass):
             # skip the optional third argument if it matches the default, for
             # compatibility with older clients
             from_connection.addnode(ip_port, "onetry")
-
-        if not wait_for_connect:
-            return
 
         self.wait_until(lambda: find_conn(from_connection, to_connection_subver, inbound=False) is not None)
         self.wait_until(lambda: find_conn(to_connection, from_connection_subver, inbound=True) is not None)
