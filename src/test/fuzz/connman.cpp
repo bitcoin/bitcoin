@@ -99,12 +99,14 @@ FUZZ_TARGET(connman, .init = initialize_connman)
     CNode random_node = ConsumeNode(fuzzed_data_provider);
     CSubNet random_subnet;
     std::string random_string;
+    std::vector<NodeId> node_ids;
 
     LIMITED_WHILE(fuzzed_data_provider.ConsumeBool(), 100) {
         CNode& p2p_node{*ConsumeNodeAsUniquePtr(fuzzed_data_provider).release()};
         // Simulate post-handshake state.
         p2p_node.fSuccessfullyConnected = true;
         connman.AddTestNode(p2p_node);
+        node_ids.push_back(p2p_node.GetId());
     }
 
     LIMITED_WHILE(fuzzed_data_provider.ConsumeBool(), 10000) {
@@ -141,10 +143,23 @@ FUZZ_TARGET(connman, .init = initialize_connman)
                 connman.DisconnectNode(random_subnet);
             },
             [&] {
-                connman.ForEachNode([](auto) {});
+                connman.ForEachNode([](CNode* pnode) {
+                    (void)pnode->GetId();
+                    (void)pnode->IsInboundConn();
+                    (void)pnode->IsFullOutboundConn();
+                    (void)pnode->ConnectionTypeAsString();
+                });
             },
             [&] {
-                (void)connman.ForNode(fuzzed_data_provider.ConsumeIntegral<NodeId>(), [&](auto) { return fuzzed_data_provider.ConsumeBool(); });
+                NodeId id = node_ids.empty() || fuzzed_data_provider.ConsumeBool()
+                    ? fuzzed_data_provider.ConsumeIntegral<NodeId>()
+                    : PickValue(fuzzed_data_provider, node_ids);
+                (void)connman.ForNode(id, [&](CNode* pnode) {
+                    (void)pnode->GetId();
+                    (void)pnode->IsInboundConn();
+                    (void)pnode->IsFullOutboundConn();
+                    return fuzzed_data_provider.ConsumeBool();
+                });
             },
             [&] {
                 auto max_addresses = fuzzed_data_provider.ConsumeIntegral<size_t>();
