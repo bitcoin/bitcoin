@@ -3283,7 +3283,6 @@ bool PeerManagerImpl::PrepareBlockFilterRequest(CNode& node, Peer& peer,
         if (!stop_index || !BlockRequestAllowed(*stop_index)) {
             LogDebug(BCLog::NET, "peer requested invalid block hash: %s, %s",
                      stop_hash.ToString(), node.DisconnectMsg());
-            node.fDisconnect = true;
             return false;
         }
     }

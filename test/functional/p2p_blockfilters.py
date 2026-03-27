@@ -193,6 +193,41 @@ class CompactFiltersTest(BitcoinTestFramework):
         computed_cfhash = uint256_from_str(hash256(cfilter.filter_data))
         assert_equal(computed_cfhash, stale_cfhashes[999])
 
+        self.log.info("Check that requesting unknown block hash results in no response, but doesn't result in disconnect.")
+
+        self.disconnect_nodes(0, 1)
+        unknown_block_hash = self.generate(self.nodes[1], 1, sync_fun=self.no_op)[0]
+
+        peer_0 = self.nodes[0].add_p2p_connection(P2PInterface())
+
+        requests = [
+            msg_getcfcheckpt(
+                filter_type=FILTER_TYPE_BASIC,
+                stop_hash=int(unknown_block_hash, 16),
+            ),
+            msg_getcfheaders(
+                filter_type=FILTER_TYPE_BASIC,
+                start_height=1,
+                stop_hash=int(unknown_block_hash, 16),
+            ),
+            msg_getcfilters(
+                filter_type=FILTER_TYPE_BASIC,
+                start_height=1,
+                stop_hash=int(unknown_block_hash, 16),
+            ),
+        ]
+
+        for request in requests:
+            peer_0.last_message = {}
+            peer_0.send_and_ping(request)
+
+            # No response...
+            assert all(msg not in peer_0.last_message for msg in ['cfheaders', 'cffilters', 'cfcheckpt'])
+            # ...But we're still connected!
+            assert peer_0.is_connected
+
+        self.connect_nodes(0, 1)
+
         self.log.info("Requests to node 1 without NODE_COMPACT_FILTERS results in disconnection.")
         requests = [
             msg_getcfcheckpt(
@@ -240,13 +275,6 @@ class CompactFiltersTest(BitcoinTestFramework):
                     filter_type=255,
                     stop_hash=int(main_block_hash, 16),
                 ), "requested unsupported block filter type"
-            ),
-            # Requesting unknown hash results in disconnection.
-            (
-                msg_getcfcheckpt(
-                    filter_type=FILTER_TYPE_BASIC,
-                    stop_hash=123456789,
-                ), "requested invalid block hash"
             ),
             (
                 # Request with (start block height > stop block height) results in disconnection.
