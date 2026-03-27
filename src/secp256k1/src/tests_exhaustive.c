@@ -459,8 +459,6 @@ int main(int argc, char** argv) {
         secp256k1_context_destroy(ctx);
     }
 
-    testrand_finish();
-
     printf("no problems found\n");
     return EXIT_SUCCESS;
 }

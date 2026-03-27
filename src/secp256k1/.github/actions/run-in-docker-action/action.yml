@@ -13,9 +13,9 @@ inputs:
 runs:
   using: "composite"
   steps:
-    - uses: docker/setup-buildx-action@v3
+    - uses: docker/setup-buildx-action@v4
 
-    - uses: docker/build-push-action@v6
+    - uses: docker/build-push-action@v7
       id: main_builder
       continue-on-error: true
       with:
@@ -24,7 +24,7 @@ runs:
         load: true
         cache-from: type=gha,scope=${{ inputs.scope }}
 
-    - uses: docker/build-push-action@v6
+    - uses: docker/build-push-action@v7
       id: retry_builder
       if: steps.main_builder.outcome == 'failure'
       with:
@@ -44,7 +44,7 @@ runs:
           $(echo '${{ toJSON(env) }}' | jq -r 'keys[] | "--env \(.) "') \
           --volume ${{ github.workspace }}:${{ github.workspace }} \
           --workdir ${{ github.workspace }} \
-          $(docker images -q | head -n1) \
+          ${{ case(steps.main_builder.outcome == 'success', steps.main_builder.outputs.imageid, steps.retry_builder.outputs.imageid) }} \
           bash -c "
             git config --global --add safe.directory ${{ github.workspace }}
             ${{ inputs.command }}

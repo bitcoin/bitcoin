@@ -80,7 +80,7 @@ int main(int argc, char **argv) {
 
     fprintf(fp, "const secp256k1_ge_storage secp256k1_ecmult_gen_prec_table[COMB_BLOCKS][COMB_POINTS] = {\n");
     fprintf(fp, "#if 0\n");
-    for (config = 0; config < sizeof(CONFIGS) / sizeof(*CONFIGS); ++config) {
+    for (config = 0; config < ARRAY_SIZE(CONFIGS); ++config) {
         print_table(fp, CONFIGS[config][0], CONFIGS[config][1]);
         if (CONFIGS[config][0] == COMB_BLOCKS && CONFIGS[config][1] == COMB_TEETH) {
             did_current_config = 1;

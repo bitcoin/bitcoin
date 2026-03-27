@@ -11,6 +11,15 @@
 #include "testrand.h"
 #include "util.h"
 
+/* Helper for when we need to check that the ctx-provided sha256 compression was called */
+#define DEFINE_SHA256_TRANSFORM_PROBE(name)                                     \
+    static int name##_called = 0;                                               \
+    static void name(uint32_t *s, const unsigned char *msg, size_t rounds) {    \
+        name##_called = 1;                                                      \
+        secp256k1_sha256_transform(s, msg, rounds);                             \
+        s[0] ^= 0xdeadbeef; /* intentional perturbation for testing */          \
+    }
+
 /* group order of the secp256k1 curve in 32-byte big endian representation */
 static const unsigned char secp256k1_group_order_bytes[32] = {
     0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff,
