@@ -1149,11 +1149,11 @@ public:
 
     ~CConnman();
 
-    bool Start(CScheduler& scheduler, const Options& options) EXCLUSIVE_LOCKS_REQUIRED(!m_total_bytes_sent_mutex, !m_added_nodes_mutex, !m_addr_fetches_mutex, !mutexMsgProc);
+    bool Start(CScheduler& scheduler, const Options& options) EXCLUSIVE_LOCKS_REQUIRED(!m_total_bytes_sent_mutex, !m_added_nodes_mutex, !m_addr_fetches_mutex, !mutexMsgProc, !m_anchors_mutex);
 
     void StopThreads();
-    void StopNodes() EXCLUSIVE_LOCKS_REQUIRED(!m_reconnections_mutex);
-    void Stop() EXCLUSIVE_LOCKS_REQUIRED(!m_reconnections_mutex)
+    void StopNodes() EXCLUSIVE_LOCKS_REQUIRED(!m_reconnections_mutex, !m_anchors_mutex);
+    void Stop() EXCLUSIVE_LOCKS_REQUIRED(!m_reconnections_mutex, !m_anchors_mutex)
     {
         AssertLockNotHeld(m_reconnections_mutex);
         StopThreads();
@@ -1163,7 +1163,7 @@ public:
     void Interrupt() EXCLUSIVE_LOCKS_REQUIRED(!mutexMsgProc);
     bool GetNetworkActive() const { return fNetworkActive; };
     bool GetUseAddrmanOutgoing() const { return m_use_addrman_outgoing; };
-    void SetNetworkActive(bool active);
+    void SetNetworkActive(bool active) EXCLUSIVE_LOCKS_REQUIRED(!m_anchors_mutex);
 
     /**
      * Open a new P2P connection and initialize it with the PeerManager at `m_msgproc`.
@@ -1423,7 +1423,7 @@ private:
     void ThreadOpenAddedConnections() EXCLUSIVE_LOCKS_REQUIRED(!m_added_nodes_mutex, !m_unused_i2p_sessions_mutex, !m_reconnections_mutex);
     void AddAddrFetch(const std::string& strDest) EXCLUSIVE_LOCKS_REQUIRED(!m_addr_fetches_mutex);
     void ProcessAddrFetch() EXCLUSIVE_LOCKS_REQUIRED(!m_addr_fetches_mutex, !m_unused_i2p_sessions_mutex);
-    void ThreadOpenConnections(std::vector<std::string> connect, std::span<const std::string> seed_nodes) EXCLUSIVE_LOCKS_REQUIRED(!m_addr_fetches_mutex, !m_added_nodes_mutex, !m_nodes_mutex, !m_unused_i2p_sessions_mutex, !m_reconnections_mutex);
+    void ThreadOpenConnections(std::vector<std::string> connect, std::span<const std::string> seed_nodes) EXCLUSIVE_LOCKS_REQUIRED(!m_addr_fetches_mutex, !m_added_nodes_mutex, !m_nodes_mutex, !m_unused_i2p_sessions_mutex, !m_reconnections_mutex, !m_anchors_mutex);
     void ThreadMessageHandler() EXCLUSIVE_LOCKS_REQUIRED(!mutexMsgProc);
     void ThreadI2PAcceptIncoming();
     void ThreadPrivateBroadcast() EXCLUSIVE_LOCKS_REQUIRED(!m_unused_i2p_sessions_mutex);
@@ -1686,7 +1686,8 @@ private:
      * Addresses that were saved during the previous clean shutdown. We'll
      * attempt to make block-relay-only connections to them.
      */
-    std::vector<CAddress> m_anchors;
+    mutable Mutex m_anchors_mutex;
+    std::vector<CAddress> m_anchors GUARDED_BY(m_anchors_mutex);
 
     /** SipHasher seeds for deterministic randomness */
     const uint64_t nSeed0, nSeed1;
