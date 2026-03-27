@@ -901,15 +901,12 @@ static UniValue CallRPC(BaseRequestHandler* rh, const std::string& strMethod, co
     evhttp_request_set_error_cb(req.get(), http_error_cb);
 
     // Get credentials
-    std::string strRPCUserColonPass;
-    bool failedToGetAuthCookie = false;
+    std::optional<std::string> rpc_credentials;
     if (gArgs.GetArg("-rpcpassword", "") == "") {
         // Try fall back to cookie-based authentication if no password is provided
-        if (!GetAuthCookie(&strRPCUserColonPass)) {
-            failedToGetAuthCookie = true;
-        }
+        rpc_credentials = GetAuthCookie();
     } else {
-        strRPCUserColonPass = username + ":" + gArgs.GetArg("-rpcpassword", "");
+        rpc_credentials = username + ":" + gArgs.GetArg("-rpcpassword", "");
     }
 
     struct evkeyvalq* output_headers = evhttp_request_get_output_headers(req.get());
@@ -917,7 +914,7 @@ static UniValue CallRPC(BaseRequestHandler* rh, const std::string& strMethod, co
     evhttp_add_header(output_headers, "Host", host.c_str());
     evhttp_add_header(output_headers, "Connection", "close");
     evhttp_add_header(output_headers, "Content-Type", "application/json");
-    evhttp_add_header(output_headers, "Authorization", (std::string("Basic ") + EncodeBase64(strRPCUserColonPass)).c_str());
+    evhttp_add_header(output_headers, "Authorization", (std::string("Basic ") + EncodeBase64(rpc_credentials.value_or(""))).c_str());
 
     // Attach request data
     std::string strRequest = rh->PrepareRequest(strMethod, args).write() + "\n";
@@ -942,7 +939,7 @@ static UniValue CallRPC(BaseRequestHandler* rh, const std::string& strMethod, co
                     "Use \"bitcoin-cli -help\" for more info.",
                     host, port, responseErrorMessage));
     } else if (response.status == HTTP_UNAUTHORIZED) {
-        if (failedToGetAuthCookie) {
+        if (!rpc_credentials.has_value()) {
             throw std::runtime_error(strprintf(
                 "Could not locate RPC credentials. No authentication cookie could be found, and RPC password is not set.  See -rpcpassword and -stdinrpcpass.  Configuration file: (%s)",
                 fs::PathToString(gArgs.GetConfigFilePath())));
