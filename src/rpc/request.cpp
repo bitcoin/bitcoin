@@ -151,7 +151,7 @@ bool GetAuthCookie(std::string *cookie_out)
     std::string cookie;
     fs::path filepath = GetAuthCookieFile();
     if (filepath.empty()) {
-        return true; // -norpccookiefile
+        return false; // -norpccookiefile
     }
     file.open(filepath.std_path());
     if (!file.is_open())

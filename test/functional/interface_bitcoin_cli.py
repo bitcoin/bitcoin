@@ -195,8 +195,13 @@ class TestBitcoinCli(BitcoinTestFramework):
         # Re-enable rpcport in conf if present
         self.nodes[0].replace_in_config([("#" + conf_rpcport, conf_rpcport)])
 
+        msg_missing_cred = "Could not locate RPC credentials. No authentication cookie could be found, and RPC password is not set."
         self.log.info("Test connecting with non-existing RPC cookie file")
-        assert_raises_process_error(1, "Could not locate RPC credentials", self.nodes[0].cli('-rpccookiefile=does-not-exist', '-rpcpassword=').echo)
+        assert_raises_process_error(1, msg_missing_cred, self.nodes[0].cli('-rpccookiefile=does-not-exist', '-rpcpassword=').echo)
+
+        self.log.info("Test connecting with neither cookie file, nor password")
+        assert_raises_process_error(1, msg_missing_cred, self.nodes[0].cli("-norpccookiefile").echo)
+        assert_raises_process_error(1, msg_missing_cred, self.nodes[0].cli("-norpccookiefile", "-rpcpassword=").echo)
 
         self.log.info("Test connecting without RPC cookie file and with password arg")
         assert_equal(BLOCKS, self.nodes[0].cli('-norpccookiefile', f'-rpcuser={user}', f'-rpcpassword={password}').getblockcount())
