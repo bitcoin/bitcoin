@@ -6,6 +6,7 @@
 import subprocess
 import sys
 import shlex
+import time
 
 
 def run(cmd, **kwargs):
@@ -19,6 +20,9 @@ def run(cmd, **kwargs):
 
 def main():
     print("Running tests on commit ...")
+    # Sleep before testing next commit because this avoids the issue of
+    # intermittent timeouts in 780KB large RPC requests in this CI job
+    time.sleep(6)
     run(["git", "log", "-1"])
 
     num_procs = int(run(["nproc"], stdout=subprocess.PIPE).stdout)
