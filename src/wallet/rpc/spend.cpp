@@ -648,6 +648,19 @@ CreatedTransactionResult FundTransaction(CWallet& wallet, const CMutableTransact
                 throw JSONRPCError(RPC_INVALID_PARAMETER, "Invalid parameter, vout cannot be negative");
             }
 
+            COutPoint outpoint(txid, vout);
+            bool found = false;
+            for (const CTxIn& txin : tx.vin) {
+                if (txin.prevout == outpoint) {
+                    found = true;
+                    break;
+                }
+            }
+            if (!found) {
+                throw JSONRPCError(RPC_INVALID_PARAMETER,
+                    strprintf("Input weight specified for %s:%d but this outpoint is not in the transaction inputs", txid.GetHex(), vout));
+            }
+
             const UniValue& weight_v = input.find_value("weight");
             if (!weight_v.isNum()) {
                 throw JSONRPCError(RPC_INVALID_PARAMETER, "Invalid parameter, missing weight key");
@@ -662,7 +675,7 @@ CreatedTransactionResult FundTransaction(CWallet& wallet, const CMutableTransact
                 throw JSONRPCError(RPC_INVALID_PARAMETER, strprintf("Invalid parameter, weight cannot be greater than the maximum standard tx weight of %d", MAX_STANDARD_TX_WEIGHT));
             }
 
-            coinControl.SetInputWeight(COutPoint(txid, vout), weight);
+            coinControl.SetInputWeight(outpoint, weight);
         }
     }
 

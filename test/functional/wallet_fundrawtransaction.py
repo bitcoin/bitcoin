@@ -1062,6 +1062,13 @@ class RawTransactionsTest(BitcoinTestFramework):
         assert_raises_rpc_error(-8, "Invalid parameter, weight cannot be less than 165", wallet.fundrawtransaction, raw_tx, input_weights=[{"txid": ext_utxo["txid"], "vout": ext_utxo["vout"], "weight": -1}])
         assert_raises_rpc_error(-8, "Invalid parameter, weight cannot be greater than", wallet.fundrawtransaction, raw_tx, input_weights=[{"txid": ext_utxo["txid"], "vout": ext_utxo["vout"], "weight": 400001}])
 
+        # input_weights for an outpoint not in the transaction must be rejected
+        wallet_utxo = wallet.listunspent()[0]
+        assert_raises_rpc_error(-8, "not in the transaction inputs", wallet.fundrawtransaction, raw_tx, input_weights=[
+            {"txid": ext_utxo["txid"], "vout": ext_utxo["vout"], "weight": 165},
+            {"txid": wallet_utxo["txid"], "vout": wallet_utxo["vout"], "weight": 165},
+        ])
+
         # But funding should work when the solving data is provided
         funded_tx = wallet.fundrawtransaction(raw_tx, solving_data={"pubkeys": [addr_info['pubkey']], "scripts": [addr_info["embedded"]["scriptPubKey"]]})
         signed_tx = wallet.signrawtransactionwithwallet(funded_tx['hex'])
