@@ -13,6 +13,7 @@
 #include <cstddef>
 #include <optional>
 #include <stdexcept>
+#include <unordered_set>
 #include <variant>
 #include <vector>
 
@@ -634,6 +635,7 @@ void BerkeleyRODatabase::Open()
 
     // Do a DFS through the BTree, starting at root
     std::vector<uint32_t> pages{inner_meta.root};
+    std::unordered_set<uint32_t> visited_pages;
     while (pages.size() > 0) {
         uint32_t curr_page = pages.back();
         // It turns out BDB completely ignores this last_page field and doesn't actually update it to the correct
@@ -643,6 +645,9 @@ void BerkeleyRODatabase::Open()
         //     throw std::runtime_error("Page number is greater than subdatabase last page");
         // }
         pages.pop_back();
+        if (!visited_pages.insert(curr_page).second) {
+            throw std::runtime_error("Cycle detected in BTree page traversal");
+        }
         SeekToPage(db_file, curr_page, page_size);
         PageHeader header(curr_page, inner_meta.other_endian);
         db_file >> header;
@@ -673,7 +678,11 @@ void BerkeleyRODatabase::Open()
                 } else if (const OverflowRecord* orec = std::get_if<OverflowRecord>(&rec)) {
                     if (orec->m_header.deleted) continue;
                     uint32_t next_page = orec->page_number;
+                    std::unordered_set<uint32_t> visited_overflow;
                     while (next_page != 0) {
+                        if (!visited_overflow.insert(next_page).second) {
+                            throw std::runtime_error("Cycle detected in overflow page chain");
+                        }
                         SeekToPage(db_file, next_page, page_size);
                         PageHeader opage_header(next_page, inner_meta.other_endian);
                         db_file >> opage_header;
