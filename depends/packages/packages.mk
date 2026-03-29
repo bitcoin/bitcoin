@@ -5,6 +5,7 @@ boost_packages = boost
 libevent_packages = libevent
 
 qrencode_linux_packages = qrencode
+qrencode_freebsd_packages = qrencode
 qrencode_darwin_packages = qrencode
 qrencode_mingw32_packages = qrencode
 
