@@ -182,7 +182,7 @@ public:
                 .hash_serialized = AssumeutxoHash{uint256{"e4b90ef9eae834f56c4b64d2d50143cee10ad87994c614d7d04125e2a6025050"}},
                 .m_chain_tx_count = 1305397408,
                 .blockhash = uint256{"0000000000000000000147034958af1652b2b91bba607beacc5e72a56f0fb5ee"},
-                .chunk_merkle_root = uint256{},  // TODO: compute from mainnet snapshot
+                .chunk_merkle_root = uint256{"f2b7098f7f3946b7dcbbe061136d9782b44176159ed6c381fe17e9a7c0f0ef54"},
             }
         };
 
