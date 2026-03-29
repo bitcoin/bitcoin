@@ -1,18 +1,14 @@
 (use-modules (gnu packages)
              ((gnu packages bash) #:select (bash-minimal))
-             (gnu packages bison)
              ((gnu packages cmake) #:select (cmake-minimal))
              (gnu packages commencement)
-             (gnu packages compression)
+             ((gnu packages compression) #:select (gzip))
              (gnu packages cross-base)
              (gnu packages gawk)
              (gnu packages gcc)
-             ((gnu packages installers) #:select (nsis-x86_64))
              ((gnu packages linux) #:select (linux-libre-headers-6.1))
              (gnu packages llvm)
              (gnu packages mingw)
-             (gnu packages ninja)
-             (gnu packages pkg-config)
              ((gnu packages python) #:select (python-minimal))
              ((gnu packages python-xyz) #:select (python-lief))
              ((gnu packages version-control) #:select (git-minimal))
@@ -271,12 +267,10 @@ chain for " target " development."))
         ;; Compression and archiving
         tar
         gzip
-        xz
         ;; Build tools
         gcc-toolchain-14
         cmake-minimal
         gnu-make
-        ninja
         ;; Scripting
         python-minimal ;; (3.11)
         ;; Git
@@ -285,17 +279,12 @@ chain for " target " development."))
         python-lief)
   (let ((target (getenv "HOST")))
     (cond ((string-suffix? "-mingw32" target)
-           (list zip
-                 (make-mingw-pthreads-cross-toolchain "x86_64-w64-mingw32")
-                 nsis-x86_64))
+           (list (make-mingw-pthreads-cross-toolchain "x86_64-w64-mingw32")))
           ((string-contains target "-linux-")
-           (list bison
-                 pkg-config
-                 (list gcc-toolchain-14 "static")
+           (list (list gcc-toolchain-14 "static")
                  (make-bitcoin-cross-toolchain target)))
           ((string-contains target "darwin")
            (list clang-toolchain-19
                  lld-19
-                 (make-lld-wrapper lld-19 #:lld-as-ld? #t)
-                 zip))
+                 (make-lld-wrapper lld-19 #:lld-as-ld? #t)))
           (else '())))))
