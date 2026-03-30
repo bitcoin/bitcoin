@@ -122,7 +122,8 @@ class MiningTest(BitcoinTestFramework):
         tx_d = self.wallet.send_self_transfer(from_node=node,
                                               fee_rate=Decimal("0.00100"))
 
-        block_template_txs = node.getblocktemplate(NORMAL_GBT_REQUEST_PARAMS)['transactions']
+        block_template = node.getblocktemplate(NORMAL_GBT_REQUEST_PARAMS)
+        block_template_txs = block_template['transactions']
 
         block_template_fees = [tx['fee'] for tx in block_template_txs]
         assert_equal(block_template_fees, [
@@ -131,6 +132,10 @@ class MiningTest(BitcoinTestFramework):
             tx_b["fee"] * COIN,
             tx_c["fee"] * COIN
         ])
+        # verify that coinbasevalue field is set to claim full block reward (subsidy + fees)
+        expected_block_reward = create_coinbase(
+            height=int(block_template["height"]), fees=sum(block_template_fees)).vout[0].nValue
+        assert_equal(block_template["coinbasevalue"], expected_block_reward)
 
         block_template_sigops = [tx['sigops'] for tx in block_template_txs]
         assert_equal(block_template_sigops, [0, 4, 4, 4])
