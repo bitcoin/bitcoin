@@ -135,6 +135,39 @@ BOOST_AUTO_TEST_CASE(rpc_namedonlyparams)
                           HasJSON(R"({"code":-8,"message":"Parameter options specified twice both as positional and named argument"})"));
 }
 
+BOOST_AUTO_TEST_CASE(rpc_remove_command_cleans_up_empty_entry)
+{
+    CRPCTable table;
+    RpcMethodFnType method{
+        []() -> RPCHelpMan {
+            return RPCHelpMan{
+                "method",
+                "Test RPC method.\n",
+                {},
+                RPCResult{RPCResult::Type::STR, "", ""},
+                RPCExamples{""},
+                [](const RPCHelpMan&, const JSONRPCRequest&) -> UniValue { return "ok"; },
+            };
+        }
+    };
+    CRPCCommand command{"test", method};
+
+    table.appendCommand(command.name, &command);
+    BOOST_CHECK(table.removeCommand(command.name, &command));
+
+    bool found{false};
+    for (const auto& name : table.listCommands()) {
+        if (name == command.name) {
+            found = true;
+            break;
+        }
+    }
+    BOOST_CHECK(!found);
+
+    UniValue doc{table.buildOpenRPCDoc()};
+    BOOST_CHECK(doc.isObject());
+}
+
 BOOST_AUTO_TEST_CASE(rpc_rawparams)
 {
     // Test raw transaction API argument handling

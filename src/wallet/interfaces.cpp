@@ -544,6 +544,7 @@ public:
                 wallet_request.context = &m_context;
                 return command.actor(wallet_request, result, last_handler);
             }, command.argNames, command.unique_id);
+            m_rpc_commands.back().metadata_fn = command.metadata_fn;
             m_rpc_handlers.emplace_back(m_context.chain->handleRpc(m_rpc_commands.back()));
         }
     }
