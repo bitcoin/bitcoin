@@ -163,7 +163,7 @@ FUZZ_TARGET(scriptpubkeyman, .init = initialize_spkm)
                 }
                 tx_to = *opt_tx_to;
 
-                std::map<COutPoint, Coin> coins{ConsumeCoins(fuzzed_data_provider)};
+                std::map<COutPoint, Coin> coins{ConsumeCoins(fuzzed_data_provider, /*num_coins=*/5)};
                 const int sighash{fuzzed_data_provider.ConsumeIntegral<int>()};
                 std::map<int, bilingual_str> input_errors;
                 (void)spk_manager->SignTransaction(tx_to, coins, sighash, input_errors);
