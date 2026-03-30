@@ -203,7 +203,7 @@ template <class Dur>
     return result;
 }
 
-[[nodiscard]] std::map<COutPoint, Coin> ConsumeCoins(FuzzedDataProvider& fuzzed_data_provider) noexcept;
+[[nodiscard]] std::map<COutPoint, Coin> ConsumeCoins(FuzzedDataProvider& fuzzed_data_provider, unsigned int num_coins = 10'000) noexcept;
 
 [[nodiscard]] CTxDestination ConsumeTxDestination(FuzzedDataProvider& fuzzed_data_provider) noexcept;
 
