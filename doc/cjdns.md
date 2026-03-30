@@ -10,8 +10,8 @@ CJDNS is like a distributed, shared VPN with multiple entry points where every
 participant can reach any other participant. All participants use addresses from
 the `fc00::/8` network (reserved IPv6 range). Installation and configuration is
 done outside of Bitcoin Core, similarly to a VPN (either in the host/OS or on
-the network router). See https://github.com/cjdelisle/cjdns#readme and
-https://github.com/hyperboria/docs#hyperboriadocs for more information.
+the network router). See https://github.com/cjdelisle/cjdns#readme for more
+information.
 
 Compared to IPv4/IPv6, CJDNS provides end-to-end encryption and protects nodes
 from traffic analysis and filtering.
@@ -24,46 +24,25 @@ somewhat centralized. I2P connections have a source address and I2P is slow.
 CJDNS is fast but does not hide the sender and the recipient from intermediate
 routers.
 
-## Installing CJDNS and finding a peer to connect to the network
+## Installing CJDNS
 
 To install and set up CJDNS, follow the instructions at
 https://github.com/cjdelisle/cjdns#how-to-install-cjdns.
 
-You need to initiate an outbound connection to a peer on the CJDNS network
-before it will work with your Bitcoin Core node. This is described in steps
-["2. Find a friend"](https://github.com/cjdelisle/cjdns#2-find-a-friend) and
-["3. Connect your node to your friend's
-node"](https://github.com/cjdelisle/cjdns#3-connect-your-node-to-your-friends-node)
-in the CJDNS documentation.
+## Connecting to the CJDNS network
 
-One quick way to accomplish these two steps is to query for available public
-peers on [Hyperboria](https://github.com/hyperboria) by running the following:
+As of CJDNS v22, nodes automatically discover and connect to peers via DNS
+seeding. After installation, you can verify that your node has peers:
 
-```
-git clone https://github.com/hyperboria/peers hyperboria-peers
-cd hyperboria-peers
-./testAvailable.py
-```
+    cjdnstool peers show
 
-For each peer, the `./testAvailable.py` script prints the filename of the peer's
-credentials followed by the ping result.
+If you see peers with status `ESTABLISHED`, your node is connected and no
+further peering setup is needed.
 
-Choose one or several peers, copy their credentials from their respective files,
-paste them into the relevant IPv4 or IPv6 "connectTo" JSON object in the
-`cjdroute.conf` file you created in step ["1. Generate a new configuration
-file"](https://github.com/cjdelisle/cjdns#1-generate-a-new-configuration-file),
-and save the file.
-
-## Launching CJDNS
-
-Typically, CJDNS might be launched from its directory with
-`sudo ./cjdroute < cjdroute.conf` and it sheds permissions after setting up the
-[TUN](https://en.wikipedia.org/wiki/TUN/TAP) interface. You may also [launch it as an
-unprivileged user](https://github.com/cjdelisle/cjdns/blob/master/doc/non-root-user.md)
-with some additional setup.
-
-The network connection can be checked by running `./tools/peerStats` from the
-CJDNS directory.
+Manual peering may be useful if you want to guarantee a connection to a
+specific node, or if you have disabled DNS seeding for privacy reasons. See
+[doc/peering.md](https://github.com/cjdelisle/cjdns/blob/master/doc/peering.md)
+in the CJDNS repository for details.
 
 ## Run Bitcoin Core with CJDNS
 
