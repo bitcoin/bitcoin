@@ -20,17 +20,14 @@
              ((gnu packages python-xyz) #:select (python-lief))
              ((gnu packages tls) #:select (openssl))
              ((gnu packages version-control) #:select (git-minimal))
-             (guix build-system cmake)
-             (guix build-system gnu)
              (guix build-system python)
              (guix build-system pyproject)
              (guix build-system trivial)
-             (guix download)
              (guix gexp)
              (guix git-download)
              ((guix licenses) #:prefix license:)
              (guix packages)
-             ((guix utils) #:select (cc-for-target substitute-keyword-arguments)))
+             ((guix utils) #:select (substitute-keyword-arguments)))
 
 (define-syntax-rule (search-our-patches file-name ...)
   "Return the list of absolute file names corresponding to each
