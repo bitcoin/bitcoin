@@ -120,15 +120,8 @@ FUZZ_TARGET(scriptpubkeyman, .init = initialize_spkm)
         CallOneOf(
             fuzzed_data_provider,
             [&] {
-                const CScript script{ConsumeScript(fuzzed_data_provider)};
-                if (spk_manager->IsMine(script)) {
-                    assert(spk_manager->GetScriptPubKeys().contains(script));
-                }
-            },
-            [&] {
                 auto spks{spk_manager->GetScriptPubKeys()};
                 for (const CScript& spk : spks) {
-                    assert(spk_manager->IsMine(spk));
                     CTxDestination dest;
                     bool extract_dest{ExtractDestination(spk, dest)};
                     if (extract_dest) {
@@ -144,10 +137,8 @@ FUZZ_TARGET(scriptpubkeyman, .init = initialize_spkm)
             },
             [&] {
                 auto spks{spk_manager->GetScriptPubKeys()};
-                if (!spks.empty()) {
-                    auto& spk{PickValue(fuzzed_data_provider, spks)};
-                    (void)spk_manager->MarkUnusedAddresses(spk);
-                }
+                auto& spk{(!spks.empty() && fuzzed_data_provider.ConsumeBool()) ? PickValue(fuzzed_data_provider, spks) : ConsumeScript(fuzzed_data_provider)};
+                (void)spk_manager->MarkUnusedAddresses(spk);
             },
             [&] {
                 LOCK(spk_manager->cs_desc_man);
