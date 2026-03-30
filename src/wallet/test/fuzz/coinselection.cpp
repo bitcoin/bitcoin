@@ -275,7 +275,7 @@ FUZZ_TARGET(bnb_finds_min_waste)
 
     // Brute force optimal solution (lowest waste, but cannot be superset of another solution)
     std::vector<uint32_t> solutions;
-    int best_waste{std::numeric_limits<int>::max()};
+    CAmount best_waste{std::numeric_limits<int64_t>::max()};
     int best_weight{std::numeric_limits<int>::max()};
     for (uint32_t pattern = 1; (pattern >> num_groups) == 0; ++pattern) {
         // BnB does not permit adding more inputs to a solution, i.e. a superset of a solution cannot ever be a solution.
