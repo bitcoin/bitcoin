@@ -14,6 +14,7 @@
 #include <util/fs_helpers.h>
 #include <util/string.h>
 
+#include <array>
 #include <chrono>
 #include <fstream>
 #include <future>
@@ -27,6 +28,7 @@
 
 #include <boost/test/unit_test.hpp>
 
+using util::log::Level;
 using util::SplitString;
 using util::TrimString;
 
@@ -103,6 +105,75 @@ struct LogSetup : public BasicTestingSetup {
     }
 };
 
+//! Test calls to log macros with all possible types of arguments: with and
+//! without categories and with and without format arguments to make sure
+//! varargs are handled correctly.
+//! Include commented out calls for combinations of macro arguments which are
+//! prohibited, for easy manual testing to confirm these calls produce readable
+//! compile errors.
+BOOST_FIXTURE_TEST_CASE(logging_macro_args, LogSetup)
+{
+    LogInstance().EnableCategory(BCLog::LogFlags::ALL);
+    LogInstance().SetLogLevel(BCLog::Level::Trace);
+
+    // Test logging with no context.
+    LogError("error");
+    LogWarning("warning");
+    LogInfo("info");
+    // LogDebug("debug"); // Not allowed because category is required!
+    // LogTrace("trace"); // Not allowed because category is required!
+    LogError("error %s", "arg");
+    LogWarning("warning %s", "arg");
+    LogInfo("info %s", "arg");
+    // LogDebug("debug %s", "arg"); // Not allowed because category is required!
+    // LogTrace("trace %s", "arg"); // Not allowed because category is required!
+
+    // Test logging with category constant arguments.
+    // LogError(BCLog::NET, "error"); // Not allowed because category is forbidden!
+    // LogWarning(BCLog::NET, "warning"); // Not allowed because category is forbidden!
+    // LogInfo(BCLog::NET, "info"); // Not allowed because category is forbidden!
+    LogDebug(BCLog::NET, "debug");
+    LogTrace(BCLog::NET, "trace");
+    // LogError(BCLog::NET, "error %s", "arg"); // Not allowed because category is forbidden!
+    // LogWarning(BCLog::NET, "warning %s", "arg"); // Not allowed because category is forbidden!
+    // LogInfo(BCLog::NET, "info %s", "arg"); // Not allowed because category is forbidden!
+    LogDebug(BCLog::NET, "debug %s", "arg");
+    LogTrace(BCLog::NET, "trace %s", "arg");
+
+    LOG_EMIT((.level = Level::Info), "options info");
+    LOG_EMIT((.level = Level::Info), "options info %s", "arg");
+    // LOG_EMIT((.level = Level::Info), BCLog::NET, "options info"); // Not allowed because category is forbidden!
+    // LOG_EMIT((.level = Level::Info), BCLog::NET, "options info %s", "arg"); // Not allowed because category is forbidden!
+
+    // LOG_EMIT((.level = Level::Debug), "options debug"); // Not allowed because category is required!
+    // LOG_EMIT((.level = Level::Debug), "options debug %s", "arg"); // Not allowed because category is required!
+    LOG_EMIT((.level = Level::Debug), BCLog::NET, "options debug");
+    LOG_EMIT((.level = Level::Debug), BCLog::NET, "options debug %s", "arg");
+
+    const auto log_lines{ReadDebugLogLines()};
+    constexpr auto expected{std::to_array({
+        "[error] error",
+        "[warning] warning",
+        "info",
+
+        "[error] error arg",
+        "[warning] warning arg",
+        "info arg",
+
+        "[net] debug",
+        "[net:trace] trace",
+
+        "[net] debug arg",
+        "[net:trace] trace arg",
+
+        "options info",
+        "options info arg",
+        "[net] options debug",
+        "[net] options debug arg",
+    })};
+    BOOST_CHECK_EQUAL_COLLECTIONS(log_lines.begin(), log_lines.end(), expected.begin(), expected.end());
+}
+
 BOOST_AUTO_TEST_CASE(logging_timer)
 {
     auto micro_timer = BCLog::Timer<std::chrono::microseconds>("tests", "end_msg");
@@ -124,7 +195,7 @@ BOOST_FIXTURE_TEST_CASE(logging_LogPrintStr, LogSetup)
 
     std::vector<Case> cases = {
         {"foo1: bar1", BCLog::NET, BCLog::Level::Debug, "[net] ", SourceLocation{__func__}},
-        {"foo2: bar2", BCLog::NET, BCLog::Level::Info, "[net:info] ", SourceLocation{__func__}},
+        {"foo2: bar2", BCLog::NET, BCLog::Level::Info, "", SourceLocation{__func__}},
         {"foo3: bar3", BCLog::ALL, BCLog::Level::Debug, "[debug] ", SourceLocation{__func__}},
         {"foo4: bar4", BCLog::ALL, BCLog::Level::Info, "", SourceLocation{__func__}},
         {"foo5: bar5", BCLog::NONE, BCLog::Level::Debug, "[debug] ", SourceLocation{__func__}},
@@ -137,24 +208,6 @@ BOOST_FIXTURE_TEST_CASE(logging_LogPrintStr, LogSetup)
         LogInstance().LogPrintStr(msg, std::move(loc), category, level, /*should_ratelimit=*/false);
     }
     std::vector<std::string> log_lines{ReadDebugLogLines()};
-    BOOST_CHECK_EQUAL_COLLECTIONS(log_lines.begin(), log_lines.end(), expected.begin(), expected.end());
-}
-
-BOOST_FIXTURE_TEST_CASE(logging_LogPrintMacros, LogSetup)
-{
-    LogInstance().EnableCategory(BCLog::NET);
-    LogTrace(BCLog::NET, "foo6: %s", "bar6"); // not logged
-    LogDebug(BCLog::NET, "foo7: %s", "bar7");
-    LogInfo("foo8: %s", "bar8");
-    LogWarning("foo9: %s", "bar9");
-    LogError("foo10: %s", "bar10");
-    std::vector<std::string> log_lines{ReadDebugLogLines()};
-    std::vector<std::string> expected = {
-        "[net] foo7: bar7",
-        "foo8: bar8",
-        "[warning] foo9: bar9",
-        "[error] foo10: bar10",
-    };
     BOOST_CHECK_EQUAL_COLLECTIONS(log_lines.begin(), log_lines.end(), expected.begin(), expected.end());
 }
 
@@ -383,7 +436,7 @@ void LogFromLocation(Location location, const std::string& message) {
         LogDebug(BCLog::LogFlags::HTTP, "%s\n", message);
         return;
     case Location::INFO_NOLIMIT:
-        LogPrintLevel_(BCLog::LogFlags::ALL, BCLog::Level::Info, /*should_ratelimit=*/false, "%s\n", message);
+        LOG_EMIT((.level = Level::Info, .ratelimit = false), "%s\n", message);
         return;
     } // no default case, so the compiler can warn about missing cases
     assert(false);
@@ -462,6 +515,46 @@ BOOST_FIXTURE_TEST_CASE(logging_filesize_rate_limit, LogSetup)
             TestLogFromLocation(location, log_message, Status::UNSUPPRESSED, /*suppressions_active=*/false);
         }
     }
+}
+
+BOOST_FIXTURE_TEST_CASE(logging_arg_evaluation, LogSetup)
+{
+    for (bool enable_logger : {true, false}) {
+        LogInstance().DisconnectTestLogger();
+        if (enable_logger) {
+            BOOST_REQUIRE(LogInstance().StartLogging());
+        } else {
+            LogInstance().DisableLogging();
+        }
+        BOOST_REQUIRE_EQUAL(enable_logger, LogInstance().Enabled());
+
+        // Info or higher should always evaluate the arguments.
+        int counter = 0;
+        LogError("error (%s)", ++counter);
+        LogWarning("warning (%s)", ++counter);
+        LogInfo("info (%s)", ++counter);
+        BOOST_CHECK_EQUAL(counter, 3);
+
+        // Debug/Trace should skip argument evaluation when category is disabled.
+        counter = 0;
+        LogDebug(BCLog::NET, "debug (%s)", ++counter);
+        LogTrace(BCLog::NET, "trace (%s)", ++counter);
+        BOOST_CHECK_EQUAL(counter, 0);
+    }
+}
+
+BOOST_FIXTURE_TEST_CASE(log_accept_category, LogSetup)
+{
+    using namespace util::log;
+    BOOST_CHECK(LogAcceptCategory(BCLog::ALL, Level::Info));
+    BOOST_CHECK(LogAcceptCategory(BCLog::NET, Level::Warning));
+    BOOST_CHECK(LogAcceptCategory(BCLog::VALIDATION, Level::Error));
+    BOOST_CHECK(!LogAcceptCategory(BCLog::LEVELDB, Level::Debug));
+    BOOST_CHECK(!LogAcceptCategory(BCLog::ALL, Level::Trace));
+
+    LogInstance().EnableCategory(BCLog::TXPACKAGES);
+    BOOST_CHECK(LogAcceptCategory(BCLog::TXPACKAGES, Level::Debug));
+    BOOST_CHECK(!LogAcceptCategory(BCLog::TXPACKAGES, Level::Trace));
 }
 
 BOOST_AUTO_TEST_SUITE_END()
