@@ -7,6 +7,7 @@
 #define BITCOIN_UINT256_H
 
 #include <crypto/common.h>
+#include <crypto/hex_base.h>
 #include <span.h>
 #include <util/strencodings.h>
 #include <util/string.h>

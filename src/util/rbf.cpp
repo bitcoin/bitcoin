@@ -6,6 +6,8 @@
 
 #include <primitives/transaction.h>
 
+#include <vector>
+
 bool SignalsOptInRBF(const CTransaction &tx)
 {
     for (const CTxIn &txin : tx.vin) {

@@ -24,6 +24,7 @@
 #ifndef WIN32
 #include <fcntl.h>
 #include <sys/resource.h>
+#include <sys/types.h>
 #include <unistd.h>
 #else
 #include <io.h>
