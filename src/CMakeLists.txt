@@ -156,10 +156,10 @@ if(ENABLE_WALLET)
   if(BUILD_WALLET_TOOL)
     add_executable(bitcoin-wallet
       bitcoin-wallet.cpp
+      bitcoin-wallet-res.rc
       init/bitcoin-wallet.cpp
       wallet/wallettool.cpp
     )
-    add_windows_resources(bitcoin-wallet bitcoin-wallet-res.rc)
     add_windows_application_manifest(bitcoin-wallet)
     target_link_libraries(bitcoin-wallet
       core_interface
@@ -297,8 +297,10 @@ endif()
 
 # Bitcoin wrapper executable that can call other executables.
 if(BUILD_BITCOIN_BIN)
-  add_executable(bitcoin bitcoin.cpp)
-  add_windows_resources(bitcoin bitcoin-res.rc)
+  add_executable(bitcoin
+    bitcoin.cpp
+    bitcoin-res.rc
+  )
   add_windows_application_manifest(bitcoin)
   target_link_libraries(bitcoin core_interface bitcoin_common bitcoin_util)
   install_binary_component(bitcoin HAS_MANPAGE)
@@ -308,9 +310,9 @@ endif()
 if(BUILD_DAEMON)
   add_executable(bitcoind
     bitcoind.cpp
+    bitcoind-res.rc
     init/bitcoind.cpp
   )
-  add_windows_resources(bitcoind bitcoind-res.rc)
   add_windows_application_manifest(bitcoind)
   target_link_libraries(bitcoind
     core_interface
@@ -347,8 +349,10 @@ target_link_libraries(bitcoin_cli
 
 # Bitcoin Core RPC client
 if(BUILD_CLI)
-  add_executable(bitcoin-cli bitcoin-cli.cpp)
-  add_windows_resources(bitcoin-cli bitcoin-cli-res.rc)
+  add_executable(bitcoin-cli
+    bitcoin-cli.cpp
+    bitcoin-cli-res.rc
+  )
   add_windows_application_manifest(bitcoin-cli)
   target_link_libraries(bitcoin-cli
     core_interface
@@ -363,8 +367,10 @@ endif()
 
 
 if(BUILD_TX)
-  add_executable(bitcoin-tx bitcoin-tx.cpp)
-  add_windows_resources(bitcoin-tx bitcoin-tx-res.rc)
+  add_executable(bitcoin-tx
+    bitcoin-tx.cpp
+    bitcoin-tx-res.rc
+  )
   add_windows_application_manifest(bitcoin-tx)
   target_link_libraries(bitcoin-tx
     core_interface
@@ -377,8 +383,10 @@ endif()
 
 
 if(BUILD_UTIL)
-  add_executable(bitcoin-util bitcoin-util.cpp)
-  add_windows_resources(bitcoin-util bitcoin-util-res.rc)
+  add_executable(bitcoin-util
+    bitcoin-util.cpp
+    bitcoin-util-res.rc
+  )
   add_windows_application_manifest(bitcoin-util)
   target_link_libraries(bitcoin-util
     core_interface
