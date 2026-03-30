@@ -626,6 +626,7 @@ void BerkeleyRODatabase::Open()
     if (inner_meta.last_page > outer_meta.last_page) {
         throw std::runtime_error("Subdatabase last page is greater than database last page");
     }
+    uint64_t max_data_size = inner_meta.last_page * page_size;
 
     // Make sure encryption is disabled
     if (inner_meta.encrypt_algo != 0) {
@@ -673,6 +674,9 @@ void BerkeleyRODatabase::Open()
                 } else if (const OverflowRecord* orec = std::get_if<OverflowRecord>(&rec)) {
                     if (orec->m_header.deleted) continue;
                     uint32_t next_page = orec->page_number;
+                    if (orec->item_len > max_data_size) {
+                        throw std::runtime_error("Overflow record has an impossible length");
+                    }
                     while (next_page != 0) {
                         SeekToPage(db_file, next_page, page_size);
                         PageHeader opage_header(next_page, inner_meta.other_endian);
@@ -683,6 +687,9 @@ void BerkeleyRODatabase::Open()
                         OverflowPage opage(opage_header);
                         db_file >> opage;
                         data.insert(data.end(), opage.data.begin(), opage.data.end());
+                        if (data.size() > orec->item_len) {
+                            throw std::runtime_error("Overflow record data is larger than stated size");
+                        }
                         next_page = opage_header.next_page;
                     }
                 }
