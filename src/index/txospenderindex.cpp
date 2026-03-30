@@ -86,15 +86,13 @@ static DBKey CreateKey(std::pair<uint64_t, uint64_t> siphash_key, const COutPoin
     return DBKey(CreateKeyPrefix(siphash_key, vout), pos);
 }
 
-void TxoSpenderIndex::WriteSpenderInfos(const std::vector<std::pair<COutPoint, CDiskTxPos>>& items)
+void TxoSpenderIndex::WriteSpenderInfos(CDBBatch& batch, const std::vector<std::pair<COutPoint, CDiskTxPos>>& items)
 {
-    CDBBatch batch(*m_db);
     for (const auto& [outpoint, pos] : items) {
         DBKey key(CreateKey(m_siphash_key, outpoint, pos));
         // key is hash(spent outpoint) | disk pos, value is empty
         batch.Write(key, "");
     }
-    m_db->WriteBatch(batch);
 }
 
 
@@ -126,9 +124,9 @@ static std::vector<std::pair<COutPoint, CDiskTxPos>> BuildSpenderPositions(const
 }
 
 
-bool TxoSpenderIndex::CustomAppend(const interfaces::BlockInfo& block)
+bool TxoSpenderIndex::CustomAppend(CDBBatch& batch, const interfaces::BlockInfo& block)
 {
-    WriteSpenderInfos(BuildSpenderPositions(block));
+    WriteSpenderInfos(batch, BuildSpenderPositions(block));
     return true;
 }
 

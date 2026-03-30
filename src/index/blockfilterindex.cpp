@@ -247,16 +247,16 @@ std::optional<uint256> BlockFilterIndex::ReadFilterHeader(int height, const uint
     return read_out.second.header;
 }
 
-bool BlockFilterIndex::CustomAppend(const interfaces::BlockInfo& block)
+bool BlockFilterIndex::CustomAppend(CDBBatch& batch, const interfaces::BlockInfo& block)
 {
     BlockFilter filter(m_filter_type, *Assert(block.data), *Assert(block.undo_data));
     const uint256& header = filter.ComputeHeader(m_last_header);
-    bool res = Write(filter, block.height, header);
+    bool res = Write(batch, filter, block.height, header);
     if (res) m_last_header = header; // update last header
     return res;
 }
 
-bool BlockFilterIndex::Write(const BlockFilter& filter, uint32_t block_height, const uint256& filter_header)
+bool BlockFilterIndex::Write(CDBBatch& batch, const BlockFilter& filter, uint32_t block_height, const uint256& filter_header)
 {
     size_t bytes_written = WriteFilterToDisk(m_next_filter_pos, filter);
     if (bytes_written == 0) return false;
@@ -267,7 +267,7 @@ bool BlockFilterIndex::Write(const BlockFilter& filter, uint32_t block_height, c
     value.second.header = filter_header;
     value.second.pos = m_next_filter_pos;
 
-    m_db->Write(index_util::DBHeightKey(block_height), value);
+    batch.Write(index_util::DBHeightKey(block_height), value);
 
     m_next_filter_pos.nPos += bytes_written;
     return true;

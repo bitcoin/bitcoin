@@ -20,6 +20,7 @@
 #include <tinyformat.h>
 #include <uint256.h>
 #include <undo.h>
+#include <util/check.h>
 #include <util/fs.h>
 #include <util/log.h>
 #include <util/string.h>
@@ -30,7 +31,7 @@
 #include <validation.h>
 #include <validationinterface.h>
 
-#include <cassert>
+#include <algorithm>
 #include <compare>
 #include <cstdint>
 #include <functional>
@@ -147,25 +148,46 @@ bool BaseIndex::Init()
     return true;
 }
 
-static const CBlockIndex* NextSyncBlock(const CBlockIndex* pindex_prev, CChain& chain) EXCLUSIVE_LOCKS_REQUIRED(cs_main)
+struct BlockRange {
+    const CBlockIndex* first{nullptr};
+    const CBlockIndex* last{nullptr};
+};
+
+// Returns the next range of blocks to sync, or 'std::nullopt' if fully synced
+static std::optional<BlockRange> NextSyncRange(const CBlockIndex* pindex_prev, const CChain& chain, const int range_max_size) EXCLUSIVE_LOCKS_REQUIRED(cs_main)
 {
     AssertLockHeld(cs_main);
+    BlockRange range;
 
     if (!pindex_prev) {
-        return chain.Genesis();
+        // Only the genesis block has no prev block
+        range.first = chain.Genesis();
+    } else {
+        range.first = chain.Next(pindex_prev);
+        if (!range.first) {
+            // If there is no next block, we might be synced
+            if (pindex_prev == chain.Tip()) {
+                return std::nullopt;
+            }
+
+            // Since block is not in the chain, return the next block in the chain AFTER the last common ancestor.
+            // Caller will be responsible for rewinding back to the common ancestor.
+            range.first = chain.Next(chain.FindFork(pindex_prev));
+        }
     }
 
-    const CBlockIndex* pindex = chain.Next(pindex_prev);
-    if (pindex) {
-        return pindex;
-    }
+    // Compute window
+    Assume(range.first);
+    const int start_height = range.first->nHeight;
+    const int tip_height = chain.Height();
+    // Compute the last height in the batch without exceeding the chain tip
+    const int batch_end_height = std::min(start_height + range_max_size - 1, tip_height);
+    range.last = chain[batch_end_height];
 
-    // Since block is not in the chain, return the next block in the chain AFTER the last common ancestor.
-    // Caller will be responsible for rewinding back to the common ancestor.
-    return chain.Next(chain.FindFork(pindex_prev));
+    return range;
 }
 
-bool BaseIndex::ProcessBlock(const CBlockIndex* pindex, const CBlock* block_data)
+bool BaseIndex::ProcessBlock(CDBBatch& db_batch, const CBlockIndex* pindex, const CBlock* block_data)
 {
     interfaces::BlockInfo block_info = kernel::MakeBlockInfo(pindex, block_data);
 
@@ -189,10 +211,28 @@ bool BaseIndex::ProcessBlock(const CBlockIndex* pindex, const CBlock* block_data
         block_info.undo_data = &block_undo;
     }
 
-    if (!CustomAppend(block_info)) {
+    if (!CustomAppend(db_batch, block_info)) {
         FatalErrorf("Failed to write block %s to index database",
                     pindex->GetBlockHash().ToString());
         return false;
+    }
+
+    return true;
+}
+
+bool BaseIndex::ProcessBlocks(CDBBatch& db_batch, const CBlockIndex* start, const CBlockIndex* end)
+{
+    // Collect all block indexes from [end...start] in order
+    std::vector<const CBlockIndex*> ordered_blocks;
+    ordered_blocks.reserve(end->nHeight - start->nHeight + 1);
+    for (const CBlockIndex* block = end; block && start->pprev != block; block = block->pprev) {
+        ordered_blocks.emplace_back(block);
+    }
+
+    // And process blocks in forward order: from start to end
+    for (auto it = ordered_blocks.rbegin(); it != ordered_blocks.rend(); ++it) {
+        if (m_interrupt) return false;
+        if (!ProcessBlock(db_batch, *it)) return false; // error logged internally
     }
 
     return true;
@@ -204,22 +244,11 @@ void BaseIndex::Sync()
     if (!m_synced) {
         auto last_log_time{NodeClock::now()};
         auto last_locator_write_time{last_log_time};
-        while (true) {
-            if (m_interrupt) {
-                LogInfo("%s: m_interrupt set; exiting ThreadSync", GetName());
-
-                SetBestBlockIndex(pindex);
-                // No need to handle errors in Commit. If it fails, the error will be already be
-                // logged. The best way to recover is to continue, as index cannot be corrupted by
-                // a missed commit to disk for an advanced index state.
-                Commit();
-                return;
-            }
-
-            const CBlockIndex* pindex_next = WITH_LOCK(cs_main, return NextSyncBlock(pindex, m_chainstate->m_chain));
-            // If pindex_next is null, it means pindex is the chain tip, so
+        while (!m_interrupt) {
+            auto block_range = WITH_LOCK(cs_main, return NextSyncRange(pindex, m_chainstate->m_chain, m_num_blocks_batch));
+            // If range.first is null, it means pindex is the chain tip, so
             // commit data indexed so far.
-            if (!pindex_next) {
+            if (!block_range) {
                 SetBestBlockIndex(pindex);
                 // No need to handle errors in Commit. See rationale above.
                 Commit();
@@ -230,20 +259,28 @@ void BaseIndex::Sync()
                 // attached while m_synced is still false, and it would not be
                 // indexed.
                 LOCK(::cs_main);
-                pindex_next = NextSyncBlock(pindex, m_chainstate->m_chain);
-                if (!pindex_next) {
+                block_range = NextSyncRange(pindex, m_chainstate->m_chain, m_num_blocks_batch);
+                if (!block_range) {
                     m_synced = true;
                     break;
                 }
             }
-            if (pindex_next->pprev != pindex && !Rewind(pindex, pindex_next->pprev)) {
+            if (block_range->first->pprev != pindex && !Rewind(pindex, block_range->first->pprev)) {
                 FatalErrorf("Failed to rewind %s to a previous chain tip", GetName());
                 return;
             }
-            pindex = pindex_next;
 
+            CDBBatch db_batch(GetDB());
+            if (!ProcessBlocks(db_batch, block_range->first, block_range->last)) {
+                // If failed due to an interruption, we haven't processed the block.
+                if (m_interrupt) break;
+                // Otherwise this is an unrecoverable error and we want to stop.
+                return; // error logged internally
+            }
+            GetDB().WriteBatch(db_batch);
 
-            if (!ProcessBlock(pindex)) return; // error logged internally
+            // Update last processed block for next round
+            pindex = block_range->last;
 
             auto current_time{NodeClock::now()};
             if (current_time - last_log_time >= SYNC_LOG_INTERVAL) {
@@ -258,6 +295,17 @@ void BaseIndex::Sync()
                 Commit();
             }
         }
+    }
+
+    if (m_interrupt) {
+        LogInfo("%s: m_interrupt set; exiting ThreadSync", GetName());
+
+        SetBestBlockIndex(pindex);
+        // No need to handle errors in Commit. If it fails, the error will be already be
+        // logged. The best way to recover is to continue, as index cannot be corrupted by
+        // a missed commit to disk for an advanced index state.
+        Commit();
+        return;
     }
 
     if (pindex) {
@@ -368,7 +416,9 @@ void BaseIndex::BlockConnected(const ChainstateRole& role, const std::shared_ptr
     }
 
     // Dispatch block to child class; errors are logged internally and abort the node.
-    if (ProcessBlock(pindex, block.get())) {
+    CDBBatch db_batch(GetDB());
+    if (ProcessBlock(db_batch, pindex, block.get())) {
+        GetDB().WriteBatch(db_batch);
         // Setting the best block index is intentionally the last step of this
         // function, so BlockUntilSyncedToCurrentChain callers waiting for the
         // best block index to be updated can rely on the block being fully

@@ -27,6 +27,10 @@ class CBlockIndex;
 class Chainstate;
 
 struct CBlockLocator;
+
+/** Range of blocks to process in batches */
+static constexpr int INDEX_BATCH_SIZE = 500;
+
 struct IndexSummary {
     std::string name;
     bool synced{false};
@@ -93,6 +97,9 @@ private:
     std::thread m_thread_sync;
     CThreadInterrupt m_interrupt;
 
+    /// Number of blocks to process in a batch
+    int m_num_blocks_batch{INDEX_BATCH_SIZE};
+
     /// Write the current index state (eg. chain block locator and subclass-specific items) to disk.
     ///
     /// Recommendations for error handling:
@@ -106,7 +113,11 @@ private:
     /// Loop over disconnected blocks and call CustomRemove.
     bool Rewind(const CBlockIndex* current_tip, const CBlockIndex* new_tip);
 
-    bool ProcessBlock(const CBlockIndex* pindex, const CBlock* block_data = nullptr);
+    bool ProcessBlock(CDBBatch& db_batch, const CBlockIndex* pindex, const CBlock* block_data = nullptr);
+
+    /// Processes blocks in the range [start, end]. Calling 'ProcessBlock'.
+    /// Returns false on unrecoverable failure or during interruption.
+    bool ProcessBlocks(CDBBatch& db_batch, const CBlockIndex* start, const CBlockIndex* end);
 
     virtual bool AllowPrune() const = 0;
 
@@ -126,7 +137,7 @@ protected:
     [[nodiscard]] virtual bool CustomInit(const std::optional<interfaces::BlockRef>& block) { return true; }
 
     /// Write update index entries for a newly connected block.
-    [[nodiscard]] virtual bool CustomAppend(const interfaces::BlockInfo& block) { return true; }
+    [[nodiscard]] virtual bool CustomAppend(CDBBatch& batch, const interfaces::BlockInfo& block) { return true; }
 
     /// Virtual method called internally by Commit that can be overridden to atomically
     /// commit more index state.
@@ -176,6 +187,9 @@ public:
 
     /// Stops the instance from staying in sync with blockchain updates.
     void Stop();
+
+    /// Number of blocks to process in a batch
+    void SetProcessingBatchSize(const int blocks_count) { m_num_blocks_batch = blocks_count; }
 
     /// Get a summary of the index and its state.
     IndexSummary GetSummary() const;
