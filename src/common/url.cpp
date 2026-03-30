@@ -37,3 +37,25 @@ std::string UrlDecode(std::string_view url_encoded)
 
     return res;
 }
+
+std::string UrlEncode(const std::string& str)
+{
+    std::string res;
+    res.reserve(str.size() * 3); // worst case: every char needs encoding
+
+    for (char ch : str) {
+        auto c = static_cast<unsigned char>(ch);
+        // Unreserved characters per RFC 3986, Section 2.3
+        if ((c >= 'A' && c <= 'Z') || (c >= 'a' && c <= 'z') ||
+            (c >= '0' && c <= '9') || c == '-' || c == '_' || c == '.' || c == '~') {
+            res += ch;
+        } else {
+            // Percent-encode all other characters
+            res += '%';
+            constexpr char hex_chars[] = "0123456789ABCDEF";
+            res += hex_chars[(c >> 4) & 0xF];
+            res += hex_chars[c & 0xF];
+        }
+    }
+    return res;
+}
