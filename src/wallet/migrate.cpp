@@ -633,10 +633,17 @@ void BerkeleyRODatabase::Open()
         throw std::runtime_error("BDB builtin encryption is not supported");
     }
 
+    // Read the root's level from its header
+    // Note that we will read the root page twice in order to process it.
+    SeekToPage(db_file, inner_meta.root, page_size);
+    PageHeader root_header(inner_meta.root, inner_meta.other_endian);
+    db_file >> root_header;
+
     // Do a DFS through the BTree, starting at root
-    std::vector<uint32_t> pages{inner_meta.root};
+    // We track the expected level of each page in order to avoid loops
+    std::vector<std::pair<uint32_t, uint32_t>> pages{{inner_meta.root, root_header.level}};
     while (pages.size() > 0) {
-        uint32_t curr_page = pages.back();
+        auto [curr_page, expected_level] = pages.back();
         // It turns out BDB completely ignores this last_page field and doesn't actually update it to the correct
         // last page. While we should be checking this, we can't.
         // This is left commented out as a reminder to not accidentally implement this in the future.
@@ -647,17 +654,23 @@ void BerkeleyRODatabase::Open()
         SeekToPage(db_file, curr_page, page_size);
         PageHeader header(curr_page, inner_meta.other_endian);
         db_file >> header;
+        if (header.level != expected_level) {
+            throw std::runtime_error("BTree page has an unexpected level");
+        }
         switch (header.type) {
         case PageType::BTREE_INTERNAL: {
             InternalPage int_page(header);
             db_file >> int_page;
             for (const InternalRecord& rec : int_page.records) {
                 if (rec.m_header.deleted) continue;
-                pages.push_back(rec.page_num);
+                pages.emplace_back(rec.page_num, header.level - 1);
             }
             break;
         }
         case PageType::BTREE_LEAF: {
+            if (header.level != 1) {
+                throw std::runtime_error("BTree Leaf page is not at level 1");
+            }
             RecordsPage rec_page(header);
             db_file >> rec_page;
             if (rec_page.records.size() % 2 != 0) {
