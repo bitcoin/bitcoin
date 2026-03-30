@@ -21,6 +21,11 @@
  */
 static constexpr auto MAX_WAIT_FOR_IO = 1s;
 
+inline bool IOErrorIsPermanent(int err)
+{
+    return err != WSAEAGAIN && err != WSAEINTR && err != WSAEWOULDBLOCK && err != WSAEINPROGRESS;
+}
+
 /**
  * RAII helper class that manages a socket and closes it automatically when it goes out of scope.
  */

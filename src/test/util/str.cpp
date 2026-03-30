@@ -2,20 +2,13 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include <test/util/str.h>
-
 #include <cstdint>
 #include <string>
 
-bool CaseInsensitiveEqual(const std::string& s1, const std::string& s2)
+#include <test/util/str.h>
+
+/** Returns a span view of the string. */
+std::span<const std::byte> StringToBytes(std::string_view str LIFETIMEBOUND)
 {
-    if (s1.size() != s2.size()) return false;
-    for (size_t i = 0; i < s1.size(); ++i) {
-        char c1 = s1[i];
-        if (c1 >= 'A' && c1 <= 'Z') c1 -= ('A' - 'a');
-        char c2 = s2[i];
-        if (c2 >= 'A' && c2 <= 'Z') c2 -= ('A' - 'a');
-        if (c1 != c2) return false;
-    }
-    return true;
+    return std::as_bytes(std::span{str});
 }

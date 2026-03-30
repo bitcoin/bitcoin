@@ -326,6 +326,14 @@ std::string Capitalize(std::string str);
  */
 std::optional<uint64_t> ParseByteUnits(std::string_view str, ByteUnit default_multiplier);
 
+/**
+ *  Locale-independent, ASCII-only comparator
+ *  @param[in] s1 a string to compare
+ *  @param[in] s2 another string to compare
+ *  @returns true if s1 == s2 when both strings are converted to lowercase
+ */
+bool CaseInsensitiveEqual(std::string_view s1, std::string_view s2);
+
 namespace util {
 /** consteval version of HexDigit() without the lookup table. */
 consteval uint8_t ConstevalHexDigit(const char c)
@@ -353,20 +361,6 @@ struct Hex {
     }
 };
 } // namespace detail
-
-struct AsciiCaseInsensitiveKeyEqual {
-    bool operator()(std::string_view s1, std::string_view s2) const
-    {
-        return ToLower(s1) == ToLower(s2);
-    }
-};
-
-struct AsciiCaseInsensitiveHash {
-    size_t operator()(std::string_view s) const
-    {
-        return std::hash<std::string>{}(ToLower(s));
-    }
-};
 
 /**
  * ""_hex is a compile-time user-defined literal returning a
