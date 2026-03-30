@@ -32,6 +32,8 @@ from test_framework.wallet_util import (
     test_address,
 )
 
+BLOCK_TIME = 60 * 10  # 10 minutes
+
 class ImportDescriptorsTest(BitcoinTestFramework):
     def set_test_params(self):
         self.num_nodes = 2
@@ -45,6 +47,11 @@ class ImportDescriptorsTest(BitcoinTestFramework):
 
     def skip_test_if_missing_module(self):
         self.skip_if_no_wallet()
+
+    def advance_time(self, node, secs):
+        """Advance mocktime on node safely."""
+        self.node_time += secs
+        node.setmocktime(self.node_time)
 
     def test_importdesc(self, req, success, error_code=None, error_message=None, warnings=None, wallet=None):
         """Run importdescriptors and assert success"""
@@ -64,6 +71,119 @@ class ImportDescriptorsTest(BitcoinTestFramework):
         if error_code is not None:
             assert_equal(result[0]['error']['code'], error_code)
             assert_equal(result[0]['error']['message'], error_message)
+
+    def import_descriptor_verify_balance_flag_test(self, node, miner_wallet):
+        self.log.info("Test import descriptor with scan_utxo flag")
+        receive_address = miner_wallet.getnewaddress()
+
+        # Mine up to block 500, then send the first tx
+        for _ in range(500):
+            self.generate(node, 1, sync_fun=lambda: None)
+            self.advance_time(node, BLOCK_TIME)
+        txid_first = miner_wallet.sendtoaddress(receive_address, 2)
+        self.log.info(f"Sent first tx {txid_first} after 500 blocks")
+
+        # Mine 1000 total 1000 more blocksthen send the second tx
+        for _ in range(1000):
+            self.generate(node, 1, sync_fun=lambda: None)
+            self.advance_time(node, BLOCK_TIME)
+        txid_second = miner_wallet.sendtoaddress(receive_address, 2)
+        self.log.info(f"Sent second tx {txid_second} after 1000 blocks")
+
+        # Mine a few extra blocks so both txs are safely confirmed
+        for _ in range(50):
+            self.generate(node, 1, sync_fun=lambda: None)
+            self.advance_time(node, BLOCK_TIME)
+
+        # Create two watch-only wallets and import using timestamp="now"
+        node.createwallet(wallet_name='watch_only_no_scan', disable_private_keys=True, load_on_startup=True)
+        node.createwallet(wallet_name='watch_only_with_scan', disable_private_keys=True, load_on_startup=True)
+        wallet_no_scan = node.get_wallet_rpc('watch_only_no_scan')
+        wallet_with_scan = node.get_wallet_rpc('watch_only_with_scan')
+
+        # Blank wallets don't have a birth time
+        assert 'birthtime' not in wallet_no_scan.getwalletinfo()
+        assert 'birthtime' not in wallet_with_scan.getwalletinfo()
+
+        # Import address with timestamp=now. The second import uses scan_utxoset=True.
+        desc = miner_wallet.getaddressinfo(receive_address)["desc"]
+        wallet_no_scan.importdescriptors([{"desc": desc, "timestamp": "now"}])
+        import_result_now_scan = wallet_with_scan.importdescriptors([{"desc": desc, "timestamp": "now"}], True)
+
+        # Assert importdescriptors(...) returned the expected structure & values for the scan=True case
+        assert isinstance(import_result_now_scan, list) and len(import_result_now_scan) == 1, f"unexpected import result: {import_result_now_scan}"
+        import_res_now_scan = import_result_now_scan[0]
+        assert_equal(import_res_now_scan.get('success'), True)
+        assert 'info' in import_res_now_scan and isinstance(import_res_now_scan['info'], dict), f"missing/invalid info field: {import_res_now_scan}"
+        info_now_scan = import_res_now_scan['info']
+        assert_equal(info_now_scan.get('utxo_check'), True)
+        assert_equal(info_now_scan.get('scanned_chunks'), 2)
+        assert_equal(info_now_scan.get('scanned_blocks'), 2000)
+
+        # With two txs of 2 each: watch_only_no_scan (no scan) should see 0, watch_only_with_scan should see 2 txs, balance 4
+        assert_equal(len(wallet_no_scan.listtransactions()), 0)
+        assert_equal(len(wallet_with_scan.listtransactions()), 2)
+        assert_equal(wallet_no_scan.getbalance(), 0)
+        assert_equal(wallet_with_scan.getbalance(), 4)
+
+        # Timestamp-based import: use the block time of the first tx as timestamp.
+        # If we import using that accurate block time (or an earlier time), BOTH imports
+        # (scan_utxoset False and True) should discover both txs.
+        tx_raw_first = miner_wallet.gettransaction(txid_first)
+        tx_raw_second = miner_wallet.gettransaction(txid_second)
+        assert 'blockhash' in tx_raw_first and tx_raw_first['blockhash'] is not None, "first tx not confirmed as expected"
+        assert 'blockhash' in tx_raw_second and tx_raw_second['blockhash'] is not None, "second tx not confirmed as expected"
+
+        blockhash_first = tx_raw_first['blockhash']
+        blockhash_second = tx_raw_second['blockhash']
+
+        # get accurate block times from the headers (fall back to tx blocktime/time fields)
+        block_time_first = node.getblockheader(blockhash_first).get('time', tx_raw_first.get('blocktime', tx_raw_first.get('time', None)))
+        block_time_second = node.getblockheader(blockhash_second).get('time', tx_raw_second.get('blocktime', tx_raw_second.get('time', None)))
+        assert block_time_first is not None and block_time_second is not None, "Unable to determine tx block times for timestamp test"
+
+        # Use the earliest tx block time so the rescan will cover both transactions
+        earliest_tx_time = min(block_time_first, block_time_second)
+        self.log.info(f"tx1 time={block_time_first}, tx2 time={block_time_second}, earliest={earliest_tx_time}")
+
+        # Create two fresh watch-only wallets for the timestamp-based import test
+        node.createwallet(wallet_name='watch_only_ts_no_scan', disable_private_keys=True, load_on_startup=True)
+        node.createwallet(wallet_name='watch_only_ts_with_scan', disable_private_keys=True, load_on_startup=True)
+        wallet_ts_no_scan = node.get_wallet_rpc('watch_only_ts_no_scan')
+        wallet_ts_with_scan = node.get_wallet_rpc('watch_only_ts_with_scan')
+
+        # Blank wallets don't have a birth time
+        assert 'birthtime' not in wallet_ts_no_scan.getwalletinfo()
+        assert 'birthtime' not in wallet_ts_with_scan.getwalletinfo()
+
+        # Import using the earliest tx block time as timestamp
+        wallet_ts_no_scan.importdescriptors([{"desc": desc, "timestamp": earliest_tx_time}])
+        import_result_ts_scan = wallet_ts_with_scan.importdescriptors([{"desc": desc, "timestamp": earliest_tx_time}], True)
+        self.log.info(import_result_ts_scan)
+
+        # Assert importdescriptors(...) returned the expected structure & values for the timestamp scan=True case
+        assert isinstance(import_result_ts_scan, list) and len(import_result_ts_scan) == 1, f"unexpected import result: {import_result_ts_scan}"
+        import_res_ts_scan = import_result_ts_scan[0]
+        assert_equal(import_res_ts_scan.get('success'), True)
+        assert 'info' in import_res_ts_scan and isinstance(import_res_ts_scan['info'], dict), f"missing/invalid info field: {import_res_ts_scan}"
+        info_ts_scan = import_res_ts_scan['info']
+        assert_equal(info_ts_scan.get('utxo_check'), True)
+        assert_equal(info_ts_scan.get('scanned_chunks'), 2)
+        assert_equal(info_ts_scan.get('scanned_blocks'), 2000)
+
+        # Both wallets should discover both transactions because the timestamp is <= the earliest tx block time
+        assert_equal(len(wallet_ts_no_scan.listtransactions()), 2)
+        assert_equal(len(wallet_ts_with_scan.listtransactions()), 2)
+        assert_equal(wallet_ts_no_scan.getbalance(), 4)
+        assert_equal(wallet_ts_with_scan.getbalance(), 4)
+
+        # Cleanup: unload the timestamp test wallets
+        wallet_ts_no_scan.unloadwallet()
+        wallet_ts_with_scan.unloadwallet()
+
+        # Unload the initial watch-only wallets as well
+        wallet_no_scan.unloadwallet()
+        wallet_with_scan.unloadwallet()
 
     def run_test(self):
         self.log.info('Setting up wallets')
@@ -784,6 +904,19 @@ class ImportDescriptorsTest(BitcoinTestFramework):
             assert_equal(w_multipath.getnewaddress(address_type="bech32"), w_multisplit.getnewaddress(address_type="bech32"))
             assert_equal(w_multipath.getrawchangeaddress(address_type="bech32"), w_multisplit.getrawchangeaddress(address_type="bech32"))
         assert_equal(sorted(w_multipath.listdescriptors()["descriptors"], key=lambda x: x["desc"]), sorted(w_multisplit.listdescriptors()["descriptors"], key=lambda x: x["desc"]))
+
+        self.node_time = int(time.time())
+        self.nodes[1].setmocktime(self.node_time)
+
+        # Create a miner wallet and fund it
+        self.nodes[1].createwallet(wallet_name='miner', load_on_startup=True)
+
+        miner_wallet = self.nodes[1].get_wallet_rpc('miner')
+
+        # Ensure miner has blocks/UTXOs
+        self.generatetoaddress(self.nodes[1], COINBASE_MATURITY + 10, miner_wallet.getnewaddress())
+
+        self.import_descriptor_verify_balance_flag_test(self.nodes[1], miner_wallet)
 
         self.log.info("Test older() safety")
 
