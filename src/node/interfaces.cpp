@@ -12,12 +12,14 @@
 #include <consensus/validation.h>
 #include <deploymentstatus.h>
 #include <external_signer.h>
+#include <httprpc.h>
 #include <index/blockfilterindex.h>
 #include <init.h>
 #include <interfaces/chain.h>
 #include <interfaces/handler.h>
 #include <interfaces/mining.h>
 #include <interfaces/node.h>
+#include <interfaces/rpc.h>
 #include <interfaces/types.h>
 #include <interfaces/wallet.h>
 #include <kernel/chain.h>
@@ -81,6 +83,7 @@ using interfaces::Handler;
 using interfaces::MakeSignalHandler;
 using interfaces::Mining;
 using interfaces::Node;
+using interfaces::Rpc;
 using interfaces::WalletLoader;
 using kernel::ChainstateRole;
 using node::BlockAssembler;
@@ -1015,6 +1018,24 @@ public:
     bool m_interrupt_mining{false};
     NodeContext& m_node;
 };
+
+class RpcImpl : public Rpc
+{
+public:
+    explicit RpcImpl(NodeContext& node) : m_node(node) {}
+
+    UniValue executeRpc(UniValue request, std::string uri, std::string user) override
+    {
+        JSONRPCRequest req;
+        req.context = &m_node;
+        req.URI = std::move(uri);
+        req.authUser = std::move(user);
+        HTTPStatusCode status;
+        return ExecuteHTTPRPC(request, req, status);
+    }
+
+    NodeContext& m_node;
+};
 } // namespace
 } // namespace node
 
@@ -1034,4 +1055,5 @@ std::unique_ptr<Mining> MakeMining(node::NodeContext& context, bool wait_loaded)
     }
     return std::make_unique<node::MinerImpl>(context);
 }
+std::unique_ptr<Rpc> MakeRpc(node::NodeContext& context) { return std::make_unique<node::RpcImpl>(context); }
 } // namespace interfaces
