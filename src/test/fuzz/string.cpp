@@ -5,6 +5,7 @@
 #include <blockfilter.h>
 #include <clientversion.h>
 #include <common/args.h>
+#include <common/license_info.h>
 #include <common/messages.h>
 #include <common/settings.h>
 #include <common/system.h>

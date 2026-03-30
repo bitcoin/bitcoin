@@ -6,6 +6,7 @@
 
 #include <clientversion.h>
 #include <common/args.h>
+#include <common/license_info.h>
 #include <common/system.h>
 #include <util/fs.h>
 #include <util/exec.h>

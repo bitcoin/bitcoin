@@ -97,6 +97,7 @@ add_library(bitcoin_common STATIC EXCLUDE_FROM_ALL
   common/config.cpp
   common/init.cpp
   common/interfaces.cpp
+  common/license_info.cpp
   common/messages.cpp
   common/netif.cpp
   common/pcp.cpp

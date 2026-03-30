@@ -12,6 +12,7 @@
 
 #include <clientversion.h>
 #include <common/args.h>
+#include <common/license_info.h>
 #include <init.h>
 #include <util/strencodings.h>
 
