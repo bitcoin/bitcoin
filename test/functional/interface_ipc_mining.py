@@ -328,6 +328,8 @@ class IPCMiningTest(BitcoinTestFramework):
                 assert_capnp_failed(e, "remote exception: std::exception: block_reserved_weight (0) must be at least 2000 weight units")
 
         asyncio.run(capnp.run(async_routine()))
+        self.restart_node(0)
+        self.connect_nodes(0, 1)
 
     def run_coinbase_and_submission_test(self):
         """Test coinbase construction (getCoinbaseTx) and block submission (submitSolution)."""
