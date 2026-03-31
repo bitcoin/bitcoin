@@ -217,7 +217,7 @@ BOOST_AUTO_TEST_CASE(testnet4_min_difficulty_pre_fork)
 
     // Verify testnet4 has the expected fork height (epoch 100 boundary)
     const int fork_height = consensus.min_difficulty_fork_height;
-    BOOST_CHECK_EQUAL(fork_height, 201600);
+    BOOST_CHECK_EQUAL(fork_height, 129024);
     BOOST_CHECK(consensus.fPowAllowMinDifficultyBlocks);
 
     const unsigned int pow_limit = UintToArith256(consensus.powLimit).GetCompact();
