@@ -8,6 +8,7 @@ import configparser
 from enum import Enum
 import argparse
 from datetime import datetime, timezone
+from importlib.util import find_spec
 import logging
 import os
 from pathlib import Path
@@ -947,6 +948,17 @@ class BitcoinTestFramework(metaclass=BitcoinTestMetaClass):
         """Skip the running test if previous releases are not available."""
         if not self.has_previous_releases():
             raise SkipTest("previous releases not available or disabled")
+
+    def has_resource_module(self):
+        """Checks whether the resource module is available."""
+        return find_spec('resource') is not None
+
+    @property
+    def RLIM_INFINITY(self):
+        if not self.has_resource_module():
+            return None
+        import resource
+        return resource.RLIM_INFINITY
 
     def has_previous_releases(self):
         """Checks whether previous releases are present and enabled."""
