@@ -127,10 +127,11 @@ void BCLog::Logger::EnableCategory(BCLog::LogFlags flag)
 
 bool BCLog::Logger::EnableCategory(std::string_view str)
 {
-    BCLog::LogFlags flag;
-    if (!GetLogCategory(flag, str)) return false;
-    EnableCategory(flag);
-    return true;
+    if (const auto flag{GetLogCategory(str)}) {
+        EnableCategory(*flag);
+        return true;
+    }
+    return false;
 }
 
 void BCLog::Logger::DisableCategory(BCLog::LogFlags flag)
@@ -140,10 +141,11 @@ void BCLog::Logger::DisableCategory(BCLog::LogFlags flag)
 
 bool BCLog::Logger::DisableCategory(std::string_view str)
 {
-    BCLog::LogFlags flag;
-    if (!GetLogCategory(flag, str)) return false;
-    DisableCategory(flag);
-    return true;
+    if (const auto flag{GetLogCategory(str)}) {
+        DisableCategory(*flag);
+        return true;
+    }
+    return false;
 }
 
 bool BCLog::Logger::WillLogCategory(BCLog::LogFlags category) const
@@ -217,18 +219,16 @@ static const std::unordered_map<BCLog::LogFlags, std::string> LOG_CATEGORIES_BY_
     }(LOG_CATEGORIES_BY_STR)
 };
 
-bool GetLogCategory(BCLog::LogFlags& flag, std::string_view str)
+std::optional<BCLog::LogFlags> GetLogCategory(std::string_view str)
 {
     if (str.empty() || str == "1" || str == "all") {
-        flag = BCLog::ALL;
-        return true;
+        return BCLog::ALL;
     }
     auto it = LOG_CATEGORIES_BY_STR.find(str);
     if (it != LOG_CATEGORIES_BY_STR.end()) {
-        flag = it->second;
-        return true;
+        return it->second;
     }
-    return false;
+    return std::nullopt;
 }
 
 std::string BCLog::Logger::LogLevelToStr(BCLog::Level level)
@@ -592,14 +592,14 @@ bool BCLog::Logger::SetLogLevel(std::string_view level_str)
 
 bool BCLog::Logger::SetCategoryLogLevel(std::string_view category_str, std::string_view level_str)
 {
-    BCLog::LogFlags flag;
-    if (!GetLogCategory(flag, category_str)) return false;
+    const auto flag{GetLogCategory(category_str)};
+    if (!flag) return false;
 
     const auto level = GetLogLevel(level_str);
     if (!level.has_value() || level.value() > MAX_USER_SETABLE_SEVERITY_LEVEL) return false;
 
     STDLOCK(m_cs);
-    m_category_log_levels[flag] = level.value();
+    m_category_log_levels[*flag] = level.value();
     return true;
 }
 
