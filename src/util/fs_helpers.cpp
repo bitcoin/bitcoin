@@ -179,11 +179,13 @@ int RaiseFileDescriptorLimit(int min_fd)
         // Check the (possibly raised) current soft limit against the special
         // value of RLIM_INFINITY. Some platforms implement this as the maximum
         // uint64, others as int64 (-1). Avoid casting even if the return type
-        // is changed to uint64_t.
-        if (limitFD.rlim_cur == RLIM_INFINITY) {
+        // is changed to uint64_t. We also cap unlikely but possible values
+        // that would overflow int.
+        if (limitFD.rlim_cur == RLIM_INFINITY ||
+            std::cmp_greater_equal(limitFD.rlim_cur, std::numeric_limits<int>::max())) {
             return std::numeric_limits<int>::max();
         }
-        return limitFD.rlim_cur;
+        return static_cast<int>(limitFD.rlim_cur);
     }
     return min_fd; // getrlimit failed, assume it's fine
 #endif
