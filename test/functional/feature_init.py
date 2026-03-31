@@ -292,12 +292,28 @@ class InitTest(BitcoinTestFramework):
         for option in options:
             self.restart_node(1, option)
 
+    def init_pause_load_mempool_interrupt_test(self):
+        self.log.info("Test interrupting startup while pause_load_mempool is active")
+        node = self.nodes[0]
+        pause_file = node.chain_path / "pause_load_mempool"
+        pause_file.touch()
+
+        with node.busy_wait_for_debug_log([b"Waiting for test pause file"]):
+            self.start_breakable(node, extra_args=["-test=pause_load_mempool"], wait_for_import=False)
+
+        self.sigterm_node(node)
+        pause_file.unlink()
+
+        self.check_clean_start(node, [])
+        self.stop_node(0)
+
     def run_test(self):
         self.init_pid_test()
         self.init_stress_test_interrupt()
         self.init_stress_test_removals()
         self.break_wait_test()
         self.init_empty_test()
+        self.init_pause_load_mempool_interrupt_test()
 
 
 if __name__ == '__main__':
