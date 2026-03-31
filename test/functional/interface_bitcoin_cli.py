@@ -139,11 +139,11 @@ class TestBitcoinCli(BitcoinTestFramework):
 
         self.log.info("Test -stdinrpcpass option")
         assert_equal(BLOCKS, self.nodes[0].cli(f'-rpcuser={user}', '-stdinrpcpass', input=password).getblockcount())
-        assert_raises_process_error(1, 'Incorrect rpcuser or rpcpassword', self.nodes[0].cli(f'-rpcuser={user}', '-stdinrpcpass', input='foo').echo)
+        assert_raises_process_error(1, 'Incorrect rpcuser or rpcpassword were specified', self.nodes[0].cli(f'-rpcuser={user}', '-stdinrpcpass', input='foo').echo)
 
         self.log.info("Test -stdin and -stdinrpcpass")
         assert_equal(['foo', 'bar'], self.nodes[0].cli(f'-rpcuser={user}', '-stdin', '-stdinrpcpass', input=f'{password}\nfoo\nbar').echo())
-        assert_raises_process_error(1, 'Incorrect rpcuser or rpcpassword', self.nodes[0].cli(f'-rpcuser={user}', '-stdin', '-stdinrpcpass', input='foo').echo)
+        assert_raises_process_error(1, 'Incorrect rpcuser or rpcpassword were specified', self.nodes[0].cli(f'-rpcuser={user}', '-stdin', '-stdinrpcpass', input='foo').echo)
 
         self.log.info("Test connecting to a non-existing server")
         assert_raises_process_error(1, "Could not connect to the server", self.nodes[0].cli('-rpcport=1').echo)
@@ -196,7 +196,14 @@ class TestBitcoinCli(BitcoinTestFramework):
         self.nodes[0].replace_in_config([("#" + conf_rpcport, conf_rpcport)])
 
         self.log.info("Test connecting with non-existing RPC cookie file")
-        assert_raises_process_error(1, "Could not locate RPC credentials", self.nodes[0].cli('-rpccookiefile=does-not-exist', '-rpcpassword=').echo)
+        assert_raises_process_error(1, "Failed to read cookie file and no rpcpassword was specified.", self.nodes[0].cli('-rpccookiefile=does-not-exist', '-rpcpassword=').echo)
+
+        self.log.info("Test connecting with neither cookie file, nor password")
+        assert_raises_process_error(1, "Cookie file was disabled via -norpccookiefile and no rpcpassword was specified.", self.nodes[0].cli("-norpccookiefile").echo)
+        assert_raises_process_error(1, "Cookie file was disabled via -norpccookiefile and no rpcpassword was specified.", self.nodes[0].cli("-norpccookiefile", "-rpcpassword=").echo)
+
+        self.log.info("Test connecting with invalid cookie file")
+        assert_raises_process_error(1, "Cookie file credentials were invalid and no rpcpassword was specified.", self.nodes[0].cli(f"-rpccookiefile={self.nodes[0].datadir_path / 'bitcoin.conf'}").echo)
 
         self.log.info("Test connecting without RPC cookie file and with password arg")
         assert_equal(BLOCKS, self.nodes[0].cli('-norpccookiefile', f'-rpcuser={user}', f'-rpcpassword={password}').getblockcount())

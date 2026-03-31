@@ -901,15 +901,13 @@ static UniValue CallRPC(BaseRequestHandler* rh, const std::string& strMethod, co
     evhttp_request_set_error_cb(req.get(), http_error_cb);
 
     // Get credentials
-    std::string strRPCUserColonPass;
-    bool failedToGetAuthCookie = false;
+    std::string rpc_credentials;
+    std::optional<AuthCookieResult> auth_cookie_result;
     if (gArgs.GetArg("-rpcpassword", "") == "") {
         // Try fall back to cookie-based authentication if no password is provided
-        if (!GetAuthCookie(&strRPCUserColonPass)) {
-            failedToGetAuthCookie = true;
-        }
+        auth_cookie_result = GetAuthCookie(rpc_credentials);
     } else {
-        strRPCUserColonPass = username + ":" + gArgs.GetArg("-rpcpassword", "");
+        rpc_credentials = username + ":" + gArgs.GetArg("-rpcpassword", "");
     }
 
     struct evkeyvalq* output_headers = evhttp_request_get_output_headers(req.get());
@@ -917,7 +915,7 @@ static UniValue CallRPC(BaseRequestHandler* rh, const std::string& strMethod, co
     evhttp_add_header(output_headers, "Host", host.c_str());
     evhttp_add_header(output_headers, "Connection", "close");
     evhttp_add_header(output_headers, "Content-Type", "application/json");
-    evhttp_add_header(output_headers, "Authorization", (std::string("Basic ") + EncodeBase64(strRPCUserColonPass)).c_str());
+    evhttp_add_header(output_headers, "Authorization", (std::string("Basic ") + EncodeBase64(rpc_credentials)).c_str());
 
     // Attach request data
     std::string strRequest = rh->PrepareRequest(strMethod, args).write() + "\n";
@@ -942,13 +940,24 @@ static UniValue CallRPC(BaseRequestHandler* rh, const std::string& strMethod, co
                     "Use \"bitcoin-cli -help\" for more info.",
                     host, port, responseErrorMessage));
     } else if (response.status == HTTP_UNAUTHORIZED) {
-        if (failedToGetAuthCookie) {
-            throw std::runtime_error(strprintf(
-                "Could not locate RPC credentials. No authentication cookie could be found, and RPC password is not set.  See -rpcpassword and -stdinrpcpass.  Configuration file: (%s)",
-                fs::PathToString(gArgs.GetConfigFilePath())));
+        std::string error{"Authorization failed: "};
+        if (auth_cookie_result.has_value()) {
+            switch (*auth_cookie_result) {
+            case AuthCookieResult::Error:
+                error += "Failed to read cookie file and no rpcpassword was specified.";
+                break;
+            case AuthCookieResult::Disabled:
+                error += "Cookie file was disabled via -norpccookiefile and no rpcpassword was specified.";
+                break;
+            case AuthCookieResult::Ok:
+                error += "Cookie file credentials were invalid and no rpcpassword was specified.";
+                break;
+            }
         } else {
-            throw std::runtime_error("Authorization failed: Incorrect rpcuser or rpcpassword");
+            error += "Incorrect rpcuser or rpcpassword were specified.";
         }
+        error += strprintf(" Configuration file: (%s)", fs::PathToString(gArgs.GetConfigFilePath()));
+        throw std::runtime_error(error);
     } else if (response.status == HTTP_SERVICE_UNAVAILABLE) {
         throw std::runtime_error(strprintf("Server response: %s", response.body));
     } else if (response.status >= 400 && response.status != HTTP_BAD_REQUEST && response.status != HTTP_NOT_FOUND && response.status != HTTP_INTERNAL_SERVER_ERROR)

@@ -43,7 +43,7 @@ AuthCookieResult GenerateAuthCookie(const std::optional<fs::perms>& cookie_perms
                                             std::string& pass);
 
 /** Read the RPC authentication cookie from disk */
-bool GetAuthCookie(std::string *cookie_out);
+AuthCookieResult GetAuthCookie(std::string& cookie_out);
 /** Delete RPC authentication cookie from disk */
 void DeleteAuthCookie();
 /** Parse JSON-RPC batch reply into a vector */

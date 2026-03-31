@@ -145,23 +145,20 @@ AuthCookieResult GenerateAuthCookie(const std::optional<fs::perms>& cookie_perms
     return AuthCookieResult::Ok;
 }
 
-bool GetAuthCookie(std::string *cookie_out)
+AuthCookieResult GetAuthCookie(std::string& cookie_out)
 {
     std::ifstream file;
-    std::string cookie;
     fs::path filepath = GetAuthCookieFile();
     if (filepath.empty()) {
-        return true; // -norpccookiefile
+        return AuthCookieResult::Disabled; // -norpccookiefile
     }
     file.open(filepath.std_path());
-    if (!file.is_open())
-        return false;
-    std::getline(file, cookie);
+    if (!file.is_open()) {
+        return AuthCookieResult::Error;
+    }
+    std::getline(file, cookie_out);
     file.close();
-
-    if (cookie_out)
-        *cookie_out = cookie;
-    return true;
+    return AuthCookieResult::Ok;
 }
 
 void DeleteAuthCookie()
