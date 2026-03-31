@@ -5,6 +5,7 @@
 #include <common/args.h>
 #include <common/settings.h>
 #include <logging.h>
+#include <test/getarg_tests_settings.h>
 #include <test/util/common.h>
 #include <test/util/setup_common.h>
 #include <univalue.h>
@@ -68,94 +69,94 @@ BOOST_AUTO_TEST_CASE(setting_args)
 
     set_foo("str");
     BOOST_CHECK_EQUAL(args.GetSetting("foo").write(), "\"str\"");
-    BOOST_CHECK_EQUAL(args.GetArg("foo", "default"), "str");
-    BOOST_CHECK_EQUAL(args.GetIntArg("foo", 100), 0);
-    BOOST_CHECK_EQUAL(args.GetBoolArg("foo", true), false);
-    BOOST_CHECK_EQUAL(args.GetBoolArg("foo", false), false);
+    BOOST_CHECK_EQUAL(FooSetting::Get(args, "default"), "str");
+    BOOST_CHECK_EQUAL(FooSettingInt::Get(args, 100), 0);
+    BOOST_CHECK_EQUAL(FooSettingBool::Get(args, true), false);
+    BOOST_CHECK_EQUAL(FooSettingBool::Get(args, false), false);
 
     set_foo("99");
     BOOST_CHECK_EQUAL(args.GetSetting("foo").write(), "\"99\"");
-    BOOST_CHECK_EQUAL(args.GetArg("foo", "default"), "99");
-    BOOST_CHECK_EQUAL(args.GetIntArg("foo", 100), 99);
-    BOOST_CHECK_EQUAL(args.GetBoolArg("foo", true), true);
-    BOOST_CHECK_EQUAL(args.GetBoolArg("foo", false), true);
+    BOOST_CHECK_EQUAL(FooSetting::Get(args, "default"), "99");
+    BOOST_CHECK_EQUAL(FooSettingInt::Get(args, 100), 99);
+    BOOST_CHECK_EQUAL(FooSettingBool::Get(args, true), true);
+    BOOST_CHECK_EQUAL(FooSettingBool::Get(args, false), true);
 
     set_foo("3.25");
     BOOST_CHECK_EQUAL(args.GetSetting("foo").write(), "\"3.25\"");
-    BOOST_CHECK_EQUAL(args.GetArg("foo", "default"), "3.25");
-    BOOST_CHECK_EQUAL(args.GetIntArg("foo", 100), 3);
-    BOOST_CHECK_EQUAL(args.GetBoolArg("foo", true), true);
-    BOOST_CHECK_EQUAL(args.GetBoolArg("foo", false), true);
+    BOOST_CHECK_EQUAL(FooSetting::Get(args, "default"), "3.25");
+    BOOST_CHECK_EQUAL(FooSettingInt::Get(args, 100), 3);
+    BOOST_CHECK_EQUAL(FooSettingBool::Get(args, true), true);
+    BOOST_CHECK_EQUAL(FooSettingBool::Get(args, false), true);
 
     set_foo("0");
     BOOST_CHECK_EQUAL(args.GetSetting("foo").write(), "\"0\"");
-    BOOST_CHECK_EQUAL(args.GetArg("foo", "default"), "0");
-    BOOST_CHECK_EQUAL(args.GetIntArg("foo", 100), 0);
-    BOOST_CHECK_EQUAL(args.GetBoolArg("foo", true), false);
-    BOOST_CHECK_EQUAL(args.GetBoolArg("foo", false), false);
+    BOOST_CHECK_EQUAL(FooSetting::Get(args, "default"), "0");
+    BOOST_CHECK_EQUAL(FooSettingInt::Get(args, 100), 0);
+    BOOST_CHECK_EQUAL(FooSettingBool::Get(args, true), false);
+    BOOST_CHECK_EQUAL(FooSettingBool::Get(args, false), false);
 
     set_foo("");
     BOOST_CHECK_EQUAL(args.GetSetting("foo").write(), "\"\"");
-    BOOST_CHECK_EQUAL(args.GetArg("foo", "default"), "");
-    BOOST_CHECK_EQUAL(args.GetIntArg("foo", 100), 0);
-    BOOST_CHECK_EQUAL(args.GetBoolArg("foo", true), true);
-    BOOST_CHECK_EQUAL(args.GetBoolArg("foo", false), true);
+    BOOST_CHECK_EQUAL(FooSetting::Get(args, "default"), "");
+    BOOST_CHECK_EQUAL(FooSettingInt::Get(args, 100), 0);
+    BOOST_CHECK_EQUAL(FooSettingBool::Get(args, true), true);
+    BOOST_CHECK_EQUAL(FooSettingBool::Get(args, false), true);
 
     set_foo(99);
     BOOST_CHECK_EQUAL(args.GetSetting("foo").write(), "99");
-    BOOST_CHECK_EQUAL(args.GetArg("foo", "default"), "99");
-    BOOST_CHECK_EQUAL(args.GetIntArg("foo", 100), 99);
-    BOOST_CHECK_THROW(args.GetBoolArg("foo", true), std::runtime_error);
-    BOOST_CHECK_THROW(args.GetBoolArg("foo", false), std::runtime_error);
+    BOOST_CHECK_EQUAL(FooSetting::Get(args, "default"), "99");
+    BOOST_CHECK_EQUAL(FooSettingInt::Get(args, 100), 99);
+    BOOST_CHECK_THROW(FooSettingBool::Get(args, true), std::runtime_error);
+    BOOST_CHECK_THROW(FooSettingBool::Get(args, false), std::runtime_error);
 
     set_foo(3.25);
     BOOST_CHECK_EQUAL(args.GetSetting("foo").write(), "3.25");
-    BOOST_CHECK_EQUAL(args.GetArg("foo", "default"), "3.25");
-    BOOST_CHECK_THROW(args.GetIntArg("foo", 100), std::runtime_error);
-    BOOST_CHECK_THROW(args.GetBoolArg("foo", true), std::runtime_error);
-    BOOST_CHECK_THROW(args.GetBoolArg("foo", false), std::runtime_error);
+    BOOST_CHECK_EQUAL(FooSetting::Get(args, "default"), "3.25");
+    BOOST_CHECK_THROW(FooSettingInt::Get(args, 100), std::runtime_error);
+    BOOST_CHECK_THROW(FooSettingBool::Get(args, true), std::runtime_error);
+    BOOST_CHECK_THROW(FooSettingBool::Get(args, false), std::runtime_error);
 
     set_foo(0);
     BOOST_CHECK_EQUAL(args.GetSetting("foo").write(), "0");
-    BOOST_CHECK_EQUAL(args.GetArg("foo", "default"), "0");
-    BOOST_CHECK_EQUAL(args.GetIntArg("foo", 100), 0);
-    BOOST_CHECK_THROW(args.GetBoolArg("foo", true), std::runtime_error);
-    BOOST_CHECK_THROW(args.GetBoolArg("foo", false), std::runtime_error);
+    BOOST_CHECK_EQUAL(FooSetting::Get(args, "default"), "0");
+    BOOST_CHECK_EQUAL(FooSettingInt::Get(args, 100), 0);
+    BOOST_CHECK_THROW(FooSettingBool::Get(args, true), std::runtime_error);
+    BOOST_CHECK_THROW(FooSettingBool::Get(args, false), std::runtime_error);
 
     set_foo(true);
     BOOST_CHECK_EQUAL(args.GetSetting("foo").write(), "true");
-    BOOST_CHECK_EQUAL(args.GetArg("foo", "default"), "1");
-    BOOST_CHECK_EQUAL(args.GetIntArg("foo", 100), 1);
-    BOOST_CHECK_EQUAL(args.GetBoolArg("foo", true), true);
-    BOOST_CHECK_EQUAL(args.GetBoolArg("foo", false), true);
+    BOOST_CHECK_EQUAL(FooSetting::Get(args, "default"), "1");
+    BOOST_CHECK_EQUAL(FooSettingInt::Get(args, 100), 1);
+    BOOST_CHECK_EQUAL(FooSettingBool::Get(args, true), true);
+    BOOST_CHECK_EQUAL(FooSettingBool::Get(args, false), true);
 
     set_foo(false);
     BOOST_CHECK_EQUAL(args.GetSetting("foo").write(), "false");
-    BOOST_CHECK_EQUAL(args.GetArg("foo", "default"), "0");
-    BOOST_CHECK_EQUAL(args.GetIntArg("foo", 100), 0);
-    BOOST_CHECK_EQUAL(args.GetBoolArg("foo", true), false);
-    BOOST_CHECK_EQUAL(args.GetBoolArg("foo", false), false);
+    BOOST_CHECK_EQUAL(FooSetting::Get(args, "default"), "0");
+    BOOST_CHECK_EQUAL(FooSettingInt::Get(args, 100), 0);
+    BOOST_CHECK_EQUAL(FooSettingBool::Get(args, true), false);
+    BOOST_CHECK_EQUAL(FooSettingBool::Get(args, false), false);
 
     set_foo(UniValue::VOBJ);
     BOOST_CHECK_EQUAL(args.GetSetting("foo").write(), "{}");
-    BOOST_CHECK_THROW(args.GetArg("foo", "default"), std::runtime_error);
-    BOOST_CHECK_THROW(args.GetIntArg("foo", 100), std::runtime_error);
-    BOOST_CHECK_THROW(args.GetBoolArg("foo", true), std::runtime_error);
-    BOOST_CHECK_THROW(args.GetBoolArg("foo", false), std::runtime_error);
+    BOOST_CHECK_THROW(FooSetting::Get(args, "default"), std::runtime_error);
+    BOOST_CHECK_THROW(FooSettingInt::Get(args, 100), std::runtime_error);
+    BOOST_CHECK_THROW(FooSettingBool::Get(args, true), std::runtime_error);
+    BOOST_CHECK_THROW(FooSettingBool::Get(args, false), std::runtime_error);
 
     set_foo(UniValue::VARR);
     BOOST_CHECK_EQUAL(args.GetSetting("foo").write(), "[]");
-    BOOST_CHECK_THROW(args.GetArg("foo", "default"), std::runtime_error);
-    BOOST_CHECK_THROW(args.GetIntArg("foo", 100), std::runtime_error);
-    BOOST_CHECK_THROW(args.GetBoolArg("foo", true), std::runtime_error);
-    BOOST_CHECK_THROW(args.GetBoolArg("foo", false), std::runtime_error);
+    BOOST_CHECK_THROW(FooSetting::Get(args, "default"), std::runtime_error);
+    BOOST_CHECK_THROW(FooSettingInt::Get(args, 100), std::runtime_error);
+    BOOST_CHECK_THROW(FooSettingBool::Get(args, true), std::runtime_error);
+    BOOST_CHECK_THROW(FooSettingBool::Get(args, false), std::runtime_error);
 
     set_foo(UniValue::VNULL);
     BOOST_CHECK_EQUAL(args.GetSetting("foo").write(), "null");
-    BOOST_CHECK_EQUAL(args.GetArg("foo", "default"), "default");
-    BOOST_CHECK_EQUAL(args.GetIntArg("foo", 100), 100);
-    BOOST_CHECK_EQUAL(args.GetBoolArg("foo", true), true);
-    BOOST_CHECK_EQUAL(args.GetBoolArg("foo", false), false);
+    BOOST_CHECK_EQUAL(FooSetting::Get(args, "default"), "default");
+    BOOST_CHECK_EQUAL(FooSettingInt::Get(args, 100), 100);
+    BOOST_CHECK_EQUAL(FooSettingBool::Get(args, true), true);
+    BOOST_CHECK_EQUAL(FooSettingBool::Get(args, false), false);
 }
 
 BOOST_AUTO_TEST_CASE(boolarg)
@@ -165,52 +166,52 @@ BOOST_AUTO_TEST_CASE(boolarg)
     const auto foo = std::make_pair("-foo", ArgsManager::ALLOW_ANY);
     SetupArgs(local_args, {foo});
     ResetArgs(local_args, "-foo");
-    BOOST_CHECK(local_args.GetBoolArg("-foo", false));
-    BOOST_CHECK(local_args.GetBoolArg("-foo", true));
+    BOOST_CHECK(FooSetting2Bool::Get(local_args, false));
+    BOOST_CHECK(FooSetting2Bool::Get(local_args, true));
 
-    BOOST_CHECK(!local_args.GetBoolArg("-fo", false));
-    BOOST_CHECK(local_args.GetBoolArg("-fo", true));
+    BOOST_CHECK(!FoSetting::Get(local_args, false));
+    BOOST_CHECK(FoSetting::Get(local_args, true));
 
-    BOOST_CHECK(!local_args.GetBoolArg("-fooo", false));
-    BOOST_CHECK(local_args.GetBoolArg("-fooo", true));
+    BOOST_CHECK(!FooOSetting::Get(local_args, false));
+    BOOST_CHECK(FooOSetting::Get(local_args, true));
 
     ResetArgs(local_args, "-foo=0");
-    BOOST_CHECK(!local_args.GetBoolArg("-foo", false));
-    BOOST_CHECK(!local_args.GetBoolArg("-foo", true));
+    BOOST_CHECK(!FooSetting2Bool::Get(local_args, false));
+    BOOST_CHECK(!FooSetting2Bool::Get(local_args, true));
 
     ResetArgs(local_args, "-foo=1");
-    BOOST_CHECK(local_args.GetBoolArg("-foo", false));
-    BOOST_CHECK(local_args.GetBoolArg("-foo", true));
+    BOOST_CHECK(FooSetting2Bool::Get(local_args, false));
+    BOOST_CHECK(FooSetting2Bool::Get(local_args, true));
 
     // New 0.6 feature: auto-map -nosomething to !-something:
     ResetArgs(local_args, "-nofoo");
-    BOOST_CHECK(!local_args.GetBoolArg("-foo", false));
-    BOOST_CHECK(!local_args.GetBoolArg("-foo", true));
+    BOOST_CHECK(!FooSetting2Bool::Get(local_args, false));
+    BOOST_CHECK(!FooSetting2Bool::Get(local_args, true));
 
     ResetArgs(local_args, "-nofoo=1");
-    BOOST_CHECK(!local_args.GetBoolArg("-foo", false));
-    BOOST_CHECK(!local_args.GetBoolArg("-foo", true));
+    BOOST_CHECK(!FooSetting2Bool::Get(local_args, false));
+    BOOST_CHECK(!FooSetting2Bool::Get(local_args, true));
 
     ResetArgs(local_args, "-foo -nofoo"); // -nofoo should win
-    BOOST_CHECK(!local_args.GetBoolArg("-foo", false));
-    BOOST_CHECK(!local_args.GetBoolArg("-foo", true));
+    BOOST_CHECK(!FooSetting2Bool::Get(local_args, false));
+    BOOST_CHECK(!FooSetting2Bool::Get(local_args, true));
 
     ResetArgs(local_args, "-foo=1 -nofoo=1"); // -nofoo should win
-    BOOST_CHECK(!local_args.GetBoolArg("-foo", false));
-    BOOST_CHECK(!local_args.GetBoolArg("-foo", true));
+    BOOST_CHECK(!FooSetting2Bool::Get(local_args, false));
+    BOOST_CHECK(!FooSetting2Bool::Get(local_args, true));
 
     ResetArgs(local_args, "-foo=0 -nofoo=0"); // -nofoo=0 should win
-    BOOST_CHECK(local_args.GetBoolArg("-foo", false));
-    BOOST_CHECK(local_args.GetBoolArg("-foo", true));
+    BOOST_CHECK(FooSetting2Bool::Get(local_args, false));
+    BOOST_CHECK(FooSetting2Bool::Get(local_args, true));
 
     // New 0.6 feature: treat -- same as -:
     ResetArgs(local_args, "--foo=1");
-    BOOST_CHECK(local_args.GetBoolArg("-foo", false));
-    BOOST_CHECK(local_args.GetBoolArg("-foo", true));
+    BOOST_CHECK(FooSetting2Bool::Get(local_args, false));
+    BOOST_CHECK(FooSetting2Bool::Get(local_args, true));
 
     ResetArgs(local_args, "--nofoo=1");
-    BOOST_CHECK(!local_args.GetBoolArg("-foo", false));
-    BOOST_CHECK(!local_args.GetBoolArg("-foo", true));
+    BOOST_CHECK(!FooSetting2Bool::Get(local_args, false));
+    BOOST_CHECK(!FooSetting2Bool::Get(local_args, true));
 }
 
 BOOST_AUTO_TEST_CASE(stringarg)
@@ -221,24 +222,24 @@ BOOST_AUTO_TEST_CASE(stringarg)
     const auto bar = std::make_pair("-bar", ArgsManager::ALLOW_ANY);
     SetupArgs(local_args, {foo, bar});
     ResetArgs(local_args, "");
-    BOOST_CHECK_EQUAL(local_args.GetArg("-foo", ""), "");
-    BOOST_CHECK_EQUAL(local_args.GetArg("-foo", "eleven"), "eleven");
+    BOOST_CHECK_EQUAL(FooSetting2::Get(local_args, ""), "");
+    BOOST_CHECK_EQUAL(FooSetting2::Get(local_args, "eleven"), "eleven");
 
     ResetArgs(local_args, "-foo -bar");
-    BOOST_CHECK_EQUAL(local_args.GetArg("-foo", ""), "");
-    BOOST_CHECK_EQUAL(local_args.GetArg("-foo", "eleven"), "");
+    BOOST_CHECK_EQUAL(FooSetting2::Get(local_args, ""), "");
+    BOOST_CHECK_EQUAL(FooSetting2::Get(local_args, "eleven"), "");
 
     ResetArgs(local_args, "-foo=");
-    BOOST_CHECK_EQUAL(local_args.GetArg("-foo", ""), "");
-    BOOST_CHECK_EQUAL(local_args.GetArg("-foo", "eleven"), "");
+    BOOST_CHECK_EQUAL(FooSetting2::Get(local_args, ""), "");
+    BOOST_CHECK_EQUAL(FooSetting2::Get(local_args, "eleven"), "");
 
     ResetArgs(local_args, "-foo=11");
-    BOOST_CHECK_EQUAL(local_args.GetArg("-foo", ""), "11");
-    BOOST_CHECK_EQUAL(local_args.GetArg("-foo", "eleven"), "11");
+    BOOST_CHECK_EQUAL(FooSetting2::Get(local_args, ""), "11");
+    BOOST_CHECK_EQUAL(FooSetting2::Get(local_args, "eleven"), "11");
 
     ResetArgs(local_args, "-foo=eleven");
-    BOOST_CHECK_EQUAL(local_args.GetArg("-foo", ""), "eleven");
-    BOOST_CHECK_EQUAL(local_args.GetArg("-foo", "eleven"), "eleven");
+    BOOST_CHECK_EQUAL(FooSetting2::Get(local_args, ""), "eleven");
+    BOOST_CHECK_EQUAL(FooSetting2::Get(local_args, "eleven"), "eleven");
 }
 
 BOOST_AUTO_TEST_CASE(intarg)
@@ -252,37 +253,37 @@ BOOST_AUTO_TEST_CASE(intarg)
     ResetArgs(local_args, "");
     BOOST_CHECK(!local_args.GetArg<int64_t>("-foo").has_value());
     BOOST_CHECK(!local_args.GetArg<uint8_t>("-bar").has_value());
-    BOOST_CHECK_EQUAL(local_args.GetIntArg("-foo", 11), 11);
-    BOOST_CHECK_EQUAL(local_args.GetIntArg("-foo", 0), 0);
-    BOOST_CHECK_EQUAL(local_args.GetArg("-bar", uint8_t{222}), 222);
-    BOOST_CHECK_EQUAL(local_args.GetArg("-bar", uint8_t{0}), 0);
+    BOOST_CHECK_EQUAL(FooSetting2Int::Get(local_args, 11), 11);
+    BOOST_CHECK_EQUAL(FooSetting2Int::Get(local_args, 0), 0);
+    BOOST_CHECK_EQUAL(BarSettinguint8_t::Get(local_args, uint8_t{222}), 222);
+    BOOST_CHECK_EQUAL(BarSettinguint8_t::Get(local_args, uint8_t{0}), 0);
 
     ResetArgs(local_args, "-foo -bar");
     BOOST_CHECK_EQUAL(local_args.GetArg<int64_t>("-foo"), 0);
     BOOST_CHECK_EQUAL(local_args.GetArg<uint8_t>("-bar"), 0);
-    BOOST_CHECK_EQUAL(local_args.GetIntArg("-foo", 11), 0);
-    BOOST_CHECK_EQUAL(local_args.GetArg("-bar", uint8_t{222}), 0);
+    BOOST_CHECK_EQUAL(FooSetting2Int::Get(local_args, 11), 0);
+    BOOST_CHECK_EQUAL(BarSettinguint8_t::Get(local_args, uint8_t{222}), 0);
 
     // Check under-/overflow behavior.
     ResetArgs(local_args, "-foo=-9223372036854775809 -bar=9223372036854775808");
     BOOST_CHECK_EQUAL(local_args.GetArg<int64_t>("-foo"), std::numeric_limits<int64_t>::min());
     BOOST_CHECK_EQUAL(local_args.GetArg<uint8_t>("-bar"), std::numeric_limits<uint8_t>::max());
-    BOOST_CHECK_EQUAL(local_args.GetIntArg("-foo", 0), std::numeric_limits<int64_t>::min());
-    BOOST_CHECK_EQUAL(local_args.GetIntArg("-bar", 0), std::numeric_limits<int64_t>::max());
-    BOOST_CHECK_EQUAL(local_args.GetArg("-foo", uint8_t{0}), std::numeric_limits<uint8_t>::min());
-    BOOST_CHECK_EQUAL(local_args.GetArg("-bar", uint8_t{0}), std::numeric_limits<uint8_t>::max());
+    BOOST_CHECK_EQUAL(FooSetting2Int::Get(local_args, 0), std::numeric_limits<int64_t>::min());
+    BOOST_CHECK_EQUAL(BarSetting::Get(local_args), std::numeric_limits<int64_t>::max());
+    BOOST_CHECK_EQUAL(FooSetting2uint8_t::Get(local_args), std::numeric_limits<uint8_t>::min());
+    BOOST_CHECK_EQUAL(BarSettinguint8_t::Get(local_args, uint8_t{0}), std::numeric_limits<uint8_t>::max());
 
     ResetArgs(local_args, "-foo=11 -bar=12");
     BOOST_CHECK_EQUAL(local_args.GetArg<int64_t>("-foo"), 11);
     BOOST_CHECK_EQUAL(local_args.GetArg<uint8_t>("-bar"), 12);
-    BOOST_CHECK_EQUAL(local_args.GetIntArg("-foo", 0), 11);
-    BOOST_CHECK_EQUAL(local_args.GetArg("-bar", uint8_t{11}), 12);
+    BOOST_CHECK_EQUAL(FooSetting2Int::Get(local_args, 0), 11);
+    BOOST_CHECK_EQUAL(BarSettinguint8_t::Get(local_args, uint8_t{11}), 12);
 
     ResetArgs(local_args, "-foo=NaN -bar=NotANumber");
     BOOST_CHECK_EQUAL(local_args.GetArg<int64_t>("-foo"), 0);
     BOOST_CHECK_EQUAL(local_args.GetArg<uint8_t>("-bar"), 0);
-    BOOST_CHECK_EQUAL(local_args.GetIntArg("-foo", 1), 0);
-    BOOST_CHECK_EQUAL(local_args.GetArg("-bar", uint8_t{11}), 0);
+    BOOST_CHECK_EQUAL(FooSetting2Int::Get(local_args, 1), 0);
+    BOOST_CHECK_EQUAL(BarSettinguint8_t::Get(local_args, uint8_t{11}), 0);
 }
 
 BOOST_AUTO_TEST_CASE(patharg)
@@ -292,91 +293,91 @@ BOOST_AUTO_TEST_CASE(patharg)
     const auto dir = std::make_pair("-dir", ArgsManager::ALLOW_ANY);
     SetupArgs(local_args, {dir});
     ResetArgs(local_args, "");
-    BOOST_CHECK_EQUAL(local_args.GetPathArg("-dir"), fs::path{});
+    BOOST_CHECK_EQUAL(DirSetting::Get(local_args, {}), fs::path{});
 
     const fs::path root_path{"/"};
     ResetArgs(local_args, "-dir=/");
-    BOOST_CHECK_EQUAL(local_args.GetPathArg("-dir"), root_path);
+    BOOST_CHECK_EQUAL(DirSetting::Get(local_args, {}), root_path);
 
     ResetArgs(local_args, "-dir=/.");
-    BOOST_CHECK_EQUAL(local_args.GetPathArg("-dir"), root_path);
+    BOOST_CHECK_EQUAL(DirSetting::Get(local_args, {}), root_path);
 
     ResetArgs(local_args, "-dir=/./");
-    BOOST_CHECK_EQUAL(local_args.GetPathArg("-dir"), root_path);
+    BOOST_CHECK_EQUAL(DirSetting::Get(local_args, {}), root_path);
 
     ResetArgs(local_args, "-dir=/.//");
-    BOOST_CHECK_EQUAL(local_args.GetPathArg("-dir"), root_path);
+    BOOST_CHECK_EQUAL(DirSetting::Get(local_args, {}), root_path);
 
 #ifdef WIN32
     const fs::path win_root_path{"C:\\"};
     ResetArgs(local_args, "-dir=C:\\");
-    BOOST_CHECK_EQUAL(local_args.GetPathArg("-dir"), win_root_path);
+    BOOST_CHECK_EQUAL(DirSetting::Get(local_args, {}), win_root_path);
 
     ResetArgs(local_args, "-dir=C:/");
-    BOOST_CHECK_EQUAL(local_args.GetPathArg("-dir"), win_root_path);
+    BOOST_CHECK_EQUAL(DirSetting::Get(local_args, {}), win_root_path);
 
     ResetArgs(local_args, "-dir=C:\\\\");
-    BOOST_CHECK_EQUAL(local_args.GetPathArg("-dir"), win_root_path);
+    BOOST_CHECK_EQUAL(DirSetting::Get(local_args, {}), win_root_path);
 
     ResetArgs(local_args, "-dir=C:\\.");
-    BOOST_CHECK_EQUAL(local_args.GetPathArg("-dir"), win_root_path);
+    BOOST_CHECK_EQUAL(DirSetting::Get(local_args, {}), win_root_path);
 
     ResetArgs(local_args, "-dir=C:\\.\\");
-    BOOST_CHECK_EQUAL(local_args.GetPathArg("-dir"), win_root_path);
+    BOOST_CHECK_EQUAL(DirSetting::Get(local_args, {}), win_root_path);
 
     ResetArgs(local_args, "-dir=C:\\.\\\\");
-    BOOST_CHECK_EQUAL(local_args.GetPathArg("-dir"), win_root_path);
+    BOOST_CHECK_EQUAL(DirSetting::Get(local_args, {}), win_root_path);
 #endif
 
     const fs::path absolute_path{"/home/user/.bitcoin"};
     ResetArgs(local_args, "-dir=/home/user/.bitcoin");
-    BOOST_CHECK_EQUAL(local_args.GetPathArg("-dir"), absolute_path);
+    BOOST_CHECK_EQUAL(DirSetting::Get(local_args, {}), absolute_path);
 
     ResetArgs(local_args, "-dir=/root/../home/user/.bitcoin");
-    BOOST_CHECK_EQUAL(local_args.GetPathArg("-dir"), absolute_path);
+    BOOST_CHECK_EQUAL(DirSetting::Get(local_args, {}), absolute_path);
 
     ResetArgs(local_args, "-dir=/home/./user/.bitcoin");
-    BOOST_CHECK_EQUAL(local_args.GetPathArg("-dir"), absolute_path);
+    BOOST_CHECK_EQUAL(DirSetting::Get(local_args, {}), absolute_path);
 
     ResetArgs(local_args, "-dir=/home/user/.bitcoin/");
-    BOOST_CHECK_EQUAL(local_args.GetPathArg("-dir"), absolute_path);
+    BOOST_CHECK_EQUAL(DirSetting::Get(local_args, {}), absolute_path);
 
     ResetArgs(local_args, "-dir=/home/user/.bitcoin//");
-    BOOST_CHECK_EQUAL(local_args.GetPathArg("-dir"), absolute_path);
+    BOOST_CHECK_EQUAL(DirSetting::Get(local_args, {}), absolute_path);
 
     ResetArgs(local_args, "-dir=/home/user/.bitcoin/.");
-    BOOST_CHECK_EQUAL(local_args.GetPathArg("-dir"), absolute_path);
+    BOOST_CHECK_EQUAL(DirSetting::Get(local_args, {}), absolute_path);
 
     ResetArgs(local_args, "-dir=/home/user/.bitcoin/./");
-    BOOST_CHECK_EQUAL(local_args.GetPathArg("-dir"), absolute_path);
+    BOOST_CHECK_EQUAL(DirSetting::Get(local_args, {}), absolute_path);
 
     ResetArgs(local_args, "-dir=/home/user/.bitcoin/.//");
-    BOOST_CHECK_EQUAL(local_args.GetPathArg("-dir"), absolute_path);
+    BOOST_CHECK_EQUAL(DirSetting::Get(local_args, {}), absolute_path);
 
     const fs::path relative_path{"user/.bitcoin"};
     ResetArgs(local_args, "-dir=user/.bitcoin");
-    BOOST_CHECK_EQUAL(local_args.GetPathArg("-dir"), relative_path);
+    BOOST_CHECK_EQUAL(DirSetting::Get(local_args, {}), relative_path);
 
     ResetArgs(local_args, "-dir=somewhere/../user/.bitcoin");
-    BOOST_CHECK_EQUAL(local_args.GetPathArg("-dir"), relative_path);
+    BOOST_CHECK_EQUAL(DirSetting::Get(local_args, {}), relative_path);
 
     ResetArgs(local_args, "-dir=user/./.bitcoin");
-    BOOST_CHECK_EQUAL(local_args.GetPathArg("-dir"), relative_path);
+    BOOST_CHECK_EQUAL(DirSetting::Get(local_args, {}), relative_path);
 
     ResetArgs(local_args, "-dir=user/.bitcoin/");
-    BOOST_CHECK_EQUAL(local_args.GetPathArg("-dir"), relative_path);
+    BOOST_CHECK_EQUAL(DirSetting::Get(local_args, {}), relative_path);
 
     ResetArgs(local_args, "-dir=user/.bitcoin//");
-    BOOST_CHECK_EQUAL(local_args.GetPathArg("-dir"), relative_path);
+    BOOST_CHECK_EQUAL(DirSetting::Get(local_args, {}), relative_path);
 
     ResetArgs(local_args, "-dir=user/.bitcoin/.");
-    BOOST_CHECK_EQUAL(local_args.GetPathArg("-dir"), relative_path);
+    BOOST_CHECK_EQUAL(DirSetting::Get(local_args, {}), relative_path);
 
     ResetArgs(local_args, "-dir=user/.bitcoin/./");
-    BOOST_CHECK_EQUAL(local_args.GetPathArg("-dir"), relative_path);
+    BOOST_CHECK_EQUAL(DirSetting::Get(local_args, {}), relative_path);
 
     ResetArgs(local_args, "-dir=user/.bitcoin/.//");
-    BOOST_CHECK_EQUAL(local_args.GetPathArg("-dir"), relative_path);
+    BOOST_CHECK_EQUAL(DirSetting::Get(local_args, {}), relative_path);
 
     // Check negated and default argument handling. Specifying an empty argument
     // is the same as not specifying the argument. This is convenient for
@@ -386,15 +387,15 @@ BOOST_AUTO_TEST_CASE(patharg)
     // ability to distinguish these in the future (and treat the no-assign case
     // like an imperative command or an error).
     ResetArgs(local_args, "");
-    BOOST_CHECK_EQUAL(local_args.GetPathArg("-dir", "default"), fs::path{"default"});
+    BOOST_CHECK_EQUAL(DirSetting::Get(local_args, "default"), fs::path{"default"});
     ResetArgs(local_args, "-dir=override");
-    BOOST_CHECK_EQUAL(local_args.GetPathArg("-dir", "default"), fs::path{"override"});
+    BOOST_CHECK_EQUAL(DirSetting::Get(local_args, "default"), fs::path{"override"});
     ResetArgs(local_args, "-dir=");
-    BOOST_CHECK_EQUAL(local_args.GetPathArg("-dir", "default"), fs::path{"default"});
+    BOOST_CHECK_EQUAL(DirSetting::Get(local_args, "default"), fs::path{"default"});
     ResetArgs(local_args, "-dir");
-    BOOST_CHECK_EQUAL(local_args.GetPathArg("-dir", "default"), fs::path{"default"});
+    BOOST_CHECK_EQUAL(DirSetting::Get(local_args, "default"), fs::path{"default"});
     ResetArgs(local_args, "-nodir");
-    BOOST_CHECK_EQUAL(local_args.GetPathArg("-dir", "default"), fs::path{""});
+    BOOST_CHECK_EQUAL(DirSetting::Get(local_args, "default"), fs::path{""});
 }
 
 BOOST_AUTO_TEST_CASE(doubledash)
@@ -405,11 +406,11 @@ BOOST_AUTO_TEST_CASE(doubledash)
     const auto bar = std::make_pair("-bar", ArgsManager::ALLOW_ANY);
     SetupArgs(local_args, {foo, bar});
     ResetArgs(local_args, "--foo");
-    BOOST_CHECK_EQUAL(local_args.GetBoolArg("-foo", false), true);
+    BOOST_CHECK_EQUAL(FooSetting2Bool::Get(local_args, false), true);
 
     ResetArgs(local_args, "--foo=verbose --bar=1");
-    BOOST_CHECK_EQUAL(local_args.GetArg("-foo", ""), "verbose");
-    BOOST_CHECK_EQUAL(local_args.GetIntArg("-bar", 0), 1);
+    BOOST_CHECK_EQUAL(FooSetting2::Get(local_args, ""), "verbose");
+    BOOST_CHECK_EQUAL(BarSetting::Get(local_args), 1);
 }
 
 BOOST_AUTO_TEST_CASE(boolargno)
@@ -420,24 +421,24 @@ BOOST_AUTO_TEST_CASE(boolargno)
     const auto bar = std::make_pair("-bar", ArgsManager::ALLOW_ANY);
     SetupArgs(local_args, {foo, bar});
     ResetArgs(local_args, "-nofoo");
-    BOOST_CHECK(!local_args.GetBoolArg("-foo", true));
-    BOOST_CHECK(!local_args.GetBoolArg("-foo", false));
+    BOOST_CHECK(!FooSetting2Bool::Get(local_args, true));
+    BOOST_CHECK(!FooSetting2Bool::Get(local_args, false));
 
     ResetArgs(local_args, "-nofoo=1");
-    BOOST_CHECK(!local_args.GetBoolArg("-foo", true));
-    BOOST_CHECK(!local_args.GetBoolArg("-foo", false));
+    BOOST_CHECK(!FooSetting2Bool::Get(local_args, true));
+    BOOST_CHECK(!FooSetting2Bool::Get(local_args, false));
 
     ResetArgs(local_args, "-nofoo=0");
-    BOOST_CHECK(local_args.GetBoolArg("-foo", true));
-    BOOST_CHECK(local_args.GetBoolArg("-foo", false));
+    BOOST_CHECK(FooSetting2Bool::Get(local_args, true));
+    BOOST_CHECK(FooSetting2Bool::Get(local_args, false));
 
     ResetArgs(local_args, "-foo --nofoo"); // --nofoo should win
-    BOOST_CHECK(!local_args.GetBoolArg("-foo", true));
-    BOOST_CHECK(!local_args.GetBoolArg("-foo", false));
+    BOOST_CHECK(!FooSetting2Bool::Get(local_args, true));
+    BOOST_CHECK(!FooSetting2Bool::Get(local_args, false));
 
     ResetArgs(local_args, "-nofoo -foo"); // foo always wins:
-    BOOST_CHECK(local_args.GetBoolArg("-foo", true));
-    BOOST_CHECK(local_args.GetBoolArg("-foo", false));
+    BOOST_CHECK(FooSetting2Bool::Get(local_args, true));
+    BOOST_CHECK(FooSetting2Bool::Get(local_args, false));
 }
 
 BOOST_AUTO_TEST_CASE(logargs)
