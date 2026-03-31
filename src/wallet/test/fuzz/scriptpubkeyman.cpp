@@ -104,14 +104,12 @@ FUZZ_TARGET(scriptpubkeyman, .init = initialize_spkm)
     if (spk_manager == nullptr) return;
 
     if (fuzzed_data_provider.ConsumeBool()) {
-        auto wallet_desc{CreateWalletDescriptor(fuzzed_data_provider)};
-        if (!wallet_desc.has_value()) {
-            return;
-        }
-        std::string error;
-        if (spk_manager->CanUpdateToWalletDescriptor(wallet_desc->first, error)) {
-            auto new_spk_manager{CreateDescriptor(wallet_desc->first, wallet_desc->second, wallet)};
-            if (new_spk_manager != nullptr) spk_manager = new_spk_manager;
+        if (auto wallet_desc{CreateWalletDescriptor(fuzzed_data_provider)}) {
+            std::string error;
+            if (spk_manager->CanUpdateToWalletDescriptor(wallet_desc->first, error)) {
+                auto new_spk_manager{CreateDescriptor(wallet_desc->first, wallet_desc->second, wallet)};
+                if (new_spk_manager != nullptr) spk_manager = new_spk_manager;
+            }
         }
     }
 
