@@ -136,7 +136,7 @@ def assert_raises_process_error(returncode: int, output: str, fun: Callable, *ar
         if returncode != e.returncode:
             raise AssertionError("Unexpected returncode %i" % e.returncode)
         if output not in e.output:
-            raise AssertionError("Expected substring not found:" + e.output)
+            raise AssertionError(f"Expected substring not found in: {e.output!r}")
     else:
         raise AssertionError("No exception raised")
 
