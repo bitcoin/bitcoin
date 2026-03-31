@@ -36,9 +36,9 @@
 
 using node::NodeContext;
 
-static RPCHelpMan setmocktime()
+static RPCMethod setmocktime()
 {
-    return RPCHelpMan{
+    return RPCMethod{
         "setmocktime",
         "Set the local time to given timestamp (-regtest only)\n",
         {
@@ -47,7 +47,7 @@ static RPCHelpMan setmocktime()
         },
         RPCResult{RPCResult::Type::NONE, "", ""},
         RPCExamples{""},
-        [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
+        [](const RPCMethod& self, const JSONRPCRequest& request) -> UniValue
 {
     if (!Params().IsMockableChain()) {
         throw std::runtime_error("setmocktime is for regression testing (-regtest mode) only");
@@ -77,9 +77,9 @@ static RPCHelpMan setmocktime()
     };
 }
 
-static RPCHelpMan mockscheduler()
+static RPCMethod mockscheduler()
 {
-    return RPCHelpMan{
+    return RPCMethod{
         "mockscheduler",
         "Bump the scheduler into the future (-regtest only)\n",
         {
@@ -87,7 +87,7 @@ static RPCHelpMan mockscheduler()
         },
         RPCResult{RPCResult::Type::NONE, "", ""},
         RPCExamples{""},
-        [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
+        [](const RPCMethod& self, const JSONRPCRequest& request) -> UniValue
 {
     if (!Params().IsMockableChain()) {
         throw std::runtime_error("mockscheduler is for regression testing (-regtest mode) only");
@@ -142,12 +142,12 @@ static std::string RPCMallocInfo()
 }
 #endif
 
-static RPCHelpMan getmemoryinfo()
+static RPCMethod getmemoryinfo()
 {
     /* Please, avoid using the word "pool" here in the RPC interface or help,
      * as users will undoubtedly confuse it with the other "memory pool"
      */
-    return RPCHelpMan{"getmemoryinfo",
+    return RPCMethod{"getmemoryinfo",
                 "Returns an object containing information about memory usage.\n",
                 {
                     {"mode", RPCArg::Type::STR, RPCArg::Default{"stats"}, "determines what kind of information is returned.\n"
@@ -177,7 +177,7 @@ static RPCHelpMan getmemoryinfo()
                     HelpExampleCli("getmemoryinfo", "")
             + HelpExampleRpc("getmemoryinfo", "")
                 },
-        [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
+        [](const RPCMethod& self, const JSONRPCRequest& request) -> UniValue
 {
     auto mode{self.Arg<std::string_view>("mode")};
     if (mode == "stats") {
@@ -215,9 +215,9 @@ static void EnableOrDisableLogCategories(UniValue cats, bool enable) {
     }
 }
 
-static RPCHelpMan logging()
+static RPCMethod logging()
 {
-    return RPCHelpMan{"logging",
+    return RPCMethod{"logging",
             "Gets and sets the logging configuration.\n"
             "When called without an argument, returns the list of categories with status that are currently being debug logged or not.\n"
             "When called with arguments, adds or removes categories from debug logging and return the lists above.\n"
@@ -247,7 +247,7 @@ static RPCHelpMan logging()
                     HelpExampleCli("logging", "\"[\\\"all\\\"]\" \"[\\\"http\\\"]\"")
             + HelpExampleRpc("logging", "[\"all\"], [\"libevent\"]")
                 },
-        [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
+        [](const RPCMethod& self, const JSONRPCRequest& request) -> UniValue
 {
     BCLog::CategoryMask original_log_categories = LogInstance().GetCategoryMask();
     if (request.params[0].isArray()) {
@@ -274,9 +274,9 @@ static RPCHelpMan logging()
     };
 }
 
-static RPCHelpMan echo(const std::string& name)
+static RPCMethod echo(const std::string& name)
 {
-    return RPCHelpMan{
+    return RPCMethod{
         name,
         "Simply echo back the input arguments. This command is for testing.\n"
                 "\nIt will return an internal bug report when arg9='trigger_internal_bug' is passed.\n"
@@ -296,7 +296,7 @@ static RPCHelpMan echo(const std::string& name)
         },
                 RPCResult{RPCResult::Type::ANY, "", "Returns whatever was passed in"},
                 RPCExamples{""},
-        [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
+        [](const RPCMethod& self, const JSONRPCRequest& request) -> UniValue
 {
     if (request.params[9].isStr()) {
         CHECK_NONFATAL(request.params[9].get_str() != "trigger_internal_bug");
@@ -307,12 +307,12 @@ static RPCHelpMan echo(const std::string& name)
     };
 }
 
-static RPCHelpMan echo() { return echo("echo"); }
-static RPCHelpMan echojson() { return echo("echojson"); }
+static RPCMethod echo() { return echo("echo"); }
+static RPCMethod echojson() { return echo("echojson"); }
 
-static RPCHelpMan echoipc()
+static RPCMethod echoipc()
 {
-    return RPCHelpMan{
+    return RPCMethod{
         "echoipc",
         "Echo back the input argument, passing it through a spawned process in a multiprocess build.\n"
         "This command is for testing.\n",
@@ -320,7 +320,7 @@ static RPCHelpMan echoipc()
         RPCResult{RPCResult::Type::STR, "echo", "The echoed string."},
         RPCExamples{HelpExampleCli("echo", "\"Hello world\"") +
                     HelpExampleRpc("echo", "\"Hello world\"")},
-        [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue {
+        [](const RPCMethod& self, const JSONRPCRequest& request) -> UniValue {
             interfaces::Init& local_init = *EnsureAnyNodeContext(request.context).init;
             std::unique_ptr<interfaces::Echo> echo;
             if (interfaces::Ipc* ipc = local_init.ipc()) {
@@ -360,9 +360,9 @@ static UniValue SummaryToJSON(const IndexSummary&& summary, std::string index_na
     return ret_summary;
 }
 
-static RPCHelpMan getindexinfo()
+static RPCMethod getindexinfo()
 {
-    return RPCHelpMan{
+    return RPCMethod{
         "getindexinfo",
         "Returns the status of one or all available indices currently running in the node.\n",
                 {
@@ -385,7 +385,7 @@ static RPCHelpMan getindexinfo()
                   + HelpExampleCli("getindexinfo", "txindex")
                   + HelpExampleRpc("getindexinfo", "txindex")
                 },
-                [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
+                [](const RPCMethod& self, const JSONRPCRequest& request) -> UniValue
 {
     UniValue result(UniValue::VOBJ);
     const std::string index_name{self.MaybeArg<std::string_view>("index_name").value_or("")};

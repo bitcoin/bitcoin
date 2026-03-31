@@ -44,9 +44,9 @@ using node::NodeContext;
 using node::TransactionError;
 using util::ToString;
 
-static RPCHelpMan sendrawtransaction()
+static RPCMethod sendrawtransaction()
 {
-    return RPCHelpMan{
+    return RPCMethod{
         "sendrawtransaction",
         "Submit a raw transaction (serialized, hex-encoded) to the network.\n"
 
@@ -87,7 +87,7 @@ static RPCHelpMan sendrawtransaction()
             "\nAs a JSON-RPC call\n"
             + HelpExampleRpc("sendrawtransaction", "\"signedhex\"")
                 },
-        [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
+        [](const RPCMethod& self, const JSONRPCRequest& request) -> UniValue
         {
             const CAmount max_burn_amount = request.params[2].isNull() ? 0 : AmountFromValue(request.params[2]);
 
@@ -139,9 +139,9 @@ static RPCHelpMan sendrawtransaction()
     };
 }
 
-static RPCHelpMan getprivatebroadcastinfo()
+static RPCMethod getprivatebroadcastinfo()
 {
-    return RPCHelpMan{
+    return RPCMethod{
         "getprivatebroadcastinfo",
         "Returns information about transactions that are currently being privately broadcast.\n",
         {},
@@ -171,7 +171,7 @@ static RPCHelpMan getprivatebroadcastinfo()
             HelpExampleCli("getprivatebroadcastinfo", "")
             + HelpExampleRpc("getprivatebroadcastinfo", "")
         },
-        [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
+        [](const RPCMethod& self, const JSONRPCRequest& request) -> UniValue
         {
             const NodeContext& node{EnsureAnyNodeContext(request.context)};
             const PeerManager& peerman{EnsurePeerman(node)};
@@ -204,9 +204,9 @@ static RPCHelpMan getprivatebroadcastinfo()
     };
 }
 
-static RPCHelpMan abortprivatebroadcast()
+static RPCMethod abortprivatebroadcast()
 {
-    return RPCHelpMan{
+    return RPCMethod{
         "abortprivatebroadcast",
         "Abort private broadcast attempts for a transaction currently being privately broadcast.\n"
         "The transaction will be removed from the private broadcast queue.\n",
@@ -232,7 +232,7 @@ static RPCHelpMan abortprivatebroadcast()
             HelpExampleCli("abortprivatebroadcast", "\"id\"")
             + HelpExampleRpc("abortprivatebroadcast", "\"id\"")
         },
-        [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
+        [](const RPCMethod& self, const JSONRPCRequest& request) -> UniValue
         {
             const uint256 id{ParseHashV(self.Arg<UniValue>("id"), "id")};
 
@@ -259,9 +259,9 @@ static RPCHelpMan abortprivatebroadcast()
     };
 }
 
-static RPCHelpMan testmempoolaccept()
+static RPCMethod testmempoolaccept()
 {
-    return RPCHelpMan{
+    return RPCMethod{
         "testmempoolaccept",
         "Returns result of mempool acceptance tests indicating if raw transaction(s) (serialized, hex-encoded) would be accepted by mempool.\n"
         "\nIf multiple transactions are passed in, parents must come before children and package policies apply: the transactions cannot conflict with any mempool transactions or each other.\n"
@@ -315,7 +315,7 @@ static RPCHelpMan testmempoolaccept()
             "\nAs a JSON-RPC call\n"
             + HelpExampleRpc("testmempoolaccept", "[\"signedhex\"]")
                 },
-        [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
+        [](const RPCMethod& self, const JSONRPCRequest& request) -> UniValue
         {
             const UniValue raw_transactions = request.params[0].get_array();
             if (raw_transactions.size() < 1 || raw_transactions.size() > MAX_PACKAGE_COUNT) {
@@ -606,9 +606,9 @@ UniValue MempoolToJSON(const CTxMemPool& pool, bool verbose, bool include_mempoo
     }
 }
 
-static RPCHelpMan getmempoolfeeratediagram()
+static RPCMethod getmempoolfeeratediagram()
 {
-    return RPCHelpMan{"getmempoolfeeratediagram",
+    return RPCMethod{"getmempoolfeeratediagram",
         "Returns the feerate diagram for the whole mempool.",
         {},
         {
@@ -629,7 +629,7 @@ static RPCHelpMan getmempoolfeeratediagram()
             HelpExampleCli("getmempoolfeeratediagram", "")
             + HelpExampleRpc("getmempoolfeeratediagram", "")
         },
-        [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
+        [](const RPCMethod& self, const JSONRPCRequest& request) -> UniValue
         {
             const CTxMemPool& mempool = EnsureAnyMemPool(request.context);
             LOCK(mempool.cs);
@@ -649,9 +649,9 @@ static RPCHelpMan getmempoolfeeratediagram()
     };
 }
 
-static RPCHelpMan getrawmempool()
+static RPCMethod getrawmempool()
 {
-    return RPCHelpMan{
+    return RPCMethod{
         "getrawmempool",
         "Returns all transaction ids in memory pool as a json array of string transaction ids.\n"
         "\nHint: use getmempoolentry to fetch a specific transaction from the mempool.\n",
@@ -684,7 +684,7 @@ static RPCHelpMan getrawmempool()
             HelpExampleCli("getrawmempool", "true")
             + HelpExampleRpc("getrawmempool", "true")
         },
-        [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
+        [](const RPCMethod& self, const JSONRPCRequest& request) -> UniValue
 {
     bool fVerbose = false;
     if (!request.params[0].isNull())
@@ -700,9 +700,9 @@ static RPCHelpMan getrawmempool()
     };
 }
 
-static RPCHelpMan getmempoolancestors()
+static RPCMethod getmempoolancestors()
 {
-    return RPCHelpMan{
+    return RPCMethod{
         "getmempoolancestors",
         "If txid is in the mempool, returns all in-mempool ancestors.\n",
         {
@@ -723,7 +723,7 @@ static RPCHelpMan getmempoolancestors()
             HelpExampleCli("getmempoolancestors", "\"mytxid\"")
             + HelpExampleRpc("getmempoolancestors", "\"mytxid\"")
         },
-        [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
+        [](const RPCMethod& self, const JSONRPCRequest& request) -> UniValue
 {
     bool fVerbose = false;
     if (!request.params[1].isNull())
@@ -761,9 +761,9 @@ static RPCHelpMan getmempoolancestors()
     };
 }
 
-static RPCHelpMan getmempooldescendants()
+static RPCMethod getmempooldescendants()
 {
-    return RPCHelpMan{
+    return RPCMethod{
         "getmempooldescendants",
         "If txid is in the mempool, returns all in-mempool descendants.\n",
         {
@@ -784,7 +784,7 @@ static RPCHelpMan getmempooldescendants()
             HelpExampleCli("getmempooldescendants", "\"mytxid\"")
             + HelpExampleRpc("getmempooldescendants", "\"mytxid\"")
         },
-        [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
+        [](const RPCMethod& self, const JSONRPCRequest& request) -> UniValue
 {
     bool fVerbose = false;
     if (!request.params[1].isNull())
@@ -826,9 +826,9 @@ static RPCHelpMan getmempooldescendants()
     };
 }
 
-static RPCHelpMan getmempoolcluster()
+static RPCMethod getmempoolcluster()
 {
-    return RPCHelpMan{"getmempoolcluster",
+    return RPCMethod{"getmempoolcluster",
         "Returns mempool data for given cluster\n",
         {
             {"txid", RPCArg::Type::STR_HEX, RPCArg::Optional::NO, "The txid of a transaction in the cluster"},
@@ -839,7 +839,7 @@ static RPCHelpMan getmempoolcluster()
             HelpExampleCli("getmempoolcluster", "txid")
             + HelpExampleRpc("getmempoolcluster", "txid")
         },
-        [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
+        [](const RPCMethod& self, const JSONRPCRequest& request) -> UniValue
 {
     uint256 hash = ParseHashV(request.params[0], "txid");
 
@@ -861,9 +861,9 @@ static RPCHelpMan getmempoolcluster()
     };
 }
 
-static RPCHelpMan getmempoolentry()
+static RPCMethod getmempoolentry()
 {
-    return RPCHelpMan{
+    return RPCMethod{
         "getmempoolentry",
         "Returns mempool data for given transaction\n",
         {
@@ -875,7 +875,7 @@ static RPCHelpMan getmempoolentry()
             HelpExampleCli("getmempoolentry", "\"mytxid\"")
             + HelpExampleRpc("getmempoolentry", "\"mytxid\"")
         },
-        [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
+        [](const RPCMethod& self, const JSONRPCRequest& request) -> UniValue
 {
     auto txid{Txid::FromUint256(ParseHashV(request.params[0], "txid"))};
 
@@ -894,9 +894,9 @@ static RPCHelpMan getmempoolentry()
     };
 }
 
-static RPCHelpMan gettxspendingprevout()
+static RPCMethod gettxspendingprevout()
 {
-    return RPCHelpMan{"gettxspendingprevout",
+    return RPCMethod{"gettxspendingprevout",
         "Scans the mempool (and the txospenderindex, if available) to find transactions spending any of the given outputs",
         {
             {"outputs", RPCArg::Type::ARR, RPCArg::Optional::NO, "The transaction outputs that we want to check, and within each, the txid (string) vout (numeric).",
@@ -934,7 +934,7 @@ static RPCHelpMan gettxspendingprevout()
             + HelpExampleRpc("gettxspendingprevout", "\"[{\\\"txid\\\":\\\"a08e6907dbbd3d809776dbfc5d82e371b764ed838b5655e72f463568df1aadf0\\\",\\\"vout\\\":3}]\"")
             + HelpExampleCliNamed("gettxspendingprevout", {{"outputs", "[{\"txid\":\"a08e6907dbbd3d809776dbfc5d82e371b764ed838b5655e72f463568df1aadf0\",\"vout\":3}]"}, {"return_spending_tx", true}})
         },
-        [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
+        [](const RPCMethod& self, const JSONRPCRequest& request) -> UniValue
         {
             const UniValue& output_params = request.params[0].get_array();
             if (output_params.empty()) {
@@ -1064,9 +1064,9 @@ UniValue MempoolInfoToJSON(const CTxMemPool& pool)
     return ret;
 }
 
-static RPCHelpMan getmempoolinfo()
+static RPCMethod getmempoolinfo()
 {
-    return RPCHelpMan{"getmempoolinfo",
+    return RPCMethod{"getmempoolinfo",
         "Returns details on the active state of the TX memory pool.",
         {},
         RPCResult{
@@ -1093,16 +1093,16 @@ static RPCHelpMan getmempoolinfo()
             HelpExampleCli("getmempoolinfo", "")
             + HelpExampleRpc("getmempoolinfo", "")
         },
-        [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
+        [](const RPCMethod& self, const JSONRPCRequest& request) -> UniValue
 {
     return MempoolInfoToJSON(EnsureAnyMemPool(request.context));
 },
     };
 }
 
-static RPCHelpMan importmempool()
+static RPCMethod importmempool()
 {
-    return RPCHelpMan{
+    return RPCMethod{
         "importmempool",
         "Import a mempool.dat file and attempt to add its contents to the mempool.\n"
         "Warning: Importing untrusted files is dangerous, especially if metadata from the file is taken over.",
@@ -1130,7 +1130,7 @@ static RPCHelpMan importmempool()
         },
         RPCResult{RPCResult::Type::OBJ, "", "", std::vector<RPCResult>{}},
         RPCExamples{HelpExampleCli("importmempool", "/path/to/mempool.dat") + HelpExampleRpc("importmempool", "/path/to/mempool.dat")},
-        [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue {
+        [](const RPCMethod& self, const JSONRPCRequest& request) -> UniValue {
             const NodeContext& node{EnsureAnyNodeContext(request.context)};
 
             CTxMemPool& mempool{EnsureMemPool(node)};
@@ -1161,9 +1161,9 @@ static RPCHelpMan importmempool()
     };
 }
 
-static RPCHelpMan savemempool()
+static RPCMethod savemempool()
 {
-    return RPCHelpMan{
+    return RPCMethod{
         "savemempool",
         "Dumps the mempool to disk. It will fail until the previous dump is fully loaded.\n",
         {},
@@ -1176,7 +1176,7 @@ static RPCHelpMan savemempool()
             HelpExampleCli("savemempool", "")
             + HelpExampleRpc("savemempool", "")
         },
-        [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
+        [](const RPCMethod& self, const JSONRPCRequest& request) -> UniValue
 {
     const ArgsManager& args{EnsureAnyArgsman(request.context)};
     const CTxMemPool& mempool = EnsureAnyMemPool(request.context);
@@ -1230,9 +1230,9 @@ static UniValue OrphanToJSON(const node::TxOrphanage::OrphanInfo& orphan)
     return o;
 }
 
-static RPCHelpMan getorphantxs()
+static RPCMethod getorphantxs()
 {
-    return RPCHelpMan{
+    return RPCMethod{
         "getorphantxs",
         "Shows transactions in the tx orphanage.\n"
         "\nEXPERIMENTAL warning: this call may be changed in future releases.\n",
@@ -1266,7 +1266,7 @@ static RPCHelpMan getorphantxs()
             HelpExampleCli("getorphantxs", "2")
             + HelpExampleRpc("getorphantxs", "2")
         },
-        [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
+        [](const RPCMethod& self, const JSONRPCRequest& request) -> UniValue
         {
             const NodeContext& node = EnsureAnyNodeContext(request.context);
             PeerManager& peerman = EnsurePeerman(node);
@@ -1299,9 +1299,9 @@ static RPCHelpMan getorphantxs()
     };
 }
 
-static RPCHelpMan submitpackage()
+static RPCMethod submitpackage()
 {
-    return RPCHelpMan{"submitpackage",
+    return RPCMethod{"submitpackage",
         "Submit a package of raw transactions (serialized, hex-encoded) to local node.\n"
         "The package will be validated according to consensus and mempool policy rules. If any transaction passes, it will be accepted to mempool.\n"
         "This RPC is experimental and the interface may be unstable. Refer to doc/policy/packages.md for documentation on package policies.\n"
@@ -1355,7 +1355,7 @@ static RPCHelpMan submitpackage()
             HelpExampleRpc("submitpackage", R"(["raw-parent-tx-1", "raw-parent-tx-2", "raw-child-tx"])") +
             HelpExampleCli("submitpackage", R"('["raw-tx-without-unconfirmed-parents"]')")
         },
-        [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
+        [](const RPCMethod& self, const JSONRPCRequest& request) -> UniValue
         {
             const UniValue raw_transactions = request.params[0].get_array();
             if (raw_transactions.empty() || raw_transactions.size() > MAX_PACKAGE_COUNT) {

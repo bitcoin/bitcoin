@@ -20,9 +20,9 @@ class JSONRPCRequest;
 
 namespace {
 
-static RPCHelpMan getzmqnotifications()
+static RPCMethod getzmqnotifications()
 {
-    return RPCHelpMan{
+    return RPCMethod{
         "getzmqnotifications",
         "Returns information about the active ZeroMQ notifications.\n",
                 {},
@@ -41,7 +41,7 @@ static RPCHelpMan getzmqnotifications()
                     HelpExampleCli("getzmqnotifications", "")
             + HelpExampleRpc("getzmqnotifications", "")
                 },
-        [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
+        [](const RPCMethod& self, const JSONRPCRequest& request) -> UniValue
 {
     UniValue result(UniValue::VARR);
     if (g_zmq_notification_interface != nullptr) {
