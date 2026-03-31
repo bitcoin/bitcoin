@@ -10,6 +10,7 @@
 #include <common/args.h>
 #include <compat/compat.h>
 #include <crypto/hmac_sha256.h>
+#include <init_settings.h>
 #include <logging.h>
 #include <net.h>
 #include <netaddress.h>
@@ -406,7 +407,7 @@ void TorController::get_socks_cb(TorControlConnection& _conn, const TorControlRe
     Proxy addrOnion = Proxy(resolved, /*tor_stream_isolation=*/ true);
     SetProxy(NET_ONION, addrOnion);
 
-    const auto onlynets = gArgs.GetArgs("-onlynet");
+    const auto onlynets = OnlyNetSetting::Get(gArgs);
 
     const bool onion_allowed_by_onlynet{
         onlynets.empty() ||
@@ -481,7 +482,7 @@ void TorController::auth_cb(TorControlConnection& _conn, const TorControlReply& 
 
         // Now that we know Tor is running setup the proxy for onion addresses
         // if -onion isn't set to something else.
-        if (gArgs.GetArg("-onion", "") == "") {
+        if (OnionSetting::Get(gArgs) == "") {
             _conn.Command("GETINFO net/listeners/socks", std::bind_front(&TorController::get_socks_cb, this));
         }
 
@@ -598,7 +599,7 @@ void TorController::protocolinfo_cb(TorControlConnection& _conn, const TorContro
          *   cookie:   hex-encoded ~/.tor/control_auth_cookie
          *   password: "password"
          */
-        std::string torpassword = gArgs.GetArg("-torpassword", "");
+        std::string torpassword = TorPasswordSetting::Get(gArgs);
         if (!torpassword.empty()) {
             if (methods.contains("HASHEDPASSWORD")) {
                 LogDebug(BCLog::TOR, "Using HASHEDPASSWORD authentication\n");
@@ -693,7 +694,7 @@ static std::thread torControlThread;
 
 static void TorControlThread(CService onion_service_target)
 {
-    TorController ctrl(gBase, gArgs.GetArg("-torcontrol", DEFAULT_TOR_CONTROL), onion_service_target);
+    TorController ctrl(gBase, TorControlSetting::Get(gArgs), onion_service_target);
 
     event_base_dispatch(gBase);
 }

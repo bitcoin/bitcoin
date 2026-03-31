@@ -3,6 +3,7 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <common/args.h>
+#include <init_settings.h>
 
 #include <common/settings.h>
 #include <logging.h>
@@ -151,7 +152,7 @@ bool ArgsManager::ReadConfigFiles(std::string& error, bool ignore_invalid_keys)
         }
         stream = std::ifstream{conf_path.std_path()};
         // If the file is explicitly specified, it must be readable
-        if (IsArgSet("-conf") && !stream.good()) {
+        if (!ConfSetting::Value(*this).isNull() && !stream.good()) {
             error = strprintf("specified config file \"%s\" could not be opened.", fs::PathToString(conf_path));
             return false;
         }
@@ -231,7 +232,7 @@ bool ArgsManager::ReadConfigFiles(std::string& error, bool ignore_invalid_keys)
     // If datadir is changed in .conf file:
     ClearPathCache();
     if (!CheckDataDirOption(*this)) {
-        error = strprintf("specified data directory \"%s\" does not exist.", GetArg("-datadir", ""));
+        error = strprintf("specified data directory \"%s\" does not exist.", DataDirSetting::Get(*this));
         return false;
     }
     return true;
