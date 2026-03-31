@@ -369,6 +369,9 @@ class IPCMiningTest(BitcoinTestFramework):
         asyncio.run(capnp.run(async_routine()))
         asyncio.run(capnp.run(async_routine_check_max_reserved_weight()))
         asyncio.run(capnp.run(async_routine_check_sigops_limit()))
+        self.restart_node(0)
+        self.connect_nodes(0, 1)
+        self.miniwallet.rescan_utxos()
 
     def run_waitnext_mining_policy_test(self):
         """Verify that waitNext() preserves the mining policy from -blockmintxfee
