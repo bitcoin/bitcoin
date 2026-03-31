@@ -17,6 +17,7 @@
 #include <sync.h>
 #include <uint256.h>
 #include <util/check.h>
+#include <util/string.h>
 #include <util/translation.h>
 #include <util/ui_change_type.h>
 #include <wallet/coincontrol.h>
@@ -45,6 +46,7 @@ using interfaces::WalletBalances;
 using interfaces::WalletLoader;
 using interfaces::WalletMigrationResult;
 using interfaces::WalletOrderForm;
+using interfaces::WalletReceiveRequest;
 using interfaces::WalletTx;
 using interfaces::WalletTxOut;
 using interfaces::WalletTxStatus;
@@ -210,27 +212,37 @@ public:
         });
         return result;
     }
-    std::vector<std::string> getAddressReceiveRequests() override {
+    std::vector<WalletReceiveRequest> getReceiveRequests() override
+    {
         LOCK(m_wallet->cs_wallet);
-        return m_wallet->GetAddressReceiveRequests();
+        std::vector<WalletReceiveRequest> result;
+        for (const auto& req : GetReceiveRequests(*m_wallet)) {
+            result.push_back({
+                .id = req.id,
+                .time = req.time,
+                .address = req.address,
+                .label = req.label,
+                .message = req.message,
+                .amount = req.amount,
+            });
+        }
+        return result;
     }
-    bool setAddressReceiveRequest(const CTxDestination& dest, const std::string& id, const std::string& value) override {
-        // Note: The setAddressReceiveRequest interface used by the GUI to store
-        // receive requests is a little awkward and could be improved in the
-        // future:
-        //
-        // - The same method is used to save requests and erase them, but
-        //   having separate methods could be clearer and prevent bugs.
-        //
-        // - Request ids are passed as strings even though they are generated as
-        //   integers.
-        //
-        // - Multiple requests can be stored for the same address, but it might
-        //   be better to only allow one request or only keep the current one.
+    std::optional<int64_t> addReceiveRequest(const WalletReceiveRequest& request) override
+    {
+        LOCK(m_wallet->cs_wallet);
+        ReceiveRequest req;
+        req.address = request.address;
+        req.label = request.label;
+        req.message = request.message;
+        req.amount = request.amount;
+        return AddReceiveRequest(*m_wallet, req);
+    }
+    bool eraseReceiveRequest(const CTxDestination& dest, int64_t id) override
+    {
         LOCK(m_wallet->cs_wallet);
         WalletBatch batch{m_wallet->GetDatabase()};
-        return value.empty() ? m_wallet->EraseAddressReceiveRequest(batch, dest, id)
-                             : m_wallet->SetAddressReceiveRequest(batch, dest, id, value);
+        return m_wallet->EraseAddressReceiveRequest(batch, dest, util::ToString(id));
     }
     util::Result<void> displayAddress(const CTxDestination& dest) override
     {

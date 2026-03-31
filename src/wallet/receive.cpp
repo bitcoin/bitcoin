@@ -4,10 +4,18 @@
 
 #include <consensus/amount.h>
 #include <consensus/consensus.h>
+#include <key_io.h>
+#include <logging.h>
+#include <serialize.h>
+#include <streams.h>
 #include <util/check.h>
+#include <util/strencodings.h>
+#include <util/string.h>
+#include <util/time.h>
 #include <wallet/receive.h>
 #include <wallet/transaction.h>
 #include <wallet/wallet.h>
+#include <wallet/walletdb.h>
 
 namespace wallet {
 bool InputIsMine(const CWallet& wallet, const CTxIn& txin)
@@ -392,5 +400,107 @@ std::set< std::set<CTxDestination> > GetAddressGroupings(const CWallet& wallet)
     }
 
     return ret;
+}
+
+namespace {
+//! Serialization-compatible mirror of SendCoinsRecipient (defined in Qt code)
+//! without Qt dependencies. Field order and types must match exactly to
+//! produce byte-identical serialized output for DB compatibility.
+struct RecipientData
+{
+    int nVersion{1};
+    std::string address;
+    std::string label;
+    CAmount amount{0};
+    std::string message;
+    std::string sPaymentRequest;
+    std::string authenticatedMerchant;
+
+    SERIALIZE_METHODS(RecipientData, obj)
+    {
+        READWRITE(obj.nVersion, obj.address, obj.label, obj.amount,
+                  obj.message, obj.sPaymentRequest, obj.authenticatedMerchant);
+    }
+};
+
+//! Serialization-compatible mirror of RecentRequestEntry (defined in Qt code)
+//! without Qt dependencies. Used to read and write receive request blobs
+//! stored in the wallet database.
+struct RequestEntryData
+{
+    int nVersion{1};
+    int64_t id{0};
+    unsigned int date_timet{0};
+    RecipientData recipient;
+
+    SERIALIZE_METHODS(RequestEntryData, obj)
+    {
+        READWRITE(obj.nVersion, obj.id, obj.date_timet, obj.recipient);
+    }
+};
+} // namespace
+
+std::vector<ReceiveRequest> GetReceiveRequests(const CWallet& wallet)
+{
+    AssertLockHeld(wallet.cs_wallet);
+    std::vector<ReceiveRequest> result;
+    for (const auto& [dest, entry] : wallet.m_address_book) {
+        const std::string address = EncodeDestination(dest);
+        for (const auto& [id_str, data] : entry.receive_requests) {
+            try {
+                RequestEntryData parsed;
+                SpanReader{MakeByteSpan(data)} >> parsed;
+                if (parsed.id == 0) continue;
+                ReceiveRequest req;
+                req.id = parsed.id;
+                req.time = parsed.date_timet;
+                req.address = address;
+                req.label = std::move(parsed.recipient.label);
+                req.message = std::move(parsed.recipient.message);
+                req.amount = parsed.recipient.amount;
+                result.emplace_back(std::move(req));
+            } catch (const std::exception& e) {
+                LogWarning("Could not deserialize receive request %s for %s: %s",
+                           id_str, address, e.what());
+            }
+        }
+    }
+    return result;
+}
+
+std::optional<int64_t> AddReceiveRequest(CWallet& wallet, const ReceiveRequest& request)
+{
+    AssertLockHeld(wallet.cs_wallet);
+    const CTxDestination dest = DecodeDestination(request.address);
+    if (!IsValidDestination(dest)) return std::nullopt;
+
+    // Determine the next ID by scanning existing request keys across all
+    // addresses. Keys are string forms of integer IDs.
+    int64_t max_id{0};
+    for (const auto& [_, addr_entry] : wallet.m_address_book) {
+        for (const auto& [id_str, _v] : addr_entry.receive_requests) {
+            if (auto id = ToIntegral<int64_t>(id_str)) {
+                if (*id > max_id) max_id = *id;
+            }
+        }
+    }
+    const int64_t new_id = max_id + 1;
+
+    RequestEntryData entry;
+    entry.id = new_id;
+    entry.date_timet = static_cast<unsigned int>(GetTime());
+    entry.recipient.address = request.address;
+    entry.recipient.label = request.label;
+    entry.recipient.message = request.message;
+    entry.recipient.amount = request.amount;
+
+    DataStream ss{};
+    ss << entry;
+
+    WalletBatch batch{wallet.GetDatabase()};
+    if (!wallet.SetAddressReceiveRequest(batch, dest, util::ToString(new_id), ss.str())) {
+        return std::nullopt;
+    }
+    return new_id;
 }
 } // namespace wallet

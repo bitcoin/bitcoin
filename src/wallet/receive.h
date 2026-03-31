@@ -10,6 +10,10 @@
 #include <wallet/transaction.h>
 #include <wallet/wallet.h>
 
+#include <optional>
+#include <string>
+#include <vector>
+
 namespace wallet {
 bool InputIsMine(const CWallet& wallet, const CTxIn& txin) EXCLUSIVE_LOCKS_REQUIRED(wallet.cs_wallet);
 
@@ -52,6 +56,24 @@ Balance GetBalance(const CWallet& wallet, int min_depth = 0, bool avoid_reuse = 
 
 std::map<CTxDestination, CAmount> GetAddressBalances(const CWallet& wallet);
 std::set<std::set<CTxDestination>> GetAddressGroupings(const CWallet& wallet) EXCLUSIVE_LOCKS_REQUIRED(wallet.cs_wallet);
+
+//! Wallet-level receive request data, independent of interface/GUI types.
+struct ReceiveRequest {
+    int64_t id{0};
+    int64_t time{0};
+    std::string address;
+    std::string label;
+    std::string message;
+    CAmount amount{0};
+};
+
+//! Read all receive requests stored in the wallet. Malformed entries are
+//! logged and skipped rather than causing a crash.
+std::vector<ReceiveRequest> GetReceiveRequests(const CWallet& wallet) EXCLUSIVE_LOCKS_REQUIRED(wallet.cs_wallet);
+
+//! Add a new receive request. Wallet assigns ID and timestamp.
+//! Returns the assigned ID on success, or nullopt on failure.
+std::optional<int64_t> AddReceiveRequest(CWallet& wallet, const ReceiveRequest& request) EXCLUSIVE_LOCKS_REQUIRED(wallet.cs_wallet);
 } // namespace wallet
 
 #endif // BITCOIN_WALLET_RECEIVE_H

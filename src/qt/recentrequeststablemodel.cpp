@@ -9,24 +9,19 @@
 #include <qt/optionsmodel.h>
 #include <qt/walletmodel.h>
 
-#include <clientversion.h>
 #include <interfaces/wallet.h>
 #include <key_io.h>
-#include <streams.h>
-#include <util/string.h>
 
 #include <utility>
 
 #include <QLatin1Char>
 #include <QLatin1String>
 
-using util::ToString;
-
 RecentRequestsTableModel::RecentRequestsTableModel(WalletModel *parent) :
     QAbstractTableModel(parent), walletModel(parent)
 {
     // Load entries from wallet
-    for (const std::string& request : parent->wallet().getAddressReceiveRequests()) {
+    for (const auto& request : parent->wallet().getReceiveRequests()) {
         addNewRequest(request);
     }
 
@@ -151,7 +146,7 @@ bool RecentRequestsTableModel::removeRows(int row, int count, const QModelIndex 
         for (int i = 0; i < count; ++i)
         {
             const RecentRequestEntry* rec = &list[row+i];
-            if (!walletModel->wallet().setAddressReceiveRequest(DecodeDestination(rec->recipient.address.toStdString()), ToString(rec->id), ""))
+            if (!walletModel->wallet().eraseReceiveRequest(DecodeDestination(rec->recipient.address.toStdString()), rec->id))
                 return false;
         }
 
@@ -172,34 +167,32 @@ Qt::ItemFlags RecentRequestsTableModel::flags(const QModelIndex &index) const
 // called when adding a request from the GUI
 void RecentRequestsTableModel::addNewRequest(const SendCoinsRecipient &recipient)
 {
+    interfaces::WalletReceiveRequest request;
+    request.address = recipient.address.toStdString();
+    request.label = recipient.label.toStdString();
+    request.message = recipient.message.toStdString();
+    request.amount = recipient.amount;
+
+    auto id = walletModel->wallet().addReceiveRequest(request);
+    if (!id) return;
+
     RecentRequestEntry newEntry;
-    newEntry.id = ++nReceiveRequestsMaxId;
+    newEntry.id = *id;
     newEntry.date = QDateTime::currentDateTime();
     newEntry.recipient = recipient;
-
-    DataStream ss{};
-    ss << newEntry;
-
-    if (!walletModel->wallet().setAddressReceiveRequest(DecodeDestination(recipient.address.toStdString()), ToString(newEntry.id), ss.str()))
-        return;
-
     addNewRequest(newEntry);
 }
 
 // called from ctor when loading from wallet
-void RecentRequestsTableModel::addNewRequest(const std::string &recipient)
+void RecentRequestsTableModel::addNewRequest(const interfaces::WalletReceiveRequest &request)
 {
-    SpanReader ss{MakeByteSpan(recipient)};
-
     RecentRequestEntry entry;
-    ss >> entry;
-
-    if (entry.id == 0) // should not happen
-        return;
-
-    if (entry.id > nReceiveRequestsMaxId)
-        nReceiveRequestsMaxId = entry.id;
-
+    entry.id = request.id;
+    entry.date = QDateTime::fromSecsSinceEpoch(request.time);
+    entry.recipient.address = QString::fromStdString(request.address);
+    entry.recipient.label = QString::fromStdString(request.label);
+    entry.recipient.message = QString::fromStdString(request.message);
+    entry.recipient.amount = request.amount;
     addNewRequest(entry);
 }
 
