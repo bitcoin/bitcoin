@@ -1431,7 +1431,16 @@ RPCMethod sendall()
             // Do not, ever, assume that it's fine to change the fee rate if the user has explicitly
             // provided one
             if (coin_control.m_feerate && fee_rate > *coin_control.m_feerate) {
-                throw JSONRPCError(RPC_INVALID_PARAMETER, strprintf("Fee rate (%s) is lower than the minimum fee rate setting (%s)", coin_control.m_feerate->ToString(FeeRateFormat::SAT_VB), fee_rate.ToString(FeeRateFormat::SAT_VB)));
+                const auto feerate_format = FeeRateFormat::SAT_VB;
+                auto msg{strprintf("Fee rate (%s) is lower than the minimum fee rate setting (%s).",
+                    coin_control.m_feerate->ToString(feerate_format),
+                    fee_rate.ToString(feerate_format))};
+                if (fee_calc_out.reason == FeeReason::REQUIRED) {
+                    msg += strprintf("\nConsider modifying -mintxfee (%s) or -minrelaytxfee (%s).",
+                        pwallet->m_min_fee.ToString(feerate_format),
+                        pwallet->chain().relayMinFee().ToString(feerate_format));
+                }
+                throw JSONRPCError(RPC_INVALID_PARAMETER, msg);
             }
             if (fee_calc_out.reason == FeeReason::FALLBACK && !pwallet->m_allow_fallback_fee) {
                 // eventually allow a fallback fee

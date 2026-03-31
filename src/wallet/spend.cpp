@@ -1159,7 +1159,18 @@ static util::Result<CreatedTransactionResult> CreateTransactionInternal(
     // Do not, ever, assume that it's fine to change the fee rate if the user has explicitly
     // provided one
     if (coin_control.m_feerate && coin_selection_params.m_effective_feerate > *coin_control.m_feerate) {
-        return util::Error{strprintf(_("Fee rate (%s) is lower than the minimum fee rate setting (%s)"), coin_control.m_feerate->ToString(FeeRateFormat::SAT_VB), coin_selection_params.m_effective_feerate.ToString(FeeRateFormat::SAT_VB))};
+        const auto feerate_format = FeeRateFormat::SAT_VB;
+        auto msg{strprintf(_("Fee rate (%s) is lower than the minimum fee rate setting (%s)."),
+            coin_control.m_feerate->ToString(feerate_format),
+            coin_selection_params.m_effective_feerate.ToString(feerate_format))};
+        if (feeCalc.reason == FeeReason::REQUIRED) {
+            msg += strprintf(_("\nConsider modifying %s (%s) or %s (%s)."),
+                "-mintxfee",
+                wallet.m_min_fee.ToString(feerate_format),
+                "-minrelaytxfee",
+                wallet.chain().relayMinFee().ToString(feerate_format));
+        }
+        return util::Error{msg};
     }
     if (feeCalc.reason == FeeReason::FALLBACK && !wallet.m_allow_fallback_fee) {
         // eventually allow a fallback fee
