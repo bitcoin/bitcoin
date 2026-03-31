@@ -70,6 +70,7 @@
 #include <util/translation.h>
 #include <validation.h>
 #include <validationinterface.h>
+#include <wallet/init_settings.h>
 
 #include <any>
 #include <atomic>
@@ -276,7 +277,7 @@ public:
     {
 #ifdef ENABLE_EXTERNAL_SIGNER
         std::vector<ExternalSigner> signers = {};
-        const std::string command = args().GetArg("-signer", "");
+        const std::string command = wallet::SignerSetting::Get(args());
         if (command == "") return {};
         ExternalSigner::Enumerate(command, signers, Params().GetChainTypeString());
         std::vector<std::unique_ptr<interfaces::ExternalSigner>> result;
