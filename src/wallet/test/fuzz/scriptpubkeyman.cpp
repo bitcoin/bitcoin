@@ -176,8 +176,11 @@ FUZZ_TARGET(scriptpubkeyman, .init = initialize_spkm)
         }
     }
 
-    std::string descriptor;
-    (void)spk_manager->GetDescriptorString(descriptor, /*priv=*/fuzzed_data_provider.ConsumeBool());
+    if (fuzzed_data_provider.ConsumeBool()) {
+        std::string descriptor;
+        (void)spk_manager->GetDescriptorString(descriptor, /*priv=*/fuzzed_data_provider.ConsumeBool());
+    }
+
     (void)spk_manager->GetEndRange();
     (void)spk_manager->GetKeyPoolSize();
 }
