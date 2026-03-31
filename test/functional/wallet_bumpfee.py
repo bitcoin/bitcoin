@@ -19,6 +19,7 @@ from test_framework.blocktools import (
     COINBASE_MATURITY,
 )
 from test_framework.messages import (
+    CTxOut,
     MAX_BIP125_RBF_SEQUENCE,
     MAX_SEQUENCE_NONFINAL,
 )
@@ -115,6 +116,7 @@ class BumpFeeTest(BitcoinTestFramework):
         # Context independent tests
         test_feerate_checks_replaced_outputs(self, rbf_node, peer_node)
         test_bumpfee_with_feerate_ignores_walletincrementalrelayfee(self, rbf_node, peer_node)
+        test_bumpfee_enormous_cluster(self, rbf_node, peer_node)
 
     def test_invalid_parameters(self, rbf_node, peer_node, dest_address):
         self.log.info('Test invalid parameters')
@@ -827,6 +829,68 @@ def test_bumpfee_with_feerate_ignores_walletincrementalrelayfee(self, rbf_node, 
 
     # You can fee bump as long as the new fee set from fee_rate is at least (original fee + incrementalrelayfee)
     rbf_node.bumpfee(tx["txid"], {"fee_rate": 2.1})
+    self.clear_mempool()
+
+
+def test_bumpfee_enormous_cluster(self, rbf_node, peer_node):
+    self.log.info("Test bumpfee failure when inputs span enormous unconfirmed clusters")
+    # We need GatherClusters() to aggregate >500 txs across the bump tx's
+    # input clusters. Individual clusters are capped at MAX_CLUSTER_COUNT_LIMIT (64),
+    # so we build 9 independent chains of 57 txs each (total 513 > 500).
+    # The wallet tx that spends from all of them can't enter the mempool (the
+    # merge would exceed the cluster limit), but it stays in the wallet since
+    # CommitTransaction persists it before attempting broadcast.
+    NUM_CLUSTERS = 9
+    CHAIN_LENGTH = 56  # +1 for the tip tx = 57 per cluster
+
+    mini_wallet = MiniWallet(peer_node)
+    self.generate(mini_wallet, COINBASE_MATURITY + NUM_CLUSTERS)
+
+    wallet_address = rbf_node.getnewaddress()
+    wallet_spk = bytes.fromhex(rbf_node.getaddressinfo(wallet_address)["scriptPubKey"])
+
+    for i in range(NUM_CLUSTERS):
+        self.log.debug(f"Building unconfirmed chain {i+1}/{NUM_CLUSTERS}")
+        chain = mini_wallet.send_self_transfer_chain(
+            from_node=peer_node,
+            chain_length=CHAIN_LENGTH,
+        )
+        # Extend the chain with one more tx that pays the wallet
+        chain_tip_utxo = chain[-1]["new_utxo"]
+        tx = mini_wallet.create_self_transfer(utxo_to_spend=chain_tip_utxo, fee_rate=0)["tx"]
+        tx.vout[0].nValue -= 11000
+        tx.vout.append(CTxOut(10000, wallet_spk))
+        mini_wallet.sendrawtransaction(from_node=peer_node, tx_hex=tx.serialize().hex())
+
+    self.sync_mempools()
+
+    mempool_size = peer_node.getmempoolinfo()["size"]
+    assert_greater_than(mempool_size + 1, NUM_CLUSTERS * (CHAIN_LENGTH + 1))
+
+    # External unconfirmed outputs require include_unsafe
+    unconfirmed_utxos = rbf_node.listunspent(
+        minconf=0, maxconf=0,
+        addresses=[wallet_address],
+        query_options={"include_unsafe": True},
+    )
+    assert_equal(len(unconfirmed_utxos), NUM_CLUSTERS)
+
+    # Wallet creates and persists the tx, but broadcast fails (cluster merge too large)
+    inputs = [{"txid": u["txid"], "vout": u["vout"]} for u in unconfirmed_utxos]
+    txid = rbf_node.send(
+        outputs=[{peer_node.getnewaddress(): Decimal("0.0005")}],
+        options={"inputs": inputs, "include_unsafe": True},
+    )["txid"]
+
+    assert txid not in rbf_node.getrawmempool()
+    assert_equal(rbf_node.gettransaction(txid)["confirmations"], 0)
+
+    assert_raises_rpc_error(
+        -4,
+        "Failed to calculate bump fees, because unconfirmed UTXOs depend on an enormous cluster of unconfirmed transactions.",
+        rbf_node.bumpfee, txid,
+    )
+
     self.clear_mempool()
 
 
