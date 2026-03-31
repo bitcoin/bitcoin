@@ -8,6 +8,7 @@
 #include <common/messages.h>
 #include <consensus/amount.h>
 #include <consensus/consensus.h>
+#include <init_settings.h>
 #include <node/mining_types.h>
 #include <node/settings.h>
 #include <policy/feerate.h>
@@ -64,13 +65,13 @@ Result<void> CheckMiningOptions(BlockCreateOptions options, bool use_argnames)
 Result<BlockCreateOptions> ReadMiningArgs(const ArgsManager& args)
 {
     BlockCreateOptions options;
-    if (const auto arg{args.GetArg("-blockmintxfee")}) {
+    if (const auto arg{BlockMinTxFeeSetting::Get(args)}) {
         std::optional<CAmount> block_min_tx_fee{ParseMoney(*arg)};
         if (!block_min_tx_fee) return Error{AmountErrMsg("blockmintxfee", *arg)};
         options.block_min_fee_rate = CFeeRate{*block_min_tx_fee};
     }
 
-    if (const auto arg{args.GetBoolArg("-printpriority")}) options.print_modified_fee = *arg;
+    if (const auto arg{PrintPrioritySetting::Get(args)}) options.print_modified_fee = *arg;
 
     options.block_reserved_weight = args.GetArg<uint64_t>("-blockreservedweight");
     options.block_max_weight = args.GetArg<uint64_t>("-blockmaxweight");

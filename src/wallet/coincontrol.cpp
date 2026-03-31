@@ -5,11 +5,12 @@
 #include <wallet/coincontrol.h>
 
 #include <common/args.h>
+#include <wallet/init_settings.h>
 
 namespace wallet {
 CCoinControl::CCoinControl()
 {
-    m_avoid_partial_spends = gArgs.GetBoolArg("-avoidpartialspends", DEFAULT_AVOIDPARTIALSPENDS);
+    m_avoid_partial_spends = AvoidPartialSpendsSetting::Get(gArgs);
 }
 
 bool CCoinControl::HasSelected() const
