@@ -264,12 +264,12 @@ static bool InitRPCAuthentication()
         }
 
         switch (GenerateAuthCookie(cookie_perms, user, pass)) {
-        case GenerateAuthCookieResult::ERR:
+        case AuthCookieResult::Error:
             return false;
-        case GenerateAuthCookieResult::DISABLED:
+        case AuthCookieResult::Disabled:
             LogInfo("RPC authentication cookie file generation is disabled.");
             break;
-        case GenerateAuthCookieResult::OK:
+        case AuthCookieResult::Ok:
             LogInfo("Using random cookie authentication.");
             break;
         }
