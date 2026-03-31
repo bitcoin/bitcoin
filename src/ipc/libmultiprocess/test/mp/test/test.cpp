@@ -146,6 +146,7 @@ KJ_TEST("Call FooInterface methods")
     in.vbool.push_back(false);
     in.vbool.push_back(true);
     in.vbool.push_back(false);
+    in.optional_int = 3;
     FooStruct out = foo->pass(in);
     KJ_EXPECT(in.name == out.name);
     KJ_EXPECT(in.setint.size() == out.setint.size());
@@ -156,6 +157,12 @@ KJ_TEST("Call FooInterface methods")
     for (size_t i = 0; i < in.vbool.size(); ++i) {
         KJ_EXPECT(in.vbool[i] == out.vbool[i]);
     }
+    KJ_EXPECT(in.optional_int == out.optional_int);
+
+    // Additional checks for std::optional member
+    KJ_EXPECT(foo->pass(in).optional_int == 3);
+    in.optional_int.reset();
+    KJ_EXPECT(!foo->pass(in).optional_int);
 
     FooStruct err;
     try {
