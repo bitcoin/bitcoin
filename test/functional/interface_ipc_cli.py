@@ -35,8 +35,19 @@ class TestBitcoinIpcCli(BitcoinTestFramework):
         assert_equal(result.stderr, None)
         assert_equal(result.returncode, 0 if error is None else 1)
 
+    def test_ipcmaxconnections(self):
+        self.log.info("Test -ipcmaxconnections")
+
+        # Verify FD availability is logged at startup with -ipcbind.
+        with self.nodes[0].assert_debug_log(["file descriptors available"]):
+            self.restart_node(0)
+
+        # Restore default for remaining tests
+        self.restart_node(0)
+
     def run_test(self):
         node = self.nodes[0]
+        self.test_ipcmaxconnections()
         if node.ipc_tmp_dir:
             self.log.info("Skipping a few checks because temporary directory path is too long")
 
