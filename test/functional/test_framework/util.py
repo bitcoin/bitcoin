@@ -17,6 +17,7 @@ import platform
 import random
 import re
 import shlex
+import stat
 import time
 import types
 
@@ -749,3 +750,16 @@ def wallet_importprivkey(wallet_rpc, privkey, timestamp, *, label=""):
     }]
     import_res = wallet_rpc.importdescriptors(req)
     assert_equal(import_res[0]["success"], True)
+
+def can_change_perms(parent_dir):
+    # Remove all perms and see if succeeded
+    old_mode = stat.S_IMODE(os.stat(parent_dir).st_mode)
+    try:
+        os.chmod(parent_dir, 0)  # remove all write bits
+        try:
+            with open(parent_dir / ".perm_test", "w"):
+                return False
+        except OSError:
+            return True
+    finally:
+        os.chmod(parent_dir, old_mode)
