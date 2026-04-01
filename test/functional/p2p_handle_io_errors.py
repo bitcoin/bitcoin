@@ -66,7 +66,7 @@ class P2PBlockIOErrorTest(BitcoinTestFramework):
         block.solve()
 
         with simulate_io_error(node.blocks_path):
-            with node.assert_debug_log(expected_msgs=["AcceptBlock FAILED (System error while saving block to disk"]):
+            with node.assert_debug_log(expected_msgs=["AcceptBlock FAILED (AcceptBlock: Failed to find position to write new block to disk)"]):
                 peer.send_without_ping(msg_block(block))
                 peer.wait_for_disconnect()
 
@@ -113,12 +113,12 @@ class P2PBlockIOErrorTest(BitcoinTestFramework):
         peer = node.add_p2p_connection(P2PInterface())
         block_hash = node.getblockhash(3)  # Not in recent cache
         with simulate_io_error(node.blocks_path):
-            # Bug: we currently swallow the GETDATA request, never reply to the other party, and log issue under debug-NET
-            with node.assert_debug_log(expected_msgs=["[ProcessMessages] [net] ProcessMessages(getdata, 37 bytes): Exception 'filesystem error"],
-                                       timeout=30):
+            # Request block and expect disconnection.
+            with node.assert_debug_log(expected_msgs=["Cannot load block from disk"]):
                 peer.send_without_ping(msg_getdata([CInv(MSG_BLOCK | MSG_WITNESS_FLAG, int(block_hash, 16))]))
+                peer.wait_for_disconnect()
 
-            # And the node keeps running
+            # Currently, the node keeps running
             node.getblockcount()
 
     def test_getblocktxn_fatal_on_block_io_error(self):
@@ -141,13 +141,19 @@ class P2PBlockIOErrorTest(BitcoinTestFramework):
             gbtn = msg_getblocktxn()
             gbtn.block_txn_request = BlockTransactionsRequest(blockhash=int(block_hash, 16), indexes=[0])
 
-            # Bug: we currently swallow the GETBLOCKTXN request, never reply to the other party, and log issue under debug-NET
-            with node.assert_debug_log(expected_msgs=["[ProcessMessages] [net] ProcessMessages(getblocktxn, 34 bytes): Exception 'filesystem error"],
-                                       timeout=10):
+            # Request block and expect crash+disconnect.
+            with node.assert_debug_log(expected_msgs=["Unable to open file"]):
                 peer.send_without_ping(gbtn)
+                peer.wait_for_disconnect()
 
-            # And the node keeps running
-            node.getblockcount()
+            node.wait_until_stopped(
+                expected_ret_code=-6,
+                expect_error=True,
+                expected_stderr=re.compile("Assertion"), # assertion crash
+            )
+
+        # Restart node for next test
+        self.start_node(0)
 
     def test_getcfilters_on_broken_fs(self):
         """GETCFILTERS must log the filter-index read failure and keep running."""
@@ -163,10 +169,10 @@ class P2PBlockIOErrorTest(BitcoinTestFramework):
         height = node.getblockcount()
         peer = node.add_p2p_connection(P2PInterface())
         with simulate_io_error(filter_dir):
-            # Bug: we currently swallow the GETCFILTERS request, never reply to the other party, and log issue under debug-NET
-            with node.assert_debug_log(expected_msgs=["[ProcessMessages] [net] ProcessMessages(getcfilters, 37 bytes): Exception 'filesystem error"],
-                                       timeout=30):
-                peer.send_without_ping(msg_getcfilters(filter_type=0, start_height=0, stop_hash=int(stop_hash, 16)))
+            with node.assert_debug_log(expected_msgs=["Failed to find block filter in index"]):
+                peer.send_and_ping(msg_getcfilters(filter_type=0, start_height=0, stop_hash=int(stop_hash, 16)))
+            # Request dropped (no cfilter reply), peer stays connected, node keeps running.
+            assert "cfilter" not in peer.last_message
             # And the node keeps running
             assert_equal(node.getblockcount(), height)
 
@@ -187,9 +193,12 @@ class P2PBlockIOErrorTest(BitcoinTestFramework):
 
         height = node.getblockcount()
         with simulate_io_error(node.blocks_path):
-            # Bug: leaks out the exception instead of properly handling the filesystem error
-            assert_raises_rpc_error(-1, "filesystem error", node.getrawtransaction, spend["txid"])
-            assert_raises_rpc_error(-1, "filesystem error", node.gettxspendingprevout, [{"txid": spent["txid"], "vout": spent["vout"]}])
+            with node.assert_debug_log(expected_msgs=["OpenBlockFile failed"]):
+                assert_raises_rpc_error(-5, "No such mempool or blockchain transaction", node.getrawtransaction, spend["txid"])
+
+            with node.assert_debug_log(expected_msgs=["Deserialize or I/O error - cannot open block"]):
+                assert_raises_rpc_error(-1, "IO error finding spending tx for outpoint", node.gettxspendingprevout, [{"txid": spent["txid"], "vout": spent["vout"]}])
+
             # And the node keeps running
             assert_equal(node.getblockcount(), height)
 
