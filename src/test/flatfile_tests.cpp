@@ -6,6 +6,7 @@
 #include <common/args.h>
 #include <flatfile.h>
 #include <streams.h>
+#include <test/util/common.h>
 #include <test/util/setup_common.h>
 
 #include <boost/test/unit_test.hpp>
@@ -128,6 +129,73 @@ BOOST_AUTO_TEST_CASE(flatfile_flush)
     // Flush with finalize should truncate file.
     seq.Flush(FlatFilePos(0, 1), true);
     BOOST_CHECK_EQUAL(fs::file_size(seq.FileName(FlatFilePos(0, 1))), 1U);
+}
+
+BOOST_AUTO_TEST_CASE(flatfile_open_readonly_missing_dir)
+{
+    // Open file with read_only=true on a directory that does not exist.
+    // File should be null instead of throwing an exception.
+    const auto data_dir = m_args.GetDataDirBase() / "nonexistent";
+    const FlatFileSeq seq(data_dir, "a", 16 * 1024);
+
+    const AutoFile file{seq.Open(FlatFilePos(0, 0), /*read_only=*/true)};
+    BOOST_CHECK(file.IsNull());
+}
+
+BOOST_AUTO_TEST_CASE(flatfile_open_write_creates_dir)
+{
+    // Open with read_only=false on a directory that does not yet exist
+    // should create it and succeed.
+    const auto data_dir = m_args.GetDataDirBase() / "new_write_dir";
+    const FlatFileSeq seq(data_dir, "a", 16 * 1024);
+
+    const AutoFile file{seq.Open(FlatFilePos(0, 0), /*read_only=*/false)};
+    BOOST_CHECK(!file.IsNull());
+    BOOST_CHECK(fs::exists(data_dir));
+}
+
+BOOST_AUTO_TEST_CASE(flatfile_open_write_missing_unwritable_parent)
+{
+    // Open with read_only=false when the parent directory cannot be created
+    const auto data_dir = m_args.GetDataDirBase();
+    const auto dir = data_dir / "parent_dir";
+    fs::create_directories(dir);
+
+    // Make it read-only so creating subdirectories fails.
+    SimulateFileSystemError(m_path_root, dir, [&dir]() {
+        const FlatFileSeq seq(dir / "blocks", "a", 16 * 1024);
+        const AutoFile file{seq.Open(FlatFilePos(0, 0), /*read_only=*/false)};
+        BOOST_CHECK(file.IsNull());
+    });
+}
+
+BOOST_AUTO_TEST_CASE(flatfile_flush_unwritable_dir)
+{
+    // Flush returns false when the file cannot be opened for writing.
+    const auto data_dir = m_args.GetDataDirBase() / "flush_dir";
+    fs::create_directories(data_dir);
+    const FlatFileSeq seq(data_dir, "a", 100);
+
+    SimulateFileSystemError(m_path_root, data_dir, [&seq]() {
+        BOOST_CHECK(!seq.Flush(FlatFilePos(0, 1)));
+    });
+}
+
+BOOST_AUTO_TEST_CASE(flatfile_allocate_unwritable_dir)
+{
+    // Allocate should return 0 when the file cannot be opened for writing.
+    // Note that out_of_space stays false. Callers that only check
+    // out_of_space will miss this failure.
+    const auto data_dir = m_args.GetDataDirBase() / "alloc_dir";
+    fs::create_directories(data_dir);
+    const FlatFileSeq seq(data_dir, "a", 100);
+
+    SimulateFileSystemError(m_path_root, data_dir, [&seq]() {
+        bool out_of_space;
+        // Note: this throws due to 'CheckDiskSpace'. In the future, this shouldn't throw either.
+        BOOST_CHECK_THROW(seq.Allocate(FlatFilePos(0, 0), 1, out_of_space), fs::filesystem_error);
+        BOOST_CHECK(!out_of_space);
+    });
 }
 
 BOOST_AUTO_TEST_SUITE_END()
