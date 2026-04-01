@@ -1610,8 +1610,6 @@ BITCOINKERNEL_API void btck_txid_destroy(btck_Txid* txid);
 
 ///@}
 
-///@}
-
 /** @name Coin
  * Functions for working with coins.
  */
