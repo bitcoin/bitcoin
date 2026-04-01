@@ -17,8 +17,7 @@ void CustomBuildField(TypeList<std::optional<LocalType>>,
 {
     if (value) {
         output.setHas();
-        // FIXME: should std::move value if destvalue is rref?
-        BuildField(TypeList<LocalType>(), invoke_context, output, *value);
+        BuildField(TypeList<LocalType>(), invoke_context, output, *std::forward<Value>(value));
     }
 }
 
@@ -30,7 +29,7 @@ decltype(auto) CustomReadField(TypeList<std::optional<LocalType>>,
     ReadDest&& read_dest)
 {
     return read_dest.update([&](auto& value) {
-        if (!input.has()) {
+        if (!CustomHasField(TypeList<LocalType>(), invoke_context, input)) {
             value.reset();
         } else if (value) {
             ReadField(TypeList<LocalType>(), invoke_context, input, ReadDestUpdate(*value));

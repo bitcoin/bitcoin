@@ -1,0 +1,300 @@
+# Copyright (c) The Bitcoin Core developers
+# Distributed under the MIT software license, see the accompanying
+# file COPYING or https://opensource.org/license/mit.
+
+# Test libmultiprocess inside Bitcoin Core by replacing the subtree copy
+# with the version from this PR, then building and running IPC-related
+# unit & functional tests.
+
+name: Bitcoin Core CI
+
+on:
+  push:
+  pull_request:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  BITCOIN_REPO: bitcoin/bitcoin
+  LLVM_VERSION: 22
+  LIBCXX_DIR: /tmp/libcxx-build/
+
+jobs:
+  bitcoin-core:
+    name: ${{ matrix.name }}
+    runs-on: ${{ matrix.runner }}
+    timeout-minutes: 120
+
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: 'ASan + UBSan'
+            unit_test_runs: 15
+            functional_test_runs: 20
+            nproc_multiplier: 2
+            functional_timeout_factor: 40
+            runner: ubuntu-24.04
+            apt-llvm: true
+            packages: >-
+              ccache
+              clang-22
+              llvm-22
+              libclang-rt-22-dev
+              libevent-dev
+              libboost-dev
+              libsqlite3-dev
+              libcapnp-dev
+              capnproto
+              ninja-build
+              pkgconf
+              python3-pip
+            pip-packages: --break-system-packages pycapnp
+            cmake-args: |-
+              -DSANITIZERS=address,float-divide-by-zero,integer,undefined
+              -DCMAKE_C_COMPILER=clang
+              -DCMAKE_CXX_COMPILER=clang++
+              -DCMAKE_C_FLAGS=-ftrivial-auto-var-init=pattern
+              -DCMAKE_CXX_FLAGS=-ftrivial-auto-var-init=pattern
+
+          - name: 'macOS'
+            unit_test_runs: 50
+            functional_test_runs: 20
+            nproc_multiplier: 2
+            functional_timeout_factor: 40
+            runner: macos-15
+            brew-packages: ccache capnp boost libevent sqlite pkgconf ninja
+            pip-packages: --break-system-packages pycapnp
+            cmake-args: |-
+              -DREDUCE_EXPORTS=ON
+
+    env:
+      CCACHE_MAXSIZE: 400M
+      CCACHE_DIR: ${{ github.workspace }}/.ccache
+
+    steps:
+      - name: Checkout Bitcoin Core
+        uses: actions/checkout@v4
+        with:
+          repository: ${{ env.BITCOIN_REPO }}
+          fetch-depth: 1
+
+      - name: Checkout libmultiprocess
+        uses: actions/checkout@v4
+        with:
+          path: _libmultiprocess
+
+      - name: Replace libmultiprocess subtree
+        run: _libmultiprocess/ci/scripts/bitcoin_core_ci.sh replace_subtree
+
+      - name: Add LLVM apt repository
+        if: matrix.apt-llvm
+        run: _libmultiprocess/ci/scripts/bitcoin_core_ci.sh add_llvm_apt_repository
+
+      - name: Install APT packages
+        if: matrix.packages
+        run: _libmultiprocess/ci/scripts/ci_helpers.sh install_apt_packages ${{ matrix.packages }}
+
+      - name: Configure LLVM alternatives
+        if: matrix.packages
+        run: _libmultiprocess/ci/scripts/bitcoin_core_ci.sh install_llvm_alternatives
+
+      - name: Install Homebrew packages
+        if: matrix.brew-packages
+        run: _libmultiprocess/ci/scripts/ci_helpers.sh install_homebrew_packages ${{ matrix.brew-packages }}
+
+      - name: Install pip packages
+        if: matrix.pip-packages
+        run: _libmultiprocess/ci/scripts/ci_helpers.sh install_pip_packages ${{ matrix.pip-packages }}
+
+      - name: Determine parallelism
+        run: _libmultiprocess/ci/scripts/ci_helpers.sh determine_parallelism "${{ matrix.nproc_multiplier }}"
+
+      - name: Restore ccache
+        id: ccache-restore
+        uses: actions/cache/restore@v4
+        with:
+          path: ${{ env.CCACHE_DIR }}
+          key: ccache-${{ matrix.name }}-${{ github.ref }}-${{ github.sha }}
+          restore-keys: |
+            ccache-${{ matrix.name }}-${{ github.ref }}-
+            ccache-${{ matrix.name }}-
+
+      - name: Reset ccache stats
+        if: matrix.packages || matrix.brew-packages
+        run: _libmultiprocess/ci/scripts/ci_helpers.sh reset_ccache_stats
+
+      - name: CMake configure
+        env:
+          BITCOIN_CORE_CMAKE_ARGS: ${{ matrix.cmake-args }}
+        run: _libmultiprocess/ci/scripts/bitcoin_core_ci.sh configure_bitcoin_core
+
+      - name: Build
+        run: _libmultiprocess/ci/scripts/bitcoin_core_ci.sh build_bitcoin_core
+
+      - name: Show ccache stats
+        if: matrix.packages || matrix.brew-packages
+        run: _libmultiprocess/ci/scripts/ci_helpers.sh show_ccache_stats
+
+      - name: Run IPC unit tests
+        env:
+          ASAN_OPTIONS: detect_leaks=1:detect_stack_use_after_return=1:check_initialization_order=1:strict_init_order=1
+          LSAN_OPTIONS: suppressions=${{ github.workspace }}/test/sanitizer_suppressions/lsan
+          UBSAN_OPTIONS: suppressions=${{ github.workspace }}/test/sanitizer_suppressions/ubsan:print_stacktrace=1:halt_on_error=1:report_error_type=1
+        run: _libmultiprocess/ci/scripts/bitcoin_core_ci.sh run_ipc_unit_tests "${{ matrix.unit_test_runs }}"
+
+      - name: Run IPC functional tests
+        env:
+          ASAN_OPTIONS: detect_leaks=1:detect_stack_use_after_return=1:check_initialization_order=1:strict_init_order=1
+          LSAN_OPTIONS: suppressions=${{ github.workspace }}/test/sanitizer_suppressions/lsan
+          UBSAN_OPTIONS: suppressions=${{ github.workspace }}/test/sanitizer_suppressions/ubsan:print_stacktrace=1:halt_on_error=1:report_error_type=1
+          CI_FAILFAST_TEST_LEAVE_DANGLING: 1
+        run: _libmultiprocess/ci/scripts/bitcoin_core_ci.sh run_ipc_functional_tests "${{ matrix.functional_test_runs }}" "${{ matrix.functional_timeout_factor }}"
+
+      - name: Save ccache
+        uses: actions/cache/save@v4
+        if: github.ref == 'refs/heads/master' || steps.ccache-restore.outputs.cache-hit != 'true'
+        with:
+          path: ${{ env.CCACHE_DIR }}
+          key: ccache-${{ matrix.name }}-${{ github.ref }}-${{ github.sha }}
+
+  bitcoin-core-tsan:
+    name: ${{ matrix.name }}
+    runs-on: ubuntu-24.04
+    timeout-minutes: 180
+
+    strategy:
+      matrix:
+        include:
+          - name: TSan
+            unit_test_runs: 8
+            functional_test_runs: 25
+            nproc_multiplier: 2
+            functional_timeout_factor: 40
+
+    env:
+      CCACHE_MAXSIZE: 400M
+      CCACHE_DIR: ${{ github.workspace }}/.ccache
+      LIBCXX_FLAGS: >-
+        -fsanitize=thread
+        -nostdinc++
+        -nostdlib++
+        -isystem /tmp/libcxx-build/include/c++/v1
+        -L/tmp/libcxx-build/lib
+        -Wl,-rpath,/tmp/libcxx-build/lib
+        -lc++
+        -lc++abi
+        -lpthread
+        -Wno-unused-command-line-argument
+      TSAN_OPTIONS: suppressions=${{ github.workspace }}/test/sanitizer_suppressions/tsan:halt_on_error=1:second_deadlock_stack=1
+
+    steps:
+      - name: Checkout Bitcoin Core
+        uses: actions/checkout@v4
+        with:
+          repository: ${{ env.BITCOIN_REPO }}
+          fetch-depth: 1
+
+      - name: Checkout libmultiprocess
+        uses: actions/checkout@v4
+        with:
+          path: _libmultiprocess
+
+      - name: Add LLVM apt repository
+        run: _libmultiprocess/ci/scripts/bitcoin_core_ci.sh add_llvm_apt_repository
+
+      - name: Install packages
+        run: _libmultiprocess/ci/scripts/bitcoin_core_ci.sh install_tsan_packages
+
+      - name: Determine parallelism
+        run: _libmultiprocess/ci/scripts/ci_helpers.sh determine_parallelism "${{ matrix.nproc_multiplier }}"
+
+      - name: Restore instrumented libc++ cache
+        id: libcxx-cache
+        uses: actions/cache@v4
+        with:
+          path: ${{ env.LIBCXX_DIR }}
+          key: libcxx-Thread-llvmorg-${{ env.LLVM_VERSION }}.1.0
+
+      - name: Build instrumented libc++
+        if: steps.libcxx-cache.outputs.cache-hit != 'true'
+        run: _libmultiprocess/ci/scripts/bitcoin_core_ci.sh build_instrumented_libcxx
+
+      - name: Determine host
+        id: host
+        run: _libmultiprocess/ci/scripts/ci_helpers.sh determine_host
+
+      - name: Restore depends cache
+        id: depends-cache
+        uses: actions/cache/restore@v4
+        with:
+          path: |
+            depends/built
+            depends/${{ steps.host.outputs.host }}
+          key: depends-tsan-${{ hashFiles('depends/packages/*.mk') }}-${{ env.LLVM_VERSION }}
+
+      - name: Build depends (stage 1, without IPC)
+        if: steps.depends-cache.outputs.cache-hit != 'true'
+        run: _libmultiprocess/ci/scripts/bitcoin_core_ci.sh build_depends_without_ipc
+
+      - name: Save depends cache
+        uses: actions/cache/save@v4
+        if: steps.depends-cache.outputs.cache-hit != 'true'
+        with:
+          path: |
+            depends/built
+            depends/${{ steps.host.outputs.host }}
+          key: depends-tsan-${{ hashFiles('depends/packages/*.mk') }}-${{ env.LLVM_VERSION }}
+
+      - name: Replace libmultiprocess subtree
+        run: _libmultiprocess/ci/scripts/bitcoin_core_ci.sh replace_subtree
+
+      - name: Build depends (stage 2, IPC packages including libmultiprocess)
+        run: _libmultiprocess/ci/scripts/bitcoin_core_ci.sh build_depends_with_ipc
+
+      - name: Restore ccache
+        id: ccache-restore
+        uses: actions/cache/restore@v4
+        with:
+          path: ${{ env.CCACHE_DIR }}
+          key: ccache-TSan-${{ github.ref }}-${{ github.sha }}
+          restore-keys: |
+            ccache-TSan-${{ github.ref }}-
+            ccache-TSan-
+
+      - name: Reset ccache stats
+        run: _libmultiprocess/ci/scripts/ci_helpers.sh reset_ccache_stats
+
+      - name: CMake configure
+        env:
+          BITCOIN_CORE_CMAKE_ARGS: |-
+            -DSANITIZERS=thread
+            -DAPPEND_CPPFLAGS=-DARENA_DEBUG -DDEBUG_LOCKCONTENTION -D_LIBCPP_REMOVE_TRANSITIVE_INCLUDES
+            -DCMAKE_TOOLCHAIN_FILE=depends/${{ steps.host.outputs.host }}/toolchain.cmake
+        run: _libmultiprocess/ci/scripts/bitcoin_core_ci.sh configure_bitcoin_core
+
+      - name: Build
+        run: _libmultiprocess/ci/scripts/bitcoin_core_ci.sh build_bitcoin_core
+
+      - name: Show ccache stats
+        run: _libmultiprocess/ci/scripts/ci_helpers.sh show_ccache_stats
+
+      - name: Run IPC unit tests
+        env:
+          LD_LIBRARY_PATH: depends/${{ steps.host.outputs.host }}/lib
+        run: _libmultiprocess/ci/scripts/bitcoin_core_ci.sh run_ipc_unit_tests "${{ matrix.unit_test_runs }}"
+
+      - name: Run IPC functional tests
+        env:
+          LD_LIBRARY_PATH: depends/${{ steps.host.outputs.host }}/lib
+          CI_FAILFAST_TEST_LEAVE_DANGLING: 1
+        run: _libmultiprocess/ci/scripts/bitcoin_core_ci.sh run_ipc_functional_tests "${{ matrix.functional_test_runs }}" "${{ matrix.functional_timeout_factor }}"
+
+      - name: Save ccache
+        uses: actions/cache/save@v4
+        if: github.ref == 'refs/heads/master' || steps.ccache-restore.outputs.cache-hit != 'true'
+        with:
+          path: ${{ env.CCACHE_DIR }}
+          key: ccache-TSan-${{ github.ref }}-${{ github.sha }}

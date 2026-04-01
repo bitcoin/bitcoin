@@ -1,5 +1,7 @@
 CI_DESC="CI job cross-compiling to 32-bit"
 CI_DIR=build-gnu32
+# Cache the heaviest Nix job to stay within GitHub's cache budget.
+CI_CACHE_NIX_STORE=true
 NIX_ARGS=(
   --arg minimal true
   --arg crossPkgs 'import <nixpkgs> { crossSystem = { config = "i686-unknown-linux-gnu"; }; }'
