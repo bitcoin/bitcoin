@@ -19,6 +19,7 @@ from test_framework.blocktools import (
     COINBASE_MATURITY,
 )
 from test_framework.messages import (
+    CTxOut,
     MAX_BIP125_RBF_SEQUENCE,
     MAX_SEQUENCE_NONFINAL,
 )
@@ -115,6 +116,8 @@ class BumpFeeTest(BitcoinTestFramework):
         # Context independent tests
         test_feerate_checks_replaced_outputs(self, rbf_node, peer_node)
         test_bumpfee_with_feerate_ignores_walletincrementalrelayfee(self, rbf_node, peer_node)
+        test_bumpfee_enormous_cluster(self, rbf_node, peer_node)
+        test_send_fallback_on_cluster_limit(self, rbf_node)
 
     def test_invalid_parameters(self, rbf_node, peer_node, dest_address):
         self.log.info('Test invalid parameters')
@@ -827,6 +830,96 @@ def test_bumpfee_with_feerate_ignores_walletincrementalrelayfee(self, rbf_node, 
 
     # You can fee bump as long as the new fee set from fee_rate is at least (original fee + incrementalrelayfee)
     rbf_node.bumpfee(tx["txid"], {"fee_rate": 2.1})
+    self.clear_mempool()
+
+
+def test_bumpfee_enormous_cluster(self, rbf_node, peer_node):
+    self.log.info("Test send/bumpfee with enormous unconfirmed clusters")
+    # Build 9 independent 57-tx chains (total 513 > 500) so GatherClusters()
+    # returns empty, triggering the calculateIndividualBumpFees empty-map path.
+    NUM_CLUSTERS = 9
+    CHAIN_LENGTH = 56  # +1 for the tip tx = 57 per cluster
+
+    rbf_node.createwallet("test_enormous_cluster")
+    w = rbf_node.get_wallet_rpc("test_enormous_cluster")
+
+    mini_wallet = MiniWallet(peer_node)
+    self.generate(mini_wallet, COINBASE_MATURITY + NUM_CLUSTERS)
+
+    wallet_address = w.getnewaddress()
+    wallet_spk = bytes.fromhex(w.getaddressinfo(wallet_address)["scriptPubKey"])
+
+    for i in range(NUM_CLUSTERS):
+        self.log.debug(f"Building unconfirmed chain {i+1}/{NUM_CLUSTERS}")
+        chain = mini_wallet.send_self_transfer_chain(
+            from_node=peer_node,
+            chain_length=CHAIN_LENGTH,
+        )
+        chain_tip_utxo = chain[-1]["new_utxo"]
+        tx = mini_wallet.create_self_transfer(utxo_to_spend=chain_tip_utxo, fee_rate=0)["tx"]
+        tx.vout[0].nValue -= 11000
+        tx.vout.append(CTxOut(10000, wallet_spk))
+        mini_wallet.sendrawtransaction(from_node=peer_node, tx_hex=tx.serialize().hex())
+
+    self.sync_mempools()
+
+    unconfirmed_utxos = w.listunspent(minconf=0, maxconf=0, addresses=[wallet_address], include_unsafe=True)
+    assert_equal(len(unconfirmed_utxos), NUM_CLUSTERS)
+    inputs = [{"txid": u["txid"], "vout": u["vout"]} for u in unconfirmed_utxos]
+
+    # This should error gracefully, not crash with map::at
+    assert_raises_rpc_error(
+        -4,
+        "Failed to calculate bump fees, because unconfirmed UTXOs depend on an enormous cluster of unconfirmed transactions.",
+        w.send,
+        outputs=[{peer_node.getnewaddress(): Decimal("0.0005")}],
+        options={"inputs": inputs, "include_unsafe": True, "add_inputs": False, "fee_rate": 2},
+    )
+
+    w.unloadwallet()
+    self.clear_mempool()
+
+
+def test_send_fallback_on_cluster_limit(self, rbf_node):
+    self.log.info("Test send falls back to confirmed inputs when cluster limit is hit")
+    # When >500 unconfirmed txs are in the wallet, calculateIndividualBumpFees
+    # returns an empty map. AvailableCoins drops unconfirmed outputs and falls
+    # back to confirmed inputs instead of crashing (#29711).
+    rbf_node.createwallet("test_cluster_fallback")
+    w = rbf_node.get_wallet_rpc("test_cluster_fallback")
+    self.generate(rbf_node, COINBASE_MATURITY + 503)
+
+    # Fund wallet with confirmed UTXOs by sending from rbf_node's default wallet
+    fund_addr = w.getnewaddress()
+    default_wallet = rbf_node.get_wallet_rpc("default_wallet")
+    for _ in range(503):
+        default_wallet.sendtoaddress(fund_addr, 1)
+    self.generate(rbf_node, 1)
+
+    address = w.getnewaddress()
+    confirmed = w.listunspent()
+    assert_greater_than(len(confirmed), 502)
+
+    for i in range(501):
+        w.send(
+            outputs=[{address: 0.5}],
+            options={"minconf": 1, "fee_rate": 10, "add_inputs": False,
+                     "inputs": [{"txid": confirmed[i]["txid"], "vout": confirmed[i]["vout"]}]},
+        )
+
+    # Unconfirmed-only should fail (unconfirmed outputs dropped, no confirmed match maxconf=0)
+    assert_raises_rpc_error(
+        -4, None,
+        w.send,
+        outputs=[{address: 0.1}],
+        options={"minconf": 0, "maxconf": 0, "fee_rate": 10},
+    )
+
+    # Without maxconf restriction, falls back to confirmed inputs
+    result = w.send(outputs=[{address: 0.1}], options={"fee_rate": 10})
+    assert "txid" in result
+
+    w.unloadwallet()
     self.clear_mempool()
 
 

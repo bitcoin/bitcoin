@@ -272,6 +272,9 @@ util::Result<CoinsResult> FetchSelectedInputs(const CWallet& wallet, const CCoin
     CoinsResult result;
     const bool can_grind_r = wallet.CanGrindR();
     std::map<COutPoint, CAmount> map_of_bump_fees = wallet.chain().calculateIndividualBumpFees(coin_control.ListSelected(), coin_selection_params.m_effective_feerate);
+    if (map_of_bump_fees.empty() && !coin_control.ListSelected().empty()) {
+        return util::Error{_("Failed to calculate bump fees, because unconfirmed UTXOs depend on an enormous cluster of unconfirmed transactions.")};
+    }
     for (const COutPoint& outpoint : coin_control.ListSelected()) {
         int64_t input_bytes = coin_control.GetInputWeight(outpoint).value_or(-1);
         if (input_bytes != -1) {
@@ -515,9 +518,17 @@ CoinsResult AvailableCoins(const CWallet& wallet,
     if (feerate.has_value()) {
         std::map<COutPoint, CAmount> map_of_bump_fees = wallet.chain().calculateIndividualBumpFees(outpoints, feerate.value());
 
-        for (auto& [_, outputs] : result.coins) {
-            for (auto& output : outputs) {
-                output.ApplyBumpFee(map_of_bump_fees.at(output.outpoint));
+        if (map_of_bump_fees.empty() && !outpoints.empty()) {
+            // GatherClusters exceeded its limit. We can't calculate bump fees
+            // for unconfirmed UTXOs, so drop them and fall back to confirmed only.
+            for (auto& [_, outputs] : result.coins) {
+                std::erase_if(outputs, [](const COutput& o) { return o.depth <= 0; });
+            }
+        } else {
+            for (auto& [_, outputs] : result.coins) {
+                for (auto& output : outputs) {
+                    output.ApplyBumpFee(map_of_bump_fees.at(output.outpoint));
+                }
             }
         }
     }
