@@ -228,7 +228,7 @@ static RPCHelpMan getrawtransaction()
                 "If verbosity is 1, returns a JSON Object with information about the transaction.\n"
                 "If verbosity is 2, returns a JSON Object with information about the transaction, including fee and prevout information.",
                 {
-                    {"txid", RPCArg::Type::STR_HEX, RPCArg::Optional::NO, "The transaction id"},
+                    {"txid|wtxid", RPCArg::Type::STR_HEX, RPCArg::Optional::NO, "The transaction id (txid or wtxid)"},
                     {"verbosity|verbose", RPCArg::Type::NUM, RPCArg::Default{0}, "0 for hex-encoded data, 1 for a JSON object, and 2 for JSON object with fee and prevout",
                      RPCArgOptions{.skip_type_check = true}},
                     {"blockhash", RPCArg::Type::STR_HEX, RPCArg::Optional::OMITTED, "The block in which to look for the transaction"},
@@ -283,11 +283,10 @@ static RPCHelpMan getrawtransaction()
 {
     const NodeContext& node = EnsureAnyNodeContext(request.context);
     ChainstateManager& chainman = EnsureChainman(node);
-
-    auto txid{Txid::FromUint256(ParseHashV(request.params[0], "parameter 1"))};
+    const uint256 hash{ParseHashV(request.params[0], "parameter 1")};
     const CBlockIndex* blockindex = nullptr;
 
-    if (txid.ToUint256() == chainman.GetParams().GenesisBlock().hashMerkleRoot) {
+    if (hash == chainman.GetParams().GenesisBlock().hashMerkleRoot) {
         // Special exception for the genesis block coinbase transaction
         throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "The genesis block coinbase is not considered an ordinary transaction and cannot be retrieved");
     }
@@ -310,7 +309,11 @@ static RPCHelpMan getrawtransaction()
     }
 
     uint256 hash_block;
-    const CTransactionRef tx = GetTransaction(blockindex, node.mempool.get(), txid, chainman.m_blockman, hash_block);
+    const Txid txid{Txid::FromUint256(hash)};
+    CTransactionRef tx = GetTransaction(blockindex, node.mempool.get(), txid, chainman.m_blockman, hash_block);
+    if (!tx && node.mempool && !blockindex) {
+        tx = node.mempool->get(Wtxid::FromUint256(hash));
+    }
     if (!tx) {
         std::string errmsg;
         if (blockindex) {
