@@ -265,7 +265,9 @@ void run_verify_test(
 }
 
 template <typename T>
-concept HasToBytes = requires(T t) { t.ToBytes(); };
+concept HasToBytes = requires(T t) {
+    { t.ToBytes() } -> std::convertible_to<std::span<const std::byte>>;
+};
 
 template <typename T>
 void CheckHandle(T object, T distinct_object)
