@@ -60,7 +60,7 @@ class P2PBlockIOErrorTest(BitcoinTestFramework):
         block.solve()
 
         with simulate_io_error(node.blocks_path):
-            with node.assert_debug_log(expected_msgs=["AcceptBlock FAILED (System error while saving block to disk"]):
+            with node.assert_debug_log(expected_msgs=["AcceptBlock FAILED (AcceptBlock: Failed to find position to write new block to disk)"]):
                 peer.send_without_ping(msg_block(block))
                 peer.wait_for_disconnect()
 
@@ -105,12 +105,12 @@ class P2PBlockIOErrorTest(BitcoinTestFramework):
         peer = node.add_p2p_connection(P2PInterface())
         block_hash = node.getblockhash(3)  # Not in recent cache
         with simulate_io_error(node.blocks_path):
-            # Bug: we currently swallow the GETDATA request, never reply to the other party, and log issue under debug-NET
-            with node.assert_debug_log(expected_msgs=["[ProcessMessages] [net] ProcessMessages(getdata, 37 bytes): Exception 'filesystem error"],
-                                       timeout=30):
+            # Request block and expect disconnection.
+            with node.assert_debug_log(expected_msgs=["Cannot load block from disk"]):
                 peer.send_without_ping(msg_getdata([CInv(MSG_BLOCK | MSG_WITNESS_FLAG, int(block_hash, 16))]))
+                peer.wait_for_disconnect()
 
-            # And the node keeps running
+            # Currently, the node keeps running
             node.getblockcount()
 
     def test_getblocktxn_fatal_on_block_io_error(self):
@@ -133,13 +133,19 @@ class P2PBlockIOErrorTest(BitcoinTestFramework):
             gbtn = msg_getblocktxn()
             gbtn.block_txn_request = BlockTransactionsRequest(blockhash=int(block_hash, 16), indexes=[0])
 
-            # Bug: we currently swallow the GETBLOCKTXN request, never reply to the other party, and log issue under debug-NET
-            with node.assert_debug_log(expected_msgs=["[ProcessMessages] [net] ProcessMessages(getblocktxn, 34 bytes): Exception 'filesystem error"],
-                                       timeout=10):
+            # Request block and expect crash+disconnect.
+            with node.assert_debug_log(expected_msgs=["Unable to open file"]):
                 peer.send_without_ping(gbtn)
+                peer.wait_for_disconnect()
 
-            # And the node keeps running
-            node.getblockcount()
+            node.wait_until_stopped(
+                expected_ret_code=-6,
+                expect_error=True,
+                expected_stderr=re.compile("Assertion"), # assertion crash
+            )
+
+        # Restart node for next test
+        self.start_node(0)
 
     def run_test(self):
         # On Windows, open files (like the DB) are locked and prevent renaming
