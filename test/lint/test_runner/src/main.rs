@@ -14,7 +14,8 @@ use std::fs;
 use std::process::{Command, ExitCode};
 
 use lint_cpp::{
-    lint_boost_assert, lint_includes_build_config, lint_remove_all, lint_rpc_assert, lint_std_filesystem,
+    lint_boost_assert, lint_includes_build_config, lint_remove_all, lint_rpc_assert,
+    lint_std_filesystem,
 };
 use lint_docs::{lint_doc_args, lint_doc_release_note_snippets, lint_markdown};
 use lint_py::{lint_py_lint, lint_rmtree};
