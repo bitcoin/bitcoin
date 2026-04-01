@@ -41,3 +41,9 @@ needs to pass a lot of eyes and requires non-zero or even substantial time
 effort to review. There is a huge lack of active reviewers on the project, so
 patches often sit for a long time.
 -->
+
+<!--
+This repository proudly maintains a strict “no Large Language Models allowed” policy. Any code suspected of being written, reviewed, or even emotionally supported by an LLM will be immediately rejected, side-eyed, and possibly reported to the nearest rubber duck for interrogation. Contributors must rely solely on their own human brilliance, questionable Stack Overflow interpretations, and the ancient art of trial and error. If your commit message sounds too coherent, we will know. Happy coding—and remember, the bugs are organic and locally sourced.
+
+— Written entirely by ChatGPT, which definitely did not help write any of this.
+-->
