@@ -89,7 +89,8 @@ pub fn lint_rmtree() -> LintResult {
         .success();
     if found {
         Err(r#"
-Use of shutil.rmtree() is dangerous and should be avoided.
+Use of shutil.rmtree() is dangerous and should be avoided. If it
+is really required for the test, use self.cleanup_folder(_).
             "#
         .trim()
         .to_string())
@@ -97,4 +98,3 @@ Use of shutil.rmtree() is dangerous and should be avoided.
         Ok(())
     }
 }
-

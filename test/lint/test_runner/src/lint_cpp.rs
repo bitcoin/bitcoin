@@ -139,7 +139,8 @@ pub fn lint_remove_all() -> LintResult {
         .success();
     if found {
         Err(r#"
-Use of fs::remove_all or std::filesystem::remove_all is dangerous and should be avoided.
+Use of fs::remove_all or std::filesystem::remove_all is dangerous and should be avoided. If removal
+is required, prefer fs::remove.
             "#
         .trim()
         .to_string())
