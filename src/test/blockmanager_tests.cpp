@@ -10,6 +10,7 @@
 #include <node/kernel_notifications.h>
 #include <script/solver.h>
 #include <primitives/block.h>
+#include <undo.h>
 #include <util/chaintype.h>
 #include <validation.h>
 
@@ -298,6 +299,63 @@ BOOST_AUTO_TEST_CASE(blockmanager_flush_block_file)
     // Block 2 was not overwritten:
     BOOST_CHECK(!blockman.ReadBlock(read_block, pos2, {}));
     BOOST_CHECK_EQUAL(read_block.nVersion, 2);
+}
+
+// Verify that block read operations return false (not throw) when the
+// blocks directory is missing (mimicking a detached volume).
+BOOST_FIXTURE_TEST_CASE(blockmanager_io_failure_consistency, TestChain100Setup)
+{
+    auto& chainman = m_node.chainman;
+    auto& blockman = m_node.chainman->m_blockman;
+    CBlockIndex* tip = WITH_LOCK(chainman->GetMutex(), return chainman->ActiveTip());
+
+    SimulateFileSystemError(m_path_root, m_args.GetBlocksDirPath().parent_path(), [&]() {
+        {
+            ASSERT_DEBUG_LOG("OpenBlockFile failed");
+            FlatFilePos tip_pos = WITH_LOCK(chainman->GetMutex(), return tip->GetBlockPos());
+            BOOST_CHECK(!blockman.ReadRawBlock(tip_pos));
+        }
+
+        {
+            ASSERT_DEBUG_LOG("OpenBlockFile failed");
+            CBlock block;
+            BOOST_CHECK(!blockman.ReadBlock(block, *tip));
+        }
+
+        {
+            ASSERT_DEBUG_LOG("OpenUndoFile failed");
+            CBlockUndo block_undo;
+            BOOST_CHECK(!blockman.ReadBlockUndo(block_undo, *tip));
+        }
+
+        // WriteBlock should return a null position, not throw.
+        // create_directories fails so the file cannot be created.
+        {
+            ASSERT_DEBUG_LOG("Failed to write block");
+            CBlock dummy_block;
+            dummy_block.nVersion = 1;
+            const auto write_pos = blockman.WriteBlock(dummy_block, 999);
+            BOOST_CHECK(write_pos.IsNull());
+        }
+
+        // WriteBlockUndo should return false, not throw.
+        // Clear BLOCK_HAVE_UNDO so it actually attempts to write.
+        {
+            ASSERT_DEBUG_LOG("Failed to write undo data");
+            LOCK(chainman->GetMutex());
+            tip->nStatus &= ~BLOCK_HAVE_UNDO;
+
+            BlockValidationState state;
+            BOOST_CHECK(!blockman.WriteBlockUndo(CBlockUndo{}, state, *tip));
+
+            tip->nStatus |= BLOCK_HAVE_UNDO;
+        }
+    });
+
+    // Ensure we haven't corrupted any internal state during the failure.
+    // Check we can read the block again now that there is no dir access issue going on.
+    CBlock recovered_block;
+    BOOST_CHECK(blockman.ReadBlock(recovered_block, *tip));
 }
 
 BOOST_AUTO_TEST_SUITE_END()
