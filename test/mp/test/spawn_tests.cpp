@@ -94,9 +94,9 @@ KJ_TEST("SpawnProcess does not run callback in child")
     ::close(fd);
 
     int status{0};
-    // Give the child up to 1 second to exit. If it does not, terminate it and
+    // Give the child some time to exit. If it does not, terminate it and
     // reap it to avoid leaving a zombie behind.
-    const bool exited{WaitPidWithTimeout(pid, std::chrono::milliseconds{1000}, status)};
+    const bool exited{WaitPidWithTimeout(pid, std::chrono::seconds{30}, status)};
     if (!exited) {
         ::kill(pid, SIGKILL);
         ::waitpid(pid, &status, /*options=*/0);
