@@ -30,6 +30,7 @@ struct CBlockLocator;
 enum class MemPoolRemovalReason;
 struct RemovedMempoolTransactionInfo;
 struct NewMempoolTransactionInfo;
+struct MemPoolChunksUpdate;
 
 /**
  * Implement this to subscribe to events generated in validation and mempool
@@ -115,6 +116,13 @@ protected:
      * Called on a background thread.
      */
     virtual void MempoolTransactionsRemovedForBlock(const std::vector<RemovedMempoolTransactionInfo>& txs_removed_for_block, unsigned int nBlockHeight) {}
+    /*
+     * Notifies listeners of each mempool update.
+     * Returns MemPoolChunkUpdate struct.
+     *
+     * Called on a background thread.
+     */
+    virtual void MempoolUpdated(const MemPoolChunksUpdate& mempool_chunks) {}
     /**
      * Notifies listeners of a block being connected.
      *
@@ -225,6 +233,7 @@ public:
     void MempoolTransactionsRemovedForBlock(const std::vector<RemovedMempoolTransactionInfo>&, unsigned int nBlockHeight);
     void BlockConnected(const kernel::ChainstateRole&, std::shared_ptr<const CBlock>, const CBlockIndex* pindex);
     void BlockDisconnected(std::shared_ptr<const CBlock>, const CBlockIndex* pindex);
+    void MempoolUpdated(MemPoolChunksUpdate);
     void ChainStateFlushed(const kernel::ChainstateRole&, const CBlockLocator&);
     void BlockChecked(const std::shared_ptr<const CBlock>&, const BlockValidationState&);
     void NewPoWValidBlock(const CBlockIndex *, const std::shared_ptr<const CBlock>&);

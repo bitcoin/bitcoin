@@ -8,10 +8,13 @@
 #include <consensus/amount.h>
 #include <consensus/validation.h>
 #include <core_memusage.h>
+#include <kernel/mempool_removal_reason.h>
 #include <policy/policy.h>
 #include <policy/settings.h>
 #include <primitives/transaction.h>
 #include <txgraph.h>
+#include <uint256.h>
+#include <util/feefrac.h>
 #include <util/overflow.h>
 #include <util/time.h>
 
@@ -19,6 +22,7 @@
 #include <cstdint>
 #include <functional>
 #include <memory>
+#include <optional>
 #include <set>
 
 class CBlockIndex;
@@ -197,6 +201,20 @@ struct NewMempoolTransactionInfo {
           m_submitted_in_package{submitted_in_package},
           m_chainstate_is_current{chainstate_is_current},
           m_has_no_mempool_parents{has_no_mempool_parents} {}
+};
+
+struct MemPoolChunk {
+    FeeFrac m_fee_rate;
+    uint256 m_chunk_hash;
+    MemPoolChunk(FeeFrac fee_rate, uint256 chunk_hash)
+        : m_fee_rate{fee_rate}, m_chunk_hash{chunk_hash} {}
+};
+
+struct MemPoolChunksUpdate {
+    std::vector<MemPoolChunk> old_chunks;
+    std::vector<MemPoolChunk> new_chunks;
+    MemPoolRemovalReason reason;
+    std::optional<unsigned int> block_height{std::nullopt};
 };
 
 #endif // BITCOIN_KERNEL_MEMPOOL_ENTRY_H

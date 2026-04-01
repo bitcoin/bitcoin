@@ -7,6 +7,7 @@
 #include <primitives/transaction.h>
 #include <uint256.h>
 #include <util/check.h>
+#include <util/hasher.h>
 
 #include <algorithm>
 #include <cassert>
@@ -155,16 +156,5 @@ uint256 GetPackageHash(const std::vector<CTransactionRef>& transactions)
     std::transform(transactions.cbegin(), transactions.cend(), std::back_inserter(wtxids_copy),
         [](const auto& tx){ return tx->GetWitnessHash(); });
 
-    // Sort in ascending order
-    std::sort(wtxids_copy.begin(), wtxids_copy.end(), [](const auto& lhs, const auto& rhs) {
-        return std::lexicographical_compare(std::make_reverse_iterator(lhs.end()), std::make_reverse_iterator(lhs.begin()),
-                                            std::make_reverse_iterator(rhs.end()), std::make_reverse_iterator(rhs.begin()));
-    });
-
-    // Get sha256 hash of the wtxids concatenated in this order
-    HashWriter hashwriter;
-    for (const auto& wtxid : wtxids_copy) {
-        hashwriter << wtxid;
-    }
-    return hashwriter.GetSHA256();
+    return GetHashFromWitnesses(std::move(wtxids_copy));
 }
