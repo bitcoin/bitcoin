@@ -144,7 +144,8 @@ bool CheckInputScripts(const CTransaction& tx, TxValidationState& state,
                        std::vector<CScriptCheck>* pvChecks = nullptr)
                        EXCLUSIVE_LOCKS_REQUIRED(cs_main);
 
-bool CheckFinalTxAtTip(const CBlockIndex& active_chain_tip, const CTransaction& tx)
+bool CheckFinalTxAtTip(const CBlockIndex& active_chain_tip, const CTransaction& tx,
+                       const MempoolAcceptContext& eval_context)
 {
     AssertLockHeld(cs_main);
 
@@ -154,16 +155,16 @@ bool CheckFinalTxAtTip(const CBlockIndex& active_chain_tip, const CTransaction& 
     // evaluated is what is used. Thus if we want to know if a
     // transaction can be part of the *next* block, we need to call
     // IsFinalTx() with one more than active_chain_tip.Height().
-    const int nBlockHeight = active_chain_tip.nHeight + 1;
+    const int block_height{eval_context.height.value_or(active_chain_tip.nHeight + 1)};
 
     // BIP113 requires that time-locked transactions have nLockTime set to
     // less than the median time of the previous block they're contained in.
     // When the next block is created its previous block will be the current
     // chain tip, so we use that to calculate the median time passed to
     // IsFinalTx().
-    const int64_t nBlockTime{active_chain_tip.GetMedianTimePast()};
+    const int64_t block_time{eval_context.mtp.value_or(active_chain_tip.GetMedianTimePast())};
 
-    return IsFinalTx(tx, nBlockHeight, nBlockTime);
+    return IsFinalTx(tx, block_height, block_time);
 }
 
 namespace {
@@ -244,21 +245,21 @@ std::optional<LockPoints> CalculateLockPointsAtTip(
 }
 
 bool CheckSequenceLocksAtTip(CBlockIndex* tip,
-                             const LockPoints& lock_points)
+                             const LockPoints& lock_points,
+                             const MempoolAcceptContext& eval_context)
 {
     assert(tip != nullptr);
 
-    CBlockIndex index;
-    index.pprev = tip;
     // CheckSequenceLocksAtTip() uses active_chainstate.m_chain.Height()+1 to evaluate
     // height based locks because when SequenceLocks() is called within
     // ConnectBlock(), the height of the block *being*
     // evaluated is what is used.
     // Thus if we want to know if a transaction can be part of the
     // *next* block, we need to use one more than active_chainstate.m_chain.Height()
-    index.nHeight = tip->nHeight + 1;
+    const int block_height{eval_context.height.value_or(tip->nHeight + 1)};
+    const int64_t block_time{eval_context.mtp.value_or(tip->GetMedianTimePast())};
 
-    return EvaluateSequenceLocks(index, {lock_points.height, lock_points.time});
+    return EvaluateSequenceLocks(block_height, block_time, {lock_points.height, lock_points.time});
 }
 
 static void LimitMempoolSize(CTxMemPool& pool, CCoinsViewCache& coins_cache)
@@ -478,10 +479,13 @@ public:
          */
         const std::optional<CFeeRate> m_client_maxfeerate;
 
+        /** Optional override height/MTP used for (non-)finality evaluation in test contexts. */
+        const MempoolAcceptContext m_eval_context;
+
         /** Parameters for single transaction mempool validation. */
         static ATMPArgs SingleAccept(const CChainParams& chainparams, int64_t accept_time,
                                      bool bypass_limits, std::vector<COutPoint>& coins_to_uncache,
-                                     bool test_accept) {
+                                     bool test_accept, const MempoolAcceptContext& eval_context = {}) {
             return ATMPArgs{/*chainparams=*/ chainparams,
                             /*accept_time=*/ accept_time,
                             /*bypass_limits=*/ bypass_limits,
@@ -492,12 +496,14 @@ public:
                             /*package_submission=*/ false,
                             /*package_feerates=*/ false,
                             /*client_maxfeerate=*/ {}, // checked by caller
+                            /*eval_context=*/ eval_context,
             };
         }
 
         /** Parameters for test package mempool validation through testmempoolaccept. */
         static ATMPArgs PackageTestAccept(const CChainParams& chainparams, int64_t accept_time,
-                                          std::vector<COutPoint>& coins_to_uncache) {
+                                          std::vector<COutPoint>& coins_to_uncache,
+                                          const MempoolAcceptContext& eval_context = {}) {
             return ATMPArgs{/*chainparams=*/ chainparams,
                             /*accept_time=*/ accept_time,
                             /*bypass_limits=*/ false,
@@ -508,6 +514,7 @@ public:
                             /*package_submission=*/ false, // not submitting to mempool
                             /*package_feerates=*/ false,
                             /*client_maxfeerate=*/ {}, // checked by caller
+                            /*eval_context=*/ eval_context,
             };
         }
 
@@ -524,6 +531,7 @@ public:
                             /*package_submission=*/ true,
                             /*package_feerates=*/ true,
                             /*client_maxfeerate=*/ client_maxfeerate,
+                            /*eval_context=*/ {},
             };
         }
 
@@ -539,6 +547,7 @@ public:
                             /*package_submission=*/ true, // trim at the end of AcceptPackage()
                             /*package_feerates=*/ false, // only 1 transaction
                             /*client_maxfeerate=*/ package_args.m_client_maxfeerate,
+                            /*eval_context=*/ package_args.m_eval_context,
             };
         }
 
@@ -554,7 +563,8 @@ public:
                  bool allow_sibling_eviction,
                  bool package_submission,
                  bool package_feerates,
-                 std::optional<CFeeRate> client_maxfeerate)
+                 std::optional<CFeeRate> client_maxfeerate,
+                 MempoolAcceptContext eval_context)
             : m_chainparams{chainparams},
               m_accept_time{accept_time},
               m_bypass_limits{bypass_limits},
@@ -564,7 +574,8 @@ public:
               m_allow_sibling_eviction{allow_sibling_eviction},
               m_package_submission{package_submission},
               m_package_feerates{package_feerates},
-              m_client_maxfeerate{client_maxfeerate}
+              m_client_maxfeerate{client_maxfeerate},
+              m_eval_context{std::move(eval_context)}
         {
             // If we are using package feerates, we must be doing package submission.
             // It also means sibling eviction is not permitted.
@@ -573,6 +584,7 @@ public:
                 Assume(!m_allow_sibling_eviction);
             }
             if (m_allow_sibling_eviction) Assume(m_allow_replacement);
+            if (!m_test_accept) Assume(!m_eval_context.HasOverrides());
         }
     };
 
@@ -813,10 +825,14 @@ bool MemPoolAccept::PreChecks(ATMPArgs& args, Workspace& ws)
     if (::GetSerializeSize(TX_NO_WITNESS(tx)) < MIN_STANDARD_TX_NONWITNESS_SIZE)
         return state.Invalid(TxValidationResult::TX_NOT_STANDARD, "tx-size-small");
 
+    const CBlockIndex* tip{Assert(m_active_chainstate.m_chain.Tip())};
+    const int effective_height{args.m_eval_context.height.value_or(tip->nHeight + 1)};
+    const int64_t effective_mtp{args.m_eval_context.mtp.value_or(tip->GetMedianTimePast())};
+
     // Only accept nLockTime-using transactions that can be mined in the next
     // block; we don't want our mempool filled up with transactions that can't
     // be mined yet.
-    if (!CheckFinalTxAtTip(*Assert(m_active_chainstate.m_chain.Tip()), tx)) {
+    if (!CheckFinalTxAtTip(*tip, tx, MempoolAcceptContext{effective_height, effective_mtp})) {
         return state.Invalid(TxValidationResult::TX_PREMATURE_SPEND, "non-final");
     }
 
@@ -884,12 +900,12 @@ bool MemPoolAccept::PreChecks(ATMPArgs& args, Workspace& ws)
     // Pass in m_view which has all of the relevant inputs cached. Note that, since m_view's
     // backend was removed, it no longer pulls coins from the mempool.
     const std::optional<LockPoints> lock_points{CalculateLockPointsAtTip(m_active_chainstate.m_chain.Tip(), m_view, tx)};
-    if (!lock_points.has_value() || !CheckSequenceLocksAtTip(m_active_chainstate.m_chain.Tip(), *lock_points)) {
+    if (!lock_points.has_value() || !CheckSequenceLocksAtTip(m_active_chainstate.m_chain.Tip(), *lock_points, MempoolAcceptContext{effective_height, effective_mtp})) {
         return state.Invalid(TxValidationResult::TX_PREMATURE_SPEND, "non-BIP68-final");
     }
 
-    // The mempool holds txs for the next block, so pass height+1 to CheckTxInputs
-    if (!Consensus::CheckTxInputs(tx, state, m_view, m_active_chainstate.m_chain.Height() + 1, ws.m_base_fees)) {
+    // The mempool holds txs for the next block, so pass height+1 to CheckTxInputs.
+    if (!Consensus::CheckTxInputs(tx, state, m_view, effective_height, ws.m_base_fees)) {
         return false; // state filled in by CheckTxInputs
     }
 
@@ -1773,7 +1789,8 @@ PackageMempoolAcceptResult MemPoolAccept::AcceptPackage(const Package& package, 
 } // anon namespace
 
 MempoolAcceptResult AcceptToMemoryPool(Chainstate& active_chainstate, const CTransactionRef& tx,
-                                       int64_t accept_time, bool bypass_limits, bool test_accept)
+                                       int64_t accept_time, bool bypass_limits, bool test_accept,
+                                       const MempoolAcceptContext& eval_context)
 {
     AssertLockHeld(::cs_main);
     const CChainParams& chainparams{active_chainstate.m_chainman.GetParams()};
@@ -1782,7 +1799,7 @@ MempoolAcceptResult AcceptToMemoryPool(Chainstate& active_chainstate, const CTra
 
     std::vector<COutPoint> coins_to_uncache;
 
-    auto args = MemPoolAccept::ATMPArgs::SingleAccept(chainparams, accept_time, bypass_limits, coins_to_uncache, test_accept);
+    auto args = MemPoolAccept::ATMPArgs::SingleAccept(chainparams, accept_time, bypass_limits, coins_to_uncache, test_accept, eval_context);
     MempoolAcceptResult result = MemPoolAccept(pool, active_chainstate).AcceptSingleTransactionAndCleanup(tx, args);
 
     if (result.m_result_type != MempoolAcceptResult::ResultType::VALID) {
@@ -1805,7 +1822,8 @@ MempoolAcceptResult AcceptToMemoryPool(Chainstate& active_chainstate, const CTra
 }
 
 PackageMempoolAcceptResult ProcessNewPackage(Chainstate& active_chainstate, CTxMemPool& pool,
-                                                   const Package& package, bool test_accept, const std::optional<CFeeRate>& client_maxfeerate)
+                                                   const Package& package, bool test_accept, const std::optional<CFeeRate>& client_maxfeerate,
+                                                   const MempoolAcceptContext& eval_context)
 {
     AssertLockHeld(cs_main);
     assert(!package.empty());
@@ -1816,7 +1834,7 @@ PackageMempoolAcceptResult ProcessNewPackage(Chainstate& active_chainstate, CTxM
     auto result = [&]() EXCLUSIVE_LOCKS_REQUIRED(cs_main) {
         AssertLockHeld(cs_main);
         if (test_accept) {
-            auto args = MemPoolAccept::ATMPArgs::PackageTestAccept(chainparams, GetTime(), coins_to_uncache);
+            auto args = MemPoolAccept::ATMPArgs::PackageTestAccept(chainparams, GetTime(), coins_to_uncache, eval_context);
             return MemPoolAccept(pool, active_chainstate).AcceptMultipleTransactionsAndCleanup(package, args);
         } else {
             auto args = MemPoolAccept::ATMPArgs::PackageChildWithParents(chainparams, GetTime(), coins_to_uncache, client_maxfeerate);
@@ -4444,7 +4462,8 @@ bool ChainstateManager::ProcessNewBlock(const std::shared_ptr<const CBlock>& blo
     return true;
 }
 
-MempoolAcceptResult ChainstateManager::ProcessTransaction(const CTransactionRef& tx, bool test_accept)
+MempoolAcceptResult ChainstateManager::ProcessTransaction(const CTransactionRef& tx, bool test_accept,
+                                                         const MempoolAcceptContext& eval_context)
 {
     AssertLockHeld(cs_main);
     Chainstate& active_chainstate = ActiveChainstate();
@@ -4453,7 +4472,7 @@ MempoolAcceptResult ChainstateManager::ProcessTransaction(const CTransactionRef&
         state.Invalid(TxValidationResult::TX_NO_MEMPOOL, "no-mempool");
         return MempoolAcceptResult::Failure(state);
     }
-    auto result = AcceptToMemoryPool(active_chainstate, tx, GetTime(), /*bypass_limits=*/ false, test_accept);
+    auto result = AcceptToMemoryPool(active_chainstate, tx, GetTime(), /*bypass_limits=*/ false, test_accept, eval_context);
     active_chainstate.GetMempool()->check(active_chainstate.CoinsTip(), active_chainstate.m_chain.Height() + 1);
     return result;
 }

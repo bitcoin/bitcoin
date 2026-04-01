@@ -98,7 +98,12 @@ bool EvaluateSequenceLocks(const CBlockIndex& block, std::pair<int, int64_t> loc
 {
     assert(block.pprev);
     int64_t nBlockTime = block.pprev->GetMedianTimePast();
-    if (lockPair.first >= block.nHeight || lockPair.second >= nBlockTime)
+    return EvaluateSequenceLocks(block.nHeight, nBlockTime, lockPair);
+}
+
+bool EvaluateSequenceLocks(int nBlockHeight, int64_t nBlockTime, std::pair<int, int64_t> lockPair)
+{
+    if (lockPair.first >= nBlockHeight || lockPair.second >= nBlockTime)
         return false;
 
     return true;

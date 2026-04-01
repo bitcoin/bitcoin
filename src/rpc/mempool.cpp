@@ -25,13 +25,14 @@
 #include <rpc/util.h>
 #include <txmempool.h>
 #include <univalue.h>
+#include <validation.h>
 #include <util/fs.h>
 #include <util/moneystr.h>
 #include <util/strencodings.h>
 #include <util/time.h>
 #include <util/vector.h>
 
-#include <map>
+#include <limits>
 #include <string_view>
 #include <utility>
 
@@ -278,6 +279,12 @@ static RPCHelpMan testmempoolaccept()
             {"maxfeerate", RPCArg::Type::AMOUNT, RPCArg::Default{FormatMoney(DEFAULT_MAX_RAW_TX_FEE_RATE.GetFeePerK())},
              "Reject transactions whose fee rate is higher than the specified value, expressed in " + CURRENCY_UNIT +
                  "/kvB.\nFee rates larger than 1BTC/kvB are rejected.\nSet to 0 to accept any fee rate."},
+            {"height", RPCArg::Type::NUM, RPCArg::Optional::OMITTED,
+             "If provided, evaluate transaction finality, BIP68 sequence locks, and input height-based checks as if the transaction were mined in a block at this height.\n"
+             "If not provided, defaults to the next block height (active tip + 1)."},
+            {"time", RPCArg::Type::NUM, RPCArg::Optional::OMITTED,
+             "If provided, evaluate transaction finality and BIP68 time-based sequence locks using this median-time-past (MTP) value (seconds since epoch).\n"
+             "If not provided, defaults to the active tip's MTP."},
         },
         RPCResult{
             RPCResult::Type::ARR, "", "The result of the mempool acceptance test for each raw transaction in the input array.\n"
@@ -325,6 +332,20 @@ static RPCHelpMan testmempoolaccept()
 
             const CFeeRate max_raw_tx_fee_rate{ParseFeeRate(self.Arg<UniValue>("maxfeerate"))};
 
+            MempoolAcceptContext eval_context;
+            if (const auto height{self.MaybeArg<int64_t>("height")}) {
+                if (*height < 0 || *height > std::numeric_limits<int>::max()) {
+                    throw JSONRPCError(RPC_INVALID_PARAMETER, "height out of range");
+                }
+                eval_context.height = static_cast<int>(*height);
+            }
+            if (const auto mtp{self.MaybeArg<int64_t>("time")}) {
+                if (*mtp < 0) {
+                    throw JSONRPCError(RPC_INVALID_PARAMETER, "time out of range");
+                }
+                eval_context.mtp = *mtp;
+            }
+
             std::vector<CTransactionRef> txns;
             txns.reserve(raw_transactions.size());
             for (const auto& rawtx : raw_transactions.getValues()) {
@@ -342,9 +363,11 @@ static RPCHelpMan testmempoolaccept()
             Chainstate& chainstate = chainman.ActiveChainstate();
             const PackageMempoolAcceptResult package_result = [&] {
                 LOCK(::cs_main);
-                if (txns.size() > 1) return ProcessNewPackage(chainstate, mempool, txns, /*test_accept=*/true, /*client_maxfeerate=*/{});
+                if (txns.size() > 1) {
+                    return ProcessNewPackage(chainstate, mempool, txns, /*test_accept=*/true, /*client_maxfeerate=*/{}, eval_context);
+                }
                 return PackageMempoolAcceptResult(txns[0]->GetWitnessHash(),
-                                                  chainman.ProcessTransaction(txns[0], /*test_accept=*/true));
+                                                  chainman.ProcessTransaction(txns[0], /*test_accept=*/true, eval_context));
             }();
 
             UniValue rpc_result(UniValue::VARR);

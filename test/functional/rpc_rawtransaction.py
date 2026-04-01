@@ -30,6 +30,8 @@ from test_framework.script import (
     OP_FALSE,
     OP_INVALIDOPCODE,
     OP_RETURN,
+    SEQUENCE_LOCKTIME_GRANULARITY,
+    SEQUENCE_LOCKTIME_TYPE_FLAG,
 )
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import (
@@ -443,6 +445,96 @@ class RawTransactionsTest(BitcoinTestFramework):
             assert_equal(testres['allowed'], False)
             assert_equal(testres['reject-reason'], 'txn-already-known')
             assert_raises_rpc_error(-27, 'Transaction outputs already in utxo set', node.sendrawtransaction, tx['hex'])
+
+        self.log.info("Test testmempoolaccept with height/time overrides")
+        node = self.nodes[2]
+        tip_height = node.getblockchaininfo()['blocks']
+        tip_mtp = node.getblockheader(node.getbestblockhash())['mediantime']
+
+        # Height-based absolute locktime (nLockTime < 500000000).
+        lock_height = tip_height + 5
+        height_locked = self.wallet.create_self_transfer_multi(locktime=lock_height, sequence=0)
+        testres = node.testmempoolaccept(rawtxs=[height_locked['hex']], maxfeerate=0)[0]
+        assert_equal(testres['allowed'], False)
+        assert_equal(testres['reject-reason'], 'non-final')
+        # IsFinalTx requires nLockTime < block_height, so use lock_height + 1.
+        testres = node.testmempoolaccept(rawtxs=[height_locked['hex']], maxfeerate=0, height=lock_height + 1)[0]
+        assert_equal(testres['allowed'], True)
+        # A time override alone must not satisfy a height lock.
+        testres = node.testmempoolaccept(rawtxs=[height_locked['hex']], maxfeerate=0, time=tip_mtp + 7200)[0]
+        assert_equal(testres['allowed'], False)
+        assert_equal(testres['reject-reason'], 'non-final')
+
+        # Time-based absolute locktime (nLockTime >= 500000000) uses MTP.
+        lock_time = tip_mtp + 3600
+        time_locked = self.wallet.create_self_transfer_multi(locktime=lock_time, sequence=0)
+        testres = node.testmempoolaccept(rawtxs=[time_locked['hex']], maxfeerate=0)[0]
+        assert_equal(testres['allowed'], False)
+        assert_equal(testres['reject-reason'], 'non-final')
+        # IsFinalTx requires nLockTime < block_mtp.
+        testres = node.testmempoolaccept(rawtxs=[time_locked['hex']], maxfeerate=0, time=lock_time + 1)[0]
+        assert_equal(testres['allowed'], True)
+        # A height override alone must not satisfy a time lock.
+        testres = node.testmempoolaccept(rawtxs=[time_locked['hex']], maxfeerate=0, height=lock_height + 10)[0]
+        assert_equal(testres['allowed'], False)
+        assert_equal(testres['reject-reason'], 'non-final')
+
+        assert_raises_rpc_error(-8, "height out of range", node.testmempoolaccept, rawtxs=[height_locked['hex']], maxfeerate=0, height=-1)
+        assert_raises_rpc_error(-8, "height out of range", node.testmempoolaccept, rawtxs=[height_locked['hex']], maxfeerate=0, height=2**31)
+        assert_raises_rpc_error(-8, "time out of range", node.testmempoolaccept, rawtxs=[time_locked['hex']], maxfeerate=0, time=-1)
+
+        self.log.info("Test testmempoolaccept with BIP68 relative lock overrides")
+        # Create a fresh confirmed UTXO at a known height.
+        parent = self.wallet.send_self_transfer(from_node=node)
+        self.generate(node, 1)
+        self.sync_all()
+        self.wallet.rescan_utxos()
+        parent_utxo = self.wallet.get_utxo(txid=parent["txid"], vout=parent["new_utxo"]["vout"], confirmed_only=True)
+
+        # Height-based relative lock (BIP68, nSequence without TYPE_FLAG).
+        rel_blocks = 5
+        height_rel_locked = self.wallet.create_self_transfer_multi(utxos_to_spend=[parent_utxo], sequence=rel_blocks)
+        testres = node.testmempoolaccept(rawtxs=[height_rel_locked["hex"]], maxfeerate=0)[0]
+        assert_equal(testres["allowed"], False)
+        assert_equal(testres["reject-reason"], "non-BIP68-final")
+        # For a coin confirmed in block H, the tx becomes valid in block height H + rel_blocks.
+        testres = node.testmempoolaccept(rawtxs=[height_rel_locked["hex"]], maxfeerate=0, height=parent_utxo["height"] + rel_blocks)[0]
+        assert_equal(testres["allowed"], True)
+
+        # Time-based relative lock (BIP68, nSequence with TYPE_FLAG; units of 512 seconds).
+        parent = self.wallet.send_self_transfer(from_node=node)
+        self.generate(node, 1)
+        self.sync_all()
+        self.wallet.rescan_utxos()
+        parent_utxo = self.wallet.get_utxo(txid=parent["txid"], vout=parent["new_utxo"]["vout"], confirmed_only=True)
+
+        rel_units = 20
+        time_seq = SEQUENCE_LOCKTIME_TYPE_FLAG | rel_units
+        time_rel_locked = self.wallet.create_self_transfer_multi(utxos_to_spend=[parent_utxo], sequence=time_seq)
+        testres = node.testmempoolaccept(rawtxs=[time_rel_locked["hex"]], maxfeerate=0)[0]
+        assert_equal(testres["allowed"], False)
+        assert_equal(testres["reject-reason"], "non-BIP68-final")
+        coin_time = node.getblockheader(node.getblockhash(max(parent_utxo["height"] - 1, 0)))["mediantime"]
+        required_mtp = coin_time + (rel_units << SEQUENCE_LOCKTIME_GRANULARITY)
+        testres = node.testmempoolaccept(rawtxs=[time_rel_locked["hex"]], maxfeerate=0, time=required_mtp)[0]
+        assert_equal(testres["allowed"], True)
+
+        self.log.info("Test testmempoolaccept height override for packages")
+        tip_height = node.getblockchaininfo()["blocks"]
+        package_lock_height = tip_height + 5
+        pkg_parent = self.wallet.create_self_transfer_multi(confirmed_only=True)
+        pkg_child = self.wallet.create_self_transfer_multi(
+            utxos_to_spend=[pkg_parent["new_utxos"][0]],
+            locktime=package_lock_height,
+            sequence=0,
+        )
+        # Without override, the package should fail due to child being non-final.
+        package_res = node.testmempoolaccept(rawtxs=[pkg_parent["hex"], pkg_child["hex"]], maxfeerate=0)
+        assert_equal(any(r.get("reject-reason") == "non-final" for r in package_res), True)
+        # With override, both transactions should be accepted.
+        package_res = node.testmempoolaccept(rawtxs=[pkg_parent["hex"], pkg_child["hex"]], maxfeerate=0, height=package_lock_height + 1)
+        assert_equal(package_res[0]["allowed"], True)
+        assert_equal(package_res[1]["allowed"], True)
 
     def decoderawtransaction_tests(self):
         self.log.info("Test decoderawtransaction")

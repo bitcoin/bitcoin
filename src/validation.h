@@ -258,6 +258,23 @@ struct PackageMempoolAcceptResult
 };
 
 /**
+ * Optional evaluation context for mempool acceptance checks.
+ *
+ * When set, the transaction is evaluated as if it were to be mined in a block
+ * with the given height and/or median-time-past (MTP). Unset fields default to
+ * the values implied by the current active chain tip.
+ */
+struct MempoolAcceptContext {
+    std::optional<int> height;
+    std::optional<int64_t> mtp;
+
+    [[nodiscard]] bool HasOverrides() const
+    {
+        return height.has_value() || mtp.has_value();
+    }
+};
+
+/**
  * Try to add a transaction to the mempool. This is an internal function and is exposed only for testing.
  * Client code should use ChainstateManager::ProcessTransaction()
  *
@@ -268,11 +285,13 @@ struct PackageMempoolAcceptResult
  * @param[in]  bypass_limits      When true, don't enforce mempool fee and capacity limits,
  *                                and set entry_sequence to zero.
  * @param[in]  test_accept        When true, run validation checks but don't submit to mempool.
+ * @param[in]  eval_context       Optional override height and/or MTP for test evaluation.
  *
  * @returns a MempoolAcceptResult indicating whether the transaction was accepted/rejected with reason.
  */
 MempoolAcceptResult AcceptToMemoryPool(Chainstate& active_chainstate, const CTransactionRef& tx,
-                                       int64_t accept_time, bool bypass_limits, bool test_accept)
+                                       int64_t accept_time, bool bypass_limits, bool test_accept,
+                                       const MempoolAcceptContext& eval_context = {})
     EXCLUSIVE_LOCKS_REQUIRED(cs_main);
 
 /**
@@ -286,15 +305,19 @@ MempoolAcceptResult AcceptToMemoryPool(Chainstate& active_chainstate, const CTra
 * possible for the package to be partially submitted.
 */
 PackageMempoolAcceptResult ProcessNewPackage(Chainstate& active_chainstate, CTxMemPool& pool,
-                                                   const Package& txns, bool test_accept, const std::optional<CFeeRate>& client_maxfeerate)
+                                                   const Package& txns, bool test_accept, const std::optional<CFeeRate>& client_maxfeerate,
+                                                   const MempoolAcceptContext& eval_context = {})
                                                    EXCLUSIVE_LOCKS_REQUIRED(cs_main);
 
 /* Mempool validation helper functions */
 
 /**
- * Check if transaction will be final in the next block to be created.
+ * Check if transaction will be final in the next block to be created, or in a
+ * caller-provided evaluation context.
  */
-bool CheckFinalTxAtTip(const CBlockIndex& active_chain_tip, const CTransaction& tx) EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
+bool CheckFinalTxAtTip(const CBlockIndex& active_chain_tip, const CTransaction& tx,
+                       const MempoolAcceptContext& eval_context = {})
+                       EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
 
 /**
  * Calculate LockPoints required to check if transaction will be BIP68 final in the next block
@@ -320,7 +343,8 @@ std::optional<LockPoints> CalculateLockPointsAtTip(
     const CTransaction& tx);
 
 /**
- * Check if transaction will be BIP68 final in the next block to be created on top of tip.
+ * Check if transaction will be BIP68 final in the next block to be created on
+ * top of tip, or in a caller-provided evaluation context.
  * @param[in]   tip             Chain tip to check tx sequence locks against. For example,
  *                              the tip of the current active chain.
  * @param[in]   lock_points     LockPoints containing the height and time at which this
@@ -329,7 +353,8 @@ std::optional<LockPoints> CalculateLockPointsAtTip(
  * The LockPoints should not be considered valid if CheckSequenceLocksAtTip returns false.
  */
 bool CheckSequenceLocksAtTip(CBlockIndex* tip,
-                             const LockPoints& lock_points);
+                             const LockPoints& lock_points,
+                             const MempoolAcceptContext& eval_context = {});
 
 /**
  * Closure representing one script verification
@@ -1296,8 +1321,10 @@ public:
      *
      * @param[in]  tx              The transaction to submit for mempool acceptance.
      * @param[in]  test_accept     When true, run validation checks but don't submit to mempool.
+     * @param[in]  eval_context    Optional override height and/or MTP for test evaluation.
      */
-    [[nodiscard]] MempoolAcceptResult ProcessTransaction(const CTransactionRef& tx, bool test_accept=false)
+    [[nodiscard]] MempoolAcceptResult ProcessTransaction(const CTransactionRef& tx, bool test_accept=false,
+                                                         const MempoolAcceptContext& eval_context = {})
         EXCLUSIVE_LOCKS_REQUIRED(cs_main);
 
     //! Load the block tree and coins database from disk, initializing state if we're running with -reindex

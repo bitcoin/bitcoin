@@ -167,6 +167,8 @@ static const CRPCConvertParam vRPCConvertParams[] =
     { "sendrawtransaction", 2, "maxburnamount" },
     { "testmempoolaccept", 0, "rawtxs" },
     { "testmempoolaccept", 1, "maxfeerate" },
+    { "testmempoolaccept", 2, "height" },
+    { "testmempoolaccept", 3, "time" },
     { "submitpackage", 0, "package" },
     { "submitpackage", 1, "maxfeerate" },
     { "submitpackage", 2, "maxburnamount" },
