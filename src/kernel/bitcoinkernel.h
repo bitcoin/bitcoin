@@ -226,6 +226,11 @@ typedef struct btck_Block btck_Block;
 typedef struct btck_BlockValidationState btck_BlockValidationState;
 
 /**
+ * Opaque data structure for holding the Consensus Params.
+ */
+typedef struct btck_ConsensusParams btck_ConsensusParams;
+
+/**
  * Opaque data structure for holding the currently known best-chain associated
  * with a chainstate.
  */
@@ -865,6 +870,17 @@ BITCOINKERNEL_API btck_ChainParameters* BITCOINKERNEL_WARN_UNUSED_RESULT btck_ch
     const btck_ChainParameters* chain_parameters) BITCOINKERNEL_ARG_NONNULL(1);
 
 /**
+ * @brief Get btck_ConsensusParams from btck_ChainParameters. The returned
+ * btck_ConsensusParams pointer is valid only for the lifetime of the
+ * btck_ChainParameters object and must not be destroyed by the caller.
+ *
+ * @param[in] chain_parameters  Non-null.
+ * @return                      The btck_ConsensusParams.
+ */
+BITCOINKERNEL_API const btck_ConsensusParams* BITCOINKERNEL_WARN_UNUSED_RESULT btck_chain_parameters_get_consensus_params(
+    const btck_ChainParameters* chain_parameters) BITCOINKERNEL_ARG_NONNULL(1);
+
+/**
  * Destroy the chain parameters.
  */
 BITCOINKERNEL_API void btck_chain_parameters_destroy(btck_ChainParameters* chain_parameters);
@@ -1246,6 +1262,40 @@ BITCOINKERNEL_API btck_Block* BITCOINKERNEL_WARN_UNUSED_RESULT btck_block_create
  */
 BITCOINKERNEL_API btck_Block* BITCOINKERNEL_WARN_UNUSED_RESULT btck_block_copy(
     const btck_Block* block) BITCOINKERNEL_ARG_NONNULL(1);
+
+/** Bitflags to control context-free block checks (optional). */
+typedef uint32_t btck_BlockCheckFlags;
+#define btck_BlockCheckFlags_BASE   ((btck_BlockCheckFlags)0)                                                        //!< run the base context-free block checks only
+#define btck_BlockCheckFlags_POW    ((btck_BlockCheckFlags)(1U << 0))                                                //!< run CheckProofOfWork via CheckBlockHeader
+#define btck_BlockCheckFlags_MERKLE ((btck_BlockCheckFlags)(1U << 1))                                                //!< verify merkle root (and mutation detection)
+#define btck_BlockCheckFlags_ALL    ((btck_BlockCheckFlags)(btck_BlockCheckFlags_POW | btck_BlockCheckFlags_MERKLE)) //!< enable all optional context-free block checks
+
+/**
+ * @brief Perform context-free validation checks on a btck_Block.
+ *
+ * Runs the base context-free block checks (size limits, coinbase structure,
+ * transaction checks, and sigop limits) using the supplied
+ * btck_ConsensusParams. The proof-of-work and merkle-root checks are optional
+ * and can be toggled via @p flags. Note that this does not include any
+ * transaction script, timestamps, order, or other checks that may require more
+ * context.
+ *
+ * @param[in]     block             Non-null, btck_Block to validate.
+ * @param[in]     consensus_params  Non-null, btck_ConsensusParams for validation.
+ * @param[in]     flags             Bitmask of btck_BlockCheckFlags controlling the
+ *                                  optional POW and merkle-root checks. Use
+ *                                  btck_BlockCheckFlags_BASE to run only the base
+ *                                  checks.
+ * @param[in,out] validation_state  Non-null, previously created with
+ *                                  btck_block_validation_state_create and updated
+ *                                  in-place with the validation result.
+ * @return                          1 if the btck_Block passed the checks, 0 otherwise.
+ */
+BITCOINKERNEL_API int BITCOINKERNEL_WARN_UNUSED_RESULT btck_block_check(
+    const btck_Block* block,
+    const btck_ConsensusParams* consensus_params,
+    btck_BlockCheckFlags flags,
+    btck_BlockValidationState* validation_state) BITCOINKERNEL_ARG_NONNULL(1, 2, 4);
 
 /**
  * @brief Count the number of transactions contained in a block.
