@@ -3,18 +3,22 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <node/caches.h>
-
 #include <common/args.h>
-#include <common/system.h>
+#include <common/system_ram.h>
 #include <index/txindex.h>
 #include <index/txospenderindex.h>
 #include <kernel/caches.h>
-#include <logging.h>
+#include <node/dbcache.h>
 #include <node/interface_ui.h>
 #include <tinyformat.h>
 #include <util/byte_units.h>
+#include <util/log.h>
+#include <util/overflow.h>
+#include <util/translation.h>
 
 #include <algorithm>
+#include <cstdint>
+#include <optional>
 #include <string>
 
 // Unlike for the UTXO database, for the txindex scenario the leveldb cache make
@@ -25,31 +29,14 @@ static constexpr size_t MAX_TX_INDEX_CACHE{1024_MiB};
 static constexpr size_t MAX_FILTER_INDEX_CACHE{1024_MiB};
 //! Max memory allocated to tx spenderindex DB specific cache in bytes.
 static constexpr size_t MAX_TXOSPENDER_INDEX_CACHE{1024_MiB};
-//! Maximum dbcache size on 32-bit systems.
-static constexpr size_t MAX_32BIT_DBCACHE{1024_MiB};
-//! Larger default dbcache on 64-bit systems with enough RAM.
-static constexpr size_t HIGH_DEFAULT_DBCACHE{1024_MiB};
-//! Minimum detected RAM required for HIGH_DEFAULT_DBCACHE.
-static constexpr uint64_t HIGH_DEFAULT_DBCACHE_MIN_TOTAL_RAM{4096ULL << 20};
 
 namespace node {
-size_t GetDefaultDBCache()
-{
-    if constexpr (sizeof(void*) >= 8) {
-        if (GetTotalRAM().value_or(0) >= HIGH_DEFAULT_DBCACHE_MIN_TOTAL_RAM) {
-            return HIGH_DEFAULT_DBCACHE;
-        }
-    }
-    return DEFAULT_DB_CACHE;
-}
-
 size_t CalculateDbCacheBytes(const ArgsManager& args)
 {
     if (auto db_cache{args.GetIntArg("-dbcache")}) {
         if (*db_cache < 0) db_cache = 0;
         const uint64_t db_cache_bytes{SaturatingLeftShift<uint64_t>(*db_cache, 20)};
-        constexpr auto max_db_cache{sizeof(void*) == 4 ? MAX_32BIT_DBCACHE : std::numeric_limits<size_t>::max()};
-        return std::max<size_t>(MIN_DB_CACHE, std::min<uint64_t>(db_cache_bytes, max_db_cache));
+        return std::max<size_t>(MIN_DB_CACHE, std::min<uint64_t>(db_cache_bytes, MAX_DBCACHE_BYTES));
     }
     return GetDefaultDBCache();
 }
@@ -73,12 +60,20 @@ CacheSizes CalculateCacheSizes(const ArgsManager& args, size_t n_indexes)
 
 void LogOversizedDbCache(const ArgsManager& args) noexcept
 {
-    if (const auto total_ram{GetTotalRAM()}) {
+    if (const auto total_ram{TryGetTotalRam()}) {
         const size_t db_cache{CalculateDbCacheBytes(args)};
         if (ShouldWarnOversizedDbCache(db_cache, *total_ram)) {
-            InitWarning(bilingual_str{tfm::format(_("A %zu MiB dbcache may be too large for a system memory of only %zu MiB."),
+            InitWarning(bilingual_str{tfm::format(_("A %s MiB dbcache may be too large for a system with only %s MiB of memory."),
                         db_cache >> 20, *total_ram >> 20)});
         }
     }
+}
+
+void LogAutoDbCacheSettings() noexcept
+{
+    LogInfo("Automatically selected -dbcache=%s MiB based on %s system memory of %s MiB.",
+            GetDefaultDBCache(GetTotalRam()) >> 20,
+            TryGetTotalRam() ? "detected" : "assumed",
+            GetTotalRam() >> 20);
 }
 } // namespace node
