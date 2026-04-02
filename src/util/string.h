@@ -5,6 +5,7 @@
 #ifndef BITCOIN_UTIL_STRING_H
 #define BITCOIN_UTIL_STRING_H
 
+#include <attributes.h>
 #include <span.h>
 
 #include <array>
@@ -294,7 +295,23 @@ struct LineReader {
      * Returns remaining size of bytes in buffer
      */
     size_t Remaining() const;
+
+    /**
+     * Returns number of bytes already read from buffer
+     */
+    size_t Consumed() const;
 };
+
+/**
+ * Returns a span view of the string.
+ *
+ * @param[in] str    the string_view to interpret as bytes
+ * @returns          span of std::byte
+ */
+inline std::span<const std::byte> StringToBytes(std::string_view str LIFETIMEBOUND)
+{
+    return std::as_bytes(std::span{str});
+}
 } // namespace util
 
 #endif // BITCOIN_UTIL_STRING_H
