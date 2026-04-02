@@ -5,6 +5,7 @@
 #include <script/parsing.h>
 #include <test/fuzz/FuzzedDataProvider.h>
 #include <test/fuzz/fuzz.h>
+#include <util/byte_units.h>
 #include <util/string.h>
 
 using util::Split;
@@ -13,7 +14,7 @@ FUZZ_TARGET(script_parsing)
 {
     FuzzedDataProvider fuzzed_data_provider(buffer.data(), buffer.size());
     const size_t query_size = fuzzed_data_provider.ConsumeIntegral<size_t>();
-    const std::string query = fuzzed_data_provider.ConsumeBytesAsString(std::min<size_t>(query_size, 1024 * 1024));
+    const std::string query = fuzzed_data_provider.ConsumeBytesAsString(std::min<size_t>(query_size, 1_MiB));
     const std::string span_str = fuzzed_data_provider.ConsumeRemainingBytesAsString();
     const std::span<const char> const_span{span_str};
 

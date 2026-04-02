@@ -45,6 +45,7 @@ class BlockValidationState;
 class CBlockUndo;
 class Chainstate;
 class ChainstateManager;
+
 namespace Consensus {
 struct Params;
 }
@@ -116,11 +117,11 @@ using kernel::CBlockFileInfo;
 using kernel::BlockTreeDB;
 
 /** The pre-allocation chunk size for blk?????.dat files (since 0.8) */
-static const unsigned int BLOCKFILE_CHUNK_SIZE = 0x1000000; // 16 MiB
+static const unsigned int BLOCKFILE_CHUNK_SIZE = 16_MiB;
 /** The pre-allocation chunk size for rev?????.dat files (since 0.8) */
-static const unsigned int UNDOFILE_CHUNK_SIZE = 0x100000; // 1 MiB
+static const unsigned int UNDOFILE_CHUNK_SIZE = 1_MiB;
 /** The maximum size of a blk?????.dat file (since 0.8) */
-static const unsigned int MAX_BLOCKFILE_SIZE = 0x8000000; // 128 MiB
+static const unsigned int MAX_BLOCKFILE_SIZE = 128_MiB;
 
 /** Size of header written by WriteBlock before a serialized CBlock (8 bytes) */
 static constexpr uint32_t STORAGE_HEADER_BYTES{std::tuple_size_v<MessageStartChars> + sizeof(unsigned int)};

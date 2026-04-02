@@ -394,8 +394,8 @@ void BlockManager::FindFilesToPrune(
     }
 
     LogDebug(BCLog::PRUNE, "[%s] target=%dMiB actual=%dMiB diff=%dMiB min_height=%d max_prune_height=%d removed %d blk/rev pairs\n",
-             chain.GetRole(), target / 1024 / 1024, nCurrentUsage / 1024 / 1024,
-             (int64_t(target) - int64_t(nCurrentUsage)) / 1024 / 1024,
+             chain.GetRole(), target / 1_MiB, nCurrentUsage / 1_MiB,
+             (int64_t(target) - int64_t(nCurrentUsage)) / int64_t(1_MiB),
              min_block_to_prune, last_block_can_prune, count);
 }
 
