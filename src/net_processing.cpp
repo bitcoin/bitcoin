@@ -2539,8 +2539,9 @@ CTransactionRef PeerManagerImpl::FindTxForGetData(const Peer::TxRelay& tx_relay,
             return m_mempool.info_for_relay(id, WITH_LOCK(tx_relay.m_tx_inventory_mutex, return tx_relay.m_last_inv_sequence));
         },
         gtxid)};
-    if (txinfo.tx) {
-        return std::move(txinfo.tx);
+    if (txinfo) {
+        Assume(txinfo->tx);
+        return std::move(txinfo->tx);
     }
 
     // Or it might be from the most recent block
@@ -6174,24 +6175,25 @@ bool PeerManagerImpl::SendMessages(CNode& node)
                         tx_relay->m_tx_inventory_to_send.erase(it);
                         // Not in the mempool anymore? don't bother sending it.
                         auto txinfo = m_mempool.info(wtxid);
-                        if (!txinfo.tx) {
+                        if (!txinfo) {
                             continue;
                         }
+                        Assume(txinfo->tx);
                         // `TxRelay::m_tx_inventory_known_filter` contains either txids or wtxids
                         // depending on whether our peer supports wtxid-relay. Therefore, first
                         // construct the inv and then use its hash for the filter check.
                         const auto inv = peer.m_wtxid_relay ?
                                              CInv{MSG_WTX, wtxid.ToUint256()} :
-                                             CInv{MSG_TX, txinfo.tx->GetHash().ToUint256()};
+                                             CInv{MSG_TX, txinfo->tx->GetHash().ToUint256()};
                         // Check if not in the filter already
                         if (tx_relay->m_tx_inventory_known_filter.contains(inv.hash)) {
                             continue;
                         }
                         // Peer told you to not send transactions at that feerate? Don't bother sending it.
-                        if (txinfo.fee < filterrate.GetFee(txinfo.vsize)) {
+                        if (txinfo->fee < filterrate.GetFee(txinfo->vsize)) {
                             continue;
                         }
-                        if (tx_relay->m_bloom_filter && !tx_relay->m_bloom_filter->IsRelevantAndUpdate(*txinfo.tx)) continue;
+                        if (tx_relay->m_bloom_filter && !tx_relay->m_bloom_filter->IsRelevantAndUpdate(*txinfo->tx)) continue;
                         // Send
                         vInv.push_back(inv);
                         nRelayedTransactions++;
