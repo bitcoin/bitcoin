@@ -4,20 +4,18 @@
 
 #include <util/asmap.h>
 
-#include <clientversion.h>
 #include <hash.h>
-#include <serialize.h>
 #include <streams.h>
 #include <uint256.h>
+#include <util/check.h>
 #include <util/fs.h>
 #include <util/log.h>
 
-#include <algorithm>
 #include <bit>
-#include <cassert>
 #include <cstddef>
 #include <cstdio>
 #include <span>
+#include <string>
 #include <utility>
 #include <vector>
 

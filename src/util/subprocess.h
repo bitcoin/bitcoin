@@ -36,10 +36,10 @@ Documentation for C++ subprocessing library.
 #ifndef BITCOIN_UTIL_SUBPROCESS_H
 #define BITCOIN_UTIL_SUBPROCESS_H
 
+#include <util/check.h>
 #include <util/syserror.h>
 
 #include <algorithm>
-#include <cassert>
 #include <csignal>
 #include <cstdio>
 #include <cstdlib>

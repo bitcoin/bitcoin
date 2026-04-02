@@ -8,6 +8,7 @@
 
 #include <crypto/siphash.h>
 #include <logging/categories.h> // IWYU pragma: export
+#include <span.h>
 #include <util/fs.h>
 #include <util/log.h> // IWYU pragma: export
 #include <util/stdmutex.h>

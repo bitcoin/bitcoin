@@ -13,6 +13,7 @@
 #include <iosfwd>
 #include <limits>
 #include <optional>
+#include <string>
 
 #ifdef __APPLE__
 enum class FSType {

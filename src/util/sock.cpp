@@ -4,18 +4,23 @@
 
 #include <util/sock.h>
 
-#include <common/system.h>
 #include <compat/compat.h>
 #include <span.h>
 #include <tinyformat.h>
+#include <util/check.h>
 #include <util/log.h>
 #include <util/syserror.h>
 #include <util/threadinterrupt.h>
 #include <util/time.h>
 
+#include <algorithm>
+#include <compare>
+#include <exception>
 #include <memory>
 #include <stdexcept>
 #include <string>
+#include <utility>
+#include <vector>
 
 #ifdef USE_POLL
 #include <poll.h>

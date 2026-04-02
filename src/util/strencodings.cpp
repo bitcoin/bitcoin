@@ -7,14 +7,13 @@
 
 #include <crypto/hex_base.h>
 #include <span.h>
+#include <util/check.h>
 #include <util/overflow.h>
 
-#include <array>
-#include <cassert>
-#include <cstring>
+#include <compare>
 #include <limits>
 #include <optional>
-#include <ostream>
+#include <sstream>
 #include <string>
 #include <vector>
 

@@ -1,15 +1,18 @@
 // Copyright (c) 2021-present The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
-#include <util/tokenpipe.h>
 
 #include <bitcoin-build-config.h> // IWYU pragma: keep
+
+#include <util/tokenpipe.h>
 
 #ifndef WIN32
 
 #include <cerrno>
-#include <fcntl.h>
 #include <optional>
+
+#include <fcntl.h>
+#include <sys/types.h>
 #include <unistd.h>
 
 TokenPipeEnd TokenPipe::TakeReadEnd()

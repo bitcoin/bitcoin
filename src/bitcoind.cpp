@@ -9,6 +9,7 @@
 #include <clientversion.h>
 #include <common/args.h>
 #include <common/init.h>
+#include <common/license_info.h>
 #include <common/system.h>
 #include <compat/compat.h>
 #include <init.h>

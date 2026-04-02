@@ -4,7 +4,8 @@
 
 #include <util/chaintype.h>
 
-#include <cassert>
+#include <util/check.h>
+
 #include <optional>
 #include <string>
 
