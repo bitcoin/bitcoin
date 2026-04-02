@@ -18,11 +18,11 @@ from typing import List, Any
 
 def send_batch_request(node: TestNode, method: str, params: List[Any]) -> List[Any]:
     """Send batch request and parse all results"""
-    data = [{"method": method, "params": p} for p in params]
+    data = [getattr(node, method).get_request(*p) for p in params]
     response = node.batch(data)
     result = []
     for item in response:
-        assert item["error"] is None, item["error"]
+        assert "error" not in item, item["error"]
         result.append(item["result"])
 
     return result
