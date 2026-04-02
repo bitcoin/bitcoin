@@ -3748,7 +3748,7 @@ void PeerManagerImpl::ProcessMessage(Peer& peer, CNode& pfrom, const std::string
 
         // Attempt to initialize address relay for outbound peers and use result
         // to decide whether to send GETADDR, so that we don't send it to
-        // inbound or outbound block-relay-only peers.
+        // inbound, feelers, or outbound block-relay-only peers.
         bool send_getaddr{false};
         if (!pfrom.IsInboundConn()) {
             send_getaddr = SetupAddressRelay(pfrom, peer);
@@ -5611,6 +5611,12 @@ bool PeerManagerImpl::SetupAddressRelay(const CNode& node, Peer& peer)
     // connections to prevent providing adversaries with the additional
     // information of addr traffic to infer the link.
     if (node.IsBlockOnlyConn()) return false;
+
+    // We don't participate in addr relay with feeler connections because
+    // they are short-lived connections made for test-before-evict or to
+    // promote addresses from addrman's new table to the tried table, and
+    // are disconnected shortly after the handshake completes.
+    if (node.IsFeelerConn()) return false;
 
     if (!peer.m_addr_relay_enabled.exchange(true)) {
         // During version message processing (non-block-relay-only outbound peers)
