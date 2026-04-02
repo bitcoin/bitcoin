@@ -2741,8 +2741,9 @@ CTransactionRef PeerManagerImpl::FindTxForGetData(const Peer::TxRelay& tx_relay,
             return m_mempool.info_for_relay(id, WITH_LOCK(tx_relay.m_tx_inventory_mutex, return tx_relay.m_last_inv_sequence));
         },
         gtxid)};
-    if (txinfo.tx) {
-        return std::move(txinfo.tx);
+    if (txinfo) {
+        Assume(txinfo->tx);
+        return std::move(txinfo->tx);
     }
 
     // Or it might be from the most recent block

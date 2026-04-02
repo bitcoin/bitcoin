@@ -338,8 +338,9 @@ static RPCMethod getrawtransaction()
     // Add sigop-adjusted virtual size if the transaction exists in the mempool.
     if (blockindex == nullptr && hash_block.IsNull() && node.mempool) {
         auto info = node.mempool->info(tx->GetHash());
-        if (info.tx) {
-            result.pushKV("vsize_adjusted", info.vsize);
+        if (info) {
+            CHECK_NONFATAL(info->tx);
+            result.pushKV("vsize_adjusted", info->vsize);
         }
     }
 
