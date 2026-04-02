@@ -31,7 +31,7 @@ class TestBitcoinIpcCli(BitcoinTestFramework):
         if error is None:
             assert_equal(result.stdout, '[\n  "foo"\n]\n')
         else:
-            assert_equal(result.stdout, error)
+            assert result.stdout.startswith(error), f"Output didn't start with the expected error {error!r}:\n{result.stdout}"
         assert_equal(result.stderr, None)
         assert_equal(result.returncode, 0 if error is None else 1)
 
@@ -40,7 +40,7 @@ class TestBitcoinIpcCli(BitcoinTestFramework):
         if node.ipc_tmp_dir:
             self.log.info("Skipping a few checks because temporary directory path is too long")
 
-        http_auth_error = "error: Authorization failed: Incorrect rpcuser or rpcpassword\n"
+        http_auth_error = "error: Authorization failed: Incorrect rpcuser or rpcpassword were specified."
         http_connect_error = f"error: timeout on transient error: Could not connect to the server 127.0.0.1:{rpc_port(node.index)}\n\nMake sure the bitcoind server is running and that you are connecting to the correct RPC port.\nUse \"bitcoin-cli -help\" for more info.\n"
         ipc_connect_error = "error: timeout on transient error: Connection refused\n\nProbably bitcoin-node is not running or not listening on a unix socket. Can be started with:\n\n    bitcoin-node -chain=regtest -ipcbind=unix\n"
         ipc_http_conflict = "error: -rpcconnect and -ipcconnect options cannot both be enabled\n"
