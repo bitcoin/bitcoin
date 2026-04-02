@@ -936,9 +936,9 @@ void DescriptorScriptPubKeyMan::ReturnDestination(int64_t index, bool internal, 
     // Only return when the index was the most recent
     if (m_wallet_descriptor.next_index - 1 == index) {
         m_wallet_descriptor.next_index--;
+        NotifyCanGetAddressesChanged();
     }
     WalletBatch(m_storage.GetDatabase()).WriteDescriptor(GetID(), m_wallet_descriptor);
-    NotifyCanGetAddressesChanged();
 }
 
 std::map<CKeyID, CKey> DescriptorScriptPubKeyMan::GetKeys() const
@@ -1054,13 +1054,13 @@ bool DescriptorScriptPubKeyMan::TopUpWithDB(WalletBatch& batch, unsigned int siz
         m_max_cached_index++;
     }
     m_wallet_descriptor.range_end = new_range_end;
+    NotifyCanGetAddressesChanged();
     batch.WriteDescriptor(GetID(), m_wallet_descriptor);
 
     // By this point, the cache size should be the size of the entire range
     assert(m_wallet_descriptor.range_end - 1 == m_max_cached_index);
 
     m_storage.TopUpCallback(new_spks, this);
-    NotifyCanGetAddressesChanged();
     return true;
 }
 
@@ -1082,6 +1082,7 @@ std::vector<WalletDestination> DescriptorScriptPubKeyMan::MarkUnusedAddresses(co
                 ExtractDestination(scripts_temp[0], dest);
                 result.push_back({dest, std::nullopt});
                 m_wallet_descriptor.next_index++;
+                NotifyCanGetAddressesChanged();
             }
         }
         if (!TopUp()) {
