@@ -95,7 +95,80 @@ private:
         }
     }
 };
+
+enum FilterRes {
+    FILTER_NO_MATCH,
+    FILTER_MATCH,
+    FILTER_NO_FILTER,
+};
 } // namespace
+
+class FilterExecutor {
+public:
+    FastWalletRescanFilter& m_filter;
+    ChainScanner& m_scanner;
+    ScanResult& m_result;
+    int m_last_submitted_height = -1;
+
+    virtual ~FilterExecutor() = default;
+    virtual void Submit() = 0;
+    virtual std::optional<FilterRes> TryPop() = 0;
+    virtual bool ReadNextBlock() = 0;
+    virtual size_t Pending() const = 0;
+
+protected:
+    explicit FilterExecutor(ChainScanner& scanner, FastWalletRescanFilter& filter, ScanResult& result)
+        : m_filter(filter), m_scanner(scanner), m_result(result) {
+            if (result.last_scanned_height)
+                m_last_submitted_height = *result.last_scanned_height;
+        }
+public:
+    bool CanSubmit() {
+        auto& blocks = m_scanner.m_blocks;
+        return !blocks.empty() && blocks.back().second > m_last_submitted_height;
+    }
+};
+
+class InlineFilterExecutor : public FilterExecutor {
+    std::deque<FilterRes> m_results;
+
+public:
+    explicit InlineFilterExecutor(ChainScanner& scanner, FastWalletRescanFilter& filter, ScanResult& result)
+        : FilterExecutor(scanner, filter, result) {}
+
+    void Submit() override {
+        size_t i = 0;
+        while (i < m_scanner.m_blocks.size() && m_scanner.m_blocks[i].second <= m_last_submitted_height) {
+            i++;
+        }
+        if (i >= m_scanner.m_blocks.size()) return;
+
+        auto& [hash, height] = m_scanner.m_blocks[i];
+        auto matches = m_filter.MatchesBlock(hash);
+        if (!matches.has_value())  m_results.push_back(FILTER_NO_FILTER);
+        else if (*matches)         m_results.push_back(FILTER_MATCH);
+        else                       m_results.push_back(FILTER_NO_MATCH);
+
+        m_last_submitted_height = height;
+    }
+
+    std::optional<FilterRes> TryPop() override {
+        if (m_results.empty()) return std::nullopt;
+        auto front = m_results.front();
+        m_results.pop_front();
+        return front;
+    }
+
+    bool ReadNextBlock() override {
+        if (!m_scanner.m_next_block) return false;
+        auto block = m_scanner.ReadNextBlock(m_result);
+        if (!block) return false;
+        m_scanner.m_blocks.emplace_back(*block);
+        return true;
+    }
+
+    size_t Pending() const override { return m_results.size(); }
+};
 
 std::optional<std::pair<uint256, int>> ChainScanner::ReadNextBlock(ScanResult& result) {
     if (!m_next_block) return std::nullopt;
@@ -131,35 +204,43 @@ std::optional<std::pair<uint256, int>> ChainScanner::ReadNextBlock(ScanResult& r
 }
 
 size_t ChainScanner::ReadNextBlocks(const std::unique_ptr<FastWalletRescanFilter>& filter, ScanResult& result) {
-    auto next_block = ReadNextBlock(result);
-    if (next_block) m_blocks.emplace_back(*next_block);
-    else return 0;
-
     if (!filter) {
-        // Slow scan: scan all blocks.
+        // Slow scan: no block filter index, inspect all blocks.
+        auto next_block = ReadNextBlock(result);
+        if (!next_block) return 0;
+        m_blocks.emplace_back(*next_block);
         return 1;
     }
 
     filter->UpdateIfNeeded();
+    auto executor = InlineFilterExecutor(*this, *filter, result);
 
-    const auto& [block_hash, block_height] = m_blocks.back();
-    auto matches_block{filter->MatchesBlock(block_hash)};
+    size_t matched_count = 0;
+    while (executor.ReadNextBlock() || executor.CanSubmit() || executor.Pending() > 0) {
+        if (auto filter_res = executor.TryPop()) {
+            const auto& [hash, height] = m_blocks[matched_count];
+            if (*filter_res == FILTER_NO_MATCH) {
+                if (matched_count > 0) {
+                    // Stop scanning just before this block.
+                    break;
+                }
+                // No match, this block will be skipped
+                result.last_scanned_block = hash;
+                result.last_scanned_height = height;
+                m_progress_current = m_wallet.chain().guessVerificationProgress(hash);
+                m_blocks.pop_front();
+            } else {
+                if (*filter_res == FILTER_MATCH)
+                    LogDebug(BCLog::SCAN, "Fast rescan: inspect block %d [%s] (filter matched)\n", height, hash.ToString());
+                else // FILTER_NO_FILTER
+                    LogDebug(BCLog::SCAN, "Fast rescan: inspect block %d [%s] (WARNING: block filter not found!)\n", height, hash.ToString());
 
-    if (matches_block.has_value() && *matches_block) {
-        LogDebug(BCLog::SCAN, "Fast rescan: inspect block %d [%s] (filter matched)\n", block_height, block_hash.ToString());
-        return 1;
-    } else if (!matches_block.has_value()) {
-        LogDebug(BCLog::SCAN, "Fast rescan: inspect block %d [%s] (WARNING: block filter not found!)\n", block_height, block_hash.ToString());
-        return 1;
+                matched_count++;
+            }
+        }
+        executor.Submit();
     }
-
-    // No match, this block will be skipped
-    result.last_scanned_block = block_hash;
-    result.last_scanned_height = block_height;
-    m_blocks.pop_back();
-    m_progress_current = m_wallet.chain().guessVerificationProgress(block_hash);
-
-    return 0;
+    return matched_count;
 }
 
 void ChainScanner::UpdateProgress(int block_height) {

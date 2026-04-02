@@ -40,6 +40,9 @@ private:
     /// Queued block hashes and heights to filter and scan
     std::deque<std::pair<uint256, int>> m_blocks;
 
+    friend class FilterExecutor;
+    friend class InlineFilterExecutor;
+
     std::optional<std::pair<uint256, int>> ReadNextBlock(ScanResult& result);
     /**
      * @return the number of blocks to be scanned in m_blocks
