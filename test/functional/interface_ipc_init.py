@@ -5,6 +5,7 @@
 """Test IPC initialization behavior."""
 
 from test_framework.test_framework import BitcoinTestFramework
+from test_framework.util import assert_equal
 
 
 class IPCInitTest(BitcoinTestFramework):
@@ -19,14 +20,34 @@ class IPCInitTest(BitcoinTestFramework):
         self.extra_init = [{"ipcbind": True}]
         super().setup_nodes()
 
-    def test_ipc_startup_logging(self):
-        self.log.info("Test IPC startup logging")
+    def test_ipcmaxconnections(self):
+        self.log.info("Test -ipcmaxconnections initialization behavior")
+        node = self.nodes[0]
 
-        with self.nodes[0].assert_debug_log(["file descriptors available"]):
-            self.restart_node(0)
+        with node.assert_debug_log([
+            "file descriptors available",
+            "Reserving 9 file descriptors for IPC (1 listening sockets, 8 accepted connections)",
+        ]):
+            self.restart_node(0, extra_args=["-ipcmaxconnections=8"])
+        assert_equal(node.getblockcount(), 0)
+
+        with node.assert_debug_log(["Reserving 1 file descriptors for IPC (1 listening sockets, 0 accepted connections)"]):
+            self.restart_node(0, extra_args=["-ipcmaxconnections=0"])
+        assert_equal(node.getblockcount(), 0)
+
+        with node.assert_debug_log(["-ipcmaxconnections is 8 but -ipcbind is not enabled; option will have no effect."]):
+            self.restart_node(0, extra_args=["-noipcbind", "-ipcmaxconnections=8"])
+        assert_equal(node.getblockcount(), 0)
+
+        self.stop_node(0)
+        node.assert_start_raises_init_error(
+            extra_args=["-ipcmaxconnections=-1"],
+            expected_msg="Error: -ipcmaxconnections must be greater than or equal to zero",
+        )
+        self.start_node(0)
 
     def run_test(self):
-        self.test_ipc_startup_logging()
+        self.test_ipcmaxconnections()
 
 
 if __name__ == '__main__':
