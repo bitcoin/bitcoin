@@ -113,6 +113,8 @@ class P2PAddConnections(BitcoinTestFramework):
         assert_equal(feeler_conn.message_count["version"], 1)
         # Feeler connections do not request tx relay
         assert_equal(feeler_conn.last_message["version"].relay, 0)
+        # We don't send a GETADDR to feelers
+        assert_equal(feeler_conn.message_count["getaddr"], 0)
 
         self.log.info("Send version message early to node")
         # Normally the test framework would be shy and send the version message
