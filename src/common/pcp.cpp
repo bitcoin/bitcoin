@@ -4,19 +4,30 @@
 
 #include <common/pcp.h>
 
-#include <atomic>
-#include <common/netif.h>
+#include <compat/compat.h>
 #include <crypto/common.h>
+#include <crypto/hex_base.h>
 #include <logging.h>
 #include <netaddress.h>
 #include <netbase.h>
-#include <random.h>
-#include <span.h>
+#include <tinyformat.h>
 #include <util/check.h>
-#include <util/readwritefile.h>
 #include <util/sock.h>
-#include <util/strencodings.h>
+#include <util/string.h>
 #include <util/threadinterrupt.h>
+#include <util/time.h>
+
+#include <algorithm>
+#include <atomic>
+#include <compare>
+#include <cstring>
+#include <functional>
+#include <map>
+#include <memory>
+#include <optional>
+#include <span>
+#include <utility>
+#include <vector>
 
 namespace {
 

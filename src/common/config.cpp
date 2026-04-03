@@ -2,28 +2,25 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include <common/args.h>
+#include <common/args.h> // IWYU pragma: associated
 
 #include <common/settings.h>
 #include <logging.h>
 #include <sync.h>
 #include <tinyformat.h>
 #include <univalue.h>
-#include <util/chaintype.h>
+#include <util/check.h>
 #include <util/fs.h>
 #include <util/string.h>
 
 #include <algorithm>
-#include <cassert>
 #include <cstdlib>
-#include <filesystem>
 #include <fstream>
 #include <iostream>
-#include <sstream>
 #include <list>
 #include <map>
-#include <memory>
 #include <optional>
+#include <sstream>
 #include <string>
 #include <string_view>
 #include <utility>
