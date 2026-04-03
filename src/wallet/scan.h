@@ -6,6 +6,7 @@
 #define BITCOIN_WALLET_SCAN_H
 
 #include <uint256.h>
+#include <util/threadpool.h>
 
 #include <atomic>
 #include <deque>
@@ -39,9 +40,12 @@ private:
 
     /// Queued block hashes and heights to filter and scan
     std::deque<std::pair<uint256, int>> m_blocks;
+    size_t m_max_blockqueue_size{1000};
+    std::unique_ptr<ThreadPool> m_thread_pool;
 
     friend class FilterExecutor;
     friend class InlineFilterExecutor;
+    friend class ParallelFilterExecutor;
 
     std::optional<std::pair<uint256, int>> ReadNextBlock(ScanResult& result);
     /**

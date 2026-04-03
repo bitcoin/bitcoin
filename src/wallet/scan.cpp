@@ -8,6 +8,9 @@
 #include <wallet/scan.h>
 #include <wallet/wallet.h>
 
+#include <algorithm>
+#include <future>
+
 using interfaces::FoundBlock;
 
 namespace wallet {
@@ -170,6 +173,77 @@ public:
     size_t Pending() const override { return m_results.size(); }
 };
 
+class ParallelFilterExecutor : public FilterExecutor {
+    std::deque<std::future<FilterRes>> m_futures;
+
+    bool IsResultReady() {
+        return !m_futures.empty() &&
+            m_futures.front().wait_for(std::chrono::seconds::zero()) == std::future_status::ready;
+    }
+
+public:
+    explicit ParallelFilterExecutor(ChainScanner& scanner, FastWalletRescanFilter& filter, ScanResult& result)
+        : FilterExecutor(scanner, filter, result) {}
+
+    ~ParallelFilterExecutor() {
+        // Wait for all remaining futures to complete
+        // to avoid data race on FastWalletRescanFilter::m_filter_set
+        while (m_scanner.m_thread_pool->WorkQueueSize() > 0) {
+            m_scanner.m_thread_pool->ProcessTask();
+        }
+        for (auto& fut : m_futures) fut.wait();
+    }
+
+    void Submit() override {
+        // Submit jobs to the threadpool in batches of at most `WorkersCount() * 2` size.
+        // This prevents over-submission: if we queued all jobs upfront and the filtered
+        // block range is smaller than expected, worker threads would process blocks
+        // that get discarded, wasting CPU cycles.
+        size_t max_queue_size = m_scanner.m_thread_pool->WorkersCount() * 2;
+        size_t current_queue_size = m_futures.size() + m_scanner.m_thread_pool->WorkQueueSize();
+        size_t max_submit = current_queue_size >= max_queue_size ?
+            0 : max_queue_size - current_queue_size;
+        if (max_submit == 0) return;
+
+        std::vector<std::function<FilterRes()>> tasks;
+        tasks.reserve(max_submit);
+        for (size_t i = 0; i < m_scanner.m_blocks.size() && tasks.size() < max_submit; ++i) {
+            auto block = m_scanner.m_blocks[i];
+            if (block.second <= m_last_submitted_height) continue;
+
+            m_last_submitted_height = block.second;
+            tasks.emplace_back([this, block = std::move(block)]() -> FilterRes {
+                auto matches = m_filter.MatchesBlock(block.first);
+                if (!matches.has_value()) return FILTER_NO_FILTER;
+                return *matches ? FILTER_MATCH : FILTER_NO_MATCH;
+            });
+        }
+
+        if (tasks.empty()) return;
+        auto futures = *m_scanner.m_thread_pool->Submit(std::move(tasks));
+        for (auto& fut : futures) m_futures.emplace_back(std::move(fut));
+    }
+
+    bool ReadNextBlock() override {
+        if (!m_scanner.m_next_block || m_scanner.m_blocks.size() >= m_scanner.m_max_blockqueue_size) {
+            return false;
+        }
+
+        auto block = m_scanner.ReadNextBlock(m_result);
+        if (block) m_scanner.m_blocks.emplace_back(*block);
+        return true;
+    }
+
+    std::optional<FilterRes> TryPop() override {
+        if (!IsResultReady()) return std::nullopt;
+        auto res = m_futures.front().get();
+        m_futures.pop_front();
+        return res;
+    }
+
+    size_t Pending() const override { return m_futures.size(); }
+};
+
 std::optional<std::pair<uint256, int>> ChainScanner::ReadNextBlock(ScanResult& result) {
     if (!m_next_block) return std::nullopt;
 
@@ -213,11 +287,16 @@ size_t ChainScanner::ReadNextBlocks(const std::unique_ptr<FastWalletRescanFilter
     }
 
     filter->UpdateIfNeeded();
-    auto executor = InlineFilterExecutor(*this, *filter, result);
+
+    std::unique_ptr<FilterExecutor> executor;
+    if (m_thread_pool)
+        executor = std::make_unique<ParallelFilterExecutor>(*this, *filter, result);
+    else
+        executor = std::make_unique<InlineFilterExecutor>(*this, *filter, result);
 
     size_t matched_count = 0;
-    while (executor.ReadNextBlock() || executor.CanSubmit() || executor.Pending() > 0) {
-        if (auto filter_res = executor.TryPop()) {
+    while (executor->ReadNextBlock() || executor->CanSubmit() || executor->Pending() > 0) {
+        if (auto filter_res = executor->TryPop()) {
             const auto& [hash, height] = m_blocks[matched_count];
             if (*filter_res == FILTER_NO_MATCH) {
                 if (matched_count > 0) {
@@ -238,7 +317,7 @@ size_t ChainScanner::ReadNextBlocks(const std::unique_ptr<FastWalletRescanFilter
                 matched_count++;
             }
         }
-        executor.Submit();
+        executor->Submit();
     }
     return matched_count;
 }
@@ -311,11 +390,21 @@ ScanResult ChainScanner::Scan() {
     assert(m_reserver.isReserved());
     auto& chain = m_wallet.chain();
 
+    std::string log_message = "slow variant inspecting all blocks";
     std::unique_ptr<FastWalletRescanFilter> fast_rescan_filter;
-    if (chain.hasBlockFilterIndex(BlockFilterType::BASIC)) fast_rescan_filter = std::make_unique<FastWalletRescanFilter>(m_wallet);
+    if (chain.hasBlockFilterIndex(BlockFilterType::BASIC)) {
+        fast_rescan_filter = std::make_unique<FastWalletRescanFilter>(m_wallet);
+        if (m_wallet.m_wallet_par > 1) {
+            m_thread_pool = std::make_unique<ThreadPool>(strprintf("%s_scanner", m_wallet.GetName()));
+            m_thread_pool->Start(m_wallet.m_wallet_par);
+            log_message = strprintf("fast variant using block filters (%d threads)", m_wallet.m_wallet_par);
+        } else {
+            log_message = "fast variant using block filters";
+        }
+    }
 
-    m_wallet.WalletLogPrintf("Rescan started from block %s... (%s)\n", m_start_block.ToString(),
-                fast_rescan_filter ? "fast variant using block filters" : "slow variant inspecting all blocks");
+    m_wallet.WalletLogPrintf("Rescan started from block %s... (%s)\n",
+            m_start_block.ToString(), log_message);
 
     m_wallet.fAbortRescan = false;
     // show rescan progress in GUI as dialog or on splashscreen, if rescan required on startup (e.g. due to corruption)
