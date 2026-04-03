@@ -133,15 +133,14 @@ class P2PBlockIOErrorTest(BitcoinTestFramework):
             gbtn = msg_getblocktxn()
             gbtn.block_txn_request = BlockTransactionsRequest(blockhash=int(block_hash, 16), indexes=[0])
 
-            # Request block and expect crash+disconnect.
+            # Request block and expect fatal error + disconnect.
             with node.assert_debug_log(expected_msgs=["Unable to open file"]):
                 peer.send_without_ping(gbtn)
                 peer.wait_for_disconnect()
 
             node.wait_until_stopped(
-                expected_ret_code=-6,
                 expect_error=True,
-                expected_stderr=re.compile("Assertion"), # assertion crash
+                expected_stderr=re.compile(r"Failed to read block during GETBLOCKTXN"),
             )
 
         # Restart node for next test
