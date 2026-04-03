@@ -1333,7 +1333,7 @@ BITCOINKERNEL_API btck_BlockValidationState* BITCOINKERNEL_WARN_UNUSED_RESULT bt
  * Destroy the btck_BlockValidationState.
  */
 BITCOINKERNEL_API void btck_block_validation_state_destroy(
-    btck_BlockValidationState* block_validation_state) BITCOINKERNEL_ARG_NONNULL(1);
+    btck_BlockValidationState* block_validation_state);
 
 ///@}
 
