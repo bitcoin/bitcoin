@@ -164,6 +164,7 @@ static constexpr bool DEFAULT_STOPAFTERBLOCKIMPORT{false};
 #endif
 
 static constexpr int MIN_CORE_FDS = MIN_LEVELDB_FDS + NUM_FDS_MESSAGE_CAPTURE;
+static constexpr int DEFAULT_IPC_MAX_CONNECTIONS{16};
 
 /**
  * The PID file facilities.
@@ -720,6 +721,7 @@ void SetupServerArgs(ArgsManager& argsman, bool can_listen_ipc)
     argsman.AddArg("-server", "Accept command line and JSON-RPC commands", ArgsManager::ALLOW_ANY, OptionsCategory::RPC);
     if (can_listen_ipc) {
         argsman.AddArg("-ipcbind=<address>", "Bind to Unix socket address and listen for incoming connections. Valid address values are \"unix\" to listen on the default path, <datadir>/node.sock, or \"unix:/custom/path\" to specify a custom path. Can be specified multiple times to listen on multiple paths. Default behavior is not to listen on any path. If relative paths are specified, they are interpreted relative to the network data directory. If paths include any parent directory components and the parent directories do not exist, they will be created. Enabling this gives local processes that can access the socket unauthenticated RPC access, so it's important to choose a path with secure permissions if customizing this.", ArgsManager::ALLOW_ANY, OptionsCategory::IPC);
+        argsman.AddArg("-ipcmaxconnections=<n>", "Reserve file descriptors for up to <n> concurrent IPC socket connections (default: " + ToString(DEFAULT_IPC_MAX_CONNECTIONS) + ")", ArgsManager::ALLOW_ANY, OptionsCategory::IPC);
     }
 
 #if HAVE_DECL_FORK
@@ -1029,16 +1031,35 @@ bool AppInitParameterInteraction(const ArgsManager& args)
 
     // Number of bound interfaces (we have at least one)
     int nBind = std::max(nUserBind, size_t(1));
+
     // Maximum number of connections with other nodes, this accounts for all types of outbounds and inbounds except for manual
     int user_max_connection = args.GetIntArg("-maxconnections", DEFAULT_MAX_PEER_CONNECTIONS);
     if (user_max_connection < 0) {
         return InitError(Untranslated("-maxconnections must be greater or equal than zero"));
     }
+
+    // IPC listening socket FDs — one per -ipcbind address, no default listener
+    auto ipc_bind = args.GetArgs("-ipcbind").size();
+
+    // We only need to reserve these FDs if the user is actually binding an IPC socket
+    auto ipc_max_connections = args.GetIntArg("-ipcmaxconnections", 0);
+
+    if (ipc_max_connections < 0) {
+        return InitError(Untranslated("-ipcmaxconnections must be greater than or equal to zero"));
+    } else if (ipc_bind > 0) {
+        if (!args.IsArgSet("-ipcmaxconnections")) ipc_max_connections = DEFAULT_IPC_MAX_CONNECTIONS;
+        LogInfo("Reserving %d file descriptors for IPC (%d listening sockets, %d accepted connections)",
+                ipc_bind + ipc_max_connections, ipc_bind, ipc_max_connections);
+    } else if (ipc_max_connections > 0) {
+        LogWarning("-ipcmaxconnections is %d but -ipcbind is not enabled; option will have no effect.\n", ipc_max_connections);
+        ipc_max_connections = 0;
+    }
+
     const size_t max_private{args.GetBoolArg("-privatebroadcast", DEFAULT_PRIVATE_BROADCAST)
                              ? MAX_PRIVATE_BROADCAST_CONNECTIONS
                              : 0};
-    // Reserve enough FDs to account for the bare minimum, plus any manual connections, plus the bound interfaces
-    int min_required_fds = MIN_CORE_FDS + MAX_ADDNODE_CONNECTIONS + nBind;
+    // Reserve enough FDs to account for the bare minimum, plus any manual connections, plus the bound interfaces, plus IPC connections
+    int min_required_fds = MIN_CORE_FDS + MAX_ADDNODE_CONNECTIONS + nBind + ipc_bind + ipc_max_connections;
 
     // Try raising the FD limit to what we need (available_fds may be smaller than the requested amount if this fails)
     available_fds = RaiseFileDescriptorLimit(user_max_connection + max_private + min_required_fds);

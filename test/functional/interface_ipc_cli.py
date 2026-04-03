@@ -35,8 +35,36 @@ class TestBitcoinIpcCli(BitcoinTestFramework):
         assert_equal(result.stderr, None)
         assert_equal(result.returncode, 0 if error is None else 1)
 
+    def test_ipcmaxconnections(self):
+        self.log.info("Test -ipcmaxconnections")
+        node = self.nodes[0]
+
+        # Node starts cleanly with explicit value
+        self.restart_node(0, extra_args=["-ipcmaxconnections=8"])
+        assert_equal(node.getblockcount(), 0)
+
+        # Node starts cleanly with zero (reserves no FDs for accepted connections)
+        self.restart_node(0, extra_args=["-ipcmaxconnections=0"])
+        assert_equal(node.getblockcount(), 0)
+
+        # Node rejects negative value
+        self.stop_node(0)
+        node.assert_start_raises_init_error(
+            extra_args=["-ipcmaxconnections=-1"],
+            expected_msg="Error: -ipcmaxconnections must be greater than or equal to zero"
+        )
+        self.start_node(0)
+
+        # Verify FD reservation is explicitly logged with correct values
+        with node.assert_debug_log(["Reserving 9 file descriptors for IPC (1 listening sockets, 8 accepted connections)"]):
+            self.restart_node(0, extra_args=["-ipcmaxconnections=8"])
+
+        # Restore default for remaining tests
+        self.restart_node(0)
+
     def run_test(self):
         node = self.nodes[0]
+        self.test_ipcmaxconnections()
         if node.ipc_tmp_dir:
             self.log.info("Skipping a few checks because temporary directory path is too long")
 
