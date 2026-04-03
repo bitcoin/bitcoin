@@ -10,13 +10,15 @@
 
 #include <netaddress.h>
 #include <util/fs.h>
-
-#include <event2/util.h>
+#include <util/sock.h>
+#include <util/threadinterrupt.h>
 
 #include <cstdint>
 #include <deque>
 #include <functional>
+#include <memory>
 #include <string>
+#include <thread>
 #include <vector>
 
 constexpr uint16_t DEFAULT_TOR_SOCKS_PORT{9050};
@@ -28,10 +30,6 @@ static const bool DEFAULT_LISTEN_ONION = true;
 constexpr int TOR_REPLY_OK{250};
 constexpr int TOR_REPLY_UNRECOGNIZED{510};
 constexpr int TOR_REPLY_SYNTAX_ERROR{512}; //!< Syntax error in command argument
-
-void StartTorControl(CService onion_service_target);
-void InterruptTorControl();
-void StopTorControl();
 
 CService DefaultOnionServiceTarget(uint16_t port);
 
@@ -57,22 +55,19 @@ public:
 class TorControlConnection
 {
 public:
-    typedef std::function<void(TorControlConnection&)> ConnectionCB;
     typedef std::function<void(TorControlConnection &,const TorControlReply &)> ReplyHandlerCB;
 
     /** Create a new TorControlConnection.
      */
-    explicit TorControlConnection(struct event_base *base);
+    explicit TorControlConnection(CThreadInterrupt& interrupt);
     ~TorControlConnection();
 
     /**
      * Connect to a Tor control port.
      * tor_control_center is address of the form host:port.
-     * connected is the handler that is called when connection is successfully established.
-     * disconnected is a handler that is called when the connection is broken.
      * Return true on success.
      */
-    bool Connect(const std::string& tor_control_center, const ConnectionCB& connected, const ConnectionCB& disconnected);
+    bool Connect(const std::string& tor_control_center);
 
     /**
      * Disconnect from Tor control port.
@@ -85,23 +80,38 @@ public:
      */
     bool Command(const std::string &cmd, const ReplyHandlerCB& reply_handler);
 
-private:
-    /** Callback when ready for use */
-    std::function<void(TorControlConnection&)> connected;
-    /** Callback when connection lost */
-    std::function<void(TorControlConnection&)> disconnected;
-    /** Libevent event base */
-    struct event_base *base;
-    /** Connection to control socket */
-    struct bufferevent* b_conn{nullptr};
-    /** Message being received */
-    TorControlReply message;
-    /** Response handlers */
-    std::deque<ReplyHandlerCB> reply_handlers;
+    /**
+     * Check if the connection is established.
+     */
+    bool IsConnected() const;
 
-    /** Libevent handlers: internal */
-    static void readcb(struct bufferevent *bev, void *ctx);
-    static void eventcb(struct bufferevent *bev, short what, void *ctx);
+    /**
+     * Wait for data to be available on the socket.
+     * @param[in] timeout Maximum time to wait
+     * @return true if data is available, false on timeout or error
+     */
+    bool WaitForData(std::chrono::milliseconds timeout);
+
+    /**
+     * Read available data from socket and process complete replies.
+     * Dispatches to registered reply handlers.
+     * @return true if connection is still open, false if connection was closed
+     */
+    bool ReceiveAndProcess();
+
+private:
+    /** Reference to interrupt object for clean shutdown */
+    CThreadInterrupt& m_interrupt;
+    /** Socket for the connection */
+    std::unique_ptr<Sock> m_sock;
+    /** Message being received */
+    TorControlReply m_message;
+    /** Response handlers */
+    std::deque<ReplyHandlerCB> m_reply_handlers;
+    /** Buffer for incoming data */
+    std::vector<std::byte> m_recv_buffer;
+    /** Process complete lines from the receive buffer */
+    bool ProcessBuffer();
 };
 
 /****** Bitcoin specific TorController implementation ********/
@@ -112,8 +122,8 @@ private:
 class TorController
 {
 public:
-    TorController(struct event_base* base, const std::string& tor_control_center, const CService& target);
-    TorController() : conn{nullptr} {
+    TorController(const std::string& tor_control_center, const CService& target);
+    TorController() : m_conn(m_interrupt) {
         // Used for testing only.
     }
     ~TorController();
@@ -121,23 +131,28 @@ public:
     /** Get name of file to store private key in */
     fs::path GetPrivateKeyFile();
 
-    /** Reconnect, after getting disconnected */
-    void Reconnect();
+    /** Interrupt the controller thread */
+    void Interrupt();
+
+    /** Wait for the controller thread to exit */
+    void Join();
 private:
-    struct event_base* base;
+    CThreadInterrupt m_interrupt;
+    std::thread m_thread;
     const std::string m_tor_control_center;
-    TorControlConnection conn;
-    std::string private_key;
-    std::string service_id;
-    bool reconnect;
-    struct event *reconnect_ev = nullptr;
-    float reconnect_timeout;
-    CService service;
+    TorControlConnection m_conn;
+    std::string m_private_key;
+    std::string m_service_id;
+    std::atomic<bool> m_reconnect;
+    std::chrono::duration<double> m_reconnect_timeout;
+    CService m_service;
     const CService m_target;
     /** Cookie for SAFECOOKIE auth */
-    std::vector<uint8_t> cookie;
+    std::vector<uint8_t> m_cookie;
     /** ClientNonce for SAFECOOKIE auth */
-    std::vector<uint8_t> clientNonce;
+    std::vector<uint8_t> m_client_nonce;
+    /** Main control thread */
+    void ThreadControl();
 
 public:
     /** Callback for GETINFO net/listeners/socks result */
@@ -154,9 +169,6 @@ public:
     void connected_cb(TorControlConnection& conn);
     /** Callback after connection lost or failed connection attempt */
     void disconnected_cb(TorControlConnection& conn);
-
-    /** Callback for reconnect timer */
-    static void reconnect_cb(evutil_socket_t fd, short what, void *arg);
 };
 
 #endif // BITCOIN_TORCONTROL_H
