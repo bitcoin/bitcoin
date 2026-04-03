@@ -6,6 +6,7 @@
 #define BITCOIN_WALLET_SCRIPTPUBKEYMAN_H
 
 #include <addresstype.h>
+#include <btcsignals.h>
 #include <common/messages.h>
 #include <common/signmessage.h>
 #include <common/types.h>
@@ -22,8 +23,6 @@
 #include <wallet/types.h>
 #include <wallet/walletdb.h>
 #include <wallet/walletutil.h>
-
-#include <boost/signals2/signal.hpp>
 
 #include <functional>
 #include <optional>
@@ -153,10 +152,10 @@ public:
     };
 
     /** Keypool has new keys */
-    boost::signals2::signal<void ()> NotifyCanGetAddressesChanged;
+    btcsignals::signal<void ()> NotifyCanGetAddressesChanged;
 
     /** Birth time changed */
-    boost::signals2::signal<void (const ScriptPubKeyMan* spkm, int64_t new_birth_time)> NotifyFirstKeyTimeChanged;
+    btcsignals::signal<void (const ScriptPubKeyMan* spkm, int64_t new_birth_time)> NotifyFirstKeyTimeChanged;
 };
 
 /** OutputTypes supported by the LegacyScriptPubKeyMan */
