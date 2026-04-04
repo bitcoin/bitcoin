@@ -6,6 +6,7 @@
 #define BITCOIN_PSBT_H
 
 #include <common/types.h>
+#include <musig.h>
 #include <node/transaction.h>
 #include <policy/feerate.h>
 #include <primitives/transaction.h>

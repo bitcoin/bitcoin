@@ -11,6 +11,7 @@
 #include <consensus/validation.h>
 #include <crypto/hex_base.h>
 #include <key_io.h>
+#include <prevector.h>
 #include <primitives/block.h>
 #include <primitives/transaction.h>
 #include <script/descriptor.h>

@@ -8,14 +8,15 @@
 
 #include <attributes.h>
 #include <crypto/common.h>
-#include <prevector.h> // IWYU pragma: export
+#include <prevector.h>
 #include <serialize.h>
 #include <uint256.h>
 #include <util/hash_type.h>
 
 #include <cassert>
+#include <cstddef>
 #include <cstdint>
-#include <cstring>
+#include <iterator>
 #include <limits>
 #include <span>
 #include <stdexcept>

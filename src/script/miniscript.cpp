@@ -2,16 +2,16 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include <limits>
-#include <vector>
+#include <script/miniscript.h>
 
 #include <primitives/transaction.h>
-#include <script/miniscript.h>
 #include <script/script.h>
 #include <script/solver.h>
-#include <span.h>
 #include <util/check.h>
 #include <util/vector.h>
+
+#include <limits>
+#include <vector>
 
 namespace miniscript {
 namespace internal {

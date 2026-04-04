@@ -4,6 +4,7 @@
 
 #include <addresstype.h>
 #include <bench/bench.h>
+#include <coins.h>
 #include <key.h>
 #include <policy/policy.h>
 #include <primitives/transaction.h>

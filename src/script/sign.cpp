@@ -5,20 +5,34 @@
 
 #include <script/sign.h>
 
+#include <addresstype.h>
+#include <coins.h>
 #include <consensus/amount.h>
+#include <hash.h>
 #include <key.h>
 #include <musig.h>
 #include <policy/policy.h>
+#include <prevector.h>
 #include <primitives/transaction.h>
-#include <random.h>
 #include <script/keyorigin.h>
 #include <script/miniscript.h>
 #include <script/script.h>
+#include <script/script_error.h>
 #include <script/signingprovider.h>
 #include <script/solver.h>
+#include <script/verify_flags.h>
+#include <serialize.h>
 #include <uint256.h>
+#include <util/check.h>
 #include <util/translation.h>
 #include <util/vector.h>
+
+#include <algorithm>
+#include <cstddef>
+#include <functional>
+#include <iterator>
+#include <span>
+#include <string>
 
 typedef std::vector<unsigned char> valtype;
 

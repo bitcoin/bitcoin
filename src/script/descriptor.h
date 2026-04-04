@@ -6,12 +6,22 @@
 #define BITCOIN_SCRIPT_DESCRIPTOR_H
 
 #include <outputtype.h>
-#include <script/script.h>
-#include <script/sign.h>
-#include <script/signingprovider.h>
+#include <pubkey.h>
+#include <uint256.h>
 
+#include <cstddef>
+#include <cstdint>
+#include <memory>
 #include <optional>
+#include <set>
+#include <string>
+#include <string_view>
+#include <unordered_map>
 #include <vector>
+
+class CScript;
+class SigningProvider;
+struct FlatSigningProvider;
 
 using ExtPubKeyMap = std::unordered_map<uint32_t, CExtPubKey>;
 
