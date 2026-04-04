@@ -110,57 +110,21 @@ struct CCoinsCacheEntry
 {
 private:
     /**
-     * These are used to create a doubly linked list of flagged entries.
-     * They are set in SetDirty, SetFresh, and unset in SetClean.
-     * A flagged entry is any entry that is either DIRTY, FRESH, or both.
+     * These are used to create a doubly linked list of dirty entries.
+     * They are set in SetDirty and unset in SetClean.
+     * A dirty entry may also be fresh.
      *
-     * DIRTY entries are tracked so that only modified entries can be passed to
+     * Dirty entries are tracked so that only modified entries can be passed to
      * the parent cache for batch writing. This is a performance optimization
      * compared to giving all entries in the cache to the parent and having the
      * parent scan for only modified entries.
      */
     CoinsCachePair* m_prev{nullptr};
     CoinsCachePair* m_next{nullptr};
-    uint8_t m_flags{0};
-
-    //! Adding a flag requires a reference to the sentinel of the flagged pair linked list.
-    static void AddFlags(uint8_t flags, CoinsCachePair& pair, CoinsCachePair& sentinel) noexcept
-    {
-        Assume(flags & (DIRTY | FRESH));
-        if (!pair.second.m_flags) {
-            Assume(!pair.second.m_prev && !pair.second.m_next);
-            pair.second.m_prev = sentinel.second.m_prev;
-            pair.second.m_next = &sentinel;
-            sentinel.second.m_prev = &pair;
-            pair.second.m_prev->second.m_next = &pair;
-        }
-        Assume(pair.second.m_prev && pair.second.m_next);
-        pair.second.m_flags |= flags;
-    }
+    bool m_fresh{false};
 
 public:
     Coin coin; // The actual cached data.
-
-    enum Flags {
-        /**
-         * DIRTY means the CCoinsCacheEntry is potentially different from the
-         * version in the parent cache. Failure to mark a coin as DIRTY when
-         * it is potentially different from the parent cache will cause a
-         * consensus failure, since the coin's state won't get written to the
-         * parent when the cache is flushed.
-         */
-        DIRTY = (1 << 0),
-        /**
-         * FRESH means the parent cache does not have this coin or that it is a
-         * spent coin in the parent cache. If a FRESH coin in the cache is
-         * later spent, it can be deleted entirely and doesn't ever need to be
-         * flushed to the parent. This is a performance optimization. Marking a
-         * coin as FRESH when it exists unspent in the parent cache will cause a
-         * consensus failure, since it might not be deleted from the parent
-         * when this cache is flushed.
-         */
-        FRESH = (1 << 1),
-    };
 
     CCoinsCacheEntry() noexcept = default;
     explicit CCoinsCacheEntry(Coin&& coin_) noexcept : coin(std::move(coin_)) {}
@@ -169,31 +133,53 @@ public:
         SetClean();
     }
 
-    static void SetDirty(CoinsCachePair& pair, CoinsCachePair& sentinel) noexcept { AddFlags(DIRTY, pair, sentinel); }
-    static void SetFresh(CoinsCachePair& pair, CoinsCachePair& sentinel) noexcept { AddFlags(FRESH, pair, sentinel); }
+    /**
+     * Mark an entry dirty and set its resulting freshness.
+     * Fresh entries must also be dirty.
+     */
+    static void SetDirty(CoinsCachePair& pair, CoinsCachePair& sentinel, bool fresh) noexcept
+    {
+        if (!pair.second.IsDirty()) {
+            pair.second.m_prev = sentinel.second.m_prev;
+            pair.second.m_next = &sentinel;
+            sentinel.second.m_prev = &pair;
+            pair.second.m_prev->second.m_next = &pair;
+        }
+        Assume(pair.second.IsDirty());
+        pair.second.m_fresh = fresh;
+    }
 
+    /** Clear the dirty state and remove the entry from the dirty-entry list. */
     void SetClean() noexcept
     {
-        if (!m_flags) return;
-        m_next->second.m_prev = m_prev;
-        m_prev->second.m_next = m_next;
-        m_flags = 0;
-        m_prev = m_next = nullptr;
+        if (IsDirty()) {
+            m_next->second.m_prev = m_prev;
+            m_prev->second.m_next = m_next;
+            m_fresh = false;
+            m_prev = m_next = nullptr;
+        }
     }
-    bool IsDirty() const noexcept { return m_flags & DIRTY; }
-    bool IsFresh() const noexcept { return m_flags & FRESH; }
 
-    //! Only call Next when this entry is DIRTY, FRESH, or both
+    /** Return whether this entry is linked into the dirty-entry list. */
+    bool IsDirty() const noexcept
+    {
+        const bool dirty{!!m_prev};
+        Assume(dirty == !!m_next && (dirty || !m_fresh));
+        return dirty;
+    }
+
+    /** Return whether this entry should remain fresh after the update. */
+    bool IsFresh() const noexcept { return m_fresh; }
+
     CoinsCachePair* Next() const noexcept
     {
-        Assume(m_flags);
+        Assume(IsDirty());
         return m_next;
     }
 
-    //! Only call Prev when this entry is DIRTY, FRESH, or both
     CoinsCachePair* Prev() const noexcept
     {
-        Assume(m_flags);
+        Assume(IsDirty());
         return m_prev;
     }
 
@@ -203,8 +189,7 @@ public:
         Assume(&pair.second == this);
         m_prev = &pair;
         m_next = &pair;
-        // Set sentinel to DIRTY so we can call Next on it
-        m_flags = DIRTY;
+        Assume(IsDirty());
     }
 };
 
@@ -245,22 +230,22 @@ private:
 };
 
 /**
- * Cursor for iterating over the linked list of flagged entries in CCoinsViewCache.
+ * Cursor for iterating over the linked list of dirty entries in CCoinsViewCache.
  *
  * This is a helper struct to encapsulate the diverging logic between a non-erasing
  * CCoinsViewCache::Sync and an erasing CCoinsViewCache::Flush. This allows the receiver
- * of CCoinsView::BatchWrite to iterate through the flagged entries without knowing
+ * of CCoinsView::BatchWrite to iterate through the dirty entries without knowing
  * the caller's intent.
  *
  * However, the receiver can still call CoinsViewCacheCursor::WillErase to see if the
  * caller will erase the entry after BatchWrite returns. If so, the receiver can
- * perform optimizations such as moving the coin out of the CCoinsCachEntry instead
+ * perform optimizations such as moving the coin out of the CCoinsCacheEntry instead
  * of copying it.
  */
 struct CoinsViewCacheCursor
 {
     //! If will_erase is not set, iterating through the cursor will erase spent coins from the map,
-    //! and other coins will be unflagged (removing them from the linked list).
+    //! and other coins will have their state cleared and be removed from the linked list.
     //! If will_erase is set, the underlying map and linked list will not be modified,
     //! as the caller is expected to wipe the entire map anyway.
     //! This is an optimization compared to erasing all entries as the cursor iterates them when will_erase is set.
@@ -376,7 +361,7 @@ protected:
      */
     mutable uint256 hashBlock;
     mutable CCoinsMapMemoryResource m_cache_coins_memory_resource{};
-    /* The starting sentinel of the flagged entry circular doubly linked list. */
+    /* The starting sentinel of the dirty-entry circular doubly linked list. */
     mutable CoinsCachePair m_sentinel;
     mutable CCoinsMap cacheCoins;
 
