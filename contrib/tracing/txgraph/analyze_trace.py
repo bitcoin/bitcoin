@@ -16,75 +16,12 @@ import struct
 import sys
 from collections import defaultdict
 
-# --- Opcodes (must match TxGraphTraceOp in txgraph_tracing.h) ---
-INIT                  = 0x00
-ADD_TX                = 0x01
-REMOVE_TX             = 0x02
-ADD_DEP               = 0x03
-SET_FEE               = 0x04
-UNLINK_REF            = 0x05
-GET_BLOCK_BUILDER     = 0x10
-DO_WORK               = 0x11
-COMPARE_MAIN_ORDER    = 0x12
-GET_ANCESTORS         = 0x13
-GET_DESCENDANTS       = 0x14
-GET_ANCESTORS_UNION   = 0x15
-GET_DESCENDANTS_UNION = 0x16
-GET_CLUSTER           = 0x17
-GET_CHUNK_FEERATE     = 0x18
-COUNT_DISTINCT        = 0x19
-GET_MEMORY_USAGE      = 0x1a
-GET_WORST_CHUNK       = 0x1b
-GET_DIAGRAMS          = 0x1c
-TRIM                  = 0x1d
-IS_OVERSIZED          = 0x1e
-EXISTS                = 0x1f
-START_STAGING         = 0x20
-ABORT_STAGING         = 0x21
-COMMIT_STAGING        = 0x22
-GET_INDIVIDUAL_FEERATE = 0x23
-GET_TX_COUNT          = 0x24
-
-# Fixed payload sizes (bytes) for each opcode.
-FIXED_PAYLOAD = {
-    INIT: 20,               # u32 + u64 + u64
-    ADD_TX: 16,             # u32 + i64 + i32
-    REMOVE_TX: 4,           # u32
-    ADD_DEP: 8,             # u32 + u32
-    SET_FEE: 12,            # u32 + i64
-    UNLINK_REF: 4,          # u32
-    GET_BLOCK_BUILDER: 0,
-    DO_WORK: 8,             # u64
-    COMPARE_MAIN_ORDER: 8,  # u32 + u32
-    GET_ANCESTORS: 5,       # u32 + u8
-    GET_DESCENDANTS: 5,     # u32 + u8
-    GET_CLUSTER: 5,         # u32 + u8
-    GET_CHUNK_FEERATE: 4,   # u32
-    GET_MEMORY_USAGE: 0,
-    GET_WORST_CHUNK: 0,
-    GET_DIAGRAMS: 0,
-    TRIM: 0,
-    IS_OVERSIZED: 1,          # u8 level
-    EXISTS: 5,                # u32 + u8
-    START_STAGING: 0,
-    ABORT_STAGING: 0,
-    COMMIT_STAGING: 0,
-    GET_INDIVIDUAL_FEERATE: 4, # u32
-    GET_TX_COUNT: 1,           # u8
-}
-
-# Variable-length opcodes: u32 count, u8 level, u32[count] indices
-VAR_LENGTH_OPS = {GET_ANCESTORS_UNION, GET_DESCENDANTS_UNION, COUNT_DISTINCT}
-
-
-def read_var_payload(f):
-    """Read variable-length payload: u32 count, u8 level, u32*count indices."""
-    raw = f.read(4)
-    if len(raw) < 4:
-        return False
-    count = struct.unpack('<I', raw)[0]
-    f.read(1 + count * 4)  # u8 level + count*u32 indices
-    return True
+from tracing_defs import (
+    PROBES_BY_OPCODE, read_event,
+    OP_INIT, OP_ADD_TRANSACTION, OP_REMOVE_TRANSACTION,
+    OP_ADD_DEPENDENCY, OP_UNLINK_REF,
+    OP_START_STAGING, OP_ABORT_STAGING, OP_COMMIT_STAGING,
+)
 
 
 class Graph:
@@ -283,11 +220,11 @@ def main():
         unstaged_unlink_ref = 0
 
         def apply_mutation(op, args):
-            if op == ADD_TX:
+            if op == OP_ADD_TRANSACTION:
                 graph.add_tx(args[0])
-            elif op == REMOVE_TX or op == UNLINK_REF:
+            elif op in (OP_REMOVE_TRANSACTION, OP_UNLINK_REF):
                 graph.remove_tx(args[0])
-            elif op == ADD_DEP:
+            elif op == OP_ADD_DEPENDENCY:
                 graph.add_dep(args[0], args[1])
 
         def check_peak():
@@ -305,40 +242,31 @@ def main():
             op = b[0]
             op_count += 1
 
-            # Variable-length ops: skip
-            if op in VAR_LENGTH_OPS:
-                if not read_var_payload(f):
-                    break
-                continue
-
-            # Fixed-length payload
-            psize = FIXED_PAYLOAD.get(op)
-            if psize is None:
+            if op not in PROBES_BY_OPCODE:
                 print(f"Unknown opcode 0x{op:02x} at op {op_count}", file=sys.stderr)
                 break
-            raw = f.read(psize) if psize else b''
-            if len(raw) < psize:
+
+            event = read_event(f, op)
+            if event is None:
                 break
 
-            # Parse mutations
-            if op == INIT:
-                mcc, mcs, ac = struct.unpack('<IQQ', raw)
-                max_cluster_count = mcc
-                print(f"Parameters: max_cluster_count={mcc} max_cluster_size={mcs} acceptable_cost={ac}")
+            # Semantic handling: only mutations and staging affect the graph
+            if op == OP_INIT:
+                max_cluster_count = event["max_cluster_count"]
+                print(f"Parameters: max_cluster_count={event['max_cluster_count']} "
+                      f"max_cluster_size={event['max_cluster_size']} "
+                      f"acceptable_cost={event['acceptable_cost']}")
                 continue
-            elif op == ADD_TX:
-                idx = struct.unpack('<I', raw[0:4])[0]
-                mut = (ADD_TX, (idx,))
-            elif op == REMOVE_TX or op == UNLINK_REF:
-                idx = struct.unpack('<I', raw)[0]
-                mut = (op, (idx,))
-            elif op == ADD_DEP:
-                parent, child = struct.unpack('<II', raw)
-                mut = (ADD_DEP, (parent, child))
-            elif op == START_STAGING:
+            elif op == OP_ADD_TRANSACTION:
+                mut = (op, (event["graph_idx"],))
+            elif op in (OP_REMOVE_TRANSACTION, OP_UNLINK_REF):
+                mut = (op, (event["graph_idx"],))
+            elif op == OP_ADD_DEPENDENCY:
+                mut = (op, (event["parent"], event["child"]))
+            elif op == OP_START_STAGING:
                 staging_buf = []
                 continue
-            elif op == COMMIT_STAGING:
+            elif op == OP_COMMIT_STAGING:
                 if staging_buf is not None:
                     commit_count += 1
                     for m_op, m_args in staging_buf:
@@ -346,24 +274,24 @@ def main():
                 staging_buf = None
                 check_peak()
                 continue
-            elif op == ABORT_STAGING:
+            elif op == OP_ABORT_STAGING:
                 staging_buf = None
                 continue
             else:
-                # Non-mutation trigger op, skip
+                # Non-mutation op (queries, maintenance), skip
                 continue
 
             # Buffer or apply mutation
             if staging_buf is not None:
                 staging_buf.append(mut)
             else:
-                if mut[0] == ADD_TX:
+                if op == OP_ADD_TRANSACTION:
                     unstaged_add_tx += 1
-                elif mut[0] == ADD_DEP:
+                elif op == OP_ADD_DEPENDENCY:
                     unstaged_add_dep += 1
-                elif mut[0] == REMOVE_TX:
+                elif op == OP_REMOVE_TRANSACTION:
                     unstaged_remove_tx += 1
-                elif mut[0] == UNLINK_REF:
+                elif op == OP_UNLINK_REF:
                     unstaged_unlink_ref += 1
                 apply_mutation(mut[0], mut[1])
                 check_peak()
