@@ -18,7 +18,7 @@
 #include <utility>
 #include <vector>
 
-using common::PSBTError;
+using common::PSBTResult;
 
 namespace wallet {
 bool ExternalSignerScriptPubKeyMan::SetupDescriptor(WalletBatch& batch, std::unique_ptr<Descriptor> desc)
@@ -79,7 +79,7 @@ util::Result<void> ExternalSignerScriptPubKeyMan::DisplayAddress(const CTxDestin
 }
 
 // If sign is true, transaction must previously have been filled
-std::optional<PSBTError> ExternalSignerScriptPubKeyMan::FillPSBT(PartiallySignedTransaction& psbt, const PrecomputedTransactionData& txdata, std::optional<int> sighash_type, bool sign, bool bip32derivs, int* n_signed, bool finalize) const
+PSBTResult ExternalSignerScriptPubKeyMan::FillPSBT(PartiallySignedTransaction& psbt, const PrecomputedTransactionData& txdata, std::optional<int> sighash_type, bool sign, bool bip32derivs, int* n_signed, bool finalize) const
 {
     if (!sign) {
         return DescriptorScriptPubKeyMan::FillPSBT(psbt, txdata, sighash_type, false, bip32derivs, n_signed, finalize);
@@ -90,20 +90,20 @@ std::optional<PSBTError> ExternalSignerScriptPubKeyMan::FillPSBT(PartiallySigned
     for (const auto& input : psbt.inputs) {
         complete &= PSBTInputSigned(input);
     }
-    if (complete) return {};
+    if (complete) return PSBTResult::OK;
 
     auto signer{GetExternalSigner()};
     if (!signer) {
         LogWarning("%s", util::ErrorString(signer).original);
-        return PSBTError::EXTERNAL_SIGNER_NOT_FOUND;
+        return PSBTResult::EXTERNAL_SIGNER_NOT_FOUND;
     }
 
     std::string failure_reason;
     if(!signer->SignTransaction(psbt, failure_reason)) {
         LogWarning("Failed to sign: %s\n", failure_reason);
-        return PSBTError::EXTERNAL_SIGNER_FAILED;
+        return PSBTResult::EXTERNAL_SIGNER_FAILED;
     }
     if (finalize) FinalizePSBT(psbt);
-    return {};
+    return PSBTResult::OK;
 }
 } // namespace wallet

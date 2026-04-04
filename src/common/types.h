@@ -14,7 +14,7 @@
 #define BITCOIN_COMMON_TYPES_H
 
 namespace common {
-enum class PSBTError {
+enum class PSBTResult {
     MISSING_INPUTS,
     SIGHASH_MISMATCH,
     EXTERNAL_SIGNER_NOT_FOUND,
