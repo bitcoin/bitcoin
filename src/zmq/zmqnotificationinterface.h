@@ -15,6 +15,7 @@
 #include <memory>
 #include <vector>
 
+class ArgsManager;
 class CBlockIndex;
 class CZMQAbstractNotifier;
 
@@ -25,7 +26,11 @@ public:
 
     std::list<const CZMQAbstractNotifier*> GetActiveNotifiers() const;
 
-    static std::unique_ptr<CZMQNotificationInterface> Create(std::function<bool(std::vector<std::byte>&, const CBlockIndex&)> get_block_by_index);
+    static std::list<std::unique_ptr<CZMQAbstractNotifier>> GetNotifiers(
+        const ArgsManager& args,
+        std::function<bool(std::vector<std::byte>&, const CBlockIndex&)> get_block_by_index);
+    // nullptr if initialization fails
+    static std::unique_ptr<CZMQNotificationInterface> Create(std::list<std::unique_ptr<CZMQAbstractNotifier>>&& notifiers);
 
 protected:
     bool Initialize();

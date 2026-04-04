@@ -4,15 +4,20 @@
 
 #include <zmq/zmqutil.h>
 
-#include <logging.h>
 #include <util/check.h>
+#include <util/log.h>
 
 #include <zmq.h>
 
 #include <cerrno>
 #include <string>
 
-void zmqError(const std::string& str)
+void zmqError(util::log::Level level, const std::string& str)
 {
-    LogDebug(BCLog::ZMQ, "Error: %s, msg: %s\n", str, zmq_strerror(errno));
+    detail_LogIfCategoryAndLevelEnabled(BCLog::ZMQ, level, "Error: %s, msg: %s\n", str, zmq_strerror(errno));
+}
+
+void zmqErrorDebug(const std::string& str)
+{
+    zmqError(util::log::Level::Debug, str);
 }
