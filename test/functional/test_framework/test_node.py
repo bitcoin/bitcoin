@@ -323,7 +323,7 @@ class TestNode():
                     f'bitcoind exited with status {self.process.returncode} during initialization. {str_error}'))
             try:
                 rpc = get_rpc_proxy(
-                    rpc_url(self.datadir_path, self.index, self.chain, self.rpchost),
+                    rpc_url(self.datadir_path, self.index, self.chain_dir, self.rpchost),
                     self.index,
                     timeout=self.rpc_timeout // 2,  # Shorter timeout to allow for one retry in case of ETIMEDOUT
                     coveragedir=self.coverage_dir,
@@ -438,7 +438,9 @@ class TestNode():
 
     def get_wallet_rpc(self, wallet_name):
         if self.use_cli:
-            return self.cli("-rpcwallet={}".format(wallet_name))
+            options = ["-rpcwallet={}".format(wallet_name)]
+            options += [arg for arg in self.extra_args if arg.startswith("-signetchallenge")]
+            return self.cli(*options)
         else:
             assert self.rpc_connected and self._rpc, self._node_msg("RPC not connected")
             wallet_path = "wallet/{}".format(urllib.parse.quote(wallet_name))
@@ -539,7 +541,19 @@ class TestNode():
 
     @property
     def chain_path(self) -> Path:
-        return self.datadir_path / self.chain
+        return self.datadir_path / self.chain_dir
+
+    @property
+    def chain_dir(self) -> str:
+        if self.chain == "signet":
+            for arg in self.extra_args:
+                if arg.startswith('-signetchallenge'):
+                    signetchallenge = arg.split('=')[1]
+                    if signetchallenge == '512103ad5e0edad18cb1f0fc0d28a3d4f1f3e445640337489abb10404f2d1e086be430210359ef5021964fe22d6f8e05b2463c9540ce96883fe3b278760f048f5189f2e6c452ae':
+                        return self.chain
+                    datadir_suffix = signetchallenge[0:16]
+                    return f"signet_{datadir_suffix}"
+        return self.chain
 
     @property
     def debug_log_path(self) -> Path:

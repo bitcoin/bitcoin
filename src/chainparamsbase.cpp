@@ -33,6 +33,18 @@ const CBaseChainParams& BaseParams()
     return *globalChainBaseParams;
 }
 
+std::string GetSignetDataDir()
+{
+    std::string base_data_dir = "signet";
+    const std::string signet_challenge = gArgs.GetArg("-signetchallenge", "");
+    const std::string default_signet_challenge = "512103ad5e0edad18cb1f0fc0d28a3d4f1f3e445640337489abb10404f2d1e086be430210359ef5021964fe22d6f8e05b2463c9540ce96883fe3b278760f048f5189f2e6c452ae";
+    if (!signet_challenge.empty() && signet_challenge != default_signet_challenge) {
+        const std::string data_dir_suffix = signet_challenge.substr(0, 16);
+        return base_data_dir + "_" + data_dir_suffix;
+    }
+    return base_data_dir;
+}
+
 /**
  * Port numbers for incoming Tor connections (8334, 18334, 38334, 48334, 18445) have
  * been chosen arbitrarily to keep ranges of used ports tight.
@@ -47,7 +59,7 @@ std::unique_ptr<CBaseChainParams> CreateBaseChainParams(const ChainType chain)
     case ChainType::TESTNET4:
         return std::make_unique<CBaseChainParams>("testnet4", 48332);
     case ChainType::SIGNET:
-        return std::make_unique<CBaseChainParams>("signet", 38332);
+        return std::make_unique<CBaseChainParams>(GetSignetDataDir(), 38332);
     case ChainType::REGTEST:
         return std::make_unique<CBaseChainParams>("regtest", 18443);
     }
@@ -56,6 +68,9 @@ std::unique_ptr<CBaseChainParams> CreateBaseChainParams(const ChainType chain)
 
 void SelectBaseParams(const ChainType chain)
 {
-    globalChainBaseParams = CreateBaseChainParams(chain);
+    // We need to call SelectConfigNetwork before CreateBaseChainParams since we
+    // check -signetchallenge in CreateBaseChainParams to determine the signet
+    // datadir.
     gArgs.SelectConfigNetwork(ChainTypeToString(chain));
+    globalChainBaseParams = CreateBaseChainParams(chain);
 }

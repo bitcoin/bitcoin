@@ -5,6 +5,7 @@
 """Test basic signet functionality"""
 
 from decimal import Decimal
+from os import path
 
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import assert_equal
@@ -38,24 +39,28 @@ class SignetParams:
 class SignetBasicTest(BitcoinTestFramework):
     def set_test_params(self):
         self.chain = "signet"
-        self.num_nodes = 6
+        self.num_nodes = 7
         self.setup_clean_chain = True
         self.signets = [
             SignetParams(challenge='51'), # OP_TRUE
             SignetParams(), # default challenge
             # default challenge as a 2-of-2, which means it should fail
-            SignetParams(challenge='522103ad5e0edad18cb1f0fc0d28a3d4f1f3e445640337489abb10404f2d1e086be430210359ef5021964fe22d6f8e05b2463c9540ce96883fe3b278760f048f5189f2e6c452ae')
+            SignetParams(challenge='522103ad5e0edad18cb1f0fc0d28a3d4f1f3e445640337489abb10404f2d1e086be430210359ef5021964fe22d6f8e05b2463c9540ce96883fe3b278760f048f5189f2e6c452ae'),
+            # explicit default challenge
+            SignetParams(challenge=SIGNET_DEFAULT_CHALLENGE),
         ]
 
         self.extra_args = [
             self.signets[0].shared_args, self.signets[0].shared_args,
             self.signets[1].shared_args, self.signets[1].shared_args,
             self.signets[2].shared_args, self.signets[2].shared_args,
+            self.signets[3].shared_args,
         ]
 
     def setup_network(self):
         self.setup_nodes()
-
+        for i, node in enumerate(self.nodes):
+            node.cli.options = [arg for arg in self.extra_args[i] if arg.startswith("-signetchallenge")]
         # Setup the three signets, which are incompatible with each other
         self.connect_nodes(0, 1)
         self.connect_nodes(2, 3)
@@ -100,6 +105,26 @@ class SignetBasicTest(BitcoinTestFramework):
         self.log.info("pregenerated signet blocks check (incompatible solution)")
 
         assert_equal(self.nodes[4].submitblock(signet_blocks[0]), 'bad-signet-blksig')
+
+        def assert_node_datadir(node, expected_dirname):
+            datadir = node.chain_path
+            self.log.info(f"Checking node datadir: {datadir}")
+            # check directory name
+            assert_equal(path.basename(datadir), expected_dirname)
+            # check if the directory exists
+            assert datadir.is_dir()
+            # check if the directory is being used
+            rpc_log_path = node.getrpcinfo()['logpath']
+            assert rpc_log_path.startswith(str(datadir))
+
+        self.log.info("Test that the signet data directory with -signetchallenge=51 is 'signet_51'")
+        assert_node_datadir(self.nodes[0], "signet_51")
+
+        self.log.info("Test that the main signet data directory is 'signet'")
+        assert_node_datadir(self.nodes[3], "signet")
+
+        self.log.info("Test that the signet data directory with -signetchallenge=SIGNET_DEFAULT_CHALLENGE is 'signet'")
+        assert_node_datadir(self.nodes[6], "signet")
 
         self.log.info("test that signet logs the network magic on node start")
         with self.nodes[0].assert_debug_log(["Signet derived magic (message start)"]):
