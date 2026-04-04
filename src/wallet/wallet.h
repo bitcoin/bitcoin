@@ -794,6 +794,19 @@ public:
     bool IsFromMe(const CTransaction& tx) const;
     CAmount GetDebit(const CTransaction& tx) const;
 
+    /**
+     * Pass-through to WalletBatch::LoadWallet() to initialize this CWallet from
+     * the records stored in CWallet::m_database. Primarily used by
+     * CWallet::LoadExisting.
+     *
+     * @param[out]  error       A bilingual_str that will indicate the reason
+     *                          for failure, if any.
+     * @param[out]  warnings    A vector of bilingual_str's that describe
+     *                          non-fatal issues encountered during loading.
+     * @return  A DBErrors indicating the success or failure state of the load.
+     *
+     * @pre m_database must be set.
+     */
     DBErrors PopulateWalletFromDB(bilingual_str& error, std::vector<bilingual_str>& warnings);
 
     /** Erases the provided transactions from the wallet. */
@@ -870,10 +883,24 @@ public:
 
     static bool LoadWalletArgs(std::shared_ptr<CWallet> wallet, const WalletContext& context, bilingual_str& error, std::vector<bilingual_str>& warnings);
 
-    /* Initializes, creates and returns a new CWallet; returns a null pointer in case of an error */
+    /**
+     * Create a new wallet.
+     *
+     * @return A shared pointer to a `CWallet` object corresponding to the
+     *         created wallet on success, `std::nullptr` is returned in case of
+     *         an error.
+     */
     static std::shared_ptr<CWallet> CreateNew(WalletContext& context, const std::string& name, std::unique_ptr<WalletDatabase> database, uint64_t wallet_creation_flags, bilingual_str& error, std::vector<bilingual_str>& warnings);
 
-    /* Initializes, loads, and returns a CWallet from an existing wallet; returns a null pointer in case of an error */
+    /**
+     * Load an existing wallet from `database`.
+     *
+     * @param[in] database  The database object from which to load an existing wallet.
+     *
+     * @return A shared pointer to a `CWallet` object corresponding to the
+     *         loaded wallet on success, `std::nullptr` is returned in case of
+     *         an error.
+     */
     static std::shared_ptr<CWallet> LoadExisting(WalletContext& context, const std::string& name, std::unique_ptr<WalletDatabase> database, bilingual_str& error, std::vector<bilingual_str>& warnings);
 
     /**

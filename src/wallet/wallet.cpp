@@ -4287,7 +4287,7 @@ util::Result<MigrationResult> MigrateLegacyToDescriptor(const std::string& walle
         return util::Error{Untranslated("Wallet file verification failed.") + Untranslated(" ") + error};
     }
 
-    // Make the local wallet
+    // Initialize the CWallet for the local wallet.
     std::shared_ptr<CWallet> local_wallet = CWallet::LoadExisting(empty_context, wallet_name, std::move(database), error, warnings);
     if (!local_wallet) {
         return util::Error{Untranslated("Wallet loading failed.") + Untranslated(" ") + error};
