@@ -89,9 +89,8 @@ void initialize_chain()
     if constexpr (INVALID) {
         auto& chainman{*setup->m_node.chainman};
         for (const auto& block : chain) {
-            BlockValidationState dummy;
-            bool processed{chainman.ProcessNewBlockHeaders({{*block}}, true, dummy)};
-            Assert(processed);
+            auto result{chainman.ProcessNewBlockHeaders({{*block}}, true)};
+            Assert(result.IsValid());
             const auto* index{WITH_LOCK(::cs_main, return chainman.m_blockman.LookupBlockIndex(block->GetHash()))};
             Assert(index);
         }
@@ -171,9 +170,8 @@ void utxo_snapshot_fuzz(FuzzBufferType buffer)
         // Consume the bool, but skip the code for the INVALID fuzz target
         if constexpr (!INVALID) {
             for (const auto& block : *g_chain) {
-                BlockValidationState dummy;
-                bool processed{chainman.ProcessNewBlockHeaders({{*block}}, true, dummy)};
-                Assert(processed);
+                auto result{chainman.ProcessNewBlockHeaders({{*block}}, true)};
+                Assert(result.IsValid());
                 const auto* index{WITH_LOCK(::cs_main, return chainman.m_blockman.LookupBlockIndex(block->GetHash()))};
                 Assert(index);
             }
