@@ -6,13 +6,25 @@
 
 #include <common/netif.h>
 
+#include <compat/compat.h>
 #include <logging.h>
 #include <netbase.h>
 #include <util/check.h>
 #include <util/sock.h>
+#if defined(__APPLE__)
 #include <util/syserror.h>
+#endif
+
+#include <cerrno>
+#include <cstdint>
+#include <cstring>
+#include <functional>
+#include <memory>
+#include <string>
+#include <type_traits>
 
 #if defined(__linux__)
+#include <linux/netlink.h>
 #include <linux/rtnetlink.h>
 #elif defined(__FreeBSD__)
 #include <osreldate.h>
@@ -30,11 +42,12 @@
 #endif
 
 #ifdef HAVE_IFADDRS
-#include <sys/types.h>
+// IWYU suggests removing `sys/types.h` because modern systems
+// treat `ifaddrs.h` as self-contained. We retain it per the
+// getifaddrs manual page to ensure broad cross-platform compatibility.
+#include <sys/types.h> // IWYU pragma: keep
 #include <ifaddrs.h>
 #endif
-
-#include <type_traits>
 
 namespace {
 
