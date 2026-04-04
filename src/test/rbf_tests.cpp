@@ -285,7 +285,7 @@ BOOST_FIXTURE_TEST_CASE(improves_feerate, TestChain100Setup)
     BOOST_CHECK(res1.value().second == "insufficient feerate: does not improve feerate diagram");
 
     // With one more satoshi it does
-    changeset.reset();
+    std::move(changeset).get().reset();
     changeset = pool.GetChangeSet();
     changeset->StageRemoval(entry1);
     changeset->StageRemoval(entry2);
@@ -293,7 +293,7 @@ BOOST_FIXTURE_TEST_CASE(improves_feerate, TestChain100Setup)
     changeset->StageAddition(tx3, tx2_fee, 0, 1, 0, false, 4, LockPoints());
     BOOST_CHECK(ImprovesFeerateDiagram(*changeset) == std::nullopt);
 
-    changeset.reset();
+    std::move(changeset).get().reset();
     // With prioritisation of in-mempool conflicts, it affects the results of the comparison using the same args as just above
     pool.PrioritiseTransaction(entry1->GetSharedTx()->GetHash(), /*nFeeDelta=*/1);
     changeset = pool.GetChangeSet();
@@ -305,7 +305,7 @@ BOOST_FIXTURE_TEST_CASE(improves_feerate, TestChain100Setup)
     BOOST_CHECK(res2.has_value());
     BOOST_CHECK(res2.value().first == DiagramCheckError::FAILURE);
     BOOST_CHECK(res2.value().second == "insufficient feerate: does not improve feerate diagram");
-    changeset.reset();
+    std::move(changeset).get().reset();
 
     pool.PrioritiseTransaction(entry1->GetSharedTx()->GetHash(), /*nFeeDelta=*/-1);
 
@@ -319,7 +319,7 @@ BOOST_FIXTURE_TEST_CASE(improves_feerate, TestChain100Setup)
     changeset->StageAddition(tx1_conflict, tx1_fee, 0, 1, 0, false, 4, LockPoints());
     changeset->StageAddition(entry4.GetSharedTx(), tx2_fee, 0, 1, 0, false, 4, LockPoints());
     BOOST_CHECK(ImprovesFeerateDiagram(*changeset) == std::nullopt);
-    changeset.reset();
+    std::move(changeset).get().reset();
 
     // Adding a grandchild makes the cluster size 3, which is also calculable
     const auto tx5 = make_tx(/*inputs=*/ {tx2}, /*output_values=*/ {995 * CENT});
