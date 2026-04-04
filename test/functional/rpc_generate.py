@@ -33,21 +33,42 @@ class RPCGenerateTest(BitcoinTestFramework):
 
         self.log.info('Mine an empty block to address and return the hex')
         address = miniwallet.get_address()
-        generated_block = self.generateblock(node, output=address, transactions=[], submit=False)
+        generated_block = self.generateblock(node, outputs=address, transactions=[], submit=False)
         node.submitblock(hexdata=generated_block['hex'])
         assert_equal(generated_block['hash'], node.getbestblockhash())
 
+        self.log.info('Generate an empty block without address and fallback to OP_RETURN')
+        hash = self.generateblock(node, transactions=[])['hash']
+        block = node.getblock(blockhash=hash, verbose=2)
+        assert_equal(len(block['tx']), 1)
+        assert_equal(block['tx'][0]['vout'][0]['scriptPubKey']['asm'], 'OP_RETURN')
+
         self.log.info('Generate an empty block to address')
-        hash = self.generateblock(node, output=address, transactions=[])['hash']
+        hash = self.generateblock(node, outputs=address, transactions=[])['hash']
         block = node.getblock(blockhash=hash, verbose=2)
         assert_equal(len(block['tx']), 1)
         assert_equal(block['tx'][0]['vout'][0]['scriptPubKey']['address'], address)
+
+        self.log.info('Generate an empty block to a list of addresses')
+        address2 = miniwallet.get_address()
+        hash = self.generateblock(node, outputs=[address, address2], transactions=[])['hash']
+        block = node.getblock(blockhash=hash, verbose=2)
+        assert_equal(len(block['tx']), 1)
+        assert_equal(block['tx'][0]['vout'][0]['scriptPubKey']['address'], address)
+        assert_equal(block['tx'][0]['vout'][1]['scriptPubKey']['address'], address2)
 
         self.log.info('Generate an empty block to a descriptor')
         hash = self.generateblock(node, 'addr(' + address + ')', [])['hash']
         block = node.getblock(blockhash=hash, verbosity=2)
         assert_equal(len(block['tx']), 1)
         assert_equal(block['tx'][0]['vout'][0]['scriptPubKey']['address'], address)
+
+        self.log.info('Generate an empty block to a list of descriptors')
+        hash = self.generateblock(node, ['addr(' + address + ')', 'addr('+ address2 + ')'], [])['hash']
+        block = node.getblock(blockhash=hash, verbosity=2)
+        assert_equal(len(block['tx']), 1)
+        assert_equal(block['tx'][0]['vout'][0]['scriptPubKey']['address'], address)
+        assert_equal(block['tx'][0]['vout'][1]['scriptPubKey']['address'], address2)
 
         self.log.info('Generate an empty block to a combo descriptor with compressed pubkey')
         combo_key = '0279be667ef9dcbbac55a06295ce870b07029bfcdb2dce28d959f2815b16f81798'
@@ -65,6 +86,15 @@ class RPCGenerateTest(BitcoinTestFramework):
         assert_equal(len(block['tx']), 1)
         assert_equal(block['tx'][0]['vout'][0]['scriptPubKey']['address'], combo_address)
 
+        # Generate some extra mempool transactions to verify that they are mined if no txs are provided
+        for _ in range(10):
+            miniwallet.send_self_transfer(from_node=node)
+
+        self.log.info('Generate block with mempool txs')
+        hash = self.generateblock(node, address)['hash']
+        block = node.getblock(hash, 1)
+        assert_equal(len(block['tx']), 11)
+
         # Generate some extra mempool transactions to verify they don't get mined
         for _ in range(10):
             miniwallet.send_self_transfer(from_node=node)
@@ -75,6 +105,22 @@ class RPCGenerateTest(BitcoinTestFramework):
         block = node.getblock(hash, 1)
         assert_equal(len(block['tx']), 2)
         assert_equal(block['tx'][1], txid)
+
+        self.log.info('Generate block with multiple txid')
+        # Generate some transactions to get mined
+        txs = []
+        for _ in range(3):
+            txs.append(miniwallet.send_self_transfer(from_node=node)['txid'])
+        # Generate some extra mempool transactions to verify they don't get mined
+        for _ in range(10):
+            miniwallet.send_self_transfer(from_node=node)
+        hash = self.generateblock(node, address, txs)['hash']
+        block = node.getblock(hash, 1)
+        assert_equal(len(block['tx']), 4)
+        for i, tx in enumerate(txs):
+            assert_equal(block['tx'][i+1], tx)
+        # Clean the mempool for next tests
+        self.generateblock(node)
 
         self.log.info('Generate block with raw tx')
         rawtx = miniwallet.create_self_transfer()['hex']
@@ -87,7 +133,7 @@ class RPCGenerateTest(BitcoinTestFramework):
 
         # Ensure that generateblock can be called concurrently by many threads.
         self.log.info('Generate blocks in parallel')
-        generate_50_blocks = lambda n: [n.generateblock(output=address, transactions=[]) for _ in range(50)]
+        generate_50_blocks = lambda n: [n.generateblock(outputs=address, transactions=[]) for _ in range(50)]
         rpcs = [node.cli for _ in range(6)]
         with ThreadPoolExecutor(max_workers=len(rpcs)) as threads:
             list(threads.map(generate_50_blocks, rpcs))
@@ -100,7 +146,7 @@ class RPCGenerateTest(BitcoinTestFramework):
 
         self.log.info('Fail to generate block with txid not in mempool')
         missing_txid = '0000000000000000000000000000000000000000000000000000000000000000'
-        assert_raises_rpc_error(-5, 'Transaction ' + missing_txid + ' not in mempool.', self.generateblock, node, address, [missing_txid])
+        assert_raises_rpc_error(-25, 'Transaction ' + missing_txid + ' not in mempool.', self.generateblock, node, address, [missing_txid])
 
         self.log.info('Fail to generate block with invalid raw tx')
         invalid_raw_tx = '0000'
