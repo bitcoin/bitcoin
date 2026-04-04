@@ -1,4 +1,6 @@
-# ASMap Tool
+# ASMap Tools
+
+## asmap-tool
 
 Tool for performing various operations on textual and binary asmap files,
 particularly encoding/compressing the raw data to the binary format that can
@@ -80,4 +82,39 @@ bitcoin-cli getnodeaddresses 0 > addrs.json
 and pass in the address file as the third argument:
 ```
 python3 asmap-tool.py diff_addrs path/to/first.file path/to/second.file addrs.json
+```
+
+## ASmap Attestation
+
+### Creating an attestation
+
+Similar to [guix](../guix/README.md#attesting-to-build-outputs) attestation, one can attest to ASmaps. Attestations are collected in the [asmap.sigs](https://github.com/asmap/asmap.sigs) repo.
+
+To attest to an ASmap, you must have:
+- the result file `final_result.txt` containing the ASmap in text format
+- a PGP key added to the `builder-keys` dir in the [asmap.sigs](https://github.com/asmap/asmap.sigs) repo.
+
+Attesting to an ASmap output:
+```bash
+env ASMAP_SIGS_REPO=<path/to/asmap.sigs>\
+  ASMAP_FILE=<path/to/asmap_file.txt>\
+  ./asmap-attest
+```
+
+This will add a `SHA256SUMS` file and a `SHA256SUMS.asc` file under the `<EPOCH>/<SIGNER>` directory in `ASMAP_SIGS_REPO`. This process will encode the ASmap with `asmap-tool`, and write encoded ASmap files to the current directory.
+
+### Verifying attestations
+
+To verify attestations in the [asmap.sigs](https://github.com/asmap/asmap.sigs) repo, you should have the PGP keys in [asmap.sigs/builder-keys](https://github.com/asmap/asmap.sigs/tree/main/builder-keys) in your GPG keyring.
+
+To verify all attestations in the repo:
+```bash
+env ASMAP_SIGS_REPO=<path/to/asmap.sigs> ./asmap-verify
+```
+Optionally pass `SIGNER` and/or `EPOCH`:
+```bash
+env ASMAP_SIGS_REPO=<path/to/asmap.sigs>\
+  SIGNER=satoshi\
+  EPOCH=1777777777\
+  ./asmap-verify
 ```
