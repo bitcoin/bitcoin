@@ -9,18 +9,16 @@ This tutorial uses [jq](https://github.com/stedolan/jq) JSON processor to proces
 Before starting this tutorial, start the bitcoin node on the signet network.
 
 ```bash
-./build/bin/bitcoind -signet -daemon
+./build/bin/bitcoin node -signet -daemon
 ```
 
 This tutorial also uses the default WPKH derivation path to get the xpubs and does not conform to [BIP 45](https://github.com/bitcoin/bips/blob/master/bip-0045.mediawiki) or [BIP 87](https://github.com/bitcoin/bips/blob/master/bip-0087.mediawiki).
-
-At the time of writing, there is no way to extract a specific path from wallets in Bitcoin Core. For this, an external signer/xpub can be used.
 
 ## 1.1 Basic Multisig Workflow
 
 ### 1.1 Create the Descriptor Wallets
 
-For a 2-of-3 multisig, create 3 descriptor wallets. It is important that they are of the descriptor type in order to retrieve the wallet descriptors. These wallets contain HD seed and private keys, which will be used to sign the PSBTs and derive the xpub.
+For a 2-of-3 multisig, create 3 wallets. These wallets contain HD seed and private keys, which will be used to sign the PSBTs and derive the xpub.
 
 These three wallets should not be used directly for privacy reasons (public key reuse). They should only be used to sign transactions for the (watch-only) multisig wallet.
 
@@ -31,16 +29,7 @@ do
 done
 ```
 
-Extract the xpub of each wallet. To do this, the `listdescriptors` RPC is used. By default, Bitcoin Core single-sig wallets are created using path `m/44'/1'/0'` for PKH, `m/84'/1'/0'` for WPKH, `m/49'/1'/0'` for P2WPKH-nested-in-P2SH and `m/86'/1'/0'` for P2TR based accounts. Each of them uses the chain 0 for external addresses and chain 1 for internal ones, as shown in the example below.
-
-```
-wpkh([1004658e/84'/1'/0']tpubDCBEcmVKbfC9KfdydyLbJ2gfNL88grZu1XcWSW9ytTM6fitvaRmVyr8Ddf7SjZ2ZfMx9RicjYAXhuh3fmLiVLPodPEqnQQURUfrBKiiVZc8/0/*)#g8l47ngv
-
-wpkh([1004658e/84'/1'/0']tpubDCBEcmVKbfC9KfdydyLbJ2gfNL88grZu1XcWSW9ytTM6fitvaRmVyr8Ddf7SjZ2ZfMx9RicjYAXhuh3fmLiVLPodPEqnQQURUfrBKiiVZc8/1/*)#en65rxc5
-```
-
-The suffix (after #) is the checksum. Descriptors can optionally be suffixed with a checksum to protect against typos or copy-paste errors.
-All RPCs in Bitcoin Core will include the checksum in their output.
+Extract the xpub of each wallet. To do this, the `derivehdkey` RPC is used.
 
 Note that previously at least two descriptors were usually used, one for external derivation paths and one for internal ones. Since https://github.com/bitcoin/bitcoin/pull/22838 this redundancy has been eliminated by a multipath descriptor with <code><0;1></code> at the [BIP-44](https://github.com/bitcoin/bips/blob/master/bip-0044.mediawiki#change) change level expanding to external and internal descriptors when imported.
 
@@ -49,49 +38,46 @@ declare -A xpubs
 
 for ((n=1;n<=3;n++))
 do
- xpubs["xpub_${n}"]=$(./build/bin/bitcoin rpc -signet -rpcwallet="participant_${n}" listdescriptors | jq '.descriptors | [.[] | select(.desc | startswith("wpkh") and contains("/0/*") )][0] | .desc' | grep -Po '(?<=\().*(?=\))' | sed 's /0/\* /<0;1>/* ')
+ xpubs["xpub_${n}"]=$(./build/bin/bitcoin rpc -signet -rpcwallet="participant_${n}" derivehdkey "m/44h/1h/0h" | jq -r '.xpub')
 done
 ```
 
-`jq` is used to extract the xpub from the `wpkh` descriptor.
-
-The following command can be used to verify if the xpub was generated correctly.
+The following command can be used to verify if the xpubs were obtained successfully:
 
 ```bash
 for x in "${!xpubs[@]}"; do printf "[%s]=%s\n" "$x" "${xpubs[$x]}" ; done
 ```
 
-As previously mentioned, this step extracts the `m/84'/1'/0'` account instead of the path defined in [BIP 45](https://github.com/bitcoin/bips/blob/master/bip-0045.mediawiki) or [BIP 87](https://github.com/bitcoin/bips/blob/master/bip-0087.mediawiki), since there is no way to extract a specific path in Bitcoin Core at the time of writing.
+As previously mentioned, this step extracts the `m/44'/1'/0'` account instead of the path defined in [BIP 45](https://github.com/bitcoin/bips/blob/master/bip-0045.mediawiki) or [BIP 87](https://github.com/bitcoin/bips/blob/master/bip-0087.mediawiki), because the wallet currently can't sign for a derivation path that's not used in one of its descriptors.
 
 ### 1.2 Define the Multisig Descriptor
 
-Define the multisig descriptor, add the checksum and then, wrap it in a JSON array.
+Define the multisig descriptors.
+
+All RPCs in Bitcoin Core will include the checksum in their output.
 
 ```bash
-desc="wsh(sortedmulti(2,${xpubs["xpub_1"]},${xpubs["xpub_2"]},${xpubs["xpub_3"]}))"
+desc="wsh(sortedmulti(2,${xpubs["xpub_1"]}/<0;1>/*,${xpubs["xpub_2"]}/<0;1>/*,${xpubs["xpub_3"]}/<0;1>/*))"
 
-checksum=$(./build/bin/bitcoin rpc -signet getdescriptorinfo $desc | jq -r '.checksum')
+desc_sum=$(./build/bin/bitcoin rpc -signet getdescriptorinfo $desc | jq -r '.checksum')
 
-multisig_desc="[{\"desc\": \"${desc}#${checksum}\", \"active\": true, \"timestamp\": \"now\"}]"
+multisig_desc="[{\"desc\": \"$desc#$desc_sum\", \"active\": true, \"timestamp\": \"now\"}]"
 ```
 
-`desc` specifies the output type (`wsh`, in this case) and the xpubs involved. It also uses BIP 67 (`sortedmulti`), so the wallet can be recreated without worrying about the order of xpubs. Conceptually, descriptors describe a list of scriptPubKey (along with information for spending from it) [[source](https://github.com/bitcoin/bitcoin/issues/21199#issuecomment-780772418)].
-
-After creating the descriptor, it is necessary to add the checksum, which is required by the `importdescriptors` RPC.
+`desc` specifies the output type (`wsh`, in this case) and the xpubs involved. They also use BIP 67 (`sortedmulti`), so the wallet can be recreated without worrying about the order of xpubs. Conceptually, descriptors describe a list of scriptPubKey (along with information for spending from it) [[source](https://github.com/bitcoin/bitcoin/issues/21199#issuecomment-780772418)].
 
 The checksum for a descriptor without one can be computed using the `getdescriptorinfo` RPC. The response has the `checksum` field, which is the checksum for the input descriptor, append "#" and this checksum to the input descriptor.
 
-There are other fields that can be added to the descriptor:
+The checksum for a descriptor without one can be computed using the `getdescriptorinfo` RPC. The response has the `descriptor` field, which is the descriptor with the checksum added. The suffix (after #) is the checksum. Descriptors can optionally be suffixed with a checksum to protect against typos or copy-paste errors.
+
+There are other fields that can be added to the descriptors:
 
 * `active`: Sets the descriptor to be the active one for the corresponding output type (`wsh`, in this case).
-* `internal`: Indicates whether matching outputs should be treated as something other than incoming payments (e.g. change).
 * `timestamp`: Sets the time from which to start rescanning the blockchain for the descriptor, in UNIX epoch time.
 
-Note: when a multipath descriptor is imported, it is expanded into two descriptors which are imported separately, with the second implicitly used for internal (change) addresses.
+Documentation for these and other parameters can be found by typing `./build/bin/bitcoin rpc help importdescriptors`.
 
-Documentation for these and other parameters can be found by typing `./build/bin/bitcoin rpc -signet help importdescriptors`.
-
-`multisig_desc` wraps the descriptor in a JSON array and will be used to create the multisig wallet.
+`multisig_desc` concatenates the descriptor in a JSON array and then it will be used to create the multisig wallet.
 
 ### 1.3 Create the Multisig Wallet
 
@@ -99,15 +85,17 @@ To create the multisig wallet, first create an empty one (no keys, HD seed and p
 
 Then import the descriptor created in the previous step using the `importdescriptors` RPC.
 
-After that, `getwalletinfo` can be used to check if the wallet was created successfully.
+After that, `listdescriptors` can be used to check if the wallet was created successfully.
 
 ```bash
-./build/bin/bitcoin rpc -signet createwallet "multisig_wallet_01" disable_private_keys=true blank=true
+./build/bin/bitcoin rpc -signet -named createwallet wallet_name="multisig_wallet_01" disable_private_keys=true blank=true
 
 ./build/bin/bitcoin rpc -signet -rpcwallet="multisig_wallet_01" importdescriptors "$multisig_desc"
 
-./build/bin/bitcoin rpc -signet -rpcwallet="multisig_wallet_01" getwalletinfo
+./build/bin/bitcoin rpc -signet -rpcwallet="multisig_wallet_01" listdescriptors
 ```
+
+The `<0;1>` notation in `desc` caused the creation of two descriptors. One uses the chain 0 for external addresses the other the chain 1 for internal ones (change).
 
 Once the wallets have already been created and this tutorial needs to be repeated or resumed, it is not necessary to recreate them, just load them with the command below:
 
@@ -199,7 +187,7 @@ psbt_2=$(./build/bin/bitcoin rpc -signet -rpcwallet="participant_2" walletproces
 The PSBT, if signed separately by the co-signers, must be combined into one transaction before being finalized. This is done by `combinepsbt` RPC.
 
 ```bash
-combined_psbt=$(./build/bin/bitcoin rpc -signet combinepsbt "[$psbt_1, $psbt_2]")
+combined_psbt=$(./build/bin/bitcoin rpc -signet combinepsbt txs="[$psbt_1, $psbt_2]")
 ```
 
 There is an RPC called `joinpsbts`, but it has a different purpose than `combinepsbt`. `joinpsbts` joins the inputs from multiple distinct PSBTs into one PSBT.
