@@ -275,7 +275,7 @@ struct Peer {
     /** The pong reply we're expecting, or 0 if no pong expected. */
     std::atomic<uint64_t> m_ping_nonce_sent{0};
     /** When the last ping was sent, or 0 if no ping was ever sent */
-    std::atomic<std::chrono::microseconds> m_ping_start{0us};
+    std::atomic<NodeClock::time_point> m_ping_start{NodeClock::epoch};
     /** Whether a ping has been requested by the user */
     std::atomic<bool> m_ping_queued{false};
 
@@ -553,7 +553,7 @@ public:
     ServiceFlags GetDesirableServiceFlags(ServiceFlags services) const override;
 
 private:
-    void ProcessMessage(Peer& peer, CNode& pfrom, const std::string& msg_type, DataStream& vRecv, std::chrono::microseconds time_received,
+    void ProcessMessage(Peer& peer, CNode& pfrom, const std::string& msg_type, DataStream& vRecv, NodeClock::time_point time_received,
                         const std::atomic<bool>& interruptMsgProc)
         EXCLUSIVE_LOCKS_REQUIRED(!m_peer_mutex, !m_most_recent_block_mutex, !m_headers_presync_mutex, g_msgproc_mutex, !m_tx_download_mutex);
 
@@ -561,7 +561,7 @@ private:
     void ConsiderEviction(CNode& pto, Peer& peer, std::chrono::seconds time_in_seconds) EXCLUSIVE_LOCKS_REQUIRED(cs_main, g_msgproc_mutex);
 
     /** If we have extra outbound peers, try to disconnect the one with the oldest block announcement */
-    void EvictExtraOutboundPeers(std::chrono::seconds now) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
+    void EvictExtraOutboundPeers(NodeClock::time_point now) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
 
     /** Retrieve unbroadcast transactions from the mempool and reattempt sending to peers */
     void ReattemptInitialBroadcast(CScheduler& scheduler) EXCLUSIVE_LOCKS_REQUIRED(!m_peer_mutex);
@@ -732,7 +732,7 @@ private:
      *  May mark the peer to be disconnected if a ping has timed out.
      *  We use mockable time for ping timeouts, so setmocktime may cause pings
      *  to time out. */
-    void MaybeSendPing(CNode& node_to, Peer& peer, std::chrono::microseconds now);
+    void MaybeSendPing(CNode& node_to, Peer& peer, NodeClock::time_point now);
 
     /** Send `addr` messages on a regular schedule. */
     void MaybeSendAddr(CNode& node, Peer& peer, std::chrono::microseconds current_time) EXCLUSIVE_LOCKS_REQUIRED(g_msgproc_mutex);
@@ -1564,7 +1564,7 @@ void PeerManagerImpl::PushNodeVersion(CNode& pnode, const Peer& peer)
     } else {
         const CAddress& addr{pnode.addr};
         my_services = peer.m_our_services;
-        my_time = count_seconds(GetTime<std::chrono::seconds>());
+        my_time = TicksSinceEpoch<std::chrono::seconds>(NodeClock::now());
         your_services = addr.nServices;
         your_addr = addr.IsRoutable() && !IsProxy(addr) && addr.IsAddrV1Compatible() ? CService{addr} : CService{};
         my_user_agent = strSubVersion;
@@ -1809,9 +1809,9 @@ bool PeerManagerImpl::GetNodeStateStats(NodeId nodeid, CNodeStateStats& stats) c
     // since pingtime does not update until the ping is complete, which might take a while.
     // So, if a ping is taking an unusually long time in flight,
     // the caller can immediately detect that this is happening.
-    auto ping_wait{0us};
-    if ((0 != peer->m_ping_nonce_sent) && (0 != peer->m_ping_start.load().count())) {
-        ping_wait = GetTime<std::chrono::microseconds>() - peer->m_ping_start.load();
+    NodeClock::duration ping_wait{0us};
+    if ((0 != peer->m_ping_nonce_sent) && (peer->m_ping_start.load() > NodeClock::epoch)) {
+        ping_wait = NodeClock::now() - peer->m_ping_start.load();
     }
 
     if (auto tx_relay = peer->GetTxRelay(); tx_relay != nullptr) {
@@ -3571,7 +3571,7 @@ void PeerManagerImpl::PushPrivateBroadcastTx(CNode& node)
 }
 
 void PeerManagerImpl::ProcessMessage(Peer& peer, CNode& pfrom, const std::string& msg_type, DataStream& vRecv,
-                                     const std::chrono::microseconds time_received,
+                                     const NodeClock::time_point time_received,
                                      const std::atomic<bool>& interruptMsgProc)
 {
     AssertLockHeld(g_msgproc_mutex);
@@ -4159,7 +4159,7 @@ void PeerManagerImpl::ProcessMessage(Peer& peer, CNode& pfrom, const std::string
                 MakeAndPushMessage(pfrom, NetMsgType::TX, TX_WITH_WITNESS(*pushed_tx));
 
                 peer.m_ping_queued = true; // Ensure a ping will be sent: mimic a request via RPC.
-                MaybeSendPing(pfrom, peer, GetTime<std::chrono::microseconds>());
+                MaybeSendPing(pfrom, peer, NodeClock::now());
             } else {
                 LogDebug(BCLog::PRIVBROADCAST, "Disconnecting: got an unexpected GETDATA message, %s",
                          pfrom.LogPeer());
@@ -4901,7 +4901,7 @@ void PeerManagerImpl::ProcessMessage(Peer& peer, CNode& pfrom, const std::string
     }
 
     if (msg_type == NetMsgType::PONG) {
-        const auto ping_end = time_received;
+        const auto ping_end{time_received};
         uint64_t nonce = 0;
         size_t nAvail = vRecv.in_avail();
         bool bPingFinished = false;
@@ -5262,7 +5262,7 @@ void PeerManagerImpl::ConsiderEviction(CNode& pto, Peer& peer, std::chrono::seco
     }
 }
 
-void PeerManagerImpl::EvictExtraOutboundPeers(std::chrono::seconds now)
+void PeerManagerImpl::EvictExtraOutboundPeers(NodeClock::time_point now)
 {
     // If we have any extra block-relay-only peers, disconnect the youngest unless
     // it's given us a block -- in which case, compare with the second-youngest, and
@@ -5303,7 +5303,7 @@ void PeerManagerImpl::EvictExtraOutboundPeers(std::chrono::seconds now)
                 return true;
             } else {
                 LogDebug(BCLog::NET, "keeping block-relay-only peer=%d chosen for eviction (connect time: %d, blocks_in_flight: %d)\n",
-                         pnode->GetId(), count_seconds(pnode->m_connected), node_state->vBlocksInFlight.size());
+                         pnode->GetId(), TicksSinceEpoch<std::chrono::seconds>(pnode->m_connected), node_state->vBlocksInFlight.size());
             }
             return false;
         });
@@ -5354,7 +5354,7 @@ void PeerManagerImpl::EvictExtraOutboundPeers(std::chrono::seconds now)
                     return true;
                 } else {
                     LogDebug(BCLog::NET, "keeping outbound peer=%d chosen for eviction (connect time: %d, blocks_in_flight: %d)\n",
-                             pnode->GetId(), count_seconds(pnode->m_connected), state.vBlocksInFlight.size());
+                             pnode->GetId(), TicksSinceEpoch<std::chrono::seconds>(pnode->m_connected), state.vBlocksInFlight.size());
                     return false;
                 }
             });
@@ -5374,9 +5374,10 @@ void PeerManagerImpl::CheckForStaleTipAndEvictPeers()
 {
     LOCK(cs_main);
 
+    const auto current_time{NodeClock::now()};
     auto now{GetTime<std::chrono::seconds>()};
 
-    EvictExtraOutboundPeers(now);
+    EvictExtraOutboundPeers(current_time);
 
     if (now > m_stale_tip_check_time) {
         // Check whether our tip is stale, and if so, allow using an extra
@@ -5397,15 +5398,15 @@ void PeerManagerImpl::CheckForStaleTipAndEvictPeers()
     }
 }
 
-void PeerManagerImpl::MaybeSendPing(CNode& node_to, Peer& peer, std::chrono::microseconds now)
+void PeerManagerImpl::MaybeSendPing(CNode& node_to, Peer& peer, NodeClock::time_point now)
 {
-    if (m_connman.ShouldRunInactivityChecks(node_to, std::chrono::duration_cast<std::chrono::seconds>(now)) &&
+    if (m_connman.ShouldRunInactivityChecks(node_to, now) &&
         peer.m_ping_nonce_sent &&
         now > peer.m_ping_start.load() + TIMEOUT_INTERVAL)
     {
         // The ping timeout is using mocktime. To disable the check during
         // testing, increase -peertimeout.
-        LogDebug(BCLog::NET, "ping timeout: %fs, %s", 0.000001 * count_microseconds(now - peer.m_ping_start.load()), node_to.DisconnectMsg());
+        LogDebug(BCLog::NET, "ping timeout: %fs, %s", Ticks<SecondsDouble>(now - peer.m_ping_start.load()), node_to.DisconnectMsg());
         node_to.fDisconnect = true;
         return;
     }
@@ -5734,13 +5735,14 @@ bool PeerManagerImpl::SendMessages(CNode& node)
     if (!node.fSuccessfullyConnected || node.fDisconnect)
         return true;
 
+    const auto now{NodeClock::now()};
     const auto current_time{GetTime<std::chrono::microseconds>()};
 
     // The logic below does not apply to private broadcast peers, so skip it.
     // Also in CConnman::PushMessage() we make sure that unwanted messages are
     // not sent. This here is just an optimization.
     if (node.IsPrivateBroadcastConn()) {
-        if (node.m_connected + PRIVATE_BROADCAST_MAX_CONNECTION_LIFETIME < current_time) {
+        if (node.m_connected + PRIVATE_BROADCAST_MAX_CONNECTION_LIFETIME < now) {
             LogDebug(BCLog::PRIVBROADCAST, "Disconnecting: did not complete the transaction send within %d seconds, %s",
                      count_seconds(PRIVATE_BROADCAST_MAX_CONNECTION_LIFETIME), node.LogPeer());
             node.fDisconnect = true;
@@ -5748,13 +5750,13 @@ bool PeerManagerImpl::SendMessages(CNode& node)
         return true;
     }
 
-    if (node.IsAddrFetchConn() && current_time - node.m_connected > 10 * AVG_ADDRESS_BROADCAST_INTERVAL) {
+    if (node.IsAddrFetchConn() && now - node.m_connected > 10 * AVG_ADDRESS_BROADCAST_INTERVAL) {
         LogDebug(BCLog::NET, "addrfetch connection timeout, %s", node.DisconnectMsg());
         node.fDisconnect = true;
         return true;
     }
 
-    MaybeSendPing(node, peer, current_time);
+    MaybeSendPing(node, peer, now);
 
     // MaybeSendPing may have marked peer for disconnection
     if (node.fDisconnect) return true;

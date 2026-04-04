@@ -30,6 +30,7 @@ struct NodeClock : public std::chrono::system_clock {
     static time_point now() noexcept;
     static std::time_t to_time_t(const time_point&) = delete; // unused
     static time_point from_time_t(std::time_t) = delete;      // unused
+    static constexpr time_point epoch{};
 };
 using NodeSeconds = std::chrono::time_point<NodeClock, std::chrono::seconds>;
 

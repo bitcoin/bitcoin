@@ -228,17 +228,17 @@ namespace GUIUtil
     /** Convert enum ConnectionType to QString */
     QString ConnectionTypeToQString(ConnectionType conn_type, bool prepend_direction);
 
-    /** Convert seconds into a QString with days, hours, mins, secs */
-    QString formatDurationStr(std::chrono::seconds dur);
+    /// Convert a duration into a QString with days, hours, mins, secs. This ignores sub-seconds.
+    QString formatDurationStr(std::chrono::nanoseconds dur);
 
     /** Convert peer connection time to a QString denominated in the most relevant unit. */
-    QString FormatPeerAge(std::chrono::seconds time_connected);
+    QString FormatPeerAge(NodeClock::time_point connected);
 
     /** Format CNodeStats.nServices bitmask into a user-readable string */
     QString formatServicesStr(quint64 mask);
 
-    /** Format a CNodeStats.m_last_ping_time into a user-readable string or display N/A, if 0 */
-    QString formatPingTime(std::chrono::microseconds ping_time);
+    /// Format a CNodeStats.m_last_ping_time/m_min_ping_time/m_ping_wait into a user-readable string if it exists, or display N/A
+    QString formatPingTime(NodeClock::duration ping_time);
 
     /** Format a CNodeStateStats.time_offset into a user-readable string */
     QString formatTimeOffset(int64_t time_offset);
