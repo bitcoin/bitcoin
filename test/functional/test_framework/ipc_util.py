@@ -95,8 +95,9 @@ def load_capnp_modules(config):
     }
 
 
-async def make_capnp_init_ctx(self):
-    node = self.nodes[0]
+async def make_capnp_init_ctx(self, node=None):
+    if node is None:
+        node = self.nodes[0]
     # Establish a connection, and create Init proxy object.
     connection = await capnp.AsyncIoStream.create_unix_connection(node.ipc_socket_path)
     client = capnp.TwoPartyClient(connection)
@@ -153,9 +154,9 @@ async def mining_get_coinbase_tx(block_template, ctx) -> CoinbaseTxData:
         lockTime=int(template_capnp.lockTime),
     )
 
-async def make_mining_ctx(self):
+async def make_mining_ctx(self, node=None):
     """Create IPC context and Mining proxy object."""
-    ctx, init = await make_capnp_init_ctx(self)
+    ctx, init = await make_capnp_init_ctx(self, node)
     self.log.debug("Create Mining proxy object")
     mining = init.makeMining(ctx).result
     return ctx, mining

@@ -909,6 +909,7 @@ public:
 
     bool submitSolution(uint32_t version, uint32_t timestamp, uint32_t nonce, CTransactionRef coinbase) override
     {
+        if (!coinbase) return false;
         AddMerkleRootAndCoinbase(m_block_template->block, std::move(coinbase), version, timestamp, nonce);
         return chainman().ProcessNewBlock(std::make_shared<const CBlock>(m_block_template->block), /*force_processing=*/true, /*min_pow_checked=*/true, /*new_block=*/nullptr);
     }
@@ -1009,6 +1010,33 @@ public:
         reason = state.GetRejectReason();
         debug = state.GetDebugMessage();
         return state.IsValid();
+    }
+
+    std::vector<CTransactionRef> getTransactionsByTxID(const std::vector<Txid>& txids) override
+    {
+        if (!m_node.mempool) return {};
+        LOCK(m_node.mempool->cs);
+
+        std::vector<CTransactionRef> results;
+        results.reserve(txids.size());
+        uint256 dummy_block_hash;
+        for (const auto& txid : txids) {
+            results.emplace_back(GetTransaction(/*block_index=*/nullptr, &*m_node.mempool, txid, chainman().m_blockman, dummy_block_hash));
+        }
+        return results;
+    }
+
+    std::vector<CTransactionRef> getTransactionsByWitnessID(const std::vector<Wtxid>& wtxids) override
+    {
+        if (!m_node.mempool) return {};
+        LOCK(m_node.mempool->cs);
+
+        std::vector<CTransactionRef> results;
+        results.reserve(wtxids.size());
+        for (const auto& wtxid : wtxids) {
+            results.emplace_back(GetTransaction(*m_node.mempool, wtxid));
+        }
+        return results;
     }
 
     NodeContext* context() override { return &m_node; }
