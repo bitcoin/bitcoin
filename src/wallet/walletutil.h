@@ -5,6 +5,7 @@
 #ifndef BITCOIN_WALLET_WALLETUTIL_H
 #define BITCOIN_WALLET_WALLETUTIL_H
 
+#include <interfaces/chain.h>
 #include <script/descriptor.h>
 #include <util/fs.h>
 
@@ -99,6 +100,19 @@ public:
 };
 
 WalletDescriptor GenerateWalletDescriptor(const CExtPubKey& master_key, const OutputType& output_type, bool internal);
+
+//! Add wallet name to persistent configuration so it will be loaded on startup.
+bool AddWalletSetting(interfaces::Chain& chain, const std::string& wallet_name);
+
+//! Remove wallet name from persistent configuration so it will not be loaded on startup.
+bool RemoveWalletSetting(interfaces::Chain& chain, const std::string& wallet_name);
+
+void UpdateWalletSetting(interfaces::Chain& chain,
+                                const std::string& wallet_name,
+                                std::optional<bool> load_on_startup,
+                                std::vector<bilingual_str>& warnings);
+
+util::Result<fs::path> GetWalletPath(const std::string& name);
 } // namespace wallet
 
 #endif // BITCOIN_WALLET_WALLETUTIL_H
