@@ -60,7 +60,7 @@ public:
     //! Sign PartiallySignedTransaction on the device.
     //! Calls `<command> signtransaction` and passes the PSBT via stdin.
     //! @param[in,out] psbt  PartiallySignedTransaction to be signed
-    bool SignTransaction(PartiallySignedTransaction& psbt, std::string& error);
+    [[nodiscard]] bool SignTransaction(PartiallySignedTransaction& psbt, std::string& error);
 };
 
 #endif // BITCOIN_EXTERNAL_SIGNER_H

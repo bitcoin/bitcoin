@@ -37,7 +37,7 @@ public:
      * @param[in] key_exp_pos Position of the key expression within the descriptor
      * @param[out] xpub The CExtPubKey to get from cache
      */
-    bool GetCachedParentExtPubKey(uint32_t key_exp_pos, CExtPubKey& xpub) const;
+    [[nodiscard]] bool GetCachedParentExtPubKey(uint32_t key_exp_pos, CExtPubKey& xpub) const;
     /** Cache an xpub derived at an index
      *
      * @param[in] key_exp_pos Position of the key expression within the descriptor
@@ -51,7 +51,7 @@ public:
      * @param[in] der_index Derivation index of the xpub
      * @param[out] xpub The CExtPubKey to get from cache
      */
-    bool GetCachedDerivedExtPubKey(uint32_t key_exp_pos, uint32_t der_index, CExtPubKey& xpub) const;
+    [[nodiscard]] bool GetCachedDerivedExtPubKey(uint32_t key_exp_pos, uint32_t der_index, CExtPubKey& xpub) const;
     /** Cache a last hardened xpub
      *
      * @param[in] key_exp_pos Position of the key expression within the descriptor
@@ -63,7 +63,7 @@ public:
      * @param[in] key_exp_pos Position of the key expression within the descriptor
      * @param[out] xpub The CExtPubKey to get from cache
      */
-    bool GetCachedLastHardenedExtPubKey(uint32_t key_exp_pos, CExtPubKey& xpub) const;
+    [[nodiscard]] bool GetCachedLastHardenedExtPubKey(uint32_t key_exp_pos, CExtPubKey& xpub) const;
 
     /** Retrieve all cached parent xpubs */
     ExtPubKeyMap GetCachedParentExtPubKeys() const;

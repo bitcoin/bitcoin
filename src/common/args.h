@@ -401,7 +401,7 @@ public:
      * Get settings file path, or return false if read-write settings were
      * disabled with -nosettings.
      */
-    bool GetSettingsPath(fs::path* filepath = nullptr, bool temp = false, bool backup = false) const EXCLUSIVE_LOCKS_REQUIRED(!cs_args);
+    [[nodiscard]] bool GetSettingsPath(fs::path* filepath = nullptr, bool temp = false, bool backup = false) const EXCLUSIVE_LOCKS_REQUIRED(!cs_args);
 
     /**
      * Read settings file. Push errors to vector, or log them if null.

@@ -195,7 +195,7 @@ public:
 
     enum Network GetNetwork() const;
     std::string ToStringAddr() const;
-    bool GetInAddr(struct in_addr* pipv4Addr) const;
+    [[nodiscard]] bool GetInAddr(struct in_addr* pipv4Addr) const;
     Network GetNetClass() const;
 
     //! For IPv4, mapped IPv4, SIIT translated IPv4, Teredo, 6to4 tunneled addresses, return the relevant IPv4 address as a uint32.
@@ -207,7 +207,7 @@ public:
     int GetReachabilityFrom(const CNetAddr& paddrPartner) const;
 
     explicit CNetAddr(const struct in6_addr& pipv6Addr, uint32_t scope = 0);
-    bool GetIn6Addr(struct in6_addr* pipv6Addr) const;
+    [[nodiscard]] bool GetIn6Addr(struct in6_addr* pipv6Addr) const;
 
     friend bool operator==(const CNetAddr& a, const CNetAddr& b);
     friend bool operator<(const CNetAddr& a, const CNetAddr& b);
@@ -537,7 +537,7 @@ public:
     CService(const struct in_addr& ipv4Addr, uint16_t port);
     explicit CService(const struct sockaddr_in& addr);
     uint16_t GetPort() const;
-    bool GetSockAddr(struct sockaddr* paddr, socklen_t* addrlen) const;
+    [[nodiscard]] bool GetSockAddr(struct sockaddr* paddr, socklen_t* addrlen) const;
     /**
      * Set CService from a network sockaddr.
      * @param[in] paddr Pointer to sockaddr structure
