@@ -291,7 +291,7 @@ std::string ConsumeScalarRPCArgument(FuzzedDataProvider& fuzzed_data_provider, b
         },
         [&] {
             // base64 encoded psbt
-            std::optional<PartiallySignedTransaction> opt_psbt = ConsumeDeserializable<PartiallySignedTransaction>(fuzzed_data_provider);
+            std::optional<PartiallySignedTransaction> opt_psbt = ConsumeDeserializableConstructor<PartiallySignedTransaction>(fuzzed_data_provider);
             if (!opt_psbt) {
                 good_data = false;
                 return;

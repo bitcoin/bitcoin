@@ -431,9 +431,8 @@ void TestGUIWatchOnly(interfaces::Node& node, TestChain100Setup& test)
     // Decode psbt
     std::optional<std::vector<unsigned char>> decoded_psbt = DecodeBase64(psbt_string);
     QVERIFY(decoded_psbt);
-    PartiallySignedTransaction psbt;
-    std::string err;
-    QVERIFY(DecodeRawPSBT(psbt, MakeByteSpan(*decoded_psbt), err));
+    util::Result<PartiallySignedTransaction> psbt = DecodeRawPSBT(MakeByteSpan(*decoded_psbt));
+    QVERIFY(psbt);
 }
 
 void TestGUI(interfaces::Node& node)

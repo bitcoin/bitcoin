@@ -111,6 +111,19 @@ void DeserializeFromFuzzingInput(FuzzBufferType buffer, T&& obj)
     assert(buffer.empty() || !Serialize(obj).empty());
 }
 
+template <typename T>
+T DeserializeConstructFromFuzzingInput(FuzzBufferType buffer)
+{
+    try {
+        SpanReader reader{buffer};
+        T obj(deserialize, reader);
+        assert(buffer.empty() || !Serialize(obj).empty());
+        return obj;
+    } catch (const std::ios_base::failure&) {
+        throw invalid_fuzzing_input_exception();
+    }
+}
+
 template <typename T, typename P>
 void AssertEqualAfterSerializeDeserialize(const T& obj, const P& params)
 {
@@ -184,19 +197,18 @@ FUZZ_TARGET_DESERIALIZE(key_origin_info_deserialize, {
     AssertEqualAfterSerializeDeserialize(key_origin_info);
 })
 FUZZ_TARGET_DESERIALIZE(partially_signed_transaction_deserialize, {
-    PartiallySignedTransaction partially_signed_transaction;
-    DeserializeFromFuzzingInput(buffer, partially_signed_transaction);
+    PartiallySignedTransaction partially_signed_transaction = DeserializeConstructFromFuzzingInput<PartiallySignedTransaction>(buffer);
 })
 FUZZ_TARGET_DESERIALIZE(prefilled_transaction_deserialize, {
     PrefilledTransaction prefilled_transaction;
     DeserializeFromFuzzingInput(buffer, prefilled_transaction);
 })
 FUZZ_TARGET_DESERIALIZE(psbt_input_deserialize, {
-    PSBTInput psbt_input;
+    PSBTInput psbt_input(0, Txid{}, 0);
     DeserializeFromFuzzingInput(buffer, psbt_input);
 })
 FUZZ_TARGET_DESERIALIZE(psbt_output_deserialize, {
-    PSBTOutput psbt_output;
+    PSBTOutput psbt_output(0, 0, CScript());
     DeserializeFromFuzzingInput(buffer, psbt_output);
 })
 FUZZ_TARGET_DESERIALIZE(block_deserialize, {
