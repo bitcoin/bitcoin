@@ -1618,7 +1618,7 @@ static RPCMethod getchaintips()
     std::set<const CBlockIndex*> setPrevs;
 
     for (const auto& [_, block_index] : chainman.BlockIndex()) {
-        if (!active_chain.Contains(&block_index)) {
+        if (!active_chain.Contains(block_index)) {
             setOrphans.insert(&block_index);
             setPrevs.insert(block_index.pprev);
         }
@@ -1636,15 +1636,16 @@ static RPCMethod getchaintips()
     /* Construct the output array.  */
     UniValue res(UniValue::VARR);
     for (const CBlockIndex* block : setTips) {
+        CHECK_NONFATAL(block);
         UniValue obj(UniValue::VOBJ);
         obj.pushKV("height", block->nHeight);
         obj.pushKV("hash", block->phashBlock->GetHex());
 
-        const int branchLen = block->nHeight - active_chain.FindFork(block)->nHeight;
+        const int branchLen = block->nHeight - active_chain.FindFork(*block)->nHeight;
         obj.pushKV("branchlen", branchLen);
 
         std::string status;
-        if (active_chain.Contains(block)) {
+        if (active_chain.Contains(*block)) {
             // This block is part of the currently active chain.
             status = "active";
         } else if (block->nStatus & BLOCK_FAILED_VALID) {
@@ -1853,7 +1854,7 @@ static RPCMethod getchaintxstats()
         if (!pindex) {
             throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Block not found");
         }
-        if (!chainman.ActiveChain().Contains(pindex)) {
+        if (!chainman.ActiveChain().Contains(*pindex)) {
             throw JSONRPCError(RPC_INVALID_PARAMETER, "Block is not in main chain");
         }
     }
@@ -2791,7 +2792,7 @@ static RPCMethod getdescriptoractivity()
             if (!pindex) {
                 throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Block not found");
             }
-            if (!chainman.ActiveChain().Contains(pindex)) {
+            if (!chainman.ActiveChain().Contains(*pindex)) {
                 throw JSONRPCError(RPC_INVALID_PARAMETER, "Block is not in main chain");
             }
             blockindexes_sorted.insert(pindex);
@@ -3152,7 +3153,6 @@ static RPCMethod dumptxoutset()
     }
 
     CConnman& connman = EnsureConnman(node);
-    const CBlockIndex* invalidate_index{nullptr};
     std::optional<NetworkDisable> disable_network;
     std::optional<TemporaryRollback> temporary_rollback;
 
@@ -3182,7 +3182,7 @@ static RPCMethod dumptxoutset()
             disable_network.emplace(connman);
         }
 
-        invalidate_index = WITH_LOCK(::cs_main, return node.chainman->ActiveChain().Next(target_index));
+        const CBlockIndex* invalidate_index{WITH_LOCK(::cs_main, return node.chainman->ActiveChain().Next(*target_index))};
         temporary_rollback.emplace(*node.chainman, *invalidate_index);
     }
 

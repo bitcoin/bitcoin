@@ -47,13 +47,11 @@ CBlockLocator GetLocator(const CBlockIndex* index)
     return CBlockLocator{LocatorEntries(index)};
 }
 
-const CBlockIndex *CChain::FindFork(const CBlockIndex *pindex) const {
-    if (pindex == nullptr) {
-        return nullptr;
-    }
+const CBlockIndex *CChain::FindFork(const CBlockIndex &pindex_ref) const {
+    auto pindex{&pindex_ref};
     if (pindex->nHeight > Height())
         pindex = pindex->GetAncestor(Height());
-    while (pindex && !Contains(pindex))
+    while (pindex && !Contains(*pindex))
         pindex = pindex->pprev;
     return pindex;
 }

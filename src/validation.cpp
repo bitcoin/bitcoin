@@ -126,7 +126,7 @@ const CBlockIndex* Chainstate::FindForkInGlobalIndex(const CBlockLocator& locato
     for (const uint256& hash : locator.vHave) {
         const CBlockIndex* pindex{m_blockman.LookupBlockIndex(hash)};
         if (pindex) {
-            if (m_chain.Contains(pindex)) {
+            if (m_chain.Contains(*pindex)) {
                 return pindex;
             }
             if (pindex->GetAncestor(m_chain.Height()) == m_chain.Tip()) {
@@ -3129,7 +3129,7 @@ CBlockIndex* Chainstate::FindMostWorkChain()
         // Just going until the active chain is an optimization, as we know all blocks in it are valid already.
         CBlockIndex *pindexTest = pindexNew;
         bool fInvalidAncestor = false;
-        while (pindexTest && !m_chain.Contains(pindexTest)) {
+        while (pindexTest && !m_chain.Contains(*pindexTest)) {
             assert(pindexTest->HaveNumChainTxs() || pindexTest->nHeight == 0);
 
             // Pruned nodes may have entries in setBlockIndexCandidates for
@@ -3188,7 +3188,7 @@ void Chainstate::PruneBlockIndexCandidates() {
  *
  * @returns true unless a system error occurred
  */
-bool Chainstate::ActivateBestChainStep(BlockValidationState& state, CBlockIndex* pindexMostWork, const std::shared_ptr<const CBlock>& pblock, bool& fInvalidFound, std::vector<ConnectedBlock>& connected_blocks)
+bool Chainstate::ActivateBestChainStep(BlockValidationState& state, CBlockIndex& pindexMostWork, const std::shared_ptr<const CBlock>& pblock, bool& fInvalidFound, std::vector<ConnectedBlock>& connected_blocks)
 {
     AssertLockHeld(cs_main);
     if (m_mempool) AssertLockHeld(m_mempool->cs);
@@ -3218,13 +3218,13 @@ bool Chainstate::ActivateBestChainStep(BlockValidationState& state, CBlockIndex*
     std::vector<CBlockIndex*> vpindexToConnect;
     bool fContinue = true;
     int nHeight = pindexFork ? pindexFork->nHeight : -1;
-    while (fContinue && nHeight != pindexMostWork->nHeight) {
+    while (fContinue && nHeight != pindexMostWork.nHeight) {
         // Don't iterate the entire list of potential improvements toward the best tip, as we likely only need
         // a few blocks along the way.
-        int nTargetHeight = std::min(nHeight + 32, pindexMostWork->nHeight);
+        int nTargetHeight = std::min(nHeight + 32, pindexMostWork.nHeight);
         vpindexToConnect.clear();
         vpindexToConnect.reserve(nTargetHeight - nHeight);
-        CBlockIndex* pindexIter = pindexMostWork->GetAncestor(nTargetHeight);
+        CBlockIndex* pindexIter = pindexMostWork.GetAncestor(nTargetHeight);
         while (pindexIter && pindexIter->nHeight != nHeight) {
             vpindexToConnect.push_back(pindexIter);
             pindexIter = pindexIter->pprev;
@@ -3233,7 +3233,7 @@ bool Chainstate::ActivateBestChainStep(BlockValidationState& state, CBlockIndex*
 
         // Connect new blocks.
         for (CBlockIndex* pindexConnect : vpindexToConnect | std::views::reverse) {
-            if (!ConnectTip(state, pindexConnect, pindexConnect == pindexMostWork ? pblock : std::shared_ptr<const CBlock>(), connected_blocks, disconnectpool)) {
+            if (!ConnectTip(state, pindexConnect, pindexConnect == &pindexMostWork ? pblock : std::shared_ptr<const CBlock>(), connected_blocks, disconnectpool)) {
                 if (state.IsInvalid()) {
                     // The block violates a consensus rule.
                     if (state.GetResult() != BlockValidationResult::BLOCK_MUTATED) {
@@ -3383,7 +3383,7 @@ bool Chainstate::ActivateBestChain(BlockValidationState& state, std::shared_ptr<
                 // in case snapshot validation is completed during ActivateBestChainStep, the
                 // result of GetRole() changes from BACKGROUND to NORMAL.
                const ChainstateRole chainstate_role{this->GetRole()};
-                if (!ActivateBestChainStep(state, pindexMostWork, pblock && pblock->GetHash() == pindexMostWork->GetBlockHash() ? pblock : nullBlockPtr, fInvalidFound, connected_blocks)) {
+                if (!ActivateBestChainStep(state, *pindexMostWork, pblock && pblock->GetHash() == pindexMostWork->GetBlockHash() ? pblock : nullBlockPtr, fInvalidFound, connected_blocks)) {
                     // A system error occurred
                     return false;
                 }
@@ -3408,7 +3408,7 @@ bool Chainstate::ActivateBestChain(BlockValidationState& state, std::shared_ptr<
             } while (!m_chain.Tip() || (starting_tip && CBlockIndexWorkComparator()(m_chain.Tip(), starting_tip)));
             if (!blocks_connected) return true;
 
-            const CBlockIndex* pindexFork = m_chain.FindFork(starting_tip);
+            const CBlockIndex* pindexFork = starting_tip ? m_chain.FindFork(*starting_tip) : nullptr;
             bool still_in_ibd = m_chainman.IsInitialBlockDownload();
 
             if (was_in_ibd && !still_in_ibd) {
@@ -3518,7 +3518,7 @@ bool Chainstate::PreciousBlock(BlockValidationState& state, CBlockIndex* pindex)
     return ActivateBestChain(state, std::shared_ptr<const CBlock>());
 }
 
-bool Chainstate::InvalidateBlock(BlockValidationState& state, CBlockIndex* pindex)
+bool Chainstate::InvalidateBlock(BlockValidationState& state, CBlockIndex* const pindex)
 {
     AssertLockNotHeld(m_chainstate_mutex);
     AssertLockNotHeld(::cs_main);
@@ -3544,16 +3544,16 @@ bool Chainstate::InvalidateBlock(BlockValidationState& state, CBlockIndex* pinde
     {
         LOCK(cs_main);
         for (auto& entry : m_blockman.m_block_index) {
-            CBlockIndex* candidate = &entry.second;
+            CBlockIndex& candidate = entry.second;
             // We don't need to put anything in our active chain into the
             // multimap, because those candidates will be found and considered
             // as we disconnect.
             // Instead, consider only non-active-chain blocks that score
             // at least as good with CBlockIndexWorkComparator as the new tip.
             if (!m_chain.Contains(candidate) &&
-                !CBlockIndexWorkComparator()(candidate, pindex->pprev) &&
-                !(candidate->nStatus & BLOCK_FAILED_VALID)) {
-                highpow_outofchain_headers.insert({candidate->nChainWork, candidate});
+                !CBlockIndexWorkComparator()(&candidate, pindex->pprev) &&
+                !(candidate.nStatus & BLOCK_FAILED_VALID)) {
+                highpow_outofchain_headers.insert({candidate.nChainWork, &candidate});
             }
         }
     }
@@ -3573,9 +3573,9 @@ bool Chainstate::InvalidateBlock(BlockValidationState& state, CBlockIndex* pinde
         // Lock for as long as disconnectpool is in scope to make sure MaybeUpdateMempoolForReorg is
         // called after DisconnectTip without unlocking in between
         LOCK(MempoolMutex());
-        if (!m_chain.Contains(pindex)) break;
+        if (!m_chain.Contains(*pindex)) break;
         pindex_was_in_chain = true;
-        CBlockIndex* disconnected_tip{m_chain.Tip()};
+        CBlockIndex* const disconnected_tip{m_chain.Tip()};
 
         // ActivateBestChain considers blocks already in m_chain
         // unconditionally valid already, so force disconnect away from it.
@@ -3645,7 +3645,7 @@ bool Chainstate::InvalidateBlock(BlockValidationState& state, CBlockIndex* pinde
 
     {
         LOCK(cs_main);
-        if (m_chain.Contains(to_mark_failed)) {
+        if (m_chain.Contains(*to_mark_failed)) {
             // If the to-be-marked invalid block is in the active chain, something is interfering and we can't proceed.
             return false;
         }
@@ -4722,7 +4722,7 @@ VerifyDBResult CVerifyDB::VerifyDB(
                 reportDone = percentageDone / 10;
             }
             m_notifications.progress(_("Verifying blocks…"), percentageDone, false);
-            pindex = chainstate.m_chain.Next(pindex);
+            pindex = chainstate.m_chain.Next(*pindex);
             CBlock block;
             if (!chainstate.m_blockman.ReadBlock(block, *pindex)) {
                 LogError("Verification error: ReadBlock failed at %d, hash=%s", pindex->nHeight, pindex->GetBlockHash().ToString());
@@ -5159,7 +5159,7 @@ void ChainstateManager::CheckBlockIndex() const
     std::multimap<const CBlockIndex*, const CBlockIndex*> forward;
     for (auto& [_, block_index] : m_blockman.m_block_index) {
         // Only save indexes in forward that are not part of the best header chain.
-        if (!best_hdr_chain.Contains(&block_index)) {
+        if (!best_hdr_chain.Contains(block_index)) {
             // Only genesis, which must be part of the best header chain, can have a nullptr parent.
             assert(block_index.pprev);
             forward.emplace(block_index.pprev, &block_index);
@@ -5394,7 +5394,8 @@ void ChainstateManager::CheckBlockIndex() const
             pindex = range.first->second;
             nHeight++;
             continue;
-        } else if (best_hdr_chain.Contains(pindex)) {
+        }
+        if (best_hdr_chain.Contains(*pindex)) {
             // Descend further into best header chain.
             nHeight++;
             pindex = best_hdr_chain[nHeight];
