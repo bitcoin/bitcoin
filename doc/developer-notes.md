@@ -225,16 +225,15 @@ To describe a class, use the same construct above the class definition:
 class CAlert
 ```
 
-To describe a member or variable use:
+To describe a member or variable, place the comment on the line(s) before it, using `/**` and `*/`, `//!`, or `///`:
 ```c++
 //! Description before the member
 int var;
 ```
 
-or
-```c++
-int var; //!< Description after the member
-```
+Avoid trailing (inline) member comments like `int var; //!< Description after the member`.
+
+  - *Rationale*: Forgetting the `<` silently breaks Doxygen output.
 
 Also OK:
 ```c++

@@ -126,10 +126,14 @@ public:
 private:
     /// Status of a transaction sent to a given node.
     struct SendStatus {
-        const NodeId nodeid; /// Node to which the transaction will be sent (or was sent).
-        const CService address; /// Address of the node.
-        const NodeClock::time_point picked; ///< When was the transaction picked for sending to the node.
-        std::optional<NodeClock::time_point> confirmed; ///< When was the transaction reception confirmed by the node (by PONG).
+        /// Node to which the transaction will be sent (or was sent).
+        const NodeId nodeid;
+        /// Address of the node.
+        const CService address;
+        /// When was the transaction picked for sending to the node.
+        const NodeClock::time_point picked;
+        /// When was the transaction reception confirmed by the node (by PONG).
+        std::optional<NodeClock::time_point> confirmed;
 
         SendStatus(const NodeId& nodeid, const CService& address, const NodeClock::time_point& picked) : nodeid{nodeid}, address{address}, picked{picked} {}
     };
