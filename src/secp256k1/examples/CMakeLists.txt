@@ -8,8 +8,10 @@ function(add_example name)
     secp256k1
     $<$<PLATFORM_ID:Windows>:bcrypt>
   )
-  set(test_name ${name}_example)
-  add_test(NAME secp256k1_${test_name} COMMAND ${target_name})
+  add_test(NAME secp256k1.example.${name} COMMAND ${target_name})
+  set_tests_properties(secp256k1.example.${name} PROPERTIES
+    LABELS secp256k1_example
+  )
 endfunction()
 
 add_example(ecdsa)

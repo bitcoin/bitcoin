@@ -144,15 +144,24 @@ if(SECP256K1_BUILD_TESTS)
     list(APPEND TEST_DEFINITIONS SUPPORTS_CONCURRENCY=1)
   endif()
 
-  add_executable(noverify_tests tests.c)
-  target_link_libraries(noverify_tests secp256k1_precomputed secp256k1_asm)
-  target_compile_definitions(noverify_tests PRIVATE ${TEST_DEFINITIONS})
-  add_test(NAME secp256k1_noverify_tests COMMAND noverify_tests)
+  function(add_executable_and_tests exe_name verify_definition)
+    add_executable(${exe_name} tests.c)
+    target_link_libraries(${exe_name} secp256k1_precomputed secp256k1_asm)
+    target_compile_definitions(${exe_name} PRIVATE ${verify_definition} ${TEST_DEFINITIONS})
+    include(DiscoverTests)
+    discover_tests(${exe_name}
+      DISCOVERY_ARGS        "--list_tests"
+      DISCOVERY_MATCH       "^\\t\\\\[ *[0-9]+\\\\] ([^ ].*)$"
+      TEST_NAME_REPLACEMENT "secp256k1.${exe_name}.\\\\1"
+      TEST_ARGS_REPLACEMENT "--target=\\\\1 --log=1"
+      PROPERTIES
+        LABELS "secp256k1_${exe_name}"
+    )
+  endfunction()
+
+  add_executable_and_tests(noverify_tests "")
   if(NOT CMAKE_BUILD_TYPE STREQUAL "Coverage")
-    add_executable(tests tests.c)
-    target_compile_definitions(tests PRIVATE VERIFY ${TEST_DEFINITIONS})
-    target_link_libraries(tests secp256k1_precomputed secp256k1_asm)
-    add_test(NAME secp256k1_tests COMMAND tests)
+    add_executable_and_tests(tests VERIFY)
   endif()
   unset(TEST_DEFINITIONS)
 endif()
@@ -162,7 +171,10 @@ if(SECP256K1_BUILD_EXHAUSTIVE_TESTS)
   add_executable(exhaustive_tests tests_exhaustive.c)
   target_link_libraries(exhaustive_tests secp256k1_asm)
   target_compile_definitions(exhaustive_tests PRIVATE $<$<NOT:$<CONFIG:Coverage>>:VERIFY>)
-  add_test(NAME secp256k1_exhaustive_tests COMMAND exhaustive_tests)
+  add_test(NAME secp256k1.exhaustive_tests COMMAND exhaustive_tests)
+  set_tests_properties(secp256k1.exhaustive_tests PROPERTIES
+    LABELS secp256k1_exhaustive
+  )
 endif()
 
 if(SECP256K1_BUILD_CTIME_TESTS)
