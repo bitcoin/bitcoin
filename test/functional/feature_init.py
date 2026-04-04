@@ -323,12 +323,48 @@ class InitTest(BitcoinTestFramework):
         for option in options:
             self.restart_node(1, option)
 
+    def restart_node_with_fd_limit(self, limit):
+        """Restart node 1 with a given soft RLIMIT_NOFILE. Skips if the limit cannot be set."""
+        import resource
+        soft, hard = resource.getrlimit(resource.RLIMIT_NOFILE)
+        try:
+            resource.setrlimit(resource.RLIMIT_NOFILE, (limit, hard))
+        except (ValueError, OSError):
+            self.log.info(f"Skipping rlimit test: cannot set soft limit (hard={hard})")
+            return
+        try:
+            self.restart_node(1)
+            self.log.debug("Node started successfully with RLIM_INFINITY limit (soft={limit})")
+        finally:
+            resource.setrlimit(resource.RLIMIT_NOFILE, (soft, hard))
+            self.log.debug(f"Restored previous RLIMIT_NOFILE limits (soft={soft}, hard={hard})")
+
+    def init_rlimit_test(self):
+        """Test that bitcoind starts correctly when the soft RLIMIT_NOFILE limit is RLIM_INFINITY."""
+        if self.RLIM_INFINITY is None:
+            self.log.info("Skipping: resource module not available")
+            return
+
+        self.log.info("Testing node startup with RLIM_INFINITY fd limit")
+        self.restart_node_with_fd_limit(self.RLIM_INFINITY)
+
+    def init_rlimit_large_test(self):
+        """Test that bitcoind starts correctly when the soft RLIMIT_NOFILE limit is above INT_MAX."""
+        if self.RLIM_INFINITY is None:
+            self.log.info("Skipping: resource module not available")
+            return
+
+        self.log.info("Testing node startup with fd limit above INT_MAX")
+        self.restart_node_with_fd_limit(1 << 31)
+
     def run_test(self):
         self.init_pid_test()
         self.init_stress_test_interrupt()
         self.init_stress_test_removals()
         self.break_wait_test()
         self.init_empty_test()
+        self.init_rlimit_test()
+        self.init_rlimit_large_test()
 
 
 if __name__ == '__main__':
