@@ -62,10 +62,9 @@ enum class FeeReason {
     FULL_ESTIMATE,
     DOUBLE_ESTIMATE,
     CONSERVATIVE,
-    MEMPOOL_MIN,
-    FALLBACK,
-    REQUIRED,
 };
+
+std::string StringForFeeReason(FeeReason reason);
 
 /* Used to return detailed information about a feerate bucket */
 struct EstimatorBucket
