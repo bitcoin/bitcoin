@@ -77,20 +77,19 @@ target_include_directories(leveldb
 
 add_library(nowarn_leveldb_interface INTERFACE)
 if(MSVC)
-  target_compile_options(nowarn_leveldb_interface INTERFACE
-    /wd4722
-  )
   target_compile_definitions(nowarn_leveldb_interface INTERFACE
     _CRT_NONSTDC_NO_WARNINGS
   )
-else()
-  try_append_cxx_flags("-Wconditional-uninitialized" TARGET nowarn_leveldb_interface SKIP_LINK
-    IF_CHECK_PASSED "-Wno-conditional-uninitialized"
-  )
-  try_append_cxx_flags("-Wcovered-switch-default" TARGET nowarn_leveldb_interface SKIP_LINK
-    IF_CHECK_PASSED "-Wno-covered-switch-default"
+  try_append_cxx_flags("-Wunused-member-function" TARGET nowarn_leveldb_interface SKIP_LINK
+    IF_CHECK_PASSED "-Wno-unused-member-function"
   )
 endif()
+try_append_cxx_flags("-Wconditional-uninitialized" TARGET nowarn_leveldb_interface SKIP_LINK
+  IF_CHECK_PASSED "-Wno-conditional-uninitialized"
+)
+try_append_cxx_flags("-Wcovered-switch-default" TARGET nowarn_leveldb_interface SKIP_LINK
+  IF_CHECK_PASSED "-Wno-covered-switch-default"
+)
 
 target_link_libraries(leveldb PRIVATE
   core_interface

@@ -24,6 +24,18 @@ def run(cmd, **kwargs):
         sys.exit(str(e))
 
 
+ENV_VARS = {
+    "standard": [
+        "cmake", "-E", "env",
+        "CXXFLAGS=-Wno-return-type -Wno-error=conditional-uninitialized",
+    ],
+    "fuzz": [
+        "cmake", "-E", "env",
+        "CXXFLAGS=-Wno-return-type -Wno-error=conditional-uninitialized",
+    ],
+}
+
+
 GENERATE_OPTIONS = {
     "standard": [
         "-DBUILD_BENCH=ON",
@@ -66,12 +78,12 @@ def github_import_vs_env(_ci_type):
 
 
 def generate(ci_type):
-    command = [
+    command = ENV_VARS[ci_type] + [
         "cmake",
         "-B",
         "build",
         "-Werror=dev",
-        "--preset=vs2026",
+        "--preset=windows",
         "-DVCPKG_TARGET_TRIPLET=x64-windows-release",
     ] + GENERATE_OPTIONS[ci_type]
     if run(command, check=False).returncode != 0:
