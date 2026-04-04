@@ -6,11 +6,10 @@
 #include <bench/data/block413567.raw.h>
 #include <chainparams.h>
 #include <common/args.h>
+#include <consensus/tx_verify.h>
 #include <consensus/validation.h>
 #include <primitives/block.h>
 #include <primitives/transaction.h>
-#include <serialize.h>
-#include <span.h>
 #include <streams.h>
 #include <util/chaintype.h>
 #include <validation.h>
@@ -18,14 +17,13 @@
 #include <cassert>
 #include <cstddef>
 #include <memory>
-#include <optional>
 #include <vector>
 
-// These are the two major time-sinks which happen after we have fully received
+// These are the major time-sinks which happen after we have fully received
 // a block off the wire, but before we can relay the block on to peers using
 // compact block relay.
 
-static void DeserializeBlockTest(benchmark::Bench& bench)
+static void DeserializeBlockBench(benchmark::Bench& bench)
 {
     DataStream stream(benchmark::data::block413567);
     std::byte a{0};
@@ -39,26 +37,34 @@ static void DeserializeBlockTest(benchmark::Bench& bench)
     });
 }
 
-static void DeserializeAndCheckBlockTest(benchmark::Bench& bench)
+static void CheckBlockBench(benchmark::Bench& bench)
 {
-    DataStream stream(benchmark::data::block413567);
-    std::byte a{0};
-    stream.write({&a, 1}); // Prevent compaction
-
-    ArgsManager bench_args;
-    const auto chainParams = CreateChainParams(bench_args, ChainType::MAIN);
-
+    CBlock block;
+    DataStream(benchmark::data::block413567) >> TX_WITH_WITNESS(block);
+    const auto& chainParams = CreateChainParams(ArgsManager{}, ChainType::MAIN);
     bench.unit("block").run([&] {
-        CBlock block; // Note that CBlock caches its checked state, so we need to recreate it here
-        stream >> TX_WITH_WITNESS(block);
-        bool rewound = stream.Rewind(benchmark::data::block413567.size());
-        assert(rewound);
-
+        block.ResetChecked();
         BlockValidationState validationState;
-        bool checked = CheckBlock(block, validationState, chainParams->GetConsensus());
-        assert(checked);
+        bool checked = CheckBlock(block, validationState, chainParams->GetConsensus(), /*fCheckPOW=*/true, /*fCheckMerkleRoot=*/true);
+        assert(checked && validationState.IsValid());
     });
 }
 
-BENCHMARK(DeserializeBlockTest);
-BENCHMARK(DeserializeAndCheckBlockTest);
+static void SigOpsBlockBench(benchmark::Bench& bench)
+{
+    CBlock block;
+    DataStream(benchmark::data::block413567) >> TX_WITH_WITNESS(block);
+
+    constexpr auto expected_sigops{2841};
+    bench.batch(expected_sigops).unit("sigops").run([&] {
+        auto nSigOps{0};
+        for (const auto& tx : block.vtx) {
+            nSigOps += GetLegacySigOpCount(*tx);
+        }
+        assert(nSigOps == expected_sigops);
+    });
+}
+
+BENCHMARK(DeserializeBlockBench);
+BENCHMARK(CheckBlockBench);
+BENCHMARK(SigOpsBlockBench);

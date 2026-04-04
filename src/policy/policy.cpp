@@ -181,9 +181,9 @@ static bool CheckSigopsBIP54(const CTransaction& tx, const CCoinsViewCache& inpu
         // This means sigops in the spent scriptPubKey count toward the limit.
         // `fAccurate` means correctly accounting sigops for CHECKMULTISIGs(VERIFY) with 16 pubkeys
         // or fewer. This method of accounting was introduced by BIP16, and BIP54 reuses it.
-        // The GetSigOpCount call on the previous scriptPubKey counts both bare and P2SH sigops.
-        sigops += txin.scriptSig.GetSigOpCount(/*fAccurate=*/true);
-        sigops += prev_txo.scriptPubKey.GetSigOpCount(txin.scriptSig);
+        sigops += prev_txo.scriptPubKey.CountSigOps(/*fAccurate=*/true);
+        sigops += txin.scriptSig.CountSigOps(/*fAccurate=*/true);
+        sigops += CountP2SHSigOps(txin.scriptSig, prev_txo.scriptPubKey);
 
         if (sigops > MAX_TX_LEGACY_SIGOPS) {
             return false;
@@ -251,7 +251,7 @@ TxValidationState ValidateInputsStandardness(const CTransaction& tx, const CCoin
                 return state;
             }
             CScript subscript(stack.back().begin(), stack.back().end());
-            unsigned int sigop_count = subscript.GetSigOpCount(true);
+            unsigned int sigop_count = subscript.CountSigOps(/*fAccurate=*/true);
             if (sigop_count > MAX_P2SH_SIGOPS) {
                 state.Invalid(TxValidationResult::TX_INPUTS_NOT_STANDARD, "bad-txns-nonstandard-inputs", strprintf("p2sh redeemscript sigops exceed limit (input %u: %u > %u)", i, sigop_count, MAX_P2SH_SIGOPS));
                 return state;
