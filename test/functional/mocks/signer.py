@@ -56,6 +56,12 @@ def displayaddress(args):
 
     return sys.stdout.write(json.dumps({"address": expected_desc[args.desc]}))
 
+def register(args):
+    if args.fingerprint != "00000001":
+        return sys.stdout.write(json.dumps({"error": "Unexpected fingerprint", "fingerprint": args.fingerprint}))
+
+    return sys.stdout.write(json.dumps({"hmac": "0000000000000000000000000000000000000000000000000000000000000000"}))
+
 def signtx(args):
     if args.fingerprint != "00000001":
         return sys.stdout.write(json.dumps({"error": "Unexpected fingerprint", "fingerprint": args.fingerprint}))
@@ -89,6 +95,12 @@ parser_getdescriptors.add_argument('--account', metavar='account')
 parser_displayaddress = subparsers.add_parser('displayaddress', help='display address on signer')
 parser_displayaddress.add_argument('--desc', metavar='desc')
 parser_displayaddress.set_defaults(func=displayaddress)
+
+parser_register = subparsers.add_parser('register')
+parser_register.add_argument('--name')
+parser_register.add_argument('--desc')
+parser_register.add_argument('--key', action='append')
+parser_register.set_defaults(func=register)
 
 parser_signtx = subparsers.add_parser('signtx')
 parser_signtx.add_argument('psbt', metavar='psbt')

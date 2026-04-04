@@ -130,6 +130,9 @@ public:
     //! Display address on external signer
     virtual util::Result<void> displayAddress(const CTxDestination& dest) = 0;
 
+    //! Register BIP388 policy on external signer, store and return hmac
+    virtual util::Result<std::string> registerPolicy(const std::optional<std::string>& name) = 0;
+
     //! Lock coin.
     virtual bool lockCoin(const COutPoint& output, bool write_to_db) = 0;
 
