@@ -2717,7 +2717,8 @@ void CConnman::ThreadOpenConnections(const std::vector<std::string> connect, std
         // block-relay-only peer (to confirm our tip is current, see below) or the next_feeler
         // timer to decide if we should open a FEELER.
 
-        if (!m_anchors.empty() && (nOutboundBlockRelay < m_max_outbound_block_relay)) {
+        const bool have_anchors{WITH_LOCK(m_anchors_mutex, return !m_anchors.empty())};
+        if (have_anchors && (nOutboundBlockRelay < m_max_outbound_block_relay)) {
             conn_type = ConnectionType::BLOCK_RELAY;
             anchor = true;
         } else if (nOutboundFullRelay < m_max_outbound_full_relay) {
@@ -2777,15 +2778,23 @@ void CConnman::ThreadOpenConnections(const std::vector<std::string> connect, std
         const auto reachable_nets{g_reachable_nets.All()};
 
         while (!m_interrupt_net->interrupted()) {
-            if (anchor && !m_anchors.empty()) {
-                const CAddress addr = m_anchors.back();
-                m_anchors.pop_back();
-                if (!addr.IsValid() || IsLocal(addr) || !g_reachable_nets.Contains(addr) ||
-                    !m_msgproc->HasAllDesirableServiceFlags(addr.nServices) ||
-                    outbound_ipv46_peer_netgroups.contains(m_netgroupman.GetGroup(addr))) continue;
-                addrConnect = addr;
-                LogDebug(BCLog::NET, "Trying to make an anchor connection to %s\n", addrConnect.ToStringAddrPort());
-                break;
+            if (anchor) {
+                std::optional<CAddress> anchor_addr;
+                {
+                    LOCK(m_anchors_mutex);
+                    if (!m_anchors.empty()) {
+                        anchor_addr = m_anchors.back();
+                        m_anchors.pop_back();
+                    }
+                }
+                if (anchor_addr) {
+                    if (!anchor_addr->IsValid() || IsLocal(*anchor_addr) || !g_reachable_nets.Contains(*anchor_addr) ||
+                        !m_msgproc->HasAllDesirableServiceFlags(anchor_addr->nServices) ||
+                        outbound_ipv46_peer_netgroups.contains(m_netgroupman.GetGroup(*anchor_addr))) continue;
+                    addrConnect = *anchor_addr;
+                    LogDebug(BCLog::NET, "Trying to make an anchor connection to %s\n", addrConnect.ToStringAddrPort());
+                    break;
+                }
             }
 
             // If we didn't find an appropriate destination after trying 100 addresses fetched from addrman,
@@ -3368,6 +3377,12 @@ void CConnman::SetNetworkActive(bool active)
 
     fNetworkActive = active;
 
+    if (!fNetworkActive) {
+        auto anchors = GetCurrentBlockRelayOnlyConns();
+        LOCK(m_anchors_mutex);
+        m_anchors = std::move(anchors);
+    }
+
     if (m_client_interface) {
         m_client_interface->NotifyNetworkActiveChanged(fNetworkActive);
     }
@@ -3492,11 +3507,14 @@ bool CConnman::Start(CScheduler& scheduler, const Options& connOptions)
 
     if (m_use_addrman_outgoing) {
         // Load addresses from anchors.dat
+        LOCK(m_anchors_mutex);
         m_anchors = ReadAnchors(gArgs.GetDataDirNet() / ANCHORS_DATABASE_FILENAME);
         if (m_anchors.size() > MAX_BLOCK_RELAY_ONLY_ANCHORS) {
             m_anchors.resize(MAX_BLOCK_RELAY_ONLY_ANCHORS);
         }
-        LogInfo("%i block-relay-only anchors will be tried for connections.\n", m_anchors.size());
+        if (fNetworkActive) {
+            LogInfo("%i block-relay-only anchors will be tried for connections.\n", m_anchors.size());
+        }
     }
 
     if (m_client_interface) {
@@ -3649,10 +3667,18 @@ void CConnman::StopNodes()
         if (m_use_addrman_outgoing) {
             // Anchor connections are only dumped during clean shutdown.
             std::vector<CAddress> anchors_to_dump = GetCurrentBlockRelayOnlyConns();
-            if (anchors_to_dump.size() > MAX_BLOCK_RELAY_ONLY_ANCHORS) {
-                anchors_to_dump.resize(MAX_BLOCK_RELAY_ONLY_ANCHORS);
+            {
+                LOCK(m_anchors_mutex);
+                if (!fNetworkActive && !m_anchors.empty()) {
+                    anchors_to_dump = m_anchors;
+                }
             }
-            DumpAnchors(gArgs.GetDataDirNet() / ANCHORS_DATABASE_FILENAME, anchors_to_dump);
+            if (fNetworkActive || !anchors_to_dump.empty()) {
+                if (anchors_to_dump.size() > MAX_BLOCK_RELAY_ONLY_ANCHORS) {
+                    anchors_to_dump.resize(MAX_BLOCK_RELAY_ONLY_ANCHORS);
+                }
+                DumpAnchors(gArgs.GetDataDirNet() / ANCHORS_DATABASE_FILENAME, anchors_to_dump);
+            }
         }
     }
 
