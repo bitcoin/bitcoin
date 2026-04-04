@@ -35,6 +35,9 @@ from test_framework.util import (
     get_binary_paths,
 )
 
+if not os.getenv("CI_FAILFAST_TEST_LEAVE_DANGLING"):
+    import psutil
+
 # Minimum amount of space to run the tests.
 MIN_FREE_SPACE = 1.1 * 1024 * 1024 * 1024
 # Additional space to run an extra job.
@@ -691,11 +694,22 @@ def run_tests(*, test_list, build_dir, tmpdir, jobs=1, enable_coverage=False, ar
 
     all_passed = all_passed and coverage_passed
 
-    # Clean up dangling processes if any. This may only happen with --failfast option.
-    # Killing the process group will also terminate the current process but that is
-    # not an issue
+    def kill_descendants(pid):
+        parent = psutil.Process(pid)
+
+        # Get all descendants recursively
+        descendants = parent.children(recursive=True)
+        # Kill all children
+        for descendant in descendants:
+            try:
+                descendant.send_signal(signal.SIGKILL)
+            except psutil.NoSuchProcess:
+                pass
+
+    # Clean up dangling descendant processes if any. This may only happen with
+    # --failfast option.
     if not os.getenv("CI_FAILFAST_TEST_LEAVE_DANGLING") and len(job_queue.jobs):
-        os.killpg(os.getpgid(0), signal.SIGKILL)
+        kill_descendants(os.getpid())
 
     sys.exit(not all_passed)
 
