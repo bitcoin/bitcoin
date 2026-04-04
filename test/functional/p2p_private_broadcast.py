@@ -357,7 +357,7 @@ class P2PPrivateBroadcast(BitcoinTestFramework):
 
     def run_test(self):
         tx_originator = self.nodes[0]
-        self.tx_originator_debug_log_path = tx_originator.debug_log_path
+        self.tx_originator_debug_log_path = tx_originator.debug_log_path(wallet=False)
         tx_receiver = self.nodes[1]
         far_observer = tx_receiver.add_p2p_connection(P2PInterface())
 
