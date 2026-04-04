@@ -392,8 +392,7 @@ BOOST_AUTO_TEST_CASE(basic_transaction_tests)
 BOOST_AUTO_TEST_CASE(test_Get)
 {
     FillableSigningProvider keystore;
-    CCoinsView coinsDummy;
-    CCoinsViewCache coins(&coinsDummy);
+    CCoinsViewCache coins{&CoinsViewEmpty::Get()};
     std::vector<CMutableTransaction> dummyTransactions =
         SetupDummyInputs(keystore, coins, {11*CENT, 50*CENT, 21*CENT, 22*CENT});
 
@@ -749,8 +748,7 @@ BOOST_AUTO_TEST_CASE(test_witness)
 BOOST_AUTO_TEST_CASE(test_IsStandard)
 {
     FillableSigningProvider keystore;
-    CCoinsView coinsDummy;
-    CCoinsViewCache coins(&coinsDummy);
+    CCoinsViewCache coins{&CoinsViewEmpty::Get()};
     std::vector<CMutableTransaction> dummyTransactions =
         SetupDummyInputs(keystore, coins, {11*CENT, 50*CENT, 21*CENT, 22*CENT});
 
@@ -1022,8 +1020,7 @@ BOOST_AUTO_TEST_CASE(test_IsStandard)
 
 BOOST_AUTO_TEST_CASE(max_standard_legacy_sigops)
 {
-    CCoinsView coins_dummy;
-    CCoinsViewCache coins(&coins_dummy);
+    CCoinsViewCache coins{&CoinsViewEmpty::Get()};
     CKey key;
     key.MakeNewKey(true);
 
@@ -1132,8 +1129,7 @@ BOOST_AUTO_TEST_CASE(max_standard_legacy_sigops)
 BOOST_AUTO_TEST_CASE(checktxinputs_invalid_transactions_test)
 {
     auto check_invalid{[](CAmount input_value, CAmount output_value, bool coinbase, int spend_height, TxValidationResult expected_result, std::string_view expected_reason) {
-        CCoinsView coins_dummy;
-        CCoinsViewCache inputs(&coins_dummy);
+        CCoinsViewCache inputs{&CoinsViewEmpty::Get()};
 
         const COutPoint prevout{Txid::FromUint256(uint256::ONE), 0};
         inputs.AddCoin(prevout, Coin{{input_value, CScript() << OP_TRUE}, /*nHeightIn=*/1, coinbase}, /*possible_overwrite=*/false);
@@ -1181,8 +1177,7 @@ BOOST_AUTO_TEST_CASE(getvalueout_out_of_range_throws)
 /** Sanity check the return value of SpendsNonAnchorWitnessProg for various output types. */
 BOOST_AUTO_TEST_CASE(spends_witness_prog)
 {
-    CCoinsView coins_dummy;
-    CCoinsViewCache coins(&coins_dummy);
+    CCoinsViewCache coins{&CoinsViewEmpty::Get()};
     CKey key;
     key.MakeNewKey(true);
     const CPubKey pubkey{key.GetPubKey()};

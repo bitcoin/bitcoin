@@ -38,14 +38,14 @@ bool operator==(const Coin &a, const Coin &b) {
            a.out == b.out;
 }
 
-class CCoinsViewTest : public CCoinsView
+class CCoinsViewTest : public CoinsViewEmpty
 {
     FastRandomContext& m_rng;
     uint256 hashBestBlock_;
     std::map<COutPoint, Coin> map_;
 
 public:
-    CCoinsViewTest(FastRandomContext& rng) : m_rng{rng} {}
+    explicit CCoinsViewTest(FastRandomContext& rng) : m_rng{rng} {}
 
     std::optional<Coin> GetCoin(const COutPoint& outpoint) const override
     {
@@ -55,7 +55,7 @@ public:
 
     uint256 GetBestBlock() const override { return hashBestBlock_; }
 
-    void BatchWrite(CoinsViewCacheCursor& cursor, const uint256& hashBlock) override
+    void BatchWrite(CoinsViewCacheCursor& cursor, const uint256& block_hash) override
     {
         for (auto it{cursor.Begin()}; it != cursor.End(); it = cursor.NextAndMaybeErase(*it)){
             if (it->second.IsDirty()) {
@@ -67,8 +67,8 @@ public:
                 }
             }
         }
-        if (!hashBlock.IsNull())
-            hashBestBlock_ = hashBlock;
+        if (!block_hash.IsNull())
+            hashBestBlock_ = block_hash;
     }
 };
 
@@ -677,8 +677,7 @@ public:
         }
     }
 
-    CCoinsView root;
-    CCoinsViewCacheTest base{&root};
+    CCoinsViewCacheTest base{&CoinsViewEmpty::Get()};
     CCoinsViewCacheTest cache{&base};
 };
 
@@ -910,7 +909,7 @@ void TestFlushBehavior(
         for (auto i = all_caches.rbegin(); i != all_caches.rend(); ++i) {
             auto& cache = *i;
             cache->SanityCheck();
-            // hashBlock must be filled before flushing to disk; value is
+            // block_hash must be filled before flushing to disk; value is
             // unimportant here. This is normally done during connect/disconnect block.
             cache->SetBestBlock(m_rng.rand256());
             erase ? cache->Flush() : cache->Sync();
@@ -1087,8 +1086,7 @@ BOOST_AUTO_TEST_CASE(coins_resource_is_used)
 
 BOOST_AUTO_TEST_CASE(ccoins_addcoin_exception_keeps_usage_balanced)
 {
-    CCoinsView root;
-    CCoinsViewCacheTest cache{&root};
+    CCoinsViewCacheTest cache{&CoinsViewEmpty::Get()};
 
     const COutPoint outpoint{Txid::FromUint256(m_rng.rand256()), m_rng.rand32()};
 
@@ -1105,8 +1103,7 @@ BOOST_AUTO_TEST_CASE(ccoins_addcoin_exception_keeps_usage_balanced)
 
 BOOST_AUTO_TEST_CASE(ccoins_emplace_duplicate_keeps_usage_balanced)
 {
-    CCoinsView root;
-    CCoinsViewCacheTest cache{&root};
+    CCoinsViewCacheTest cache{&CoinsViewEmpty::Get()};
 
     const COutPoint outpoint{Txid::FromUint256(m_rng.rand256()), m_rng.rand32()};
 
