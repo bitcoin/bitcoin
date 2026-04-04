@@ -37,6 +37,7 @@ from test_framework.psbt import (
     PSBT_IN_WITNESS_UTXO,
     PSBT_OUT_MUSIG2_PARTICIPANT_PUBKEYS,
     PSBT_OUT_TAP_TREE,
+    PSBT_IN_FINAL_SCRIPTWITNESS,
 )
 from test_framework.script import CScript, OP_TRUE, SIGHASH_ALL, SIGHASH_ANYONECANPAY
 from test_framework.script_util import MIN_STANDARD_TX_NONWITNESS_SIZE
@@ -50,6 +51,7 @@ from test_framework.util import (
     assert_raises_rpc_error,
     find_vout_for_address,
     wallet_importprivkey,
+    bitflipper
 )
 from test_framework.wallet_util import (
     calculate_input_weight,
@@ -405,6 +407,48 @@ class PSBTTest(BitcoinTestFramework):
         assert_raises_rpc_error(-22, "TX decode failed invalid base64", node.cli("-named", "finalizepsbt", unknown_psbt_param).send_cli)
 
         self.log.info("PSBT parameter handling test completed successfully")
+
+    def test_psbt_with_invalid_signature(self):
+        self.log.info("Test descriptorprocesspsbt with invalid signature in signed PSBT")
+
+        def_wallet = self.nodes[0].get_wallet_rpc(self.default_wallet_name)
+        outputs = [{def_wallet.getnewaddress(address_type="bech32m"): 1}]
+        def_wallet.send(outputs)
+        self.generate(self.nodes[0], 1)
+
+        utxos = [utxo for utxo in def_wallet.listunspent() if utxo["desc"].startswith("tr")]
+        unsigned_psbt = def_wallet.walletcreatefundedpsbt(utxos, [{def_wallet.getnewaddress(): 0.5}])["psbt"]
+        descs = [desc for desc in def_wallet.listdescriptors(True)["descriptors"] if desc["desc"].startswith("tr")]
+
+        # unload wallet so as to not use the wallet RPC in further process PSBT calls
+        def_wallet.unloadwallet()
+
+        result = self.nodes[0].descriptorprocesspsbt(psbt=unsigned_psbt, descriptors=descs, finalize=True)
+        assert_equal(result["complete"], True)
+        assert_equal("hex" in result, True)
+
+        valid_sig_psbt = result["psbt"]
+        flawed_psbt = PSBT.from_base64(valid_sig_psbt)
+        valid_witness = flawed_psbt.i[0].map.get(PSBT_IN_FINAL_SCRIPTWITNESS)
+        # The witness format is [num_items: CompactSize] [item1_len: CompactSize] [item1_data] ...
+        # For taproot key-path spend [0x01] [0x40 or 0x41] [64 or 65 byte signature]
+        # We need to flip a bit only in the signature, not in the length prefixes
+        # Skip first 2 bytes (num_items=0x01, sig_len=0x40/0x41) and flip a bit in the signature
+        assert_equal(valid_witness[0], 1) # keypath spend
+        prefix = valid_witness[:2]
+        sig_len = valid_witness[1]
+        signature = valid_witness[2:2+sig_len]
+        invalid_sig = bitflipper(signature)
+        invalid_witness = prefix + invalid_sig + valid_witness[2+sig_len:]
+        flawed_psbt.i[0].map[PSBT_IN_FINAL_SCRIPTWITNESS] = invalid_witness
+        invalid_sig_psbt = flawed_psbt.to_base64()
+
+        result = self.nodes[0].descriptorprocesspsbt(psbt=invalid_sig_psbt, descriptors=descs, finalize=True)
+        assert_equal(result["complete"], False)
+        assert_equal("hex" in result, False)
+
+        # load the default wallet back
+        self.nodes[0].loadwallet(self.default_wallet_name)
 
     def run_test(self):
         # Create and fund a raw tx for sending 10 BTC
@@ -1249,6 +1293,7 @@ class PSBTTest(BitcoinTestFramework):
             self.test_sighash_mismatch()
         self.test_sighash_adding()
         self.test_psbt_named_parameter_handling()
+        self.test_psbt_with_invalid_signature()
 
 if __name__ == '__main__':
     PSBTTest(__file__).main()
