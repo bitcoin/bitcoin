@@ -27,6 +27,7 @@
 #include <util/any.h>
 #include <util/check.h>
 #include <util/time.h>
+#include <validationinterface.h>
 
 #include <cstdint>
 #ifdef HAVE_MALLOC_INFO
