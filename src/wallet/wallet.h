@@ -90,17 +90,16 @@ struct WalletContext;
 void WaitForDeleteWallet(std::shared_ptr<CWallet>&& wallet);
 
 bool AddWallet(WalletContext& context, const std::shared_ptr<CWallet>& wallet);
-bool RemoveWallet(WalletContext& context, const std::shared_ptr<CWallet>& wallet, std::optional<bool> load_on_start, std::vector<bilingual_str>& warnings);
-bool RemoveWallet(WalletContext& context, const std::shared_ptr<CWallet>& wallet, std::optional<bool> load_on_start);
+util::Result<void> RemoveWallet(WalletContext& context, const std::shared_ptr<CWallet>& wallet, std::optional<bool> load_on_start);
 std::vector<std::shared_ptr<CWallet>> GetWallets(WalletContext& context);
 std::shared_ptr<CWallet> GetDefaultWallet(WalletContext& context, size_t& count);
 std::shared_ptr<CWallet> GetWallet(WalletContext& context, const std::string& name);
-std::shared_ptr<CWallet> LoadWallet(WalletContext& context, const std::string& name, std::optional<bool> load_on_start, const DatabaseOptions& options, DatabaseStatus& status, bilingual_str& error, std::vector<bilingual_str>& warnings);
-std::shared_ptr<CWallet> CreateWallet(WalletContext& context, const std::string& name, std::optional<bool> load_on_start, DatabaseOptions& options, DatabaseStatus& status, bilingual_str& error, std::vector<bilingual_str>& warnings);
-std::shared_ptr<CWallet> RestoreWallet(WalletContext& context, const fs::path& backup_file, const std::string& wallet_name, std::optional<bool> load_on_start, DatabaseStatus& status, bilingual_str& error, std::vector<bilingual_str>& warnings, bool load_after_restore = true, bool allow_unnamed = false);
+util::ResultPtr<std::shared_ptr<CWallet>, DatabaseError> LoadWallet(WalletContext& context, const std::string& name, std::optional<bool> load_on_start, const DatabaseOptions& options);
+util::ResultPtr<std::shared_ptr<CWallet>, DatabaseError> CreateWallet(WalletContext& context, const std::string& name, std::optional<bool> load_on_start, DatabaseOptions& options);
+util::ResultPtr<std::shared_ptr<CWallet>, DatabaseError> RestoreWallet(WalletContext& context, const fs::path& backup_file, const std::string& wallet_name, std::optional<bool> load_on_start, bool load_after_restore = true, bool allow_unnamed = false);
 std::unique_ptr<interfaces::Handler> HandleLoadWallet(WalletContext& context, LoadWalletFn load_wallet);
 void NotifyWalletLoaded(WalletContext& context, const std::shared_ptr<CWallet>& wallet);
-std::unique_ptr<WalletDatabase> MakeWalletDatabase(const std::string& name, const DatabaseOptions& options, DatabaseStatus& status, bilingual_str& error);
+util::ResultPtr<std::unique_ptr<WalletDatabase>, DatabaseError> MakeWalletDatabase(const std::string& name, const DatabaseOptions& options);
 
 //! -fallbackfee default
 static const CAmount DEFAULT_FALLBACK_FEE = 0;
@@ -442,7 +441,7 @@ private:
      * block locator and m_last_block_processed, and registering for
      * notifications about new blocks and transactions.
      */
-    static bool AttachChain(const std::shared_ptr<CWallet>& wallet, interfaces::Chain& chain, bool rescan_required, bilingual_str& error, std::vector<bilingual_str>& warnings);
+    static util::Result<void> AttachChain(const std::shared_ptr<CWallet>& wallet, interfaces::Chain& chain, bool rescan_required);
 
     static NodeClock::time_point GetDefaultNextResend();
 
@@ -794,7 +793,7 @@ public:
     bool IsFromMe(const CTransaction& tx) const;
     CAmount GetDebit(const CTransaction& tx) const;
 
-    DBErrors PopulateWalletFromDB(bilingual_str& error, std::vector<bilingual_str>& warnings);
+    util::Result<void, DBErrors> PopulateWalletFromDB();
 
     /** Erases the provided transactions from the wallet. */
     util::Result<void> RemoveTxs(std::vector<Txid>& txs_to_remove) EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
@@ -868,13 +867,13 @@ public:
     /** Mark a transaction as replaced by another transaction. */
     bool MarkReplaced(const Txid& originalHash, const Txid& newHash);
 
-    static bool LoadWalletArgs(std::shared_ptr<CWallet> wallet, const WalletContext& context, bilingual_str& error, std::vector<bilingual_str>& warnings);
+    util::Result<void> LoadWalletArgs(const ArgsManager& args);
 
     /* Initializes, creates and returns a new CWallet; returns a null pointer in case of an error */
-    static std::shared_ptr<CWallet> CreateNew(WalletContext& context, const std::string& name, std::unique_ptr<WalletDatabase> database, uint64_t wallet_creation_flags, bilingual_str& error, std::vector<bilingual_str>& warnings);
+    static util::ResultPtr<std::shared_ptr<CWallet>> CreateNew(WalletContext& context, const std::string& name, std::unique_ptr<WalletDatabase> database, uint64_t wallet_creation_flags);
 
     /* Initializes, loads, and returns a CWallet from an existing wallet; returns a null pointer in case of an error */
-    static std::shared_ptr<CWallet> LoadExisting(WalletContext& context, const std::string& name, std::unique_ptr<WalletDatabase> database, bilingual_str& error, std::vector<bilingual_str>& warnings);
+    static util::ResultPtr<std::shared_ptr<CWallet>> LoadExisting(WalletContext& context, const std::string& name, std::unique_ptr<WalletDatabase> database);
 
     /**
      * Wallet post-init setup
@@ -1049,10 +1048,10 @@ public:
      * A backup is not created.
      * May crash if something unexpected happens in the filesystem.
      */
-    bool MigrateToSQLite(bilingual_str& error) EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
+    util::Result<void> MigrateToSQLite() EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
 
     //! Get all of the descriptors from a legacy wallet
-    std::optional<MigrationData> GetDescriptorsForLegacy(bilingual_str& error) const EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
+    util::Result<MigrationData> GetDescriptorsForLegacy() const EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
 
     //! Adds the ScriptPubKeyMans given in MigrationData to this wallet, removes LegacyScriptPubKeyMan,
     //! and where needed, moves tx and address book entries to watchonly_wallet or solvable_wallet

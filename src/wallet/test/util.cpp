@@ -49,9 +49,7 @@ std::unique_ptr<CWallet> CreateSyncedWallet(interfaces::Chain& chain, CChain& cc
 
 std::shared_ptr<CWallet> TestCreateWallet(std::unique_ptr<WalletDatabase> database, WalletContext& context, uint64_t create_flags)
 {
-    bilingual_str _error;
-    std::vector<bilingual_str> _warnings;
-    auto wallet = CWallet::CreateNew(context, "", std::move(database), create_flags, _error, _warnings);
+    auto wallet = Assert(CWallet::CreateNew(context, "", std::move(database), create_flags)).value();
     NotifyWalletLoaded(context, wallet);
     if (context.chain) {
         wallet->postInitProcess();
@@ -64,35 +62,29 @@ std::shared_ptr<CWallet> TestCreateWallet(WalletContext& context)
     DatabaseOptions options;
     options.require_create = true;
     options.create_flags = WALLET_FLAG_DESCRIPTORS;
-    DatabaseStatus status;
-    bilingual_str error;
     std::vector<bilingual_str> warnings;
-    auto database = MakeWalletDatabase("", options, status, error);
+    auto database = std::move(Assert(MakeWalletDatabase("", options)).value());
     return TestCreateWallet(std::move(database), context, options.create_flags);
 }
 
 
 std::shared_ptr<CWallet> TestLoadWallet(std::unique_ptr<WalletDatabase> database, WalletContext& context)
 {
-    bilingual_str error;
-    std::vector<bilingual_str> warnings;
-    auto wallet = CWallet::LoadExisting(context, "", std::move(database), error, warnings);
-    NotifyWalletLoaded(context, wallet);
+    auto wallet{CWallet::LoadExisting(context, "", std::move(database))};
+    NotifyWalletLoaded(context, wallet.value());
     if (context.chain) {
         wallet->postInitProcess();
     }
-    return wallet;
+    return wallet.value();
 }
 
 std::shared_ptr<CWallet> TestLoadWallet(WalletContext& context)
 {
     DatabaseOptions options;
     options.require_existing = true;
-    DatabaseStatus status;
-    bilingual_str error;
     std::vector<bilingual_str> warnings;
-    auto database = MakeWalletDatabase("", options, status, error);
-    return TestLoadWallet(std::move(database), context);
+    auto database{MakeWalletDatabase("", options)};
+    return TestLoadWallet(std::move(database.value()), context);
 }
 
 void TestUnloadWallet(std::shared_ptr<CWallet>&& wallet)
