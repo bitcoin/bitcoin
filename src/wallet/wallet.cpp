@@ -2929,7 +2929,9 @@ static util::Result<fs::path> GetWalletPath(const std::string& name)
     fs::file_type path_type = fs::symlink_status(wallet_path).type();
     if (!(path_type == fs::file_type::not_found || path_type == fs::file_type::directory ||
           (path_type == fs::file_type::symlink && fs::is_directory(wallet_path)) ||
-          (path_type == fs::file_type::regular && fs::PathFromString(name).filename() == fs::PathFromString(name)))) {
+          // Windows cross compile does not detect symlinks, so we need to explicitly check
+          // whether a "regular file" is actually a symlink.
+          (path_type == fs::file_type::regular && fs::PathFromString(name).filename() == fs::PathFromString(name) && !IsSymlink(wallet_path)))) {
         return util::Error{Untranslated(strprintf(
               "Invalid -wallet path '%s'. -wallet path should point to a directory where wallet.dat and "
               "database/log.?????????? files can be stored, a location where such a directory could be created, "

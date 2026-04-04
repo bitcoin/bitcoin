@@ -98,4 +98,11 @@ std::optional<fs::perms> InterpretPermString(const std::string& s);
 fs::path GetSpecialFolderPath(int nFolder, bool fCreate = true);
 #endif
 
+/** Determine whether the given path is a symbolic link or a reparse point on Windows
+ *
+ * @param[in] path The path to check
+ * @return Whether path is a symlink or reparse point
+ */
+bool IsSymlink(const fs::path& path);
+
 #endif // BITCOIN_UTIL_FS_HELPERS_H
