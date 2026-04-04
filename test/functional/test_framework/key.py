@@ -104,8 +104,8 @@ class ECPubKey:
         z = int.from_bytes(msg, 'big')
 
         # Run verifier algorithm on r, s
-        w = pow(s, -1, ORDER)
-        R = secp256k1.GE.mul((z * w, secp256k1.G), (r * w, self.p))
+        w = secp256k1.Scalar(pow(s, -1, ORDER))
+        R = secp256k1.GE.batch_mul((z * w, secp256k1.G), (r * w, self.p))
         if R.infinity or (int(R.x) % ORDER) != r:
             return False
         return True
@@ -226,8 +226,9 @@ def tweak_add_pubkey(key, tweak):
     assert len(key) == 32
     assert len(tweak) == 32
 
-    P = secp256k1.GE.from_bytes_xonly(key)
-    if P is None:
+    try:
+        P = secp256k1.GE.from_bytes_xonly(key)
+    except ValueError:
         return None
     t = int.from_bytes(tweak, 'big')
     if t >= ORDER:
@@ -247,8 +248,9 @@ def verify_schnorr(key, sig, msg):
     assert len(key) == 32
     assert len(sig) == 64
 
-    P = secp256k1.GE.from_bytes_xonly(key)
-    if P is None:
+    try:
+        P = secp256k1.GE.from_bytes_xonly(key)
+    except ValueError:
         return False
     r = int.from_bytes(sig[0:32], 'big')
     if r >= secp256k1.FE.SIZE:
@@ -256,8 +258,8 @@ def verify_schnorr(key, sig, msg):
     s = int.from_bytes(sig[32:64], 'big')
     if s >= ORDER:
         return False
-    e = int.from_bytes(TaggedHash("BIP0340/challenge", sig[0:32] + key + msg), 'big') % ORDER
-    R = secp256k1.GE.mul((s, secp256k1.G), (-e, P))
+    e = secp256k1.Scalar.from_bytes_wrapping(TaggedHash("BIP0340/challenge", sig[0:32] + key + msg))
+    R = secp256k1.GE.batch_mul((s, secp256k1.G), (-e, P))
     if R.infinity or not R.y.is_even():
         return False
     if r != R.x:
