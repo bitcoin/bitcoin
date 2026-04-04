@@ -144,10 +144,11 @@ void CachedTxGetAmounts(const CWallet& wallet, const CWalletTx& wtx,
     nFee = 0;
     listReceived.clear();
     listSent.clear();
+    const bool from_me_for_accounting = CachedTxIsFromMeForAccounting(wallet, wtx);
 
     // Compute fee:
     CAmount nDebit = CachedTxGetDebit(wallet, wtx, /*avoid_reuse=*/false);
-    if (nDebit > 0) // debit>0 means we signed/sent this transaction
+    if (from_me_for_accounting)
     {
         CAmount nValueOut = wtx.tx->GetValueOut();
         nFee = nDebit - nValueOut;
@@ -159,10 +160,10 @@ void CachedTxGetAmounts(const CWallet& wallet, const CWalletTx& wtx,
     {
         const CTxOut& txout = wtx.tx->vout[i];
         bool ismine = wallet.IsMine(txout);
-        // Only need to handle txouts if AT LEAST one of these is true:
-        //   1) they debit from us (sent)
-        //   2) the output is to us (received)
-        if (nDebit > 0)
+        // Only need to handle txouts if either:
+        //   1) we funded every input, so the transaction is a wallet send
+        //   2) the output is to us, so it is wallet receive data
+        if (from_me_for_accounting)
         {
             if (!include_change && OutputIsChange(wallet, txout))
                 continue;
@@ -182,8 +183,8 @@ void CachedTxGetAmounts(const CWallet& wallet, const CWalletTx& wtx,
 
         COutputEntry output = {address, txout.nValue, (int)i};
 
-        // If we are debited by the transaction, add the output as a "sent" entry
-        if (nDebit > 0)
+        // Only transactions fully funded by the wallet have send entries and fees.
+        if (from_me_for_accounting)
             listSent.push_back(output);
 
         // If we are receiving the output, add it as a "received" entry
@@ -199,6 +200,14 @@ bool CachedTxIsFromMe(const CWallet& wallet, const CWalletTx& wtx)
         wtx.m_cached_from_me = wallet.IsFromMe(*wtx.tx);
     }
     return wtx.m_cached_from_me.value();
+}
+
+bool CachedTxIsFromMeForAccounting(const CWallet& wallet, const CWalletTx& wtx)
+{
+    if (!wtx.m_cached_from_me_for_accounting.has_value()) {
+        wtx.m_cached_from_me_for_accounting = !wtx.tx->vin.empty() && AllInputsMine(wallet, *wtx.tx);
+    }
+    return wtx.m_cached_from_me_for_accounting.value();
 }
 
 // NOLINTNEXTLINE(misc-no-recursion)

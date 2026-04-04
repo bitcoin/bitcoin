@@ -741,10 +741,11 @@ RPCMethod gettransaction()
     CAmount nCredit = CachedTxGetCredit(*pwallet, wtx, /*avoid_reuse=*/false);
     CAmount nDebit = CachedTxGetDebit(*pwallet, wtx, /*avoid_reuse=*/false);
     CAmount nNet = nCredit - nDebit;
-    CAmount nFee = (CachedTxIsFromMe(*pwallet, wtx) ? wtx.tx->GetValueOut() - nDebit : 0);
+    const bool from_me_for_accounting = CachedTxIsFromMeForAccounting(*pwallet, wtx);
+    CAmount nFee = (from_me_for_accounting ? wtx.tx->GetValueOut() - nDebit : 0);
 
     entry.pushKV("amount", ValueFromAmount(nNet - nFee));
-    if (CachedTxIsFromMe(*pwallet, wtx))
+    if (from_me_for_accounting)
         entry.pushKV("fee", ValueFromAmount(nFee));
 
     WalletTxToJSON(*pwallet, wtx, entry);
