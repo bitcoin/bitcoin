@@ -29,6 +29,15 @@
 class PrivateBroadcast
 {
 public:
+
+    /// If a transaction is not sent to any peer for this duration,
+    /// then we consider it stale / for rebroadcasting.
+    static constexpr auto INITIAL_STALE_DURATION{5min};
+
+    /// If a transaction is not received back from the network for this duration
+    /// after it is broadcast, then we consider it stale / for rebroadcasting.
+    static constexpr auto STALE_DURATION{1min};
+
     struct PeerSendInfo {
         CService address;
         NodeClock::time_point sent;
@@ -37,6 +46,7 @@ public:
 
     struct TxBroadcastInfo {
         CTransactionRef tx;
+        NodeClock::time_point time_added;
         std::vector<PeerSendInfo> peers;
     };
 
@@ -176,9 +186,12 @@ private:
      */
     std::optional<TxAndSendStatusForNode> GetSendStatusByNode(const NodeId& nodeid)
         EXCLUSIVE_LOCKS_REQUIRED(m_mutex);
-
+    struct TxSendStatus {
+        const NodeClock::time_point time_added{NodeClock::now()};
+        std::vector<SendStatus> send_statuses;
+    };
     mutable Mutex m_mutex;
-    std::unordered_map<CTransactionRef, std::vector<SendStatus>, CTransactionRefHash, CTransactionRefComp>
+    std::unordered_map<CTransactionRef, TxSendStatus, CTransactionRefHash, CTransactionRefComp>
         m_transactions GUARDED_BY(m_mutex);
 };
 
