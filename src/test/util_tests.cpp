@@ -13,6 +13,7 @@
 #include <test/util/random.h>
 #include <test/util/setup_common.h>
 #include <uint256.h>
+#include <univalue.h>
 #include <util/bitdeque.h>
 #include <util/byte_units.h>
 #include <util/fs.h>
@@ -23,6 +24,7 @@
 #include <util/strencodings.h>
 #include <util/string.h>
 #include <util/time.h>
+#include <util/tokenbucket.h>
 #include <util/vector.h>
 
 #include <array>
@@ -35,7 +37,6 @@
 #include <optional>
 #include <string>
 #include <thread>
-#include <univalue.h>
 #include <utility>
 #include <vector>
 
@@ -1870,6 +1871,81 @@ BOOST_AUTO_TEST_CASE(ceil_div_test)
 
     // `serialize.h` varint scratch-buffer pattern.
     BOOST_CHECK_EQUAL(CeilDiv(sizeof(uint64_t) * 8, 7u), (sizeof(uint64_t) * 8 + 6) / 7);
+}
+
+BOOST_AUTO_TEST_CASE(token_bucket_initial_value)
+{
+    // Initial value is clamped to cap
+    util::TokenBucket<NodeClock> b1(/*rate=*/1, /*value=*/100, /*cap=*/10);
+    BOOST_CHECK_EQUAL(b1.value(), 10);
+
+    // Initial value below cap is kept as-is
+    util::TokenBucket<NodeClock> b2(/*rate=*/1, /*value=*/5, /*cap=*/10);
+    BOOST_CHECK_EQUAL(b2.value(), 5);
+}
+
+BOOST_AUTO_TEST_CASE(token_bucket_first_increment)
+{
+    // First increment establishes the time baseline but does not refill
+    util::TokenBucket<NodeClock> b(/*rate=*/100, /*value=*/0, /*cap=*/1000);
+    b.increment(NodeClock::time_point{10s});
+    BOOST_CHECK_EQUAL(b.value(), 0);
+
+    // Second increment refills based on elapsed time
+    b.increment(NodeClock::time_point{15s});
+    BOOST_CHECK_EQUAL(b.value(), 500); // 100/s * 5s
+}
+
+BOOST_AUTO_TEST_CASE(token_bucket_refill_caps)
+{
+    util::TokenBucket<NodeClock> b(/*rate=*/10, /*value=*/90, /*cap=*/100);
+    b.increment(NodeClock::time_point{1s});
+    b.increment(NodeClock::time_point{100s}); // would add 990, but cap is 100
+    BOOST_CHECK_EQUAL(b.value(), 100);
+}
+
+BOOST_AUTO_TEST_CASE(token_bucket_time_backwards)
+{
+    util::TokenBucket<NodeClock> b(/*rate=*/10, /*value=*/50, /*cap=*/200);
+    b.increment(NodeClock::time_point{10s});
+    b.increment(NodeClock::time_point{5s}); // backwards, no change
+    BOOST_CHECK_EQUAL(b.value(), 50);
+    b.increment(NodeClock::time_point{15s}); // forwards takes backwards into account
+    BOOST_CHECK_EQUAL(b.value(), 150);
+}
+
+BOOST_AUTO_TEST_CASE(token_bucket_decrement_no_debt)
+{
+    // Default debt=0: returns false at exactly 0
+    util::TokenBucket<NodeClock> b(/*rate=*/1, /*value=*/3, /*cap=*/10);
+    BOOST_CHECK(b.decrement(1));  // 3 -> 2
+    BOOST_CHECK(b.decrement(1));  // 2 -> 1
+    BOOST_CHECK(!b.decrement(1)); // 1 -> 0, at floor
+    BOOST_CHECK_EQUAL(b.value(), 0);
+    BOOST_CHECK(!b.decrement(1)); // 0 -> -1, despite being at floor
+    BOOST_CHECK_EQUAL(b.value(), -1);
+}
+
+BOOST_AUTO_TEST_CASE(token_bucket_decrement_with_debt)
+{
+    util::TokenBucket<NodeClock> b(/*rate=*/1, /*value=*/2, /*cap=*/10);
+    BOOST_CHECK(b.decrement(1, -3));  // 2 -> 1
+    BOOST_CHECK(b.decrement(1, -3));  // 1 -> 0
+    BOOST_CHECK(b.decrement(1, -3));  // 0 -> -1, still above -3
+    BOOST_CHECK(b.decrement(1, -3));  // -1 -> -2, still above -3
+    BOOST_CHECK(!b.decrement(1, -3)); // -2 -> -3, at floor
+    BOOST_CHECK_EQUAL(b.value(), -3);
+}
+
+BOOST_AUTO_TEST_CASE(token_bucket_drain_and_refill)
+{
+    util::TokenBucket<NodeClock> b(/*rate=*/10, /*value=*/20, /*cap=*/100);
+    b.decrement(20); // drain to 0
+    BOOST_CHECK_EQUAL(b.value(), 0);
+
+    b.increment(NodeClock::time_point{1s});
+    b.increment(NodeClock::time_point{4s}); // +30
+    BOOST_CHECK_EQUAL(b.value(), 30);
 }
 
 BOOST_AUTO_TEST_SUITE_END()
