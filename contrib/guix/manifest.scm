@@ -38,13 +38,36 @@ FILE-NAME found in ./patches relative to the current file."
 
 (define building-on (string-append "--build=" (list-ref (string-split (%current-system) #\-) 0) "-guix-linux-gnu"))
 
+(define (base-binutils target)
+  (package
+    (inherit (cross-binutils target)) ;; 2.44
+    (version "2.46.0")
+    (source (origin
+              (method url-fetch)
+              (uri (string-append "mirror://gnu/binutils/binutils-"
+                          version ".tar.bz2"))
+              (sha256
+               (base32
+                "04nd9vl7c1pxjbc9wh3ckddzhz5g82xyjqq9y9kf171a59im4c8g"))))
+    (arguments
+      (substitute-keyword-arguments (package-arguments (cross-binutils target))
+        ((#:configure-flags flags)
+          #~(append #$flags
+            (list "--enable-gprofng=no")))))
+    (native-inputs
+      (modify-inputs
+        (package-native-inputs (cross-binutils target))
+        (delete "bison")))
+  )
+)
+
 (define (make-cross-toolchain target
                               base-gcc-for-libc
                               base-kernel-headers
                               base-libc
                               base-gcc)
   "Create a cross-compilation toolchain package for TARGET"
-  (let* ((xbinutils (cross-binutils target))
+  (let* ((xbinutils (base-binutils target))
          ;; 1. Build a cross-compiling gcc without targeting any libc, derived
          ;; from BASE-GCC-FOR-LIBC
          (xgcc-sans-libc (cross-gcc target
@@ -119,7 +142,7 @@ desirable for building Bitcoin Core release binaries."
 
 (define (make-mingw-pthreads-cross-toolchain target)
   "Create a cross-compilation toolchain package for TARGET"
-  (let* ((xbinutils (binutils-mingw-patches (cross-binutils target)))
+  (let* ((xbinutils (binutils-mingw-patches (base-binutils target)))
          (machine (substring target 0 (string-index target #\-)))
          (pthreads-xlibc (winpthreads-patches (make-mingw-w64 machine
                                          #:xgcc (cross-gcc target #:xgcc base-gcc)
@@ -373,6 +396,39 @@ inspecting signatures in Mach-O binaries.")
                    (("^install-others =.*$")
                     (string-append "install-others = " out "/etc/rpc\n")))))))))))))
 
+;; --enable-static-nss isn't used yet, because it has been broken
+;; since 2.33: https://sourceware.org/bugzilla/show_bug.cgi?id=27959.
+(define-public glibc-2.43
+  (let ((commit "305ce0b58809869295e62c3caa7eda4c8e41134f"))
+  (package
+    (inherit glibc) ;; 2.39
+    (version "2.43")
+    (source (origin
+              (method git-fetch)
+              (uri (git-reference
+                    (url "https://sourceware.org/git/glibc.git")
+                    (commit commit)))
+              (file-name (git-file-name "glibc" commit))
+              (sha256
+               (base32
+                "1gw93g987d3zlklfq5sby8zc0m272ganfbb0rzmwhdr7gwsa6yck"))
+              (patches (search-our-patches "glibc-guix-2.43-prefix.patch"))))
+    (arguments
+      (substitute-keyword-arguments (package-arguments glibc)
+        ((#:configure-flags flags)
+          `(append ,flags
+            ;; https://www.gnu.org/software/libc/manual/html_node/Configuring-and-compiling.html
+            (list "--enable-bind-now",
+                  "--enable-cet=yes",
+                  "--enable-fortify-source",
+                  "--enable-stack-protector=all",
+                  "--disable-nscd",
+                  "--disable-profile",
+                  "--disable-pt_chown",
+                  "--disable-timezone-tools",
+                  "--disable-werror",
+                  building-on))))))))
+
 (packages->manifest
  (append
   (list ;; The Basics
@@ -408,6 +464,12 @@ inspecting signatures in Mach-O binaries.")
                  (make-mingw-pthreads-cross-toolchain "x86_64-w64-mingw32")
                  nsis-x86_64
                  osslsigncode))
+          ((or (string-contains target "x86_64-linux-")
+               (string-contains target "aarch64-linux-")
+               (string-contains target "riscv64-linux-"))
+           (list (list gcc-toolchain-14 "static")
+                 (make-bitcoin-cross-toolchain target
+                                               #:base-libc glibc-2.43)))
           ((string-contains target "-linux-")
            (list bison
                  pkg-config
