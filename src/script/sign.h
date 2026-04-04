@@ -7,19 +7,24 @@
 #define BITCOIN_SCRIPT_SIGN_H
 
 #include <attributes.h>
-#include <coins.h>
-#include <hash.h>
+#include <coins.h> // IWYU pragma: keep
+#include <consensus/amount.h>
 #include <pubkey.h>
 #include <script/interpreter.h>
 #include <script/keyorigin.h>
+#include <script/script.h>
 #include <script/signingprovider.h>
 #include <uint256.h>
+#include <cstdint>
+#include <map>
+#include <optional>
+#include <set>
+#include <utility>
+#include <vector>
 
-class CKey;
-class CKeyID;
-class CScript;
-class CTransaction;
-class SigningProvider;
+class COutPoint;
+class CTxIn;
+class CTxOut;
 
 struct bilingual_str;
 struct CMutableTransaction;

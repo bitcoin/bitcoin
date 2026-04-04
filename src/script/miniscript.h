@@ -11,22 +11,25 @@
 #include <cstdint>
 #include <cstdlib>
 #include <functional>
-#include <iterator>
 #include <memory>
 #include <optional>
 #include <set>
 #include <stdexcept>
+#include <string>
+#include <string_view>
+#include <span>
 #include <tuple>
 #include <utility>
+#include <variant>
 #include <vector>
 
 #include <consensus/consensus.h>
+#include <crypto/hex_base.h>
 #include <policy/policy.h>
 #include <script/interpreter.h>
 #include <script/parsing.h>
 #include <script/script.h>
 #include <serialize.h>
-#include <span.h>
 #include <util/check.h>
 #include <util/strencodings.h>
 #include <util/string.h>

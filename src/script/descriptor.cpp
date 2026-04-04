@@ -4,29 +4,45 @@
 
 #include <script/descriptor.h>
 
+#include <addresstype.h>
+#include <attributes.h>
+#include <consensus/consensus.h>
+#include <crypto/hex_base.h>
+#include <crypto/sha256.h>
 #include <hash.h>
+#include <key.h>
 #include <key_io.h>
 #include <pubkey.h>
 #include <musig.h>
+#include <primitives/transaction.h>
+#include <script/interpreter.h>
+#include <script/keyorigin.h>
 #include <script/miniscript.h>
 #include <script/parsing.h>
 #include <script/script.h>
 #include <script/signingprovider.h>
 #include <script/solver.h>
+#include <serialize.h>
+#include <tinyformat.h>
 #include <uint256.h>
-
-#include <common/args.h>
-#include <span.h>
 #include <util/bip32.h>
 #include <util/check.h>
 #include <util/strencodings.h>
+#include <util/string.h>
 #include <util/vector.h>
 
 #include <algorithm>
+#include <iterator>
+#include <map>
 #include <memory>
 #include <numeric>
 #include <optional>
+#include <span>
+#include <stdexcept>
 #include <string>
+#include <tuple>
+#include <unordered_set>
+#include <utility>
 #include <vector>
 
 using util::Split;

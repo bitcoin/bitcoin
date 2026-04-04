@@ -9,14 +9,26 @@
 #include <addresstype.h>
 #include <attributes.h>
 #include <key.h>
-#include <musig.h>
 #include <pubkey.h>
 #include <script/keyorigin.h>
 #include <script/script.h>
 #include <sync.h>
 
+#include <uint256.h>
+#include <compare>
+#include <cstdint>
 #include <functional>
+#include <map>
+#include <memory>
 #include <optional>
+#include <set>
+#include <span>
+#include <tuple>
+#include <utility>
+#include <variant>
+#include <vector>
+
+class MuSig2SecNonce;
 
 struct ShortestVectorFirstComparator
 {
