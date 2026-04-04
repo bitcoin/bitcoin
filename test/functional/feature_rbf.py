@@ -534,7 +534,6 @@ class ReplaceByFeeTest(BitcoinTestFramework):
         # BIP125 signaling is not respected
 
         confirmed_utxo = self.make_utxo(self.nodes[0], int(2 * COIN))
-        assert self.nodes[0].getmempoolinfo()["fullrbf"]
 
         # Create an explicitly opt-out BIP125 transaction, which will be ignored
         optout_tx = self.wallet.send_self_transfer(
@@ -543,7 +542,6 @@ class ReplaceByFeeTest(BitcoinTestFramework):
             sequence=MAX_BIP125_RBF_SEQUENCE + 1,
             fee_rate=Decimal('0.01'),
         )
-        assert_equal(False, self.nodes[0].getmempoolentry(optout_tx['txid'])['bip125-replaceable'])
 
         conflicting_tx = self.wallet.create_self_transfer(
                 utxo_to_spend=confirmed_utxo,
