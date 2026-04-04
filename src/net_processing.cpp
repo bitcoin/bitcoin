@@ -2610,7 +2610,7 @@ void PeerManagerImpl::SendBlockTransactions(CNode& pfrom, Peer& peer, const CBlo
     if (LogAcceptCategory(BCLog::CMPCTBLOCK, BCLog::Level::Debug)) {
         uint32_t tx_requested_size{0};
         for (const auto& tx : resp.txn) tx_requested_size += tx->ComputeTotalSize();
-        LogDebug(BCLog::CMPCTBLOCK, "Peer %d sent us a GETBLOCKTXN for block %s, sending a BLOCKTXN with %u txns. (%u bytes)\n", pfrom.GetId(), block.GetHash().ToString(), resp.txn.size(), tx_requested_size);
+        LogDebug(BCLog::CMPCTBLOCK, "Peer %d%s sent us a GETBLOCKTXN for block %s, sending a BLOCKTXN with %u txns. (%u bytes)", pfrom.GetId(), pfrom.LogIP(fLogIPs), block.GetHash().ToString(), resp.txn.size(), tx_requested_size);
     }
     MakeAndPushMessage(pfrom, NetMsgType::BLOCKTXN, resp);
 }
@@ -4537,8 +4537,16 @@ void PeerManagerImpl::ProcessMessage(Peer& peer, CNode& pfrom, const std::string
             nodestate->m_last_block_announcement = GetTime();
         }
 
-        if (pindex->nStatus & BLOCK_HAVE_DATA) // Nothing to do here
+        // Nothing to do here
+        if (pindex->nStatus & BLOCK_HAVE_DATA) {
             return;
+        } else if (m_opts.ignore_incoming_txs) {
+            LogDebug(BCLog::CMPCTBLOCK, "Peer %d%s sent us a compact block even though we are blocksonly!", pfrom.GetId(), pfrom.LogIP(fLogIPs));
+            return;
+        } else if (!nodestate->m_provides_cmpctblocks) {
+            LogDebug(BCLog::CMPCTBLOCK, "Peer %d%s sent us a compact block despite never having sent us a SENDCMPCT!", pfrom.GetId(), pfrom.LogIP(fLogIPs));
+            return;
+        }
 
         auto range_flight = mapBlocksInFlight.equal_range(pindex->GetBlockHash());
         size_t already_in_flight = std::distance(range_flight.first, range_flight.second);
@@ -4553,6 +4561,11 @@ void PeerManagerImpl::ProcessMessage(Peer& peer, CNode& pfrom, const std::string
                 break;
             }
             range_flight.first++;
+        }
+
+        if (!requested_block_from_this_peer && !pfrom.m_bip152_highbandwidth_to) {
+            LogDebug(BCLog::CMPCTBLOCK, "Peer %d%s, not marked as high-bandwidth, sent us an unsolicited compact block!", pfrom.GetId(), pfrom.LogIP(fLogIPs));
+            return;
         }
 
         if (pindex->nChainWork <= m_chainman.ActiveChain().Tip()->nChainWork || // We know something better
