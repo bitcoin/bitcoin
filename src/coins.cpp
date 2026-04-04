@@ -185,12 +185,14 @@ const Coin& CCoinsViewCache::AccessCoin(const COutPoint &outpoint) const {
     }
 }
 
-bool CCoinsViewCache::HaveCoin(const COutPoint &outpoint) const {
+bool CCoinsViewCache::HaveCoin(const COutPoint& outpoint) const
+{
     CCoinsMap::const_iterator it = FetchCoin(outpoint);
     return (it != cacheCoins.end() && !it->second.coin.IsSpent());
 }
 
-bool CCoinsViewCache::HaveCoinInCache(const COutPoint &outpoint) const {
+bool CCoinsViewCache::HaveCoinInCache(const COutPoint& outpoint) const
+{
     CCoinsMap::const_iterator it = cacheCoins.find(outpoint);
     return (it != cacheCoins.end() && !it->second.coin.IsSpent());
 }
