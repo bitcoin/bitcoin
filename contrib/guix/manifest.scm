@@ -416,7 +416,6 @@ inspecting signatures in Mach-O binaries.")
           ((string-contains target "darwin")
            (list clang-toolchain-19
                  lld-19
-                 (make-lld-wrapper lld-19 #:lld-as-ld? #t)
                  python-signapple
                  zip))
           (else '())))))
