@@ -2,7 +2,8 @@
 # Copyright (c) 2024-present The Bitcoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
-"""Test utxo-to-sqlite conversion tool"""
+"""Test utxo_convert conversion tool"""
+import csv
 from itertools import product
 import os
 import platform
@@ -10,9 +11,17 @@ try:
     import sqlite3
 except ImportError:
     pass
+import random
 import subprocess
 import sys
 
+from test_framework.address import (
+    key_to_p2pkh,
+    key_to_p2wpkh,
+    output_key_to_p2tr,
+    script_to_p2sh,
+    script_to_p2wsh,
+)
 from test_framework.key import ECKey
 from test_framework.messages import (
     COutPoint,
@@ -88,33 +97,52 @@ class UtxoToSqliteTest(BitcoinTestFramework):
         key = ECKey()
 
         self.log.info('Create UTXOs with various output script types')
-        for i in range(1, 10+1):
+        expected_csv_records = []
+        for i in range(1, 20+1):
             key.generate(compressed=False)
             uncompressed_pubkey = key.get_pubkey().get_bytes()
             key.generate(compressed=True)
             pubkey = key.get_pubkey().get_bytes()
+            multisig_k = random.randrange(1, i + 1)
 
             # add output scripts for compressed script type 0 (P2PKH), type 1 (P2SH),
             # types 2-3 (P2PK compressed), types 4-5 (P2PK uncompressed) and
             # for uncompressed scripts (bare multisig, segwit, etc.)
-            output_scripts = (
-                key_to_p2pkh_script(pubkey),
-                script_to_p2sh_script(key_to_p2pkh_script(pubkey)),
-                key_to_p2pk_script(pubkey),
-                key_to_p2pk_script(uncompressed_pubkey),
+            p2pkh_script = key_to_p2pkh_script(pubkey)
+            large_script = CScript([CScriptOp.encode_op_n(i % 17)]*(10001-i))  # large script (up to 10000 bytes)
+            output_scripts = {
+                key_to_p2pkh_script(pubkey): f"addr({key_to_p2pkh(pubkey)})",
+                script_to_p2sh_script(p2pkh_script): f"addr({script_to_p2sh(p2pkh_script)})",
+                key_to_p2pk_script(pubkey): f"pk({pubkey.hex()})",
+                key_to_p2pk_script(uncompressed_pubkey): f"pk({uncompressed_pubkey.hex()})",
 
-                keys_to_multisig_script([pubkey]*i),
-                keys_to_multisig_script([uncompressed_pubkey]*i),
-                key_to_p2wpkh_script(pubkey),
-                script_to_p2wsh_script(key_to_p2pkh_script(pubkey)),
-                output_key_to_p2tr_script(pubkey[1:]),
-                PAY_TO_ANCHOR,
-                CScript([CScriptOp.encode_op_n(i)]*(1000*i)),  # large script (up to 10000 bytes)
-            )
+                keys_to_multisig_script([pubkey]*i, k=multisig_k): f"multi({multisig_k},{','.join([pubkey.hex()] * i)})",
+                keys_to_multisig_script([uncompressed_pubkey]*i, k=multisig_k): f"multi({multisig_k},{','.join([uncompressed_pubkey.hex()] * i)})",
+                key_to_p2wpkh_script(pubkey): f"addr({key_to_p2wpkh(pubkey)})",
+                script_to_p2wsh_script(p2pkh_script): f"addr({script_to_p2wsh(p2pkh_script)})",
+                output_key_to_p2tr_script(pubkey[1:]): f"addr({output_key_to_p2tr(pubkey[1:])})",
+                PAY_TO_ANCHOR: "addr(bcrt1pfeesnyr2tx)",
+                large_script: f"raw({large_script.hex()})",
+            }
 
             # create outputs and mine them in a block
-            for output_script in output_scripts:
-                wallet.send_to(from_node=node, scriptPubKey=output_script, amount=i, fee=20000)
+            output_script_keys = list(output_scripts.keys())
+            random.shuffle(output_script_keys)
+            height = node.getblockcount()
+            for k, output_script in enumerate(output_script_keys):
+                tx = wallet.send_to(from_node=node, scriptPubKey=output_script, amount=i + k * 100, fee=20000 - k)
+                for idx, txout in enumerate(tx['tx'].vout):
+                    if txout.nValue == i + k * 100:
+                        vout = idx
+                        break
+                expected_csv_records.append({
+                    "txid": tx['txid'],
+                    "vout": str(vout),
+                    "value": str(i + k * 100),
+                    "coinbase": "0",
+                    "height": str(height + 1),
+                    "descriptor": output_scripts[output_script]
+                })
             self.generate(wallet, 1)
 
         self.log.info('Dump UTXO set via `dumptxoutset` RPC')
@@ -126,9 +154,9 @@ class UtxoToSqliteTest(BitcoinTestFramework):
             self.log.info('-> Convert UTXO set from compact-serialized format to sqlite format')
             output_filename = os.path.join(self.options.tmpdir, f"utxos_{i+1}.sqlite")
             base_dir = self.config["environment"]["SRCDIR"]
-            utxo_to_sqlite_path = os.path.join(base_dir, "contrib", "utxo-tools", "utxo_to_sqlite.py")
+            utxo_convert_path = os.path.join(base_dir, "contrib", "utxo-tools", "utxo_convert.py")
             arguments = [input_filename, output_filename, f'--txid={txid_format}', f'--spk={spk_format}']
-            subprocess.run([sys.executable, utxo_to_sqlite_path] + arguments, check=True, stderr=subprocess.STDOUT)
+            subprocess.run([sys.executable, utxo_convert_path] + arguments, check=True, stderr=subprocess.STDOUT)
 
             self.log.info('-> Verify that both UTXO sets match by comparing their MuHash')
             muhash_sqlite = calculate_muhash_from_sqlite_utxos(output_filename, txid_format, spk_format)
@@ -149,6 +177,27 @@ class UtxoToSqliteTest(BitcoinTestFramework):
             assert_equal(muhash_sqlite, muhash_direct_sqlite)
             os.remove(fifo_filename)
 
+        self.log.info('Test utxo-to-csv script')
+        self.log.info('-> Convert UTXO set from compact-serialized format to CSV format')
+        output_filename = os.path.join(self.options.tmpdir, "utxos.csv")
+        base_dir = self.config["environment"]["SRCDIR"]
+        utxo_convert_path = os.path.join(base_dir, "contrib", "utxo-tools", "utxo_convert.py")
+        arguments = [input_filename, output_filename]
+        subprocess.run([sys.executable, utxo_convert_path] + arguments, check=True, stderr=subprocess.STDOUT)
+
+        self.log.info('-> Verify that the CSV file contains the expected records')
+        with open(output_filename, 'r', encoding='utf-8') as csvfile:
+            reader = csv.DictReader(csvfile)
+            records = []
+            # Filter out large UTXOs (coinbase outputs and change).
+            for record in reader:
+                if int(record['value']) < 10000:
+                    records.append(record)
+            # Check whether the result matches the expected set of UTXO records.
+            records.sort(key=lambda x: (x['txid'], x['vout']))
+            expected_csv_records.sort(key=lambda x: (x['txid'], x['vout']))
+            assert_equal(records, expected_csv_records)
+        self.log.info('')
 
 if __name__ == "__main__":
     UtxoToSqliteTest(__file__).main()
