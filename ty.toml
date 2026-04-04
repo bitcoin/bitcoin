@@ -1,0 +1,22 @@
+[src]
+include = ["test/functional/**", "contrib/devtools/**"]
+
+[environment]
+root = ["test/functional"]
+
+[rules]
+deprecated = "ignore"
+invalid-argument-type = "ignore"
+missing-argument = "ignore"
+no-matching-overload = "ignore"
+invalid-assignment = "ignore"
+invalid-method-override = "ignore"
+invalid-return-type = "ignore"
+not-iterable = "ignore"
+not-subscriptable = "ignore"
+possibly-missing-attribute = "ignore"
+too-many-positional-arguments = "ignore"
+unresolved-attribute = "ignore"
+unsupported-operator = "ignore"
+unused-ignore-comment = "ignore"
+unused-type-ignore-comment = "ignore"
