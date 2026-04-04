@@ -723,12 +723,14 @@ class ImportDescriptorsTest(BitcoinTestFramework):
             try:
                 self.nodes[0].cli("-rpcwallet=encrypted_wallet").walletlock()
             except JSONRPCException as e:
-                assert e.error["code"] == -4 and "Error: the wallet is currently being used to rescan the blockchain for related transactions. Please call `abortrescan` before locking the wallet." in e.error["message"]
+                assert_equal(e.error["code"], -4)
+                assert "Error: the wallet is currently being used to rescan the blockchain for related transactions. Please call `abortrescan` before locking the wallet." in e.error["message"]
 
             try:
                 self.nodes[0].cli("-rpcwallet=encrypted_wallet").walletpassphrasechange("passphrase", "newpassphrase")
             except JSONRPCException as e:
-                assert e.error["code"] == -4 and "Error: the wallet is currently being used to rescan the blockchain for related transactions. Please call `abortrescan` before changing the passphrase." in e.error["message"]
+                assert_equal(e.error["code"], -4)
+                assert "Error: the wallet is currently being used to rescan the blockchain for related transactions. Please call `abortrescan` before changing the passphrase." in e.error["message"]
 
             assert_equal(importing.result(), [{"success": True}])
 

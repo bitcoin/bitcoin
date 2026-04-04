@@ -551,8 +551,7 @@ class CompactBlocksTest(BitcoinTestFramework):
 
         # We should receive a getdata request
         test_node.wait_for_getdata([block.hash_int], timeout=10)
-        assert test_node.last_message["getdata"].inv[0].type == MSG_BLOCK or \
-               test_node.last_message["getdata"].inv[0].type == MSG_BLOCK | MSG_WITNESS_FLAG
+        assert test_node.last_message["getdata"].inv[0].type in (MSG_BLOCK, MSG_BLOCK | MSG_WITNESS_FLAG)
 
         # Deliver the block
         test_node.send_and_ping(msg_block(block))
@@ -586,8 +585,7 @@ class CompactBlocksTest(BitcoinTestFramework):
 
         # We should receive a getdata request
         test_node.wait_for_getdata([block.hash_int], timeout=10)
-        assert test_node.last_message["getdata"].inv[0].type == MSG_BLOCK or \
-               test_node.last_message["getdata"].inv[0].type == MSG_BLOCK | MSG_WITNESS_FLAG
+        assert test_node.last_message["getdata"].inv[0].type in (MSG_BLOCK, MSG_BLOCK | MSG_WITNESS_FLAG)
 
         # Send the same blocktxn and assert the sender gets disconnected.
         with node.assert_debug_log(['previous compact block reconstruction attempt failed']):

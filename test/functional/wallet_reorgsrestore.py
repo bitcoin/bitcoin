@@ -42,7 +42,8 @@ class ReorgsRestoreTest(BitcoinTestFramework):
         self.connect_nodes(1, 0)
         self.sync_blocks(self.nodes[:2])
         self.disconnect_nodes(1, 0)
-        assert all(len(node.getpeerinfo()) == 0 for node in self.nodes[:2])
+        for node in self.nodes[:2]:
+            assert_equal(len(node.getpeerinfo()), 0)
 
         # Create a new block in node0, coinbase going to wallet0
         self.nodes[0].createwallet(wallet_name="w0", load_on_startup=True)

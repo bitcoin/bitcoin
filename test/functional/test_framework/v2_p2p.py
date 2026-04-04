@@ -12,6 +12,7 @@ from .crypto.ellswift import ellswift_create, ellswift_ecdh_xonly
 from .crypto.hkdf import hkdf_sha256
 from .key import TaggedHash
 from .messages import MAGIC_BYTES
+from .util import assert_equal
 
 
 CHACHA20POLY1305_EXPANSION = 16
@@ -218,7 +219,7 @@ class EncryptedP2PState:
             # decoy packets have contents = None. v2 handshake is complete only when version packet
             # (can be empty with contents = b"") with contents != None is received.
             if contents is not None:
-                assert contents == b""  # currently TestNode sends an empty version packet
+                assert_equal(contents, b"")  # currently TestNode sends an empty version packet
                 self.tried_v2_handshake = True
                 return processed_length, True
             response = response[length:]
