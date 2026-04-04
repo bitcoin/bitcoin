@@ -4,11 +4,13 @@
 
 #include <bench/bench.h>
 #include <cluster_linearize.h>
+#include <random.h>
 #include <test/util/cluster_linearize.h>
 #include <util/bitset.h>
 #include <util/strencodings.h>
 
 #include <algorithm>
+#include <array>
 #include <cassert>
 #include <cstdint>
 #include <vector>
@@ -33,10 +35,41 @@ DepGraph<SetType> MakeWideGraph(DepGraphIndex ntx)
     return depgraph;
 }
 
+/** Construct a chain graph (tx0 -> tx1 -> tx2 -> ... -> tx_{n-1}). Each transaction
+ *  depends only on the previous one. Chain graphs have a unique topological order.
+ *  Uses FastRandomContext for deterministic but randomized feerates.
+ */
+template<typename SetType>
+DepGraph<SetType> MakeChainGraph(DepGraphIndex ntx, FastRandomContext& rng)
+{
+    DepGraph<SetType> depgraph;
+    for (DepGraphIndex i = 0; i < ntx; ++i) {
+        int64_t fee = rng.randbits<27>() + 100;
+        int32_t size = rng.randrange(1000) + 1;
+        depgraph.AddTransaction({fee, size});
+        if (i > 0) depgraph.AddDependencies(SetType::Singleton(i - 1), i);
+    }
+    return depgraph;
+}
+
 template<typename SetType>
 void BenchPostLinearizeWorstCase(DepGraphIndex ntx, benchmark::Bench& bench)
 {
     DepGraph<SetType> depgraph = MakeWideGraph<SetType>(ntx);
+    std::vector<DepGraphIndex> lin(ntx);
+    bench.run([&] {
+        for (DepGraphIndex i = 0; i < ntx; ++i) lin[i] = i;
+        PostLinearize(depgraph, lin);
+    });
+}
+
+template<typename SetType>
+void BenchPostLinearizeChain(DepGraphIndex ntx, benchmark::Bench& bench)
+{
+    std::array<unsigned char, 32> seed{};
+    for (int i = 0; i < 4; ++i) seed[i] = static_cast<unsigned char>((ntx >> (i * 8)) & 0xff);
+    FastRandomContext rng{uint256(seed)};
+    DepGraph<SetType> depgraph = MakeChainGraph<SetType>(ntx, rng);
     std::vector<DepGraphIndex> lin(ntx);
     bench.run([&] {
         for (DepGraphIndex i = 0; i < ntx; ++i) lin[i] = i;
@@ -89,6 +122,24 @@ void BenchLinearizeOptimallyPerCost(benchmark::Bench& bench, const std::string& 
     }
 }
 
+/** Benchmark Linearize on chain graphs of given sizes (total time to optimal). */
+void BenchLinearizeOptimallyChainTotal(benchmark::Bench& bench, const std::vector<DepGraphIndex>& chain_sizes)
+{
+    for (DepGraphIndex ntx : chain_sizes) {
+        std::array<unsigned char, 32> seed{};
+        for (int i = 0; i < 4; ++i) seed[i] = static_cast<unsigned char>((ntx >> (i * 8)) & 0xff);
+        FastRandomContext rng{uint256(seed)};
+        DepGraph<BitSet<64>> depgraph = MakeChainGraph<BitSet<64>>(ntx, rng);
+        auto bench_name = strprintf("LinearizeOptimallyChainTotal_%utx_%udep", depgraph.TxCount(), depgraph.CountDependencies());
+
+        uint64_t rng_seed = 0;
+        bench.name(bench_name).run([&] {
+            auto [_lin, optimal, _cost] = Linearize(depgraph, /*max_iterations=*/10000000, rng_seed++, IndexTxOrder{});
+            assert(optimal);
+        });
+    }
+}
+
 } // namespace
 
 static void PostLinearize16TxWorstCase(benchmark::Bench& bench) { BenchPostLinearizeWorstCase<BitSet<16>>(16, bench); }
@@ -97,6 +148,13 @@ static void PostLinearize48TxWorstCase(benchmark::Bench& bench) { BenchPostLinea
 static void PostLinearize64TxWorstCase(benchmark::Bench& bench) { BenchPostLinearizeWorstCase<BitSet<64>>(64, bench); }
 static void PostLinearize75TxWorstCase(benchmark::Bench& bench) { BenchPostLinearizeWorstCase<BitSet<75>>(75, bench); }
 static void PostLinearize99TxWorstCase(benchmark::Bench& bench) { BenchPostLinearizeWorstCase<BitSet<99>>(99, bench); }
+
+static void PostLinearize16TxChain(benchmark::Bench& bench) { BenchPostLinearizeChain<BitSet<16>>(16, bench); }
+static void PostLinearize32TxChain(benchmark::Bench& bench) { BenchPostLinearizeChain<BitSet<32>>(32, bench); }
+static void PostLinearize48TxChain(benchmark::Bench& bench) { BenchPostLinearizeChain<BitSet<48>>(48, bench); }
+static void PostLinearize64TxChain(benchmark::Bench& bench) { BenchPostLinearizeChain<BitSet<64>>(64, bench); }
+static void PostLinearize75TxChain(benchmark::Bench& bench) { BenchPostLinearizeChain<BitSet<75>>(75, bench); }
+static void PostLinearize99TxChain(benchmark::Bench& bench) { BenchPostLinearizeChain<BitSet<99>>(99, bench); }
 
 // Constructed from replayed historical mempool activity, selecting for clusters that are slow
 // to linearize from scratch, with increasing number of transactions (9 to 63).
@@ -150,6 +208,14 @@ static void LinearizeOptimallyPerCost(benchmark::Bench& bench)
     BenchLinearizeOptimallyPerCost(bench, "LinearizeOptimallySyntheticPerCost", CLUSTERS_SYNTHETIC);
 }
 
+// Chain sizes for Linearize benchmarks (aligned with historical cluster size range).
+static const std::vector<DepGraphIndex> CHAIN_SIZES = {9, 16, 32, 48, 63};
+
+static void LinearizeOptimallyChainTotal(benchmark::Bench& bench)
+{
+    BenchLinearizeOptimallyChainTotal(bench, CHAIN_SIZES);
+}
+
 BENCHMARK(PostLinearize16TxWorstCase);
 BENCHMARK(PostLinearize32TxWorstCase);
 BENCHMARK(PostLinearize48TxWorstCase);
@@ -157,5 +223,13 @@ BENCHMARK(PostLinearize64TxWorstCase);
 BENCHMARK(PostLinearize75TxWorstCase);
 BENCHMARK(PostLinearize99TxWorstCase);
 
+BENCHMARK(PostLinearize16TxChain);
+BENCHMARK(PostLinearize32TxChain);
+BENCHMARK(PostLinearize48TxChain);
+BENCHMARK(PostLinearize64TxChain);
+BENCHMARK(PostLinearize75TxChain);
+BENCHMARK(PostLinearize99TxChain);
+
 BENCHMARK(LinearizeOptimallyTotal);
 BENCHMARK(LinearizeOptimallyPerCost);
+BENCHMARK(LinearizeOptimallyChainTotal);
