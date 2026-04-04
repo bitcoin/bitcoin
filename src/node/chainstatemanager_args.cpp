@@ -7,11 +7,11 @@
 #include <arith_uint256.h>
 #include <common/args.h>
 #include <common/system.h>
-#include <logging.h>
 #include <node/coins_view_args.h>
 #include <node/database_args.h>
 #include <tinyformat.h>
 #include <uint256.h>
+#include <util/log.h>
 #include <util/result.h>
 #include <util/strencodings.h>
 #include <util/translation.h>

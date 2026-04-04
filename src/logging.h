@@ -238,7 +238,7 @@ namespace BCLog {
          */
         void DisableLogging() EXCLUSIVE_LOCKS_REQUIRED(!m_cs);
 
-        void ShrinkDebugFile();
+        void ShrinkDebugFile() EXCLUSIVE_LOCKS_REQUIRED(!m_cs);
 
         std::unordered_map<LogFlags, Level> CategoryLevels() const EXCLUSIVE_LOCKS_REQUIRED(!m_cs)
         {
@@ -286,19 +286,12 @@ namespace BCLog {
         static std::string LogLevelToStr(BCLog::Level level);
 
         bool DefaultShrinkDebugFile() const;
-    };
 
+        //! Return log flag if str parses as a log category.
+        static std::optional<BCLog::LogFlags> GetLogCategory(std::string_view str);
+    };
 } // namespace BCLog
 
 BCLog::Logger& LogInstance();
-
-/** Return true if log accepts specified category, at the specified level. */
-static inline bool LogAcceptCategory(BCLog::LogFlags category, BCLog::Level level)
-{
-    return LogInstance().WillLogCategoryLevel(category, level);
-}
-
-/// Return log flag if str parses as a log category.
-std::optional<BCLog::LogFlags> GetLogCategory(std::string_view str);
 
 #endif // BITCOIN_LOGGING_H

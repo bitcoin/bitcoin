@@ -5,8 +5,8 @@
 
 #include <noui.h>
 
-#include <logging.h>
 #include <node/interface_ui.h>
+#include <util/log.h>
 #include <util/translation.h>
 
 #include <string>

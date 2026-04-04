@@ -7,12 +7,12 @@
 
 #include <common/settings.h>
 #include <consensus/amount.h>
-#include <logging.h>
 #include <net.h>
 #include <net_types.h>
 #include <netaddress.h>
 #include <netbase.h>
 #include <support/allocators/secure.h>
+#include <util/log.h>
 #include <util/translation.h>
 
 #include <cstddef>

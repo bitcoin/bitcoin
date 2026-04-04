@@ -166,7 +166,7 @@ BOOST_FIXTURE_TEST_CASE(logging_LogPrintMacros_CategoryName, LogSetup)
     const auto category_names = SplitString(concatenated_category_names, ',');
     for (const auto& category_name : category_names) {
         const auto trimmed_category_name = TrimString(category_name);
-        const auto category{*Assert(GetLogCategory(trimmed_category_name))};
+        const auto category{*Assert(BCLog::Logger::GetLogCategory(trimmed_category_name))};
         expected_category_names.emplace_back(category, trimmed_category_name);
     }
 
@@ -382,7 +382,7 @@ void LogFromLocation(Location location, const std::string& message) {
         LogDebug(BCLog::LogFlags::HTTP, "%s\n", message);
         return;
     case Location::INFO_NOLIMIT:
-        LogPrintLevel_(BCLog::LogFlags::ALL, BCLog::Level::Info, /*should_ratelimit=*/false, "%s\n", message);
+        LogInfo(util::log::NO_RATE_LIMIT, "%s\n", message);
         return;
     } // no default case, so the compiler can warn about missing cases
     assert(false);

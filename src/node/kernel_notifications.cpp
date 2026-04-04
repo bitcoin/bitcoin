@@ -11,11 +11,11 @@
 #include <common/system.h>
 #include <kernel/context.h>
 #include <kernel/warning.h>
-#include <logging.h>
 #include <node/abort.h>
 #include <node/interface_ui.h>
 #include <node/warnings.h>
 #include <util/check.h>
+#include <util/log.h>
 #include <util/signalinterrupt.h>
 #include <util/strencodings.h>
 #include <util/string.h>
