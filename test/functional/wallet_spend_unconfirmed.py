@@ -9,6 +9,7 @@ from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import (
     assert_greater_than_or_equal,
     assert_equal,
+    assert_raises_rpc_error,
     find_vout_for_address,
 )
 
@@ -462,6 +463,33 @@ class UnconfirmedInputTest(BitcoinTestFramework):
 
         wallet.unloadwallet()
 
+    def test_unconfirmed_cluster_limit_error(self):
+        self.log.info("Check that hitting the unconfirmed cluster limit returns a descriptive error")
+        # Confirm any leftovers from previous test cases so this scenario starts from an empty mempool.
+        self.generate(self.nodes[0], 1)
+
+        self.nodes[0].createwallet("cluster_limit_wallet")
+        wallet = self.nodes[0].get_wallet_rpc("cluster_limit_wallet")
+
+        self.generatetoaddress(self.nodes[0], 701, wallet.getnewaddress())
+        address = wallet.getnewaddress()
+        for _ in range(501):
+            result = wallet.send(outputs=[{address: 1}], options={"fee_rate": 10})
+            assert "txid" in result
+
+        assert_raises_rpc_error(
+            -4,
+            "Failed to calculate bump fees, because unconfirmed UTXOs depend on an enormous cluster of unconfirmed transactions.",
+            wallet.send,
+            outputs=[{address: 1}],
+            options={"fee_rate": 10},
+        )
+
+        self.generate(self.nodes[0], 1)
+        assert "txid" in wallet.send(outputs=[{address: 1}], options={"fee_rate": 10})
+
+        wallet.unloadwallet()
+
 
     def run_test(self):
         self.log.info("Starting UnconfirmedInputTest!")
@@ -500,6 +528,8 @@ class UnconfirmedInputTest(BitcoinTestFramework):
         self.test_confirmed_and_unconfirmed_parent()
 
         self.test_external_input_unconfirmed_low()
+
+        self.test_unconfirmed_cluster_limit_error()
 
 if __name__ == '__main__':
     UnconfirmedInputTest(__file__).main()

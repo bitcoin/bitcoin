@@ -99,6 +99,12 @@ CoinsResult AvailableCoins(const CWallet& wallet,
                            std::optional<CFeeRate> feerate = std::nullopt,
                            const CoinFilterParams& params = {}) EXCLUSIVE_LOCKS_REQUIRED(wallet.cs_wallet);
 
+CoinsResult AvailableCoins(const CWallet& wallet,
+                           const CCoinControl* coinControl,
+                           std::optional<CFeeRate> feerate,
+                           const CoinFilterParams& params,
+                           bool& bump_fee_calculation_failed) EXCLUSIVE_LOCKS_REQUIRED(wallet.cs_wallet);
+
 /**
  * Find non-change parent output.
  */
