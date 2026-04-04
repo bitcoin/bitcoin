@@ -133,6 +133,18 @@ WalletTxOut MakeWalletTxOut(const CWallet& wallet,
 
 class WalletImpl : public Wallet
 {
+private:
+    ImportDescriptorResult processDescriptorImport(CWallet& wallet, const interfaces::ImportDescriptorRequest& request, const int64_t timestamp) EXCLUSIVE_LOCKS_REQUIRED(wallet.cs_wallet)
+    {
+        return wallet.ImportDescriptor(
+            request.descriptor,
+            request.active.value_or(false),
+            request.internal,
+            request.label,
+            timestamp,
+            request.range,
+            request.next_index);
+    }
 public:
     explicit WalletImpl(WalletContext& context, const std::shared_ptr<CWallet>& wallet) : m_context(context), m_wallet(wallet) {}
 
@@ -372,6 +384,75 @@ public:
         bool& complete) override
     {
         return m_wallet->FillPSBT(psbtx, complete, sighash_type, sign, bip32derivs, n_signed);
+    }
+    std::vector<wallet::ImportDescriptorResult> importDescriptors(const std::vector<interfaces::ImportDescriptorRequest>& requests) override
+    {
+        std::vector<wallet::ImportDescriptorResult> response;
+
+        // Make sure the results are valid at least up to the most recent block
+        // the user could have gotten from another RPC command prior to now
+        m_wallet->BlockUntilSyncedToCurrentChain();
+
+        WalletRescanReserver reserver(*m_wallet);
+        if (!reserver.reserve(/*with_passphrase=*/true)) {
+            wallet::ImportDescriptorResult result;
+            result.success = false;
+            result.error = "Wallet is currently rescanning. Abort existing rescan or wait.";
+            result.reason = wallet::ImportDescriptorResult::FailureReason::WALLET_ERROR;
+            // Fill response with one error for each request
+            for (size_t i = 0; i < requests.size(); ++i) {
+                response.push_back(result);
+            }
+            return response;
+        }
+
+        // Ensure that the wallet is not locked for the remainder of this IPC call,
+        // as the passphrase is used to top up the keypool.
+        LOCK(m_wallet->m_relock_mutex);
+
+        const int64_t minimum_timestamp = 1;
+        int64_t now = 0;
+        int64_t lowest_timestamp = 0;
+        bool rescan = false;
+        {
+            LOCK(m_wallet->cs_wallet);
+
+            CHECK_NONFATAL(m_wallet->chain().findBlock(m_wallet->GetLastBlockHash(), FoundBlock().time(lowest_timestamp).mtpTime(now)));
+
+            for (const interfaces::ImportDescriptorRequest& request : requests) {
+                const int64_t timestamp = std::max(request.timestamp, minimum_timestamp);
+                wallet::ImportDescriptorResult result = processDescriptorImport(*m_wallet, request, timestamp);
+                response.push_back(result);
+
+                if (result.success) {
+                    // At least one request succeeded, so we need to rescan
+                    rescan = true;
+                    if (lowest_timestamp > timestamp) {
+                        lowest_timestamp = timestamp;
+                    }
+                }
+            }
+            m_wallet->ConnectScriptPubKeyManNotifiers();
+            m_wallet->RefreshAllTXOs();
+        }
+
+        if (rescan) {
+            m_wallet->RescanFromTime(lowest_timestamp, reserver, /*update=*/true);
+            m_wallet->ResubmitWalletTransactions(node::TxBroadcast::MEMPOOL_NO_BROADCAST, /*force=*/true);
+
+            if (m_wallet->IsAbortingRescan()) {
+                // Mark all previously successful imports as aborted
+                for (wallet::ImportDescriptorResult& r : response) {
+                    if (r.success) {
+                        r.success = false;
+                        r.error = "Rescan aborted by user.";
+                        r.reason = wallet::ImportDescriptorResult::FailureReason::MISC_ERROR;
+                    }
+                }
+                return response;
+            }
+        }
+        return response;
     }
     WalletBalances getBalances() override
     {
