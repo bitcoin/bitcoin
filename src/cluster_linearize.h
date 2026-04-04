@@ -9,6 +9,7 @@
 #include <cstdint>
 #include <numeric>
 #include <optional>
+#include <ranges>
 #include <utility>
 #include <vector>
 
@@ -316,7 +317,7 @@ public:
     {
         DepGraphIndex old_len = list.size();
         for (auto i : select) list.push_back(i);
-        std::sort(list.begin() + old_len, list.end(), [&](DepGraphIndex a, DepGraphIndex b) noexcept {
+        std::ranges::sort(std::span{list}.subspan(old_len), [&](DepGraphIndex a, DepGraphIndex b) noexcept {
             const auto a_anc_count = entries[a].ancestors.Count();
             const auto b_anc_count = entries[b].ancestors.Count();
             if (a_anc_count != b_anc_count) return a_anc_count < b_anc_count;
@@ -432,7 +433,7 @@ std::vector<SetInfo<SetType>> ChunkLinearizationInfo(const DepGraph<SetType>& de
         /** The new chunk to be added, initially a singleton. */
         SetInfo<SetType> new_chunk(depgraph, i);
         // As long as the new chunk has a higher feerate than the last chunk so far, absorb it.
-        while (!ret.empty() && new_chunk.feerate >> ret.back().feerate) {
+        while (!ret.empty() && ByRatio{new_chunk.feerate} > ByRatio{ret.back().feerate}) {
             new_chunk |= ret.back();
             ret.pop_back();
         }
@@ -452,7 +453,7 @@ std::vector<FeeFrac> ChunkLinearization(const DepGraph<SetType>& depgraph, std::
         /** The new chunk to be added, initially a singleton. */
         auto new_chunk = depgraph.FeeRate(i);
         // As long as the new chunk has a higher feerate than the last chunk so far, absorb it.
-        while (!ret.empty() && new_chunk >> ret.back()) {
+        while (!ret.empty() && ByRatio{new_chunk} > ByRatio{ret.back()}) {
             new_chunk += ret.back();
             ret.pop_back();
         }
@@ -1031,8 +1032,8 @@ private:
             auto& reached_chunk_info = m_set_info[reached_chunk_idx];
             todo -= reached_chunk_info.transactions;
             // See if it has an acceptable feerate.
-            auto cmp = DownWard ? FeeRateCompare(best_other_chunk_feerate, reached_chunk_info.feerate)
-                                : FeeRateCompare(reached_chunk_info.feerate, best_other_chunk_feerate);
+            auto cmp = DownWard ? ByRatio{best_other_chunk_feerate} <=> ByRatio{reached_chunk_info.feerate}
+                                : ByRatio{reached_chunk_info.feerate} <=> ByRatio{best_other_chunk_feerate};
             if (cmp > 0) continue;
             uint64_t tiebreak = m_rng.rand64();
             if (cmp < 0 || tiebreak >= best_other_chunk_tiebreak) {
@@ -1154,7 +1155,7 @@ private:
                 auto& dep_top_info = m_set_info[tx_data.dep_top_idx[child_idx]];
                 // Skip if this dependency is ineligible (the top chunk that would be created
                 // does not have higher feerate than the chunk it is currently part of).
-                auto cmp = FeeRateCompare(dep_top_info.feerate, chunk_info.feerate);
+                auto cmp = ByRatio{dep_top_info.feerate} <=> ByRatio{chunk_info.feerate};
                 if (cmp <= 0) continue;
                 // Generate a random tiebreak for this dependency, and reject it if its tiebreak
                 // is worse than the best so far. This means that among all eligible
@@ -1381,7 +1382,7 @@ public:
                 // Skip if this dependency does not have equal top and bottom set feerates. Note
                 // that the top cannot have higher feerate than the bottom, or OptimizeSteps would
                 // have dealt with it.
-                if (dep_top_info.feerate << chunk_info.feerate) continue;
+                if (ByRatio{dep_top_info.feerate} < ByRatio{chunk_info.feerate}) continue;
                 have_any = true;
                 // Skip if this dependency does not have pivot in the right place.
                 if (move_pivot_down == dep_top_info.transactions[pivot_idx]) continue;
@@ -1510,7 +1511,7 @@ public:
             // First sort by increasing transaction feerate.
             auto& a_feerate = m_depgraph.FeeRate(a);
             auto& b_feerate = m_depgraph.FeeRate(b);
-            auto feerate_cmp = FeeRateCompare(a_feerate, b_feerate);
+            auto feerate_cmp = ByRatio{a_feerate} <=> ByRatio{b_feerate};
             if (feerate_cmp != 0) return feerate_cmp < 0;
             // Then by decreasing transaction size.
             if (a_feerate.size != b_feerate.size) {
@@ -1532,7 +1533,7 @@ public:
             // First sort by increasing chunk feerate.
             auto& chunk_feerate_a = m_set_info[a.first].feerate;
             auto& chunk_feerate_b = m_set_info[b.first].feerate;
-            auto feerate_cmp = FeeRateCompare(chunk_feerate_a, chunk_feerate_b);
+            auto feerate_cmp = ByRatio{chunk_feerate_a} <=> ByRatio{chunk_feerate_b};
             if (feerate_cmp != 0) return feerate_cmp < 0;
             // Then by decreasing chunk size.
             if (chunk_feerate_a.size != chunk_feerate_b.size) {
@@ -1622,7 +1623,7 @@ public:
         for (auto chunk_idx : m_chunk_idxs) {
             ret.push_back(m_set_info[chunk_idx].feerate);
         }
-        std::sort(ret.begin(), ret.end(), std::greater{});
+        std::ranges::sort(ret, std::greater<ByRatioNegSize<FeeFrac>>{});
         return ret;
     }
 
@@ -1651,8 +1652,8 @@ public:
                 }
             }
         }
-        std::sort(expected_dependencies.begin(), expected_dependencies.end());
-        std::sort(all_dependencies.begin(), all_dependencies.end());
+        std::ranges::sort(expected_dependencies);
+        std::ranges::sort(all_dependencies);
         assert(expected_dependencies == all_dependencies);
 
         //
@@ -1976,7 +1977,7 @@ void PostLinearize(const DepGraph<SetType>& depgraph, std::span<DepGraphIndex> l
             DepGraphIndex next_group = SENTINEL; // We inserted at the end, so next group is sentinel.
             DepGraphIndex prev_group = entries[cur_group].prev_group;
             // Continue as long as the current group has higher feerate than the previous one.
-            while (entries[cur_group].feerate >> entries[prev_group].feerate) {
+            while (ByRatio{entries[cur_group].feerate} > ByRatio{entries[prev_group].feerate}) {
                 // prev_group/cur_group/next_group refer to (the last transactions of) 3
                 // consecutive entries in groups list.
                 Assume(cur_group == entries[next_group].prev_group);

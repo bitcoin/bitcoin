@@ -14,6 +14,7 @@
 #include <compare>
 #include <functional>
 #include <memory>
+#include <ranges>
 #include <set>
 #include <span>
 #include <unordered_set>
@@ -496,9 +497,8 @@ private:
         const auto& entry_a = m_entries[a];
         const auto& entry_b = m_entries[b];
         // Compare chunk feerates, and return result if it differs.
-        auto feerate_cmp = FeeRateCompare(entry_b.m_main_chunk_feerate, entry_a.m_main_chunk_feerate);
-        if (feerate_cmp < 0) return std::strong_ordering::less;
-        if (feerate_cmp > 0) return std::strong_ordering::greater;
+        auto feerate_cmp = ByRatio{entry_b.m_main_chunk_feerate} <=> ByRatio{entry_a.m_main_chunk_feerate};
+        if (feerate_cmp != 0) return feerate_cmp;
         // Compare equal-feerate chunk prefix size for comparing equal chunk feerates. This does two
         // things: it distinguishes equal-feerate chunks within the same cluster (because later
         // ones will always have a higher prefix size), and it may distinguish equal-feerate chunks
@@ -1100,7 +1100,7 @@ void GenericClusterImpl::Updated(TxGraphImpl& graph, int level, bool rename) noe
             Assume(chunk_count > 0);
             // Update equal_feerate_chunk_feerate to include this chunk, starting over when the
             // feerate changed.
-            if (chunk.feerate << equal_feerate_chunk_feerate) {
+            if (ByRatio{chunk.feerate} < ByRatio{equal_feerate_chunk_feerate}) {
                 equal_feerate_chunk_feerate = chunk.feerate;
             } else {
                 // Note that this is adding fees to fees, and sizes to sizes, so the overall
@@ -1213,8 +1213,8 @@ std::vector<Cluster*> TxGraphImpl::GetConflicts() const noexcept
         }
     }
     // Deduplicate the result (the same Cluster may appear multiple times).
-    std::sort(ret.begin(), ret.end(), [](Cluster* a, Cluster* b) noexcept { return CompareClusters(a, b) < 0; });
-    ret.erase(std::unique(ret.begin(), ret.end()), ret.end());
+    std::ranges::sort(ret, [](Cluster* a, Cluster* b) noexcept { return CompareClusters(a, b) < 0; });
+    ret.erase(std::ranges::unique(ret).begin(), ret.end());
     return ret;
 }
 
@@ -1559,7 +1559,7 @@ void SingletonClusterImpl::Merge(TxGraphImpl&, int, Cluster&) noexcept
 void GenericClusterImpl::ApplyDependencies(TxGraphImpl& graph, int level, std::span<std::pair<GraphIndex, GraphIndex>> to_apply) noexcept
 {
     // Sort the list of dependencies to apply by child, so those can be applied in batch.
-    std::sort(to_apply.begin(), to_apply.end(), [](auto& a, auto& b) { return a.second < b.second; });
+    std::ranges::sort(to_apply, [](auto& a, auto& b) { return a.second < b.second; });
     // Iterate over groups of to-be-added dependencies with the same child.
     auto it = to_apply.begin();
     while (it != to_apply.end()) {
@@ -1721,7 +1721,7 @@ void TxGraphImpl::ApplyRemovals(int up_to_level) noexcept
             }
         }
         // Group the set of to-be-removed entries by Cluster::m_sequence.
-        std::sort(to_remove.begin(), to_remove.end(), [&](GraphIndex a, GraphIndex b) noexcept {
+        std::ranges::sort(to_remove, [&](GraphIndex a, GraphIndex b) noexcept {
             Cluster* cluster_a = m_entries[a].m_locator[level].cluster;
             Cluster* cluster_b = m_entries[b].m_locator[level].cluster;
             return CompareClusters(cluster_a, cluster_b) < 0;
@@ -1792,7 +1792,7 @@ void TxGraphImpl::Compact() noexcept
     // ones get processed first. This means earlier-processed GraphIndexes will not cause moving of
     // later-processed ones during the "swap with end of m_entries" step below (which might
     // invalidate them).
-    std::sort(m_unlinked.begin(), m_unlinked.end(), std::greater{});
+    std::ranges::sort(m_unlinked, std::greater{});
 
     std::vector<Cluster*> affected_main;
     auto last = GraphIndex(-1);
@@ -1818,7 +1818,7 @@ void TxGraphImpl::Compact() noexcept
 
     // Update the affected clusters, to fixup Entry::m_main_max_chunk_fallback values which may
     // have become outdated due to the compaction above.
-    std::sort(affected_main.begin(), affected_main.end());
+    std::ranges::sort(affected_main);
     affected_main.erase(std::unique(affected_main.begin(), affected_main.end()), affected_main.end());
     for (Cluster* cluster : affected_main) {
         cluster->Updated(*this, /*level=*/0, /*rename=*/true);
@@ -1902,10 +1902,10 @@ void TxGraphImpl::GroupClusters(int level) noexcept
     }
     // Sort and deduplicate an_clusters, so we end up with a sorted list of all involved Clusters
     // to which dependencies apply, or which are oversized.
-    std::sort(an_clusters.begin(), an_clusters.end(), [](auto& a, auto& b) noexcept { return a.second < b.second; });
-    an_clusters.erase(std::unique(an_clusters.begin(), an_clusters.end()), an_clusters.end());
+    std::ranges::sort(an_clusters, [](auto& a, auto& b) noexcept { return a.second < b.second; });
+    an_clusters.erase(std::ranges::unique(an_clusters).begin(), an_clusters.end());
     // Sort an_deps by applying the same order to the involved child cluster.
-    std::sort(an_deps.begin(), an_deps.end(), [&](auto& a, auto& b) noexcept { return a.second < b.second; });
+    std::ranges::sort(an_deps, [&](auto& a, auto& b) noexcept { return a.second < b.second; });
 
     // Run the union-find algorithm to find partitions of the input Clusters which need to be
     // grouped together. See https://en.wikipedia.org/wiki/Disjoint-set_data_structure.
@@ -2018,8 +2018,8 @@ void TxGraphImpl::GroupClusters(int level) noexcept
 
     // Sort both an_clusters and an_deps by sequence number of the representative of the
     // partition they are in, grouping all those applying to the same partition together.
-    std::sort(an_deps.begin(), an_deps.end(), [](auto& a, auto& b) noexcept { return a.second < b.second; });
-    std::sort(an_clusters.begin(), an_clusters.end(), [](auto& a, auto& b) noexcept { return a.second < b.second; });
+    std::ranges::sort(an_deps, [](auto& a, auto& b) noexcept { return a.second < b.second; });
+    std::ranges::sort(an_clusters, [](auto& a, auto& b) noexcept { return a.second < b.second; });
 
     // Translate the resulting cluster groups to the m_group_data structure, and the dependencies
     // back to m_deps_to_add.
@@ -2490,7 +2490,7 @@ std::vector<TxGraph::Ref*> TxGraphImpl::GetAncestorsUnion(std::span<const Ref* c
         matches.emplace_back(cluster, m_entries[GetRefIndex(*arg)].m_locator[cluster_level].index);
     }
     // Group by Cluster.
-    std::sort(matches.begin(), matches.end(), [](auto& a, auto& b) noexcept { return CompareClusters(a.first, b.first) < 0; });
+    std::ranges::sort(matches, [](auto& a, auto& b) noexcept { return CompareClusters(a.first, b.first) < 0; });
     // Dispatch to the Clusters.
     std::span match_span(matches);
     std::vector<TxGraph::Ref*> ret;
@@ -2523,7 +2523,7 @@ std::vector<TxGraph::Ref*> TxGraphImpl::GetDescendantsUnion(std::span<const Ref*
         matches.emplace_back(cluster, m_entries[GetRefIndex(*arg)].m_locator[cluster_level].index);
     }
     // Group by Cluster.
-    std::sort(matches.begin(), matches.end(), [](auto& a, auto& b) noexcept { return CompareClusters(a.first, b.first) < 0; });
+    std::ranges::sort(matches, [](auto& a, auto& b) noexcept { return CompareClusters(a.first, b.first) < 0; });
     // Dispatch to the Clusters.
     std::span match_span(matches);
     std::vector<TxGraph::Ref*> ret;
@@ -2797,7 +2797,7 @@ TxGraph::GraphIndex TxGraphImpl::CountDistinctClusters(std::span<const Ref* cons
         if (cluster != nullptr) clusters.push_back(cluster);
     }
     // Count the number of distinct elements in clusters.
-    std::sort(clusters.begin(), clusters.end(), [](Cluster* a, Cluster* b) noexcept { return CompareClusters(a, b) < 0; });
+    std::ranges::sort(clusters, [](Cluster* a, Cluster* b) noexcept { return CompareClusters(a, b) < 0; });
     Cluster* last{nullptr};
     GraphIndex ret{0};
     for (Cluster* cluster : clusters) {
@@ -2828,8 +2828,8 @@ std::pair<std::vector<FeeFrac>, std::vector<FeeFrac>> TxGraphImpl::GetMainStagin
         }
     }
     // Sort both by decreasing feerate to obtain diagrams, and return them.
-    std::sort(main_feerates.begin(), main_feerates.end(), [](auto& a, auto& b) { return a > b; });
-    std::sort(staging_feerates.begin(), staging_feerates.end(), [](auto& a, auto& b) { return a > b; });
+    std::ranges::sort(main_feerates, std::greater<ByRatioNegSize<FeeFrac>>{});
+    std::ranges::sort(staging_feerates, std::greater<ByRatioNegSize<FeeFrac>>{});
     return std::make_pair(std::move(main_feerates), std::move(staging_feerates));
 }
 
@@ -2875,10 +2875,10 @@ void GenericClusterImpl::SanityCheck(const TxGraphImpl& graph, int level) const
                 ++chunk_num;
                 assert(chunk_num < linchunking.size());
                 chunk_pos = 0;
-                if (linchunking[chunk_num].feerate << equal_feerate_prefix) {
+                if (ByRatio{linchunking[chunk_num].feerate} < ByRatio{equal_feerate_prefix}) {
                     equal_feerate_prefix = linchunking[chunk_num].feerate;
                 } else {
-                    assert(!(linchunking[chunk_num].feerate >> equal_feerate_prefix));
+                    assert(ByRatio{linchunking[chunk_num].feerate} == ByRatio{equal_feerate_prefix});
                     equal_feerate_prefix += linchunking[chunk_num].feerate;
                 }
             }
@@ -3103,7 +3103,7 @@ void TxGraphImpl::SanityCheck() const
         actual_chunkindex.insert(idx);
         auto chunk_feerate = m_entries[idx].m_main_chunk_feerate;
         if (!last_chunk_feerate.IsEmpty()) {
-            assert(FeeRateCompare(last_chunk_feerate, chunk_feerate) >= 0);
+            assert(ByRatio{last_chunk_feerate} >= ByRatio{FeeFrac{chunk_feerate}});
         }
         last_chunk_feerate = chunk_feerate;
     }
@@ -3338,7 +3338,7 @@ std::vector<TxGraph::Ref*> TxGraphImpl::Trim() noexcept
         // We do not need to sort by cluster or within clusters, because due to the implicit
         // dependency between consecutive linearization elements, no two transactions from the
         // same Cluster will ever simultaneously be in the heap.
-        return a->m_chunk_feerate < b->m_chunk_feerate;
+        return ByRatioNegSize{a->m_chunk_feerate} < ByRatioNegSize{b->m_chunk_feerate};
     };
 
     /** Given a TrimTxData entry, find the representative of the partition it is in. */
@@ -3402,7 +3402,7 @@ std::vector<TxGraph::Ref*> TxGraphImpl::Trim() noexcept
         // Sort the trim data by GraphIndex. In what follows, we will treat this sorted vector as
         // a map from GraphIndex to TrimTxData via locate_fn, and its ordering will not change
         // anymore.
-        std::sort(trim_data.begin(), trim_data.end(), [](auto& a, auto& b) noexcept { return a.m_index < b.m_index; });
+        std::ranges::sort(trim_data, [](auto& a, auto& b) noexcept { return a.m_index < b.m_index; });
 
         // Add the explicitly added dependencies to deps_by_child.
         deps_by_child.insert(deps_by_child.end(),
@@ -3411,7 +3411,7 @@ std::vector<TxGraph::Ref*> TxGraphImpl::Trim() noexcept
 
         // Sort deps_by_child by child transaction GraphIndex. The order will not be changed
         // anymore after this.
-        std::sort(deps_by_child.begin(), deps_by_child.end(), [](auto& a, auto& b) noexcept { return a.second < b.second; });
+        std::ranges::sort(deps_by_child, [](auto& a, auto& b) noexcept { return a.second < b.second; });
         // Fill m_parents_count and m_parents_offset in trim_data, as well as m_deps_left, and
         // initially populate trim_heap. Because of the sort above, all dependencies involving the
         // same child are grouped together, so a single linear scan suffices.
@@ -3435,7 +3435,7 @@ std::vector<TxGraph::Ref*> TxGraphImpl::Trim() noexcept
         // Construct deps_by_parent, sorted by parent transaction GraphIndex. The order will not be
         // changed anymore after this.
         deps_by_parent = deps_by_child;
-        std::sort(deps_by_parent.begin(), deps_by_parent.end(), [](auto& a, auto& b) noexcept { return a.first < b.first; });
+        std::ranges::sort(deps_by_parent, [](auto& a, auto& b) noexcept { return a.first < b.first; });
         // Fill m_children_offset and m_children_count in trim_data. Because of the sort above, all
         // dependencies involving the same parent are grouped together, so a single linear scan
         // suffices.
@@ -3483,8 +3483,8 @@ std::vector<TxGraph::Ref*> TxGraphImpl::Trim() noexcept
                 Assume(chl == entry.m_index);
                 current_deps.push_back(find_fn(&*locate_fn(par)));
             }
-            std::sort(current_deps.begin(), current_deps.end());
-            current_deps.erase(std::unique(current_deps.begin(), current_deps.end()), current_deps.end());
+            std::ranges::sort(current_deps);
+            current_deps.erase(std::ranges::unique(current_deps).begin(), current_deps.end());
 
             // Compute resource counts.
             uint32_t new_count = 1;

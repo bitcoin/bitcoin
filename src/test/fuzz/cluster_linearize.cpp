@@ -126,7 +126,7 @@ public:
                     // Add a queue entry with split excluded.
                     queue.emplace_back(inc, und - m_depgraph.Descendants(split));
                     // Update statistics to account for the candidate new_inc.
-                    if (new_inc.feerate > best.feerate) best = new_inc;
+                    if (ByRatioNegSize{new_inc.feerate} > ByRatioNegSize{best.feerate}) best = new_inc;
                     break;
                 }
             }
@@ -181,7 +181,7 @@ public:
                 x_shifted >>= 1;
             }
             SetInfo cur(m_depgraph, txn & m_todo);
-            if (cur.feerate > best.feerate) best = cur;
+            if (ByRatioNegSize{cur.feerate} > ByRatioNegSize{best.feerate}) best = cur;
         }
         return best;
     }
@@ -737,7 +737,7 @@ FUZZ_TARGET(clusterlin_chunking)
 
     // Verify that chunk feerates are monotonically non-increasing.
     for (size_t i = 1; i < chunking.size(); ++i) {
-        assert(!(chunking[i] >> chunking[i - 1]));
+        assert(ByRatio{chunking[i]} <= ByRatio{chunking[i - 1]});
     }
 
     // Naively recompute the chunks (each is the highest-feerate prefix of what remains).
@@ -748,7 +748,7 @@ FUZZ_TARGET(clusterlin_chunking)
         for (DepGraphIndex idx : linearization) {
             if (todo[idx]) {
                 accumulator.Set(depgraph, idx);
-                if (best.feerate.IsEmpty() || accumulator.feerate >> best.feerate) {
+                if (best.feerate.IsEmpty() || ByRatio{accumulator.feerate} > ByRatio{best.feerate}) {
                     best = accumulator;
                 }
             }
@@ -825,7 +825,7 @@ FUZZ_TARGET(clusterlin_simple_finder)
             // Compare with a non-empty topological set read from the fuzz input (comparing with an
             // empty set is not interesting).
             auto read_topo = ReadTopologicalSet(depgraph, todo, reader, /*non_empty=*/true);
-            assert(found.feerate >= depgraph.FeeRate(read_topo));
+            assert(ByRatioNegSize{found.feerate} >= ByRatioNegSize{depgraph.FeeRate(read_topo)});
         }
 
         // Find a non-empty topologically valid subset of transactions to remove from the graph.
@@ -1110,9 +1110,9 @@ FUZZ_TARGET(clusterlin_linearize)
                     // Check whether tx2 only depends on transactions that precede tx1.
                     if ((depgraph.Ancestors(tx2) - done).Count() == 1) {
                         // tx2 could take position pos1.
-                        // Verify that individual transaction feerate is decreasing (note that >=
-                        // tie-breaks by size).
-                        assert(depgraph.FeeRate(tx1) >= depgraph.FeeRate(tx2));
+                        // Verify that individual transaction feerate is decreasing (tie-breaking by
+                        // size).
+                        assert(ByRatioNegSize{depgraph.FeeRate(tx1)} >= ByRatioNegSize{depgraph.FeeRate(tx2)});
                         // If feerate and size are equal, compare by DepGraphIndex.
                         if (depgraph.FeeRate(tx1) == depgraph.FeeRate(tx2)) {
                             assert(tx1 < tx2);
@@ -1139,8 +1139,8 @@ FUZZ_TARGET(clusterlin_linearize)
                 // Check whether chunk2 only depends on transactions that precede chunk1.
                 if ((chunk2_ancestors - done).IsSubsetOf(chunk2.transactions)) {
                     // chunk2 could take position chunk_num1.
-                    // Verify that chunk feerate is decreasing (note that >= tie-breaks by size).
-                    assert(chunk1.feerate >= chunk2.feerate);
+                    // Verify that chunk feerate is decreasing (tie-breaking by size).
+                    assert(ByRatioNegSize{chunk1.feerate} >= ByRatioNegSize{chunk2.feerate});
                     // If feerate and size are equal, compare by maximum DepGraphIndex element.
                     if (chunk1.feerate == chunk2.feerate) {
                         assert(chunk1.transactions.Last() < chunk2.transactions.Last());
