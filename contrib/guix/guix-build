@@ -441,7 +441,8 @@ EOF
         #    more information.
         #
         # shellcheck disable=SC2086,SC2031
-        time-machine shell --manifest="${PWD}/contrib/guix/manifest.scm" \
+        time-machine shell --manifest="${PWD}/contrib/guix/manifest_build.scm" \
+                                 --manifest="${PWD}/contrib/guix/manifest_build_gui.scm" \
                                  --container \
                                  --writable-root \
                                  --pure \
