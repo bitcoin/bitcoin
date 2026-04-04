@@ -52,7 +52,7 @@ from test_framework.wallet import MiniWallet, COIN
 class MempoolPersistTest(BitcoinTestFramework):
     def set_test_params(self):
         self.num_nodes = 3
-        self.extra_args = [[], ["-persistmempool=0"], []]
+        self.extra_args = [["-test=pause_load_mempool"], ["-persistmempool=0"], []]
         self.uses_wallet = None
 
     def run_test(self):
@@ -114,7 +114,15 @@ class MempoolPersistTest(BitcoinTestFramework):
         # Give this node a head-start, so we can be "extra-sure" that it didn't load anything later
         # Also don't store the mempool, to keep the datadir clean
         self.start_node(1, extra_args=["-persistmempool=0"])
-        self.start_node(0)
+        # Pause this node during init, in order to check that we can't save
+        # the mempool before it's loaded.
+        pause_file = self.nodes[0].chain_path / "pause_load_mempool"
+        pause_file.touch()
+        self.start_node(0, wait_for_import=False)
+        assert_equal(self.nodes[0].getmempoolinfo()["loaded"], False)
+        assert_raises_rpc_error(-1, "The mempool was not loaded yet", self.nodes[0].savemempool)
+        pause_file.unlink()
+        self.nodes[0].wait_until(lambda: self.nodes[0].getmempoolinfo()["loaded"])
         self.start_node(2)
         assert self.nodes[0].getmempoolinfo()["loaded"]  # start_node is blocking on the mempool being loaded
         assert self.nodes[2].getmempoolinfo()["loaded"]
