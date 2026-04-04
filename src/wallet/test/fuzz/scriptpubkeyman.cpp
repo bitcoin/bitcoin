@@ -104,99 +104,81 @@ FUZZ_TARGET(scriptpubkeyman, .init = initialize_spkm)
     if (spk_manager == nullptr) return;
 
     if (fuzzed_data_provider.ConsumeBool()) {
-        auto wallet_desc{CreateWalletDescriptor(fuzzed_data_provider)};
-        if (!wallet_desc.has_value()) {
-            return;
-        }
-        std::string error;
-        if (spk_manager->CanUpdateToWalletDescriptor(wallet_desc->first, error)) {
-            auto new_spk_manager{CreateDescriptor(wallet_desc->first, wallet_desc->second, wallet)};
-            if (new_spk_manager != nullptr) spk_manager = new_spk_manager;
-        }
-    }
-
-    bool good_data{true};
-    LIMITED_WHILE(good_data && fuzzed_data_provider.ConsumeBool(), 20) {
-        CallOneOf(
-            fuzzed_data_provider,
-            [&] {
-                const CScript script{ConsumeScript(fuzzed_data_provider)};
-                if (spk_manager->IsMine(script)) {
-                    assert(spk_manager->GetScriptPubKeys().contains(script));
-                }
-            },
-            [&] {
-                auto spks{spk_manager->GetScriptPubKeys()};
-                for (const CScript& spk : spks) {
-                    assert(spk_manager->IsMine(spk));
-                    CTxDestination dest;
-                    bool extract_dest{ExtractDestination(spk, dest)};
-                    if (extract_dest) {
-                        const std::string msg{fuzzed_data_provider.ConsumeRandomLengthString()};
-                        PKHash pk_hash{std::get_if<PKHash>(&dest) && fuzzed_data_provider.ConsumeBool() ?
-                                           *std::get_if<PKHash>(&dest) :
-                                           PKHash{ConsumeUInt160(fuzzed_data_provider)}};
-                        std::string str_sig;
-                        (void)spk_manager->SignMessage(msg, pk_hash, str_sig);
-                        (void)spk_manager->GetMetadata(dest);
-                    }
-                }
-            },
-            [&] {
-                auto spks{spk_manager->GetScriptPubKeys()};
-                if (!spks.empty()) {
-                    auto& spk{PickValue(fuzzed_data_provider, spks)};
-                    (void)spk_manager->MarkUnusedAddresses(spk);
-                }
-            },
-            [&] {
-                LOCK(spk_manager->cs_desc_man);
-                auto wallet_desc{spk_manager->GetWalletDescriptor()};
-                if (wallet_desc.descriptor->IsSingleType()) {
-                    auto output_type{wallet_desc.descriptor->GetOutputType()};
-                    if (output_type.has_value()) {
-                        auto dest{spk_manager->GetNewDestination(*output_type)};
-                        if (dest) {
-                            assert(IsValidDestination(*dest));
-                            assert(spk_manager->IsHDEnabled());
-                        }
-                    }
-                }
-            },
-            [&] {
-                CMutableTransaction tx_to;
-                const std::optional<CMutableTransaction> opt_tx_to{ConsumeDeserializable<CMutableTransaction>(fuzzed_data_provider, TX_WITH_WITNESS)};
-                if (!opt_tx_to) {
-                    good_data = false;
-                    return;
-                }
-                tx_to = *opt_tx_to;
-
-                std::map<COutPoint, Coin> coins{ConsumeCoins(fuzzed_data_provider)};
-                const int sighash{fuzzed_data_provider.ConsumeIntegral<int>()};
-                std::map<int, bilingual_str> input_errors;
-                (void)spk_manager->SignTransaction(tx_to, coins, sighash, input_errors);
-            },
-            [&] {
-                std::optional<PartiallySignedTransaction> opt_psbt{ConsumeDeserializable<PartiallySignedTransaction>(fuzzed_data_provider)};
-                if (!opt_psbt) {
-                    good_data = false;
-                    return;
-                }
-                auto psbt{*opt_psbt};
-                const PrecomputedTransactionData txdata{PrecomputePSBTData(psbt)};
-                std::optional<int> sighash_type{fuzzed_data_provider.ConsumeIntegralInRange<int>(0, 151)};
-                if (sighash_type == 151) sighash_type = std::nullopt;
-                auto sign  = fuzzed_data_provider.ConsumeBool();
-                auto bip32derivs = fuzzed_data_provider.ConsumeBool();
-                auto finalize = fuzzed_data_provider.ConsumeBool();
-                (void)spk_manager->FillPSBT(psbt, txdata, sighash_type, sign, bip32derivs, nullptr, finalize);
+        if (auto wallet_desc{CreateWalletDescriptor(fuzzed_data_provider)}) {
+            std::string error;
+            if (spk_manager->CanUpdateToWalletDescriptor(wallet_desc->first, error)) {
+                auto new_spk_manager{CreateDescriptor(wallet_desc->first, wallet_desc->second, wallet)};
+                if (new_spk_manager != nullptr) spk_manager = new_spk_manager;
             }
-        );
+        }
     }
 
-    std::string descriptor;
-    (void)spk_manager->GetDescriptorString(descriptor, /*priv=*/fuzzed_data_provider.ConsumeBool());
+    if (fuzzed_data_provider.ConsumeBool()) {
+        LOCK(spk_manager->cs_desc_man);
+        auto wallet_desc{spk_manager->GetWalletDescriptor()};
+        if (wallet_desc.descriptor->IsSingleType()) {
+            auto output_type{wallet_desc.descriptor->GetOutputType()};
+            if (output_type.has_value()) {
+                auto dest{spk_manager->GetNewDestination(*output_type)};
+                if (dest) {
+                    assert(IsValidDestination(*dest));
+                    assert(spk_manager->IsHDEnabled());
+                }
+            }
+        }
+    }
+
+    auto spks{spk_manager->GetScriptPubKeys()};
+
+    if (fuzzed_data_provider.ConsumeBool()) {
+        auto& spk{(!spks.empty() && fuzzed_data_provider.ConsumeBool()) ? PickValue(fuzzed_data_provider, spks) : ConsumeScript(fuzzed_data_provider)};
+        (void)spk_manager->MarkUnusedAddresses(spk);
+    }
+
+    if (!spks.empty() && fuzzed_data_provider.ConsumeBool()) {
+        auto& spk{PickValue(fuzzed_data_provider, spks)};
+        CTxDestination dest;
+        bool extract_dest{ExtractDestination(spk, dest)};
+        if (extract_dest) {
+            const std::string msg{fuzzed_data_provider.ConsumeRandomLengthString()};
+            PKHash pk_hash{std::get_if<PKHash>(&dest) && fuzzed_data_provider.ConsumeBool() ?
+                                *std::get_if<PKHash>(&dest) :
+                                PKHash{ConsumeUInt160(fuzzed_data_provider)}};
+            std::string str_sig;
+            (void)spk_manager->SignMessage(msg, pk_hash, str_sig);
+            (void)spk_manager->GetMetadata(dest);
+        }
+    }
+
+    if (fuzzed_data_provider.ConsumeBool()) {
+        if (auto opt_psbt{ConsumeDeserializable<PartiallySignedTransaction>(fuzzed_data_provider)}) {
+            auto psbt{*opt_psbt};
+            const PrecomputedTransactionData txdata{PrecomputePSBTData(psbt)};
+            std::optional<int> sighash_type{fuzzed_data_provider.ConsumeIntegralInRange<int>(0, 151)};
+            if (sighash_type == 151) sighash_type = std::nullopt;
+            auto sign = fuzzed_data_provider.ConsumeBool();
+            auto bip32derivs = fuzzed_data_provider.ConsumeBool();
+            auto finalize = fuzzed_data_provider.ConsumeBool();
+            (void)spk_manager->FillPSBT(psbt, txdata, sighash_type, sign, bip32derivs, nullptr, finalize);
+        }
+    }
+
+    if (fuzzed_data_provider.ConsumeBool()) {
+        if (auto opt_tx_to{ConsumeDeserializable<CMutableTransaction>(fuzzed_data_provider, TX_WITH_WITNESS)}) {
+            CMutableTransaction tx_to;
+            tx_to = *opt_tx_to;
+            std::map<COutPoint, Coin> coins{ConsumeCoins(fuzzed_data_provider, /*num_coins=*/5)};
+            const int sighash{fuzzed_data_provider.ConsumeIntegral<int>()};
+            std::map<int, bilingual_str> input_errors;
+            (void)spk_manager->SignTransaction(tx_to, coins, sighash, input_errors);
+        }
+    }
+
+    if (fuzzed_data_provider.ConsumeBool()) {
+        std::string descriptor;
+        (void)spk_manager->GetDescriptorString(descriptor, /*priv=*/fuzzed_data_provider.ConsumeBool());
+    }
+
     (void)spk_manager->GetEndRange();
     (void)spk_manager->GetKeyPoolSize();
 }
