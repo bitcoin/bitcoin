@@ -130,12 +130,8 @@ namespace BCLog {
     {
     public:
         struct BufferedLog {
-            SystemClock::time_point now;
+            util::log::Entry entry;
             std::chrono::seconds mocktime;
-            std::string str, threadname;
-            SourceLocation source_loc;
-            LogFlags category;
-            Level level;
         };
 
     private:
@@ -161,16 +157,15 @@ namespace BCLog {
         /** Log categories bitfield. */
         std::atomic<CategoryMask> m_categories{BCLog::NONE};
 
-        void FormatLogStrInPlace(std::string& str, LogFlags category, Level level, const SourceLocation& source_loc, std::string_view threadname, SystemClock::time_point now, std::chrono::seconds mocktime) const;
+        std::string Format(const util::log::Entry& entry, std::chrono::seconds mocktime) const;
 
         std::string LogTimestampStr(SystemClock::time_point now, std::chrono::seconds mocktime) const;
 
         /** Slots that connect to the print signal */
-        std::list<std::function<void(const std::string&)>> m_print_callbacks GUARDED_BY(m_cs) {};
+        std::list<std::function<void(const std::string&)>> m_print_callbacks GUARDED_BY(m_cs){};
 
-        /** Send a string to the log output (internal) */
-        void LogPrintStr_(std::string_view str, SourceLocation&& source_loc, BCLog::LogFlags category, BCLog::Level level, bool should_ratelimit)
-            EXCLUSIVE_LOCKS_REQUIRED(m_cs);
+        /** Send an entry to the log output (internal) */
+        void LogPrintStr_(util::log::Entry&& log_entry) EXCLUSIVE_LOCKS_REQUIRED(m_cs);
 
         std::string GetLogPrefix(LogFlags category, Level level) const;
 
@@ -187,9 +182,8 @@ namespace BCLog {
         fs::path m_file_path;
         std::atomic<bool> m_reopen_file{false};
 
-        /** Send a string to the log output */
-        void LogPrintStr(std::string_view str, SourceLocation&& source_loc, BCLog::LogFlags category, BCLog::Level level, bool should_ratelimit)
-            EXCLUSIVE_LOCKS_REQUIRED(!m_cs);
+        /** Send an entry to the log output */
+        void LogPrintStr(util::log::Entry&& log_entry) EXCLUSIVE_LOCKS_REQUIRED(!m_cs);
 
         /** Returns whether logs will be written to any output */
         bool Enabled() const EXCLUSIVE_LOCKS_REQUIRED(!m_cs)

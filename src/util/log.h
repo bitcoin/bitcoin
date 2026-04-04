@@ -10,6 +10,8 @@
 #include <logging/categories.h> // IWYU pragma: export
 #include <tinyformat.h>
 #include <util/check.h>
+#include <util/threadnames.h>
+#include <util/time.h>
 
 #include <cstdint>
 #include <source_location>
@@ -52,6 +54,8 @@ struct Entry {
     Category category;
     Level level;
     bool should_ratelimit{false}; //!< Hint for consumers if this entry should be ratelimited
+    SystemClock::time_point timestamp{SystemClock::now()};
+    std::string thread_name{util::ThreadGetInternalName()};
     SourceLocation source_loc;
     std::string message;
 };
