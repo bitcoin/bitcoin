@@ -283,10 +283,10 @@ static RPCMethod generatetoaddress()
                 },
         [](const RPCMethod& self, const JSONRPCRequest& request) -> UniValue
 {
-    const int num_blocks{request.params[0].getInt<int>()};
-    const uint64_t max_tries{request.params[2].isNull() ? DEFAULT_MAX_TRIES : request.params[2].getInt<int>()};
+    const auto num_blocks{self.Arg<int>("nblocks")};
+    const auto max_tries{self.Arg<uint64_t>("maxtries")};
 
-    CTxDestination destination = DecodeDestination(request.params[1].get_str());
+    CTxDestination destination = DecodeDestination(std::string{self.Arg<std::string_view>("address")});
     if (!IsValidDestination(destination)) {
         throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Error: Invalid address");
     }
