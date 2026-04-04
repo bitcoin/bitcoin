@@ -9,7 +9,7 @@
 
 #include <boost/test/unit_test.hpp>
 
-BOOST_FIXTURE_TEST_SUITE(merkle_tests, TestingSetup)
+BOOST_FIXTURE_TEST_SUITE(merkle_tests, BasicTestingSetup)
 
 static uint256 ComputeMerkleRootFromBranch(const uint256& leaf, const std::vector<uint256>& vMerkleBranch, uint32_t nIndex) {
     uint256 hash = leaf;

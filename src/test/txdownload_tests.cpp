@@ -17,7 +17,7 @@
 
 #include <boost/test/unit_test.hpp>
 
-BOOST_FIXTURE_TEST_SUITE(txdownload_tests, TestingSetup)
+BOOST_FIXTURE_TEST_SUITE(txdownload_tests, TestChain100Setup)
 
 struct Behaviors {
     bool m_txid_in_rejects;
@@ -111,7 +111,7 @@ static CTransactionRef CreatePlaceholderTx(bool segwit)
     return ptx;
 }
 
-BOOST_FIXTURE_TEST_CASE(tx_rejection_types, TestChain100Setup)
+BOOST_AUTO_TEST_CASE(tx_rejection_types)
 {
     CTxMemPool& pool = *Assert(m_node.mempool);
     FastRandomContext det_rand{true};
@@ -169,7 +169,7 @@ BOOST_FIXTURE_TEST_CASE(tx_rejection_types, TestChain100Setup)
     }
 }
 
-BOOST_FIXTURE_TEST_CASE(handle_missing_inputs, TestChain100Setup)
+BOOST_AUTO_TEST_CASE(handle_missing_inputs)
 {
     CTxMemPool& pool = *Assert(m_node.mempool);
     FastRandomContext det_rand{true};
