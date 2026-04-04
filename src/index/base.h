@@ -158,6 +158,11 @@ public:
     /// not block and immediately returns false.
     bool BlockUntilSyncedToCurrentChain() const LOCKS_EXCLUDED(::cs_main);
 
+    //! Non-blocking shutdown signal.
+    //!
+    //! Useful for initiating shutdown of multiple indexes in parallel before
+    //! calling Stop() to block for completion. Purely an optimization; Stop()
+    //! can be called directly instead.
     void Interrupt();
 
     /// Initializes the sync state and registers the instance to the

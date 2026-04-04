@@ -34,6 +34,8 @@
 #include <string_view>
 #include <utility>
 
+#define LOG_REQUIRE_CONTEXT true
+
 TRACEPOINT_SEMAPHORE(mempool, added);
 TRACEPOINT_SEMAPHORE(mempool, removed);
 
@@ -174,7 +176,7 @@ static CTxMemPool::Options&& Flatten(CTxMemPool::Options&& opts, bilingual_str& 
 }
 
 CTxMemPool::CTxMemPool(Options opts, bilingual_str& error)
-    : m_opts{Flatten(std::move(opts), error)}
+    : m_opts{Flatten(std::move(opts), error)}, m_log{BCLog::MEMPOOL, m_opts.logger}
 {
     m_txgraph = MakeTxGraph(
         /*max_cluster_count=*/m_opts.limits.cluster_count,
@@ -222,7 +224,7 @@ void CTxMemPool::Apply(ChangeSet* changeset)
         addNewTransaction(it);
     }
     if (!m_txgraph->DoWork(/*max_cost=*/POST_CHANGE_COST)) {
-        LogDebug(BCLog::MEMPOOL, "Mempool in non-optimal ordering after addition(s).");
+        LogDebug(m_log, "Mempool in non-optimal ordering after addition(s).");
     }
 }
 
@@ -381,7 +383,7 @@ void CTxMemPool::removeForReorg(CChain& chain, std::function<bool(txiter)> check
         assert(TestLockPointValidity(chain, it->GetLockPoints()));
     }
     if (!m_txgraph->DoWork(/*max_cost=*/POST_CHANGE_COST)) {
-        LogDebug(BCLog::MEMPOOL, "Mempool in non-optimal ordering after reorg.");
+        LogDebug(m_log, "Mempool in non-optimal ordering after reorg.");
     }
 }
 
@@ -426,7 +428,7 @@ void CTxMemPool::removeForBlock(const std::vector<CTransactionRef>& vtx, unsigne
     lastRollingFeeUpdate = GetTime();
     blockSinceLastRollingFeeBump = true;
     if (!m_txgraph->DoWork(/*max_cost=*/POST_CHANGE_COST)) {
-        LogDebug(BCLog::MEMPOOL, "Mempool in non-optimal ordering after block.");
+        LogDebug(m_log, "Mempool in non-optimal ordering after block.");
     }
 }
 
@@ -438,7 +440,7 @@ void CTxMemPool::check(const CCoinsViewCache& active_coins_tip, int64_t spendhei
 
     AssertLockHeld(::cs_main);
     LOCK(cs);
-    LogDebug(BCLog::MEMPOOL, "Checking mempool with %u transactions and %u inputs\n", (unsigned int)mapTx.size(), (unsigned int)mapNextTx.size());
+    LogDebug(m_log, "Checking mempool with %u transactions and %u inputs\n", (unsigned int)mapTx.size(), (unsigned int)mapNextTx.size());
 
     uint64_t checkTotal = 0;
     CAmount check_total_fee{0};
@@ -643,9 +645,9 @@ void CTxMemPool::PrioritiseTransaction(const Txid& hash, const CAmount& nFeeDelt
         }
         if (delta == 0) {
             mapDeltas.erase(hash);
-            LogInfo("PrioritiseTransaction: %s (%sin mempool) delta cleared\n", hash.ToString(), it == mapTx.end() ? "not " : "");
+            LogInfo(m_log, "PrioritiseTransaction: %s (%sin mempool) delta cleared\n", hash.ToString(), it == mapTx.end() ? "not " : "");
         } else {
-            LogInfo("PrioritiseTransaction: %s (%sin mempool) fee += %s, new delta=%s\n",
+            LogInfo(m_log, "PrioritiseTransaction: %s (%sin mempool) fee += %s, new delta=%s\n",
                       hash.ToString(),
                       it == mapTx.end() ? "not " : "",
                       FormatMoney(nFeeDelta),
@@ -786,7 +788,7 @@ void CTxMemPool::RemoveUnbroadcastTx(const Txid& txid, const bool unchecked) {
 
     if (m_unbroadcast_txids.erase(txid))
     {
-        LogDebug(BCLog::MEMPOOL, "Removed %s from set of unbroadcast txns%s", txid.GetHex(), (unchecked ? " before confirmation that txn was sent out" : ""));
+        LogDebug(m_log, "Removed %s from set of unbroadcast txns%s", txid.GetHex(), (unchecked ? " before confirmation that txn was sent out" : ""));
     }
 }
 
@@ -906,7 +908,7 @@ void CTxMemPool::TrimToSize(size_t sizelimit, std::vector<COutPoint>* pvNoSpends
     }
 
     if (maxFeeRateRemoved > CFeeRate(0)) {
-        LogDebug(BCLog::MEMPOOL, "Removed %u txn, rolling minimum fee bumped to %s\n", nTxnRemoved, maxFeeRateRemoved.ToString());
+        LogDebug(m_log, "Removed %u txn, rolling minimum fee bumped to %s\n", nTxnRemoved, maxFeeRateRemoved.ToString());
     }
 }
 

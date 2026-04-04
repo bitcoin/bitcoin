@@ -301,6 +301,7 @@ public:
     using Options = kernel::MemPoolOptions;
 
     const Options m_opts;
+    const util::log::Context m_log;
 
     /** Create a new CTxMemPool.
      * Sanity checks will be off by default for performance, because otherwise
