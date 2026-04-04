@@ -74,7 +74,8 @@ struct DBVal {
 static std::map<BlockFilterType, BlockFilterIndex> g_filter_indexes;
 
 BlockFilterIndex::BlockFilterIndex(std::unique_ptr<interfaces::Chain> chain, BlockFilterType filter_type,
-                                   size_t n_cache_size, bool f_memory, bool f_wipe)
+                                   size_t n_cache_size, bool f_memory, bool f_wipe,
+                                   std::function<void()> read_error_cb)
     : BaseIndex(std::move(chain), BlockFilterTypeName(filter_type) + " block filter index")
     , m_filter_type(filter_type)
 {
@@ -84,7 +85,7 @@ BlockFilterIndex::BlockFilterIndex(std::unique_ptr<interfaces::Chain> chain, Blo
     fs::path path = gArgs.GetDataDirNet() / "indexes" / "blockfilter" / fs::u8path(filter_name);
     fs::create_directories(path);
 
-    m_db = std::make_unique<BaseIndex::DB>(path / "db", n_cache_size, f_memory, f_wipe);
+    m_db = std::make_unique<BaseIndex::DB>(path / "db", n_cache_size, f_memory, f_wipe, /*f_obfuscate=*/false, std::move(read_error_cb));
     m_filter_fileseq = std::make_unique<FlatFileSeq>(std::move(path), "fltr", FLTR_FILE_CHUNK_SIZE);
 }
 
@@ -98,9 +99,8 @@ interfaces::Chain::NotifyOptions BlockFilterIndex::CustomOptions()
 bool BlockFilterIndex::CustomInit(const std::optional<interfaces::BlockRef>& block)
 {
     if (!m_db->Read(DB_FILTER_POS, m_next_filter_pos)) {
-        // Check that the cause of the read failure is that the key does not exist. Any other errors
-        // indicate database corruption or a disk failure, and starting the index would cause
-        // further corruption.
+        // TODO: Drop this Read+Exists pattern. Read() now terminates on corruption,
+        // so this branch should only represent the missing-key initialization path.
         if (m_db->Exists(DB_FILTER_POS)) {
             LogError("Cannot read current %s state; index may be corrupted",
                       GetName());
@@ -444,12 +444,13 @@ void ForEachBlockFilterIndex(std::function<void (BlockFilterIndex&)> fn)
 }
 
 bool InitBlockFilterIndex(std::function<std::unique_ptr<interfaces::Chain>()> make_chain, BlockFilterType filter_type,
-                          size_t n_cache_size, bool f_memory, bool f_wipe)
+                          size_t n_cache_size, bool f_memory, bool f_wipe, std::function<void()> read_error_cb)
 {
     auto result = g_filter_indexes.emplace(std::piecewise_construct,
                                            std::forward_as_tuple(filter_type),
                                            std::forward_as_tuple(make_chain(), filter_type,
-                                                                 n_cache_size, f_memory, f_wipe));
+                                                                 n_cache_size, f_memory, f_wipe,
+                                                                 std::move(read_error_cb)));
     return result.second;
 }
 

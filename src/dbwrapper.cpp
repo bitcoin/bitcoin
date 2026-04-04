@@ -28,6 +28,7 @@
 #include <algorithm>
 #include <cassert>
 #include <cstdarg>
+#include <cstdlib>
 #include <cstdint>
 #include <cstdio>
 #include <memory>
@@ -215,7 +216,9 @@ struct LevelDBContext {
 };
 
 CDBWrapper::CDBWrapper(const DBParams& params)
-    : m_db_context{std::make_unique<LevelDBContext>()}, m_name{fs::PathToString(params.path.stem())}
+    : m_db_context{std::make_unique<LevelDBContext>()},
+      m_name{fs::PathToString(params.path.stem())},
+      m_read_error_cb{params.read_error_cb}
 {
     DBContext().penv = nullptr;
     DBContext().readoptions.verify_checksums = true;
@@ -310,25 +313,16 @@ std::optional<std::string> CDBWrapper::ReadImpl(std::span<const std::byte> key) 
     if (!status.ok()) {
         if (status.IsNotFound())
             return std::nullopt;
-        LogError("LevelDB read failure: %s", status.ToString());
-        HandleError(status);
+        FatalReadError(strprintf("LevelDB read failure: %s", status.ToString()));
     }
     return strValue;
 }
 
-bool CDBWrapper::ExistsImpl(std::span<const std::byte> key) const
+[[noreturn]] void CDBWrapper::FatalReadError(const std::string& message) const
 {
-    leveldb::Slice slKey(CharCast(key.data()), key.size());
-
-    std::string strValue;
-    leveldb::Status status = DBContext().pdb->Get(DBContext().readoptions, slKey, &strValue);
-    if (!status.ok()) {
-        if (status.IsNotFound())
-            return false;
-        LogError("LevelDB read failure: %s", status.ToString());
-        HandleError(status);
-    }
-    return true;
+    LogError("%s", message);
+    m_read_error_cb();
+    std::abort();
 }
 
 size_t CDBWrapper::EstimateSizeImpl(std::span<const std::byte> key1, std::span<const std::byte> key2) const

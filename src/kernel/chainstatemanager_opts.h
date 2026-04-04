@@ -42,6 +42,11 @@ struct ChainstateManagerOpts {
     std::chrono::seconds max_tip_age{DEFAULT_MAX_TIP_AGE};
     DBOptions coins_db{};
     CoinsViewOptions coins_view{};
+    //! Callback executed on fatal read failures.
+    //!
+    //! Called synchronously from database read paths. It must be safe to call
+    //! from any thread, with or without locks held.
+    std::function<void()> read_error_cb{[] {}};
     Notifications& notifications;
     ValidationSignals* signals{nullptr};
     //! Number of script check worker threads. Zero means no parallel verification.
