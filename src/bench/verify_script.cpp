@@ -57,7 +57,7 @@ static void VerifyScriptBench(benchmark::Bench& bench, ScriptType script_type)
         std::map<COutPoint, Coin> coins;
         coins[txSpend.vin[0].prevout] = Coin(txCredit.vout[0], /*nHeightIn=*/100, /*fCoinBaseIn=*/false);
         std::map<int, bilingual_str> input_errors;
-        bool complete = SignTransaction(txSpend, &keystore, coins, SIGHASH_ALL, input_errors);
+        bool complete = SignTransaction(txSpend, &keystore, coins, {.sighash_type = SIGHASH_ALL}, input_errors);
         assert(complete);
         txdata.Init(txSpend, /*spent_outputs=*/{txCredit.vout[0]});
     }
