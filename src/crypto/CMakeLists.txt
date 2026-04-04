@@ -5,6 +5,7 @@
 add_library(bitcoin_crypto STATIC EXCLUDE_FROM_ALL
   aes.cpp
   chacha20.cpp
+  chacha20_vec_base.cpp
   chacha20poly1305.cpp
   hex_base.cpp
   hkdf_sha256_32.cpp
