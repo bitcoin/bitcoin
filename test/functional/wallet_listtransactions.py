@@ -31,7 +31,6 @@ class ListTransactionsTest(BitcoinTestFramework):
         self.num_nodes = 3
         # whitelist peers to speed up tx relay / mempool sync
         self.noban_tx_relay = True
-        self.extra_args = [["-walletrbf=0"]] * self.num_nodes
 
     def skip_test_if_missing_module(self):
         self.skip_if_no_wallet()
@@ -104,6 +103,7 @@ class ListTransactionsTest(BitcoinTestFramework):
         self.test_op_return()
         self.test_from_me_status_change()
 
+    # TODO: Remove all assertions related to "bip125-replaceable" once this key is removed from the RPC
     def run_rbf_opt_in_test(self):
         """Test the opt-in-rbf flag for sent and received transactions."""
 
@@ -123,13 +123,13 @@ class ListTransactionsTest(BitcoinTestFramework):
                     return i
             return None
 
-        self.log.info("Test txs w/o opt-in RBF (bip125-replaceable=no)")
+        self.log.info("Test txs w/o opt-in RBF but relying on default RBF (bip125-replaceable=yes)")
         # Chain a few transactions that don't opt in.
         txid_1 = self.nodes[0].sendtoaddress(self.nodes[1].getnewaddress(), 1)
-        assert not is_opt_in(self.nodes[0], txid_1)
-        assert_array_result(self.nodes[0].listtransactions(), {"txid": txid_1}, {"bip125-replaceable": "no"})
+        assert is_opt_in(self.nodes[0], txid_1)
+        assert_array_result(self.nodes[0].listtransactions(), {"txid": txid_1}, {"bip125-replaceable": "yes"})
         self.sync_mempools()
-        assert_array_result(self.nodes[1].listtransactions(), {"txid": txid_1}, {"bip125-replaceable": "no"})
+        assert_array_result(self.nodes[1].listtransactions(), {"txid": txid_1}, {"bip125-replaceable": "yes"})
 
         # Tx2 will build off tx1, still not opting in to RBF.
         utxo_to_use = get_unconfirmed_utxo_entry(self.nodes[0], txid_1)
@@ -144,11 +144,12 @@ class ListTransactionsTest(BitcoinTestFramework):
         tx2_signed = self.nodes[1].signrawtransactionwithwallet(tx2)["hex"]
         txid_2 = self.nodes[1].sendrawtransaction(tx2_signed)
 
-        # ...and check the result
+        # ...and check the result - it's not explcitly opt-in
         assert not is_opt_in(self.nodes[1], txid_2)
-        assert_array_result(self.nodes[1].listtransactions(), {"txid": txid_2}, {"bip125-replaceable": "no"})
+        # but it's still replaceable due to its unconfirmed parent being replaceable
+        assert_array_result(self.nodes[1].listtransactions(), {"txid": txid_2}, {"bip125-replaceable": "yes"})
         self.sync_mempools()
-        assert_array_result(self.nodes[0].listtransactions(), {"txid": txid_2}, {"bip125-replaceable": "no"})
+        assert_array_result(self.nodes[0].listtransactions(), {"txid": txid_2}, {"bip125-replaceable": "yes"})
 
         self.log.info("Test txs with opt-in RBF (bip125-replaceable=yes)")
         # Tx3 will opt-in to RBF
@@ -196,8 +197,8 @@ class ListTransactionsTest(BitcoinTestFramework):
 
         self.log.info("Test bip125-replaceable status with gettransaction RPC")
         for n in self.nodes[0:2]:
-            assert_equal(n.gettransaction(txid_1)["bip125-replaceable"], "no")
-            assert_equal(n.gettransaction(txid_2)["bip125-replaceable"], "no")
+            assert_equal(n.gettransaction(txid_1)["bip125-replaceable"], "yes")
+            assert_equal(n.gettransaction(txid_2)["bip125-replaceable"], "yes")
             assert_equal(n.gettransaction(txid_3)["bip125-replaceable"], "yes")
             assert_equal(n.gettransaction(txid_3b)["bip125-replaceable"], "yes")
             assert_equal(n.gettransaction(txid_4)["bip125-replaceable"], "unknown")
@@ -205,8 +206,8 @@ class ListTransactionsTest(BitcoinTestFramework):
         self.log.info("Test bip125-replaceable status with listsinceblock")
         for n in self.nodes[0:2]:
             txs = {tx['txid']: tx['bip125-replaceable'] for tx in n.listsinceblock()['transactions']}
-            assert_equal(txs[txid_1], "no")
-            assert_equal(txs[txid_2], "no")
+            assert_equal(txs[txid_1], "yes")
+            assert_equal(txs[txid_2], "yes")
             assert_equal(txs[txid_3], "yes")
             assert_equal(txs[txid_3b], "yes")
             assert_equal(txs[txid_4], "unknown")
