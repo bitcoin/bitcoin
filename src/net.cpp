@@ -1751,9 +1751,9 @@ void CConnman::AcceptConnection(const ListenSocket& hListenSocket) {
     CService addr;
     if (!addr.SetSockAddr((const struct sockaddr*)&sockaddr, len)) {
         LogWarning("Unknown socket family\n");
-    } else {
-        addr = MaybeFlipIPv6toCJDNS(addr);
+        return;
     }
+    addr = MaybeFlipIPv6toCJDNS(addr);
 
     const CService addr_bind{MaybeFlipIPv6toCJDNS(GetBindAddress(*sock))};
 
