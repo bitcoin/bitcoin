@@ -33,7 +33,9 @@ from test_framework.psbt import (
     PSBT_IN_MUSIG2_PARTIAL_SIG,
     PSBT_IN_MUSIG2_PARTICIPANT_PUBKEYS,
     PSBT_IN_MUSIG2_PUB_NONCE,
+    PSBT_IN_FINAL_SCRIPTWITNESS,
     PSBT_IN_NON_WITNESS_UTXO,
+    PSBT_IN_TAP_KEY_SIG,
     PSBT_IN_WITNESS_UTXO,
     PSBT_OUT_MUSIG2_PARTICIPANT_PUBKEYS,
     PSBT_OUT_TAP_TREE,
@@ -969,6 +971,45 @@ class PSBTTest(BitcoinTestFramework):
         analysis = self.nodes[0].analyzepsbt('cHNidP8BAHECAAAAAfA00BFgAm6tp86RowwH6BMImQNL5zXUcTT97XoLGz0BAAAAAAD/////AgCAgWrj0AcAFgAUKNw0x8HRctAgmvoevm4u1SbN7XL87QKVAAAAABYAFPck4gF7iL4NL4wtfRAKgQbghiTUAAAAAAABAR8A8gUqAQAAABYAFJUDtxf2PHo641HEOBOAIvFMNTr2AAAA')
         assert_equal(analysis['next'], 'creator')
         assert_equal(analysis['error'], 'PSBT is not valid. Output amount invalid')
+
+        self.log.info("PSBT with invalid taproot key path signature should have error message and Creator as next")
+        # Create a taproot UTXO, sign a PSBT spending it, then corrupt the signature
+        tr_addr = self.nodes[1].getnewaddress(address_type="bech32m")
+        self.nodes[0].sendtoaddress(tr_addr, 1)
+        self.generate(self.nodes[0], 1)
+        tr_utxo = self.nodes[1].listunspent(addresses=[tr_addr])[0]
+        psbt_tr = self.nodes[1].createpsbt([{"txid": tr_utxo["txid"], "vout": tr_utxo["vout"]}], {self.nodes[0].getnewaddress(): Decimal('0.999')})
+        signed_tr = self.nodes[1].walletprocesspsbt(psbt_tr, finalize=False)['psbt']
+        # Decode the signed PSBT, corrupt the taproot key path signature
+        parsed = PSBT.from_base64(signed_tr)
+        sig = parsed.i[0].map[PSBT_IN_TAP_KEY_SIG]
+        parsed.i[0].map[PSBT_IN_TAP_KEY_SIG] = bytes([b ^ 0xff for b in sig])
+        corrupted_psbt = parsed.to_base64()
+        analysis = self.nodes[0].analyzepsbt(corrupted_psbt)
+        assert_equal(analysis['next'], 'creator')
+        assert 'invalid signature' in analysis['error']
+
+        self.log.info("PSBT with invalid finalized scriptWitness should have error message and Creator as next")
+        # Create a P2WPKH UTXO, sign and finalize a PSBT spending it, then corrupt the witness
+        sw_addr = self.nodes[1].getnewaddress(address_type="bech32")
+        self.nodes[0].sendtoaddress(sw_addr, 1)
+        self.generate(self.nodes[0], 1)
+        sw_utxo = self.nodes[1].listunspent(addresses=[sw_addr])[0]
+        psbt_sw = self.nodes[1].createpsbt([{"txid": sw_utxo["txid"], "vout": sw_utxo["vout"]}], {self.nodes[0].getnewaddress(): Decimal('0.999')})
+        signed_sw = self.nodes[1].walletprocesspsbt(psbt_sw, finalize=True)['psbt']
+        # Decode the finalized PSBT, corrupt the signature inside the final scriptWitness.
+        # The witness is serialized as: <num_items> <sig_len> <sig_bytes...> <pubkey_len> <pubkey_bytes...>
+        # XOR-corrupt only the signature bytes (starting at offset 2) to preserve the stack structure.
+        parsed = PSBT.from_base64(signed_sw)
+        wit = bytearray(parsed.i[0].map[PSBT_IN_FINAL_SCRIPTWITNESS])
+        sig_len = wit[1]
+        for i in range(2, 2 + sig_len):
+            wit[i] ^= 0xff
+        parsed.i[0].map[PSBT_IN_FINAL_SCRIPTWITNESS] = bytes(wit)
+        corrupted_psbt = parsed.to_base64()
+        analysis = self.nodes[0].analyzepsbt(corrupted_psbt)
+        assert_equal(analysis['next'], 'creator')
+        assert 'invalid signature' in analysis['error']
 
         assert_raises_rpc_error(-22, "TX decode failed", self.nodes[0].analyzepsbt, "cHNidP8BAJoCAAAAAkvEW8NnDtdNtDpsmze+Ht2LH35IJcKv00jKAlUs21RrAwAAAAD/////S8Rbw2cO1020OmybN74e3Ysffkglwq/TSMoCVSzbVGsBAAAAAP7///8CwLYClQAAAAAWABSNJKzjaUb3uOxixsvh1GGE3fW7zQD5ApUAAAAAFgAUKNw0x8HRctAgmvoevm4u1SbN7XIAAAAAAAEAnQIAAAACczMa321tVHuN4GKWKRncycI22aX3uXgwSFUKM2orjRsBAAAAAP7///9zMxrfbW1Ue43gYpYpGdzJwjbZpfe5eDBIVQozaiuNGwAAAAAA/v///wIA+QKVAAAAABl2qRT9zXUVA8Ls5iVqynLHe5/vSe1XyYisQM0ClQAAAAAWABRmWQUcjSjghQ8/uH4Bn/zkakwLtAAAAAAAAQEfQM0ClQAAAAAWABRmWQUcjSjghQ8/uH4Bn/zkakwLtAAAAA==")
 
