@@ -171,7 +171,7 @@ void ValidationSignals::SyncWithValidationInterfaceQueue()
     } while (0)
 
 #define LOG_MSG(fmt, ...) \
-    (ShouldLog(BCLog::VALIDATION, BCLog::Level::Debug) ? tfm::format((fmt), __VA_ARGS__) : std::string{})
+    (LogAcceptCategory(BCLog::VALIDATION, BCLog::Level::Debug) ? tfm::format((fmt), __VA_ARGS__) : std::string{})
 
 #define LOG_EVENT(fmt, ...) \
     LogDebug(BCLog::VALIDATION, fmt, __VA_ARGS__)
