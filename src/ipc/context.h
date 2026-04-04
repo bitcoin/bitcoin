@@ -5,6 +5,8 @@
 #ifndef BITCOIN_IPC_CONTEXT_H
 #define BITCOIN_IPC_CONTEXT_H
 
+#include <functional>
+
 namespace ipc {
 //! Context struct used to give IPC protocol implementations or implementation
 //! hooks access to application state, in case they need to run extra code that
@@ -13,6 +15,9 @@ namespace ipc {
 //! with shared objects that are created or destroyed remotely.
 struct Context
 {
+    //! Callback to initialize spawned process after receiving ArgsManager
+    //! configuration from parent.
+    std::function<void()> init_process;
 };
 } // namespace ipc
 
