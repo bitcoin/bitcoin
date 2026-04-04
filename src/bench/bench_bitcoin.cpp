@@ -3,12 +3,13 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <bench/bench.h>
+#include <bench/bench_bitcoin_settings.h>
 #include <common/args.h>
 #include <crypto/sha256.h>
+#include <test/util/setup_common.h>
 #include <tinyformat.h>
 #include <util/fs.h>
 #include <util/string.h>
-#include <test/util/setup_common.h>
 
 #include <chrono>
 #include <cstdint>
@@ -18,21 +19,18 @@
 #include <sstream>
 #include <vector>
 
-static const char* DEFAULT_BENCH_FILTER = ".*";
-static constexpr int64_t DEFAULT_MIN_TIME_MS{10};
-
 static void SetupBenchArgs(ArgsManager& argsman)
 {
     SetupHelpOptions(argsman);
     SetupCommonTestArgs(argsman);
 
-    argsman.AddArg("-asymptote=<n1,n2,n3,...>", "Test asymptotic growth of the runtime of an algorithm, if supported by the benchmark", ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
-    argsman.AddArg("-filter=<regex>", strprintf("Regular expression filter to select benchmark by name (default: %s)", DEFAULT_BENCH_FILTER), ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
-    argsman.AddArg("-list", "List benchmarks without executing them", ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
-    argsman.AddArg("-min-time=<milliseconds>", strprintf("Minimum runtime per benchmark, in milliseconds (default: %d)", DEFAULT_MIN_TIME_MS), ArgsManager::ALLOW_ANY | ArgsManager::DISALLOW_NEGATION, OptionsCategory::OPTIONS);
-    argsman.AddArg("-output-csv=<output.csv>", "Generate CSV file with the most important benchmark results", ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
-    argsman.AddArg("-output-json=<output.json>", "Generate JSON file with all benchmark results", ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
-    argsman.AddArg("-sanity-check", "Run benchmarks for only one iteration with no output", ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
+    AsymptoteSetting::Register(argsman);
+    FilterSetting::Register(argsman);
+    ListSetting::Register(argsman);
+    MinTimeSetting::Register(argsman);
+    OutputCsvSetting::Register(argsman);
+    OutputJsonSetting::Register(argsman);
+    SanityCheckSetting::Register(argsman);
 }
 
 // parses a comma separated list like "10,20,30,50"
@@ -123,13 +121,13 @@ int main(int argc, char** argv)
 
     try {
         benchmark::Args args;
-        args.asymptote = parseAsymptote(argsman.GetArg("-asymptote", ""));
-        args.is_list_only = argsman.GetBoolArg("-list", false);
-        args.min_time = std::chrono::milliseconds(argsman.GetIntArg("-min-time", DEFAULT_MIN_TIME_MS));
-        args.output_csv = argsman.GetPathArg("-output-csv");
-        args.output_json = argsman.GetPathArg("-output-json");
-        args.regex_filter = argsman.GetArg("-filter", DEFAULT_BENCH_FILTER);
-        args.sanity_check = argsman.GetBoolArg("-sanity-check", false);
+        args.asymptote = parseAsymptote(AsymptoteSetting::Get(argsman));
+        args.is_list_only = ListSetting::Get(argsman);
+        args.min_time = std::chrono::milliseconds(MinTimeSetting::Get(argsman));
+        args.output_csv = OutputCsvSetting::Get(argsman);
+        args.output_json = OutputJsonSetting::Get(argsman);
+        args.regex_filter = FilterSetting::Get(argsman);
+        args.sanity_check = SanityCheckSetting::Get(argsman);
         args.setup_args = parseTestSetupArgs(argsman);
 
         benchmark::BenchRunner::RunAll(args);
