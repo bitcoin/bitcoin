@@ -553,19 +553,30 @@ std::string HTTPRequest::ReadBody()
     struct evbuffer* buf = evhttp_request_get_input_buffer(req);
     if (!buf)
         return "";
-    size_t size = evbuffer_get_length(buf);
-    /** Trivial implementation: if this is ever a performance bottleneck,
-     * internal copying can be avoided in multi-segment buffers by using
-     * evbuffer_peek and an awkward loop. Though in that case, it'd be even
-     * better to not copy into an intermediate string but use a stream
-     * abstraction to consume the evbuffer on the fly in the parsing algorithm.
-     */
-    const char* data = (const char*)evbuffer_pullup(buf, size);
-    if (!data) // returns nullptr in case of empty buffer
+
+    size_t total_len = evbuffer_get_length(buf);
+    if (total_len == 0)
         return "";
-    std::string rv(data, size);
-    evbuffer_drain(buf, size);
-    return rv;
+    std::string result;
+    result.reserve(total_len);
+
+    struct evbuffer_iovec v[8];
+    int n;
+
+    while ((n = evbuffer_peek(buf, -1, nullptr, v, 8)) > 0) {
+        size_t drained = 0;
+
+        for (int i = 0; i < n; ++i) {
+            const char* data = static_cast<const char*>(v[i].iov_base);
+            size_t len = v[i].iov_len;
+
+            result.append(data, len);
+            drained += len;
+        }
+
+        evbuffer_drain(buf, drained);
+    }
+    return result;
 }
 
 void HTTPRequest::WriteHeader(const std::string& hdr, const std::string& value)

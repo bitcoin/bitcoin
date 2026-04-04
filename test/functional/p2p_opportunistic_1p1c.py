@@ -12,7 +12,7 @@ import time
 
 from test_framework.blocktools import MAX_STANDARD_TX_WEIGHT
 from test_framework.mempool_util import (
-    create_large_orphan,
+    LargeOrphanTransaction,
     DEFAULT_MIN_RELAY_TX_FEE,
     fill_mempool,
 )
@@ -435,13 +435,13 @@ class PackageRelayTest(BitcoinTestFramework):
         num_individual_dosers = 10
 
         self.log.info("Create very large orphans to be sent by DoSy peers (may take a while)")
-        large_orphans = [create_large_orphan() for _ in range(50)]
+        large_orphans = [LargeOrphanTransaction() for _ in range(50)]
         # Check to make sure these are orphans, within max standard size (to be accepted into the orphanage)
         for large_orphan in large_orphans:
-            assert_greater_than_or_equal(100000, large_orphan.get_vsize())
-            assert_greater_than(MAX_STANDARD_TX_WEIGHT, large_orphan.get_weight())
-            assert_greater_than_or_equal(3 * large_orphan.get_vsize(), 2 * 100000)
-            testres = node.testmempoolaccept([large_orphan.serialize().hex()])
+            assert_greater_than_or_equal(100000, large_orphan.get.get_vsize())
+            assert_greater_than(MAX_STANDARD_TX_WEIGHT, large_orphan.get.get_weight())
+            assert_greater_than_or_equal(3 * large_orphan.get.get_vsize(), 2 * 100000)
+            testres = node.testmempoolaccept([large_orphan.to_send.serialize().hex()])
             assert not testres[0]["allowed"]
             assert_equal(testres[0]["reject-reason"], "missing-inputs")
 
@@ -451,9 +451,9 @@ class PackageRelayTest(BitcoinTestFramework):
         # Connect 10 peers and have each of them send a large orphan.
         for large_orphan in large_orphans[:num_individual_dosers]:
             peer_doser_individual = node.add_p2p_connection(P2PInterface())
-            peer_doser_individual.send_and_ping(msg_tx(large_orphan))
+            peer_doser_individual.send_and_ping(msg_tx(large_orphan.to_send))
             node.bumpmocktime(NONPREF_PEER_TX_DELAY + TXID_RELAY_DELAY)
-            peer_doser_individual.wait_for_getdata([large_orphan.vin[0].prevout.hash])
+            peer_doser_individual.wait_for_getdata([large_orphan.get.vin[0].prevout.hash])
 
         # Make sure that these transactions are going through the orphan handling codepaths.
         # Subsequent rounds will not wait for getdata because the time mocking will cause the
@@ -485,7 +485,7 @@ class PackageRelayTest(BitcoinTestFramework):
 
         self.log.info("Send another round of very large orphans from a DoSy peer")
         for large_orphan in large_orphans[num_individual_dosers:]:
-            peer_doser.send_and_ping(msg_tx(large_orphan))
+            peer_doser.send_and_ping(msg_tx(large_orphan.to_send))
 
         # Something was evicted; the orphanage does not contain all large orphans + the 1p1c child
         self.wait_until(lambda: len(node.getorphantxs()) < len(large_orphans) + 1)

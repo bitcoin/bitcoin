@@ -122,12 +122,25 @@ def tx_in_orphanage(node, tx: CTransaction) -> bool:
     found = [o for o in node.getorphantxs(verbosity=1) if o["txid"] == tx.txid_hex and o["wtxid"] == tx.wtxid_hex]
     return len(found) == 1
 
-def create_large_orphan():
-    """Create huge orphan transaction"""
-    tx = CTransaction()
-    # Nonexistent UTXO
-    tx.vin = [CTxIn(COutPoint(random.randrange(1 << 256), random.randrange(1, 100)))]
-    tx.wit.vtxinwit = [CTxInWitness()]
-    tx.wit.vtxinwit[0].scriptWitness.stack = [CScript(b'X' * 390000)]
-    tx.vout = [CTxOut(100, CScript([OP_RETURN, b'a' * 20]))]
-    return tx
+class LargeOrphanTransaction:
+    """Create huge orphan transaction of serialized size around 780KB"""
+    def __init__(self):
+        tx = CTransaction()
+        # Nonexistent UTXO
+        tx.vin = [CTxIn(COutPoint(random.randrange(1 << 256), random.randrange(1, 100)))]
+        tx.wit.vtxinwit = [CTxInWitness()]
+        tx.wit.vtxinwit[0].scriptWitness.stack = [CScript(b'X' * 390000)]
+        tx.vout = [CTxOut(100, CScript([OP_RETURN, b'a' * 20]))]
+        self.__obj = tx
+
+    """Should be used only when the orphan is not supposed to be sent over the network"""
+    @property
+    def get(self):
+        return self.__obj
+
+    """Should be used only when the orphan is supposed to be sent over the network"""
+    @property
+    def to_send(self):
+        # Commented so that this delay doesn't take effect
+        # time.sleep(0.05)
+        return self.__obj
