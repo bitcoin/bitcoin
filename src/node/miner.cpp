@@ -3,8 +3,6 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include <node/miner.h>
-
 #include <chain.h>
 #include <chainparams.h>
 #include <coins.h>
@@ -15,20 +13,22 @@
 #include <consensus/tx_verify.h>
 #include <consensus/validation.h>
 #include <deploymentstatus.h>
+#include <kernel/chain.h>
 #include <logging.h>
-#include <node/context.h>
 #include <node/kernel_notifications.h>
+#include <node/miner.h>
 #include <policy/feerate.h>
 #include <policy/policy.h>
 #include <pow.h>
+#include <primitives/block.h>
 #include <primitives/transaction.h>
+#include <sync.h>
 #include <util/moneystr.h>
 #include <util/signalinterrupt.h>
 #include <util/time.h>
 #include <validation.h>
 
 #include <algorithm>
-#include <utility>
 #include <numeric>
 
 namespace node {
@@ -226,6 +226,7 @@ std::unique_ptr<CBlockTemplate> BlockAssembler::CreateNewBlock()
             throw std::runtime_error(strprintf("TestBlockValidity failed: %s", state.ToString()));
         }
     }
+    pblocktemplate->m_creation_time = MockableSteadyClock::now();
     const auto time_2{SteadyClock::now()};
 
     LogDebug(BCLog::BENCH, "CreateNewBlock() chunks: %.2fms, validity: %.2fms (total %.2fms)\n",
@@ -333,6 +334,98 @@ void BlockAssembler::addChunks()
     }
 }
 
+BlockTemplateCache::BlockTemplateCache(CTxMemPool& mempool, ChainstateManager& chainman, size_t block_template_cache_limit)
+    : m_mempool(mempool), m_chainman(chainman), m_block_template_cache_limit(block_template_cache_limit)
+{
+}
+
+void BlockTemplateCache::BlockConnected(
+    const ChainstateRole& role,
+    const std::shared_ptr<const CBlock>& /*unused*/,
+    const CBlockIndex* /*unused*/)
+{
+    // Ignore block being connected to historical chain, not current chain.
+    if (role.historical) return;
+    LOCK(m_mutex);
+    m_block_templates.clear();
+}
+
+void BlockTemplateCache::BlockDisconnected(
+    const std::shared_ptr<const CBlock>& /*unused*/,
+    const CBlockIndex* /*unused*/)
+{
+    LOCK(m_mutex);
+    m_block_templates.clear();
+}
+
+BlockTemplateRef BlockTemplateCache::getCachedTemplate(
+    const BlockAssembler::Options& options,
+    MillisecondsDouble template_max_age)
+{
+    AssertLockHeld(m_mutex);
+    auto it = std::find_if(m_block_templates.begin(), m_block_templates.end(),
+                           [&](const TemplateEntry& entry) { return entry.options == options; });
+    if (it == m_block_templates.end()) {
+        return nullptr;
+    }
+    const auto now = MockableSteadyClock::now();
+    // Erase template if it is too old, or if the clock moved backwards (should never happen except in tests).
+    if (now - it->block_template->m_creation_time > template_max_age || now < it->block_template->m_creation_time) {
+        m_block_templates.erase(it);
+        return nullptr;
+    }
+    return Assert(it->block_template);
+}
+
+BlockTemplateRef BlockTemplateCache::GetBlockTemplate(
+    const BlockAssembler::Options& options,
+    std::optional<MillisecondsDouble> template_max_age)
+{
+    if (!template_max_age.has_value()) {
+        return BlockAssembler{m_chainman.ActiveChainstate(), &m_mempool, options}.CreateNewBlock();
+    }
+
+    // Cache lookup requires an exact match on all block creation options.
+    // While some fields (e.g. test_block_validity, print_modified_fee, coinbase_output_script)
+    // could be ignored for cache reuse, differences in these fields mainly occur in
+    // tests and benchmarks. To keep the logic simple, we treat all fields as part of
+    // the cache key and accept cache misses in those cases.
+    {
+        LOCK(m_mutex);
+        auto cached = getCachedTemplate(options, *template_max_age);
+        if (cached) return cached;
+    }
+
+    LOCK2(::cs_main, m_mutex);
+    // Search again with cs_main held. The search above avoided locking cs_main as an optimization,
+    // but new cached templates may have been created since then.
+    auto cached = getCachedTemplate(options, *template_max_age);
+    if (cached) return cached;
+    BlockTemplateRef block_template = BlockAssembler{m_chainman.ActiveChainstate(), &m_mempool, options}.CreateNewBlock();
+    m_block_templates.emplace_back(options, block_template);
+    if (m_block_templates.size() > m_block_template_cache_limit) {
+        m_block_templates.pop_front();
+    }
+    return block_template;
+}
+
+void BlockTemplateCache::SanityCheck() const
+{
+    LOCK(m_mutex);
+    // Verify cache size does not exceed maximum
+    Assume(m_block_templates.size() <= m_block_template_cache_limit);
+    // Verify no duplicate options exist in cache
+    for (size_t i = 0; i < m_block_templates.size(); ++i) {
+        for (size_t j = i + 1; j < m_block_templates.size(); ++j) {
+            Assume(!(m_block_templates[i].options == m_block_templates[j].options));
+        }
+    }
+    // Verify that we don't have a nullptr in the block template.
+    for (const auto& [options, template_ref] : m_block_templates) {
+        Assume(template_ref != nullptr);
+    }
+}
+
 void AddMerkleRootAndCoinbase(CBlock& block, CTransactionRef coinbase, uint32_t version, uint32_t timestamp, uint32_t nonce)
 {
     if (block.vtx.size() == 0) {
@@ -358,13 +451,13 @@ void InterruptWait(KernelNotifications& kernel_notifications, bool& interrupt_wa
     kernel_notifications.m_tip_block_cv.notify_all();
 }
 
-std::unique_ptr<CBlockTemplate> WaitAndCreateNewBlock(ChainstateManager& chainman,
-                                                      KernelNotifications& kernel_notifications,
-                                                      CTxMemPool* mempool,
-                                                      const std::unique_ptr<CBlockTemplate>& block_template,
-                                                      const BlockWaitOptions& options,
-                                                      const BlockAssembler::Options& assemble_options,
-                                                      bool& interrupt_wait)
+BlockTemplateRef WaitAndCreateNewBlock(BlockTemplateCache* block_template_cache,
+                                       ChainstateManager& chainman,
+                                       KernelNotifications& kernel_notifications,
+                                       const CBlockTemplate& block_template,
+                                       const BlockWaitOptions& options,
+                                       const BlockAssembler::Options& assemble_options,
+                                       bool& interrupt_wait)
 {
     // Delay calculating the current template fees, just in case a new block
     // comes in before the next tick.
@@ -388,7 +481,7 @@ std::unique_ptr<CBlockTemplate> WaitAndCreateNewBlock(ChainstateManager& chainma
                 // We assume tip_block is set, because this is an instance
                 // method on BlockTemplate and no template could have been
                 // generated before a tip exists.
-                tip_changed = Assume(tip_block) && tip_block != block_template->block.hashPrevBlock;
+                tip_changed = Assume(tip_block) && tip_block != block_template.block.hashPrevBlock;
                 return tip_changed || chainman.m_interrupt || interrupt_wait;
             });
             if (interrupt_wait) {
@@ -421,18 +514,19 @@ std::unique_ptr<CBlockTemplate> WaitAndCreateNewBlock(ChainstateManager& chainma
          * We'll also create a new template if the tip changed during this iteration.
          */
         if (options.fee_threshold < MAX_MONEY || tip_changed) {
-            auto new_tmpl{BlockAssembler{
-                chainman.ActiveChainstate(),
-                mempool,
-                assemble_options}
-                              .CreateNewBlock()};
+            // Passing std::nullopt as template_max_age bypasses the cache completely.
+            // We want a fresh template here because the cache currently returns a cached
+            // template regardless of mempool fee increases. In the future, when the cache
+            // can account for fee increases that affect the template, we can pass a desired
+            // fee increase threshold instead of std::nullopt.
+            auto new_tmpl{block_template_cache->GetBlockTemplate(assemble_options, std::nullopt)};
 
             // If the tip changed, return the new template regardless of its fees.
             if (tip_changed) return new_tmpl;
 
             // Calculate the original template total fees if we haven't already
             if (current_fees == -1) {
-                current_fees = std::accumulate(block_template->vTxFees.begin(), block_template->vTxFees.end(), CAmount{0});
+                current_fees = std::accumulate(block_template.vTxFees.begin(), block_template.vTxFees.end(), CAmount{0});
             }
 
             // Check if fees increased enough to return the new template

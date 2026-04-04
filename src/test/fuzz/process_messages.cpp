@@ -29,6 +29,8 @@
 
 namespace {
 TestingSetup* g_setup;
+// Initialize mock steady clock for deterministic fuzzing
+[[maybe_unused]] SteadyClockContext steady_clock{};
 
 void ResetChainman(TestingSetup& setup)
 {

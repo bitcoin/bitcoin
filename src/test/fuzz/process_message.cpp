@@ -34,6 +34,8 @@
 namespace {
 TestingSetup* g_setup;
 std::string_view LIMIT_TO_MESSAGE_TYPE{};
+// Initialize mock steady clock for deterministic fuzzing
+[[maybe_unused]] SteadyClockContext steady_clock{};
 
 void ResetChainman(TestingSetup& setup)
 {
