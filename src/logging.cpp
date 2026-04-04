@@ -155,7 +155,7 @@ bool BCLog::Logger::WillLogCategory(BCLog::LogFlags category) const
 
 bool BCLog::Logger::WillLogCategoryLevel(BCLog::LogFlags category, BCLog::Level level) const
 {
-    // Log messages at Info, Warning and Error level unconditionally, so that
+    // Log messages at Info and Alert level unconditionally, so that
     // important troubleshooting information doesn't get lost.
     if (level >= BCLog::Level::Info) return true;
 
@@ -240,10 +240,8 @@ std::string BCLog::Logger::LogLevelToStr(BCLog::Level level)
         return "debug";
     case BCLog::Level::Info:
         return "info";
-    case BCLog::Level::Warning:
-        return "warning";
-    case BCLog::Level::Error:
-        return "error";
+    case BCLog::Level::Alert:
+        return "alert";
     }
     assert(false);
 }
@@ -266,10 +264,12 @@ static std::optional<BCLog::Level> GetLogLevel(std::string_view level_str)
         return BCLog::Level::Debug;
     } else if (level_str == "info") {
         return BCLog::Level::Info;
+    } else if (level_str == "alert") {
+        return BCLog::Level::Alert;
     } else if (level_str == "warning") {
-        return BCLog::Level::Warning;
+        return BCLog::Level::Alert;
     } else if (level_str == "error") {
-        return BCLog::Level::Error;
+        return BCLog::Level::Alert;
     } else {
         return std::nullopt;
     }
@@ -474,7 +474,7 @@ void BCLog::Logger::LogPrintStr_(std::string_view str, SourceLocation&& source_l
                              source_loc.file_name(), source_loc.line(), source_loc.function_name_short(),
                              m_limiter->m_max_bytes,
                              Ticks<std::chrono::seconds>(m_limiter->m_reset_window)),
-                         SourceLocation{__func__}, LogFlags::ALL, Level::Warning, /*should_ratelimit=*/false); // with should_ratelimit=false, this cannot lead to infinite recursion
+                         SourceLocation{__func__}, LogFlags::ALL, Level::Alert, /*should_ratelimit=*/false); // with should_ratelimit=false, this cannot lead to infinite recursion
         } else if (status == LogRateLimiter::Status::STILL_SUPPRESSED) {
             ratelimit = true;
         }
@@ -563,7 +563,7 @@ void BCLog::LogRateLimiter::Reset()
     for (const auto& [source_loc, stats] : source_locations) {
         if (stats.m_dropped_bytes == 0) continue;
         LogPrintLevel_(
-            LogFlags::ALL, Level::Warning, /*should_ratelimit=*/false,
+            LogFlags::ALL, Level::Alert, /*should_ratelimit=*/false,
             "Restarting logging from %s:%d (%s): %d bytes were dropped during the last %ss.",
             source_loc.file_name(), source_loc.line(), source_loc.function_name_short(),
             stats.m_dropped_bytes, Ticks<std::chrono::seconds>(m_reset_window));

@@ -146,13 +146,13 @@ bool BlockTreeDB::LoadBlockIndexGuts(const Consensus::Params& consensusParams, s
                 pindexNew->nTx            = diskindex.nTx;
 
                 if (!CheckProofOfWork(pindexNew->GetBlockHash(), pindexNew->nBits, consensusParams)) {
-                    LogError("%s: CheckProofOfWork failed: %s\n", __func__, pindexNew->ToString());
+                    LogAlert("%s: CheckProofOfWork failed: %s", __func__, pindexNew->ToString());
                     return false;
                 }
 
                 pcursor->Next();
             } else {
-                LogError("%s: failed to read value\n", __func__);
+                LogAlert("%s: failed to read value", __func__);
                 return false;
             }
         } else {
@@ -460,7 +460,7 @@ bool BlockManager::LoadBlockIndex(const std::optional<uint256>& snapshot_blockha
     for (CBlockIndex* pindex : vSortedByHeight) {
         if (m_interrupt) return false;
         if (previous_index && pindex->nHeight > previous_index->nHeight + 1) {
-            LogError("%s: block index is non-contiguous, index of height %d missing\n", __func__, previous_index->nHeight + 1);
+            LogAlert("%s: block index is non-contiguous, index of height %d missing", __func__, previous_index->nHeight + 1);
             return false;
         }
         previous_index = pindex;
@@ -701,7 +701,7 @@ bool BlockManager::ReadBlockUndo(CBlockUndo& blockundo, const CBlockIndex& index
     // Open history file to read
     AutoFile file{OpenUndoFile(pos, true)};
     if (file.IsNull()) {
-        LogError("OpenUndoFile failed for %s while reading block undo", pos.ToString());
+        LogAlert("OpenUndoFile failed for %s while reading block undo", pos.ToString());
         return false;
     }
     BufferedReader filein{std::move(file)};
@@ -718,11 +718,11 @@ bool BlockManager::ReadBlockUndo(CBlockUndo& blockundo, const CBlockIndex& index
 
         // Verify checksum
         if (hashChecksum != verifier.GetHash()) {
-            LogError("Checksum mismatch at %s while reading block undo", pos.ToString());
+            LogAlert("Checksum mismatch at %s while reading block undo", pos.ToString());
             return false;
         }
     } catch (const std::exception& e) {
-        LogError("Deserialize or I/O error - %s at %s while reading block undo", e.what(), pos.ToString());
+        LogAlert("Deserialize or I/O error - %s at %s while reading block undo", e.what(), pos.ToString());
         return false;
     }
 
@@ -895,7 +895,7 @@ FlatFilePos BlockManager::FindNextBlockPos(unsigned int nAddSize, unsigned int n
         // a reindex. A flush error might also leave some of the data files
         // untrimmed.
         if (!FlushBlockFile(last_blockfile, /*fFinalize=*/true, finalize_undo)) {
-            LogWarning(
+            LogAlert(
                           "Failed to flush previous block file %05i (finalize=1, finalize_undo=%i) before opening new block file %05i\n",
                           last_blockfile, finalize_undo, nFile);
         }
@@ -975,14 +975,14 @@ bool BlockManager::WriteBlockUndo(const CBlockUndo& blockundo, BlockValidationSt
         FlatFilePos pos;
         const auto blockundo_size{static_cast<uint32_t>(GetSerializeSize(blockundo))};
         if (!FindUndoPos(state, block.nFile, pos, blockundo_size + UNDO_DATA_DISK_OVERHEAD)) {
-            LogError("FindUndoPos failed for %s while writing block undo", pos.ToString());
+            LogAlert("FindUndoPos failed for %s while writing block undo", pos.ToString());
             return false;
         }
 
         // Open history file to append
         AutoFile file{OpenUndoFile(pos)};
         if (file.IsNull()) {
-            LogError("OpenUndoFile failed for %s while writing block undo", pos.ToString());
+            LogAlert("OpenUndoFile failed for %s while writing block undo", pos.ToString());
             return FatalError(m_opts.notifications, state, _("Failed to write undo data."));
         }
         {
@@ -1003,7 +1003,7 @@ bool BlockManager::WriteBlockUndo(const CBlockUndo& blockundo, BlockValidationSt
 
         // Make sure that the file is closed before we call `FlushUndoFile`.
         if (file.fclose() != 0) {
-            LogError("Failed to close block undo file %s: %s", pos.ToString(), SysErrorString(errno));
+            LogAlert("Failed to close block undo file %s: %s", pos.ToString(), SysErrorString(errno));
             return FatalError(m_opts.notifications, state, _("Failed to close block undo file."));
         }
 
@@ -1019,7 +1019,7 @@ bool BlockManager::WriteBlockUndo(const CBlockUndo& blockundo, BlockValidationSt
             // fact it is. Note though, that a failed flush might leave the data
             // file untrimmed.
             if (!FlushUndoFile(pos.nFile, true)) {
-                LogWarning("Failed to flush undo file %05i\n", pos.nFile);
+                LogAlert("Failed to flush undo file %05i", pos.nFile);
             }
         } else if (pos.nFile == cursor.file_num && block.nHeight > cursor.undo_height) {
             cursor.undo_height = block.nHeight;
@@ -1047,7 +1047,7 @@ bool BlockManager::ReadBlock(CBlock& block, const FlatFilePos& pos, const std::o
         // Read block
         SpanReader{*block_data} >> TX_WITH_WITNESS(block);
     } catch (const std::exception& e) {
-        LogError("Deserialize or I/O error - %s at %s while reading block", e.what(), pos.ToString());
+        LogAlert("Deserialize or I/O error - %s at %s while reading block", e.what(), pos.ToString());
         return false;
     }
 
@@ -1055,18 +1055,18 @@ bool BlockManager::ReadBlock(CBlock& block, const FlatFilePos& pos, const std::o
 
     // Check the header
     if (!CheckProofOfWork(block_hash, block.nBits, GetConsensus())) {
-        LogError("Errors in block header at %s while reading block", pos.ToString());
+        LogAlert("Errors in block header at %s while reading block", pos.ToString());
         return false;
     }
 
     // Signet only: check block solution
     if (GetConsensus().signet_blocks && !CheckSignetBlockSolution(block, GetConsensus())) {
-        LogError("Errors in block solution at %s while reading block", pos.ToString());
+        LogAlert("Errors in block solution at %s while reading block", pos.ToString());
         return false;
     }
 
     if (expected_hash && block_hash != *expected_hash) {
-        LogError("GetHash() doesn't match index at %s while reading block (%s != %s)",
+        LogAlert("GetHash() doesn't match index at %s while reading block (%s != %s)",
                  pos.ToString(), block_hash.ToString(), expected_hash->ToString());
         return false;
     }
@@ -1086,12 +1086,12 @@ BlockManager::ReadRawBlockResult BlockManager::ReadRawBlock(const FlatFilePos& p
         // If nPos is less than STORAGE_HEADER_BYTES, we can't read the header that precedes the block data
         // This would cause an unsigned integer underflow when trying to position the file cursor
         // This can happen after pruning or default constructed positions
-        LogError("Failed for %s while reading raw block storage header", pos.ToString());
+        LogAlert("Failed for %s while reading raw block storage header", pos.ToString());
         return util::Unexpected{ReadRawError::IO};
     }
     AutoFile filein{OpenBlockFile({pos.nFile, pos.nPos - STORAGE_HEADER_BYTES}, /*fReadOnly=*/true)};
     if (filein.IsNull()) {
-        LogError("OpenBlockFile failed for %s while reading raw block", pos.ToString());
+        LogAlert("OpenBlockFile failed for %s while reading raw block", pos.ToString());
         return util::Unexpected{ReadRawError::IO};
     }
 
@@ -1102,13 +1102,13 @@ BlockManager::ReadRawBlockResult BlockManager::ReadRawBlock(const FlatFilePos& p
         filein >> blk_start >> blk_size;
 
         if (blk_start != GetParams().MessageStart()) {
-            LogError("Block magic mismatch for %s: %s versus expected %s while reading raw block",
+            LogAlert("Block magic mismatch for %s: %s versus expected %s while reading raw block",
                 pos.ToString(), HexStr(blk_start), HexStr(GetParams().MessageStart()));
             return util::Unexpected{ReadRawError::IO};
         }
 
         if (blk_size > MAX_SIZE) {
-            LogError("Block data is larger than maximum deserialization size for %s: %s versus %s while reading raw block",
+            LogAlert("Block data is larger than maximum deserialization size for %s: %s versus %s while reading raw block",
                 pos.ToString(), blk_size, MAX_SIZE);
             return util::Unexpected{ReadRawError::IO};
         }
@@ -1126,7 +1126,7 @@ BlockManager::ReadRawBlockResult BlockManager::ReadRawBlock(const FlatFilePos& p
         filein.read(data);
         return data;
     } catch (const std::exception& e) {
-        LogError("Read from block file failed: %s for %s while reading raw block", e.what(), pos.ToString());
+        LogAlert("Read from block file failed: %s for %s while reading raw block", e.what(), pos.ToString());
         return util::Unexpected{ReadRawError::IO};
     }
 }
@@ -1136,12 +1136,12 @@ FlatFilePos BlockManager::WriteBlock(const CBlock& block, int nHeight)
     const unsigned int block_size{static_cast<unsigned int>(GetSerializeSize(TX_WITH_WITNESS(block)))};
     FlatFilePos pos{FindNextBlockPos(block_size + STORAGE_HEADER_BYTES, nHeight, block.GetBlockTime())};
     if (pos.IsNull()) {
-        LogError("FindNextBlockPos failed for %s while writing block", pos.ToString());
+        LogAlert("FindNextBlockPos failed for %s while writing block", pos.ToString());
         return FlatFilePos();
     }
     AutoFile file{OpenBlockFile(pos, /*fReadOnly=*/false)};
     if (file.IsNull()) {
-        LogError("OpenBlockFile failed for %s while writing block", pos.ToString());
+        LogAlert("OpenBlockFile failed for %s while writing block", pos.ToString());
         m_opts.notifications.fatalError(_("Failed to write block."));
         return FlatFilePos();
     }
@@ -1156,7 +1156,7 @@ FlatFilePos BlockManager::WriteBlock(const CBlock& block, int nHeight)
     }
 
     if (file.fclose() != 0) {
-        LogError("Failed to close block file %s: %s", pos.ToString(), SysErrorString(errno));
+        LogAlert("Failed to close block file %s: %s", pos.ToString(), SysErrorString(errno));
         m_opts.notifications.fatalError(_("Failed to close file when writing block."));
         return FlatFilePos();
     }
@@ -1304,7 +1304,7 @@ void ImportBlocks(ChainstateManager& chainman, std::span<const fs::path> import_
                 return;
             }
         } else {
-            LogWarning("Could not open blocks file %s", fs::PathToString(path));
+            LogAlert("Could not open blocks file %s", fs::PathToString(path));
         }
     }
 
