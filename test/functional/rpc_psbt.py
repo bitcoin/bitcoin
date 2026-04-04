@@ -406,6 +406,50 @@ class PSBTTest(BitcoinTestFramework):
 
         self.log.info("PSBT parameter handling test completed successfully")
 
+    def test_utxoupdatepsbt_prev_txs(self):
+        """Test that utxoupdatepsbt can populate inputs from caller-provided raw transactions."""
+        self.log.info("Test utxoupdatepsbt with prev_txs parameter")
+        node = self.nodes[0]
+
+        # Create a parent transaction but do not broadcast it
+        addr_parent = node.getnewaddress(address_type="bech32")
+        parent_hex = node.createrawtransaction(
+            [node.listunspent()[0]],
+            [{addr_parent: 49.999}]
+        )
+        parent_hex = node.signrawtransactionwithwallet(parent_hex)["hex"]
+        parent_txid = node.decoderawtransaction(parent_hex)["txid"]
+
+        # Build a child PSBT that spends the (unbroadcast) parent output
+        child_addr = node.getnewaddress(address_type="bech32")
+        child_psbt = node.createpsbt(
+            [{"txid": parent_txid, "vout": 0}],
+            [{child_addr: 49.998}]
+        )
+
+        # Without prev_txs, the input cannot be populated because the parent
+        # is not in the mempool, UTXO set, or txindex
+        updated_without = node.utxoupdatepsbt(child_psbt)
+        decoded = node.decodepsbt(updated_without)
+        assert "non_witness_utxo" not in decoded["inputs"][0], \
+            "Input should not be populated without prev_txs"
+
+        # With prev_txs, the parent transaction is found and the input is populated
+        updated_with = node.utxoupdatepsbt(child_psbt, [], [parent_hex])
+        decoded = node.decodepsbt(updated_with)
+        assert "non_witness_utxo" in decoded["inputs"][0], \
+            "Input should be populated via prev_txs"
+        assert_equal(decoded["inputs"][0]["non_witness_utxo"]["txid"], parent_txid)
+
+        # Test error handling: invalid hex in prev_txs
+        assert_raises_rpc_error(-22, "TX decode failed",
+                                node.utxoupdatepsbt, child_psbt, [], ["not_valid_hex"])
+
+        self.log.info("Test utxoupdatepsbt prev_txs with named parameters")
+        updated_named = node.utxoupdatepsbt(psbt=child_psbt, prev_txs=[parent_hex])
+        decoded = node.decodepsbt(updated_named)
+        assert "non_witness_utxo" in decoded["inputs"][0]
+
     def run_test(self):
         # Create and fund a raw tx for sending 10 BTC
         psbtx1 = self.nodes[0].walletcreatefundedpsbt([], {self.nodes[2].getnewaddress():10})['psbt']
@@ -859,6 +903,7 @@ class PSBTTest(BitcoinTestFramework):
 
         self.test_utxo_conversion()
         self.test_psbt_incomplete_after_invalid_modification()
+        self.test_utxoupdatepsbt_prev_txs()
 
         self.test_input_confs_control()
 
