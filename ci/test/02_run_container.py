@@ -115,6 +115,7 @@ def main():
             CI_CCACHE_MOUNT = f"type=bind,src={os.environ['CCACHE_DIR']},dst={os.environ['CCACHE_DIR']}"
 
         run(["docker", "network", "create", "--ipv6", "--subnet", "1111:1111::/112", "ci-ip6net"], check=False)
+        run(["docker", "network", "create", "--subnet", "1.1.1.0/24", "ci-ip4net"], check=False)
 
         if os.getenv("RESTART_CI_DOCKER_BEFORE_RUN"):
             print("Restart docker before run to stop and clear all containers started with --rm")
@@ -144,6 +145,7 @@ def main():
             f"--env-file={env_file}",
             f"--name={os.environ['CONTAINER_NAME']}",
             "--network=ci-ip6net",
+            "--ip6=1111:1111::5",
             f"--platform={os.environ['CI_IMAGE_PLATFORM']}",
             os.environ["CONTAINER_NAME"],
         ]
@@ -153,6 +155,8 @@ def main():
             stdout=subprocess.PIPE,
             text=True,
         ).stdout.strip()
+
+        run(["docker", "network", "connect", "--ip=1.1.1.5", "ci-ip4net", container_id])
 
     def ci_exec(cmd_inner, **kwargs):
         if os.getenv("DANGER_RUN_CI_ON_HOST"):
