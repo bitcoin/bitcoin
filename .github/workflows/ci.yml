@@ -61,6 +61,7 @@ jobs:
     runs-on: ${{ needs.runners.outputs.provider == 'cirrus' && 'ghcr.io/cirruslabs/ubuntu-runner-amd64:24.04-md' || 'ubuntu-24.04' }}
     env:
       TEST_RUNNER_PORT_MIN: "14000"  # Use a larger port, to avoid colliding with CIRRUS_CACHE_HOST port 12321.
+      CI_FAILFAST_TEST_LEAVE_DANGLING: 0
     if: github.event_name == 'pull_request' && github.event.pull_request.commits != 1
     timeout-minutes: 360  # Use maximum time, see https://docs.github.com/en/actions/writing-workflows/workflow-syntax-for-github-actions#jobsjob_idtimeout-minutes.
     steps:
@@ -117,7 +118,7 @@ jobs:
       - run: |
           sudo apt-get update
           sudo apt-get install clang mold ccache build-essential cmake ninja-build pkgconf python3-zmq libevent-dev libboost-dev libsqlite3-dev systemtap-sdt-dev libzmq3-dev qt6-base-dev qt6-tools-dev qt6-l10n-tools libqrencode-dev capnproto libcapnp-dev -y
-          sudo pip3 install --break-system-packages pycapnp
+          sudo pip3 install --break-system-packages pycapnp psutil
       - name: Compile and run tests
         run: |
           # Run tests on commits after the last merge commit and before the PR head commit
