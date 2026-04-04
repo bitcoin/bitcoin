@@ -46,7 +46,6 @@ FUZZ_TARGET(utxo_total_supply)
     };
     BlockAssembler::Options options;
     options.coinbase_output_script = CScript() << OP_FALSE;
-    options.include_dummy_extranonce = true;
     const auto PrepareNextBlock = [&]() {
         // Use OP_FALSE to avoid BIP30 check from hitting early
         auto block = PrepareBlock(node, options);
@@ -107,8 +106,13 @@ FUZZ_TARGET(utxo_total_supply)
     // Assuming that the fuzzer will mine relatively short chains (less than 200 blocks), we want the duplicate coinbase to be not too high.
     // Up to 300 seems reasonable.
     int64_t duplicate_coinbase_height = fuzzed_data_provider.ConsumeIntegralInRange(0, 300);
-    // Always pad with OP_0 at the end to avoid bad-cb-length error
-    const CScript duplicate_coinbase_script = CScript() << duplicate_coinbase_height << OP_0;
+    // Build the scriptSig exactly as CreateNewBlock does for the given height:
+    // BIP34-encoded height, plus OP_0 padding at heights <= 16 to satisfy
+    // the minimum 2-byte coinbase scriptSig length (bad-cb-length).
+    CScript duplicate_coinbase_script = CScript() << duplicate_coinbase_height;
+    if (duplicate_coinbase_height <= 16) {
+        duplicate_coinbase_script << OP_0;
+    }
     // Mine the first block with this duplicate
     current_block = PrepareNextBlock();
     StoreLastTxo();
