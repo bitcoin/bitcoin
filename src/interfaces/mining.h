@@ -8,6 +8,7 @@
 #include <consensus/amount.h>
 #include <interfaces/types.h>
 #include <node/types.h>
+#include <node/mining_types.h>
 #include <primitives/block.h>
 #include <primitives/transaction.h>
 #include <uint256.h>
@@ -132,7 +133,7 @@ public:
      * @retval BlockTemplate a block template.
      * @retval std::nullptr if the node is shut down or interrupt() is called.
      */
-    virtual std::unique_ptr<BlockTemplate> createNewBlock(const node::BlockCreateOptions& options = {}, bool cooldown = true) = 0;
+    virtual std::unique_ptr<BlockTemplate> createNewBlock(node::BlockCreateOptions options = {}, bool cooldown = true) = 0;
 
     /**
      * Interrupts createNewBlock and waitTipChanged.

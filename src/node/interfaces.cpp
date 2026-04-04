@@ -69,7 +69,6 @@
 #include <any>
 #include <memory>
 #include <optional>
-#include <stdexcept>
 #include <utility>
 
 #include <boost/signals2/signal.hpp>
@@ -87,6 +86,8 @@ using interfaces::Rpc;
 using interfaces::WalletLoader;
 using kernel::ChainstateRole;
 using node::BlockAssembler;
+using node::BlockCreateOptions;
+using node::MiningArgs;
 using node::BlockWaitOptions;
 using node::CoinbaseTx;
 using util::Join;
@@ -868,9 +869,9 @@ public:
 class BlockTemplateImpl : public BlockTemplate
 {
 public:
-    explicit BlockTemplateImpl(BlockAssembler::Options assemble_options,
+    explicit BlockTemplateImpl(BlockCreateOptions create_options,
                                std::unique_ptr<CBlockTemplate> block_template,
-                               NodeContext& node) : m_assemble_options(std::move(assemble_options)),
+                               NodeContext& node) : m_create_options(std::move(create_options)),
                                                     m_block_template(std::move(block_template)),
                                                     m_node(node)
     {
@@ -915,8 +916,15 @@ public:
 
     std::unique_ptr<BlockTemplate> waitNext(BlockWaitOptions options) override
     {
-        auto new_template = WaitAndCreateNewBlock(chainman(), notifications(), m_node.mempool.get(), m_block_template, options, m_assemble_options, m_interrupt_wait);
-        if (new_template) return std::make_unique<BlockTemplateImpl>(m_assemble_options, std::move(new_template), m_node);
+        auto new_template = WaitAndCreateNewBlock(chainman(),
+                                                  notifications(),
+                                                  m_node.mempool.get(),
+                                                  m_block_template,
+                                                  options,
+                                                  m_mining_args,
+                                                  m_create_options,
+                                                  m_interrupt_wait);
+        if (new_template) return std::make_unique<BlockTemplateImpl>(m_create_options, std::move(new_template), m_node);
         return nullptr;
     }
 
@@ -925,7 +933,8 @@ public:
         InterruptWait(notifications(), m_interrupt_wait);
     }
 
-    const BlockAssembler::Options m_assemble_options;
+    const MiningArgs m_mining_args;
+    const BlockCreateOptions m_create_options;
 
     const std::unique_ptr<CBlockTemplate> m_block_template;
 
@@ -960,18 +969,8 @@ public:
         return WaitTipChanged(chainman(), notifications(), current_tip, timeout, m_interrupt_mining);
     }
 
-    std::unique_ptr<BlockTemplate> createNewBlock(const BlockCreateOptions& options, bool cooldown) override
+    std::unique_ptr<BlockTemplate> createNewBlock(BlockCreateOptions options, bool cooldown) override
     {
-        // Reject too-small values instead of clamping so callers don't silently
-        // end up mining with different options than requested. This matches the
-        // behavior of the `-blockreservedweight` startup option, which rejects
-        // values below MINIMUM_BLOCK_RESERVED_WEIGHT.
-        if (options.block_reserved_weight && options.block_reserved_weight < MINIMUM_BLOCK_RESERVED_WEIGHT) {
-            throw std::runtime_error(strprintf("block_reserved_weight (%zu) must be at least %u weight units",
-                                               *options.block_reserved_weight,
-                                               MINIMUM_BLOCK_RESERVED_WEIGHT));
-        }
-
         // Ensure m_tip_block is set so consumers of BlockTemplate can rely on that.
         std::optional<BlockRef> maybe_tip{waitTipChanged(uint256::ZERO, MillisecondsDouble::max())};
 
@@ -991,10 +990,15 @@ public:
             // Also wait during the final catch-up moments after IBD.
             if (!CooldownIfHeadersAhead(chainman(), notifications(), *maybe_tip, m_interrupt_mining)) return {};
         }
-
-        BlockAssembler::Options assemble_options{options};
-        ApplyArgsManOptions(*Assert(m_node.args), assemble_options);
-        return std::make_unique<BlockTemplateImpl>(assemble_options, BlockAssembler{chainman().ActiveChainstate(), context()->mempool.get(), assemble_options}.CreateNewBlock(), m_node);
+        ApplyMiningDefaults(m_node.mining_args, options);
+        return std::make_unique<BlockTemplateImpl>(options,
+                                                   BlockAssembler{
+                                                       chainman().ActiveChainstate(),
+                                                       context()->mempool.get(),
+                                                       context()->mining_args,
+                                                       options,
+                                                    }.CreateNewBlock(),
+                                                   m_node);
     }
 
     void interrupt() override

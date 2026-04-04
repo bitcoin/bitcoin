@@ -30,6 +30,7 @@
 #include <algorithm>
 #include <utility>
 #include <numeric>
+#include <stdexcept>
 
 namespace node {
 
@@ -76,35 +77,49 @@ void RegenerateCommitments(CBlock& block, ChainstateManager& chainman)
     block.hashMerkleRoot = BlockMerkleRoot(block);
 }
 
-static BlockAssembler::Options ClampOptions(BlockAssembler::Options options)
+static BlockCreateOptions ApplyBlockCreateOptions(BlockCreateOptions options)
 {
-    // Apply DEFAULT_BLOCK_RESERVED_WEIGHT when the caller left it unset.
-    options.block_reserved_weight = std::clamp<size_t>(options.block_reserved_weight.value_or(DEFAULT_BLOCK_RESERVED_WEIGHT), MINIMUM_BLOCK_RESERVED_WEIGHT, MAX_BLOCK_WEIGHT);
-    options.coinbase_output_max_additional_sigops = std::clamp<size_t>(options.coinbase_output_max_additional_sigops, 0, MAX_BLOCK_SIGOPS_COST);
-    // Limit weight to between block_reserved_weight and MAX_BLOCK_WEIGHT for sanity:
-    // block_reserved_weight can safely exceed -blockmaxweight, but the rest of the block template will be empty.
-    options.nBlockMaxWeight = std::clamp<size_t>(options.nBlockMaxWeight, *options.block_reserved_weight, MAX_BLOCK_WEIGHT);
+    // Typically block_reserved_weight and block_max_weight are set by
+    // ApplyMiningDefaults before the constructor calls this; value_or(DEFAULT_...)
+    // only affects (test) call sites that don't go through the Mining interface.
+    const size_t reserved_weight{options.block_reserved_weight.value_or(DEFAULT_BLOCK_RESERVED_WEIGHT)};
+    if (auto result{CheckBlockReservedWeight(reserved_weight)}; !result) {
+        throw std::runtime_error("block_reserved_weight " + util::ErrorString(result).original);
+    }
+    options.block_reserved_weight = reserved_weight;
+    if (auto result{CheckCoinbaseOutputMaxAdditionalSigops(options.coinbase_output_max_additional_sigops)}; !result) {
+        throw std::runtime_error("coinbase_output_max_additional_sigops " + util::ErrorString(result).original);
+    }
+    const size_t max_weight{options.block_max_weight.value_or(DEFAULT_BLOCK_MAX_WEIGHT)};
+    // block_reserved_weight can safely exceed block_max_weight, but the rest
+    // of the block template will be empty.
+    if (auto result{CheckBlockMaxWeight(max_weight)}; !result) {
+        throw std::runtime_error("block_max_weight " + util::ErrorString(result).original);
+    }
+    options.block_max_weight = max_weight;
     return options;
 }
 
-BlockAssembler::BlockAssembler(Chainstate& chainstate, const CTxMemPool* mempool, const Options& options)
+BlockAssembler::BlockAssembler(Chainstate& chainstate,
+                               const CTxMemPool* mempool,
+                               MiningArgs mining_args,
+                               BlockCreateOptions options)
     : chainparams{chainstate.m_chainman.GetParams()},
       m_mempool{options.use_mempool ? mempool : nullptr},
       m_chainstate{chainstate},
-      m_options{ClampOptions(options)}
+      m_mining_args{mining_args},
+      m_options{ApplyBlockCreateOptions(options)}
 {
 }
 
-void ApplyArgsManOptions(const ArgsManager& args, BlockAssembler::Options& options)
+void ApplyMiningDefaults(const MiningArgs& args, BlockCreateOptions& options)
 {
     // Block resource limits
-    options.nBlockMaxWeight = args.GetIntArg("-blockmaxweight", options.nBlockMaxWeight);
-    if (const auto blockmintxfee{args.GetArg("-blockmintxfee")}) {
-        if (const auto parsed{ParseMoney(*blockmintxfee)}) options.blockMinFeeRate = CFeeRate{*parsed};
+    if (!options.block_max_weight) {
+        options.block_max_weight = args.default_block_max_weight;
     }
-    options.print_modified_fee = args.GetBoolArg("-printpriority", options.print_modified_fee);
     if (!options.block_reserved_weight) {
-        options.block_reserved_weight = args.GetIntArg("-blockreservedweight");
+        options.block_reserved_weight = args.default_block_reserved_weight;
     }
 }
 
@@ -238,7 +253,7 @@ std::unique_ptr<CBlockTemplate> BlockAssembler::CreateNewBlock()
 
 bool BlockAssembler::TestChunkBlockLimits(FeePerWeight chunk_feerate, int64_t chunk_sigops_cost) const
 {
-    if (nBlockWeight + chunk_feerate.size >= m_options.nBlockMaxWeight) {
+    if (nBlockWeight + chunk_feerate.size >= m_options.block_max_weight) {
         return false;
     }
     if (nBlockSigOpsCost + chunk_sigops_cost >= MAX_BLOCK_SIGOPS_COST) {
@@ -269,7 +284,7 @@ void BlockAssembler::AddToBlock(const CTxMemPoolEntry& entry)
     nBlockSigOpsCost += entry.GetSigOpCost();
     nFees += entry.GetFee();
 
-    if (m_options.print_modified_fee) {
+    if (m_mining_args.print_modified_fee) {
         LogInfo("fee rate %s txid %s\n",
                   CFeeRate(entry.GetModifiedFee(), entry.GetTxSize()).ToString(),
                   entry.GetTx().GetHash().ToString());
@@ -295,7 +310,7 @@ void BlockAssembler::addChunks()
 
     while (selected_transactions.size() > 0) {
         // Check to see if min fee rate is still respected.
-        if (chunk_feerate_vsize << m_options.blockMinFeeRate.GetFeePerVSize()) {
+        if (chunk_feerate_vsize << m_mining_args.blockMinFeeRate.GetFeePerVSize()) {
             // Everything else we might consider has a lower feerate
             return;
         }
@@ -312,7 +327,7 @@ void BlockAssembler::addChunks()
             ++nConsecutiveFailed;
 
             if (nConsecutiveFailed > MAX_CONSECUTIVE_FAILURES && nBlockWeight +
-                    BLOCK_FULL_ENOUGH_WEIGHT_DELTA > m_options.nBlockMaxWeight) {
+                    BLOCK_FULL_ENOUGH_WEIGHT_DELTA > m_options.block_max_weight) {
                 // Give up if we're close to full and haven't succeeded in a while
                 return;
             }
@@ -363,7 +378,8 @@ std::unique_ptr<CBlockTemplate> WaitAndCreateNewBlock(ChainstateManager& chainma
                                                       CTxMemPool* mempool,
                                                       const std::unique_ptr<CBlockTemplate>& block_template,
                                                       const BlockWaitOptions& options,
-                                                      const BlockAssembler::Options& assemble_options,
+                                                      const MiningArgs& mining_args,
+                                                      const BlockCreateOptions& assemble_options,
                                                       bool& interrupt_wait)
 {
     // Delay calculating the current template fees, just in case a new block
@@ -424,8 +440,9 @@ std::unique_ptr<CBlockTemplate> WaitAndCreateNewBlock(ChainstateManager& chainma
             auto new_tmpl{BlockAssembler{
                 chainman.ActiveChainstate(),
                 mempool,
-                assemble_options}
-                              .CreateNewBlock()};
+                mining_args,
+                assemble_options
+                }.CreateNewBlock()};
 
             // If the tip changed, return the new template regardless of its fees.
             if (tip_changed) return new_tmpl;
