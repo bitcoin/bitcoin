@@ -61,15 +61,23 @@ def seed_addrman(node):
 
 class NetTest(BitcoinTestFramework):
     def set_test_params(self):
-        self.num_nodes = 2
+        self.num_nodes = 11
         self.extra_args = [
             ["-minrelaytxfee=0.00001000"],
             ["-minrelaytxfee=0.00000500"],
-        ]
-        # Specify a non-working proxy to make sure no actual connections to public IPs are attempted
-        for args in self.extra_args:
-            args.append("-proxy=127.0.0.1:1")
+        ] + [[]] * 9
+        # Specify a non-working proxy on nodes 0-1 to make sure no actual
+        # connections to public IPs are attempted; nodes 2-10 need to accept
+        # real connections for the addnode limit test.
+        for i in range(2):
+            self.extra_args[i].append("-proxy=127.0.0.1:1")
         self.supports_cli = False
+
+    def setup_network(self):
+        self.setup_nodes()
+        # Only connect nodes 0 and 1; nodes 2-10 are addnode targets used
+        # exclusively by test_addnode_connection_limit.
+        self.connect_nodes(1, 0)
 
     def run_test(self):
         # We need miniwallet to make a transaction
@@ -80,7 +88,7 @@ class NetTest(BitcoinTestFramework):
         # the two nodes being connected both ways.
         # Topology will look like: node0 <--> node1
         self.connect_nodes(0, 1)
-        self.sync_all()
+        self.sync_blocks(self.nodes[:2])
 
         self.test_connection_count()
         self.test_getpeerinfo()
@@ -93,6 +101,7 @@ class NetTest(BitcoinTestFramework):
         self.test_sendmsgtopeer()
         self.test_getaddrmaninfo()
         self.test_getrawaddrman()
+        self.test_addnode_connection_limit()
 
     def test_connection_count(self):
         self.log.info("Test getconnectioncount")
@@ -103,11 +112,11 @@ class NetTest(BitcoinTestFramework):
         self.log.info("Test getpeerinfo")
         # Create a few getpeerinfo last_block/last_transaction values.
         self.wallet.send_self_transfer(from_node=self.nodes[0]) # Make a transaction so we can see it in the getpeerinfo results
-        self.generate(self.nodes[1], 1)
+        self.generate(self.nodes[1], 1, sync_fun=lambda: self.sync_blocks(self.nodes[:2]))
         time_now = int(time.time())
-        peer_info = [x.getpeerinfo() for x in self.nodes]
+        peer_info = [x.getpeerinfo() for x in self.nodes[:2]]
         # Verify last_block and last_transaction keys/values.
-        for node, peer, field in product(range(self.num_nodes), range(2), ['last_block', 'last_transaction']):
+        for node, peer, field in product(range(2), range(2), ['last_block', 'last_transaction']):
             assert field in peer_info[node][peer].keys()
             if peer_info[node][peer][field] != 0:
                 assert_approx(peer_info[node][peer][field], time_now, vspan=60)
@@ -586,6 +595,51 @@ class NetTest(BitcoinTestFramework):
         self.log.debug("Test that getrawaddrman contains information about newly added addresses in each addrman table")
         check_getrawaddrman_entries(expected)
 
+
+    def test_addnode_connection_limit(self):
+        self.log.info("Test addnode connection limit (MAX_ADDNODE_CONNECTIONS=8)")
+        MAX_ADDNODE_CONNECTIONS = 8
+        node = self.nodes[0]
+
+        def count_manual():
+            return sum(1 for p in node.getpeerinfo() if p['connection_type'] == 'manual')
+
+        # Restart node 0 without proxy, with -maxconnections=0 to prove
+        # addnode connections bypass the general connection limit.
+        self.restart_node(0, extra_args=["-maxconnections=0"])
+
+        targets = MAX_ADDNODE_CONNECTIONS + 1  # 9 targets (nodes 2-10), only 8 can connect
+
+        self.log.info("Verify clean initial state")
+        assert_equal(node.getaddednodeinfo(), [])
+        assert_equal(count_manual(), 0)
+
+        self.log.info(f"Add {targets} nodes via addnode RPC")
+        for i in range(2, 2 + targets):
+            node.addnode(node=f"127.0.0.1:{p2p_port(i)}", command='add')
+        assert_equal(len(node.getaddednodeinfo()), targets)
+
+        self.log.info(f"Wait for exactly {MAX_ADDNODE_CONNECTIONS} manual connections")
+        self.wait_until(lambda: count_manual() == MAX_ADDNODE_CONNECTIONS, timeout=120)
+
+        self.log.info("Verify one addnode target remains unconnected")
+        added_addrs = {info['addednode'] for info in node.getaddednodeinfo()}
+        connected_addrs = {p['addr'] for p in node.getpeerinfo()
+                          if p['connection_type'] == 'manual'}
+        unconnected = added_addrs - connected_addrs
+        assert_equal(len(unconnected), 1)
+
+        self.log.info("Remove and disconnect one connected peer to free a slot")
+        connected = [p for p in node.getpeerinfo() if p['connection_type'] == 'manual']
+        victim_addr = connected[0]['addr']
+        node.addnode(node=victim_addr, command='remove')
+        node.disconnectnode(victim_addr)
+
+        self.log.info("Wait for the previously-blocked node to fill the slot")
+        self.wait_until(lambda: count_manual() == MAX_ADDNODE_CONNECTIONS, timeout=120)
+        # We removed 1 from the addnode list (9 -> 8), so all 8 remaining
+        # targets should now be connected.
+        assert_equal(len(node.getaddednodeinfo()), targets - 1)
 
 if __name__ == '__main__':
     NetTest(__file__).main()
