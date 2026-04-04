@@ -54,12 +54,12 @@ void InitExecutor::initialize()
     });
 }
 
-void InitExecutor::shutdown()
+void InitExecutor::shutdown(bool node_shutdown)
 {
-    QMetaObject::invokeMethod(&m_context, [this] {
+    QMetaObject::invokeMethod(&m_context, [this, node_shutdown] {
         try {
             qDebug() << "Running Shutdown in thread";
-            m_node.appShutdown();
+            if (node_shutdown) m_node.appShutdown();
             qDebug() << "Shutdown finished";
             Q_EMIT shutdownResult();
         } catch (const std::exception& e) {

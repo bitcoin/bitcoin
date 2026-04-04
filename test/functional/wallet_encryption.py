@@ -149,7 +149,7 @@ class WalletEncryptionTest(BitcoinTestFramework):
             # Load the dump into a new wallet
             do_wallet_tool("-wallet=noprivs_enc", f"-dumpfile={dumpfile_path}", "createfromdump")
             # Load the wallet and make sure it is no longer encrypted
-            with self.nodes[0].assert_debug_log(["Detected extraneous encryption keys in this wallet without private keys. Removing extraneous encryption keys."]):
+            with self.nodes[0].assert_debug_log(["Detected extraneous encryption keys in this wallet without private keys. Removing extraneous encryption keys."], wallet=True):
                 self.nodes[0].loadwallet("noprivs_enc")
             noprivs_wallet = self.nodes[0].get_wallet_rpc("noprivs_enc")
             assert_raises_rpc_error(-15, "Error: running with an unencrypted wallet, but walletpassphrase was called.", noprivs_wallet.walletpassphrase, "pass", 1)
