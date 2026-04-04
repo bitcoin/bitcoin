@@ -128,7 +128,7 @@ static bool ComputeUTXOStats(CCoinsView* view, CCoinsStats& stats, T hash_obj, c
             outputs[key.n] = std::move(coin);
             stats.coins_count++;
         } else {
-            LogError("%s: unable to read value\n", __func__);
+            LogDebug(BCLog::COINDB, "%s: unable to read value", __func__);
             return false;
         }
         pcursor->Next();

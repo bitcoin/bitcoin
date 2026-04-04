@@ -117,4 +117,15 @@ inline void LogPrintFormatInternal(SourceLocation&& source_loc, BCLog::LogFlags 
 #define LogDebug(category, ...) detail_LogIfCategoryAndLevelEnabled(category, BCLog::Level::Debug, __VA_ARGS__)
 #define LogTrace(category, ...) detail_LogIfCategoryAndLevelEnabled(category, BCLog::Level::Trace, __VA_ARGS__)
 
+// Log unconditionally the first time this statement is hit, then conditionally afterwards
+#define LogWarnThenDebug(category, ...) \
+   do { \
+      static std::atomic<bool> _warned{false}; \
+      if (!_warned.exchange(true)) { \
+          LogWarning(__VA_ARGS__); \
+      } else { \
+          LogDebug(category, __VA_ARGS__); \
+      } \
+   } while(0)
+
 #endif // BITCOIN_UTIL_LOG_H

@@ -190,7 +190,7 @@ std::optional<std::vector<int>> CalculatePrevHeights(
                               ? tip.nHeight + 1 // Assume all mempool transaction confirm in the next block.
                               : coin->nHeight;
         } else {
-            LogInfo("ERROR: %s: Missing input %d in transaction \'%s\'\n", __func__, i, tx.GetHash().GetHex());
+            LogWarning("%s: Missing input %d in transaction \'%s\'", __func__, i, tx.GetHash().GetHex());
             return std::nullopt;
         }
     }
@@ -2619,7 +2619,7 @@ bool Chainstate::ConnectBlock(const CBlock& block, BlockValidationState& state, 
         }
     }
     if (!state.IsValid()) {
-        LogInfo("Block validation error: %s", state.ToString());
+        LogWarning("Block validation error: %s", state.ToString());
         return false;
     }
     const auto time_4{SteadyClock::now()};

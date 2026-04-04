@@ -518,7 +518,7 @@ static size_t CalculateNestedKeyhashInputSize(bool use_max_sig)
 
     // Add inner-script to key store and key to watchonly
     FillableSigningProvider keystore;
-    keystore.AddCScript(inner_script);
+    BOOST_CHECK(keystore.AddCScript(inner_script));
     keystore.AddKeyPubKey(key, pubkey);
 
     // Fill in dummy signatures for fee calculation.
