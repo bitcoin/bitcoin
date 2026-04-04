@@ -12,8 +12,16 @@ bool PrivateBroadcast::Add(const CTransactionRef& tx)
     EXCLUSIVE_LOCKS_REQUIRED(!m_mutex)
 {
     LOCK(m_mutex);
-    const bool inserted{m_transactions.try_emplace(tx).second};
-    return inserted;
+    const auto [it, inserted]{m_transactions.try_emplace(tx)};
+    if (!inserted) {
+        auto& state{it->second};
+        if (!state.received.has_value()) {
+            return false;
+        }
+        state.received.reset();
+        state.send_statuses.clear();
+    }
+    return true;
 }
 
 std::optional<size_t> PrivateBroadcast::Remove(const CTransactionRef& tx)
@@ -28,18 +36,30 @@ std::optional<size_t> PrivateBroadcast::Remove(const CTransactionRef& tx)
     return std::nullopt;
 }
 
+std::optional<size_t> PrivateBroadcast::MarkReceived(const CTransactionRef& tx, const CService& received_from)
+    EXCLUSIVE_LOCKS_REQUIRED(!m_mutex)
+{
+    LOCK(m_mutex);
+    const auto it{m_transactions.find(tx)};
+    if (it == m_transactions.end() || it->second.received.has_value()) return std::nullopt;
+    it->second.received.emplace(Received{received_from, NodeClock::now()});
+    const auto p{DerivePriority(it->second.send_statuses)};
+    return p.num_confirmed;
+}
+
 std::optional<CTransactionRef> PrivateBroadcast::PickTxForSend(const NodeId& will_send_to_nodeid, const CService& will_send_to_address)
     EXCLUSIVE_LOCKS_REQUIRED(!m_mutex)
 {
     LOCK(m_mutex);
 
+    auto pending{GetPendingTransactions()};
     const auto it{std::ranges::max_element(
-            m_transactions,
+            pending,
             [](const auto& a, const auto& b) { return a < b; },
-            [](const auto& el) { return DerivePriority(el.second.send_statuses); })};
+            [](const auto& el) { return DerivePriority(el->second.send_statuses); })};
 
-    if (it != m_transactions.end()) {
-        auto& [tx, state]{*it};
+    if (it != pending.end()) {
+        auto& [tx, state]{**it};
         state.send_statuses.emplace_back(will_send_to_nodeid, will_send_to_address, NodeClock::now());
         return tx;
     }
@@ -83,7 +103,7 @@ bool PrivateBroadcast::HavePendingTransactions()
     EXCLUSIVE_LOCKS_REQUIRED(!m_mutex)
 {
     LOCK(m_mutex);
-    return !m_transactions.empty();
+    return !GetPendingTransactions().empty();
 }
 
 std::vector<CTransactionRef> PrivateBroadcast::GetStale() const
@@ -93,6 +113,7 @@ std::vector<CTransactionRef> PrivateBroadcast::GetStale() const
     const auto now{NodeClock::now()};
     std::vector<CTransactionRef> stale;
     for (const auto& [tx, state] : m_transactions) {
+        if (state.received.has_value()) continue;
         const Priority p{DerivePriority(state.send_statuses)};
         if (p.num_confirmed == 0) {
             if (state.time_added < now - INITIAL_STALE_DURATION) stale.push_back(tx);
@@ -116,7 +137,12 @@ std::vector<PrivateBroadcast::TxBroadcastInfo> PrivateBroadcast::GetBroadcastInf
         for (const auto& status : state.send_statuses) {
             peers.emplace_back(PeerSendInfo{.address = status.address, .sent = status.picked, .received = status.confirmed});
         }
-        entries.emplace_back(TxBroadcastInfo{.tx = tx, .time_added = state.time_added, .peers = std::move(peers)});
+        entries.emplace_back(TxBroadcastInfo{
+            .tx = tx,
+            .time_added = state.time_added,
+            .peers = std::move(peers),
+            .received = state.received,
+        });
     }
 
     return entries;
@@ -148,4 +174,17 @@ std::optional<PrivateBroadcast::TxAndSendStatusForNode> PrivateBroadcast::GetSen
         }
     }
     return std::nullopt;
+}
+
+std::vector<PrivateBroadcast::TransactionMap::iterator> PrivateBroadcast::GetPendingTransactions()
+    EXCLUSIVE_LOCKS_REQUIRED(m_mutex)
+{
+    AssertLockHeld(m_mutex);
+    std::vector<TransactionMap::iterator> result;
+    for (auto it{m_transactions.begin()}; it != m_transactions.end(); ++it) {
+        if (!it->second.received.has_value()) {
+            result.push_back(it);
+        }
+    }
+    return result;
 }
