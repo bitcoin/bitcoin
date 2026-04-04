@@ -421,14 +421,14 @@ void BCLog::Logger::FormatLogStrInPlace(std::string& str, BCLog::LogFlags catego
     str.insert(0, LogTimestampStr(now, mocktime));
 }
 
-void BCLog::Logger::LogPrintStr(std::string_view str, SourceLocation&& source_loc, BCLog::LogFlags category, BCLog::Level level, bool should_ratelimit)
+void BCLog::Logger::LogPrintStr(std::string_view str, const SourceLocation& source_loc, BCLog::LogFlags category, BCLog::Level level, bool should_ratelimit)
 {
     STDLOCK(m_cs);
-    return LogPrintStr_(str, std::move(source_loc), category, level, should_ratelimit);
+    return LogPrintStr_(str, source_loc, category, level, should_ratelimit);
 }
 
 // NOLINTNEXTLINE(misc-no-recursion)
-void BCLog::Logger::LogPrintStr_(std::string_view str, SourceLocation&& source_loc, BCLog::LogFlags category, BCLog::Level level, bool should_ratelimit)
+void BCLog::Logger::LogPrintStr_(std::string_view str, const SourceLocation& source_loc, BCLog::LogFlags category, BCLog::Level level, bool should_ratelimit)
 {
     std::string str_prefixed = LogEscapeMessage(str);
 
@@ -439,7 +439,7 @@ void BCLog::Logger::LogPrintStr_(std::string_view str, SourceLocation&& source_l
                 .mocktime = GetMockTime(),
                 .str = str_prefixed,
                 .threadname = util::ThreadGetInternalName(),
-                .source_loc = std::move(source_loc),
+                .source_loc = source_loc,
                 .category = category,
                 .level = level,
             };

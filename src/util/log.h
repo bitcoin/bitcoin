@@ -36,6 +36,8 @@ private:
     std::source_location m_loc;
 };
 
+static_assert(std::is_trivially_copyable_v<SourceLocation>); // Document why we're not using std::move for these types
+
 namespace util::log {
 /** Opaque to util::log; interpreted by consumers (e.g., BCLog::LogFlags). */
 using Category = uint64_t;
@@ -70,7 +72,7 @@ using Level = util::log::Level;
 } // namespace BCLog
 
 template <typename... Args>
-inline void LogPrintFormatInternal(SourceLocation&& source_loc, BCLog::LogFlags flag, BCLog::Level level, bool should_ratelimit, util::ConstevalFormatString<sizeof...(Args)> fmt, const Args&... args)
+inline void LogPrintFormatInternal(const SourceLocation& source_loc, BCLog::LogFlags flag, BCLog::Level level, bool should_ratelimit, util::ConstevalFormatString<sizeof...(Args)> fmt, const Args&... args)
 {
     std::string log_msg;
     try {
@@ -82,7 +84,7 @@ inline void LogPrintFormatInternal(SourceLocation&& source_loc, BCLog::LogFlags 
         .category = flag,
         .level = level,
         .should_ratelimit = should_ratelimit,
-        .source_loc = std::move(source_loc),
+        .source_loc = source_loc,
         .message = std::move(log_msg)});
 }
 

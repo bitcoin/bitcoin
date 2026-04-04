@@ -113,7 +113,7 @@ void TestCoinsView(FuzzedDataProvider& fuzzed_data_provider, CCoinsViewCache& co
                     const bool possible_overwrite{coins_view_cache.PeekCoin(outpoint) || fuzzed_data_provider.ConsumeBool()};
                     coins_view_cache.AddCoin(outpoint, std::move(coin), possible_overwrite);
                 } else {
-                    coins_view_cache.EmplaceCoinInternalDANGER(std::move(outpoint), std::move(coin));
+                    coins_view_cache.EmplaceCoinInternalDANGER(outpoint, std::move(coin));
                 }
             },
             [&] {
