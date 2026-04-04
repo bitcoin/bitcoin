@@ -371,6 +371,7 @@ class RPCPackagesTest(BitcoinTestFramework):
             assert wtxid in submitpackage_result["tx-results"]
             tx_result = submitpackage_result["tx-results"][wtxid]
             assert_equal(tx_result["txid"], tx.txid_hex)
+            assert_equal(tx_result["vsize_adjusted"], tx.get_vsize())
             assert_equal(tx_result["vsize"], tx.get_vsize())
             assert_equal(tx_result["fees"]["base"], DEFAULT_FEE)
             if wtxid not in presubmitted_wtxids:
