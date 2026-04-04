@@ -1,0 +1,67 @@
+#compdef bitcoin-tx
+
+# zsh completion for bitcoin-tx(1)
+# Copyright (c) 2026-present The Bitcoin Core developers
+# Distributed under the MIT software license, see the accompanying
+# file COPYING or http://www.opensource.org/licenses/mit-license.php.
+
+_bitcoin-tx() {
+    local cur="$words[CURRENT]"
+    local bitcoin_tx="$words[1]"
+
+    case "$cur" in
+        load=*:*)
+            compset -P 'load=*:'
+            _files
+            return 0
+            ;;
+        *=*)
+            # prevent attempts to complete other arguments
+            return 0
+            ;;
+    esac
+
+    # nothing to complete after terminal flags
+    if [[ "$words[CURRENT-1]" == "-help" || "$words[CURRENT-1]" == "-help-debug" || "$words[CURRENT-1]" == "-version" ]]; then
+        return 0
+    fi
+
+    # check if -create was given in any previous argument
+    local has_create=false
+    local w
+    for w in "${(@)words[2,CURRENT-1]}"; do
+        [[ "$w" == "-create" ]] && has_create=true
+    done
+
+    # parse options from -help
+    local helpopts
+    helpopts=$($bitcoin_tx -help | awk '/^  -/ { sub(/=.*/, "="); print $1 }')
+    local -a opts
+    opts=(${(f)helpopts})
+
+    if $has_create; then
+        # -create enables transaction building, show both options and commands
+        local helpcmds
+        helpcmds=$($bitcoin_tx -help | awk '/^Commands:/{found=1; next} found && /^  [a-z]/ { sub(/=.*/, "="); print $1 }')
+        local -a cmds
+        cmds=(${(f)helpcmds})
+        compadd -S '' -- ${(M)opts:#*=} ${(M)cmds:#*=}
+        compadd -- ${opts:#*=} ${cmds:#*=}
+    elif (( CURRENT == 2 )); then
+        # first argument: show options only
+        compadd -S '' -- ${(M)opts:#*=}
+        compadd -- ${opts:#*=}
+    fi
+
+    return 0
+}
+
+_bitcoin-tx "$@"
+
+# Local variables:
+# mode: shell-script
+# sh-basic-offset: 4
+# sh-indent-comment: t
+# indent-tabs-mode: nil
+# End:
+# ex: ts=4 sw=4 et filetype=zsh
