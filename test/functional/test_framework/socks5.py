@@ -113,6 +113,8 @@ class Socks5Connection():
     def __init__(self, serv, conn):
         self.serv = serv
         self.conn = conn
+        # Forwarding socket, stored for closing upon stop
+        self.conn_to = None
 
     def handle(self):
         """Handle socks5 request according to RFC1928."""
@@ -176,27 +178,60 @@ class Socks5Connection():
             requested_to_addr = addr.decode("utf-8")
             requested_to = format_addr_port(requested_to_addr, port)
 
-            if self.serv.conf.destinations_factory is not None:
-                dest = self.serv.conf.destinations_factory(requested_to_addr, port)
-                if dest is not None:
-                    logger.debug(f"Serving connection to {requested_to}, will redirect it to "
-                                 f"{dest['actual_to_addr']}:{dest['actual_to_port']} instead")
-                    with socket.create_connection((dest["actual_to_addr"], dest["actual_to_port"])) as conn_to:
-                        forward_sockets(self.conn, conn_to)
+            if self.serv.is_running():
+                if self.serv.conf.destinations_factory is not None:
+                    dest = self.serv.conf.destinations_factory(requested_to_addr, port)
+                    if dest is not None:
+                        logger.debug(f"Serving connection to {requested_to}, will redirect it to "
+                                    f"{dest['actual_to_addr']}:{dest['actual_to_port']} instead")
+                        with socket.create_connection((dest["actual_to_addr"], dest["actual_to_port"])) as conn_to:
+                            self.conn_to = conn_to
+                            forward_sockets(self.conn, conn_to)
+                            conn_to.close()
+                    else:
+                        logger.debug(f"Can't serve the connection to {requested_to}: the destinations factory returned None")
                 else:
-                    logger.debug(f"Can't serve the connection to {requested_to}: the destinations factory returned None")
-            else:
-                logger.debug(f"Can't serve the connection to {requested_to}: no destinations factory")
+                    logger.debug(f"Can't serve the connection to {requested_to}: no destinations factory")
 
             # Fall through to disconnect
         except Exception as e:
-            logger.exception("socks5 request handling failed.")
-            self.serv.queue.put(e)
+            logger.exception(f"socks5 request handling failed (running {self.serv.is_running()})")
+            if self.serv.is_running():
+                self.serv.queue.put(e)
         finally:
             if not self.serv.keep_alive:
                 self.conn.close()
             else:
                 logger.debug("Keeping client connection alive")
+            self.conn_to = None
+
+    def force_close(self):
+        # close underlying connections
+        try:
+            self.conn.close()
+            logger.debug("Incoming connection force-closed")
+        except OSError:
+            pass
+        conn_to = self.conn_to
+        if conn_to:
+            try:
+                conn_to.close()
+                logger.debug("Outgoing connection force-closed")
+                self.conn_to = None
+            except OSError:
+                pass
+
+
+# Wrapper for thread.join(), which may throw for daemon threads (in late stages of finalization).
+# Return True if thread is still alive.
+# See PR #34863 for more details on using daemon threads.
+def try_join_daemon_thread(thread, timeout=0) -> bool:
+    try:
+        thread.join(timeout=timeout)
+        return thread.is_alive()
+    except Exception as e:
+        logger.debug(f"Exception in thread.join, {e}")
+        return False
 
 class Socks5Server():
     def __init__(self, conf):
@@ -212,31 +247,56 @@ class Socks5Server():
         # to reflect the actual bound address so callers can use it.
         self.conf.addr = self.s.getsockname()
         self.s.listen(5)
-        self.running = False
+        # Set to False when stop is initiated
+        self._running = False
+        self._running_lock = threading.Lock()
         self.thread = None
         self.queue = queue.Queue() # report connections and exceptions to client
         self.keep_alive = conf.keep_alive
+        # Store the background handlers, needed for clean shutdown
+        self.handlers = []
+        self._handlers_lock = threading.Lock()
+
+    def is_running(self) -> bool:
+        with self._running_lock:
+            return self._running
+
+    def set_running(self, new_value: bool):
+        with self._running_lock:
+            self._running = new_value
 
     def run(self):
-        while self.running:
+        while self.is_running():
             (sockconn, _) = self.s.accept()
-            if self.running:
+            if self.is_running():
                 conn = Socks5Connection(self, sockconn)
                 thread = threading.Thread(None, conn.handle)
+                # Use "daemon" threads, see PR #34863 for more discussion.
                 thread.daemon = True
+                with self._handlers_lock:
+                    self.handlers.append((thread, conn))
                 thread.start()
 
     def start(self):
-        assert not self.running
-        self.running = True
+        assert not self.is_running()
+        self.set_running(True)
         self.thread = threading.Thread(None, self.run)
         self.thread.daemon = True
         self.thread.start()
 
     def stop(self):
-        self.running = False
+        self.set_running(False)
         # connect to self to end run loop
         s = socket.socket(self.conf.af)
         s.connect(self.conf.addr)
         s.close()
         self.thread.join()
+        # if there are active handlers, close them
+        with self._handlers_lock:
+            items = list(self.handlers)
+        for thread, conn in items:
+            # check if thread is still active
+            if try_join_daemon_thread(thread, timeout=0):
+                conn.force_close()
+                if try_join_daemon_thread(thread, timeout=2):
+                    logger.warning("Stop(): A handler thread didn't finish after closing the sockets")
