@@ -1036,6 +1036,11 @@ BOOST_AUTO_TEST_CASE(btck_block_tree_entry_tests)
     auto prev{entry_1.GetPrevious()};
     BOOST_CHECK(prev.has_value());
     BOOST_CHECK(prev.value() == entry_0);
+
+    // Test GetAncestor
+    BOOST_CHECK(entry_2.GetAncestor(2) == entry_2);
+    BOOST_CHECK(entry_2.GetAncestor(1) == entry_1);
+    BOOST_CHECK(entry_2.GetAncestor(0) == entry_0);
 }
 
 BOOST_AUTO_TEST_CASE(btck_chainman_in_memory_tests)
