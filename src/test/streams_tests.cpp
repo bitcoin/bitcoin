@@ -208,6 +208,35 @@ BOOST_AUTO_TEST_CASE(streams_vector_writer)
     vch.clear();
 }
 
+BOOST_AUTO_TEST_CASE(streams_span_writer)
+{
+    unsigned char a(1);
+    unsigned char b(2);
+    unsigned char bytes[] = {3, 4, 5, 6};
+    std::array<unsigned char, 8> arr{};
+
+    // Test operator<<
+    SpanWriter writer{arr};
+    writer << a << b;
+    std::array<unsigned char, 8> expected1{1, 2, 0, 0, 0, 0, 0, 0};
+    BOOST_CHECK_EQUAL_COLLECTIONS(arr.begin(), arr.end(), expected1.begin(), expected1.end());
+
+    // Use variadic constructor and write to subspan.
+    SpanWriter{std::span{arr}.subspan(2), a, bytes, b};
+    std::array<unsigned char, 8> expected2{1, 2, 1, 3, 4, 5, 6, 2};
+    BOOST_CHECK_EQUAL_COLLECTIONS(arr.begin(), arr.end(), expected2.begin(), expected2.end());
+
+    // Test std::byte span constructor
+    std::array<std::byte, 2> byte_arr{};
+    SpanWriter{std::span{byte_arr}} << a << b;
+    std::array<std::byte, 2> expected3{std::byte{1}, std::byte{2}};
+    BOOST_CHECK_EQUAL_COLLECTIONS(byte_arr.begin(), byte_arr.end(), expected3.begin(), expected3.end());
+
+    // Writing past the end throws
+    std::array<unsigned char, 1> small{};
+    BOOST_CHECK_THROW(SpanWriter(small, a, b), std::ios_base::failure);
+}
+
 BOOST_AUTO_TEST_CASE(streams_vector_reader)
 {
     std::vector<unsigned char> vch = {1, 255, 3, 4, 5, 6};
