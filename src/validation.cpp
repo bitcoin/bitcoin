@@ -138,11 +138,11 @@ const CBlockIndex* Chainstate::FindForkInGlobalIndex(const CBlockLocator& locato
 }
 
 bool CheckInputScripts(const CTransaction& tx, TxValidationState& state,
-                       const CCoinsViewCache& inputs, script_verify_flags flags, bool cacheSigStore,
+                       std::vector<CTxOut>&& spent_outputs, script_verify_flags flags, bool cacheSigStore,
                        bool cacheFullScriptStore, PrecomputedTransactionData& txdata,
                        ValidationCache& validation_cache,
                        std::vector<CScriptCheck>* pvChecks = nullptr)
-                       EXCLUSIVE_LOCKS_REQUIRED(cs_main);
+    EXCLUSIVE_LOCKS_REQUIRED(cs_main);
 
 bool CheckFinalTxAtTip(const CBlockIndex& active_chain_tip, const CTransaction& tx)
 {
@@ -426,8 +426,10 @@ static bool CheckInputsFromMempoolAndCache(const CTransaction& tx, TxValidationS
         }
     }
 
+    std::vector<CTxOut> spent_outputs{view.GetUnspentOutputs(tx)};
+
     // Call CheckInputScripts() to cache signature and script validity against current tip consensus rules.
-    return CheckInputScripts(tx, state, view, flags, /* cacheSigStore= */ true, /* cacheFullScriptStore= */ true, txdata, validation_cache);
+    return CheckInputScripts(tx, state, std::move(spent_outputs), flags, /* cacheSigStore= */ true, /* cacheFullScriptStore= */ true, txdata, validation_cache);
 }
 
 namespace {
@@ -888,35 +890,48 @@ bool MemPoolAccept::PreChecks(ATMPArgs& args, Workspace& ws)
         return state.Invalid(TxValidationResult::TX_PREMATURE_SPEND, "non-BIP68-final");
     }
 
-    // The mempool holds txs for the next block, so pass height+1 to CheckTxInputs
-    if (!Consensus::CheckTxInputs(tx, state, m_view, m_active_chainstate.m_chain.Height() + 1, ws.m_base_fees)) {
-        return false; // state filled in by CheckTxInputs
+    // are the actual inputs available?
+    if (!m_view.HaveInputs(tx)) {
+        return state.Invalid(TxValidationResult::TX_MISSING_INPUTS, "bad-txns-inputs-missingorspent",
+                             strprintf("%s: inputs missing/spent", __func__));
     }
 
-    if (m_pool.m_opts.require_standard) {
-        state = ValidateInputsStandardness(tx, m_view);
-        if (state.IsInvalid()) {
-            return false;
-        }
-    }
-
-    // Check for non-standard witnesses.
-    if (tx.HasWitness() && m_pool.m_opts.require_standard && !IsWitnessStandard(tx, m_view)) {
-        return state.Invalid(TxValidationResult::TX_WITNESS_MUTATED, "bad-witness-nonstandard");
-    }
-
-    int64_t nSigOpsCost = GetTransactionSigOpCost(tx, m_view, STANDARD_SCRIPT_VERIFY_FLAGS);
-
-    // Keep track of transactions that spend a coinbase, which we re-scan
-    // during reorgs to ensure COINBASE_MATURITY is still met.
+    int64_t nSigOpsCost = 0;
     bool fSpendsCoinbase = false;
-    for (const CTxIn &txin : tx.vin) {
-        const Coin &coin = m_view.AccessCoin(txin.prevout);
-        if (coin.IsCoinBase()) {
-            fSpendsCoinbase = true;
-            break;
+    // Wrap access to required coins in their own scope to avoid coin lifetime extension issues
+    auto res = m_view.AccessCoins(tx, [&, this](auto&& coins) {
+        // The mempool holds txs for the next block, so pass height+1 to CheckTxInputs
+        if (!Consensus::CheckTxInputs(tx, state, std::span{coins}, m_active_chainstate.m_chain.Height() + 1, ws.m_base_fees)) {
+            return false; // state filled in by CheckTxInputs
         }
-    }
+
+        if (m_pool.m_opts.require_standard) {
+            state = ValidateInputsStandardness(tx, m_view);
+            if (state.IsInvalid()) {
+                return false;
+            }
+        }
+
+        // Check for non-standard witnesses.
+        if (tx.HasWitness() && m_pool.m_opts.require_standard && !IsWitnessStandard(tx, m_view)) {
+            return state.Invalid(TxValidationResult::TX_WITNESS_MUTATED, "bad-witness-nonstandard");
+        }
+
+        nSigOpsCost = GetTransactionSigOpCost(tx, coins, STANDARD_SCRIPT_VERIFY_FLAGS);
+
+        // Keep track of transactions that spend a coinbase, which we re-scan
+        // during reorgs to ensure COINBASE_MATURITY is still met.
+        for (const Coin& coin : coins) {
+            if (coin.IsCoinBase()) {
+                fSpendsCoinbase = true;
+                break;
+            }
+        }
+
+        return true;
+    });
+
+    if (!res) return res;
 
     // Set entry_sequence to 0 when bypass_limits is used; this allows txs from a block
     // reorg to be marked earlier than any child txs that were already in the mempool.
@@ -1141,9 +1156,11 @@ bool MemPoolAccept::PolicyScriptChecks(const ATMPArgs& args, Workspace& ws)
 
     constexpr script_verify_flags scriptVerifyFlags = STANDARD_SCRIPT_VERIFY_FLAGS;
 
+    std::vector<CTxOut> spent_outputs{m_view.GetUnspentOutputs(tx)};
+
     // Check input scripts and signatures.
     // This is done last to help prevent CPU exhaustion denial-of-service attacks.
-    if (!CheckInputScripts(tx, state, m_view, scriptVerifyFlags, true, false, ws.m_precomputed_txdata, GetValidationCache())) {
+    if (!CheckInputScripts(tx, state, std::move(spent_outputs), scriptVerifyFlags, true, false, ws.m_precomputed_txdata, GetValidationCache())) {
         // Detect a failure due to a missing witness so that p2p code can handle rejection caching appropriately.
         if (!tx.HasWitness() && SpendsNonAnchorWitnessProg(tx, m_view)) {
             state.Invalid(TxValidationResult::TX_WITNESS_STRIPPED,
@@ -2059,7 +2076,7 @@ ValidationCache::ValidationCache(const size_t script_execution_cache_bytes, cons
  * Non-static (and redeclared) in src/test/txvalidationcache_tests.cpp
  */
 bool CheckInputScripts(const CTransaction& tx, TxValidationState& state,
-                       const CCoinsViewCache& inputs, script_verify_flags flags, bool cacheSigStore,
+                       std::vector<CTxOut>&& spent_outputs, script_verify_flags flags, bool cacheSigStore,
                        bool cacheFullScriptStore, PrecomputedTransactionData& txdata,
                        ValidationCache& validation_cache,
                        std::vector<CScriptCheck>* pvChecks)
@@ -2084,15 +2101,6 @@ bool CheckInputScripts(const CTransaction& tx, TxValidationState& state,
     }
 
     if (!txdata.m_spent_outputs_ready) {
-        std::vector<CTxOut> spent_outputs;
-        spent_outputs.reserve(tx.vin.size());
-
-        for (const auto& txin : tx.vin) {
-            const COutPoint& prevout = txin.prevout;
-            const Coin& coin = inputs.AccessCoin(prevout);
-            assert(!coin.IsSpent());
-            spent_outputs.emplace_back(coin.out);
-        }
         txdata.Init(tx, std::move(spent_outputs));
     }
     assert(txdata.m_spent_outputs.size() == tx.vin.size());
@@ -2288,57 +2296,24 @@ script_verify_flags GetBlockScriptFlags(const CBlockIndex& block_index, const Ch
     return flags;
 }
 
-
-/** Apply the effects of this block (with given index) on the UTXO set represented by coins.
- *  Validity checks that depend on the UTXO set are also done; ConnectBlock()
- *  can fail if those validity checks fail (among other reasons). */
-bool Chainstate::ConnectBlock(const CBlock& block, BlockValidationState& state, CBlockIndex* pindex,
-                               CCoinsViewCache& view, bool fJustCheck)
+bool Chainstate::ConnectBlock(const CBlock& block, const CBlockUndo& blockundo, BlockValidationState& state,
+                              CBlockIndex* pindex, bool fJustCheck)
 {
     AssertLockHeld(cs_main);
     assert(pindex);
-
-    uint256 block_hash{block.GetHash()};
-    assert(*pindex->phashBlock == block_hash);
+    assert(pindex->GetBlockHash() == block.GetHash());
+    auto block_hash{pindex->GetBlockHash()};
 
     const auto time_start{SteadyClock::now()};
     const CChainParams& params{m_chainman.GetParams()};
 
-    // Check it again in case a previous version let a bad block in
-    // NOTE: We don't currently (re-)invoke ContextualCheckBlock() or
-    // ContextualCheckBlockHeader() here. This means that if we add a new
-    // consensus rule that is enforced in one of those two functions, then we
-    // may have let in a block that violates the rule prior to updating the
-    // software, and we would NOT be enforcing the rule here. Fully solving
-    // upgrade from one software version to the next after a consensus rule
-    // change is potentially tricky and issue-specific (see NeedsRedownload()
-    // for one approach that was used for BIP 141 deployment).
-    // Also, currently the rule against blocks more than 2 hours in the future
-    // is enforced in ContextualCheckBlockHeader(); we wouldn't want to
-    // re-enforce that rule here (at least until we make it impossible for
-    // the clock to go backward).
-    if (!CheckBlock(block, state, params.GetConsensus(), !fJustCheck, !fJustCheck)) {
-        if (state.GetResult() == BlockValidationResult::BLOCK_MUTATED) {
-            // We don't write down blocks to disk if they may have been
-            // corrupted, so this should be impossible unless we're having hardware
-            // problems.
-            return FatalError(m_chainman.GetNotifications(), state, _("Corrupt block found indicating potential hardware failure."));
-        }
-        LogError("%s: Consensus::CheckBlock: %s\n", __func__, state.ToString());
-        return false;
-    }
-
-    // verify that the view's current state corresponds to the previous block
-    uint256 hashPrevBlock = pindex->pprev == nullptr ? uint256() : pindex->pprev->GetBlockHash();
-    assert(hashPrevBlock == view.GetBestBlock());
+    assert(block.vtx.size() == blockundo.vtxundo.size() + 1); // blockundo does not contain a CTxUndo for the coinbase
 
     m_chainman.num_blocks_total++;
 
     // Special case for the genesis block, skipping connection of its transactions
     // (its coinbase is unspendable)
     if (block_hash == params.GetConsensus().hashGenesisBlock) {
-        if (!fJustCheck)
-            view.SetBestBlock(pindex->GetBlockHash());
         return true;
     }
 
@@ -2389,92 +2364,6 @@ bool Chainstate::ConnectBlock(const CBlock& block, BlockValidationState& state, 
              Ticks<SecondsDouble>(m_chainman.time_check),
              Ticks<MillisecondsDouble>(m_chainman.time_check) / m_chainman.num_blocks_total);
 
-    // Do not allow blocks that contain transactions which 'overwrite' older transactions,
-    // unless those are already completely spent.
-    // If such overwrites are allowed, coinbases and transactions depending upon those
-    // can be duplicated to remove the ability to spend the first instance -- even after
-    // being sent to another address.
-    // See BIP30, CVE-2012-1909, and https://r6.ca/blog/20120206T005236Z.html for more information.
-    // This rule was originally applied to all blocks with a timestamp after March 15, 2012, 0:00 UTC.
-    // Now that the whole chain is irreversibly beyond that time it is applied to all blocks except the
-    // two in the chain that violate it. This prevents exploiting the issue against nodes during their
-    // initial block download.
-    bool fEnforceBIP30 = !IsBIP30Repeat(*pindex);
-
-    // Once BIP34 activated it was not possible to create new duplicate coinbases and thus other than starting
-    // with the 2 existing duplicate coinbase pairs, not possible to create overwriting txs.  But by the
-    // time BIP34 activated, in each of the existing pairs the duplicate coinbase had overwritten the first
-    // before the first had been spent.  Since those coinbases are sufficiently buried it's no longer possible to create further
-    // duplicate transactions descending from the known pairs either.
-    // If we're on the known chain at height greater than where BIP34 activated, we can save the db accesses needed for the BIP30 check.
-
-    // BIP34 requires that a block at height X (block X) has its coinbase
-    // scriptSig start with a CScriptNum of X (indicated height X).  The above
-    // logic of no longer requiring BIP30 once BIP34 activates is flawed in the
-    // case that there is a block X before the BIP34 height of 227,931 which has
-    // an indicated height Y where Y is greater than X.  The coinbase for block
-    // X would also be a valid coinbase for block Y, which could be a BIP30
-    // violation.  An exhaustive search of all mainnet coinbases before the
-    // BIP34 height which have an indicated height greater than the block height
-    // reveals many occurrences. The 3 lowest indicated heights found are
-    // 209,921, 490,897, and 1,983,702 and thus coinbases for blocks at these 3
-    // heights would be the first opportunity for BIP30 to be violated.
-
-    // The search reveals a great many blocks which have an indicated height
-    // greater than 1,983,702, so we simply remove the optimization to skip
-    // BIP30 checking for blocks at height 1,983,702 or higher.  Before we reach
-    // that block in another 25 years or so, we should take advantage of a
-    // future consensus change to do a new and improved version of BIP34 that
-    // will actually prevent ever creating any duplicate coinbases in the
-    // future.
-    static constexpr int BIP34_IMPLIES_BIP30_LIMIT = 1983702;
-
-    // There is no potential to create a duplicate coinbase at block 209,921
-    // because this is still before the BIP34 height and so explicit BIP30
-    // checking is still active.
-
-    // The final case is block 176,684 which has an indicated height of
-    // 490,897. Unfortunately, this issue was not discovered until about 2 weeks
-    // before block 490,897 so there was not much opportunity to address this
-    // case other than to carefully analyze it and determine it would not be a
-    // problem. Block 490,897 was, in fact, mined with a different coinbase than
-    // block 176,684, but it is important to note that even if it hadn't been or
-    // is remined on an alternate fork with a duplicate coinbase, we would still
-    // not run into a BIP30 violation.  This is because the coinbase for 176,684
-    // is spent in block 185,956 in transaction
-    // d4f7fbbf92f4a3014a230b2dc70b8058d02eb36ac06b4a0736d9d60eaa9e8781.  This
-    // spending transaction can't be duplicated because it also spends coinbase
-    // 0328dd85c331237f18e781d692c92de57649529bd5edf1d01036daea32ffde29.  This
-    // coinbase has an indicated height of over 4.2 billion, and wouldn't be
-    // duplicatable until that height, and it's currently impossible to create a
-    // chain that long. Nevertheless we may wish to consider a future soft fork
-    // which retroactively prevents block 490,897 from creating a duplicate
-    // coinbase. The two historical BIP30 violations often provide a confusing
-    // edge case when manipulating the UTXO and it would be simpler not to have
-    // another edge case to deal with.
-
-    // testnet3 has no blocks before the BIP34 height with indicated heights
-    // post BIP34 before approximately height 486,000,000. After block
-    // 1,983,702 testnet3 starts doing unnecessary BIP30 checking again.
-    assert(pindex->pprev);
-    CBlockIndex* pindexBIP34height = pindex->pprev->GetAncestor(params.GetConsensus().BIP34Height);
-    //Only continue to enforce if we're below BIP34 activation height or the block hash at that height doesn't correspond.
-    fEnforceBIP30 = fEnforceBIP30 && (!pindexBIP34height || !(pindexBIP34height->GetBlockHash() == params.GetConsensus().BIP34Hash));
-
-    // TODO: Remove BIP30 checking from block height 1,983,702 on, once we have a
-    // consensus change that ensures coinbases at those heights cannot
-    // duplicate earlier coinbases.
-    if (fEnforceBIP30 || pindex->nHeight >= BIP34_IMPLIES_BIP30_LIMIT) {
-        for (const auto& tx : block.vtx) {
-            for (size_t o = 0; o < tx->vout.size(); o++) {
-                if (view.HaveCoin(COutPoint(tx->GetHash(), o))) {
-                    state.Invalid(BlockValidationResult::BLOCK_CONSENSUS, "bad-txns-BIP30",
-                                  "tried to overwrite transaction");
-                }
-            }
-        }
-    }
-
     // Enforce BIP68 (sequence locks)
     int nLockTimeFlags = 0;
     if (DeploymentActiveAt(*pindex, m_chainman, Consensus::DEPLOYMENT_CSV)) {
@@ -2504,8 +2393,6 @@ bool Chainstate::ConnectBlock(const CBlock& block, BlockValidationState& state, 
         m_last_script_check_reason_logged = script_check_reason;
     }
 
-    CBlockUndo blockundo;
-
     // Precomputed transaction data pointers must not be invalidated
     // until after `control` has run the script checks (potentially
     // in multiple threads). Preallocate the vector size so a new allocation
@@ -2520,19 +2407,19 @@ bool Chainstate::ConnectBlock(const CBlock& block, BlockValidationState& state, 
     CAmount nFees = 0;
     int nInputs = 0;
     int64_t nSigOpsCost = 0;
-    blockundo.vtxundo.reserve(block.vtx.size() - 1);
     for (unsigned int i = 0; i < block.vtx.size(); i++)
     {
         if (!state.IsValid()) break;
         const CTransaction &tx = *(block.vtx[i]);
-
         nInputs += tx.vin.size();
 
         if (!tx.IsCoinBase())
         {
+            auto spent_coins = std::span<const Coin>{blockundo.vtxundo[i - 1].vprevout};
             CAmount txfee = 0;
             TxValidationState tx_state;
-            if (!Consensus::CheckTxInputs(tx, tx_state, view, pindex->nHeight, txfee)) {
+
+            if (!Consensus::CheckTxInputs(tx, tx_state, spent_coins, pindex->nHeight, txfee)) {
                 // Any transaction validation failure in ConnectBlock is a block consensus failure
                 state.Invalid(BlockValidationResult::BLOCK_CONSENSUS,
                               tx_state.GetRejectReason(),
@@ -2551,7 +2438,7 @@ bool Chainstate::ConnectBlock(const CBlock& block, BlockValidationState& state, 
             // be in ConnectBlock because they require the UTXO set
             prevheights.resize(tx.vin.size());
             for (size_t j = 0; j < tx.vin.size(); j++) {
-                prevheights[j] = view.AccessCoin(tx.vin[j].prevout).nHeight;
+                prevheights[j] = spent_coins[j].nHeight;
             }
 
             if (!SequenceLocks(tx, nLockTimeFlags, prevheights, *pindex)) {
@@ -2565,7 +2452,11 @@ bool Chainstate::ConnectBlock(const CBlock& block, BlockValidationState& state, 
         // * legacy (always)
         // * p2sh (when P2SH enabled in flags and excludes coinbase)
         // * witness (when witness enabled in flags and excludes coinbase)
-        nSigOpsCost += GetTransactionSigOpCost(tx, view, flags);
+        if (!tx.IsCoinBase()) {
+            nSigOpsCost += GetTransactionSigOpCost(tx, std::span<const Coin>{blockundo.vtxundo[i - 1].vprevout}, flags);
+        } else {
+            nSigOpsCost += GetTransactionSigOpCost(tx, std::span<const Coin>{}, flags);
+        }
         if (nSigOpsCost > MAX_BLOCK_SIGOPS_COST) {
             state.Invalid(BlockValidationResult::BLOCK_CONSENSUS, "bad-blk-sigops", "too many sigops");
             break;
@@ -2576,14 +2467,21 @@ bool Chainstate::ConnectBlock(const CBlock& block, BlockValidationState& state, 
             bool fCacheResults = fJustCheck; /* Don't cache results if we're actually connecting blocks (still consult the cache, though) */
             bool tx_ok;
             TxValidationState tx_state;
+            const std::vector<Coin>& spent_coins = blockundo.vtxundo[i - 1].vprevout;
+            std::vector<CTxOut> spent_outputs;
+            spent_outputs.reserve(tx.vin.size());
+            for (const Coin& coin : spent_coins) {
+                spent_outputs.push_back(coin.out);
+            }
+
             // If CheckInputScripts is called with a pointer to a checks vector, the resulting checks are appended to it. In that case
             // they need to be added to control which runs them asynchronously. Otherwise, CheckInputScripts runs the checks before returning.
             if (control) {
                 std::vector<CScriptCheck> vChecks;
-                tx_ok = CheckInputScripts(tx, tx_state, view, flags, fCacheResults, fCacheResults, txsdata[i], m_chainman.m_validation_cache, &vChecks);
+                tx_ok = CheckInputScripts(tx, tx_state, std::move(spent_outputs), flags, fCacheResults, fCacheResults, txsdata[i], m_chainman.m_validation_cache, &vChecks);
                 if (tx_ok) control->Add(std::move(vChecks));
             } else {
-                tx_ok = CheckInputScripts(tx, tx_state, view, flags, fCacheResults, fCacheResults, txsdata[i], m_chainman.m_validation_cache);
+                tx_ok = CheckInputScripts(tx, tx_state, std::move(spent_outputs), flags, fCacheResults, fCacheResults, txsdata[i], m_chainman.m_validation_cache);
             }
             if (!tx_ok) {
                 // Any transaction validation failure in ConnectBlock is a block consensus failure
@@ -2592,12 +2490,6 @@ bool Chainstate::ConnectBlock(const CBlock& block, BlockValidationState& state, 
                 break;
             }
         }
-
-        CTxUndo undoDummy;
-        if (i > 0) {
-            blockundo.vtxundo.emplace_back();
-        }
-        UpdateCoins(tx, view, i == 0 ? undoDummy : blockundo.vtxundo.back(), pindex->nHeight);
     }
     const auto time_3{SteadyClock::now()};
     m_chainman.time_connect += time_3 - time_2;
@@ -2649,9 +2541,6 @@ bool Chainstate::ConnectBlock(const CBlock& block, BlockValidationState& state, 
         pindex->RaiseValidity(BLOCK_VALID_SCRIPTS);
         m_blockman.m_dirty_blockindex.insert(pindex);
     }
-
-    // add this block to the view's block chain
-    view.SetBestBlock(pindex->GetBlockHash());
 
     const auto time_6{SteadyClock::now()};
     m_chainman.time_index += time_6 - time_5;
@@ -2879,6 +2768,179 @@ static void UpdateTipLog(
                    !warning_messages.empty() ? strprintf(" warning='%s'", warning_messages) : "");
 }
 
+bool Chainstate::SpendBlock(
+    const CBlock& block,
+    const CBlockIndex* pindex,
+    CCoinsViewCache& view,
+    BlockValidationState& state,
+    CBlockUndo& blockundo,
+    bool fJustCheck)
+{
+    AssertLockHeld(cs_main);
+    assert(pindex);
+    assert(pindex->GetBlockHash() == block.GetHash());
+    auto block_hash{pindex->GetBlockHash()};
+
+    const CChainParams& params{m_chainman.GetParams()};
+
+    // Check it again in case a previous version let a bad block in
+    // NOTE: We don't currently (re-)invoke ContextualCheckBlock() or
+    // ContextualCheckBlockHeader() here. This means that if we add a new
+    // consensus rule that is enforced in one of those two functions, then we
+    // may have let in a block that violates the rule prior to updating the
+    // software, and we would NOT be enforcing the rule here. Fully solving
+    // upgrade from one software version to the next after a consensus rule
+    // change is potentially tricky and issue-specific (see NeedsRedownload()
+    // for one approach that was used for BIP 141 deployment).
+    // Also, currently the rule against blocks more than 2 hours in the future
+    // is enforced in ContextualCheckBlockHeader(); we wouldn't want to
+    // re-enforce that rule here (at least until we make it impossible for
+    // the clock to go backward).
+    if (!CheckBlock(block, state, params.GetConsensus(), !fJustCheck, !fJustCheck)) {
+        if (state.GetResult() == BlockValidationResult::BLOCK_MUTATED) {
+            // We don't write down blocks to disk if they may have been
+            // corrupted, so this should be impossible unless we're having hardware
+            // problems.
+            return FatalError(m_chainman.GetNotifications(), state, _("Corrupt block found indicating potential hardware failure."));
+        }
+        LogError("%s: Consensus::CheckBlock: %s\n", __func__, state.ToString());
+        return false;
+    }
+
+    // Special case for the genesis block, skipping connection of its transactions
+    // (its coinbase is unspendable)
+    if (block_hash == params.GetConsensus().hashGenesisBlock) {
+        return true;
+    }
+
+    // verify that the view's current state corresponds to the previous block
+    uint256 hashPrevBlock = pindex->pprev == nullptr ? uint256() : pindex->pprev->GetBlockHash();
+    assert(hashPrevBlock == view.GetBestBlock());
+
+    const auto time_start{SteadyClock::now()};
+
+    // Do not allow blocks that contain transactions which 'overwrite' older transactions,
+    // unless those are already completely spent.
+    // If such overwrites are allowed, coinbases and transactions depending upon those
+    // can be duplicated to remove the ability to spend the first instance -- even after
+    // being sent to another address.
+    // See BIP30, CVE-2012-1909, and https://r6.ca/blog/20120206T005236Z.html for more information.
+    // This rule was originally applied to all blocks with a timestamp after March 15, 2012, 0:00 UTC.
+    // Now that the whole chain is irreversibly beyond that time it is applied to all blocks except the
+    // two in the chain that violate it. This prevents exploiting the issue against nodes during their
+    // initial block download.
+    bool fEnforceBIP30 = !IsBIP30Repeat(*pindex);
+
+    // Once BIP34 activated it was not possible to create new duplicate coinbases and thus other than starting
+    // with the 2 existing duplicate coinbase pairs, not possible to create overwriting txs.  But by the
+    // time BIP34 activated, in each of the existing pairs the duplicate coinbase had overwritten the first
+    // before the first had been spent.  Since those coinbases are sufficiently buried it's no longer possible to create further
+    // duplicate transactions descending from the known pairs either.
+    // If we're on the known chain at height greater than where BIP34 activated, we can save the db accesses needed for the BIP30 check.
+
+    // BIP34 requires that a block at height X (block X) has its coinbase
+    // scriptSig start with a CScriptNum of X (indicated height X).  The above
+    // logic of no longer requiring BIP30 once BIP34 activates is flawed in the
+    // case that there is a block X before the BIP34 height of 227,931 which has
+    // an indicated height Y where Y is greater than X.  The coinbase for block
+    // X would also be a valid coinbase for block Y, which could be a BIP30
+    // violation.  An exhaustive search of all mainnet coinbases before the
+    // BIP34 height which have an indicated height greater than the block height
+    // reveals many occurrences. The 3 lowest indicated heights found are
+    // 209,921, 490,897, and 1,983,702 and thus coinbases for blocks at these 3
+    // heights would be the first opportunity for BIP30 to be violated.
+
+    // The search reveals a great many blocks which have an indicated height
+    // greater than 1,983,702, so we simply remove the optimization to skip
+    // BIP30 checking for blocks at height 1,983,702 or higher.  Before we reach
+    // that block in another 25 years or so, we should take advantage of a
+    // future consensus change to do a new and improved version of BIP34 that
+    // will actually prevent ever creating any duplicate coinbases in the
+    // future.
+    static constexpr int BIP34_IMPLIES_BIP30_LIMIT = 1983702;
+
+    // There is no potential to create a duplicate coinbase at block 209,921
+    // because this is still before the BIP34 height and so explicit BIP30
+    // checking is still active.
+
+    // The final case is block 176,684 which has an indicated height of
+    // 490,897. Unfortunately, this issue was not discovered until about 2 weeks
+    // before block 490,897 so there was not much opportunity to address this
+    // case other than to carefully analyze it and determine it would not be a
+    // problem. Block 490,897 was, in fact, mined with a different coinbase than
+    // block 176,684, but it is important to note that even if it hadn't been or
+    // is remined on an alternate fork with a duplicate coinbase, we would still
+    // not run into a BIP30 violation.  This is because the coinbase for 176,684
+    // is spent in block 185,956 in transaction
+    // d4f7fbbf92f4a3014a230b2dc70b8058d02eb36ac06b4a0736d9d60eaa9e8781.  This
+    // spending transaction can't be duplicated because it also spends coinbase
+    // 0328dd85c331237f18e781d692c92de57649529bd5edf1d01036daea32ffde29.  This
+    // coinbase has an indicated height of over 4.2 billion, and wouldn't be
+    // duplicatable until that height, and it's currently impossible to create a
+    // chain that long. Nevertheless we may wish to consider a future soft fork
+    // which retroactively prevents block 490,897 from creating a duplicate
+    // coinbase. The two historical BIP30 violations often provide a confusing
+    // edge case when manipulating the UTXO and it would be simpler not to have
+    // another edge case to deal with.
+
+    // testnet3 has no blocks before the BIP34 height with indicated heights
+    // post BIP34 before approximately height 486,000,000. After block
+    // 1,983,702 testnet3 starts doing unnecessary BIP30 checking again.
+    assert(pindex->pprev);
+    CBlockIndex* pindexBIP34height = pindex->pprev->GetAncestor(params.GetConsensus().BIP34Height);
+    // Only continue to enforce if we're below BIP34 activation height or the block hash at that height doesn't correspond.
+    fEnforceBIP30 = fEnforceBIP30 && (!pindexBIP34height || !(pindexBIP34height->GetBlockHash() == params.GetConsensus().BIP34Hash));
+
+    // TODO: Remove BIP30 checking from block height 1,983,702 on, once we have a
+    // consensus change that ensures coinbases at those heights cannot
+    // duplicate earlier coinbases.
+    if (fEnforceBIP30 || pindex->nHeight >= BIP34_IMPLIES_BIP30_LIMIT) {
+        for (const auto& tx : block.vtx) {
+            for (size_t o = 0; o < tx->vout.size(); o++) {
+                if (view.HaveCoin(COutPoint(tx->GetHash(), o))) {
+                    return state.Invalid(BlockValidationResult::BLOCK_CONSENSUS, "bad-txns-BIP30",
+                                  "tried to overwrite transaction");
+                }
+            }
+        }
+    }
+
+    int nInputs = 0;
+
+    blockundo.vtxundo.reserve(block.vtx.size() - 1);
+    for (const CTransactionRef& tx : block.vtx) {
+        nInputs += tx->vin.size();
+        // are the actual inputs available?
+        if (!view.HaveInputs(*tx)) {
+            state.Invalid(BlockValidationResult::BLOCK_CONSENSUS, "bad-txns-inputs-missingorspent",
+                          strprintf("%s: inputs missing/spent in transaction %s", __func__, tx->GetHash().ToString()));
+            break;
+        }
+        if (!tx->IsCoinBase()) {
+            blockundo.vtxundo.emplace_back();
+        }
+        CTxUndo dummy;
+        UpdateCoins(*tx, view, tx->IsCoinBase() ? dummy : blockundo.vtxundo.back(), pindex->nHeight);
+    }
+
+    const auto time_1{SteadyClock::now()};
+    m_chainman.time_connect += time_1 - time_start;
+    LogDebug(BCLog::BENCH, "      - Spend Block processed %u transactions: %.2fms (%.3fms/tx, %.3fms/txin) [%.2fs (%.2fms/blk)]\n", (unsigned)block.vtx.size(),
+             Ticks<MillisecondsDouble>(time_1 - time_start),
+             block.vtx.size() == 0 ? 0 : Ticks<MillisecondsDouble>(time_1 - time_start) / block.vtx.size(),
+             nInputs <= 1 ? 0 : Ticks<MillisecondsDouble>(time_1 - time_start) / (nInputs - 1),
+             Ticks<SecondsDouble>(m_chainman.time_connect),
+             m_chainman.num_blocks_total == 0 ? 0 : Ticks<MillisecondsDouble>(m_chainman.time_connect) / m_chainman.num_blocks_total);
+
+    if (!state.IsValid()) {
+        LogInfo("Block validation error: %s", state.ToString());
+        return false;
+    }
+
+    assert(blockundo.vtxundo.size() == block.vtx.size() - 1);
+    return true;
+}
+
 void Chainstate::UpdateTip(const CBlockIndex* pindexNew)
 {
     AssertLockHeld(::cs_main);
@@ -3034,7 +3096,17 @@ bool Chainstate::ConnectTip(
     {
         CCoinsViewCache& view{*m_coins_views->m_connect_block_view};
         const auto reset_guard{view.CreateResetGuard()};
-        bool rv = ConnectBlock(*block_to_connect, state, pindexNew, view);
+        CBlockUndo blockundo;
+        if (!SpendBlock(*block_to_connect, pindexNew, view, state, blockundo)) {
+            assert(state.IsInvalid());
+            if (m_chainman.m_options.signals) {
+                m_chainman.m_options.signals->BlockChecked(block_to_connect, state);
+            }
+            InvalidBlockFound(pindexNew, state);
+            LogError("%s: SpendBlock %s failed, %s\n", __func__, pindexNew->GetBlockHash().ToString(), state.ToString());
+            return false;
+        }
+        bool rv = ConnectBlock(*block_to_connect, blockundo, state, pindexNew);
         if (m_chainman.m_options.signals) {
             m_chainman.m_options.signals->BlockChecked(block_to_connect, state);
         }
@@ -3044,6 +3116,8 @@ bool Chainstate::ConnectTip(
             LogError("%s: ConnectBlock %s failed, %s\n", __func__, pindexNew->GetBlockHash().ToString(), state.ToString());
             return false;
         }
+        // add this block to the view's block chain
+        view.SetBestBlock(pindexNew->GetBlockHash());
         time_3 = SteadyClock::now();
         m_chainman.time_connect_total += time_3 - time_2;
         assert(m_chainman.num_blocks_total > 0);
@@ -4521,8 +4595,14 @@ BlockValidationState TestBlockValidity(
     index_dummy.phashBlock = &block_hash;
     CCoinsViewCache view_dummy(&chainstate.CoinsTip());
 
+    CBlockUndo blockundo;
+    if (!chainstate.SpendBlock(block, &index_dummy, view_dummy, state, blockundo, /*fJustCheck=*/true)) {
+        if (state.IsValid()) NONFATAL_UNREACHABLE();
+        return state;
+    }
+
     // Set fJustCheck to true in order to update, and not clear, validation caches.
-    if(!chainstate.ConnectBlock(block, state, &index_dummy, view_dummy, /*fJustCheck=*/true)) {
+    if (!chainstate.ConnectBlock(block, blockundo, state, &index_dummy, true)) {
         if (state.IsValid()) NONFATAL_UNREACHABLE();
         return state;
     }
@@ -4728,10 +4808,17 @@ VerifyDBResult CVerifyDB::VerifyDB(
                 LogError("Verification error: ReadBlock failed at %d, hash=%s", pindex->nHeight, pindex->GetBlockHash().ToString());
                 return VerifyDBResult::CORRUPTED_BLOCK_DB;
             }
-            if (!chainstate.ConnectBlock(block, state, pindex, coins)) {
-                LogError("Verification error: found unconnectable block at %d, hash=%s (%s)", pindex->nHeight, pindex->GetBlockHash().ToString(), state.ToString());
+            CBlockUndo blockundo;
+            if (!chainstate.SpendBlock(block, pindex, coins, state, blockundo)) {
+                LogError("SpendBlock failed %s\n", state.ToString());
                 return VerifyDBResult::CORRUPTED_BLOCK_DB;
             }
+
+            if (!chainstate.ConnectBlock(block, blockundo, state, pindex)) {
+                LogError("Verification error: found unconnectable block at %d, hash=%s (%s)\n", pindex->nHeight, pindex->GetBlockHash().ToString(), state.ToString());
+                return VerifyDBResult::CORRUPTED_BLOCK_DB;
+            }
+            coins.SetBestBlock(pindex->GetBlockHash());
             if (chainstate.m_chainman.m_interrupt) return VerifyDBResult::INTERRUPTED;
         }
     }
