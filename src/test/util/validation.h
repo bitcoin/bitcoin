@@ -39,6 +39,11 @@ public:
         CValidationInterface& obj,
         const std::shared_ptr<const CBlock>& block,
         const CBlockIndex* pindex);
+
+    static void ChainStateFlushed(
+        const kernel::ChainstateRole& role,
+        CValidationInterface& obj,
+        const CBlockLocator& locator);
 };
 
 #endif // BITCOIN_TEST_UTIL_VALIDATION_H
