@@ -5,7 +5,10 @@
 """Test the sendmany RPC command."""
 
 from test_framework.test_framework import BitcoinTestFramework
-from test_framework.util import assert_raises_rpc_error
+from test_framework.util import (
+    assert_greater_than_or_equal,
+    assert_raises_rpc_error,
+)
 
 
 class SendmanyTest(BitcoinTestFramework):
@@ -36,6 +39,37 @@ class SendmanyTest(BitcoinTestFramework):
         self.log.info("Test valid mixing of string destinations with numeric indexes in SFFO argument")
         self.def_wallet.sendmany(dummy='', amounts={addr_1: 1, addr_2: 1}, subtractfeefrom=[0, addr_2])
 
+    def test_anti_fee_sniping(self):
+        self.log.info('Test that sendmany sets the transaction locktime no lower than any input locktime')
+        self.generate(self.nodes[0], 250)
+        wallet_rpc = self.nodes[0].get_wallet_rpc(self.default_wallet_name)
+        self.nodes[0].createwallet("anti_fee_sniping_test")
+        test_wallet = self.nodes[0].get_wallet_rpc("anti_fee_sniping_test")
+        # Create 100 parent transactions, all with the same
+        # explicit backdated nLockTime. This avoids relying on the random
+        # anti fee sniping behavior and provides several inputs to spend from.
+        num_parents = 100
+        tip_height = self.nodes[0].getblockcount()
+        parent_locktime = tip_height - 80
+        for _ in range(num_parents):
+            wallet_rpc.send(outputs=[{test_wallet.getnewaddress(): 10}], locktime=parent_locktime)
+        self.generate(self.nodes[0], 5)
+        tip_height = self.nodes[0].getblockcount()
+        # Spend parents one by one until we observe a backdated
+        # nLockTime on a child transaction. Backdating happens randomly, so
+        # retry until the locktime is less than the current block height.
+        child_nlocktime = tip_height
+        num_tries = 0
+        while child_nlocktime == tip_height:
+            child_txid = test_wallet.sendmany("", {wallet_rpc.getnewaddress(): 6, wallet_rpc.getnewaddress(): 3})
+            child_nlocktime = test_wallet.gettransaction(txid=child_txid, verbose=True)["decoded"]["locktime"]
+            num_tries += 1
+            if num_tries >= num_parents:
+                raise AssertionError("RPC call sendmany() did not produce a backdated nLockTime")
+        # Child nlocktime should be >= parent nlocktime
+        assert_greater_than_or_equal(child_nlocktime, parent_locktime)
+        test_wallet.unloadwallet()
+
     def run_test(self):
         self.nodes[0].createwallet("activewallet")
         self.wallet = self.nodes[0].get_wallet_rpc("activewallet")
@@ -43,6 +77,7 @@ class SendmanyTest(BitcoinTestFramework):
         self.generate(self.nodes[0], 101)
 
         self.test_sffo_repeated_address()
+        self.test_anti_fee_sniping()
 
 
 if __name__ == '__main__':

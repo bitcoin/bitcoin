@@ -532,6 +532,7 @@ class WalletSendTest(BitcoinTestFramework):
 
         # Check tx creation size limits
         self.test_weight_limits()
+        self.test_fee_sniping_respects_input_locktime()
 
     def test_weight_limits(self):
         self.log.info("Test weight limits")
@@ -563,6 +564,31 @@ class WalletSendTest(BitcoinTestFramework):
 
         self.nodes[1].unloadwallet("test_weight_limits")
 
+    def test_fee_sniping_respects_input_locktime(self):
+        self.log.info("Test that send sets the anti-fee-sniping locktime no lower than any input locktime")
+        self.nodes[1].createwallet("test_fee_sniping")
+        wallet = self.nodes[1].get_wallet_rpc("test_fee_sniping")
+        tip_height = self.nodes[0].getblockcount()
+        # Create a parent transaction with an explicit backdated nLockTime
+        parent_nlocktime = tip_height - 80
+        self.nodes[0].send(outputs=[{wallet.getnewaddress(): 10}], locktime=parent_nlocktime)
+        self.sync_mempools()
+        # Create child transactions until we observe a backdated nLockTime.
+        # Backdating happens randomly, so retry until the locktime is less than
+        # the current block height.
+        utxos = wallet.listunspent(0, 0)
+        child_nlocktime = tip_height
+        while child_nlocktime == tip_height:
+            # We set add_to_wallet=False, so that the transaction won't get added to the wallet or broadcasted.
+            # This way we can continue creating transactions spending the same input, until we find one with
+            # a backdated nlocktime
+            child_hex = wallet.send([{wallet.getnewaddress(): 9}], inputs=utxos, add_to_wallet=False)["hex"]
+            child_nlocktime = wallet.decoderawtransaction(child_hex)["locktime"]
+            # Child nlocktime should be within 100 blocks of tip
+            assert_greater_than_or_equal(child_nlocktime, tip_height - 100)
+        # Child nlocktime should be >= parent nlocktime
+        assert_greater_than_or_equal(child_nlocktime, parent_nlocktime)
+        self.nodes[1].unloadwallet("test_fee_sniping")
 
 if __name__ == '__main__':
     WalletSendTest(__file__).main()

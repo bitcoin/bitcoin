@@ -12,6 +12,7 @@ from test_framework.util import (
     assert_equal,
     assert_greater_than,
     assert_greater_than_or_equal,
+    assert_not_equal,
     assert_raises_rpc_error,
 )
 
@@ -453,6 +454,29 @@ class SendallTest(BitcoinTestFramework):
         utxos[0]["sequence"] = SEQUENCE_FINAL
         txid = self.wallet.sendall(recipients=[self.remainder_target], inputs=utxos)["txid"]
         assert_equal(self.wallet.gettransaction(txid=txid, verbose=True)["decoded"]["locktime"], 0)
+
+        self.log.info("Test sendall sets the anti-fee-sniping locktime no lower than any input locktime")
+        # Create a parent transaction with an explicit backdated nLockTime.
+        self.add_utxos([1])
+        tip_height = self.nodes[0].getblockcount()
+        parent_nlocktime = tip_height - 80
+        self.wallet.send(outputs=[{self.wallet.getnewaddress(): 0.9}], locktime=parent_nlocktime)
+        # Keep creating transactions with sendall until we observe a backdated
+        # nLockTime on a child transaction. Backdating happens randomly due
+        # to the anti fee sniping logic, so retry until the locktime is less
+        # than the current block height.
+        parent_utxos = self.wallet.listunspent(0, 0)
+        child_nlocktime = tip_height
+        while child_nlocktime == tip_height:
+            # We set add_to_wallet=False, so that the transaction won't get added to the wallet or broadcasted.
+            # This way we can continue creating transactions spending the same input, until we find one with
+            # a backdated nlocktime
+            child_hex = self.wallet.sendall(recipients=[self.remainder_target], inputs=parent_utxos, add_to_wallet=False)["hex"]
+            child_nlocktime = self.nodes[0].decoderawtransaction(child_hex)["locktime"]
+            # Child nlocktime should be within 100 blocks of tip
+            assert_greater_than_or_equal(child_nlocktime, self.nodes[0].getblockcount() - 100)
+        # Child nlocktime should be >= parent nlocktime
+        assert_greater_than_or_equal(child_nlocktime, parent_nlocktime)
 
     # This tests needs to be the last one otherwise @cleanup will fail with "Transaction too large" error
     def sendall_fails_with_transaction_too_large(self):

@@ -9,6 +9,7 @@ from test_framework.messages import (
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import (
     assert_equal,
+    assert_greater_than_or_equal,
     assert_raises_rpc_error,
 )
 from test_framework.blocktools import (
@@ -48,7 +49,37 @@ class CreateTxWalletTest(BitcoinTestFramework):
         self.generate(self.nodes[0], 1)
         txid = self.nodes[0].sendtoaddress(self.nodes[0].getnewaddress(), 1)
         tx = self.nodes[0].gettransaction(txid=txid, verbose=True)['decoded']
-        assert 0 < tx['locktime'] <= 201
+        # The nlocktime should be within 100 blocks of the block height
+        assert 101 <= tx['locktime'] <= 201
+
+        self.log.info('Test that sendtoaddress sets the transaction locktime no lower than any input locktime')
+        wallet_rpc = self.nodes[0].get_wallet_rpc(self.default_wallet_name)
+        self.nodes[0].createwallet("anti_fee_sniping_test")
+        test_wallet = self.nodes[0].get_wallet_rpc("anti_fee_sniping_test")
+        # Create 100 parent transactions, all with the same
+        # explicit backdated nLockTime. This avoids relying on the random
+        # anti fee sniping behavior and provides several inputs to spend from.
+        num_parents = 100
+        tip_height = self.nodes[0].getblockcount()
+        parent_locktime = tip_height - 80
+        for _ in range(num_parents):
+            wallet_rpc.send(outputs=[{test_wallet.getnewaddress(): 10}], locktime=parent_locktime)
+        self.generate(self.nodes[0], 5)
+        tip_height = self.nodes[0].getblockcount()
+        # Spend parents one by one until we observe a backdated
+        # nLockTime on a child transaction. Backdating happens randomly, so
+        # retry until the locktime is less than the current block height.
+        child_nlocktime = tip_height
+        num_tries = 0
+        while child_nlocktime == tip_height:
+            child_txid = test_wallet.sendtoaddress(wallet_rpc.getnewaddress(), 9)
+            child_nlocktime = test_wallet.gettransaction(txid=child_txid, verbose=True)["decoded"]["locktime"]
+            num_tries += 1
+            if num_tries >= num_parents:
+                raise AssertionError("RPC call sendtoaddress() did not produce a backdated nLockTime")
+        # Child nlocktime should be >= parent nlocktime
+        assert_greater_than_or_equal(child_nlocktime, parent_locktime)
+        test_wallet.unloadwallet()
 
     def test_tx_size_too_large(self):
         # More than 10kB of outputs, so that we hit -maxtxfee with a high feerate
