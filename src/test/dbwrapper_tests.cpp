@@ -9,6 +9,7 @@
 #include <uint256.h>
 #include <util/string.h>
 
+#include <fstream>
 #include <memory>
 #include <ranges>
 
@@ -183,6 +184,108 @@ BOOST_AUTO_TEST_CASE(dbwrapper_batch)
 
         // key3 should've never been written
         BOOST_CHECK(dbw.Read(key3, res) == false);
+    }
+}
+
+// Verify that Read() returns false (without throwing) when the stored value
+// fails to be deserialized
+BOOST_AUTO_TEST_CASE(dbwrapper_read_returns_false_on_deserialization_error)
+{
+    for (const bool obfuscate : {false, true}) {
+        const fs::path path{m_args.GetDataDirBase() / (obfuscate ? "dbwrapper_deser_obf" : "dbwrapper_deser_noobf")};
+        CDBWrapper dbw({.path = path, .cache_bytes = 1 << 20, .wipe_data = true, .obfuscate = obfuscate});
+
+        constexpr uint8_t key{'X'};
+
+        // Write a single byte. uint256 requires 32 bytes, so reading this key
+        // as uint256 must trigger a deserialization error inside Read()
+        dbw.Write(key, uint8_t{0xFF});
+        BOOST_CHECK(dbw.Exists(key));
+
+        // Read() must catch the deserialization exception and return false,
+        // the same as if the key were absent
+        uint256 result;
+        BOOST_CHECK(!dbw.Read(key, result));
+    }
+}
+
+// Verify Read() throws dbwrapper_error due to an internal db error
+BOOST_AUTO_TEST_CASE(dbwrapper_read_throws_on_db_error)
+{
+    const fs::path path{m_args.GetDataDirBase() / "dbwrapper_db_error"};
+    constexpr uint8_t key{'Y'};
+
+    const auto make_db = [] (const fs::path& path, const bool force_compact) {
+        return CDBWrapper({.path = path, .cache_bytes = 1 << 20, .obfuscate = false,
+                        .options = {.force_compact = force_compact}});
+    };
+
+    // Write a value and close the database
+    make_db(path, /*force_compact=*/false).Write(key, m_rng.rand256());
+
+    // Force compaction to ensure the data is written into the .ldb files
+    // rather than left in the WAL.
+    (void)make_db(path, /*force_compact=*/true);
+
+    // Corrupt every table so any posterior Read() fails
+    for (const auto& entry : fs::directory_iterator(path)) {
+        if (entry.path().extension() == ".ldb") {
+            std::ofstream{entry.path(), std::ios::binary | std::ios::trunc}
+            .write("\xff", 1);
+        }
+    }
+
+    // Read() should detect the issue now and throw
+    const auto db{make_db(path, /*force_compact=*/false)};
+    uint256 result;
+    BOOST_CHECK_EXCEPTION(db.Read(key, result), dbwrapper_error, HasReason("Fatal LevelDB error"));
+
+    // TryRead() must return DB_INTERNAL_ERROR (without throwing).
+    auto status = db.TryRead(key, result);
+    BOOST_CHECK(status.status == CDBWrapper::ReadStatus::Code::DB_INTERNAL_ERROR);
+    BOOST_CHECK(Assert(status.op_error)->find("Fatal LevelDB error") != std::string::npos);
+}
+
+// Exercise TryRead() return values directly: OK, NOT_FOUND and DESERIALIZATION_ERROR.
+// DB_INTERNAL_ERROR is tested inside 'dbwrapper_read_throws_on_db_error' test
+BOOST_AUTO_TEST_CASE(dbwrapper_tryread)
+{
+    for (const bool obfuscate : {false, true}) {
+        const fs::path path{m_args.GetDataDirBase() / (obfuscate ? "dbwrapper_tryread_obf" : "dbwrapper_tryread_noobf")};
+        CDBWrapper dbw({.path = path, .cache_bytes = 1 << 20, .wipe_data = true, .obfuscate = obfuscate});
+
+        constexpr uint8_t key_ok{'A'};
+        constexpr uint8_t key_missing{'B'};
+        constexpr uint8_t key_bad{'C'};
+
+        uint256 written_value{m_rng.rand256()};
+        dbw.Write(key_ok, written_value);
+        dbw.Write(key_bad, uint8_t{0xFF});
+
+        // OK: key exists, value deserializes correctly
+        {
+            uint256 read_value;
+            auto status = dbw.TryRead(key_ok, read_value);
+            BOOST_CHECK(status.status == CDBWrapper::ReadStatus::Code::OK);
+            BOOST_CHECK(!status.op_error.has_value());
+            BOOST_CHECK_EQUAL(read_value, written_value);
+        }
+
+        // NOT_FOUND: key does not exist
+        {
+            uint256 read_value;
+            auto status = dbw.TryRead(key_missing, read_value);
+            BOOST_CHECK(status.status == CDBWrapper::ReadStatus::Code::NOT_FOUND);
+            BOOST_CHECK(!status.op_error.has_value());
+        }
+
+        // DESERIALIZATION_ERROR: key exists but stored value is too short
+        {
+            uint256 read_value;
+            auto status = dbw.TryRead(key_bad, read_value);
+            BOOST_CHECK(status.status == CDBWrapper::ReadStatus::Code::DESERIALIZATION_ERROR);
+            BOOST_CHECK(status.op_error.has_value());
+        }
     }
 }
 
