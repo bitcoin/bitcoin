@@ -13,7 +13,7 @@ called min_work_node.
 The test:
 1. Generate one block on each node, to leave IBD.
 
-2. Mine a new block on each tip, and deliver to each node from node's peer.
+2. Mine blocks on each tip, and deliver to each node from node's peer.
    The tip should advance for node0, but node1 should skip processing due to
    nMinimumChainWork.
 
@@ -85,27 +85,40 @@ class AcceptBlockTest(BitcoinTestFramework):
 
         # 1. Have nodes mine a block (leave IBD)
         [self.generate(n, 1, sync_fun=self.no_op) for n in self.nodes]
-        tips = [int("0x" + n.getbestblockhash(), 0) for n in self.nodes]
 
-        # 2. Send one block that builds on each tip.
+        # 2. Send one block that builds on node0.
         # This should be accepted by node0
-        blocks_h2 = []  # the height 2 blocks on each node's chain
         block_time = int(time.time()) + 1
-        for i in range(2):
-            blocks_h2.append(create_block(tips[i], create_coinbase(2), block_time))
-            blocks_h2[i].solve()
-            block_time += 1
-        test_node.send_and_ping(msg_block(blocks_h2[0]))
+        blocks_h2 = create_block(int("0x" + self.nodes[0].getbestblockhash(), 0), create_coinbase(2), block_time)
+        blocks_h2.solve()
+        test_node.send_and_ping(msg_block(blocks_h2))
 
-        with self.nodes[1].assert_debug_log(expected_msgs=[f"AcceptBlockHeader: not adding new block header {blocks_h2[1].hash_hex}, missing anti-dos proof-of-work validation"]):
-            min_work_node.send_and_ping(msg_block(blocks_h2[1]))
+        # Mine a long enough chain to surpass minchainwork
+        headers_message = msg_headers()
+        tip = int("0x" + self.nodes[1].getbestblockhash(), 0)
+        nTime = int(time.time())
+        blocks = []
+        for i in range(8):
+            next_block = create_block(tip, create_coinbase(i+2), nTime + 1)
+            next_block.solve()
+            tip = next_block.hash_int
+            nTime = next_block.nTime
+            headers_message.headers.append(CBlockHeader(next_block))
+            blocks.append(next_block)
+
+        # Create a fork below the chain tip and below minchainwork
+        test_block = create_block(blocks[2].hash_int, create_coinbase(4), blocks[2].nTime + 1)
+        test_block.solve()
+        min_work_node.send_and_ping(headers_message)
+        with self.nodes[1].assert_debug_log(expected_msgs=[f"AcceptBlockHeader: not adding new block header {test_block.hash_hex}, missing anti-dos proof-of-work validation"]):
+            min_work_node.send_and_ping(msg_block(test_block))
 
         assert_equal(self.nodes[0].getblockcount(), 2)
         assert_equal(self.nodes[1].getblockcount(), 1)
 
-        # Ensure that the header of the second block was also not accepted by node1
-        assert_equal(self.check_hash_in_chaintips(self.nodes[1], blocks_h2[1].hash_hex), False)
-        self.log.info("First height 2 block accepted by node0; correctly rejected by node1")
+        # Ensure that the header of the block was also not accepted by node1
+        assert_equal(self.check_hash_in_chaintips(self.nodes[1], test_block.hash_hex), False)
+        self.log.info("First height 2 block accepted by node0; low work block correctly rejected by node1")
 
         # 3. Send another block that builds on genesis.
         block_h1f = create_block(int("0x" + self.nodes[0].getblockhash(0), 0), create_coinbase(1), block_time)
