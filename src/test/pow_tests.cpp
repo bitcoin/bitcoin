@@ -214,9 +214,9 @@ BOOST_AUTO_TEST_CASE(testnet4_min_difficulty_pre_fork)
     const auto chainParams = CreateChainParams(*m_node.args, ChainType::TESTNET4);
     const auto& consensus = chainParams->GetConsensus();
 
-    // Verify testnet4 has the expected fork height (epoch 100 boundary)
+    // Verify testnet4 has the expected fork height (epoch 75 boundary)
     const int fork_height = consensus.min_difficulty_fork_height;
-    BOOST_CHECK_EQUAL(fork_height, 129024);
+    BOOST_CHECK_EQUAL(fork_height, 151200);
     BOOST_CHECK(consensus.fPowAllowMinDifficultyBlocks);
 
     const unsigned int pow_limit = UintToArith256(consensus.powLimit).GetCompact();

@@ -332,7 +332,7 @@ public:
         consensus.nPowTargetTimespan = 14 * 24 * 60 * 60; // two weeks
         consensus.nPowTargetSpacing = 10 * 60;
         consensus.fPowAllowMinDifficultyBlocks = true;
-        consensus.min_difficulty_fork_height = 129024; // Hard fork to disable min difficulty blocks (epoch 100 boundary)
+        consensus.min_difficulty_fork_height = 151200; // Hard fork to disable min difficulty blocks (epoch 75 boundary)
         consensus.enforce_BIP94 = true;
         consensus.fPowNoRetargeting = false;
 
