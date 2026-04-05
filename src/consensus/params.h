@@ -117,7 +117,7 @@ struct Params {
     /**
      * Block height at which the min difficulty blocks feature is disabled via hard fork.
      * Set to 0 to never disable (default behavior for testnet3, regtest).
-     * For testnet4, this is set to 201600 to fix the difficulty reset exploit.
+     * For testnet4, this is set to 151200 to fix the difficulty reset exploit.
      */
     int min_difficulty_fork_height{0};
     /**
