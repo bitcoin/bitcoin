@@ -4,12 +4,16 @@
 
 #include <txgraph.h>
 
+#include <bitcoin-build-config.h> // IWYU pragma: keep
+
 #include <cluster_linearize.h>
 #include <random.h>
 #include <util/bitset.h>
 #include <util/check.h>
 #include <util/feefrac.h>
 #include <util/vector.h>
+
+#include <util/trace.h>
 
 #include <compare>
 #include <functional>
@@ -18,6 +22,34 @@
 #include <span>
 #include <unordered_set>
 #include <utility>
+
+// USDT tracepoint semaphores for TxGraph operations.
+TRACEPOINT_SEMAPHORE(txgraph, add_transaction);
+TRACEPOINT_SEMAPHORE(txgraph, remove_transaction);
+TRACEPOINT_SEMAPHORE(txgraph, add_dependency);
+TRACEPOINT_SEMAPHORE(txgraph, set_transaction_fee);
+TRACEPOINT_SEMAPHORE(txgraph, unlink_ref);
+TRACEPOINT_SEMAPHORE(txgraph, start_staging);
+TRACEPOINT_SEMAPHORE(txgraph, abort_staging);
+TRACEPOINT_SEMAPHORE(txgraph, commit_staging);
+TRACEPOINT_SEMAPHORE(txgraph, do_work);
+TRACEPOINT_SEMAPHORE(txgraph, get_block_builder);
+TRACEPOINT_SEMAPHORE(txgraph, compare_main_order);
+TRACEPOINT_SEMAPHORE(txgraph, get_ancestors);
+TRACEPOINT_SEMAPHORE(txgraph, get_descendants);
+TRACEPOINT_SEMAPHORE(txgraph, get_ancestors_union);
+TRACEPOINT_SEMAPHORE(txgraph, get_descendants_union);
+TRACEPOINT_SEMAPHORE(txgraph, get_cluster);
+TRACEPOINT_SEMAPHORE(txgraph, get_main_chunk_feerate);
+TRACEPOINT_SEMAPHORE(txgraph, count_distinct_clusters);
+TRACEPOINT_SEMAPHORE(txgraph, get_main_memory_usage);
+TRACEPOINT_SEMAPHORE(txgraph, get_worst_main_chunk);
+TRACEPOINT_SEMAPHORE(txgraph, get_main_staging_diagrams);
+TRACEPOINT_SEMAPHORE(txgraph, trim);
+TRACEPOINT_SEMAPHORE(txgraph, is_oversized);
+TRACEPOINT_SEMAPHORE(txgraph, exists);
+TRACEPOINT_SEMAPHORE(txgraph, get_individual_feerate);
+TRACEPOINT_SEMAPHORE(txgraph, get_transaction_count);
 
 namespace {
 
@@ -2240,6 +2272,11 @@ void TxGraphImpl::AddTransaction(Ref& arg, const FeePerWeight& feerate) noexcept
     entry.m_ref = &arg;
     GetRefGraph(arg) = this;
     GetRefIndex(arg) = idx;
+    TRACEPOINT(txgraph, add_transaction,
+        (uint64_t)GetRefIndex(arg),
+        (int64_t)feerate.fee,
+        (int64_t)feerate.size
+    );
     // Construct a new singleton Cluster (which is necessarily optimally linearized).
     bool oversized = uint64_t(feerate.size) > m_max_cluster_size;
     auto cluster = CreateEmptyCluster(1);
@@ -2272,6 +2309,7 @@ void TxGraphImpl::RemoveTransaction(const Ref& arg) noexcept
     if (cluster == nullptr) return;
     // Remember that the transaction is to be removed.
     auto& clusterset = GetClusterSet(level);
+    TRACEPOINT(txgraph, remove_transaction, (uint64_t)GetRefIndex(arg));
     clusterset.m_to_remove.push_back(GetRefIndex(arg));
     // Wipe m_group_data (as it will need to be recomputed).
     clusterset.m_group_data.reset();
@@ -2296,6 +2334,7 @@ void TxGraphImpl::AddDependency(const Ref& parent, const Ref& child) noexcept
     if (chl_cluster == nullptr) return;
     // Remember that this dependency is to be applied.
     auto& clusterset = GetClusterSet(level);
+    TRACEPOINT(txgraph, add_dependency, (uint64_t)GetRefIndex(parent), (uint64_t)GetRefIndex(child));
     clusterset.m_deps_to_add.emplace_back(GetRefIndex(parent), GetRefIndex(child));
     // Wipe m_group_data (as it will need to be recomputed).
     clusterset.m_group_data.reset();
@@ -2306,6 +2345,7 @@ bool TxGraphImpl::Exists(const Ref& arg, Level level_select) noexcept
 {
     if (GetRefGraph(arg) == nullptr) return false;
     Assume(GetRefGraph(arg) == this);
+    TRACEPOINT(txgraph, exists, (uint64_t)GetRefIndex(arg), (uint64_t)level_select);
     size_t level = GetSpecifiedLevel(level_select);
     // Make sure the transaction isn't scheduled for removal.
     ApplyRemovals(level);
@@ -2430,6 +2470,7 @@ std::vector<TxGraph::Ref*> TxGraphImpl::GetAncestors(const Ref& arg, Level level
     // Return the empty vector if the Ref is empty.
     if (GetRefGraph(arg) == nullptr) return {};
     Assume(GetRefGraph(arg) == this);
+    TRACEPOINT(txgraph, get_ancestors, (uint64_t)GetRefIndex(arg), (uint64_t)level_select);
     // Apply all removals and dependencies, as the result might be incorrect otherwise.
     size_t level = GetSpecifiedLevel(level_select);
     ApplyDependencies(level);
@@ -2451,6 +2492,7 @@ std::vector<TxGraph::Ref*> TxGraphImpl::GetDescendants(const Ref& arg, Level lev
     // Return the empty vector if the Ref is empty.
     if (GetRefGraph(arg) == nullptr) return {};
     Assume(GetRefGraph(arg) == this);
+    TRACEPOINT(txgraph, get_descendants, (uint64_t)GetRefIndex(arg), (uint64_t)level_select);
     // Apply all removals and dependencies, as the result might be incorrect otherwise.
     size_t level = GetSpecifiedLevel(level_select);
     ApplyDependencies(level);
@@ -2469,6 +2511,16 @@ std::vector<TxGraph::Ref*> TxGraphImpl::GetDescendants(const Ref& arg, Level lev
 
 std::vector<TxGraph::Ref*> TxGraphImpl::GetAncestorsUnion(std::span<const Ref* const> args, Level level_select) noexcept
 {
+#ifdef ENABLE_TRACING
+    if (TRACEPOINT_ACTIVE(txgraph, get_ancestors_union)) {
+        static constexpr uint32_t MAX_TRACE = 64;
+        Assume(args.size() <= MAX_TRACE);
+        uint64_t trace_buf[MAX_TRACE] = {};
+        uint32_t count = static_cast<uint32_t>(args.size());
+        for (uint32_t i = 0; i < count; ++i) trace_buf[i] = GetRefIndex(*args[i]);
+        TRACEPOINT(txgraph, get_ancestors_union, (uint64_t)count, (uint64_t)level_select, (uint8_t*)trace_buf);
+    }
+#endif
     // Apply all dependencies, as the result might be incorrect otherwise.
     size_t level = GetSpecifiedLevel(level_select);
     ApplyDependencies(level);
@@ -2502,6 +2554,16 @@ std::vector<TxGraph::Ref*> TxGraphImpl::GetAncestorsUnion(std::span<const Ref* c
 
 std::vector<TxGraph::Ref*> TxGraphImpl::GetDescendantsUnion(std::span<const Ref* const> args, Level level_select) noexcept
 {
+#ifdef ENABLE_TRACING
+    if (TRACEPOINT_ACTIVE(txgraph, get_descendants_union)) {
+        static constexpr uint32_t MAX_TRACE = 64;
+        Assume(args.size() <= MAX_TRACE);
+        uint64_t trace_buf[MAX_TRACE] = {};
+        uint32_t count = static_cast<uint32_t>(args.size());
+        for (uint32_t i = 0; i < count; ++i) trace_buf[i] = GetRefIndex(*args[i]);
+        TRACEPOINT(txgraph, get_descendants_union, (uint64_t)count, (uint64_t)level_select, (uint8_t*)trace_buf);
+    }
+#endif
     // Apply all dependencies, as the result might be incorrect otherwise.
     size_t level = GetSpecifiedLevel(level_select);
     ApplyDependencies(level);
@@ -2539,6 +2601,7 @@ std::vector<TxGraph::Ref*> TxGraphImpl::GetCluster(const Ref& arg, Level level_s
     // having been removed already.
     if (GetRefGraph(arg) == nullptr) return {};
     Assume(GetRefGraph(arg) == this);
+    TRACEPOINT(txgraph, get_cluster, (uint64_t)GetRefIndex(arg), (uint64_t)level_select);
     // Apply all removals and dependencies, as the result might be incorrect otherwise.
     size_t level = GetSpecifiedLevel(level_select);
     ApplyDependencies(level);
@@ -2556,6 +2619,7 @@ std::vector<TxGraph::Ref*> TxGraphImpl::GetCluster(const Ref& arg, Level level_s
 
 TxGraph::GraphIndex TxGraphImpl::GetTransactionCount(Level level_select) noexcept
 {
+    TRACEPOINT(txgraph, get_transaction_count, (uint64_t)level_select);
     size_t level = GetSpecifiedLevel(level_select);
     ApplyRemovals(level);
     return GetClusterSet(level).m_txcount;
@@ -2566,6 +2630,7 @@ FeePerWeight TxGraphImpl::GetIndividualFeerate(const Ref& arg) noexcept
     // Return the empty FeePerWeight if the passed Ref is empty.
     if (GetRefGraph(arg) == nullptr) return {};
     Assume(GetRefGraph(arg) == this);
+    TRACEPOINT(txgraph, get_individual_feerate, (uint64_t)GetRefIndex(arg));
     // Find the cluster the argument is in (the level does not matter as individual feerates will
     // be identical if it occurs in both), and return the empty FeePerWeight if it isn't in any.
     Cluster* cluster{nullptr};
@@ -2589,6 +2654,7 @@ FeePerWeight TxGraphImpl::GetMainChunkFeerate(const Ref& arg) noexcept
     // Return the empty FeePerWeight if the passed Ref is empty.
     if (GetRefGraph(arg) == nullptr) return {};
     Assume(GetRefGraph(arg) == this);
+    TRACEPOINT(txgraph, get_main_chunk_feerate, (uint64_t)GetRefIndex(arg));
     // Apply all removals and dependencies, as the result might be inaccurate otherwise.
     ApplyDependencies(/*level=*/0);
     // Chunk feerates cannot be accurately known if unapplied dependencies remain.
@@ -2605,6 +2671,7 @@ FeePerWeight TxGraphImpl::GetMainChunkFeerate(const Ref& arg) noexcept
 
 bool TxGraphImpl::IsOversized(Level level_select) noexcept
 {
+    TRACEPOINT(txgraph, is_oversized, (uint64_t)level_select);
     size_t level = GetSpecifiedLevel(level_select);
     auto& clusterset = GetClusterSet(level);
     if (clusterset.m_oversized.has_value()) {
@@ -2625,6 +2692,7 @@ bool TxGraphImpl::IsOversized(Level level_select) noexcept
 
 void TxGraphImpl::StartStaging() noexcept
 {
+    TRACEPOINT(txgraph, start_staging);
     // Staging cannot already exist.
     Assume(!m_staging_clusterset.has_value());
     // Apply all remaining dependencies in main before creating a staging graph. Once staging
@@ -2649,6 +2717,7 @@ void TxGraphImpl::StartStaging() noexcept
 
 void TxGraphImpl::AbortStaging() noexcept
 {
+    TRACEPOINT(txgraph, abort_staging);
     // Staging must exist.
     Assume(m_staging_clusterset.has_value());
     // Mark all removed transactions as Missing (so the staging locator for these transactions
@@ -2680,6 +2749,7 @@ void TxGraphImpl::AbortStaging() noexcept
 
 void TxGraphImpl::CommitStaging() noexcept
 {
+    TRACEPOINT(txgraph, commit_staging);
     // Staging must exist.
     Assume(m_staging_clusterset.has_value());
     Assume(m_main_chunkindex_observers == 0);
@@ -2749,6 +2819,7 @@ void TxGraphImpl::SetTransactionFee(const Ref& ref, int64_t fee) noexcept
     if (GetRefGraph(ref) == nullptr) return;
     Assume(GetRefGraph(ref) == this);
     Assume(m_main_chunkindex_observers == 0);
+    TRACEPOINT(txgraph, set_transaction_fee, (uint64_t)GetRefIndex(ref), (int64_t)fee);
     // Find the entry, its locator, and inform its Cluster about the new feerate, if any.
     auto& entry = m_entries[GetRefIndex(ref)];
     for (int level = 0; level < MAX_LEVELS; ++level) {
@@ -2764,6 +2835,7 @@ std::strong_ordering TxGraphImpl::CompareMainOrder(const Ref& a, const Ref& b) n
     // The references must not be empty.
     Assume(GetRefGraph(a) == this);
     Assume(GetRefGraph(b) == this);
+    TRACEPOINT(txgraph, compare_main_order, (uint64_t)GetRefIndex(a), (uint64_t)GetRefIndex(b));
     // Apply dependencies in main.
     ApplyDependencies(0);
     Assume(m_main_clusterset.m_deps_to_add.empty());
@@ -2782,6 +2854,16 @@ std::strong_ordering TxGraphImpl::CompareMainOrder(const Ref& a, const Ref& b) n
 
 TxGraph::GraphIndex TxGraphImpl::CountDistinctClusters(std::span<const Ref* const> refs, Level level_select) noexcept
 {
+#ifdef ENABLE_TRACING
+    if (TRACEPOINT_ACTIVE(txgraph, count_distinct_clusters)) {
+        static constexpr uint32_t MAX_TRACE = 64;
+        Assume(refs.size() <= MAX_TRACE);
+        uint64_t trace_buf[MAX_TRACE] = {};
+        uint32_t count = static_cast<uint32_t>(refs.size());
+        for (uint32_t i = 0; i < count; ++i) trace_buf[i] = GetRefIndex(*refs[i]);
+        TRACEPOINT(txgraph, count_distinct_clusters, (uint64_t)count, (uint64_t)level_select, (uint8_t*)trace_buf);
+    }
+#endif
     size_t level = GetSpecifiedLevel(level_select);
     ApplyDependencies(level);
     auto& clusterset = GetClusterSet(level);
@@ -2809,6 +2891,7 @@ TxGraph::GraphIndex TxGraphImpl::CountDistinctClusters(std::span<const Ref* cons
 
 std::pair<std::vector<FeeFrac>, std::vector<FeeFrac>> TxGraphImpl::GetMainStagingDiagrams() noexcept
 {
+    TRACEPOINT(txgraph, get_main_staging_diagrams);
     Assume(m_staging_clusterset.has_value());
     MakeAllAcceptable(0);
     Assume(m_main_clusterset.m_deps_to_add.empty()); // can only fail if main is oversized
@@ -3112,6 +3195,7 @@ void TxGraphImpl::SanityCheck() const
 
 bool TxGraphImpl::DoWork(uint64_t max_cost) noexcept
 {
+    TRACEPOINT(txgraph, do_work, (uint64_t)max_cost);
     uint64_t cost_done{0};
     // First linearize everything in NEEDS_RELINEARIZE to an acceptable level. If more budget
     // remains after that, try to make everything optimal.
@@ -3252,11 +3336,13 @@ void BlockBuilderImpl::Skip() noexcept
 
 std::unique_ptr<TxGraph::BlockBuilder> TxGraphImpl::GetBlockBuilder() noexcept
 {
+    TRACEPOINT(txgraph, get_block_builder);
     return std::make_unique<BlockBuilderImpl>(*this);
 }
 
 std::pair<std::vector<TxGraph::Ref*>, FeePerWeight> TxGraphImpl::GetWorstMainChunk() noexcept
 {
+    TRACEPOINT(txgraph, get_worst_main_chunk);
     std::pair<std::vector<Ref*>, FeePerWeight> ret;
     // Make sure all clusters in main are up to date, and acceptable.
     MakeAllAcceptable(0);
@@ -3284,6 +3370,7 @@ std::pair<std::vector<TxGraph::Ref*>, FeePerWeight> TxGraphImpl::GetWorstMainChu
 
 std::vector<TxGraph::Ref*> TxGraphImpl::Trim() noexcept
 {
+    TRACEPOINT(txgraph, trim);
     int level = GetTopLevel();
     Assume(m_main_chunkindex_observers == 0 || level != 0);
     std::vector<TxGraph::Ref*> ret;
@@ -3534,6 +3621,7 @@ std::vector<TxGraph::Ref*> TxGraphImpl::Trim() noexcept
 
 size_t TxGraphImpl::GetMainMemoryUsage() noexcept
 {
+    TRACEPOINT(txgraph, get_main_memory_usage);
     // Make sure splits/merges are applied, as memory usage may not be representative otherwise.
     SplitAll(/*up_to_level=*/0);
     ApplyDependencies(/*level=*/0);
@@ -3552,6 +3640,7 @@ size_t TxGraphImpl::GetMainMemoryUsage() noexcept
 TxGraph::Ref::~Ref()
 {
     if (m_graph) {
+        TRACEPOINT(txgraph, unlink_ref, (uint64_t)m_index);
         // Inform the TxGraph about the Ref being destroyed.
         m_graph->UnlinkRef(m_index);
         m_graph = nullptr;
