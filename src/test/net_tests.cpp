@@ -1590,4 +1590,50 @@ BOOST_AUTO_TEST_CASE(private_broadcast_version_does_not_update_addrman_services)
     m_node.peerman->FinalizeNode(node);
 }
 
+BOOST_AUTO_TEST_CASE(outbound_bind_address_selection)
+{
+    const uint64_t seed{0};
+    auto connman = std::make_unique<ConnmanTestMsg>(seed, seed, *m_node.addrman, *m_node.netgroupman, Params());
+
+    CConnman::Options options;
+    options.m_msgproc = m_node.peerman.get();
+
+    const CService addr1{LookupNumeric("203.0.113.1", 8333)};
+    const CService addr2{LookupNumeric("198.51.100.1", 8333)};
+    const CService addr6{LookupNumeric("2001:db8::1", 8333)};
+    const CService loopback{LookupNumeric("127.0.0.1", 8333)};
+
+    // First non-local address per family is used; second is ignored.
+    options.vBinds = {addr1, addr2};
+    connman->Init(options);
+    BOOST_REQUIRE(connman->GetOutboundBindV4());
+    BOOST_CHECK_EQUAL(connman->GetOutboundBindV4()->ToStringAddr(), "203.0.113.1");
+
+    // Loopback addresses are skipped.
+    connman = std::make_unique<ConnmanTestMsg>(seed, seed, *m_node.addrman, *m_node.netgroupman, Params());
+    options.vBinds = {loopback, addr1};
+    connman->Init(options);
+    BOOST_REQUIRE(connman->GetOutboundBindV4());
+    BOOST_CHECK_EQUAL(connman->GetOutboundBindV4()->ToStringAddr(), "203.0.113.1");
+
+    // IPv4 and IPv6 are stored independently.
+    connman = std::make_unique<ConnmanTestMsg>(seed, seed, *m_node.addrman, *m_node.netgroupman, Params());
+    options.vBinds = {addr1, addr6};
+    connman->Init(options);
+    BOOST_REQUIRE(connman->GetOutboundBindV4());
+    BOOST_REQUIRE(connman->GetOutboundBindV6());
+    BOOST_CHECK_EQUAL(connman->GetOutboundBindV4()->ToStringAddr(), "203.0.113.1");
+    BOOST_CHECK_EQUAL(connman->GetOutboundBindV6()->ToStringAddr(), "2001:db8::1");
+
+    // CJDNS addresses must not match either IsIPv4() or IsIPv6(), so the
+    // outbound bind selection in ConnectNode (which only binds for clearnet
+    // families) correctly skips them.
+    g_reachable_nets.Add(NET_CJDNS);
+    const CService cjdns_service{LookupNumeric("fc00:1:2:3:4:5:6:7", 8333)};
+    const CAddress cjdns_target{MaybeFlipIPv6toCJDNS(cjdns_service), NODE_NONE};
+    BOOST_CHECK(cjdns_target.IsCJDNS());
+    BOOST_CHECK(!cjdns_target.IsIPv4());
+    BOOST_CHECK(!cjdns_target.IsIPv6());
+}
+
 BOOST_AUTO_TEST_SUITE_END()
