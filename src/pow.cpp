@@ -11,15 +11,25 @@
 #include <uint256.h>
 #include <util/check.h>
 
+bool AllowMinDifficultyBlocks(const Consensus::Params& params, int height)
+{
+    if (!params.fPowAllowMinDifficultyBlocks) return false;
+    if (params.min_difficulty_fork_height == 0) return true;
+    return height < params.min_difficulty_fork_height;
+}
+
 unsigned int GetNextWorkRequired(const CBlockIndex* pindexLast, const CBlockHeader *pblock, const Consensus::Params& params)
 {
     assert(pindexLast != nullptr);
     unsigned int nProofOfWorkLimit = UintToArith256(params.powLimit).GetCompact();
 
+    const int next_height = pindexLast->nHeight + 1;
+    const bool allow_min_difficulty_blocks = AllowMinDifficultyBlocks(params, next_height);
+
     // Only change once per difficulty adjustment interval
     if ((pindexLast->nHeight+1) % params.DifficultyAdjustmentInterval() != 0)
     {
-        if (params.fPowAllowMinDifficultyBlocks)
+        if (allow_min_difficulty_blocks)
         {
             // Special difficulty rule for testnet:
             // If the new block's timestamp is more than 2* 10 minutes
@@ -88,7 +98,7 @@ unsigned int CalculateNextWorkRequired(const CBlockIndex* pindexLast, int64_t nF
 // or decrease beyond the permitted limits.
 bool PermittedDifficultyTransition(const Consensus::Params& params, int64_t height, uint32_t old_nbits, uint32_t new_nbits)
 {
-    if (params.fPowAllowMinDifficultyBlocks) return true;
+    if (AllowMinDifficultyBlocks(params, height)) return true;
 
     if (height % params.DifficultyAdjustmentInterval() == 0) {
         int64_t smallest_timespan = params.nPowTargetTimespan/4;

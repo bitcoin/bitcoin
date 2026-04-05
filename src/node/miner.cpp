@@ -404,11 +404,16 @@ std::unique_ptr<CBlockTemplate> WaitAndCreateNewBlock(ChainstateManager& chainma
         // Must release m_tip_block_mutex before locking cs_main, to avoid deadlocks.
         LOCK(::cs_main);
 
-        // On test networks return a minimum difficulty block after 20 minutes
+        // On test networks return a minimum difficulty block after 20 minutes,
+        // but only if we haven't reached the fork height that disables this feature.
         if (!tip_changed && allow_min_difficulty) {
-            const NodeClock::time_point tip_time{std::chrono::seconds{chainman.ActiveChain().Tip()->GetBlockTime()}};
-            if (now > tip_time + 20min) {
-                tip_changed = true;
+            const auto& consensus = chainman.GetParams().GetConsensus();
+            const int next_height = chainman.ActiveChain().Tip()->nHeight + 1;
+            if (AllowMinDifficultyBlocks(consensus, next_height)) {
+                const NodeClock::time_point tip_time{std::chrono::seconds{chainman.ActiveChain().Tip()->GetBlockTime()}};
+                if (now > tip_time + 20min) {
+                    tip_changed = true;
+                }
             }
         }
 
