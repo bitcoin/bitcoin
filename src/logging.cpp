@@ -23,8 +23,9 @@ using util::RemovePrefixView;
 const char * const DEFAULT_DEBUGLOGFILE = "debug.log";
 constexpr auto MAX_USER_SETABLE_SEVERITY_LEVEL{BCLog::Level::Info};
 
-BCLog::Logger& LogInstance()
-{
+bool fLogIPs = DEFAULT_LOGIPS;
+
+namespace BCLog {
 /**
  * NOTE: the logger instances is leaked on exit. This is ugly, but will be
  * cleaned up by the OS/libc. Defining a logger as a global object doesn't work
@@ -40,15 +41,27 @@ BCLog::Logger& LogInstance()
  * This method of initialization was originally introduced in
  * ee3374234c60aba2cc4c5cd5cac1c0aefc2d817c.
  */
-    static BCLog::Logger* g_logger{new BCLog::Logger()};
-    return *g_logger;
-}
-
-bool fLogIPs = DEFAULT_LOGIPS;
+Logger* g_logger{nullptr};
+} // namespace BCLog
 
 static int FileWriteStr(std::string_view str, FILE *fp)
 {
     return fwrite(str.data(), 1, str.size(), fp);
+}
+
+BCLog::Logger& LogInstance()
+{
+    return *Assert(BCLog::g_logger);
+}
+
+BCLog::Logger::Logger()
+{
+    if (!g_logger) g_logger = this;
+}
+
+BCLog::Logger::~Logger()
+{
+    if (g_logger == this) g_logger = nullptr;
 }
 
 bool BCLog::Logger::StartLogging()
@@ -344,7 +357,9 @@ std::string BCLog::Logger::GetLogPrefix(BCLog::LogFlags category, BCLog::Level l
 {
     if (category == LogFlags::NONE) category = LogFlags::ALL;
 
-    const bool has_category{m_always_print_category_level || category != LogFlags::ALL};
+    // Only log categories at debug level and below so users cannot use category
+    // filters at higher levels and miss important messages.
+    const bool has_category{level <= Level::Debug && (m_always_print_category_level || category != LogFlags::ALL)};
 
     // If there is no category, Info is implied
     if (!has_category && level == Level::Info) return {};
@@ -562,8 +577,7 @@ void BCLog::LogRateLimiter::Reset()
     }
     for (const auto& [source_loc, stats] : source_locations) {
         if (stats.m_dropped_bytes == 0) continue;
-        LogPrintLevel_(
-            LogFlags::ALL, Level::Warning, /*should_ratelimit=*/false,
+        LOG_EMIT((.level = Level::Warning, .ratelimit = false),
             "Restarting logging from %s:%d (%s): %d bytes were dropped during the last %ss.",
             source_loc.file_name(), source_loc.line(), source_loc.function_name_short(),
             stats.m_dropped_bytes, Ticks<std::chrono::seconds>(m_reset_window));
@@ -603,15 +617,14 @@ bool BCLog::Logger::SetCategoryLogLevel(std::string_view category_str, std::stri
     return true;
 }
 
-bool util::log::ShouldLog(Category category, Level level)
+bool util::log::ShouldLog(Logger* log, Category category, Level level)
 {
-    return LogInstance().WillLogCategoryLevel(static_cast<BCLog::LogFlags>(category), level);
+    auto& logger{log ? *static_cast<BCLog::Logger*>(log) : LogInstance()};
+    return logger.Enabled() && logger.WillLogCategoryLevel(static_cast<BCLog::LogFlags>(category), level);
 }
 
-void util::log::Log(util::log::Entry entry)
+void util::log::Log(Logger* log, Entry entry)
 {
-    BCLog::Logger& logger{LogInstance()};
-    if (logger.Enabled()) {
-        logger.LogPrintStr(std::move(entry.message), std::move(entry.source_loc), static_cast<BCLog::LogFlags>(entry.category), entry.level, entry.should_ratelimit);
-    }
+    auto& logger{log ? *static_cast<BCLog::Logger*>(log) : LogInstance()};
+    logger.LogPrintStr(std::move(entry.message), std::move(entry.source_loc), static_cast<BCLog::LogFlags>(entry.category), entry.level, entry.should_ratelimit);
 }

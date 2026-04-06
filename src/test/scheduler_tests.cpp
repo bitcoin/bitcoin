@@ -4,6 +4,7 @@
 
 #include <random.h>
 #include <scheduler.h>
+#include <test/util/setup_common.h>
 #include <util/time.h>
 
 #include <boost/test/unit_test.hpp>
@@ -13,7 +14,7 @@
 #include <thread>
 #include <vector>
 
-BOOST_AUTO_TEST_SUITE(scheduler_tests)
+BOOST_FIXTURE_TEST_SUITE(scheduler_tests, BasicTestingSetup)
 
 static void microTask(CScheduler& s, std::mutex& mutex, int& counter, int delta, std::chrono::steady_clock::time_point rescheduleTime)
 {
