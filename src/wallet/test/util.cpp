@@ -105,27 +105,6 @@ void TestUnloadWallet(std::shared_ptr<CWallet>&& wallet)
     WaitForDeleteWallet(std::move(wallet));
 }
 
-std::unique_ptr<WalletDatabase> DuplicateMockDatabase(WalletDatabase& database)
-{
-    std::unique_ptr<DatabaseBatch> batch_orig = database.MakeBatch();
-    std::unique_ptr<DatabaseCursor> cursor_orig = batch_orig->GetNewCursor();
-
-    std::unique_ptr<WalletDatabase> new_db = CreateMockableWalletDatabase();
-    std::unique_ptr<DatabaseBatch> new_db_batch = new_db->MakeBatch();
-    MockableSQLiteBatch* batch_new = dynamic_cast<MockableSQLiteBatch*>(new_db_batch.get());
-    Assert(batch_new);
-
-    while (true) {
-        DataStream key, value;
-        DatabaseCursor::Status status = cursor_orig->Next(key, value);
-        Assert(status != DatabaseCursor::Status::FAIL);
-        if (status != DatabaseCursor::Status::MORE) break;
-        batch_new->WriteKey(std::move(key), std::move(value));
-    }
-
-    return new_db;
-}
-
 std::string getnewaddress(CWallet& w)
 {
     constexpr auto output_type = OutputType::BECH32;
