@@ -110,8 +110,6 @@ ReadStatus PartiallyDownloadedBlock::InitData(const CBlockHeaderAndShortTxIDs& c
         if (shorttxids.bucket_size(shorttxids.bucket(cmpctblock.shorttxids[i])) > 12)
             return READ_STATUS_FAILED;
     }
-    // TODO: in the shortid-collision case, we should instead request both transactions
-    // which collided. Falling back to full-block-request here is overkill.
     if (shorttxids.size() != cmpctblock.shorttxids.size())
         return READ_STATUS_FAILED; // Short ID collision
 
