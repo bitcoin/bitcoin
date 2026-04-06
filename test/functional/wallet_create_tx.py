@@ -33,6 +33,9 @@ class CreateTxWalletTest(BitcoinTestFramework):
         self.nodes[0].setmocktime(0)
 
         self.test_anti_fee_sniping()
+        self.test_walletcreatefundedpsbt_anti_fee_sniping()
+        self.test_fundrawtransaction_anti_fee_sniping()
+        self.test_send_anti_fee_sniping()
         self.test_tx_size_too_large()
         self.test_create_too_long_mempool_chain()
         self.test_version3()
@@ -49,6 +52,68 @@ class CreateTxWalletTest(BitcoinTestFramework):
         txid = self.nodes[0].sendtoaddress(self.nodes[0].getnewaddress(), 1)
         tx = self.nodes[0].gettransaction(txid=txid, verbose=True)['decoded']
         assert 0 < tx['locktime'] <= 201
+
+    def test_walletcreatefundedpsbt_anti_fee_sniping(self):
+        self.log.info('Check that walletcreatefundedpsbt applies anti-fee-sniping by default')
+        # At this point we have a recent block (from test_anti_fee_sniping), so anti-fee-sniping is active
+        block_height = self.nodes[0].getblockcount()
+        addr = self.nodes[0].getnewaddress()
+        psbt_info = self.nodes[0].walletcreatefundedpsbt([], [{addr: 1}])
+        decoded = self.nodes[0].decodepsbt(psbt_info['psbt'])
+        locktime = decoded['tx']['locktime']
+        assert locktime > 0, f"Expected anti-fee-sniping locktime > 0, got {locktime}"
+        assert locktime <= block_height, f"locktime {locktime} exceeds block_height {block_height}"
+        assert locktime >= block_height - 100, f"locktime {locktime} too far below block_height {block_height}"
+
+        self.log.info('Check that walletcreatefundedpsbt respects an explicit non-zero locktime')
+        explicit_locktime = 42
+        psbt_info = self.nodes[0].walletcreatefundedpsbt([], [{addr: 1}], explicit_locktime)
+        decoded = self.nodes[0].decodepsbt(psbt_info['psbt'])
+        assert decoded['tx']['locktime'] == explicit_locktime, \
+            f"Expected explicit locktime {explicit_locktime}, got {decoded['tx']['locktime']}"
+
+        self.log.info('Check that walletcreatefundedpsbt respects an explicit locktime=0')
+        psbt_info = self.nodes[0].walletcreatefundedpsbt([], [{addr: 1}], 0)
+        decoded = self.nodes[0].decodepsbt(psbt_info['psbt'])
+        assert decoded['tx']['locktime'] == 0, \
+            f"Expected explicit locktime 0, got {decoded['tx']['locktime']}"
+
+    def test_send_anti_fee_sniping(self):
+        self.log.info('Check that send applies anti-fee-sniping by default')
+        block_height = self.nodes[0].getblockcount()
+        addr = self.nodes[0].getnewaddress()
+        res = self.nodes[0].send(outputs=[{addr: 1}])
+        tx = self.nodes[0].gettransaction(txid=res['txid'], verbose=True)['decoded']
+        locktime = tx['locktime']
+        assert locktime > 0, f"Expected anti-fee-sniping locktime > 0, got {locktime}"
+        assert locktime <= block_height, f"locktime {locktime} exceeds block_height {block_height}"
+        assert locktime >= block_height - 100, f"locktime {locktime} too far below block_height {block_height}"
+
+        self.log.info('Check that send respects an explicit locktime=0')
+        res = self.nodes[0].send(outputs=[{addr: 1}], options={"locktime": 0})
+        tx = self.nodes[0].gettransaction(txid=res['txid'], verbose=True)['decoded']
+        assert tx['locktime'] == 0, f"Expected explicit locktime 0, got {tx['locktime']}"
+
+    def test_fundrawtransaction_anti_fee_sniping(self):
+        self.log.info('Check that fundrawtransaction applies anti-fee-sniping when raw tx has default locktime')
+        block_height = self.nodes[0].getblockcount()
+        addr = self.nodes[0].getnewaddress()
+        # createrawtransaction defaults to locktime=0
+        raw_tx = self.nodes[0].createrawtransaction([], [{addr: 1}])
+        funded = self.nodes[0].fundrawtransaction(raw_tx)
+        tx = tx_from_hex(funded['hex'])
+        locktime = tx.nLockTime
+        assert locktime > 0, f"Expected anti-fee-sniping locktime > 0, got {locktime}"
+        assert locktime <= block_height, f"locktime {locktime} exceeds block_height {block_height}"
+        assert locktime >= block_height - 100, f"locktime {locktime} too far below block_height {block_height}"
+
+        self.log.info('Check that fundrawtransaction preserves an explicit non-zero locktime in the raw tx')
+        explicit_locktime = 42
+        raw_tx = self.nodes[0].createrawtransaction([], [{addr: 1}], explicit_locktime)
+        funded = self.nodes[0].fundrawtransaction(raw_tx)
+        tx = tx_from_hex(funded['hex'])
+        assert tx.nLockTime == explicit_locktime, \
+            f"Expected explicit locktime {explicit_locktime}, got {tx.nLockTime}"
 
     def test_tx_size_too_large(self):
         # More than 10kB of outputs, so that we hit -maxtxfee with a high feerate

@@ -740,13 +740,15 @@ class PSBTTest(BitcoinTestFramework):
             assert "bip32_derivs" in psbt_in
         assert_equal(decoded_psbt["tx"]["locktime"], block_height)
 
-        # Same construction without optional arguments
+        # Same construction without optional arguments - anti-fee sniping should be applied
         psbtx_info = self.nodes[0].walletcreatefundedpsbt([], [{self.nodes[2].getnewaddress():unspent["amount"]+1}])
         decoded_psbt = self.nodes[0].decodepsbt(psbtx_info["psbt"])
         for tx_in, psbt_in in zip(decoded_psbt["tx"]["vin"], decoded_psbt["inputs"]):
             assert_equal(tx_in["sequence"], MAX_BIP125_RBF_SEQUENCE)
             assert "bip32_derivs" in psbt_in
-        assert_equal(decoded_psbt["tx"]["locktime"], 0)
+        # Anti-fee sniping sets locktime to current block height (with 10% chance of being up to 100 blocks earlier)
+        assert_greater_than_or_equal(decoded_psbt["tx"]["locktime"], max(0, block_height - 100))
+        assert decoded_psbt["tx"]["locktime"] <= block_height
 
         # Same construction without optional arguments, for a node with -walletrbf=0
         unspent1 = self.nodes[1].listunspent()[0]

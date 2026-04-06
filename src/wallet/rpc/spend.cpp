@@ -670,6 +670,13 @@ CreatedTransactionResult FundTransaction(CWallet& wallet, const CMutableTransact
         coinControl.m_max_tx_weight = options["max_tx_weight"].getInt<int>();
     }
 
+    // If the caller explicitly provided a locktime (including 0), honour it
+    // and disable anti-fee-sniping.  Absence of the key means "use the
+    // default", which leaves anti-fee-sniping active inside CreateTransaction.
+    if (options.exists("locktime")) {
+        coinControl.m_locktime = options["locktime"].getInt<uint32_t>();
+    }
+
     if (tx.version == TRUC_VERSION) {
         if (!coinControl.m_max_tx_weight.has_value() || coinControl.m_max_tx_weight.value() > TRUC_MAX_WEIGHT) {
             coinControl.m_max_tx_weight = TRUC_MAX_WEIGHT;
@@ -1691,7 +1698,7 @@ RPCMethod walletcreatefundedpsbt()
                             "accepted as second parameter.",
                         OutputsDoc(),
                         RPCArgOptions{.skip_type_check = true}},
-                    {"locktime", RPCArg::Type::NUM, RPCArg::Default{0}, "Raw locktime. Non-0 value also locktime-activates inputs"},
+                    {"locktime", RPCArg::Type::NUM, RPCArg::DefaultHint{"locktime close to block height to prevent fee sniping"}, "Raw locktime. Non-0 value also locktime-activates inputs"},
                     {"options", RPCArg::Type::OBJ_NAMED_PARAMS, RPCArg::Optional::OMITTED, "",
                         Cat<std::vector<RPCArg>>(
                         {
@@ -1755,6 +1762,12 @@ RPCMethod walletcreatefundedpsbt()
 
     const UniValue &replaceable_arg = options["replaceable"];
     const bool rbf{replaceable_arg.isNull() ? wallet.m_signal_rbf : replaceable_arg.get_bool()};
+    // If the caller explicitly provided a locktime (including 0), honour it and
+    // disable anti-fee-sniping.  A null param means "use the default", which
+    // leaves anti-fee-sniping active inside CreateTransaction.
+    if (!request.params[2].isNull()) {
+        coin_control.m_locktime = request.params[2].getInt<uint32_t>();
+    }
     CMutableTransaction rawTx = ConstructTransaction(request.params[0], request.params[1], request.params[2], rbf, coin_control.m_version);
     UniValue outputs(UniValue::VOBJ);
     outputs = NormalizeOutputs(request.params[1]);

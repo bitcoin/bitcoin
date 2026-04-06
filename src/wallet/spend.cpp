@@ -1508,8 +1508,15 @@ util::Result<CreatedTransactionResult> FundTransaction(CWallet& wallet, const CM
     // This sets us up to remove tx completely in a future PR in favor of passing the inputs directly.
     assert(tx.vout.empty());
 
-    // Set the user desired locktime
-    coinControl.m_locktime = tx.nLockTime;
+    // Set the user desired locktime. Only propagate non-zero values; a zero
+    // value is indistinguishable from the CMutableTransaction default and
+    // should leave anti-fee-sniping active. Callers that explicitly want
+    // nLockTime=0 must set coinControl.m_locktime = 0 before calling this
+    // function (the RPC layer does this via options["locktime"] or a named
+    // locktime parameter).
+    if (tx.nLockTime != 0) {
+        coinControl.m_locktime = tx.nLockTime;
+    }
 
     // Set the user desired version
     coinControl.m_version = tx.version;
