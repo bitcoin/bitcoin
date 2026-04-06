@@ -47,17 +47,26 @@ static void WalletCreate(benchmark::Bench& bench, bool encrypted)
     const auto wallet_path = test_setup->m_path_root / "test_wallet";
     const auto wallet_name = fs::PathToString(wallet_path);
 
-    bench.run([&] {
-        auto wallet = CreateWallet(context, wallet_name, /*load_on_start=*/std::nullopt, options, status, error_string, warnings);
-        assert(status == DatabaseStatus::SUCCESS);
-        assert(wallet != nullptr);
+    std::shared_ptr<CWallet> wallet;
+    bench.epochIterations(1)
+        .setup([&] {
+            if (wallet) {
+                // Release wallet
+                RemoveWallet(context, wallet, /*load_on_start=*/ std::nullopt);
+                WaitForDeleteWallet(std::move(wallet));
+                fs::remove(wallet_path / "wallet.dat");
+                fs::remove(wallet_path);
+            }
+        })
+        .run([&] {
+            wallet = CreateWallet(context, wallet_name, /*load_on_start=*/std::nullopt, options, status, error_string, warnings);
+            assert(status == DatabaseStatus::SUCCESS);
+            assert(wallet != nullptr);
+        });
 
-        // Release wallet
-        RemoveWallet(context, wallet, /*load_on_start=*/ std::nullopt);
-        WaitForDeleteWallet(std::move(wallet));
-        fs::remove(wallet_path / "wallet.dat");
-        fs::remove(wallet_path);
-    });
+    // Cleanup
+    RemoveWallet(context, wallet, /*load_on_start=*/ std::nullopt);
+    WaitForDeleteWallet(std::move(wallet));
 }
 
 static void WalletCreatePlain(benchmark::Bench& bench) { WalletCreate(bench, /*encrypted=*/false); }
