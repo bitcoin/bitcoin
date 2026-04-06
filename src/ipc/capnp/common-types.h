@@ -12,6 +12,7 @@
 #include <streams.h>
 #include <univalue.h>
 
+#include <algorithm>
 #include <cstddef>
 #include <mp/proxy-types.h>
 #include <mp/type-chrono.h>
@@ -72,7 +73,8 @@ requires Serializable<LocalType, DataStream> && std::is_same_v<LocalType, std::r
     auto wrapper{ipc::capnp::Wrap(stream)};
     value.Serialize(wrapper);
     auto result = output.init(stream.size());
-    memcpy(result.begin(), stream.data(), stream.size());
+    assert(result.size() == stream.size());
+    std::copy(stream.data(), stream.data() + result.size(), result.begin());
 }
 
 //! Overload multiprocess library's CustomReadField hook to allow any object
@@ -114,7 +116,8 @@ void CustomBuildField(TypeList<UniValue>, Priority<1>, InvokeContext& invoke_con
 {
     std::string str = value.write();
     auto result = output.init(str.size());
-    memcpy(result.begin(), str.data(), str.size());
+    assert(result.size() == str.size());
+    std::copy(str.data(), str.data() + result.size(), result.begin());
 }
 
 template <typename Input, typename ReadDest>
