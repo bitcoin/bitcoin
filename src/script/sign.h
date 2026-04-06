@@ -7,7 +7,6 @@
 #define BITCOIN_SCRIPT_SIGN_H
 
 #include <attributes.h>
-#include <coins.h> // IWYU pragma: keep
 #include <consensus/amount.h>
 #include <pubkey.h>
 #include <script/interpreter.h>
@@ -25,6 +24,7 @@
 class COutPoint;
 class CTxIn;
 class CTxOut;
+class Coin;
 
 struct bilingual_str;
 struct CMutableTransaction;

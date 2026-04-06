@@ -14,6 +14,7 @@
 #include <test/util/transaction_utils.h>
 #include <uint256.h>
 #include <util/translation.h>
+#include <coins.h>
 
 #include <array>
 #include <cassert>

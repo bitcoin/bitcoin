@@ -18,6 +18,7 @@
 #include <util/time.h>
 #include <util/translation.h>
 #include <wallet/scriptpubkeyman.h>
+#include <coins.h>
 
 #include <optional>
 

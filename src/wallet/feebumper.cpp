@@ -16,6 +16,7 @@
 #include <wallet/receive.h>
 #include <wallet/spend.h>
 #include <wallet/wallet.h>
+#include <coins.h>
 
 namespace wallet {
 //! Check whether transaction has descendant in wallet or mempool, or has been
