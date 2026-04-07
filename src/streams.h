@@ -206,21 +206,6 @@ public:
     value_type* data()                               { return vch.data() + m_read_pos; }
     const value_type* data() const                   { return vch.data() + m_read_pos; }
 
-    bool Rewind(std::optional<size_type> n = std::nullopt)
-    {
-        // Total rewind if no size is passed
-        if (!n) {
-            m_read_pos = 0;
-            return true;
-        }
-        // Rewind by n characters if the buffer hasn't been compacted yet
-        if (*n > m_read_pos)
-            return false;
-        m_read_pos -= *n;
-        return true;
-    }
-
-
     //
     // Stream subset
     //
