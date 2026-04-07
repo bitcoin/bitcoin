@@ -102,6 +102,7 @@ class ListTransactionsTest(BitcoinTestFramework):
         self.run_coinjoin_test()
         self.run_invalid_parameters_test()
         self.test_op_return()
+        self.test_include_change()
         self.test_from_me_status_change()
 
     def run_rbf_opt_in_test(self):
@@ -316,6 +317,32 @@ class ListTransactionsTest(BitcoinTestFramework):
         op_ret_tx = [tx for tx in self.nodes[0].listtransactions() if tx['txid'] == tx_id][0]
 
         assert 'address' not in op_ret_tx
+
+    def test_include_change(self):
+        """Test that include_change=True shows transactions to change addresses."""
+        self.log.info("Test include_change parameter")
+
+        # Send to a change address
+        change_addr = self.nodes[0].getrawchangeaddress()
+        txid = self.nodes[0].sendtoaddress(change_addr, 1)
+
+        # Without include_change, the receive entry should not appear
+        txs = self.nodes[0].listtransactions("*", 100)
+        receive_entries = [t for t in txs if t["txid"] == txid and t["category"] == "receive"]
+        assert_equal(len(receive_entries), 0)
+
+        # With include_change=True, we get both the send (to a change address)
+        # and the actual change.
+        txs = self.nodes[0].listtransactions("*", 100, 0, False, True)
+        receive_entries = [t for t in txs if t["txid"] == txid and t["category"] == "receive"]
+        assert_equal(len(receive_entries), 2)
+        assert any(e["address"] == change_addr for e in receive_entries)
+        assert all(self.nodes[0].getaddressinfo(e["address"])["ischange"] for e in receive_entries)
+
+        send_entries = [t for t in txs if t["txid"] == txid and t["category"] == "send"]
+        assert_equal(len(send_entries), 2)
+        assert any(e["address"] == change_addr for e in send_entries)
+        assert all(self.nodes[0].getaddressinfo(e["address"])["ischange"] for e in send_entries)
 
     def test_from_me_status_change(self):
         self.log.info("Test gettransaction after changing a transaction's 'from me' status")
