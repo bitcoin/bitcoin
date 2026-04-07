@@ -189,7 +189,7 @@ auto PassField(Priority<1>, TypeList<>, ServerContext& server_context, const Fn&
             }
         })) {
             MP_LOG(loop, Log::Error) << "IPC server request #" << req << " uncaught exception (" << kj::str(*exception).cStr() << ")";
-            throw kj::mv(*exception);
+            kj::throwRecoverableException(kj::mv(*exception));
         }
         return call_context;
         // End of scope: if KJ_DEFER was reached, it runs here
