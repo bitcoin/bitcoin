@@ -350,11 +350,7 @@ void Chainstate::MaybeUpdateMempoolForReorg(
         const LockPoints& lp = it->GetLockPoints();
         // CheckSequenceLocksAtTip checks if the transaction will be final in the next block to be
         // created on top of the new chain.
-        if (TestLockPointValidity(m_chain, lp)) {
-            if (!CheckSequenceLocksAtTip(m_chain.Tip(), lp)) {
-                return true;
-            }
-        } else {
+        if (!TestLockPointValidity(m_chain, lp) || !CheckSequenceLocksAtTip(m_chain.Tip(), lp)) {
             const CCoinsViewMemPool view_mempool{&CoinsTip(), *m_mempool};
             const std::optional<LockPoints> new_lock_points{CalculateLockPointsAtTip(m_chain.Tip(), view_mempool, tx)};
             if (new_lock_points.has_value() && CheckSequenceLocksAtTip(m_chain.Tip(), *new_lock_points)) {
