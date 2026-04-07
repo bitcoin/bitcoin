@@ -305,7 +305,7 @@ static void MaybePushAddress(UniValue & entry, const CTxDestination &dest)
 template <class Vec>
 static void ListTransactions(const CWallet& wallet, const CWalletTx& wtx, int nMinDepth, bool fLong,
                              Vec& ret, const std::optional<std::string>& filter_label,
-                             bool include_change = false)
+                             bool include_change)
     EXCLUSIVE_LOCKS_REQUIRED(wallet.cs_wallet)
 {
     CAmount nFee;
@@ -429,6 +429,7 @@ RPCMethod listtransactions()
                     {"count", RPCArg::Type::NUM, RPCArg::Default{10}, "The number of transactions to return"},
                     {"skip", RPCArg::Type::NUM, RPCArg::Default{0}, "The number of transactions to skip"},
                     {"include_watchonly", RPCArg::Type::BOOL, RPCArg::Default{false}, "(DEPRECATED) No longer used"},
+                    {"include_change", RPCArg::Type::BOOL, RPCArg::Default{false}, "Also add entries for change outputs.\n"},
                 },
                 RPCResult{
                     RPCResult::Type::ARR, "", "",
@@ -485,6 +486,7 @@ RPCMethod listtransactions()
     int nFrom = 0;
     if (!request.params[2].isNull())
         nFrom = request.params[2].getInt<int>();
+    bool include_change = (!request.params[4].isNull() && request.params[4].get_bool());
 
     if (nCount < 0)
         throw JSONRPCError(RPC_INVALID_PARAMETER, "Negative count");
@@ -501,7 +503,7 @@ RPCMethod listtransactions()
         for (CWallet::TxItems::const_reverse_iterator it = txOrdered.rbegin(); it != txOrdered.rend(); ++it)
         {
             CWalletTx *const pwtx = (*it).second;
-            ListTransactions(*pwallet, *pwtx, 0, true, ret, filter_label);
+            ListTransactions(*pwallet, *pwtx, 0, true, ret, filter_label, include_change);
             if ((int)ret.size() >= (nCount+nFrom)) break;
         }
     }
@@ -750,7 +752,7 @@ RPCMethod gettransaction()
     WalletTxToJSON(*pwallet, wtx, entry);
 
     UniValue details(UniValue::VARR);
-    ListTransactions(*pwallet, wtx, 0, false, details, /*filter_label=*/std::nullopt);
+    ListTransactions(*pwallet, wtx, 0, false, details, /*filter_label=*/std::nullopt, /*include_change=*/false);
     entry.pushKV("details", std::move(details));
 
     entry.pushKV("hex", EncodeHexTx(*wtx.tx));
