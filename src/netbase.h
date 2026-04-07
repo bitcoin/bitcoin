@@ -300,10 +300,11 @@ extern std::function<std::unique_ptr<Sock>(int, int, int)> CreateSock;
  *
  * @param[in] dest The service to which to connect.
  * @param[in] manual_connection Whether or not the connection was manually requested (e.g. through the addnode RPC)
+ * @param[in] bind_addr If set, bind to this local address before connecting (controls source IP for outgoing connections)
  *
  * @returns the connected socket if the operation succeeded, empty unique_ptr otherwise
  */
-std::unique_ptr<Sock> ConnectDirectly(const CService& dest, bool manual_connection);
+std::unique_ptr<Sock> ConnectDirectly(const CService& dest, bool manual_connection, std::optional<CNetAddr> bind_addr = std::nullopt);
 
 /**
  * Connect to a specified destination service through a SOCKS5 proxy by first

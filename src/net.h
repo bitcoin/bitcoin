@@ -1131,6 +1131,15 @@ public:
             }
         }
         m_onion_binds = connOptions.onion_binds;
+        // Use -bind addresses for outgoing connections (one per address family).
+        for (const auto& bind_addr : connOptions.vBinds) {
+            if (bind_addr.IsLocal()) continue;
+            if (bind_addr.IsIPv4() && !m_outbound_bind_v4) {
+                m_outbound_bind_v4 = static_cast<const CNetAddr&>(bind_addr);
+            } else if (bind_addr.IsIPv6() && !m_outbound_bind_v6) {
+                m_outbound_bind_v6 = static_cast<const CNetAddr&>(bind_addr);
+            }
+        }
         whitelist_forcerelay = connOptions.whitelist_forcerelay;
         whitelist_relay = connOptions.whitelist_relay;
         m_capture_messages = connOptions.m_capture_messages;
@@ -1735,6 +1744,14 @@ private:
      * an address and port that are designated for incoming Tor connections.
      */
     std::vector<CService> m_onion_binds;
+
+    /**
+     * Local addresses to bind outgoing connections to, per address family.
+     * Populated from -bind addresses so outbound connections originate from
+     * the same IP the node listens on.
+     */
+    std::optional<CNetAddr> m_outbound_bind_v4;
+    std::optional<CNetAddr> m_outbound_bind_v6;
 
     /**
      * flag for adding 'forcerelay' permission to whitelisted inbound
