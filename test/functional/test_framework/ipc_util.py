@@ -10,7 +10,6 @@ from dataclasses import dataclass
 from io import BytesIO
 from pathlib import Path
 import shutil
-import platform
 from typing import Optional
 
 from test_framework.messages import CBlock
@@ -161,12 +160,5 @@ async def make_mining_ctx(self):
     return ctx, mining
 
 def assert_capnp_failed(e, description_prefix):
-    if e.description == "remote exception: unknown non-KJ exception of type: kj::Exception":
-        # macOS + REDUCE_EXPORTS bug: Cap'n Proto fails to recognize
-        # its own exception type and returns a generic error instead.
-        # https://github.com/bitcoin/bitcoin/pull/34422#discussion_r2863852691
-        # Assert this only occurs on Darwin until fixed.
-        assert_equal(platform.system(), "Darwin")
-    else:
-        assert e.description.startswith(description_prefix), f"Expected description starting with '{description_prefix}', got '{e.description}'"
+    assert e.description.startswith(description_prefix), f"Expected description starting with '{description_prefix}', got '{e.description}'"
     assert_equal(e.type, "FAILED")
