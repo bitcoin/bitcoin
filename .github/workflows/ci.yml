@@ -127,7 +127,7 @@ jobs:
     name: ${{ matrix.job-name }}
     # Use any image to support the xcode-select below, but hardcode version to avoid silent upgrades (and breaks).
     # See: https://github.com/actions/runner-images#available-images.
-    runs-on: macos-15
+    runs-on: macos-26
 
     # When a contributor maintains a fork of the repo, any pull request they make
     # to their own fork, or to the main repository, will trigger two CI runs:
@@ -170,16 +170,12 @@ jobs:
           # doc/release-notes-empty-template.md and providing at least the
           # minimum clang version denoted in doc/dependencies.md.
           # See: https://developer.apple.com/documentation/xcode-release-notes/xcode-16_2-release-notes
-          sudo xcode-select --switch /Applications/Xcode_16.2.app
+          sudo xcode-select --switch /Applications/Xcode_26.4.app
           clang --version
 
       - name: Install Homebrew packages
-        env:
-          HOMEBREW_NO_INSTALLED_DEPENDENTS_CHECK: 1
         run: |
-          # A workaround for "The `brew link` step did not complete successfully" error.
-          brew install --quiet python@3 || brew link --overwrite python@3
-          brew install --quiet coreutils ninja pkgconf ccache boost libevent zeromq qt@6 qrencode capnp
+          brew install --quiet cmake coreutils ninja pkgconf ccache boost libevent zeromq qt@6 qrencode capnp
 
       - name: Set Ccache directory
         run: echo "CCACHE_DIR=${RUNNER_TEMP}/ccache_dir" >> "$GITHUB_ENV"
