@@ -350,7 +350,7 @@ void Chainstate::MaybeUpdateMempoolForReorg(
         const LockPoints& lp = it->GetLockPoints();
         // CheckSequenceLocksAtTip checks if the transaction will be final in the next block to be
         // created on top of the new chain.
-        if (TestLockPointValidity(m_chain, lp)) {
+        if (TestLockPointValidity(m_chain, lp) && !(lp.maxInputBlock && lp.maxInputBlock->nHeight == 0 && lp.height > 0)) {
             if (!CheckSequenceLocksAtTip(m_chain.Tip(), lp)) {
                 return true;
             }
