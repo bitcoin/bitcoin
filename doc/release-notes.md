@@ -43,6 +43,8 @@ Notable changes
 ### Wallet
 
 - #34358 wallet: fix removeprunedfunds bug with conflicting transactions
+- #34870 wallet: feebumper, fix crash when combined bump fee is unavailable
+- #34888 wallet: fix amount computed as boolean in coin selection
 
 ### Net
 
@@ -66,6 +68,8 @@ Notable changes
 - #34713 depends: Allow building Qt packages after interruption
 - #34754 depends: Qt fixes for GCC 16 compatibility
 - #34787 build: fix native macOS deployment
+- #34848 cmake: Migrate away from deprecated SQLite3 target
+- #34956 depends, qt: Fix build on aarch64 macOS 26.4
 
 ### Test
 
@@ -76,6 +80,7 @@ Notable changes
 - #34445 fuzz: Use AFL_SHM_ID for naming test directories
 - #34608 test: Fix broken --valgrind handling after bitcoin wrapper
 - #34690 test: Add missing timeout_factor to zmq socket
+- #34869 tests: applied PYTHON_GIL to the env for every test
 
 ### Util
 
@@ -108,10 +113,13 @@ Thanks to everyone who directly contributed to this release:
 
 - ANAVHEOBA
 - brunoerg
+- Daniel Pfeifer
 - darosior
 - fanquake
+- furszy
 - Hennadii Stepanov
 - jayvaliya
+- kevkevinpal
 - Lőrinc
 - m3dwards
 - marcofleon
