@@ -903,7 +903,7 @@ BOOST_AUTO_TEST_CASE(initial_advertise_from_version_message)
 
 BOOST_AUTO_TEST_CASE(advertise_local_address)
 {
-    auto CreatePeer = [](const CAddress& addr) {
+    auto CreatePeer = [](const CAddress& addr, bool inbound_onion = false) {
         return std::make_unique<CNode>(/*id=*/0,
                                        /*sock=*/nullptr,
                                        addr,
@@ -911,8 +911,8 @@ BOOST_AUTO_TEST_CASE(advertise_local_address)
                                        /*nLocalHostNonceIn=*/0,
                                        CAddress{},
                                        /*pszDest=*/std::string{},
-                                       ConnectionType::OUTBOUND_FULL_RELAY,
-                                       /*inbound_onion=*/false,
+                                       ConnectionType::INBOUND,
+                                       inbound_onion,
                                        /*network_key=*/0);
     };
     g_reachable_nets.Add(NET_CJDNS);
@@ -955,6 +955,7 @@ BOOST_AUTO_TEST_CASE(advertise_local_address)
     const auto peer_ipv6_tunnel{CreatePeer(addr_ipv6_tunnel)};
     const auto peer_teredo{CreatePeer(addr_teredo)};
     const auto peer_onion{CreatePeer(addr_onion)};
+    const auto peer_inbound_onion{CreatePeer(addr_ipv4, true)};
     const auto peer_i2p{CreatePeer(addr_i2p)};
     const auto peer_cjdns{CreatePeer(addr_cjdns)};
 
@@ -966,6 +967,7 @@ BOOST_AUTO_TEST_CASE(advertise_local_address)
     BOOST_CHECK(GetLocalAddress(*peer_teredo) == addr_ipv4);
     BOOST_CHECK(GetLocalAddress(*peer_cjdns) == addr_ipv4);
     BOOST_CHECK(!GetLocalAddress(*peer_onion).IsValid());
+    BOOST_CHECK(!GetLocalAddress(*peer_inbound_onion).IsValid());
     BOOST_CHECK(!GetLocalAddress(*peer_i2p).IsValid());
     RemoveLocal(addr_ipv4);
 
@@ -978,6 +980,7 @@ BOOST_AUTO_TEST_CASE(advertise_local_address)
     BOOST_CHECK(!GetLocalAddress(*peer_teredo).IsValid());
     BOOST_CHECK(!GetLocalAddress(*peer_cjdns).IsValid());
     BOOST_CHECK(GetLocalAddress(*peer_onion) == addr_onion);
+    BOOST_CHECK(GetLocalAddress(*peer_inbound_onion) == addr_onion);
     BOOST_CHECK(GetLocalAddress(*peer_i2p) == addr_i2p);
     RemoveLocal(addr_onion);
     RemoveLocal(addr_i2p);
@@ -995,6 +998,7 @@ BOOST_AUTO_TEST_CASE(advertise_local_address)
     BOOST_CHECK(GetLocalAddress(*peer_ipv6_tunnel) == addr_ipv6);
     BOOST_CHECK(GetLocalAddress(*peer_teredo) == addr_ipv4);
     BOOST_CHECK(GetLocalAddress(*peer_onion) == addr_onion);
+    BOOST_CHECK(GetLocalAddress(*peer_inbound_onion) == addr_onion);
     BOOST_CHECK(GetLocalAddress(*peer_i2p) == addr_i2p);
     BOOST_CHECK(GetLocalAddress(*peer_cjdns) == addr_cjdns);
     RemoveLocal(addr_ipv4);
