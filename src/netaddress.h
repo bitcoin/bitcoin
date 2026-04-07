@@ -107,6 +107,15 @@ static constexpr uint16_t I2P_SAM31_PORT{0};
 std::string OnionToString(std::span<const uint8_t> addr);
 
 /**
+ * TODO: consider adding IsCJDNS() here when more peers adopt CJDNS, see:
+ * https://github.com/bitcoin/bitcoin/pull/27411#issuecomment-1497176155
+ */
+[[nodiscard]] constexpr inline bool IsPrivacyNetwork(const Network& net)
+{
+    return (net == NET_ONION) || (net == NET_I2P);
+}
+
+/**
  * Network address.
  */
 class CNetAddr
@@ -183,10 +192,8 @@ public:
 
     /**
      * Whether this object is a privacy network.
-     * TODO: consider adding IsCJDNS() here when more peers adopt CJDNS, see:
-     * https://github.com/bitcoin/bitcoin/pull/27411#issuecomment-1497176155
      */
-    [[nodiscard]] bool IsPrivacyNet() const { return IsTor() || IsI2P(); }
+    [[nodiscard]] bool IsPrivacyNet() const { return IsPrivacyNetwork(m_net); }
 
     /**
      * Check if the current object can be serialized in pre-ADDRv2/BIP155 format.
