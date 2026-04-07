@@ -734,29 +734,33 @@ static CBlockUndo GetUndoChecked(BlockManager& blockman, const CBlockIndex& bloc
     return blockUndo;
 }
 
-const RPCResult getblock_vin{
-    RPCResult::Type::ARR, "vin", "",
-    {
-        {RPCResult::Type::OBJ, "", "",
+const RPCResult& GetBlockVin()
+{
+    static const RPCResult getblock_vin{
+        RPCResult::Type::ARR, "vin", "",
         {
-            {RPCResult::Type::ELISION, "", "The same output as verbosity = 2"},
-            {RPCResult::Type::OBJ, "prevout", "(Only if undo information is available)",
+            {RPCResult::Type::OBJ, "", "",
             {
-                {RPCResult::Type::BOOL, "generated", "Coinbase or not"},
-                {RPCResult::Type::NUM, "height", "The height of the prevout"},
-                {RPCResult::Type::STR_AMOUNT, "value", "The value in " + CURRENCY_UNIT},
-                {RPCResult::Type::OBJ, "scriptPubKey", "",
+                {RPCResult::Type::ELISION, "", "The same output as verbosity = 2"},
+                {RPCResult::Type::OBJ, "prevout", "(Only if undo information is available)",
                 {
-                    {RPCResult::Type::STR, "asm", "Disassembly of the output script"},
-                    {RPCResult::Type::STR, "desc", "Inferred descriptor for the output"},
-                    {RPCResult::Type::STR_HEX, "hex", "The raw output script bytes, hex-encoded"},
-                    {RPCResult::Type::STR, "address", /*optional=*/true, "The Bitcoin address (only if a well-defined address exists)"},
-                    {RPCResult::Type::STR, "type", "The type (one of: " + GetAllOutputTypes() + ")"},
+                    {RPCResult::Type::BOOL, "generated", "Coinbase or not"},
+                    {RPCResult::Type::NUM, "height", "The height of the prevout"},
+                    {RPCResult::Type::STR_AMOUNT, "value", "The value in " + CURRENCY_UNIT},
+                    {RPCResult::Type::OBJ, "scriptPubKey", "",
+                    {
+                        {RPCResult::Type::STR, "asm", "Disassembly of the output script"},
+                        {RPCResult::Type::STR, "desc", "Inferred descriptor for the output"},
+                        {RPCResult::Type::STR_HEX, "hex", "The raw output script bytes, hex-encoded"},
+                        {RPCResult::Type::STR, "address", /*optional=*/true, "The Bitcoin address (only if a well-defined address exists)"},
+                        {RPCResult::Type::STR, "type", "The type (one of: " + GetAllOutputTypes() + ")"},
+                    }},
                 }},
             }},
-        }},
-    }
-};
+        }
+    };
+    return getblock_vin;
+}
 
 static RPCMethod getblock()
 {
@@ -828,7 +832,7 @@ static RPCMethod getblock()
                     {
                         {RPCResult::Type::OBJ, "", "",
                         {
-                            getblock_vin,
+                            GetBlockVin(),
                         }},
                     }},
                 }},
