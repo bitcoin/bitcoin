@@ -3241,9 +3241,11 @@ bool Chainstate::FlushStateToDisk(
         // It's been very long since we flushed the cache. Do this infrequently, to optimize cache usage.
         bool fPeriodicFlush = mode == FlushStateMode::PERIODIC && nNow > m_last_flush + DATABASE_FLUSH_INTERVAL;
         const bool in_ibd = m_chainman.IsInitialBlockDownload();
+        const bool dip3_active = m_chain.Height() >= Params().GetConsensus().DIP0003Height;
         const bool dmn_window_init_needed =
             mode == FlushStateMode::PERIODIC &&
             !in_ibd &&
+            dip3_active &&
             deterministicMNManager &&
             !deterministicMNManager->HasPersistentWindow();
         // Combine all conditions that result in a full cache flush.
