@@ -86,10 +86,8 @@ FUZZ_TARGET(local_address, .init = initialize_net)
     CService service{ConsumeService(fuzzed_data_provider)};
     Network network{ConsumeNetwork(fuzzed_data_provider)};
     CAddress address{ConsumeAddress(fuzzed_data_provider)};
-    CNode node{ConsumeNode(fuzzed_data_provider)};
-    {
-        ClearLocal();
-    }
+    LocalAddressManager localaddressman;
+
     LIMITED_WHILE(fuzzed_data_provider.ConsumeBool(), 10000) {
         CallOneOf(
             fuzzed_data_provider,
@@ -99,23 +97,23 @@ FUZZ_TARGET(local_address, .init = initialize_net)
                 network = ConsumeNetwork(fuzzed_data_provider);
             },
             [&] {
-                const bool added{AddLocal(service, fuzzed_data_provider.ConsumeIntegralInRange<int>(0, LOCAL_MAX - 1))};
+                const bool added{localaddressman.Add(service, fuzzed_data_provider.ConsumeIntegralInRange<int>(0, LOCAL_MAX - 1))};
                 if (!added) return;
                 assert(service.IsRoutable());
-                assert(IsLocal(service));
-                assert(SeenLocal(service));
+                assert(localaddressman.Contains(service));
+                assert(localaddressman.Seen(service));
             },
             [&] {
-                (void)RemoveLocal(service);
+                (void)localaddressman.Remove(service);
             },
             [&] {
-                (void)SeenLocal(service);
+                (void)localaddressman.Seen(service);
             },
             [&] {
-                (void)IsLocal(service);
+                (void)localaddressman.Contains(service);
             },
             [&] {
-                (void)GetLocalAddress(address, network);
+                (void)localaddressman.Get(address, network);
             });
     }
 }
