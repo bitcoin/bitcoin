@@ -24,6 +24,7 @@ static RPCHelpMan syscoincreaterawnevmblob()
         {
             {"versionhash", RPCArg::Type::STR_HEX, RPCArg::Optional::NO, "Version hash of the blob"},
             {"data", RPCArg::Type::STR_HEX, RPCArg::Optional::NO, "data in hex"},
+            {"hash_type", RPCArg::Type::STR, RPCArg::Default{"keccak"}, "\"blake2s\" or \"keccak\" when versionhash is 32-byte digest; optional/ignored for 33-byte versioned hash"},
             {"conf_target", RPCArg::Type::NUM, RPCArg::DefaultHint{"wallet -txconfirmtarget"}, "Confirmation target in blocks"},
             {"estimate_mode", RPCArg::Type::STR, RPCArg::Default{"unset"}, std::string() + "The fee estimate mode, must be one of (case insensitive):\n"
                         "       \"" + FeeModes("\"\n\"") + "\""},
@@ -31,8 +32,8 @@ static RPCHelpMan syscoincreaterawnevmblob()
         },
         RPCResult{RPCResult::Type::ANY, "", ""},
         RPCExamples{
-            HelpExampleCli("syscoincreaterawnevmblob", "\"versionhash\" \"data\" 6 economical 25")
-            + HelpExampleRpc("syscoincreaterawnevmblob", "\"versionhash\" \"data\" 6 economical 25")
+            HelpExampleCli("syscoincreaterawnevmblob", "\"versionhash\" \"data\" \"blake2s\" 6 economical 25")
+            + HelpExampleRpc("syscoincreaterawnevmblob", "\"versionhash\" \"data\" \"blake2s\" 6 economical 25")
         },
     [&](const RPCHelpMan& self, const node::JSONRPCRequest& request) -> UniValue
 { 
@@ -48,10 +49,34 @@ static RPCHelpMan syscoincreaterawnevmblob()
     if(vchData.empty()) {
         throw JSONRPCError(RPC_INVALID_PARAMS, "Empty input, are you sure you passed in hex?");  
     }
+    bool hashTypeProvided = false;
+    std::string hashType = "keccak";
+    if (request.params.size() > 2 && !request.params[2].isNull()) {
+        hashTypeProvided = true;
+        hashType = ToLower(request.params[2].get_str());
+    }
+    if (hashType != "blake2s" && hashType != "keccak") {
+        throw JSONRPCError(RPC_INVALID_PARAMS, "hash_type must be either 'blake2s' or 'keccak'");
+    }
     const std::vector<uint8_t> vchVersionHash = ParseHex(request.params[0].get_str());
-    if (!DecodeNEVMVersionHash(vchVersionHash, nevmData.nVersionHashType, nevmData.vchVersionHash)) {
+    uint8_t decodedType{NEVM_DATA_LEGACY_VERSION_BYTE};
+    std::vector<uint8_t> decodedDigest;
+    if (!DecodeNEVMVersionHash(vchVersionHash, decodedType, decodedDigest)) {
         throw JSONRPCError(RPC_INVALID_PARAMS, "Invalid version hash length");
     }
+    // For 32-byte hashes, infer type from explicit hash_type argument.
+    if (vchVersionHash.size() == NEVM_DATA_LEGACY_VERSIONHASH_SIZE) {
+        nevmData.nVersionHashType = (hashType == "blake2s") ? NEVM_DATA_BLAKE2S_VERSION_BYTE : NEVM_DATA_LEGACY_VERSION_BYTE;
+    } else {
+        nevmData.nVersionHashType = decodedType;
+        // For 33-byte hashes, ensure optional hash_type does not conflict.
+        if (hashTypeProvided &&
+            ((hashType == "blake2s" && nevmData.nVersionHashType != NEVM_DATA_BLAKE2S_VERSION_BYTE) ||
+             (hashType == "keccak" && nevmData.nVersionHashType != NEVM_DATA_LEGACY_VERSION_BYTE))) {
+            throw JSONRPCError(RPC_INVALID_PARAMS, "hash_type does not match versioned hash prefix");
+        }
+    }
+    nevmData.vchVersionHash = decodedDigest;
     std::vector<unsigned char> data;
     nevmData.SerializeData(data);
 
@@ -134,6 +159,7 @@ static RPCHelpMan syscoincreatenevmblob()
     UniValue paramsSend(UniValue::VARR);
     paramsSend.push_back(HexStr(vchVersionHash));
     paramsSend.push_back(HexStr(vchData));
+    paramsSend.push_back(hashType);
     paramsSend.push_back(request.params.size() > 3 ? request.params[3] : UniValue(UniValue::VNULL));
     paramsSend.push_back(request.params.size() > 4 ? request.params[4] : UniValue(UniValue::VNULL));
     paramsSend.push_back(request.params.size() > 5 ? request.params[5] : UniValue(UniValue::VNULL));
