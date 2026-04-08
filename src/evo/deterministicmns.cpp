@@ -24,6 +24,7 @@
 #include <util/fs_helpers.h>
 
 #include <algorithm>
+#include <chrono>
 #include <fstream>
 bool fMasternodeMode = false;
 int64_t DEFAULT_MAX_RECOVERED_SIGS_AGE = 60 * 60 * 24 * 7; // keep them for a week
@@ -31,8 +32,14 @@ int64_t DEFAULT_MAX_RECOVERED_SIGS_AGE = 60 * 60 * 24 * 7; // keep them for a we
 std::unique_ptr<CDeterministicMNManager> deterministicMNManager;
 
 namespace {
-using EvoSnapshotEntry = std::pair<uint256, CDeterministicMNList>;
 using EvoEraseSet = std::unordered_set<uint256, StaticSaltedHasher>;
+
+int64_t ElapsedMillis(const std::chrono::steady_clock::time_point& start)
+{
+    return std::chrono::duration_cast<std::chrono::milliseconds>(
+               std::chrono::steady_clock::now() - start)
+        .count();
+}
 
 fs::path RewriteBackupPath(const fs::path& db_path)
 {
@@ -169,74 +176,28 @@ void RecoverRewriteBackupIfPresent(const DBParams& db_params)
     }
 }
 
-bool SnapshotEntryLess(const EvoSnapshotEntry& a, const EvoSnapshotEntry& b)
+void CollectRetainedSnapshotHashes(
+    const CBlockIndex* tip,
+    std::vector<uint256>& ordered_hashes,
+    EvoEraseSet& retained_hashes)
 {
-    if (a.second.GetHeight() != b.second.GetHeight()) {
-        return a.second.GetHeight() < b.second.GetHeight();
-    }
-    return a.first < b.first;
-}
-
-bool SnapshotEntryGreater(const EvoSnapshotEntry& a, const EvoSnapshotEntry& b)
-{
-    return SnapshotEntryLess(b, a);
-}
-
-void RetainNewestSnapshot(
-    std::vector<EvoSnapshotEntry>& retained_snapshots,
-    size_t& total_snapshots,
-    EvoSnapshotEntry snapshot)
-{
-    ++total_snapshots;
-
-    if (retained_snapshots.size() < CDeterministicMNManager::LIST_CACHE_SIZE) {
-        retained_snapshots.emplace_back(std::move(snapshot));
-        std::push_heap(retained_snapshots.begin(), retained_snapshots.end(), SnapshotEntryGreater);
-        return;
-    }
-
-    if (SnapshotEntryLess(retained_snapshots.front(), snapshot)) {
-        std::pop_heap(retained_snapshots.begin(), retained_snapshots.end(), SnapshotEntryGreater);
-        retained_snapshots.back() = std::move(snapshot);
-        std::push_heap(retained_snapshots.begin(), retained_snapshots.end(), SnapshotEntryGreater);
+    const auto& consensus = Params().GetConsensus();
+    for (const CBlockIndex* pindex = tip;
+         pindex != nullptr &&
+         pindex->nHeight >= consensus.DIP0003Height &&
+         ordered_hashes.size() < CDeterministicMNManager::LIST_CACHE_SIZE;
+         pindex = pindex->pprev) {
+        const uint256 block_hash = pindex->GetBlockHash();
+        ordered_hashes.emplace_back(block_hash);
+        retained_hashes.insert(block_hash);
     }
 }
 
-bool CollectNewestPersistedSnapshots(
+bool CollectPersistedKeysOutsideWindow(
     CEvoDB<uint256, CDeterministicMNList, StaticSaltedHasher>& evo_db,
-    const EvoEraseSet& skip_keys,
-    std::vector<EvoSnapshotEntry>& retained_snapshots,
-    size_t& total_snapshots)
-{
-    std::unique_ptr<CDBIterator> cursor(evo_db.NewIterator());
-    if (!cursor) {
-        LogPrint(BCLog::SYS, "CDeterministicMNManager::%s -- Failed to create EvoDB iterator\n", __func__);
-        return false;
-    }
-
-    for (cursor->SeekToFirst(); cursor->Valid(); cursor->Next()) {
-        uint256 key;
-        if (!cursor->GetKey(key)) {
-            continue;
-        }
-        if (skip_keys.count(key) != 0) {
-            continue;
-        }
-
-        CDeterministicMNList snapshot;
-        if (!cursor->GetValue(snapshot)) {
-            LogPrint(BCLog::SYS, "CDeterministicMNManager::%s -- Failed to read EvoDB snapshot for %s\n", __func__, key.ToString());
-            return false;
-        }
-        RetainNewestSnapshot(retained_snapshots, total_snapshots, std::make_pair(key, std::move(snapshot)));
-    }
-
-    return true;
-}
-
-bool ReadAllPersistedSnapshots(
-    CEvoDB<uint256, CDeterministicMNList, StaticSaltedHasher>& evo_db,
-    std::vector<EvoSnapshotEntry>& snapshots)
+    const EvoEraseSet& retained_hashes,
+    std::vector<uint256>& prune_keys,
+    size_t& persisted_snapshot_count)
 {
     std::unique_ptr<CDBIterator> cursor(evo_db.NewIterator());
     if (!cursor) {
@@ -250,136 +211,32 @@ bool ReadAllPersistedSnapshots(
             continue;
         }
 
-        CDeterministicMNList snapshot;
-        if (!cursor->GetValue(snapshot)) {
-            LogPrint(BCLog::SYS, "CDeterministicMNManager::%s -- Failed to read EvoDB snapshot for %s\n", __func__, key.ToString());
-            return false;
+        ++persisted_snapshot_count;
+        if (retained_hashes.count(key) == 0) {
+            prune_keys.emplace_back(key);
         }
-        snapshots.emplace_back(key, std::move(snapshot));
     }
 
     return true;
 }
 
-bool RewriteSnapshotWindow(
+bool WarmReadCacheFromWindow(
     CEvoDB<uint256, CDeterministicMNList, StaticSaltedHasher>& evo_db,
-    const std::vector<EvoSnapshotEntry>& snapshots)
+    const std::vector<uint256>& ordered_hashes)
 {
-    const auto db_path = evo_db.StoragePath();
-    std::vector<EvoSnapshotEntry> memory_only_backup;
-    fs::path backup_path;
-    fs::path marker_path;
-
-    if (db_path) {
-        backup_path = RewriteBackupPath(*db_path);
-        marker_path = RewriteMarkerPath(*db_path);
-
-        std::error_code ec;
-        fs::remove_all(backup_path, ec);
-        RemoveRewriteMarker(marker_path);
-        if (!WriteRewriteMarker(marker_path, "prepared")) {
-            LogPrint(BCLog::SYS, "CDeterministicMNManager::%s -- Failed to create rewrite marker %s\n",
-                     __func__, fs::PathToString(marker_path));
+    CDeterministicMNList snapshot;
+    const size_t warm_count = std::min<size_t>(
+        ordered_hashes.size(), CDeterministicMNManager::HOT_LIST_CACHE_SIZE);
+    for (size_t i = warm_count; i > 0; --i) {
+        if (!evo_db.ReadCache(ordered_hashes[i - 1], snapshot)) {
+            LogPrint(BCLog::SYS,
+                     "CDeterministicMNManager::%s -- Failed to warm read cache for %s\n",
+                     __func__,
+                     ordered_hashes[i - 1].ToString());
             return false;
         }
-
-        evo_db.CloseDB();
-        fs::rename(*db_path, backup_path, ec);
-        if (ec) {
-            LogPrint(BCLog::SYS, "CDeterministicMNManager::%s -- Failed to back up EvoDB for rewrite: %s\n", __func__, ec.message());
-            RemoveRewriteMarker(marker_path);
-            evo_db.OpenDB(/*create_new=*/false);
-            return false;
-        }
-        evo_db.OpenDB(/*create_new=*/true);
-    } else {
-        if (!ReadAllPersistedSnapshots(evo_db, memory_only_backup)) {
-            return false;
-        }
-        evo_db.ResetDB();
     }
 
-    CDBBatch batch(evo_db);
-    std::size_t items{0};
-    auto restore_original = [&]() {
-        if (db_path) {
-            evo_db.CloseDB();
-
-            std::error_code ec;
-            fs::remove_all(*db_path, ec);
-            fs::rename(backup_path, *db_path, ec);
-            if (ec) {
-                LogPrint(BCLog::SYS, "CDeterministicMNManager::%s -- Failed to restore backed up EvoDB: %s\n", __func__, ec.message());
-            } else {
-                RemoveRewriteMarker(marker_path);
-            }
-            evo_db.OpenDB(/*create_new=*/false);
-        } else {
-            evo_db.ResetDB();
-            CDBBatch restore_batch(evo_db);
-            std::size_t restore_items{0};
-            for (const auto& [key, snapshot] : memory_only_backup) {
-                restore_batch.Write(key, snapshot);
-                if (++restore_items == 256) {
-                    if (!evo_db.SubmitBatchForTesting(restore_batch)) {
-                        return false;
-                    }
-                    restore_batch.Clear();
-                    restore_items = 0;
-                }
-            }
-            if (restore_batch.SizeEstimate() != 0 && !evo_db.SubmitBatchForTesting(restore_batch)) {
-                return false;
-            }
-        }
-        return true;
-    };
-    auto restore_after_failure = [&](const char* message, const std::string& error = std::string()) {
-        if (error.empty()) {
-            LogPrint(BCLog::SYS, "CDeterministicMNManager::%s -- %s\n", __func__, message);
-        } else {
-            LogPrint(BCLog::SYS, "CDeterministicMNManager::%s -- %s: %s\n", __func__, message, error);
-        }
-        try {
-            restore_original();
-        } catch (const std::exception& e) {
-            LogPrint(BCLog::SYS, "CDeterministicMNManager::%s -- Failed to restore EvoDB after rewrite failure: %s\n", __func__, e.what());
-        } catch (...) {
-            LogPrint(BCLog::SYS, "CDeterministicMNManager::%s -- Failed to restore EvoDB after rewrite failure: unknown exception\n", __func__);
-        }
-        return false;
-    };
-
-    try {
-        for (const auto& [key, snapshot] : snapshots) {
-            batch.Write(key, snapshot);
-            if (++items == 256) {
-                if (!evo_db.SubmitBatchForTesting(batch)) {
-                    return restore_after_failure("Failed to write compacted EvoDB batch");
-                }
-                batch.Clear();
-                items = 0;
-            }
-        }
-
-        if (batch.SizeEstimate() != 0 && !evo_db.SubmitBatchForTesting(batch)) {
-            return restore_after_failure("Failed to write final compacted EvoDB batch");
-        }
-        if (db_path && !WriteRewriteMarker(marker_path, "complete")) {
-            return restore_after_failure("Failed to update rewrite marker to complete");
-        }
-    } catch (const std::exception& e) {
-        return restore_after_failure("Exception while rewriting compacted EvoDB", e.what());
-    } catch (...) {
-        return restore_after_failure("Unknown exception while rewriting compacted EvoDB");
-    }
-
-    if (db_path) {
-        RemoveRewriteMarker(marker_path);
-        DestroyDB(fs::PathToString(backup_path));
-    }
-
-    evo_db.ClearCaches();
     return true;
 }
 } // namespace
@@ -388,6 +245,10 @@ CDeterministicMNManager::CDeterministicMNManager(const DBParams& db_params)
 {
     RecoverRewriteBackupIfPresent(db_params);
     m_evoDb = std::make_unique<CEvoDB<uint256, CDeterministicMNList, StaticSaltedHasher>>(db_params, LIST_CACHE_SIZE);
+    if (m_evoDb->CountPersistedEntries() > 0) {
+        m_persistent_window_initialized.store(true, std::memory_order_relaxed);
+        m_evoDb->SetReadCacheSize(HOT_LIST_CACHE_SIZE);
+    }
 }
 
 uint64_t CDeterministicMN::GetInternalId() const
@@ -1409,64 +1270,106 @@ bool CDeterministicMNManager::IsDIP3Enforced(int nHeight)
 }
 
 bool CDeterministicMNManager::DoMaintenance(bool bForceFlush) {
+    if (!bForceFlush) {
+        return true;
+    }
+
     LOCK(m_evoDb->cs);
-    if (m_evoDb->IsCacheFull()) {
-        m_evoDb->ResetDB();
-        bForceFlush = true;
-        LogPrint(BCLog::SYS, "CDeterministicMNManager::DoMaintenance Database successfully wiped and recreated.\n");
-    } else if (bForceFlush) {
+    const auto maintenance_start = std::chrono::steady_clock::now();
+    const CBlockIndex* tip = WITH_LOCK(cs, return tipIndex;);
+    if (tip == nullptr) {
         const size_t cache_entry_count{m_evoDb->GetReadWriteCacheSize()};
         const size_t erase_entry_count{m_evoDb->GetEraseCacheSize()};
-
-        // Shutdown can call the forced flush path twice. If the first pass already
-        // persisted all dirty EvoDB state, avoid rescanning and rewriting the
-        // persisted snapshot window again on the second pass.
         if (cache_entry_count == 0 && erase_entry_count == 0) {
             return true;
         }
+        LogPrint(BCLog::SYS,
+                 "CDeterministicMNManager::%s maintenance without tip; flushing dirty=%zu erase=%zu only elapsed=%d ms\n",
+                 __func__,
+                 cache_entry_count,
+                 erase_entry_count,
+                 ElapsedMillis(maintenance_start));
+        return m_evoDb->FlushCacheToDisk();
+    }
 
-        EvoEraseSet skipped_persisted;
-        skipped_persisted.reserve(cache_entry_count + erase_entry_count);
-        m_evoDb->ForEachEraseEntry([&](const uint256& key) {
-            skipped_persisted.insert(key);
-        });
-        m_evoDb->ForEachCachedEntry([&](const uint256& key, const CDeterministicMNList&) {
-            skipped_persisted.insert(key);
-        });
+    const uint256 tip_hash = tip->GetBlockHash();
+    const size_t cache_entry_count{m_evoDb->GetReadWriteCacheSize()};
+    const size_t erase_entry_count{m_evoDb->GetEraseCacheSize()};
+    const bool persistent_window_initialized =
+        m_persistent_window_initialized.load(std::memory_order_relaxed);
 
-        std::vector<EvoSnapshotEntry> live_snapshots;
-        live_snapshots.reserve(LIST_CACHE_SIZE);
+    if (cache_entry_count == 0 && erase_entry_count == 0 &&
+        WITH_LOCK(cs, return m_last_maintained_tip == tip_hash)) {
+        LogPrint(BCLog::SYS,
+                 "CDeterministicMNManager::%s no-op; tip=%s already maintained elapsed=%d ms\n",
+                 __func__,
+                 tip_hash.ToString(),
+                 ElapsedMillis(maintenance_start));
+        return true;
+    }
 
-        size_t total_live_snapshots{0};
-        if (!CollectNewestPersistedSnapshots(*m_evoDb, skipped_persisted, live_snapshots, total_live_snapshots)) {
+    std::vector<uint256> retained_hashes_ordered;
+    retained_hashes_ordered.reserve(LIST_CACHE_SIZE);
+    EvoEraseSet retained_hashes;
+    retained_hashes.reserve(LIST_CACHE_SIZE * 2);
+    CollectRetainedSnapshotHashes(tip, retained_hashes_ordered, retained_hashes);
+
+    LogPrint(BCLog::SYS,
+             "CDeterministicMNManager::%s maintenance start tip=%s height=%d dirty=%zu erase=%zu retained=%zu persistent_window_initialized=%d\n",
+             __func__,
+             tip_hash.ToString(),
+             tip->nHeight,
+             cache_entry_count,
+             erase_entry_count,
+             retained_hashes_ordered.size(),
+             persistent_window_initialized);
+
+    if ((cache_entry_count != 0 || erase_entry_count != 0) && !m_evoDb->FlushCacheToDisk()) {
+        return false;
+    }
+
+    std::vector<uint256> prune_keys;
+    size_t persisted_snapshot_count{0};
+    if (!CollectPersistedKeysOutsideWindow(
+            *m_evoDb, retained_hashes, prune_keys, persisted_snapshot_count)) {
+        return false;
+    }
+
+    for (const uint256& key : prune_keys) {
+        m_evoDb->EraseCache(key);
+    }
+    if (!prune_keys.empty() && !m_evoDb->FlushCacheToDisk()) {
+        return false;
+    }
+
+    const bool should_initialize_hot_cache =
+        !persistent_window_initialized && !retained_hashes_ordered.empty();
+    if (should_initialize_hot_cache) {
+        m_evoDb->SetReadCacheSize(HOT_LIST_CACHE_SIZE);
+        if (!WarmReadCacheFromWindow(*m_evoDb, retained_hashes_ordered)) {
             return false;
         }
-        m_evoDb->ForEachCachedEntry([&](const uint256& key, const CDeterministicMNList& snapshot) {
-            RetainNewestSnapshot(live_snapshots, total_live_snapshots, std::make_pair(key, snapshot));
-        });
-
-        if (total_live_snapshots > LIST_CACHE_SIZE) {
-            std::sort(live_snapshots.begin(), live_snapshots.end(), SnapshotEntryLess);
-
-            if (!RewriteSnapshotWindow(*m_evoDb, live_snapshots)) {
-                return false;
-            }
-
-            LogPrint(BCLog::SYS,
-                     "CDeterministicMNManager::%s compacted EvoDB to %zu newest snapshots before forced flush.\n",
-                     __func__, live_snapshots.size());
-            return true;
-        }
+        m_persistent_window_initialized.store(true, std::memory_order_relaxed);
     }
-    if(bForceFlush) {
-        if(!m_evoDb->FlushCacheToDisk()) {
-            return false;
-        }
-    }
+
+    WITH_LOCK(cs, m_last_maintained_tip = tip_hash;);
+    LogPrint(BCLog::SYS,
+             "CDeterministicMNManager::%s maintenance complete tip=%s persisted=%zu pruned=%zu read_cache=%zu initialized_hot_cache=%d elapsed=%d ms\n",
+             __func__,
+             tip_hash.ToString(),
+             persisted_snapshot_count,
+             prune_keys.size(),
+             m_evoDb->GetReadCacheSize(),
+             should_initialize_hot_cache,
+             ElapsedMillis(maintenance_start));
     return true;
 }
 bool CDeterministicMNManager::FlushCacheToDisk(bool bForceFlush) {
     return DoMaintenance(bForceFlush);
+}
+bool CDeterministicMNManager::HasPersistentWindow() const
+{
+    return m_persistent_window_initialized.load(std::memory_order_relaxed);
 }
 bool CDeterministicMNManager::GetEvoDBStats(EvoDBStats& stats)
 {

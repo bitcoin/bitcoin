@@ -3240,10 +3240,16 @@ bool Chainstate::FlushStateToDisk(
         bool fPeriodicWrite = mode == FlushStateMode::PERIODIC && nNow > m_last_write + DATABASE_WRITE_INTERVAL;
         // It's been very long since we flushed the cache. Do this infrequently, to optimize cache usage.
         bool fPeriodicFlush = mode == FlushStateMode::PERIODIC && nNow > m_last_flush + DATABASE_FLUSH_INTERVAL;
+        const bool in_ibd = m_chainman.IsInitialBlockDownload();
+        const bool dmn_window_init_needed =
+            mode == FlushStateMode::PERIODIC &&
+            !in_ibd &&
+            deterministicMNManager &&
+            !deterministicMNManager->HasPersistentWindow();
         // Combine all conditions that result in a full cache flush.
         fDoFullFlush = (mode == FlushStateMode::ALWAYS) || fCacheLarge || fCacheCritical || fPeriodicFlush || fFlushForPrune;
         // Write blocks and block index to disk.
-        if (fDoFullFlush || fPeriodicWrite) {
+        if (fDoFullFlush || fPeriodicWrite || dmn_window_init_needed) {
             // Ensure we can write block index
             if (!CheckDiskSpace(m_blockman.m_opts.blocks_dir)) {
                 return FatalError(m_chainman.GetNotifications(), state, "Disk space is too low!", _("Disk space is too low!"));
@@ -3286,8 +3292,17 @@ bool Chainstate::FlushStateToDisk(
             if (pnevmtxmintdb && !pnevmtxmintdb->FlushCacheToDisk()) {
                 return FatalError(m_chainman.GetNotifications(), state, "Failed to commit to nevm tx mint db");
             }
-            if (deterministicMNManager && !deterministicMNManager->FlushCacheToDisk(mode == FlushStateMode::ALWAYS)) {
-                return FatalError(m_chainman.GetNotifications(), state, "Failed to commit DMN DB");
+            const bool force_dmn_maintenance =
+                deterministicMNManager &&
+                (mode == FlushStateMode::ALWAYS ||
+                 (mode == FlushStateMode::PERIODIC && !in_ibd));
+            if (force_dmn_maintenance) {
+                if (mode == FlushStateMode::PERIODIC) {
+                    LogPrint(BCLog::SYS, "%s: requesting periodic DMN EvoDB maintenance at height %d\n", __func__, m_chain.Height());
+                }
+                if (!deterministicMNManager->FlushCacheToDisk(force_dmn_maintenance)) {
+                    return FatalError(m_chainman.GetNotifications(), state, "Failed to commit DMN DB");
+                }
             }
             if (governance && !governance->FlushCacheToDisk()) {
                 return FatalError(m_chainman.GetNotifications(), state, "Failed to commit governance DB");

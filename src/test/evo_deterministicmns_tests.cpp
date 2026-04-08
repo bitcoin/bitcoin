@@ -18,6 +18,7 @@
 #include <evo/specialtx.h>
 #include <evo/providertx.h>
 #include <evo/deterministicmns.h>
+#include <chainparams.h>
 #include <dbwrapper.h>
 #include <boost/test/unit_test.hpp>
 #include <test/util/txmempool.h>
@@ -245,6 +246,35 @@ static void WriteSnapshotRange(CDeterministicMNManager& manager, int start_heigh
         const int height = start_height + i;
         manager.m_evoDb->WriteCache(MakeSnapshotKey(height), MakeSnapshot(height));
     }
+}
+
+struct SnapshotIndexChain {
+    int start_height{0};
+    std::vector<uint256> hashes;
+    std::vector<CBlockIndex> indices;
+
+    const CBlockIndex* Tip() const
+    {
+        return indices.empty() ? nullptr : &indices.back();
+    }
+
+    const CBlockIndex* At(int height) const
+    {
+        return &indices.at(height - start_height);
+    }
+};
+
+static SnapshotIndexChain BuildSnapshotIndexChain(int start_height, int count)
+{
+    SnapshotIndexChain chain{start_height, std::vector<uint256>(count), std::vector<CBlockIndex>(count)};
+    for (int i = 0; i < count; ++i) {
+        const int height = start_height + i;
+        chain.hashes[i] = MakeSnapshotKey(height);
+        chain.indices[i].nHeight = height;
+        chain.indices[i].pprev = i == 0 ? nullptr : &chain.indices[i - 1];
+        chain.indices[i].phashBlock = &chain.hashes[i];
+    }
+    return chain;
 }
 
 void FuncDIP3Activation(TestChain100Setup& setup)
@@ -714,134 +744,141 @@ BOOST_AUTO_TEST_SUITE_END()
 
 BOOST_AUTO_TEST_SUITE(evo_dmn_db_maintenance_tests)
 
-BOOST_AUTO_TEST_CASE(forced_flush_compacts_persisted_snapshots_window)
+BOOST_AUTO_TEST_CASE(non_forced_flush_does_not_persist_snapshots_during_ibd)
 {
+    SelectParams(ChainType::MAIN);
     const int cache_limit = CDeterministicMNManager::LIST_CACHE_SIZE;
-    BOOST_REQUIRE_EQUAL(cache_limit % 3, 0);
-    const int sub_flush_batch = cache_limit / 3;
+    const int start_height = Params().GetConsensus().DIP0003Height;
 
     auto db_params = DBParams{
-        .path = "testdb",
+        .path = "testdb_dmn_ibd_no_persist",
         .cache_bytes = static_cast<size_t>(1 << 20),
         .memory_only = true,
         .wipe_data = true,
     };
     CDeterministicMNManager manager(db_params);
+    const auto chain = BuildSnapshotIndexChain(start_height, cache_limit);
+    manager.UpdatedBlockTip(chain.Tip());
 
-    for (int batch = 0; batch < 3; ++batch) {
-        WriteSnapshotRange(manager, batch * sub_flush_batch, sub_flush_batch);
-        BOOST_REQUIRE(manager.FlushCacheToDisk(/*bForceFlush=*/true));
-        BOOST_CHECK_EQUAL(manager.m_evoDb->CountPersistedEntries(), (batch + 1) * sub_flush_batch);
-    }
+    WriteSnapshotRange(manager, start_height, cache_limit);
+    BOOST_REQUIRE(manager.FlushCacheToDisk(/*bForceFlush=*/false));
 
-    // Reproduce the shutdown-growth bug: cache is below 1728, but disk already
-    // holds a full 3-day window. Forced flush must compact instead of appending.
-    WriteSnapshotRange(manager, cache_limit, 1);
+    BOOST_CHECK_EQUAL(manager.m_evoDb->CountPersistedEntries(), 0);
+    BOOST_CHECK_EQUAL(manager.m_evoDb->GetReadWriteCacheSize(), static_cast<size_t>(cache_limit));
+    BOOST_CHECK_EQUAL(manager.m_evoDb->GetEraseCacheSize(), 0U);
+    BOOST_CHECK_EQUAL(manager.m_evoDb->GetReadCacheSize(), 0U);
+    BOOST_CHECK(!manager.HasPersistentWindow());
+}
+
+BOOST_AUTO_TEST_CASE(first_forced_flush_initializes_persisted_window_and_hot_cache)
+{
+    SelectParams(ChainType::MAIN);
+    const int cache_limit = CDeterministicMNManager::LIST_CACHE_SIZE;
+    const int start_height = Params().GetConsensus().DIP0003Height;
+    const int total_snapshots = cache_limit + 8;
+    const int oldest_retained_height = start_height + total_snapshots - cache_limit;
+
+    auto db_params = DBParams{
+        .path = "testdb_dmn_init_window",
+        .cache_bytes = static_cast<size_t>(1 << 20),
+        .memory_only = true,
+        .wipe_data = true,
+    };
+    CDeterministicMNManager manager(db_params);
+    const auto chain = BuildSnapshotIndexChain(start_height, total_snapshots);
+    manager.UpdatedBlockTip(chain.Tip());
+
+    WriteSnapshotRange(manager, start_height, total_snapshots);
     BOOST_REQUIRE(manager.FlushCacheToDisk(/*bForceFlush=*/true));
 
+    BOOST_CHECK(manager.HasPersistentWindow());
     BOOST_CHECK_EQUAL(manager.m_evoDb->CountPersistedEntries(), cache_limit);
     BOOST_CHECK_EQUAL(manager.m_evoDb->GetReadWriteCacheSize(), 0U);
     BOOST_CHECK_EQUAL(manager.m_evoDb->GetEraseCacheSize(), 0U);
+    BOOST_CHECK_EQUAL(
+        manager.m_evoDb->GetReadCacheSize(),
+        static_cast<size_t>(CDeterministicMNManager::HOT_LIST_CACHE_SIZE));
 
     CDeterministicMNList snapshot;
-    BOOST_CHECK(!manager.m_evoDb->Read(MakeSnapshotKey(0), snapshot));
-    BOOST_CHECK(manager.m_evoDb->Read(MakeSnapshotKey(1), snapshot));
-    BOOST_CHECK_EQUAL(snapshot.GetHeight(), 1);
-    BOOST_CHECK(manager.m_evoDb->Read(MakeSnapshotKey(cache_limit), snapshot));
-    BOOST_CHECK_EQUAL(snapshot.GetHeight(), cache_limit);
+    BOOST_CHECK(!manager.m_evoDb->Read(MakeSnapshotKey(oldest_retained_height - 1), snapshot));
+    BOOST_REQUIRE(manager.m_evoDb->Read(MakeSnapshotKey(oldest_retained_height), snapshot));
+    BOOST_CHECK_EQUAL(snapshot.GetHeight(), oldest_retained_height);
+    BOOST_REQUIRE(manager.m_evoDb->Read(MakeSnapshotKey(start_height + total_snapshots - 1), snapshot));
+    BOOST_CHECK_EQUAL(snapshot.GetHeight(), start_height + total_snapshots - 1);
 }
 
-BOOST_AUTO_TEST_CASE(forced_flush_rewrite_failure_preserves_existing_snapshots)
+BOOST_AUTO_TEST_CASE(subsequent_forced_flush_appends_and_prunes_without_rewrite)
 {
+    SelectParams(ChainType::MAIN);
     const int cache_limit = CDeterministicMNManager::LIST_CACHE_SIZE;
-    BOOST_REQUIRE_EQUAL(cache_limit % 3, 0);
-    const int sub_flush_batch = cache_limit / 3;
+    const int start_height = Params().GetConsensus().DIP0003Height;
 
     auto db_params = DBParams{
-        .path = "testdb_dmn_rewrite_failure",
+        .path = "testdb_dmn_incremental_append_prune",
         .cache_bytes = static_cast<size_t>(1 << 20),
         .memory_only = false,
         .wipe_data = true,
     };
     CDeterministicMNManager manager(db_params);
 
-    for (int batch = 0; batch < 3; ++batch) {
-        WriteSnapshotRange(manager, batch * sub_flush_batch, sub_flush_batch);
-        BOOST_REQUIRE(manager.FlushCacheToDisk(/*bForceFlush=*/true));
-    }
+    const auto initial_chain = BuildSnapshotIndexChain(start_height, cache_limit + 1);
+    manager.UpdatedBlockTip(initial_chain.Tip());
+    WriteSnapshotRange(manager, start_height, cache_limit + 1);
+    BOOST_REQUIRE(manager.FlushCacheToDisk(/*bForceFlush=*/true));
+    BOOST_CHECK(manager.HasPersistentWindow());
 
-    WriteSnapshotRange(manager, cache_limit, 1);
+    const auto extended_chain = BuildSnapshotIndexChain(start_height, cache_limit + 2);
+    manager.UpdatedBlockTip(extended_chain.Tip());
+    WriteSnapshotRange(manager, start_height + cache_limit + 1, 1);
+    BOOST_REQUIRE(manager.FlushCacheToDisk(/*bForceFlush=*/true));
 
-    int batch_calls{0};
-    manager.m_evoDb->SetWriteBatchHookForTesting([&](CDBBatch&) {
-        ++batch_calls;
-        return false;
-    });
-
-    BOOST_CHECK(!manager.FlushCacheToDisk(/*bForceFlush=*/true));
-    BOOST_CHECK_EQUAL(batch_calls, 1);
+    BOOST_CHECK_EQUAL(manager.m_evoDb->CountPersistedEntries(), cache_limit);
+    BOOST_CHECK_EQUAL(
+        manager.m_evoDb->GetReadCacheSize(),
+        static_cast<size_t>(CDeterministicMNManager::HOT_LIST_CACHE_SIZE));
 
     CDeterministicMNList snapshot;
-    BOOST_CHECK(manager.m_evoDb->Read(MakeSnapshotKey(0), snapshot));
-    BOOST_CHECK_EQUAL(snapshot.GetHeight(), 0);
-    BOOST_CHECK(manager.m_evoDb->Read(MakeSnapshotKey(cache_limit - 1), snapshot));
-    BOOST_CHECK_EQUAL(snapshot.GetHeight(), cache_limit - 1);
-    BOOST_CHECK(!manager.m_evoDb->Read(MakeSnapshotKey(cache_limit), snapshot));
-    BOOST_CHECK(manager.m_evoDb->ReadCache(MakeSnapshotKey(cache_limit), snapshot));
-    BOOST_CHECK_EQUAL(snapshot.GetHeight(), cache_limit);
+    BOOST_CHECK(!manager.m_evoDb->Read(MakeSnapshotKey(start_height + 1), snapshot));
+    BOOST_REQUIRE(manager.m_evoDb->Read(MakeSnapshotKey(start_height + 2), snapshot));
+    BOOST_CHECK_EQUAL(snapshot.GetHeight(), start_height + 2);
+    BOOST_REQUIRE(manager.m_evoDb->Read(MakeSnapshotKey(start_height + cache_limit + 1), snapshot));
+    BOOST_CHECK_EQUAL(snapshot.GetHeight(), start_height + cache_limit + 1);
 
-    manager.m_evoDb->SetWriteBatchHookForTesting({});
-    BOOST_REQUIRE(manager.FlushCacheToDisk(/*bForceFlush=*/true));
-    BOOST_CHECK(!manager.m_evoDb->Read(MakeSnapshotKey(0), snapshot));
-    BOOST_CHECK(manager.m_evoDb->Read(MakeSnapshotKey(1), snapshot));
-    BOOST_CHECK_EQUAL(snapshot.GetHeight(), 1);
-    BOOST_CHECK(manager.m_evoDb->Read(MakeSnapshotKey(cache_limit), snapshot));
-    BOOST_CHECK_EQUAL(snapshot.GetHeight(), cache_limit);
+    fs::path backup_path = db_params.path;
+    backup_path += ".rewrite-backup";
+    fs::path marker_path = db_params.path;
+    marker_path += ".rewrite-in-progress";
+    BOOST_CHECK(!fs::exists(backup_path));
+    BOOST_CHECK(!fs::exists(marker_path));
 }
 
-BOOST_AUTO_TEST_CASE(forced_flush_rewrite_exception_preserves_existing_snapshots)
+BOOST_AUTO_TEST_CASE(older_snapshot_reads_fall_back_to_disk_after_hot_cache_shrink)
 {
+    SelectParams(ChainType::MAIN);
     const int cache_limit = CDeterministicMNManager::LIST_CACHE_SIZE;
-    BOOST_REQUIRE_EQUAL(cache_limit % 3, 0);
-    const int sub_flush_batch = cache_limit / 3;
+    const int start_height = Params().GetConsensus().DIP0003Height;
+    const int total_snapshots = cache_limit + CDeterministicMNManager::HOT_LIST_CACHE_SIZE + 1;
+    const int fallback_height =
+        start_height + total_snapshots - CDeterministicMNManager::HOT_LIST_CACHE_SIZE - 1;
 
     auto db_params = DBParams{
-        .path = "testdb_dmn_rewrite_exception",
+        .path = "testdb_dmn_hot_cache_fallback",
         .cache_bytes = static_cast<size_t>(1 << 20),
-        .memory_only = false,
+        .memory_only = true,
         .wipe_data = true,
     };
     CDeterministicMNManager manager(db_params);
+    const auto chain = BuildSnapshotIndexChain(start_height, total_snapshots);
+    manager.UpdatedBlockTip(chain.Tip());
 
-    for (int batch = 0; batch < 3; ++batch) {
-        WriteSnapshotRange(manager, batch * sub_flush_batch, sub_flush_batch);
-        BOOST_REQUIRE(manager.FlushCacheToDisk(/*bForceFlush=*/true));
-    }
-
-    WriteSnapshotRange(manager, cache_limit, 1);
-
-    manager.m_evoDb->SetWriteBatchHookForTesting([&](CDBBatch&) -> bool {
-        throw dbwrapper_error("injected rewrite failure");
-    });
-
-    BOOST_CHECK(!manager.FlushCacheToDisk(/*bForceFlush=*/true));
-
-    CDeterministicMNList snapshot;
-    BOOST_CHECK(manager.m_evoDb->Read(MakeSnapshotKey(0), snapshot));
-    BOOST_CHECK_EQUAL(snapshot.GetHeight(), 0);
-    BOOST_CHECK(manager.m_evoDb->Read(MakeSnapshotKey(cache_limit - 1), snapshot));
-    BOOST_CHECK_EQUAL(snapshot.GetHeight(), cache_limit - 1);
-    BOOST_CHECK(!manager.m_evoDb->Read(MakeSnapshotKey(cache_limit), snapshot));
-    BOOST_CHECK(manager.m_evoDb->ReadCache(MakeSnapshotKey(cache_limit), snapshot));
-    BOOST_CHECK_EQUAL(snapshot.GetHeight(), cache_limit);
-
-    manager.m_evoDb->SetWriteBatchHookForTesting({});
+    WriteSnapshotRange(manager, start_height, total_snapshots);
     BOOST_REQUIRE(manager.FlushCacheToDisk(/*bForceFlush=*/true));
-    BOOST_CHECK(!manager.m_evoDb->Read(MakeSnapshotKey(0), snapshot));
-    BOOST_CHECK(manager.m_evoDb->Read(MakeSnapshotKey(1), snapshot));
-    BOOST_CHECK_EQUAL(snapshot.GetHeight(), 1);
-    BOOST_CHECK(manager.m_evoDb->Read(MakeSnapshotKey(cache_limit), snapshot));
-    BOOST_CHECK_EQUAL(snapshot.GetHeight(), cache_limit);
+
+    const CDeterministicMNList snapshot = manager.GetListForBlock(chain.At(fallback_height));
+    BOOST_CHECK_EQUAL(snapshot.GetHeight(), fallback_height);
+    BOOST_CHECK_EQUAL(
+        manager.m_evoDb->GetReadCacheSize(),
+        static_cast<size_t>(CDeterministicMNManager::HOT_LIST_CACHE_SIZE));
 }
 
 BOOST_AUTO_TEST_CASE(rewrite_backup_is_recovered_on_restart)
