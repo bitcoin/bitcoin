@@ -7,33 +7,37 @@ Library versions are tracked with simple
 Versioning policy is described in the [version.h](../include/mp/version.h)
 include.
 
-## v9
+## v10
 - Current unstable version.
+
+## [v9.0](https://github.com/bitcoin-core/libmultiprocess/commits/v9.0)
+- Fixes race conditions where worker thread could be used after destruction, where getParams() could be called after request cancel, and where m_on_cancel could be called after request finishes.
+- Adds `CustomHasField` hook to map Cap'n Proto null values to C++ null values.
+- Improves `CustomBuildField` for `std::optional` to use move semantics.
+- Adds LLVM 22 compatibility fix in type-map.
+- Used in Bitcoin Core master branch, pulled in by [#34804](https://github.com/bitcoin/bitcoin/pull/34804). Also pulled into Bitcoin Core 31.x stable branch by [#34952](https://github.com/bitcoin/bitcoin/pull/34952).
 
 ## [v8.0](https://github.com/bitcoin-core/libmultiprocess/commits/v8.0)
 - Better support for non-libmultiprocess IPC clients: avoiding errors on unclean disconnects, and allowing simultaneous requests to worker threads which previously triggered "thread busy" errors.
-- Used in Bitcoin Core, pulled in by [#34422](https://github.com/bitcoin/bitcoin/pull/34422).
+- Intermediate version used in Bitcoin Core master branch between 30.x and 31.x branches, pulled in by [#34422](https://github.com/bitcoin/bitcoin/pull/34422).
 
 ## [v7.0](https://github.com/bitcoin-core/libmultiprocess/commits/v7.0)
 - Adds SpawnProcess race fix, cmake `target_capnp_sources` option, ci and documentation improvements. Adds `version.h` header declaring major and minor version numbers.
-- Used in Bitcoin Core, pulled in by [#34363](https://github.com/bitcoin/bitcoin/pull/34363).
+- Intermediate version used in Bitcoin Core master branch between 30.x and 31.x branches, pulled in by [#34363](https://github.com/bitcoin/bitcoin/pull/34363).
 
 ## [v7.0-pre2](https://github.com/bitcoin-core/libmultiprocess/commits/v7.0-pre2)
 - Fixes intermittent mptest hang and makes other minor improvements.
 - Used in Bitcoin Core 30.1 and 30.2 releases and 30.x branch, pulled in by [#33518](https://github.com/bitcoin/bitcoin/pull/33518) and [#33519](https://github.com/bitcoin/bitcoin/pull/33519).
 
 ## [v7.0-pre1](https://github.com/bitcoin-core/libmultiprocess/commits/v7.0-pre1)
-
 - Adds support for log levels to reduce logging and "thread busy" error to avoid a crash on misuse.
-- Minimum required version for Bitcoin Core 30.1 and 30.2 releases and 30.x branch, pulled in by [#33412](https://github.com/bitcoin/bitcoin/pull/33412), [#33518](https://github.com/bitcoin/bitcoin/pull/33518), and [#33519](https://github.com/bitcoin/bitcoin/pull/33519).
+- Minimum required version since Bitcoin Core 30.1, pulled in by [#33412](https://github.com/bitcoin/bitcoin/pull/33412), [#33518](https://github.com/bitcoin/bitcoin/pull/33518), and [#33519](https://github.com/bitcoin/bitcoin/pull/33519).
 
 ## [v6.0](https://github.com/bitcoin-core/libmultiprocess/commits/v6.0)
-
 - Adds CI scripts and build and test fixes.
 - Used in Bitcoin Core 30.0 release, pulled in by [#32345](https://github.com/bitcoin/bitcoin/pull/32345), [#33241](https://github.com/bitcoin/bitcoin/pull/33241), and [#33322](https://github.com/bitcoin/bitcoin/pull/33322).
 
 ## [v6.0-pre1](https://github.com/bitcoin-core/libmultiprocess/commits/v6.0-pre1)
-
 - Adds fixes for unclean shutdowns and thread sanitizer issues.
 - Drops `EventLoop::addClient` and `EventLoop::removeClient` methods,
   requiring clients to use new `EventLoopRef` class instead.
