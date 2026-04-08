@@ -3600,7 +3600,7 @@ void PeerManagerImpl::ProcessMessage(Peer& peer, CNode& pfrom, const std::string
         }
         vRecv.ignore(8); // Ignore the addrMe service bits sent by the peer
         vRecv >> CNetAddr::V1(addrMe);
-        if (!pfrom.IsInboundConn())
+        if (!pfrom.IsInboundConn() && !pfrom.IsPrivateBroadcastConn())
         {
             // Overwrites potentially existing services. In contrast to this,
             // unvalidated services received via gossip relay in ADDR/ADDRV2
