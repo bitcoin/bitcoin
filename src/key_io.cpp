@@ -211,7 +211,7 @@ CTxDestination DecodeDestination(const std::string& str, const CChainParams& par
 }
 } // namespace
 
-CKey DecodeSecret(const std::string& str)
+CKey DecodeSecret(std::string_view str)
 {
     CKey key;
     std::vector<unsigned char> data;
@@ -242,7 +242,7 @@ std::string EncodeSecret(const CKey& key)
     return ret;
 }
 
-CExtPubKey DecodeExtPubKey(const std::string& str)
+CExtPubKey DecodeExtPubKey(std::string_view str)
 {
     CExtPubKey key;
     std::vector<unsigned char> data;
@@ -265,7 +265,7 @@ std::string EncodeExtPubKey(const CExtPubKey& key)
     return ret;
 }
 
-CExtKey DecodeExtKey(const std::string& str)
+CExtKey DecodeExtKey(std::string_view str)
 {
     CExtKey key;
     std::vector<unsigned char> data;
@@ -279,6 +279,25 @@ CExtKey DecodeExtKey(const std::string& str)
         memory_cleanse(data.data(), data.size());
     }
     return key;
+}
+
+std::pair<CExtKey, CExtPubKey> DecodeExtKeyOrPubKey(std::string_view str)
+{
+    std::pair<CExtKey, CExtPubKey> result;
+    std::vector<unsigned char> data;
+    if (DecodeBase58Check(str, data, 78)) {
+        const std::vector<unsigned char>& priv_prefix = Params().Base58Prefix(CChainParams::EXT_SECRET_KEY);
+        const std::vector<unsigned char>& pub_prefix = Params().Base58Prefix(CChainParams::EXT_PUBLIC_KEY);
+        if (data.size() == BIP32_EXTKEY_SIZE + priv_prefix.size() && std::equal(priv_prefix.begin(), priv_prefix.end(), data.begin())) {
+            result.first.Decode(data.data() + priv_prefix.size());
+        } else if (data.size() == BIP32_EXTKEY_SIZE + pub_prefix.size() && std::equal(pub_prefix.begin(), pub_prefix.end(), data.begin())) {
+            result.second.Decode(data.data() + pub_prefix.size());
+        }
+    }
+    if (!data.empty()) {
+        memory_cleanse(data.data(), data.size());
+    }
+    return result;
 }
 
 std::string EncodeExtKey(const CExtKey& key)
