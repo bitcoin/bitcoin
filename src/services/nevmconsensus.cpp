@@ -57,7 +57,7 @@ void CNEVMDataDB::FlushDataToCache(const PoDAMAPMemory &mapPoDA) {
         pnevmdatablobdb->WriteBatch(batchblob);
     }
 }
-bool CNEVMDataDB::FlushCacheToDisk(const int64_t nMedianTime) {
+bool CNEVMDataDB::FlushCacheToDisk(const int64_t nMedianTime, bool fSync) {
     bool cacheEmpty = false;
     {
         LOCK(cs_cache);
@@ -65,7 +65,7 @@ bool CNEVMDataDB::FlushCacheToDisk(const int64_t nMedianTime) {
     }
     if(cacheEmpty) {
         if(fTestNet) {
-            return PruneStandalone(nMedianTime);
+            return PruneStandalone(nMedianTime, fSync);
         }
         return true;
     }
@@ -85,7 +85,7 @@ bool CNEVMDataDB::FlushCacheToDisk(const int64_t nMedianTime) {
     }
     if(mapCache.size() > 0)
         LogPrint(BCLog::SYS, "Flushing cache to disk, storing %d nevm blobs\n", mapCache.size());
-    bool res = WriteBatch(batch, true);
+    bool res = WriteBatch(batch, fSync);
     if(res) {
         mapCache.clear();
     }
@@ -183,7 +183,7 @@ bool CNEVMDataDB::PruneToBatch(
     return true;
 }
 
-bool CNEVMDataDB::PruneStandalone(const int64_t nMedianTime)
+bool CNEVMDataDB::PruneStandalone(const int64_t nMedianTime, bool fSync)
 {
     LOCK(cs_cache);
     CDBBatch batch(*this);
@@ -191,5 +191,5 @@ bool CNEVMDataDB::PruneStandalone(const int64_t nMedianTime)
     if (!PruneToBatch(batch, batchblob, nMedianTime)) {
         return false;
     }
-    return WriteBatch(batch, true) && pnevmdatablobdb->WriteBatch(batchblob);
+    return WriteBatch(batch, fSync) && pnevmdatablobdb->WriteBatch(batchblob, fSync);
 }

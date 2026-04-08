@@ -183,7 +183,7 @@ public:
         setEraseCache.insert(key);
     }
 
-    bool FlushCacheToDisk(std::size_t CHUNK_ITEMS = 256)
+    bool FlushCacheToDisk(std::size_t CHUNK_ITEMS = 256, bool fSync = true)
     {
         LOCK(cs);
         if (mapCache.empty() && setEraseCache.empty()) return true;
@@ -193,7 +193,7 @@ public:
         std::size_t count = 0;
         auto flush = [&]() {
             if (batch.SizeEstimate() == 0) return true;
-            if (!WriteBatch(batch, /*sync=*/true)) return false;
+            if (!WriteBatch(batch, fSync)) return false;
             batch.Clear();
             items = 0;
             return true;

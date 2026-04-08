@@ -48,7 +48,7 @@ public:
 
     bool HasMinedCommitment(const uint256& quorumHash);
     CFinalCommitmentPtr GetMinedCommitment(const uint256& quorumHash, uint256& retMinedBlockHash);
-    bool FlushCacheToDisk();
+    bool FlushCacheToDisk(bool fSync = true);
     static bool IsMiningPhase(int nHeight);
 private:
     static bool GetCommitmentsFromBlock(const CBlock& block, const uint32_t& nHeight, llmq::CFinalCommitmentTxPayload &qcRet, BlockValidationState& state) EXCLUSIVE_LOCKS_REQUIRED(::cs_main);

@@ -524,8 +524,8 @@ public:
     // Test if given TX is a ProRegTx which also contains the collateral at index n
     static bool IsProTxWithCollateral(const CTransactionRef& tx, uint32_t n);
     bool IsDIP3Enforced(int nHeight = -1) EXCLUSIVE_LOCKS_REQUIRED(!cs);
-    bool FlushCacheToDisk(bool bForceFlush) EXCLUSIVE_LOCKS_REQUIRED(!cs);
-    bool DoMaintenance(bool bForceFlush) EXCLUSIVE_LOCKS_REQUIRED(!cs);
+    bool FlushCacheToDisk(bool bForceFlush, bool fSync = true) EXCLUSIVE_LOCKS_REQUIRED(!cs);
+    bool DoMaintenance(bool bForceFlush, bool fSync = true) EXCLUSIVE_LOCKS_REQUIRED(!cs);
     void UpdatedBlockTip(const CBlockIndex* pindex) EXCLUSIVE_LOCKS_REQUIRED(!cs);
     bool GetEvoDBStats(EvoDBStats& stats) EXCLUSIVE_LOCKS_REQUIRED(!cs);
     bool HasPersistentWindow() const;

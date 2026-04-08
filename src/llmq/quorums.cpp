@@ -387,7 +387,7 @@ void CQuorumManager::StartCachePopulatorThread(const CQuorumCPtr pQuorum) const
     });
 }
 
-bool CQuorumManager::DoMaintenance(bool bForceFlush) {
+bool CQuorumManager::DoMaintenance(bool bForceFlush, bool fSync) {
     {
         LOCK(evoDb_vvec->cs);
         if (evoDb_vvec->IsCacheFull()) {
@@ -396,7 +396,7 @@ bool CQuorumManager::DoMaintenance(bool bForceFlush) {
             LogPrint(BCLog::SYS, "CQuorumManager::DoMaintenance evoDb_vvec Database successfully wiped and recreated.\n");
         }
         if(bForceFlush) {
-            if(!evoDb_vvec->FlushCacheToDisk()) {
+            if(!evoDb_vvec->FlushCacheToDisk(/*CHUNK_ITEMS=*/256, fSync)) {
                 return false;
             }
         }
@@ -409,15 +409,15 @@ bool CQuorumManager::DoMaintenance(bool bForceFlush) {
             LogPrint(BCLog::SYS, "CQuorumManager::DoMaintenance evoDb_sk Database successfully wiped and recreated.\n");
         }
         if(bForceFlush) {
-            if(!evoDb_sk->FlushCacheToDisk()) {
+            if(!evoDb_sk->FlushCacheToDisk(/*CHUNK_ITEMS=*/256, fSync)) {
                 return false;
             }
         }
     }
     return true;
 }
-bool CQuorumManager::FlushCacheToDisk(bool bForceFlush) {
-    return DoMaintenance(bForceFlush);
+bool CQuorumManager::FlushCacheToDisk(bool bForceFlush, bool fSync) {
+    return DoMaintenance(bForceFlush, fSync);
 }
 
 CQuorumCPtr SelectQuorumForSigning(ChainstateManager& chainman,

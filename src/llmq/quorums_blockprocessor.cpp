@@ -435,8 +435,8 @@ bool CQuorumBlockProcessor::GetMinableCommitment(int nHeight, CFinalCommitment& 
 
     return true;
 }
-bool CQuorumBlockProcessor::FlushCacheToDisk() {
-    return m_commitment_evoDb.FlushCacheToDisk();
+bool CQuorumBlockProcessor::FlushCacheToDisk(bool fSync) {
+    return m_commitment_evoDb.FlushCacheToDisk(/*CHUNK_ITEMS=*/256, fSync);
 }
 
 } // namespace llmq

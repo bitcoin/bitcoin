@@ -1343,7 +1343,7 @@ public:
     bool FlushErase(const std::vector<std::pair<uint256,uint32_t> > &vecTXIDPairs);
     bool FlushErase(const std::vector<std::pair<uint256,uint32_t> > &vecTXIDPairs, CDBBatch &batch);
     void FlushDataToCache(const std::vector<std::pair<uint256,uint32_t> > &vecTXIDPairs);
-    bool FlushCacheToDisk(const uint32_t &nHeight, std::size_t CHUNK_ITEMS = 100000);
+    bool FlushCacheToDisk(const uint32_t &nHeight, std::size_t CHUNK_ITEMS = 100000, bool fSync = true);
 };
 extern std::unique_ptr<CBlockIndexDB> pblockindexdb;
 // SYSCOIN

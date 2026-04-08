@@ -29,9 +29,9 @@ private:
 public:
     using CDBWrapper::CDBWrapper;
     bool FlushErase(const NEVMDataVec &vecDataKeys) EXCLUSIVE_LOCKS_REQUIRED(!cs_cache);
-    bool FlushCacheToDisk(const int64_t nMedianTime) EXCLUSIVE_LOCKS_REQUIRED(!cs_cache);
+    bool FlushCacheToDisk(const int64_t nMedianTime, bool fSync = true) EXCLUSIVE_LOCKS_REQUIRED(!cs_cache);
     void FlushDataToCache(const PoDAMAPMemory &mapPoDA) EXCLUSIVE_LOCKS_REQUIRED(!cs_cache);
-    bool PruneStandalone(const int64_t nMedianTime) EXCLUSIVE_LOCKS_REQUIRED(!cs_cache);
+    bool PruneStandalone(const int64_t nMedianTime, bool fSync = true) EXCLUSIVE_LOCKS_REQUIRED(!cs_cache);
     bool PruneToBatch(CDBBatch& batch,CDBBatch& batchblob,  const int64_t nMedianTime) EXCLUSIVE_LOCKS_REQUIRED(cs_cache);
     bool GetBlobMetaData(const std::vector<uint8_t>& vchVersionhash, MapPoDAPayloadMeta& meta) EXCLUSIVE_LOCKS_REQUIRED(!cs_cache);
     bool BlobExists(const std::vector<uint8_t>& vchVersionhash) EXCLUSIVE_LOCKS_REQUIRED(!cs_cache);

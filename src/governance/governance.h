@@ -273,7 +273,7 @@ public:
     const std::unique_ptr<CEvoDB<uint256, CAmount, StaticSaltedHasher>> m_sb;
     explicit CGovernanceManager(ChainstateManager& _chainman);
     ~CGovernanceManager();
-    bool FlushCacheToDisk();
+    bool FlushCacheToDisk(bool fSync = true);
 
     bool LoadCache(bool load_cache);
 

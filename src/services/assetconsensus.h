@@ -19,7 +19,7 @@ public:
     using CDBWrapper::CDBWrapper;
     bool FlushErase(const std::vector<uint256> &vecBlockHashes) EXCLUSIVE_LOCKS_REQUIRED(!cs_cache);
     bool ReadTxRoots(const uint256& nBlockHash, NEVMTxRoot& txRoot) EXCLUSIVE_LOCKS_REQUIRED(!cs_cache);
-    bool FlushCacheToDisk(std::size_t CHUNK_ITEMS = 100000) EXCLUSIVE_LOCKS_REQUIRED(!cs_cache);
+    bool FlushCacheToDisk(std::size_t CHUNK_ITEMS = 100000, bool fSync = true) EXCLUSIVE_LOCKS_REQUIRED(!cs_cache);
     void FlushDataToCache(const NEVMTxRootMap &mapNEVMTxRoots) EXCLUSIVE_LOCKS_REQUIRED(!cs_cache);
 };
 
@@ -29,7 +29,7 @@ class CNEVMMintedTxDB : public CDBWrapper {
 public:
     using CDBWrapper::CDBWrapper;
     bool FlushErase(const NEVMMintTxSet &setMintTxs) EXCLUSIVE_LOCKS_REQUIRED(!cs_cache);
-    bool FlushCacheToDisk(std::size_t CHUNK_ITEMS = 256) EXCLUSIVE_LOCKS_REQUIRED(!cs_cache);
+    bool FlushCacheToDisk(std::size_t CHUNK_ITEMS = 256, bool fSync = true) EXCLUSIVE_LOCKS_REQUIRED(!cs_cache);
     void FlushDataToCache(const NEVMMintTxSet &mapNEVMTxRoots) EXCLUSIVE_LOCKS_REQUIRED(!cs_cache);
     bool ExistsTx(const uint256& nTxHash) EXCLUSIVE_LOCKS_REQUIRED(!cs_cache);
 };

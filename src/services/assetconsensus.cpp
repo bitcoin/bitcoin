@@ -440,7 +440,7 @@ void CNEVMTxRootsDB::FlushDataToCache(const NEVMTxRootMap &mapNEVMTxRoots) {
         }
     }
 }
-bool CNEVMTxRootsDB::FlushCacheToDisk(std::size_t CHUNK_ITEMS)
+bool CNEVMTxRootsDB::FlushCacheToDisk(std::size_t CHUNK_ITEMS, bool fSync)
 {
     LOCK(cs_cache);
     if (mapCache.empty()) return true;
@@ -450,7 +450,7 @@ bool CNEVMTxRootsDB::FlushCacheToDisk(std::size_t CHUNK_ITEMS)
     std::size_t count = 0;
     auto flush = [&]() {
         if (batch.SizeEstimate() == 0) return true;
-        if (!WriteBatch(batch, /*sync=*/true)) return false;
+        if (!WriteBatch(batch, fSync)) return false;
         batch.Clear();
         items = 0;
         return true;
@@ -504,7 +504,7 @@ void CNEVMMintedTxDB::FlushDataToCache(const NEVMMintTxSet &mapNEVMTxRoots) {
         mapCache.insert(key);
     }
 }
-bool CNEVMMintedTxDB::FlushCacheToDisk(std::size_t CHUNK_ITEMS)
+bool CNEVMMintedTxDB::FlushCacheToDisk(std::size_t CHUNK_ITEMS, bool fSync)
 {
     LOCK(cs_cache);
     if (mapCache.empty()) return true;
@@ -515,7 +515,7 @@ bool CNEVMMintedTxDB::FlushCacheToDisk(std::size_t CHUNK_ITEMS)
 
     auto flush = [&]() {
         if (batch.SizeEstimate() == 0) return true;
-        if (!WriteBatch(batch, /*sync=*/true)) return false;
+        if (!WriteBatch(batch, fSync)) return false;
         batch.Clear();
         items = 0;
         return true;

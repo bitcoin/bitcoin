@@ -1269,7 +1269,7 @@ bool CDeterministicMNManager::IsDIP3Enforced(int nHeight)
     return nHeight >= Params().GetConsensus().DIP0003EnforcementHeight;
 }
 
-bool CDeterministicMNManager::DoMaintenance(bool bForceFlush) {
+bool CDeterministicMNManager::DoMaintenance(bool bForceFlush, bool fSync) {
     if (!bForceFlush) {
         return true;
     }
@@ -1289,7 +1289,7 @@ bool CDeterministicMNManager::DoMaintenance(bool bForceFlush) {
                  cache_entry_count,
                  erase_entry_count,
                  ElapsedMillis(maintenance_start));
-        return m_evoDb->FlushCacheToDisk();
+        return m_evoDb->FlushCacheToDisk(/*CHUNK_ITEMS=*/256, fSync);
     }
 
     const uint256 tip_hash = tip->GetBlockHash();
@@ -1324,7 +1324,8 @@ bool CDeterministicMNManager::DoMaintenance(bool bForceFlush) {
              retained_hashes_ordered.size(),
              persistent_window_initialized);
 
-    if ((cache_entry_count != 0 || erase_entry_count != 0) && !m_evoDb->FlushCacheToDisk()) {
+    if ((cache_entry_count != 0 || erase_entry_count != 0) &&
+        !m_evoDb->FlushCacheToDisk(/*CHUNK_ITEMS=*/256, fSync)) {
         return false;
     }
 
@@ -1338,7 +1339,7 @@ bool CDeterministicMNManager::DoMaintenance(bool bForceFlush) {
     for (const uint256& key : prune_keys) {
         m_evoDb->EraseCache(key);
     }
-    if (!prune_keys.empty() && !m_evoDb->FlushCacheToDisk()) {
+    if (!prune_keys.empty() && !m_evoDb->FlushCacheToDisk(/*CHUNK_ITEMS=*/256, fSync)) {
         return false;
     }
 
@@ -1364,8 +1365,8 @@ bool CDeterministicMNManager::DoMaintenance(bool bForceFlush) {
              ElapsedMillis(maintenance_start));
     return true;
 }
-bool CDeterministicMNManager::FlushCacheToDisk(bool bForceFlush) {
-    return DoMaintenance(bForceFlush);
+bool CDeterministicMNManager::FlushCacheToDisk(bool bForceFlush, bool fSync) {
+    return DoMaintenance(bForceFlush, fSync);
 }
 bool CDeterministicMNManager::HasPersistentWindow() const
 {
