@@ -1878,7 +1878,7 @@ std::vector<std::unique_ptr<PubkeyProvider>> ParsePubkeyInner(uint32_t& key_exp_
     std::vector<std::unique_ptr<PubkeyProvider>> ret;
     bool permit_uncompressed = ctx == ParseScriptContext::TOP || ctx == ParseScriptContext::P2SH;
     auto split = Split(sp, '/');
-    std::string str(split[0].begin(), split[0].end());
+    std::string_view str(split[0].data(), split[0].size());
     if (str.size() == 0) {
         error = "No key provided";
         return {};
@@ -1931,8 +1931,7 @@ std::vector<std::unique_ptr<PubkeyProvider>> ParsePubkeyInner(uint32_t& key_exp_
             }
         }
     }
-    CExtKey extkey = DecodeExtKey(str);
-    CExtPubKey extpubkey = DecodeExtPubKey(str);
+    auto [extkey, extpubkey] = DecodeExtKeyOrPubKey(str);
     if (!extkey.key.IsValid() && !extpubkey.pubkey.IsValid()) {
         error = strprintf("key '%s' is not valid", str);
         return {};
