@@ -52,11 +52,16 @@ static RPCHelpMan syscoincreaterawnevmblob()
     bool hashTypeProvided = false;
     std::string hashType = "keccak";
     if (request.params.size() > 2 && !request.params[2].isNull()) {
-        hashTypeProvided = true;
-        hashType = ToLower(request.params[2].get_str());
-    }
-    if (hashType != "blake2s" && hashType != "keccak") {
-        throw JSONRPCError(RPC_INVALID_PARAMS, "hash_type must be either 'blake2s' or 'keccak'");
+        if (request.params[2].isStr()) {
+            const std::string candidate = ToLower(request.params[2].get_str());
+            if (candidate == "blake2s" || candidate == "keccak") {
+                hashTypeProvided = true;
+                hashType = candidate;
+            } else {
+                throw JSONRPCError(RPC_INVALID_PARAMS, "hash_type must be either 'blake2s' or 'keccak'");
+            }
+        }
+        // Legacy positional compatibility: numeric conf_target in param[2].
     }
     const std::vector<uint8_t> vchVersionHash = ParseHex(request.params[0].get_str());
     uint8_t decodedType{NEVM_DATA_LEGACY_VERSION_BYTE};
@@ -130,11 +135,18 @@ static RPCHelpMan syscoincreatenevmblob()
         bOverwrite = request.params[1].get_bool();
     }
     std::string hashType = "keccak";
+    bool hashTypeProvided = false;
     if (request.params.size() > 2 && !request.params[2].isNull()) {
-        hashType = ToLower(request.params[2].get_str());
-    }
-    if (hashType != "blake2s" && hashType != "keccak") {
-        throw JSONRPCError(RPC_INVALID_PARAMS, "hash_type must be either 'blake2s' or 'keccak'");
+        if (request.params[2].isStr()) {
+            const std::string candidate = ToLower(request.params[2].get_str());
+            if (candidate == "blake2s" || candidate == "keccak") {
+                hashTypeProvided = true;
+                hashType = candidate;
+            } else {
+                throw JSONRPCError(RPC_INVALID_PARAMS, "hash_type must be either 'blake2s' or 'keccak'");
+            }
+        }
+        // Legacy positional compatibility: numeric conf_target in param[2].
     }
     // process new vector in batch checking the blobs
     BlockValidationState state;
@@ -160,9 +172,12 @@ static RPCHelpMan syscoincreatenevmblob()
     paramsSend.push_back(HexStr(vchVersionHash));
     paramsSend.push_back(HexStr(vchData));
     paramsSend.push_back(hashType);
-    paramsSend.push_back(request.params.size() > 3 ? request.params[3] : UniValue(UniValue::VNULL));
-    paramsSend.push_back(request.params.size() > 4 ? request.params[4] : UniValue(UniValue::VNULL));
-    paramsSend.push_back(request.params.size() > 5 ? request.params[5] : UniValue(UniValue::VNULL));
+    const size_t confTargetIndex = hashTypeProvided ? 3 : 2;
+    const size_t estimateModeIndex = hashTypeProvided ? 4 : 3;
+    const size_t feeRateIndex = hashTypeProvided ? 5 : 4;
+    paramsSend.push_back(request.params.size() > confTargetIndex ? request.params[confTargetIndex] : UniValue(UniValue::VNULL));
+    paramsSend.push_back(request.params.size() > estimateModeIndex ? request.params[estimateModeIndex] : UniValue(UniValue::VNULL));
+    paramsSend.push_back(request.params.size() > feeRateIndex ? request.params[feeRateIndex] : UniValue(UniValue::VNULL));
     node::JSONRPCRequest requestSend;
     requestSend.context = request.context;
     requestSend.params = paramsSend;
