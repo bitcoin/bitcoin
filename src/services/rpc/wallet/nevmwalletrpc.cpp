@@ -76,7 +76,7 @@ static RPCHelpMan syscoincreatenevmblob()
         {
             {"data", RPCArg::Type::STR_HEX, RPCArg::Optional::NO, "blob in hex"},
             {"overwrite_existing", RPCArg::Type::BOOL, RPCArg::Default{true}, "true to overwrite an existing blob if it exists, false to return versionhash of data on duplicate."},
-            {"hash_type", RPCArg::Type::STR, RPCArg::Default{"blake2s"}, "\"blake2s\" for versioned 33-byte hash (0x01 || blake2s), \"keccak\" for legacy 32-byte hash"},
+            {"hash_type", RPCArg::Type::STR, RPCArg::Default{"keccak"}, "\"blake2s\" for versioned 33-byte hash (0x01 || blake2s), \"keccak\" for legacy 32-byte hash"},
             {"conf_target", RPCArg::Type::NUM, RPCArg::DefaultHint{"wallet -txconfirmtarget"}, "Confirmation target in blocks"},
             {"estimate_mode", RPCArg::Type::STR, RPCArg::Default{"unset"}, std::string() + "The fee estimate mode, must be one of (case insensitive):\n"
                         "       \"" + FeeModes("\"\n\"") + "\""},
