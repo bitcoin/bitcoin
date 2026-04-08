@@ -27,6 +27,51 @@
 #if defined(__GNUC__) && !defined(__clang__)
 #pragma GCC diagnostic pop
 #endif
+
+bool IsValidNEVMVersionHash(const std::vector<uint8_t>& vchVersionHash)
+{
+    if (vchVersionHash.size() == NEVM_DATA_LEGACY_VERSIONHASH_SIZE) {
+        return true;
+    }
+    if (vchVersionHash.size() != NEVM_DATA_VERSIONED_HASH_SIZE) {
+        return false;
+    }
+    return vchVersionHash[0] == NEVM_DATA_BLAKE2S_VERSION_BYTE;
+}
+
+bool DecodeNEVMVersionHash(const std::vector<uint8_t>& version_hash, uint8_t& hash_type, std::vector<uint8_t>& hash_digest)
+{
+    if (!IsValidNEVMVersionHash(version_hash)) {
+        return false;
+    }
+    if (version_hash.size() == NEVM_DATA_LEGACY_VERSIONHASH_SIZE) {
+        hash_type = NEVM_DATA_LEGACY_VERSION_BYTE;
+        hash_digest = version_hash;
+        return true;
+    }
+    hash_type = version_hash[0];
+    hash_digest.assign(version_hash.begin() + 1, version_hash.end());
+    return true;
+}
+
+std::vector<uint8_t> EncodeNEVMVersionHash(const std::vector<uint8_t>& hash_digest, uint8_t hash_type)
+{
+    if (hash_digest.size() != NEVM_DATA_LEGACY_VERSIONHASH_SIZE) {
+        return {};
+    }
+    if (hash_type == NEVM_DATA_LEGACY_VERSION_BYTE) {
+        return hash_digest;
+    }
+    if (hash_type != NEVM_DATA_BLAKE2S_VERSION_BYTE) {
+        return {};
+    }
+    std::vector<uint8_t> encoded_hash;
+    encoded_hash.reserve(NEVM_DATA_VERSIONED_HASH_SIZE);
+    encoded_hash.push_back(hash_type);
+    encoded_hash.insert(encoded_hash.end(), hash_digest.begin(), hash_digest.end());
+    return encoded_hash;
+}
+
 bool fTestNet = false;
 std::string COutPoint::ToString() const
 {
@@ -677,7 +722,12 @@ int CNEVMData::UnserializeFromData(const std::vector<unsigned char> &vchPayload,
     try {
 		CDataStream dsNEVMData(vchPayload, SER_NETWORK, nVersion);
 		Unser(dsNEVMData);
-        if(vchVersionHash.size() != 32) {
+        if(vchVersionHash.size() != NEVM_DATA_LEGACY_VERSIONHASH_SIZE) {
+            SetNull();
+            return -1;
+        }
+        if (nVersionHashType != NEVM_DATA_LEGACY_VERSION_BYTE &&
+            nVersionHashType != NEVM_DATA_BLAKE2S_VERSION_BYTE) {
             SetNull();
             return -1;
         }

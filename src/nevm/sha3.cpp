@@ -25,6 +25,7 @@
 #include <cstdlib>
 #include <cstring>
 #include <nevm/rlp.h>
+extern "C" void md_map_b2s256(uint8_t* hash, const uint8_t* msg, int len);
 using namespace std;
 using namespace dev;
 
@@ -217,6 +218,15 @@ bool sha3(bytesConstRef _input, bytesRef o_output)
 		return false;
 	keccak::sha3_256(o_output.data(), 32, _input.data(), _input.size());
 //	keccak::keccak(ret.data(), 32, (uint64_t const*)_input.data(), _input.size());
+	return true;
+}
+
+bool blake2s256(bytesConstRef _input, bytesRef o_output)
+{
+	if (o_output.size() != 32) {
+		return false;
+	}
+	md_map_b2s256(o_output.data(), _input.data(), static_cast<int>(_input.size()));
 	return true;
 }
 

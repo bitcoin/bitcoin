@@ -18,6 +18,7 @@
 #include <test/util/json.h>
 #include <validation.h>
 #include <consensus/validation.h>
+#include <primitives/transaction.h>
 #include <services/assetconsensus.h>
 BOOST_FIXTURE_TEST_SUITE(nevm_tests, BasicTestingSetup)
 BOOST_AUTO_TEST_CASE(seniority_test)
@@ -157,5 +158,47 @@ BOOST_AUTO_TEST_CASE(nevmspv_invalid)
             BOOST_CHECK(!VerifyProof(vchTxPathRef, rlpTxValue, rlpTxParentNodes, rlpTxRoot));
         }
     }
+}
+
+BOOST_AUTO_TEST_CASE(nevm_blob_versionhash_formats_and_hashes)
+{
+    const std::vector<uint8_t> data{'a', 'b', 'c'};
+    const auto keccak = dev::sha3(data).asBytes();
+    BOOST_CHECK_EQUAL(
+        HexStr(keccak),
+        "4e03657aea45a94fc7d47ba826c8d667c0d1e6e33a64a036ec44f58fa12d6c45");
+
+    const auto blake = dev::blake2s(dev::bytesConstRef(&data)).asBytes();
+    BOOST_CHECK_EQUAL(
+        HexStr(blake),
+        "508c5e8c327c14e2e1a72ba34eeb452f37458b209ed63a294d999b4c86675982");
+
+    std::vector<uint8_t> versioned_blake;
+    versioned_blake.reserve(NEVM_DATA_VERSIONED_HASH_SIZE);
+    versioned_blake.push_back(NEVM_DATA_BLAKE2S_VERSION_BYTE);
+    versioned_blake.insert(versioned_blake.end(), blake.begin(), blake.end());
+
+    BOOST_CHECK(IsValidNEVMVersionHash(keccak));
+    BOOST_CHECK(IsValidNEVMVersionHash(versioned_blake));
+
+    auto invalid_versioned = versioned_blake;
+    invalid_versioned[0] = 0x02;
+    BOOST_CHECK(!IsValidNEVMVersionHash(invalid_versioned));
+
+    std::vector<uint8_t> invalid_short(31, 0);
+    BOOST_CHECK(!IsValidNEVMVersionHash(invalid_short));
+
+    uint8_t hash_type = NEVM_DATA_LEGACY_VERSION_BYTE;
+    std::vector<uint8_t> digest;
+    BOOST_CHECK(DecodeNEVMVersionHash(keccak, hash_type, digest));
+    BOOST_CHECK_EQUAL(hash_type, NEVM_DATA_LEGACY_VERSION_BYTE);
+    BOOST_CHECK(digest == keccak);
+
+    BOOST_CHECK(DecodeNEVMVersionHash(versioned_blake, hash_type, digest));
+    BOOST_CHECK_EQUAL(hash_type, NEVM_DATA_BLAKE2S_VERSION_BYTE);
+    BOOST_CHECK(digest == blake);
+
+    BOOST_CHECK(EncodeNEVMVersionHash(keccak, NEVM_DATA_LEGACY_VERSION_BYTE) == keccak);
+    BOOST_CHECK(EncodeNEVMVersionHash(blake, NEVM_DATA_BLAKE2S_VERSION_BYTE) == versioned_blake);
 }
 BOOST_AUTO_TEST_SUITE_END()

@@ -14,6 +14,7 @@
 #include <rpc/server.h>
 #include <wallet/coincontrol.h>
 #include <nevm/sha3.h>
+#include <util/string.h>
 using namespace wallet;
 
 static RPCHelpMan syscoincreaterawnevmblob()
@@ -47,7 +48,10 @@ static RPCHelpMan syscoincreaterawnevmblob()
     if(vchData.empty()) {
         throw JSONRPCError(RPC_INVALID_PARAMS, "Empty input, are you sure you passed in hex?");  
     }
-    nevmData.vchVersionHash = ParseHex(request.params[0].get_str());
+    const std::vector<uint8_t> vchVersionHash = ParseHex(request.params[0].get_str());
+    if (!DecodeNEVMVersionHash(vchVersionHash, nevmData.nVersionHashType, nevmData.vchVersionHash)) {
+        throw JSONRPCError(RPC_INVALID_PARAMS, "Invalid version hash length");
+    }
     std::vector<unsigned char> data;
     nevmData.SerializeData(data);
 
@@ -72,6 +76,7 @@ static RPCHelpMan syscoincreatenevmblob()
         {
             {"data", RPCArg::Type::STR_HEX, RPCArg::Optional::NO, "blob in hex"},
             {"overwrite_existing", RPCArg::Type::BOOL, RPCArg::Default{true}, "true to overwrite an existing blob if it exists, false to return versionhash of data on duplicate."},
+            {"hash_type", RPCArg::Type::STR, RPCArg::Default{"blake2s"}, "\"blake2s\" for versioned 33-byte hash (0x01 || blake2s), \"keccak\" for legacy 32-byte hash"},
             {"conf_target", RPCArg::Type::NUM, RPCArg::DefaultHint{"wallet -txconfirmtarget"}, "Confirmation target in blocks"},
             {"estimate_mode", RPCArg::Type::STR, RPCArg::Default{"unset"}, std::string() + "The fee estimate mode, must be one of (case insensitive):\n"
                         "       \"" + FeeModes("\"\n\"") + "\""},
@@ -79,8 +84,8 @@ static RPCHelpMan syscoincreatenevmblob()
         },
         RPCResult{RPCResult::Type::ANY, "", ""},
         RPCExamples{
-            HelpExampleCli("syscoincreatenevmblob", "\"data\"")
-            + HelpExampleRpc("syscoincreatenevmblob", "\"data\"")
+            HelpExampleCli("syscoincreatenevmblob", "\"data\" true \"blake2s\"")
+            + HelpExampleRpc("syscoincreatenevmblob", "\"data\" true \"blake2s\"")
         },
     [&](const RPCHelpMan& self, const node::JSONRPCRequest& request) -> UniValue
 { 
@@ -99,21 +104,39 @@ static RPCHelpMan syscoincreatenevmblob()
     if(request.params.size() > 1) {
         bOverwrite = request.params[1].get_bool();
     }
+    std::string hashType = "keccak";
+    if (request.params.size() > 2 && !request.params[2].isNull()) {
+        hashType = ToLower(request.params[2].get_str());
+    }
+    if (hashType != "blake2s" && hashType != "keccak") {
+        throw JSONRPCError(RPC_INVALID_PARAMS, "hash_type must be either 'blake2s' or 'keccak'");
+    }
     // process new vector in batch checking the blobs
     BlockValidationState state;
-    const std::vector<uint8_t> vchVersionHash = dev::sha3(vchData).asBytes();
-    if(pnevmdatadb->BlobExists(vchVersionHash) && !bOverwrite) {
+    std::vector<uint8_t> vchVersionHashDigest;
+    uint8_t versionHashType = NEVM_DATA_LEGACY_VERSION_BYTE;
+    if (hashType == "keccak") {
+        vchVersionHashDigest = dev::sha3(vchData).asBytes();
+    } else {
+        versionHashType = NEVM_DATA_BLAKE2S_VERSION_BYTE;
+        vchVersionHashDigest = dev::blake2s(dev::bytesConstRef(&vchData)).asBytes();
+    }
+    const std::vector<uint8_t> vchVersionHash = EncodeNEVMVersionHash(vchVersionHashDigest, versionHashType);
+    if (vchVersionHash.empty()) {
+        throw JSONRPCError(RPC_MISC_ERROR, "Could not encode version hash");
+    }
+    if(pnevmdatadb->BlobExists(vchVersionHashDigest) && !bOverwrite) {
         UniValue resObj(UniValue::VOBJ);
-        resObj.pushKVEnd("versionhash", HexStr(vchVersionHash));
+        resObj.pushKVEnd("versionhash", HexStr(vchVersionHashDigest));
         return resObj;
     }
 
     UniValue paramsSend(UniValue::VARR);
     paramsSend.push_back(HexStr(vchVersionHash));
     paramsSend.push_back(HexStr(vchData));
-    paramsSend.push_back(request.params[2]);
-    paramsSend.push_back(request.params[3]);
-    paramsSend.push_back(request.params[4]);
+    paramsSend.push_back(request.params.size() > 3 ? request.params[3] : UniValue(UniValue::VNULL));
+    paramsSend.push_back(request.params.size() > 4 ? request.params[4] : UniValue(UniValue::VNULL));
+    paramsSend.push_back(request.params.size() > 5 ? request.params[5] : UniValue(UniValue::VNULL));
     node::JSONRPCRequest requestSend;
     requestSend.context = request.context;
     requestSend.params = paramsSend;
@@ -122,7 +145,7 @@ static RPCHelpMan syscoincreatenevmblob()
     if(!resObj.isNull()) {
         if(!resObj.find_value("txid").isNull()) {
             UniValue resRet(UniValue::VOBJ);
-            resObj.pushKVEnd("versionhash", HexStr(vchVersionHash));
+            resObj.pushKVEnd("versionhash", HexStr(vchVersionHashDigest));
             resObj.pushKVEnd("datasize", vchData.size());
             return resObj;
         } else {

@@ -352,9 +352,7 @@ class NEVMDataTest(DashTestFramework):
         assert_equal(self.nodes[0].getnevmblobdata(vh, True)['data'], vhData)
         assert_raises_rpc_error(-32602, 'Could not find blob information for versionhash', self.nodes[0].getnevmblobdata, txid1)
         print('Checking for invalid versionhash...')
-        txidBad = self.nodes[3].syscoincreaterawnevmblob(secrets.token_hex(55), secrets.token_hex(55))['txid']
-        # should fail and not propagate due to 'bad-txns-poda-invalid'
-        assert_raises_rpc_error(-5, "No such mempool transaction", self.nodes[0].getrawtransaction, txid=txidBad)
+        assert_raises_rpc_error(-32602, "Invalid version hash length", self.nodes[3].syscoincreaterawnevmblob, secrets.token_hex(55), secrets.token_hex(55))
         print('Expire updated blob...')
         mtp = self.nodes[0].getnevmblobdata(vh)['mtp']
         expiry_timestamp = (mtp + NEVM_DATA_EXPIRE_TIME)

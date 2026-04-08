@@ -100,7 +100,7 @@ static RPCHelpMan getnevmblobdata()
     return RPCHelpMan{"getnevmblobdata",
         "\nReturn NEVM blob information and status from a version hash.\n",
         {
-            {"versionhash_or_txid", RPCArg::Type::STR_HEX, RPCArg::Optional::NO, "The version hash or txid of the NEVM blob"},
+            {"versionhash_or_txid", RPCArg::Type::STR_HEX, RPCArg::Optional::NO, "The 32-byte version hash digest or txid of the NEVM blob"},
             {"getdata", RPCArg::Type::BOOL, RPCArg::Optional::OMITTED, "Optional, retrieve the blob data"}
         },
         RPCResult{RPCResult::Type::ANY, "", ""},
@@ -139,7 +139,7 @@ static RPCHelpMan getnevmblobdata()
         }
         if(!tx || hashBlock.IsNull()) {
             vchVH = ParseHex(request.params[0].get_str());
-            if(vchVH.size() != 32) {
+            if(vchVH.size() != NEVM_DATA_LEGACY_VERSIONHASH_SIZE) {
                 throw JSONRPCError(RPC_INVALID_PARAMS, "Invalid version hash length");
             }
         }
