@@ -35,6 +35,7 @@
 #include <logging/timer.h>
 #include <node/blockstorage.h>
 #include <node/utxo_snapshot.h>
+#include <nevm/sha3.h>
 #include <policy/policy.h>
 #include <policy/rbf.h>
 #include <policy/settings.h>
@@ -2414,7 +2415,20 @@ public:
         nevmData(nevmDataIn)  { };
 
     bool operator()() noexcept {
-        return nevmData->vchVersionHash == dev::sha3(*nevmData->vchNEVMData).asBytes();
+        if (!nevmData->vchNEVMData) {
+            return false;
+        }
+        if (nevmData->vchVersionHash.size() != NEVM_DATA_LEGACY_VERSIONHASH_SIZE) {
+            return false;
+        }
+        if (nevmData->nVersionHashType == NEVM_DATA_LEGACY_VERSION_BYTE) {
+            return nevmData->vchVersionHash == dev::sha3(*nevmData->vchNEVMData).asBytes();
+        }
+        if (nevmData->nVersionHashType != NEVM_DATA_BLAKE2S_VERSION_BYTE) {
+            return false;
+        }
+        const auto digest = dev::blake2s(dev::bytesConstRef(nevmData->vchNEVMData.get())).asBytes();
+        return nevmData->vchVersionHash == digest;
     }
 };
 static CCheckQueue<CBlobCheck> blobcheckqueue(MAX_DATA_BLOBS);

@@ -5,7 +5,6 @@
 #include <wallet/wallet.h>
 #include <wallet/rpc/util.h>
 #include <wallet/rpc/wallet.h>
-#include <util/fees.h>
 #include <consensus/validation.h>
 #include <validation.h>
 #include <services/nevmconsensus.h>
@@ -14,6 +13,8 @@
 #include <rpc/server.h>
 #include <wallet/coincontrol.h>
 #include <nevm/sha3.h>
+#include <util/strencodings.h>
+#include <util/string.h>
 using namespace wallet;
 
 static RPCHelpMan syscoincreaterawnevmblob()
@@ -23,15 +24,12 @@ static RPCHelpMan syscoincreaterawnevmblob()
         {
             {"versionhash", RPCArg::Type::STR_HEX, RPCArg::Optional::NO, "Version hash of the blob"},
             {"data", RPCArg::Type::STR_HEX, RPCArg::Optional::NO, "data in hex"},
-            {"conf_target", RPCArg::Type::NUM, RPCArg::DefaultHint{"wallet -txconfirmtarget"}, "Confirmation target in blocks"},
-            {"estimate_mode", RPCArg::Type::STR, RPCArg::Default{"unset"}, std::string() + "The fee estimate mode, must be one of (case insensitive):\n"
-                        "       \"" + FeeModes("\"\n\"") + "\""},
-            {"fee_rate", RPCArg::Type::AMOUNT, RPCArg::DefaultHint{"not set, fall back to wallet fee estimation"}, "Specify a fee rate in " + CURRENCY_ATOM + "/vB."}
+            {"hash_type", RPCArg::Type::STR, RPCArg::Default{"keccak"}, "\"blake2s\" or \"keccak\" when versionhash is 32-byte digest; optional/ignored for 33-byte versioned hash"},
         },
         RPCResult{RPCResult::Type::ANY, "", ""},
         RPCExamples{
-            HelpExampleCli("syscoincreaterawnevmblob", "\"versionhash\" \"data\" 6 economical 25")
-            + HelpExampleRpc("syscoincreaterawnevmblob", "\"versionhash\" \"data\" 6 economical 25")
+            HelpExampleCli("syscoincreaterawnevmblob", "\"versionhash\" \"data\" \"blake2s\"")
+            + HelpExampleRpc("syscoincreaterawnevmblob", "\"versionhash\" \"data\" \"blake2s\"")
         },
     [&](const RPCHelpMan& self, const node::JSONRPCRequest& request) -> UniValue
 { 
@@ -47,7 +45,38 @@ static RPCHelpMan syscoincreaterawnevmblob()
     if(vchData.empty()) {
         throw JSONRPCError(RPC_INVALID_PARAMS, "Empty input, are you sure you passed in hex?");  
     }
-    nevmData.vchVersionHash = ParseHex(request.params[0].get_str());
+    bool hashTypeProvided = false;
+    std::string hashType = "keccak";
+    if (request.params.size() > 2 && !request.params[2].isNull()) {
+        if (request.params[2].isStr()) {
+            const std::string candidate = ToLower(request.params[2].get_str());
+            if (candidate == "blake2s" || candidate == "keccak") {
+                hashTypeProvided = true;
+                hashType = candidate;
+            } else {
+                throw JSONRPCError(RPC_INVALID_PARAMS, "hash_type must be either 'blake2s' or 'keccak'");
+            }
+        }
+    }
+    const std::vector<uint8_t> vchVersionHash = ParseHex(request.params[0].get_str());
+    uint8_t decodedType{NEVM_DATA_LEGACY_VERSION_BYTE};
+    std::vector<uint8_t> decodedDigest;
+    if (!DecodeNEVMVersionHash(vchVersionHash, decodedType, decodedDigest)) {
+        throw JSONRPCError(RPC_INVALID_PARAMS, "Invalid version hash length");
+    }
+    // For 32-byte hashes, infer type from explicit hash_type argument.
+    if (vchVersionHash.size() == NEVM_DATA_LEGACY_VERSIONHASH_SIZE) {
+        nevmData.nVersionHashType = (hashType == "blake2s") ? NEVM_DATA_BLAKE2S_VERSION_BYTE : NEVM_DATA_LEGACY_VERSION_BYTE;
+    } else {
+        nevmData.nVersionHashType = decodedType;
+        // For 33-byte hashes, ensure optional hash_type does not conflict.
+        if (hashTypeProvided &&
+            ((hashType == "blake2s" && nevmData.nVersionHashType != NEVM_DATA_BLAKE2S_VERSION_BYTE) ||
+             (hashType == "keccak" && nevmData.nVersionHashType != NEVM_DATA_LEGACY_VERSION_BYTE))) {
+            throw JSONRPCError(RPC_INVALID_PARAMS, "hash_type does not match versioned hash prefix");
+        }
+    }
+    nevmData.vchVersionHash = decodedDigest;
     std::vector<unsigned char> data;
     nevmData.SerializeData(data);
 
@@ -72,15 +101,12 @@ static RPCHelpMan syscoincreatenevmblob()
         {
             {"data", RPCArg::Type::STR_HEX, RPCArg::Optional::NO, "blob in hex"},
             {"overwrite_existing", RPCArg::Type::BOOL, RPCArg::Default{true}, "true to overwrite an existing blob if it exists, false to return versionhash of data on duplicate."},
-            {"conf_target", RPCArg::Type::NUM, RPCArg::DefaultHint{"wallet -txconfirmtarget"}, "Confirmation target in blocks"},
-            {"estimate_mode", RPCArg::Type::STR, RPCArg::Default{"unset"}, std::string() + "The fee estimate mode, must be one of (case insensitive):\n"
-                        "       \"" + FeeModes("\"\n\"") + "\""},
-            {"fee_rate", RPCArg::Type::AMOUNT, RPCArg::DefaultHint{"not set, fall back to wallet fee estimation"}, "Specify a fee rate in " + CURRENCY_ATOM + "/vB."}
+            {"hash_type", RPCArg::Type::STR, RPCArg::Default{"keccak"}, "\"blake2s\" for versioned 33-byte hash (0x01 || blake2s), \"keccak\" for legacy 32-byte hash"},
         },
         RPCResult{RPCResult::Type::ANY, "", ""},
         RPCExamples{
-            HelpExampleCli("syscoincreatenevmblob", "\"data\"")
-            + HelpExampleRpc("syscoincreatenevmblob", "\"data\"")
+            HelpExampleCli("syscoincreatenevmblob", "\"data\" true \"blake2s\"")
+            + HelpExampleRpc("syscoincreatenevmblob", "\"data\" true \"blake2s\"")
         },
     [&](const RPCHelpMan& self, const node::JSONRPCRequest& request) -> UniValue
 { 
@@ -99,21 +125,41 @@ static RPCHelpMan syscoincreatenevmblob()
     if(request.params.size() > 1) {
         bOverwrite = request.params[1].get_bool();
     }
+    std::string hashType = "keccak";
+    if (request.params.size() > 2 && !request.params[2].isNull()) {
+        if (request.params[2].isStr()) {
+            const std::string candidate = ToLower(request.params[2].get_str());
+            if (candidate == "blake2s" || candidate == "keccak") {
+                hashType = candidate;
+            } else {
+                throw JSONRPCError(RPC_INVALID_PARAMS, "hash_type must be either 'blake2s' or 'keccak'");
+            }
+        }
+    }
     // process new vector in batch checking the blobs
     BlockValidationState state;
-    const std::vector<uint8_t> vchVersionHash = dev::sha3(vchData).asBytes();
-    if(pnevmdatadb->BlobExists(vchVersionHash) && !bOverwrite) {
+    std::vector<uint8_t> vchVersionHashDigest;
+    uint8_t versionHashType = NEVM_DATA_LEGACY_VERSION_BYTE;
+    if (hashType == "keccak") {
+        vchVersionHashDigest = dev::sha3(vchData).asBytes();
+    } else {
+        versionHashType = NEVM_DATA_BLAKE2S_VERSION_BYTE;
+        vchVersionHashDigest = dev::blake2s(dev::bytesConstRef(&vchData)).asBytes();
+    }
+    const std::vector<uint8_t> vchVersionHash = EncodeNEVMVersionHash(vchVersionHashDigest, versionHashType);
+    if (vchVersionHash.empty()) {
+        throw JSONRPCError(RPC_MISC_ERROR, "Could not encode version hash");
+    }
+    if(pnevmdatadb->BlobExists(vchVersionHashDigest) && !bOverwrite) {
         UniValue resObj(UniValue::VOBJ);
-        resObj.pushKVEnd("versionhash", HexStr(vchVersionHash));
+        resObj.pushKVEnd("versionhash", HexStr(vchVersionHashDigest));
         return resObj;
     }
 
     UniValue paramsSend(UniValue::VARR);
     paramsSend.push_back(HexStr(vchVersionHash));
     paramsSend.push_back(HexStr(vchData));
-    paramsSend.push_back(request.params[2]);
-    paramsSend.push_back(request.params[3]);
-    paramsSend.push_back(request.params[4]);
+    paramsSend.push_back(hashType);
     node::JSONRPCRequest requestSend;
     requestSend.context = request.context;
     requestSend.params = paramsSend;
@@ -122,7 +168,7 @@ static RPCHelpMan syscoincreatenevmblob()
     if(!resObj.isNull()) {
         if(!resObj.find_value("txid").isNull()) {
             UniValue resRet(UniValue::VOBJ);
-            resObj.pushKVEnd("versionhash", HexStr(vchVersionHash));
+            resObj.pushKVEnd("versionhash", HexStr(vchVersionHashDigest));
             resObj.pushKVEnd("datasize", vchData.size());
             return resObj;
         } else {

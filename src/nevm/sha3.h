@@ -36,10 +36,13 @@ namespace dev
 /// Calculate SHA3-256 hash of the given input and load it into the given output.
 /// @returns false if o_output.size() != 32.
 bool sha3(bytesConstRef _input, bytesRef o_output);
+bool blake2s256(bytesConstRef _input, bytesRef o_output);
 
 /// Calculate SHA3-256 hash of the given input, returning as a 256-bit hash.
 inline h256 sha3(bytesConstRef _input) { h256 ret; sha3(_input, ret.ref()); return ret; }
 inline SecureFixedHash<32> sha3Secure(bytesConstRef _input) { SecureFixedHash<32> ret; sha3(_input, ret.writable().ref()); return ret; }
+inline h256 blake2s(bytesConstRef _input) { h256 ret; blake2s256(_input, ret.ref()); return ret; }
+inline SecureFixedHash<32> blake2sSecure(bytesConstRef _input) { SecureFixedHash<32> ret; blake2s256(_input, ret.writable().ref()); return ret; }
 
 /// Calculate SHA3-256 hash of the given input, returning as a 256-bit hash.
 inline h256 sha3(bytes const& _input) { return sha3(bytesConstRef(&_input)); }

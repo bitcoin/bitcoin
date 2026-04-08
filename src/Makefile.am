@@ -948,7 +948,8 @@ syscoin_bin_ldadd = \
   $(LIBLEVELDB) \
   $(LIBMEMENV) \
   $(LIBSECP256K1) \
-  $(LIBNEVM)
+  $(LIBNEVM) \
+  $(LIBDASHBLS)
 
 syscoin_bin_ldadd += $(BDB_LIBS) $(MINIUPNPC_LIBS) $(NATPMP_LIBS) $(EVENT_PTHREADS_LIBS) $(EVENT_LIBS) $(ZMQ_LIBS) $(SQLITE_LIBS) $(GMP_LIBS)
 
@@ -1006,6 +1007,7 @@ syscoin_tx_LDADD = \
   $(LIBDASHBLS) \
   $(LIBSECP256K1) \
   $(LIBNEVM) \
+  $(LIBDASHBLS) \
   $(GMP_LIBS)
 #
 
@@ -1027,6 +1029,7 @@ syscoin_util_LDADD = \
   $(LIBDASHBLS) \
   $(LIBSECP256K1) \
   $(LIBNEVM) \
+  $(LIBDASHBLS) \
   $(LIBUNIVALUE) \
   $(GMP_LIBS)
 #

@@ -72,6 +72,10 @@ const int MAX_NEVM_DATA_BLOCK = MAX_NEVM_DATA_BLOB * MAX_DATA_BLOBS; // 64MB
 const int NEVM_DATA_EXPIRE_TIME = 21600; // 6 hour
 const int NEVM_DATA_ENFORCE_TIME_HAVE_DATA = 7200; // 2 hour
 const int NEVM_DATA_ENFORCE_TIME_NOT_HAVE_DATA = NEVM_DATA_ENFORCE_TIME_HAVE_DATA*4; // 8 hour
+const size_t NEVM_DATA_LEGACY_VERSIONHASH_SIZE = 32;
+const size_t NEVM_DATA_VERSIONED_HASH_SIZE = 33;
+const uint8_t NEVM_DATA_LEGACY_VERSION_BYTE = 0x00;
+const uint8_t NEVM_DATA_BLAKE2S_VERSION_BYTE = 0x01;
 enum {
 	ZDAG_NOT_FOUND = -1,
 	ZDAG_STATUS_OK = 0,
@@ -424,9 +428,13 @@ public:
 };
 class CTransaction;
 bool IsSyscoinNEVMDataTx(const int &nVersion);
+bool IsValidNEVMVersionHash(const std::vector<uint8_t>& vchVersionHash);
+bool DecodeNEVMVersionHash(const std::vector<uint8_t>& version_hash, uint8_t& hash_type, std::vector<uint8_t>& hash_digest);
+std::vector<uint8_t> EncodeNEVMVersionHash(const std::vector<uint8_t>& hash_digest, uint8_t hash_type);
 class CNEVMData {
 public:
     std::vector<uint8_t> vchVersionHash;
+    uint8_t nVersionHashType{NEVM_DATA_LEGACY_VERSION_BYTE};
     uint256 txid;
     std::shared_ptr<const std::vector<uint8_t>> vchNEVMData;
     CNEVMData() {
@@ -437,18 +445,29 @@ public:
     explicit CNEVMData(const CTransaction &tx);
     inline void ClearData() {
         vchVersionHash.clear();
+        nVersionHashType = NEVM_DATA_LEGACY_VERSION_BYTE;
         if(vchNEVMData) {
             vchNEVMData.reset();
         }
     }
     template<typename Stream>
     void Ser(Stream &s) {
-        s << vchVersionHash;
+        if (nVersionHashType == NEVM_DATA_LEGACY_VERSION_BYTE) {
+            s << vchVersionHash;
+            return;
+        }
+        const std::vector<uint8_t> encoded_version_hash = EncodeNEVMVersionHash(vchVersionHash, nVersionHashType);
+        s << encoded_version_hash;
     }
 
     template<typename Stream>
     void Unser(Stream &s) {
-        s >> vchVersionHash;
+        std::vector<uint8_t> encoded_version_hash;
+        s >> encoded_version_hash;
+        if (!DecodeNEVMVersionHash(encoded_version_hash, nVersionHashType, vchVersionHash)) {
+            vchVersionHash.clear();
+            nVersionHashType = NEVM_DATA_LEGACY_VERSION_BYTE;
+        }
         const bool fAllowPoDA = (s.GetVersion() & SERIALIZE_TRANSACTION_PODA);
         if(fAllowPoDA) {
             std::vector<uint8_t> vchNEVMDataIn;

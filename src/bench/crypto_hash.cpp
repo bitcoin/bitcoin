@@ -12,12 +12,14 @@
 #include <crypto/sha512.h>
 #include <crypto/siphash.h>
 #include <hash.h>
+#include <nevm/sha3.h>
 #include <random.h>
 #include <tinyformat.h>
 #include <uint256.h>
 
 /* Number of bytes to hash per iteration */
 static const uint64_t BUFFER_SIZE = 1000*1000;
+static volatile uint8_t g_hash_sink = 0;
 
 static void BenchRIPEMD160(benchmark::Bench& bench)
 {
@@ -89,6 +91,24 @@ static void SHA3_256_1M(benchmark::Bench& bench)
         SHA3_256().Write(in).Finalize(hash);
     });
 }
+// SYSCOIN
+static void NEVM_KECCAK_256_1M(benchmark::Bench& bench)
+{
+    std::vector<uint8_t> in(BUFFER_SIZE, 0);
+    bench.batch(in.size()).unit("byte").run([&] {
+        const auto digest = dev::sha3(in).asBytes();
+        g_hash_sink ^= digest[0];
+    });
+}
+
+static void NEVM_BLAKE2S_256_1M(benchmark::Bench& bench)
+{
+    std::vector<uint8_t> in(BUFFER_SIZE, 0);
+    bench.batch(in.size()).unit("byte").run([&] {
+        const auto digest = dev::blake2s(dev::bytesConstRef(&in)).asBytes();
+        g_hash_sink ^= digest[0];
+    });
+}
 
 static void SHA256_32b_STANDARD(benchmark::Bench& bench)
 {
@@ -136,6 +156,24 @@ static void SHA256_32b_SHANI(benchmark::Bench& bench)
             .Finalize(in.data());
     });
     SHA256AutoDetect();
+}
+// SYSCOIN
+static void NEVM_KECCAK_32b(benchmark::Bench& bench)
+{
+    std::vector<uint8_t> in(32, 0);
+    bench.batch(in.size()).unit("byte").run([&] {
+        const auto digest = dev::sha3(in).asBytes();
+        g_hash_sink ^= digest[0];
+    });
+}
+
+static void NEVM_BLAKE2S_32b(benchmark::Bench& bench)
+{
+    std::vector<uint8_t> in(32, 0);
+    bench.batch(in.size()).unit("byte").run([&] {
+        const auto digest = dev::blake2s(dev::bytesConstRef(&in)).asBytes();
+        g_hash_sink ^= digest[0];
+    });
 }
 
 static void SHA256D64_1024_STANDARD(benchmark::Bench& bench)
@@ -264,11 +302,15 @@ BENCHMARK(SHA256_AVX2, benchmark::PriorityLevel::HIGH);
 BENCHMARK(SHA256_SHANI, benchmark::PriorityLevel::HIGH);
 BENCHMARK(SHA512, benchmark::PriorityLevel::HIGH);
 BENCHMARK(SHA3_256_1M, benchmark::PriorityLevel::HIGH);
+BENCHMARK(NEVM_KECCAK_256_1M, benchmark::PriorityLevel::HIGH);
+BENCHMARK(NEVM_BLAKE2S_256_1M, benchmark::PriorityLevel::HIGH);
 
 BENCHMARK(SHA256_32b_STANDARD, benchmark::PriorityLevel::HIGH);
 BENCHMARK(SHA256_32b_SSE4, benchmark::PriorityLevel::HIGH);
 BENCHMARK(SHA256_32b_AVX2, benchmark::PriorityLevel::HIGH);
 BENCHMARK(SHA256_32b_SHANI, benchmark::PriorityLevel::HIGH);
+BENCHMARK(NEVM_KECCAK_32b, benchmark::PriorityLevel::HIGH);
+BENCHMARK(NEVM_BLAKE2S_32b, benchmark::PriorityLevel::HIGH);
 BENCHMARK(SipHash_32b, benchmark::PriorityLevel::HIGH);
 BENCHMARK(SHA256D64_1024_STANDARD, benchmark::PriorityLevel::HIGH);
 BENCHMARK(SHA256D64_1024_SSE4, benchmark::PriorityLevel::HIGH);
