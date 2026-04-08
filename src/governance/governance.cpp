@@ -1578,9 +1578,9 @@ void CGovernanceManager::RemoveInvalidVotes()
     // store current MN list for the next run so that we can determine which keys changed
     lastMNListForVotingKeys = std::make_shared<CDeterministicMNList>(tip_mn_list);
 }
-bool CGovernanceManager::FlushCacheToDisk()
+bool CGovernanceManager::FlushCacheToDisk(bool fSync)
 {
-    return m_sb->FlushCacheToDisk();
+    return m_sb->FlushCacheToDisk(/*CHUNK_ITEMS=*/256, fSync);
 }
 bool CGovernanceManager::UndoBlock(const CBlockIndex* pindex)
 {

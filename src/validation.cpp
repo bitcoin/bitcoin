@@ -3240,10 +3240,18 @@ bool Chainstate::FlushStateToDisk(
         bool fPeriodicWrite = mode == FlushStateMode::PERIODIC && nNow > m_last_write + DATABASE_WRITE_INTERVAL;
         // It's been very long since we flushed the cache. Do this infrequently, to optimize cache usage.
         bool fPeriodicFlush = mode == FlushStateMode::PERIODIC && nNow > m_last_flush + DATABASE_FLUSH_INTERVAL;
+        const bool in_ibd = m_chainman.IsInitialBlockDownload();
+        const bool dip3_active = m_chain.Height() >= Params().GetConsensus().DIP0003Height;
+        const bool dmn_window_init_needed =
+            mode == FlushStateMode::PERIODIC &&
+            !in_ibd &&
+            dip3_active &&
+            deterministicMNManager &&
+            !deterministicMNManager->HasPersistentWindow();
         // Combine all conditions that result in a full cache flush.
         fDoFullFlush = (mode == FlushStateMode::ALWAYS) || fCacheLarge || fCacheCritical || fPeriodicFlush || fFlushForPrune;
         // Write blocks and block index to disk.
-        if (fDoFullFlush || fPeriodicWrite) {
+        if (fDoFullFlush || fPeriodicWrite || dmn_window_init_needed) {
             // Ensure we can write block index
             if (!CheckDiskSpace(m_blockman.m_opts.blocks_dir)) {
                 return FatalError(m_chainman.GetNotifications(), state, "Disk space is too low!", _("Disk space is too low!"));
@@ -3274,28 +3282,49 @@ bool Chainstate::FlushStateToDisk(
                 m_blockman.UnlinkPrunedFiles(setFilesToPrune);
             }
             // SYSCOIN
-            if (pnevmdatadb && !pnevmdatadb->FlushCacheToDisk(m_chain.Tip()->GetMedianTimePast())) {
+            const bool sys_sync_flush = mode == FlushStateMode::ALWAYS;
+            if (pnevmdatadb &&
+                !pnevmdatadb->FlushCacheToDisk(m_chain.Tip()->GetMedianTimePast(), sys_sync_flush)) {
                 return FatalError(m_chainman.GetNotifications(), state, "Failed to commit PoDA");
             }
-            if (pblockindexdb && !pblockindexdb->FlushCacheToDisk((uint32_t)m_chain.Height())) {
+            if (pblockindexdb &&
+                !pblockindexdb->FlushCacheToDisk((uint32_t)m_chain.Height(), /*CHUNK_ITEMS=*/100000, sys_sync_flush)) {
                 return FatalError(m_chainman.GetNotifications(), state, "Failed to commit to block index db");
             }
-            if (pnevmtxrootsdb && !pnevmtxrootsdb->FlushCacheToDisk()) {
+            if (pnevmtxrootsdb &&
+                !pnevmtxrootsdb->FlushCacheToDisk(/*CHUNK_ITEMS=*/100000, sys_sync_flush)) {
                 return FatalError(m_chainman.GetNotifications(), state, "Failed to commit to nevm tx roots db");
             }
-            if (pnevmtxmintdb && !pnevmtxmintdb->FlushCacheToDisk()) {
+            if (pnevmtxmintdb &&
+                !pnevmtxmintdb->FlushCacheToDisk(/*CHUNK_ITEMS=*/256, sys_sync_flush)) {
                 return FatalError(m_chainman.GetNotifications(), state, "Failed to commit to nevm tx mint db");
             }
-            if (deterministicMNManager && !deterministicMNManager->FlushCacheToDisk(mode == FlushStateMode::ALWAYS)) {
-                return FatalError(m_chainman.GetNotifications(), state, "Failed to commit DMN DB");
+            const bool force_dmn_maintenance =
+                deterministicMNManager &&
+                (mode == FlushStateMode::ALWAYS ||
+                 (mode == FlushStateMode::PERIODIC && !in_ibd));
+            if (force_dmn_maintenance) {
+                if (mode == FlushStateMode::PERIODIC) {
+                    LogPrint(BCLog::SYS, "%s: requesting periodic DMN EvoDB maintenance at height %d\n", __func__, m_chain.Height());
+                }
+                if (!deterministicMNManager->FlushCacheToDisk(force_dmn_maintenance, sys_sync_flush)) {
+                    return FatalError(m_chainman.GetNotifications(), state, "Failed to commit DMN DB");
+                }
             }
-            if (governance && !governance->FlushCacheToDisk()) {
+            if (governance && !governance->FlushCacheToDisk(sys_sync_flush)) {
                 return FatalError(m_chainman.GetNotifications(), state, "Failed to commit governance DB");
             }
-            if (llmq::quorumBlockProcessor && !llmq::quorumBlockProcessor->FlushCacheToDisk()) {
+            if (llmq::quorumBlockProcessor && !llmq::quorumBlockProcessor->FlushCacheToDisk(sys_sync_flush)) {
                 return FatalError(m_chainman.GetNotifications(), state, "Failed to commit QC DB");
             }
-            if (llmq::quorumManager && !llmq::quorumManager->FlushCacheToDisk(mode == FlushStateMode::ALWAYS)) {
+            const bool force_quorum_manager_maintenance = mode == FlushStateMode::ALWAYS;
+            // QuorumManager persists derived vvec/sk-share caches, so avoid reset/rewrite
+            // maintenance churn during IBD and only force it on clean shutdown.
+            const bool run_quorum_manager_maintenance =
+                llmq::quorumManager &&
+                (force_quorum_manager_maintenance || !in_ibd);
+            if (run_quorum_manager_maintenance &&
+                !llmq::quorumManager->FlushCacheToDisk(force_quorum_manager_maintenance, sys_sync_flush)) {
                 return FatalError(m_chainman.GetNotifications(), state, "Failed to commit QM DB");
             }
             
@@ -6973,7 +7002,8 @@ void CBlockIndexDB::FlushDataToCache(const std::vector<std::pair<uint256,uint32_
     }
 }
 bool CBlockIndexDB::FlushCacheToDisk(const uint32_t &nHeight,
-                                     std::size_t CHUNK_ITEMS)
+                                     std::size_t CHUNK_ITEMS,
+                                     bool fSync)
 {
     if (mapCache.empty()) return true;
 
@@ -6985,7 +7015,7 @@ bool CBlockIndexDB::FlushCacheToDisk(const uint32_t &nHeight,
 
     auto flush = [&]() {
         if (batch.SizeEstimate() == 0) return true;
-        if (!WriteBatch(batch, /*sync=*/true)) return false;
+        if (!WriteBatch(batch, fSync)) return false;
         batch.Clear();
         items = 0;
         return true;

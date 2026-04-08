@@ -134,9 +134,9 @@ public:
 
     // this one is cs_main-free
     std::vector<CQuorumCPtr> ScanQuorums(const CBlockIndex* pindexStart, size_t nCountRequested) EXCLUSIVE_LOCKS_REQUIRED(!cs_quorums, !cs_db);
-    bool FlushCacheToDisk(bool bForceFlush);
+    bool FlushCacheToDisk(bool bForceFlush, bool fSync = true);
 private:
-    bool DoMaintenance(bool bForceFlush);
+    bool DoMaintenance(bool bForceFlush, bool fSync = true);
     std::vector<CQuorumCPtr>::iterator FindQuorumByHash(const uint256& blockHash) EXCLUSIVE_LOCKS_REQUIRED(cs_quorums);
     // all private methods here are cs_main-free
     void EnsureQuorumConnections(const CBlockIndex *pindexNew) EXCLUSIVE_LOCKS_REQUIRED(!cs_quorums, !cs_db);

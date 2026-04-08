@@ -8,7 +8,6 @@
 #include <dbwrapper.h>
 #include <sync.h>
 #include <uint256.h>
-#include <functional>
 #include <unordered_map>
 #include <unordered_set>
 #include <list>
@@ -19,19 +18,61 @@ template <typename K, typename V, typename Hasher = std::hash<K>>
 class CEvoDB : public CDBWrapper {
     std::unordered_map<K, typename std::list<std::pair<K, V>>::iterator, Hasher> mapCache;
     std::list<std::pair<K, V>> fifoList;
+    std::unordered_map<K, typename std::list<std::pair<K, V>>::iterator, Hasher> mapReadCache;
+    std::list<std::pair<K, V>> readFifoList;
     std::unordered_set<K, Hasher> setEraseCache;
     size_t maxCacheSize{0};
+    size_t maxReadCacheSize{0};
     DBParams m_db_params;
     bool bFlushOnNextRead{false};
-    std::function<bool(CDBBatch&)> m_write_batch_hook_for_testing;
 public:
     mutable RecursiveMutex cs;
     using CDBWrapper::CDBWrapper;
-    explicit CEvoDB(const DBParams &db_params, size_t maxCacheSizeIn) : CDBWrapper(db_params), maxCacheSize(maxCacheSizeIn), m_db_params(db_params) {
+    explicit CEvoDB(const DBParams &db_params, size_t maxCacheSizeIn, size_t maxReadCacheSizeIn = 0)
+        : CDBWrapper(db_params),
+          maxCacheSize(maxCacheSizeIn),
+          maxReadCacheSize(maxReadCacheSizeIn),
+          m_db_params(db_params)
+    {
     }
     ~CEvoDB() {
         FlushCacheToDisk();
     }
+private:
+    void TrimReadCache()
+    {
+        while (maxReadCacheSize == 0 ? !readFifoList.empty() : readFifoList.size() > maxReadCacheSize) {
+            mapReadCache.erase(readFifoList.front().first);
+            readFifoList.pop_front();
+        }
+    }
+
+    void EraseReadCache(const K& key)
+    {
+        auto it = mapReadCache.find(key);
+        if (it == mapReadCache.end()) {
+            return;
+        }
+        readFifoList.erase(it->second);
+        mapReadCache.erase(it);
+    }
+
+    void WriteReadCache(const K& key, const V& value)
+    {
+        if (maxReadCacheSize == 0) {
+            return;
+        }
+        EraseReadCache(key);
+        readFifoList.emplace_back(key, value);
+        mapReadCache[key] = --readFifoList.end();
+        TrimReadCache();
+    }
+
+    void TouchReadCache(const typename std::unordered_map<K, typename std::list<std::pair<K, V>>::iterator, Hasher>::iterator& it)
+    {
+        readFifoList.splice(readFifoList.end(), readFifoList, it->second);
+    }
+public:
     bool IsCacheFull() const {
         LOCK(cs);
         return maxCacheSize > 0 && (mapCache.size()+setEraseCache.size()) >= maxCacheSize;
@@ -39,17 +80,19 @@ public:
     DBParams GetDBParams() const {
         return m_db_params;
     }
-    bool SubmitBatchForTesting(CDBBatch& batch)
+    void SetReadCacheSize(size_t maxReadCacheSizeIn)
     {
-        if (m_write_batch_hook_for_testing) {
-            return m_write_batch_hook_for_testing(batch);
-        }
-        return WriteBatch(batch, /*sync=*/true);
+        LOCK(cs);
+        maxReadCacheSize = maxReadCacheSizeIn;
+        TrimReadCache();
     }
-    void SetWriteBatchHookForTesting(std::function<bool(CDBBatch&)> hook)
+    size_t GetReadCacheSize() const
     {
-        m_write_batch_hook_for_testing = std::move(hook);
+        LOCK(cs);
+        return mapReadCache.size();
     }
+
+
     bool ReadCache(const K& key, V& value) {
         LOCK(cs);
         if(bFlushOnNextRead) {
@@ -62,48 +105,17 @@ public:
             value = it->second->second;
             return true;
         }
-        return Read(key, value);
-    }
-    template <typename Callback>
-    void ForEachCachedEntry(Callback&& cb) {
-        LOCK(cs);
-        if(bFlushOnNextRead) {
-            bFlushOnNextRead = false;
-            LogPrint(BCLog::SYS, "Evodb::ReadCache flushing cache before read\n");
-            FlushCacheToDisk();
+        auto it_read = mapReadCache.find(key);
+        if (it_read != mapReadCache.end()) {
+            value = it_read->second->second;
+            TouchReadCache(it_read);
+            return true;
         }
-        for (const auto& [key, it] : mapCache) {
-            cb(key, it->second);
+        if (!Read(key, value)) {
+            return false;
         }
-    }
-
-    std::unordered_set<K, Hasher> GetEraseCacheCopy() const {
-        LOCK(cs);
-        return setEraseCache;
-    }
-
-    template <typename Callback>
-    void ForEachEraseEntry(Callback&& cb) const {
-        LOCK(cs);
-        for (const auto& key : setEraseCache) {
-            cb(key);
-        }
-    }
-
-    void RestoreCaches(const std::unordered_map<K, V, Hasher>& mapCacheCopy, const std::unordered_set<K, Hasher>& eraseCacheCopy) {
-        LOCK(cs);
-        for (const auto& [key, value] : mapCacheCopy) {
-            WriteCache(key, value);
-        }
-        setEraseCache = eraseCacheCopy;
-    }
-
-    void ClearCaches() {
-        LOCK(cs);
-        mapCache.clear();
-        fifoList.clear();
-        setEraseCache.clear();
-        bFlushOnNextRead = false;
+        WriteReadCache(key, value);
+        return true;
     }
 
     void WriteCache(const K& key, V&& value) {
@@ -115,6 +127,7 @@ public:
         }
         fifoList.emplace_back(key, std::move(value));
         mapCache[key] = --fifoList.end();
+        WriteReadCache(key, fifoList.back().second);
         setEraseCache.erase(key);
 
         if (maxCacheSize > 0 && mapCache.size() > maxCacheSize) {
@@ -133,6 +146,7 @@ public:
         }
         fifoList.emplace_back(key, value);
         mapCache[key] = --fifoList.end();
+        WriteReadCache(key, fifoList.back().second);
         setEraseCache.erase(key);
 
         if (maxCacheSize > 0 && mapCache.size() > maxCacheSize) {
@@ -149,6 +163,11 @@ public:
             LogPrint(BCLog::SYS, "Evodb::ReadCache flushing cache before read\n");
             FlushCacheToDisk();
         }
+        auto it_read = mapReadCache.find(key);
+        if (it_read != mapReadCache.end()) {
+            TouchReadCache(it_read);
+            return true;
+        }
         return (mapCache.find(key) != mapCache.end() || Exists(key));
     }
 
@@ -160,10 +179,11 @@ public:
             fifoList.erase(it->second);
             mapCache.erase(it);
         }
+        EraseReadCache(key);
         setEraseCache.insert(key);
     }
 
-    bool FlushCacheToDisk(std::size_t CHUNK_ITEMS = 256)
+    bool FlushCacheToDisk(std::size_t CHUNK_ITEMS = 256, bool fSync = true)
     {
         LOCK(cs);
         if (mapCache.empty() && setEraseCache.empty()) return true;
@@ -173,7 +193,7 @@ public:
         std::size_t count = 0;
         auto flush = [&]() {
             if (batch.SizeEstimate() == 0) return true;
-            if (!WriteBatch(batch, /*sync=*/true)) return false;
+            if (!WriteBatch(batch, fSync)) return false;
             batch.Clear();
             items = 0;
             return true;

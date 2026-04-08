@@ -91,6 +91,7 @@
 #include <walletinitinterface.h>
 
 #include <algorithm>
+#include <chrono>
 #include <condition_variable>
 #include <cstdint>
 #include <cstdio>
@@ -327,12 +328,19 @@ void Shutdown(NodeContext& node)
 
     // FlushStateToDisk generates a ChainStateFlushed callback, which we should avoid missing
     if (node.chainman) {
+        const auto phase1_flush_start = std::chrono::steady_clock::now();
+        LogPrint(BCLog::SYS, "Shutdown: phase 1 ForceFlushStateToDisk start\n");
         LOCK(cs_main);
         for (Chainstate* chainstate : node.chainman->GetAll()) {
             if (chainstate->CanFlushToDisk()) {
                 chainstate->ForceFlushStateToDisk();
             }
         }
+        LogPrint(BCLog::SYS,
+                 "Shutdown: phase 1 ForceFlushStateToDisk completed in %d ms\n",
+                 std::chrono::duration_cast<std::chrono::milliseconds>(
+                     std::chrono::steady_clock::now() - phase1_flush_start)
+                     .count());
     }
     UninterruptibleSleep(std::chrono::milliseconds{100});
 
@@ -364,6 +372,8 @@ void Shutdown(NodeContext& node)
     {
         LOCK(cs_main);
         if (node.chainman) {
+            const auto phase2_flush_start = std::chrono::steady_clock::now();
+            LogPrint(BCLog::SYS, "Shutdown: phase 2 ForceFlushStateToDisk + ResetCoinsViews start\n");
             // SYSCOIN
             node.chainman->ActiveChainstate().StopBTCHeaderNode();
             node.chainman->ActiveChainstate().StopGethNode();
@@ -373,6 +383,11 @@ void Shutdown(NodeContext& node)
                     chainstate->ResetCoinsViews();
                 }
             }
+            LogPrint(BCLog::SYS,
+                     "Shutdown: phase 2 ForceFlushStateToDisk + ResetCoinsViews completed in %d ms\n",
+                     std::chrono::duration_cast<std::chrono::milliseconds>(
+                         std::chrono::steady_clock::now() - phase2_flush_start)
+                         .count());
         }
         UninterruptibleSleep(std::chrono::milliseconds{200});
 

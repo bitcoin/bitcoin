@@ -73,54 +73,6 @@ BOOST_AUTO_TEST_CASE(TestCacheEviction) {
     BOOST_CHECK_EQUAL(fifoList.size(), 3);
 }
 
-BOOST_AUTO_TEST_CASE(TestEraseCache) {
-    auto dbParams = DBParams{
-        .path = "testdb",
-        .cache_bytes = static_cast<size_t>(1 << 20),
-        .memory_only = true};
-    CEvoDB<int, int> evoDB(dbParams, 3);
-
-    evoDB.WriteCache(1, one);
-    evoDB.WriteCache(2, two);
-    evoDB.WriteCache(3, three);
-    auto mapCache = evoDB.GetMapCache();
-    auto fifoList = evoDB.GetFifoList();
-    auto eraseCache = evoDB.GetEraseCacheCopy();
-    BOOST_CHECK_EQUAL(mapCache.size(), 3);
-    BOOST_CHECK_EQUAL(fifoList.size(), 3);
-    BOOST_CHECK_EQUAL(eraseCache.size(), 0);
-
-    evoDB.EraseCache(2);
-    // try erasing again
-    evoDB.EraseCache(2);
-    mapCache = evoDB.GetMapCache();
-    fifoList = evoDB.GetFifoList();
-    eraseCache = evoDB.GetEraseCacheCopy();
-    BOOST_CHECK_EQUAL(mapCache.size(), 2);
-    BOOST_CHECK_EQUAL(fifoList.size(), 2);
-    BOOST_CHECK_EQUAL(eraseCache.size(), 1);
-    BOOST_CHECK(eraseCache.find(2) != eraseCache.end());
-
-    int value;
-    // should flush to disk
-    BOOST_CHECK(!evoDB.ReadCache(2, value));
-    BOOST_CHECK(evoDB.ReadCache(1, value));
-    BOOST_CHECK_EQUAL(value, one);
-
-    BOOST_CHECK(evoDB.ReadCache(3, value));
-    BOOST_CHECK_EQUAL(value, three);
-
-    // Check internal structures that are empty after read flush (after erase)
-    mapCache = evoDB.GetMapCache();
-    fifoList = evoDB.GetFifoList();
-    eraseCache = evoDB.GetEraseCacheCopy();
-
-    BOOST_CHECK_EQUAL(mapCache.size(), 0);
-    BOOST_CHECK_EQUAL(fifoList.size(), 0);
-    BOOST_CHECK_EQUAL(eraseCache.size(), 0);
-    BOOST_CHECK(eraseCache.find(2) == eraseCache.end());
-}
-
 BOOST_AUTO_TEST_CASE(TestFlushCacheToDisk) {
     auto dbParams = DBParams{
         .path = "testdb",
@@ -147,11 +99,9 @@ BOOST_AUTO_TEST_CASE(TestFlushCacheToDisk) {
     // Check internal structures after flush
     auto mapCache = evoDB.GetMapCache();
     auto fifoList = evoDB.GetFifoList();
-    auto eraseCache = evoDB.GetEraseCacheCopy();
 
     BOOST_CHECK_EQUAL(mapCache.size(), 0);
     BOOST_CHECK_EQUAL(fifoList.size(), 0);
-    BOOST_CHECK_EQUAL(eraseCache.size(), 0);
 }
 
 BOOST_AUTO_TEST_CASE(TestMaxCacheSize) {
@@ -468,85 +418,5 @@ BOOST_AUTO_TEST_CASE(TestUint256KeyUniqueness)
     BOOST_CHECK(mapCache.find(key3) != mapCache.end());
 }
 
-BOOST_AUTO_TEST_CASE(TestForEachCachedEntryEnumeratesCurrentCacheValues)
-{
-    auto dbParams = DBParams{
-        .path = "testdb",
-        .cache_bytes = static_cast<size_t>(1 << 20),
-        .memory_only = true};
-    CEvoDB<int, int> evoDB(dbParams, 3);
-
-    evoDB.WriteCache(1, one);
-    evoDB.WriteCache(2, two);
-    evoDB.WriteCache(2, four);
-    evoDB.WriteCache(3, three);
-
-    std::unordered_map<int, int> visited;
-    evoDB.ForEachCachedEntry([&](int key, int value) {
-        visited[key] = value;
-    });
-
-    BOOST_CHECK_EQUAL(visited.size(), 3U);
-    BOOST_CHECK_EQUAL(visited[1], one);
-    BOOST_CHECK_EQUAL(visited[2], four);
-    BOOST_CHECK_EQUAL(visited[3], three);
-}
-
-BOOST_AUTO_TEST_CASE(TestForEachCachedEntryFlushesPendingEraseBeforeIteration)
-{
-    auto dbParams = DBParams{
-        .path = "testdb",
-        .cache_bytes = static_cast<size_t>(1 << 20),
-        .memory_only = true};
-    CEvoDB<int, int> evoDB(dbParams, 3);
-
-    evoDB.WriteCache(1, one);
-    evoDB.WriteCache(2, two);
-    BOOST_REQUIRE(evoDB.FlushCacheToDisk());
-
-    evoDB.WriteCache(3, three);
-    evoDB.EraseCache(1);
-
-    std::unordered_map<int, int> visited;
-    evoDB.ForEachCachedEntry([&](int key, int value) {
-        visited[key] = value;
-    });
-
-    BOOST_CHECK(visited.empty());
-    BOOST_CHECK_EQUAL(evoDB.GetMapCache().size(), 0U);
-    BOOST_CHECK_EQUAL(evoDB.GetEraseCacheCopy().size(), 0U);
-
-    int value;
-    BOOST_CHECK(!evoDB.Read(1, value));
-    BOOST_CHECK(evoDB.Read(2, value));
-    BOOST_CHECK_EQUAL(value, two);
-    BOOST_CHECK(evoDB.Read(3, value));
-    BOOST_CHECK_EQUAL(value, three);
-}
-
-BOOST_AUTO_TEST_CASE(TestForEachEraseEntryEnumeratesPendingEraseKeys)
-{
-    auto dbParams = DBParams{
-        .path = "testdb",
-        .cache_bytes = static_cast<size_t>(1 << 20),
-        .memory_only = true};
-    CEvoDB<int, int> evoDB(dbParams, 3);
-
-    evoDB.WriteCache(1, one);
-    evoDB.WriteCache(2, two);
-    evoDB.WriteCache(3, three);
-    evoDB.EraseCache(1);
-    evoDB.EraseCache(3);
-
-    std::unordered_set<int> visited;
-    evoDB.ForEachEraseEntry([&](int key) {
-        visited.insert(key);
-    });
-
-    BOOST_CHECK_EQUAL(visited.size(), 2U);
-    BOOST_CHECK(visited.count(1) == 1);
-    BOOST_CHECK(visited.count(3) == 1);
-    BOOST_CHECK(visited.count(2) == 0);
-}
 BOOST_AUTO_TEST_SUITE_END()
 

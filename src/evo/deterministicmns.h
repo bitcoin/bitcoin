@@ -485,12 +485,15 @@ public:
     static constexpr int DISK_SNAPSHOTS = 3; // keep cache for 3 disk snapshots to have 2 full days covered
 public:
     static constexpr int LIST_CACHE_SIZE = DISK_SNAPSHOT_PERIOD * DISK_SNAPSHOTS;
+    static constexpr int HOT_LIST_CACHE_SIZE = 128;
 private:
     Mutex cs;
     // Main thread has indicated we should perform cleanup up to this height
     std::atomic<int> to_cleanup {0};
+    std::atomic<bool> m_persistent_window_initialized{false};
 
     const CBlockIndex* tipIndex GUARDED_BY(cs) {nullptr};
+    uint256 m_last_maintained_tip GUARDED_BY(cs);
 public:
     struct EvoDBStats {
         int64_t approxPersistedEntries{0};
@@ -521,10 +524,11 @@ public:
     // Test if given TX is a ProRegTx which also contains the collateral at index n
     static bool IsProTxWithCollateral(const CTransactionRef& tx, uint32_t n);
     bool IsDIP3Enforced(int nHeight = -1) EXCLUSIVE_LOCKS_REQUIRED(!cs);
-    bool FlushCacheToDisk(bool bForceFlush) EXCLUSIVE_LOCKS_REQUIRED(!cs);
-    bool DoMaintenance(bool bForceFlush) EXCLUSIVE_LOCKS_REQUIRED(!cs);
+    bool FlushCacheToDisk(bool bForceFlush, bool fSync = true) EXCLUSIVE_LOCKS_REQUIRED(!cs);
+    bool DoMaintenance(bool bForceFlush, bool fSync = true) EXCLUSIVE_LOCKS_REQUIRED(!cs);
     void UpdatedBlockTip(const CBlockIndex* pindex) EXCLUSIVE_LOCKS_REQUIRED(!cs);
     bool GetEvoDBStats(EvoDBStats& stats) EXCLUSIVE_LOCKS_REQUIRED(!cs);
+    bool HasPersistentWindow() const;
 private:
     const CDeterministicMNList GetListForBlockInternal(const CBlockIndex* pindex) EXCLUSIVE_LOCKS_REQUIRED(!cs);
 };
