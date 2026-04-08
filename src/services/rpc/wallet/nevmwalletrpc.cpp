@@ -14,6 +14,7 @@
 #include <rpc/server.h>
 #include <wallet/coincontrol.h>
 #include <nevm/sha3.h>
+#include <util/strencodings.h>
 #include <util/string.h>
 using namespace wallet;
 
@@ -58,7 +59,10 @@ static RPCHelpMan syscoincreaterawnevmblob()
                 hashTypeProvided = true;
                 hashType = candidate;
             } else {
-                throw JSONRPCError(RPC_INVALID_PARAMS, "hash_type must be either 'blake2s' or 'keccak'");
+                int64_t legacyConfTargetDummy{0};
+                if (!ParseInt64(candidate, &legacyConfTargetDummy)) {
+                    throw JSONRPCError(RPC_INVALID_PARAMS, "hash_type must be either 'blake2s' or 'keccak'");
+                }
             }
         }
         // Legacy positional compatibility: numeric conf_target in param[2].
@@ -143,7 +147,10 @@ static RPCHelpMan syscoincreatenevmblob()
                 hashTypeProvided = true;
                 hashType = candidate;
             } else {
-                throw JSONRPCError(RPC_INVALID_PARAMS, "hash_type must be either 'blake2s' or 'keccak'");
+                int64_t legacyConfTargetDummy{0};
+                if (!ParseInt64(candidate, &legacyConfTargetDummy)) {
+                    throw JSONRPCError(RPC_INVALID_PARAMS, "hash_type must be either 'blake2s' or 'keccak'");
+                }
             }
         }
         // Legacy positional compatibility: numeric conf_target in param[2].
