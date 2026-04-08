@@ -413,7 +413,8 @@ inspecting signatures in Mach-O binaries.")
               (sha256
                (base32
                 "1gw93g987d3zlklfq5sby8zc0m272ganfbb0rzmwhdr7gwsa6yck"))
-              (patches (search-our-patches "glibc-guix-2.43-prefix.patch"))))
+              (patches (search-our-patches "glibc-guix-2.43-prefix.patch"
+                                           "glibc-nss-nodlopen.patch"))))
     (arguments
       (substitute-keyword-arguments (package-arguments glibc)
         ((#:configure-flags flags)
