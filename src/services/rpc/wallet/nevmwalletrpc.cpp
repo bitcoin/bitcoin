@@ -5,7 +5,6 @@
 #include <wallet/wallet.h>
 #include <wallet/rpc/util.h>
 #include <wallet/rpc/wallet.h>
-#include <util/fees.h>
 #include <consensus/validation.h>
 #include <validation.h>
 #include <services/nevmconsensus.h>
@@ -26,15 +25,11 @@ static RPCHelpMan syscoincreaterawnevmblob()
             {"versionhash", RPCArg::Type::STR_HEX, RPCArg::Optional::NO, "Version hash of the blob"},
             {"data", RPCArg::Type::STR_HEX, RPCArg::Optional::NO, "data in hex"},
             {"hash_type", RPCArg::Type::STR, RPCArg::Default{"keccak"}, "\"blake2s\" or \"keccak\" when versionhash is 32-byte digest; optional/ignored for 33-byte versioned hash"},
-            {"conf_target", RPCArg::Type::NUM, RPCArg::DefaultHint{"wallet -txconfirmtarget"}, "Confirmation target in blocks"},
-            {"estimate_mode", RPCArg::Type::STR, RPCArg::Default{"unset"}, std::string() + "The fee estimate mode, must be one of (case insensitive):\n"
-                        "       \"" + FeeModes("\"\n\"") + "\""},
-            {"fee_rate", RPCArg::Type::AMOUNT, RPCArg::DefaultHint{"not set, fall back to wallet fee estimation"}, "Specify a fee rate in " + CURRENCY_ATOM + "/vB."}
         },
         RPCResult{RPCResult::Type::ANY, "", ""},
         RPCExamples{
-            HelpExampleCli("syscoincreaterawnevmblob", "\"versionhash\" \"data\" \"blake2s\" 6 economical 25")
-            + HelpExampleRpc("syscoincreaterawnevmblob", "\"versionhash\" \"data\" \"blake2s\" 6 economical 25")
+            HelpExampleCli("syscoincreaterawnevmblob", "\"versionhash\" \"data\" \"blake2s\"")
+            + HelpExampleRpc("syscoincreaterawnevmblob", "\"versionhash\" \"data\" \"blake2s\"")
         },
     [&](const RPCHelpMan& self, const node::JSONRPCRequest& request) -> UniValue
 { 
@@ -59,13 +54,9 @@ static RPCHelpMan syscoincreaterawnevmblob()
                 hashTypeProvided = true;
                 hashType = candidate;
             } else {
-                int64_t legacyConfTargetDummy{0};
-                if (!ParseInt64(candidate, &legacyConfTargetDummy)) {
-                    throw JSONRPCError(RPC_INVALID_PARAMS, "hash_type must be either 'blake2s' or 'keccak'");
-                }
+                throw JSONRPCError(RPC_INVALID_PARAMS, "hash_type must be either 'blake2s' or 'keccak'");
             }
         }
-        // Legacy positional compatibility: numeric conf_target in param[2].
     }
     const std::vector<uint8_t> vchVersionHash = ParseHex(request.params[0].get_str());
     uint8_t decodedType{NEVM_DATA_LEGACY_VERSION_BYTE};
@@ -111,10 +102,6 @@ static RPCHelpMan syscoincreatenevmblob()
             {"data", RPCArg::Type::STR_HEX, RPCArg::Optional::NO, "blob in hex"},
             {"overwrite_existing", RPCArg::Type::BOOL, RPCArg::Default{true}, "true to overwrite an existing blob if it exists, false to return versionhash of data on duplicate."},
             {"hash_type", RPCArg::Type::STR, RPCArg::Default{"keccak"}, "\"blake2s\" for versioned 33-byte hash (0x01 || blake2s), \"keccak\" for legacy 32-byte hash"},
-            {"conf_target", RPCArg::Type::NUM, RPCArg::DefaultHint{"wallet -txconfirmtarget"}, "Confirmation target in blocks"},
-            {"estimate_mode", RPCArg::Type::STR, RPCArg::Default{"unset"}, std::string() + "The fee estimate mode, must be one of (case insensitive):\n"
-                        "       \"" + FeeModes("\"\n\"") + "\""},
-            {"fee_rate", RPCArg::Type::AMOUNT, RPCArg::DefaultHint{"not set, fall back to wallet fee estimation"}, "Specify a fee rate in " + CURRENCY_ATOM + "/vB."}
         },
         RPCResult{RPCResult::Type::ANY, "", ""},
         RPCExamples{
@@ -139,21 +126,15 @@ static RPCHelpMan syscoincreatenevmblob()
         bOverwrite = request.params[1].get_bool();
     }
     std::string hashType = "keccak";
-    bool hashTypeProvided = false;
     if (request.params.size() > 2 && !request.params[2].isNull()) {
         if (request.params[2].isStr()) {
             const std::string candidate = ToLower(request.params[2].get_str());
             if (candidate == "blake2s" || candidate == "keccak") {
-                hashTypeProvided = true;
                 hashType = candidate;
             } else {
-                int64_t legacyConfTargetDummy{0};
-                if (!ParseInt64(candidate, &legacyConfTargetDummy)) {
-                    throw JSONRPCError(RPC_INVALID_PARAMS, "hash_type must be either 'blake2s' or 'keccak'");
-                }
+                throw JSONRPCError(RPC_INVALID_PARAMS, "hash_type must be either 'blake2s' or 'keccak'");
             }
         }
-        // Legacy positional compatibility: numeric conf_target in param[2].
     }
     // process new vector in batch checking the blobs
     BlockValidationState state;
@@ -179,12 +160,6 @@ static RPCHelpMan syscoincreatenevmblob()
     paramsSend.push_back(HexStr(vchVersionHash));
     paramsSend.push_back(HexStr(vchData));
     paramsSend.push_back(hashType);
-    const size_t confTargetIndex = hashTypeProvided ? 3 : 2;
-    const size_t estimateModeIndex = hashTypeProvided ? 4 : 3;
-    const size_t feeRateIndex = hashTypeProvided ? 5 : 4;
-    paramsSend.push_back(request.params.size() > confTargetIndex ? request.params[confTargetIndex] : UniValue(UniValue::VNULL));
-    paramsSend.push_back(request.params.size() > estimateModeIndex ? request.params[estimateModeIndex] : UniValue(UniValue::VNULL));
-    paramsSend.push_back(request.params.size() > feeRateIndex ? request.params[feeRateIndex] : UniValue(UniValue::VNULL));
     node::JSONRPCRequest requestSend;
     requestSend.context = request.context;
     requestSend.params = paramsSend;
