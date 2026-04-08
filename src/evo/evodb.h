@@ -118,22 +118,6 @@ public:
         return true;
     }
 
-
-    std::unordered_set<K, Hasher> GetEraseCacheCopy() const {
-        LOCK(cs);
-        return setEraseCache;
-    }
-
-
-    void RestoreCaches(const std::unordered_map<K, V, Hasher>& mapCacheCopy, const std::unordered_set<K, Hasher>& eraseCacheCopy) {
-        LOCK(cs);
-        for (const auto& [key, value] : mapCacheCopy) {
-            WriteCache(key, value);
-        }
-        setEraseCache = eraseCacheCopy;
-    }
-
-
     void WriteCache(const K& key, V&& value) {
         LOCK(cs);
         auto it = mapCache.find(key);
