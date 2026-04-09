@@ -1843,8 +1843,9 @@ CAmount GetBlockSubsidy(int nHeight, const Consensus::Params& consensusParams)
     if (halvings >= 64)
         return 0;
 
-    CAmount nSubsidy = 50 * COIN;
-    // Subsidy is cut in half every 210,000 blocks which will occur approximately every 4 years.
+    // Elektron Net genesis reward: 5 Elek per block.
+    // Halves every 2,102,400 blocks (~4 years at 60-second block time).
+    CAmount nSubsidy = 5 * COIN;
     nSubsidy >>= halvings;
     return nSubsidy;
 }
