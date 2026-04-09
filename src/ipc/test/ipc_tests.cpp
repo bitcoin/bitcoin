@@ -15,6 +15,7 @@ BOOST_AUTO_TEST_CASE(ipc_tests)
     IpcPipeTest();
     IpcSocketPairTest();
     IpcSocketTest(m_args.GetDataDirNet());
+    IpcSocketMaxConnectionsTest(m_args.GetDataDirNet());
 }
 
 // Test address parsing.

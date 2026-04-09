@@ -26,5 +26,6 @@ public:
 void IpcPipeTest();
 void IpcSocketPairTest();
 void IpcSocketTest(const fs::path& datadir);
+void IpcSocketMaxConnectionsTest(const fs::path& datadir);
 
 #endif // BITCOIN_IPC_TEST_IPC_TEST_H

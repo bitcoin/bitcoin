@@ -183,3 +183,41 @@ void IpcSocketTest(const fs::path& datadir)
         connect_and_test(addresses[i]);
     }
 }
+
+//! Test ipc::Protocol listen() local connection limiting over a unix socket.
+void IpcSocketMaxConnectionsTest(const fs::path& datadir)
+{
+    std::unique_ptr<interfaces::Init> init{std::make_unique<TestInit>()};
+    std::unique_ptr<ipc::Protocol> protocol{ipc::capnp::MakeCapnpProtocol()};
+    std::unique_ptr<ipc::Process> process{ipc::MakeProcess()};
+
+    std::string address{strprintf("unix:%s", TempPath("bitcoin_sock_limit_XXXXXX"))};
+    int serve_fd = process->bind(datadir, "test_bitcoin", address);
+    BOOST_CHECK_GE(serve_fd, 0);
+    protocol->listen(serve_fd, "test-serve", *init, /*max_connections=*/1);
+
+    auto connect_echo{[&](const std::string& connect_address) {
+        std::string addr{connect_address};
+        int connect_fd{process->connect(datadir, "test_bitcoin", addr)};
+        BOOST_CHECK_EQUAL(addr, connect_address);
+        std::unique_ptr<interfaces::Init> remote_init{protocol->connect(connect_fd, "test-connect")};
+        std::unique_ptr<interfaces::Echo> remote_echo{remote_init->makeEcho()};
+        return std::make_pair(std::move(remote_init), std::move(remote_echo));
+    }};
+
+    auto [remote_init1, remote_echo1] = connect_echo(address);
+    BOOST_CHECK_EQUAL(remote_echo1->echo("echo test 1"), "echo test 1");
+
+    auto second_call = std::async(std::launch::async, [&] {
+        auto [remote_init2, remote_echo2] = connect_echo(address);
+        return remote_echo2->echo("echo test 2");
+    });
+
+    BOOST_CHECK(second_call.wait_for(std::chrono::milliseconds{100}) == std::future_status::timeout);
+
+    remote_echo1.reset();
+    remote_init1.reset();
+
+    BOOST_REQUIRE(second_call.wait_for(std::chrono::seconds{5}) == std::future_status::ready);
+    BOOST_CHECK_EQUAL(second_call.get(), "echo test 2");
+}
