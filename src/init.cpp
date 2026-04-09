@@ -7,13 +7,10 @@
 
 #include <init.h>
 
-#include <kernel/checks.h>
-
 #include <addrdb.h>
 #include <addrman.h>
 #include <banman.h>
 #include <blockfilter.h>
-#include <btcsignals.h>
 #include <chain.h>
 #include <chainparams.h>
 #include <chainparamsbase.h>
@@ -42,6 +39,7 @@
 #include <kernel/blockmanager_opts.h>
 #include <kernel/caches.h>
 #include <kernel/chainstatemanager_opts.h>
+#include <kernel/checks.h>
 #include <kernel/context.h>
 #include <kernel/notifications_interface.h>
 #include <key.h>
@@ -87,6 +85,7 @@
 #include <uint256.h>
 #include <util/asmap.h>
 #include <util/batchpriority.h>
+#include <util/btcsignals.h>
 #include <util/chaintype.h>
 #include <util/check.h>
 #include <util/fs.h>

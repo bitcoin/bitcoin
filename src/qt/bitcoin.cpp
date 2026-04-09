@@ -6,7 +6,6 @@
 
 #include <qt/bitcoin.h>
 
-#include <btcsignals.h>
 #include <chainparams.h>
 #include <common/args.h>
 #include <common/init.h>
@@ -31,6 +30,7 @@
 #include <qt/utilitydialog.h>
 #include <qt/winshutdownmonitor.h>
 #include <uint256.h>
+#include <util/btcsignals.h>
 #include <util/exception.h>
 #include <util/log.h>
 #include <util/string.h>

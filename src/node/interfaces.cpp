@@ -6,7 +6,6 @@
 
 #include <banman.h>
 #include <blockfilter.h>
-#include <btcsignals.h>
 #include <chain.h>
 #include <chainparams.h>
 #include <coins.h>
@@ -60,6 +59,7 @@
 #include <txmempool.h>
 #include <uint256.h>
 #include <univalue.h>
+#include <util/btcsignals.h>
 #include <util/check.h>
 #include <util/result.h>
 #include <util/signalinterrupt.h>
