@@ -14,7 +14,7 @@ CClientUIInterface uiInterface;
 
 struct UISignals {
     btcsignals::signal<CClientUIInterface::ThreadSafeMessageBoxSig> ThreadSafeMessageBox;
-    btcsignals::signal<CClientUIInterface::ThreadSafeQuestionSig, btcsignals::optional_last_value<bool>> ThreadSafeQuestion;
+    btcsignals::signal<CClientUIInterface::ThreadSafeQuestionSig, btcsignals::any_of> ThreadSafeQuestion;
     btcsignals::signal<CClientUIInterface::InitMessageSig> InitMessage;
     btcsignals::signal<CClientUIInterface::InitWalletSig> InitWallet;
     btcsignals::signal<CClientUIInterface::NotifyNumConnectionsChangedSig> NotifyNumConnectionsChanged;
@@ -46,7 +46,7 @@ ADD_SIGNALS_IMPL_WRAPPER(NotifyHeaderTip);
 ADD_SIGNALS_IMPL_WRAPPER(BannedListChanged);
 
 void CClientUIInterface::ThreadSafeMessageBox(const bilingual_str& message, unsigned int style) { return g_ui_signals.ThreadSafeMessageBox(message, style); }
-bool CClientUIInterface::ThreadSafeQuestion(const bilingual_str& message, const std::string& non_interactive_message, unsigned int style) { return g_ui_signals.ThreadSafeQuestion(message, non_interactive_message, style).value_or(false);}
+bool CClientUIInterface::ThreadSafeQuestion(const bilingual_str& message, const std::string& non_interactive_message, unsigned int style) { return g_ui_signals.ThreadSafeQuestion(message, non_interactive_message, style);}
 void CClientUIInterface::InitMessage(const std::string& message) { return g_ui_signals.InitMessage(message); }
 void CClientUIInterface::InitWallet() { return g_ui_signals.InitWallet(); }
 void CClientUIInterface::NotifyNumConnectionsChanged(int newNumConnections) { return g_ui_signals.NotifyNumConnectionsChanged(newNumConnections); }
