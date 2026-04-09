@@ -10,7 +10,7 @@
 
 std::unique_ptr<LocalAddressManager> g_localaddressman{std::make_unique<LocalAddressManager>()};
 
-[[nodiscard]] std::optional<CService> LocalAddressManager::Get(const CAddress& addr, const Network& connected_through) const
+[[nodiscard]] std::optional<CService> LocalAddressManager::Get(const CNetAddr& addr, const Network& connected_through) const
 {
     if (!fListen) return std::nullopt;
 
@@ -75,16 +75,16 @@ bool LocalAddressManager::Add(const CService& addr_, int nScore)
     return true;
 }
 
-void LocalAddressManager::Remove(const CService& addr)
+void LocalAddressManager::Remove(const CNetAddr& addr)
 {
     LOCK(m_mutex);
     if (fLogIPs) {
-        LogInfo("LocalAddressManager: Removing %s\n", addr.ToStringAddrPort());
+        LogInfo("LocalAddressManager: Removing %s\n", addr.ToStringAddr());
     }
     m_addresses.erase(addr);
 }
 
-bool LocalAddressManager::Seen(const CService& addr)
+bool LocalAddressManager::Seen(const CNetAddr& addr)
 {
     LOCK(m_mutex);
     const auto it = m_addresses.find(addr);
@@ -93,13 +93,13 @@ bool LocalAddressManager::Seen(const CService& addr)
     return true;
 }
 
-bool LocalAddressManager::Contains(const CService& addr) const
+bool LocalAddressManager::Contains(const CNetAddr& addr) const
 {
     LOCK(m_mutex);
     return m_addresses.contains(addr);
 }
 
-int LocalAddressManager::GetnScore(const CService& addr) const
+int LocalAddressManager::GetnScore(const CNetAddr& addr) const
 {
     LOCK(m_mutex);
     const auto it = m_addresses.find(addr);

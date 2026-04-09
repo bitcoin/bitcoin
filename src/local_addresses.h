@@ -12,8 +12,6 @@
 #include <optional>
 #include <map>
 
-class CAddress;
-
 enum
 {
     LOCAL_NONE,   // unknown
@@ -38,20 +36,20 @@ public:
     // learn a new local address
     bool Add(const CService& addr_, int nScore = LOCAL_NONE) EXCLUSIVE_LOCKS_REQUIRED(!m_mutex);
 
-    void Remove(const CService& addr) EXCLUSIVE_LOCKS_REQUIRED(!m_mutex);
+    void Remove(const CNetAddr& addr) EXCLUSIVE_LOCKS_REQUIRED(!m_mutex);
 
     /** vote for a local address */
-    bool Seen(const CService& addr) EXCLUSIVE_LOCKS_REQUIRED(!m_mutex);
+    bool Seen(const CNetAddr& addr) EXCLUSIVE_LOCKS_REQUIRED(!m_mutex);
 
     /** check whether a given address is potentially local */
-    bool Contains(const CService& addr) const EXCLUSIVE_LOCKS_REQUIRED(!m_mutex);
+    bool Contains(const CNetAddr& addr) const EXCLUSIVE_LOCKS_REQUIRED(!m_mutex);
 
     // Determine the "best" local address for a particular peer.
-    [[nodiscard]] std::optional<CService> Get(const CAddress& addr, const Network& connected_through) const EXCLUSIVE_LOCKS_REQUIRED(!m_mutex);
+    [[nodiscard]] std::optional<CService> Get(const CNetAddr& addr, const Network& connected_through) const EXCLUSIVE_LOCKS_REQUIRED(!m_mutex);
 
     void Clear() EXCLUSIVE_LOCKS_REQUIRED(!m_mutex);
 
-    int GetnScore(const CService& addr) const EXCLUSIVE_LOCKS_REQUIRED(!m_mutex);
+    int GetnScore(const CNetAddr& addr) const EXCLUSIVE_LOCKS_REQUIRED(!m_mutex);
 
     map_type GetAll() const EXCLUSIVE_LOCKS_REQUIRED(!m_mutex);
 
