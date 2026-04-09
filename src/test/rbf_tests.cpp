@@ -14,7 +14,7 @@
 #include <optional>
 #include <vector>
 
-BOOST_FIXTURE_TEST_SUITE(rbf_tests, TestingSetup)
+BOOST_FIXTURE_TEST_SUITE(rbf_tests, BasicTestingSetup)
 
 static inline CTransactionRef make_tx(const std::vector<CTransactionRef>& inputs,
                                       const std::vector<CAmount>& output_values)

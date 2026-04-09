@@ -7,10 +7,10 @@
 #include <kernel/disconnected_transactions.h>
 #include <test/util/setup_common.h>
 
-BOOST_FIXTURE_TEST_SUITE(disconnected_transactions, TestChain100Setup)
+BOOST_AUTO_TEST_SUITE(disconnected_transactions)
 
 //! Tests that DisconnectedBlockTransactions limits its own memory properly
-BOOST_AUTO_TEST_CASE(disconnectpool_memory_limits)
+BOOST_FIXTURE_TEST_CASE(disconnectpool_memory_limits, TestChain100Setup)
 {
     // Use the coinbase transactions from TestChain100Setup. It doesn't matter whether these
     // transactions would realistically be in a block together, they just need distinct txids and

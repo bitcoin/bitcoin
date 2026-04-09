@@ -17,7 +17,7 @@
 
 #include <boost/test/unit_test.hpp>
 
-BOOST_FIXTURE_TEST_SUITE(txdownload_tests, TestingSetup)
+BOOST_AUTO_TEST_SUITE(txdownload_tests)
 
 struct Behaviors {
     bool m_txid_in_rejects;
