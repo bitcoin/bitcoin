@@ -124,7 +124,7 @@ The operator must type the exact Elektron Net mainnet genesis hash:
 **Validation rules:**
 - Exactly 64 hexadecimal characters required
 - Compared byte-for-byte against the value hardcoded in `GenesisConfig::mainnet()`
-  (`src/chain/mod.rs`)
+  (`src/chain/chain.h`)
 - Wrong input → menu shown again (no lockout, no limit — wrong input is always wrong)
 - Correct input → `DiscoveryResult::GenesisConfirmed(Mainnet)` → Genesis Mode starts
 
@@ -198,27 +198,28 @@ and no carelessness can pass this guard.
 
 ```
 CORE:
-  Language:      Rust (memory-safe, zero-cost abstractions)
-  Async Runtime: Tokio (async/await, multi-threaded)
-  Networking:    libp2p (P2P, encryption, NAT traversal)
-  Database:      sled or RocksDB (embedded, ACID-compliant)
+  Language:      C++20 (performant, zero-overhead abstractions, no GC)
+  Async Runtime: Boost.Asio (async I/O, multi-threaded executor)
+  Networking:    cpp-libp2p / Boost.Asio (P2P, encryption, NAT traversal)
+  Database:      RocksDB (embedded, ACID-compliant, native C++ API)
+  Build:         CMake
 
 CRYPTOGRAPHY:
-  Signatures:    Ed25519 (Ed25519-dalek)
-  Hashing:       BLAKE3 (address generation, PoW, stealth)
-  VRF:           ristretto255 (Curve25519 wrapper)
-  BLS:           blst (aggregate signatures, finality)
+  Signatures:    Ed25519 (libsodium)
+  Hashing:       BLAKE3 C library (address generation, PoW, stealth)
+  VRF:           ristretto255 via libsodium (Curve25519 wrapper)
+  BLS:           blst C library (aggregate signatures, finality)
 
 WALLET:
-  Mnemonics:     bip39 (24-word, 256-bit entropy)
-  Derivation:    bip32 (hierarchical deterministic)
+  Mnemonics:     BIP-39 (24-word, 256-bit entropy, trezor-crypto)
+  Derivation:    BIP-32 (hierarchical deterministic, libwally-core)
   Scanning:      Bloom-Filter (2^20 items, 0.1% FPR)
 
 INTERFACES:
   RPC Port:      9337 (JSON-RPC 2.0)
-  P2P Port:      9336 (libp2p multiaddr)
-  GUI:           eGUI (Electron, wallet operations)
-  CLI:           Subcommands via tokio-console
+  P2P Port:      9336 (multiaddr)
+  GUI:           eGUI (Qt, wallet operations)
+  CLI:           Subcommands via CLI11
 ```
 
 ---
@@ -481,13 +482,13 @@ STEP 1: UI CONFIRMATION
     User confirms → proceed
 
 STEP 2: REGISTRY ENTRY CREATION
-    Compute: fn_record = {
-        pubkey:        wallet_pubkey,
-        status:        ACTIVE,
-        first_seen:    current_slot,
-        heartbeat_cnt: 0,
-        registration_block: current_height
-    }
+    Compute: FnRecord fn_record {
+        .pubkey             = wallet_pubkey,
+        .status             = FnStatus::ACTIVE,
+        .first_seen         = current_slot,
+        .heartbeat_cnt      = 0,
+        .registration_block = current_height
+    };
     Broadcast: REGISTRATION_MESSAGE (signed)
     Producer includes in next block
     On-chain registry updated
@@ -811,53 +812,94 @@ STEP 4: DETERMINE COMMITTEE RANK
 ```
 
 ```
-VRF IMPLEMENTATION (using ristretto255):
+VRF IMPLEMENTATION (using libsodium ristretto255):
 
-    // Rust code (using curve25519-dalek + ristretto255)
-    use curve25519_dalek::{
-        ristretto::RistrettoPoint,
-        scalar::Scalar,
-    };
+    // C++20 code (using libsodium + BLAKE3 C library)
+    #include <sodium.h>
+    #include <blake3.h>
+    #include <array>
+    #include <cstring>
 
-    fn vrf_prove(private_key: &[u8; 32], input: &[u8]) -> (Vec<u8>, Vec<u8>) {
-        // Step 1: Hash input to scalar
-        let alpha = Scalar::hash_from_bytes::<扩张::Hash>(&[input, private_key].concat());
+    // Returns {vrf_hash[32], vrf_proof[64]}
+    std::pair<std::array<uint8_t,32>, std::array<uint8_t,64>>
+    vrf_prove(const uint8_t private_key[32],
+              const uint8_t* input, size_t input_len)
+    {
+        // Step 1: Hash input + privkey to scalar via BLAKE3
+        uint8_t alpha_buf[64];
+        blake3_hasher h;
+        blake3_hasher_init(&h);
+        blake3_hasher_update(&h, input, input_len);
+        blake3_hasher_update(&h, private_key, 32);
+        blake3_hasher_finalize(&h, alpha_buf, 64);
+        uint8_t alpha[32];
+        crypto_core_ristretto255_scalar_reduce(alpha, alpha_buf);
 
-        // Step 2: Compute beta = alpha × G
-        let beta = RistrettoPoint::mul_base_g(&alpha);
+        // Step 2: beta = alpha × G  (ristretto255 base-point multiply)
+        uint8_t beta[crypto_core_ristretto255_BYTES];
+        crypto_scalarmult_ristretto255_base(beta, alpha);
 
-        // Step 3: Fiat-Shamir challenge
-        let gamma = Scalar::hash_from_bytes::<扩张::Hash>(
-            &[alpha.as_bytes(), beta.compress().as_bytes(), input].concat()
-        );
+        // Step 3: Fiat-Shamir challenge gamma = BLAKE3(alpha || beta || input)
+        uint8_t gamma_buf[64];
+        blake3_hasher_init(&h);
+        blake3_hasher_update(&h, alpha, 32);
+        blake3_hasher_update(&h, beta, sizeof beta);
+        blake3_hasher_update(&h, input, input_len);
+        blake3_hasher_finalize(&h, gamma_buf, 64);
+        uint8_t gamma[32];
+        crypto_core_ristretto255_scalar_reduce(gamma, gamma_buf);
 
-        // Step 4: r = alpha - gamma × private_key
-        let sk = Scalar::from_bytes_mod_order(*private_key);
-        let r = alpha - gamma * sk;
+        // Step 4: r = alpha - gamma × private_key  (scalar arithmetic)
+        uint8_t gamma_sk[32];
+        crypto_core_ristretto255_scalar_mul(gamma_sk, gamma, private_key);
+        uint8_t r[32];
+        crypto_core_ristretto255_scalar_sub(r, alpha, gamma_sk);
 
-        // Output: (vrf_hash, proof)
-        let vrf_hash =扩张::hash(beta.compress().as_bytes());
-        let proof = [beta.compress().as_bytes(), r.as_bytes()].concat();
-        (vrf_hash, proof)
+        // Output vrf_hash = BLAKE3(beta)
+        std::array<uint8_t,32> vrf_hash;
+        blake3_hasher_init(&h);
+        blake3_hasher_update(&h, beta, sizeof beta);
+        blake3_hasher_finalize(&h, vrf_hash.data(), 32);
+
+        // proof = beta[32] || r[32]  (64 bytes total)
+        std::array<uint8_t,64> proof;
+        std::memcpy(proof.data(),      beta, 32);
+        std::memcpy(proof.data() + 32, r,    32);
+
+        return {vrf_hash, proof};
     }
 ```
 
 ```
 VRF VERIFICATION (by any node):
 
-    fn vrf_verify(public_key: RistrettoPoint, input: &[u8], proof: Vec<u8>) -> bool {
-        let beta = RistrettoPoint::decompress(proof[0..32]).unwrap();
-        let r = Scalar::from_bytes_mod_order(proof[32..64]);
+    bool vrf_verify(const uint8_t public_key[32],
+                    const uint8_t* input, size_t input_len,
+                    const uint8_t proof[64])
+    {
+        const uint8_t* beta = proof;       // bytes [0..32]
+        const uint8_t* r    = proof + 32;  // bytes [32..64]
 
-        // Re-compute challenge
-        let gamma = Scalar::hash_from_bytes::<扩张::Hash>(
-            &[r.as_bytes(), beta.compress().as_bytes(), input].concat()
-        );
+        // Re-compute challenge gamma = BLAKE3(r || beta || input)
+        uint8_t gamma_buf[64];
+        blake3_hasher h;
+        blake3_hasher_init(&h);
+        blake3_hasher_update(&h, r, 32);
+        blake3_hasher_update(&h, beta, 32);
+        blake3_hasher_update(&h, input, input_len);
+        blake3_hasher_finalize(&h, gamma_buf, 64);
+        uint8_t gamma[32];
+        crypto_core_ristretto255_scalar_reduce(gamma, gamma_buf);
 
-        // Check: r = alpha - gamma × private_key
-        // Equivalently: r × G + gamma × public_key = beta
-        let check = RistrettoPoint::mul_base_g(&r) + public_key.mul(gamma);
-        check == beta
+        // Check: r × G + gamma × public_key == beta
+        uint8_t rG[crypto_core_ristretto255_BYTES];
+        uint8_t gP[crypto_core_ristretto255_BYTES];
+        uint8_t check[crypto_core_ristretto255_BYTES];
+        crypto_scalarmult_ristretto255_base(rG, r);
+        crypto_scalarmult_ristretto255(gP, gamma, public_key);
+        crypto_core_ristretto255_add(check, rG, gP);
+
+        return crypto_verify_32(check, beta) == 0;
     }
 ```
 
@@ -928,21 +970,24 @@ PACEMAKER INTEGRATION WITH pBFT:
 ```
 IMPLEMENTATION NOTES:
 
-    pacemaker_state = {
-        k: usize,                    // consecutive skipped slots
-        last_finalized_height: u64,
-        current_slot: u64,
-        timeout_until: Instant
-    }
+    struct PacemakerState {
+        size_t   k;                       // consecutive skipped slots
+        uint64_t last_finalized_height;
+        uint64_t current_slot;
+        std::chrono::steady_clock::time_point timeout_until;
+    };
 
-    EVERY SLOT_TICK (every 60s):
-        if block_exists_for_slot(current_slot):
-            k = 0  // reset
-            advance to next slot
-        else:
-            k += 1
-            timeout = 60s × 2^min(k, 10)
-            re_draw_committee(current_slot)
+    // Every SLOT_TICK (every 60s):
+    void on_slot_tick(PacemakerState& state) {
+        if (block_exists_for_slot(state.current_slot)) {
+            state.k = 0;  // reset
+            advance_to_next_slot();
+        } else {
+            state.k += 1;
+            auto secs = 60 * (1u << std::min(state.k, size_t(10)));
+            re_draw_committee(state.current_slot);
+        }
+    }
 
     VRF COMMITTEE IS ALWAYS FRESH:
         - Each slot: new independent VRF draw
@@ -1059,9 +1104,9 @@ USER: "Create New Wallet"
        ▼
 ┌──────────────────────────────────────────┐
 │ 4. DERIVE_KEYS                           │
-│    seed = bip39::to_seed(mnemonic)      │
-│    spend_priv = HD::derive(seed, m/137'/0'/0') │
-│    scan_priv  = HD::derive(seed, m/137'/0'/1') │
+│    seed = bip39_to_seed(mnemonic)       │
+│    spend_priv = hd_derive(seed, "m/137'/0'/0'") │
+│    scan_priv  = hd_derive(seed, "m/137'/0'/1'") │
 └──────┬───────────────────────────────────┘
        │
        ▼
@@ -1365,14 +1410,13 @@ UI FLOW:
 ```
 IMPLEMENTATION:
 
-    confirmation = {
-        user_pubkey:    wallet_pubkey (derived from seed),
-        declaration_hash: hash(DATA_SOVEREIGNTY_TEXT),
-        signature:       Ed25519_Sign(seed, declaration_hash),
-        timestamp:       current_slot
-    }
-
-    Stored locally: ~/.elektron/sovereignty.json
+    struct SovereigntyConfirmation {
+        std::array<uint8_t,32> user_pubkey;      // derived from seed
+        std::array<uint8_t,32> declaration_hash; // BLAKE3(DATA_SOVEREIGNTY_TEXT)
+        std::array<uint8_t,64> signature;         // Ed25519_Sign(seed, declaration_hash)
+        uint64_t               timestamp;         // current_slot
+    };
+    // Serialized as JSON → ~/.elektron/sovereignty.json
 
     This is NOT broadcast. It's a local cryptographic record.
     The declaration is architectural, not contractual.
@@ -1585,17 +1629,17 @@ INVOICE QR WORKFLOW:
 
 ```
 QR ENCODING:
-    Rust: qrcode (crate) or quirc (via FFI)
-    Encode: String → QR Matrix → Image
+    C++: libqrencode (C library, C++ wrapper) or nayuki QR Code generator
+    Encode: std::string → QR Matrix → Image
     Version: auto-select based on data length
     Error correction: Level M (15%)
 
 QR DECODING:
-    Rust: quirc, zbar, or llvm-zbar-binding
-    Camera frame → Detect patterns → Decode → String
+    C++: ZBar (C/C++ library) or ZXing-C++ (port of ZXing)
+    Camera frame → Detect patterns → Decode → std::string
 
 QR IMAGE:
-    Output formats: PNG, SVG, JPEG
+    Output formats: PNG (lodepng), SVG (string generation), JPEG
     Display size: 200×200px minimum for scanning
     High-contrast: Black on white (default)
 ```

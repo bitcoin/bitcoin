@@ -256,29 +256,30 @@ No other transaction revealed. Tamper-proof.
 
 ```
 IMPLEMENTATION:
-  Language:     Rust (memory-safe, performant, no runtime overhead)
-  Async:        Tokio (async runtime for network I/O)
-  Networking:   libp2p (peer-to-peer, NAT traversal, encryption)
-  Storage:      sled or RocksDB (embedded key-value database)
-  Serialization: serde (JSON/binary encoding)
+  Language:      C++20 (performant, zero-overhead abstractions, no GC)
+  Async:         Boost.Asio (async runtime for network I/O)
+  Networking:    cpp-libp2p / Boost.Asio (peer-to-peer, NAT traversal, encryption)
+  Storage:       RocksDB (embedded key-value database, native C++ API)
+  Serialization: nlohmann/json + Protocol Buffers (JSON/binary encoding)
+  Build:         CMake (cross-platform build system)
 
 CRYPTOGRAPHY:
-  Keys/Signatures: Ed25519 (deterministic, fast)
-  Hashing:         BLAKE3 (addresses, PoW, stealth, checkpoints)
-  VRF:             Curve25519 + ristretto255 (committee selection)
-  BLS:              blst (aggregate signatures for pBFT finality)
+  Keys/Signatures: Ed25519 (libsodium – deterministic, fast)
+  Hashing:         BLAKE3 C library (addresses, PoW, stealth, checkpoints)
+  VRF:             ristretto255 via libsodium (committee selection)
+  BLS:             blst C library (aggregate signatures for pBFT finality)
 
 WALLET:
-  Mnemonics:     BIP-39 (24-word seed phrases)
-  Derivation:    BIP-32 (HD wallet, m/137'/0'/N paths)
+  Mnemonics:     BIP-39 (24-word seed phrases, trezor-crypto or custom)
+  Derivation:    BIP-32 (HD wallet, m/137'/0'/N paths, libwally-core)
   Addresses:     Bech32m with "elek1" prefix
   Privacy:       Bloom-Filter (local, offline stealth scanning)
 
 INTERFACES:
   Daemon:        elektrond (background service)
-  CLI:           Command-line interface for node control
+  CLI:           Command-line interface for node control (CLI11)
   RPC:           JSON-RPC (port 9337, for wallet/explorer integration)
-  GUI:           eGUI (Electron-based desktop wallet, Bitcoin Core-like)
+  GUI:           eGUI (Qt-based desktop wallet, Bitcoin Core-like)
 ```
 
 ## Proof-of-Work: 137 Seconds
@@ -355,7 +356,7 @@ All on-chain receipts use stealth by default.
 
 ## Bitcoin Core as Foundation
 
-Elektron Net builds directly on the Bitcoin Core peer-to-peer network layer, rewritten in Rust:
+Elektron Net builds directly on the Bitcoin Core peer-to-peer network layer, implemented in C++:
 
 ```
 Inherited from Bitcoin Core:
