@@ -12,22 +12,6 @@
 namespace {
 
 
-struct MoveOnlyData {
-    MoveOnlyData(int data) : m_data(data) {}
-    MoveOnlyData(MoveOnlyData&&) = default;
-
-    MoveOnlyData& operator=(MoveOnlyData&&) = delete;
-    MoveOnlyData(const MoveOnlyData&) = delete;
-    MoveOnlyData& operator=(const MoveOnlyData&) = delete;
-
-    int m_data;
-};
-
-MoveOnlyData MoveOnlyReturnCallback(int val)
-{
-    return {val};
-}
-
 void IncrementCallback(int& val)
 {
     val++;
@@ -97,44 +81,30 @@ BOOST_AUTO_TEST_CASE(disconnects)
     BOOST_CHECK_EQUAL(val, 6);
 }
 
-/* Check that move-only return types work correctly
- */
-BOOST_AUTO_TEST_CASE(moveonly_return)
+BOOST_AUTO_TEST_CASE(any_of_combiner)
 {
-    btcsignals::signal<MoveOnlyData(int)> sig0;
-    sig0.connect(MoveOnlyReturnCallback);
-    int data{3};
-    auto ret = sig0(data);
-    BOOST_CHECK_EQUAL(ret->m_data, 3);
-}
-
-/* The result of the signal invocation should always be the result of the last
- * enabled callback.
- */
-BOOST_AUTO_TEST_CASE(return_value)
-{
-    btcsignals::signal<bool()> sig0;
+    btcsignals::signal<bool(), btcsignals::any_of> sig0;
     decltype(sig0)::result_type ret;
     ret = sig0();
-    BOOST_CHECK(!ret);
+    BOOST_CHECK_EQUAL(ret, false);
     {
-        btcsignals::scoped_connection conn0 = sig0.connect(ReturnTrue);
+        btcsignals::scoped_connection conn0{sig0.connect(ReturnTrue)};
         ret = sig0();
-        BOOST_CHECK(ret && *ret == true);
+        BOOST_CHECK_EQUAL(ret, true);
     }
     ret = sig0();
-    BOOST_CHECK(!ret);
+    BOOST_CHECK_EQUAL(ret, false);
     {
-        btcsignals::scoped_connection conn1 = sig0.connect(ReturnTrue);
-        btcsignals::scoped_connection conn0 = sig0.connect(ReturnFalse);
+        btcsignals::scoped_connection conn0{sig0.connect(ReturnTrue)};
+        btcsignals::scoped_connection conn1{sig0.connect(ReturnFalse)};
         ret = sig0();
-        BOOST_CHECK(ret && *ret == false);
+        BOOST_CHECK_EQUAL(ret, true);
         conn0.disconnect();
         ret = sig0();
-        BOOST_CHECK(ret && *ret == true);
+        BOOST_CHECK_EQUAL(ret, false);
     }
     ret = sig0();
-    BOOST_CHECK(!ret);
+    BOOST_CHECK_EQUAL(ret, false);
 }
 
 /* Test the thread-safety of connect/disconnect/empty/connected/callbacks.
