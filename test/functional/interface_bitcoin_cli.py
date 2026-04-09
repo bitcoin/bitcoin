@@ -177,9 +177,9 @@ class TestBitcoinCli(BitcoinTestFramework):
         conf_rpcport = "rpcport=" + str(node_rpc_port)
         self.nodes[0].replace_in_config([(conf_rpcport, "#" + conf_rpcport)])
         # prefer rpcport over rpcconnect
-        assert_raises_process_error(1, "Could not connect to the server 127.0.0.1:1", self.nodes[0].cli(f"-rpcconnect=127.0.0.1:{node_rpc_port}", "-rpcport=1").echo)
+        assert_raises_process_error(1, "Error while attempting to communicate with server 127.0.0.1:1 (Could not connect to the server)", self.nodes[0].cli(f"-rpcconnect=127.0.0.1:{node_rpc_port}", "-rpcport=1").echo)
         if have_ipv6:
-            assert_raises_process_error(1, "Could not connect to the server ::1:1", self.nodes[0].cli(f"-rpcconnect=[::1]:{node_rpc_port}", "-rpcport=1").echo)
+            assert_raises_process_error(1, "Error while attempting to communicate with server ::1:1 (Could not connect to the server)", self.nodes[0].cli(f"-rpcconnect=[::1]:{node_rpc_port}", "-rpcport=1").echo)
 
         assert_equal(BLOCKS, self.nodes[0].cli("-rpcconnect=127.0.0.1:18999", f'-rpcport={node_rpc_port}').getblockcount())
         if have_ipv6:

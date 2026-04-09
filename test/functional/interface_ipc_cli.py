@@ -41,8 +41,8 @@ class TestBitcoinIpcCli(BitcoinTestFramework):
             self.log.info("Skipping a few checks because temporary directory path is too long")
 
         http_auth_error = "error: Authorization failed: Incorrect rpcuser or rpcpassword were specified."
-        http_connect_error = f"error: timeout on transient error: Could not connect to the server 127.0.0.1:{rpc_port(node.index)}\n\nMake sure the bitcoind server is running and that you are connecting to the correct RPC port.\nUse \"bitcoin-cli -help\" for more info.\n"
-        ipc_connect_error = "error: timeout on transient error: Connection refused\n\nProbably bitcoin-node is not running or not listening on a unix socket. Can be started with:\n\n    bitcoin-node -chain=regtest -ipcbind=unix\n"
+        http_connect_error = f"error: Error while attempting to communicate with server 127.0.0.1:{rpc_port(node.index)} (Could not connect to the server)\n\nMake sure the bitcoind server is running and that you are connecting to the correct RPC port.\nUse \"bitcoin-cli -help\" for more info.\n"
+        ipc_connect_error = "error: Connection refused\n\nProbably bitcoin-node is not running or not listening on a unix socket. Can be started with:\n\n    bitcoin-node -chain=regtest -ipcbind=unix\n"
         ipc_http_conflict = "error: -rpcconnect and -ipcconnect options cannot both be enabled\n"
 
         for started in (True, False):
