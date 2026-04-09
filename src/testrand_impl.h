@@ -22,12 +22,13 @@ SECP256K1_INLINE static void testrand_seed(const unsigned char *seed16) {
     unsigned char out32[32];
     secp256k1_sha256 hash;
     int i;
+    const secp256k1_hash_ctx *hash_ctx = secp256k1_get_hash_context(secp256k1_context_static);
 
     /* Use SHA256(PREFIX || seed16) as initial state. */
     secp256k1_sha256_initialize(&hash);
-    secp256k1_sha256_write(&hash, PREFIX, sizeof(PREFIX));
-    secp256k1_sha256_write(&hash, seed16, 16);
-    secp256k1_sha256_finalize(&hash, out32);
+    secp256k1_sha256_write(hash_ctx, &hash, PREFIX, sizeof(PREFIX));
+    secp256k1_sha256_write(hash_ctx, &hash, seed16, 16);
+    secp256k1_sha256_finalize(hash_ctx, &hash, out32);
     for (i = 0; i < 4; ++i) {
         uint64_t s = 0;
         int j;
@@ -156,12 +157,6 @@ static void testrand_init(const char* hexseed) {
 
     printf("random seed = %02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x\n", seed16[0], seed16[1], seed16[2], seed16[3], seed16[4], seed16[5], seed16[6], seed16[7], seed16[8], seed16[9], seed16[10], seed16[11], seed16[12], seed16[13], seed16[14], seed16[15]);
     testrand_seed(seed16);
-}
-
-static void testrand_finish(void) {
-    unsigned char run32[32];
-    testrand256(run32);
-    printf("random run = %02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x\n", run32[0], run32[1], run32[2], run32[3], run32[4], run32[5], run32[6], run32[7], run32[8], run32[9], run32[10], run32[11], run32[12], run32[13], run32[14], run32[15]);
 }
 
 #endif /* SECP256K1_TESTRAND_IMPL_H */
