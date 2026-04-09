@@ -211,7 +211,7 @@ jobs:
         with:
           path: ${{ env.CCACHE_DIR }}
           # https://github.com/actions/cache/blob/main/tips-and-workarounds.md#update-a-cache
-          key: ${{ github.job }}-${{ matrix.job-type }}-ccache-${{ github.run_id }}
+          key: ${{ steps.ccache-cache.outputs.cache-primary-key }}
 
   windows-native-dll:
     name: ${{ matrix.job-name }}
@@ -277,7 +277,7 @@ jobs:
         if: github.event_name != 'pull_request' && github.ref_name == github.event.repository.default_branch && steps.vcpkg-binary-cache.outputs.cache-hit != 'true' && matrix.job-type == 'standard'
         with:
           path: ~/AppData/Local/vcpkg/archives
-          key: ${{ github.job }}-vcpkg-binary-${{ hashFiles('cmake_version', 'msbuild_version', 'toolset_version', 'vcpkg.json') }}
+          key: ${{ steps.vcpkg-binary-cache.outputs.cache-primary-key }}
 
       - name: Save vcpkg tools cache
         uses: actions/cache/save@v5
@@ -285,7 +285,7 @@ jobs:
         if: github.event_name != 'pull_request' && github.ref_name == github.event.repository.default_branch && steps.vcpkg-tools-cache.outputs.cache-hit != 'true' && matrix.job-type == 'standard'
         with:
           path: ~/AppData/Local/vcpkg/downloads/tools
-          key: ${{ github.job }}-vcpkg-tools-${{ github.run_id }}
+          key: ${{ steps.vcpkg-tools-cache.outputs.cache-primary-key }}
 
       - name: Build
         run: |
