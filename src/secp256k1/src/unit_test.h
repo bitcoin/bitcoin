@@ -6,6 +6,8 @@
 #ifndef SECP256K1_UNIT_TEST_H
 #define SECP256K1_UNIT_TEST_H
 
+#include "util.h"
+
 /* --------------------------------------------------------- */
 /* Configurable constants                                    */
 /* --------------------------------------------------------- */
@@ -27,7 +29,7 @@
 #define MAKE_TEST_MODULE(name) { \
     #name, \
     tests_##name, \
-    sizeof(tests_##name) / sizeof(tests_##name[0]) \
+    ARRAY_SIZE(tests_##name) \
 }
 
 /* Macro to wrap a test internal function with a COUNT loop (iterations number) */

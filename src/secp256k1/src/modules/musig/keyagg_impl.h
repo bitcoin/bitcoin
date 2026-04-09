@@ -62,17 +62,11 @@ static int secp256k1_keyagg_cache_load(const secp256k1_context* ctx, secp256k1_k
 /* Initializes SHA256 with fixed midstate. This midstate was computed by applying
  * SHA256 to SHA256("KeyAgg list")||SHA256("KeyAgg list"). */
 static void secp256k1_musig_keyagglist_sha256(secp256k1_sha256 *sha) {
-    secp256k1_sha256_initialize(sha);
-
-    sha->s[0] = 0xb399d5e0ul;
-    sha->s[1] = 0xc8fff302ul;
-    sha->s[2] = 0x6badac71ul;
-    sha->s[3] = 0x07c5b7f1ul;
-    sha->s[4] = 0x9701e2eful;
-    sha->s[5] = 0x2a72ecf8ul;
-    sha->s[6] = 0x201a4c7bul;
-    sha->s[7] = 0xab148a38ul;
-    sha->bytes = 64;
+    static const uint32_t midstate[8] = {
+        0xb399d5e0ul, 0xc8fff302ul, 0x6badac71ul, 0x07c5b7f1ul,
+        0x9701e2eful, 0x2a72ecf8ul, 0x201a4c7bul, 0xab148a38ul
+    };
+    secp256k1_sha256_initialize_midstate(sha, 64, midstate);
 }
 
 /* Computes pks_hash = tagged_hash(pk[0], ..., pk[np-1]) */
@@ -88,26 +82,20 @@ static int secp256k1_musig_compute_pks_hash(const secp256k1_context *ctx, unsign
             return 0;
         }
         VERIFY_CHECK(ser_len == sizeof(ser));
-        secp256k1_sha256_write(&sha, ser, sizeof(ser));
+        secp256k1_sha256_write(secp256k1_get_hash_context(ctx), &sha, ser, sizeof(ser));
     }
-    secp256k1_sha256_finalize(&sha, pks_hash);
+    secp256k1_sha256_finalize(secp256k1_get_hash_context(ctx), &sha, pks_hash);
     return 1;
 }
 
 /* Initializes SHA256 with fixed midstate. This midstate was computed by applying
  * SHA256 to SHA256("KeyAgg coefficient")||SHA256("KeyAgg coefficient"). */
 static void secp256k1_musig_keyaggcoef_sha256(secp256k1_sha256 *sha) {
-    secp256k1_sha256_initialize(sha);
-
-    sha->s[0] = 0x6ef02c5aul;
-    sha->s[1] = 0x06a480deul;
-    sha->s[2] = 0x1f298665ul;
-    sha->s[3] = 0x1d1134f2ul;
-    sha->s[4] = 0x56a0b063ul;
-    sha->s[5] = 0x52da4147ul;
-    sha->s[6] = 0xf280d9d4ul;
-    sha->s[7] = 0x4484be15ul;
-    sha->bytes = 64;
+    static const uint32_t midstate[8] = {
+        0x6ef02c5aul, 0x06a480deul, 0x1f298665ul, 0x1d1134f2ul,
+        0x56a0b063ul, 0x52da4147ul, 0xf280d9d4ul, 0x4484be15ul
+    };
+    secp256k1_sha256_initialize_midstate(sha, 64, midstate);
 }
 
 /* Compute KeyAgg coefficient which is constant 1 for the second pubkey and
@@ -115,7 +103,7 @@ static void secp256k1_musig_keyaggcoef_sha256(secp256k1_sha256 *sha) {
  * second_pk is the point at infinity in case there is no second_pk. Assumes
  * that pk is not the point at infinity and that the Y-coordinates of pk and
  * second_pk are normalized. */
-static void secp256k1_musig_keyaggcoef_internal(secp256k1_scalar *r, const unsigned char *pks_hash, secp256k1_ge *pk, const secp256k1_ge *second_pk) {
+static void secp256k1_musig_keyaggcoef_internal(const secp256k1_hash_ctx *hash_ctx, secp256k1_scalar *r, const unsigned char *pks_hash, secp256k1_ge *pk, const secp256k1_ge *second_pk) {
     VERIFY_CHECK(!secp256k1_ge_is_infinity(pk));
 
     if (!secp256k1_ge_is_infinity(second_pk)
@@ -125,20 +113,20 @@ static void secp256k1_musig_keyaggcoef_internal(secp256k1_scalar *r, const unsig
         secp256k1_sha256 sha;
         unsigned char buf[33];
         secp256k1_musig_keyaggcoef_sha256(&sha);
-        secp256k1_sha256_write(&sha, pks_hash, 32);
+        secp256k1_sha256_write(hash_ctx, &sha, pks_hash, 32);
         /* Serialization does not fail since the pk is not the point at infinity
          * (according to this function's precondition). */
         secp256k1_eckey_pubkey_serialize33(pk, buf);
-        secp256k1_sha256_write(&sha, buf, sizeof(buf));
-        secp256k1_sha256_finalize(&sha, buf);
+        secp256k1_sha256_write(hash_ctx, &sha, buf, sizeof(buf));
+        secp256k1_sha256_finalize(hash_ctx, &sha, buf);
         secp256k1_scalar_set_b32(r, buf, NULL);
     }
 }
 
 /* Assumes that pk is not the point at infinity and that the Y-coordinates of pk
  * and cache_i->second_pk are normalized. */
-static void secp256k1_musig_keyaggcoef(secp256k1_scalar *r, const secp256k1_keyagg_cache_internal *cache_i, secp256k1_ge *pk) {
-    secp256k1_musig_keyaggcoef_internal(r, cache_i->pks_hash, pk, &cache_i->second_pk);
+static void secp256k1_musig_keyaggcoef(const secp256k1_hash_ctx *hash_ctx, secp256k1_scalar *r, const secp256k1_keyagg_cache_internal *cache_i, secp256k1_ge *pk) {
+    secp256k1_musig_keyaggcoef_internal(hash_ctx, r, cache_i->pks_hash, pk, &cache_i->second_pk);
 }
 
 typedef struct {
@@ -161,7 +149,7 @@ static int secp256k1_musig_pubkey_agg_callback(secp256k1_scalar *sc, secp256k1_g
 #else
     (void) ret;
 #endif
-    secp256k1_musig_keyaggcoef_internal(sc, ctx->pks_hash, pt, &ctx->second_pk);
+    secp256k1_musig_keyaggcoef_internal(secp256k1_get_hash_context(ctx->ctx), sc, ctx->pks_hash, pt, &ctx->second_pk);
     return 1;
 }
 

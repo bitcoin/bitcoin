@@ -8,6 +8,7 @@
 
 #include "../../../include/secp256k1_ellswift.h"
 #include "../../unit_test.h"
+#include "../../util.h"
 
 struct ellswift_xswiftec_inv_test {
     int enc_bitmap;
@@ -180,7 +181,7 @@ static int ellswift_xdh_hash_x32(unsigned char *output, const unsigned char *x32
 /* Run the test vectors for ellswift encoding */
 void ellswift_encoding_test_vectors_tests(void) {
     int i;
-    for (i = 0; (unsigned)i < sizeof(ellswift_xswiftec_inv_tests) / sizeof(ellswift_xswiftec_inv_tests[0]); ++i) {
+    for (i = 0; (unsigned)i < ARRAY_SIZE(ellswift_xswiftec_inv_tests); ++i) {
         const struct ellswift_xswiftec_inv_test *testcase = &ellswift_xswiftec_inv_tests[i];
         int c;
         for (c = 0; c < 8; ++c) {
@@ -200,7 +201,7 @@ void ellswift_encoding_test_vectors_tests(void) {
 /* Run the test vectors for ellswift decoding */
 void ellswift_decoding_test_vectors_tests(void) {
     int i;
-    for (i = 0; (unsigned)i < sizeof(ellswift_decode_tests) / sizeof(ellswift_decode_tests[0]); ++i) {
+    for (i = 0; (unsigned)i < ARRAY_SIZE(ellswift_decode_tests); ++i) {
         const struct ellswift_decode_test *testcase = &ellswift_decode_tests[i];
         secp256k1_pubkey pubkey;
         secp256k1_ge ge;
@@ -217,7 +218,7 @@ void ellswift_decoding_test_vectors_tests(void) {
 /* Run the test vectors for ellswift expected xdh BIP324 shared secrets */
 void ellswift_xdh_test_vectors_tests(void) {
     int i;
-    for (i = 0; (unsigned)i < sizeof(ellswift_xdh_tests_bip324) / sizeof(ellswift_xdh_tests_bip324[0]); ++i) {
+    for (i = 0; (unsigned)i < ARRAY_SIZE(ellswift_xdh_tests_bip324); ++i) {
         const struct ellswift_xdh_test *test = &ellswift_xdh_tests_bip324[i];
         unsigned char shared_secret[32];
         int ret;
@@ -431,9 +432,48 @@ void ellswift_xdh_correctness_tests(void) {
     }
 }
 
+DEFINE_SHA256_TRANSFORM_PROBE(sha256_ellswift_xdh)
+void ellswift_xdh_ctx_sha256_tests(void) {
+    /* Check ctx-provided SHA256 compression override takes effect */
+    secp256k1_context *ctx = secp256k1_context_clone(CTX);
+    unsigned char out_default[65], out_custom[65];
+    const unsigned char skA[32] = {1}, skB[32] = {2};
+    unsigned char keyA[64], keyB[64], data[64] = {0};
+    secp256k1_ellswift_xdh_hash_function hash_fn;
+    int i;
+
+    CHECK(secp256k1_ellswift_create(ctx, keyA, skA, NULL));
+    CHECK(secp256k1_ellswift_create(ctx, keyB, skB, NULL));
+
+    for (i = 0; i < 2; i++) {
+        if (i == 0) {
+            hash_fn = secp256k1_ellswift_xdh_hash_function_bip324;
+        } else {
+            hash_fn = secp256k1_ellswift_xdh_hash_function_prefix;
+        }
+        /* Default behavior. No ctx-provided SHA256 compression */
+        CHECK(secp256k1_ellswift_xdh(ctx, out_default, keyA, keyB, skA, 0, hash_fn, data));
+        CHECK(!sha256_ellswift_xdh_called);
+
+        /* Override SHA256 compression directly, bypassing the ctx setter sanity checks */
+        ctx->hash_ctx.fn_sha256_compression = sha256_ellswift_xdh;
+        CHECK(secp256k1_ellswift_xdh(ctx, out_custom, keyA, keyB, skA, 0, hash_fn, data));
+        CHECK(sha256_ellswift_xdh_called);
+        /* Outputs must differ if custom compression was used */
+        CHECK(secp256k1_memcmp_var(out_default, out_custom, 32) != 0);
+
+        /* Restore defaults */
+        sha256_ellswift_xdh_called = 0;
+        secp256k1_context_set_sha256_compression(ctx, NULL);
+    }
+
+    secp256k1_context_destroy(ctx);
+}
+
 /* Test hash initializers */
 void ellswift_hash_init_tests(void) {
     secp256k1_sha256 sha_optimized;
+    const secp256k1_hash_ctx *hash_ctx = secp256k1_get_hash_context(CTX);
     /* "secp256k1_ellswift_encode" */
     static const unsigned char encode_tag[] = {'s', 'e', 'c', 'p', '2', '5', '6', 'k', '1', '_', 'e', 'l', 'l', 's', 'w', 'i', 'f', 't', '_', 'e', 'n', 'c', 'o', 'd', 'e'};
     /* "secp256k1_ellswift_create" */
@@ -445,19 +485,46 @@ void ellswift_hash_init_tests(void) {
      * secp256k1_ellswift_sha256_init_encode has the expected
      * state. */
     secp256k1_ellswift_sha256_init_encode(&sha_optimized);
-    test_sha256_tag_midstate(&sha_optimized, encode_tag, sizeof(encode_tag));
+    test_sha256_tag_midstate(hash_ctx, &sha_optimized, encode_tag, sizeof(encode_tag));
 
     /* Check that hash initialized by
      * secp256k1_ellswift_sha256_init_create has the expected
      * state. */
     secp256k1_ellswift_sha256_init_create(&sha_optimized);
-    test_sha256_tag_midstate(&sha_optimized, create_tag, sizeof(create_tag));
+    test_sha256_tag_midstate(hash_ctx, &sha_optimized, create_tag, sizeof(create_tag));
 
     /* Check that hash initialized by
      * secp256k1_ellswift_sha256_init_bip324 has the expected
      * state. */
     secp256k1_ellswift_sha256_init_bip324(&sha_optimized);
-    test_sha256_tag_midstate(&sha_optimized, bip324_tag, sizeof(bip324_tag));
+    test_sha256_tag_midstate(hash_ctx, &sha_optimized, bip324_tag, sizeof(bip324_tag));
+}
+
+void ellswift_xdh_bad_scalar_tests(void) {
+    unsigned char s_zero[32] = { 0 };
+    unsigned char s_overflow_minus1[32] = { 0 };
+    unsigned char s_overflow_plus1[32] = { 0 };
+    unsigned char s_good[32] = { 0 };
+    unsigned char ell_a64[64], ell_b64[64];
+    unsigned char output[32];
+    secp256k1_scalar rand_scalar;
+
+    testutil_random_scalar_order(&rand_scalar);
+    secp256k1_scalar_get_b32(s_good, &rand_scalar);
+
+    CHECK(secp256k1_ellswift_create(CTX, ell_a64, s_good, NULL) == 1);
+
+    testrand256_test(ell_b64);
+    testrand256_test(ell_b64 + 32);
+
+    memcpy(s_overflow_minus1, secp256k1_group_order_bytes, 32);
+    s_overflow_minus1[31] -= 1;
+    memcpy(s_overflow_plus1, secp256k1_group_order_bytes, 32);
+    s_overflow_plus1[31] += 1;
+    CHECK(secp256k1_ellswift_xdh(CTX, output, ell_a64, ell_b64, s_zero, 0, &ellswift_xdh_hash_x32, NULL) == 0);
+    CHECK(secp256k1_ellswift_xdh(CTX, output, ell_a64, ell_b64, secp256k1_group_order_bytes, 0, &ellswift_xdh_hash_x32, NULL) == 0);
+    CHECK(secp256k1_ellswift_xdh(CTX, output, ell_a64, ell_b64, s_overflow_plus1, 0, &ellswift_xdh_hash_x32, NULL) == 0);
+    CHECK(secp256k1_ellswift_xdh(CTX, output, ell_a64, ell_b64, s_overflow_minus1, 0, &ellswift_xdh_hash_x32, NULL) == 1);
 }
 
 /* --- Test registry --- */
@@ -470,6 +537,8 @@ static const struct tf_test_entry tests_ellswift[] = {
     CASE1(ellswift_compute_shared_secret_tests),
     CASE1(ellswift_xdh_correctness_tests),
     CASE1(ellswift_hash_init_tests),
+    CASE1(ellswift_xdh_bad_scalar_tests),
+    CASE1(ellswift_xdh_ctx_sha256_tests),
 };
 
 #endif

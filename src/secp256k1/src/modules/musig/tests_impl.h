@@ -505,12 +505,12 @@ static void musig_api_tests(void) {
     CHECK(secp256k1_musig_partial_sig_agg(CTX, pre_sig, &session, partial_sig_ptr, 2) == 1);
 }
 
-static void musig_nonce_bitflip(unsigned char **args, size_t n_flip, size_t n_bytes) {
+static void musig_nonce_bitflip(const secp256k1_hash_ctx *hash_ctx, unsigned char **args, size_t n_flip, size_t n_bytes) {
     secp256k1_scalar k1[2], k2[2];
 
-    secp256k1_nonce_function_musig(k1, args[0], args[1], args[2], args[3], args[4], args[5]);
+    secp256k1_nonce_function_musig(hash_ctx, k1, args[0], args[1], args[2], args[3], args[4], args[5]);
     testrand_flip(args[n_flip], n_bytes);
-    secp256k1_nonce_function_musig(k2, args[0], args[1], args[2], args[3], args[4], args[5]);
+    secp256k1_nonce_function_musig(hash_ctx, k2, args[0], args[1], args[2], args[3], args[4], args[5]);
     CHECK(secp256k1_scalar_eq(&k1[0], &k2[0]) == 0);
     CHECK(secp256k1_scalar_eq(&k1[1], &k2[1]) == 0);
 }
@@ -526,6 +526,7 @@ static void musig_nonce_test(void) {
     int i, j;
     secp256k1_scalar k[6][2];
 
+    const secp256k1_hash_ctx *hash_ctx = secp256k1_get_hash_context(CTX);
     testrand_bytes_test(session_secrand, sizeof(session_secrand));
     testrand_bytes_test(sk, sizeof(sk));
     testrand_bytes_test(pk, sizeof(pk));
@@ -541,12 +542,12 @@ static void musig_nonce_test(void) {
     args[4] = agg_pk;
     args[5] = extra_input;
     for (i = 0; i < COUNT; i++) {
-        musig_nonce_bitflip(args, 0, sizeof(session_secrand));
-        musig_nonce_bitflip(args, 1, sizeof(msg));
-        musig_nonce_bitflip(args, 2, sizeof(sk));
-        musig_nonce_bitflip(args, 3, sizeof(pk));
-        musig_nonce_bitflip(args, 4, sizeof(agg_pk));
-        musig_nonce_bitflip(args, 5, sizeof(extra_input));
+        musig_nonce_bitflip(hash_ctx, args, 0, sizeof(session_secrand));
+        musig_nonce_bitflip(hash_ctx, args, 1, sizeof(msg));
+        musig_nonce_bitflip(hash_ctx, args, 2, sizeof(sk));
+        musig_nonce_bitflip(hash_ctx, args, 3, sizeof(pk));
+        musig_nonce_bitflip(hash_ctx, args, 4, sizeof(agg_pk));
+        musig_nonce_bitflip(hash_ctx, args, 5, sizeof(extra_input));
     }
     /* Check that if any argument is NULL, a different nonce is produced than if
      * any other argument is NULL. */
@@ -555,12 +556,12 @@ static void musig_nonce_test(void) {
     memcpy(pk, session_secrand, sizeof(session_secrand));
     memcpy(agg_pk, session_secrand, sizeof(agg_pk));
     memcpy(extra_input, session_secrand, sizeof(extra_input));
-    secp256k1_nonce_function_musig(k[0], args[0], args[1], args[2], args[3], args[4], args[5]);
-    secp256k1_nonce_function_musig(k[1], args[0], NULL, args[2], args[3], args[4], args[5]);
-    secp256k1_nonce_function_musig(k[2], args[0], args[1], NULL, args[3], args[4], args[5]);
-    secp256k1_nonce_function_musig(k[3], args[0], args[1], args[2], NULL, args[4], args[5]);
-    secp256k1_nonce_function_musig(k[4], args[0], args[1], args[2], args[3], NULL, args[5]);
-    secp256k1_nonce_function_musig(k[5], args[0], args[1], args[2], args[3], args[4], NULL);
+    secp256k1_nonce_function_musig(hash_ctx, k[0], args[0], args[1], args[2], args[3], args[4], args[5]);
+    secp256k1_nonce_function_musig(hash_ctx, k[1], args[0], NULL, args[2], args[3], args[4], args[5]);
+    secp256k1_nonce_function_musig(hash_ctx, k[2], args[0], args[1], NULL, args[3], args[4], args[5]);
+    secp256k1_nonce_function_musig(hash_ctx, k[3], args[0], args[1], args[2], NULL, args[4], args[5]);
+    secp256k1_nonce_function_musig(hash_ctx, k[4], args[0], args[1], args[2], args[3], NULL, args[5]);
+    secp256k1_nonce_function_musig(hash_ctx, k[5], args[0], args[1], args[2], args[3], args[4], NULL);
     for (i = 0; i < 6; i++) {
         CHECK(!secp256k1_scalar_eq(&k[i][0], &k[i][1]));
         for (j = i+1; j < 6; j++) {
@@ -574,35 +575,36 @@ static void musig_nonce_test(void) {
  * state. */
 static void sha256_tag_test(void) {
     secp256k1_sha256 sha;
+    const secp256k1_hash_ctx *hash_ctx = secp256k1_get_hash_context(CTX);
     {
         /* "KeyAgg list" */
         static const unsigned char tag[] = {'K', 'e', 'y', 'A', 'g', 'g', ' ', 'l', 'i', 's', 't'};
         secp256k1_musig_keyagglist_sha256(&sha);
-        test_sha256_tag_midstate(&sha, tag, sizeof(tag));
+        test_sha256_tag_midstate(hash_ctx, &sha, tag, sizeof(tag));
     }
     {
         /* "KeyAgg coefficient" */
         static const unsigned char tag[] = {'K', 'e', 'y', 'A', 'g', 'g', ' ', 'c', 'o', 'e', 'f', 'f', 'i', 'c', 'i', 'e', 'n', 't'};
         secp256k1_musig_keyaggcoef_sha256(&sha);
-        test_sha256_tag_midstate(&sha, tag, sizeof(tag));
+        test_sha256_tag_midstate(hash_ctx, &sha, tag, sizeof(tag));
     }
     {
         /* "MuSig/aux" */
         static const unsigned char tag[] = { 'M', 'u', 'S', 'i', 'g', '/', 'a', 'u', 'x' };
         secp256k1_nonce_function_musig_sha256_tagged_aux(&sha);
-        test_sha256_tag_midstate(&sha, tag, sizeof(tag));
+        test_sha256_tag_midstate(hash_ctx, &sha, tag, sizeof(tag));
     }
     {
         /* "MuSig/nonce" */
         static const unsigned char tag[] = { 'M', 'u', 'S', 'i', 'g', '/', 'n', 'o', 'n', 'c', 'e' };
         secp256k1_nonce_function_musig_sha256_tagged(&sha);
-        test_sha256_tag_midstate(&sha, tag, sizeof(tag));
+        test_sha256_tag_midstate(hash_ctx, &sha, tag, sizeof(tag));
     }
     {
         /* "MuSig/noncecoef" */
         static const unsigned char tag[] = { 'M', 'u', 'S', 'i', 'g', '/', 'n', 'o', 'n', 'c', 'e', 'c', 'o', 'e', 'f' };
         secp256k1_musig_compute_noncehash_sha256_tagged(&sha);
-        test_sha256_tag_midstate(&sha, tag, sizeof(tag));
+        test_sha256_tag_midstate(hash_ctx, &sha, tag, sizeof(tag));
     }
 }
 
@@ -769,7 +771,7 @@ static void musig_test_vectors_keyagg(void) {
     size_t i;
     const struct musig_key_agg_vector *vector = &musig_key_agg_vector;
 
-    for (i = 0; i < sizeof(vector->valid_case)/sizeof(vector->valid_case[0]); i++) {
+    for (i = 0; i < ARRAY_SIZE(vector->valid_case); i++) {
         const struct musig_key_agg_valid_test_case *c = &vector->valid_case[i];
         enum MUSIG_ERROR error;
         secp256k1_musig_keyagg_cache keyagg_cache;
@@ -779,7 +781,7 @@ static void musig_test_vectors_keyagg(void) {
         CHECK(secp256k1_memcmp_var(agg_pk, c->expected, sizeof(agg_pk)) == 0);
     }
 
-    for (i = 0; i < sizeof(vector->error_case)/sizeof(vector->error_case[0]); i++) {
+    for (i = 0; i < ARRAY_SIZE(vector->error_case); i++) {
         const struct musig_key_agg_error_test_case *c = &vector->error_case[i];
         enum MUSIG_ERROR error;
         secp256k1_musig_keyagg_cache keyagg_cache;
@@ -793,7 +795,7 @@ static void musig_test_vectors_noncegen(void) {
     size_t i;
     const struct musig_nonce_gen_vector *vector = &musig_nonce_gen_vector;
 
-    for (i = 0; i < sizeof(vector->test_case)/sizeof(vector->test_case[0]); i++) {
+    for (i = 0; i < ARRAY_SIZE(vector->test_case); i++) {
         const struct musig_nonce_gen_test_case *c = &vector->test_case[i];
         secp256k1_musig_keyagg_cache keyagg_cache;
         secp256k1_musig_keyagg_cache *keyagg_cache_ptr = NULL;
@@ -847,7 +849,7 @@ static void musig_test_vectors_nonceagg(void) {
     int j;
     const struct musig_nonce_agg_vector *vector = &musig_nonce_agg_vector;
 
-    for (i = 0; i < sizeof(vector->valid_case)/sizeof(vector->valid_case[0]); i++) {
+    for (i = 0; i < ARRAY_SIZE(vector->valid_case); i++) {
         const struct musig_nonce_agg_test_case *c = &vector->valid_case[i];
         secp256k1_musig_pubnonce pubnonce[2];
         const secp256k1_musig_pubnonce *pubnonce_ptr[2];
@@ -862,7 +864,7 @@ static void musig_test_vectors_nonceagg(void) {
         CHECK(secp256k1_musig_aggnonce_serialize(CTX, aggnonce66, &aggnonce));
         CHECK(secp256k1_memcmp_var(aggnonce66, c->expected, 33) == 0);
     }
-    for (i = 0; i < sizeof(vector->error_case)/sizeof(vector->error_case[0]); i++) {
+    for (i = 0; i < ARRAY_SIZE(vector->error_case); i++) {
         const struct musig_nonce_agg_test_case *c = &vector->error_case[i];
         secp256k1_musig_pubnonce pubnonce[2];
         for (j = 0; j < 2; j++) {
@@ -886,7 +888,7 @@ static void musig_test_vectors_signverify(void) {
     size_t i;
     const struct musig_sign_verify_vector *vector = &musig_sign_verify_vector;
 
-    for (i = 0; i < sizeof(vector->valid_case)/sizeof(vector->valid_case[0]); i++) {
+    for (i = 0; i < ARRAY_SIZE(vector->valid_case); i++) {
         const struct musig_valid_case *c = &vector->valid_case[i];
         enum MUSIG_ERROR error;
         secp256k1_musig_keyagg_cache keyagg_cache;
@@ -914,7 +916,7 @@ static void musig_test_vectors_signverify(void) {
         CHECK(secp256k1_musig_pubnonce_parse(CTX, &pubnonce, vector->pubnonces[0]));
         CHECK(secp256k1_musig_partial_sig_verify(CTX, &partial_sig, &pubnonce, &pubkey, &keyagg_cache, &session));
     }
-    for (i = 0; i < sizeof(vector->sign_error_case)/sizeof(vector->sign_error_case[0]); i++) {
+    for (i = 0; i < ARRAY_SIZE(vector->sign_error_case); i++) {
         const struct musig_sign_error_case *c = &vector->sign_error_case[i];
         enum MUSIG_ERROR error;
         secp256k1_musig_keyagg_cache keyagg_cache;
@@ -953,7 +955,7 @@ static void musig_test_vectors_signverify(void) {
         musig_test_set_secnonce(&secnonce, vector->secnonces[c->secnonce_index], &pubkey);
         CHECK_ILLEGAL(CTX, secp256k1_musig_partial_sign(CTX, &partial_sig, &secnonce, &keypair, &keyagg_cache, &session));
     }
-    for (i = 0; i < sizeof(vector->verify_fail_case)/sizeof(vector->verify_fail_case[0]); i++) {
+    for (i = 0; i < ARRAY_SIZE(vector->verify_fail_case); i++) {
         const struct musig_verify_fail_error_case *c = &vector->verify_fail_case[i];
         enum MUSIG_ERROR error;
         secp256k1_musig_keyagg_cache keyagg_cache;
@@ -987,7 +989,7 @@ static void musig_test_vectors_signverify(void) {
         expected = c->error != MUSIG_SIG_VERIFY;
         CHECK(expected == secp256k1_musig_partial_sig_verify(CTX, &partial_sig, pubnonce, &pubkey, &keyagg_cache, &session));
     }
-    for (i = 0; i < sizeof(vector->verify_error_case)/sizeof(vector->verify_error_case[0]); i++) {
+    for (i = 0; i < ARRAY_SIZE(vector->verify_error_case); i++) {
         const struct musig_verify_fail_error_case *c = &vector->verify_error_case[i];
         enum MUSIG_ERROR error;
         secp256k1_musig_keyagg_cache keyagg_cache;
@@ -1015,7 +1017,7 @@ static void musig_test_vectors_tweak(void) {
     CHECK(secp256k1_musig_aggnonce_parse(CTX, &aggnonce, vector->aggnonce));
     CHECK(secp256k1_ec_pubkey_parse(CTX, &pubkey, vector->pubkeys[0], sizeof(vector->pubkeys[0])));
 
-    for (i = 0; i < sizeof(vector->valid_case)/sizeof(vector->valid_case[0]); i++) {
+    for (i = 0; i < ARRAY_SIZE(vector->valid_case); i++) {
         const struct musig_tweak_case *c = &vector->valid_case[i];
         enum MUSIG_ERROR error;
         secp256k1_musig_keyagg_cache keyagg_cache;
@@ -1039,7 +1041,7 @@ static void musig_test_vectors_tweak(void) {
         CHECK(secp256k1_musig_pubnonce_parse(CTX, &pubnonce, vector->pubnonces[c->nonce_indices[c->signer_index]]));
         CHECK(secp256k1_musig_partial_sig_verify(CTX, &partial_sig, &pubnonce, &pubkey, &keyagg_cache, &session));
     }
-    for (i = 0; i < sizeof(vector->error_case)/sizeof(vector->error_case[0]); i++) {
+    for (i = 0; i < ARRAY_SIZE(vector->error_case); i++) {
         const struct musig_tweak_case *c = &vector->error_case[i];
         enum MUSIG_ERROR error;
         secp256k1_musig_keyagg_cache keyagg_cache;
@@ -1052,7 +1054,7 @@ static void musig_test_vectors_sigagg(void) {
     size_t i, j;
     const struct musig_sig_agg_vector *vector = &musig_sig_agg_vector;
 
-    for (i = 0; i < sizeof(vector->valid_case)/sizeof(vector->valid_case[0]); i++) {
+    for (i = 0; i < ARRAY_SIZE(vector->valid_case); i++) {
         const struct musig_sig_agg_case *c = &vector->valid_case[i];
         enum MUSIG_ERROR error;
         unsigned char final_sig[64];
@@ -1061,8 +1063,8 @@ static void musig_test_vectors_sigagg(void) {
         secp256k1_xonly_pubkey agg_pk;
         secp256k1_musig_aggnonce aggnonce;
         secp256k1_musig_session session;
-        secp256k1_musig_partial_sig partial_sig[(sizeof(vector->psigs)/sizeof(vector->psigs[0]))];
-        const secp256k1_musig_partial_sig *partial_sig_ptr[(sizeof(vector->psigs)/sizeof(vector->psigs[0]))];
+        secp256k1_musig_partial_sig partial_sig[ARRAY_SIZE(vector->psigs)];
+        const secp256k1_musig_partial_sig *partial_sig_ptr[ARRAY_SIZE(vector->psigs)];
 
         CHECK(musig_vectors_keyagg_and_tweak(&error, &keyagg_cache, agg_pk32, vector->pubkeys, vector->tweaks, c->key_indices_len, c->key_indices, c->tweak_indices_len, c->tweak_indices, c->is_xonly));
         CHECK(secp256k1_musig_aggnonce_parse(CTX, &aggnonce, c->aggnonce));
@@ -1078,9 +1080,9 @@ static void musig_test_vectors_sigagg(void) {
         CHECK(secp256k1_xonly_pubkey_parse(CTX, &agg_pk, agg_pk32));
         CHECK(secp256k1_schnorrsig_verify(CTX, final_sig, vector->msg, sizeof(vector->msg), &agg_pk) == 1);
     }
-    for (i = 0; i < sizeof(vector->error_case)/sizeof(vector->error_case[0]); i++) {
+    for (i = 0; i < ARRAY_SIZE(vector->error_case); i++) {
         const struct musig_sig_agg_case *c = &vector->error_case[i];
-        secp256k1_musig_partial_sig partial_sig[(sizeof(vector->psigs)/sizeof(vector->psigs[0]))];
+        secp256k1_musig_partial_sig partial_sig[ARRAY_SIZE(vector->psigs)];
         for (j = 0; j < c->psig_indices_len; j++) {
             int expected = c->invalid_sig_idx != (int)j;
             CHECK(expected == secp256k1_musig_partial_sig_parse(CTX, &partial_sig[j], vector->psigs[c->psig_indices[j]]));
