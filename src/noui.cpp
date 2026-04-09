@@ -17,7 +17,7 @@ btcsignals::connection noui_ThreadSafeMessageBoxConn;
 btcsignals::connection noui_ThreadSafeQuestionConn;
 btcsignals::connection noui_InitMessageConn;
 
-bool noui_ThreadSafeMessageBox(const bilingual_str& message, unsigned int style)
+void noui_ThreadSafeMessageBox(const bilingual_str& message, unsigned int style)
 {
     bool fSecure = style & CClientUIInterface::SECURE;
     style &= ~CClientUIInterface::SECURE;
@@ -41,12 +41,12 @@ bool noui_ThreadSafeMessageBox(const bilingual_str& message, unsigned int style)
     }
 
     tfm::format(std::cerr, "%s%s\n", strCaption, message.original);
-    return false;
 }
 
 bool noui_ThreadSafeQuestion(const bilingual_str& /* ignored interactive message */, const std::string& message, unsigned int style)
 {
-    return noui_ThreadSafeMessageBox(Untranslated(message), style);
+    noui_ThreadSafeMessageBox(Untranslated(message), style);
+    return false;
 }
 
 void noui_InitMessage(const std::string& message)
@@ -61,10 +61,9 @@ void noui_connect()
     noui_InitMessageConn = uiInterface.InitMessage_connect(noui_InitMessage);
 }
 
-bool noui_ThreadSafeMessageBoxRedirect(const bilingual_str& message, unsigned int style)
+void noui_ThreadSafeMessageBoxRedirect(const bilingual_str& message, unsigned int style)
 {
     LogInfo("%s", message.original);
-    return false;
 }
 
 bool noui_ThreadSafeQuestionRedirect(const bilingual_str& /* ignored interactive message */, const std::string& message, unsigned int style)
