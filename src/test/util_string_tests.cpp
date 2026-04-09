@@ -4,7 +4,6 @@
 
 #include <util/strencodings.h>
 #include <util/string.h>
-#include <vector>
 
 #include <boost/test/unit_test.hpp>
 #include <test/util/common.h>
@@ -41,12 +40,6 @@ template <unsigned WrongNumArgs>
 void FailFmtWithError(const char* wrong_fmt, std::string_view error)
 {
     BOOST_CHECK_EXCEPTION(CheckNumFormatSpecifiers<WrongNumArgs>(wrong_fmt), const char*, HasReason{error});
-}
-
-std::vector<std::byte> StringToBuffer(const std::string& str)
-{
-    auto span = std::as_bytes(std::span(str));
-    return {span.begin(), span.end()};
 }
 
 BOOST_AUTO_TEST_CASE(ConstevalFormatString_NumSpec)
@@ -155,49 +148,42 @@ BOOST_AUTO_TEST_CASE(ConstevalFormatString_NumSpec)
         HasReason{"tinyformat: Too many conversion specifiers in format string"});
 }
 
-BOOST_AUTO_TEST_CASE(ascii_case_insensitive_key_equal_test)
+BOOST_AUTO_TEST_CASE(case_insensitive_equal_test)
 {
-    AsciiCaseInsensitiveKeyEqual cmp;
-    BOOST_CHECK(!cmp("A", "B"));
-    BOOST_CHECK(!cmp("A", "b"));
-    BOOST_CHECK(!cmp("a", "B"));
-    BOOST_CHECK(!cmp("B", "A"));
-    BOOST_CHECK(!cmp("B", "a"));
-    BOOST_CHECK(!cmp("b", "A"));
-    BOOST_CHECK(!cmp("A", "AA"));
-    BOOST_CHECK(cmp("A-A", "a-a"));
-    BOOST_CHECK(cmp("A", "A"));
-    BOOST_CHECK(cmp("A", "a"));
-    BOOST_CHECK(cmp("a", "a"));
-    BOOST_CHECK(cmp("B", "b"));
-    BOOST_CHECK(cmp("ab", "aB"));
-    BOOST_CHECK(cmp("Ab", "aB"));
-    BOOST_CHECK(cmp("AB", "ab"));
+    BOOST_CHECK(!CaseInsensitiveEqual("A", "B"));
+    BOOST_CHECK(!CaseInsensitiveEqual("A", "b"));
+    BOOST_CHECK(!CaseInsensitiveEqual("a", "B"));
+    BOOST_CHECK(!CaseInsensitiveEqual("B", "A"));
+    BOOST_CHECK(!CaseInsensitiveEqual("B", "a"));
+    BOOST_CHECK(!CaseInsensitiveEqual("b", "A"));
+    BOOST_CHECK(!CaseInsensitiveEqual("A", "AA"));
+    BOOST_CHECK(CaseInsensitiveEqual("A-A", "a-a"));
+    BOOST_CHECK(CaseInsensitiveEqual("A", "A"));
+    BOOST_CHECK(CaseInsensitiveEqual("A", "a"));
+    BOOST_CHECK(CaseInsensitiveEqual("a", "a"));
+    BOOST_CHECK(CaseInsensitiveEqual("B", "b"));
+    BOOST_CHECK(CaseInsensitiveEqual("ab", "aB"));
+    BOOST_CHECK(CaseInsensitiveEqual("Ab", "aB"));
+    BOOST_CHECK(CaseInsensitiveEqual("AB", "ab"));
 
     // Use a character with value > 127
     // to ensure we don't trigger implicit-integer-sign-change
-    BOOST_CHECK(!cmp("a", "\xe4"));
-}
-
-BOOST_AUTO_TEST_CASE(ascii_case_insensitive_hash_test)
-{
-    AsciiCaseInsensitiveHash hsh;
-    BOOST_CHECK_NE(hsh("A"), hsh("B"));
-    BOOST_CHECK_NE(hsh("AA"), hsh("A"));
-    BOOST_CHECK_EQUAL(hsh("A"), hsh("a"));
-    BOOST_CHECK_EQUAL(hsh("Ab"), hsh("aB"));
-    BOOST_CHECK_EQUAL(hsh("A\xfe"), hsh("a\xfe"));
+    BOOST_CHECK(!CaseInsensitiveEqual("a", "\xe4"));
 }
 
 BOOST_AUTO_TEST_CASE(line_reader_test)
 {
     {
         // Check three lines terminated by \n and \r\n, trimming whitespace
-        const std::vector<std::byte> input{StringToBuffer("once upon a time\n there was a dog \r\nwho liked food\n")};
+        std::string_view input = "once upon a time\n there was a dog \r\nwho liked food\n";
         LineReader reader(input, /*max_line_length=*/128);
+        BOOST_CHECK_EQUAL(reader.Consumed(), 0);
+        BOOST_CHECK_EQUAL(reader.Remaining(), 51);
         std::optional<std::string> line1{reader.ReadLine()};
+        BOOST_CHECK_EQUAL(reader.Consumed(), 17);
         BOOST_CHECK_EQUAL(reader.Remaining(), 34);
         std::optional<std::string> line2{reader.ReadLine()};
+        BOOST_CHECK_EQUAL(reader.Consumed(), 36);
         BOOST_CHECK_EQUAL(reader.Remaining(), 15);
         std::optional<std::string> line3{reader.ReadLine()};
         std::optional<std::string> line4{reader.ReadLine()};
@@ -208,11 +194,13 @@ BOOST_AUTO_TEST_CASE(line_reader_test)
         BOOST_CHECK_EQUAL(line1.value(), "once upon a time");
         BOOST_CHECK_EQUAL(line2.value(), "there was a dog");
         BOOST_CHECK_EQUAL(line3.value(), "who liked food");
+        BOOST_CHECK_EQUAL(reader.Consumed(), 51);
+        BOOST_CHECK_EQUAL(reader.Remaining(), 0);
     }
     {
         // Do not exceed max_line_length + 1 while searching for \n
         // Test with 22-character line + \n + 23-character line + \n
-        const std::vector<std::byte> input{StringToBuffer("once upon a time there\nwas a dog who liked tea\n")};
+        std::string_view input = "once upon a time there\nwas a dog who liked tea\n";
 
         LineReader reader1(input, /*max_line_length=*/22);
         // First line is exactly the length of max_line_length
@@ -230,26 +218,26 @@ BOOST_AUTO_TEST_CASE(line_reader_test)
     }
     {
         // Empty lines are empty
-        const std::vector<std::byte> input{StringToBuffer("\n")};
+        std::string_view input = "\n";
         LineReader reader(input, /*max_line_length=*/1024);
         BOOST_CHECK_EQUAL(reader.ReadLine(), "");
         BOOST_CHECK(!reader.ReadLine());
     }
     {
         // Empty buffers are null
-        const std::vector<std::byte> input{StringToBuffer("")};
+        std::string_view input;
         LineReader reader(input, /*max_line_length=*/1024);
         BOOST_CHECK(!reader.ReadLine());
     }
     {
         // Even one character is too long, if it's not \n
-        const std::vector<std::byte> input{StringToBuffer("ab\n")};
+        std::string_view input = "ab\n";
         LineReader reader(input, /*max_line_length=*/1);
         // First line is +1 character too long
         BOOST_CHECK_EXCEPTION(reader.ReadLine(), std::runtime_error, HasReason{"max_line_length exceeded by LineReader"});
     }
     {
-        const std::vector<std::byte> input{StringToBuffer("a\nb\n")};
+        std::string_view input = "a\nb\n";
         LineReader reader(input, /*max_line_length=*/1);
         BOOST_CHECK_EQUAL(reader.ReadLine(), "a");
         BOOST_CHECK_EQUAL(reader.ReadLine(), "b");
@@ -257,7 +245,7 @@ BOOST_AUTO_TEST_CASE(line_reader_test)
     }
     {
         // If ReadLine fails, the iterator is reset and we can ReadLength instead
-        const std::vector<std::byte> input{StringToBuffer("a\nbaboon\n")};
+        std::string_view input = "a\nbaboon\n";
         LineReader reader(input, /*max_line_length=*/1);
         BOOST_CHECK_EQUAL(reader.ReadLine(), "a");
         // "baboon" is too long
@@ -273,7 +261,7 @@ BOOST_AUTO_TEST_CASE(line_reader_test)
     }
     {
         // The end of the buffer (EOB) does not count as end of line \n
-        const std::vector<std::byte> input{StringToBuffer("once upon a time there")};
+        std::string_view input = "once upon a time there";
 
         LineReader reader(input, /*max_line_length=*/22);
         // First line is exactly the length of max_line_length, but that doesn't matter because \n is missing
@@ -285,7 +273,7 @@ BOOST_AUTO_TEST_CASE(line_reader_test)
     }
     {
         // Read specific number of bytes regardless of max_line_length or \n unless buffer is too short
-        const std::vector<std::byte> input{StringToBuffer("once upon a time\n there was a dog \r\nwho liked food")};
+        std::string_view input = "once upon a time\n there was a dog \r\nwho liked food";
         LineReader reader(input, /*max_line_length=*/1);
         BOOST_CHECK_EQUAL(reader.ReadLength(0), "");
         BOOST_CHECK_EQUAL(reader.ReadLength(3), "onc");
