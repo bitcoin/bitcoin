@@ -23,6 +23,7 @@ from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import assert_equal, assert_greater_than
 
 IP_TO_ANNOUNCE = "42.42.42.42"
+ONION_ADDR = "pg6mmjiyjmcrsslvykfwnntlaru7p5svn6y2ymmju6nubxndf4pscryd.onion"
 ONE_DAY = 60 * 60 * 24
 
 
@@ -77,6 +78,7 @@ class AddrSelfAnnouncementTest(BitcoinTestFramework):
         self.self_announcement_test(outbound=False, addrv2=True)
         self.self_announcement_test(outbound=True, addrv2=False)
         self.self_announcement_test(outbound=True, addrv2=True)
+        self.test_externalip_bypasses_onlynet()
 
     @staticmethod
     def inbound_connection_open_assertions(addr_receiver):
@@ -149,6 +151,18 @@ class AddrSelfAnnouncementTest(BitcoinTestFramework):
             assert_equal(addr_receiver.addresses_received, last_addresses_received + 1)
 
         self.nodes[0].disconnect_p2ps()
+
+    def test_externalip_bypasses_onlynet(self):
+        self.log.info("Test that -externalip onion is advertised despite -onlynet=ipv4")
+        self.restart_node(0, extra_args=["-onlynet=ipv4", f"-externalip={ONION_ADDR}"])
+
+        netinfo = self.nodes[0].getnetworkinfo()
+
+        onion_net = next(n for n in netinfo["networks"] if n["name"] == "onion")
+        assert not onion_net["reachable"], "onion should not be reachable under -onlynet=ipv4"
+
+        addrs = [a["address"] for a in netinfo["localaddresses"]]
+        assert ONION_ADDR in addrs, f"onion address missing from localaddresses: {addrs}"
 
 if __name__ == '__main__':
     AddrSelfAnnouncementTest(__file__).main()
