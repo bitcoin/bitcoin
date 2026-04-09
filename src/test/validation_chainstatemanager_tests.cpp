@@ -618,6 +618,94 @@ BOOST_FIXTURE_TEST_CASE(loadblockindex_invalid_descendants, TestChain100Setup)
     BOOST_CHECK(child->nStatus & BLOCK_FAILED_VALID);
 }
 
+//! Verify that ReconsiderBlock clears failure flags for the target block, its ancestors, and descendants,
+//! but not for sibling forks that diverge from a shared ancestor.
+BOOST_FIXTURE_TEST_CASE(invalidate_block_and_reconsider_fork, TestChain100Setup)
+{
+    ChainstateManager& chainman = *Assert(m_node.chainman);
+    Chainstate& chainstate = chainman.ActiveChainstate();
+
+    // we have a chain of 100 blocks: genesis(0) <- ... <- block98 <- block99 <- block100
+    CBlockIndex* block98;
+    CBlockIndex* block99;
+    CBlockIndex* block100;
+    {
+        LOCK(chainman.GetMutex());
+        block98 = chainman.ActiveChain()[98];
+        block99 = chainman.ActiveChain()[99];
+        block100 = chainman.ActiveChain()[100];
+    }
+
+    // create the following block constellation:
+    // genesis(0) <- ... <- block98 <- block99  <- block100
+    //                              <- block99' <- block100'
+    // by temporarily invalidating block99. the chain tip now falls to block98,
+    // mine 2 new blocks on top of block 98 (block99' and block100') and then restore block99 and block 100.
+    BlockValidationState state;
+    BOOST_REQUIRE(chainstate.InvalidateBlock(state, block99));
+    BOOST_REQUIRE(WITH_LOCK(cs_main, return chainman.ActiveChain().Tip()) == block98);
+    CScript coinbase_script = CScript() << ToByteVector(coinbaseKey.GetPubKey()) << OP_CHECKSIG;
+    for (int i = 0; i < 2; ++i) {
+        CreateAndProcessBlock({}, coinbase_script);
+    }
+    const CBlockIndex* fork_block99;
+    const CBlockIndex* fork_block100;
+    {
+        LOCK(chainman.GetMutex());
+        fork_block99 = chainman.ActiveChain()[99];
+        BOOST_REQUIRE(fork_block99->pprev == block98);
+        fork_block100 = chainman.ActiveChain()[100];
+        BOOST_REQUIRE(fork_block100->pprev == fork_block99);
+    }
+    // Restore original block99 and block100
+    {
+        LOCK(chainman.GetMutex());
+        chainstate.ResetBlockFailureFlags(block99);
+        chainman.RecalculateBestHeader();
+    }
+    chainstate.ActivateBestChain(state);
+    BOOST_REQUIRE(WITH_LOCK(cs_main, return chainman.ActiveChain().Tip()) == block100);
+
+    {
+        LOCK(chainman.GetMutex());
+        BOOST_CHECK(!(block100->nStatus & BLOCK_FAILED_VALID));
+        BOOST_CHECK(!(block99->nStatus & BLOCK_FAILED_VALID));
+        BOOST_CHECK(!(fork_block100->nStatus & BLOCK_FAILED_VALID));
+        BOOST_CHECK(!(fork_block99->nStatus & BLOCK_FAILED_VALID));
+    }
+
+    // Invalidate block98
+    BOOST_REQUIRE(chainstate.InvalidateBlock(state, block98));
+
+    {
+        LOCK(chainman.GetMutex());
+        // block98 and all descendants of block98 are marked BLOCK_FAILED_VALID
+        BOOST_CHECK(block98->nStatus & BLOCK_FAILED_VALID);
+        BOOST_CHECK(block99->nStatus & BLOCK_FAILED_VALID);
+        BOOST_CHECK(block100->nStatus & BLOCK_FAILED_VALID);
+        BOOST_CHECK(fork_block99->nStatus & BLOCK_FAILED_VALID);
+        BOOST_CHECK(fork_block100->nStatus & BLOCK_FAILED_VALID);
+    }
+
+    // Reconsider block99. ResetBlockFailureFlags clears BLOCK_FAILED_VALID from
+    // block99 and its ancestors (block98) and descendants (block100)
+    // but NOT from block99' and block100' (not a direct ancestor/descendant)
+    {
+        LOCK(chainman.GetMutex());
+        chainstate.ResetBlockFailureFlags(block99);
+        chainman.RecalculateBestHeader();
+    }
+    chainstate.ActivateBestChain(state);
+    {
+        LOCK(chainman.GetMutex());
+        BOOST_CHECK(!(block98->nStatus & BLOCK_FAILED_VALID));
+        BOOST_CHECK(!(block99->nStatus & BLOCK_FAILED_VALID));
+        BOOST_CHECK(!(block100->nStatus & BLOCK_FAILED_VALID));
+        BOOST_CHECK(fork_block99->nStatus & BLOCK_FAILED_VALID);
+        BOOST_CHECK(fork_block100->nStatus & BLOCK_FAILED_VALID);
+    }
+}
+
 //! Ensure that snapshot chainstate can be loaded when found on disk after a
 //! restart, and that new blocks can be connected to both chainstates.
 BOOST_FIXTURE_TEST_CASE(chainstatemanager_snapshot_init, SnapshotTestSetup)

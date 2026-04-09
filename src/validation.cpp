@@ -3127,9 +3127,8 @@ CBlockIndex* Chainstate::FindMostWorkChain()
 
         // Check whether all blocks on the path between the currently active chain and the candidate are valid.
         // Just going until the active chain is an optimization, as we know all blocks in it are valid already.
-        CBlockIndex *pindexTest = pindexNew;
         bool fInvalidAncestor = false;
-        while (pindexTest && !m_chain.Contains(pindexTest)) {
+        for (CBlockIndex *pindexTest = pindexNew; pindexTest && !m_chain.Contains(pindexTest); pindexTest = pindexTest->pprev) {
             assert(pindexTest->HaveNumChainTxs() || pindexTest->nHeight == 0);
 
             // Pruned nodes may have entries in setBlockIndexCandidates for
@@ -3143,27 +3142,21 @@ CBlockIndex* Chainstate::FindMostWorkChain()
                 if (fFailedChain && (m_chainman.m_best_invalid == nullptr || pindexNew->nChainWork > m_chainman.m_best_invalid->nChainWork)) {
                     m_chainman.m_best_invalid = pindexNew;
                 }
-                CBlockIndex *pindexFailed = pindexNew;
                 // Remove the entire chain from the set.
-                while (pindexTest != pindexFailed) {
-                    if (fFailedChain) {
-                        pindexFailed->nStatus |= BLOCK_FAILED_VALID;
-                        m_blockman.m_dirty_blockindex.insert(pindexFailed);
-                    } else if (fMissingData) {
-                        // If we're missing data, then add back to m_blocks_unlinked,
-                        // so that if the block arrives in the future we can try adding
-                        // to setBlockIndexCandidates again.
+                for (CBlockIndex *pindexFailed = pindexNew; pindexFailed != pindexTest; pindexFailed = pindexFailed->pprev) {
+                    if (fMissingData && !fFailedChain) {
+                        // If we're missing data and not a descendant of an invalid block,
+                        // then add back to m_blocks_unlinked, so that if the block arrives in the future
+                        // we can try adding to setBlockIndexCandidates again.
                         m_blockman.m_blocks_unlinked.insert(
                             std::make_pair(pindexFailed->pprev, pindexFailed));
                     }
                     setBlockIndexCandidates.erase(pindexFailed);
-                    pindexFailed = pindexFailed->pprev;
                 }
                 setBlockIndexCandidates.erase(pindexTest);
                 fInvalidAncestor = true;
                 break;
             }
-            pindexTest = pindexTest->pprev;
         }
         if (!fInvalidAncestor)
             return pindexNew;
