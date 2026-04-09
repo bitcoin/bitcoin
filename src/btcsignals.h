@@ -122,7 +122,7 @@ class scoped_connection
     connection m_conn;
 
 public:
-    scoped_connection(connection rhs) noexcept : m_conn{std::move(rhs)} {}
+    explicit scoped_connection(connection rhs) noexcept : m_conn{std::move(rhs)} {}
 
     scoped_connection(scoped_connection&&) noexcept = default;
     scoped_connection& operator=(scoped_connection&&) noexcept = default;
