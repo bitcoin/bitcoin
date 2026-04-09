@@ -205,7 +205,7 @@ FUZZ_TARGET(spkm_migration, .init = initialize_spkm_migration)
 {
     SeedRandomStateForTest(SeedRand::ZEROS);
     FuzzedDataProvider fuzzed_data_provider{buffer.data(), buffer.size()};
-    SetMockTime(ConsumeTime(fuzzed_data_provider));
+    NodeClockContext clock_ctx{ConsumeTime(fuzzed_data_provider)};
     const auto& node{g_setup->m_node};
     Chainstate& chainstate{node.chainman->ActiveChainstate()};
 
