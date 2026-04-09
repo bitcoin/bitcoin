@@ -25,6 +25,7 @@
 #include <util/chaintype.h>
 #include <util/exception.h>
 #include <util/strencodings.h>
+#include <util/string.h>
 #include <util/time.h>
 #include <util/translation.h>
 
@@ -36,6 +37,7 @@
 #include <memory>
 #include <optional>
 #include <string>
+#include <string_view>
 #include <tuple>
 
 #ifndef WIN32
@@ -74,6 +76,65 @@ static const std::string DEFAULT_NBLOCKS = "1";
 
 /** Default -color setting. */
 static const std::string DEFAULT_COLOR_SETTING{"auto"};
+
+struct HTTPError : std::runtime_error {
+    explicit inline HTTPError(const std::string& msg) : std::runtime_error(msg) {}
+};
+
+/** Parses the headers of an HTTP response.
+ *
+ * May be replaced by the corresponding methods in HTTPHeaders from
+ * https://github.com/bitcoin/bitcoin/pull/35182 once that class is in a
+ * shared location.
+ */
+class HTTPResponseHeaders
+{
+    std::vector<std::pair<std::string, std::string>> m_headers;
+
+public:
+    void Read(util::LineReader& reader);
+    std::optional<std::string> FindFirst(std::string_view key) const;
+};
+
+// Named Read() in HTTPHeaders (see PR #35182).
+void HTTPResponseHeaders::Read(util::LineReader& reader)
+{
+    // Headers https://httpwg.org/specs/rfc9110.html#rfc.section.6.3
+    // A sequence of Field Lines https://httpwg.org/specs/rfc9110.html#rfc.section.5.2
+    while (auto maybe_line = reader.ReadLine()) {
+        const std::string& line = *maybe_line;
+
+        // An empty line indicates end of the headers section https://www.rfc-editor.org/rfc/rfc2616#section-4
+        if (line.empty()) return;
+
+        // Header line must have at least one ":"
+        // keys are not allowed to have delimiters like ":" but values are
+        // https://httpwg.org/specs/rfc9110.html#rfc.section.5.6.2
+        const size_t pos{line.find(':')};
+        if (pos == std::string::npos) throw HTTPError{"Header missing colon (:)"};
+
+        // Whitespace is optional
+        std::string key = util::TrimString(std::string_view(line).substr(0, pos));
+        std::string value = util::TrimString(std::string_view(line).substr(pos + 1));
+
+        // Header keys are Field Names: https://httpwg.org/specs/rfc9110.html#fields.names
+        // which consist of "tokens": https://httpwg.org/specs/rfc9110.html#rfc.section.5.6.2
+        // that can not be empty.
+        if (key.empty()) throw HTTPError{"Empty header name"};
+
+        m_headers.emplace_back(std::move(key), std::move(value));
+    }
+}
+
+std::optional<std::string> HTTPResponseHeaders::FindFirst(std::string_view key) const
+{
+    for (const auto& item : m_headers) {
+        if (CaseInsensitiveEqual(key, item.first)) {
+            return item.second;
+        }
+    }
+    return std::nullopt;
+}
 
 static void SetupCliArgs(ArgsManager& argsman)
 {
