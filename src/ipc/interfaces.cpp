@@ -108,10 +108,10 @@ public:
         }
         return m_protocol->connect(fd, m_exe_name);
     }
-    void listenAddress(std::string& address) override
+    void listenAddress(std::string& address, std::optional<size_t> max_connections) override
     {
         int fd = m_process->bind(gArgs.GetDataDirNet(), m_exe_name, address);
-        m_protocol->listen(fd, m_exe_name, m_init);
+        m_protocol->listen(fd, m_exe_name, m_init, max_connections);
     }
     void disconnectIncoming() override
     {

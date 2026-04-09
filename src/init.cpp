@@ -1056,27 +1056,30 @@ bool AppInitParameterInteraction(const ArgsManager& args)
     }
 
     // IPC listening socket FDs — one per -ipcbind address, no default listener
-    auto ipc_bind = args.GetArgs("-ipcbind").size();
+    size_t ipc_bind{0};
+    size_t ipc_max_connections{0};
+    for (const std::string& configured_address : args.GetArgs("-ipcbind")) {
+        std::string error;
+        auto bind{ParseIpcBindOption(configured_address, error)};
+        if (!bind) {
+            return InitError(Untranslated(strprintf("Invalid -ipcbind address '%s': %s", configured_address, error)));
+        }
+        ++ipc_bind;
+        ipc_max_connections += bind->max_connections;
+    }
 
-    // We only need to reserve these FDs if the user is actually binding an IPC socket
-    auto ipc_max_connections = args.GetIntArg("-ipcmaxconnections", 0);
-
-    if (ipc_max_connections < 0) {
-        return InitError(Untranslated("-ipcmaxconnections must be greater than or equal to zero"));
-    } else if (ipc_bind > 0) {
-        if (!args.IsArgSet("-ipcmaxconnections")) ipc_max_connections = DEFAULT_IPC_MAX_CONNECTIONS;
+    if (ipc_bind > 0) {
         LogInfo("Reserving %d file descriptors for IPC (%d listening sockets, %d accepted connections)",
-                ipc_bind + ipc_max_connections, ipc_bind, ipc_max_connections);
-    } else if (ipc_max_connections > 0) {
-        LogWarning("-ipcmaxconnections is %d but -ipcbind is not enabled; option will have no effect.\n", ipc_max_connections);
-        ipc_max_connections = 0;
+                static_cast<int>(ipc_bind + ipc_max_connections),
+                static_cast<int>(ipc_bind),
+                static_cast<int>(ipc_max_connections));
     }
 
     const size_t max_private{args.GetBoolArg("-privatebroadcast", DEFAULT_PRIVATE_BROADCAST)
                              ? MAX_PRIVATE_BROADCAST_CONNECTIONS
                              : 0};
     // Reserve enough FDs to account for the bare minimum, plus any manual connections, plus the bound interfaces, plus IPC connections
-    int min_required_fds = MIN_CORE_FDS + MAX_ADDNODE_CONNECTIONS + nBind + ipc_bind + ipc_max_connections;
+    int min_required_fds = MIN_CORE_FDS + MAX_ADDNODE_CONNECTIONS + nBind + static_cast<int>(ipc_bind + ipc_max_connections);
 
     // Try raising the FD limit to what we need (available_fds may be smaller than the requested amount if this fails)
     available_fds = RaiseFileDescriptorLimit(user_max_connection + max_private + min_required_fds);

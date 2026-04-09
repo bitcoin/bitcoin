@@ -6,7 +6,9 @@
 #define BITCOIN_INTERFACES_IPC_H
 
 #include <functional>
+#include <cstddef>
 #include <memory>
+#include <optional>
 #include <string>
 #include <typeindex>
 
@@ -69,7 +71,7 @@ public:
 
     //! Listen on a socket address exposing this process's init interface to
     //! clients. Throws an exception if there was an error.
-    virtual void listenAddress(std::string& address) = 0;
+    virtual void listenAddress(std::string& address, std::optional<size_t> max_connections = std::nullopt) = 0;
 
     //! Disconnect any incoming connections that are still connected.
     virtual void disconnectIncoming() = 0;
