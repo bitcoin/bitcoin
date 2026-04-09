@@ -19,35 +19,36 @@ class IPCInitTest(BitcoinTestFramework):
     def setup_nodes(self):
         self.extra_init = [{"ipcbind": True}]
         super().setup_nodes()
+        self.nodes[0].args = [arg for arg in self.nodes[0].args if not arg.startswith("-ipcbind=")]
 
-    def test_ipcmaxconnections(self):
-        self.log.info("Test -ipcmaxconnections initialization behavior")
+    def test_ipcbind_max_connections(self):
+        self.log.info("Test -ipcbind max-connections initialization behavior")
         node = self.nodes[0]
 
         with node.assert_debug_log([
             "file descriptors available",
             "Reserving 9 file descriptors for IPC (1 listening sockets, 8 accepted connections)",
         ]):
-            self.restart_node(0, extra_args=["-ipcmaxconnections=8"])
+            self.restart_node(0, extra_args=["-ipcbind=unix::max-connections=8"])
         assert_equal(node.getblockcount(), 0)
 
         with node.assert_debug_log(["Reserving 1 file descriptors for IPC (1 listening sockets, 0 accepted connections)"]):
-            self.restart_node(0, extra_args=["-ipcmaxconnections=0"])
-        assert_equal(node.getblockcount(), 0)
-
-        with node.assert_debug_log(["-ipcmaxconnections is 8 but -ipcbind is not enabled; option will have no effect."]):
-            self.restart_node(0, extra_args=["-noipcbind", "-ipcmaxconnections=8"])
+            self.restart_node(0, extra_args=["-ipcbind=unix::max-connections=0"])
         assert_equal(node.getblockcount(), 0)
 
         self.stop_node(0)
         node.assert_start_raises_init_error(
-            extra_args=["-ipcmaxconnections=-1"],
-            expected_msg="Error: -ipcmaxconnections must be greater than or equal to zero",
+            extra_args=["-ipcbind=unix::max-connections=-1"],
+            expected_msg="Error: Invalid -ipcbind address 'unix::max-connections=-1': Invalid max-connections value '-1'",
+        )
+        node.assert_start_raises_init_error(
+            extra_args=["-ipcbind=unix::max-connections="],
+            expected_msg="Error: Invalid -ipcbind address 'unix::max-connections=': Missing value for max-connections option",
         )
         self.start_node(0)
 
     def run_test(self):
-        self.test_ipcmaxconnections()
+        self.test_ipcbind_max_connections()
 
 
 if __name__ == '__main__':

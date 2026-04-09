@@ -35,6 +35,7 @@
 #include <interfaces/mining.h>
 #include <interfaces/node.h>
 #include <ipc/exception.h>
+#include <ipc/process.h>
 #include <kernel/caches.h>
 #include <kernel/context.h>
 #include <key.h>
@@ -102,6 +103,7 @@
 #include <cstdio>
 #include <fstream>
 #include <functional>
+#include <optional>
 #include <set>
 #include <string>
 #include <thread>
@@ -179,6 +181,22 @@ static bool g_generated_pid{false};
 static fs::path GetPidFile(const ArgsManager& args)
 {
     return AbsPathForConfigVal(args, args.GetPathArg("-pid", BITCOIN_PID_FILENAME));
+}
+
+struct IpcBindOption
+{
+    std::string listen_address;
+    size_t max_connections;
+};
+
+static std::optional<IpcBindOption> ParseIpcBindOption(const std::string& configured_address, std::string& error)
+{
+    auto bind{ipc::ParseBindAddress(configured_address, error)};
+    if (!bind) return std::nullopt;
+    return IpcBindOption{
+        .listen_address = std::move(bind->address),
+        .max_connections = bind->max_connections.value_or(DEFAULT_IPC_MAX_CONNECTIONS),
+    };
 }
 
 [[nodiscard]] static bool CreatePidFile(const ArgsManager& args)
@@ -720,8 +738,7 @@ void SetupServerArgs(ArgsManager& argsman, bool can_listen_ipc)
     argsman.AddArg("-rpcworkqueue=<n>", strprintf("Set the maximum depth of the work queue to service RPC calls (default: %d)", DEFAULT_HTTP_WORKQUEUE), ArgsManager::ALLOW_ANY | ArgsManager::DEBUG_ONLY, OptionsCategory::RPC);
     argsman.AddArg("-server", "Accept command line and JSON-RPC commands", ArgsManager::ALLOW_ANY, OptionsCategory::RPC);
     if (can_listen_ipc) {
-        argsman.AddArg("-ipcbind=<address>", "Bind to Unix socket address and listen for incoming connections. Valid address values are \"unix\" to listen on the default path, <datadir>/node.sock, or \"unix:/custom/path\" to specify a custom path. Can be specified multiple times to listen on multiple paths. Default behavior is not to listen on any path. If relative paths are specified, they are interpreted relative to the network data directory. If paths include any parent directory components and the parent directories do not exist, they will be created. Enabling this gives local processes that can access the socket unauthenticated RPC access, so it's important to choose a path with secure permissions if customizing this.", ArgsManager::ALLOW_ANY, OptionsCategory::IPC);
-        argsman.AddArg("-ipcmaxconnections=<n>", "Reserve file descriptors for up to <n> concurrent IPC socket connections (default: " + ToString(DEFAULT_IPC_MAX_CONNECTIONS) + ")", ArgsManager::ALLOW_ANY, OptionsCategory::IPC);
+        argsman.AddArg("-ipcbind=<address>", "Bind to Unix socket address and listen for incoming connections. Valid address values are \"unix\" to listen on the default path, <datadir>/node.sock, or \"unix:/custom/path\" to specify a custom path. Append \":max-connections=<n>\" to set a per-address IPC connection limit, for example \"unix::max-connections=8\" or \"unix:/custom/path:max-connections=8\". If no max-connections option is specified, " + ToString(DEFAULT_IPC_MAX_CONNECTIONS) + " accepted connections will be reserved per listener. Can be specified multiple times to listen on multiple paths. Default behavior is not to listen on any path. If relative paths are specified, they are interpreted relative to the network data directory. If paths include any parent directory components and the parent directories do not exist, they will be created. Enabling this gives local processes that can access the socket unauthenticated RPC access, so it's important to choose a path with secure permissions if customizing this.", ArgsManager::ALLOW_ANY, OptionsCategory::IPC);
     }
 
 #if HAVE_DECL_FORK
@@ -1521,11 +1538,17 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
     uiInterface.InitWallet();
 
     if (interfaces::Ipc* ipc = node.init->ipc()) {
-        for (std::string address : gArgs.GetArgs("-ipcbind")) {
+        for (const std::string& configured_address : gArgs.GetArgs("-ipcbind")) {
+            std::string error;
+            auto bind{ParseIpcBindOption(configured_address, error)};
+            if (!bind) {
+                return InitError(Untranslated(strprintf("Invalid -ipcbind address '%s': %s", configured_address, error)));
+            }
+            std::string address{std::move(bind->listen_address)};
             try {
-                ipc->listenAddress(address);
+                ipc->listenAddress(address, bind->max_connections);
             } catch (const std::exception& e) {
-                return InitError(Untranslated(strprintf("Unable to bind to IPC address '%s'. %s", address, e.what())));
+                return InitError(Untranslated(strprintf("Unable to bind to IPC address '%s'. %s", configured_address, e.what())));
             }
             LogInfo("Listening for IPC requests on address %s", address);
         }
