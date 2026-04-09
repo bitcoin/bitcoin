@@ -1560,7 +1560,7 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
      * be disabled when initialisation is finished.
      */
     if (args.GetBoolArg("-server", false)) {
-        uiInterface.InitMessage_connect(SetRPCWarmupStatus);
+        uiInterface.InitMessage.connect(SetRPCWarmupStatus);
         if (!AppInitServers(node))
             return InitError(_("Unable to start HTTP server. See debug log for details."));
     }
@@ -2012,7 +2012,7 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
 #if HAVE_SYSTEM
     const std::string block_notify = args.GetArg("-blocknotify", "");
     if (!block_notify.empty()) {
-        uiInterface.NotifyBlockTip_connect([block_notify](SynchronizationState sync_state, const CBlockIndex& block, double /* verification_progress */) {
+        uiInterface.NotifyBlockTip.connect([block_notify](SynchronizationState sync_state, const CBlockIndex& block, double /* verification_progress */) {
             if (sync_state != SynchronizationState::POST_INIT) return;
             std::string command = block_notify;
             ReplaceAll(command, "%s", block.GetBlockHash().GetHex());
