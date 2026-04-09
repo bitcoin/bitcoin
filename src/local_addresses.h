@@ -53,6 +53,9 @@ public:
 
     map_type GetAll() const EXCLUSIVE_LOCKS_REQUIRED(!m_mutex);
 
+    /** Calculates a metric for how reachable (*this) is from a given partner */
+    static int GetReachability(const CNetAddr& addr, const CNetAddr& paddrPartner);
+
 private:
     mutable Mutex m_mutex;
     map_type m_addresses GUARDED_BY(m_mutex);

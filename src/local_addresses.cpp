@@ -10,6 +10,16 @@
 
 std::unique_ptr<LocalAddressManager> g_localaddressman{std::make_unique<LocalAddressManager>()};
 
+// private extensions to enum Network, only returned by GetExtNetwork,
+// and only used in GetReachabilityFrom
+static const int NET_TEREDO = NET_MAX;
+int static GetExtNetwork(const CNetAddr& addr)
+{
+    if (addr.IsRFC4380())
+        return NET_TEREDO;
+    return addr.GetNetwork();
+}
+
 [[nodiscard]] std::optional<CService> LocalAddressManager::Get(const CNetAddr& addr, const Network& connected_through) const
 {
     if (!fListen) return std::nullopt;
@@ -28,7 +38,7 @@ std::unique_ptr<LocalAddressManager> g_localaddressman{std::make_unique<LocalAdd
                 continue;
             }
             const int nScore{local_service_info.nScore};
-            const int nReachability{local_addr.GetReachabilityFrom(addr)};
+            const int nReachability{GetReachability(local_addr, addr)};
             if (nReachability > nBestReachability || (nReachability == nBestReachability && nScore > nBestScore)) {
                 ret.emplace(CService{local_addr, local_service_info.nPort});
                 nBestReachability = nReachability;
@@ -110,4 +120,71 @@ LocalAddressManager::map_type LocalAddressManager::GetAll() const
 {
     LOCK(m_mutex);
     return m_addresses;
+}
+
+int LocalAddressManager::GetReachability(const CNetAddr& addr, const CNetAddr& paddrPartner)
+{
+    enum Reachability {
+        REACH_UNREACHABLE,
+        REACH_DEFAULT,
+        REACH_TEREDO,
+        REACH_IPV6_WEAK,
+        REACH_IPV4,
+        REACH_IPV6_STRONG,
+        REACH_PRIVATE
+    };
+
+    if (!addr.IsRoutable() || addr.IsInternal())
+        return REACH_UNREACHABLE;
+
+    int ourNet = GetExtNetwork(addr);
+    int theirNet = GetExtNetwork(paddrPartner);
+    bool fTunnel = addr.IsRFC3964() || addr.IsRFC6052() || addr.IsRFC6145();
+
+    switch(theirNet) {
+    case NET_IPV4:
+        switch(ourNet) {
+        default:       return REACH_DEFAULT;
+        case NET_IPV4: return REACH_IPV4;
+        }
+    case NET_IPV6:
+        switch(ourNet) {
+        default:         return REACH_DEFAULT;
+        case NET_TEREDO: return REACH_TEREDO;
+        case NET_IPV4:   return REACH_IPV4;
+        case NET_IPV6:   return fTunnel ? REACH_IPV6_WEAK : REACH_IPV6_STRONG; // only prefer giving our IPv6 address if it's not tunnelled
+        }
+    case NET_ONION:
+        switch(ourNet) {
+        default:         return REACH_DEFAULT;
+        case NET_IPV4:   return REACH_IPV4; // Tor users can connect to IPv4 as well
+        case NET_ONION:    return REACH_PRIVATE;
+        }
+    case NET_I2P:
+        switch (ourNet) {
+        case NET_I2P: return REACH_PRIVATE;
+        default: return REACH_DEFAULT;
+        }
+    case NET_CJDNS:
+        switch (ourNet) {
+        case NET_CJDNS: return REACH_PRIVATE;
+        default: return REACH_DEFAULT;
+        }
+    case NET_TEREDO:
+        switch(ourNet) {
+        default:          return REACH_DEFAULT;
+        case NET_TEREDO:  return REACH_TEREDO;
+        case NET_IPV6:    return REACH_IPV6_WEAK;
+        case NET_IPV4:    return REACH_IPV4;
+        }
+    case NET_UNROUTABLE:
+    default:
+        switch(ourNet) {
+        default:          return REACH_DEFAULT;
+        case NET_TEREDO:  return REACH_TEREDO;
+        case NET_IPV6:    return REACH_IPV6_WEAK;
+        case NET_IPV4:    return REACH_IPV4;
+        case NET_ONION:     return REACH_PRIVATE; // either from Tor, or don't care about our address
+        }
+    }
 }
