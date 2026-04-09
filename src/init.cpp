@@ -7,12 +7,9 @@
 
 #include <init.h>
 
-#include <kernel/checks.h>
-
 #include <addrman.h>
 #include <banman.h>
 #include <blockfilter.h>
-#include <btcsignals.h>
 #include <chain.h>
 #include <chainparams.h>
 #include <chainparamsbase.h>
@@ -37,6 +34,7 @@
 #include <interfaces/node.h>
 #include <ipc/exception.h>
 #include <kernel/caches.h>
+#include <kernel/checks.h>
 #include <kernel/context.h>
 #include <key.h>
 #include <logging.h>
@@ -78,6 +76,7 @@
 #include <util/asmap.h>
 #include <util/batchpriority.h>
 #include <util/byte_units.h>
+#include <util/btcsignals.h>
 #include <util/chaintype.h>
 #include <util/check.h>
 #include <util/fs.h>

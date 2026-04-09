@@ -5,9 +5,9 @@
 
 #include <noui.h>
 
-#include <btcsignals.h>
 #include <logging.h>
 #include <node/interface_ui.h>
+#include <util/btcsignals.h>
 #include <util/translation.h>
 
 #include <string>

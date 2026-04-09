@@ -2,10 +2,11 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
+#include <bitcoin-build-config.h> // IWYU pragma: keep
+
 #include <addrdb.h>
 #include <banman.h>
 #include <blockfilter.h>
-#include <btcsignals.h>
 #include <chain.h>
 #include <chainparams.h>
 #include <common/args.h>
@@ -36,9 +37,9 @@
 #include <node/coin.h>
 #include <node/context.h>
 #include <node/interface_ui.h>
-#include <node/mini_miner.h>
-#include <node/miner.h>
 #include <node/kernel_notifications.h>
+#include <node/miner.h>
+#include <node/mini_miner.h>
 #include <node/transaction.h>
 #include <node/types.h>
 #include <node/warnings.h>
@@ -57,6 +58,7 @@
 #include <txmempool.h>
 #include <uint256.h>
 #include <univalue.h>
+#include <util/btcsignals.h>
 #include <util/check.h>
 #include <util/result.h>
 #include <util/signalinterrupt.h>
@@ -64,8 +66,6 @@
 #include <util/translation.h>
 #include <validation.h>
 #include <validationinterface.h>
-
-#include <bitcoin-build-config.h> // IWYU pragma: keep
 
 #include <any>
 #include <memory>

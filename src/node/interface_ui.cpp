@@ -4,7 +4,7 @@
 
 #include <node/interface_ui.h>
 
-#include <btcsignals.h>
+#include <util/btcsignals.h>
 #include <util/string.h>
 #include <util/translation.h>
 

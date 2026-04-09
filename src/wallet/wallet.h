@@ -7,7 +7,6 @@
 #define BITCOIN_WALLET_WALLET_H
 
 #include <addresstype.h>
-#include <btcsignals.h>
 #include <consensus/amount.h>
 #include <interfaces/chain.h>
 #include <interfaces/handler.h>
@@ -24,6 +23,7 @@
 #include <sync.h>
 #include <tinyformat.h>
 #include <uint256.h>
+#include <util/btcsignals.h>
 #include <util/fs.h>
 #include <util/hasher.h>
 #include <util/result.h>
