@@ -16,18 +16,21 @@ WinGet is available on all supported Windows versions. The applications mentione
 
 This guide relies on using CMake and vcpkg package manager provided with the Visual Studio installation.
 
-Minimum required version: Visual Studio 2026 version 18.3 with the "Desktop development with C++" workload.
-
 To install Visual Studio Community Edition with the necessary components, run:
 
 ```powershell
-winget install --id Microsoft.VisualStudio.Community --override "--wait --quiet --add Microsoft.VisualStudio.Workload.NativeDesktop --add Microsoft.VisualStudio.Component.Git --includeRecommended"
+winget install --id Microsoft.VisualStudio.Community --override "--wait --quiet --add Microsoft.VisualStudio.Workload.NativeDesktop --add Microsoft.VisualStudio.Component.VC.Llvm.ClangToolset --add Microsoft.VisualStudio.Component.VC.Llvm.Clang --add Microsoft.VisualStudio.Component.Git --includeRecommended"
 ```
 
 This installs:
 - Visual Studio
 - The "Desktop development with C++" workload (NativeDesktop)
+- The "MSBuild support for LLVM (clang-cl) toolset" component
+- The "C++ Clang Compiler for Windows" component
 - Git component
+
+Make sure the "C++ Clang Compiler for Windows" component meets the minimum
+required Clang version specified in [dependencies.md](dependencies.md).
 
 After installation, the commands in this guide should be executed in "Developer PowerShell for VS" or "Developer Command Prompt for VS".
 The former is assumed hereinafter.
@@ -79,7 +82,7 @@ Run `cmake -B build -LH` to see the full list of available options.
 ### Building with Static Linking with GUI
 
 ```powershell
-cmake -B build --preset vs2026-static          # It might take a while if the vcpkg binary cache is unpopulated or invalidated.
+cmake -B build --preset windows-static         # It might take a while if the vcpkg binary cache is unpopulated or invalidated.
 cmake --build build --config Release           # Append "-j N" for N parallel jobs.
 ctest --test-dir build --build-config Release  # Append "-j N" for N parallel tests.
 cmake --install build --config Release         # Optional.
@@ -88,9 +91,9 @@ cmake --install build --config Release         # Optional.
 ### Building with Dynamic Linking without GUI
 
 ```powershell
-cmake -B build --preset vs2026 -DBUILD_GUI=OFF # It might take a while if the vcpkg binary cache is unpopulated or invalidated.
-cmake --build build --config Release           # Append "-j N" for N parallel jobs.
-ctest --test-dir build --build-config Release  # Append "-j N" for N parallel tests.
+cmake -B build --preset windows -DBUILD_GUI=OFF  # It might take a while if the vcpkg binary cache is unpopulated or invalidated.
+cmake --build build --config Release             # Append "-j N" for N parallel jobs.
+ctest --test-dir build --build-config Release    # Append "-j N" for N parallel tests.
 ```
 
 ### vcpkg-specific Issues and Workarounds
@@ -103,7 +106,7 @@ specify a shorter path to store intermediate build files by using
 the [`--x-buildtrees-root`](https://learn.microsoft.com/en-us/vcpkg/commands/common-options#buildtrees-root) option:
 
 ```powershell
-cmake -B build --preset vs2026-static -DVCPKG_INSTALL_OPTIONS="--x-buildtrees-root=C:\vcpkg"
+cmake -B build --preset windows-static -DVCPKG_INSTALL_OPTIONS="--x-buildtrees-root=C:\vcpkg"
 ```
 
 If vcpkg installation fails with the message "Paths with embedded space may be handled incorrectly", which
@@ -111,7 +114,7 @@ can occur if your local Bitcoin Core repository path contains spaces, you can ov
 by setting the [`VCPKG_INSTALLED_DIR`](https://github.com/microsoft/vcpkg-docs/blob/main/vcpkg/users/buildsystems/cmake-integration.md#vcpkg_installed_dir) variable:
 
 ```powershell
-cmake -B build --preset vs2026-static -DVCPKG_INSTALLED_DIR="C:\path_without_spaces"
+cmake -B build --preset windows-static -DVCPKG_INSTALLED_DIR="C:\path_without_spaces"
 ```
 
 ## Performance Notes
@@ -121,7 +124,7 @@ cmake -B build --preset vs2026-static -DVCPKG_INSTALLED_DIR="C:\path_without_spa
 One can skip vcpkg manifest default features to speed up the configuration step.
 For example, the following invocation will skip all features except for "wallet" and "tests" and their dependencies:
 ```powershell
-cmake -B build --preset vs2026 -DVCPKG_MANIFEST_NO_DEFAULT_FEATURES=ON -DVCPKG_MANIFEST_FEATURES="wallet;tests" -DBUILD_GUI=OFF -DWITH_ZMQ=OFF
+cmake -B build --preset windows -DVCPKG_MANIFEST_NO_DEFAULT_FEATURES=ON -DVCPKG_MANIFEST_FEATURES="wallet;tests" -DBUILD_GUI=OFF -DWITH_ZMQ=OFF
 ```
 
 Available features are listed in the [`vcpkg.json`](/vcpkg.json) file.
