@@ -72,6 +72,11 @@ def generate(ci_type):
         "build",
         "-Werror=dev",
         "--preset=vs2026",
+        # Using x64-windows-release for both host and target triplets
+        # to ensure vcpkg builds only release packages, thereby optimizing
+        # build time.
+        # See https://github.com/microsoft/vcpkg/issues/50927.
+        "-DVCPKG_HOST_TRIPLET=x64-windows-release",
         "-DVCPKG_TARGET_TRIPLET=x64-windows-release",
     ] + GENERATE_OPTIONS[ci_type]
     if run(command, check=False).returncode != 0:
