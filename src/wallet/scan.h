@@ -9,6 +9,7 @@
 #include <util/threadpool.h>
 
 #include <atomic>
+#include <chrono>
 #include <deque>
 #include <optional>
 
@@ -31,6 +32,7 @@ private:
     bool m_fUpdate;
     bool m_save_progress;
     std::optional<std::pair<uint256, int>> m_next_block;
+    std::chrono::steady_clock::time_point m_current_time;
 
     // Progress tracking
     double m_progress_begin{0};
@@ -47,6 +49,10 @@ private:
     friend class InlineFilterExecutor;
     friend class ParallelFilterExecutor;
 
+    /**
+     * @return `true` if it is time to log progress and save progress to disk
+     */
+    bool IsNextInterval();
     std::optional<std::pair<uint256, int>> ReadNextBlock(ScanResult& result);
     /**
      * @return the number of blocks to be scanned in m_blocks

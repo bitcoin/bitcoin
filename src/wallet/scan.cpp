@@ -13,6 +13,8 @@
 
 using interfaces::FoundBlock;
 
+constexpr auto INTERVAL_TIME{60s};
+
 namespace wallet {
 
 /**
@@ -128,7 +130,8 @@ protected:
 public:
     bool CanSubmit() {
         auto& blocks = m_scanner.m_blocks;
-        return !blocks.empty() && blocks.back().second > m_last_submitted_height;
+        return !m_scanner.IsNextInterval() && !blocks.empty()
+            && blocks.back().second > m_last_submitted_height;
     }
 };
 
@@ -243,6 +246,10 @@ public:
 
     size_t Pending() const override { return m_futures.size(); }
 };
+
+bool ChainScanner::IsNextInterval() {
+    return m_reserver.now() >= m_current_time + INTERVAL_TIME;
+}
 
 std::optional<std::pair<uint256, int>> ChainScanner::ReadNextBlock(ScanResult& result) {
     if (!m_next_block) return std::nullopt;
@@ -383,9 +390,8 @@ bool ChainScanner::ScanBlock(const uint256& block_hash, int block_height, bool s
 }
 
 ScanResult ChainScanner::Scan() {
-    constexpr auto INTERVAL_TIME{60s};
-    auto current_time{m_reserver.now()};
     auto start_time{m_reserver.now()};
+    m_current_time = start_time;
 
     assert(m_reserver.isReserved());
     auto& chain = m_wallet.chain();
@@ -430,9 +436,9 @@ ScanResult ChainScanner::Scan() {
 
             UpdateProgress(block_height);
 
-            bool next_interval = m_reserver.now() >= current_time + INTERVAL_TIME;
+            bool next_interval = IsNextInterval();
             if (next_interval) {
-                current_time = m_reserver.now();
+                m_current_time = m_reserver.now();
                 m_wallet.WalletLogPrintf("Still rescanning. At block %d. Progress=%f\n", block_height, m_progress_current);
             }
 
