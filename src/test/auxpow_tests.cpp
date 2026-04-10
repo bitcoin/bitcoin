@@ -7,6 +7,7 @@
 #include <chainparams.h>
 #include <coins.h>
 #include <consensus/merkle.h>
+#include <evo/specialtx.h>
 #include <validation.h>
 #include <pow.h>
 #include <primitives/block.h>
@@ -610,6 +611,46 @@ BOOST_FIXTURE_TEST_CASE (auxpow_miner_createAndLookupBlock, TestChain100Setup)
 
   BOOST_CHECK (miner.lookupSavedBlock (pblock->GetHash ().GetHex ()) == pblock);
   BOOST_CHECK_THROW (miner.lookupSavedBlock ("foobar"), UniValue);
+}
+// SYSCOIN
+struct AuxpowMinerBTCPREVFixture : public TestChain100Setup {
+  AuxpowMinerBTCPREVFixture()
+      : TestChain100Setup(ChainType::REGTEST, {"-clreceiptstartheight=0"}) {}
+};
+
+BOOST_FIXTURE_TEST_CASE(auxpow_miner_regeneratesTemplateOnBTCPREVChange, AuxpowMinerBTCPREVFixture)
+{
+  CTxMemPool mempool{MemPoolOptionsForTest(m_node)};
+  AuxpowMinerForTest miner;
+  CScript scriptPubKey;
+  const uint256 btc_prev_1 = uint256S(std::string(64, '1'));
+  const uint256 btc_prev_2 = uint256S(std::string(64, '2'));
+
+  // Move to height 101 so next template is for height 102 (sign-offset height).
+  CreateAndProcessBlock({}, scriptPubKey);
+  BOOST_CHECK_EQUAL(m_node.chainman->ActiveChain().Height() + 1, 102);
+
+  LOCK(miner.cs);
+  uint256 target;
+  const CBlock* pblock1 = miner.getCurrentBlock(*m_node.chainman, mempool, scriptPubKey, target, btc_prev_1);
+  BOOST_REQUIRE(pblock1 != nullptr);
+  const uint256 hash1 = pblock1->GetHash();
+
+  uint256 committed;
+  BOOST_CHECK(ExtractBTCPREVCommitment(*pblock1, committed));
+  BOOST_CHECK_EQUAL(committed, btc_prev_1);
+
+  // Same BTCPREV should reuse the cached template.
+  const CBlock* pblock_same = miner.getCurrentBlock(*m_node.chainman, mempool, scriptPubKey, target, btc_prev_1);
+  BOOST_CHECK(pblock_same == pblock1);
+  BOOST_CHECK_EQUAL(pblock_same->GetHash(), hash1);
+
+  // Different BTCPREV must invalidate and rebuild template.
+  const CBlock* pblock2 = miner.getCurrentBlock(*m_node.chainman, mempool, scriptPubKey, target, btc_prev_2);
+  BOOST_REQUIRE(pblock2 != nullptr);
+  BOOST_CHECK_NE(pblock2->GetHash(), hash1);
+  BOOST_CHECK(ExtractBTCPREVCommitment(*pblock2, committed));
+  BOOST_CHECK_EQUAL(committed, btc_prev_2);
 }
 
 /* ************************************************************************** */

@@ -301,9 +301,9 @@ static RPCHelpMan getauxblock()
                 "required to merge-mine it.  With arguments, submits a solved\n"
                 "auxpow for a previously returned block.\n",
                 {
-                    {"btcprevhash", RPCArg::Type::STR_HEX, RPCArg::Optional::OMITTED, "Optional. BTC prev-block hash commitment for BTCC sign-offset blocks (required at those heights)."},
                     {"hash", RPCArg::Type::STR_HEX, RPCArg::Optional::OMITTED, "Hash of the block to submit"},
                     {"auxpow", RPCArg::Type::STR_HEX, RPCArg::Optional::OMITTED, "Serialised auxpow found"},
+                    {"btcprevhash", RPCArg::Type::STR_HEX, RPCArg::Optional::OMITTED, "Optional. BTC prev-block hash commitment for BTCC sign-offset blocks. When omitted on non-mine-blocks-on-demand chains, sourced from local BTC header backend."},
                 },
                 {
                     RPCResult{"without arguments",
@@ -352,8 +352,10 @@ static RPCHelpMan getauxblock()
     if (request.params.size() != 2 && request.params.size() != 3) {
         throw JSONRPCError(RPC_INVALID_PARAMETER, "getauxblock expects 0, 1, 2, or 3 arguments");
     }
-    const size_t hash_index = request.params.size() == 3 ? 1 : 0;
-    const size_t auxpow_index = request.params.size() == 3 ? 2 : 1;
+    // For submit, keep miner-compatible positional order:
+    // getauxblock(hash, auxpow, [btcprevhash]).
+    const size_t hash_index = 0;
+    const size_t auxpow_index = 1;
     const std::string& hash = request.params[hash_index].get_str();
 
     const bool fAccepted

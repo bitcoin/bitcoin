@@ -91,6 +91,7 @@
 #include <walletinitinterface.h>
 
 #include <algorithm>
+#include <array>
 #include <chrono>
 #include <condition_variable>
 #include <cstdint>
@@ -169,6 +170,27 @@ static constexpr bool DEFAULT_STOPAFTERBLOCKIMPORT{false};
 static constexpr int64_t DEFAULT_GETH_STARTUP_TIMEOUT{14400};
 static constexpr int64_t DEFAULT_GETH_STARTUP_RETRY_INTERVAL_MS{2000};
 static constexpr int64_t DEFAULT_GETH_STARTUP_LOG_INTERVAL{30};
+
+static bool HasNEVMMinerFeeRecipientConfig(const ArgsManager& args)
+{
+    const std::vector<std::string> geth_args = args.GetArgs("-gethcommandline");
+    if (geth_args.empty()) return false;
+
+    static const std::array<std::string, 2> miner_addr_flags{
+        "--miner.etherbase",
+        "--miner.pendingfeerecipient",
+    };
+
+    for (size_t i = 0; i < geth_args.size(); ++i) {
+        const std::string& arg = geth_args[i];
+        for (const std::string& flag : miner_addr_flags) {
+            if (arg == flag || arg.rfind(flag + "=", 0) == 0) {
+                return true;
+            }
+        }
+    }
+    return false;
+}
 
 #ifdef WIN32
 // Win32 LevelDB doesn't use filedescriptors, and the ones used for
@@ -1856,8 +1878,12 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
 
     fRPCSerialVersion = gArgs.GetIntArg("-rpcserialversion", DEFAULT_RPC_SERIALIZE_VERSION);
     const bool enforce_btcheader_policy_ondemand = gArgs.GetBoolArg("-btcheaderpolicyondemand", DEFAULT_BTC_HEADER_POLICY_ON_DEMAND);
+    const bool nevm_miner_addr_configured = HasNEVMMinerFeeRecipientConfig(args);
+    const bool require_btcheader_backend =
+        (fMasternodeMode || nevm_miner_addr_configured) &&
+        (!Params().MineBlocksOnDemand() || enforce_btcheader_policy_ondemand);
     bool btc_header_policy_ready{true};
-    if (fMasternodeMode && (!Params().MineBlocksOnDemand() || enforce_btcheader_policy_ondemand)) {
+    if (require_btcheader_backend) {
         if (!node.chainman->ActiveChainstate().DoBTCHeaderStartupProcedure()) {
             btc_header_policy_ready = false;
             LogPrintf("Failed to initialize BTC header policy backend; startup will abort before node enters steady state\n");
@@ -1870,8 +1896,8 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
         }
     }
     LogPrintf("NEVM connection %d\n", fNEVMConnection? 1: 0);
-    if (fMasternodeMode && (!Params().MineBlocksOnDemand() || enforce_btcheader_policy_ondemand) && !btc_header_policy_ready) {
-        return InitError(Untranslated("Failed to initialize BTC header policy backend. Ensure managed btcheadernode binaries are available (configure with --enable-btcheadernode-build) or set -btcheadermanaged=0 with a valid -btcheadercmd."));
+    if (require_btcheader_backend && !btc_header_policy_ready) {
+        return InitError(Untranslated("Failed to initialize BTC header policy backend. Ensure managed btcheadernode binaries are available (configure with --enable-btcheadernode-build) or set -btcheadermanaged=0 with a valid -btcheadercmd. This backend is required for BTCC policy."));
     }
     if(args.IsArgSet("-hrp"))
         fNEVMConnection = false;

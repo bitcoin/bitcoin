@@ -189,10 +189,6 @@ class AuxpowMiningTest (SyscoinTestFramework):
     submit = self.nodes[0].getauxblock
     self.test_common (create, submit)
 
-    dummy_btc_prev = "00" * 32
-    submit_with_btcprev = lambda blockhash, auxpow: self.nodes[0].getauxblock(dummy_btc_prev, blockhash, auxpow)
-    self.test_common(create, submit_with_btcprev)
-
     # Ensure that the payout address is changed from one block to the next.
     hash1 = mineAuxpowBlockWithMethods (create, submit)
     hash2 = mineAuxpowBlockWithMethods (create, submit)

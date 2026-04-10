@@ -349,6 +349,9 @@ class BTCHeaderPolicyAuxpowTest(DashTestFramework):
         assert btcheader_cmd is not None
         for i in range(self.num_nodes):
             self.extra_args[i].extend([
+                # Ensure startup path treats this node as NEVM miner-configured
+                # via geth passthrough (covers init-time btcheader requirement).
+                "-gethcommandline=--miner.pendingfeerecipient=0x00000000000000000000000000000000000000aa",
                 "-btcheadermanaged=0",
                 f"-btcheadercmd={btcheader_cmd}",
                 "-btcheaderpolicyondemand=1",
@@ -680,6 +683,21 @@ class BTCHeaderPolicyAuxpowTest(DashTestFramework):
             self.sync_blocks(self.nodes, timeout=120)
         return auxblock["height"]
 
+    def _assert_createauxblock_autofills_btcprev(self):
+        """
+        On sign-offset heights, createauxblock without explicit btcprevhash should
+        succeed by sourcing BTC tip from the configured header backend.
+        """
+        target_sign_height = self._next_sign_height()
+        self.log.info(
+            "Verify createauxblock auto-sources btcprevhash at sign height=%d",
+            target_sign_height,
+        )
+        self._mine_sys_to_height_with_btcprev(target_sign_height - 1, self._btc_active_confirmed_hash())
+        address = self.nodes[0].get_deterministic_priv_key().address
+        auxblock = self.nodes[0].createauxblock(address)
+        assert_equal(auxblock["height"], target_sign_height)
+
     def _mine_sys_blocks_with_btcprev(self, count, btc_prev_hash):
         for _ in range(count):
             self._mine_auxpow_with_btcprev(self.nodes[0], btc_prev_hash)
@@ -935,6 +953,8 @@ class BTCHeaderPolicyAuxpowTest(DashTestFramework):
         self.btc_nodes[0].mine(8)
         self._wait_for_btc_sync()
         confirmed_hash = self._btc_active_confirmed_hash()
+
+        self._assert_createauxblock_autofills_btcprev()
 
         self._exercise_policy_allows(confirmed_hash)
         self._exercise_policy_denies(self._btc_far_older_confirmed_hash(), "btc-candidate-too-old(")
