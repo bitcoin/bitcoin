@@ -9,6 +9,7 @@
 #include <consensus/amount.h>
 #include <consensus/consensus.h>
 #include <node/mining_types.h>
+#include <node/settings.h>
 #include <policy/feerate.h>
 #include <policy/policy.h>
 #include <tinyformat.h>
