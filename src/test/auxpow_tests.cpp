@@ -613,18 +613,22 @@ BOOST_FIXTURE_TEST_CASE (auxpow_miner_createAndLookupBlock, TestChain100Setup)
   BOOST_CHECK_THROW (miner.lookupSavedBlock ("foobar"), UniValue);
 }
 // SYSCOIN
-struct AuxpowMinerBTCPREVFixture : public TestChain100Setup {
-  AuxpowMinerBTCPREVFixture()
-      : TestChain100Setup(ChainType::REGTEST, {"-clreceiptstartheight=0"}) {}
-};
-
-BOOST_FIXTURE_TEST_CASE(auxpow_miner_regeneratesTemplateOnBTCPREVChange, AuxpowMinerBTCPREVFixture)
+BOOST_FIXTURE_TEST_CASE(auxpow_miner_regeneratesTemplateOnBTCPREVChange, TestChain100Setup)
 {
   CTxMemPool mempool{MemPoolOptionsForTest(m_node)};
   AuxpowMinerForTest miner;
   CScript scriptPubKey;
   const uint256 btc_prev_1 = uint256S(std::string(64, '1'));
   const uint256 btc_prev_2 = uint256S(std::string(64, '2'));
+
+  auto& consensus = const_cast<Consensus::Params&>(Params().GetConsensus());
+  const int old_cl_start = consensus.nCLReceiptStartBlock;
+  struct ScopedCLReceiptStartRestore {
+    Consensus::Params& params;
+    int old_value;
+    ~ScopedCLReceiptStartRestore() { params.nCLReceiptStartBlock = old_value; }
+  } restore_cl_start{consensus, old_cl_start};
+  consensus.nCLReceiptStartBlock = 0;
 
   // Move to height 101 so next template is for height 102 (sign-offset height).
   CreateAndProcessBlock({}, scriptPubKey);
