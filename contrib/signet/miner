@@ -333,7 +333,7 @@ class Generate:
     def gbt(self, bcli, bestblockhash, now):
         tmpl = json.loads(bcli("getblocktemplate", '{"rules":["signet","segwit"]}'))
         if tmpl["previousblockhash"] != bestblockhash:
-            logging.warning("GBT based off unexpected block (%s not %s), retrying", tmpl["previousblockhash"], bci["bestblockhash"])
+            logging.warning("GBT based off unexpected block (%s not %s), retrying", tmpl["previousblockhash"], bestblockhash)
             time.sleep(1)
             return None
 
