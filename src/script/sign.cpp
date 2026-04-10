@@ -5,6 +5,7 @@
 
 #include <script/sign.h>
 
+#include <algorithm>
 #include <consensus/amount.h>
 #include <key.h>
 #include <musig.h>
@@ -301,6 +302,10 @@ static bool SignMuSig2(const BaseSignatureCreator& creator, SignatureData& sigda
             if (!std::equal(agg_info.fingerprint, agg_info.fingerprint + sizeof(agg_info.fingerprint), keyid.data())) {
                 continue;
             }
+            // Reject hardened derivation indices (public key derivation only supports unhardened)
+            if (std::any_of(agg_info.path.begin(), agg_info.path.end(), [](uint32_t idx) { return idx >> 31; })) {
+                continue;
+            }
             // Get the BIP32 derivation tweaks
             CExtPubKey extpub = CreateMuSig2SyntheticXpub(agg_pub);
             for (const int i : agg_info.path) {
@@ -310,7 +315,7 @@ static bool SignMuSig2(const BaseSignatureCreator& creator, SignatureData& sigda
                     return false;
                 }
             }
-            Assert(XOnlyPubKey(extpub.pubkey) == script_pubkey);
+            if (XOnlyPubKey(extpub.pubkey) != script_pubkey) continue;
             plain_pub = extpub.pubkey;
         }
 
