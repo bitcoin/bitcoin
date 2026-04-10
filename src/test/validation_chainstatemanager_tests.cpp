@@ -7,6 +7,7 @@
 #include <kernel/disconnected_transactions.h>
 #include <node/chainstatemanager_args.h>
 #include <node/kernel_notifications.h>
+#include <node/settings.h>
 #include <node/utxo_snapshot.h>
 #include <random.h>
 #include <rpc/blockchain.h>
