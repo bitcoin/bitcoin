@@ -12,6 +12,9 @@
 
 #include <util/translation.h>
 
+#include <string>
+#include <vector>
+
 namespace util {
 //! Default MessagesType for Result class, simple list of errors and warnings.
 struct Messages {
