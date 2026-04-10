@@ -33,6 +33,7 @@
 #include <node/block_template_manager.h>
 #include <node/blockstorage.h>
 #include <node/context.h>
+#include <node/settings.h>
 #include <node/utxo_snapshot.h>
 #include <node/warnings.h>
 #include <policy/feerate.h>
