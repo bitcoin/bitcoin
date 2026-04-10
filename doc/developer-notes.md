@@ -2,8 +2,8 @@
 
 ## Coding Style (General)
 
-Various coding styles have been used during the history of the codebase,
-and the result is not very consistent. However, we're now trying to converge to
+Various coding styles have been used throughout the history of the codebase,
+which has resulted in some inconsistencies. However, we're now trying to converge to
 a single style, which is specified below. When writing patches, favor the new
 style over attempting to mimic the surrounding style, except for move-only
 commits.
@@ -13,9 +13,9 @@ Do not submit patches solely to modify the style of existing code.
 ## Coding Style (C++)
 
 - **Indentation and whitespace rules** as specified in
-[src/.clang-format](/src/.clang-format). You can use the provided
-[clang-format-diff script](/contrib/devtools/README.md#clang-format-diffpy)
-tool to clean up patches automatically before submission.
+  [src/.clang-format](/src/.clang-format). You can use the provided
+  [clang-format-diff script](/contrib/devtools/README.md#clang-format-diffpy)
+  tool to clean up patches automatically before submission.
   - Braces on new lines for classes, functions, methods.
   - Braces on the same line for everything else (including structs).
   - 4 space indentation (no tabs) for every block except namespaces.
@@ -33,8 +33,8 @@ tool to clean up patches automatically before submission.
     style option.
 
 - **Symbol naming conventions**. These are preferred in new code, but are not
-required when doing so would need changes to significant pieces of existing
-code.
+  required when doing so would need changes to significant pieces of existing
+  code.
   - Variable (including function arguments) and namespace names are all lowercase and may use `_` to
     separate words (snake_case).
     - Class member variables have a `m_` prefix.
@@ -43,7 +43,7 @@ code.
   - Enumerator constants may be `snake_case`, `PascalCase` or `ALL_CAPS`.
     This is a more tolerant policy than the [C++ Core
     Guidelines](https://isocpp.github.io/CppCoreGuidelines/CppCoreGuidelines#Renum-caps),
-    which recommend using `snake_case`.  Please use what seems appropriate.
+    which recommend using `snake_case`. Please use what seems appropriate.
   - Class names, function names, and method names are UpperCamelCase
     (PascalCase). Do not prefix class names with `C`. See [Internal interface
     naming style](#internal-interface-naming-style) for an exception to this
@@ -69,6 +69,7 @@ code.
 For function calls a namespace should be specified explicitly, unless such functions have been declared within it.
 Otherwise, [argument-dependent lookup](https://en.cppreference.com/w/cpp/language/adl), also known as ADL, could be
 triggered that makes code harder to maintain and reason about:
+
 ```c++
 #include <filesystem>
 
@@ -89,6 +90,7 @@ int main()
 ```
 
 Block style example:
+
 ```c++
 int g_count{0};
 
@@ -125,12 +127,12 @@ public:
 - When ordering function parameters, place input parameters first, then any
   in-out parameters, followed by any output parameters.
 
-- *Rationale*: API consistency.
+- _Rationale_: Ensures consistent API design across the codebase.
 
 - Prefer returning values directly to using in-out or output parameters. Use
   `std::optional` where helpful for returning values.
 
-- *Rationale*: Less error-prone (no need for assumptions about what the output
+- _Rationale_: Less error-prone (no need for assumptions about what the output
   is initialized to on failure), easier to read, and often the same or better
   performance.
 
@@ -213,9 +215,10 @@ bool function(int arg1, const char *arg2, std::string& arg3)
 
 A complete list of `@xxx` commands can be found at https://www.doxygen.nl/manual/commands.html.
 As Doxygen recognizes the comments by the delimiters (`/**` and `*/` in this case), you don't
-*need* to provide any commands for a comment to be valid; just a description text is fine.
+_need_ to provide any commands for a comment to be valid; just a description text is fine.
 
 To describe a class, use the same construct above the class definition:
+
 ```c++
 /**
  * Alerts are for notifying old versions if they become too obsolete and
@@ -226,6 +229,7 @@ class CAlert
 ```
 
 To describe a member or variable, place the comment on the line(s) before it, using `/**` and `*/`, `//!`, or `///`:
+
 ```c++
 //! Description before the member
 int var;
@@ -233,9 +237,10 @@ int var;
 
 Avoid trailing (inline) member comments like `int var; //!< Description after the member`.
 
-  - *Rationale*: Forgetting the `<` silently breaks Doxygen output.
+- _Rationale_: Forgetting the `<` silently breaks Doxygen output.
 
 Also OK:
+
 ```c++
 ///
 /// ... Description ...
@@ -244,6 +249,7 @@ bool function2(int arg1, const char *arg2)
 ```
 
 Not picked up by Doxygen:
+
 ```c++
 //
 // ... Description ...
@@ -251,6 +257,7 @@ Not picked up by Doxygen:
 ```
 
 Also not picked up by Doxygen:
+
 ```c++
 /*
  * ... Description ...
@@ -311,7 +318,7 @@ error and debugging messages are written there.
 
 Debug logging can be enabled on startup with the `-debug` and `-loglevel`
 configuration options and toggled while bitcoind is running with the `logging`
-RPC.  For instance, launching bitcoind with `-debug` or `-debug=1` will turn on
+RPC. For instance, launching bitcoind with `-debug` or `-debug=1` will turn on
 all log categories and `-loglevel=trace` will turn on all log severity levels.
 
 The Qt code routes `qDebug()` output to `debug.log` under category "qt": run with `-debug=qt`
@@ -324,7 +331,7 @@ you can run with either the `-signet` or the `-testnet4` config option to test
 with "play bitcoins" on a test network.
 
 If you are testing something that can run on one machine, run with the
-`-regtest` option.  In regression test mode, blocks can be created on demand;
+`-regtest` option. In regression test mode, blocks can be created on demand;
 see [test/functional/](/test/functional) for tests that run in `-regtest` mode.
 
 ### DEBUG_LOCKORDER
@@ -355,18 +362,18 @@ The util file `src/util/check.h` offers helpers to protect against coding and
 internal logic bugs. They must never be used to validate user, network or any
 other input.
 
-* `assert` or `Assert` should be used to document assumptions when any
+- `assert` or `Assert` should be used to document assumptions when any
   violation would mean that it is not safe to continue program execution. The
   code is always compiled with assertions enabled.
-   - For example, a nullptr dereference or any other logic bug in validation
-     code means the program code is faulty and must terminate immediately.
-* `CHECK_NONFATAL` should be used for recoverable internal logic bugs. On
+  - For example, a nullptr dereference or any other logic bug in validation
+    code means the program code is faulty and must terminate immediately.
+- `CHECK_NONFATAL` should be used for recoverable internal logic bugs. On
   failure, it will throw an exception, which can be caught to recover from the
   error.
-   - For example, a nullptr dereference or any other logic bug in RPC code
-     means that the RPC code is faulty and cannot be executed. However, the
-     logic bug can be shown to the user and the program can continue to run.
-* `Assume` should be used to document assumptions when program execution can
+  - For example, a nullptr dereference or any other logic bug in RPC code
+    means that the RPC code is faulty and cannot be executed. However, the
+    logic bug can be shown to the user and the program can continue to run.
+- `Assume` should be used to document assumptions when program execution can
   safely continue even if the assumption is violated. In debug builds it
   behaves like `Assert`/`assert` to notify developers and testers about
   nonfatal errors. In production it doesn't warn or log anything, though the
@@ -374,10 +381,10 @@ other input.
   an expression inside `Assume` is side-effect-free, it may optimize the call away,
   skipping its evaluation in production. This enables a lower-cost way of
   making explicit statements about the code, aiding review.
-   - For example it can be assumed that a variable is only initialized once,
-     but a failed assumption does not result in a fatal bug. A failed
-     assumption may or may not result in a slightly degraded user experience,
-     but it is safe to continue program execution.
+  - For example it can be assumed that a variable is only initialized once,
+    but a failed assumption does not result in a fatal bug. A failed
+    assumption may or may not result in a slightly degraded user experience,
+    but it is safe to continue program execution.
 
 ### Valgrind suppressions file
 
@@ -424,6 +431,7 @@ cmake -DLCOV_OPTS="--rc branch_coverage=1" -P build/Coverage.cmake
 ```
 
 To enable test parallelism:
+
 ```
 cmake -DJOBS=$(nproc) -P build/Coverage.cmake
 ```
@@ -542,6 +550,7 @@ Use `IWYU pragma: export` very sparingly, as this enforces transitive inclusion 
 and undermines the specific purpose of IWYU.
 
 The acceptable cases for using `IWYU pragma: export` are:
+
 1. Facade headers. For example, see [`compat/compat.h`](/src/compat/compat.h).
 2. Drop-in replacement headers. For example, see [`util/time.h`](/src/util/time.h).
 3. Presenting a complete interface across multiple headers.
@@ -591,7 +600,6 @@ or using a graphical tool like [Hotspot](https://github.com/KDAB/hotspot).
 
 See the functional test documentation for how to invoke perf within tests.
 
-
 ### Sanitizers
 
 Bitcoin Core can be compiled with various "sanitizers" enabled, which add
@@ -621,6 +629,7 @@ will fail with a linker error when testing the sanitizer flags.
 The test suite should pass cleanly with the `thread` and `undefined` sanitizers. You
 may need to use a suppressions file, see `test/sanitizer_suppressions`. They may be
 used as follows:
+
 ```bash
 export LSAN_OPTIONS="suppressions=$(pwd)/test/sanitizer_suppressions/lsan"
 export TSAN_OPTIONS="suppressions=$(pwd)/test/sanitizer_suppressions/tsan:halt_on_error=1:second_deadlock_stack=1"
@@ -638,13 +647,13 @@ compiler.
 
 Additional resources:
 
- * [AddressSanitizer](https://clang.llvm.org/docs/AddressSanitizer.html)
- * [LeakSanitizer](https://clang.llvm.org/docs/LeakSanitizer.html)
- * [MemorySanitizer](https://clang.llvm.org/docs/MemorySanitizer.html)
- * [ThreadSanitizer](https://clang.llvm.org/docs/ThreadSanitizer.html)
- * [UndefinedBehaviorSanitizer](https://clang.llvm.org/docs/UndefinedBehaviorSanitizer.html)
- * [GCC Instrumentation Options](https://gcc.gnu.org/onlinedocs/gcc/Instrumentation-Options.html)
- * [Google Sanitizers Wiki](https://github.com/google/sanitizers/wiki)
+- [AddressSanitizer](https://clang.llvm.org/docs/AddressSanitizer.html)
+- [LeakSanitizer](https://clang.llvm.org/docs/LeakSanitizer.html)
+- [MemorySanitizer](https://clang.llvm.org/docs/MemorySanitizer.html)
+- [ThreadSanitizer](https://clang.llvm.org/docs/ThreadSanitizer.html)
+- [UndefinedBehaviorSanitizer](https://clang.llvm.org/docs/UndefinedBehaviorSanitizer.html)
+- [GCC Instrumentation Options](https://gcc.gnu.org/onlinedocs/gcc/Instrumentation-Options.html)
+- [Google Sanitizers Wiki](https://github.com/google/sanitizers/wiki)
 
 ## Locking/mutex usage notes
 
@@ -670,7 +679,7 @@ and its `cs_KeyStore` lock for example).
 
 - [Init load (`b-initload`)](https://doxygen.bitcoincore.org/namespacenode.html#ab4305679079866f0f420f7dbf278381d)
   : Performs various loading tasks that are part of init but shouldn't block the node from being started: external block import,
-   reindex, reindex-chainstate, main chain activation, spawn indexes background sync threads and mempool load.
+  reindex, reindex-chainstate, main chain activation, spawn indexes background sync threads and mempool load.
 
 - [CCheckQueue::Loop (`b-scriptch.x`)](https://doxygen.bitcoincore.org/class_c_check_queue.html#a6e7fa51d3a25e7cb65446d4b50e6a987)
   : Parallel script validation threads for transactions in blocks.
@@ -692,7 +701,6 @@ and its `cs_KeyStore` lock for example).
   : Libevent thread for tor connections.
 
 - Net threads:
-
   - [ThreadMessageHandler (`b-msghand`)](https://doxygen.bitcoincore.org/class_c_connman.html#aacdbb7148575a31bb33bc345e2bf22a9)
     : Application level message handling (sending and receiving). Almost
     all net_processing and validation logic runs on this thread.
@@ -723,8 +731,7 @@ pay attention to for reviewers of Bitcoin Core code.
 ## General Bitcoin Core
 
 - New features should be exposed on RPC first, then can be made available in the GUI.
-
-  - *Rationale*: RPC allows for better automatic testing. The test suite for
+  - _Rationale_: RPC allows for better automatic testing. The test suite for
     the GUI is very limited.
 
 ## Logging
@@ -758,7 +765,7 @@ logging messages. They should be used as follows:
   system, e.g. due to being too noisy in normal use, or too resource
   intensive to process. These will be logged if the startup
   options `-debug=category -loglevel=category:trace` or `-debug=1
-  -loglevel=trace` are selected.
+-loglevel=trace` are selected.
 
 Note that the format strings and parameters of `LogDebug` and `LogTrace`
 are only evaluated if the logging category is enabled, so you must be
@@ -775,41 +782,36 @@ Common misconceptions are clarified in those sections:
   Guideline](https://isocpp.github.io/CppCoreGuidelines/CppCoreGuidelines#Rf-conventional).
 
 - If you use the `.h`, you must link the `.cpp`.
-
-  - *Rationale*: Include files define the interface for the code in implementation files. Including one but
-      not linking the other is confusing. Please avoid that. Moving functions from
-      the `.h` to the `.cpp` should not result in build errors.
+  - _Rationale_: Include files define the interface for the code in implementation files. Including one but
+    not linking the other is confusing. Please avoid that. Moving functions from
+    the `.h` to the `.cpp` should not result in build errors.
 
 - Use the RAII (Resource Acquisition Is Initialization) paradigm where possible. For example, by using
   `unique_ptr` for allocations in a function.
-
-  - *Rationale*: This avoids memory and resource leaks, and ensures exception safety.
+  - _Rationale_: This avoids memory and resource leaks, and ensures exception safety.
 
 ## C++ data structures
 
 - Never use the `std::map []` syntax when reading from a map, but instead use `.find()`.
-
-  - *Rationale*: `[]` does an insert (of the default element) if the item doesn't
+  - _Rationale_: `[]` does an insert (of the default element) if the item doesn't
     exist in the map yet. This has resulted in memory leaks in the past, as well as
-    race conditions (expecting read-read behavior). Using `[]` is fine for *writing* to a map.
+    race conditions (expecting read-read behavior). Using `[]` is fine for _writing_ to a map.
 
 - Do not compare an iterator from one data structure with an iterator of
   another data structure (even if of the same type).
-
-  - *Rationale*: Behavior is undefined. In C++ parlor this means "may reformat
+  - _Rationale_: Behavior is undefined. In C++ parlor this means "may reformat
     the universe", in practice this has resulted in at least one hard-to-debug crash bug.
 
 - Watch out for out-of-bounds vector access. `&vch[vch.size()]` is illegal,
   including `&vch[0]` for an empty vector. Use `vch.data()` and `vch.data() +
-  vch.size()` instead.
+vch.size()` instead.
 
 - Vector bounds checking is only enabled in debug mode. Do not rely on it.
 
 - Initialize all non-static class members where they are defined.
   If this is skipped for a good reason (i.e., optimization on the critical
   path), add an explicit comment about this.
-
-  - *Rationale*: Ensure determinism by avoiding accidental use of uninitialized
+  - _Rationale_: Ensure determinism by avoiding accidental use of uninitialized
     values. Also, static analyzers balk about this.
     Initializing the members in the declaration makes it easy to
     spot uninitialized ones.
@@ -822,8 +824,7 @@ class A
 ```
 
 - By default, declare constructors `explicit`.
-
-  - *Rationale*: This is a precaution to avoid unintended
+  - _Rationale_: This is a precaution to avoid unintended
     [conversions](https://en.cppreference.com/w/cpp/language/converting_constructor).
 
 - Use explicitly signed or unsigned `char`s, or even better `uint8_t` and
@@ -833,13 +834,11 @@ class A
   out-of-bounds array accesses.
 
 - Prefer explicit constructions over implicit ones that rely on 'magical' C++ behavior.
-
-  - *Rationale*: Easier to understand what is happening, thus easier to spot mistakes, even for those
-  that are not language lawyers.
+  - _Rationale_: Easier to understand what is happening, thus easier to spot mistakes, even for those
+    that are not language lawyers.
 
 - Use `std::span` as function argument when it can operate on any range-like container.
-
-  - *Rationale*: Compared to `Foo(const vector<int>&)` this avoids the need for a (potentially expensive)
+  - _Rationale_: Compared to `Foo(const vector<int>&)` this avoids the need for a (potentially expensive)
     conversion to vector if the caller happens to have the input stored in another type of container.
     However, be aware of the pitfalls documented in [span.h](../src/span.h).
 
@@ -851,8 +850,7 @@ Foo(vec);
 ```
 
 - Prefer `enum class` (scoped enumerations) over `enum` (traditional enumerations) where possible.
-
-  - *Rationale*: Scoped enumerations avoid two potential pitfalls/problems with traditional C++ enumerations: implicit conversions to `int`, and name clashes due to enumerators being exported to the surrounding scope.
+  - _Rationale_: Scoped enumerations avoid two potential pitfalls/problems with traditional C++ enumerations: implicit conversions to `int`, and name clashes due to enumerators being exported to the surrounding scope.
 
 - `switch` statement on an enumeration example:
 
@@ -876,35 +874,29 @@ int GetInt(Tabs tab)
 }
 ```
 
-*Rationale*: The comment documents skipping `default:` label, and it complies with `clang-format` rules. The assertion prevents firing of `-Wreturn-type` warning on some compilers.
+_Rationale_: The comment documents skipping `default:` label, and it complies with `clang-format` rules. The assertion prevents firing of `-Wreturn-type` warning on some compilers.
 
 ## Strings and formatting
 
-- Use `std::string`, avoid C string manipulation functions.
-
-  - *Rationale*: C++ string handling is marginally safer, less scope for
+- Use std::string where possible and avoid C-style string manipulation functions.
+  - _Rationale_: C++ string handling is marginally safer, less scope for
     buffer overflows, and surprises with `\0` characters. Also, some C string manipulations
     tend to act differently depending on platform, or even the user locale.
 
 - For `strprintf`, `LogInfo`, `LogDebug`, etc formatting characters don't need size specifiers (hh, h, l, ll, j, z, t, L) for arithmetic types.
-
-  - *Rationale*: Bitcoin Core uses tinyformat, which is type safe. Leave them out to avoid confusion.
+  - _Rationale_: Bitcoin Core uses tinyformat, which is type safe. Leave them out to avoid confusion.
 
 - Use `.c_str()` sparingly. Its only valid use is to pass C++ strings to C functions that take NULL-terminated
   strings.
-
   - Do not use it when passing a sized array (so along with `.size()`). Use `.data()` instead to get a pointer
     to the raw data.
-
-    - *Rationale*: Although this is guaranteed to be safe starting with C++11, `.data()` communicates the intent better.
+    - _Rationale_: Although this is guaranteed to be safe starting with C++11, `.data()` communicates the intent better.
 
   - Do not use it when passing strings to `tfm::format`, `strprintf`, `LogInfo`, `LogDebug`, etc.
-
-    - *Rationale*: This is redundant. Tinyformat handles strings.
+    - _Rationale_: This is redundant. Tinyformat handles strings.
 
   - Do not use it to convert to `QString`. Use `QString::fromStdString()`.
-
-    - *Rationale*: Qt has built-in functionality for converting their string
+    - _Rationale_: Qt has built-in functionality for converting their string
       type from/to C++. No need to roll your own.
 
   - In cases where you do call `.c_str()`, you might want to additionally check that the string does not contain embedded '\0' characters, because
@@ -936,7 +928,6 @@ annotation defined in `src/attributes.h`; please grep the codebase for examples.
 
 - Consistently use [Clang Thread Safety Analysis](https://clang.llvm.org/docs/ThreadSafetyAnalysis.html) annotations to
   get compile-time warnings about potential race conditions or deadlocks in code.
-
   - In functions that are declared separately from where they are defined, the
     thread safety annotations should be added exclusively to the function
     declaration. Annotations on the definition could lead to false positives
@@ -1016,6 +1007,7 @@ bool Chainstate::PreciousBlock(BlockValidationState& state, CBlockIndex* pindex)
   with braces.
 
   OK:
+
 ```c++
 {
     TRY_LOCK(cs_vNodes, lockNodes);
@@ -1023,7 +1015,8 @@ bool Chainstate::PreciousBlock(BlockValidationState& state, CBlockIndex* pindex)
 }
 ```
 
-  Wrong:
+Wrong:
+
 ```c++
 TRY_LOCK(cs_vNodes, lockNodes);
 {
@@ -1039,20 +1032,17 @@ Write scripts in Python or Rust rather than bash, when possible.
 
 - Implementation code should go into the `.cpp` file and not the `.h`, unless necessary due to template usage or
   when performance due to inlining is critical.
-
-  - *Rationale*: Shorter and simpler header files are easier to read and reduce compile time.
+  - _Rationale_: Shorter and simpler header files are easier to read and reduce compile time.
 
 - Every `.cpp` and `.h` file should `#include` every header file it directly uses classes, functions or other
   definitions from, even if those headers are already included indirectly through other headers.
-
-  - *Rationale*: Excluding headers because they are already indirectly included results in compilation
+  - _Rationale_: Excluding headers because they are already indirectly included results in compilation
     failures when those indirect dependencies change. Furthermore, it obscures what the real code
     dependencies are. The [Using IWYU](#using-iwyu) section describes a tool to help enforce this.
 
 - Don't import anything into the global namespace (`using namespace ...`). Use
   fully specified types such as `std::string`.
-
-  - *Rationale*: Avoids symbol conflicts.
+  - _Rationale_: Avoids symbol conflicts.
 
 - Terminate namespaces with a comment (`// namespace mynamespace`). The comment
   should be placed on the same line as the brace closing the namespace, e.g.
@@ -1067,13 +1057,12 @@ namespace {
 } // namespace
 ```
 
-  - *Rationale*: Avoids confusion about the namespace context.
+- _Rationale_: Avoids confusion about the namespace context.
 
 ## GUI
 
 - Do not display or manipulate dialogs in model code (classes `*Model`).
-
-  - *Rationale*: Model classes pass through events and data from the core, they
+  - _Rationale_: Model classes pass through events and data from the core, they
     should not interact with the user. That's where View classes come in. The converse also
     holds: try to not directly access core data structures from Views.
 
@@ -1086,8 +1075,7 @@ namespace {
   `RPCExecutor` in console code as an example) or take other steps (see
   https://doc.qt.io/archives/qq/qq27-responsive-guis.html) to keep the GUI
   responsive.
-
-  - *Rationale*: Blocking the GUI thread can increase latency, and lead to
+  - _Rationale_: Blocking the GUI thread can increase latency, and lead to
     hangs and deadlocks.
 
 ## Subtrees
@@ -1191,8 +1179,8 @@ To create a scripted-diff:
 
 - start the commit message with `scripted-diff:` (and then a description of the diff on the same line)
 - in the commit message include the bash script between lines containing just the following text:
-    - `-BEGIN VERIFY SCRIPT-`
-    - `-END VERIFY SCRIPT-`
+  - `-BEGIN VERIFY SCRIPT-`
+  - `-END VERIFY SCRIPT-`
 
 The scripted-diff is verified by the tool `test/lint/commit-script-check.sh`. The tool's default behavior, when supplied
 with a commit is to verify all scripted-diffs from the beginning of time up to said commit. Internally, the tool passes
@@ -1221,13 +1209,13 @@ introduce accidental changes.
 Some good examples of scripted-diff:
 
 - [scripted-diff: Rename InitInterfaces to NodeContext](https://github.com/bitcoin/bitcoin/commit/301bd41a2e6765b185bd55f4c541f9e27aeea29d)
-uses an elegant script to replace occurrences of multiple terms in all source files.
+  uses an elegant script to replace occurrences of multiple terms in all source files.
 
 - [scripted-diff: Remove g_connman, g_banman globals](https://github.com/bitcoin/bitcoin/commit/8922d7f6b751a3e6b3b9f6fb7961c442877fb65a)
-replaces specific terms in a list of specific source files.
+  replaces specific terms in a list of specific source files.
 
 - [scripted-diff: Replace fprintf with tfm::format](https://github.com/bitcoin/bitcoin/commit/fac03ec43a15ad547161e37e53ea82482cc508f9)
-does a global replacement but excludes certain directories.
+  does a global replacement but excludes certain directories.
 
 To find all previous uses of scripted diffs in the repository, do:
 
@@ -1253,24 +1241,21 @@ All `release-notes*` files are merged into a single `release-notes-<version>.md`
 A few guidelines for introducing and reviewing new RPC interfaces:
 
 - Method naming: use consecutive lower-case names such as `getrawtransaction` and `submitblock`.
-
-  - *Rationale*: Consistency with the existing interface.
+  - _Rationale_: Consistency with the existing interface.
 
 - Argument and field naming: please consider whether there is already a naming
   style or spelling convention in the API for the type of object in question
   (`blockhash`, for example), and if so, try to use that. If not, use snake case
   `fee_delta` (and not, e.g. `feedelta` or camel case `feeDelta`).
-
-  - *Rationale*: Consistency with the existing interface.
+  - _Rationale_: Consistency with the existing interface.
 
 - Use the JSON parser for parsing, don't manually parse integers or strings from
   arguments unless absolutely necessary.
-
-  - *Rationale*: Introduces hand-rolled string manipulation code at both the caller and callee sites,
+  - _Rationale_: Introduces hand-rolled string manipulation code at both the caller and callee sites,
     which is error-prone, and it is easy to get things such as escaping wrong.
     JSON already supports nested data structures, no need to re-invent the wheel.
 
-  - *Exception*: AmountFromValue can parse amounts as string. This was introduced because many JSON
+  - _Exception_: AmountFromValue can parse amounts as string. This was introduced because many JSON
     parsers and formatters hard-code handling decimal numbers as floating-point
     values, resulting in potential loss of precision. This is unacceptable for
     monetary values. **Always** use `AmountFromValue` and `ValueFromAmount` when
@@ -1283,49 +1268,42 @@ A few guidelines for introducing and reviewing new RPC interfaces:
   guideline is to detect unspecified arguments with `params[x].isNull()` instead of
   `params.size() <= x`. The former returns true if the argument is either null or missing,
   while the latter returns true if is missing, and false if it is null.
-
-  - *Rationale*: Avoids surprises when switching to name-based arguments. Missing name-based arguments
-  are passed as 'null'.
+  - _Rationale_: Avoids surprises when switching to name-based arguments. Missing name-based arguments
+    are passed as 'null'.
 
 - Try not to overload methods on argument type. E.g. don't make `getblock(true)` and `getblock("hash")`
   do different things.
+  - _Rationale_: This is impossible to use with `bitcoin-cli`, and can be surprising to users.
 
-  - *Rationale*: This is impossible to use with `bitcoin-cli`, and can be surprising to users.
-
-  - *Exception*: Some RPC calls can take both an `int` and `bool`, most notably when a bool was switched
+  - _Exception_: Some RPC calls can take both an `int` and `bool`, most notably when a bool was switched
     to a multi-value, or due to other historical reasons. **Always** have false map to 0 and
     true to 1 in this case.
 
 - For new RPC methods, if implementing a `verbosity` argument, use integer verbosity rather than boolean.
   Disallow usage of boolean verbosity (see `ParseVerbosity()` in [util.h](/src/rpc/util.h)).
-
-  - *Rationale*: Integer verbosity allows for multiple values. Undocumented boolean verbosity is deprecated
+  - _Rationale_: Integer verbosity allows for multiple values. Undocumented boolean verbosity is deprecated
     and new RPC methods should prevent its use.
 
 - Add every non-string RPC argument `(method, idx, name)` to the table `vRPCConvertParams` in `rpc/client.cpp`.
-
-  - *Rationale*: `bitcoin-cli` and the GUI debug console use this table to determine how to
+  - _Rationale_: `bitcoin-cli` and the GUI debug console use this table to determine how to
     convert a plaintext command line to JSON. If the types don't match, the method can be unusable
     from there.
 
 - A RPC method must either be a wallet method or a non-wallet method. Do not
   introduce new methods that differ in behavior based on the presence of a wallet.
-
-  - *Rationale*: As well as complicating the implementation and interfering
+  - _Rationale_: As well as complicating the implementation and interfering
     with the introduction of multi-wallet, wallet and non-wallet code should be
     separated to avoid introducing circular dependencies between code units.
 
 - Try to make the RPC response a JSON object.
-
-  - *Rationale*: If a RPC response is not a JSON object, then it is harder to avoid API breakage if
+  - _Rationale_: If a RPC response is not a JSON object, then it is harder to avoid API breakage if
     new data in the response is needed.
 
 - Wallet RPCs call BlockUntilSyncedToCurrentChain to maintain consistency with
   `getblockchaininfo`'s state immediately prior to the call's execution. Wallet
-  RPCs whose behavior does *not* depend on the current chainstate may omit this
+  RPCs whose behavior does _not_ depend on the current chainstate may omit this
   call.
-
-  - *Rationale*: In previous versions of Bitcoin Core, the wallet was always
+  - _Rationale_: In previous versions of Bitcoin Core, the wallet was always
     in-sync with the chainstate (by virtue of them all being updated in the
     same cs_main lock). In order to maintain the behavior that wallet RPCs
     return results as of at least the highest best-known block an RPC
@@ -1333,28 +1311,24 @@ A few guidelines for introducing and reviewing new RPC interfaces:
     until the wallet is caught up to the chainstate as of the RPC call's entry.
     This also makes the API much easier for RPC clients to reason about.
 
-- Use *invalid* bech32 addresses (e.g. in the constant array `EXAMPLE_ADDRESS`) for
+- Use _invalid_ bech32 addresses (e.g. in the constant array `EXAMPLE_ADDRESS`) for
   `RPCExamples` help documentation.
-
-  - *Rationale*: Prevent accidental transactions by users and encourage the use
+  - _Rationale_: Prevent accidental transactions by users and encourage the use
     of bech32 addresses by default.
 
 - Use the `UNIX_EPOCH_TIME` constant when describing UNIX epoch time or
   timestamps in the documentation.
-
-  - *Rationale*: User-facing consistency.
+  - _Rationale_: User-facing consistency.
 
 - Use `fs::path::u8string()`/`fs::path::utf8string()` and `fs::u8path()` functions when converting path
   to JSON strings, not `fs::PathToString` and `fs::PathFromString`
-
-  - *Rationale*: JSON strings are Unicode strings, not byte strings, and
+  - _Rationale_: JSON strings are Unicode strings, not byte strings, and
     RFC8259 requires JSON to be encoded as UTF-8.
 
 A few guidelines for modifying existing RPC interfaces:
 
 - It's preferable to avoid changing an RPC in a backward-incompatible manner, but in that case, add an associated `-deprecatedrpc=` option to retain previous RPC behavior during the deprecation period. Backward-incompatible changes include: data type changes (e.g. from `{"warnings":""}` to `{"warnings":[]}`, changing a value from a string to a number, etc.), logical meaning changes of a value, key name changes (e.g. `{"warning":""}` to `{"warnings":""}`), or removing a key from an object. Adding a key to an object is generally considered backward-compatible. Include a release note that refers the user to the RPC help for details of feature deprecation and re-enabling previous behavior. [Example RPC help](https://github.com/bitcoin/bitcoin/blob/94f0adcc/src/rpc/blockchain.cpp#L1316-L1323).
-
-  - *Rationale*: Changes in RPC JSON structure can break downstream application compatibility. Implementation of `deprecatedrpc` provides a grace period for downstream applications to migrate. Release notes provide notification to downstream users.
+  - _Rationale_: Changes in RPC JSON structure can break downstream application compatibility. Implementation of `deprecatedrpc` provides a grace period for downstream applications to migrate. Release notes provide notification to downstream users.
 
 ## Internal interface guidelines
 
@@ -1424,7 +1398,7 @@ communication:
 
 - Interface methods should not be overloaded.
 
-  *Rationale*: consistency and friendliness to code generation tools.
+  _Rationale_: consistency and friendliness to code generation tools.
 
   Example:
 
@@ -1443,7 +1417,7 @@ communication:
 - Interface method names should be `lowerCamelCase` and standalone function names should be
   `UpperCamelCase`.
 
-  *Rationale*: consistency and friendliness to code generation tools.
+  _Rationale_: consistency and friendliness to code generation tools.
 
   Examples:
 
