@@ -1,11 +1,26 @@
 name: 'Restore Caches'
 description: 'Restore ccache, depends sources, and built depends caches'
+inputs:
+  provider:
+    description: 'Runner provider'
+    required: true
 runs:
   using: 'composite'
   steps:
+    - name: Mount Namespace cache volumes
+      if: inputs.provider == 'namespace'
+      uses: namespacelabs/nscloud-cache-action@v1
+      with:
+        path: |
+          ${{ env.CCACHE_DIR }}
+          ${{ env.SOURCES_PATH }}
+          ${{ env.BASE_CACHE }}
+          ${{ env.PREVIOUS_RELEASES_DIR }}
+
     - name: Restore Ccache cache
+      if: inputs.provider == 'gha'
       id: ccache-cache
-      uses: cirruslabs/cache/restore@v5
+      uses: actions/cache/restore@v5
       with:
         path: ${{ env.CCACHE_DIR }}
         key: ccache-${{ env.CONTAINER_NAME }}-${{ github.run_id }}
@@ -13,8 +28,9 @@ runs:
           ccache-${{ env.CONTAINER_NAME }}-
 
     - name: Restore depends sources cache
+      if: inputs.provider == 'gha'
       id: depends-sources
-      uses: cirruslabs/cache/restore@v5
+      uses: actions/cache/restore@v5
       with:
         path: ${{ env.SOURCES_PATH }}
         key: depends-sources-${{ env.CONTAINER_NAME }}-${{ env.DEPENDS_HASH }}
@@ -22,8 +38,9 @@ runs:
           depends-sources-${{ env.CONTAINER_NAME }}-
 
     - name: Restore built depends cache
+      if: inputs.provider == 'gha'
       id: depends-built
-      uses: cirruslabs/cache/restore@v5
+      uses: actions/cache/restore@v5
       with:
         path: ${{ env.BASE_CACHE }}
         key: depends-built-${{ env.CONTAINER_NAME }}-${{ env.DEPENDS_HASH }}
@@ -31,8 +48,9 @@ runs:
           depends-built-${{ env.CONTAINER_NAME }}-
 
     - name: Restore previous releases cache
+      if: inputs.provider == 'gha'
       id: previous-releases
-      uses: cirruslabs/cache/restore@v5
+      uses: actions/cache/restore@v5
       with:
         path: ${{ env.PREVIOUS_RELEASES_DIR }}
         key: previous-releases-${{ env.CONTAINER_NAME }}-${{ env.PREVIOUS_RELEASES_HASH }}
@@ -40,6 +58,7 @@ runs:
           previous-releases-${{ env.CONTAINER_NAME }}-
 
     - name: export cache hits
+      if: inputs.provider == 'gha'
       shell: bash
       run: |
         echo "depends-sources-cache-hit=${{ steps.depends-sources.outputs.cache-hit }}" >> $GITHUB_ENV
