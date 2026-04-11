@@ -353,6 +353,8 @@ jobs:
 
       - name: Configure environment
         uses: ./.github/actions/configure-environment
+        with:
+          provider: ${{ needs.runners.outputs.provider }}
 
       - name: Restore caches
         id: restore-cache
@@ -544,6 +546,8 @@ jobs:
 
       - name: Configure environment
         uses: ./.github/actions/configure-environment
+        with:
+          provider: ${{ matrix.namespace-runner && needs.runners.outputs.provider == 'namespace' && 'namespace' || 'gha' }}
 
       - name: Restore caches
         id: restore-cache

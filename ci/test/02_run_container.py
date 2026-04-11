@@ -62,7 +62,8 @@ def main():
         CI_IMAGE_LABEL = "bitcoin-ci-test"
 
         # Use buildx unconditionally
-        # Using buildx is required to properly load the correct driver, for use with registry caching. Neither build, nor BUILDKIT=1 currently do this properly
+        # Namespace jobs configure buildx in the workflow, while GitHub-hosted
+        # jobs pass explicit Actions cache flags via DOCKER_BUILD_CACHE_ARG.
         cmd_build = ["docker", "buildx", "build"]
         cmd_build += [
             f"--file={os.environ['BASE_READ_ONLY_DIR']}/ci/test_imagefile",
@@ -95,16 +96,16 @@ def main():
             # ensure the directories exist
             for create_dir in [
                     os.environ["CCACHE_DIR"],
-                    f"{os.environ['DEPENDS_DIR']}/built",
-                    f"{os.environ['DEPENDS_DIR']}/sources",
+                    os.environ["BASE_CACHE"],
+                    os.environ["SOURCES_PATH"],
                     os.environ["PREVIOUS_RELEASES_DIR"],
                     os.environ["BASE_BUILD_DIR"],  # Unset by default, must be defined externally
             ]:
                 Path(create_dir).mkdir(parents=True, exist_ok=True)
 
             CI_CCACHE_MOUNT = f"type=bind,src={os.environ['CCACHE_DIR']},dst={os.environ['CCACHE_DIR']}"
-            CI_DEPENDS_MOUNT = f"type=bind,src={os.environ['DEPENDS_DIR']}/built,dst={os.environ['DEPENDS_DIR']}/built"
-            CI_DEPENDS_SOURCES_MOUNT = f"type=bind,src={os.environ['DEPENDS_DIR']}/sources,dst={os.environ['DEPENDS_DIR']}/sources"
+            CI_DEPENDS_MOUNT = f"type=bind,src={os.environ['BASE_CACHE']},dst={os.environ['DEPENDS_DIR']}/built"
+            CI_DEPENDS_SOURCES_MOUNT = f"type=bind,src={os.environ['SOURCES_PATH']},dst={os.environ['DEPENDS_DIR']}/sources"
             CI_PREVIOUS_RELEASES_MOUNT = f"type=bind,src={os.environ['PREVIOUS_RELEASES_DIR']},dst={os.environ['PREVIOUS_RELEASES_DIR']}"
             CI_BUILD_MOUNT = [f"--mount=type=bind,src={os.environ['BASE_BUILD_DIR']},dst={os.environ['BASE_BUILD_DIR']}"]
 
