@@ -189,6 +189,11 @@ class AuxpowMiningTest (SyscoinTestFramework):
     submit = self.nodes[0].getauxblock
     self.test_common (create, submit)
 
+    # Named args expand missing leading params to null placeholders internally.
+    # Ensure btcprevhash-only named create stays in create mode, not submit mode.
+    named_create = lambda: self.nodes[0].getauxblock(btcprevhash=NON_NULL_BTCPREV_HASH_HEX)
+    mineAuxpowBlockWithMethods(named_create, submit)
+
     # Ensure that the payout address is changed from one block to the next.
     hash1 = mineAuxpowBlockWithMethods (create, submit)
     hash2 = mineAuxpowBlockWithMethods (create, submit)

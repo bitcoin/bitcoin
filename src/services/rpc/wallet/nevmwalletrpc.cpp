@@ -339,18 +339,32 @@ static RPCHelpMan getauxblock()
         throw JSONRPCError(RPC_WALLET_ERROR, "Error: Private keys are disabled for this wallet");
     }
     LOCK(g_mining_keys.cs);
-    /* Create a new block */
-    if (request.params.size() == 0 || request.params.size() == 1)
-    {
+    const size_t param_count = request.params.size();
+    const bool create_mode_with_named_placeholders =
+        param_count == 3 && request.params[0].isNull() && request.params[1].isNull();
+
+    /* Create a new block. */
+    if (param_count == 0 || param_count == 1 || create_mode_with_named_placeholders) {
+        node::JSONRPCRequest create_request = request;
+        if (create_mode_with_named_placeholders) {
+            UniValue normalized(UniValue::VARR);
+            if (!request.params[2].isNull()) {
+                normalized.push_back(request.params[2]);
+            }
+            create_request.params = std::move(normalized);
+        }
         const CScript coinbaseScript = g_mining_keys.GetCoinbaseScript(pwallet);
-        UniValue res = AuxpowMiner::get().createAuxBlock(request, coinbaseScript);
+        UniValue res = AuxpowMiner::get().createAuxBlock(create_request, coinbaseScript);
         g_mining_keys.AddBlockHash(pwallet, res["hash"].get_str ());
         return res;
     }
 
     /* Submit a block instead.  */
-    if (request.params.size() != 2 && request.params.size() != 3) {
+    if (param_count != 2 && param_count != 3) {
         throw JSONRPCError(RPC_INVALID_PARAMETER, "getauxblock expects 0, 1, 2, or 3 arguments");
+    }
+    if (request.params[0].isNull() || request.params[1].isNull()) {
+        throw JSONRPCError(RPC_INVALID_PARAMETER, "getauxblock submit mode requires non-null hash and auxpow");
     }
     // For submit, keep miner-compatible positional order:
     // getauxblock(hash, auxpow, [btcprevhash]).
