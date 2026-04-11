@@ -1879,8 +1879,9 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
     fRPCSerialVersion = gArgs.GetIntArg("-rpcserialversion", DEFAULT_RPC_SERIALIZE_VERSION);
     const bool enforce_btcheader_policy_ondemand = gArgs.GetBoolArg("-btcheaderpolicyondemand", DEFAULT_BTC_HEADER_POLICY_ON_DEMAND);
     const bool nevm_miner_addr_configured = HasNEVMMinerFeeRecipientConfig(args);
+    const bool nevm_enabled_for_mining_checks = fNEVMConnection && !args.IsArgSet("-hrp");
     const bool require_btcheader_backend =
-        (fMasternodeMode || nevm_miner_addr_configured) &&
+        (fMasternodeMode || (nevm_enabled_for_mining_checks && nevm_miner_addr_configured)) &&
         (!Params().MineBlocksOnDemand() || enforce_btcheader_policy_ondemand);
     bool btc_header_policy_ready{true};
     if (require_btcheader_backend) {
