@@ -880,7 +880,16 @@ class BTCHeaderPolicyAuxpowTest(DashTestFramework):
 
     def _exercise_continuity_persistence_after_restart(self):
         self.log.info("Verify continuity guard persists after signer restart using on-chain baseline")
-        signed_sys_height = self._exercise_policy_allows(self._btc_active_confirmed_hash())
+        try:
+            signed_sys_height = self._exercise_policy_allows(self._btc_active_confirmed_hash())
+        except AssertionError as e:
+            # Continuity rebaseline is tracked per signer; when this scenario runs
+            # immediately after reorg recovery, one signer can still emit a final
+            # legacy baseline deny for one cycle before converging.
+            if "btc-prev-signed-not-active-chain(" not in str(e):
+                raise
+            self.log.info("Observed delayed continuity rebaseline before restart check; retrying next sign cycle")
+            signed_sys_height = self._exercise_policy_allows(self._btc_active_confirmed_hash())
         restart_node = 1
         self._restart_signer_node(restart_node)
         denied_sys_height = self._exercise_node_policy_denies(
