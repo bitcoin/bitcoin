@@ -1880,14 +1880,22 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
     const bool enforce_btcheader_policy_ondemand = gArgs.GetBoolArg("-btcheaderpolicyondemand", DEFAULT_BTC_HEADER_POLICY_ON_DEMAND);
     const bool nevm_miner_addr_configured = HasNEVMMinerFeeRecipientConfig(args);
     const bool nevm_enabled_for_mining_checks = fNEVMConnection && !args.IsArgSet("-hrp");
+    const bool btcheader_policy_active_chain = !Params().MineBlocksOnDemand() || enforce_btcheader_policy_ondemand;
+    // AuxPoW template auto-fill (btcprevhash omitted) depends on BTC header backend
+    // command wiring, so initialize backend whenever BTCPREV policy is active.
+    const bool init_btcheader_backend = btcheader_policy_active_chain;
     const bool require_btcheader_backend =
         (fMasternodeMode || (nevm_enabled_for_mining_checks && nevm_miner_addr_configured)) &&
-        (!Params().MineBlocksOnDemand() || enforce_btcheader_policy_ondemand);
+        btcheader_policy_active_chain;
     bool btc_header_policy_ready{true};
-    if (require_btcheader_backend) {
+    if (init_btcheader_backend) {
         if (!node.chainman->ActiveChainstate().DoBTCHeaderStartupProcedure()) {
             btc_header_policy_ready = false;
-            LogPrintf("Failed to initialize BTC header policy backend; startup will abort before node enters steady state\n");
+            if (require_btcheader_backend) {
+                LogPrintf("Failed to initialize BTC header policy backend; startup will abort before node enters steady state\n");
+            } else {
+                LogPrintf("Failed to initialize BTC header backend; BTCPREV auto-fill for createauxblock/getauxblock may be unavailable\n");
+            }
         }
     }
     if(fNEVMConnection && !fRegTest) {
