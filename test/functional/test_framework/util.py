@@ -20,8 +20,7 @@ import shlex
 import time
 import types
 
-from . import coverage
-from .authproxy import AuthServiceProxy, JSONRPCException
+from .authproxy import JSONRPCException
 from .descriptors import descsum_create
 from collections.abc import Callable
 from typing import Optional, Union
@@ -477,32 +476,6 @@ PORT_RANGE = 5000
 class PortSeed:
     # Must be initialized with a unique integer for each process
     n = None
-
-
-def get_rpc_proxy(url: str, node_number: int, *, timeout: Optional[int]=None, coveragedir: Optional[str]=None) -> coverage.AuthServiceProxyWrapper:
-    """
-    Args:
-        url: URL of the RPC server to call
-        node_number: the node number (or id) that this calls to
-
-    Kwargs:
-        timeout: HTTP timeout in seconds
-        coveragedir: Directory
-
-    Returns:
-        AuthServiceProxy. convenience object for making RPC calls.
-
-    """
-    proxy_kwargs = {}
-    if timeout is not None:
-        proxy_kwargs['timeout'] = int(timeout)
-
-    proxy = AuthServiceProxy(url, **proxy_kwargs)
-
-    coverage_logfile = coverage.get_filename(coveragedir, node_number) if coveragedir else None
-
-    return coverage.AuthServiceProxyWrapper(proxy, url, coverage_logfile)
-
 
 def p2p_port(n):
     assert n <= MAX_NODES
