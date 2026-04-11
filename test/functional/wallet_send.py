@@ -7,7 +7,6 @@
 from decimal import Decimal, getcontext
 from itertools import product
 
-from test_framework.authproxy import JSONRPCException
 from test_framework.descriptors import descsum_create
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import (
@@ -18,6 +17,7 @@ from test_framework.util import (
     assert_greater_than_or_equal,
     assert_raises_rpc_error,
     count_bytes,
+    JSONRPCException,
 )
 from test_framework.wallet_util import (
     calculate_input_weight,

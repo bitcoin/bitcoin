@@ -24,7 +24,6 @@ from collections.abc import Iterable
 from pathlib import Path
 
 from .authproxy import (
-    JSONRPCException,
     serialization_fallback,
 )
 from .rpc_util import get_rpc_proxy
@@ -37,6 +36,7 @@ from .util import (
     append_config,
     delete_cookie_file,
     get_auth_cookie,
+    JSONRPCException,
     rpc_url,
     wait_until_helper_internal,
     p2p_port,

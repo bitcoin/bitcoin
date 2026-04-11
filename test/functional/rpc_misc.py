@@ -11,9 +11,8 @@ from test_framework.util import (
     assert_equal,
     assert_greater_than,
     assert_greater_than_or_equal,
+    JSONRPCException,
 )
-
-from test_framework.authproxy import JSONRPCException
 
 import http
 import subprocess

@@ -12,7 +12,6 @@ import platform
 import shutil
 import stat
 
-from test_framework.authproxy import JSONRPCException
 from test_framework.blocktools import COINBASE_MATURITY
 from test_framework.rpc_util import get_rpc_proxy
 from test_framework.test_framework import BitcoinTestFramework
@@ -21,6 +20,7 @@ from test_framework.util import (
     assert_equal,
     assert_raises_rpc_error,
     ensure_for,
+    JSONRPCException,
 )
 
 got_loading_error = False
