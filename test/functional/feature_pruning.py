@@ -236,8 +236,8 @@ class PruneTest(BitcoinTestFramework):
         self.nodes[2].getblock(self.nodes[2].getblockhash(self.forkheight))
 
         first_reorg_height = self.nodes[2].getblockcount()
-        curchainhash = self.nodes[2].getblockhash(self.mainchainheight)
-        self.nodes[2].invalidateblock(curchainhash)
+        block_hash_1295 = self.nodes[2].getblockhash(1295)
+        self.nodes[2].invalidateblock(block_hash_1295)
         goalbestheight = self.mainchainheight
         goalbesthash = self.mainchainhash2
 
@@ -252,7 +252,7 @@ class PruneTest(BitcoinTestFramework):
         if self.nodes[2].getblockcount() < self.mainchainheight:
             blocks_to_mine = first_reorg_height + 1 - self.mainchainheight
             self.log.info(f"Rewind node 0 to prev main chain to mine longer chain to trigger redownload. Blocks needed: {blocks_to_mine}")
-            self.nodes[0].invalidateblock(curchainhash)
+            self.nodes[0].invalidateblock(block_hash_1295)
             assert_equal(self.nodes[0].getblockcount(), self.mainchainheight)
             assert_equal(self.nodes[0].getbestblockhash(), self.mainchainhash2)
             goalbesthash = self.generate(self.nodes[0], blocks_to_mine, sync_fun=self.no_op)[-1]
