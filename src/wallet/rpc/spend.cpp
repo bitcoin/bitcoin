@@ -1538,6 +1538,10 @@ RPCMethod sendall()
                 throw JSONRPCError(RPC_WALLET_INSUFFICIENT_FUNDS, "Insufficient funds for fees after creating specified outputs.");
             }
 
+
+            if (addresses_without_amount.empty()) {
+                throw JSONRPCError(RPC_INVALID_PARAMETER, "No addresses without amount specified");
+            }
             const CAmount per_output_without_amount{remainder / (long)addresses_without_amount.size()};
 
             bool gave_remaining_to_first{false};
