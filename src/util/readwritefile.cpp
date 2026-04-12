@@ -43,6 +43,7 @@ bool WriteBinaryFile(const fs::path &filename, const std::string &data)
         return false;
     }
     if (fclose(f) != 0) {
+        fclose(f);
         return false;
     }
     return true;
