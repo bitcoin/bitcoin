@@ -2202,7 +2202,7 @@ DisconnectResult Chainstate::DisconnectBlock(const CBlock& block, const CBlockIn
                            (pindex->nHeight==91812 && pindex->GetBlockHash() == uint256{"00000000000af0aed4792b1acee3d966af36cf5def14935db8de83d6f9306f2f"}));
 
     // undo transactions in reverse order
-    for (int i = block.vtx.size() - 1; i >= 0; i--) {
+    for (int i = static_cast<int>(block.vtx.size()) - 1; i >= 0; i--) {
         const CTransaction &tx = *(block.vtx[i]);
         Txid hash = tx.GetHash();
         bool is_coinbase = tx.IsCoinBase();
