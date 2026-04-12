@@ -73,6 +73,11 @@ std::optional<CAmount> ParseMoney(const std::string& money_string)
         if (!IsDigit(*p))
             return std::nullopt;
         strWhole.insert(strWhole.end(), *p);
+
+        // Reject leading zeros
+        if (strWhole.size() > 1 && strWhole[0] == '0') {
+            return std::nullopt;
+        }
     }
     if (*p) {
         return std::nullopt;
