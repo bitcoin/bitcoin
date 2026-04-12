@@ -130,5 +130,19 @@ BOOST_AUTO_TEST_CASE(decrypt) {
     }
 }
 
+BOOST_AUTO_TEST_CASE(setkey_cleans_old_key) {
+    CKeyingMaterial key1(WALLET_CRYPTO_KEY_SIZE, 0x41);
+    CKeyingMaterial key2(WALLET_CRYPTO_KEY_SIZE, 0x42);
+    std::array<uint8_t, WALLET_CRYPTO_IV_SIZE> iv1{};
+    std::array<uint8_t, WALLET_CRYPTO_IV_SIZE> iv2{};
+
+    CCrypter crypt;
+    BOOST_CHECK(crypt.SetKey(key1, iv1));
+    BOOST_CHECK_EQUAL(crypt.vchKey[0], 0x41);
+
+    BOOST_CHECK(crypt.SetKey(key2, iv2));
+    BOOST_CHECK_EQUAL(crypt.vchKey[0], 0x42);
+}
+
 BOOST_AUTO_TEST_SUITE_END()
 } // namespace wallet

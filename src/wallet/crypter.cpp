@@ -66,6 +66,8 @@ bool CCrypter::SetKey(const CKeyingMaterial& new_key, const std::span<const unsi
         return false;
     }
 
+    if (fKeySet) CleanKey();
+
     memcpy(vchKey.data(), new_key.data(), new_key.size());
     memcpy(vchIV.data(), new_iv.data(), new_iv.size());
 
