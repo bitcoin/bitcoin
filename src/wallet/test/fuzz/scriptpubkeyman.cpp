@@ -136,9 +136,14 @@ FUZZ_TARGET(scriptpubkeyman, .init = initialize_spkm)
     }
 
     auto spks{spk_manager->GetScriptPubKeys()};
+    for (const CScript& spk : spks) {
+        assert(spk_manager->IsMine(spk));
+    }
 
     if (fuzzed_data_provider.ConsumeBool()) {
         auto& spk{(!spks.empty() && fuzzed_data_provider.ConsumeBool()) ? PickValue(fuzzed_data_provider, spks) : ConsumeScript(fuzzed_data_provider)};
+        // Assert before MarkUnusedAddresses(), as it may TopUp() and add scripts not in `spks`.
+        if (spk_manager->IsMine(spk)) assert(spks.contains(spk));
         (void)spk_manager->MarkUnusedAddresses(spk);
     }
 
