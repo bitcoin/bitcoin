@@ -267,7 +267,7 @@ jobs:
         id: vcpkg-binary-cache
         with:
           path: ~/AppData/Local/vcpkg/archives
-          key: ${{ github.job }}-vcpkg-binary-${{ hashFiles('cmake_version', 'msbuild_version', 'toolset_version', 'vcpkg.json') }}
+          key: ${{ github.job }}-vcpkg-binary-release-${{ hashFiles('cmake_version', 'msbuild_version', 'toolset_version', 'vcpkg.json') }}
 
       - name: Generate build system
         run: |
