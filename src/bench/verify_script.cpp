@@ -115,12 +115,13 @@ static void VerifyNestedIfScript(benchmark::Bench& bench)
     for (int i = 0; i < 100; ++i) {
         script << OP_ENDIF;
     }
-    bench.run([&] {
-        auto stack_copy = stack;
-        ScriptError error;
-        bool ret = EvalScript(stack_copy, script, 0, BaseSignatureChecker(), SigVersion::BASE, &error);
-        assert(ret);
-    });
+    bench.unit("script").epochIterations(1)
+        .setup([&] { stack.clear(); })
+        .run([&] {
+            ScriptError error;
+            const bool ret{EvalScript(stack, script, /*flags=*/0, BaseSignatureChecker(), SigVersion::BASE, &error)};
+            assert(ret && error == SCRIPT_ERR_OK);
+        });
 }
 
 BENCHMARK(VerifyScriptP2WPKH);
