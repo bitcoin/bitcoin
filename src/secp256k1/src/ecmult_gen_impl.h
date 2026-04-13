@@ -14,8 +14,8 @@
 #include "hash_impl.h"
 #include "precomputed_ecmult_gen.h"
 
-static void secp256k1_ecmult_gen_context_build(secp256k1_ecmult_gen_context *ctx) {
-    secp256k1_ecmult_gen_blind(ctx, NULL);
+static void secp256k1_ecmult_gen_context_build(secp256k1_ecmult_gen_context *ctx, const secp256k1_hash_ctx *hash_ctx) {
+    secp256k1_ecmult_gen_blind(ctx, hash_ctx, NULL);
     ctx->built = 1;
 }
 
@@ -282,7 +282,7 @@ static void secp256k1_ecmult_gen(const secp256k1_ecmult_gen_context *ctx, secp25
 }
 
 /* Setup blinding values for secp256k1_ecmult_gen. */
-static void secp256k1_ecmult_gen_blind(secp256k1_ecmult_gen_context *ctx, const unsigned char *seed32) {
+static void secp256k1_ecmult_gen_blind(secp256k1_ecmult_gen_context *ctx, const secp256k1_hash_ctx *hash_ctx, const unsigned char *seed32) {
     secp256k1_scalar b;
     secp256k1_scalar diff;
     secp256k1_gej gb;
@@ -309,17 +309,17 @@ static void secp256k1_ecmult_gen_blind(secp256k1_ecmult_gen_context *ctx, const 
      */
     VERIFY_CHECK(seed32 != NULL);
     memcpy(keydata + 32, seed32, 32);
-    secp256k1_rfc6979_hmac_sha256_initialize(&rng, keydata, 64);
+    secp256k1_rfc6979_hmac_sha256_initialize(hash_ctx, &rng, keydata, 64);
     secp256k1_memclear_explicit(keydata, sizeof(keydata));
 
     /* Compute projective blinding factor (cannot be 0). */
-    secp256k1_rfc6979_hmac_sha256_generate(&rng, nonce32, 32);
+    secp256k1_rfc6979_hmac_sha256_generate(hash_ctx, &rng, nonce32, 32);
     secp256k1_fe_set_b32_mod(&f, nonce32);
     secp256k1_fe_cmov(&f, &secp256k1_fe_one, secp256k1_fe_normalizes_to_zero(&f));
     ctx->proj_blind = f;
 
     /* For a random blinding value b, set scalar_offset=diff-b, ge_offset=bG */
-    secp256k1_rfc6979_hmac_sha256_generate(&rng, nonce32, 32);
+    secp256k1_rfc6979_hmac_sha256_generate(hash_ctx, &rng, nonce32, 32);
     secp256k1_scalar_set_b32(&b, nonce32, NULL);
     /* The blinding value cannot be zero, as that would mean ge_offset = infinity,
      * which secp256k1_gej_add_ge cannot handle. */

@@ -86,7 +86,7 @@ static int secp256k1_eckey_pubkey_tweak_mul(secp256k1_ge *key, const secp256k1_s
     }
 
     secp256k1_gej_set_ge(&pt, key);
-    secp256k1_ecmult(&pt, &pt, tweak, &secp256k1_scalar_zero);
+    secp256k1_ecmult(&pt, &pt, tweak, NULL);
     secp256k1_ge_set_gej(key, &pt);
     return 1;
 }

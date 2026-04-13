@@ -8,6 +8,7 @@
 #define SECP256K1_MODULE_ECDH_TESTS_H
 
 #include "../../unit_test.h"
+#include "../../testutil.h"
 
 static int ecdh_hash_function_test_xpassthru(unsigned char *output, const unsigned char *x, const unsigned char *y, void *data) {
     (void)y;
@@ -83,11 +84,35 @@ static void test_ecdh_generator_basepoint(void) {
         /* compute "explicitly" */
         CHECK(secp256k1_ec_pubkey_serialize(CTX, point_ser, &point_ser_len, &point[1], SECP256K1_EC_COMPRESSED) == 1);
         secp256k1_sha256_initialize(&sha);
-        secp256k1_sha256_write(&sha, point_ser, point_ser_len);
-        secp256k1_sha256_finalize(&sha, output_ser);
+        secp256k1_sha256_write(secp256k1_get_hash_context(CTX), &sha, point_ser, point_ser_len);
+        secp256k1_sha256_finalize(secp256k1_get_hash_context(CTX), &sha, output_ser);
         /* compare */
         CHECK(secp256k1_memcmp_var(output_ecdh, output_ser, 32) == 0);
     }
+}
+
+DEFINE_SHA256_TRANSFORM_PROBE(sha256_ecdh)
+static void test_ecdh_ctx_sha256(void) {
+    /* Check ctx-provided SHA256 compression override takes effect */
+    secp256k1_context *ctx = secp256k1_context_clone(CTX);
+    unsigned char out_default[65], out_custom[65];
+    const unsigned char sk[32] = {1};
+    secp256k1_pubkey pubkey;
+    CHECK(secp256k1_ec_pubkey_create(ctx, &pubkey, sk) == 1);
+
+    /* Default behavior */
+    CHECK(secp256k1_ecdh(ctx, out_default, &pubkey, sk, NULL, NULL) == 1);
+    CHECK(!sha256_ecdh_called);
+
+    /* Override SHA256 compression directly, bypassing the ctx setter sanity checks */
+    ctx->hash_ctx.fn_sha256_compression = sha256_ecdh;
+    CHECK(secp256k1_ecdh(ctx, out_custom, &pubkey, sk, NULL, NULL) == 1);
+
+    /* Outputs must differ if custom compression was used */
+    CHECK(secp256k1_memcmp_var(out_default, out_custom, 32) != 0);
+    CHECK(sha256_ecdh_called);
+
+    secp256k1_context_destroy(ctx);
 }
 
 static void test_bad_scalar(void) {
@@ -187,6 +212,7 @@ static const struct tf_test_entry tests_ecdh[] = {
     CASE1(test_bad_scalar),
     CASE1(test_result_basepoint),
     CASE1(test_ecdh_wycheproof),
+    CASE1(test_ecdh_ctx_sha256),
 };
 
 #endif /* SECP256K1_MODULE_ECDH_TESTS_H */
