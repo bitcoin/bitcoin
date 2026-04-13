@@ -14,32 +14,11 @@ TRACEPOINT_SEMAPHORE(utxocache, add);
 TRACEPOINT_SEMAPHORE(utxocache, spent);
 TRACEPOINT_SEMAPHORE(utxocache, uncache);
 
-std::optional<Coin> CCoinsView::GetCoin(const COutPoint& outpoint) const { return std::nullopt; }
-std::optional<Coin> CCoinsView::PeekCoin(const COutPoint& outpoint) const { return GetCoin(outpoint); }
-uint256 CCoinsView::GetBestBlock() const { return uint256(); }
-std::vector<uint256> CCoinsView::GetHeadBlocks() const { return std::vector<uint256>(); }
-void CCoinsView::BatchWrite(CoinsViewCacheCursor& cursor, const uint256& hashBlock)
+CoinsViewEmpty& CoinsViewEmpty::Get()
 {
-    for (auto it{cursor.Begin()}; it != cursor.End(); it = cursor.NextAndMaybeErase(*it)) { }
+    static CoinsViewEmpty instance;
+    return instance;
 }
-
-std::unique_ptr<CCoinsViewCursor> CCoinsView::Cursor() const { return nullptr; }
-
-bool CCoinsView::HaveCoin(const COutPoint &outpoint) const
-{
-    return GetCoin(outpoint).has_value();
-}
-
-CCoinsViewBacked::CCoinsViewBacked(CCoinsView *viewIn) : base(viewIn) { }
-std::optional<Coin> CCoinsViewBacked::GetCoin(const COutPoint& outpoint) const { return base->GetCoin(outpoint); }
-std::optional<Coin> CCoinsViewBacked::PeekCoin(const COutPoint& outpoint) const { return base->PeekCoin(outpoint); }
-bool CCoinsViewBacked::HaveCoin(const COutPoint &outpoint) const { return base->HaveCoin(outpoint); }
-uint256 CCoinsViewBacked::GetBestBlock() const { return base->GetBestBlock(); }
-std::vector<uint256> CCoinsViewBacked::GetHeadBlocks() const { return base->GetHeadBlocks(); }
-void CCoinsViewBacked::SetBackend(CCoinsView &viewIn) { base = &viewIn; }
-void CCoinsViewBacked::BatchWrite(CoinsViewCacheCursor& cursor, const uint256& hashBlock) { base->BatchWrite(cursor, hashBlock); }
-std::unique_ptr<CCoinsViewCursor> CCoinsViewBacked::Cursor() const { return base->Cursor(); }
-size_t CCoinsViewBacked::EstimateSize() const { return base->EstimateSize(); }
 
 std::optional<Coin> CCoinsViewCache::PeekCoin(const COutPoint& outpoint) const
 {
@@ -49,8 +28,8 @@ std::optional<Coin> CCoinsViewCache::PeekCoin(const COutPoint& outpoint) const
     return base->PeekCoin(outpoint);
 }
 
-CCoinsViewCache::CCoinsViewCache(CCoinsView* baseIn, bool deterministic) :
-    CCoinsViewBacked(baseIn), m_deterministic(deterministic),
+CCoinsViewCache::CCoinsViewCache(CCoinsView* in_base, bool deterministic) :
+    CCoinsViewBacked(in_base), m_deterministic(deterministic),
     cacheCoins(0, SaltedOutpointHasher(/*deterministic=*/deterministic), CCoinsMap::key_equal{}, &m_cache_coins_memory_resource)
 {
     m_sentinel.second.SelfRef(m_sentinel);
@@ -185,7 +164,8 @@ const Coin& CCoinsViewCache::AccessCoin(const COutPoint &outpoint) const {
     }
 }
 
-bool CCoinsViewCache::HaveCoin(const COutPoint &outpoint) const {
+bool CCoinsViewCache::HaveCoin(const COutPoint& outpoint) const
+{
     CCoinsMap::const_iterator it = FetchCoin(outpoint);
     return (it != cacheCoins.end() && !it->second.coin.IsSpent());
 }
@@ -196,16 +176,17 @@ bool CCoinsViewCache::HaveCoinInCache(const COutPoint &outpoint) const {
 }
 
 uint256 CCoinsViewCache::GetBestBlock() const {
-    if (hashBlock.IsNull())
-        hashBlock = base->GetBestBlock();
-    return hashBlock;
+    if (m_block_hash.IsNull())
+        m_block_hash = base->GetBestBlock();
+    return m_block_hash;
 }
 
-void CCoinsViewCache::SetBestBlock(const uint256 &hashBlockIn) {
-    hashBlock = hashBlockIn;
+void CCoinsViewCache::SetBestBlock(const uint256& in_block_hash)
+{
+    m_block_hash = in_block_hash;
 }
 
-void CCoinsViewCache::BatchWrite(CoinsViewCacheCursor& cursor, const uint256& hashBlockIn)
+void CCoinsViewCache::BatchWrite(CoinsViewCacheCursor& cursor, const uint256& in_block_hash)
 {
     for (auto it{cursor.Begin()}; it != cursor.End(); it = cursor.NextAndMaybeErase(*it)) {
         if (!it->second.IsDirty()) { // TODO a cursor can only contain dirty entries
@@ -273,13 +254,13 @@ void CCoinsViewCache::BatchWrite(CoinsViewCacheCursor& cursor, const uint256& ha
             }
         }
     }
-    SetBestBlock(hashBlockIn);
+    SetBestBlock(in_block_hash);
 }
 
 void CCoinsViewCache::Flush(bool reallocate_cache)
 {
     auto cursor{CoinsViewCacheCursor(m_dirty_count, m_sentinel, cacheCoins, /*will_erase=*/true)};
-    base->BatchWrite(cursor, hashBlock);
+    base->BatchWrite(cursor, m_block_hash);
     Assume(m_dirty_count == 0);
     cacheCoins.clear();
     if (reallocate_cache) {
@@ -291,7 +272,7 @@ void CCoinsViewCache::Flush(bool reallocate_cache)
 void CCoinsViewCache::Sync()
 {
     auto cursor{CoinsViewCacheCursor(m_dirty_count, m_sentinel, cacheCoins, /*will_erase=*/false)};
-    base->BatchWrite(cursor, hashBlock);
+    base->BatchWrite(cursor, m_block_hash);
     Assume(m_dirty_count == 0);
     if (m_sentinel.second.Next() != &m_sentinel) {
         /* BatchWrite must clear flags of all entries */
