@@ -137,6 +137,7 @@ FUZZ_TARGET(scriptpubkeyman, .init = initialize_spkm)
 
     if (!spks.empty() && fuzzed_data_provider.ConsumeBool()) {
         auto& spk{PickValue(fuzzed_data_provider, spks)};
+        assert(spk_manager->IsMine(spk));
         CTxDestination dest;
         bool extract_dest{ExtractDestination(spk, dest)};
         if (extract_dest) {
