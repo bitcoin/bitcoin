@@ -655,6 +655,11 @@ BOOST_FIXTURE_TEST_CASE(auxpow_miner_regeneratesTemplateOnBTCPREVChange, TestCha
   BOOST_CHECK_NE(pblock2->GetHash(), hash1);
   BOOST_CHECK(ExtractBTCPREVCommitment(*pblock2, committed));
   BOOST_CHECK_EQUAL(committed, btc_prev_2);
+
+  // After rebuilding, subsequent polls must reuse the new cached template.
+  const CBlock* pblock2_same = miner.getCurrentBlock(*m_node.chainman, mempool, scriptPubKey, target, btc_prev_2);
+  BOOST_CHECK(pblock2_same == pblock2);
+  BOOST_CHECK_EQUAL(pblock2_same->GetHash(), pblock2->GetHash());
 }
 
 /* ************************************************************************** */

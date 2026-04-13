@@ -267,7 +267,8 @@ AuxpowMiner::getCurrentBlock (ChainstateManager &chainman, const CTxMemPool& mem
 
         /* Save in our map of constructed blocks.  */
         pblockCur = &newBlock->block;
-        curBlocks.try_emplace(scriptID, pblockCur);
+        // SYSCOIN
+        curBlocks[scriptID] = pblockCur;
         blocks[pblockCur->GetHash ()] = pblockCur;
         templates.push_back (std::move (newBlock));
       }
