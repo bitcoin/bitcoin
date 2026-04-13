@@ -272,7 +272,7 @@ class ListSinceBlockTest(BitcoinTestFramework):
 
         # listsinceblock(lastblockhash) should now include txid1, as seen from nodes[0]
         lsbres = self.nodes[0].listsinceblock(lastblockhash)
-        assert any(tx['txid'] == txid1 for tx in lsbres['removed'])
+        assert txid1 in [tx['txid'] for tx in lsbres['removed']]
 
         # but it should not include 'removed' if include_removed=false
         lsbres2 = self.nodes[0].listsinceblock(blockhash=lastblockhash, include_removed=False)
@@ -354,8 +354,8 @@ class ListSinceBlockTest(BitcoinTestFramework):
         # listsinceblock(lastblockhash) should now include txid1 in transactions
         # as well as in removed
         lsbres = self.nodes[0].listsinceblock(lastblockhash)
-        assert any(tx['txid'] == txid1 for tx in lsbres['transactions'])
-        assert any(tx['txid'] == txid1 for tx in lsbres['removed'])
+        assert txid1 in [tx['txid'] for tx in lsbres['transactions']]
+        assert txid1 in [tx['txid'] for tx in lsbres['removed']]
 
         # find transaction and ensure confirmations is valid
         for tx in lsbres['transactions']:
@@ -463,14 +463,14 @@ class ListSinceBlockTest(BitcoinTestFramework):
 
         # If we don't list change, we won't have an entry for it.
         coins = self.nodes[2].listsinceblock(blockhash=block_hash)["transactions"]
-        assert not any(c["address"] == addr for c in coins)
+        assert addr not in [c["address"] for c in coins]
 
         # Now if we list change, we'll get both the send (to a change address) and
         # the actual change.
         res = self.nodes[2].listsinceblock(blockhash=block_hash, include_change=True)
         coins = [entry for entry in res["transactions"] if entry["category"] == "receive"]
         assert_equal(len(coins), 2)
-        assert any(c["address"] == addr for c in coins)
+        assert addr in [c["address"] for c in coins]
         assert all(self.nodes[2].getaddressinfo(c["address"])["ischange"] for c in coins)
 
     def test_op_return(self):

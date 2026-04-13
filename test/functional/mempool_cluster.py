@@ -72,7 +72,7 @@ class MempoolClusterTest(BitcoinTestFramework):
             all_txids.append(next_tx["txid"])
             utxo_to_spend = next_tx["new_utxo"]
 
-        assert node.getmempoolcluster(parent_tx['txid'])['txcount'] == cluster_count
+        assert_equal(node.getmempoolcluster(parent_tx['txid'])['txcount'], cluster_count)
         return all_results
 
     def check_feerate_diagram(self, node):
@@ -81,7 +81,8 @@ class MempoolClusterTest(BitcoinTestFramework):
         last_val = {"weight": 0, "fee": 0}
         for x in feeratediagram:
             # The weight is always positive, except for the first iteration
-            assert x['weight'] > 0 or x['fee'] == 0
+            assert (x['weight'] > 0
+                   or x['fee'] == 0)
             # Monotonically decreasing fee per weight
             assert_greater_than_or_equal(last_val['fee'] * x['weight'], x['fee'] * last_val['weight'])
             last_val = x

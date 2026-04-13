@@ -9,7 +9,7 @@ import itertools
 import time
 
 from test_framework.test_framework import BitcoinTestFramework
-from test_framework.util import assert_not_equal
+from test_framework.util import assert_equal, assert_not_equal
 from test_framework.messages import (
     NODE_NETWORK,
     NODE_NETWORK_LIMITED,
@@ -63,7 +63,7 @@ class P2PHandshakeTest(BitcoinTestFramework):
                 with node.assert_debug_log([expected_debug_log]):
                     self.add_outbound_connection(node, conn_type, services, wait_for_disconnect=True)
             else:
-                assert (services & desirable_service_flags) == desirable_service_flags
+                assert_equal((services & desirable_service_flags), desirable_service_flags)
                 self.add_outbound_connection(node, conn_type, services, wait_for_disconnect=False)
 
     def generate_at_mocktime(self, time):

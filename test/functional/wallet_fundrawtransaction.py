@@ -785,7 +785,7 @@ class RawTransactionsTest(BitcoinTestFramework):
         result = wwatch.fundrawtransaction(rawtx, changeAddress=w3.getrawchangeaddress(), subtractFeeFromOutputs=[0])
         res_dec = self.nodes[0].decoderawtransaction(result["hex"])
         assert_equal(len(res_dec["vin"]), 1)
-        assert res_dec["vin"][0]["txid"] == self.watchonly_utxo['txid']
+        assert_equal(res_dec["vin"][0]["txid"], self.watchonly_utxo['txid'])
 
         assert_greater_than(result["fee"], 0)
         assert_equal(result["changepos"], -1)
@@ -1481,7 +1481,7 @@ class RawTransactionsTest(BitcoinTestFramework):
         assert_equal(len(tx1_inputs), 1)
 
         utxo1 = tx1_inputs[0]
-        assert unconfirmed_txid == utxo1['txid']
+        assert_equal(unconfirmed_txid, utxo1['txid'])
 
         final_tx1 = wallet.signrawtransactionwithwallet(funded_tx1)['hex']
         txid1 = self.nodes[0].sendrawtransaction(final_tx1)

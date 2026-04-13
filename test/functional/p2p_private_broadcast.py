@@ -499,7 +499,7 @@ class P2PPrivateBroadcast(BitcoinTestFramework):
         self.log.info("Checking abortprivatebroadcast removes a pending private-broadcast transaction")
         tx_abort = wallet.create_self_transfer()
         tx_originator.sendrawtransaction(hexstring=tx_abort["hex"], maxfeerate=0.1)
-        assert any(t["wtxid"] == tx_abort["wtxid"] for t in tx_originator.getprivatebroadcastinfo()["transactions"])
+        assert tx_abort["wtxid"] in [t["wtxid"] for t in tx_originator.getprivatebroadcastinfo()["transactions"]]
         abort_res = tx_originator.abortprivatebroadcast(tx_abort["txid"])
         assert_equal(len(abort_res["removed_transactions"]), 1)
         assert_equal(abort_res["removed_transactions"][0]["txid"], tx_abort["txid"])
