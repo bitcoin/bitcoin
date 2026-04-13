@@ -469,6 +469,8 @@ EOF
                                         ${SOURCES_PATH:+SOURCES_PATH="$SOURCES_PATH"} \
                                         ${BASE_CACHE:+BASE_CACHE="$BASE_CACHE"} \
                                         ${SDK_PATH:+SDK_PATH="$SDK_PATH"} \
+                                        BUILD_ID_SALT="$ADDITIONAL_GUIX_COMMON_FLAGS $ADDITIONAL_GUIX_TIMEMACHINE_FLAGS $ADDITIONAL_GUIX_ENVIRONMENT_FLAGS" \
+                                        HOST_ID_SALT="$ADDITIONAL_GUIX_COMMON_FLAGS $ADDITIONAL_GUIX_TIMEMACHINE_FLAGS $ADDITIONAL_GUIX_ENVIRONMENT_FLAGS" \
                                         DISTSRC="$(DISTSRC_BASE=/distsrc-base && distsrc_for_host "$HOST")" \
                                         OUTDIR="$(OUTDIR_BASE=/outdir-base && outdir_for_host "$HOST")" \
                                         DIST_ARCHIVE_BASE=/outdir-base/dist-archive \
