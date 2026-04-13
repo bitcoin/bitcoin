@@ -35,7 +35,7 @@ bool ParseHexUint256Strict(const UniValue& v, uint256& out)
   return true;
 }
 
-std::optional<uint256> QueryBTCHeaderBestBlockHash(std::string& err)
+std::optional<uint256> QueryBTCHeaderBestBlockHash(Chainstate& chainstate, std::string& err)
 {
   err.clear();
   UniValue chainInfo;
@@ -45,8 +45,14 @@ std::optional<uint256> QueryBTCHeaderBestBlockHash(std::string& err)
     if (managed) {
       std::vector<std::string> command_args;
       if (!GetManagedBTCHeaderRPCCommandArgs(command_args)) {
-        err = "btcheadercmd-not-set";
-        return std::nullopt;
+        if (!chainstate.DoBTCHeaderStartupProcedure()) {
+          err = "btcheader-startup-failed";
+          return std::nullopt;
+        }
+        if (!GetManagedBTCHeaderRPCCommandArgs(command_args)) {
+          err = "btcheadercmd-not-set";
+          return std::nullopt;
+        }
       }
       command_args.emplace_back("getblockchaininfo");
       chainInfo = RunCommandParseJSON(command_args);
@@ -352,7 +358,7 @@ AuxpowMiner::createAuxBlock (const node::JSONRPCRequest& request,
   if (btcpRequired && !btcPrevHash.has_value() &&
       (!Params().MineBlocksOnDemand() || enforce_on_demand)) {
     std::string err;
-    btcPrevHash = QueryBTCHeaderBestBlockHash(err);
+    btcPrevHash = QueryBTCHeaderBestBlockHash(node.chainman->ActiveChainstate(), err);
     if (!btcPrevHash.has_value()) {
       throw JSONRPCError(
           RPC_MISC_ERROR,
