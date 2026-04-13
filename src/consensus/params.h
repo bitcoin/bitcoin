@@ -115,10 +115,23 @@ struct Params {
     uint256 powLimit;
     bool fPowAllowMinDifficultyBlocks;
     /**
-      * Enforce BIP94 timewarp attack mitigation. On testnet4 this also enforces
-      * the block storm mitigation.
+      * Enforce BIP94 timewarp attack mitigation.
       */
     bool enforce_BIP94;
+    /**
+     * Height at which the fix for the min-difficulty block exploit activates.
+     * From this height onward a block is invalid if its timestamp exceeds the
+     * previous block's timestamp by more than 2 * nPowTargetSpacing (1200
+     * seconds on testnet4). Because the min-difficulty rule only triggers when
+     * a block's timestamp is more than 2 * nPowTargetSpacing past the previous
+     * block's timestamp, capping that gap eliminates min-difficulty blocks
+     * entirely without removing the min-difficulty rule itself.
+     *
+     * This is a soft fork: previously-valid blocks at heights below this value
+     * are unaffected. A value of 0 disables the rule (default for chains where
+     * it does not apply).
+     */
+    int min_difficulty_blocks_fix_height{0};
     bool fPowNoRetargeting;
     int64_t nPowTargetSpacing;
     int64_t nPowTargetTimespan;

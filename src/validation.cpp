@@ -4093,6 +4093,20 @@ static bool ContextualCheckBlockHeader(const CBlockHeader& block, BlockValidatio
         }
     }
 
+    // Min-difficulty block exploit fix: once active, a block's timestamp must
+    // not exceed the previous block's timestamp by more than 2 * nPowTargetSpacing
+    // (1200 seconds on testnet4). This kills the min-difficulty block exploit
+    // on testnet4 (BIP 94): since the min-difficulty rule only triggers when
+    // the gap is greater than 2 * nPowTargetSpacing, capping the gap at that
+    // boundary makes min-difficulty blocks impossible. Soft fork: only blocks
+    // at or above the activation height are affected.
+    if (consensusParams.min_difficulty_blocks_fix_height > 0 &&
+        nHeight >= consensusParams.min_difficulty_blocks_fix_height) {
+        if (block.GetBlockTime() > pindexPrev->GetBlockTime() + consensusParams.nPowTargetSpacing * 2) {
+            return state.Invalid(BlockValidationResult::BLOCK_INVALID_HEADER, "time-too-far-ahead", "block's timestamp too far ahead of previous block");
+        }
+    }
+
     // Check timestamp
     if (block.Time() > NodeClock::now() + std::chrono::seconds{MAX_FUTURE_BLOCK_TIME}) {
         return state.Invalid(BlockValidationResult::BLOCK_TIME_FUTURE, "time-too-new", "block timestamp too far in the future");
