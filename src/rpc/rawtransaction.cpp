@@ -123,9 +123,29 @@ static std::vector<RPCArg> CreateTxDoc()
     };
 }
 
+// Build a txid-indexed map from an array of raw transaction hex strings.
+static std::map<Txid, CTransactionRef> ParsePrevTxs(const UniValue& prev_txs)
+{
+    std::map<Txid, CTransactionRef> result;
+    for (unsigned int i = 0; i < prev_txs.size(); ++i) {
+        CMutableTransaction mtx;
+        if (!DecodeHexTx(mtx, prev_txs[i].get_str())) {
+            throw JSONRPCError(RPC_DESERIALIZATION_ERROR,
+                               strprintf("TX decode failed for prev_tx %u", i));
+        }
+        CTransactionRef tx{MakeTransactionRef(std::move(mtx))};
+        auto [it, inserted] = result.emplace(tx->GetHash(), std::move(tx));
+        if (!inserted) {
+            throw JSONRPCError(RPC_INVALID_PARAMETER,
+                               strprintf("Duplicate prev_tx %s at index %u", it->first.ToString(), i));
+        }
+    }
+    return result;
+}
+
 // Update PSBT with information from the mempool, the UTXO set, the txindex, and the provided descriptors.
 // Optionally, sign the inputs that we can using information from the descriptors.
-PartiallySignedTransaction ProcessPSBT(const std::string& psbt_string, const std::any& context, const HidingSigningProvider& provider, std::optional<int> sighash_type, bool finalize)
+PartiallySignedTransaction ProcessPSBT(const std::string& psbt_string, const std::any& context, const HidingSigningProvider& provider, std::optional<int> sighash_type, bool finalize, const std::map<Txid, CTransactionRef>& prev_txs)
 {
     // Unserialize the transactions
     PartiallySignedTransaction psbtx;
@@ -143,7 +163,7 @@ PartiallySignedTransaction ProcessPSBT(const std::string& psbt_string, const std
     std::map<COutPoint, Coin> coins;
 
     // Fetch previous transactions:
-    // First, look in the txindex and the mempool
+    // First, check caller-provided transactions, then the txindex and the mempool
     for (unsigned int i = 0; i < psbtx.tx->vin.size(); ++i) {
         PSBTInput& psbt_input = psbtx.inputs.at(i);
         const CTxIn& tx_in = psbtx.tx->vin.at(i);
@@ -153,8 +173,12 @@ PartiallySignedTransaction ProcessPSBT(const std::string& psbt_string, const std
 
         CTransactionRef tx;
 
+        // Look in caller-provided previous transactions first
+        if (auto it = prev_txs.find(tx_in.prevout.hash); it != prev_txs.end()) {
+            tx = it->second;
+        }
         // Look in the txindex
-        if (g_txindex) {
+        if (!tx && g_txindex) {
             uint256 block_hash;
             g_txindex->FindTx(tx_in.prevout.hash, block_hash, tx);
         }
@@ -1740,7 +1764,7 @@ static RPCMethod utxoupdatepsbt()
 {
     return RPCMethod{
         "utxoupdatepsbt",
-        "Updates all segwit inputs and outputs in a PSBT with data from output descriptors, the UTXO set, txindex, or the mempool.\n",
+        "Updates all segwit inputs and outputs in a PSBT with data from output descriptors, the UTXO set, txindex, the mempool, or raw previous transactions.\n",
             {
                 {"psbt", RPCArg::Type::STR, RPCArg::Optional::NO, "A base64 string of a PSBT"},
                 {"descriptors", RPCArg::Type::ARR, RPCArg::Optional::OMITTED, "An array of either strings or objects", {
@@ -1750,12 +1774,16 @@ static RPCMethod utxoupdatepsbt()
                          {"range", RPCArg::Type::RANGE, RPCArg::Default{1000}, "Up to what index HD chains should be explored (either end or [begin,end])"},
                     }},
                 }},
+                {"prevtxs", RPCArg::Type::ARR, RPCArg::Optional::OMITTED, "An array of raw transaction hex strings for previous transactions whose outputs are being spent in this PSBT but may not be available in the UTXO set, txindex, or the mempool", {
+                    {"rawtx", RPCArg::Type::STR_HEX, RPCArg::Optional::OMITTED, "A raw transaction in hex"},
+                }},
             },
             RPCResult {
                     RPCResult::Type::STR, "", "The base64-encoded partially signed transaction with inputs updated"
             },
             RPCExamples {
-                HelpExampleCli("utxoupdatepsbt", "\"psbt\"")
+                HelpExampleCli("utxoupdatepsbt", "\"psbt\"") +
+                HelpExampleCli("utxoupdatepsbt", "\"psbt\" '[]' '[\"raw_parent_tx_hex\"]'")
             },
         [](const RPCMethod& self, const JSONRPCRequest& request) -> UniValue
 {
@@ -1768,13 +1796,20 @@ static RPCMethod utxoupdatepsbt()
         }
     }
 
+    // Parse caller-provided previous transactions, if any.
+    std::map<Txid, CTransactionRef> prev_txs;
+    if (!request.params[2].isNull()) {
+        prev_txs = ParsePrevTxs(request.params[2].get_array());
+    }
+
     // We don't actually need private keys further on; hide them as a precaution.
     const PartiallySignedTransaction& psbtx = ProcessPSBT(
         request.params[0].get_str(),
         request.context,
         HidingSigningProvider(&provider, /*hide_secret=*/true, /*hide_origin=*/false),
         /*sighash_type=*/std::nullopt,
-        /*finalize=*/false);
+        /*finalize=*/false,
+        prev_txs);
 
     DataStream ssTx{};
     ssTx << psbtx;
@@ -2052,7 +2087,8 @@ RPCMethod descriptorprocesspsbt()
         request.context,
         HidingSigningProvider(&provider, /*hide_secret=*/false, !bip32derivs),
         sighash_type,
-        finalize);
+        finalize,
+        /*prev_txs=*/{});
 
     // Check whether or not all of the inputs are now signed
     bool complete = true;
