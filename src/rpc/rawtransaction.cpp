@@ -2034,7 +2034,7 @@ RPCMethod descriptorprocesspsbt()
 {
     return RPCMethod{
         "descriptorprocesspsbt",
-        "Update all segwit inputs in a PSBT with information from output descriptors, the UTXO set or the mempool. \n"
+        "Update all segwit inputs in a PSBT with information from output descriptors, the UTXO set, the mempool, or raw previous transactions. \n"
                 "Then, sign the inputs we are able to with information from the output descriptors. ",
                 {
                     {"psbt", RPCArg::Type::STR, RPCArg::Optional::NO, "The transaction base64 string"},
@@ -2055,6 +2055,9 @@ RPCMethod descriptorprocesspsbt()
             "       \"SINGLE|ANYONECANPAY\""},
                     {"bip32derivs", RPCArg::Type::BOOL, RPCArg::Default{true}, "Include BIP 32 derivation paths for public keys if we know them"},
                     {"finalize", RPCArg::Type::BOOL, RPCArg::Default{true}, "Also finalize inputs if possible"},
+                    {"prevtxs", RPCArg::Type::ARR, RPCArg::Optional::OMITTED, "An array of raw transaction hex strings for previous transactions whose outputs are being spent in this PSBT but may not be available in the UTXO set, txindex, or the mempool", {
+                        {"rawtx", RPCArg::Type::STR_HEX, RPCArg::Optional::OMITTED, "A raw transaction in hex"},
+                    }},
                 },
                 RPCResult{
                     RPCResult::Type::OBJ, "", "",
@@ -2082,13 +2085,19 @@ RPCMethod descriptorprocesspsbt()
     bool bip32derivs = request.params[3].isNull() ? true : request.params[3].get_bool();
     bool finalize = request.params[4].isNull() ? true : request.params[4].get_bool();
 
+    // Parse caller-provided previous transactions, if any.
+    std::map<Txid, CTransactionRef> prev_txs;
+    if (!request.params[5].isNull()) {
+        prev_txs = ParsePrevTxs(request.params[5].get_array());
+    }
+
     const PartiallySignedTransaction& psbtx = ProcessPSBT(
         request.params[0].get_str(),
         request.context,
         HidingSigningProvider(&provider, /*hide_secret=*/false, !bip32derivs),
         sighash_type,
         finalize,
-        /*prev_txs=*/{});
+        prev_txs);
 
     // Check whether or not all of the inputs are now signed
     bool complete = true;

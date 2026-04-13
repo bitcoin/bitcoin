@@ -219,6 +219,7 @@ static const CRPCConvertParam vRPCConvertParams[] =
     { "descriptorprocesspsbt", 2, "sighashtype", ParamFormat::STRING },
     { "descriptorprocesspsbt", 3, "bip32derivs" },
     { "descriptorprocesspsbt", 4, "finalize" },
+    { "descriptorprocesspsbt", 5, "prevtxs" },
     { "createpsbt", 0, "inputs" },
     { "createpsbt", 1, "outputs" },
     { "createpsbt", 2, "locktime" },

@@ -454,6 +454,12 @@ class PSBTTest(BitcoinTestFramework):
         decoded = node.decodepsbt(updated_named)
         assert "non_witness_utxo" in decoded["inputs"][0]
 
+        self.log.info("Test descriptorprocesspsbt with prevtxs parameter")
+        desc = node.getaddressinfo(addr_parent)["desc"]
+        result = node.descriptorprocesspsbt(child_psbt, [desc], "DEFAULT", True, True, [parent_hex])
+        decoded = node.decodepsbt(result["psbt"])
+        assert "non_witness_utxo" in decoded["inputs"][0]
+
     def run_test(self):
         # Create and fund a raw tx for sending 10 BTC
         psbtx1 = self.nodes[0].walletcreatefundedpsbt([], {self.nodes[2].getnewaddress():10})['psbt']
