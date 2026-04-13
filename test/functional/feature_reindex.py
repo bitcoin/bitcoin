@@ -8,7 +8,7 @@
 - Stop the node and restart it with -reindex. Verify that the node has reindexed up to block 3.
 - Stop the node and restart it with -reindex-chainstate. Verify that the node has reindexed up to block 3.
 - Verify that out-of-order blocks are correctly processed, see LoadExternalBlockFile()
-- Verify that an interrupted reindex does not resume from the last completed block file.
+- Verify that an interrupted reindex resumes from the last completed block file.
 """
 
 from test_framework.test_framework import BitcoinTestFramework
@@ -103,8 +103,8 @@ class ReindexTest(BitcoinTestFramework):
             node.wait_for_rpc_connection(wait_for_import=False)
         node.stop_node()
 
-    def reindex_restart_after_interrupt(self):
-        self.log.info("Test that an interrupted reindex does not resume from the last completed block file.")
+    def reindex_resume_after_interrupt(self):
+        self.log.info("Test that an interrupted reindex resumes from the last completed block file.")
 
         self.log.info("Ensuring second node with -fastprune has multiple block files")
         node = self.nodes[1]
@@ -129,21 +129,23 @@ class ReindexTest(BitcoinTestFramework):
         with open(node.debug_log_path, "r") as dl:
             assert "Reindexing block file blk00002.dat" not in dl.read()
 
-        self.log.info("Restarting without -reindex to restart entire process")
-        # Ensure all blk files were reindexed, again
-        with node.busy_wait_for_debug_log(
+        self.log.info("Restarting without -reindex to resume reindex process")
+        # Ensure we only reindex blk files that were not already reindexed on the last run
+        with node.assert_debug_log(
             expected_msgs=[
-                b'Reindexing block file blk00000.dat',
-                b'Reindexing block file blk00001.dat',
-                b'Reindexing block file blk00002.dat',
-                b'Reindexing finished',
-                b'progress=1'
+                'Resuming reindex from block file', # most likely "blk00001.dat" unless shutdown took too long
+                'Reindexing block file blk00002.dat',
+                'Reindexing finished',
+                'progress=1',
+                f'height={expected_block_count}'
+            ],
+            unexpected_msgs=[
+                'Reindexing block file blk00000.dat'
             ],
             timeout=30
         ):
             node.start(['-fastprune'])
-            node.wait_for_rpc_connection(wait_for_import=False)
-        assert_equal(node.getblockcount(), expected_block_count)
+            node.wait_for_rpc_connection()
 
 
     def run_test(self):
@@ -154,7 +156,7 @@ class ReindexTest(BitcoinTestFramework):
 
         self.out_of_order()
         self.continue_reindex_after_shutdown()
-        self.reindex_restart_after_interrupt()
+        self.reindex_resume_after_interrupt()
 
 
 if __name__ == '__main__':

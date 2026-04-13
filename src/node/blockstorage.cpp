@@ -60,6 +60,8 @@ static constexpr uint8_t DB_BLOCK_INDEX{'b'};
 static constexpr uint8_t DB_FLAG{'F'};
 static constexpr uint8_t DB_REINDEX_FLAG{'R'};
 static constexpr uint8_t DB_LAST_BLOCK{'l'};
+static constexpr uint8_t DB_REINDEX_LASTFILE{'P'}; // Last completed blk file index during reindex
+static constexpr uint8_t DB_REINDEX_ORPHAN_BLOCKS{'O'}; // Orphan block positions during reindex
 // Keys used in previous version that might still be found in the DB:
 // BlockTreeDB::DB_TXINDEX_BLOCK{'T'};
 // BlockTreeDB::DB_TXINDEX{'t'}
@@ -82,6 +84,34 @@ void BlockTreeDB::WriteReindexing(bool fReindexing)
 void BlockTreeDB::ReadReindexing(bool& fReindexing)
 {
     fReindexing = Exists(DB_REINDEX_FLAG);
+}
+
+void BlockTreeDB::WriteReindexProgress(int last_file, const std::multimap<uint256, FlatFilePos>& orphans)
+{
+    CDBBatch batch(*this);
+    batch.Write(DB_REINDEX_LASTFILE, last_file);
+    batch.Write(DB_REINDEX_ORPHAN_BLOCKS,
+        std::vector<std::pair<uint256, FlatFilePos>>(orphans.begin(), orphans.end()));
+    WriteBatch(batch);
+}
+
+bool BlockTreeDB::ReadReindexProgress(int& last_file, std::multimap<uint256, FlatFilePos>& orphans)
+{
+    if (!Read(DB_REINDEX_LASTFILE, last_file)) return false;
+    std::vector<std::pair<uint256, FlatFilePos>> entries;
+    if (Read(DB_REINDEX_ORPHAN_BLOCKS, entries)) {
+        for (auto& [hash, pos] : entries) orphans.emplace(hash, pos);
+    }
+    return true;
+}
+
+void BlockTreeDB::WriteReindexingComplete()
+{
+    CDBBatch batch(*this);
+    batch.Erase(DB_REINDEX_FLAG);
+    batch.Erase(DB_REINDEX_LASTFILE);
+    batch.Erase(DB_REINDEX_ORPHAN_BLOCKS);
+    WriteBatch(batch, /*fSync=*/true);
 }
 
 bool BlockTreeDB::ReadLastBlockFile(int& nFile)
@@ -1272,8 +1302,26 @@ void ImportBlocks(ChainstateManager& chainman, std::span<const fs::path> import_
         // Map of disk positions for blocks with unknown parent (only used for reindex);
         // parent hash -> child disk position, multiple children can have the same parent.
         std::multimap<uint256, FlatFilePos> blocks_with_unknown_parent;
+        int start_file{0};
 
-        for (int nFile{0}; nFile < total_files; ++nFile) {
+        // Restore progress from an interrupted reindex. A block in file N may reference a
+        // parent that only appears in a later file M; such blocks are held in
+        // blocks_with_unknown_parent rather than the block index. Persisting this map ensures
+        // those blocks are connected when their parent file is eventually processed.
+        {
+            int last_completed{-1};
+            const bool has_progress{WITH_LOCK(::cs_main,
+                return chainman.m_blockman.m_block_tree_db->ReadReindexProgress(
+                            last_completed, blocks_with_unknown_parent
+                        )
+            )};
+            if (has_progress) {
+                start_file = last_completed + 1;
+                LogInfo("Resuming reindex from block file blk%05u.dat...", start_file);
+            }
+        }
+
+        for (int nFile{start_file}; nFile < total_files; ++nFile) {
             FlatFilePos pos(nFile, 0);
             AutoFile file{chainman.m_blockman.OpenBlockFile(pos, /*fReadOnly=*/true)};
             if (file.IsNull()) {
@@ -1285,8 +1333,14 @@ void ImportBlocks(ChainstateManager& chainman, std::span<const fs::path> import_
                 LogInfo("Interrupt requested. Exit reindexing.");
                 return;
             }
+            // Checkpoint progress after each fully-completed file so an interrupted reindex
+            // can resume from here rather than starting over from blk00000.dat.
+            // Only written after the interrupt check so we never record a partially-processed
+            // file as complete.
+            WITH_LOCK(::cs_main, chainman.m_blockman.m_block_tree_db->WriteReindexProgress(
+                nFile, blocks_with_unknown_parent));
         }
-        WITH_LOCK(::cs_main, chainman.m_blockman.m_block_tree_db->WriteReindexing(false));
+        WITH_LOCK(::cs_main, chainman.m_blockman.m_block_tree_db->WriteReindexingComplete());
         chainman.m_blockman.m_blockfiles_indexed = true;
         LogInfo("Reindexing finished");
         // To avoid ending up in a situation without genesis block, re-try initializing (no-op if reindexing worked):
