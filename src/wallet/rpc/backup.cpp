@@ -166,7 +166,7 @@ static ImportDescriptorRequest ProcessUniValueDescriptor(const UniValue& data, s
     return request;
 }
 
-ImportResult ProcessDescriptorImport(CWallet& wallet, const ImportDescriptorRequest& request) EXCLUSIVE_LOCKS_REQUIRED(wallet.cs_wallet)
+ImportResult ImportDescriptor(CWallet& wallet, const ImportDescriptorRequest& request) EXCLUSIVE_LOCKS_REQUIRED(wallet.cs_wallet)
 {
     AssertLockHeld(wallet.cs_wallet);
 
@@ -371,6 +371,114 @@ ImportResult ProcessDescriptorImport(CWallet& wallet, const ImportDescriptorRequ
     return result;
 }
 
+std::vector<ImportResult> ProcessDescriptorsImport(CWallet& wallet,
+    std::vector<ImportDescriptorRequest>& requests)
+{
+    std::vector<ImportResult> response;
+
+    WalletRescanReserver reserver(wallet);
+    if (!reserver.reserve(/*with_passphrase=*/true)) {
+        return {ImportResult{
+            WalletErrorCode::GenericError,
+            "Wallet is currently rescanning. Abort existing rescan or wait.",
+            /*warnings=*/{},
+            /*general_error=*/true
+        }};
+    }
+
+    // Make sure the results are valid at least up to the most recent block
+    // the user could have gotten from another RPC command prior to now
+    wallet.BlockUntilSyncedToCurrentChain();
+
+    // Ensure that the wallet is not locked for the remainder of this call,
+    // as the passphrase is used to top up the keypool.
+    LOCK(wallet.m_relock_mutex);
+    int64_t now = 0;
+    int64_t lowest_timestamp = 0;
+    bool rescan = false;
+    {
+        LOCK(wallet.cs_wallet);
+        if (wallet.IsLocked()) {
+            return {ImportResult{
+                WalletErrorCode::UnlockNeeded,
+                "Error: Please enter the wallet passphrase with walletpassphrase first.",
+                /*warnings=*/{},
+                /*general_error=*/true
+            }};
+        }
+
+        CHECK_NONFATAL(wallet.chain().findBlock(wallet.GetLastBlockHash(), interfaces::FoundBlock().time(lowest_timestamp).mtpTime(now)));
+
+        for (ImportDescriptorRequest& request : requests) {
+            request.timestamp = request.timestamp.value_or(now);
+            const ImportResult& import_result = ImportDescriptor(wallet, request);
+
+            if (lowest_timestamp > request.timestamp.value()) {
+                lowest_timestamp = request.timestamp.value();
+            }
+            if (!import_result.has_error()) {
+                // At least one request succeeded, so we need to rescan
+                rescan = true;
+            }
+            response.push_back(import_result);
+        }
+        wallet.ConnectScriptPubKeyManNotifiers();
+        wallet.RefreshAllTXOs();
+    }
+
+    if (rescan) {
+        const int64_t scanned_time = wallet.RescanFromTime(lowest_timestamp, reserver);
+        wallet.ResubmitWalletTransactions(node::TxBroadcast::MEMPOOL_NO_BROADCAST, /*force=*/true);
+
+        if (wallet.IsAbortingRescan()) {
+            return {ImportResult{
+                WalletErrorCode::MiscError,
+                "Rescan aborted by user.",
+                /*warnings=*/{},
+                /*general_error=*/true
+            }};
+        }
+
+        if (scanned_time > lowest_timestamp) {
+            // Compose the response
+            for (size_t i = 0; i < requests.size(); ++i) {
+                ImportResult& result = response.at(i);
+
+                // If the descriptor timestamp is within the successfully scanned
+                // range, or if the import result already has an error set, let
+                // the result stand unmodified. Otherwise replace the result
+                // with an error message.
+                const int64_t timestamp{requests.at(i).timestamp.value()};
+                if (scanned_time > timestamp && !result.has_error()) {
+                    std::string error_msg = strprintf("Rescan failed for descriptor with timestamp %d. There "
+                        "was an error reading a block from time %d, which is after or within %d seconds "
+                        "of key creation, and could contain transactions pertaining to the desc. As a "
+                        "result, transactions and coins using this desc may not appear in the wallet.",
+                        timestamp, scanned_time - TIMESTAMP_WINDOW - 1, TIMESTAMP_WINDOW);
+                    if (wallet.chain().havePruned()) {
+                        error_msg += strprintf(" This error could be caused by pruning or data corruption "
+                            "(see bitcoind log for details) and could be dealt with by downloading and "
+                            "rescanning the relevant blocks (see -reindex option and rescanblockchain RPC).");
+                    } else if (wallet.chain().hasAssumedValidChain()) {
+                        error_msg += strprintf(" This error is likely caused by an in-progress assumeutxo "
+                            "background sync. Check logs or getchainstates RPC for assumeutxo background "
+                            "sync progress and try again later.");
+                    } else {
+                        error_msg += strprintf(" This error could potentially caused by data corruption. If "
+                            "the issue persists you may want to reindex (see -reindex option).");
+                    }
+                    result.error = ImportError{
+                        WalletErrorCode::MiscError,
+                        Untranslated(error_msg),
+                        /*is_wallet_error=*/false
+                    };
+                }
+            }
+        }
+    }
+    return response;
+}
+
 RPCMethod importdescriptors()
 {
     return RPCMethod{
@@ -432,19 +540,6 @@ RPCMethod importdescriptors()
     if (!pwallet) return UniValue::VNULL;
     CWallet& wallet{*pwallet};
 
-    WalletRescanReserver reserver(*pwallet);
-    if (!reserver.reserve(/*with_passphrase=*/true)) {
-        throw JSONRPCError(RPC_WALLET_ERROR, "Wallet is currently rescanning. Abort existing rescan or wait.");
-    }
-
-    // Make sure the results are valid at least up to the most recent block
-    // the user could have gotten from another RPC command prior to now
-    wallet.BlockUntilSyncedToCurrentChain();
-
-    // Ensure that the wallet is not locked for the remainder of this RPC, as
-    // the passphrase is used to top up the keypool.
-    LOCK(pwallet->m_relock_mutex);
-
     const UniValue& univalue_requests = main_request.params[0];
     // One result per input, in input order.
     std::vector<UniValue> results(univalue_requests.size());
@@ -468,95 +563,49 @@ RPCMethod importdescriptors()
         }
     }
 
-    int64_t now = 0;
-    int64_t lowest_timestamp = 0;
-    bool rescan = false;
-    {
-        LOCK(pwallet->cs_wallet);
-        EnsureWalletIsUnlocked(*pwallet);
-
-        CHECK_NONFATAL(pwallet->chain().findBlock(pwallet->GetLastBlockHash(), FoundBlock().time(lowest_timestamp).mtpTime(now)));
-
-        // Get all timestamps and extract the lowest timestamp
-        for (auto& [i, request] : requests) {
-            request.timestamp = request.timestamp.value_or(now);
-            const ImportResult& import_result = ProcessDescriptorImport(*pwallet, request);
-
-            if (lowest_timestamp > request.timestamp.value()) {
-                lowest_timestamp = request.timestamp.value();
-            }
-
-            // Translate the ImportResult into the per-input UniValue result.
-            UniValue& result = results[i];
-            result = UniValue(UniValue::VOBJ);
-            UniValue warnings(UniValue::VARR);
-            if (import_result.has_error()) {
-                const WalletError& error = import_result.error.value().wallet_error;
-                auto write_error = [&result, &error](int code) {
-                    result.pushKV("success", false);
-                    result.pushKV("error", JSONRPCError(code, error.message.original));
-                };
-                if (error.code == WalletErrorCode::UnlockNeeded) NONFATAL_UNREACHABLE();
-                write_error(HandleWalletErrorCode(error.code));
-            } else {
-                result.pushKV("success", true);
-            }
-            for (const auto& w : import_result.warnings) {
-                warnings.push_back(w);
-            }
-            PushWarnings(warnings, result);
-
-            // If we know the chain tip, and at least one request was successful then allow rescan
-            if (!rescan && !import_result.has_error()) {
-                rescan = true;
-            }
-        }
-        pwallet->ConnectScriptPubKeyManNotifiers();
-        pwallet->RefreshAllTXOs();
+    // Hand off the successfully parsed requests to the batch importer, which
+    // handles wallet locking, rescanning and rescan-failure error composition.
+    std::vector<ImportDescriptorRequest> descriptor_requests;
+    descriptor_requests.reserve(requests.size());
+    for (auto& parsed : requests) {
+        descriptor_requests.push_back(std::move(parsed.request));
     }
 
-    // Rescan the blockchain using the lowest timestamp
-    if (rescan) {
-        int64_t scanned_time = pwallet->RescanFromTime(lowest_timestamp, reserver);
-        pwallet->ResubmitWalletTransactions(node::TxBroadcast::MEMPOOL_NO_BROADCAST, /*force=*/true);
+    std::vector<ImportResult> import_results{ProcessDescriptorsImport(wallet, descriptor_requests)};
 
-        if (pwallet->IsAbortingRescan()) {
-            throw JSONRPCError(RPC_MISC_ERROR, "Rescan aborted by user.");
-        }
+    // Wallet-wide precondition failure (e.g. already rescanning, or locked):
+    // surface as a top-level RPC error.
+    if (import_results.size() == 1 && import_results[0].has_error() && import_results[0].error->is_general_error) {
+        const ImportError& import_error = import_results[0].error.value();
+        RPCErrorCode rpc_error_code{HandleWalletErrorCode(import_error.wallet_error.code)};
+        throw JSONRPCError(rpc_error_code, import_error.wallet_error.message.original);
+    }
 
-        if (scanned_time > lowest_timestamp) {
-            // Compose the response
-            for (const auto& [i, request] : requests) {
-                UniValue& result = results[i];
-                // If the descriptor timestamp is within the successfully scanned
-                // range, or if the import result already has an error set, let
-                // the result stand unmodified. Otherwise replace the result
-                // with an error message.
-                const int64_t timestamp = request.timestamp.value();
-                if (scanned_time > timestamp && !result.exists("error")) {
-                    std::string error_msg{strprintf("Rescan failed for descriptor with timestamp %d. There "
-                            "was an error reading a block from time %d, which is after or within %d seconds "
-                            "of key creation, and could contain transactions pertaining to the desc. As a "
-                            "result, transactions and coins using this desc may not appear in the wallet.",
-                            timestamp, scanned_time - TIMESTAMP_WINDOW - 1, TIMESTAMP_WINDOW)};
-                    if (pwallet->chain().havePruned()) {
-                        error_msg += strprintf(" This error could be caused by pruning or data corruption "
-                                "(see bitcoind log for details) and could be dealt with by downloading and "
-                                "rescanning the relevant blocks (see -reindex option and rescanblockchain RPC).");
-                    } else if (pwallet->chain().hasAssumedValidChain()) {
-                        error_msg += strprintf(" This error is likely caused by an in-progress assumeutxo "
-                                "background sync. Check logs or getchainstates RPC for assumeutxo background "
-                                "sync progress and try again later.");
-                    } else {
-                        error_msg += strprintf(" This error could potentially caused by data corruption. If "
-                                "the issue persists you may want to reindex (see -reindex option).");
-                    }
-                    result = UniValue(UniValue::VOBJ);
-                    result.pushKV("success", UniValue(false));
-                    result.pushKV("error", JSONRPCError(RPC_MISC_ERROR, error_msg));
-                }
-            }
+    // Translate each ImportResult into the per-input UniValue result. Inputs
+    // that failed to parse already hold an error in results[] and are not
+    // part of `requests`, so use input_index to map each import_results[k]
+    // back to its slot.
+    CHECK_NONFATAL(import_results.size() == requests.size());
+    for (size_t k = 0; k < requests.size(); ++k) {
+        UniValue& result = results[requests[k].input_index];
+        const ImportResult& import_result = import_results[k];
+        result = UniValue(UniValue::VOBJ);
+        UniValue warnings(UniValue::VARR);
+        if (import_result.has_error()) {
+            const WalletError& error = import_result.error.value().wallet_error;
+            auto write_error = [&result, &error](int code) {
+                result.pushKV("success", false);
+                result.pushKV("error", JSONRPCError(code, error.message.original));
+            };
+            if (error.code == WalletErrorCode::UnlockNeeded) NONFATAL_UNREACHABLE();
+            write_error(HandleWalletErrorCode(error.code));
+        } else {
+            result.pushKV("success", true);
         }
+        for (const auto& w : import_result.warnings) {
+            warnings.push_back(w);
+        }
+        PushWarnings(warnings, result);
     }
 
     UniValue response(UniValue::VARR);
