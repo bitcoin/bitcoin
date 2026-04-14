@@ -47,7 +47,7 @@ public:
      * Returns false when block is already tracked or when request is
      * already in-flight for 'peer_id'.
      */
-    bool track(const uint256& block_hash, std::optional<NodeId> peer_id) EXCLUSIVE_LOCKS_REQUIRED(!cs_block_tracker);
+    bool track(const uint256& block_hash, std::optional<NodeId> peer_id=std::nullopt) EXCLUSIVE_LOCKS_REQUIRED(!cs_block_tracker);
 
     /** Stop tracking the block */
     void untrack(const uint256& block_hash) EXCLUSIVE_LOCKS_REQUIRED(!cs_block_tracker);
