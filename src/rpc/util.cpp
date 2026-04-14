@@ -3,6 +3,7 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <chain.h>
+#include <chainparams.h>
 #include <common/args.h>
 #include <common/messages.h>
 #include <common/types.h>
@@ -213,6 +214,49 @@ std::string HelpExampleRpcNamed(const std::string& methodname, const RPCArgList&
 
     return "> curl --user myusername --data-binary '{\"jsonrpc\": \"2.0\", \"id\": \"curltest\", "
            "\"method\": \"" + methodname + "\", \"params\": " + params.write() + "}' -H 'content-type: application/json' http://127.0.0.1:8332/\n";
+}
+
+namespace {
+std::string GetChainName(ChainType chain)
+{
+    switch (chain) {
+    case ChainType::MAIN:
+        return "mainnet";
+    case ChainType::TESTNET:
+        return "testnet";
+    case ChainType::TESTNET4:
+        return "testnet4";
+    case ChainType::SIGNET:
+        return "signet";
+    case ChainType::REGTEST:
+        return "regtest";
+    }
+    assert(false);
+}
+} // namespace
+
+std::optional<std::string> GetDifferentNetworkAddressError(std::string_view subject, const std::string& address, const CChainParams& current_chain_params, const ArgsManager& args)
+{
+    const auto current_chain{current_chain_params.GetChainType()};
+    std::vector<ChainType> matching_chains;
+
+    for (const auto chain : {ChainType::MAIN, ChainType::TESTNET, ChainType::TESTNET4, ChainType::SIGNET, ChainType::REGTEST}) {
+        if (chain == current_chain) continue;
+
+        if (const auto chain_params{CreateChainParams(args, chain)}; IsValidDestinationString(address, *chain_params)) {
+            matching_chains.push_back(chain);
+        }
+    }
+
+    if (matching_chains.empty()) return std::nullopt;
+
+    const std::string subject_str{subject};
+    const std::string current_chain_name{GetChainName(current_chain)};
+    if (matching_chains.size() == 1) {
+        return strprintf("%s is valid for %s, but this node is using %s", subject_str, GetChainName(matching_chains.front()), current_chain_name);
+    }
+
+    return strprintf("%s is valid for a different network, but this node is using %s", subject_str, current_chain_name);
 }
 
 // Converts a hex string to a public key if possible

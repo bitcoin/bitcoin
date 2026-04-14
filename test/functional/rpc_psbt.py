@@ -767,6 +767,10 @@ class PSBTTest(BitcoinTestFramework):
         psbtx_legacy = self.nodes[1].walletcreatefundedpsbt([], [small_output])
         self.assert_change_type(psbtx_legacy, "pubkeyhash")
 
+        assert_raises_rpc_error(-5, "Change address must be a valid bitcoin address", self.nodes[0].walletcreatefundedpsbt, [], [small_output], 0, {"changeAddress": "foobar"})
+        assert_raises_rpc_error(-5, "valid for mainnet, but this node is using regtest", self.nodes[0].walletcreatefundedpsbt, [], [small_output], 0, {"changeAddress": "3J98t1WpEZ73CNmQviecrnyiWrnqRhWNLy"})
+        assert_raises_rpc_error(-5, "valid for a different network, but this node is using regtest", self.nodes[0].walletcreatefundedpsbt, [], [small_output], 0, {"change_address": "tb1qcrh3yqn4nlleplcez2yndq2ry8h9ncg3qh7n54"})
+
         # Make sure the change type of the wallet can also be overwritten
         psbtx_np2wkh = self.nodes[1].walletcreatefundedpsbt([], [small_output], 0, {"change_type":"p2sh-segwit"})
         self.assert_change_type(psbtx_np2wkh, "scripthash")

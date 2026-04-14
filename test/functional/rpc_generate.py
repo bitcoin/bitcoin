@@ -24,12 +24,20 @@ class RPCGenerateTest(BitcoinTestFramework):
         self.test_generateblock()
 
     def test_generatetoaddress(self):
+        invalid_address = 'foobar'
+        unique_wrong_network_address = '3J98t1WpEZ73CNmQviecrnyiWrnqRhWNLy'
+        ambiguous_wrong_network_address = 'tb1qcrh3yqn4nlleplcez2yndq2ry8h9ncg3qh7n54'
+
         self.generatetoaddress(self.nodes[0], 1, 'mneYUmWYsuk7kySiURxCi3AGxrAqZxLgPZ')
-        assert_raises_rpc_error(-5, "Invalid address", self.generatetoaddress, self.nodes[0], 1, '3J98t1WpEZ73CNmQviecrnyiWrnqRhWNLy')
+        assert_raises_rpc_error(-5, "Invalid address", self.generatetoaddress, self.nodes[0], 1, invalid_address)
+        assert_raises_rpc_error(-5, "valid for mainnet, but this node is using regtest", self.generatetoaddress, self.nodes[0], 1, unique_wrong_network_address)
+        assert_raises_rpc_error(-5, "valid for a different network, but this node is using regtest", self.generatetoaddress, self.nodes[0], 1, ambiguous_wrong_network_address)
 
     def test_generateblock(self):
         node = self.nodes[0]
         miniwallet = MiniWallet(node)
+        unique_wrong_network_address = '3J98t1WpEZ73CNmQviecrnyiWrnqRhWNLy'
+        ambiguous_wrong_network_address = 'tb1qcrh3yqn4nlleplcez2yndq2ry8h9ncg3qh7n54'
 
         self.log.info('Mine an empty block to address and return the hex')
         address = miniwallet.get_address()
@@ -108,6 +116,8 @@ class RPCGenerateTest(BitcoinTestFramework):
 
         self.log.info('Fail to generate block with invalid address/descriptor')
         assert_raises_rpc_error(-5, 'Invalid address or descriptor', self.generateblock, node, '1234', [])
+        assert_raises_rpc_error(-5, 'valid for mainnet, but this node is using regtest', self.generateblock, node, unique_wrong_network_address, [])
+        assert_raises_rpc_error(-5, 'valid for a different network, but this node is using regtest', self.generateblock, node, ambiguous_wrong_network_address, [])
 
         self.log.info('Fail to generate block with a ranged descriptor')
         ranged_descriptor = 'pkh(tpubD6NzVbkrYhZ4XgiXtGrdW5XDAPFCL9h7we1vwNCpn8tGbBcgfVYjXyhWo4E1xkh56hjod1RhGjxbaTLV3X4FyWuejifB9jusQ46QzG87VKp/0/*)'

@@ -2,6 +2,8 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
+#include <chainparams.h>
+#include <common/args.h>
 #include <common/messages.h>
 #include <consensus/validation.h>
 #include <core_io.h>
@@ -523,6 +525,9 @@ CreatedTransactionResult FundTransaction(CWallet& wallet, const CMutableTransact
                 CTxDestination dest = DecodeDestination(change_address_str);
 
                 if (!IsValidDestination(dest)) {
+                    if (const auto error{GetDifferentNetworkAddressError("Change address", change_address_str, Params(), gArgs)}) {
+                        throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, *error);
+                    }
                     throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Change address must be a valid bitcoin address");
                 }
 

@@ -32,6 +32,8 @@
 #include <vector>
 
 class JSONRPCRequest;
+class ArgsManager;
+class CChainParams;
 enum ServiceFlags : uint64_t;
 enum class OutputType;
 struct FlatSigningProvider;
@@ -134,6 +136,7 @@ std::string HelpExampleCli(const std::string& methodname, const std::string& arg
 std::string HelpExampleCliNamed(const std::string& methodname, const RPCArgList& args);
 std::string HelpExampleRpc(const std::string& methodname, const std::string& args);
 std::string HelpExampleRpcNamed(const std::string& methodname, const RPCArgList& args);
+std::optional<std::string> GetDifferentNetworkAddressError(std::string_view subject, const std::string& address, const CChainParams& current_chain_params, const ArgsManager& args);
 
 CPubKey HexToPubKey(const std::string& hex_in);
 CTxDestination AddAndGetMultisigDestination(int required, const std::vector<CPubKey>& pubkeys, OutputType type, FlatSigningProvider& keystore, CScript& script_out);

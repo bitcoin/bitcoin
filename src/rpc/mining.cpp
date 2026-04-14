@@ -285,15 +285,18 @@ static RPCMethod generatetoaddress()
 {
     const int num_blocks{request.params[0].getInt<int>()};
     const uint64_t max_tries{request.params[2].isNull() ? DEFAULT_MAX_TRIES : request.params[2].getInt<int>()};
+    NodeContext& node = EnsureAnyNodeContext(request.context);
+    ChainstateManager& chainman = EnsureChainman(node);
 
     CTxDestination destination = DecodeDestination(request.params[1].get_str());
     if (!IsValidDestination(destination)) {
+        if (const auto error{GetDifferentNetworkAddressError("Address", request.params[1].get_str(), chainman.GetParams(), EnsureArgsman(node))}) {
+            throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, *error);
+        }
         throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Error: Invalid address");
     }
 
-    NodeContext& node = EnsureAnyNodeContext(request.context);
     Mining& miner = EnsureMining(node);
-    ChainstateManager& chainman = EnsureChainman(node);
 
     CScript coinbase_output_script = GetScriptForDestination(destination);
 
@@ -331,6 +334,7 @@ static RPCMethod generateblock()
         },
         [](const RPCMethod& self, const JSONRPCRequest& request) -> UniValue
 {
+    NodeContext& node = EnsureAnyNodeContext(request.context);
     const auto address_or_descriptor = request.params[0].get_str();
     CScript coinbase_output_script;
     std::string error;
@@ -338,13 +342,15 @@ static RPCMethod generateblock()
     if (!getScriptFromDescriptor(address_or_descriptor, coinbase_output_script, error)) {
         const auto destination = DecodeDestination(address_or_descriptor);
         if (!IsValidDestination(destination)) {
+            if (const auto different_network_error{GetDifferentNetworkAddressError("Address", address_or_descriptor, EnsureChainman(node).GetParams(), EnsureArgsman(node))}) {
+                throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, *different_network_error);
+            }
             throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Error: Invalid address or descriptor");
         }
 
         coinbase_output_script = GetScriptForDestination(destination);
     }
 
-    NodeContext& node = EnsureAnyNodeContext(request.context);
     Mining& miner = EnsureMining(node);
     const CTxMemPool& mempool = EnsureMemPool(node);
 
