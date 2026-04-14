@@ -22,6 +22,7 @@ class CChainParams;
 class ValidationSignals;
 
 static constexpr auto DEFAULT_MAX_TIP_AGE{24h};
+static constexpr int32_t DEFAULT_INPUTFETCH_THREADS{4};
 
 namespace kernel {
 
@@ -46,6 +47,8 @@ struct ChainstateManagerOpts {
     ValidationSignals* signals{nullptr};
     //! Number of script check worker threads. Zero means no parallel verification.
     int worker_threads_num{0};
+    //! Number of input fetch worker threads. Zero means no parallel fetching.
+    int32_t inputfetch_threads_num{DEFAULT_INPUTFETCH_THREADS};
     size_t script_execution_cache_bytes{DEFAULT_SCRIPT_EXECUTION_CACHE_BYTES};
     size_t signature_cache_bytes{DEFAULT_SIGNATURE_CACHE_BYTES};
 };
