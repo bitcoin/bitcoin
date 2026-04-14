@@ -24,6 +24,7 @@
 #include <wallet/export.h>
 #include <wallet/feebumper.h>
 #include <wallet/fees.h>
+#include <wallet/imports.h>
 #include <wallet/load.h>
 #include <wallet/receive.h>
 #include <wallet/rpc/wallet.h>
@@ -372,6 +373,10 @@ public:
         bool& complete) override
     {
         return m_wallet->FillPSBT(psbtx, options, complete, n_signed);
+    }
+    std::vector<wallet::ImportResult> importDescriptors(std::vector<wallet::ImportDescriptorRequest>& requests) override
+    {
+        return wallet::ProcessDescriptorsImport(*m_wallet, requests);
     }
     WalletBalances getBalances() override
     {
