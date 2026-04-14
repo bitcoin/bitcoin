@@ -4,6 +4,8 @@
 
 find_package(Doxygen COMPONENTS dot)
 
+
+
 if(DOXYGEN_FOUND)
   set(doxyfile ${CMAKE_CURRENT_BINARY_DIR}/Doxyfile)
   configure_file(Doxyfile.in ${doxyfile} USE_SOURCE_PERMISSIONS)
