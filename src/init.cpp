@@ -1879,7 +1879,8 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
     fRPCSerialVersion = gArgs.GetIntArg("-rpcserialversion", DEFAULT_RPC_SERIALIZE_VERSION);
     const bool enforce_btcheader_policy_ondemand = gArgs.GetBoolArg("-btcheaderpolicyondemand", DEFAULT_BTC_HEADER_POLICY_ON_DEMAND);
     const bool nevm_miner_addr_configured = HasNEVMMinerFeeRecipientConfig(args);
-    const bool nevm_enabled_for_mining_checks = fNEVMConnection && !args.IsArgSet("-hrp");
+    const bool hrp_forces_nevm_off = args.IsArgSet("-hrp");
+    const bool nevm_enabled_for_mining_checks = fNEVMConnection && !hrp_forces_nevm_off;
     const bool btcheader_policy_active_chain = !Params().MineBlocksOnDemand() || enforce_btcheader_policy_ondemand;
     const bool require_btcheader_backend =
         (fMasternodeMode || (nevm_enabled_for_mining_checks && nevm_miner_addr_configured)) &&
@@ -1899,7 +1900,10 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
         }
     }
     LogPrintf("NEVM connection %d\n", fNEVMConnection? 1: 0);
-    if (require_btcheader_backend && !btc_header_policy_ready) {
+    const bool require_btcheader_backend_post_nevm =
+        (fMasternodeMode || ((fNEVMConnection && !hrp_forces_nevm_off) && nevm_miner_addr_configured)) &&
+        btcheader_policy_active_chain;
+    if (require_btcheader_backend_post_nevm && !btc_header_policy_ready) {
         return InitError(Untranslated("Failed to initialize BTC header policy backend. Ensure managed btcheadernode binaries are available (configure with --enable-btcheadernode-build) or set -btcheadermanaged=0 with a valid -btcheadercmd. This backend is required for BTCC policy."));
     }
     if(args.IsArgSet("-hrp"))
