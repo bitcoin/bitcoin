@@ -194,7 +194,7 @@ class AuxpowMiningTest (SyscoinTestFramework):
       self.nodes[0].getauxblock, "1234"
     )
     assert_raises_rpc_error(
-      -8, "getauxblock expects 0 or 2 arguments",
+      -8, "Unknown named parameter btcprevhash",
       lambda: self.nodes[0].getauxblock(btcprevhash="1234")
     )
 
