@@ -968,6 +968,7 @@ private:
      * Caller must set min_pow_checked=true in order to add a new header to the
      * block index (permanent memory storage), indicating that the header is
      * known to be part of a sufficiently high-work chain (anti-dos check).
+     * Can return Valid or Invalid result, but not Error.
      */
     [[nodiscard]] BlockValidationState AcceptBlockHeader(
         const CBlockHeader& block,
@@ -1275,11 +1276,12 @@ public:
      *
      * @param[in]  headers The block headers themselves
      * @param[in]  min_pow_checked  True if proof-of-work anti-DoS checks have been done by caller for headers chain
-     * @param[out] state This may be set to an Error state if any error occurred processing them
      * @param[out] ppindex If set, the pointer will be set to point to the last new block index object for the given headers
-     * @returns false if AcceptBlockHeader fails on any of the headers, true otherwise (including if headers were already known)
+     * @returns BlockValidationState indicating the result. IsValid() returns true if all headers
+     *          were accepted. On failure, IsInvalid() is false and the state contains the specific
+     *          validation failure reason. Never returns Error state.
      */
-    bool ProcessNewBlockHeaders(std::span<const CBlockHeader> headers, bool min_pow_checked, BlockValidationState& state, const CBlockIndex** ppindex = nullptr) LOCKS_EXCLUDED(cs_main);
+    [[nodiscard]] BlockValidationState ProcessNewBlockHeaders(std::span<const CBlockHeader> headers, bool min_pow_checked, const CBlockIndex** ppindex = nullptr) LOCKS_EXCLUDED(cs_main);
 
     /**
      * Sufficiently validate a block for disk storage (and store on disk).

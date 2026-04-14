@@ -4258,19 +4258,19 @@ BlockValidationState ChainstateManager::AcceptBlockHeader(const CBlockHeader& bl
 }
 
 // Exposed wrapper for AcceptBlockHeader
-bool ChainstateManager::ProcessNewBlockHeaders(std::span<const CBlockHeader> headers, bool min_pow_checked, BlockValidationState& state, const CBlockIndex** ppindex)
+BlockValidationState ChainstateManager::ProcessNewBlockHeaders(std::span<const CBlockHeader> headers, bool min_pow_checked, const CBlockIndex** ppindex)
 {
     AssertLockNotHeld(cs_main);
     {
         LOCK(cs_main);
         for (const CBlockHeader& header : headers) {
             CBlockIndex *pindex = nullptr; // Use a temp pindex instead of ppindex to avoid a const_cast
-            state = AcceptBlockHeader(header, &pindex, min_pow_checked);
+            BlockValidationState state{AcceptBlockHeader(header, &pindex, min_pow_checked)};
             CheckBlockIndex();
-
             if (!state.IsValid()) {
-                return false;
+                return state;
             }
+
             if (ppindex) {
                 *ppindex = pindex;
             }
@@ -4285,7 +4285,8 @@ bool ChainstateManager::ProcessNewBlockHeaders(std::span<const CBlockHeader> hea
             LogInfo("Synchronizing blockheaders, height: %d (~%.2f%%)\n", last_accepted.nHeight, progress);
         }
     }
-    return true;
+
+    return BlockValidationState{};
 }
 
 void ChainstateManager::ReportHeadersPresync(int64_t height, int64_t timestamp)

@@ -1354,11 +1354,9 @@ btck_BlockValidationState* btck_chainstate_manager_process_block_header(
 {
     try {
         auto& chainman = btck_ChainstateManager::get(chainstate_manager).m_chainman;
+        auto state = chainman->ProcessNewBlockHeaders({&btck_BlockHeader::get(header), 1}, /*min_pow_checked=*/true);
 
-        auto state = btck_BlockValidationState::create();
-        bool result{chainman->ProcessNewBlockHeaders({&btck_BlockHeader::get(header), 1}, /*min_pow_checked=*/true, btck_BlockValidationState::get(state))};
-        assert(result == btck_BlockValidationState::get(state).IsValid());
-        return state;
+        return btck_BlockValidationState::create(std::move(state));
     } catch (const std::exception& e) {
         LogError("Failed to process block header: %s", e.what());
         return nullptr;
