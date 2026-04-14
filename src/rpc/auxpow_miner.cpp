@@ -345,11 +345,8 @@ AuxpowMiner::createAuxBlock (const node::JSONRPCRequest& request,
 
   std::optional<uint256> btcPrevHash;
   // createauxblock(address, [btcprevhash]) passes btcprevhash as params[1].
-  // getauxblock([btcprevhash]) (wallet RPC) may pass btcprevhash as params[0].
   if (request.params.size() > 1 && !request.params[1].isNull()) {
       btcPrevHash = ParseHashV(request.params[1], "btcprevhash");
-  } else if (request.params.size() == 1 && !request.params[0].isNull()) {
-      btcPrevHash = ParseHashV(request.params[0], "btcprevhash");
   }
 
   const bool enforce_on_demand = gArgs.GetBoolArg("-btcheaderpolicyondemand", DEFAULT_BTC_HEADER_POLICY_ON_DEMAND);

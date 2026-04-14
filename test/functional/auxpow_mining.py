@@ -190,18 +190,13 @@ class AuxpowMiningTest (SyscoinTestFramework):
     self.test_common (create, submit)
 
     assert_raises_rpc_error(
-      -8, "btcprevhash must be of length 64",
+      -8, "getauxblock expects 0 or 2 arguments",
       self.nodes[0].getauxblock, "1234"
     )
     assert_raises_rpc_error(
-      -8, "btcprevhash must be of length 64",
+      -8, "getauxblock expects 0 or 2 arguments",
       lambda: self.nodes[0].getauxblock(btcprevhash="1234")
     )
-
-    # Named args expand missing leading params to null placeholders internally.
-    # Ensure btcprevhash-only named create stays in create mode, not submit mode.
-    named_create = lambda: self.nodes[0].getauxblock(btcprevhash=NON_NULL_BTCPREV_HASH_HEX)
-    mineAuxpowBlockWithMethods(named_create, submit)
 
     # Ensure that the payout address is changed from one block to the next.
     hash1 = mineAuxpowBlockWithMethods (create, submit)

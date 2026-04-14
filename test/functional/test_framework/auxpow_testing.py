@@ -82,20 +82,7 @@ def mineAuxpowBlockWithMethods (create, submit):
   Mine an auxpow block, using the given methods for creation and submission.
   """
 
-  try:
-    auxblock = create ()
-  except JSONRPCException as e:
-    msg = ""
-    try:
-      msg = e.error.get("message", "")
-    except Exception:
-      msg = str(e)
-    if "btcprevhash is required at this height" in msg:
-      # Try again assuming the create method supports passing btcprevhash as a single argument
-      # (e.g. wallet RPC getauxblock(btcprevhash)).
-      auxblock = create(ZERO_HASH_HEX)
-    else:
-      raise
+  auxblock = create ()
   target = auxpow.reverseHex (auxblock['_target'])
   parent_prev_hash = auxblock.get("_btcprevhash", ZERO_HASH_HEX)
   # SYSCOIN

@@ -1,4 +1,4 @@
-// Copyright (c) 2013-2019 The Syscoin Core developers
+﻿// Copyright (c) 2013-2019 The Syscoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 #include <rpc/util.h>
@@ -303,7 +303,6 @@ static RPCHelpMan getauxblock()
                 {
                     {"hash", RPCArg::Type::STR_HEX, RPCArg::Optional::OMITTED, "Hash of the block to submit"},
                     {"auxpow", RPCArg::Type::STR_HEX, RPCArg::Optional::OMITTED, "Serialised auxpow found"},
-                    {"btcprevhash", RPCArg::Type::STR_HEX, RPCArg::Optional::OMITTED, "Optional. BTC prev-block hash commitment for BTCC sign-offset blocks. When omitted on non-mine-blocks-on-demand chains, sourced from local BTC header backend."},
                 },
                 {
                     RPCResult{"without arguments",
@@ -331,7 +330,7 @@ static RPCHelpMan getauxblock()
     [&](const RPCHelpMan& self, const node::JSONRPCRequest& request) -> UniValue
 {
     /* RPCHelpMan::Check is not applicable here since we have the
-       custom branching for create (0/1 args) and submit (2/3 args).  */
+       custom branching for create (0 args) and submit (2 args).  */
     std::shared_ptr<CWallet> const wallet = GetWalletForJSONRPCRequest(request);
     if (!wallet) return NullUniValue;
     CWallet* const pwallet = wallet.get();
@@ -340,34 +339,21 @@ static RPCHelpMan getauxblock()
     }
     LOCK(g_mining_keys.cs);
     const size_t param_count = request.params.size();
-    const bool create_mode_with_named_placeholders =
-        param_count == 3 && request.params[0].isNull() && request.params[1].isNull();
-
     /* Create a new block. */
-    if (param_count == 0 || param_count == 1 || create_mode_with_named_placeholders) {
-        node::JSONRPCRequest create_request = request;
-        if (create_mode_with_named_placeholders) {
-            UniValue normalized(UniValue::VARR);
-            if (!request.params[2].isNull()) {
-                normalized.push_back(request.params[2]);
-            }
-            create_request.params = std::move(normalized);
-        }
+    if (param_count == 0) {
         const CScript coinbaseScript = g_mining_keys.GetCoinbaseScript(pwallet);
-        UniValue res = AuxpowMiner::get().createAuxBlock(create_request, coinbaseScript);
+        UniValue res = AuxpowMiner::get().createAuxBlock(request, coinbaseScript);
         g_mining_keys.AddBlockHash(pwallet, res["hash"].get_str ());
         return res;
     }
 
     /* Submit a block instead.  */
-    if (param_count != 2 && param_count != 3) {
-        throw JSONRPCError(RPC_INVALID_PARAMETER, "getauxblock expects 0, 1, 2, or 3 arguments");
+    if (param_count != 2) {
+        throw JSONRPCError(RPC_INVALID_PARAMETER, "getauxblock expects 0 or 2 arguments");
     }
     if (request.params[0].isNull() || request.params[1].isNull()) {
         throw JSONRPCError(RPC_INVALID_PARAMETER, "getauxblock submit mode requires non-null hash and auxpow");
     }
-    // For submit, keep miner-compatible positional order:
-    // getauxblock(hash, auxpow, [btcprevhash]).
     const size_t hash_index = 0;
     const size_t auxpow_index = 1;
     const std::string& hash = request.params[hash_index].get_str();
