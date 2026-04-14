@@ -940,6 +940,8 @@ public:
     explicit BlockValidationState() : Handle{btck_block_validation_state_create()} {}
 
     BlockValidationState(const BlockValidationStateView& view) : Handle{view} {}
+
+    BlockValidationState(btck_BlockValidationState* state) : Handle{state} {}
 };
 
 class ValidationInterface
@@ -1217,9 +1219,13 @@ public:
         return res == 0;
     }
 
-    bool ProcessBlockHeader(const BlockHeader& header, BlockValidationState& state)
+    BlockValidationState ProcessBlockHeader(const BlockHeader& header)
     {
-        return btck_chainstate_manager_process_block_header(get(), header.get(), state.get()) == 0;
+        auto state = btck_chainstate_manager_process_block_header(get(), header.get());
+        if (!state) {
+            throw std::runtime_error("Failed to process block header");
+        }
+        return BlockValidationState{state};
     }
 
     ChainView GetChain() const

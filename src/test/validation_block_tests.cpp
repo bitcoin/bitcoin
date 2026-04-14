@@ -105,8 +105,7 @@ std::shared_ptr<CBlock> MinerTestingSetup::FinalizeBlock(std::shared_ptr<CBlock>
 
     // submit block header, so that miner can get the block height from the
     // global state and the node has the topology of the chain
-    BlockValidationState ignored;
-    BOOST_CHECK(Assert(m_node.chainman)->ProcessNewBlockHeaders({{*pblock}}, true, ignored));
+    BOOST_CHECK(Assert(m_node.chainman)->ProcessNewBlockHeaders({{*pblock}}, true).IsValid());
 
     return pblock;
 }
@@ -366,5 +365,11 @@ BOOST_AUTO_TEST_CASE(witness_commitment_index)
     pblock.vtx[0] = MakeTransactionRef(std::move(txCoinbase));
 
     BOOST_CHECK_EQUAL(GetWitnessCommitmentIndex(pblock), 2);
+}
+
+BOOST_AUTO_TEST_CASE(test_empty_process_new_block_headers)
+{
+    auto res = m_node.chainman->ProcessNewBlockHeaders({}, true);
+    BOOST_CHECK(res.IsValid());
 }
 BOOST_AUTO_TEST_SUITE_END()
