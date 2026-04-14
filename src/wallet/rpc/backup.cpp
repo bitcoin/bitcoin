@@ -156,7 +156,7 @@ static ImportDescriptorRequest ProcessUniValueDescriptor(const UniValue& data, s
     return request;
 }
 
-ImportDescriptorResult ProcessDescriptorImport(CWallet& wallet, const ImportDescriptorRequest& request) EXCLUSIVE_LOCKS_REQUIRED(wallet.cs_wallet)
+ImportDescriptorResult ImportDescriptor(CWallet& wallet, const ImportDescriptorRequest& request) EXCLUSIVE_LOCKS_REQUIRED(wallet.cs_wallet)
 {
     AssertLockHeld(wallet.cs_wallet);
 
@@ -342,6 +342,112 @@ ImportDescriptorResult ProcessDescriptorImport(CWallet& wallet, const ImportDesc
     return result;
 }
 
+std::vector<ImportDescriptorResult> ProcessDescriptorsImport(CWallet& wallet,
+    std::vector<ImportDescriptorRequest>& requests)
+{
+    std::vector<ImportDescriptorResult> response;
+
+    // Make sure the results are valid at least up to the most recent block
+    // the user could have gotten from another RPC command prior to now
+    wallet.BlockUntilSyncedToCurrentChain();
+
+    WalletRescanReserver reserver(wallet);
+    if (!reserver.reserve(/*with_passphrase=*/true)) {
+        ImportDescriptorResult result;
+        result.Error(ImportDescriptorResult::ImportResultCode::WALLET_ERROR,
+            "Wallet is currently rescanning. Abort existing rescan or wait.",
+            /*is_wallet_error=*/true);
+        response.push_back(result);
+        return response;
+    }
+    // Ensure that the wallet is not locked for the remainder of this call,
+    // as the passphrase is used to top up the keypool.
+    LOCK(wallet.m_relock_mutex);
+    const int64_t minimum_timestamp = 0;
+    int64_t now = 0;
+    int64_t lowest_timestamp = 0;
+    bool rescan = false;
+    {
+        LOCK(wallet.cs_wallet);
+        if (wallet.IsLocked()) {
+            ImportDescriptorResult result;
+            result.Error(
+                ImportDescriptorResult::ImportResultCode::WALLET_UNLOCK_NEEDED,
+                "Error: Please enter the wallet passphrase with walletpassphrase first.",
+                /*is_wallet_error=*/true);
+            response.push_back(result);
+            return response;
+        }
+
+        CHECK_NONFATAL(wallet.chain().findBlock(wallet.GetLastBlockHash(), interfaces::FoundBlock().time(lowest_timestamp).mtpTime(now)));
+
+        for (ImportDescriptorRequest& request : requests) {
+            const int64_t timestamp = std::max(request.timestamp.value_or(now), minimum_timestamp);
+            request.timestamp = timestamp;
+            ImportDescriptorResult result = ImportDescriptor(wallet, request);
+            response.push_back(result);
+
+            if (result.result_code == ImportDescriptorResult::ImportResultCode::OK) {
+                // At least one request succeeded, so we need to rescan
+                rescan = true;
+                if (lowest_timestamp > timestamp) {
+                    lowest_timestamp = timestamp;
+                }
+            }
+        }
+        wallet.ConnectScriptPubKeyManNotifiers();
+        wallet.RefreshAllTXOs();
+    }
+
+    if (rescan) {
+        const int64_t scanned_time = wallet.RescanFromTime(lowest_timestamp, reserver);
+        wallet.ResubmitWalletTransactions(node::TxBroadcast::MEMPOOL_NO_BROADCAST, /*force=*/true);
+
+        if (wallet.IsAbortingRescan()) {
+            ImportDescriptorResult result;
+            result.Error(ImportDescriptorResult::ImportResultCode::MISC_ERROR, "Rescan aborted by user.", /*is_wallet_error=*/true);
+            response.clear();
+            response.push_back(result);
+            return response;
+        }
+
+        if (scanned_time > lowest_timestamp) {
+            // Compose the response
+            for (size_t i = 0; i < requests.size(); ++i) {
+                ImportDescriptorResult& result = response.at(i);
+
+                // If the descriptor timestamp is within the successfully scanned
+                // range, or if the import result already has an error set, let
+                // the result stand unmodified. Otherwise replace the result
+                // with an error message.
+                const int64_t timestamp{requests.at(i).timestamp.value()};
+                if (scanned_time > timestamp && result.result_code == ImportDescriptorResult::ImportResultCode::OK) {
+                    std::string error_msg = strprintf("Rescan failed for descriptor with timestamp %d. There "
+                        "was an error reading a block from time %d, which is after or within %d seconds "
+                        "of key creation, and could contain transactions pertaining to the desc. As a "
+                        "result, transactions and coins using this desc may not appear in the wallet.",
+                        timestamp, scanned_time - TIMESTAMP_WINDOW - 1, TIMESTAMP_WINDOW);
+                    if (wallet.chain().havePruned()) {
+                        error_msg += strprintf(" This error could be caused by pruning or data corruption "
+                            "(see bitcoind log for details) and could be dealt with by downloading and "
+                            "rescanning the relevant blocks (see -reindex option and rescanblockchain RPC).");
+                    } else if (wallet.chain().hasAssumedValidChain()) {
+                        error_msg += strprintf(" This error is likely caused by an in-progress assumeutxo "
+                            "background sync. Check logs or getchainstates RPC for assumeutxo background "
+                            "sync progress and try again later.");
+                    } else {
+                        error_msg += strprintf(" This error could potentially caused by data corruption. If "
+                            "the issue persists you may want to reindex (see -reindex option).");
+                    }
+                    result.Error(ImportDescriptorResult::ImportResultCode::MISC_ERROR,
+                        error_msg);
+                }
+            }
+        }
+    }
+    return response;
+}
+
 RPCMethod importdescriptors()
 {
     return RPCMethod{
@@ -403,19 +509,6 @@ RPCMethod importdescriptors()
     if (!pwallet) return UniValue::VNULL;
     CWallet& wallet{*pwallet};
 
-    // Make sure the results are valid at least up to the most recent block
-    // the user could have gotten from another RPC command prior to now
-    wallet.BlockUntilSyncedToCurrentChain();
-
-    WalletRescanReserver reserver(*pwallet);
-    if (!reserver.reserve(/*with_passphrase=*/true)) {
-        throw JSONRPCError(RPC_WALLET_ERROR, "Wallet is currently rescanning. Abort existing rescan or wait.");
-    }
-
-    // Ensure that the wallet is not locked for the remainder of this RPC, as
-    // the passphrase is used to top up the keypool.
-    LOCK(pwallet->m_relock_mutex);
-
     UniValue response(UniValue::VARR);
     const UniValue& univalue_requests = main_request.params[0];
     std::vector<ImportDescriptorRequest> requests;
@@ -433,80 +526,23 @@ RPCMethod importdescriptors()
         }
     }
 
-    const int64_t minimum_timestamp = 0;
-    int64_t now = 0;
-    int64_t lowest_timestamp = 0;
-    bool rescan = false;
-    std::vector<ImportDescriptorResult> import_results;
-    {
-        LOCK(pwallet->cs_wallet);
-        EnsureWalletIsUnlocked(*pwallet);
+    std::vector<ImportDescriptorResult> import_results{ProcessDescriptorsImport(wallet, requests)};
 
-        CHECK_NONFATAL(pwallet->chain().findBlock(pwallet->GetLastBlockHash(), FoundBlock().time(lowest_timestamp).mtpTime(now)));
-
-        // Get all timestamps and extract the lowest timestamp
-        for (auto& request : requests) {
-            request.timestamp = std::max(request.timestamp.value_or(now), minimum_timestamp);
-            const auto& result = ProcessDescriptorImport(*pwallet, request);
-            import_results.push_back(result);
-
-            // If we know the chain tip, and at least one request was successful then allow rescan
-            if (result.result_code == ImportDescriptorResult::ImportResultCode::OK) {
-                rescan = true;
-                if (lowest_timestamp > request.timestamp.value()) {
-                    lowest_timestamp = request.timestamp.value();
-                }
-            }
+    // Wallet-wide precondition failure (e.g. already rescanning, or locked):
+    // surface as a top-level RPC error.
+    if (!import_results.empty() && import_results[0].is_wallet_error) {
+        RPCErrorCode rpc_error_code{RPC_WALLET_ERROR};
+        switch (import_results[0].result_code) {
+            case ImportDescriptorResult::ImportResultCode::WALLET_UNLOCK_NEEDED:
+                rpc_error_code = RPC_WALLET_UNLOCK_NEEDED;
+                break;
+            case ImportDescriptorResult::ImportResultCode::MISC_ERROR:
+                rpc_error_code = RPC_MISC_ERROR;
+                break;
+            default:
+                break;
         }
-        pwallet->ConnectScriptPubKeyManNotifiers();
-        pwallet->RefreshAllTXOs();
-    }
-
-    // Rescan the blockchain using the lowest timestamp
-    if (rescan) {
-        int64_t scanned_time = pwallet->RescanFromTime(lowest_timestamp, reserver);
-        pwallet->ResubmitWalletTransactions(node::TxBroadcast::MEMPOOL_NO_BROADCAST, /*force=*/true);
-
-        if (pwallet->IsAbortingRescan()) {
-            throw JSONRPCError(RPC_MISC_ERROR, "Rescan aborted by user.");
-        }
-
-        if (scanned_time > lowest_timestamp) {
-            // Compose the response
-            size_t result_idx = 0;
-            for (size_t i = 0; i < univalue_requests.size(); ++i) {
-                // Skip items that had parse errors (they have no entry in import_results).
-                if (parse_errors[i].has_value()) continue;
-                ImportDescriptorResult& result = import_results.at(result_idx);
-                // If the descriptor timestamp is within the successfully scanned
-                // range, or if the import result already has an error set, let
-                // the result stand unmodified. Otherwise replace the result
-                // with an error message.
-                const int64_t timestamp = requests.at(result_idx).timestamp.value();
-                if (scanned_time > timestamp && result.result_code == ImportDescriptorResult::ImportResultCode::OK) {
-                    std::string error_msg{strprintf("Rescan failed for descriptor with timestamp %d. There "
-                            "was an error reading a block from time %d, which is after or within %d seconds "
-                            "of key creation, and could contain transactions pertaining to the desc. As a "
-                            "result, transactions and coins using this desc may not appear in the wallet.",
-                            timestamp, scanned_time - TIMESTAMP_WINDOW - 1, TIMESTAMP_WINDOW)};
-                    if (pwallet->chain().havePruned()) {
-                        error_msg += strprintf(" This error could be caused by pruning or data corruption "
-                                "(see bitcoind log for details) and could be dealt with by downloading and "
-                                "rescanning the relevant blocks (see -reindex option and rescanblockchain RPC).");
-                    } else if (pwallet->chain().hasAssumedValidChain()) {
-                        error_msg += strprintf(" This error is likely caused by an in-progress assumeutxo "
-                                "background sync. Check logs or getchainstates RPC for assumeutxo background "
-                                "sync progress and try again later.");
-                    } else {
-                        error_msg += strprintf(" This error could potentially caused by data corruption. If "
-                                "the issue persists you may want to reindex (see -reindex option).");
-                    }
-                    result.Error(ImportDescriptorResult::ImportResultCode::MISC_ERROR, error_msg);
-                }
-
-                ++result_idx;
-            }
-        }
+        throw JSONRPCError(rpc_error_code, import_results[0].error_message);
     }
 
     // Build the final response in input order.
