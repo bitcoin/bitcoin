@@ -1186,6 +1186,7 @@ static RPCHelpMan createauxblock()
                         {RPCResult::Type::STR, "bits", "compressed target of the block"},
                         {RPCResult::Type::NUM, "height", "height of the block"},
                         {RPCResult::Type::STR_HEX, "_target", "target in reversed byte order, deprecated"},
+                        {RPCResult::Type::STR_HEX, "_btcprevhash", /*optional=*/true, "BTCPREV committed into the template when required for BTCC sign-offset blocks"},
                     }},
                 RPCExamples{
                   HelpExampleCli("createauxblock", "\"address\"")
