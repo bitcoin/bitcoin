@@ -1969,6 +1969,9 @@ util::Expected<void, std::string> PeerManagerImpl::FetchBlock(NodeId peer_id, co
     // Ignore pre-segwit peers
     if (!CanServeWitnesses(*peer)) return util::Unexpected{"Pre-SegWit peer"};
 
+    // Ignore limited peers
+    if (IsLimitedPeer(*peer) && m_best_height - block_index.nHeight > int{NODE_NETWORK_LIMITED_MIN_BLOCKS}) return util::Unexpected{"Cannot fetch block from a limited peer"};
+
     LOCK(cs_main);
 
     // Forget about all prior requests
