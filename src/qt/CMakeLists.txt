@@ -229,6 +229,7 @@ endif()
 
 if(WITH_DBUS)
   target_link_libraries(bitcoinqt PRIVATE Qt6::DBus)
+  target_compile_definitions(bitcoinqt PRIVATE USE_DBUS)
 endif()
 
 if(qt_lib_type STREQUAL "STATIC_LIBRARY")
