@@ -695,8 +695,10 @@ class BTCHeaderPolicyAuxpowTest(DashTestFramework):
         )
         self._mine_sys_to_height_with_btcprev(target_sign_height - 1, self._btc_active_confirmed_hash())
         address = self.nodes[0].get_deterministic_priv_key().address
+        expected_btc_prev = self.btc_nodes[0].rpc("getbestblockhash")
         auxblock = self.nodes[0].createauxblock(address)
         assert_equal(auxblock["height"], target_sign_height)
+        assert_equal(auxblock["_btcprevhash"], expected_btc_prev)
 
     def _mine_sys_blocks_with_btcprev(self, count, btc_prev_hash):
         for _ in range(count):

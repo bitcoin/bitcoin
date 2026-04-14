@@ -354,12 +354,36 @@ AuxpowMiner::createAuxBlock (const node::JSONRPCRequest& request,
 
   const auto& mempool = EnsureAnyMemPool (request.nodeContext? request.nodeContext: request.context);
   uint256 target;
-  const CBlock* pblock{nullptr};
+  std::string blockHashHex;
+  int64_t chainId{0};
+  std::string previousBlockHashHex;
+  int64_t coinbaseValue{0};
+  std::string coinbaseScriptHex;
+  std::string bitsHex;
+  int64_t blockHeight{0};
+  std::optional<uint256> committedBTCPrevHash;
   bool attempted_autofill{false};
   while (true) {
     try {
       LOCK (cs);
-      pblock = getCurrentBlock (*node.chainman, mempool, scriptPubKey, target, btcPrevHash);
+      const CBlock* pblock = getCurrentBlock (*node.chainman, mempool, scriptPubKey, target, btcPrevHash);
+      CHECK_NONFATAL(pindexPrev != nullptr);
+      const int nextHeight = pindexPrev->nHeight + 1;
+      const int start = Params().GetConsensus().nCLReceiptStartBlock;
+      const bool btcpRequired = nextHeight >= start && (nextHeight % BTCCHECK_PERIOD) == BTCCHECK_SIGN_OFFSET;
+      int nActiveHeight = pindexPrev->nHeight - 5;
+      nActiveHeight -= nActiveHeight % 10;
+      const CBlockIndex* refIndex = pindexPrev->GetAncestor(nActiveHeight);
+      CHECK_NONFATAL(refIndex != nullptr);
+
+      blockHashHex = pblock->GetHash().GetHex();
+      chainId = pblock->GetChainId();
+      previousBlockHashHex = pblock->hashPrevBlock.GetHex();
+      coinbaseValue = static_cast<int64_t>(pblock->vtx[0]->vout[0].nValue);
+      coinbaseScriptHex = HexStr(createScriptPubKey(refIndex->GetBlockHash(), refIndex->nHeight));
+      bitsHex = strprintf ("%08x", pblock->nBits);
+      blockHeight = nextHeight;
+      committedBTCPrevHash = btcpRequired ? btcPrevHash : std::nullopt;
       break;
     } catch (const UniValue& e) {
       if (!can_autofill_btcprev || btcPrevHash.has_value() || attempted_autofill || !IsBTCPrevRequiredError(e)) {
@@ -376,23 +400,18 @@ AuxpowMiner::createAuxBlock (const node::JSONRPCRequest& request,
     }
   }
 
-  // SYSCOIN
-  CHECK_NONFATAL(pindexPrev != nullptr);
-  int nActiveHeight = pindexPrev->nHeight - 5;
-  nActiveHeight -= nActiveHeight % 10;
-  const CBlockIndex* refIndex = pindexPrev->GetAncestor(nActiveHeight);
-
   UniValue result(UniValue::VOBJ);
-  result.pushKV ("hash", pblock->GetHash ().GetHex ());
-  result.pushKV ("chainid", pblock->GetChainId ());
-  result.pushKV ("previousblockhash", pblock->hashPrevBlock.GetHex ());
-  result.pushKV ("coinbasevalue",
-                 static_cast<int64_t> (pblock->vtx[0]->vout[0].nValue));
-  // SYSCOIN
-  result.pushKV ("coinbasescript", HexStr(createScriptPubKey(refIndex->GetBlockHash(), refIndex->nHeight)));
-  result.pushKV ("bits", strprintf ("%08x", pblock->nBits));
-  result.pushKV ("height", static_cast<int64_t> (pindexPrev->nHeight + 1));
+  result.pushKV ("hash", blockHashHex);
+  result.pushKV ("chainid", chainId);
+  result.pushKV ("previousblockhash", previousBlockHashHex);
+  result.pushKV ("coinbasevalue", coinbaseValue);
+  result.pushKV ("coinbasescript", coinbaseScriptHex);
+  result.pushKV ("bits", bitsHex);
+  result.pushKV ("height", blockHeight);
   result.pushKV ("_target", HexStr (target));
+  if (committedBTCPrevHash.has_value()) {
+    result.pushKV("_btcprevhash", committedBTCPrevHash->GetHex());
+  }
 
   return result;
 }
