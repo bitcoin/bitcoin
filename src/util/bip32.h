@@ -9,6 +9,11 @@
 #include <string>
 #include <vector>
 
+/** BIP32 unhardened derivation index (no high bit set) */
+static constexpr uint32_t BIP32_UNHARDENED_FLAG = 0x0;
+/** BIP32 hardened derivation flag (2^31) */
+static constexpr uint32_t BIP32_HARDENED_FLAG = 0x80000000;
+
 /** Parse an HD keypaths like "m/7/0'/2000". */
 [[nodiscard]] bool ParseHDKeypath(const std::string& keypath_str, std::vector<uint32_t>& keypath);
 

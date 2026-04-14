@@ -33,7 +33,7 @@ bool ParseHDKeypath(const std::string& keypath_str, std::vector<uint32_t>& keypa
             if (pos != item.size() - 1) {
                 return false;
             }
-            path |= 0x80000000;
+            path |= BIP32_HARDENED_FLAG;
             item = item.substr(0, item.size() - 1); // Drop the last character which is the hardened tick
         }
 

@@ -429,7 +429,7 @@ public:
         std::copy(keyid.begin(), keyid.begin() + sizeof(info.fingerprint), info.fingerprint);
         info.path = m_path;
         if (m_derive == DeriveType::UNHARDENED_RANGED) info.path.push_back((uint32_t)pos);
-        if (m_derive == DeriveType::HARDENED_RANGED) info.path.push_back(((uint32_t)pos) | 0x80000000L);
+        if (m_derive == DeriveType::HARDENED_RANGED) info.path.push_back(((uint32_t)pos) | BIP32_HARDENED_FLAG);
 
         // Derive keys or fetch them from cache
         CExtPubKey final_extkey = m_root_extkey;
@@ -450,7 +450,7 @@ public:
             if (!GetDerivedExtKey(arg, xprv, lh_xprv)) return std::nullopt;
             parent_extkey = xprv.Neuter();
             if (m_derive == DeriveType::UNHARDENED_RANGED) der = xprv.Derive(xprv, pos);
-            if (m_derive == DeriveType::HARDENED_RANGED) der = xprv.Derive(xprv, pos | 0x80000000UL);
+            if (m_derive == DeriveType::HARDENED_RANGED) der = xprv.Derive(xprv, pos | BIP32_HARDENED_FLAG);
             final_extkey = xprv.Neuter();
             if (lh_xprv.key.IsValid()) {
                 last_hardened_extkey = lh_xprv.Neuter();
@@ -576,7 +576,7 @@ public:
         CExtKey dummy;
         if (!GetDerivedExtKey(arg, extkey, dummy)) return;
         if (m_derive == DeriveType::UNHARDENED_RANGED && !extkey.Derive(extkey, pos)) return;
-        if (m_derive == DeriveType::HARDENED_RANGED && !extkey.Derive(extkey, pos | 0x80000000UL)) return;
+        if (m_derive == DeriveType::HARDENED_RANGED && !extkey.Derive(extkey, pos | BIP32_HARDENED_FLAG)) return;
         out.keys.emplace(extkey.key.GetPubKey().GetID(), extkey.key);
     }
     std::optional<CPubKey> GetRootPubKey() const override

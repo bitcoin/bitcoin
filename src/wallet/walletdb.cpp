@@ -622,20 +622,20 @@ static DBErrors LoadLegacyWalletRecords(CWallet* pwallet, DatabaseBatch& batch, 
                     strErr = "Error reading wallet database: keymeta found with unexpected path";
                     return DBErrors::NONCRITICAL_ERROR;
                 }
-                if (path[0] != 0x80000000) {
+                if (path[0] != BIP32_HARDENED_FLAG) {
                     strErr = strprintf("Unexpected path index of 0x%08x (expected 0x80000000) for the element at index 0", path[0]);
                     return DBErrors::NONCRITICAL_ERROR;
                 }
-                if (path[1] != 0x80000000 && path[1] != (1 | 0x80000000)) {
+                if (path[1] != BIP32_HARDENED_FLAG && path[1] != (1 | BIP32_HARDENED_FLAG)) {
                     strErr = strprintf("Unexpected path index of 0x%08x (expected 0x80000000 or 0x80000001) for the element at index 1", path[1]);
                     return DBErrors::NONCRITICAL_ERROR;
                 }
-                if ((path[2] & 0x80000000) == 0) {
+                if ((path[2] & BIP32_HARDENED_FLAG) == 0) {
                     strErr = strprintf("Unexpected path index of 0x%08x (expected to be greater than or equal to 0x80000000)", path[2]);
                     return DBErrors::NONCRITICAL_ERROR;
                 }
-                internal = path[1] == (1 | 0x80000000);
-                index = path[2] & ~0x80000000;
+                internal = path[1] == (1 | BIP32_HARDENED_FLAG);
+                index = path[2] & ~BIP32_HARDENED_FLAG;
             }
 
             // Insert a new CHDChain, or get the one that already exists
