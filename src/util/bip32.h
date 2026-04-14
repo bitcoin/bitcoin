@@ -8,12 +8,26 @@
 #include <cstdint>
 #include <span>
 #include <string>
+#include <util/expected.h>
 #include <vector>
 
 /** BIP32 unhardened derivation index (no high bit set) */
 static constexpr uint32_t BIP32_UNHARDENED_FLAG = 0x0;
 /** BIP32 hardened derivation flag (2^31) */
 static constexpr uint32_t BIP32_HARDENED_FLAG = 0x80000000;
+
+struct KeyPathElement {
+    /** Derivation index, without the hardened flag */
+    uint32_t index;
+    bool is_hardened;
+
+    /** Derivation index with the hardened flag applied */
+    uint32_t ChildNumber() const { return index | (is_hardened ? BIP32_HARDENED_FLAG : BIP32_UNHARDENED_FLAG); }
+};
+
+/** Parse a single key path element like "0", "0'", or "0h".
+ *  Returns the derivation index and hardened status, or an error message. */
+util::Expected<KeyPathElement, std::string> ParseKeyPathElement(std::span<const char> elem);
 
 /** Parse an HD keypaths like "m/7/0'/2000". */
 [[nodiscard]] bool ParseHDKeypath(const std::string& keypath_str, std::vector<uint32_t>& keypath);

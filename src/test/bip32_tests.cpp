@@ -297,17 +297,25 @@ BOOST_AUTO_TEST_CASE(parse_hd_keypath)
     BOOST_CHECK(ParseHDKeypath("m/0'", keypath));
     BOOST_CHECK(!ParseHDKeypath("m/0''", keypath));
 
+    BOOST_CHECK(ParseHDKeypath("m/0h", keypath));
+    BOOST_CHECK(!ParseHDKeypath("m/0hh", keypath));
+    BOOST_CHECK(!ParseHDKeypath("m/0x", keypath));
+    BOOST_CHECK(!ParseHDKeypath("m/0a", keypath));
+    BOOST_CHECK(!ParseHDKeypath("m/0G", keypath));
+    BOOST_CHECK(!ParseHDKeypath("m/h0", keypath));
+
     keypath.clear();
     BOOST_REQUIRE(ParseHDKeypath("m/0h/1h/2h", keypath));
     BOOST_REQUIRE_EQUAL(keypath.size(), 3);
     BOOST_CHECK_EQUAL(keypath[0], BIP32_HARDENED_FLAG);
     BOOST_CHECK_EQUAL(keypath[1], BIP32_HARDENED_FLAG | 1);
     BOOST_CHECK_EQUAL(keypath[2], BIP32_HARDENED_FLAG | 2);
-    BOOST_CHECK(!ParseHDKeypath("m/0hh", keypath));
-    BOOST_CHECK(!ParseHDKeypath("m/h0", keypath));
 
     BOOST_CHECK(ParseHDKeypath("m/0'/0'", keypath));
+    BOOST_CHECK(ParseHDKeypath("m/0h/0h", keypath));
+    BOOST_CHECK(ParseHDKeypath("m/0'/0h", keypath));
     BOOST_CHECK(!ParseHDKeypath("m/'0/0'", keypath));
+    BOOST_CHECK(!ParseHDKeypath("m/h0/0'", keypath));
 
     BOOST_CHECK(ParseHDKeypath("m/0/0", keypath));
     BOOST_CHECK(!ParseHDKeypath("n/0/0", keypath));
@@ -323,6 +331,17 @@ BOOST_AUTO_TEST_CASE(parse_hd_keypath)
 
     BOOST_CHECK(ParseHDKeypath("m/1/", keypath));
     BOOST_CHECK(!ParseHDKeypath("m/1//", keypath));
+
+    // The cap applies to every element, wherever it sits in the path.
+    BOOST_CHECK(ParseHDKeypath("m/2147483647", keypath));
+    BOOST_CHECK(!ParseHDKeypath("m/2147483648", keypath));
+    BOOST_CHECK(!ParseHDKeypath("m/4294967295", keypath));
+    BOOST_CHECK(!ParseHDKeypath("m/4294967296", keypath));
+
+    BOOST_CHECK(ParseHDKeypath("m/0/2147483647", keypath));
+    BOOST_CHECK(!ParseHDKeypath("m/0/2147483648", keypath));
+    BOOST_CHECK(!ParseHDKeypath("m/0/4294967295", keypath));
+    BOOST_CHECK(!ParseHDKeypath("m/0/4294967296", keypath));
 }
 
 BOOST_AUTO_TEST_SUITE_END()
