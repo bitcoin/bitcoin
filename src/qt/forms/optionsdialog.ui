@@ -55,7 +55,7 @@
          <item>
           <widget class="QCheckBox" name="prune">
            <property name="toolTip">
-            <string>Enabling pruning significantly reduces the disk space required to store transactions. All blocks are still fully validated. Reverting this setting requires re-downloading the entire blockchain.</string>
+            <string>Enabling pruning significantly reduces the disk space required to store transactions. All blocks are still fully validated. Keep wallets loaded while pruning is enabled; if a wallet needs old block data that has already been deleted, a reindex may be required. Reverting this setting requires re-downloading the entire blockchain.</string>
            </property>
            <property name="text">
             <string>Prune &amp;block storage to</string>
