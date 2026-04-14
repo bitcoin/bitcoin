@@ -189,6 +189,15 @@ class AuxpowMiningTest (SyscoinTestFramework):
     submit = self.nodes[0].getauxblock
     self.test_common (create, submit)
 
+    assert_raises_rpc_error(
+      -8, "btcprevhash must be of length 64",
+      self.nodes[0].getauxblock, "1234"
+    )
+    assert_raises_rpc_error(
+      -8, "btcprevhash must be of length 64",
+      lambda: self.nodes[0].getauxblock(btcprevhash="1234")
+    )
+
     # Named args expand missing leading params to null placeholders internally.
     # Ensure btcprevhash-only named create stays in create mode, not submit mode.
     named_create = lambda: self.nodes[0].getauxblock(btcprevhash=NON_NULL_BTCPREV_HASH_HEX)

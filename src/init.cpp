@@ -1882,12 +1882,11 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
     const bool hrp_forces_nevm_off = args.IsArgSet("-hrp");
     const bool nevm_enabled_for_mining_checks = fNEVMConnection && !hrp_forces_nevm_off;
     const bool btcheader_policy_active_chain = !Params().MineBlocksOnDemand() || enforce_btcheader_policy_ondemand;
-    const bool require_btcheader_backend =
-        (fMasternodeMode || (nevm_enabled_for_mining_checks && nevm_miner_addr_configured)) &&
-        btcheader_policy_active_chain;
-    const bool init_btcheader_backend = require_btcheader_backend;
     bool btc_header_policy_ready{true};
-    if (init_btcheader_backend) {
+    bool btcheader_backend_initialized{false};
+    const bool init_btcheader_backend_early = fMasternodeMode && btcheader_policy_active_chain;
+    if (init_btcheader_backend_early) {
+        btcheader_backend_initialized = true;
         if (!node.chainman->ActiveChainstate().DoBTCHeaderStartupProcedure()) {
             btc_header_policy_ready = false;
             LogPrintf("Failed to initialize BTC header policy backend; startup will abort before node enters steady state\n");
@@ -1903,6 +1902,13 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
     const bool require_btcheader_backend_post_nevm =
         (fMasternodeMode || ((fNEVMConnection && !hrp_forces_nevm_off) && nevm_miner_addr_configured)) &&
         btcheader_policy_active_chain;
+    if (require_btcheader_backend_post_nevm && !btcheader_backend_initialized) {
+        btcheader_backend_initialized = true;
+        if (!node.chainman->ActiveChainstate().DoBTCHeaderStartupProcedure()) {
+            btc_header_policy_ready = false;
+            LogPrintf("Failed to initialize BTC header policy backend after NEVM startup; startup will abort before node enters steady state\n");
+        }
+    }
     if (require_btcheader_backend_post_nevm && !btc_header_policy_ready) {
         return InitError(Untranslated("Failed to initialize BTC header policy backend. Ensure managed btcheadernode binaries are available (configure with --enable-btcheadernode-build) or set -btcheadermanaged=0 with a valid -btcheadercmd. This backend is required for BTCC policy."));
     }

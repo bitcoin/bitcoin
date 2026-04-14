@@ -93,6 +93,16 @@ std::optional<uint256> QueryBTCHeaderBestBlockHash(Chainstate& chainstate, std::
   return bestHash;
 }
 
+bool IsBTCPrevRequiredError(const UniValue& e)
+{
+  if (!e.isObject()) return false;
+  const UniValue& code = e.find_value("code");
+  const UniValue& message = e.find_value("message");
+  return code.isNum() && message.isStr() &&
+         code.getInt<int>() == RPC_INVALID_PARAMETER &&
+         message.get_str() == "btcprevhash is required at this height";
+}
+
 void auxMiningCheck(const node::JSONRPCRequest& request)
 {
   node::NodeContext& node = request.nodeContext? *request.nodeContext: EnsureAnyNodeContext (request.context);
@@ -338,38 +348,36 @@ AuxpowMiner::createAuxBlock (const node::JSONRPCRequest& request,
   // getauxblock([btcprevhash]) (wallet RPC) may pass btcprevhash as params[0].
   if (request.params.size() > 1 && !request.params[1].isNull()) {
       btcPrevHash = ParseHashV(request.params[1], "btcprevhash");
-  } else if (request.params.size() == 1 && request.params[0].isStr()) {
-      const std::string s = request.params[0].get_str();
-      // Heuristic: treat a 32-byte hex string as btcprevhash (wallet getauxblock create path).
-      if (s.size() == 64 && IsHex(s)) {
-          btcPrevHash = ParseHashV(request.params[0], "btcprevhash");
-      }
-  }
-
-  bool btcpRequired{false};
-  {
-    LOCK(cs_main);
-    const int nextHeight = node.chainman->ActiveChain().Height() + 1;
-    const int start = Params().GetConsensus().nCLReceiptStartBlock;
-    btcpRequired = nextHeight >= start && (nextHeight % BTCCHECK_PERIOD) == BTCCHECK_SIGN_OFFSET;
+  } else if (request.params.size() == 1 && !request.params[0].isNull()) {
+      btcPrevHash = ParseHashV(request.params[0], "btcprevhash");
   }
 
   const bool enforce_on_demand = gArgs.GetBoolArg("-btcheaderpolicyondemand", DEFAULT_BTC_HEADER_POLICY_ON_DEMAND);
-  if (btcpRequired && !btcPrevHash.has_value() &&
-      (!Params().MineBlocksOnDemand() || enforce_on_demand)) {
-    std::string err;
-    btcPrevHash = QueryBTCHeaderBestBlockHash(node.chainman->ActiveChainstate(), err);
-    if (!btcPrevHash.has_value()) {
-      throw JSONRPCError(
-          RPC_MISC_ERROR,
-          strprintf("btcprevhash unavailable from BTC header backend (%s); configure -btcheadermanaged/-btcheadercmd or pass btcprevhash explicitly", err));
-    }
-  }
+  const bool can_autofill_btcprev = !Params().MineBlocksOnDemand() || enforce_on_demand;
 
-  LOCK (cs);
   const auto& mempool = EnsureAnyMemPool (request.nodeContext? request.nodeContext: request.context);
   uint256 target;
-  const CBlock* pblock = getCurrentBlock (*node.chainman, mempool, scriptPubKey, target, btcPrevHash);
+  const CBlock* pblock{nullptr};
+  bool attempted_autofill{false};
+  while (true) {
+    try {
+      LOCK (cs);
+      pblock = getCurrentBlock (*node.chainman, mempool, scriptPubKey, target, btcPrevHash);
+      break;
+    } catch (const UniValue& e) {
+      if (!can_autofill_btcprev || btcPrevHash.has_value() || attempted_autofill || !IsBTCPrevRequiredError(e)) {
+        throw;
+      }
+      std::string err;
+      btcPrevHash = QueryBTCHeaderBestBlockHash(node.chainman->ActiveChainstate(), err);
+      if (!btcPrevHash.has_value()) {
+        throw JSONRPCError(
+            RPC_MISC_ERROR,
+            strprintf("btcprevhash unavailable from BTC header backend (%s); configure managed backend with --enable-btcheadernode-build or set -btcheadermanaged=0 with a valid -btcheadercmd, or pass btcprevhash explicitly", err));
+      }
+      attempted_autofill = true;
+    }
+  }
 
   // SYSCOIN
   CHECK_NONFATAL(pindexPrev != nullptr);
