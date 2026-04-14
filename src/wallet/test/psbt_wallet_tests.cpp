@@ -114,8 +114,10 @@ BOOST_AUTO_TEST_CASE(parse_hd_keypath)
     BOOST_CHECK(ParseHDKeypath("42", keypath));
     BOOST_CHECK(!ParseHDKeypath("m42", keypath));
 
-    BOOST_CHECK(ParseHDKeypath("4294967295", keypath)); // 4294967295 == 0xFFFFFFFF (uint32_t max)
-    BOOST_CHECK(!ParseHDKeypath("4294967296", keypath)); // 4294967296 == 0xFFFFFFFF (uint32_t max) + 1
+    BOOST_CHECK(ParseHDKeypath("2147483647", keypath)); // 2147483647 == 0x7FFFFFFF (max non-hardened)
+    BOOST_CHECK(!ParseHDKeypath("2147483648", keypath)); // 2147483648 == 0x80000000 (would collide with hardened bit)
+    BOOST_CHECK(!ParseHDKeypath("4294967295", keypath)); // 4294967295 == 0xFFFFFFFF (uint32_t max)
+    BOOST_CHECK(!ParseHDKeypath("4294967296", keypath)); // 4294967296 > uint32_t max
 
     BOOST_CHECK(ParseHDKeypath("m", keypath));
     BOOST_CHECK(!ParseHDKeypath("n", keypath));
@@ -129,8 +131,17 @@ BOOST_AUTO_TEST_CASE(parse_hd_keypath)
     BOOST_CHECK(ParseHDKeypath("m/0'", keypath));
     BOOST_CHECK(!ParseHDKeypath("m/0''", keypath));
 
+    BOOST_CHECK(ParseHDKeypath("m/0h", keypath));
+    BOOST_CHECK(!ParseHDKeypath("m/0hh", keypath));
+    BOOST_CHECK(!ParseHDKeypath("m/0x", keypath));
+    BOOST_CHECK(!ParseHDKeypath("m/0a", keypath));
+    BOOST_CHECK(!ParseHDKeypath("m/0G", keypath));
+
     BOOST_CHECK(ParseHDKeypath("m/0'/0'", keypath));
+    BOOST_CHECK(ParseHDKeypath("m/0h/0h", keypath));
+    BOOST_CHECK(ParseHDKeypath("m/0'/0h", keypath));
     BOOST_CHECK(!ParseHDKeypath("m/'0/0'", keypath));
+    BOOST_CHECK(!ParseHDKeypath("m/h0/0'", keypath));
 
     BOOST_CHECK(ParseHDKeypath("m/0/0", keypath));
     BOOST_CHECK(!ParseHDKeypath("n/0/0", keypath));
@@ -147,11 +158,15 @@ BOOST_AUTO_TEST_CASE(parse_hd_keypath)
     BOOST_CHECK(ParseHDKeypath("m/1/", keypath));
     BOOST_CHECK(!ParseHDKeypath("m/1//", keypath));
 
-    BOOST_CHECK(ParseHDKeypath("m/0/4294967295", keypath)); // 4294967295 == 0xFFFFFFFF (uint32_t max)
-    BOOST_CHECK(!ParseHDKeypath("m/0/4294967296", keypath)); // 4294967296 == 0xFFFFFFFF (uint32_t max) + 1
+    BOOST_CHECK(ParseHDKeypath("m/0/2147483647", keypath)); // 2147483647 == 0x7FFFFFFF (max non-hardened)
+    BOOST_CHECK(!ParseHDKeypath("m/0/2147483648", keypath)); // 2147483648 == 0x80000000 (would collide with hardened bit)
+    BOOST_CHECK(!ParseHDKeypath("m/0/4294967295", keypath)); // 4294967295 == 0xFFFFFFFF (uint32_t max)
+    BOOST_CHECK(!ParseHDKeypath("m/0/4294967296", keypath)); // 4294967296 > uint32_t max
 
-    BOOST_CHECK(ParseHDKeypath("m/4294967295", keypath)); // 4294967295 == 0xFFFFFFFF (uint32_t max)
-    BOOST_CHECK(!ParseHDKeypath("m/4294967296", keypath)); // 4294967296 == 0xFFFFFFFF (uint32_t max) + 1
+    BOOST_CHECK(ParseHDKeypath("m/2147483647", keypath)); // 2147483647 == 0x7FFFFFFF (max non-hardened)
+    BOOST_CHECK(!ParseHDKeypath("m/2147483648", keypath)); // 2147483648 == 0x80000000 (would collide with hardened bit)
+    BOOST_CHECK(!ParseHDKeypath("m/4294967295", keypath)); // 4294967295 == 0xFFFFFFFF (uint32_t max)
+    BOOST_CHECK(!ParseHDKeypath("m/4294967296", keypath)); // 4294967296 > uint32_t max
 }
 
 BOOST_AUTO_TEST_SUITE_END()

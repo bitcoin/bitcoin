@@ -6,6 +6,8 @@
 #define BITCOIN_UTIL_BIP32_H
 
 #include <cstdint>
+#include <optional>
+#include <span>
 #include <string>
 #include <vector>
 
@@ -13,6 +15,11 @@
 static constexpr uint32_t BIP32_UNHARDENED_FLAG = 0x0;
 /** BIP32 hardened derivation flag (2^31) */
 static constexpr uint32_t BIP32_HARDENED_FLAG = 0x80000000;
+
+/** Parse a single key path element like "0", "0'", or "0h".
+ *  Returns the derivation index and sets is_hardened, or nullopt on failure
+ *  (in which case `error` is populated with a human-readable message). */
+std::optional<uint32_t> ParseKeyPathElement(std::span<const char> elem, bool& is_hardened, std::string& error);
 
 /** Parse an HD keypaths like "m/7/0'/2000". */
 [[nodiscard]] bool ParseHDKeypath(const std::string& keypath_str, std::vector<uint32_t>& keypath);
