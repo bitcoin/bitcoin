@@ -12,6 +12,7 @@
 
 #include <util/translation.h>
 #include <wallet/types.h>
+#include <wallet/wallet.h>
 
 namespace wallet {
 
@@ -48,6 +49,9 @@ struct ImportDescriptorRequest {
     std::optional<std::pair<int64_t, int64_t>> range;
     std::optional<int64_t> next_index;
 };
+
+std::vector<ImportResult> ProcessDescriptorsImport(CWallet& wallet,
+    std::vector<ImportDescriptorRequest>& requests);
 
 } // namespace wallet
 
