@@ -69,7 +69,7 @@ void CCoinsViewDB::ResizeCache(size_t new_cache_size)
     }
 }
 
-std::optional<Coin> CCoinsViewDB::GetCoin(const COutPoint& outpoint) const
+std::optional<Coin> CCoinsViewDB::GetCoin(const COutPoint& outpoint, bool = false) const
 {
     if (Coin coin; m_db->Read(CoinEntry(&outpoint), coin)) {
         Assert(!coin.IsSpent()); // The UTXO database should never contain spent coins

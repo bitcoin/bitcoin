@@ -312,7 +312,7 @@ public:
 
     //! Retrieve the Coin (unspent transaction output) for a given outpoint.
     //! May populate the cache. Use PeekCoin() to perform a non-caching lookup.
-    virtual std::optional<Coin> GetCoin(const COutPoint& outpoint) const = 0;
+    virtual std::optional<Coin> GetCoin(const COutPoint& outpoint, bool peek_only = false) const = 0;
 
     //! Retrieve the Coin (unspent transaction output) for a given outpoint, without caching results.
     //! Does not populate the cache. Use GetCoin() to cache the result.
@@ -354,7 +354,7 @@ public:
     CoinsViewEmpty(const CoinsViewEmpty&) = delete;
     CoinsViewEmpty& operator=(const CoinsViewEmpty&) = delete;
 
-    std::optional<Coin> GetCoin(const COutPoint&) const override { return {}; }
+    std::optional<Coin> GetCoin(const COutPoint&, bool = false) const override { return {}; }
     std::optional<Coin> PeekCoin(const COutPoint& outpoint) const override { return GetCoin(outpoint); }
     bool HaveCoin(const COutPoint& outpoint) const override { return !!GetCoin(outpoint); }
     uint256 GetBestBlock() const override { return {}; }
@@ -378,7 +378,7 @@ public:
 
     void SetBackend(CCoinsView& in_view) { base = &in_view; }
 
-    std::optional<Coin> GetCoin(const COutPoint& outpoint) const override { return base->GetCoin(outpoint); }
+    std::optional<Coin> GetCoin(const COutPoint& outpoint, bool peek_only) const override { return base->GetCoin(outpoint, peek_only); }
     std::optional<Coin> PeekCoin(const COutPoint& outpoint) const override { return base->PeekCoin(outpoint); }
     bool HaveCoin(const COutPoint& outpoint) const override { return base->HaveCoin(outpoint); }
     uint256 GetBestBlock() const override { return base->GetBestBlock(); }
@@ -429,7 +429,7 @@ public:
     CCoinsViewCache(const CCoinsViewCache &) = delete;
 
     // Standard CCoinsView methods
-    std::optional<Coin> GetCoin(const COutPoint& outpoint) const override;
+    std::optional<Coin> GetCoin(const COutPoint& outpoint, bool peek_only = false) const override;
     std::optional<Coin> PeekCoin(const COutPoint& outpoint) const override;
     bool HaveCoin(const COutPoint& outpoint) const override;
     uint256 GetBestBlock() const override;
@@ -603,7 +603,7 @@ public:
         m_err_callbacks.emplace_back(std::move(f));
     }
 
-    std::optional<Coin> GetCoin(const COutPoint& outpoint) const override;
+    std::optional<Coin> GetCoin(const COutPoint& outpoint, bool peek_only) const override;
     bool HaveCoin(const COutPoint& outpoint) const override;
     std::optional<Coin> PeekCoin(const COutPoint& outpoint) const override;
 

@@ -59,7 +59,7 @@ CCoinsMap::iterator CCoinsViewCache::FetchCoin(const COutPoint &outpoint) const 
     return ret;
 }
 
-std::optional<Coin> CCoinsViewCache::GetCoin(const COutPoint& outpoint) const
+std::optional<Coin> CCoinsViewCache::GetCoin(const COutPoint& outpoint, bool peek_only) const
 {
     if (auto it{FetchCoin(outpoint)}; it != cacheCoins.end() && !it->second.coin.IsSpent()) return it->second.coin;
     return std::nullopt;
@@ -393,9 +393,9 @@ static ReturnType ExecuteBackedWrapper(Func func, const std::vector<std::functio
     }
 }
 
-std::optional<Coin> CCoinsViewErrorCatcher::GetCoin(const COutPoint& outpoint) const
+std::optional<Coin> CCoinsViewErrorCatcher::GetCoin(const COutPoint& outpoint, bool peek_only) const
 {
-    return ExecuteBackedWrapper<std::optional<Coin>>([&]() { return CCoinsViewBacked::GetCoin(outpoint); }, m_err_callbacks);
+    return ExecuteBackedWrapper<std::optional<Coin>>([&]() { return CCoinsViewBacked::GetCoin(outpoint, peek_only); }, m_err_callbacks);
 }
 
 bool CCoinsViewErrorCatcher::HaveCoin(const COutPoint& outpoint) const
