@@ -124,6 +124,38 @@ public:
     }
 };
 
+/** Minimal stream for writing to an existing span of bytes.
+ */
+class SpanWriter
+{
+private:
+    std::span<std::byte> m_dest;
+
+public:
+    explicit SpanWriter(std::span<std::byte> dest) : m_dest{dest} {}
+    template <typename... Args>
+    SpanWriter(std::span<std::byte> dest, Args&&... args) : SpanWriter{dest}
+    {
+        ::SerializeMany(*this, std::forward<Args>(args)...);
+    }
+
+    void write(std::span<const std::byte> src)
+    {
+        if (src.size() > m_dest.size()) {
+            throw std::ios_base::failure("SpanWriter::write(): exceeded buffer size");
+        }
+        memcpy(m_dest.data(), src.data(), src.size());
+        m_dest = m_dest.subspan(src.size());
+    }
+
+    template<typename T>
+    SpanWriter& operator<<(const T& obj)
+    {
+        ::Serialize(*this, obj);
+        return *this;
+    }
+};
+
 /** Double ended buffer combining vector and stream-like interfaces.
  *
  * >> and << read and write unformatted data using the above serialization templates.

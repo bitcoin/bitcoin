@@ -768,6 +768,16 @@ public:
     {
         return btck_block_header_get_nonce(impl());
     }
+
+    std::array<std::byte, 80> ToBytes() const
+    {
+        std::array<std::byte, 80> header;
+        int res{btck_block_header_to_bytes(impl(), reinterpret_cast<unsigned char*>(header.data()))};
+        if (res != 0) {
+            throw std::runtime_error("Failed to serialize block header");
+        }
+        return header;
+    }
 };
 
 class BlockHeaderView : public View<btck_BlockHeader>, public BlockHeaderApi<BlockHeaderView>

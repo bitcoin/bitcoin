@@ -1423,6 +1423,16 @@ uint32_t btck_block_header_get_nonce(const btck_BlockHeader* header)
     return btck_BlockHeader::get(header).nNonce;
 }
 
+int btck_block_header_to_bytes(const btck_BlockHeader* header, unsigned char output[80])
+{
+    try {
+        SpanWriter{std::as_writable_bytes(std::span{output, 80})} << btck_BlockHeader::get(header);
+        return 0;
+    } catch (...) {
+        return -1;
+    }
+}
+
 void btck_block_header_destroy(btck_BlockHeader* header)
 {
     delete header;
