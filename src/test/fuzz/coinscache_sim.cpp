@@ -247,14 +247,12 @@ FUZZ_TARGET(coinscache_sim)
         CallOneOf(
             provider,
 
-            [&]() { // PeekCoin/GetCoin
+            [&]() { // GetCoin
                 uint32_t outpointidx = provider.ConsumeIntegralInRange<uint32_t>(0, NUM_OUTPOINTS - 1);
                 // Look up in simulation data.
                 auto sim = lookup(outpointidx);
                 // Look up in real caches.
-                auto realcoin = provider.ConsumeBool() ?
-                    caches.back()->PeekCoin(data.outpoints[outpointidx]) :
-                    caches.back()->GetCoin(data.outpoints[outpointidx]);
+                auto realcoin = caches.back()->GetCoin(data.outpoints[outpointidx], /*peek_only=*/provider.ConsumeBool());
                 // Compare results.
                 if (!sim.has_value()) {
                     assert(!realcoin);

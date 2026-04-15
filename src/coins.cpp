@@ -20,14 +20,6 @@ CoinsViewEmpty& CoinsViewEmpty::Get()
     return instance;
 }
 
-std::optional<Coin> CCoinsViewCache::PeekCoin(const COutPoint& outpoint) const
-{
-    if (auto it{cacheCoins.find(outpoint)}; it != cacheCoins.end()) {
-        return it->second.coin.IsSpent() ? std::nullopt : std::optional{it->second.coin};
-    }
-    return base->PeekCoin(outpoint);
-}
-
 CCoinsViewCache::CCoinsViewCache(CCoinsView* in_base, bool deterministic) :
     CCoinsViewBacked(in_base), m_deterministic(deterministic),
     cacheCoins(0, SaltedOutpointHasher(/*deterministic=*/deterministic), CCoinsMap::key_equal{}, &m_cache_coins_memory_resource)
@@ -61,8 +53,15 @@ CCoinsMap::iterator CCoinsViewCache::FetchCoin(const COutPoint &outpoint) const 
 
 std::optional<Coin> CCoinsViewCache::GetCoin(const COutPoint& outpoint, bool peek_only) const
 {
-    if (auto it{FetchCoin(outpoint)}; it != cacheCoins.end() && !it->second.coin.IsSpent()) return it->second.coin;
-    return std::nullopt;
+    if (peek_only) {
+        if (auto it{cacheCoins.find(outpoint)}; it != cacheCoins.end()) {
+            return it->second.coin.IsSpent() ? std::nullopt : std::optional{it->second.coin};
+        }
+        return base->GetCoin(outpoint, peek_only);
+    } else {
+        if (auto it{FetchCoin(outpoint)}; it != cacheCoins.end() && !it->second.coin.IsSpent()) return it->second.coin;
+        return std::nullopt;
+    }
 }
 
 void CCoinsViewCache::AddCoin(const COutPoint &outpoint, Coin&& coin, bool possible_overwrite) {
@@ -401,9 +400,4 @@ std::optional<Coin> CCoinsViewErrorCatcher::GetCoin(const COutPoint& outpoint, b
 bool CCoinsViewErrorCatcher::HaveCoin(const COutPoint& outpoint) const
 {
     return ExecuteBackedWrapper<bool>([&]() { return CCoinsViewBacked::HaveCoin(outpoint); }, m_err_callbacks);
-}
-
-std::optional<Coin> CCoinsViewErrorCatcher::PeekCoin(const COutPoint& outpoint) const
-{
-    return ExecuteBackedWrapper<std::optional<Coin>>([&]() { return CCoinsViewBacked::PeekCoin(outpoint); }, m_err_callbacks);
 }
