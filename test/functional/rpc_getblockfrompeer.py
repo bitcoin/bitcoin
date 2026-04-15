@@ -198,9 +198,10 @@ class GetBlockFromPeerTest(BitcoinTestFramework):
         self.connect_nodes(1, 2)
 
         # Move clock above the block request timeout and assert the initial block fetching failed
+        current_time = current_time + 610
         with pruned_node.assert_debug_log([f"Timeout downloading block {pruned_block_15}, disconnecting peer={not_responding_peer_id}"], timeout=5):
             for node in self.nodes:
-                node.setmocktime(current_time + 610)
+                node.setmocktime(current_time)
 
         # Now verify that the block was requested and received from another peer after the initial failure
         self.wait_until(lambda: self.check_for_block(node=2, hash=pruned_block_15), timeout=3)
@@ -210,7 +211,7 @@ class GetBlockFromPeerTest(BitcoinTestFramework):
         #######################################
 
         self.log.info("Fetch block from \"any\" peer")
-        # Disconnect only connection that can provide the block
+        # Disconnect only connections that can provide the block
         self.disconnect_nodes(0, 2)
         self.disconnect_nodes(1, 2)
 
@@ -221,6 +222,37 @@ class GetBlockFromPeerTest(BitcoinTestFramework):
         # Now connect the full node. The node should automatically request the missing block
         self.connect_nodes(0, 2)
         self.wait_until(lambda: self.check_for_block(node=2, hash=pruned_block_10), timeout=5)
+
+        ##############################################################################
+        # Try to fetch block from certain peer only once, no automatic retry process #
+        ##############################################################################
+
+        self.log.info("Try to fetch block from certain peer only once")
+
+        # Advance peers time so every peer stay responsive
+        current_time = current_time + 60
+        for node in self.nodes:
+            node.setmocktime(current_time)
+
+        # Connect peer that can serve blocks but will not answer to the getdata requests
+        pruned_node.add_p2p_connection(P2PInterface())
+        not_responding_peer_id = pruned_node.getpeerinfo()[-1]["id"]  # last connection
+        # Also connect full node that can serve the block
+        self.connect_nodes(1, 2)
+
+        # Request block with 'retry=false'
+        pruned_block_9 = self.nodes[0].getblockhash(9)
+        result = pruned_node.getblockfrompeer(pruned_block_9, not_responding_peer_id, False)
+        assert_equal(result, {})
+
+        # Move clock above the block request timeout and assert the initial block fetching failed
+        with pruned_node.assert_debug_log([f"Timeout downloading block {pruned_block_9}, disconnecting peer={not_responding_peer_id}"], timeout=5):
+            for node in self.nodes:
+                node.setmocktime(current_time + 610)
+
+        # Sleep for a bit and verify that the block was not requested to any other peer
+        time.sleep(3)
+        self.wait_until(lambda: not self.check_for_block(node=2, hash=pruned_block_9), timeout=3)
 
 
 if __name__ == '__main__':

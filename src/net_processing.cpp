@@ -534,7 +534,7 @@ public:
     /** Implement PeerManager */
     void StartScheduledTasks(CScheduler& scheduler) override;
     void CheckForStaleTipAndEvictPeers() override;
-    util::Expected<void, std::string> FetchBlock(std::optional<NodeId> op_peer_id, const CBlockIndex& block_index) override
+    util::Expected<void, std::string> FetchBlock(std::optional<NodeId> op_peer_id, const CBlockIndex& block_index, bool retry) override
         EXCLUSIVE_LOCKS_REQUIRED(!m_peer_mutex);
     bool GetNodeStateStats(NodeId nodeid, CNodeStateStats& stats) const override EXCLUSIVE_LOCKS_REQUIRED(!m_peer_mutex);
     std::vector<node::TxOrphanage::OrphanInfo> GetOrphanTransactions() override EXCLUSIVE_LOCKS_REQUIRED(!m_tx_download_mutex);
@@ -1996,13 +1996,14 @@ bool PeerManagerImpl::BlockRequestAllowed(const CBlockIndex& block_index)
            (GetBlockProofEquivalentTime(*m_chainman.m_best_header, block_index, *m_chainman.m_best_header, m_chainparams.GetConsensus()) < STALE_RELAY_AGE_LIMIT);
 }
 
-util::Expected<void, std::string> PeerManagerImpl::FetchBlock(std::optional<NodeId> op_peer_id, const CBlockIndex& block_index)
+util::Expected<void, std::string> PeerManagerImpl::FetchBlock(std::optional<NodeId> op_peer_id, const CBlockIndex& block_index, bool retry)
 {
     if (m_chainman.m_blockman.LoadingBlocks()) return util::Unexpected{"Loading blocks ..."};
 
     // If no peer id was specified, track block. The internal block sync process will
     // be in charge of downloading the block.
     if (!op_peer_id) {
+        if (!retry) return util::Unexpected("'retry' disabled, cannot perform single block request"); // future: enable one-try requests.
         if (!m_block_tracker.track(block_index.GetBlockHash())) return util::Unexpected("Already tracked block");
         LogDebug(BCLog::NET, "Block added to the tracking list, hash %s\n", block_index.GetBlockHash().ToString());
         return {};
@@ -2025,8 +2026,8 @@ util::Expected<void, std::string> PeerManagerImpl::FetchBlock(std::optional<Node
     // Mark block as in-flight
     if (!BlockRequested(peer_id, block_index)) return util::Unexpected{"Already requested from this peer"};
 
-    // Track block request
-    m_block_tracker.track(block_index.GetBlockHash(), peer_id);
+    // Track block request (only if requested)
+    if (retry) m_block_tracker.track(block_index.GetBlockHash(), peer_id);
 
     // Construct message to request the block
     const uint256& hash{block_index.GetBlockHash()};
