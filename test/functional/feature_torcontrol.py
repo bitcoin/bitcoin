@@ -237,11 +237,32 @@ class TorControlTest(BitcoinTestFramework):
 
         mock_tor.stop()
 
+    def test_overmany_lines(self):
+        mock_tor = MockTorControlServer(self.next_port(), manual_mode=True)
+        self.restart_with_mock(mock_tor)
+
+        MAX_LINE_COUNT = 1000
+
+        self.log.info("Test that Tor control does not disconnect on receiving MAX_LINE_COUNT lines.")
+        with self.expect_disconnect(False, mock_tor):
+            for _ in range(MAX_LINE_COUNT - 1):
+                mock_tor.send_raw("250-Continuing\r\n")
+            mock_tor.send_raw("250 OK\r\n")
+
+        self.log.info("Test that Tor control disconnects on receiving MAX_LINE_COUNT + 1 lines.")
+        with self.expect_disconnect(True, mock_tor):
+            for _ in range(MAX_LINE_COUNT + 1):
+                mock_tor.send_raw("250-Continuing\r\n")
+
+        mock_tor.stop()
+
     def run_test(self):
         self.test_basic()
         self.test_partial_data()
         self.test_pow_fallback()
         self.test_oversized_line()
+        self.test_overmany_lines()
+
 
 if __name__ == '__main__':
     TorControlTest(__file__).main()
