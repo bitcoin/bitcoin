@@ -50,7 +50,7 @@ class P2PIBDTxRelayTest(BitcoinTestFramework):
 
         self.nodes[0].setmocktime(int(time.time()))
         self.log.info("Mine one old block so we stay in IBD, then remember its coinbase wtxid")
-        block = create_block(int(self.nodes[0].getbestblockhash(), 16), create_coinbase(1), int(time.time()) - 2 * 24 * 60 * 60)
+        block = create_block(int(self.nodes[0].getbestblockhash(), 16), height=1, ntime=int(time.time()) - 2 * 24 * 60 * 60)
         block.solve()
         self.nodes[0].submitblock(block.serialize().hex())
         assert self.nodes[0].getblockchaininfo()['initialblockdownload']

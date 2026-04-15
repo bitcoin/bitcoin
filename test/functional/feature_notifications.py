@@ -174,7 +174,7 @@ class NotificationsTest(BitcoinTestFramework):
 
         invalid_blocks = []
         for _ in range(7):  # invalid chain must be longer than 6 blocks to trigger warning
-            block = create_block(int(tip, 16), create_coinbase(height), block_time)
+            block = create_block(int(tip, 16), height=height, ntime=block_time)
             # make block invalid by exceeding block subsidy
             block.vtx[0].vout[0].nValue += 1
             block.hashMerkleRoot = block.calc_merkle_root()

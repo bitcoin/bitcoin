@@ -607,7 +607,7 @@ class BlockchainTest(BitcoinTestFramework):
         fork_block = node.getblock(fork_hash)
 
         def solve_and_send_block(prevhash, height, time):
-            b = create_block(prevhash, create_coinbase(height), time)
+            b = create_block(prevhash, height=height, ntime=time)
             b.solve()
             peer.send_and_ping(msg_block(b))
             return b

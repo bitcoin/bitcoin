@@ -129,7 +129,7 @@ def create_empty_fork(node, fork_length=FORK_LENGTH):
 
     blocks = []
     for _ in range(fork_length):
-        block = create_block(tip, create_coinbase(height + 1), block_time)
+        block = create_block(tip, height=height + 1, ntime=block_time)
         block.solve()
         blocks.append(block)
         tip = block.hash_int

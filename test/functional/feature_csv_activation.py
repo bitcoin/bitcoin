@@ -170,7 +170,7 @@ class BIP68_112_113Test(BitcoinTestFramework):
         return test_blocks
 
     def create_test_block(self, txs):
-        block = create_block(self.tip, create_coinbase(self.tipheight + 1), self.last_block_time + 600, txlist=txs)
+        block = create_block(self.tip, height=self.tipheight + 1, ntime=self.last_block_time + 600, txlist=txs)
         block.solve()
         return block
 
