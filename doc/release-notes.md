@@ -81,6 +81,7 @@ Notable changes
 - #34608 test: Fix broken --valgrind handling after bitcoin wrapper
 - #34690 test: Add missing timeout_factor to zmq socket
 - #34869 tests: applied PYTHON_GIL to the env for every test
+- #35080 test: Add missing self.options.timeout_factor scale in tool_bitcoin_chainstate.py
 
 ### Util
 
