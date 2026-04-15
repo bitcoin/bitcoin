@@ -5,4 +5,10 @@
   { "include": [ "<mmintrin.h>", "private", "<immintrin.h>", "public" ] },
   { "include": [ "<smmintrin.h>", "private", "<immintrin.h>", "public" ] },
   { "include": [ "<tmmintrin.h>", "private", "<immintrin.h>", "public" ] },
+
+  # IWYU's std_symbol_map.inc maps std::hash<T> specializations to their
+  # correct headers, but with libstdc++ IWYU still suggests a wrong
+  # header for the bare std::hash symbol. Map it to <functional> where
+  # the primary template is defined.
+  { "symbol": ["std::hash", "private", "<functional>", "public"] },
 ]
