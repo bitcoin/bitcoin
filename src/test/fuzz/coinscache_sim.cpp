@@ -144,7 +144,7 @@ class CoinsViewBottom final : public CoinsViewEmpty
     std::map<COutPoint, Coin> m_data;
 
 public:
-    std::optional<Coin> GetCoin(const COutPoint& outpoint) const final
+    std::optional<Coin> GetCoin(const COutPoint& outpoint, bool = false) const final
     {
         if (auto it{m_data.find(outpoint)}; it != m_data.end()) {
             assert(!it->second.IsSpent());
@@ -247,14 +247,12 @@ FUZZ_TARGET(coinscache_sim)
         CallOneOf(
             provider,
 
-            [&]() { // PeekCoin/GetCoin
+            [&]() { // GetCoin
                 uint32_t outpointidx = provider.ConsumeIntegralInRange<uint32_t>(0, NUM_OUTPOINTS - 1);
                 // Look up in simulation data.
                 auto sim = lookup(outpointidx);
                 // Look up in real caches.
-                auto realcoin = provider.ConsumeBool() ?
-                    caches.back()->PeekCoin(data.outpoints[outpointidx]) :
-                    caches.back()->GetCoin(data.outpoints[outpointidx]);
+                auto realcoin = caches.back()->GetCoin(data.outpoints[outpointidx], /*peek_only=*/provider.ConsumeBool());
                 // Compare results.
                 if (!sim.has_value()) {
                     assert(!realcoin);

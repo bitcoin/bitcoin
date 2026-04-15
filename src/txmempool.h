@@ -768,8 +768,9 @@ protected:
 public:
     CCoinsViewMemPool(CCoinsView* baseIn, const CTxMemPool& mempoolIn);
     /** GetCoin, returning whether it exists and is not spent. Also updates m_non_base_coins if the
-     * coin is not fetched from base. May populate the base view on cache misses. */
-    std::optional<Coin> GetCoin(const COutPoint& outpoint) const override;
+     * coin is not fetched from base. May populate the base view on cache misses unless
+     * peek_only is true. */
+    std::optional<Coin> GetCoin(const COutPoint& outpoint, bool peek_only = false) const override;
     /** Add the coins created by this transaction. These coins are only temporarily stored in
      * m_temp_added and cannot be flushed to the back end. Only used for package validation. */
     void PackageAddTransaction(const CTransactionRef& tx);

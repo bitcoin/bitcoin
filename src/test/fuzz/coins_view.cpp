@@ -112,7 +112,7 @@ void TestCoinsView(FuzzedDataProvider& fuzzed_data_provider, CCoinsViewCache& co
                 Coin coin{random_coin};
                 if (fuzzed_data_provider.ConsumeBool()) {
                     // We can only skip the check if no unspent coin exists for this outpoint.
-                    const bool possible_overwrite{coins_view_cache.PeekCoin(outpoint) || fuzzed_data_provider.ConsumeBool()};
+                    const bool possible_overwrite{coins_view_cache.GetCoin(outpoint, /*peek_only=*/fuzzed_data_provider.ConsumeBool()) || fuzzed_data_provider.ConsumeBool()};
                     coins_view_cache.AddCoin(outpoint, std::move(coin), possible_overwrite);
                 } else {
                     coins_view_cache.EmplaceCoinInternalDANGER(std::move(outpoint), std::move(coin));
@@ -205,7 +205,7 @@ void TestCoinsView(FuzzedDataProvider& fuzzed_data_provider, CCoinsViewCache& co
                         coins_cache_entry.coin = *opt_coin;
                     }
                     // Avoid setting FRESH for an outpoint that already exists unspent in the parent view.
-                    bool fresh{!coins_view_cache.PeekCoin(random_out_point) && fuzzed_data_provider.ConsumeBool()};
+                    bool fresh{!coins_view_cache.GetCoin(random_out_point, /*peek_only=*/true) && fuzzed_data_provider.ConsumeBool()};
                     bool dirty{fresh || fuzzed_data_provider.ConsumeBool()};
                     auto it{coins_map.emplace(random_out_point, std::move(coins_cache_entry)).first};
                     if (dirty) CCoinsCacheEntry::SetDirty(*it, sentinel);
@@ -265,7 +265,7 @@ void TestCoinsView(FuzzedDataProvider& fuzzed_data_provider, CCoinsViewCache& co
                 const int height{int(fuzzed_data_provider.ConsumeIntegral<uint32_t>() >> 1)};
                 const bool check_for_overwrite{transaction.IsCoinBase() || [&] {
                     for (uint32_t i{0}; i < transaction.vout.size(); ++i) {
-                        if (coins_view_cache.PeekCoin(COutPoint{transaction.GetHash(), i})) return true;
+                        if (coins_view_cache.GetCoin(COutPoint{transaction.GetHash(), i}, /*peek_only=*/fuzzed_data_provider.ConsumeBool())) return true;
                     }
                     return fuzzed_data_provider.ConsumeBool();
                 }()}; // We can only skip the check if the current txid has no unspent outputs
