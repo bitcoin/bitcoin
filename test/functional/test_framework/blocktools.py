@@ -95,7 +95,7 @@ def nbits_str(nbits):
 def target_str(target):
     return f"{target:064x}"
 
-def create_block(hashprev=None, coinbase=None, ntime=None, *, height=None, version=None, tmpl=None, txlist=None):
+def create_block(hashprev=None, coinbase=None, *, ntime=None, height=None, version=None, tmpl=None, txlist=None):
     """Create a block (with regtest difficulty)."""
     block = CBlock()
     if tmpl is None:

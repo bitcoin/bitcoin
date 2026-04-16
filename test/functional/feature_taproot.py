@@ -1425,7 +1425,7 @@ class TaprootTest(BitcoinTestFramework):
         extra_output_script = CScript(bytes([OP_CHECKSIG]*((MAX_BLOCK_SIGOPS_WEIGHT - sigops_weight) // WITNESS_SCALE_FACTOR)))
 
         coinbase_tx = create_coinbase(self.lastblockheight + 1, pubkey=cb_pubkey, extra_output_script=extra_output_script, fees=fees)
-        block = create_block(self.tip, coinbase_tx, self.lastblocktime + 1, txlist=txs)
+        block = create_block(self.tip, coinbase_tx, ntime=self.lastblocktime + 1, txlist=txs)
         witness and add_witness_commitment(block)
         block.solve()
         block_response = node.submitblock(block.serialize().hex())

@@ -99,7 +99,7 @@ class InvalidBlockRequestTest(BitcoinTestFramework):
 
         self.log.info("Test very broken block.")
 
-        block3 = create_block(tip, create_coinbase(height, nValue=100), block_time)
+        block3 = create_block(tip, create_coinbase(height, nValue=100), ntime=block_time)
         block_time += 1
         block3.solve()
 

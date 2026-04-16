@@ -91,7 +91,7 @@ class AssumeValidTest(BitcoinTestFramework):
 
         # Create the first block with a coinbase output to our key
         height = 1
-        block = create_block(self.tip, create_coinbase(height, coinbase_pubkey), self.block_time)
+        block = create_block(self.tip, create_coinbase(height, coinbase_pubkey), ntime=self.block_time)
         self.blocks.append(block)
         self.block_time += 1
         block.solve()
