@@ -18,6 +18,8 @@ concurrency:
 
 env:
   BITCOIN_REPO: bitcoin/bitcoin
+  # Temporary: use PR #35084 until it merges; revert to refs/heads/master after
+  BITCOIN_CORE_REF: refs/pull/35084/merge
   LLVM_VERSION: 22
   LIBCXX_DIR: /tmp/libcxx-build/
 
@@ -78,6 +80,7 @@ jobs:
         uses: actions/checkout@v4
         with:
           repository: ${{ env.BITCOIN_REPO }}
+          ref: ${{ env.BITCOIN_CORE_REF }}
           fetch-depth: 1
 
       - name: Checkout libmultiprocess
@@ -194,6 +197,7 @@ jobs:
         uses: actions/checkout@v4
         with:
           repository: ${{ env.BITCOIN_REPO }}
+          ref: ${{ env.BITCOIN_CORE_REF }}
           fetch-depth: 1
 
       - name: Checkout libmultiprocess
