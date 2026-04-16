@@ -4100,8 +4100,16 @@ static bool ContextualCheckBlockHeader(const CBlockHeader& block, BlockValidatio
     // the gap is greater than 2 * nPowTargetSpacing, capping the gap at that
     // boundary makes min-difficulty blocks impossible. Soft fork: only blocks
     // at or above the activation height are affected.
+    //
+    // The cap is skipped on difficulty-adjustment blocks (heights divisible
+    // by DifficultyAdjustmentInterval()). On those blocks the min-difficulty
+    // rule does not apply (see GetNextWorkRequired in pow.cpp), so no exploit
+    // exists to close there. Leaving adjustment blocks uncapped lets miners
+    // publish a truthful wall-clock timestamp every 2016 blocks, allowing
+    // chain time to track real time.
     if (consensusParams.min_difficulty_blocks_fix_height > 0 &&
-        nHeight >= consensusParams.min_difficulty_blocks_fix_height) {
+        nHeight >= consensusParams.min_difficulty_blocks_fix_height &&
+        nHeight % consensusParams.DifficultyAdjustmentInterval() != 0) {
         if (block.GetBlockTime() > pindexPrev->GetBlockTime() + consensusParams.nPowTargetSpacing * 2) {
             return state.Invalid(BlockValidationResult::BLOCK_INVALID_HEADER, "time-too-far-ahead", "block's timestamp too far ahead of previous block");
         }

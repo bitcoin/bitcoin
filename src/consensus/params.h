@@ -128,6 +128,12 @@ struct Params {
      * block's timestamp, capping that gap eliminates min-difficulty blocks
      * entirely without removing the min-difficulty rule itself.
      *
+     * The cap does not apply to difficulty-adjustment blocks (heights divisible
+     * by DifficultyAdjustmentInterval()). On those blocks the min-difficulty
+     * rule is not consulted, so there is no exploit to close, and leaving them
+     * uncapped lets miners publish a truthful wall-clock timestamp every 2016
+     * blocks so that chain time can track real time.
+     *
      * This is a soft fork: previously-valid blocks at heights below this value
      * are unaffected. A value of 0 disables the rule (default for chains where
      * it does not apply).

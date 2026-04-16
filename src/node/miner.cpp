@@ -51,7 +51,8 @@ int64_t GetMaximumTime(const CBlockIndex* pindexPrev, const Consensus::Params& c
 {
     const int height{pindexPrev->nHeight + 1};
     if (consensusParams.min_difficulty_blocks_fix_height > 0 &&
-        height >= consensusParams.min_difficulty_blocks_fix_height) {
+        height >= consensusParams.min_difficulty_blocks_fix_height &&
+        height % consensusParams.DifficultyAdjustmentInterval() != 0) {
         return pindexPrev->GetBlockTime() + consensusParams.nPowTargetSpacing * 2;
     }
     return std::numeric_limits<int64_t>::max();

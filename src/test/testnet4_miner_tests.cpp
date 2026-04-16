@@ -94,10 +94,10 @@ BOOST_AUTO_TEST_CASE(MinDifficultyBlocksFixMaxTimeAtFork)
 {
     const auto& consensus = Params().GetConsensus();
 
-    // pindexPrev at height 151199 -> next block height 151200 is the first
-    // block subject to the rule. Max allowed timestamp = prev + 2 * spacing.
+    // pindexPrev at height 151200 -> next block height 151201 is the first
+    // non-adjustment block post-fork subject to the cap.
     CBlockIndex pindexPrev;
-    pindexPrev.nHeight = 151199;
+    pindexPrev.nHeight = 151200;
     pindexPrev.nTime = 1700000000;
 
     BOOST_CHECK_EQUAL(GetMaximumTime(&pindexPrev, consensus),
@@ -108,12 +108,41 @@ BOOST_AUTO_TEST_CASE(MinDifficultyBlocksFixMaxTimeAfterFork)
 {
     const auto& consensus = Params().GetConsensus();
 
+    // 200001 % 2016 = 417, so next block is not an adjustment block.
     CBlockIndex pindexPrev;
     pindexPrev.nHeight = 200000;
     pindexPrev.nTime = 1800000000;
 
     BOOST_CHECK_EQUAL(GetMaximumTime(&pindexPrev, consensus),
                       1800000000 + consensus.nPowTargetSpacing * 2);
+}
+
+BOOST_AUTO_TEST_CASE(MinDifficultyBlocksFixMaxTimeOnActivationAdjustmentBlock)
+{
+    const auto& consensus = Params().GetConsensus();
+
+    // The activation height 151200 = 2016 * 75 is itself a difficulty-
+    // adjustment block. The cap must not apply to it.
+    CBlockIndex pindexPrev;
+    pindexPrev.nHeight = 151199;
+    pindexPrev.nTime = 1700000000;
+
+    BOOST_CHECK_EQUAL(GetMaximumTime(&pindexPrev, consensus),
+                      std::numeric_limits<int64_t>::max());
+}
+
+BOOST_AUTO_TEST_CASE(MinDifficultyBlocksFixMaxTimeOnLaterAdjustmentBlock)
+{
+    const auto& consensus = Params().GetConsensus();
+
+    // Next block height 153216 = 2016 * 76 is the first post-activation
+    // adjustment block after the fork epoch. Cap must not apply.
+    CBlockIndex pindexPrev;
+    pindexPrev.nHeight = 153215;
+    pindexPrev.nTime = 1700000000;
+
+    BOOST_CHECK_EQUAL(GetMaximumTime(&pindexPrev, consensus),
+                      std::numeric_limits<int64_t>::max());
 }
 
 BOOST_AUTO_TEST_CASE(MinDifficultyBlocksFixMaxTimeDisabledOnOtherChains)
