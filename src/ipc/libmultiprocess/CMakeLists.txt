@@ -13,7 +13,7 @@ endif()
 include("cmake/compat_find.cmake")
 
 find_package(Threads REQUIRED)
-find_package(CapnProto 0.7 QUIET NO_MODULE)
+find_package(CapnProto 0.9 QUIET NO_MODULE)
  if(NOT CapnProto_FOUND)
    message(FATAL_ERROR
      "Cap'n Proto is required but was not found.\n"
