@@ -166,7 +166,7 @@ void WriteSpawnError(int fd, const SpawnError& error)
 
 // Get rid of a child process the parent is abandoning because SpawnProcess is
 // about to throw, so it is not left behind as a zombie. The child may still be
-// alive, so kill it first: waiting without that could block for as long as the 
+// alive, so kill it first: waiting without that could block for as long as the
 // spawned program runs.
 void KillAndReapChild(ProcessId pid)
 {
