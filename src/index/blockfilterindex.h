@@ -63,8 +63,6 @@ private:
     std::optional<uint256> ReadFilterHeader(int height, const uint256& expected_block_hash);
 
 protected:
-    interfaces::Chain::NotifyOptions CustomOptions() override;
-
     bool CustomInit(const std::optional<interfaces::BlockRef>& block) override;
 
     bool CustomCommit(CDBBatch& batch) override;
@@ -79,6 +77,8 @@ public:
     /** Constructs the index, which becomes available to be queried. */
     explicit BlockFilterIndex(std::unique_ptr<interfaces::Chain> chain, BlockFilterType filter_type,
                               size_t n_cache_size, bool f_memory = false, bool f_wipe = false);
+
+    interfaces::Chain::NotifyOptions CustomOptions() override;
 
     BlockFilterType GetFilterType() const { return m_filter_type; }
 

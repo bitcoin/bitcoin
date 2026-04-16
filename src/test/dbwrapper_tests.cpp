@@ -3,6 +3,7 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <dbwrapper.h>
+#include <test/util/common.h>
 #include <test/util/random.h>
 #include <test/util/setup_common.h>
 #include <uint256.h>
@@ -364,7 +365,7 @@ struct StringContentsSerializer {
     {
         str.clear();
         uint8_t c{0};
-        while (!s.eof()) {
+        while (!s.empty()) {
             s >> c;
             str.push_back(c);
         }

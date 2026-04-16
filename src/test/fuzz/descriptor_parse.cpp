@@ -61,6 +61,10 @@ static void TestDescriptor(const Descriptor& desc, FlatSigningProvider& sig_prov
     const bool is_nontop_or_nonsolvable{!*is_solvable || !desc.GetOutputType()};
     const bool is_input_size_info_set{max_sat_maxsig && max_sat_nonmaxsig && max_elems};
     assert(is_input_size_info_set || is_nontop_or_nonsolvable);
+
+    auto max_key_expr = desc.GetMaxKeyExpr();
+    auto key_count = desc.GetKeyCount();
+    assert((max_key_expr == 0 && key_count == 0) || max_key_expr + 1 == key_count);
 }
 
 void initialize_descriptor_parse()

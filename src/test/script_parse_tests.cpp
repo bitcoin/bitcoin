@@ -5,7 +5,7 @@
 #include <core_io.h>
 #include <script/script.h>
 #include <util/strencodings.h>
-#include <test/util/setup_common.h>
+#include <test/util/common.h>
 
 #include <boost/test/unit_test.hpp>
 

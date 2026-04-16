@@ -91,9 +91,11 @@ set(ts_files
   bitcoin_uz@Latn.ts
   bitcoin_ve.ts
   bitcoin_yi.ts
+  bitcoin_yo.ts
   bitcoin_yue.ts
   bitcoin_zh-Hans.ts
   bitcoin_zh-Hant.ts
+  bitcoin_zh.ts
   bitcoin_zh_CN.ts
   bitcoin_zh_HK.ts
   bitcoin_zh_TW.ts

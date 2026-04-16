@@ -1058,6 +1058,16 @@ O le fa'amaoniga o le malaga o le a fai se kopi o le 'aofa'i a'o le'i fa'aauau l
         <translation type="unfinished">O tusitusiga e mafai ona foʻia ae leʻi mataʻituina ua siitia atu i se atotupe fou ua faaigoaina '%1'.</translation>
     </message>
     <message>
+        <source>Restore Wallet</source>
+        <extracomment>Title of progress window which is displayed when wallets are being restored.</extracomment>
+        <translation type="unfinished">Toe fa'aleleia le Pusa O le 'Aumauga</translation>
+    </message>
+    <message>
+        <source>Restoring Wallet &lt;b&gt;%1&lt;/b&gt;…</source>
+        <extracomment>Descriptive text of the restore wallets progress window which indicates to the user that wallets are currently being restored.</extracomment>
+        <translation type="unfinished">Toe Faʻaleleia le ʻApefaʻamau &lt;b&gt;%1&lt;/b&gt;…</translation>
+    </message>
+    <message>
         <source>Migration failed</source>
         <translation type="unfinished">Ua le manuia le siʻitia.</translation>
     </message>
@@ -1179,10 +1189,6 @@ O le fa'amaoniga o le malaga o le a fai se kopi o le 'aofa'i a'o le'i fa'aauau l
     <message>
         <source>Disable Private Keys</source>
         <translation type="unfinished">Faʻamaonia o Ki Faʻamaonia</translation>
-    </message>
-    <message>
-        <source>Make a blank wallet. Blank wallets do not initially have private keys or scripts. Private keys and addresses can be imported, or an HD seed can be set, at a later time.</source>
-        <translation type="unfinished">Fai se 'uati leai se mea i totonu. O 'uati leai se mea i totonu e le'o i ai i le amataga ki patino po'o tusitusiga. E mafai ona fa'amae'a ki patino ma tu'ufua, po'o le fa'amaonia o se HD seed i se taimi mulimuli.</translation>
     </message>
     <message>
         <source>Make Blank Wallet</source>
@@ -1862,6 +1868,25 @@ O le fa'amaoniga o le malaga o le a fai se kopi o le 'aofa'i a'o le'i fa'aauau l
     <message>
         <source>Recent transactions</source>
         <translation type="unfinished">Fa'amaoniga talu ai</translation>
+    </message>
+    </context>
+<context>
+    <name>PSBTOperationsDialog</name>
+    <message numerus="yes">
+        <source>Signed %n input(s), but more signatures are still required.</source>
+        <translation type="unfinished">
+            <numerusform />
+            <numerusform />
+            <numerusform />
+        </translation>
+    </message>
+    <message numerus="yes">
+        <source>Transaction has %n unsigned input(s).</source>
+        <translation type="unfinished">
+            <numerusform />
+            <numerusform />
+            <numerusform />
+        </translation>
     </message>
     </context>
 <context>

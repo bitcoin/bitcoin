@@ -6,6 +6,7 @@
 #include <clientversion.h>
 #include <coins.h>
 #include <streams.h>
+#include <test/util/common.h>
 #include <test/util/poolresourcetester.h>
 #include <test/util/random.h>
 #include <test/util/setup_common.h>
@@ -37,14 +38,14 @@ bool operator==(const Coin &a, const Coin &b) {
            a.out == b.out;
 }
 
-class CCoinsViewTest : public CCoinsView
+class CCoinsViewTest : public CoinsViewEmpty
 {
     FastRandomContext& m_rng;
     uint256 hashBestBlock_;
     std::map<COutPoint, Coin> map_;
 
 public:
-    CCoinsViewTest(FastRandomContext& rng) : m_rng{rng} {}
+    explicit CCoinsViewTest(FastRandomContext& rng) : m_rng{rng} {}
 
     std::optional<Coin> GetCoin(const COutPoint& outpoint) const override
     {
@@ -54,7 +55,7 @@ public:
 
     uint256 GetBestBlock() const override { return hashBestBlock_; }
 
-    void BatchWrite(CoinsViewCacheCursor& cursor, const uint256& hashBlock) override
+    void BatchWrite(CoinsViewCacheCursor& cursor, const uint256& block_hash) override
     {
         for (auto it{cursor.Begin()}; it != cursor.End(); it = cursor.NextAndMaybeErase(*it)){
             if (it->second.IsDirty()) {
@@ -66,8 +67,8 @@ public:
                 }
             }
         }
-        if (!hashBlock.IsNull())
-            hashBestBlock_ = hashBlock;
+        if (!block_hash.IsNull())
+            hashBestBlock_ = block_hash;
     }
 };
 
@@ -95,6 +96,7 @@ public:
     CCoinsMap& map() const { return cacheCoins; }
     CoinsCachePair& sentinel() const { return m_sentinel; }
     size_t& usage() const { return cachedCoinsUsage; }
+    size_t& dirty() const { return m_dirty_count; }
 };
 
 } // namespace
@@ -189,8 +191,11 @@ void SimulationTest(CCoinsView* base, bool fake_best_block)
                     (coin.IsSpent() ? added_an_entry : updated_an_entry) = true;
                     coin = newcoin;
                 }
-                bool is_overwrite = !coin.IsSpent() || m_rng.rand32() & 1;
-                stack.back()->AddCoin(COutPoint(txid, 0), std::move(newcoin), is_overwrite);
+                if (COutPoint op(txid, 0); !stack.back()->map().contains(op) && !newcoin.out.scriptPubKey.IsUnspendable() && m_rng.randbool()) {
+                    stack.back()->EmplaceCoinInternalDANGER(std::move(op), std::move(newcoin));
+                } else {
+                    stack.back()->AddCoin(op, std::move(newcoin), /*possible_overwrite=*/!coin.IsSpent() || m_rng.randbool());
+                }
             } else {
                 // Spend the coin.
                 removed_an_entry = true;
@@ -517,37 +522,33 @@ BOOST_FIXTURE_TEST_CASE(updatecoins_simulation_test, UpdateTest)
 BOOST_AUTO_TEST_CASE(ccoins_serialization)
 {
     // Good example
-    DataStream ss1{"97f23c835800816115944e077fe7c803cfa57f29b36bf87c1d35"_hex};
     Coin cc1;
-    ss1 >> cc1;
+    SpanReader{"97f23c835800816115944e077fe7c803cfa57f29b36bf87c1d35"_hex} >> cc1;
     BOOST_CHECK_EQUAL(cc1.fCoinBase, false);
     BOOST_CHECK_EQUAL(cc1.nHeight, 203998U);
     BOOST_CHECK_EQUAL(cc1.out.nValue, CAmount{60000000000});
     BOOST_CHECK_EQUAL(HexStr(cc1.out.scriptPubKey), HexStr(GetScriptForDestination(PKHash(uint160("816115944e077fe7c803cfa57f29b36bf87c1d35"_hex_u8)))));
 
     // Good example
-    DataStream ss2{"8ddf77bbd123008c988f1a4a4de2161e0f50aac7f17e7f9555caa4"_hex};
     Coin cc2;
-    ss2 >> cc2;
+    SpanReader{"8ddf77bbd123008c988f1a4a4de2161e0f50aac7f17e7f9555caa4"_hex} >> cc2;
     BOOST_CHECK_EQUAL(cc2.fCoinBase, true);
     BOOST_CHECK_EQUAL(cc2.nHeight, 120891U);
     BOOST_CHECK_EQUAL(cc2.out.nValue, 110397);
     BOOST_CHECK_EQUAL(HexStr(cc2.out.scriptPubKey), HexStr(GetScriptForDestination(PKHash(uint160("8c988f1a4a4de2161e0f50aac7f17e7f9555caa4"_hex_u8)))));
 
     // Smallest possible example
-    DataStream ss3{"000006"_hex};
     Coin cc3;
-    ss3 >> cc3;
+    SpanReader{"000006"_hex} >> cc3;
     BOOST_CHECK_EQUAL(cc3.fCoinBase, false);
     BOOST_CHECK_EQUAL(cc3.nHeight, 0U);
     BOOST_CHECK_EQUAL(cc3.out.nValue, 0);
     BOOST_CHECK_EQUAL(cc3.out.scriptPubKey.size(), 0U);
 
     // scriptPubKey that ends beyond the end of the stream
-    DataStream ss4{"000007"_hex};
     try {
         Coin cc4;
-        ss4 >> cc4;
+        SpanReader{"000007"_hex} >> cc4;
         BOOST_CHECK_MESSAGE(false, "We should have thrown");
     } catch (const std::ios_base::failure&) {
     }
@@ -557,10 +558,9 @@ BOOST_AUTO_TEST_CASE(ccoins_serialization)
     uint64_t x = 3000000000ULL;
     tmp << VARINT(x);
     BOOST_CHECK_EQUAL(HexStr(tmp), "8a95c0bb00");
-    DataStream ss5{"00008a95c0bb00"_hex};
     try {
         Coin cc5;
-        ss5 >> cc5;
+        SpanReader{"00008a95c0bb00"_hex} >> cc5;
         BOOST_CHECK_MESSAGE(false, "We should have thrown");
     } catch (const std::ios_base::failure&) {
     }
@@ -658,8 +658,10 @@ static void WriteCoinsViewEntry(CCoinsView& view, const MaybeCoin& cache_coin)
     CCoinsMapMemoryResource resource;
     CCoinsMap map{0, CCoinsMap::hasher{}, CCoinsMap::key_equal{}, &resource};
     if (cache_coin) InsertCoinsMapEntry(map, sentinel, *cache_coin);
-    auto cursor{CoinsViewCacheCursor(sentinel, map, /*will_erase=*/true)};
+    size_t dirty_count{cache_coin && cache_coin->IsDirty()};
+    auto cursor{CoinsViewCacheCursor(dirty_count, sentinel, map, /*will_erase=*/true)};
     view.BatchWrite(cursor, {});
+    BOOST_CHECK_EQUAL(dirty_count, 0U);
 }
 
 class SingleEntryCacheTest
@@ -669,11 +671,13 @@ public:
     {
         auto base_cache_coin{base_value == ABSENT ? MISSING : CoinEntry{base_value, CoinEntry::State::DIRTY}};
         WriteCoinsViewEntry(base, base_cache_coin);
-        if (cache_coin) cache.usage() += InsertCoinsMapEntry(cache.map(), cache.sentinel(), *cache_coin);
+        if (cache_coin) {
+            cache.usage() += InsertCoinsMapEntry(cache.map(), cache.sentinel(), *cache_coin);
+            cache.dirty() += cache_coin->IsDirty();
+        }
     }
 
-    CCoinsView root;
-    CCoinsViewCacheTest base{&root};
+    CCoinsViewCacheTest base{&CoinsViewEmpty::Get()};
     CCoinsViewCacheTest cache{&base};
 };
 
@@ -905,7 +909,7 @@ void TestFlushBehavior(
         for (auto i = all_caches.rbegin(); i != all_caches.rend(); ++i) {
             auto& cache = *i;
             cache->SanityCheck();
-            // hashBlock must be filled before flushing to disk; value is
+            // block_hash must be filled before flushing to disk; value is
             // unimportant here. This is normally done during connect/disconnect block.
             cache->SetBestBlock(m_rng.rand256());
             erase ? cache->Flush() : cache->Sync();
@@ -1082,8 +1086,7 @@ BOOST_AUTO_TEST_CASE(coins_resource_is_used)
 
 BOOST_AUTO_TEST_CASE(ccoins_addcoin_exception_keeps_usage_balanced)
 {
-    CCoinsView root;
-    CCoinsViewCacheTest cache{&root};
+    CCoinsViewCacheTest cache{&CoinsViewEmpty::Get()};
 
     const COutPoint outpoint{Txid::FromUint256(m_rng.rand256()), m_rng.rand32()};
 
@@ -1100,8 +1103,7 @@ BOOST_AUTO_TEST_CASE(ccoins_addcoin_exception_keeps_usage_balanced)
 
 BOOST_AUTO_TEST_CASE(ccoins_emplace_duplicate_keeps_usage_balanced)
 {
-    CCoinsView root;
-    CCoinsViewCacheTest cache{&root};
+    CCoinsViewCacheTest cache{&CoinsViewEmpty::Get()};
 
     const COutPoint outpoint{Txid::FromUint256(m_rng.rand256()), m_rng.rand32()};
 
@@ -1130,6 +1132,7 @@ BOOST_AUTO_TEST_CASE(ccoins_reset_guard)
 
     const Coin coin{CTxOut{m_rng.randrange(10), CScript{} << m_rng.randbytes(CScriptBase::STATIC_SIZE + 1)}, 1, false};
     cache.EmplaceCoinInternalDANGER(COutPoint{outpoint}, Coin{coin});
+    BOOST_CHECK_EQUAL(cache.GetDirtyCount(), 1U);
 
     uint256 cache_best_block{m_rng.rand256()};
     cache.SetBestBlock(cache_best_block);
@@ -1139,12 +1142,14 @@ BOOST_AUTO_TEST_CASE(ccoins_reset_guard)
         BOOST_CHECK(cache.AccessCoin(outpoint) == coin);
         BOOST_CHECK(!cache.AccessCoin(outpoint).IsSpent());
         BOOST_CHECK_EQUAL(cache.GetCacheSize(), 1);
+        BOOST_CHECK_EQUAL(cache.GetDirtyCount(), 1);
         BOOST_CHECK_EQUAL(cache.GetBestBlock(), cache_best_block);
         BOOST_CHECK(!root_cache.HaveCoinInCache(outpoint));
     }
 
     BOOST_CHECK(cache.AccessCoin(outpoint).IsSpent());
     BOOST_CHECK_EQUAL(cache.GetCacheSize(), 0);
+    BOOST_CHECK_EQUAL(cache.GetDirtyCount(), 0);
     BOOST_CHECK_EQUAL(cache.GetBestBlock(), base_best_block);
     BOOST_CHECK(!root_cache.HaveCoinInCache(outpoint));
 
@@ -1155,8 +1160,34 @@ BOOST_AUTO_TEST_CASE(ccoins_reset_guard)
 
     BOOST_CHECK(cache.AccessCoin(outpoint).IsSpent());
     BOOST_CHECK_EQUAL(cache.GetCacheSize(), 0);
+    BOOST_CHECK_EQUAL(cache.GetDirtyCount(), 0U);
     BOOST_CHECK_EQUAL(cache.GetBestBlock(), base_best_block);
     BOOST_CHECK(!root_cache.HaveCoinInCache(outpoint));
+
+    // Flush should be a no-op after reset.
+    cache.Flush();
+    BOOST_CHECK_EQUAL(cache.GetDirtyCount(), 0U);
+}
+
+BOOST_AUTO_TEST_CASE(ccoins_peekcoin)
+{
+    CCoinsViewTest base{m_rng};
+
+    // Populate the base view with a coin.
+    const COutPoint outpoint{Txid::FromUint256(m_rng.rand256()), m_rng.rand32()};
+    const Coin coin{CTxOut{m_rng.randrange(10), CScript{}}, 1, false};
+    {
+        CCoinsViewCache cache{&base};
+        cache.AddCoin(outpoint, Coin{coin}, /*possible_overwrite=*/false);
+        cache.Flush();
+    }
+
+    // Verify PeekCoin can read through the cache stack without mutating the intermediate cache.
+    CCoinsViewCacheTest main_cache{&base};
+    const auto fetched{main_cache.PeekCoin(outpoint)};
+    BOOST_CHECK(fetched.has_value());
+    BOOST_CHECK(*fetched == coin);
+    BOOST_CHECK(!main_cache.HaveCoinInCache(outpoint));
 }
 
 BOOST_AUTO_TEST_SUITE_END()

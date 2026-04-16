@@ -81,8 +81,8 @@ class MutatedBlocksTest(BitcoinTestFramework):
         # mutated block (as the attacker).
         with self.nodes[0].assert_debug_log(expected_msgs=["Block mutated: bad-txnmrklroot, hashMerkleRoot mismatch"]):
             attacker.send_without_ping(msg_block(mutated_block))
-        # Attacker should get disconnected for sending a mutated block
-        attacker.wait_for_disconnect(timeout=5)
+            # Attacker should get disconnected for sending a mutated block
+            attacker.wait_for_disconnect(timeout=5)
 
         # Block at height 101 should *still* be the only block in-flight from
         # peer 0
@@ -108,7 +108,7 @@ class MutatedBlocksTest(BitcoinTestFramework):
         assert_equal(len(self.nodes[0].getpeerinfo()), 2)
         with self.nodes[0].assert_debug_log(expected_msgs=["AcceptBlock FAILED (prev-blk-not-found)"]):
             attacker.send_without_ping(msg_block(block_missing_prev))
-        attacker.wait_for_disconnect(timeout=5)
+            attacker.wait_for_disconnect(timeout=5)
 
 
 if __name__ == '__main__':

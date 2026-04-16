@@ -294,9 +294,9 @@ public:
             mapValueCopy["timesmart"] = strprintf("%u", nTimeSmart);
         }
 
-        std::vector<uint8_t> dummy_vector1; //!< Used to be vMerkleBranch
-        std::vector<uint8_t> dummy_vector2; //!< Used to be vtxPrev
-        bool dummy_bool = false; //!< Used to be fFromMe, and fSpent
+        std::vector<uint8_t> dummy_vector1; // Used to be vMerkleBranch
+        std::vector<uint8_t> dummy_vector2; // Used to be vtxPrev
+        bool dummy_bool = false; // Used to be fFromMe, and fSpent
         uint32_t dummy_int = 0; // Used to be fTimeReceivedIsTxTime
         uint256 serializedHash = TxStateSerializedBlockHash(m_state);
         int serializedIndex = TxStateSerializedIndex(m_state);
@@ -308,9 +308,9 @@ public:
     {
         Init();
 
-        std::vector<uint256> dummy_vector1; //!< Used to be vMerkleBranch
-        std::vector<CMerkleTx> dummy_vector2; //!< Used to be vtxPrev
-        bool dummy_bool; //! Used to be fFromMe, and fSpent
+        std::vector<uint256> dummy_vector1; // Used to be vMerkleBranch
+        std::vector<CMerkleTx> dummy_vector2; // Used to be vtxPrev
+        bool dummy_bool; // Used to be fFromMe, and fSpent
         uint32_t dummy_int; // Used to be fTimeReceivedIsTxTime
         uint256 serialized_block_hash;
         int serializedIndex;

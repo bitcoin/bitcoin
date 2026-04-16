@@ -243,7 +243,14 @@ void DeserializeMuSig2ParticipantDataIdentifier(Stream& skey, CPubKey& agg_pub, 
 
     skey >> std::as_writable_bytes(std::span{part_pubkey_bytes}) >> std::as_writable_bytes(std::span{agg_pubkey_bytes});
     agg_pub.Set(agg_pubkey_bytes.begin(), agg_pubkey_bytes.end());
+    if (!agg_pub.IsFullyValid()) {
+        throw std::ios_base::failure("musig2 aggregate pubkey is invalid");
+    }
+
     part_pub.Set(part_pubkey_bytes.begin(), part_pubkey_bytes.end());
+    if (!part_pub.IsFullyValid()) {
+        throw std::ios_base::failure("musig2 participant pubkey is invalid");
+    }
 
     if (!skey.empty()) {
         skey >> leaf_hash;

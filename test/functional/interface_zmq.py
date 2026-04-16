@@ -75,9 +75,9 @@ class ZMQSubscriber:
         label = chr(body[32])
         mempool_sequence = None if len(body) != 32+1+8 else struct.unpack("<Q", body[32+1:])[0]
         if mempool_sequence is not None:
-            assert label == "A" or label == "R"
+            assert label in ("A", "R")
         else:
-            assert label == "D" or label == "C"
+            assert label in ("D", "C")
         return (hash, label, mempool_sequence)
 
 
@@ -174,7 +174,7 @@ class ZMQTest (BitcoinTestFramework):
 
         # set subscriber's desired timeout for the test
         for sub in subscribers:
-            sub.socket.set(zmq.RCVTIMEO, recv_timeout*1000)
+            sub.socket.set(zmq.RCVTIMEO, int(recv_timeout * self.options.timeout_factor * 1000))
 
         self.connect_nodes(0, 1)
         if sync_blocks:
@@ -480,7 +480,7 @@ class ZMQTest (BitcoinTestFramework):
         while zmq_mem_seq is None:
             (hash_str, label, zmq_mem_seq) = seq.receive_sequence()
 
-        assert label == "A" or label == "R"
+        assert label in ("A", "R")
         assert hash_str is not None
 
         # 2) We need to "seed" our view of the mempool

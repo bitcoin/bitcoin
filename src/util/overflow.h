@@ -5,6 +5,8 @@
 #ifndef BITCOIN_UTIL_OVERFLOW_H
 #define BITCOIN_UTIL_OVERFLOW_H
 
+#include <util/check.h>
+
 #include <climits>
 #include <concepts>
 #include <limits>
@@ -31,6 +33,14 @@ template <class T>
     return i + j;
 }
 
+template <std::unsigned_integral T, std::unsigned_integral U>
+[[nodiscard]] constexpr bool TrySub(T& i, const U j) noexcept
+{
+    if (i < T{j}) return false;
+    i -= T{j};
+    return true;
+}
+
 template <class T>
 [[nodiscard]] T SaturatingAdd(const T i, const T j) noexcept
 {
@@ -47,6 +57,21 @@ template <class T>
         }
     }
     return i + j;
+}
+
+/**
+ * @brief Integer ceiling division (for unsigned values).
+ *
+ * Computes the smallest integer q such that q * divisor >= dividend.
+ * Both dividend and divisor must be unsigned, and divisor must be non-zero.
+ *
+ * The implementation avoids overflow that can occur with `(dividend + divisor - 1) / divisor`.
+ */
+template <std::unsigned_integral Dividend, std::unsigned_integral Divisor>
+[[nodiscard]] constexpr auto CeilDiv(const Dividend dividend, const Divisor divisor)
+{
+    assert(divisor > 0);
+    return dividend / divisor + (dividend % divisor != 0);
 }
 
 /**

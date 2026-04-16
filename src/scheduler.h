@@ -7,7 +7,6 @@
 
 #include <attributes.h>
 #include <sync.h>
-#include <threadsafety.h>
 #include <util/task_runner.h>
 
 #include <chrono>

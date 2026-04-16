@@ -8,6 +8,7 @@ export LC_ALL=C
 
 set -o errexit -o pipefail -o xtrace
 
+export DEBIAN_FRONTEND=noninteractive
 export CI_RETRY_EXE="/ci_retry"
 
 pushd "/"
@@ -40,20 +41,18 @@ command -v python3
 python3 --version
 
 ${CI_RETRY_EXE} pip3 install \
-  lief==0.16.6 \
-  mypy==1.18.2 \
+  lief==0.17.5 \
+  mypy==1.19.1 \
   pyzmq==27.1.0 \
-  ruff==0.13.2 \
-  vulture==2.14
+  ruff==0.15.5
 
 SHELLCHECK_VERSION=v0.11.0
-curl -sL "https://github.com/koalaman/shellcheck/releases/download/${SHELLCHECK_VERSION}/shellcheck-${SHELLCHECK_VERSION}.linux.x86_64.tar.xz" | \
+curl --fail -L "https://github.com/koalaman/shellcheck/releases/download/${SHELLCHECK_VERSION}/shellcheck-${SHELLCHECK_VERSION}.linux.$(uname --machine).tar.xz" | \
     tar --xz -xf - --directory /tmp/
 mv "/tmp/shellcheck-${SHELLCHECK_VERSION}/shellcheck" /usr/bin/
 
-MLC_VERSION=v1
-MLC_BIN=mlc-x86_64-linux
-curl -sL "https://github.com/becheran/mlc/releases/download/${MLC_VERSION}/${MLC_BIN}" -o "/usr/bin/mlc"
+MLC_VERSION=v1.2.0
+curl --fail -L "https://github.com/becheran/mlc/releases/download/${MLC_VERSION}/mlc-$(uname --machine)-linux" -o "/usr/bin/mlc"
 chmod +x /usr/bin/mlc
 
 popd || exit

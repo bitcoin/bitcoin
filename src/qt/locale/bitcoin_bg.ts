@@ -1090,6 +1090,16 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <translation type="unfinished">Портфейлът "%1" беше мигриран успешно.</translation>
     </message>
     <message>
+        <source>Restore Wallet</source>
+        <extracomment>Title of progress window which is displayed when wallets are being restored.</extracomment>
+        <translation type="unfinished">Възстановяване на Портфейл</translation>
+    </message>
+    <message>
+        <source>Restoring Wallet &lt;b&gt;%1&lt;/b&gt;…</source>
+        <extracomment>Descriptive text of the restore wallets progress window which indicates to the user that wallets are currently being restored.</extracomment>
+        <translation type="unfinished">Възстановяване на портфейл &lt;b&gt;%1&lt;/b&gt;…</translation>
+    </message>
+    <message>
         <source>Migration failed</source>
         <translation type="unfinished">Грешка при миграцията</translation>
     </message>
@@ -1211,10 +1221,6 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     <message>
         <source>Disable Private Keys</source>
         <translation type="unfinished">Изключете частните (тайните) ключове</translation>
-    </message>
-    <message>
-        <source>Make a blank wallet. Blank wallets do not initially have private keys or scripts. Private keys and addresses can be imported, or an HD seed can be set, at a later time.</source>
-        <translation type="unfinished">Създайте празен портфейл.  Празните портфейли първоначално нямат частни ключове или скриптове. Частните ключове и адреси могат да бъдат импортирани или може да се зададе HD seed по-късно. </translation>
     </message>
     <message>
         <source>Make Blank Wallet</source>
@@ -1881,6 +1887,13 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <source>Could not sign any more inputs.</source>
         <translation type="unfinished">Не можах да подпиша повече входове.</translation>
     </message>
+    <message numerus="yes">
+        <source>Signed %n input(s), but more signatures are still required.</source>
+        <translation type="unfinished">
+            <numerusform />
+            <numerusform />
+        </translation>
+    </message>
     <message>
         <source>own address</source>
         <translation type="unfinished">собствен адрес</translation>
@@ -1892,6 +1905,13 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     <message>
         <source>or</source>
         <translation type="unfinished">или</translation>
+    </message>
+    <message numerus="yes">
+        <source>Transaction has %n unsigned input(s).</source>
+        <translation type="unfinished">
+            <numerusform />
+            <numerusform />
+        </translation>
     </message>
     </context>
 <context>
@@ -2442,10 +2462,6 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     <message>
         <source>The amount exceeds your balance.</source>
         <translation type="unfinished">Сумата надвишава текущия баланс</translation>
-    </message>
-    <message>
-        <source>The total exceeds your balance when the %1 transaction fee is included.</source>
-        <translation type="unfinished">Сумата при добавяне на данък добавена стойност по %1 транзакцията надвишава сумата по вашата сметка.</translation>
     </message>
     <message>
         <source>Transaction creation failed!</source>
@@ -3018,10 +3034,6 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     <message>
         <source>This is the minimum transaction fee you pay on every transaction.</source>
         <translation type="unfinished">Това е минималната такса за транзакция, която плащате за всяка транзакция.</translation>
-    </message>
-    <message>
-        <source>This is the transaction fee you will pay if you send a transaction.</source>
-        <translation type="unfinished">Това е таксата за транзакцията която ще платите ако изпратите транзакция.</translation>
     </message>
     <message>
         <source>Transaction amount too small</source>

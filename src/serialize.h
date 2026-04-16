@@ -11,6 +11,7 @@
 #include <compat/endian.h>
 #include <prevector.h>
 #include <span.h>
+#include <util/overflow.h>
 
 #include <algorithm>
 #include <concepts>
@@ -21,6 +22,7 @@
 #include <map>
 #include <memory>
 #include <set>
+#include <span>
 #include <string>
 #include <utility>
 #include <vector>
@@ -425,7 +427,7 @@ template<typename Stream, VarIntMode Mode, typename I>
 void WriteVarInt(Stream& os, I n)
 {
     CheckVarIntMode<Mode, I>();
-    unsigned char tmp[(sizeof(n)*8+6)/7];
+    unsigned char tmp[CeilDiv(sizeof(n) * 8, 7u)];
     int len=0;
     while(true) {
         tmp[len] = (n & 0x7F) | (len ? 0x80 : 0x00);
@@ -1127,7 +1129,7 @@ public:
     void write(std::span<const std::byte> src) { GetStream().write(src); }
     void read(std::span<std::byte> dst) { GetStream().read(dst); }
     void ignore(size_t num) { GetStream().ignore(num); }
-    bool eof() const { return GetStream().eof(); }
+    bool empty() const { return GetStream().empty(); }
     size_t size() const { return GetStream().size(); }
 
     //! Get reference to stream parameters.

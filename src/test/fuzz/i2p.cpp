@@ -13,6 +13,7 @@
 #include <test/fuzz/util/net.h>
 #include <test/fuzz/util/threadinterrupt.h>
 #include <test/util/setup_common.h>
+#include <test/util/time.h>
 #include <util/fs_helpers.h>
 #include <util/threadinterrupt.h>
 
@@ -26,7 +27,7 @@ FUZZ_TARGET(i2p, .init = initialize_i2p)
     SeedRandomStateForTest(SeedRand::ZEROS);
     FuzzedDataProvider fuzzed_data_provider{buffer.data(), buffer.size()};
 
-    SetMockTime(ConsumeTime(fuzzed_data_provider));
+    NodeClockContext clock_ctx{ConsumeTime(fuzzed_data_provider)};
 
     // Mock CreateSock() to create FuzzedSock.
     auto CreateSockOrig = CreateSock;
@@ -60,7 +61,7 @@ FUZZ_TARGET(i2p, .init = initialize_i2p)
         }
     }
 
-    fs::remove_all(private_key_path);
+    fs::remove(private_key_path);
 
     CreateSock = CreateSockOrig;
 }

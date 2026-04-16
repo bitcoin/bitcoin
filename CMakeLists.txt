@@ -27,7 +27,7 @@ get_directory_property(precious_variables CACHE_VARIABLES)
 # Project / Package metadata
 #=============================
 set(CLIENT_NAME "Bitcoin Core")
-set(CLIENT_VERSION_MAJOR 30)
+set(CLIENT_VERSION_MAJOR 31)
 set(CLIENT_VERSION_MINOR 99)
 set(CLIENT_VERSION_BUILD 0)
 set(CLIENT_VERSION_RC 0)
@@ -69,10 +69,15 @@ set(CLIENT_BUGREPORT "https://github.com/bitcoin/bitcoin/issues")
 #=============================
 # Language setup
 #=============================
-if(CMAKE_SYSTEM_NAME STREQUAL "Darwin" AND NOT CMAKE_HOST_APPLE)
+if(CMAKE_VERSION VERSION_LESS 4.2 AND CMAKE_SYSTEM_NAME STREQUAL "Darwin" AND NOT CMAKE_HOST_APPLE)
   # We do not use the install_name_tool when cross-compiling for macOS.
+  # However, CMake < 4.2 still searches for Apple's version of the tool,
+  # which causes an error during configuration.
+  # See:
+  # - https://gitlab.kitware.com/cmake/cmake/-/issues/27069
+  # - https://gitlab.kitware.com/cmake/cmake/-/merge_requests/10955
   # So disable this tool check in further enable_language() commands.
-  set(CMAKE_PLATFORM_HAS_INSTALLNAME FALSE)
+  set(CMAKE_INSTALL_NAME_TOOL "${CMAKE_COMMAND} -E true")
 endif()
 enable_language(CXX)
 set(CMAKE_CXX_STANDARD 20)
@@ -112,20 +117,26 @@ if(ENABLE_WALLET)
   if(VCPKG_TARGET_TRIPLET)
     # Use of the `unofficial::` namespace is a vcpkg package manager convention.
     find_package(unofficial-sqlite3 CONFIG REQUIRED)
+    add_library(SQLite3::SQLite3 ALIAS unofficial::sqlite3::sqlite3)
   else()
     find_package(SQLite3 3.7.17 REQUIRED)
+    if(NOT TARGET SQLite3::SQLite3) # CMake < 4.3
+      add_library(SQLite3::SQLite3 ALIAS SQLite::SQLite3)
+    endif()
   endif()
 endif()
 cmake_dependent_option(BUILD_WALLET_TOOL "Build bitcoin-wallet tool." ${BUILD_TESTS} "ENABLE_WALLET" OFF)
 
 option(REDUCE_EXPORTS "Attempt to reduce exported symbols in the resulting executables." OFF)
-option(WERROR "Treat compiler warnings as errors." OFF)
+option(CMAKE_COMPILE_WARNING_AS_ERROR "Treat compiler warnings as errors." OFF)
 option(WITH_CCACHE "Attempt to use ccache for compiling." ON)
 
 option(WITH_ZMQ "Enable ZMQ notifications." OFF)
 if(WITH_ZMQ)
   find_package(ZeroMQ 4.0.0 MODULE REQUIRED)
 endif()
+
+option(WITH_EMBEDDED_ASMAP "Embed default ASMap data." ON)
 
 option(WITH_USDT "Enable tracepoints for Userspace, Statically Defined Tracing." OFF)
 if(WITH_USDT)
@@ -216,6 +227,7 @@ if(BUILD_FOR_FUZZING)
   set(BUILD_GUI OFF)
   set(ENABLE_EXTERNAL_SIGNER OFF)
   set(WITH_ZMQ OFF)
+  set(WITH_EMBEDDED_ASMAP OFF)
   set(BUILD_TESTS OFF)
   set(BUILD_GUI_TESTS OFF)
   set(BUILD_BENCH OFF)
@@ -441,6 +453,7 @@ else()
   try_append_cxx_flags("-Wall" TARGET warn_interface SKIP_LINK)
   try_append_cxx_flags("-Wextra" TARGET warn_interface SKIP_LINK)
   try_append_cxx_flags("-Wgnu" TARGET warn_interface SKIP_LINK)
+  try_append_cxx_flags("-Wcovered-switch-default" TARGET warn_interface SKIP_LINK)
   # Some compilers will ignore -Wformat-security without -Wformat, so just combine the two here.
   try_append_cxx_flags("-Wformat -Wformat-security" TARGET warn_interface SKIP_LINK)
   try_append_cxx_flags("-Wvla" TARGET warn_interface SKIP_LINK)
@@ -568,19 +581,6 @@ if(REDUCE_EXPORTS)
   try_append_linker_flag("-Wl,-no_exported_symbols" VAR CMAKE_EXE_LINKER_FLAGS)
 endif()
 
-if(WERROR)
-  if(MSVC)
-    set(werror_flag "/WX")
-  else()
-    set(werror_flag "-Werror")
-  endif()
-  try_append_cxx_flags(${werror_flag} TARGET core_interface SKIP_LINK RESULT_VAR compiler_supports_werror)
-  if(NOT compiler_supports_werror)
-    message(FATAL_ERROR "WERROR set but ${werror_flag} is not usable.")
-  endif()
-  unset(werror_flag)
-endif()
-
 # Prefer Unix-style package components over frameworks on macOS.
 # This improves compatibility with Python version managers.
 set(Python3_FIND_FRAMEWORK LAST CACHE STRING "")
@@ -667,6 +667,7 @@ else()
   set(ipc_status OFF)
 endif()
 message("  IPC ................................. ${ipc_status}")
+message("  Embedded ASMap ...................... ${WITH_EMBEDDED_ASMAP}")
 message("  USDT tracing ........................ ${WITH_USDT}")
 message("  QR code (GUI) ....................... ${WITH_QRENCODE}")
 message("  DBus (GUI) .......................... ${WITH_DBUS}")
@@ -685,7 +686,7 @@ message("Cross compiling ....................... ${cross_status}")
 message("C++ compiler .......................... ${CMAKE_CXX_COMPILER_ID} ${CMAKE_CXX_COMPILER_VERSION}, ${CMAKE_CXX_COMPILER}")
 include(FlagsSummary)
 flags_summary()
-message("Treat compiler warnings as errors ..... ${WERROR}")
+message("Treat compiler warnings as errors ..... ${CMAKE_COMPILE_WARNING_AS_ERROR}")
 message("Use ccache for compiling .............. ${WITH_CCACHE}")
 message("\n")
 if(configure_warnings)
@@ -694,6 +695,7 @@ if(configure_warnings)
       message(WARNING "${warning}")
     endforeach()
     message("  ******\n")
+    message(AUTHOR_WARNING "Warnings have been encountered!")
 endif()
 
 # We want all build properties to be encapsulated properly.

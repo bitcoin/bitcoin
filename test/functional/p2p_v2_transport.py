@@ -151,7 +151,7 @@ class V2TransportTest(BitcoinTestFramework):
         with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
             with self.nodes[0].wait_for_new_peer():
                 s.connect(("127.0.0.1", p2p_port(0)))
-            with self.nodes[0].assert_debug_log(["V2 transport error: V1 peer with wrong MessageStart"]):
+            with self.nodes[0].assert_debug_log(["V2 transport error: V1 peer with wrong MessageStart"], timeout=2):
                 s.sendall(wrong_network_magic_prefix + b"somepayload")
 
         # Check detection of missing garbage terminator (hits after fixed amount of data if terminator never matches garbage)

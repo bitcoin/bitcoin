@@ -10,10 +10,11 @@ import shlex
 
 def run(cmd, **kwargs):
     print("+ " + shlex.join(cmd), flush=True)
+    kwargs.setdefault("check", True)
     try:
-        return subprocess.run(cmd, check=True, **kwargs)
+        return subprocess.run(cmd, **kwargs)
     except Exception as e:
-        sys.exit(e)
+        sys.exit(str(e))
 
 
 def main():
@@ -37,12 +38,16 @@ def main():
         "-DAPPEND_CXXFLAGS='-O3 -g2'",
         "-DAPPEND_CFLAGS='-O3 -g2'",
         "-DCMAKE_BUILD_TYPE=Debug",
-        "-DWERROR=ON",
+        "-DCMAKE_COMPILE_WARNING_AS_ERROR=ON",
         "--preset=dev-mode",
         # Tolerate unused member functions in intermediate commits in a pull request
         "-DCMAKE_CXX_FLAGS=-Wno-error=unused-member-function",
     ])
-    run(["cmake", "--build", build_dir, "-j", str(num_procs)])
+
+    if run(["cmake", "--build", build_dir, "-j", str(num_procs)], check=False).returncode != 0:
+        print("Build failure. Verbose build follows.")
+        run(["cmake", "--build", build_dir, "-j1", "--verbose"])
+
     run([
         "ctest",
         "--output-on-failure",
@@ -57,6 +62,7 @@ def main():
         f"./{build_dir}/test/functional/test_runner.py",
         "-j",
         str(num_procs * 2),
+        "--failfast",
         "--combinedlogslen=99999999",
     ])
 

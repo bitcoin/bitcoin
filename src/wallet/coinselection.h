@@ -207,19 +207,20 @@ struct CoinEligibilityFilter
     const int conf_theirs;
     /** Maximum number of unconfirmed ancestors aggregated across all UTXOs in an OutputGroup. */
     const uint64_t max_ancestors;
-    /** Maximum number of descendants that a single UTXO in the OutputGroup may have. */
-    const uint64_t max_descendants;
+    /** Maximum cluster count that a single UTXO in the OutputGroup may have. In practice, this filter also caps the
+     * maximum descendant count, as a transaction's descendant count is never larger than its cluster count. */
+    const uint64_t max_cluster_count;
     /** When avoid_reuse=true and there are full groups (OUTPUT_GROUP_MAX_ENTRIES), whether or not to use any partial groups.*/
     const bool m_include_partial_groups{false};
 
     CoinEligibilityFilter() = delete;
-    CoinEligibilityFilter(int conf_mine, int conf_theirs, uint64_t max_ancestors) : conf_mine(conf_mine), conf_theirs(conf_theirs), max_ancestors(max_ancestors), max_descendants(max_ancestors) {}
-    CoinEligibilityFilter(int conf_mine, int conf_theirs, uint64_t max_ancestors, uint64_t max_descendants) : conf_mine(conf_mine), conf_theirs(conf_theirs), max_ancestors(max_ancestors), max_descendants(max_descendants) {}
-    CoinEligibilityFilter(int conf_mine, int conf_theirs, uint64_t max_ancestors, uint64_t max_descendants, bool include_partial) : conf_mine(conf_mine), conf_theirs(conf_theirs), max_ancestors(max_ancestors), max_descendants(max_descendants), m_include_partial_groups(include_partial) {}
+    CoinEligibilityFilter(int conf_mine, int conf_theirs, uint64_t max_ancestors) : conf_mine(conf_mine), conf_theirs(conf_theirs), max_ancestors(max_ancestors), max_cluster_count(max_ancestors) {}
+    CoinEligibilityFilter(int conf_mine, int conf_theirs, uint64_t max_ancestors, uint64_t max_cluster_count) : conf_mine(conf_mine), conf_theirs(conf_theirs), max_ancestors(max_ancestors), max_cluster_count(max_cluster_count) {}
+    CoinEligibilityFilter(int conf_mine, int conf_theirs, uint64_t max_ancestors, uint64_t max_cluster_count, bool include_partial) : conf_mine(conf_mine), conf_theirs(conf_theirs), max_ancestors(max_ancestors), max_cluster_count(max_cluster_count), m_include_partial_groups(include_partial) {}
 
     bool operator<(const CoinEligibilityFilter& other) const {
-        return std::tie(conf_mine, conf_theirs, max_ancestors, max_descendants, m_include_partial_groups)
-               < std::tie(other.conf_mine, other.conf_theirs, other.max_ancestors, other.max_descendants, other.m_include_partial_groups);
+        return std::tie(conf_mine, conf_theirs, max_ancestors, max_cluster_count, m_include_partial_groups)
+               < std::tie(other.conf_mine, other.conf_theirs, other.max_ancestors, other.max_cluster_count, other.m_include_partial_groups);
     }
 };
 
@@ -239,8 +240,8 @@ struct OutputGroup
     /** The aggregated count of unconfirmed ancestors of all UTXOs in this
      * group. Not deduplicated and may overestimate when ancestors are shared. */
     size_t m_ancestors{0};
-    /** The maximum count of descendants of a single UTXO in this output group. */
-    size_t m_descendants{0};
+    /** The maximum cluster count of a single UTXO in this output group. */
+    size_t m_max_cluster_count{0};
     /** The value of the UTXOs after deducting the cost of spending them at the effective feerate. */
     CAmount effective_value{0};
     /** The fee to spend these UTXOs at the effective feerate. */
@@ -263,7 +264,7 @@ struct OutputGroup
         m_subtract_fee_outputs(params.m_subtract_fee_outputs)
     {}
 
-    void Insert(const std::shared_ptr<COutput>& output, size_t ancestors, size_t descendants);
+    void Insert(const std::shared_ptr<COutput>& output, size_t ancestors, size_t cluster_count);
     bool EligibleForSpending(const CoinEligibilityFilter& eligibility_filter) const;
     CAmount GetSelectionAmount() const;
 };
@@ -319,11 +320,18 @@ enum class SelectionAlgorithm : uint8_t
 
 std::string GetAlgorithmName(SelectionAlgorithm algo);
 
+struct OutputPtrComparator {
+    bool operator()(const std::shared_ptr<COutput>& a, const std::shared_ptr<COutput>& b) const {
+        return *a < *b;
+    }
+};
+using OutputSet = std::set<std::shared_ptr<COutput>, OutputPtrComparator>;
+
 struct SelectionResult
 {
 private:
     /** Set of inputs selected by the algorithm to use in the transaction */
-    std::set<std::shared_ptr<COutput>> m_selected_inputs;
+    OutputSet m_selected_inputs;
     /** The target the algorithm selected for. Equal to the recipient amount plus non-input fees */
     CAmount m_target;
     /** The algorithm used to produce this result */
@@ -368,7 +376,7 @@ public:
     void Clear();
 
     void AddInput(const OutputGroup& group);
-    void AddInputs(const std::set<std::shared_ptr<COutput>>& inputs, bool subtract_fee_outputs);
+    void AddInputs(const OutputSet& inputs, bool subtract_fee_outputs);
 
     /** How much individual inputs overestimated the bump fees for shared ancestries */
     void SetBumpFeeDiscount(CAmount discount);
@@ -409,7 +417,7 @@ public:
     void Merge(const SelectionResult& other);
 
     /** Get m_selected_inputs */
-    const std::set<std::shared_ptr<COutput>>& GetInputSet() const;
+    const OutputSet& GetInputSet() const;
     /** Get the vector of COutputs that will be used to fill in a CTransaction's vin */
     std::vector<std::shared_ptr<COutput>> GetShuffledInputVector() const;
 

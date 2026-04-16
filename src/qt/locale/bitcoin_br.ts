@@ -641,9 +641,23 @@ Signing is only possible with addresses of the type 'legacy'.</translation>
         <source>Close</source>
         <translation type="unfinished">Serriñ</translation>
     </message>
+    <message numerus="yes">
+        <source>Signed %n input(s), but more signatures are still required.</source>
+        <translation type="unfinished">
+            <numerusform />
+            <numerusform />
+        </translation>
+    </message>
     <message>
         <source>or</source>
         <translation type="unfinished">pe</translation>
+    </message>
+    <message numerus="yes">
+        <source>Transaction has %n unsigned input(s).</source>
+        <translation type="unfinished">
+            <numerusform />
+            <numerusform />
+        </translation>
     </message>
     </context>
 <context>
@@ -662,11 +676,6 @@ Signing is only possible with addresses of the type 'legacy'.</translation>
         <source>Sent</source>
         <extracomment>Title of Peers Table column which indicates the total amount of network information we have sent to the peer.</extracomment>
         <translation type="unfinished">Kaset</translation>
-    </message>
-    <message>
-        <source>Address</source>
-        <extracomment>Title of Peers Table column which contains the IP/Onion/I2P address of the connected peer.</extracomment>
-        <translation type="unfinished">Adres</translation>
     </message>
     <message>
         <source>Type</source>
@@ -921,10 +930,6 @@ Signing is only possible with addresses of the type 'legacy'.</translation>
         <translation type="unfinished">Seurt</translation>
     </message>
     <message>
-        <source>Address</source>
-        <translation type="unfinished">Adres</translation>
-    </message>
-    <message>
         <source>to</source>
         <translation type="unfinished">da</translation>
     </message>
@@ -968,10 +973,6 @@ Signing is only possible with addresses of the type 'legacy'.</translation>
     <message>
         <source>Error: Transaction %s in wallet cannot be identified to belong to migrated wallets</source>
         <translation type="unfinished">Fazi: Transaction %s in wallet cannot be identified to belong to migrated wallets</translation>
-    </message>
-    <message>
-        <source>Error creating %s</source>
-        <translation type="unfinished">Fazi en ur grouiñ %s</translation>
     </message>
     <message>
         <source>Error: Cannot extract destination from the generated scriptpubkey</source>

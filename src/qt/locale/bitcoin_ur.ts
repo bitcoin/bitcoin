@@ -302,17 +302,88 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <translation type="unfinished">نامعلوم</translation>
     </message>
     <message>
+        <source>Custom…</source>
+        <translation type="unfinished">"کسٹم…"</translation>
+    </message>
+    <message>
         <source>Amount</source>
         <translation type="unfinished">رقم</translation>
+    </message>
+    <message>
+        <source>Ctrl+W</source>
+        <translation type="unfinished">موجودہ ٹیب بند کریں</translation>
     </message>
     <message>
         <source>Unroutable</source>
         <translation type="unfinished">ناقابل استعمال</translation>
     </message>
     <message>
+        <source>IPv4</source>
+        <comment>network name</comment>
+        <extracomment>Name of IPv4 network in peer info</extracomment>
+        <translation type="unfinished"> آئی پی وی 4</translation>
+    </message>
+    <message>
+        <source>IPv6</source>
+        <comment>network name</comment>
+        <extracomment>Name of IPv6 network in peer info</extracomment>
+        <translation type="unfinished">"آئی پی وی 6"</translation>
+    </message>
+    <message>
+        <source>Onion</source>
+        <comment>network name</comment>
+        <extracomment>Name of Tor network in peer info</extracomment>
+        <translation type="unfinished">پیاز </translation>
+    </message>
+    <message>
+        <source>I2P</source>
+        <comment>network name</comment>
+        <extracomment>Name of I2P network in peer info</extracomment>
+        <translation type="unfinished">آئی ٹو پی</translation>
+    </message>
+    <message>
+        <source>CJDNS</source>
+        <comment>network name</comment>
+        <extracomment>Name of CJDNS network in peer info</extracomment>
+        <translation type="unfinished">مکمل ریلے</translation>
+    </message>
+    <message>
+        <source>Inbound</source>
+        <extracomment>An inbound connection from a peer. An inbound connection is a connection initiated by a peer.</extracomment>
+        <translation type="unfinished">آنے والا</translation>
+    </message>
+    <message>
+        <source>Outbound</source>
+        <extracomment>An outbound connection to a peer. An outbound connection is a connection initiated by us.</extracomment>
+        <translation type="unfinished">باہر جانے والا</translation>
+    </message>
+    <message>
+        <source>Full Relay</source>
+        <extracomment>Peer connection type that relays all network information.</extracomment>
+        <translation type="unfinished">"مکمل ریلے"</translation>
+    </message>
+    <message>
+        <source>Manual</source>
+        <extracomment>Peer connection type established manually through one of several methods.</extracomment>
+        <translation type="unfinished">دستی</translation>
+    </message>
+    <message>
+        <source>Feeler</source>
+        <extracomment>Short-lived peer connection type that tests the aliveness of known addresses.</extracomment>
+        <translation type="unfinished">محسوس کرنے والا</translation>
+    </message>
+    <message>
         <source>Address Fetch</source>
         <extracomment>Short-lived peer connection type that solicits known addresses from a peer.</extracomment>
         <translation type="unfinished">پتہ بازیافت کریں۔</translation>
+    </message>
+    <message>
+        <source>None</source>
+        <translation type="unfinished">کوئی نہیں</translation>
+    </message>
+    <message>
+        <source>N/A</source>
+        <translation type="unfinished">لاگو نہیں</translation>
     </message>
     <message>
         <source>%1 ms</source>
@@ -744,19 +815,19 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     <message>
         <source>Date: %1
 </source>
-        <translation type="unfinished">%1' تاریخ۔
+        <translation type="unfinished">1%1' تاریخ۔
 </translation>
     </message>
     <message>
         <source>Amount: %1
 </source>
-        <translation type="unfinished">%1' مقدار
+        <translation type="unfinished">1%1' مقدار
 </translation>
     </message>
     <message>
         <source>Wallet: %1
 </source>
-        <translation type="unfinished">%1' والیٹ
+        <translation type="unfinished">1%1' والیٹ
 </translation>
     </message>
     <message>
@@ -768,13 +839,13 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     <message>
         <source>Label: %1
 </source>
-        <translation type="unfinished">%1'لیبل
+        <translation type="unfinished">1%1'لیبل
 </translation>
     </message>
     <message>
         <source>Address: %1
 </source>
-        <translation type="unfinished">%1' پتہ
+        <translation type="unfinished">1%1' پتہ
 </translation>
     </message>
     <message>
@@ -968,7 +1039,11 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <source>Can't list signers</source>
         <translation type="unfinished">دستخط کنندگان کی فہرست نہیں بن سکتی</translation>
     </message>
-    </context>
+    <message>
+        <source>Too many external signers found</source>
+        <translation type="unfinished">بہت سارے باہر کے دستخط کرنے والے ملے</translation>
+    </message>
+</context>
 <context>
     <name>LoadWalletsActivity</name>
     <message>
@@ -984,6 +1059,10 @@ Signing is only possible with addresses of the type 'legacy'.</source>
 </context>
 <context>
     <name>MigrateWalletActivity</name>
+    <message>
+        <source>Migrate wallet</source>
+        <translation type="unfinished">بٹ کوائن کے لیے بٹوے کو منتقل کریں</translation>
+    </message>
     <message>
         <source>Migrating the wallet will convert this wallet to one or more descriptor wallets. A new wallet backup will need to be made.
 If this wallet contains any watchonly scripts, a new wallet will be created which contains those watchonly scripts.
@@ -1002,7 +1081,20 @@ The migration process will create a backup of the wallet before migrating. This 
         <source>Migrate Wallet</source>
         <translation type="unfinished">والیٹ منتقل کریں</translation>
     </message>
-    </context>
+    <message>
+        <source>Restore Wallet</source>
+        <extracomment>Title of progress window which is displayed when wallets are being restored.</extracomment>
+        <translation type="unfinished">والیٹ بحال کریں</translation>
+    </message>
+    <message>
+        <source>Migration failed</source>
+        <translation type="unfinished">بٹ کوائن کے لیے منتقلی ناکام ہوئی</translation>
+    </message>
+    <message>
+        <source>Migration Successful</source>
+        <translation type="unfinished">بٹ کوائن کے لیے منتقلی کامیاب ہوئی</translation>
+    </message>
+</context>
 <context>
     <name>OpenWalletActivity</name>
     <message>
@@ -1026,7 +1118,22 @@ The migration process will create a backup of the wallet before migrating. This 
         <extracomment>Title of progress window which is displayed when wallets are being restored.</extracomment>
         <translation type="unfinished">والیٹ بحال کریں</translation>
     </message>
-    </context>
+    <message>
+        <source>Restore wallet failed</source>
+        <extracomment>Title of message box which is displayed when the wallet could not be restored.</extracomment>
+        <translation type="unfinished">بٹ کوئن والٹ بحال کرنے میں ناکام</translation>
+    </message>
+    <message>
+        <source>Restore wallet warning</source>
+        <extracomment>Title of message box which is displayed when the wallet is restored with some warning.</extracomment>
+        <translation type="unfinished">بٹ کوئن والٹ بحال کرنے کا انتباہ </translation>
+    </message>
+    <message>
+        <source>Restore wallet message</source>
+        <extracomment>Title of message box which is displayed when the wallet is successfully restored.</extracomment>
+        <translation type="unfinished">بٹ کوائن کے لیے بٹوے کو بحال کریں</translation>
+    </message>
+</context>
 <context>
     <name>WalletController</name>
     <message>
@@ -1051,6 +1158,10 @@ The migration process will create a backup of the wallet before migrating. This 
     <message>
         <source>Create Wallet</source>
         <translation type="unfinished">والیٹ بنائیں</translation>
+    </message>
+    <message>
+        <source>You are one step away from creating your new wallet!</source>
+        <translation type="unfinished">آپ بٹ کوائن کے لیے نئے بٹوے بنانے سے صرف ایک قدم دور ہیں!</translation>
     </message>
     <message>
         <source>Please provide a name and, if desired, enable any advanced options</source>
@@ -1083,10 +1194,6 @@ The migration process will create a backup of the wallet before migrating. This 
     <message>
         <source>Disable Private Keys</source>
         <translation type="unfinished">نجی چابیاں غیر فعال کریں۔</translation>
-    </message>
-    <message>
-        <source>Make a blank wallet. Blank wallets do not initially have private keys or scripts. Private keys and addresses can be imported, or an HD seed can be set, at a later time.</source>
-        <translation type="unfinished">ایک خالی والیٹ بنائیں۔ خالی والیٹ میں ابتدائی طور پر نجی چابیاں یا اسکرپٹ نہیں ہوتے ہیں۔ نجی چابیاں اور پتے درآمد کیے جا سکتے ہیں، یا بعد میں ایک HD بیج سیٹ کیا جا سکتا ہے۔</translation>
     </message>
     <message>
         <source>Make Blank Wallet</source>
@@ -1257,6 +1364,10 @@ The migration process will create a backup of the wallet before migrating. This 
             <numerusform />
         </translation>
     </message>
+    <message>
+        <source>Choose data directory</source>
+        <translation type="unfinished">ٹ کوائن کے لیے ڈیٹا ڈائریکٹری منتخب کریں</translation>
+    </message>
     <message numerus="yes">
         <source>(sufficient to restore backups %n day(s) old)</source>
         <extracomment>Explanatory text on the capability of the current prune target.</extracomment>
@@ -1352,12 +1463,25 @@ The migration process will create a backup of the wallet before migrating. This 
         <translation type="unfinished">کٹائی کو فعال کرنا لین دین کو ذخیرہ کرنے کے لیے درکار ڈسک کی جگہ کو نمایاں طور پر کم کرتا ہے۔ تمام بلاکس اب بھی مکمل طور پر درست ہیں۔ اس ترتیب کو واپس کرنے کے لیے پورے بلاکچین کو دوبارہ ڈاؤن لوڈ کرنے کی ضرورت ہے۔</translation>
     </message>
     <message>
+        <source>Maximum database cache size. Make sure you have enough RAM. A larger cache can contribute to faster sync, after which the benefit is less pronounced for most use cases. Lowering the cache size will reduce memory usage. Unused mempool memory is shared for this cache.</source>
+        <extracomment>Tooltip text for Options window setting that sets the size of the database cache. Explains the corresponding effects of increasing/decreasing this value.</extracomment>
+        <translation type="unfinished">"بٹ کوائن کے لیے زیادہ سے زیادہ ڈیٹابیس کیش کا سائز۔ یقینی بنائیں کہ آپ کے پاس کافی ریم ہے۔ بڑا کیش تیز سنک کرنے میں مدد کر سکتا ہے، لیکن اس کے بعد زیادہ تر استعمال کے لیے فائدہ کم ہوتا ہے۔ کیش کا سائز کم کرنے سے میموری کا استعمال کم ہوگا۔ غیر استعمال شدہ میمپول میموری اس کیش کے لیے شیئر کی جاتی ہے</translation>
+    </message>
+    <message>
         <source>Size of &amp;database cache</source>
         <translation type="unfinished">ڈیٹا بیس کیشے کا سائز</translation>
     </message>
     <message>
         <source>Number of script &amp;verification threads</source>
         <translation type="unfinished">اسکرپٹ اور تصدیقی دھاگوں کی تعداد</translation>
+    </message>
+    <message>
+        <source>Automatically open the Bitcoin client port on the router. This only works when your router supports PCP or NAT-PMP and it is enabled. The external port could be random.</source>
+        <translation type="unfinished">"بٹ کوائن کلائنٹ پورٹ کو روٹر پر خودکار طور پر کھولیں۔ یہ صرف اس وقت کام کرتا ہے جب آپ کا روٹر PCP یا NAT-PMP کو سپورٹ کرتا ہو اور یہ فعال ہو۔ بیرونی پورٹ بے ترتیب ہو سکتا ہے۔</translation>
+    </message>
+    <message>
+        <source>Map port using PCP or NA&amp;T-PMP</source>
+        <translation type="unfinished">بٹ کوائن کے لیے PCP یا NAT-PMP کا استعمال کرتے ہوئے پورٹ میپ کریں</translation>
     </message>
     <message>
         <source>IP address of the proxy (e.g. IPv4: 127.0.0.1 / IPv6: ::1)</source>
@@ -1370,6 +1494,10 @@ The migration process will create a backup of the wallet before migrating. This 
     <message>
         <source>Minimize instead of exit the application when the window is closed. When this option is enabled, the application will be closed only after selecting Exit in the menu.</source>
         <translation type="unfinished">ونڈو بند ہونے پر ایپلیکیشن سے باہر نکلنے کے بجائے چھوٹا کریں۔ جب یہ آپشن فعال ہو جائے گا تو مینو میں ایگزٹ کو منتخب کرنے کے بعد ہی ایپلیکیشن بند ہو جائے گی۔</translation>
+    </message>
+    <message>
+        <source>Font in the Overview tab: </source>
+        <translation type="unfinished">بٹ کوائن کے لیے اوور ویو ٹیب میں فونٹ"</translation>
     </message>
     <message>
         <source>Open Configuration File</source>
@@ -1396,6 +1524,35 @@ The migration process will create a backup of the wallet before migrating. This 
         <translation type="unfinished">اس ترتیب کو واپس کرنے کے لیے پورے بلاکچین کو دوبارہ ڈاؤن لوڈ کرنے کی ضرورت ہے۔</translation>
     </message>
     <message>
+        <source>MiB</source>
+        <translation type="unfinished">بٹ کوائن کے لیے بلاک اسٹوریج کو میبی بائٹ تک پرون کریں</translation>
+    </message>
+    <message>
+        <source>Set the number of script verification threads. Negative values correspond to the number of cores you want to leave free to the system.</source>
+        <extracomment>Tooltip text for Options window setting that sets the number of script verification threads. Explains that negative values mean to leave these many cores free to the system.</extracomment>
+        <translation type="unfinished">بٹ کوائن کے لیے اسکرپٹ تصدیق کے دھاگوں کی تعداد سیٹ کریں۔ منفی اقدار اس تعداد کے مساوی ہیں جو آپ سسٹم کے لیے آزاد رکھنا چاہتے ہیں</translation>
+    </message>
+    <message>
+        <source>(0 = auto, &lt;0 = leave that many cores free)</source>
+        <translation type="unfinished">(بٹ کوائن کے لیے) 0 = خودکار، &lt;0 = اتنی کورز کو سسٹم کے لیے آزاد
+ چھوڑیں</translation>
+    </message>
+    <message>
+        <source>This allows you or a third party tool to communicate with the node through command-line and JSON-RPC commands.</source>
+        <extracomment>Tooltip text for Options window setting that enables the RPC server.</extracomment>
+        <translation type="unfinished">بٹ کوائن کے لیے اس سے آپ یا کوئی تیسری پارٹی کا ٹول نوڈ کے ساتھ کمانڈ لائن اور JSON-RPC کمانڈز کے ذریعے رابطہ کر سکتا ہے۔"</translation>
+    </message>
+    <message>
+        <source>Whether to set subtract fee from amount as default or not.</source>
+        <extracomment>Tooltip text for Options window setting that sets subtracting the fee from a sending amount as default.</extracomment>
+        <translation type="unfinished">بٹ کوائن کے لیے کیا فیس کو رقم سے خودکار طور پر منہا کرنا ہے یا نہیں۔</translation>
+    </message>
+    <message>
+        <source>Subtract &amp;fee from amount by default</source>
+        <extracomment>An Options window setting to set subtracting the fee from a sending amount as default.</extracomment>
+        <translation type="unfinished">فیس کو رقم سے خودکار طور پر منہا کریں</translation>
+    </message>
+    <message>
         <source>Expert</source>
         <translation type="unfinished">ماہر</translation>
     </message>
@@ -1412,8 +1569,66 @@ The migration process will create a backup of the wallet before migrating. This 
         <translation type="unfinished">اور غیر مصدقہ تبدیلی خرچ کریں۔</translation>
     </message>
     <message>
+        <source>Whether to show PSBT controls.</source>
+        <extracomment>Tooltip text for options window setting that enables PSBT controls.</extracomment>
+        <translation type="unfinished">کیا PSBT کنٹرولز دکھانے ہیں۔"</translation>
+    </message>
+    <message>
+        <source>External Signer (e.g. hardware wallet)</source>
+        <translation type="unfinished">یرونی دستخط کنندہ (مثلاً ہارڈویئر بٹوا)</translation>
+    </message>
+    <message>
+        <source>Accept connections from outside.</source>
+        <translation type="unfinished">باہر سے رابطے قبول کری</translation>
+    </message>
+    <message>
+        <source>Connect to the Bitcoin network through a SOCKS5 proxy.</source>
+        <translation type="unfinished">بٹ کوائن نیٹ ورک سے SOCKS5 پراکسی کے ذریع
+ے رابطہ کریں"</translation>
+    </message>
+    <message>
+        <source>Port of the proxy (e.g. 9050)</source>
+        <translation type="unfinished">پراکسی کا پورٹ (مثلاً 9050)"</translation>
+    </message>
+    <message>
+        <source>Used for reaching peers via:</source>
+        <translation type="unfinished">"ساتھیوں تک رسائی کے لیے استعمال کیا جاتا ہے:</translation>
+    </message>
+    <message>
+        <source>IPv4</source>
+        <translation type="unfinished"> آئی پی وی 4</translation>
+    </message>
+    <message>
+        <source>IPv6</source>
+        <translation type="unfinished">"آئی پی وی 6"</translation>
+    </message>
+    <message>
+        <source>Tor</source>
+        <translation type="unfinished">ور"</translation>
+    </message>
+    <message>
         <source>&amp;Window</source>
         <translation type="unfinished">اور ونڈو</translation>
+    </message>
+    <message>
+        <source>Show the icon in the system tray.</source>
+        <translation type="unfinished">سسٹم ٹرے میں آئیکن دکھائیں</translation>
+    </message>
+    <message>
+        <source>Show only a tray icon after minimizing the window.</source>
+        <translation type="unfinished">"ونڈو کو کم کرنے کے بعد صرف ٹرے آئیکن دکھائیں"</translation>
+    </message>
+    <message>
+        <source>Choose the default subdivision unit to show in the interface and when sending coins.</source>
+        <translation type="unfinished">انٹرفیس میں دکھانے اور سکے بھیجتے وقت پہلے سے طے شدہ تقسیم یونٹ منتخب کریں</translation>
+    </message>
+    <message>
+        <source>Whether to show coin control features or not.</source>
+        <translation type="unfinished">"کیا سکے کنٹرول فیچرز دکھانے ہیں یا نہیں۔</translation>
+    </message>
+    <message>
+        <source>Connect to the Bitcoin network through a separate SOCKS5 proxy for Tor onion services.</source>
+        <translation type="unfinished">ور آنین سروسز کے لیے الگ SOCKS5 پراکسی کے ذریعے بٹ کوائن نیٹ ورک سے رابطہ کریں</translation>
     </message>
     <message>
         <source>Compiled without external signing support (required for external signing)</source>
@@ -1449,12 +1664,25 @@ The migration process will create a backup of the wallet before migrating. This 
         <translation type="unfinished">کنفیگریشن کے اختیارات</translation>
     </message>
     <message>
+        <source>The configuration file is used to specify advanced user options which override GUI settings. Additionally, any command-line options will override this configuration file.</source>
+        <extracomment>Explanatory text about the priority order of instructions considered by client. The order from high to low being: command-line, configuration file, GUI settings.</extracomment>
+        <translation type="unfinished">کنفیگریشن فائل کا استعمال اعلیٰ صارف اختیارات کو متعین کرنے کے لیے کیا جاتا ہے جو GUI سیٹنگز کو اوور رائیڈ کرتے ہیں۔ اس کے علاوہ، کوئی بھی کمانڈ لائن اختیارات اس کنفیگریشن فائل کو اوور رائیڈ کریں گے۔"</translation>
+    </message>
+    <message>
         <source>Continue</source>
         <translation type="unfinished">جاری رکھیں</translation>
     </message>
     <message>
+        <source>Cancel</source>
+        <translation type="unfinished">نسوخ کریں"</translation>
+    </message>
+    <message>
         <source>Error</source>
         <translation type="unfinished">نقص</translation>
+    </message>
+    <message>
+        <source>The configuration file could not be opened.</source>
+        <translation type="unfinished">کنفیگریشن فائل کھولی نہیں جا سکی۔"</translation>
     </message>
     <message>
         <source>This change would require a client restart.</source>
@@ -1523,6 +1751,18 @@ The migration process will create a backup of the wallet before migrating. This 
 <context>
     <name>PSBTOperationsDialog</name>
     <message>
+        <source>PSBT Operations</source>
+        <translation type="unfinished">"PSBT آپریشنز</translation>
+    </message>
+    <message>
+        <source>Sign Tx</source>
+        <translation type="unfinished">رانزیکشن پر دستخط کریں"</translation>
+    </message>
+    <message>
+        <source>Broadcast Tx</source>
+        <translation type="unfinished">ٹرانزیکشن نشر کریں"</translation>
+    </message>
+    <message>
         <source>Copy to Clipboard</source>
         <translation type="unfinished">کلپ بورڈ پر کاپی کریں۔</translation>
     </message>
@@ -1543,12 +1783,56 @@ The migration process will create a backup of the wallet before migrating. This 
         <translation type="unfinished">لین دین پر دستخط کرنے میں ناکام:%1</translation>
     </message>
     <message>
+        <source>Cannot sign inputs while wallet is locked.</source>
+        <translation type="unfinished">"جب بٹوا مقفل ہو تو ان پٹس پر دستخط نہیں کیے جا سکتے۔"</translation>
+    </message>
+    <message>
         <source>Could not sign any more inputs.</source>
         <translation type="unfinished">مزید ان پٹ پر دستخط نہیں ہو سکے۔</translation>
+    </message>
+    <message numerus="yes">
+        <source>Signed %n input(s), but more signatures are still required.</source>
+        <translation type="unfinished">
+            <numerusform />
+            <numerusform />
+        </translation>
+    </message>
+    <message>
+        <source>Signed transaction successfully. Transaction is ready to broadcast.</source>
+        <translation type="unfinished">"ٹرانزیکشن پر کامیابی سے دستخط کر دیا گیا۔ ٹرانزیکشن نشر کرنے کے لیے تیار ہے۔</translation>
+    </message>
+    <message>
+        <source>Unknown error processing transaction.</source>
+        <translation type="unfinished">ٹرانزیکشن پر عمل کرنے میں نامعلوم خرابی۔</translation>
+    </message>
+    <message>
+        <source>PSBT copied to clipboard.</source>
+        <translation type="unfinished">"PSBT کلپ بورڈ پر کاپی کر دیا گیا۔"</translation>
     </message>
     <message>
         <source>Save Transaction Data</source>
         <translation type="unfinished">لین دین کا ڈیٹا محفوظ کریں۔</translation>
+    </message>
+    <message>
+        <source>Partially Signed Transaction (Binary)</source>
+        <extracomment>Expanded name of the binary PSBT file format. See: BIP 174.</extracomment>
+        <translation type="unfinished">جزوی طور پر دستخط شدہ ٹرانزیکشن (بائنری</translation>
+    </message>
+    <message>
+        <source>PSBT saved to disk.</source>
+        <translation type="unfinished">PSBT ڈسک پر محفوظ کر دیا گیا۔"</translation>
+    </message>
+    <message>
+        <source>own address</source>
+        <translation type="unfinished">اپنا پتہ"</translation>
+    </message>
+    <message>
+        <source>Unable to calculate transaction fee or total transaction amount.</source>
+        <translation type="unfinished">"ٹرانزیکشن فیس یا کل ٹرانزیکشن رقم کا حساب لگانے میں ناکامی۔"</translation>
+    </message>
+    <message>
+        <source>Pays transaction fee: </source>
+        <translation type="unfinished">ٹرانزیکشن فیس ادا کرتا ہے:"</translation>
     </message>
     <message>
         <source>Total Amount</source>
@@ -1558,13 +1842,32 @@ The migration process will create a backup of the wallet before migrating. This 
         <source>or</source>
         <translation type="unfinished">یا</translation>
     </message>
+    <message numerus="yes">
+        <source>Transaction has %n unsigned input(s).</source>
+        <translation type="unfinished">
+            <numerusform />
+            <numerusform />
+        </translation>
+    </message>
     <message>
         <source>Transaction still needs signature(s).</source>
         <translation type="unfinished">لین دین کو ابھی بھی دستخط کی ضرورت ہے۔</translation>
     </message>
     <message>
+        <source>(But no wallet is loaded.)</source>
+        <translation type="unfinished">(لیکن کوئی بٹوا لوڈ نہیں کیا گیا۔)</translation>
+    </message>
+    <message>
         <source>(But this wallet cannot sign transactions.)</source>
         <translation type="unfinished">(لیکن یہ والیٹ لین دین پر دستخط نہیں کر سکتا۔)</translation>
+    </message>
+    <message>
+        <source>(But this wallet does not have the right keys.)</source>
+        <translation type="unfinished">(لیکن اس بٹوے کے پاس صحیح چابیاں نہیں ہیں۔)</translation>
+    </message>
+    <message>
+        <source>Transaction is fully signed and ready for broadcast.</source>
+        <translation type="unfinished">لین دین مکمل طور پر دستخط شدہ ہے اور نشر کرنے کے لیے تیار ہے۔</translation>
     </message>
     <message>
         <source>Transaction status is unknown.</source>
@@ -1578,12 +1881,28 @@ The migration process will create a backup of the wallet before migrating. This 
         <translation type="unfinished">ادائیگی کی درخواست کی خرابی۔</translation>
     </message>
     <message>
+        <source>Cannot start bitcoin: click-to-pay handler</source>
+        <translation type="unfinished">کوائن شروع نہیں کیا جا سکتا: کلک کرکے ادائیگی کرنے والا ہینڈلر۔</translation>
+    </message>
+    <message>
+        <source>URI handling</source>
+        <translation type="unfinished">یُو آر آئی کی ہینڈلنگ</translation>
+    </message>
+    <message>
         <source>Cannot process payment request because BIP70 is not supported.
 Due to widespread security flaws in BIP70 it's strongly recommended that any merchant instructions to switch wallets be ignored.
 If you are receiving this error you should request the merchant provide a BIP21 compatible URI.</source>
         <translation type="unfinished">ادائیگی کی درخواست پر کارروائی نہیں کی جا سکتی کیونکہ BIP70 تعاون یافتہ نہیں ہے۔ BIP70 میں سیکورٹی کی وسیع خامیوں کی وجہ سے یہ پرزور مشورہ دیا جاتا ہے کہ والیٹ کو تبدیل کرنے کے لیے کسی بھی تاجر کی ہدایات کو نظر انداز کر دیا جائے۔ اگر آپ کو یہ خرابی موصول ہو رہی ہے تو آپ کو مرچنٹ سے BIP21 مطابقت پذیر URI فراہم کرنے کی درخواست کرنی چاہیے۔</translation>
     </message>
-    </context>
+    <message>
+        <source>URI cannot be parsed! This can be caused by an invalid Bitcoin address or malformed URI parameters.</source>
+        <translation type="unfinished">URI کو پارس نہیں کیا جا سکتا! اس کی وجہ ایک غلط بٹ کوائن ایڈریس یا خراب URI پیرا میٹرز ہو سکتے ہیں۔</translation>
+    </message>
+    <message>
+        <source>Payment request file handling</source>
+        <translation type="unfinished">ادائیگی کی درخواست فائل کا انتظام</translation>
+    </message>
+</context>
 <context>
     <name>PeerTableModel</name>
     <message>
@@ -1600,6 +1919,16 @@ If you are receiving this error you should request the merchant provide a BIP21 
         <source>Peer</source>
         <extracomment>Title of Peers Table column which contains a unique number used to identify a connection.</extracomment>
         <translation type="unfinished">فریق</translation>
+    </message>
+    <message>
+        <source>Age</source>
+        <extracomment>Title of Peers Table column which indicates the duration (length of time) since the peer connection started.</extracomment>
+        <translation type="unfinished">عمر</translation>
+    </message>
+    <message>
+        <source>Direction</source>
+        <extracomment>Title of Peers Table column which indicates the direction the peer connection was initiated from.</extracomment>
+        <translation type="unfinished">راہنمائی </translation>
     </message>
     <message>
         <source>Sent</source>
@@ -1626,7 +1955,17 @@ If you are receiving this error you should request the merchant provide a BIP21 
         <extracomment>Title of Peers Table column which states the network the peer connected through.</extracomment>
         <translation type="unfinished">نیٹ ورک</translation>
     </message>
-    </context>
+    <message>
+        <source>Inbound</source>
+        <extracomment>An Inbound Connection from a Peer.</extracomment>
+        <translation type="unfinished">آنے والا</translation>
+    </message>
+    <message>
+        <source>Outbound</source>
+        <extracomment>An Outbound Connection to a Peer.</extracomment>
+        <translation type="unfinished">باہر جانے والا</translation>
+    </message>
+</context>
 <context>
     <name>QRImageWidget</name>
     <message>
@@ -1638,15 +1977,44 @@ If you are receiving this error you should request the merchant provide a BIP21 
         <translation type="unfinished">اور تصویر کاپی کریں۔</translation>
     </message>
     <message>
+        <source>Resulting URI too long, try to reduce the text for label / message.</source>
+        <translation type="unfinished">"یو آر آئی بہت لمبا ہے، براہ کرم لیبل یا پیغام کے متن کو کم کریں۔"</translation>
+    </message>
+    <message>
+        <source>Error encoding URI into QR Code.</source>
+        <translation type="unfinished">"یو آر آئی کو QR کوڈ میں انکوڈ کرنے میں خرابی۔"</translation>
+    </message>
+    <message>
+        <source>QR code support not available.</source>
+        <translation type="unfinished">QR کوڈ کی سپورٹ دستیاب نہیں ہے۔"</translation>
+    </message>
+    <message>
         <source>Save QR Code</source>
         <translation type="unfinished">کیو آر کوڈ محفوظ کریں۔</translation>
     </message>
-    </context>
+    <message>
+        <source>PNG Image</source>
+        <extracomment>Expanded name of the PNG file format. See: https://en.wikipedia.org/wiki/Portable_Network_Graphics.</extracomment>
+        <translation type="unfinished">PNG قسم کی تصویر</translation>
+    </message>
+</context>
 <context>
     <name>RPCConsole</name>
     <message>
+        <source>N/A</source>
+        <translation type="unfinished">لاگو نہیں</translation>
+    </message>
+    <message>
+        <source>Client version</source>
+        <translation type="unfinished">صارف کا نسخہ</translation>
+    </message>
+    <message>
         <source>&amp;Information</source>
         <translation type="unfinished">اور معلومات</translation>
+    </message>
+    <message>
+        <source>General</source>
+        <translation type="unfinished">عمومی</translation>
     </message>
     <message>
         <source>Startup time</source>
@@ -1703,10 +2071,6 @@ If you are receiving this error you should request the merchant provide a BIP21 
     <message>
         <source>Select a peer to view detailed information.</source>
         <translation type="unfinished">تفصیلی معلومات دیکھنے کے لیے فریق کا انتخاب کریں۔</translation>
-    </message>
-    <message>
-        <source>Starting Block</source>
-        <translation type="unfinished">شروع ہونے والا بلاک</translation>
     </message>
     <message>
         <source>Synced Blocks</source>
@@ -1792,6 +2156,10 @@ If you are receiving this error you should request the merchant provide a BIP21 
     <message>
         <source>Network activity disabled</source>
         <translation type="unfinished">نیٹ ورک کی سرگرمی غیر فعال ہے۔</translation>
+    </message>
+    <message>
+        <source>None</source>
+        <translation type="unfinished">کوئی نہیں</translation>
     </message>
     <message>
         <source>Yes</source>
@@ -2088,6 +2456,11 @@ If you are receiving this error you should request the merchant provide a BIP21 
         <translation type="unfinished">لین دین کا ڈیٹا محفوظ کریں۔</translation>
     </message>
     <message>
+        <source>Partially Signed Transaction (Binary)</source>
+        <extracomment>Expanded name of the binary PSBT file format. See: BIP 174.</extracomment>
+        <translation type="unfinished">جزوی طور پر دستخط شدہ ٹرانزیکشن (بائنری</translation>
+    </message>
+    <message>
         <source>External balance:</source>
         <translation type="unfinished">بیرونی توازن:</translation>
     </message>
@@ -2280,6 +2653,10 @@ If you are receiving this error you should request the merchant provide a BIP21 
         <source>To</source>
         <translation type="unfinished">کو</translation>
     </message>
+    <message>
+        <source>own address</source>
+        <translation type="unfinished">اپنا پتہ"</translation>
+    </message>
     <message numerus="yes">
         <source>matures in %n more block(s)</source>
         <translation type="unfinished">
@@ -2400,7 +2777,11 @@ If you are receiving this error you should request the merchant provide a BIP21 
         <extracomment>Name of the wallet data file format.</extracomment>
         <translation type="unfinished">والیٹ کا ڈیٹا</translation>
     </message>
-    </context>
+    <message>
+        <source>Cancel</source>
+        <translation type="unfinished">نسوخ کریں"</translation>
+    </message>
+</context>
 <context>
     <name>bitcoin-core</name>
     <message>

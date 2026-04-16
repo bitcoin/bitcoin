@@ -4,7 +4,7 @@
 
 #include <primitives/transaction_identifier.h>
 #include <streams.h>
-#include <test/util/setup_common.h>
+#include <test/util/common.h>
 #include <uint256.h>
 #include <util/strencodings.h>
 

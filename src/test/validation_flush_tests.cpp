@@ -5,6 +5,7 @@
 #include <sync.h>
 #include <test/util/coins.h>
 #include <test/util/random.h>
+#include <test/util/common.h>
 #include <test/util/setup_common.h>
 #include <validation.h>
 

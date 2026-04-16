@@ -13,7 +13,7 @@
 #include <ranges>
 #include <vector>
 
-BOOST_FIXTURE_TEST_SUITE(prevector_tests, TestingSetup)
+BOOST_FIXTURE_TEST_SUITE(prevector_tests, BasicTestingSetup)
 
 template <unsigned int N, typename T>
 class prevector_tester

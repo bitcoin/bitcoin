@@ -24,26 +24,6 @@
 #include <cmath>
 #include <optional>
 
-/** Over how many buckets entries with tried addresses from a single group (/16 for IPv4) are spread */
-static constexpr uint32_t ADDRMAN_TRIED_BUCKETS_PER_GROUP{8};
-/** Over how many buckets entries with new addresses originating from a single group are spread */
-static constexpr uint32_t ADDRMAN_NEW_BUCKETS_PER_SOURCE_GROUP{64};
-/** Maximum number of times an address can occur in the new table */
-static constexpr int32_t ADDRMAN_NEW_BUCKETS_PER_ADDRESS{8};
-/** How old addresses can maximally be */
-static constexpr auto ADDRMAN_HORIZON{30 * 24h};
-/** After how many failed attempts we give up on a new node */
-static constexpr int32_t ADDRMAN_RETRIES{3};
-/** How many successive failures are allowed ... */
-static constexpr int32_t ADDRMAN_MAX_FAILURES{10};
-/** ... in at least this duration */
-static constexpr auto ADDRMAN_MIN_FAIL{7 * 24h};
-/** How recent a successful connection should be before we allow an address to be evicted from tried */
-static constexpr auto ADDRMAN_REPLACEMENT{4h};
-/** The maximum number of tried addr collisions to store */
-static constexpr size_t ADDRMAN_SET_TRIED_COLLISION_SIZE{10};
-/** The maximum time we'll spend trying to resolve a tried table collision */
-static constexpr auto ADDRMAN_TEST_WINDOW{40min};
 
 int AddrInfo::GetTriedBucket(const uint256& nKey, const NetGroupManager& netgroupman) const
 {
@@ -156,7 +136,7 @@ void AddrManImpl::Serialize(Stream& s_) const
      * * for each new bucket:
      *   * number of elements
      *   * for each element: index in the serialized "all new addresses"
-     * * asmap checksum
+     * * asmap version
      *
      * 2**30 is xorred with the number of buckets to make addrman deserializer v0 detect it
      * as incompatible. This is necessary because it did not check the version number on
@@ -222,9 +202,9 @@ void AddrManImpl::Serialize(Stream& s_) const
             }
         }
     }
-    // Store asmap checksum after bucket entries so that it
+    // Store asmap version after bucket entries so that it
     // can be ignored by older clients for backward compatibility.
-    s << m_netgroupman.GetAsmapChecksum();
+    s << m_netgroupman.GetAsmapVersion();
 }
 
 template <typename Stream>
@@ -330,16 +310,16 @@ void AddrManImpl::Unserialize(Stream& s_)
         }
     }
 
-    // If the bucket count and asmap checksum haven't changed, then attempt
+    // If the bucket count and asmap version haven't changed, then attempt
     // to restore the entries to the buckets/positions they were in before
     // serialization.
-    uint256 supplied_asmap_checksum{m_netgroupman.GetAsmapChecksum()};
-    uint256 serialized_asmap_checksum;
+    uint256 supplied_asmap_version{m_netgroupman.GetAsmapVersion()};
+    uint256 serialized_asmap_version;
     if (format >= Format::V2_ASMAP) {
-        s >> serialized_asmap_checksum;
+        s >> serialized_asmap_version;
     }
     const bool restore_bucketing{nUBuckets == ADDRMAN_NEW_BUCKET_COUNT &&
-        serialized_asmap_checksum == supplied_asmap_checksum};
+        serialized_asmap_version == supplied_asmap_version};
 
     if (!restore_bucketing) {
         LogDebug(BCLog::ADDRMAN, "Bucketing method was updated, re-bucketing addrman entries from disk\n");
@@ -663,8 +643,8 @@ bool AddrManImpl::Good_(const CService& addr, bool test_before_evict, NodeSecond
         }
         // Output the entry we'd be colliding with, for debugging purposes
         auto colliding_entry = mapInfo.find(vvTried[tried_bucket][tried_bucket_pos]);
-        LogDebug(BCLog::ADDRMAN, "Collision with %s while attempting to move %s to tried table. Collisions=%d\n",
-                 colliding_entry != mapInfo.end() ? colliding_entry->second.ToStringAddrPort() : "",
+        LogDebug(BCLog::ADDRMAN, "Collision with %s while attempting to move %s to tried table. Collisions=%d",
+                 colliding_entry != mapInfo.end() ? colliding_entry->second.ToStringAddrPort() : "<unknown-addr>",
                  addr.ToStringAddrPort(),
                  m_tried_collisions.size());
         return false;

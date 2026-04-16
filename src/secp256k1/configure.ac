@@ -19,8 +19,8 @@ define(_LIB_VERSION_AGE, 0)
 
 AC_INIT([libsecp256k1],m4_join([.], _PKG_VERSION_MAJOR, _PKG_VERSION_MINOR, _PKG_VERSION_PATCH)m4_if(_PKG_VERSION_IS_RELEASE, [true], [], [-dev]),[https://github.com/bitcoin-core/secp256k1/issues],[libsecp256k1],[https://github.com/bitcoin-core/secp256k1])
 
-AC_CONFIG_AUX_DIR([build-aux])
-AC_CONFIG_MACRO_DIR([build-aux/m4])
+AC_CONFIG_AUX_DIR([autotools-aux])
+AC_CONFIG_MACRO_DIR([autotools-aux/m4])
 AC_CANONICAL_HOST
 
 # Require Automake 1.11.2 for AM_PROG_AR
@@ -111,6 +111,8 @@ AC_DEFUN([SECP_TRY_APPEND_DEFAULT_CFLAGS], [
       SECP_TRY_APPEND_CFLAGS([-Wcast-align=strict], $1) # GCC >= 8.0
       SECP_TRY_APPEND_CFLAGS([-Wconditional-uninitialized], $1) # Clang >= 3.0 only
       SECP_TRY_APPEND_CFLAGS([-Wreserved-identifier], $1) # Clang >= 13.0 only
+      SECP_TRY_APPEND_CFLAGS([-Wtrailing-whitespace=any], $1) # GCC >= 15.0
+      SECP_TRY_APPEND_CFLAGS([-Wleading-whitespace=spaces], $1) # GCC >= 15.0
 
       CFLAGS="$SECP_TRY_APPEND_DEFAULT_CFLAGS_saved_CFLAGS"
     fi

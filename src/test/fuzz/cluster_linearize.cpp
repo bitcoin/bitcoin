@@ -919,13 +919,13 @@ FUZZ_TARGET(clusterlin_sfl)
         if (rng.randbits(4) == 0) {
             // Perform sanity checks from time to time (too computationally expensive to do after
             // every step).
-            sfl.SanityCheck(depgraph);
+            sfl.SanityCheck();
         }
         auto diagram = sfl.GetDiagram();
         if (rng.randbits(4) == 0) {
             // Verify that the diagram of GetLinearization() is at least as good as GetDiagram(),
             // from time to time.
-            auto lin = sfl.GetLinearization();
+            auto lin = sfl.GetLinearization(IndexTxOrder{});
             auto lin_diagram = ChunkLinearization(depgraph, lin);
             auto cmp_lin = CompareChunks(lin_diagram, diagram);
             assert(cmp_lin >= 0);
@@ -984,7 +984,7 @@ FUZZ_TARGET(clusterlin_sfl)
 
     // Verify that optimality is reached within an expected amount of work. This protects against
     // hypothetical bugs that hugely increase the amount of work needed to reach optimality.
-    assert(sfl.GetCost() <= MaxOptimalLinearizationIters(depgraph.TxCount()));
+    assert(sfl.GetCost() <= MaxOptimalLinearizationCost(depgraph.TxCount()));
 
     // The result must be as good as SimpleLinearize.
     auto [simple_linearization, simple_optimal] = SimpleLinearize(depgraph, MAX_SIMPLE_ITERATIONS / 10);
@@ -1011,16 +1011,17 @@ FUZZ_TARGET(clusterlin_linearize)
 {
     // Verify the behavior of Linearize().
 
-    // Retrieve an RNG seed, an iteration count, a depgraph, and whether to make it connected from
-    // the fuzz input.
+    // Retrieve an RNG seed, a maximum amount of work, a depgraph, and whether to make it connected
+    // from the fuzz input.
     SpanReader reader(buffer);
     DepGraph<TestBitSet> depgraph;
     uint64_t rng_seed{0};
-    uint64_t iter_count{0};
+    uint64_t max_cost{0};
     uint8_t flags{7};
     try {
-        reader >> VARINT(iter_count) >> Using<DepGraphFormatter>(depgraph) >> rng_seed >> flags;
+        reader >> VARINT(max_cost) >> Using<DepGraphFormatter>(depgraph) >> rng_seed >> flags;
     } catch (const std::ios_base::failure&) {}
+    if (depgraph.TxCount() <= 1) return;
     bool make_connected = flags & 1;
     // The following 3 booleans have 4 combinations:
     // - (flags & 6) == 0: do not provide input linearization.
@@ -1043,8 +1044,14 @@ FUZZ_TARGET(clusterlin_linearize)
     }
 
     // Invoke Linearize().
-    iter_count &= 0x7ffff;
-    auto [linearization, optimal, cost] = Linearize(depgraph, iter_count, rng_seed, old_linearization, /*is_topological=*/claim_topological_input);
+    max_cost &= 0x3fffff;
+    auto [linearization, optimal, cost] = Linearize(
+        /*depgraph=*/depgraph,
+        /*max_cost=*/max_cost,
+        /*rng_seed=*/rng_seed,
+        /*fallback_order=*/IndexTxOrder{},
+        /*old_linearization=*/old_linearization,
+        /*is_topological=*/claim_topological_input);
     SanityCheck(depgraph, linearization);
     auto chunking = ChunkLinearization(depgraph, linearization);
 
@@ -1056,8 +1063,8 @@ FUZZ_TARGET(clusterlin_linearize)
         assert(cmp >= 0);
     }
 
-    // If the iteration count is sufficiently high, an optimal linearization must be found.
-    if (iter_count > MaxOptimalLinearizationIters(depgraph.TxCount())) {
+    // If the maximum amount of work is sufficiently high, an optimal linearization must be found.
+    if (max_cost > MaxOptimalLinearizationCost(depgraph.TxCount())) {
         assert(optimal);
     }
 
@@ -1082,6 +1089,72 @@ FUZZ_TARGET(clusterlin_linearize)
         auto read_chunking = ChunkLinearization(depgraph, read);
         auto cmp_read = CompareChunks(chunking, read_chunking);
         assert(cmp_read >= 0);
+
+        // Verify that within every chunk, the transactions are in a valid order. For any pair of
+        // transactions, it should not be possible to swap them; either due to a missing
+        // dependency, or because the order would be inconsistent with decreasing feerate,
+        // increasing size, and fallback order (just DepGraphIndex value here).
+        auto chunking_info = ChunkLinearizationInfo(depgraph, linearization);
+        /** The set of all transactions (strictly) before tx1 (see below), or (strictly) before
+         *  chunk1 (see even further below). */
+        TestBitSet done;
+        unsigned pos{0};
+        for (const auto& chunk : chunking_info) {
+            auto chunk_start = pos;
+            auto chunk_end = pos + chunk.transactions.Count() - 1;
+            // Go over all pairs of transactions. done is the set of transactions seen before pos1.
+            for (unsigned pos1 = chunk_start; pos1 <= chunk_end; ++pos1) {
+                auto tx1 = linearization[pos1];
+                for (unsigned pos2 = pos1 + 1; pos2 <= chunk_end; ++pos2) {
+                    auto tx2 = linearization[pos2];
+                    // Check whether tx2 only depends on transactions that precede tx1.
+                    if ((depgraph.Ancestors(tx2) - done).Count() == 1) {
+                        // tx2 could take position pos1.
+                        // Verify that individual transaction feerate is decreasing (note that >=
+                        // tie-breaks by size).
+                        assert(depgraph.FeeRate(tx1) >= depgraph.FeeRate(tx2));
+                        // If feerate and size are equal, compare by DepGraphIndex.
+                        if (depgraph.FeeRate(tx1) == depgraph.FeeRate(tx2)) {
+                            assert(tx1 < tx2);
+                        }
+                    }
+                }
+                done.Set(tx1);
+            }
+            pos += chunk.transactions.Count();
+        }
+
+        // Verify that chunks themselves are in a valid order. For any pair of chunks, it should
+        // not be possible to swap them; either due to a missing dependency, or because the order
+        // would be inconsistent with decreasing chunk feerate, increasing chunk size, and order
+        // of maximum fallback-ordered element (just maximum DepGraphIndex element here).
+        done = {};
+        // Go over all pairs of chunks. done is the set of transactions seen before chunk_num1.
+        for (unsigned chunk_num1 = 0; chunk_num1 < chunking_info.size(); ++chunk_num1) {
+            const auto& chunk1 = chunking_info[chunk_num1];
+            for (unsigned chunk_num2 = chunk_num1 + 1; chunk_num2 < chunking_info.size(); ++chunk_num2) {
+                const auto& chunk2 = chunking_info[chunk_num2];
+                TestBitSet chunk2_ancestors;
+                for (auto tx : chunk2.transactions) chunk2_ancestors |= depgraph.Ancestors(tx);
+                // Check whether chunk2 only depends on transactions that precede chunk1.
+                if ((chunk2_ancestors - done).IsSubsetOf(chunk2.transactions)) {
+                    // chunk2 could take position chunk_num1.
+                    // Verify that chunk feerate is decreasing (note that >= tie-breaks by size).
+                    assert(chunk1.feerate >= chunk2.feerate);
+                    // If feerate and size are equal, compare by maximum DepGraphIndex element.
+                    if (chunk1.feerate == chunk2.feerate) {
+                        assert(chunk1.transactions.Last() < chunk2.transactions.Last());
+                    }
+                }
+            }
+            done |= chunk1.transactions;
+        }
+
+        // Redo from scratch with a different rng_seed. The resulting linearization should be
+        // deterministic, if both are optimal.
+        auto [linearization2, optimal2, cost2] = Linearize(depgraph, MaxOptimalLinearizationCost(depgraph.TxCount()) + 1, rng_seed ^ 0x1337, IndexTxOrder{});
+        assert(optimal2);
+        assert(linearization2 == linearization);
     }
 }
 
@@ -1170,7 +1243,7 @@ FUZZ_TARGET(clusterlin_postlinearize_tree)
 
     // Try to find an even better linearization directly. This must not change the diagram for the
     // same reason.
-    auto [opt_linearization, _optimal, _cost] = Linearize(depgraph_tree, 100000, rng_seed, post_linearization);
+    auto [opt_linearization, _optimal, _cost] = Linearize(depgraph_tree, 1000000, rng_seed, IndexTxOrder{}, post_linearization);
     auto opt_chunking = ChunkLinearization(depgraph_tree, opt_linearization);
     auto cmp_opt = CompareChunks(opt_chunking, post_chunking);
     assert(cmp_opt == 0);

@@ -7,3 +7,9 @@ build_freebsd_DOWNLOAD = curl --location --fail --connect-timeout $(DOWNLOAD_CON
 # freebsd host on freebsd builder: override freebsd host preferences.
 freebsd_CC = clang
 freebsd_CXX = clang++
+
+i686_freebsd_CFLAGS += -m32
+i686_freebsd_CXXFLAGS += -m32
+
+x86_64_freebsd_CFLAGS += -m64
+x86_64_freebsd_CXXFLAGS += -m64

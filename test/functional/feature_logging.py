@@ -7,6 +7,7 @@
 import os
 
 from test_framework.test_framework import BitcoinTestFramework
+from test_framework.p2p import P2PInterface
 from test_framework.test_node import ErrorMatch
 
 
@@ -114,6 +115,13 @@ class LoggingTest(BitcoinTestFramework):
             assert 'abc' not in logging
             assert logging['rpc']
             assert logging['net']
+
+        self.log.info("Test -logips formatting in net logs")
+        self.restart_node(0, ['-debug=net', '-logips=1'])
+        with self.nodes[0].assert_debug_log(["peer=0, peeraddr="]):
+            p2p = self.nodes[0].add_p2p_connection(P2PInterface())
+            p2p.wait_for_verack()
+            self.nodes[0].disconnect_p2ps()
 
 if __name__ == '__main__':
     LoggingTest(__file__).main()

@@ -96,7 +96,7 @@ class PSBTTest(BitcoinTestFramework):
 
         # Check that the walletprocesspsbt call succeeds but also recognizes that the transaction is not complete
         signed_psbt_incomplete = wallet.walletprocesspsbt(psbt=signed_psbt_obj.to_base64(), finalize=False)
-        assert signed_psbt_incomplete["complete"] is False
+        assert_equal(signed_psbt_incomplete["complete"], False)
 
     def test_utxo_conversion(self):
         self.log.info("Check that non-witness UTXOs are removed for segwit v1+ inputs")
@@ -490,7 +490,7 @@ class PSBTTest(BitcoinTestFramework):
         finalized_psbt = processed_finalized_psbt['psbt']
         finalized_psbt_hex = processed_finalized_psbt['hex']
         assert_not_equal(signed_psbt, finalized_psbt)
-        assert finalized_psbt_hex == finalized_hex
+        assert_equal(finalized_psbt_hex, finalized_hex)
 
         # Manually selected inputs can be locked:
         assert_equal(len(self.nodes[0].listlockunspent()), 0)
@@ -918,7 +918,10 @@ class PSBTTest(BitcoinTestFramework):
         assert "final_scriptwitness" in psbt2_decoded['inputs'][0] and "final_scriptSig" in psbt2_decoded['inputs'][0]
         joined = self.nodes[0].joinpsbts([psbt, psbt2])
         joined_decoded = self.nodes[0].decodepsbt(joined)
-        assert len(joined_decoded['inputs']) == 4 and len(joined_decoded['outputs']) == 2 and "final_scriptwitness" not in joined_decoded['inputs'][3] and "final_scriptSig" not in joined_decoded['inputs'][3]
+        assert_equal(len(joined_decoded['inputs']), 4)
+        assert_equal(len(joined_decoded['outputs']), 2)
+        assert "final_scriptwitness" not in joined_decoded['inputs'][3]
+        assert "final_scriptSig" not in joined_decoded['inputs'][3]
 
         # Check that joining shuffles the inputs and outputs
         # 10 attempts should be enough to get a shuffled join
@@ -937,20 +940,31 @@ class PSBTTest(BitcoinTestFramework):
         self.generate(self.nodes[0], 6)[0]
         psbt = self.nodes[1].createpsbt([utxo], {self.nodes[0].getnewaddress("", "p2sh-segwit"):Decimal('6.999')})
         analyzed = self.nodes[0].analyzepsbt(psbt)
-        assert not analyzed['inputs'][0]['has_utxo'] and not analyzed['inputs'][0]['is_final'] and analyzed['inputs'][0]['next'] == 'updater' and analyzed['next'] == 'updater'
+        assert_equal(analyzed['inputs'][0]['has_utxo'], False)
+        assert_equal(analyzed['inputs'][0]['is_final'], False)
+        assert_equal(analyzed['inputs'][0]['next'], 'updater')
+        assert_equal(analyzed['next'], 'updater')
 
         # After update with wallet, only needs signing
         updated = self.nodes[1].walletprocesspsbt(psbt, False, 'ALL', True)['psbt']
         analyzed = self.nodes[0].analyzepsbt(updated)
-        assert analyzed['inputs'][0]['has_utxo'] and not analyzed['inputs'][0]['is_final'] and analyzed['inputs'][0]['next'] == 'signer' and analyzed['next'] == 'signer' and analyzed['inputs'][0]['missing']['signatures'][0] == addrinfo['embedded']['witness_program']
+        assert_equal(analyzed['inputs'][0]['has_utxo'], True)
+        assert_equal(analyzed['inputs'][0]['is_final'], False)
+        assert_equal(analyzed['inputs'][0]['next'], 'signer')
+        assert_equal(analyzed['next'], 'signer')
+        assert_equal(analyzed['inputs'][0]['missing']['signatures'][0], addrinfo['embedded']['witness_program'])
 
         # Check fee and size things
-        assert analyzed['fee'] == Decimal('0.001') and analyzed['estimated_vsize'] == 134 and analyzed['estimated_feerate'] == Decimal('0.00746268')
+        assert_equal(analyzed['fee'], Decimal('0.001'))
+        assert_equal(analyzed['estimated_vsize'], 134)
+        assert_equal(analyzed['estimated_feerate'], Decimal('0.00746268'))
 
         # After signing and finalizing, needs extracting
         signed = self.nodes[1].walletprocesspsbt(updated)['psbt']
         analyzed = self.nodes[0].analyzepsbt(signed)
-        assert analyzed['inputs'][0]['has_utxo'] and analyzed['inputs'][0]['is_final'] and analyzed['next'] == 'extractor'
+        assert_equal(analyzed['inputs'][0]['has_utxo'], True)
+        assert_equal(analyzed['inputs'][0]['is_final'], True)
+        assert_equal(analyzed['next'], 'extractor')
 
         self.log.info("PSBT spending unspendable outputs should have error message and Creator as next")
         analysis = self.nodes[0].analyzepsbt('cHNidP8BAJoCAAAAAljoeiG1ba8MI76OcHBFbDNvfLqlyHV5JPVFiHuyq911AAAAAAD/////g40EJ9DsZQpoqka7CwmK6kQiwHGyyng1Kgd5WdB86h0BAAAAAP////8CcKrwCAAAAAAWAEHYXCtx0AYLCcmIauuBXlCZHdoSTQDh9QUAAAAAFv8/wADXYP/7//////8JxOh0LR2HAI8AAAAAAAEBIADC6wsAAAAAF2oUt/X69ELjeX2nTof+fZ10l+OyAokDAQcJAwEHEAABAACAAAEBIADC6wsAAAAAF2oUt/X69ELjeX2nTof+fZ10l+OyAokDAQcJAwEHENkMak8AAAAA')
@@ -984,7 +998,7 @@ class PSBTTest(BitcoinTestFramework):
         # Make a weird but signable script. sh(wsh(pkh())) descriptor accomplishes this
         desc = descsum_create("sh(wsh(pkh({})))".format(privkey))
         res = self.nodes[0].importdescriptors([{"desc": desc, "timestamp": "now"}])
-        assert res[0]["success"]
+        assert_equal(res[0]["success"], True)
         addr = self.nodes[0].deriveaddresses(desc)[0]
         addr_info = self.nodes[0].getaddressinfo(addr)
 
@@ -999,15 +1013,15 @@ class PSBTTest(BitcoinTestFramework):
         # But funding should work when the solving data is provided
         psbt = wallet.walletcreatefundedpsbt([ext_utxo], {self.nodes[0].getnewaddress(): 15}, 0, {"add_inputs": True, "solving_data": {"pubkeys": [addr_info['pubkey']], "scripts": [addr_info["embedded"]["scriptPubKey"], addr_info["embedded"]["embedded"]["scriptPubKey"]]}})
         signed = wallet.walletprocesspsbt(psbt['psbt'])
-        assert not signed['complete']
+        assert_equal(signed['complete'], False)
         signed = self.nodes[0].walletprocesspsbt(signed['psbt'])
-        assert signed['complete']
+        assert_equal(signed['complete'], True)
 
         psbt = wallet.walletcreatefundedpsbt([ext_utxo], {self.nodes[0].getnewaddress(): 15}, 0, {"add_inputs": True, "solving_data":{"descriptors": [desc]}})
         signed = wallet.walletprocesspsbt(psbt['psbt'])
-        assert not signed['complete']
+        assert_equal(signed['complete'], False)
         signed = self.nodes[0].walletprocesspsbt(signed['psbt'])
-        assert signed['complete']
+        assert_equal(signed['complete'], True)
         final = signed['hex']
 
         dec = self.nodes[0].decodepsbt(signed["psbt"])
@@ -1041,7 +1055,7 @@ class PSBTTest(BitcoinTestFramework):
         signed = wallet.walletprocesspsbt(psbt["psbt"])
         signed = self.nodes[0].walletprocesspsbt(signed["psbt"])
         final = signed["hex"]
-        assert self.nodes[0].testmempoolaccept([final])[0]["allowed"]
+        assert_equal(self.nodes[0].testmempoolaccept([final])[0]["allowed"], True)
         # Reducing the weight should have a lower fee
         psbt2 = wallet.walletcreatefundedpsbt(
             inputs=[{"txid": ext_utxo["txid"], "vout": ext_utxo["vout"], "weight": low_input_weight}],
@@ -1066,7 +1080,7 @@ class PSBTTest(BitcoinTestFramework):
 
         # Import the external utxo descriptor so that we can sign for it from the test wallet
         res = wallet.importdescriptors([{"desc": desc, "timestamp": "now"}])
-        assert res[0]["success"]
+        assert_equal(res[0]["success"], True)
         # The provided weight should override the calculated weight for a wallet input
         psbt3 = wallet.walletcreatefundedpsbt(
             inputs=[{"txid": ext_utxo["txid"], "vout": ext_utxo["vout"], "weight": high_input_weight}],
@@ -1083,7 +1097,7 @@ class PSBTTest(BitcoinTestFramework):
 
         desc = descsum_create("wsh(pkh({}))".format(pubkey.hex()))
         res = watchonly.importdescriptors([{"desc": desc, "timestamp": "now"}])
-        assert res[0]["success"]
+        assert_equal(res[0]["success"], True)
         addr = self.nodes[0].deriveaddresses(desc)[0]
         self.nodes[0].sendtoaddress(addr, 10)
         self.generate(self.nodes[0], 1)
@@ -1098,7 +1112,7 @@ class PSBTTest(BitcoinTestFramework):
 
         desc = descsum_create("tr({},pk({}))".format(H_POINT, pubkey.hex()))
         res = watchonly.importdescriptors([{"desc": desc, "timestamp": "now"}])
-        assert res[0]["success"]
+        assert_equal(res[0]["success"], True)
         addr = self.nodes[0].deriveaddresses(desc)[0]
         self.nodes[0].sendtoaddress(addr, 10)
         self.generate(self.nodes[0], 1)

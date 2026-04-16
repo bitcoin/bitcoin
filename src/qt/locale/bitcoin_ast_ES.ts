@@ -743,6 +743,11 @@ La firma ye possible solamentu con direcciones del tipu 'legacy'.</translation>
         <source>Migrate Wallet</source>
         <translation type="unfinished">Migrar cartera</translation>
     </message>
+    <message>
+        <source>Restore Wallet</source>
+        <extracomment>Title of progress window which is displayed when wallets are being restored.</extracomment>
+        <translation type="unfinished">Restaurar cartera</translation>
+    </message>
     </context>
 <context>
     <name>OpenWalletActivity</name>
@@ -815,6 +820,21 @@ La firma ye possible solamentu con direcciones del tipu 'legacy'.</translation>
     <message>
         <source>Continue</source>
         <translation type="unfinished">Continuar</translation>
+    </message>
+    </context>
+<context>
+    <name>PSBTOperationsDialog</name>
+    <message numerus="yes">
+        <source>Signed %n input(s), but more signatures are still required.</source>
+        <translation type="unfinished">
+            <numerusform />
+        </translation>
+    </message>
+    <message numerus="yes">
+        <source>Transaction has %n unsigned input(s).</source>
+        <translation type="unfinished">
+            <numerusform />
+        </translation>
     </message>
     </context>
 <context>

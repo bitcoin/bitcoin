@@ -279,44 +279,45 @@ FUZZ_TARGET(versionbits, .init = initialize)
     }
 
     // state is where everything interesting is
-    switch (state) {
-    case ThresholdState::DEFINED:
-        assert(since == 0);
-        assert(exp_state == ThresholdState::DEFINED);
-        assert(current_block->GetMedianTimePast() < dep.nStartTime);
-        break;
-    case ThresholdState::STARTED:
-        assert(current_block->GetMedianTimePast() >= dep.nStartTime);
-        if (exp_state == ThresholdState::STARTED) {
-            assert(blocks_sig < dep.threshold);
-            assert(current_block->GetMedianTimePast() < dep.nTimeout);
-        } else {
+    [&]() {
+        switch (state) {
+        case ThresholdState::DEFINED:
+            assert(since == 0);
             assert(exp_state == ThresholdState::DEFINED);
-        }
-        break;
-    case ThresholdState::LOCKED_IN:
-        if (exp_state == ThresholdState::LOCKED_IN) {
-            assert(current_block->nHeight + 1 < dep.min_activation_height);
-        } else {
-            assert(exp_state == ThresholdState::STARTED);
-            assert(blocks_sig >= dep.threshold);
-        }
-        break;
-    case ThresholdState::ACTIVE:
-        assert(always_active_test || dep.min_activation_height <= current_block->nHeight + 1);
-        assert(exp_state == ThresholdState::ACTIVE || exp_state == ThresholdState::LOCKED_IN);
-        break;
-    case ThresholdState::FAILED:
-        assert(never_active_test || current_block->GetMedianTimePast() >= dep.nTimeout);
-        if (exp_state == ThresholdState::STARTED) {
-            assert(blocks_sig < dep.threshold);
-        } else {
-            assert(exp_state == ThresholdState::FAILED);
-        }
-        break;
-    default:
+            assert(current_block->GetMedianTimePast() < dep.nStartTime);
+            return;
+        case ThresholdState::STARTED:
+            assert(current_block->GetMedianTimePast() >= dep.nStartTime);
+            if (exp_state == ThresholdState::STARTED) {
+                assert(blocks_sig < dep.threshold);
+                assert(current_block->GetMedianTimePast() < dep.nTimeout);
+            } else {
+                assert(exp_state == ThresholdState::DEFINED);
+            }
+            return;
+        case ThresholdState::LOCKED_IN:
+            if (exp_state == ThresholdState::LOCKED_IN) {
+                assert(current_block->nHeight + 1 < dep.min_activation_height);
+            } else {
+                assert(exp_state == ThresholdState::STARTED);
+                assert(blocks_sig >= dep.threshold);
+            }
+            return;
+        case ThresholdState::ACTIVE:
+            assert(always_active_test || dep.min_activation_height <= current_block->nHeight + 1);
+            assert(exp_state == ThresholdState::ACTIVE || exp_state == ThresholdState::LOCKED_IN);
+            return;
+        case ThresholdState::FAILED:
+            assert(never_active_test || current_block->GetMedianTimePast() >= dep.nTimeout);
+            if (exp_state == ThresholdState::STARTED) {
+                assert(blocks_sig < dep.threshold);
+            } else {
+                assert(exp_state == ThresholdState::FAILED);
+            }
+            return;
+        } // no default case, so the compiler can warn about missing cases
         assert(false);
-    }
+    }();
 
     if (blocks.size() >= period * max_periods) {
         // we chose the timeout (and block times) so that by the time we have this many blocks it's all over

@@ -600,8 +600,7 @@ std::string PSBTRoleName(PSBTRole role) {
     case PSBTRole::SIGNER: return "signer";
     case PSBTRole::FINALIZER: return "finalizer";
     case PSBTRole::EXTRACTOR: return "extractor";
-        // no default case, so the compiler can warn about missing cases
-    }
+    } // no default case, so the compiler can warn about missing cases
     assert(false);
 }
 
@@ -617,7 +616,7 @@ bool DecodeBase64PSBT(PartiallySignedTransaction& psbt, const std::string& base6
 
 bool DecodeRawPSBT(PartiallySignedTransaction& psbt, std::span<const std::byte> tx_data, std::string& error)
 {
-    DataStream ss_data{tx_data};
+    SpanReader ss_data{tx_data};
     try {
         ss_data >> psbt;
         if (!ss_data.empty()) {

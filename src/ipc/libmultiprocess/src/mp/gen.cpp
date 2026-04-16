@@ -211,6 +211,7 @@ static void Generate(kj::StringPtr src_prefix,
     cpp_server << "#include <kj/async.h>\n";
     cpp_server << "#include <kj/common.h>\n";
     cpp_server << "#include <kj/exception.h>\n";
+    cpp_server << "#include <kj/tuple.h>\n";
     cpp_server << "#include <mp/proxy.h>\n";
     cpp_server << "#include <mp/util.h>\n";
     cpp_server << "#include <" << PROXY_TYPES << ">\n";
@@ -227,6 +228,7 @@ static void Generate(kj::StringPtr src_prefix,
     cpp_client << "#include <" << include_path << ".proxy-types.h>\n";
     cpp_client << "#include <capnp/generated-header-support.h>\n";
     cpp_client << "#include <cstring>\n";
+    cpp_client << "#include <vector>\n";
     cpp_client << "#include <kj/common.h>\n";
     cpp_client << "#include <mp/proxy.h>\n";
     cpp_client << "#include <mp/util.h>\n";

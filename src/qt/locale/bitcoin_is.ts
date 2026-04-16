@@ -924,6 +924,20 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <source>Broadcast Tx</source>
         <translation type="unfinished">Útsending Tx</translation>
     </message>
+    <message numerus="yes">
+        <source>Signed %n input(s), but more signatures are still required.</source>
+        <translation type="unfinished">
+            <numerusform />
+            <numerusform />
+        </translation>
+    </message>
+    <message numerus="yes">
+        <source>Transaction has %n unsigned input(s).</source>
+        <translation type="unfinished">
+            <numerusform />
+            <numerusform />
+        </translation>
+    </message>
     </context>
 <context>
     <name>PeerTableModel</name>
@@ -945,10 +959,6 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     <message>
         <source>Block chain</source>
         <translation type="unfinished">Blokkarkeðja</translation>
-    </message>
-    <message>
-        <source>Starting Block</source>
-        <translation type="unfinished">Upphafsblokk</translation>
     </message>
     <message>
         <source>Synced Blocks</source>
@@ -1063,10 +1073,6 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     <message>
         <source>The amount exceeds your balance.</source>
         <translation type="unfinished">Upphæðin fer yfir stöðu þína.</translation>
-    </message>
-    <message>
-        <source>The total exceeds your balance when the %1 transaction fee is included.</source>
-        <translation type="unfinished">Heildarkostnaður fer yfir stöðuna þína þegar %1 færslugjaldið er innifalið.</translation>
     </message>
     <message numerus="yes">
         <source>Estimated to begin confirmation within %n block(s).</source>

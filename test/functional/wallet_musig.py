@@ -7,6 +7,7 @@ import re
 
 from test_framework.descriptors import descsum_create
 from test_framework.key import H_POINT
+from test_framework.script import hash160
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import (
     assert_equal,
@@ -221,7 +222,7 @@ class WalletMuSigTest(BitcoinTestFramework):
                 utxo = wallet.listunspent()[0]
             else:
                 assert_equal(utxo, wallet.listunspent()[0])
-        psbt = wallets[0].walletcreatefundedpsbt(outputs=[{self.def_wallet.getnewaddress(): 5}], inputs=[utxo], change_type="bech32m", changePosition=1)["psbt"]
+        psbt = wallets[0].walletcreatefundedpsbt(outputs=[{self.def_wallet.getnewaddress(): 5}], inputs=[utxo], change_type="bech32m", changePosition=1, locktime=self.nodes[0].getblockcount())["psbt"]
 
         dec_psbt = self.nodes[0].decodepsbt(psbt)
         assert_equal(len(dec_psbt["inputs"]), 1)
@@ -261,6 +262,8 @@ class WalletMuSigTest(BitcoinTestFramework):
         assert_equal(len(dec_psbt["inputs"][0]["musig2_pubnonces"]), expected_pubnonces)
         for pn in dec_psbt["inputs"][0]["musig2_pubnonces"]:
             pubkey = pn["aggregate_pubkey"][2:]
+            if "pkh" in pattern or "pk_h" in pattern:
+                pubkey = hash160(bytes.fromhex(pubkey)).hex()
             if pubkey in dec_psbt["inputs"][0]["witness_utxo"]["scriptPubKey"]["hex"]:
                 continue
             elif "taproot_scripts" in dec_psbt["inputs"][0]:
@@ -287,6 +290,8 @@ class WalletMuSigTest(BitcoinTestFramework):
         assert_equal(len(dec_psbt["inputs"][0]["musig2_partial_sigs"]), expected_partial_sigs)
         for ps in dec_psbt["inputs"][0]["musig2_partial_sigs"]:
             pubkey = ps["aggregate_pubkey"][2:]
+            if "pkh" in pattern or "pk_h" in pattern:
+                pubkey = hash160(bytes.fromhex(pubkey)).hex()
             if pubkey in dec_psbt["inputs"][0]["witness_utxo"]["scriptPubKey"]["hex"]:
                 continue
             elif "taproot_scripts" in dec_psbt["inputs"][0]:
@@ -328,6 +333,11 @@ class WalletMuSigTest(BitcoinTestFramework):
         self.test_success_case("tr(H,{pk(musig/*), pk(same keys different musig/*)})", "tr($H,{pk(musig($0,$1,$2)/<0;1>/*),pk(musig($1,$2)/0/*)})", scriptpath=True)
         self.test_success_case("tr(musig/*,{pk(partial keys diff musig-1/*),pk(partial keys diff musig-2/*)})}", "tr(musig($0,$1,$2)/<3;4>/*,{pk(musig($0,$1)/<5;6>/*),pk(musig($1,$2)/7/*)})")
         self.test_success_case("tr(musig/*,{pk(partial keys diff musig-1/*),pk(partial keys diff musig-2/*)})} script-path", "tr(musig($0,$1,$2)/<3;4>/*,{pk(musig($0,$1)/<5;6>/*),pk(musig($1,$2)/7/*)})", scriptpath=True, nosign_wallets=[0])
+        self.test_success_case("tr(H,and(pk(musig/*),after(1)))", "tr($H,and_v(v:pk(musig($0,$1,$2)/<0;1>/*),after(1)))", scriptpath=True)
+        self.test_success_case("tr(H,and(pk_k(musig/*),after(1)))", "tr($H,and_v(vc:pk_k(musig($0,$1,$2)/<0;1>/*),after(1)))", scriptpath=True)
+        self.test_success_case("tr(H,and(pkh(musig/*),after(1)))", "tr($H,and_v(v:pkh(musig($0,$1,$2)/<0;1>/*),after(1)))", scriptpath=True)
+        self.test_success_case("tr(H,and(pk_h(musig/*),after(1)))", "tr($H,and_v(vc:pk_h(musig($0,$1,$2)/<0;1>/*),after(1)))", scriptpath=True)
+        self.test_success_case("tr(H,{and(pk(musig/*),after(1)),and(pk(musig/*),after(1))})", "tr($H,{and_v(v:pk(musig($0,$2)/0/*),after(1)),and_v(v:pk(musig($1,$2)/0/*),after(1))})", scriptpath=True)
 
         self.test_failure_case_1("missing participant nonce", "tr(musig($0/<0;1>/*,$1/<1;2>/*,$2/<2;3>/*))")
         self.test_failure_case_2("insufficient partial signatures", "rawtr(musig($0/<0;1>/*,$1/<1;2>/*,$2/<2;3>/*))")

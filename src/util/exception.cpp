@@ -5,8 +5,8 @@
 
 #include <util/exception.h>
 
-#include <logging.h>
 #include <tinyformat.h>
+#include <util/log.h>
 
 #include <exception>
 #include <iostream>

@@ -1434,6 +1434,14 @@ Pasirašymas galimas tik su 'legacy' tipo adresais.</translation>
         <source>Close</source>
         <translation type="unfinished">Uždaryti</translation>
     </message>
+    <message numerus="yes">
+        <source>Signed %n input(s), but more signatures are still required.</source>
+        <translation type="unfinished">
+            <numerusform />
+            <numerusform />
+            <numerusform />
+        </translation>
+    </message>
     <message>
         <source>own address</source>
         <translation type="unfinished">savo adresas</translation>
@@ -1445,6 +1453,14 @@ Pasirašymas galimas tik su 'legacy' tipo adresais.</translation>
     <message>
         <source>or</source>
         <translation type="unfinished">ar</translation>
+    </message>
+    <message numerus="yes">
+        <source>Transaction has %n unsigned input(s).</source>
+        <translation type="unfinished">
+            <numerusform />
+            <numerusform />
+            <numerusform />
+        </translation>
     </message>
     </context>
 <context>
@@ -1631,10 +1647,6 @@ Pasirašymas galimas tik su 'legacy' tipo adresais.</translation>
     <message>
         <source>Version</source>
         <translation type="unfinished">Versija</translation>
-    </message>
-    <message>
-        <source>Starting Block</source>
-        <translation type="unfinished">Pradinis blokas</translation>
     </message>
     <message>
         <source>Synced Headers</source>
@@ -2148,10 +2160,6 @@ Pasirašymas galimas tik su 'legacy' tipo adresais.</translation>
     <message>
         <source>The amount exceeds your balance.</source>
         <translation type="unfinished">Ši suma viršija jūsų balansą.</translation>
-    </message>
-    <message>
-        <source>The total exceeds your balance when the %1 transaction fee is included.</source>
-        <translation type="unfinished">Bendra suma viršija jūsų balansą, kai įtraukiamas %1 sandorio mokestis.</translation>
     </message>
     <message>
         <source>Duplicate address found: addresses should only be used once each.</source>
@@ -2849,10 +2857,6 @@ Pasirašymas galimas tik su 'legacy' tipo adresais.</translation>
         <translation type="unfinished">Klaida įkeliant %s</translation>
     </message>
     <message>
-        <source>Error loading %s: Private keys can only be disabled during creation</source>
-        <translation type="unfinished">Klaida įkeliant %s: Privatūs raktai gali būti išjungti tik kūrimo metu</translation>
-    </message>
-    <message>
         <source>Error loading %s: Wallet corrupted</source>
         <translation type="unfinished">Klaida įkeliant %s: Piniginės failas pažeistas</translation>
     </message>
@@ -2891,10 +2895,6 @@ Pasirašymas galimas tik su 'legacy' tipo adresais.</translation>
     <message>
         <source>This is the minimum transaction fee you pay on every transaction.</source>
         <translation type="unfinished">Tai yra minimalus transakcijos mokestis, kurį jūs mokate kiekvieną transakciją.</translation>
-    </message>
-    <message>
-        <source>This is the transaction fee you will pay if you send a transaction.</source>
-        <translation type="unfinished">Tai yra sandorio mokestis, kurį mokėsite, jei siunčiate sandorį.</translation>
     </message>
     <message>
         <source>Transaction amount too small</source>

@@ -12,6 +12,11 @@
 
 namespace {
 
+std::strong_ordering PointerComparator(const TxGraph::Ref& a, const TxGraph::Ref& b) noexcept
+{
+    return (&a) <=> (&b);
+}
+
 void BenchTxGraphTrim(benchmark::Bench& bench)
 {
     // The from-block transactions consist of 1000 fully linear clusters, each with 64
@@ -46,9 +51,9 @@ void BenchTxGraphTrim(benchmark::Bench& bench)
     static constexpr int NUM_DEPS_PER_BOTTOM_TX = 100;
     /** Set a very large cluster size limit so that only the count limit is triggered. */
     static constexpr int32_t MAX_CLUSTER_SIZE = 100'000 * 100;
-    /** Set a very high number for acceptable iterations, so that we certainly benchmark optimal
+    /** Set a very high number for acceptable cost, so that we certainly benchmark optimal
      *  linearization. */
-    static constexpr uint64_t NUM_ACCEPTABLE_ITERS = 100'000'000;
+    static constexpr uint64_t HIGH_ACCEPTABLE_COST = 100'000'000;
 
     /** Refs to all top transactions. */
     std::vector<TxGraph::Ref> top_refs;
@@ -60,14 +65,14 @@ void BenchTxGraphTrim(benchmark::Bench& bench)
     std::vector<size_t> top_components;
 
     InsecureRandomContext rng(11);
-    auto graph = MakeTxGraph(MAX_CLUSTER_COUNT, MAX_CLUSTER_SIZE, NUM_ACCEPTABLE_ITERS);
+    auto graph = MakeTxGraph(MAX_CLUSTER_COUNT, MAX_CLUSTER_SIZE, HIGH_ACCEPTABLE_COST, PointerComparator);
 
     // Construct the top chains.
     for (int chain = 0; chain < NUM_TOP_CHAINS; ++chain) {
         for (int chaintx = 0; chaintx < NUM_TX_PER_TOP_CHAIN; ++chaintx) {
             int64_t fee = rng.randbits<27>() + 100;
             FeePerWeight feerate{fee, 1};
-            top_refs.push_back(graph->AddTransaction(feerate));
+            graph->AddTransaction(top_refs.emplace_back(), feerate);
             // Add internal dependencies linking the chain transactions together.
             if (chaintx > 0) {
                  graph->AddDependency(*(top_refs.rbegin()), *(top_refs.rbegin() + 1));
@@ -85,7 +90,8 @@ void BenchTxGraphTrim(benchmark::Bench& bench)
         // Construct the transaction.
         int64_t fee = rng.randbits<27>() + 100;
         FeePerWeight feerate{fee, 1};
-        auto bottom_tx = graph->AddTransaction(feerate);
+        TxGraph::Ref bottom_tx;
+        graph->AddTransaction(bottom_tx, feerate);
         // Determine the number of dependencies this transaction will have.
         int deps = std::min<int>(NUM_DEPS_PER_BOTTOM_TX, top_components.size());
         for (int dep = 0; dep < deps; ++dep) {

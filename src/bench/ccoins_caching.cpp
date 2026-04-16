@@ -26,8 +26,7 @@ static void CCoinsCaching(benchmark::Bench& bench)
     ECC_Context ecc_context{};
 
     FillableSigningProvider keystore;
-    CCoinsView coinsDummy;
-    CCoinsViewCache coins(&coinsDummy);
+    CCoinsViewCache coins{&CoinsViewEmpty::Get()};
     std::vector<CMutableTransaction> dummyTransactions =
         SetupDummyInputs(keystore, coins, {11 * COIN, 50 * COIN, 21 * COIN, 22 * COIN});
 
@@ -49,8 +48,7 @@ static void CCoinsCaching(benchmark::Bench& bench)
     // Benchmark.
     const CTransaction tx_1(t1);
     bench.run([&] {
-        bool success{AreInputsStandard(tx_1, coins)};
-        assert(success);
+        assert(ValidateInputsStandardness(tx_1, coins).IsValid());
     });
 }
 

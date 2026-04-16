@@ -58,9 +58,9 @@ const std::vector<std::string> TRANSPORT_TYPE_DOC{
     "v2 (BIP324 encrypted transport protocol)"
 };
 
-static RPCHelpMan getconnectioncount()
+static RPCMethod getconnectioncount()
 {
-    return RPCHelpMan{
+    return RPCMethod{
         "getconnectioncount",
         "Returns the number of connections to other nodes.\n",
                 {},
@@ -71,7 +71,7 @@ static RPCHelpMan getconnectioncount()
                     HelpExampleCli("getconnectioncount", "")
             + HelpExampleRpc("getconnectioncount", "")
                 },
-        [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
+        [](const RPCMethod& self, const JSONRPCRequest& request) -> UniValue
 {
     NodeContext& node = EnsureAnyNodeContext(request.context);
     const CConnman& connman = EnsureConnman(node);
@@ -81,9 +81,9 @@ static RPCHelpMan getconnectioncount()
     };
 }
 
-static RPCHelpMan ping()
+static RPCMethod ping()
 {
-    return RPCHelpMan{
+    return RPCMethod{
         "ping",
         "Requests that a ping be sent to all other nodes, to measure ping time.\n"
                 "Results are provided in getpeerinfo.\n"
@@ -94,7 +94,7 @@ static RPCHelpMan ping()
                     HelpExampleCli("ping", "")
             + HelpExampleRpc("ping", "")
                 },
-        [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
+        [](const RPCMethod& self, const JSONRPCRequest& request) -> UniValue
 {
     NodeContext& node = EnsureAnyNodeContext(request.context);
     PeerManager& peerman = EnsurePeerman(node);
@@ -118,9 +118,9 @@ static UniValue GetServicesNames(ServiceFlags services)
     return servicesNames;
 }
 
-static RPCHelpMan getpeerinfo()
+static RPCMethod getpeerinfo()
 {
-    return RPCHelpMan{
+    return RPCMethod{
         "getpeerinfo",
         "Returns data about each connected network peer as a json array of objects.",
         {},
@@ -161,7 +161,6 @@ static RPCHelpMan getpeerinfo()
                     {RPCResult::Type::BOOL, "inbound", "Inbound (true) or Outbound (false)"},
                     {RPCResult::Type::BOOL, "bip152_hb_to", "Whether we selected peer as (compact blocks) high-bandwidth peer"},
                     {RPCResult::Type::BOOL, "bip152_hb_from", "Whether peer selected us as (compact blocks) high-bandwidth peer"},
-                    {RPCResult::Type::NUM, "startingheight", /*optional=*/true, "(DEPRECATED, returned only if config option -deprecatedrpc=startingheight is passed) The starting height (block) of the peer"},
                     {RPCResult::Type::NUM, "presynced_headers", "The current height of header pre-synchronization with this peer, or -1 if no low-work sync is in progress"},
                     {RPCResult::Type::NUM, "synced_headers", "The last header we have in common with this peer"},
                     {RPCResult::Type::NUM, "synced_blocks", "The last block we have in common with this peer"},
@@ -202,7 +201,7 @@ static RPCHelpMan getpeerinfo()
             HelpExampleCli("getpeerinfo", "")
             + HelpExampleRpc("getpeerinfo", "")
         },
-        [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
+        [](const RPCMethod& self, const JSONRPCRequest& request) -> UniValue
 {
     NodeContext& node = EnsureAnyNodeContext(request.context);
     const CConnman& connman = EnsureConnman(node);
@@ -235,7 +234,7 @@ static RPCHelpMan getpeerinfo()
         }
         obj.pushKV("network", GetNetworkName(stats.m_network));
         if (stats.m_mapped_as != 0) {
-            obj.pushKV("mapped_as", uint64_t(stats.m_mapped_as));
+            obj.pushKV("mapped_as", stats.m_mapped_as);
         }
         ServiceFlags services{statestats.their_services};
         obj.pushKV("services", strprintf("%016x", services));
@@ -268,9 +267,6 @@ static RPCHelpMan getpeerinfo()
         obj.pushKV("inbound", stats.fInbound);
         obj.pushKV("bip152_hb_to", stats.m_bip152_highbandwidth_to);
         obj.pushKV("bip152_hb_from", stats.m_bip152_highbandwidth_from);
-        if (IsDeprecatedRPCEnabled("startingheight")) {
-            obj.pushKV("startingheight", statestats.m_starting_height);
-        }
         obj.pushKV("presynced_headers", statestats.presync_height);
         obj.pushKV("synced_headers", statestats.nSyncHeight);
         obj.pushKV("synced_blocks", statestats.nCommonHeight);
@@ -314,9 +310,9 @@ static RPCHelpMan getpeerinfo()
     };
 }
 
-static RPCHelpMan addnode()
+static RPCMethod addnode()
 {
-    return RPCHelpMan{
+    return RPCMethod{
         "addnode",
         "Attempts to add or remove a node from the addnode list.\n"
                 "Or try a connection to a node once.\n"
@@ -334,7 +330,7 @@ static RPCHelpMan addnode()
                     HelpExampleCli("addnode", "\"192.168.0.6:8333\" \"onetry\" true")
             + HelpExampleRpc("addnode", "\"192.168.0.6:8333\", \"onetry\" true")
                 },
-        [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
+        [](const RPCMethod& self, const JSONRPCRequest& request) -> UniValue
 {
     const auto command{self.Arg<std::string_view>("command")};
     if (command != "onetry" && command != "add" && command != "remove") {
@@ -378,9 +374,9 @@ static RPCHelpMan addnode()
     };
 }
 
-static RPCHelpMan addconnection()
+static RPCMethod addconnection()
 {
-    return RPCHelpMan{
+    return RPCMethod{
         "addconnection",
         "Open an outbound connection to a specified node. This RPC is for testing only.\n",
         {
@@ -398,7 +394,7 @@ static RPCHelpMan addconnection()
             HelpExampleCli("addconnection", "\"192.168.0.6:8333\" \"outbound-full-relay\" true")
             + HelpExampleRpc("addconnection", "\"192.168.0.6:8333\" \"outbound-full-relay\" true")
         },
-        [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
+        [](const RPCMethod& self, const JSONRPCRequest& request) -> UniValue
 {
     if (Params().GetChainType() != ChainType::REGTEST) {
         throw std::runtime_error("addconnection is for regression testing (-regtest mode) only.");
@@ -441,9 +437,9 @@ static RPCHelpMan addconnection()
     };
 }
 
-static RPCHelpMan disconnectnode()
+static RPCMethod disconnectnode()
 {
-    return RPCHelpMan{
+    return RPCMethod{
         "disconnectnode",
         "Immediately disconnects from the specified peer node.\n"
                 "\nStrictly one out of 'address' and 'nodeid' can be provided to identify the node.\n"
@@ -459,7 +455,7 @@ static RPCHelpMan disconnectnode()
             + HelpExampleRpc("disconnectnode", "\"192.168.0.6:8333\"")
             + HelpExampleRpc("disconnectnode", "\"\", 1")
                 },
-        [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
+        [](const RPCMethod& self, const JSONRPCRequest& request) -> UniValue
 {
     NodeContext& node = EnsureAnyNodeContext(request.context);
     CConnman& connman = EnsureConnman(node);
@@ -487,9 +483,9 @@ static RPCHelpMan disconnectnode()
     };
 }
 
-static RPCHelpMan getaddednodeinfo()
+static RPCMethod getaddednodeinfo()
 {
-    return RPCHelpMan{
+    return RPCMethod{
         "getaddednodeinfo",
         "Returns information about the given added node, or all added nodes\n"
                 "(note that onetry addnodes are not listed here)\n",
@@ -518,7 +514,7 @@ static RPCHelpMan getaddednodeinfo()
                     HelpExampleCli("getaddednodeinfo", "\"192.168.0.201\"")
             + HelpExampleRpc("getaddednodeinfo", "\"192.168.0.201\"")
                 },
-        [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
+        [](const RPCMethod& self, const JSONRPCRequest& request) -> UniValue
 {
     NodeContext& node = EnsureAnyNodeContext(request.context);
     const CConnman& connman = EnsureConnman(node);
@@ -561,9 +557,9 @@ static RPCHelpMan getaddednodeinfo()
     };
 }
 
-static RPCHelpMan getnettotals()
+static RPCMethod getnettotals()
 {
-    return RPCHelpMan{"getnettotals",
+    return RPCMethod{"getnettotals",
         "Returns information about network traffic, including bytes in, bytes out,\n"
         "and current system time.",
         {},
@@ -588,7 +584,7 @@ static RPCHelpMan getnettotals()
                     HelpExampleCli("getnettotals", "")
             + HelpExampleRpc("getnettotals", "")
                 },
-        [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
+        [](const RPCMethod& self, const JSONRPCRequest& request) -> UniValue
 {
     NodeContext& node = EnsureAnyNodeContext(request.context);
     const CConnman& connman = EnsureConnman(node);
@@ -617,22 +613,25 @@ static UniValue GetNetworksInfo()
     for (int n = 0; n < NET_MAX; ++n) {
         enum Network network = static_cast<enum Network>(n);
         if (network == NET_UNROUTABLE || network == NET_INTERNAL) continue;
-        Proxy proxy;
         UniValue obj(UniValue::VOBJ);
-        GetProxy(network, proxy);
         obj.pushKV("name", GetNetworkName(network));
         obj.pushKV("limited", !g_reachable_nets.Contains(network));
         obj.pushKV("reachable", g_reachable_nets.Contains(network));
-        obj.pushKV("proxy", proxy.IsValid() ? proxy.ToString() : std::string());
-        obj.pushKV("proxy_randomize_credentials", proxy.m_tor_stream_isolation);
+        if (const auto proxy = GetProxy(network)) {
+            obj.pushKV("proxy", proxy->ToString());
+            obj.pushKV("proxy_randomize_credentials", proxy->m_tor_stream_isolation);
+        } else {
+            obj.pushKV("proxy", std::string());
+            obj.pushKV("proxy_randomize_credentials", false);
+        }
         networks.push_back(std::move(obj));
     }
     return networks;
 }
 
-static RPCHelpMan getnetworkinfo()
+static RPCMethod getnetworkinfo()
 {
-    return RPCHelpMan{"getnetworkinfo",
+    return RPCMethod{"getnetworkinfo",
                 "Returns an object containing various state info regarding P2P networking.\n",
                 {},
                 RPCResult{
@@ -688,7 +687,7 @@ static RPCHelpMan getnetworkinfo()
                     HelpExampleCli("getnetworkinfo", "")
             + HelpExampleRpc("getnetworkinfo", "")
                 },
-        [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
+        [](const RPCMethod& self, const JSONRPCRequest& request) -> UniValue
 {
     LOCK(cs_main);
     UniValue obj(UniValue::VOBJ);
@@ -737,9 +736,9 @@ static RPCHelpMan getnetworkinfo()
     };
 }
 
-static RPCHelpMan setban()
+static RPCMethod setban()
 {
-    return RPCHelpMan{
+    return RPCMethod{
         "setban",
         "Attempts to add or remove an IP/Subnet from the banned list.\n",
                 {
@@ -754,7 +753,7 @@ static RPCHelpMan setban()
                             + HelpExampleCli("setban", "\"192.168.0.0/24\" \"add\"")
                             + HelpExampleRpc("setban", "\"192.168.0.6\", \"add\", 86400")
                 },
-        [&](const RPCHelpMan& help, const JSONRPCRequest& request) -> UniValue
+        [](const RPCMethod& help, const JSONRPCRequest& request) -> UniValue
 {
     auto command{help.Arg<std::string_view>("command")};
     if (command != "add" && command != "remove") {
@@ -817,9 +816,9 @@ static RPCHelpMan setban()
     };
 }
 
-static RPCHelpMan listbanned()
+static RPCMethod listbanned()
 {
-    return RPCHelpMan{
+    return RPCMethod{
         "listbanned",
         "List all manually banned IPs/Subnets.\n",
                 {},
@@ -838,7 +837,7 @@ static RPCHelpMan listbanned()
                     HelpExampleCli("listbanned", "")
                             + HelpExampleRpc("listbanned", "")
                 },
-        [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
+        [](const RPCMethod& self, const JSONRPCRequest& request) -> UniValue
 {
     BanMan& banman = EnsureAnyBanman(request.context);
 
@@ -865,9 +864,9 @@ static RPCHelpMan listbanned()
     };
 }
 
-static RPCHelpMan clearbanned()
+static RPCMethod clearbanned()
 {
-    return RPCHelpMan{
+    return RPCMethod{
         "clearbanned",
         "Clear all banned IPs.\n",
                 {},
@@ -876,7 +875,7 @@ static RPCHelpMan clearbanned()
                     HelpExampleCli("clearbanned", "")
                             + HelpExampleRpc("clearbanned", "")
                 },
-        [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
+        [](const RPCMethod& self, const JSONRPCRequest& request) -> UniValue
 {
     BanMan& banman = EnsureAnyBanman(request.context);
 
@@ -887,9 +886,9 @@ static RPCHelpMan clearbanned()
     };
 }
 
-static RPCHelpMan setnetworkactive()
+static RPCMethod setnetworkactive()
 {
-    return RPCHelpMan{
+    return RPCMethod{
         "setnetworkactive",
         "Disable/enable all p2p network activity.\n",
                 {
@@ -897,7 +896,7 @@ static RPCHelpMan setnetworkactive()
                 },
                 RPCResult{RPCResult::Type::BOOL, "", "The value that was passed in"},
                 RPCExamples{""},
-        [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
+        [](const RPCMethod& self, const JSONRPCRequest& request) -> UniValue
 {
     NodeContext& node = EnsureAnyNodeContext(request.context);
     CConnman& connman = EnsureConnman(node);
@@ -909,9 +908,9 @@ static RPCHelpMan setnetworkactive()
     };
 }
 
-static RPCHelpMan getnodeaddresses()
+static RPCMethod getnodeaddresses()
 {
-    return RPCHelpMan{"getnodeaddresses",
+    return RPCMethod{"getnodeaddresses",
                 "Return known addresses, after filtering for quality and recency.\n"
                 "These can potentially be used to find new peers in the network.\n"
                 "The total number of addresses known to the node may be higher.",
@@ -939,7 +938,7 @@ static RPCHelpMan getnodeaddresses()
                     + HelpExampleRpc("getnodeaddresses", "8")
                     + HelpExampleRpc("getnodeaddresses", "4, \"i2p\"")
                 },
-        [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
+        [](const RPCMethod& self, const JSONRPCRequest& request) -> UniValue
 {
     NodeContext& node = EnsureAnyNodeContext(request.context);
     const CConnman& connman = EnsureConnman(node);
@@ -958,7 +957,7 @@ static RPCHelpMan getnodeaddresses()
 
     for (const CAddress& addr : vAddr) {
         UniValue obj(UniValue::VOBJ);
-        obj.pushKV("time", int64_t{TicksSinceEpoch<std::chrono::seconds>(addr.nTime)});
+        obj.pushKV("time", TicksSinceEpoch<std::chrono::seconds>(addr.nTime));
         obj.pushKV("services", static_cast<std::underlying_type_t<decltype(addr.nServices)>>(addr.nServices));
         obj.pushKV("address", addr.ToStringAddr());
         obj.pushKV("port", addr.GetPort());
@@ -970,9 +969,9 @@ static RPCHelpMan getnodeaddresses()
     };
 }
 
-static RPCHelpMan addpeeraddress()
+static RPCMethod addpeeraddress()
 {
-    return RPCHelpMan{"addpeeraddress",
+    return RPCMethod{"addpeeraddress",
         "Add the address of a potential peer to an address manager table. This RPC is for testing only.",
         {
             {"address", RPCArg::Type::STR, RPCArg::Optional::NO, "The IP address of the peer"},
@@ -990,7 +989,7 @@ static RPCHelpMan addpeeraddress()
             HelpExampleCli("addpeeraddress", "\"1.2.3.4\" 8333 true")
     + HelpExampleRpc("addpeeraddress", "\"1.2.3.4\", 8333, true")
         },
-        [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
+        [](const RPCMethod& self, const JSONRPCRequest& request) -> UniValue
 {
     AddrMan& addrman = EnsureAnyAddrman(request.context);
 
@@ -1030,9 +1029,9 @@ static RPCHelpMan addpeeraddress()
     };
 }
 
-static RPCHelpMan sendmsgtopeer()
+static RPCMethod sendmsgtopeer()
 {
-    return RPCHelpMan{
+    return RPCMethod{
         "sendmsgtopeer",
         "Send a p2p message to a peer specified by id.\n"
         "The message type and body must be provided, the message header will be generated.\n"
@@ -1045,7 +1044,7 @@ static RPCHelpMan sendmsgtopeer()
         RPCResult{RPCResult::Type::OBJ, "", "", std::vector<RPCResult>{}},
         RPCExamples{
             HelpExampleCli("sendmsgtopeer", "0 \"addr\" \"ffffff\"") + HelpExampleRpc("sendmsgtopeer", "0 \"addr\" \"ffffff\"")},
-        [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue {
+        [](const RPCMethod& self, const JSONRPCRequest& request) -> UniValue {
             const NodeId peer_id{request.params[0].getInt<int64_t>()};
             const auto msg_type{self.Arg<std::string_view>("msg_type")};
             if (msg_type.size() > CMessageHeader::MESSAGE_TYPE_SIZE) {
@@ -1078,9 +1077,9 @@ static RPCHelpMan sendmsgtopeer()
     };
 }
 
-static RPCHelpMan getaddrmaninfo()
+static RPCMethod getaddrmaninfo()
 {
-    return RPCHelpMan{
+    return RPCMethod{
         "getaddrmaninfo",
         "Provides information about the node's address manager by returning the number of "
         "addresses in the `new` and `tried` tables and their sum for all networks.\n",
@@ -1094,7 +1093,7 @@ static RPCHelpMan getaddrmaninfo()
             }},
         }},
         RPCExamples{HelpExampleCli("getaddrmaninfo", "") + HelpExampleRpc("getaddrmaninfo", "")},
-        [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue {
+        [](const RPCMethod& self, const JSONRPCRequest& request) -> UniValue {
             AddrMan& addrman = EnsureAnyAddrman(request.context);
 
             UniValue ret(UniValue::VOBJ);
@@ -1127,7 +1126,7 @@ UniValue AddrmanEntryToJSON(const AddrInfo& info, const CConnman& connman)
     }
     ret.pushKV("port", info.GetPort());
     ret.pushKV("services", static_cast<std::underlying_type_t<decltype(info.nServices)>>(info.nServices));
-    ret.pushKV("time", int64_t{TicksSinceEpoch<std::chrono::seconds>(info.nTime)});
+    ret.pushKV("time", TicksSinceEpoch<std::chrono::seconds>(info.nTime));
     ret.pushKV("network", GetNetworkName(info.GetNetClass()));
     ret.pushKV("source", info.source.ToStringAddr());
     ret.pushKV("source_network", GetNetworkName(info.source.GetNetClass()));
@@ -1154,9 +1153,9 @@ UniValue AddrmanTableToJSON(const std::vector<std::pair<AddrInfo, AddressPositio
     return table;
 }
 
-static RPCHelpMan getrawaddrman()
+static RPCMethod getrawaddrman()
 {
-    return RPCHelpMan{"getrawaddrman",
+    return RPCMethod{"getrawaddrman",
         "EXPERIMENTAL warning: this call may be changed in future releases.\n"
         "\nReturns information on all address manager entries for the new and tried tables.\n",
         {},
@@ -1181,7 +1180,7 @@ static RPCHelpMan getrawaddrman()
             HelpExampleCli("getrawaddrman", "")
             + HelpExampleRpc("getrawaddrman", "")
         },
-        [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue {
+        [](const RPCMethod& self, const JSONRPCRequest& request) -> UniValue {
             AddrMan& addrman = EnsureAnyAddrman(request.context);
             NodeContext& node_context = EnsureAnyNodeContext(request.context);
             CConnman& connman = EnsureConnman(node_context);

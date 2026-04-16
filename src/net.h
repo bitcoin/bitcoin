@@ -205,7 +205,6 @@ public:
     bool m_bip152_highbandwidth_to;
     // Peer requested high bandwidth connection
     bool m_bip152_highbandwidth_from;
-    int m_starting_height;
     uint64_t nSendBytes;
     mapMsgTypeSize mapSendBytesPerMsgType;
     uint64_t nRecvBytes;
@@ -968,20 +967,18 @@ public:
     std::string ConnectionTypeAsString() const { return ::ConnectionTypeAsString(m_conn_type); }
 
     /**
-     * Helper function to optionally log the IP address.
+     * Helper function to log the peer id, optionally including IP address.
      *
-     * @param[in] log_ip whether to include the IP address
-     * @return " peeraddr=..." or ""
+     * @return "peer=..." and optionally ", peeraddr=..."
      */
-    std::string LogIP(bool log_ip) const;
+    std::string LogPeer() const;
 
     /**
      * Helper function to log disconnects.
      *
-     * @param[in] log_ip whether to include the IP address
-     * @return "disconnecting peer=..." and optionally "peeraddr=..."
+     * @return "disconnecting peer=..." and optionally ", peeraddr=..."
      */
-    std::string DisconnectMsg(bool log_ip) const;
+    std::string DisconnectMsg() const;
 
     /** A ping-pong round trip has completed successfully. Update latest and minimum ping times. */
     void PongReceived(std::chrono::microseconds ping_time) {
@@ -1043,21 +1040,21 @@ public:
     virtual bool HasAllDesirableServiceFlags(ServiceFlags services) const = 0;
 
     /**
-    * Process protocol messages received from a given node
-    *
-    * @param[in]   pnode           The node which we have received messages from.
-    * @param[in]   interrupt       Interrupt condition for processing threads
-    * @return                      True if there is more work to be done
-    */
-    virtual bool ProcessMessages(CNode* pnode, std::atomic<bool>& interrupt) EXCLUSIVE_LOCKS_REQUIRED(g_msgproc_mutex) = 0;
+     * Process protocol messages received from a given node
+     *
+     * @param[in]   node            The node which we have received messages from.
+     * @param[in]   interrupt       Interrupt condition for processing threads
+     * @return                      True if there is more work to be done
+     */
+    virtual bool ProcessMessages(CNode& node, std::atomic<bool>& interrupt) EXCLUSIVE_LOCKS_REQUIRED(g_msgproc_mutex) = 0;
 
     /**
-    * Send queued protocol messages to a given node.
-    *
-    * @param[in]   pnode           The node which we are sending messages to.
-    * @return                      True if there is more work to be done
-    */
-    virtual bool SendMessages(CNode* pnode) EXCLUSIVE_LOCKS_REQUIRED(g_msgproc_mutex) = 0;
+     * Send queued protocol messages to a given node.
+     *
+     * @param[in]   node            The node which we are sending messages to.
+     * @return                      True if there is more work to be done
+     */
+    virtual bool SendMessages(CNode& node) EXCLUSIVE_LOCKS_REQUIRED(g_msgproc_mutex) = 0;
 
 
 protected:
@@ -1241,7 +1238,7 @@ public:
         /// Wait for the number of needed connections to become greater than 0.
         void NumToOpenWait() const;
 
-    private:
+    protected:
         /**
          * Check if private broadcast can be done to IPv4 or IPv6 peers and if so via which proxy.
          * If private broadcast connections should not be opened to IPv4 or IPv6, then this will
@@ -1251,6 +1248,8 @@ public:
 
         /// Number of `ConnectionType::PRIVATE_BROADCAST` connections to open.
         std::atomic_size_t m_num_to_open{0};
+
+        friend struct ConnmanTestMsg;
     } m_private_broadcast;
 
     bool CheckIncomingNonce(uint64_t nonce);

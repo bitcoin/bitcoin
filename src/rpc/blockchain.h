@@ -14,10 +14,12 @@
 
 #include <any>
 #include <cstdint>
+#include <optional>
 #include <vector>
 
 class CBlock;
 class CBlockIndex;
+class CChain;
 class Chainstate;
 class UniValue;
 namespace node {

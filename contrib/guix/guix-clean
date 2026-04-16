@@ -9,6 +9,14 @@ set -e -o pipefail
 # shellcheck source=libexec/prelude.bash
 source "$(dirname "${BASH_SOURCE[0]}")/libexec/prelude.bash"
 
+# Parse supported args
+FORCE=0
+if [[ $* == "--force" ]]; then
+    FORCE=1
+elif [ $# != 0 ]; then
+    echo "Script only takes optional --force arg."
+    exit 1
+fi
 
 ###################
 ## Sanity Checks ##
@@ -79,5 +87,15 @@ for precious_dirs_file in "${found_precious_dirs_files[@]}"; do
         fi
     done < "$precious_dirs_file"
 done
+
+if [[ $FORCE == 0 ]]; then
+    git clean -nxdff "${exclude_flags[@]}"
+
+    read -p "Proceed? (y/n) " -r
+    if [[ ! $REPLY =~ ^[Yy]$ ]]; then
+        echo "Aborted."
+        exit 1
+    fi
+fi
 
 git clean -xdff "${exclude_flags[@]}"

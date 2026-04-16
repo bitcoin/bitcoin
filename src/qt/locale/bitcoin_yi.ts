@@ -446,6 +446,23 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     </message>
     </context>
 <context>
+    <name>PSBTOperationsDialog</name>
+    <message numerus="yes">
+        <source>Signed %n input(s), but more signatures are still required.</source>
+        <translation type="unfinished">
+            <numerusform />
+            <numerusform />
+        </translation>
+    </message>
+    <message numerus="yes">
+        <source>Transaction has %n unsigned input(s).</source>
+        <translation type="unfinished">
+            <numerusform />
+            <numerusform />
+        </translation>
+    </message>
+    </context>
+<context>
     <name>PeerTableModel</name>
     <message>
         <source>Address</source>
@@ -603,20 +620,12 @@ Unable to restore backup of wallet.</source>
         <translation type="unfinished">עליפטישער קרויִז קריפּטאָגראַפֿיע סאַנטי טשעק פעלער. 1%s איז שפּאַשנדיק אאָפֿן.</translation>
     </message>
     <message>
-        <source>Error creating %s</source>
-        <translation type="unfinished">אור מיט שאפן 1%s</translation>
-    </message>
-    <message>
         <source>Error initializing block database</source>
         <translation type="unfinished">אַראָר אין אריינשאַפֿן בלאָק דאַטאַבאַזע</translation>
     </message>
     <message>
         <source>Error loading %s</source>
         <translation type="unfinished">ערראָר לאָאַדינג 1%s</translation>
-    </message>
-    <message>
-        <source>Error loading %s: Private keys can only be disabled during creation</source>
-        <translation type="unfinished">גרייַזונג לאָדן 1%s: פּריוואַטע שליסלען קענען נאָר ווערן דיסאַבלירט בזמן שלאַפֿן</translation>
     </message>
     <message>
         <source>Error loading %s: Wallet corrupted</source>
@@ -735,10 +744,6 @@ Unable to restore backup of wallet.</source>
         <translation type="unfinished">טעות: די דאטאבאזע טראַנזאַקשאַן קען נישט דורכגעפֿירט ווערן פֿאַר וואַלעט 1%s</translation>
     </message>
     <message>
-        <source>Failed to connect best block (%s).</source>
-        <translation type="unfinished">ניט הצלחה צו פאַרבינדן דעם בעסטן בלאָק (1%s).</translation>
-    </message>
-    <message>
         <source>Failed to disconnect block.</source>
         <translation type="unfinished">פֿאַרפאַלן צונויפֿרובֿן בלאָק</translation>
     </message>
@@ -761,14 +766,6 @@ Unable to restore backup of wallet.</source>
     <message>
         <source>Failed to write block.</source>
         <translation type="unfinished">געפאלן צו געשריבן בלוק</translation>
-    </message>
-    <message>
-        <source>Failed to write to block index database.</source>
-        <translation type="unfinished">זיך נישט מצליח געווען צו שרייַבן צו בלאָק אינדעקס דאַטאַבאַסע.</translation>
-    </message>
-    <message>
-        <source>Failed to write to coin database.</source>
-        <translation type="unfinished">פאַרפאלן צו רעקאָרדירן אין דער קוינס דאַטאַבאַסע.</translation>
     </message>
     <message>
         <source>Failed to write undo data.</source>
@@ -821,10 +818,6 @@ Unable to restore backup of wallet.</source>
     <message>
         <source>Invalid P2P permission: '%s'</source>
         <translation type="unfinished">יוצרים פּ2פּ זכּות: '1%s'</translation>
-    </message>
-    <message>
-        <source>Invalid amount for %s=&lt;amount&gt;: '%s' (must be at least %s)</source>
-        <translation type="unfinished">ניט גאָלדיגער בטראַכט פֿאַר 1%s=: '1%s' (מוז זײַן בּאַלד נישט ווייניקער ווי 1%s)</translation>
     </message>
     <message>
         <source>Invalid amount for %s=&lt;amount&gt;: '%s'</source>
@@ -1017,10 +1010,6 @@ Unable to restore backup of wallet.</source>
     <message>
         <source>This is the minimum transaction fee you pay on every transaction.</source>
         <translation type="unfinished">און דאָס איז דער מינימאַלער טראַנסאַקציאָנס-פיע וואָס איר באַצאָלט אויף יעדער טראַנסאַקציע.</translation>
-    </message>
-    <message>
-        <source>This is the transaction fee you will pay if you send a transaction.</source>
-        <translation type="unfinished">אַזוי איז דער טראַנסאַקשאַן פייַעך וואָס איר וועט צאָלן אויב איר שיקט אַ טראַנסאַקשאַן.</translation>
     </message>
     <message>
         <source>Transaction %s does not belong to this wallet</source>

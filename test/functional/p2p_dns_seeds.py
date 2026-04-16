@@ -29,7 +29,7 @@ class P2PDNSSeeds(BitcoinTestFramework):
 
         self.log.info("Check that setting -connect disables -dnsseed by default")
         self.nodes[0].stop_node()
-        with self.nodes[0].assert_debug_log(expected_msgs=["DNS seeding disabled"]):
+        with self.nodes[0].assert_debug_log(expected_msgs=["DNS seeding disabled"], timeout=2):
             self.start_node(0, extra_args=[f"-connect={fakeaddr}", UNREACHABLE_PROXY_ARG])
 
         self.log.info("Check that running -connect and -dnsseed means DNS logic runs.")
@@ -103,7 +103,7 @@ class P2PDNSSeeds(BitcoinTestFramework):
             self.nodes[0].addpeeraddress(a, 8333)
 
         # The delay should be 11 seconds
-        with self.nodes[0].assert_debug_log(expected_msgs=["Waiting 11 seconds before querying DNS seeds.\n"]):
+        with self.nodes[0].assert_debug_log(expected_msgs=["Waiting 11 seconds before querying DNS seeds.\n"], timeout=2):
             self.restart_node(0)
 
         # Populate addrman with > 1000 addresses
@@ -122,7 +122,7 @@ class P2PDNSSeeds(BitcoinTestFramework):
                     break
 
         # The delay should be 5 mins
-        with self.nodes[0].assert_debug_log(expected_msgs=["Waiting 300 seconds before querying DNS seeds.\n"]):
+        with self.nodes[0].assert_debug_log(expected_msgs=["Waiting 300 seconds before querying DNS seeds.\n"], timeout=2):
             self.restart_node(0)
 
 

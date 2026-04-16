@@ -345,13 +345,11 @@ Kirish faqat 'legacy' turidagi manzillar uchun.</translation>
         <source>%n second(s)</source>
         <translation type="unfinished">
             <numerusform />
-            <numerusform />
         </translation>
     </message>
     <message numerus="yes">
         <source>%n minute(s)</source>
         <translation type="unfinished">
-            <numerusform />
             <numerusform />
         </translation>
     </message>
@@ -359,20 +357,17 @@ Kirish faqat 'legacy' turidagi manzillar uchun.</translation>
         <source>%n hour(s)</source>
         <translation type="unfinished">
             <numerusform />
-            <numerusform />
         </translation>
     </message>
     <message numerus="yes">
         <source>%n day(s)</source>
         <translation type="unfinished">
             <numerusform />
-            <numerusform />
         </translation>
     </message>
     <message numerus="yes">
         <source>%n week(s)</source>
         <translation type="unfinished">
-            <numerusform />
             <numerusform />
         </translation>
     </message>
@@ -383,7 +378,6 @@ Kirish faqat 'legacy' turidagi manzillar uchun.</translation>
     <message numerus="yes">
         <source>%n year(s)</source>
         <translation type="unfinished">
-            <numerusform />
             <numerusform />
         </translation>
     </message>
@@ -585,30 +579,29 @@ Kirish faqat 'legacy' turidagi manzillar uchun.</translation>
     </message>
     <message>
         <source>Request payments (generates QR codes and bitcoin: URIs)</source>
-        <translation type="unfinished">To'lovlarni so'rash(QR kolar va bitkoin yaratish: URL manzillar)</translation>
+        <translation type="unfinished">Тўловлар (QR кодлари ва bitcoin ёрдамида яратишлар: URI’лар) сўраш</translation>
     </message>
     <message>
         <source>Show the list of used sending addresses and labels</source>
-        <translation type="unfinished">Manzillar va yorliqlar ro'yxatini ko'rsatish</translation>
+        <translation type="unfinished">Фойдаланилган жўнатилган манзиллар ва ёрлиқлар рўйхатини кўрсатиш</translation>
     </message>
     <message>
         <source>Show the list of used receiving addresses and labels</source>
-        <translation type="unfinished">Qabul qilish manzillari va yorliqlar ro'yxatini ko'rsatish</translation>
+        <translation type="unfinished">Фойдаланилган қабул қилинган манзиллар ва ёрлиқлар рўйхатини кўрсатиш</translation>
     </message>
     <message>
         <source>&amp;Command-line options</source>
-        <translation type="unfinished">&amp;Command-line sozlamalari</translation>
+        <translation type="unfinished">&amp;Буйруқлар сатри мосламалари</translation>
     </message>
     <message numerus="yes">
         <source>Processed %n block(s) of transaction history.</source>
         <translation type="unfinished">
             <numerusform>Tranzaksiya tarixining %n blok(lar)i qayta ishlandi.</numerusform>
-            <numerusform />
         </translation>
     </message>
     <message>
         <source>%1 behind</source>
-        <translation type="unfinished">%1 yonida</translation>
+        <translation type="unfinished">%1 орқада</translation>
     </message>
     <message>
         <source>Catching up…</source>
@@ -616,27 +609,27 @@ Kirish faqat 'legacy' turidagi manzillar uchun.</translation>
     </message>
     <message>
         <source>Last received block was generated %1 ago.</source>
-        <translation type="unfinished">%1 oldin oxirgi marta blok qabul qilingan edi.</translation>
+        <translation type="unfinished">Сўнги қабул қилинган блок %1 олдин яратилган.</translation>
     </message>
     <message>
         <source>Transactions after this will not yet be visible.</source>
-        <translation type="unfinished">Shundan keyingi operatsiyalar hali ko'rinmaydi.</translation>
+        <translation type="unfinished">Бундан кейинги пул ўтказмалари кўринмайдиган бўлади.</translation>
     </message>
     <message>
         <source>Error</source>
-        <translation type="unfinished">Xatolik</translation>
+        <translation type="unfinished">Хатолик</translation>
     </message>
     <message>
         <source>Warning</source>
-        <translation type="unfinished">Eslatma</translation>
+        <translation type="unfinished">Диққат</translation>
     </message>
     <message>
         <source>Information</source>
-        <translation type="unfinished">Informatsiya</translation>
+        <translation type="unfinished">Маълумот</translation>
     </message>
     <message>
         <source>Up to date</source>
-        <translation type="unfinished">Hozirgi kunda</translation>
+        <translation type="unfinished">Янгиланган</translation>
     </message>
     <message>
         <source>Ctrl+Q</source>
@@ -773,7 +766,6 @@ Kirish faqat 'legacy' turidagi manzillar uchun.</translation>
         <extracomment>A substring of the tooltip.</extracomment>
         <translation type="unfinished">
             <numerusform>Bitkoin tarmog'iga %n aktiv ulanishlar.</numerusform>
-            <numerusform />
         </translation>
     </message>
     <message>
@@ -972,7 +964,7 @@ Kirish faqat 'legacy' turidagi manzillar uchun.</translation>
     </message>
     <message>
         <source>L&amp;ock unspent</source>
-        <translation type="unfinished">Sarflanmagan miqdorlarni q&amp;ulflash</translation>
+        <translation type="unfinished">Sarflanmagan tranzaksiyalarni q&amp;ulflash</translation>
     </message>
     <message>
         <source>&amp;Unlock unspent</source>
@@ -1008,7 +1000,7 @@ Kirish faqat 'legacy' turidagi manzillar uchun.</translation>
     </message>
     <message>
         <source>(no label)</source>
-        <translation type="unfinished">(Ёрлиқ мавжуд эмас)</translation>
+        <translation type="unfinished">(Yorliqlar mavjud emas)</translation>
     </message>
     <message>
         <source>change from %1 (%2)</source>
@@ -1068,6 +1060,10 @@ Kirish faqat 'legacy' turidagi manzillar uchun.</translation>
         <translation type="unfinished">Hamyonni ko'chirish</translation>
     </message>
     <message>
+        <source>Are you sure you wish to migrate the wallet &lt;i&gt;%1&lt;/i&gt;?</source>
+        <translation type="unfinished">Hamyonni ko'chirmoqchi ekanligingizga ishonchingiz komilmi?&lt;i&gt;%1&lt;/i&gt;</translation>
+    </message>
+    <message>
         <source>Migrating the wallet will convert this wallet to one or more descriptor wallets. A new wallet backup will need to be made.
 If this wallet contains any watchonly scripts, a new wallet will be created which contains those watchonly scripts.
 If this wallet contains any solvable but not watched scripts, a different and new wallet will be created which contains those scripts.
@@ -1098,6 +1094,16 @@ Migratsiya jarayoni ko'chirishdan oldin hamyonning zaxira nusxasini yaratadi. Us
     <message>
         <source>Solvable but not watched scripts have been migrated to a new wallet named '%1'.</source>
         <translation type="unfinished">Yechish mumkin bo'lgan, lekin ko'rilmagan skriptlar nomli yangi hamyonga o'tkazildi%1</translation>
+    </message>
+    <message>
+        <source>Restore Wallet</source>
+        <extracomment>Title of progress window which is displayed when wallets are being restored.</extracomment>
+        <translation type="unfinished">Hamyonni tiklash</translation>
+    </message>
+    <message>
+        <source>Restoring Wallet &lt;b&gt;%1&lt;/b&gt;…</source>
+        <extracomment>Descriptive text of the restore wallets progress window which indicates to the user that wallets are currently being restored.</extracomment>
+        <translation type="unfinished">Wallet tiklanmoqda&lt;b&gt;%1&lt;/b&gt;</translation>
     </message>
     <message>
         <source>Migration failed</source>
@@ -1221,10 +1227,6 @@ Migratsiya jarayoni ko'chirishdan oldin hamyonning zaxira nusxasini yaratadi. Us
     <message>
         <source>Disable Private Keys</source>
         <translation type="unfinished">Maxfiy kalitlarni faolsizlantirish</translation>
-    </message>
-    <message>
-        <source>Make a blank wallet. Blank wallets do not initially have private keys or scripts. Private keys and addresses can be imported, or an HD seed can be set, at a later time.</source>
-        <translation type="unfinished">Bo'sh hamyon yaratish. Bo'sh hamyonlarga keyinchalik maxfiy kalitlar yoki manzillar import qilinishi mumkin, yana HD seedlar ham o'rnatilishi mumkin.</translation>
     </message>
     <message>
         <source>Make Blank Wallet</source>
@@ -1402,21 +1404,18 @@ Migratsiya jarayoni ko'chirishdan oldin hamyonning zaxira nusxasini yaratadi. Us
         <source>%n GB of space available</source>
         <translation type="unfinished">
             <numerusform>%nGb bo'sh joy mavjud</numerusform>
-            <numerusform />
         </translation>
     </message>
     <message numerus="yes">
         <source>(of %n GB needed)</source>
         <translation type="unfinished">
             <numerusform>(%nGb kerak)</numerusform>
-            <numerusform />
         </translation>
     </message>
     <message numerus="yes">
         <source>(%n GB needed for full chain)</source>
         <translation type="unfinished">
             <numerusform>(To'liq zanjir uchun%n GB kerak)</numerusform>
-            <numerusform />
         </translation>
     </message>
     <message>
@@ -1436,7 +1435,6 @@ Migratsiya jarayoni ko'chirishdan oldin hamyonning zaxira nusxasini yaratadi. Us
         <extracomment>Explanatory text on the capability of the current prune target.</extracomment>
         <translation type="unfinished">
             <numerusform>(%n kun oldingi zaxira nusxalarini tiklash uchun etarli)</numerusform>
-            <numerusform />
         </translation>
     </message>
     <message>
@@ -1929,16 +1927,18 @@ Migratsiya jarayoni ko'chirishdan oldin hamyonning zaxira nusxasini yaratadi. Us
         <translation type="unfinished">Yopish</translation>
     </message>
     <message>
-        <source>Failed to load transaction: %1</source>
-        <translation type="unfinished">Tranzaksiyani yuklab bo'lmadi: %1</translation>
-    </message>
-    <message>
         <source>Failed to sign transaction: %1</source>
         <translation type="unfinished">Tranzaksiyani muhirlab bo'lmadi: %1</translation>
     </message>
     <message>
         <source>Cannot sign inputs while wallet is locked.</source>
         <translation type="unfinished">Hamyon maʼlumotlarga imzo qoʻyib boʻlmaydi.</translation>
+    </message>
+    <message numerus="yes">
+        <source>Signed %n input(s), but more signatures are still required.</source>
+        <translation type="unfinished">
+            <numerusform />
+        </translation>
     </message>
     <message>
         <source>own address</source>
@@ -1947,6 +1947,12 @@ Migratsiya jarayoni ko'chirishdan oldin hamyonning zaxira nusxasini yaratadi. Us
     <message>
         <source>or</source>
         <translation type="unfinished">ёки</translation>
+    </message>
+    <message numerus="yes">
+        <source>Transaction has %n unsigned input(s).</source>
+        <translation type="unfinished">
+            <numerusform />
+        </translation>
     </message>
     </context>
 <context>
@@ -2408,7 +2414,6 @@ Migratsiya jarayoni ko'chirishdan oldin hamyonning zaxira nusxasini yaratadi. Us
         <source>Estimated to begin confirmation within %n block(s).</source>
         <translation type="unfinished">
             <numerusform />
-            <numerusform />
         </translation>
     </message>
     <message>
@@ -2526,7 +2531,6 @@ Migratsiya jarayoni ko'chirishdan oldin hamyonning zaxira nusxasini yaratadi. Us
         <source>matures in %n more block(s)</source>
         <translation type="unfinished">
             <numerusform />
-            <numerusform />
         </translation>
     </message>
     <message>
@@ -2629,7 +2633,7 @@ Migratsiya jarayoni ko'chirishdan oldin hamyonning zaxira nusxasini yaratadi. Us
     </message>
     <message>
         <source>(no label)</source>
-        <translation type="unfinished">(Yorliqlar mavjud emas)</translation>
+        <translation type="unfinished">(Ёрлиқ мавжуд эмас)</translation>
     </message>
     <message>
         <source>Transaction status. Hover over this field to show number of confirmations.</source>

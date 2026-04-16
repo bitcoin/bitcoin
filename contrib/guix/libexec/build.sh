@@ -4,6 +4,9 @@
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 export LC_ALL=C
 set -e -o pipefail
+
+# Environment variables for determinism
+export TAR_OPTIONS="--no-same-owner --owner=0 --group=0 --numeric-owner --mtime='@${SOURCE_DATE_EPOCH}' --sort=name"
 export TZ=UTC
 
 # Although Guix _does_ set umask when building its own packages (in our case,
@@ -157,10 +160,6 @@ case "$HOST" in
         ;;
 esac
 
-# Environment variables for determinism
-export TAR_OPTIONS="--owner=0 --group=0 --numeric-owner --mtime='@${SOURCE_DATE_EPOCH}' --sort=name"
-export TZ="UTC"
-
 ####################
 # Depends Building #
 ####################
@@ -273,10 +272,6 @@ mkdir -p "$DISTSRC"
     # Install built Bitcoin Core to $INSTALLPATH
     case "$HOST" in
         *darwin*)
-            # This workaround can be dropped for CMake >= 3.27.
-            # See the upstream commit 689616785f76acd844fd448c51c5b2a0711aafa2.
-            find build -name 'cmake_install.cmake' -exec sed -i 's| -u -r | |g' {} +
-
             cmake --install build --strip --prefix "${INSTALLPATH}" ${V:+--verbose}
             ;;
         *)
@@ -310,6 +305,7 @@ mkdir -p "$DISTSRC"
                 ;;
             *linux*)
                 cp "${DISTSRC}/README.md" "${DISTNAME}/"
+                cp "${DISTSRC}/doc/INSTALL_linux.md" "${DISTNAME}/INSTALL.md"
                 ;;
         esac
 
@@ -401,12 +397,14 @@ mv --no-target-directory "$OUTDIR" "$ACTUAL_OUTDIR" \
     || ( rm -rf "$ACTUAL_OUTDIR" && exit 1 )
 
 (
+    tmp="$(mktemp)"
     cd /outdir-base
     {
         echo "$GIT_ARCHIVE"
         find "$ACTUAL_OUTDIR" -type f
     } | xargs realpath --relative-base="$PWD" \
-      | xargs sha256sum \
-      | sort -k2 \
-      | sponge "$ACTUAL_OUTDIR"/SHA256SUMS.part
+        | xargs sha256sum \
+        | sort -k2 \
+        > "$tmp";
+    mv "$tmp" "$ACTUAL_OUTDIR"/SHA256SUMS.part
 )

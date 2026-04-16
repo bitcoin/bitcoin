@@ -44,7 +44,6 @@ enum class DBErrors : int
 {
     LOAD_OK = 0,
     NEED_RESCAN = 1,
-    NEED_REWRITE = 2,
     EXTERNAL_SIGNER_SUPPORT_REQUIRED = 3,
     NONCRITICAL_ERROR = 4,
     TOO_NEW = 5,
@@ -264,6 +263,9 @@ public:
     bool EraseActiveScriptPubKeyMan(uint8_t type, bool internal);
 
     DBErrors LoadWallet(CWallet* pwallet);
+
+    //! Write the given client_version.
+    bool WriteVersion(int client_version) { return m_batch->Write(DBKeys::VERSION, CLIENT_VERSION); }
 
     //! Delete records of the given types
     bool EraseRecords(const std::unordered_set<std::string>& types);

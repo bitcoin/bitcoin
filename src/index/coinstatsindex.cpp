@@ -17,7 +17,6 @@
 #include <interfaces/chain.h>
 #include <interfaces/types.h>
 #include <kernel/coinstats.h>
-#include <logging.h>
 #include <primitives/block.h>
 #include <primitives/transaction.h>
 #include <script/script.h>
@@ -26,11 +25,11 @@
 #include <undo.h>
 #include <util/check.h>
 #include <util/fs.h>
+#include <util/log.h>
 #include <validation.h>
 
 #include <compare>
 #include <limits>
-#include <span>
 #include <string>
 #include <utility>
 #include <vector>

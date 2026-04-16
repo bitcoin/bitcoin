@@ -5,13 +5,14 @@
 
 #include <merkleblock.h>
 
-#include <hash.h>
 #include <consensus/consensus.h>
+#include <hash.h>
+#include <util/overflow.h>
 
 
 std::vector<unsigned char> BitsToBytes(const std::vector<bool>& bits)
 {
-    std::vector<unsigned char> ret((bits.size() + 7) / 8);
+    std::vector<unsigned char> ret(CeilDiv(bits.size(), 8u));
     for (unsigned int p = 0; p < bits.size(); p++) {
         ret[p / 8] |= bits[p] << (p % 8);
     }
@@ -174,7 +175,7 @@ uint256 CPartialMerkleTree::ExtractMatches(std::vector<Txid> &vMatch, std::vecto
     if (fBad)
         return uint256();
     // verify that all bits were consumed (except for the padding caused by serializing it as a byte sequence)
-    if ((nBitsUsed+7)/8 != (vBits.size()+7)/8)
+    if (CeilDiv(nBitsUsed, 8u) != CeilDiv(vBits.size(), 8u))
         return uint256();
     // verify that all hashes were consumed
     if (nHashUsed != vHash.size())

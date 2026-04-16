@@ -41,7 +41,6 @@
 #include <cstring>
 #include <exception>
 #include <functional>
-#include <iterator>
 #include <list>
 #include <memory>
 #include <span>
@@ -51,12 +50,16 @@
 #include <utility>
 #include <vector>
 
+namespace Consensus {
+struct Params;
+} // namespace Consensus
+
 using kernel::ChainstateRole;
 using util::ImmediateTaskRunner;
 
 // Define G_TRANSLATION_FUN symbol in libbitcoinkernel library so users of the
 // library aren't required to export this symbol
-extern const std::function<std::string(const char*)> G_TRANSLATION_FUN{nullptr};
+extern const TranslateFn G_TRANSLATION_FUN{nullptr};
 
 static const kernel::Context btck_context_static{};
 
@@ -84,7 +87,7 @@ public:
     //
     void write(std::span<const std::byte> src)
     {
-        if (m_writer(std::data(src), src.size(), m_user_data) != 0) {
+        if (m_writer(src.data(), src.size(), m_user_data) != 0) {
             throw std::runtime_error("Failed to write serialization data");
         }
     }
@@ -113,13 +116,13 @@ struct Handle {
     static C* create(Args&&... args)
     {
         auto cpp_obj{std::make_unique<CPP>(std::forward<Args>(args)...)};
-        return reinterpret_cast<C*>(cpp_obj.release());
+        return ref(cpp_obj.release());
     }
 
     static C* copy(const C* ptr)
     {
         auto cpp_obj{std::make_unique<CPP>(get(ptr))};
-        return reinterpret_cast<C*>(cpp_obj.release());
+        return ref(cpp_obj.release());
     }
 
     static const CPP& get(const C* ptr)
@@ -497,6 +500,7 @@ struct btck_TransactionOutPoint: Handle<btck_TransactionOutPoint, COutPoint> {};
 struct btck_Txid: Handle<btck_Txid, Txid> {};
 struct btck_PrecomputedTransactionData : Handle<btck_PrecomputedTransactionData, PrecomputedTransactionData> {};
 struct btck_BlockHeader: Handle<btck_BlockHeader, CBlockHeader> {};
+struct btck_ConsensusParams: Handle<btck_ConsensusParams, Consensus::Params> {};
 
 btck_Transaction* btck_transaction_create(const void* raw_transaction, size_t raw_transaction_len)
 {
@@ -504,7 +508,7 @@ btck_Transaction* btck_transaction_create(const void* raw_transaction, size_t ra
         return nullptr;
     }
     try {
-        DataStream stream{std::span{reinterpret_cast<const std::byte*>(raw_transaction), raw_transaction_len}};
+        SpanReader stream{std::span{reinterpret_cast<const std::byte*>(raw_transaction), raw_transaction_len}};
         return btck_Transaction::create(std::make_shared<const CTransaction>(deserialize, TX_WITH_WITNESS, stream));
     } catch (...) {
         return nullptr;
@@ -532,6 +536,11 @@ const btck_TransactionInput* btck_transaction_get_input_at(const btck_Transactio
 {
     assert(input_index < btck_Transaction::get(transaction)->vin.size());
     return btck_TransactionInput::ref(&btck_Transaction::get(transaction)->vin[input_index]);
+}
+
+uint32_t btck_transaction_get_locktime(const btck_Transaction* transaction)
+{
+    return btck_Transaction::get(transaction)->nLockTime;
 }
 
 const btck_Txid* btck_transaction_get_txid(const btck_Transaction* transaction)
@@ -693,6 +702,11 @@ const btck_TransactionOutPoint* btck_transaction_input_get_out_point(const btck_
     return btck_TransactionOutPoint::ref(&btck_TransactionInput::get(input).prevout);
 }
 
+uint32_t btck_transaction_input_get_sequence(const btck_TransactionInput* input)
+{
+    return btck_TransactionInput::get(input).nSequence;
+}
+
 void btck_transaction_input_destroy(btck_TransactionInput* input)
 {
     delete input;
@@ -812,6 +826,11 @@ btck_ChainParameters* btck_chain_parameters_create(const btck_ChainType chain_ty
 btck_ChainParameters* btck_chain_parameters_copy(const btck_ChainParameters* chain_parameters)
 {
     return btck_ChainParameters::copy(chain_parameters);
+}
+
+const btck_ConsensusParams* btck_chain_parameters_get_consensus_params(const btck_ChainParameters* chain_parameters)
+{
+    return btck_ConsensusParams::ref(&btck_ChainParameters::get(chain_parameters).GetConsensus());
 }
 
 void btck_chain_parameters_destroy(btck_ChainParameters* chain_parameters)
@@ -1093,7 +1112,7 @@ btck_Block* btck_block_create(const void* raw_block, size_t raw_block_length)
     }
     auto block{std::make_shared<CBlock>()};
 
-    DataStream stream{std::span{reinterpret_cast<const std::byte*>(raw_block), raw_block_length}};
+    SpanReader stream{std::span{reinterpret_cast<const std::byte*>(raw_block), raw_block_length}};
 
     try {
         stream >> TX_WITH_WITNESS(*block);
@@ -1108,6 +1127,19 @@ btck_Block* btck_block_create(const void* raw_block, size_t raw_block_length)
 btck_Block* btck_block_copy(const btck_Block* block)
 {
     return btck_Block::copy(block);
+}
+
+int btck_block_check(const btck_Block* block, const btck_ConsensusParams* consensus_params, btck_BlockCheckFlags flags, btck_BlockValidationState* validation_state)
+{
+    auto& state = btck_BlockValidationState::get(validation_state);
+    state = BlockValidationState{};
+
+    const bool check_pow    = (flags & btck_BlockCheckFlags_POW) != 0;
+    const bool check_merkle = (flags & btck_BlockCheckFlags_MERKLE) != 0;
+
+    const bool result = CheckBlock(*btck_Block::get(block), state, btck_ConsensusParams::get(consensus_params), /*fCheckPOW=*/check_pow, /*fCheckMerkleRoot=*/check_merkle);
+
+    return result ? 1 : 0;
 }
 
 size_t btck_block_count_transactions(const btck_Block* block)
@@ -1344,7 +1376,7 @@ btck_BlockHeader* btck_block_header_create(const void* raw_block_header, size_t 
         return nullptr;
     }
     auto header{std::make_unique<CBlockHeader>()};
-    DataStream stream{std::span{reinterpret_cast<const std::byte*>(raw_block_header), raw_block_header_len}};
+    SpanReader stream{std::span{reinterpret_cast<const std::byte*>(raw_block_header), raw_block_header_len}};
 
     try {
         stream >> *header;
@@ -1389,6 +1421,16 @@ int32_t btck_block_header_get_version(const btck_BlockHeader* header)
 uint32_t btck_block_header_get_nonce(const btck_BlockHeader* header)
 {
     return btck_BlockHeader::get(header).nNonce;
+}
+
+int btck_block_header_to_bytes(const btck_BlockHeader* header, unsigned char output[80])
+{
+    try {
+        SpanWriter{std::as_writable_bytes(std::span{output, 80})} << btck_BlockHeader::get(header);
+        return 0;
+    } catch (...) {
+        return -1;
+    }
 }
 
 void btck_block_header_destroy(btck_BlockHeader* header)

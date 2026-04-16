@@ -16,7 +16,6 @@
 #include <kernel/messagestartchars.h>
 #include <kernel/notifications_interface.h>
 #include <kernel/types.h>
-#include <logging.h>
 #include <pow.h>
 #include <primitives/block.h>
 #include <primitives/transaction.h>
@@ -31,6 +30,7 @@
 #include <util/check.h>
 #include <util/expected.h>
 #include <util/fs.h>
+#include <util/log.h>
 #include <util/obfuscation.h>
 #include <util/overflow.h>
 #include <util/result.h>
@@ -487,10 +487,18 @@ bool BlockManager::LoadBlockIndex(const std::optional<uint256>& snapshot_blockha
                 pindex->m_chain_tx_count = pindex->nTx;
             }
         }
-        if (!(pindex->nStatus & BLOCK_FAILED_MASK) && pindex->pprev && (pindex->pprev->nStatus & BLOCK_FAILED_MASK)) {
-            pindex->nStatus |= BLOCK_FAILED_CHILD;
+
+        if (pindex->nStatus & BLOCK_FAILED_CHILD) {
+            // BLOCK_FAILED_CHILD is deprecated, but may still exist on disk. Replace it with BLOCK_FAILED_VALID.
+            pindex->nStatus = (pindex->nStatus & ~BLOCK_FAILED_CHILD) | BLOCK_FAILED_VALID;
             m_dirty_blockindex.insert(pindex);
         }
+        if (!(pindex->nStatus & BLOCK_FAILED_VALID) && pindex->pprev && (pindex->pprev->nStatus & BLOCK_FAILED_VALID)) {
+            // All descendants of invalid blocks are invalid too.
+            pindex->nStatus |= BLOCK_FAILED_VALID;
+            m_dirty_blockindex.insert(pindex);
+        }
+
         if (pindex->pprev) {
             pindex->BuildSkip();
         }
@@ -623,10 +631,18 @@ const CBlockIndex& BlockManager::GetFirstBlock(const CBlockIndex& upper_block, u
     return *last_block;
 }
 
-bool BlockManager::CheckBlockDataAvailability(const CBlockIndex& upper_block, const CBlockIndex& lower_block)
+bool BlockManager::CheckBlockDataAvailability(const CBlockIndex& upper_block, const CBlockIndex& lower_block, BlockStatus block_status)
 {
-    if (!(upper_block.nStatus & BLOCK_HAVE_DATA)) return false;
-    return &GetFirstBlock(upper_block, BLOCK_HAVE_DATA, &lower_block) == &lower_block;
+    if (!(upper_block.nStatus & block_status)) return false;
+    const auto& first_block = GetFirstBlock(upper_block, block_status, &lower_block);
+    // Special case: the genesis block has no undo data
+    if (block_status & BLOCK_HAVE_UNDO && lower_block.nHeight == 0 && first_block.nHeight == 1) {
+        // This might indicate missing data, or it could simply reflect the expected absence of undo data for the genesis block.
+        // To distinguish between the two, check if all required block data *except* undo is available up to the genesis block.
+        BlockStatus flags{block_status & ~BLOCK_HAVE_UNDO};
+        return first_block.pprev && first_block.pprev->nStatus & flags;
+    }
+    return &first_block == &lower_block;
 }
 
 // If we're using -prune with -reindex, then delete block files that will be ignored by the

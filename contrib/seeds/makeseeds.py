@@ -48,8 +48,9 @@ PATTERN_AGENT = re.compile(
     r"|25\.(0|1|2|99)\.0"
     r"|26\.(0|1|2|99)\.0"
     r"|27\.(0|1|2|99)\.0"
-    r"|28\.(0|1|2|99)\.0"
-    r"|29\.(0|99)\.0"
+    r"|28\.(0|1|2|3|4|99)\.0"
+    r"|29\.(0|1|2|3|99)\.0"
+    r"|30\.(0|1|2|99)\.0"
     r")")
 
 def parseline(line: str) -> Union[dict, None]:
@@ -138,7 +139,9 @@ def dedup(ips: list[dict]) -> list[dict]:
     """ Remove duplicates from `ips` where multiple ips share address and port. """
     d = {}
     for ip in ips:
-        d[ip['ip'],ip['port']] = ip
+        ip_port = (ip["ip"], ip["port"])
+        if ip_port not in d or ip["lastsuccess"] > d[ip_port]["lastsuccess"]:
+            d[ip_port] = ip
     return list(d.values())
 
 def filtermultiport(ips: list[dict]) -> list[dict]:

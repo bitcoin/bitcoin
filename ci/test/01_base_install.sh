@@ -8,6 +8,11 @@ export LC_ALL=C.UTF-8
 
 set -o errexit -o pipefail -o xtrace
 
+if [ "${DANGER_RUN_CI_ON_HOST}" != "1" ]; then
+  echo "This script will make unsafe local and global modifications, so it can only be run inside a container and requires DANGER_RUN_CI_ON_HOST=1"
+  exit 1
+fi
+
 CFG_DONE="${BASE_ROOT_DIR}/ci.base-install-done"  # Use a global setting to remember whether this script ran to avoid running it twice
 
 if [ "$( cat "${CFG_DONE}" || true )" == "done" ]; then
@@ -32,7 +37,7 @@ if [ -n "${APT_LLVM_V}" ]; then
   )
 fi
 
-if [[ $CI_IMAGE_NAME_TAG == *alpine* ]]; then
+if command -v apk >/dev/null 2>&1; then
   ${CI_RETRY_EXE} apk update
   # shellcheck disable=SC2086
   ${CI_RETRY_EXE} apk add --no-cache $CI_BASE_PACKAGES $PACKAGES
@@ -57,7 +62,7 @@ if [ -n "$PIP_PACKAGES" ]; then
 fi
 
 if [[ -n "${USE_INSTRUMENTED_LIBCPP}" ]]; then
-  ${CI_RETRY_EXE} git clone --depth=1 https://github.com/llvm/llvm-project -b "llvmorg-21.1.5" /llvm-project
+  ${CI_RETRY_EXE} git clone --depth=1 https://github.com/llvm/llvm-project -b "llvmorg-22.1.0" /llvm-project
 
   cmake -G Ninja -B /cxx_build/ \
     -DLLVM_ENABLE_RUNTIMES="libcxx;libcxxabi;libunwind" \
@@ -80,9 +85,9 @@ if [[ -n "${USE_INSTRUMENTED_LIBCPP}" ]]; then
 fi
 
 if [[ "${RUN_IWYU}" == true ]]; then
-  ${CI_RETRY_EXE} git clone --depth=1 https://github.com/include-what-you-use/include-what-you-use -b clang_"${TIDY_LLVM_V}" /include-what-you-use
+  ${CI_RETRY_EXE} git clone --depth=1 https://github.com/include-what-you-use/include-what-you-use -b clang_"${IWYU_LLVM_V}" /include-what-you-use
   (cd /include-what-you-use && patch -p1 < /ci_container_base/ci/test/01_iwyu.patch)
-  cmake -B /iwyu-build/ -G 'Unix Makefiles' -DCMAKE_PREFIX_PATH=/usr/lib/llvm-"${TIDY_LLVM_V}" -S /include-what-you-use
+  cmake -B /iwyu-build/ -G 'Unix Makefiles' -DCMAKE_PREFIX_PATH=/usr/lib/llvm-"${IWYU_LLVM_V}" -S /include-what-you-use
   make -C /iwyu-build/ install "$MAKEJOBS"
 fi
 
@@ -97,6 +102,18 @@ if [ -n "$XCODE_VERSION" ] && [ ! -d "${DEPENDS_DIR}/SDKs/${OSX_SDK_BASENAME}" ]
     ${CI_RETRY_EXE} curl --location --fail "${SDK_URL}/${OSX_SDK_FILENAME}" -o "$OSX_SDK_PATH"
   fi
   tar -C "${DEPENDS_DIR}/SDKs" -xf "$OSX_SDK_PATH"
+fi
+
+FREEBSD_SDK_BASENAME="freebsd-${HOST}-${FREEBSD_VERSION}"
+
+if [ -n "$FREEBSD_VERSION" ] && [ ! -d "${DEPENDS_DIR}/SDKs/${FREEBSD_SDK_BASENAME}" ]; then
+  FREEBSD_SDK_FILENAME="base-${FREEBSD_VERSION}.txz"
+  FREEBSD_SDK_PATH="${DEPENDS_DIR}/sdk-sources/${FREEBSD_SDK_FILENAME}"
+  if [ ! -f "$FREEBSD_SDK_PATH" ]; then
+    ${CI_RETRY_EXE} curl --location --fail "https://download.freebsd.org/releases/amd64/${FREEBSD_VERSION}-RELEASE/base.txz" -o "$FREEBSD_SDK_PATH"
+  fi
+  mkdir -p "${DEPENDS_DIR}/SDKs/${FREEBSD_SDK_BASENAME}"
+  tar -C "${DEPENDS_DIR}/SDKs/${FREEBSD_SDK_BASENAME}" -xf "$FREEBSD_SDK_PATH"
 fi
 
 echo -n "done" > "${CFG_DONE}"

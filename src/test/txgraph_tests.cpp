@@ -13,9 +13,18 @@
 
 BOOST_AUTO_TEST_SUITE(txgraph_tests)
 
-/** The number used as acceptable_iters argument in these tests. High enough that everything
+namespace {
+
+/** The number used as acceptable_cost argument in these tests. High enough that everything
  *  should be optimal, always. */
-static constexpr uint64_t NUM_ACCEPTABLE_ITERS = 100'000'000;
+constexpr uint64_t HIGH_ACCEPTABLE_COST = 100'000'000;
+
+std::strong_ordering PointerComparator(const TxGraph::Ref& a, const TxGraph::Ref& b) noexcept
+{
+    return (&a) <=> (&b);
+}
+
+} // namespace
 
 BOOST_AUTO_TEST_CASE(txgraph_trim_zigzag)
 {
@@ -39,18 +48,18 @@ BOOST_AUTO_TEST_CASE(txgraph_trim_zigzag)
     static constexpr int32_t MAX_CLUSTER_SIZE = 100'000 * 100;
 
     // Create a new graph for the test.
-    auto graph = MakeTxGraph(MAX_CLUSTER_COUNT, MAX_CLUSTER_SIZE, NUM_ACCEPTABLE_ITERS);
+    auto graph = MakeTxGraph(MAX_CLUSTER_COUNT, MAX_CLUSTER_SIZE, HIGH_ACCEPTABLE_COST, PointerComparator);
 
     // Add all transactions and store their Refs.
     std::vector<TxGraph::Ref> refs;
     refs.reserve(NUM_TOTAL_TX);
     // First all bottom transactions: the i'th bottom transaction is at position i.
     for (unsigned int i = 0; i < NUM_BOTTOM_TX; ++i) {
-        refs.push_back(graph->AddTransaction(FeePerWeight{200 - i, 100}));
+        graph->AddTransaction(refs.emplace_back(), FeePerWeight{200 - i, 100});
     }
     // Then all top transactions: the i'th top transaction is at position NUM_BOTTOM_TX + i.
     for (unsigned int i = 0; i < NUM_TOP_TX; ++i) {
-        refs.push_back(graph->AddTransaction(FeePerWeight{100 - i, 100}));
+        graph->AddTransaction(refs.emplace_back(), FeePerWeight{100 - i, 100});
     }
 
     // Create the zigzag dependency structure.
@@ -102,16 +111,16 @@ BOOST_AUTO_TEST_CASE(txgraph_trim_flower)
     /** Set a very large cluster size limit so that only the count limit is triggered. */
     static constexpr int32_t MAX_CLUSTER_SIZE = 100'000 * 100;
 
-    auto graph = MakeTxGraph(MAX_CLUSTER_COUNT, MAX_CLUSTER_SIZE, NUM_ACCEPTABLE_ITERS);
+    auto graph = MakeTxGraph(MAX_CLUSTER_COUNT, MAX_CLUSTER_SIZE, HIGH_ACCEPTABLE_COST, PointerComparator);
 
     // Add all transactions and store their Refs.
     std::vector<TxGraph::Ref> refs;
     refs.reserve(NUM_TOTAL_TX);
 
     // Add all transactions. They are in individual clusters.
-    refs.push_back(graph->AddTransaction({1, 100}));
+    graph->AddTransaction(refs.emplace_back(), {1, 100});
     for (unsigned int i = 0; i < NUM_TOP_TX; ++i) {
-        refs.push_back(graph->AddTransaction(FeePerWeight{500 + i, 100}));
+        graph->AddTransaction(refs.emplace_back(), FeePerWeight{500 + i, 100});
     }
     graph->SanityCheck();
 
@@ -188,7 +197,7 @@ BOOST_AUTO_TEST_CASE(txgraph_trim_huge)
     std::vector<size_t> top_components;
 
     FastRandomContext rng;
-    auto graph = MakeTxGraph(MAX_CLUSTER_COUNT, MAX_CLUSTER_SIZE, NUM_ACCEPTABLE_ITERS);
+    auto graph = MakeTxGraph(MAX_CLUSTER_COUNT, MAX_CLUSTER_SIZE, HIGH_ACCEPTABLE_COST, PointerComparator);
 
     // Construct the top chains.
     for (int chain = 0; chain < NUM_TOP_CHAINS; ++chain) {
@@ -196,8 +205,8 @@ BOOST_AUTO_TEST_CASE(txgraph_trim_huge)
             // Use random fees, size 1.
             int64_t fee = rng.randbits<27>() + 100;
             FeePerWeight feerate{fee, 1};
-            top_refs.push_back(graph->AddTransaction(feerate));
-            // Add internal dependencies linked the chain transactions together.
+            graph->AddTransaction(top_refs.emplace_back(), feerate);
+            // Add internal dependencies linking the chain transactions together.
             if (chaintx > 0) {
                  graph->AddDependency(*(top_refs.rbegin()), *(top_refs.rbegin() + 1));
             }
@@ -215,7 +224,8 @@ BOOST_AUTO_TEST_CASE(txgraph_trim_huge)
         // Construct the transaction.
         int64_t fee = rng.randbits<27>() + 100;
         FeePerWeight feerate{fee, 1};
-        auto bottom_tx = graph->AddTransaction(feerate);
+        TxGraph::Ref bottom_tx;
+        graph->AddTransaction(bottom_tx, feerate);
         // Determine the number of dependencies this transaction will have.
         int deps = std::min<int>(NUM_DEPS_PER_BOTTOM_TX, top_components.size());
         for (int dep = 0; dep < deps; ++dep) {
@@ -260,7 +270,7 @@ BOOST_AUTO_TEST_CASE(txgraph_trim_big_singletons)
     static constexpr int NUM_TOTAL_TX = 100;
 
     // Create a new graph for the test.
-    auto graph = MakeTxGraph(MAX_CLUSTER_COUNT, MAX_CLUSTER_SIZE, NUM_ACCEPTABLE_ITERS);
+    auto graph = MakeTxGraph(MAX_CLUSTER_COUNT, MAX_CLUSTER_SIZE, HIGH_ACCEPTABLE_COST, PointerComparator);
 
     // Add all transactions and store their Refs.
     std::vector<TxGraph::Ref> refs;
@@ -271,7 +281,7 @@ BOOST_AUTO_TEST_CASE(txgraph_trim_big_singletons)
         // The 88th transaction is oversized.
         // Every 20th transaction is oversized.
         const FeePerWeight feerate{500 + i, (i == 88 || i % 20 == 0) ? MAX_CLUSTER_SIZE + 1 : 100};
-        refs.push_back(graph->AddTransaction(feerate));
+        graph->AddTransaction(refs.emplace_back(), feerate);
     }
     graph->SanityCheck();
 
@@ -289,6 +299,136 @@ BOOST_AUTO_TEST_CASE(txgraph_trim_big_singletons)
     for (unsigned int i = 0; i < refs.size(); ++i) {
         BOOST_CHECK_EQUAL(graph->Exists(refs[i], TxGraph::Level::TOP), i != 88 && i % 20 != 0);
     }
+}
+
+BOOST_AUTO_TEST_CASE(txgraph_chunk_chain)
+{
+    // Create a new graph for the test.
+    auto graph = MakeTxGraph(50, 1000, HIGH_ACCEPTABLE_COST, PointerComparator);
+
+    auto block_builder_checker = [&graph](std::vector<std::vector<TxGraph::Ref*>> expected_chunks) {
+        std::vector<std::vector<TxGraph::Ref*>> chunks;
+        auto builder = graph->GetBlockBuilder();
+        FeePerWeight last_chunk_feerate;
+        while (auto chunk = builder->GetCurrentChunk()) {
+            FeePerWeight sum;
+            for (TxGraph::Ref* ref : chunk->first) {
+                // The reported chunk feerate must match the chunk feerate obtained by asking
+                // it for each of the chunk's transactions individually.
+                BOOST_CHECK(graph->GetMainChunkFeerate(*ref) == chunk->second);
+                // Verify the chunk feerate matches the sum of the reported individual feerates.
+                sum += graph->GetIndividualFeerate(*ref);
+            }
+            BOOST_CHECK(sum == chunk->second);
+            chunks.push_back(std::move(chunk->first));
+            last_chunk_feerate = chunk->second;
+            builder->Include();
+        }
+
+        BOOST_CHECK(chunks == expected_chunks);
+        auto& last_chunk = chunks.back();
+        // The last chunk returned by the BlockBuilder must match GetWorstMainChunk, in reverse.
+        std::reverse(last_chunk.begin(), last_chunk.end());
+        auto [worst_chunk, worst_chunk_feerate] = graph->GetWorstMainChunk();
+        BOOST_CHECK(last_chunk == worst_chunk);
+        BOOST_CHECK(last_chunk_feerate == worst_chunk_feerate);
+    };
+
+    std::vector<TxGraph::Ref> refs;
+    refs.reserve(4);
+
+    FeePerWeight feerateA{2, 10};
+    FeePerWeight feerateB{1, 10};
+    FeePerWeight feerateC{2, 10};
+    FeePerWeight feerateD{4, 10};
+
+    // everytime adding a transaction, test the chunk status
+    // [A]
+    graph->AddTransaction(refs.emplace_back(), feerateA);
+    BOOST_CHECK_EQUAL(graph->GetTransactionCount(TxGraph::Level::TOP), 1);
+    block_builder_checker({{&refs[0]}});
+    // [A, B]
+    graph->AddTransaction(refs.emplace_back(), feerateB);
+    graph->AddDependency(/*parent=*/refs[0], /*child=*/refs[1]);
+    BOOST_CHECK_EQUAL(graph->GetTransactionCount(TxGraph::Level::TOP), 2);
+    block_builder_checker({{&refs[0]}, {&refs[1]}});
+
+    // [A, BC]
+    graph->AddTransaction(refs.emplace_back(), feerateC);
+    graph->AddDependency(/*parent=*/refs[1], /*child=*/refs[2]);
+    BOOST_CHECK_EQUAL(graph->GetTransactionCount(TxGraph::Level::TOP), 3);
+    block_builder_checker({{&refs[0]}, {&refs[1], &refs[2]}});
+
+    // [ABCD]
+    graph->AddTransaction(refs.emplace_back(), feerateD);
+    graph->AddDependency(/*parent=*/refs[2], /*child=*/refs[3]);
+    BOOST_CHECK_EQUAL(graph->GetTransactionCount(TxGraph::Level::TOP), 4);
+    block_builder_checker({{&refs[0], &refs[1], &refs[2], &refs[3]}});
+
+    graph->SanityCheck();
+
+    // D->C->A
+    graph->RemoveTransaction(refs[1]);
+    // txgraph is not responsible for removing the descendants or ancestors
+    BOOST_CHECK_EQUAL(graph->GetTransactionCount(TxGraph::Level::TOP), 3);
+    // only A remains there
+    graph->RemoveTransaction(refs[2]);
+    graph->RemoveTransaction(refs[3]);
+    BOOST_CHECK_EQUAL(graph->GetTransactionCount(TxGraph::Level::TOP), 1);
+    block_builder_checker({{&refs[0]}});
+}
+
+BOOST_AUTO_TEST_CASE(txgraph_staging)
+{
+    /* Create a new graph for the test.
+     * The parameters are max_cluster_count, max_cluster_size, acceptable_iters
+     */
+    auto graph = MakeTxGraph(10, 1000, HIGH_ACCEPTABLE_COST, PointerComparator);
+
+    std::vector<TxGraph::Ref> refs;
+    refs.reserve(2);
+
+    FeePerWeight feerateA{2, 10};
+    FeePerWeight feerateB{1, 10};
+
+    // everytime adding a transaction, test the chunk status
+    // [A]
+    graph->AddTransaction(refs.emplace_back(), feerateA);
+    BOOST_CHECK_EQUAL(graph->HaveStaging(), false);
+    BOOST_CHECK_EQUAL(graph->GetTransactionCount(TxGraph::Level::TOP), 1);
+
+    graph->StartStaging();
+    BOOST_CHECK_EQUAL(graph->HaveStaging(), true);
+    BOOST_CHECK_EQUAL(graph->GetTransactionCount(TxGraph::Level::TOP), 1);
+
+    // [A, B]
+    graph->AddTransaction(refs.emplace_back(), feerateB);
+    BOOST_CHECK_EQUAL(graph->GetTransactionCount(TxGraph::Level::MAIN), 1);
+    BOOST_CHECK_EQUAL(graph->GetTransactionCount(TxGraph::Level::TOP), 2);
+    BOOST_CHECK_EQUAL(graph->Exists(refs[0], TxGraph::Level::TOP), true);
+    BOOST_CHECK_EQUAL(graph->Exists(refs[1], TxGraph::Level::TOP), true);
+
+    graph->AddDependency(/*parent=*/refs[0], /*child=*/refs[1]);
+    BOOST_CHECK_EQUAL(graph->GetTransactionCount(TxGraph::Level::MAIN), 1);
+    BOOST_CHECK_EQUAL(graph->GetTransactionCount(TxGraph::Level::TOP), 2);
+
+    graph->CommitStaging();
+    BOOST_CHECK_EQUAL(graph->HaveStaging(), false);
+
+    BOOST_CHECK_EQUAL(graph->GetTransactionCount(TxGraph::Level::MAIN), 2);
+
+    graph->StartStaging();
+
+    // [A]
+    graph->RemoveTransaction(refs[1]);
+    BOOST_CHECK_EQUAL(graph->GetTransactionCount(TxGraph::Level::MAIN), 2);
+    BOOST_CHECK_EQUAL(graph->GetTransactionCount(TxGraph::Level::TOP), 1);
+
+    graph->CommitStaging();
+
+    BOOST_CHECK_EQUAL(graph->GetTransactionCount(TxGraph::Level::MAIN), 1);
+
+    graph->SanityCheck();
 }
 
 BOOST_AUTO_TEST_SUITE_END()

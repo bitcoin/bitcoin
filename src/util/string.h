@@ -5,13 +5,14 @@
 #ifndef BITCOIN_UTIL_STRING_H
 #define BITCOIN_UTIL_STRING_H
 
-#include <span.h>
-
+#include <algorithm>
 #include <array>
+#include <cstddef>
 #include <cstdint>
-#include <cstring>
+#include <initializer_list>
 #include <locale>
 #include <optional>
+#include <span>
 #include <sstream>
 #include <string>
 #include <string_view>
@@ -269,6 +270,7 @@ struct LineReader {
     std::span<const std::byte>::iterator it;
 
     explicit LineReader(std::span<const std::byte> buffer, size_t max_line_length);
+    explicit LineReader(std::string_view str, size_t max_line_length) : LineReader{std::as_bytes(std::span{str}), max_line_length} {}
 
     /**
      * Returns a string from current iterator position up to (but not including) next \n
@@ -294,6 +296,11 @@ struct LineReader {
      * Returns remaining size of bytes in buffer
      */
     size_t Remaining() const;
+
+    /**
+     * Returns number of bytes already read from buffer
+     */
+    size_t Consumed() const;
 };
 } // namespace util
 

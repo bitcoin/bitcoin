@@ -803,6 +803,7 @@ Status DBImpl::OpenCompactionOutputFile(CompactionState* compact) {
     pending_outputs_.insert(file_number);
     CompactionState::Output out;
     out.number = file_number;
+    out.file_size = 0;
     out.smallest.Clear();
     out.largest.Clear();
     compact->outputs.push_back(out);

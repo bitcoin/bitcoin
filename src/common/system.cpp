@@ -127,8 +127,8 @@ std::optional<size_t> GetTotalRAM()
     return std::nullopt;
 }
 
-SteadyClock::duration GetUptime()
-{
-    static const auto g_startup_time{SteadyClock::now()};
-    return SteadyClock::now() - g_startup_time;
-}
+namespace {
+    const auto g_startup_time{SteadyClock::now()};
+} // namespace
+
+SteadyClock::duration GetUptime() { return SteadyClock::now() - g_startup_time; }

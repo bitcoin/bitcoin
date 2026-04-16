@@ -168,7 +168,7 @@ class SendTxRcnclTest(BitcoinTestFramework):
         self.restart_node(0, ["-txreconciliation"])
         self.log.info('valid SENDTXRCNCL received')
         peer = self.nodes[0].add_p2p_connection(PeerNoVerack(), send_version=True, wait_for_verack=False)
-        with self.nodes[0].assert_debug_log(["received: sendtxrcncl"]):
+        with self.nodes[0].assert_debug_log(["received: sendtxrcncl"], timeout=2):
             peer.send_without_ping(create_sendtxrcncl_msg())
         self.log.info('second SENDTXRCNCL triggers a disconnect')
         with self.nodes[0].assert_debug_log(["(sendtxrcncl received from already registered peer), disconnecting peer=0"]):
@@ -178,7 +178,7 @@ class SendTxRcnclTest(BitcoinTestFramework):
         self.restart_node(0, [])
         self.log.info('SENDTXRCNCL if no txreconciliation supported is ignored')
         peer = self.nodes[0].add_p2p_connection(PeerNoVerack(), send_version=True, wait_for_verack=False)
-        with self.nodes[0].assert_debug_log(['ignored, as our node does not have txreconciliation enabled']):
+        with self.nodes[0].assert_debug_log(['ignored, as our node does not have txreconciliation enabled'], timeout=2):
             peer.send_without_ping(create_sendtxrcncl_msg())
         self.nodes[0].disconnect_p2ps()
 
@@ -196,7 +196,7 @@ class SendTxRcnclTest(BitcoinTestFramework):
         sendtxrcncl_higher_version = create_sendtxrcncl_msg()
         sendtxrcncl_higher_version.version = 2
         peer = self.nodes[0].add_p2p_connection(PeerNoVerack(), send_version=True, wait_for_verack=False)
-        with self.nodes[0].assert_debug_log(['Register peer=1']):
+        with self.nodes[0].assert_debug_log(['Register peer=1'], timeout=2):
             peer.send_without_ping(sendtxrcncl_higher_version)
         self.nodes[0].disconnect_p2ps()
 
@@ -208,7 +208,7 @@ class SendTxRcnclTest(BitcoinTestFramework):
         old_version_msg.nServices = P2P_SERVICES
         old_version_msg.relay = 1
         peer.send_without_ping(old_version_msg)
-        with self.nodes[0].assert_debug_log(['Ignore unexpected txreconciliation signal']):
+        with self.nodes[0].assert_debug_log(['Ignore unexpected txreconciliation signal'], timeout=2):
             peer.send_without_ping(create_sendtxrcncl_msg())
         self.nodes[0].disconnect_p2ps()
 
@@ -222,7 +222,7 @@ class SendTxRcnclTest(BitcoinTestFramework):
         peer = self.nodes[0].add_p2p_connection(PeerNoVerack(wtxidrelay=False), send_version=True, wait_for_verack=False)
         with self.nodes[0].assert_debug_log(['Forget txreconciliation state of peer']):
             peer.send_without_ping(create_sendtxrcncl_msg())
-            peer.send_without_ping(msg_verack())
+            peer.send_and_ping(msg_verack())
         self.nodes[0].disconnect_p2ps()
 
         # Now, *receiving* from *outbound*.

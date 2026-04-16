@@ -18,6 +18,7 @@
 #include <test/util/mining.h>
 #include <test/util/net.h>
 #include <test/util/setup_common.h>
+#include <test/util/time.h>
 #include <test/util/validation.h>
 #include <util/check.h>
 #include <util/time.h>
@@ -41,9 +42,10 @@ void ResetChainman(TestingSetup& setup)
     setup.m_make_chainman();
     setup.LoadVerifyActivateChainstate();
     for (int i = 0; i < 2 * COINBASE_MATURITY; i++) {
-        MineBlock(setup.m_node, {});
+        node::BlockAssembler::Options options;
+        options.include_dummy_extranonce = true;
+        MineBlock(setup.m_node, options);
     }
-    setup.m_node.validation_signals->SyncWithValidationInterfaceQueue();
 }
 } // namespace
 
@@ -70,11 +72,10 @@ FUZZ_TARGET(process_message, .init = initialize_process_message)
 
     auto& node{g_setup->m_node};
     auto& connman{static_cast<ConnmanTestMsg&>(*node.connman)};
-    connman.ResetAddrCache();
-    connman.ResetMaxOutboundCycle();
+    connman.Reset();
     auto& chainman{static_cast<TestChainstateManager&>(*node.chainman)};
     const auto block_index_size{WITH_LOCK(chainman.GetMutex(), return chainman.BlockIndex().size())};
-    SetMockTime(1610000000); // any time to successfully reset ibd
+    NodeClockContext clock_ctx{1610000000s}; // any time to successfully reset ibd
     chainman.ResetIbd();
     chainman.DisableNextWrite();
 
@@ -99,13 +100,15 @@ FUZZ_TARGET(process_message, .init = initialize_process_message)
     if (!LIMIT_TO_MESSAGE_TYPE.empty() && random_message_type != LIMIT_TO_MESSAGE_TYPE) {
         return;
     }
+
+    node.validation_signals->RegisterValidationInterface(node.peerman.get());
+
     CNode& p2p_node = *ConsumeNodeAsUniquePtr(fuzzed_data_provider).release();
 
     connman.AddTestNode(p2p_node);
     FillNode(fuzzed_data_provider, connman, p2p_node);
 
-    const auto mock_time = ConsumeTime(fuzzed_data_provider);
-    SetMockTime(mock_time);
+    clock_ctx.set(ConsumeTime(fuzzed_data_provider));
 
     CSerializedNetMsg net_msg;
     net_msg.m_type = random_message_type;
@@ -121,9 +124,10 @@ FUZZ_TARGET(process_message, .init = initialize_process_message)
             more_work = connman.ProcessMessagesOnce(p2p_node);
         } catch (const std::ios_base::failure&) {
         }
-        node.peerman->SendMessages(&p2p_node);
+        node.peerman->SendMessages(p2p_node);
     }
     node.validation_signals->SyncWithValidationInterfaceQueue();
+    node.validation_signals->UnregisterValidationInterface(node.peerman.get());
     node.connman->StopNodes();
     if (block_index_size != WITH_LOCK(chainman.GetMutex(), return chainman.BlockIndex().size())) {
         // Reuse the global chainman, but reset it when it is dirty

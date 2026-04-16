@@ -6,11 +6,11 @@
 #ifndef BITCOIN_STREAMS_H
 #define BITCOIN_STREAMS_H
 
-#include <logging.h>
 #include <serialize.h>
 #include <span.h>
 #include <support/allocators/zeroafterfree.h>
 #include <util/check.h>
+#include <util/log.h>
 #include <util/obfuscation.h>
 #include <util/overflow.h>
 #include <util/syserror.h>
@@ -117,7 +117,42 @@ public:
 
     void ignore(size_t n)
     {
+        if (n > m_data.size()) {
+            throw std::ios_base::failure("SpanReader::ignore(): end of data");
+        }
         m_data = m_data.subspan(n);
+    }
+};
+
+/** Minimal stream for writing to an existing span of bytes.
+ */
+class SpanWriter
+{
+private:
+    std::span<std::byte> m_dest;
+
+public:
+    explicit SpanWriter(std::span<std::byte> dest) : m_dest{dest} {}
+    template <typename... Args>
+    SpanWriter(std::span<std::byte> dest, Args&&... args) : SpanWriter{dest}
+    {
+        ::SerializeMany(*this, std::forward<Args>(args)...);
+    }
+
+    void write(std::span<const std::byte> src)
+    {
+        if (src.size() > m_dest.size()) {
+            throw std::ios_base::failure("SpanWriter::write(): exceeded buffer size");
+        }
+        memcpy(m_dest.data(), src.data(), src.size());
+        m_dest = m_dest.subspan(src.size());
+    }
+
+    template<typename T>
+    SpanWriter& operator<<(const T& obj)
+    {
+        ::Serialize(*this, obj);
+        return *this;
     }
 };
 
@@ -195,7 +230,6 @@ public:
     //
     // Stream subset
     //
-    bool eof() const             { return size() == 0; }
     int in_avail() const         { return size(); }
 
     void read(std::span<value_type> dst)

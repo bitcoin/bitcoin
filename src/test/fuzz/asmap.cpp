@@ -6,28 +6,18 @@
 #include <netgroup.h>
 #include <test/fuzz/fuzz.h>
 #include <util/asmap.h>
+#include <util/strencodings.h>
 
 #include <cstdint>
 #include <vector>
 
+using namespace util::hex_literals;
+
 //! asmap code that consumes nothing
-static const std::vector<bool> IPV6_PREFIX_ASMAP = {};
+static const std::vector<std::byte> IPV6_PREFIX_ASMAP = {};
 
 //! asmap code that consumes the 96 prefix bits of ::ffff:0/96 (IPv4-in-IPv6 map)
-static const std::vector<bool> IPV4_PREFIX_ASMAP = {
-    true, true, false, true, true, true, true, true, true, true, false, false, false, false, false, false, false, false, // Match 0x00
-    true, true, false, true, true, true, true, true, true, true, false, false, false, false, false, false, false, false, // Match 0x00
-    true, true, false, true, true, true, true, true, true, true, false, false, false, false, false, false, false, false, // Match 0x00
-    true, true, false, true, true, true, true, true, true, true, false, false, false, false, false, false, false, false, // Match 0x00
-    true, true, false, true, true, true, true, true, true, true, false, false, false, false, false, false, false, false, // Match 0x00
-    true, true, false, true, true, true, true, true, true, true, false, false, false, false, false, false, false, false, // Match 0x00
-    true, true, false, true, true, true, true, true, true, true, false, false, false, false, false, false, false, false, // Match 0x00
-    true, true, false, true, true, true, true, true, true, true, false, false, false, false, false, false, false, false, // Match 0x00
-    true, true, false, true, true, true, true, true, true, true, false, false, false, false, false, false, false, false, // Match 0x00
-    true, true, false, true, true, true, true, true, true, true, false, false, false, false, false, false, false, false, // Match 0x00
-    true, true, false, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true,         // Match 0xFF
-    true, true, false, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true          // Match 0xFF
-};
+static const auto IPV4_PREFIX_ASMAP = "fb03ec0fb03fc0fe00fb03ec0fb03fc0fe00fb03ec0fb0fffffeff"_hex_v;
 
 FUZZ_TARGET(asmap)
 {
@@ -37,14 +27,9 @@ FUZZ_TARGET(asmap)
     bool ipv6 = buffer[0] & 128;
     const size_t addr_size = ipv6 ? ADDR_IPV6_SIZE : ADDR_IPV4_SIZE;
     if (buffer.size() < size_t(1 + asmap_size + addr_size)) return;
-    std::vector<bool> asmap = ipv6 ? IPV6_PREFIX_ASMAP : IPV4_PREFIX_ASMAP;
-    asmap.reserve(asmap.size() + 8 * asmap_size);
-    for (int i = 0; i < asmap_size; ++i) {
-        for (int j = 0; j < 8; ++j) {
-            asmap.push_back((buffer[1 + i] >> j) & 1);
-        }
-    }
-    if (!SanityCheckASMap(asmap, 128)) return;
+    std::vector<std::byte> asmap = ipv6 ? IPV6_PREFIX_ASMAP : IPV4_PREFIX_ASMAP;
+    std::ranges::copy(std::as_bytes(buffer.subspan(1, asmap_size)), std::back_inserter(asmap));
+    if (!CheckStandardAsmap(asmap)) return;
 
     const uint8_t* addr_data = buffer.data() + 1 + asmap_size;
     CNetAddr net_addr;
@@ -57,6 +42,6 @@ FUZZ_TARGET(asmap)
         memcpy(&ipv4, addr_data, addr_size);
         net_addr.SetIP(CNetAddr{ipv4});
     }
-    NetGroupManager netgroupman{asmap};
+    auto netgroupman{NetGroupManager::WithEmbeddedAsmap(asmap)};
     (void)netgroupman.GetMappedAS(net_addr);
 }

@@ -9,14 +9,13 @@
 #include <coins.h>
 #include <consensus/params.h>
 #include <kernel/caches.h>
-#include <logging.h>
 #include <node/blockstorage.h>
 #include <sync.h>
-#include <threadsafety.h>
 #include <tinyformat.h>
 #include <txdb.h>
 #include <uint256.h>
 #include <util/fs.h>
+#include <util/log.h>
 #include <util/signalinterrupt.h>
 #include <util/time.h>
 #include <util/translation.h>
@@ -124,6 +123,13 @@ static ChainstateLoadResult CompleteChainstateInitialization(
             }
             assert(chainstate->m_chain.Tip() != nullptr);
         }
+    }
+
+    // Populate setBlockIndexCandidates in a separate loop, after all LoadChainTip()
+    // calls have finished modifying nSequenceId. Because nSequenceId is used in the
+    // set's comparator, changing it while blocks are in the set would be UB.
+    for (const auto& chainstate : chainman.m_chainstates) {
+        chainstate->PopulateBlockIndexCandidates();
     }
 
     const auto& chainstates{chainman.m_chainstates};

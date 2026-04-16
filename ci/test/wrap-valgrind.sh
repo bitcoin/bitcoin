@@ -12,7 +12,7 @@ for b_name in "${BASE_OUTDIR}/bin"/*; do
       echo "Wrap $b ..."
       mv "$b" "${b}_orig"
       echo '#!/usr/bin/env bash' > "$b"
-      echo "exec valgrind --gen-suppressions=all --quiet --error-exitcode=1 --suppressions=${BASE_ROOT_DIR}/contrib/valgrind.supp \"${b}_orig\" \"\$@\"" >> "$b"
+      echo "exec valgrind --gen-suppressions=all --quiet --error-exitcode=1 --suppressions=${BASE_ROOT_DIR}/test/sanitizer_suppressions/valgrind.supp \"${b}_orig\" \"\$@\"" >> "$b"
       chmod +x "$b"
     done
 done

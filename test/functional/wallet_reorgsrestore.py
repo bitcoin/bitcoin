@@ -42,7 +42,8 @@ class ReorgsRestoreTest(BitcoinTestFramework):
         self.connect_nodes(1, 0)
         self.sync_blocks(self.nodes[:2])
         self.disconnect_nodes(1, 0)
-        assert all(len(node.getpeerinfo()) == 0 for node in self.nodes[:2])
+        for node in self.nodes[:2]:
+            assert_equal(len(node.getpeerinfo()), 0)
 
         # Create a new block in node0, coinbase going to wallet0
         self.nodes[0].createwallet(wallet_name="w0", load_on_startup=True)
@@ -72,7 +73,7 @@ class ReorgsRestoreTest(BitcoinTestFramework):
         # Stop both nodes and replace node0 chain entirely for the node1 chain
         self.stop_nodes()
         for path in ["chainstate", "blocks"]:
-            shutil.rmtree(self.nodes[0].chain_path / path)
+            self.cleanup_folder(self.nodes[0].chain_path / path)
             shutil.copytree(self.nodes[1].chain_path / path, self.nodes[0].chain_path / path)
 
         # Start node0 and verify that now it has node1 chain and no info about its previous best block

@@ -9,6 +9,7 @@
 #include <cassert>
 #include <cstddef>
 #include <cstring>
+#include <exception>
 #include <functional>
 #include <kj/string-tree.h>
 #include <mutex>
@@ -209,6 +210,38 @@ void Unlock(Lock& lock, Callback&& callback)
     callback();
 }
 
+//! Invoke a function and run a follow-up action before returning the original
+//! result.
+//!
+//! This can be used similarly to KJ_DEFER to run cleanup code, but works better
+//! if the cleanup function can throw because it avoids clang bug
+//! https://github.com/llvm/llvm-project/issues/12658 which skips calling
+//! destructors in that case and can lead to memory leaks. Also, if both
+//! functions throw, this lets one exception take precedence instead of
+//! terminating due to having two active exceptions.
+template <typename Fn, typename After>
+decltype(auto) TryFinally(Fn&& fn, After&& after)
+{
+    bool success{false};
+    using R = std::invoke_result_t<Fn>;
+    try {
+        if constexpr (std::is_void_v<R>) {
+            std::forward<Fn>(fn)();
+            success = true;
+            std::forward<After>(after)();
+            return;
+        } else {
+            decltype(auto) result = std::forward<Fn>(fn)();
+            success = true;
+            std::forward<After>(after)();
+            return result;
+        }
+    } catch (...) {
+        if (!success) std::forward<After>(after)();
+        throw;
+    }
+}
+
 //! Format current thread name as "{exe_name}-{$pid}/{thread_name}-{$tid}".
 std::string ThreadName(const char* exe_name);
 
@@ -241,6 +274,69 @@ inline char* CharCast(unsigned char* c) { return (char*)c; }
 inline const char* CharCast(const char* c) { return c; }
 inline const char* CharCast(const unsigned char* c) { return (const char*)c; }
 
+//! Exception thrown from code executing an IPC call that is interrupted.
+struct InterruptException final : std::exception {
+    explicit InterruptException(std::string message) : m_message(std::move(message)) {}
+    const char* what() const noexcept override { return m_message.c_str(); }
+    std::string m_message;
+};
+
+class CancelProbe;
+
+//! Helper class that detects when a promise is canceled. Used to detect
+//! canceled requests and prevent potential crashes on unclean disconnects.
+//!
+//! In the future, this could also be used to support a way for wrapped C++
+//! methods to detect cancellation (like approach #4 in
+//! https://github.com/bitcoin/bitcoin/issues/33575).
+class CancelMonitor
+{
+public:
+    inline ~CancelMonitor();
+    inline void promiseDestroyed(CancelProbe& probe);
+
+    bool m_canceled{false};
+    std::function<void()> m_on_cancel;
+    CancelProbe* m_probe{nullptr};
+};
+
+//! Helper object to attach to a promise and update a CancelMonitor.
+class CancelProbe
+{
+public:
+    CancelProbe(CancelMonitor& monitor) : m_monitor(&monitor)
+    {
+        assert(!monitor.m_probe);
+        monitor.m_probe = this;
+    }
+    ~CancelProbe()
+    {
+        if (m_monitor) m_monitor->promiseDestroyed(*this);
+    }
+    CancelMonitor* m_monitor;
+};
+
+CancelMonitor::~CancelMonitor()
+{
+    if (m_probe) {
+        assert(m_probe->m_monitor == this);
+        m_probe->m_monitor = nullptr;
+        m_probe = nullptr;
+    }
+}
+
+void CancelMonitor::promiseDestroyed(CancelProbe& probe)
+{
+    // If promise is being destroyed, assume the promise has been canceled. In
+    // theory this method could be called when a promise was fulfilled or
+    // rejected rather than canceled, but it's safe to assume that's not the
+    // case because the CancelMonitor class is meant to be used inside code
+    // fulfilling or rejecting the promise and destroyed before doing so.
+    assert(m_probe == &probe);
+    m_canceled = true;
+    if (m_on_cancel) m_on_cancel();
+    m_probe = nullptr;
+}
 } // namespace mp
 
 #endif // MP_UTIL_H

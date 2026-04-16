@@ -8,11 +8,9 @@
 #include <functional>
 #include <memory>
 
-namespace boost {
-namespace signals2 {
-class connection;
-} // namespace signals2
-} // namespace boost
+namespace btcsignals {
+    class connection;
+} // namespace btcsignals
 
 namespace interfaces {
 
@@ -28,8 +26,8 @@ public:
     virtual void disconnect() = 0;
 };
 
-//! Return handler wrapping a boost signal connection.
-std::unique_ptr<Handler> MakeSignalHandler(boost::signals2::connection connection);
+//! Return handler wrapping a btcsignals connection.
+std::unique_ptr<Handler> MakeSignalHandler(btcsignals::connection connection);
 
 //! Return handler wrapping a cleanup function.
 std::unique_ptr<Handler> MakeCleanupHandler(std::function<void()> cleanup);

@@ -10,6 +10,7 @@
 #include <script/script.h>
 #include <script/signingprovider.h>
 #include <script/solver.h>
+#include <test/util/common.h>
 #include <test/util/setup_common.h>
 #include <util/strencodings.h>
 

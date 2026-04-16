@@ -217,6 +217,7 @@ else()
   try_append_c_flags(-Wcast-align=strict) # GCC >= 8.0.
   try_append_c_flags(-Wconditional-uninitialized) # Clang >= 3.0 only.
   try_append_c_flags(-Wextra) # GCC >= 3.4, this is the newer name of -W, which we don't use because older GCCs will warn about unused functions.
+  try_append_c_flags(-Wleading-whitespace=spaces) # GCC >= 15.0
   try_append_c_flags(-Wnested-externs)
   try_append_c_flags(-Wno-long-long) # GCC >= 3.0, -Wlong-long is implied by -pedantic.
   try_append_c_flags(-Wno-overlength-strings) # GCC >= 4.2, -Woverlength-strings is implied by -pedantic.
@@ -224,6 +225,7 @@ else()
   try_append_c_flags(-Wreserved-identifier) # Clang >= 13.0 only.
   try_append_c_flags(-Wshadow)
   try_append_c_flags(-Wstrict-prototypes)
+  try_append_c_flags(-Wtrailing-whitespace=any) # GCC >= 15.0
   try_append_c_flags(-Wundef)
 endif()
 

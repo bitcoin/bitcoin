@@ -58,6 +58,7 @@ from test_framework.script import (
     OP_SUBSTR,
     OP_XOR,
 )
+from test_framework.util import assert_equal
 from test_framework.script_util import (
     MIN_PADDING,
     MIN_STANDARD_TX_NONWITNESS_SIZE,
@@ -122,8 +123,8 @@ class SizeTooSmall(BadTxTemplate):
         tx = CTransaction()
         tx.vin.append(self.valid_txin)
         tx.vout.append(CTxOut(0, CScript([OP_RETURN] + ([OP_0] * (MIN_PADDING - 2)))))
-        assert len(tx.serialize_without_witness()) == 64
-        assert MIN_STANDARD_TX_NONWITNESS_SIZE - 1 == 64
+        assert_equal(len(tx.serialize_without_witness()), 64)
+        assert_equal(MIN_STANDARD_TX_NONWITNESS_SIZE - 1, 64)
         return tx
 
 # reject a transaction that contains a witness

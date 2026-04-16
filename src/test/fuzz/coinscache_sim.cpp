@@ -139,7 +139,7 @@ struct CacheLevel
  *
  * The initial state consists of the empty UTXO set.
  */
-class CoinsViewBottom final : public CCoinsView
+class CoinsViewBottom final : public CoinsViewEmpty
 {
     std::map<COutPoint, Coin> m_data;
 
@@ -152,11 +152,6 @@ public:
         }
         return std::nullopt;
     }
-
-    uint256 GetBestBlock() const final { return {}; }
-    std::vector<uint256> GetHeadBlocks() const final { return {}; }
-    std::unique_ptr<CCoinsViewCursor> Cursor() const final { return {}; }
-    size_t EstimateSize() const final { return m_data.size(); }
 
     void BatchWrite(CoinsViewCacheCursor& cursor, const uint256&) final
     {
@@ -252,12 +247,14 @@ FUZZ_TARGET(coinscache_sim)
         CallOneOf(
             provider,
 
-            [&]() { // GetCoin
+            [&]() { // PeekCoin/GetCoin
                 uint32_t outpointidx = provider.ConsumeIntegralInRange<uint32_t>(0, NUM_OUTPOINTS - 1);
                 // Look up in simulation data.
                 auto sim = lookup(outpointidx);
                 // Look up in real caches.
-                auto realcoin = caches.back()->GetCoin(data.outpoints[outpointidx]);
+                auto realcoin = provider.ConsumeBool() ?
+                    caches.back()->PeekCoin(data.outpoints[outpointidx]) :
+                    caches.back()->GetCoin(data.outpoints[outpointidx]);
                 // Compare results.
                 if (!sim.has_value()) {
                     assert(!realcoin);
@@ -372,7 +369,11 @@ FUZZ_TARGET(coinscache_sim)
             [&]() { // Add a cache level (if not already at the max).
                 if (caches.size() != MAX_CACHES) {
                     // Apply to real caches.
-                    caches.emplace_back(new CCoinsViewCache(&*caches.back(), /*deterministic=*/true));
+                    if (provider.ConsumeBool()) {
+                        caches.emplace_back(new CCoinsViewCache(&*caches.back(), /*deterministic=*/true));
+                    } else {
+                        caches.emplace_back(new CoinsViewOverlay(&*caches.back(), /*deterministic=*/true));
+                    }
                     // Apply to simulation data.
                     sim_caches[caches.size()].Wipe();
                 }

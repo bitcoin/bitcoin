@@ -4,6 +4,7 @@
 
 #include <boost/test/unit_test.hpp>
 
+#include <test/util/common.h>
 #include <test/util/setup_common.h>
 #include <util/check.h>
 #include <util/fs.h>
@@ -14,7 +15,6 @@
 #include <wallet/walletutil.h>
 
 #include <cstddef>
-#include <fstream>
 #include <memory>
 #include <span>
 #include <string>

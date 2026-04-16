@@ -18,6 +18,12 @@ from test_framework.test_node import (
 )
 from test_framework.util import assert_equal
 
+ALL_INDEX_ARGS = [
+    '-txindex=1',
+    '-blockfilterindex=1',
+    '-coinstatsindex=1',
+    '-txospenderindex=1',
+]
 
 class InitTest(BitcoinTestFramework):
     """
@@ -26,17 +32,26 @@ class InitTest(BitcoinTestFramework):
     """
 
     def set_test_params(self):
-        self.setup_clean_chain = False
-        self.num_nodes = 1
+        self.setup_clean_chain = True
+        self.num_nodes = 2
         self.uses_wallet = None
 
-    def init_stress_test(self):
+    def check_clean_start(self, node, extra_args):
+        """Ensure that node restarts successfully after various interrupts."""
+        node.start(extra_args)
+        node.wait_for_rpc_connection()
+        height = node.getblockcount()
+        assert_equal(200, height)
+        self.wait_until(lambda: all(i["synced"] and i["best_block_height"] == height for i in node.getindexinfo().values()))
+
+    def init_stress_test_interrupt(self):
         """
         - test terminating initialization after seeing a certain log line.
-        - test removing certain essential files to test startup error paths.
         """
-        self.stop_node(0)
+        self.start_node(0)
         node = self.nodes[0]
+        self.generate(node, 200, sync_fun=self.no_op)
+        self.stop_node(0)
 
         def sigterm_node():
             if platform.system() == 'Windows':
@@ -46,22 +61,7 @@ class InitTest(BitcoinTestFramework):
                 os.kill(node.process.pid, signal.CTRL_BREAK_EVENT)
             else:
                 node.process.terminate()
-            node.process.wait()
-
-        def start_expecting_error(err_fragment, args):
-            node.assert_start_raises_init_error(
-                extra_args=args,
-                expected_msg=err_fragment,
-                match=ErrorMatch.PARTIAL_REGEX,
-            )
-
-        def check_clean_start(extra_args):
-            """Ensure that node restarts successfully after various interrupts."""
-            node.start(extra_args)
-            node.wait_for_rpc_connection()
-            height = node.getblockcount()
-            assert_equal(200, height)
-            self.wait_until(lambda: all(i["synced"] and i["best_block_height"] == height for i in node.getindexinfo().values()))
+            assert_equal(0, node.process.wait())
 
         lines_to_terminate_after = [
             b'Validating signatures for all blocks',
@@ -80,6 +80,7 @@ class InitTest(BitcoinTestFramework):
             b'txindex thread start',
             b'block filter index thread start',
             b'coinstatsindex thread start',
+            b'txospenderindex thread start',
             b'msghand thread start',
             b'net thread start',
             b'addcon thread start',
@@ -87,25 +88,36 @@ class InitTest(BitcoinTestFramework):
         if self.is_wallet_compiled():
             lines_to_terminate_after.append(b'Verifying wallet')
 
-        args = ['-txindex=1', '-blockfilterindex=1', '-coinstatsindex=1']
         for terminate_line in lines_to_terminate_after:
             self.log.info(f"Starting node and will terminate after line {terminate_line}")
             with node.busy_wait_for_debug_log([terminate_line]):
                 if platform.system() == 'Windows':
                     # CREATE_NEW_PROCESS_GROUP is required in order to be able
                     # to terminate the child without terminating the test.
-                    node.start(extra_args=args, creationflags=subprocess.CREATE_NEW_PROCESS_GROUP)
+                    node.start(extra_args=ALL_INDEX_ARGS, creationflags=subprocess.CREATE_NEW_PROCESS_GROUP)
                 else:
-                    node.start(extra_args=args)
+                    node.start(extra_args=ALL_INDEX_ARGS)
             self.log.debug("Terminating node after terminate line was found")
             sigterm_node()
 
         # Prior to deleting/perturbing index files, start node with all indexes enabled.
         # 'check_clean_start' will ensure indexes are synchronized (i.e., data exists to modify)
-        check_clean_start(args)
+        self.check_clean_start(node, ALL_INDEX_ARGS)
         self.stop_node(0)
 
+    def init_stress_test_removals(self):
+        """
+        - test removing certain essential files to test startup error paths.
+        """
         self.log.info("Test startup errors after removing certain essential files")
+        node = self.nodes[0]
+
+        def start_expecting_error(err_fragment, args):
+            node.assert_start_raises_init_error(
+                extra_args=args,
+                expected_msg=err_fragment,
+                match=ErrorMatch.PARTIAL_REGEX,
+            )
 
         deletion_rounds = [
             {
@@ -127,6 +139,11 @@ class InitTest(BitcoinTestFramework):
                 'filepath_glob': 'indexes/txindex/MANIFEST*',
                 'error_message': 'LevelDB error: Corruption: CURRENT points to a non-existent file',
                 'startup_args': ['-txindex=1'],
+            },
+            {
+                'filepath_glob': 'indexes/txospenderindex/db/MANIFEST*',
+                'error_message': 'LevelDB error: Corruption: CURRENT points to a non-existent file',
+                'startup_args': ['-txospenderindex=1'],
             },
             # Removing these files does not result in a startup error:
             # 'indexes/blockfilter/basic/*.dat', 'indexes/blockfilter/basic/db/*.*', 'indexes/coinstatsindex/db/*.*',
@@ -169,6 +186,11 @@ class InitTest(BitcoinTestFramework):
                 'error_message': 'LevelDB error: Corruption',
                 'startup_args': ['-txindex=1'],
             },
+            {
+                'filepath_glob': 'indexes/txospenderindex/db/*',
+                'error_message': 'LevelDB error: Corruption',
+                'startup_args': ['-txospenderindex=1'],
+            },
             # Perturbing these files does not result in a startup error:
             # 'indexes/blockfilter/basic/*.dat', 'indexes/txindex/MANIFEST*', 'indexes/txindex/LOCK'
         ]
@@ -178,6 +200,7 @@ class InitTest(BitcoinTestFramework):
             err_fragment = round_info['error_message']
             startup_args = round_info['startup_args']
             target_files = list(node.chain_path.glob(file_patt))
+            assert target_files, f"Failed to find expected files: {file_patt}"
 
             for target_file in target_files:
                 self.log.info(f"Deleting file to ensure failure {target_file}")
@@ -191,7 +214,7 @@ class InitTest(BitcoinTestFramework):
                 self.log.debug(f"Restoring file from {bak_path} and restarting")
                 Path(bak_path).rename(target_file)
 
-            check_clean_start(args)
+            self.check_clean_start(node, ALL_INDEX_ARGS)
             self.stop_node(0)
 
         self.log.info("Test startup errors after perturbing certain essential files")
@@ -204,6 +227,7 @@ class InitTest(BitcoinTestFramework):
             for dir in dirs:
                 shutil.copytree(node.chain_path / dir, node.chain_path / f"{dir}_bak")
             target_files = list(node.chain_path.glob(file_patt))
+            assert target_files, f"Failed to find expected files: {file_patt}"
 
             for target_file in target_files:
                 self.log.info(f"Perturbing file to ensure failure {target_file}")
@@ -217,7 +241,7 @@ class InitTest(BitcoinTestFramework):
             start_expecting_error(err_fragment, startup_args)
 
             for dir in dirs:
-                shutil.rmtree(node.chain_path / dir)
+                self.cleanup_folder(node.chain_path / dir)
                 shutil.move(node.chain_path / f"{dir}_bak", node.chain_path / dir)
 
     def init_pid_test(self):
@@ -290,10 +314,21 @@ class InitTest(BitcoinTestFramework):
             assert_equal(result["height"], current_height)
             node.wait_until_stopped()
 
+    def init_empty_test(self):
+        self.log.info("Test that stopping and restarting a node that has done nothing is not causing a failure")
+        options = [
+            [],
+            ALL_INDEX_ARGS,
+        ]
+        for option in options:
+            self.restart_node(1, option)
+
     def run_test(self):
         self.init_pid_test()
-        self.init_stress_test()
+        self.init_stress_test_interrupt()
+        self.init_stress_test_removals()
         self.break_wait_test()
+        self.init_empty_test()
 
 
 if __name__ == '__main__':

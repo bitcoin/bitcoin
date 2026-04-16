@@ -6,10 +6,9 @@
 #define BITCOIN_UTIL_THREADINTERRUPT_H
 
 #include <sync.h>
-#include <threadsafety.h>
+#include <util/time.h>
 
 #include <atomic>
-#include <chrono>
 #include <condition_variable>
 
 /**

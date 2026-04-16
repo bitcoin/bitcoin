@@ -105,7 +105,6 @@ pub fn lint_std_filesystem() -> LintResult {
             "./src/",
             ":(exclude)src/ipc/libmultiprocess/",
             ":(exclude)src/util/fs.h",
-            ":(exclude)src/test/kernel/test_kernel.cpp",
             ":(exclude)src/bitcoin-chainstate.cpp",
         ])
         .status()
@@ -115,6 +114,33 @@ pub fn lint_std_filesystem() -> LintResult {
         Err(r#"
 Direct use of std::filesystem may be dangerous and buggy. Please include <util/fs.h> and use the
 fs:: namespace, which has unsafe filesystem functions marked as deleted.
+            "#
+        .trim()
+        .to_string())
+    } else {
+        Ok(())
+    }
+}
+
+pub fn lint_remove_all() -> LintResult {
+    let found = git()
+        .args([
+            "grep",
+            "--line-number",
+            "remove_all(.*)",
+            "--",
+            "./src/",
+            // These are likely not avoidable.
+            ":(exclude)src/test/kernel/test_kernel.cpp",
+            ":(exclude)src/test/util/setup_common.cpp",
+        ])
+        .status()
+        .expect("command error")
+        .success();
+    if found {
+        Err(r#"
+Use of fs::remove_all or std::filesystem::remove_all is dangerous and should be avoided. If removal
+is required, prefer fs::remove.
             "#
         .trim()
         .to_string())

@@ -73,3 +73,28 @@ pub fn lint_py_lint() -> LintResult {
         Err(e) => Err(format!("Error running `{bin_name}`: {e}")),
     }
 }
+
+pub fn lint_rmtree() -> LintResult {
+    let found = git()
+        .args([
+            "grep",
+            "--line-number",
+            "rmtree",
+            "--",
+            "test/functional/",
+            ":(exclude)test/functional/test_framework/test_framework.py",
+        ])
+        .status()
+        .expect("command error")
+        .success();
+    if found {
+        Err(r#"
+Use of shutil.rmtree() is dangerous and should be avoided. If it
+is really required for the test, use self.cleanup_folder(_).
+            "#
+        .trim()
+        .to_string())
+    } else {
+        Ok(())
+    }
+}

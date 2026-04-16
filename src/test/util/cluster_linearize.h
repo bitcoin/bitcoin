@@ -394,26 +394,26 @@ void SanityCheck(const DepGraph<SetType>& depgraph, std::span<const DepGraphInde
     }
 }
 
-inline uint64_t MaxOptimalLinearizationIters(DepGraphIndex cluster_count)
+inline uint64_t MaxOptimalLinearizationCost(DepGraphIndex cluster_count)
 {
     // These are the largest numbers seen returned as cost by Linearize(), in a large randomized
     // trial. There exist almost certainly far worse cases, but they are unlikely to be
     // encountered in randomized tests. The purpose of these numbers is guaranteeing that for
     // *some* reasonable cost bound, optimal linearizations are always found.
-    static constexpr uint64_t ITERS[65] = {
+    static constexpr uint64_t COSTS[65] = {
         0,
-        0, 4, 10, 34, 76, 118, 184, 225,
-        320, 376, 464, 573, 830, 868, 1019, 1468,
-        1375, 1785, 1880, 1854, 2551, 2559, 4336, 4784,
-        5547, 5807, 6157, 6075, 6961, 7403, 7756, 8001,
-        8041, 7579, 8483, 10077, 9015, 9388, 9626, 12371,
-        12847, 12102, 15173, 15800, 20319, 22190, 23183, 24361,
-        24909, 19225, 27419, 23789, 25909, 21993, 25596, 24130,
-        26349, 31823, 31855, 31250, 32688, 34825, 41710, 45478
+        0, 545, 928, 1633, 2647, 4065, 5598, 8258,
+        9505, 11471, 14137, 19553, 20460, 26191, 28397, 32599,
+        41631, 47419, 56329, 57767, 72196, 63652, 95366, 96537,
+        115653, 125407, 131734, 145090, 156349, 164665, 194224, 203953,
+        207710, 225878, 239971, 252284, 256534, 222142, 251332, 357098,
+        325788, 295867, 410053, 497483, 533892, 576572, 577845, 572400,
+        592536, 455082, 609249, 659130, 714091, 544507, 718788, 562378,
+        601926, 1025081, 732725, 708896, 738224, 900445, 1092519, 1139946
     };
-    assert(cluster_count < std::size(ITERS));
+    assert(cluster_count < std::size(COSTS));
     // Multiply the table number by two, to account for the fact that they are not absolutes.
-    return ITERS[cluster_count] * 2;
+    return COSTS[cluster_count] * 2;
 }
 
 } // namespace

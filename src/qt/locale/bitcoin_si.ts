@@ -629,6 +629,14 @@
     </message>
     </context>
 <context>
+    <name>MigrateWalletActivity</name>
+    <message>
+        <source>Restore Wallet</source>
+        <extracomment>Title of progress window which is displayed when wallets are being restored.</extracomment>
+        <translation type="unfinished">පසුම්බිය ප්‍රතිස්ථාපනය කිරීම</translation>
+    </message>
+    </context>
+<context>
     <name>OpenWalletActivity</name>
     <message>
         <source>Open Wallet</source>
@@ -900,9 +908,23 @@
     </context>
 <context>
     <name>PSBTOperationsDialog</name>
+    <message numerus="yes">
+        <source>Signed %n input(s), but more signatures are still required.</source>
+        <translation type="unfinished">
+            <numerusform />
+            <numerusform />
+        </translation>
+    </message>
     <message>
         <source>or</source>
         <translation type="unfinished">හෝ</translation>
+    </message>
+    <message numerus="yes">
+        <source>Transaction has %n unsigned input(s).</source>
+        <translation type="unfinished">
+            <numerusform />
+            <numerusform />
+        </translation>
     </message>
     </context>
 <context>
@@ -1269,10 +1291,6 @@
     <message>
         <source>default wallet</source>
         <translation type="unfinished">පෙරනිමි පසුම්බිය</translation>
-    </message>
-    <message>
-        <source>Error creating %s</source>
-        <translation type="unfinished">%s සෑදීමේ දෝෂයකි</translation>
     </message>
     <message>
         <source>Error loading %s</source>

@@ -17,7 +17,7 @@ def run(cmd, **kwargs):
     try:
         return subprocess.run(cmd, **kwargs)
     except Exception as e:
-        sys.exit(e)
+        sys.exit(str(e))
 
 
 def main():
@@ -158,7 +158,13 @@ def main():
         if os.getenv("DANGER_RUN_CI_ON_HOST"):
             prefix = []
         else:
-            prefix = ["docker", "exec", container_id]
+            prefix = [
+                "docker",
+                "exec",
+                "--env",
+                "DANGER_RUN_CI_ON_HOST=1",  # Safe to set *inside* the container
+                container_id,
+            ]
 
         return run([*prefix, *cmd_inner], **kwargs)
 

@@ -14,6 +14,7 @@
 #include <test/fuzz/util.h>
 #include <test/fuzz/util/net.h>
 #include <test/util/setup_common.h>
+#include <test/util/time.h>
 #include <util/asmap.h>
 #include <util/chaintype.h>
 
@@ -116,7 +117,7 @@ FUZZ_TARGET(addrman, .init = initialize_addrman)
 {
     SeedRandomStateForTest(SeedRand::ZEROS);
     FuzzedDataProvider fuzzed_data_provider(buffer.data(), buffer.size());
-    SetMockTime(ConsumeTime(fuzzed_data_provider));
+    NodeClockContext clock_ctx{ConsumeTime(fuzzed_data_provider)};
     NetGroupManager netgroupman{ConsumeNetGroupManager(fuzzed_data_provider)};
     auto addr_man_ptr = std::make_unique<AddrManDeterministic>(netgroupman, fuzzed_data_provider, GetCheckRatio());
     if (fuzzed_data_provider.ConsumeBool()) {
@@ -144,7 +145,7 @@ FUZZ_TARGET(addrman, .init = initialize_addrman)
                     addresses.push_back(ConsumeAddress(fuzzed_data_provider));
                 }
                 auto net_addr = ConsumeNetAddr(fuzzed_data_provider);
-                auto time_penalty = ConsumeDuration(fuzzed_data_provider, /*min=*/0s, /*max=*/100000000s);
+                auto time_penalty = ConsumeDuration<std::chrono::seconds>(fuzzed_data_provider, /*min=*/0s, /*max=*/100000000s);
                 addr_man.Add(addresses, net_addr, time_penalty);
             },
             [&] {
@@ -201,7 +202,7 @@ FUZZ_TARGET(addrman_serdeser, .init = initialize_addrman)
 {
     SeedRandomStateForTest(SeedRand::ZEROS);
     FuzzedDataProvider fuzzed_data_provider(buffer.data(), buffer.size());
-    SetMockTime(ConsumeTime(fuzzed_data_provider));
+    NodeClockContext clock_ctx{ConsumeTime(fuzzed_data_provider)};
 
     NetGroupManager netgroupman{ConsumeNetGroupManager(fuzzed_data_provider)};
     AddrManDeterministic addr_man1{netgroupman, fuzzed_data_provider, GetCheckRatio()};

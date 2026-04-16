@@ -30,7 +30,7 @@ void initialize_transaction()
 FUZZ_TARGET(transaction, .init = initialize_transaction)
 {
     SeedRandomStateForTest(SeedRand::ZEROS);
-    DataStream ds{buffer};
+    SpanReader ds{buffer};
     bool valid_tx = true;
     const CTransaction tx = [&] {
         try {
@@ -41,10 +41,9 @@ FUZZ_TARGET(transaction, .init = initialize_transaction)
         }
     }();
     bool valid_mutable_tx = true;
-    DataStream ds_mtx{buffer};
     CMutableTransaction mutable_tx;
     try {
-        ds_mtx >> TX_WITH_WITNESS(mutable_tx);
+        SpanReader{buffer} >> TX_WITH_WITNESS(mutable_tx);
     } catch (const std::ios_base::failure&) {
         valid_mutable_tx = false;
     }
@@ -87,9 +86,8 @@ FUZZ_TARGET(transaction, .init = initialize_transaction)
     (void)RecursiveDynamicUsage(tx);
     (void)SignalsOptInRBF(tx);
 
-    CCoinsView coins_view;
-    const CCoinsViewCache coins_view_cache(&coins_view);
-    (void)AreInputsStandard(tx, coins_view_cache);
+    const CCoinsViewCache coins_view_cache{&CoinsViewEmpty::Get()};
+    (void)ValidateInputsStandardness(tx, coins_view_cache);
     (void)IsWitnessStandard(tx, coins_view_cache);
 
     if (tx.ComputeTotalSize() < 250'000) { // Avoid high memory usage (with msan) due to json encoding

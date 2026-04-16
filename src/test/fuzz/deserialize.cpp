@@ -38,18 +38,13 @@
 using kernel::CBlockFileInfo;
 using node::SnapshotMetadata;
 
-namespace {
-const BasicTestingSetup* g_setup;
-} // namespace
-
 void initialize_deserialize()
 {
     static const auto testing_setup = MakeNoLogFileContext<>();
-    g_setup = testing_setup.get();
 }
 
 #define FUZZ_TARGET_DESERIALIZE(name, code)                \
-    FUZZ_TARGET(name, .init = initialize_deserialize)         \
+    FUZZ_TARGET(name, .init = initialize_deserialize)      \
     {                                                      \
         try {                                              \
             code                                           \
@@ -81,9 +76,8 @@ T Deserialize(DataStream&& ds, const P& params)
 template <typename T, typename P>
 void DeserializeFromFuzzingInput(FuzzBufferType buffer, T&& obj, const P& params)
 {
-    DataStream ds{buffer};
     try {
-        ds >> params(obj);
+        SpanReader{buffer} >> params(obj);
     } catch (const std::ios_base::failure&) {
         throw invalid_fuzzing_input_exception();
     }
@@ -109,9 +103,8 @@ T Deserialize(DataStream ds)
 template <typename T>
 void DeserializeFromFuzzingInput(FuzzBufferType buffer, T&& obj)
 {
-    DataStream ds{buffer};
     try {
-        ds >> obj;
+        SpanReader{buffer} >> obj;
     } catch (const std::ios_base::failure&) {
         throw invalid_fuzzing_input_exception();
     }

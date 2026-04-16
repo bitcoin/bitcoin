@@ -14,7 +14,7 @@
 #ifndef BITCOIN_WALLET_TYPES_H
 #define BITCOIN_WALLET_TYPES_H
 
-#include <type_traits>
+#include <policy/fees/block_policy_estimator.h>
 
 namespace wallet {
 /**
@@ -30,6 +30,18 @@ enum class AddressPurpose {
     SEND,
     REFUND, //!< Never set in current code may be present in older wallet databases
 };
+
+struct CreatedTransactionResult
+{
+    CTransactionRef tx;
+    CAmount fee;
+    FeeCalculation fee_calc;
+    std::optional<unsigned int> change_pos;
+
+    CreatedTransactionResult(CTransactionRef _tx, CAmount _fee, std::optional<unsigned int> _change_pos, const FeeCalculation& _fee_calc)
+            : tx(_tx), fee(_fee), fee_calc(_fee_calc), change_pos(_change_pos) {}
+};
+
 } // namespace wallet
 
 #endif // BITCOIN_WALLET_TYPES_H

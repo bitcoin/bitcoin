@@ -83,13 +83,13 @@ class ConfArgsTest(BitcoinTestFramework):
         self.log.debug('Verifying that disabling of the config file means garbage inside of it does ' \
             'not prevent the node from starting, and message about existing config file is logged')
         ignored_file_message = [f'Data directory "{self.nodes[0].datadir_path}" contains a "bitcoin.conf" file which is explicitly ignored using -noconf.']
-        with self.nodes[0].assert_debug_log(timeout=60, expected_msgs=ignored_file_message):
+        with self.nodes[0].assert_debug_log(expected_msgs=ignored_file_message):
             self.start_node(0, extra_args=settings + ['-noconf'])
         self.stop_node(0)
 
         self.log.debug('Verifying no message appears when removing config file')
         os.remove(conf_path)
-        with self.nodes[0].assert_debug_log(timeout=60, expected_msgs=[], unexpected_msgs=ignored_file_message):
+        with self.nodes[0].assert_debug_log(expected_msgs=[], unexpected_msgs=ignored_file_message):
             self.start_node(0, extra_args=settings + ['-noconf'])
         self.stop_node(0)
 
@@ -319,7 +319,7 @@ class ConfArgsTest(BitcoinTestFramework):
 
         with self.nodes[0].assert_debug_log(expected_msgs=[
                 "Adding fixed seeds as 60 seconds have passed and addrman is empty",
-        ]):
+        ], timeout=2):
             self.nodes[0].setmocktime(start + 65)
         self.stop_node(0)
 
@@ -330,7 +330,7 @@ class ConfArgsTest(BitcoinTestFramework):
                 "Loaded 0 addresses from peers.dat",
                 "DNS seeding disabled",
                 "Adding fixed seeds as -dnsseed=0 (or IPv4/IPv6 connections are disabled via -onlynet) and neither -addnode nor -seednode are provided\n",
-        ]):
+        ], timeout=2):
             self.start_node(0, extra_args=['-dnsseed=0', '-fixedseeds=1'])
         self.stop_node(0)
         self.nodes[0].assert_start_raises_init_error(['-dnsseed=1', '-onlynet=i2p', '-i2psam=127.0.0.1:7656'], "Error: Incompatible options: -dnsseed=1 was explicitly specified, but -onlynet forbids connections to IPv4/IPv6")
@@ -342,7 +342,7 @@ class ConfArgsTest(BitcoinTestFramework):
                 "Loaded 0 addresses from peers.dat",
                 "DNS seeding disabled",
                 "Fixed seeds are disabled",
-        ]):
+        ], timeout=2):
             self.start_node(0, extra_args=['-dnsseed=0', '-fixedseeds=0'])
         self.stop_node(0)
 
@@ -361,7 +361,7 @@ class ConfArgsTest(BitcoinTestFramework):
             self.start_node(0, extra_args=['-dnsseed=0', '-fixedseeds=1', '-addnode=fakenodeaddr', f'-mocktime={start}', UNREACHABLE_PROXY_ARG])
         with self.nodes[0].assert_debug_log(expected_msgs=[
                 "Adding fixed seeds as 60 seconds have passed and addrman is empty",
-        ]):
+        ], timeout=2):
             self.nodes[0].setmocktime(start + 65)
         self.stop_node(0)
 
@@ -386,7 +386,7 @@ class ConfArgsTest(BitcoinTestFramework):
         # If the user did not disable -dnsseed, but it was soft-disabled because they provided -connect,
         # they shouldn't see a warning about -dnsseed being ignored.
         with self.nodes[0].assert_debug_log(expected_msgs=addcon_thread_started,
-                unexpected_msgs=dnsseed_ignored):
+                unexpected_msgs=dnsseed_ignored, timeout=2):
             self.restart_node(0, extra_args=['-connect=fakeaddress1', UNREACHABLE_PROXY_ARG])
 
         # We have to supply expected_msgs as it's a required argument
@@ -394,7 +394,7 @@ class ConfArgsTest(BitcoinTestFramework):
         # These cases test for -connect being supplied but only to disable it
         for connect_arg in ['-connect=0', '-noconnect']:
             with self.nodes[0].assert_debug_log(expected_msgs=addcon_thread_started,
-                    unexpected_msgs=seednode_ignored):
+                    unexpected_msgs=seednode_ignored, timeout=2):
                 self.restart_node(0, extra_args=[connect_arg, '-seednode=fakeaddress2'])
 
             # Make sure -noconnect soft-disables -listen and -dnsseed.

@@ -18,17 +18,9 @@ fn get_pathspecs_exclude_whitespace() -> Vec<String> {
             "contrib/windeploy/win-codesign.cert",
             "doc/README_windows.txt",
             // Temporary excludes, or existing violations
-            "contrib/init/bitcoind.openrc",
-            "contrib/macdeploy/macdeployqtplus",
-            "src/crypto/sha256_sse4.cpp",
             "src/qt/res/src/*.svg",
             "test/functional/test_framework/crypto/ellswift_decode_test_vectors.csv",
             "test/functional/test_framework/crypto/xswiftec_inv_test_vectors.csv",
-            "contrib/qos/tc.sh",
-            "contrib/verify-commits/gpg.sh",
-            "src/univalue/include/univalue_escapes.h",
-            "src/univalue/test/object.cpp",
-            "test/lint/git-subtree-check.sh",
         ]
         .iter()
         .map(|s| format!(":(exclude){s}")),

@@ -3,9 +3,9 @@ See: https://en.cppreference.com/w/cpp/preprocessor/include.html.
 
 --- a/iwyu_path_util.cc
 +++ b/iwyu_path_util.cc
-@@ -211,7 +211,7 @@ bool IsQuotedInclude(const string& s) {
+@@ -222,7 +222,7 @@ bool IsQuotedInclude(StringRef s) {
  }
-
+ 
  string AddQuotes(string include_name, bool angled) {
 -  if (angled) {
 +  if (true) {
@@ -19,7 +19,7 @@ See: https://github.com/include-what-you-use/include-what-you-use/blob/clang_21/
 
 --- a/iwyu_include_picker.cc
 +++ b/iwyu_include_picker.cc
-@@ -100,20 +100,20 @@ const IncludeMapEntry libc_symbol_map[] = {
+@@ -104,20 +104,20 @@ const IncludeMapEntry libc_symbol_map[] = {
    // equal.  The visibility on the symbol-name is ignored; by convention
    // we always set it to kPrivate.
    { "_POSIX_VDISABLE", kPrivate, "<unistd.h>", kPublic },
@@ -46,7 +46,7 @@ See: https://github.com/include-what-you-use/include-what-you-use/blob/clang_21/
    { "error_t", kPrivate, "<argp.h>", kPublic },
    { "error_t", kPrivate, "<argz.h>", kPublic },
    { "FD_CLR", kPrivate, "<sys/select.h>", kPublic },
-@@ -122,10 +122,10 @@ const IncludeMapEntry libc_symbol_map[] = {
+@@ -126,10 +126,10 @@ const IncludeMapEntry libc_symbol_map[] = {
    { "fd_set", kPrivate, "<sys/select.h>", kPublic },
    { "FD_SETSIZE", kPrivate, "<sys/select.h>", kPublic },
    { "FD_ZERO", kPrivate, "<sys/select.h>", kPublic },
@@ -61,7 +61,7 @@ See: https://github.com/include-what-you-use/include-what-you-use/blob/clang_21/
    { "fsblkcnt_t", kPrivate, "<sys/types.h>", kPublic },
    { "fsfilcnt_t", kPrivate, "<sys/types.h>", kPublic },
    { "getopt", kPrivate, "<unistd.h>", kPublic },
-@@ -135,31 +135,31 @@ const IncludeMapEntry libc_symbol_map[] = {
+@@ -139,47 +139,47 @@ const IncludeMapEntry libc_symbol_map[] = {
    { "in_addr_t", kPrivate, "<netinet/in.h>", kPublic },
    { "in_port_t", kPrivate, "<netinet/in.h>", kPublic },
    { "id_t", kPrivate, "<sys/types.h>", kPublic },
@@ -77,20 +77,52 @@ See: https://github.com/include-what-you-use/include-what-you-use/blob/clang_21/
 -  { "int16_t", kPrivate, "<stdint.h>", kPublic },
 -  { "int32_t", kPrivate, "<stdint.h>", kPublic },
 -  { "int64_t", kPrivate, "<stdint.h>", kPublic },
+-  { "int_fast8_t", kPrivate, "<stdint.h>", kPublic },
+-  { "int_fast16_t", kPrivate, "<stdint.h>", kPublic },
+-  { "int_fast32_t", kPrivate, "<stdint.h>", kPublic },
+-  { "int_fast64_t", kPrivate, "<stdint.h>", kPublic },
+-  { "int_least8_t", kPrivate, "<stdint.h>", kPublic },
+-  { "int_least16_t", kPrivate, "<stdint.h>", kPublic },
+-  { "int_least32_t", kPrivate, "<stdint.h>", kPublic },
+-  { "int_least64_t", kPrivate, "<stdint.h>", kPublic },
 -  { "uint8_t", kPrivate, "<stdint.h>", kPublic },
 -  { "uint16_t", kPrivate, "<stdint.h>", kPublic },
 -  { "uint32_t", kPrivate, "<stdint.h>", kPublic },
 -  { "uint64_t", kPrivate, "<stdint.h>", kPublic },
+-  { "uint_fast8_t", kPrivate, "<stdint.h>", kPublic },
+-  { "uint_fast16_t", kPrivate, "<stdint.h>", kPublic },
+-  { "uint_fast32_t", kPrivate, "<stdint.h>", kPublic },
+-  { "uint_fast64_t", kPrivate, "<stdint.h>", kPublic },
+-  { "uint_least8_t", kPrivate, "<stdint.h>", kPublic },
+-  { "uint_least16_t", kPrivate, "<stdint.h>", kPublic },
+-  { "uint_least32_t", kPrivate, "<stdint.h>", kPublic },
+-  { "uint_least64_t", kPrivate, "<stdint.h>", kPublic },
 -  { "intptr_t", kPrivate, "<stdint.h>", kPublic },
 -  { "uintptr_t", kPrivate, "<stdint.h>", kPublic },
 +  { "int8_t", kPrivate, "<stdint.h>", kPrivate },
 +  { "int16_t", kPrivate, "<stdint.h>", kPrivate },
 +  { "int32_t", kPrivate, "<stdint.h>", kPrivate },
 +  { "int64_t", kPrivate, "<stdint.h>", kPrivate },
++  { "int_fast8_t", kPrivate, "<stdint.h>", kPrivate },
++  { "int_fast16_t", kPrivate, "<stdint.h>", kPrivate },
++  { "int_fast32_t", kPrivate, "<stdint.h>", kPrivate },
++  { "int_fast64_t", kPrivate, "<stdint.h>", kPrivate },
++  { "int_least8_t", kPrivate, "<stdint.h>", kPrivate },
++  { "int_least16_t", kPrivate, "<stdint.h>", kPrivate },
++  { "int_least32_t", kPrivate, "<stdint.h>", kPrivate },
++  { "int_least64_t", kPrivate, "<stdint.h>", kPrivate },
 +  { "uint8_t", kPrivate, "<stdint.h>", kPrivate },
 +  { "uint16_t", kPrivate, "<stdint.h>", kPrivate },
 +  { "uint32_t", kPrivate, "<stdint.h>", kPrivate },
 +  { "uint64_t", kPrivate, "<stdint.h>", kPrivate },
++  { "uint_fast8_t", kPrivate, "<stdint.h>", kPrivate },
++  { "uint_fast16_t", kPrivate, "<stdint.h>", kPrivate },
++  { "uint_fast32_t", kPrivate, "<stdint.h>", kPrivate },
++  { "uint_fast64_t", kPrivate, "<stdint.h>", kPrivate },
++  { "uint_least8_t", kPrivate, "<stdint.h>", kPrivate },
++  { "uint_least16_t", kPrivate, "<stdint.h>", kPrivate },
++  { "uint_least32_t", kPrivate, "<stdint.h>", kPrivate },
++  { "uint_least64_t", kPrivate, "<stdint.h>", kPrivate },
 +  { "intptr_t", kPrivate, "<stdint.h>", kPrivate },
 +  { "uintptr_t", kPrivate, "<stdint.h>", kPrivate },
    { "iovec", kPrivate, "<sys/uio.h>", kPublic },
@@ -114,7 +146,7 @@ See: https://github.com/include-what-you-use/include-what-you-use/blob/clang_21/
    { "mcontext_t", kPrivate, "<ucontext.h>", kPublic },
    { "mode_t", kPrivate, "<sys/types.h>", kPublic },
    { "nl_item", kPrivate, "<nl_types.h>", kPublic },
-@@ -175,8 +175,8 @@ const IncludeMapEntry libc_symbol_map[] = {
+@@ -195,8 +195,8 @@ const IncludeMapEntry libc_symbol_map[] = {
    { "optind", kPrivate, "<unistd.h>", kPublic },
    { "optopt", kPrivate, "<unistd.h>", kPublic },
    { "pid_t", kPrivate, "<sys/types.h>", kPublic },
@@ -125,7 +157,7 @@ See: https://github.com/include-what-you-use/include-what-you-use/blob/clang_21/
    { "pthread_attr_t", kPrivate, "<pthread.h>", kPublic },
    { "pthread_cond_t", kPrivate, "<pthread.h>", kPublic },
    { "pthread_condattr_t", kPrivate, "<pthread.h>", kPublic },
-@@ -187,7 +187,7 @@ const IncludeMapEntry libc_symbol_map[] = {
+@@ -207,7 +207,7 @@ const IncludeMapEntry libc_symbol_map[] = {
    { "pthread_rwlock_t", kPrivate, "<pthread.h>", kPublic },
    { "pthread_rwlockattr_t", kPrivate, "<pthread.h>", kPublic },
    { "pthread_t", kPrivate, "<pthread.h>", kPublic },
@@ -134,7 +166,7 @@ See: https://github.com/include-what-you-use/include-what-you-use/blob/clang_21/
    { "regex_t", kPrivate, "<regex.h>", kPublic },
    { "regmatch_t", kPrivate, "<regex.h>", kPublic },
    { "regoff_t", kPrivate, "<regex.h>", kPublic },
-@@ -218,51 +218,51 @@ const IncludeMapEntry libc_symbol_map[] = {
+@@ -238,54 +238,54 @@ const IncludeMapEntry libc_symbol_map[] = {
    { "SCHED_FIFO", kPrivate, "<sched.h>", kPublic },
    { "SCHED_OTHER", kPrivate, "<sched.h>", kPublic },
    { "SCHED_RR", kPrivate, "<sched.h>", kPublic },
@@ -167,7 +199,10 @@ See: https://github.com/include-what-you-use/include-what-you-use/blob/clang_21/
    { "timer_t", kPrivate, "<sys/types.h>", kPublic },
 -  { "timespec", kPrivate, "<time.h>", kPublic },
 +  { "timespec", kPrivate, "<time.h>", kPrivate },
-   { "timeval", kPrivate, "<sys/time.h>", kPublic },
+   { "timeval", kPrivate, "<sys/time.h>", kPublic },  // 'canonical' location for timeval
+   { "timeval", kPrivate, "<sys/resource.h>", kPublic },
+   { "timeval", kPrivate, "<sys/select.h>", kPublic },
+   { "timeval", kPrivate, "<utmpx.h>", kPublic },
 -  { "tm", kPrivate, "<time.h>", kPublic },
 +  { "tm", kPrivate, "<time.h>", kPrivate },
    { "u_char", kPrivate, "<sys/types.h>", kPublic },
@@ -212,7 +247,7 @@ See: https://github.com/include-what-you-use/include-what-you-use/blob/clang_21/
    { "IBSHIFT", kPrivate, "<asm/termbits.h>", kPublic },
    { "MAP_POPULATE", kPrivate, "<sys/mman.h>", kPublic },
    { "MAP_POPULATE", kPrivate, "<linux/mman.h>", kPublic },
-@@ -270,22 +270,22 @@ const IncludeMapEntry libc_symbol_map[] = {
+@@ -293,22 +293,22 @@ const IncludeMapEntry libc_symbol_map[] = {
    { "MAP_STACK", kPrivate, "<linux/mman.h>", kPublic },
    { "MAXHOSTNAMELEN", kPrivate, "<sys/param.h>", kPublic },
    { "MAXHOSTNAMELEN", kPrivate, "<protocols/timed.h>", kPublic },
@@ -248,7 +283,7 @@ See: https://github.com/include-what-you-use/include-what-you-use/blob/clang_21/
    { "NULL", kPrivate, "<clocale>", kPublic },
    { "NULL", kPrivate, "<cstddef>", kPublic },
    { "NULL", kPrivate, "<cstdio>", kPublic },
-@@ -293,13 +293,13 @@ const IncludeMapEntry libc_symbol_map[] = {
+@@ -316,13 +316,13 @@ const IncludeMapEntry libc_symbol_map[] = {
    { "NULL", kPrivate, "<cstring>", kPublic },
    { "NULL", kPrivate, "<ctime>", kPublic },
    { "NULL", kPrivate, "<cwchar>", kPublic },
@@ -266,10 +301,10 @@ See: https://github.com/include-what-you-use/include-what-you-use/blob/clang_21/
 +  { "NULL", kPrivate, "<time.h>", kPrivate },
 +  { "NULL", kPrivate, "<wchar.h>", kPrivate },
 +  { "offsetof", kPrivate, "<stddef.h>", kPrivate },
- };
- 
- // Common kludges for C++ standard libraries
-@@ -355,7 +355,7 @@ const IncludeMapEntry libc_include_map[] = {
+   // Auxiliary vector entry types.
+   { "AT_BASE", kPrivate, "<sys/auxv.h>", kPublic },
+   { "AT_BASE_PLATFORM", kPrivate, "<sys/auxv.h>", kPublic },
+@@ -409,7 +409,7 @@ const IncludeMapEntry libc_include_map[] = {
    { "<bits/a.out.h>", kPrivate, "<a.out.h>", kPublic },
    { "<bits/auxv.h>", kPrivate, "<sys/auxv.h>", kPublic },
    { "<bits/byteswap.h>", kPrivate, "<byteswap.h>", kPublic },
@@ -278,7 +313,7 @@ See: https://github.com/include-what-you-use/include-what-you-use/blob/clang_21/
    { "<bits/confname.h>", kPrivate, "<unistd.h>", kPublic },
    { "<bits/dirent.h>", kPrivate, "<dirent.h>", kPublic },
    { "<bits/dlfcn.h>", kPrivate, "<dlfcn.h>", kPublic },
-@@ -363,18 +363,18 @@ const IncludeMapEntry libc_include_map[] = {
+@@ -417,18 +417,18 @@ const IncludeMapEntry libc_include_map[] = {
    { "<bits/endian.h>", kPrivate, "<endian.h>", kPublic },
    { "<bits/environments.h>", kPrivate, "<unistd.h>", kPublic },
    { "<bits/epoll.h>", kPrivate, "<sys/epoll.h>", kPublic },
@@ -304,7 +339,7 @@ See: https://github.com/include-what-you-use/include-what-you-use/blob/clang_21/
    { "<bits/inotify.h>", kPrivate, "<sys/inotify.h>", kPublic },
    { "<bits/ioctl-types.h>", kPrivate, "<sys/ioctl.h>", kPublic },
    { "<bits/ioctls.h>", kPrivate, "<sys/ioctl.h>", kPublic },
-@@ -382,24 +382,24 @@ const IncludeMapEntry libc_include_map[] = {
+@@ -436,24 +436,24 @@ const IncludeMapEntry libc_include_map[] = {
    { "<bits/ipctypes.h>", kPrivate, "<sys/ipc.h>", kPublic },
    { "<bits/libio-ldbl.h>", kPrivate, "<libio.h>", kPublic },
    { "<bits/link.h>", kPrivate, "<link.h>", kPublic },
@@ -337,7 +372,7 @@ See: https://github.com/include-what-you-use/include-what-you-use/blob/clang_21/
    { "<bits/posix_opt.h>", kPrivate, "<unistd.h>", kPublic },
    { "<bits/printf-ldbl.h>", kPrivate, "<printf.h>", kPublic },
    { "<bits/pthreadtypes.h>", kPrivate, "<pthread.h>", kPublic },
-@@ -409,17 +409,17 @@ const IncludeMapEntry libc_include_map[] = {
+@@ -463,17 +463,17 @@ const IncludeMapEntry libc_include_map[] = {
    { "<bits/select2.h>", kPrivate, "<sys/select.h>", kPublic },
    { "<bits/sem.h>", kPrivate, "<sys/sem.h>", kPublic },
    { "<bits/semaphore.h>", kPrivate, "<semaphore.h>", kPublic },
@@ -365,7 +400,7 @@ See: https://github.com/include-what-you-use/include-what-you-use/blob/clang_21/
    { "<bits/sockaddr.h>", kPrivate, "<sys/un.h>", kPublic },
    { "<bits/socket.h>", kPrivate, "<sys/socket.h>", kPublic },
    { "<bits/socket2.h>", kPrivate, "<sys/socket.h>", kPublic },
-@@ -429,22 +429,22 @@ const IncludeMapEntry libc_include_map[] = {
+@@ -483,22 +483,22 @@ const IncludeMapEntry libc_include_map[] = {
    { "<bits/statfs.h>", kPrivate, "<sys/statfs.h>", kPublic },
    { "<bits/statvfs.h>", kPrivate, "<sys/statvfs.h>", kPublic },
    { "<bits/statx-generic.h>", kPrivate, "<sys/stat.h>", kPublic },
@@ -400,7 +435,7 @@ See: https://github.com/include-what-you-use/include-what-you-use/blob/clang_21/
    { "<bits/syscall.h>", kPrivate, "<sys/syscall.h>", kPublic },
    { "<bits/sysctl.h>", kPrivate, "<sys/sysctl.h>", kPublic },
    { "<bits/syslog-ldbl.h>", kPrivate, "<sys/syslog.h>", kPrivate },
-@@ -459,12 +459,12 @@ const IncludeMapEntry libc_include_map[] = {
+@@ -515,12 +515,12 @@ const IncludeMapEntry libc_include_map[] = {
    { "<bits/termios-struct.h>", kPrivate, "<termios.h>", kPublic },
    { "<bits/termios-tcflow.h>", kPrivate, "<termios.h>", kPublic },
    { "<bits/termios.h>", kPrivate, "<termios.h>", kPublic },
@@ -413,9 +448,9 @@ See: https://github.com/include-what-you-use/include-what-you-use/blob/clang_21/
 -  { "<bits/types/siginfo_t.h>", kPrivate, "<signal.h>", kPublic },
 +  { "<bits/types/siginfo_t.h>", kPrivate, "<signal.h>", kPrivate },
    { "<bits/types/siginfo_t.h>", kPrivate, "<sys/wait.h>", kPublic },
-   { "<bits/uio.h>", kPrivate, "<sys/uio.h>", kPublic },
-   { "<bits/unistd.h>", kPrivate, "<unistd.h>", kPublic },
-@@ -474,11 +474,11 @@ const IncludeMapEntry libc_include_map[] = {
+   { "<bits/types/struct_rusage.h>", kPrivate, "<sys/resource.h>", kPublic },
+   { "<bits/types/struct_sched_param.h>", kPrivate, "<sched.h>", kPublic },
+@@ -532,11 +532,11 @@ const IncludeMapEntry libc_include_map[] = {
    { "<bits/utsname.h>", kPrivate, "<sys/utsname.h>", kPublic },
    { "<bits/waitflags.h>", kPrivate, "<sys/wait.h>", kPublic },
    { "<bits/waitstatus.h>", kPrivate, "<sys/wait.h>", kPublic },
@@ -432,7 +467,7 @@ See: https://github.com/include-what-you-use/include-what-you-use/blob/clang_21/
    { "<bits/xtitypes.h>", kPrivate, "<stropts.h>", kPublic },
    // Sometimes libc tells you what mapping to do via an '#error':
    // # error "Never use <bits/dlfcn.h> directly; include <dlfcn.h> instead."
-@@ -488,7 +488,7 @@ const IncludeMapEntry libc_include_map[] = {
+@@ -546,7 +546,7 @@ const IncludeMapEntry libc_include_map[] = {
    { "<bits/a.out.h>", kPrivate, "<a.out.h>", kPublic },
    { "<bits/byteswap-16.h>", kPrivate, "<byteswap.h>", kPublic },
    { "<bits/byteswap.h>", kPrivate, "<byteswap.h>", kPublic },
@@ -441,7 +476,7 @@ See: https://github.com/include-what-you-use/include-what-you-use/blob/clang_21/
    { "<bits/confname.h>", kPrivate, "<unistd.h>", kPublic },
    { "<bits/dirent.h>", kPrivate, "<dirent.h>", kPublic },
    { "<bits/dlfcn.h>", kPrivate, "<dlfcn.h>", kPublic },
-@@ -498,38 +498,38 @@ const IncludeMapEntry libc_include_map[] = {
+@@ -556,38 +556,38 @@ const IncludeMapEntry libc_include_map[] = {
    { "<bits/eventfd.h>", kPrivate, "<sys/eventfd.h>", kPublic },
    { "<bits/fcntl-linux.h>", kPrivate, "<fcntl.h>", kPublic },
    { "<bits/fcntl.h>", kPrivate, "<fcntl.h>", kPublic },
@@ -495,7 +530,7 @@ See: https://github.com/include-what-you-use/include-what-you-use/blob/clang_21/
    { "<bits/timerfd.h>", kPrivate, "<sys/timerfd.h>", kPublic },
    { "<bits/typesizes.h>", kPrivate, "<sys/types.h>", kPublic },
    // Top-level #includes that just forward to another file:
-@@ -541,13 +541,13 @@ const IncludeMapEntry libc_include_map[] = {
+@@ -599,13 +599,13 @@ const IncludeMapEntry libc_include_map[] = {
    // on the POSIX.1-2024 list, I just choose the top-level one.
    { "<sys/aio.h>", kPrivate, "<aio.h>", kPublic },
    { "<sys/dirent.h>", kPrivate, "<dirent.h>", kPublic },
@@ -512,7 +547,7 @@ See: https://github.com/include-what-you-use/include-what-you-use/blob/clang_21/
    { "<sys/syslog.h>", kPrivate, "<syslog.h>", kPublic },
    { "<sys/termios.h>", kPrivate, "<termios.h>", kPublic },
    { "<sys/unistd.h>", kPrivate, "<unistd.h>", kPublic },
-@@ -567,21 +567,21 @@ const IncludeMapEntry libc_include_map[] = {
+@@ -625,21 +625,21 @@ const IncludeMapEntry libc_include_map[] = {
    { "<asm/unistd_64.h>", kPrivate, "<asm/unistd.h>", kPrivate },
    // I don't know what grep would have found these.  I found them
    // via user report.
@@ -535,11 +570,11 @@ See: https://github.com/include-what-you-use/include-what-you-use/blob/clang_21/
    { "<sys/ustat.h>", kPrivate, "<ustat.h>", kPublic },
    // Exports guaranteed by the C standard
 -  { "<stdint.h>", kPublic, "<inttypes.h>", kPublic },
-+  { "<stdint.h>", kPrivate, "<inttypes.h>", kPrivate },
++  { "<cstdint>", kPublic, "<cinttypes>", kPublic },
  };
  
  const IncludeMapEntry stdlib_c_include_map[] = {
-@@ -600,32 +600,32 @@ const IncludeMapEntry stdlib_c_include_map[] = {
+@@ -658,32 +658,32 @@ const IncludeMapEntry stdlib_c_include_map[] = {
    // https://github.com/cplusplus/draft/blob/c+%2B20/source/lib-intro.tex
    //
    // $ curl -s -N https://raw.githubusercontent.com/cplusplus/draft/c%2B%2B20/source/lib-intro.tex | sed -n '/begin{multicolfloattable}.*{headers.cpp.c}/,/end{multicolfloattable}/p' | grep tcode | perl -nle 'm/tcode{<c(.*)>}/ && print qq@  { "<$1.h>", kPublic, "<c$1>", kPublic },@' | sort
@@ -548,7 +583,12 @@ See: https://github.com/include-what-you-use/include-what-you-use/blob/clang_21/
 -  { "<ctype.h>", kPublic, "<cctype>", kPublic },
 -  { "<errno.h>", kPublic, "<cerrno>", kPublic },
 -  { "<fenv.h>", kPublic, "<cfenv>", kPublic },
--  { "<float.h>", kPublic, "<cfloat>", kPublic },
++  { "<assert.h>", kPrivate, "<cassert>", kPublic },
++  { "<complex.h>", kPrivate, "<ccomplex>", kPublic },
++  { "<ctype.h>", kPrivate, "<cctype>", kPublic },
++  { "<errno.h>", kPrivate, "<cerrno>", kPublic },
++  { "<fenv.h>", kPrivate, "<cfenv>", kPublic },
+   { "<float.h>", kPublic, "<cfloat>", kPublic },
 -  { "<inttypes.h>", kPublic, "<cinttypes>", kPublic },
 -  { "<iso646.h>", kPublic, "<ciso646>", kPublic },
 -  { "<limits.h>", kPublic, "<climits>", kPublic },
@@ -569,12 +609,6 @@ See: https://github.com/include-what-you-use/include-what-you-use/blob/clang_21/
 -  { "<uchar.h>", kPublic, "<cuchar>", kPublic },
 -  { "<wchar.h>", kPublic, "<cwchar>", kPublic },
 -  { "<wctype.h>", kPublic, "<cwctype>", kPublic },
-+  { "<assert.h>", kPrivate, "<cassert>", kPublic },
-+  { "<complex.h>", kPrivate, "<ccomplex>", kPublic },
-+  { "<ctype.h>", kPrivate, "<cctype>", kPublic },
-+  { "<errno.h>", kPrivate, "<cerrno>", kPublic },
-+  { "<fenv.h>", kPrivate, "<cfenv>", kPublic },
-+  { "<float.h>", kPrivate, "<cfloat>", kPublic },
 +  { "<inttypes.h>", kPrivate, "<cinttypes>", kPublic },
 +  { "<iso646.h>", kPrivate, "<ciso646>", kPublic },
 +  { "<limits.h>", kPrivate, "<climits>", kPublic },

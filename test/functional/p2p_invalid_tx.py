@@ -179,6 +179,7 @@ class InvalidTxRequestTest(BitcoinTestFramework):
         self.log.info('Send the block that includes the previous orphan ... ')
         with node.assert_debug_log(["Erased 1 orphan transaction(s) included or conflicted by block"]):
             node.p2ps[0].send_blocks_and_test([block_A], node, success=True)
+            node.syncwithvalidationinterfacequeue()
 
         self.log.info('Test that a transaction in the orphan pool conflicts with a new tip block causes erase this transaction from the orphan pool')
         tx_withhold_until_block_B = CTransaction()
@@ -205,6 +206,7 @@ class InvalidTxRequestTest(BitcoinTestFramework):
         self.log.info('Send the block that includes a transaction which conflicts with the previous orphan ... ')
         with node.assert_debug_log(["Erased 1 orphan transaction(s) included or conflicted by block"]):
             node.p2ps[0].send_blocks_and_test([block_B], node, success=True)
+            node.syncwithvalidationinterfacequeue()
 
 
 if __name__ == '__main__':

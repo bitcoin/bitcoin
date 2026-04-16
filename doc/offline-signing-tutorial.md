@@ -4,7 +4,7 @@ This tutorial will describe how to use two instances of Bitcoin Core, one online
 
 Maintaining an air-gap between private keys and any network connections drastically reduces the opportunity for those keys to be exfiltrated from the user.
 
-This workflow uses [Partially Signed Bitcoin Transactions](https://github.com/bitcoin/bitcoin/blob/master/doc/psbt.md) (PSBTs) to transfer the transaction to and from the offline wallet for signing using the private keys.
+This workflow uses [Partially Signed Bitcoin Transactions](/doc/psbt.md) (PSBTs) to transfer the transaction to and from the offline wallet for signing using the private keys.
 
 > [!NOTE]
 > While this tutorial demonstrates the process using `signet` network, you should omit the `-signet` flag in the provided commands when working with `mainnet`.
@@ -37,7 +37,7 @@ We are going to first create an `offline_wallet` on the offline host. We will th
 `bitcoin rpc` can also be substituted for `bitcoin-cli`.
 
 > [!NOTE]
-> The use of a passphrase is crucial to encrypt the wallet.dat file. This encryption ensures that even if an unauthorized individual gains access to the offline host, they won't be able to access the wallet's contents. Further details about securing your wallet can be found in  [Managing the Wallet](https://github.com/bitcoin/bitcoin/blob/master/doc/managing-wallets.md#12-encrypting-the-wallet)
+> The use of a passphrase is crucial to encrypt the wallet.dat file. This encryption ensures that even if an unauthorized individual gains access to the offline host, they won't be able to access the wallet's contents. Further details about securing your wallet can be found in  [Managing the Wallet](/doc/managing-wallets.md#12-encrypting-the-wallet)
 
 2. Export the public key-only descriptors from the offline host to a JSON file named `descriptors.json`. We use `jq` here to extract the `.descriptors` field from the full RPC response.
 

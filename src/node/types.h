@@ -43,14 +43,19 @@ struct BlockCreateOptions {
     bool use_mempool{true};
     /**
      * The default reserved weight for the fixed-size block header,
-     * transaction count and coinbase transaction.
+     * transaction count and coinbase transaction. Minimum: 2000 weight units
+     * (MINIMUM_BLOCK_RESERVED_WEIGHT).
+     *
+     * Providing a value overrides the `-blockreservedweight` startup setting.
+     * Cap'n Proto IPC clients currently cannot leave this field unset, so they
+     * always provide a value.
      */
-    size_t block_reserved_weight{DEFAULT_BLOCK_RESERVED_WEIGHT};
+    std::optional<size_t> block_reserved_weight{};
     /**
      * The maximum additional sigops which the pool will add in coinbase
      * transaction outputs.
      */
-    size_t coinbase_output_max_additional_sigops{400};
+    size_t coinbase_output_max_additional_sigops{DEFAULT_COINBASE_OUTPUT_MAX_ADDITIONAL_SIGOPS};
     /**
      * Script to put in the coinbase transaction. The default is an
      * anyone-can-spend dummy.
@@ -67,6 +72,10 @@ struct BlockCreateOptions {
      * coinbase_max_additional_weight and coinbase_output_max_additional_sigops.
      */
     CScript coinbase_output_script{CScript() << OP_TRUE};
+    /**
+     * Whether to include an OP_0 as a dummy extraNonce in the template's coinbase
+     */
+    bool include_dummy_extranonce{false};
 };
 
 struct BlockWaitOptions {

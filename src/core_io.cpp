@@ -11,10 +11,7 @@
 #include <consensus/validation.h>
 #include <crypto/hex_base.h>
 #include <key_io.h>
-// IWYU incorrectly suggests replacing this header
-// with forward declarations.
-// See https://github.com/include-what-you-use/include-what-you-use/issues/1886.
-#include <primitives/block.h> // IWYU pragma: keep
+#include <primitives/block.h>
 #include <primitives/transaction.h>
 #include <script/descriptor.h>
 #include <script/interpreter.h>
@@ -174,7 +171,7 @@ static bool DecodeTx(CMutableTransaction& tx, const std::vector<unsigned char>& 
     // Try decoding with extended serialization support, and remember if the result successfully
     // consumes the entire input.
     if (try_witness) {
-        DataStream ssData(tx_data);
+        SpanReader ssData{tx_data};
         try {
             ssData >> TX_WITH_WITNESS(tx_extended);
             if (ssData.empty()) ok_extended = true;
@@ -192,7 +189,7 @@ static bool DecodeTx(CMutableTransaction& tx, const std::vector<unsigned char>& 
 
     // Try decoding with legacy serialization, and remember if the result successfully consumes the entire input.
     if (try_no_witness) {
-        DataStream ssData(tx_data);
+        SpanReader ssData{tx_data};
         try {
             ssData >> TX_NO_WITNESS(tx_legacy);
             if (ssData.empty()) ok_legacy = true;
@@ -239,9 +236,8 @@ bool DecodeHexBlockHeader(CBlockHeader& header, const std::string& hex_header)
     if (!IsHex(hex_header)) return false;
 
     const std::vector<unsigned char> header_data{ParseHex(hex_header)};
-    DataStream ser_header{header_data};
     try {
-        ser_header >> header;
+        SpanReader{header_data} >> header;
     } catch (const std::exception&) {
         return false;
     }
@@ -254,9 +250,8 @@ bool DecodeHexBlk(CBlock& block, const std::string& strHexBlk)
         return false;
 
     std::vector<unsigned char> blockData(ParseHex(strHexBlk));
-    DataStream ssBlock(blockData);
     try {
-        ssBlock >> TX_WITH_WITNESS(block);
+        SpanReader{blockData} >> TX_WITH_WITNESS(block);
     }
     catch (const std::exception&) {
         return false;
@@ -439,7 +434,7 @@ void TxToUniv(const CTransaction& tx, const uint256& block_hash, UniValue& entry
     entry.pushKV("size", tx.ComputeTotalSize());
     entry.pushKV("vsize", (GetTransactionWeight(tx) + WITNESS_SCALE_FACTOR - 1) / WITNESS_SCALE_FACTOR);
     entry.pushKV("weight", GetTransactionWeight(tx));
-    entry.pushKV("locktime", (int64_t)tx.nLockTime);
+    entry.pushKV("locktime", tx.nLockTime);
 
     UniValue vin{UniValue::VARR};
     vin.reserve(tx.vin.size());
@@ -457,7 +452,7 @@ void TxToUniv(const CTransaction& tx, const uint256& block_hash, UniValue& entry
             in.pushKV("coinbase", HexStr(txin.scriptSig));
         } else {
             in.pushKV("txid", txin.prevout.hash.GetHex());
-            in.pushKV("vout", (int64_t)txin.prevout.n);
+            in.pushKV("vout", txin.prevout.n);
             UniValue o(UniValue::VOBJ);
             o.pushKV("asm", ScriptToAsmStr(txin.scriptSig, true));
             o.pushKV("hex", HexStr(txin.scriptSig));
@@ -482,14 +477,14 @@ void TxToUniv(const CTransaction& tx, const uint256& block_hash, UniValue& entry
                 ScriptToUniv(prev_txout.scriptPubKey, /*out=*/o_script_pub_key, /*include_hex=*/true, /*include_address=*/true);
 
                 UniValue p(UniValue::VOBJ);
-                p.pushKV("generated", bool(prev_coin.fCoinBase));
-                p.pushKV("height", uint64_t(prev_coin.nHeight));
+                p.pushKV("generated", static_cast<bool>(prev_coin.fCoinBase));
+                p.pushKV("height", prev_coin.nHeight);
                 p.pushKV("value", ValueFromAmount(prev_txout.nValue));
                 p.pushKV("scriptPubKey", std::move(o_script_pub_key));
                 in.pushKV("prevout", std::move(p));
             }
         }
-        in.pushKV("sequence", (int64_t)txin.nSequence);
+        in.pushKV("sequence", txin.nSequence);
         vin.push_back(std::move(in));
     }
     entry.pushKV("vin", std::move(vin));
@@ -502,7 +497,7 @@ void TxToUniv(const CTransaction& tx, const uint256& block_hash, UniValue& entry
         UniValue out(UniValue::VOBJ);
 
         out.pushKV("value", ValueFromAmount(txout.nValue));
-        out.pushKV("n", (int64_t)i);
+        out.pushKV("n", i);
 
         UniValue o(UniValue::VOBJ);
         ScriptToUniv(txout.scriptPubKey, /*out=*/o, /*include_hex=*/true, /*include_address=*/true);

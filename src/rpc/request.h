@@ -23,10 +23,10 @@ UniValue JSONRPCRequestObj(const std::string& strMethod, const UniValue& params,
 UniValue JSONRPCReplyObj(UniValue result, UniValue error, std::optional<UniValue> id, JSONRPCVersion jsonrpc_version);
 UniValue JSONRPCError(int code, const std::string& message);
 
-enum class GenerateAuthCookieResult : uint8_t {
-    DISABLED, // -norpccookiefile
-    ERR,
-    OK,
+enum class AuthCookieResult : uint8_t {
+    Disabled, // -norpccookiefile
+    Error,
+    Ok,
 };
 
 /**
@@ -34,16 +34,16 @@ enum class GenerateAuthCookieResult : uint8_t {
  * @param[in] cookie_perms Filesystem permissions to use for the cookie file.
  * @param[out] user Generated username, only set if `OK` is returned.
  * @param[out] pass Generated password, only set if `OK` is returned.
- * @retval GenerateAuthCookieResult::DISABLED Authentication via cookie is disabled.
- * @retval GenerateAuthCookieResult::ERROR Error occurred, auth data could not be saved to disk.
- * @retval GenerateAuthCookieResult::OK Auth data was generated, saved to disk and in `user` and `pass`.
+ * @retval AuthCookieResult::Disabled Authentication via cookie is disabled.
+ * @retval AuthCookieResult::Error Error occurred, auth data could not be saved to disk.
+ * @retval AuthCookieResult::Ok Auth data was generated, saved to disk and in `user` and `pass`.
  */
-GenerateAuthCookieResult GenerateAuthCookie(const std::optional<fs::perms>& cookie_perms,
+AuthCookieResult GenerateAuthCookie(const std::optional<fs::perms>& cookie_perms,
                                             std::string& user,
                                             std::string& pass);
 
 /** Read the RPC authentication cookie from disk */
-bool GetAuthCookie(std::string *cookie_out);
+AuthCookieResult GetAuthCookie(std::string& cookie_out);
 /** Delete RPC authentication cookie from disk */
 void DeleteAuthCookie();
 /** Parse JSON-RPC batch reply into a vector */

@@ -1065,6 +1065,16 @@ The migration process will create a backup of the wallet before migrating. This 
         <translation type="unfinished">حل کیدونکي خو نه لیدل شوي سکریپټونه یوې نوې بکسې ته انتقال شوي چې نوم یې '%1' دی."</translation>
     </message>
     <message>
+        <source>Restore Wallet</source>
+        <extracomment>Title of progress window which is displayed when wallets are being restored.</extracomment>
+        <translation type="unfinished">والټ بېرته راګرځول</translation>
+    </message>
+    <message>
+        <source>Restoring Wallet &lt;b&gt;%1&lt;/b&gt;…</source>
+        <extracomment>Descriptive text of the restore wallets progress window which indicates to the user that wallets are currently being restored.</extracomment>
+        <translation type="unfinished">"والټ بیا راګرځول ..&lt;b&gt;%1&lt;/b&gt;…</translation>
+    </message>
+    <message>
         <source>Migration failed</source>
         <translation type="unfinished">هجرت ناکام شو</translation>
     </message>
@@ -1182,10 +1192,6 @@ The migration process will create a backup of the wallet before migrating. This 
     <message>
         <source>Disable Private Keys</source>
         <translation type="unfinished">د خصوصي کليدونه غير فعاله کړئ.</translation>
-    </message>
-    <message>
-        <source>Make a blank wallet. Blank wallets do not initially have private keys or scripts. Private keys and addresses can be imported, or an HD seed can be set, at a later time.</source>
-        <translation type="unfinished">یو خالي والیټ جوړ کړئ. خالي والیټونه په لومړي سر کې خصوصي کیلي او سکریپټونه نه لري. خصوصي کیلي او پته کولی شي وارد شي، یا د HD تخم وروسته ټاکل کیدی شي."</translation>
     </message>
     <message>
         <source>Make Blank Wallet</source>
@@ -1634,6 +1640,23 @@ The migration process will create a backup of the wallet before migrating. This 
     <message>
         <source>Form</source>
         <translation type="unfinished">"فورمه:</translation>
+    </message>
+    </context>
+<context>
+    <name>PSBTOperationsDialog</name>
+    <message numerus="yes">
+        <source>Signed %n input(s), but more signatures are still required.</source>
+        <translation type="unfinished">
+            <numerusform />
+            <numerusform />
+        </translation>
+    </message>
+    <message numerus="yes">
+        <source>Transaction has %n unsigned input(s).</source>
+        <translation type="unfinished">
+            <numerusform />
+            <numerusform />
+        </translation>
     </message>
     </context>
 <context>

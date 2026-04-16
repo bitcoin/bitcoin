@@ -578,7 +578,7 @@
     </message>
     <message>
         <source>Connecting to peers…</source>
-        <translation type="unfinished">Connessione ai nodi...</translation>
+        <translation type="unfinished">Connessione ai nodi in corso...</translation>
     </message>
     <message>
         <source>Request payments (generates QR codes and bitcoin: URIs)</source>
@@ -609,7 +609,7 @@
     </message>
     <message>
         <source>Catching up…</source>
-        <translation type="unfinished">Recuperando il ritardo...</translation>
+        <translation type="unfinished">Recupero del ritardo in corso...</translation>
     </message>
     <message>
         <source>Last received block was generated %1 ago.</source>
@@ -637,7 +637,7 @@
     </message>
     <message>
         <source>Load Partially Signed Bitcoin Transaction</source>
-        <translation type="unfinished">Carica Transazione Bitcoin Parzialmente Firmata (PSBT)</translation>
+        <translation type="unfinished">Carica Partially Signed Bitcoin Transaction</translation>
     </message>
     <message>
         <source>Load PSBT from &amp;clipboard…</source>
@@ -1089,6 +1089,16 @@ Il processo di migrazione creerà un backup del portafoglio prima della migrazio
         <translation type="unfinished">Gli script risolvibili ma non monitorati sono stati migrati su un nuovo wallet chiamato '%1'.</translation>
     </message>
     <message>
+        <source>Restore Wallet</source>
+        <extracomment>Title of progress window which is displayed when wallets are being restored.</extracomment>
+        <translation type="unfinished">Ripristina Portafoglio</translation>
+    </message>
+    <message>
+        <source>Restoring Wallet &lt;b&gt;%1&lt;/b&gt;…</source>
+        <extracomment>Descriptive text of the restore wallets progress window which indicates to the user that wallets are currently being restored.</extracomment>
+        <translation type="unfinished">Ripristinando Portafoglio  &lt;b&gt;%1&lt;/b&gt;…</translation>
+    </message>
+    <message>
         <source>Migration failed</source>
         <translation type="unfinished">Migrazione fallita</translation>
     </message>
@@ -1210,10 +1220,6 @@ Il processo di migrazione creerà un backup del portafoglio prima della migrazio
     <message>
         <source>Disable Private Keys</source>
         <translation type="unfinished">Disabilita Chiavi Private</translation>
-    </message>
-    <message>
-        <source>Make a blank wallet. Blank wallets do not initially have private keys or scripts. Private keys and addresses can be imported, or an HD seed can be set, at a later time.</source>
-        <translation type="unfinished">Crea un portafoglio vuoto. I portafogli vuoti non hanno inizialmente nessuna chiave privata o script. In seguito, possono essere importate chiavi private e indirizzi oppure può essere impostato un seme HD.</translation>
     </message>
     <message>
         <source>Make Blank Wallet</source>
@@ -1950,9 +1956,12 @@ Il processo di migrazione creerà un backup del portafoglio prima della migrazio
         <source>Could not sign any more inputs.</source>
         <translation type="unfinished">Impossibile firmare ulteriori input.</translation>
     </message>
-    <message>
-        <source>Signed %1 inputs, but more signatures are still required.</source>
-        <translation type="unfinished">Firmato/i %1 input, ma sono ancora richieste ulteriori firme.</translation>
+    <message numerus="yes">
+        <source>Signed %n input(s), but more signatures are still required.</source>
+        <translation type="unfinished">
+            <numerusform />
+            <numerusform />
+        </translation>
     </message>
     <message>
         <source>Signed transaction successfully. Transaction is ready to broadcast.</source>
@@ -2011,9 +2020,12 @@ Il processo di migrazione creerà un backup del portafoglio prima della migrazio
         <source>or</source>
         <translation type="unfinished">o</translation>
     </message>
-    <message>
-        <source>Transaction has %1 unsigned inputs.</source>
-        <translation type="unfinished">La transazione ha %1 input non firmati.</translation>
+    <message numerus="yes">
+        <source>Transaction has %n unsigned input(s).</source>
+        <translation type="unfinished">
+            <numerusform />
+            <numerusform />
+        </translation>
     </message>
     <message>
         <source>Transaction is missing some information about inputs.</source>
@@ -2285,10 +2297,6 @@ Se ricevi questo errore, dovresti richiedere al commerciante di fornire un URI c
     <message>
         <source>Transaction Relay</source>
         <translation type="unfinished">Relay di transazione</translation>
-    </message>
-    <message>
-        <source>Starting Block</source>
-        <translation type="unfinished">Blocco di partenza</translation>
     </message>
     <message>
         <source>Synced Headers</source>
@@ -3137,10 +3145,6 @@ Nota: poiché la commissione è calcolata su base per byte, una commissione di "
     <message>
         <source>The amount exceeds your balance.</source>
         <translation type="unfinished">Non hai abbastanza fondi</translation>
-    </message>
-    <message>
-        <source>The total exceeds your balance when the %1 transaction fee is included.</source>
-        <translation type="unfinished">Il totale è superiore al tuo saldo attuale includendo la commissione di %1.</translation>
     </message>
     <message>
         <source>Duplicate address found: addresses should only be used once each.</source>
@@ -4103,10 +4107,6 @@ Vai su File &gt; Apri Portafoglio per caricare un portafoglio.
         <translation type="unfinished">Avviso: chiavi private rilevate nel portafoglio { %s} con chiavi private disabilitate</translation>
     </message>
     <message>
-        <source>Warning: We do not appear to fully agree with our peers! You may need to upgrade, or other nodes may need to upgrade.</source>
-        <translation type="unfinished">Attenzione: Sembra che non vi sia pieno consenso con i nostri peer! Un aggiornamento da parte tua o degli altri nodi potrebbe essere necessario.</translation>
-    </message>
-    <message>
         <source>Witness data for blocks after height %d requires validation. Please restart with -reindex.</source>
         <translation type="unfinished">I dati di testimonianza per blocchi più alti di %d richiedono verifica. Si prega di riavviare con -reindex.</translation>
     </message>
@@ -4347,20 +4347,12 @@ Non in grado di ripristinare il backup del portafoglio.</translation>
         <translation type="unfinished">Errore nel controllo di integrità della crittografia a curva ellittica. %s in spegnimento. </translation>
     </message>
     <message>
-        <source>Error creating %s</source>
-        <translation type="unfinished">Errore di creazione %s</translation>
-    </message>
-    <message>
         <source>Error initializing block database</source>
         <translation type="unfinished">Errore durante l'inizializzazione del database dei blocchi</translation>
     </message>
     <message>
         <source>Error loading %s</source>
         <translation type="unfinished">Errore caricamento %s</translation>
-    </message>
-    <message>
-        <source>Error loading %s: Private keys can only be disabled during creation</source>
-        <translation type="unfinished">Errore durante il caricamento di %s: le chiavi private possono essere disabilitate solo durante la creazione</translation>
     </message>
     <message>
         <source>Error loading %s: Wallet corrupted</source>
@@ -4491,10 +4483,6 @@ Non in grado di ripristinare il backup del portafoglio.</translation>
         <translation type="unfinished">Errore: la transazione database non può essere eseguita per il portafoglio %s</translation>
     </message>
     <message>
-        <source>Failed to connect best block (%s).</source>
-        <translation type="unfinished">Non è stato possibile connettersi al blocco migliore (%s).</translation>
-    </message>
-    <message>
         <source>Failed to disconnect block.</source>
         <translation type="unfinished">Non è stato possibile scollegare il blocco.</translation>
     </message>
@@ -4517,14 +4505,6 @@ Non in grado di ripristinare il backup del portafoglio.</translation>
     <message>
         <source>Failed to write block.</source>
         <translation type="unfinished">Errore nella scrittura del blocco.</translation>
-    </message>
-    <message>
-        <source>Failed to write to block index database.</source>
-        <translation type="unfinished">Non è stato possibile scrivere sul database degli indici di blocco.</translation>
-    </message>
-    <message>
-        <source>Failed to write to coin database.</source>
-        <translation type="unfinished">Impossibile scrivere sul database delle monete.</translation>
     </message>
     <message>
         <source>Failed to write undo data.</source>
@@ -4578,10 +4558,6 @@ Errore nella scrittura dei dati di ripristino.</translation>
     <message>
         <source>Invalid P2P permission: '%s'</source>
         <translation type="unfinished">Permesso P2P non valido: '%s'</translation>
-    </message>
-    <message>
-        <source>Invalid amount for %s=&lt;amount&gt;: '%s' (must be at least %s)</source>
-        <translation type="unfinished">Importo non valido per %s=&lt;amount&gt;: '%s' (deve essere almeno %s)</translation>
     </message>
     <message>
         <source>Invalid amount for %s=&lt;amount&gt;: '%s'</source>
@@ -4779,10 +4755,6 @@ Errore di sistema in fase di salvataggio del blocco nel disco: %s</translation>
     <message>
         <source>This is the minimum transaction fee you pay on every transaction.</source>
         <translation type="unfinished">Questo è il costo di transazione minimo che pagherai su ogni transazione.</translation>
-    </message>
-    <message>
-        <source>This is the transaction fee you will pay if you send a transaction.</source>
-        <translation type="unfinished">Questo è il costo di transazione che pagherai se invii una transazione.</translation>
     </message>
     <message>
         <source>Transaction %s does not belong to this wallet</source>

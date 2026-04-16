@@ -1,0 +1,131 @@
+From 05f201a3d559452287b20becb960de3a50249540 Mon Sep 17 00:00:00 2001
+From: Giuseppe D'Angelo <giuseppe.dangelo@kdab.com>
+Date: Wed, 4 Feb 2026 12:12:37 +0100
+Subject: [PATCH] Move QChar::fromUcs4 into qchar.h
+
+Right now fromUcs4 lives in qstringview.h because the return type has an
+implicit conversion operator towards QStringView. This however creates
+an inclusion loop: qchar.h includes qstringview.h, and qstringview.h
+includes qchar.h. Only the latter should exist.
+
+We can move the code back into qchar.h and drop the QStringView
+dependency by making the type returned from fromUcs4 have data(). That
+would make it a string-like range and become implicitly convertible to
+QStringView through its ranged constructor.
+
+In fact, add a test that checks for the *implicit* conversion; and
+add a test that checks for a conversion towards std::u16string_view.
+
+QMetaType was calling the conversion operator from the return type of
+fromUcs4 to QStringView directly (...Hyrum law...), although we never
+documented the presence of that operator, only that the conversion was
+possible; fix it by using a conversion.
+
+Fixes: QTBUG-143873
+Task-number: QTBUG-143470
+Change-Id: Id07657dd411cc2e1446fb18789e04db9cecd8ae0
+Reviewed-by: Edward Welbourne <edward.welbourne@qt.io>
+Reviewed-by: Thiago Macieira <thiago.macieira@intel.com>
+---
+ src/corelib/kernel/qmetatype.cpp            |  2 +-
+ src/corelib/text/qchar.h                    | 16 +++++++++++++---
+ src/corelib/text/qstringview.h              | 16 ----------------
+ tests/auto/corelib/text/qchar/tst_qchar.cpp | 10 ++++++++++
+ 4 files changed, 24 insertions(+), 20 deletions(-)
+
+diff --git a/qtbase/src/corelib/kernel/qmetatype.cpp b/qtbase/src/corelib/kernel/qmetatype.cpp
+index e70583404a46..54a0fe671fe0 100644
+--- a/qtbase/src/corelib/kernel/qmetatype.cpp
++++ b/qtbase/src/corelib/kernel/qmetatype.cpp
+@@ -1212,7 +1212,7 @@ QT_WARNING_DISABLE_CLANG("-Wtautological-compare")
+             return true;
+         );
+         QMETATYPE_CONVERTER(QString, Char32,
+-            result = QChar::fromUcs4(source).operator QStringView().toString();
++            result = QStringView(QChar::fromUcs4(source)).toString();
+             return true;
+         );
+ #if QT_CONFIG(datestring)
+diff --git a/qtbase/src/corelib/text/qchar.h b/qtbase/src/corelib/text/qchar.h
+index 4a3aad0ca0c1..f96ca590f2e2 100644
+--- a/qtbase/src/corelib/text/qchar.h
++++ b/qtbase/src/corelib/text/qchar.h
+@@ -88,7 +88,19 @@ class QT6_ONLY(Q_CORE_EXPORT) QChar {
+ #endif
+
+     static constexpr QChar fromUcs2(char16_t c) noexcept { return QChar{c}; }
+-    static constexpr inline auto fromUcs4(char32_t c) noexcept;
++    [[nodiscard]] static constexpr inline auto fromUcs4(char32_t c) noexcept
++    {
++        struct R {
++            char16_t chars[2];
++            [[nodiscard]] constexpr qsizetype size() const noexcept { return chars[1] ? 2 : 1; }
++            [[nodiscard]] constexpr const char16_t *data() const noexcept { return chars; }
++            [[nodiscard]] constexpr const char16_t *begin() const noexcept { return chars; }
++            [[nodiscard]] constexpr const char16_t *end() const noexcept { return begin() + size(); }
++        };
++        return requiresSurrogates(c) ? R{{QChar::highSurrogate(c),
++                                          QChar::lowSurrogate(c)}} :
++                                       R{{char16_t(c), u'\0'}} ;
++    }
+
+     // Unicode information
+
+@@ -666,5 +678,3 @@ struct hash<QT_PREPEND_NAMESPACE(QChar)>
+ } // namespace std
+
+ #endif // QCHAR_H
+-
+-#include <QtCore/qstringview.h> // for QChar::fromUcs4() definition
+diff --git a/qtbase/src/corelib/text/qstringview.h b/qtbase/src/corelib/text/qstringview.h
+index 6d5edfc06d7d..d5897af6da2d 100644
+--- a/qtbase/src/corelib/text/qstringview.h
++++ b/qtbase/src/corelib/text/qstringview.h
+@@ -472,22 +472,6 @@ template <typename QStringLike, typename std::enable_if<
+ inline QStringView qToStringViewIgnoringNull(const QStringLike &s) noexcept
+ { return QStringView(s.begin(), s.size()); }
+
+-// QChar inline functions:
+-
+-[[nodiscard]] constexpr auto QChar::fromUcs4(char32_t c) noexcept
+-{
+-    struct R {
+-        char16_t chars[2];
+-        [[nodiscard]] constexpr operator QStringView() const noexcept { return {begin(), end()}; }
+-        [[nodiscard]] constexpr qsizetype size() const noexcept { return chars[1] ? 2 : 1; }
+-        [[nodiscard]] constexpr const char16_t *begin() const noexcept { return chars; }
+-        [[nodiscard]] constexpr const char16_t *end() const noexcept { return begin() + size(); }
+-    };
+-    return requiresSurrogates(c) ? R{{QChar::highSurrogate(c),
+-                                      QChar::lowSurrogate(c)}} :
+-                                   R{{char16_t(c), u'\0'}} ;
+-}
+-
+ qsizetype QtPrivate::findString(QStringView str, qsizetype from, QChar ch, Qt::CaseSensitivity cs) noexcept
+ {
+     if (from < -str.size()) // from < 0 && abs(from) > str.size(), avoiding overflow
+diff --git a/qtbase/tests/auto/corelib/text/qchar/tst_qchar.cpp b/qtbase/tests/auto/corelib/text/qchar/tst_qchar.cpp
+index 6701f0e33f3d..5781d36e458b 100644
+--- a/qtbase/tests/auto/corelib/text/qchar/tst_qchar.cpp
++++ b/qtbase/tests/auto/corelib/text/qchar/tst_qchar.cpp
+@@ -142,10 +142,20 @@ void tst_QChar::fromUcs4()
+         QCOMPARE(result.chars[0], QChar::highSurrogate(ucs4));
+         QCOMPARE(result.chars[1], QChar::lowSurrogate(ucs4));
+         QCOMPARE(QStringView{result}.size(), 2);
++        QStringView v = result;
++        QCOMPARE(v.size(), 2);
++#if __cplusplus >= 202302L // no FTM for the ranged constructor of basic_string_view
++        QCOMPARE(std::u16string_view{result}.size(), 2);
++#endif
+     } else {
+         QCOMPARE(result.chars[0], ucs4);
+         QCOMPARE(result.chars[1], 0u);
+         QCOMPARE(QStringView{result}.size(), 1);
++        QStringView v = result;
++        QCOMPARE(v.size(), 1);
++#if __cplusplus >= 202302L // no FTM for the ranged constructor of basic_string_view
++        QCOMPARE(std::u16string_view{result}.size(), 1);
++#endif
+     }
+ }
+

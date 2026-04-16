@@ -164,7 +164,7 @@ def add_witness_commitment(block, nonce=0):
 def script_BIP34_coinbase_height(height):
     if height <= 16:
         res = CScriptOp.encode_op_n(height)
-        # Append dummy to increase scriptSig size to 2 (see bad-cb-length consensus rule)
+        # Append dummy extraNonce to increase scriptSig size to 2 (see bad-cb-length consensus rule)
         return CScript([res, OP_0])
     return CScript([CScriptNum(height)])
 
@@ -267,7 +267,7 @@ def send_to_witness(use_p2wsh, node, utxo, pubkey, encode_p2sh, amount, sign=Tru
     tx_to_witness = create_witness_tx(node, use_p2wsh, utxo, pubkey, encode_p2sh, amount)
     if (sign):
         signed = node.signrawtransactionwithwallet(tx_to_witness)
-        assert "errors" not in signed or len(["errors"]) == 0
+        assert "errors" not in signed
         return node.sendrawtransaction(signed["hex"])
     else:
         if (insert_redeem_script):

@@ -9,8 +9,9 @@
 #include <consensus/amount.h>
 #include <net.h>
 #include <node/txorphanage.h>
+#include <private_broadcast.h>
 #include <protocol.h>
-#include <threadsafety.h>
+#include <uint256.h>
 #include <util/expected.h>
 #include <validationinterface.h>
 
@@ -51,7 +52,6 @@ static const unsigned int MAX_HEADERS_RESULTS = 2000;
 struct CNodeStateStats {
     int nSyncHeight = -1;
     int nCommonHeight = -1;
-    int m_starting_height = -1;
     std::chrono::microseconds m_ping_wait;
     std::vector<int> vHeightInFlight;
     bool m_relay_txs;
@@ -118,6 +118,21 @@ public:
     /** Get peer manager info. */
     virtual PeerManagerInfo GetInfo() const = 0;
 
+    /** Get info about transactions currently being privately broadcast. */
+    virtual std::vector<PrivateBroadcast::TxBroadcastInfo> GetPrivateBroadcastInfo() const = 0;
+
+    /**
+     * Abort private broadcast attempts for transactions currently being privately broadcast.
+     *
+     * @param[in] id A transaction identifier. It will be matched against both txid and wtxid for
+     *               all transactions in the private broadcast queue.
+     *
+     * @return Transactions removed from the private broadcast queue. If the provided id matches a
+     *         txid that corresponds to multiple transactions with different wtxids, multiple
+     *         transactions may be returned.
+     */
+    virtual std::vector<CTransactionRef> AbortPrivateBroadcast(const uint256& id) = 0;
+
     /**
      * Initiate a transaction broadcast to eligible peers.
      * Queue the witness transaction id to `Peer::TxRelay::m_tx_inventory_to_send`
@@ -146,10 +161,6 @@ public:
      * Public for unit testing.
      */
     virtual void CheckForStaleTipAndEvictPeers() = 0;
-
-    /** Process a single message from a peer. Public for fuzz testing */
-    virtual void ProcessMessage(CNode& pfrom, const std::string& msg_type, DataStream& vRecv,
-                                std::chrono::microseconds time_received, const std::atomic<bool>& interruptMsgProc) EXCLUSIVE_LOCKS_REQUIRED(g_msgproc_mutex) = 0;
 
     /** This function is used for testing the stale tip eviction logic, see denialofservice_tests.cpp */
     virtual void UpdateLastBlockAnnounceTime(NodeId node, int64_t time_in_seconds) = 0;

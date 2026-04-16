@@ -5,7 +5,7 @@ runs:
   steps:
     - name: Restore Ccache cache
       id: ccache-cache
-      uses: cirruslabs/cache/restore@v4
+      uses: cirruslabs/cache/restore@v5
       with:
         path: ${{ env.CCACHE_DIR }}
         key: ccache-${{ env.CONTAINER_NAME }}-${{ github.run_id }}
@@ -14,7 +14,7 @@ runs:
 
     - name: Restore depends sources cache
       id: depends-sources
-      uses: cirruslabs/cache/restore@v4
+      uses: cirruslabs/cache/restore@v5
       with:
         path: ${{ env.SOURCES_PATH }}
         key: depends-sources-${{ env.CONTAINER_NAME }}-${{ env.DEPENDS_HASH }}
@@ -23,7 +23,7 @@ runs:
 
     - name: Restore built depends cache
       id: depends-built
-      uses: cirruslabs/cache/restore@v4
+      uses: cirruslabs/cache/restore@v5
       with:
         path: ${{ env.BASE_CACHE }}
         key: depends-built-${{ env.CONTAINER_NAME }}-${{ env.DEPENDS_HASH }}
@@ -32,7 +32,7 @@ runs:
 
     - name: Restore previous releases cache
       id: previous-releases
-      uses: cirruslabs/cache/restore@v4
+      uses: cirruslabs/cache/restore@v5
       with:
         path: ${{ env.PREVIOUS_RELEASES_DIR }}
         key: previous-releases-${{ env.CONTAINER_NAME }}-${{ env.PREVIOUS_RELEASES_HASH }}

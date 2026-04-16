@@ -10,7 +10,6 @@
 #include <interfaces/chain.h>
 #include <interfaces/types.h>
 #include <kernel/types.h>
-#include <logging.h>
 #include <node/abort.h>
 #include <node/blockstorage.h>
 #include <node/context.h>
@@ -22,6 +21,7 @@
 #include <uint256.h>
 #include <undo.h>
 #include <util/fs.h>
+#include <util/log.h>
 #include <util/string.h>
 #include <util/thread.h>
 #include <util/threadinterrupt.h>
@@ -33,9 +33,9 @@
 #include <cassert>
 #include <compare>
 #include <cstdint>
+#include <functional>
 #include <memory>
 #include <optional>
-#include <span>
 #include <stdexcept>
 #include <string>
 #include <thread>
@@ -155,9 +155,13 @@ static const CBlockIndex* NextSyncBlock(const CBlockIndex* pindex_prev, CChain& 
         return chain.Genesis();
     }
 
-    const CBlockIndex* pindex = chain.Next(pindex_prev);
-    if (pindex) {
+    if (const auto* pindex{chain.Next(pindex_prev)}) {
         return pindex;
+    }
+
+    // If there is no next block, we might be synced
+    if (pindex_prev == chain.Tip()) {
+        return nullptr;
     }
 
     // Since block is not in the chain, return the next block in the chain AFTER the last common ancestor.

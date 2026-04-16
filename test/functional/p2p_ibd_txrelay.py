@@ -11,6 +11,7 @@
 from decimal import Decimal
 import time
 
+from test_framework.blocktools import create_block, create_coinbase
 from test_framework.messages import (
         CInv,
         COIN,
@@ -48,6 +49,12 @@ class P2PIBDTxRelayTest(BitcoinTestFramework):
             self.wait_until(lambda: all(peer['minfeefilter'] == MAX_FEE_FILTER for peer in node.getpeerinfo()))
 
         self.nodes[0].setmocktime(int(time.time()))
+        self.log.info("Mine one old block so we stay in IBD, then remember its coinbase wtxid")
+        block = create_block(int(self.nodes[0].getbestblockhash(), 16), create_coinbase(1), int(time.time()) - 2 * 24 * 60 * 60)
+        block.solve()
+        self.nodes[0].submitblock(block.serialize().hex())
+        assert self.nodes[0].getblockchaininfo()['initialblockdownload']
+        ibd_wtxid = int(self.nodes[0].getblock(f"{block.hash_int:064x}", 2)["tx"][0]["hash"], 16)
 
         self.log.info("Check that nodes don't send getdatas for transactions while still in IBD")
         peer_inver = self.nodes[0].add_p2p_connection(P2PDataStore())
@@ -81,6 +88,13 @@ class P2PIBDTxRelayTest(BitcoinTestFramework):
         for node in self.nodes:
             assert not node.getblockchaininfo()['initialblockdownload']
             self.wait_until(lambda: all(peer['minfeefilter'] == NORMAL_FEE_FILTER for peer in node.getpeerinfo()))
+
+        self.log.info("Check that txs confirmed during IBD are not in the recently-confirmed filter once out of ibd")
+        peer_inver = self.nodes[0].add_p2p_connection(P2PDataStore())
+        peer_inver.send_and_ping(msg_inv([CInv(t=MSG_WTX, h=ibd_wtxid)]))
+        self.nodes[0].bumpmocktime(NONPREF_PEER_TX_DELAY)
+        peer_inver.wait_for_getdata([ibd_wtxid])
+        self.nodes[0].disconnect_p2ps()
 
         self.log.info("Check that nodes process the same transaction, even when unsolicited, when no longer in IBD")
         peer_txer = self.nodes[0].add_p2p_connection(P2PInterface())

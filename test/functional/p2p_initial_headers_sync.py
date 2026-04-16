@@ -153,9 +153,9 @@ class HeadersSyncTest(BitcoinTestFramework):
         with self.nodes[0].assert_debug_log(["Timeout downloading headers, disconnecting peer=0"]):
             self.trigger_headers_timeout()
 
-        self.log.info("Check that stalling peer1 is disconnected")
-        peer1.wait_for_disconnect()
-        assert_equal(self.nodes[0].num_test_p2p_connections(), 1)
+            self.log.info("Check that stalling peer1 is disconnected")
+            peer1.wait_for_disconnect()
+            assert_equal(self.nodes[0].num_test_p2p_connections(), 1)
 
         self.log.info("Check that peer2 receives a getheaders request")
         peer2.wait_for_getheaders(block_hash=int(self.nodes[0].getbestblockhash(), 16))
@@ -169,9 +169,9 @@ class HeadersSyncTest(BitcoinTestFramework):
         with self.nodes[0].assert_debug_log(["Timeout downloading headers from noban peer, not disconnecting peer=0"]):
             self.trigger_headers_timeout()
 
-        self.log.info("Check that noban peer1 is not disconnected")
-        peer1.sync_with_ping()
-        assert_equal(self.nodes[0].num_test_p2p_connections(), 2)
+            self.log.info("Check that noban peer1 is not disconnected")
+            peer1.sync_with_ping()
+            assert_equal(self.nodes[0].num_test_p2p_connections(), 2)
 
         self.log.info("Check that exactly 1 of {peer1, peer2} receives a getheaders")
         self.assert_single_getheaders_recipient([peer1, peer2])

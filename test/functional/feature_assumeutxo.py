@@ -10,7 +10,6 @@ The assumeutxo value generated and used here is committed to in
 `CRegTestParams::m_assumeutxo_data` in `src/kernel/chainparams.cpp`.
 """
 import contextlib
-from shutil import rmtree
 
 from dataclasses import dataclass
 from test_framework.blocktools import (
@@ -38,6 +37,7 @@ from test_framework.util import (
     assert_equal,
     assert_not_equal,
     assert_raises_rpc_error,
+    dumb_sync_blocks,
     ensure_for,
     sha256sum_file,
     try_rpc,
@@ -191,7 +191,8 @@ class AssumeutxoTest(BitcoinTestFramework):
         expected_error(log_msg=error_details, error_msg=expected_error_msg)
 
         # resurrect node again
-        rmtree(chainstate_snapshot_path)
+        (chainstate_snapshot_path / "base_blockhash").unlink()
+        chainstate_snapshot_path.rmdir()
         self.start_node(0)
 
     def test_invalid_mempool_state(self, dump_output_path):
@@ -303,7 +304,7 @@ class AssumeutxoTest(BitcoinTestFramework):
         # Start test fresh by cleaning up node directories
         for node in (snapshot_node, ibd_node):
             self.stop_node(node.index)
-            rmtree(node.chain_path)
+            self.cleanup_folder(node.chain_path)
             self.start_node(node.index, extra_args=self.extra_args[node.index])
 
         # Sync-up headers chain on snapshot_node to load snapshot
@@ -412,7 +413,7 @@ class AssumeutxoTest(BitcoinTestFramework):
 
         # Generate a series of blocks that `n0` will have in the snapshot,
         # but that n1 and n2 don't yet see.
-        assert n0.getblockcount() == START_HEIGHT
+        assert_equal(n0.getblockcount(), START_HEIGHT)
         blocks = {START_HEIGHT: Block(n0.getbestblockhash(), 1, START_HEIGHT + 1)}
         for i in range(100):
             block_tx = 1
@@ -541,6 +542,30 @@ class AssumeutxoTest(BitcoinTestFramework):
         assert_equal(utxo_info['height'], SNAPSHOT_BASE_HEIGHT)
         assert_equal(utxo_info['bestblock'], snapshot_hash)
 
+        self.log.info("Check that getblockchaininfo returns information about the background validation process")
+        expected_keys = [
+            "snapshotheight",
+            "blocks",
+            "bestblockhash",
+            "mediantime",
+            "chainwork",
+            "verificationprogress"
+        ]
+        res = n1.getblockchaininfo()
+        assert "backgroundvalidation" in res.keys()
+        bv_res = res["backgroundvalidation"]
+        assert_equal(sorted(expected_keys), sorted(bv_res.keys()))
+        assert_equal(bv_res["snapshotheight"], SNAPSHOT_BASE_HEIGHT)
+        assert_equal(bv_res["blocks"], START_HEIGHT)
+        assert_equal(bv_res["bestblockhash"], n1.getblockhash(START_HEIGHT))
+        block = n1.getblockheader(bv_res["bestblockhash"])
+        assert_equal(bv_res["mediantime"], block["mediantime"])
+        assert_equal(bv_res["chainwork"], block["chainwork"])
+        background_tx_count = n1.getchaintxstats(blockhash=bv_res["bestblockhash"])["txcount"]
+        snapshot_tx_count = n1.getchaintxstats(blockhash=snapshot_hash)["txcount"]
+        expected_verification_progress = background_tx_count / snapshot_tx_count
+        assert_approx(bv_res["verificationprogress"], expected_verification_progress, vspan=0.01)
+
         # find coinbase output at snapshot height on node0 and scan for it on node1,
         # where the block is not available, but the snapshot was loaded successfully
         coinbase_tx = n0.getblock(snapshot_hash, verbosity=2)['tx'][0]
@@ -631,30 +656,17 @@ class AssumeutxoTest(BitcoinTestFramework):
 
         PAUSE_HEIGHT = FINAL_HEIGHT - 40
 
-        self.log.info("Restarting node to stop at height %d", PAUSE_HEIGHT)
-        self.restart_node(1, extra_args=[
-            f"-stopatheight={PAUSE_HEIGHT}", *self.extra_args[1]])
-
-        # Upon restart during snapshot tip sync, the node must remain in 'limited' mode.
+        self.log.info(f"Sync node up to height {PAUSE_HEIGHT}")
+        # During snapshot tip sync, the node must remain in 'limited' mode.
         self.assert_only_network_limited_service(n1)
-
-        # Finally connect the nodes and let them sync.
-        #
-        # Set `wait_for_connect=False` to avoid a race between performing connection
-        # assertions and the -stopatheight tripping.
-        self.connect_nodes(0, 1, wait_for_connect=False)
-
-        n1.wait_until_stopped(timeout=5)
+        dumb_sync_blocks(src=n0, dst=n1, height=PAUSE_HEIGHT)
 
         self.log.info("Checking that blocks are segmented on disk")
         assert self.has_blockfile(n1, "00000"), "normal blockfile missing"
         assert self.has_blockfile(n1, "00001"), "assumed blockfile missing"
         assert not self.has_blockfile(n1, "00002"), "too many blockfiles"
 
-        self.log.info("Restarted node before snapshot validation completed, reloading...")
-        self.restart_node(1, extra_args=self.extra_args[1])
-
-        # Upon restart, the node must remain in 'limited' mode
+        # The node must remain in 'limited' mode
         self.assert_only_network_limited_service(n1)
 
         # Send snapshot block to n1 out of order. This makes the test less

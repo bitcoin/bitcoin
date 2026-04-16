@@ -5,7 +5,6 @@
 
 #include <util/time.h>
 
-#include <compat/compat.h>
 #include <tinyformat.h>
 #include <util/check.h>
 #include <util/strencodings.h>
@@ -13,10 +12,17 @@
 #include <array>
 #include <atomic>
 #include <chrono>
+#include <compare>
 #include <optional>
 #include <string>
 #include <string_view>
 #include <thread>
+
+#ifdef WIN32
+#include <winsock2.h>
+#else
+#include <sys/time.h>
+#endif
 
 static constexpr std::array<std::string_view, 7> weekdays{"Thu", "Fri", "Sat", "Sun", "Mon", "Tue", "Wed"}; // 1970-01-01 was a Thursday.
 static constexpr std::array<std::string_view, 12> months{"Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"};

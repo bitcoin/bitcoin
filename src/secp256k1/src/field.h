@@ -233,7 +233,7 @@ static void secp256k1_fe_add_int(secp256k1_fe *r, int a);
 #define secp256k1_fe_mul_int(r, a) ASSERT_INT_CONST_AND_DO(a, secp256k1_fe_mul_int_unchecked(r, a))
 
 /** Like secp256k1_fe_mul_int but a is not checked to be an integer constant expression.
- * 
+ *
  * Should not be called directly outside of tests.
  */
 static void secp256k1_fe_mul_int_unchecked(secp256k1_fe *r, int a);

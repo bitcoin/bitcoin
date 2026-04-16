@@ -13,12 +13,14 @@
 #include <cstddef>
 #include <mp/test/foo.capnp.h>
 #include <mp/type-context.h>
+#include <mp/type-data.h>
 #include <mp/type-decay.h>
 #include <mp/type-function.h>
 #include <mp/type-interface.h>
 #include <mp/type-map.h>
 #include <mp/type-message.h>
 #include <mp/type-number.h>
+#include <mp/type-pointer.h>
 #include <mp/type-set.h>
 #include <mp/type-string.h>
 #include <mp/type-struct.h>
@@ -55,6 +57,14 @@ decltype(auto) CustomReadField(TypeList<FooCustom>, Priority<1>, InvokeContext& 
 }
 
 } // namespace test
+
+template <typename Input>
+bool CustomHasField(TypeList<test::FooData>, InvokeContext& invoke_context, const Input& input)
+{
+    // Cap'n Proto C++ cannot distinguish null vs empty Data in List(Data), so
+    // interpret empty Data as null for this specific type.
+    return input.get().size() != 0;
+}
 
 inline void CustomBuildMessage(InvokeContext& invoke_context,
                         const test::FooMessage& src,

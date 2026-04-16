@@ -7,13 +7,13 @@
 
 #include <crypto/hex_base.h>
 #include <span.h>
+#include <util/check.h>
+#include <util/overflow.h>
 
-#include <array>
-#include <cassert>
-#include <cstring>
+#include <compare>
 #include <limits>
 #include <optional>
-#include <ostream>
+#include <sstream>
 #include <string>
 #include <vector>
 
@@ -100,7 +100,7 @@ std::string EncodeBase64(std::span<const unsigned char> input)
     static const char *pbase64 = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
 
     std::string str;
-    str.reserve(((input.size() + 2) / 3) * 4);
+    str.reserve(CeilDiv(input.size(), 3u) * 4);
     ConvertBits<8, 6, true>([&](int v) { str += pbase64[v]; }, input.begin(), input.end());
     while (str.size() % 4) str += '=';
     return str;
@@ -146,7 +146,7 @@ std::string EncodeBase32(std::span<const unsigned char> input, bool pad)
     static const char *pbase32 = "abcdefghijklmnopqrstuvwxyz234567";
 
     std::string str;
-    str.reserve(((input.size() + 4) / 5) * 8);
+    str.reserve(CeilDiv(input.size(), 5u) * 8);
     ConvertBits<8, 5, true>([&](int v) { str += pbase32[v]; }, input.begin(), input.end());
     if (pad) {
         while (str.size() % 8) {
@@ -426,4 +426,17 @@ std::optional<uint64_t> ParseByteUnits(std::string_view str, ByteUnit default_mu
         return std::nullopt;
     }
     return *parsed_num * unit_amount;
+}
+
+bool CaseInsensitiveEqual(std::string_view s1, std::string_view s2)
+{
+    if (s1.size() != s2.size()) return false;
+    for (size_t i = 0; i < s1.size(); ++i) {
+        char c1 = s1[i];
+        if (c1 >= 'A' && c1 <= 'Z') c1 -= ('A' - 'a');
+        char c2 = s2[i];
+        if (c2 >= 'A' && c2 <= 'Z') c2 -= ('A' - 'a');
+        if (c1 != c2) return false;
+    }
+    return true;
 }

@@ -59,7 +59,7 @@ static void print_number(const int64_t x) {
             y /= 10;
         }
     } else if (c == 0) { /* fractional part is 0 */
-        buffer[--ptr] = '0'; 
+        buffer[--ptr] = '0';
     }
     buffer[--ptr] = '.';
     do {

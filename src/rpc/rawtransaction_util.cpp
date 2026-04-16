@@ -344,16 +344,18 @@ void SignTransactionResultToJSON(CMutableTransaction& mtx, bool complete, const 
     }
 }
 
-std::vector<RPCResult> DecodeTxDoc(const std::string& txid_field_doc, bool wallet)
+std::vector<RPCResult> TxDoc(const TxDocOptions& opts)
 {
+    std::optional<std::string> maybe_skip{};
+    if (opts.elision_description) maybe_skip.emplace();
     return {
-        {RPCResult::Type::STR_HEX, "txid", txid_field_doc},
-        {RPCResult::Type::STR_HEX, "hash", "The transaction hash (differs from txid for witness transactions)"},
-        {RPCResult::Type::NUM, "size", "The serialized transaction size"},
-        {RPCResult::Type::NUM, "vsize", "The virtual transaction size (differs from size for witness transactions)"},
-        {RPCResult::Type::NUM, "weight", "The transaction's weight (between vsize*4-3 and vsize*4)"},
-        {RPCResult::Type::NUM, "version", "The version"},
-        {RPCResult::Type::NUM_TIME, "locktime", "The lock time"},
+        {RPCResult::Type::STR_HEX, "txid", opts.txid_field_doc, {}, {.print_elision=opts.elision_description}},
+        {RPCResult::Type::STR_HEX, "hash", "The transaction hash (differs from txid for witness transactions)", {}, {.print_elision=maybe_skip}},
+        {RPCResult::Type::NUM, "size", "The serialized transaction size", {}, {.print_elision=maybe_skip}},
+        {RPCResult::Type::NUM, "vsize", "The virtual transaction size (differs from size for witness transactions)", {}, {.print_elision=maybe_skip}},
+        {RPCResult::Type::NUM, "weight", "The transaction's weight (between vsize*4-3 and vsize*4)", {}, {.print_elision=maybe_skip}},
+        {RPCResult::Type::NUM, "version", "The version", {}, {.print_elision=maybe_skip}},
+        {RPCResult::Type::NUM_TIME, "locktime", "The lock time", {}, {.print_elision=maybe_skip}},
         {RPCResult::Type::ARR, "vin", "",
         {
             {RPCResult::Type::OBJ, "", "",
@@ -372,7 +374,7 @@ std::vector<RPCResult> DecodeTxDoc(const std::string& txid_field_doc, bool walle
                 }},
                 {RPCResult::Type::NUM, "sequence", "The script sequence number"},
             }},
-        }},
+        }, {.print_elision=maybe_skip}},
         {RPCResult::Type::ARR, "vout", "",
         {
             {RPCResult::Type::OBJ, "", "", Cat(
@@ -381,11 +383,11 @@ std::vector<RPCResult> DecodeTxDoc(const std::string& txid_field_doc, bool walle
                     {RPCResult::Type::NUM, "n", "index"},
                     {RPCResult::Type::OBJ, "scriptPubKey", "", ScriptPubKeyDoc()},
                 },
-                    wallet ?
+                    opts.wallet ?
                     std::vector<RPCResult>{{RPCResult::Type::BOOL, "ischange", /*optional=*/true, "Output script is change (only present if true)"}} :
                     std::vector<RPCResult>{}
                 )
             },
-        }},
+        }, {.print_elision=maybe_skip}},
     };
 }

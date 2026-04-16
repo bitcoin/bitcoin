@@ -7,8 +7,6 @@
 
 #include <string>
 
-bool CaseInsensitiveEqual(const std::string& s1, const std::string& s2);
-
 /**
  * Increment a string. Useful to enumerate all fixed length strings with
  * characters in [min_char, max_char].

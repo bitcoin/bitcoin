@@ -91,25 +91,6 @@ class WalletBackupTest(BitcoinTestFramework):
         self.sync_mempools()
         self.generate(self.nodes[3], 1)
 
-    # As above, this mirrors the original bash test.
-    def start_three(self, args=()):
-        self.start_node(0, self.extra_args[0] + list(args))
-        self.start_node(1, self.extra_args[1] + list(args))
-        self.start_node(2, self.extra_args[2] + list(args))
-        self.connect_nodes(0, 3)
-        self.connect_nodes(1, 3)
-        self.connect_nodes(2, 3)
-        self.connect_nodes(2, 0)
-
-    def stop_three(self):
-        self.stop_node(0)
-        self.stop_node(1)
-        self.stop_node(2)
-
-    def erase_three(self):
-        for node_num in range(3):
-            (self.nodes[node_num].wallets_path / self.default_wallet_name / self.wallet_data_filename).unlink()
-
     def restore_invalid_wallet(self):
         node = self.nodes[3]
         invalid_wallet_file = self.nodes[0].datadir_path / 'invalid_wallet_file.bak'
@@ -191,7 +172,7 @@ class WalletBackupTest(BitcoinTestFramework):
         self.log.info("Test loading backup on a pruned node when the backup was created close to the prune height of the restoring node")
         node = self.nodes[3]
         self.restart_node(3, ["-prune=1", "-fastprune=1"])
-        # Ensure the chain tip is at height 214, because this test assume it is.
+        # Ensure the chain tip is at height 214, because this test assumes it is.
         assert_equal(node.getchaintips()[0]["height"], 214)
         # We need a few more blocks so we can actually get above an realistic
         # minimal prune height

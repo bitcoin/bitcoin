@@ -8,7 +8,10 @@
 #include <atomic>
 #include <capnp/capability.h>
 #include <capnp/rpc.h>
+#include <cassert>
+#include <chrono>
 #include <condition_variable>
+#include <cstdint>
 #include <cstring>
 #include <functional>
 #include <future>
@@ -16,9 +19,7 @@
 #include <kj/async-io.h>
 #include <kj/common.h>
 #include <kj/debug.h>
-#include <kj/exception.h>
 #include <kj/memory.h>
-#include <kj/string.h>
 #include <kj/test.h>
 #include <memory>
 #include <mp/proxy.h>
@@ -31,7 +32,6 @@
 #include <stdexcept>
 #include <string>
 #include <string_view>
-#include <system_error>
 #include <thread>
 #include <type_traits>
 #include <utility>
@@ -50,8 +50,8 @@ static_assert(std::is_integral_v<decltype(kMP_MINOR_VERSION)>, "MP_MINOR_VERSION
  * Test setup class creating a two way connection between a
  * ProxyServer<FooInterface> object and a ProxyClient<FooInterface>.
  *
- * Provides client_disconnect and server_disconnect lambdas that can be used to
- * trigger disconnects and test handling of broken and closed connections.
+ * Provides disconnection lambdas that can be used to trigger
+ * disconnects and test handling of broken and closed connections.
  *
  * Accepts a client_owns_connection option to test different ProxyClient
  * destroy_connection values and control whether destroying the ProxyClient
@@ -64,6 +64,7 @@ class TestSetup
 {
 public:
     std::function<void()> server_disconnect;
+    std::function<void()> server_disconnect_later;
     std::function<void()> client_disconnect;
     std::promise<std::unique_ptr<ProxyClient<messages::FooInterface>>> client_promise;
     std::unique_ptr<ProxyClient<messages::FooInterface>> client;
@@ -89,6 +90,10 @@ public:
                       return capnp::Capability::Client(kj::mv(server_proxy));
                   });
               server_disconnect = [&] { loop.sync([&] { server_connection.reset(); }); };
+              server_disconnect_later = [&] {
+                  assert(std::this_thread::get_id() == loop.m_thread_id);
+                  loop.m_task_set->add(kj::evalLater([&] { server_connection.reset(); }));
+              };
               // Set handler to destroy the server when the client disconnects. This
               // is ignored if server_disconnect() is called instead.
               server_connection->onDisconnect([&] { server_connection.reset(); });
@@ -98,7 +103,7 @@ public:
                   client_connection->m_rpc_system->bootstrap(ServerVatId().vat_id).castAs<messages::FooInterface>(),
                   client_connection.get(), /* destroy_connection= */ client_owns_connection);
               if (client_owns_connection) {
-                  client_connection.release();
+                  (void)client_connection.release();
               } else {
                   client_disconnect = [&] { loop.sync([&] { client_connection.reset(); }); };
               }
@@ -212,6 +217,15 @@ KJ_TEST("Call FooInterface methods")
     KJ_EXPECT(mut.message == "init build pass call return read");
 
     KJ_EXPECT(foo->passFn([]{ return 10; }) == 10);
+
+    std::vector<FooDataRef> data_in;
+    data_in.push_back(std::make_shared<FooData>(FooData{'H', 'i'}));
+    data_in.push_back(nullptr);
+    std::vector<FooDataRef> data_out{foo->passDataPointers(data_in)};
+    KJ_EXPECT(data_out.size() == 2);
+    KJ_REQUIRE(data_out[0] != nullptr);
+    KJ_EXPECT(*data_out[0] == *data_in[0]);
+    KJ_EXPECT(!data_out[1]);
 }
 
 KJ_TEST("Call IPC method after client connection is closed")
@@ -317,7 +331,103 @@ KJ_TEST("Calling IPC method, disconnecting and blocking during the call")
     signal.set_value();
 }
 
-KJ_TEST("Make simultaneous IPC calls to trigger 'thread busy' error")
+KJ_TEST("Worker thread destroyed before it is initialized")
+{
+    // Regression test for bitcoin/bitcoin#34711, bitcoin/bitcoin#34756 where a
+    // worker thread is destroyed before it starts waiting for work.
+    //
+    // The test uses the `makethread` hook to trigger a disconnect as soon as
+    // ProxyServer<ThreadMap>::makeThread is called, so without the bugfix,
+    // ProxyServer<Thread>::~ProxyServer would run and destroy the waiter before
+    // the worker thread started waiting, causing a SIGSEGV when it did start.
+    TestSetup setup;
+    ProxyClient<messages::FooInterface>* foo = setup.client.get();
+    foo->initThreadMap();
+    setup.server->m_impl->m_fn = [] {};
+
+    EventLoop& loop = *setup.server->m_context.connection->m_loop;
+    loop.testing_hook_makethread = [&] {
+        // Use disconnect_later to queue the disconnect, because the makethread
+        // hook is called on the event loop thread. The disconnect should happen
+        // as soon as the event loop is idle.
+        setup.server_disconnect_later();
+    };
+    loop.testing_hook_makethread_created = [&] {
+        // Sleep to allow event loop to run and process the queued disconnect
+        // before the worker thread starts waiting.
+        std::this_thread::sleep_for(std::chrono::milliseconds(10));
+    };
+
+    bool disconnected{false};
+    try {
+        foo->callFnAsync();
+    } catch (const std::runtime_error& e) {
+        KJ_EXPECT(std::string_view{e.what()} == "IPC client method call interrupted by disconnect.");
+        disconnected = true;
+    }
+    KJ_EXPECT(disconnected);
+}
+
+KJ_TEST("Calling async IPC method, with server disconnect racing the call")
+{
+    // Regression test for bitcoin/bitcoin#34777 heap-use-after-free where
+    // an async request is canceled before it starts to execute.
+    //
+    // Use testing_hook_async_request_start to trigger a disconnect from the
+    // worker thread as soon as it begins to execute an async request. Without
+    // the bugfix, the worker thread would trigger a SIGSEGV after this by
+    // calling call_context.getParams().
+    TestSetup setup;
+    ProxyClient<messages::FooInterface>* foo = setup.client.get();
+    foo->initThreadMap();
+    setup.server->m_impl->m_fn = [] {};
+
+    EventLoop& loop = *setup.server->m_context.connection->m_loop;
+    loop.testing_hook_async_request_start = [&] {
+        setup.server_disconnect();
+        // Sleep is necessary to let the event loop fully clean up after the
+        // disconnect and trigger the SIGSEGV.
+        std::this_thread::sleep_for(std::chrono::milliseconds(10));
+    };
+
+    try {
+        foo->callFnAsync();
+        KJ_EXPECT(false);
+    } catch (const std::runtime_error& e) {
+        KJ_EXPECT(std::string_view{e.what()} == "IPC client method call interrupted by disconnect.");
+    }
+}
+
+KJ_TEST("Calling async IPC method, with server disconnect after cleanup")
+{
+    // Regression test for bitcoin/bitcoin#34782 stack-use-after-return where
+    // an async request is canceled after it finishes executing but before the
+    // response is sent.
+    //
+    // Use testing_hook_async_request_done to trigger a disconnect from the
+    // worker thread after it executes an async request but before it returns.
+    // Without the bugfix, the m_on_cancel callback would be called at this
+    // point, accessing the cancel_mutex stack variable that had gone out of
+    // scope.
+    TestSetup setup;
+    ProxyClient<messages::FooInterface>* foo = setup.client.get();
+    foo->initThreadMap();
+    setup.server->m_impl->m_fn = [] {};
+
+    EventLoop& loop = *setup.server->m_context.connection->m_loop;
+    loop.testing_hook_async_request_done = [&] {
+        setup.server_disconnect();
+    };
+
+    try {
+        foo->callFnAsync();
+        KJ_EXPECT(false);
+    } catch (const std::runtime_error& e) {
+        KJ_EXPECT(std::string_view{e.what()} == "IPC client method call interrupted by disconnect.");
+    }
+}
+
+KJ_TEST("Make simultaneous IPC calls on single remote thread")
 {
     TestSetup setup;
     ProxyClient<messages::FooInterface>* foo = setup.client.get();
@@ -336,51 +446,39 @@ KJ_TEST("Make simultaneous IPC calls to trigger 'thread busy' error")
         request_thread = &tc.request_threads.at(foo->m_context.connection)->m_client;
     });
 
-    setup.server->m_impl->m_fn = [&] {
-        try
-        {
-            signal.get_future().get();
-        }
-        catch (const std::future_error& e)
-        {
-            KJ_EXPECT(e.code() == std::make_error_code(std::future_errc::future_already_retrieved));
-        }
+    // Call callIntFnAsync 3 times with n=100, 200, 300
+    std::atomic<int> expected = 100;
+
+    setup.server->m_impl->m_int_fn = [&](int n) {
+        assert(n == expected);
+        expected += 100;
+        return n;
     };
 
     auto client{foo->m_client};
-    bool caught_thread_busy = false;
-    // NOTE: '3' was chosen because it was the lowest number
-    // of simultaneous calls required to reliably catch a "thread busy" error
     std::atomic<size_t> running{3};
     foo->m_context.loop->sync([&]
     {
         for (size_t i = 0; i < running; i++)
         {
-            auto request{client.callFnAsyncRequest()};
+            auto request{client.callIntFnAsyncRequest()};
             auto context{request.initContext()};
             context.setCallbackThread(*callback_thread);
             context.setThread(*request_thread);
+            request.setArg(100 * (i+1));
             foo->m_context.loop->m_task_set->add(request.send().then(
-                [&](auto&& results) {
+                [&running, &tc, i](auto&& results) {
+                    assert(results.getResult() == static_cast<int32_t>(100 * (i+1)));
                     running -= 1;
                     tc.waiter->m_cv.notify_all();
-                },
-                [&](kj::Exception&& e) {
-                    KJ_EXPECT(std::string_view{e.getDescription().cStr()} ==
-                        "remote exception: std::exception: thread busy");
-                    caught_thread_busy = true;
-                    running -= 1;
-                    signal.set_value();
-                    tc.waiter->m_cv.notify_all();
-                }
-            ));
+                }));
         }
     });
     {
         Lock lock(tc.waiter->m_mutex);
         tc.waiter->wait(lock, [&running] { return running == 0; });
     }
-    KJ_EXPECT(caught_thread_busy);
+    KJ_EXPECT(expected == 400);
 }
 
 } // namespace test

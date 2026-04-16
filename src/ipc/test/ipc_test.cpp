@@ -8,6 +8,7 @@
 #include <ipc/protocol.h>
 #include <logging.h>
 #include <mp/proxy-types.h>
+#include <ipc/capnp/mining.capnp.h>
 #include <ipc/test/ipc_test.capnp.h>
 #include <ipc/test/ipc_test.capnp.proxy.h>
 #include <ipc/test/ipc_test.h>
@@ -22,6 +23,11 @@
 #include <stdexcept>
 
 #include <boost/test/unit_test.hpp>
+
+static_assert(ipc::capnp::messages::MAX_MONEY == MAX_MONEY);
+static_assert(ipc::capnp::messages::MAX_DOUBLE == std::numeric_limits<double>::max());
+static_assert(ipc::capnp::messages::DEFAULT_BLOCK_RESERVED_WEIGHT == DEFAULT_BLOCK_RESERVED_WEIGHT);
+static_assert(ipc::capnp::messages::DEFAULT_COINBASE_OUTPUT_MAX_ADDITIONAL_SIGOPS == DEFAULT_COINBASE_OUTPUT_MAX_ADDITIONAL_SIGOPS);
 
 //! Remote init class.
 class TestInit : public interfaces::Init

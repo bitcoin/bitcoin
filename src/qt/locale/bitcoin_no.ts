@@ -939,6 +939,11 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <source>Migrate Wallet</source>
         <translation type="unfinished">Migrer Lommebok</translation>
     </message>
+    <message>
+        <source>Restore Wallet</source>
+        <extracomment>Title of progress window which is displayed when wallets are being restored.</extracomment>
+        <translation type="unfinished">Gjenopprett lommebok</translation>
+    </message>
     </context>
 <context>
     <name>OpenWalletActivity</name>
@@ -1024,6 +1029,23 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     <message>
         <source>Error</source>
         <translation type="unfinished">Feil</translation>
+    </message>
+    </context>
+<context>
+    <name>PSBTOperationsDialog</name>
+    <message numerus="yes">
+        <source>Signed %n input(s), but more signatures are still required.</source>
+        <translation type="unfinished">
+            <numerusform />
+            <numerusform />
+        </translation>
+    </message>
+    <message numerus="yes">
+        <source>Transaction has %n unsigned input(s).</source>
+        <translation type="unfinished">
+            <numerusform />
+            <numerusform />
+        </translation>
     </message>
     </context>
 <context>
@@ -1215,11 +1237,11 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     </message>
     <message>
         <source>Address</source>
-        <translation type="unfinished">Adresse</translation>
+        <translation type="unfinished">Adresse </translation>
     </message>
     <message>
         <source>Exporting Failed</source>
-        <translation type="unfinished">Eksportering mislyktes</translation>
+        <translation type="unfinished">Eksportering feilet </translation>
     </message>
     </context>
 <context>

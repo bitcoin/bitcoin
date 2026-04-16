@@ -19,6 +19,11 @@ inline void insert(std::set<TsetT>& dst, const Tsrc& src) {
     dst.insert(src.begin(), src.end());
 }
 
+template <typename TsetT, typename Compare, typename Tsrc>
+inline void insert(std::set<TsetT, Compare>& dst, const Tsrc& src) {
+    dst.insert(src.begin(), src.end());
+}
+
 } // namespace util
 
 #endif // BITCOIN_UTIL_INSERT_H

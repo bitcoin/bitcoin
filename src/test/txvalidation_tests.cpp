@@ -11,6 +11,7 @@
 #include <primitives/transaction.h>
 #include <random.h>
 #include <script/script.h>
+#include <test/util/common.h>
 #include <test/util/setup_common.h>
 #include <test/util/txmempool.h>
 #include <validation.h>

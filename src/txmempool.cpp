@@ -11,13 +11,13 @@
 #include <consensus/consensus.h>
 #include <consensus/tx_verify.h>
 #include <consensus/validation.h>
-#include <logging.h>
 #include <policy/policy.h>
 #include <policy/settings.h>
 #include <random.h>
 #include <tinyformat.h>
 #include <util/check.h>
 #include <util/feefrac.h>
+#include <util/log.h>
 #include <util/moneystr.h>
 #include <util/overflow.h>
 #include <util/result.h>
@@ -176,7 +176,15 @@ static CTxMemPool::Options&& Flatten(CTxMemPool::Options&& opts, bilingual_str& 
 CTxMemPool::CTxMemPool(Options opts, bilingual_str& error)
     : m_opts{Flatten(std::move(opts), error)}
 {
-    m_txgraph = MakeTxGraph(m_opts.limits.cluster_count, m_opts.limits.cluster_size_vbytes * WITNESS_SCALE_FACTOR, ACCEPTABLE_ITERS);
+    m_txgraph = MakeTxGraph(
+        /*max_cluster_count=*/m_opts.limits.cluster_count,
+        /*max_cluster_size=*/m_opts.limits.cluster_size_vbytes * WITNESS_SCALE_FACTOR,
+        /*acceptable_cost=*/ACCEPTABLE_COST,
+        /*fallback_order=*/[&](const TxGraph::Ref& a, const TxGraph::Ref& b) noexcept {
+            const Txid& txid_a = static_cast<const CTxMemPoolEntry&>(a).GetTx().GetHash();
+            const Txid& txid_b = static_cast<const CTxMemPoolEntry&>(b).GetTx().GetHash();
+            return txid_a <=> txid_b;
+        });
 }
 
 bool CTxMemPool::isSpent(const COutPoint& outpoint) const
@@ -213,7 +221,9 @@ void CTxMemPool::Apply(ChangeSet* changeset)
 
         addNewTransaction(it);
     }
-    m_txgraph->DoWork(POST_CHANGE_WORK);
+    if (!m_txgraph->DoWork(/*max_cost=*/POST_CHANGE_COST)) {
+        LogDebug(BCLog::MEMPOOL, "Mempool in non-optimal ordering after addition(s).");
+    }
 }
 
 void CTxMemPool::addNewTransaction(CTxMemPool::txiter newit)
@@ -370,7 +380,9 @@ void CTxMemPool::removeForReorg(CChain& chain, std::function<bool(txiter)> check
     for (indexed_transaction_set::const_iterator it = mapTx.begin(); it != mapTx.end(); it++) {
         assert(TestLockPointValidity(chain, it->GetLockPoints()));
     }
-    m_txgraph->DoWork(POST_CHANGE_WORK);
+    if (!m_txgraph->DoWork(/*max_cost=*/POST_CHANGE_COST)) {
+        LogDebug(BCLog::MEMPOOL, "Mempool in non-optimal ordering after reorg.");
+    }
 }
 
 void CTxMemPool::removeConflicts(const CTransaction &tx)
@@ -413,7 +425,9 @@ void CTxMemPool::removeForBlock(const std::vector<CTransactionRef>& vtx, unsigne
     }
     lastRollingFeeUpdate = GetTime();
     blockSinceLastRollingFeeBump = true;
-    m_txgraph->DoWork(POST_CHANGE_WORK);
+    if (!m_txgraph->DoWork(/*max_cost=*/POST_CHANGE_COST)) {
+        LogDebug(BCLog::MEMPOOL, "Mempool in non-optimal ordering after block.");
+    }
 }
 
 void CTxMemPool::check(const CCoinsViewCache& active_coins_tip, int64_t spendheight) const
@@ -772,7 +786,7 @@ void CTxMemPool::RemoveUnbroadcastTx(const Txid& txid, const bool unchecked) {
 
     if (m_unbroadcast_txids.erase(txid))
     {
-        LogDebug(BCLog::MEMPOOL, "Removed %i from set of unbroadcast txns%s\n", txid.GetHex(), (unchecked ? " before confirmation that txn was sent out" : ""));
+        LogDebug(BCLog::MEMPOOL, "Removed %s from set of unbroadcast txns%s", txid.GetHex(), (unchecked ? " before confirmation that txn was sent out" : ""));
     }
 }
 
@@ -1000,8 +1014,9 @@ CTxMemPool::ChangeSet::TxHandle CTxMemPool::ChangeSet::StageAddition(const CTran
     CAmount delta{0};
     m_pool->ApplyDelta(tx->GetHash(), delta);
 
-    TxGraph::Ref ref(m_pool->m_txgraph->AddTransaction(FeePerWeight(fee, GetSigOpsAdjustedWeight(GetTransactionWeight(*tx), sigops_cost, ::nBytesPerSigOp))));
-    auto newit = m_to_add.emplace(std::move(ref), tx, fee, time, entry_height, entry_sequence, spends_coinbase, sigops_cost, lp).first;
+    FeePerWeight feerate(fee, GetSigOpsAdjustedWeight(GetTransactionWeight(*tx), sigops_cost, ::nBytesPerSigOp));
+    auto newit = m_to_add.emplace(tx, fee, time, entry_height, entry_sequence, spends_coinbase, sigops_cost, lp).first;
+    m_pool->m_txgraph->AddTransaction(const_cast<CTxMemPoolEntry&>(*newit), feerate);
     if (delta) {
         newit->UpdateModifiedFee(delta);
         m_pool->m_txgraph->SetTransactionFee(*newit, newit->GetModifiedFee());

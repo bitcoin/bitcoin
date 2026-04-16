@@ -46,7 +46,6 @@ struct CBlockTemplate
     std::vector<CAmount> vTxFees;
     // Sigops per transaction, not including coinbase transaction (unlike CBlock::vtx).
     std::vector<int64_t> vTxSigOpsCost;
-    std::vector<unsigned char> vchCoinbaseCommitment;
     /* A vector of package fee rates, ordered by the sequence in which
      * packages are selected for inclusion in the block template.*/
     std::vector<FeePerVSize> m_package_feerates;
@@ -142,7 +141,7 @@ void ApplyArgsManOptions(const ArgsManager& gArgs, BlockAssembler::Options& opti
 void AddMerkleRootAndCoinbase(CBlock& block, CTransactionRef coinbase, uint32_t version, uint32_t timestamp, uint32_t nonce);
 
 
-/* Interrupt the current wait for the next block template. */
+/* Interrupt a blocking call. */
 void InterruptWait(KernelNotifications& kernel_notifications, bool& interrupt_wait);
 /**
  * Return a new block template when fees rise to a certain threshold or after a
@@ -160,9 +159,31 @@ std::unique_ptr<CBlockTemplate> WaitAndCreateNewBlock(ChainstateManager& chainma
 std::optional<BlockRef> GetTip(ChainstateManager& chainman);
 
 /* Waits for the connected tip to change until timeout has elapsed. During node initialization, this will wait until the tip is connected (regardless of `timeout`).
- * Returns the current tip, or nullopt if the node is shutting down. */
-std::optional<BlockRef> WaitTipChanged(ChainstateManager& chainman, KernelNotifications& kernel_notifications, const uint256& current_tip, MillisecondsDouble& timeout);
+ * Returns the current tip, or nullopt if the node is shutting down or interrupt()
+ * is called.
+ */
+std::optional<BlockRef> WaitTipChanged(ChainstateManager& chainman, KernelNotifications& kernel_notifications, const uint256& current_tip, MillisecondsDouble& timeout, bool& interrupt);
 
+/**
+ * Wait while the best known header extends the current chain tip AND at least
+ * one block is being added to the tip every 3 seconds. If the tip is
+ * sufficiently far behind, allow up to 20 seconds for the next tip update.
+ *
+ * It’s not safe to keep waiting, because a malicious miner could announce a
+ * header and delay revealing the block, causing all other miners using this
+ * software to stall. At the same time, we need to balance between the default
+ * waiting time being brief, but not ending the cooldown prematurely when a
+ * random block is slow to download (or process).
+ *
+ * The cooldown only applies to createNewBlock(), which is typically called
+ * once per connected client. Subsequent templates are provided by waitNext().
+ *
+ * @param last_tip tip at the start of the cooldown window.
+ * @param interrupt_mining set to true to interrupt the cooldown.
+ *
+ * @returns false if interrupted.
+ */
+bool CooldownIfHeadersAhead(ChainstateManager& chainman, KernelNotifications& kernel_notifications, const BlockRef& last_tip, bool& interrupt_mining);
 } // namespace node
 
 #endif // BITCOIN_NODE_MINER_H
