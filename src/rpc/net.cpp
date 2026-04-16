@@ -15,6 +15,7 @@
 #include <net_processing.h>
 #include <net_types.h>
 #include <netbase.h>
+#include <netglobals.h>
 #include <node/context.h>
 #include <node/protocol_version.h>
 #include <node/warnings.h>

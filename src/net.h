@@ -152,12 +152,6 @@ uint16_t GetListenPort();
 /** Returns a local address that we should advertise to this peer. */
 std::optional<CService> GetLocalAddrForPeer(CNode& node);
 
-extern bool fDiscover;
-extern bool fListen;
-
-/** Subversion as sent to the P2P network in `version` messages */
-extern std::string strSubVersion;
-
 extern const std::string NET_MESSAGE_TYPE_OTHER;
 using mapMsgTypeSize = std::map</* message type */ std::string, /* total bytes */ uint64_t>;
 

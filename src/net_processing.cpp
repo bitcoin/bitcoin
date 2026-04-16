@@ -30,6 +30,7 @@
 #include <net_permissions.h>
 #include <netaddress.h>
 #include <netbase.h>
+#include <netglobals.h>
 #include <netmessagemaker.h>
 #include <node/blockstorage.h>
 #include <node/connection_types.h>

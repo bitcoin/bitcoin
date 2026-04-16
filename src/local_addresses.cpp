@@ -6,7 +6,8 @@
 #include <local_addresses.h>
 
 #include <logging.h>
-#include <net.h>
+#include <netbase.h>
+#include <netglobals.h>
 
 std::unique_ptr<LocalAddressManager> g_localaddressman{std::make_unique<LocalAddressManager>()};
 

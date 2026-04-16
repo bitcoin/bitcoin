@@ -19,6 +19,7 @@
 #include <local_addresses.h>
 #include <logging.h>
 #include <net.h>
+#include <netglobals.h>
 #include <net_processing.h>
 #include <node/blockstorage.h>
 #include <node/chainstate.h>

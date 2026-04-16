@@ -24,6 +24,7 @@
 #include <net_permissions.h>
 #include <netaddress.h>
 #include <netbase.h>
+#include <netglobals.h>
 #include <node/eviction.h>
 #include <node/interface_ui.h>
 #include <protocol.h>
@@ -111,12 +112,6 @@ const std::string NET_MESSAGE_TYPE_OTHER = "*other*";
 static const uint64_t RANDOMIZER_ID_NETGROUP = 0x6c0edd8036ef4036ULL; // SHA256("netgroup")[0:8]
 static const uint64_t RANDOMIZER_ID_LOCALHOSTNONCE = 0xd93e69e2bbfa5735ULL; // SHA256("localhostnonce")[0:8]
 static const uint64_t RANDOMIZER_ID_NETWORKKEY = 0x0e8a2b136c592a7dULL; // SHA256("networkkey")[0:8]
-//
-// Global state variables
-//
-bool fDiscover = true;
-bool fListen = true;
-std::string strSubVersion;
 
 size_t CSerializedNetMsg::GetMemoryUsage() const noexcept
 {

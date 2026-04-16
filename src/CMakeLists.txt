@@ -206,6 +206,7 @@ add_library(bitcoin_node STATIC EXCLUDE_FROM_ALL
   local_addresses.cpp
   mapport.cpp
   net.cpp
+  netglobals.cpp
   net_processing.cpp
   netgroup.cpp
   node/abort.cpp
