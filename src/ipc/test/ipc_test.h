@@ -23,8 +23,4 @@ public:
     CScript passScript(CScript s) { return s; }
 };
 
-void IpcPipeTest();
-void IpcSocketPairTest();
-void IpcSocketTest(const fs::path& datadir);
-
 #endif // BITCOIN_IPC_TEST_IPC_TEST_H
