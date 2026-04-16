@@ -26,6 +26,7 @@ from test_framework.descriptors import descsum_create
 from test_framework.script import SEQUENCE_LOCKTIME_TYPE_FLAG
 from test_framework.util import (
     assert_equal,
+    assert_not_equal,
     assert_raises_rpc_error,
 )
 from test_framework.wallet_util import (
@@ -119,7 +120,7 @@ class ImportDescriptorsTest(BitcoinTestFramework):
 
         issued_addr = gap_wallet.getnewaddress("", "legacy")
         assert_equal(issued_addr, next_addr)
-        assert issued_addr != high_addr
+        assert_not_equal(issued_addr, high_addr)
 
         change_addr = gap_wallet.getrawchangeaddress(address_type="legacy")
         assert gap_wallet.getaddressinfo(change_addr)["ischange"]
