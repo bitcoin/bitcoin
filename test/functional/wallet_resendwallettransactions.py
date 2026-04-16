@@ -9,7 +9,6 @@ from decimal import Decimal
 
 from test_framework.blocktools import (
     create_block,
-    create_coinbase,
 )
 from test_framework.messages import DEFAULT_MEMPOOL_EXPIRY_HOURS
 from test_framework.p2p import P2PTxInvStore

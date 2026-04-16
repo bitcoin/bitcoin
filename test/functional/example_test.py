@@ -17,7 +17,6 @@ from collections import defaultdict
 # Use lexicographically sorted multi-line imports
 from test_framework.blocktools import (
     create_block,
-    create_coinbase,
 )
 from test_framework.messages import (
     CInv,

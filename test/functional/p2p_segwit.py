@@ -10,7 +10,6 @@ from test_framework.blocktools import (
     WITNESS_COMMITMENT_HEADER,
     add_witness_commitment,
     create_block,
-    create_coinbase,
 )
 from test_framework.messages import (
     MAX_BIP125_RBF_SEQUENCE,

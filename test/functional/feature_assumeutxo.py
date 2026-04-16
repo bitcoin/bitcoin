@@ -14,7 +14,6 @@ import contextlib
 from dataclasses import dataclass
 from test_framework.blocktools import (
         create_block,
-        create_coinbase
 )
 from test_framework.compressor import (
     compress_amount,

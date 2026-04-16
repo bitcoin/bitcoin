@@ -8,7 +8,6 @@ from test_framework.test_framework import BitcoinTestFramework
 from test_framework.address import ADDRESS_BCRT1_UNSPENDABLE_DESCRIPTOR
 from test_framework.blocktools import (
     create_block,
-    create_coinbase,
 )
 from test_framework.util import (
     assert_equal,

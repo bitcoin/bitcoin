@@ -9,7 +9,6 @@ import platform
 from test_framework.address import ADDRESS_BCRT1_UNSPENDABLE
 from test_framework.blocktools import (
     create_block,
-    create_coinbase,
 )
 from test_framework.descriptors import descsum_create
 from test_framework.test_framework import BitcoinTestFramework

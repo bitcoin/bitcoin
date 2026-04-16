@@ -10,7 +10,6 @@ Test that the CHECKLOCKTIMEVERIFY soft-fork activates.
 from test_framework.blocktools import (
     TIME_GENESIS_BLOCK,
     create_block,
-    create_coinbase,
 )
 from test_framework.messages import (
     CTransaction,

@@ -16,7 +16,6 @@ import time
 
 from test_framework.blocktools import (
     create_block,
-    create_coinbase,
 )
 from test_framework.messages import (
     msg_pong,
