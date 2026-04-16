@@ -1068,20 +1068,16 @@ std::vector<WalletDestination> DescriptorScriptPubKeyMan::MarkUnusedAddresses(co
     LOCK(cs_desc_man);
     std::vector<WalletDestination> result;
     if (IsMine(script)) {
-        int32_t index = m_map_script_pub_keys[script];
+        const int32_t index = m_map_script_pub_keys[script];
+        CTxDestination observed_dest;
+        // Return only the observed destination. Other skipped addresses can be
+        // recorded lazily if they are later seen in transactions.
+        if (ExtractDestination(script, observed_dest)) {
+            result.push_back({observed_dest, std::nullopt});
+        }
         if (index >= m_wallet_descriptor.next_index) {
-            WalletLogPrintf("%s: Detected a used keypool item at index %d, mark all keypool items up to this item as used\n", __func__, index);
-            auto out_keys = std::make_unique<FlatSigningProvider>();
-            std::vector<CScript> scripts_temp;
-            while (index >= m_wallet_descriptor.next_index) {
-                if (!m_wallet_descriptor.descriptor->ExpandFromCache(m_wallet_descriptor.next_index, m_wallet_descriptor.cache, scripts_temp, *out_keys)) {
-                    throw std::runtime_error(std::string(__func__) + ": Unable to expand descriptor from cache");
-                }
-                CTxDestination dest;
-                ExtractDestination(scripts_temp[0], dest);
-                result.push_back({dest, std::nullopt});
-                m_wallet_descriptor.next_index++;
-            }
+            WalletLogPrintf("%s: Detected a used keypool item at index %d, advance descriptor state past this item\n", __func__, index);
+            m_wallet_descriptor.next_index = index + 1;
         }
         if (!TopUp()) {
             WalletLogPrintf("%s: Topping up keypool failed (locked wallet)\n", __func__);

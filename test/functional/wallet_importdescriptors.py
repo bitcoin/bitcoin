@@ -17,6 +17,7 @@ variants.
 
 import concurrent.futures
 import time
+from decimal import Decimal
 
 from test_framework.authproxy import JSONRPCException
 from test_framework.blocktools import COINBASE_MATURITY
@@ -64,6 +65,85 @@ class ImportDescriptorsTest(BitcoinTestFramework):
         if error_code is not None:
             assert_equal(result[0]['error']['code'], error_code)
             assert_equal(result[0]['error']['message'], error_message)
+
+    def test_high_index_descriptor_import_gap_regression(self, funding_wallet):
+        self.log.info("Test high-index descriptor import does not materialize a gap-sized receive address set")
+
+        wallet_name = "w_high_index_gap"
+        self.nodes[1].createwallet(wallet_name=wallet_name)
+        gap_wallet = self.nodes[1].get_wallet_rpc(wallet_name)
+
+        high_index = 1000
+        legacy_desc = next(
+            desc["desc"]
+            for desc in gap_wallet.listdescriptors(True)["descriptors"]
+            if desc["active"] and not desc["internal"] and desc["desc"].startswith("pkh(")
+        )
+        high_addr = gap_wallet.deriveaddresses(legacy_desc, [high_index, high_index])[0]
+        next_addr = gap_wallet.deriveaddresses(legacy_desc, [high_index + 1, high_index + 1])[0]
+        next_after_reload_addr = gap_wallet.deriveaddresses(legacy_desc, [high_index + 2, high_index + 2])[0]
+        mid_addr = gap_wallet.deriveaddresses(legacy_desc, [high_index - 1, high_index - 1])[0]
+
+        txid = funding_wallet.sendtoaddress(high_addr, 1)
+        self.sync_mempools()
+        assert_equal(gap_wallet.listreceivedbyaddress(minconf=0, include_empty=True), [])
+
+        self.test_importdesc(
+            {
+                "desc": legacy_desc,
+                "active": True,
+                "range": [0, high_index],
+                "next_index": 0,
+                "timestamp": "now",
+            },
+            success=True,
+            wallet=gap_wallet,
+        )
+
+        assert_equal(gap_wallet.getbalances()["mine"]["untrusted_pending"], Decimal("1"))
+        received = gap_wallet.listreceivedbyaddress(minconf=0, include_empty=True)
+        assert_equal(len(received), 1)
+        assert_equal(received[0]["address"], high_addr)
+        assert_equal(received[0]["amount"], Decimal("1"))
+        assert_equal(received[0]["confirmations"], 0)
+        assert_equal(received[0]["txids"], [txid])
+
+        self.generatetoaddress(self.nodes[0], 1, funding_wallet.getnewaddress())
+        self.sync_all()
+
+        assert_equal(gap_wallet.getbalance(), Decimal("1"))
+        filtered = gap_wallet.listreceivedbyaddress(minconf=0, include_empty=True, address_filter=high_addr)
+        assert_equal(len(filtered), 1)
+        assert_equal(filtered[0]["address"], high_addr)
+        assert_equal(filtered[0]["amount"], Decimal("1"))
+
+        issued_addr = gap_wallet.getnewaddress("", "legacy")
+        assert_equal(issued_addr, next_addr)
+        assert issued_addr != high_addr
+
+        change_addr = gap_wallet.getrawchangeaddress(address_type="legacy")
+        assert gap_wallet.getaddressinfo(change_addr)["ischange"]
+
+        funding_wallet.sendtoaddress(mid_addr, 1)
+        self.generatetoaddress(self.nodes[0], 1, funding_wallet.getnewaddress())
+        self.sync_all()
+
+        received_addrs = {entry["address"] for entry in gap_wallet.listreceivedbyaddress(minconf=0, include_empty=True)}
+        assert_equal(received_addrs, {high_addr, issued_addr, mid_addr})
+        assert_equal(gap_wallet.getbalance(), Decimal("2"))
+
+        gap_wallet.unloadwallet()
+        self.nodes[1].loadwallet(wallet_name)
+        gap_wallet = self.nodes[1].get_wallet_rpc(wallet_name)
+
+        received_addrs = {entry["address"] for entry in gap_wallet.listreceivedbyaddress(minconf=0, include_empty=True)}
+        assert_equal(received_addrs, {high_addr, issued_addr, mid_addr})
+        assert_equal(gap_wallet.getbalance(), Decimal("2"))
+
+        issued_after_reload = gap_wallet.getnewaddress("", "legacy")
+        assert_equal(issued_after_reload, next_after_reload_addr)
+        assert issued_after_reload not in {high_addr, issued_addr, mid_addr}
+        assert gap_wallet.getaddressinfo(gap_wallet.getrawchangeaddress(address_type="legacy"))["ischange"]
 
     def run_test(self):
         self.log.info('Setting up wallets')
@@ -820,6 +900,8 @@ class ImportDescriptorsTest(BitcoinTestFramework):
                 success=True,
                 warnings=[expected_warning],
             )
+
+        self.test_high_index_descriptor_import_gap_regression(w0)
 
 
 if __name__ == '__main__':
