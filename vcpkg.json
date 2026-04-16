@@ -7,12 +7,19 @@
     "libevent"
   ],
   "default-features": [
+    "ipc",
     "qt",
     "tests",
     "wallet",
     "zeromq"
   ],
   "features": {
+    "ipc": {
+      "description": "Build multiprocess bitcoin-node and bitcoin-gui executables",
+      "dependencies": [
+        "capnproto"
+      ]
+    },
     "qt": {
       "description": "Build GUI, Qt 6",
       "dependencies": [
