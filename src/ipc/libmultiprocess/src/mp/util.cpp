@@ -7,14 +7,14 @@
 
 #include <cerrno>
 #include <cstdio>
-#include <filesystem>
-#include <iostream>
 #include <kj/common.h>
+#include <kj/debug.h>
 #include <kj/string-tree.h>
 #include <pthread.h>
 #include <sstream>
 #include <string>
 #include <sys/types.h>
+#include <spawn.h>
 #include <sys/resource.h>
 #include <sys/socket.h>
 #include <sys/wait.h>
@@ -32,7 +32,7 @@
 #include <pthread_np.h>
 #endif // HAVE_PTHREAD_GETTHREADID_NP
 
-namespace fs = std::filesystem;
+extern "C" char **environ; // NOLINT(readability-redundant-declaration)
 
 namespace mp {
 namespace {
@@ -181,16 +181,14 @@ SocketId StartSpawned(const SpawnConnectInfo& connect_info)
     }
 }
 
-void ExecProcess(const std::vector<std::string>& args)
+ProcessId StartProcess(const std::vector<std::string>& args)
 {
     const std::vector<char*> argv{MakeArgv(args)};
-    if (execvp(argv[0], argv.data()) != 0) {
-        perror("execvp failed");
-        if (errno == ENOENT && !args.empty()) {
-            std::cerr << "Missing executable: " << fs::weakly_canonical(args.front()) << '\n';
-        }
-        _exit(1);
+    ProcessId pid;
+    if (int err = posix_spawnp(&pid, argv[0], nullptr, nullptr, argv.data(), ::environ)) {
+        KJ_FAIL_SYSCALL("posix_spawnp", err, args.front());
     }
+    return pid;
 }
 
 int WaitProcess(ProcessId pid)

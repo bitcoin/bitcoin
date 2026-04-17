@@ -9,7 +9,6 @@
 #include <capnp/schema.capnp.h> // IWYU pragma: keep
 #include <capnp/schema.h>
 #include <capnp/schema-parser.h>
-#include <cerrno>
 #include <cstdint>
 #include <cstdio>
 #include <cstdlib>
@@ -27,8 +26,6 @@
 #include <sstream>
 #include <stdexcept>
 #include <string>
-#include <system_error>
-#include <unistd.h>
 #include <utility>
 #include <vector>
 
@@ -284,14 +281,7 @@ static void Generate(kj::StringPtr src_prefix,
     }
     args.emplace_back("--output=" capnp_PREFIX "/bin/capnpc-c++");
     args.emplace_back(src_file);
-    const int pid = fork();
-    if (pid == -1) {
-        throw std::system_error(errno, std::system_category(), "fork");
-    }
-    if (!pid) {
-        mp::ExecProcess(args);
-    }
-    const int status = mp::WaitProcess(pid);
+    const int status = mp::WaitProcess(mp::StartProcess(args));
     if (status) {
         throw std::runtime_error("Invoking " capnp_PREFIX "/bin/capnp failed");
     }
