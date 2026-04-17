@@ -14,6 +14,7 @@
 #include <test/util/setup_common.h>
 #include <test/util/time.h>
 #include <uint256.h>
+#include <univalue.h>
 #include <util/bitdeque.h>
 #include <util/byte_units.h>
 #include <util/fs.h>
@@ -36,7 +37,7 @@
 #include <optional>
 #include <string>
 #include <thread>
-#include <univalue.h>
+#include <type_traits>
 #include <utility>
 #include <vector>
 
@@ -1827,6 +1828,9 @@ BOOST_AUTO_TEST_CASE(saturating_left_shift_test)
     TestSaturatingLeftShift<int64_t>();
 }
 
+template <class Int, auto bytes>
+concept BraceInitializesTo = requires { Int{bytes}; };
+
 BOOST_AUTO_TEST_CASE(mib_string_literal_test)
 {
     // Basic equivalences and simple arithmetic operations
@@ -1850,16 +1854,12 @@ BOOST_AUTO_TEST_CASE(mib_string_literal_test)
     BOOST_CHECK_EQUAL(128_MiB, 0x8000000U);
     BOOST_CHECK_EQUAL(550_MiB, 550ULL * 1024 * 1024);
 
-    // Overflow handling
-    constexpr auto max_mib{std::numeric_limits<size_t>::max() >> 20};
-    if constexpr (SIZE_MAX == UINT32_MAX) {
-        BOOST_CHECK_EQUAL(max_mib, 4095U);
-        BOOST_CHECK_EQUAL(4095_MiB, size_t{4095} << 20);
-        BOOST_CHECK_EXCEPTION(4096_MiB, std::overflow_error, HasReason("MiB value too large for size_t byte conversion"));
-    } else {
-        BOOST_CHECK_EQUAL(4096_MiB, size_t{4096} << 20);
-    }
-    BOOST_CHECK_EXCEPTION(operator""_MiB(max_mib + 1), std::overflow_error, HasReason("MiB value too large for size_t byte conversion"));
+    // 4095 MiB fits in uint32_t bytes. 4096 MiB requires the uint64_t return type.
+    static_assert(BraceInitializesTo<uint32_t, 4095_MiB>);
+    static_assert(!BraceInitializesTo<uint32_t, 4096_MiB>);
+    static_assert(BraceInitializesTo<uint64_t, 4096_MiB>);
+    BOOST_CHECK_EQUAL(4095_MiB, uint32_t{4095} << 20);
+    BOOST_CHECK_EQUAL(4096_MiB, uint64_t{4096} << 20);
 }
 
 BOOST_AUTO_TEST_CASE(ceil_div_test)
@@ -1916,20 +1916,18 @@ BOOST_AUTO_TEST_CASE(gib_string_literal_test)
     BOOST_CHECK_EQUAL(3_GiB / 1_GiB, 3U);
     BOOST_CHECK_EQUAL(3_GiB, 3U << 30);
 
-    // Overflow handling and specific codebase values
-    constexpr auto max_gib{std::numeric_limits<size_t>::max() >> 30};
-    if constexpr (SIZE_MAX == UINT32_MAX) {
-        BOOST_CHECK_EQUAL(max_gib, 3U);
-        BOOST_CHECK_EXCEPTION(4_GiB, std::overflow_error, HasReason("GiB value too large for size_t byte conversion"));
-    } else {
-        BOOST_CHECK_GT(max_gib, 3U);
-        BOOST_CHECK_EQUAL(4_GiB, size_t{4} << 30);
-        BOOST_CHECK_EQUAL(4_GiB, 4096_MiB);
-        BOOST_CHECK_EQUAL(8_GiB, 8192_MiB);
-        BOOST_CHECK_EQUAL(16_GiB, 16384_MiB);
-        BOOST_CHECK_EQUAL(32_GiB, 32768_MiB);
-    }
-    BOOST_CHECK_EXCEPTION(operator""_GiB(max_gib + 1), std::overflow_error, HasReason("GiB value too large for size_t byte conversion"));
+    // 3 GiB fits in uint32_t bytes. 4 GiB requires the uint64_t return type.
+    static_assert(BraceInitializesTo<uint32_t, 3_GiB>);
+    static_assert(!BraceInitializesTo<uint32_t, 4_GiB>);
+    static_assert(BraceInitializesTo<uint64_t, 4_GiB>);
+    BOOST_CHECK_EQUAL(3_GiB, uint32_t{3} << 30);
+    BOOST_CHECK_EQUAL(4_GiB, uint64_t{4} << 30);
+
+    // Specific codebase values
+    BOOST_CHECK_EQUAL(4_GiB, 4096_MiB);
+    BOOST_CHECK_EQUAL(8_GiB, 8192_MiB);
+    BOOST_CHECK_EQUAL(16_GiB, 16384_MiB);
+    BOOST_CHECK_EQUAL(32_GiB, 32768_MiB);
 }
 
 BOOST_AUTO_TEST_SUITE_END()
