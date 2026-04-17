@@ -8,7 +8,7 @@
 
 #include <support/cleanse.h>
 
-#include <memory>
+#include <cstddef>
 #include <vector>
 
 template <typename T>

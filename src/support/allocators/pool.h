@@ -5,17 +5,17 @@
 #ifndef BITCOIN_SUPPORT_ALLOCATORS_POOL_H
 #define BITCOIN_SUPPORT_ALLOCATORS_POOL_H
 
+#include <util/check.h>
+#include <util/overflow.h>
+
+#include <algorithm>
 #include <array>
-#include <cassert>
 #include <cstddef>
 #include <list>
 #include <memory>
 #include <new>
 #include <type_traits>
 #include <utility>
-
-#include <util/check.h>
-#include <util/overflow.h>
 
 /**
  * A memory resource similar to std::pmr::unsynchronized_pool_resource, but

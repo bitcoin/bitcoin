@@ -9,8 +9,11 @@
 #include <support/lockedpool.h>
 #include <support/cleanse.h>
 
+#include <cstddef>
 #include <memory>
+#include <new>
 #include <string>
+#include <utility>
 
 //
 // Allocator that locks its contents from being paged
