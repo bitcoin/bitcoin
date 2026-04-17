@@ -11,7 +11,6 @@
 #include <kj/debug.h>
 #include <kj/string-tree.h>
 #include <optional>
-#include <pthread.h>
 #include <csignal>
 #include <sstream>
 #include <string>
@@ -22,6 +21,7 @@
 
 #ifdef WIN32
 #include <atomic>
+#include <process.h>
 #include <windows.h>
 #include <winsock2.h>
 #else
@@ -32,6 +32,11 @@
 #include <sys/types.h>
 #include <sys/wait.h>
 #include <unistd.h>
+#define _getpid getpid
+#endif
+
+#if !defined(WIN32) || defined(HAVE_PTHREAD_GETNAME_NP) || defined(HAVE_PTHREAD_THREADID_NP) || defined(HAVE_PTHREAD_GETTHREADID_NP)
+#include <pthread.h>
 #endif
 
 #ifdef __linux__
@@ -216,7 +221,7 @@ std::string ThreadName(const char* exe_name)
 #endif // HAVE_PTHREAD_GETNAME_NP
 
     std::ostringstream buffer;
-    buffer << (exe_name ? exe_name : "") << "-" << getpid() << "/";
+    buffer << (exe_name ? exe_name : "") << "-" << _getpid() << "/";
 
     if (thread_name[0] != '\0') {
         buffer << thread_name << "-";
