@@ -112,6 +112,12 @@ extern "C" {
  * object.
  *
  * Array lengths follow the pointer argument they describe.
+ *
+ * @section types Type conventions
+ *
+ * Fixed-width integer types (e.g. int32_t, uint32_t) are used for data values
+ * such as heights. Plain int and unsigned int are used for boolean-like values
+ * and flags.
  */
 
 /**
