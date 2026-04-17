@@ -12,25 +12,27 @@
 #include <kj/common.h>
 #include <kj/debug.h>
 #include <kj/string-tree.h>
-#include <pthread.h>
 #include <sstream>
 #include <string>
 #include <system_error>
 #include <thread> // NOLINT(misc-include-cleaner) // IWYU pragma: keep
-#include <unistd.h>
 #include <utility>
 #include <vector>
 
 #ifdef WIN32
 #include <atomic>
+#include <process.h>
 #include <windows.h>
 #include <winsock2.h>
 #else
 #include <fcntl.h>
+#include <pthread.h>
 #include <sys/resource.h>
 #include <sys/socket.h>
 #include <sys/types.h>
 #include <sys/wait.h>
+#include <unistd.h>
+#define _getpid getpid
 #endif
 
 #ifdef __linux__
@@ -80,12 +82,12 @@ size_t MaxFd()
 std::string ThreadName(const char* exe_name)
 {
     char thread_name[16] = {0};
-#ifdef HAVE_PTHREAD_GETNAME_NP
+#if defined(HAVE_PTHREAD_GETNAME_NP) && !defined(WIN32)
     pthread_getname_np(pthread_self(), thread_name, sizeof(thread_name));
 #endif // HAVE_PTHREAD_GETNAME_NP
 
     std::ostringstream buffer;
-    buffer << (exe_name ? exe_name : "") << "-" << getpid() << "/";
+    buffer << (exe_name ? exe_name : "") << "-" << _getpid() << "/";
 
     if (thread_name[0] != '\0') {
         buffer << thread_name << "-";
