@@ -70,6 +70,7 @@ BOOST_FIXTURE_TEST_CASE(write_during_multiblock_activation, TestChain100Setup)
 
     auto& chainstate{Assert(m_node.chainman)->ActiveChainstate()};
     BlockValidationState state_dummy{};
+    NodeClockContext clock_ctx{};
 
     // Pop two blocks from the tip
     const CBlockIndex* tip{chainstate.m_chain.Tip()};
@@ -88,7 +89,7 @@ BOOST_FIXTURE_TEST_CASE(write_during_multiblock_activation, TestChain100Setup)
     m_node.validation_signals->SyncWithValidationInterfaceQueue();
     // The periodic flush interval is between 50 and 70 minutes (inclusive)
     // The next call to a PERIODIC write will flush
-    SetMockTime(GetMockTime() + DATABASE_WRITE_INTERVAL_MAX);
+    clock_ctx += DATABASE_WRITE_INTERVAL_MAX;
 
     const auto sub{std::make_shared<TestSubscriber>()};
     m_node.validation_signals->RegisterSharedValidationInterface(sub);
