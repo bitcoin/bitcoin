@@ -19,6 +19,7 @@ from test_framework.messages import (
     CTxIn,
     CTxOut,
     MAX_BIP125_RBF_SEQUENCE,
+    SEQUENCE_FINAL,
     WITNESS_SCALE_FACTOR,
 )
 from test_framework.psbt import (
@@ -922,6 +923,29 @@ class PSBTTest(BitcoinTestFramework):
         assert_equal(len(joined_decoded['outputs']), 2)
         assert "final_scriptwitness" not in joined_decoded['inputs'][3]
         assert "final_scriptSig" not in joined_decoded['inputs'][3]
+
+        # Check that joinpsbts ignores locktime when all inputs use SEQUENCE_FINAL
+        addr5 = self.nodes[1].getnewaddress("", "bech32m")
+        utxo5 = self.create_outpoints(self.nodes[0], outputs=[{addr5: 5}])[0]
+        self.generate(self.nodes[0], 6)
+        vin = [{"txid": utxo4["txid"], "vout": utxo4["vout"], "sequence": SEQUENCE_FINAL}]
+        psbt_250 = self.nodes[1].createpsbt(vin, {self.nodes[0].getnewaddress():Decimal('4.999')}, locktime=250)
+        psbt_200 = self.nodes[1].createpsbt([utxo5], {self.nodes[0].getnewaddress():Decimal('4.999')}, locktime=200)
+        joined_lt = self.nodes[0].joinpsbts([psbt_250, psbt_200])
+        joined_lt_decoded = self.nodes[0].decodepsbt(joined_lt)
+        assert_equal(joined_lt_decoded['tx']['locktime'], 200)
+
+        # Check that joinpsbts uses the maximum locktime across locktime-enabled PSBTs
+        addr6 = self.nodes[1].getnewaddress("", "bech32m")
+        utxo6 = self.create_outpoints(self.nodes[0], outputs=[{addr6: 5}])[0]
+        self.generate(self.nodes[0], 6)
+        psbt_150 = self.nodes[1].createpsbt([utxo6], {self.nodes[0].getnewaddress():Decimal('4.999')}, locktime=150)
+        joined_lt = self.nodes[0].joinpsbts([psbt_150, psbt_200])
+        joined_lt_decoded = self.nodes[0].decodepsbt(joined_lt)
+        assert_equal(joined_lt_decoded['tx']['locktime'], 200)
+        joined_lt_rev = self.nodes[0].joinpsbts([psbt_200, psbt_150])
+        joined_lt_rev_dec = self.nodes[0].decodepsbt(joined_lt_rev)
+        assert_equal(joined_lt_rev_dec['tx']['locktime'], 200)
 
         # Check that joining shuffles the inputs and outputs
         # 10 attempts should be enough to get a shuffled join
