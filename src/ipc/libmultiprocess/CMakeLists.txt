@@ -193,6 +193,7 @@ target_link_libraries(multiprocess PUBLIC CapnProto::capnp)
 target_link_libraries(multiprocess PUBLIC CapnProto::capnp-rpc)
 target_link_libraries(multiprocess PUBLIC CapnProto::kj)
 target_link_libraries(multiprocess PUBLIC CapnProto::kj-async)
+target_link_libraries(multiprocess PUBLIC Threads::Threads)
 set_target_properties(multiprocess PROPERTIES
     PUBLIC_HEADER "${MP_PUBLIC_HEADERS}")
 install(TARGETS multiprocess EXPORT LibTargets
