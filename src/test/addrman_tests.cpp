@@ -97,8 +97,7 @@ BOOST_AUTO_TEST_CASE(addrman_simple)
 
 BOOST_AUTO_TEST_CASE(addrman_terrible_many_failures)
 {
-    auto now = Now<NodeSeconds>();
-    SetMockTime(now - (ADDRMAN_MIN_FAIL + 24h));
+    NodeClockContext clock_ctx{};
 
     auto addrman{std::make_unique<AddrMan>(EMPTY_NETGROUPMAN, DETERMINISTIC, GetCheckRatio(m_node))};
 
@@ -109,7 +108,7 @@ BOOST_AUTO_TEST_CASE(addrman_terrible_many_failures)
     BOOST_CHECK(addrman->Add({addr}, source));
     BOOST_CHECK(addrman->Good(addr));
 
-    SetMockTime(now);
+    clock_ctx += ADDRMAN_MIN_FAIL + 24h;
 
     CAddress addr_helper{CAddress(ResolveService("251.252.2.3", 8333), NODE_NONE)};
     addr_helper.nTime = Now<NodeSeconds>();
@@ -132,7 +131,7 @@ BOOST_AUTO_TEST_CASE(addrman_terrible_many_failures)
 
 BOOST_AUTO_TEST_CASE(addrman_penalty_self_announcement)
 {
-    SetMockTime(Now<NodeSeconds>());
+    NodeClockContext clock_ctx{};
     auto addrman = std::make_unique<AddrMan>(EMPTY_NETGROUPMAN, DETERMINISTIC, GetCheckRatio(m_node));
 
     const auto base_time{Now<NodeSeconds>() - 10000s};

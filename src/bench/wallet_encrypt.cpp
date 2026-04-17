@@ -8,6 +8,7 @@
 #include <random.h>
 #include <support/allocators/secure.h>
 #include <test/util/setup_common.h>
+#include <test/util/time.h>
 #include <util/time.h>
 #include <wallet/context.h>
 #include <wallet/test/util.h>
@@ -52,7 +53,7 @@ static void WalletEncrypt(benchmark::Bench& bench, unsigned int key_count)
 
     // Setting a mock time is necessary to force default derive iteration count during
     // wallet encryption.
-    SetMockTime(1);
+    NodeClockContext clock_ctx{1s};
 
     // This benchmark has a lot of overhead, this should be good enough to catch
     // any regressions, but for an accurate measurement of how long wallet
