@@ -145,7 +145,10 @@ struct PtrOrValue {
     std::variant<T*, T> data;
 
     template <typename... Args>
-    PtrOrValue(T* ptr, Args&&... args) : data(ptr ? ptr : std::variant<T*, T>{std::in_place_type<T>, std::forward<Args>(args)...}) {}
+    PtrOrValue(T* ptr, Args&&... args) : data(std::in_place_type<T*>, ptr)
+    {
+        if (!ptr) data.template emplace<T>(std::forward<Args>(args)...);
+    }
 
     T& operator*() { return data.index() ? std::get<T>(data) : *std::get<T*>(data); }
     T* operator->() { return &**this; }
