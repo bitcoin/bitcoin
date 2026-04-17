@@ -44,8 +44,8 @@ public:
     /// Initialize with the given time.
     explicit NodeClockContext(NodeSeconds init_time) { set(init_time); }
     explicit NodeClockContext(std::chrono::seconds init_time) { set(init_time); }
-    /// Initialize with current time, using the next tick to avoid going back by rounding to seconds.
-    explicit NodeClockContext() { set(++Now<NodeSeconds>().time_since_epoch()); }
+    /// Initialize with current time.
+    explicit NodeClockContext() { set(Now<NodeSeconds>().time_since_epoch()); }
 
     /// Unset mocktime.
     ~NodeClockContext() { set(0s); }
