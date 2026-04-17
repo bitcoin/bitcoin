@@ -165,5 +165,5 @@ This table describes the files installed by Bitcoin Core across different platfo
 
 ## Filesystem recommendations
 
-When choosing a filesystem for the data directory (`datadir`) or blocks directory (`blocksdir`) on **macOS**,the `exFAT` filesystem should be avoided.
+When choosing a filesystem for the data directory (`datadir`) or blocks directory (`blocksdir`) on **macOS**, the `exFAT` filesystem should be avoided.
 There have been multiple reports of database corruption and data loss when using this filesystem with Bitcoin Core, see [Issue #31454](https://github.com/bitcoin/bitcoin/issues/31454) for more details.
