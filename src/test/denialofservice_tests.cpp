@@ -243,6 +243,7 @@ BOOST_FIXTURE_TEST_CASE(stale_tip_peer_management, OutboundTest)
 BOOST_FIXTURE_TEST_CASE(block_relay_only_eviction, OutboundTest)
 {
     NodeId id{0};
+    NodeClockContext clock_ctx{};
     auto connman = std::make_unique<ConnmanTestMsg>(0x1337, 0x1337, *m_node.addrman, *m_node.netgroupman, Params());
     auto peerLogic = PeerManager::make(*connman, *m_node.addrman, nullptr, *m_node.chainman, *m_node.mempool, *m_node.warnings, {});
 
@@ -274,7 +275,6 @@ BOOST_FIXTURE_TEST_CASE(block_relay_only_eviction, OutboundTest)
     }
     BOOST_CHECK(vNodes.back()->fDisconnect == false);
 
-    NodeClockContext clock_ctx{};
     clock_ctx += MINIMUM_CONNECT_TIME;
     peerLogic->CheckForStaleTipAndEvictPeers();
     for (int i = 0; i < max_outbound_block_relay; ++i) {
