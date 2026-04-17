@@ -143,7 +143,10 @@ struct PtrOrValue {
     std::variant<T*, T> data;
 
     template <typename... Args>
-    PtrOrValue(T* ptr, Args&&... args) : data(ptr ? ptr : std::variant<T*, T>{std::in_place_type<T>, std::forward<Args>(args)...}) {}
+    PtrOrValue(T* ptr, Args&&... args) : data(std::in_place_type<T*>, ptr)
+    {
+        if (!ptr) data.template emplace<T>(std::forward<Args>(args)...);
+    }
 
     T& operator*() { return data.index() ? std::get<T>(data) : *std::get<T*>(data); }
     T* operator->() { return &**this; }
@@ -282,6 +285,10 @@ using ConnectInfoToArgsFn = std::function<std::vector<std::string>(const Connect
 //! needs to be passed to the child process, and executes the argv command line
 //! it returns. Returns child process id and socket id.
 std::tuple<ProcessId, SocketId> SpawnProcess(ConnectInfoToArgsFn&& connect_info_to_args);
+
+//! Spawn a process and return its process id. Caller should call WaitProcess
+//! on the returned id.
+ProcessId SpawnProcess(const std::vector<std::string>& args);
 
 //! Initialize spawned child process using the ConnectInfo string passed to it,
 //! returning a socket id for communicating with the parent process.
