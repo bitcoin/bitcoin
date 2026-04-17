@@ -10,6 +10,7 @@
 #include <filesystem>
 #include <iostream>
 #include <kj/common.h>
+#include <kj/debug.h>
 #include <kj/string-tree.h>
 #include <pthread.h>
 #include <sstream>
@@ -176,9 +177,12 @@ SocketId StartSpawned(const ConnectInfo& connect_info)
     return std::stoi(connect_info);
 }
 
-void ExecProcess(const std::vector<std::string>& args)
+ProcessId ExecProcess(const std::vector<std::string>& args)
 {
     const std::vector<char*> argv{MakeArgv(args)};
+    ProcessId pid;
+    KJ_SYSCALL(pid = fork());
+    if (pid) return pid;
     if (execvp(argv[0], argv.data()) != 0) {
         perror("execvp failed");
         if (errno == ENOENT && !args.empty()) {
@@ -186,6 +190,7 @@ void ExecProcess(const std::vector<std::string>& args)
         }
         _exit(1);
     }
+    KJ_UNREACHABLE;
 }
 
 int WaitProcess(ProcessId pid)

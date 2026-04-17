@@ -270,10 +270,9 @@ std::tuple<ProcessId, SocketId> SpawnProcess(ConnectInfoToArgsFn&& connect_info_
 //! returning a socket id for communicating with the parent process.
 SocketId StartSpawned(const ConnectInfo& connect_info);
 
-//! Call execvp with vector args.
-//! Not safe to call in a post-fork child of a multi-threaded process.
-//! Currently only used by mpgen at build time.
-void ExecProcess(const std::vector<std::string>& args);
+//! Start a process and return its process id. Caller should call WaitProcess
+//! on the returned id.
+ProcessId ExecProcess(const std::vector<std::string>& args);
 
 //! Wait for a process to exit and return its exit code.
 int WaitProcess(ProcessId pid);
