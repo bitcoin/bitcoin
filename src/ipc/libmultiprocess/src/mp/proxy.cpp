@@ -111,13 +111,20 @@ Connection::~Connection()
     // when one side of a socket pair is closed the other side may not receive
     // these messages, preventing the remote side from freeing ProxyServer
     // resources and shutting down cleanly.
-    try {
+    // Use kj::runCatchingExceptions instead of try/catch because on macOS with
+    // dynamic libraries, kj::Exception typeinfo differs between libcapnp and
+    // the calling binary, so catch (const kj::Exception&) silently fails to
+    // match. kj::runCatchingExceptions uses KJ's own interception mechanism
+    // which works correctly across dynamic library boundaries.
+    KJ_IF_MAYBE(exception, kj::runCatchingExceptions([&]() {
         m_stream->shutdownWrite();
-    } catch (const kj::Exception& e) {
+    })) {
         // Ignore ENOTCONN: on macOS/FreeBSD (unlike Linux), shutdown(SHUT_WR)
         // returns ENOTCONN if the peer already closed the connection. This is
         // expected when the destructor is triggered by a remote disconnect.
-        if (e.getType() != kj::Exception::Type::DISCONNECTED) throw;
+        if (exception->getType() != kj::Exception::Type::DISCONNECTED) {
+            kj::throwRecoverableException(kj::mv(*exception));
+        }
     }
 
     // ProxyClient cleanup handlers are in sync list, and ProxyServer cleanup
