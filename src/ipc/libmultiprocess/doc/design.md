@@ -120,7 +120,7 @@ sequenceDiagram
     participant PMT as ProxyMethodTraits
     participant Impl as Actual C++ Method
 
-    serverInvoke->>SF1: SF1::invoke 
+    serverInvoke->>SF1: SF1::invoke
     SF1->>SF2: SF2::invoke
     SF2->>SR: SR::invoke
     SR->>SC: SC::invoke
@@ -165,7 +165,7 @@ Thread mapping enables each client thread to have a dedicated server thread proc
 Thread mapping is initialized by defining an interface method with a `ThreadMap` parameter and/or response. The example below adds `ThreadMap` to the `construct` method because libmultiprocess calls the `construct` method automatically.
 
 ```capnp
-interface InitInterface $Proxy.wrap("Init") { 
+interface InitInterface $Proxy.wrap("Init") {
     construct @0 (threadMap: Proxy.ThreadMap) -> (threadMap :Proxy.ThreadMap);
 }
 ```
