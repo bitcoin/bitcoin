@@ -23,8 +23,9 @@ public:
     /// The func argument must be constructed from the C++11 __func__ macro.
     /// Ref: https://en.cppreference.com/w/cpp/language/function.html#func
     /// Non-static string literals are not supported.
-    SourceLocation(const char* func,
-                   std::source_location loc = std::source_location::current())
+    explicit SourceLocation(
+        const char* func,
+        std::source_location loc = std::source_location::current())
         : m_func{func}, m_loc{loc} {}
 
     std::string_view file_name() const { return m_loc.file_name(); }
