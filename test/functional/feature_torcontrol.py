@@ -119,6 +119,11 @@ class TorControlTest(BitcoinTestFramework):
             "-debug=tor",
         ])
 
+        # Wait for connection and PROTOCOLINFO command
+        mock_tor.conn_ready.wait(timeout=10)
+        self.wait_until(lambda: len(mock_tor.received_commands) >= 1, timeout=10)
+        assert_equal(mock_tor.received_commands[0], "PROTOCOLINFO 1")
+
     def test_basic(self):
         self.log.info("Test Tor control basic functionality")
 
@@ -143,11 +148,6 @@ class TorControlTest(BitcoinTestFramework):
 
         mock_tor = MockTorControlServer(self.next_port(), manual_mode=True)
         self.restart_with_mock(mock_tor)
-
-        # Wait for connection and PROTOCOLINFO command
-        mock_tor.conn_ready.wait(timeout=10)
-        self.wait_until(lambda: len(mock_tor.received_commands) >= 1, timeout=10)
-        assert_equal(mock_tor.received_commands[0], "PROTOCOLINFO 1")
 
         # Send partial response (no \r\n on last line)
         mock_tor.send_raw(
@@ -206,11 +206,6 @@ class TorControlTest(BitcoinTestFramework):
 
         mock_tor = MockTorControlServer(self.next_port(), manual_mode=True)
         self.restart_with_mock(mock_tor)
-
-        # Wait for connection and PROTOCOLINFO command.
-        mock_tor.conn_ready.wait(timeout=10)
-        self.wait_until(lambda: len(mock_tor.received_commands) >= 1, timeout=10)
-        assert_equal(mock_tor.received_commands[0], "PROTOCOLINFO 1")
 
         # Send a single line longer than MAX_LINE_LENGTH. The node should disconnect.
         MAX_LINE_LENGTH = 100000
