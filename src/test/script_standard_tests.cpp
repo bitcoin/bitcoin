@@ -131,6 +131,13 @@ BOOST_AUTO_TEST_CASE(script_standard_Solver_success)
     BOOST_CHECK(solutions[0] == std::vector<unsigned char>{16});
     BOOST_CHECK(solutions[1] == ToByteVector(uint256::ONE));
 
+    // TxoutType::WITNESS_V2_P2MR
+    s.clear();
+    s << OP_2 << ToByteVector(uint256::ONE);
+    BOOST_CHECK_EQUAL(Solver(s, solutions), TxoutType::WITNESS_V2_P2MR);
+    BOOST_CHECK_EQUAL(solutions.size(), 1U);
+    BOOST_CHECK(solutions[0] == ToByteVector(uint256::ONE));
+
     // TxoutType::ANCHOR
     s.clear();
     s << OP_1 << ANCHOR_BYTES;
@@ -298,11 +305,18 @@ BOOST_AUTO_TEST_CASE(script_standard_ExtractDestination)
     WitnessUnknown unk_v1{1, ToByteVector(pubkey)};
     BOOST_CHECK(std::get<WitnessUnknown>(address) == unk_v1);
     s.clear();
-    // -> segwit versions 2+ are not specified yet
+    // -> segwit version 2 with 32-byte program (P2MR) currently maps to WitnessUnknown at destination level
+    s << OP_2 << ToByteVector(uint256::ONE);
+    BOOST_CHECK(ExtractDestination(s, address));
+    WitnessUnknown unk_v2{2, ToByteVector(uint256::ONE)};
+    BOOST_CHECK(std::get<WitnessUnknown>(address) == unk_v2);
+
+    s.clear();
+    // -> segwit version 2 with undefined program size
     s << OP_2 << ToByteVector(xpk);
     BOOST_CHECK(ExtractDestination(s, address));
-    WitnessUnknown unk_v2{2, ToByteVector(xpk)};
-    BOOST_CHECK(std::get<WitnessUnknown>(address) == unk_v2);
+    WitnessUnknown unk_v2_unknown_size{2, ToByteVector(xpk)};
+    BOOST_CHECK(std::get<WitnessUnknown>(address) == unk_v2_unknown_size);
 }
 
 BOOST_AUTO_TEST_CASE(script_standard_GetScriptFor_)

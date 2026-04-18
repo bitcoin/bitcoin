@@ -639,6 +639,7 @@ static bool SignStep(const SigningProvider& provider, const BaseSignatureCreator
     case TxoutType::NONSTANDARD:
     case TxoutType::NULL_DATA:
     case TxoutType::WITNESS_UNKNOWN:
+    case TxoutType::WITNESS_V2_P2MR:
         return false;
     case TxoutType::PUBKEY:
         if (!CreateSig(creator, sigdata, provider, sig, CPubKey(vSolutions[0]), scriptPubKey, sigversion)) return false;
@@ -784,6 +785,9 @@ bool ProduceSignature(const SigningProvider& provider, const BaseSignatureCreato
         if (solved) {
             sigdata.scriptWitness.stack = std::move(result);
         }
+        result.clear();
+    } else if (whichType == TxoutType::WITNESS_V2_P2MR && !P2SH) {
+        sigdata.witness = true;
         result.clear();
     } else if (solved && whichType == TxoutType::WITNESS_UNKNOWN) {
         sigdata.witness = true;

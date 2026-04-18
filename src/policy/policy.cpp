@@ -238,6 +238,13 @@ TxValidationState ValidateInputsStandardness(const CTransaction& tx, const CCoin
             // validation.
             state.Invalid(TxValidationResult::TX_INPUTS_NOT_STANDARD, "bad-txns-nonstandard-inputs", strprintf("input %u witness program is undefined", i));
             return state;
+        } else if (whichType == TxoutType::WITNESS_V2_P2MR) {
+            // Policy-safety guard: P2MR spends must be evaluated under SCRIPT_VERIFY_P2MR rules.
+            // If the input has no witness, block it early to avoid treating v2 outputs as effectively anyone-can-spend.
+            if (tx.vin[i].scriptWitness.IsNull()) {
+                state.Invalid(TxValidationResult::TX_INPUTS_NOT_STANDARD, "bad-txns-nonstandard-inputs", strprintf("input %u p2mr witness missing", i));
+                return state;
+            }
         } else if (whichType == TxoutType::SCRIPTHASH) {
             std::vector<std::vector<unsigned char> > stack;
             ScriptError serror;
@@ -345,6 +352,28 @@ bool IsWitnessStandard(const CTransaction& tx, const CCoinsViewCache& mapInputs)
             } else {
                 // 0 stack elements; this is already invalid by consensus rules
                 return false;
+            }
+        }
+
+        // Check policy limits for P2MR spends:
+        // - script-path-only
+        // - No annexes
+        // - MAX_STANDARD_P2MR_STACK_ITEM_SIZE for tapscript leaf spends
+        if (witnessversion == 2 && witnessprogram.size() == WITNESS_V2_P2MR_SIZE && !p2sh) {
+            std::span stack{tx.vin[i].scriptWitness.stack};
+            if (stack.size() < 2) return false;
+            if (!stack.back().empty() && stack.back()[0] == ANNEX_TAG) {
+                // Annexes are nonstandard as long as no semantics are defined for them.
+                return false;
+            }
+            const auto& control_block = SpanPopBack(stack);
+            SpanPopBack(stack); // Ignore script
+            if (control_block.empty()) return false;
+            if ((control_block[0] & 1) != 1) return false;
+            if ((control_block[0] & TAPROOT_LEAF_MASK) == TAPROOT_LEAF_TAPSCRIPT) {
+                for (const auto& item : stack) {
+                    if (item.size() > MAX_STANDARD_P2MR_STACK_ITEM_SIZE) return false;
+                }
             }
         }
     }

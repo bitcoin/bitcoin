@@ -1196,14 +1196,14 @@ BOOST_AUTO_TEST_CASE(spends_witness_prog)
     tx_create.vout[0].scriptPubKey = GetScriptForDestination(PubKeyDestination{pubkey});
     BOOST_CHECK_EQUAL(Solver(tx_create.vout[0].scriptPubKey, sol_dummy), TxoutType::PUBKEY);
     tx_spend.vin[0].prevout.hash = tx_create.GetHash();
-    AddCoins(coins, CTransaction{tx_create}, 0, false);
+    AddCoins(coins, CTransaction{tx_create}, /*nHeight=*/0, /*check_for_overwrite=*/false);
     BOOST_CHECK(!::SpendsNonAnchorWitnessProg(CTransaction{tx_spend}, coins));
 
     // P2PKH
     tx_create.vout[0].scriptPubKey = GetScriptForDestination(PKHash{pubkey});
     BOOST_CHECK_EQUAL(Solver(tx_create.vout[0].scriptPubKey, sol_dummy), TxoutType::PUBKEYHASH);
     tx_spend.vin[0].prevout.hash = tx_create.GetHash();
-    AddCoins(coins, CTransaction{tx_create}, 0, false);
+    AddCoins(coins, CTransaction{tx_create}, /*nHeight=*/0, /*check_for_overwrite=*/false);
     BOOST_CHECK(!::SpendsNonAnchorWitnessProg(CTransaction{tx_spend}, coins));
 
     // P2SH
@@ -1306,9 +1306,27 @@ BOOST_AUTO_TEST_CASE(spends_witness_prog)
     tx_spend.vin[0].scriptSig.clear();
     BOOST_CHECK(!::SpendsNonAnchorWitnessProg(CTransaction{tx_spend}, coins));
 
-    // Various undefined version >1 32-byte witness programs.
+    // Version 2 32-byte witness program (P2MR).
     const auto program{ToByteVector(XOnlyPubKey{pubkey})};
-    for (int i{2}; i <= 16; ++i) {
+    tx_create.vout[0].scriptPubKey = GetScriptForDestination(WitnessUnknown{2, program});
+    BOOST_CHECK_EQUAL(Solver(tx_create.vout[0].scriptPubKey, sol_dummy), TxoutType::WITNESS_V2_P2MR);
+    tx_spend.vin[0].prevout.hash = tx_create.GetHash();
+    AddCoins(coins, CTransaction{tx_create}, 0, false);
+    BOOST_CHECK(::SpendsNonAnchorWitnessProg(CTransaction{tx_spend}, coins));
+
+    // It's also detected within P2SH.
+    redeem_script = tx_create.vout[0].scriptPubKey;
+    tx_create.vout[0].scriptPubKey = GetScriptForDestination(ScriptHash(redeem_script));
+    BOOST_CHECK_EQUAL(Solver(tx_create.vout[0].scriptPubKey, sol_dummy), TxoutType::SCRIPTHASH);
+    tx_spend.vin[0].prevout.hash = tx_create.GetHash();
+    tx_spend.vin[0].scriptSig = CScript{} << ToByteVector(redeem_script);
+    AddCoins(coins, CTransaction{tx_create}, 0, false);
+    BOOST_CHECK(::SpendsNonAnchorWitnessProg(CTransaction{tx_spend}, coins));
+    tx_spend.vin[0].scriptSig.clear();
+    BOOST_CHECK(!::SpendsNonAnchorWitnessProg(CTransaction{tx_spend}, coins));
+
+    // Various undefined version >1 32-byte witness programs.
+    for (int i{3}; i <= 16; ++i) {
         tx_create.vout[0].scriptPubKey = GetScriptForDestination(WitnessUnknown{i, program});
         BOOST_CHECK_EQUAL(Solver(tx_create.vout[0].scriptPubKey, sol_dummy), TxoutType::WITNESS_UNKNOWN);
         tx_spend.vin[0].prevout.hash = tx_create.GetHash();
