@@ -179,19 +179,19 @@ static RPCMethod getprivatebroadcastinfo()
             const auto txs{peerman.GetPrivateBroadcastInfo()};
 
             UniValue transactions(UniValue::VARR);
-            for (const auto& tx_info : txs) {
+            for (const auto& [tx, status] : txs) {
                 UniValue o(UniValue::VOBJ);
-                o.pushKV("txid", tx_info.tx->GetHash().ToString());
-                o.pushKV("wtxid", tx_info.tx->GetWitnessHash().ToString());
-                o.pushKV("hex", EncodeHexTx(*tx_info.tx));
-                o.pushKV("time_added", TicksSinceEpoch<std::chrono::seconds>(tx_info.time_added));
+                o.pushKV("txid", tx->GetHash().ToString());
+                o.pushKV("wtxid", tx->GetWitnessHash().ToString());
+                o.pushKV("hex", EncodeHexTx(*tx));
+                o.pushKV("time_added", TicksSinceEpoch<std::chrono::seconds>(status.time_added));
                 UniValue peers(UniValue::VARR);
-                for (const auto& peer : tx_info.peers) {
+                for (const auto& ss : status.send_statuses) {
                     UniValue p(UniValue::VOBJ);
-                    p.pushKV("address", peer.address.ToStringAddrPort());
-                    p.pushKV("sent", TicksSinceEpoch<std::chrono::seconds>(peer.sent));
-                    if (peer.received.has_value()) {
-                        p.pushKV("received", TicksSinceEpoch<std::chrono::seconds>(*peer.received));
+                    p.pushKV("address", ss.address.ToStringAddrPort());
+                    p.pushKV("sent", TicksSinceEpoch<std::chrono::seconds>(ss.picked));
+                    if (ss.confirmed.has_value()) {
+                        p.pushKV("received", TicksSinceEpoch<std::chrono::seconds>(*ss.confirmed));
                     }
                     peers.push_back(std::move(p));
                 }
