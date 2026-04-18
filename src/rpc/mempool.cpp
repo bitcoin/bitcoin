@@ -41,7 +41,7 @@ using node::DEFAULT_MAX_BURN_AMOUNT;
 using node::DEFAULT_MAX_RAW_TX_FEE_RATE;
 using node::MempoolPath;
 using node::NodeContext;
-using node::TransactionError;
+using node::TransactionResponse;
 using util::ToString;
 
 static RPCMethod sendrawtransaction()
@@ -98,7 +98,7 @@ static RPCMethod sendrawtransaction()
 
             for (const auto& out : mtx.vout) {
                 if((out.scriptPubKey.IsUnspendable() || !out.scriptPubKey.HasValidOps()) && out.nValue > max_burn_amount) {
-                    throw JSONRPCTransactionError(TransactionError::MAX_BURN_EXCEEDED);
+                    throw JSONRPCTransactionError(TransactionResponse::MAX_BURN_EXCEEDED);
                 }
             }
 
@@ -124,13 +124,13 @@ static RPCMethod sendrawtransaction()
             }
             const auto method = private_broadcast_enabled ? node::TxBroadcast::NO_MEMPOOL_PRIVATE_BROADCAST
                                                           : node::TxBroadcast::MEMPOOL_AND_BROADCAST_TO_ALL;
-            const TransactionError err = BroadcastTransaction(node,
+            const TransactionResponse err = BroadcastTransaction(node,
                                                               tx,
                                                               err_string,
                                                               max_raw_tx_fee,
                                                               method,
                                                               /*wait_callback=*/true);
-            if (TransactionError::OK != err) {
+            if (TransactionResponse::OK != err) {
                 throw JSONRPCTransactionError(err, err_string);
             }
 
@@ -1387,7 +1387,7 @@ static RPCMethod submitpackage()
 
                 for (const auto& out : mtx.vout) {
                     if((out.scriptPubKey.IsUnspendable() || !out.scriptPubKey.HasValidOps()) && out.nValue > max_burn_amount) {
-                        throw JSONRPCTransactionError(TransactionError::MAX_BURN_EXCEEDED);
+                        throw JSONRPCTransactionError(TransactionResponse::MAX_BURN_EXCEEDED);
                     }
                 }
 
@@ -1395,7 +1395,7 @@ static RPCMethod submitpackage()
             }
             CHECK_NONFATAL(!txns.empty());
             if (txns.size() > 1 && !IsChildWithParentsTree(txns)) {
-                throw JSONRPCTransactionError(TransactionError::INVALID_PACKAGE, "package topology disallowed. not child-with-parents or parents depend on each other.");
+                throw JSONRPCTransactionError(TransactionResponse::INVALID_PACKAGE, "package topology disallowed. not child-with-parents or parents depend on each other.");
             }
 
             NodeContext& node = EnsureAnyNodeContext(request.context);
@@ -1419,7 +1419,7 @@ static RPCMethod submitpackage()
                 case PackageValidationResult::PCKG_MEMPOOL_ERROR:
                 {
                     // This only happens with internal bug; user should stop and report
-                    throw JSONRPCTransactionError(TransactionError::MEMPOOL_ERROR,
+                    throw JSONRPCTransactionError(TransactionResponse::MEMPOOL_ERROR,
                         package_result.m_state.GetRejectReason());
                 }
                 case PackageValidationResult::PCKG_POLICY:
@@ -1448,7 +1448,7 @@ static RPCMethod submitpackage()
                                                       /*max_tx_fee=*/0,
                                                       node::TxBroadcast::MEMPOOL_AND_BROADCAST_TO_ALL,
                                                       /*wait_callback=*/true);
-                if (err != TransactionError::OK) {
+                if (err != TransactionResponse::OK) {
                     throw JSONRPCTransactionError(err,
                         strprintf("transaction broadcast failed: %s (%d transactions were broadcast successfully)",
                             err_string, num_broadcast));

@@ -16,20 +16,20 @@
 #include <node/transaction.h>
 
 namespace node {
-static TransactionError HandleATMPError(const TxValidationState& state, std::string& err_string_out)
+static TransactionResponse HandleATMPError(const TxValidationState& state, std::string& err_string_out)
 {
     err_string_out = state.ToString();
     if (state.IsInvalid()) {
         if (state.GetResult() == TxValidationResult::TX_MISSING_INPUTS) {
-            return TransactionError::MISSING_INPUTS;
+            return TransactionResponse::MISSING_INPUTS;
         }
-        return TransactionError::MEMPOOL_REJECTED;
+        return TransactionResponse::MEMPOOL_REJECTED;
     } else {
-        return TransactionError::MEMPOOL_ERROR;
+        return TransactionResponse::MEMPOOL_ERROR;
     }
 }
 
-TransactionError BroadcastTransaction(NodeContext& node,
+TransactionResponse BroadcastTransaction(NodeContext& node,
                                       const CTransactionRef tx,
                                       std::string& err_string,
                                       const CAmount& max_tx_fee,
@@ -57,7 +57,7 @@ TransactionError BroadcastTransaction(NodeContext& node,
             const Coin& existingCoin = view.AccessCoin(COutPoint(txid, o));
             // IsSpent doesn't mean the coin is spent, it means the output doesn't exist.
             // So if the output does exist, then this transaction exists in the chain.
-            if (!existingCoin.IsSpent()) return TransactionError::ALREADY_IN_UTXO_SET;
+            if (!existingCoin.IsSpent()) return TransactionResponse::ALREADY_IN_UTXO_SET;
         }
 
         if (auto mempool_tx = node.mempool->get(txid); mempool_tx) {
@@ -79,7 +79,7 @@ TransactionError BroadcastTransaction(NodeContext& node,
                 if (result.m_result_type != MempoolAcceptResult::ResultType::VALID) {
                     return HandleATMPError(result.m_state, err_string);
                 } else if (check_max_fee && result.m_base_fees.value() > max_tx_fee) {
-                    return TransactionError::MAX_FEE_EXCEEDED;
+                    return TransactionResponse::MAX_FEE_EXCEEDED;
                 }
             }
 
@@ -137,7 +137,7 @@ TransactionError BroadcastTransaction(NodeContext& node,
         break;
     }
 
-    return TransactionError::OK;
+    return TransactionResponse::OK;
 }
 
 CTransactionRef GetTransaction(const CBlockIndex* const block_index, const CTxMemPool* const mempool, const Txid& hash, const BlockManager& blockman, uint256& hashBlock)

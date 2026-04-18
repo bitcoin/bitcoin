@@ -26,7 +26,7 @@ using common::TransactionErrorString;
 using node::AnalyzePSBT;
 using node::DEFAULT_MAX_RAW_TX_FEE_RATE;
 using node::PSBTAnalysis;
-using node::TransactionError;
+using node::TransactionResponse;
 
 PSBTOperationsDialog::PSBTOperationsDialog(
     QWidget* parent, WalletModel* wallet_model, ClientModel* client_model) : QDialog(parent, GUIUtil::dialog_flags),
@@ -119,10 +119,10 @@ void PSBTOperationsDialog::broadcastTransaction()
 
     CTransactionRef tx = MakeTransactionRef(mtx);
     std::string err_string;
-    TransactionError error =
+    TransactionResponse error =
         m_client_model->node().broadcastTransaction(tx, DEFAULT_MAX_RAW_TX_FEE_RATE.GetFeePerK(), err_string);
 
-    if (error == TransactionError::OK) {
+    if (error == TransactionResponse::OK) {
         showStatus(tr("Transaction broadcast successfully! Transaction ID: %1")
             .arg(QString::fromStdString(tx->GetHash().GetHex())), StatusLevel::INFO);
     } else {

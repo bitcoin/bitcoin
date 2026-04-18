@@ -19,7 +19,7 @@
 #include <optional>
 
 namespace node {
-enum class TransactionError;
+enum class TransactionResponse;
 } // namespace node
 
 using common::PSBTError;

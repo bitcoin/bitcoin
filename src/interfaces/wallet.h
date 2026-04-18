@@ -37,7 +37,7 @@ namespace common {
 enum class PSBTError;
 } // namespace common
 namespace node {
-enum class TransactionError;
+enum class TransactionResponse;
 } // namespace node
 namespace wallet {
 struct CreatedTransactionResult;

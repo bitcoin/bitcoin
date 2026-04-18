@@ -18,15 +18,15 @@
 #include <vector>
 
 using common::TransactionErrorString;
-using node::TransactionError;
+using node::TransactionResponse;
 
 namespace {
-constexpr TransactionError ALL_TRANSACTION_ERROR[] = {
-    TransactionError::MISSING_INPUTS,
-    TransactionError::ALREADY_IN_UTXO_SET,
-    TransactionError::MEMPOOL_REJECTED,
-    TransactionError::MEMPOOL_ERROR,
-    TransactionError::MAX_FEE_EXCEEDED,
+constexpr TransactionResponse ALL_TRANSACTION_RESPONSE[] = {
+    TransactionResponse::MISSING_INPUTS,
+    TransactionResponse::ALREADY_IN_UTXO_SET,
+    TransactionResponse::MEMPOOL_REJECTED,
+    TransactionResponse::MEMPOOL_ERROR,
+    TransactionResponse::MAX_FEE_EXCEEDED,
 };
 }; // namespace
 
@@ -37,10 +37,10 @@ FUZZ_TARGET(kitchen_sink)
 {
     FuzzedDataProvider fuzzed_data_provider(buffer.data(), buffer.size());
 
-    const TransactionError transaction_error = fuzzed_data_provider.PickValueInArray(ALL_TRANSACTION_ERROR);
-    (void)JSONRPCTransactionError(transaction_error);
-    (void)RPCErrorFromTransactionError(transaction_error);
-    (void)TransactionErrorString(transaction_error);
+    const TransactionResponse transaction_response = fuzzed_data_provider.PickValueInArray(ALL_TRANSACTION_RESPONSE);
+    (void)JSONRPCTransactionError(transaction_response);
+    (void)RPCErrorFromTransactionError(transaction_response);
+    (void)TransactionErrorString(transaction_response);
 
     (void)StringForFeeEstimateHorizon(fuzzed_data_provider.PickValueInArray(ALL_FEE_ESTIMATE_HORIZONS));
 

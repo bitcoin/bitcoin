@@ -25,7 +25,7 @@
 #include <vector>
 
 namespace node {
-enum class TransactionError {
+enum class TransactionResponse {
     OK, //!< No error
     MISSING_INPUTS,
     ALREADY_IN_UTXO_SET,

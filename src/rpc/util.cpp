@@ -35,7 +35,7 @@
 using common::PSBTError;
 using common::PSBTErrorString;
 using common::TransactionErrorString;
-using node::TransactionError;
+using node::TransactionResponse;
 using util::Join;
 using util::SplitString;
 using util::TrimString;
@@ -388,12 +388,12 @@ RPCErrorCode RPCErrorFromPSBTError(PSBTError err)
     return RPC_TRANSACTION_ERROR;
 }
 
-RPCErrorCode RPCErrorFromTransactionError(TransactionError terr)
+RPCErrorCode RPCErrorFromTransactionError(TransactionResponse tx_res)
 {
-    switch (terr) {
-        case TransactionError::MEMPOOL_REJECTED:
+    switch (tx_res) {
+        case TransactionResponse::MEMPOOL_REJECTED:
             return RPC_TRANSACTION_REJECTED;
-        case TransactionError::ALREADY_IN_UTXO_SET:
+        case TransactionResponse::ALREADY_IN_UTXO_SET:
             return RPC_VERIFY_ALREADY_IN_UTXO_SET;
         default: break;
     }
@@ -405,12 +405,12 @@ UniValue JSONRPCPSBTError(PSBTError err)
     return JSONRPCError(RPCErrorFromPSBTError(err), PSBTErrorString(err).original);
 }
 
-UniValue JSONRPCTransactionError(TransactionError terr, const std::string& err_string)
+UniValue JSONRPCTransactionError(TransactionResponse tx_res, const std::string& err_string)
 {
     if (err_string.length() > 0) {
-        return JSONRPCError(RPCErrorFromTransactionError(terr), err_string);
+        return JSONRPCError(RPCErrorFromTransactionError(tx_res), err_string);
     } else {
-        return JSONRPCError(RPCErrorFromTransactionError(terr), TransactionErrorString(terr).original);
+        return JSONRPCError(RPCErrorFromTransactionError(tx_res), TransactionErrorString(tx_res).original);
     }
 }
 

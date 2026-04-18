@@ -35,7 +35,7 @@
 using common::StringForFeeReason;
 using common::TransactionErrorString;
 using interfaces::FoundBlock;
-using node::TransactionError;
+using node::TransactionResponse;
 
 TRACEPOINT_SEMAPHORE(coin_selection, selected_coins);
 TRACEPOINT_SEMAPHORE(coin_selection, normal_create_tx_internal);
@@ -1421,7 +1421,7 @@ static util::Result<CreatedTransactionResult> CreateTransactionInternal(
     }
 
     if (current_fee > wallet.m_default_max_tx_fee) {
-        return util::Error{TransactionErrorString(TransactionError::MAX_FEE_EXCEEDED)};
+        return util::Error{TransactionErrorString(TransactionResponse::MAX_FEE_EXCEEDED)};
     }
 
     if (gArgs.GetBoolArg("-walletrejectlongchains", DEFAULT_WALLET_REJECT_LONG_CHAINS)) {
