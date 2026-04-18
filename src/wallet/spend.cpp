@@ -251,6 +251,7 @@ static OutputType GetOutputType(TxoutType type, bool is_from_p2sh)
 {
     switch (type) {
         case TxoutType::WITNESS_V1_TAPROOT:
+        case TxoutType::WITNESS_V2_P2MR:
             return OutputType::BECH32M;
         case TxoutType::WITNESS_V0_KEYHASH:
         case TxoutType::WITNESS_V0_SCRIPTHASH:

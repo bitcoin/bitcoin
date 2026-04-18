@@ -1721,11 +1721,37 @@ BOOST_AUTO_TEST_CASE(compute_tapleaf)
     BOOST_CHECK_EQUAL(ComputeTapleafHash(0xc2, std::span(script)), tlc2);
 }
 
+BOOST_AUTO_TEST_CASE(p2mr_witness_v2_validation)
+{
+    const std::vector<unsigned char> script_bytes{OP_TRUE};
+    const uint256 root = ComputeTapleafHash(TAPROOT_LEAF_TAPSCRIPT, std::span(script_bytes));
+    const CScript script_pubkey = CScript() << OP_2 << ToByteVector(root);
+
+    CScriptWitness witness_ok;
+    witness_ok.stack = {script_bytes, std::vector<unsigned char>{0xc1}};
+
+    ScriptError err;
+    const script_verify_flags flags = SCRIPT_VERIFY_P2SH | SCRIPT_VERIFY_WITNESS | SCRIPT_VERIFY_TAPROOT | SCRIPT_VERIFY_P2MR;
+    BOOST_CHECK(VerifyScript(CScript{}, script_pubkey, &witness_ok, flags, BaseSignatureChecker{}, &err));
+    BOOST_CHECK_EQUAL(err, SCRIPT_ERR_OK);
+
+    // Without P2MR verification enabled, v2 witness programs remain forward-compatible.
+    BOOST_CHECK(VerifyScript(CScript{}, script_pubkey, &witness_ok, SCRIPT_VERIFY_P2SH | SCRIPT_VERIFY_WITNESS | SCRIPT_VERIFY_TAPROOT, BaseSignatureChecker{}, &err));
+    BOOST_CHECK_EQUAL(err, SCRIPT_ERR_OK);
+
+    // P2MR control byte must have parity bit set.
+    CScriptWitness witness_bad_control;
+    witness_bad_control.stack = {script_bytes, std::vector<unsigned char>{0xc0}};
+    BOOST_CHECK(!VerifyScript(CScript{}, script_pubkey, &witness_bad_control, flags, BaseSignatureChecker{}, &err));
+    BOOST_CHECK_EQUAL(err, SCRIPT_ERR_WITNESS_PROGRAM_MISMATCH);
+}
+
 BOOST_AUTO_TEST_CASE(formatscriptflags)
 {
     // quick check that FormatScriptFlags reports any unknown/unexpected bits
     BOOST_CHECK_EQUAL(FormatScriptFlags(SCRIPT_VERIFY_P2SH), "P2SH");
     BOOST_CHECK_EQUAL(FormatScriptFlags(SCRIPT_VERIFY_P2SH | SCRIPT_VERIFY_TAPROOT), "P2SH,TAPROOT");
+    BOOST_CHECK_EQUAL(FormatScriptFlags(SCRIPT_VERIFY_P2MR), "P2MR");
     BOOST_CHECK_EQUAL(FormatScriptFlags(SCRIPT_VERIFY_P2SH | script_verify_flags::from_int(1u<<31)), "P2SH,0x80000000");
     BOOST_CHECK_EQUAL(FormatScriptFlags(SCRIPT_VERIFY_TAPROOT | script_verify_flags::from_int(1u<<27)), "TAPROOT,0x08000000");
     BOOST_CHECK_EQUAL(FormatScriptFlags(SCRIPT_VERIFY_TAPROOT | script_verify_flags::from_int((1u<<28) | (1ull<<58))), "TAPROOT,0x400000010000000");
