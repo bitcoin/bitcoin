@@ -144,14 +144,16 @@ private:
         NodeClock::time_point last_picked{}; ///< The most recent time when the transaction was picked for sending.
         size_t num_confirmed{0}; ///< Number of nodes that have confirmed reception of a transaction (by PONG).
         NodeClock::time_point last_confirmed{}; ///< The most recent time when the transaction was confirmed.
+        std::chrono::seconds urgency{0}; ///< Seconds elapsed since the first pick attempt.
 
         auto operator<=>(const Priority& other) const
         {
             // Invert `other` and `this` in the comparison because smaller num_picked, num_confirmed or
             // earlier times mean greater priority. In other words, if this.num_picked < other.num_picked
-            // then this > other.
-            return std::tie(other.num_picked, other.num_confirmed, other.last_picked, other.last_confirmed) <=>
-                   std::tie(num_picked, num_confirmed, last_picked, last_confirmed);
+            // then this > other. Urgency is placed last so it only breaks ties between transactions
+            // with equal send counts.
+            return std::tie(other.num_picked, other.num_confirmed, other.last_picked, other.last_confirmed, other.urgency) <=>
+                   std::tie(num_picked, num_confirmed, last_picked, last_confirmed, urgency);
         }
     };
 
