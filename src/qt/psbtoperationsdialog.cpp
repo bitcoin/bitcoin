@@ -22,7 +22,7 @@
 #include <iostream>
 #include <string>
 
-using common::TransactionErrorString;
+using common::TransactionResultString;
 using node::AnalyzePSBT;
 using node::DEFAULT_MAX_RAW_TX_FEE_RATE;
 using node::PSBTAnalysis;
@@ -127,7 +127,7 @@ void PSBTOperationsDialog::broadcastTransaction()
             .arg(QString::fromStdString(tx->GetHash().GetHex())), StatusLevel::INFO);
     } else {
         showStatus(tr("Transaction broadcast failed: %1")
-            .arg(QString::fromStdString(TransactionErrorString(error).translated)), StatusLevel::ERR);
+            .arg(QString::fromStdString(TransactionResultString(error).translated)), StatusLevel::ERR);
     }
 }
 

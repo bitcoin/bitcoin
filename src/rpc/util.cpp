@@ -34,7 +34,7 @@
 
 using common::PSBTError;
 using common::PSBTErrorString;
-using common::TransactionErrorString;
+using common::TransactionResultString;
 using node::TransactionResponse;
 using util::Join;
 using util::SplitString;
@@ -410,7 +410,7 @@ UniValue JSONRPCTransactionError(TransactionResponse tx_res, const std::string& 
     if (err_string.length() > 0) {
         return JSONRPCError(RPCErrorFromTransactionError(tx_res), err_string);
     } else {
-        return JSONRPCError(RPCErrorFromTransactionError(tx_res), TransactionErrorString(tx_res).original);
+        return JSONRPCError(RPCErrorFromTransactionError(tx_res), TransactionResultString(tx_res).original);
     }
 }
 

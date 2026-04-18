@@ -122,9 +122,9 @@ bilingual_str PSBTErrorString(PSBTError err)
     assert(false);
 }
 
-bilingual_str TransactionErrorString(const TransactionResponse err)
+bilingual_str TransactionResultString(const TransactionResponse result)
 {
-    switch (err) {
+    switch (result) {
         case TransactionResponse::OK:
             return Untranslated("No error");
         case TransactionResponse::MISSING_INPUTS:

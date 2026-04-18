@@ -28,7 +28,7 @@ using common::FeeModeFromString;
 using common::FeeModesDetail;
 using common::InvalidEstimateModeErrorMessage;
 using common::StringForFeeReason;
-using common::TransactionErrorString;
+using common::TransactionResultString;
 using node::TransactionResponse;
 
 namespace wallet {
@@ -1508,7 +1508,7 @@ RPCMethod sendall()
             CAmount effective_value = total_input_value - fee_from_size - total_bump_fees.value_or(0);
 
             if (fee_from_size > pwallet->m_default_max_tx_fee) {
-                throw JSONRPCError(RPC_WALLET_ERROR, TransactionErrorString(TransactionResponse::MAX_FEE_EXCEEDED).original);
+                throw JSONRPCError(RPC_WALLET_ERROR, TransactionResultString(TransactionResponse::MAX_FEE_EXCEEDED).original);
             }
 
             if (effective_value <= 0) {

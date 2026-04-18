@@ -33,7 +33,7 @@
 #include <cmath>
 
 using common::StringForFeeReason;
-using common::TransactionErrorString;
+using common::TransactionResultString;
 using interfaces::FoundBlock;
 using node::TransactionResponse;
 
@@ -1421,7 +1421,7 @@ static util::Result<CreatedTransactionResult> CreateTransactionInternal(
     }
 
     if (current_fee > wallet.m_default_max_tx_fee) {
-        return util::Error{TransactionErrorString(TransactionResponse::MAX_FEE_EXCEEDED)};
+        return util::Error{TransactionResultString(TransactionResponse::MAX_FEE_EXCEEDED)};
     }
 
     if (gArgs.GetBoolArg("-walletrejectlongchains", DEFAULT_WALLET_REJECT_LONG_CHAINS)) {
