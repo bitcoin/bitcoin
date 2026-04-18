@@ -78,7 +78,7 @@ class P2MRTest(BitcoinTestFramework):
         res = node.testmempoolaccept([bad_control_tx.serialize().hex()])[0]
         assert_equal(res["allowed"], False)
         self.log.info(f"Bad control reject reason: {res['reject-reason']}")
-        assert (
+        bad_control_reject_matches = (
             "bad-witness-nonstandard" in res["reject-reason"]
             or "bad-txns-nonstandard-inputs" in res["reject-reason"]
             or (
@@ -87,6 +87,7 @@ class P2MRTest(BitcoinTestFramework):
             )
             or "witness program is undefined" in res["reject-reason"]
         )
+        assert_equal(bad_control_reject_matches, True)
 
         self.log.info("Valid P2MR witness must be accepted")
         good_control = bytes([LEAF_VERSION_TAPSCRIPT | 1])  # 0xc1, parity bit set
