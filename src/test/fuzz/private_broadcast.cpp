@@ -195,10 +195,10 @@ FUZZ_TARGET(private_broadcast)
 
                 Assert(all_broadcast_info.size() == transactions.size());
 
-                for (const auto& info : all_broadcast_info) {
-                    const auto it{transactions.find(info.tx)};
+                for (const auto& [tx, status] : all_broadcast_info) {
+                    const auto it{transactions.find(tx)};
                     Assert(it != transactions.end());
-                    Assert(info.peers.size() == it->second); // exactly the sends we recorded
+                    Assert(status.send_statuses.size() == it->second); // exactly the sends we recorded
                 }
             },
             [&] {

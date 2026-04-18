@@ -64,16 +64,16 @@ BOOST_AUTO_TEST_CASE(basic)
     BOOST_REQUIRE(tx1->GetWitnessHash() != tx2->GetWitnessHash());
 
     BOOST_CHECK_EQUAL(pb.Add(tx2), PrivateBroadcast::AddResult::Added);
-    const auto find_tx_info{[](auto& infos, const CTransactionRef& tx) -> const PrivateBroadcast::TxBroadcastInfo& {
-        const auto it{std::ranges::find(infos, tx->GetWitnessHash(), [](const auto& info) { return info.tx->GetWitnessHash(); })};
-        BOOST_REQUIRE(it != infos.end());
-        return *it;
-    }};
+    const auto time_added{NodeClock::now()};
     const auto check_peer_counts{[&](size_t tx1_peer_count, size_t tx2_peer_count) {
         const auto infos{pb.GetBroadcastInfo()};
         BOOST_CHECK_EQUAL(infos.size(), 2);
-        BOOST_CHECK_EQUAL(find_tx_info(infos, tx1).peers.size(), tx1_peer_count);
-        BOOST_CHECK_EQUAL(find_tx_info(infos, tx2).peers.size(), tx2_peer_count);
+        const auto& tx1_info{infos.at(tx1)};
+        const auto& tx2_info{infos.at(tx2)};
+        BOOST_CHECK(tx1_info.time_added == time_added);
+        BOOST_CHECK(tx2_info.time_added == time_added);
+        BOOST_CHECK_EQUAL(tx1_info.send_statuses.size(), tx1_peer_count);
+        BOOST_CHECK_EQUAL(tx2_info.send_statuses.size(), tx2_peer_count);
     }};
 
     check_peer_counts(/*tx1_peer_count=*/0, /*tx2_peer_count=*/0);
@@ -121,16 +121,16 @@ BOOST_AUTO_TEST_CASE(basic)
     const auto infos{pb.GetBroadcastInfo()};
     BOOST_CHECK_EQUAL(infos.size(), 2);
     {
-        const auto& peers{find_tx_info(infos, tx_for_recipient1).peers};
-        BOOST_CHECK_EQUAL(peers.size(), 1);
-        BOOST_CHECK_EQUAL(peers[0].address.ToStringAddrPort(), addr1.ToStringAddrPort());
-        BOOST_CHECK(peers[0].received.has_value());
+        const auto& send_statuses{infos.at(tx_for_recipient1).send_statuses};
+        BOOST_CHECK_EQUAL(send_statuses.size(), 1);
+        BOOST_CHECK_EQUAL(send_statuses[0].address.ToStringAddrPort(), addr1.ToStringAddrPort());
+        BOOST_CHECK(send_statuses[0].confirmed.has_value());
     }
     {
-        const auto& peers{find_tx_info(infos, tx_for_recipient2).peers};
-        BOOST_CHECK_EQUAL(peers.size(), 1);
-        BOOST_CHECK_EQUAL(peers[0].address.ToStringAddrPort(), addr2.ToStringAddrPort());
-        BOOST_CHECK(!peers[0].received.has_value());
+        const auto& send_statuses{infos.at(tx_for_recipient2).send_statuses};
+        BOOST_CHECK_EQUAL(send_statuses.size(), 1);
+        BOOST_CHECK_EQUAL(send_statuses[0].address.ToStringAddrPort(), addr2.ToStringAddrPort());
+        BOOST_CHECK(!send_statuses[0].confirmed.has_value());
     }
 
     const auto stale_state{pb.GetStale()};
@@ -195,8 +195,8 @@ BOOST_AUTO_TEST_CASE(rejection_at_cap)
     // Nothing was evicted: all originally-added transactions are still present.
     const auto infos{pb.GetBroadcastInfo()};
     std::set<uint256> present_wtxids;
-    for (const auto& info : infos) {
-        present_wtxids.insert(info.tx->GetWitnessHash().ToUint256());
+    for (const auto& [tx, _] : infos) {
+        present_wtxids.insert(tx->GetWitnessHash().ToUint256());
     }
     BOOST_CHECK_EQUAL(present_wtxids.size(), infos.size());
     for (size_t i{0}; i < num_cap; ++i) {
