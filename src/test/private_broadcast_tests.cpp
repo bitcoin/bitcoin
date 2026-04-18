@@ -163,4 +163,76 @@ BOOST_AUTO_TEST_CASE(stale_unpicked_tx)
     BOOST_CHECK_EQUAL(stale_state[0], tx);
 }
 
+BOOST_AUTO_TEST_CASE(urgency_tie_break)
+{
+    NodeClockContext clock_ctx{};
+    PrivateBroadcast pb;
+    in_addr ipv4Addr;
+    ipv4Addr.s_addr = 0xa0b0c001;
+
+    const auto tx1{MakeDummyTx(/*id=*/1, /*num_witness=*/0)};
+    const auto tx2{MakeDummyTx(/*id=*/2, /*num_witness=*/0)};
+    BOOST_REQUIRE(pb.Add(tx1));
+    BOOST_REQUIRE(pb.Add(tx2));
+
+    const CService addr1{ipv4Addr, 1111};
+    const CService addr2{ipv4Addr, 2222};
+    const NodeId node1{1};
+    const NodeId node2{2};
+
+    // Both transactions have the same num_picked (0). The first pick returns tx1.
+    const auto first_pick{pb.PickTxForSend(node1, addr1)};
+    BOOST_REQUIRE(first_pick.has_value());
+    BOOST_CHECK_EQUAL(*first_pick, tx1);
+
+    // Advance time so tx1 has been waiting longer.
+    clock_ctx += 30min;
+
+    // Second pick: tx1 has higher urgency due to time elapsed since first pick,
+    // so tx1 should still be selected over tx2.
+    const auto second_pick{pb.PickTxForSend(node2, addr2)};
+    BOOST_REQUIRE(second_pick.has_value());
+    BOOST_CHECK_EQUAL(*second_pick, tx1);
+}
+
+BOOST_AUTO_TEST_CASE(urgency_secondary_to_send_count)
+{
+    NodeClockContext clock_ctx{};
+    PrivateBroadcast pb;
+    in_addr ipv4Addr;
+    ipv4Addr.s_addr = 0xa0b0c001;
+
+    const auto tx1{MakeDummyTx(/*id=*/1, /*num_witness=*/0)};
+    const auto tx2{MakeDummyTx(/*id=*/2, /*num_witness=*/0)};
+    BOOST_REQUIRE(pb.Add(tx1));
+    BOOST_REQUIRE(pb.Add(tx2));
+
+    const CService addr1{ipv4Addr, 1111};
+    const CService addr2{ipv4Addr, 2222};
+    const CService addr3{ipv4Addr, 3333};
+    const NodeId node1{1};
+    const NodeId node2{2};
+    const NodeId node3{3};
+
+    // First pick: tx1 is returned (no urgency difference yet).
+    const auto first_pick{pb.PickTxForSend(node1, addr1)};
+    BOOST_REQUIRE(first_pick.has_value());
+    BOOST_CHECK_EQUAL(*first_pick, tx1);
+
+    // Advance time significantly.
+    clock_ctx += 60min;
+
+    // Second pick: tx2 has only 0 picks, tx1 has 1 pick.
+    // Even though tx1 has higher urgency, tx2 should still win
+    // because send count takes precedence over urgency.
+    const auto second_pick{pb.PickTxForSend(node2, addr2)};
+    BOOST_REQUIRE(second_pick.has_value());
+    BOOST_CHECK_EQUAL(*second_pick, tx2);
+
+    // Third pick: only tx1 remains, so it should be returned regardless of urgency.
+    const auto third_pick{pb.PickTxForSend(node3, addr3)};
+    BOOST_REQUIRE(third_pick.has_value());
+    BOOST_CHECK_EQUAL(*third_pick, tx1);
+}
+
 BOOST_AUTO_TEST_SUITE_END()

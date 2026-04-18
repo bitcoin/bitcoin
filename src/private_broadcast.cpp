@@ -121,13 +121,19 @@ PrivateBroadcast::Priority PrivateBroadcast::DerivePriority(const std::vector<Se
 {
     Priority p;
     p.num_picked = sent_to.size();
+    if (sent_to.empty()) [[unlikely]] {
+        return p;
+    }
+    NodeClock::time_point oldest_pick{sent_to.front().picked};
     for (const auto& send_status : sent_to) {
         p.last_picked = std::max(p.last_picked, send_status.picked);
+        oldest_pick = std::min(oldest_pick, send_status.picked);
         if (send_status.confirmed.has_value()) {
             ++p.num_confirmed;
             p.last_confirmed = std::max(p.last_confirmed, send_status.confirmed.value());
         }
     }
+    p.urgency = std::chrono::duration_cast<std::chrono::seconds>(NodeClock::now() - oldest_pick);
     return p;
 }
 
