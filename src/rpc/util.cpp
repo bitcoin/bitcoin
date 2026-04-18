@@ -388,7 +388,7 @@ RPCErrorCode RPCErrorFromPSBTError(PSBTError err)
     return RPC_TRANSACTION_ERROR;
 }
 
-RPCErrorCode RPCErrorFromTransactionError(TransactionResponse tx_res)
+RPCErrorCode RPCErrorFromTransactionResponse(TransactionResponse tx_res)
 {
     switch (tx_res) {
         case TransactionResponse::MEMPOOL_REJECTED:
@@ -408,9 +408,9 @@ UniValue JSONRPCPSBTError(PSBTError err)
 UniValue JSONRPCTransactionError(TransactionResponse tx_res, const std::string& err_string)
 {
     if (err_string.length() > 0) {
-        return JSONRPCError(RPCErrorFromTransactionError(tx_res), err_string);
+        return JSONRPCError(RPCErrorFromTransactionResponse(tx_res), err_string);
     } else {
-        return JSONRPCError(RPCErrorFromTransactionError(tx_res), TransactionResultString(tx_res).original);
+        return JSONRPCError(RPCErrorFromTransactionResponse(tx_res), TransactionResultString(tx_res).original);
     }
 }
 

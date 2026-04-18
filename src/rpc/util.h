@@ -146,7 +146,7 @@ std::optional<int> ParseSighashString(const UniValue& sighash);
 //! Parse a confirm target option and raise an RPC error if it is invalid.
 unsigned int ParseConfirmTarget(const UniValue& value, unsigned int max_target);
 
-RPCErrorCode RPCErrorFromTransactionError(node::TransactionResponse tx_res);
+RPCErrorCode RPCErrorFromTransactionResponse(node::TransactionResponse tx_res);
 UniValue JSONRPCPSBTError(common::PSBTError err);
 UniValue JSONRPCTransactionError(node::TransactionResponse tx_res, const std::string& err_string = "");
 

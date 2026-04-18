@@ -39,7 +39,7 @@ FUZZ_TARGET(kitchen_sink)
 
     const TransactionResponse transaction_response = fuzzed_data_provider.PickValueInArray(ALL_TRANSACTION_RESPONSE);
     (void)JSONRPCTransactionError(transaction_response);
-    (void)RPCErrorFromTransactionError(transaction_response);
+    (void)RPCErrorFromTransactionResponse(transaction_response);
     (void)TransactionResultString(transaction_response);
 
     (void)StringForFeeEstimateHorizon(fuzzed_data_provider.PickValueInArray(ALL_FEE_ESTIMATE_HORIZONS));
