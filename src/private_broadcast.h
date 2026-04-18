@@ -38,16 +38,24 @@ public:
     /// after it is broadcast, then we consider it stale / for rebroadcasting.
     static constexpr auto STALE_DURATION{1min};
 
-    struct PeerSendInfo {
-        CService address;
-        NodeClock::time_point sent;
-        std::optional<NodeClock::time_point> received;
+    /// Status of a transaction sent to a given node.
+    struct SendStatus {
+        /// Node to which the transaction will be sent (or was sent).
+        const NodeId nodeid;
+        /// Address of the node.
+        const CService address;
+        /// When was the transaction picked for sending to the node.
+        const NodeClock::time_point picked;
+        /// When was the transaction reception confirmed by the node (by PONG).
+        std::optional<NodeClock::time_point> confirmed;
+
+        SendStatus(const NodeId& nodeid, const CService& address, const NodeClock::time_point& picked) : nodeid{nodeid}, address{address}, picked{picked} {}
     };
 
     struct TxBroadcastInfo {
         CTransactionRef tx;
-        NodeClock::time_point time_added;
-        std::vector<PeerSendInfo> peers;
+        const NodeClock::time_point time_added{NodeClock::now()};
+        std::vector<SendStatus> send_statuses{};
     };
 
     /**
@@ -124,20 +132,6 @@ public:
         EXCLUSIVE_LOCKS_REQUIRED(!m_mutex);
 
 private:
-    /// Status of a transaction sent to a given node.
-    struct SendStatus {
-        /// Node to which the transaction will be sent (or was sent).
-        const NodeId nodeid;
-        /// Address of the node.
-        const CService address;
-        /// When was the transaction picked for sending to the node.
-        const NodeClock::time_point picked;
-        /// When was the transaction reception confirmed by the node (by PONG).
-        std::optional<NodeClock::time_point> confirmed;
-
-        SendStatus(const NodeId& nodeid, const CService& address, const NodeClock::time_point& picked) : nodeid{nodeid}, address{address}, picked{picked} {}
-    };
-
     /// Cumulative stats from all the send attempts for a transaction. Used to prioritize transactions.
     struct Priority {
         size_t num_picked{0}; ///< Number of times the transaction was picked for sending.
@@ -190,12 +184,9 @@ private:
      */
     std::optional<TxAndSendStatusForNode> GetSendStatusByNode(const NodeId& nodeid)
         EXCLUSIVE_LOCKS_REQUIRED(m_mutex);
-    struct TxSendStatus {
-        const NodeClock::time_point time_added{NodeClock::now()};
-        std::vector<SendStatus> send_statuses;
-    };
+
     mutable Mutex m_mutex;
-    std::unordered_map<CTransactionRef, TxSendStatus, CTransactionRefHash, CTransactionRefComp>
+    std::unordered_map<CTransactionRef, TxBroadcastInfo, CTransactionRefHash, CTransactionRefComp>
         m_transactions GUARDED_BY(m_mutex);
 };
 

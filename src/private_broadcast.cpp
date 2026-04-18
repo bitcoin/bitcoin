@@ -12,7 +12,7 @@ bool PrivateBroadcast::Add(const CTransactionRef& tx)
     EXCLUSIVE_LOCKS_REQUIRED(!m_mutex)
 {
     LOCK(m_mutex);
-    const bool inserted{m_transactions.try_emplace(tx).second};
+    const bool inserted{m_transactions.try_emplace(tx, TxBroadcastInfo{.tx = tx}).second};
     return inserted;
 }
 
@@ -110,13 +110,8 @@ std::vector<PrivateBroadcast::TxBroadcastInfo> PrivateBroadcast::GetBroadcastInf
     std::vector<TxBroadcastInfo> entries;
     entries.reserve(m_transactions.size());
 
-    for (const auto& [tx, state] : m_transactions) {
-        std::vector<PeerSendInfo> peers;
-        peers.reserve(state.send_statuses.size());
-        for (const auto& status : state.send_statuses) {
-            peers.emplace_back(PeerSendInfo{.address = status.address, .sent = status.picked, .received = status.confirmed});
-        }
-        entries.emplace_back(TxBroadcastInfo{.tx = tx, .time_added = state.time_added, .peers = std::move(peers)});
+    for (const auto& entry : m_transactions) {
+        entries.emplace_back(entry.second);
     }
 
     return entries;

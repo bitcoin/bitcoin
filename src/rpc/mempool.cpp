@@ -186,12 +186,12 @@ static RPCMethod getprivatebroadcastinfo()
                 o.pushKV("hex", EncodeHexTx(*tx_info.tx));
                 o.pushKV("time_added", TicksSinceEpoch<std::chrono::seconds>(tx_info.time_added));
                 UniValue peers(UniValue::VARR);
-                for (const auto& peer : tx_info.peers) {
+                for (const auto& ss : tx_info.send_statuses) {
                     UniValue p(UniValue::VOBJ);
-                    p.pushKV("address", peer.address.ToStringAddrPort());
-                    p.pushKV("sent", TicksSinceEpoch<std::chrono::seconds>(peer.sent));
-                    if (peer.received.has_value()) {
-                        p.pushKV("received", TicksSinceEpoch<std::chrono::seconds>(*peer.received));
+                    p.pushKV("address", ss.address.ToStringAddrPort());
+                    p.pushKV("sent", TicksSinceEpoch<std::chrono::seconds>(ss.picked));
+                    if (ss.confirmed.has_value()) {
+                        p.pushKV("received", TicksSinceEpoch<std::chrono::seconds>(*ss.confirmed));
                     }
                     peers.push_back(std::move(p));
                 }

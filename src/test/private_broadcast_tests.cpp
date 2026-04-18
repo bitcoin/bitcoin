@@ -52,7 +52,8 @@ BOOST_AUTO_TEST_CASE(basic)
     BOOST_REQUIRE(tx1->GetWitnessHash() != tx2->GetWitnessHash());
 
     BOOST_CHECK(pb.Add(tx2));
-    const auto find_tx_info{[](auto& infos, const CTransactionRef& tx) -> const PrivateBroadcast::TxBroadcastInfo& {
+    const auto time_added{NodeClock::now()};
+    const auto find_tx_info{[](const auto& infos, const CTransactionRef& tx) -> const PrivateBroadcast::TxBroadcastInfo& {
         const auto it{std::ranges::find(infos, tx->GetWitnessHash(), [](const auto& info) { return info.tx->GetWitnessHash(); })};
         BOOST_REQUIRE(it != infos.end());
         return *it;
@@ -60,8 +61,12 @@ BOOST_AUTO_TEST_CASE(basic)
     const auto check_peer_counts{[&](size_t tx1_peer_count, size_t tx2_peer_count) {
         const auto infos{pb.GetBroadcastInfo()};
         BOOST_CHECK_EQUAL(infos.size(), 2);
-        BOOST_CHECK_EQUAL(find_tx_info(infos, tx1).peers.size(), tx1_peer_count);
-        BOOST_CHECK_EQUAL(find_tx_info(infos, tx2).peers.size(), tx2_peer_count);
+        const auto& tx1_info{find_tx_info(infos, tx1)};
+        const auto& tx2_info{find_tx_info(infos, tx2)};
+        BOOST_CHECK(tx1_info.time_added == time_added);
+        BOOST_CHECK(tx2_info.time_added == time_added);
+        BOOST_CHECK_EQUAL(tx1_info.send_statuses.size(), tx1_peer_count);
+        BOOST_CHECK_EQUAL(tx2_info.send_statuses.size(), tx2_peer_count);
     }};
 
     check_peer_counts(/*tx1_peer_count=*/0, /*tx2_peer_count=*/0);
@@ -109,16 +114,16 @@ BOOST_AUTO_TEST_CASE(basic)
     const auto infos{pb.GetBroadcastInfo()};
     BOOST_CHECK_EQUAL(infos.size(), 2);
     {
-        const auto& peers{find_tx_info(infos, tx_for_recipient1).peers};
-        BOOST_CHECK_EQUAL(peers.size(), 1);
-        BOOST_CHECK_EQUAL(peers[0].address.ToStringAddrPort(), addr1.ToStringAddrPort());
-        BOOST_CHECK(peers[0].received.has_value());
+        const auto& send_statuses{find_tx_info(infos, tx_for_recipient1).send_statuses};
+        BOOST_CHECK_EQUAL(send_statuses.size(), 1);
+        BOOST_CHECK_EQUAL(send_statuses[0].address.ToStringAddrPort(), addr1.ToStringAddrPort());
+        BOOST_CHECK(send_statuses[0].confirmed.has_value());
     }
     {
-        const auto& peers{find_tx_info(infos, tx_for_recipient2).peers};
-        BOOST_CHECK_EQUAL(peers.size(), 1);
-        BOOST_CHECK_EQUAL(peers[0].address.ToStringAddrPort(), addr2.ToStringAddrPort());
-        BOOST_CHECK(!peers[0].received.has_value());
+        const auto& send_statuses{find_tx_info(infos, tx_for_recipient2).send_statuses};
+        BOOST_CHECK_EQUAL(send_statuses.size(), 1);
+        BOOST_CHECK_EQUAL(send_statuses[0].address.ToStringAddrPort(), addr2.ToStringAddrPort());
+        BOOST_CHECK(!send_statuses[0].confirmed.has_value());
     }
 
     const auto stale_state{pb.GetStale()};
