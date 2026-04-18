@@ -176,7 +176,7 @@ FUZZ_TARGET(p2p_headers_presync, .init = initialize)
 
     ChainstateManager& chainman = *g_testing_setup->m_node.chainman;
     CBlockHeader base{chainman.GetParams().GenesisBlock()};
-    const NodeClockContext clock_ctx{base.Time()};
+    const FakeNodeClock clock{base.Time()};
 
     LOCK(NetEventsInterface::g_msgproc_mutex);
 

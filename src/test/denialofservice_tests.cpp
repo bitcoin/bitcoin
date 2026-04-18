@@ -91,8 +91,8 @@ BOOST_AUTO_TEST_CASE(outbound_slow_chain_eviction)
     }
     connman.FlushSendBuffer(dummyNode1);
 
-    NodeClockContext clock_ctx{};
-    clock_ctx += 21min;
+    FakeNodeClock clock{};
+    clock += 21min;
 
     BOOST_CHECK(peerman.SendMessages(dummyNode1)); // should result in getheaders
     {
@@ -101,7 +101,7 @@ BOOST_AUTO_TEST_CASE(outbound_slow_chain_eviction)
         BOOST_CHECK(!to_send.empty());
     }
 
-    clock_ctx += 3min;
+    clock += 3min;
     BOOST_CHECK(peerman.SendMessages(dummyNode1)); // should result in disconnect
     BOOST_CHECK(dummyNode1.fDisconnect == true);
 
@@ -153,7 +153,7 @@ BOOST_FIXTURE_TEST_CASE(stale_tip_peer_management, OutboundTest)
     options.m_max_automatic_connections = DEFAULT_MAX_PEER_CONNECTIONS;
 
     const auto time_init{Now<NodeSeconds>()};
-    NodeClockContext clock_ctx{time_init};
+    FakeNodeClock clock{time_init};
     const auto delta{3 * std::chrono::seconds{m_node.chainman->GetConsensus().nPowTargetSpacing} + 1s};
     connman->Init(options);
     std::vector<CNode *> vNodes;
@@ -170,7 +170,7 @@ BOOST_FIXTURE_TEST_CASE(stale_tip_peer_management, OutboundTest)
         BOOST_CHECK(node->fDisconnect == false);
     }
 
-    clock_ctx += delta;
+    clock += delta;
 
     // Now tip should definitely be stale, and we should look for an extra
     // outbound peer
@@ -185,9 +185,9 @@ BOOST_FIXTURE_TEST_CASE(stale_tip_peer_management, OutboundTest)
     // If we add one more peer, something should get marked for eviction
     // on the next check (since we're mocking the time to be in the future, the
     // required time connected check should be satisfied).
-    clock_ctx.set(time_init);
+    clock.set(time_init);
     AddRandomOutboundPeer(id, vNodes, *peerLogic, *connman, ConnectionType::OUTBOUND_FULL_RELAY);
-    clock_ctx += delta;
+    clock += delta;
 
     peerLogic->CheckForStaleTipAndEvictPeers();
     for (int i = 0; i < max_outbound_full_relay; ++i) {
@@ -213,9 +213,9 @@ BOOST_FIXTURE_TEST_CASE(stale_tip_peer_management, OutboundTest)
 
     // Add an onion peer, that will be protected because it is the only one for
     // its network, so another peer gets disconnected instead.
-    clock_ctx.set(time_init);
+    clock.set(time_init);
     AddRandomOutboundPeer(id, vNodes, *peerLogic, *connman, ConnectionType::OUTBOUND_FULL_RELAY, /*onion_peer=*/true);
-    clock_ctx += delta;
+    clock += delta;
     peerLogic->CheckForStaleTipAndEvictPeers();
 
     for (int i = 0; i < max_outbound_full_relay - 2; ++i) {
@@ -226,9 +226,9 @@ BOOST_FIXTURE_TEST_CASE(stale_tip_peer_management, OutboundTest)
     BOOST_CHECK(vNodes[max_outbound_full_relay]->fDisconnect == false);
 
     // Add a second onion peer which won't be protected
-    clock_ctx.set(time_init);
+    clock.set(time_init);
     AddRandomOutboundPeer(id, vNodes, *peerLogic, *connman, ConnectionType::OUTBOUND_FULL_RELAY, /*onion_peer=*/true);
-    clock_ctx += delta;
+    clock += delta;
     peerLogic->CheckForStaleTipAndEvictPeers();
 
     BOOST_CHECK(vNodes.back()->fDisconnect == true);
@@ -243,7 +243,7 @@ BOOST_FIXTURE_TEST_CASE(stale_tip_peer_management, OutboundTest)
 BOOST_FIXTURE_TEST_CASE(block_relay_only_eviction, OutboundTest)
 {
     NodeId id{0};
-    NodeClockContext clock_ctx{};
+    FakeNodeClock clock{};
     auto connman = std::make_unique<ConnmanTestMsg>(0x1337, 0x1337, *m_node.addrman, *m_node.netgroupman, Params());
     auto peerLogic = PeerManager::make(*connman, *m_node.addrman, nullptr, *m_node.chainman, *m_node.mempool, *m_node.warnings, {});
 
@@ -275,7 +275,7 @@ BOOST_FIXTURE_TEST_CASE(block_relay_only_eviction, OutboundTest)
     }
     BOOST_CHECK(vNodes.back()->fDisconnect == false);
 
-    clock_ctx += MINIMUM_CONNECT_TIME;
+    clock += MINIMUM_CONNECT_TIME;
     peerLogic->CheckForStaleTipAndEvictPeers();
     for (int i = 0; i < max_outbound_block_relay; ++i) {
         BOOST_CHECK(vNodes[i]->fDisconnect == false);
@@ -413,7 +413,7 @@ BOOST_AUTO_TEST_CASE(DoS_bantime)
     auto peerLogic = PeerManager::make(*connman, *m_node.addrman, banman.get(), *m_node.chainman, *m_node.mempool, *m_node.warnings, {});
 
     banman->ClearBanned();
-    const NodeClockContext clock_ctx{}; // keep mocktime constant
+    const FakeNodeClock clock{}; // keep mocktime constant
 
     CAddress addr(ip(0xa0b0c001), NODE_NONE);
     NodeId id{0};

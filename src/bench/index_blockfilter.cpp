@@ -38,10 +38,10 @@ static void BlockFilterIndexSync(benchmark::Bench& bench)
     CPubKey pubkey{"02ed26169896db86ced4cbb7b3ecef9859b5952825adbeab998fb5b307e54949c9"_hex_u8};
     CScript script = GetScriptForDestination(WitnessV0KeyHash(pubkey));
     std::vector<CMutableTransaction> noTxns;
-    NodeClockContext clock_ctx{};
+    FakeNodeClock clock{};
     for (int i = 0; i < CHAIN_SIZE - 100; i++) {
         test_setup->CreateAndProcessBlock(noTxns, script);
-        clock_ctx += 1s;
+        clock += 1s;
     }
     assert(WITH_LOCK(::cs_main, return test_setup->m_node.chainman->ActiveHeight() == CHAIN_SIZE));
 
