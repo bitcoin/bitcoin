@@ -342,9 +342,9 @@ BOOST_AUTO_TEST_CASE(rpc_ban)
 
     BOOST_CHECK_NO_THROW(CallRPC(std::string("clearbanned")));
 
-    NodeClockContext clock_ctx{10'000s};
+    FakeNodeClock clock{10'000s};
     BOOST_CHECK_NO_THROW(r = CallRPC(std::string("setban 127.0.0.0/24 add 200")));
-    clock_ctx += 2s;
+    clock += 2s;
     const int64_t time_remaining_expected{198};
     BOOST_CHECK_NO_THROW(r = CallRPC(std::string("listbanned")));
     ar = r.get_array();

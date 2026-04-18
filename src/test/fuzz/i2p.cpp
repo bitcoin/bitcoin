@@ -27,7 +27,7 @@ FUZZ_TARGET(i2p, .init = initialize_i2p)
     SeedRandomStateForTest(SeedRand::ZEROS);
     FuzzedDataProvider fuzzed_data_provider{buffer.data(), buffer.size()};
 
-    NodeClockContext clock_ctx{ConsumeTime(fuzzed_data_provider)};
+    FakeNodeClock clock{ConsumeTime(fuzzed_data_provider)};
 
     // Mock CreateSock() to create FuzzedSock.
     auto CreateSockOrig = CreateSock;

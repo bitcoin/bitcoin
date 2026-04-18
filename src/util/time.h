@@ -23,7 +23,7 @@
 using namespace std::chrono_literals;
 
 /// Version of the system clock that is mockable in the context of tests (via
-/// NodeClockContext or ::SetMockTime), otherwise the system clock.
+/// FakeNodeClock or ::SetMockTime), otherwise the system clock.
 struct NodeClock : public std::chrono::system_clock {
     using time_point = std::chrono::time_point<NodeClock>;
     /** Return current system time or mocked time, if set */

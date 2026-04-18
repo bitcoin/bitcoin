@@ -60,7 +60,7 @@ FUZZ_TARGET(headers_sync_state, .init = initialize_headers_sync_state_fuzz)
     CBlockHeader genesis_header{Params().GenesisBlock()};
     CBlockIndex start_index(genesis_header);
 
-    NodeClockContext clock_ctx{ConsumeTime(fuzzed_data_provider, /*min=*/start_index.GetMedianTimePast())};
+    FakeNodeClock clock{ConsumeTime(fuzzed_data_provider, /*min=*/start_index.GetMedianTimePast())};
 
     const uint256 genesis_hash = genesis_header.GetHash();
     start_index.phashBlock = &genesis_hash;

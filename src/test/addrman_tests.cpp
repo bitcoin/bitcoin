@@ -97,7 +97,7 @@ BOOST_AUTO_TEST_CASE(addrman_simple)
 
 BOOST_AUTO_TEST_CASE(addrman_terrible_many_failures)
 {
-    NodeClockContext clock_ctx{};
+    FakeNodeClock clock{};
 
     auto addrman{std::make_unique<AddrMan>(EMPTY_NETGROUPMAN, DETERMINISTIC, GetCheckRatio(m_node))};
 
@@ -108,7 +108,7 @@ BOOST_AUTO_TEST_CASE(addrman_terrible_many_failures)
     BOOST_CHECK(addrman->Add({addr}, source));
     BOOST_CHECK(addrman->Good(addr));
 
-    clock_ctx += ADDRMAN_MIN_FAIL + 24h;
+    clock += ADDRMAN_MIN_FAIL + 24h;
 
     CAddress addr_helper{CAddress(ResolveService("251.252.2.3", 8333), NODE_NONE)};
     addr_helper.nTime = Now<NodeSeconds>();
@@ -131,7 +131,7 @@ BOOST_AUTO_TEST_CASE(addrman_terrible_many_failures)
 
 BOOST_AUTO_TEST_CASE(addrman_penalty_self_announcement)
 {
-    NodeClockContext clock_ctx{};
+    FakeNodeClock clock{};
     auto addrman = std::make_unique<AddrMan>(EMPTY_NETGROUPMAN, DETERMINISTIC, GetCheckRatio(m_node));
 
     const auto base_time{Now<NodeSeconds>() - 10000s};
@@ -1030,8 +1030,8 @@ BOOST_AUTO_TEST_CASE(addrman_evictionworks)
     BOOST_CHECK_EQUAL(addrman->SelectTriedCollision().first.ToStringAddrPort(), "250.1.1.36:0");
 
     // Eviction is also successful if too much time has passed since last try
-    NodeClockContext clock_ctx{};
-    clock_ctx += 4h;
+    FakeNodeClock clock{};
+    clock += 4h;
     addrman->ResolveCollisions();
     BOOST_CHECK(addrman->SelectTriedCollision().first.ToStringAddrPort() == "[::]:0");
     //Now 19 is in tried again, and 36 back to new

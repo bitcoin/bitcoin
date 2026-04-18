@@ -432,7 +432,7 @@ BOOST_AUTO_TEST_CASE(DoS_mapOrphans)
     FillableSigningProvider keystore;
     BOOST_CHECK(keystore.AddKey(key));
 
-    NodeClockContext clock_ctx{};
+    FakeNodeClock clock{};
 
     std::vector<CTransactionRef> orphans_added;
 

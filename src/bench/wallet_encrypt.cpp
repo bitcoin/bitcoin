@@ -45,7 +45,7 @@ static void WalletEncrypt(benchmark::Bench& bench, unsigned int key_count)
 
     // Setting a mock time is necessary to force default derive iteration count during
     // wallet encryption.
-    NodeClockContext clock_ctx{1s};
+    FakeNodeClock clock{1s};
 
     std::unique_ptr<WalletDatabase> database;
     std::shared_ptr<CWallet> wallet;
