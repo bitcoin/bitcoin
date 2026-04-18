@@ -1196,14 +1196,14 @@ BOOST_AUTO_TEST_CASE(spends_witness_prog)
     tx_create.vout[0].scriptPubKey = GetScriptForDestination(PubKeyDestination{pubkey});
     BOOST_CHECK_EQUAL(Solver(tx_create.vout[0].scriptPubKey, sol_dummy), TxoutType::PUBKEY);
     tx_spend.vin[0].prevout.hash = tx_create.GetHash();
-    AddCoins(coins, CTransaction{tx_create}, /*nHeight=*/0, /*check_for_overwrite=*/false);
+    AddCoins(coins, CTransaction{tx_create}, 0, false);
     BOOST_CHECK(!::SpendsNonAnchorWitnessProg(CTransaction{tx_spend}, coins));
 
     // P2PKH
     tx_create.vout[0].scriptPubKey = GetScriptForDestination(PKHash{pubkey});
     BOOST_CHECK_EQUAL(Solver(tx_create.vout[0].scriptPubKey, sol_dummy), TxoutType::PUBKEYHASH);
     tx_spend.vin[0].prevout.hash = tx_create.GetHash();
-    AddCoins(coins, CTransaction{tx_create}, /*nHeight=*/0, /*check_for_overwrite=*/false);
+    AddCoins(coins, CTransaction{tx_create}, 0, false);
     BOOST_CHECK(!::SpendsNonAnchorWitnessProg(CTransaction{tx_spend}, coins));
 
     // P2SH
