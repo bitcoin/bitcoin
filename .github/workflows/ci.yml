@@ -211,7 +211,7 @@ jobs:
         with:
           path: ${{ env.CCACHE_DIR }}
           # https://github.com/actions/cache/blob/main/tips-and-workarounds.md#update-a-cache
-          key: ${{ github.job }}-${{ matrix.job-type }}-ccache-${{ github.run_id }}
+          key: ${{ steps.ccache-cache.outputs.cache-primary-key }}
 
   windows-native-dll:
     name: ${{ matrix.job-name }}
@@ -253,20 +253,21 @@ jobs:
           py -3 --version
           bash --version
 
-      - name: Restore vcpkg tools cache
-        id: vcpkg-tools-cache
+      - name: Restore vcpkg downloads cache
+        id: vcpkg-downloads-cache
         uses: actions/cache/restore@v5
         with:
-          path: ~/AppData/Local/vcpkg/downloads/tools
-          key: ${{ github.job }}-vcpkg-tools-${{ github.run_id }}
-          restore-keys: ${{ github.job }}-vcpkg-tools-
+          path: |
+            ~/AppData/Local/vcpkg/downloads/*
+            !~/AppData/Local/vcpkg/downloads/tools
+          key: ${{ github.job }}-vcpkg-downloads-${{ hashFiles('vcpkg.json') }}
 
       - name: Restore vcpkg binary cache
         uses: actions/cache/restore@v5
         id: vcpkg-binary-cache
         with:
           path: ~/AppData/Local/vcpkg/archives
-          key: ${{ github.job }}-vcpkg-binary-${{ hashFiles('cmake_version', 'msbuild_version', 'toolset_version', 'vcpkg.json') }}
+          key: ${{ github.job }}-vcpkg-binary-release-${{ hashFiles('cmake_version', 'msbuild_version', 'toolset_version', 'vcpkg.json') }}
 
       - name: Generate build system
         run: |
@@ -277,15 +278,17 @@ jobs:
         if: github.event_name != 'pull_request' && github.ref_name == github.event.repository.default_branch && steps.vcpkg-binary-cache.outputs.cache-hit != 'true' && matrix.job-type == 'standard'
         with:
           path: ~/AppData/Local/vcpkg/archives
-          key: ${{ github.job }}-vcpkg-binary-${{ hashFiles('cmake_version', 'msbuild_version', 'toolset_version', 'vcpkg.json') }}
+          key: ${{ steps.vcpkg-binary-cache.outputs.cache-primary-key }}
 
-      - name: Save vcpkg tools cache
+      - name: Save vcpkg downloads cache
         uses: actions/cache/save@v5
-        # Only save cache from one job as they share tools. If the matrix is expanded to jobs with unique tools, this may need amending.
-        if: github.event_name != 'pull_request' && github.ref_name == github.event.repository.default_branch && steps.vcpkg-tools-cache.outputs.cache-hit != 'true' && matrix.job-type == 'standard'
+        # Only save cache from the 'standard' job, as it includes the necessary downloads for other jobs in the matrix. If the matrix is modified, this may need amending.
+        if: github.event_name != 'pull_request' && github.ref_name == github.event.repository.default_branch && steps.vcpkg-binary-cache.outputs.cache-hit != 'true' && steps.vcpkg-downloads-cache.outputs.cache-hit != 'true' && matrix.job-type == 'standard'
         with:
-          path: ~/AppData/Local/vcpkg/downloads/tools
-          key: ${{ github.job }}-vcpkg-tools-${{ github.run_id }}
+          path: |
+            ~/AppData/Local/vcpkg/downloads/*
+            !~/AppData/Local/vcpkg/downloads/tools  # Cache the tools once as archives, but not redundantly in extracted form.
+          key: ${{ steps.vcpkg-downloads-cache.outputs.cache-primary-key }}
 
       - name: Build
         run: |
