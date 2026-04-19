@@ -723,5 +723,50 @@ BOOST_FIXTURE_TEST_CASE(RemoveTxs, TestChain100Setup)
     TestUnloadWallet(std::move(wallet));
 }
 
+// Regression test for https://github.com/bitcoin/bitcoin/issues/34599:
+// AbandonTransaction must not abort if a wallet descendant of the abandoned
+// transaction is in TxStateConfirmed (or TxStateInMempool) while the parent
+// itself is not. The wallet's per-tx state can transiently diverge from the
+// chain, and the lambda inside AbandonTransaction used to assert against that.
+BOOST_FIXTURE_TEST_CASE(abandon_with_confirmed_descendant, WalletTestingSetup)
+{
+    // Parent: a transaction with one spendable output.
+    CMutableTransaction parent_mtx;
+    parent_mtx.vout.emplace_back(1 * COIN, CScript{});
+    const auto parent_ref = MakeTransactionRef(parent_mtx);
+    const Txid parent_hash = parent_ref->GetHash();
+
+    BOOST_REQUIRE(m_wallet.AddToWallet(parent_ref, TxStateInactive{}) != nullptr);
+
+    // Child: spends parent's vout 0. Synthesise a TxStateConfirmed for it -
+    // mirrors the inconsistency the wallet can momentarily reach during
+    // reorgs / RBF candidate tracking.
+    CMutableTransaction child_mtx;
+    child_mtx.vin.emplace_back(parent_hash, /*n=*/0);
+    const auto child_ref = MakeTransactionRef(child_mtx);
+    const Txid child_hash = child_ref->GetHash();
+
+    uint256 fake_block_hash;
+    {
+        LOCK(cs_main);
+        auto inserted = m_node.chainman->BlockIndex().emplace(
+            std::piecewise_construct, std::make_tuple(GetRandHash()), std::make_tuple());
+        BOOST_REQUIRE(inserted.second);
+        fake_block_hash = inserted.first->first;
+        inserted.first->second.phashBlock = &inserted.first->first;
+    }
+    TxStateConfirmed conf{fake_block_hash, /*height=*/0, /*index=*/0};
+    BOOST_REQUIRE(m_wallet.AddToWallet(child_ref, conf) != nullptr);
+
+    // Pre-fix: assert(!wtx.isConfirmed()) inside AbandonTransaction's lambda
+    // would abort the process when the recursive descent reached the child.
+    // Post-fix: AbandonTransaction returns true and leaves the child alone.
+    BOOST_CHECK(m_wallet.AbandonTransaction(parent_hash));
+
+    LOCK(m_wallet.cs_wallet);
+    BOOST_CHECK(m_wallet.mapWallet.at(parent_hash).isAbandoned());
+    BOOST_CHECK(m_wallet.mapWallet.at(child_hash).isConfirmed());
+}
+
 BOOST_AUTO_TEST_SUITE_END()
 } // namespace wallet
