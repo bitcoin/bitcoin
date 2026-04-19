@@ -64,8 +64,6 @@ find_package_handle_standard_args(USDT
 
 if(USDT_FOUND AND NOT TARGET USDT::headers)
   add_library(USDT::headers INTERFACE IMPORTED)
-  set_target_properties(USDT::headers PROPERTIES
-    INTERFACE_INCLUDE_DIRECTORIES "${USDT_INCLUDE_DIR}"
-  )
-  set(ENABLE_TRACING TRUE)
+  target_compile_definitions(USDT::headers INTERFACE ENABLE_TRACING)
+  target_include_directories(USDT::headers INTERFACE ${USDT_INCLUDE_DIR})
 endif()
