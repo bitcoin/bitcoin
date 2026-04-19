@@ -13,6 +13,7 @@
 #include <qt/recentrequeststablemodel.h>
 #include <qt/sendcoinsdialog.h>
 #include <qt/transactiontablemodel.h>
+#include <wallet/init_settings.h>
 
 #include <common/args.h>
 #include <interfaces/handler.h>
@@ -38,7 +39,6 @@
 
 using wallet::CCoinControl;
 using wallet::CRecipient;
-using wallet::DEFAULT_DISABLE_WALLET;
 
 WalletModel::WalletModel(std::unique_ptr<interfaces::Wallet> wallet, ClientModel& client_model, const PlatformStyle *platformStyle, QObject *parent) :
     QObject(parent),
@@ -566,7 +566,7 @@ void WalletModel::displayAddress(std::string sAddress) const
 
 bool WalletModel::isWalletEnabled()
 {
-   return !gArgs.GetBoolArg("-disablewallet", DEFAULT_DISABLE_WALLET);
+   return !wallet::DisableWalletSetting::Get(gArgs);
 }
 
 QString WalletModel::getWalletName() const

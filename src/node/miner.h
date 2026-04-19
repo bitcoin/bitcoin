@@ -7,6 +7,7 @@
 #define BITCOIN_NODE_MINER_H
 
 #include <interfaces/types.h>
+#include <node/settings.h>
 #include <node/types.h>
 #include <policy/policy.h>
 #include <primitives/block.h>
@@ -36,8 +37,6 @@ using interfaces::BlockRef;
 
 namespace node {
 class KernelNotifications;
-
-static const bool DEFAULT_PRINT_MODIFIED_FEE = false;
 
 struct CBlockTemplate
 {

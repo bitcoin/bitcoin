@@ -97,14 +97,6 @@ static constexpr auto DATABASE_WRITE_INTERVAL_MIN{50min};
 static constexpr auto DATABASE_WRITE_INTERVAL_MAX{70min};
 /** Maximum age of our tip for us to be considered current for fee estimation */
 static constexpr std::chrono::hours MAX_FEE_ESTIMATION_TIP_AGE{3};
-const std::vector<std::string> CHECKLEVEL_DOC {
-    "level 0 reads the blocks from disk",
-    "level 1 verifies block validity",
-    "level 2 verifies undo data",
-    "level 3 checks disconnection of tip blocks",
-    "level 4 tries to reconnect the blocks",
-    "each level includes the checks of the previous levels",
-};
 /** The number of blocks to keep below the deepest prune lock.
  *  There is nothing special about this number. It is higher than what we
  *  expect to see in regular mainnet reorgs, but not so high that it would

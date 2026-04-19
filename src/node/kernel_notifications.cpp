@@ -9,6 +9,7 @@
 #include <chain.h>
 #include <common/args.h>
 #include <common/system.h>
+#include <init_settings.h>
 #include <kernel/context.h>
 #include <kernel/warning.h>
 #include <logging.h>
@@ -30,7 +31,7 @@ using util::ReplaceAll;
 static void AlertNotify(const std::string& strMessage)
 {
 #if HAVE_SYSTEM
-    std::string strCmd = gArgs.GetArg("-alertnotify", "");
+    std::string strCmd = AlertNotifySetting::Get(gArgs);
     if (strCmd.empty()) return;
 
     // Alert text should be plain ascii coming from a trusted source, but to
@@ -109,7 +110,7 @@ std::optional<uint256> KernelNotifications::TipBlock()
 
 void ReadNotificationArgs(const ArgsManager& args, KernelNotifications& notifications)
 {
-    if (auto value{args.GetIntArg("-stopatheight")}) notifications.m_stop_at_height = *value;
+    if (auto value{StopAtHeightSetting::Get(args)}) notifications.m_stop_at_height = *value;
 }
 
 } // namespace node

@@ -65,6 +65,7 @@
 #include <wallet/crypter.h>
 #include <wallet/db.h>
 #include <wallet/external_signer_scriptpubkeyman.h>
+#include <wallet/init_settings.h>
 #include <wallet/scriptpubkeyman.h>
 #include <wallet/transaction.h>
 #include <wallet/types.h>
@@ -2955,25 +2956,25 @@ bool CWallet::LoadWalletArgs(std::shared_ptr<CWallet> wallet, const WalletContex
     interfaces::Chain* chain = context.chain;
     const ArgsManager& args = *Assert(context.args);
 
-    if (!args.GetArg("-addresstype", "").empty()) {
-        std::optional<OutputType> parsed = ParseOutputType(args.GetArg("-addresstype", ""));
+    if (!AddressTypeSetting::Get(args).empty()) {
+        std::optional<OutputType> parsed = ParseOutputType(AddressTypeSetting::Get(args));
         if (!parsed) {
-            error = strprintf(_("Unknown address type '%s'"), args.GetArg("-addresstype", ""));
+            error = strprintf(_("Unknown address type '%s'"), AddressTypeSetting::Get(args));
             return false;
         }
         wallet->m_default_address_type = parsed.value();
     }
 
-    if (!args.GetArg("-changetype", "").empty()) {
-        std::optional<OutputType> parsed = ParseOutputType(args.GetArg("-changetype", ""));
+    if (!ChangeTypeSetting::Get(args).empty()) {
+        std::optional<OutputType> parsed = ParseOutputType(ChangeTypeSetting::Get(args));
         if (!parsed) {
-            error = strprintf(_("Unknown change type '%s'"), args.GetArg("-changetype", ""));
+            error = strprintf(_("Unknown change type '%s'"), ChangeTypeSetting::Get(args));
             return false;
         }
         wallet->m_default_change_type = parsed.value();
     }
 
-    if (const auto arg{args.GetArg("-mintxfee")}) {
+    if (const auto arg{MinTxFeeSetting::Get(args)}) {
         std::optional<CAmount> min_tx_fee = ParseMoney(*arg);
         if (!min_tx_fee) {
             error = AmountErrMsg("mintxfee", *arg);
@@ -2986,7 +2987,7 @@ bool CWallet::LoadWalletArgs(std::shared_ptr<CWallet> wallet, const WalletContex
         wallet->m_min_fee = CFeeRate{min_tx_fee.value()};
     }
 
-    if (const auto arg{args.GetArg("-maxapsfee")}) {
+    if (const auto arg{MaxApsFeeSetting::Get(args)}) {
         const std::string& max_aps_fee{*arg};
         if (max_aps_fee == "-1") {
             wallet->m_max_aps_fee = -1;
@@ -3002,7 +3003,7 @@ bool CWallet::LoadWalletArgs(std::shared_ptr<CWallet> wallet, const WalletContex
         }
     }
 
-    if (const auto arg{args.GetArg("-fallbackfee")}) {
+    if (const auto arg{FallbackFeeSetting::Get(args)}) {
         std::optional<CAmount> fallback_fee = ParseMoney(*arg);
         if (!fallback_fee) {
             error = strprintf(_("Invalid amount for %s=<amount>: '%s'"), "-fallbackfee", *arg);
@@ -3017,7 +3018,7 @@ bool CWallet::LoadWalletArgs(std::shared_ptr<CWallet> wallet, const WalletContex
     // Disable fallback fee in case value was set to 0, enable if non-null value
     wallet->m_allow_fallback_fee = wallet->m_fallback_fee.GetFeePerK() != 0;
 
-    if (const auto arg{args.GetArg("-discardfee")}) {
+    if (const auto arg{DiscardFeeSetting::Get(args)}) {
         std::optional<CAmount> discard_fee = ParseMoney(*arg);
         if (!discard_fee) {
             error = strprintf(_("Invalid amount for %s=<amount>: '%s'"), "-discardfee", *arg);
@@ -3029,7 +3030,7 @@ bool CWallet::LoadWalletArgs(std::shared_ptr<CWallet> wallet, const WalletContex
         wallet->m_discard_rate = CFeeRate{discard_fee.value()};
     }
 
-    if (const auto arg{args.GetArg("-maxtxfee")}) {
+    if (const auto arg{MaxTxFeeSetting::Get(args)}) {
         std::optional<CAmount> max_fee = ParseMoney(*arg);
         if (!max_fee) {
             error = AmountErrMsg("maxtxfee", *arg);
@@ -3047,7 +3048,7 @@ bool CWallet::LoadWalletArgs(std::shared_ptr<CWallet> wallet, const WalletContex
         wallet->m_default_max_tx_fee = max_fee.value();
     }
 
-    if (const auto arg{args.GetArg("-consolidatefeerate")}) {
+    if (const auto arg{ConsolidateFeeRateSetting::Get(args)}) {
         if (std::optional<CAmount> consolidate_feerate = ParseMoney(*arg)) {
             wallet->m_consolidate_feerate = CFeeRate(*consolidate_feerate);
         } else {
@@ -3061,13 +3062,13 @@ bool CWallet::LoadWalletArgs(std::shared_ptr<CWallet> wallet, const WalletContex
                            _("The wallet will avoid paying less than the minimum relay fee."));
     }
 
-    wallet->m_confirm_target = args.GetIntArg("-txconfirmtarget", DEFAULT_TX_CONFIRM_TARGET);
-    wallet->m_spend_zero_conf_change = args.GetBoolArg("-spendzeroconfchange", DEFAULT_SPEND_ZEROCONF_CHANGE);
-    wallet->m_signal_rbf = args.GetBoolArg("-walletrbf", DEFAULT_WALLET_RBF);
+    wallet->m_confirm_target = TxConfirmTargetSetting::Get(args);
+    wallet->m_spend_zero_conf_change = SpendZeroConfChangeSetting::Get(args);
+    wallet->m_signal_rbf = WalletRbfSetting::Get(args);
 
-    wallet->m_keypool_size = std::max(args.GetIntArg("-keypool", DEFAULT_KEYPOOL_SIZE), int64_t{1});
-    wallet->m_notify_tx_changed_script = args.GetArg("-walletnotify", "");
-    wallet->SetBroadcastTransactions(args.GetBoolArg("-walletbroadcast", DEFAULT_WALLETBROADCAST));
+    wallet->m_keypool_size = std::max(KeyPoolSetting::Get(args), int64_t{1});
+    wallet->m_notify_tx_changed_script = WalletNotifySetting::Get(args);
+    wallet->SetBroadcastTransactions(WalletBroadcastSetting::Get(args));
 
     return true;
 }
@@ -3178,7 +3179,7 @@ bool CWallet::AttachChain(const std::shared_ptr<CWallet>& walletInstance, interf
     walletInstance->m_chain = &chain;
 
     // Unless allowed, ensure wallet files are not reused across chains:
-    if (!gArgs.GetBoolArg("-walletcrosschain", DEFAULT_WALLETCROSSCHAIN)) {
+    if (!WalletCrossChainSetting::Get(gArgs)) {
         WalletBatch batch(walletInstance->GetDatabase());
         CBlockLocator locator;
         if (batch.ReadBestBlock(locator) && locator.vHave.size() > 0 && chain.getHeight()) {

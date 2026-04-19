@@ -9,6 +9,7 @@
 
 #include <arith_uint256.h>
 #include <dbwrapper.h>
+#include <node/settings.h>
 #include <script/sigcache.h>
 #include <txdb.h>
 #include <uint256.h>
@@ -20,8 +21,6 @@
 
 class CChainParams;
 class ValidationSignals;
-
-static constexpr auto DEFAULT_MAX_TIP_AGE{24h};
 
 namespace kernel {
 
