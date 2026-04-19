@@ -22,8 +22,19 @@
 
 enum class ScriptType {
     P2WPKH, // segwitv0, witness-pubkey-hash (ECDSA signature)
-    P2TR,   // segwitv1, taproot key-path spend (Schnorr signature)
+    P2TR_KeyPath, // segwitv1, taproot key-path spend (Schnorr signature)
+    P2TR_ScriptPath, // segwitv1, taproot script-path spend (Tapscript leaf with a single OP_CHECKSIG)
 };
+
+static size_t ExpectedWitnessStackSize(ScriptType script_type)
+{
+    switch (script_type) {
+    case ScriptType::P2WPKH: return 2; // [pubkey, signature]
+    case ScriptType::P2TR_KeyPath: return 1; // [signature]
+    case ScriptType::P2TR_ScriptPath: return 3; // [signature, tapscript, control block]
+    } // no default case, so the compiler can warn about missing cases
+    assert(false);
+}
 
 // Microbenchmark for verification of standard scripts.
 static void VerifyScriptBench(benchmark::Bench& bench, ScriptType script_type)
@@ -34,6 +45,7 @@ static void VerifyScriptBench(benchmark::Bench& bench, ScriptType script_type)
     CKey privkey;
     privkey.Set(uint256::ONE.begin(), uint256::ONE.end(), /*fCompressedIn=*/true);
     CPubKey pubkey = privkey.GetPubKey();
+    XOnlyPubKey xonly_pubkey{pubkey};
     CKeyID key_id = pubkey.GetID();
 
     FlatSigningProvider keystore;
@@ -44,7 +56,14 @@ static void VerifyScriptBench(benchmark::Bench& bench, ScriptType script_type)
     const auto dest{[&]() -> CTxDestination {
         switch (script_type) {
         case ScriptType::P2WPKH: return WitnessV0KeyHash(pubkey);
-        case ScriptType::P2TR: return WitnessV1Taproot(XOnlyPubKey{pubkey});
+        case ScriptType::P2TR_KeyPath: return WitnessV1Taproot(xonly_pubkey);
+        case ScriptType::P2TR_ScriptPath:
+            TaprootBuilder builder;
+            builder.Add(0, CScript() << ToByteVector(xonly_pubkey) << OP_CHECKSIG, TAPROOT_LEAF_TAPSCRIPT);
+            builder.Finalize(XOnlyPubKey::NUMS_H); // effectively unspendable key-path
+            const auto output{builder.GetOutput()};
+            keystore.tr_trees.emplace(output, builder);
+            return output;
         } // no default case, so the compiler can warn about missing cases
         assert(false);
     }()};
@@ -54,16 +73,18 @@ static void VerifyScriptBench(benchmark::Bench& bench, ScriptType script_type)
     // Sign spending transaction, precompute transaction data
     PrecomputedTransactionData txdata;
     {
-        std::map<COutPoint, Coin> coins;
-        coins[txSpend.vin[0].prevout] = Coin(txCredit.vout[0], /*nHeightIn=*/100, /*fCoinBaseIn=*/false);
+        const std::map<COutPoint, Coin> coins{
+            {txSpend.vin[0].prevout, Coin(txCredit.vout[0], /*nHeightIn=*/100, /*fCoinBaseIn=*/false)}
+        };
         std::map<int, bilingual_str> input_errors;
-        bool complete = SignTransaction(txSpend, &keystore, coins, SIGHASH_ALL, input_errors);
-        assert(complete);
+        assert(SignTransaction(txSpend, &keystore, coins, SIGHASH_ALL, input_errors));
+        // Weak sanity check on witness data to ensure we produced the intended spending type
+        assert(txSpend.vin[0].scriptWitness.stack.size() == ExpectedWitnessStackSize(script_type));
         txdata.Init(txSpend, /*spent_outputs=*/{txCredit.vout[0]});
     }
 
     // Benchmark.
-    bench.run([&] {
+    bench.unit("script").run([&] {
         ScriptError err;
         bool success = VerifyScript(
             txSpend.vin[0].scriptSig,
@@ -78,7 +99,8 @@ static void VerifyScriptBench(benchmark::Bench& bench, ScriptType script_type)
 }
 
 static void VerifyScriptP2WPKH(benchmark::Bench& bench) { VerifyScriptBench(bench, ScriptType::P2WPKH); }
-static void VerifyScriptP2TR(benchmark::Bench& bench)   { VerifyScriptBench(bench, ScriptType::P2TR);   }
+static void VerifyScriptP2TR_KeyPath(benchmark::Bench& bench) { VerifyScriptBench(bench, ScriptType::P2TR_KeyPath); }
+static void VerifyScriptP2TR_ScriptPath(benchmark::Bench& bench) { VerifyScriptBench(bench, ScriptType::P2TR_ScriptPath); }
 
 static void VerifyNestedIfScript(benchmark::Bench& bench)
 {
@@ -93,14 +115,16 @@ static void VerifyNestedIfScript(benchmark::Bench& bench)
     for (int i = 0; i < 100; ++i) {
         script << OP_ENDIF;
     }
-    bench.run([&] {
-        auto stack_copy = stack;
-        ScriptError error;
-        bool ret = EvalScript(stack_copy, script, 0, BaseSignatureChecker(), SigVersion::BASE, &error);
-        assert(ret);
-    });
+    bench.unit("script").epochIterations(1)
+        .setup([&] { stack.clear(); })
+        .run([&] {
+            ScriptError error;
+            const bool ret{EvalScript(stack, script, /*flags=*/0, BaseSignatureChecker(), SigVersion::BASE, &error)};
+            assert(ret && error == SCRIPT_ERR_OK);
+        });
 }
 
 BENCHMARK(VerifyScriptP2WPKH);
-BENCHMARK(VerifyScriptP2TR);
+BENCHMARK(VerifyScriptP2TR_KeyPath);
+BENCHMARK(VerifyScriptP2TR_ScriptPath);
 BENCHMARK(VerifyNestedIfScript);
