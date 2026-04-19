@@ -224,6 +224,7 @@ if(ENABLE_WALLET)
       bitcoin_wallet
       Qt6::Network
   )
+  target_compile_definitions(bitcoinqt PUBLIC ENABLE_WALLET)
   if(WITH_QRENCODE)
     target_link_libraries(bitcoinqt PRIVATE QRencode::QRencode)
     target_compile_definitions(bitcoinqt PRIVATE USE_QRCODE)
