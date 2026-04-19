@@ -607,7 +607,7 @@ class BlockchainTest(BitcoinTestFramework):
         fork_block = node.getblock(fork_hash)
 
         def solve_and_send_block(prevhash, height, time):
-            b = create_block(prevhash, create_coinbase(height), time)
+            b = create_block(prevhash, height=height, ntime=time)
             b.solve()
             peer.send_and_ping(msg_block(b))
             return b
@@ -741,7 +741,7 @@ class BlockchainTest(BitcoinTestFramework):
         self.log.info("Test getblock when only header is known")
         current_height = node.getblock(node.getbestblockhash())['height']
         block_time = node.getblock(node.getbestblockhash())['time'] + 1
-        block = create_block(int(blockhash, 16), create_coinbase(current_height + 1, nValue=100), block_time)
+        block = create_block(int(blockhash, 16), create_coinbase(current_height + 1, nValue=100), ntime=block_time)
         block.solve()
         node.submitheader(block.serialize().hex())
         assert_raises_rpc_error(-1, "Block not available (not fully downloaded)", lambda: node.getblock(block.hash_hex))
@@ -749,7 +749,7 @@ class BlockchainTest(BitcoinTestFramework):
         self.log.info("Test getblock when block data is available but undo data isn't")
         # Submits a block building on the header-only block, so it can't be connected and has no undo data
         tx = create_tx_with_script(block.vtx[0], 0, script_sig=bytes([OP_TRUE]), amount=50 * COIN)
-        block_noundo = create_block(block.hash_int, create_coinbase(current_height + 2, nValue=100), block_time + 1, txlist=[tx])
+        block_noundo = create_block(block.hash_int, create_coinbase(current_height + 2, nValue=100), ntime=block_time + 1, txlist=[tx])
         block_noundo.solve()
         node.submitblock(block_noundo.serialize().hex())
 

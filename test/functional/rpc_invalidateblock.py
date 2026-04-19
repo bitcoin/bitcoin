@@ -8,7 +8,6 @@ from test_framework.test_framework import BitcoinTestFramework
 from test_framework.address import ADDRESS_BCRT1_UNSPENDABLE_DESCRIPTOR
 from test_framework.blocktools import (
     create_block,
-    create_coinbase,
 )
 from test_framework.util import (
     assert_equal,
@@ -44,7 +43,7 @@ class InvalidateTest(BitcoinTestFramework):
         # affect results since this chain will be invalidated next.
         tip = self.nodes[0].getbestblockhash()
         block_time = self.nodes[0].getblock(self.nodes[0].getbestblockhash())['time'] + 1
-        block = create_block(int(tip, 16), create_coinbase(self.nodes[0].getblockcount()), block_time, version=4)
+        block = create_block(int(tip, 16), height=self.nodes[0].getblockcount(), ntime=block_time, version=4)
         block.solve()
         self.nodes[0].submitheader(block.serialize().hex())
         assert_equal(self.nodes[0].getblockchaininfo()["headers"], self.nodes[0].getblockchaininfo()["blocks"] + 1)

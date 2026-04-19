@@ -13,7 +13,6 @@ import copy
 
 from test_framework.blocktools import (
     create_block,
-    create_coinbase,
     add_witness_commitment,
 )
 
@@ -183,8 +182,8 @@ class MiningTemplateVerificationTest(BitcoinTestFramework):
 
         block_3 = create_block(
             int(block_2_hash, 16),
-            create_coinbase(block_0_height + 3),
-            block_1["mediantime"] + 1,
+            height=block_0_height + 3,
+            ntime=block_1["mediantime"] + 1,
             txlist=[tx["hex"]],
         )
         assert_equal(len(block_3.vtx), 2)
@@ -211,8 +210,8 @@ class MiningTemplateVerificationTest(BitcoinTestFramework):
         )
         block_3 = create_block(
             int(block_2_hash, 16),
-            create_coinbase(block_0_height + 3),
-            block_1["mediantime"] + 1,
+            height=block_0_height + 3,
+            ntime=block_1["mediantime"] + 1,
             txlist=[bad_tx_hex],
         )
         assert_equal(len(block_3.vtx), 2)
@@ -239,8 +238,8 @@ class MiningTemplateVerificationTest(BitcoinTestFramework):
         )
         block_3 = create_block(
             int(block_2_hash, 16),
-            create_coinbase(block_0_height + 3),
-            block_1["mediantime"] + 1,
+            height=block_0_height + 3,
+            ntime=block_1["mediantime"] + 1,
             txlist=[tx_hex, tx_2_hex],
         )
         assert_equal(len(block_3.vtx), 3)
@@ -269,8 +268,8 @@ class MiningTemplateVerificationTest(BitcoinTestFramework):
         block_1 = node.getblock(node.getbestblockhash())
         block_2 = create_block(
             int(block_1["hash"], 16),
-            create_coinbase(block_0_height + 2),
-            block_1["mediantime"] + 1,
+            height=block_0_height + 2,
+            ntime=block_1["mediantime"] + 1,
         )
 
         self.valid_block_test(node, block_2)

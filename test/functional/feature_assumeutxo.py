@@ -14,7 +14,6 @@ import contextlib
 from dataclasses import dataclass
 from test_framework.blocktools import (
         create_block,
-        create_coinbase
 )
 from test_framework.compressor import (
     compress_amount,
@@ -271,9 +270,9 @@ class AssumeutxoTest(BitcoinTestFramework):
         # the main chain headers up to the snapshot height.
         parent_block_hash = node0.getblockhash(SNAPSHOT_BASE_HEIGHT - 1)
         block_time = node0.getblock(node0.getbestblockhash())['time'] + 1
-        fork_block1 = create_block(int(parent_block_hash, 16), create_coinbase(SNAPSHOT_BASE_HEIGHT), block_time)
+        fork_block1 = create_block(int(parent_block_hash, 16), height=SNAPSHOT_BASE_HEIGHT, ntime=block_time)
         fork_block1.solve()
-        fork_block2 = create_block(fork_block1.hash_int, create_coinbase(SNAPSHOT_BASE_HEIGHT + 1), block_time + 1)
+        fork_block2 = create_block(fork_block1.hash_int, height=SNAPSHOT_BASE_HEIGHT + 1, ntime=block_time + 1)
         fork_block2.solve()
         node1.submitheader(fork_block1.serialize().hex())
         node1.submitheader(fork_block2.serialize().hex())

@@ -10,7 +10,7 @@ soft-forks, and test that warning alerts are generated.
 import os
 import re
 
-from test_framework.blocktools import create_block, create_coinbase
+from test_framework.blocktools import create_block
 from test_framework.messages import msg_block
 from test_framework.p2p import P2PInterface
 from test_framework.test_framework import BitcoinTestFramework
@@ -45,7 +45,7 @@ class VersionBitsWarningTest(BitcoinTestFramework):
         tip = int(tip, 16)
 
         for _ in range(numblocks):
-            block = create_block(tip, create_coinbase(height + 1), block_time, version=version)
+            block = create_block(tip, height=height + 1, ntime=block_time, version=version)
             block.solve()
             peer.send_without_ping(msg_block(block))
             block_time += 1

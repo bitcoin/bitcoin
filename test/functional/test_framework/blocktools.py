@@ -95,7 +95,7 @@ def nbits_str(nbits):
 def target_str(target):
     return f"{target:064x}"
 
-def create_block(hashprev=None, coinbase=None, ntime=None, *, version=None, tmpl=None, txlist=None):
+def create_block(hashprev=None, coinbase=None, *, ntime=None, height=None, version=None, tmpl=None, txlist=None):
     """Create a block (with regtest difficulty)."""
     block = CBlock()
     if tmpl is None:
@@ -108,7 +108,7 @@ def create_block(hashprev=None, coinbase=None, ntime=None, *, version=None, tmpl
     else:
         block.nBits = REGTEST_N_BITS
     if coinbase is None:
-        coinbase = create_coinbase(height=tmpl['height'])
+        coinbase = create_coinbase(height=height or tmpl["height"])
     block.vtx.append(coinbase)
     if txlist:
         for tx in txlist:
@@ -129,7 +129,7 @@ def create_empty_fork(node, fork_length=FORK_LENGTH):
 
     blocks = []
     for _ in range(fork_length):
-        block = create_block(tip, create_coinbase(height + 1), block_time)
+        block = create_block(tip, height=height + 1, ntime=block_time)
         block.solve()
         blocks.append(block)
         tip = block.hash_int
@@ -278,6 +278,14 @@ def send_to_witness(use_p2wsh, node, utxo, pubkey, encode_p2sh, amount, sign=Tru
     return node.sendrawtransaction(tx_to_witness)
 
 class TestFrameworkBlockTools(unittest.TestCase):
+    def test_create_block_prefers_explicit_height(self):
+        block = create_block(
+            hashprev=1,
+            tmpl={"height": 100},
+            height=200,
+        )
+        assert_equal(CScriptNum.decode(block.vtx[0].vin[0].scriptSig), 200)
+
     def test_create_coinbase(self):
         height = 20
         coinbase_tx = create_coinbase(height=height)
