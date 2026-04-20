@@ -407,7 +407,7 @@ RPCMethod importdescriptors()
 
     // Rescan the blockchain using the lowest timestamp
     if (rescan) {
-        int64_t scanned_time = pwallet->RescanFromTime(lowest_timestamp, reserver, /*update=*/true);
+        int64_t scanned_time = pwallet->RescanFromTime(lowest_timestamp, reserver);
         pwallet->ResubmitWalletTransactions(node::TxBroadcast::MEMPOOL_NO_BROADCAST, /*force=*/true);
 
         if (pwallet->IsAbortingRescan()) {
