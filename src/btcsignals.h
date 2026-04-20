@@ -123,11 +123,11 @@ public:
     scoped_connection(connection rhs) noexcept : m_conn{std::move(rhs)} {}
 
     scoped_connection(scoped_connection&&) noexcept = default;
-    scoped_connection& operator=(scoped_connection&&) noexcept = default;
 
     /**
-     * For simplicity, disable copy assignment and construction.
+     * For simplicity, disable copy construction and copy/move assignment.
      */
+    scoped_connection& operator=(scoped_connection&&) = delete;
     scoped_connection& operator=(const scoped_connection&) = delete;
     scoped_connection(const scoped_connection&) = delete;
 
