@@ -215,7 +215,10 @@ static void ExecCommand(const std::vector<const char*>& args, std::string_view w
 #else
             if (allow_notfound && errno == ENOENT) return false;
 #endif
-            throw std::system_error(errno, std::system_category(), strprintf("execvp failed to execute '%s'", exec_args[0]));
+            // Throw an exception with the errno value from ExecVp. Use
+            // generic_category because it expects a POSIX errno on all
+            // platforms.
+            throw std::system_error(errno, std::generic_category(), strprintf("execvp failed to execute '%s'", exec_args[0]));
         }
         throw std::runtime_error("execvp returned unexpectedly");
     };
