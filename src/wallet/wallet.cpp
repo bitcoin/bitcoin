@@ -1413,9 +1413,9 @@ void CWallet::RecursiveUpdateTxState(WalletBatch* batch, const Txid& tx_hash, co
     }
 }
 
-bool CWallet::SyncTransaction(const CTransactionRef& ptx, const SyncTxState& state, bool update_tx, bool rescanning_old_block)
+bool CWallet::SyncTransaction(const CTransactionRef& ptx, const SyncTxState& state, bool rescanning_old_block)
 {
-    if (!AddToWalletIfInvolvingMe(ptx, state, update_tx, rescanning_old_block))
+    if (!AddToWalletIfInvolvingMe(ptx, state, /*fUpdate=*/true, rescanning_old_block))
         return false; // Not one of ours
 
     // If a transaction changes 'conflicted' state, that changes the balance
@@ -1952,7 +1952,7 @@ CWallet::ScanResult CWallet::ScanForWalletTransactions(const uint256& start_bloc
                     break;
                 }
                 for (size_t posInBlock = 0; posInBlock < block.vtx.size(); ++posInBlock) {
-                    SyncTransaction(block.vtx[posInBlock], TxStateConfirmed{block_hash, block_height, static_cast<int>(posInBlock)}, /*update_tx=*/true, /*rescanning_old_block=*/true);
+                    SyncTransaction(block.vtx[posInBlock], TxStateConfirmed{block_hash, block_height, static_cast<int>(posInBlock)}, /*rescanning_old_block=*/true);
                 }
                 // scan succeeded, record block as most recent successfully scanned
                 result.last_scanned_block = block_hash;
