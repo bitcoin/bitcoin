@@ -233,11 +233,13 @@ void JSONRPCRequest::parse(const UniValue& valRequest)
     if (!valMethod.isStr())
         throw JSONRPCError(RPC_INVALID_REQUEST, "Method must be a string");
     strMethod = valMethod.get_str();
+    const std::string log_id{id && !id->isNull() ? SanitizeString(id->getValStr()) : ""};
     if (fLogIPs)
-        LogDebug(BCLog::RPC, "ThreadRPCServer method=%s user=%s peeraddr=%s\n", SanitizeString(strMethod),
-            this->authUser, this->peerAddr);
+        LogDebug(BCLog::RPC, "ThreadRPCServer method=%s user=%s peeraddr=%s id=%s", SanitizeString(strMethod),
+            this->authUser, this->peerAddr, log_id);
     else
-        LogDebug(BCLog::RPC, "ThreadRPCServer method=%s user=%s\n", SanitizeString(strMethod), this->authUser);
+        LogDebug(BCLog::RPC, "ThreadRPCServer method=%s user=%s id=%s", SanitizeString(strMethod), this->authUser,
+            log_id);
 
     // Parse params
     const UniValue& valParams{request.find_value("params")};

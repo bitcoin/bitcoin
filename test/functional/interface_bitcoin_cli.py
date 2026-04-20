@@ -421,6 +421,18 @@ class TestBitcoinCli(BitcoinTestFramework):
 
         self.test_netinfo()
 
+        self.log.info("Test -rpcid option sets custom JSON-RPC request ID")
+        with self.nodes[0].assert_debug_log(expected_msgs=['id=myrpcid']):
+            self.nodes[0].cli('-rpcid=myrpcid').getblockcount()
+
+        self.log.info("Test default request logs default id=1")
+        with self.nodes[0].assert_debug_log(expected_msgs=["ThreadRPCServer method=getblockcount", "id=1"]):
+            self.nodes[0].cli.getblockcount()
+
+        self.log.info("Test that request ids with unsafe characters are sanitized in the log")
+        with self.nodes[0].assert_debug_log(expected_msgs=["ThreadRPCServer method=getblockcount", "id=abcdef"]):
+            self.nodes[0].cli('-rpcid=abc<\n>def').getblockcount()
+
         self.log.info("Test -version with node stopped")
         self.stop_node(0)
         cli_response = self.nodes[0].cli('-version').send_cli()

@@ -57,6 +57,7 @@ using CliClock = std::chrono::system_clock;
 const TranslateFn G_TRANSLATION_FUN{nullptr};
 
 static const char DEFAULT_RPCCONNECT[] = "127.0.0.1";
+static constexpr const char* DEFAULT_RPC_REQ_ID{"1"};
 static const int DEFAULT_HTTP_CLIENT_TIMEOUT=900;
 static constexpr int DEFAULT_WAIT_CLIENT_TIMEOUT = 0;
 static const bool DEFAULT_NAMED=false;
@@ -100,6 +101,7 @@ static void SetupCliArgs(ArgsManager& argsman)
     SetupChainParamsBaseOptions(argsman);
     argsman.AddArg("-color=<when>", strprintf("Color setting for CLI output (default: %s). Valid values: always, auto (add color codes when standard output is connected to a terminal and OS is not WIN32), never. Only applies to the output of -getinfo.", DEFAULT_COLOR_SETTING), ArgsManager::ALLOW_ANY | ArgsManager::DISALLOW_NEGATION, OptionsCategory::OPTIONS);
     argsman.AddArg("-named", strprintf("Pass named instead of positional arguments (default: %s)", DEFAULT_NAMED), ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
+    argsman.AddArg("-rpcid=<id>", strprintf("Set a custom JSON-RPC request ID string (default: %s)", DEFAULT_RPC_REQ_ID), ArgsManager::ALLOW_ANY | ArgsManager::DISALLOW_NEGATION | ArgsManager::DISALLOW_ELISION, OptionsCategory::OPTIONS);
     argsman.AddArg("-rpcclienttimeout=<n>", strprintf("Timeout in seconds during HTTP requests, or 0 for no timeout. (default: %d)", DEFAULT_HTTP_CLIENT_TIMEOUT), ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
     argsman.AddArg("-rpcconnect=<ip>", strprintf("Send commands to node running on <ip> (default: %s)", DEFAULT_RPCCONNECT), ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
     argsman.AddArg("-rpccookiefile=<loc>", "Location of the auth cookie. Relative paths will be prefixed by a net-specific datadir location. (default: data dir)", ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
@@ -787,7 +789,8 @@ struct DefaultRequestHandler : BaseRequestHandler {
         } else {
             params = RPCConvertValues(method, args);
         }
-        return JSONRPCRequestObj(method, params, 1);
+        UniValue id{UniValue::VSTR, gArgs.GetArg("-rpcid", DEFAULT_RPC_REQ_ID)};
+        return JSONRPCRequestObj(method, params, id);
     }
 
     UniValue ProcessReply(const UniValue &reply) override
