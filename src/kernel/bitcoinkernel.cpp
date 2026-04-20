@@ -1352,13 +1352,13 @@ const btck_Chain* btck_chainstate_manager_get_active_chain(const btck_Chainstate
     return btck_Chain::ref(&WITH_LOCK(btck_ChainstateManager::get(chainman).m_chainman->GetMutex(), return btck_ChainstateManager::get(chainman).m_chainman->ActiveChain()));
 }
 
-int btck_chain_get_height(const btck_Chain* chain)
+int32_t btck_chain_get_height(const btck_Chain* chain)
 {
     LOCK(::cs_main);
     return btck_Chain::get(chain).Height();
 }
 
-const btck_BlockTreeEntry* btck_chain_get_by_height(const btck_Chain* chain, int height)
+const btck_BlockTreeEntry* btck_chain_get_by_height(const btck_Chain* chain, int32_t height)
 {
     LOCK(::cs_main);
     return btck_BlockTreeEntry::ref(btck_Chain::get(chain)[height]);
