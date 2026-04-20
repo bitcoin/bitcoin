@@ -7,8 +7,14 @@ Library versions are tracked with simple
 Versioning policy is described in the [version.h](../include/mp/version.h)
 include.
 
-## v10
+## v11
 - Current unstable version.
+- Adds an optional per-listener `max_connections` parameter to `ListenConnections()`
+  so servers can stop accepting new connections when a local connection cap is reached,
+  and resume accepting after existing connections disconnect.
+
+## [v10.0](https://github.com/bitcoin-core/libmultiprocess/commits/v10.0)
+- Prior unstable version before local listener connection-limit support.
 
 ## [v9.0](https://github.com/bitcoin-core/libmultiprocess/commits/v9.0)
 - Fixes race conditions where worker thread could be used after destruction, where getParams() could be called after request cancel, and where m_on_cancel could be called after request finishes.

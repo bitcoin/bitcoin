@@ -5,6 +5,8 @@
 #include <mp/test/foo.capnp.h>
 #include <mp/test/foo.capnp.proxy.h>
 
+#include <string.h> // NOLINT(modernize-deprecated-headers)
+
 #include <atomic>
 #include <capnp/capability.h>
 #include <capnp/rpc.h>
@@ -12,7 +14,6 @@
 #include <chrono>
 #include <condition_variable>
 #include <cstdint>
-#include <cstring>
 #include <functional>
 #include <future>
 #include <kj/async.h>
