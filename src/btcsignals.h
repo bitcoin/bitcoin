@@ -120,10 +120,18 @@ class scoped_connection
     connection m_conn;
 
 public:
+    constexpr scoped_connection() noexcept = default;
     scoped_connection(connection rhs) noexcept : m_conn{std::move(rhs)} {}
 
     scoped_connection(scoped_connection&&) noexcept = default;
-    scoped_connection& operator=(scoped_connection&&) noexcept = default;
+    scoped_connection& operator=(scoped_connection&& other) noexcept
+    {
+        if (this != &other) {
+            disconnect();
+            m_conn = std::move(other.m_conn);
+        }
+        return *this;
+    }
 
     /**
      * For simplicity, disable copy assignment and construction.

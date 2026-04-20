@@ -97,6 +97,39 @@ BOOST_AUTO_TEST_CASE(disconnects)
     BOOST_CHECK_EQUAL(val, 6);
 }
 
+/* Move-assigning a scoped_connection should disconnect the old connection.
+ * A default-constructed scoped_connection can be move-assigned into.
+ */
+BOOST_AUTO_TEST_CASE(scoped_connection_move_assignment)
+{
+    btcsignals::signal<void(int&)> sig0;
+    int val{0};
+
+    // Default-construct, then move-assign a real connection into it.
+    btcsignals::scoped_connection sc0;
+    sc0 = btcsignals::scoped_connection{sig0.connect(IncrementCallback)};
+    sig0(val);
+    BOOST_CHECK_EQUAL(val, 1);
+
+    // Move-assign sc0 to hold a different connection.
+    // The old callback (IncrementCallback) should be disconnected.
+    btcsignals::scoped_connection sc1 = sig0.connect(SquareCallback);
+    sc0 = std::move(sc1);
+
+    val = 3;
+    sig0(val);
+    // If the old connection was properly disconnected, only SquareCallback runs.
+    BOOST_CHECK_EQUAL(val, 9);
+
+    // Self-move-assignment should be safe. Use a reference to avoid
+    // a -Wself-move warning.
+    auto& ref = sc0;
+    sc0 = std::move(ref);
+    val = 3;
+    sig0(val);
+    BOOST_CHECK_EQUAL(val, 9);
+}
+
 /* Check that move-only return types work correctly
  */
 BOOST_AUTO_TEST_CASE(moveonly_return)
