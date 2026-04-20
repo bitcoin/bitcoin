@@ -167,11 +167,13 @@ chain for " target " development."))
         ((#:configure-flags flags)
           #~(append #$flags
             ;; https://gcc.gnu.org/install/configure.html
-            (list "--enable-threads=posix"
-                  "--enable-default-ssp=yes"
+            (list "--enable-default-ssp=yes"
+                  "--enable-gprofng=no"
                   "--enable-host-bind-now=yes"
+                  "--enable-threads=posix"
                   "--disable-gcov"
                   "--disable-libgomp"
+                  "--disable-libsanitizer"
                   "--disable-lto"
                   "--disable-nls"
                   #$building-on)))))))
@@ -184,13 +186,13 @@ chain for " target " development."))
         ((#:configure-flags flags)
            #~(append #$flags
             ;; https://gcc.gnu.org/install/configure.html
-            (list "--enable-initfini-array=yes"
+            (list "--enable-cet=yes"
                   "--enable-default-ssp=yes"
                   "--enable-default-pie=yes"
-                  "--enable-host-bind-now=yes"
-                  "--enable-standard-branch-protection=yes"
-                  "--enable-cet=yes"
                   "--enable-gprofng=no"
+                  "--enable-host-bind-now=yes"
+                  "--enable-initfini-array=yes"
+                  "--enable-standard-branch-protection=yes"
                   "--disable-gcov"
                   "--disable-libgomp"
                   "--disable-libquadmath"
