@@ -226,14 +226,6 @@ SOURCE_DATE_EPOCH="${SOURCE_DATE_EPOCH:-$(git -c log.showSignature=false log --f
 OUTDIR_BASE="${OUTDIR_BASE:-${VERSION_BASE}/output}"
 mkdir -p "$OUTDIR_BASE"
 
-# Usage: profiledir_for_host HOST SUFFIX
-#
-#   HOST: The current platform triple we're building for
-#
-profiledir_for_host() {
-    echo "${PROFILES_BASE}/${1}${2:+-${2}}"
-}
-
 #########
 # BUILD #
 #########

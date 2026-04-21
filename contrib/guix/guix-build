@@ -297,14 +297,6 @@ for host in $HOSTS; do
     make -C "${PWD}/depends" -j"$JOBS" download-"$(host_to_commonname "$host")" ${V:+V=1} ${SOURCES_PATH:+SOURCES_PATH="$SOURCES_PATH"}
 done
 
-# Usage: profiledir_for_host HOST SUFFIX
-#
-#   HOST: The current platform triple we're building for
-#
-profiledir_for_host() {
-    echo "${PROFILES_BASE}/${1}${2:+-${2}}"
-}
-
 
 #########
 # BUILD #
