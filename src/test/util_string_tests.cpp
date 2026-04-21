@@ -248,8 +248,14 @@ BOOST_AUTO_TEST_CASE(line_reader_test)
         std::string_view input = "a\nbaboon\n";
         LineReader reader(input, /*max_line_length=*/1);
         BOOST_CHECK_EQUAL(reader.ReadLine(), "a");
+        // After a successful read, capture position before the failing ReadLine
+        const size_t consumed_before = reader.Consumed();
+        const size_t remaining_before = reader.Remaining();
         // "baboon" is too long
         BOOST_CHECK_EXCEPTION(reader.ReadLine(), std::runtime_error, HasReason{"max_line_length exceeded by LineReader"});
+        // Position is unchanged after the failed ReadLine
+        BOOST_CHECK_EQUAL(reader.Consumed(), consumed_before);
+        BOOST_CHECK_EQUAL(reader.Remaining(), remaining_before);
         BOOST_CHECK_EQUAL(reader.ReadLength(1), "b");
         BOOST_CHECK_EQUAL(reader.ReadLength(1), "a");
         BOOST_CHECK_EQUAL(reader.ReadLength(2), "bo");
@@ -284,6 +290,13 @@ BOOST_AUTO_TEST_CASE(line_reader_test)
         BOOST_CHECK_EQUAL(reader.ReadLength(31), "here was a dog \r\nwho liked food");
         // End of buffer reached
         BOOST_CHECK_EQUAL(reader.Remaining(), 0);
+    }
+    {
+        // Consecutive CRLFs produce an empty line HTTP end-of-headers marker
+        std::string_view input = "Host: example.com\r\n\r\n";
+        LineReader reader(input, /*max_line_length=*/64);
+        BOOST_CHECK_EQUAL(reader.ReadLine(), "Host: example.com");
+        BOOST_CHECK_EQUAL(reader.ReadLine(), "");
     }
 }
 
