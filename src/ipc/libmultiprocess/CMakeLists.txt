@@ -203,6 +203,10 @@ target_link_libraries(mpgen PRIVATE CapnProto::capnp-rpc)
 target_link_libraries(mpgen PRIVATE CapnProto::capnpc)
 target_link_libraries(mpgen PRIVATE CapnProto::kj)
 target_link_libraries(mpgen PRIVATE Threads::Threads)
+target_compile_definitions(mpgen PRIVATE
+  "CAPNP_EXECUTABLE=\"$<TARGET_FILE:CapnProto::capnp_tool>\""
+  "CAPNPC_CXX_EXECUTABLE=\"$<TARGET_FILE:CapnProto::capnpc_cpp>\""
+  "CAPNP_INCLUDE_DIRS=\"${CAPNP_INCLUDE_DIRS}\"")
 set_target_properties(mpgen PROPERTIES
     INSTALL_RPATH_USE_LINK_PATH TRUE)
 set_target_properties(mpgen PROPERTIES
