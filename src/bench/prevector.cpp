@@ -66,22 +66,22 @@ static void PrevectorResize(benchmark::Bench& bench)
 template <typename T>
 static void PrevectorDeserialize(benchmark::Bench& bench)
 {
-    DataStream s0{};
+    DataStream data{};
     prevector<CScriptBase::STATIC_SIZE, T> t0;
     t0.resize(CScriptBase::STATIC_SIZE);
     for (auto x = 0; x < 900; ++x) {
-        s0 << t0;
+        data << t0;
     }
     t0.resize(100);
-    for (auto x = 0; x < 101; ++x) {
-        s0 << t0;
+    for (auto x = 0; x < 100; ++x) {
+        data << t0;
     }
     bench.batch(1000).run([&] {
+        SpanReader s0{data};
         prevector<CScriptBase::STATIC_SIZE, T> t1;
         for (auto x = 0; x < 1000; ++x) {
             s0 >> t1;
         }
-        s0.Rewind();
     });
 }
 

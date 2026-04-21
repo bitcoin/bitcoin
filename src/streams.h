@@ -206,27 +206,6 @@ public:
     value_type* data()                               { return vch.data() + m_read_pos; }
     const value_type* data() const                   { return vch.data() + m_read_pos; }
 
-    inline void Compact()
-    {
-        vch.erase(vch.begin(), vch.begin() + m_read_pos);
-        m_read_pos = 0;
-    }
-
-    bool Rewind(std::optional<size_type> n = std::nullopt)
-    {
-        // Total rewind if no size is passed
-        if (!n) {
-            m_read_pos = 0;
-            return true;
-        }
-        // Rewind by n characters if the buffer hasn't been compacted yet
-        if (*n > m_read_pos)
-            return false;
-        m_read_pos -= *n;
-        return true;
-    }
-
-
     //
     // Stream subset
     //
@@ -243,8 +222,8 @@ public:
         }
         memcpy(dst.data(), &vch[m_read_pos], dst.size());
         if (next_read_pos.value() == vch.size()) {
-            m_read_pos = 0;
-            vch.clear();
+            // If fully consumed, reset to empty state.
+            clear();
             return;
         }
         m_read_pos = next_read_pos.value();
@@ -258,8 +237,8 @@ public:
             throw std::ios_base::failure("DataStream::ignore(): end of data");
         }
         if (next_read_pos.value() == vch.size()) {
-            m_read_pos = 0;
-            vch.clear();
+            // If all bytes are ignored, reset to empty state.
+            clear();
             return;
         }
         m_read_pos = next_read_pos.value();
