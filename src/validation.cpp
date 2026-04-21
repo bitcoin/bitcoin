@@ -2990,6 +2990,8 @@ bool Chainstate::DisconnectTip(BlockValidationState& state, DisconnectedBlockTra
 struct ConnectedBlock {
     const CBlockIndex* pindex;
     std::shared_ptr<const CBlock> pblock;
+    ConnectedBlock(const CBlockIndex* _pindex, std::shared_ptr<const CBlock> _pblock)
+        : pindex(_pindex), pblock(std::move(_pblock)) {}
 };
 
 /**
