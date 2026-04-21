@@ -56,7 +56,6 @@ class BumpFeeTest(BitcoinTestFramework):
         # whitelist peers to speed up tx relay / mempool sync
         self.noban_tx_relay = True
         self.extra_args = [[
-            "-walletrbf={}".format(i),
             "-mintxfee=0.00002",
             "-addresstype=bech32",
         ] for i in range(self.num_nodes)]
