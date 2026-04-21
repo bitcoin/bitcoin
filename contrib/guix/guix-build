@@ -244,18 +244,9 @@ SOURCE_DATE_EPOCH="${SOURCE_DATE_EPOCH:-$(git -c log.showSignature=false log --f
 
 # Precious directories are those which should not be cleaned between successive
 # guix builds
-depends_precious_dir_names='SOURCES_PATH BASE_CACHE SDK_PATH'
-precious_dir_names="${depends_precious_dir_names} OUTDIR_BASE PROFILES_BASE"
-
-# Usage: contains IFS-SEPARATED-LIST ITEM
-contains() {
-    for i in ${1}; do
-        if [ "$i" = "${2}" ]; then
-            return 0  # Found!
-        fi
-    done
-    return 1
-}
+depends_precious_dir_names="SOURCES_PATH BASE_CACHE SDK_PATH"
+base_dir_names="OUTDIR_BASE PROFILES_BASE"
+precious_dir_names="${depends_precious_dir_names} ${base_dir_names}"
 
 # If the user explicitly specified a precious directory, create it so we
 # can map it into the container
@@ -287,11 +278,9 @@ mkdir -p "$VAR_BASE"
          -- $(printf "print-%s\n" $depends_precious_dir_names)
 
     # Get remaining precious dir definitions from the environment
-    for precious_dir_name in $precious_dir_names; do
+    for precious_dir_name in $base_dir_names; do
         precious_dir_path="${!precious_dir_name}"
-        if ! contains "$depends_precious_dir_names" "$precious_dir_name"; then
-            echo "${precious_dir_name}=${precious_dir_path}"
-        fi
+        echo "${precious_dir_name}=${precious_dir_path}"
     done
 } > "${VAR_BASE}/precious_dirs"
 
