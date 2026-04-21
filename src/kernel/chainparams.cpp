@@ -10,16 +10,15 @@
 #include <consensus/merkle.h>
 #include <consensus/params.h>
 #include <crypto/hex_base.h>
-#include <hash.h>
 #include <kernel/messagestartchars.h>
 #include <primitives/block.h>
 #include <primitives/transaction.h>
 #include <script/interpreter.h>
 #include <script/script.h>
+#include <signet.h>
 #include <uint256.h>
 #include <util/chaintype.h>
 #include <util/log.h>
-#include <util/strencodings.h>
 
 #include <algorithm>
 #include <array>
@@ -30,8 +29,6 @@
 #include <map>
 #include <span>
 #include <utility>
-
-using namespace util::hex_literals;
 
 static CBlock CreateGenesisBlock(const char* pszTimestamp, const CScript& genesisOutputScript, uint32_t nTime, uint32_t nNonce, uint32_t nBits, int32_t nVersion, const CAmount& genesisReward)
 {
@@ -415,7 +412,7 @@ public:
         vSeeds.clear();
 
         if (!options.challenge) {
-            bin = "512103ad5e0edad18cb1f0fc0d28a3d4f1f3e445640337489abb10404f2d1e086be430210359ef5021964fe22d6f8e05b2463c9540ce96883fe3b278760f048f5189f2e6c452ae"_hex_v_u8;
+            bin = SIGNET_DEFAULT_CHALLENGE;
             vFixedSeeds = std::vector<uint8_t>(std::begin(chainparams_seed_signet), std::end(chainparams_seed_signet));
             vSeeds.emplace_back("seed.signet.bitcoin.sprovoost.nl.");
             vSeeds.emplace_back("seed.signet.achownodes.xyz."); // Ava Chow, only supports x1, x5, x9, x49, x809, x849, xd, x400, x404, x408, x448, xc08, xc48, x40c
@@ -472,11 +469,7 @@ public:
         consensus.vDeployments[Consensus::DEPLOYMENT_TESTDUMMY].threshold = 1815; // 90%
         consensus.vDeployments[Consensus::DEPLOYMENT_TESTDUMMY].period = 2016;
 
-        // message start is defined as the first 4 bytes of the sha256d of the block script
-        HashWriter h{};
-        h << consensus.signet_challenge;
-        uint256 hash = h.GetHash();
-        std::copy_n(hash.begin(), 4, pchMessageStart.begin());
+        pchMessageStart = GetSignetMessageStart(consensus.signet_challenge);
 
         nDefaultPort = 38333;
         nPruneAfterHeight = 1000;
