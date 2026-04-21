@@ -4040,9 +4040,9 @@ ServiceFlags CConnman::GetLocalServices() const
 static util::NotNullUniquePtr<Transport> MakeTransport(NodeId id, bool use_v2transport, bool inbound) noexcept
 {
     if (use_v2transport) {
-        return util::NotNullUniquePtr<Transport>{std::make_unique<V2Transport>(id, /*initiating=*/!inbound)};
+        return util::NotNull{std::make_unique<V2Transport>(id, /*initiating=*/!inbound)};
     } else {
-        return util::NotNullUniquePtr<Transport>{std::make_unique<V1Transport>(id)};
+        return util::NotNull{std::make_unique<V1Transport>(id)};
     }
 }
 
