@@ -252,16 +252,15 @@ for host in $HOSTS; do
         # for the particular $HOST we're building for
         export HOST="$host"
 
-        # shellcheck disable=SC2030
 cat << EOF
 INFO: Codesigning ${VERSION:?not set} for platform triple ${HOST:?not set}:
       ...using reference timestamp: ${SOURCE_DATE_EPOCH:?not set}
       ...from worktree directory: '${PWD}'
           ...bind-mounted in container to: '/bitcoin'
       ...in build directory: '$(distsrc_for_host "$HOST" codesigned)'
-          ...bind-mounted in container to: '$(DISTSRC_BASE=/distsrc-base && distsrc_for_host "$HOST" codesigned)'
+          ...bind-mounted in container to: '$(distsrc_for_host "$HOST" codesigned /distsrc-base)'
       ...outputting in: '$(outdir_for_host "$HOST" codesigned)'
-          ...bind-mounted in container to: '$(OUTDIR_BASE=/outdir-base && outdir_for_host "$HOST" codesigned)'
+          ...bind-mounted in container to: '$(outdir_for_host "$HOST" codesigned /outdir-base)'
       ...using detached signatures in: '${DETACHED_SIGS_REPO:?not set}'
           ...bind-mounted in container to: '/detached-sigs'
 EOF
@@ -318,7 +317,7 @@ EOF
         #    Please read the README.md in the same directory as this file for
         #    more information.
         #
-        # shellcheck disable=SC2086,SC2031
+        # shellcheck disable=SC2086
         time-machine shell --manifest="${PWD}/contrib/guix/manifest.scm" \
                                  --container \
                                  --writable-root \
@@ -342,8 +341,8 @@ EOF
                                         JOBS="$JOBS" \
                                         SOURCE_DATE_EPOCH="${SOURCE_DATE_EPOCH:?unable to determine value}" \
                                         ${V:+V=1} \
-                                        DISTSRC="$(DISTSRC_BASE=/distsrc-base && distsrc_for_host "$HOST" codesigned)" \
-                                        OUTDIR="$(OUTDIR_BASE=/outdir-base && outdir_for_host "$HOST" codesigned)" \
+                                        DISTSRC="$(distsrc_for_host "$HOST" codesigned /distsrc-base)" \
+                                        OUTDIR="$(outdir_for_host "$HOST" codesigned /outdir-base)" \
                                         DIST_ARCHIVE_BASE=/outdir-base/dist-archive \
                                         DETACHED_SIGS_REPO=/detached-sigs \
                                         CODESIGNING_TARBALL="$(OUTDIR_BASE=/outdir-base && codesigning_tarball_for_host "$HOST")" \
