@@ -566,7 +566,7 @@ void CNode::CloseSocketDisconnect()
             m_addr_name.c_str(),
             ConnectionTypeAsString().c_str(),
             ConnectedThroughNetwork(),
-            Ticks<std::chrono::seconds>(m_connected));
+            TicksSinceEpoch<std::chrono::seconds>(m_connected));
     }
     m_i2p_sam_session.reset();
 }
@@ -662,9 +662,9 @@ void CNode::CopyStats(CNodeStats& stats)
 bool CNode::ReceiveMsgBytes(std::span<const uint8_t> msg_bytes, bool& complete)
 {
     complete = false;
-    const auto time = GetTime<std::chrono::microseconds>();
+    const auto time{NodeClock::now()};
     LOCK(cs_vRecv);
-    m_last_recv = std::chrono::duration_cast<std::chrono::seconds>(time);
+    m_last_recv = time;
     nRecvBytes += msg_bytes.size();
     while (msg_bytes.size() > 0) {
         // absorb network data
@@ -800,7 +800,7 @@ const uint256& V1Transport::GetMessageHash() const
     return data_hash;
 }
 
-CNetMessage V1Transport::GetReceivedMessage(const std::chrono::microseconds time, bool& reject_message)
+CNetMessage V1Transport::GetReceivedMessage(NodeClock::time_point time, bool& reject_message)
 {
     AssertLockNotHeld(m_recv_mutex);
     // Initialize out parameter
@@ -1452,7 +1452,7 @@ std::optional<std::string> V2Transport::GetMessageType(std::span<const uint8_t>&
     return ret;
 }
 
-CNetMessage V2Transport::GetReceivedMessage(std::chrono::microseconds time, bool& reject_message) noexcept
+CNetMessage V2Transport::GetReceivedMessage(NodeClock::time_point time, bool& reject_message) noexcept
 {
     AssertLockNotHeld(m_recv_mutex);
     LOCK(m_recv_mutex);
@@ -1643,7 +1643,7 @@ std::pair<size_t, bool> CConnman::SocketSendData(CNode& node) const
             nBytes = node.m_sock->Send(data.data(), data.size(), flags);
         }
         if (nBytes > 0) {
-            node.m_last_send = GetTime<std::chrono::seconds>();
+            node.m_last_send = NodeClock::now();
             node.nSendBytes += nBytes;
             // Notify transport that bytes have been processed.
             node.m_transport->MarkBytesSent(nBytes);
@@ -1727,7 +1727,7 @@ bool CConnman::AttemptToEvictConnection()
                 pnode->m_addr_name.c_str(),
                 pnode->ConnectionTypeAsString().c_str(),
                 pnode->ConnectedThroughNetwork(),
-                Ticks<std::chrono::seconds>(pnode->m_connected));
+                TicksSinceEpoch<std::chrono::seconds>(pnode->m_connected));
             pnode->fDisconnect = true;
             return true;
         }
@@ -2005,12 +2005,12 @@ void CConnman::NotifyNumConnectionsChanged()
     }
 }
 
-bool CConnman::ShouldRunInactivityChecks(const CNode& node, std::chrono::microseconds now) const
+bool CConnman::ShouldRunInactivityChecks(const CNode& node, NodeClock::time_point now) const
 {
     return node.m_connected + m_peer_connect_timeout < now;
 }
 
-bool CConnman::InactivityCheck(const CNode& node, std::chrono::microseconds now) const
+bool CConnman::InactivityCheck(const CNode& node, NodeClock::time_point now) const
 {
     // Tests that see disconnects after using mocktime can start nodes with a
     // large timeout. For example, -peertimeout=999999999.
@@ -2019,8 +2019,8 @@ bool CConnman::InactivityCheck(const CNode& node, std::chrono::microseconds now)
 
     if (!ShouldRunInactivityChecks(node, now)) return false;
 
-    bool has_received{last_recv.count() != 0};
-    bool has_sent{last_send.count() != 0};
+    bool has_received{last_recv > NodeClock::epoch};
+    bool has_sent{last_send > NodeClock::epoch};
 
     if (!has_received || !has_sent) {
         std::string has_never;
@@ -2127,7 +2127,7 @@ void CConnman::SocketHandlerConnected(const std::vector<CNode*>& nodes,
 {
     AssertLockNotHeld(m_total_bytes_sent_mutex);
 
-    auto now = GetTime<std::chrono::microseconds>();
+    const auto now{NodeClock::now()};
 
     for (CNode* pnode : nodes) {
         if (m_interrupt_net->interrupted()) {
@@ -3987,7 +3987,7 @@ CNode::CNode(NodeId idIn,
     : m_transport{MakeTransport(idIn, node_opts.use_v2transport, conn_type_in == ConnectionType::INBOUND)},
       m_permission_flags{node_opts.permission_flags},
       m_sock{sock},
-      m_connected{GetTime<std::chrono::seconds>()},
+      m_connected{NodeClock::now()},
       addr{addrIn},
       addrBind{addrBindIn},
       m_addr_name{addrNameIn.empty() ? addr.ToStringAddrPort() : addrNameIn},

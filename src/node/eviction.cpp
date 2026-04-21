@@ -218,7 +218,7 @@ void ProtectEvictionCandidatesByRatio(std::vector<NodeEvictionCandidate>& evicti
     // (vEvictionCandidates is already sorted by reverse connect time)
     uint64_t naMostConnections;
     unsigned int nMostConnections = 0;
-    std::chrono::seconds nMostConnectionsTime{0};
+    NodeClock::time_point nMostConnectionsTime{NodeClock::epoch};
     std::map<uint64_t, std::vector<NodeEvictionCandidate> > mapNetGroupNodes;
     for (const NodeEvictionCandidate &node : vEvictionCandidates) {
         std::vector<NodeEvictionCandidate> &group = mapNetGroupNodes[node.nKeyedNetGroup];
