@@ -9,6 +9,9 @@ set -e -o pipefail
 # shellcheck source=libexec/prelude.bash
 source "$(dirname "${BASH_SOURCE[0]}")/libexec/prelude.bash"
 
+# shellcheck source=libexec/common.bash
+source "$(dirname "${BASH_SOURCE[0]}")/libexec/common.bash"
+
 
 ###################
 ## SANITY CHECKS ##
@@ -293,14 +296,6 @@ mkdir -p "$OUTDIR_BASE"
 for host in $HOSTS; do
     make -C "${PWD}/depends" -j"$JOBS" download-"$(host_to_commonname "$host")" ${V:+V=1} ${SOURCES_PATH:+SOURCES_PATH="$SOURCES_PATH"}
 done
-
-# Usage: outdir_for_host HOST SUFFIX
-#
-#   HOST: The current platform triple we're building for
-#
-outdir_for_host() {
-    echo "${OUTDIR_BASE}/${1}${2:+-${2}}"
-}
 
 # Usage: profiledir_for_host HOST SUFFIX
 #
