@@ -956,6 +956,8 @@ static RPCMethod gettxspendingprevout()
             struct Entry {
                 COutPoint outpoint;
                 const UniValue* raw;
+                Entry(COutPoint _outpoint, const UniValue* _raw)
+                    : outpoint(std::move(_outpoint)), raw(_raw) {}
             };
             std::vector<Entry> prevouts_to_process;
             prevouts_to_process.reserve(output_params.size());
