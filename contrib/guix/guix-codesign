@@ -102,18 +102,10 @@ fi
 # Default to building for all supported HOSTs (overridable by environment)
 export HOSTS="${HOSTS:-x86_64-w64-mingw32 x86_64-apple-darwin arm64-apple-darwin}"
 
-# Usage: distsrc_for_host HOST
-#
-#   HOST: The current platform triple we're building for
-#
-distsrc_for_host() {
-    echo "${DISTSRC_BASE}/distsrc-${VERSION}-${1}-codesigned"
-}
-
 # Accumulate a list of build directories that already exist...
 hosts_distsrc_exists=""
 for host in $HOSTS; do
-    if [ -e "$(distsrc_for_host "$host")" ]; then
+    if [ -e "$(distsrc_for_host "$host" codesigned)" ]; then
         hosts_distsrc_exists+=" ${host}"
     fi
 done
@@ -137,7 +129,7 @@ packages cache, the garbage collector roots for Guix environments, and the
 output directory.
 EOF
 for host in $hosts_distsrc_exists; do
-    echo "     ${host} '$(distsrc_for_host "$host")'"
+    echo "     ${host} '$(distsrc_for_host "$host" codesigned)'"
 done
 exit 1
 else
@@ -266,8 +258,8 @@ INFO: Codesigning ${VERSION:?not set} for platform triple ${HOST:?not set}:
       ...using reference timestamp: ${SOURCE_DATE_EPOCH:?not set}
       ...from worktree directory: '${PWD}'
           ...bind-mounted in container to: '/bitcoin'
-      ...in build directory: '$(distsrc_for_host "$HOST")'
-          ...bind-mounted in container to: '$(DISTSRC_BASE=/distsrc-base && distsrc_for_host "$HOST")'
+      ...in build directory: '$(distsrc_for_host "$HOST" codesigned)'
+          ...bind-mounted in container to: '$(DISTSRC_BASE=/distsrc-base && distsrc_for_host "$HOST" codesigned)'
       ...outputting in: '$(outdir_for_host "$HOST" codesigned)'
           ...bind-mounted in container to: '$(OUTDIR_BASE=/outdir-base && outdir_for_host "$HOST" codesigned)'
       ...using detached signatures in: '${DETACHED_SIGS_REPO:?not set}'
@@ -350,7 +342,7 @@ EOF
                                         JOBS="$JOBS" \
                                         SOURCE_DATE_EPOCH="${SOURCE_DATE_EPOCH:?unable to determine value}" \
                                         ${V:+V=1} \
-                                        DISTSRC="$(DISTSRC_BASE=/distsrc-base && distsrc_for_host "$HOST")" \
+                                        DISTSRC="$(DISTSRC_BASE=/distsrc-base && distsrc_for_host "$HOST" codesigned)" \
                                         OUTDIR="$(OUTDIR_BASE=/outdir-base && outdir_for_host "$HOST" codesigned)" \
                                         DIST_ARCHIVE_BASE=/outdir-base/dist-archive \
                                         DETACHED_SIGS_REPO=/detached-sigs \
