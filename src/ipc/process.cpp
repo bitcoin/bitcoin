@@ -23,11 +23,13 @@
 
 #ifdef WIN32
 #include <afunix.h>
+#define sock_errno WSAGetLastError()
 #else
 #include <sys/socket.h>
 #include <sys/un.h>
 #include <unistd.h>
 #define closesocket close
+#define sock_errno errno
 #endif
 
 using util::RemovePrefixView;
@@ -115,14 +117,14 @@ mp::SocketId ProcessImpl::connect(const fs::path& data_dir,
 
     mp::SocketId fd;
     if ((fd = ::socket(addr.sun_family, SOCK_STREAM, 0)) == mp::SocketError) {
-        throw std::system_error(errno, std::system_category());
+        throw std::system_error(sock_errno, std::system_category());
     }
     if (::connect(fd, (struct sockaddr*)&addr, sizeof(addr)) == 0) {
         return fd;
     }
-    int connect_error = errno;
+    int connect_error = sock_errno;
     if (::closesocket(fd) != 0) {
-        LogWarning("Error closing file descriptor %i '%s': %s", fd, address, SysErrorString(errno));
+        LogWarning("Error closing file descriptor %i '%s': %s", fd, address, SysErrorString(sock_errno));
     }
     throw std::system_error(connect_error, std::system_category());
 }
@@ -150,15 +152,15 @@ mp::SocketId ProcessImpl::bind(const fs::path& data_dir, const std::string& exe_
 
     mp::SocketId fd;
     if ((fd = ::socket(addr.sun_family, SOCK_STREAM, 0)) == mp::SocketError) {
-        throw std::system_error(errno, std::system_category());
+        throw std::system_error(sock_errno, std::system_category());
     }
 
     if (::bind(fd, (struct sockaddr*)&addr, sizeof(addr)) == 0) {
         return fd;
     }
-    int bind_error = errno;
+    int bind_error = sock_errno;
     if (::closesocket(fd) != 0) {
-        LogWarning("Error closing file descriptor %i: %s", fd, SysErrorString(errno));
+        LogWarning("Error closing file descriptor %i: %s", fd, SysErrorString(sock_errno));
     }
     throw std::system_error(bind_error, std::system_category());
 }

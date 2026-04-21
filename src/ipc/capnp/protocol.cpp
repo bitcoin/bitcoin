@@ -23,9 +23,17 @@
 #include <mutex>
 #include <optional>
 #include <string>
-#include <sys/socket.h>
 #include <system_error>
 #include <thread>
+
+#ifdef WIN32
+#include <winsock.h>
+#define sock_errno WSAGetLastError()
+#else
+#include <cerrno>
+#include <sys/socket.h>
+#define sock_errno errno
+#endif
 
 namespace ipc {
 namespace capnp {
@@ -87,7 +95,7 @@ public:
     {
         startLoop();
         if (::listen(listen_fd, /*backlog=*/5) != 0) {
-            throw std::system_error(errno, std::system_category());
+            throw std::system_error(sock_errno, std::system_category());
         }
         mp::ListenConnections<messages::Init>(*m_loop, listen_fd, init);
     }
