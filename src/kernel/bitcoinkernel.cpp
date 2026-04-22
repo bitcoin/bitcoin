@@ -15,6 +15,7 @@
 #include <kernel/checks.h>
 #include <kernel/context.h>
 #include <kernel/notifications_interface.h>
+#include <kernel/result.h>
 #include <kernel/warning.h>
 #include <logging.h>
 #include <node/blockstorage.h>
@@ -46,8 +47,8 @@
 #include <span>
 #include <stdexcept>
 #include <string>
-#include <tuple>
 #include <utility>
+#include <variant>
 #include <vector>
 
 namespace Consensus {
@@ -1031,14 +1032,14 @@ btck_ChainstateManager* btck_chainstate_manager_create(
         const auto chainstate_load_opts{WITH_LOCK(opts.m_mutex, return opts.m_chainstate_load_options)};
 
         kernel::CacheSizes cache_sizes{DEFAULT_KERNEL_CACHE};
-        auto [status, chainstate_err]{node::LoadChainstate(*chainman, cache_sizes, chainstate_load_opts)};
-        if (status != node::ChainstateLoadStatus::SUCCESS) {
-            LogError("Failed to load chain state from your data directory: %s", chainstate_err.original);
+        auto load_result{node::LoadChainstate(*chainman, cache_sizes, chainstate_load_opts)};
+        if (!load_result || IsInterrupted(*load_result)) {
+            LogError("Failed to load chain state from your data directory: %s", util::ErrorString(load_result).original);
             return nullptr;
         }
-        std::tie(status, chainstate_err) = node::VerifyLoadedChainstate(*chainman, chainstate_load_opts);
-        if (status != node::ChainstateLoadStatus::SUCCESS) {
-            LogError("Failed to verify loaded chain state from your datadir: %s", chainstate_err.original);
+        auto verify_result{node::VerifyLoadedChainstate(*chainman, chainstate_load_opts)};
+        if (!verify_result || IsInterrupted(*verify_result)) {
+            LogError("Failed to verify loaded chain state from your datadir: %s", util::ErrorString(load_result).original);
             return nullptr;
         }
         if (auto result = chainman->ActivateBestChains(); !result) {
@@ -1076,7 +1077,8 @@ void btck_chainstate_manager_destroy(btck_ChainstateManager* chainman)
         LOCK(btck_ChainstateManager::get(chainman).m_chainman->GetMutex());
         for (const auto& chainstate : btck_ChainstateManager::get(chainman).m_chainman->m_chainstates) {
             if (chainstate->CanFlushToDisk()) {
-                chainstate->ForceFlushStateToDisk();
+                auto flush_result{chainstate->ForceFlushStateToDisk()};
+                if (!flush_result) LogError("%s", util::ErrorString(flush_result).original);
                 chainstate->ResetCoinsViews();
             }
         }
@@ -1096,7 +1098,8 @@ int btck_chainstate_manager_import_blocks(btck_ChainstateManager* chainman, cons
             }
         }
         auto& chainman_ref{*btck_ChainstateManager::get(chainman).m_chainman};
-        node::ImportBlocks(chainman_ref, import_files);
+        auto result{node::ImportBlocks(chainman_ref, import_files)};
+        if (!result) LogError("%s", util::ErrorString(result).original);
         WITH_LOCK(::cs_main, chainman_ref.UpdateIBDStatus());
     } catch (const std::exception& e) {
         LogError("Failed to import blocks: %s", e.what());
@@ -1324,11 +1327,13 @@ int btck_chainstate_manager_process_block(
     int* _new_block)
 {
     bool new_block;
-    auto result = btck_ChainstateManager::get(chainman).m_chainman->ProcessNewBlock(btck_Block::get(block), /*force_processing=*/true, /*min_pow_checked=*/true, /*new_block=*/&new_block);
+    kernel::FlushResult<void, kernel::AbortFailure> process_result;
+    bool accepted = btck_ChainstateManager::get(chainman).m_chainman->ProcessNewBlock(btck_Block::get(block), /*force_processing=*/true, /*min_pow_checked=*/true, /*new_block=*/&new_block, process_result);
+    if (!process_result) LogError("%s", util::ErrorString(process_result).original);
     if (_new_block) {
         *_new_block = new_block ? 1 : 0;
     }
-    return result ? 0 : -1;
+    return accepted ? 0 : -1;
 }
 
 int btck_chainstate_manager_process_block_header(
