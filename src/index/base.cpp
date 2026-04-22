@@ -20,6 +20,7 @@
 #include <tinyformat.h>
 #include <uint256.h>
 #include <undo.h>
+#include <util/check.h>
 #include <util/fs.h>
 #include <util/log.h>
 #include <util/string.h>
@@ -30,7 +31,6 @@
 #include <validation.h>
 #include <validationinterface.h>
 
-#include <cassert>
 #include <compare>
 #include <cstdint>
 #include <functional>
@@ -147,7 +147,7 @@ bool BaseIndex::Init()
     return true;
 }
 
-static const CBlockIndex* NextSyncBlock(const CBlockIndex* pindex_prev, CChain& chain) EXCLUSIVE_LOCKS_REQUIRED(cs_main)
+static const CBlockIndex* NextSyncBlock(const CBlockIndex* const pindex_prev, CChain& chain) EXCLUSIVE_LOCKS_REQUIRED(cs_main)
 {
     AssertLockHeld(cs_main);
 
@@ -155,7 +155,7 @@ static const CBlockIndex* NextSyncBlock(const CBlockIndex* pindex_prev, CChain& 
         return chain.Genesis();
     }
 
-    if (const auto* pindex{chain.Next(pindex_prev)}) {
+    if (const auto* pindex{chain.Next(*pindex_prev)}) {
         return pindex;
     }
 
@@ -166,7 +166,9 @@ static const CBlockIndex* NextSyncBlock(const CBlockIndex* pindex_prev, CChain& 
 
     // Since block is not in the chain, return the next block in the chain AFTER the last common ancestor.
     // Caller will be responsible for rewinding back to the common ancestor.
-    return chain.Next(chain.FindFork(pindex_prev));
+    const auto* fork{chain.FindFork(*pindex_prev)};
+    // Common ancestor must exist (genesis).
+    return chain.Next(*Assert(fork));
 }
 
 bool BaseIndex::ProcessBlock(const CBlockIndex* pindex, const CBlock* block_data)
