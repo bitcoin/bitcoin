@@ -16,6 +16,16 @@ To receive security and update notifications, please subscribe to:
 
   <https://bitcoincore.org/en/list/announcements/join/>
 
+
+With the release of this new major version, versions `28.x` and
+older are at "End of Life" and will no longer receive updates.
+
+In accordance with the security policy, we will in two weeks disclose:
+
+* Medium and high severity vulnerabilities fixed in `29.0`. There is one of these.
+
+* Low severity vulnerabilities fixed in `31.0`. There are none of these.
+
 How to Upgrade
 ==============
 
