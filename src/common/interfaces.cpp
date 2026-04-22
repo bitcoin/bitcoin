@@ -17,6 +17,7 @@ public:
     explicit CleanupHandler(std::function<void()> cleanup) : m_cleanup(std::move(cleanup)) {}
     ~CleanupHandler() override { if (!m_cleanup) return; m_cleanup(); m_cleanup = nullptr; }
     void disconnect() override { if (!m_cleanup) return; m_cleanup(); m_cleanup = nullptr; }
+    bool connected() override { return bool{m_cleanup}; }
     std::function<void()> m_cleanup;
 };
 
@@ -26,7 +27,7 @@ public:
     explicit SignalHandler(btcsignals::connection connection) : m_connection(std::move(connection)) {}
 
     void disconnect() override { m_connection.disconnect(); }
-
+    bool connected() override { return m_connection.connected(); }
     btcsignals::scoped_connection m_connection;
 };
 
