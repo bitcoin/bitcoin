@@ -21,6 +21,7 @@
 #endif // ENABLE_WALLET
 #include <rpc/client.h>
 #include <rpc/server.h>
+#include <util/byte_units.h>
 #include <util/strencodings.h>
 #include <util/string.h>
 #include <util/time.h>
@@ -529,7 +530,7 @@ RPCConsole::RPCConsole(interfaces::Node& node, const PlatformStyle *_platformSty
 
     // Install event filter for up and down arrow
     ui->lineEdit->installEventFilter(this);
-    ui->lineEdit->setMaxLength(16 * 1024 * 1024);
+    ui->lineEdit->setMaxLength(16_MiB);
     ui->messagesWidget->installEventFilter(this);
 
     connect(ui->hidePeersDetailButton, &QAbstractButton::clicked, this, &RPCConsole::clearSelectedNode);

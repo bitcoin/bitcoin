@@ -13,6 +13,7 @@
 #include <crypto/sha512.h>
 #include <span.h>
 #include <support/cleanse.h>
+#include <util/byte_units.h>
 #include <util/time.h>
 
 #include <algorithm>
@@ -113,7 +114,7 @@ void AddFile(CSHA512& hasher, const char *path)
             if (n > 0) hasher.Write(fbuf, n);
             total += n;
             /* not bothering with EINTR handling. */
-        } while (n == sizeof(fbuf) && total < 1048576); // Read only the first 1 Mbyte
+        } while (n == sizeof(fbuf) && total < 1_MiB); // Read only the first 1 Mbyte
         close(f);
     }
 }
