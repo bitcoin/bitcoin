@@ -45,8 +45,8 @@ BOOST_AUTO_TEST_CASE(xor_random_chunks)
         }
 
         apply_random_xor_chunks(roundtrip, obfuscation);
-        BOOST_CHECK_EQUAL_COLLECTIONS(roundtrip.begin(), roundtrip.end(), original.begin(), original.end());
-  }
+        ASSERT_EQ_COLLECTIONS(roundtrip, original);
+    }
 }
 
 BOOST_AUTO_TEST_CASE(obfuscation_hexkey)
@@ -76,7 +76,7 @@ BOOST_AUTO_TEST_CASE(obfuscation_serialize)
     ds_out >> key_out;
 
     // Make sure saved key is the same.
-    BOOST_CHECK_EQUAL_COLLECTIONS(key_in.begin(), key_in.end(), key_out.begin(), key_out.end());
+    ASSERT_EQ_COLLECTIONS(key_in, key_out);
 }
 
 BOOST_AUTO_TEST_CASE(obfuscation_empty)
@@ -680,10 +680,7 @@ BOOST_AUTO_TEST_CASE(buffered_reader_matches_autofile_random_content)
             DataBuffer buffered_buffer{read};
             buffered_reader.read(buffered_buffer);
 
-            BOOST_CHECK_EQUAL_COLLECTIONS(
-                direct_file_buffer.begin(), direct_file_buffer.end(),
-                buffered_buffer.begin(), buffered_buffer.end()
-            );
+            ASSERT_EQ_COLLECTIONS(direct_file_buffer, buffered_buffer);
 
             total_read += read;
         }
@@ -754,10 +751,7 @@ BOOST_AUTO_TEST_CASE(buffered_writer_matches_autofile_random_content)
         ASSERT_EXCEPTION(verify_buffered.read(excess_byte), std::ios_base::failure, HasReason{"end of file"});
     }
 
-    BOOST_CHECK_EQUAL_COLLECTIONS(
-        direct_result.begin(), direct_result.end(),
-        buffered_result.begin(), buffered_result.end()
-    );
+    ASSERT_EQ_COLLECTIONS(direct_result, buffered_result);
 
     fs::remove(test_direct.FileName(pos));
     fs::remove(test_buffered.FileName(pos));
