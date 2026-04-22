@@ -148,7 +148,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        config: [default, llvm, gnu32, sanitize, olddeps, newdeps]
+        config: [default, llvm, gnu32, sanitize, olddeps, newdeps, windows]
 
     name: build • ${{ matrix.config }}
 
