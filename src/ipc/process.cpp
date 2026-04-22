@@ -126,6 +126,20 @@ mp::SocketId ProcessImpl::connect(const fs::path& data_dir,
     if (::closesocket(fd) != 0) {
         LogWarning("Error closing file descriptor %i '%s': %s", fd, address, SysErrorString(sock_errno));
     }
+#ifdef WIN32
+    // On Windows, connect() to a Unix domain socket path that doesn't exist may
+    // return a WSA error that doesn't map to std::errc::no_such_file_or_directory
+    // via std::system_category(). Check if the path exists and throw the
+    // appropriate POSIX-compatible error if not.
+    // TODO: There may be a better way to map the WSA error directly to the
+    // right exception without needing to call fs::exists.
+    if (addr.sun_family == AF_UNIX) {
+        std::error_code ec;
+        if (!fs::exists(fs::PathFromString(addr.sun_path), ec) && !ec) {
+            throw std::system_error(std::make_error_code(std::errc::no_such_file_or_directory));
+        }
+    }
+#endif
     throw std::system_error(connect_error, std::system_category());
 }
 
