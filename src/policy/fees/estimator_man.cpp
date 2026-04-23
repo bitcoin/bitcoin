@@ -20,6 +20,15 @@ FeeRateEstimatorResult FeeRateEstimatorManager::GetFeeRateEstimate(int target, b
     return m_block_policy_estimator->EstimateFeeRate(target, conservative);
 }
 
+FeeRateEstimatorResult FeeRateEstimatorManager::GetFeeRateEstimate(FeeRateEstimatorType type, int target, bool conservative) const
+{
+    switch (type) {
+    case FeeRateEstimatorType::BLOCK_POLICY:
+        return m_block_policy_estimator->EstimateFeeRate(target, conservative);
+    } // no default case, so the compiler can warn about missing cases
+    assert(false);
+}
+
 void FeeRateEstimatorManager::IntervalFlush()
 {
     m_block_policy_estimator->FlushFeeEstimates();

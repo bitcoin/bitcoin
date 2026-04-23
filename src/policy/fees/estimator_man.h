@@ -43,6 +43,15 @@ public:
      */
     virtual FeeRateEstimatorResult GetFeeRateEstimate(int target, bool conservative) const;
 
+    /**
+     * Like GetFeeRateEstimate, but only consults the specified estimator type.
+     * @param[in] type The estimator to query.
+     * @param[in] target The target within which the transaction should be confirmed.
+     * @param[in] conservative True if the package cannot be fee bumped later.
+     * @return Fee rate estimator result from the specified estimator.
+     */
+    virtual FeeRateEstimatorResult GetFeeRateEstimate(FeeRateEstimatorType type, int target, bool conservative) const;
+
     /** Flush recorded data to disk. */
     void IntervalFlush();
 

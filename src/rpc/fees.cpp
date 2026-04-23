@@ -42,6 +42,7 @@ static RPCMethod estimatesmartfee()
             {"conf_target", RPCArg::Type::NUM, RPCArg::Optional::NO, "Confirmation target in blocks (1 - 1008)"},
             {"estimate_mode", RPCArg::Type::STR, RPCArg::Default{"economical"}, "The fee estimate mode.\n"
               + FeeModesDetail(std::string("default mode will be used"))},
+            {"block_policy_only", RPCArg::Type::BOOL, RPCArg::Default{true}, "When true (default), use only the block policy estimator."},
         },
         RPCResult{
             RPCResult::Type::OBJ, "", "",
@@ -74,11 +75,17 @@ static RPCMethod estimatesmartfee()
             if (!FeeModeFromString(self.Arg<std::string_view>("estimate_mode"), fee_mode)) {
                 throw JSONRPCError(RPC_INVALID_PARAMETER, InvalidEstimateModeErrorMessage());
             }
+            bool block_policy_only{self.Arg<bool>("block_policy_only")};
+            bool conservative{fee_mode == FeeEstimateMode::CONSERVATIVE};
 
             UniValue result(UniValue::VOBJ);
             UniValue errors(UniValue::VARR);
-            bool conservative{fee_mode == FeeEstimateMode::CONSERVATIVE};
-            FeeRateEstimatorResult estimate{fee_estimator_man.GetFeeRateEstimate(conf_target, conservative)};
+            FeeRateEstimatorResult estimate;
+            if (block_policy_only) {
+                estimate = fee_estimator_man.GetFeeRateEstimate(FeeRateEstimatorType::BLOCK_POLICY, conf_target, conservative);
+            } else {
+                estimate = fee_estimator_man.GetFeeRateEstimate(conf_target, conservative);
+            }
             auto fee_rate = CFeeRate(estimate.feerate.fee, estimate.feerate.size);
             if (fee_rate != CFeeRate(0)) {
                 CFeeRate min_mempool_feerate{mempool.GetMinFee()};

@@ -53,6 +53,12 @@ public:
         res.feerate = FeePerVSize(ConsumeMoney(fuzzed_data_provider, /*max=*/1'000'000), fuzzed_data_provider.ConsumeIntegralInRange<unsigned int>(1000, 1000000));
         return res;
     }
+    FeeRateEstimatorResult GetFeeRateEstimate(FeeRateEstimatorType type, int confTarget, bool conservative) const override
+    {
+        FeeRateEstimatorResult res = GetFeeRateEstimate(confTarget, conservative);
+        res.feerate_estimator = type;
+        return res;
+    }
     unsigned int MaximumTarget() const override
     {
         return fuzzed_data_provider.ConsumeIntegralInRange<unsigned int>(1, 1004);
