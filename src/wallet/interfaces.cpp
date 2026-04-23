@@ -26,6 +26,7 @@
 #include <wallet/fees.h>
 #include <wallet/imports.h>
 #include <wallet/load.h>
+#include <wallet/migration.h>
 #include <wallet/receive.h>
 #include <wallet/rpc/wallet.h>
 #include <wallet/spend.h>
