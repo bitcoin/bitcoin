@@ -11,6 +11,7 @@
 #include <test/util/mining.h>
 #include <test/util/setup_common.h>
 #include <wallet/context.h>
+#include <wallet/migration.h>
 #include <wallet/receive.h>
 #include <wallet/test/util.h>
 #include <wallet/wallet.h>
