@@ -168,14 +168,12 @@ static const std::unordered_set<OutputType> LEGACY_OUTPUT_TYPES {
 
 using KeyMap = std::map<CKeyID, CKey>;
 using CryptedKeyMap = std::map<CKeyID, std::pair<CPubKey, std::vector<unsigned char>>>;
-using ScriptPubKeyMap = std::map<CScript, int32_t>; // Map of scripts to descriptor range index
-using PubKeyMap = std::map<CPubKey, int32_t>; // Map of pubkeys involved in scripts to descriptor range index
 
 // Manages the data for a LegacyScriptPubKeyMan.
 // This is the minimum necessary to load a legacy wallet so that it can be migrated.
 class LegacyDataSPKM : public ScriptPubKeyMan, public FillableSigningProvider
 {
-protected:
+private:
     using WatchOnlySet = std::set<CScript>;
     using WatchKeyMap = std::map<CKeyID, CPubKey>;
 
@@ -277,6 +275,9 @@ class DescriptorScriptPubKeyMan : public ScriptPubKeyMan
 {
     friend class LegacyDataSPKM;
 private:
+    using ScriptPubKeyMap = std::map<CScript, int32_t>; // Map of scripts to descriptor range index
+    using PubKeyMap = std::map<CPubKey, int32_t>; // Map of pubkeys involved in scripts to descriptor range index
+
     ScriptPubKeyMap m_map_script_pub_keys GUARDED_BY(cs_desc_man);
     PubKeyMap m_map_pubkeys GUARDED_BY(cs_desc_man);
     int32_t m_max_cached_index = -1;
