@@ -48,6 +48,7 @@ static RPCMethod estimatesmartfee()
             RPCResult::Type::OBJ, "", "",
             {
                 {RPCResult::Type::NUM, "feerate", /*optional=*/true, "estimate fee rate in " + CURRENCY_UNIT + "/kvB (only present if no errors were encountered)"},
+                {RPCResult::Type::STR, "estimator", /*optional=*/true, "the fee estimator used to produce the result (only present when block_policy_only is false)"},
                 {RPCResult::Type::ARR, "errors", /*optional=*/true, "Errors encountered during processing (if there are any)",
                     {
                         {RPCResult::Type::STR, "", "error"},
@@ -97,6 +98,9 @@ static RPCMethod estimatesmartfee()
                     errors.push_back(error);
                 }
                 result.pushKV("errors", std::move(errors));
+            }
+            if (!block_policy_only) {
+                result.pushKV("estimator", FeeRateEstimatorTypeToString(estimate.feerate_estimator));
             }
             result.pushKV("blocks", estimate.returned_target);
             return result;

@@ -5,11 +5,9 @@
 #ifndef BITCOIN_UTIL_FEES_H
 #define BITCOIN_UTIL_FEES_H
 
-#include <uint256.h>
 #include <util/feefrac.h>
 
 #include <compare>
-#include <cstddef>
 #include <cstdint>
 #include <string>
 #include <vector>

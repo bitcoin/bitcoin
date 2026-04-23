@@ -15,6 +15,9 @@
 #include <memory>
 
 class CFeeRate;
+class ChainstateManager;
+class CTxMemPool;
+class MemPoolFeeRateEstimator;
 
 enum class MempoolRemovalReason;
 
@@ -30,10 +33,12 @@ public:
     /**
      * @param[in] block_policy_path    Path to the block policy fee estimates file.
      * @param[in] read_stale_estimates Whether to load stale estimates from disk.
+     * @param[in] mempool              The mempool to use for the mempool estimator.
+     * @param[in] chainman             The chainstate manager.
      */
-    FeeRateEstimatorManager(const fs::path& block_policy_path, bool read_stale_estimates);
+    FeeRateEstimatorManager(const fs::path& block_policy_path, bool read_stale_estimates, const CTxMemPool* mempool, ChainstateManager* chainman);
 
-    virtual ~FeeRateEstimatorManager() = default;
+    virtual ~FeeRateEstimatorManager();
 
     /**
      * @brief Get a fee rate estimate from block policy estimator.
@@ -81,6 +86,7 @@ protected:
 
 private:
     std::unique_ptr<CBlockPolicyEstimator> m_block_policy_estimator;
+    std::unique_ptr<MemPoolFeeRateEstimator> m_mempool_estimator;
 };
 
 #endif // BITCOIN_POLICY_FEES_ESTIMATOR_MAN_H

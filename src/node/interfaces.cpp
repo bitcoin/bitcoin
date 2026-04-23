@@ -729,7 +729,7 @@ public:
     FeeRateEstimatorResult getFeeRateEstimate(int num_blocks, bool conservative) const override
     {
         if (!m_node.fee_estimator_man) return {};
-        return m_node.fee_estimator_man->GetFeeRateEstimate(num_blocks, conservative);
+        return m_node.fee_estimator_man->GetFeeRateEstimate(FeeRateEstimatorType::BLOCK_POLICY, num_blocks, conservative);
     }
     unsigned int maximumFeeEstimationTargetBlocks() override
     {

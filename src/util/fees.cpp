@@ -5,10 +5,10 @@
 #include <util/fees.h>
 
 #include <consensus/consensus.h>
-#include <util/check.h>
 #include <util/feefrac.h>
 
 #include <algorithm>
+#include <cassert>
 
 Percentiles CalculatePercentiles(const std::vector<FeePerVSize>& chunk_feerates, int32_t total_weight)
 {

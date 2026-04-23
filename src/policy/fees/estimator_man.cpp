@@ -6,18 +6,42 @@
 
 #include <kernel/mempool_entry.h>
 #include <kernel/mempool_removal_reason.h>
+#include <logging.h>
 #include <policy/feerate.h>
 #include <policy/fees/block_policy_estimator.h>
+#include <policy/fees/mempool_estimator.h>
 #include <util/fees.h>
 
-FeeRateEstimatorManager::FeeRateEstimatorManager(const fs::path& block_policy_path, bool read_stale_estimates)
-    : m_block_policy_estimator(std::make_unique<CBlockPolicyEstimator>(block_policy_path, read_stale_estimates))
+FeeRateEstimatorManager::~FeeRateEstimatorManager() = default;
+
+FeeRateEstimatorManager::FeeRateEstimatorManager(const fs::path& block_policy_path, bool read_stale_estimates, const CTxMemPool* mempool, ChainstateManager* chainman)
+    : m_block_policy_estimator(std::make_unique<CBlockPolicyEstimator>(block_policy_path, read_stale_estimates)),
+      m_mempool_estimator(std::make_unique<MemPoolFeeRateEstimator>(mempool, chainman))
 {
 }
 
 FeeRateEstimatorResult FeeRateEstimatorManager::GetFeeRateEstimate(int target, bool conservative) const
 {
-    return m_block_policy_estimator->EstimateFeeRate(target, conservative);
+    FeeRateEstimatorResult selected_estimate;
+    std::vector<std::string> errors;
+    auto block_policy_estimate = m_block_policy_estimator->EstimateFeeRate(target, conservative);
+    errors.insert(errors.end(), block_policy_estimate.errors.begin(), block_policy_estimate.errors.end());
+    if (block_policy_estimate.feerate.IsEmpty()) {
+        return block_policy_estimate;
+    }
+    selected_estimate = block_policy_estimate;
+    auto mempool_estimate = m_mempool_estimator->EstimateFeeRate(conservative);
+    errors.insert(errors.end(), mempool_estimate.errors.begin(), mempool_estimate.errors.end());
+    if (!mempool_estimate.feerate.IsEmpty()) {
+        selected_estimate = std::min(selected_estimate, mempool_estimate);
+    }
+    LogDebug(BCLog::ESTIMATEFEE, "Fee rate estimated using %s: for target %s, fee rate %s %s/kvB.\n",
+             FeeRateEstimatorTypeToString(selected_estimate.feerate_estimator),
+             selected_estimate.returned_target,
+             CFeeRate(selected_estimate.feerate.fee, selected_estimate.feerate.size).GetFeePerK(),
+             CURRENCY_ATOM);
+    selected_estimate.errors = errors;
+    return selected_estimate;
 }
 
 FeeRateEstimatorResult FeeRateEstimatorManager::GetFeeRateEstimate(FeeRateEstimatorType type, int target, bool conservative) const
@@ -26,8 +50,7 @@ FeeRateEstimatorResult FeeRateEstimatorManager::GetFeeRateEstimate(FeeRateEstima
     case FeeRateEstimatorType::BLOCK_POLICY:
         return m_block_policy_estimator->EstimateFeeRate(target, conservative);
     case FeeRateEstimatorType::MEMPOOL_POLICY:
-        // FIXME: wire up mempool estimator
-        return {};
+        return m_mempool_estimator->EstimateFeeRate(conservative);
     } // no default case, so the compiler can warn about missing cases
     assert(false);
 }
@@ -69,5 +92,5 @@ unsigned int FeeRateEstimatorManager::BlockPolicyHighestTargetTracked(FeeEstimat
 
 unsigned int FeeRateEstimatorManager::MaximumTarget() const
 {
-    return m_block_policy_estimator->MaximumTarget();
+    return std::max(m_block_policy_estimator->MaximumTarget(), m_mempool_estimator->MaximumTarget());
 }
