@@ -24,12 +24,12 @@ size_t GetDefaultDBCache()
             return HIGH_DEFAULT_DBCACHE;
         }
     }
-    return DEFAULT_DB_CACHE;
+    return DEFAULT_DBCACHE_BYTES;
 }
 
 bool ShouldWarnOversizedDbCache(uint64_t dbcache, uint64_t total_ram) noexcept
 {
     const uint64_t headroom{total_ram > RESERVED_RAM ? total_ram - RESERVED_RAM : 0};
-    return dbcache > std::max<uint64_t>(DEFAULT_DB_CACHE, (headroom / 4) * 3);
+    return dbcache > std::max<uint64_t>(DEFAULT_DBCACHE_BYTES, (headroom / 4) * 3);
 }
 } // namespace node
