@@ -113,10 +113,10 @@ unsigned int GetLegacySigOpCount(const CTransaction& tx)
 {
     unsigned int nSigOps = 0;
     for (const auto& txin : tx.vin) {
-        nSigOps += txin.scriptSig.GetSigOpCount(/*fAccurate=*/false);
+        nSigOps += txin.scriptSig.CountSigOps(/*fAccurate=*/false);
     }
     for (const auto& txout : tx.vout) {
-        nSigOps += txout.scriptPubKey.GetSigOpCount(/*fAccurate=*/false);
+        nSigOps += txout.scriptPubKey.CountSigOps(/*fAccurate=*/false);
     }
     return nSigOps;
 }

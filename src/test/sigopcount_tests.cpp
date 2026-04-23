@@ -31,7 +31,7 @@ Serialize(const CScript& s)
 BOOST_FIXTURE_TEST_SUITE(sigopcount_tests, BasicTestingSetup)
 
 // Asserts the expected legacy/accurate sigop totals for common script templates
-BOOST_AUTO_TEST_CASE(GetSigOpCountKnownTemplates)
+BOOST_AUTO_TEST_CASE(CountSigOpsKnownTemplates)
 {
     CKey dummy_key{GenerateRandomKey(/*compressed=*/true)};
     const auto& pubkey{dummy_key.GetPubKey()};
@@ -41,54 +41,54 @@ BOOST_AUTO_TEST_CASE(GetSigOpCountKnownTemplates)
         {
             // P2PK (compressed)
             const auto script{GetScriptForRawPubKey(pubkey)};
-            BOOST_CHECK_EQUAL(script.GetSigOpCount(accurate_sigops), 1);
+            BOOST_CHECK_EQUAL(script.CountSigOps(accurate_sigops), 1);
         }
         {
             // P2PK (uncompressed)
             CKey uncompressed_key{GenerateRandomKey(/*compressed=*/false)};
             const auto script{GetScriptForRawPubKey(uncompressed_key.GetPubKey())};
-            BOOST_CHECK_EQUAL(script.GetSigOpCount(accurate_sigops), 1);
+            BOOST_CHECK_EQUAL(script.CountSigOps(accurate_sigops), 1);
         }
         {
             // P2PKH
             const auto script{GetScriptForDestination(PKHash(pubkey.GetID()))};
-            BOOST_CHECK_EQUAL(script.GetSigOpCount(accurate_sigops), 1);
+            BOOST_CHECK_EQUAL(script.CountSigOps(accurate_sigops), 1);
         }
         {
             // P2SH
             const auto script{GetScriptForDestination(ScriptHash(CScript{} << OP_TRUE))};
-            BOOST_CHECK_EQUAL(script.GetSigOpCount(accurate_sigops), 0);
+            BOOST_CHECK_EQUAL(script.CountSigOps(accurate_sigops), 0);
         }
         {
             // P2WSH
             const auto script{GetScriptForDestination(WitnessV0ScriptHash(CScript{} << OP_TRUE))};
-            BOOST_CHECK_EQUAL(script.GetSigOpCount(accurate_sigops), 0);
+            BOOST_CHECK_EQUAL(script.CountSigOps(accurate_sigops), 0);
         }
         {
             // P2WPKH
             const auto script{GetScriptForDestination(WitnessV0KeyHash(pubkey.GetID()))};
-            BOOST_CHECK_EQUAL(script.GetSigOpCount(accurate_sigops), 0);
+            BOOST_CHECK_EQUAL(script.CountSigOps(accurate_sigops), 0);
         }
         {
             // P2TR
             const auto script{GetScriptForDestination(WitnessV1Taproot(XOnlyPubKey(pubkey)))};
-            BOOST_CHECK_EQUAL(script.GetSigOpCount(accurate_sigops), 0);
+            BOOST_CHECK_EQUAL(script.CountSigOps(accurate_sigops), 0);
         }
         {
             // P2A
             const auto script{GetScriptForDestination(PayToAnchor{})};
 
-            BOOST_CHECK_EQUAL(script.GetSigOpCount(accurate_sigops), 0);
+            BOOST_CHECK_EQUAL(script.CountSigOps(accurate_sigops), 0);
         }
         {
             // OP_RETURN with sigop after (non-standard, found first in block 229,712)
             const auto script{CScript{} << OP_RETURN << OP_DUP << OP_HASH160 << p2pkh_hash << OP_EQUALVERIFY << OP_CHECKSIG};
 
-            BOOST_CHECK_EQUAL(script.GetSigOpCount(accurate_sigops), 1);
+            BOOST_CHECK_EQUAL(script.CountSigOps(accurate_sigops), 1);
         }
         {
             // CHECKSIGVERIFY counts identically to CHECKSIG.
-            BOOST_CHECK_EQUAL((CScript{} << OP_CHECKSIGVERIFY).GetSigOpCount(accurate_sigops), 1);
+            BOOST_CHECK_EQUAL((CScript{} << OP_CHECKSIGVERIFY).CountSigOps(accurate_sigops), 1);
         }
     }
 
@@ -97,13 +97,13 @@ BOOST_AUTO_TEST_CASE(GetSigOpCountKnownTemplates)
     keys.push_back(pubkey);
     keys.push_back(pubkey); // Using the same key twice for simplicity
     const auto script{GetScriptForMultisig(1, keys)};
-    BOOST_CHECK_EQUAL(script.GetSigOpCount(/*fAccurate=*/false), MAX_PUBKEYS_PER_MULTISIG);
-    BOOST_CHECK_EQUAL(script.GetSigOpCount(/*fAccurate=*/true), 2); // Actual count
+    BOOST_CHECK_EQUAL(script.CountSigOps(/*fAccurate=*/false), MAX_PUBKEYS_PER_MULTISIG);
+    BOOST_CHECK_EQUAL(script.CountSigOps(/*fAccurate=*/true), 2); // Actual count
 
     // CHECKMULTISIGVERIFY counts identically to CHECKMULTISIG.
     const auto script_cmv{CScript{} << OP_1 << ToByteVector(pubkey) << ToByteVector(pubkey) << OP_2 << OP_CHECKMULTISIGVERIFY};
-    BOOST_CHECK_EQUAL(script_cmv.GetSigOpCount(/*fAccurate=*/false), MAX_PUBKEYS_PER_MULTISIG);
-    BOOST_CHECK_EQUAL(script_cmv.GetSigOpCount(/*fAccurate=*/true), 2);
+    BOOST_CHECK_EQUAL(script_cmv.CountSigOps(/*fAccurate=*/false), MAX_PUBKEYS_PER_MULTISIG);
+    BOOST_CHECK_EQUAL(script_cmv.CountSigOps(/*fAccurate=*/true), 2);
 }
 
 // Exercises P2SH redeemScript selection, push-only checks, and parse errors.
@@ -130,88 +130,88 @@ BOOST_AUTO_TEST_CASE(P2SHSigOpCountEdgeCases)
 
 // Feeds malformed PUSHDATA sequences to confirm the parser never crashes and
 // still counts sigops that appear before the error.
-BOOST_AUTO_TEST_CASE(GetSigOpCountErrors)
+BOOST_AUTO_TEST_CASE(CountSigOpsErrors)
 {
     // The opcodetype casts append raw script bytes; bytes after PUSHDATA are
     // parsed as lengths, not opcodes.
     for (const bool accurate_sigops : {false, true}) {
         {
             // push-75 with 0 bytes present: 0 sigops since none precede the error
-            BOOST_CHECK_EQUAL((CScript{} << opcodetype(0x4b)).GetSigOpCount(accurate_sigops), 0);
+            BOOST_CHECK_EQUAL((CScript{} << opcodetype(0x4b)).CountSigOps(accurate_sigops), 0);
         }
         {
             // push-75 with 0 bytes present
             const auto script{CScript{} << OP_CHECKSIG << opcodetype(0x4b)};
-            BOOST_CHECK_EQUAL(script.GetSigOpCount(accurate_sigops), 1);
+            BOOST_CHECK_EQUAL(script.CountSigOps(accurate_sigops), 1);
         }
         {
             // push-2 with only 1 byte present ignoring OP_CHECKSIGVERIFY
             const auto script{CScript{} << OP_CHECKSIG
                                         << opcodetype(0x02)
                                         << OP_CHECKSIGVERIFY};
-            BOOST_CHECK_EQUAL(script.GetSigOpCount(accurate_sigops), 1);
+            BOOST_CHECK_EQUAL(script.CountSigOps(accurate_sigops), 1);
         }
 
         {
             // not enough data after OP_PUSHDATA1
             const auto script{CScript{} << OP_CHECKSIG << OP_PUSHDATA1};
-            BOOST_CHECK_EQUAL(script.GetSigOpCount(accurate_sigops), 1);
+            BOOST_CHECK_EQUAL(script.CountSigOps(accurate_sigops), 1);
         }
         {
             // out of bounds OP_PUSHDATA1 data size ignoring OP_CHECKSIGVERIFY
             const auto script{CScript{} << OP_CHECKSIG << OP_PUSHDATA1
                                         << opcodetype(0xff)
                                         << OP_CHECKSIGVERIFY};
-            BOOST_CHECK_EQUAL(script.GetSigOpCount(accurate_sigops), 1);
+            BOOST_CHECK_EQUAL(script.CountSigOps(accurate_sigops), 1);
         }
 
         {
             // not enough data after OP_PUSHDATA2
             const auto script{CScript{} << OP_CHECKSIG << OP_PUSHDATA2};
-            BOOST_CHECK_EQUAL(script.GetSigOpCount(accurate_sigops), 1);
+            BOOST_CHECK_EQUAL(script.CountSigOps(accurate_sigops), 1);
         }
         {
             // not enough data after OP_PUSHDATA2
             const auto script{CScript{} << OP_CHECKSIG << OP_PUSHDATA2 << opcodetype(0xff)};
-            BOOST_CHECK_EQUAL(script.GetSigOpCount(accurate_sigops), 1);
+            BOOST_CHECK_EQUAL(script.CountSigOps(accurate_sigops), 1);
         }
         {
             // out of bounds OP_PUSHDATA2 data size ignoring OP_CHECKSIGVERIFY
             const auto script{CScript{} << OP_CHECKSIG << OP_PUSHDATA2
                                         << opcodetype(0xff) << opcodetype(0xff)
                                         << OP_CHECKSIG << OP_CHECKSIGVERIFY << OP_CHECKMULTISIG << OP_CHECKMULTISIGVERIFY};
-            BOOST_CHECK_EQUAL(script.GetSigOpCount(accurate_sigops), 1);
+            BOOST_CHECK_EQUAL(script.CountSigOps(accurate_sigops), 1);
         }
 
         {
             // not enough data after OP_PUSHDATA4
             const auto script{CScript{} << OP_CHECKSIG << OP_PUSHDATA4};
-            BOOST_CHECK_EQUAL(script.GetSigOpCount(accurate_sigops), 1);
+            BOOST_CHECK_EQUAL(script.CountSigOps(accurate_sigops), 1);
         }
         {
             // not enough data after OP_PUSHDATA4
             const auto script{CScript{} << OP_CHECKSIG << OP_PUSHDATA4
                                         << opcodetype(0xff)};
-            BOOST_CHECK_EQUAL(script.GetSigOpCount(accurate_sigops), 1);
+            BOOST_CHECK_EQUAL(script.CountSigOps(accurate_sigops), 1);
         }
         {
             // not enough data after OP_PUSHDATA4
             const auto script{CScript{} << OP_CHECKSIG << OP_PUSHDATA4
                                         << opcodetype(0xff) << opcodetype(0xff)};
-            BOOST_CHECK_EQUAL(script.GetSigOpCount(accurate_sigops), 1);
+            BOOST_CHECK_EQUAL(script.CountSigOps(accurate_sigops), 1);
         }
         {
             // not enough data after OP_PUSHDATA4
             const auto script{CScript{} << OP_CHECKSIG << OP_PUSHDATA4
                                         << opcodetype(0xff) << opcodetype(0xff) << opcodetype(0xff)};
-            BOOST_CHECK_EQUAL(script.GetSigOpCount(accurate_sigops), 1);
+            BOOST_CHECK_EQUAL(script.CountSigOps(accurate_sigops), 1);
         }
         {
             // out of bounds OP_PUSHDATA4 data size ignoring OP_CHECKMULTISIGVERIFY
             const auto script{CScript{} << OP_CHECKSIG << OP_PUSHDATA4
                                         << opcodetype(100) << opcodetype(0xff) << opcodetype(0xff) << opcodetype(0xff)
                                         << OP_CHECKSIG << OP_CHECKSIGVERIFY << OP_CHECKMULTISIG << OP_CHECKMULTISIGVERIFY};
-            BOOST_CHECK_EQUAL(script.GetSigOpCount(accurate_sigops), 1);
+            BOOST_CHECK_EQUAL(script.CountSigOps(accurate_sigops), 1);
         }
     }
 }
@@ -219,15 +219,15 @@ BOOST_AUTO_TEST_CASE(GetSigOpCountErrors)
 BOOST_AUTO_TEST_CASE(GetSigOpCount)
 {
     CScript s1;
-    BOOST_CHECK_EQUAL(s1.GetSigOpCount(/*fAccurate=*/false), 0);
-    BOOST_CHECK_EQUAL(s1.GetSigOpCount(/*fAccurate=*/true), 0);
+    BOOST_CHECK_EQUAL(s1.CountSigOps(/*fAccurate=*/false), 0);
+    BOOST_CHECK_EQUAL(s1.CountSigOps(/*fAccurate=*/true), 0);
 
     uint160 dummy;
     s1 << OP_1 << ToByteVector(dummy) << ToByteVector(dummy) << OP_2 << OP_CHECKMULTISIG;
-    BOOST_CHECK_EQUAL(s1.GetSigOpCount(/*fAccurate=*/true), 2);
+    BOOST_CHECK_EQUAL(s1.CountSigOps(/*fAccurate=*/true), 2);
     s1 << OP_IF << OP_CHECKSIG << OP_ENDIF;
-    BOOST_CHECK_EQUAL(s1.GetSigOpCount(/*fAccurate=*/true), 3);
-    BOOST_CHECK_EQUAL(s1.GetSigOpCount(/*fAccurate=*/false), 21);
+    BOOST_CHECK_EQUAL(s1.CountSigOps(/*fAccurate=*/true), 3);
+    BOOST_CHECK_EQUAL(s1.CountSigOps(/*fAccurate=*/false), 21);
 
     CScript p2sh = GetScriptForDestination(ScriptHash(s1));
     CScript scriptSig;
@@ -240,12 +240,12 @@ BOOST_AUTO_TEST_CASE(GetSigOpCount)
         keys.push_back(k.GetPubKey());
     }
     CScript s2 = GetScriptForMultisig(1, keys);
-    BOOST_CHECK_EQUAL(s2.GetSigOpCount(/*fAccurate=*/true), 3);
-    BOOST_CHECK_EQUAL(s2.GetSigOpCount(/*fAccurate=*/false), 20);
+    BOOST_CHECK_EQUAL(s2.CountSigOps(/*fAccurate=*/true), 3);
+    BOOST_CHECK_EQUAL(s2.CountSigOps(/*fAccurate=*/false), 20);
 
     p2sh = GetScriptForDestination(ScriptHash(s2));
-    BOOST_CHECK_EQUAL(p2sh.GetSigOpCount(/*fAccurate=*/true), 0);
-    BOOST_CHECK_EQUAL(p2sh.GetSigOpCount(/*fAccurate=*/false), 0);
+    BOOST_CHECK_EQUAL(p2sh.CountSigOps(/*fAccurate=*/true), 0);
+    BOOST_CHECK_EQUAL(p2sh.CountSigOps(/*fAccurate=*/false), 0);
     CScript scriptSig2;
     scriptSig2 << OP_1 << ToByteVector(dummy) << ToByteVector(dummy) << Serialize(s2);
     BOOST_CHECK_EQUAL(p2sh.GetSigOpCount(scriptSig2), 3U);
