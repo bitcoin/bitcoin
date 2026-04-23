@@ -46,7 +46,9 @@ static RPCMethod estimatesmartfee()
                 {
                     {"fee_rate_estimator", RPCArg::Type::STR, RPCArg::Default{"none"},
                      "Selects which fee rate estimator to use.\n"
-                     "\"none\" lets the fee rate estimator manager choose.\n"
+                     "\"none\" returns the lower of the block policy and mempool estimates. If the mempool\n"
+                     "estimate is unavailable, it returns that error instead of falling back to the block\n"
+                     "policy estimate; use \"block_policy\" in that case to get the block policy estimate.\n"
                      "\"block_policy\" uses only the block policy fee rate estimator.\n"
                      "\"mempool_policy\" uses only the mempool fee rate estimator.\n"
                      "Unknown values are treated as \"none\"."},
@@ -57,15 +59,15 @@ static RPCMethod estimatesmartfee()
             RPCResult::Type::OBJ, "", "",
             {
                 {RPCResult::Type::NUM, "feerate", /*optional=*/true, "estimate fee rate in " + CURRENCY_UNIT + "/kvB (only present if no errors were encountered)"},
+                {RPCResult::Type::STR, "estimator", /*optional=*/true, "the fee estimator used to produce the result (only present for successful estimates when fee_rate_estimator is \"none\")"},
                 {RPCResult::Type::ARR, "errors", /*optional=*/true, "Errors encountered during processing (if there are any)",
                     {
                         {RPCResult::Type::STR, "", "error"},
                     }},
-                {RPCResult::Type::NUM, "blocks", "block number where estimate was found\n"
-                "The request target will be clamped between 2 and the highest target\n"
-                "fee estimation is able to return based on how long it has been running.\n"
-                "An error is returned if not enough transactions and blocks\n"
-                "have been observed to make an estimate for any number of blocks."},
+                {RPCResult::Type::NUM, "blocks", "the confirmation target in blocks for the returned fee rate estimate.\n"
+                "For the block policy fee rate estimator, this is the target the estimate was found at, clamped to at\n"
+                "least 2 and at most the estimator's maximum usable target. For the mempool fee rate\n"
+                "estimator, it is always 2."},
         }},
         RPCExamples{
             HelpExampleCli("estimatesmartfee", "6") +
@@ -105,7 +107,11 @@ static RPCMethod estimatesmartfee()
                 errors.push_back(estimate.error().reason);
                 result.pushKV("errors", std::move(errors));
             }
-            result.pushKV("blocks", FeeRateEstimationRef(estimate).returned_target);
+            if (estimate && fee_rate_estimator == FeeRateEstimatorType::NONE) {
+                result.pushKV("estimator", FeeRateEstimatorTypeToString(estimate->feerate_estimator));
+            }
+            const FeeRateEstimation& estimation{FeeRateEstimationRef(estimate)};
+            result.pushKV("blocks", estimation.returned_target);
             return result;
         },
     };
