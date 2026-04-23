@@ -60,6 +60,7 @@ enum WalletFlags : uint64_t {
 //! Get the path of the wallet directory.
 fs::path GetWalletDir();
 
+//! Determine the path that the wallet is stored in
 util::Result<fs::path> GetWalletPath(const std::string& name);
 
 //! Add wallet name to persistent configuration so it will be loaded on startup.
