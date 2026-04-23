@@ -533,8 +533,9 @@ helps to enforce the source code organization [policy](#source-code-organization
 
 To reproduce the IWYU CI job locally, run:
 ```bash
-env -i HOME="$HOME" PATH="$PATH" USER="$USER" FILE_ENV="./ci/test/00_setup_env_native_iwyu.sh" ./ci/test_run_all.sh
+env -i HOME="$HOME" PATH="$PATH" USER="$USER" IWYU_FILTER_MODIFIED=1 FILE_ENV="./ci/test/00_setup_env_native_iwyu.sh" ./ci/test_run_all.sh || echo "IWYU failed"
 ```
+For a full-codebase check, omit `IWYU_FILTER_MODIFIED=1`.
 
 In some cases, IWYU might suggest headers that seem unnecessary at first glance, but are actually required.
 For example, a macro may use a symbol that requires its own include. Another example is passing a string literal

@@ -208,6 +208,14 @@ if [ "${RUN_TIDY}" = "true" ]; then
 fi
 
 if [[ "${RUN_IWYU}" == true ]]; then
+  # Optionally narrow IWYU to files changed on the current branch vs origin/master.
+  if [[ "${IWYU_FILTER_MODIFIED:-}" == "1" ]]; then
+    LAST_MERGE_COMMIT="$(git --git-dir="${BASE_ROOT_DIR}/.git_ci_backup" rev-list --max-count=1 --merges HEAD)"
+    mapfile -t MODIFIED < <(git --git-dir="${BASE_ROOT_DIR}/.git_ci_backup" diff --name-only "${LAST_MERGE_COMMIT}...HEAD")
+    jq --arg root "${BASE_ROOT_DIR}/" 'map(select(.file | ltrimstr($root) | IN($ARGS.positional[])))' "${BASE_BUILD_DIR}/compile_commands.json" --args "${MODIFIED[@]}" > "${BASE_BUILD_DIR}/compile_commands_modified.json"
+    mv "${BASE_BUILD_DIR}/compile_commands_modified.json" "${BASE_BUILD_DIR}/compile_commands.json"
+  fi
+
   # TODO: Consider enforcing IWYU across the entire codebase.
   FILES_WITH_ENFORCED_IWYU="/src/(((crypto|index|kernel|primitives|univalue/(lib|test)|util|zmq)/.*|common/license_info|node/blockstorage|node/utxo_snapshot|clientversion|core_io|signet)\\.cpp)"
   jq --arg patterns "$FILES_WITH_ENFORCED_IWYU" 'map(select(.file | test($patterns)))' "${BASE_BUILD_DIR}/compile_commands.json" > "${BASE_BUILD_DIR}/compile_commands_iwyu_errors.json"
