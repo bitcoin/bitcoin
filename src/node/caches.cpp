@@ -13,6 +13,7 @@
 #include <node/interface_ui.h>
 #include <tinyformat.h>
 #include <util/byte_units.h>
+#include <util/log.h>
 
 #include <algorithm>
 #include <string>
@@ -63,5 +64,13 @@ void LogOversizedDbCache(const ArgsManager& args) noexcept
                         db_cache / 1_MiB, *total_ram / 1_MiB)});
         }
     }
+}
+
+void LogAutoDbCacheSettings() noexcept
+{
+    LogInfo("Automatically selected -dbcache=%s MiB based on %s system memory of %s MiB.",
+            GetDefaultDBCache(GetTotalRam()) / 1_MiB,
+            TryGetTotalRam() ? "detected" : "assumed",
+            GetTotalRam() / 1_MiB);
 }
 } // namespace node
