@@ -18,7 +18,6 @@
 
 #include <algorithm>
 #include <cstdint>
-#include <limits>
 #include <string>
 
 // Unlike for the UTXO database, for the txindex scenario the leveldb cache make
@@ -29,8 +28,6 @@ static constexpr uint64_t MAX_TX_INDEX_CACHE{1_GiB};
 static constexpr uint64_t MAX_FILTER_INDEX_CACHE{1_GiB};
 //! Max memory allocated to tx spenderindex DB specific cache in bytes.
 static constexpr uint64_t MAX_TXOSPENDER_INDEX_CACHE{1_GiB};
-//! Maximum dbcache size on 32-bit systems.
-static constexpr uint64_t MAX_32BIT_DBCACHE{1_GiB};
 //! Larger default dbcache on 64-bit systems with enough RAM.
 static constexpr uint64_t HIGH_DEFAULT_DBCACHE{1_GiB};
 //! Minimum detected RAM required for HIGH_DEFAULT_DBCACHE.
@@ -52,8 +49,7 @@ uint64_t CalculateDbCacheBytes(const ArgsManager& args)
     if (auto db_cache{args.GetIntArg("-dbcache")}) {
         if (*db_cache < 0) db_cache = 0;
         const uint64_t db_cache_bytes{SaturatingLeftShift<uint64_t>(*db_cache, 20)};
-        constexpr uint64_t max_db_cache{sizeof(void*) == 4 ? MAX_32BIT_DBCACHE : std::numeric_limits<uint64_t>::max()};
-        return std::max<uint64_t>(MIN_DBCACHE_BYTES, std::min<uint64_t>(db_cache_bytes, max_db_cache));
+        return std::max(MIN_DBCACHE_BYTES, std::min(db_cache_bytes, MAX_DBCACHE_BYTES));
     }
     return GetDefaultDBCache();
 }
