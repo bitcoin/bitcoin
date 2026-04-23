@@ -146,14 +146,16 @@ BOOST_FIXTURE_TEST_CASE(logging_LogPrintMacros, LogSetup)
     LogTrace(BCLog::NET, "foo6: %s", "bar6"); // not logged
     LogDebug(BCLog::NET, "foo7: %s", "bar7");
     LogInfo("foo8: %s", "bar8");
-    LogWarning("foo9: %s", "bar9");
+    LogAlert("foo9: %s", "bar9");
     LogError("foo10: %s", "bar10");
+    LogWarning("foo11: %s", "bar11");
     std::vector<std::string> log_lines{ReadDebugLogLines()};
     std::vector<std::string> expected = {
         "[net] foo7: bar7",
         "foo8: bar8",
-        "[warning] foo9: bar9",
-        "[error] foo10: bar10",
+        "[alert] foo9: bar9",
+        "[alert] foo10: bar10",
+        "[alert] foo11: bar11",
     };
     BOOST_CHECK_EQUAL_COLLECTIONS(log_lines.begin(), log_lines.end(), expected.begin(), expected.end());
 }
@@ -193,8 +195,9 @@ BOOST_FIXTURE_TEST_CASE(logging_SeverityLevels, LogSetup)
     LogInfo("info_%s", 1);
     LogTrace(BCLog::HTTP, "trace_%s. This log level is lower than the global one.", 2);
     LogDebug(BCLog::HTTP, "debug_%s", 3);
-    LogWarning("warn_%s", 4);
+    LogAlert("alert_%s", 4);
     LogError("err_%s", 5);
+    LogWarning("warn_%s", 6);
 
     // Category-specific log level
     LogDebug(BCLog::NET, "debug_%s. This log level is the same as the global one but lower than the category-specific one, which takes precedence.", 6);
@@ -202,8 +205,9 @@ BOOST_FIXTURE_TEST_CASE(logging_SeverityLevels, LogSetup)
     std::vector<std::string> expected = {
         "info_1",
         "[http] debug_3",
-        "[warning] warn_4",
-        "[error] err_5",
+        "[alert] alert_4",
+        "[alert] err_5",
+        "[alert] warn_6",
     };
     std::vector<std::string> log_lines{ReadDebugLogLines()};
     BOOST_CHECK_EQUAL_COLLECTIONS(log_lines.begin(), log_lines.end(), expected.begin(), expected.end());
@@ -412,7 +416,7 @@ void TestLogFromLocation(Location location, const std::string& message,
 
     if (status == Status::NEWLY_SUPPRESSED) {
         BOOST_REQUIRE_EQUAL(log_lines.size(), 2);
-        BOOST_CHECK(log_lines[0].starts_with("[*] [warning] Excessive logging detected"));
+        BOOST_CHECK(log_lines[0].starts_with("[*] [alert] Excessive logging detected"));
         log_lines.erase(log_lines.begin());
     }
     BOOST_REQUIRE_EQUAL(log_lines.size(), 1);
@@ -450,7 +454,7 @@ BOOST_FIXTURE_TEST_CASE(logging_filesize_rate_limit, LogSetup)
     TestLogFromLocation(Location::INFO_2, "c", Status::UNSUPPRESSED, /*suppressions_active=*/true);
     {
         scheduler.MockForwardAndSync(time_window);
-        BOOST_CHECK(ReadDebugLogLines().back().starts_with("[warning] Restarting logging"));
+        BOOST_CHECK(ReadDebugLogLines().back().starts_with("[alert] Restarting logging"));
     }
     // Check that logging from previously suppressed location is unsuppressed again.
     TestLogFromLocation(Location::INFO_1, log_message, Status::UNSUPPRESSED, /*suppressions_active=*/false);
