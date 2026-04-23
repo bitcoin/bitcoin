@@ -32,6 +32,7 @@
 #include <util/ui_change_type.h>
 #include <wallet/crypter.h>
 #include <wallet/db.h>
+#include <wallet/logging.h>
 #include <wallet/scriptpubkeyman.h>
 #include <wallet/transaction.h>
 #include <wallet/types.h>
@@ -394,6 +395,9 @@ private:
     /** Wallet name: relative directory name or "" for default wallet. */
     std::string m_name;
 
+    /** Custom log context which adds the wallet name to all log messages */
+    WalletLogContext m_log;
+
     /** Internal database handle. */
     std::unique_ptr<WalletDatabase> m_database;
 
@@ -476,6 +480,7 @@ public:
     CWallet(interfaces::Chain* chain, const std::string& name, std::unique_ptr<WalletDatabase> database)
         : m_chain(chain),
           m_name(name),
+          m_log{LogName()},
           m_database(std::move(database))
     {
     }
@@ -938,20 +943,14 @@ public:
         std::string name{GetName()};
         return name.empty() ? _("default wallet") : name;
     };
-
-    /** Prepends the wallet name in logging output to ease debugging in multi-wallet use cases */
-    template <typename... Params>
-    void WalletLogPrintf(util::ConstevalFormatString<sizeof...(Params)> wallet_fmt, const Params&... params) const
-    {
-        LogInfo("[%s] %s", LogName(), tfm::format(wallet_fmt, params...));
-    };
+    const WalletLogContext& Log() const override { return m_log; }
 
     void LogStats() const EXCLUSIVE_LOCKS_REQUIRED(cs_wallet)
     {
         AssertLockHeld(cs_wallet);
-        WalletLogPrintf("setKeyPool.size() = %u\n",      GetKeyPoolSize());
-        WalletLogPrintf("mapWallet.size() = %u\n",       mapWallet.size());
-        WalletLogPrintf("m_address_book.size() = %u\n",  m_address_book.size());
+        LogInfo(m_log, "setKeyPool.size() = %u\n",      GetKeyPoolSize());
+        LogInfo(m_log, "mapWallet.size() = %u\n",       mapWallet.size());
+        LogInfo(m_log, "m_address_book.size() = %u\n",  m_address_book.size());
     };
 
     //! Returns all unique ScriptPubKeyMans in m_internal_spk_managers and m_external_spk_managers

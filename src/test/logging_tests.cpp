@@ -14,6 +14,7 @@
 #include <util/fs_helpers.h>
 #include <util/string.h>
 
+#include <array>
 #include <chrono>
 #include <fstream>
 #include <future>
@@ -27,6 +28,7 @@
 
 #include <boost/test/unit_test.hpp>
 
+using util::log::Level;
 using util::SplitString;
 using util::TrimString;
 
@@ -103,6 +105,166 @@ struct LogSetup : public BasicTestingSetup {
     }
 };
 
+//! Test logging to local logger.
+BOOST_AUTO_TEST_CASE(logging_local_logger)
+{
+    BCLog::Logger logger;
+    logger.m_log_timestamps = false;
+    logger.EnableCategory(BCLog::LogFlags::ALL);
+    logger.SetLogLevel(BCLog::Level::Trace);
+    BOOST_REQUIRE(logger.StartLogging());
+
+    std::vector<std::string> messages;
+    logger.PushBackCallback([&](const std::string& s) { messages.push_back(s); });
+
+    util::log::Context log{BCLog::NET, &logger};
+    LogError(log, "error %s", "arg");
+    LogWarning(log, "warning %s", "arg");
+    LogInfo(log, "info %s", "arg");
+    LogDebug(log, "debug %s", "arg");
+    LogTrace(log, "trace %s", "arg");
+
+    constexpr auto expected{std::to_array({
+        "[error] error arg\n",
+        "[warning] warning arg\n",
+        "info arg\n",
+        "[net] debug arg\n",
+        "[net:trace] trace arg\n",
+    })};
+    BOOST_CHECK_EQUAL_COLLECTIONS(messages.begin(), messages.end(), expected.begin(), expected.end());
+}
+
+//! Test calls to log macros with all possible types of arguments: with and
+//! without categories and with and without format arguments to make sure
+//! varargs are handled correctly.
+//! Include commented out calls for combinations of macro arguments which are
+//! prohibited, for easy manual testing to confirm these calls produce readable
+//! compile errors.
+BOOST_FIXTURE_TEST_CASE(logging_macro_args, LogSetup)
+{
+    LogInstance().EnableCategory(BCLog::LogFlags::ALL);
+    LogInstance().SetLogLevel(BCLog::Level::Trace);
+
+    // Test logging with no context.
+    LogError("error");
+    LogWarning("warning");
+    LogInfo("info");
+    // LogDebug("debug"); // Not allowed because category is required!
+    // LogTrace("trace"); // Not allowed because category is required!
+    LogError("error %s", "arg");
+    LogWarning("warning %s", "arg");
+    LogInfo("info %s", "arg");
+    // LogDebug("debug %s", "arg"); // Not allowed because category is required!
+    // LogTrace("trace %s", "arg"); // Not allowed because category is required!
+
+    // Test logging with category constant arguments.
+    // LogError(BCLog::NET, "error"); // Not allowed because category is forbidden!
+    // LogWarning(BCLog::NET, "warning"); // Not allowed because category is forbidden!
+    // LogInfo(BCLog::NET, "info"); // Not allowed because category is forbidden!
+    LogDebug(BCLog::NET, "debug");
+    LogTrace(BCLog::NET, "trace");
+    // LogError(BCLog::NET, "error %s", "arg"); // Not allowed because category is forbidden!
+    // LogWarning(BCLog::NET, "warning %s", "arg"); // Not allowed because category is forbidden!
+    // LogInfo(BCLog::NET, "info %s", "arg"); // Not allowed because category is forbidden!
+    LogDebug(BCLog::NET, "debug %s", "arg");
+    LogTrace(BCLog::NET, "trace %s", "arg");
+
+    LOG_EMIT((.level = Level::Info), "options info");
+    LOG_EMIT((.level = Level::Info), "options info %s", "arg");
+    // LOG_EMIT((.level = Level::Info), BCLog::NET, "options info"); // Not allowed because category is forbidden!
+    // LOG_EMIT((.level = Level::Info), BCLog::NET, "options info %s", "arg"); // Not allowed because category is forbidden!
+
+    // LOG_EMIT((.level = Level::Debug), "options debug"); // Not allowed because category is required!
+    // LOG_EMIT((.level = Level::Debug), "options debug %s", "arg"); // Not allowed because category is required!
+    LOG_EMIT((.level = Level::Debug), BCLog::NET, "options debug");
+    LOG_EMIT((.level = Level::Debug), BCLog::NET, "options debug %s", "arg");
+
+    // Test logging with context object.
+    util::log::Context log{BCLog::TOR, &LogInstance()};
+    LogError(log, "error");
+    LogWarning(log, "warning");
+    LogInfo(log, "info");
+    LogDebug(log, "debug");
+    LogTrace(log, "trace");
+    LogError(log, "error %s", "arg");
+    LogWarning(log, "warning %s", "arg");
+    LogInfo(log, "info %s", "arg");
+    LogDebug(log, "debug %s", "arg");
+    LogTrace(log, "trace %s", "arg");
+
+    const auto log_lines{ReadDebugLogLines()};
+    constexpr auto expected{std::to_array({
+        "[error] error",
+        "[warning] warning",
+        "info",
+
+        "[error] error arg",
+        "[warning] warning arg",
+        "info arg",
+
+        "[net] debug",
+        "[net:trace] trace",
+
+        "[net] debug arg",
+        "[net:trace] trace arg",
+
+        "options info",
+        "options info arg",
+        "[net] options debug",
+        "[net] options debug arg",
+
+        "[error] error",
+        "[warning] warning",
+        "info",
+        "[tor] debug",
+        "[tor:trace] trace",
+
+        "[error] error arg",
+        "[warning] warning arg",
+        "info arg",
+        "[tor] debug arg",
+        "[tor:trace] trace arg",
+    })};
+    BOOST_CHECK_EQUAL_COLLECTIONS(log_lines.begin(), log_lines.end(), expected.begin(), expected.end());
+}
+
+//! Example of a custom log context that includes a counter value in logged
+//! messages. Custom log contexts allow different areas of the codebase to
+//! attach information to log messages (like request ids or filenames) while
+//! still using standard logging macros.
+struct CountingLogContext {
+    static constexpr bool log_context{true};
+    util::log::Category category{BCLog::VALIDATION};
+    util::log::Logger* logger{nullptr};
+    int counter{0};
+
+    template <typename... Args>
+    std::string Format(util::ConstevalFormatString<sizeof...(Args)> fmt, const Args&... args)
+    {
+        return tfm::format("Custom #%d %s", ++counter, tfm::format(fmt, args...));
+    }
+};
+
+BOOST_FIXTURE_TEST_CASE(logging_CustomContext, LogSetup)
+{
+    LogInstance().EnableCategory(BCLog::LogFlags::ALL);
+    LogInstance().SetLogLevel(BCLog::Level::Debug);
+    CountingLogContext log;
+    LogTrace(log, "foo0: %s", "bar0"); // not logged
+    LogDebug(log, "foo1: %s", "bar1");
+    LogInfo(log, "foo2: %s", "bar2");
+    LogWarning(log, "foo3: %s", "bar3");
+    LogError(log, "foo4: %s", "bar4");
+    const auto log_lines{ReadDebugLogLines()};
+    constexpr auto expected{std::to_array({
+        "[validation] Custom #1 foo1: bar1",
+        "Custom #2 foo2: bar2",
+        "[warning] Custom #3 foo3: bar3",
+        "[error] Custom #4 foo4: bar4",
+    })};
+    BOOST_CHECK_EQUAL_COLLECTIONS(log_lines.begin(), log_lines.end(), expected.begin(), expected.end());
+}
+
 BOOST_AUTO_TEST_CASE(logging_timer)
 {
     auto micro_timer = BCLog::Timer<std::chrono::microseconds>("tests", "end_msg");
@@ -124,7 +286,7 @@ BOOST_FIXTURE_TEST_CASE(logging_LogPrintStr, LogSetup)
 
     std::vector<Case> cases = {
         {"foo1: bar1", BCLog::NET, BCLog::Level::Debug, "[net] ", SourceLocation{__func__}},
-        {"foo2: bar2", BCLog::NET, BCLog::Level::Info, "[net:info] ", SourceLocation{__func__}},
+        {"foo2: bar2", BCLog::NET, BCLog::Level::Info, "", SourceLocation{__func__}},
         {"foo3: bar3", BCLog::ALL, BCLog::Level::Debug, "[debug] ", SourceLocation{__func__}},
         {"foo4: bar4", BCLog::ALL, BCLog::Level::Info, "", SourceLocation{__func__}},
         {"foo5: bar5", BCLog::NONE, BCLog::Level::Debug, "[debug] ", SourceLocation{__func__}},
@@ -137,24 +299,6 @@ BOOST_FIXTURE_TEST_CASE(logging_LogPrintStr, LogSetup)
         LogInstance().LogPrintStr(msg, std::move(loc), category, level, /*should_ratelimit=*/false);
     }
     std::vector<std::string> log_lines{ReadDebugLogLines()};
-    BOOST_CHECK_EQUAL_COLLECTIONS(log_lines.begin(), log_lines.end(), expected.begin(), expected.end());
-}
-
-BOOST_FIXTURE_TEST_CASE(logging_LogPrintMacros, LogSetup)
-{
-    LogInstance().EnableCategory(BCLog::NET);
-    LogTrace(BCLog::NET, "foo6: %s", "bar6"); // not logged
-    LogDebug(BCLog::NET, "foo7: %s", "bar7");
-    LogInfo("foo8: %s", "bar8");
-    LogWarning("foo9: %s", "bar9");
-    LogError("foo10: %s", "bar10");
-    std::vector<std::string> log_lines{ReadDebugLogLines()};
-    std::vector<std::string> expected = {
-        "[net] foo7: bar7",
-        "foo8: bar8",
-        "[warning] foo9: bar9",
-        "[error] foo10: bar10",
-    };
     BOOST_CHECK_EQUAL_COLLECTIONS(log_lines.begin(), log_lines.end(), expected.begin(), expected.end());
 }
 
@@ -382,7 +526,7 @@ void LogFromLocation(Location location, const std::string& message) {
         LogDebug(BCLog::LogFlags::HTTP, "%s\n", message);
         return;
     case Location::INFO_NOLIMIT:
-        LogPrintLevel_(BCLog::LogFlags::ALL, BCLog::Level::Info, /*should_ratelimit=*/false, "%s\n", message);
+        LOG_EMIT((.level = Level::Info, .ratelimit = false), "%s\n", message);
         return;
     } // no default case, so the compiler can warn about missing cases
     assert(false);
@@ -461,6 +605,46 @@ BOOST_FIXTURE_TEST_CASE(logging_filesize_rate_limit, LogSetup)
             TestLogFromLocation(location, log_message, Status::UNSUPPRESSED, /*suppressions_active=*/false);
         }
     }
+}
+
+BOOST_FIXTURE_TEST_CASE(logging_arg_evaluation, LogSetup)
+{
+    for (bool enable_logger : {true, false}) {
+        LogInstance().DisconnectTestLogger();
+        if (enable_logger) {
+            BOOST_REQUIRE(LogInstance().StartLogging());
+        } else {
+            LogInstance().DisableLogging();
+        }
+        BOOST_REQUIRE_EQUAL(enable_logger, LogInstance().Enabled());
+
+        // Info or higher should always evaluate the arguments.
+        int counter = 0;
+        LogError("error (%s)", ++counter);
+        LogWarning("warning (%s)", ++counter);
+        LogInfo("info (%s)", ++counter);
+        BOOST_CHECK_EQUAL(counter, 3);
+
+        // Debug/Trace should skip argument evaluation when category is disabled.
+        counter = 0;
+        LogDebug(BCLog::NET, "debug (%s)", ++counter);
+        LogTrace(BCLog::NET, "trace (%s)", ++counter);
+        BOOST_CHECK_EQUAL(counter, 0);
+    }
+}
+
+BOOST_FIXTURE_TEST_CASE(log_accept_category, LogSetup)
+{
+    using namespace util::log;
+    BOOST_CHECK(LogAcceptCategory(BCLog::ALL, Level::Info));
+    BOOST_CHECK(LogAcceptCategory(BCLog::NET, Level::Warning));
+    BOOST_CHECK(LogAcceptCategory(BCLog::VALIDATION, Level::Error));
+    BOOST_CHECK(!LogAcceptCategory(BCLog::LEVELDB, Level::Debug));
+    BOOST_CHECK(!LogAcceptCategory(BCLog::ALL, Level::Trace));
+
+    LogInstance().EnableCategory(BCLog::TXPACKAGES);
+    BOOST_CHECK(LogAcceptCategory(BCLog::TXPACKAGES, Level::Debug));
+    BOOST_CHECK(!LogAcceptCategory(BCLog::TXPACKAGES, Level::Trace));
 }
 
 BOOST_AUTO_TEST_SUITE_END()
