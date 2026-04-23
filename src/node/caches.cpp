@@ -41,7 +41,7 @@ uint64_t GetDefaultDBCache()
             return HIGH_DEFAULT_DBCACHE;
         }
     }
-    return DEFAULT_DB_CACHE;
+    return DEFAULT_KERNEL_CACHE;
 }
 
 uint64_t CalculateDbCacheBytes(const ArgsManager& args)
