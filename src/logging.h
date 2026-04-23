@@ -127,7 +127,7 @@ namespace BCLog {
         bool SuppressionsActive() const { return m_suppression_active; }
     };
 
-    class Logger
+    class Logger : public util::log::Logger
     {
     public:
         struct BufferedLog {
@@ -293,11 +293,6 @@ namespace BCLog {
 
 BCLog::Logger& LogInstance();
 
-/** Return true if log accepts specified category, at the specified level. */
-static inline bool LogAcceptCategory(BCLog::LogFlags category, BCLog::Level level)
-{
-    return LogInstance().WillLogCategoryLevel(category, level);
-}
 
 /// Return log flag if str parses as a log category.
 std::optional<BCLog::LogFlags> GetLogCategory(std::string_view str);
