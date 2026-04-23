@@ -10,6 +10,7 @@
 #include <util/feefrac.h>
 
 #include <string>
+#include <string_view>
 #include <utility>
 
 /* Used to determine type of fee estimation requested */

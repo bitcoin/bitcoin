@@ -42,6 +42,15 @@ public:
      */
     virtual util::Expected<FeeRateEstimation, FeeRateEstimationError> GetFeeRateEstimate(int target, bool conservative) const;
 
+    /**
+     * Like GetFeeRateEstimate, but only consults the specified estimator type.
+     * @param[in] type The estimator to query. NONE returns the manager-selected combined estimate.
+     * @param[in] target The target within which the transaction should be confirmed.
+     * @param[in] conservative True if the package cannot be fee bumped later.
+     * @return Fee rate estimation from the specified estimator, or an error on failure.
+     */
+    virtual util::Expected<FeeRateEstimation, FeeRateEstimationError> GetFeeRateEstimate(FeeRateEstimatorType type, int target, bool conservative) const;
+
     /** Flush recorded data to disk. */
     void IntervalFlush();
 

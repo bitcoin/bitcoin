@@ -18,6 +18,7 @@
 #include <univalue.h>
 #include <util/expected.h>
 #include <util/fees.h>
+#include <util/strencodings.h>
 #include <validationinterface.h>
 
 #include <algorithm>
@@ -31,6 +32,13 @@ using common::FeeModesDetail;
 using common::InvalidEstimateModeErrorMessage;
 using node::NodeContext;
 
+static FeeRateEstimatorType FeeRateEstimatorTypeFromString(std::string_view feerate_estimator_type)
+{
+    const auto normalized{ToLower(feerate_estimator_type)};
+    if (normalized == "block_policy") return FeeRateEstimatorType::BLOCK_POLICY;
+    return FeeRateEstimatorType::NONE;
+}
+
 static RPCMethod estimatesmartfee()
 {
     return RPCMethod{
@@ -43,6 +51,15 @@ static RPCMethod estimatesmartfee()
             {"conf_target", RPCArg::Type::NUM, RPCArg::Optional::NO, "Confirmation target in blocks (1 - 1008)"},
             {"estimate_mode", RPCArg::Type::STR, RPCArg::Default{"economical"}, "The fee estimate mode.\n"
               + FeeModesDetail(std::string("default mode will be used"))},
+            {"options", RPCArg::Type::OBJ, RPCArg::Optional::OMITTED, "",
+                {
+                    {"fee_rate_estimator", RPCArg::Type::STR, RPCArg::Default{"none"},
+                     "The fee rate estimator to use. Recognized values are "
+                     "\"none\" and \"block_policy\". Unknown values are treated "
+                     "as \"none\". \"none\" uses the fee rate estimator manager "
+                     "to select an estimate."},
+                },
+            },
         },
         RPCResult{
             RPCResult::Type::OBJ, "", "",
@@ -75,11 +92,18 @@ static RPCMethod estimatesmartfee()
             if (!FeeModeFromString(self.Arg<std::string_view>("estimate_mode"), fee_mode)) {
                 throw JSONRPCError(RPC_INVALID_PARAMETER, InvalidEstimateModeErrorMessage());
             }
+            const UniValue options{request.params[2].isNull() ? UniValue::VOBJ : request.params[2]};
+            RPCTypeCheckObj(options,
+                            {
+                                {"fee_rate_estimator", UniValueType(UniValue::VSTR)},
+                            }, /*fAllowNull=*/true, /*fStrict=*/true);
+            const auto fee_rate_estimator{FeeRateEstimatorTypeFromString(
+                options["fee_rate_estimator"].isNull() ? "none" : options["fee_rate_estimator"].get_str())};
+            bool conservative{fee_mode == FeeEstimateMode::CONSERVATIVE};
 
             UniValue result(UniValue::VOBJ);
             UniValue errors(UniValue::VARR);
-            bool conservative{fee_mode == FeeEstimateMode::CONSERVATIVE};
-            const auto estimate{fee_estimator_man.GetFeeRateEstimate(conf_target, conservative)};
+            const auto estimate{fee_estimator_man.GetFeeRateEstimate(fee_rate_estimator, conf_target, conservative)};
             if (estimate) {
                 const CFeeRate min_mempool_feerate{mempool.GetMinFee()};
                 const CFeeRate min_relay_feerate{mempool.m_opts.min_relay_feerate};

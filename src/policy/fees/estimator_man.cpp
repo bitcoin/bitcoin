@@ -20,6 +20,17 @@ util::Expected<FeeRateEstimation, FeeRateEstimationError> FeeRateEstimatorManage
     return m_block_policy_estimator->EstimateFeeRate(target, conservative);
 }
 
+util::Expected<FeeRateEstimation, FeeRateEstimationError> FeeRateEstimatorManager::GetFeeRateEstimate(FeeRateEstimatorType type, int target, bool conservative) const
+{
+    switch (type) {
+    case FeeRateEstimatorType::NONE:
+        return GetFeeRateEstimate(target, conservative);
+    case FeeRateEstimatorType::BLOCK_POLICY:
+        return m_block_policy_estimator->EstimateFeeRate(target, conservative);
+    } // no default case, so the compiler can warn about missing cases
+    assert(false);
+}
+
 void FeeRateEstimatorManager::IntervalFlush()
 {
     m_block_policy_estimator->FlushFeeEstimates();

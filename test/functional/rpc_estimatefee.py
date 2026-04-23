@@ -28,12 +28,16 @@ class EstimateFeeTest(BitcoinTestFramework):
             assert_raises_rpc_error(-3, "JSON value of type string is not of expected type number", self.nodes[0].estimaterawfee, 'foo')
             # wrong type for estimatesmartfee(estimate_mode)
             assert_raises_rpc_error(-3, "JSON value of type number is not of expected type string", self.nodes[0].estimatesmartfee, 1, 1)
+            # wrong type for estimatesmartfee(options.fee_rate_estimator)
+            assert_raises_rpc_error(-3, "JSON value of type number for field fee_rate_estimator is not of expected type string", self.nodes[0].estimatesmartfee, 1, 'ECONOMICAL', {'fee_rate_estimator': 1})
             # wrong type for estimaterawfee(threshold)
             assert_raises_rpc_error(-3, "JSON value of type string is not of expected type number", self.nodes[0].estimaterawfee, 1, 'foo')
 
         assert_raises_rpc_error(-8, 'Invalid estimate_mode parameter, must be one of: "unset", "economical", "conservative"', self.nodes[0].estimatesmartfee, 1, 'foo')
+        assert_raises_rpc_error(-8, "Unknown named parameter fee_rate_estimator", self.nodes[0].estimatesmartfee, 1, fee_rate_estimator=True)
+        assert_raises_rpc_error(-3, "Unexpected key block_policy_only", self.nodes[0].estimatesmartfee, 1, 'ECONOMICAL', {'block_policy_only': True})
         # extra params
-        assert_raises_rpc_error(-1, "estimatesmartfee", self.nodes[0].estimatesmartfee, 1, 'ECONOMICAL', 1)
+        assert_raises_rpc_error(-1, "estimatesmartfee", self.nodes[0].estimatesmartfee, 1, 'ECONOMICAL', {}, 1)
         assert_raises_rpc_error(-1, "estimaterawfee", self.nodes[0].estimaterawfee, 1, 1, 1)
 
         # max value of 1008 per src/policy/fees/block_policy_estimator.h
@@ -45,6 +49,8 @@ class EstimateFeeTest(BitcoinTestFramework):
         self.nodes[0].estimatesmartfee(1, 'ECONOMICAL')
         self.nodes[0].estimatesmartfee(1, 'unset')
         self.nodes[0].estimatesmartfee(1, 'conservative')
+        self.nodes[0].estimatesmartfee(1, 'ECONOMICAL', {"fee_rate_estimator": "block_policy"})
+        self.nodes[0].estimatesmartfee(1, 'ECONOMICAL', {"fee_rate_estimator": "foo"})
 
         self.nodes[0].estimaterawfee(1)
         self.nodes[0].estimaterawfee(1, None)
