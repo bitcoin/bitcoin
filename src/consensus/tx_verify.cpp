@@ -112,13 +112,11 @@ bool SequenceLocks(const CTransaction &tx, int flags, std::vector<int>& prevHeig
 unsigned int GetLegacySigOpCount(const CTransaction& tx)
 {
     unsigned int nSigOps = 0;
-    for (const auto& txin : tx.vin)
-    {
-        nSigOps += txin.scriptSig.GetSigOpCount(false);
+    for (const auto& txin : tx.vin) {
+        nSigOps += txin.scriptSig.GetSigOpCount(/*fAccurate=*/false);
     }
-    for (const auto& txout : tx.vout)
-    {
-        nSigOps += txout.scriptPubKey.GetSigOpCount(false);
+    for (const auto& txout : tx.vout) {
+        nSigOps += txout.scriptPubKey.GetSigOpCount(/*fAccurate=*/false);
     }
     return nSigOps;
 }
