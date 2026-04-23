@@ -40,7 +40,7 @@ public:
     virtual ~FeeRateEstimatorManager();
 
     /**
-     * @brief Get a fee rate estimate from block policy estimator.
+     * @brief Get a fee rate estimate from the available fee rate estimators.
      * @param[in] target The target within which the transaction should be confirmed.
      * @param[in] conservative Whether to select a more conservative, potentially higher, fee rate estimate.
      * @return fee rate estimation, or an error on failure.
