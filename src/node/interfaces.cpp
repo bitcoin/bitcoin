@@ -36,14 +36,14 @@
 #include <node/coin.h>
 #include <node/context.h>
 #include <node/interface_ui.h>
-#include <node/mini_miner.h>
-#include <node/miner.h>
 #include <node/kernel_notifications.h>
+#include <node/miner.h>
+#include <node/mini_miner.h>
 #include <node/transaction.h>
 #include <node/types.h>
 #include <node/warnings.h>
 #include <policy/feerate.h>
-#include <policy/fees/block_policy_estimator.h>
+#include <policy/fees/estimator_man.h>
 #include <policy/policy.h>
 #include <policy/rbf.h>
 #include <policy/settings.h>
@@ -58,6 +58,7 @@
 #include <uint256.h>
 #include <univalue.h>
 #include <util/check.h>
+#include <util/fees.h>
 #include <util/result.h>
 #include <util/signalinterrupt.h>
 #include <util/string.h>
@@ -725,15 +726,15 @@ public:
         }
         return {};
     }
-    CFeeRate estimateSmartFee(int num_blocks, bool conservative, FeeCalculation* calc) override
+    FeeRateEstimatorResult getFeeRateEstimate(int num_blocks, bool conservative) const override
     {
-        if (!m_node.fee_estimator) return {};
-        return m_node.fee_estimator->estimateSmartFee(num_blocks, calc, conservative);
+        if (!m_node.fee_estimator_man) return {};
+        return m_node.fee_estimator_man->GetFeeRateEstimate(num_blocks, conservative);
     }
-    unsigned int estimateMaxBlocks() override
+    unsigned int maximumFeeEstimationTargetBlocks() override
     {
-        if (!m_node.fee_estimator) return 0;
-        return m_node.fee_estimator->MaximumTarget();
+        if (!m_node.fee_estimator_man) return 0;
+        return m_node.fee_estimator_man->MaximumTarget();
     }
     CFeeRate mempoolMinFee() override
     {

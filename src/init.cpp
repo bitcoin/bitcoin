@@ -62,6 +62,7 @@
 #include <policy/feerate.h>
 #include <policy/fees/block_policy_estimator.h>
 #include <policy/fees/block_policy_estimator_args.h>
+#include <policy/fees/estimator_man.h>
 #include <policy/policy.h>
 #include <policy/settings.h>
 #include <protocol.h>
@@ -346,10 +347,10 @@ void Shutdown(NodeContext& node)
 
     // Drop transactions we were still watching, record fee estimations and unregister
     // fee estimator from validation interface.
-    if (node.fee_estimator) {
-        node.fee_estimator->Flush();
+    if (node.fee_estimator_man) {
+        node.fee_estimator_man->ShutdownFlush();
         if (node.validation_signals) {
-            node.validation_signals->UnregisterValidationInterface(node.fee_estimator.get());
+            node.validation_signals->UnregisterValidationInterface(node.fee_estimator_man.get());
         }
     }
 
@@ -409,7 +410,7 @@ void Shutdown(NodeContext& node)
         node.validation_signals->UnregisterAllValidationInterfaces();
     }
     node.mempool.reset();
-    node.fee_estimator.reset();
+    node.fee_estimator_man.reset();
     node.chainman.reset();
     node.validation_signals.reset();
     node.scheduler.reset();
@@ -1652,7 +1653,7 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
                                               rng.rand64(),
                                               *node.addrman, *node.netgroupman, chainparams, args.GetBoolArg("-networkactive", true));
 
-    assert(!node.fee_estimator);
+    assert(!node.fee_estimator_man);
     // Don't initialize fee estimation with old data if we don't relay transactions,
     // as they would never get updated.
     if (!peerman_opts.ignore_incoming_txs) {
@@ -1660,12 +1661,12 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
         if (read_stale_estimates && (chainparams.GetChainType() != ChainType::REGTEST)) {
             return InitError(strprintf(_("acceptstalefeeestimates is not supported on %s chain."), chainparams.GetChainTypeString()));
         }
-        node.fee_estimator = std::make_unique<CBlockPolicyEstimator>(FeeestPath(args), read_stale_estimates);
+        node.fee_estimator_man = std::make_unique<FeeRateEstimatorManager>(FeeestPath(args), read_stale_estimates);
 
         // Flush estimates to disk periodically
-        CBlockPolicyEstimator* fee_estimator = node.fee_estimator.get();
-        scheduler.scheduleEvery([fee_estimator] { fee_estimator->FlushFeeEstimates(); }, FEE_FLUSH_INTERVAL);
-        validation_signals.RegisterValidationInterface(fee_estimator);
+        FeeRateEstimatorManager* fee_estimator_man = node.fee_estimator_man.get();
+        scheduler.scheduleEvery([fee_estimator_man] { fee_estimator_man->IntervalFlush(); }, FEE_FLUSH_INTERVAL);
+        validation_signals.RegisterValidationInterface(fee_estimator_man);
     }
 
     for (const std::string& socket_addr : args.GetArgs("-bind")) {

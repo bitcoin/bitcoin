@@ -15,6 +15,7 @@
 #define BITCOIN_WALLET_TYPES_H
 
 #include <policy/feerate.h>
+#include <primitives/transaction.h>
 #include <util/fees.h>
 
 namespace wallet {

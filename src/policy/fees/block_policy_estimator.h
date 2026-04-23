@@ -7,12 +7,12 @@
 
 #include <consensus/amount.h>
 #include <policy/feerate.h>
+#include <primitives/transaction_identifier.h>
 #include <random.h>
 #include <sync.h>
 #include <uint256.h>
 #include <util/fees.h>
 #include <util/fs.h>
-#include <validationinterface.h>
 
 #include <array>
 #include <chrono>
@@ -22,9 +22,6 @@
 #include <string>
 #include <vector>
 
-
-// How often to flush fee estimates to fee_estimates.dat.
-static constexpr std::chrono::hours FEE_FLUSH_INTERVAL{1};
 
 /** fee_estimates.dat that are more than 60 hours (2.5 days) old will not be read,
  * as fee estimates are based on historical data and may be inaccurate if
@@ -144,7 +141,7 @@ struct FeeCalculation
  * a certain number of blocks.  Every time a block is added to the best chain, this class records
  * stats on the transactions included in that block
  */
-class CBlockPolicyEstimator : public CValidationInterface
+class CBlockPolicyEstimator
 {
 private:
     /** Track confirm delays up to 12 blocks for short horizon */
@@ -271,14 +268,6 @@ public:
     FeeRateEstimatorResult EstimateFeeRate(int target, bool conservative) const
         EXCLUSIVE_LOCKS_REQUIRED(!m_cs_fee_estimator);
 
-protected:
-    /** Overridden from CValidationInterface. */
-    void TransactionAddedToMempool(const NewMempoolTransactionInfo& tx, uint64_t /*unused*/) override
-        EXCLUSIVE_LOCKS_REQUIRED(!m_cs_fee_estimator);
-    void TransactionRemovedFromMempool(const CTransactionRef& tx, MemPoolRemovalReason /*unused*/, uint64_t /*unused*/) override
-        EXCLUSIVE_LOCKS_REQUIRED(!m_cs_fee_estimator);
-    void MempoolTransactionsRemovedForBlock(const std::vector<RemovedMempoolTransactionInfo>& txs_removed_for_block, unsigned int nBlockHeight) override
-        EXCLUSIVE_LOCKS_REQUIRED(!m_cs_fee_estimator);
 
 private:
     mutable Mutex m_cs_fee_estimator;
