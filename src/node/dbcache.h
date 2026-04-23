@@ -9,6 +9,7 @@
 
 #include <cstddef>
 #include <cstdint>
+#include <limits>
 
 //! min. -dbcache (bytes)
 static constexpr size_t MIN_DB_CACHE{4_MiB};
@@ -16,6 +17,8 @@ static constexpr size_t MIN_DB_CACHE{4_MiB};
 static constexpr size_t DEFAULT_DB_CACHE{450_MiB};
 //! Reserved non-dbcache memory usage.
 static constexpr uint64_t RESERVED_RAM{2_GiB};
+//! Maximum dbcache size on current architecture.
+static constexpr uint64_t MAX_DBCACHE_BYTES{SIZE_MAX == UINT64_MAX ? std::numeric_limits<uint64_t>::max() : 1_GiB};
 
 namespace node {
 size_t GetDefaultDBCache();
