@@ -1133,12 +1133,6 @@ public:
     }
 };
 
-//! Add wallet name to persistent configuration so it will be loaded on startup.
-bool AddWalletSetting(interfaces::Chain& chain, const std::string& wallet_name);
-
-//! Remove wallet name from persistent configuration so it will not be loaded on startup.
-bool RemoveWalletSetting(interfaces::Chain& chain, const std::string& wallet_name);
-
 struct MigrationResult {
     std::string wallet_name;
     std::optional<std::string> watchonly_wallet_name;
