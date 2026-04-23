@@ -3,6 +3,7 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <chainparams.h>
+#include <local_addresses.h>
 #include <net.h>
 #include <net_permissions.h>
 #include <netaddress.h>
@@ -83,35 +84,36 @@ FUZZ_TARGET(local_address, .init = initialize_net)
     FuzzedDataProvider fuzzed_data_provider(buffer.data(), buffer.size());
     NodeClockContext clock_ctx{ConsumeTime(fuzzed_data_provider)};
     CService service{ConsumeService(fuzzed_data_provider)};
-    CNode node{ConsumeNode(fuzzed_data_provider)};
-    {
-        LOCK(g_maplocalhost_mutex);
-        mapLocalHost.clear();
-    }
+    Network network{ConsumeNetwork(fuzzed_data_provider)};
+    CAddress address{ConsumeAddress(fuzzed_data_provider)};
+    LocalAddressManager localaddressman;
+
     LIMITED_WHILE(fuzzed_data_provider.ConsumeBool(), 10000) {
         CallOneOf(
             fuzzed_data_provider,
             [&] {
                 service = ConsumeService(fuzzed_data_provider);
+                address = ConsumeAddress(fuzzed_data_provider);
+                network = ConsumeNetwork(fuzzed_data_provider);
             },
             [&] {
-                const bool added{AddLocal(service, fuzzed_data_provider.ConsumeIntegralInRange<int>(0, LOCAL_MAX - 1))};
+                const bool added{localaddressman.Add(service, fuzzed_data_provider.ConsumeIntegralInRange<int>(0, LOCAL_MAX - 1))};
                 if (!added) return;
                 assert(service.IsRoutable());
-                assert(IsLocal(service));
-                assert(SeenLocal(service));
+                assert(localaddressman.Contains(service));
+                assert(localaddressman.Seen(service));
             },
             [&] {
-                (void)RemoveLocal(service);
+                (void)localaddressman.Remove(service);
             },
             [&] {
-                (void)SeenLocal(service);
+                (void)localaddressman.Seen(service);
             },
             [&] {
-                (void)IsLocal(service);
+                (void)localaddressman.Contains(service);
             },
             [&] {
-                (void)GetLocalAddress(node);
+                (void)localaddressman.Get(address, network);
             });
     }
 }

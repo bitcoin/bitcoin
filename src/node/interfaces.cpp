@@ -26,6 +26,7 @@
 #include <kernel/chain.h>
 #include <kernel/context.h>
 #include <kernel/mempool_entry.h>
+#include <local_addresses.h>
 #include <logging.h>
 #include <mapport.h>
 #include <net.h>
@@ -300,10 +301,7 @@ public:
     }
     std::map<CNetAddr, LocalServiceInfo> getNetLocalAddresses() override
     {
-        if (m_context->connman)
-            return m_context->connman->getNetLocalAddresses();
-        else
-            return {};
+        return g_localaddressman->GetAll();
     }
     int getNumBlocks() override
     {

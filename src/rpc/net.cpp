@@ -10,10 +10,12 @@
 #include <chainparams.h>
 #include <clientversion.h>
 #include <core_io.h>
+#include <local_addresses.h>
 #include <net_permissions.h>
 #include <net_processing.h>
 #include <net_types.h>
 #include <netbase.h>
+#include <netglobals.h>
 #include <node/context.h>
 #include <node/protocol_version.h>
 #include <node/warnings.h>
@@ -719,8 +721,8 @@ static RPCMethod getnetworkinfo()
     }
     UniValue localAddresses(UniValue::VARR);
     {
-        LOCK(g_maplocalhost_mutex);
-        for (const std::pair<const CNetAddr, LocalServiceInfo> &item : mapLocalHost)
+        auto addresses = g_localaddressman->GetAll();
+        for (const std::pair<const CNetAddr, LocalServiceInfo> &item : addresses)
         {
             UniValue rec(UniValue::VOBJ);
             rec.pushKV("address", item.first.ToStringAddr());

@@ -17,8 +17,10 @@
 #include <common/system.h>
 #include <interfaces/handler.h>
 #include <interfaces/node.h>
+#include <local_addresses.h>
 #include <net.h>
 #include <netbase.h>
+#include <netglobals.h>
 #include <util/threadnames.h>
 #include <util/time.h>
 #include <validation.h>

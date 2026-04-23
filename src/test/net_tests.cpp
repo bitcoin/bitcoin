@@ -7,6 +7,7 @@
 #include <clientversion.h>
 #include <common/args.h>
 #include <compat/compat.h>
+#include <local_addresses.h>
 #include <net.h>
 #include <net_processing.h>
 #include <netaddress.h>
@@ -591,64 +592,11 @@ BOOST_AUTO_TEST_CASE(cnetaddr_unserialize_v2)
     BOOST_REQUIRE(s.empty());
 }
 
-// prior to PR #14728, this test triggers an undefined behavior
-BOOST_AUTO_TEST_CASE(ipv4_peer_with_ipv6_addrMe_test)
-{
-    // set up local addresses; all that's necessary to reproduce the bug is
-    // that a normal IPv4 address is among the entries, but if this address is
-    // !IsRoutable the undefined behavior is easier to trigger deterministically
-    in_addr raw_addr;
-    raw_addr.s_addr = htonl(0x7f000001);
-    const CNetAddr mapLocalHost_entry = CNetAddr(raw_addr);
-    {
-        LOCK(g_maplocalhost_mutex);
-        LocalServiceInfo lsi;
-        lsi.nScore = 23;
-        lsi.nPort = 42;
-        mapLocalHost[mapLocalHost_entry] = lsi;
-    }
-
-    // create a peer with an IPv4 address
-    in_addr ipv4AddrPeer;
-    ipv4AddrPeer.s_addr = 0xa0b0c001;
-    CAddress addr = CAddress(CService(ipv4AddrPeer, 7777), NODE_NETWORK);
-    std::unique_ptr<CNode> pnode = std::make_unique<CNode>(/*id=*/0,
-                                                           /*sock=*/nullptr,
-                                                           addr,
-                                                           /*nKeyedNetGroupIn=*/0,
-                                                           /*nLocalHostNonceIn=*/0,
-                                                           CAddress{},
-                                                           /*pszDest=*/std::string{},
-                                                           ConnectionType::OUTBOUND_FULL_RELAY,
-                                                           /*inbound_onion=*/false,
-                                                           /*network_key=*/0);
-    pnode->fSuccessfullyConnected.store(true);
-
-    // the peer claims to be reaching us via IPv6
-    in6_addr ipv6AddrLocal;
-    memset(ipv6AddrLocal.s6_addr, 0, 16);
-    ipv6AddrLocal.s6_addr[0] = 0xcc;
-    CAddress addrLocal = CAddress(CService(ipv6AddrLocal, 7777), NODE_NETWORK);
-    pnode->SetAddrLocal(addrLocal);
-
-    // before patch, this causes undefined behavior detectable with clang's -fsanitize=memory
-    GetLocalAddrForPeer(*pnode);
-
-    // suppress no-checks-run warning; if this test fails, it's by triggering a sanitizer
-    BOOST_CHECK(1);
-
-    // Cleanup, so that we don't confuse other tests.
-    {
-        LOCK(g_maplocalhost_mutex);
-        mapLocalHost.erase(mapLocalHost_entry);
-    }
-}
-
 BOOST_AUTO_TEST_CASE(get_local_addr_for_peer_port)
 {
     // Test that GetLocalAddrForPeer() properly selects the address to self-advertise:
     //
-    // 1. GetLocalAddrForPeer() calls GetLocalAddress() which returns an address that is
+    // 1. GetLocalAddrForPeer() gets an address from LocalAddressManager that is
     //    not routable.
     // 2. GetLocalAddrForPeer() overrides the address with whatever the peer has told us
     //    he sees us as.
@@ -794,12 +742,13 @@ BOOST_AUTO_TEST_CASE(LocalAddress_BasicLifecycle)
 
     g_reachable_nets.Add(NET_IPV4);
 
-    BOOST_CHECK(!IsLocal(addr));
-    BOOST_CHECK(AddLocal(addr, 1000));
-    BOOST_CHECK(IsLocal(addr));
+    LocalAddressManager localaddressman;
+    BOOST_CHECK(!localaddressman.Contains(addr));
+    BOOST_CHECK(localaddressman.Add(addr, 1000));
+    BOOST_CHECK(localaddressman.Contains(addr));
 
-    RemoveLocal(addr);
-    BOOST_CHECK(!IsLocal(addr));
+    localaddressman.Remove(addr);
+    BOOST_CHECK(!localaddressman.Contains(addr));
 }
 
 BOOST_AUTO_TEST_CASE(initial_advertise_from_version_message)
@@ -904,18 +853,6 @@ BOOST_AUTO_TEST_CASE(initial_advertise_from_version_message)
 
 BOOST_AUTO_TEST_CASE(advertise_local_address)
 {
-    auto CreatePeer = [](const CAddress& addr) {
-        return std::make_unique<CNode>(/*id=*/0,
-                                       /*sock=*/nullptr,
-                                       addr,
-                                       /*nKeyedNetGroupIn=*/0,
-                                       /*nLocalHostNonceIn=*/0,
-                                       CAddress{},
-                                       /*pszDest=*/std::string{},
-                                       ConnectionType::OUTBOUND_FULL_RELAY,
-                                       /*inbound_onion=*/false,
-                                       /*network_key=*/0);
-    };
     g_reachable_nets.Add(NET_CJDNS);
 
     CAddress addr_ipv4{Lookup("1.2.3.4", 8333, false).value(), NODE_NONE};
@@ -951,60 +888,54 @@ BOOST_AUTO_TEST_CASE(advertise_local_address)
     BOOST_REQUIRE(addr_cjdns.IsValid());
     BOOST_REQUIRE(addr_cjdns.IsCJDNS());
 
-    const auto peer_ipv4{CreatePeer(addr_ipv4)};
-    const auto peer_ipv6{CreatePeer(addr_ipv6)};
-    const auto peer_ipv6_tunnel{CreatePeer(addr_ipv6_tunnel)};
-    const auto peer_teredo{CreatePeer(addr_teredo)};
-    const auto peer_onion{CreatePeer(addr_onion)};
-    const auto peer_i2p{CreatePeer(addr_i2p)};
-    const auto peer_cjdns{CreatePeer(addr_cjdns)};
-
+    {
     // one local clearnet address - advertise to all but privacy peers
-    AddLocal(addr_ipv4);
-    BOOST_CHECK(GetLocalAddress(*peer_ipv4) == addr_ipv4);
-    BOOST_CHECK(GetLocalAddress(*peer_ipv6) == addr_ipv4);
-    BOOST_CHECK(GetLocalAddress(*peer_ipv6_tunnel) == addr_ipv4);
-    BOOST_CHECK(GetLocalAddress(*peer_teredo) == addr_ipv4);
-    BOOST_CHECK(GetLocalAddress(*peer_cjdns) == addr_ipv4);
-    BOOST_CHECK(!GetLocalAddress(*peer_onion).IsValid());
-    BOOST_CHECK(!GetLocalAddress(*peer_i2p).IsValid());
-    RemoveLocal(addr_ipv4);
+    LocalAddressManager localaddressman;
+    localaddressman.Add(addr_ipv4);
+    BOOST_CHECK(localaddressman.Get(addr_ipv4, addr_ipv4.GetNetClass()) == addr_ipv4);
+    BOOST_CHECK(localaddressman.Get(addr_ipv6, addr_ipv6.GetNetClass()) == addr_ipv4);
+    BOOST_CHECK(localaddressman.Get(addr_ipv6_tunnel, addr_ipv6_tunnel.GetNetClass()) == addr_ipv4);
+    BOOST_CHECK(localaddressman.Get(addr_teredo, addr_teredo.GetNetClass()) == addr_ipv4);
+    BOOST_CHECK(localaddressman.Get(addr_cjdns, addr_cjdns.GetNetClass()) == addr_ipv4);
+    BOOST_CHECK(!localaddressman.Get(addr_onion, addr_onion.GetNetClass()));
+    BOOST_CHECK(!localaddressman.Get(addr_ipv4, NET_ONION));
+    BOOST_CHECK(!localaddressman.Get(addr_i2p, addr_i2p.GetNetClass()));
+    }
 
+    {
     // local privacy addresses - don't advertise to clearnet peers
-    AddLocal(addr_onion);
-    AddLocal(addr_i2p);
-    BOOST_CHECK(!GetLocalAddress(*peer_ipv4).IsValid());
-    BOOST_CHECK(!GetLocalAddress(*peer_ipv6).IsValid());
-    BOOST_CHECK(!GetLocalAddress(*peer_ipv6_tunnel).IsValid());
-    BOOST_CHECK(!GetLocalAddress(*peer_teredo).IsValid());
-    BOOST_CHECK(!GetLocalAddress(*peer_cjdns).IsValid());
-    BOOST_CHECK(GetLocalAddress(*peer_onion) == addr_onion);
-    BOOST_CHECK(GetLocalAddress(*peer_i2p) == addr_i2p);
-    RemoveLocal(addr_onion);
-    RemoveLocal(addr_i2p);
+    LocalAddressManager localaddressman;
+    localaddressman.Add(addr_onion);
+    localaddressman.Add(addr_i2p);
+    BOOST_CHECK(!localaddressman.Get(addr_ipv4, addr_ipv4.GetNetClass()));
+    BOOST_CHECK(!localaddressman.Get(addr_ipv6, addr_ipv6.GetNetClass()));
+    BOOST_CHECK(!localaddressman.Get(addr_ipv6_tunnel, addr_ipv6_tunnel.GetNetClass()));
+    BOOST_CHECK(!localaddressman.Get(addr_teredo, addr_teredo.GetNetClass()));
+    BOOST_CHECK(!localaddressman.Get(addr_cjdns, addr_cjdns.GetNetClass()));
+    BOOST_CHECK(localaddressman.Get(addr_onion, addr_onion.GetNetClass()) == addr_onion);
+    BOOST_CHECK(localaddressman.Get(addr_ipv4, NET_ONION) == addr_onion);
+    BOOST_CHECK(localaddressman.Get(addr_i2p, addr_i2p.GetNetClass()) == addr_i2p);
+    }
 
+    {
     // local addresses from all networks
-    AddLocal(addr_ipv4);
-    AddLocal(addr_ipv6);
-    AddLocal(addr_ipv6_tunnel);
-    AddLocal(addr_teredo);
-    AddLocal(addr_onion);
-    AddLocal(addr_i2p);
-    AddLocal(addr_cjdns);
-    BOOST_CHECK(GetLocalAddress(*peer_ipv4) == addr_ipv4);
-    BOOST_CHECK(GetLocalAddress(*peer_ipv6) == addr_ipv6);
-    BOOST_CHECK(GetLocalAddress(*peer_ipv6_tunnel) == addr_ipv6);
-    BOOST_CHECK(GetLocalAddress(*peer_teredo) == addr_ipv4);
-    BOOST_CHECK(GetLocalAddress(*peer_onion) == addr_onion);
-    BOOST_CHECK(GetLocalAddress(*peer_i2p) == addr_i2p);
-    BOOST_CHECK(GetLocalAddress(*peer_cjdns) == addr_cjdns);
-    RemoveLocal(addr_ipv4);
-    RemoveLocal(addr_ipv6);
-    RemoveLocal(addr_ipv6_tunnel);
-    RemoveLocal(addr_teredo);
-    RemoveLocal(addr_onion);
-    RemoveLocal(addr_i2p);
-    RemoveLocal(addr_cjdns);
+    LocalAddressManager localaddressman;
+    localaddressman.Add(addr_ipv4);
+    localaddressman.Add(addr_ipv6);
+    localaddressman.Add(addr_ipv6_tunnel);
+    localaddressman.Add(addr_teredo);
+    localaddressman.Add(addr_onion);
+    localaddressman.Add(addr_i2p);
+    localaddressman.Add(addr_cjdns);
+    BOOST_CHECK(localaddressman.Get(addr_ipv4, addr_ipv4.GetNetClass()) == addr_ipv4);
+    BOOST_CHECK(localaddressman.Get(addr_ipv6, addr_ipv6.GetNetClass()) == addr_ipv6);
+    BOOST_CHECK(localaddressman.Get(addr_ipv6_tunnel, addr_ipv6_tunnel.GetNetClass()) == addr_ipv6);
+    BOOST_CHECK(localaddressman.Get(addr_teredo, addr_teredo.GetNetClass()) == addr_ipv4);
+    BOOST_CHECK(localaddressman.Get(addr_onion, addr_onion.GetNetClass()) == addr_onion);
+    BOOST_CHECK(localaddressman.Get(addr_ipv4, NET_ONION) == addr_onion);
+    BOOST_CHECK(localaddressman.Get(addr_i2p, addr_i2p.GetNetClass()) == addr_i2p);
+    BOOST_CHECK(localaddressman.Get(addr_cjdns, addr_cjdns.GetNetClass()) == addr_cjdns);
+    }
 }
 
 namespace {

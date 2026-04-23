@@ -8,6 +8,7 @@
 #include <common/netif.h>
 #include <common/pcp.h>
 #include <common/system.h>
+#include <local_addresses.h>
 #include <logging.h>
 #include <net.h>
 #include <netaddress.h>
@@ -48,7 +49,7 @@ static void ProcessPCP()
     auto handle_mapping = [&](std::variant<MappingResult, MappingError> &res) -> void {
         if (MappingResult* mapping = std::get_if<MappingResult>(&res)) {
             LogInfo("portmap: Added mapping %s", mapping->ToString());
-            AddLocal(mapping->external, LOCAL_MAPPED);
+            g_localaddressman->Add(mapping->external, LOCAL_MAPPED);
             ret = true;
             actual_lifetime = std::min(actual_lifetime, mapping->lifetime);
         } else if (MappingError *err = std::get_if<MappingError>(&res)) {

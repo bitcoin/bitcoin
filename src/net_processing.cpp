@@ -23,12 +23,14 @@
 #include <headerssync.h>
 #include <index/blockfilterindex.h>
 #include <kernel/types.h>
+#include <local_addresses.h>
 #include <logging.h>
 #include <merkleblock.h>
 #include <net.h>
 #include <net_permissions.h>
 #include <netaddress.h>
 #include <netbase.h>
+#include <netglobals.h>
 #include <netmessagemaker.h>
 #include <node/blockstorage.h>
 #include <node/connection_types.h>
@@ -3653,7 +3655,7 @@ void PeerManagerImpl::ProcessMessage(Peer& peer, CNode& pfrom, const std::string
 
         if (pfrom.IsInboundConn() && addrMe.IsRoutable())
         {
-            SeenLocal(addrMe);
+            g_localaddressman->Seen(addrMe);
         }
 
         // Inbound peers send us their version message when they connect.

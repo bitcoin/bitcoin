@@ -16,8 +16,10 @@
 #include <init/common.h>
 #include <interfaces/chain.h>
 #include <kernel/mempool_entry.h>
+#include <local_addresses.h>
 #include <logging.h>
 #include <net.h>
+#include <netglobals.h>
 #include <net_processing.h>
 #include <node/blockstorage.h>
 #include <node/chainstate.h>
@@ -122,7 +124,7 @@ BasicTestingSetup::BasicTestingSetup(const ChainType chainType, TestOpts opts)
     fListen = true;
     SetRPCWarmupStarting();
     g_reachable_nets.Reset();
-    ClearLocal();
+    g_localaddressman->Clear();
 
     m_node.shutdown_signal = &m_interrupt;
     m_node.shutdown_request = [this]{ return m_interrupt(); };

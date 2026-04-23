@@ -33,6 +33,7 @@ class Proxy;
 enum class SynchronizationState;
 struct CNodeStateStats;
 struct bilingual_str;
+struct LocalServiceInfo;
 namespace node {
 enum class TransactionError;
 struct NodeContext;

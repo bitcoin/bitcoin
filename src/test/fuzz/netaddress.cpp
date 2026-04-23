@@ -2,6 +2,7 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
+#include <local_addresses.h>
 #include <netaddress.h>
 #include <test/fuzz/FuzzedDataProvider.h>
 #include <test/fuzz/fuzz.h>
@@ -98,7 +99,7 @@ FUZZ_TARGET(netaddress)
     (void)CServiceHash(0, 0)(service);
 
     const CNetAddr other_net_addr = ConsumeNetAddr(fuzzed_data_provider);
-    (void)net_addr.GetReachabilityFrom(other_net_addr);
+    (void)LocalAddressManager::GetReachability(net_addr, other_net_addr);
     (void)sub_net.Match(other_net_addr);
 
     const CService other_service{fuzzed_data_provider.ConsumeBool() ? net_addr : other_net_addr, fuzzed_data_provider.ConsumeIntegral<uint16_t>()};
