@@ -115,8 +115,7 @@ static void BnBExhaustion(benchmark::Bench& bench)
 {
     std::vector<OutputGroup> utxo_pool;
     CAmount target;
-    bench.epochIterations(1)
-        .setup([&] { target = make_hard_case(17, utxo_pool); })
+    bench.setup([&] { target = make_hard_case(17, utxo_pool); })
         .run([&] {
             auto res{SelectCoinsBnB(utxo_pool, target, /*cost_of_change=*/0, MAX_STANDARD_TX_WEIGHT)}; // Should exhaust
             ankerl::nanobench::doNotOptimizeAway(res);

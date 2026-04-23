@@ -33,7 +33,7 @@ static void CheckBlockTest(benchmark::Bench& bench)
     const auto block_data{benchmark::data::block413567};
 
     CBlock block;
-    bench.unit("block").epochIterations(1)
+    bench.unit("block")
         .setup([&] {
             block = CBlock{};
             SpanReader{block_data} >> TX_WITH_WITNESS(block);

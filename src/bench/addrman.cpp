@@ -162,8 +162,7 @@ static void AddrManAddThenGood(benchmark::Bench& bench)
     CreateAddresses();
 
     std::optional<AddrMan> addrman;
-    bench.epochIterations(1)
-        .setup([&] {
+    bench.setup([&] {
             addrman.emplace(EMPTY_NETGROUPMAN, /*deterministic=*/false, ADDRMAN_CONSISTENCY_CHECK_RATIO);
             AddAddressesToAddrMan(*addrman);
         })
