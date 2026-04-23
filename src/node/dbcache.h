@@ -12,7 +12,7 @@
 #include <limits>
 
 //! min. -dbcache (bytes)
-static constexpr size_t MIN_DB_CACHE{4_MiB};
+static constexpr size_t MIN_DBCACHE_BYTES{4_MiB};
 //! -dbcache default (bytes)
 static constexpr size_t DEFAULT_DB_CACHE{450_MiB};
 //! Reserved non-dbcache memory usage.

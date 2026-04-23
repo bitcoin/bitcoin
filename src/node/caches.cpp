@@ -32,7 +32,7 @@ size_t CalculateDbCacheBytes(const ArgsManager& args)
     if (auto db_cache{args.GetIntArg("-dbcache")}) {
         if (*db_cache < 0) db_cache = 0;
         const uint64_t db_cache_bytes{SaturatingLeftShift<uint64_t>(*db_cache, 20)};
-        return std::max<size_t>(MIN_DB_CACHE, std::min(db_cache_bytes, MAX_DBCACHE_BYTES));
+        return std::max<size_t>(MIN_DBCACHE_BYTES, std::min(db_cache_bytes, MAX_DBCACHE_BYTES));
     }
     return GetDefaultDBCache();
 }
