@@ -371,6 +371,8 @@ void CDBIterator::SeekImpl(std::span<const std::byte> key)
 
 std::span<const std::byte> CDBIterator::GetKeyImpl() const
 {
+    // The returned span borrows from the current iterator entry and is only
+    // valid until the iterator is advanced.
     return MakeByteSpan(m_impl_iter->iter->key());
 }
 

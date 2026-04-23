@@ -154,7 +154,7 @@ public:
 
     template<typename K> bool GetKey(K& key) {
         try {
-            DataStream ssKey{GetKeyImpl()};
+            SpanReader ssKey{GetKeyImpl()};
             ssKey >> key;
         } catch (const std::exception&) {
             return false;

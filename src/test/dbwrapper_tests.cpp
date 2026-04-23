@@ -202,10 +202,14 @@ BOOST_AUTO_TEST_CASE(dbwrapper_iterator)
         uint256 in2 = m_rng.rand256();
         dbw.Write(key2, in2);
 
-        std::unique_ptr<CDBIterator> it(const_cast<CDBWrapper&>(dbw).NewIterator());
+        std::unique_ptr<CDBIterator> it(dbw.NewIterator());
 
         // Be sure to seek past the obfuscation key (if it exists)
         it->Seek(key);
+
+        // A failed key decode must not consume the current iterator entry.
+        uint16_t key_too_large{0};
+        BOOST_CHECK(!it->GetKey(key_too_large));
 
         uint8_t key_res;
         uint256 val_res;
