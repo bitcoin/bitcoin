@@ -202,7 +202,6 @@ function(add_boost_test source_file)
       SKIP_REGULAR_EXPRESSION
         "no test cases matching filter"
         "skipping script_assets_test"
-        "skipping total_ram"
     )
   endforeach()
 endfunction()

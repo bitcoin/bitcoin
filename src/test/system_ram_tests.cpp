@@ -14,14 +14,9 @@ BOOST_AUTO_TEST_SUITE(system_ram_tests)
 
 BOOST_AUTO_TEST_CASE(total_ram)
 {
-    const auto total{TryGetTotalRam()};
-    if (!total) {
-        BOOST_WARN_MESSAGE(false, "skipping total_ram: total RAM unknown");
-        return;
-    }
-
-    BOOST_CHECK_GE(*total, 1000_MiB);
-    BOOST_CHECK_LT(*total, 10'000_GiB); // ~10 TiB memory is unlikely
+    const auto total{*Assert(TryGetTotalRam())};
+    BOOST_CHECK_GE(total, 1_GiB);
+    BOOST_CHECK_LT(total, 10'000_GiB); // ~10 TiB memory is unlikely
 }
 
 BOOST_AUTO_TEST_SUITE_END()
