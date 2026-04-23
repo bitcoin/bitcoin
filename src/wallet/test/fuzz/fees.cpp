@@ -53,6 +53,12 @@ public:
         FeePerVSize feerate(ConsumeMoney(fuzzed_data_provider, /*max=*/1'000'000), fuzzed_data_provider.ConsumeIntegralInRange<unsigned int>(1000, 1000000));
         return FeeRateEstimation{FeeRateEstimatorType::BLOCK_POLICY, feerate, fuzzed_data_provider.ConsumeIntegralInRange<int>(2, 1004)};
     }
+    util::Expected<FeeRateEstimation, FeeRateEstimationError> GetFeeRateEstimate(FeeRateEstimatorType type, int confTarget, bool conservative) const override
+    {
+        auto res = GetFeeRateEstimate(confTarget, conservative);
+        if (res) res->feerate_estimator = type;
+        return res;
+    }
     unsigned int MaximumTarget() const override
     {
         return fuzzed_data_provider.ConsumeIntegralInRange<unsigned int>(1, 1004);

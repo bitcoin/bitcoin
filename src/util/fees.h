@@ -10,6 +10,7 @@
 #include <util/feefrac.h>
 
 #include <string>
+#include <string_view>
 #include <utility>
 
 /* Used to determine type of fee estimation requested */
@@ -77,5 +78,7 @@ inline const FeeRateEstimation& FeeRateEstimationRef(const util::Expected<FeeRat
 {
     return result ? *result : result.error().estimation;
 }
+
+FeeRateEstimatorType FeeRateEstimatorTypeFromString(std::string_view feerate_estimator_type);
 
 #endif // BITCOIN_UTIL_FEES_H

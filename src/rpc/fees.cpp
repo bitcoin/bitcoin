@@ -42,6 +42,15 @@ static RPCMethod estimatesmartfee()
             {"conf_target", RPCArg::Type::NUM, RPCArg::Optional::NO, "Confirmation target in blocks (1 - 1008)"},
             {"estimate_mode", RPCArg::Type::STR, RPCArg::Default{"economical"}, "The fee estimate mode.\n"
               + FeeModesDetail(std::string("default mode will be used"))},
+            {"options", RPCArg::Type::OBJ, RPCArg::Optional::OMITTED, "",
+                {
+                    {"fee_rate_estimator", RPCArg::Type::STR, RPCArg::Default{"none"},
+                     "Selects which fee rate estimator to use.\n"
+                     "\"none\" lets the fee rate estimator manager choose.\n"
+                     "\"block_policy\" uses only the block policy fee rate estimator.\n"
+                     "Unknown values are treated as \"none\"."},
+                },
+            },
         },
         RPCResult{
             RPCResult::Type::OBJ, "", "",
@@ -74,11 +83,18 @@ static RPCMethod estimatesmartfee()
             if (!FeeModeFromString(self.Arg<std::string_view>("estimate_mode"), fee_mode)) {
                 throw JSONRPCError(RPC_INVALID_PARAMETER, InvalidEstimateModeErrorMessage());
             }
+            const UniValue options{request.params[2].isNull() ? UniValue::VOBJ : request.params[2]};
+            RPCTypeCheckObj(options,
+                            {
+                                {"fee_rate_estimator", UniValueType(UniValue::VSTR)},
+                            }, /*fAllowNull=*/true, /*fStrict=*/true);
+            const auto fee_rate_estimator{FeeRateEstimatorTypeFromString(
+                options["fee_rate_estimator"].isNull() ? "none" : options["fee_rate_estimator"].get_str())};
+            bool conservative{fee_mode == FeeEstimateMode::CONSERVATIVE};
 
             UniValue result(UniValue::VOBJ);
             UniValue errors(UniValue::VARR);
-            bool conservative{fee_mode == FeeEstimateMode::CONSERVATIVE};
-            const auto estimate{fee_estimator_man.GetFeeRateEstimate(conf_target, conservative)};
+            const auto estimate{fee_estimator_man.GetFeeRateEstimate(fee_rate_estimator, conf_target, conservative)};
             if (estimate) {
                 const CFeeRate min_mempool_feerate{mempool.GetMinFee()};
                 const CFeeRate min_relay_feerate{mempool.m_opts.min_relay_feerate};
