@@ -7,6 +7,7 @@
 #include <common/system_ram.h>
 #include <util/byte_units.h>
 
+#include <algorithm>
 #include <cstddef>
 #include <cstdint>
 
@@ -24,5 +25,11 @@ size_t GetDefaultDBCache()
         }
     }
     return DEFAULT_DB_CACHE;
+}
+
+bool ShouldWarnOversizedDbCache(uint64_t dbcache, uint64_t total_ram) noexcept
+{
+    const uint64_t headroom{total_ram > RESERVED_RAM ? total_ram - RESERVED_RAM : 0};
+    return dbcache > std::max<uint64_t>(DEFAULT_DB_CACHE, (headroom / 4) * 3);
 }
 } // namespace node

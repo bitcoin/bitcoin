@@ -8,20 +8,19 @@
 #include <util/byte_units.h>
 
 #include <cstddef>
+#include <cstdint>
 
 //! min. -dbcache (bytes)
 static constexpr size_t MIN_DB_CACHE{4_MiB};
 //! -dbcache default (bytes)
 static constexpr size_t DEFAULT_DB_CACHE{450_MiB};
+//! Reserved non-dbcache memory usage.
+static constexpr uint64_t RESERVED_RAM{2_GiB};
 
 namespace node {
 size_t GetDefaultDBCache();
 
-constexpr bool ShouldWarnOversizedDbCache(uint64_t dbcache, uint64_t total_ram) noexcept
-{
-    const uint64_t cap{(total_ram < 2_GiB) ? DEFAULT_DB_CACHE : (total_ram / 100) * 75};
-    return dbcache > cap;
-}
+bool ShouldWarnOversizedDbCache(uint64_t dbcache, uint64_t total_ram) noexcept;
 } // namespace node
 
 #endif // BITCOIN_NODE_DBCACHE_H

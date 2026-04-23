@@ -62,7 +62,7 @@ void LogOversizedDbCache(const ArgsManager& args) noexcept
     if (const auto total_ram{TryGetTotalRam()}) {
         const size_t db_cache{CalculateDbCacheBytes(args)};
         if (ShouldWarnOversizedDbCache(db_cache, *total_ram)) {
-            InitWarning(bilingual_str{tfm::format(_("A %zu MiB dbcache may be too large for a system memory of only %zu MiB."),
+            InitWarning(bilingual_str{tfm::format(_("A %s MiB dbcache may be too large for a system with only %s MiB of memory."),
                         db_cache / 1_MiB, *total_ram / 1_MiB)});
         }
     }
