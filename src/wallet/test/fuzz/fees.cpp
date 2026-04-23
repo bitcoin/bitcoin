@@ -43,8 +43,8 @@ class FuzzedFeeEstimatorMan : public FeeRateEstimatorManager
     FuzzedDataProvider& fuzzed_data_provider;
 
 public:
-    FuzzedFeeEstimatorMan(FuzzedDataProvider& provider)
-        : FeeRateEstimatorManager(fs::path{}, false, g_setup->m_node.mempool.get(), g_setup->m_node.chainman.get()), fuzzed_data_provider(provider) {}
+    FuzzedFeeEstimatorMan(FuzzedDataProvider& provider, CTxMemPool* mempool, ChainstateManager* chainman)
+        : FeeRateEstimatorManager(fs::path{}, false, mempool, chainman), fuzzed_data_provider(provider) {}
 
     util::Expected<FeeRateEstimation, FeeRateEstimationError> GetFeeRateEstimate(int confTarget, bool conservative) const override
     {
@@ -84,7 +84,7 @@ FUZZ_TARGET(wallet_fees, .init = initialize_setup)
         .dust_relay_feerate = CFeeRate{ConsumeMoney(fuzzed_data_provider, 1'000'000)}
     };
     node.mempool = std::make_unique<CTxMemPool>(mempool_opts, error);
-    std::unique_ptr<FeeRateEstimatorManager> fee_estimator_man = std::make_unique<FuzzedFeeEstimatorMan>(fuzzed_data_provider);
+    std::unique_ptr<FeeRateEstimatorManager> fee_estimator_man = std::make_unique<FuzzedFeeEstimatorMan>(fuzzed_data_provider, node.mempool.get(), node.chainman.get());
     g_setup->SetFeeEstimatorMan(std::move(fee_estimator_man));
     auto target_feerate{CFeeRate{ConsumeMoney(fuzzed_data_provider, /*max=*/1'000'000)}};
     if (target_feerate > node.mempool->m_opts.incremental_relay_feerate &&

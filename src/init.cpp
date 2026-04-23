@@ -69,6 +69,7 @@
 #include <policy/fees/block_policy_estimator.h>
 #include <policy/fees/block_policy_estimator_args.h>
 #include <policy/fees/estimator_man.h>
+#include <policy/fees/mempool_estimator.h>
 #include <policy/policy.h>
 #include <policy/settings.h>
 #include <protocol.h>

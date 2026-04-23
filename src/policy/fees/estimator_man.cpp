@@ -6,6 +6,7 @@
 
 #include <kernel/mempool_entry.h>
 #include <kernel/mempool_removal_reason.h>
+#include <logging.h>
 #include <policy/feerate.h>
 #include <policy/fees/block_policy_estimator.h>
 #include <policy/fees/mempool_estimator.h>
@@ -21,7 +22,23 @@ FeeRateEstimatorManager::FeeRateEstimatorManager(const fs::path& block_policy_pa
 
 util::Expected<FeeRateEstimation, FeeRateEstimationError> FeeRateEstimatorManager::GetFeeRateEstimate(int target, bool conservative) const
 {
-    return m_block_policy_estimator->EstimateFeeRate(target, conservative);
+    auto block_policy_estimate = m_block_policy_estimator->EstimateFeeRate(target, conservative);
+    if (!block_policy_estimate) {
+        LogDebug(BCLog::ESTIMATEFEE, "%s", block_policy_estimate.error().reason);
+        return block_policy_estimate;
+    }
+    auto mempool_estimate = m_mempool_estimator->EstimateFeeRate(conservative);
+    if (!mempool_estimate) {
+        // A failed mempool estimate is surfaced as a warning rather than silently returning the
+        // block policy estimate, which callers can still request explicitly.
+        LogDebug(BCLog::ESTIMATEFEE, "%s", mempool_estimate.error().reason);
+        return mempool_estimate;
+    }
+    auto selected_estimate = std::min(*block_policy_estimate, *mempool_estimate);
+    LogDebug(BCLog::ESTIMATEFEE, "Fee rate estimated using %s: target=%s feerate=%s %s/kvB.",
+             FeeRateEstimatorTypeToString(selected_estimate.feerate_estimator),
+             selected_estimate.returned_target, CFeeRate(selected_estimate.feerate).GetFeePerK(), CURRENCY_ATOM);
+    return selected_estimate;
 }
 
 util::Expected<FeeRateEstimation, FeeRateEstimationError> FeeRateEstimatorManager::GetFeeRateEstimate(FeeRateEstimatorType type, int target, bool conservative) const
@@ -74,5 +91,5 @@ unsigned int FeeRateEstimatorManager::BlockPolicyHighestTargetTracked(FeeEstimat
 
 unsigned int FeeRateEstimatorManager::MaximumTarget() const
 {
-    return m_block_policy_estimator->MaximumTarget();
+    return std::max(m_block_policy_estimator->MaximumTarget(), m_mempool_estimator->MaximumTarget());
 }

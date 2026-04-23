@@ -57,6 +57,7 @@ static RPCMethod estimatesmartfee()
             RPCResult::Type::OBJ, "", "",
             {
                 {RPCResult::Type::NUM, "feerate", /*optional=*/true, "estimate fee rate in " + CURRENCY_UNIT + "/kvB (only present if no errors were encountered)"},
+                {RPCResult::Type::STR, "estimator", /*optional=*/true, "the fee estimator used to produce the result (only present for successful estimates when fee_rate_estimator is \"none\")"},
                 {RPCResult::Type::ARR, "errors", /*optional=*/true, "Errors encountered during processing (if there are any)",
                     {
                         {RPCResult::Type::STR, "", "error"},
@@ -105,7 +106,11 @@ static RPCMethod estimatesmartfee()
                 errors.push_back(estimate.error().reason);
                 result.pushKV("errors", std::move(errors));
             }
-            result.pushKV("blocks", FeeRateEstimationRef(estimate).returned_target);
+            if (estimate && fee_rate_estimator == FeeRateEstimatorType::NONE) {
+                result.pushKV("estimator", FeeRateEstimatorTypeToString(estimate->feerate_estimator));
+            }
+            const FeeRateEstimation& estimation{FeeRateEstimationRef(estimate)};
+            result.pushKV("blocks", estimation.returned_target);
             return result;
         },
     };

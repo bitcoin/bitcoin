@@ -50,6 +50,15 @@ struct FeeRateEstimation {
     FeePerVSize feerate;
     //! The returned target at which the package is likely to confirm within
     int returned_target;
+    /**
+     * Compare two FeeRateEstimation objects based on fee rate
+     * @param other The other FeeRateEstimation object to compare with
+     * @return strong ordering of either less, greater or equal; based on feerate ratio comparison.
+     */
+    auto operator<=>(const FeeRateEstimation& other) const
+    {
+        return ByRatio{feerate} <=> ByRatio{other.feerate};
+    }
 };
 
 /**
