@@ -1106,12 +1106,6 @@ public:
 void MaybeResendWalletTxs(WalletContext& context);
 
 
-//! Add wallet name to persistent configuration so it will be loaded on startup.
-bool AddWalletSetting(interfaces::Chain& chain, const std::string& wallet_name);
-
-//! Remove wallet name from persistent configuration so it will not be loaded on startup.
-bool RemoveWalletSetting(interfaces::Chain& chain, const std::string& wallet_name);
-
 struct MigrationResult {
     std::string wallet_name;
     std::optional<std::string> watchonly_wallet_name;
@@ -1126,9 +1120,6 @@ struct MigrationResult {
 [[nodiscard]] util::Result<MigrationResult> MigrateLegacyToDescriptor(const std::string& wallet_name, const SecureString& passphrase, WalletContext& context, bool load_wallet = true);
 //! Requirement: The wallet provided to this function must be isolated, with no attachment to the node's context.
 [[nodiscard]] util::Result<MigrationResult> MigrateLegacyToDescriptor(std::shared_ptr<CWallet> local_wallet, const SecureString& passphrase, WalletContext& context, bool load_wallet = true);
-
-//! Determine the path that the wallet is stored in
-util::Result<fs::path> GetWalletPath(const std::string& name);
 } // namespace wallet
 
 #endif // BITCOIN_WALLET_WALLET_H
