@@ -533,7 +533,7 @@ public:
      * the redeemScript/witnessScript began to be counted precisely, using the
      * preceding OP_N to determine the number of pubkeys.
      */
-    unsigned int GetSigOpCount(bool fAccurate) const;
+    unsigned int CountSigOps(bool fAccurate) const;
 
     /**
      * Accurately count sigOps, including sigOps in

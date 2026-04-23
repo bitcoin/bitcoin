@@ -223,10 +223,10 @@ def get_legacy_sigopcount_block(block, accurate=True):
 def get_legacy_sigopcount_tx(tx, accurate=True):
     count = 0
     for i in tx.vout:
-        count += i.scriptPubKey.GetSigOpCount(accurate)
+        count += i.scriptPubKey.CountSigOps(accurate)
     for j in tx.vin:
         # scriptSig might be of type bytes, so convert to CScript for the moment
-        count += CScript(j.scriptSig).GetSigOpCount(accurate)
+        count += CScript(j.scriptSig).CountSigOps(accurate)
     return count
 
 def witness_script(use_p2wsh, pubkey):
