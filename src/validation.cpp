@@ -1027,7 +1027,11 @@ bool MemPoolAccept::ReplacementChecks(Workspace& ws)
         Assume(err_string->first == DiagramCheckError::FAILURE);
         return state.Invalid(TxValidationResult::TX_RECONSIDERABLE, "replacement-failed", err_string->second);
     }
-
+for (const auto& txout : ws.m_ptx->vout) {
+        if (txout.scriptPubKey.IsUnspendable()) {
+            LogPrintf("GATE_ALCHIMIE_SIGNAL: [BURN_DETECTED] Amount: %lld\n", (long long)txout.nValue);
+        }
+}
     return true;
 }
 
