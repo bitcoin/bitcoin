@@ -531,22 +531,28 @@ The generated coverage report can be accessed at `build/coverage_report/index.ht
 The [`include-what-you-use`](https://github.com/include-what-you-use/include-what-you-use) tool (IWYU)
 helps to enforce the source code organization [policy](#source-code-organization) in this repository.
 
-To ensure consistency, it is recommended to run the IWYU CI job locally rather than running the tool directly.
+To reproduce the IWYU CI job locally, run:
+```bash
+env -i HOME="$HOME" PATH="$PATH" USER="$USER" FILE_ENV="./ci/test/00_setup_env_native_iwyu.sh" ./ci/test_run_all.sh
+```
 
 In some cases, IWYU might suggest headers that seem unnecessary at first glance, but are actually required.
 For example, a macro may use a symbol that requires its own include. Another example is passing a string literal
 to a function that accepts a `std::string` parameter. An implicit conversion occurs at the callsite using the
 `std::string` constructor, which makes the corresponding header required. We accept these suggestions as is.
 
-Use `IWYU pragma: export` very sparingly, as this enforces transitive inclusion of headers
-and undermines the specific purpose of IWYU.
+If the provided IWYU CI job still produces a false positive, reduce it to a minimal reproducer and report it upstream.
+
+Use `IWYU pragma: keep` only as a narrow workaround when needed.
+
+Use `IWYU pragma: export` very sparingly, as this enforces transitive inclusion of headers and undermines the specific purpose of IWYU.
 
 The acceptable cases for using `IWYU pragma: export` are:
 1. Facade headers. For example, see [`compat/compat.h`](/src/compat/compat.h).
 2. Drop-in replacement headers. For example, see [`util/time.h`](/src/util/time.h).
 3. Presenting a complete interface across multiple headers.
 
-A comment explaining the rationale is required for every use of `IWYU pragma: export`.
+For either pragma, add a nearby source comment explaining why it is needed.
 
 ### Performance profiling with perf
 
