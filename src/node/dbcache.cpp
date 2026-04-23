@@ -8,19 +8,22 @@
 #include <util/byte_units.h>
 
 #include <algorithm>
-#include <cstddef>
 #include <cstdint>
+#include <optional>
 
 //! Larger default dbcache on 64-bit systems with enough RAM.
-static constexpr size_t HIGH_DEFAULT_DBCACHE{1_GiB};
+static constexpr uint64_t HIGH_DEFAULT_DBCACHE{1_GiB};
 //! Minimum detected RAM required for HIGH_DEFAULT_DBCACHE.
 static constexpr uint64_t HIGH_DEFAULT_DBCACHE_MIN_TOTAL_RAM{4_GiB};
 
 namespace node {
-size_t GetDefaultDBCache()
+uint64_t GetTotalRam() noexcept { return TryGetTotalRam().value_or(0); }
+
+uint64_t GetDefaultDBCache(std::optional<uint64_t> total_ram)
 {
+    if (!total_ram) total_ram.emplace(GetTotalRam());
     if constexpr (sizeof(void*) >= 8) {
-        if (TryGetTotalRam().value_or(0) >= HIGH_DEFAULT_DBCACHE_MIN_TOTAL_RAM) {
+        if (*total_ram >= HIGH_DEFAULT_DBCACHE_MIN_TOTAL_RAM) {
             return HIGH_DEFAULT_DBCACHE;
         }
     }
@@ -30,6 +33,6 @@ size_t GetDefaultDBCache()
 bool ShouldWarnOversizedDbCache(uint64_t dbcache, uint64_t total_ram) noexcept
 {
     const uint64_t headroom{total_ram > RESERVED_RAM ? total_ram - RESERVED_RAM : 0};
-    return dbcache > std::max<uint64_t>(DEFAULT_DB_CACHE, (headroom / 4) * 3);
+    return dbcache > std::max(GetDefaultDBCache(total_ram), (headroom / 4) * 3);
 }
 } // namespace node

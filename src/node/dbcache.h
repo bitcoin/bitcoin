@@ -10,6 +10,7 @@
 #include <cstddef>
 #include <cstdint>
 #include <limits>
+#include <optional>
 
 //! min. -dbcache (bytes)
 static constexpr size_t MIN_DBCACHE_BYTES{4_MiB};
@@ -21,7 +22,8 @@ static constexpr uint64_t RESERVED_RAM{2_GiB};
 static constexpr uint64_t MAX_DBCACHE_BYTES{SIZE_MAX == UINT64_MAX ? std::numeric_limits<uint64_t>::max() : 1_GiB};
 
 namespace node {
-size_t GetDefaultDBCache();
+uint64_t GetTotalRam() noexcept;
+uint64_t GetDefaultDBCache(std::optional<uint64_t> total_ram = {});
 
 bool ShouldWarnOversizedDbCache(uint64_t dbcache, uint64_t total_ram) noexcept;
 } // namespace node
