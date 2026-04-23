@@ -6,7 +6,6 @@
 #include <wallet/fees.h>
 
 #include <policy/feerate.h>
-#include <policy/fees/block_policy_estimator.h>
 #include <util/fees.h>
 #include <wallet/coincontrol.h>
 #include <wallet/wallet.h>
@@ -59,13 +58,14 @@ MinimumFeeRateResult GetMinimumFeeRate(const CWallet& wallet, const CCoinControl
     else if (coin_control.m_fee_mode == FeeEstimateMode::ECONOMICAL)
         conservative_estimate = false;
 
-    FeeCalculation feeCalc;
-    CFeeRate fee_rate{wallet.chain().estimateSmartFee(target, conservative_estimate, &feeCalc)};
+    const auto fee_estimation_res = wallet.chain().getFeeRateEstimate(target, conservative_estimate);
+    const FeeRateEstimation& estimation{FeeRateEstimationRef(fee_estimation_res)};
+    CFeeRate fee_rate{estimation.feerate};
     FeeReason fee_reason{FeeReason::FEE_RATE_ESTIMATOR};
     // Only fee rate estimator results have a returned target.
-    std::optional<int> returned_target{feeCalc.returnedTarget};
+    std::optional<int> returned_target{estimation.returned_target};
     if (fee_rate == CFeeRate(0)) {
-        // if we don't have enough data for estimateSmartFee, then use fallback fee
+        // if we don't have enough data for getFeeRateEstimate, then use fallback fee
         fee_rate = wallet.m_fallback_fee;
         fee_reason = FeeReason::FALLBACK;
         returned_target = std::nullopt;
@@ -89,8 +89,9 @@ MinimumFeeRateResult GetMinimumFeeRate(const CWallet& wallet, const CCoinControl
 
 CFeeRate GetDiscardRate(const CWallet& wallet)
 {
-    unsigned int highest_target = wallet.chain().estimateMaxBlocks();
-    CFeeRate discard_rate = wallet.chain().estimateSmartFee(highest_target, /*conservative=*/false);
+    unsigned int highest_target = wallet.chain().maximumFeeEstimationTargetBlocks();
+    const auto res = wallet.chain().getFeeRateEstimate(highest_target, /*conservative=*/false);
+    auto discard_rate = res ? CFeeRate(res->feerate) : CFeeRate(0);
     // Don't let discard_rate be greater than longest possible fee estimate if we get a valid fee estimate
     discard_rate = (discard_rate == CFeeRate(0)) ? wallet.m_discard_rate : std::min(discard_rate, wallet.m_discard_rate);
     // Discard rate must be at least dust relay feerate
