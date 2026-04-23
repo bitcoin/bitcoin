@@ -251,7 +251,7 @@ TxValidationState ValidateInputsStandardness(const CTransaction& tx, const CCoin
                 return state;
             }
             CScript subscript(stack.back().begin(), stack.back().end());
-            unsigned int sigop_count = subscript.GetSigOpCount(true);
+            unsigned int sigop_count = subscript.GetSigOpCount(/*fAccurate=*/true);
             if (sigop_count > MAX_P2SH_SIGOPS) {
                 state.Invalid(TxValidationResult::TX_INPUTS_NOT_STANDARD, "bad-txns-nonstandard-inputs", strprintf("p2sh redeemscript sigops exceed limit (input %u: %u > %u)", i, sigop_count, MAX_P2SH_SIGOPS));
                 return state;
