@@ -33,6 +33,7 @@ enum class FeeReason {
  * Identifier for fee rate estimator.
  */
 enum class FeeRateEstimatorType {
+    NONE,
     BLOCK_POLICY,
 };
 
@@ -66,6 +67,15 @@ struct FeeRateEstimationError {
 inline util::Unexpected<FeeRateEstimationError> EstimationError(FeeRateEstimatorType estimator, int returned_target, std::string error)
 {
     return util::Unexpected{FeeRateEstimationError{{estimator, FeePerVSize{0, 0}, returned_target}, std::move(error)}};
+}
+
+/**
+ * Return the estimation carried by a fee rate estimate result: the
+ * successful estimation, or the error's zero-value estimation.
+ */
+inline const FeeRateEstimation& FeeRateEstimationRef(const util::Expected<FeeRateEstimation, FeeRateEstimationError>& result LIFETIMEBOUND)
+{
+    return result ? *result : result.error().estimation;
 }
 
 #endif // BITCOIN_UTIL_FEES_H

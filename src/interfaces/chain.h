@@ -10,6 +10,8 @@
 #include <kernel/chain.h> // IWYU pragma: export
 #include <node/types.h>
 #include <primitives/transaction.h>
+#include <util/expected.h>
+#include <util/fees.h>
 #include <util/result.h>
 
 #include <cstddef>
@@ -33,7 +35,6 @@ enum class MemPoolRemovalReason;
 enum class RBFTransactionState;
 struct bilingual_str;
 struct CBlockLocator;
-struct FeeCalculation;
 namespace kernel {
 struct ChainstateRole;
 } // namespace kernel
@@ -256,11 +257,11 @@ public:
     //! Check if transaction will pass the mempool's chain limits.
     virtual util::Result<void> checkChainLimits(const CTransactionRef& tx) = 0;
 
-    //! Estimate smart fee.
-    virtual CFeeRate estimateSmartFee(int num_blocks, bool conservative, FeeCalculation* calc = nullptr) = 0;
+    //! Estimate a fee rate.
+    virtual util::Expected<FeeRateEstimation, FeeRateEstimationError> getFeeRateEstimate(int num_blocks, bool conservative) const = 0;
 
     //! Fee estimator max target.
-    virtual unsigned int estimateMaxBlocks() = 0;
+    virtual unsigned int maximumFeeEstimationTargetBlocks() const = 0;
 
     //! Mempool minimum fee.
     virtual CFeeRate mempoolMinFee() = 0;
