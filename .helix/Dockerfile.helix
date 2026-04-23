@@ -1,0 +1,52 @@
+FROM ubuntu:24.04
+
+ENV LC_ALL=C.UTF-8 \
+    DEBIAN_FRONTEND=noninteractive \
+    PYTHON_GIL=1 \
+    CCACHE_DIR=/tmp/ccache
+
+RUN apt-get update && apt-get install -y \
+    build-essential \
+    cmake \
+    ninja-build \
+    pkg-config \
+    ccache \
+    git \
+    python3 \
+    python3-pip \
+    && rm -rf /var/lib/apt/lists/*
+
+RUN apt-get update && apt-get install -y \
+    libevent-dev \
+    libboost-dev \
+    libboost-system-dev \
+    libboost-filesystem-dev \
+    libboost-thread-dev \
+    libboost-test-dev \
+    libsqlite3-dev \
+    libzmq3-dev \
+    libcapnp-dev \
+    capnproto \
+    && rm -rf /var/lib/apt/lists/*
+
+RUN pip3 install --no-cache-dir \
+    zmq \
+    pycapnp==2.2.1
+
+RUN mkdir -p /tmp/ccache && \
+    ccache -M 10G && \
+    echo "max_size = 10G" > /tmp/ccache/ccache.conf
+
+WORKDIR /app
+
+COPY . /app/
+
+RUN cmake -B build \
+    -DENABLE_WALLET=ON \
+    -DBUILD_GUI=OFF \
+    -DWITH_ZMQ=ON \
+    -DENABLE_IPC=ON \
+    -DCMAKE_BUILD_TYPE=RelWithDebInfo && \
+    cmake --build build -j$(nproc)
+
+ENTRYPOINT ["/bin/bash", "/app/.helix/run-tests-eval.sh"]
