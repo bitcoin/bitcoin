@@ -48,6 +48,15 @@ public:
     CFeeRate(const CAmount& nFeePaid, int32_t virtual_bytes);
 
     /**
+     * Construct from a fee rate expressed as FeePerVSize.
+     *
+     * Lossless: CFeeRate is internally a FeePerVSize, so the exact
+     * fee/vsize fraction is preserved. A feerate whose size is less than
+     * or equal to 0 results in 0 fee rate per 0 size.
+     */
+    explicit CFeeRate(const FeePerVSize& feerate) : m_feerate{feerate.size > 0 ? feerate : FeePerVSize{}} {}
+
+    /**
      * Return the fee in satoshis for the given vsize in vbytes.
      * If the calculated fee would have fractional satoshis, then the
      * returned fee will always be rounded up to the nearest satoshi.
