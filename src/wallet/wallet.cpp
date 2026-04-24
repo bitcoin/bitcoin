@@ -1340,9 +1340,15 @@ bool CWallet::AbandonTransaction(CWalletTx& tx)
     }
 
     auto try_updating_state = [](CWalletTx& wtx) EXCLUSIVE_LOCKS_REQUIRED(cs_wallet) {
-        // If the orig tx was not in block/mempool, none of its spends can be.
-        assert(!wtx.isConfirmed());
-        assert(!wtx.InMempool());
+        // A descendant in mapTxSpends may be confirmed or in mempool even when
+        // the parent we are abandoning is not -- e.g. transient state during
+        // reorgs, or RBF candidates that share inputs. Don't abandon those;
+        // halting descent here is safe because we cannot know whether the
+        // descendant's recorded children belong to the same chain that
+        // confirmed it. See issue #34599.
+        if (wtx.isConfirmed() || wtx.InMempool()) {
+            return TxUpdate::UNCHANGED;
+        }
         // If already conflicted or abandoned, no need to set abandoned
         if (!wtx.isBlockConflicted() && !wtx.isAbandoned()) {
             wtx.m_state = TxStateInactive{/*abandoned=*/true};
