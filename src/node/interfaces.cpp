@@ -2,10 +2,11 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
+#include <bitcoin-build-config.h> // IWYU pragma: keep
+
 #include <addrdb.h>
 #include <banman.h>
 #include <blockfilter.h>
-#include <btcsignals.h>
 #include <chain.h>
 #include <chainparams.h>
 #include <common/args.h>
@@ -36,9 +37,9 @@
 #include <node/coin.h>
 #include <node/context.h>
 #include <node/interface_ui.h>
-#include <node/mini_miner.h>
-#include <node/miner.h>
 #include <node/kernel_notifications.h>
+#include <node/miner.h>
+#include <node/mini_miner.h>
 #include <node/transaction.h>
 #include <node/types.h>
 #include <node/warnings.h>
@@ -57,6 +58,7 @@
 #include <txmempool.h>
 #include <uint256.h>
 #include <univalue.h>
+#include <util/btcsignals.h>
 #include <util/check.h>
 #include <util/result.h>
 #include <util/signalinterrupt.h>
@@ -64,8 +66,6 @@
 #include <util/translation.h>
 #include <validation.h>
 #include <validationinterface.h>
-
-#include <bitcoin-build-config.h> // IWYU pragma: keep
 
 #include <any>
 #include <memory>
@@ -375,50 +375,50 @@ public:
     }
     std::unique_ptr<Handler> handleInitMessage(InitMessageFn fn) override
     {
-        return MakeSignalHandler(::uiInterface.InitMessage_connect(fn));
+        return MakeSignalHandler(::uiInterface.InitMessage.connect(fn));
     }
     std::unique_ptr<Handler> handleMessageBox(MessageBoxFn fn) override
     {
-        return MakeSignalHandler(::uiInterface.ThreadSafeMessageBox_connect(fn));
+        return MakeSignalHandler(::uiInterface.ThreadSafeMessageBox.connect(fn));
     }
     std::unique_ptr<Handler> handleQuestion(QuestionFn fn) override
     {
-        return MakeSignalHandler(::uiInterface.ThreadSafeQuestion_connect(fn));
+        return MakeSignalHandler(::uiInterface.ThreadSafeQuestion.connect(fn));
     }
     std::unique_ptr<Handler> handleShowProgress(ShowProgressFn fn) override
     {
-        return MakeSignalHandler(::uiInterface.ShowProgress_connect(fn));
+        return MakeSignalHandler(::uiInterface.ShowProgress.connect(fn));
     }
     std::unique_ptr<Handler> handleInitWallet(InitWalletFn fn) override
     {
-        return MakeSignalHandler(::uiInterface.InitWallet_connect(fn));
+        return MakeSignalHandler(::uiInterface.InitWallet.connect(fn));
     }
     std::unique_ptr<Handler> handleNotifyNumConnectionsChanged(NotifyNumConnectionsChangedFn fn) override
     {
-        return MakeSignalHandler(::uiInterface.NotifyNumConnectionsChanged_connect(fn));
+        return MakeSignalHandler(::uiInterface.NotifyNumConnectionsChanged.connect(fn));
     }
     std::unique_ptr<Handler> handleNotifyNetworkActiveChanged(NotifyNetworkActiveChangedFn fn) override
     {
-        return MakeSignalHandler(::uiInterface.NotifyNetworkActiveChanged_connect(fn));
+        return MakeSignalHandler(::uiInterface.NotifyNetworkActiveChanged.connect(fn));
     }
     std::unique_ptr<Handler> handleNotifyAlertChanged(NotifyAlertChangedFn fn) override
     {
-        return MakeSignalHandler(::uiInterface.NotifyAlertChanged_connect(fn));
+        return MakeSignalHandler(::uiInterface.NotifyAlertChanged.connect(fn));
     }
     std::unique_ptr<Handler> handleBannedListChanged(BannedListChangedFn fn) override
     {
-        return MakeSignalHandler(::uiInterface.BannedListChanged_connect(fn));
+        return MakeSignalHandler(::uiInterface.BannedListChanged.connect(fn));
     }
     std::unique_ptr<Handler> handleNotifyBlockTip(NotifyBlockTipFn fn) override
     {
-        return MakeSignalHandler(::uiInterface.NotifyBlockTip_connect([fn](SynchronizationState sync_state, const CBlockIndex& block, double verification_progress) {
+        return MakeSignalHandler(::uiInterface.NotifyBlockTip.connect([fn](SynchronizationState sync_state, const CBlockIndex& block, double verification_progress) {
             fn(sync_state, BlockTip{block.nHeight, block.GetBlockTime(), block.GetBlockHash()}, verification_progress);
         }));
     }
     std::unique_ptr<Handler> handleNotifyHeaderTip(NotifyHeaderTipFn fn) override
     {
         return MakeSignalHandler(
-            ::uiInterface.NotifyHeaderTip_connect([fn](SynchronizationState sync_state, int64_t height, int64_t timestamp, bool presync) {
+            ::uiInterface.NotifyHeaderTip.connect([fn](SynchronizationState sync_state, int64_t height, int64_t timestamp, bool presync) {
                 fn(sync_state, BlockTip{(int)height, timestamp, uint256{}}, presync);
             }));
     }

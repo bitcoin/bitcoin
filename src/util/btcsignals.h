@@ -2,8 +2,8 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef BITCOIN_BTCSIGNALS_H
-#define BITCOIN_BTCSIGNALS_H
+#ifndef BITCOIN_UTIL_BTCSIGNALS_H
+#define BITCOIN_UTIL_BTCSIGNALS_H
 
 #include <sync.h>
 
@@ -30,21 +30,23 @@
 
 namespace btcsignals {
 
-/*
- * optional_last_value is the default and only supported combiner.
- * As such, its behavior is embedded into the signal functor.
- *
- * Because optional<void> is undefined, void must be special-cased.
- */
-
-template <typename T>
-class optional_last_value
+/// The default combiner, which only returns void.
+class null_value
 {
 public:
-    using result_type = std::conditional_t<std::is_void_v<T>, void, std::optional<T>>;
+    using result_type = void;
 };
 
-template <typename Signature, typename Combiner = optional_last_value<typename std::function<Signature>::result_type>>
+/// A combiner, which checks if at least one callback returned true.
+class any_of
+{
+public:
+    // This is the only supported combiner with a non-void return type. As
+    // such, its behavior is embedded into the signal functor.
+    using result_type = bool;
+};
+
+template <typename Signature, typename Combiner = null_value>
 class signal;
 
 /*
@@ -120,7 +122,7 @@ class scoped_connection
     connection m_conn;
 
 public:
-    scoped_connection(connection rhs) noexcept : m_conn{std::move(rhs)} {}
+    explicit scoped_connection(connection rhs) noexcept : m_conn{std::move(rhs)} {}
 
     scoped_connection(scoped_connection&&) noexcept = default;
     scoped_connection& operator=(scoped_connection&&) noexcept = default;
@@ -149,8 +151,6 @@ template <typename Signature, typename Combiner>
 class signal
 {
     using function_type = std::function<Signature>;
-
-    static_assert(std::is_same_v<Combiner, optional_last_value<typename function_type::result_type>>, "only the optional_last_value combiner is supported");
 
     /*
      * Helper struct for maintaining a callback and its associated connection liveness
@@ -184,9 +184,7 @@ public:
 
     /*
      * Execute all enabled callbacks for the signal. Rather than allowing for
-     * custom combiners, the behavior of optional_last_value is hard-coded
-     * here. Return the value of the last executed callback, or nullopt if none
-     * were executed.
+     * custom combiners, the behavior of any_of is hard-coded here.
      *
      * Callbacks which return void require special handling.
      *
@@ -208,16 +206,22 @@ public:
             connections = m_connections;
         }
         if constexpr (std::is_void_v<result_type>) {
+            static_assert(std::is_same_v<result_type, typename function_type::result_type>,
+                          "Callback result type must be equal to the combiner result type (void).");
             for (const auto& connection : connections) {
                 if (connection->connected()) {
                     connection->m_callback(args...);
                 }
             }
         } else {
-            result_type ret{std::nullopt};
+            static_assert(std::is_same_v<Combiner, any_of>,
+                          "only the any_of combiner is supported and hard-coded into this functor.");
+            static_assert(std::is_same_v<result_type, typename function_type::result_type>,
+                          "Callback result type must be equal to the combiner result type (bool).");
+            result_type ret{false};
             for (const auto& connection : connections) {
                 if (connection->connected()) {
-                    ret.emplace(connection->m_callback(args...));
+                    ret |= connection->m_callback(args...);
                 }
             }
             return ret;
@@ -254,4 +258,4 @@ public:
 
 } // namespace btcsignals
 
-#endif // BITCOIN_BTCSIGNALS_H
+#endif // BITCOIN_UTIL_BTCSIGNALS_H
