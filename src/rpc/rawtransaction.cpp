@@ -42,6 +42,7 @@
 #include <validation.h>
 #include <validationinterface.h>
 
+#include <algorithm>
 #include <cstdint>
 #include <numeric>
 
@@ -1787,7 +1788,8 @@ static RPCMethod joinpsbts()
     return RPCMethod{
         "joinpsbts",
         "Joins multiple distinct PSBTs with different inputs and outputs into one PSBT with inputs and outputs from all of the PSBTs\n"
-            "No input in any of the PSBTs can be in more than one of the PSBTs.\n",
+            "No input in any of the PSBTs can be in more than one of the PSBTs.\n"
+            "The merged PSBT's transaction uses the highest nLockTime among PSBTs that have at least one input with nSequence not equal to SEQUENCE_FINAL.\n",
             {
                 {"txs", RPCArg::Type::ARR, RPCArg::Optional::NO, "The base64 strings of partially signed transactions",
                     {
@@ -1811,7 +1813,8 @@ static RPCMethod joinpsbts()
     }
 
     uint32_t best_version = 1;
-    uint32_t best_locktime = 0xffffffff;
+    uint32_t max_locktime = 0;
+    bool has_locktime_constraint = false;
     for (unsigned int i = 0; i < txs.size(); ++i) {
         PartiallySignedTransaction psbtx;
         std::string error;
@@ -1823,9 +1826,13 @@ static RPCMethod joinpsbts()
         if (psbtx.tx->version > best_version) {
             best_version = psbtx.tx->version;
         }
-        // Choose the lowest lock time
-        if (psbtx.tx->nLockTime < best_locktime) {
-            best_locktime = psbtx.tx->nLockTime;
+        // If every input has nSequence == SEQUENCE_FINAL, nLockTime is ignored
+        const bool locktime_enabled = std::any_of(psbtx.tx->vin.begin(), psbtx.tx->vin.end(), [](const CTxIn& txin) {
+            return txin.nSequence != CTxIn::SEQUENCE_FINAL;
+        });
+        if (locktime_enabled && (!has_locktime_constraint || psbtx.tx->nLockTime > max_locktime)) {
+            max_locktime = psbtx.tx->nLockTime;
+            has_locktime_constraint = true;
         }
     }
 
@@ -1833,7 +1840,7 @@ static RPCMethod joinpsbts()
     PartiallySignedTransaction merged_psbt;
     merged_psbt.tx = CMutableTransaction();
     merged_psbt.tx->version = best_version;
-    merged_psbt.tx->nLockTime = best_locktime;
+    merged_psbt.tx->nLockTime = max_locktime;
 
     // Merge
     for (auto& psbt : psbtxs) {
