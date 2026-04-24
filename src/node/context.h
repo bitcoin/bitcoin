@@ -5,10 +5,13 @@
 #ifndef BITCOIN_NODE_CONTEXT_H
 #define BITCOIN_NODE_CONTEXT_H
 
+#include <node/types.h>
+
 #include <atomic>
 #include <cstdlib>
 #include <functional>
 #include <memory>
+#include <sync.h>
 #include <thread>
 #include <vector>
 
@@ -27,6 +30,7 @@ class NetGroupManager;
 class PeerManager;
 class TorController;
 namespace interfaces {
+class BlockTemplate;
 class Chain;
 class ChainClient;
 class Mining;
@@ -67,6 +71,15 @@ struct NodeContext {
     std::unique_ptr<AddrMan> addrman;
     std::unique_ptr<CConnman> connman;
     std::unique_ptr<CTxMemPool> mempool;
+    Mutex template_state_mutex;
+    //! Track how many templates (which we hold on to on behalf of connected IPC
+    //! clients) are referencing each transaction.
+    TxTemplateMap template_tx_refs GUARDED_BY(template_state_mutex);
+    //! Cache latest getblocktemplate result for BIP 22 long polling. Must be
+    //! cleared before template_tx_refs because the destructor decrements the
+    //! count in template_tx_refs of each transaction in the template and aborts
+    //! if an entry is missing.
+    std::unique_ptr<interfaces::BlockTemplate> gbt_result;
     std::unique_ptr<const NetGroupManager> netgroupman;
     std::unique_ptr<CBlockPolicyEstimator> fee_estimator;
     std::unique_ptr<PeerManager> peerman;

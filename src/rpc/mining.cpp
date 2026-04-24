@@ -859,7 +859,7 @@ static RPCMethod getblocktemplate()
     // Update block
     static CBlockIndex* pindexPrev;
     static int64_t time_start;
-    static std::unique_ptr<BlockTemplate> block_template;
+    std::unique_ptr<BlockTemplate>& block_template{node.gbt_result};
     if (!pindexPrev || pindexPrev->GetBlockHash() != tip ||
         (mempool.GetTransactionsUpdated() != nTransactionsUpdatedLast && GetTime() - time_start > 5))
     {
