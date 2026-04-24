@@ -62,11 +62,9 @@ static void WalletBalance(benchmark::Bench& bench, const bool set_dirty, const b
 
 static void WalletBalanceDirty(benchmark::Bench& bench) { WalletBalance(bench, /*set_dirty=*/true, /*add_mine=*/true); }
 static void WalletBalanceClean(benchmark::Bench& bench) { WalletBalance(bench, /*set_dirty=*/false, /*add_mine=*/true); }
-static void WalletBalanceMine(benchmark::Bench& bench) { WalletBalance(bench, /*set_dirty=*/false, /*add_mine=*/true); }
 static void WalletBalanceWatch(benchmark::Bench& bench) { WalletBalance(bench, /*set_dirty=*/false, /*add_mine=*/false); }
 
 BENCHMARK(WalletBalanceDirty);
 BENCHMARK(WalletBalanceClean);
-BENCHMARK(WalletBalanceMine);
 BENCHMARK(WalletBalanceWatch);
 } // namespace wallet

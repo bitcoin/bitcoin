@@ -59,8 +59,8 @@ static void MempoolCheckEphemeralSpends(benchmark::Bench& bench)
     CMutableTransaction tx2;
     tx2.vin.resize(tx1.vout.size());
     for (size_t i = 0; i < tx2.vin.size(); i++) {
-        tx2.vin[0].prevout.hash = parent_txid;
-        tx2.vin[0].prevout.n = i;
+        tx2.vin[i].prevout.hash = parent_txid;
+        tx2.vin[i].prevout.n = i;
     }
     tx2.vout.resize(1);
 
@@ -71,6 +71,7 @@ static void MempoolCheckEphemeralSpends(benchmark::Bench& bench)
     const CTransactionRef tx2_r{MakeTransactionRef(tx2)};
 
     AddTx(tx1_r, pool);
+    assert(tx2_r->vin.back().prevout == COutPoint(parent_txid, tx1_r->vout.size() - 1));
 
     uint32_t iteration{0};
 

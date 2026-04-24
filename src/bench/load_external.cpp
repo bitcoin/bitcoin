@@ -62,8 +62,7 @@ static void LoadExternalBlockFile(benchmark::Bench& bench)
 
     std::multimap<uint256, FlatFilePos> blocks_with_unknown_parent;
     FlatFilePos pos;
-    bench.epochIterations(1)
-        .setup([&] {
+    bench.setup([&] {
             blocks_with_unknown_parent.clear();
             pos = FlatFilePos{};
         })

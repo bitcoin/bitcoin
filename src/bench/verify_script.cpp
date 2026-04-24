@@ -115,7 +115,7 @@ static void VerifyNestedIfScript(benchmark::Bench& bench)
     for (int i = 0; i < 100; ++i) {
         script << OP_ENDIF;
     }
-    bench.unit("script").epochIterations(1)
+    bench.unit("script")
         .setup([&] { stack.clear(); })
         .run([&] {
             ScriptError error;
