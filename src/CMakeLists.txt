@@ -122,6 +122,7 @@ add_library(bitcoin_common STATIC EXCLUDE_FROM_ALL
   net_types.cpp
   netaddress.cpp
   netbase.cpp
+  node/interface_ui.cpp
   outputtype.cpp
   policy/feerate.cpp
   policy/policy.cpp
@@ -219,7 +220,6 @@ add_library(bitcoin_node STATIC EXCLUDE_FROM_ALL
   node/context.cpp
   node/database_args.cpp
   node/eviction.cpp
-  node/interface_ui.cpp
   node/interfaces.cpp
   node/kernel_notifications.cpp
   node/mempool_args.cpp
@@ -332,6 +332,19 @@ if(ENABLE_IPC AND BUILD_DAEMON)
     $<TARGET_NAME_IF_EXISTS:bitcoin_wallet>
   )
   install_binary_component(bitcoin-node INTERNAL)
+
+  add_executable(bitcoin-mine
+    bitcoin-mine.cpp
+    init/basic.cpp
+  )
+  add_windows_resources(bitcoin-mine bitcoin-mine-res.rc)
+  add_windows_application_manifest(bitcoin-mine)
+  target_link_libraries(bitcoin-mine
+    core_interface
+    bitcoin_common
+    bitcoin_ipc
+  )
+  install_binary_component(bitcoin-mine INTERNAL)
 endif()
 
 
