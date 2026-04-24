@@ -119,7 +119,7 @@ void CTxMemPool::UpdateTransactionsFromBlock(const std::vector<Txid>& vHashesToU
     }
 }
 
-bool CTxMemPool::HasDescendants(const Txid& txid) const
+bool CTxMemPool::HasDescendants(const Txid& txid)
 {
     LOCK(cs);
     auto entry = GetEntry(txid);
