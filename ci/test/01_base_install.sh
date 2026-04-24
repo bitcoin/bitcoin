@@ -86,7 +86,10 @@ fi
 
 if [[ "${RUN_IWYU}" == true ]]; then
   ${CI_RETRY_EXE} git clone --depth=1 https://github.com/include-what-you-use/include-what-you-use -b clang_"${IWYU_LLVM_V}" /include-what-you-use
-  (cd /include-what-you-use && patch -p1 < /ci_container_base/ci/test/01_iwyu.patch)
+  pushd /include-what-you-use
+  patch -p1 < /ci_container_base/ci/test/01_iwyu.patch
+  patch -p1 < /ci_container_base/ci/test/02_iwyu_hash.patch
+  popd
   cmake -B /iwyu-build/ -G 'Unix Makefiles' -DCMAKE_PREFIX_PATH=/usr/lib/llvm-"${IWYU_LLVM_V}" -S /include-what-you-use
   make -C /iwyu-build/ install "$MAKEJOBS"
 fi
