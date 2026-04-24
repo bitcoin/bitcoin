@@ -25,6 +25,7 @@
 #include <util/fs.h>
 #include <util/strencodings.h>
 #include <util/string.h>
+#include <compressor.h>
 
 #include <cstdint>
 #include <string>

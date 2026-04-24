@@ -10,13 +10,13 @@
 #include <crypto/sha256.h>
 #include <cuckoocache.h>
 #include <script/interpreter.h>
-#include <span.h>
 #include <uint256.h>
 #include <util/byte_units.h>
 #include <util/hasher.h>
 
 #include <cstddef>
 #include <shared_mutex>
+#include <span>
 #include <vector>
 
 class CPubKey;

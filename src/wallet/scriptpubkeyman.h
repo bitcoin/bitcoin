@@ -23,10 +23,12 @@
 #include <wallet/types.h>
 #include <wallet/walletdb.h>
 #include <wallet/walletutil.h>
+#include <util/hasher.h>
 
 #include <functional>
 #include <optional>
 #include <unordered_map>
+#include <unordered_set>
 
 enum class OutputType;
 

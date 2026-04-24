@@ -17,6 +17,7 @@
 #include <wallet/rpc/wallet.h>
 #include <wallet/wallet.h>
 #include <wallet/walletutil.h>
+#include <coins.h>
 
 #include <optional>
 #include <string_view>
