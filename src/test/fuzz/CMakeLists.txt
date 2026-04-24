@@ -114,7 +114,6 @@ add_executable(fuzz
   secp256k1_ec_seckey_import_export_der.cpp
   secp256k1_ecdsa_signature_parse_der_lax.cpp
   signature_checker.cpp
-  signet.cpp
   socks5.cpp
   span.cpp
   string.cpp

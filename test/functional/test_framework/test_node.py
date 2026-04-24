@@ -42,6 +42,7 @@ from .util import (
     p2p_port,
     tor_port,
 )
+from .signet import SIGNET_DEFAULT_CHALLENGE, message_start
 
 BITCOIND_PROC_WAIT_TIMEOUT = 60
 # The size of the blocks xor key
@@ -323,7 +324,7 @@ class TestNode():
                     f'bitcoind exited with status {self.process.returncode} during initialization. {str_error}'))
             try:
                 rpc = get_rpc_proxy(
-                    rpc_url(self.datadir_path, self.index, self.chain, self.rpchost),
+                    rpc_url(self.datadir_path, self.index, self.chain_dir, self.rpchost),
                     self.index,
                     timeout=self.rpc_timeout // 2,  # Shorter timeout to allow for one retry in case of ETIMEDOUT
                     coveragedir=self.coverage_dir,
@@ -438,7 +439,9 @@ class TestNode():
 
     def get_wallet_rpc(self, wallet_name):
         if self.use_cli:
-            return self.cli("-rpcwallet={}".format(wallet_name))
+            options = ["-rpcwallet={}".format(wallet_name)]
+            options += [arg for arg in self.extra_args if arg.startswith("-signetchallenge")]
+            return self.cli(*options)
         else:
             assert self.rpc_connected and self._rpc, self._node_msg("RPC not connected")
             wallet_path = "wallet/{}".format(urllib.parse.quote(wallet_name))
@@ -539,7 +542,21 @@ class TestNode():
 
     @property
     def chain_path(self) -> Path:
-        return self.datadir_path / self.chain
+        return self.datadir_path / self.chain_dir
+
+    @property
+    def chain_dir(self) -> str:
+        if self.chain != "signet":
+            return self.chain
+        for arg in self.extra_args:
+            if not arg.startswith("-signetchallenge"):
+                continue
+            signetchallenge = arg.split('=')[1]
+            if signetchallenge == SIGNET_DEFAULT_CHALLENGE:
+                return self.chain
+            suffix = message_start(signetchallenge)
+            return f"signet_{suffix}"
+        return self.chain
 
     @property
     def debug_log_path(self) -> Path:
