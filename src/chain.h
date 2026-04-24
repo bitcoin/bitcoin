@@ -452,4 +452,7 @@ CBlockLocator GetLocator(const CBlockIndex* index);
 /** Construct a list of hash entries to put in a locator.  */
 std::vector<uint256> LocatorEntries(const CBlockIndex* index);
 
+/** Compute what height to jump back to with the CBlockIndex::pskip pointer. */
+int GetSkipHeight(int height);
+
 #endif // BITCOIN_CHAIN_H
