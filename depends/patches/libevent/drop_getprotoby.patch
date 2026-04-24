@@ -1,0 +1,19 @@
+commit 4829dc9d478ef37d07f6df35d35abcd021f8b170
+Author: fanquake <fanquake@gmail.com>
+Date:   Wed Apr 8 13:17:01 2026 +0800
+
+    build: drop usage of getservby*
+
+diff --git a/CMakeLists.txt b/CMakeLists.txt
+index 676727f1..0edb3309 100644
+--- a/CMakeLists.txt
++++ b/CMakeLists.txt
+@@ -439,8 +439,6 @@ unset(FILES_TO_CHECK)
+ list(APPEND SYMBOLS_TO_CHECK
+     getaddrinfo
+     getnameinfo
+-    getprotobynumber
+-    getservbyname
+     gethostbyname
+     inet_ntop
+     inet_pton
