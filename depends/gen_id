@@ -46,15 +46,18 @@
     # the information from "-v -E -" as well, so just include both.
     echo "BEGIN CC"
     bash -c "${CC} -v"
-    bash -c "${CC} -v -E -xc -o /dev/null - < /dev/null"
-    bash -c "${CC} -v -E -xobjective-c -o /dev/null - < /dev/null"
+    # Clang leaks the SOURCE_DATE_EPOCH value as the `-source-date-epoch` option,
+    # which effectively invalidates caching for Guix builds for `*-apple-darwin` hosts.
+    # Unset this variable to prevent such behavior.
+    bash -c "env -u SOURCE_DATE_EPOCH ${CC} -v -E -xc -o /dev/null - < /dev/null"
+    bash -c "env -u SOURCE_DATE_EPOCH ${CC} -v -E -xobjective-c -o /dev/null - < /dev/null"
     echo "C_STANDARD=${C_STANDARD}"
     echo "END CC"
 
     echo "BEGIN CXX"
     bash -c "${CXX} -v"
-    bash -c "${CXX} -v -E -xc++ -o /dev/null - < /dev/null"
-    bash -c "${CXX} -v -E -xobjective-c++ -o /dev/null - < /dev/null"
+    bash -c "env -u SOURCE_DATE_EPOCH ${CXX} -v -E -xc++ -o /dev/null - < /dev/null"
+    bash -c "env -u SOURCE_DATE_EPOCH ${CXX} -v -E -xobjective-c++ -o /dev/null - < /dev/null"
     echo "CXX_STANDARD=${CXX_STANDARD}"
     echo "END CXX"
 
