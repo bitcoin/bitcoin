@@ -188,7 +188,6 @@ public:
         return std::string{UCharCast(data()), UCharCast(data() + size())};
     }
 
-
     //
     // Vector subset
     //
@@ -209,8 +208,6 @@ public:
     //
     // Stream subset
     //
-    int in_avail() const         { return size(); }
-
     void read(std::span<value_type> dst)
     {
         if (dst.size() == 0) return;

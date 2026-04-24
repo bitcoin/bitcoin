@@ -5557,7 +5557,7 @@ bool PeerManagerImpl::RejectIncomingTxs(const CNode& peer) const
 void PeerManagerImpl::ProcessPong(CNode& pfrom, Peer& peer, const NodeClock::time_point ping_end, DataStream& vRecv)
 {
     uint64_t nonce = 0;
-    size_t nAvail = vRecv.in_avail();
+    const size_t nAvail{vRecv.size()};
     bool bPingFinished = false;
     std::string sProblem;
 
