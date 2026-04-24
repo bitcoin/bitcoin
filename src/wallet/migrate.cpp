@@ -13,6 +13,7 @@
 #include <cstddef>
 #include <optional>
 #include <stdexcept>
+#include <unordered_set>
 #include <variant>
 #include <vector>
 
@@ -632,17 +633,25 @@ void BerkeleyRODatabase::Open()
         throw std::runtime_error("BDB builtin encryption is not supported");
     }
 
-    // Do a DFS through the BTree, starting at root
+    // Do a DFS through the BTree, starting at root. Track visited pages to
+    // reject cyclic references, which would otherwise cause an infinite loop
+    // (and unbounded memory growth when following an overflow chain). Every
+    // page in a valid BDB database is referenced at most once, so a single
+    // shared set covers both the B-tree traversal and any overflow chains.
     std::vector<uint32_t> pages{inner_meta.root};
+    std::unordered_set<uint32_t> visited_pages;
     while (pages.size() > 0) {
         uint32_t curr_page = pages.back();
+        pages.pop_back();
+        if (!visited_pages.insert(curr_page).second) {
+            throw std::runtime_error("Cyclic page reference in BDB database");
+        }
         // It turns out BDB completely ignores this last_page field and doesn't actually update it to the correct
         // last page. While we should be checking this, we can't.
         // This is left commented out as a reminder to not accidentally implement this in the future.
         // if (curr_page > inner_meta.last_page) {
         //     throw std::runtime_error("Page number is greater than subdatabase last page");
         // }
-        pages.pop_back();
         SeekToPage(db_file, curr_page, page_size);
         PageHeader header(curr_page, inner_meta.other_endian);
         db_file >> header;
@@ -674,6 +683,9 @@ void BerkeleyRODatabase::Open()
                     if (orec->m_header.deleted) continue;
                     uint32_t next_page = orec->page_number;
                     while (next_page != 0) {
+                        if (!visited_pages.insert(next_page).second) {
+                            throw std::runtime_error("Cyclic page reference in BDB database");
+                        }
                         SeekToPage(db_file, next_page, page_size);
                         PageHeader opage_header(next_page, inner_meta.other_endian);
                         db_file >> opage_header;
