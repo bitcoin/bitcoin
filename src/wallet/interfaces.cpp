@@ -29,6 +29,7 @@
 #include <wallet/spend.h>
 #include <wallet/wallet.h>
 
+#include <algorithm>
 #include <memory>
 #include <string>
 #include <utility>
