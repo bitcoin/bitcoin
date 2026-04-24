@@ -28,6 +28,7 @@ class ReplaceByFeeTest(BitcoinTestFramework):
     def set_test_params(self):
         self.num_nodes = 2
         self.uses_wallet = None
+        self.extra_args = [["-deprecatedrpc=fullrbf", "-deprecatedrpc=bip125"], []]
 
     def run_test(self):
         self.wallet = MiniWallet(self.nodes[0])
