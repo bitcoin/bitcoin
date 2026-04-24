@@ -13,6 +13,7 @@
 #include <functional>
 #include <map>
 #include <string>
+#include <string_view>
 
 #include <univalue.h>
 
@@ -62,6 +63,7 @@ public:
               fn().GetArgNames(),
               intptr_t(fn))
     {
+        this->metadata_fn = fn;
     }
 
     std::string category;
@@ -78,6 +80,7 @@ public:
     //! appended after other arguments, see transformNamedArguments for details.
     std::vector<std::pair<std::string, bool>> argNames;
     intptr_t unique_id;
+    RpcMethodFnType metadata_fn{nullptr};
 };
 
 /**
@@ -104,6 +107,8 @@ public:
     * @returns List of registered commands.
     */
     std::vector<std::string> listCommands() const;
+    /** Return a complete OpenRPC 1.3.2 document for all registered commands. */
+    UniValue buildOpenRPCDoc() const;
 
     /**
      * Return all named arguments that need to be converted by the client from string to another JSON type

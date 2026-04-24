@@ -26,7 +26,9 @@
 #include <chrono>
 #include <memory>
 #include <mutex>
+#include <span>
 #include <string_view>
+#include <unordered_set>
 #include <unordered_map>
 
 using util::SplitString;
@@ -235,8 +237,276 @@ static RPCMethod getrpcinfo()
     };
 }
 
+namespace {
+UniValue OpenRPCArgSchema(const RPCArg& arg);
+UniValue OpenRPCResultSchema(const RPCResult& result);
+
+UniValue MakeObject(std::initializer_list<std::pair<std::string, UniValue>> entries)
+{
+    UniValue obj{UniValue::VOBJ};
+    for (const auto& [key, value] : entries) {
+        obj.pushKV(key, value);
+    }
+    return obj;
+}
+
+void PushUniqueSchema(UniValue& schemas, std::unordered_set<std::string>& seen, UniValue schema)
+{
+    const std::string serialized{schema.write()};
+    if (seen.insert(serialized).second) schemas.push_back(std::move(schema));
+}
+
+// NOLINTNEXTLINE(misc-no-recursion)
+UniValue DedupArrayItemsSchema(std::span<const RPCArg> inner)
+{
+    if (inner.empty()) return UniValue{UniValue::VOBJ};
+    if (inner.size() == 1) return OpenRPCArgSchema(inner.front());
+
+    UniValue one_of{UniValue::VARR};
+    std::unordered_set<std::string> seen;
+    for (const auto& item : inner) {
+        PushUniqueSchema(one_of, seen, OpenRPCArgSchema(item));
+    }
+
+    if (one_of.size() == 1) return one_of[0];
+
+    UniValue items{UniValue::VOBJ};
+    items.pushKV("oneOf", std::move(one_of));
+    return items;
+}
+
+// NOLINTNEXTLINE(misc-no-recursion)
+UniValue DedupArrayItemsSchema(std::span<const RPCResult> inner)
+{
+    if (inner.empty()) return UniValue{UniValue::VOBJ};
+    if (inner.size() == 1) return OpenRPCResultSchema(inner.front());
+
+    UniValue one_of{UniValue::VARR};
+    std::unordered_set<std::string> seen;
+    for (const auto& item : inner) {
+        PushUniqueSchema(one_of, seen, OpenRPCResultSchema(item));
+    }
+
+    if (one_of.size() == 1) return one_of[0];
+
+    UniValue items{UniValue::VOBJ};
+    items.pushKV("oneOf", std::move(one_of));
+    return items;
+}
+
+// NOLINTNEXTLINE(misc-no-recursion)
+UniValue OpenRPCArgSchema(const RPCArg& arg)
+{
+    switch (arg.m_type) {
+    case RPCArg::Type::STR:
+        return MakeObject({{"type", "string"}});
+    case RPCArg::Type::STR_HEX:
+        return MakeObject({{"type", "string"}, {"pattern", "^[0-9a-fA-F]+$"}});
+    case RPCArg::Type::NUM:
+        return MakeObject({{"type", "number"}});
+    case RPCArg::Type::BOOL:
+        return MakeObject({{"type", "boolean"}});
+    case RPCArg::Type::AMOUNT: {
+        UniValue one_of{UniValue::VARR};
+        one_of.push_back(MakeObject({{"type", "number"}}));
+        one_of.push_back(MakeObject({{"type", "string"}}));
+        UniValue schema{UniValue::VOBJ};
+        schema.pushKV("oneOf", std::move(one_of));
+        return schema;
+    }
+    case RPCArg::Type::RANGE: {
+        UniValue prefix_items{UniValue::VARR};
+        prefix_items.push_back(MakeObject({{"type", "number"}}));
+        prefix_items.push_back(MakeObject({{"type", "number"}}));
+        UniValue range_schema{UniValue::VOBJ};
+        range_schema.pushKV("type", "array");
+        range_schema.pushKV("prefixItems", std::move(prefix_items));
+        range_schema.pushKV("minItems", 2);
+        range_schema.pushKV("maxItems", 2);
+        UniValue one_of{UniValue::VARR};
+        one_of.push_back(MakeObject({{"type", "number"}}));
+        one_of.push_back(std::move(range_schema));
+        UniValue schema{UniValue::VOBJ};
+        schema.pushKV("oneOf", std::move(one_of));
+        return schema;
+    }
+    case RPCArg::Type::ARR: {
+        UniValue items{DedupArrayItemsSchema(arg.m_inner)};
+        UniValue schema{UniValue::VOBJ};
+        schema.pushKV("type", "array");
+        schema.pushKV("items", std::move(items));
+        return schema;
+    }
+    case RPCArg::Type::OBJ:
+    case RPCArg::Type::OBJ_NAMED_PARAMS: {
+        UniValue properties{UniValue::VOBJ};
+        UniValue required{UniValue::VARR};
+        for (const auto& inner : arg.m_inner) {
+            if (inner.m_opts.hidden) continue;
+            UniValue prop{OpenRPCArgSchema(inner)};
+            if (!inner.m_description.empty()) prop.pushKV("description", inner.m_description);
+            if (inner.m_opts.placeholder) prop.pushKV("x-bitcoin-placeholder", true);
+            if (inner.m_opts.also_positional) prop.pushKV("x-bitcoin-also-positional", true);
+            properties.pushKV(inner.GetFirstName(), std::move(prop));
+            if (!inner.IsOptional()) required.push_back(inner.GetFirstName());
+        }
+        UniValue schema{UniValue::VOBJ};
+        schema.pushKV("type", "object");
+        schema.pushKV("properties", std::move(properties));
+        schema.pushKV("additionalProperties", false);
+        if (!required.empty()) schema.pushKV("required", std::move(required));
+        return schema;
+    }
+    case RPCArg::Type::OBJ_USER_KEYS: {
+        UniValue schema{UniValue::VOBJ};
+        schema.pushKV("type", "object");
+        if (!arg.m_inner.empty()) {
+            schema.pushKV("additionalProperties", OpenRPCArgSchema(arg.m_inner[0]));
+        } else {
+            schema.pushKV("additionalProperties", true);
+        }
+        return schema;
+    }
+    } // no default case, so the compiler can warn about missing cases
+    NONFATAL_UNREACHABLE();
+}
+
+// NOLINTNEXTLINE(misc-no-recursion)
+UniValue OpenRPCResultSchema(const RPCResult& result)
+{
+    switch (result.m_type) {
+    case RPCResult::Type::STR:
+    case RPCResult::Type::STR_AMOUNT:
+        return MakeObject({{"type", "string"}});
+    case RPCResult::Type::STR_HEX:
+        return MakeObject({{"type", "string"}, {"pattern", "^[0-9a-fA-F]+$"}});
+    case RPCResult::Type::NUM:
+        return MakeObject({{"type", "number"}});
+    case RPCResult::Type::NUM_TIME: {
+        UniValue schema{UniValue::VOBJ};
+        schema.pushKV("type", "number");
+        schema.pushKV("x-bitcoin-unit", "unix-time");
+        return schema;
+    }
+    case RPCResult::Type::BOOL:
+        return MakeObject({{"type", "boolean"}});
+    case RPCResult::Type::NONE:
+        return MakeObject({{"type", "null"}});
+    case RPCResult::Type::ARR: {
+        UniValue items{DedupArrayItemsSchema(result.m_inner)};
+        UniValue schema{UniValue::VOBJ};
+        schema.pushKV("type", "array");
+        schema.pushKV("items", std::move(items));
+        return schema;
+    }
+    case RPCResult::Type::ARR_FIXED: {
+        UniValue prefix_items{UniValue::VARR};
+        for (const auto& inner : result.m_inner) {
+            prefix_items.push_back(OpenRPCResultSchema(inner));
+        }
+        UniValue schema{UniValue::VOBJ};
+        schema.pushKV("type", "array");
+        schema.pushKV("prefixItems", std::move(prefix_items));
+        schema.pushKV("minItems", uint64_t(result.m_inner.size()));
+        schema.pushKV("maxItems", uint64_t(result.m_inner.size()));
+        return schema;
+    }
+    case RPCResult::Type::OBJ: {
+        UniValue properties{UniValue::VOBJ};
+        UniValue required{UniValue::VARR};
+        bool has_elision{false};
+        for (const auto& inner : result.m_inner) {
+            if (inner.m_type == RPCResult::Type::ELISION) {
+                has_elision = true;
+                continue;
+            }
+            if (inner.m_key_name.empty()) continue;
+            UniValue prop{OpenRPCResultSchema(inner)};
+            if (!inner.m_description.empty()) prop.pushKV("description", inner.m_description);
+            properties.pushKV(inner.m_key_name, std::move(prop));
+            if (!inner.m_optional) required.push_back(inner.m_key_name);
+        }
+        UniValue schema{UniValue::VOBJ};
+        schema.pushKV("type", "object");
+        schema.pushKV("properties", std::move(properties));
+        schema.pushKV("additionalProperties", has_elision);
+        if (!required.empty()) schema.pushKV("required", std::move(required));
+        return schema;
+    }
+    case RPCResult::Type::OBJ_DYN: {
+        UniValue schema{UniValue::VOBJ};
+        schema.pushKV("type", "object");
+        if (!result.m_inner.empty()) {
+            schema.pushKV("additionalProperties", OpenRPCResultSchema(result.m_inner[0]));
+        } else {
+            schema.pushKV("additionalProperties", UniValue{UniValue::VOBJ});
+        }
+        return schema;
+    }
+    case RPCResult::Type::ANY:
+    case RPCResult::Type::ELISION:
+        return UniValue{UniValue::VOBJ};
+    } // no default case, so the compiler can warn about missing cases
+    NONFATAL_UNREACHABLE();
+}
+} // namespace
+
+static RPCMethod getopenrpcinfo()
+{
+    return RPCMethod{
+        "getopenrpcinfo",
+        "Returns an OpenRPC document for currently available RPC commands.\n",
+        {},
+        RPCResult{
+            RPCResult::Type::OBJ, "", "",
+            {
+                {RPCResult::Type::STR, "openrpc", "OpenRPC specification version."},
+                {RPCResult::Type::OBJ, "info", "Metadata about this JSON-RPC interface.",
+                    {
+                        {RPCResult::Type::STR, "title", "API title."},
+                        {RPCResult::Type::STR, "version", "Bitcoin Core version string."},
+                        {RPCResult::Type::STR, "description", "API description."},
+                    }},
+                {RPCResult::Type::ARR, "methods", "Documented RPC methods.",
+                    {{RPCResult::Type::OBJ, "", "An RPC method description object.",
+                        {
+                            {RPCResult::Type::STR, "name", "Method name."},
+                            {RPCResult::Type::STR, "description", "Method description."},
+                            {RPCResult::Type::ARR, "params", "Method parameters.",
+                                {{RPCResult::Type::OBJ, "", "A parameter.",
+                                    {
+                                        {RPCResult::Type::STR, "name", "Parameter name."},
+                                        {RPCResult::Type::BOOL, "required", "Whether the parameter is required."},
+                                        {RPCResult::Type::ANY, "schema", "JSON Schema for the parameter."},
+                                        {RPCResult::Type::STR, "description", /*optional=*/true, "Parameter description."},
+                                        {RPCResult::Type::ARR, "x-bitcoin-aliases", /*optional=*/true, "Alternative parameter names.",
+                                            {{RPCResult::Type::STR, "", "An alias."}}},
+                                        {RPCResult::Type::BOOL, "x-bitcoin-placeholder", /*optional=*/true, "Whether the parameter is retained only for compatibility."},
+                                        {RPCResult::Type::BOOL, "x-bitcoin-also-positional", /*optional=*/true, "Whether the parameter can also be passed positionally."},
+                                    }}}},
+                            {RPCResult::Type::OBJ, "result", "Method result.",
+                                {
+                                    {RPCResult::Type::STR, "name", "Result name."},
+                                    {RPCResult::Type::ANY, "schema", "JSON Schema for the result."},
+                                }},
+                            {RPCResult::Type::STR, "x-bitcoin-category", "RPC category."},
+                        }}}},
+            },
+            {.skip_type_check = true}},
+        RPCExamples{
+            HelpExampleCli("getopenrpcinfo", "")
+            + HelpExampleRpc("getopenrpcinfo", "")
+        },
+        [](const RPCMethod& self, const JSONRPCRequest& request) -> UniValue
+{
+    return tableRPC.buildOpenRPCDoc();
+},
+    };
+}
+
 static const CRPCCommand vRPCCommands[]{
     /* Overall control/query calls */
+    {"control", &getopenrpcinfo},
     {"control", &getrpcinfo},
     {"control", &help},
     {"control", &stop},
@@ -264,6 +534,9 @@ bool CRPCTable::removeCommand(const std::string& name, const CRPCCommand* pcmd)
         auto new_end = std::remove(it->second.begin(), it->second.end(), pcmd);
         if (it->second.end() != new_end) {
             it->second.erase(new_end, it->second.end());
+            if (it->second.empty()) {
+                mapCommands.erase(it);
+            }
             return true;
         }
     }
@@ -522,6 +795,88 @@ std::vector<std::string> CRPCTable::listCommands() const
     commandList.reserve(mapCommands.size());
     for (const auto& i : mapCommands) commandList.emplace_back(i.first);
     return commandList;
+}
+
+UniValue CRPCTable::buildOpenRPCDoc() const
+{
+    std::vector<std::string> method_names;
+    for (const auto& [name, cmds] : mapCommands) {
+        if (cmds.empty()) continue;
+        const CRPCCommand* cmd{cmds.front()};
+        if (cmd->category == "hidden" || !cmd->metadata_fn) continue;
+        method_names.push_back(name);
+    }
+    std::sort(method_names.begin(), method_names.end());
+
+    UniValue methods{UniValue::VARR};
+    for (const auto& method_name : method_names) {
+        const CRPCCommand* cmd{mapCommands.at(method_name).front()};
+        RPCMethod helpman{cmd->metadata_fn()};
+
+        UniValue params{UniValue::VARR};
+        for (const auto& arg : helpman.GetArgs()) {
+            if (arg.m_opts.hidden) continue;
+            UniValue param{UniValue::VOBJ};
+            param.pushKV("name", arg.GetFirstName());
+            param.pushKV("required", !arg.IsOptional());
+            param.pushKV("schema", OpenRPCArgSchema(arg));
+
+            std::vector<std::string> names{SplitString(arg.m_names, '|')};
+            if (names.size() > 1) {
+                UniValue aliases{UniValue::VARR};
+                for (size_t i{1}; i < names.size(); ++i) aliases.push_back(names[i]);
+                param.pushKV("x-bitcoin-aliases", std::move(aliases));
+            }
+            if (arg.m_opts.placeholder) param.pushKV("x-bitcoin-placeholder", true);
+            if (arg.m_opts.also_positional) param.pushKV("x-bitcoin-also-positional", true);
+            if (!arg.m_description.empty()) param.pushKV("description", arg.m_description);
+            params.push_back(std::move(param));
+        }
+
+        UniValue result_schema{UniValue::VOBJ};
+        const auto& results{helpman.GetResults().m_results};
+        if (results.size() == 1 && results[0].m_type != RPCResult::Type::ANY) {
+            result_schema = OpenRPCResultSchema(results[0]);
+        } else if (results.size() > 1) {
+            UniValue one_of{UniValue::VARR};
+            for (const auto& r : results) {
+                if (r.m_type == RPCResult::Type::ANY) continue;
+                UniValue schema{OpenRPCResultSchema(r)};
+                if (!r.m_cond.empty()) schema.pushKV("description", r.m_cond);
+                one_of.push_back(std::move(schema));
+            }
+            if (one_of.size() == 1) {
+                result_schema = one_of[0];
+            } else if (one_of.size() > 1) {
+                result_schema.pushKV("oneOf", std::move(one_of));
+            }
+        }
+
+        UniValue method{UniValue::VOBJ};
+        method.pushKV("name", method_name);
+        method.pushKV("description", util::TrimString(helpman.GetDescription()));
+        method.pushKV("params", std::move(params));
+        UniValue result{UniValue::VOBJ};
+        result.pushKV("name", "result");
+        result.pushKV("schema", std::move(result_schema));
+        method.pushKV("result", std::move(result));
+        method.pushKV("x-bitcoin-category", cmd->category);
+        methods.push_back(std::move(method));
+    }
+
+    std::string version{"v" CLIENT_VERSION_STRING};
+    if (!CLIENT_VERSION_IS_RELEASE) version += "-dev";
+
+    UniValue info{UniValue::VOBJ};
+    info.pushKV("title", "Bitcoin Core JSON-RPC");
+    info.pushKV("version", version);
+    info.pushKV("description", "Autogenerated from Bitcoin Core RPC metadata.");
+
+    UniValue doc{UniValue::VOBJ};
+    doc.pushKV("openrpc", "1.3.2");
+    doc.pushKV("info", std::move(info));
+    doc.pushKV("methods", std::move(methods));
+    return doc;
 }
 
 UniValue CRPCTable::dumpArgMap(const JSONRPCRequest& args_request) const
