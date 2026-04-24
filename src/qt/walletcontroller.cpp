@@ -267,12 +267,15 @@ void CreateWalletActivity::createWallet()
     }
 
     QTimer::singleShot(500ms, worker(), [this, name, flags] {
-        auto wallet{node().walletLoader().createWallet(name, m_passphrase, flags, m_warning_message)};
-
+        auto wallet{node().walletLoader().createWallet(name, m_passphrase, flags)};
+        m_error_message.clear();
+        m_warning_message.clear();
+        if (wallet.messages_ptr()) {
+            m_error_message = Join(wallet.messages_ptr()->errors, Untranslated(" "));
+            m_warning_message = wallet.messages_ptr()->warnings;
+        }
         if (wallet) {
-            m_wallet_model = m_wallet_controller->getOrCreateWallet(std::move(*wallet));
-        } else {
-            m_error_message = util::ErrorString(wallet);
+            m_wallet_model = m_wallet_controller->getOrCreateWallet(std::move(wallet.value()));
         }
 
         QTimer::singleShot(500ms, this, &CreateWalletActivity::finish);
@@ -356,12 +359,15 @@ void OpenWalletActivity::open(const std::string& path)
         tr("Opening Wallet <b>%1</b>…").arg(name.toHtmlEscaped()));
 
     QTimer::singleShot(0, worker(), [this, path] {
-        auto wallet{node().walletLoader().loadWallet(path, m_warning_message)};
-
+        auto wallet{node().walletLoader().loadWallet(path)};
+        m_error_message.clear();
+        m_warning_message.clear();
+        if (wallet.messages_ptr()) {
+            m_error_message = Join(wallet.messages_ptr()->errors, Untranslated(" "));
+            m_warning_message = wallet.messages_ptr()->warnings;
+        }
         if (wallet) {
-            m_wallet_model = m_wallet_controller->getOrCreateWallet(std::move(*wallet));
-        } else {
-            m_error_message = util::ErrorString(wallet);
+            m_wallet_model = m_wallet_controller->getOrCreateWallet(std::move(wallet.value()));
         }
 
         QTimer::singleShot(0, this, &OpenWalletActivity::finish);
@@ -409,12 +415,15 @@ void RestoreWalletActivity::restore(const fs::path& backup_file, const std::stri
         tr("Restoring Wallet <b>%1</b>…").arg(name.toHtmlEscaped()));
 
     QTimer::singleShot(0, worker(), [this, backup_file, wallet_name] {
-        auto wallet{node().walletLoader().restoreWallet(backup_file, wallet_name, m_warning_message, /*load_after_restore=*/true)};
-
+        auto wallet{node().walletLoader().restoreWallet(backup_file, wallet_name, /*load_after_restore=*/true)};
+        m_error_message.clear();
+        m_warning_message.clear();
+        if (wallet.messages_ptr()) {
+            m_error_message = Join(wallet.messages_ptr()->errors, Untranslated(" "));
+            m_warning_message = wallet.messages_ptr()->warnings;
+        }
         if (wallet) {
-            m_wallet_model = m_wallet_controller->getOrCreateWallet(std::move(*wallet));
-        } else {
-            m_error_message = util::ErrorString(wallet);
+            m_wallet_model = m_wallet_controller->getOrCreateWallet(std::move(wallet.value()));
         }
 
         QTimer::singleShot(0, this, &RestoreWalletActivity::finish);
@@ -515,7 +524,11 @@ void MigrateWalletActivity::restore_and_migrate(const fs::path& path, const std:
         tr("Restoring Wallet <b>%1</b>…").arg(GUIUtil::HtmlEscape(GUIUtil::WalletDisplayName(wallet_name))));
 
     QTimer::singleShot(0, worker(), [this, path, wallet_name] {
-        auto res{node().walletLoader().restoreWallet(path, wallet_name, m_warning_message, /*load_after_restore=*/false)};
+        auto res{node().walletLoader().restoreWallet(path, wallet_name, /*load_after_restore=*/false)};
+        m_warning_message.clear();
+        if (res.messages_ptr()) {
+            m_warning_message = res.messages_ptr()->warnings;
+        }
 
         if (!res) {
             m_error_message = util::ErrorString(res);
