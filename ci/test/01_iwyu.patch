@@ -632,3 +632,48 @@ See: https://github.com/include-what-you-use/include-what-you-use/blob/clang_21/
  };
  
  const char* stdlib_cpp_public_headers[] = {
+
+
+Map std::hash to its providing standard headers.
+Backport of https://github.com/include-what-you-use/include-what-you-use/pull/2013
+(commit 52f85e1f4d990f55fc6556d543eb051d79364a16) to the clang_22 release
+branch. Drop once the upstream fix lands in the IWYU branch tracked above.
+
+--- a/std_symbol_map.inc
++++ b/std_symbol_map.inc
+@@ -1054,12 +1054,27 @@
+ { "std::has_unique_object_representations_v", kPrivate, "<type_traits>", kPublic },
+ { "std::has_virtual_destructor", kPrivate, "<type_traits>", kPublic },
+ { "std::has_virtual_destructor_v", kPrivate, "<type_traits>", kPublic },
++{ "std::hash", kPrivate, "<functional>", kPublic },
++{ "std::hash", kPrivate, "<bitset>", kPublic },
++{ "std::hash", kPrivate, "<coroutine>", kPublic },
++{ "std::hash", kPrivate, "<filesystem>", kPublic },
++{ "std::hash", kPrivate, "<memory>", kPublic },
++{ "std::hash", kPrivate, "<optional>", kPublic },
++{ "std::hash", kPrivate, "<stacktrace>", kPublic },
++{ "std::hash", kPrivate, "<string>", kPublic },
++{ "std::hash", kPrivate, "<string_view>", kPublic },
++{ "std::hash", kPrivate, "<system_error>", kPublic },
++{ "std::hash", kPrivate, "<thread>", kPublic },
++{ "std::hash", kPrivate, "<typeindex>", kPublic },
++{ "std::hash", kPrivate, "<variant>", kPublic },
++{ "std::hash", kPrivate, "<vector>", kPublic },
+ { "std::hash<std::basic_stacktrace<:0>>", kPrivate, "<stacktrace>", kPublic },
+ { "std::hash<std::basic_string<char, std::char_traits<char>, :0>>", kPrivate, "<string>", kPublic },
+ { "std::hash<std::basic_string<char16_t, std::char_traits<char16_t>, :0>>", kPrivate, "<string>", kPublic },
+ { "std::hash<std::basic_string<char32_t, std::char_traits<char32_t>, :0>>", kPrivate, "<string>", kPublic },
+ { "std::hash<std::basic_string<char8_t, std::char_traits<char8_t>, :0>>", kPrivate, "<string>", kPublic },
+ { "std::hash<std::basic_string<wchar_t, std::char_traits<wchar_t>, :0>>", kPrivate, "<string>", kPublic },
++{ "std::hash<std::bitset<:0>>", kPrivate, "<bitset>", kPublic },
+ { "std::hash<std::coroutine_handle<:0>>", kPrivate, "<coroutine>", kPublic },
+ { "std::hash<std::error_code>", kPrivate, "<system_error>", kPublic },
+ { "std::hash<std::error_condition>", kPrivate, "<system_error>", kPublic },
+@@ -1069,6 +1084,7 @@
+ { "std::hash<std::shared_ptr<:0>>", kPrivate, "<memory>", kPublic },
+ { "std::hash<std::stacktrace_entry>", kPrivate, "<stacktrace>", kPublic },
+ { "std::hash<std::string_view>", kPrivate, "<string_view>", kPublic },
++{ "std::hash<std::thread::id>", kPrivate, "<thread>", kPublic },
+ { "std::hash<std::type_index>", kPrivate, "<typeindex>", kPublic },
+ { "std::hash<std::u16string_view>", kPrivate, "<string_view>", kPublic },
+ { "std::hash<std::u32string_view>", kPrivate, "<string_view>", kPublic },
