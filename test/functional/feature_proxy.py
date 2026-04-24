@@ -436,7 +436,7 @@ class ProxyTest(BitcoinTestFramework):
 
         self.log.info("Test passing -onlynet=onion without -proxy or -onion but with -listenonion=1 is ok")
         self.start_node(1, extra_args=["-onlynet=onion", "-listenonion=1"])
-        self.stop_node(1)
+        self.stop_node(1, expected_stderr="Warning: The Tor onion service is being directed to a -bind address without a dedicated onion socket (-bind=<addr>=onion). Incoming Tor connections will not be identified as onion connections.")
 
         self.log.info("Test passing unknown network to -onlynet raises expected init error")
         self.nodes[1].extra_args = ["-onlynet=abc"]
