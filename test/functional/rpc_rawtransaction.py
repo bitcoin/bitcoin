@@ -91,6 +91,7 @@ class RawTransactionsTest(BitcoinTestFramework):
         self.decoderawtransaction_tests()
         self.transaction_version_number_tests()
         self.getrawtransaction_verbosity_tests()
+        self.getrawtransaction_wtxid_tests()
 
     def getrawtransaction_tests(self):
         tx = self.wallet.send_self_transfer(from_node=self.nodes[0])
@@ -496,6 +497,13 @@ class RawTransactionsTest(BitcoinTestFramework):
         rawtx = tx.serialize().hex()
         decrawtx = self.nodes[0].decoderawtransaction(rawtx)
         assert_equal(decrawtx['version'], 0xffffffff)
+
+    def getrawtransaction_wtxid_tests(self):
+        #Test wtxid lookup in mempool
+        self.log.info("Test wtxid lookup in mempool")
+        mempool_tx = self.wallet.send_self_transfer(from_node=self.nodes[0])
+        wtxid = self.nodes[0].getmempoolentry(mempool_tx['txid'])['wtxid']
+        assert_equal(self.nodes[0].getrawtransaction(wtxid), mempool_tx['hex'])
 
 if __name__ == '__main__':
     RawTransactionsTest(__file__).main()
