@@ -3141,12 +3141,18 @@ CBlockIndex* Chainstate::FindMostWorkChain()
                 }
                 // Remove the entire chain from the set.
                 for (CBlockIndex *pindexFailed = pindexNew; pindexFailed != pindexTest; pindexFailed = pindexFailed->pprev) {
+                    // If we're missing data and not a descendant of an invalid block,
+                    // then add back to m_blocks_unlinked, so that if the block arrives in the future
+                    // we can try adding to setBlockIndexCandidates again.
                     if (fMissingData && !fFailedChain) {
-                        // If we're missing data and not a descendant of an invalid block,
-                        // then add back to m_blocks_unlinked, so that if the block arrives in the future
-                        // we can try adding to setBlockIndexCandidates again.
-                        m_blockman.m_blocks_unlinked.insert(
-                            std::make_pair(pindexFailed->pprev, pindexFailed));
+                        // Avoid duplicate entries in m_blocks_unlinked. If the same entry is
+                        // processed twice in ReceivedBlockTransactions(), it may be re-added to
+                        // setBlockIndexCandidates with a modified nSequenceId, breaking ordering
+                        // guarantees and leading to undefined behavior.
+                        auto range = m_blockman.m_blocks_unlinked.equal_range(pindexFailed->pprev);
+                        if (!std::any_of(range.first, range.second, [&](const auto& p) { return p.second == pindexFailed; })) {
+                            m_blockman.m_blocks_unlinked.emplace(pindexFailed->pprev, pindexFailed);
+                        }
                     }
                     setBlockIndexCandidates.erase(pindexFailed);
                 }
