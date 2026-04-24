@@ -2,7 +2,7 @@
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or https://opensource.org/license/mit/.
 
-enable_language(C)
+bitcoincore_enable_language(C)
 
 function(add_secp256k1 subdir)
   message("")
