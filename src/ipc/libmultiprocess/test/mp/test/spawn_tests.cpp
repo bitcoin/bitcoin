@@ -9,23 +9,31 @@
 #include <chrono>
 #include <compare>
 #include <condition_variable>
-#include <csignal>
 #include <cstdlib>
 #include <mutex>
 #include <string>
-#include <sys/wait.h>
 #include <thread>
-#include <unistd.h>
+#include <tuple>
+#include <utility>
 #include <vector>
 
+#ifndef WIN32
+#include <csignal>
+#include <sys/wait.h>
+#include <unistd.h>
+#endif
+
+namespace mp {
+namespace test {
 namespace {
 
+#ifndef WIN32
 constexpr auto FAILURE_TIMEOUT = std::chrono::seconds{30};
 
 // Poll for child process exit using waitpid(..., WNOHANG) until the child exits
 // or timeout expires. Returns true if the child exited and status_out was set.
 // Returns false on timeout or error.
-static bool WaitPidWithTimeout(int pid, std::chrono::milliseconds timeout, int& status_out)
+static bool WaitPidWithTimeout(ProcessId pid, std::chrono::milliseconds timeout, int& status_out)
 {
     const auto deadline = std::chrono::steady_clock::now() + timeout;
     while (std::chrono::steady_clock::now() < deadline) {
@@ -40,14 +48,19 @@ static bool WaitPidWithTimeout(int pid, std::chrono::milliseconds timeout, int& 
     }
     return false;
 }
+#endif // !WIN32
 
 } // namespace
 
+#ifndef WIN32
 KJ_TEST("SpawnProcess does not run callback in child")
 {
     // This test is designed to fail deterministically if fd_to_args is invoked
     // in the post-fork child: a mutex held by another parent thread at fork
     // time appears locked forever in the child.
+    //
+    // This test is Unix-only: Windows uses CreateProcess (not fork), so the
+    // inherited-locked-mutex hazard does not apply there.
     std::mutex target_mutex;
     std::mutex control_mutex;
     std::condition_variable control_cv;
@@ -86,14 +99,13 @@ KJ_TEST("SpawnProcess does not run callback in child")
         control_cv.notify_one();
     });
 
-    int pid{-1};
-    const int fd{mp::SpawnProcess(pid, [&](int child_fd) -> std::vector<std::string> {
+    const auto [pid, socket]{SpawnProcess([&](ConnectInfo connect_info) -> std::vector<std::string> {
         // If this callback runs in the post-fork child, target_mutex appears
         // locked forever (the owning thread does not exist), so this deadlocks.
         std::lock_guard<std::mutex> g(target_mutex);
-        return {"true", std::to_string(child_fd)};
+        return {"true", std::move(connect_info)};
     })};
-    ::close(fd);
+    ::close(socket);
 
     int status{0};
     // Give the child some time to exit. If it does not, terminate it and
@@ -110,3 +122,6 @@ KJ_TEST("SpawnProcess does not run callback in child")
     KJ_EXPECT(exited, "Timeout waiting for child process to exit");
     KJ_EXPECT(WIFEXITED(status) && WEXITSTATUS(status) == 0);
 }
+#endif // !WIN32
+} // namespace test
+} // namespace mp

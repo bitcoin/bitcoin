@@ -6,7 +6,6 @@
 #define MP_CONFIG_H
 
 #cmakedefine CMAKE_INSTALL_PREFIX "@CMAKE_INSTALL_PREFIX@"
-#cmakedefine capnp_PREFIX "@capnp_PREFIX@"
 #cmakedefine HAVE_KJ_FILESYSTEM
 
 #cmakedefine HAVE_PTHREAD_GETNAME_NP @HAVE_PTHREAD_GETNAME_NP@

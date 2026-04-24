@@ -20,6 +20,7 @@
 #include <kj/common.h>
 #include <kj/filesystem.h>
 #include <kj/memory.h>
+#include <kj/exception.h>
 #include <kj/string.h>
 #include <map>
 #include <set>
@@ -27,7 +28,6 @@
 #include <stdexcept>
 #include <string>
 #include <system_error>
-#include <unistd.h>
 #include <utility>
 #include <vector>
 
@@ -170,7 +170,7 @@ static void Generate(kj::StringPtr src_prefix,
     if (p != std::string::npos) include_base.erase(p);
 
     std::vector<std::string> args;
-    args.emplace_back(capnp_PREFIX "/bin/capnp");
+    args.emplace_back(CAPNP_EXECUTABLE);
     args.emplace_back("compile");
     args.emplace_back("--src-prefix=");
     args.back().append(src_prefix.cStr(), src_prefix.size());
@@ -178,18 +178,11 @@ static void Generate(kj::StringPtr src_prefix,
         args.emplace_back("--import-path=");
         args.back().append(import_path.cStr(), import_path.size());
     }
-    args.emplace_back("--output=" capnp_PREFIX "/bin/capnpc-c++");
+    args.emplace_back("--output=" CAPNPC_CXX_EXECUTABLE);
     args.emplace_back(src_file);
-    const int pid = fork();
-    if (pid == -1) {
-        throw std::system_error(errno, std::system_category(), "fork");
-    }
-    if (!pid) {
-        mp::ExecProcess(args);
-    }
-    const int status = mp::WaitProcess(pid);
+    const int status = mp::WaitProcess(mp::ExecProcess(args));
     if (status) {
-        throw std::runtime_error("Invoking " capnp_PREFIX "/bin/capnp failed");
+        throw std::runtime_error("Invoking " CAPNP_EXECUTABLE " failed");
     }
 
     const capnp::SchemaParser parser;
@@ -677,35 +670,41 @@ static void Generate(kj::StringPtr src_prefix,
 
 int main(int argc, char** argv)
 {
-    if (argc < 3) {
-        std::cerr << "Usage: " << PROXY_BIN << " SRC_PREFIX INCLUDE_PREFIX SRC_FILE [IMPORT_PATH...]\n";
-        exit(1);
-    }
-    std::vector<kj::StringPtr> import_paths;
-    std::vector<kj::Own<const kj::ReadableDirectory>> import_dirs;
-    auto fs = kj::newDiskFilesystem();
-    auto cwd = fs->getCurrentPath();
-    kj::Own<const kj::ReadableDirectory> src_dir;
-    KJ_IF_MAYBE(dir, fs->getRoot().tryOpenSubdir(cwd.evalNative(argv[1]))) {
-        src_dir = kj::mv(*dir);
-    } else {
-        throw std::runtime_error(std::string("Failed to open src_prefix prefix directory: ") + argv[1]);
-    }
-    for (int i = 4; i < argc; ++i) {
-        KJ_IF_MAYBE(dir, fs->getRoot().tryOpenSubdir(cwd.evalNative(argv[i]))) {
-            import_paths.emplace_back(argv[i]);
-            import_dirs.emplace_back(kj::mv(*dir));
+    int ret = 1;
+    KJ_IF_MAYBE(exception, kj::runCatchingExceptions([&]() {
+        if (argc < 3) {
+            std::cerr << "Usage: " << PROXY_BIN << " SRC_PREFIX INCLUDE_PREFIX SRC_FILE [IMPORT_PATH...]\n";
+            exit(1);
+        }
+        std::vector<kj::StringPtr> import_paths;
+        std::vector<kj::Own<const kj::ReadableDirectory>> import_dirs;
+        auto fs = kj::newDiskFilesystem();
+        auto cwd = fs->getCurrentPath();
+        kj::Own<const kj::ReadableDirectory> src_dir;
+        KJ_IF_MAYBE(dir, fs->getRoot().tryOpenSubdir(cwd.evalNative(argv[1]))) {
+            src_dir = kj::mv(*dir);
         } else {
-            throw std::runtime_error(std::string("Failed to open import directory: ") + argv[i]);
+            throw std::runtime_error(std::string("Failed to open src_prefix prefix directory: ") + argv[1]);
         }
-    }
-    for (const char* path : {CMAKE_INSTALL_PREFIX "/include", capnp_PREFIX "/include"}) {
-        KJ_IF_MAYBE(dir, fs->getRoot().tryOpenSubdir(cwd.evalNative(path))) {
-            import_paths.emplace_back(path);
-            import_dirs.emplace_back(kj::mv(*dir));
+        for (int i = 4; i < argc; ++i) {
+            KJ_IF_MAYBE(dir, fs->getRoot().tryOpenSubdir(cwd.evalNative(argv[i]))) {
+                import_paths.emplace_back(argv[i]);
+                import_dirs.emplace_back(kj::mv(*dir));
+            } else {
+                throw std::runtime_error(std::string("Failed to open import directory: ") + argv[i]);
+            }
         }
-        // No exception thrown if _PREFIX directories do not exist
+        for (const char* path : {CMAKE_INSTALL_PREFIX "/include", CAPNP_INCLUDE_DIRS}) {
+            KJ_IF_MAYBE(dir, fs->getRoot().tryOpenSubdir(cwd.evalNative(path))) {
+                import_paths.emplace_back(path);
+                import_dirs.emplace_back(kj::mv(*dir));
+            }
+            // No exception thrown if _PREFIX directories do not exist
+        }
+        Generate(argv[1], argv[2], argv[3], import_paths, *src_dir, import_dirs);
+        ret = 0;
+    })) {
+        std::cerr << "mpgen error: " << kj::str(*exception).cStr() << '\n';
     }
-    Generate(argv[1], argv[2], argv[3], import_paths, *src_dir, import_dirs);
-    return 0;
+    return ret;
 }

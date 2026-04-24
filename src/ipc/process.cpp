@@ -18,11 +18,19 @@
 #include <exception>
 #include <iostream>
 #include <stdexcept>
+#include <utility>
+#include <vector>
+
+#ifdef WIN32
+#include <afunix.h>
+#define sock_errno WSAGetLastError()
+#else
 #include <sys/socket.h>
 #include <sys/un.h>
 #include <unistd.h>
-#include <utility>
-#include <vector>
+#define closesocket close
+#define sock_errno errno
+#endif
 
 using util::RemovePrefixView;
 
@@ -31,17 +39,17 @@ namespace {
 class ProcessImpl : public Process
 {
 public:
-    int spawn(const std::string& new_exe_name, const fs::path& argv0_path, int& pid) override
+    std::tuple<mp::ProcessId, mp::SocketId> spawn(const std::string& new_exe_name, const fs::path& argv0_path) override
     {
-        return mp::SpawnProcess(pid, [&](int fd) {
+        return mp::SpawnProcess([&](mp::ConnectInfo info) {
             fs::path path = argv0_path;
             path.remove_filename();
             path /= fs::PathFromString(new_exe_name);
-            return std::vector<std::string>{fs::PathToString(path), "-ipcfd", strprintf("%i", fd)};
+            return std::vector<std::string>{fs::PathToString(path), "-ipcfd", std::move(info)};
         });
     }
-    int waitSpawned(int pid) override { return mp::WaitProcess(pid); }
-    bool checkSpawned(int argc, char* argv[], int& fd) override
+    int waitSpawned(mp::ProcessId pid) override { return mp::WaitProcess(pid); }
+    bool checkSpawned(int argc, char* argv[], mp::SocketId& socket) override
     {
         // If this process was not started with a single -ipcfd argument, it is
         // not a process spawned by the spawn() call above, so return false and
@@ -55,17 +63,17 @@ public:
         // in combination with other arguments because the parent process
         // should be able to control the child process through the IPC protocol
         // without passing information out of band.
-        const auto maybe_fd{ToIntegral<int32_t>(argv[2])};
-        if (!maybe_fd) {
-            throw std::runtime_error(strprintf("Invalid -ipcfd number '%s'", argv[2]));
+        try {
+           socket = mp::StartSpawned(argv[2]);
+        } catch (const std::exception& e) {
+           throw std::runtime_error(strprintf("Invalid -ipcfd number '%s' (%s)", argv[2], e.what()));
         }
-        fd = *maybe_fd;
         return true;
     }
-    int connect(const fs::path& data_dir,
+    mp::SocketId connect(const fs::path& data_dir,
                 const std::string& dest_exe_name,
                 std::string& address) override;
-    int bind(const fs::path& data_dir, const std::string& exe_name, std::string& address) override;
+    mp::SocketId bind(const fs::path& data_dir, const std::string& exe_name, std::string& address) override;
 };
 
 static bool ParseAddress(std::string& address,
@@ -97,7 +105,7 @@ static bool ParseAddress(std::string& address,
     return false;
 }
 
-int ProcessImpl::connect(const fs::path& data_dir,
+mp::SocketId ProcessImpl::connect(const fs::path& data_dir,
                          const std::string& dest_exe_name,
                          std::string& address)
 {
@@ -107,21 +115,21 @@ int ProcessImpl::connect(const fs::path& data_dir,
         throw std::invalid_argument(error);
     }
 
-    int fd;
-    if ((fd = ::socket(addr.sun_family, SOCK_STREAM, 0)) == -1) {
-        throw std::system_error(errno, std::system_category());
+    mp::SocketId fd;
+    if ((fd = ::socket(addr.sun_family, SOCK_STREAM, 0)) == mp::SocketError) {
+        throw std::system_error(sock_errno, std::system_category());
     }
     if (::connect(fd, (struct sockaddr*)&addr, sizeof(addr)) == 0) {
         return fd;
     }
-    int connect_error = errno;
-    if (::close(fd) != 0) {
-        LogWarning("Error closing file descriptor %i '%s': %s", fd, address, SysErrorString(errno));
+    int connect_error = sock_errno;
+    if (::closesocket(fd) != 0) {
+        LogWarning("Error closing file descriptor %i '%s': %s", fd, address, SysErrorString(sock_errno));
     }
     throw std::system_error(connect_error, std::system_category());
 }
 
-int ProcessImpl::bind(const fs::path& data_dir, const std::string& exe_name, std::string& address)
+mp::SocketId ProcessImpl::bind(const fs::path& data_dir, const std::string& exe_name, std::string& address)
 {
     struct sockaddr_un addr;
     std::string error;
@@ -132,22 +140,27 @@ int ProcessImpl::bind(const fs::path& data_dir, const std::string& exe_name, std
     if (addr.sun_family == AF_UNIX) {
         fs::path path = addr.sun_path;
         if (path.has_parent_path()) fs::create_directories(path.parent_path());
-        if (fs::symlink_status(path).type() == fs::file_type::socket) {
+        if (fs::symlink_status(path).type() == fs::file_type::socket
+#ifdef WIN32
+            // On windows, sockets show up as regular files with size 0
+            || (fs::is_regular_file(path) && fs::file_size(path) == 0)
+#endif
+        ) {
             fs::remove(path);
         }
     }
 
-    int fd;
-    if ((fd = ::socket(addr.sun_family, SOCK_STREAM, 0)) == -1) {
-        throw std::system_error(errno, std::system_category());
+    mp::SocketId fd;
+    if ((fd = ::socket(addr.sun_family, SOCK_STREAM, 0)) == mp::SocketError) {
+        throw std::system_error(sock_errno, std::system_category());
     }
 
     if (::bind(fd, (struct sockaddr*)&addr, sizeof(addr)) == 0) {
         return fd;
     }
-    int bind_error = errno;
-    if (::close(fd) != 0) {
-        LogWarning("Error closing file descriptor %i: %s", fd, SysErrorString(errno));
+    int bind_error = sock_errno;
+    if (::closesocket(fd) != 0) {
+        LogWarning("Error closing file descriptor %i: %s", fd, SysErrorString(sock_errno));
     }
     throw std::system_error(bind_error, std::system_category());
 }
