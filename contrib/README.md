@@ -45,7 +45,7 @@ Command Line Tools
 ---------------------
 
 ### [Completions](/contrib/completions) ###
-Shell completions for bash and fish.
+Shell completions for bash, fish, and zsh.
 
 UTXO Set Tools
 --------------

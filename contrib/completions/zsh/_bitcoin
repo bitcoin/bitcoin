@@ -1,0 +1,425 @@
+#compdef bitcoin
+
+_bitcoin() {
+    local context state state_descr line
+    typeset -A opt_args
+
+    _arguments -C \
+        '(-h --help)'{-h,--help}'[Show help information]' \
+        '(-v --version)'{-v,--version}'[Show version information]' \
+        '(-m --multiprocess)'{-m,--multiprocess}'[Run multiprocess binaries]' \
+        '(-M --monolithic)'{-M,--monolithic}'[Run monolithic binaries (default)]' \
+        '1: :_bitcoin_commands' \
+        '*::arg:->args' && return 0
+
+    case $state in
+        args)
+            case $words[1] in
+                gui)
+                    _bitcoin_gui
+                    ;;
+                node)
+                    _bitcoin_node
+                    ;;
+                rpc)
+                    _bitcoin_rpc
+                    ;;
+                wallet)
+                    _bitcoin_wallet
+                    ;;
+                tx)
+                    _bitcoin_tx
+                    ;;
+                help)
+                    _bitcoin_help
+                    ;;
+                bench)
+                    _bitcoin_bench
+                    ;;
+                chainstate)
+                    _bitcoin_chainstate
+                    ;;
+                test|test-gui)
+                    _bitcoin_test
+                    ;;
+                *)
+                    _message "no more arguments"
+                    ;;
+            esac
+            ;;
+    esac
+}
+
+_bitcoin_commands() {
+    local -a subcmds
+    if (( $+commands[bitcoin] )); then
+        subcmds=(${(f)"$(bitcoin --help 2>/dev/null | grep -E '^\s+[a-z][-a-z]*\s' | sed 's/^\s*//' | sed 's/\s*\[ARGS\]\s*/:/; s/\s\{2,\}/:/' | head -20)"})
+    fi
+
+    # fallback if bitcoin command not available
+    if [[ ${#subcmds} -eq 0 ]]; then
+        subcmds=(
+            'gui:Start GUI (bitcoin-qt)'
+            'node:Start node (bitcoind)'
+            'rpc:Call RPC method (bitcoin-cli -named)'
+            'wallet:Call wallet command (bitcoin-wallet)'
+            'tx:Manipulate transactions (bitcoin-tx)'
+            'help:Show full help message'
+            'bench:Run bench command'
+            'chainstate:Run chainstate util'
+            'test:Run unit tests'
+            'test-gui:Run GUI unit tests'
+        )
+    fi
+
+    _describe 'bitcoin commands' subcmds
+}
+
+_bitcoin_gui() {
+    _arguments \
+        '-help[Print help message and exit]' \
+        '-version[Print version and exit]' \
+        '-datadir=[Specify data directory]:directory:_directories' \
+        '-conf=[Specify configuration file]:file:_files' \
+        '-blocksdir=[Specify blocks directory]:directory:_directories' \
+        '-settings=[Specify settings file]:file:_files' \
+        '-walletdir=[Specify wallet directory]:directory:_directories' \
+        '-daemon[Run in background as daemon]' \
+        '-daemonwait[Wait for initialization then background]' \
+        '-printtoconsole[Send trace/debug info to console]' \
+        '-server[Accept command line and JSON-RPC commands]' \
+        '-chain=[Use specified chain]:chain:(main test testnet4 signet regtest)' \
+        '-signet[Use signet chain]' \
+        '-testnet[Use testnet3 chain]' \
+        '-testnet4[Use testnet4 chain]' \
+        '-regtest[Use regression test network]' \
+        '-txindex[Maintain full transaction index]' \
+        '-dbcache=[Maximum database cache size in MiB]:size:' \
+        '-prune=[Reduce storage by pruning old blocks]:size:' \
+        '-reindex[Rebuild chain state and block index]' \
+        '-rpcuser=[RPC username]:username:' \
+        '-rpcpassword=[RPC password]:password:' \
+        '-rpcport=[RPC port]:port:' \
+        '-rpcbind=[RPC bind address]:address:' \
+        '-rpcallowip=[Allow JSON-RPC from specified source]:ip:' \
+        '-port=[Listen for connections on port]:port:' \
+        '-maxconnections=[Maximum number of connections]:number:' \
+        '-disablewallet[Disable wallet]'
+}
+
+_bitcoin_node() {
+    _arguments \
+        '-help[Print help message and exit]' \
+        '-version[Print version and exit]' \
+        '-datadir=[Specify data directory]:directory:_directories' \
+        '-conf=[Specify configuration file]:file:_files' \
+        '-includeconf=[Specify additional configuration file]:file:_files' \
+        '-settings=[Specify settings file]:file:_files' \
+        '-pid=[Specify pid file]:file:_files' \
+        '-daemon[Run in background as daemon]' \
+        '-daemonwait[Wait for initialization then background]' \
+        '-printtoconsole[Send trace/debug info to console]' \
+        '-allowignoredconf[Treat unused conf file as warning]' \
+        '-blocksdir=[Specify blocks directory]:directory:_directories' \
+        '-blocksonly[Reject transactions from network peers]' \
+        '-blocksxor[Apply XOR-key to blocksdir dat files]' \
+        '-dbcache=[Maximum database cache size in MiB]:size:' \
+        '-debuglogfile=[Debug log file location]:file:_files' \
+        '-loadblock=[Import blocks from external file]:file:_files' \
+        '-maxmempool=[Max transaction memory pool in MB]:size:' \
+        '-mempoolexpiry=[Max hours to keep transactions in mempool]:hours:' \
+        '-par=[Script verification threads (0=auto)]:threads:' \
+        '-persistmempool[Save/load mempool on shutdown/restart]' \
+        '-persistmempoolv1[Write mempool.dat in legacy format]' \
+        '-prune=[Enable pruning of old blocks]:size:' \
+        '-reindex[Rebuild chain state and block index]' \
+        '-reindex-chainstate[Rebuild chain state from blk*.dat]' \
+        '-txindex[Maintain full transaction index]' \
+        '-blockfilterindex=[Maintain compact filter index]:type:' \
+        '-coinstatsindex[Maintain coinstats index]' \
+        '-assumevalid=[Skip script verification for this block]:hex:' \
+        '-alertnotify=[Execute command on alert]:command:' \
+        '-blocknotify=[Execute command on best block change]:command:' \
+        '-shutdownnotify=[Execute command before shutdown]:command:' \
+        '-startupnotify=[Execute command on startup]:command:' \
+        '-blockreconstructionextratxn=[Extra txns for compact block reconstruction]:count:' \
+        '-addnode=[Add node to connect to]:ip:' \
+        '-asmap=[ASN mapping file]:file:_files' \
+        '-bantime=[Default ban duration in seconds]:seconds:' \
+        '-bind=[Bind to address]:address:' \
+        '-cjdnsreachable[Host is configured for CJDNS]' \
+        '-connect=[Connect only to specified node]:ip:' \
+        '-discover[Discover own IP addresses]' \
+        '-dns[Allow DNS lookups]' \
+        '-dnsseed[Query DNS for peer addresses]' \
+        '-externalip=[Specify public address]:ip:' \
+        '-fixedseeds[Allow fixed seeds]' \
+        '-forcednsseed[Always query DNS for peers]' \
+        '-i2pacceptincoming[Accept inbound I2P connections]' \
+        '-i2psam=[I2P SAM proxy address]:address:' \
+        '-listen[Accept connections from outside]' \
+        '-listenonion[Create Tor onion service]' \
+        '-maxconnections=[Max automatic peer connections]:count:' \
+        '-maxreceivebuffer=[Max per-connection receive buffer]:size:' \
+        '-maxsendbuffer=[Max per-connection send buffer]:size:' \
+        '-maxuploadtarget=[Max outbound traffic per 24h]:target:' \
+        '-natpmp[Use PCP or NAT-PMP for port mapping]' \
+        '-networkactive[Enable all P2P network activity]' \
+        '-onion=[SOCKS5 proxy for Tor]:address:' \
+        '-onlynet=[Automatic outbound connections only to network]:network:(ipv4 ipv6 onion i2p cjdns)' \
+        '-peerblockfilters[Serve compact block filters (BIP 157)]' \
+        '-peerbloomfilters[Support bloom filter blocks]' \
+        '-port=[Listen port]:port:' \
+        '-proxy=[SOCKS5 proxy]:address:' \
+        '-proxyrandomize[Randomize proxy credentials]' \
+        '-seednode=[Connect to node for peer addresses]:ip:' \
+        '-timeout=[Connection timeout in ms]:milliseconds:' \
+        '-torcontrol=[Tor control host\:port]:address:' \
+        '-torpassword=[Tor control port password]:password:' \
+        '-v2transport[Support v2 transport]' \
+        '-whitebind=[Bind address with permissions]:address:' \
+        '-whitelist=[Add permission flags to peers]:address:' \
+        '-addresstype=[Address type]:type:(legacy p2sh-segwit bech32 bech32m)' \
+        '-avoidpartialspends[Group outputs by address]' \
+        '-changetype=[Change address type]:type:(legacy p2sh-segwit bech32 bech32m)' \
+        '-consolidatefeerate=[Max feerate for UTXO consolidation]:rate:' \
+        '-disablewallet[Disable wallet]' \
+        '-discardfee=[Fee rate to discard change]:rate:' \
+        '-fallbackfee=[Fallback fee rate]:rate:' \
+        '-keypool=[Key pool size]:size:' \
+        '-maxapsfee=[Max additional fee for partial spend avoidance]:amount:' \
+        '-mintxfee=[Min fee rate for tx creation]:rate:' \
+        '-paytxfee=[Fee rate to add to transactions]:rate:' \
+        '-signer=[External signing tool]:command:' \
+        '-spendzeroconfchange[Spend unconfirmed change]' \
+        '-txconfirmtarget=[Target blocks for confirmation]:blocks:' \
+        '-wallet=[Wallet path to load]:file:_files' \
+        '-walletbroadcast[Broadcast wallet transactions]' \
+        '-walletdir=[Wallet directory]:directory:_directories' \
+        '-walletnotify=[Execute command on wallet tx change]:command:' \
+        '-walletrbf[Send transactions with full-RBF]' \
+        '-debug=[Output debug logging for category]:category:(addrman bench blockstorage cmpctblock coindb estimatefee http i2p ipc leveldb libevent mempool mempoolrej net proxy prune qt rand reindex rpc scan selectcoins tor txpackages txreconciliation validation walletdb zmq 0 1 all none)' \
+        '-debugexclude=[Exclude debug logging category]:category:' \
+        '-help-debug[Print help with debugging options]' \
+        '-logips[Include IP addresses in debug output]' \
+        '-loglevelalways[Always prepend category and level]' \
+        '-logsourcelocations[Prepend source location to debug output]' \
+        '-logthreadnames[Prepend thread name to debug output]' \
+        '-logtimestamps[Prepend timestamp to debug output]' \
+        '-maxtxfee=[Max total fees per wallet transaction]:amount:' \
+        '-shrinkdebugfile[Shrink debug.log on startup]' \
+        '-uacomment=[Append comment to user agent string]:comment:' \
+        '-chain=[Use specified chain]:chain:(main test testnet4 signet regtest)' \
+        '-signet[Use signet chain]' \
+        '-signetchallenge=[Signet challenge script]:script:' \
+        '-signetseednode=[Signet seed node]:address:' \
+        '-testnet[Use testnet3 chain]' \
+        '-testnet4[Use testnet4 chain]' \
+        '-regtest[Use regression test network]' \
+        '-bytespersigop=[Equivalent bytes per sigop]:bytes:' \
+        '-datacarrier[Relay data carrier transactions]' \
+        '-datacarriersize=[Max data carrier script size]:size:' \
+        '-minrelaytxfee=[Min relay fee rate]:rate:' \
+        '-permitbaremultisig[Relay non-P2SH multisig outputs]' \
+        '-whitelistforcerelay[Force relay for whitelisted peers]' \
+        '-whitelistrelay[Relay for whitelisted peers]' \
+        '-blockmintxfee=[Min fee rate for block inclusion]:rate:' \
+        '-blockreservedweight=[Reserved block weight]:weight:' \
+        '-rest[Accept public REST requests]' \
+        '-rpcallowip=[Allow JSON-RPC from source]:ip:' \
+        '-rpcauth=[RPC username\:HMAC-SHA-256 password]:auth:' \
+        '-rpcbind=[RPC bind address]:address:' \
+        '-rpccookiefile=[Auth cookie location]:file:_files' \
+        '-rpccookieperms=[Auth cookie file permissions]:perms:(owner group all)' \
+        '-rpcpassword=[RPC password]:password:' \
+        '-rpcport=[RPC port]:port:' \
+        '-rpcthreads=[RPC threads]:threads:' \
+        '-rpcuser=[RPC username]:username:' \
+        '-rpcwhitelist=[RPC whitelist for user]:whitelist:' \
+        '-rpcwhitelistdefault[Default RPC whitelist behavior]' \
+        '-server[Accept command line and JSON-RPC commands]'
+}
+
+_bitcoin_rpc() {
+    local -a rpc_methods
+    if (( $+commands[bitcoin] )); then
+        rpc_methods=(${(f)"$(bitcoin rpc help 2>/dev/null | grep -E '^[a-z]' | awk '{print $1}')"})
+    fi
+
+    # full fallback list when bitcoin isnt installed or node is not running.
+    if [[ ${#rpc_methods} -eq 0 ]]; then
+        rpc_methods=(
+            dumptxoutset getbestblockhash getblock getblockchaininfo
+            getblockcount getblockfilter getblockfrompeer getblockhash
+            getblockheader getblockstats getchainstates getchaintips
+            getchaintxstats getdeploymentinfo getdescriptoractivity
+            getdifficulty getmempoolancestors getmempooldescendants
+            getmempoolentry getmempoolinfo getrawmempool gettxout
+            gettxoutproof gettxoutsetinfo gettxspendingprevout
+            importmempool loadtxoutset preciousblock pruneblockchain
+            savemempool scanblocks scantxoutset verifychain
+            verifytxoutproof waitforblock waitforblockheight waitfornewblock
+            getmemoryinfo getrpcinfo help logging stop uptime
+            getblocktemplate getmininginfo getnetworkhashps
+            getprioritisedtransactions prioritisetransaction submitblock
+            submitheader
+            addnode clearbanned disconnectnode getaddednodeinfo
+            getaddrmaninfo getconnectioncount getnettotals getnetworkinfo
+            getnodeaddresses getpeerinfo listbanned ping setban
+            setnetworkactive
+            analyzepsbt combinepsbt combinerawtransaction converttopsbt
+            createpsbt createrawtransaction decodepsbt decoderawtransaction
+            decodescript descriptorprocesspsbt finalizepsbt
+            fundrawtransaction getrawtransaction joinpsbts
+            sendrawtransaction signrawtransactionwithkey submitpackage
+            testmempoolaccept utxoupdatepsbt
+            enumeratesigners
+            createmultisig deriveaddresses estimatesmartfee
+            getdescriptorinfo getindexinfo signmessagewithprivkey
+            validateaddress verifymessage
+            abandontransaction abortrescan backupwallet bumpfee
+            createwallet createwalletdescriptor encryptwallet
+            getaddressesbylabel getaddressinfo getbalance getbalances
+            gethdkeys getnewaddress getrawchangeaddress
+            getreceivedbyaddress getreceivedbylabel gettransaction
+            getwalletinfo importdescriptors importprunedfunds
+            keypoolrefill listaddressgroupings listdescriptors listlabels
+            listlockunspent listreceivedbyaddress listreceivedbylabel
+            listsinceblock listtransactions listunspent listwalletdir
+            listwallets loadwallet lockunspent migratewallet psbtbumpfee
+            removeprunedfunds rescanblockchain restorewallet send sendall
+            sendmany sendtoaddress setlabel settxfee setwalletflag
+            signmessage signrawtransactionwithwallet simulaterawtransaction
+            unloadwallet walletcreatefundedpsbt walletdisplayaddress
+            walletlock walletpassphrase walletpassphrasechange
+            walletprocesspsbt
+        )
+    fi
+
+    _arguments \
+        '-help[Print help message and exit]' \
+        '-version[Print version and exit]' \
+        '-color=[Color setting]:when:(always auto never)' \
+        '-conf=[Specify configuration file]:file:_files' \
+        '-datadir=[Specify data directory]:directory:_directories' \
+        '-named[Pass named instead of positional arguments]' \
+        '-rpcclienttimeout=[HTTP request timeout in seconds]:seconds:' \
+        '-rpcconnect=[Send commands to node on host]:host:' \
+        '-rpccookiefile=[Auth cookie location]:file:_files' \
+        '-rpcpassword=[RPC password]:password:' \
+        '-rpcport=[RPC port]:port:' \
+        '-rpcuser=[RPC username]:username:' \
+        '-rpcwait[Wait for RPC server to start]' \
+        '-rpcwaittimeout=[Timeout to wait for RPC server]:seconds:' \
+        '-rpcwallet=[RPC wallet name]:wallet:' \
+        '-stdin[Read extra arguments from stdin]' \
+        '-stdinrpcpass[Read RPC password from stdin]' \
+        '-stdinwalletpassphrase[Read wallet passphrase from stdin]' \
+        '-chain=[Use specified chain]:chain:(main test testnet4 signet regtest)' \
+        '-signet[Use signet chain]' \
+        '-signetchallenge=[Signet challenge script]:script:' \
+        '-signetseednode=[Signet seed node]:address:' \
+        '-testnet[Use testnet3 chain]' \
+        '-testnet4[Use testnet4 chain]' \
+        '-regtest[Use regression test network]' \
+        '-addrinfo[Get address count per network]' \
+        '-generate[Generate blocks]' \
+        '-getinfo[Get general server information]' \
+        '-netinfo[Get network peer connection info]' \
+        '*:rpc method:_values "RPC methods" $rpc_methods'
+}
+
+_bitcoin_wallet() {
+    _arguments \
+        '-help[Print help message and exit]' \
+        '-version[Print version and exit]' \
+        '-datadir=[Specify data directory]:directory:_directories' \
+        '-wallet=[Specify wallet name]:wallet:' \
+        '-dumpfile=[File for dump/createfromdump]:file:_files' \
+        '-debug=[Output debugging information]:category:' \
+        '-printtoconsole[Send trace/debug info to console]' \
+        '-chain=[Use specified chain]:chain:(main test testnet4 signet regtest)' \
+        '-signet[Use signet chain]' \
+        '-signetchallenge=[Signet challenge script]:script:' \
+        '-signetseednode=[Signet seed node]:address:' \
+        '-testnet[Use testnet3 chain]' \
+        '-testnet4[Use testnet4 chain]' \
+        '-regtest[Use regression test network]' \
+        '1:wallet command:(create createfromdump dump info)'
+}
+
+_bitcoin_tx() {
+    _arguments \
+        '-help[Print help message and exit]' \
+        '-version[Print version and exit]' \
+        '-create[Create new empty transaction]' \
+        '-json[Select JSON output]' \
+        '-txid[Output only the transaction id]' \
+        '-chain=[Use specified chain]:chain:(main test testnet4 signet regtest)' \
+        '-signet[Use signet chain]' \
+        '-signetchallenge=[Signet challenge script]:script:' \
+        '-signetseednode=[Signet seed node]:address:' \
+        '-testnet[Use testnet3 chain]' \
+        '-testnet4[Use testnet4 chain]' \
+        '-regtest[Use regression test network]' \
+        '*:transaction command:_values "TX commands" "delin=" "delout=" "in=" "locktime=" "nversion=" "outaddr=" "outdata=" "outmultisig=" "outpubkey=" "outscript=" "replaceable" "sign=" "load=" "set="'
+}
+
+_bitcoin_help() {
+    local -a help_commands
+    help_commands=(
+        'gui' 'node' 'rpc' 'wallet' 'tx' 'bench' 'chainstate' 'test' 'test-gui'
+    )
+
+    _arguments \
+        '*:command:_values "commands" $help_commands'
+}
+
+_bitcoin_bench() {
+    _arguments \
+        '-help[Print help message and exit]' \
+        '-list[List available benchmarks]' \
+        '-filter=[Filter benchmarks by regex]:filter:' \
+        '-asymptote=[Asymptote values]:asymptote:' \
+        '-plot-plotlyurl=[Plot Plotly URL]:url:'
+}
+
+_bitcoin_chainstate() {
+    _arguments \
+        '-help[Print help message and exit]' \
+        '-version[Print version and exit]' \
+        '-datadir=[Specify data directory]:directory:_directories'
+}
+
+_bitcoin_test() {
+    _arguments \
+        '--help[Help for framework parameters]' \
+        '--version[Print Boost.Test version and exit]' \
+        '--run_test=[Filter which tests to execute]:test filter:' \
+        '--list_content=[List test suites and test cases]:format:(HRF DOT)' \
+        '--list_labels[List all available labels]' \
+        '--log_level=[Logging level]:level:(all success test_suite unit_scope message warning error cpp_exception system_error fatal_error nothing)' \
+        '--log_format=[Log format]:format:(HRF CLF XML JUNIT)' \
+        '--log_sink=[Log sink]:sink:' \
+        '--logger=[Log format,level,sink specification]:spec:' \
+        '--output_format=[Output format]:format:(HRF CLF XML)' \
+        '--report_level=[Report level]:level:(confirm short detailed no)' \
+        '--report_format=[Report format]:format:(HRF CLF XML)' \
+        '--report_sink=[Report sink]:sink:' \
+        '--report_memory_leaks_to=[File to report memory leaks]:file:_files' \
+        '--random=[Random order execution with optional seed]:seed:' \
+        '--color_output[Enable color output]' \
+        '--catch_system_errors[Catch system errors/signals]' \
+        '--detect_fp_exceptions[Enable floating point exception traps]' \
+        '--detect_memory_leaks=[Turn on memory leak detection]:alloc order:' \
+        '--build_info[Display library build information]' \
+        '--auto_start_dbg[Attach debugger on system failure]' \
+        '--break_exec_path=[Break at specific execution path]:path:' \
+        '--result_code[Enable/disable result code generation]' \
+        '--save_pattern[Save or match test pattern file]' \
+        '--show_progress[Turn on progress display]' \
+        '--use_alt_stack[Use alternative stack for signal handling]' \
+        '--wait_for_debugger[Wait for debugger before test run]'
+}
+
+_bitcoin "$@"
