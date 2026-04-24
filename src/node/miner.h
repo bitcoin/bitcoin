@@ -129,6 +129,16 @@ private:
  */
 int64_t GetMinimumTime(const CBlockIndex* pindexPrev, int64_t difficulty_adjustment_interval);
 
+/**
+ * Get the maximum time a miner may use in the next block. Returns
+ * std::numeric_limits<int64_t>::max() when no consensus upper bound applies.
+ * When the min-difficulty-block exploit fix is active for the next block's
+ * height, the maximum is the previous block's timestamp plus
+ * 2 * nPowTargetSpacing, matching the consensus check in
+ * ContextualCheckBlockHeader.
+ */
+int64_t GetMaximumTime(const CBlockIndex* pindexPrev, const Consensus::Params& consensusParams);
+
 int64_t UpdateTime(CBlockHeader* pblock, const Consensus::Params& consensusParams, const CBlockIndex* pindexPrev);
 
 /** Update an old GenerateCoinbaseCommitment from CreateNewBlock after the block txs have changed */

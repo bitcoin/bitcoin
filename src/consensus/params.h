@@ -119,6 +119,26 @@ struct Params {
       * the block storm mitigation.
       */
     bool enforce_BIP94;
+    /**
+     * Height at which the fix for the min-difficulty block exploit activates.
+     * From this height onward a block is invalid if its timestamp exceeds the
+     * previous block's timestamp by more than 2 * nPowTargetSpacing (1200
+     * seconds on testnet4). Because the min-difficulty rule only triggers when
+     * a block's timestamp is more than 2 * nPowTargetSpacing past the previous
+     * block's timestamp, capping that gap eliminates min-difficulty blocks
+     * entirely without removing the min-difficulty rule itself.
+     *
+     * The cap does not apply to difficulty-adjustment blocks (heights divisible
+     * by DifficultyAdjustmentInterval()). On those blocks the min-difficulty
+     * rule is not consulted, so there is no exploit to close, and leaving them
+     * uncapped lets miners publish a truthful wall-clock timestamp every 2016
+     * blocks so that chain time can track real time.
+     *
+     * This is a soft fork: previously-valid blocks at heights below this value
+     * are unaffected. A value of 0 disables the rule (default for chains where
+     * it does not apply).
+     */
+    int min_difficulty_blocks_fix_height{0};
     bool fPowNoRetargeting;
     int64_t nPowTargetSpacing;
     int64_t nPowTargetTimespan;
