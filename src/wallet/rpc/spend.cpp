@@ -1477,7 +1477,12 @@ RPCMethod sendall()
             } else {
                 CoinFilterParams coins_params;
                 coins_params.min_amount = 0;
-                for (const COutput& output : AvailableCoins(*pwallet, &coin_control, fee_rate, coins_params).All()) {
+                bool bump_fee_calculation_failed{false};
+                CoinsResult available_coins = AvailableCoins(*pwallet, &coin_control, fee_rate, coins_params, bump_fee_calculation_failed);
+                if (bump_fee_calculation_failed) {
+                    throw JSONRPCError(RPC_WALLET_ERROR, "Failed to calculate bump fees, because unconfirmed UTXOs depend on an enormous cluster of unconfirmed transactions.");
+                }
+                for (const COutput& output : available_coins.All()) {
                     if (send_max && fee_rate.GetFee(output.input_bytes) > output.txout.nValue) {
                         continue;
                     }
