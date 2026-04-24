@@ -24,6 +24,7 @@
 #include <sync.h>
 #include <tinyformat.h>
 #include <uint256.h>
+#include <util/expected.h>
 #include <util/fs.h>
 #include <util/hasher.h>
 #include <util/result.h>
@@ -299,6 +300,18 @@ struct CRecipient
     CTxDestination dest;
     CAmount nAmount;
     bool fSubtractFeeFromAmount;
+};
+
+// Struct containing all of the info from WalletDescriptor, except with the descriptor as a string,
+// and without its ID or cache.
+// Used when exporting descriptors from the wallet.
+struct WalletDescInfo {
+    std::string descriptor;
+    uint64_t creation_time;
+    bool active;
+    std::optional<bool> internal;
+    std::optional<std::pair<int64_t,int64_t>> range;
+    int64_t next_index;
 };
 
 class WalletRescanReserver; //forward declarations for ScanForWalletTransactions/RescanFromTime
@@ -888,7 +901,7 @@ public:
      */
     void postInitProcess();
 
-    bool BackupWallet(const std::string& strDest) const;
+    [[nodiscard]] bool BackupWallet(const std::string& strDest) const;
 
     /* Returns true if HD is enabled */
     bool IsHDEnabled() const;
@@ -1081,6 +1094,13 @@ public:
 
     //! Disconnect chain notifications and wait for all notifications to be processed
     void DisconnectChainNotifications();
+
+    //! Export the descriptors from this wallet so that they can be imported elsewhere
+    util::Expected<std::vector<WalletDescInfo>, std::string> ExportDescriptors(bool export_private) const EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
+
+    //! Make a new watchonly wallet file containing the public descriptors from this wallet
+    //! The exported watchonly wallet file will be named and placed at the path specified in 'destination'
+    util::Result<std::string> ExportWatchOnlyWallet(const fs::path& destination, WalletContext& context) const EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
 };
 
 /**
