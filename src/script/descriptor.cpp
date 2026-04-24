@@ -429,7 +429,7 @@ public:
         std::copy(keyid.begin(), keyid.begin() + sizeof(info.fingerprint), info.fingerprint);
         info.path = m_path;
         if (m_derive == DeriveType::UNHARDENED_RANGED) info.path.push_back((uint32_t)pos);
-        if (m_derive == DeriveType::HARDENED_RANGED) info.path.push_back(((uint32_t)pos) | 0x80000000L);
+        if (m_derive == DeriveType::HARDENED_RANGED) info.path.push_back(((uint32_t)pos) | BIP32_HARDENED_FLAG);
 
         // Derive keys or fetch them from cache
         CExtPubKey final_extkey = m_root_extkey;
@@ -450,7 +450,7 @@ public:
             if (!GetDerivedExtKey(arg, xprv, lh_xprv)) return std::nullopt;
             parent_extkey = xprv.Neuter();
             if (m_derive == DeriveType::UNHARDENED_RANGED) der = xprv.Derive(xprv, pos);
-            if (m_derive == DeriveType::HARDENED_RANGED) der = xprv.Derive(xprv, pos | 0x80000000UL);
+            if (m_derive == DeriveType::HARDENED_RANGED) der = xprv.Derive(xprv, pos | BIP32_HARDENED_FLAG);
             final_extkey = xprv.Neuter();
             if (lh_xprv.key.IsValid()) {
                 last_hardened_extkey = lh_xprv.Neuter();
@@ -576,7 +576,7 @@ public:
         CExtKey dummy;
         if (!GetDerivedExtKey(arg, extkey, dummy)) return;
         if (m_derive == DeriveType::UNHARDENED_RANGED && !extkey.Derive(extkey, pos)) return;
-        if (m_derive == DeriveType::HARDENED_RANGED && !extkey.Derive(extkey, pos | 0x80000000UL)) return;
+        if (m_derive == DeriveType::HARDENED_RANGED && !extkey.Derive(extkey, pos | BIP32_HARDENED_FLAG)) return;
         out.keys.emplace(extkey.key.GetPubKey().GetID(), extkey.key);
     }
     std::optional<CPubKey> GetRootPubKey() const override
@@ -1751,30 +1751,6 @@ enum class ParseScriptContext {
     MUSIG,   //!< Inside musig() (implies P2TR, cannot have nested musig())
 };
 
-std::optional<uint32_t> ParseKeyPathNum(std::span<const char> elem, bool& apostrophe, std::string& error, bool& has_hardened)
-{
-    bool hardened = false;
-    if (elem.size() > 0) {
-        const char last = elem[elem.size() - 1];
-        if (last == '\'' || last == 'h') {
-            elem = elem.first(elem.size() - 1);
-            hardened = true;
-            apostrophe = last == '\'';
-        }
-    }
-    const auto p{ToIntegral<uint32_t>(std::string_view{elem.begin(), elem.end()})};
-    if (!p) {
-        error = strprintf("Key path value '%s' is not a valid uint32", std::string_view{elem.begin(), elem.end()});
-        return std::nullopt;
-    } else if (*p > 0x7FFFFFFFUL) {
-        error = strprintf("Key path value %u is out of range", *p);
-        return std::nullopt;
-    }
-    has_hardened = has_hardened || hardened;
-
-    return std::make_optional<uint32_t>(*p | (((uint32_t)hardened) << 31));
-}
-
 /**
  * Parse a key path, being passed a split list of elements (the first element is ignored because it is always the key).
  *
@@ -1788,6 +1764,17 @@ std::optional<uint32_t> ParseKeyPathNum(std::span<const char> elem, bool& apostr
  **/
 [[nodiscard]] bool ParseKeyPath(const std::vector<std::span<const char>>& split, std::vector<KeyPath>& out, bool& apostrophe, std::string& error, bool allow_multipath, bool& has_hardened)
 {
+    auto parserWrapper = [&](std::span<const char> elem) -> std::optional<uint32_t> {
+        bool hardened = false;
+        const auto index{ParseKeyPathElement(elem, hardened, error)};
+        if (!index.has_value()) return std::nullopt;
+        if (hardened) {
+            has_hardened = true;
+            apostrophe = elem.back() == '\'';
+        }
+        return *index;
+    };
+
     KeyPath path;
     struct MultipathSubstitutes {
         size_t placeholder_index;
@@ -1820,7 +1807,7 @@ std::optional<uint32_t> ParseKeyPathNum(std::span<const char> elem, bool& apostr
             substitutes.emplace();
             std::unordered_set<uint32_t> seen_substitutes;
             for (const auto& num : nums) {
-                const auto& op_num = ParseKeyPathNum(num, apostrophe, error, has_hardened);
+                const auto& op_num = parserWrapper(num);
                 if (!op_num) return false;
                 auto [_, inserted] = seen_substitutes.insert(*op_num);
                 if (!inserted) {
@@ -1833,7 +1820,7 @@ std::optional<uint32_t> ParseKeyPathNum(std::span<const char> elem, bool& apostr
             path.emplace_back(); // Placeholder for multipath segment
             substitutes->placeholder_index = path.size() - 1;
         } else {
-            const auto& op_num = ParseKeyPathNum(elem, apostrophe, error, has_hardened);
+            const auto& op_num = parserWrapper(elem);
             if (!op_num) return false;
             path.emplace_back(*op_num);
         }
