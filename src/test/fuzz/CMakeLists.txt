@@ -138,6 +138,17 @@ add_executable(fuzz
   versionbits.cpp
 )
 
+if(ENABLE_IPC)
+  target_sources(fuzz PRIVATE ipc.cpp)
+  add_library(bitcoin_ipc_fuzz STATIC EXCLUDE_FROM_ALL)
+  target_capnp_sources(bitcoin_ipc_fuzz ${PROJECT_SOURCE_DIR}/src
+    ipc_fuzz.capnp
+    IMPORT_PATHS ${PROJECT_SOURCE_DIR}/src
+  )
+  add_dependencies(bitcoin_ipc_fuzz bitcoin_ipc_headers)
+  target_link_libraries(bitcoin_ipc_fuzz PUBLIC core_interface bitcoin_ipc univalue Libmultiprocess::multiprocess)
+endif()
+
 add_windows_application_manifest(fuzz)
 
 target_link_libraries(fuzz
@@ -154,6 +165,10 @@ target_link_libraries(fuzz
   Boost::headers
   libevent::extra
 )
+
+if(ENABLE_IPC)
+  target_link_libraries(fuzz bitcoin_ipc_fuzz)
+endif()
 
 if(ENABLE_WALLET)
   add_subdirectory(${PROJECT_SOURCE_DIR}/src/wallet/test/fuzz wallet)
