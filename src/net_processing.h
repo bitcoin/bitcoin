@@ -102,10 +102,10 @@ public:
     /**
      * Attempt to manually fetch block from a given peer. We must already have the header.
      *
-     * @param[in]  peer_id      The peer id
+     * @param[in]  op_peer_id   The peer id (std::nullopt is equivalent to "any peer")
      * @param[in]  block_index  The blockindex
      */
-    virtual util::Expected<void, std::string> FetchBlock(NodeId peer_id, const CBlockIndex& block_index) = 0;
+    virtual util::Expected<void, std::string> FetchBlock(std::optional<NodeId> op_peer_id, const CBlockIndex& block_index, bool retry) = 0;
 
     /** Begin running background tasks, should only be called once */
     virtual void StartScheduledTasks(CScheduler& scheduler) = 0;
