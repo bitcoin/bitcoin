@@ -100,7 +100,7 @@ BOOST_AUTO_TEST_CASE(blockfilter_basic_test)
     block_undo.vtxundo.back().vprevout.emplace_back(CTxOut(700, excluded_scripts[3]), 100000, false);
 
     BlockFilter block_filter(BlockFilterType::BASIC, block, block_undo);
-    const GCSFilter& filter = block_filter.GetFilter();
+    const BlockFilterBase& filter = block_filter.GetFilter();
 
     for (const CScript& script : included_scripts) {
         BOOST_CHECK(filter.Match(GCSFilter::Element(script.begin(), script.end())));

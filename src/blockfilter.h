@@ -8,6 +8,7 @@
 #include <cstddef>
 #include <cstdint>
 #include <ios>
+#include <memory>
 #include <set>
 #include <string>
 #include <string_view>
@@ -135,13 +136,13 @@ class BlockFilter
 private:
     BlockFilterType m_filter_type = BlockFilterType::INVALID;
     uint256 m_block_hash;
-    GCSFilter m_filter;
+    std::unique_ptr<BlockFilterBase> m_filter;
 
     bool BuildParams(GCSFilter::Params& params) const;
 
 public:
 
-    BlockFilter() = default;
+    BlockFilter() : m_filter(std::make_unique<GCSFilter>()) {}
 
     //! Reconstruct a BlockFilter from parts.
     BlockFilter(BlockFilterType filter_type, const uint256& block_hash,
@@ -152,11 +153,11 @@ public:
 
     BlockFilterType GetFilterType() const { return m_filter_type; }
     const uint256& GetBlockHash() const LIFETIMEBOUND { return m_block_hash; }
-    const GCSFilter& GetFilter() const LIFETIMEBOUND { return m_filter; }
+    const BlockFilterBase& GetFilter() const LIFETIMEBOUND { return *m_filter; }
 
     const std::vector<unsigned char>& GetEncodedFilter() const LIFETIMEBOUND
     {
-        return m_filter.GetEncoded();
+        return m_filter->GetEncoded();
     }
 
     //! Compute the filter hash.
@@ -169,7 +170,7 @@ public:
     void Serialize(Stream& s) const {
         s << static_cast<uint8_t>(m_filter_type)
           << m_block_hash
-          << m_filter.GetEncoded();
+          << m_filter->GetEncoded();
     }
 
     template <typename Stream>
@@ -187,7 +188,7 @@ public:
         if (!BuildParams(params)) {
             throw std::ios_base::failure("unknown filter_type");
         }
-        m_filter = GCSFilter(params, std::move(encoded_filter), /*skip_decode_check=*/false);
+        m_filter = std::make_unique<GCSFilter>(params, std::move(encoded_filter), /*skip_decode_check=*/false);
     }
 };
 

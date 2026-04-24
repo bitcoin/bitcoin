@@ -216,7 +216,7 @@ BlockFilter::BlockFilter(BlockFilterType filter_type, const uint256& block_hash,
     if (!BuildParams(params)) {
         throw std::invalid_argument("unknown filter_type");
     }
-    m_filter = GCSFilter(params, std::move(filter), skip_decode_check);
+    m_filter = std::make_unique<GCSFilter>(params, std::move(filter), skip_decode_check);
 }
 
 BlockFilter::BlockFilter(BlockFilterType filter_type, const CBlock& block, const CBlockUndo& block_undo)
@@ -226,7 +226,7 @@ BlockFilter::BlockFilter(BlockFilterType filter_type, const CBlock& block, const
     if (!BuildParams(params)) {
         throw std::invalid_argument("unknown filter_type");
     }
-    m_filter = GCSFilter(params, BasicFilterElements(block, block_undo));
+    m_filter = std::make_unique<GCSFilter>(params, BasicFilterElements(block, block_undo));
 }
 
 bool BlockFilter::BuildParams(GCSFilter::Params& params) const
