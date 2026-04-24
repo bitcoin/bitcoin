@@ -1263,6 +1263,10 @@ bool MemPoolAccept::SubmitPackage(const ATMPArgs& args, std::vector<Workspace>& 
                                             ws.m_ptx->GetHash().ToString()));
             // Remove the transaction from the mempool.
             if (!m_subpackage.m_changeset) m_subpackage.m_changeset = m_pool.GetChangeSet();
+        }
+        // Remove first failing tx and all subsequent in package
+        if (!all_submitted) {
+            Assert(m_subpackage.m_changeset);
             m_subpackage.m_changeset->StageRemoval(m_pool.GetIter(ws.m_ptx->GetHash()).value());
         }
     }
