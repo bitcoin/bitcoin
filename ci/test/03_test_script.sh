@@ -123,15 +123,16 @@ cmake -S "$BASE_ROOT_DIR" -B "$BASE_BUILD_DIR" "${CMAKE_ARGS[@]}" || (
   false
 )
 
+BUILD_TARGETS="${GOAL}"
 if [[ "${GOAL}" != all && "${GOAL}" != codegen ]]; then
-  GOAL="all ${GOAL}"
+  BUILD_TARGETS="all ${GOAL}"
 fi
 
 # shellcheck disable=SC2086
-cmake --build "${BASE_BUILD_DIR}" "$MAKEJOBS" --target $GOAL || (
+cmake --build "${BASE_BUILD_DIR}" "$MAKEJOBS" --target $BUILD_TARGETS || (
   echo "Build failure. Verbose build follows."
   # shellcheck disable=SC2086
-  cmake --build "${BASE_BUILD_DIR}" -j1 --target $GOAL --verbose
+  cmake --build "${BASE_BUILD_DIR}" -j1 --target $BUILD_TARGETS --verbose
   false
 )
 
@@ -157,7 +158,7 @@ fi
 
 if [[ "$CI_OS_NAME" == "macos" && "${GOAL}" = "install deploy" ]]; then
   unzip "${BASE_BUILD_DIR}/bitcoin-macos-app.zip" -d "${BASE_BUILD_DIR}/deploy"
-  if ! ( codesign --verify "${BASE_BUILD_DIR}/deploy/Bitcoin-Qt.app" ); then
+  if ! ( codesign --verify --strict "${BASE_BUILD_DIR}/deploy/Bitcoin-Qt.app" ); then
     echo "Codesigning failed."
     false
   fi
