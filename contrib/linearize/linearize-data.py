@@ -134,6 +134,7 @@ class BlockDataCopier:
     def writeBlock(self, inhdr, blk_hdr, rawblock):
         blockSizeOnDisk = len(inhdr) + len(blk_hdr) + len(rawblock)
         if not self.fileOutput and ((self.outsz + blockSizeOnDisk) > self.maxOutSz):
+            os.ftruncate(self.outF.fileno(), self.outF.tell())
             self.outF.close()
             if self.setFileTime:
                 os.utime(self.outFname, (int(time.time()), self.highTS))
@@ -147,6 +148,7 @@ class BlockDataCopier:
             print("New month " + blkDate.strftime("%Y-%m") + " @ " + self.hash_str)
             self.lastDate = blkDate
             if self.outF:
+                os.ftruncate(self.outF.fileno(), self.outF.tell())
                 self.outF.close()
                 if self.setFileTime:
                     os.utime(self.outFname, (int(time.time()), self.highTS))
@@ -161,7 +163,10 @@ class BlockDataCopier:
             else:
                 self.outFname = os.path.join(self.settings['output'], "blk%05d.dat" % self.outFn)
             print("Output file " + self.outFname)
-            self.outF = open(self.outFname, "wb")
+            try:
+                self.outF = open(self.outFname, "xb+")
+            except FileExistsError:
+                self.outF = open(self.outFname, "rb+")
 
         self.outF.write(inhdr)
         self.outF.write(blk_hdr)
