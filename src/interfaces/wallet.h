@@ -7,6 +7,7 @@
 
 #include <addresstype.h>
 #include <common/signmessage.h>
+#include <common/types.h>
 #include <consensus/amount.h>
 #include <interfaces/chain.h>
 #include <primitives/transaction_identifier.h>
@@ -202,9 +203,7 @@ public:
         int& num_blocks) = 0;
 
     //! Fill PSBT.
-    virtual std::optional<common::PSBTError> fillPSBT(std::optional<int> sighash_type,
-        bool sign,
-        bool bip32derivs,
+    virtual std::optional<common::PSBTError> fillPSBT(common::PSBTFillOptions options,
         size_t* n_signed,
         PartiallySignedTransaction& psbtx,
         bool& complete) = 0;
