@@ -22,29 +22,14 @@ ${CI_RETRY_EXE} apt-get update
 # - moreutils (used by scripted-diff)
 ${CI_RETRY_EXE} apt-get install -y cargo curl xz-utils git gpg moreutils
 
-PYTHON_PATH="/python_build"
-if [ ! -d "${PYTHON_PATH}/bin" ]; then
-  (
-    ${CI_RETRY_EXE} git clone --depth=1 https://github.com/pyenv/pyenv.git
-    cd pyenv/plugins/python-build || exit 1
-    ./install.sh
-  )
-  # For dependencies see https://github.com/pyenv/pyenv/wiki#suggested-build-environment
-  ${CI_RETRY_EXE} apt-get install -y build-essential libssl-dev zlib1g-dev \
-    libbz2-dev libreadline-dev libsqlite3-dev curl llvm \
-    libncursesw5-dev xz-utils tk-dev libxml2-dev libxmlsec1-dev libffi-dev liblzma-dev \
-    clang
-  env CC=clang python-build "$(cat "/.python-version")" "${PYTHON_PATH}"
-fi
-export PATH="${PYTHON_PATH}/bin:${PATH}"
+# Install Python and create venv using uv (reads version from .python-version)
+uv venv /python_env
+
+export PATH="/python_env/bin:${PATH}"
 command -v python3
 python3 --version
 
-${CI_RETRY_EXE} pip3 install \
-  lief==0.17.5 \
-  mypy==1.19.1 \
-  pyzmq==27.1.0 \
-  ruff==0.15.5
+uv pip install --python /python_env --requirements /ci/lint/requirements.txt
 
 SHELLCHECK_VERSION=v0.11.0
 curl --fail -L "https://github.com/koalaman/shellcheck/releases/download/${SHELLCHECK_VERSION}/shellcheck-${SHELLCHECK_VERSION}.linux.$(uname --machine).tar.xz" | \
