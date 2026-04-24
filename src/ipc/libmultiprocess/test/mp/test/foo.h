@@ -9,6 +9,7 @@
 #include <functional>
 #include <map>
 #include <memory>
+#include <optional>
 #include <string>
 #include <set>
 #include <vector>
@@ -21,6 +22,7 @@ struct FooStruct
     std::string name;
     std::set<int> setint;
     std::vector<bool> vbool;
+    std::optional<int> optional_int;
 };
 
 enum class FooEnum : uint8_t { ONE = 1, TWO = 2, };
