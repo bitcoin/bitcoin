@@ -380,14 +380,9 @@ std::variant<MappingResult, MappingError> NATPMPRequestPortMap(const CNetAddr &g
         uint16_t result_code = ReadBE16(response.data() + NATPMP_RESPONSE_HDR_RESULT_OFS);
         if (result_code != NATPMP_RESULT_SUCCESS) {
             if (result_code == NATPMP_RESULT_NOT_AUTHORIZED) {
-                static std::atomic<bool> warned{false};
-                if (!warned.exchange(true)) {
-                    LogWarning("natpmp: Port mapping failed with result %s\n", NATPMPResultString(result_code));
-                } else {
-                    LogDebug(BCLog::NET, "natpmp: Port mapping failed with result %s\n", NATPMPResultString(result_code));
-                }
+                LogWarnThenDebug(BCLog::NET, "natpmp: Port mapping failed with result %s", NATPMPResultString(result_code));
             } else {
-                LogWarning("natpmp: Port mapping failed with result %s\n", NATPMPResultString(result_code));
+                LogWarning("natpmp: Port mapping failed with result %s", NATPMPResultString(result_code));
             }
             if (result_code == NATPMP_RESULT_NO_RESOURCES) {
                 return MappingError::NO_RESOURCES;
@@ -523,14 +518,9 @@ std::variant<MappingResult, MappingError> PCPRequestPortMap(const PCPMappingNonc
     CNetAddr external_addr{PCPUnwrapAddress(response.subspan(PCP_HDR_SIZE + PCP_MAP_EXTERNAL_IP_OFS, ADDR_IPV6_SIZE))};
     if (result_code != PCP_RESULT_SUCCESS) {
         if (result_code == PCP_RESULT_NOT_AUTHORIZED) {
-            static std::atomic<bool> warned{false};
-            if (!warned.exchange(true)) {
-                LogWarning("pcp: Mapping failed with result %s\n", PCPResultString(result_code));
-            } else {
-                LogDebug(BCLog::NET, "pcp: Mapping failed with result %s\n", PCPResultString(result_code));
-            }
+            LogWarnThenDebug(BCLog::NET, "pcp: Mapping failed with result %s", PCPResultString(result_code));
         } else {
-            LogWarning("pcp: Mapping failed with result %s\n", PCPResultString(result_code));
+            LogWarning("pcp: Mapping failed with result %s", PCPResultString(result_code));
         }
         if (result_code == PCP_RESULT_NO_RESOURCES) {
             return MappingError::NO_RESOURCES;
