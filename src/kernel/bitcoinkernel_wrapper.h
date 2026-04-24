@@ -878,17 +878,22 @@ concept Log = requires(T a, std::string_view message) {
 };
 
 template <Log T>
-class Logger : UniqueHandle<btck_LoggingConnection, btck_logging_connection_destroy>
+void logging_set_callback(std::unique_ptr<T> log)
 {
-public:
-    Logger(std::unique_ptr<T> log)
-        : UniqueHandle{btck_logging_connection_create(
-              +[](void* user_data, const char* message, size_t message_len) { static_cast<T*>(user_data)->LogMessage({message, message_len}); },
-              log.release(),
-              +[](void* user_data) { delete static_cast<T*>(user_data); })}
-    {
+    if (btck_logging_set_callback(
+            +[](void* user_data, const char* message, size_t message_len) { static_cast<T*>(user_data)->LogMessage({message, message_len}); },
+            log.release(),
+            +[](void* user_data) { delete static_cast<T*>(user_data); }) != 0) {
+        throw std::runtime_error("Failed to set logging callback");
     }
-};
+}
+
+inline void logging_set_callback(std::nullptr_t)
+{
+    if (btck_logging_set_callback(nullptr, nullptr, nullptr) != 0) {
+        throw std::runtime_error("Failed to clear logging callback");
+    }
+}
 
 class BlockTreeEntry : public View<btck_BlockTreeEntry>
 {

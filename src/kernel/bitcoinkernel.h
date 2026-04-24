@@ -136,19 +136,6 @@ typedef struct btck_ScriptPubkey btck_ScriptPubkey;
 typedef struct btck_TransactionOutput btck_TransactionOutput;
 
 /**
- * Opaque data structure for holding a logging connection.
- *
- * The logging connection can be used to manually stop logging.
- *
- * Messages that were logged before a connection is created are buffered in a
- * 1MB buffer. Logging can alternatively be permanently disabled by calling
- * @ref btck_logging_disable. Functions changing the logging settings are
- * global and change the settings for all existing btck_LoggingConnection
- * instances.
- */
-typedef struct btck_LoggingConnection btck_LoggingConnection;
-
-/**
  * Opaque data structure for holding the chain parameters.
  *
  * These are eventually placed into a kernel context through the kernel context
@@ -779,16 +766,14 @@ BITCOINKERNEL_API void btck_transaction_output_destroy(btck_TransactionOutput* t
  * @brief This disables the global internal logger. No log messages will be
  * buffered internally anymore once this is called and the buffer is cleared.
  * This function should only be called once and is not thread or re-entry safe.
- * Log messages will be buffered until this function is called, or a logging
- * connection is created. This must not be called while a logging connection
- * already exists.
+ * Log messages will be buffered until this function is called, or the logging
+ * callback is set. If a logging callback is set, it will be cleared and its
+ * user_data freed through the destroy callback if one was provided.
  */
 BITCOINKERNEL_API void btck_logging_disable();
 
 /**
- * @brief Set some options for the global internal logger. This changes global
- * settings and will override settings for all existing @ref
- * btck_LoggingConnection instances.
+ * @brief Set some options for the global internal logger.
  *
  * @param[in] options Sets formatting options of the log messages.
  */
@@ -797,9 +782,7 @@ BITCOINKERNEL_API void btck_logging_set_options(btck_LoggingOptions options);
 /**
  * @brief Set the log level of the global internal logger. This does not
  * enable the selected categories. Use @ref btck_logging_enable_category to
- * start logging from a specific, or all categories. This changes a global
- * setting and will override settings for all existing
- * @ref btck_LoggingConnection instances.
+ * start logging from a specific, or all categories.
  *
  * @param[in] category If btck_LogCategory_ALL is chosen, sets both the global fallback log level
  *                     used by all categories that don't have a specific level set, and also
@@ -812,45 +795,41 @@ BITCOINKERNEL_API void btck_logging_set_options(btck_LoggingOptions options);
 BITCOINKERNEL_API void btck_logging_set_level_category(btck_LogCategory category, btck_LogLevel level);
 
 /**
- * @brief Enable a specific log category for the global internal logger. This
- * changes a global setting and will override settings for all existing @ref
- * btck_LoggingConnection instances.
+ * @brief Enable a specific log category for the global internal logger.
  *
  * @param[in] category If btck_LogCategory_ALL is chosen, all categories will be enabled.
  */
 BITCOINKERNEL_API void btck_logging_enable_category(btck_LogCategory category);
 
 /**
- * @brief Disable a specific log category for the global internal logger. This
- * changes a global setting and will override settings for all existing @ref
- * btck_LoggingConnection instances.
+ * @brief Disable a specific log category for the global internal logger.
  *
  * @param[in] category If btck_LogCategory_ALL is chosen, all categories will be disabled.
  */
 BITCOINKERNEL_API void btck_logging_disable_category(btck_LogCategory category);
 
 /**
- * @brief Start logging messages through the provided callback. Log messages
- * produced before this function is first called are buffered and on calling this
- * function are logged immediately.
+ * @brief Set the logging callback for the global internal logger. This function
+ * is not thread-safe and must not be called concurrently. Log messages produced
+ * before this function is first called are buffered and on calling this function
+ * are logged immediately. Calling this function again replaces the previous
+ * callback. Any previously set user_data will be freed through its destroy
+ * callback if one was provided.
  *
- * @param[in] log_callback               Non-null, function through which messages will be logged.
+ * @param[in] log_callback               Nullable, function through which messages will be logged.
+ *                                       Null to clear the logging callback, in which case user_data
+ *                                       and user_data_destroy_callback must also be null.
  * @param[in] user_data                  Nullable, holds a user-defined opaque structure. Is passed back
  *                                       to the user through the callback. If the user_data_destroy_callback
  *                                       is also defined it is assumed that ownership of the user_data is passed
- *                                       to the created logging connection.
+ *                                       to the logger.
  * @param[in] user_data_destroy_callback Nullable, function for freeing the user data.
- * @return                               A new kernel logging connection, or null on error.
+ * @return                               Zero on success.
  */
-BITCOINKERNEL_API btck_LoggingConnection* BITCOINKERNEL_WARN_UNUSED_RESULT btck_logging_connection_create(
+BITCOINKERNEL_API int BITCOINKERNEL_WARN_UNUSED_RESULT btck_logging_set_callback(
     btck_LogCallback log_callback,
     void* user_data,
-    btck_DestroyCallback user_data_destroy_callback) BITCOINKERNEL_ARG_NONNULL(1);
-
-/**
- * Stop logging and destroy the logging connection.
- */
-BITCOINKERNEL_API void btck_logging_connection_destroy(btck_LoggingConnection* logging_connection);
+    btck_DestroyCallback user_data_destroy_callback);
 
 ///@}
 

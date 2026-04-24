@@ -631,14 +631,12 @@ BOOST_AUTO_TEST_CASE(logging_tests)
     logging_enable_category(LogCategory::VALIDATION);
     logging_disable_category(LogCategory::VALIDATION);
 
-    // Check that connecting, connecting another, and then disconnecting and connecting a logger again works.
-    {
-        logging_set_level_category(LogCategory::KERNEL, LogLevel::TRACE_LEVEL);
-        logging_enable_category(LogCategory::KERNEL);
-        Logger logger{std::make_unique<TestLog>()};
-        Logger logger_2{std::make_unique<TestLog>()};
-    }
-    Logger logger{std::make_unique<TestLog>()};
+    // Check that setting, replacing, and clearing the logging callback works.
+    logging_set_level_category(LogCategory::KERNEL, LogLevel::TRACE_LEVEL);
+    logging_enable_category(LogCategory::KERNEL);
+    logging_set_callback(std::make_unique<TestLog>());
+    logging_set_callback(std::make_unique<TestLog>());
+    logging_set_callback(nullptr);
 }
 
 BOOST_AUTO_TEST_CASE(btck_context_tests)
@@ -735,7 +733,7 @@ Context create_context(std::shared_ptr<TestKernelNotifications> notifications, C
 
 BOOST_AUTO_TEST_CASE(btck_chainman_tests)
 {
-    Logger logger{std::make_unique<TestLog>()};
+    logging_set_callback(std::make_unique<TestLog>());
     auto test_directory{TestDirectory{"chainman_test_bitcoin_kernel"}};
 
     { // test with default context
