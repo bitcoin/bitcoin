@@ -26,6 +26,7 @@ add_executable(fuzz
   chain.cpp
   checkqueue.cpp
   cluster_linearize.cpp
+  cmpctblock.cpp
   coins_view.cpp
   coinscache_sim.cpp
   connman.cpp
