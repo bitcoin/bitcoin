@@ -362,8 +362,6 @@ struct Peer {
      *  This field must correlate with whether m_addr_known has been
      *  initialized.*/
     std::atomic_bool m_addr_relay_enabled{false};
-    /** Whether a getaddr request to this peer is outstanding. */
-    bool m_getaddr_sent GUARDED_BY(NetEventsInterface::g_msgproc_mutex){false};
     /** Guards address sending timers. */
     mutable Mutex m_addr_send_times_mutex;
     /** Time point to send the next ADDR message to this peer. */
@@ -3763,7 +3761,6 @@ void PeerManagerImpl::ProcessMessage(Peer& peer, CNode& pfrom, const std::string
             // potentially leaking addr information and we do not want to
             // indicate to the peer that we will participate in addr relay.
             MakeAndPushMessage(pfrom, NetMsgType::GETADDR);
-            peer.m_getaddr_sent = true;
             // When requesting a getaddr, accept an additional MAX_ADDR_TO_SEND addresses in response
             // (bypassing the MAX_ADDR_PROCESSING_TOKEN_BUCKET limit).
             peer.m_addr_token_bucket += MAX_ADDR_TO_SEND;
@@ -5688,7 +5685,7 @@ void PeerManagerImpl::ProcessAddrs(std::string_view msg_type, CNode& pfrom, Peer
         }
         ++num_proc;
         const bool reachable{g_reachable_nets.Contains(addr)};
-        if (addr.nTime > current_time - 10min && !peer.m_getaddr_sent && vAddr.size() <= 10 && addr.IsRoutable()) {
+        if (addr.nTime > current_time - 10min && vAddr.size() <= 10 && addr.IsRoutable()) {
             // Relay to a limited number of other nodes
             RelayAddress(pfrom.GetId(), addr, reachable);
         }
@@ -5703,7 +5700,6 @@ void PeerManagerImpl::ProcessAddrs(std::string_view msg_type, CNode& pfrom, Peer
              vAddr.size(), num_proc, num_rate_limit, pfrom.GetId());
 
     m_addrman.Add(vAddrOk, pfrom.addr, /*time_penalty=*/2h);
-    if (vAddr.size() < 1000) peer.m_getaddr_sent = false;
 
     // AddrFetch: Require multiple addresses to avoid disconnecting on self-announcements
     if (pfrom.IsAddrFetchConn() && vAddr.size() > 1) {
