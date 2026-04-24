@@ -564,7 +564,7 @@ const CWalletTx* CWallet::GetWalletTx(const Txid& hash) const
 
 void CWallet::UpgradeDescriptorCache()
 {
-    if (!IsWalletFlagSet(WALLET_FLAG_DESCRIPTORS) || IsLocked() || IsWalletFlagSet(WALLET_FLAG_LAST_HARDENED_XPUB_CACHED)) {
+    if (IsLocked() || IsWalletFlagSet(WALLET_FLAG_LAST_HARDENED_XPUB_CACHED)) {
         return;
     }
 
@@ -639,8 +639,10 @@ bool CWallet::Unlock(const SecureString& strWalletPassphrase)
                 continue; // try another master key
             }
             if (Unlock(plain_master_key)) {
-                // Now that we've unlocked, upgrade the descriptor cache
-                UpgradeDescriptorCache();
+                if (IsWalletFlagSet(WALLET_FLAG_DESCRIPTORS)) {
+                    // Now that we've unlocked, upgrade the descriptor cache
+                    UpgradeDescriptorCache();
+                }
                 return true;
             }
         }
@@ -840,9 +842,6 @@ void CWallet::AddToSpends(const CWalletTx& wtx)
 
 bool CWallet::EncryptWallet(const SecureString& strWalletPassphrase)
 {
-    // Only descriptor wallets can be encrypted
-    Assert(IsWalletFlagSet(WALLET_FLAG_DESCRIPTORS));
-
     if (HasEncryptionKeys())
         return false;
 
@@ -3711,10 +3710,6 @@ void CWallet::AddActiveScriptPubKeyManWithDb(WalletBatch& batch, uint256 id, Out
 
 void CWallet::LoadActiveScriptPubKeyMan(uint256 id, OutputType type, bool internal)
 {
-    // Activating ScriptPubKeyManager for a given output and change type is incompatible with legacy wallets.
-    // Legacy wallets have only one ScriptPubKeyManager and it's active for all output and change types.
-    Assert(IsWalletFlagSet(WALLET_FLAG_DESCRIPTORS));
-
     WalletLogPrintf("Setting spkMan to active: id = %s, type = %s, internal = %s\n", id.ToString(), FormatOutputType(type), internal ? "true" : "false");
     auto& spk_mans = internal ? m_internal_spk_managers : m_external_spk_managers;
     auto& spk_mans_other = internal ? m_external_spk_managers : m_internal_spk_managers;
@@ -3783,8 +3778,6 @@ std::optional<bool> CWallet::IsInternalScriptPubKeyMan(ScriptPubKeyMan* spk_man)
 util::Result<std::reference_wrapper<DescriptorScriptPubKeyMan>> CWallet::AddWalletDescriptor(WalletDescriptor& desc, const FlatSigningProvider& signing_provider, const std::string& label, bool internal)
 {
     AssertLockHeld(cs_wallet);
-
-    Assert(IsWalletFlagSet(WALLET_FLAG_DESCRIPTORS));
 
     auto spk_man = GetDescriptorScriptPubKeyMan(desc);
     if (spk_man) {
@@ -4528,8 +4521,6 @@ std::set<CExtPubKey> CWallet::GetActiveHDPubKeys() const
 {
     AssertLockHeld(cs_wallet);
 
-    Assert(IsWalletFlagSet(WALLET_FLAG_DESCRIPTORS));
-
     std::set<CExtPubKey> active_xpubs;
     for (const auto& spkm : GetActiveScriptPubKeyMans()) {
         const DescriptorScriptPubKeyMan* desc_spkm = dynamic_cast<DescriptorScriptPubKeyMan*>(spkm);
@@ -4547,8 +4538,6 @@ std::set<CExtPubKey> CWallet::GetActiveHDPubKeys() const
 
 std::optional<CKey> CWallet::GetKey(const CKeyID& keyid) const
 {
-    Assert(IsWalletFlagSet(WALLET_FLAG_DESCRIPTORS));
-
     for (const auto& spkm : GetAllScriptPubKeyMans()) {
         const DescriptorScriptPubKeyMan* desc_spkm = dynamic_cast<DescriptorScriptPubKeyMan*>(spkm);
         assert(desc_spkm);
