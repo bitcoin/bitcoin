@@ -5,7 +5,9 @@
 """Test for assumeutxo wallet related behavior.
 See feature_assumeutxo.py for background.
 """
+from shutil import rmtree
 from test_framework.address import address_to_scriptpubkey
+from test_framework.blocktools import create_block, create_coinbase
 from test_framework.descriptors import descsum_create
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.messages import COIN
@@ -52,12 +54,13 @@ class AssumeutxoTest(BitcoinTestFramework):
         wrpc = node.get_wallet_rpc(wallet_name)
         return wrpc.importdescriptors(import_request)
 
-    def validate_snapshot_import(self, node, loaded, base_hash):
+    def validate_snapshot_import(self, node, loaded, base_hash, expect_start_height=True):
         assert_equal(loaded['coins_loaded'], SNAPSHOT_BASE_HEIGHT)
         assert_equal(loaded['base_height'], SNAPSHOT_BASE_HEIGHT)
 
         normal, snapshot = node.getchainstates()["chainstates"]
-        assert_equal(normal['blocks'], START_HEIGHT)
+        if expect_start_height:
+            assert_equal(normal['blocks'], START_HEIGHT)
         assert 'snapshot_blockhash' not in normal
         assert_equal(normal['validated'], True)
         assert_equal(snapshot['blocks'], SNAPSHOT_BASE_HEIGHT)
@@ -106,6 +109,81 @@ class AssumeutxoTest(BitcoinTestFramework):
         # Check balance of w_alt wallet
         w_alt = n3.get_wallet_rpc("w_alt")
         assert_equal(w_alt.getbalance(), 34)
+
+    def test_wallet_reorg_during_background_sync(self, dump_output):
+        self.log.info("Ensure wallet balances stay consistent across a reorg during assumeutxo background sync")
+        n0 = self.nodes[0]
+        n3 = self.nodes[3]
+
+        # Restart pruned node fresh to ensure snapshot has more work than active chainstate
+        self.stop_node(n3.index)
+        rmtree(n3.chain_path)
+        self.start_node(n3.index, extra_args=self.extra_args[n3.index])
+        n3.setmocktime(n0.getblockheader(n0.getbestblockhash())['time'])
+
+        # Feed headers so the snapshot base block is known
+        for i in range(1, SNAPSHOT_BASE_HEIGHT + 1):
+            header = n0.getblock(n0.getblockhash(i), 0)
+            n3.submitheader(header)
+
+        loaded = n3.loadtxoutset(dump_output['path'])
+        self.validate_snapshot_import(n3, loaded, dump_output['base_hash'], expect_start_height=False)
+
+        # Restore wallet created at snapshot height it should be empty before sync
+        n3.restorewallet("w_reorg", "backup_w.dat")
+        w_reorg = n3.get_wallet_rpc("w_reorg")
+        assert_equal(w_reorg.getbalance(), 0)
+
+        # Begin background sync from n0
+        self.connect_nodes(n3.index, n0.index)
+        self.wait_until(lambda: n3.getchainstates()['chainstates'][-1]['blocks'] > SNAPSHOT_BASE_HEIGHT)
+
+        # Fund the wallet on the main chain after the snapshot so the payment is orphaned by the reorg
+        payment_addr = w_reorg.getnewaddress()
+        pay_amount = 5
+        funding_wallet = n0.get_wallet_rpc("w")
+        txid = funding_wallet.sendtoaddress(payment_addr, pay_amount)
+        self.generate(n0, nblocks=2, sync_fun=self.no_op)
+        # Ensure the assumeutxo node receives the blocks with the payment
+        self.sync_blocks(nodes=(n0, n3))
+        self.wait_until(lambda: n3.getblockcount() == n0.getblockcount())
+        # Payment is post snapshot and intended to be orphaned by the reorg ensure seen first
+        self.wait_until(lambda: w_reorg.gettransaction(txid)['confirmations'] >= 1, timeout=180)
+        self.wait_until(lambda: w_reorg.getbalance() >= pay_amount, timeout=30)
+
+        # Build an alternative chain on n0 that excludes the post-snapshot wallet payment
+        fork_point = SNAPSHOT_BASE_HEIGHT
+        orig_height = n0.getblockcount()
+        orig_chainwork = int(n0.getblockchaininfo()['chainwork'], 16)
+        self.disconnect_nodes(n3.index, n0.index)
+
+        fork_block_hash = int(n0.getblockhash(fork_point), 16)
+        tip_time = n0.getblockheader(n0.getbestblockhash())['time']
+        fork_blocks = []
+        for i in range((orig_height - fork_point) + 2):
+            block = create_block(
+                hashprev=fork_block_hash,
+                coinbase=create_coinbase(height=fork_point + 1 + i),
+                ntime=tip_time + 1 + i,
+            )
+            block.solve()
+            fork_blocks.append(block)
+            fork_block_hash = block.hash_int
+
+        for block in fork_blocks:
+            assert n0.submitblock(block.serialize().hex()) in (None, 'inconclusive')
+        assert_equal(n0.getbestblockhash(), fork_blocks[-1].hash_hex)
+
+        assert_greater_than(int(n0.getblockchaininfo()['chainwork'], 16), orig_chainwork)
+        n0.setmocktime(n3.getblockheader(n3.getbestblockhash())['time'])
+        self.connect_nodes(n3.index, n0.index)
+
+        # Wait for n3 to follow the new chain and finish background validation
+        self.wait_until(lambda: n3.getblockcount() == n0.getblockcount())
+        self.wait_until(lambda: len(n3.getchainstates()['chainstates']) == 1)
+
+        # Wallet should reflect the reorged chain (post-snapshot payment was orphaned).
+        assert_equal(w_reorg.getbalance(), 0)
 
     def run_test(self):
         """
@@ -277,6 +355,7 @@ class AssumeutxoTest(BitcoinTestFramework):
         assert_equal(result[0]['success'], True)
 
         self.test_restore_wallet_pruneheight(n3)
+        self.test_wallet_reorg_during_background_sync(dump_output)
 
 if __name__ == '__main__':
     AssumeutxoTest(__file__).main()
