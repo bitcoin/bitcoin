@@ -460,6 +460,9 @@ public:
     //! Delete a prune lock identified by its name. Returns true if the lock existed.
     bool DeletePruneLock(const std::string& name) EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
 
+    //! Return the current set of prune locks.
+    const std::unordered_map<std::string, PruneLockInfo>& GetPruneLocks() const EXCLUSIVE_LOCKS_REQUIRED(::cs_main) { return m_prune_locks; }
+
     /** Open a block file (blk?????.dat) */
     AutoFile OpenBlockFile(const FlatFilePos& pos, bool fReadOnly) const;
 

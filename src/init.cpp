@@ -527,6 +527,7 @@ void SetupServerArgs(ArgsManager& argsman, bool can_listen_ipc)
     argsman.AddArg("-prune=<n>", strprintf("Reduce storage requirements by enabling pruning (deleting) of old blocks. This allows the pruneblockchain RPC to be called to delete specific blocks and enables automatic pruning of old blocks if a target size in MiB is provided. This mode is incompatible with -txindex. "
             "Warning: Reverting this setting requires re-downloading the entire blockchain. "
             "(default: 0 = disable pruning blocks, 1 = allow manual pruning via RPC, >=%u = automatically prune block files to stay under the specified target size in MiB)", MIN_DISK_SPACE_FOR_BLOCK_FILES / 1_MiB), ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
+    argsman.AddArg("-prunelockheight=<n>", "If -prune is set, creates a prune lock at the specified block height to prevent block data at or above that height from being pruned. If set without a value or set to 0, locks at the current chain tip height at startup. ", ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
     argsman.AddArg("-reindex", "If enabled, wipe chain state and block index, and rebuild them from blk*.dat files on disk. Also wipe and rebuild other optional indexes that are active. If an assumeutxo snapshot was loaded, its chainstate will be wiped as well. The snapshot can then be reloaded via RPC.", ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
     argsman.AddArg("-reindex-chainstate", "If enabled, wipe chain state, and rebuild it from blk*.dat files on disk. If an assumeutxo snapshot was loaded, its chainstate will be wiped as well. The snapshot can then be reloaded via RPC.", ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
     argsman.AddArg("-settings=<file>", strprintf("Specify path to dynamic settings data file. Can be disabled with -nosettings. File is written at runtime and not meant to be edited by users (use %s instead for custom settings). Relative paths will be prefixed by datadir location. (default: %s)", BITCOIN_CONF_FILENAME, BITCOIN_SETTINGS_FILENAME), ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
@@ -1011,6 +1012,11 @@ bool AppInitParameterInteraction(const ArgsManager& args)
         if (args.GetBoolArg("-reindex-chainstate", false)) {
             return InitError(_("Prune mode is incompatible with -reindex-chainstate. Use full -reindex instead."));
         }
+    }
+
+    // Check that prune mode is enabled if -prunelockheight is set
+    if (args.IsArgSet("-prunelockheight") && !args.GetIntArg("-prune", 0)) {
+        return InitError(Untranslated("-prunelockheight is only possible in prune mode. Set -prune to enable."));
     }
 
     // If -forcednsseed is set to true, ensure -dnsseed has not been set to false
@@ -2097,6 +2103,26 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
     }
     LogInfo("nBestHeight = %d", chain_active_height);
     if (node.peerman) node.peerman->SetBestBlock(chain_active_height, std::chrono::seconds{best_block_time});
+
+    // Apply -prunelockheight startup option
+    if (chainman.m_blockman.IsPruneMode() && args.IsArgSet("-prunelockheight")) {
+        int lock_height = args.GetIntArg("-prunelockheight", 0);
+
+        if (lock_height < 0) {
+            return InitError(Untranslated("-prunelockheight can not be negative"));
+        }
+
+        if (lock_height == 0) {
+            // No value or 0: lock the current chain tip height
+            const CBlockIndex* tip = WITH_LOCK(::cs_main, return chainman.ActiveChain().Tip());
+            lock_height = tip ? tip->nHeight : 0;
+        }
+
+        node::PruneLockInfo lock_info;
+        lock_info.height_first = lock_height;
+        WITH_LOCK(::cs_main, chainman.m_blockman.UpdatePruneLock("init", lock_info));
+        LogInfo("Initial prune lock set at height %d", lock_height);
+    }
 
     // Map ports with NAT-PMP
     StartMapPort(args.GetBoolArg("-natpmp", DEFAULT_NATPMP));

@@ -337,6 +337,7 @@ BASE_SCRIPTS = [
     'feature_asmap.py',
     'feature_chain_tiebreaks.py',
     'feature_fastprune.py',
+    'rpc_prunelock.py',
     'feature_framework_miniwallet.py',
     'mempool_unbroadcast.py',
     'mempool_compatibility.py',
