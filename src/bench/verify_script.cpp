@@ -77,7 +77,8 @@ static void VerifyScriptBench(benchmark::Bench& bench, ScriptType script_type)
             {txSpend.vin[0].prevout, Coin(txCredit.vout[0], /*nHeightIn=*/100, /*fCoinBaseIn=*/false)}
         };
         std::map<int, bilingual_str> input_errors;
-        assert(SignTransaction(txSpend, &keystore, coins, SIGHASH_ALL, input_errors));
+        bool complete = SignTransaction(txSpend, &keystore, coins, {.sighash_type = SIGHASH_ALL}, input_errors);
+        assert(complete);
         // Weak sanity check on witness data to ensure we produced the intended spending type
         assert(txSpend.vin[0].scriptWitness.stack.size() == ExpectedWitnessStackSize(script_type));
         txdata.Init(txSpend, /*spent_outputs=*/{txCredit.vout[0]});
