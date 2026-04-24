@@ -13,6 +13,7 @@
 #include <pubkey.h>
 #include <script/script.h>
 #include <support/allocators/secure.h>
+#include <util/fees.h>
 #include <util/fs.h>
 #include <util/result.h>
 #include <util/ui_change_type.h>
@@ -29,7 +30,6 @@
 
 class CFeeRate;
 class CKey;
-enum class FeeReason;
 enum class OutputType;
 struct PartiallySignedTransaction;
 struct bilingual_str;
@@ -248,7 +248,7 @@ public:
     virtual CAmount getMinimumFee(unsigned int tx_bytes,
         const wallet::CCoinControl& coin_control,
         int* returned_target,
-        FeeReason* reason) = 0;
+        FeeSource* fee_source) = 0;
 
     //! Get tx confirm target.
     virtual unsigned int getConfirmTarget() = 0;

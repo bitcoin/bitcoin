@@ -48,6 +48,23 @@ std::string StringForFeeEstimateHorizon(FeeEstimateHorizon horizon)
     assert(false);
 }
 
+std::string StringForFeeReason(FeeReason reason)
+{
+    switch (reason) {
+    case FeeReason::NONE:
+        return "None";
+    case FeeReason::HALF_ESTIMATE:
+        return "Half Target 60% Threshold";
+    case FeeReason::FULL_ESTIMATE:
+        return "Target 85% Threshold";
+    case FeeReason::DOUBLE_ESTIMATE:
+        return "Double Target 95% Threshold";
+    case FeeReason::CONSERVATIVE:
+        return "Conservative Double Target longer horizon";
+    } // no default case, so the compiler can warn about missing cases
+    assert(false);
+}
+
 namespace {
 
 struct EncodedDoubleFormatter
@@ -872,11 +889,12 @@ CFeeRate CBlockPolicyEstimator::estimateSmartFee(int confTarget, FeeCalculation 
 {
     LOCK(m_cs_fee_estimator);
 
-    if (feeCalc) {
-        feeCalc->desiredTarget = confTarget;
-        feeCalc->returnedTarget = confTarget;
-        feeCalc->best_height = nBestSeenHeight;
-    }
+    FeeCalculation temp_fee_calc;
+    if (!feeCalc) feeCalc = &temp_fee_calc;
+
+    feeCalc->desiredTarget = confTarget;
+    feeCalc->returnedTarget = confTarget;
+    feeCalc->best_height = nBestSeenHeight;
 
     double median = -1;
     EstimationResult tempResult;
@@ -951,6 +969,15 @@ CFeeRate CBlockPolicyEstimator::estimateSmartFee(int confTarget, FeeCalculation 
     }
 
     if (median < 0) return CFeeRate(0); // error condition
+
+    LogDebug(BCLog::ESTIMATEFEE, "estimateSmartFee Selected feerate :%g Tgt:%d (requested %d) Reason:\"%s\" Decay %.5f: Estimation: (%g - %g) %.2f%% %.1f/(%.1f %d mem %.1f out) Fail: (%g - %g) %.2f%% %.1f/(%.1f %d mem %.1f out)\n",
+             median, feeCalc->returnedTarget, feeCalc->desiredTarget, StringForFeeReason(feeCalc->reason), feeCalc->est.decay,
+             feeCalc->est.pass.start, feeCalc->est.pass.end,
+             (feeCalc->est.pass.totalConfirmed + feeCalc->est.pass.inMempool + feeCalc->est.pass.leftMempool) > 0.0 ? 100 * feeCalc->est.pass.withinTarget / (feeCalc->est.pass.totalConfirmed + feeCalc->est.pass.inMempool + feeCalc->est.pass.leftMempool) : 0.0,
+             feeCalc->est.pass.withinTarget, feeCalc->est.pass.totalConfirmed, feeCalc->est.pass.inMempool, feeCalc->est.pass.leftMempool,
+             feeCalc->est.fail.start, feeCalc->est.fail.end,
+             (feeCalc->est.fail.totalConfirmed + feeCalc->est.fail.inMempool + feeCalc->est.fail.leftMempool) > 0.0 ? 100 * feeCalc->est.fail.withinTarget / (feeCalc->est.fail.totalConfirmed + feeCalc->est.fail.inMempool + feeCalc->est.fail.leftMempool) : 0.0,
+             feeCalc->est.fail.withinTarget, feeCalc->est.fail.totalConfirmed, feeCalc->est.fail.inMempool, feeCalc->est.fail.leftMempool);
 
     return CFeeRate(llround(median));
 }

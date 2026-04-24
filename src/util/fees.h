@@ -12,4 +12,13 @@ enum class FeeEstimateMode {
     CONSERVATIVE, //!< Force estimateSmartFee to use conservative estimates
 };
 
+/* Used to determine the source behind a transaction fee */
+enum class FeeSource {
+    FEE_RATE_ESTIMATOR,
+    MEMPOOL_MIN,
+    USER_SPECIFIED,
+    FALLBACK,
+    REQUIRED,
+};
+
 #endif // BITCOIN_UTIL_FEES_H
