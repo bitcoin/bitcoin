@@ -103,6 +103,10 @@ bool ArgsManager::ReadConfigStream(std::istream& stream, const std::string& file
         std::optional<unsigned int> flags = GetArgFlags_('-' + key.name);
         if (!IsConfSupported(key, error)) return false;
         if (flags) {
+            if (!(*flags & ALLOW_LIST) && m_settings.ro_config[key.section].contains(key.name)) {
+                error = strprintf("Multiple values specified for -%s in same section of config file.", key.name);
+                return false;
+            }
             std::optional<common::SettingsValue> value = InterpretValue(key, &option.second, *flags, error);
             if (!value) {
                 return false;
@@ -129,7 +133,9 @@ bool ArgsManager::ReadConfigString(const std::string& str_config)
         m_config_sections.clear();
     }
     std::string error;
-    return ReadConfigStream(streamConfig, "", error);
+    bool b = ReadConfigStream(streamConfig, "", error);
+    LogInfo("ERROR '%s'", error);
+    return b;
 }
 
 bool ArgsManager::ReadConfigFiles(std::string& error, bool ignore_invalid_keys)
