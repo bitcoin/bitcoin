@@ -9,6 +9,9 @@ set -e -o pipefail
 # shellcheck source=libexec/prelude.bash
 source "$(dirname "${BASH_SOURCE[0]}")/libexec/prelude.bash"
 
+# shellcheck source=libexec/common.bash
+source "$(dirname "${BASH_SOURCE[0]}")/libexec/common.bash"
+
 
 ###################
 ## SANITY CHECKS ##
@@ -84,14 +87,6 @@ check_source_date_epoch
 export HOSTS="${HOSTS:-x86_64-linux-gnu arm-linux-gnueabihf aarch64-linux-gnu riscv64-linux-gnu powerpc64-linux-gnu
                        x86_64-w64-mingw32
                        x86_64-apple-darwin arm64-apple-darwin}"
-
-# Usage: distsrc_for_host HOST
-#
-#   HOST: The current platform triple we're building for
-#
-distsrc_for_host() {
-    echo "${DISTSRC_BASE}/distsrc-${VERSION}-${1}"
-}
 
 # Accumulate a list of build directories that already exist...
 hosts_distsrc_exists=""
@@ -244,18 +239,9 @@ SOURCE_DATE_EPOCH="${SOURCE_DATE_EPOCH:-$(git -c log.showSignature=false log --f
 
 # Precious directories are those which should not be cleaned between successive
 # guix builds
-depends_precious_dir_names='SOURCES_PATH BASE_CACHE SDK_PATH'
-precious_dir_names="${depends_precious_dir_names} OUTDIR_BASE PROFILES_BASE"
-
-# Usage: contains IFS-SEPARATED-LIST ITEM
-contains() {
-    for i in ${1}; do
-        if [ "$i" = "${2}" ]; then
-            return 0  # Found!
-        fi
-    done
-    return 1
-}
+depends_precious_dir_names="SOURCES_PATH BASE_CACHE SDK_PATH"
+base_dir_names="OUTDIR_BASE PROFILES_BASE"
+precious_dir_names="${depends_precious_dir_names} ${base_dir_names}"
 
 # If the user explicitly specified a precious directory, create it so we
 # can map it into the container
@@ -287,11 +273,9 @@ mkdir -p "$VAR_BASE"
          -- $(printf "print-%s\n" $depends_precious_dir_names)
 
     # Get remaining precious dir definitions from the environment
-    for precious_dir_name in $precious_dir_names; do
+    for precious_dir_name in $base_dir_names; do
         precious_dir_path="${!precious_dir_name}"
-        if ! contains "$depends_precious_dir_names" "$precious_dir_name"; then
-            echo "${precious_dir_name}=${precious_dir_path}"
-        fi
+        echo "${precious_dir_name}=${precious_dir_path}"
     done
 } > "${VAR_BASE}/precious_dirs"
 
@@ -304,22 +288,6 @@ mkdir -p "$OUTDIR_BASE"
 for host in $HOSTS; do
     make -C "${PWD}/depends" -j"$JOBS" download-"$(host_to_commonname "$host")" ${V:+V=1} ${SOURCES_PATH:+SOURCES_PATH="$SOURCES_PATH"}
 done
-
-# Usage: outdir_for_host HOST SUFFIX
-#
-#   HOST: The current platform triple we're building for
-#
-outdir_for_host() {
-    echo "${OUTDIR_BASE}/${1}${2:+-${2}}"
-}
-
-# Usage: profiledir_for_host HOST SUFFIX
-#
-#   HOST: The current platform triple we're building for
-#
-profiledir_for_host() {
-    echo "${PROFILES_BASE}/${1}${2:+-${2}}"
-}
 
 
 #########
@@ -356,7 +324,6 @@ for host in $HOSTS; do
         # for the particular $HOST we're building for
         export HOST="$host"
 
-        # shellcheck disable=SC2030
 cat << EOF
 INFO: Building ${VERSION:?not set} for platform triple ${HOST:?not set}:
       ...using reference timestamp: ${SOURCE_DATE_EPOCH:?not set}
@@ -364,9 +331,9 @@ INFO: Building ${VERSION:?not set} for platform triple ${HOST:?not set}:
       ...from worktree directory: '${PWD}'
           ...bind-mounted in container to: '/bitcoin'
       ...in build directory: '$(distsrc_for_host "$HOST")'
-          ...bind-mounted in container to: '$(DISTSRC_BASE=/distsrc-base && distsrc_for_host "$HOST")'
+          ...bind-mounted in container to: '$(distsrc_for_host "$HOST" "" /distsrc-base)'
       ...outputting in: '$(outdir_for_host "$HOST")'
-          ...bind-mounted in container to: '$(OUTDIR_BASE=/outdir-base && outdir_for_host "$HOST")'
+          ...bind-mounted in container to: '$(outdir_for_host "$HOST" "" /outdir-base)'
       ADDITIONAL FLAGS (if set)
           ADDITIONAL_GUIX_COMMON_FLAGS: ${ADDITIONAL_GUIX_COMMON_FLAGS}
           ADDITIONAL_GUIX_ENVIRONMENT_FLAGS: ${ADDITIONAL_GUIX_ENVIRONMENT_FLAGS}
@@ -440,7 +407,7 @@ EOF
         #    Please read the README.md in the same directory as this file for
         #    more information.
         #
-        # shellcheck disable=SC2086,SC2031
+        # shellcheck disable=SC2086
         time-machine shell --manifest="${PWD}/contrib/guix/manifest.scm" \
                                  --container \
                                  --writable-root \
@@ -468,8 +435,8 @@ EOF
                                         ${SOURCES_PATH:+SOURCES_PATH="$SOURCES_PATH"} \
                                         ${BASE_CACHE:+BASE_CACHE="$BASE_CACHE"} \
                                         ${SDK_PATH:+SDK_PATH="$SDK_PATH"} \
-                                        DISTSRC="$(DISTSRC_BASE=/distsrc-base && distsrc_for_host "$HOST")" \
-                                        OUTDIR="$(OUTDIR_BASE=/outdir-base && outdir_for_host "$HOST")" \
+                                        DISTSRC="$(distsrc_for_host "$HOST" "" /distsrc-base)" \
+                                        OUTDIR="$(outdir_for_host "$HOST" "" /outdir-base)" \
                                         DIST_ARCHIVE_BASE=/outdir-base/dist-archive \
                                       bash -c "cd /bitcoin && bash contrib/guix/libexec/build.sh"
     )

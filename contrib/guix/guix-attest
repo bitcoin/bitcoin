@@ -139,14 +139,6 @@ fi
 ##  Attest  ##
 ##############
 
-# Usage: out_name $outdir
-#
-#   HOST: The output directory being attested
-#
-out_name() {
-    basename "$(dirname "$1")"
-}
-
 shasum_already_exists() {
 cat <<EOF
 --
