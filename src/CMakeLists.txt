@@ -139,6 +139,9 @@ add_library(bitcoin_common STATIC EXCLUDE_FROM_ALL
   script/signingprovider.cpp
   script/solver.cpp
 )
+if(ENABLE_EXTERNAL_SIGNER)
+  target_compile_definitions(bitcoin_common PUBLIC ENABLE_EXTERNAL_SIGNER)
+endif()
 target_link_libraries(bitcoin_common
   PRIVATE
     core_interface
