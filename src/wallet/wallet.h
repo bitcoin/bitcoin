@@ -301,7 +301,26 @@ struct CRecipient
     bool fSubtractFeeFromAmount;
 };
 
-class WalletRescanReserver; //forward declarations for ScanForWalletTransactions/RescanFromTime
+//forward declaration for ScanForWalletTransactions/RescanFromTime
+class WalletRescanReserver;
+
+/** Result of a wallet scan */
+struct ScanResult {
+    enum { SUCCESS, FAILURE, USER_ABORT } status = SUCCESS;
+
+    //! Hash and height of most recent block that was successfully scanned.
+    //! Unset if no blocks were scanned due to read errors or the chain
+    //! being empty.
+    uint256 last_scanned_block;
+    std::optional<int> last_scanned_height;
+
+    //! Height of the most recent block that could not be scanned due to
+    //! read errors or pruning. Will be set if status is FAILURE, unset if
+    //! status is SUCCESS, and may or may not be set if status is
+    //! USER_ABORT.
+    uint256 last_failed_block;
+};
+
 /**
  * A CWallet maintains a set of transactions and balances, and provides the ability to create new transactions.
  */
@@ -318,6 +337,7 @@ private:
     std::atomic<SteadyClock::time_point> m_scanning_start{SteadyClock::time_point{}};
     std::atomic<double> m_scanning_progress{0};
     friend class WalletRescanReserver;
+    friend class ChainScanner;
 
     /** The next scheduled rebroadcast of wallet transactions. */
     NodeClock::time_point m_next_resend{GetDefaultNextResend()};
@@ -637,21 +657,6 @@ public:
     void updatedBlockTip() override;
     int64_t RescanFromTime(int64_t startTime, const WalletRescanReserver& reserver, bool update);
 
-    struct ScanResult {
-        enum { SUCCESS, FAILURE, USER_ABORT } status = SUCCESS;
-
-        //! Hash and height of most recent block that was successfully scanned.
-        //! Unset if no blocks were scanned due to read errors or the chain
-        //! being empty.
-        uint256 last_scanned_block;
-        std::optional<int> last_scanned_height;
-
-        //! Height of the most recent block that could not be scanned due to
-        //! read errors or pruning. Will be set if status is FAILURE, unset if
-        //! status is SUCCESS, and may or may not be set if status is
-        //! USER_ABORT.
-        uint256 last_failed_block;
-    };
     ScanResult ScanForWalletTransactions(const uint256& start_block, int start_height, std::optional<int> max_height, const WalletRescanReserver& reserver, bool fUpdate, bool save_progress);
     void transactionRemovedFromMempool(const CTransactionRef& tx, MemPoolRemovalReason reason) override;
     /** Set the next time this wallet should resend transactions to 12-36 hours from now, ~1 day on average. */
