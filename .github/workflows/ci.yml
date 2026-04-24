@@ -549,6 +549,12 @@ jobs:
         id: restore-cache
         uses: ./.github/actions/restore-caches
 
+      - name: Set up QEMU for 32 bit ARM tests
+        if: ${{ env.CONTAINER_NAME == 'ci_arm_linux' && env.RUNNER_PROVIDER == 'namespace' }}
+        uses: docker/setup-qemu-action@v4
+        with:
+          platforms: arm
+
       - name: Configure Docker
         uses: ./.github/actions/configure-docker
         with:
