@@ -53,11 +53,15 @@ static void WalletBalance(benchmark::Bench& bench, const bool set_dirty, const b
 
     auto bal = GetBalance(wallet); // Cache
 
-    bench.run([&] {
-        if (set_dirty) wallet.MarkDirty();
-        bal = GetBalance(wallet);
-        if (add_mine) assert(bal.m_mine_trusted > 0);
-    });
+    bench.epochIterations(1)
+        .setup([&] {
+            if (set_dirty) wallet.MarkDirty();
+        })
+        .run([&] {
+            bal = GetBalance(wallet);
+            ankerl::nanobench::doNotOptimizeAway(bal);
+            if (add_mine) assert(bal.m_mine_trusted > 0);
+        });
 }
 
 static void WalletBalanceDirty(benchmark::Bench& bench) { WalletBalance(bench, /*set_dirty=*/true, /*add_mine=*/true); }
