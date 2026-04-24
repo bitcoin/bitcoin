@@ -234,6 +234,8 @@ public:
     unsigned int nTimeSmart;
     // Cached value for whether the transaction spends any inputs known to the wallet
     mutable std::optional<bool> m_cached_from_me{std::nullopt};
+    // Cached value for whether all transaction inputs are wallet-owned, used by history/accounting RPCs
+    mutable std::optional<bool> m_cached_from_me_for_accounting{std::nullopt};
     int64_t nOrderPos; //!< position in ordered transaction list
     std::multimap<int64_t, CWalletTx*>::const_iterator m_it_wtxOrdered;
 
@@ -342,6 +344,7 @@ public:
         fChangeCached = false;
         m_is_cache_empty = true;
         m_cached_from_me = std::nullopt;
+        m_cached_from_me_for_accounting = std::nullopt;
     }
 
     /** True if only scriptSigs are different */
