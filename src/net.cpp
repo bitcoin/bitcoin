@@ -3211,6 +3211,7 @@ void CConnman::ThreadI2PAcceptIncoming()
 
 void CConnman::ThreadPrivateBroadcast()
 {
+    AssertLockNotHeld(m_nodes_mutex);
     AssertLockNotHeld(m_unused_i2p_sessions_mutex);
 
     size_t addrman_num_bad_addresses{0};
