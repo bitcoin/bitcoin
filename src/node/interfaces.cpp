@@ -864,6 +864,35 @@ public:
     NodeContext& m_node;
 };
 
+class SubmitBlockStateCatcher final : public CValidationInterface
+{
+public:
+    uint256 hash;
+    bool found{false};
+    BlockValidationState state;
+
+    explicit SubmitBlockStateCatcher(const uint256& hashIn) : hash(hashIn), state() {}
+
+protected:
+    void BlockChecked(const std::shared_ptr<const CBlock>& block, const BlockValidationState& stateIn) override
+    {
+        if (block->GetHash() != hash) return;
+        found = true;
+        state = stateIn;
+    }
+};
+
+//! Process a block and capture the validation state via the BlockChecked callback.
+//! Returns whether ProcessNewBlock accepted the block.
+static bool ProcessBlock(ChainstateManager& chainman, const std::shared_ptr<const CBlock>& blockptr, bool* new_block, std::shared_ptr<SubmitBlockStateCatcher>& sc)
+{
+    sc = std::make_shared<SubmitBlockStateCatcher>(blockptr->GetHash());
+    CHECK_NONFATAL(chainman.m_options.signals)->RegisterSharedValidationInterface(sc);
+    bool accepted = chainman.ProcessNewBlock(blockptr, /*force_processing=*/true, /*min_pow_checked=*/true, /*new_block=*/new_block);
+    CHECK_NONFATAL(chainman.m_options.signals)->UnregisterSharedValidationInterface(sc);
+    return accepted;
+}
+
 class BlockTemplateImpl : public BlockTemplate
 {
 public:
@@ -909,7 +938,8 @@ public:
     bool submitSolution(uint32_t version, uint32_t timestamp, uint32_t nonce, CTransactionRef coinbase) override
     {
         AddMerkleRootAndCoinbase(m_block_template->block, std::move(coinbase), version, timestamp, nonce);
-        return chainman().ProcessNewBlock(std::make_shared<const CBlock>(m_block_template->block), /*force_processing=*/true, /*min_pow_checked=*/true, /*new_block=*/nullptr);
+        std::shared_ptr<SubmitBlockStateCatcher> sc;
+        return ProcessBlock(chainman(), std::make_shared<const CBlock>(m_block_template->block), /*new_block=*/nullptr, sc);
     }
 
     std::unique_ptr<BlockTemplate> waitNext(BlockWaitOptions options) override
@@ -1008,6 +1038,33 @@ public:
         reason = state.GetRejectReason();
         debug = state.GetDebugMessage();
         return state.IsValid();
+    }
+
+    bool submitBlock(const CBlock& block_in, std::string& reason, std::string& debug) override
+    {
+        reason.clear();
+        debug.clear();
+
+        auto blockptr = std::make_shared<const CBlock>(block_in);
+
+        bool new_block;
+        std::shared_ptr<SubmitBlockStateCatcher> sc;
+        bool accepted = ProcessBlock(chainman(), blockptr, &new_block, sc);
+
+        if (!new_block && accepted) {
+            reason = "duplicate";
+            return false;
+        }
+        if (!sc->found) {
+            reason = "inconclusive";
+            return false;
+        }
+        if (!sc->state.IsValid()) {
+            reason = sc->state.GetRejectReason();
+            debug = sc->state.GetDebugMessage();
+            return false;
+        }
+        return true;
     }
 
     NodeContext* context() override { return &m_node; }
