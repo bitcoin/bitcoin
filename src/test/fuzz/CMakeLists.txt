@@ -92,6 +92,7 @@ add_executable(fuzz
   pow.cpp
   prevector.cpp
   primitives_transaction.cpp
+  private_broadcast.cpp
   process_message.cpp
   process_messages.cpp
   protocol.cpp
