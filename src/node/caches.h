@@ -29,9 +29,9 @@ struct CacheSizes {
     kernel::CacheSizes kernel;
 };
 CacheSizes CalculateCacheSizes(const ArgsManager& args, size_t n_indexes = 0);
-constexpr bool ShouldWarnOversizedDbCache(size_t dbcache, size_t total_ram) noexcept
+constexpr bool ShouldWarnOversizedDbCache(uint64_t dbcache, uint64_t total_ram) noexcept
 {
-    const size_t cap{(total_ram < 2_GiB) ? DEFAULT_DB_CACHE : (total_ram / 100) * 75};
+    const uint64_t cap{(total_ram < 2_GiB) ? DEFAULT_DB_CACHE : (total_ram / 100) * 75};
     return dbcache > cap;
 }
 
