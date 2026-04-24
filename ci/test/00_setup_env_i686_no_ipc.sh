@@ -14,7 +14,7 @@ export PACKAGES="llvm clang g++-multilib"
 export DEP_OPTS="DEBUG=1 NO_IPC=1"
 export GOAL="install"
 export CI_LIMIT_STACK_SIZE=1
-export TEST_RUNNER_EXTRA="--v2transport --usecli"
+export TEST_RUNNER_EXTRA="--v2transport --usecli --extended"
 export BITCOIN_CONFIG="\
  --preset=dev-mode \
  -DENABLE_IPC=OFF \
