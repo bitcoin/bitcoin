@@ -164,7 +164,7 @@ To run clang-tidy on Ubuntu/Debian, install the dependencies:
 apt install clang-tidy clang
 ```
 
-Configure with clang as the compiler:
+Configure with clang as the compiler with the below command that should create a `compile_commands.json` file within the build directory:
 
 ```sh
 cmake -B build -DCMAKE_C_COMPILER=clang -DCMAKE_CXX_COMPILER=clang++ -DCMAKE_EXPORT_COMPILE_COMMANDS=ON
@@ -172,11 +172,18 @@ cmake -B build -DCMAKE_C_COMPILER=clang -DCMAKE_CXX_COMPILER=clang++ -DCMAKE_EXP
 
 The output is denoised of errors from external dependencies.
 
-To run clang-tidy on all source files:
+To run clang-tidy on all source files using the checks mentioned in the `./src/.clang-tidy` file:
 
 ```sh
 ( cd ./src/ && run-clang-tidy -p ../build -j $(nproc) )
 ```
+
+To run clang-tidy on one file:
+```sh
+( cd ./src/ && run-clang-tidy -p ../build -j $(nproc) ./path/to/single_file.cpp )
+```
+
+Optionally, append the `run-clang-tidy` command with the `-quiet` option to suppress printing of statistics and ignored warnings that can clutter the output. The `-fix` option also comes in handy to apply the fixes suggested by the tool but need to ensure that unrelated changes in the file are not committed.
 
 To run clang-tidy on the changed source lines:
 
