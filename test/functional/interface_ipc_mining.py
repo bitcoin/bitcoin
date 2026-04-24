@@ -61,7 +61,8 @@ class IPCMiningTest(BitcoinTestFramework):
         self.num_nodes = 2
 
     def setup_nodes(self):
-        self.extra_init = [{"ipcbind": True}, {}]
+        self.extra_init = [{"ipcbind": True}, {"ipcbind": True}]
+        self.extra_args = [[], ["-txindex=1"]]
         super().setup_nodes()
         # Use this function to also load the capnp modules (we cannot use set_test_params for this,
         # as it is being called before knowing whether capnp is available).
@@ -328,6 +329,8 @@ class IPCMiningTest(BitcoinTestFramework):
                 assert_capnp_failed(e, "remote exception: std::exception: block_reserved_weight (0) must be at least 2000 weight units")
 
         asyncio.run(capnp.run(async_routine()))
+        self.restart_node(0)
+        self.connect_nodes(0, 1)
 
     def run_coinbase_and_submission_test(self):
         """Test coinbase construction (getCoinbaseTx) and block submission (submitSolution)."""
@@ -349,9 +352,13 @@ class IPCMiningTest(BitcoinTestFramework):
                 block.hashMerkleRoot = block.calc_merkle_root()
                 original_version = block.nVersion
 
+                self.log.debug("Submit empty coinbase")
+                submitted = (await template.submitSolution(ctx, 0, 0, 0, b"")).result
+                assert_equal(submitted, False)
+
                 self.log.debug("Submit solution that can't be deserialized")
                 try:
-                    await template.submitSolution(ctx, 0, 0, 0, b"")
+                    await template.submitSolution(ctx, 0, 0, 0, b"\x00")
                     raise AssertionError("submitSolution unexpectedly succeeded")
                 except capnp.lib.capnp.KjException as e:
                     assert_capnp_failed(e, "remote exception: std::exception: SpanReader::read(): end of data:")
@@ -407,6 +414,45 @@ class IPCMiningTest(BitcoinTestFramework):
 
         asyncio.run(capnp.run(async_routine()))
 
+    def run_transaction_lookup_test(self):
+        """Test getTransactionsByTxID() and getTransactionsByWitnessID()."""
+        self.log.info("Running transaction lookup test")
+
+        async def async_routine():
+            ctx, mining = await make_mining_ctx(self)
+            tx1 = self.miniwallet.send_self_transfer(fee_rate=10, from_node=self.nodes[0])
+            tx2 = self.miniwallet.send_self_transfer(fee_rate=10, from_node=self.nodes[0])
+
+            self.log.debug("getTransactionsByTxID() returns mempool txs and nulls")
+            raw_txs_txid = await mining.getTransactionsByTxID(ctx, [tx1["tx"].txid, tx2["tx"].txid, bytes(32)])
+            assert_equal(len(raw_txs_txid.result), 3)
+            assert_equal(raw_txs_txid.result[0].hex(), tx1["hex"])
+            assert_equal(raw_txs_txid.result[1].hex(), tx2["hex"])
+            assert_equal(raw_txs_txid.result[2], b'')
+
+            self.log.debug("getTransactionsByWitnessID() returns mempool txs and nulls")
+            raw_txs_wtxid = await mining.getTransactionsByWitnessID(ctx, [tx1["tx"].wtxid, tx2["tx"].wtxid, bytes(32)])
+            assert_equal(len(raw_txs_wtxid.result), 3)
+            assert_equal(raw_txs_wtxid.result[0].hex(), tx1["hex"])
+            assert_equal(raw_txs_wtxid.result[1].hex(), tx2["hex"])
+            assert_equal(raw_txs_wtxid.result[2], b'')
+
+            self.log.debug("getTransactionsByTxID() uses txindex when enabled")
+            self.generate(self.nodes[0], 1)
+            self.sync_all()
+
+            # Node 0 without -txindex: transaction won't be found once mined
+            #                          and out of the mempool.
+            raw_txs = await mining.getTransactionsByTxID(ctx, [tx1["tx"].txid])
+            assert_equal(raw_txs.result[0], b'')
+
+            # Node 1 with -txindex: mined transaction will be found.
+            ctx1, mining1 = await make_mining_ctx(self, self.nodes[1])
+            raw_txs = await mining1.getTransactionsByTxID(ctx1, [tx1["tx"].txid])
+            assert_equal(raw_txs.result[0].hex(), tx1["hex"])
+
+        asyncio.run(capnp.run(async_routine()))
+
     def run_test(self):
         self.miniwallet = MiniWallet(self.nodes[0])
         self.default_block_create_options = self.capnp_modules['mining'].BlockCreateOptions()
@@ -415,6 +461,7 @@ class IPCMiningTest(BitcoinTestFramework):
         self.run_block_template_test()
         self.run_coinbase_and_submission_test()
         self.run_ipc_option_override_test()
+        self.run_transaction_lookup_test()
 
 
 if __name__ == '__main__':

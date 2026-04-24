@@ -172,4 +172,9 @@ CTransactionRef GetTransaction(const CBlockIndex* const block_index, const CTxMe
     }
     return nullptr;
 }
+
+CTransactionRef GetTransaction(const CTxMemPool& mempool, const Wtxid& hash)
+{
+    return mempool.get(hash);
+}
 } // namespace node
