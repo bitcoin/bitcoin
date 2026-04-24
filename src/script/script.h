@@ -398,7 +398,7 @@ private:
  */
 using CScriptBase = prevector<36, uint8_t>;
 
-bool GetScriptOp(CScriptBase::const_iterator& pc, CScriptBase::const_iterator end, opcodetype& opcodeRet, std::vector<unsigned char>* pvchRet);
+[[nodiscard]] bool GetScriptOp(CScriptBase::const_iterator& pc, CScriptBase::const_iterator end, opcodetype& opcodeRet, std::vector<unsigned char>* pvchRet);
 
 /** Serialized script, used inside transaction inputs and outputs */
 class CScript : public CScriptBase
@@ -493,12 +493,12 @@ public:
         return *this << std::as_bytes(b);
     }
 
-    bool GetOp(const_iterator& pc, opcodetype& opcodeRet, std::vector<unsigned char>& vchRet) const
+    [[nodiscard]] bool GetOp(const_iterator& pc, opcodetype& opcodeRet, std::vector<unsigned char>& vchRet) const
     {
         return GetScriptOp(pc, end(), opcodeRet, &vchRet);
     }
 
-    bool GetOp(const_iterator& pc, opcodetype& opcodeRet) const
+    [[nodiscard]] bool GetOp(const_iterator& pc, opcodetype& opcodeRet) const
     {
         return GetScriptOp(pc, end(), opcodeRet, nullptr);
     }

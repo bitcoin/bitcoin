@@ -902,7 +902,7 @@ BOOST_AUTO_TEST_CASE(test_IsStandard)
     while (pc < t.vin[0].scriptSig.end()) {
         opcodetype opcode;
         CScript::const_iterator prev_pc = pc;
-        t.vin[0].scriptSig.GetOp(pc, opcode); // advance to next op
+        BOOST_REQUIRE(t.vin[0].scriptSig.GetOp(pc, opcode)); // advance to next op
         // for the sake of simplicity, we only replace single-byte push operations
         if (opcode >= 1 && opcode <= OP_PUSHDATA4)
             continue;

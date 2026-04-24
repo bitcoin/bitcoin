@@ -14,7 +14,7 @@ constexpr uint256 MUSIG_CHAINCODE{
     []() consteval { return uint256{"868087ca02a6f974c4598924c36b57762d32cb45717167e300622c7167e38965"_hex_u8}; }(),
 };
 
-static bool GetMuSig2KeyAggCache(const std::vector<CPubKey>& pubkeys, secp256k1_musig_keyagg_cache& keyagg_cache)
+[[nodiscard]] static bool GetMuSig2KeyAggCache(const std::vector<CPubKey>& pubkeys, secp256k1_musig_keyagg_cache& keyagg_cache)
 {
     // Parse the pubkeys
     std::vector<secp256k1_pubkey> secp_pubkeys;

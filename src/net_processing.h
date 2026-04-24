@@ -111,7 +111,7 @@ public:
     virtual void StartScheduledTasks(CScheduler& scheduler) = 0;
 
     /** Get statistics from node state */
-    virtual bool GetNodeStateStats(NodeId nodeid, CNodeStateStats& stats) const = 0;
+    [[nodiscard]] virtual bool GetNodeStateStats(NodeId nodeid, CNodeStateStats& stats) const = 0;
 
     virtual std::vector<node::TxOrphanage::OrphanInfo> GetOrphanTransactions() = 0;
 
