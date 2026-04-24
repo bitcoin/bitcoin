@@ -7,7 +7,7 @@ import asyncio
 import time
 from contextlib import AsyncExitStack
 from io import BytesIO
-from test_framework.blocktools import NULL_OUTPOINT
+from test_framework.blocktools import NULL_OUTPOINT, script_BIP34_coinbase_height
 from test_framework.messages import (
     MAX_BLOCK_WEIGHT,
     CBlockHeader,
@@ -19,10 +19,6 @@ from test_framework.messages import (
     COIN,
     from_hex,
     msg_headers,
-)
-from test_framework.script import (
-    CScript,
-    CScriptNum,
 )
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import (
@@ -67,7 +63,7 @@ class IPCMiningTest(BitcoinTestFramework):
         # as it is being called before knowing whether capnp is available).
         self.capnp_modules = load_capnp_modules(self.config)
 
-    async def build_coinbase_test(self, template, ctx, miniwallet):
+    async def build_coinbase_test(self, template, ctx, miniwallet, extra_nonce=b""):
         self.log.debug("Build coinbase transaction using getCoinbaseTx()")
         assert template is not None
         coinbase_res = await mining_get_coinbase_tx(template, ctx)
@@ -79,11 +75,11 @@ class IPCMiningTest(BitcoinTestFramework):
 
         # Verify there's no dummy extraNonce in the coinbase scriptSig
         current_block_height = self.nodes[0].getchaintips()[0]["height"]
-        expected_scriptsig = CScript([CScriptNum(current_block_height + 1)])
-        assert_equal(coinbase_res.scriptSigPrefix.hex(), expected_scriptsig.hex())
+        bip34_prefix = script_BIP34_coinbase_height(current_block_height + 1, padding=False)
+        assert_equal(coinbase_res.scriptSigPrefix, bip34_prefix)
 
         # Typically a mining pool appends its name and an extraNonce
-        coinbase_tx.vin[0].scriptSig = coinbase_res.scriptSigPrefix
+        coinbase_tx.vin[0].scriptSig = coinbase_res.scriptSigPrefix + extra_nonce
 
         # We currently always provide a coinbase witness, even for empty
         # blocks, but this may change, so always check:
@@ -407,6 +403,45 @@ class IPCMiningTest(BitcoinTestFramework):
 
         asyncio.run(capnp.run(async_routine()))
 
+    def run_low_height_test(self):
+        """Test that IPC createNewBlock() works at low block heights on a
+        clean chain, in particular with regard to bad-cb-length.
+
+        createNewBlock pads the scriptSig with a dummy extranonce to pass
+        its internal CheckBlock(). This dummy is omitted from the
+        getCoinbaseTx() script_sig_prefix field. The client provides its
+        own extraNonce via submitSolution()."""
+        self.log.info("Running low block height test")
+
+        node = self.nodes[0]
+        self.stop_node(0)
+        # Clear chain data to start from genesis
+        self.cleanup_folder(node.chain_path)
+        node.start()
+        node.wait_for_rpc_connection()
+        assert_equal(node.getblockcount(), 0)
+
+        miniwallet = MiniWallet(node)
+
+        async def async_routine():
+            ctx, mining = await make_mining_ctx(self)
+            opts = self.capnp_modules['mining'].BlockCreateOptions()
+
+            async with AsyncExitStack() as stack:
+                # Disable cooldown to avoid hanging in the IBD loop on a fresh chain
+                template = await mining_create_block_template(mining, stack, ctx, opts, cooldown=False)
+                assert template is not None
+                block = await mining_get_block(template, ctx)
+                coinbase = await self.build_coinbase_test(template, ctx, miniwallet, extra_nonce=b'\xaa\xbb\xcc\xdd')
+                block.vtx[0] = coinbase
+                block.hashMerkleRoot = block.calc_merkle_root()
+                block.solve()
+                submitted = (await template.submitSolution(ctx, block.nVersion, block.nTime, block.nNonce, coinbase.serialize())).result
+                assert_equal(submitted, True)
+                assert_equal(node.getblockcount(), 1)
+
+        asyncio.run(capnp.run(async_routine()))
+
     def run_test(self):
         self.miniwallet = MiniWallet(self.nodes[0])
         self.default_block_create_options = self.capnp_modules['mining'].BlockCreateOptions()
@@ -415,6 +450,9 @@ class IPCMiningTest(BitcoinTestFramework):
         self.run_block_template_test()
         self.run_coinbase_and_submission_test()
         self.run_ipc_option_override_test()
+
+        # Needs to run last because it resets the chain.
+        self.run_low_height_test()
 
 
 if __name__ == '__main__':

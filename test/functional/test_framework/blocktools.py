@@ -161,11 +161,13 @@ def add_witness_commitment(block, nonce=0):
     block.hashMerkleRoot = block.calc_merkle_root()
 
 
-def script_BIP34_coinbase_height(height):
+def script_BIP34_coinbase_height(height, *, padding=True):
     if height <= 16:
         res = CScriptOp.encode_op_n(height)
-        # Append dummy extraNonce to increase scriptSig size to 2 (see bad-cb-length consensus rule)
-        return CScript([res, OP_0])
+        if padding:
+            # Append dummy extraNonce to increase scriptSig size to 2 (see bad-cb-length consensus rule)
+            return CScript([res, OP_0])
+        return CScript([res])
     return CScript([CScriptNum(height)])
 
 
