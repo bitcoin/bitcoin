@@ -4,6 +4,7 @@
 
 #include <bench/bench.h>
 #include <bench/data/block413567.raw.h>
+#include <consensus/tx_verify.h>
 #include <consensus/validation.h>
 #include <primitives/block.h>
 #include <primitives/transaction.h>
@@ -13,7 +14,7 @@
 #include <cassert>
 #include <cstddef>
 
-// These are the two major time-sinks which happen after we have fully received
+// These are the major time-sinks which happen after we have fully received
 // a block off the wire, but before we can relay the block on to peers using
 // compact block relay.
 
@@ -46,5 +47,21 @@ static void CheckBlockTest(benchmark::Bench& bench)
         });
 }
 
+static void SigOpsBlockBench(benchmark::Bench& bench)
+{
+    CBlock block;
+    DataStream(benchmark::data::block413567) >> TX_WITH_WITNESS(block);
+
+    constexpr auto expected_sigops{2841};
+    bench.batch(expected_sigops).unit("sigops").run([&] {
+        auto nSigOps{0};
+        for (const auto& tx : block.vtx) {
+            nSigOps += GetLegacySigOpCount(*tx);
+        }
+        assert(nSigOps == expected_sigops);
+    });
+}
+
 BENCHMARK(DeserializeBlockTest);
 BENCHMARK(CheckBlockTest);
+BENCHMARK(SigOpsBlockBench);

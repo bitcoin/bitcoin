@@ -9,6 +9,7 @@
 #include <attributes.h>
 #include <crypto/common.h>
 #include <prevector.h> // IWYU pragma: export
+#include <pubkey.h>
 #include <serialize.h>
 #include <uint256.h>
 #include <util/hash_type.h>
@@ -23,6 +24,14 @@
 #include <type_traits>
 #include <utility>
 #include <vector>
+
+// Hash output sizes
+static constexpr size_t HASH160_OUTPUT_SIZE{20};
+
+// Signature hash sizes
+static constexpr size_t WITNESS_V0_KEYHASH_SIZE{HASH160_OUTPUT_SIZE};
+static constexpr size_t WITNESS_V0_SCRIPTHASH_SIZE{32};
+static constexpr size_t WITNESS_V1_TAPROOT_SIZE{32};
 
 // Maximum number of bytes pushable to the stack
 static const unsigned int MAX_SCRIPT_ELEMENT_SIZE = 520;
@@ -212,8 +221,8 @@ enum opcodetype
     OP_INVALIDOPCODE = 0xff,
 };
 
-// Maximum value that an opcode can be
-static const unsigned int MAX_OPCODE = OP_NOP10;
+// Highest opcode allowed in pre-Taproot scripts
+static constexpr unsigned MAX_BASE_OPCODE{OP_NOP10};
 
 std::string GetOpName(opcodetype opcode);
 
@@ -520,40 +529,97 @@ public:
     }
 
     /**
-     * Pre-version-0.6, Bitcoin always counted CHECKMULTISIGs
-     * as 20 sigops. With pay-to-script-hash, that changed:
-     * CHECKMULTISIGs serialized in scriptSigs are
-     * counted more accurately, assuming they are of the form
-     *  ... OP_N CHECKMULTISIG ...
+     * Count the number of signature operations (sigops) in this script.
+     *
+     * The `fAccurate` parameter controls how `CHECKMULTISIG` operations are counted.
+     * When enforcing the `MAX_BLOCK_SIGOPS_COST` limit, set `fAccurate` to `true` when
+     * counting a redeemScript (P2SH) or witnessScript (P2WSH), and set it to `false`
+     * when counting a scriptPubKey (locking script) or scriptSig (unlocking script).
+     *
+     * Historical note: before P2SH (v0.6), `CHECKMULTISIG` was always counted as
+     * MAX_PUBKEYS_PER_MULTISIG (=20), regardless of the actual number of pubkeys.
+     * Starting with P2SH — and similarly for P2WSH later — `CHECKMULTISIG` inside
+     * the redeemScript/witnessScript began to be counted precisely, using the
+     * preceding OP_N to determine the number of pubkeys.
      */
-    unsigned int GetSigOpCount(bool fAccurate) const;
+    unsigned int CountSigOps(bool fAccurate) const;
 
-    /**
-     * Accurately count sigOps, including sigOps in
-     * pay-to-script-hash transactions:
-     */
-    unsigned int GetSigOpCount(const CScript& scriptSig) const;
-
-    /*
-     * OP_1 <0x4e73>
-     */
-    bool IsPayToAnchor() const;
     /** Checks if output of IsWitnessProgram comes from a P2A output script
      */
     static bool IsPayToAnchor(int version, const std::vector<unsigned char>& program);
 
-    bool IsPayToScriptHash() const;
-    bool IsPayToWitnessScriptHash() const;
-    bool IsWitnessProgram(int& version, std::vector<unsigned char>& program) const;
+    bool IsPayToAnchor() const noexcept
+    {
+        return size() == 4 &&
+               (*this)[0] == OP_1 &&
+               (*this)[1] == 0x02 &&
+               (*this)[2] == 0x4e &&
+               (*this)[3] == 0x73;
+    }
 
-    bool IsPayToTaproot() const;
+    bool IsPayToPubKeyHash() const noexcept
+    {
+        return size() == 25 &&
+               (*this)[0] == OP_DUP &&
+               (*this)[1] == OP_HASH160 &&
+               (*this)[2] == HASH160_OUTPUT_SIZE &&
+               (*this)[23] == OP_EQUALVERIFY &&
+               (*this)[24] == OP_CHECKSIG;
+    }
+
+    bool IsPayToScriptHash() const noexcept
+    {
+        return size() == 23 &&
+               (*this)[0] == OP_HASH160 &&
+               (*this)[1] == HASH160_OUTPUT_SIZE &&
+               (*this)[22] == OP_EQUAL;
+    }
+
+    bool IsPayToWitnessPubKeyHash() const noexcept
+    {
+        return size() == 22 &&
+               (*this)[0] == OP_0 &&
+               (*this)[1] == WITNESS_V0_KEYHASH_SIZE;
+    }
+
+    bool IsPayToWitnessScriptHash() const noexcept
+    {
+        return size() == 34 &&
+               (*this)[0] == OP_0 &&
+               (*this)[1] == WITNESS_V0_SCRIPTHASH_SIZE;
+    }
+
+    bool IsPayToTaproot() const noexcept
+    {
+        return size() == 34 &&
+               (*this)[0] == OP_1 &&
+               (*this)[1] == WITNESS_V1_TAPROOT_SIZE;
+    }
+
+    //! Detect P2PK script with a compressed public key. Doesn't check the 0x02/0x03 key prefix.
+    bool IsCompressedPayToPubKey() const noexcept
+    {
+        return size() == 35 &&
+               (*this)[0] == CPubKey::COMPRESSED_SIZE &&
+               (*this)[34] == OP_CHECKSIG;
+    }
+
+    //! Detect P2PK script with an uncompressed public key. Doesn't check the 0x04 key prefix.
+    bool IsUncompressedPayToPubKey() const noexcept
+    {
+        return size() == 67 &&
+               (*this)[0] == CPubKey::SIZE &&
+               (*this)[66] == OP_CHECKSIG;
+    }
+
+    bool IsWitnessProgram(int& version, std::vector<unsigned char>& program) const;
 
     /** Called by IsStandardTx and P2SH/BIP62 VerifyScript (which makes it consensus-critical). */
     bool IsPushOnly(const_iterator pc) const;
     bool IsPushOnly() const;
 
-    /** Check if the script contains valid OP_CODES */
-    bool HasValidOps() const;
+    /** Check if the script contains valid pre-Taproot OP_CODES */
+    bool HasValidBaseOps() const;
 
     /**
      * Returns whether the script is guaranteed to fail at execution,
@@ -597,6 +663,15 @@ public:
     explicit CScriptID(const CScript& in);
     explicit CScriptID(const uint160& in) : BaseHash(in) {}
 };
+
+/**
+ * Count the number of signature operations (sigops) in a P2SH scriptSig.
+ *
+ * If the scriptSig contains a SegWit redeem script (i.e., a P2SH-P2WPKH or P2SH-P2WSH script),
+ * this function counts only the non-SegWit sigops.
+ * To count SegWit sigops in such cases, use `CountWitnessSigOps`.
+ */
+unsigned int CountP2SHSigOps(const CScript& scriptSig, const CScript& scriptPubKey);
 
 /** Test for OP_SUCCESSx opcodes as defined by BIP342. */
 bool IsOpSuccess(const opcodetype& opcode);
