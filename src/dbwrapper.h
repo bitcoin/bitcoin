@@ -21,7 +21,6 @@
 #include <string>
 
 static const size_t DBWRAPPER_PREALLOC_KEY_SIZE = 64;
-static const size_t DBWRAPPER_PREALLOC_VALUE_SIZE = 1024;
 static const size_t DBWRAPPER_MAX_FILE_SIZE{32_MiB};
 
 //! User-controlled performance and debug options.
@@ -79,10 +78,10 @@ private:
     struct WriteBatchImpl;
     const std::unique_ptr<WriteBatchImpl> m_impl_batch;
 
-    DataStream ssKey{};
-    DataStream ssValue{};
+    DataStream m_key_scratch{};
+    DataStream m_value_scratch{};
 
-    void WriteImpl(std::span<const std::byte> key, DataStream& ssValue);
+    void WriteImpl(std::span<const std::byte> key, DataStream& value);
     void EraseImpl(std::span<const std::byte> key);
 
 public:
@@ -96,22 +95,18 @@ public:
     template <typename K, typename V>
     void Write(const K& key, const V& value)
     {
-        ssKey.reserve(DBWRAPPER_PREALLOC_KEY_SIZE);
-        ssValue.reserve(DBWRAPPER_PREALLOC_VALUE_SIZE);
-        ssKey << key;
-        ssValue << value;
-        WriteImpl(ssKey, ssValue);
-        ssKey.clear();
-        ssValue.clear();
+        ScopedDataStreamUsage scoped_key{m_key_scratch}, scoped_value{m_value_scratch};
+        m_key_scratch << key;
+        m_value_scratch << value;
+        WriteImpl(m_key_scratch, m_value_scratch);
     }
 
     template <typename K>
     void Erase(const K& key)
     {
-        ssKey.reserve(DBWRAPPER_PREALLOC_KEY_SIZE);
-        ssKey << key;
-        EraseImpl(ssKey);
-        ssKey.clear();
+        ScopedDataStreamUsage scoped_key{m_key_scratch};
+        m_key_scratch << key;
+        EraseImpl(m_key_scratch);
     }
 
     size_t ApproximateSize() const;

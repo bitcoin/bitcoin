@@ -171,13 +171,15 @@ CDBBatch::~CDBBatch() = default;
 void CDBBatch::Clear()
 {
     m_impl_batch->batch.Clear();
+    assert(m_key_scratch.empty());
+    assert(m_value_scratch.empty());
 }
 
-void CDBBatch::WriteImpl(std::span<const std::byte> key, DataStream& ssValue)
+void CDBBatch::WriteImpl(std::span<const std::byte> key, DataStream& value)
 {
     leveldb::Slice slKey(CharCast(key.data()), key.size());
-    dbwrapper_private::GetObfuscation(parent)(ssValue);
-    leveldb::Slice slValue(CharCast(ssValue.data()), ssValue.size());
+    dbwrapper_private::GetObfuscation(parent)(value);
+    leveldb::Slice slValue(CharCast(value.data()), value.size());
     m_impl_batch->batch.Put(slKey, slValue);
 }
 
