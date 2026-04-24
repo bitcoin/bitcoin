@@ -24,7 +24,7 @@ The configuration file is a plain text file and consists of `option=value` entri
 
 In contrast to the command-line usage:
 - an option must be specified without leading `-`;
-- a value of the given option is mandatory; e.g., `testnet=1` (for chain selection options), `noconnect=1` (for negated options).
+- a value of the given option is mandatory; e.g., `signet=1` (for chain selection options), `noconnect=1` (for negated options).
 
 ### Blank lines
 
@@ -41,7 +41,7 @@ Comments may appear in two ways:
 ### Network specific options
 
 Network specific options can be:
-- placed into sections with headers `[main]` (not `[mainnet]`), `[test]` (not `[testnet]`, for testnet3), `[testnet4]`, `[signet]` or `[regtest]`;
+- placed into sections with headers `[main]` (not `[mainnet]`), `[testnet4]`, `[signet]` or `[regtest]`;
 - prefixed with a chain name; e.g., `regtest.maxmempool=100`.
 
 Network specific options take precedence over non-network specific options.
