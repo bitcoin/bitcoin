@@ -443,11 +443,11 @@ class ZMQTest (BitcoinTestFramework):
         mempool_seq += 1
         assert_equal((bump_txid, "A", mempool_seq), seq.receive_sequence())
         mempool_seq += 1
-        # Conflict announced first, then block
+        # Block txs seq slots consumed first, then conflict evicted, then block announced
+        mempool_seq += len(more_tx)
         assert_equal((bump_txid, "R", mempool_seq), seq.receive_sequence())
         mempool_seq += 1
         assert_equal((tip, "C", None), seq.receive_sequence())
-        mempool_seq += len(more_tx)
         # Last tx
         assert_equal((orig_txid_2, "A", mempool_seq), seq.receive_sequence())
         mempool_seq += 1

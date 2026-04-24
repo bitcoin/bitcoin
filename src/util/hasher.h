@@ -13,6 +13,7 @@
 #include <cstdint>
 #include <cstring>
 #include <span>
+#include <vector>
 
 class SaltedUint256Hasher
 {
@@ -115,5 +116,8 @@ public:
 
     size_t operator()(const std::span<const unsigned char>& script) const;
 };
+
+/** Sorts and hashes a set of wtxids into a single hash*/
+uint256 GetHashFromWitnesses(std::vector<Wtxid> wtxids);
 
 #endif // BITCOIN_UTIL_HASHER_H
