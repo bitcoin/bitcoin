@@ -241,7 +241,7 @@ class WalletMuSigTest(BitcoinTestFramework):
                     part_pks.add(part_pub[2:])
             # Check that there are as many participants as we expected
             assert_equal(len(part_pks), len(keys))
-            # Check that each participant has a derivation path
+            # Check that each participant has a derivation path.
             for deriv_path in psbt_map["taproot_bip32_derivs"]:
                 if deriv_path["pubkey"] in part_pks:
                     part_pks.remove(deriv_path["pubkey"])
@@ -315,6 +315,47 @@ class WalletMuSigTest(BitcoinTestFramework):
         assert "hex" in finalized
         self.nodes[0].sendrawtransaction(finalized["hex"])
 
+    def test_same_musig_different_derivation_paths(self):
+        self.log.info("Testing tr(H,and_v(v:pk(musig/*)),pk(same musig different derivation/*))")
+        pattern = f"tr({H_POINT},and_v(v:pk(musig($0,$1,$2)/<0;1>/*),pk(musig($0,$1,$2)/<2;3>/*)))"
+        wallets, keys = self.create_wallets_and_keys_from_pattern(pattern)
+        self.construct_and_import_musig_descriptor_in_wallets(pattern, wallets, keys)
+
+        addr = wallets[0].getnewaddress(address_type="bech32m")
+        for wallet in wallets[1:]:
+            assert_equal(addr, wallet.getnewaddress(address_type="bech32m"))
+        self.def_wallet.sendtoaddress(addr, 10)
+        self.generate(self.nodes[0], 1)
+
+        utxo = wallets[0].listunspent()[0]
+        psbt = wallets[0].walletcreatefundedpsbt(
+            outputs=[{self.def_wallet.getnewaddress(): 5}],
+            inputs=[utxo],
+            change_type="bech32m",
+            changePosition=1,
+            locktime=self.nodes[0].getblockcount(),
+        )["psbt"]
+        dec_psbt = self.nodes[0].decodepsbt(psbt)
+
+        expected_deriv_paths = {"m" + ORIGIN_PATH_RE.search(pub).group(1) for _, pub in keys}
+        assert_equal(len(expected_deriv_paths), 1)
+        expected_deriv_path = expected_deriv_paths.pop()
+
+        for psbt_map in [dec_psbt["inputs"][0], dec_psbt["outputs"][1]]:
+            participant_pubkeys = set()
+            for agg in psbt_map["musig2_participant_pubkeys"]:
+                for participant in agg["participant_pubkeys"]:
+                    participant_pubkeys.add(participant[2:])
+
+            seen_paths = []
+            for deriv_path in psbt_map["taproot_bip32_derivs"]:
+                if deriv_path["pubkey"] in participant_pubkeys:
+                    seen_paths.append(deriv_path["path"])
+
+            assert_equal(len(seen_paths), len(keys))
+            for path in seen_paths:
+                assert_equal(path, expected_deriv_path)
+
     def run_test(self):
         self.def_wallet = self.nodes[0].get_wallet_rpc(self.default_wallet_name)
 
@@ -331,6 +372,7 @@ class WalletMuSigTest(BitcoinTestFramework):
         self.test_success_case("tr(H,pk(musig/*))", "tr($H,pk(musig($0,$1,$2)/<0;1>/*))", scriptpath=True)
         self.test_success_case("tr(H,{pk(musig/*), pk(musig/*)})", "tr($H,{pk(musig($0,$1,$2)/<0;1>/*),pk(musig($3,$4,$5)/0/*)})", scriptpath=True)
         self.test_success_case("tr(H,{pk(musig/*), pk(same keys different musig/*)})", "tr($H,{pk(musig($0,$1,$2)/<0;1>/*),pk(musig($1,$2)/0/*)})", scriptpath=True)
+        self.test_same_musig_different_derivation_paths()
         self.test_success_case("tr(musig/*,{pk(partial keys diff musig-1/*),pk(partial keys diff musig-2/*)})}", "tr(musig($0,$1,$2)/<3;4>/*,{pk(musig($0,$1)/<5;6>/*),pk(musig($1,$2)/7/*)})")
         self.test_success_case("tr(musig/*,{pk(partial keys diff musig-1/*),pk(partial keys diff musig-2/*)})} script-path", "tr(musig($0,$1,$2)/<3;4>/*,{pk(musig($0,$1)/<5;6>/*),pk(musig($1,$2)/7/*)})", scriptpath=True, nosign_wallets=[0])
         self.test_success_case("tr(H,and(pk(musig/*),after(1)))", "tr($H,and_v(v:pk(musig($0,$1,$2)/<0;1>/*),after(1)))", scriptpath=True)
