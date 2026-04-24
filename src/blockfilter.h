@@ -22,16 +22,34 @@
 class CBlock;
 class CBlockUndo;
 
+/** An opaque type for approximate set membership queries. */
+class BlockFilterBase
+{
+public:
+    /** A data structure that may be queried for approximate set membership. */
+    typedef std::vector<unsigned char> Element;
+    /** A collection of elements that may be queried for approximate set membership. */
+    typedef std::unordered_set<Element, ByteVectorHash> ElementSet;
+
+    virtual ~BlockFilterBase() = default;
+
+    /** Checks if a single element may be in the set. */
+    virtual bool Match(const Element& element) const = 0;
+
+    /** Checks if any element may be in the set. */
+    virtual bool MatchAny(const ElementSet& elements) const = 0;
+
+    /** Serialization of the probabilistic data structure. */
+    virtual const std::vector<unsigned char>& GetEncoded() const LIFETIMEBOUND = 0;
+};
+
 /**
  * This implements a Golomb-coded set as defined in BIP 158. It is a
  * compact, probabilistic data structure for testing set membership.
  */
-class GCSFilter
+class GCSFilter : public BlockFilterBase
 {
 public:
-    typedef std::vector<unsigned char> Element;
-    typedef std::unordered_set<Element, ByteVectorHash> ElementSet;
-
     struct Params
     {
         uint64_t m_siphash_k0;
@@ -71,20 +89,20 @@ public:
 
     uint32_t GetN() const { return m_N; }
     const Params& GetParams() const LIFETIMEBOUND { return m_params; }
-    const std::vector<unsigned char>& GetEncoded() const LIFETIMEBOUND { return m_encoded; }
+    const std::vector<unsigned char>& GetEncoded() const LIFETIMEBOUND override { return m_encoded; }
 
     /**
      * Checks if the element may be in the set. False positives are possible
      * with probability 1/M.
      */
-    bool Match(const Element& element) const;
+    bool Match(const Element& element) const override;
 
     /**
      * Checks if any of the given elements may be in the set. False positives
      * are possible with probability 1/M per element checked. This is more
      * efficient that checking Match on multiple elements separately.
      */
-    bool MatchAny(const ElementSet& elements) const;
+    bool MatchAny(const ElementSet& elements) const override;
 };
 
 constexpr uint8_t BASIC_FILTER_P = 19;
