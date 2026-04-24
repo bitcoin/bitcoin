@@ -541,7 +541,7 @@ public:
     void SendPings() override EXCLUSIVE_LOCKS_REQUIRED(!m_peer_mutex);
     void InitiateTxBroadcastToAll(const Txid& txid, const Wtxid& wtxid) override EXCLUSIVE_LOCKS_REQUIRED(!m_peer_mutex);
     node::TransactionError InitiateTxBroadcastPrivate(const CTransactionRef& tx) override EXCLUSIVE_LOCKS_REQUIRED(!m_peer_mutex);
-    void SetBestBlock(int height, std::chrono::seconds time) override
+    void SetBestBlock(int height, NodeSeconds time) override
     {
         m_best_height = height;
         m_best_block_time = time;
@@ -790,7 +790,7 @@ private:
     /** The height of the best chain */
     std::atomic<int> m_best_height{-1};
     /** The time of the best chain tip block */
-    std::atomic<std::chrono::seconds> m_best_block_time{0s};
+    std::atomic<NodeSeconds> m_best_block_time{};
 
     /** Next time to check for stale tip */
     std::chrono::seconds m_stale_tip_check_time GUARDED_BY(cs_main){0s};
@@ -1352,7 +1352,7 @@ bool PeerManagerImpl::TipMayBeStale()
 
 int64_t PeerManagerImpl::ApproximateBestBlockDepth() const
 {
-    return (GetTime<std::chrono::seconds>() - m_best_block_time.load()).count() / m_chainparams.GetConsensus().nPowTargetSpacing;
+    return (Now<NodeSeconds>() - m_best_block_time.load()) / m_chainparams.GetConsensus().PowTargetSpacing();
 }
 
 bool PeerManagerImpl::CanDirectFetch()
@@ -2187,7 +2187,7 @@ void PeerManagerImpl::NewPoWValidBlock(const CBlockIndex *pindex, const std::sha
  */
 void PeerManagerImpl::UpdatedBlockTip(const CBlockIndex *pindexNew, const CBlockIndex *pindexFork, bool fInitialDownload)
 {
-    SetBestBlock(pindexNew->nHeight, std::chrono::seconds{pindexNew->GetBlockTime()});
+    SetBestBlock(pindexNew->nHeight, pindexNew->Time());
 
     // Don't relay inventory during initial block download.
     if (fInitialDownload) return;

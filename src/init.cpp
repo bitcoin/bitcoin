@@ -2101,16 +2101,16 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
 
     // ********************************************************* Step 12: start node
 
-    int64_t best_block_time{};
+    NodeSeconds best_block_time{};
     {
         LOCK(chainman.GetMutex());
         const auto& tip{*Assert(chainman.ActiveTip())};
         LogInfo("block tree size = %u", chainman.BlockIndex().size());
         chain_active_height = tip.nHeight;
-        best_block_time = tip.GetBlockTime();
+        best_block_time = tip.Time();
         if (tip_info) {
             tip_info->block_height = chain_active_height;
-            tip_info->block_time = best_block_time;
+            tip_info->block_time = TicksSinceEpoch<std::chrono::seconds>(best_block_time);
             tip_info->verification_progress = chainman.GuessVerificationProgress(&tip);
         }
         if (tip_info && chainman.m_best_header) {
@@ -2119,7 +2119,7 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
         }
     }
     LogInfo("nBestHeight = %d", chain_active_height);
-    if (node.peerman) node.peerman->SetBestBlock(chain_active_height, std::chrono::seconds{best_block_time});
+    if (node.peerman) node.peerman->SetBestBlock(chain_active_height, best_block_time);
 
     // Map ports with NAT-PMP
     StartMapPort(args.GetBoolArg("-natpmp", DEFAULT_NATPMP));
