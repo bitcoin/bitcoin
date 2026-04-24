@@ -381,6 +381,7 @@ BASE_SCRIPTS = [
     'p2p_handshake.py',
     'p2p_handshake.py --v2transport',
     'interface_ipc_cli.py',
+    'interface_ipc_init.py',
     'feature_dirsymlinks.py',
     'feature_help.py',
     'feature_framework_startup_failures.py',

@@ -2,6 +2,7 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
+#include <interfaces/ipc.h>
 #include <ipc/process.h>
 #include <ipc/test/ipc_test.h>
 
@@ -38,6 +39,30 @@ BOOST_AUTO_TEST_CASE(parse_address_test)
                   "unix:/var/empty/notexist/0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000.sock",
                   "Unix address path \"/var/empty/notexist/0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000.sock\" exceeded maximum socket path length");
     check_address("invalid", "invalid", "Unrecognized address 'invalid'");
+
+    auto check_bind{[](const std::string& configured_address, const std::string& expected_address, size_t expected_max_connections, const std::string& expected_error) {
+        auto bind{interfaces::Ipc::ParseBindAddress(configured_address)};
+        if (!expected_error.empty()) {
+            BOOST_CHECK(!bind);
+            BOOST_CHECK_EQUAL(util::ErrorString(bind).original, expected_error);
+            return;
+        }
+        BOOST_REQUIRE(bind);
+        BOOST_CHECK_EQUAL(bind->address, expected_address);
+        BOOST_CHECK_EQUAL(bind->max_connections, expected_max_connections);
+    }};
+    check_bind("unix", "unix", interfaces::Ipc::DEFAULT_MAX_CONNECTIONS, "");
+    check_bind("unix:", "unix:", interfaces::Ipc::DEFAULT_MAX_CONNECTIONS, "");
+    check_bind("unix::max-connections=8", "unix:", 8, "");
+    check_bind("unix:path.sock:max-connections=8", "unix:path.sock", 8, "");
+    check_bind("unix::max-connections=0", "unix:", 0, "");
+    check_bind("unix::max-connections=2147483647", "unix:", 2147483647ULL, "");
+    check_bind("unix:path.sock:max-connections=8,unknown=1", "", 0, "Unknown socket option 'unknown'");
+    check_bind("unix:max-connections=8", "", 0, "Missing unix socket path before socket options; use unix::<options> for the default path");
+    check_bind("unix::max-connections=-1", "", 0, "Invalid max-connections value '-1'");
+    check_bind("unix::max-connections=-9223372036854775808", "", 0, "Invalid max-connections value '-9223372036854775808'");
+    check_bind("unix::max-connections=9223372036854775808", "", 0, "Invalid max-connections value '9223372036854775808'");
+    check_bind("unix::max-connections=", "", 0, "Missing value for max-connections option");
 }
 
 BOOST_AUTO_TEST_SUITE_END()

@@ -7,6 +7,8 @@
 
 #include <util/fs.h>
 
+#include <cstddef>
+#include <interfaces/ipc.h>
 #include <memory>
 #include <string>
 
