@@ -44,7 +44,7 @@ import socket
 import time
 import urllib.parse
 
-from .util import JSONRPCException
+from .util import JSONRPCException, assert_equal
 
 HTTP_TIMEOUT = 30
 USER_AGENT = "AuthServiceProxy/0.1"
@@ -139,7 +139,6 @@ class AuthServiceProxy():
             else:
                 return response['result']
         else:
-            from .util import assert_equal
             assert_equal(response['jsonrpc'], '2.0')
             if status != HTTPStatus.OK:
                 raise JSONRPCException({
