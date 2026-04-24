@@ -184,6 +184,13 @@ BOOST_AUTO_TEST_CASE(dbwrapper_batch)
 
         // key3 should've never been written
         BOOST_CHECK(dbw.Read(key3, res) == false);
+
+        batch.Clear();
+        batch.Write(key3, in3);
+        dbw.WriteBatch(batch);
+
+        BOOST_CHECK(dbw.Read(key3, res));
+        BOOST_CHECK_EQUAL(res.ToString(), in3.ToString());
     }
 }
 
@@ -213,6 +220,25 @@ BOOST_AUTO_TEST_CASE(dbwrapper_iterator)
 
         uint8_t key_res;
         uint256 val_res;
+
+        BOOST_REQUIRE(it->GetKey(key_res));
+
+        // A failed value decode must not leave the iterator's scratch stream dirty.
+        std::pair<uint256, uint8_t> value_too_large;
+        BOOST_CHECK(!it->GetValue(value_too_large));
+
+        BOOST_REQUIRE(it->GetValue(val_res));
+        BOOST_CHECK_EQUAL(key_res, key);
+        BOOST_CHECK_EQUAL(val_res.ToString(), in.ToString());
+
+        it->Seek(key2);
+
+        BOOST_REQUIRE(it->GetKey(key_res));
+        BOOST_REQUIRE(it->GetValue(val_res));
+        BOOST_CHECK_EQUAL(key_res, key2);
+        BOOST_CHECK_EQUAL(val_res.ToString(), in2.ToString());
+
+        it->Seek(key);
 
         BOOST_REQUIRE(it->GetKey(key_res));
         BOOST_REQUIRE(it->GetValue(val_res));
