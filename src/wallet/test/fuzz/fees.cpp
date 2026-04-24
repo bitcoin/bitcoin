@@ -63,7 +63,7 @@ FUZZ_TARGET(wallet_fees, .init = initialize_setup)
 {
     SeedRandomStateForTest(SeedRand::ZEROS);
     FuzzedDataProvider fuzzed_data_provider{buffer.data(), buffer.size()};
-    NodeClockContext clock_ctx{ConsumeTime(fuzzed_data_provider)};
+    FakeNodeClock clock{ConsumeTime(fuzzed_data_provider)};
     auto& node{g_setup->m_node};
     Chainstate* chainstate = &node.chainman->ActiveChainstate();
 

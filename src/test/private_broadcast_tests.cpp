@@ -5,6 +5,7 @@
 #include <primitives/transaction.h>
 #include <private_broadcast.h>
 #include <test/util/setup_common.h>
+#include <test/util/time.h>
 #include <util/time.h>
 
 #include <algorithm>
@@ -26,7 +27,7 @@ static CTransactionRef MakeDummyTx(uint32_t id, size_t num_witness)
 
 BOOST_AUTO_TEST_CASE(basic)
 {
-    SetMockTime(Now<NodeSeconds>());
+    FakeNodeClock clock{};
 
     PrivateBroadcast pb;
     const NodeId recipient1{1};
@@ -94,7 +95,7 @@ BOOST_AUTO_TEST_CASE(basic)
     BOOST_CHECK_EQUAL(pb.GetStale().size(), 0);
 
     // 2. Fast-forward the mock clock past the INITIAL_STALE_DURATION.
-    SetMockTime(Now<NodeSeconds>() + PrivateBroadcast::INITIAL_STALE_DURATION + 1min);
+    clock += PrivateBroadcast::INITIAL_STALE_DURATION + 1min;
 
     // 3. Now that the initial duration has passed, both unconfirmed transactions should be stale.
     BOOST_CHECK_EQUAL(pb.GetStale().size(), 2);
@@ -125,7 +126,7 @@ BOOST_AUTO_TEST_CASE(basic)
     BOOST_CHECK_EQUAL(stale_state.size(), 1);
     BOOST_CHECK_EQUAL(stale_state[0], tx_for_recipient2);
 
-    SetMockTime(Now<NodeSeconds>() + 10h);
+    clock += 10h;
 
     BOOST_CHECK_EQUAL(pb.GetStale().size(), 2);
 
@@ -141,7 +142,7 @@ BOOST_AUTO_TEST_CASE(basic)
 
 BOOST_AUTO_TEST_CASE(stale_unpicked_tx)
 {
-    SetMockTime(Now<NodeSeconds>());
+    FakeNodeClock clock{};
 
     PrivateBroadcast pb;
     const auto tx{MakeDummyTx(/*id=*/42, /*num_witness=*/0)};
@@ -149,9 +150,9 @@ BOOST_AUTO_TEST_CASE(stale_unpicked_tx)
 
     // Unpicked transactions use the longer INITIAL_STALE_DURATION.
     BOOST_CHECK_EQUAL(pb.GetStale().size(), 0);
-    SetMockTime(Now<NodeSeconds>() + PrivateBroadcast::INITIAL_STALE_DURATION - 1min);
+    clock += PrivateBroadcast::INITIAL_STALE_DURATION - 1min;
     BOOST_CHECK_EQUAL(pb.GetStale().size(), 0);
-    SetMockTime(Now<NodeSeconds>() + 2min);
+    clock += 2min;
     const auto stale_state{pb.GetStale()};
     BOOST_REQUIRE_EQUAL(stale_state.size(), 1);
     BOOST_CHECK_EQUAL(stale_state[0], tx);

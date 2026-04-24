@@ -36,22 +36,22 @@ public:
 
 /// Helper to initialize the global NodeClock, let a duration elapse,
 /// and reset it after use in a test.
-class NodeClockContext
+class FakeNodeClock
 {
     NodeSeconds m_t{std::chrono::seconds::max()};
 
 public:
     /// Initialize with the given time.
-    explicit NodeClockContext(NodeSeconds init_time) { set(init_time); }
-    explicit NodeClockContext(std::chrono::seconds init_time) { set(init_time); }
-    /// Initialize with current time, using the next tick to avoid going back by rounding to seconds.
-    explicit NodeClockContext() { set(++Now<NodeSeconds>().time_since_epoch()); }
+    explicit FakeNodeClock(NodeSeconds init_time) { set(init_time); }
+    explicit FakeNodeClock(std::chrono::seconds init_time) { set(init_time); }
+    /// Initialize with current time.
+    explicit FakeNodeClock() { set(Now<NodeSeconds>().time_since_epoch()); }
 
     /// Unset mocktime.
-    ~NodeClockContext() { set(0s); }
+    ~FakeNodeClock() { set(0s); }
 
-    NodeClockContext(const NodeClockContext&) = delete;
-    NodeClockContext& operator=(const NodeClockContext&) = delete;
+    FakeNodeClock(const FakeNodeClock&) = delete;
+    FakeNodeClock& operator=(const FakeNodeClock&) = delete;
 
     /// Set mocktime.
     void set(NodeSeconds t) { SetMockTime(m_t = t); }

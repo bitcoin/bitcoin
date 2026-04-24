@@ -31,7 +31,7 @@ BOOST_FIXTURE_TEST_CASE(chainstate_write_interval, TestingSetup)
     m_node.validation_signals->RegisterSharedValidationInterface(sub);
     auto& chainstate{Assert(m_node.chainman)->ActiveChainstate()};
     BlockValidationState state_dummy{};
-    NodeClockContext clock_ctx{};
+    FakeNodeClock clock{};
 
     // The first periodic flush sets m_next_write and does not flush
     chainstate.FlushStateToDisk(state_dummy, FlushStateMode::PERIODIC);
@@ -39,12 +39,12 @@ BOOST_FIXTURE_TEST_CASE(chainstate_write_interval, TestingSetup)
     BOOST_CHECK(!sub->m_did_flush);
 
     // The periodic flush interval is between 50 and 70 minutes (inclusive)
-    clock_ctx += DATABASE_WRITE_INTERVAL_MIN - 1min;
+    clock += DATABASE_WRITE_INTERVAL_MIN - 1min;
     chainstate.FlushStateToDisk(state_dummy, FlushStateMode::PERIODIC);
     m_node.validation_signals->SyncWithValidationInterfaceQueue();
     BOOST_CHECK(!sub->m_did_flush);
 
-    clock_ctx += DATABASE_WRITE_INTERVAL_MAX;
+    clock += DATABASE_WRITE_INTERVAL_MAX;
     chainstate.FlushStateToDisk(state_dummy, FlushStateMode::PERIODIC);
     m_node.validation_signals->SyncWithValidationInterfaceQueue();
     BOOST_CHECK(sub->m_did_flush);
@@ -70,6 +70,7 @@ BOOST_FIXTURE_TEST_CASE(write_during_multiblock_activation, TestChain100Setup)
 
     auto& chainstate{Assert(m_node.chainman)->ActiveChainstate()};
     BlockValidationState state_dummy{};
+    FakeNodeClock clock{};
 
     // Pop two blocks from the tip
     const CBlockIndex* tip{chainstate.m_chain.Tip()};
@@ -88,7 +89,7 @@ BOOST_FIXTURE_TEST_CASE(write_during_multiblock_activation, TestChain100Setup)
     m_node.validation_signals->SyncWithValidationInterfaceQueue();
     // The periodic flush interval is between 50 and 70 minutes (inclusive)
     // The next call to a PERIODIC write will flush
-    SetMockTime(GetMockTime() + DATABASE_WRITE_INTERVAL_MAX);
+    clock += DATABASE_WRITE_INTERVAL_MAX;
 
     const auto sub{std::make_shared<TestSubscriber>()};
     m_node.validation_signals->RegisterSharedValidationInterface(sub);

@@ -45,7 +45,7 @@ FUZZ_TARGET(p2p_handshake, .init = ::initialize)
 
     auto& connman = static_cast<ConnmanTestMsg&>(*g_setup->m_node.connman);
     auto& chainman = static_cast<TestChainstateManager&>(*g_setup->m_node.chainman);
-    NodeClockContext clock_ctx{1610000000s}; // any time to successfully reset ibd
+    FakeNodeClock clock{1610000000s}; // any time to successfully reset ibd
     chainman.ResetIbd();
 
     node::Warnings warnings{};
@@ -81,7 +81,7 @@ FUZZ_TARGET(p2p_handshake, .init = ::initialize)
             continue;
         }
 
-        clock_ctx += std::chrono::seconds{
+        clock += std::chrono::seconds{
                     fuzzed_data_provider.ConsumeIntegralInRange<int64_t>(
                         -std::chrono::seconds{10min}.count(), // Allow mocktime to go backwards slightly
                         std::chrono::seconds{TIMEOUT_INTERVAL}.count()),
