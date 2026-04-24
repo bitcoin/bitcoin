@@ -27,6 +27,9 @@ class RPCGenerateTest(BitcoinTestFramework):
         self.generatetoaddress(self.nodes[0], 1, 'mneYUmWYsuk7kySiURxCi3AGxrAqZxLgPZ')
         assert_raises_rpc_error(-5, "Invalid address", self.generatetoaddress, self.nodes[0], 1, '3J98t1WpEZ73CNmQviecrnyiWrnqRhWNLy')
 
+        self.log.info("Test generatetoaddress rejects negative maxtries")
+        assert_raises_rpc_error(-1, "JSON integer out of range", self.generatetoaddress, self.nodes[0], 1, 'mneYUmWYsuk7kySiURxCi3AGxrAqZxLgPZ', -1)
+
     def test_generateblock(self):
         node = self.nodes[0]
         miniwallet = MiniWallet(node)
