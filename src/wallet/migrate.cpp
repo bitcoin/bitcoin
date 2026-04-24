@@ -626,16 +626,24 @@ void BerkeleyRODatabase::Open()
     if (inner_meta.last_page > outer_meta.last_page) {
         throw std::runtime_error("Subdatabase last page is greater than database last page");
     }
+    uint64_t max_data_size = static_cast<uint64_t>(outer_meta.last_page) * page_size;
 
     // Make sure encryption is disabled
     if (inner_meta.encrypt_algo != 0) {
         throw std::runtime_error("BDB builtin encryption is not supported");
     }
 
+    // Read the root's level from its header
+    // Note that we will read the root page twice in order to process it.
+    SeekToPage(db_file, inner_meta.root, page_size);
+    PageHeader root_header(inner_meta.root, inner_meta.other_endian);
+    db_file >> root_header;
+
     // Do a DFS through the BTree, starting at root
-    std::vector<uint32_t> pages{inner_meta.root};
+    // We track the expected level of each page in order to avoid loops
+    std::vector<std::pair<uint32_t, uint32_t>> pages{{inner_meta.root, root_header.level}};
     while (pages.size() > 0) {
-        uint32_t curr_page = pages.back();
+        auto [curr_page, expected_level] = pages.back();
         // It turns out BDB completely ignores this last_page field and doesn't actually update it to the correct
         // last page. While we should be checking this, we can't.
         // This is left commented out as a reminder to not accidentally implement this in the future.
@@ -646,17 +654,23 @@ void BerkeleyRODatabase::Open()
         SeekToPage(db_file, curr_page, page_size);
         PageHeader header(curr_page, inner_meta.other_endian);
         db_file >> header;
+        if (header.level != expected_level) {
+            throw std::runtime_error("BTree page has an unexpected level");
+        }
         switch (header.type) {
         case PageType::BTREE_INTERNAL: {
             InternalPage int_page(header);
             db_file >> int_page;
             for (const InternalRecord& rec : int_page.records) {
                 if (rec.m_header.deleted) continue;
-                pages.push_back(rec.page_num);
+                pages.emplace_back(rec.page_num, header.level - 1);
             }
             break;
         }
         case PageType::BTREE_LEAF: {
+            if (header.level != 1) {
+                throw std::runtime_error("BTree Leaf page is not at level 1");
+            }
             RecordsPage rec_page(header);
             db_file >> rec_page;
             if (rec_page.records.size() % 2 != 0) {
@@ -673,6 +687,9 @@ void BerkeleyRODatabase::Open()
                 } else if (const OverflowRecord* orec = std::get_if<OverflowRecord>(&rec)) {
                     if (orec->m_header.deleted) continue;
                     uint32_t next_page = orec->page_number;
+                    if (orec->item_len > max_data_size) {
+                        throw std::runtime_error("Overflow record has an impossible length");
+                    }
                     while (next_page != 0) {
                         SeekToPage(db_file, next_page, page_size);
                         PageHeader opage_header(next_page, inner_meta.other_endian);
@@ -683,6 +700,9 @@ void BerkeleyRODatabase::Open()
                         OverflowPage opage(opage_header);
                         db_file >> opage;
                         data.insert(data.end(), opage.data.begin(), opage.data.end());
+                        if (data.size() > orec->item_len) {
+                            throw std::runtime_error("Overflow record data is larger than stated size");
+                        }
                         next_page = opage_header.next_page;
                     }
                 }
