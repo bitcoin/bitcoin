@@ -50,16 +50,15 @@ BOOST_AUTO_TEST_CASE(test_cuckoocache_no_fakes)
 };
 
 struct HitRateTest : BasicTestingSetup {
-/** This helper returns the hit rate when megabytes*load worth of entries are
- * inserted into a megabytes sized cache
+/** This helper returns the hit rate when bytes*load worth of entries are
+ * inserted into a bytes sized cache
  */
 template <typename Cache>
-double test_cache(size_t megabytes, double load)
+double test_cache(size_t bytes, double load)
 {
     SeedRandomForTest(SeedRand::ZEROS);
     std::vector<uint256> hashes;
     Cache set{};
-    size_t bytes{megabytes * 1_MiB};
     set.setup_bytes(bytes);
     uint32_t n_insert = static_cast<uint32_t>(load * (bytes / sizeof(uint256)));
     hashes.resize(n_insert);
@@ -114,9 +113,8 @@ BOOST_FIXTURE_TEST_CASE(cuckoocache_hit_rate_ok, HitRateTest)
      * as a lower bound on performance.
      */
     double HitRateThresh = 0.98;
-    size_t megabytes = 4;
     for (double load = 0.1; load < 2; load *= 2) {
-        double hits = test_cache<CuckooCache::cache<uint256, SignatureCacheHasher>>(megabytes, load);
+        double hits = test_cache<CuckooCache::cache<uint256, SignatureCacheHasher>>(4_MiB, load);
         BOOST_CHECK(normalize_hit_rate(hits, load) > HitRateThresh);
     }
 }
@@ -126,13 +124,12 @@ struct EraseTest : BasicTestingSetup {
 /** This helper checks that erased elements are preferentially inserted onto and
  * that the hit rate of "fresher" keys is reasonable*/
 template <typename Cache>
-void test_cache_erase(size_t megabytes)
+void test_cache_erase(size_t bytes)
 {
     double load = 1;
     SeedRandomForTest(SeedRand::ZEROS);
     std::vector<uint256> hashes;
     Cache set{};
-    size_t bytes{megabytes * 1_MiB};
     set.setup_bytes(bytes);
     uint32_t n_insert = static_cast<uint32_t>(load * (bytes / sizeof(uint256)));
     hashes.resize(n_insert);
@@ -185,19 +182,17 @@ void test_cache_erase(size_t megabytes)
 
 BOOST_FIXTURE_TEST_CASE(cuckoocache_erase_ok, EraseTest)
 {
-    size_t megabytes = 4;
-    test_cache_erase<CuckooCache::cache<uint256, SignatureCacheHasher>>(megabytes);
+    test_cache_erase<CuckooCache::cache<uint256, SignatureCacheHasher>>(4_MiB);
 }
 
 struct EraseParallelTest : BasicTestingSetup {
 template <typename Cache>
-void test_cache_erase_parallel(size_t megabytes)
+void test_cache_erase_parallel(size_t bytes)
 {
     double load = 1;
     SeedRandomForTest(SeedRand::ZEROS);
     std::vector<uint256> hashes;
     Cache set{};
-    size_t bytes{megabytes * 1_MiB};
     set.setup_bytes(bytes);
     uint32_t n_insert = static_cast<uint32_t>(load * (bytes / sizeof(uint256)));
     hashes.resize(n_insert);
@@ -277,8 +272,7 @@ void test_cache_erase_parallel(size_t megabytes)
 }; // struct EraseParallelTest
 BOOST_FIXTURE_TEST_CASE(cuckoocache_erase_parallel_ok, EraseParallelTest)
 {
-    size_t megabytes = 4;
-    test_cache_erase_parallel<CuckooCache::cache<uint256, SignatureCacheHasher>>(megabytes);
+    test_cache_erase_parallel<CuckooCache::cache<uint256, SignatureCacheHasher>>(4_MiB);
 }
 
 
