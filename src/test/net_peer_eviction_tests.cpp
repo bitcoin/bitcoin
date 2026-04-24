@@ -617,7 +617,7 @@ BOOST_AUTO_TEST_CASE(peer_eviction_test)
         // into our mempool should be protected from eviction.
         BOOST_CHECK(!IsEvicted(
                         number_of_nodes, [number_of_nodes](NodeEvictionCandidate& candidate) {
-                            candidate.m_last_tx_time = std::chrono::seconds{number_of_nodes - candidate.id};
+                            candidate.m_last_tx_time = NodeSeconds{std::chrono::seconds{number_of_nodes - candidate.id}};
                         },
                         {0, 1, 2, 3}, random_context));
 
@@ -625,7 +625,7 @@ BOOST_AUTO_TEST_CASE(peer_eviction_test)
         // blocks should be protected from eviction.
         BOOST_CHECK(!IsEvicted(
                         number_of_nodes, [number_of_nodes](NodeEvictionCandidate& candidate) {
-                            candidate.m_last_block_time = std::chrono::seconds{number_of_nodes - candidate.id};
+                            candidate.m_last_block_time = NodeSeconds{std::chrono::seconds{number_of_nodes - candidate.id}};
                             if (candidate.id <= 7) {
                                 candidate.m_relay_txs = false;
                                 candidate.fRelevantServices = true;
@@ -637,14 +637,14 @@ BOOST_AUTO_TEST_CASE(peer_eviction_test)
         // protected from eviction.
         BOOST_CHECK(!IsEvicted(
                         number_of_nodes, [number_of_nodes](NodeEvictionCandidate& candidate) {
-                            candidate.m_last_block_time = std::chrono::seconds{number_of_nodes - candidate.id};
+                            candidate.m_last_block_time = NodeSeconds{std::chrono::seconds{number_of_nodes - candidate.id}};
                         },
                         {0, 1, 2, 3}, random_context));
 
         // Combination of the previous two tests.
         BOOST_CHECK(!IsEvicted(
                         number_of_nodes, [number_of_nodes](NodeEvictionCandidate& candidate) {
-                            candidate.m_last_block_time = std::chrono::seconds{number_of_nodes - candidate.id};
+                            candidate.m_last_block_time = NodeSeconds{std::chrono::seconds{number_of_nodes - candidate.id}};
                             if (candidate.id <= 7) {
                                 candidate.m_relay_txs = false;
                                 candidate.fRelevantServices = true;
@@ -657,8 +657,8 @@ BOOST_AUTO_TEST_CASE(peer_eviction_test)
                         number_of_nodes, [number_of_nodes](NodeEvictionCandidate& candidate) {
                             candidate.nKeyedNetGroup = number_of_nodes - candidate.id;           // 4 protected
                             candidate.m_min_ping_time = std::chrono::microseconds{candidate.id}; // 8 protected
-                            candidate.m_last_tx_time = std::chrono::seconds{number_of_nodes - candidate.id};    // 4 protected
-                            candidate.m_last_block_time = std::chrono::seconds{number_of_nodes - candidate.id}; // 4 protected
+                            candidate.m_last_tx_time = NodeSeconds{std::chrono::seconds{number_of_nodes - candidate.id}};    // 4 protected
+                            candidate.m_last_block_time = NodeSeconds{std::chrono::seconds{number_of_nodes - candidate.id}}; // 4 protected
                         },
                         {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19}, random_context));
 
