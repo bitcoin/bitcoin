@@ -5,6 +5,8 @@
 
 #include <txmempool.h>
 
+#include <bitcoin-build-config.h> // IWYU pragma: keep
+
 #include <chain.h>
 #include <coins.h>
 #include <common/system.h>
@@ -28,14 +30,17 @@
 
 #include <algorithm>
 #include <cmath>
+#include <cstdlib>
 #include <numeric>
 #include <optional>
 #include <ranges>
 #include <string_view>
+#include <thread>
 #include <utility>
 
 TRACEPOINT_SEMAPHORE(mempool, added);
 TRACEPOINT_SEMAPHORE(mempool, removed);
+TRACEPOINT_SEMAPHORE(txgraph, init);
 
 bool TestLockPointValidity(CChain& active_chain, const LockPoints& lp)
 {
@@ -185,6 +190,25 @@ CTxMemPool::CTxMemPool(Options opts, bilingual_str& error)
             const Txid& txid_b = static_cast<const CTxMemPoolEntry&>(b).GetTx().GetHash();
             return txid_a <=> txid_b;
         });
+#ifdef ENABLE_TRACING
+    if (std::getenv("TXGRAPH_WAIT_FOR_TRACER")) {
+        LogInfo("TXGRAPH_WAIT_FOR_TRACER: Waiting for txgraph tracer to attach...\n");
+        while (!TRACEPOINT_ACTIVE(txgraph, init)) {
+            std::this_thread::sleep_for(std::chrono::milliseconds(100));
+        }
+        // Grace period: BCC increments the semaphore during BPF program loading,
+        // but the perf ring buffer is not ready until open_perf_buffer() is called
+        // after the BPF constructor returns. Without this delay, tracepoint events
+        // fire before the buffer is ready and are silently dropped.
+        std::this_thread::sleep_for(std::chrono::seconds(2));
+        LogInfo("TXGRAPH_WAIT_FOR_TRACER: Tracer attached, proceeding.\n");
+    }
+#endif
+    TRACEPOINT(txgraph, init,
+        (uint64_t)m_opts.limits.cluster_count,
+        (uint64_t)(m_opts.limits.cluster_size_vbytes * WITNESS_SCALE_FACTOR),
+        (uint64_t)ACCEPTABLE_COST
+    );
 }
 
 bool CTxMemPool::isSpent(const COutPoint& outpoint) const
