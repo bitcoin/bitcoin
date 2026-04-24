@@ -172,6 +172,7 @@ BASE_SCRIPTS = [
     'wallet_blank.py',
     'wallet_keypool_topup.py',
     'wallet_fast_rescan.py',
+    'wallet_derivehdkey.py',
     'wallet_gethdkeys.py',
     'wallet_createwalletdescriptor.py',
     'interface_zmq.py',
