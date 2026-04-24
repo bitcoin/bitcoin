@@ -15,7 +15,6 @@
 #include <interfaces/handler.h>
 #include <interfaces/init.h>
 #include <interfaces/node.h>
-#include <logging.h>
 #include <node/context.h>
 #include <node/interface_ui.h>
 #include <noui.h>
@@ -33,6 +32,7 @@
 #include <qt/winshutdownmonitor.h>
 #include <uint256.h>
 #include <util/exception.h>
+#include <util/log.h>
 #include <util/string.h>
 #include <util/threadnames.h>
 #include <util/translation.h>

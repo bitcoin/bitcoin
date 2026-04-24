@@ -4,8 +4,8 @@
 
 #include <compat/byteswap.h>
 #include <crypto/common.h>
-#include <logging.h>
 #include <streams.h>
+#include <util/log.h>
 #include <util/translation.h>
 #include <wallet/migrate.h>
 

@@ -8,10 +8,10 @@
 
 #include <chainparams.h>
 #include <crypto/common.h>
-#include <logging.h>
 #include <sync.h>
 #include <util/check.h>
 #include <util/fs_helpers.h>
+#include <util/log.h>
 #include <util/strencodings.h>
 #include <util/translation.h>
 #include <wallet/db.h>
@@ -267,7 +267,7 @@ void SQLiteDatabase::Open(int additional_flags)
             throw std::runtime_error(strprintf("SQLiteDatabase: Failed to enable extended result codes: %s\n", sqlite3_errstr(ret)));
         }
         // Trace SQL statements if tracing is enabled with -debug=walletdb -loglevel=walletdb:trace
-        if (LogAcceptCategory(BCLog::WALLETDB, BCLog::Level::Trace)) {
+        if (util::log::ShouldTraceLog(BCLog::WALLETDB)) {
            ret = sqlite3_trace_v2(m_db, SQLITE_TRACE_STMT, TraceSqlCallback, this);
            if (ret != SQLITE_OK) {
                LogWarning("Failed to enable SQL tracing for %s", Filename());

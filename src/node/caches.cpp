@@ -9,10 +9,10 @@
 #include <index/txindex.h>
 #include <index/txospenderindex.h>
 #include <kernel/caches.h>
-#include <logging.h>
 #include <node/interface_ui.h>
 #include <tinyformat.h>
 #include <util/byte_units.h>
+#include <util/log.h>
 
 #include <algorithm>
 #include <string>

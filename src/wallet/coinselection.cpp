@@ -8,9 +8,9 @@
 #include <consensus/amount.h>
 #include <consensus/consensus.h>
 #include <interfaces/chain.h>
-#include <logging.h>
 #include <policy/feerate.h>
 #include <util/check.h>
+#include <util/log.h>
 #include <util/moneystr.h>
 
 #include <numeric>
@@ -732,7 +732,7 @@ util::Result<SelectionResult> KnapsackSolver(std::vector<OutputGroup>& groups, c
             result.AddInput(*lowest_larger);
         }
 
-        if (LogAcceptCategory(BCLog::SELECTCOINS, BCLog::Level::Debug)) {
+        if (util::log::ShouldDebugLog(BCLog::SELECTCOINS)) {
             std::string log_message{"Coin selection best subset: "};
             for (unsigned int i = 0; i < applicable_groups.size(); i++) {
                 if (vfBest[i]) {

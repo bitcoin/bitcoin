@@ -9,10 +9,10 @@
 #include <consensus/validation.h>
 #include <crypto/sha256.h>
 #include <crypto/siphash.h>
-#include <logging.h>
 #include <random.h>
 #include <streams.h>
 #include <txmempool.h>
+#include <util/log.h>
 #include <validation.h>
 
 #include <unordered_map>
@@ -219,7 +219,7 @@ ReadStatus PartiallyDownloadedBlock::FillBlock(CBlock& block, const std::vector<
         return READ_STATUS_FAILED; // Possible Short ID collision
     }
 
-    if (LogAcceptCategory(BCLog::CMPCTBLOCK, BCLog::Level::Debug)) {
+    if (util::log::ShouldDebugLog(BCLog::CMPCTBLOCK)) {
         const uint256 hash{block.GetHash()};
         uint32_t tx_missing_size{0};
         for (const auto& tx : vtx_missing) tx_missing_size += tx->ComputeTotalSize();

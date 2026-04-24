@@ -43,6 +43,10 @@ namespace util::log {
 /** Opaque to util::log; interpreted by consumers (e.g., BCLog::LogFlags). */
 using Category = uint64_t;
 
+//! Structure and constant for tagging not to rate limit.
+struct NoRateLimitTag { explicit NoRateLimitTag() = default; };
+inline constexpr NoRateLimitTag NO_RATE_LIMIT{};
+
 enum class Level {
     Trace = 0, // High-volume or detailed logging for development/debugging
     Debug,     // Reasonably noisy logging, but still usable in production
@@ -62,21 +66,19 @@ struct Entry {
     std::string message;
 };
 
-/** Return whether messages with specified category and level should be logged. Applications using
- * the logging library need to provide this. */
-bool ShouldLog(Category category, Level level);
+/** Return whether messages with specified category should be debug logged.
+ * Applications using the logging library need to provide this. */
+bool ShouldDebugLog(Category category);
+
+/** Return whether messages with specified category should be trace logged.
+ * Applications using the logging library need to provide this. */
+bool ShouldTraceLog(Category category);
 
 /** Send message to be logged. Applications using the logging library need to provide this. */
 void Log(Entry entry);
-} // namespace util::log
-
-namespace BCLog {
-//! Alias for compatibility. Prefer util::log::Level over BCLog::Level in new code.
-using Level = util::log::Level;
-} // namespace BCLog
 
 template <typename... Args>
-inline void LogPrintFormatInternal(SourceLocation&& source_loc, BCLog::LogFlags flag, BCLog::Level level, bool should_ratelimit, util::ConstevalFormatString<sizeof...(Args)> fmt, const Args&... args)
+inline void LogPrintFormatInternal_(SourceLocation&& source_loc, BCLog::LogFlags flag, util::log::Level level, bool should_ratelimit, util::ConstevalFormatString<sizeof...(Args)> fmt, const Args&... args)
 {
     std::string log_msg;
     try {
@@ -92,17 +94,35 @@ inline void LogPrintFormatInternal(SourceLocation&& source_loc, BCLog::LogFlags 
         .message = std::move(log_msg)});
 }
 
+template <typename... Args>
+inline void LogPrintFormatInternal(SourceLocation&& source_loc, BCLog::LogFlags flag, util::log::Level level, util::ConstevalFormatString<sizeof...(Args)> fmt, const Args&... args)
+{
+    return LogPrintFormatInternal_(std::move(source_loc), flag, level, /*should_ratelimit=*/true, fmt, args...);
+}
+
+template <typename... Args>
+inline void LogPrintFormatInternal(SourceLocation&& source_loc, BCLog::LogFlags flag, util::log::Level level, util::log::NoRateLimitTag, util::ConstevalFormatString<sizeof...(Args)> fmt, const Args&... args)
+{
+    return LogPrintFormatInternal_(std::move(source_loc), flag, level, /*should_ratelimit=*/false, fmt, args...);
+}
+} // namespace util::log
+
+namespace BCLog {
+//! Alias for compatibility. Prefer util::log::Level over BCLog::Level in new code.
+using Level = util::log::Level;
+} // namespace BCLog
+
 // Allow __func__ to be used in any context without warnings:
 // NOLINTNEXTLINE(bugprone-lambda-function-name)
-#define LogPrintLevel_(category, level, should_ratelimit, ...) LogPrintFormatInternal(SourceLocation{__func__}, category, level, should_ratelimit, __VA_ARGS__)
+#define detail_LogPrintLevel_(category, level, ...) util::log::LogPrintFormatInternal(SourceLocation{__func__}, category, level, __VA_ARGS__)
 
 // Log unconditionally. Uses basic rate limiting to mitigate disk filling attacks.
 // Be conservative when using functions that unconditionally log to debug.log!
 // It should not be the case that an inbound peer can fill up a user's storage
 // with debug.log entries.
-#define LogInfo(...) LogPrintLevel_(BCLog::LogFlags::ALL, BCLog::Level::Info, /*should_ratelimit=*/true, __VA_ARGS__)
-#define LogWarning(...) LogPrintLevel_(BCLog::LogFlags::ALL, BCLog::Level::Warning, /*should_ratelimit=*/true, __VA_ARGS__)
-#define LogError(...) LogPrintLevel_(BCLog::LogFlags::ALL, BCLog::Level::Error, /*should_ratelimit=*/true, __VA_ARGS__)
+#define LogInfo(...) detail_LogPrintLevel_(BCLog::LogFlags::ALL, util::log::Level::Info, __VA_ARGS__)
+#define LogWarning(...) detail_LogPrintLevel_(BCLog::LogFlags::ALL, util::log::Level::Warning, __VA_ARGS__)
+#define LogError(...) detail_LogPrintLevel_(BCLog::LogFlags::ALL, util::log::Level::Error, __VA_ARGS__)
 
 // Use a macro instead of a function for conditional logging to prevent
 // evaluating arguments when logging for the category is not enabled.
@@ -110,17 +130,15 @@ inline void LogPrintFormatInternal(SourceLocation&& source_loc, BCLog::LogFlags 
 // Log by prefixing the output with the passed category name and severity level. This logs conditionally if
 // the category is allowed. No rate limiting is applied, because users specifying -debug are assumed to be
 // developers or power users who are aware that -debug may cause excessive disk usage due to logging.
-#define detail_LogIfCategoryAndLevelEnabled(category, level, ...)      \
-    do {                                                               \
-        if (util::log::ShouldLog((category), (level))) {               \
-            bool rate_limit{level >= BCLog::Level::Info};              \
-            Assume(!rate_limit); /*Only called with the levels below*/ \
-            LogPrintLevel_(category, level, rate_limit, __VA_ARGS__);  \
-        }                                                              \
+#define detail_LogIfCategoryAndLevelEnabled(category, shouldlog, level, ...) \
+    do { \
+        if (shouldlog(category)) { \
+            detail_LogPrintLevel_((category), (level), util::log::NO_RATE_LIMIT, __VA_ARGS__); \
+        } \
     } while (0)
 
 // Log conditionally, prefixing the output with the passed category name.
-#define LogDebug(category, ...) detail_LogIfCategoryAndLevelEnabled(category, BCLog::Level::Debug, __VA_ARGS__)
-#define LogTrace(category, ...) detail_LogIfCategoryAndLevelEnabled(category, BCLog::Level::Trace, __VA_ARGS__)
+#define LogDebug(category, ...) detail_LogIfCategoryAndLevelEnabled(category, util::log::ShouldDebugLog, util::log::Level::Debug, __VA_ARGS__)
+#define LogTrace(category, ...) detail_LogIfCategoryAndLevelEnabled(category, util::log::ShouldTraceLog, util::log::Level::Trace, __VA_ARGS__)
 
 #endif // BITCOIN_UTIL_LOG_H
