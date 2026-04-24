@@ -20,7 +20,7 @@
 #include <utility>
 #include <vector>
 
-using node::TransactionError;
+using node::TransactionResponse;
 using util::Join;
 
 namespace common {
@@ -122,24 +122,24 @@ bilingual_str PSBTErrorString(PSBTError err)
     assert(false);
 }
 
-bilingual_str TransactionErrorString(const TransactionError err)
+bilingual_str TransactionResultString(const TransactionResponse result)
 {
-    switch (err) {
-        case TransactionError::OK:
+    switch (result) {
+        case TransactionResponse::OK:
             return Untranslated("No error");
-        case TransactionError::MISSING_INPUTS:
+        case TransactionResponse::MISSING_INPUTS:
             return Untranslated("Inputs missing or spent");
-        case TransactionError::ALREADY_IN_UTXO_SET:
+        case TransactionResponse::ALREADY_IN_UTXO_SET:
             return Untranslated("Transaction outputs already in utxo set");
-        case TransactionError::MEMPOOL_REJECTED:
+        case TransactionResponse::MEMPOOL_REJECTED:
             return Untranslated("Transaction rejected by mempool");
-        case TransactionError::MEMPOOL_ERROR:
+        case TransactionResponse::MEMPOOL_ERROR:
             return Untranslated("Mempool internal error");
-        case TransactionError::MAX_FEE_EXCEEDED:
+        case TransactionResponse::MAX_FEE_EXCEEDED:
             return Untranslated("Fee exceeds maximum configured by user (e.g. -maxtxfee, maxfeerate)");
-        case TransactionError::MAX_BURN_EXCEEDED:
+        case TransactionResponse::MAX_BURN_EXCEEDED:
             return Untranslated("Unspendable output exceeds maximum configured by user (maxburnamount)");
-        case TransactionError::INVALID_PACKAGE:
+        case TransactionResponse::INVALID_PACKAGE:
             return Untranslated("Transaction rejected due to invalid package");
     } // no default case, so the compiler can warn about missing cases
     assert(false);

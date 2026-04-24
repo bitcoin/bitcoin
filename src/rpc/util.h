@@ -40,7 +40,7 @@ namespace common {
 enum class PSBTError;
 } // namespace common
 namespace node {
-enum class TransactionError;
+enum class TransactionResponse;
 } // namespace node
 
 static constexpr bool DEFAULT_RPC_DOC_CHECK{
@@ -146,9 +146,9 @@ std::optional<int> ParseSighashString(const UniValue& sighash);
 //! Parse a confirm target option and raise an RPC error if it is invalid.
 unsigned int ParseConfirmTarget(const UniValue& value, unsigned int max_target);
 
-RPCErrorCode RPCErrorFromTransactionError(node::TransactionError terr);
+RPCErrorCode RPCErrorFromTransactionResponse(node::TransactionResponse tx_res);
 UniValue JSONRPCPSBTError(common::PSBTError err);
-UniValue JSONRPCTransactionError(node::TransactionError terr, const std::string& err_string = "");
+UniValue JSONRPCTransactionError(node::TransactionResponse tx_res, const std::string& err_string = "");
 
 //! Parse a JSON range specified as int64, or [int64, int64]
 std::pair<int64_t, int64_t> ParseDescriptorRange(const UniValue& value);

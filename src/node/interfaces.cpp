@@ -360,7 +360,7 @@ public:
         LOCK(::cs_main);
         return chainman().ActiveChainstate().CoinsTip().GetCoin(output);
     }
-    TransactionError broadcastTransaction(CTransactionRef tx, CAmount max_tx_fee, std::string& err_string) override
+    TransactionResponse broadcastTransaction(CTransactionRef tx, CAmount max_tx_fee, std::string& err_string) override
     {
         return BroadcastTransaction(*m_context,
                                     std::move(tx),
@@ -676,11 +676,11 @@ public:
         TxBroadcast broadcast_method,
         std::string& err_string) override
     {
-        const TransactionError err = BroadcastTransaction(m_node, tx, err_string, max_tx_fee, broadcast_method, /*wait_callback=*/false);
+        const TransactionResponse tx_res = BroadcastTransaction(m_node, tx, err_string, max_tx_fee, broadcast_method, /*wait_callback=*/false);
         // Chain clients only care about failures to accept the tx to the mempool. Disregard non-mempool related failures.
         // Note: this will need to be updated if BroadcastTransactions() is updated to return other non-mempool failures
         // that Chain clients do not need to know about.
-        return TransactionError::OK == err;
+        return TransactionResponse::OK == tx_res;
     }
     void getTransactionAncestry(const Txid& txid, size_t& ancestors, size_t& cluster_count, size_t* ancestorsize, CAmount* ancestorfees) override
     {
