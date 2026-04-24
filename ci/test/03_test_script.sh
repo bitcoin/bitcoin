@@ -32,12 +32,18 @@ fi
 echo "Free disk space:"
 df -h
 
-# We force an install of linux-headers again here via $PACKAGES to fix any
-# kernel mismatch between a cached docker image and the underlying host.
-# This can happen occasionally on hosted runners if the runner image is updated.
+# We need kernel headers for the USDT tests in the asan job.
+# Reinstall packages at runtime to fix any mismatch between a cached docker image and the underlying host.
+# If the host does not expose in-kernel headers, install matching linux-headers for BCC as well.
+# This is needed to permit jobs on namespace (in-kernel headers) and github actions.
 if [[ "$CONTAINER_NAME" == "ci_native_asan" ]]; then
+  runtime_packages="$PACKAGES"
+  if [[ ! -r /sys/kernel/kheaders.tar.xz ]]; then
+    runtime_packages="$runtime_packages linux-headers-$(uname --kernel-release)"
+  fi
   $CI_RETRY_EXE apt-get update
-  ${CI_RETRY_EXE} bash -c "apt-get install --no-install-recommends --no-upgrade -y $PACKAGES"
+  # shellcheck disable=SC2086
+  ${CI_RETRY_EXE} apt-get install --no-install-recommends --no-upgrade -y $runtime_packages
 fi
 
 # What host to compile for. See also ./depends/README.md

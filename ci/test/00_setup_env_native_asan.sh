@@ -10,8 +10,9 @@ export CI_IMAGE_NAME_TAG="mirror.gcr.io/ubuntu:24.04"
 
 # Only install BCC tracing packages in CI. Container has to match the host for BCC to work.
 if [[ "${INSTALL_BCC_TRACING_TOOLS}" == "true" ]]; then
-  # Required for USDT functional tests to run
-  BPFCC_PACKAGE="bpfcc-tools linux-headers-$(uname --kernel-release)"
+  # Required for USDT functional tests to run. BCC can use in-kernel headers
+  # from /sys/kernel/kheaders.tar.xz when they are exposed by the host kernel.
+  BPFCC_PACKAGE="bpfcc-tools"
   export CI_CONTAINER_CAP="--privileged -v /sys/kernel:/sys/kernel:rw"
 else
   BPFCC_PACKAGE=""
