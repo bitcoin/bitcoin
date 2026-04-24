@@ -1,0 +1,72 @@
+# Copyright (c) 2023-present The Bitcoin Core developers
+# Distributed under the MIT software license, see the accompanying
+# file COPYING or https://opensource.org/license/mit.
+
+name: Silent Merge Periodic Check
+
+on:
+  schedule:
+    - cron: "0 0 * * 0"  # Sunday 00:00 UTC
+  workflow_dispatch:
+
+jobs:
+  runners:
+    name: '[meta] determine runners'
+    runs-on: ubuntu-slim
+    outputs:
+      provider: ${{ steps.runners.outputs.provider }}
+    steps:
+      - &ANNOTATION_PR_NUMBER
+        name: Annotate with pull request number
+        # This annotation is machine-readable and can be used to assign a check
+        # run to its corresponding pull request. Running in all check runs is
+        # required, because check re-runs discard the annotations of other
+        # tasks in the test suite.
+        run: |
+          if [ "${{ github.event_name }}" = "pull_request" ]; then
+            echo "::notice title=debug_pull_request_number_str::${{ github.event.number }}"
+          fi
+      - id: runners
+        run: |
+          if [[ "${REPO_USE_CIRRUS_RUNNERS}" == "${{ github.repository }}" ]]; then
+            echo "provider=cirrus" >> "$GITHUB_OUTPUT"
+            echo "::notice title=Runner Selection::Using Cirrus Runners"
+          else
+            echo "provider=gha" >> "$GITHUB_OUTPUT"
+            echo "::notice title=Runner Selection::Using GitHub-hosted runners"
+          fi
+  verify-prs:
+    name: 'Verify open PRs for silent merge conflicts'
+    needs: [runners]
+    runs-on: ubuntu-latest
+    permissions:
+      checks: write
+      pull-requests: read
+      contents: read
+    env:
+      FILE_ENV: './ci/test/00_setup_env_native_previous_releases.sh'
+      DANGER_CI_ON_HOST_FOLDERS: 1
+
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Configure environment
+        uses: ./.github/actions/configure-environment
+
+      - name: Restore caches
+        id: restore-cache
+        uses: ./.github/actions/restore-caches
+
+      - name: Configure Docker
+        uses: ./.github/actions/configure-docker
+        with:
+          cache-provider: ${{ needs.runners.outputs.provider }}
+
+      - name: Set up GitHub CLI
+        run: gh auth login --with-token <<< "${{ secrets.GITHUB_TOKEN }}"
+
+      - name: Run silent merge check
+        run: python3 ./.github/silent-merge-check.py
