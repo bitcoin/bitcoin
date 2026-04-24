@@ -436,6 +436,9 @@ private:
     //! Set of both spent and unspent transaction outputs owned by this wallet
     std::unordered_map<COutPoint, WalletTXO, SaltedOutpointHasher> m_txos GUARDED_BY(cs_wallet);
 
+    //! Features of the last client to decrypt this wallet
+    std::optional<uint64_t> m_last_decrypted_features;
+
     /**
      * Catch wallet up to current chain, scanning new blocks, updating the best
      * block locator and m_last_block_processed, and registering for
@@ -1081,6 +1084,9 @@ public:
 
     //! Disconnect chain notifications and wait for all notifications to be processed
     void DisconnectChainNotifications();
+
+    //! Set the features of the last client to decrypt this wallet
+    void SetLastDecryptedFeatures(uint64_t features);
 };
 
 /**
