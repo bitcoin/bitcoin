@@ -1376,9 +1376,9 @@ std::optional<PSBTError> DescriptorScriptPubKeyMan::FillPSBT(PartiallySignedTran
             }
         }
 
-        PSBTError res = SignPSBTInput(HidingSigningProvider(keys.get(), /*hide_secret=*/!sign, /*hide_origin=*/!bip32derivs), psbtx, i, &txdata, sighash_type, nullptr, finalize);
-        if (res != PSBTError::OK && res != PSBTError::INCOMPLETE) {
-            return res;
+        const auto sign_result = SignPSBTInput(HidingSigningProvider(keys.get(), /*hide_secret=*/!sign, /*hide_origin=*/!bip32derivs), psbtx, i, &txdata, sighash_type, nullptr, finalize);
+        if (!sign_result.has_value() && sign_result.error() != PSBTError::INCOMPLETE) {
+            return sign_result.error();
         }
 
         bool signed_one = PSBTInputSigned(input);
