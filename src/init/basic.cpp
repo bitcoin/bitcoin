@@ -10,7 +10,7 @@ namespace {
 class BitcoinBasicInit : public interfaces::Init
 {
 public:
-    BitcoinBasicInit(const char* exe_name, const char* process_argv0) : m_ipc(interfaces::MakeIpc(exe_name, process_argv0, *this)) {}
+    BitcoinBasicInit(const char* exe_name, const char* log_suffix, const char* process_argv0) : m_ipc(interfaces::MakeIpc(exe_name, log_suffix, process_argv0, *this)) {}
     interfaces::Ipc* ipc() override { return m_ipc.get(); }
 private:
     std::unique_ptr<interfaces::Ipc> m_ipc;
@@ -19,8 +19,8 @@ private:
 } // namespace init
 
 namespace interfaces {
-std::unique_ptr<Init> MakeBasicInit(const char* exe_name, const char* process_argv0)
+std::unique_ptr<Init> MakeBasicInit(const char* exe_name, const char* log_suffix, const char* process_argv0)
 {
-    return std::make_unique<init::BitcoinBasicInit>(exe_name, process_argv0);
+    return std::make_unique<init::BitcoinBasicInit>(exe_name, log_suffix, process_argv0);
 }
 } // namespace interfaces
