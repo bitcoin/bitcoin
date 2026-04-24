@@ -46,6 +46,12 @@ struct AssumeutxoData {
     //! The hash of the base block for this snapshot. Used to refer to assumeutxo data
     //! prior to having a loaded blockindex.
     uint256 blockhash;
+
+    //! The expected Merkle root of the snapshot file chunked into
+    //! UTXO_SET_CHUNK_SIZE-byte pieces and hashed with SHA256d. Used to verify
+    //! integrity of peer-advertised chunk trees during P2P UTXO set downloads.
+    //! A null value means the root is unknown and validation is skipped.
+    uint256 chunk_merkle_root;
 };
 
 /**

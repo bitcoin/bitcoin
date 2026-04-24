@@ -14,6 +14,7 @@
 #include <net_processing.h>
 #include <netgroup.h>
 #include <node/kernel_notifications.h>
+#include <node/utxo_set_share.h>
 #include <node/warnings.h>
 #include <policy/fees/block_policy_estimator.h>
 #include <scheduler.h>

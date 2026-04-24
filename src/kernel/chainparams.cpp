@@ -161,24 +161,28 @@ public:
                 .hash_serialized = AssumeutxoHash{uint256{"a2a5521b1b5ab65f67818e5e8eccabb7171a517f9e2382208f77687310768f96"}},
                 .m_chain_tx_count = 991032194,
                 .blockhash = uint256{"0000000000000000000320283a032748cef8227873ff4872689bf23f1cda83a5"},
+                .chunk_merkle_root = uint256{},  // TODO: compute from mainnet snapshot
             },
             {
                 .height = 880'000,
                 .hash_serialized = AssumeutxoHash{uint256{"dbd190983eaf433ef7c15f78a278ae42c00ef52e0fd2a54953782175fbadcea9"}},
                 .m_chain_tx_count = 1145604538,
                 .blockhash = uint256{"000000000000000000010b17283c3c400507969a9c2afd1dcf2082ec5cca2880"},
+                .chunk_merkle_root = uint256{},  // TODO: compute from mainnet snapshot
             },
             {
                 .height = 910'000,
                 .hash_serialized = AssumeutxoHash{uint256{"4daf8a17b4902498c5787966a2b51c613acdab5df5db73f196fa59a4da2f1568"}},
                 .m_chain_tx_count = 1226586151,
                 .blockhash = uint256{"0000000000000000000108970acb9522ffd516eae17acddcb1bd16469194a821"},
+                .chunk_merkle_root = uint256{},  // TODO: compute from mainnet snapshot
             },
             {
                 .height = 935'000,
                 .hash_serialized = AssumeutxoHash{uint256{"e4b90ef9eae834f56c4b64d2d50143cee10ad87994c614d7d04125e2a6025050"}},
                 .m_chain_tx_count = 1305397408,
                 .blockhash = uint256{"0000000000000000000147034958af1652b2b91bba607beacc5e72a56f0fb5ee"},
+                .chunk_merkle_root = uint256{"f2b7098f7f3946b7dcbbe061136d9782b44176159ed6c381fe17e9a7c0f0ef54"},
             }
         };
 
@@ -274,12 +278,14 @@ public:
                 .hash_serialized = AssumeutxoHash{uint256{"f841584909f68e47897952345234e37fcd9128cd818f41ee6c3ca68db8071be7"}},
                 .m_chain_tx_count = 66484552,
                 .blockhash = uint256{"0000000000000093bcb68c03a9a168ae252572d348a2eaeba2cdf9231d73206f"},
+                .chunk_merkle_root = uint256{},  // TODO: compute from testnet3 snapshot
             },
             {
                 .height = 4'840'000,
                 .hash_serialized = AssumeutxoHash{uint256{"ce6bb677bb2ee9789c4a1c9d73e6683c53fc20e8fdbedbdaaf468982a0c8db2a"}},
                 .m_chain_tx_count = 536078574,
                 .blockhash = uint256{"00000000000000f4971a7fb37fbdff89315b69a2e1920c467654a382f0d64786"},
+                .chunk_merkle_root = uint256{},  // TODO: compute from testnet3 snapshot
             }
         };
 
@@ -379,12 +385,14 @@ public:
                 .hash_serialized = AssumeutxoHash{uint256{"784fb5e98241de66fdd429f4392155c9e7db5c017148e66e8fdbc95746f8b9b5"}},
                 .m_chain_tx_count = 11347043,
                 .blockhash = uint256{"0000000002ebe8bcda020e0dd6ccfbdfac531d2f6a81457191b99fc2df2dbe3b"},
+                .chunk_merkle_root = uint256{},  // TODO: compute from testnet4 snapshot
             },
             {
                 .height = 120'000,
                 .hash_serialized = AssumeutxoHash{uint256{"10b05d05ad468d0971162e1b222a4aa66caca89da2bb2a93f8f37fb29c4794b0"}},
                 .m_chain_tx_count = 14141057,
                 .blockhash = uint256{"000000000bd2317e51b3c5794981c35ba894ce27d3e772d5c39ecd9cbce01dc8"},
+                .chunk_merkle_root = uint256{},  // TODO: compute from testnet4 snapshot
             }
         };
 
@@ -492,12 +500,14 @@ public:
                 .hash_serialized = AssumeutxoHash{uint256{"fe0a44309b74d6b5883d246cb419c6221bcccf0b308c9b59b7d70783dbdf928a"}},
                 .m_chain_tx_count = 2289496,
                 .blockhash = uint256{"0000003ca3c99aff040f2563c2ad8f8ec88bd0fd6b8f0895cfaf1ef90353a62c"},
+                .chunk_merkle_root = uint256{},  // TODO: compute from signet snapshot
             },
             {
                 .height = 290'000,
                 .hash_serialized = AssumeutxoHash{uint256{"97267e000b4b876800167e71b9123f1529d13b14308abec2888bbd2160d14545"}},
                 .m_chain_tx_count = 28547497,
                 .blockhash = uint256{"0000000577f2741bb30cd9d39d6d71b023afbeb9764f6260786a97969d5c9ac0"},
+                .chunk_merkle_root = uint256{},  // TODO: compute from signet snapshot
             }
         };
 
@@ -610,6 +620,7 @@ public:
                 .hash_serialized = AssumeutxoHash{uint256{"b952555c8ab81fec46f3d4253b7af256d766ceb39fb7752b9d18cdf4a0141327"}},
                 .m_chain_tx_count = 111,
                 .blockhash = uint256{"6affe030b7965ab538f820a56ef56c8149b7dc1d1c144af57113be080db7c397"},
+                .chunk_merkle_root = uint256{},
             },
             {
                 // For use by fuzz target src/test/fuzz/utxo_snapshot.cpp
@@ -617,6 +628,7 @@ public:
                 .hash_serialized = AssumeutxoHash{uint256{"17dcc016d188d16068907cdeb38b75691a118d43053b8cd6a25969419381d13a"}},
                 .m_chain_tx_count = 201,
                 .blockhash = uint256{"385901ccbd69dff6bbd00065d01fb8a9e464dede7cfe0372443884f9b1dcf6b9"},
+                .chunk_merkle_root = uint256{},
             },
             {
                 // For use by test/functional/feature_assumeutxo.py and test/functional/tool_bitcoin_chainstate.py
@@ -624,6 +636,7 @@ public:
                 .hash_serialized = AssumeutxoHash{uint256{"d2b051ff5e8eef46520350776f4100dd710a63447a8e01d917e92e79751a63e2"}},
                 .m_chain_tx_count = 334,
                 .blockhash = uint256{"7cc695046fec709f8c9394b6f928f81e81fd3ac20977bb68760fa1faa7916ea2"},
+                .chunk_merkle_root = uint256{"b42f449642695bfe79e6f3158d588e45265ee728e4d11dc341596a33f0f466b5"},
             },
         };
 

@@ -59,6 +59,7 @@ NODE_WITNESS = (1 << 3)
 NODE_COMPACT_FILTERS = (1 << 6)
 NODE_NETWORK_LIMITED = (1 << 10)
 NODE_P2P_V2 = (1 << 11)
+NODE_UTXO_SET = (1 << 12)
 
 MSG_TX = 1
 MSG_BLOCK = 2
@@ -1382,6 +1383,127 @@ class msg_block:
 
     def __repr__(self):
         return "msg_block(block=%s)" % (repr(self.block))
+
+
+class UTXOSetInfoEntry:
+    __slots__ = ("height", "block_hash", "serialized_hash", "data_length", "merkle_root")
+
+    def __init__(self, height=0, block_hash=0, serialized_hash=0, data_length=0, merkle_root=0):
+        self.height = height
+        self.block_hash = block_hash
+        self.serialized_hash = serialized_hash
+        self.data_length = data_length
+        self.merkle_root = merkle_root
+
+    def deserialize(self, f):
+        self.height = int.from_bytes(f.read(4), "little")
+        self.block_hash = deser_uint256(f)
+        self.serialized_hash = deser_uint256(f)
+        self.data_length = int.from_bytes(f.read(8), "little")
+        self.merkle_root = deser_uint256(f)
+
+    def serialize(self):
+        r = b""
+        r += self.height.to_bytes(4, "little")
+        r += ser_uint256(self.block_hash)
+        r += ser_uint256(self.serialized_hash)
+        r += self.data_length.to_bytes(8, "little")
+        r += ser_uint256(self.merkle_root)
+        return r
+
+    def __repr__(self):
+        return "UTXOSetInfoEntry(height=%d)" % self.height
+
+
+class msg_getutxostinf:
+    __slots__ = ()
+    msgtype = b"getutxostinf"
+
+    def __init__(self):
+        pass
+
+    def deserialize(self, f):
+        pass
+
+    def serialize(self):
+        return b""
+
+    def __repr__(self):
+        return "msg_getutxostinf()"
+
+
+class msg_utxosetinfo:
+    __slots__ = ("entries",)
+    msgtype = b"utxosetinfo"
+
+    def __init__(self):
+        self.entries = []
+
+    def deserialize(self, f):
+        self.entries = deser_vector(f, UTXOSetInfoEntry)
+
+    def serialize(self):
+        return ser_vector(self.entries)
+
+    def __repr__(self):
+        return "msg_utxosetinfo(entries=%d)" % len(self.entries)
+
+
+class msg_getutxoset:
+    __slots__ = ("height", "block_hash", "chunk_index")
+    msgtype = b"getutxoset"
+
+    def __init__(self, height=0, block_hash=0, chunk_index=0):
+        self.height = height
+        self.block_hash = block_hash
+        self.chunk_index = chunk_index
+
+    def deserialize(self, f):
+        self.height = int.from_bytes(f.read(4), "little")
+        self.block_hash = deser_uint256(f)
+        self.chunk_index = int.from_bytes(f.read(4), "little")
+
+    def serialize(self):
+        r = b""
+        r += self.height.to_bytes(4, "little")
+        r += ser_uint256(self.block_hash)
+        r += self.chunk_index.to_bytes(4, "little")
+        return r
+
+    def __repr__(self):
+        return "msg_getutxoset(height=%d, chunk_index=%d)" % (self.height, self.chunk_index)
+
+
+class msg_utxoset:
+    __slots__ = ("height", "block_hash", "chunk_index", "proof_hashes", "data")
+    msgtype = b"utxoset"
+
+    def __init__(self, height=0, block_hash=0, chunk_index=0, proof_hashes=None, data=b""):
+        self.height = height
+        self.block_hash = block_hash
+        self.chunk_index = chunk_index
+        self.proof_hashes = proof_hashes or []
+        self.data = data
+
+    def deserialize(self, f):
+        self.height = int.from_bytes(f.read(4), "little")
+        self.block_hash = deser_uint256(f)
+        self.chunk_index = int.from_bytes(f.read(4), "little")
+        self.proof_hashes = deser_uint256_vector(f)
+        self.data = deser_string(f)
+
+    def serialize(self):
+        r = b""
+        r += self.height.to_bytes(4, "little")
+        r += ser_uint256(self.block_hash)
+        r += self.chunk_index.to_bytes(4, "little")
+        r += ser_uint256_vector(self.proof_hashes)
+        r += ser_string(self.data)
+        return r
+
+    def __repr__(self):
+        return "msg_utxoset(height=%d, chunk_index=%d, data_len=%d)" % (
+            self.height, self.chunk_index, len(self.data))
 
 
 # Generic type to control the raw bytes sent over the wire.

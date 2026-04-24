@@ -33,6 +33,8 @@ class DataStream;
 class uint256;
 
 namespace node {
+class UTXOSetDownloadManager;
+class UTXOSetShareProvider;
 class Warnings;
 } // namespace node
 
@@ -92,6 +94,10 @@ public:
         uint32_t max_headers_result{MAX_HEADERS_RESULTS};
         //! Whether private broadcast is used for sending transactions.
         bool private_broadcast{DEFAULT_PRIVATE_BROADCAST};
+        //! UTXO set share provider (nullptr if not serving)
+        node::UTXOSetShareProvider* utxo_set_share_provider{nullptr};
+        //! UTXO set download manager
+        node::UTXOSetDownloadManager* utxo_set_download_manager{nullptr};
     };
 
     static std::unique_ptr<PeerManager> make(CConnman& connman, AddrMan& addrman,

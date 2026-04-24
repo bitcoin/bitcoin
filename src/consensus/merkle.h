@@ -24,6 +24,11 @@ uint256 BlockMerkleRoot(const CBlock& block, bool* mutated = nullptr);
 uint256 BlockWitnessMerkleRoot(const CBlock& block);
 
 /**
+ * Compute the merkle path for a given leaf position in a set of leaf hashes.
+ */
+std::vector<uint256> ComputeMerklePath(const std::vector<uint256>& leaves, uint32_t position);
+
+/**
  * Compute merkle path to the specified transaction
  *
  * @param[in] block the block

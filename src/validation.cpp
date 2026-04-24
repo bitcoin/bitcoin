@@ -5888,6 +5888,7 @@ util::Result<void> ChainstateManager::PopulateAndValidateSnapshot(
 
     std::optional<CCoinsStats> maybe_stats;
 
+    LogInfo("[snapshot] computing UTXO set hash to verify against assumeutxo value");
     try {
         maybe_stats = ComputeUTXOStats(
             CoinStatsHashType::HASH_SERIALIZED, snapshot_coinsdb, m_blockman, [&interrupt = m_interrupt] { SnapshotUTXOHashBreakpoint(interrupt); });

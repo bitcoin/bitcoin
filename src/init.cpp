@@ -59,6 +59,7 @@
 #include <node/mempool_persist_args.h>
 #include <node/miner.h>
 #include <node/peerman_args.h>
+#include <node/utxo_set_share.h>
 #include <policy/feerate.h>
 #include <policy/fees/block_policy_estimator.h>
 #include <policy/fees/block_policy_estimator_args.h>
@@ -1896,6 +1897,25 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
 
     ChainstateManager& chainman = *Assert(node.chainman);
     auto& kernel_notifications{*Assert(node.notifications)};
+
+    // Initialize UTXO set sharing if share dir contains any valid snapshots
+    {
+        fs::path share_dir{args.GetDataDirNet() / "share"};
+        std::error_code error;
+        if (fs::is_directory(share_dir, error)) {
+            node.utxo_set_share_provider = std::make_unique<node::UTXOSetShareProvider>();
+            size_t num_snapshots{node.utxo_set_share_provider->Initialize(share_dir, chainman.GetParams())};
+            if (num_snapshots > 0) {
+                g_local_services = ServiceFlags(g_local_services | NODE_UTXO_SET);
+                LogInfo("UTXO set sharing enabled: %d snapshot(s) available", num_snapshots);
+            }
+            peerman_opts.utxo_set_share_provider = node.utxo_set_share_provider.get();
+        }
+    }
+
+    // Create UTXO set download manager
+    node.utxo_set_download_manager = std::make_unique<node::UTXOSetDownloadManager>();
+    peerman_opts.utxo_set_download_manager = node.utxo_set_download_manager.get();
 
     assert(!node.peerman);
     node.peerman = PeerManager::make(*node.connman, *node.addrman,
