@@ -2,6 +2,7 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
+#include <chain.h>
 #include <chainparams.h>
 #include <index/coinstatsindex.h>
 #include <interfaces/chain.h>
@@ -106,6 +107,70 @@ BOOST_FIXTURE_TEST_CASE(coinstatsindex_unclean_shutdown, TestChain100Setup)
         BOOST_REQUIRE(index.Init());
         // Make sure the index can be loaded.
         BOOST_REQUIRE(index.StartBackgroundSync());
+        index.Stop();
+    }
+}
+
+// Test that the index does not commit ahead of the chainstate's last
+// flushed block. If it did, a subsequent unclean shutdown would corrupt
+// the index, because during reverting it would require blocks that were
+// never flushed to disk.
+BOOST_FIXTURE_TEST_CASE(coinstatsindex_no_commit_ahead_of_flush, TestChain100Setup)
+{
+    Chainstate& chainstate = Assert(m_node.chainman)->ActiveChainstate();
+    const CChainParams& params = Params();
+    const CBlockIndex* old_tip;
+    {
+        LOCK(cs_main);
+        old_tip = m_node.chainman->ActiveChain().Tip();
+    }
+
+    {
+        CoinStatsIndex index{interfaces::MakeChain(m_node), 1 << 20};
+        BOOST_REQUIRE(index.Init());
+        index.Sync();
+
+        // Verify the index has data for the current tip.
+        BOOST_CHECK(index.LookUpStats(*old_tip));
+
+        // Manually create and connect a new block. Since the chainstate was
+        // never flushed, m_last_flushed_block is still null.
+        std::shared_ptr<const CBlock> new_block;
+        CBlockIndex* new_block_index = nullptr;
+        {
+            const CScript script_pub_key{CScript() << ToByteVector(coinbaseKey.GetPubKey()) << OP_CHECKSIG};
+            const CBlock block = this->CreateBlock({}, script_pub_key, chainstate);
+
+            new_block = std::make_shared<CBlock>(block);
+
+            LOCK(cs_main);
+            BlockValidationState state;
+            BOOST_CHECK(CheckBlock(block, state, params.GetConsensus()));
+            BOOST_CHECK(m_node.chainman->AcceptBlock(new_block, state, &new_block_index, true, nullptr, nullptr, true));
+            CCoinsViewCache view(&chainstate.CoinsTip());
+            BOOST_CHECK(chainstate.ConnectBlock(block, state, new_block_index, view));
+        }
+
+        // Notify the index about the new block
+        ValidationInterfaceTest::BlockConnected(ChainstateRole{}, index, new_block, new_block_index);
+
+        // Trigger a commit via ChainStateFlushed. The chainstate was never
+        // flushed (m_last_flushed_block is null), so Commit() should skip.
+        const CBlockLocator locator{GetLocator(old_tip)};
+        ValidationInterfaceTest::ChainStateFlushed(ChainstateRole{}, index, locator);
+
+        index.Stop();
+    }
+
+    // Reload the index and verify the committed state.
+    {
+        CoinStatsIndex index{interfaces::MakeChain(m_node), 1 << 20};
+        BOOST_REQUIRE(index.Init());
+
+        // No commits should have gone through (m_last_flushed_block was
+        // never set), so the persisted best block height is still 0.
+        BOOST_CHECK_EQUAL(index.GetSummary().best_block_height, 0);
+
         index.Stop();
     }
 }

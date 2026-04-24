@@ -51,6 +51,15 @@ void ValidationInterfaceTest::BlockConnected(
 {
     obj.BlockConnected(role, block, pindex);
 }
+
+void ValidationInterfaceTest::ChainStateFlushed(
+    const ChainstateRole& role,
+    CValidationInterface& obj,
+    const CBlockLocator& locator)
+{
+    obj.ChainStateFlushed(role, locator);
+}
+
 void TestChainstateManager::InvalidBlockFound(CBlockIndex* pindex, const BlockValidationState& state)
 {
     struct TestChainstate : public Chainstate {
