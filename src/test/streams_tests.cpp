@@ -39,14 +39,14 @@ BOOST_AUTO_TEST_CASE(xor_random_chunks)
         const auto key_bytes{m_rng.randbool() ? m_rng.randbytes<Obfuscation::KEY_SIZE>() : std::array<std::byte, Obfuscation::KEY_SIZE>{}};
         const Obfuscation obfuscation{key_bytes};
         apply_random_xor_chunks(roundtrip, obfuscation);
-        BOOST_CHECK_EQUAL(roundtrip.size(), original.size());
+        ASSERT_EQ(roundtrip.size(), original.size());
         for (size_t i{0}; i < original.size(); ++i) {
-            BOOST_CHECK_EQUAL(roundtrip[i], original[i] ^ key_bytes[i % Obfuscation::KEY_SIZE]);
+            ASSERT_EQ(roundtrip[i], original[i] ^ key_bytes[i % Obfuscation::KEY_SIZE]);
         }
 
         apply_random_xor_chunks(roundtrip, obfuscation);
-        BOOST_CHECK_EQUAL_COLLECTIONS(roundtrip.begin(), roundtrip.end(), original.begin(), original.end());
-  }
+        ASSERT_EQ_COLLECTIONS(roundtrip, original);
+    }
 }
 
 BOOST_AUTO_TEST_CASE(obfuscation_hexkey)
@@ -54,19 +54,19 @@ BOOST_AUTO_TEST_CASE(obfuscation_hexkey)
     const auto key_bytes{m_rng.randbytes<Obfuscation::KEY_SIZE>()};
 
     const Obfuscation obfuscation{key_bytes};
-    BOOST_CHECK_EQUAL(obfuscation.HexKey(), HexStr(key_bytes));
+    ASSERT_EQ(obfuscation.HexKey(), HexStr(key_bytes));
 }
 
 BOOST_AUTO_TEST_CASE(obfuscation_serialize)
 {
     Obfuscation obfuscation{};
-    BOOST_CHECK(!obfuscation);
+    ASSERT(!obfuscation);
 
     // Test loading a key.
     std::vector key_in{m_rng.randbytes<std::byte>(Obfuscation::KEY_SIZE)};
     DataStream ds_in;
     ds_in << key_in;
-    BOOST_CHECK_EQUAL(ds_in.size(), 1 + Obfuscation::KEY_SIZE); // serialized as a vector
+    ASSERT_EQ(ds_in.size(), 1 + Obfuscation::KEY_SIZE); // serialized as a vector
     ds_in >> obfuscation;
 
     // Test saving the key.
@@ -76,16 +76,16 @@ BOOST_AUTO_TEST_CASE(obfuscation_serialize)
     ds_out >> key_out;
 
     // Make sure saved key is the same.
-    BOOST_CHECK_EQUAL_COLLECTIONS(key_in.begin(), key_in.end(), key_out.begin(), key_out.end());
+    ASSERT_EQ_COLLECTIONS(key_in, key_out);
 }
 
 BOOST_AUTO_TEST_CASE(obfuscation_empty)
 {
     const Obfuscation null_obf{};
-    BOOST_CHECK(!null_obf);
+    ASSERT(!null_obf);
 
     const Obfuscation non_null_obf{"ff00ff00ff00ff00"_hex};
-    BOOST_CHECK(non_null_obf);
+    ASSERT(non_null_obf);
 }
 
 BOOST_AUTO_TEST_CASE(xor_file)
@@ -99,10 +99,10 @@ BOOST_AUTO_TEST_CASE(xor_file)
     {
         // Check errors for missing file
         AutoFile xor_file{raw_file("rb"), obfuscation};
-        BOOST_CHECK_EXCEPTION(xor_file << std::byte{}, std::ios_base::failure, HasReason{"AutoFile::write: file handle is nullptr"});
-        BOOST_CHECK_EXCEPTION(xor_file >> std::byte{}, std::ios_base::failure, HasReason{"AutoFile::read: file handle is nullptr"});
-        BOOST_CHECK_EXCEPTION(xor_file.ignore(1), std::ios_base::failure, HasReason{"AutoFile::ignore: file handle is nullptr"});
-        BOOST_CHECK_EXCEPTION(xor_file.size(), std::ios_base::failure, HasReason{"AutoFile::size: file handle is nullptr"});
+        ASSERT_EXCEPTION(xor_file << std::byte{}, std::ios_base::failure, HasReason{"AutoFile::write: file handle is nullptr"});
+        ASSERT_EXCEPTION(xor_file >> std::byte{}, std::ios_base::failure, HasReason{"AutoFile::read: file handle is nullptr"});
+        ASSERT_EXCEPTION(xor_file.ignore(1), std::ios_base::failure, HasReason{"AutoFile::ignore: file handle is nullptr"});
+        ASSERT_EXCEPTION(xor_file.size(), std::ios_base::failure, HasReason{"AutoFile::size: file handle is nullptr"});
     }
     {
 #ifdef __MINGW64__
@@ -113,28 +113,28 @@ BOOST_AUTO_TEST_CASE(xor_file)
 #endif
         AutoFile xor_file{raw_file(mode), obfuscation};
         xor_file << test1 << test2;
-        BOOST_CHECK_EQUAL(xor_file.size(), 7);
-        BOOST_REQUIRE_EQUAL(xor_file.fclose(), 0);
+        ASSERT_EQ(xor_file.size(), 7);
+        ASSERT_EQ(xor_file.fclose(), 0);
     }
     {
         // Read raw from disk
         AutoFile non_xor_file{raw_file("rb")};
         std::vector<std::byte> raw(7);
         non_xor_file >> std::span{raw};
-        BOOST_CHECK_EQUAL(HexStr(raw), "fc01fd03fd04fa");
+        ASSERT_EQ(HexStr(raw), "fc01fd03fd04fa");
         // Check that no padding exists
-        BOOST_CHECK_EXCEPTION(non_xor_file.ignore(1), std::ios_base::failure, HasReason{"AutoFile::ignore: end of file"});
-        BOOST_CHECK_EQUAL(non_xor_file.size(), 7);
+        ASSERT_EXCEPTION(non_xor_file.ignore(1), std::ios_base::failure, HasReason{"AutoFile::ignore: end of file"});
+        ASSERT_EQ(non_xor_file.size(), 7);
     }
     {
         AutoFile xor_file{raw_file("rb"), obfuscation};
         std::vector<std::byte> read1, read2;
         xor_file >> read1 >> read2;
-        BOOST_CHECK_EQUAL(HexStr(read1), HexStr(test1));
-        BOOST_CHECK_EQUAL(HexStr(read2), HexStr(test2));
+        ASSERT_EQ(HexStr(read1), HexStr(test1));
+        ASSERT_EQ(HexStr(read2), HexStr(test2));
         // Check that eof was reached
-        BOOST_CHECK_EXCEPTION(xor_file >> std::byte{}, std::ios_base::failure, HasReason{"AutoFile::read: end of file"});
-        BOOST_CHECK_EQUAL(xor_file.size(), 7);
+        ASSERT_EXCEPTION(xor_file >> std::byte{}, std::ios_base::failure, HasReason{"AutoFile::read: end of file"});
+        ASSERT_EQ(xor_file.size(), 7);
     }
     {
         AutoFile xor_file{raw_file("rb"), obfuscation};
@@ -142,11 +142,11 @@ BOOST_AUTO_TEST_CASE(xor_file)
         // Check that ignore works
         xor_file.ignore(4);
         xor_file >> read2;
-        BOOST_CHECK_EQUAL(HexStr(read2), HexStr(test2));
+        ASSERT_EQ(HexStr(read2), HexStr(test2));
         // Check that ignore and read fail now
-        BOOST_CHECK_EXCEPTION(xor_file.ignore(1), std::ios_base::failure, HasReason{"AutoFile::ignore: end of file"});
-        BOOST_CHECK_EXCEPTION(xor_file >> std::byte{}, std::ios_base::failure, HasReason{"AutoFile::read: end of file"});
-        BOOST_CHECK_EQUAL(xor_file.size(), 7);
+        ASSERT_EXCEPTION(xor_file.ignore(1), std::ios_base::failure, HasReason{"AutoFile::ignore: end of file"});
+        ASSERT_EXCEPTION(xor_file >> std::byte{}, std::ios_base::failure, HasReason{"AutoFile::read: end of file"});
+        ASSERT_EQ(xor_file.size(), 7);
     }
 }
 
@@ -162,49 +162,49 @@ BOOST_AUTO_TEST_CASE(streams_vector_writer)
     // vector.
 
     VectorWriter{vch, 0, a, b};
-    BOOST_CHECK((vch == std::vector<unsigned char>{{1, 2}}));
+    ASSERT((vch == std::vector<unsigned char>{{1, 2}}));
     VectorWriter{vch, 0, a, b};
-    BOOST_CHECK((vch == std::vector<unsigned char>{{1, 2}}));
+    ASSERT((vch == std::vector<unsigned char>{{1, 2}}));
     vch.clear();
 
     VectorWriter{vch, 2, a, b};
-    BOOST_CHECK((vch == std::vector<unsigned char>{{0, 0, 1, 2}}));
+    ASSERT((vch == std::vector<unsigned char>{{0, 0, 1, 2}}));
     VectorWriter{vch, 2, a, b};
-    BOOST_CHECK((vch == std::vector<unsigned char>{{0, 0, 1, 2}}));
+    ASSERT((vch == std::vector<unsigned char>{{0, 0, 1, 2}}));
     vch.clear();
 
     vch.resize(5, 0);
     VectorWriter{vch, 2, a, b};
-    BOOST_CHECK((vch == std::vector<unsigned char>{{0, 0, 1, 2, 0}}));
+    ASSERT((vch == std::vector<unsigned char>{{0, 0, 1, 2, 0}}));
     VectorWriter{vch, 2, a, b};
-    BOOST_CHECK((vch == std::vector<unsigned char>{{0, 0, 1, 2, 0}}));
+    ASSERT((vch == std::vector<unsigned char>{{0, 0, 1, 2, 0}}));
     vch.clear();
 
     vch.resize(4, 0);
     VectorWriter{vch, 3, a, b};
-    BOOST_CHECK((vch == std::vector<unsigned char>{{0, 0, 0, 1, 2}}));
+    ASSERT((vch == std::vector<unsigned char>{{0, 0, 0, 1, 2}}));
     VectorWriter{vch, 3, a, b};
-    BOOST_CHECK((vch == std::vector<unsigned char>{{0, 0, 0, 1, 2}}));
+    ASSERT((vch == std::vector<unsigned char>{{0, 0, 0, 1, 2}}));
     vch.clear();
 
     vch.resize(4, 0);
     VectorWriter{vch, 4, a, b};
-    BOOST_CHECK((vch == std::vector<unsigned char>{{0, 0, 0, 0, 1, 2}}));
+    ASSERT((vch == std::vector<unsigned char>{{0, 0, 0, 0, 1, 2}}));
     VectorWriter{vch, 4, a, b};
-    BOOST_CHECK((vch == std::vector<unsigned char>{{0, 0, 0, 0, 1, 2}}));
+    ASSERT((vch == std::vector<unsigned char>{{0, 0, 0, 0, 1, 2}}));
     vch.clear();
 
     VectorWriter{vch, 0, bytes};
-    BOOST_CHECK((vch == std::vector<unsigned char>{{3, 4, 5, 6}}));
+    ASSERT((vch == std::vector<unsigned char>{{3, 4, 5, 6}}));
     VectorWriter{vch, 0, bytes};
-    BOOST_CHECK((vch == std::vector<unsigned char>{{3, 4, 5, 6}}));
+    ASSERT((vch == std::vector<unsigned char>{{3, 4, 5, 6}}));
     vch.clear();
 
     vch.resize(4, 8);
     VectorWriter{vch, 2, a, bytes, b};
-    BOOST_CHECK((vch == std::vector<unsigned char>{{8, 8, 1, 3, 4, 5, 6, 2}}));
+    ASSERT((vch == std::vector<unsigned char>{{8, 8, 1, 3, 4, 5, 6, 2}}));
     VectorWriter{vch, 2, a, bytes, b};
-    BOOST_CHECK((vch == std::vector<unsigned char>{{8, 8, 1, 3, 4, 5, 6, 2}}));
+    ASSERT((vch == std::vector<unsigned char>{{8, 8, 1, 3, 4, 5, 6, 2}}));
     vch.clear();
 }
 
@@ -218,16 +218,16 @@ BOOST_AUTO_TEST_CASE(streams_span_writer)
     // Test operator<<
     SpanWriter writer{arr};
     writer << a << b;
-    BOOST_CHECK_EQUAL(HexStr(arr), "0102000000000000");
+    ASSERT_EQ(HexStr(arr), "0102000000000000");
 
     // Use variadic constructor and write to subspan.
     SpanWriter{std::span{arr}.subspan(2), a, bytes, b};
-    BOOST_CHECK_EQUAL(HexStr(arr), "0102010304050602");
+    ASSERT_EQ(HexStr(arr), "0102010304050602");
 
     // Writing past the end throws
     std::array<std::byte, 1> small{};
-    BOOST_CHECK_THROW(SpanWriter(std::span{small}, a, b), std::ios_base::failure);
-    BOOST_CHECK_THROW(SpanWriter(std::span{small}) << a << b, std::ios_base::failure);
+    ASSERT_EXCEPTION(SpanWriter(std::span{small}, a, b), std::ios_base::failure, HasReason{""});
+    ASSERT_EXCEPTION(SpanWriter(std::span{small}) << a << b, std::ios_base::failure, HasReason{""});
 }
 
 BOOST_AUTO_TEST_CASE(streams_vector_reader)
@@ -235,44 +235,44 @@ BOOST_AUTO_TEST_CASE(streams_vector_reader)
     std::vector<unsigned char> vch = {1, 255, 3, 4, 5, 6};
 
     SpanReader reader{vch};
-    BOOST_CHECK_EQUAL(reader.size(), 6U);
-    BOOST_CHECK(!reader.empty());
+    ASSERT_EQ(reader.size(), 6U);
+    ASSERT(!reader.empty());
 
     // Read a single byte as an unsigned char.
     unsigned char a;
     reader >> a;
-    BOOST_CHECK_EQUAL(a, 1);
-    BOOST_CHECK_EQUAL(reader.size(), 5U);
-    BOOST_CHECK(!reader.empty());
+    ASSERT_EQ(a, 1);
+    ASSERT_EQ(reader.size(), 5U);
+    ASSERT(!reader.empty());
 
     // Read a single byte as a int8_t.
     int8_t b;
     reader >> b;
-    BOOST_CHECK_EQUAL(b, -1);
-    BOOST_CHECK_EQUAL(reader.size(), 4U);
-    BOOST_CHECK(!reader.empty());
+    ASSERT_EQ(b, -1);
+    ASSERT_EQ(reader.size(), 4U);
+    ASSERT(!reader.empty());
 
     // Read a 4 bytes as an unsigned int.
     unsigned int c;
     reader >> c;
-    BOOST_CHECK_EQUAL(c, 100992003U); // 3,4,5,6 in little-endian base-256
-    BOOST_CHECK_EQUAL(reader.size(), 0U);
-    BOOST_CHECK(reader.empty());
+    ASSERT_EQ(c, 100992003U); // 3,4,5,6 in little-endian base-256
+    ASSERT_EQ(reader.size(), 0U);
+    ASSERT(reader.empty());
 
     // Reading after end of byte vector throws an error.
     signed int d;
-    BOOST_CHECK_THROW(reader >> d, std::ios_base::failure);
+    ASSERT_EXCEPTION(reader >> d, std::ios_base::failure, HasReason{""});
 
     // Read a 4 bytes as a signed int from the beginning of the buffer.
     SpanReader new_reader{vch};
     new_reader >> d;
-    BOOST_CHECK_EQUAL(d, 67370753); // 1,255,3,4 in little-endian base-256
-    BOOST_CHECK_EQUAL(new_reader.size(), 2U);
-    BOOST_CHECK(!new_reader.empty());
+    ASSERT_EQ(d, 67370753); // 1,255,3,4 in little-endian base-256
+    ASSERT_EQ(new_reader.size(), 2U);
+    ASSERT(!new_reader.empty());
 
     // Reading after end of byte vector throws an error even if the reader is
     // not totally empty.
-    BOOST_CHECK_THROW(new_reader >> d, std::ios_base::failure);
+    ASSERT_EXCEPTION(new_reader >> d, std::ios_base::failure, HasReason{""});
 }
 
 BOOST_AUTO_TEST_CASE(streams_vector_reader_rvalue)
@@ -282,8 +282,8 @@ BOOST_AUTO_TEST_CASE(streams_vector_reader_rvalue)
     uint32_t varint = 0;
     // Deserialize into r-value
     reader >> VARINT(varint);
-    BOOST_CHECK_EQUAL(varint, 54321U);
-    BOOST_CHECK(reader.empty());
+    ASSERT_EQ(varint, 54321U);
+    ASSERT(reader.empty());
 }
 
 BOOST_AUTO_TEST_CASE(bitstream_reader_writer)
@@ -304,21 +304,21 @@ BOOST_AUTO_TEST_CASE(bitstream_reader_writer)
     DataStream data_copy{data};
     uint32_t serialized_int1;
     data >> serialized_int1;
-    BOOST_CHECK_EQUAL(serialized_int1, uint32_t{0x7700C35A}); // NOTE: Serialized as LE
+    ASSERT_EQ(serialized_int1, uint32_t{0x7700C35A}); // NOTE: Serialized as LE
     uint16_t serialized_int2;
     data >> serialized_int2;
-    BOOST_CHECK_EQUAL(serialized_int2, uint16_t{0x1072}); // NOTE: Serialized as LE
+    ASSERT_EQ(serialized_int2, uint16_t{0x1072}); // NOTE: Serialized as LE
 
     BitStreamReader bit_reader{data_copy};
-    BOOST_CHECK_EQUAL(bit_reader.Read(1), 0U);
-    BOOST_CHECK_EQUAL(bit_reader.Read(2), 2U);
-    BOOST_CHECK_EQUAL(bit_reader.Read(3), 6U);
-    BOOST_CHECK_EQUAL(bit_reader.Read(4), 11U);
-    BOOST_CHECK_EQUAL(bit_reader.Read(5), 1U);
-    BOOST_CHECK_EQUAL(bit_reader.Read(6), 32U);
-    BOOST_CHECK_EQUAL(bit_reader.Read(7), 7U);
-    BOOST_CHECK_EQUAL(bit_reader.Read(16), 30497U);
-    BOOST_CHECK_THROW(bit_reader.Read(8), std::ios_base::failure);
+    ASSERT_EQ(bit_reader.Read(1), 0U);
+    ASSERT_EQ(bit_reader.Read(2), 2U);
+    ASSERT_EQ(bit_reader.Read(3), 6U);
+    ASSERT_EQ(bit_reader.Read(4), 11U);
+    ASSERT_EQ(bit_reader.Read(5), 1U);
+    ASSERT_EQ(bit_reader.Read(6), 32U);
+    ASSERT_EQ(bit_reader.Read(7), 7U);
+    ASSERT_EQ(bit_reader.Read(16), 30497U);
+    ASSERT_EXCEPTION(bit_reader.Read(8), std::ios_base::failure, HasReason{""});
 }
 
 BOOST_AUTO_TEST_CASE(streams_serializedata_xor)
@@ -327,7 +327,7 @@ BOOST_AUTO_TEST_CASE(streams_serializedata_xor)
     {
         DataStream ds{};
         Obfuscation{}(ds);
-        BOOST_CHECK_EQUAL(""s, ds.str());
+        ASSERT_EQ(""s, ds.str());
     }
 
     {
@@ -335,7 +335,7 @@ BOOST_AUTO_TEST_CASE(streams_serializedata_xor)
 
         DataStream ds{"0ff0"_hex};
         obfuscation(ds);
-        BOOST_CHECK_EQUAL("\xf0\x0f"s, ds.str());
+        ASSERT_EQ("\xf0\x0f"s, ds.str());
     }
 
     {
@@ -343,7 +343,7 @@ BOOST_AUTO_TEST_CASE(streams_serializedata_xor)
 
         DataStream ds{"f00f"_hex};
         obfuscation(ds);
-        BOOST_CHECK_EQUAL("\x0f\x00"s, ds.str());
+        ASSERT_EQ("\x0f\x00"s, ds.str());
     }
 }
 
@@ -362,117 +362,117 @@ BOOST_AUTO_TEST_CASE(streams_buffered_file)
     // amount (third arg).
     try {
         BufferedFile bfbad{file, 25, 25};
-        BOOST_CHECK(false);
+        ASSERT(false);
     } catch (const std::exception& e) {
-        BOOST_CHECK(strstr(e.what(),
+        ASSERT(strstr(e.what(),
                         "Rewind limit must be less than buffer size") != nullptr);
     }
 
     // The buffer is 25 bytes, allow rewinding 10 bytes.
     BufferedFile bf{file, 25, 10};
-    BOOST_CHECK(!bf.eof());
+    ASSERT(!bf.eof());
 
     uint8_t i;
     bf >> i;
-    BOOST_CHECK_EQUAL(i, 0);
+    ASSERT_EQ(i, 0);
     bf >> i;
-    BOOST_CHECK_EQUAL(i, 1);
+    ASSERT_EQ(i, 1);
 
     // After reading bytes 0 and 1, we're positioned at 2.
-    BOOST_CHECK_EQUAL(bf.GetPos(), 2U);
+    ASSERT_EQ(bf.GetPos(), 2U);
 
     // Rewind to offset 0, ok (within the 10 byte window).
-    BOOST_CHECK(bf.SetPos(0));
+    ASSERT(bf.SetPos(0));
     bf >> i;
-    BOOST_CHECK_EQUAL(i, 0);
+    ASSERT_EQ(i, 0);
 
     // We can go forward to where we've been, but beyond may fail.
-    BOOST_CHECK(bf.SetPos(2));
+    ASSERT(bf.SetPos(2));
     bf >> i;
-    BOOST_CHECK_EQUAL(i, 2);
+    ASSERT_EQ(i, 2);
 
     // If you know the maximum number of bytes that should be
     // read to deserialize the variable, you can limit the read
     // extent. The current file offset is 3, so the following
     // SetLimit() allows zero bytes to be read.
-    BOOST_CHECK(bf.SetLimit(3));
+    ASSERT(bf.SetLimit(3));
     try {
         bf >> i;
-        BOOST_CHECK(false);
+        ASSERT(false);
     } catch (const std::exception& e) {
-        BOOST_CHECK(strstr(e.what(),
+        ASSERT(strstr(e.what(),
                            "Attempt to position past buffer limit") != nullptr);
     }
     // The default argument removes the limit completely.
-    BOOST_CHECK(bf.SetLimit());
+    ASSERT(bf.SetLimit());
     // The read position should still be at 3 (no change).
-    BOOST_CHECK_EQUAL(bf.GetPos(), 3U);
+    ASSERT_EQ(bf.GetPos(), 3U);
 
     // Read from current offset, 3, forward until position 10.
     for (uint8_t j = 3; j < 10; ++j) {
         bf >> i;
-        BOOST_CHECK_EQUAL(i, j);
+        ASSERT_EQ(i, j);
     }
-    BOOST_CHECK_EQUAL(bf.GetPos(), 10U);
+    ASSERT_EQ(bf.GetPos(), 10U);
 
     // We're guaranteed (just barely) to be able to rewind to zero.
-    BOOST_CHECK(bf.SetPos(0));
-    BOOST_CHECK_EQUAL(bf.GetPos(), 0U);
+    ASSERT(bf.SetPos(0));
+    ASSERT_EQ(bf.GetPos(), 0U);
     bf >> i;
-    BOOST_CHECK_EQUAL(i, 0);
+    ASSERT_EQ(i, 0);
 
     // We can set the position forward again up to the farthest
     // into the stream we've been, but no farther. (Attempting
     // to go farther may succeed, but it's not guaranteed.)
-    BOOST_CHECK(bf.SetPos(10));
+    ASSERT(bf.SetPos(10));
     bf >> i;
-    BOOST_CHECK_EQUAL(i, 10);
-    BOOST_CHECK_EQUAL(bf.GetPos(), 11U);
+    ASSERT_EQ(i, 10);
+    ASSERT_EQ(bf.GetPos(), 11U);
 
     // Now it's only guaranteed that we can rewind to offset 1
     // (current read position, 11, minus rewind amount, 10).
-    BOOST_CHECK(bf.SetPos(1));
-    BOOST_CHECK_EQUAL(bf.GetPos(), 1U);
+    ASSERT(bf.SetPos(1));
+    ASSERT_EQ(bf.GetPos(), 1U);
     bf >> i;
-    BOOST_CHECK_EQUAL(i, 1);
+    ASSERT_EQ(i, 1);
 
     // We can stream into large variables, even larger than
     // the buffer size.
-    BOOST_CHECK(bf.SetPos(11));
+    ASSERT(bf.SetPos(11));
     {
         uint8_t a[40 - 11];
         bf >> a;
         for (uint8_t j = 0; j < sizeof(a); ++j) {
-            BOOST_CHECK_EQUAL(a[j], 11 + j);
+            ASSERT_EQ(a[j], 11 + j);
         }
     }
-    BOOST_CHECK_EQUAL(bf.GetPos(), 40U);
+    ASSERT_EQ(bf.GetPos(), 40U);
 
     // We've read the entire file, the next read should throw.
     try {
         bf >> i;
-        BOOST_CHECK(false);
+        ASSERT(false);
     } catch (const std::exception& e) {
-        BOOST_CHECK(strstr(e.what(),
+        ASSERT(strstr(e.what(),
                         "BufferedFile::Fill: end of file") != nullptr);
     }
     // Attempting to read beyond the end sets the EOF indicator.
-    BOOST_CHECK(bf.eof());
+    ASSERT(bf.eof());
 
     // Still at offset 40, we can go back 10, to 30.
-    BOOST_CHECK_EQUAL(bf.GetPos(), 40U);
-    BOOST_CHECK(bf.SetPos(30));
+    ASSERT_EQ(bf.GetPos(), 40U);
+    ASSERT(bf.SetPos(30));
     bf >> i;
-    BOOST_CHECK_EQUAL(i, 30);
-    BOOST_CHECK_EQUAL(bf.GetPos(), 31U);
+    ASSERT_EQ(i, 30);
+    ASSERT_EQ(bf.GetPos(), 31U);
 
     // We're too far to rewind to position zero.
-    BOOST_CHECK(!bf.SetPos(0));
+    ASSERT(!bf.SetPos(0));
     // But we should now be positioned at least as far back as allowed
     // by the rewind window (relative to our farthest read position, 40).
-    BOOST_CHECK(bf.GetPos() <= 30U);
+    ASSERT(bf.GetPos() <= 30U);
 
-    BOOST_REQUIRE_EQUAL(file.fclose(), 0);
+    ASSERT_EQ(file.fclose(), 0);
 
     fs::remove(streams_test_filename);
 }
@@ -494,35 +494,35 @@ BOOST_AUTO_TEST_CASE(streams_buffered_file_skip)
     // This is like bf >> (7-byte-variable), in that it will cause data
     // to be read from the file into memory, but it's not copied to us.
     bf.SkipTo(7);
-    BOOST_CHECK_EQUAL(bf.GetPos(), 7U);
+    ASSERT_EQ(bf.GetPos(), 7U);
     bf >> i;
-    BOOST_CHECK_EQUAL(i, 7);
+    ASSERT_EQ(i, 7);
 
     // The bytes in the buffer up to offset 7 are valid and can be read.
-    BOOST_CHECK(bf.SetPos(0));
+    ASSERT(bf.SetPos(0));
     bf >> i;
-    BOOST_CHECK_EQUAL(i, 0);
+    ASSERT_EQ(i, 0);
     bf >> i;
-    BOOST_CHECK_EQUAL(i, 1);
+    ASSERT_EQ(i, 1);
 
     bf.SkipTo(11);
     bf >> i;
-    BOOST_CHECK_EQUAL(i, 11);
+    ASSERT_EQ(i, 11);
 
     // SkipTo() honors the transfer limit; we can't position beyond the limit.
     bf.SetLimit(13);
     try {
         bf.SkipTo(14);
-        BOOST_CHECK(false);
+        ASSERT(false);
     } catch (const std::exception& e) {
-        BOOST_CHECK(strstr(e.what(), "Attempt to position past buffer limit") != nullptr);
+        ASSERT(strstr(e.what(), "Attempt to position past buffer limit") != nullptr);
     }
 
     // We can position exactly to the transfer limit.
     bf.SkipTo(13);
-    BOOST_CHECK_EQUAL(bf.GetPos(), 13U);
+    ASSERT_EQ(bf.GetPos(), 13U);
 
-    BOOST_REQUIRE_EQUAL(file.fclose(), 0);
+    ASSERT_EQ(file.fclose(), 0);
     fs::remove(streams_test_filename);
 }
 
@@ -550,8 +550,8 @@ BOOST_AUTO_TEST_CASE(streams_buffered_file_rand)
                 break;
 
             // We haven't read to the end of the file yet.
-            BOOST_CHECK(!bf.eof());
-            BOOST_CHECK_EQUAL(bf.GetPos(), currentPos);
+            ASSERT(!bf.eof());
+            ASSERT_EQ(bf.GetPos(), currentPos);
 
             // Pretend the file consists of a series of objects of varying
             // sizes; the boundaries of the objects can interact arbitrarily
@@ -565,7 +565,7 @@ BOOST_AUTO_TEST_CASE(streams_buffered_file_rand)
                 bf.SetLimit(currentPos + 1);
                 bf >> a;
                 for (uint8_t i = 0; i < 1; ++i) {
-                    BOOST_CHECK_EQUAL(a[i], currentPos);
+                    ASSERT_EQ(a[i], currentPos);
                     currentPos++;
                 }
                 break;
@@ -577,7 +577,7 @@ BOOST_AUTO_TEST_CASE(streams_buffered_file_rand)
                 bf.SetLimit(currentPos + 2);
                 bf >> a;
                 for (uint8_t i = 0; i < 2; ++i) {
-                    BOOST_CHECK_EQUAL(a[i], currentPos);
+                    ASSERT_EQ(a[i], currentPos);
                     currentPos++;
                 }
                 break;
@@ -589,7 +589,7 @@ BOOST_AUTO_TEST_CASE(streams_buffered_file_rand)
                 bf.SetLimit(currentPos + 5);
                 bf >> a;
                 for (uint8_t i = 0; i < 5; ++i) {
-                    BOOST_CHECK_EQUAL(a[i], currentPos);
+                    ASSERT_EQ(a[i], currentPos);
                     currentPos++;
                 }
                 break;
@@ -611,13 +611,13 @@ BOOST_AUTO_TEST_CASE(streams_buffered_file_rand)
                     find = fileSize - 1;
                 bf.FindByte(std::byte(find));
                 // The value at each offset is the offset.
-                BOOST_CHECK_EQUAL(bf.GetPos(), find);
+                ASSERT_EQ(bf.GetPos(), find);
                 currentPos = find;
 
                 bf.SetLimit(currentPos + 1);
                 uint8_t i;
                 bf >> i;
-                BOOST_CHECK_EQUAL(i, currentPos);
+                ASSERT_EQ(i, currentPos);
                 currentPos++;
                 break;
             }
@@ -629,13 +629,13 @@ BOOST_AUTO_TEST_CASE(streams_buffered_file_rand)
                 // window, and we may not be able to move forward beyond the
                 // farthest position we've reached so far.
                 currentPos = bf.GetPos();
-                BOOST_CHECK_EQUAL(okay, currentPos == requestPos);
+                ASSERT_EQ(okay, currentPos == requestPos);
                 // Check that we can position within the rewind window.
                 if (requestPos <= maxPos &&
                     maxPos > rewindSize &&
                     requestPos >= maxPos - rewindSize) {
                     // We requested a position within the rewind window.
-                    BOOST_CHECK(okay);
+                    ASSERT(okay);
                 }
                 break;
             }
@@ -643,7 +643,7 @@ BOOST_AUTO_TEST_CASE(streams_buffered_file_rand)
             if (maxPos < currentPos)
                 maxPos = currentPos;
         }
-        BOOST_REQUIRE_EQUAL(file.fclose(), 0);
+        ASSERT_EQ(file.fclose(), 0);
     }
     fs::remove(streams_test_filename);
 }
@@ -661,9 +661,9 @@ BOOST_AUTO_TEST_CASE(buffered_reader_matches_autofile_random_content)
     {
         AutoFile f{test_file.Open(pos, /*read_only=*/false), obfuscation};
         f.write(m_rng.randbytes<std::byte>(file_size));
-        BOOST_REQUIRE_EQUAL(f.fclose(), 0);
+        ASSERT_EQ(f.fclose(), 0);
     }
-    BOOST_CHECK_EQUAL(fs::file_size(test_file.FileName(pos)), file_size);
+    ASSERT_EQ(fs::file_size(test_file.FileName(pos)), file_size);
 
     {
         AutoFile direct_file{test_file.Open(pos, /*read_only=*/true), obfuscation};
@@ -680,22 +680,19 @@ BOOST_AUTO_TEST_CASE(buffered_reader_matches_autofile_random_content)
             DataBuffer buffered_buffer{read};
             buffered_reader.read(buffered_buffer);
 
-            BOOST_CHECK_EQUAL_COLLECTIONS(
-                direct_file_buffer.begin(), direct_file_buffer.end(),
-                buffered_buffer.begin(), buffered_buffer.end()
-            );
+            ASSERT_EQ_COLLECTIONS(direct_file_buffer, buffered_buffer);
 
             total_read += read;
         }
 
         {
             DataBuffer excess_byte{1};
-            BOOST_CHECK_EXCEPTION(direct_file.read(excess_byte), std::ios_base::failure, HasReason{"end of file"});
+            ASSERT_EXCEPTION(direct_file.read(excess_byte), std::ios_base::failure, HasReason{"end of file"});
         }
 
         {
             DataBuffer excess_byte{1};
-            BOOST_CHECK_EXCEPTION(buffered_reader.read(excess_byte), std::ios_base::failure, HasReason{"end of file"});
+            ASSERT_EXCEPTION(buffered_reader.read(excess_byte), std::ios_base::failure, HasReason{"end of file"});
         }
     }
 
@@ -731,8 +728,8 @@ BOOST_AUTO_TEST_CASE(buffered_writer_matches_autofile_random_content)
                 total_written += write_size;
             }
         }
-        BOOST_REQUIRE_EQUAL(buffered_file.fclose(), 0);
-        BOOST_REQUIRE_EQUAL(direct_file.fclose(), 0);
+        ASSERT_EQ(buffered_file.fclose(), 0);
+        ASSERT_EQ(direct_file.fclose(), 0);
     }
 
     // Compare the resulting files
@@ -742,7 +739,7 @@ BOOST_AUTO_TEST_CASE(buffered_writer_matches_autofile_random_content)
         verify_direct.read(direct_result);
 
         DataBuffer excess_byte{1};
-        BOOST_CHECK_EXCEPTION(verify_direct.read(excess_byte), std::ios_base::failure, HasReason{"end of file"});
+        ASSERT_EXCEPTION(verify_direct.read(excess_byte), std::ios_base::failure, HasReason{"end of file"});
     }
 
     DataBuffer buffered_result{file_size};
@@ -751,13 +748,10 @@ BOOST_AUTO_TEST_CASE(buffered_writer_matches_autofile_random_content)
         verify_buffered.read(buffered_result);
 
         DataBuffer excess_byte{1};
-        BOOST_CHECK_EXCEPTION(verify_buffered.read(excess_byte), std::ios_base::failure, HasReason{"end of file"});
+        ASSERT_EXCEPTION(verify_buffered.read(excess_byte), std::ios_base::failure, HasReason{"end of file"});
     }
 
-    BOOST_CHECK_EQUAL_COLLECTIONS(
-        direct_result.begin(), direct_result.end(),
-        buffered_result.begin(), buffered_result.end()
-    );
+    ASSERT_EQ_COLLECTIONS(direct_result, buffered_result);
 
     fs::remove(test_direct.FileName(pos));
     fs::remove(test_buffered.FileName(pos));
@@ -775,7 +769,7 @@ BOOST_AUTO_TEST_CASE(buffered_writer_reader)
         f << v1 << v2;
         f.write(std::as_bytes(std::span{&v3, 1}));
     }
-    BOOST_REQUIRE_EQUAL(file.fclose(), 0);
+    ASSERT_EQ(file.fclose(), 0);
 
     // Read back and verify using BufferedReader
     {
@@ -784,12 +778,12 @@ BOOST_AUTO_TEST_CASE(buffered_writer_reader)
         BufferedReader f(std::move(file), sizeof(v1) + sizeof(v2) + sizeof(v3));
         f >> _v1 >> _v2;
         f.read(std::as_writable_bytes(std::span{&_v3, 1}));
-        BOOST_CHECK_EQUAL(_v1, v1);
-        BOOST_CHECK_EQUAL(_v2, v2);
-        BOOST_CHECK_EQUAL(_v3, v3);
+        ASSERT_EQ(_v1, v1);
+        ASSERT_EQ(_v2, v2);
+        ASSERT_EQ(_v3, v3);
 
         DataBuffer excess_byte{1};
-        BOOST_CHECK_EXCEPTION(f.read(excess_byte), std::ios_base::failure, HasReason{"end of file"});
+        ASSERT_EXCEPTION(f.read(excess_byte), std::ios_base::failure, HasReason{"end of file"});
     }
 
     fs::remove(test_file);
@@ -805,8 +799,8 @@ BOOST_AUTO_TEST_CASE(streams_hashed)
     HashVerifier hash_verifier{stream};
     std::string result;
     hash_verifier >> result;
-    BOOST_CHECK_EQUAL(data, result);
-    BOOST_CHECK_EQUAL(hash_writer.GetHash(), hash_verifier.GetHash());
+    ASSERT_EQ(data, result);
+    ASSERT_EQ(hash_writer.GetHash(), hash_verifier.GetHash());
 }
 
 BOOST_AUTO_TEST_CASE(size_preserves_position)
@@ -824,7 +818,7 @@ BOOST_AUTO_TEST_CASE(size_preserves_position)
     (void)f.size();
     uint8_t first{};
     f >> first;
-    BOOST_CHECK_EQUAL(first, 0);
+    ASSERT_EQ(first, 0);
 
     // Case: Pos at middle of the file
     f.seek(0, SEEK_SET);
@@ -834,15 +828,15 @@ BOOST_AUTO_TEST_CASE(size_preserves_position)
     uint8_t middle{};
     f >> middle;
     // Pos still at 4
-    BOOST_CHECK_EQUAL(middle, 4);
+    ASSERT_EQ(middle, 4);
 
     // Case: Pos at EOF
     f.seek(0, SEEK_END);
     (void)f.size();
     uint8_t end{};
-    BOOST_CHECK_EXCEPTION(f >> end, std::ios_base::failure, HasReason{"AutoFile::read: end of file"});
+    ASSERT_EXCEPTION(f >> end, std::ios_base::failure, HasReason{"AutoFile::read: end of file"});
 
-    BOOST_REQUIRE_EQUAL(f.fclose(), 0);
+    ASSERT_EQ(f.fclose(), 0);
     fs::remove(path);
 }
 
