@@ -21,6 +21,7 @@
 #include <functional>
 #include <map>
 #include <memory>
+#include <optional>
 #include <string>
 #include <tuple>
 #include <type_traits>
@@ -53,6 +54,7 @@ namespace interfaces {
 class Handler;
 struct WalletAddress;
 struct WalletBalances;
+struct WalletReceiveRequest;
 struct WalletTx;
 struct WalletTxOut;
 struct WalletTxStatus;
@@ -122,10 +124,14 @@ public:
     virtual std::vector<WalletAddress> getAddresses() = 0;
 
     //! Get receive requests.
-    virtual std::vector<std::string> getAddressReceiveRequests() = 0;
+    virtual std::vector<WalletReceiveRequest> getReceiveRequests() = 0;
 
-    //! Save or remove receive request.
-    virtual bool setAddressReceiveRequest(const CTxDestination& dest, const std::string& id, const std::string& value) = 0;
+    //! Add a new receive request. Wallet assigns ID and timestamp.
+    //! Returns the assigned ID on success, or nullopt on failure.
+    virtual std::optional<int64_t> addReceiveRequest(const WalletReceiveRequest& request) = 0;
+
+    //! Erase a receive request.
+    virtual bool eraseReceiveRequest(const CTxDestination& dest, int64_t id) = 0;
 
     //! Display address on external signer
     virtual util::Result<void> displayAddress(const CTxDestination& dest) = 0;
@@ -361,6 +367,17 @@ struct WalletAddress
         : dest(std::move(dest)), is_mine(is_mine), purpose(std::move(purpose)), name(std::move(name))
     {
     }
+};
+
+//! Information about one wallet receive request.
+struct WalletReceiveRequest
+{
+    int64_t id{0};
+    int64_t time{0};
+    std::string address;
+    std::string label;
+    std::string message;
+    CAmount amount{0};
 };
 
 //! Collection of wallet balances.

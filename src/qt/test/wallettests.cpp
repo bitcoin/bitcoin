@@ -361,19 +361,14 @@ void TestGUI(interfaces::Node& node, const std::shared_ptr<CWallet>& wallet)
     QCOMPARE(currentRowCount, initialRowCount+1);
 
     // Check addition to wallet
-    std::vector<std::string> requests = walletModel.wallet().getAddressReceiveRequests();
+    std::vector<interfaces::WalletReceiveRequest> requests = walletModel.wallet().getReceiveRequests();
     QCOMPARE(requests.size(), size_t{1});
-    RecentRequestEntry entry;
-    SpanReader{MakeByteSpan(requests[0])} >> entry;
-    QCOMPARE(entry.nVersion, int{1});
-    QCOMPARE(entry.id, int64_t{1});
-    QVERIFY(entry.date.isValid());
-    QCOMPARE(entry.recipient.address, address);
-    QCOMPARE(entry.recipient.label, QString{"TEST_LABEL_1"});
-    QCOMPARE(entry.recipient.amount, CAmount{1});
-    QCOMPARE(entry.recipient.message, QString{"TEST_MESSAGE_1"});
-    QCOMPARE(entry.recipient.sPaymentRequest, std::string{});
-    QCOMPARE(entry.recipient.authenticatedMerchant, QString{});
+    QCOMPARE(requests[0].id, int64_t{0});
+    QVERIFY(requests[0].time > 0);
+    QCOMPARE(QString::fromStdString(requests[0].address), address);
+    QCOMPARE(requests[0].label, std::string{"TEST_LABEL_1"});
+    QCOMPARE(requests[0].amount, CAmount{1});
+    QCOMPARE(requests[0].message, std::string{"TEST_MESSAGE_1"});
 
     // Check Remove button
     QTableView* table = receiveCoinsDialog.findChild<QTableView*>("recentRequestsView");
@@ -383,7 +378,7 @@ void TestGUI(interfaces::Node& node, const std::shared_ptr<CWallet>& wallet)
     QCOMPARE(requestTableModel->rowCount({}), currentRowCount-1);
 
     // Check removal from wallet
-    QCOMPARE(walletModel.wallet().getAddressReceiveRequests().size(), size_t{0});
+    QCOMPARE(walletModel.wallet().getReceiveRequests().size(), size_t{0});
 }
 
 void TestGUIWatchOnly(interfaces::Node& node, TestChain100Setup& test)

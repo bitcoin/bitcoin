@@ -7,11 +7,13 @@
 
 #include <qt/sendcoinsrecipient.h>
 
-#include <string>
-
 #include <QAbstractTableModel>
 #include <QStringList>
 #include <QDateTime>
+
+namespace interfaces {
+struct WalletReceiveRequest;
+}
 
 class WalletModel;
 
@@ -20,18 +22,9 @@ class RecentRequestEntry
 public:
     RecentRequestEntry() = default;
 
-    static const int CURRENT_VERSION = 1;
-    int nVersion{RecentRequestEntry::CURRENT_VERSION};
     int64_t id{0};
     QDateTime date;
     SendCoinsRecipient recipient;
-
-    SERIALIZE_METHODS(RecentRequestEntry, obj) {
-        unsigned int date_timet;
-        SER_WRITE(obj, date_timet = obj.date.toSecsSinceEpoch());
-        READWRITE(obj.nVersion, obj.id, date_timet, obj.recipient);
-        SER_READ(obj, obj.date = QDateTime::fromSecsSinceEpoch(date_timet));
-    }
 };
 
 class RecentRequestEntryLessThan
@@ -80,7 +73,7 @@ public:
 
     const RecentRequestEntry &entry(int row) const { return list[row]; }
     void addNewRequest(const SendCoinsRecipient &recipient);
-    void addNewRequest(const std::string &recipient);
+    void addNewRequest(const interfaces::WalletReceiveRequest &request);
     void addNewRequest(RecentRequestEntry &recipient);
 
 public Q_SLOTS:
@@ -90,7 +83,6 @@ private:
     WalletModel *walletModel;
     QStringList columns;
     QList<RecentRequestEntry> list;
-    int64_t nReceiveRequestsMaxId{0};
 
     /** Updates the column title to "Amount (DisplayUnit)" and emits headerDataChanged() signal for table headers to react. */
     void updateAmountColumnTitle();
