@@ -488,7 +488,13 @@ CNode* CConnman::ConnectNode(CAddress addrConnect,
                 sock = ConnectThroughProxy(*use_proxy, target_addr.ToStringAddr(), target_addr.GetPort(), proxyConnectionFailed);
             } else {
                 // no proxy needed (none set for target network)
-                sock = ConnectDirectly(target_addr, conn_type == ConnectionType::MANUAL);
+                std::optional<CNetAddr> outbound_bind;
+                if (target_addr.IsIPv4()) {
+                    outbound_bind = m_outbound_bind_v4;
+                } else if (target_addr.IsIPv6()) {
+                    outbound_bind = m_outbound_bind_v6;
+                }
+                sock = ConnectDirectly(target_addr, conn_type == ConnectionType::MANUAL, outbound_bind);
             }
             if (!proxyConnectionFailed) {
                 // If a connection to the node was attempted, and failure (if any) is not caused by a problem connecting to

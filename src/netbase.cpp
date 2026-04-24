@@ -642,12 +642,28 @@ static bool ConnectToSocket(const Sock& sock, struct sockaddr* sockaddr, socklen
     return true;
 }
 
-std::unique_ptr<Sock> ConnectDirectly(const CService& dest, bool manual_connection)
+std::unique_ptr<Sock> ConnectDirectly(const CService& dest, bool manual_connection, std::optional<CNetAddr> bind_addr)
 {
     auto sock = CreateSock(dest.GetSAFamily(), SOCK_STREAM, IPPROTO_TCP);
     if (!sock) {
         LogError("Cannot create a socket for connecting to %s\n", dest.ToStringAddrPort());
         return {};
+    }
+
+    // If a bind address is specified, bind to it before connecting.
+    if (bind_addr) {
+        const CService bind_service{*bind_addr, /*port=*/0};
+        struct sockaddr_storage bind_sa;
+        socklen_t bind_len = sizeof(bind_sa);
+        if (!bind_service.GetSockAddr(reinterpret_cast<struct sockaddr*>(&bind_sa), &bind_len)) {
+            LogError("Cannot get sockaddr for bind address %s\n", bind_addr->ToStringAddr());
+            return {};
+        }
+        if (sock->Bind(reinterpret_cast<struct sockaddr*>(&bind_sa), bind_len) == SOCKET_ERROR) {
+            LogError("Failed to bind outgoing connection to %s: %s\n",
+                     bind_addr->ToStringAddr(), NetworkErrorString(WSAGetLastError()));
+            return {};
+        }
     }
 
     // Create a sockaddr from the specified service.
