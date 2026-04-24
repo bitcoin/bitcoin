@@ -10,6 +10,7 @@ from test_framework.blocktools import (
     NORMAL_GBT_REQUEST_PARAMS,
     add_witness_commitment,
     create_block,
+    create_coinbase,
 )
 from test_framework.messages import (
     BlockTransactions,
@@ -663,6 +664,69 @@ class CompactBlocksTest(BitcoinTestFramework):
                 break
         assert not found
 
+    def test_cmpctblock_requested_far_ahead_retries_getdata(self):
+        node = self.nodes[0]
+
+        class CountingP2PConn(TestP2PConn):
+            def __init__(self):
+                super().__init__()
+                self.getdata_count = {}
+
+            def on_getdata(self, message):
+                for inv in message.inv:
+                    self.getdata_count[inv.hash] = self.getdata_count.get(inv.hash, 0) + 1
+
+        test_node = node.add_p2p_connection(CountingP2PConn())
+
+        tip_hex = node.getbestblockhash()
+        tip_height = node.getblockcount()
+        block_time = node.getblock(tip_hex)["time"] + 1
+
+        blocks = []
+        prev_hash = int(tip_hex, 16)
+        for i in range(3):
+            block = create_block(prev_hash, create_coinbase(tip_height + 1 + i), block_time + i)
+            block.solve()
+            blocks.append(block)
+            prev_hash = block.hash_int
+
+        with p2p_lock:
+            test_node.last_message.pop("getdata", None)
+
+        headers_message = msg_headers()
+        headers_message.headers = [CBlockHeader(b) for b in blocks]
+        test_node.send_without_ping(headers_message)
+
+        def saw_initial_getdata_requests():
+            with p2p_lock:
+                return (
+                    test_node.getdata_count.get(blocks[0].hash_int, 0) >= 1
+                    and test_node.getdata_count.get(blocks[1].hash_int, 0) >= 1
+                    and test_node.getdata_count.get(blocks[2].hash_int, 0) >= 1
+                )
+
+        self.wait_until(saw_initial_getdata_requests, timeout=30)
+        with p2p_lock:
+            baseline_count = test_node.getdata_count.get(blocks[2].hash_int, 0)
+
+        comp_block = HeaderAndShortIDs()
+        comp_block.initialize_from_block(blocks[2])
+        test_node.send_and_ping(msg_cmpctblock(comp_block.to_p2p()))
+
+        expected_count = baseline_count + 1
+        observed = {"count": None}
+
+        def saw_exactly_one_retry():
+            with p2p_lock:
+                observed["count"] = test_node.getdata_count.get(blocks[2].hash_int, 0)
+            return observed["count"] == expected_count
+
+        self.wait_until(saw_exactly_one_retry, timeout=10)
+        assert_equal(observed["count"], expected_count)
+
+        test_node.peer_disconnect()
+        test_node.wait_for_disconnect()
+
     def test_compactblocks_not_at_tip(self, test_node):
         node = self.nodes[0]
         # Test that requesting old compactblocks doesn't work.
@@ -986,6 +1050,9 @@ class CompactBlocksTest(BitcoinTestFramework):
 
         self.log.info("Testing handling of low-work compact blocks...")
         self.test_low_work_compactblocks(self.segwit_node)
+
+        self.log.info("Testing cmpctblock far-ahead requested block retry getdata...")
+        self.test_cmpctblock_requested_far_ahead_retries_getdata()
 
         self.log.info("Testing handling of incorrect blocktxn responses...")
         self.test_incorrect_blocktxn_response(self.segwit_node)
