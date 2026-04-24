@@ -7,7 +7,7 @@
 #include <logging.h>
 #include <streams.h>
 #include <util/translation.h>
-#include <wallet/migrate.h>
+#include <wallet/legacybdb.h>
 
 #include <array>
 #include <cstddef>
