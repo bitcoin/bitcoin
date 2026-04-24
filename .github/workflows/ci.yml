@@ -229,9 +229,9 @@ jobs:
         job-type: [standard, fuzz]
         include:
           - job-type: standard
-            job-name: 'Windows native, VS'
+            job-name: 'Windows native, clang-cl'
           - job-type: fuzz
-            job-name: 'Windows native, fuzz, VS'
+            job-name: 'Windows native, fuzz, clang-cl'
 
     steps:
       - *ANNOTATION_PR_NUMBER
