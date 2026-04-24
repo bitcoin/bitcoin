@@ -315,6 +315,16 @@ void CheckHandle(T object, T distinct_object)
     if constexpr (HasToBytes<T>) {
         check_equal(object2.ToBytes(), object3.ToBytes());
     }
+
+    // Self move-assignment must not destroy the held resource.
+    // Use a reference to avoid -Wself-move warnings.
+    original_ptr = object2.get();
+    auto& object2_ref = object2;
+    object2 = std::move(object2_ref);
+    BOOST_CHECK_EQUAL(object2.get(), original_ptr);
+    if constexpr (HasToBytes<T>) {
+        check_equal(object2.ToBytes(), object3.ToBytes());
+    }
 }
 
 template <typename RangeType>
