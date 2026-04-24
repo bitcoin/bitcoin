@@ -17,7 +17,9 @@
 
 #include <common/args.h>
 #include <interfaces/node.h>
+#include <node/interface_ui.h>
 #include <util/fs_helpers.h>
+#include <util/translation.h>
 #include <validation.h>
 
 #include <QFileDialog>
@@ -25,6 +27,7 @@
 #include <QMessageBox>
 
 #include <cmath>
+#include <cstdlib>
 
 namespace {
 //! Return pruning size that will be used if automatic pruning is enabled.
@@ -138,8 +141,10 @@ bool Intro::showIfNeeded(bool& did_show_intro, int64_t& prune_MiB)
         /* Use selectParams here to guarantee Params() can be used by node interface */
         try {
             SelectParams(gArgs.GetChainType());
-        } catch (const std::exception&) {
-            return false;
+        } catch (const std::exception& e) {
+            InitError(Untranslated(e.what()));
+            QMessageBox::critical(nullptr, CLIENT_NAME, QObject::tr("Error: %1").arg(QString(e.what())));
+            std::exit(EXIT_FAILURE);
         }
 
         /* If current default data directory does not exist, let the user choose one */
