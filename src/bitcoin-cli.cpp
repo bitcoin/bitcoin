@@ -808,7 +808,7 @@ static std::optional<UniValue> CallIPC(BaseRequestHandler* rh, const std::string
         throw std::runtime_error("-rpcconnect and -ipcconnect options cannot both be enabled");
     }
 
-    std::unique_ptr<interfaces::Init> local_init{interfaces::MakeBasicInit("bitcoin-cli")};
+    std::unique_ptr<interfaces::Init> local_init{interfaces::MakeBasicInit("bitcoin-cli", ".cli")};
     if (!local_init || !local_init->ipc()) {
         if (ipcconnect == "auto") return {}; // Use HTTP if -ipcconnect=auto is set and there is no IPC support.
         throw std::runtime_error("bitcoin-cli was not built with IPC support");
