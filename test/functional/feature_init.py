@@ -5,11 +5,7 @@
 """Tests related to node initialization."""
 from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
-import os
-import platform
 import shutil
-import signal
-import subprocess
 
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.test_node import (
@@ -53,16 +49,6 @@ class InitTest(BitcoinTestFramework):
         self.generate(node, 200, sync_fun=self.no_op)
         self.stop_node(0)
 
-        def sigterm_node():
-            if platform.system() == 'Windows':
-                # Don't call Python's terminate() since it calls
-                # TerminateProcess(), which unlike SIGTERM doesn't allow
-                # bitcoind to perform any shutdown logic.
-                os.kill(node.process.pid, signal.CTRL_BREAK_EVENT)
-            else:
-                node.process.terminate()
-            assert_equal(0, node.process.wait())
-
         lines_to_terminate_after = [
             b'Validating signatures for all blocks',
             b'scheduler thread start',
@@ -91,14 +77,9 @@ class InitTest(BitcoinTestFramework):
         for terminate_line in lines_to_terminate_after:
             self.log.info(f"Starting node and will terminate after line {terminate_line}")
             with node.busy_wait_for_debug_log([terminate_line]):
-                if platform.system() == 'Windows':
-                    # CREATE_NEW_PROCESS_GROUP is required in order to be able
-                    # to terminate the child without terminating the test.
-                    node.start(extra_args=ALL_INDEX_ARGS, creationflags=subprocess.CREATE_NEW_PROCESS_GROUP)
-                else:
-                    node.start(extra_args=ALL_INDEX_ARGS)
+                self.start_breakable(node, extra_args=ALL_INDEX_ARGS)
             self.log.debug("Terminating node after terminate line was found")
-            sigterm_node()
+            self.sigterm_node(node)
 
         # Prior to deleting/perturbing index files, start node with all indexes enabled.
         # 'check_clean_start' will ensure indexes are synchronized (i.e., data exists to modify)
@@ -279,12 +260,7 @@ class InitTest(BitcoinTestFramework):
         self.log.info("Testing waitforblockheight RPC call followed by break signal")
         node = self.nodes[0]
 
-        if platform.system() == 'Windows':
-            # CREATE_NEW_PROCESS_GROUP prevents python test from exiting
-            # with STATUS_CONTROL_C_EXIT (-1073741510) when break is sent.
-            self.start_node(node.index, creationflags=subprocess.CREATE_NEW_PROCESS_GROUP)
-        else:
-            self.start_node(node.index)
+        self.start_breakable(node)
 
         current_height = node.getblock(node.getbestblockhash())['height']
 
@@ -299,15 +275,8 @@ class InitTest(BitcoinTestFramework):
             self.wait_until(lambda: any(c["method"] == "waitforblockheight" for c in node.cli.getrpcinfo()["active_commands"]))
 
             self.log.debug(f"Sending break signal to pid {node.process.pid}")
-            if platform.system() == 'Windows':
-                # Note: CTRL_C_EVENT should not be sent here because unlike
-                # CTRL_BREAK_EVENT it can not be targeted at a specific process
-                # group and may behave unpredictably.
-                node.process.send_signal(signal.CTRL_BREAK_EVENT)
-            else:
-                # Note: signal.SIGINT would work here as well
-                node.process.send_signal(signal.SIGTERM)
-            node.process.wait()
+            # Note: signal.SIGINT would work here as well
+            self.sigterm_node(node)
 
             result = fut.result()
             self.log.debug(f"waitforblockheight returned {result!r}")
@@ -323,12 +292,28 @@ class InitTest(BitcoinTestFramework):
         for option in options:
             self.restart_node(1, option)
 
+    def init_pause_load_mempool_interrupt_test(self):
+        self.log.info("Test interrupting startup while pause_load_mempool is active")
+        node = self.nodes[0]
+        pause_file = node.chain_path / "pause_load_mempool"
+        pause_file.touch()
+
+        with node.busy_wait_for_debug_log([b"Waiting for test pause file"]):
+            self.start_breakable(node, extra_args=["-test=pause_load_mempool"], wait_for_import=False)
+
+        self.sigterm_node(node)
+        pause_file.unlink()
+
+        self.check_clean_start(node, [])
+        self.stop_node(0)
+
     def run_test(self):
         self.init_pid_test()
         self.init_stress_test_interrupt()
         self.init_stress_test_removals()
         self.break_wait_test()
         self.init_empty_test()
+        self.init_pause_load_mempool_interrupt_test()
 
 
 if __name__ == '__main__':

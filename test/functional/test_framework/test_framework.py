@@ -16,6 +16,7 @@ import pdb
 import random
 import re
 import shutil
+import signal
 import subprocess
 import sys
 import tempfile
@@ -495,16 +496,37 @@ class BitcoinTestFramework(metaclass=BitcoinTestMetaClass):
                 # adjust conf for pre 17
                 test_node_i.replace_in_config([('[regtest]', '')])
 
-    def start_node(self, i, *args, **kwargs):
+    def start_node(self, i, *args, wait_for_import=True, **kwargs):
         """Start a bitcoind"""
 
         node = self.nodes[i]
 
         node.start(*args, **kwargs)
-        node.wait_for_rpc_connection()
+        node.wait_for_rpc_connection(wait_for_import=wait_for_import)
 
         if self.options.coveragedir is not None:
             coverage.write_all_rpc_commands(self.options.coveragedir, node._rpc)
+
+    def start_breakable(self, node, extra_args=None, *, wait_for_import=True):
+        if platform.system() == 'Windows':
+            # CREATE_NEW_PROCESS_GROUP prevents python test from exiting
+            # with STATUS_CONTROL_C_EXIT (-1073741510) when break is sent.
+            self.start_node(node.index, extra_args=extra_args, wait_for_import=wait_for_import, creationflags=subprocess.CREATE_NEW_PROCESS_GROUP)
+        else:
+            self.start_node(node.index, extra_args=extra_args, wait_for_import=wait_for_import)
+
+    def sigterm_node(self, node):
+        if platform.system() == 'Windows':
+            # Don't call Python's terminate() since it calls
+            # TerminateProcess(), which unlike SIGTERM doesn't allow
+            # bitcoind to perform any shutdown logic.
+            # Note: CTRL_C_EVENT should not be sent here because unlike
+            # CTRL_BREAK_EVENT it can not be targeted at a specific process
+            # group and may behave unpredictably.
+            os.kill(node.process.pid, signal.CTRL_BREAK_EVENT)
+        else:
+            node.process.terminate()
+        assert_equal(0, node.process.wait())
 
     def start_nodes(self, extra_args=None, *args, **kwargs):
         """Start multiple bitcoinds"""

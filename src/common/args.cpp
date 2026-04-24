@@ -769,6 +769,7 @@ const std::vector<std::string> TEST_OPTIONS_DOC{
     "addrman (use deterministic addrman)",
     "reindex_after_failure_noninteractive_yes (When asked for a reindex after failure interactively, simulate as-if answered with 'yes')",
     "bip94 (enforce BIP94 consensus rules)",
+    "pause_load_mempool (pause startup before loading mempool until regtest/pause_load_mempool is removed)",
 };
 
 bool HasTestOption(const ArgsManager& args, const std::string& test_option)

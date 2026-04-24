@@ -750,6 +750,17 @@ static void StartupNotify(const ArgsManager& args)
 }
 #endif
 
+static void MaybeWaitForTestPause(const ArgsManager& args, const util::SignalInterrupt& interrupt, const std::string& test_option)
+{
+    if (!HasTestOption(args, test_option)) return;
+    const fs::path pause_file{args.GetDataDirNet() / fs::PathFromString(test_option)};
+
+    LogInfo("Waiting for test pause file %s to be removed\n", fs::PathToString(pause_file));
+    while (!interrupt && fs::exists(pause_file)) {
+        UninterruptibleSleep(std::chrono::milliseconds{10});
+    }
+}
+
 static bool AppInitServers(NodeContext& node)
 {
     const ArgsManager& args = *Assert(node.args);
@@ -2049,6 +2060,7 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
         }
         // Load mempool from disk
         if (auto* pool{chainman.ActiveChainstate().GetMempool()}) {
+            MaybeWaitForTestPause(args, chainman.m_interrupt, "pause_load_mempool");
             LoadMempool(*pool, ShouldPersistMempool(args) ? MempoolPath(args) : fs::path{}, chainman.ActiveChainstate(), {});
             pool->SetLoadTried(!chainman.m_interrupt);
         }
