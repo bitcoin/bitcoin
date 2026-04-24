@@ -14,6 +14,7 @@
 #include <test/util/mining.h>
 #include <test/util/script.h>
 #include <test/util/setup_common.h>
+#include <test/util/time.h>
 #include <test/util/txmempool.h>
 #include <util/check.h>
 #include <util/rbf.h>
@@ -28,6 +29,8 @@ namespace {
 
 const TestingSetup* g_setup;
 std::vector<COutPoint> g_outpoints_coinbase_init_mature;
+// Initialize mock steady clock for deterministic fuzzing
+[[maybe_unused]] SteadyClockContext steady_clock{};
 
 struct MockedTxPool : public CTxMemPool {
     void RollingFeeUpdate() EXCLUSIVE_LOCKS_REQUIRED(!cs)

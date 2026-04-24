@@ -41,6 +41,7 @@ class SignalInterrupt;
 }
 
 namespace node {
+class BlockTemplateCache;
 class KernelNotifications;
 class Warnings;
 
@@ -72,6 +73,7 @@ struct NodeContext {
     std::unique_ptr<PeerManager> peerman;
     std::unique_ptr<TorController> tor_controller;
     std::unique_ptr<ChainstateManager> chainman;
+    std::unique_ptr<BlockTemplateCache> block_template_cache;
     std::unique_ptr<BanMan> banman;
     ArgsManager* args{nullptr}; // Currently a raw pointer because the memory is not managed by this struct
     std::vector<BaseIndex*> indexes; // raw pointers because memory is not managed by this struct
