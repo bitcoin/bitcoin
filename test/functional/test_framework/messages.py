@@ -1671,7 +1671,7 @@ class msg_sendcmpct:
     __slots__ = ("announce", "version")
     msgtype = b"sendcmpct"
 
-    def __init__(self, announce=False, version=1):
+    def __init__(self, announce=False, version=2):
         self.announce = announce
         self.version = version
 
