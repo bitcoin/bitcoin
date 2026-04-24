@@ -1814,7 +1814,8 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
     }
 
 #ifdef ENABLE_ZMQ
-    g_zmq_notification_interface = CZMQNotificationInterface::Create(
+    auto notifiers{CZMQNotificationInterface::GetNotifiers(
+        gArgs,
         [&chainman = node.chainman](std::vector<std::byte>& block, const CBlockIndex& index) {
             assert(chainman);
             if (auto ret{chainman->m_blockman.ReadRawBlock(WITH_LOCK(cs_main, return index.GetBlockPos()))}) {
@@ -1822,7 +1823,14 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
                 return true;
             }
             return false;
-        });
+        })};
+        if (!notifiers.empty()) {
+            if (auto zmq_notification_interface{CZMQNotificationInterface::Create(std::move(notifiers))}) {
+                g_zmq_notification_interface = std::move(zmq_notification_interface);
+            } else {
+                return InitError(Untranslated("Initializing ZMQ interface failed."));
+            }
+        }
 
     if (g_zmq_notification_interface) {
         validation_signals.RegisterValidationInterface(g_zmq_notification_interface.get());

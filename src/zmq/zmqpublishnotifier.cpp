@@ -49,7 +49,7 @@ static int zmq_send_multipart(void *sock, const void* data, size_t size, ...)
         int rc = zmq_msg_init_size(&msg, size);
         if (rc != 0)
         {
-            zmqError("Unable to initialize ZMQ msg");
+            zmqErrorDebug("Unable to initialize ZMQ msg");
             va_end(args);
             return -1;
         }
@@ -62,7 +62,7 @@ static int zmq_send_multipart(void *sock, const void* data, size_t size, ...)
         rc = zmq_msg_send(&msg, sock, data ? ZMQ_SNDMORE : 0);
         if (rc == -1)
         {
-            zmqError("Unable to send ZMQ msg");
+            zmqErrorDebug("Unable to send ZMQ msg");
             zmq_msg_close(&msg);
             va_end(args);
             return -1;
@@ -104,7 +104,7 @@ bool CZMQAbstractPublishNotifier::Initialize(void *pcontext)
         psocket = zmq_socket(pcontext, ZMQ_PUB);
         if (!psocket)
         {
-            zmqError("Failed to create socket");
+            zmqErrorDebug("Failed to create socket");
             return false;
         }
 
@@ -113,7 +113,7 @@ bool CZMQAbstractPublishNotifier::Initialize(void *pcontext)
         int rc = zmq_setsockopt(psocket, ZMQ_SNDHWM, &outbound_message_high_water_mark, sizeof(outbound_message_high_water_mark));
         if (rc != 0)
         {
-            zmqError("Failed to set outbound message high water mark");
+            zmqErrorDebug("Failed to set outbound message high water mark");
             zmq_close(psocket);
             return false;
         }
@@ -121,7 +121,7 @@ bool CZMQAbstractPublishNotifier::Initialize(void *pcontext)
         const int so_keepalive_option {1};
         rc = zmq_setsockopt(psocket, ZMQ_TCP_KEEPALIVE, &so_keepalive_option, sizeof(so_keepalive_option));
         if (rc != 0) {
-            zmqError("Failed to set SO_KEEPALIVE");
+            zmqErrorDebug("Failed to set SO_KEEPALIVE");
             zmq_close(psocket);
             return false;
         }
@@ -130,7 +130,7 @@ bool CZMQAbstractPublishNotifier::Initialize(void *pcontext)
         const int enable_ipv6 { IsZMQAddressIPV6(address) ? 1 : 0};
         rc = zmq_setsockopt(psocket, ZMQ_IPV6, &enable_ipv6, sizeof(enable_ipv6));
         if (rc != 0) {
-            zmqError("Failed to set ZMQ_IPV6");
+            zmqErrorDebug("Failed to set ZMQ_IPV6");
             zmq_close(psocket);
             return false;
         }
@@ -138,7 +138,7 @@ bool CZMQAbstractPublishNotifier::Initialize(void *pcontext)
         rc = zmq_bind(psocket, address.c_str());
         if (rc != 0)
         {
-            zmqError("Failed to bind address");
+            zmqError(BCLog::Level::Error, "Failed to bind address");
             zmq_close(psocket);
             return false;
         }
@@ -235,7 +235,7 @@ bool CZMQPublishRawBlockNotifier::NotifyBlock(const CBlockIndex *pindex)
 
     std::vector<std::byte> block{};
     if (!m_get_block_by_index(block, *pindex)) {
-        zmqError("Can't read block from disk");
+        zmqErrorDebug("Can't read block from disk");
         return false;
     }
 
