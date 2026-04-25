@@ -38,6 +38,7 @@
 #include <set>
 #include <span>
 #include <string>
+#include <string_view>
 #include <unordered_map>
 #include <utility>
 #include <vector>
@@ -46,6 +47,7 @@ class BlockValidationState;
 class CBlockUndo;
 class Chainstate;
 class ChainstateManager;
+
 namespace Consensus {
 struct Params;
 }
@@ -54,6 +56,8 @@ class SignalInterrupt;
 } // namespace util
 
 namespace kernel {
+class Notifications;
+
 class CBlockFileInfo
 {
 public:
@@ -483,6 +487,15 @@ public:
 
 // Calls ActivateBestChain() even if no blocks are imported.
 void ImportBlocks(ChainstateManager& chainman, std::span<const fs::path> import_paths);
+
+bool ObfuscateBlocks(
+    const util::SignalInterrupt& interrupt,
+    kernel::Notifications& notifications,
+    std::string_view suffix,
+    const fs::path& blocks_dir,
+    const fs::path& xor_dat,
+    const fs::path& xor_new,
+    const std::optional<std::array<std::byte, Obfuscation::KEY_SIZE>>& requested_key);
 } // namespace node
 
 #endif // BITCOIN_NODE_BLOCKSTORAGE_H
