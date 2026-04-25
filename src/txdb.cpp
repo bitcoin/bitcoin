@@ -72,11 +72,22 @@ void CCoinsViewDB::ResizeCache(size_t new_cache_size)
 
 std::optional<Coin> CCoinsViewDB::GetCoin(const COutPoint& outpoint) const
 {
-    if (Coin coin; m_db->Read(CoinEntry(&outpoint), coin)) {
-        Assert(!coin.IsSpent()); // The UTXO database should never contain spent coins
-        return coin;
+    Coin coin;
+    const auto read_status = m_db->TryRead(CoinEntry(&outpoint), coin);
+    switch (read_status.status) {
+        case CDBWrapper::ReadStatus::Code::OK:
+            // The UTXO database should never contain spent coins.
+            Assert(!coin.IsSpent());
+            return coin;
+        case CDBWrapper::ReadStatus::Code::NOT_FOUND:
+            return std::nullopt;
+        // Propagate errors so CCoinsViewErrorCatcher triggers a clean shutdown.
+        case CDBWrapper::ReadStatus::Code::DESERIALIZATION_ERROR:
+            throw dbwrapper_error{strprintf("Coin deserialization failure: %s", read_status.op_error.value_or("unknown"))};
+        case CDBWrapper::ReadStatus::Code::DB_INTERNAL_ERROR:
+            throw dbwrapper_error{strprintf("Coin DB read failure: %s", read_status.op_error.value_or("unknown"))};
     }
-    return std::nullopt;
+    std::abort(); // unreachable
 }
 
 std::optional<Coin> CCoinsViewDB::PeekCoin(const COutPoint& outpoint) const

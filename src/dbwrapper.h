@@ -204,24 +204,89 @@ public:
     CDBWrapper(const CDBWrapper&) = delete;
     CDBWrapper& operator=(const CDBWrapper&) = delete;
 
+    struct ReadStatus {
+        enum class Code {
+            OK,                      //!< Key found and value deserialized successfully.
+            NOT_FOUND,               //!< Key does not exist in the database.
+            DESERIALIZATION_ERROR,   //!< Key exists but value could not be deserialized.
+            DB_INTERNAL_ERROR,       //!< Unexpected internal DB error.
+        };
+
+        const Code status;
+        const std::optional<std::string> op_error{std::nullopt};
+
+        ReadStatus(const Code status) : status(status) {}
+        ReadStatus(const Code status, const std::string& error) : status(status), op_error(error) {}
+    };
+
+    /**
+     * Read and deserialize a value from the database, with explicit error discrimination.
+     *
+     * Unlike Read(), this method distinguishes between a missing key (NOT_FOUND), a
+     * deserialization failure (DESERIALIZATION_ERROR), and an internal DB error
+     * (DB_INTERNAL_ERROR) enabling callers to treat data corruption differently from
+     * an absent entry.
+     *
+     * @note Callers are expected to provide well-formed keys; key serialization
+     *       is the only operation that may throw.
+     *
+     * @param[in]  key    The key to look up.
+     * @param[out] value  Populated with the deserialized value on ReadStatus::OK
+     *                    and indeterminate on any other status.
+     * @return ReadStatus::OK on success,
+     *         ReadStatus::NOT_FOUND if the key does not exist,
+     *         ReadStatus::DESERIALIZATION_ERROR if value deserialization fails,
+     *         ReadStatus::DB_INTERNAL_ERROR if DB record read fails.
+     */
     template <typename K, typename V>
-    bool Read(const K& key, V& value) const
+    [[nodiscard]] ReadStatus TryRead(const K& key, V& value) const
     {
         DataStream ssKey{};
         ssKey.reserve(DBWRAPPER_PREALLOC_KEY_SIZE);
+        // Key serialization is the only operation that may throw.
+        // Callers are expected to provide well-formed keys.
         ssKey << key;
-        std::optional<std::string> strValue{ReadImpl(ssKey)};
-        if (!strValue) {
-            return false;
+
+        std::optional<std::string> strValue;
+        try {
+            strValue = ReadImpl(ssKey);
+            if (!strValue) {
+                return {ReadStatus::Code::NOT_FOUND};
+            }
+        } catch (const std::exception& e) {
+            return {ReadStatus::Code::DB_INTERNAL_ERROR, e.what()};
         }
+
         try {
             std::span ssValue{MakeWritableByteSpan(*strValue)};
             m_obfuscation(ssValue);
             SpanReader{ssValue} >> value;
-        } catch (const std::exception&) {
-            return false;
+        } catch (const std::exception& e) {
+            return {ReadStatus::Code::DESERIALIZATION_ERROR, e.what()};
         }
-        return true;
+
+        return {ReadStatus::Code::OK};
+    }
+
+    /**
+     * Wrapper around TryRead() that preserves the original Read() semantics:
+     * returns true on success, false if the key is absent or deserialization
+     * fails, and throws dbwrapper_error on an internal DB error.
+     *
+     * Prefer TryRead() when the caller needs to distinguish between a missing
+     * key and a corrupt value.
+     */
+    template <typename K, typename V>
+    bool Read(const K& key, V& value) const
+    {
+        auto read_status = TryRead(key, value);
+        switch (read_status.status) {
+            case ReadStatus::Code::OK: return true;
+            case ReadStatus::Code::NOT_FOUND: return false;
+            case ReadStatus::Code::DESERIALIZATION_ERROR: return false;
+            case ReadStatus::Code::DB_INTERNAL_ERROR: throw dbwrapper_error(read_status.op_error.value_or("unknown database error"));
+        } // no default case, so the compiler can warn about missing cases
+        std::abort(); // unreachable
     }
 
     template <typename K, typename V>
