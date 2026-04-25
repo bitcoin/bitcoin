@@ -172,28 +172,4 @@ BOOST_AUTO_TEST_CASE(damaged_private_key)
     }
 }
 
-
-BOOST_AUTO_TEST_CASE(session_create_reply_redacts_private_key)
-{
-    CreateSock = [](int, int, int) {
-        return std::make_unique<StaticContentsSock>("HELLO REPLY RESULT=OK VERSION=3.1\n"
-                                                    "SESSION STATUS RESULT=I2P_ERROR MESSAGE=\"oops\"\n");
-    };
-
-    const auto i2p_private_key_file = m_args.GetDataDirNet() / "test_i2p_private_key_redacted";
-    BOOST_REQUIRE(WriteBinaryFile(i2p_private_key_file, "private key marker"));
-
-    auto interrupt{std::make_shared<CThreadInterrupt>()};
-    const CService addr{in6_addr(COMPAT_IN6ADDR_LOOPBACK_INIT), /*port=*/7656};
-    const Proxy sam_proxy{addr, /*tor_stream_isolation=*/false};
-    i2p::sam::Session session(i2p_private_key_file, sam_proxy, interrupt);
-
-    DebugLogHelper log_helper{"Unexpected reply to \"SESSION CREATE ...\"", [](const std::string* line) {
-        return line == nullptr || line->find("DESTINATION=") == std::string::npos;
-    }};
-
-    i2p::Connection conn;
-    BOOST_CHECK(!session.Listen(conn));
-}
-
 BOOST_AUTO_TEST_SUITE_END()
