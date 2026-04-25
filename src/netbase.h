@@ -179,6 +179,7 @@ enum Network ParseNetwork(const std::string& net);
 std::string GetNetworkName(enum Network net);
 /** Return a vector of publicly routable Network names; optionally append NET_UNROUTABLE. */
 std::vector<std::string> GetNetworkNames(bool append_unroutable = false);
+bool isClearnet(enum Network net);
 bool SetProxy(enum Network net, const Proxy &addrProxy);
 std::optional<Proxy> GetProxy(enum Network net);
 bool IsProxy(const CNetAddr &addr);
