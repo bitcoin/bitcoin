@@ -23,7 +23,7 @@ add_library(test_util STATIC EXCLUDE_FROM_ALL
 target_link_libraries(test_util
   PRIVATE
     core_interface
-    Boost::headers
+    $<TARGET_NAME_IF_EXISTS:Boost::headers>
     $<$<BOOL:${ENABLE_WALLET}>:SQLite3::SQLite3>
   PUBLIC
     univalue
