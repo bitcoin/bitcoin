@@ -8,6 +8,7 @@
 #include <cstddef>
 #include <cstdint>
 #include <ios>
+#include <memory>
 #include <set>
 #include <string>
 #include <string_view>
@@ -22,16 +23,34 @@
 class CBlock;
 class CBlockUndo;
 
+/** An opaque type for approximate set membership queries. */
+class BlockFilterBase
+{
+public:
+    /** A data structure that may be queried for approximate set membership. */
+    typedef std::vector<unsigned char> Element;
+    /** A collection of elements that may be queried for approximate set membership. */
+    typedef std::unordered_set<Element, ByteVectorHash> ElementSet;
+
+    virtual ~BlockFilterBase() = default;
+
+    /** Checks if a single element may be in the set. */
+    virtual bool Match(const Element& element) const = 0;
+
+    /** Checks if any element may be in the set. */
+    virtual bool MatchAny(const ElementSet& elements) const = 0;
+
+    /** Serialization of the probabilistic data structure. */
+    virtual const std::vector<unsigned char>& GetEncoded() const LIFETIMEBOUND = 0;
+};
+
 /**
  * This implements a Golomb-coded set as defined in BIP 158. It is a
  * compact, probabilistic data structure for testing set membership.
  */
-class GCSFilter
+class GCSFilter : public BlockFilterBase
 {
 public:
-    typedef std::vector<unsigned char> Element;
-    typedef std::unordered_set<Element, ByteVectorHash> ElementSet;
-
     struct Params
     {
         uint64_t m_siphash_k0;
@@ -71,20 +90,20 @@ public:
 
     uint32_t GetN() const { return m_N; }
     const Params& GetParams() const LIFETIMEBOUND { return m_params; }
-    const std::vector<unsigned char>& GetEncoded() const LIFETIMEBOUND { return m_encoded; }
+    const std::vector<unsigned char>& GetEncoded() const LIFETIMEBOUND override { return m_encoded; }
 
     /**
      * Checks if the element may be in the set. False positives are possible
      * with probability 1/M.
      */
-    bool Match(const Element& element) const;
+    bool Match(const Element& element) const override;
 
     /**
      * Checks if any of the given elements may be in the set. False positives
      * are possible with probability 1/M per element checked. This is more
      * efficient that checking Match on multiple elements separately.
      */
-    bool MatchAny(const ElementSet& elements) const;
+    bool MatchAny(const ElementSet& elements) const override;
 };
 
 constexpr uint8_t BASIC_FILTER_P = 19;
@@ -117,13 +136,13 @@ class BlockFilter
 private:
     BlockFilterType m_filter_type = BlockFilterType::INVALID;
     uint256 m_block_hash;
-    GCSFilter m_filter;
+    std::unique_ptr<BlockFilterBase> m_filter;
 
     bool BuildParams(GCSFilter::Params& params) const;
 
 public:
 
-    BlockFilter() = default;
+    BlockFilter() : m_filter(std::make_unique<GCSFilter>()) {}
 
     //! Reconstruct a BlockFilter from parts.
     BlockFilter(BlockFilterType filter_type, const uint256& block_hash,
@@ -134,11 +153,11 @@ public:
 
     BlockFilterType GetFilterType() const { return m_filter_type; }
     const uint256& GetBlockHash() const LIFETIMEBOUND { return m_block_hash; }
-    const GCSFilter& GetFilter() const LIFETIMEBOUND { return m_filter; }
+    const BlockFilterBase& GetFilter() const LIFETIMEBOUND { return *m_filter; }
 
     const std::vector<unsigned char>& GetEncodedFilter() const LIFETIMEBOUND
     {
-        return m_filter.GetEncoded();
+        return m_filter->GetEncoded();
     }
 
     //! Compute the filter hash.
@@ -151,7 +170,7 @@ public:
     void Serialize(Stream& s) const {
         s << static_cast<uint8_t>(m_filter_type)
           << m_block_hash
-          << m_filter.GetEncoded();
+          << m_filter->GetEncoded();
     }
 
     template <typename Stream>
@@ -169,7 +188,7 @@ public:
         if (!BuildParams(params)) {
             throw std::ios_base::failure("unknown filter_type");
         }
-        m_filter = GCSFilter(params, std::move(encoded_filter), /*skip_decode_check=*/false);
+        m_filter = std::make_unique<GCSFilter>(params, std::move(encoded_filter), /*skip_decode_check=*/false);
     }
 };
 
