@@ -35,7 +35,7 @@ class UTXOSetHashTest(BitcoinTestFramework):
 
         # Create a spending transaction and mine a block which includes it
         txid = wallet.send_self_transfer(from_node=node)['txid']
-        tx_block = self.generateblock(node, output=wallet.get_address(), transactions=[txid])
+        tx_block = self.generateblock(node, outputs=wallet.get_address(), transactions=[txid])
         blocks.append(from_hex(CBlock(), node.getblock(tx_block['hash'], False)))
 
         # Serialize the outputs that should be in the UTXO set and add them to
