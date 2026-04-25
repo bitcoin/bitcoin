@@ -134,7 +134,7 @@ BOOST_FIXTURE_TEST_CASE(logging_LogPrint, LogSetup)
     std::vector<std::string> expected;
     for (auto& [msg, category, level, prefix, loc] : cases) {
         expected.push_back(tfm::format("[%s:%s] [%s] %s%s", util::RemovePrefix(loc.file_name(), "./"), loc.line(), loc.function_name_short(), prefix, msg));
-        LogInstance().LogPrint({.category = category, .level = level, .should_ratelimit = false, .source_loc = std::move(loc), .message = msg});
+        LogInstance().LogPrint({.category = category, .level = level, .should_ratelimit = false, .source_loc = loc, .message = msg});
     }
     std::vector<std::string> log_lines{ReadDebugLogLines()};
     BOOST_CHECK_EQUAL_COLLECTIONS(log_lines.begin(), log_lines.end(), expected.begin(), expected.end());
