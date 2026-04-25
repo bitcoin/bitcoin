@@ -268,6 +268,20 @@ public:
     size_t GetMemoryUsage() const noexcept;
 };
 
+// Require empty scratch streams on entry and reset them on exit.
+class ScopedDataStreamUsage
+{
+    DataStream& m_stream;
+
+public:
+    explicit ScopedDataStreamUsage(DataStream& stream) : m_stream{stream} { assert(m_stream.empty()); }
+
+    ScopedDataStreamUsage(const ScopedDataStreamUsage&) = delete;
+    ScopedDataStreamUsage& operator=(const ScopedDataStreamUsage&) = delete;
+
+    ~ScopedDataStreamUsage() { m_stream.clear(); }
+};
+
 template <typename IStream>
 class BitStreamReader
 {
