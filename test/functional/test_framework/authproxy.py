@@ -44,17 +44,12 @@ import socket
 import time
 import urllib.parse
 
+from .util import JSONRPCException, assert_equal
+
 HTTP_TIMEOUT = 30
 USER_AGENT = "AuthServiceProxy/0.1"
 
 log = logging.getLogger("BitcoinRPC")
-
-class JSONRPCException(Exception):
-    def __init__(self, rpc_error, http_status=None):
-        super().__init__(f"{rpc_error} [http_status={http_status}]")
-        self.error = rpc_error
-        self.http_status = http_status
-
 
 def serialization_fallback(o):
     if isinstance(o, decimal.Decimal):
@@ -144,7 +139,6 @@ class AuthServiceProxy():
             else:
                 return response['result']
         else:
-            from .util import assert_equal
             assert_equal(response['jsonrpc'], '2.0')
             if status != HTTPStatus.OK:
                 raise JSONRPCException({
