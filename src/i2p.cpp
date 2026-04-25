@@ -320,7 +320,7 @@ Session::Reply Session::SendRequestAndGetReply(const Sock& sock,
 
     if (check_result_ok && reply.Get("RESULT") != "OK") {
         throw std::runtime_error(
-            strprintf("Unexpected reply to \"%s\": \"%s\"", request, reply.full));
+            strprintf("Unexpected reply to \"%s\": \"%s\"", reply.request, reply.full));
     }
 
     return reply;
