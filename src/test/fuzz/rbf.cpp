@@ -211,12 +211,12 @@ FUZZ_TARGET(package_rbf, .init = initialize_package_rbf)
         FeeFrac first_sum;
         for (size_t i = 0; i < calc_results->first.size(); ++i) {
             first_sum += calc_results->first[i];
-            if (i) assert(!(calc_results->first[i - 1] << calc_results->first[i]));
+            if (i) assert(ByRatio{calc_results->first[i - 1]} >= ByRatio{calc_results->first[i]});
         }
         FeeFrac second_sum;
         for (size_t i = 0; i < calc_results->second.size(); ++i) {
             second_sum += calc_results->second[i];
-            if (i) assert(!(calc_results->second[i - 1] << calc_results->second[i]));
+            if (i) assert(ByRatio{calc_results->second[i - 1]} >= ByRatio{calc_results->second[i]});
         }
 
         FeeFrac replaced;

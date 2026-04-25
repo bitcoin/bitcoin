@@ -555,7 +555,7 @@ FUZZ_TARGET(txorphanage_sim)
             count += 1 + (txn[ann.tx]->vin.size() / 10);
             usage += GetTransactionWeight(*txn[ann.tx]);
         }
-        return std::max(FeeFrac{count, max_count}, FeeFrac{usage, max_usage});
+        return std::max<ByRatioNegSize<FeeFrac>>(FeeFrac{count, max_count}, FeeFrac{usage, max_usage});
     };
 
     //
@@ -707,13 +707,13 @@ FUZZ_TARGET(txorphanage_sim)
                 auto dos_score = dos_score_fn(peer, max_ann, max_mem);
                 // Use >= so that the more recent peer (higher NodeId) wins in case of
                 // ties.
-                if (dos_score >= worst_dos_score) {
+                if (ByRatioNegSize{dos_score} >= ByRatioNegSize{worst_dos_score}) {
                     worst_dos_score = dos_score;
                     worst_peer = peer;
                 }
             }
             assert(worst_peer != unsigned(-1));
-            assert(worst_dos_score >> FeeFrac(1, 1));
+            assert(ByRatio{worst_dos_score} > ByRatio{FeeFrac(1, 1)});
             // Find oldest announcement from worst_peer, preferring non-reconsiderable ones.
             bool done{false};
             for (int reconsider = 0; reconsider < 2; ++reconsider) {

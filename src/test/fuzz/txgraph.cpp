@@ -16,6 +16,7 @@
 #include <iterator>
 #include <map>
 #include <memory>
+#include <ranges>
 #include <set>
 #include <utility>
 
@@ -433,7 +434,7 @@ FUZZ_TARGET(txgraph)
         assert(num_tx == sim.GetTransactionCount());
         // Sort by feerate only, since violating topological constraints within same-feerate
         // chunks won't affect diagram comparisons.
-        std::sort(chunk_feerates.begin(), chunk_feerates.end(), std::greater{});
+        std::ranges::sort(chunk_feerates, std::greater<ByRatioNegSize<FeeFrac>>{});
         return chunk_feerates;
     };
 
@@ -806,10 +807,10 @@ FUZZ_TARGET(txgraph)
                 assert(sim_gain == real_gain);
                 // Check that the feerates in each diagram are monotonically decreasing.
                 for (size_t i = 1; i < real_main_diagram.size(); ++i) {
-                    assert(FeeRateCompare(real_main_diagram[i], real_main_diagram[i - 1]) <= 0);
+                    assert(ByRatio{real_main_diagram[i]} <= ByRatio{real_main_diagram[i - 1]});
                 }
                 for (size_t i = 1; i < real_staged_diagram.size(); ++i) {
-                    assert(FeeRateCompare(real_staged_diagram[i], real_staged_diagram[i - 1]) <= 0);
+                    assert(ByRatio{real_staged_diagram[i]} <= ByRatio{real_staged_diagram[i - 1]});
                 }
                 break;
             } else if (block_builders.size() < 4 && !main_sim.IsOversized() && command-- == 0) {
@@ -829,7 +830,7 @@ FUZZ_TARGET(txgraph)
                 if (chunk) {
                     // Chunk feerates must be monotonously decreasing.
                     if (!builder_data.last_feerate.IsEmpty()) {
-                        assert(!(chunk->second >> builder_data.last_feerate));
+                        assert(ByRatio{chunk->second} <= ByRatio{builder_data.last_feerate});
                     }
                     builder_data.last_feerate = chunk->second;
                     // Verify the contents of GetCurrentChunk.
@@ -1006,7 +1007,7 @@ FUZZ_TARGET(txgraph)
                     for (auto i : cluster) sizes.push_back(top_sim.graph.FeeRate(i).size);
                     auto sum_sizes = std::accumulate(sizes.begin(), sizes.end(), uint64_t{0});
                     // Sort from large to small.
-                    std::sort(sizes.begin(), sizes.end(), std::greater{});
+                    std::ranges::sort(sizes, std::greater{});
                     // In the worst case, only the smallest transactions are removed.
                     while (sizes.size() > max_cluster_count || sum_sizes > max_cluster_size) {
                         sum_sizes -= sizes.back();
@@ -1075,8 +1076,8 @@ FUZZ_TARGET(txgraph)
         auto cmp = [&](SimTxGraph::Pos a, SimTxGraph::Pos b) noexcept {
             return real->CompareMainOrder(*sims[0].GetRef(a), *sims[0].GetRef(b)) < 0;
         };
-        std::sort(vec1.begin(), vec1.end(), cmp);
-        std::sort(vec2.begin(), vec2.end(), cmp);
+        std::ranges::sort(vec1, cmp);
+        std::ranges::sort(vec2, cmp);
 
         // Verify the resulting orderings are identical. This could only fail if the ordering was
         // not total.
@@ -1118,7 +1119,7 @@ FUZZ_TARGET(txgraph)
             std::pair<int32_t, uint64_t> max_chunk_tiebreak{0, 0};
             for (const auto& chunk : real_chunking) {
                 // If this is the first chunk with a strictly lower feerate, reset.
-                if (chunk.feerate << last_chunk_feerate) {
+                if (ByRatio{chunk.feerate} < ByRatio{last_chunk_feerate}) {
                     comp_prefix_sizes.clear();
                     max_chunk_tiebreak = {0, 0};
                 }
@@ -1199,7 +1200,7 @@ FUZZ_TARGET(txgraph)
                 auto cmp_redo = [&](SimTxGraph::Pos a, SimTxGraph::Pos b) noexcept {
                     return real_redo->CompareMainOrder(*txobjects_redo[a], *txobjects_redo[b]) < 0;
                 };
-                std::sort(vec_redo.begin(), vec_redo.end(), cmp_redo);
+                std::ranges::sort(vec_redo, cmp_redo);
                 // Compare with the ordering we got from real.
                 assert(vec1 == vec_redo);
             }
@@ -1212,12 +1213,12 @@ FUZZ_TARGET(txgraph)
             if (pos > 0) {
                 size_t before = rng.randrange<size_t>(pos);
                 auto before_feerate = real->GetMainChunkFeerate(*sims[0].GetRef(vec1[before]));
-                assert(FeeRateCompare(before_feerate, pos_feerate) >= 0);
+                assert(ByRatio{before_feerate} >= ByRatio{pos_feerate});
             }
             if (pos + 1 < vec1.size()) {
                 size_t after = pos + 1 + rng.randrange<size_t>(vec1.size() - 1 - pos);
                 auto after_feerate = real->GetMainChunkFeerate(*sims[0].GetRef(vec1[after]));
-                assert(FeeRateCompare(after_feerate, pos_feerate) <= 0);
+                assert(ByRatio{after_feerate} <= ByRatio{pos_feerate});
             }
         }
 
@@ -1265,17 +1266,17 @@ FUZZ_TARGET(txgraph)
             auto [main_cmp_diagram, stage_cmp_diagram] = real->GetMainStagingDiagrams();
             // Check that the feerates in each diagram are monotonically decreasing.
             for (size_t i = 1; i < main_cmp_diagram.size(); ++i) {
-                assert(FeeRateCompare(main_cmp_diagram[i], main_cmp_diagram[i - 1]) <= 0);
+                assert(ByRatio{main_cmp_diagram[i]} <= ByRatio{main_cmp_diagram[i - 1]});
             }
             for (size_t i = 1; i < stage_cmp_diagram.size(); ++i) {
-                assert(FeeRateCompare(stage_cmp_diagram[i], stage_cmp_diagram[i - 1]) <= 0);
+                assert(ByRatio{stage_cmp_diagram[i]} <= ByRatio{stage_cmp_diagram[i - 1]});
             }
             // Treat the diagrams as sets of chunk feerates, and sort them in the same way so that
             // std::set_difference can be used on them below. The exact ordering does not matter
             // here, but it has to be consistent with the one used in main_real_diagram and
             // stage_real_diagram).
-            std::sort(main_cmp_diagram.begin(), main_cmp_diagram.end(), std::greater{});
-            std::sort(stage_cmp_diagram.begin(), stage_cmp_diagram.end(), std::greater{});
+            std::ranges::sort(main_cmp_diagram, std::greater<ByRatioNegSize<FeeFrac>>{});
+            std::ranges::sort(stage_cmp_diagram, std::greater<ByRatioNegSize<FeeFrac>>{});
             // Find the chunks that appear in main_diagram but are missing from main_cmp_diagram.
             // This is allowed, because GetMainStagingDiagrams omits clusters in main unaffected
             // by staging.
@@ -1283,7 +1284,7 @@ FUZZ_TARGET(txgraph)
             std::set_difference(main_real_diagram.begin(), main_real_diagram.end(),
                                 main_cmp_diagram.begin(), main_cmp_diagram.end(),
                                 std::inserter(missing_main_cmp, missing_main_cmp.end()),
-                                std::greater{});
+                                std::greater<ByRatioNegSize<FeeFrac>>{});
             assert(main_cmp_diagram.size() + missing_main_cmp.size() == main_real_diagram.size());
             // Do the same for chunks in stage_diagram missing from stage_cmp_diagram.
             auto stage_real_diagram = get_diagram_fn(TxGraph::Level::TOP);
@@ -1291,7 +1292,7 @@ FUZZ_TARGET(txgraph)
             std::set_difference(stage_real_diagram.begin(), stage_real_diagram.end(),
                                 stage_cmp_diagram.begin(), stage_cmp_diagram.end(),
                                 std::inserter(missing_stage_cmp, missing_stage_cmp.end()),
-                                std::greater{});
+                                std::greater<ByRatioNegSize<FeeFrac>>{});
             assert(stage_cmp_diagram.size() + missing_stage_cmp.size() == stage_real_diagram.size());
             // The missing chunks must be equal across main & staging (otherwise they couldn't have
             // been omitted).

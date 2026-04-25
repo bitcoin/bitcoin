@@ -13,29 +13,9 @@
 #include <span>
 #include <utility>
 
-/** Data structure storing a fee and size, ordered by increasing fee/size.
+/** Data structure storing a fee and size.
  *
  * The size of a FeeFrac cannot be zero unless the fee is also zero.
- *
- * FeeFracs have a total ordering, first by increasing feerate (ratio of fee over size), and then
- * by decreasing size. The empty FeeFrac (fee and size both 0) sorts last. So for example, the
- * following FeeFracs are in sorted order:
- *
- * - fee=0 size=1 (feerate 0)
- * - fee=1 size=2 (feerate 0.5)
- * - fee=2 size=3 (feerate 0.667...)
- * - fee=2 size=2 (feerate 1)
- * - fee=1 size=1 (feerate 1)
- * - fee=3 size=2 (feerate 1.5)
- * - fee=2 size=1 (feerate 2)
- * - fee=0 size=0 (undefined feerate)
- *
- * A FeeFrac is considered "better" if it sorts after another, by this ordering. All standard
- * comparison operators (<=>, ==, !=, >, <, >=, <=) respect this ordering.
- *
- * The FeeRateCompare, and >> and << operators only compare feerate and treat equal feerate but
- * different size as equivalent. The empty FeeFrac is neither lower or higher in feerate than any
- * other.
  */
 struct FeeFrac
 {
@@ -154,35 +134,6 @@ struct FeeFrac
         return a.fee == b.fee && a.size == b.size;
     }
 
-    /** Compare two FeeFracs just by feerate. */
-    friend inline std::weak_ordering FeeRateCompare(const FeeFrac& a, const FeeFrac& b) noexcept
-    {
-        auto cross_a = Mul(a.fee, b.size), cross_b = Mul(b.fee, a.size);
-        return cross_a <=> cross_b;
-    }
-
-    /** Check if a FeeFrac object has strictly lower feerate than another. */
-    friend inline bool operator<<(const FeeFrac& a, const FeeFrac& b) noexcept
-    {
-        auto cross_a = Mul(a.fee, b.size), cross_b = Mul(b.fee, a.size);
-        return cross_a < cross_b;
-    }
-
-    /** Check if a FeeFrac object has strictly higher feerate than another. */
-    friend inline bool operator>>(const FeeFrac& a, const FeeFrac& b) noexcept
-    {
-        auto cross_a = Mul(a.fee, b.size), cross_b = Mul(b.fee, a.size);
-        return cross_a > cross_b;
-    }
-
-    /** Compare two FeeFracs. <, >, <=, and >= are auto-generated from this. */
-    friend inline std::strong_ordering operator<=>(const FeeFrac& a, const FeeFrac& b) noexcept
-    {
-        auto cross_a = Mul(a.fee, b.size), cross_b = Mul(b.fee, a.size);
-        if (cross_a == cross_b) return b.size <=> a.size;
-        return cross_a <=> cross_b;
-    }
-
     /** Swap two FeeFracs. */
     friend inline void swap(FeeFrac& a, FeeFrac& b) noexcept
     {
@@ -255,5 +206,108 @@ using FeePerVSize = FeePerUnit<VSizeTag>;
 // FeePerUnit instance for satoshi / WU.
 struct WeightTag {};
 using FeePerWeight = FeePerUnit<WeightTag>;
+
+/** Wrapper around FeeFrac & derived types, which adds a feerate-based ordering which treats
+ *  equal-feerate but distinct-size FeeFracs as equals.
+ *
+ *  This is not included inside FeeFrac itself, because it is not a total ordering (as would be
+ *  expected for built-in comparison operators).
+ */
+template<std::derived_from<FeeFrac> T>
+class ByRatio
+{
+    const T& m_feefrac;
+
+public:
+    constexpr ByRatio(const T& feefrac) noexcept : m_feefrac{feefrac} {}
+
+    friend bool operator==(const ByRatio& a, const ByRatio& b) noexcept
+    {
+        auto cross_a = T::Mul(a.m_feefrac.fee, b.m_feefrac.size);
+        auto cross_b = T::Mul(b.m_feefrac.fee, a.m_feefrac.size);
+        return cross_a == cross_b;
+    }
+
+    // Note that we can use std::strong_ordering here, because even though FeeFrac{1,2} and
+    // FeeFrac{2,4} are distinct as FeeFracs, they are indistinguishable from ByRatio's perspective
+    // (operator== also treats them as equal).
+    friend std::strong_ordering operator<=>(const ByRatio& a, const ByRatio& b) noexcept
+    {
+        auto cross_a = T::Mul(a.m_feefrac.fee, b.m_feefrac.size);
+        auto cross_b = T::Mul(b.m_feefrac.fee, a.m_feefrac.size);
+        return cross_a <=> cross_b;
+    }
+
+    // Specialized versions for efficiency. GCC 15+ and Clang 11+ produce operator<=>-derived
+    // versions that are equally efficient as this at -O2, but earlier versions do not.
+    friend bool operator<(const ByRatio& a, const ByRatio& b) noexcept
+    {
+        auto cross_a = T::Mul(a.m_feefrac.fee, b.m_feefrac.size);
+        auto cross_b = T::Mul(b.m_feefrac.fee, a.m_feefrac.size);
+        return cross_a < cross_b;
+    }
+    friend bool operator>(const ByRatio& a, const ByRatio& b) noexcept
+    {
+        auto cross_a = T::Mul(a.m_feefrac.fee, b.m_feefrac.size);
+        auto cross_b = T::Mul(b.m_feefrac.fee, a.m_feefrac.size);
+        return cross_a > cross_b;
+    }
+    friend bool operator<=(const ByRatio& a, const ByRatio& b) noexcept
+    {
+        auto cross_a = T::Mul(a.m_feefrac.fee, b.m_feefrac.size);
+        auto cross_b = T::Mul(b.m_feefrac.fee, a.m_feefrac.size);
+        return cross_a <= cross_b;
+    }
+    friend bool operator>=(const ByRatio& a, const ByRatio& b) noexcept
+    {
+        auto cross_a = T::Mul(a.m_feefrac.fee, b.m_feefrac.size);
+        auto cross_b = T::Mul(b.m_feefrac.fee, a.m_feefrac.size);
+        return cross_a >= cross_b;
+    }
+};
+
+/** Wrapper around FeeFrac & derived types, which adds a total ordering which first sorts by feerate
+ *  and then by reversed size (i.e., larger sizes come first).
+ *
+ *  This is not included inside FeeFrac itself, because it is not the most natural behavior, so it
+ *  is better to make code using it invoke this explicitly.
+ *
+ *  The empty FeeFrac (fee and size both 0) sorts last. So for example, the following FeeFracs are
+ *  in sorted order:
+ *
+ *   - fee=0 size=1 (feerate 0)
+ *   - fee=1 size=2 (feerate 0.5)
+ *   - fee=2 size=3 (feerate 0.667...)
+ *   - fee=2 size=2 (feerate 1)
+ *   - fee=1 size=1 (feerate 1)
+ *   - fee=3 size=2 (feerate 1.5)
+ *   - fee=2 size=1 (feerate 2)
+ *   - fee=0 size=0 (undefined feerate)
+ */
+template<std::derived_from<FeeFrac> T>
+class ByRatioNegSize
+{
+    const T& m_feefrac;
+
+public:
+    constexpr ByRatioNegSize(const T& feefrac) noexcept : m_feefrac{feefrac} {}
+
+    friend bool operator==(const ByRatioNegSize& a, const ByRatioNegSize& b) noexcept
+    {
+        return a.m_feefrac == b.m_feefrac;
+    }
+
+    friend std::strong_ordering operator<=>(const ByRatioNegSize& a, const ByRatioNegSize& b) noexcept
+    {
+        auto cross_a = T::Mul(a.m_feefrac.fee, b.m_feefrac.size);
+        auto cross_b = T::Mul(b.m_feefrac.fee, a.m_feefrac.size);
+        auto cmp = cross_a <=> cross_b;
+        if (cmp != 0) return cmp;
+        return b.m_feefrac.size <=> a.m_feefrac.size;
+    }
+
+    // Support conversion back to underlying FeeFrac, which allows using std::max().
+    operator const T&() const noexcept { return m_feefrac; }
+};
 
 #endif // BITCOIN_UTIL_FEEFRAC_H
