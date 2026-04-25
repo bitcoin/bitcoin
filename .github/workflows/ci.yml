@@ -19,8 +19,7 @@ concurrency:
 
 env:
   CI_FAILFAST_TEST_LEAVE_DANGLING: 1  # GHA does not care about dangling processes and setting this variable avoids killing the CI script itself on error
-  CIRRUS_CACHE_HOST: http://127.0.0.1:12321/ # When using Cirrus Runners this host can be used by the docker `gha` build cache type.
-  REPO_USE_CIRRUS_RUNNERS: 'bitcoin/bitcoin' # Use cirrus runners and cache for this repo, instead of falling back to the slow GHA runners
+  REPO_USE_NAMESPACE_RUNNERS: 'bitcoin/bitcoin' # Use Namespace runners for this repo; other forks fall back to the free GHA runners.
 
 defaults:
   run:
@@ -47,9 +46,9 @@ jobs:
           fi
       - id: runners
         run: |
-          if [[ "${REPO_USE_CIRRUS_RUNNERS}" == "${{ github.repository }}" ]]; then
-            echo "provider=cirrus" >> "$GITHUB_OUTPUT"
-            echo "::notice title=Runner Selection::Using Cirrus Runners"
+          if [[ "${REPO_USE_NAMESPACE_RUNNERS}" == "${{ github.repository }}" ]]; then
+            echo "provider=namespace" >> "$GITHUB_OUTPUT"
+            echo "::notice title=Runner Selection::Using Namespace runners"
           else
             echo "provider=gha" >> "$GITHUB_OUTPUT"
             echo "::notice title=Runner Selection::Using GitHub-hosted runners"
@@ -58,7 +57,7 @@ jobs:
   test-each-commit:
     name: 'test ancestor commits'
     needs: runners
-    runs-on: ${{ needs.runners.outputs.provider == 'cirrus' && 'ghcr.io/cirruslabs/ubuntu-runner-amd64:24.04-md' || 'ubuntu-24.04' }}
+    runs-on: ${{ needs.runners.outputs.provider == 'namespace' && 'namespace-profile-x64-linux-medium' || 'ubuntu-24.04' }}
     env:
       TEST_RUNNER_PORT_MIN: "14000"  # Use a larger port, to avoid colliding with CIRRUS_CACHE_HOST port 12321.
     if: github.event_name == 'pull_request' && github.event.pull_request.commits != 1
@@ -325,7 +324,7 @@ jobs:
   windows-cross:
     name: 'Windows-cross to x86_64, ${{ matrix.crt }}'
     needs: [runners, record-frozen-commit]
-    runs-on: ${{ needs.runners.outputs.provider == 'cirrus' && 'ghcr.io/cirruslabs/ubuntu-runner-amd64:24.04-sm' || 'ubuntu-24.04' }}
+    runs-on: ${{ needs.runners.outputs.provider == 'namespace' && format('namespace-profile-x64-linux-small;overrides.cache-tag={0}', matrix.cache-tag) || 'ubuntu-24.04' }}
     if: ${{ vars.SKIP_BRANCH_PUSH != 'true' || github.event_name == 'pull_request' }}
 
     strategy:
@@ -334,15 +333,19 @@ jobs:
         crt: [msvcrt, ucrt]
         include:
           - crt: msvcrt
+            # cache-tags are needed at GHA template time to restore the correct cache mount for the job (in the runs-on field), so can't be read from $FILE_ENV or any other file.
+            cache-tag: 'bitcoin-ci-windows-cross-msvcrt'
             file-env: './ci/test/00_setup_env_win64_msvcrt.sh'
             artifact-name: 'x86_64-w64-mingw32-executables'
           - crt: ucrt
+            cache-tag: 'bitcoin-ci-windows-cross-ucrt'
             file-env: './ci/test/00_setup_env_win64.sh'
             artifact-name: 'x86_64-w64-mingw32ucrt-executables'
 
     env:
       FILE_ENV: ${{ matrix.file-env }}
       DANGER_CI_ON_HOST_FOLDERS: 1
+      RUNNER_PROVIDER: ${{ needs.runners.outputs.provider }}
 
     steps:
       - *ANNOTATION_PR_NUMBER
@@ -354,21 +357,26 @@ jobs:
 
       - name: Configure environment
         uses: ./.github/actions/configure-environment
+        with:
+          provider: ${{ needs.runners.outputs.provider }}
 
       - name: Restore caches
-        id: restore-cache
         uses: ./.github/actions/restore-caches
+        with:
+          provider: ${{ env.RUNNER_PROVIDER }}
 
       - name: Configure Docker
         uses: ./.github/actions/configure-docker
         with:
-          cache-provider: ${{ needs.runners.outputs.provider }}
+          provider: ${{ env.RUNNER_PROVIDER }}
 
       - name: CI script
         run: ./ci/test_run_all.sh
 
       - name: Save caches
         uses: ./.github/actions/save-caches
+        with:
+          provider: ${{ env.RUNNER_PROVIDER }}
 
       - name: Upload built executables
         uses: actions/upload-artifact@v7
@@ -436,105 +444,120 @@ jobs:
   ci-matrix:
     name: ${{ matrix.name }}
     needs: runners
-    runs-on: ${{ needs.runners.outputs.provider == 'cirrus' && matrix.cirrus-runner || matrix.fallback-runner }}
+    runs-on: ${{ matrix.namespace-runner && needs.runners.outputs.provider == 'namespace' && format('{0};overrides.cache-tag={1}', matrix.namespace-runner, matrix.cache-tag) || matrix.fallback-runner }}
     if: ${{ vars.SKIP_BRANCH_PUSH != 'true' || github.event_name == 'pull_request' }}
     timeout-minutes: ${{ matrix.timeout-minutes }}
 
     env:
       DANGER_CI_ON_HOST_FOLDERS: 1
       FILE_ENV: ${{ matrix.file-env }}
+      RUNNER_PROVIDER: ${{ matrix.provider || needs.runners.outputs.provider }}
 
     strategy:
       fail-fast: false
       matrix:
         include:
           - name: 'iwyu'
-            cirrus-runner: 'ghcr.io/cirruslabs/ubuntu-runner-amd64:24.04-md'
+            cache-tag: 'bitcoin-ci-iwyu'
+            namespace-runner: 'namespace-profile-x64-linux-medium'
             fallback-runner: 'ubuntu-24.04'
             timeout-minutes: 120
             file-env: './ci/test/00_setup_env_native_iwyu.sh'
 
           - name: '32 bit ARM'
-            cirrus-runner: 'ubuntu-24.04-arm' # Cirrus' Arm runners are Apple (with virtual Linux aarch64), which doesn't support 32-bit mode
+            cache-tag: 'bitcoin-ci-32bit-arm'
+            namespace-runner: 'namespace-profile-apple-arm64-linux-medium;container.privileged=true;container.host-pid-namespace=true' # Required for qemu/binfmt registration to affect the runner host.
             fallback-runner: 'ubuntu-24.04-arm'
             timeout-minutes: 120
             file-env: './ci/test/00_setup_env_arm.sh'
-            provider: 'gha'
 
           - name: 'ASan + LSan + UBSan + integer'
-            cirrus-runner: 'ghcr.io/cirruslabs/ubuntu-runner-amd64:24.04-md' # has to match container in ci/test/00_setup_env_native_asan.sh for tracing tools
+            cache-tag: 'bitcoin-ci-asan'
+            namespace-runner: 'namespace-profile-x64-linux-medium;container.privileged=true;container.host-pid-namespace=true;container.mount-host-sys=sys' # This is needed to mount namespace resources (/sys) into the container.
             fallback-runner: 'ubuntu-24.04'
             timeout-minutes: 120
             file-env: './ci/test/00_setup_env_native_asan.sh'
 
           - name: 'macOS-cross to arm64'
-            cirrus-runner: 'ghcr.io/cirruslabs/ubuntu-runner-amd64:24.04-sm'
+            cache-tag: 'bitcoin-ci-macos-cross-arm64'
+            namespace-runner: 'namespace-profile-x64-linux-small'
             fallback-runner: 'ubuntu-24.04'
             timeout-minutes: 120
             file-env: './ci/test/00_setup_env_mac_cross.sh'
 
           - name: 'macOS-cross to x86_64'
-            cirrus-runner: 'ghcr.io/cirruslabs/ubuntu-runner-amd64:24.04-sm'
+            cache-tag: 'bitcoin-ci-macos-cross-x86-64'
+            namespace-runner: 'namespace-profile-x64-linux-small'
             fallback-runner: 'ubuntu-24.04'
             timeout-minutes: 120
             file-env: './ci/test/00_setup_env_mac_cross_intel.sh'
 
           - name: 'FreeBSD Cross'
-            cirrus-runner: 'ghcr.io/cirruslabs/ubuntu-runner-amd64:24.04-md'
+            cache-tag: 'bitcoin-ci-freebsd-cross'
+            namespace-runner: 'namespace-profile-x64-linux-medium'
             fallback-runner: 'ubuntu-24.04'
             timeout-minutes: 120
             file-env: './ci/test/00_setup_env_freebsd_cross.sh'
 
           - name: 'No wallet'
-            cirrus-runner: 'ghcr.io/cirruslabs/ubuntu-runner-amd64:24.04-sm'
+            cache-tag: 'bitcoin-ci-no-wallet'
+            namespace-runner: 'namespace-profile-x64-linux-small'
             fallback-runner: 'ubuntu-24.04'
             timeout-minutes: 120
             file-env: './ci/test/00_setup_env_native_nowallet.sh'
 
           - name: 'i686, no IPC'
-            cirrus-runner: 'ghcr.io/cirruslabs/ubuntu-runner-amd64:24.04-md'
+            cache-tag: 'bitcoin-ci-i686-no-ipc'
+            namespace-runner: 'namespace-profile-x64-linux-medium'
             fallback-runner: 'ubuntu-24.04'
             timeout-minutes: 120
             file-env: './ci/test/00_setup_env_i686_no_ipc.sh'
 
           - name: 'fuzzer,address,undefined,integer'
-            cirrus-runner: 'ghcr.io/cirruslabs/ubuntu-runner-amd64:24.04-lg'
+            cache-tag: 'bitcoin-ci-fuzz-asan-ubsan-integer'
+            namespace-runner: 'namespace-profile-x64-linux-large'
             fallback-runner: 'ubuntu-24.04'
             timeout-minutes: 240
             file-env: './ci/test/00_setup_env_native_fuzz.sh'
 
           - name: 'previous releases'
-            cirrus-runner: 'ghcr.io/cirruslabs/ubuntu-runner-amd64:24.04-md'
+            cache-tag: 'bitcoin-ci-previous-releases'
+            namespace-runner: 'namespace-profile-x64-linux-medium'
             fallback-runner: 'ubuntu-24.04'
             timeout-minutes: 120
             file-env: './ci/test/00_setup_env_native_previous_releases.sh'
 
           - name: 'Alpine (musl)'
-            cirrus-runner: 'ghcr.io/cirruslabs/ubuntu-runner-amd64:24.04-md'
+            cache-tag: 'bitcoin-ci-alpine-musl'
+            namespace-runner: 'namespace-profile-x64-linux-medium'
             fallback-runner: 'ubuntu-24.04'
             timeout-minutes: 120
             file-env: './ci/test/00_setup_env_native_alpine_musl.sh'
 
           - name: 'tidy'
-            cirrus-runner: 'ghcr.io/cirruslabs/ubuntu-runner-amd64:24.04-md'
+            cache-tag: 'bitcoin-ci-tidy'
+            namespace-runner: 'namespace-profile-x64-linux-medium'
             fallback-runner: 'ubuntu-24.04'
             timeout-minutes: 120
             file-env: './ci/test/00_setup_env_native_tidy.sh'
 
           - name: 'TSan'
-            cirrus-runner: 'ghcr.io/cirruslabs/ubuntu-runner-amd64:24.04-md'
+            cache-tag: 'bitcoin-ci-tsan'
+            namespace-runner: 'namespace-profile-x64-linux-medium'
             fallback-runner: 'ubuntu-24.04'
             timeout-minutes: 120
             file-env: './ci/test/00_setup_env_native_tsan.sh'
 
           - name: 'MSan, fuzz'
-            cirrus-runner: 'ghcr.io/cirruslabs/ubuntu-runner-amd64:24.04-md'
+            cache-tag: 'bitcoin-ci-msan-fuzz'
+            namespace-runner: 'namespace-profile-x64-linux-medium'
             fallback-runner: 'ubuntu-24.04'
             timeout-minutes: 150
             file-env: './ci/test/00_setup_env_native_fuzz_with_msan.sh'
 
           - name: 'MSan'
-            cirrus-runner: 'ghcr.io/cirruslabs/ubuntu-runner-amd64:24.04-lg'
+            cache-tag: 'bitcoin-ci-msan'
+            namespace-runner: 'namespace-profile-x64-linux-large'
             fallback-runner: 'ubuntu-24.04'
             timeout-minutes: 120
             file-env: './ci/test/00_setup_env_native_msan.sh'
@@ -546,15 +569,25 @@ jobs:
 
       - name: Configure environment
         uses: ./.github/actions/configure-environment
+        with:
+          provider: ${{ matrix.namespace-runner && needs.runners.outputs.provider == 'namespace' && 'namespace' || 'gha' }}
 
       - name: Restore caches
         id: restore-cache
         uses: ./.github/actions/restore-caches
+        with:
+          provider: ${{ env.RUNNER_PROVIDER }}
+
+      - name: Set up QEMU for 32 bit ARM tests
+        if: ${{ env.CONTAINER_NAME == 'ci_arm_linux' && env.RUNNER_PROVIDER == 'namespace' }}
+        uses: docker/setup-qemu-action@v4
+        with:
+          platforms: arm
 
       - name: Configure Docker
         uses: ./.github/actions/configure-docker
         with:
-          cache-provider: ${{ matrix.provider || needs.runners.outputs.provider }}
+          provider: ${{ env.RUNNER_PROVIDER }}
 
       - name: Clear unnecessary files
         if: ${{ needs.runners.outputs.provider == 'gha' && true || false }} # Only needed on GHA runners
@@ -576,11 +609,13 @@ jobs:
 
       - name: Save caches
         uses: ./.github/actions/save-caches
+        with:
+          provider: ${{ env.RUNNER_PROVIDER }}
 
   lint:
     name: 'lint'
     needs: runners
-    runs-on: ${{ needs.runners.outputs.provider == 'cirrus' && 'ghcr.io/cirruslabs/ubuntu-runner-amd64:24.04-xs' || 'ubuntu-24.04' }}
+    runs-on: ${{ needs.runners.outputs.provider == 'namespace' && 'namespace-profile-x64-linux-tiny;overrides.cache-tag=bitcoin-ci-linter' || 'ubuntu-24.04' }}
     if: ${{ vars.SKIP_BRANCH_PUSH != 'true' || github.event_name == 'pull_request' }}
     timeout-minutes: 20
     env:
@@ -597,7 +632,7 @@ jobs:
       - name: Configure Docker
         uses: ./.github/actions/configure-docker
         with:
-          cache-provider: ${{ needs.runners.outputs.provider }}
+          provider: ${{ needs.runners.outputs.provider }}
 
       - name: CI script
         run: |
