@@ -151,7 +151,6 @@ target_link_libraries(bitcoinqt
     bitcoin_cli
     leveldb
     Boost::headers
-    $<TARGET_NAME_IF_EXISTS:QRencode::QRencode>
     $<$<PLATFORM_ID:Darwin>:-framework\ AppKit>
     $<$<CXX_COMPILER_ID:MSVC>:shlwapi>
 )
@@ -225,10 +224,16 @@ if(ENABLE_WALLET)
       bitcoin_wallet
       Qt6::Network
   )
+  target_compile_definitions(bitcoinqt PUBLIC ENABLE_WALLET)
+  if(WITH_QRENCODE)
+    target_link_libraries(bitcoinqt PRIVATE QRencode::QRencode)
+    target_compile_definitions(bitcoinqt PRIVATE USE_QRCODE)
+  endif()
 endif()
 
 if(WITH_DBUS)
   target_link_libraries(bitcoinqt PRIVATE Qt6::DBus)
+  target_compile_definitions(bitcoinqt PRIVATE USE_DBUS)
 endif()
 
 if(qt_lib_type STREQUAL "STATIC_LIBRARY")
