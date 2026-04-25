@@ -20,14 +20,6 @@ CoinsViewEmpty& CoinsViewEmpty::Get()
     return instance;
 }
 
-std::optional<Coin> CCoinsViewCache::PeekCoin(const COutPoint& outpoint) const
-{
-    if (auto it{cacheCoins.find(outpoint)}; it != cacheCoins.end()) {
-        return it->second.coin.IsSpent() ? std::nullopt : std::optional{it->second.coin};
-    }
-    return base->PeekCoin(outpoint);
-}
-
 CCoinsViewCache::CCoinsViewCache(CCoinsView* in_base, bool deterministic) :
     CCoinsViewBacked(in_base), m_deterministic(deterministic),
     cacheCoins(0, SaltedOutpointHasher(/*deterministic=*/deterministic), CCoinsMap::key_equal{}, &m_cache_coins_memory_resource)
@@ -44,7 +36,7 @@ std::optional<Coin> CCoinsViewCache::FetchCoinFromBase(const COutPoint& outpoint
     return base->GetCoin(outpoint);
 }
 
-CCoinsMap::iterator CCoinsViewCache::FetchCoin(const COutPoint &outpoint) const {
+CCoinsMap::iterator CCoinsViewCache::FetchCoin(const COutPoint &outpoint) const noexcept {
     const auto [ret, inserted] = cacheCoins.try_emplace(outpoint);
     if (inserted) {
         if (auto coin{FetchCoinFromBase(outpoint)}) {
@@ -59,10 +51,17 @@ CCoinsMap::iterator CCoinsViewCache::FetchCoin(const COutPoint &outpoint) const 
     return ret;
 }
 
-std::optional<Coin> CCoinsViewCache::GetCoin(const COutPoint& outpoint) const
+std::optional<Coin> CCoinsViewCache::GetCoin(const COutPoint& outpoint, bool peek_only) const noexcept
 {
-    if (auto it{FetchCoin(outpoint)}; it != cacheCoins.end() && !it->second.coin.IsSpent()) return it->second.coin;
-    return std::nullopt;
+    if (peek_only) {
+        if (auto it{cacheCoins.find(outpoint)}; it != cacheCoins.end()) {
+            return it->second.coin.IsSpent() ? std::nullopt : std::optional{it->second.coin};
+        }
+        return base->GetCoin(outpoint, peek_only);
+    } else {
+        if (auto it{FetchCoin(outpoint)}; it != cacheCoins.end() && !it->second.coin.IsSpent()) return it->second.coin;
+        return std::nullopt;
+    }
 }
 
 void CCoinsViewCache::AddCoin(const COutPoint &outpoint, Coin&& coin, bool possible_overwrite) {
@@ -155,7 +154,7 @@ bool CCoinsViewCache::SpendCoin(const COutPoint &outpoint, Coin* moveout) {
 
 static const Coin coinEmpty;
 
-const Coin& CCoinsViewCache::AccessCoin(const COutPoint &outpoint) const {
+const Coin& CCoinsViewCache::AccessCoin(const COutPoint &outpoint) const noexcept {
     CCoinsMap::const_iterator it = FetchCoin(outpoint);
     if (it == cacheCoins.end()) {
         return coinEmpty;
@@ -164,13 +163,13 @@ const Coin& CCoinsViewCache::AccessCoin(const COutPoint &outpoint) const {
     }
 }
 
-bool CCoinsViewCache::HaveCoin(const COutPoint& outpoint) const
+bool CCoinsViewCache::HaveCoin(const COutPoint& outpoint) const noexcept
 {
     CCoinsMap::const_iterator it = FetchCoin(outpoint);
     return (it != cacheCoins.end() && !it->second.coin.IsSpent());
 }
 
-bool CCoinsViewCache::HaveCoinInCache(const COutPoint &outpoint) const {
+bool CCoinsViewCache::HaveCoinInCache(const COutPoint &outpoint) const noexcept {
     CCoinsMap::const_iterator it = cacheCoins.find(outpoint);
     return (it != cacheCoins.end() && !it->second.coin.IsSpent());
 }
@@ -373,37 +372,4 @@ const Coin& AccessByTxid(const CCoinsViewCache& view, const Txid& txid)
         ++iter.n;
     }
     return coinEmpty;
-}
-
-template <typename ReturnType, typename Func>
-static ReturnType ExecuteBackedWrapper(Func func, const std::vector<std::function<void()>>& err_callbacks)
-{
-    try {
-        return func();
-    } catch(const std::runtime_error& e) {
-        for (const auto& f : err_callbacks) {
-            f();
-        }
-        LogError("Error reading from database: %s\n", e.what());
-        // Starting the shutdown sequence and returning false to the caller would be
-        // interpreted as 'entry not found' (as opposed to unable to read data), and
-        // could lead to invalid interpretation. Just exit immediately, as we can't
-        // continue anyway, and all writes should be atomic.
-        std::abort();
-    }
-}
-
-std::optional<Coin> CCoinsViewErrorCatcher::GetCoin(const COutPoint& outpoint) const
-{
-    return ExecuteBackedWrapper<std::optional<Coin>>([&]() { return CCoinsViewBacked::GetCoin(outpoint); }, m_err_callbacks);
-}
-
-bool CCoinsViewErrorCatcher::HaveCoin(const COutPoint& outpoint) const
-{
-    return ExecuteBackedWrapper<bool>([&]() { return CCoinsViewBacked::HaveCoin(outpoint); }, m_err_callbacks);
-}
-
-std::optional<Coin> CCoinsViewErrorCatcher::PeekCoin(const COutPoint& outpoint) const
-{
-    return ExecuteBackedWrapper<std::optional<Coin>>([&]() { return CCoinsViewBacked::PeekCoin(outpoint); }, m_err_callbacks);
 }

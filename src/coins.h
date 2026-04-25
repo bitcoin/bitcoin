@@ -21,7 +21,6 @@
 #include <cassert>
 #include <cstdint>
 
-#include <functional>
 #include <unordered_map>
 
 /**
@@ -311,16 +310,12 @@ public:
     virtual ~CCoinsView() = default;
 
     //! Retrieve the Coin (unspent transaction output) for a given outpoint.
-    //! May populate the cache. Use PeekCoin() to perform a non-caching lookup.
-    virtual std::optional<Coin> GetCoin(const COutPoint& outpoint) const = 0;
-
-    //! Retrieve the Coin (unspent transaction output) for a given outpoint, without caching results.
-    //! Does not populate the cache. Use GetCoin() to cache the result.
-    virtual std::optional<Coin> PeekCoin(const COutPoint& outpoint) const = 0;
+    //! May populate the cache unless peek_only is true.
+    virtual std::optional<Coin> GetCoin(const COutPoint& outpoint, bool peek_only = false) const noexcept = 0;
 
     //! Just check whether a given outpoint is unspent.
-    //! May populate the cache. Use PeekCoin() to perform a non-caching lookup.
-    virtual bool HaveCoin(const COutPoint& outpoint) const = 0;
+    //! May populate the cache. Use GetCoin(outpoint, true) to avoid caching.
+    virtual bool HaveCoin(const COutPoint& outpoint) const noexcept = 0;
 
     //! Retrieve the block hash whose state this CCoinsView currently represents
     virtual uint256 GetBestBlock() const = 0;
@@ -354,9 +349,8 @@ public:
     CoinsViewEmpty(const CoinsViewEmpty&) = delete;
     CoinsViewEmpty& operator=(const CoinsViewEmpty&) = delete;
 
-    std::optional<Coin> GetCoin(const COutPoint&) const override { return {}; }
-    std::optional<Coin> PeekCoin(const COutPoint& outpoint) const override { return GetCoin(outpoint); }
-    bool HaveCoin(const COutPoint& outpoint) const override { return !!GetCoin(outpoint); }
+    std::optional<Coin> GetCoin(const COutPoint&, bool = false) const noexcept override { return {}; }
+    bool HaveCoin(const COutPoint& outpoint) const noexcept override { return !!GetCoin(outpoint); }
     uint256 GetBestBlock() const override { return {}; }
     std::vector<uint256> GetHeadBlocks() const override { return {}; }
     void BatchWrite(CoinsViewCacheCursor& cursor, const uint256&) override
@@ -378,9 +372,8 @@ public:
 
     void SetBackend(CCoinsView& in_view) { base = &in_view; }
 
-    std::optional<Coin> GetCoin(const COutPoint& outpoint) const override { return base->GetCoin(outpoint); }
-    std::optional<Coin> PeekCoin(const COutPoint& outpoint) const override { return base->PeekCoin(outpoint); }
-    bool HaveCoin(const COutPoint& outpoint) const override { return base->HaveCoin(outpoint); }
+    std::optional<Coin> GetCoin(const COutPoint& outpoint, bool peek_only) const noexcept override { return base->GetCoin(outpoint, peek_only); }
+    bool HaveCoin(const COutPoint& outpoint) const noexcept override { return base->HaveCoin(outpoint); }
     uint256 GetBestBlock() const override { return base->GetBestBlock(); }
     std::vector<uint256> GetHeadBlocks() const override { return base->GetHeadBlocks(); }
     void BatchWrite(CoinsViewCacheCursor& cursor, const uint256& block_hash) override { base->BatchWrite(cursor, block_hash); }
@@ -429,9 +422,8 @@ public:
     CCoinsViewCache(const CCoinsViewCache &) = delete;
 
     // Standard CCoinsView methods
-    std::optional<Coin> GetCoin(const COutPoint& outpoint) const override;
-    std::optional<Coin> PeekCoin(const COutPoint& outpoint) const override;
-    bool HaveCoin(const COutPoint& outpoint) const override;
+    std::optional<Coin> GetCoin(const COutPoint& outpoint, bool peek_only = false) const noexcept override;
+    bool HaveCoin(const COutPoint& outpoint) const noexcept override;
     uint256 GetBestBlock() const override;
     void SetBestBlock(const uint256& block_hash);
     void BatchWrite(CoinsViewCacheCursor& cursor, const uint256& block_hash) override;
@@ -444,7 +436,7 @@ public:
      * The semantics are the same as HaveCoin(), but no calls to
      * the backing CCoinsView are made.
      */
-    bool HaveCoinInCache(const COutPoint &outpoint) const;
+    bool HaveCoinInCache(const COutPoint &outpoint) const noexcept;
 
     /**
      * Return a reference to Coin in the cache, or coinEmpty if not found. This is
@@ -456,7 +448,7 @@ public:
      * on! To be safe, best to not hold the returned reference through any other
      * calls to this cache.
      */
-    const Coin& AccessCoin(const COutPoint &output) const;
+    const Coin& AccessCoin(const COutPoint &output) const noexcept;
 
     /**
      * Add a coin. Set possible_overwrite to true if an unspent version may
@@ -549,14 +541,14 @@ private:
      * @note this is marked const, but may actually append to `cacheCoins`, increasing
      * memory usage.
      */
-    CCoinsMap::iterator FetchCoin(const COutPoint &outpoint) const;
+    CCoinsMap::iterator FetchCoin(const COutPoint &outpoint) const noexcept;
 };
 
 /**
  * CCoinsViewCache overlay that avoids populating/mutating parent cache layers on cache misses.
  *
- * This is achieved by fetching coins from the base view using PeekCoin() instead of GetCoin(),
- * so intermediate CCoinsViewCache layers are not filled.
+ * This is achieved by fetching coins from the base view using `GetCoin(outpoint, true)`
+ * instead of `GetCoin(outpoint)`, so intermediate CCoinsViewCache layers are not filled.
  *
  * Used during ConnectBlock() as an ephemeral, resettable top-level view that is flushed only
  * on success, so invalid blocks don't pollute the underlying cache.
@@ -566,7 +558,7 @@ class CoinsViewOverlay : public CCoinsViewCache
 private:
     std::optional<Coin> FetchCoinFromBase(const COutPoint& outpoint) const override
     {
-        return base->PeekCoin(outpoint);
+        return base->GetCoin(outpoint, /*peek_only=*/true);
     }
 
 public:
@@ -586,31 +578,5 @@ void AddCoins(CCoinsViewCache& cache, const CTransaction& tx, int nHeight, bool 
 //! which is not found in the cache, it can cause up to MAX_OUTPUTS_PER_BLOCK
 //! lookups to database, so it should be used with care.
 const Coin& AccessByTxid(const CCoinsViewCache& cache, const Txid& txid);
-
-/**
- * This is a minimally invasive approach to shutdown on LevelDB read errors from the
- * chainstate, while keeping user interface out of the common library, which is shared
- * between bitcoind, and bitcoin-qt and non-server tools.
- *
- * Writes do not need similar protection, as failure to write is handled by the caller.
-*/
-class CCoinsViewErrorCatcher final : public CCoinsViewBacked
-{
-public:
-    explicit CCoinsViewErrorCatcher(CCoinsView* view) : CCoinsViewBacked(view) {}
-
-    void AddReadErrCallback(std::function<void()> f) {
-        m_err_callbacks.emplace_back(std::move(f));
-    }
-
-    std::optional<Coin> GetCoin(const COutPoint& outpoint) const override;
-    bool HaveCoin(const COutPoint& outpoint) const override;
-    std::optional<Coin> PeekCoin(const COutPoint& outpoint) const override;
-
-private:
-    /** A list of callbacks to execute upon leveldb read error. */
-    std::vector<std::function<void()>> m_err_callbacks;
-
-};
 
 #endif // BITCOIN_COINS_H

@@ -86,7 +86,8 @@ struct DBVal {
 
 std::unique_ptr<CoinStatsIndex> g_coin_stats_index;
 
-CoinStatsIndex::CoinStatsIndex(std::unique_ptr<interfaces::Chain> chain, size_t n_cache_size, bool f_memory, bool f_wipe)
+CoinStatsIndex::CoinStatsIndex(std::unique_ptr<interfaces::Chain> chain, size_t n_cache_size, bool f_memory, bool f_wipe,
+                               std::function<void()> read_error_cb)
     : BaseIndex(std::move(chain), "coinstatsindex")
 {
     // An earlier version of the index used "indexes/coinstats" but it contained
@@ -102,7 +103,7 @@ CoinStatsIndex::CoinStatsIndex(std::unique_ptr<interfaces::Chain> chain, size_t 
     fs::path path{gArgs.GetDataDirNet() / "indexes" / "coinstatsindex"};
     fs::create_directories(path);
 
-    m_db = std::make_unique<CoinStatsIndex::DB>(path / "db", n_cache_size, f_memory, f_wipe);
+    m_db = std::make_unique<CoinStatsIndex::DB>(path / "db", n_cache_size, f_memory, f_wipe, /*f_obfuscate=*/false, std::move(read_error_cb));
 }
 
 bool CoinStatsIndex::CustomAppend(const interfaces::BlockInfo& block)
@@ -262,9 +263,8 @@ std::optional<CCoinsStats> CoinStatsIndex::LookUpStats(const CBlockIndex& block_
 bool CoinStatsIndex::CustomInit(const std::optional<interfaces::BlockRef>& block)
 {
     if (!m_db->Read(DB_MUHASH, m_muhash)) {
-        // Check that the cause of the read failure is that the key does not
-        // exist. Any other errors indicate database corruption or a disk
-        // failure, and starting the index would cause further corruption.
+        // TODO: Drop this Read+Exists pattern. Read() now terminates on corruption,
+        // so this branch should only represent the missing-key initialization path.
         if (m_db->Exists(DB_MUHASH)) {
             LogError("Cannot read current %s state; index may be corrupted",
                       GetName());
