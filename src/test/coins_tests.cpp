@@ -48,7 +48,7 @@ class CCoinsViewTest : public CoinsViewEmpty
 public:
     explicit CCoinsViewTest(FastRandomContext& rng) : m_rng{rng} {}
 
-    std::optional<Coin> GetCoin(const COutPoint& outpoint) const override
+    std::optional<Coin> GetCoin(const COutPoint& outpoint, bool) const override
     {
         if (auto it{map_.find(outpoint)}; it != map_.end() && !it->second.IsSpent()) return it->second;
         return std::nullopt;
@@ -1060,6 +1060,63 @@ BOOST_FIXTURE_TEST_CASE(ccoins_flush_behavior, FlushTest)
     }
 }
 
+BOOST_AUTO_TEST_CASE(ccoins_cache_behavior)
+{
+    class CCoinsViewSpy final : public CoinsViewEmpty
+    {
+    public:
+        const COutPoint expected;
+        mutable size_t getcoin_calls{0};
+
+        explicit CCoinsViewSpy(const COutPoint& out) : expected{out} {}
+
+        std::optional<Coin> GetCoin(const COutPoint& out, bool) const override
+        {
+            BOOST_CHECK(out == expected);
+            ++getcoin_calls;
+            return Coin{CTxOut{1, CScript{}}, 1, false};
+        }
+
+        bool HaveCoin(const COutPoint& out) const override
+        {
+            BOOST_CHECK(out == expected);
+            BOOST_FAIL("Base HaveCoin should never be called");
+            return false;
+        }
+    };
+
+    const COutPoint prevout{Txid::FromUint256(m_rng.rand256()), 0};
+    CCoinsViewSpy base{prevout};
+    CCoinsViewCache cache{&base};
+
+    CMutableTransaction mtx;
+    mtx.vin.emplace_back(prevout);
+    const CTransaction tx{mtx};
+    BOOST_CHECK(!tx.IsCoinBase());
+
+    BOOST_CHECK(cache.HaveInputs(tx));
+    BOOST_CHECK_EQUAL(base.getcoin_calls, 1);
+
+    BOOST_CHECK(cache.HaveInputs(tx));
+    BOOST_CHECK(cache.GetCoin(prevout));
+    BOOST_CHECK(!cache.AccessCoin(prevout).IsSpent());
+    BOOST_CHECK(cache.HaveCoin(prevout));
+    BOOST_CHECK_EQUAL(base.getcoin_calls, 1);
+
+    const COutPoint prefilled_prevout{Txid::FromUint256(m_rng.rand256()), 0};
+    cache.AddCoin(prefilled_prevout, Coin{CTxOut{1, CScript{}}, 1, false}, /*possible_overwrite=*/false);
+    BOOST_CHECK(cache.HaveCoinInCache(prefilled_prevout));
+
+    CMutableTransaction prefilled_mtx;
+    prefilled_mtx.vin.emplace_back(prefilled_prevout);
+    const CTransaction prefilled_tx{prefilled_mtx};
+    BOOST_CHECK(!prefilled_tx.IsCoinBase());
+    BOOST_CHECK(cache.HaveInputs(prefilled_tx));
+
+    BOOST_CHECK(cache.SpendCoin(prevout));
+    BOOST_CHECK(!cache.HaveCoinInCache(prevout));
+}
+
 BOOST_AUTO_TEST_CASE(coins_resource_is_used)
 {
     CCoinsMapMemoryResource resource;
@@ -1170,7 +1227,7 @@ BOOST_AUTO_TEST_CASE(ccoins_reset_guard)
     BOOST_CHECK_EQUAL(cache.GetDirtyCount(), 0U);
 }
 
-BOOST_AUTO_TEST_CASE(ccoins_peekcoin)
+BOOST_AUTO_TEST_CASE(ccoins_getcoin_peek_only)
 {
     CCoinsViewTest base{m_rng};
 
@@ -1183,9 +1240,10 @@ BOOST_AUTO_TEST_CASE(ccoins_peekcoin)
         cache.Flush();
     }
 
-    // Verify PeekCoin can read through the cache stack without mutating the intermediate cache.
+    // Verify GetCoin(peek_only=true) can read through the cache stack without mutating
+    // the intermediate cache.
     CCoinsViewCacheTest main_cache{&base};
-    const auto fetched{main_cache.PeekCoin(outpoint)};
+    const auto fetched{main_cache.GetCoin(outpoint, /*peek_only=*/true)};
     BOOST_CHECK(fetched.has_value());
     BOOST_CHECK(*fetched == coin);
     BOOST_CHECK(!main_cache.HaveCoinInCache(outpoint));
