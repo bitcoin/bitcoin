@@ -45,6 +45,7 @@
 
 #ifndef WIN32
 #include <sys/wait.h>
+#include <sys/socket.h>
 #endif
 
 #include <boost/test/unit_test.hpp>

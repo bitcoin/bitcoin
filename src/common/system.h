@@ -7,10 +7,10 @@
 #define BITCOIN_COMMON_SYSTEM_H
 
 #include <bitcoin-build-config.h> // IWYU pragma: keep
+
 #include <util/time.h>
 
-#include <chrono>
-#include <cstdint>
+#include <cstddef>
 #include <optional>
 #include <string>
 

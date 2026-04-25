@@ -5,14 +5,13 @@
 #ifndef BITCOIN_COMMON_SETTINGS_H
 #define BITCOIN_COMMON_SETTINGS_H
 
+#include <univalue.h>
 #include <util/fs.h>
 
 #include <cstddef>
 #include <map>
 #include <string>
 #include <vector>
-
-class UniValue;
 
 namespace common {
 
