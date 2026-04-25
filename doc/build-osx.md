@@ -139,7 +139,7 @@ It is required that you have `python` and `zip` installed.
 
 There are many ways to configure Bitcoin Core, here are a few common examples:
 
-##### Wallet (only SQlite) and GUI Support:
+##### Wallet and GUI:
 
 This enables the GUI.
 If `sqlite` or `qt` are not installed, this will throw an error.
