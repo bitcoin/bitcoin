@@ -17,6 +17,7 @@ export RUN_FUNCTIONAL_TESTS=false
 export RUN_FUZZ_TESTS=false
 export RUN_CHECK_DEPS=false
 export RUN_IWYU=true
+export IWYU_FILTER_MODIFIED=${IWYU_FILTER_MODIFIED:-}
 export GOAL="codegen"
 export BITCOIN_CONFIG="\
  --preset dev-mode -DBUILD_GUI=OFF \
