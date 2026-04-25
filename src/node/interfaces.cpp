@@ -49,6 +49,7 @@
 #include <policy/settings.h>
 #include <primitives/block.h>
 #include <primitives/transaction.h>
+#include <pow.h>
 #include <rpc/blockchain.h>
 #include <rpc/protocol.h>
 #include <rpc/server.h>
@@ -59,6 +60,7 @@
 #include <univalue.h>
 #include <util/check.h>
 #include <util/result.h>
+#include <util/time.h>
 #include <util/signalinterrupt.h>
 #include <util/string.h>
 #include <util/translation.h>
@@ -959,6 +961,86 @@ public:
         return WaitTipChanged(chainman(), notifications(), current_tip, timeout, m_interrupt_mining);
     }
 
+    // Collect all blocks in the block index that are not on the active chain
+    // and are above the given height.
+    std::vector<CBlockIndex*> GetAllForkBlocksAboveHeight(int height) EXCLUSIVE_LOCKS_REQUIRED(::cs_main)
+    {
+        AssertLockHeld(::cs_main);
+        CChain& active_chain = chainman().ActiveChain();
+        std::vector<CBlockIndex*> forks;
+        for (auto& [_, block_index] : chainman().BlockIndex()) {
+            if (!active_chain.Contains(&block_index) && block_index.nHeight > height) {
+                forks.push_back(&block_index);
+            }
+        }
+        return forks;
+    }
+
+    // Temporarily invalidate min-difficulty blocks and competing forks on
+    // Testnet4 so that a block template can be built on top of the last
+    // actual-difficulty block. Returns the list of invalidated block indexes
+    // so they can be reconsidered later.
+    std::vector<CBlockIndex*> RollbackTestnet4MinDiffBlocks()
+    {
+        std::vector<CBlockIndex*> invalids;
+
+        // Collect all min-difficulty blocks from the current tip backwards,
+        // stopping at the first actual-difficulty block.
+        {
+            LOCK(::cs_main);
+            CBlockIndex* tip{chainman().ActiveChain().Tip()};
+            if (!tip) return {};
+
+            CBlockIndex* walk{tip};
+            while (walk->nBits == 0x1d00ffff) {
+                invalids.push_back(walk);
+                walk = walk->pprev;
+                if (!walk) return {};
+            }
+
+            // No min-difficulty blocks found at the tip
+            if (invalids.empty()) return {};
+
+            // Insert forks first so the actual-difficulty block remains the
+            // tip when invalidating.
+            std::vector<CBlockIndex*> forks = GetAllForkBlocksAboveHeight(walk->nHeight);
+            invalids.insert(invalids.end(), forks.begin(), forks.end());
+        }
+
+        // Invalidate min-difficulty blocks, starting with forks first.
+        for (auto it = invalids.rbegin(); it != invalids.rend(); ++it) {
+            BlockValidationState state;
+            chainman().ActiveChainstate().InvalidateBlock(state, *it);
+            if (state.IsValid()) {
+                chainman().ActiveChainstate().ActivateBestChain(state);
+            }
+            if (!state.IsValid()) {
+                LogWarning("testnet4 rollback: failed to invalidate block %s: %s\n",
+                           (*it)->GetBlockHash().ToString(), state.ToString());
+            }
+        }
+
+        return invalids;
+    }
+
+    // Undo the temporary invalidation of min-difficulty blocks.
+    void ReconsiderTestnet4Blocks(const std::vector<CBlockIndex*>& invalids)
+    {
+        for (CBlockIndex* index : invalids) {
+            {
+                LOCK(::cs_main);
+                chainman().ActiveChainstate().ResetBlockFailureFlags(index);
+                chainman().RecalculateBestHeader();
+            }
+            BlockValidationState state;
+            chainman().ActiveChainstate().ActivateBestChain(state);
+            if (!state.IsValid()) {
+                LogWarning("testnet4 rollback: failed to reconsider block %s: %s\n",
+                           index->GetBlockHash().ToString(), state.ToString());
+            }
+        }
+    }
+
     std::unique_ptr<BlockTemplate> createNewBlock(const BlockCreateOptions& options, bool cooldown) override
     {
         // Reject too-small values instead of clamping so callers don't silently
@@ -991,9 +1073,35 @@ public:
             if (!CooldownIfHeadersAhead(chainman(), notifications(), *maybe_tip, m_interrupt_mining)) return {};
         }
 
+        // On testnet4, temporarily roll back any min-difficulty blocks at the
+        // tip so that the template builds on the last actual-difficulty block.
+        // This lets a miner produce a block that re-orgs the min-difficulty
+        // chain. The rollback is undone after the template is created.
+        std::vector<CBlockIndex*> testnet4_invalids;
+        if (chainman().GetConsensus().enforce_BIP94 && !chainman().IsInitialBlockDownload()) {
+            testnet4_invalids = RollbackTestnet4MinDiffBlocks();
+        }
+
         BlockAssembler::Options assemble_options{options};
         ApplyArgsManOptions(*Assert(m_node.args), assemble_options);
-        return std::make_unique<BlockTemplateImpl>(assemble_options, BlockAssembler{chainman().ActiveChainstate(), context()->mempool.get(), assemble_options}.CreateNewBlock(), m_node);
+        std::unique_ptr<CBlockTemplate> block_template{
+            BlockAssembler{chainman().ActiveChainstate(), context()->mempool.get(), assemble_options}.CreateNewBlock()};
+
+        if (!testnet4_invalids.empty()) {
+            const CBlockIndex* prev{WITH_LOCK(::cs_main,
+                return chainman().m_blockman.LookupBlockIndex(block_template->block.hashPrevBlock))};
+            if (prev && block_template->block.nTime > prev->nTime + 1200) {
+                // Set block time 18 min ahead of the prev block, assuming that the
+                // template should be refreshed roughly once every minute
+                block_template->block.nTime = prev->nTime + 1080;
+                block_template->block.nBits = GetNextWorkRequired(prev, &block_template->block,
+                                                                  chainman().GetConsensus());
+            }
+
+            ReconsiderTestnet4Blocks(testnet4_invalids);
+        }
+
+        return std::make_unique<BlockTemplateImpl>(assemble_options, std::move(block_template), m_node);
     }
 
     void interrupt() override

@@ -885,6 +885,13 @@ static RPCMethod getblocktemplate()
     CHECK_NONFATAL(pindexPrev);
     CBlock block{block_template->getBlock()};
 
+    if (consensusParams.enforce_BIP94) {
+        // createNewBlock() may have built the template on a rolled-back tip, i.e.
+        // the last block not using the min-difficulty exception. In that case
+        // derive the actual prev block from the template rather than pindexPrev.
+        pindexPrev = CHECK_NONFATAL(chainman.m_blockman.LookupBlockIndex(block.hashPrevBlock));
+    }
+
     // Update nTime
     UpdateTime(&block, consensusParams, pindexPrev);
     block.nNonce = 0;
