@@ -33,6 +33,7 @@ Required environment variables as seen inside the container:
     DIST_ARCHIVE_BASE: ${DIST_ARCHIVE_BASE:?not set}
     DISTNAME: ${DISTNAME:?not set}
     HOST: ${HOST:?not set}
+    BUILD_MODE: ${BUILD_MODE:?not set}
     SOURCE_DATE_EPOCH: ${SOURCE_DATE_EPOCH:?not set}
     JOBS: ${JOBS:?not set}
     DISTSRC: ${DISTSRC:?not set}
@@ -165,19 +166,27 @@ esac
 ####################
 
 # Build the depends tree, overriding variables that assume multilib gcc
-make -C depends --jobs="$JOBS" HOST="$HOST" \
-                                   ${V:+V=1} \
-                                   ${SOURCES_PATH+SOURCES_PATH="$SOURCES_PATH"} \
-                                   ${BASE_CACHE+BASE_CACHE="$BASE_CACHE"} \
-                                   ${SDK_PATH+SDK_PATH="$SDK_PATH"} \
-                                   ${build_CC+build_CC="$build_CC"} \
-                                   ${build_CXX+build_CXX="$build_CXX"} \
-                                   x86_64_linux_CC=x86_64-linux-gnu-gcc \
-                                   x86_64_linux_CXX=x86_64-linux-gnu-g++ \
-                                   x86_64_linux_AR=x86_64-linux-gnu-gcc-ar \
-                                   x86_64_linux_RANLIB=x86_64-linux-gnu-gcc-ranlib \
-                                   x86_64_linux_NM=x86_64-linux-gnu-gcc-nm \
-                                   x86_64_linux_STRIP=x86_64-linux-gnu-strip
+make_args=(
+    -C depends
+    --jobs="$JOBS"
+    HOST="$HOST"
+    ${V:+V=1} \
+    ${SOURCES_PATH+SOURCES_PATH="$SOURCES_PATH"} \
+    ${BASE_CACHE+BASE_CACHE="$BASE_CACHE"} \
+    ${SDK_PATH+SDK_PATH="$SDK_PATH"} \
+    ${build_CC+build_CC="$build_CC"} \
+    ${build_CXX+build_CXX="$build_CXX"} \
+    x86_64_linux_CC=x86_64-linux-gnu-gcc \
+    x86_64_linux_CXX=x86_64-linux-gnu-g++ \
+    x86_64_linux_AR=x86_64-linux-gnu-gcc-ar \
+    x86_64_linux_RANLIB=x86_64-linux-gnu-gcc-ranlib \
+    x86_64_linux_NM=x86_64-linux-gnu-gcc-nm \
+    x86_64_linux_STRIP=x86_64-linux-gnu-strip
+)
+if [[ "$BUILD_MODE" == "CORE" ]]; then
+    make_args+=( "NO_QT=1" )
+fi
+make "${make_args[@]}"
 
 case "$HOST" in
     *darwin*)
@@ -205,7 +214,7 @@ mkdir -p "$OUTDIR"
 ###########################
 
 # CONFIGFLAGS
-CONFIGFLAGS="-DREDUCE_EXPORTS=ON -DBUILD_BENCH=OFF -DBUILD_GUI_TESTS=OFF -DBUILD_FUZZ_BINARY=OFF -DCMAKE_SKIP_RPATH=TRUE"
+CONFIGFLAGS="-DREDUCE_EXPORTS=ON -DBUILD_BENCH=OFF -DBUILD_FUZZ_BINARY=OFF -DCMAKE_SKIP_RPATH=TRUE"
 
 # CFLAGS
 HOST_CFLAGS="-O2 -g"
@@ -242,17 +251,31 @@ mkdir -p "$DISTSRC"
     tar --strip-components=1 -xf "${GIT_ARCHIVE}"
 
     # Configure this DISTSRC for $HOST
-    # shellcheck disable=SC2086
+    # shellcheck disable=SC2086,SC2206
+    cmake_args=(
+        -B build \
+        --toolchain "${BASEPREFIX}/${HOST}/toolchain.cmake" \
+        -DWITH_CCACHE=OFF \
+        -Werror=dev \
+        ${CONFIGFLAGS} \
+        "${CMAKE_EXE_LINKER_FLAGS}"
+    )
+    if [[ "$BUILD_MODE" == *"GUI"* ]]; then
+        cmake_args+=(
+            "-DBUILD_GUI=ON"
+            "-DBUILD_GUI_TESTS=OFF"
+        )
+    fi
     env CFLAGS="${HOST_CFLAGS}" CXXFLAGS="${HOST_CXXFLAGS}" LDFLAGS="${HOST_LDFLAGS}" \
-    cmake -S . -B build \
-          --toolchain "${BASEPREFIX}/${HOST}/toolchain.cmake" \
-          -DWITH_CCACHE=OFF \
-          -Werror=dev \
-          ${CONFIGFLAGS} \
-          "${CMAKE_EXE_LINKER_FLAGS}"
+    cmake "${cmake_args[@]}"
 
     # Build Bitcoin Core
     cmake --build build -j "$JOBS" ${V:+--verbose}
+
+    # Stop here if we are only building the non-GUI binaries.
+    if [[ "$BUILD_MODE" == "CORE" ]]; then
+        exit 0
+    fi
 
     mkdir -p "$OUTDIR"
 
