@@ -148,7 +148,7 @@ static RPCMethod getprivatebroadcastinfo()
         RPCResult{
             RPCResult::Type::OBJ, "", "",
             {
-                {RPCResult::Type::ARR, "transactions", "",
+                {RPCResult::Type::ARR, "transactions", "Transactions currently in the private broadcast queue",
                     {
                         {RPCResult::Type::OBJ, "", "",
                             {
@@ -164,6 +164,11 @@ static RPCMethod getprivatebroadcastinfo()
                                                 {RPCResult::Type::NUM_TIME, "sent", "The time this transaction was picked for sending to this peer via private broadcast (seconds since epoch)"},
                                                 {RPCResult::Type::NUM_TIME, "received", /*optional=*/true, "The time this peer acknowledged reception of the transaction (seconds since epoch)"},
                                             }},
+                                    }},
+                                {RPCResult::Type::OBJ, "received_by_us", /*optional=*/true, "Information about how this transaction was received back from the network",
+                                    {
+                                        {RPCResult::Type::STR, "address", "The peer address from which this transaction was received back from the network"},
+                                        {RPCResult::Type::NUM_TIME, "time", "The time this transaction was received back from the network (seconds since epoch)"},
                                     }},
                             }},
                     }},
@@ -196,6 +201,12 @@ static RPCMethod getprivatebroadcastinfo()
                     peers.push_back(std::move(p));
                 }
                 o.pushKV("peers", std::move(peers));
+                if (tx_info.received_by_us.has_value()) {
+                    UniValue r(UniValue::VOBJ);
+                    r.pushKV("address", tx_info.received_by_us->from.ToStringAddrPort());
+                    r.pushKV("time", TicksSinceEpoch<std::chrono::seconds>(tx_info.received_by_us->when));
+                    o.pushKV("received_by_us", std::move(r));
+                }
                 transactions.push_back(std::move(o));
             }
 
