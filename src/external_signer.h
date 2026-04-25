@@ -11,7 +11,7 @@
 #include <string>
 #include <vector>
 
-struct PartiallySignedTransaction;
+class PartiallySignedTransaction;
 
 //! Enables interaction with an external signing device or service, such as
 //! a hardware wallet. See doc/external-signer.md

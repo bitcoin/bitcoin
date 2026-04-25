@@ -124,6 +124,19 @@ template <typename T>
     return obj;
 }
 
+template <typename T>
+[[nodiscard]] inline std::optional<T> ConsumeDeserializableConstructor(FuzzedDataProvider& fuzzed_data_provider, const std::optional<size_t>& max_length = std::nullopt) noexcept
+{
+    const std::vector<uint8_t> buffer = ConsumeRandomLengthByteVector(fuzzed_data_provider, max_length);
+    SpanReader ds{buffer};
+    try {
+        T obj(deserialize, ds);
+        return obj;
+    } catch (const std::ios_base::failure&) {
+        return std::nullopt;
+    }
+}
+
 template <typename WeakEnumType, size_t size>
 [[nodiscard]] WeakEnumType ConsumeWeakEnum(FuzzedDataProvider& fuzzed_data_provider, const WeakEnumType (&all_types)[size]) noexcept
 {

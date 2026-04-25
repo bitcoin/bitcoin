@@ -178,13 +178,17 @@ FUZZ_TARGET(scriptpubkeyman, .init = initialize_spkm)
                 (void)spk_manager->SignTransaction(tx_to, coins, sighash, input_errors);
             },
             [&] {
-                std::optional<PartiallySignedTransaction> opt_psbt{ConsumeDeserializable<PartiallySignedTransaction>(fuzzed_data_provider)};
+                std::optional<PartiallySignedTransaction> opt_psbt{ConsumeDeserializableConstructor<PartiallySignedTransaction>(fuzzed_data_provider)};
                 if (!opt_psbt) {
                     good_data = false;
                     return;
                 }
                 auto psbt{*opt_psbt};
-                const PrecomputedTransactionData txdata{PrecomputePSBTData(psbt)};
+                std::optional<PrecomputedTransactionData> txdata_res = PrecomputePSBTData(psbt);
+                if (!txdata_res) {
+                    return;
+                }
+                const PrecomputedTransactionData& txdata = *txdata_res;
                 std::optional<int> sighash_type{fuzzed_data_provider.ConsumeIntegralInRange<int>(0, 151)};
                 if (sighash_type == 151) sighash_type = std::nullopt;
                 auto sign  = fuzzed_data_provider.ConsumeBool();
