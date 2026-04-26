@@ -333,7 +333,17 @@ public:
     void removeForReorg(CChain& chain, std::function<bool(txiter)> filter_final_and_mature) EXCLUSIVE_LOCKS_REQUIRED(cs, cs_main);
     void removeForBlock(const std::vector<CTransactionRef>& vtx, unsigned int nBlockHeight) EXCLUSIVE_LOCKS_REQUIRED(cs);
 
-    bool CompareMiningScoreWithTopology(const Wtxid& hasha, const Wtxid& hashb) const;
+    /** Look up wtxids in the mempool and (partially) sort by mining score.
+     *
+     * Wtxids not found in the mempool are silently dropped. The returned
+     * vector is arranged so that the best @p n entries (by CompareMainOrder)
+     * appear at the end, in sorted order from lowest to highest priority.
+     * Entries before that suffix are in unspecified order.
+     *
+     * Note that the returned `txiter` values may become invalidated once
+     * mempool.cs is released.
+     */
+    std::vector<txiter> SortMiningScoreWithTopology(std::span<const Wtxid> wtxids, size_t n) const EXCLUSIVE_LOCKS_REQUIRED(cs);
     bool isSpent(const COutPoint& outpoint) const;
     unsigned int GetTransactionsUpdated() const;
     void AddTransactionsUpdated(unsigned int n);
