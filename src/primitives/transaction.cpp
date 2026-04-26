@@ -12,10 +12,10 @@
 #include <script/script.h>
 #include <serialize.h>
 #include <tinyformat.h>
-#include <uint256.h>
 
 #include <algorithm>
 #include <cassert>
+#include <span>
 #include <stdexcept>
 
 std::string COutPoint::ToString() const
@@ -107,7 +107,7 @@ CAmount CTransaction::GetValueOut() const
     return nValueOut;
 }
 
-unsigned int CTransaction::GetTotalSize() const
+unsigned int CTransaction::ComputeTotalSize() const
 {
     return ::GetSerializeSize(TX_WITH_WITNESS(*this));
 }

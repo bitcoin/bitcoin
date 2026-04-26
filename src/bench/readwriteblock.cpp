@@ -21,9 +21,8 @@
 
 static CBlock CreateTestBlock()
 {
-    DataStream stream{benchmark::data::block413567};
     CBlock block;
-    stream >> TX_WITH_WITNESS(block);
+    SpanReader{benchmark::data::block413567} >> TX_WITH_WITNESS(block);
     return block;
 }
 
@@ -63,6 +62,6 @@ static void ReadRawBlockBench(benchmark::Bench& bench)
     });
 }
 
-BENCHMARK(WriteBlockBench, benchmark::PriorityLevel::HIGH);
-BENCHMARK(ReadBlockBench, benchmark::PriorityLevel::HIGH);
-BENCHMARK(ReadRawBlockBench, benchmark::PriorityLevel::HIGH);
+BENCHMARK(WriteBlockBench);
+BENCHMARK(ReadBlockBench);
+BENCHMARK(ReadRawBlockBench);

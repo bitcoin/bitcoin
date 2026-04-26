@@ -3,12 +3,14 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include <stdexcept>
-
 #include <flatfile.h>
-#include <logging.h>
+
 #include <tinyformat.h>
 #include <util/fs_helpers.h>
+#include <util/log.h>
+#include <util/overflow.h>
+
+#include <stdexcept>
 
 FlatFileSeq::FlatFileSeq(fs::path dir, const char* prefix, size_t chunk_size) :
     m_dir(std::move(dir)),
@@ -58,8 +60,8 @@ size_t FlatFileSeq::Allocate(const FlatFilePos& pos, size_t add_size, bool& out_
 {
     out_of_space = false;
 
-    unsigned int n_old_chunks = (pos.nPos + m_chunk_size - 1) / m_chunk_size;
-    unsigned int n_new_chunks = (pos.nPos + add_size + m_chunk_size - 1) / m_chunk_size;
+    unsigned int n_old_chunks = CeilDiv(pos.nPos, m_chunk_size);
+    unsigned int n_new_chunks = CeilDiv(pos.nPos + add_size, m_chunk_size);
     if (n_new_chunks > n_old_chunks) {
         size_t old_size = pos.nPos;
         size_t new_size = n_new_chunks * m_chunk_size;

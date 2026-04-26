@@ -6,11 +6,6 @@
 import sys
 import re
 
-MAPPING = {
-    'core_read.cpp': 'core_io.cpp',
-    'core_write.cpp': 'core_io.cpp',
-}
-
 # Directories with header-based modules, where the assumption that .cpp files
 # define functions and variables declared in corresponding .h files is
 # incorrect.
@@ -19,8 +14,6 @@ HEADER_MODULE_PATHS = [
 ]
 
 def module_name(path):
-    if path in MAPPING:
-        path = MAPPING[path]
     if any(path.startswith(dirpath) for dirpath in HEADER_MODULE_PATHS):
         return path
     if path.endswith(".h"):

@@ -6,6 +6,7 @@
 #define BITCOIN_WALLET_SCRIPTPUBKEYMAN_H
 
 #include <addresstype.h>
+#include <btcsignals.h>
 #include <common/messages.h>
 #include <common/signmessage.h>
 #include <common/types.h>
@@ -22,8 +23,6 @@
 #include <wallet/types.h>
 #include <wallet/walletdb.h>
 #include <wallet/walletutil.h>
-
-#include <boost/signals2/signal.hpp>
 
 #include <functional>
 #include <optional>
@@ -120,9 +119,6 @@ public:
     virtual bool HavePrivateKeys() const { return false; }
     virtual bool HaveCryptedKeys() const { return false; }
 
-    //! The action to do when the DB needs rewrite
-    virtual void RewriteDB() {}
-
     virtual unsigned int GetKeyPoolSize() const { return 0; }
 
     virtual int64_t GetTimeFirstKey() const { return 0; }
@@ -156,10 +152,10 @@ public:
     };
 
     /** Keypool has new keys */
-    boost::signals2::signal<void ()> NotifyCanGetAddressesChanged;
+    btcsignals::signal<void ()> NotifyCanGetAddressesChanged;
 
     /** Birth time changed */
-    boost::signals2::signal<void (const ScriptPubKeyMan* spkm, int64_t new_birth_time)> NotifyFirstKeyTimeChanged;
+    btcsignals::signal<void (const ScriptPubKeyMan* spkm, int64_t new_birth_time)> NotifyFirstKeyTimeChanged;
 };
 
 /** OutputTypes supported by the LegacyScriptPubKeyMan */
@@ -337,13 +333,13 @@ public:
 
     mutable RecursiveMutex cs_desc_man;
 
-    util::Result<CTxDestination> GetNewDestination(const OutputType type) override;
+    util::Result<CTxDestination> GetNewDestination(OutputType type) override;
     bool IsMine(const CScript& script) const override;
 
     bool CheckDecryptionKey(const CKeyingMaterial& master_key) override;
     bool Encrypt(const CKeyingMaterial& master_key, WalletBatch* batch) override;
 
-    util::Result<CTxDestination> GetReservedDestination(const OutputType type, bool internal, int64_t& index) override;
+    util::Result<CTxDestination> GetReservedDestination(OutputType type, bool internal, int64_t& index) override;
     void ReturnDestination(int64_t index, bool internal, const CTxDestination& addr) override;
 
     // Tops up the descriptor cache and m_map_script_pub_keys. The cache is stored in the wallet file
@@ -402,7 +398,7 @@ public:
     std::unordered_set<CScript, SaltedSipHasher> GetScriptPubKeys(int32_t minimum_index) const;
     int32_t GetEndRange() const;
 
-    [[nodiscard]] bool GetDescriptorString(std::string& out, const bool priv) const;
+    [[nodiscard]] bool GetDescriptorString(std::string& out, bool priv) const;
 
     void UpgradeDescriptorCache();
 };

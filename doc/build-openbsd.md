@@ -1,6 +1,6 @@
 # OpenBSD Build Guide
 
-**Updated for OpenBSD [7.6](https://www.openbsd.org/76.html)**
+**Updated for OpenBSD [7.8](https://www.openbsd.org/78.html)**
 
 This guide describes how to build bitcoind, command-line utilities, and GUI on OpenBSD.
 
@@ -21,8 +21,11 @@ pkg_add sqlite3
 
 To build Bitcoin Core without the wallet, use `-DENABLE_WALLET=OFF`.
 
-Cap'n Proto is needed for IPC functionality (see [multiprocess.md](multiprocess.md))
-and can be built from source: https://capnproto.org/install.html
+Cap'n Proto is needed for IPC functionality (see [multiprocess.md](multiprocess.md)):
+
+```bash
+pkg_add capnproto
+```
 
 Compile with `-DENABLE_IPC=OFF` if you do not need IPC functionality.
 

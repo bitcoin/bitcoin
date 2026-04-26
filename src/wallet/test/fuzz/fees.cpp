@@ -6,6 +6,7 @@
 #include <test/fuzz/fuzz.h>
 #include <test/fuzz/util.h>
 #include <test/util/setup_common.h>
+#include <test/util/time.h>
 #include <test/util/txmempool.h>
 #include <validation.h>
 #include <wallet/coincontrol.h>
@@ -62,7 +63,7 @@ FUZZ_TARGET(wallet_fees, .init = initialize_setup)
 {
     SeedRandomStateForTest(SeedRand::ZEROS);
     FuzzedDataProvider fuzzed_data_provider{buffer.data(), buffer.size()};
-    SetMockTime(ConsumeTime(fuzzed_data_provider));
+    NodeClockContext clock_ctx{ConsumeTime(fuzzed_data_provider)};
     auto& node{g_setup->m_node};
     Chainstate* chainstate = &node.chainman->ActiveChainstate();
 
@@ -98,7 +99,6 @@ FUZZ_TARGET(wallet_fees, .init = initialize_setup)
 
     const auto tx_bytes{fuzzed_data_provider.ConsumeIntegralInRange(0, std::numeric_limits<int32_t>::max())};
     if (fuzzed_data_provider.ConsumeBool()) {
-        wallet.m_pay_tx_fee = CFeeRate{ConsumeMoney(fuzzed_data_provider, /*max=*/COIN)};
         wallet.m_min_fee = CFeeRate{ConsumeMoney(fuzzed_data_provider, /*max=*/COIN)};
     }
 

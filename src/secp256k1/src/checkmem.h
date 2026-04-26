@@ -78,10 +78,15 @@
 #  if defined(__clang__) && defined(__APPLE__)
 #    pragma clang diagnostic push
 #    pragma clang diagnostic ignored "-Wreserved-identifier"
+#  elif defined(__GNUC__) && (__GNUC__ >= 15)
+#    pragma GCC diagnostic push
+#    pragma GCC diagnostic ignored "-Wtrailing-whitespace"
 #  endif
 #    include <valgrind/memcheck.h>
 #  if defined(__clang__) && defined(__APPLE__)
 #    pragma clang diagnostic pop
+#  elif defined(__GNUC__) && (__GNUC__ >= 15)
+#    pragma GCC diagnostic pop
 #  endif
 #    define SECP256K1_CHECKMEM_ENABLED 1
 #    define SECP256K1_CHECKMEM_UNDEFINE(p, len) VALGRIND_MAKE_MEM_UNDEFINED((p), (len))

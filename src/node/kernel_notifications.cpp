@@ -53,7 +53,7 @@ kernel::InterruptResult KernelNotifications::blockTip(SynchronizationState state
     {
         LOCK(m_tip_block_mutex);
         Assume(index.GetBlockHash() != uint256::ZERO);
-        m_tip_block = index.GetBlockHash();
+        m_state.tip_block = index.GetBlockHash();
         m_tip_block_cv.notify_all();
     }
 
@@ -103,7 +103,7 @@ void KernelNotifications::fatalError(const bilingual_str& message)
 std::optional<uint256> KernelNotifications::TipBlock()
 {
     AssertLockHeld(m_tip_block_mutex);
-    return m_tip_block;
+    return m_state.tip_block;
 };
 
 

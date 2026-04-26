@@ -111,11 +111,11 @@ class GetBlocksActivityTest(BitcoinTestFramework):
         [a1] = [a for a in result['activity'] if a['output_spk']['address'] == addr_1]
         [a2] = [a for a in result['activity'] if a['output_spk']['address'] == addr_2]
 
-        assert a1['blockhash'] == blockhash
-        assert a1['amount'] == 1.0
+        assert_equal(a1['blockhash'], blockhash)
+        assert_equal(a1['amount'], 1.0)
 
-        assert a2['blockhash'] == blockhash
-        assert a2['amount'] == 2.0
+        assert_equal(a2['blockhash'], blockhash)
+        assert_equal(a2['amount'], 2.0)
 
     def test_invalid_blockhash(self, node, wallet):
         self.log.info("Test that passing an invalid blockhash raises appropriate RPC error")
@@ -159,14 +159,14 @@ class GetBlocksActivityTest(BitcoinTestFramework):
         assert_equal(len(activity), 2)
 
         [confirmed] = [a for a in activity if a.get('blockhash') == blockhash]
-        assert confirmed['txid'] == txid_1
-        assert confirmed['height'] == node.getblockchaininfo()['blocks']
+        assert_equal(confirmed['txid'], txid_1)
+        assert_equal(confirmed['height'], node.getblockchaininfo()['blocks'])
 
         [unconfirmed] = [a for a in activity if not a.get('blockhash')]
         assert 'blockhash' not in unconfirmed
         assert 'height' not in unconfirmed
 
-        assert any(a['txid'] == txid_2 for a in activity if not a.get('blockhash'))
+        assert txid_2 in [a['txid'] for a in activity if not a.get('blockhash')]
 
     def test_receive_then_spend(self, node, wallet):
         """Also important because this tests multiple blockhashes."""
@@ -185,15 +185,15 @@ class GetBlocksActivityTest(BitcoinTestFramework):
 
         assert_equal(len(result['activity']), 4)
 
-        assert result['activity'][1]['type'] == 'receive'
-        assert result['activity'][1]['txid'] == sent1['txid']
-        assert result['activity'][1]['blockhash'] == blockhash_1
+        assert_equal(result['activity'][1]['type'], 'receive')
+        assert_equal(result['activity'][1]['txid'], sent1['txid'])
+        assert_equal(result['activity'][1]['blockhash'], blockhash_1)
 
-        assert result['activity'][2]['type'] == 'spend'
-        assert result['activity'][2]['spend_txid'] == sent2['txid']
-        assert result['activity'][2]['spend_vin'] == 0
-        assert result['activity'][2]['prevout_txid'] == sent1['txid']
-        assert result['activity'][2]['blockhash'] == blockhash_2
+        assert_equal(result['activity'][2]['type'], 'spend')
+        assert_equal(result['activity'][2]['spend_txid'], sent2['txid'])
+        assert_equal(result['activity'][2]['spend_vin'], 0)
+        assert_equal(result['activity'][2]['prevout_txid'], sent1['txid'])
+        assert_equal(result['activity'][2]['blockhash'], blockhash_2)
 
         # Test that reversing the blockorder yields the same result.
         assert_equal(result, node.getdescriptoractivity(
@@ -221,17 +221,17 @@ class GetBlocksActivityTest(BitcoinTestFramework):
         a1 = result['activity'][0]
         a2 = result['activity'][1]
 
-        assert a1['type'] == "spend"
-        assert a1['blockhash'] == blockhash
+        assert_equal(a1['type'], "spend")
+        assert_equal(a1['blockhash'], blockhash)
         # sPK lacks address.
         assert_equal(list(a1['prevout_spk'].keys()), ['asm', 'desc', 'hex', 'type'])
-        assert a1['amount'] == no_addr_tx["fee"] + Decimal(no_addr_tx["tx"].vout[0].nValue) / COIN
+        assert_equal(a1['amount'], no_addr_tx["fee"] + Decimal(no_addr_tx["tx"].vout[0].nValue) / COIN)
 
-        assert a2['type'] == "receive"
-        assert a2['blockhash'] == blockhash
+        assert_equal(a2['type'], "receive")
+        assert_equal(a2['blockhash'], blockhash)
         # sPK lacks address.
         assert_equal(list(a2['output_spk'].keys()), ['asm', 'desc', 'hex', 'type'])
-        assert a2['amount'] == Decimal(no_addr_tx["tx"].vout[0].nValue) / COIN
+        assert_equal(a2['amount'], Decimal(no_addr_tx["tx"].vout[0].nValue) / COIN)
 
     def test_required_args(self, node):
         self.log.info("Test that required arguments must be passed")

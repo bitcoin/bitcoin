@@ -25,6 +25,8 @@ from test_framework.wallet import MiniWallet
 
 MAX_FILE_AGE = 60
 SECONDS_PER_HOUR = 60 * 60
+MIN_BUCKET_FEERATE = Decimal(100) / Decimal(COIN)
+TXS_COUNT = 24
 
 def small_txpuzzle_randfee(
     wallet, from_node, conflist, unconflist, amount, min_fee, fee_increment, batch_reqs
@@ -163,8 +165,18 @@ class EstimateFeeTest(BitcoinTestFramework):
         # Node2 is a stingy miner, that
         # produces too small blocks (room for only 55 or so transactions)
 
+    def update_utxo(self, mined):
+        # update which txouts are confirmed
+            newmem = []
+            for utx in self.memutxo:
+                if utx["txid"] in mined:
+                    self.confutxo.append(utx)
+                else:
+                    newmem.append(utx)
+            self.memutxo = newmem
+
     def transact_and_mine(self, numblocks, mining_node):
-        min_fee = Decimal("0.00001")
+        min_fee = MIN_BUCKET_FEERATE
         # We will now mine numblocks blocks generating on average 100 transactions between each block
         # We shuffle our confirmed txout set before each set of transactions
         # small_txpuzzle_randfee will use the transactions that have inputs already in the chain when possible
@@ -190,14 +202,7 @@ class EstimateFeeTest(BitcoinTestFramework):
                 node.batch(batch_sendtx_reqs)
             self.sync_mempools(wait=0.1)
             mined = mining_node.getblock(self.generate(mining_node, 1)[0], True)["tx"]
-            # update which txouts are confirmed
-            newmem = []
-            for utx in self.memutxo:
-                if utx["txid"] in mined:
-                    self.confutxo.append(utx)
-                else:
-                    newmem.append(utx)
-            self.memutxo = newmem
+            self.update_utxo(mined)
 
     def initial_split(self, node):
         """Split two coinbase UTxOs into many small coins"""
@@ -244,7 +249,7 @@ class EstimateFeeTest(BitcoinTestFramework):
         check_smart_estimates(self.nodes[1], self.fees_per_kb)
         self.restart_node(1)
 
-    def sanity_check_rbf_estimates(self, utxos):
+    def sanity_check_rbf_estimates(self):
         """During 5 blocks, broadcast low fee transactions. Only 10% of them get
         confirmed and the remaining ones get RBF'd with a high fee transaction at
         the next block.
@@ -261,19 +266,20 @@ class EstimateFeeTest(BitcoinTestFramework):
         utxos_to_respend = []
         txids_to_replace = []
 
-        assert_greater_than_or_equal(len(utxos), 250)
+        assert_greater_than_or_equal(len(self.confutxo), 250)
         for _ in range(5):
             # Broadcast 45 low fee transactions that will need to be RBF'd
             txs = []
             for _ in range(45):
-                u = utxos.pop(0)
+                u = self.confutxo.pop(0)
                 tx = make_tx(self.wallet, u, low_feerate)
                 utxos_to_respend.append(u)
                 txids_to_replace.append(tx["txid"])
                 txs.append(tx)
             # Broadcast 5 low fee transaction which don't need to
             for _ in range(5):
-                tx = make_tx(self.wallet, utxos.pop(0), low_feerate)
+                tx = make_tx(self.wallet, self.confutxo.pop(0), low_feerate)
+                self.memutxo.append(tx["new_utxo"])
                 txs.append(tx)
             batch_send_tx = [node.sendrawtransaction.get_request(tx["hex"]) for tx in txs]
             for n in self.nodes:
@@ -282,11 +288,13 @@ class EstimateFeeTest(BitcoinTestFramework):
             self.sync_mempools(wait=0.1, nodes=[node, miner])
             for txid in txids_to_replace:
                 miner.prioritisetransaction(txid=txid, fee_delta=-COIN)
-            self.generate(miner, 1)
+            mined = miner.getblock(self.generate(miner, 1)[0], True)["tx"]
+            self.update_utxo(mined)
             # RBF the low-fee transactions
             while len(utxos_to_respend) > 0:
                 u = utxos_to_respend.pop(0)
                 tx = make_tx(self.wallet, u, high_feerate)
+                self.memutxo.append(tx["new_utxo"])
                 node.sendrawtransaction(tx["hex"])
                 txs.append(tx)
             dec_txs = [res["result"] for res in node.batch([node.decoderawtransaction.get_request(tx["hex"]) for tx in txs])]
@@ -295,7 +303,8 @@ class EstimateFeeTest(BitcoinTestFramework):
 
         # Mine the last replacement txs
         self.sync_mempools(wait=0.1, nodes=[node, miner])
-        self.generate(miner, 1)
+        mined = miner.getblock(self.generate(miner, 1)[0], True)["tx"]
+        self.update_utxo(mined)
 
         # Only 10% of the transactions were really confirmed with a low feerate,
         # the rest needed to be RBF'd. We must return the 90% conf rate feerate.
@@ -332,7 +341,8 @@ class EstimateFeeTest(BitcoinTestFramework):
 
         # Verify if the string "Flushed fee estimates to fee_estimates.dat." is present in the debug log file.
         # If present, it indicates that fee estimates have been successfully flushed to disk.
-        with self.nodes[0].assert_debug_log(expected_msgs=["Flushed fee estimates to fee_estimates.dat."], timeout=1):
+        expected_messages = [f"Flushed fee estimates to {fee_dat}."]
+        with self.nodes[0].assert_debug_log(expected_msgs=expected_messages, timeout=1):
             # Mock the scheduler for an hour to flush fee estimates to fee_estimates.dat
             self.nodes[0].mockscheduler(SECONDS_PER_HOUR)
 
@@ -342,7 +352,7 @@ class EstimateFeeTest(BitcoinTestFramework):
         # Verify that the estimates remain the same if there are no blocks in the flush interval
         block_hash_before = self.nodes[0].getbestblockhash()
         fee_dat_initial_content = open(fee_dat, "rb").read()
-        with self.nodes[0].assert_debug_log(expected_msgs=["Flushed fee estimates to fee_estimates.dat."], timeout=1):
+        with self.nodes[0].assert_debug_log(expected_msgs=expected_messages, timeout=1):
             # Mock the scheduler for an hour to flush fee estimates to fee_estimates.dat
             self.nodes[0].mockscheduler(SECONDS_PER_HOUR)
 
@@ -358,7 +368,7 @@ class EstimateFeeTest(BitcoinTestFramework):
         assert_equal(fee_dat_current_content, fee_dat_initial_content)
 
         # Verify that the estimates are not the same if new blocks were produced in the flush interval
-        with self.nodes[0].assert_debug_log(expected_msgs=["Flushed fee estimates to fee_estimates.dat."], timeout=1):
+        with self.nodes[0].assert_debug_log(expected_msgs=expected_messages, timeout=1):
             # Mock the scheduler for an hour to flush fee estimates to fee_estimates.dat
             self.generate(self.nodes[0], 5, sync_fun=self.no_op)
             self.nodes[0].mockscheduler(SECONDS_PER_HOUR)
@@ -402,29 +412,39 @@ class EstimateFeeTest(BitcoinTestFramework):
         self.sync_blocks()
         assert_equal(self.nodes[0].estimatesmartfee(1)["errors"], ["Insufficient data or no feerate found"])
 
-    def broadcast_and_mine(self, broadcaster, miner, feerate, count):
-        """Broadcast and mine some number of transactions with a specified fee rate."""
+    def broadcast_many(self, broadcaster, feerate, count, miner=None):
+        """Broadcast and maybe mine some number of transactions with a specified fee rate."""
         for _ in range(count):
-            self.wallet.send_self_transfer(from_node=broadcaster, fee_rate=feerate)
-        self.sync_mempools()
-        self.generate(miner, 1)
+            tx = self.wallet.send_self_transfer(from_node=broadcaster, fee_rate=feerate, confirmed_only=True, utxo_to_spend=self.confutxo.pop(0))
+            self.memutxo.append(tx["new_utxo"])
+        self.sync_mempools(wait=0.1, nodes=[self.nodes[0], self.nodes[1], self.nodes[2]])
+        if miner:
+            mined = miner.getblock(self.generate(miner, 1)[0], True)["tx"]
+            self.update_utxo(mined)
 
     def test_estimation_modes(self):
         low_feerate = Decimal("0.001")
         high_feerate = Decimal("0.005")
-        tx_count = 24
         # Broadcast and mine high fee transactions for the first 12 blocks.
         for _ in range(12):
-            self.broadcast_and_mine(self.nodes[1], self.nodes[2], high_feerate, tx_count)
+            self.broadcast_many(self.nodes[1], high_feerate, TXS_COUNT, self.nodes[2])
         check_fee_estimates_btw_modes(self.nodes[0], high_feerate, high_feerate)
 
         # We now track 12 blocks; short horizon stats will start decaying.
         # Broadcast and mine low fee transactions for the next 4 blocks.
         for _ in range(4):
-            self.broadcast_and_mine(self.nodes[1], self.nodes[2], low_feerate, tx_count)
+            self.broadcast_many(self.nodes[1], low_feerate, TXS_COUNT, self.nodes[2])
         # conservative mode will consider longer time horizons while economical mode does not
         # Check the fee estimates for both modes after mining low fee transactions.
         check_fee_estimates_btw_modes(self.nodes[0], high_feerate, low_feerate)
+
+    def test_sub_1s_per_vb_estimates(self):
+        feerate_0_5_s_per_vb = MIN_BUCKET_FEERATE * 5
+        feerate_1_s_per_vb = Decimal(1000) / Decimal(COIN)
+        for i in range(6):
+            self.broadcast_many(self.nodes[1], feerate_0_5_s_per_vb, TXS_COUNT)
+            self.broadcast_many(self.nodes[1], feerate_1_s_per_vb, TXS_COUNT, self.nodes[2])
+        assert_equal(feerate_0_5_s_per_vb, self.nodes[0].estimatesmartfee(1)["feerate"])
 
 
     def run_test(self):
@@ -467,11 +487,15 @@ class EstimateFeeTest(BitcoinTestFramework):
         self.clear_estimates()
 
         self.log.info("Testing estimates with RBF.")
-        self.sanity_check_rbf_estimates(self.confutxo + self.memutxo)
+        self.sanity_check_rbf_estimates()
 
         self.clear_estimates()
         self.log.info("Test estimatesmartfee modes")
         self.test_estimation_modes()
+
+        self.clear_estimates()
+        self.log.info("Test that estimatesmartfee returns a sub 1s/vb fee rate estimate")
+        self.test_sub_1s_per_vb_estimates()
 
         self.log.info("Testing that fee estimation is disabled in blocksonly.")
         self.restart_node(0, ["-blocksonly"])

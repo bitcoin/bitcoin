@@ -11,28 +11,28 @@ runs:
         echo "previous releases direct cache hit to primary key: ${{ env.previous-releases-cache-hit }}"
 
     - name: Save Ccache cache
-      uses: cirruslabs/cache/save@v4
+      uses: cirruslabs/cache/save@v5
       if: ${{ (github.event_name == 'push') && (github.ref_name == github.event.repository.default_branch) }}
       with:
         path: ${{ env.CCACHE_DIR }}
         key: ccache-${{ env.CONTAINER_NAME }}-${{ github.run_id }}
 
     - name: Save depends sources cache
-      uses: cirruslabs/cache/save@v4
+      uses: cirruslabs/cache/save@v5
       if: ${{ (github.event_name == 'push') && (github.ref_name == github.event.repository.default_branch) && (env.depends-sources-cache-hit != 'true') }}
       with:
         path: ${{ env.SOURCES_PATH }}
         key: depends-sources-${{ env.CONTAINER_NAME }}-${{ env.DEPENDS_HASH }}
 
     - name: Save built depends cache
-      uses: cirruslabs/cache/save@v4
+      uses: cirruslabs/cache/save@v5
       if: ${{ (github.event_name == 'push') && (github.ref_name == github.event.repository.default_branch) && (env.depends-built-cache-hit != 'true' )}}
       with:
         path: ${{ env.BASE_CACHE }}
         key: depends-built-${{ env.CONTAINER_NAME }}-${{ env.DEPENDS_HASH }}
 
     - name: Save previous releases cache
-      uses: cirruslabs/cache/save@v4
+      uses: cirruslabs/cache/save@v5
       if: ${{ (github.event_name == 'push') && (github.ref_name == github.event.repository.default_branch) && (env.previous-releases-cache-hit != 'true' )}}
       with:
         path: ${{ env.PREVIOUS_RELEASES_DIR }}

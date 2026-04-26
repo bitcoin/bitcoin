@@ -690,9 +690,23 @@ The migration process will create a backup of the wallet before migrating. This 
     </context>
 <context>
     <name>PSBTOperationsDialog</name>
+    <message numerus="yes">
+        <source>Signed %n input(s), but more signatures are still required.</source>
+        <translation type="unfinished">
+            <numerusform />
+            <numerusform />
+        </translation>
+    </message>
     <message>
         <source>Sends %1 to %2</source>
         <translation type="unfinished">%1 ወደ %2 ይልካል</translation>
+    </message>
+    <message numerus="yes">
+        <source>Transaction has %n unsigned input(s).</source>
+        <translation type="unfinished">
+            <numerusform />
+            <numerusform />
+        </translation>
     </message>
     </context>
 <context>

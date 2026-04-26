@@ -46,4 +46,4 @@ static void BIP324_ECDH(benchmark::Bench& bench)
     });
 }
 
-BENCHMARK(BIP324_ECDH, benchmark::PriorityLevel::HIGH);
+BENCHMARK(BIP324_ECDH);

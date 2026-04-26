@@ -7,6 +7,7 @@ import argparse
 import hashlib
 import logging
 import os
+from pathlib import Path
 import subprocess
 import sys
 import time
@@ -80,20 +81,14 @@ def main():
     args = parser.parse_args()
 
     # get directory of this program and read data files
-    dirname = os.path.dirname(os.path.abspath(__file__))
-    print("Using verify-commits data from " + dirname)
-    with open(dirname + "/trusted-git-root", "r") as f:
-        verified_root = f.read().splitlines()[0]
-    with open(dirname + "/trusted-sha512-root-commit", "r") as f:
-        verified_sha512_root = f.read().splitlines()[0]
-    with open(dirname + "/allow-revsig-commits", "r") as f:
-        revsig_allowed = f.read().splitlines()
-    with open(dirname + "/allow-unclean-merge-commits", "r") as f:
-        unclean_merge_allowed = f.read().splitlines()
-    with open(dirname + "/allow-incorrect-sha512-commits", "r") as f:
-        incorrect_sha512_allowed = f.read().splitlines()
-    with open(dirname + "/trusted-keys", "r") as f:
-        trusted_keys = f.read().splitlines()
+    dirname = Path(__file__).absolute().parent
+    print(f"Using verify-commits data from {dirname}")
+    verified_root = (dirname / "trusted-git-root").read_text().splitlines()[0]
+    verified_sha512_root = (dirname / "trusted-sha512-root-commit").read_text().splitlines()[0]
+    revsig_allowed = (dirname / "allow-revsig-commits").read_text().splitlines()
+    unclean_merge_allowed = (dirname / "allow-unclean-merge-commits").read_text().splitlines()
+    incorrect_sha512_allowed = (dirname / "allow-incorrect-sha512-commits").read_text().splitlines()
+    trusted_keys = (dirname / "trusted-keys").read_text().splitlines()
 
     # Set commit and variables
     current_commit = args.commit

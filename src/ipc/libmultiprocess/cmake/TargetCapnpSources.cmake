@@ -55,7 +55,7 @@ Example:
 function(target_capnp_sources target include_prefix)
   cmake_parse_arguments(PARSE_ARGV 2
     "TCS"           # prefix
-    ""              # options
+    "ONLY_CAPNP"    # options
     ""              # one_value_keywords
     "IMPORT_PATHS"  # multi_value_keywords
   )
@@ -85,11 +85,14 @@ function(target_capnp_sources target include_prefix)
     set_source_files_properties(${capnp_file}.c++ PROPERTIES SKIP_LINTING TRUE) # Ignored before cmake 3.27
     target_sources(${target} PRIVATE
       ${CMAKE_CURRENT_BINARY_DIR}/${capnp_file}.c++
-      ${CMAKE_CURRENT_BINARY_DIR}/${capnp_file}.proxy-client.c++
-      ${CMAKE_CURRENT_BINARY_DIR}/${capnp_file}.proxy-server.c++
-      ${CMAKE_CURRENT_BINARY_DIR}/${capnp_file}.proxy-types.c++
     )
-
+    if(NOT TCS_ONLY_CAPNP)
+      target_sources(${target} PRIVATE
+        ${CMAKE_CURRENT_BINARY_DIR}/${capnp_file}.proxy-client.c++
+        ${CMAKE_CURRENT_BINARY_DIR}/${capnp_file}.proxy-server.c++
+        ${CMAKE_CURRENT_BINARY_DIR}/${capnp_file}.proxy-types.c++
+      )
+    endif()
     list(APPEND generated_headers ${capnp_file}.h)
   endforeach()
 
@@ -111,5 +114,7 @@ function(target_capnp_sources target include_prefix)
   # dependencies explicitly because while cmake detect dependencies of non
   # generated files on generated headers, it does not reliably detect
   # dependencies of generated headers on other generated headers.
-  add_custom_target("${target}_headers" DEPENDS ${generated_headers})
+  if(NOT TARGET "${target}_headers")
+    add_custom_target("${target}_headers" DEPENDS ${generated_headers})
+  endif()
 endfunction()

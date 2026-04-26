@@ -10,6 +10,7 @@ import argparse
 from datetime import datetime, timezone
 import logging
 import os
+from pathlib import Path
 import platform
 import pdb
 import random
@@ -148,7 +149,9 @@ class BitcoinTestFramework(metaclass=BitcoinTestMetaClass):
             self.log.exception(f"Called Process failed with stdout='{e.stdout}'; stderr='{e.stderr}';")
             self.success = TestStatus.FAILED
         except BaseException:
-            self.log.exception("Unexpected exception")
+            # The `exception` log will add the exception info to the message.
+            # https://docs.python.org/3/library/logging.html#logging.exception
+            self.log.exception("Unexpected exception:")
             self.success = TestStatus.FAILED
         finally:
             exit_code = self.shutdown()
@@ -177,7 +180,7 @@ class BitcoinTestFramework(metaclass=BitcoinTestMetaClass):
                             help="The seed to use for assigning port numbers (default: current process id)")
         parser.add_argument("--previous-releases", dest="prev_releases", action="store_true",
                             default=os.path.isdir(previous_releases_path) and bool(os.listdir(previous_releases_path)),
-                            help="Force test of previous releases (default: %(default)s)")
+                            help="Force test of previous releases (default: %(default)s). Previous releases binaries can be downloaded via `test/get_previous_releases.py`.")
         parser.add_argument("--coveragedir", dest="coveragedir",
                             help="Write tested RPC commands into this directory")
         parser.add_argument("--configfile", dest="configfile",
@@ -190,7 +193,7 @@ class BitcoinTestFramework(metaclass=BitcoinTestMetaClass):
         parser.add_argument("--perf", dest="perf", default=False, action="store_true",
                             help="profile running nodes with perf for the duration of the test")
         parser.add_argument("--valgrind", dest="valgrind", default=False, action="store_true",
-                            help="run nodes under the valgrind memory error detector: expect at least a ~10x slowdown. valgrind 3.14 or later required. Does not apply to previous release binaries.")
+                            help="Run binaries under the valgrind memory error detector: Expect at least a ~10x slowdown. Does not apply to previous release binaries.")
         parser.add_argument("--randomseed", type=int,
                             help="set a random seed for deterministically reproducing a previous test run")
         parser.add_argument("--timeout-factor", dest="timeout_factor", type=float, help="adjust test timeouts by a factor. Setting it to 0 disables all timeouts")
@@ -221,7 +224,7 @@ class BitcoinTestFramework(metaclass=BitcoinTestMetaClass):
         PortSeed.n = self.options.port_seed
 
     def get_binaries(self, bin_dir=None):
-        return Binaries(self.binary_paths, bin_dir)
+        return Binaries(self.binary_paths, bin_dir, use_valgrind=self.options.valgrind)
 
     def setup(self):
         """Call this method to start up the test framework object with options set."""
@@ -258,7 +261,7 @@ class BitcoinTestFramework(metaclass=BitcoinTestMetaClass):
         self.log.debug('Setting up network thread')
         self.network_thread = NetworkThread()
         self.network_thread.start()
-        self.wait_until(lambda: self.network_thread.network_event_loop.is_running())
+        self.wait_until(lambda: self.network_thread.network_event_loop is not None and self.network_thread.network_event_loop.is_running())
 
         if self.options.usecli:
             if not self.supports_cli:
@@ -278,7 +281,7 @@ class BitcoinTestFramework(metaclass=BitcoinTestMetaClass):
             pdb.set_trace()
 
         self.log.debug('Closing down network thread')
-        self.network_thread.close()
+        self.network_thread.close(timeout=self.options.timeout_factor * 10)
         if self.success == TestStatus.FAILED:
             self.log.info("Not stopping nodes as test failed. The dangling processes will be cleaned up later.")
         else:
@@ -329,7 +332,7 @@ class BitcoinTestFramework(metaclass=BitcoinTestMetaClass):
             h.flush()
             rpc_logger.removeHandler(h)
         if cleanup_tree_on_exit:
-            shutil.rmtree(self.options.tmpdir)
+            self.cleanup_folder(self.options.tmpdir)
 
         self.nodes.clear()
         return exit_code
@@ -456,18 +459,6 @@ class BitcoinTestFramework(metaclass=BitcoinTestMetaClass):
         bin_dirs = []
         for v in versions:
             bin_dir = bin_dir_from_version(v)
-
-            # Fail test if any of the needed release binaries is missing
-            for bin_path in (argv[0] for binaries in (self.get_binaries(bin_dir),)
-                                     for argv in (binaries.node_argv(), binaries.rpc_argv())):
-
-                if shutil.which(bin_path) is None:
-                    self.log.error(f"Binary not found: {bin_path}")
-                    if v is None:
-                        raise AssertionError("At least one binary is missing, did you compile?")
-                    raise AssertionError("At least one release binary is missing. "
-                                         "Previous releases binaries can be downloaded via `test/get_previous_releases.py`.")
-
             bin_dirs.append(bin_dir)
 
         extra_init = [{}] * num_nodes if self.extra_init is None else self.extra_init # type: ignore[var-annotated]
@@ -491,7 +482,6 @@ class BitcoinTestFramework(metaclass=BitcoinTestMetaClass):
                 extra_args=args,
                 use_cli=self.options.usecli,
                 start_perf=self.options.perf,
-                use_valgrind=self.options.valgrind,
                 v2transport=self.options.v2transport,
                 uses_wallet=self.uses_wallet,
             )
@@ -559,16 +549,20 @@ class BitcoinTestFramework(metaclass=BitcoinTestMetaClass):
     def wait_for_node_exit(self, i, timeout):
         self.nodes[i].process.wait(timeout)
 
-    def connect_nodes(self, a, b, *, peer_advertises_v2=None, wait_for_connect: bool = True):
-        """
-        Kwargs:
-            wait_for_connect: if True, block until the nodes are verified as connected. You might
-                want to disable this when using -stopatheight with one of the connected nodes,
-                since there will be a race between the actual connection and performing
-                the assertions before one node shuts down.
-        """
+    def connect_nodes(self, a, b, *, peer_advertises_v2=None):
         from_connection = self.nodes[a]
         to_connection = self.nodes[b]
+
+        # Use subversion as peer id. Test nodes have their node number appended to the user agent string
+        from_connection_subver = from_connection.getnetworkinfo()['subversion']
+        to_connection_subver = to_connection.getnetworkinfo()['subversion']
+
+        def find_conn(node, peer_subversion, inbound):
+            return next(filter(lambda peer: peer['subver'] == peer_subversion and peer['inbound'] == inbound, node.getpeerinfo()), None)
+
+        self.wait_until(lambda: not find_conn(from_connection, to_connection_subver, inbound=False))
+        self.wait_until(lambda: not find_conn(to_connection, from_connection_subver, inbound=True))
+
         ip_port = "127.0.0.1:" + str(p2p_port(b))
 
         if peer_advertises_v2 is None:
@@ -580,16 +574,6 @@ class BitcoinTestFramework(metaclass=BitcoinTestMetaClass):
             # skip the optional third argument if it matches the default, for
             # compatibility with older clients
             from_connection.addnode(ip_port, "onetry")
-
-        if not wait_for_connect:
-            return
-
-        # Use subversion as peer id. Test nodes have their node number appended to the user agent string
-        from_connection_subver = from_connection.getnetworkinfo()['subversion']
-        to_connection_subver = to_connection.getnetworkinfo()['subversion']
-
-        def find_conn(node, peer_subversion, inbound):
-            return next(filter(lambda peer: peer['subver'] == peer_subversion and peer['inbound'] == inbound, node.getpeerinfo()), None)
 
         self.wait_until(lambda: find_conn(from_connection, to_connection_subver, inbound=False) is not None)
         self.wait_until(lambda: find_conn(to_connection, from_connection_subver, inbound=True) is not None)
@@ -683,7 +667,8 @@ class BitcoinTestFramework(metaclass=BitcoinTestMetaClass):
         `[{"txid": txid, "vout": vout1}, {"txid": txid, "vout": vout2}, ...]`.
         The result can be used to specify inputs for RPCs like `createrawtransaction`,
         `createpsbt`, `lockunspent` etc."""
-        assert all(len(output.keys()) == 1 for output in outputs)
+        for output in outputs:
+            assert_equal(len(output.keys()), 1)
         send_res = node.send(outputs)
         assert send_res["complete"]
         utxos = []
@@ -943,6 +928,11 @@ class BitcoinTestFramework(metaclass=BitcoinTestMetaClass):
         if not self.is_bitcoin_chainstate_compiled():
             raise SkipTest("bitcoin-chainstate has not been compiled")
 
+    def skip_if_no_bitcoin_bench(self):
+        """Skip the running test if bench_bitcoin has not been compiled."""
+        if not self.is_bench_compiled():
+            raise SkipTest("bench_bitcoin has not been compiled")
+
     def skip_if_no_cli(self):
         """Skip the running test if bitcoin-cli has not been compiled."""
         if not self.is_cli_compiled():
@@ -962,8 +952,8 @@ class BitcoinTestFramework(metaclass=BitcoinTestMetaClass):
         """Checks whether previous releases are present and enabled."""
         if not os.path.isdir(self.options.previous_releases_path):
             if self.options.prev_releases:
-                raise AssertionError("Force test of previous releases but releases missing: {}".format(
-                    self.options.previous_releases_path))
+                raise AssertionError(f"Force test of previous releases but releases missing: {self.options.previous_releases_path}\n"
+                                     "Previous releases binaries can be downloaded via `test/get_previous_releases.py`.")
         return self.options.prev_releases
 
     def skip_if_no_external_signer(self):
@@ -975,6 +965,10 @@ class BitcoinTestFramework(metaclass=BitcoinTestMetaClass):
         """Skip the running test if Valgrind is being used."""
         if self.options.valgrind:
             raise SkipTest("This test is not compatible with Valgrind.")
+
+    def is_bench_compiled(self):
+        """Checks whether bench_bitcoin was compiled."""
+        return self.config["components"].getboolean("BUILD_BENCH")
 
     def is_cli_compiled(self):
         """Checks whether bitcoin-cli was compiled."""
@@ -1008,6 +1002,10 @@ class BitcoinTestFramework(metaclass=BitcoinTestMetaClass):
         """Checks whether the zmq module was compiled."""
         return self.config["components"].getboolean("ENABLE_ZMQ")
 
+    def is_embedded_asmap_compiled(self):
+        """Checks whether ASMap data was embedded during compilation."""
+        return self.config["components"].getboolean("ENABLE_EMBEDDED_ASMAP")
+
     def is_usdt_compiled(self):
         """Checks whether the USDT tracepoints were compiled."""
         return self.config["components"].getboolean("ENABLE_USDT_TRACEPOINTS")
@@ -1029,3 +1027,9 @@ class BitcoinTestFramework(metaclass=BitcoinTestMetaClass):
             return result
         except ImportError:
             self.log.warning("sqlite3 module not available, skipping tests that inspect the database")
+
+    def cleanup_folder(self, _path):
+        path = Path(_path)
+        if not path.is_relative_to(self.options.tmpdir):
+            raise AssertionError(f"Trying to delete #{path} outside of #{self.options.tmpdir}")
+        shutil.rmtree(path)

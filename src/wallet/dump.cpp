@@ -121,6 +121,11 @@ static void WalletToolReleaseWallet(CWallet* wallet)
 
 bool CreateFromDump(const ArgsManager& args, const std::string& name, const fs::path& wallet_path, bilingual_str& error, std::vector<bilingual_str>& warnings)
 {
+    if (name.empty()) {
+        tfm::format(std::cerr, "Wallet name cannot be empty\n");
+        return false;
+    }
+
     // Get the dumpfile
     std::string dump_filename = args.GetArg("-dumpfile", "");
     if (dump_filename.empty()) {
@@ -198,13 +203,6 @@ bool CreateFromDump(const ArgsManager& args, const std::string& name, const fs::
     bool ret = true;
     std::shared_ptr<CWallet> wallet(new CWallet(/*chain=*/nullptr, name, std::move(database)), WalletToolReleaseWallet);
     {
-        LOCK(wallet->cs_wallet);
-        DBErrors load_wallet_ret = wallet->LoadWallet();
-        if (load_wallet_ret != DBErrors::LOAD_OK) {
-            error = strprintf(_("Error creating %s"), name);
-            return false;
-        }
-
         // Get the database handle
         WalletDatabase& db = wallet->GetDatabase();
         std::unique_ptr<DatabaseBatch> batch = db.MakeBatch();
@@ -276,11 +274,17 @@ bool CreateFromDump(const ArgsManager& args, const std::string& name, const fs::
 
         dump_file.close();
     }
+    // On failure, gather the paths to remove
+    std::vector<fs::path> paths_to_remove = wallet->GetDatabase().Files();
+    if (!name.empty()) paths_to_remove.push_back(wallet_path);
+
     wallet.reset(); // The pointer deleter will close the wallet for us.
 
     // Remove the wallet dir if we have a failure
     if (!ret) {
-        fs::remove_all(wallet_path);
+        for (const auto& p : paths_to_remove) {
+            fs::remove(p);
+        }
     }
 
     return ret;

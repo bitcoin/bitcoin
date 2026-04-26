@@ -12,7 +12,7 @@
 #include "util.h"
 #include "bench.h"
 
-static void help(int default_iters) {
+static void help(const char *executable_path, int default_iters) {
     printf("Benchmarks the following algorithms:\n");
     printf("    - ECDSA signing/verification\n");
 
@@ -36,7 +36,7 @@ static void help(int default_iters) {
     printf("The default number of iterations for each benchmark is %d. This can be\n", default_iters);
     printf("customized using the SECP256K1_BENCH_ITERS environment variable.\n");
     printf("\n");
-    printf("Usage: ./bench [args]\n");
+    printf("Usage: %s [args]\n", executable_path);
     printf("By default, all benchmarks will be run.\n");
     printf("args:\n");
     printf("    help              : display this help and exit\n");
@@ -177,26 +177,30 @@ int main(int argc, char** argv) {
     bench_data data;
 
     int d = argc == 1;
-    int default_iters = 20000;
-    int iters = get_iters(default_iters);
 
     /* Check for invalid user arguments */
     char* valid_args[] = {"ecdsa", "verify", "ecdsa_verify", "sign", "ecdsa_sign", "ecdh", "recover",
                          "ecdsa_recover", "schnorrsig", "schnorrsig_verify", "schnorrsig_sign", "ec",
                          "keygen", "ec_keygen", "ellswift", "encode", "ellswift_encode", "decode",
                          "ellswift_decode", "ellswift_keygen", "ellswift_ecdh"};
-    size_t valid_args_size = sizeof(valid_args)/sizeof(valid_args[0]);
-    int invalid_args = have_invalid_args(argc, argv, valid_args, valid_args_size);
+    int invalid_args = have_invalid_args(argc, argv, valid_args, ARRAY_SIZE(valid_args));
+
+    int default_iters = 20000;
+    int iters = get_iters(default_iters);
+    if (iters == 0) {
+        help(argv[0], default_iters);
+        return EXIT_FAILURE;
+    }
 
     if (argc > 1) {
         if (have_flag(argc, argv, "-h")
            || have_flag(argc, argv, "--help")
            || have_flag(argc, argv, "help")) {
-            help(default_iters);
+            help(argv[0], default_iters);
             return EXIT_SUCCESS;
         } else if (invalid_args) {
             fprintf(stderr, "./bench: unrecognized argument.\n\n");
-            help(default_iters);
+            help(argv[0], default_iters);
             return EXIT_FAILURE;
         }
     }
@@ -205,7 +209,7 @@ int main(int argc, char** argv) {
 #ifndef ENABLE_MODULE_ECDH
     if (have_flag(argc, argv, "ecdh")) {
         fprintf(stderr, "./bench: ECDH module not enabled.\n");
-        fprintf(stderr, "Use ./configure --enable-module-ecdh.\n\n");
+        fprintf(stderr, "See README.md for configuration instructions.\n\n");
         return EXIT_FAILURE;
     }
 #endif
@@ -213,7 +217,7 @@ int main(int argc, char** argv) {
 #ifndef ENABLE_MODULE_RECOVERY
     if (have_flag(argc, argv, "recover") || have_flag(argc, argv, "ecdsa_recover")) {
         fprintf(stderr, "./bench: Public key recovery module not enabled.\n");
-        fprintf(stderr, "Use ./configure --enable-module-recovery.\n\n");
+        fprintf(stderr, "See README.md for configuration instructions.\n\n");
         return EXIT_FAILURE;
     }
 #endif
@@ -221,7 +225,7 @@ int main(int argc, char** argv) {
 #ifndef ENABLE_MODULE_SCHNORRSIG
     if (have_flag(argc, argv, "schnorrsig") || have_flag(argc, argv, "schnorrsig_sign") || have_flag(argc, argv, "schnorrsig_verify")) {
         fprintf(stderr, "./bench: Schnorr signatures module not enabled.\n");
-        fprintf(stderr, "Use ./configure --enable-module-schnorrsig.\n\n");
+        fprintf(stderr, "See README.md for configuration instructions.\n\n");
         return EXIT_FAILURE;
     }
 #endif
@@ -231,7 +235,7 @@ int main(int argc, char** argv) {
         have_flag(argc, argv, "encode") || have_flag(argc, argv, "decode") || have_flag(argc, argv, "ellswift_keygen") ||
         have_flag(argc, argv, "ellswift_ecdh")) {
         fprintf(stderr, "./bench: ElligatorSwift module not enabled.\n");
-        fprintf(stderr, "Use ./configure --enable-module-ellswift.\n\n");
+        fprintf(stderr, "See README.md for configuration instructions.\n\n");
         return EXIT_FAILURE;
     }
 #endif

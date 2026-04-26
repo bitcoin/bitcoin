@@ -14,6 +14,7 @@
 #include <cstdint>
 #include <functional>
 #include <memory>
+#include <optional>
 #include <string>
 #include <type_traits>
 #include <unordered_set>
@@ -60,7 +61,8 @@ class Proxy
 public:
     Proxy() : m_is_unix_socket(false), m_tor_stream_isolation(false) {}
     explicit Proxy(const CService& _proxy, bool tor_stream_isolation = false) : proxy(_proxy), m_is_unix_socket(false), m_tor_stream_isolation(tor_stream_isolation) {}
-    explicit Proxy(const std::string path, bool tor_stream_isolation = false) : m_unix_socket_path(path), m_is_unix_socket(true), m_tor_stream_isolation(tor_stream_isolation) {}
+    explicit Proxy(std::string path, bool tor_stream_isolation = false)
+        : m_unix_socket_path(std::move(path)), m_is_unix_socket(true), m_tor_stream_isolation(tor_stream_isolation) {}
 
     CService proxy;
     std::string m_unix_socket_path;
@@ -178,7 +180,7 @@ std::string GetNetworkName(enum Network net);
 /** Return a vector of publicly routable Network names; optionally append NET_UNROUTABLE. */
 std::vector<std::string> GetNetworkNames(bool append_unroutable = false);
 bool SetProxy(enum Network net, const Proxy &addrProxy);
-bool GetProxy(enum Network net, Proxy &proxyInfoOut);
+std::optional<Proxy> GetProxy(enum Network net);
 bool IsProxy(const CNetAddr &addr);
 /**
  * Set the name proxy to use for all connections to nodes specified by a
@@ -198,7 +200,7 @@ bool IsProxy(const CNetAddr &addr);
  */
 bool SetNameProxy(const Proxy &addrProxy);
 bool HaveNameProxy();
-bool GetNameProxy(Proxy &nameProxyOut);
+std::optional<Proxy> GetNameProxy();
 
 using DNSLookupFn = std::function<std::vector<CNetAddr>(const std::string&, bool)>;
 extern DNSLookupFn g_dns_lookup;
@@ -361,5 +363,8 @@ bool IsBadPort(uint16_t port);
  * @return a copy of `service` either unmodified or changed to CJDNS.
  */
 CService MaybeFlipIPv6toCJDNS(const CService& service);
+
+/** Get the bind address for a socket as CService. */
+CService GetBindAddress(const Sock& sock);
 
 #endif // BITCOIN_NETBASE_H

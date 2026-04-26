@@ -1,6 +1,6 @@
 # macOS Build Guide
 
-**Updated for MacOS [15](https://www.apple.com/macos/macos-sequoia/)**
+**Updated for MacOS [26](https://www.apple.com/os/macos/)**
 
 This guide describes how to build bitcoind, command-line utilities, and GUI on macOS.
 

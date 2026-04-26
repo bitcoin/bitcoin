@@ -28,6 +28,7 @@
 #include <undo.h>
 #include <util/any.h>
 #include <util/check.h>
+#include <util/overflow.h>
 #include <util/strencodings.h>
 #include <validation.h>
 
@@ -224,12 +225,12 @@ static bool rest_headers(const std::any& context,
         CChain& active_chain = chainman.ActiveChain();
         tip = active_chain.Tip();
         const CBlockIndex* pindex{chainman.m_blockman.LookupBlockIndex(*hash)};
-        while (pindex != nullptr && active_chain.Contains(pindex)) {
+        while (pindex != nullptr && active_chain.Contains(*pindex)) {
             headers.push_back(pindex);
             if (headers.size() == *parsed_count) {
                 break;
             }
-            pindex = active_chain.Next(pindex);
+            pindex = active_chain.Next(*pindex);
         }
     }
 
@@ -451,8 +452,7 @@ static bool rest_block(const std::any& context,
     case RESTResponseFormat::JSON: {
         if (tx_verbosity) {
             CBlock block{};
-            DataStream block_stream{*block_data};
-            block_stream >> TX_WITH_WITNESS(block);
+            SpanReader{*block_data} >> TX_WITH_WITNESS(block);
             UniValue objBlock = blockToJSON(chainman.m_blockman, block, *tip, *pblockindex, *tx_verbosity, chainman.GetConsensus().powLimit);
             std::string strJSON = objBlock.write() + "\n";
             req->WriteHeader("Content-Type", "application/json");
@@ -552,11 +552,11 @@ static bool rest_filter_header(const std::any& context, HTTPRequest* req, const 
         LOCK(cs_main);
         CChain& active_chain = chainman.ActiveChain();
         const CBlockIndex* pindex{chainman.m_blockman.LookupBlockIndex(*block_hash)};
-        while (pindex != nullptr && active_chain.Contains(pindex)) {
+        while (pindex != nullptr && active_chain.Contains(*pindex)) {
             headers.push_back(pindex);
             if (headers.size() == *parsed_count)
                 break;
-            pindex = active_chain.Next(pindex);
+            pindex = active_chain.Next(*pindex);
         }
     }
 
@@ -711,7 +711,7 @@ static bool rest_block_filter(const std::any& context, HTTPRequest* req, const s
 }
 
 // A bit of a hack - dependency on a function defined in rpc/blockchain.cpp
-RPCHelpMan getblockchaininfo();
+RPCMethod getblockchaininfo();
 
 static bool rest_chaininfo(const std::any& context, HTTPRequest* req, const std::string& uri_part)
 {
@@ -738,7 +738,7 @@ static bool rest_chaininfo(const std::any& context, HTTPRequest* req, const std:
 }
 
 
-RPCHelpMan getdeploymentinfo();
+RPCMethod getdeploymentinfo();
 
 static bool rest_deploymentinfo(const std::any& context, HTTPRequest* req, const std::string& str_uri_part)
 {
@@ -994,7 +994,7 @@ static bool rest_getutxos(const std::any& context, HTTPRequest* req, const std::
     std::vector<CCoin> outs;
     std::string bitmapStringRepresentation;
     std::vector<bool> hits;
-    bitmap.resize((vOutPoints.size() + 7) / 8);
+    bitmap.resize(CeilDiv(vOutPoints.size(), 8u));
     ChainstateManager* maybe_chainman = GetChainman(context, req);
     if (!maybe_chainman) return false;
     ChainstateManager& chainman = *maybe_chainman;
@@ -1065,7 +1065,7 @@ static bool rest_getutxos(const std::any& context, HTTPRequest* req, const std::
         UniValue utxos(UniValue::VARR);
         for (const CCoin& coin : outs) {
             UniValue utxo(UniValue::VOBJ);
-            utxo.pushKV("height", (int32_t)coin.nHeight);
+            utxo.pushKV("height", coin.nHeight);
             utxo.pushKV("value", ValueFromAmount(coin.out.nValue));
 
             // include the script in a json output

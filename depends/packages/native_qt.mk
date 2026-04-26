@@ -9,6 +9,7 @@ $(package)_patches := dont_hardcode_pwd.patch
 $(package)_patches += qtbase_skip_tools.patch
 $(package)_patches += rcc_hardcode_timestamp.patch
 $(package)_patches += qttools_skip_dependencies.patch
+$(package)_patches += fix-macos26-qyield.patch
 
 $(package)_qttranslations_file_name=$(qt_details_qttranslations_file_name)
 $(package)_qttranslations_sha256_hash=$(qt_details_qttranslations_sha256_hash)
@@ -96,6 +97,11 @@ $(package)_cmake_opts := -DCMAKE_EXE_LINKER_FLAGS="$$(build_LDFLAGS)"
 ifneq ($(V),)
 $(package)_cmake_opts += --log-level=STATUS
 endif
+
+ifeq ($(build_os),darwin)
+$(package)_cmake_opts += -DQT_NO_APPLE_SDK_MAX_VERSION_CHECK=ON
+$(package)_cmake_opts += -DQT_NO_XCODE_MIN_VERSION_CHECK=ON
+endif
 endef
 
 define $(package)_fetch_cmds
@@ -116,14 +122,14 @@ define $(package)_extract_cmds
   echo "$($(package)_top_cmake_ecmoptionaladdsubdirectory_sha256_hash)  $($(package)_source_dir)/$($(package)_top_cmake_ecmoptionaladdsubdirectory_file_name)-$($(package)_version)" >> $($(package)_extract_dir)/.$($(package)_file_name).hash && \
   echo "$($(package)_top_cmake_qttoplevelhelpers_sha256_hash)  $($(package)_source_dir)/$($(package)_top_cmake_qttoplevelhelpers_file_name)-$($(package)_version)" >> $($(package)_extract_dir)/.$($(package)_file_name).hash && \
   $(build_SHA256SUM) -c $($(package)_extract_dir)/.$($(package)_file_name).hash && \
-  mkdir qtbase && \
+  mkdir -p qtbase && \
   $(build_TAR) --no-same-owner --strip-components=1 -xf $($(package)_source) -C qtbase && \
-  mkdir qttranslations && \
+  mkdir -p qttranslations && \
   $(build_TAR) --no-same-owner --strip-components=1 -xf $($(package)_source_dir)/$($(package)_qttranslations_file_name) -C qttranslations && \
-  mkdir qttools && \
+  mkdir -p qttools && \
   $(build_TAR) --no-same-owner --strip-components=1 -xf $($(package)_source_dir)/$($(package)_qttools_file_name) -C qttools && \
   cp $($(package)_source_dir)/$($(package)_top_cmakelists_file_name)-$($(package)_version) ./$($(package)_top_cmakelists_file_name) && \
-  mkdir cmake && \
+  mkdir -p cmake && \
   cp $($(package)_source_dir)/$($(package)_top_cmake_ecmoptionaladdsubdirectory_file_name)-$($(package)_version) cmake/$($(package)_top_cmake_ecmoptionaladdsubdirectory_file_name) && \
   cp $($(package)_source_dir)/$($(package)_top_cmake_qttoplevelhelpers_file_name)-$($(package)_version) cmake/$($(package)_top_cmake_qttoplevelhelpers_file_name)
 endef
@@ -132,7 +138,8 @@ define $(package)_preprocess_cmds
   patch -p1 -i $($(package)_patch_dir)/dont_hardcode_pwd.patch && \
   patch -p1 -i $($(package)_patch_dir)/qtbase_skip_tools.patch && \
   patch -p1 -i $($(package)_patch_dir)/rcc_hardcode_timestamp.patch && \
-  patch -p1 -i $($(package)_patch_dir)/qttools_skip_dependencies.patch
+  patch -p1 -i $($(package)_patch_dir)/qttools_skip_dependencies.patch && \
+  patch -p1 -i $($(package)_patch_dir)/fix-macos26-qyield.patch
 endef
 
 define $(package)_config_cmds

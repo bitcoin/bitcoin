@@ -5,6 +5,9 @@
 """
 Test that a node sends a self-announcement with its external IP to
 in- and outbound peers after connection open and again sometime later.
+
+Additionally, this checks that the first self-announcement arrives
+in its own message and that this message is the first we receive.
 """
 
 import time
@@ -42,6 +45,13 @@ class SelfAnnouncementReceiver(P2PInterface):
             self.addresses_received += 1
             if addr == self.expected:
                 self.self_announcements_received += 1
+                if self.self_announcements_received == 1:
+                    # If it's the first self-announcement, check that it is
+                    # in the first addr message we receive, and that this message
+                    # only contains one address. This also implies that it is
+                    # the first address we receive.
+                    assert_equal(self.addr_messages_received, 1)
+                    assert_equal(len(message.addrs), 1)
 
     def on_addrv2(self, message):
         assert (self.addrv2_test)
@@ -68,14 +78,16 @@ class AddrSelfAnnouncementTest(BitcoinTestFramework):
         self.self_announcement_test(outbound=True, addrv2=False)
         self.self_announcement_test(outbound=True, addrv2=True)
 
-    def inbound_connection_open_assertions(self, addr_receiver):
-        # We expect one self-announcement and multiple other addresses in
-        # response to a GETADDR in a single addr / addrv2 message.
+    @staticmethod
+    def inbound_connection_open_assertions(addr_receiver):
+        # In response to a GETADDR, we expect a message with the self-announcement
+        # and an addr message containing the GETADDR response.
         assert_equal(addr_receiver.self_announcements_received, 1)
-        assert_equal(addr_receiver.addr_messages_received, 1)
+        assert_equal(addr_receiver.addr_messages_received, 2)
         assert_greater_than(addr_receiver.addresses_received, 1)
 
-    def outbound_connection_open_assertions(self, addr_receiver):
+    @staticmethod
+    def outbound_connection_open_assertions(addr_receiver):
         # We expect only the self-announcement.
         assert_equal(addr_receiver.self_announcements_received, 1)
         assert_equal(addr_receiver.addr_messages_received, 1)
@@ -128,8 +140,8 @@ class AddrSelfAnnouncementTest(BitcoinTestFramework):
                 # self-announcements are sent on an exponential distribution with mean interval of 24h.
                 # Setting the mocktime 20d forward gives a probability of (1 - e^-(480/24)) that
                 # the event will occur (i.e. this fails once in ~500 million repeats).
+                addr_receiver.expected.time = self.nodes[0].mocktime + 20 * ONE_DAY
                 self.nodes[0].bumpmocktime(20 * ONE_DAY)
-                addr_receiver.expected.time = self.nodes[0].mocktime
                 addr_receiver.sync_with_ping()
 
             assert_equal(addr_receiver.self_announcements_received, last_self_announcements_received + 1)

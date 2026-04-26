@@ -25,7 +25,6 @@ add_library(bitcoinkernel
   ../consensus/merkle.cpp
   ../consensus/tx_check.cpp
   ../consensus/tx_verify.cpp
-  ../core_read.cpp
   ../dbwrapper.cpp
   ../deploymentinfo.cpp
   ../deploymentstatus.cpp
@@ -55,7 +54,6 @@ add_library(bitcoinkernel
   ../script/solver.cpp
   ../signet.cpp
   ../streams.cpp
-  ../support/lockedpool.cpp
   ../sync.cpp
   ../txdb.cpp
   ../txgraph.cpp
@@ -70,10 +68,7 @@ add_library(bitcoinkernel
   ../util/hasher.cpp
   ../util/moneystr.cpp
   ../util/rbf.cpp
-  ../util/serfloat.cpp
   ../util/signalinterrupt.cpp
-  ../util/strencodings.cpp
-  ../util/string.cpp
   ../util/syserror.cpp
   ../util/threadnames.cpp
   ../util/time.cpp
@@ -86,13 +81,28 @@ add_library(bitcoinkernel
   $<TARGET_OBJECTS:leveldb>
   $<TARGET_OBJECTS:crc32c>
 )
+
+# Compiler warnings that apply only to the kernel and its dependencies.
+# These can be more strict and/or warnings that only apply to shared
+# libs.
+add_library(kernel_warn_interface INTERFACE)
+if(NOT MSVC)
+  try_append_cxx_flags("-Wunique-object-duplication" TARGET kernel_warn_interface SKIP_LINK)
+endif()
+
+# Also manually apply the warnings to the kernel's internal dependencies
+target_link_libraries(bitcoin_clientversion PRIVATE kernel_warn_interface)
+target_link_libraries(bitcoin_crypto PRIVATE kernel_warn_interface)
+target_link_libraries(leveldb PRIVATE kernel_warn_interface)
+target_link_libraries(crc32c PRIVATE kernel_warn_interface)
+
 target_link_libraries(bitcoinkernel
   PRIVATE
     core_interface
+    kernel_warn_interface
     secp256k1_objs
     $<$<PLATFORM_ID:Windows>:bcrypt>
     $<TARGET_NAME_IF_EXISTS:USDT::headers>
-  PUBLIC
     Boost::headers
 )
 

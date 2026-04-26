@@ -15,6 +15,7 @@
 #include <test/fuzz/util/net.h>
 #include <test/fuzz/util/threadinterrupt.h>
 #include <test/util/setup_common.h>
+#include <test/util/time.h>
 #include <util/translation.h>
 
 #include <cstdint>
@@ -40,7 +41,7 @@ FUZZ_TARGET(connman, .init = initialize_connman)
 {
     SeedRandomStateForTest(SeedRand::ZEROS);
     FuzzedDataProvider fuzzed_data_provider{buffer.data(), buffer.size()};
-    SetMockTime(ConsumeTime(fuzzed_data_provider));
+    NodeClockContext clock_ctx{ConsumeTime(fuzzed_data_provider)};
     auto netgroupman{ConsumeNetGroupManager(fuzzed_data_provider)};
     auto addr_man_ptr{std::make_unique<AddrManDeterministic>(netgroupman, fuzzed_data_provider, GetCheckRatio())};
     if (fuzzed_data_provider.ConsumeBool()) {
@@ -79,6 +80,18 @@ FUZZ_TARGET(connman, .init = initialize_connman)
     CConnman::Options options;
     options.m_msgproc = &net_events;
     options.nMaxOutboundLimit = max_outbound_limit;
+
+    auto consume_whitelist = [&]() {
+        std::vector<NetWhitelistPermissions> result(fuzzed_data_provider.ConsumeIntegralInRange<size_t>(0, 3));
+        for (auto& entry : result) {
+            entry.m_flags = ConsumeWeakEnum(fuzzed_data_provider, ALL_NET_PERMISSION_FLAGS);
+            entry.m_subnet = ConsumeSubNet(fuzzed_data_provider);
+        }
+        return result;
+    };
+    options.vWhitelistedRangeIncoming = consume_whitelist();
+    options.vWhitelistedRangeOutgoing = consume_whitelist();
+
     connman.Init(options);
 
     CNetAddr random_netaddr;
@@ -89,6 +102,8 @@ FUZZ_TARGET(connman, .init = initialize_connman)
 
     LIMITED_WHILE(fuzzed_data_provider.ConsumeBool(), 100) {
         CNode& p2p_node{*ConsumeNodeAsUniquePtr(fuzzed_data_provider).release()};
+        // Simulate post-handshake state.
+        p2p_node.fSuccessfullyConnected = true;
         connman.AddTestNode(p2p_node);
     }
 

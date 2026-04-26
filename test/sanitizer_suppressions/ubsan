@@ -55,7 +55,6 @@ unsigned-integer-overflow:TxConfirmStats::EstimateMedianVal
 unsigned-integer-overflow:InsecureRandomContext::rand64
 unsigned-integer-overflow:InsecureRandomContext::SplitMix64
 unsigned-integer-overflow:bitset_detail::PopCount
-implicit-integer-sign-change:SetStdinEcho
 implicit-integer-sign-change:compressor.h
 implicit-integer-sign-change:crypto/
 implicit-integer-sign-change:TxConfirmStats::removeTx

@@ -185,8 +185,8 @@ Is called *after* the in-memory UTXO cache is flushed.
 
 Arguments passed:
 1. Time it took to flush the cache microseconds as `int64`
-2. Flush state mode as `uint32`. It's an enumerator class with values `0`
-   (`NONE`), `1` (`IF_NEEDED`), `2` (`PERIODIC`), `3` (`ALWAYS`)
+2. Flush state mode as `uint32`. It's an enumerator class with values
+   `0` (`NONE`), `1` (`IF_NEEDED`), `2` (`PERIODIC`), `3` (`FORCE_FLUSH`), `4` (`FORCE_SYNC`)
 3. Cache size (number of coins) before the flush as `uint64`
 4. Cache memory usage in bytes as `uint64`
 5. If pruning caused the flush as `bool`

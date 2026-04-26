@@ -5,6 +5,7 @@
 #include <common/args.h>
 #include <common/settings.h>
 #include <logging.h>
+#include <test/util/common.h>
 #include <test/util/setup_common.h>
 #include <univalue.h>
 #include <util/strencodings.h>
@@ -247,26 +248,41 @@ BOOST_AUTO_TEST_CASE(intarg)
     const auto foo = std::make_pair("-foo", ArgsManager::ALLOW_ANY);
     const auto bar = std::make_pair("-bar", ArgsManager::ALLOW_ANY);
     SetupArgs(local_args, {foo, bar});
+
     ResetArgs(local_args, "");
+    BOOST_CHECK(!local_args.GetArg<int64_t>("-foo").has_value());
+    BOOST_CHECK(!local_args.GetArg<uint8_t>("-bar").has_value());
     BOOST_CHECK_EQUAL(local_args.GetIntArg("-foo", 11), 11);
     BOOST_CHECK_EQUAL(local_args.GetIntArg("-foo", 0), 0);
+    BOOST_CHECK_EQUAL(local_args.GetArg("-bar", uint8_t{222}), 222);
+    BOOST_CHECK_EQUAL(local_args.GetArg("-bar", uint8_t{0}), 0);
 
     ResetArgs(local_args, "-foo -bar");
+    BOOST_CHECK_EQUAL(local_args.GetArg<int64_t>("-foo"), 0);
+    BOOST_CHECK_EQUAL(local_args.GetArg<uint8_t>("-bar"), 0);
     BOOST_CHECK_EQUAL(local_args.GetIntArg("-foo", 11), 0);
-    BOOST_CHECK_EQUAL(local_args.GetIntArg("-bar", 11), 0);
+    BOOST_CHECK_EQUAL(local_args.GetArg("-bar", uint8_t{222}), 0);
 
     // Check under-/overflow behavior.
     ResetArgs(local_args, "-foo=-9223372036854775809 -bar=9223372036854775808");
+    BOOST_CHECK_EQUAL(local_args.GetArg<int64_t>("-foo"), std::numeric_limits<int64_t>::min());
+    BOOST_CHECK_EQUAL(local_args.GetArg<uint8_t>("-bar"), std::numeric_limits<uint8_t>::max());
     BOOST_CHECK_EQUAL(local_args.GetIntArg("-foo", 0), std::numeric_limits<int64_t>::min());
     BOOST_CHECK_EQUAL(local_args.GetIntArg("-bar", 0), std::numeric_limits<int64_t>::max());
+    BOOST_CHECK_EQUAL(local_args.GetArg("-foo", uint8_t{0}), std::numeric_limits<uint8_t>::min());
+    BOOST_CHECK_EQUAL(local_args.GetArg("-bar", uint8_t{0}), std::numeric_limits<uint8_t>::max());
 
     ResetArgs(local_args, "-foo=11 -bar=12");
+    BOOST_CHECK_EQUAL(local_args.GetArg<int64_t>("-foo"), 11);
+    BOOST_CHECK_EQUAL(local_args.GetArg<uint8_t>("-bar"), 12);
     BOOST_CHECK_EQUAL(local_args.GetIntArg("-foo", 0), 11);
-    BOOST_CHECK_EQUAL(local_args.GetIntArg("-bar", 11), 12);
+    BOOST_CHECK_EQUAL(local_args.GetArg("-bar", uint8_t{11}), 12);
 
     ResetArgs(local_args, "-foo=NaN -bar=NotANumber");
+    BOOST_CHECK_EQUAL(local_args.GetArg<int64_t>("-foo"), 0);
+    BOOST_CHECK_EQUAL(local_args.GetArg<uint8_t>("-bar"), 0);
     BOOST_CHECK_EQUAL(local_args.GetIntArg("-foo", 1), 0);
-    BOOST_CHECK_EQUAL(local_args.GetIntArg("-bar", 11), 0);
+    BOOST_CHECK_EQUAL(local_args.GetArg("-bar", uint8_t{11}), 0);
 }
 
 BOOST_AUTO_TEST_CASE(patharg)

@@ -86,7 +86,7 @@ address is used for making outbound connections and accepting inbound
 connections.
 
 In the I2P network, the receiver of an inbound connection sees the address of
-the initiator.  This is unlike the Tor network, where the recipient does not
+the initiator. This is unlike the Tor network, where the recipient does not
 know who is connecting to it.
 
 If your node is configured by setting `-i2pacceptincoming=0` to not accept

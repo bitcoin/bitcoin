@@ -63,6 +63,8 @@ COINBASE_MATURITY = 100
 # From BIP141
 WITNESS_COMMITMENT_HEADER = b"\xaa\x21\xa9\xed"
 
+NULL_OUTPOINT = COutPoint(0, 0xffffffff)
+
 NORMAL_GBT_REQUEST_PARAMS = {"rules": ["segwit"]}
 VERSIONBITS_LAST_OLD_BLOCK_VERSION = 4
 MIN_BLOCKS_TO_KEEP = 288
@@ -93,7 +95,7 @@ def nbits_str(nbits):
 def target_str(target):
     return f"{target:064x}"
 
-def create_block(hashprev=None, coinbase=None, ntime=None, *, version=None, tmpl=None, txlist=None):
+def create_block(hashprev=None, coinbase=None, *, ntime=None, height=None, version=None, tmpl=None, txlist=None):
     """Create a block (with regtest difficulty)."""
     block = CBlock()
     if tmpl is None:
@@ -106,7 +108,7 @@ def create_block(hashprev=None, coinbase=None, ntime=None, *, version=None, tmpl
     else:
         block.nBits = REGTEST_N_BITS
     if coinbase is None:
-        coinbase = create_coinbase(height=tmpl['height'])
+        coinbase = create_coinbase(height=height or tmpl["height"])
     block.vtx.append(coinbase)
     if txlist:
         for tx in txlist:
@@ -127,7 +129,7 @@ def create_empty_fork(node, fork_length=FORK_LENGTH):
 
     blocks = []
     for _ in range(fork_length):
-        block = create_block(tip, create_coinbase(height + 1), block_time)
+        block = create_block(tip, height=height + 1, ntime=block_time)
         block.solve()
         blocks.append(block)
         tip = block.hash_int
@@ -162,7 +164,7 @@ def add_witness_commitment(block, nonce=0):
 def script_BIP34_coinbase_height(height):
     if height <= 16:
         res = CScriptOp.encode_op_n(height)
-        # Append dummy to increase scriptSig size to 2 (see bad-cb-length consensus rule)
+        # Append dummy extraNonce to increase scriptSig size to 2 (see bad-cb-length consensus rule)
         return CScript([res, OP_0])
     return CScript([CScriptNum(height)])
 
@@ -177,7 +179,7 @@ def create_coinbase(height, pubkey=None, *, script_pubkey=None, extra_output_scr
     script. This is useful to pad block weight/sigops as needed. """
     coinbase = CTransaction()
     coinbase.nLockTime = height - 1
-    coinbase.vin.append(CTxIn(COutPoint(0, 0xffffffff), script_BIP34_coinbase_height(height), MAX_SEQUENCE_NONFINAL))
+    coinbase.vin.append(CTxIn(NULL_OUTPOINT, script_BIP34_coinbase_height(height), MAX_SEQUENCE_NONFINAL))
     coinbaseoutput = CTxOut()
     coinbaseoutput.nValue = nValue * COIN
     if nValue == 50:
@@ -265,7 +267,7 @@ def send_to_witness(use_p2wsh, node, utxo, pubkey, encode_p2sh, amount, sign=Tru
     tx_to_witness = create_witness_tx(node, use_p2wsh, utxo, pubkey, encode_p2sh, amount)
     if (sign):
         signed = node.signrawtransactionwithwallet(tx_to_witness)
-        assert "errors" not in signed or len(["errors"]) == 0
+        assert "errors" not in signed
         return node.sendrawtransaction(signed["hex"])
     else:
         if (insert_redeem_script):
@@ -276,6 +278,14 @@ def send_to_witness(use_p2wsh, node, utxo, pubkey, encode_p2sh, amount, sign=Tru
     return node.sendrawtransaction(tx_to_witness)
 
 class TestFrameworkBlockTools(unittest.TestCase):
+    def test_create_block_prefers_explicit_height(self):
+        block = create_block(
+            hashprev=1,
+            tmpl={"height": 100},
+            height=200,
+        )
+        assert_equal(CScriptNum.decode(block.vtx[0].vin[0].scriptSig), 200)
+
     def test_create_coinbase(self):
         height = 20
         coinbase_tx = create_coinbase(height=height)

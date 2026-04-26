@@ -7,16 +7,31 @@
 
 #include <util/overflow.h>
 
+#include <limits>
 #include <stdexcept>
 
-//! Overflow-safe conversion of MiB to bytes.
-constexpr size_t operator""_MiB(unsigned long long mebibytes)
+namespace util::detail {
+template <unsigned SHIFT>
+consteval uint64_t ByteUnitsToBytes(unsigned long long units)
 {
-    auto bytes{CheckedLeftShift(mebibytes, 20)};
-    if (!bytes || *bytes > std::numeric_limits<size_t>::max()) {
-        throw std::overflow_error("MiB value too large for size_t byte conversion");
+    const auto bytes{CheckedLeftShift(units, SHIFT)};
+    if (!bytes || *bytes > std::numeric_limits<uint64_t>::max()) {
+        throw std::overflow_error("Too large");
     }
     return *bytes;
+}
+} // namespace util::detail
+
+/// Conversion of MiB to bytes.
+consteval uint64_t operator""_MiB(unsigned long long mebibytes)
+{
+    return util::detail::ByteUnitsToBytes<20>(mebibytes);
+}
+
+/// Conversion of GiB to bytes.
+consteval uint64_t operator""_GiB(unsigned long long gibibytes)
+{
+    return util::detail::ByteUnitsToBytes<30>(gibibytes);
 }
 
 #endif // BITCOIN_UTIL_BYTE_UNITS_H

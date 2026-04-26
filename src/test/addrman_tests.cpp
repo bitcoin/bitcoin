@@ -12,11 +12,13 @@
 #include <random.h>
 #include <test/data/asmap.raw.h>
 #include <test/util/setup_common.h>
+#include <test/util/time.h>
 #include <util/asmap.h>
 #include <util/string.h>
 
 #include <boost/test/unit_test.hpp>
 
+#include <cstdint>
 #include <optional>
 #include <string>
 
@@ -24,7 +26,7 @@ using namespace std::literals;
 using node::NodeContext;
 using util::ToString;
 
-static NetGroupManager EMPTY_NETGROUPMAN{std::vector<bool>()};
+static auto EMPTY_NETGROUPMAN{NetGroupManager::NoAsmap()};
 static const bool DETERMINISTIC{true};
 
 static int32_t GetCheckRatio(const NodeContext& node_ctx)
@@ -44,20 +46,6 @@ static CService ResolveService(const std::string& ip, uint16_t port = 0)
     const std::optional<CService> serv{Lookup(ip, port, false)};
     BOOST_CHECK_MESSAGE(serv.has_value(), strprintf("failed to resolve: %s:%i", ip, port));
     return serv.value_or(CService{});
-}
-
-
-static std::vector<bool> FromBytes(std::span<const std::byte> source)
-{
-    int vector_size(source.size() * 8);
-    std::vector<bool> result(vector_size);
-    for (int byte_i = 0; byte_i < vector_size / 8; ++byte_i) {
-        uint8_t cur_byte{std::to_integer<uint8_t>(source[byte_i])};
-        for (int bit_i = 0; bit_i < 8; ++bit_i) {
-            result[byte_i * 8 + bit_i] = (cur_byte >> bit_i) & 1;
-        }
-    }
-    return result;
 }
 
 BOOST_FIXTURE_TEST_SUITE(addrman_tests, BasicTestingSetup)
@@ -104,6 +92,81 @@ BOOST_AUTO_TEST_CASE(addrman_simple)
     vAddr.emplace_back(ResolveService("250.1.1.4", 8333), NODE_NONE);
     BOOST_CHECK(addrman->Add(vAddr, source));
     BOOST_CHECK(addrman->Size() >= 1);
+}
+
+
+BOOST_AUTO_TEST_CASE(addrman_terrible_many_failures)
+{
+    auto now = Now<NodeSeconds>();
+    SetMockTime(now - (ADDRMAN_MIN_FAIL + 24h));
+
+    auto addrman{std::make_unique<AddrMan>(EMPTY_NETGROUPMAN, DETERMINISTIC, GetCheckRatio(m_node))};
+
+    CNetAddr source{ResolveIP("250.1.2.1")};
+    CAddress addr{CAddress(ResolveService("250.250.2.1", 8333), NODE_NONE)};
+    addr.nTime = Now<NodeSeconds>();
+
+    BOOST_CHECK(addrman->Add({addr}, source));
+    BOOST_CHECK(addrman->Good(addr));
+
+    SetMockTime(now);
+
+    CAddress addr_helper{CAddress(ResolveService("251.252.2.3", 8333), NODE_NONE)};
+    addr_helper.nTime = Now<NodeSeconds>();
+    BOOST_CHECK(addrman->Add({addr_helper}, source));
+    BOOST_CHECK(addrman->Good(addr_helper));
+
+    for (int i = 0; i < ADDRMAN_MAX_FAILURES; ++i) {
+        // Use a time > 60s ago so IsTerrible doesn't bail out at the "tried in the last minute" check
+        addrman->Attempt(addr, /*fCountFailure=*/true, Now<NodeSeconds>() - 61s);
+    }
+
+    std::vector<CAddress> filtered{addrman->GetAddr(/*max_addresses=*/0, /*max_pct=*/0, /*network=*/std::nullopt)};
+    BOOST_CHECK_EQUAL(filtered.size(), 1U);
+    BOOST_CHECK_EQUAL(filtered[0].ToStringAddrPort(), "251.252.2.3:8333");
+
+    std::vector<CAddress> unfiltered{addrman->GetAddr(/*max_addresses=*/0, /*max_pct=*/0, /*network=*/std::nullopt, /*filtered=*/false)};
+    BOOST_CHECK_EQUAL(unfiltered.size(), 2U);
+}
+
+
+BOOST_AUTO_TEST_CASE(addrman_penalty_self_announcement)
+{
+    SetMockTime(Now<NodeSeconds>());
+    auto addrman = std::make_unique<AddrMan>(EMPTY_NETGROUPMAN, DETERMINISTIC, GetCheckRatio(m_node));
+
+    const auto base_time{Now<NodeSeconds>() - 10000s};
+    CService addr1 = ResolveService("250.1.1.1", 8333);
+    CNetAddr source1 = ResolveIP("250.1.1.1"); // Same as addr1 - self announcement
+
+    CAddress caddr1(addr1, NODE_NONE);
+    caddr1.nTime = base_time;
+
+    const auto time_penalty{3600s};
+
+    BOOST_CHECK(addrman->Add({caddr1}, source1, time_penalty));
+
+    auto addr_pos1{addrman->FindAddressEntry(caddr1)};
+    BOOST_REQUIRE(addr_pos1.has_value());
+
+    std::vector<CAddress> addresses{addrman->GetAddr(/*max_addresses=*/0, /*max_pct=*/0, /*network=*/std::nullopt)};
+    BOOST_REQUIRE_EQUAL(addresses.size(), 1U);
+
+    BOOST_CHECK(addresses[0].nTime == base_time);
+
+    CService addr2{ResolveService("250.1.1.2", 8333)};
+    CNetAddr source2{ResolveIP("250.1.1.3")}; // Different from addr2 - not self announcement
+
+    CAddress caddr2(addr2, NODE_NONE);
+    caddr2.nTime = base_time;
+
+    BOOST_CHECK(addrman->Add({caddr2}, source2, time_penalty));
+
+    addresses = addrman->GetAddr(/*max_addresses=*/0, /*max_pct=*/0, /*network=*/std::nullopt);
+    BOOST_REQUIRE_EQUAL(addresses.size(), 2U);
+
+    CAddress retrieved_addr2{addresses[0]};
+    BOOST_CHECK(retrieved_addr2.nTime == base_time - time_penalty);
 }
 
 BOOST_AUTO_TEST_CASE(addrman_ports)
@@ -598,8 +661,7 @@ BOOST_AUTO_TEST_CASE(caddrinfo_get_new_bucket_legacy)
 // 101.8.0.0/16 AS8
 BOOST_AUTO_TEST_CASE(caddrinfo_get_tried_bucket)
 {
-    std::vector<bool> asmap = FromBytes(test::data::asmap);
-    NetGroupManager ngm_asmap{asmap};
+    auto ngm_asmap{NetGroupManager::WithEmbeddedAsmap(test::data::asmap)};
 
     CAddress addr1 = CAddress(ResolveService("250.1.1.1", 8333), NODE_NONE);
     CAddress addr2 = CAddress(ResolveService("250.1.1.1", 9999), NODE_NONE);
@@ -652,8 +714,7 @@ BOOST_AUTO_TEST_CASE(caddrinfo_get_tried_bucket)
 
 BOOST_AUTO_TEST_CASE(caddrinfo_get_new_bucket)
 {
-    std::vector<bool> asmap = FromBytes(test::data::asmap);
-    NetGroupManager ngm_asmap{asmap};
+    auto ngm_asmap{NetGroupManager::WithEmbeddedAsmap(test::data::asmap)};
 
     CAddress addr1 = CAddress(ResolveService("250.1.2.1", 8333), NODE_NONE);
     CAddress addr2 = CAddress(ResolveService("250.1.2.1", 9999), NODE_NONE);
@@ -730,8 +791,7 @@ BOOST_AUTO_TEST_CASE(caddrinfo_get_new_bucket)
 
 BOOST_AUTO_TEST_CASE(addrman_serialization)
 {
-    std::vector<bool> asmap1 = FromBytes(test::data::asmap);
-    NetGroupManager netgroupman{asmap1};
+    auto netgroupman{NetGroupManager::WithEmbeddedAsmap(test::data::asmap)};
 
     const auto ratio = GetCheckRatio(m_node);
     auto addrman_asmap1 = std::make_unique<AddrMan>(netgroupman, DETERMINISTIC, ratio);
@@ -971,7 +1031,8 @@ BOOST_AUTO_TEST_CASE(addrman_evictionworks)
     BOOST_CHECK_EQUAL(addrman->SelectTriedCollision().first.ToStringAddrPort(), "250.1.1.36:0");
 
     // Eviction is also successful if too much time has passed since last try
-    SetMockTime(GetTime() + 4 * 60 *60);
+    NodeClockContext clock_ctx{};
+    clock_ctx += 4h;
     addrman->ResolveCollisions();
     BOOST_CHECK(addrman->SelectTriedCollision().first.ToStringAddrPort() == "[::]:0");
     //Now 19 is in tried again, and 36 back to new

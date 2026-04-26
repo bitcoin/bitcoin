@@ -7,6 +7,7 @@
 #include <index/txindex.h>
 #include <interfaces/chain.h>
 #include <test/util/setup_common.h>
+#include <util/byte_units.h>
 #include <validation.h>
 
 #include <boost/test/unit_test.hpp>
@@ -15,7 +16,7 @@ BOOST_AUTO_TEST_SUITE(txindex_tests)
 
 BOOST_FIXTURE_TEST_CASE(txindex_initial_sync, TestChain100Setup)
 {
-    TxIndex txindex(interfaces::MakeChain(m_node), 1 << 20, true);
+    TxIndex txindex(interfaces::MakeChain(m_node), 1_MiB, true);
     BOOST_REQUIRE(txindex.Init());
 
     CTransactionRef tx_disk;
@@ -60,14 +61,6 @@ BOOST_FIXTURE_TEST_CASE(txindex_initial_sync, TestChain100Setup)
             BOOST_ERROR("Read incorrect tx");
         }
     }
-
-    // It is not safe to stop and destroy the index until it finishes handling
-    // the last BlockConnected notification. The BlockUntilSyncedToCurrentChain()
-    // call above is sufficient to ensure this, but the
-    // SyncWithValidationInterfaceQueue() call below is also needed to ensure
-    // TSAN always sees the test thread waiting for the notification thread, and
-    // avoid potential false positive reports.
-    m_node.validation_signals->SyncWithValidationInterfaceQueue();
 
     // shutdown sequence (c.f. Shutdown() in init.cpp)
     txindex.Stop();

@@ -5,15 +5,17 @@
 #ifndef BITCOIN_UTIL_STRING_H
 #define BITCOIN_UTIL_STRING_H
 
-#include <span.h>
-
+#include <algorithm>
 #include <array>
+#include <cstddef>
 #include <cstdint>
-#include <cstring>
+#include <initializer_list>
 #include <locale>
+#include <optional>
+#include <span>
 #include <sstream>
-#include <string>      // IWYU pragma: export
-#include <string_view> // IWYU pragma: export
+#include <string>
+#include <string_view>
 #include <vector>
 
 namespace util {
@@ -260,6 +262,46 @@ template <typename T1, size_t PREFIX_LEN>
     return obj.size() >= PREFIX_LEN &&
            std::equal(std::begin(prefix), std::end(prefix), std::begin(obj));
 }
+
+struct LineReader {
+    const std::span<const std::byte>::iterator start;
+    const std::span<const std::byte>::iterator end;
+    const size_t max_line_length;
+    std::span<const std::byte>::iterator it;
+
+    explicit LineReader(std::span<const std::byte> buffer, size_t max_line_length);
+    explicit LineReader(std::string_view str, size_t max_line_length) : LineReader{std::as_bytes(std::span{str}), max_line_length} {}
+
+    /**
+     * Returns a string from current iterator position up to (but not including) next \n
+     * and advances iterator to the character following the \n on success.
+     * Will not return a line longer than max_line_length.
+     * @returns the next string from the buffer.
+     *          std::nullopt if end of buffer is reached without finding a \n.
+     * @throws a std::runtime_error if max_line_length + 1 bytes are read without finding \n.
+     */
+    std::optional<std::string> ReadLine();
+
+    /**
+     * Returns string from current iterator position of specified length
+     * if possible and advances iterator on success.
+     * May exceed max_line_length but will not read past end of buffer.
+     * @param[in]   len     The number of bytes to read from the buffer
+     * @returns a string of the expected length.
+     * @throws a std::runtime_error if there is not enough data in the buffer.
+     */
+    std::string ReadLength(size_t len);
+
+    /**
+     * Returns remaining size of bytes in buffer
+     */
+    size_t Remaining() const;
+
+    /**
+     * Returns number of bytes already read from buffer
+     */
+    size_t Consumed() const;
+};
 } // namespace util
 
 #endif // BITCOIN_UTIL_STRING_H

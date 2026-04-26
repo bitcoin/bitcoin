@@ -14,7 +14,7 @@ import random
 import unittest
 
 from test_framework.crypto import secp256k1
-from test_framework.util import assert_not_equal, random_bitflip
+from test_framework.util import assert_equal, assert_not_equal, random_bitflip
 
 # Point with no known discrete log.
 H_POINT = "50929b74c1a04954b78b4b6035e97a5e078a5a0f28ec96d547bfee9ace803ac0"
@@ -132,7 +132,7 @@ class ECKey:
 
     def set(self, secret, compressed):
         """Construct a private key object with given 32-byte secret and compressed flag."""
-        assert len(secret) == 32
+        assert_equal(len(secret), 32)
         secret = int.from_bytes(secret, 'big')
         self.valid = (secret > 0 and secret < ORDER)
         if self.valid:
@@ -194,7 +194,7 @@ def compute_xonly_pubkey(key):
     This also returns whether the resulting public key was negated.
     """
 
-    assert len(key) == 32
+    assert_equal(len(key), 32)
     x = int.from_bytes(key, 'big')
     if x == 0 or x >= ORDER:
         return (None, None)
@@ -204,8 +204,8 @@ def compute_xonly_pubkey(key):
 def tweak_add_privkey(key, tweak):
     """Tweak a private key (after negating it if needed)."""
 
-    assert len(key) == 32
-    assert len(tweak) == 32
+    assert_equal(len(key), 32)
+    assert_equal(len(tweak), 32)
 
     x = int.from_bytes(key, 'big')
     if x == 0 or x >= ORDER:
@@ -223,8 +223,8 @@ def tweak_add_privkey(key, tweak):
 def tweak_add_pubkey(key, tweak):
     """Tweak a public key and return whether the result had to be negated."""
 
-    assert len(key) == 32
-    assert len(tweak) == 32
+    assert_equal(len(key), 32)
+    assert_equal(len(tweak), 32)
 
     P = secp256k1.GE.from_bytes_xonly(key)
     if P is None:
@@ -244,8 +244,8 @@ def verify_schnorr(key, sig, msg):
     - sig is a 64-byte Schnorr signature
     - msg is a variable-length message
     """
-    assert len(key) == 32
-    assert len(sig) == 64
+    assert_equal(len(key), 32)
+    assert_equal(len(sig), 64)
 
     P = secp256k1.GE.from_bytes_xonly(key)
     if P is None:
@@ -270,8 +270,8 @@ def sign_schnorr(key, msg, aux=None, flip_p=False, flip_r=False):
     if aux is None:
         aux = bytes(32)
 
-    assert len(key) == 32
-    assert len(aux) == 32
+    assert_equal(len(key), 32)
+    assert_equal(len(aux), 32)
 
     sec = int.from_bytes(key, 'big')
     if sec == 0 or sec >= ORDER:

@@ -3,6 +3,7 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <common/args.h>
+#include <compat/compat.h>
 #include <i2p.h>
 #include <netaddress.h>
 #include <netbase.h>
@@ -12,6 +13,7 @@
 #include <test/fuzz/util/net.h>
 #include <test/fuzz/util/threadinterrupt.h>
 #include <test/util/setup_common.h>
+#include <test/util/time.h>
 #include <util/fs_helpers.h>
 #include <util/threadinterrupt.h>
 
@@ -25,7 +27,7 @@ FUZZ_TARGET(i2p, .init = initialize_i2p)
     SeedRandomStateForTest(SeedRand::ZEROS);
     FuzzedDataProvider fuzzed_data_provider{buffer.data(), buffer.size()};
 
-    SetMockTime(ConsumeTime(fuzzed_data_provider));
+    NodeClockContext clock_ctx{ConsumeTime(fuzzed_data_provider)};
 
     // Mock CreateSock() to create FuzzedSock.
     auto CreateSockOrig = CreateSock;
@@ -34,7 +36,7 @@ FUZZ_TARGET(i2p, .init = initialize_i2p)
     };
 
     const fs::path private_key_path = gArgs.GetDataDirNet() / "fuzzed_i2p_private_key";
-    const CService addr{in6_addr(IN6ADDR_LOOPBACK_INIT), 7656};
+    const CService addr{in6_addr(COMPAT_IN6ADDR_LOOPBACK_INIT), 7656};
     const Proxy sam_proxy{addr, /*tor_stream_isolation=*/false};
     auto interrupt{ConsumeThreadInterrupt(fuzzed_data_provider)};
 
@@ -59,7 +61,7 @@ FUZZ_TARGET(i2p, .init = initialize_i2p)
         }
     }
 
-    fs::remove_all(private_key_path);
+    fs::remove(private_key_path);
 
     CreateSock = CreateSockOrig;
 }

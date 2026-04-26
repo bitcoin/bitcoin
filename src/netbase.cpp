@@ -431,8 +431,8 @@ bool Socks5(const std::string& strDest, uint16_t port, const ProxyCredentials* a
             vAuth.insert(vAuth.end(), auth->username.begin(), auth->username.end());
             vAuth.push_back(auth->password.size());
             vAuth.insert(vAuth.end(), auth->password.begin(), auth->password.end());
+            LogDebug(BCLog::PROXY, "SOCKS5 sending username/password authentication\n");
             sock.SendComplete(vAuth, g_socks5_recv_timeout, g_socks5_interrupt);
-            LogDebug(BCLog::PROXY, "SOCKS5 sending proxy authentication %s:%s\n", auth->username, auth->password);
             uint8_t pchRetA[2];
             if (InterruptibleRecv(pchRetA, 2, g_socks5_recv_timeout, sock) != IntrRecvError::OK) {
                 LogError("Error reading proxy authentication response\n");
@@ -706,13 +706,14 @@ bool SetProxy(enum Network net, const Proxy &addrProxy) {
     return true;
 }
 
-bool GetProxy(enum Network net, Proxy &proxyInfoOut) {
+std::optional<Proxy> GetProxy(enum Network net)
+{
     assert(net >= 0 && net < NET_MAX);
     LOCK(g_proxyinfo_mutex);
-    if (!proxyInfo[net].IsValid())
-        return false;
-    proxyInfoOut = proxyInfo[net];
-    return true;
+    if (!proxyInfo[net].IsValid()) {
+        return std::nullopt;
+    }
+    return proxyInfo[net];
 }
 
 bool SetNameProxy(const Proxy &addrProxy) {
@@ -723,12 +724,13 @@ bool SetNameProxy(const Proxy &addrProxy) {
     return true;
 }
 
-bool GetNameProxy(Proxy &nameProxyOut) {
+std::optional<Proxy> GetNameProxy()
+{
     LOCK(g_proxyinfo_mutex);
-    if(!nameProxy.IsValid())
-        return false;
-    nameProxyOut = nameProxy;
-    return true;
+    if (!nameProxy.IsValid()) {
+        return std::nullopt;
+    }
+    return nameProxy;
 }
 
 bool HaveNameProxy() {
@@ -946,4 +948,20 @@ CService MaybeFlipIPv6toCJDNS(const CService& service)
         ret.m_net = NET_CJDNS;
     }
     return ret;
+}
+
+CService GetBindAddress(const Sock& sock)
+{
+    CService addr_bind;
+    sockaddr_storage storage;
+    socklen_t len = sizeof(storage);
+
+    auto sa = reinterpret_cast<sockaddr*>(&storage);
+
+    if (sock.GetSockName(sa, &len) == 0) {
+        addr_bind.SetSockAddr(sa, len);
+    } else {
+        LogWarning("getsockname failed\n");
+    }
+    return addr_bind;
 }

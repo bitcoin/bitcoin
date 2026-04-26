@@ -9,9 +9,12 @@
 #include <script/parsing.h>
 #include <span.h>
 #include <sync.h>
+#include <test/util/common.h>
 #include <test/util/random.h>
 #include <test/util/setup_common.h>
+#include <test/util/time.h>
 #include <uint256.h>
+#include <univalue.h>
 #include <util/bitdeque.h>
 #include <util/byte_units.h>
 #include <util/fs.h>
@@ -34,7 +37,7 @@
 #include <optional>
 #include <string>
 #include <thread>
-#include <univalue.h>
+#include <type_traits>
 #include <utility>
 #include <vector>
 
@@ -385,6 +388,21 @@ BOOST_AUTO_TEST_CASE(util_FormatISO8601Date)
     BOOST_CHECK_EQUAL(FormatISO8601Date(1317425777), "2011-09-30");
 }
 
+
+BOOST_AUTO_TEST_CASE(util_FormatRFC1123DateTime)
+{
+    BOOST_CHECK_EQUAL(FormatRFC1123DateTime(std::numeric_limits<int64_t>::max()), "");
+    BOOST_CHECK_EQUAL(FormatRFC1123DateTime(253402300800), "");
+    BOOST_CHECK_EQUAL(FormatRFC1123DateTime(253402300799), "Fri, 31 Dec 9999 23:59:59 GMT");
+    BOOST_CHECK_EQUAL(FormatRFC1123DateTime(253402214400), "Fri, 31 Dec 9999 00:00:00 GMT");
+    BOOST_CHECK_EQUAL(FormatRFC1123DateTime(1717429609), "Mon, 03 Jun 2024 15:46:49 GMT");
+    BOOST_CHECK_EQUAL(FormatRFC1123DateTime(0), "Thu, 01 Jan 1970 00:00:00 GMT");
+    BOOST_CHECK_EQUAL(FormatRFC1123DateTime(-1), "Wed, 31 Dec 1969 23:59:59 GMT");
+    BOOST_CHECK_EQUAL(FormatRFC1123DateTime(-1717429609), "Sat, 31 Jul 1915 08:13:11 GMT");
+    BOOST_CHECK_EQUAL(FormatRFC1123DateTime(-62167219200), "Sat, 01 Jan 0000 00:00:00 GMT");
+    BOOST_CHECK_EQUAL(FormatRFC1123DateTime(-62167219201), "");
+}
+
 BOOST_AUTO_TEST_CASE(util_FormatMoney)
 {
     BOOST_CHECK_EQUAL(FormatMoney(0), "0.00");
@@ -569,7 +587,7 @@ BOOST_AUTO_TEST_CASE(strprintf_numbers)
 
 BOOST_AUTO_TEST_CASE(util_mocktime)
 {
-    SetMockTime(111s);
+    NodeClockContext clock_ctx{111s};
     // Check that mock time does not change after a sleep
     for (const auto& num_sleep : {0ms, 1ms}) {
         UninterruptibleSleep(num_sleep);
@@ -582,7 +600,15 @@ BOOST_AUTO_TEST_CASE(util_mocktime)
         BOOST_CHECK_EQUAL(111000, TicksSinceEpoch<std::chrono::milliseconds>(NodeClock::now()));
         BOOST_CHECK_EQUAL(111000000, GetTime<std::chrono::microseconds>().count());
     }
-    SetMockTime(0s);
+}
+
+BOOST_AUTO_TEST_CASE(util_ticksseconds)
+{
+    BOOST_CHECK_EQUAL(TicksSeconds(0s), 0);
+    BOOST_CHECK_EQUAL(TicksSeconds(1s), 1);
+    BOOST_CHECK_EQUAL(TicksSeconds(999ms), 0);
+    BOOST_CHECK_EQUAL(TicksSeconds(1000ms), 1);
+    BOOST_CHECK_EQUAL(TicksSeconds(1500ms), 1);
 }
 
 BOOST_AUTO_TEST_CASE(test_IsDigit)
@@ -835,6 +861,39 @@ BOOST_AUTO_TEST_CASE(test_LocaleIndependentAtoi)
     BOOST_CHECK_EQUAL(LocaleIndependentAtoi<uint8_t>("256"), 255U);
 }
 
+BOOST_AUTO_TEST_CASE(test_ToIntegralHex)
+{
+    std::optional<uint64_t> n;
+    // Valid values
+    n = ToIntegral<uint64_t>("1234", 16);
+    BOOST_CHECK_EQUAL(*n, 0x1234);
+    n = ToIntegral<uint64_t>("a", 16);
+    BOOST_CHECK_EQUAL(*n, 0xA);
+    n = ToIntegral<uint64_t>("0000000a", 16);
+    BOOST_CHECK_EQUAL(*n, 0xA);
+    n = ToIntegral<uint64_t>("100", 16);
+    BOOST_CHECK_EQUAL(*n, 0x100);
+    n = ToIntegral<uint64_t>("DEADbeef", 16);
+    BOOST_CHECK_EQUAL(*n, 0xDEADbeef);
+    n = ToIntegral<uint64_t>("FfFfFfFf", 16);
+    BOOST_CHECK_EQUAL(*n, 0xFfFfFfFf);
+    n = ToIntegral<uint64_t>("123456789", 16);
+    BOOST_CHECK_EQUAL(*n, 0x123456789ULL);
+    n = ToIntegral<uint64_t>("0", 16);
+    BOOST_CHECK_EQUAL(*n, 0);
+    n = ToIntegral<uint64_t>("FfFfFfFfFfFfFfFf", 16);
+    BOOST_CHECK_EQUAL(*n, 0xFfFfFfFfFfFfFfFfULL);
+    n = ToIntegral<int64_t>("-1", 16);
+    BOOST_CHECK_EQUAL(*n, -1);
+    // Invalid values
+    BOOST_CHECK(!ToIntegral<uint64_t>("", 16));
+    BOOST_CHECK(!ToIntegral<uint64_t>("-1", 16));
+    BOOST_CHECK(!ToIntegral<uint64_t>("10 00", 16));
+    BOOST_CHECK(!ToIntegral<uint64_t>("1 ", 16));
+    BOOST_CHECK(!ToIntegral<uint64_t>("0xAB", 16));
+    BOOST_CHECK(!ToIntegral<uint64_t>("FfFfFfFfFfFfFfFf0", 16));
+}
+
 BOOST_AUTO_TEST_CASE(test_FormatParagraph)
 {
     BOOST_CHECK_EQUAL(FormatParagraph("", 79, 0), "");
@@ -1080,7 +1139,8 @@ BOOST_AUTO_TEST_CASE(test_LockDirectory)
 #endif
     // Clean up
     ReleaseDirectoryLocks();
-    fs::remove_all(dirname);
+    fs::remove(dirname / lockname);
+    fs::remove(dirname);
 }
 
 BOOST_AUTO_TEST_CASE(test_ToLower)
@@ -1574,10 +1634,10 @@ BOOST_AUTO_TEST_CASE(util_ParseByteUnits)
     BOOST_CHECK_EQUAL(ParseByteUnits("1K", noop).value(), 1ULL << 10);
 
     BOOST_CHECK_EQUAL(ParseByteUnits("2m", noop).value(), 2'000'000ULL);
-    BOOST_CHECK_EQUAL(ParseByteUnits("2M", noop).value(), 2ULL << 20);
+    BOOST_CHECK_EQUAL(ParseByteUnits("2M", noop).value(), 2_MiB);
 
     BOOST_CHECK_EQUAL(ParseByteUnits("3g", noop).value(), 3'000'000'000ULL);
-    BOOST_CHECK_EQUAL(ParseByteUnits("3G", noop).value(), 3ULL << 30);
+    BOOST_CHECK_EQUAL(ParseByteUnits("3G", noop).value(), 3_GiB);
 
     BOOST_CHECK_EQUAL(ParseByteUnits("4t", noop).value(), 4'000'000'000'000ULL);
     BOOST_CHECK_EQUAL(ParseByteUnits("4T", noop).value(), 4ULL << 40);
@@ -1598,7 +1658,7 @@ BOOST_AUTO_TEST_CASE(util_ParseByteUnits)
     BOOST_CHECK(!ParseByteUnits("+123m", noop));
 
     // zero padding
-    BOOST_CHECK_EQUAL(ParseByteUnits("020M", noop).value(), 20ULL << 20);
+    BOOST_CHECK_EQUAL(ParseByteUnits("020M", noop).value(), 20_MiB);
 
     // fractions not allowed
     BOOST_CHECK(!ParseByteUnits("0.5T", noop));
@@ -1768,12 +1828,106 @@ BOOST_AUTO_TEST_CASE(saturating_left_shift_test)
     TestSaturatingLeftShift<int64_t>();
 }
 
+template <class Int, auto bytes>
+concept BraceInitializesTo = requires { Int{bytes}; };
+
 BOOST_AUTO_TEST_CASE(mib_string_literal_test)
 {
+    // Basic equivalences and simple arithmetic operations
     BOOST_CHECK_EQUAL(0_MiB, 0);
+    BOOST_CHECK_EQUAL(1_MiB, 1 << 20);
     BOOST_CHECK_EQUAL(1_MiB, 1024 * 1024);
-    const auto max_mib{std::numeric_limits<size_t>::max() >> 20};
-    BOOST_CHECK_EXCEPTION(operator""_MiB(static_cast<unsigned long long>(max_mib) + 1), std::overflow_error, HasReason("MiB value too large for size_t byte conversion"));
+    BOOST_CHECK_EQUAL(1_MiB, 0x100000U);
+    BOOST_CHECK_EQUAL(1_MiB, 1048576U);
+    BOOST_CHECK_EQUAL(2ULL * 1_MiB, 2ULL << 20);
+    BOOST_CHECK_EQUAL((3_MiB + 123) / double(1_MiB), (3_MiB + 123) / 1024.0 / 1024.0);
+
+    // Specific codebase values
+    BOOST_CHECK_EQUAL(4_MiB, 1 << 22);
+    BOOST_CHECK_EQUAL(8_MiB, 1 << 23);
+    BOOST_CHECK_EQUAL(16_MiB, 0x1000000U);
+    BOOST_CHECK_EQUAL(16_MiB, 1 << 24);
+    BOOST_CHECK_EQUAL(32_MiB, 0x2000000U);
+    BOOST_CHECK_EQUAL(32_MiB, 32U << 20);
+    BOOST_CHECK_EQUAL(50_MiB / 1_MiB, 50U);
+    BOOST_CHECK_EQUAL(50_MiB, 52428800U);
+    BOOST_CHECK_EQUAL(128_MiB, 0x8000000U);
+    BOOST_CHECK_EQUAL(550_MiB, 550ULL * 1024 * 1024);
+
+    // 4095 MiB fits in uint32_t bytes. 4096 MiB requires the uint64_t return type.
+    static_assert(BraceInitializesTo<uint32_t, 4095_MiB>);
+    static_assert(!BraceInitializesTo<uint32_t, 4096_MiB>);
+    static_assert(BraceInitializesTo<uint64_t, 4096_MiB>);
+    BOOST_CHECK_EQUAL(4095_MiB, uint32_t{4095} << 20);
+    BOOST_CHECK_EQUAL(4096_MiB, uint64_t{4096} << 20);
+}
+
+BOOST_AUTO_TEST_CASE(ceil_div_test)
+{
+    // Type combinations used by current CeilDiv callsites.
+    BOOST_CHECK((std::is_same_v<decltype(CeilDiv(uint32_t{0}, 8u)), uint32_t>));
+    BOOST_CHECK((std::is_same_v<decltype(CeilDiv(size_t{0}, 8u)), size_t>));
+    BOOST_CHECK((std::is_same_v<decltype(CeilDiv(unsigned{0}, size_t{1})), size_t>));
+
+    // `common/bloom.cpp` and `cuckoocache.h` patterns.
+    BOOST_CHECK_EQUAL(CeilDiv(uint32_t{3}, 2u), uint32_t{2});
+    BOOST_CHECK_EQUAL(CeilDiv(uint32_t{65}, 64u), uint32_t{2});
+    BOOST_CHECK_EQUAL(CeilDiv(uint32_t{9}, 8u), uint32_t{2});
+
+    // `key_io.cpp`, `rest.cpp`, `merkleblock.cpp`, `strencodings.cpp` patterns.
+    BOOST_CHECK_EQUAL(CeilDiv(size_t{9}, 8u), size_t{2});
+    BOOST_CHECK_EQUAL(CeilDiv(size_t{10}, 3u), size_t{4});
+    BOOST_CHECK_EQUAL(CeilDiv(size_t{11}, 5u), size_t{3});
+    BOOST_CHECK_EQUAL(CeilDiv(size_t{41} * 8, 5u), size_t{66});
+
+    // `flatfile.cpp` mixed unsigned/size_t pattern.
+    BOOST_CHECK_EQUAL(CeilDiv(unsigned{10}, size_t{4}), size_t{3});
+
+    // `util/feefrac.h` fast-path rounding-up pattern.
+    constexpr int64_t fee{12345};
+    constexpr int32_t at_size{67};
+    constexpr int32_t size{10};
+    BOOST_CHECK_EQUAL(CeilDiv(uint64_t(fee) * at_size, uint32_t(size)),
+                      (uint64_t(fee) * at_size + uint32_t(size) - 1) / uint32_t(size));
+
+    // `bitset.h` template parameter pattern.
+    constexpr unsigned bits{129};
+    constexpr size_t digits{std::numeric_limits<size_t>::digits};
+    BOOST_CHECK_EQUAL(CeilDiv(bits, digits), (bits + digits - 1) / digits);
+
+    // `serialize.h` varint scratch-buffer pattern.
+    BOOST_CHECK_EQUAL(CeilDiv(sizeof(uint64_t) * 8, 7u), (sizeof(uint64_t) * 8 + 6) / 7);
+}
+
+BOOST_AUTO_TEST_CASE(gib_string_literal_test)
+{
+    // Basic equivalences and simple arithmetic operations
+    BOOST_CHECK_EQUAL(0_GiB, 0);
+    BOOST_CHECK_EQUAL(1_GiB, 1 << 30);
+    BOOST_CHECK_EQUAL(1_GiB, 1024 * 1024 * 1024);
+    BOOST_CHECK_EQUAL(1_GiB, 0x40000000U);
+    BOOST_CHECK_EQUAL(1_GiB, 1073741824U);
+    BOOST_CHECK_EQUAL(1_GiB, 1_MiB * 1024);
+    BOOST_CHECK_EQUAL(1_GiB, 1024_MiB);
+    BOOST_CHECK_EQUAL((1_GiB + 123) / double(1_GiB), (1_GiB + 123) / 1024.0 / 1024.0 / 1024.0);
+    BOOST_CHECK_EQUAL(2ULL * 1_GiB, 2ULL << 30);
+    BOOST_CHECK_EQUAL(4 * uint64_t{1_GiB}, uint64_t{4} << 30);
+    BOOST_CHECK_EQUAL(2_GiB, 2048_MiB);
+    BOOST_CHECK_EQUAL(3_GiB / 1_GiB, 3U);
+    BOOST_CHECK_EQUAL(3_GiB, 3U << 30);
+
+    // 3 GiB fits in uint32_t bytes. 4 GiB requires the uint64_t return type.
+    static_assert(BraceInitializesTo<uint32_t, 3_GiB>);
+    static_assert(!BraceInitializesTo<uint32_t, 4_GiB>);
+    static_assert(BraceInitializesTo<uint64_t, 4_GiB>);
+    BOOST_CHECK_EQUAL(3_GiB, uint32_t{3} << 30);
+    BOOST_CHECK_EQUAL(4_GiB, uint64_t{4} << 30);
+
+    // Specific codebase values
+    BOOST_CHECK_EQUAL(4_GiB, 4096_MiB);
+    BOOST_CHECK_EQUAL(8_GiB, 8192_MiB);
+    BOOST_CHECK_EQUAL(16_GiB, 16384_MiB);
+    BOOST_CHECK_EQUAL(32_GiB, 32768_MiB);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

@@ -2,6 +2,7 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
+#include <banman.h>
 #include <consensus/consensus.h>
 #include <net.h>
 #include <net_processing.h>
@@ -17,6 +18,7 @@
 #include <test/util/mining.h>
 #include <test/util/net.h>
 #include <test/util/setup_common.h>
+#include <test/util/time.h>
 #include <test/util/validation.h>
 #include <util/check.h>
 #include <util/time.h>
@@ -40,9 +42,10 @@ void ResetChainman(TestingSetup& setup)
     setup.m_make_chainman();
     setup.LoadVerifyActivateChainstate();
     for (int i = 0; i < 2 * COINBASE_MATURITY; i++) {
-        MineBlock(setup.m_node, {});
+        node::BlockAssembler::Options options;
+        options.include_dummy_extranonce = true;
+        MineBlock(setup.m_node, options);
     }
-    setup.m_node.validation_signals->SyncWithValidationInterfaceQueue();
 }
 } // namespace
 
@@ -67,40 +70,45 @@ FUZZ_TARGET(process_message, .init = initialize_process_message)
     SeedRandomStateForTest(SeedRand::ZEROS);
     FuzzedDataProvider fuzzed_data_provider(buffer.data(), buffer.size());
 
-    auto& connman = static_cast<ConnmanTestMsg&>(*g_setup->m_node.connman);
-    connman.ResetAddrCache();
-    connman.ResetMaxOutboundCycle();
-    auto& chainman = static_cast<TestChainstateManager&>(*g_setup->m_node.chainman);
+    auto& node{g_setup->m_node};
+    auto& connman{static_cast<ConnmanTestMsg&>(*node.connman)};
+    connman.Reset();
+    auto& chainman{static_cast<TestChainstateManager&>(*node.chainman)};
     const auto block_index_size{WITH_LOCK(chainman.GetMutex(), return chainman.BlockIndex().size())};
-    SetMockTime(1610000000); // any time to successfully reset ibd
+    NodeClockContext clock_ctx{1610000000s}; // any time to successfully reset ibd
     chainman.ResetIbd();
     chainman.DisableNextWrite();
 
-    node::Warnings warnings{};
-    NetGroupManager netgroupman{{}};
-    AddrMan addrman{netgroupman, /*deterministic=*/true, /*consistency_check_ratio=*/0};
-    auto peerman = PeerManager::make(connman, addrman,
+    // Reset, so that dangling pointers can be detected by sanitizers.
+    node.banman.reset();
+    node.addrman.reset();
+    node.peerman.reset();
+    node.addrman = std::make_unique<AddrMan>(*node.netgroupman, /*deterministic=*/true, /*consistency_check_ratio=*/0);
+    node.peerman = PeerManager::make(connman, *node.addrman,
                                      /*banman=*/nullptr, chainman,
-                                     *g_setup->m_node.mempool, warnings,
+                                     *node.mempool, *node.warnings,
                                      PeerManager::Options{
                                          .reconcile_txs = true,
                                          .deterministic_rng = true,
                                      });
 
-    connman.SetMsgProc(peerman.get());
+    connman.SetMsgProc(node.peerman.get());
+    connman.SetAddrman(*node.addrman);
     LOCK(NetEventsInterface::g_msgproc_mutex);
 
     const std::string random_message_type{fuzzed_data_provider.ConsumeBytesAsString(CMessageHeader::MESSAGE_TYPE_SIZE).c_str()};
     if (!LIMIT_TO_MESSAGE_TYPE.empty() && random_message_type != LIMIT_TO_MESSAGE_TYPE) {
         return;
     }
+
+    node.validation_signals->RegisterValidationInterface(node.peerman.get());
+
     CNode& p2p_node = *ConsumeNodeAsUniquePtr(fuzzed_data_provider).release();
 
     connman.AddTestNode(p2p_node);
     FillNode(fuzzed_data_provider, connman, p2p_node);
 
-    const auto mock_time = ConsumeTime(fuzzed_data_provider);
-    SetMockTime(mock_time);
+    clock_ctx.set(ConsumeTime(fuzzed_data_provider));
 
     CSerializedNetMsg net_msg;
     net_msg.m_type = random_message_type;
@@ -116,10 +124,11 @@ FUZZ_TARGET(process_message, .init = initialize_process_message)
             more_work = connman.ProcessMessagesOnce(p2p_node);
         } catch (const std::ios_base::failure&) {
         }
-        g_setup->m_node.peerman->SendMessages(&p2p_node);
+        node.peerman->SendMessages(p2p_node);
     }
-    g_setup->m_node.validation_signals->SyncWithValidationInterfaceQueue();
-    g_setup->m_node.connman->StopNodes();
+    node.validation_signals->SyncWithValidationInterfaceQueue();
+    node.validation_signals->UnregisterValidationInterface(node.peerman.get());
+    node.connman->StopNodes();
     if (block_index_size != WITH_LOCK(chainman.GetMutex(), return chainman.BlockIndex().size())) {
         // Reuse the global chainman, but reset it when it is dirty
         ResetChainman(*g_setup);

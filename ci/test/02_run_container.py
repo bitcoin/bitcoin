@@ -17,7 +17,7 @@ def run(cmd, **kwargs):
     try:
         return subprocess.run(cmd, **kwargs)
     except Exception as e:
-        sys.exit(e)
+        sys.exit(str(e))
 
 
 def main():
@@ -58,14 +58,6 @@ def main():
 
         # Modify PATH to prepend the retry script, needed for CI_RETRY_EXE
         os.environ["PATH"] = f"{os.environ['BASE_ROOT_DIR']}/ci/retry:{os.environ['PATH']}"
-        # GNU getopt is required for the CI_RETRY_EXE script
-        if os.getenv("CI_OS_NAME") == "macos":
-            prefix = run(
-                ["brew", "--prefix", "gnu-getopt"],
-                stdout=subprocess.PIPE,
-                text=True,
-            ).stdout.strip()
-            os.environ["IN_GETOPT_BIN"] = f"{prefix}/bin/getopt"
     else:
         CI_IMAGE_LABEL = "bitcoin-ci-test"
 
@@ -166,7 +158,13 @@ def main():
         if os.getenv("DANGER_RUN_CI_ON_HOST"):
             prefix = []
         else:
-            prefix = ["docker", "exec", container_id]
+            prefix = [
+                "docker",
+                "exec",
+                "--env",
+                "DANGER_RUN_CI_ON_HOST=1",  # Safe to set *inside* the container
+                container_id,
+            ]
 
         return run([*prefix, *cmd_inner], **kwargs)
 

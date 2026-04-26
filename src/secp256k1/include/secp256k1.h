@@ -6,6 +6,7 @@ extern "C" {
 #endif
 
 #include <stddef.h>
+#include <stdint.h>
 
 /** Unless explicitly stated all pointer arguments must not be NULL.
  *
@@ -349,7 +350,8 @@ SECP256K1_API void secp256k1_context_destroy(
  *  writes the message to stderr and calls abort. This default callback can be
  *  replaced at link time if the preprocessor macro
  *  USE_EXTERNAL_DEFAULT_CALLBACKS is defined, which is the case if the build
- *  has been configured with --enable-external-default-callbacks. Then the
+ *  has been configured with --enable-external-default-callbacks (GNU Autotools) or
+ *  -DSECP256K1_USE_EXTERNAL_DEFAULT_CALLBACKS=ON (CMake). Then the
  *  following two symbols must be provided to link against:
  *   - void secp256k1_default_illegal_callback_fn(const char *message, void *data);
  *   - void secp256k1_default_error_callback_fn(const char *message, void *data);
@@ -401,6 +403,46 @@ SECP256K1_API void secp256k1_context_set_error_callback(
     secp256k1_context *ctx,
     void (*fun)(const char *message, void *data),
     const void *data
+) SECP256K1_ARG_NONNULL(1);
+
+/** A pointer to a function implementing SHA256's internal compression function.
+ *
+ * This function processes one or more contiguous 64-byte message blocks and
+ * updates the internal SHA256 state accordingly. The function is not responsible
+ * for counting consumed blocks or bytes, nor for performing padding.
+ *
+ * In/Out:  state:     pointer to eight 32-bit words representing the current internal state;
+ *                     the state is updated in place.
+ * In:      blocks64:  pointer to concatenation of n_blocks blocks, of 64 bytes each.
+ *                     no alignment guarantees are made for this pointer.
+ *          n_blocks:  number of contiguous 64-byte blocks to process.
+ */
+typedef void (*secp256k1_sha256_compression_function)(
+    uint32_t *state,
+    const unsigned char *blocks64,
+    size_t n_blocks
+);
+
+/**
+ * Set a callback function to override the internal SHA256 compression function.
+ *
+ * This installs a function to replace the built-in block-compression
+ * step used by the library's internal SHA256 implementation.
+ * The provided callback must exactly implement the effect of n_blocks
+ * repeated applications of the SHA256 compression function.
+ *
+ * This API exists to support environments that wish to route the
+ * SHA256 compression step through a hardware-accelerated or otherwise
+ * specialized implementation. It is NOT meant for replacing SHA256
+ * with a different hash function.
+ *
+ * Args:    ctx:             pointer to a context object.
+ * In:      fn_compression:  pointer to a function implementing the compression function;
+ *                           passing NULL restores the default implementation.
+ */
+SECP256K1_API void secp256k1_context_set_sha256_compression(
+        secp256k1_context *ctx,
+        secp256k1_sha256_compression_function fn_compression
 ) SECP256K1_ARG_NONNULL(1);
 
 /** Parse a variable-length public key into the pubkey object.

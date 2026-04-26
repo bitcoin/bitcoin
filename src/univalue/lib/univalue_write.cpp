@@ -5,7 +5,6 @@
 #include <univalue.h>
 #include <univalue_escapes.h>
 
-#include <memory>
 #include <string>
 #include <vector>
 

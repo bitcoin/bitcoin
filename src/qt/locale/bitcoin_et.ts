@@ -171,6 +171,14 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <translation type="unfinished">Sisesta rahakoti vana salafraas ja uus salafraas.</translation>
     </message>
     <message>
+        <source>Continue</source>
+        <translation type="unfinished">Jätka</translation>
+    </message>
+    <message>
+        <source>Back</source>
+        <translation type="unfinished">Tagasi</translation>
+    </message>
+    <message>
         <source>Remember that encrypting your wallet cannot fully protect your bitcoins from being stolen by malware infecting your computer.</source>
         <translation type="unfinished">Pea meeles, et rahakoti krüpteerimine ei välista bitcoinide vargust, kui sinu arvuti on nakatunud pahavaraga.</translation>
     </message>
@@ -213,6 +221,10 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     <message>
         <source>Wallet passphrase was successfully changed.</source>
         <translation type="unfinished">Rahakoti parooli vahetus õnnestus.</translation>
+    </message>
+    <message>
+        <source>Passphrase change failed</source>
+        <translation type="unfinished">Parooli muutmine ei õnnestunud</translation>
     </message>
     <message>
         <source>Warning: The Caps Lock key is on!</source>
@@ -419,12 +431,20 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <translation type="unfinished">Kinnita sõnumid kindlustamaks et need allkirjastati määratud Bitcoini aadressiga</translation>
     </message>
     <message>
+        <source>Open &amp;URI…</source>
+        <translation type="unfinished">Ava &amp;URI…</translation>
+    </message>
+    <message>
         <source>Close Wallet…</source>
         <translation type="unfinished">Sulge Rahakott...</translation>
     </message>
     <message>
         <source>Create Wallet…</source>
         <translation type="unfinished">Loo Rahakott...</translation>
+    </message>
+    <message>
+        <source>Close All Wallets…</source>
+        <translation type="unfinished">Sulge kõik rahakotid</translation>
     </message>
     <message>
         <source>&amp;File</source>
@@ -933,6 +953,10 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <translation type="unfinished">Kinnita valikute algseadistamine</translation>
     </message>
     <message>
+        <source>Continue</source>
+        <translation type="unfinished">Jätka</translation>
+    </message>
+    <message>
         <source>Error</source>
         <translation type="unfinished">Viga</translation>
     </message>
@@ -974,6 +998,13 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     </context>
 <context>
     <name>PSBTOperationsDialog</name>
+    <message numerus="yes">
+        <source>Signed %n input(s), but more signatures are still required.</source>
+        <translation type="unfinished">
+            <numerusform />
+            <numerusform />
+        </translation>
+    </message>
     <message>
         <source>own address</source>
         <translation type="unfinished">oma aadress</translation>
@@ -981,6 +1012,13 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     <message>
         <source>or</source>
         <translation type="unfinished">või</translation>
+    </message>
+    <message numerus="yes">
+        <source>Transaction has %n unsigned input(s).</source>
+        <translation type="unfinished">
+            <numerusform />
+            <numerusform />
+        </translation>
     </message>
     </context>
 <context>
@@ -1381,10 +1419,6 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     <message>
         <source>The amount exceeds your balance.</source>
         <translation type="unfinished">Summa ületab jäägi.</translation>
-    </message>
-    <message>
-        <source>The total exceeds your balance when the %1 transaction fee is included.</source>
-        <translation type="unfinished">Summa koos tehingu tasuga %1 ületab sinu jääki.</translation>
     </message>
     <message numerus="yes">
         <source>Estimated to begin confirmation within %n block(s).</source>

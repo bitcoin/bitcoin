@@ -4,21 +4,6 @@
 
 #include <dbwrapper.h>
 
-#include <logging.h>
-#include <random.h>
-#include <serialize.h>
-#include <span.h>
-#include <streams.h>
-#include <util/fs.h>
-#include <util/fs_helpers.h>
-#include <util/obfuscation.h>
-#include <util/strencodings.h>
-
-#include <algorithm>
-#include <cassert>
-#include <cstdarg>
-#include <cstdint>
-#include <cstdio>
 #include <leveldb/cache.h>
 #include <leveldb/db.h>
 #include <leveldb/env.h>
@@ -29,6 +14,23 @@
 #include <leveldb/slice.h>
 #include <leveldb/status.h>
 #include <leveldb/write_batch.h>
+#include <logging.h>
+#include <random.h>
+#include <serialize.h>
+#include <span.h>
+#include <streams.h>
+#include <util/byte_units.h>
+#include <util/fs.h>
+#include <util/fs_helpers.h>
+#include <util/log.h>
+#include <util/obfuscation.h>
+#include <util/strencodings.h>
+
+#include <algorithm>
+#include <cassert>
+#include <cstdarg>
+#include <cstdint>
+#include <cstdio>
 #include <memory>
 #include <optional>
 #include <utility>
@@ -57,7 +59,7 @@ public:
     // This code is adapted from posix_logger.h, which is why it is using vsprintf.
     // Please do not do this in normal code
     void Logv(const char * format, va_list ap) override {
-            if (!LogAcceptCategory(BCLog::LEVELDB, BCLog::Level::Debug)) {
+            if (!LogAcceptCategory(BCLog::LEVELDB, util::log::Level::Debug)) {
                 return;
             }
             char buffer[500];
@@ -276,15 +278,15 @@ CDBWrapper::~CDBWrapper()
 
 void CDBWrapper::WriteBatch(CDBBatch& batch, bool fSync)
 {
-    const bool log_memory = LogAcceptCategory(BCLog::LEVELDB, BCLog::Level::Debug);
+    const bool log_memory = LogAcceptCategory(BCLog::LEVELDB, util::log::Level::Debug);
     double mem_before = 0;
     if (log_memory) {
-        mem_before = DynamicMemoryUsage() / 1024.0 / 1024;
+        mem_before = DynamicMemoryUsage() / double(1_MiB);
     }
     leveldb::Status status = DBContext().pdb->Write(fSync ? DBContext().syncoptions : DBContext().writeoptions, &batch.m_impl_batch->batch);
     HandleError(status);
     if (log_memory) {
-        double mem_after = DynamicMemoryUsage() / 1024.0 / 1024;
+        double mem_after{DynamicMemoryUsage() / double(1_MiB)};
         LogDebug(BCLog::LEVELDB, "WriteBatch memory usage: db=%s, before=%.1fMiB, after=%.1fMiB\n",
                  m_name, mem_before, mem_after);
     }
@@ -369,6 +371,8 @@ void CDBIterator::SeekImpl(std::span<const std::byte> key)
 
 std::span<const std::byte> CDBIterator::GetKeyImpl() const
 {
+    // The returned span borrows from the current iterator entry and is only
+    // valid until the iterator is advanced.
     return MakeByteSpan(m_impl_iter->iter->key());
 }
 

@@ -70,7 +70,7 @@ public:
     /* Add an address to the model.
        Returns the added address on success, and an empty string otherwise.
      */
-    QString addRow(const QString &type, const QString &label, const QString &address, const OutputType address_type);
+    QString addRow(const QString& type, const QString& label, const QString& address, OutputType address_type);
 
     /** Look up label for address in address book, if not found return empty string. */
     QString labelForAddress(const QString &address) const;

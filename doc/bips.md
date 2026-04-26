@@ -51,6 +51,8 @@ BIPs that are implemented by Bitcoin Core:
 * [`BIP 176`](https://github.com/bitcoin/bips/blob/master/bip-0176.mediawiki): Bits Denomination [QT only] is supported as of **v0.16.0** ([PR 12035](https://github.com/bitcoin/bitcoin/pull/12035)).
 * [`BIP 324`](https://github.com/bitcoin/bips/blob/master/bip-0324.mediawiki): The v2 transport protocol specified by BIP324 and the associated `NODE_P2P_V2` service bit are supported as of **v26.0**, but off by default ([PR 28331](https://github.com/bitcoin/bitcoin/pull/28331)). On by default as of **v27.0** ([PR 29347](https://github.com/bitcoin/bitcoin/pull/29347)).
 * [`BIP 325`](https://github.com/bitcoin/bips/blob/master/bip-0325.mediawiki): Signet test network is supported as of **v0.21.0** ([PR 18267](https://github.com/bitcoin/bitcoin/pull/18267)).
+* [`BIP 327`](https://github.com/bitcoin/bips/blob/master/bip-0327.mediawiki): Key aggregation via `musig()` descriptors is supported as of **v30.0** ([PR 31244](https://github.com/bitcoin/bitcoin/pull/31244)). Signing is supported as of **v31.0** ([PR 29675](https://github.com/bitcoin/bitcoin/pull/29675))
+* [`BIP 328`](https://github.com/bitcoin/bips/blob/master/bip-0328.mediawiki): MuSig2 derivation via `musig()` descriptors is supported as of **v30.0** ([PR 31244](https://github.com/bitcoin/bitcoin/pull/31244))
 * [`BIP 339`](https://github.com/bitcoin/bips/blob/master/bip-0339.mediawiki): Relay of transactions by wtxid is supported as of **v0.21.0** ([PR 18044](https://github.com/bitcoin/bitcoin/pull/18044)).
 * [`BIP 340`](https://github.com/bitcoin/bips/blob/master/bip-0340.mediawiki)
   [`341`](https://github.com/bitcoin/bips/blob/master/bip-0341.mediawiki)
@@ -62,6 +64,7 @@ BIPs that are implemented by Bitcoin Core:
   always active as of **v24.0** ([PR 23536](https://github.com/bitcoin/bitcoin/pull/23536)).
 * [`BIP 350`](https://github.com/bitcoin/bips/blob/master/bip-0350.mediawiki): Addresses for native v1+ segregated Witness outputs use Bech32m instead of Bech32 as of **v22.0** ([PR 20861](https://github.com/bitcoin/bitcoin/pull/20861)).
 * [`BIP 371`](https://github.com/bitcoin/bips/blob/master/bip-0371.mediawiki): Taproot fields for PSBT as of **v24.0** ([PR 22558](https://github.com/bitcoin/bitcoin/pull/22558)).
+* [`BIP 373`](https://github.com/bitcoin/bips/blob/master/bip-0373.mediawiki): MuSig2 fields for PSBT as of **v30.0** ([PR 31247](https://github.com/bitcoin/bitcoin/pull/31247))
 * [`BIP 379`](https://github.com/bitcoin/bips/blob/master/bip-0379.md): Miniscript was partially implemented in **v24.0** ([PR 24148](https://github.com/bitcoin/bitcoin/pull/24148)), and fully implemented as of **v26.0** ([PR 27255](https://github.com/bitcoin/bitcoin/pull/27255)).
 * [`BIP 380`](https://github.com/bitcoin/bips/blob/master/bip-0380.mediawiki)
   [`381`](https://github.com/bitcoin/bips/blob/master/bip-0381.mediawiki)
@@ -72,4 +75,6 @@ BIPs that are implemented by Bitcoin Core:
   Output Script Descriptors, and most of Script Expressions are implemented as of **v0.17.0** ([PR 13697](https://github.com/bitcoin/bitcoin/pull/13697)).
 * [`BIP 386`](https://github.com/bitcoin/bips/blob/master/bip-0386.mediawiki): tr() Output Script Descriptors are implemented as of **v22.0** ([PR 22051](https://github.com/bitcoin/bitcoin/pull/22051)).
 * [`BIP 387`](https://github.com/bitcoin/bips/blob/master/bip-0387.mediawiki): Tapscript Multisig Output Script Descriptors are implemented as of **v24.0** ([PR 24043](https://github.com/bitcoin/bitcoin/pull/24043)).
+* [`BIP 390`](https://github.com/bitcoin/bips/blob/master/bip-0390.mediawiki): MuSig2 Descriptor parsing is implemented in **v30.0** ([PR 31244](https://github.com/bitcoin/bitcoin/pull/31244)) and signing in **v31.0** ([PR 29675](https://github.com/bitcoin/bitcoin/pull/29675))
 * [`BIP 431`](https://github.com/bitcoin/bips/blob/master/bip-0431.mediawiki): transactions with nVersion=3 are standard and treated as Topologically Restricted Until Confirmation as of **v28.0** ([PR 29496](https://github.com/bitcoin/bitcoin/pull/29496)).
+* [`BIP 433`](https://github.com/bitcoin/bips/blob/master/bip-0433.mediawiki): Spending of Pay to Anchor (P2A) outputs is standard as of **v28.0** ([PR 30352](https://github.com/bitcoin/bitcoin/pull/30352)).

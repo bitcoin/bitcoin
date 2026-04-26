@@ -12,8 +12,10 @@
 #include <primitives/transaction.h>
 #include <random.h>
 #include <sync.h>
+#include <test/util/setup_common.h>
 #include <util/result.h>
 #include <wallet/coinselection.h>
+#include <wallet/context.h>
 #include <wallet/spend.h>
 #include <wallet/test/util.h>
 #include <wallet/transaction.h>
@@ -26,19 +28,7 @@
 #include <utility>
 #include <vector>
 
-using node::NodeContext;
-using wallet::AttemptSelection;
-using wallet::CHANGE_LOWER;
-using wallet::COutput;
-using wallet::CWallet;
-using wallet::CWalletTx;
-using wallet::CoinEligibilityFilter;
-using wallet::CoinSelectionParams;
-using wallet::CreateMockableWalletDatabase;
-using wallet::OutputGroup;
-using wallet::SelectCoinsBnB;
-using wallet::TxStateInactive;
-
+namespace wallet {
 static void addCoin(const CAmount& nValue, const CWallet& wallet, std::vector<std::unique_ptr<CWalletTx>>& wtxs)
 {
     static int nextLockTime = 0;
@@ -58,9 +48,8 @@ static void addCoin(const CAmount& nValue, const CWallet& wallet, std::vector<st
 // (https://github.com/bitcoin/bitcoin/issues/7883#issuecomment-224807484)
 static void CoinSelection(benchmark::Bench& bench)
 {
-    NodeContext node;
-    auto chain = interfaces::MakeChain(node);
-    CWallet wallet(chain.get(), "", CreateMockableWalletDatabase());
+    const auto test_setup = MakeNoLogFileContext<TestingSetup>();
+    CWallet wallet(test_setup->m_node.chain.get(), "", CreateMockableWalletDatabase());
     std::vector<std::unique_ptr<CWalletTx>> wtxs;
     LOCK(wallet.cs_wallet);
 
@@ -107,7 +96,7 @@ static void add_coin(const CAmount& nValue, int nInput, std::vector<OutputGroup>
     tx.vout[nInput].nValue = nValue;
     COutput output(COutPoint(tx.GetHash(), nInput), tx.vout.at(nInput), /*depth=*/0, /*input_bytes=*/-1, /*solvable=*/true, /*safe=*/true, /*time=*/0, /*from_me=*/true, /*fees=*/0);
     set.emplace_back();
-    set.back().Insert(std::make_shared<COutput>(output), /*ancestors=*/ 0, /*descendants=*/ 0);
+    set.back().Insert(std::make_shared<COutput>(output), /*ancestors=*/ 0, /*cluster_count=*/ 0);
 }
 // Copied from src/wallet/test/coinselector_tests.cpp
 static CAmount make_hard_case(int utxos, std::vector<OutputGroup>& utxo_pool)
@@ -124,18 +113,15 @@ static CAmount make_hard_case(int utxos, std::vector<OutputGroup>& utxo_pool)
 
 static void BnBExhaustion(benchmark::Bench& bench)
 {
-    // Setup
     std::vector<OutputGroup> utxo_pool;
-
-    bench.run([&] {
-        // Benchmark
-        CAmount target = make_hard_case(17, utxo_pool);
-        [[maybe_unused]] auto _{SelectCoinsBnB(utxo_pool, target, /*cost_of_change=*/0, MAX_STANDARD_TX_WEIGHT)}; // Should exhaust
-
-        // Cleanup
-        utxo_pool.clear();
-    });
+    CAmount target;
+    bench.setup([&] { target = make_hard_case(17, utxo_pool); })
+        .run([&] {
+            auto res{SelectCoinsBnB(utxo_pool, target, /*cost_of_change=*/0, MAX_STANDARD_TX_WEIGHT)}; // Should exhaust
+            ankerl::nanobench::doNotOptimizeAway(res);
+        });
 }
 
-BENCHMARK(CoinSelection, benchmark::PriorityLevel::HIGH);
-BENCHMARK(BnBExhaustion, benchmark::PriorityLevel::HIGH);
+BENCHMARK(CoinSelection);
+BENCHMARK(BnBExhaustion);
+}; // namespace wallet

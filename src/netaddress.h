@@ -206,7 +206,7 @@ public:
     std::vector<unsigned char> GetAddrBytes() const;
     int GetReachabilityFrom(const CNetAddr& paddrPartner) const;
 
-    explicit CNetAddr(const struct in6_addr& pipv6Addr, const uint32_t scope = 0);
+    explicit CNetAddr(const struct in6_addr& pipv6Addr, uint32_t scope = 0);
     bool GetIn6Addr(struct in6_addr* pipv6Addr) const;
 
     friend bool operator==(const CNetAddr& a, const CNetAddr& b);

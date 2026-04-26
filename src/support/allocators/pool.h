@@ -15,6 +15,7 @@
 #include <utility>
 
 #include <util/check.h>
+#include <util/overflow.h>
 
 /**
  * A memory resource similar to std::pmr::unsynchronized_pool_resource, but
@@ -127,7 +128,7 @@ class PoolResource final
      */
     [[nodiscard]] static constexpr std::size_t NumElemAlignBytes(std::size_t bytes)
     {
-        return (bytes + ELEM_ALIGN_BYTES - 1) / ELEM_ALIGN_BYTES + (bytes == 0);
+        return CeilDiv(bytes, ELEM_ALIGN_BYTES) + (bytes == 0);
     }
 
     /**
@@ -155,7 +156,7 @@ class PoolResource final
     void AllocateChunk()
     {
         // if there is still any available memory left, put it into the freelist.
-        size_t remaining_available_bytes = std::distance(m_available_memory_it, m_available_memory_end);
+        size_t remaining_available_bytes = m_available_memory_end - m_available_memory_it;
         if (0 != remaining_available_bytes) {
             ASAN_UNPOISON_MEMORY_REGION(m_available_memory_it, sizeof(ListNode));
             PlacementAddToList(m_available_memory_it, m_free_lists[remaining_available_bytes / ELEM_ALIGN_BYTES]);

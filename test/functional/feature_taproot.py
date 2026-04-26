@@ -640,6 +640,7 @@ ERR_BAD_OPCODE = {"err_msg": "Opcode missing or not understood"}
 ERR_EVAL_FALSE = {"err_msg": "Script evaluated without error but finished with a false/empty top stack element"}
 ERR_WITNESS_PROGRAM_WITNESS_EMPTY = {"err_msg": "Witness program was passed an empty witness"}
 ERR_CHECKSIGVERIFY = {"err_msg": "Script failed an OP_CHECKSIGVERIFY operation"}
+ERR_SCRIPT_NUM = {"err_msg": "Script number overflowed or is non-minimally encoded"}
 
 VALID_SIGHASHES_ECDSA = [
     SIGHASH_ALL,
@@ -849,7 +850,7 @@ def spenders_taproot_active():
             for witlen in [20, 31, 32, 33]:
                 def mutate(spk):
                     prog = spk[2:]
-                    assert len(prog) == 32
+                    assert_equal(len(prog), 32)
                     if witlen < 32:
                         prog = prog[0:witlen]
                     elif witlen > 32:
@@ -1060,8 +1061,8 @@ def spenders_taproot_active():
     add_spender(spenders, "tapscript/emptypk/checksigadd", leaf="t9", **SINGLE_SIG, **common, failure={"leaf": "t10"}, **ERR_TAPSCRIPT_EMPTY_PUBKEY)
     add_spender(spenders, "tapscript/emptypk/checksigadd", leaf="t35", standard=False, **SINGLE_SIG, **common, failure={"leaf": "t10"}, **ERR_TAPSCRIPT_EMPTY_PUBKEY)
     # Test that OP_CHECKSIGADD results are as expected
-    add_spender(spenders, "tapscript/checksigaddresults", leaf="t28", **SINGLE_SIG, **common, failure={"leaf": "t27"}, err_msg="unknown error")
-    add_spender(spenders, "tapscript/checksigaddoversize", leaf="t29", **SINGLE_SIG, **common, failure={"leaf": "t27"}, err_msg="unknown error")
+    add_spender(spenders, "tapscript/checksigaddresults", leaf="t28", **SINGLE_SIG, **common, failure={"leaf": "t27"}, **ERR_SCRIPT_NUM)
+    add_spender(spenders, "tapscript/checksigaddoversize", leaf="t29", **SINGLE_SIG, **common, failure={"leaf": "t27"}, **ERR_SCRIPT_NUM)
     # Test that OP_CHECKSIGADD requires 3 stack elements.
     add_spender(spenders, "tapscript/checksigadd3args", leaf="t9", **SINGLE_SIG, **common, failure={"leaf": "t11"}, **ERR_INVALID_STACK_OPERATION)
     # Test that empty signatures do not cause script failure in OP_CHECKSIG and OP_CHECKSIGADD (but do fail with empty pubkey, and do fail OP_CHECKSIGVERIFY)
@@ -1424,7 +1425,7 @@ class TaprootTest(BitcoinTestFramework):
         extra_output_script = CScript(bytes([OP_CHECKSIG]*((MAX_BLOCK_SIGOPS_WEIGHT - sigops_weight) // WITNESS_SCALE_FACTOR)))
 
         coinbase_tx = create_coinbase(self.lastblockheight + 1, pubkey=cb_pubkey, extra_output_script=extra_output_script, fees=fees)
-        block = create_block(self.tip, coinbase_tx, self.lastblocktime + 1, txlist=txs)
+        block = create_block(self.tip, coinbase_tx, ntime=self.lastblocktime + 1, txlist=txs)
         witness and add_witness_commitment(block)
         block.solve()
         block_response = node.submitblock(block.serialize().hex())
@@ -1531,7 +1532,7 @@ class TaprootTest(BitcoinTestFramework):
         self.log.info("- Running %i spending tests" % done)
         random.shuffle(normal_utxos)
         random.shuffle(mismatching_utxos)
-        assert done == len(normal_utxos) + len(mismatching_utxos)
+        assert_equal(done, len(normal_utxos) + len(mismatching_utxos))
 
         left = done
         while left:
@@ -1644,9 +1645,9 @@ class TaprootTest(BitcoinTestFramework):
             if (len(spenders) - left) // 200 > (len(spenders) - left - len(input_utxos)) // 200:
                 self.log.info("  - %i tests done" % (len(spenders) - left))
 
-        assert left == 0
-        assert len(normal_utxos) == 0
-        assert len(mismatching_utxos) == 0
+        assert_equal(left, 0)
+        assert_equal(len(normal_utxos), 0)
+        assert_equal(len(mismatching_utxos), 0)
         self.log.info("  - Done")
 
     def gen_test_vectors(self):
@@ -1661,7 +1662,7 @@ class TaprootTest(BitcoinTestFramework):
         coinbase.vin = [CTxIn(COutPoint(0, 0xffffffff), CScript([OP_1, OP_1]), SEQUENCE_FINAL)]
         coinbase.vout = [CTxOut(5000000000, CScript([OP_1]))]
         coinbase.nLockTime = 0
-        assert coinbase.txid_hex == "f60c73405d499a956d3162e3483c395526ef78286458a4cb17b125aa92e49b20"
+        assert_equal(coinbase.txid_hex, "f60c73405d499a956d3162e3483c395526ef78286458a4cb17b125aa92e49b20")
         # Mine it
         block = create_block(hashprev=int(self.nodes[0].getbestblockhash(), 16), coinbase=coinbase)
         block.solve()

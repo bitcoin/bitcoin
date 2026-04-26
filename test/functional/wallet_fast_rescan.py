@@ -14,7 +14,6 @@ from test_framework.wallet_util import get_generate_key
 
 
 KEYPOOL_SIZE = 100   # smaller than default size to speed-up test
-NUM_DESCRIPTORS = 9  # number of descriptors (8 default ranged ones + 1 fixed non-ranged one)
 NUM_BLOCKS = 6       # number of blocks to mine
 
 
@@ -33,41 +32,56 @@ class WalletFastRescanTest(BitcoinTestFramework):
 
     def run_test(self):
         node = self.nodes[0]
-        wallet = MiniWallet(node)
+        funding_wallet = MiniWallet(node)
 
         self.log.info("Create descriptor wallet with backup")
         WALLET_BACKUP_FILENAME = node.datadir_path / 'wallet.bak'
         node.createwallet(wallet_name='topup_test')
         w = node.get_wallet_rpc('topup_test')
         fixed_key = get_generate_key()
-        print(w.importdescriptors([{"desc": descsum_create(f"wpkh({fixed_key.privkey})"), "timestamp": "now"}]))
+        w.importdescriptors([{"desc": descsum_create(f"wpkh({fixed_key.privkey})"), "timestamp": "now"}])
         descriptors = w.listdescriptors()['descriptors']
-        assert_equal(len(descriptors), NUM_DESCRIPTORS)
         w.backupwallet(WALLET_BACKUP_FILENAME)
 
+        num_txs = 0
+
+        fast_rescan_messages = []
+        def append_fast_rescan_message():
+            chain_info = self.nodes[0].getblockchaininfo()
+            fast_rescan_messages.append(f"Fast rescan: inspect block {chain_info['blocks']} [{chain_info['bestblockhash']}] (filter matched)")
+
+        self.log.info("Create tx sending to non-ranged descriptors")
+        self.log.debug(f"Block 1/{NUM_BLOCKS}")
+        spk = bytes.fromhex(fixed_key.p2wpkh_script)
+        self.log.debug(f"-> fixed non-range descriptor address {fixed_key.p2wpkh_addr}")
+        funding_wallet.send_to(from_node=node, scriptPubKey=spk, amount=10000)
+        num_txs += 1
+        self.generate(node, 1)
+        append_fast_rescan_message()
+
         self.log.info("Create txs sending to end range address of each descriptor, triggering top-ups")
-        for i in range(NUM_BLOCKS):
-            self.log.info(f"Block {i+1}/{NUM_BLOCKS}")
-            for desc_info in w.listdescriptors()['descriptors']:
-                if 'range' in desc_info:
-                    start_range, end_range = desc_info['range']
-                    addr = w.deriveaddresses(desc_info['desc'], [end_range, end_range])[0]
-                    spk = address_to_scriptpubkey(addr)
-                    self.log.info(f"-> range [{start_range},{end_range}], last address {addr}")
-                else:
-                    spk = bytes.fromhex(fixed_key.p2wpkh_script)
-                    self.log.info(f"-> fixed non-range descriptor address {fixed_key.p2wpkh_addr}")
-                wallet.send_to(from_node=node, scriptPubKey=spk, amount=10000)
+        for i in range(1, NUM_BLOCKS):
+            self.log.debug(f"Block {i+1}/{NUM_BLOCKS}")
+            # Get descriptors with updated ranges
+            ranged_descs = [desc for desc in w.listdescriptors()['descriptors'] if 'range' in desc]
+            for desc_info in ranged_descs:
+                start_range, end_range = desc_info['range']
+                addr = w.deriveaddresses(desc_info['desc'], [end_range, end_range])[0]
+                spk = address_to_scriptpubkey(addr)
+                self.log.debug(f"-> range [{start_range},{end_range}], last address {addr}")
+                funding_wallet.send_to(from_node=node, scriptPubKey=spk, amount=10000)
+                num_txs += 1
             self.generate(node, 1)
+            append_fast_rescan_message()
 
         self.log.info("Import wallet backup with block filter index")
-        with node.assert_debug_log(['fast variant using block filters']):
+        with node.assert_debug_log(['fast variant using block filters', *fast_rescan_messages]):
             node.restorewallet('rescan_fast', WALLET_BACKUP_FILENAME)
         txids_fast = self.get_wallet_txids(node, 'rescan_fast')
 
         self.log.info("Import non-active descriptors with block filter index")
         node.createwallet(wallet_name='rescan_fast_nonactive', disable_private_keys=True, blank=True)
-        with node.assert_debug_log(['fast variant using block filters']):
+        with node.assert_debug_log(['fast variant using block filters', *fast_rescan_messages]):
             w = node.get_wallet_rpc('rescan_fast_nonactive')
             w.importdescriptors([{"desc": descriptor['desc'], "timestamp": 0} for descriptor in descriptors])
         txids_fast_nonactive = self.get_wallet_txids(node, 'rescan_fast_nonactive')
@@ -86,10 +100,10 @@ class WalletFastRescanTest(BitcoinTestFramework):
         txids_slow_nonactive = self.get_wallet_txids(node, 'rescan_slow_nonactive')
 
         self.log.info("Verify that all rescans found the same txs in slow and fast variants")
-        assert_equal(len(txids_slow), NUM_DESCRIPTORS * NUM_BLOCKS)
-        assert_equal(len(txids_fast), NUM_DESCRIPTORS * NUM_BLOCKS)
-        assert_equal(len(txids_slow_nonactive), NUM_DESCRIPTORS * NUM_BLOCKS)
-        assert_equal(len(txids_fast_nonactive), NUM_DESCRIPTORS * NUM_BLOCKS)
+        assert_equal(len(txids_slow), num_txs)
+        assert_equal(len(txids_fast), num_txs)
+        assert_equal(len(txids_slow_nonactive), num_txs)
+        assert_equal(len(txids_fast_nonactive), num_txs)
         assert_equal(sorted(txids_slow), sorted(txids_fast))
         assert_equal(sorted(txids_slow_nonactive), sorted(txids_fast_nonactive))
 

@@ -16,6 +16,7 @@ function(create_test_config)
   endmacro()
 
   set_configure_variable(ENABLE_WALLET ENABLE_WALLET)
+  set_configure_variable(BUILD_BENCH BUILD_BENCH)
   set_configure_variable(BUILD_CLI BUILD_BITCOIN_CLI)
   set_configure_variable(BUILD_TX BUILD_BITCOIN_TX)
   set_configure_variable(BUILD_UTIL BUILD_BITCOIN_UTIL)
@@ -24,6 +25,7 @@ function(create_test_config)
   set_configure_variable(BUILD_DAEMON BUILD_BITCOIND)
   set_configure_variable(BUILD_FUZZ_BINARY ENABLE_FUZZ_BINARY)
   set_configure_variable(WITH_ZMQ ENABLE_ZMQ)
+  set_configure_variable(WITH_EMBEDDED_ASMAP ENABLE_EMBEDDED_ASMAP)
   set_configure_variable(ENABLE_EXTERNAL_SIGNER ENABLE_EXTERNAL_SIGNER)
   set_configure_variable(WITH_USDT ENABLE_USDT_TRACEPOINTS)
   set_configure_variable(ENABLE_IPC ENABLE_IPC)
@@ -33,17 +35,65 @@ endfunction()
 
 create_test_config()
 
-file(MAKE_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/functional)
-file(MAKE_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/fuzz)
-file(MAKE_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/util)
 
-file(GLOB_RECURSE functional_tests RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} functional/*)
-foreach(script ${functional_tests} fuzz/test_runner.py)
-  if(CMAKE_HOST_WIN32)
-    set(symlink)
-  else()
-    set(symlink SYMBOLIC)
-  endif()
-  file(CREATE_LINK ${CMAKE_CURRENT_SOURCE_DIR}/${script} ${CMAKE_CURRENT_BINARY_DIR}/${script} COPY_ON_ERROR ${symlink})
-endforeach()
-unset(functional_tests)
+function(create_test_directory_links)
+  file(MAKE_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/functional)
+  file(GLOB functional
+    LIST_DIRECTORIES FALSE
+    RELATIVE ${CMAKE_CURRENT_SOURCE_DIR}
+    functional/*.html
+    functional/*.py
+  )
+
+  file(MAKE_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/functional/data)
+  file(GLOB functional_data
+    LIST_DIRECTORIES FALSE
+    RELATIVE ${CMAKE_CURRENT_SOURCE_DIR}
+    functional/data/*.json
+    functional/data/*.py
+  )
+
+  file(MAKE_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/functional/mocks)
+  file(GLOB functional_mocks
+    LIST_DIRECTORIES FALSE
+    RELATIVE ${CMAKE_CURRENT_SOURCE_DIR}
+    functional/mocks/*.py
+  )
+
+  file(MAKE_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/functional/test_framework)
+  file(GLOB functional_test_framework
+    LIST_DIRECTORIES FALSE
+    RELATIVE ${CMAKE_CURRENT_SOURCE_DIR}
+    functional/test_framework/*.csv
+    functional/test_framework/*.py
+  )
+
+  file(MAKE_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/functional/test_framework/crypto)
+  file(GLOB functional_test_framework_crypto
+    LIST_DIRECTORIES FALSE
+    RELATIVE ${CMAKE_CURRENT_SOURCE_DIR}
+    functional/test_framework/crypto/*.csv
+    functional/test_framework/crypto/*.py
+  )
+
+  file(MAKE_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/fuzz)
+  set(files_to_link
+    ${functional}
+    ${functional_data}
+    ${functional_mocks}
+    ${functional_test_framework}
+    ${functional_test_framework_crypto}
+    fuzz/test_runner.py
+  )
+
+  foreach(f IN LISTS files_to_link)
+    if(CMAKE_HOST_WIN32)
+      set(symlink)
+    else()
+      set(symlink SYMBOLIC)
+    endif()
+    file(CREATE_LINK ${CMAKE_CURRENT_SOURCE_DIR}/${f} ${CMAKE_CURRENT_BINARY_DIR}/${f} COPY_ON_ERROR ${symlink})
+  endforeach()
+endfunction()
+
+create_test_directory_links()

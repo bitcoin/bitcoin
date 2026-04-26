@@ -5,17 +5,18 @@
 #ifndef BITCOIN_UTIL_FS_H
 #define BITCOIN_UTIL_FS_H
 
-#include <tinyformat.h>
+// IWYU incorrectly suggests removing this header.
+// See https://github.com/include-what-you-use/include-what-you-use/issues/1931.
+#include <tinyformat.h> // IWYU pragma: keep
 
 #include <cstdio>
+// The `util/fs.h` header is designed to be a drop-in replacement for `filesystem`.
 #include <filesystem> // IWYU pragma: export
 #include <functional>
 #include <iomanip>
 #include <ios>
-#include <ostream>
 #include <string>
 #include <string_view>
-#include <system_error>
 #include <type_traits>
 #include <utility>
 
@@ -95,6 +96,10 @@ static inline path absolute(const path& p)
 static inline bool exists(const path& p)
 {
     return std::filesystem::exists(p);
+}
+static inline bool exists(const std::filesystem::file_status& s)
+{
+    return std::filesystem::exists(s);
 }
 
 // Allow explicit quoted stream I/O.

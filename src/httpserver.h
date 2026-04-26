@@ -50,7 +50,7 @@ void StopHTTPServer();
 void UpdateHTTPServerLogging(bool enable);
 
 /** Handler for requests to a certain HTTP path */
-typedef std::function<bool(HTTPRequest* req, const std::string &)> HTTPRequestHandler;
+typedef std::function<void(HTTPRequest* req, const std::string &)> HTTPRequestHandler;
 /** Register handler for prefix.
  * If multiple handlers match a prefix, the first-registered one will
  * be invoked.
@@ -158,15 +158,6 @@ public:
  * @param[in] key represents the query parameter of which the value is returned
  */
 std::optional<std::string> GetQueryParameterFromUri(const char* uri, const std::string& key);
-
-/** Event handler closure.
- */
-class HTTPClosure
-{
-public:
-    virtual void operator()() = 0;
-    virtual ~HTTPClosure() = default;
-};
 
 /** Event class. This can be used either as a cross-thread trigger or as a timer.
  */

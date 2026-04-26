@@ -260,27 +260,27 @@ static void MuHashFinalize(benchmark::Bench& bench)
     });
 }
 
-BENCHMARK(BenchRIPEMD160, benchmark::PriorityLevel::HIGH);
-BENCHMARK(SHA1, benchmark::PriorityLevel::HIGH);
-BENCHMARK(SHA256_STANDARD, benchmark::PriorityLevel::HIGH);
-BENCHMARK(SHA256_SSE4, benchmark::PriorityLevel::HIGH);
-BENCHMARK(SHA256_AVX2, benchmark::PriorityLevel::HIGH);
-BENCHMARK(SHA256_SHANI, benchmark::PriorityLevel::HIGH);
-BENCHMARK(SHA512, benchmark::PriorityLevel::HIGH);
-BENCHMARK(SHA3_256_1M, benchmark::PriorityLevel::HIGH);
+BENCHMARK(BenchRIPEMD160);
+BENCHMARK(SHA1);
+BENCHMARK(SHA256_STANDARD);
+BENCHMARK(SHA256_SSE4);
+BENCHMARK(SHA256_AVX2);
+BENCHMARK(SHA256_SHANI);
+BENCHMARK(SHA512);
+BENCHMARK(SHA3_256_1M);
 
-BENCHMARK(SHA256_32b_STANDARD, benchmark::PriorityLevel::HIGH);
-BENCHMARK(SHA256_32b_SSE4, benchmark::PriorityLevel::HIGH);
-BENCHMARK(SHA256_32b_AVX2, benchmark::PriorityLevel::HIGH);
-BENCHMARK(SHA256_32b_SHANI, benchmark::PriorityLevel::HIGH);
-BENCHMARK(SipHash_32b, benchmark::PriorityLevel::HIGH);
-BENCHMARK(SHA256D64_1024_STANDARD, benchmark::PriorityLevel::HIGH);
-BENCHMARK(SHA256D64_1024_SSE4, benchmark::PriorityLevel::HIGH);
-BENCHMARK(SHA256D64_1024_AVX2, benchmark::PriorityLevel::HIGH);
-BENCHMARK(SHA256D64_1024_SHANI, benchmark::PriorityLevel::HIGH);
+BENCHMARK(SHA256_32b_STANDARD);
+BENCHMARK(SHA256_32b_SSE4);
+BENCHMARK(SHA256_32b_AVX2);
+BENCHMARK(SHA256_32b_SHANI);
+BENCHMARK(SipHash_32b);
+BENCHMARK(SHA256D64_1024_STANDARD);
+BENCHMARK(SHA256D64_1024_SSE4);
+BENCHMARK(SHA256D64_1024_AVX2);
+BENCHMARK(SHA256D64_1024_SHANI);
 
-BENCHMARK(MuHash, benchmark::PriorityLevel::HIGH);
-BENCHMARK(MuHashMul, benchmark::PriorityLevel::HIGH);
-BENCHMARK(MuHashDiv, benchmark::PriorityLevel::HIGH);
-BENCHMARK(MuHashPrecompute, benchmark::PriorityLevel::HIGH);
-BENCHMARK(MuHashFinalize, benchmark::PriorityLevel::HIGH);
+BENCHMARK(MuHash);
+BENCHMARK(MuHashMul);
+BENCHMARK(MuHashDiv);
+BENCHMARK(MuHashPrecompute);
+BENCHMARK(MuHashFinalize);

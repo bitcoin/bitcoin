@@ -78,11 +78,12 @@ void RegenerateCommitments(CBlock& block, ChainstateManager& chainman)
 
 static BlockAssembler::Options ClampOptions(BlockAssembler::Options options)
 {
-    options.block_reserved_weight = std::clamp<size_t>(options.block_reserved_weight, MINIMUM_BLOCK_RESERVED_WEIGHT, MAX_BLOCK_WEIGHT);
+    // Apply DEFAULT_BLOCK_RESERVED_WEIGHT when the caller left it unset.
+    options.block_reserved_weight = std::clamp<size_t>(options.block_reserved_weight.value_or(DEFAULT_BLOCK_RESERVED_WEIGHT), MINIMUM_BLOCK_RESERVED_WEIGHT, MAX_BLOCK_WEIGHT);
     options.coinbase_output_max_additional_sigops = std::clamp<size_t>(options.coinbase_output_max_additional_sigops, 0, MAX_BLOCK_SIGOPS_COST);
     // Limit weight to between block_reserved_weight and MAX_BLOCK_WEIGHT for sanity:
     // block_reserved_weight can safely exceed -blockmaxweight, but the rest of the block template will be empty.
-    options.nBlockMaxWeight = std::clamp<size_t>(options.nBlockMaxWeight, options.block_reserved_weight, MAX_BLOCK_WEIGHT);
+    options.nBlockMaxWeight = std::clamp<size_t>(options.nBlockMaxWeight, *options.block_reserved_weight, MAX_BLOCK_WEIGHT);
     return options;
 }
 
@@ -102,13 +103,15 @@ void ApplyArgsManOptions(const ArgsManager& args, BlockAssembler::Options& optio
         if (const auto parsed{ParseMoney(*blockmintxfee)}) options.blockMinFeeRate = CFeeRate{*parsed};
     }
     options.print_modified_fee = args.GetBoolArg("-printpriority", options.print_modified_fee);
-    options.block_reserved_weight = args.GetIntArg("-blockreservedweight", options.block_reserved_weight);
+    if (!options.block_reserved_weight) {
+        options.block_reserved_weight = args.GetIntArg("-blockreservedweight");
+    }
 }
 
 void BlockAssembler::resetBlock()
 {
     // Reserve space for fixed-size block header, txs count, and coinbase tx.
-    nBlockWeight = m_options.block_reserved_weight;
+    nBlockWeight = *Assert(m_options.block_reserved_weight);
     nBlockSigOpsCost = m_options.coinbase_output_max_additional_sigops;
 
     // These counters do not include coinbase tx
@@ -158,17 +161,56 @@ std::unique_ptr<CBlockTemplate> BlockAssembler::CreateNewBlock()
 
     // Create coinbase transaction.
     CMutableTransaction coinbaseTx;
+
+    // Construct coinbase transaction struct in parallel
+    CoinbaseTx& coinbase_tx{pblocktemplate->m_coinbase_tx};
+    coinbase_tx.version = coinbaseTx.version;
+
     coinbaseTx.vin.resize(1);
     coinbaseTx.vin[0].prevout.SetNull();
     coinbaseTx.vin[0].nSequence = CTxIn::MAX_SEQUENCE_NONFINAL; // Make sure timelock is enforced.
+    coinbase_tx.sequence = coinbaseTx.vin[0].nSequence;
+
+    // Add an output that spends the full coinbase reward.
     coinbaseTx.vout.resize(1);
     coinbaseTx.vout[0].scriptPubKey = m_options.coinbase_output_script;
-    coinbaseTx.vout[0].nValue = nFees + GetBlockSubsidy(nHeight, chainparams.GetConsensus());
-    coinbaseTx.vin[0].scriptSig = CScript() << nHeight << OP_0;
+    // Block subsidy + fees
+    const CAmount block_reward{nFees + GetBlockSubsidy(nHeight, chainparams.GetConsensus())};
+    coinbaseTx.vout[0].nValue = block_reward;
+    coinbase_tx.block_reward_remaining = block_reward;
+
+    // Start the coinbase scriptSig with the block height as required by BIP34.
+    // Mining clients are expected to append extra data to this prefix, so
+    // increasing its length would reduce the space they can use and may break
+    // existing clients.
+    coinbaseTx.vin[0].scriptSig = CScript() << nHeight;
+    if (m_options.include_dummy_extranonce) {
+        // For blocks at heights <= 16, the BIP34-encoded height alone is only
+        // one byte. Consensus requires coinbase scriptSigs to be at least two
+        // bytes long (bad-cb-length), so tests and regtest include a dummy
+        // extraNonce (OP_0)
+        coinbaseTx.vin[0].scriptSig << OP_0;
+    }
+    coinbase_tx.script_sig_prefix = coinbaseTx.vin[0].scriptSig;
     Assert(nHeight > 0);
     coinbaseTx.nLockTime = static_cast<uint32_t>(nHeight - 1);
+    coinbase_tx.lock_time = coinbaseTx.nLockTime;
+
     pblock->vtx[0] = MakeTransactionRef(std::move(coinbaseTx));
-    pblocktemplate->vchCoinbaseCommitment = m_chainstate.m_chainman.GenerateCoinbaseCommitment(*pblock, pindexPrev);
+    m_chainstate.m_chainman.GenerateCoinbaseCommitment(*pblock, pindexPrev);
+
+    const CTransactionRef& final_coinbase{pblock->vtx[0]};
+    if (final_coinbase->HasWitness()) {
+        const auto& witness_stack{final_coinbase->vin[0].scriptWitness.stack};
+        // Consensus requires the coinbase witness stack to have exactly one
+        // element of 32 bytes.
+        Assert(witness_stack.size() == 1 && witness_stack[0].size() == 32);
+        coinbase_tx.witness = uint256(witness_stack[0]);
+    }
+    if (const int witness_index = GetWitnessCommitmentIndex(*pblock); witness_index != NO_WITNESS_COMMITMENT) {
+        Assert(witness_index >= 0 && static_cast<size_t>(witness_index) < final_coinbase->vout.size());
+        coinbase_tx.required_outputs.push_back(final_coinbase->vout[witness_index]);
+    }
 
     LogInfo("CreateNewBlock(): block weight: %u txs: %u fees: %ld sigops %d\n", GetBlockWeight(*pblock), nBlockTx, nFees, nBlockSigOpsCost);
 
@@ -179,6 +221,7 @@ std::unique_ptr<CBlockTemplate> BlockAssembler::CreateNewBlock()
     pblock->nNonce         = 0;
 
     if (m_options.test_block_validity) {
+        // if nHeight <= 16, and include_dummy_extranonce=false this will fail due to bad-cb-length.
         if (BlockValidationState state{TestBlockValidity(m_chainstate, *pblock, /*check_pow=*/false, /*check_merkle_root=*/false)}; !state.IsValid()) {
             throw std::runtime_error(strprintf("TestBlockValidity failed: %s", state.ToString()));
         }
@@ -412,7 +455,41 @@ std::optional<BlockRef> GetTip(ChainstateManager& chainman)
     return BlockRef{tip->GetBlockHash(), tip->nHeight};
 }
 
-std::optional<BlockRef> WaitTipChanged(ChainstateManager& chainman, KernelNotifications& kernel_notifications, const uint256& current_tip, MillisecondsDouble& timeout)
+bool CooldownIfHeadersAhead(ChainstateManager& chainman, KernelNotifications& kernel_notifications, const BlockRef& last_tip, bool& interrupt_mining)
+{
+    uint256 last_tip_hash{last_tip.hash};
+
+    while (const std::optional<int> remaining = chainman.BlocksAheadOfTip()) {
+        const int cooldown_seconds = std::clamp(*remaining, 3, 20);
+        const auto cooldown_deadline{MockableSteadyClock::now() + std::chrono::seconds{cooldown_seconds}};
+
+        {
+            WAIT_LOCK(kernel_notifications.m_tip_block_mutex, lock);
+            kernel_notifications.m_tip_block_cv.wait_until(lock, cooldown_deadline, [&]() EXCLUSIVE_LOCKS_REQUIRED(kernel_notifications.m_tip_block_mutex) {
+                const auto tip_block = kernel_notifications.TipBlock();
+                return chainman.m_interrupt || interrupt_mining || (tip_block && *tip_block != last_tip_hash);
+            });
+            if (chainman.m_interrupt || interrupt_mining) {
+                interrupt_mining = false;
+                return false;
+            }
+
+            // If the tip changed during the wait, extend the deadline
+            const auto tip_block = kernel_notifications.TipBlock();
+            if (tip_block && *tip_block != last_tip_hash) {
+                last_tip_hash = *tip_block;
+                continue;
+            }
+        }
+
+        // No tip change and the cooldown window has expired.
+        if (MockableSteadyClock::now() >= cooldown_deadline) break;
+    }
+
+    return true;
+}
+
+std::optional<BlockRef> WaitTipChanged(ChainstateManager& chainman, KernelNotifications& kernel_notifications, const uint256& current_tip, MillisecondsDouble& timeout, bool& interrupt)
 {
     Assume(timeout >= 0ms); // No internal callers should use a negative timeout
     if (timeout < 0ms) timeout = 0ms;
@@ -425,19 +502,26 @@ std::optional<BlockRef> WaitTipChanged(ChainstateManager& chainman, KernelNotifi
         // always returns valid tip information when possible and only
         // returns null when shutting down, not when timing out.
         kernel_notifications.m_tip_block_cv.wait(lock, [&]() EXCLUSIVE_LOCKS_REQUIRED(kernel_notifications.m_tip_block_mutex) {
-            return kernel_notifications.TipBlock() || chainman.m_interrupt;
+            return kernel_notifications.TipBlock() || chainman.m_interrupt || interrupt;
         });
-        if (chainman.m_interrupt) return {};
+        if (chainman.m_interrupt || interrupt) {
+            interrupt = false;
+            return {};
+        }
         // At this point TipBlock is set, so continue to wait until it is
         // different then `current_tip` provided by caller.
         kernel_notifications.m_tip_block_cv.wait_until(lock, deadline, [&]() EXCLUSIVE_LOCKS_REQUIRED(kernel_notifications.m_tip_block_mutex) {
-            return Assume(kernel_notifications.TipBlock()) != current_tip || chainman.m_interrupt;
+            return Assume(kernel_notifications.TipBlock()) != current_tip || chainman.m_interrupt || interrupt;
         });
+        if (chainman.m_interrupt || interrupt) {
+            interrupt = false;
+            return {};
+        }
     }
-    if (chainman.m_interrupt) return {};
 
     // Must release m_tip_block_mutex before getTip() locks cs_main, to
     // avoid deadlocks.
     return GetTip(chainman);
 }
+
 } // namespace node

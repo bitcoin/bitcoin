@@ -18,6 +18,5 @@ ${formatted_bytes}
 };
 
 inline constexpr std::span ${raw_source_basename}{detail_${raw_source_basename}_raw};
-}
-")
+}")
 file(WRITE ${HEADER_PATH} "${header_content}")

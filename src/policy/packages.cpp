@@ -76,7 +76,7 @@ bool IsConsistentPackage(const Package& txns)
     return true;
 }
 
-bool IsWellFormedPackage(const Package& txns, PackageValidationState& state, bool require_sorted)
+bool IsWellFormedPackage(const Package& txns, PackageValidationState& state)
 {
     const unsigned int package_count = txns.size();
 
@@ -105,7 +105,7 @@ bool IsWellFormedPackage(const Package& txns, PackageValidationState& state, boo
     // An unsorted package will fail anyway on missing-inputs, but it's better to quit earlier and
     // fail on something less ambiguous (missing-inputs could also be an orphan or trying to
     // spend nonexistent coins).
-    if (require_sorted && !IsTopoSortedPackage(txns, later_txids)) {
+    if (!IsTopoSortedPackage(txns, later_txids)) {
         return state.Invalid(PackageValidationResult::PCKG_POLICY, "package-not-sorted");
     }
 

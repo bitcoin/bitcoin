@@ -46,10 +46,7 @@ import tempfile
 
 from test_framework.socks5 import Socks5Configuration, Socks5Command, Socks5Server, AddressType
 from test_framework.test_framework import BitcoinTestFramework
-from test_framework.util import (
-    assert_equal,
-    p2p_port,
-)
+from test_framework.util import assert_equal
 from test_framework.netutil import test_ipv6_local, test_unix_socket
 
 # Networks returned by RPC getpeerinfo.
@@ -74,22 +71,24 @@ class ProxyTest(BitcoinTestFramework):
     def setup_nodes(self):
         self.have_ipv6 = test_ipv6_local()
         self.have_unix_sockets = test_unix_socket()
-        # Create two proxies on different ports
+        # Create two proxies on different ports.
+        # Use port=0 to let the OS assign available ports, avoiding
+        # "address already in use" errors from concurrent tests.
         # ... one unauthenticated
         self.conf1 = Socks5Configuration()
-        self.conf1.addr = ('127.0.0.1', p2p_port(self.num_nodes))
+        self.conf1.addr = ('127.0.0.1', 0)
         self.conf1.unauth = True
         self.conf1.auth = False
         # ... one supporting authenticated and unauthenticated (Tor)
         self.conf2 = Socks5Configuration()
-        self.conf2.addr = ('127.0.0.1', p2p_port(self.num_nodes + 1))
+        self.conf2.addr = ('127.0.0.1', 0)
         self.conf2.unauth = True
         self.conf2.auth = True
         if self.have_ipv6:
             # ... one on IPv6 with similar configuration
             self.conf3 = Socks5Configuration()
             self.conf3.af = socket.AF_INET6
-            self.conf3.addr = ('::1', p2p_port(self.num_nodes + 2))
+            self.conf3.addr = ('::1', 0)
             self.conf3.unauth = True
             self.conf3.auth = True
         else:

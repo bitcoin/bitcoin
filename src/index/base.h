@@ -9,7 +9,7 @@
 #include <dbwrapper.h>
 #include <interfaces/chain.h>
 #include <kernel/cs_main.h>
-#include <threadsafety.h>
+#include <sync.h>
 #include <uint256.h>
 #include <util/fs.h>
 #include <util/threadinterrupt.h>
@@ -122,9 +122,6 @@ protected:
 
     void ChainStateFlushed(const kernel::ChainstateRole& role, const CBlockLocator& locator) override;
 
-    /// Return custom notification options for index.
-    [[nodiscard]] virtual interfaces::Chain::NotifyOptions CustomOptions() { return {}; }
-
     /// Initialize internal state from the database and block index.
     [[nodiscard]] virtual bool CustomInit(const std::optional<interfaces::BlockRef>& block) { return true; }
 
@@ -150,6 +147,9 @@ public:
 
     /// Get the name of the index for display in logs.
     const std::string& GetName() const LIFETIMEBOUND { return m_name; }
+
+    /// Return custom notification options for index.
+    [[nodiscard]] virtual interfaces::Chain::NotifyOptions CustomOptions() { return {}; }
 
     /// Blocks the current thread until the index is caught up to the current
     /// state of the block chain. This only blocks if the index has gotten in

@@ -4,14 +4,13 @@
 
 #include <util/thread.h>
 
-#include <logging.h>
 #include <util/exception.h>
+#include <util/log.h>
 #include <util/threadnames.h>
 
 #include <exception>
 #include <functional>
 #include <string>
-#include <utility>
 
 void util::TraceThread(std::string_view thread_name, std::function<void()> thread_func)
 {

@@ -34,5 +34,5 @@ static void RollingBloomReset(benchmark::Bench& bench)
     });
 }
 
-BENCHMARK(RollingBloom, benchmark::PriorityLevel::HIGH);
-BENCHMARK(RollingBloomReset, benchmark::PriorityLevel::HIGH);
+BENCHMARK(RollingBloom);
+BENCHMARK(RollingBloomReset);

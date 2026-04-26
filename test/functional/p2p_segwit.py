@@ -10,7 +10,6 @@ from test_framework.blocktools import (
     WITNESS_COMMITMENT_HEADER,
     add_witness_commitment,
     create_block,
-    create_coinbase,
 )
 from test_framework.messages import (
     MAX_BIP125_RBF_SEQUENCE,
@@ -230,7 +229,7 @@ class SegWitTest(BitcoinTestFramework):
         tip = self.nodes[0].getbestblockhash()
         height = self.nodes[0].getblockcount() + 1
         block_time = self.nodes[0].getblockheader(tip)["mediantime"] + 1
-        block = create_block(int(tip, 16), create_coinbase(height), block_time)
+        block = create_block(int(tip, 16), height=height, ntime=block_time)
         return block
 
     def update_witness_block_with_transactions(self, block, tx_list, nonce=0):
@@ -374,14 +373,14 @@ class SegWitTest(BitcoinTestFramework):
         self.test_node.send_without_ping(msg_headers())
 
         self.test_node.announce_block_and_wait_for_getdata(block1, use_header=False)
-        assert self.test_node.last_message["getdata"].inv[0].type == blocktype
+        assert_equal(self.test_node.last_message["getdata"].inv[0].type, blocktype)
         test_witness_block(self.nodes[0], self.test_node, block1, True)
 
         block2 = self.build_next_block()
         block2.solve()
 
         self.test_node.announce_block_and_wait_for_getdata(block2, use_header=True)
-        assert self.test_node.last_message["getdata"].inv[0].type == blocktype
+        assert_equal(self.test_node.last_message["getdata"].inv[0].type, blocktype)
         test_witness_block(self.nodes[0], self.test_node, block2, True)
 
         # Check that we can getdata for witness blocks or regular blocks,
@@ -410,8 +409,8 @@ class SegWitTest(BitcoinTestFramework):
             block = self.build_next_block()
             self.update_witness_block_with_transactions(block, [])
             # This gives us a witness commitment.
-            assert len(block.vtx[0].wit.vtxinwit) == 1
-            assert len(block.vtx[0].wit.vtxinwit[0].scriptWitness.stack) == 1
+            assert_equal(len(block.vtx[0].wit.vtxinwit), 1)
+            assert_equal(len(block.vtx[0].wit.vtxinwit[0].scriptWitness.stack), 1)
             test_witness_block(self.nodes[0], self.test_node, block, accepted=True)
             # Now try to retrieve it...
             rpc_block = self.nodes[0].getblock(block.hash_hex, False)
@@ -529,7 +528,7 @@ class SegWitTest(BitcoinTestFramework):
         # Verify that if a peer doesn't set nServices to include NODE_WITNESS,
         # the getdata is just for the non-witness portion.
         self.old_node.announce_tx_and_wait_for_getdata(tx)
-        assert self.old_node.last_message["getdata"].inv[0].type == MSG_TX
+        assert_equal(self.old_node.last_message["getdata"].inv[0].type, MSG_TX)
 
         # Since we haven't delivered the tx yet, inv'ing the same tx from
         # a witness transaction ought not result in a getdata.
@@ -790,7 +789,7 @@ class SegWitTest(BitcoinTestFramework):
         block_3.vtx[0].vout[0].nValue -= 1
         block_3.vtx[0].vout[-1].nValue += 1
         block_3.hashMerkleRoot = block_3.calc_merkle_root()
-        assert len(block_3.vtx[0].vout) == 4  # 3 OP_returns
+        assert_equal(len(block_3.vtx[0].vout), 4)  # 3 OP_returns
         block_3.solve()
         test_witness_block(self.nodes[0], self.test_node, block_3, accepted=True)
 
@@ -831,7 +830,7 @@ class SegWitTest(BitcoinTestFramework):
         assert block.get_weight() < MAX_BLOCK_WEIGHT
         assert_equal(None, self.nodes[0].submitblock(block.serialize().hex()))
 
-        assert self.nodes[0].getbestblockhash() == block.hash_hex
+        assert_equal(self.nodes[0].getbestblockhash(), block.hash_hex)
 
         # Build a relayable-but-invalid block
         relayable_block = self.build_next_block()
@@ -943,7 +942,7 @@ class SegWitTest(BitcoinTestFramework):
         block.vtx[0].vout.pop()
         add_witness_commitment(block)
         block.solve()
-        assert block.get_weight() == MAX_BLOCK_WEIGHT
+        assert_equal(block.get_weight(), MAX_BLOCK_WEIGHT)
 
         test_witness_block(self.nodes[0], self.test_node, block, accepted=True)
 
@@ -1101,7 +1100,7 @@ class SegWitTest(BitcoinTestFramework):
 
         # This script is 19 max pushes (9937 bytes), then 64 more opcode-bytes.
         long_witness_script = CScript([b'a' * MAX_SCRIPT_ELEMENT_SIZE] * 19 + [OP_DROP] * 63 + [OP_TRUE])
-        assert len(long_witness_script) == MAX_WITNESS_SCRIPT_LENGTH + 1
+        assert_equal(len(long_witness_script), MAX_WITNESS_SCRIPT_LENGTH + 1)
         long_script_pubkey = script_to_p2wsh_script(long_witness_script)
 
         block = self.build_next_block()
@@ -1123,7 +1122,7 @@ class SegWitTest(BitcoinTestFramework):
 
         # Try again with one less byte in the witness script
         witness_script = CScript([b'a' * MAX_SCRIPT_ELEMENT_SIZE] * 19 + [OP_DROP] * 62 + [OP_TRUE])
-        assert len(witness_script) == MAX_WITNESS_SCRIPT_LENGTH
+        assert_equal(len(witness_script), MAX_WITNESS_SCRIPT_LENGTH)
         script_pubkey = script_to_p2wsh_script(witness_script)
 
         tx.vout[0] = CTxOut(tx.vout[0].nValue, script_pubkey)
@@ -1198,8 +1197,8 @@ class SegWitTest(BitcoinTestFramework):
         block.vtx = [block.vtx[0]]
         self.update_witness_block_with_transactions(block, [tx2])
         # This block doesn't result in a specific reject reason, but an iostream exception:
-        # "Exception 'CDataStream::read(): end of data: unspecified iostream_category error' (...) caught"
-        test_witness_block(self.nodes[0], self.test_node, block, accepted=False)
+        with self.nodes[0].assert_debug_log(["Exception 'DataStream::read(): end of data"]):
+            test_witness_block(self.nodes[0], self.test_node, block, accepted=False)
 
         # Now make one of the intermediate witnesses be incorrect
         tx2.wit.vtxinwit.append(CTxInWitness())
@@ -1358,7 +1357,7 @@ class SegWitTest(BitcoinTestFramework):
             temp_utxo.append(UTXO(tx.txid_int, 0, tx.vout[0].nValue))
 
         self.generate(self.nodes[0], 1)  # Mine all the transactions
-        assert len(self.nodes[0].getrawmempool()) == 0
+        assert_equal(len(self.nodes[0].getrawmempool()), 0)
 
         # Finally, verify that version 0 -> version 2 transactions
         # are standard

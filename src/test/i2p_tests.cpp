@@ -3,6 +3,7 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <common/args.h>
+#include <compat/compat.h>
 #include <i2p.h>
 #include <logging.h>
 #include <netaddress.h>
@@ -113,7 +114,7 @@ BOOST_AUTO_TEST_CASE(listen_ok_accept_fail)
     };
 
     auto interrupt{std::make_shared<CThreadInterrupt>()};
-    const CService addr{in6_addr(IN6ADDR_LOOPBACK_INIT), /*port=*/7656};
+    const CService addr{in6_addr(COMPAT_IN6ADDR_LOOPBACK_INIT), /*port=*/7656};
     const Proxy sam_proxy(addr, /*tor_stream_isolation=*/false);
     i2p::sam::Session session(gArgs.GetDataDirNet() / "test_i2p_private_key",
                               sam_proxy,
@@ -156,7 +157,7 @@ BOOST_AUTO_TEST_CASE(damaged_private_key)
         BOOST_REQUIRE(WriteBinaryFile(i2p_private_key_file, file_contents));
 
         auto interrupt{std::make_shared<CThreadInterrupt>()};
-        const CService addr{in6_addr(IN6ADDR_LOOPBACK_INIT), /*port=*/7656};
+        const CService addr{in6_addr(COMPAT_IN6ADDR_LOOPBACK_INIT), /*port=*/7656};
         const Proxy sam_proxy{addr, /*tor_stream_isolation=*/false};
         i2p::sam::Session session(i2p_private_key_file, sam_proxy, interrupt);
 

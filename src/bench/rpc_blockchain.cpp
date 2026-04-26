@@ -31,10 +31,7 @@ struct TestBlockAndIndex {
 
     TestBlockAndIndex()
     {
-        DataStream stream{benchmark::data::block413567};
-        std::byte a{0};
-        stream.write({&a, 1}); // Prevent compaction
-
+        SpanReader stream{benchmark::data::block413567};
         stream >> TX_WITH_WITNESS(block);
 
         blockHash = block.GetHash();
@@ -70,9 +67,9 @@ static void BlockToJsonVerbosity3(benchmark::Bench& bench)
     BlockToJson(bench, TxVerbosity::SHOW_DETAILS_AND_PREVOUT);
 }
 
-BENCHMARK(BlockToJsonVerbosity1, benchmark::PriorityLevel::HIGH);
-BENCHMARK(BlockToJsonVerbosity2, benchmark::PriorityLevel::HIGH);
-BENCHMARK(BlockToJsonVerbosity3, benchmark::PriorityLevel::HIGH);
+BENCHMARK(BlockToJsonVerbosity1);
+BENCHMARK(BlockToJsonVerbosity2);
+BENCHMARK(BlockToJsonVerbosity3);
 
 static void BlockToJsonVerboseWrite(benchmark::Bench& bench)
 {
@@ -85,4 +82,4 @@ static void BlockToJsonVerboseWrite(benchmark::Bench& bench)
     });
 }
 
-BENCHMARK(BlockToJsonVerboseWrite, benchmark::PriorityLevel::HIGH);
+BENCHMARK(BlockToJsonVerboseWrite);

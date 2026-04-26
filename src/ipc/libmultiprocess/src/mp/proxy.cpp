@@ -38,7 +38,7 @@
 
 namespace mp {
 
-thread_local ThreadContext g_thread_context;
+thread_local ThreadContext g_thread_context; // NOLINT(bitcoin-nontrivial-threadlocal)
 
 void LoggingErrorHandler::taskFailed(kj::Exception&& exception)
 {
@@ -87,6 +87,10 @@ Connection::~Connection()
     // event loop thread, and if there was a remote disconnect, this is called
     // by an onDisconnect callback directly from the event loop thread.
     assert(std::this_thread::get_id() == m_loop->m_thread_id);
+
+    // Try to cancel any calls that may be executing.
+    m_canceler.cancel("Interrupted by disconnect");
+
     // Shut down RPC system first, since this will garbage collect any
     // ProxyServer objects that were not freed before the connection was closed.
     // Typically all ProxyServer objects associated with this connection will be
@@ -102,12 +106,12 @@ Connection::~Connection()
     // The ProxyClient cleanup handlers are synchronous because they are fast
     // and don't do anything besides release capnp resources and reset state so
     // future calls to client methods immediately throw exceptions instead of
-    // trying to communicating across the socket. The synchronous callbacks set
+    // trying to communicate across the socket. The synchronous callbacks set
     // ProxyClient capability pointers to null, so new method calls on client
     // objects fail without triggering i/o or relying on event loop which may go
     // out of scope or trigger obscure capnp i/o errors.
     //
-    // The ProxySever cleanup handlers call user defined destructors on server
+    // The ProxyServer cleanup handlers call user defined destructors on the server
     // object, which can run arbitrary blocking bitcoin code so they have to run
     // asynchronously in a different thread. The asynchronous cleanup functions
     // intentionally aren't started until after the synchronous cleanup
@@ -136,7 +140,7 @@ Connection::~Connection()
     //
     // Either way disconnect code runs in the event loop thread and called both
     // on clean and unclean shutdowns. In unclean shutdown case when the
-    // connection is broken, sync and async cleanup lists will filled with
+    // connection is broken, sync and async cleanup lists will be filled with
     // callbacks. In the clean shutdown case both lists will be empty.
     Lock lock{m_loop->m_mutex};
     while (!m_sync_cleanup_fns.empty()) {
@@ -362,8 +366,8 @@ ProxyClient<Thread>::~ProxyClient()
     }
 }
 
-ProxyServer<Thread>::ProxyServer(ThreadContext& thread_context, std::thread&& thread)
-    : m_thread_context(thread_context), m_thread(std::move(thread))
+ProxyServer<Thread>::ProxyServer(Connection& connection, ThreadContext& thread_context, std::thread&& thread)
+    : m_loop{*connection.m_loop}, m_thread_context(thread_context), m_thread(std::move(thread))
 {
     assert(m_thread_context.waiter.get() != nullptr);
 }
@@ -407,18 +411,21 @@ ProxyServer<ThreadMap>::ProxyServer(Connection& connection) : m_connection(conne
 
 kj::Promise<void> ProxyServer<ThreadMap>::makeThread(MakeThreadContext context)
 {
+    EventLoop& loop{*m_connection.m_loop};
+    if (loop.testing_hook_makethread) loop.testing_hook_makethread();
     const std::string from = context.getParams().getName();
     std::promise<ThreadContext*> thread_context;
-    std::thread thread([&thread_context, from, this]() {
-        g_thread_context.thread_name = ThreadName(m_connection.m_loop->m_exe_name) + " (from " + from + ")";
+    std::thread thread([&loop, &thread_context, from]() {
+        g_thread_context.thread_name = ThreadName(loop.m_exe_name) + " (from " + from + ")";
         g_thread_context.waiter = std::make_unique<Waiter>();
-        thread_context.set_value(&g_thread_context);
         Lock lock(g_thread_context.waiter->m_mutex);
+        thread_context.set_value(&g_thread_context);
+        if (loop.testing_hook_makethread_created) loop.testing_hook_makethread_created();
         // Wait for shutdown signal from ProxyServer<Thread> destructor (signal
         // is just waiter getting set to null.)
         g_thread_context.waiter->wait(lock, [] { return !g_thread_context.waiter; });
     });
-    auto thread_server = kj::heap<ProxyServer<Thread>>(*thread_context.get_future().get(), std::move(thread));
+    auto thread_server = kj::heap<ProxyServer<Thread>>(m_connection, *thread_context.get_future().get(), std::move(thread));
     auto thread_client = m_connection.m_threads.add(kj::mv(thread_server));
     context.getResults().setResult(kj::mv(thread_client));
     return kj::READY_NOW;

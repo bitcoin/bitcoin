@@ -10,7 +10,7 @@ the node should pretend that it does not have it to avoid fingerprinting.
 
 import time
 
-from test_framework.blocktools import (create_block, create_coinbase)
+from test_framework.blocktools import create_block
 from test_framework.messages import CInv, MSG_BLOCK
 from test_framework.p2p import (
     P2PInterface,
@@ -35,15 +35,13 @@ class P2PFingerprintTest(BitcoinTestFramework):
     def build_chain(self, nblocks, prev_hash, prev_height, prev_median_time):
         blocks = []
         for _ in range(nblocks):
-            coinbase = create_coinbase(prev_height + 1)
-            block_time = prev_median_time + 1
-            block = create_block(int(prev_hash, 16), coinbase, block_time)
+            block = create_block(int(prev_hash, 16), height=prev_height + 1, ntime=prev_median_time + 1)
             block.solve()
 
             blocks.append(block)
             prev_hash = block.hash_hex
             prev_height += 1
-            prev_median_time = block_time
+            prev_median_time += 1
         return blocks
 
     # Send a getdata request for a given block hash

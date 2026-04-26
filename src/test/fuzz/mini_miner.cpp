@@ -6,10 +6,11 @@
 #include <test/fuzz/fuzz.h>
 #include <test/fuzz/util.h>
 #include <test/fuzz/util/mempool.h>
+#include <test/util/mining.h>
 #include <test/util/script.h>
 #include <test/util/setup_common.h>
+#include <test/util/time.h>
 #include <test/util/txmempool.h>
-#include <test/util/mining.h>
 
 #include <node/miner.h>
 #include <node/mini_miner.h>
@@ -26,12 +27,10 @@
 
 namespace {
 
-const TestingSetup* g_setup;
 std::deque<COutPoint> g_available_coins;
 void initialize_miner()
 {
     static const auto testing_setup = MakeNoLogFileContext<const TestingSetup>();
-    g_setup = testing_setup.get();
     for (uint32_t i = 0; i < uint32_t{100}; ++i) {
         g_available_coins.emplace_back(Txid::FromUint256(uint256::ZERO), i);
     }
@@ -42,7 +41,7 @@ FUZZ_TARGET(mini_miner, .init = initialize_miner)
 {
     SeedRandomStateForTest(SeedRand::ZEROS);
     FuzzedDataProvider fuzzed_data_provider{buffer.data(), buffer.size()};
-    SetMockTime(ConsumeTime(fuzzed_data_provider));
+    NodeClockContext clock_ctx{ConsumeTime(fuzzed_data_provider)};
     bilingual_str error;
     CTxMemPool pool{CTxMemPool::Options{}, error};
     Assert(error.empty());

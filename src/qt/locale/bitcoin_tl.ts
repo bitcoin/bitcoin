@@ -571,6 +571,10 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <translation type="unfinished">&amp;Pagpapadalhan na mga ♦address♦</translation>
     </message>
     <message>
+        <source>&amp;Receiving addresses</source>
+        <translation type="unfinished">&amp;Pagtatanggapan na mga ♦address♦</translation>
+    </message>
+    <message>
         <source>Open a bitcoin: URI</source>
         <translation type="unfinished">Buksan ang ♦bitcoin: URI♦</translation>
     </message>
@@ -979,10 +983,6 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <translation type="unfinished">I-disable ang Pribadong mga Susi</translation>
     </message>
     <message>
-        <source>Make a blank wallet. Blank wallets do not initially have private keys or scripts. Private keys and addresses can be imported, or an HD seed can be set, at a later time.</source>
-        <translation type="unfinished">Gumawa ng blankong pitaka. Ang blankong mga pitaka hindi muna nagkakaroon ng pribadong mga susi o mga ♦script♦. Ang pribadong mga susi at mga ♦address♦ ay pwedeng ma-import, o ang ♦HD seed♦ ay pwedeng mai-set, mamaya.</translation>
-    </message>
-    <message>
         <source>Make Blank Wallet</source>
         <translation type="unfinished">Gumawa ng Blankong Pitaka</translation>
     </message>
@@ -1210,6 +1210,23 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     <message>
         <source>Error</source>
         <translation type="unfinished">Nagkamali</translation>
+    </message>
+    </context>
+<context>
+    <name>PSBTOperationsDialog</name>
+    <message numerus="yes">
+        <source>Signed %n input(s), but more signatures are still required.</source>
+        <translation type="unfinished">
+            <numerusform />
+            <numerusform />
+        </translation>
+    </message>
+    <message numerus="yes">
+        <source>Transaction has %n unsigned input(s).</source>
+        <translation type="unfinished">
+            <numerusform />
+            <numerusform />
+        </translation>
     </message>
     </context>
 <context>

@@ -550,10 +550,6 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         </translation>
     </message>
     <message>
-        <source>%1 behind</source>
-        <translation type="unfinished">%1 പുറകിൽ</translation>
-    </message>
-    <message>
         <source>Last received block was generated %1 ago.</source>
         <translation type="unfinished">അവസാനം ലഭിച്ച ബ്ലോക്ക് %1 മുമ്പ് സൃഷ്ടിച്ചു.</translation>
     </message>
@@ -900,6 +896,11 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <source>Migrate Wallet</source>
         <translation type="unfinished">വാലറ്റ് മൈഗ്രേറ്റ് ചെയ്യുക</translation>
     </message>
+    <message>
+        <source>Restore Wallet</source>
+        <extracomment>Title of progress window which is displayed when wallets are being restored.</extracomment>
+        <translation type="unfinished">വാലറ്റ് പുനഃസ്ഥാപിക്കുക</translation>
+    </message>
     </context>
 <context>
     <name>OpenWalletActivity</name>
@@ -1178,6 +1179,13 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <source>Close</source>
         <translation type="unfinished">അവസാനിപ്പിക്കുക</translation>
     </message>
+    <message numerus="yes">
+        <source>Signed %n input(s), but more signatures are still required.</source>
+        <translation type="unfinished">
+            <numerusform />
+            <numerusform />
+        </translation>
+    </message>
     <message>
         <source>Signed transaction successfully. Transaction is ready to broadcast.</source>
         <translation type="unfinished">ഇടപാട് വിജയകരമായി ഒപ്പിട്ടു.  ഇടപാട് പ്രക്ഷേപണത്തിന് തയ്യാറാണ്</translation>
@@ -1185,6 +1193,13 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     <message>
         <source>Total Amount</source>
         <translation type="unfinished">മുഴുവന്‍ തുക </translation>
+    </message>
+    <message numerus="yes">
+        <source>Transaction has %n unsigned input(s).</source>
+        <translation type="unfinished">
+            <numerusform />
+            <numerusform />
+        </translation>
     </message>
     </context>
 <context>
@@ -1203,7 +1218,7 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     </message>
     <message>
         <source>URI cannot be parsed! This can be caused by an invalid Bitcoin address or malformed URI parameters.</source>
-        <translation type="unfinished">യു‌ആർ‌ഐ പാഴ്‌സുചെയ്യാൻ‌ കഴിയില്ല! അസാധുവായ ബിറ്റ്കോയിൻ വിലാസം അല്ലെങ്കിൽ തെറ്റായ യു‌ആർ‌ഐ പാരാമീറ്ററുകൾ കാരണം ഇത് സംഭവിക്കാം.</translation>
+        <translation type="unfinished">യു‌ആർ‌ഐ പാഴ്‌സുചെയ്യാൻ‌ കഴിയില്ല! അസാധുവായ ബിറ്റ്കോയിൻ വിലാസം അല്ലെങ്കിൽ കേടായ യു‌ആർ‌ഐ പാരാമീറ്ററുകൾ കാരണം ഇത് സംഭവിക്കാം.</translation>
     </message>
     <message>
         <source>Payment request file handling</source>

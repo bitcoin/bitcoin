@@ -20,7 +20,7 @@
 #include "ecmult_compute_table_impl.h"
 
 static void print_table(FILE *fp, const char *name, int window_g, const secp256k1_ge_storage* table) {
-    int j;
+    size_t j;
     int i;
 
     fprintf(fp, "const secp256k1_ge_storage %s[ECMULT_TABLE_SIZE(WINDOW_G)] = {\n", name);

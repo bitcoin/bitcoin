@@ -865,6 +865,14 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     </message>
     </context>
 <context>
+    <name>MigrateWalletActivity</name>
+    <message>
+        <source>Restore Wallet</source>
+        <extracomment>Title of progress window which is displayed when wallets are being restored.</extracomment>
+        <translation type="unfinished">பணப்பையை மீட்டெடுக்க</translation>
+    </message>
+    </context>
+<context>
     <name>OpenWalletActivity</name>
     <message>
         <source>Open wallet failed</source>
@@ -940,10 +948,6 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     <message>
         <source>Disable Private Keys</source>
         <translation type="unfinished">ப்ரைவேட் கீஸ் ஐ முடக்கு</translation>
-    </message>
-    <message>
-        <source>Make a blank wallet. Blank wallets do not initially have private keys or scripts. Private keys and addresses can be imported, or an HD seed can be set, at a later time.</source>
-        <translation type="unfinished">காலியான வாலட்டை உருவாக்கு. காலியான வாலட்டிற்கு ஆரம்பத்தில் ப்ரைவேட் கீஸ் மற்றும் ஸ்கிரிப்ட் இருக்காது. ப்ரைவேட் கீஸ் மற்றும் முகவரிகளை இம்போர்ட் செய்து கொள்ளலாம், அல்லது எச்டி ஸீடை பின்னர், அமைத்து கொள்ளலாம்.</translation>
     </message>
     <message>
         <source>Make Blank Wallet</source>
@@ -1104,13 +1108,6 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <translation type="unfinished">
             <numerusform>(%n ஜிபி தேவை)</numerusform>
             <numerusform>(%n ஜிபி தேவை)</numerusform>
-        </translation>
-    </message>
-    <message numerus="yes">
-        <source>(%n GB needed for full chain)</source>
-        <translation type="unfinished">
-            <numerusform />
-            <numerusform />
         </translation>
     </message>
     <message>
@@ -1494,6 +1491,13 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <source>Close</source>
         <translation type="unfinished">நெருக்கமான</translation>
     </message>
+    <message numerus="yes">
+        <source>Signed %n input(s), but more signatures are still required.</source>
+        <translation type="unfinished">
+            <numerusform />
+            <numerusform />
+        </translation>
+    </message>
     <message>
         <source>own address</source>
         <translation type="unfinished">சொந்த முகவரி</translation>
@@ -1505,6 +1509,13 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     <message>
         <source>or</source>
         <translation type="unfinished">அல்லது</translation>
+    </message>
+    <message numerus="yes">
+        <source>Transaction has %n unsigned input(s).</source>
+        <translation type="unfinished">
+            <numerusform />
+            <numerusform />
+        </translation>
     </message>
     </context>
 <context>
@@ -1699,10 +1710,6 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     <message>
         <source>Version</source>
         <translation type="unfinished">பதிப்பு</translation>
-    </message>
-    <message>
-        <source>Starting Block</source>
-        <translation type="unfinished">பிளாக் தொடங்குகிறது</translation>
     </message>
     <message>
         <source>Synced Headers</source>
@@ -2208,10 +2215,6 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     <message>
         <source>The amount exceeds your balance.</source>
         <translation type="unfinished">தொகை உங்கள் இருப்பையைவிட அதிகமாக உள்ளது.</translation>
-    </message>
-    <message>
-        <source>The total exceeds your balance when the %1 transaction fee is included.</source>
-        <translation type="unfinished">%1 பரிவர்த்தனைக் கட்டணம் சேர்க்கப்படும்போது மொத்த தொகை உங்கள் மீதம் உள்ள தொகையை மீறுகிறது.</translation>
     </message>
     <message>
         <source>Duplicate address found: addresses should only be used once each.</source>
@@ -2934,10 +2937,6 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <translation type="unfinished">பிளாக்களை இயக்க முடியவில்லை. -reindex-chainstate ஐப் பயன்படுத்தி டேட்டாபேசை மீண்டும் உருவாக்க வேண்டும்.</translation>
     </message>
     <message>
-        <source>Warning: We do not appear to fully agree with our peers! You may need to upgrade, or other nodes may need to upgrade.</source>
-        <translation type="unfinished">எச்சரிக்கை: நாங்கள் எங்கள் பீர்களுடன் முழுமையாக உடன்படுவதாகத் தெரியவில்லை! நீங்கள் அப்க்ரேட் செய்ய வேண்டியிருக்கலாம், அல்லது மற்ற நோடுகள் அப்க்ரேட் செய்ய வேண்டியிருக்கலாம்.</translation>
-    </message>
-    <message>
         <source>%s is set very high!</source>
         <translation type="unfinished">%s மிக அதிகமாக அமைக்கப்பட்டுள்ளது!</translation>
     </message>
@@ -2976,10 +2975,6 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     <message>
         <source>Error loading %s</source>
         <translation type="unfinished">%s லோட் செய்வதில் பிழை</translation>
-    </message>
-    <message>
-        <source>Error loading %s: Private keys can only be disabled during creation</source>
-        <translation type="unfinished">லோட் செய்வதில் பிழை %s: ப்ரைவேட் கீஸ் உருவாக்கத்தின் போது மட்டுமே முடக்கப்படும்</translation>
     </message>
     <message>
         <source>Error loading %s: Wallet corrupted</source>
@@ -3084,10 +3079,6 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     <message>
         <source>This is the minimum transaction fee you pay on every transaction.</source>
         <translation type="unfinished">ஒவ்வொரு பரிவர்த்தனைக்கும் நீங்கள் செலுத்த வேண்டிய குறைந்தபட்ச பரிவர்த்தனைக் கட்டணம் இதுவாகும்.</translation>
-    </message>
-    <message>
-        <source>This is the transaction fee you will pay if you send a transaction.</source>
-        <translation type="unfinished">நீங்கள் ஒரு பரிவர்த்தனையை அனுப்பும்பொழுது நீங்கள் செலுத்த வேண்டிய பரிவர்த்தனைக் கட்டணம் இதுவாகும்.</translation>
     </message>
     <message>
         <source>Transaction amount too small</source>

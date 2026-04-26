@@ -7,70 +7,65 @@ Test mempool acceptance in case of an already known transaction
 with identical non-witness data but different witness.
 """
 
-from test_framework.messages import (
-    COIN,
-)
 from test_framework.p2p import P2PTxInvStore
-from test_framework.script_util import ValidWitnessMalleatedTx
+from test_framework.script_util import build_malleated_tx_package
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import (
     assert_not_equal,
     assert_equal,
 )
-
+from test_framework.wallet import (
+    MiniWallet,
+)
 
 class MempoolWtxidTest(BitcoinTestFramework):
     def set_test_params(self):
         self.num_nodes = 1
-        self.setup_clean_chain = True
 
     def run_test(self):
         node = self.nodes[0]
+        mini_wallet = MiniWallet(node)
+        self.log.info('Start with pre-generated blocks')
 
-        self.log.info('Start with empty mempool and 101 blocks')
-        # The last 100 coinbase transactions are premature
-        blockhash = self.generate(node, 101)[0]
-        txid = node.getblock(blockhash=blockhash, verbosity=2)["tx"][0]["txid"]
         assert_equal(node.getmempoolinfo()['size'], 0)
 
         self.log.info("Submit parent with multiple script branches to mempool")
-        txgen = ValidWitnessMalleatedTx()
-        parent = txgen.build_parent_tx(txid, 9.99998 * COIN)
 
-        privkeys = [node.get_deterministic_priv_key().key]
-        raw_parent = node.signrawtransactionwithkey(hexstring=parent.serialize().hex(), privkeys=privkeys)['hex']
-        signed_parent_txid = node.sendrawtransaction(hexstring=raw_parent, maxfeerate=0)
+        parent = mini_wallet.create_self_transfer()["tx"]
+        parent_amount = parent.vout[0].nValue - 10000
+        child_amount = parent_amount - 10000
+        parent, child_one, child_two = build_malleated_tx_package(
+            parent=parent,
+            rebalance_parent_output_amount=parent_amount,
+            child_amount=child_amount
+        )
+
+        mini_wallet.sendrawtransaction(from_node=node, tx_hex=parent.serialize().hex())
+
         self.generate(node, 1)
 
         peer_wtxid_relay = node.add_p2p_connection(P2PTxInvStore())
 
-        child_one, child_two = txgen.build_malleated_children(signed_parent_txid, 9.99996 * COIN)
-        child_one_wtxid = child_one.wtxid_hex
-        child_one_txid = child_one.txid_hex
-        child_two_wtxid = child_two.wtxid_hex
-        child_two_txid = child_two.txid_hex
-
-        assert_equal(child_one_txid, child_two_txid)
-        assert_not_equal(child_one_wtxid, child_two_wtxid)
+        assert_equal(child_one.txid_hex, child_two.txid_hex)
+        assert_not_equal(child_one.wtxid_hex, child_two.wtxid_hex)
 
         self.log.info("Submit child_one to the mempool")
         txid_submitted = node.sendrawtransaction(child_one.serialize().hex())
-        assert_equal(node.getmempoolentry(txid_submitted)['wtxid'], child_one_wtxid)
-
-        peer_wtxid_relay.wait_for_broadcast([child_one_wtxid])
+        assert_equal(node.getmempoolentry(txid_submitted)['wtxid'], child_one.wtxid_hex)
+        peer_wtxid_relay.wait_for_broadcast([child_one.wtxid_hex])
         assert_equal(node.getmempoolinfo()["unbroadcastcount"], 0)
 
         # testmempoolaccept reports the "already in mempool" error
         assert_equal(node.testmempoolaccept([child_one.serialize().hex()]), [{
-            "txid": child_one_txid,
-            "wtxid": child_one_wtxid,
+            "txid": child_one.txid_hex,
+            "wtxid": child_one.wtxid_hex,
             "allowed": False,
             "reject-reason": "txn-already-in-mempool",
             "reject-details": "txn-already-in-mempool"
         }])
         assert_equal(node.testmempoolaccept([child_two.serialize().hex()])[0], {
-            "txid": child_two_txid,
-            "wtxid": child_two_wtxid,
+            "txid": child_two.txid_hex,
+            "wtxid": child_two.wtxid_hex,
             "allowed": False,
             "reject-reason": "txn-same-nonwitness-data-in-mempool",
             "reject-details": "txn-same-nonwitness-data-in-mempool"
@@ -88,7 +83,7 @@ class MempoolWtxidTest(BitcoinTestFramework):
 
         # The node should rebroadcast the transaction using the wtxid of the correct transaction
         # (child_one, which is in its mempool).
-        peer_wtxid_relay_2.wait_for_broadcast([child_one_wtxid])
+        peer_wtxid_relay_2.wait_for_broadcast([child_one.wtxid_hex])
         assert_equal(node.getmempoolinfo()["unbroadcastcount"], 0)
 
 if __name__ == '__main__':

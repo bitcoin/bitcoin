@@ -7,6 +7,9 @@
 
 #include <mp/util.h>
 
+#include <concepts>
+#include <span>
+
 namespace mp {
 template <typename T, typename U>
 concept IsSpanOf =

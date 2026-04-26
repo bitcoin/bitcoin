@@ -111,7 +111,20 @@ struct Descriptor {
     /** Whether this descriptor will return one scriptPubKey or multiple (aka is or is not combo) */
     virtual bool IsSingleType() const = 0;
 
-    /** Convert the descriptor to a private string. This fails if the provided provider does not have the relevant private keys. */
+    /** Whether the given provider has all private keys required by this descriptor.
+     * @return `false` if the descriptor doesn't have any keys or subdescriptors,
+     *         or if the provider does not have all private keys required by
+     *         the descriptor.
+     */
+    virtual bool HavePrivateKeys(const SigningProvider& provider) const = 0;
+
+    /** Convert the descriptor to a private string. This uses public keys if the relevant private keys are not in the SigningProvider.
+     *  If none of the relevant private keys are available, the output string in the "out" parameter will not contain any private key information,
+     *  and this function will return "false".
+     *  @param[in] provider The SigningProvider to query for private keys.
+     *  @param[out] out The resulting descriptor string, containing private keys if available.
+     *  @returns true if at least one private key available.
+     */
     virtual bool ToPrivateString(const SigningProvider& provider, std::string& out) const = 0;
 
     /** Convert the descriptor to a normalized string. Normalized descriptors have the xpub at the last hardened step. This fails if the provided provider does not have the private keys to derive that xpub. */
@@ -165,6 +178,15 @@ struct Descriptor {
      * @param[out] ext_pubs Any extended public keys
      */
     virtual void GetPubKeys(std::set<CPubKey>& pubkeys, std::set<CExtPubKey>& ext_pubs) const = 0;
+
+    /** Semantic/safety warnings (includes subdescriptors). */
+    virtual std::vector<std::string> Warnings() const = 0;
+
+    /** Get the maximum key expression index. Used only for tests */
+    virtual uint32_t GetMaxKeyExpr() const = 0;
+
+    /** Get the number of key expressions in this descriptor. Used only for tests */
+    virtual size_t GetKeyCount() const = 0;
 };
 
 /** Parse a `descriptor` string. Included private keys are put in `out`.

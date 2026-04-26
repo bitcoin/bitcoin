@@ -6,6 +6,7 @@
 #include <logging.h>
 #include <logging/timer.h>
 #include <scheduler.h>
+#include <test/util/common.h>
 #include <test/util/logging.h>
 #include <test/util/setup_common.h>
 #include <tinyformat.h>
@@ -109,7 +110,7 @@ BOOST_AUTO_TEST_CASE(logging_timer)
     BOOST_CHECK_EQUAL(micro_timer.LogMsg("msg").substr(0, result_prefix.size()), result_prefix);
 }
 
-BOOST_FIXTURE_TEST_CASE(logging_LogPrintStr, LogSetup)
+BOOST_FIXTURE_TEST_CASE(logging_LogPrint, LogSetup)
 {
     LogInstance().m_log_sourcelocations = true;
 
@@ -133,7 +134,7 @@ BOOST_FIXTURE_TEST_CASE(logging_LogPrintStr, LogSetup)
     std::vector<std::string> expected;
     for (auto& [msg, category, level, prefix, loc] : cases) {
         expected.push_back(tfm::format("[%s:%s] [%s] %s%s", util::RemovePrefix(loc.file_name(), "./"), loc.line(), loc.function_name_short(), prefix, msg));
-        LogInstance().LogPrintStr(msg, std::move(loc), category, level, /*should_ratelimit=*/false);
+        LogInstance().LogPrint({.category = category, .level = level, .should_ratelimit = false, .source_loc = std::move(loc), .message = msg});
     }
     std::vector<std::string> log_lines{ReadDebugLogLines()};
     BOOST_CHECK_EQUAL_COLLECTIONS(log_lines.begin(), log_lines.end(), expected.begin(), expected.end());
@@ -164,9 +165,8 @@ BOOST_FIXTURE_TEST_CASE(logging_LogPrintMacros_CategoryName, LogSetup)
     std::vector<std::pair<BCLog::LogFlags, std::string>> expected_category_names;
     const auto category_names = SplitString(concatenated_category_names, ',');
     for (const auto& category_name : category_names) {
-        BCLog::LogFlags category;
         const auto trimmed_category_name = TrimString(category_name);
-        BOOST_REQUIRE(GetLogCategory(category, trimmed_category_name));
+        const auto category{*Assert(GetLogCategory(trimmed_category_name))};
         expected_category_names.emplace_back(category, trimmed_category_name);
     }
 

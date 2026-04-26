@@ -10,6 +10,7 @@ bugprone-unhandled-self-assignment,
 bugprone-unused-return-value,
 misc-unused-using-decls,
 misc-no-recursion,
+modernize-avoid-bind,
 modernize-deprecated-headers,
 modernize-use-default-member-init,
 modernize-use-emplace,
@@ -24,6 +25,7 @@ performance-*,
 -performance-no-int-to-ptr,
 -performance-noexcept-move-constructor,
 -performance-unnecessary-value-param,
+readability-avoid-const-params-in-decls,
 readability-const-return-type,
 readability-container-contains,
 readability-redundant-declaration,
@@ -35,8 +37,10 @@ CheckOptions:
  - key: modernize-deprecated-headers.CheckHeaderFile
    value: false
  - key: performance-move-const-arg.CheckTriviallyCopyableMove
-   value: false
+   value: false  # Disabled, to allow the bugprone-use-after-move rule on trivially copyable types, to catch logic bugs
  - key: bugprone-unhandled-self-assignment.WarnOnlyIfThisHasSuspiciousField
    value: false
  - key: bugprone-unused-return-value.CheckedReturnTypes
    value: '^::std::error_code$;^::std::error_condition$;^::std::errc$;^::std::expected$;^::util::Result$;^::util::Expected$'
+ - key: bugprone-unused-return-value.AllowCastToVoid
+   value: true  # Can be removed with C++26 once the _ placeholder exists.

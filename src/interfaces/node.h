@@ -19,6 +19,7 @@
 #include <cstdint>
 #include <functional>
 #include <memory>
+#include <optional>
 #include <string>
 #include <tuple>
 #include <vector>
@@ -123,7 +124,7 @@ public:
     virtual void mapPort(bool enable) = 0;
 
     //! Get proxy.
-    virtual bool getProxy(Network net, Proxy& proxy_info) = 0;
+    virtual std::optional<Proxy> getProxy(Network net) = 0;
 
     //! Get number of connections.
     virtual size_t getNodeCount(ConnectionDirection flags) = 0;
@@ -219,13 +220,12 @@ public:
 
     //! Register handler for message box messages.
     using MessageBoxFn =
-        std::function<bool(const bilingual_str& message, const std::string& caption, unsigned int style)>;
+        std::function<bool(const bilingual_str& message, unsigned int style)>;
     virtual std::unique_ptr<Handler> handleMessageBox(MessageBoxFn fn) = 0;
 
     //! Register handler for question messages.
     using QuestionFn = std::function<bool(const bilingual_str& message,
         const std::string& non_interactive_message,
-        const std::string& caption,
         unsigned int style)>;
     virtual std::unique_ptr<Handler> handleQuestion(QuestionFn fn) = 0;
 

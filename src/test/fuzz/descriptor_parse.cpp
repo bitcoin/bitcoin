@@ -61,6 +61,10 @@ static void TestDescriptor(const Descriptor& desc, FlatSigningProvider& sig_prov
     const bool is_nontop_or_nonsolvable{!*is_solvable || !desc.GetOutputType()};
     const bool is_input_size_info_set{max_sat_maxsig && max_sat_nonmaxsig && max_elems};
     assert(is_input_size_info_set || is_nontop_or_nonsolvable);
+
+    auto max_key_expr = desc.GetMaxKeyExpr();
+    auto key_count = desc.GetKeyCount();
+    assert((max_key_expr == 0 && key_count == 0) || max_key_expr + 1 == key_count);
 }
 
 void initialize_descriptor_parse()
@@ -77,21 +81,9 @@ void initialize_mocked_descriptor_parse()
 
 FUZZ_TARGET(mocked_descriptor_parse, .init = initialize_mocked_descriptor_parse)
 {
-    // Key derivation is expensive. Deriving deep derivation paths take a lot of compute and we'd
-    // rather spend time elsewhere in this target, like on the actual descriptor syntax. So rule
-    // out strings which could correspond to a descriptor containing a too large derivation path.
-    if (HasDeepDerivPath(buffer)) return;
-
-    // Some fragments can take a virtually unlimited number of sub-fragments (thresh, multi_a) but
-    // may perform quadratic operations on them. Limit the number of sub-fragments per fragment.
-    if (HasTooManySubFrag(buffer)) return;
-
-    // The script building logic performs quadratic copies in the number of nested wrappers. Limit
-    // the number of nested wrappers per fragment.
-    if (HasTooManyWrappers(buffer)) return;
-
     const std::string mocked_descriptor{buffer.begin(), buffer.end()};
     if (const auto descriptor = MOCKED_DESC_CONVERTER.GetDescriptor(mocked_descriptor)) {
+        if (IsTooExpensive(MakeUCharSpan(*descriptor))) return;
         FlatSigningProvider signing_provider;
         std::string error;
         const auto desc = Parse(*descriptor, signing_provider, error);
@@ -106,10 +98,7 @@ FUZZ_TARGET(mocked_descriptor_parse, .init = initialize_mocked_descriptor_parse)
 
 FUZZ_TARGET(descriptor_parse, .init = initialize_descriptor_parse)
 {
-    // See comments above for rationales.
-    if (HasDeepDerivPath(buffer)) return;
-    if (HasTooManySubFrag(buffer)) return;
-    if (HasTooManyWrappers(buffer)) return;
+    if (IsTooExpensive(buffer)) return;
 
     const std::string descriptor(buffer.begin(), buffer.end());
     FlatSigningProvider signing_provider;

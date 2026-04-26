@@ -17,6 +17,7 @@
 #include <sync.h>
 #include <uint256.h>
 #include <util/bip32.h>
+#include <util/check.h>
 #include <util/fs.h>
 #include <util/time.h>
 #include <util/translation.h>
@@ -35,9 +36,9 @@
 using interfaces::FoundBlock;
 
 namespace wallet {
-RPCHelpMan importprunedfunds()
+RPCMethod importprunedfunds()
 {
-    return RPCHelpMan{
+    return RPCMethod{
         "importprunedfunds",
         "Imports funds without rescan. Corresponding address or script must previously be included in wallet. Aimed towards pruned wallets. The end-user is responsible to import additional transactions that subsequently spend the imported outputs or rescan after the point in the blockchain the transaction is included.\n",
                 {
@@ -46,7 +47,7 @@ RPCHelpMan importprunedfunds()
                 },
                 RPCResult{RPCResult::Type::NONE, "", ""},
                 RPCExamples{""},
-        [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
+        [](const RPCMethod& self, const JSONRPCRequest& request) -> UniValue
 {
     std::shared_ptr<CWallet> const pwallet = GetWalletForJSONRPCRequest(request);
     if (!pwallet) return UniValue::VNULL;
@@ -56,9 +57,8 @@ RPCHelpMan importprunedfunds()
         throw JSONRPCError(RPC_DESERIALIZATION_ERROR, "TX decode failed. Make sure the tx has at least one input.");
     }
 
-    DataStream ssMB{ParseHexV(request.params[1], "proof")};
     CMerkleBlock merkleBlock;
-    ssMB >> merkleBlock;
+    SpanReader{ParseHexV(request.params[1], "proof")} >> merkleBlock;
 
     //Search partial merkle tree in proof for our transaction and index in valid block
     std::vector<Txid> vMatch;
@@ -91,9 +91,9 @@ RPCHelpMan importprunedfunds()
     };
 }
 
-RPCHelpMan removeprunedfunds()
+RPCMethod removeprunedfunds()
 {
-    return RPCHelpMan{
+    return RPCMethod{
         "removeprunedfunds",
         "Deletes the specified transaction from the wallet. Meant for use with pruned wallets and as a companion to importprunedfunds. This will affect wallet balances.\n",
                 {
@@ -105,7 +105,7 @@ RPCHelpMan removeprunedfunds()
             "\nAs a JSON-RPC call\n"
             + HelpExampleRpc("removeprunedfunds", "\"a8d0c0184dde994a09ec054286f1ce581bebf46446a512166eae7628734ea0a5\"")
                 },
-        [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
+        [](const RPCMethod& self, const JSONRPCRequest& request) -> UniValue
 {
     std::shared_ptr<CWallet> const pwallet = GetWalletForJSONRPCRequest(request);
     if (!pwallet) return UniValue::VNULL;
@@ -240,6 +240,10 @@ static UniValue ProcessDescriptorImport(CWallet& wallet, const UniValue& data, c
             }
             parsed_desc->ExpandPrivate(0, keys, expand_keys);
 
+            for (const auto& w : parsed_desc->Warnings()) {
+               warnings.push_back(w);
+            }
+
             // Check if all private keys are provided
             bool have_all_privkeys = !expand_keys.keys.empty();
             for (const auto& entry : expand_keys.origins) {
@@ -295,9 +299,9 @@ static UniValue ProcessDescriptorImport(CWallet& wallet, const UniValue& data, c
     return result;
 }
 
-RPCHelpMan importdescriptors()
+RPCMethod importdescriptors()
 {
-    return RPCHelpMan{
+    return RPCMethod{
         "importdescriptors",
         "Import descriptors. This will trigger a rescan of the blockchain based on the earliest timestamp of all descriptors being imported. Requires a new wallet backup.\n"
         "When importing descriptors with multipath key expressions, if the multipath specifier contains exactly two elements, the descriptor produced from the second element will be imported as an internal descriptor.\n"
@@ -339,7 +343,8 @@ RPCHelpMan importdescriptors()
                             }},
                             {RPCResult::Type::OBJ, "error", /*optional=*/true, "",
                             {
-                                {RPCResult::Type::ELISION, "", "JSONRPC error"},
+                                {RPCResult::Type::NUM, "code", "JSONRPC error code"},
+                                {RPCResult::Type::STR, "message", "JSONRPC error message"},
                             }},
                         }},
                     }
@@ -349,7 +354,7 @@ RPCHelpMan importdescriptors()
                                           "{ \"desc\": \"<my descriptor 2>\", \"label\": \"example 2\", \"timestamp\": 1455191480 }]'") +
                     HelpExampleCli("importdescriptors", "'[{ \"desc\": \"<my descriptor>\", \"timestamp\":1455191478, \"active\": true, \"range\": [0,100], \"label\": \"<my bech32 wallet>\" }]'")
                 },
-        [&](const RPCHelpMan& self, const JSONRPCRequest& main_request) -> UniValue
+        [](const RPCMethod& self, const JSONRPCRequest& main_request) -> UniValue
 {
     std::shared_ptr<CWallet> const pwallet = GetWalletForJSONRPCRequest(main_request);
     if (!pwallet) return UniValue::VNULL;
@@ -457,9 +462,9 @@ RPCHelpMan importdescriptors()
     };
 }
 
-RPCHelpMan listdescriptors()
+RPCMethod listdescriptors()
 {
-    return RPCHelpMan{
+    return RPCMethod{
         "listdescriptors",
         "List all descriptors present in a wallet.\n",
         {
@@ -487,12 +492,15 @@ RPCHelpMan listdescriptors()
             HelpExampleCli("listdescriptors", "") + HelpExampleRpc("listdescriptors", "")
             + HelpExampleCli("listdescriptors", "true") + HelpExampleRpc("listdescriptors", "true")
         },
-        [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
+        [](const RPCMethod& self, const JSONRPCRequest& request) -> UniValue
 {
     const std::shared_ptr<const CWallet> wallet = GetWalletForJSONRPCRequest(request);
     if (!wallet) return UniValue::VNULL;
 
     const bool priv = !request.params[0].isNull() && request.params[0].get_bool();
+    if (wallet->IsWalletFlagSet(WALLET_FLAG_DISABLE_PRIVATE_KEYS) && priv) {
+        throw JSONRPCError(RPC_WALLET_ERROR, "Can't get private descriptor string for watch-only wallets");
+    }
     if (priv) {
         EnsureWalletIsUnlocked(*wallet);
     }
@@ -519,9 +527,7 @@ RPCHelpMan listdescriptors()
         LOCK(desc_spk_man->cs_desc_man);
         const auto& wallet_descriptor = desc_spk_man->GetWalletDescriptor();
         std::string descriptor;
-        if (!desc_spk_man->GetDescriptorString(descriptor, priv)) {
-            throw JSONRPCError(RPC_WALLET_ERROR, "Can't get descriptor string.");
-        }
+        CHECK_NONFATAL(desc_spk_man->GetDescriptorString(descriptor, priv));
         const bool is_range = wallet_descriptor.descriptor->IsRange();
         wallet_descriptors.push_back({
             descriptor,
@@ -566,9 +572,9 @@ RPCHelpMan listdescriptors()
     };
 }
 
-RPCHelpMan backupwallet()
+RPCMethod backupwallet()
 {
-    return RPCHelpMan{
+    return RPCMethod{
         "backupwallet",
         "Safely copies the current wallet file to the specified destination, which can either be a directory or a path with a filename.\n",
                 {
@@ -579,7 +585,7 @@ RPCHelpMan backupwallet()
                     HelpExampleCli("backupwallet", "\"backup.dat\"")
             + HelpExampleRpc("backupwallet", "\"backup.dat\"")
                 },
-        [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
+        [](const RPCMethod& self, const JSONRPCRequest& request) -> UniValue
 {
     const std::shared_ptr<const CWallet> pwallet = GetWalletForJSONRPCRequest(request);
     if (!pwallet) return UniValue::VNULL;
@@ -601,9 +607,9 @@ RPCHelpMan backupwallet()
 }
 
 
-RPCHelpMan restorewallet()
+RPCMethod restorewallet()
 {
-    return RPCHelpMan{
+    return RPCMethod{
         "restorewallet",
         "Restores and loads a wallet from backup.\n"
         "\nThe rescan is significantly faster if block filters are available"
@@ -629,7 +635,7 @@ RPCHelpMan restorewallet()
             + HelpExampleCliNamed("restorewallet", {{"wallet_name", "testwallet"}, {"backup_file", "home\\backups\\backup-file.bak\""}, {"load_on_startup", true}})
             + HelpExampleRpcNamed("restorewallet", {{"wallet_name", "testwallet"}, {"backup_file", "home\\backups\\backup-file.bak\""}, {"load_on_startup", true}})
         },
-        [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
+        [](const RPCMethod& self, const JSONRPCRequest& request) -> UniValue
 {
 
     WalletContext& context = EnsureWalletContext(request.context);

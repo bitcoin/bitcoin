@@ -23,6 +23,7 @@
 #include <psbt.h>
 #include <util/translation.h>
 #include <wallet/coincontrol.h>
+#include <wallet/types.h>
 #include <wallet/wallet.h>
 
 #include <cstdint>
@@ -149,6 +150,8 @@ bool WalletModel::validateAddress(const QString& address) const
 
 WalletModel::SendCoinsReturn WalletModel::prepareTransaction(WalletModelTransaction &transaction, const CCoinControl& coinControl)
 {
+    transaction.getWtx() = nullptr; // reset tx output
+
     CAmount total = 0;
     bool fSubtractFeeFromAmount = false;
     QList<SendCoinsRecipient> recipients = transaction.getRecipients();
@@ -199,25 +202,19 @@ WalletModel::SendCoinsReturn WalletModel::prepareTransaction(WalletModelTransact
     }
 
     try {
-        CAmount nFeeRequired = 0;
-        int nChangePosRet = -1;
-
         auto& newTx = transaction.getWtx();
-        const auto& res = m_wallet->createTransaction(vecSend, coinControl, /*sign=*/!wallet().privateKeysDisabled(), nChangePosRet, nFeeRequired);
-        newTx = res ? *res : nullptr;
-        transaction.setTransactionFee(nFeeRequired);
-        if (fSubtractFeeFromAmount && newTx)
-            transaction.reassignAmounts(nChangePosRet);
-
-        if(!newTx)
-        {
-            if(!fSubtractFeeFromAmount && (total + nFeeRequired) > nBalance)
-            {
-                return SendCoinsReturn(AmountWithFeeExceedsBalance);
-            }
+        const auto& res = m_wallet->createTransaction(vecSend, coinControl, /*sign=*/!wallet().privateKeysDisabled(), /*change_pos=*/std::nullopt);
+        if (!res) {
             Q_EMIT message(tr("Send Coins"), QString::fromStdString(util::ErrorString(res).translated),
-                CClientUIInterface::MSG_ERROR);
+                           CClientUIInterface::MSG_ERROR);
             return TransactionCreationFailed;
+        }
+
+        newTx = res->tx;
+        CAmount nFeeRequired = res->fee;
+        transaction.setTransactionFee(nFeeRequired);
+        if (fSubtractFeeFromAmount && newTx) {
+            transaction.reassignAmounts(static_cast<int>(res->change_pos.value_or(-1)));
         }
 
         // Reject absurdly high fee. (This can never happen because the
@@ -408,12 +405,12 @@ static void NotifyCanGetAddressesChanged(WalletModel* walletmodel)
 void WalletModel::subscribeToCoreSignals()
 {
     // Connect signals to wallet
-    m_handler_unload = m_wallet->handleUnload(std::bind(&NotifyUnload, this));
-    m_handler_status_changed = m_wallet->handleStatusChanged(std::bind(&NotifyKeyStoreStatusChanged, this));
-    m_handler_address_book_changed = m_wallet->handleAddressBookChanged(std::bind(NotifyAddressBookChanged, this, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3, std::placeholders::_4, std::placeholders::_5));
-    m_handler_transaction_changed = m_wallet->handleTransactionChanged(std::bind(NotifyTransactionChanged, this, std::placeholders::_1, std::placeholders::_2));
-    m_handler_show_progress = m_wallet->handleShowProgress(std::bind(ShowProgress, this, std::placeholders::_1, std::placeholders::_2));
-    m_handler_can_get_addrs_changed = m_wallet->handleCanGetAddressesChanged(std::bind(NotifyCanGetAddressesChanged, this));
+    m_handler_unload = m_wallet->handleUnload(std::bind_front(&NotifyUnload, this));
+    m_handler_status_changed = m_wallet->handleStatusChanged(std::bind_front(&NotifyKeyStoreStatusChanged, this));
+    m_handler_address_book_changed = m_wallet->handleAddressBookChanged(std::bind_front(NotifyAddressBookChanged, this));
+    m_handler_transaction_changed = m_wallet->handleTransactionChanged(std::bind_front(NotifyTransactionChanged, this));
+    m_handler_show_progress = m_wallet->handleShowProgress(std::bind_front(ShowProgress, this));
+    m_handler_can_get_addrs_changed = m_wallet->handleCanGetAddressesChanged(std::bind_front(NotifyCanGetAddressesChanged, this));
 }
 
 void WalletModel::unsubscribeFromCoreSignals()

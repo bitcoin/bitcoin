@@ -36,7 +36,7 @@ static void WalletIsMine(benchmark::Bench& bench, int num_combo = 0)
     // Loading the wallet will also create it
     uint64_t create_flags = WALLET_FLAG_DESCRIPTORS;
     auto database = CreateMockableWalletDatabase();
-    auto wallet = TestLoadWallet(std::move(database), context, create_flags);
+    auto wallet = TestCreateWallet(std::move(database), context, create_flags);
 
     // For a descriptor wallet, fill with num_combo combo descriptors with random keys
     // This benchmarks a non-HD wallet migrated to descriptors
@@ -66,6 +66,6 @@ static void WalletIsMine(benchmark::Bench& bench, int num_combo = 0)
 
 static void WalletIsMineDescriptors(benchmark::Bench& bench) { WalletIsMine(bench); }
 static void WalletIsMineMigratedDescriptors(benchmark::Bench& bench) { WalletIsMine(bench, /*num_combo=*/2000); }
-BENCHMARK(WalletIsMineDescriptors, benchmark::PriorityLevel::LOW);
-BENCHMARK(WalletIsMineMigratedDescriptors, benchmark::PriorityLevel::LOW);
+BENCHMARK(WalletIsMineDescriptors);
+BENCHMARK(WalletIsMineMigratedDescriptors);
 } // namespace wallet

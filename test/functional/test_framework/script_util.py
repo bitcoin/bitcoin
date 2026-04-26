@@ -36,7 +36,10 @@ from test_framework.script import (
     hash160,
 )
 
-from test_framework.util import assert_equal
+from test_framework.util import (
+    assert_greater_than_or_equal,
+    assert_equal,
+)
 
 # Maximum number of potentially executed legacy signature operations in validating a transaction.
 MAX_STD_LEGACY_SIGOPS = 2_500
@@ -58,12 +61,12 @@ MAX_STD_P2SH_SIGOPS = 15
 # least 5 bytes.
 MIN_STANDARD_TX_NONWITNESS_SIZE = 65
 MIN_PADDING = MIN_STANDARD_TX_NONWITNESS_SIZE - 10 - 41 - 9
-assert MIN_PADDING == 5
+assert_equal(MIN_PADDING, 5)
 
 # This script cannot be spent, allowing dust output values under
 # standardness checks
 DUMMY_MIN_OP_RETURN_SCRIPT = CScript([OP_RETURN] + ([OP_0] * (MIN_PADDING - 1)))
-assert len(DUMMY_MIN_OP_RETURN_SCRIPT) == MIN_PADDING
+assert_equal(len(DUMMY_MIN_OP_RETURN_SCRIPT), MIN_PADDING)
 
 PAY_TO_ANCHOR = CScript([OP_1, bytes.fromhex("4e73")])
 ANCHOR_ADDRESS = "bcrt1pfeesnyr2tx"
@@ -83,12 +86,12 @@ def keys_to_multisig_script(keys, *, k=None):
 
 
 def keyhash_to_p2pkh_script(hash):
-    assert len(hash) == 20
+    assert_equal(len(hash), 20)
     return CScript([OP_DUP, OP_HASH160, hash, OP_EQUALVERIFY, OP_CHECKSIG])
 
 
 def scripthash_to_p2sh_script(hash):
-    assert len(hash) == 20
+    assert_equal(len(hash), 20)
     return CScript([OP_HASH160, hash, OP_EQUAL])
 
 
@@ -144,7 +147,7 @@ def bulk_vout(tx, target_vsize):
     assert_equal(tx.get_vsize(), target_vsize)
 
 def output_key_to_p2tr_script(key):
-    assert len(key) == 32
+    assert_equal(len(key), 32)
     return program_to_witness_script(1, key)
 
 
@@ -164,43 +167,44 @@ def check_script(script):
     assert False
 
 
-class ValidWitnessMalleatedTx:
+def build_malleated_tx_package(*, parent: CTransaction, rebalance_parent_output_amount, child_amount):
     """
-    Creates a valid witness malleation transaction test case:
-    - Parent transaction with a script supporting 2 branches
-    - 2 child transactions with the same txid but different wtxids
+    Returns a transaction package with valid witness:
+    - Parent transaction whose last output contains a script that has two spending conditions
+    - Two malleated child transactions with same txid but different wtxids because of different witnesses
+
+    Args:
+        parent: Transaction with modifiable outputs. Either unsigned (sign after
+        calling this function) or anyone-can-spend (e.g., MiniWallet's OP_TRUE).
     """
-    def __init__(self):
-        hashlock = hash160(b'Preimage')
-        self.witness_script = CScript([OP_IF, OP_HASH160, hashlock, OP_EQUAL, OP_ELSE, OP_TRUE, OP_ENDIF])
+    hashlock = hash160(b'Preimage')
+    witness_script = CScript([OP_IF, OP_HASH160, hashlock, OP_EQUAL, OP_ELSE, OP_TRUE, OP_ENDIF])
+    witness_program = sha256(witness_script)
+    script_pubkey = CScript([OP_0, witness_program])
 
-    def build_parent_tx(self, funding_txid, amount):
-        # Create an unsigned parent transaction paying to the witness script.
-        witness_program = sha256(self.witness_script)
-        script_pubkey = CScript([OP_0, witness_program])
+    # Append to the transaction the vout containing the script supporting 2 spending conditions
+    assert_greater_than_or_equal(len(parent.vout), 1)
+    last_output = parent.vout[len(parent.vout) - 1]
+    assert_greater_than_or_equal(last_output.nValue, rebalance_parent_output_amount)
+    last_output.nValue -= rebalance_parent_output_amount
+    parent.vout.append(CTxOut(rebalance_parent_output_amount, script_pubkey))
 
-        parent = CTransaction()
-        parent.vin.append(CTxIn(COutPoint(int(funding_txid, 16), 0), b""))
-        parent.vout.append(CTxOut(int(amount), script_pubkey))
-        return parent
 
-    def build_malleated_children(self, signed_parent_txid, amount):
-        # Create 2 valid children that differ only in witness data.
-        # 1. Create a new transaction with witness solving first branch
-        child_witness_script = CScript([OP_TRUE])
-        child_witness_program = sha256(child_witness_script)
-        child_script_pubkey = CScript([OP_0, child_witness_program])
+    # Create 2 valid children that differ only in witness data.
+    # 1. Create a new transaction with witness solving first branch
+    child_witness_script = CScript([OP_TRUE])
+    child_witness_program = sha256(child_witness_script)
+    child_script_pubkey = CScript([OP_0, child_witness_program])
+    child_one = CTransaction()
 
-        child_one = CTransaction()
-        child_one.vin.append(CTxIn(COutPoint(int(signed_parent_txid, 16), 0), b""))
-        child_one.vout.append(CTxOut(int(amount), child_script_pubkey))
-        child_one.wit.vtxinwit.append(CTxInWitness())
-        child_one.wit.vtxinwit[0].scriptWitness.stack = [b'Preimage', b'\x01', self.witness_script]
-
-        # 2. Create another identical transaction with witness solving second branch
-        child_two = deepcopy(child_one)
-        child_two.wit.vtxinwit[0].scriptWitness.stack = [b'', self.witness_script]
-        return child_one, child_two
+    child_one.vin.append(CTxIn(COutPoint(int(parent.txid_hex, 16), len(parent.vout) - 1), b""))
+    child_one.vout.append(CTxOut(child_amount, child_script_pubkey))
+    child_one.wit.vtxinwit.append(CTxInWitness())
+    child_one.wit.vtxinwit[0].scriptWitness.stack = [b'Preimage', b'\x01', witness_script]
+    # 2. Create another identical transaction with witness solving second branch
+    child_two = deepcopy(child_one)
+    child_two.wit.vtxinwit[0].scriptWitness.stack = [b'', witness_script]
+    return parent, child_one, child_two
 
 
 class TestFrameworkScriptUtil(unittest.TestCase):

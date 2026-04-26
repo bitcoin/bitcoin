@@ -2,11 +2,20 @@
 
 There are a few parameters that can be dialed down to reduce the memory usage of `bitcoind`. This can be useful on embedded systems or small VPSes.
 
+## Swapping
+
+When the operating system is under memory pressure, it may swap memory pages from RAM to disk.
+If this becomes continuous ("thrashing"), `bitcoind` can slow to a crawl, especially during initial sync or reindex.
+
+If you see sustained swap I/O while `bitcoind` runs, restart with a lower `-dbcache`.
+If needed, also reduce `-maxmempool`, `-maxconnections`, or use `-blocksonly`.
+Bitcoin Core may warn at startup when `-dbcache` looks too large for the detected system memory.
+
 ## In-memory caches
 
 The size of some in-memory caches can be reduced. As caches trade off memory usage for performance, reducing these will usually have a negative effect on performance.
 
-- `-dbcache=<n>` - the UTXO database cache size, this defaults to `450`. The unit is MiB (1024).
+- `-dbcache=<n>` - the UTXO database cache size, this defaults to `1024` (or `450` if less than `4096` MiB system RAM is detected). The unit is MiB (1024).
   - The minimum value for `-dbcache` is 4.
   - A lower `-dbcache` makes initial sync time much longer. After the initial sync, the effect is less pronounced for most use-cases, unless fast validation of blocks is important, such as for mining.
 

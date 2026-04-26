@@ -25,11 +25,13 @@ Release Process
   - set `CLIENT_VERSION_MINOR` to `0`
   - set `CLIENT_VERSION_BUILD` to `0`
   - set `CLIENT_VERSION_IS_RELEASE` to `true`
+* Check with the security team whether there is any security advisory to pre-announce.
 
 #### Before branch-off
 
 * Update translations see [translation_process.md](/doc/translation_process.md#synchronising-translations).
 * Update hardcoded [seeds](/contrib/seeds/README.md), see [this pull request](https://github.com/bitcoin/bitcoin/pull/27488) for an example.
+* Update embedded asmap data at `/src/node/data/ip_asn.dat`, see [asmap data documentation](./asmap-data.md).
 * Update the following variables in [`src/kernel/chainparams.cpp`](/src/kernel/chainparams.cpp) for mainnet, testnet, and signet:
   - `m_assumed_blockchain_size` and `m_assumed_chain_state_size` with the current size plus some overhead (see
     [this](#how-to-calculate-assumed-blockchain-and-chain-state-size) for information on how to calculate them).
@@ -295,7 +297,7 @@ cat "$VERSION"/*/all.SHA256SUMS.asc > SHA256SUMS.asc
 
   - Create a [new GitHub release](https://github.com/bitcoin/bitcoin/releases/new) with a link to the archived release notes
 
-- Announce the release:
+- Announce the release, along with any security advisory pre-announcements:
 
   - bitcoin-dev and bitcoin-core-dev mailing list
 

@@ -7,7 +7,6 @@
 #include <consensus/merkle.h>
 #include <consensus/params.h>
 #include <consensus/validation.h>
-#include <logging.h>
 #include <primitives/block.h>
 #include <primitives/transaction.h>
 #include <script/interpreter.h>
@@ -15,6 +14,7 @@
 #include <streams.h>
 #include <uint256.h>
 #include <util/check.h>
+#include <util/log.h>
 
 #include <algorithm>
 #include <cstddef>
@@ -59,10 +59,10 @@ static bool FetchAndClearCommitmentSection(const std::span<const uint8_t> header
 static uint256 ComputeModifiedMerkleRoot(const CMutableTransaction& cb, const CBlock& block)
 {
     std::vector<uint256> leaves;
-    leaves.resize(block.vtx.size());
-    leaves[0] = cb.GetHash().ToUint256();
+    leaves.reserve((block.vtx.size() + 1) & ~1ULL); // capacity rounded up to even
+    leaves.push_back(cb.GetHash().ToUint256());
     for (size_t s = 1; s < block.vtx.size(); ++s) {
-        leaves[s] = block.vtx[s]->GetHash().ToUint256();
+        leaves.push_back(block.vtx[s]->GetHash().ToUint256());
     }
     return ComputeMerkleRoot(std::move(leaves));
 }

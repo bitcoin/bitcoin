@@ -20,6 +20,15 @@ To receive security and update notifications, please subscribe to:
 
   <https://bitcoincore.org/en/list/announcements/join/>
 
+With the release of this new major version, versions *version minus 3* and
+older are at "End of Life" and will no longer receive updates.
+
+In accordance with the security policy, we will in two weeks disclose:
+
+* Medium and high severity vulnerabilities fixed in *version minus 2*. There are N of these.
+
+* Low severity vulnerabilities fixed in *version*. There are M of these.
+
 How to Upgrade
 ==============
 

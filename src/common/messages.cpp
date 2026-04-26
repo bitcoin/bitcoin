@@ -4,11 +4,11 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <common/messages.h>
-
 #include <common/types.h>
-#include <policy/fees/block_policy_estimator.h>
 #include <node/types.h>
+#include <policy/fees/block_policy_estimator.h>
 #include <tinyformat.h>
+#include <util/fees.h>
 #include <util/strencodings.h>
 #include <util/string.h>
 #include <util/translation.h>
@@ -33,7 +33,6 @@ std::string StringForFeeReason(FeeReason reason)
         {FeeReason::DOUBLE_ESTIMATE, "Double Target 95% Threshold"},
         {FeeReason::CONSERVATIVE, "Conservative Double Target longer horizon"},
         {FeeReason::MEMPOOL_MIN, "Mempool Min Fee"},
-        {FeeReason::PAYTXFEE, "PayTxFee set"},
         {FeeReason::FALLBACK, "Fallback fee"},
         {FeeReason::REQUIRED, "Minimum Required Fee"},
     };
@@ -67,10 +66,8 @@ std::string FeeModeInfo(const std::pair<std::string, FeeEstimateMode>& mode, std
             return strprintf("%s estimates use a longer time horizon, making them\n"
                    "less responsive to short-term drops in the prevailing fee market. This mode\n"
                    "potentially returns a higher fee rate estimate.\n", mode.first);
-        default:
-            // Other modes apart from the ones handled are fee rate units; they should not be clarified.
-            assert(false);
-    }
+    } // no default case, so the compiler can warn about missing cases
+    assert(false);
 }
 
 std::string FeeModesDetail(std::string default_info)
@@ -121,8 +118,7 @@ bilingual_str PSBTErrorString(PSBTError err)
             return Untranslated("Input needs additional signatures or other data");
         case PSBTError::OK:
             return Untranslated("No errors");
-        // no default case, so the compiler can warn about missing cases
-    }
+    } // no default case, so the compiler can warn about missing cases
     assert(false);
 }
 
@@ -145,8 +141,7 @@ bilingual_str TransactionErrorString(const TransactionError err)
             return Untranslated("Unspendable output exceeds maximum configured by user (maxburnamount)");
         case TransactionError::INVALID_PACKAGE:
             return Untranslated("Transaction rejected due to invalid package");
-        // no default case, so the compiler can warn about missing cases
-    }
+    } // no default case, so the compiler can warn about missing cases
     assert(false);
 }
 

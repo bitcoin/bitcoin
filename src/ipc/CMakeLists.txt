@@ -14,12 +14,14 @@ target_capnp_sources(bitcoin_ipc ${CMAKE_CURRENT_SOURCE_DIR}
   capnp/echo.capnp
   capnp/init.capnp
   capnp/mining.capnp
+  capnp/rpc.capnp
 )
 
 target_link_libraries(bitcoin_ipc
   PRIVATE
     core_interface
     univalue
+    Boost::headers
 )
 
 if(BUILD_TESTS)

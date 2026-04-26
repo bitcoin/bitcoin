@@ -2,6 +2,7 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
+#include <compat/compat.h>
 #include <net_permissions.h>
 #include <netaddress.h>
 #include <netbase.h>
@@ -9,6 +10,7 @@
 #include <protocol.h>
 #include <serialize.h>
 #include <streams.h>
+#include <test/util/common.h>
 #include <test/util/setup_common.h>
 #include <util/strencodings.h>
 #include <util/translation.h>
@@ -325,7 +327,7 @@ BOOST_AUTO_TEST_CASE(subnet_test)
 
 BOOST_AUTO_TEST_CASE(netbase_getgroup)
 {
-    NetGroupManager netgroupman{std::vector<bool>()}; // use /16
+    auto netgroupman{NetGroupManager::NoAsmap()}; // use /16
     BOOST_CHECK(netgroupman.GetGroup(ResolveIP("127.0.0.1")) == std::vector<unsigned char>({0})); // Local -> !Routable()
     BOOST_CHECK(netgroupman.GetGroup(ResolveIP("257.0.0.1")) == std::vector<unsigned char>({0})); // !Valid -> !Routable()
     BOOST_CHECK(netgroupman.GetGroup(ResolveIP("10.0.0.1")) == std::vector<unsigned char>({0})); // RFC1918 -> !Routable()
@@ -502,17 +504,17 @@ BOOST_AUTO_TEST_CASE(netbase_dont_resolve_strings_with_embedded_nul_characters)
 
 static const std::vector<CAddress> fixture_addresses({
     CAddress{
-        CService(CNetAddr(in6_addr(IN6ADDR_LOOPBACK_INIT)), 0 /* port */),
+        CService(CNetAddr(in6_addr(COMPAT_IN6ADDR_LOOPBACK_INIT)), 0 /* port */),
         NODE_NONE,
         NodeSeconds{0x4966bc61s}, /* Fri Jan  9 02:54:25 UTC 2009 */
     },
     CAddress{
-        CService(CNetAddr(in6_addr(IN6ADDR_LOOPBACK_INIT)), 0x00f1 /* port */),
+        CService(CNetAddr(in6_addr(COMPAT_IN6ADDR_LOOPBACK_INIT)), 0x00f1 /* port */),
         NODE_NETWORK,
         NodeSeconds{0x83766279s}, /* Tue Nov 22 11:22:33 UTC 2039 */
     },
     CAddress{
-        CService(CNetAddr(in6_addr(IN6ADDR_LOOPBACK_INIT)), 0xf1f2 /* port */),
+        CService(CNetAddr(in6_addr(COMPAT_IN6ADDR_LOOPBACK_INIT)), 0xf1f2 /* port */),
         static_cast<ServiceFlags>(NODE_WITNESS | NODE_COMPACT_FILTERS | NODE_NETWORK_LIMITED),
         NodeSeconds{0xffffffffs}, /* Sun Feb  7 06:28:15 UTC 2106 */
     },
@@ -574,10 +576,9 @@ BOOST_AUTO_TEST_CASE(caddress_serialize_v1)
 
 BOOST_AUTO_TEST_CASE(caddress_unserialize_v1)
 {
-    DataStream s{ParseHex(stream_addrv1_hex)};
     std::vector<CAddress> addresses_unserialized;
 
-    s >> CAddress::V1_NETWORK(addresses_unserialized);
+    SpanReader{ParseHex(stream_addrv1_hex)} >> CAddress::V1_NETWORK(addresses_unserialized);
     BOOST_CHECK(fixture_addresses == addresses_unserialized);
 }
 
@@ -591,10 +592,9 @@ BOOST_AUTO_TEST_CASE(caddress_serialize_v2)
 
 BOOST_AUTO_TEST_CASE(caddress_unserialize_v2)
 {
-    DataStream s{ParseHex(stream_addrv2_hex)};
     std::vector<CAddress> addresses_unserialized;
 
-    s >> CAddress::V2_NETWORK(addresses_unserialized);
+    SpanReader{ParseHex(stream_addrv2_hex)} >> CAddress::V2_NETWORK(addresses_unserialized);
     BOOST_CHECK(fixture_addresses == addresses_unserialized);
 }
 
@@ -630,17 +630,8 @@ BOOST_AUTO_TEST_CASE(asmap_test_vectors)
         "33e53662a7d72a29477b5beb35710591d3e23e5f0379baea62ffdee535bcdf879cbf69b88d7ea37c8015381cf"
         "63dc33d28f757a4a5e15d6a08"_hex};
 
-    // Convert to std::vector<bool> format that the ASMap interpreter uses.
-    std::vector<bool> asmap_bits;
-    asmap_bits.reserve(ASMAP_DATA.size() * 8);
-    for (auto byte : ASMAP_DATA) {
-        for (int bit = 0; bit < 8; ++bit) {
-            asmap_bits.push_back((std::to_integer<uint8_t>(byte) >> bit) & 1);
-        }
-    }
-
     // Construct NetGroupManager with this data.
-    NetGroupManager netgroup{std::move(asmap_bits)};
+    auto netgroup{NetGroupManager::WithEmbeddedAsmap(ASMAP_DATA)};
     BOOST_CHECK(netgroup.UsingASMap());
 
     // Check some randomly-generated IPv6 addresses in it (biased towards the very beginning and

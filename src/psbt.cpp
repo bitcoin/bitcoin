@@ -322,10 +322,10 @@ bool PSBTInputSigned(const PSBTInput& input)
     return !input.final_script_sig.empty() || !input.final_script_witness.IsNull();
 }
 
-bool PSBTInputSignedAndVerified(const PartiallySignedTransaction psbt, unsigned int input_index, const PrecomputedTransactionData* txdata)
+bool PSBTInputSignedAndVerified(const PartiallySignedTransaction& psbt, unsigned int input_index, const PrecomputedTransactionData* txdata)
 {
     CTxOut utxo;
-    assert(psbt.inputs.size() >= input_index);
+    assert(input_index < psbt.inputs.size());
     const PSBTInput& input = psbt.inputs[input_index];
 
     if (input.non_witness_utxo) {
@@ -600,8 +600,7 @@ std::string PSBTRoleName(PSBTRole role) {
     case PSBTRole::SIGNER: return "signer";
     case PSBTRole::FINALIZER: return "finalizer";
     case PSBTRole::EXTRACTOR: return "extractor";
-        // no default case, so the compiler can warn about missing cases
-    }
+    } // no default case, so the compiler can warn about missing cases
     assert(false);
 }
 
@@ -617,7 +616,7 @@ bool DecodeBase64PSBT(PartiallySignedTransaction& psbt, const std::string& base6
 
 bool DecodeRawPSBT(PartiallySignedTransaction& psbt, std::span<const std::byte> tx_data, std::string& error)
 {
-    DataStream ss_data{tx_data};
+    SpanReader ss_data{tx_data};
     try {
         ss_data >> psbt;
         if (!ss_data.empty()) {

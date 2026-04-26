@@ -6,6 +6,7 @@
 #define BITCOIN_UTIL_BITSET_H
 
 #include <util/check.h>
+#include <util/overflow.h>
 
 #include <array>
 #include <bit>
@@ -522,6 +523,6 @@ public:
 template<unsigned BITS>
 using BitSet = std::conditional_t<(BITS <= 32), bitset_detail::IntBitSet<uint32_t>,
                std::conditional_t<(BITS <= std::numeric_limits<size_t>::digits), bitset_detail::IntBitSet<size_t>,
-               bitset_detail::MultiIntBitSet<size_t, (BITS + std::numeric_limits<size_t>::digits - 1) / std::numeric_limits<size_t>::digits>>>;
+               bitset_detail::MultiIntBitSet<size_t, CeilDiv(BITS, size_t{std::numeric_limits<size_t>::digits})>>>;
 
 #endif // BITCOIN_UTIL_BITSET_H

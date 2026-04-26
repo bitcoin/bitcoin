@@ -31,7 +31,7 @@ void ConnmanTestMsg::Handshake(CNode& node,
     auto& connman{*this};
 
     peerman.InitializeNode(node, local_services);
-    peerman.SendMessages(&node);
+    peerman.SendMessages(node);
     FlushSendBuffer(node); // Drop the version message added by SendMessages.
 
     CSerializedNetMsg msg_version{
@@ -52,7 +52,7 @@ void ConnmanTestMsg::Handshake(CNode& node,
     (void)connman.ReceiveMsgFrom(node, std::move(msg_version));
     node.fPauseSend = false;
     connman.ProcessMessagesOnce(node);
-    peerman.SendMessages(&node);
+    peerman.SendMessages(node);
     FlushSendBuffer(node); // Drop the verack message added by SendMessages.
     if (node.fDisconnect) return;
     assert(node.nVersion == version);
@@ -66,7 +66,7 @@ void ConnmanTestMsg::Handshake(CNode& node,
         (void)connman.ReceiveMsgFrom(node, std::move(msg_verack));
         node.fPauseSend = false;
         connman.ProcessMessagesOnce(node);
-        peerman.SendMessages(&node);
+        peerman.SendMessages(node);
         assert(node.fSuccessfullyConnected == true);
     }
 }
@@ -78,6 +78,14 @@ void ConnmanTestMsg::ResetMaxOutboundCycle()
     LOCK(m_total_bytes_sent_mutex);
     nMaxOutboundCycleStartTime = 0s;
     nMaxOutboundTotalBytesSentInCycle = 0;
+}
+
+void ConnmanTestMsg::Reset()
+{
+    ResetAddrCache();
+    ResetMaxOutboundCycle();
+    m_private_broadcast.m_outbound_tor_ok_at_least_once.store(false);
+    m_private_broadcast.m_num_to_open.store(0);
 }
 
 void ConnmanTestMsg::NodeReceiveMsgBytes(CNode& node, std::span<const uint8_t> msg_bytes, bool& complete) const
@@ -132,7 +140,7 @@ std::vector<NodeEvictionCandidate> GetRandomNodeEvictionCandidates(int n_candida
     for (int id = 0; id < n_candidates; ++id) {
         candidates.push_back({
             .id=id,
-            .m_connected=std::chrono::seconds{random_context.randrange(100)},
+            .m_connected=NodeSeconds{std::chrono::seconds{random_context.randrange(100)}},
             .m_min_ping_time=std::chrono::microseconds{random_context.randrange(100)},
             .m_last_block_time=std::chrono::seconds{random_context.randrange(100)},
             .m_last_tx_time=std::chrono::seconds{random_context.randrange(100)},
@@ -338,8 +346,13 @@ void DynSock::Pipe::WaitForDataOrEof(UniqueLock<Mutex>& lock)
     });
 }
 
-DynSock::DynSock(std::shared_ptr<Pipes> pipes, std::shared_ptr<Queue> accept_sockets)
+DynSock::DynSock(std::shared_ptr<Pipes> pipes, Queue* accept_sockets)
     : m_pipes{pipes}, m_accept_sockets{accept_sockets}
+{
+}
+
+DynSock::DynSock(std::shared_ptr<Pipes> pipes)
+    : m_pipes{pipes}, m_accept_sockets{}
 {
 }
 
@@ -361,6 +374,7 @@ ssize_t DynSock::Send(const void* buf, size_t len, int) const
 
 std::unique_ptr<Sock> DynSock::Accept(sockaddr* addr, socklen_t* addr_len) const
 {
+    assert(m_accept_sockets && "Accept() called on non-listening DynSock");
     ZeroSock::Accept(addr, addr_len);
     return m_accept_sockets->Pop().value_or(nullptr);
 }
@@ -395,7 +409,7 @@ bool DynSock::WaitMany(std::chrono::milliseconds timeout, EventsPerSock& events_
             if ((events.requested & Sock::RECV) != 0) {
                 auto dyn_sock = reinterpret_cast<const DynSock*>(sock.get());
                 uint8_t b;
-                if (dyn_sock->m_pipes->recv.GetBytes(&b, 1, MSG_PEEK) == 1 || !dyn_sock->m_accept_sockets->Empty()) {
+                if (dyn_sock->m_pipes->recv.GetBytes(&b, 1, MSG_PEEK) == 1 || (dyn_sock->m_accept_sockets && !dyn_sock->m_accept_sockets->Empty())) {
                     events.occurred |= Sock::RECV;
                     at_least_one_event_occurred = true;
                 }

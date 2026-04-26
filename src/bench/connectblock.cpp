@@ -126,6 +126,6 @@ static void ConnectBlockAllEcdsa(benchmark::Bench& bench)
     BenchmarkConnectBlock(bench, keys, outputs, *test_setup);
 }
 
-BENCHMARK(ConnectBlockAllSchnorr, benchmark::PriorityLevel::HIGH);
-BENCHMARK(ConnectBlockMixedEcdsaSchnorr, benchmark::PriorityLevel::HIGH);
-BENCHMARK(ConnectBlockAllEcdsa, benchmark::PriorityLevel::HIGH);
+BENCHMARK(ConnectBlockAllSchnorr);
+BENCHMARK(ConnectBlockMixedEcdsaSchnorr);
+BENCHMARK(ConnectBlockAllEcdsa);

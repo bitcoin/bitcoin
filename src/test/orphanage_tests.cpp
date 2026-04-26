@@ -10,8 +10,10 @@
 #include <pubkey.h>
 #include <script/sign.h>
 #include <script/signingprovider.h>
+#include <test/util/common.h>
 #include <test/util/random.h>
 #include <test/util/setup_common.h>
+#include <test/util/time.h>
 #include <test/util/transaction_utils.h>
 
 #include <array>
@@ -19,7 +21,7 @@
 
 #include <boost/test/unit_test.hpp>
 
-BOOST_FIXTURE_TEST_SUITE(orphanage_tests, TestingSetup)
+BOOST_FIXTURE_TEST_SUITE(orphanage_tests, BasicTestingSetup)
 
 static void MakeNewKeyWithFastRandomContext(CKey& key, FastRandomContext& rand_ctx)
 {
@@ -430,9 +432,7 @@ BOOST_AUTO_TEST_CASE(DoS_mapOrphans)
     FillableSigningProvider keystore;
     BOOST_CHECK(keystore.AddKey(key));
 
-    // Freeze time for length of test
-    auto now{GetTime<std::chrono::seconds>()};
-    SetMockTime(now);
+    NodeClockContext clock_ctx{};
 
     std::vector<CTransactionRef> orphans_added;
 

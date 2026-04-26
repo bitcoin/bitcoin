@@ -235,9 +235,9 @@ static void SetFeeEstimateMode(const CWallet& wallet, CCoinControl& cc, const Un
     }
 }
 
-RPCHelpMan sendtoaddress()
+RPCMethod sendtoaddress()
 {
-    return RPCHelpMan{
+    return RPCMethod{
         "sendtoaddress",
         "Send an amount to a given address." +
         HELP_REQUIRING_PASSPHRASE,
@@ -285,7 +285,7 @@ RPCHelpMan sendtoaddress()
                     + HelpExampleCli("-named sendtoaddress", "address=\"" + EXAMPLE_ADDRESS[0] + "\" amount=0.5 fee_rate=25")
                     + HelpExampleCli("-named sendtoaddress", "address=\"" + EXAMPLE_ADDRESS[0] + "\" amount=0.5 fee_rate=25 subtractfeefromamount=false replaceable=true avoid_reuse=true comment=\"2 pizzas\" comment_to=\"jeremy\" verbose=true")
                 },
-        [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
+        [](const RPCMethod& self, const JSONRPCRequest& request) -> UniValue
 {
     std::shared_ptr<CWallet> const pwallet = GetWalletForJSONRPCRequest(request);
     if (!pwallet) return UniValue::VNULL;
@@ -333,9 +333,9 @@ RPCHelpMan sendtoaddress()
     };
 }
 
-RPCHelpMan sendmany()
+RPCMethod sendmany()
 {
-    return RPCHelpMan{"sendmany",
+    return RPCMethod{"sendmany",
         "Send multiple times. Amounts are double-precision floating point numbers." +
         HELP_REQUIRING_PASSPHRASE,
                 {
@@ -389,7 +389,7 @@ RPCHelpMan sendmany()
             "\nAs a JSON-RPC call\n"
             + HelpExampleRpc("sendmany", "\"\", {\"" + EXAMPLE_ADDRESS[0] + "\":0.01,\"" + EXAMPLE_ADDRESS[1] + "\":0.02}, 6, \"testing\"")
                 },
-        [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
+        [](const RPCMethod& self, const JSONRPCRequest& request) -> UniValue
 {
     std::shared_ptr<CWallet> const pwallet = GetWalletForJSONRPCRequest(request);
     if (!pwallet) return UniValue::VNULL;
@@ -426,54 +426,6 @@ RPCHelpMan sendmany()
 },
     };
 }
-
-RPCHelpMan settxfee()
-{
-    return RPCHelpMan{
-        "settxfee",
-        "(DEPRECATED) Set the transaction fee rate in " + CURRENCY_UNIT + "/kvB for this wallet. Overrides the global -paytxfee command line parameter.\n"
-                "Can be deactivated by passing 0 as the fee. In that case automatic fee selection will be used by default.\n",
-                {
-                    {"amount", RPCArg::Type::AMOUNT, RPCArg::Optional::NO, "The transaction fee rate in " + CURRENCY_UNIT + "/kvB"},
-                },
-                RPCResult{
-                    RPCResult::Type::BOOL, "", "Returns true if successful"
-                },
-                RPCExamples{
-                    HelpExampleCli("settxfee", "0.00001")
-            + HelpExampleRpc("settxfee", "0.00001")
-                },
-        [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
-{
-    std::shared_ptr<CWallet> const pwallet = GetWalletForJSONRPCRequest(request);
-    if (!pwallet) return UniValue::VNULL;
-
-    LOCK(pwallet->cs_wallet);
-
-    if (!pwallet->chain().rpcEnableDeprecated("settxfee")) {
-        throw JSONRPCError(RPC_METHOD_DEPRECATED, "settxfee is deprecated and will be fully removed in v31.0."
-        "\nTo use settxfee restart bitcoind with -deprecatedrpc=settxfee.");
-    }
-
-    CAmount nAmount = AmountFromValue(request.params[0]);
-    CFeeRate tx_fee_rate(nAmount, 1000);
-    CFeeRate max_tx_fee_rate(pwallet->m_default_max_tx_fee, 1000);
-    if (tx_fee_rate == CFeeRate(0)) {
-        // automatic selection
-    } else if (tx_fee_rate < pwallet->chain().relayMinFee()) {
-        throw JSONRPCError(RPC_INVALID_PARAMETER, strprintf("txfee cannot be less than min relay tx fee (%s)", pwallet->chain().relayMinFee().ToString()));
-    } else if (tx_fee_rate < pwallet->m_min_fee) {
-        throw JSONRPCError(RPC_INVALID_PARAMETER, strprintf("txfee cannot be less than wallet min fee (%s)", pwallet->m_min_fee.ToString()));
-    } else if (tx_fee_rate > max_tx_fee_rate) {
-        throw JSONRPCError(RPC_INVALID_PARAMETER, strprintf("txfee cannot be more than wallet max tx fee (%s)", max_tx_fee_rate.ToString()));
-    }
-
-    pwallet->m_pay_tx_fee = tx_fee_rate;
-    return true;
-},
-    };
-}
-
 
 // Only includes key documentation where the key is snake_case in all RPC methods. MixedCase keys can be added later.
 static std::vector<RPCArg> FundTxDoc(bool solving_data = true)
@@ -751,9 +703,9 @@ static void SetOptionsInputWeights(const UniValue& inputs, UniValue& options)
     options.pushKV("input_weights", std::move(weights));
 }
 
-RPCHelpMan fundrawtransaction()
+RPCMethod fundrawtransaction()
 {
-    return RPCHelpMan{
+    return RPCMethod{
         "fundrawtransaction",
         "If the transaction has no inputs, they will be automatically selected to meet its out value.\n"
                 "It will add at most one change output to the outputs.\n"
@@ -844,7 +796,7 @@ RPCHelpMan fundrawtransaction()
                             "\nSend the transaction\n"
                             + HelpExampleCli("sendrawtransaction", "\"signedtransactionhex\"")
                                 },
-        [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
+        [](const RPCMethod& self, const JSONRPCRequest& request) -> UniValue
 {
     std::shared_ptr<CWallet> const pwallet = GetWalletForJSONRPCRequest(request);
     if (!pwallet) return UniValue::VNULL;
@@ -886,9 +838,9 @@ RPCHelpMan fundrawtransaction()
     };
 }
 
-RPCHelpMan signrawtransactionwithwallet()
+RPCMethod signrawtransactionwithwallet()
 {
-    return RPCHelpMan{
+    return RPCMethod{
         "signrawtransactionwithwallet",
         "Sign inputs for raw transaction (serialized, hex-encoded).\n"
                 "The second optional argument (may be null) is an array of previous transaction outputs that\n"
@@ -945,7 +897,7 @@ RPCHelpMan signrawtransactionwithwallet()
                     HelpExampleCli("signrawtransactionwithwallet", "\"myhex\"")
             + HelpExampleRpc("signrawtransactionwithwallet", "\"myhex\"")
                 },
-        [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
+        [](const RPCMethod& self, const JSONRPCRequest& request) -> UniValue
 {
     const std::shared_ptr<const CWallet> pwallet = GetWalletForJSONRPCRequest(request);
     if (!pwallet) return UniValue::VNULL;
@@ -1005,12 +957,12 @@ static std::vector<RPCArg> OutputsDoc()
     };
 }
 
-static RPCHelpMan bumpfee_helper(std::string method_name)
+static RPCMethod bumpfee_helper(std::string method_name)
 {
     const bool want_psbt = method_name == "psbtbumpfee";
-    const std::string incremental_fee{CFeeRate(DEFAULT_INCREMENTAL_RELAY_FEE).ToString(FeeEstimateMode::SAT_VB)};
+    const std::string incremental_fee{CFeeRate(DEFAULT_INCREMENTAL_RELAY_FEE).ToString(FeeRateFormat::SAT_VB)};
 
-    return RPCHelpMan{method_name,
+    return RPCMethod{method_name,
         "Bumps the fee of a transaction T, replacing it with a new transaction B.\n"
         + std::string(want_psbt ? "Returns a PSBT instead of creating and signing a new transaction.\n" : "") +
         "A transaction with the given txid must be in the wallet.\n"
@@ -1075,7 +1027,7 @@ static RPCHelpMan bumpfee_helper(std::string method_name)
     "\nBump the fee, get the new transaction\'s " + std::string(want_psbt ? "psbt" : "txid") + "\n" +
             HelpExampleCli(method_name, "<txid>")
         },
-        [want_psbt](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
+        [want_psbt](const RPCMethod& self, const JSONRPCRequest& request) -> UniValue
 {
     std::shared_ptr<CWallet> const pwallet = GetWalletForJSONRPCRequest(request);
     if (!pwallet) return UniValue::VNULL;
@@ -1146,28 +1098,24 @@ static RPCHelpMan bumpfee_helper(std::string method_name)
     CAmount old_fee;
     CAmount new_fee;
     CMutableTransaction mtx;
-    feebumper::Result res;
     // Targeting feerate bump.
-    res = feebumper::CreateRateBumpTransaction(*pwallet, hash, coin_control, errors, old_fee, new_fee, mtx, /*require_mine=*/ !want_psbt, outputs, original_change_index);
-    if (res != feebumper::Result::OK) {
-        switch(res) {
+    [&](){
+        switch (feebumper::CreateRateBumpTransaction(*pwallet, hash, coin_control, errors, old_fee, new_fee, mtx, /*require_mine=*/ !want_psbt, outputs, original_change_index)) {
+            case feebumper::Result::OK:
+                return;
             case feebumper::Result::INVALID_ADDRESS_OR_KEY:
                 throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, errors[0].original);
-                break;
             case feebumper::Result::INVALID_REQUEST:
                 throw JSONRPCError(RPC_INVALID_REQUEST, errors[0].original);
-                break;
             case feebumper::Result::INVALID_PARAMETER:
                 throw JSONRPCError(RPC_INVALID_PARAMETER, errors[0].original);
-                break;
             case feebumper::Result::WALLET_ERROR:
                 throw JSONRPCError(RPC_WALLET_ERROR, errors[0].original);
-                break;
-            default:
+            case feebumper::Result::MISC_ERROR:
                 throw JSONRPCError(RPC_MISC_ERROR, errors[0].original);
-                break;
-        }
-    }
+        } // no default case, so the compiler can warn about missing cases
+        NONFATAL_UNREACHABLE();
+    }();
 
     UniValue result(UniValue::VOBJ);
 
@@ -1211,12 +1159,12 @@ static RPCHelpMan bumpfee_helper(std::string method_name)
     };
 }
 
-RPCHelpMan bumpfee() { return bumpfee_helper("bumpfee"); }
-RPCHelpMan psbtbumpfee() { return bumpfee_helper("psbtbumpfee"); }
+RPCMethod bumpfee() { return bumpfee_helper("bumpfee"); }
+RPCMethod psbtbumpfee() { return bumpfee_helper("psbtbumpfee"); }
 
-RPCHelpMan send()
+RPCMethod send()
 {
-    return RPCHelpMan{
+    return RPCMethod{
         "send",
         "EXPERIMENTAL warning: this call may be changed in future releases.\n"
         "\nSend a transaction.\n",
@@ -1297,9 +1245,9 @@ RPCHelpMan send()
         "Send 0.3 BTC with a fee rate of 25 " + CURRENCY_ATOM + "/vB using named arguments\n"
         + HelpExampleCli("-named send", "outputs='{\"" + EXAMPLE_ADDRESS[0] + "\": 0.3}' fee_rate=25\n") +
         "Create a transaction that should confirm the next block, with a specific input, and return result without adding to wallet or broadcasting to the network\n"
-        + HelpExampleCli("send", "'{\"" + EXAMPLE_ADDRESS[0] + "\": 0.1}' 1 economical '{\"add_to_wallet\": false, \"inputs\": [{\"txid\":\"a08e6907dbbd3d809776dbfc5d82e371b764ed838b5655e72f463568df1aadf0\", \"vout\":1}]}'")
+        + HelpExampleCli("send", "'{\"" + EXAMPLE_ADDRESS[0] + "\": 0.1}' 1 economical null '{\"add_to_wallet\": false, \"inputs\": [{\"txid\":\"a08e6907dbbd3d809776dbfc5d82e371b764ed838b5655e72f463568df1aadf0\", \"vout\":1}]}'")
         },
-        [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
+        [](const RPCMethod& self, const JSONRPCRequest& request) -> UniValue
         {
             std::shared_ptr<CWallet> const pwallet = GetWalletForJSONRPCRequest(request);
             if (!pwallet) return UniValue::VNULL;
@@ -1338,9 +1286,9 @@ RPCHelpMan send()
     };
 }
 
-RPCHelpMan sendall()
+RPCMethod sendall()
 {
-    return RPCHelpMan{"sendall",
+    return RPCMethod{"sendall",
         "EXPERIMENTAL warning: this call may be changed in future releases.\n"
         "\nSpend the value of all (or specific) confirmed UTXOs and unconfirmed change in the wallet to one or more recipients.\n"
         "Unconfirmed inbound UTXOs and locked UTXOs will not be spent. Sendall will respect the avoid_reuse wallet flag.\n"
@@ -1413,7 +1361,7 @@ RPCHelpMan sendall()
         "Spend all UTXOs with a fee rate of 1.3 " + CURRENCY_ATOM + "/vB using named arguments and sending a 0.25 " + CURRENCY_UNIT + " to another recipient\n"
         + HelpExampleCli("-named sendall", "recipients='[{\"" + EXAMPLE_ADDRESS[1] + "\": 0.25}, \""+ EXAMPLE_ADDRESS[0] + "\"]' fee_rate=1.3\n")
         },
-        [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
+        [](const RPCMethod& self, const JSONRPCRequest& request) -> UniValue
         {
             std::shared_ptr<CWallet> const pwallet{GetWalletForJSONRPCRequest(request)};
             if (!pwallet) return UniValue::VNULL;
@@ -1467,7 +1415,7 @@ RPCHelpMan sendall()
             }
 
             if (options.exists("version")) {
-                coin_control.m_version = options["version"].getInt<int>();
+                coin_control.m_version = options["version"].getInt<decltype(coin_control.m_version)>();
             }
 
             if (coin_control.m_version == TRUC_VERSION) {
@@ -1483,7 +1431,16 @@ RPCHelpMan sendall()
             // Do not, ever, assume that it's fine to change the fee rate if the user has explicitly
             // provided one
             if (coin_control.m_feerate && fee_rate > *coin_control.m_feerate) {
-               throw JSONRPCError(RPC_INVALID_PARAMETER, strprintf("Fee rate (%s) is lower than the minimum fee rate setting (%s)", coin_control.m_feerate->ToString(FeeEstimateMode::SAT_VB), fee_rate.ToString(FeeEstimateMode::SAT_VB)));
+                const auto feerate_format = FeeRateFormat::SAT_VB;
+                auto msg{strprintf("Fee rate (%s) is lower than the minimum fee rate setting (%s).",
+                    coin_control.m_feerate->ToString(feerate_format),
+                    fee_rate.ToString(feerate_format))};
+                if (fee_calc_out.reason == FeeReason::REQUIRED) {
+                    msg += strprintf("\nConsider modifying -mintxfee (%s) or -minrelaytxfee (%s).",
+                        pwallet->m_min_fee.ToString(feerate_format),
+                        pwallet->chain().relayMinFee().ToString(feerate_format));
+                }
+                throw JSONRPCError(RPC_INVALID_PARAMETER, msg);
             }
             if (fee_calc_out.reason == FeeReason::FALLBACK && !pwallet->m_allow_fallback_fee) {
                 // eventually allow a fallback fee
@@ -1618,9 +1575,9 @@ RPCHelpMan sendall()
     };
 }
 
-RPCHelpMan walletprocesspsbt()
+RPCMethod walletprocesspsbt()
 {
-    return RPCHelpMan{
+    return RPCMethod{
         "walletprocesspsbt",
         "Update a PSBT with input information from our wallet and then sign inputs\n"
                 "that we can sign for." +
@@ -1650,7 +1607,7 @@ RPCHelpMan walletprocesspsbt()
                 RPCExamples{
                     HelpExampleCli("walletprocesspsbt", "\"psbt\"")
                 },
-        [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
+        [](const RPCMethod& self, const JSONRPCRequest& request) -> UniValue
 {
     const std::shared_ptr<const CWallet> pwallet = GetWalletForJSONRPCRequest(request);
     if (!pwallet) return UniValue::VNULL;
@@ -1702,9 +1659,9 @@ RPCHelpMan walletprocesspsbt()
     };
 }
 
-RPCHelpMan walletcreatefundedpsbt()
+RPCMethod walletcreatefundedpsbt()
 {
-    return RPCHelpMan{
+    return RPCMethod{
         "walletcreatefundedpsbt",
         "Creates and funds a transaction in the Partially Signed Transaction format.\n"
                 "Implements the Creator and Updater roles.\n"
@@ -1781,7 +1738,7 @@ RPCHelpMan walletcreatefundedpsbt()
                             + "\nCreate the same PSBT as the above one instead using named arguments:\n"
                             + HelpExampleCli("-named walletcreatefundedpsbt", "outputs=\"[{\\\"" + EXAMPLE_ADDRESS[0] + "\\\":0.5}]\" add_inputs=true fee_rate=2")
                                 },
-        [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
+        [](const RPCMethod& self, const JSONRPCRequest& request) -> UniValue
 {
     std::shared_ptr<CWallet> const pwallet = GetWalletForJSONRPCRequest(request);
     if (!pwallet) return UniValue::VNULL;

@@ -20,7 +20,6 @@
 #include <primitives/transaction_identifier.h>
 #include <sync.h>
 #include <txgraph.h>
-#include <util/epochguard.h>
 #include <util/feefrac.h>
 #include <util/hasher.h>
 #include <util/result.h>
@@ -50,14 +49,13 @@ struct bilingual_str;
 /** Fake height value used in Coin to signify they are only in the memory pool (since 0.8) */
 static const uint32_t MEMPOOL_HEIGHT = 0x7FFFFFFF;
 
-/** How many linearization iterations required for TxGraph clusters to have
- * "acceptable" quality, if they cannot be optimally linearized with fewer
- * iterations. */
-static constexpr uint64_t ACCEPTABLE_ITERS = 1'700;
+/** How much linearization cost required for TxGraph clusters to have
+ * "acceptable" quality, if they cannot be optimally linearized with less cost. */
+static constexpr uint64_t ACCEPTABLE_COST = 75'000;
 
 /** How much work we ask TxGraph to do after a mempool change occurs (either
  * due to a changeset being applied, a new block being found, or a reorg). */
-static constexpr uint64_t POST_CHANGE_WORK = 5 * ACCEPTABLE_ITERS;
+static constexpr uint64_t POST_CHANGE_COST = 5 * ACCEPTABLE_COST;
 
 /**
  * Test whether the LockPoints height and time are still valid on the current chain
@@ -197,7 +195,6 @@ protected:
     mutable int64_t lastRollingFeeUpdate GUARDED_BY(cs){GetTime()};
     mutable bool blockSinceLastRollingFeeBump GUARDED_BY(cs){false};
     mutable double rollingMinimumFeeRate GUARDED_BY(cs){0}; //!< minimum fee to get into the pool, decreases exponentially
-    mutable Epoch m_epoch GUARDED_BY(cs){};
 
     // In-memory counter for external mempool tracking purposes.
     // This number is incremented once every time a transaction
@@ -260,7 +257,7 @@ public:
      * changing the chain tip. It's necessary to keep both mutexes locked until
      * the mempool is consistent with the new chain tip and fully populated.
      */
-    mutable RecursiveMutex cs;
+    mutable RecursiveMutex cs ACQUIRED_AFTER(::cs_main);
     std::unique_ptr<TxGraph> m_txgraph GUARDED_BY(cs);
     mutable std::unique_ptr<TxGraph::BlockBuilder> m_builder GUARDED_BY(cs);
     indexed_transaction_set mapTx GUARDED_BY(cs);
@@ -394,7 +391,7 @@ public:
      * @param[in] vHashesToUpdate          The set of txids from the
      *     disconnected block that have been accepted back into the mempool.
      */
-    void UpdateTransactionsFromBlock(const std::vector<Txid>& vHashesToUpdate) EXCLUSIVE_LOCKS_REQUIRED(cs, cs_main) LOCKS_EXCLUDED(m_epoch);
+    void UpdateTransactionsFromBlock(const std::vector<Txid>& vHashesToUpdate) EXCLUSIVE_LOCKS_REQUIRED(cs, cs_main);
 
     std::vector<FeePerWeight> GetFeerateDiagram() const EXCLUSIVE_LOCKS_REQUIRED(cs);
     FeePerWeight GetMainChunkFeerate(const CTxMemPoolEntry& tx) const EXCLUSIVE_LOCKS_REQUIRED(cs) {
@@ -553,7 +550,7 @@ public:
     bool CheckPolicyLimits(const CTransactionRef& tx);
 
     /** Removes a transaction from the unbroadcast set */
-    void RemoveUnbroadcastTx(const Txid& txid, const bool unchecked = false);
+    void RemoveUnbroadcastTx(const Txid& txid, bool unchecked = false);
 
     /** Returns transactions in unbroadcast set */
     std::set<Txid> GetUnbroadcastTxs() const
@@ -589,35 +586,9 @@ private:
     /* Helper for the public removeRecursive() */
     void removeRecursive(txiter to_remove, MemPoolRemovalReason reason) EXCLUSIVE_LOCKS_REQUIRED(cs);
 
-    /** Before calling removeUnchecked for a given transaction,
-     *  UpdateForRemoveFromMempool must be called on the entire (dependent) set
-     *  of transactions being removed at the same time.  We use each
-     *  CTxMemPoolEntry's m_parents in order to walk ancestors of a
-     *  given transaction that is removed, so we can't remove intermediate
-     *  transactions in a chain before we've updated all the state for the
-     *  removal.
-     */
+    /* Removal from the mempool also triggers removal of the entry's Ref from txgraph. */
     void removeUnchecked(txiter entry, MemPoolRemovalReason reason) EXCLUSIVE_LOCKS_REQUIRED(cs);
 public:
-    /** visited marks a CTxMemPoolEntry as having been traversed
-     * during the lifetime of the most recently created Epoch::Guard
-     * and returns false if we are the first visitor, true otherwise.
-     *
-     * An Epoch::Guard must be held when visited is called or an assert will be
-     * triggered.
-     *
-     */
-    bool visited(const txiter it) const EXCLUSIVE_LOCKS_REQUIRED(cs, m_epoch)
-    {
-        return m_epoch.visited(it->m_epoch_marker);
-    }
-
-    bool visited(std::optional<txiter> it) const EXCLUSIVE_LOCKS_REQUIRED(cs, m_epoch)
-    {
-        assert(m_epoch.guarded()); // verify guard even when it==nullopt
-        return !it || visited(*it);
-    }
-
     /*
      * CTxMemPool::ChangeSet:
      *
@@ -662,7 +633,7 @@ public:
 
         using TxHandle = CTxMemPool::txiter;
 
-        TxHandle StageAddition(const CTransactionRef& tx, const CAmount fee, int64_t time, unsigned int entry_height, uint64_t entry_sequence, bool spends_coinbase, int64_t sigops_cost, LockPoints lp);
+        TxHandle StageAddition(const CTransactionRef& tx, CAmount fee, int64_t time, unsigned int entry_height, uint64_t entry_sequence, bool spends_coinbase, int64_t sigops_cost, LockPoints lp);
 
         void StageRemoval(CTxMemPool::txiter it);
 
@@ -797,7 +768,7 @@ protected:
 public:
     CCoinsViewMemPool(CCoinsView* baseIn, const CTxMemPool& mempoolIn);
     /** GetCoin, returning whether it exists and is not spent. Also updates m_non_base_coins if the
-     * coin is not fetched from base. */
+     * coin is not fetched from base. May populate the base view on cache misses. */
     std::optional<Coin> GetCoin(const COutPoint& outpoint) const override;
     /** Add the coins created by this transaction. These coins are only temporarily stored in
      * m_temp_added and cannot be flushed to the back end. Only used for package validation. */

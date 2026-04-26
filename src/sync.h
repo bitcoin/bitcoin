@@ -6,11 +6,8 @@
 #ifndef BITCOIN_SYNC_H
 #define BITCOIN_SYNC_H
 
-#ifdef DEBUG_LOCKCONTENTION
-#include <logging.h>
-#include <logging/timer.h>
-#endif
-
+// This header declares threading primitives compatible with Clang
+// Thread Safety Analysis and provides appropriate annotation macros.
 #include <threadsafety.h> // IWYU pragma: export
 #include <util/macros.h>
 
@@ -76,6 +73,16 @@ template <typename MutexType>
 void AssertLockNotHeldInternal(const char* pszName, const char* pszFile, int nLine, MutexType* cs) LOCKS_EXCLUDED(cs) {}
 inline void DeleteLock(void* cs) {}
 inline bool LockStackEmpty() { return true; }
+#endif
+
+/*
+ * Called when a mutex fails to lock immediately because it is held by another
+ * thread, or spuriously. Responsible for locking the lock before returning.
+ */
+#ifdef DEBUG_LOCKCONTENTION
+
+template <typename LockType>
+void ContendedLock(std::string_view name, std::string_view file, int nLine, LockType& lock);
 #endif
 
 /**
@@ -152,10 +159,12 @@ private:
     {
         EnterCritical(pszName, pszFile, nLine, Base::mutex());
 #ifdef DEBUG_LOCKCONTENTION
-        if (Base::try_lock()) return;
-        LOG_TIME_MICROS_WITH_CATEGORY(strprintf("lock contention %s, %s:%d", pszName, pszFile, nLine), BCLog::LOCK);
-#endif
+        if (!Base::try_lock()) {
+            ContendedLock(pszName, pszFile, nLine, static_cast<Base&>(*this));
+        }
+#else
         Base::lock();
+#endif
     }
 
     bool TryEnter(const char* pszName, const char* pszFile, int nLine)
@@ -277,11 +286,11 @@ inline MutexType* MaybeCheckNotHeld(MutexType* m) LOCKS_EXCLUDED(m) LOCK_RETURNE
 //! Since the return type deduction follows that of decltype(auto), while the
 //! deduced type of:
 //!
-//!   WITH_LOCK(cs, return {int i = 1; return i;});
+//!   WITH_LOCK(cs, int i = 1; return i);
 //!
 //! is int, the deduced type of:
 //!
-//!   WITH_LOCK(cs, return {int j = 1; return (j);});
+//!   WITH_LOCK(cs, int j = 1; return (j));
 //!
 //! is &int, a reference to a local variable
 //!

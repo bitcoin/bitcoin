@@ -1022,12 +1022,21 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <source>Create wallet warning</source>
         <translation type="unfinished">אזהרה לגבי יצירת הארנק</translation>
     </message>
-    </context>
+    <message>
+        <source>Too many external signers found</source>
+        <translation type="unfinished">נמצאו יותר מדי חותמים חיצוניים</translation>
+    </message>
+</context>
 <context>
     <name>MigrateWalletActivity</name>
     <message>
         <source>Migrate Wallet</source>
         <translation type="unfinished">הסבת ארנק</translation>
+    </message>
+    <message>
+        <source>Restore Wallet</source>
+        <extracomment>Title of progress window which is displayed when wallets are being restored.</extracomment>
+        <translation type="unfinished">שחזור ארנק</translation>
     </message>
     </context>
 <context>
@@ -1117,12 +1126,12 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <translation type="unfinished">השבתת מפתחות פרטיים</translation>
     </message>
     <message>
-        <source>Make a blank wallet. Blank wallets do not initially have private keys or scripts. Private keys and addresses can be imported, or an HD seed can be set, at a later time.</source>
-        <translation type="unfinished">הכינו ארנק ריק. ארנקים ריקים הנם ללא מפתחות פרטיים ראשוניים או סקריפטים. מפתחות פרטיים או כתובות ניתנים לייבוא, או שניתן להגדיר מקור HD במועד מאוחר יותר. </translation>
-    </message>
-    <message>
         <source>Make Blank Wallet</source>
         <translation type="unfinished">יצירת ארנק ריק</translation>
+    </message>
+    <message>
+        <source>External signer</source>
+        <translation type="unfinished">חותם חיצוני</translation>
     </message>
     <message>
         <source>Create</source>
@@ -1721,9 +1730,12 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <source>Could not sign any more inputs.</source>
         <translation type="unfinished">לא ניתן לחתום קלטים נוספים.</translation>
     </message>
-    <message>
-        <source>Signed %1 inputs, but more signatures are still required.</source>
-        <translation type="unfinished">נחתם קלט  %1 אך יש צורך בחתימות נוספות.</translation>
+    <message numerus="yes">
+        <source>Signed %n input(s), but more signatures are still required.</source>
+        <translation type="unfinished">
+            <numerusform />
+            <numerusform />
+        </translation>
     </message>
     <message>
         <source>Signed transaction successfully. Transaction is ready to broadcast.</source>
@@ -1773,9 +1785,12 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <source>or</source>
         <translation type="unfinished">או</translation>
     </message>
-    <message>
-        <source>Transaction has %1 unsigned inputs.</source>
-        <translation type="unfinished">לעיסקה יש  %1 קלטים לא חתומים.</translation>
+    <message numerus="yes">
+        <source>Transaction has %n unsigned input(s).</source>
+        <translation type="unfinished">
+            <numerusform />
+            <numerusform />
+        </translation>
     </message>
     <message>
         <source>Transaction is missing some information about inputs.</source>
@@ -1998,10 +2013,6 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     <message>
         <source>Version</source>
         <translation type="unfinished">גרסה</translation>
-    </message>
-    <message>
-        <source>Starting Block</source>
-        <translation type="unfinished">בלוק התחלה</translation>
     </message>
     <message>
         <source>Synced Headers</source>
@@ -2586,10 +2597,6 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     <message>
         <source>The amount exceeds your balance.</source>
         <translation type="unfinished">הסכום חורג מהמאזן שלך.</translation>
-    </message>
-    <message>
-        <source>The total exceeds your balance when the %1 transaction fee is included.</source>
-        <translation type="unfinished">הסכום גבוה מהמאזן שלכם לאחר כלילת עמלת עסקה  %1.</translation>
     </message>
     <message>
         <source>Duplicate address found: addresses should only be used once each.</source>
@@ -3386,10 +3393,6 @@ Go to File &gt; Open Wallet to load a wallet.
         <translation type="unfinished">אזהרה: זוהו מפתחות פרטיים בארנק {%s} עם מפתחות פרטיים מושבתים</translation>
     </message>
     <message>
-        <source>Warning: We do not appear to fully agree with our peers! You may need to upgrade, or other nodes may need to upgrade.</source>
-        <translation type="unfinished">אזהרה: יתכן שלא נסכים לגמרי עם עמיתינו! יתכן שתצטרכו לשדרג או שצמתות אחרות יצטרכו לשדרג.</translation>
-    </message>
-    <message>
         <source>You need to rebuild the database using -reindex to go back to unpruned mode.  This will redownload the entire blockchain</source>
         <translation type="unfinished">יש צורך בבניה מחדש של מסד הנתונים ע"י שימוש ב -reindex כדי לחזור חזרה לצומת שאינה גזומה.  הפעולה תוריד מחדש את כל שרשרת הבלוקים.</translation>
     </message>
@@ -3448,10 +3451,6 @@ Go to File &gt; Open Wallet to load a wallet.
     <message>
         <source>Error loading %s</source>
         <translation type="unfinished">שגיאה בטעינת %s</translation>
-    </message>
-    <message>
-        <source>Error loading %s: Private keys can only be disabled during creation</source>
-        <translation type="unfinished">שגיאת טעינה %s: מפתחות פרטיים ניתנים לניטרול רק בעת תהליך היצירה</translation>
     </message>
     <message>
         <source>Error loading %s: Wallet corrupted</source>
@@ -3592,10 +3591,6 @@ Go to File &gt; Open Wallet to load a wallet.
     <message>
         <source>This is the minimum transaction fee you pay on every transaction.</source>
         <translation type="unfinished">זו עמלת ההעברה המזערית שתיגבה מכל העברה שלך.</translation>
-    </message>
-    <message>
-        <source>This is the transaction fee you will pay if you send a transaction.</source>
-        <translation type="unfinished">זו עמלת ההעברה שתיגבה ממך במידה של שליחת העברה.</translation>
     </message>
     <message>
         <source>Transaction amount too small</source>

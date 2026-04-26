@@ -9,6 +9,7 @@
 #include <span.h>
 #include <streams.h>
 #include <secp256k1_extrakeys.h>
+#include <test/util/common.h>
 #include <test/util/random.h>
 #include <test/util/setup_common.h>
 #include <uint256.h>

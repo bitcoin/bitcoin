@@ -1012,9 +1012,21 @@ once_cell = "1.18"</translation>
     </context>
 <context>
     <name>PSBTOperationsDialog</name>
+    <message numerus="yes">
+        <source>Signed %n input(s), but more signatures are still required.</source>
+        <translation type="unfinished">
+            <numerusform />
+        </translation>
+    </message>
     <message>
         <source>or</source>
         <translation type="unfinished">abo</translation>
+    </message>
+    <message numerus="yes">
+        <source>Transaction has %n unsigned input(s).</source>
+        <translation type="unfinished">
+            <numerusform />
+        </translation>
     </message>
     </context>
 <context>
@@ -1622,10 +1634,6 @@ once_cell = "1.18"</translation>
     <message>
         <source>Error loading %s</source>
         <translation type="unfinished">Feler wgrŏwaniŏ %s</translation>
-    </message>
-    <message>
-        <source>Error loading %s: Private keys can only be disabled during creation</source>
-        <translation type="unfinished">Feler wgrŏwaniŏ %s: Klucze prywatne mogōm być zastawiōne ino w czasie tworzyniŏ</translation>
     </message>
     <message>
         <source>Error loading %s: Wallet corrupted</source>

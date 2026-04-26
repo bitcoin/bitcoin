@@ -8,26 +8,21 @@
 #include <coins.h>
 #include <crypto/muhash.h>
 #include <hash.h>
-#include <logging.h>
 #include <node/blockstorage.h>
 #include <primitives/transaction.h>
 #include <script/script.h>
-#include <serialize.h>
 #include <span.h>
 #include <streams.h>
 #include <sync.h>
-#include <tinyformat.h>
 #include <uint256.h>
 #include <util/check.h>
+#include <util/log.h>
 #include <util/overflow.h>
 #include <validation.h>
 
-#include <cassert>
-#include <iosfwd>
-#include <iterator>
+#include <cstddef>
 #include <map>
 #include <memory>
-#include <string>
 #include <utility>
 
 namespace kernel {
@@ -51,7 +46,7 @@ template <typename T>
 static void TxOutSer(T& ss, const COutPoint& outpoint, const Coin& coin)
 {
     ss << outpoint;
-    ss << static_cast<uint32_t>((coin.nHeight << 1) + coin.fCoinBase);
+    ss << ((uint32_t{coin.nHeight} << 1) | uint32_t{coin.fCoinBase});
     ss << coin.out;
 }
 
@@ -113,10 +108,17 @@ static void ApplyStats(CCoinsStats& stats, const std::map<uint32_t, Coin>& outpu
 
 //! Calculate statistics about the unspent transaction output set
 template <typename T>
-static bool ComputeUTXOStats(CCoinsView* view, CCoinsStats& stats, T hash_obj, const std::function<void()>& interruption_point)
+static std::optional<CCoinsStats> ComputeUTXOStats(T hash_obj, CCoinsView* view, node::BlockManager& blockman, const std::function<void()>& interruption_point)
 {
-    std::unique_ptr<CCoinsViewCursor> pcursor(view->Cursor());
+    std::unique_ptr<CCoinsViewCursor> pcursor;
+    CBlockIndex* pindex;
+    {
+        LOCK(::cs_main);
+        pcursor = view->Cursor();
+        pindex = blockman.LookupBlockIndex(pcursor->GetBestBlock());
+    }
     assert(pcursor);
+    CCoinsStats stats{Assert(pindex)->nHeight, pindex->GetBlockHash()};
 
     Txid prevkey;
     std::map<uint32_t, Coin> outputs;
@@ -135,7 +137,7 @@ static bool ComputeUTXOStats(CCoinsView* view, CCoinsStats& stats, T hash_obj, c
             stats.coins_count++;
         } else {
             LogError("%s: unable to read value\n", __func__);
-            return false;
+            return std::nullopt;
         }
         pcursor->Next();
     }
@@ -147,36 +149,27 @@ static bool ComputeUTXOStats(CCoinsView* view, CCoinsStats& stats, T hash_obj, c
     FinalizeHash(hash_obj, stats);
 
     stats.nDiskSize = view->EstimateSize();
-
-    return true;
+    return stats;
 }
 
 std::optional<CCoinsStats> ComputeUTXOStats(CoinStatsHashType hash_type, CCoinsView* view, node::BlockManager& blockman, const std::function<void()>& interruption_point)
 {
-    CBlockIndex* pindex = WITH_LOCK(::cs_main, return blockman.LookupBlockIndex(view->GetBestBlock()));
-    CCoinsStats stats{Assert(pindex)->nHeight, pindex->GetBlockHash()};
-
-    bool success = [&]() -> bool {
+    return [&]() -> std::optional<CCoinsStats> {
         switch (hash_type) {
         case(CoinStatsHashType::HASH_SERIALIZED): {
             HashWriter ss{};
-            return ComputeUTXOStats(view, stats, ss, interruption_point);
+            return ComputeUTXOStats(ss, view, blockman, interruption_point);
         }
         case(CoinStatsHashType::MUHASH): {
             MuHash3072 muhash;
-            return ComputeUTXOStats(view, stats, muhash, interruption_point);
+            return ComputeUTXOStats(muhash, view, blockman, interruption_point);
         }
         case(CoinStatsHashType::NONE): {
-            return ComputeUTXOStats(view, stats, nullptr, interruption_point);
+            return ComputeUTXOStats(nullptr, view, blockman, interruption_point);
         }
         } // no default case, so the compiler can warn about missing cases
         assert(false);
     }();
-
-    if (!success) {
-        return std::nullopt;
-    }
-    return stats;
 }
 
 static void FinalizeHash(HashWriter& ss, CCoinsStats& stats)

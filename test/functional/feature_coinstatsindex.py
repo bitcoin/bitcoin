@@ -194,7 +194,7 @@ class CoinStatsIndexTest(BitcoinTestFramework):
         # Generate a block that includes previous coinbase
         tip = self.nodes[0].getbestblockhash()
         block_time = self.nodes[0].getblock(tip)['time'] + 1
-        block = create_block(int(tip, 16), cb, block_time)
+        block = create_block(int(tip, 16), cb, ntime=block_time)
         block.solve()
         self.nodes[0].submitblock(block.serialize().hex())
         self.sync_all()

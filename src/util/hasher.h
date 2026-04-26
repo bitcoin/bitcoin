@@ -8,12 +8,11 @@
 #include <crypto/common.h>
 #include <crypto/siphash.h>
 #include <primitives/transaction.h>
-#include <span.h>
 #include <uint256.h>
 
-#include <concepts>
 #include <cstdint>
 #include <cstring>
+#include <span>
 
 class SaltedUint256Hasher
 {
@@ -74,10 +73,6 @@ public:
     {
         return m_hasher(id.hash.ToUint256(), id.n);
     }
-};
-
-struct FilterHeaderHasher {
-    size_t operator()(const uint256& hash) const { return ReadLE64(hash.begin()); }
 };
 
 /**

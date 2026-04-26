@@ -38,7 +38,7 @@ def assert_net_servicesnames(servicesflag, servicenames):
     servicesflag_generated = 0
     for servicename in servicenames:
         servicesflag_generated |= getattr(test_framework.messages, 'NODE_' + servicename)
-    assert servicesflag_generated == servicesflag
+    assert_equal(servicesflag_generated, servicesflag)
 
 
 def seed_addrman(node):
@@ -62,7 +62,10 @@ def seed_addrman(node):
 class NetTest(BitcoinTestFramework):
     def set_test_params(self):
         self.num_nodes = 2
-        self.extra_args = [["-minrelaytxfee=0.00001000"], ["-minrelaytxfee=0.00000500"]]
+        self.extra_args = [
+            ["-minrelaytxfee=0.00001000"],
+            ["-minrelaytxfee=0.00000500"],
+        ]
         # Specify a non-working proxy to make sure no actual connections to public IPs are attempted
         for args in self.extra_args:
             args.append("-proxy=127.0.0.1:1")
@@ -171,7 +174,6 @@ class NetTest(BitcoinTestFramework):
                 "services": "0000000000000000",
                 "servicesnames": [],
                 "session_id": "" if not self.options.v2transport else no_version_peer.v2_state.peer['session_id'].hex(),
-                "startingheight": -1,
                 "subver": "",
                 "synced_blocks": -1,
                 "synced_headers": -1,
@@ -415,8 +417,12 @@ class NetTest(BitcoinTestFramework):
 
         self.log.info("Test sendmsgtopeer")
         self.log.debug("Send a valid message")
+        msg_bytes_before = node.getpeerinfo()[0]["bytesrecv_per_msg"]["pong"]
+
         with self.nodes[1].assert_debug_log(expected_msgs=["received: addr"]):
             node.sendmsgtopeer(peer_id=0, msg_type="addr", msg="FFFFFF")
+            node.ping()
+            self.wait_until(lambda: node.getpeerinfo()[0]["bytesrecv_per_msg"]["pong"] > msg_bytes_before)
 
         self.log.debug("Test error for sending to non-existing peer")
         assert_raises_rpc_error(-1, "Error: Could not send message to peer", node.sendmsgtopeer, peer_id=100, msg_type="addr", msg="FF")
@@ -494,7 +500,7 @@ class NetTest(BitcoinTestFramework):
                 for bucket_position in getrawaddrman[table_name].keys():
                     entry = getrawaddrman[table_name][bucket_position]
                     expected_entry = list(filter(lambda e: e["address"] == entry["address"], table_info))[0]
-                    assert bucket_position == expected_entry["bucket_position"]
+                    assert_equal(bucket_position, expected_entry["bucket_position"])
                     check_addr_information(entry, expected_entry)
 
         # we expect 4 new and 4 tried table entries in the addrman which were added using seed_addrman()

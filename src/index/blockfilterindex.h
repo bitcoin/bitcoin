@@ -51,7 +51,7 @@ private:
 
     Mutex m_cs_headers_cache;
     /** cache of block hash to filter header, to avoid disk access when responding to getcfcheckpt. */
-    std::unordered_map<uint256, uint256, FilterHeaderHasher> m_headers_cache GUARDED_BY(m_cs_headers_cache);
+    std::unordered_map<uint256, uint256, BlockHasher> m_headers_cache GUARDED_BY(m_cs_headers_cache);
 
     // Last computed header to avoid disk reads on every new block.
     uint256 m_last_header{};
@@ -63,8 +63,6 @@ private:
     std::optional<uint256> ReadFilterHeader(int height, const uint256& expected_block_hash);
 
 protected:
-    interfaces::Chain::NotifyOptions CustomOptions() override;
-
     bool CustomInit(const std::optional<interfaces::BlockRef>& block) override;
 
     bool CustomCommit(CDBBatch& batch) override;
@@ -79,6 +77,8 @@ public:
     /** Constructs the index, which becomes available to be queried. */
     explicit BlockFilterIndex(std::unique_ptr<interfaces::Chain> chain, BlockFilterType filter_type,
                               size_t n_cache_size, bool f_memory = false, bool f_wipe = false);
+
+    interfaces::Chain::NotifyOptions CustomOptions() override;
 
     BlockFilterType GetFilterType() const { return m_filter_type; }
 

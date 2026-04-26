@@ -25,7 +25,7 @@
  * - Which peer announced it (through their NodeId)
  * - The txid or wtxid of the transaction (collectively called "txhash" in what follows)
  * - Whether it was a tx or wtx announcement (see BIP339).
- * - What the earliest permitted time is that that transaction can be requested from that peer (called "reqtime").
+ * - What the earliest permitted time is that the transaction can be requested from that peer (called "reqtime").
  * - Whether it's from a "preferred" peer or not. Which announcements get this flag is determined by the caller, but
  *   this is designed for outbound peers, or other peers that we have a higher level of trust in. Even when the
  *   peers' preferredness changes, the preferred flag of existing announcements from that peer won't change.

@@ -11,9 +11,12 @@ import time
 
 from test_framework.messages import (
     CAddress,
+    CBlockHeader,
     msg_addr,
     msg_getaddr,
+    msg_headers,
     msg_verack,
+    from_hex,
 )
 from test_framework.p2p import (
     P2PInterface,
@@ -178,6 +181,9 @@ class AddrTest(BitcoinTestFramework):
 
         self.log.info('Check relay of addresses received from outbound peers')
         inbound_peer = self.nodes[0].add_p2p_connection(AddrReceiver(test_addr_contents=True, send_getaddr=False))
+        # Send an empty ADDR message to initialize address relay on this connection.
+        inbound_peer.send_and_ping(msg_addr())
+
         full_outbound_peer = self.nodes[0].add_outbound_p2p_connection(AddrReceiver(), p2p_idx=0, connection_type="outbound-full-relay")
         msg = self.setup_addr_msg(2)
         self.send_addr_msg(full_outbound_peer, msg, [inbound_peer])
@@ -187,9 +193,6 @@ class AddrTest(BitcoinTestFramework):
         # large GETADDR responses from being relayed, it now typically affects the self-announcement
         # of the outbound peer which is often sent before the GETADDR response.
         assert_equal(inbound_peer.num_ipv4_received, 0)
-
-        # Send an empty ADDR message to initialize address relay on this connection.
-        inbound_peer.send_and_ping(msg_addr())
 
         self.log.info('Check that subsequent addr messages sent from an outbound peer are relayed')
         msg2 = self.setup_addr_msg(2)
@@ -248,8 +251,9 @@ class AddrTest(BitcoinTestFramework):
         blackhole_peer.send_and_ping(msg_addr())
 
         # Confirm node has now received addr-related messages from blackhole peer
-        assert_greater_than(self.sum_addr_messages(peerinfo[1]['bytesrecv_per_msg']), 0)
-        assert_equal(self.nodes[0].getpeerinfo()[2]['addr_relay_enabled'], True)
+        peerinfo = self.nodes[0].getpeerinfo()
+        assert_greater_than(self.sum_addr_messages(peerinfo[2]['bytesrecv_per_msg']), 0)
+        assert_equal(peerinfo[2]['addr_relay_enabled'], True)
 
         msg = self.setup_addr_msg(2)
         self.send_addr_msg(addr_source, msg, [receiver_peer, blackhole_peer])
@@ -272,14 +276,20 @@ class AddrTest(BitcoinTestFramework):
         full_outbound_peer.sync_with_ping()
         assert full_outbound_peer.getaddr_received()
 
+        # to avoid the node evicting the outbound peer, protect it by announcing the most recent header to it
+        tip_header = from_hex(CBlockHeader(), self.nodes[0].getblockheader(self.nodes[0].getbestblockhash(), False))
+        full_outbound_peer.send_and_ping(msg_headers([tip_header]))
+
         self.log.info('Check that we do not send a getaddr message to a block-relay-only or inbound peer')
         block_relay_peer = self.nodes[0].add_outbound_p2p_connection(AddrReceiver(), p2p_idx=1, connection_type="block-relay-only")
         block_relay_peer.sync_with_ping()
         assert_equal(block_relay_peer.getaddr_received(), False)
+        block_relay_peer.send_and_ping(msg_headers([tip_header]))
 
         inbound_peer = self.nodes[0].add_p2p_connection(AddrReceiver(send_getaddr=False))
         inbound_peer.sync_with_ping()
         assert_equal(inbound_peer.getaddr_received(), False)
+        assert_equal(inbound_peer.addr_received(), False)
 
         self.log.info('Check that we answer getaddr messages only from inbound peers')
         # Add some addresses to addrman
@@ -392,8 +402,7 @@ class AddrTest(BitcoinTestFramework):
     def get_nodes_that_received_addr(self, peer, receiver_peer, addr_receivers,
                                      time_interval_1, time_interval_2):
 
-        # Clean addr response related to the initial getaddr. There is no way to avoid initial
-        # getaddr because the peer won't self-announce then.
+        # Clean addr response related to the initial getaddr.
         for addr_receiver in addr_receivers:
             addr_receiver.num_ipv4_received = 0
 

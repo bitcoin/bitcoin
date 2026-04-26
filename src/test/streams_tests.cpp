@@ -5,6 +5,7 @@
 #include <flatfile.h>
 #include <node/blockstorage.h>
 #include <streams.h>
+#include <test/util/common.h>
 #include <test/util/random.h>
 #include <test/util/setup_common.h>
 #include <util/fs.h>
@@ -205,6 +206,28 @@ BOOST_AUTO_TEST_CASE(streams_vector_writer)
     VectorWriter{vch, 2, a, bytes, b};
     BOOST_CHECK((vch == std::vector<unsigned char>{{8, 8, 1, 3, 4, 5, 6, 2}}));
     vch.clear();
+}
+
+BOOST_AUTO_TEST_CASE(streams_span_writer)
+{
+    unsigned char a(1);
+    unsigned char b(2);
+    unsigned char bytes[] = {3, 4, 5, 6};
+    std::array<std::byte, 8> arr{};
+
+    // Test operator<<
+    SpanWriter writer{arr};
+    writer << a << b;
+    BOOST_CHECK_EQUAL(HexStr(arr), "0102000000000000");
+
+    // Use variadic constructor and write to subspan.
+    SpanWriter{std::span{arr}.subspan(2), a, bytes, b};
+    BOOST_CHECK_EQUAL(HexStr(arr), "0102010304050602");
+
+    // Writing past the end throws
+    std::array<std::byte, 1> small{};
+    BOOST_CHECK_THROW(SpanWriter(std::span{small}, a, b), std::ios_base::failure);
+    BOOST_CHECK_THROW(SpanWriter(std::span{small}) << a << b, std::ios_base::failure);
 }
 
 BOOST_AUTO_TEST_CASE(streams_vector_reader)

@@ -5,12 +5,9 @@
 
 #include <univalue.h>
 
-#include <cerrno>
-#include <cstdint>
-#include <cstdlib>
 #include <cstring>
-#include <limits>
 #include <locale>
+#include <optional>
 #include <sstream>
 #include <stdexcept>
 #include <string>
@@ -29,18 +26,20 @@ static bool ParsePrechecks(const std::string& str)
     return true;
 }
 
-bool ParseDouble(const std::string& str, double *out)
+std::optional<double> ParseDouble(const std::string& str)
 {
     if (!ParsePrechecks(str))
-        return false;
+        return std::nullopt;
     if (str.size() >= 2 && str[0] == '0' && str[1] == 'x') // No hexadecimal floats allowed
-        return false;
+        return std::nullopt;
     std::istringstream text(str);
     text.imbue(std::locale::classic());
     double result;
     text >> result;
-    if(out) *out = result;
-    return text.eof() && !text.fail();
+    if (!text.eof() || text.fail()) {
+        return std::nullopt;
+    }
+    return result;
 }
 }
 
@@ -72,10 +71,10 @@ const std::string& UniValue::get_str() const
 double UniValue::get_real() const
 {
     checkType(VNUM);
-    double retval;
-    if (!ParseDouble(getValStr(), &retval))
-        throw std::runtime_error("JSON double out of range");
-    return retval;
+    if (const auto retval{ParseDouble(getValStr())}) {
+        return *retval;
+    }
+    throw std::runtime_error("JSON double out of range");
 }
 
 const UniValue& UniValue::get_obj() const

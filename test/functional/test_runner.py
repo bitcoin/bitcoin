@@ -29,6 +29,11 @@ import sys
 import tempfile
 import re
 import logging
+from test_framework.util import (
+    Binaries,
+    export_env_build_path,
+    get_binary_paths,
+)
 
 # Minimum amount of space to run the tests.
 MIN_FREE_SPACE = 1.1 * 1024 * 1024 * 1024
@@ -87,7 +92,12 @@ EXTENDED_SCRIPTS = [
     'feature_index_prune.py',
 ]
 
+# Special script to run each bench sanity check
+TOOL_BENCH_SANITY_CHECK = "tool_bench_sanity_check.py"
+
 BASE_SCRIPTS = [
+    # Special scripts that are "expanded" later
+    TOOL_BENCH_SANITY_CHECK,
     # Scripts that are run by default.
     # Longest test should go first, to favor running tests in parallel
     # vv Tests less than 5m vv
@@ -301,6 +311,7 @@ BASE_SCRIPTS = [
     'rpc_dumptxoutset.py',
     'feature_minchainwork.py',
     'rpc_estimatefee.py',
+    'p2p_private_broadcast.py',
     'rpc_getblockstats.py',
     'feature_port.py',
     'feature_bind_port_externalip.py',
@@ -341,10 +352,12 @@ BASE_SCRIPTS = [
     'tool_bitcoin.py',
     'p2p_sendtxrcncl.py',
     'rpc_scantxoutset.py',
+    'feature_torcontrol.py',
     'feature_unsupported_utxo_db.py',
     'mempool_cluster.py',
     'feature_logging.py',
     'interface_ipc.py',
+    'interface_ipc_mining.py',
     'feature_anchors.py',
     'mempool_datacarrier.py',
     'feature_coinstatsindex.py',
@@ -361,12 +374,13 @@ BASE_SCRIPTS = [
     'feature_presegwit_node_upgrade.py',
     'feature_settings.py',
     'rpc_getdescriptorinfo.py',
-    'rpc_mempool_info.py',
+    'rpc_gettxspendingprevout.py',
     'rpc_help.py',
     'feature_framework_testshell.py',
     'tool_rpcauth.py',
     'p2p_handshake.py',
     'p2p_handshake.py --v2transport',
+    'interface_ipc_cli.py',
     'feature_dirsymlinks.py',
     'feature_help.py',
     'feature_framework_startup_failures.py',
@@ -399,12 +413,10 @@ def main():
     parser.add_argument('--ansi', action='store_true', default=sys.stdout.isatty(), help="Use ANSI colors and dots in output (enabled by default when standard output is a TTY)")
     parser.add_argument('--combinedlogslen', '-c', type=int, default=0, metavar='n', help='On failure, print a log (of length n lines) to the console, combined from the test framework and all test nodes.')
     parser.add_argument('--coverage', action='store_true', help='generate a basic coverage report for the RPC interface')
-    parser.add_argument('--ci', action='store_true', help='Run checks and code that are usually only enabled in a continuous integration environment')
-    parser.add_argument('--exclude', '-x', help='specify a comma-separated-list of scripts to exclude.')
+    parser.add_argument('--exclude', '-x', action='append', help='specify a script to exclude. Can be specified multiple times. The .py extension is optional.')
     parser.add_argument('--extended', action='store_true', help='run the extended test suite in addition to the basic tests')
     parser.add_argument('--help', '-h', '-?', action='store_true', help='print help text and exit')
     parser.add_argument('--jobs', '-j', type=int, default=4, help='how many test scripts to run in parallel. Default=4.')
-    parser.add_argument('--keepcache', '-k', action='store_true', help='the default behavior is to flush the cache directory on startup. --keepcache retains the cache from the previous testrun.')
     parser.add_argument('--quiet', '-q', action='store_true', help='only print dots, results summary and failure logs')
     parser.add_argument('--tmpdirprefix', '-t', default=tempfile.gettempdir(), help="Root directory for datadirs")
     parser.add_argument('--failfast', '-F', action='store_true', help='stop execution after the first test failure')
@@ -414,7 +426,8 @@ def main():
     parser.add_argument('--resultsfile', '-r', help='store test results (as CSV) to the provided file')
 
     args, unknown_args = parser.parse_known_args()
-    fail_on_warn = args.ci
+    # Fail on self-check warnings before running the tests.
+    fail_on_warn = True
     if not args.ansi:
         global DEFAULT, BOLD, GREEN, RED
         DEFAULT = ("", "")
@@ -458,6 +471,8 @@ def main():
         print("Re-compile with the -DBUILD_DAEMON=ON build option")
         sys.exit(1)
 
+    export_env_build_path(config)
+
     # Build tests
     test_list = deque()
     if tests:
@@ -493,7 +508,7 @@ def main():
     if args.exclude:
 
         def print_warning_missing_test(test_name):
-            print("{}WARNING!{} Test '{}' not found in current test list. Check the --exclude list.".format(BOLD[1], BOLD[0], test_name))
+            print("{}WARNING!{} Test '{}' not found in current test list. Check the --exclude options.".format(BOLD[1], BOLD[0], test_name))
             if fail_on_warn:
                 sys.exit(1)
 
@@ -501,16 +516,31 @@ def main():
             if not exclude_list:
                 print_warning_missing_test(exclude_test)
             for exclude_item in exclude_list:
+                print("Excluding %s" % exclude_item)
                 test_list.remove(exclude_item)
 
-        exclude_tests = [test.strip() for test in args.exclude.split(",")]
-        for exclude_test in exclude_tests:
+        for exclude_test in args.exclude:
+            if ',' in exclude_test:
+                print("{}WARNING!{} --exclude '{}' contains a comma. Use --exclude for each test.".format(BOLD[1], BOLD[0], exclude_test))
+                if fail_on_warn:
+                    sys.exit(1)
+
+        for exclude_test in args.exclude:
             # A space in the name indicates it has arguments such as "rpc_bind.py --ipv4"
             if ' ' in exclude_test:
                 remove_tests([test for test in test_list if test.replace('.py', '') == exclude_test.replace('.py', '')])
             else:
                 # Exclude all variants of a test
                 remove_tests([test for test in test_list if test.split('.py')[0] == exclude_test.split('.py')[0]])
+
+    if config["components"].getboolean("BUILD_BENCH") and TOOL_BENCH_SANITY_CHECK in test_list:
+        # Remove it, and expand it for each bench in the list
+        test_list.remove(TOOL_BENCH_SANITY_CHECK)
+        bench_cmd = Binaries(get_binary_paths(config), bin_dir=None).bench_argv() + ["-list"]
+        bench_list = subprocess.check_output(bench_cmd, text=True).splitlines()
+        bench_list = [f"{TOOL_BENCH_SANITY_CHECK} --bench={b}" for b in bench_list]
+        # Start with special scripts (variable, unknown runtime)
+        test_list.extendleft(reversed(bench_list))
 
     if args.filter:
         test_list = deque(filter(re.compile(args.filter).search, test_list))
@@ -536,9 +566,6 @@ def main():
     check_script_list(src_dir=config["environment"]["SRCDIR"], fail_on_warn=fail_on_warn)
     check_script_prefixes()
 
-    if not args.keepcache:
-        shutil.rmtree("%s/test/cache" % config["environment"]["BUILDDIR"], ignore_errors=True)
-
     run_tests(
         test_list=test_list,
         build_dir=config["environment"]["BUILDDIR"],
@@ -555,6 +582,11 @@ def main():
 def run_tests(*, test_list, build_dir, tmpdir, jobs=1, enable_coverage=False, args=None, combined_logs_len=0, failfast=False, use_term_control, results_filepath=None):
     args = args or []
 
+    # Some optional Python dependencies (e.g. pycapnp) may emit warnings or fail under
+    # CPython free-threaded builds when the GIL is disabled. Force it on for all
+    # functional tests so every child process inherits PYTHON_GIL=1.
+    os.environ["PYTHON_GIL"] = "1"
+
     # Warn if bitcoind is already running
     try:
         # pgrep exits with code zero when one or more matching processes found
@@ -563,11 +595,6 @@ def run_tests(*, test_list, build_dir, tmpdir, jobs=1, enable_coverage=False, ar
     except OSError:
         # pgrep not supported
         pass
-
-    # Warn if there is a cache directory
-    cache_dir = "%s/test/cache" % build_dir
-    if os.path.isdir(cache_dir):
-        print("%sWARNING!%s There is a cache directory here: %s. If tests fail unexpectedly, try deleting the cache directory." % (BOLD[1], BOLD[0], cache_dir))
 
     # Warn if there is not enough space on the testing dir
     min_space = MIN_FREE_SPACE + (jobs - 1) * ADDITIONAL_SPACE_PER_JOB
@@ -580,7 +607,8 @@ def run_tests(*, test_list, build_dir, tmpdir, jobs=1, enable_coverage=False, ar
     # a hard link or a copy on any platform. See https://github.com/bitcoin/bitcoin/pull/27561.
     sys.path.append(tests_dir)
 
-    flags = ['--cachedir={}'.format(cache_dir)] + args
+    cache_tmp_dir = tempfile.TemporaryDirectory(prefix="functional_test_cache")
+    flags = [f"--cachedir={cache_tmp_dir.name}"] + args
 
     if enable_coverage:
         coverage = RPCCoverage()
@@ -597,7 +625,7 @@ def run_tests(*, test_list, build_dir, tmpdir, jobs=1, enable_coverage=False, ar
             sys.stdout.buffer.write(e.output)
             raise
 
-    #Run Tests
+    # Run Tests
     job_queue = TestHandler(
         num_tests_parallel=jobs,
         tests_dir=tests_dir,
@@ -655,9 +683,6 @@ def run_tests(*, test_list, build_dir, tmpdir, jobs=1, enable_coverage=False, ar
 
     if coverage:
         coverage_passed = coverage.report_rpc_coverage()
-
-        logging.debug("Cleaning up coverage data")
-        coverage.cleanup()
     else:
         coverage_passed = True
 
@@ -781,7 +806,7 @@ class TestHandler:
                     status = "Passed"
                 elif proc.returncode == TEST_EXIT_SKIPPED:
                     status = "Skipped"
-                    skip_reason = re.search(r"Test Skipped: (.*)", stdout).group(1)
+                    skip_reason = re.search(r"Test Skipped: (.*)", stdout).group(1).strip()
                 else:
                     status = "Failed"
 
@@ -872,7 +897,8 @@ class RPCCoverage():
 
     """
     def __init__(self):
-        self.dir = tempfile.mkdtemp(prefix="coverage")
+        self.temp_dir = tempfile.TemporaryDirectory(prefix="coverage")
+        self.dir = self.temp_dir.name
         self.flag = '--coveragedir=%s' % self.dir
 
     def report_rpc_coverage(self):
@@ -889,9 +915,6 @@ class RPCCoverage():
         else:
             print("All RPC commands covered.")
             return True
-
-    def cleanup(self):
-        return shutil.rmtree(self.dir)
 
     def _get_uncovered_rpc_commands(self):
         """

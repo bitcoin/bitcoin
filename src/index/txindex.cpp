@@ -10,7 +10,6 @@
 #include <index/base.h>
 #include <index/disktxpos.h>
 #include <interfaces/chain.h>
-#include <logging.h>
 #include <node/blockstorage.h>
 #include <primitives/block.h>
 #include <primitives/transaction.h>
@@ -18,14 +17,13 @@
 #include <streams.h>
 #include <uint256.h>
 #include <util/fs.h>
+#include <util/log.h>
 #include <validation.h>
 
 #include <cassert>
 #include <cstdint>
 #include <cstdio>
 #include <exception>
-#include <iterator>
-#include <span>
 #include <string>
 #include <utility>
 #include <vector>

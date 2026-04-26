@@ -58,8 +58,6 @@
  *   - clusterlin_postlinearize
  *   - clusterlin_postlinearize_tree
  *   - clusterlin_postlinearize_moved_leaf
- * - FixLinearization tests:
- *   - clusterlin_fix_linearization
  * - MakeConnected tests (a test-only function):
  *   - clusterlin_make_connected
  */
@@ -916,29 +914,38 @@ FUZZ_TARGET(clusterlin_sfl)
 
     // Function to test the state.
     std::vector<FeeFrac> last_diagram;
-    auto test_fn = [&](bool is_optimal = false) {
+    bool was_optimal{false};
+    auto test_fn = [&](bool is_optimal = false, bool is_minimal = false) {
         if (rng.randbits(4) == 0) {
             // Perform sanity checks from time to time (too computationally expensive to do after
             // every step).
-            sfl.SanityCheck(depgraph);
+            sfl.SanityCheck();
         }
         auto diagram = sfl.GetDiagram();
         if (rng.randbits(4) == 0) {
             // Verify that the diagram of GetLinearization() is at least as good as GetDiagram(),
             // from time to time.
-            auto lin = sfl.GetLinearization();
+            auto lin = sfl.GetLinearization(IndexTxOrder{});
             auto lin_diagram = ChunkLinearization(depgraph, lin);
             auto cmp_lin = CompareChunks(lin_diagram, diagram);
             assert(cmp_lin >= 0);
             // If we're in an allegedly optimal state, they must match.
             if (is_optimal) assert(cmp_lin == 0);
+            // If we're in an allegedly minimal state, they must also have the same number of
+            // segments.
+            if (is_minimal) assert(diagram.size() == lin_diagram.size());
         }
         // Verify that subsequent calls to GetDiagram() never get worse/incomparable.
         if (!last_diagram.empty()) {
             auto cmp = CompareChunks(diagram, last_diagram);
             assert(cmp >= 0);
+            // If the last diagram was already optimal, the new one cannot be better.
+            if (was_optimal) assert(cmp == 0);
+            // Also, if the diagram was already optimal, the number of segments can only increase.
+            if (was_optimal) assert(diagram.size() >= last_diagram.size());
         }
         last_diagram = std::move(diagram);
+        was_optimal = is_optimal;
     };
 
     if (load_linearization) {
@@ -965,11 +972,19 @@ FUZZ_TARGET(clusterlin_sfl)
         test_fn();
         if (!sfl.OptimizeStep()) break;
     }
+
+    // Loop until minimal.
     test_fn(/*is_optimal=*/true);
+    sfl.StartMinimizing();
+    while (true) {
+        test_fn(/*is_optimal=*/true);
+        if (!sfl.MinimizeStep()) break;
+    }
+    test_fn(/*is_optimal=*/true, /*is_minimal=*/true);
 
     // Verify that optimality is reached within an expected amount of work. This protects against
     // hypothetical bugs that hugely increase the amount of work needed to reach optimality.
-    assert(sfl.GetCost() <= MaxOptimalLinearizationIters(depgraph.TxCount()));
+    assert(sfl.GetCost() <= MaxOptimalLinearizationCost(depgraph.TxCount()));
 
     // The result must be as good as SimpleLinearize.
     auto [simple_linearization, simple_optimal] = SimpleLinearize(depgraph, MAX_SIMPLE_ITERATIONS / 10);
@@ -977,6 +992,9 @@ FUZZ_TARGET(clusterlin_sfl)
     auto simple_cmp = CompareChunks(last_diagram, simple_diagram);
     assert(simple_cmp >= 0);
     if (simple_optimal) assert(simple_cmp == 0);
+    // If the diagram matches, we must also have at least as many segments (because the SFL state
+    // and its produced diagram are minimal);
+    if (simple_cmp == 0) assert(last_diagram.size() >= simple_diagram.size());
 
     // We can compare with any arbitrary linearization, and the diagram must be at least as good as
     // each.
@@ -985,6 +1003,7 @@ FUZZ_TARGET(clusterlin_sfl)
         auto read_diagram = ChunkLinearization(depgraph, read_lin);
         auto cmp = CompareChunks(last_diagram, read_diagram);
         assert(cmp >= 0);
+        if (cmp == 0) assert(last_diagram.size() >= read_diagram.size());
     }
 }
 
@@ -992,48 +1011,60 @@ FUZZ_TARGET(clusterlin_linearize)
 {
     // Verify the behavior of Linearize().
 
-    // Retrieve an RNG seed, an iteration count, a depgraph, and whether to make it connected from
-    // the fuzz input.
+    // Retrieve an RNG seed, a maximum amount of work, a depgraph, and whether to make it connected
+    // from the fuzz input.
     SpanReader reader(buffer);
     DepGraph<TestBitSet> depgraph;
     uint64_t rng_seed{0};
-    uint64_t iter_count{0};
-    uint8_t make_connected{1};
+    uint64_t max_cost{0};
+    uint8_t flags{7};
     try {
-        reader >> VARINT(iter_count) >> Using<DepGraphFormatter>(depgraph) >> rng_seed >> make_connected;
+        reader >> VARINT(max_cost) >> Using<DepGraphFormatter>(depgraph) >> rng_seed >> flags;
     } catch (const std::ios_base::failure&) {}
+    if (depgraph.TxCount() <= 1) return;
+    bool make_connected = flags & 1;
+    // The following 3 booleans have 4 combinations:
+    // - (flags & 6) == 0: do not provide input linearization.
+    // - (flags & 6) == 2: provide potentially non-topological input.
+    // - (flags & 6) == 4: provide topological input linearization, but do not claim it is
+    //                     topological.
+    // - (flags & 6) == 6: provide topological input linearization, and claim it is topological.
+    bool provide_input = flags & 6;
+    bool provide_topological_input = flags & 4;
+    bool claim_topological_input = (flags & 6) == 6;
     // The most complicated graphs are connected ones (other ones just split up). Optionally force
     // the graph to be connected.
     if (make_connected) MakeConnected(depgraph);
 
     // Optionally construct an old linearization for it.
     std::vector<DepGraphIndex> old_linearization;
-    {
-        uint8_t have_old_linearization{0};
-        try {
-            reader >> have_old_linearization;
-        } catch(const std::ios_base::failure&) {}
-        if (have_old_linearization & 1) {
-            old_linearization = ReadLinearization(depgraph, reader);
-            SanityCheck(depgraph, old_linearization);
-        }
+    if (provide_input) {
+        old_linearization = ReadLinearization(depgraph, reader, /*topological=*/provide_topological_input);
+        if (provide_topological_input) SanityCheck(depgraph, old_linearization);
     }
 
     // Invoke Linearize().
-    iter_count &= 0x7ffff;
-    auto [linearization, optimal, cost] = Linearize(depgraph, iter_count, rng_seed, old_linearization);
+    max_cost &= 0x3fffff;
+    auto [linearization, optimal, cost] = Linearize(
+        /*depgraph=*/depgraph,
+        /*max_cost=*/max_cost,
+        /*rng_seed=*/rng_seed,
+        /*fallback_order=*/IndexTxOrder{},
+        /*old_linearization=*/old_linearization,
+        /*is_topological=*/claim_topological_input);
     SanityCheck(depgraph, linearization);
     auto chunking = ChunkLinearization(depgraph, linearization);
 
-    // Linearization must always be as good as the old one, if provided.
-    if (!old_linearization.empty()) {
+    // Linearization must always be as good as the old one, if provided and topological (even when
+    // not claimed to be topological).
+    if (provide_topological_input) {
         auto old_chunking = ChunkLinearization(depgraph, old_linearization);
         auto cmp = CompareChunks(chunking, old_chunking);
         assert(cmp >= 0);
     }
 
-    // If the iteration count is sufficiently high, an optimal linearization must be found.
-    if (iter_count > MaxOptimalLinearizationIters(depgraph.TxCount())) {
+    // If the maximum amount of work is sufficiently high, an optimal linearization must be found.
+    if (max_cost > MaxOptimalLinearizationCost(depgraph.TxCount())) {
         assert(optimal);
     }
 
@@ -1049,18 +1080,81 @@ FUZZ_TARGET(clusterlin_linearize)
         // SimpleLinearize is broken).
         if (simple_optimal) assert(cmp == 0);
 
-        // Temporarily disabled, as Linearize() currently does not guarantee minimal chunks, even
-        // when it reports an optimal result. This will be re-introduced in a later commit.
-        //
-        // // If simple_chunking is diagram-optimal, it cannot have more chunks than chunking (as
-        // // chunking is claimed to be optimal, which implies minimal chunks).
-        // if (cmp == 0) assert(chunking.size() >= simple_chunking.size());
+        // If simple_chunking is diagram-optimal, it cannot have more chunks than chunking (as
+        // chunking is claimed to be optimal, which implies minimal chunks).
+        if (cmp == 0) assert(chunking.size() >= simple_chunking.size());
 
         // Compare with a linearization read from the fuzz input.
         auto read = ReadLinearization(depgraph, reader);
         auto read_chunking = ChunkLinearization(depgraph, read);
         auto cmp_read = CompareChunks(chunking, read_chunking);
         assert(cmp_read >= 0);
+
+        // Verify that within every chunk, the transactions are in a valid order. For any pair of
+        // transactions, it should not be possible to swap them; either due to a missing
+        // dependency, or because the order would be inconsistent with decreasing feerate,
+        // increasing size, and fallback order (just DepGraphIndex value here).
+        auto chunking_info = ChunkLinearizationInfo(depgraph, linearization);
+        /** The set of all transactions (strictly) before tx1 (see below), or (strictly) before
+         *  chunk1 (see even further below). */
+        TestBitSet done;
+        unsigned pos{0};
+        for (const auto& chunk : chunking_info) {
+            auto chunk_start = pos;
+            auto chunk_end = pos + chunk.transactions.Count() - 1;
+            // Go over all pairs of transactions. done is the set of transactions seen before pos1.
+            for (unsigned pos1 = chunk_start; pos1 <= chunk_end; ++pos1) {
+                auto tx1 = linearization[pos1];
+                for (unsigned pos2 = pos1 + 1; pos2 <= chunk_end; ++pos2) {
+                    auto tx2 = linearization[pos2];
+                    // Check whether tx2 only depends on transactions that precede tx1.
+                    if ((depgraph.Ancestors(tx2) - done).Count() == 1) {
+                        // tx2 could take position pos1.
+                        // Verify that individual transaction feerate is decreasing (note that >=
+                        // tie-breaks by size).
+                        assert(depgraph.FeeRate(tx1) >= depgraph.FeeRate(tx2));
+                        // If feerate and size are equal, compare by DepGraphIndex.
+                        if (depgraph.FeeRate(tx1) == depgraph.FeeRate(tx2)) {
+                            assert(tx1 < tx2);
+                        }
+                    }
+                }
+                done.Set(tx1);
+            }
+            pos += chunk.transactions.Count();
+        }
+
+        // Verify that chunks themselves are in a valid order. For any pair of chunks, it should
+        // not be possible to swap them; either due to a missing dependency, or because the order
+        // would be inconsistent with decreasing chunk feerate, increasing chunk size, and order
+        // of maximum fallback-ordered element (just maximum DepGraphIndex element here).
+        done = {};
+        // Go over all pairs of chunks. done is the set of transactions seen before chunk_num1.
+        for (unsigned chunk_num1 = 0; chunk_num1 < chunking_info.size(); ++chunk_num1) {
+            const auto& chunk1 = chunking_info[chunk_num1];
+            for (unsigned chunk_num2 = chunk_num1 + 1; chunk_num2 < chunking_info.size(); ++chunk_num2) {
+                const auto& chunk2 = chunking_info[chunk_num2];
+                TestBitSet chunk2_ancestors;
+                for (auto tx : chunk2.transactions) chunk2_ancestors |= depgraph.Ancestors(tx);
+                // Check whether chunk2 only depends on transactions that precede chunk1.
+                if ((chunk2_ancestors - done).IsSubsetOf(chunk2.transactions)) {
+                    // chunk2 could take position chunk_num1.
+                    // Verify that chunk feerate is decreasing (note that >= tie-breaks by size).
+                    assert(chunk1.feerate >= chunk2.feerate);
+                    // If feerate and size are equal, compare by maximum DepGraphIndex element.
+                    if (chunk1.feerate == chunk2.feerate) {
+                        assert(chunk1.transactions.Last() < chunk2.transactions.Last());
+                    }
+                }
+            }
+            done |= chunk1.transactions;
+        }
+
+        // Redo from scratch with a different rng_seed. The resulting linearization should be
+        // deterministic, if both are optimal.
+        auto [linearization2, optimal2, cost2] = Linearize(depgraph, MaxOptimalLinearizationCost(depgraph.TxCount()) + 1, rng_seed ^ 0x1337, IndexTxOrder{});
+        assert(optimal2);
+        assert(linearization2 == linearization);
     }
 }
 
@@ -1149,7 +1243,7 @@ FUZZ_TARGET(clusterlin_postlinearize_tree)
 
     // Try to find an even better linearization directly. This must not change the diagram for the
     // same reason.
-    auto [opt_linearization, _optimal, _cost] = Linearize(depgraph_tree, 100000, rng_seed, post_linearization);
+    auto [opt_linearization, _optimal, _cost] = Linearize(depgraph_tree, 1000000, rng_seed, IndexTxOrder{}, post_linearization);
     auto opt_chunking = ChunkLinearization(depgraph_tree, opt_linearization);
     auto cmp_opt = CompareChunks(opt_chunking, post_chunking);
     assert(cmp_opt == 0);
@@ -1196,47 +1290,4 @@ FUZZ_TARGET(clusterlin_postlinearize_moved_leaf)
     auto new_chunking = ChunkLinearization(depgraph, lin_moved);
     auto cmp = CompareChunks(new_chunking, old_chunking);
     assert(cmp >= 0);
-}
-
-FUZZ_TARGET(clusterlin_fix_linearization)
-{
-    // Verify expected properties of FixLinearization() on arbitrary linearizations.
-
-    // Retrieve a depgraph from the fuzz input.
-    SpanReader reader(buffer);
-    DepGraph<TestBitSet> depgraph;
-    try {
-        reader >> Using<DepGraphFormatter>(depgraph);
-    } catch (const std::ios_base::failure&) {}
-
-    // Construct an arbitrary linearization (not necessarily topological for depgraph).
-    std::vector<DepGraphIndex> linearization = ReadLinearization(depgraph, reader, /*topological=*/false);
-    assert(linearization.size() == depgraph.TxCount());
-
-    // Determine what prefix of linearization is topological, i.e., the position of the first entry
-    // in linearization which corresponds to a transaction that is not preceded by all its
-    // ancestors.
-    size_t topo_prefix = 0;
-    auto todo = depgraph.Positions();
-    while (topo_prefix < linearization.size()) {
-        DepGraphIndex idx = linearization[topo_prefix];
-        todo.Reset(idx);
-        if (todo.Overlaps(depgraph.Ancestors(idx))) break;
-        ++topo_prefix;
-    }
-
-    // Then make a fixed copy of linearization.
-    auto linearization_fixed = linearization;
-    FixLinearization(depgraph, linearization_fixed);
-    // Sanity check it (which includes testing whether it is topological).
-    SanityCheck(depgraph, linearization_fixed);
-
-    // FixLinearization does not modify the topological prefix of linearization.
-    assert(std::equal(linearization.begin(), linearization.begin() + topo_prefix,
-                      linearization_fixed.begin()));
-    // This also means that if linearization was entirely topological, FixLinearization cannot have
-    // modified it. This is implied by the assertion above already, but repeat it explicitly.
-    if (topo_prefix == linearization.size()) {
-        assert(linearization == linearization_fixed);
-    }
 }

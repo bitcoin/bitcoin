@@ -5,6 +5,8 @@
 #include <zmq/zmqutil.h>
 
 #include <logging.h>
+#include <util/check.h>
+
 #include <zmq.h>
 
 #include <cerrno>

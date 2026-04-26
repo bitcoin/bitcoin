@@ -24,7 +24,7 @@
 static constexpr size_t NUM_SOURCES = 64;
 static constexpr size_t NUM_ADDRESSES_PER_SOURCE = 256;
 
-static NetGroupManager EMPTY_NETGROUPMAN{std::vector<bool>()};
+static auto EMPTY_NETGROUPMAN{NetGroupManager::NoAsmap()};
 static constexpr uint32_t ADDRMAN_CONSISTENCY_CHECK_RATIO{0};
 
 static std::vector<CAddress> g_sources;
@@ -161,23 +161,17 @@ static void AddrManAddThenGood(benchmark::Bench& bench)
 
     CreateAddresses();
 
-    bench.run([&] {
-        // To make the benchmark independent of the number of evaluations, we always prepare a new addrman.
-        // This is necessary because AddrMan::Good() method modifies the object, affecting the timing of subsequent calls
-        // to the same method and we want to do the same amount of work in every loop iteration.
-        //
-        // This has some overhead (exactly the result of AddrManAdd benchmark), but that overhead is constant so improvements in
-        // AddrMan::Good() will still be noticeable.
-        AddrMan addrman{EMPTY_NETGROUPMAN, /*deterministic=*/false, ADDRMAN_CONSISTENCY_CHECK_RATIO};
-        AddAddressesToAddrMan(addrman);
-
-        markSomeAsGood(addrman);
-    });
+    std::optional<AddrMan> addrman;
+    bench.setup([&] {
+            addrman.emplace(EMPTY_NETGROUPMAN, /*deterministic=*/false, ADDRMAN_CONSISTENCY_CHECK_RATIO);
+            AddAddressesToAddrMan(*addrman);
+        })
+        .run([&] { markSomeAsGood(*addrman); });
 }
 
-BENCHMARK(AddrManAdd, benchmark::PriorityLevel::HIGH);
-BENCHMARK(AddrManSelect, benchmark::PriorityLevel::HIGH);
-BENCHMARK(AddrManSelectFromAlmostEmpty, benchmark::PriorityLevel::HIGH);
-BENCHMARK(AddrManSelectByNetwork, benchmark::PriorityLevel::HIGH);
-BENCHMARK(AddrManGetAddr, benchmark::PriorityLevel::HIGH);
-BENCHMARK(AddrManAddThenGood, benchmark::PriorityLevel::HIGH);
+BENCHMARK(AddrManAdd);
+BENCHMARK(AddrManSelect);
+BENCHMARK(AddrManSelectFromAlmostEmpty);
+BENCHMARK(AddrManSelectByNetwork);
+BENCHMARK(AddrManGetAddr);
+BENCHMARK(AddrManAddThenGood);

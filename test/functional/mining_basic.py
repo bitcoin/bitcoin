@@ -122,7 +122,8 @@ class MiningTest(BitcoinTestFramework):
         tx_d = self.wallet.send_self_transfer(from_node=node,
                                               fee_rate=Decimal("0.00100"))
 
-        block_template_txs = node.getblocktemplate(NORMAL_GBT_REQUEST_PARAMS)['transactions']
+        block_template = node.getblocktemplate(NORMAL_GBT_REQUEST_PARAMS)
+        block_template_txs = block_template['transactions']
 
         block_template_fees = [tx['fee'] for tx in block_template_txs]
         assert_equal(block_template_fees, [
@@ -131,6 +132,10 @@ class MiningTest(BitcoinTestFramework):
             tx_b["fee"] * COIN,
             tx_c["fee"] * COIN
         ])
+        # verify that coinbasevalue field is set to claim full block reward (subsidy + fees)
+        expected_block_reward = create_coinbase(
+            height=int(block_template["height"]), fees=sum(block_template_fees)).vout[0].nValue
+        assert_equal(block_template["coinbasevalue"], expected_block_reward)
 
         block_template_sigops = [tx['sigops'] for tx in block_template_txs]
         assert_equal(block_template_sigops, [0, 4, 4, 4])
@@ -435,6 +440,9 @@ class MiningTest(BitcoinTestFramework):
 
         self.log.info("getblocktemplate: segwit rule must be set")
         assert_raises_rpc_error(-8, "getblocktemplate must be called with the segwit rule set", node.getblocktemplate, {})
+
+        self.log.info("getblocktemplate: result should set the right rules")
+        assert_equal(['csv', '!segwit', 'taproot'], self.nodes[0].getblocktemplate(NORMAL_GBT_REQUEST_PARAMS)['rules'])
 
         self.log.info("submitblock: Test block decode failure")
         assert_raises_rpc_error(-22, "Block decode failed", node.submitblock, block.serialize()[:-15].hex())

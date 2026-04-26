@@ -9,14 +9,14 @@
 #include <coins.h>
 #include <consensus/params.h>
 #include <kernel/caches.h>
-#include <logging.h>
 #include <node/blockstorage.h>
 #include <sync.h>
-#include <threadsafety.h>
 #include <tinyformat.h>
 #include <txdb.h>
 #include <uint256.h>
+#include <util/byte_units.h>
 #include <util/fs.h>
+#include <util/log.h>
 #include <util/signalinterrupt.h>
 #include <util/time.h>
 #include <util/translation.h>
@@ -126,6 +126,13 @@ static ChainstateLoadResult CompleteChainstateInitialization(
         }
     }
 
+    // Populate setBlockIndexCandidates in a separate loop, after all LoadChainTip()
+    // calls have finished modifying nSequenceId. Because nSequenceId is used in the
+    // set's comparator, changing it while blocks are in the set would be UB.
+    for (const auto& chainstate : chainman.m_chainstates) {
+        chainstate->PopulateBlockIndexCandidates();
+    }
+
     const auto& chainstates{chainman.m_chainstates};
     if (std::any_of(chainstates.begin(), chainstates.end(),
                     [](const auto& cs) EXCLUSIVE_LOCKS_REQUIRED(cs_main) { return cs->NeedsRedownload(); })) {
@@ -157,7 +164,7 @@ ChainstateLoadResult LoadChainstate(ChainstateManager& chainman, const CacheSize
         LogInfo("Block pruning enabled. Use RPC call pruneblockchain(height) to manually prune block and undo files.");
     } else if (chainman.m_blockman.GetPruneTarget()) {
         LogInfo("Prune configured to target %u MiB on disk for block and undo files.",
-                chainman.m_blockman.GetPruneTarget() / 1024 / 1024);
+                chainman.m_blockman.GetPruneTarget() / 1_MiB);
     }
 
     LOCK(cs_main);

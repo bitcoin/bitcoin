@@ -52,22 +52,6 @@ if [ -n "$WRAPPER_CMD" ]; then
     $WRAPPER_CMD --version
 fi
 
-# Workaround for https://bugs.kde.org/show_bug.cgi?id=452758 (fixed in valgrind 3.20.0).
-case "${CC:-undefined}" in
-    clang*)
-        if [ "$CTIMETESTS" = "yes" ] && [ "$WITH_VALGRIND" = "yes" ]
-        then
-            export CFLAGS="${CFLAGS:+$CFLAGS }-gdwarf-4"
-        else
-            case "$WRAPPER_CMD" in
-                valgrind*)
-                    export CFLAGS="${CFLAGS:+$CFLAGS }-gdwarf-4"
-                    ;;
-            esac
-        fi
-        ;;
-esac
-
 ./autogen.sh
 
 ./configure \

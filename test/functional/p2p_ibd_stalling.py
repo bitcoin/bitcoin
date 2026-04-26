@@ -10,7 +10,6 @@ import time
 
 from test_framework.blocktools import (
         create_block,
-        create_coinbase
 )
 from test_framework.messages import (
         MSG_BLOCK,
@@ -60,7 +59,7 @@ class P2PIBDStallingTest(BitcoinTestFramework):
         self.log.info("Prepare blocks without sending them to the node")
         block_dict = {}
         for _ in range(NUM_BLOCKS):
-            blocks.append(create_block(tip, create_coinbase(height), block_time))
+            blocks.append(create_block(tip, height=height, ntime=block_time))
             blocks[-1].solve()
             tip = blocks[-1].hash_int
             block_time += 1

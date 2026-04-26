@@ -12,6 +12,7 @@
 #include <test/fuzz/fuzz.h>
 #include <test/fuzz/util.h>
 #include <test/util/setup_common.h>
+#include <test/util/time.h>
 #include <test/util/validation.h>
 #include <validation.h>
 
@@ -41,7 +42,7 @@ void initialize_block_index_tree()
 FUZZ_TARGET(block_index_tree, .init = initialize_block_index_tree)
 {
     FuzzedDataProvider fuzzed_data_provider(buffer.data(), buffer.size());
-    SetMockTime(ConsumeTime(fuzzed_data_provider));
+    NodeClockContext clock_ctx{ConsumeTime(fuzzed_data_provider)};
     auto& chainman = static_cast<TestChainstateManager&>(*g_setup->m_node.chainman);
     auto& blockman = static_cast<TestBlockManager&>(chainman.m_blockman);
     CBlockIndex* genesis = chainman.ActiveChainstate().m_chain[0];
@@ -61,7 +62,7 @@ FUZZ_TARGET(block_index_tree, .init = initialize_block_index_tree)
                 // Receive a header building on an existing valid one. This assumes headers are valid, so PoW is not relevant here.
                 LOCK(cs_main);
                 CBlockIndex* prev_block = PickValue(fuzzed_data_provider, blocks);
-                if (!(prev_block->nStatus & BLOCK_FAILED_MASK)) {
+                if (!(prev_block->nStatus & BLOCK_FAILED_VALID)) {
                     CBlockHeader header = ConsumeBlockHeader(fuzzed_data_provider, prev_block->GetBlockHash(), nonce_counter);
                     CBlockIndex* index = blockman.AddToBlockIndex(header, chainman.m_best_header);
                     assert(index->nStatus & BLOCK_VALID_TREE);
@@ -74,7 +75,7 @@ FUZZ_TARGET(block_index_tree, .init = initialize_block_index_tree)
                 LOCK(cs_main);
                 CBlockIndex* index = PickValue(fuzzed_data_provider, blocks);
                 // Must be new to us and not known to be invalid (e.g. because of an invalid ancestor).
-                if (index->nTx == 0 && !(index->nStatus & BLOCK_FAILED_MASK)) {
+                if (index->nTx == 0 && !(index->nStatus & BLOCK_FAILED_VALID)) {
                     if (fuzzed_data_provider.ConsumeBool()) { // Invalid
                         BlockValidationState state;
                         state.Invalid(BlockValidationResult::BLOCK_CONSENSUS, "consensus-invalid");
@@ -101,7 +102,7 @@ FUZZ_TARGET(block_index_tree, .init = initialize_block_index_tree)
                     assert(best_tip);                   // Should at least return current tip
                     if (best_tip == chain.Tip()) break; // Nothing to do
                     // Rewind chain to forking point
-                    const CBlockIndex* fork = chain.FindFork(best_tip);
+                    const CBlockIndex* fork = chain.FindFork(*best_tip);
                     // If we can't go back to the fork point due to pruned data, abort this run. In reality, a pruned node would also currently just crash in this scenario.
                     // This is very unlikely to happen due to the minimum pruning threshold of 550MiB.
                     CBlockIndex* it = chain.Tip();
@@ -124,7 +125,7 @@ FUZZ_TARGET(block_index_tree, .init = initialize_block_index_tree)
                     }
                     // Connect blocks, possibly fail
                     for (CBlockIndex* block : to_connect | std::views::reverse) {
-                        assert(!(block->nStatus & BLOCK_FAILED_MASK));
+                        assert(!(block->nStatus & BLOCK_FAILED_VALID));
                         assert(block->nStatus & BLOCK_HAVE_DATA);
                         if (!block->IsValid(BLOCK_VALID_SCRIPTS)) {
                             if (fuzzed_data_provider.ConsumeBool()) { // Invalid
@@ -207,7 +208,7 @@ FUZZ_TARGET(block_index_tree, .init = initialize_block_index_tree)
         chainman.nBlockSequenceId = 2;
         chainman.ActiveChain().SetTip(*genesis);
         chainman.ActiveChainstate().setBlockIndexCandidates.clear();
-        chainman.m_cached_finished_ibd = false;
+        chainman.m_cached_is_ibd = true;
         blockman.m_blocks_unlinked.clear();
         blockman.m_have_pruned = false;
         blockman.CleanupForFuzzing();

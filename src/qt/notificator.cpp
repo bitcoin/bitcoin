@@ -176,8 +176,7 @@ void Notificator::notifyDBus(Class cls, const QString &title, const QString &tex
         case Information: sicon = QStyle::SP_MessageBoxInformation; break;
         case Warning: sicon = QStyle::SP_MessageBoxWarning; break;
         case Critical: sicon = QStyle::SP_MessageBoxCritical; break;
-        default: break;
-        }
+        } // no default case, so the compiler can warn about missing cases
         tmpicon = QApplication::style()->standardIcon(sicon);
     }
     else

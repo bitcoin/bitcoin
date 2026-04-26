@@ -7,6 +7,7 @@
 #include <crypto/chacha20.h>
 #include <crypto/chacha20poly1305.h>
 #include <span.h>
+#include <util/byte_units.h>
 
 #include <cstddef>
 #include <cstdint>
@@ -15,7 +16,7 @@
 /* Number of bytes to process per iteration */
 static const uint64_t BUFFER_SIZE_TINY  = 64;
 static const uint64_t BUFFER_SIZE_SMALL = 256;
-static const uint64_t BUFFER_SIZE_LARGE = 1024*1024;
+static const uint64_t BUFFER_SIZE_LARGE{1_MiB};
 
 static void CHACHA20(benchmark::Bench& bench, size_t buffersize)
 {
@@ -71,9 +72,9 @@ static void FSCHACHA20POLY1305_1MB(benchmark::Bench& bench)
     FSCHACHA20POLY1305(bench, BUFFER_SIZE_LARGE);
 }
 
-BENCHMARK(CHACHA20_64BYTES, benchmark::PriorityLevel::HIGH);
-BENCHMARK(CHACHA20_256BYTES, benchmark::PriorityLevel::HIGH);
-BENCHMARK(CHACHA20_1MB, benchmark::PriorityLevel::HIGH);
-BENCHMARK(FSCHACHA20POLY1305_64BYTES, benchmark::PriorityLevel::HIGH);
-BENCHMARK(FSCHACHA20POLY1305_256BYTES, benchmark::PriorityLevel::HIGH);
-BENCHMARK(FSCHACHA20POLY1305_1MB, benchmark::PriorityLevel::HIGH);
+BENCHMARK(CHACHA20_64BYTES);
+BENCHMARK(CHACHA20_256BYTES);
+BENCHMARK(CHACHA20_1MB);
+BENCHMARK(FSCHACHA20POLY1305_64BYTES);
+BENCHMARK(FSCHACHA20POLY1305_256BYTES);
+BENCHMARK(FSCHACHA20POLY1305_1MB);

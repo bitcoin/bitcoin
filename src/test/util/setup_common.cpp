@@ -161,8 +161,17 @@ BasicTestingSetup::BasicTestingSetup(const ChainType chainType, TestOpts opts)
         // tests, such as the fuzz tests to run in several processes at the
         // same time, add a random element to the path. Keep it small enough to
         // avoid a MAX_PATH violation on Windows.
-        const auto rand{HexStr(g_rng_temp_path.randbytes(10))};
-        m_path_root = fs::temp_directory_path() / TEST_DIR_PATH_ELEMENT / test_name / rand;
+        //
+        // When fuzzing with AFL++, use the shared memory ID for a deterministic
+        // path. This allows for cleanup of leftover directories from timed-out
+        // or crashed iterations, preventing accumulation of stale datadirs.
+        if (const char* shm_id = std::getenv("__AFL_SHM_ID"); shm_id && *shm_id) {
+            m_path_root = fs::temp_directory_path() / TEST_DIR_PATH_ELEMENT / test_name / shm_id;
+            fs::remove_all(m_path_root);
+        } else {
+            const auto rand{HexStr(g_rng_temp_path.randbytes(10))};
+            m_path_root = fs::temp_directory_path() / TEST_DIR_PATH_ELEMENT / test_name / rand;
+        }
         TryCreateDirectories(m_path_root);
     } else {
         // Custom data directory
@@ -191,7 +200,6 @@ BasicTestingSetup::BasicTestingSetup(const ChainType chainType, TestOpts opts)
     gArgs.ForceSetArg("-datadir", fs::PathToString(m_path_root));
 
     SelectParams(chainType);
-    if (G_TEST_LOG_FUN) LogInstance().PushBackCallback(G_TEST_LOG_FUN);
     InitLogging(*m_node.args);
     AppInitParameterInteraction(*m_node.args);
     LogInstance().StartLogging();
@@ -344,7 +352,7 @@ TestingSetup::TestingSetup(
 
     if (!opts.setup_net) return;
 
-    m_node.netgroupman = std::make_unique<NetGroupManager>(/*asmap=*/std::vector<bool>());
+    m_node.netgroupman = std::make_unique<NetGroupManager>(NetGroupManager::NoAsmap());
     m_node.addrman = std::make_unique<AddrMan>(*m_node.netgroupman,
                                                /*deterministic=*/false,
                                                m_node.args->GetIntArg("-checkaddrman", 0));
@@ -404,6 +412,7 @@ CBlock TestChain100Setup::CreateBlock(
 {
     BlockAssembler::Options options;
     options.coinbase_output_script = scriptPubKey;
+    options.include_dummy_extranonce = true;
     CBlock block = BlockAssembler{chainstate, nullptr, options}.CreateNewBlock()->block;
 
     Assert(block.vtx.size() == 1);
@@ -456,8 +465,7 @@ std::pair<CMutableTransaction, CAmount> TestChain100Setup::CreateValidTransactio
         keystore.AddKey(input_signing_key);
     }
     // - Populate a CoinsViewCache with the unspent output
-    CCoinsView coins_view;
-    CCoinsViewCache coins_cache(&coins_view);
+    CCoinsViewCache coins_cache{&CoinsViewEmpty::Get()};
     for (const auto& input_transaction : input_transactions) {
         AddCoins(coins_cache, *input_transaction.get(), input_height);
     }
@@ -609,27 +617,4 @@ CBlock getBlock13b8a()
     };
     stream >> TX_WITH_WITNESS(block);
     return block;
-}
-
-std::ostream& operator<<(std::ostream& os, const arith_uint256& num)
-{
-    return os << num.ToString();
-}
-
-std::ostream& operator<<(std::ostream& os, const uint160& num)
-{
-    return os << num.ToString();
-}
-
-std::ostream& operator<<(std::ostream& os, const uint256& num)
-{
-    return os << num.ToString();
-}
-
-std::ostream& operator<<(std::ostream& os, const Txid& txid) {
-    return os << txid.ToString();
-}
-
-std::ostream& operator<<(std::ostream& os, const Wtxid& wtxid) {
-    return os << wtxid.ToString();
 }

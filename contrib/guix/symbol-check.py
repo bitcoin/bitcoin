@@ -172,7 +172,7 @@ PE_ALLOWED_LIBRARIES = {
 def check_version(max_versions, version, arch) -> bool:
     (lib, _, ver) = version.rpartition('_')
     ver = tuple([int(x) for x in ver.split('.')])
-    if not lib in max_versions:
+    if lib not in max_versions:
         return False
     if isinstance(max_versions[lib], tuple):
         return ver <= max_versions[lib]
@@ -202,7 +202,7 @@ def check_exported_symbols(binary) -> bool:
         if not symbol.exported:
             continue
         name = symbol.name
-        if binary.header.machine_type == lief.ELF.ARCH.RISCV or name in IGNORE_EXPORTS:
+        if name in IGNORE_EXPORTS:
             continue
         print(f'{filename}: export of symbol {name} not allowed!')
         ok = False
@@ -241,7 +241,7 @@ def check_MACHO_sdk(binary) -> bool:
     return False
 
 def check_MACHO_lld(binary) -> bool:
-    if binary.build_version.tools[0].version == [19, 1, 4]:
+    if binary.build_version.tools[0].version == [19, 1, 7]:
         return True
     return False
 

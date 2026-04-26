@@ -8,9 +8,8 @@
 #include <consensus/amount.h>
 #include <util/result.h>
 
+#include <functional>
 #include <string>
-#include <vector>
-#include <optional>
 
 class CBlock;
 class CBlockHeader;
@@ -32,17 +31,15 @@ enum class TxVerbosity {
     SHOW_DETAILS_AND_PREVOUT  //!< The same as previous option with information about prevouts if available
 };
 
-// core_read.cpp
 CScript ParseScript(const std::string& s);
-std::string ScriptToAsmStr(const CScript& script, const bool fAttemptSighashDecode = false);
+std::string ScriptToAsmStr(const CScript& script, bool fAttemptSighashDecode = false);
 [[nodiscard]] bool DecodeHexTx(CMutableTransaction& tx, const std::string& hex_tx, bool try_no_witness = false, bool try_witness = true);
 [[nodiscard]] bool DecodeHexBlk(CBlock&, const std::string& strHexBlk);
 bool DecodeHexBlockHeader(CBlockHeader&, const std::string& hex_header);
 
 [[nodiscard]] util::Result<int> SighashFromStr(const std::string& sighash);
 
-// core_write.cpp
-UniValue ValueFromAmount(const CAmount amount);
+UniValue ValueFromAmount(CAmount amount);
 std::string FormatScript(const CScript& script);
 std::string EncodeHexTx(const CTransaction& tx);
 std::string SighashToStr(unsigned char sighash_type);

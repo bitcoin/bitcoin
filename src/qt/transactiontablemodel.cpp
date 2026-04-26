@@ -477,9 +477,8 @@ QVariant TransactionTableModel::txStatusDecoration(const TransactionRecord *wtx)
         }
     case TransactionStatus::NotAccepted:
         return QIcon(":/icons/transaction_0");
-    default:
-        return COLOR_BLACK;
-    }
+    } // no default case, so the compiler can warn about missing cases
+    assert(false);
 }
 
 QString TransactionTableModel::formatTooltip(const TransactionRecord *rec) const
@@ -712,7 +711,9 @@ void TransactionTablePriv::DispatchNotifications()
 void TransactionTableModel::subscribeToCoreSignals()
 {
     // Connect signals to wallet
-    m_handler_transaction_changed = walletModel->wallet().handleTransactionChanged(std::bind(&TransactionTablePriv::NotifyTransactionChanged, priv, std::placeholders::_1, std::placeholders::_2));
+    m_handler_transaction_changed = walletModel->wallet().handleTransactionChanged([this](const Txid& hash, ChangeType status) {
+        priv->NotifyTransactionChanged(hash, status);
+    });
     m_handler_show_progress = walletModel->wallet().handleShowProgress([this](const std::string&, int progress) {
         priv->m_loading = progress < 100;
         priv->DispatchNotifications();

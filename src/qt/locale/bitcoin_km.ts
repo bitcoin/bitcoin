@@ -153,7 +153,7 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     </message>
     <message>
         <source>Unlock wallet</source>
-        <translation type="unfinished">ដោះសោរកាបូបចល័ត</translation>
+        <translation type="unfinished">ដោះសោកាបូបចល័ត</translation>
     </message>
     <message>
         <source>Change passphrase</source>
@@ -225,7 +225,7 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     </message>
     <message>
         <source>Wallet unlock failed</source>
-        <translation type="unfinished">បរាជ័យដោះសោរកាបូបចល័ត</translation>
+        <translation type="unfinished">បានបរាជ័យដោះសោកាបូបចល័ត</translation>
     </message>
     <message>
         <source>The passphrase entered for the wallet decryption was incorrect.</source>
@@ -309,10 +309,6 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     <message>
         <source>Amount</source>
         <translation type="unfinished">ចំនួន</translation>
-    </message>
-    <message>
-        <source>Enter a Bitcoin address (e.g. %1)</source>
-        <translation type="unfinished">បញ្ចូលអាសយដ្ឋាន Bitcoin (ឧទាហរណ៏ %1)</translation>
     </message>
     <message>
         <source>Unroutable</source>
@@ -431,7 +427,7 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     </message>
     <message>
         <source>&amp;About %1</source>
-        <translation type="unfinished">អំពី(&amp;A) %1</translation>
+        <translation type="unfinished">អំពី %1</translation>
     </message>
     <message>
         <source>Show information about %1</source>
@@ -443,7 +439,7 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     </message>
     <message>
         <source>Show information about Qt</source>
-        <translation type="unfinished">បង្ហាញព័ត៍មានអំពី Qt</translation>
+        <translation type="unfinished">បង្ហាញព័ត៌មានអំពី Qt</translation>
     </message>
     <message>
         <source>Modify configuration options for %1</source>
@@ -455,7 +451,7 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     </message>
     <message>
         <source>&amp;Minimize</source>
-        <translation type="unfinished">បង្រួមអប្បបរមា(&amp;M)</translation>
+        <translation type="unfinished">បង្រួមអប្បបរមា</translation>
     </message>
     <message>
         <source>Wallet:</source>
@@ -484,19 +480,19 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     </message>
     <message>
         <source>&amp;Send</source>
-        <translation type="unfinished">ផ្ញើ(&amp;S)</translation>
+        <translation type="unfinished">ផ្ងើ</translation>
     </message>
     <message>
         <source>&amp;Receive</source>
-        <translation type="unfinished">&amp;ទទួល</translation>
+        <translation type="unfinished">ទទួល</translation>
     </message>
     <message>
         <source>&amp;Options…</source>
-        <translation type="unfinished">&amp;ជម្រើស…</translation>
+        <translation type="unfinished">ជម្រើស…</translation>
     </message>
     <message>
         <source>&amp;Encrypt Wallet…</source>
-        <translation type="unfinished">&amp;អ៊ិនគ្រីបកាបូប...</translation>
+        <translation type="unfinished">អ៊ិនគ្រីបកាបូបចល័ត…</translation>
     </message>
     <message>
         <source>Encrypt the private keys that belong to your wallet</source>
@@ -504,15 +500,15 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     </message>
     <message>
         <source>&amp;Backup Wallet…</source>
-        <translation type="unfinished">&amp;ការបម្រុងទុកកាបូប...</translation>
+        <translation type="unfinished">ការបម្រុងទុកកាបូប...</translation>
     </message>
     <message>
         <source>&amp;Change Passphrase…</source>
-        <translation type="unfinished">&amp;ការផ្លាស់ប្តូរឃ្លាសម្ងាត់</translation>
+        <translation type="unfinished">ការផ្លាស់ប្តូរឃ្លាសម្ងាត់</translation>
     </message>
     <message>
         <source>Sign &amp;message…</source>
-        <translation type="unfinished">ចុះហត្ថលេខា&amp;សារ…</translation>
+        <translation type="unfinished">ចុះហត្ថលេខាសារ…</translation>
     </message>
     <message>
         <source>Sign messages with your Bitcoin addresses to prove you own them</source>
@@ -520,7 +516,7 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     </message>
     <message>
         <source>&amp;Verify message…</source>
-        <translation type="unfinished">&amp;ផ្ទៀងផ្ទាត់សារ...</translation>
+        <translation type="unfinished">ផ្ទៀងផ្ទាត់សារ…</translation>
     </message>
     <message>
         <source>Verify messages to ensure they were signed with specified Bitcoin addresses</source>
@@ -528,7 +524,7 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     </message>
     <message>
         <source>&amp;Load PSBT from file…</source>
-        <translation type="unfinished">&amp;ផ្ទុក PSBT ពីឯកសារ...</translation>
+        <translation type="unfinished">ផ្ទុក PSBT ពីឯកសារ…</translation>
     </message>
     <message>
         <source>Open &amp;URI…</source>
@@ -536,11 +532,11 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     </message>
     <message>
         <source>Close Wallet…</source>
-        <translation type="unfinished">បិទកាបូប…</translation>
+        <translation type="unfinished">បិទកាបូបចល័ត…</translation>
     </message>
     <message>
         <source>Create Wallet…</source>
-        <translation type="unfinished">បង្កើតកាបូប...</translation>
+        <translation type="unfinished">បង្កើតកាបូប…</translation>
     </message>
     <message>
         <source>Close All Wallets…</source>
@@ -556,7 +552,7 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     </message>
     <message>
         <source>&amp;Help</source>
-        <translation type="unfinished">ជំនួយ(&amp;H)</translation>
+        <translation type="unfinished">ជំនួយ</translation>
     </message>
     <message>
         <source>Tabs toolbar</source>
@@ -643,7 +639,7 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     </message>
     <message>
         <source>&amp;Receiving addresses</source>
-        <translation type="unfinished">&amp;អាសយដ្ឋានទទួល</translation>
+        <translation type="unfinished">អាសយដ្ឋានទទួល</translation>
     </message>
     <message>
         <source>Open a bitcoin: URI</source>
@@ -664,7 +660,7 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     <message>
         <source>Restore Wallet…</source>
         <extracomment>Name of the menu item that restores wallet from a backup file.</extracomment>
-        <translation type="unfinished">ស្តារកាបូប…</translation>
+        <translation type="unfinished">ស្តារកាបូបចល័តឡើងវិញ…</translation>
     </message>
     <message>
         <source>Restore a wallet from a backup file</source>
@@ -717,7 +713,7 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     </message>
     <message>
         <source>&amp;Window</source>
-        <translation type="unfinished">វិនដូ(&amp;W)</translation>
+        <translation type="unfinished">&amp;វិនដូ</translation>
     </message>
     <message>
         <source>Main Window</source>
@@ -725,7 +721,7 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     </message>
     <message>
         <source>%1 client</source>
-        <translation type="unfinished">%1 អតិថិជន</translation>
+        <translation type="unfinished">អតិថូបករណ៍ %1</translation>
     </message>
     <message>
         <source>&amp;Hide</source>
@@ -733,7 +729,7 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     </message>
     <message>
         <source>S&amp;how</source>
-        <translation type="unfinished">របៀប(&amp;S)</translation>
+        <translation type="unfinished">បង្ហាញ</translation>
     </message>
     <message numerus="yes">
         <source>%n active connection(s) to Bitcoin network.</source>
@@ -870,6 +866,10 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <translation type="unfinished">តម្លៃសេវា៖</translation>
     </message>
     <message>
+        <source>After Fee:</source>
+        <translation type="unfinished">បន្ទាប់ពីតម្លៃសេវា៖</translation>
+    </message>
+    <message>
         <source>(un)select all</source>
         <translation type="unfinished">(កុំ)ជ្រើសរើសទាំងអស់</translation>
     </message>
@@ -887,7 +887,7 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     </message>
     <message>
         <source>Date</source>
-        <translation type="unfinished">ថ្ងៃ</translation>
+        <translation type="unfinished">កាលបរិច្ឆេទ</translation>
     </message>
     <message>
         <source>Confirmations</source>
@@ -899,7 +899,7 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     </message>
     <message>
         <source>&amp;Copy address</source>
-        <translation type="unfinished">&amp;ចម្លងអាសយដ្ឋាន</translation>
+        <translation type="unfinished">ចម្លងអាសយដ្ឋាន(&amp;C)</translation>
     </message>
     <message>
         <source>Copy &amp;label</source>
@@ -907,7 +907,7 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     </message>
     <message>
         <source>Copy &amp;amount</source>
-        <translation type="unfinished">ចម្លង &amp; ចំនួន</translation>
+        <translation type="unfinished">ចម្លង &amp; ចំនួនទឹកប្រាក់</translation>
     </message>
     <message>
         <source>Copy transaction &amp;ID and output index</source>
@@ -920,6 +920,14 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     <message>
         <source>&amp;Unlock unspent</source>
         <translation type="unfinished">&amp;ដោះសោដោយមិនបានចំណាយ</translation>
+    </message>
+    <message>
+        <source>Copy quantity</source>
+        <translation type="unfinished">ចម្លងបរិមាណ</translation>
+    </message>
+    <message>
+        <source>(%1 locked)</source>
+        <translation type="unfinished">(%1បានចាក់សោរ)</translation>
     </message>
     <message>
         <source>Can vary +/- %1 satoshi(s) per input.</source>
@@ -989,6 +997,16 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     <message>
         <source>Migrating Wallet &lt;b&gt;%1&lt;/b&gt;…</source>
         <translation type="unfinished">អន្ដោប្រវេសន៍កាបូប&lt;b&gt;%1&lt;/b&gt;…</translation>
+    </message>
+    <message>
+        <source>Restore Wallet</source>
+        <extracomment>Title of progress window which is displayed when wallets are being restored.</extracomment>
+        <translation type="unfinished">ស្តារកាបូប</translation>
+    </message>
+    <message>
+        <source>Restoring Wallet &lt;b&gt;%1&lt;/b&gt;…</source>
+        <extracomment>Descriptive text of the restore wallets progress window which indicates to the user that wallets are currently being restored.</extracomment>
+        <translation type="unfinished">កំពុងស្ដារកាបូប&lt;b&gt;%1&lt;/b&gt;…</translation>
     </message>
     <message>
         <source>Migration failed</source>
@@ -1152,6 +1170,18 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     <message>
         <source>Edit sending address</source>
         <translation type="unfinished">កែប្រែអាសយដ្ឋានបញ្ចូន</translation>
+    </message>
+    <message>
+        <source>The entered address "%1" is not a valid Bitcoin address.</source>
+        <translation type="unfinished">អាសយដ្ឋានដែលបានបញ្ចូល  ៉​%1 ៉​គឺមិនមែនជាអាសយដ្ឋានត្រឹមត្រូវរបស់ប៊ីតខញ។</translation>
+    </message>
+    <message>
+        <source>Address "%1" already exists as a receiving address with label "%2" and so cannot be added as a sending address.</source>
+        <translation type="unfinished">អាសយដ្ឋាន  ៉​%1​ ៉​ មាននៅក្នុងអាសយដ្ឋានសម្រាប់ទទួលដែលមានស្លាកសញ្ញា  ៉​%2​​  ៉ ដូច្នេះមិនអាចបញ្ចូលជាអាសយដ្ឋាសម្រាប់បញ្ចូន។</translation>
+    </message>
+    <message>
+        <source>The entered address "%1" is already in the address book with label "%2".</source>
+        <translation type="unfinished">អាសយដ្ឋានបានបញ្ចូល ​ ៉​%1  ៉ គឺមាននៅក្នុងសៀវភៅអាសយដ្ឋានដែលមានស្លាកសញ្ញា  ៉​​​%2  ៉​។</translation>
     </message>
     <message>
         <source>Could not unlock wallet.</source>
@@ -1607,16 +1637,19 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <translation type="unfinished">បិទ</translation>
     </message>
     <message>
-        <source>Failed to load transaction: %1</source>
-        <translation type="unfinished">មិនជោគជ័យក្នុងការបង្ហាញប្រត្តិបត្តិការៈ %1</translation>
-    </message>
-    <message>
-        <source>Failed to sign transaction: %1</source>
-        <translation type="unfinished">មិនជោគជ័យក្នុងការចុះហត្ថលេខាលើប្រត្តិបត្តិការៈ %1</translation>
-    </message>
-    <message>
         <source>Cannot sign inputs while wallet is locked.</source>
         <translation type="unfinished">មិនអាចចុះហត្ថលេខាលើធាតុចូលបានទេ ខណៈពេលដែលកាបូបត្រូវបានចាក់សោ។</translation>
+    </message>
+    <message>
+        <source>Could not sign any more inputs.</source>
+        <translation type="unfinished">មិនអាចចុះហត្ថលេខាលើធាតុចូលទៀតទេ</translation>
+    </message>
+    <message numerus="yes">
+        <source>Signed %n input(s), but more signatures are still required.</source>
+        <translation type="unfinished">
+            <numerusform />
+            <numerusform />
+        </translation>
     </message>
     <message>
         <source>Signed transaction successfully. Transaction is ready to broadcast.</source>
@@ -1625,10 +1658,6 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     <message>
         <source>Unknown error processing transaction.</source>
         <translation type="unfinished"> ពុំស្គាល់ប្រត្តិបត្តិការកំពុងដំណើរការជួបបញ្ហា។</translation>
-    </message>
-    <message>
-        <source>Transaction broadcast failed: %1</source>
-        <translation type="unfinished">ផ្សព្វផ្សាយប្រត្តិបត្តិការមិនជោគជ័យៈ %1</translation>
     </message>
     <message>
         <source>PSBT copied to clipboard.</source>
@@ -1671,9 +1700,12 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <source>or</source>
         <translation type="unfinished">ឬ</translation>
     </message>
-    <message>
-        <source>Transaction has %1 unsigned inputs.</source>
-        <translation type="unfinished">ប្រត្តិបត្តិការ​មាននៅសល់ %1 នៅពុំទាន់បានហត្ថលេខាធាតុចូល។</translation>
+    <message numerus="yes">
+        <source>Transaction has %n unsigned input(s).</source>
+        <translation type="unfinished">
+            <numerusform />
+            <numerusform />
+        </translation>
     </message>
     <message>
         <source>Transaction is missing some information about inputs.</source>
@@ -1874,10 +1906,6 @@ If you are receiving this error you should request the merchant provide a BIP21 
     <message>
         <source>Transaction Relay</source>
         <translation type="unfinished">ការបញ្ជូនតប្រតិបត្តិការ</translation>
-    </message>
-    <message>
-        <source>Starting Block</source>
-        <translation type="unfinished">កំពុងចាប់ផ្តើមប៊្លុក</translation>
     </message>
     <message>
         <source>Last Transaction</source>
@@ -2110,7 +2138,7 @@ If you are receiving this error you should request the merchant provide a BIP21 
     </message>
     <message>
         <source>Copy &amp;amount</source>
-        <translation type="unfinished">ចម្លង &amp; ចំនួនទឹកប្រាក់</translation>
+        <translation type="unfinished">ចម្លង &amp; ចំនួន</translation>
     </message>
     <message>
         <source>Base58 (Legacy)</source>
@@ -2149,7 +2177,7 @@ If you are receiving this error you should request the merchant provide a BIP21 
     </message>
     <message>
         <source>Wallet:</source>
-        <translation type="unfinished">កាបូបចល័ត៖</translation>
+        <translation type="unfinished">កាបូប៖</translation>
     </message>
     <message>
         <source>Copy &amp;URI</source>
@@ -2184,7 +2212,7 @@ If you are receiving this error you should request the merchant provide a BIP21 
     <name>RecentRequestsTableModel</name>
     <message>
         <source>Date</source>
-        <translation type="unfinished">កាលបរិច្ឆេទ</translation>
+        <translation type="unfinished">ថ្ងៃ</translation>
     </message>
     <message>
         <source>Label</source>
@@ -2322,14 +2350,6 @@ Note:  Since the fee is calculated on a per-byte basis, a fee rate of "100 satos
         <translation type="unfinished">ចម្លងបរិមាណ</translation>
     </message>
     <message>
-        <source>Copy amount</source>
-        <translation type="unfinished">ចម្លងចំនួនទឹកប្រាក់</translation>
-    </message>
-    <message>
-        <source>Copy fee</source>
-        <translation type="unfinished">ចម្លងតម្លៃ</translation>
-    </message>
-    <message>
         <source>Sign on device</source>
         <extracomment>"device" usually means a hardware wallet.</extracomment>
         <translation type="unfinished">ចុះហត្ថលេខាលើឧបករណ៍</translation>
@@ -2440,10 +2460,6 @@ Note:  Since the fee is calculated on a per-byte basis, a fee rate of "100 satos
     <message>
         <source>The amount exceeds your balance.</source>
         <translation type="unfinished">ចំនួនលើសសមតុល្យរបស់អ្នក។</translation>
-    </message>
-    <message>
-        <source>The total exceeds your balance when the %1 transaction fee is included.</source>
-        <translation type="unfinished">ចំនួនសរុបលើសសមតុល្យរបស់អ្នកនៅពេលដែលកម្រៃប្រត្តិបត្តិការ%1ត្រូវបានបូកបញ្ចូល។</translation>
     </message>
     <message>
         <source>Duplicate address found: addresses should only be used once each.</source>
@@ -2913,7 +2929,7 @@ Note:  Since the fee is calculated on a per-byte basis, a fee rate of "100 satos
     </message>
     <message>
         <source>Confirmed</source>
-        <translation type="unfinished">បានបញ្ចាក់រួចរាល់</translation>
+        <translation type="unfinished">បានបញ្ជាក់</translation>
     </message>
     <message>
         <source>Date</source>
@@ -3140,10 +3156,6 @@ Go to File &gt; Open Wallet to load a wallet.
     <message>
         <source>This is the minimum transaction fee you pay on every transaction.</source>
         <translation type="unfinished">នេះជាកម្រៃប្រត្តិបត្តិការតិចបំផុត អ្នកបង់រាល់ពេលធ្វើប្រត្តិបត្តិការម្តងៗ។</translation>
-    </message>
-    <message>
-        <source>This is the transaction fee you will pay if you send a transaction.</source>
-        <translation type="unfinished">នេះជាកម្រៃប្រត្តិបត្តិការ អ្នកនឹងបង់ប្រសិនបើអ្នកធ្វើប្រត្តិបត្តិការម្តង។</translation>
     </message>
     <message>
         <source>Transaction amount too small</source>

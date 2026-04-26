@@ -383,6 +383,8 @@ EOF
         #     Running in an isolated container minimizes build-time differences
         #     between machines and improves reproducibility
         #
+        #   --writable-root    make the root filesystem writable
+        #
         #   --pure             unset existing environment variables
         #
         #     Same rationale as --container
@@ -441,6 +443,7 @@ EOF
         # shellcheck disable=SC2086,SC2031
         time-machine shell --manifest="${PWD}/contrib/guix/manifest.scm" \
                                  --container \
+                                 --writable-root \
                                  --pure \
                                  --no-cwd \
                                  --share="$PWD"=/bitcoin \

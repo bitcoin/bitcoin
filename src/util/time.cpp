@@ -5,23 +5,35 @@
 
 #include <util/time.h>
 
-#include <compat/compat.h>
 #include <tinyformat.h>
 #include <util/check.h>
 #include <util/strencodings.h>
 
+#include <array>
 #include <atomic>
 #include <chrono>
+#include <compare>
 #include <optional>
 #include <string>
 #include <string_view>
 #include <thread>
+
+#ifdef WIN32
+#include <winsock2.h>
+#else
+#include <sys/time.h>
+#endif
+
+static constexpr std::array<std::string_view, 7> weekdays{"Thu", "Fri", "Sat", "Sun", "Mon", "Tue", "Wed"}; // 1970-01-01 was a Thursday.
+static constexpr std::array<std::string_view, 12> months{"Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"};
 
 void UninterruptibleSleep(const std::chrono::microseconds& n) { std::this_thread::sleep_for(n); }
 
 static std::atomic<std::chrono::seconds> g_mock_time{}; //!< For testing
 std::atomic<bool> g_used_system_time{false};
 static std::atomic<MockableSteadyClock::mock_time_point::duration> g_mock_steady_time{}; //!< For testing
+
+static_assert(NodeClock::epoch.time_since_epoch().count() == 0);
 
 NodeClock::time_point NodeClock::now() noexcept
 {
@@ -115,6 +127,24 @@ std::optional<int64_t> ParseISO8601DateTime(std::string_view str)
     const auto time{std::chrono::hours{*hour} + std::chrono::minutes{*min} + std::chrono::seconds{*sec}};
     const auto tp{std::chrono::sys_days{ymd} + time};
     return int64_t{TicksSinceEpoch<std::chrono::seconds>(tp)};
+}
+
+std::string FormatRFC1123DateTime(int64_t time)
+{
+    if (time < -62167219200 || 253402300799 < time) {
+        // 4-digit year, so only support years 0 to 9999
+        return "";
+    }
+    const std::chrono::sys_seconds secs{std::chrono::seconds{time}};
+    const auto days{std::chrono::floor<std::chrono::days>(secs)};
+    const auto w{days.time_since_epoch().count() % 7}; // will be in the range [-6, 6]
+    std::string_view weekday{weekdays.at(w >= 0 ? w : w + 7)};
+    const std::chrono::year_month_day ymd{days};
+    std::string_view month{months.at(unsigned{ymd.month()} - 1)};
+    const std::chrono::hh_mm_ss hms{secs - days};
+    // examples: Mon, 27 Jul 2009 12:28:53 GMT
+    //           Fri, 31 May 2024 19:18:04 GMT
+    return strprintf("%03s, %02u %03s %04i %02i:%02i:%02i GMT", weekday, unsigned{ymd.day()}, month, signed{ymd.year()}, hms.hours().count(), hms.minutes().count(), hms.seconds().count());
 }
 
 struct timeval MillisToTimeval(int64_t nTimeout)

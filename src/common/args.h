@@ -11,6 +11,7 @@
 #include <util/chaintype.h>
 #include <util/fs.h>
 
+#include <concepts>
 #include <cstdint>
 #include <iosfwd>
 #include <list>
@@ -89,8 +90,11 @@ struct SectionInfo {
 std::string SettingToString(const common::SettingsValue&, const std::string&);
 std::optional<std::string> SettingToString(const common::SettingsValue&);
 
-int64_t SettingToInt(const common::SettingsValue&, int64_t);
-std::optional<int64_t> SettingToInt(const common::SettingsValue&);
+template <std::integral Int>
+Int SettingTo(const common::SettingsValue&, Int);
+
+template <std::integral Int>
+std::optional<Int> SettingTo(const common::SettingsValue&);
 
 bool SettingToBool(const common::SettingsValue&, bool);
 std::optional<bool> SettingToBool(const common::SettingsValue&);
@@ -123,7 +127,7 @@ public:
         COMMAND = 0x800,
     };
 
-protected:
+private:
     struct Arg
     {
         std::string m_help_param;
@@ -131,7 +135,7 @@ protected:
         unsigned int m_flags;
     };
 
-    mutable RecursiveMutex cs_args;
+    mutable Mutex cs_args;
     common::Settings m_settings GUARDED_BY(cs_args);
     std::vector<std::string> m_command GUARDED_BY(cs_args);
     std::string m_network GUARDED_BY(cs_args);
@@ -145,8 +149,6 @@ protected:
     mutable fs::path m_cached_datadir_path GUARDED_BY(cs_args);
     mutable fs::path m_cached_network_datadir_path GUARDED_BY(cs_args);
 
-    [[nodiscard]] bool ReadConfigStream(std::istream& stream, const std::string& filepath, std::string& error, bool ignore_invalid_keys = false);
-
     /**
      * Returns true if settings values from the default section should be used,
      * depending on the current network and whether the setting is
@@ -154,7 +156,11 @@ protected:
      */
     bool UseDefaultSection(const std::string& arg) const EXCLUSIVE_LOCKS_REQUIRED(cs_args);
 
- public:
+protected:
+    [[nodiscard]] bool ReadConfigStream(std::istream& stream, const std::string& filepath, std::string& error, bool ignore_invalid_keys = false) EXCLUSIVE_LOCKS_REQUIRED(!cs_args);
+    [[nodiscard]] bool ReadConfigString(const std::string& str_config) EXCLUSIVE_LOCKS_REQUIRED(!cs_args);
+
+public:
     /**
      * Get setting value.
      *
@@ -162,12 +168,12 @@ protected:
      * false if "-nosetting" argument was passed, and a string if a "-setting=value"
      * argument was passed.
      */
-    common::SettingsValue GetSetting(const std::string& arg) const;
+    common::SettingsValue GetSetting(const std::string& arg) const EXCLUSIVE_LOCKS_REQUIRED(!cs_args);
 
     /**
      * Get list of setting values.
      */
-    std::vector<common::SettingsValue> GetSettingsList(const std::string& arg) const;
+    std::vector<common::SettingsValue> GetSettingsList(const std::string& arg) const EXCLUSIVE_LOCKS_REQUIRED(!cs_args);
 
     ArgsManager();
     ~ArgsManager();
@@ -175,16 +181,16 @@ protected:
     /**
      * Select the network in use
      */
-    void SelectConfigNetwork(const std::string& network);
+    void SelectConfigNetwork(const std::string& network) EXCLUSIVE_LOCKS_REQUIRED(!cs_args);
 
-    [[nodiscard]] bool ParseParameters(int argc, const char* const argv[], std::string& error);
+    [[nodiscard]] bool ParseParameters(int argc, const char* const argv[], std::string& error) EXCLUSIVE_LOCKS_REQUIRED(!cs_args);
 
     /**
      * Return config file path (read-only)
      */
-    fs::path GetConfigFilePath() const;
-    void SetConfigFilePath(fs::path);
-    [[nodiscard]] bool ReadConfigFiles(std::string& error, bool ignore_invalid_keys = false);
+    fs::path GetConfigFilePath() const EXCLUSIVE_LOCKS_REQUIRED(!cs_args);
+    void SetConfigFilePath(fs::path) EXCLUSIVE_LOCKS_REQUIRED(!cs_args);
+    [[nodiscard]] bool ReadConfigFiles(std::string& error, bool ignore_invalid_keys = false) EXCLUSIVE_LOCKS_REQUIRED(!cs_args);
 
     /**
      * Log warnings for options in m_section_only_args when
@@ -192,12 +198,12 @@ protected:
      * on the command line or in a network-specific section in the
      * config file.
      */
-    std::set<std::string> GetUnsuitableSectionOnlyArgs() const;
+    std::set<std::string> GetUnsuitableSectionOnlyArgs() const EXCLUSIVE_LOCKS_REQUIRED(!cs_args);
 
     /**
      * Log warnings for unrecognized section names in the config file.
      */
-    std::list<SectionInfo> GetUnrecognizedSections() const;
+    std::list<SectionInfo> GetUnrecognizedSections() const EXCLUSIVE_LOCKS_REQUIRED(!cs_args);
 
     struct Command {
         /** The command (if one has been registered with AddCommand), or empty */
@@ -211,33 +217,33 @@ protected:
     /**
      * Get the command and command args (returns std::nullopt if no command provided)
      */
-    std::optional<const Command> GetCommand() const;
+    std::optional<const Command> GetCommand() const EXCLUSIVE_LOCKS_REQUIRED(!cs_args);
 
     /**
      * Get blocks directory path
      *
      * @return Blocks path which is network specific
      */
-    fs::path GetBlocksDirPath() const;
+    fs::path GetBlocksDirPath() const EXCLUSIVE_LOCKS_REQUIRED(!cs_args);
 
     /**
      * Get data directory path
      *
      * @return Absolute path on success, otherwise an empty path when a non-directory path would be returned
      */
-    fs::path GetDataDirBase() const { return GetDataDir(false); }
+    fs::path GetDataDirBase() const EXCLUSIVE_LOCKS_REQUIRED(!cs_args);
 
     /**
      * Get data directory path with appended network identifier
      *
      * @return Absolute path on success, otherwise an empty path when a non-directory path would be returned
      */
-    fs::path GetDataDirNet() const { return GetDataDir(true); }
+    fs::path GetDataDirNet() const EXCLUSIVE_LOCKS_REQUIRED(!cs_args);
 
     /**
      * Clear cached directory paths
      */
-    void ClearPathCache();
+    void ClearPathCache() EXCLUSIVE_LOCKS_REQUIRED(!cs_args);
 
     /**
      * Return a vector of strings of the given argument
@@ -245,7 +251,7 @@ protected:
      * @param strArg Argument to get (e.g. "-foo")
      * @return command-line arguments
      */
-    std::vector<std::string> GetArgs(const std::string& strArg) const;
+    std::vector<std::string> GetArgs(const std::string& strArg) const EXCLUSIVE_LOCKS_REQUIRED(!cs_args);
 
     /**
      * Return true if the given argument has been manually set
@@ -253,7 +259,7 @@ protected:
      * @param strArg Argument to get (e.g. "-foo")
      * @return true if the argument has been set
      */
-    bool IsArgSet(const std::string& strArg) const;
+    bool IsArgSet(const std::string& strArg) const EXCLUSIVE_LOCKS_REQUIRED(!cs_args);
 
     /**
      * Return true if the argument was originally passed as a negated option,
@@ -262,7 +268,7 @@ protected:
      * @param strArg Argument to get (e.g. "-foo")
      * @return true if the argument was passed negated
      */
-    bool IsArgNegated(const std::string& strArg) const;
+    bool IsArgNegated(const std::string& strArg) const EXCLUSIVE_LOCKS_REQUIRED(!cs_args);
 
     /**
      * Return string argument or default value
@@ -271,8 +277,8 @@ protected:
      * @param strDefault (e.g. "1")
      * @return command-line argument or default value
      */
-    std::string GetArg(const std::string& strArg, const std::string& strDefault) const;
-    std::optional<std::string> GetArg(const std::string& strArg) const;
+    std::string GetArg(const std::string& strArg, const std::string& strDefault) const EXCLUSIVE_LOCKS_REQUIRED(!cs_args);
+    std::optional<std::string> GetArg(const std::string& strArg) const EXCLUSIVE_LOCKS_REQUIRED(!cs_args);
 
     /**
      * Return path argument or default value
@@ -284,7 +290,7 @@ protected:
      * for examples or implementation for details). If argument is empty or not
      * set, default_value is returned unchanged.
      */
-    fs::path GetPathArg(std::string arg, const fs::path& default_value = {}) const;
+    fs::path GetPathArg(std::string arg, const fs::path& default_value = {}) const EXCLUSIVE_LOCKS_REQUIRED(!cs_args);
 
     /**
      * Return integer argument or default value
@@ -293,8 +299,14 @@ protected:
      * @param nDefault (e.g. 1)
      * @return command-line argument (0 if invalid number) or default value
      */
-    int64_t GetIntArg(const std::string& strArg, int64_t nDefault) const;
-    std::optional<int64_t> GetIntArg(const std::string& strArg) const;
+    template <std::integral Int>
+    Int GetArg(const std::string& strArg, Int nDefault) const EXCLUSIVE_LOCKS_REQUIRED(!cs_args);
+
+    template <std::integral Int>
+    std::optional<Int> GetArg(const std::string& strArg) const EXCLUSIVE_LOCKS_REQUIRED(!cs_args);
+
+    int64_t GetIntArg(const std::string& strArg, int64_t nDefault) const EXCLUSIVE_LOCKS_REQUIRED(!cs_args) { return GetArg<int64_t>(strArg, nDefault); }
+    std::optional<int64_t> GetIntArg(const std::string& strArg) const EXCLUSIVE_LOCKS_REQUIRED(!cs_args) { return GetArg<int64_t>(strArg); }
 
     /**
      * Return boolean argument or default value
@@ -303,8 +315,8 @@ protected:
      * @param fDefault (true or false)
      * @return command-line argument or default value
      */
-    bool GetBoolArg(const std::string& strArg, bool fDefault) const;
-    std::optional<bool> GetBoolArg(const std::string& strArg) const;
+    bool GetBoolArg(const std::string& strArg, bool fDefault) const EXCLUSIVE_LOCKS_REQUIRED(!cs_args);
+    std::optional<bool> GetBoolArg(const std::string& strArg) const EXCLUSIVE_LOCKS_REQUIRED(!cs_args);
 
     /**
      * Set an argument if it doesn't already have a value
@@ -313,7 +325,7 @@ protected:
      * @param strValue Value (e.g. "1")
      * @return true if argument gets set, false if it already had a value
      */
-    bool SoftSetArg(const std::string& strArg, const std::string& strValue);
+    bool SoftSetArg(const std::string& strArg, const std::string& strValue) EXCLUSIVE_LOCKS_REQUIRED(!cs_args);
 
     /**
      * Set a boolean argument if it doesn't already have a value
@@ -322,97 +334,97 @@ protected:
      * @param fValue Value (e.g. false)
      * @return true if argument gets set, false if it already had a value
      */
-    bool SoftSetBoolArg(const std::string& strArg, bool fValue);
+    bool SoftSetBoolArg(const std::string& strArg, bool fValue) EXCLUSIVE_LOCKS_REQUIRED(!cs_args);
 
     // Forces an arg setting. Called by SoftSetArg() if the arg hasn't already
     // been set. Also called directly in testing.
-    void ForceSetArg(const std::string& strArg, const std::string& strValue);
+    void ForceSetArg(const std::string& strArg, const std::string& strValue) EXCLUSIVE_LOCKS_REQUIRED(!cs_args);
 
     /**
      * Returns the appropriate chain type from the program arguments.
      * @return ChainType::MAIN by default; raises runtime error if an invalid
      * combination, or unknown chain is given.
      */
-    ChainType GetChainType() const;
+    ChainType GetChainType() const EXCLUSIVE_LOCKS_REQUIRED(!cs_args);
 
     /**
      * Returns the appropriate chain type string from the program arguments.
      * @return ChainType::MAIN string by default; raises runtime error if an
      * invalid combination is given.
      */
-    std::string GetChainTypeString() const;
+    std::string GetChainTypeString() const EXCLUSIVE_LOCKS_REQUIRED(!cs_args);
 
     /**
      * Add argument
      */
-    void AddArg(const std::string& name, const std::string& help, unsigned int flags, const OptionsCategory& cat);
+    void AddArg(const std::string& name, const std::string& help, unsigned int flags, const OptionsCategory& cat) EXCLUSIVE_LOCKS_REQUIRED(!cs_args);
 
     /**
      * Add subcommand
      */
-    void AddCommand(const std::string& cmd, const std::string& help);
+    void AddCommand(const std::string& cmd, const std::string& help) EXCLUSIVE_LOCKS_REQUIRED(!cs_args);
 
     /**
      * Add many hidden arguments
      */
-    void AddHiddenArgs(const std::vector<std::string>& args);
+    void AddHiddenArgs(const std::vector<std::string>& args) EXCLUSIVE_LOCKS_REQUIRED(!cs_args);
 
     /**
      * Clear available arguments
      */
-    void ClearArgs();
+    void ClearArgs() EXCLUSIVE_LOCKS_REQUIRED(!cs_args);
 
     /**
      * Check CLI command args
      *
      * @throws std::runtime_error when multiple CLI_COMMAND arguments are specified
      */
-    void CheckMultipleCLIArgs() const;
+    void CheckMultipleCLIArgs() const EXCLUSIVE_LOCKS_REQUIRED(!cs_args);
 
     /**
      * Get the help string
      */
-    std::string GetHelpMessage() const;
+    std::string GetHelpMessage() const EXCLUSIVE_LOCKS_REQUIRED(!cs_args);
 
     /**
      * Return Flags for known arg.
      * Return default flags for unknown arg.
      */
-    std::optional<unsigned int> GetArgFlags(const std::string& name) const;
+    std::optional<unsigned int> GetArgFlags(const std::string& name) const EXCLUSIVE_LOCKS_REQUIRED(!cs_args);
 
     /**
      * Set default flags to return for an unknown arg.
      */
-    void SetDefaultFlags(std::optional<unsigned int>);
+    void SetDefaultFlags(std::optional<unsigned int>) EXCLUSIVE_LOCKS_REQUIRED(!cs_args);
 
     /**
      * Get settings file path, or return false if read-write settings were
      * disabled with -nosettings.
      */
-    bool GetSettingsPath(fs::path* filepath = nullptr, bool temp = false, bool backup = false) const;
+    bool GetSettingsPath(fs::path* filepath = nullptr, bool temp = false, bool backup = false) const EXCLUSIVE_LOCKS_REQUIRED(!cs_args);
 
     /**
      * Read settings file. Push errors to vector, or log them if null.
      */
-    bool ReadSettingsFile(std::vector<std::string>* errors = nullptr);
+    bool ReadSettingsFile(std::vector<std::string>* errors = nullptr) EXCLUSIVE_LOCKS_REQUIRED(!cs_args);
 
     /**
      * Write settings file or backup settings file. Push errors to vector, or
      * log them if null.
      */
-    bool WriteSettingsFile(std::vector<std::string>* errors = nullptr, bool backup = false) const;
+    bool WriteSettingsFile(std::vector<std::string>* errors = nullptr, bool backup = false) const EXCLUSIVE_LOCKS_REQUIRED(!cs_args);
 
     /**
      * Get current setting from config file or read/write settings file,
      * ignoring nonpersistent command line or forced settings values.
      */
-    common::SettingsValue GetPersistentSetting(const std::string& name) const;
+    common::SettingsValue GetPersistentSetting(const std::string& name) const EXCLUSIVE_LOCKS_REQUIRED(!cs_args);
 
     /**
      * Access settings with lock held.
      */
     template <typename Fn>
-    void LockSettings(Fn&& fn)
+    void LockSettings(Fn&& fn) EXCLUSIVE_LOCKS_REQUIRED(!cs_args)
     {
         LOCK(cs_args);
         fn(m_settings);
@@ -422,16 +434,21 @@ protected:
      * Log the config file options and the command line arguments,
      * useful for troubleshooting.
      */
-    void LogArgs() const;
+    void LogArgs() const EXCLUSIVE_LOCKS_REQUIRED(!cs_args);
 
 private:
+    // Internal helpers, for use by callers that already hold `cs_args`.
+    common::SettingsValue GetSetting_(const std::string& arg) const EXCLUSIVE_LOCKS_REQUIRED(cs_args);
+    std::optional<unsigned int> GetArgFlags_(const std::string& name) const EXCLUSIVE_LOCKS_REQUIRED(cs_args);
+    fs::path GetPathArg_(std::string arg, const fs::path& default_value = {}) const EXCLUSIVE_LOCKS_REQUIRED(cs_args);
+
     /**
      * Get data directory path
      *
      * @param net_specific Append network identifier to the returned path
      * @return Absolute path on success, otherwise an empty path when a non-directory path would be returned
      */
-    fs::path GetDataDir(bool net_specific) const;
+    fs::path GetDataDir(bool net_specific) const EXCLUSIVE_LOCKS_REQUIRED(cs_args);
 
     /**
      * Return -regtest/-signet/-testnet/-testnet4/-chain= setting as a ChainType enum if a
@@ -439,13 +456,13 @@ private:
      * name was set. Raise an exception if an invalid combination of flags was
      * provided.
      */
-    std::variant<ChainType, std::string> GetChainArg() const;
+    std::variant<ChainType, std::string> GetChainArg() const EXCLUSIVE_LOCKS_REQUIRED(!cs_args);
 
     // Helper function for LogArgs().
     void logArgsPrefix(
         const std::string& prefix,
         const std::string& section,
-        const std::map<std::string, std::vector<common::SettingsValue>>& args) const;
+        const std::map<std::string, std::vector<common::SettingsValue>>& args) const EXCLUSIVE_LOCKS_REQUIRED(cs_args);
 };
 
 extern ArgsManager gArgs;

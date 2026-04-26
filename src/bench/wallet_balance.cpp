@@ -10,6 +10,7 @@
 #include <sync.h>
 #include <test/util/mining.h>
 #include <test/util/setup_common.h>
+#include <test/util/time.h>
 #include <uint256.h>
 #include <util/time.h>
 #include <validation.h>
@@ -32,7 +33,7 @@ static void WalletBalance(benchmark::Bench& bench, const bool set_dirty, const b
 
     // Set clock to genesis block, so the descriptors/keys creation time don't interfere with the blocks scanning process.
     // The reason is 'generatetoaddress', which creates a chain with deterministic timestamps in the past.
-    SetMockTime(test_setup->m_node.chainman->GetParams().GenesisBlock().nTime);
+    NodeClockContext clock_ctx{test_setup->m_node.chainman->GetParams().GenesisBlock().Time()};
     CWallet wallet{test_setup->m_node.chain.get(), "", CreateMockableWalletDatabase()};
     {
         LOCK(wallet.cs_wallet);
@@ -61,11 +62,9 @@ static void WalletBalance(benchmark::Bench& bench, const bool set_dirty, const b
 
 static void WalletBalanceDirty(benchmark::Bench& bench) { WalletBalance(bench, /*set_dirty=*/true, /*add_mine=*/true); }
 static void WalletBalanceClean(benchmark::Bench& bench) { WalletBalance(bench, /*set_dirty=*/false, /*add_mine=*/true); }
-static void WalletBalanceMine(benchmark::Bench& bench) { WalletBalance(bench, /*set_dirty=*/false, /*add_mine=*/true); }
 static void WalletBalanceWatch(benchmark::Bench& bench) { WalletBalance(bench, /*set_dirty=*/false, /*add_mine=*/false); }
 
-BENCHMARK(WalletBalanceDirty, benchmark::PriorityLevel::HIGH);
-BENCHMARK(WalletBalanceClean, benchmark::PriorityLevel::HIGH);
-BENCHMARK(WalletBalanceMine, benchmark::PriorityLevel::HIGH);
-BENCHMARK(WalletBalanceWatch, benchmark::PriorityLevel::HIGH);
+BENCHMARK(WalletBalanceDirty);
+BENCHMARK(WalletBalanceClean);
+BENCHMARK(WalletBalanceWatch);
 } // namespace wallet

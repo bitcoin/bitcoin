@@ -11,6 +11,7 @@
 #include <node/utxo_snapshot.h>
 #include <rpc/blockchain.h>
 #include <test/util/setup_common.h>
+#include <util/byte_units.h>
 #include <util/fs.h>
 #include <validation.h>
 
@@ -81,10 +82,9 @@ CreateAndActivateUTXOSnapshot(
             Chainstate& chain = node.chainman->ActiveChainstate();
             Assert(chain.LoadGenesisBlock());
             // These cache values will be corrected shortly in `MaybeRebalanceCaches`.
-            chain.InitCoinsDB(1 << 20, /*in_memory=*/true, /*should_wipe=*/false);
-            chain.InitCoinsCache(1 << 20);
+            chain.InitCoinsDB(1_MiB, /*in_memory=*/true, /*should_wipe=*/false);
+            chain.InitCoinsCache(1_MiB);
             chain.CoinsTip().SetBestBlock(gen_hash);
-            chain.setBlockIndexCandidates.insert(node.chainman->m_blockman.LookupBlockIndex(gen_hash));
             chain.LoadChainTip();
             node.chainman->MaybeRebalanceCaches();
 
@@ -106,6 +106,7 @@ CreateAndActivateUTXOSnapshot(
                 pindex->nSequenceId = 0;
                 pindex = pindex->pprev;
             }
+            chain.PopulateBlockIndexCandidates();
         }
         BlockValidationState state;
         if (!node.chainman->ActiveChainstate().ActivateBestChain(state)) {

@@ -210,7 +210,7 @@ bool ClientModel::isReleaseVersion() const
 
 QString ClientModel::formatClientStartupTime() const
 {
-    return QDateTime::fromSecsSinceEpoch(GetStartupTime()).toString();
+    return QDateTime::currentDateTime().addSecs(-TicksSeconds(GetUptime())).toString();
 }
 
 QString ClientModel::dataDir() const
@@ -287,10 +287,11 @@ void ClientModel::unsubscribeFromCoreSignals()
 
 bool ClientModel::getProxyInfo(std::string& ip_port) const
 {
-    Proxy ipv4, ipv6;
-    if (m_node.getProxy((Network) 1, ipv4) && m_node.getProxy((Network) 2, ipv6)) {
-      ip_port = ipv4.proxy.ToStringAddrPort();
-      return true;
+    const auto ipv4 = m_node.getProxy(NET_IPV4);
+    const auto ipv6 = m_node.getProxy(NET_IPV6);
+    if (ipv4 && ipv6) {
+        ip_port = ipv4->proxy.ToStringAddrPort();
+        return true;
     }
     return false;
 }

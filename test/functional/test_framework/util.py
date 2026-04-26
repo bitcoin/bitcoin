@@ -75,7 +75,10 @@ def summarise_dict_differences(thing1, thing2):
 def assert_equal(thing1, thing2, *args):
     if thing1 != thing2 and not args and isinstance(thing1, dict) and isinstance(thing2, dict):
         d1,d2 = summarise_dict_differences(thing1, thing2)
-        raise AssertionError("not(%s == %s)\n  in particular not(%s == %s)" % (thing1, thing2, d1, d2))
+        if d1 != thing1 or d2 != thing2:
+            raise AssertionError(f"not({thing1!s} == {thing2!s})\n  in particular not({d1!s} == {d2!s})")
+        else:
+            raise AssertionError(f"not({thing1!s} == {thing2!s})")
     if thing1 != thing2 or any(thing1 != arg for arg in args):
         raise AssertionError("not(%s)" % " == ".join(str(arg) for arg in (thing1, thing2) + args))
 
@@ -133,7 +136,7 @@ def assert_raises_process_error(returncode: int, output: str, fun: Callable, *ar
         if returncode != e.returncode:
             raise AssertionError("Unexpected returncode %i" % e.returncode)
         if output not in e.output:
-            raise AssertionError("Expected substring not found:" + e.output)
+            raise AssertionError(f"Expected substring not found in: {e.output!r}")
     else:
         raise AssertionError("No exception raised")
 
@@ -165,13 +168,13 @@ def try_rpc(code, message, fun, *args, **kwds):
     try:
         fun(*args, **kwds)
     except JSONRPCException as e:
-        # JSONRPCException was thrown as expected. Check the code and message values are correct.
-        if (code is not None) and (code != e.error["code"]):
-            raise AssertionError("Unexpected JSONRPC error code %i" % e.error["code"])
+        # JSONRPCException was thrown as expected. Check the message and code values are correct.
         if (message is not None) and (message not in e.error['message']):
             raise AssertionError(
                 "Expected substring not found in error message:\nsubstring: '{}'\nerror message: '{}'.".format(
                     message, e.error['message']))
+        if (code is not None) and (code != e.error["code"]):
+            raise AssertionError("Unexpected JSONRPC error code %i" % e.error["code"])
         return True
     except Exception as e:
         raise AssertionError("Unexpected exception raised: " + type(e).__name__)
@@ -248,9 +251,19 @@ class Binaries:
             binaries, which takes precedence over the paths above, if specified.
             This is used by tests calling binaries from previous releases.
     """
-    def __init__(self, paths, bin_dir):
+    def __init__(self, paths, bin_dir, *, use_valgrind=False):
         self.paths = paths
         self.bin_dir = bin_dir
+        suppressions_file = pathlib.Path(__file__).resolve().parents[3] / "test" / "sanitizer_suppressions" / "valgrind.supp"
+        self.valgrind_cmd = [
+            "valgrind",
+            f"--suppressions={suppressions_file}",
+            "--gen-suppressions=all",
+            "--trace-children=yes",  # Needed for 'bitcoin' wrapper
+            "--exit-on-first-error=yes",
+            "--error-exitcode=1",
+            "--quiet",
+        ] if use_valgrind else []
 
     def node_argv(self, **kwargs):
         "Return argv array that should be used to invoke bitcoind"
@@ -260,6 +273,10 @@ class Binaries:
         "Return argv array that should be used to invoke bitcoin-cli"
         # Add -nonamed because "bitcoin rpc" enables -named by default, but bitcoin-cli doesn't
         return self._argv("rpc", self.paths.bitcoincli) + ["-nonamed"]
+
+    def bench_argv(self):
+        "Return argv array that should be used to invoke bench_bitcoin"
+        return self._argv("bench", self.paths.bitcoin_bench)
 
     def tx_argv(self):
         "Return argv array that should be used to invoke bitcoin-tx"
@@ -278,20 +295,26 @@ class Binaries:
         return self._argv("chainstate", self.paths.bitcoinchainstate)
 
     def _argv(self, command, bin_path, need_ipc=False):
-        """Return argv array that should be used to invoke the command. It
-        either uses the bitcoin wrapper executable (if BITCOIN_CMD is set or
+        """Return argv array that should be used to invoke the command.
+
+        It either uses the bitcoin wrapper executable (if BITCOIN_CMD is set or
         need_ipc is True), or the direct binary path (bitcoind, etc). When
         bin_dir is set (by tests calling binaries from previous releases) it
-        always uses the direct path."""
+        always uses the direct path.
+
+        The returned args include valgrind, except when bin_dir is set
+        (previous releases). Also, valgrind will only apply to the bitcoin
+        wrapper executable directly, not to the commands that `bitcoin` calls.
+        """
         if self.bin_dir is not None:
             return [os.path.join(self.bin_dir, os.path.basename(bin_path))]
         elif self.paths.bitcoin_cmd is not None or need_ipc:
             # If the current test needs IPC functionality, use the bitcoin
             # wrapper binary and append -m so it calls multiprocess binaries.
             bitcoin_cmd = self.paths.bitcoin_cmd or [self.paths.bitcoin_bin]
-            return bitcoin_cmd + (["-m"] if need_ipc else []) + [command]
+            return self.valgrind_cmd + bitcoin_cmd + (["-m"] if need_ipc else []) + [command]
         else:
-            return [bin_path]
+            return self.valgrind_cmd + [bin_path]
 
 
 def get_binary_paths(config):
@@ -301,6 +324,7 @@ def get_binary_paths(config):
     binaries = {
         "bitcoin": "BITCOIN_BIN",
         "bitcoind": "BITCOIND",
+        "bench_bitcoin": "BITCOIN_BENCH",
         "bitcoin-cli": "BITCOINCLI",
         "bitcoin-util": "BITCOINUTIL",
         "bitcoin-tx": "BITCOINTX",
@@ -698,6 +722,16 @@ def find_vout_for_address(node, txid, addr):
         if addr == tx["vout"][i]["scriptPubKey"]["address"]:
             return i
     raise RuntimeError("Vout not found for address: txid=%s, addr=%s" % (txid, addr))
+
+
+def dumb_sync_blocks(*, src, dst, height=None):
+    """Sync blocks between `src` and `dst` nodes via RPC submitblock up to height."""
+    height = height or src.getblockcount()
+    for i in range(dst.getblockcount() + 1, height + 1):
+        block_hash = src.getblockhash(i)
+        block = src.getblock(blockhash=block_hash, verbosity=0)
+        dst.submitblock(block)
+    assert_equal(dst.getblockcount(), height)
 
 
 def sync_txindex(test_framework, node):

@@ -4,6 +4,7 @@
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test BIP68 implementation."""
 
+import random
 import time
 
 from test_framework.blocktools import (
@@ -24,6 +25,10 @@ from test_framework.messages import (
 from test_framework.script import (
     CScript,
     OP_TRUE,
+    SEQUENCE_LOCKTIME_DISABLE_FLAG,
+    SEQUENCE_LOCKTIME_TYPE_FLAG,
+    SEQUENCE_LOCKTIME_GRANULARITY,
+    SEQUENCE_LOCKTIME_MASK,
 )
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import (
@@ -35,11 +40,6 @@ from test_framework.util import (
 from test_framework.wallet import MiniWallet
 
 SCRIPT_W0_SH_OP_TRUE = script_to_p2wsh_script(CScript([OP_TRUE]))
-
-SEQUENCE_LOCKTIME_DISABLE_FLAG = (1<<31)
-SEQUENCE_LOCKTIME_TYPE_FLAG = (1<<22) # this means use time (0 means height)
-SEQUENCE_LOCKTIME_GRANULARITY = 9 # this is a bit-shift
-SEQUENCE_LOCKTIME_MASK = 0x0000ffff
 
 # RPC error for non-BIP68 final transactions
 NOT_FINAL_ERROR = "non-BIP68-final"
@@ -131,7 +131,6 @@ class BIP68Test(BitcoinTestFramework):
         # transactions.
         max_outputs = 50
         while len(self.wallet.get_utxos(include_immature_coinbase=False, mark_as_spent=False)) < 200:
-            import random
             num_outputs = random.randint(1, max_outputs)
             self.wallet.send_self_transfer_multi(from_node=self.nodes[0], num_outputs=num_outputs)
             self.generate(self.wallet, 1)
@@ -198,7 +197,7 @@ class BIP68Test(BitcoinTestFramework):
                 value += utxos[j]["value"]*COIN
             # Overestimate the size of the tx - signatures should be less than 120 bytes, and leave 50 for the output
             tx_size = len(tx.serialize().hex())//2 + 120*num_inputs + 50
-            tx.vout.append(CTxOut(int(value - self.relayfee * tx_size * COIN / 1000), SCRIPT_W0_SH_OP_TRUE))
+            tx.vout.append(CTxOut(int(value - self.relayfee * tx_size * COIN / 1000), self.wallet.get_output_script()))
             self.wallet.sign_tx(tx=tx)
 
             if (using_sequence_locks and not should_pass):

@@ -29,7 +29,7 @@ static void AddTx(const CTransactionRef& tx, CTxMemPool& pool, FastRandomContext
     bool spendsCoinbase = false;
     unsigned int sigOpCost = 4;
     LockPoints lp;
-    TryAddToMempool(pool, CTxMemPoolEntry(TxGraph::Ref(), tx, det_rand.randrange(10000)+1000, nTime, nHeight, sequence, spendsCoinbase, sigOpCost, lp));
+    TryAddToMempool(pool, CTxMemPoolEntry(tx, det_rand.randrange(10000)+1000, nTime, nHeight, sequence, spendsCoinbase, sigOpCost, lp));
 }
 
 struct Available {
@@ -106,7 +106,7 @@ static void MemPoolAddTransactions(benchmark::Bench& bench)
     std::vector<CTransactionRef> transactions;
     // Create 1000 clusters of 100 transactions each
     for (int i=0; i<100; i++) {
-        auto new_txs = CreateCoinCluster(det_rand, childTxs, /*min_ancestors*/ 1);
+        auto new_txs = CreateCoinCluster(det_rand, childTxs, /*min_ancestors=*/ 1);
         transactions.insert(transactions.end(), new_txs.begin(), new_txs.end());
     }
 
@@ -140,7 +140,7 @@ static void ComplexMemPool(benchmark::Bench& bench)
 
         // Add all transactions to the mempool.
         // Also store the first 10 transactions from each cluster as the
-        // transactions we'll "mine" in the the benchmark.
+        // transactions we'll "mine" in the benchmark.
         int tx_count = 0;
         for (auto& tx : transactions) {
             if (tx_count < 10) {
@@ -156,7 +156,7 @@ static void ComplexMemPool(benchmark::Bench& bench)
     // in the same state at the end of the function, so we benchmark both
     // mining a block and reorging the block's contents back into the mempool.
     bench.run([&]() NO_THREAD_SAFETY_ANALYSIS {
-        pool.removeForBlock(tx_remove_for_block, /*nBlockHeight*/100);
+        pool.removeForBlock(tx_remove_for_block, /*nBlockHeight=*/100);
         for (auto& tx: tx_remove_for_block) {
             AddTx(tx, pool, det_rand);
         }
@@ -208,7 +208,7 @@ static void MempoolCheck(benchmark::Bench& bench)
     });
 }
 
-BENCHMARK(MemPoolAncestorsDescendants, benchmark::PriorityLevel::HIGH);
-BENCHMARK(MemPoolAddTransactions, benchmark::PriorityLevel::HIGH);
-BENCHMARK(ComplexMemPool, benchmark::PriorityLevel::HIGH);
-BENCHMARK(MempoolCheck, benchmark::PriorityLevel::HIGH);
+BENCHMARK(MemPoolAncestorsDescendants);
+BENCHMARK(MemPoolAddTransactions);
+BENCHMARK(ComplexMemPool);
+BENCHMARK(MempoolCheck);

@@ -10,11 +10,9 @@
 #include <util/macros.h>
 
 #include <chrono>
-#include <cstdint>
 #include <functional>
 #include <map>
 #include <string>
-#include <utility>
 #include <vector>
 
 /*
@@ -40,17 +38,7 @@ namespace benchmark {
 
 using ankerl::nanobench::Bench;
 
-typedef std::function<void(Bench&)> BenchFunction;
-
-enum PriorityLevel : uint8_t
-{
-    LOW = 1 << 0,
-    HIGH = 1 << 2,
-};
-
-// List priority labels, comma-separated and sorted by increasing priority
-std::string ListPriorities();
-uint8_t StringToPriority(const std::string& str);
+using BenchFunction = std::function<void(Bench&)>;
 
 struct Args {
     bool is_list_only;
@@ -60,25 +48,24 @@ struct Args {
     fs::path output_csv;
     fs::path output_json;
     std::string regex_filter;
-    uint8_t priority;
     std::vector<std::string> setup_args;
 };
 
 class BenchRunner
 {
-    // maps from "name" -> (function, priority_level)
-    typedef std::map<std::string, std::pair<BenchFunction, PriorityLevel>> BenchmarkMap;
+    // maps from "name" -> function
+    using BenchmarkMap = std::map<std::string, BenchFunction>;
     static BenchmarkMap& benchmarks();
 
 public:
-    BenchRunner(std::string name, BenchFunction func, PriorityLevel level);
+    BenchRunner(std::string name, BenchFunction func);
 
     static void RunAll(const Args& args);
 };
 } // namespace benchmark
 
-// BENCHMARK(foo) expands to:  benchmark::BenchRunner bench_11foo("foo", foo, priority_level);
-#define BENCHMARK(n, priority_level) \
-    benchmark::BenchRunner PASTE2(bench_, PASTE2(__LINE__, n))(STRINGIZE(n), n, priority_level);
+// BENCHMARK(foo); expands to:  benchmark::BenchRunner bench_runner_foo{"foo", foo};
+#define BENCHMARK(n) \
+    benchmark::BenchRunner PASTE2(bench_runner_, n) { STRINGIZE(n), n }
 
 #endif // BITCOIN_BENCH_BENCH_H

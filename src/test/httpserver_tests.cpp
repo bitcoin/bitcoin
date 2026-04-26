@@ -3,6 +3,7 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <httpserver.h>
+#include <test/util/common.h>
 #include <test/util/setup_common.h>
 
 #include <boost/test/unit_test.hpp>

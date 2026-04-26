@@ -13,14 +13,15 @@
 #include <node/connection_types.h>
 #include <node/eviction.h>
 #include <protocol.h>
+#include <sync.h>
 #include <test/fuzz/FuzzedDataProvider.h>
 #include <test/fuzz/util.h>
 #include <test/util/net.h>
-#include <threadsafety.h>
 #include <util/asmap.h>
 #include <util/sock.h>
 
 #include <chrono>
+#include <cstddef>
 #include <cstdint>
 #include <limits>
 #include <memory>
@@ -150,9 +151,9 @@ public:
 
     virtual bool HasAllDesirableServiceFlags(ServiceFlags) const override { return m_fdp.ConsumeBool(); }
 
-    virtual bool ProcessMessages(CNode*, std::atomic<bool>&) override { return m_fdp.ConsumeBool(); }
+    virtual bool ProcessMessages(CNode&, std::atomic<bool>&) override { return m_fdp.ConsumeBool(); }
 
-    virtual bool SendMessages(CNode*) override { return m_fdp.ConsumeBool(); }
+    virtual bool SendMessages(CNode&) override { return m_fdp.ConsumeBool(); }
 
 private:
     FuzzedDataProvider& m_fdp;
@@ -234,9 +235,11 @@ public:
 
 [[nodiscard]] inline NetGroupManager ConsumeNetGroupManager(FuzzedDataProvider& fuzzed_data_provider) noexcept
 {
-    std::vector<bool> asmap = ConsumeRandomLengthBitVector(fuzzed_data_provider);
-    if (!SanityCheckASMap(asmap, 128)) asmap.clear();
-    return NetGroupManager(asmap);
+    std::vector<std::byte> asmap{ConsumeRandomLengthByteVector<std::byte>(fuzzed_data_provider)};
+    if (!CheckStandardAsmap(asmap)) {
+        return NetGroupManager::NoAsmap();
+    }
+    return NetGroupManager::WithLoadedAsmap(std::move(asmap));
 }
 
 inline CSubNet ConsumeSubNet(FuzzedDataProvider& fuzzed_data_provider) noexcept

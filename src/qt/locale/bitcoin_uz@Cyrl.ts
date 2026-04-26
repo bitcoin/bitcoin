@@ -345,13 +345,11 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <source>%n second(s)</source>
         <translation type="unfinished">
             <numerusform />
-            <numerusform />
         </translation>
     </message>
     <message numerus="yes">
         <source>%n minute(s)</source>
         <translation type="unfinished">
-            <numerusform />
             <numerusform />
         </translation>
     </message>
@@ -359,20 +357,17 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <source>%n hour(s)</source>
         <translation type="unfinished">
             <numerusform />
-            <numerusform />
         </translation>
     </message>
     <message numerus="yes">
         <source>%n day(s)</source>
         <translation type="unfinished">
             <numerusform />
-            <numerusform />
         </translation>
     </message>
     <message numerus="yes">
         <source>%n week(s)</source>
         <translation type="unfinished">
-            <numerusform />
             <numerusform />
         </translation>
     </message>
@@ -383,7 +378,6 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     <message numerus="yes">
         <source>%n year(s)</source>
         <translation type="unfinished">
-            <numerusform />
             <numerusform />
         </translation>
     </message>
@@ -603,7 +597,6 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <source>Processed %n block(s) of transaction history.</source>
         <translation type="unfinished">
             <numerusform>Tranzaksiya tarixining %n blok(lar)i qayta ishlandi.</numerusform>
-            <numerusform />
         </translation>
     </message>
     <message>
@@ -773,7 +766,6 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <extracomment>A substring of the tooltip.</extracomment>
         <translation type="unfinished">
             <numerusform>Bitkoin tarmog'iga %n aktiv ulanishlar.</numerusform>
-            <numerusform />
         </translation>
     </message>
     <message>
@@ -1068,6 +1060,10 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <translation type="unfinished">Hamyonni ko'chirish</translation>
     </message>
     <message>
+        <source>Are you sure you wish to migrate the wallet &lt;i&gt;%1&lt;/i&gt;?</source>
+        <translation type="unfinished">Hamyonni ko'chirmoqchi ekanligingizga ishonchingiz komilmi?&lt;i&gt;%1&lt;/i&gt;</translation>
+    </message>
+    <message>
         <source>Migrating the wallet will convert this wallet to one or more descriptor wallets. A new wallet backup will need to be made.
 If this wallet contains any watchonly scripts, a new wallet will be created which contains those watchonly scripts.
 If this wallet contains any solvable but not watched scripts, a different and new wallet will be created which contains those scripts.
@@ -1098,6 +1094,16 @@ Migratsiya jarayoni ko'chirishdan oldin hamyonning zaxira nusxasini yaratadi. Us
     <message>
         <source>Solvable but not watched scripts have been migrated to a new wallet named '%1'.</source>
         <translation type="unfinished">Yechish mumkin bo'lgan, lekin ko'rilmagan skriptlar nomli yangi hamyonga o'tkazildi%1</translation>
+    </message>
+    <message>
+        <source>Restore Wallet</source>
+        <extracomment>Title of progress window which is displayed when wallets are being restored.</extracomment>
+        <translation type="unfinished">Hamyonni tiklash</translation>
+    </message>
+    <message>
+        <source>Restoring Wallet &lt;b&gt;%1&lt;/b&gt;…</source>
+        <extracomment>Descriptive text of the restore wallets progress window which indicates to the user that wallets are currently being restored.</extracomment>
+        <translation type="unfinished">Wallet tiklanmoqda&lt;b&gt;%1&lt;/b&gt;</translation>
     </message>
     <message>
         <source>Migration failed</source>
@@ -1221,10 +1227,6 @@ Migratsiya jarayoni ko'chirishdan oldin hamyonning zaxira nusxasini yaratadi. Us
     <message>
         <source>Disable Private Keys</source>
         <translation type="unfinished">Maxfiy kalitlarni faolsizlantirish</translation>
-    </message>
-    <message>
-        <source>Make a blank wallet. Blank wallets do not initially have private keys or scripts. Private keys and addresses can be imported, or an HD seed can be set, at a later time.</source>
-        <translation type="unfinished">Bo'sh hamyon yaratish. Bo'sh hamyonlarga keyinchalik maxfiy kalitlar yoki manzillar import qilinishi mumkin, yana HD seedlar ham o'rnatilishi mumkin.</translation>
     </message>
     <message>
         <source>Make Blank Wallet</source>
@@ -1402,21 +1404,18 @@ Migratsiya jarayoni ko'chirishdan oldin hamyonning zaxira nusxasini yaratadi. Us
         <source>%n GB of space available</source>
         <translation type="unfinished">
             <numerusform>%nGb bo'sh joy mavjud</numerusform>
-            <numerusform />
         </translation>
     </message>
     <message numerus="yes">
         <source>(of %n GB needed)</source>
         <translation type="unfinished">
             <numerusform>(%nGb kerak)</numerusform>
-            <numerusform />
         </translation>
     </message>
     <message numerus="yes">
         <source>(%n GB needed for full chain)</source>
         <translation type="unfinished">
             <numerusform>(To'liq zanjir uchun%n GB kerak)</numerusform>
-            <numerusform />
         </translation>
     </message>
     <message>
@@ -1436,7 +1435,6 @@ Migratsiya jarayoni ko'chirishdan oldin hamyonning zaxira nusxasini yaratadi. Us
         <extracomment>Explanatory text on the capability of the current prune target.</extracomment>
         <translation type="unfinished">
             <numerusform>(%n kun oldingi zaxira nusxalarini tiklash uchun etarli)</numerusform>
-            <numerusform />
         </translation>
     </message>
     <message>
@@ -1936,6 +1934,12 @@ Migratsiya jarayoni ko'chirishdan oldin hamyonning zaxira nusxasini yaratadi. Us
         <source>Cannot sign inputs while wallet is locked.</source>
         <translation type="unfinished">Hamyon maʼlumotlarga imzo qoʻyib boʻlmaydi.</translation>
     </message>
+    <message numerus="yes">
+        <source>Signed %n input(s), but more signatures are still required.</source>
+        <translation type="unfinished">
+            <numerusform />
+        </translation>
+    </message>
     <message>
         <source>own address</source>
         <translation type="unfinished">ўз манзили</translation>
@@ -1943,6 +1947,12 @@ Migratsiya jarayoni ko'chirishdan oldin hamyonning zaxira nusxasini yaratadi. Us
     <message>
         <source>or</source>
         <translation type="unfinished">ёки</translation>
+    </message>
+    <message numerus="yes">
+        <source>Transaction has %n unsigned input(s).</source>
+        <translation type="unfinished">
+            <numerusform />
+        </translation>
     </message>
     </context>
 <context>
@@ -2404,7 +2414,6 @@ Migratsiya jarayoni ko'chirishdan oldin hamyonning zaxira nusxasini yaratadi. Us
         <source>Estimated to begin confirmation within %n block(s).</source>
         <translation type="unfinished">
             <numerusform />
-            <numerusform />
         </translation>
     </message>
     <message>
@@ -2521,7 +2530,6 @@ Migratsiya jarayoni ko'chirishdan oldin hamyonning zaxira nusxasini yaratadi. Us
     <message numerus="yes">
         <source>matures in %n more block(s)</source>
         <translation type="unfinished">
-            <numerusform />
             <numerusform />
         </translation>
     </message>

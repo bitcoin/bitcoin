@@ -32,12 +32,14 @@ function(add_boost_if_needed)
   find_package(Boost 1.74.0 REQUIRED CONFIG)
   mark_as_advanced(Boost_INCLUDE_DIR boost_headers_DIR)
   # Workaround for a bug in NetBSD pkgsrc.
-  # See: https://github.com/NetBSD/pkgsrc/issues/167.
+  # See https://gnats.netbsd.org/59856.
   if(CMAKE_SYSTEM_NAME STREQUAL "NetBSD")
     get_filename_component(_boost_include_dir "${boost_headers_DIR}/../../../include/" ABSOLUTE)
-    set_target_properties(Boost::headers PROPERTIES
-      INTERFACE_INCLUDE_DIRECTORIES ${_boost_include_dir}
-    )
+    if(_boost_include_dir MATCHES "^/usr/pkg/")
+      set_target_properties(Boost::headers PROPERTIES
+        INTERFACE_INCLUDE_DIRECTORIES ${_boost_include_dir}
+      )
+    endif()
     unset(_boost_include_dir)
   endif()
   set_target_properties(Boost::headers PROPERTIES IMPORTED_GLOBAL TRUE)
