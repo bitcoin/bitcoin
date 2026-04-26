@@ -622,7 +622,7 @@ static RPCHelpMan combinerawtransaction()
 
     { // Test Tx relation for mergeability. Strip scriptSigs and scriptWitnesses to facilitate txId comparison
         std::vector<CMutableTransaction> tx_variants_copy(txVariants);
-        Txid txid{};
+        Txid first_txid{};
         for (unsigned int k{0}; k < tx_variants_copy.size(); ++k) {
             // Remove all scriptSigs and scriptWitnesses from inputs
             for (CTxIn& input : tx_variants_copy[k].vin) {
@@ -630,8 +630,8 @@ static RPCHelpMan combinerawtransaction()
                 input.scriptWitness.SetNull();
             }
             if (k == 0) {
-                txid = tx_variants_copy[k].GetHash();
-            } else if (txid != tx_variants_copy[k].GetHash()) {
+                first_txid = tx_variants_copy[k].GetHash();
+            } else if (first_txid != tx_variants_copy[k].GetHash()) {
                 throw JSONRPCError(RPC_INVALID_PARAMETER, strprintf("Transaction number %d not compatible with first transaction", k+1));
             }
         }

@@ -162,7 +162,7 @@ class RpcCreateMultiSigTest(BitcoinTestFramework):
             out_addr2 = getnewdestination('bech32')[2]
             unmergeable_transaction_args = [
                 ([[{"txid": tx["txid"], "vout": tx["sent_vout"]}], [{out_addr: outval * 2}]], {}), # similar transaction but with different amount to send
-                ([[{"txid": tx["txid"], "vout": tx["sent_vout"]}], [{out_addr: outval}]], {"locktime": 0, "replaceable": True, "version": 1}), # similar transaction but with different version
+                ([[{"txid": tx["txid"], "vout": tx["sent_vout"]}], [{out_addr: outval}]], {"version": 1}), # similar transaction but with different version
                 ([[{"txid": tx["txid"], "vout": tx["sent_vout"]}], [{out_addr: outval}]], {"locktime": 1}), # similar transaction but with different locktime
                 ([[{"txid": tx["txid"], "vout": tx["sent_vout"]}], [{out_addr2: outval}]], {}), # similar transaction but with different output address (scriptPubKey)
                 ([[{"txid": tx["txid"], "vout": tx["sent_vout"], "sequence": 1}], [{out_addr: outval}]], {}), # similar transaction but with different sequence number
