@@ -119,7 +119,7 @@ public:
     virtual PeerManagerInfo GetInfo() const = 0;
 
     /** Get info about transactions currently being privately broadcast. */
-    virtual std::vector<PrivateBroadcast::TxBroadcastInfo> GetPrivateBroadcastInfo() const = 0;
+    virtual PrivateBroadcast::Transactions GetPrivateBroadcastInfo() const = 0;
 
     /**
      * Abort private broadcast attempts for transactions currently being privately broadcast.
