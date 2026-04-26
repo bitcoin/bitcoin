@@ -107,6 +107,7 @@ add_library(bitcoin_common STATIC EXCLUDE_FROM_ALL
   common/settings.cpp
   common/signmessage.cpp
   common/system.cpp
+  common/system_ram.cpp
   common/url.cpp
   compressor.cpp
   core_io.cpp
@@ -211,6 +212,7 @@ add_library(bitcoin_node STATIC EXCLUDE_FROM_ALL
   node/blockmanager_args.cpp
   node/blockstorage.cpp
   node/caches.cpp
+  node/dbcache.cpp
   node/chainstate.cpp
   node/chainstatemanager_args.cpp
   node/coin.cpp

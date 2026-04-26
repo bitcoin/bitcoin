@@ -2,41 +2,83 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or https://opensource.org/license/mit.
 
-#include <node/caches.h>
+#include <node/dbcache.h>
 #include <util/byte_units.h>
 
 #include <boost/test/unit_test.hpp>
 
+#include <array>
+#include <cstdint>
+#include <limits>
+#include <utility>
+
 using namespace node;
+
+namespace {
+void CheckDbCacheWarnThreshold(uint64_t threshold, uint64_t total_ram)
+{
+    BOOST_CHECK(!ShouldWarnOversizedDbCache(threshold, total_ram));
+    BOOST_CHECK( ShouldWarnOversizedDbCache(threshold + 1, total_ram));
+}
+} // namespace
 
 BOOST_AUTO_TEST_SUITE(caches_tests)
 
+BOOST_AUTO_TEST_CASE(default_dbcache_formula_by_total_ram)
+{
+    BOOST_CHECK(FALLBACK_RAM_BYTES >= 1_GiB);
+    for (const auto& [total_ram, expected] : std::array<std::pair<uint64_t, uint64_t>, 4>{{
+        {512_MiB, MIN_DEFAULT_DBCACHE},
+        {1_GiB, MIN_DEFAULT_DBCACHE},
+        {RESERVED_RAM - 1, MIN_DEFAULT_DBCACHE},
+        {RESERVED_RAM, MIN_DEFAULT_DBCACHE}
+    }}) {
+        BOOST_CHECK_EQUAL(GetDefaultDBCache(total_ram), expected);
+    }
+
+    BOOST_CHECK_EQUAL(GetDefaultDBCache(3_GiB), 256_MiB);
+
+    if constexpr (SIZE_MAX == UINT64_MAX) {
+        for (const auto& [total_ram_64, expected] : std::array<std::pair<uint64_t, uint64_t>, 3>{{
+            {8_GiB, 1536_MiB},
+            {16_GiB, MAX_DEFAULT_DBCACHE},
+            {32_GiB, MAX_DEFAULT_DBCACHE}
+        }}) {
+            BOOST_CHECK_EQUAL(GetDefaultDBCache(total_ram_64), expected);
+        }
+    }
+}
+
+BOOST_AUTO_TEST_CASE(default_dbcache_uses_current_total_ram)
+{
+    BOOST_CHECK_EQUAL(GetDefaultDBCache(), GetDefaultDBCache(GetTotalRam()));
+}
+
 BOOST_AUTO_TEST_CASE(oversized_dbcache_warning)
 {
-    // memory restricted setup - cap is DEFAULT_DB_CACHE (450 MiB)
-    BOOST_CHECK(!ShouldWarnOversizedDbCache(/*dbcache=*/4_MiB, /*total_ram=*/1_GiB));    // Under cap
-    BOOST_CHECK( ShouldWarnOversizedDbCache(/*dbcache=*/512_MiB, /*total_ram=*/1_GiB));  // At cap
-    BOOST_CHECK( ShouldWarnOversizedDbCache(/*dbcache=*/1500_MiB, /*total_ram=*/1_GiB)); // Over cap
+    BOOST_CHECK(!ShouldWarnOversizedDbCache(MIN_DBCACHE_BYTES, 1_GiB));
 
-    // 2 GiB RAM - cap is 75%
-    BOOST_CHECK(!ShouldWarnOversizedDbCache(/*dbcache=*/1500_MiB, /*total_ram=*/2_GiB)); // Under cap
-    BOOST_CHECK( ShouldWarnOversizedDbCache(/*dbcache=*/1600_MiB, /*total_ram=*/2_GiB)); // Over cap
+    // Below RESERVED_RAM the auto default dominates (headroom is zero).
+    CheckDbCacheWarnThreshold(GetDefaultDBCache(1_GiB), 1_GiB);
+    CheckDbCacheWarnThreshold(GetDefaultDBCache(RESERVED_RAM), RESERVED_RAM);
 
-    // 4 GiB RAM - cap is 75%
-    BOOST_CHECK(!ShouldWarnOversizedDbCache(/*dbcache=*/2500_MiB, /*total_ram=*/4_GiB)); // Under cap
-    BOOST_CHECK( ShouldWarnOversizedDbCache(/*dbcache=*/3500_MiB, /*total_ram=*/4_GiB)); // Over cap
+    // Above RESERVED_RAM the warning fires at 75% of the headroom.
+    CheckDbCacheWarnThreshold(((3_GiB - RESERVED_RAM) / 4) * 3, 3_GiB);
 
-    // 8 GiB RAM - cap is 75%
-    BOOST_CHECK(!ShouldWarnOversizedDbCache(/*dbcache=*/6000_MiB, /*total_ram=*/8_GiB)); // Under cap
-    BOOST_CHECK( ShouldWarnOversizedDbCache(/*dbcache=*/7000_MiB, /*total_ram=*/8_GiB)); // Over cap
+    for (const auto total_ram : {8_GiB, 16_GiB, 32_GiB}) {
+        CheckDbCacheWarnThreshold(((total_ram - RESERVED_RAM) / 4) * 3, total_ram);
+    }
+}
 
-    // 16 GiB RAM - cap is 75%
-    BOOST_CHECK(!ShouldWarnOversizedDbCache(/*dbcache=*/10_GiB, /*total_ram=*/16_GiB)); // Under cap
-    BOOST_CHECK( ShouldWarnOversizedDbCache(/*dbcache=*/15_GiB, /*total_ram=*/16_GiB)); // Over cap
+BOOST_AUTO_TEST_CASE(default_dbcache_never_warns)
+{
+    for (const auto total_ram : {1_GiB, 2_GiB, 3_GiB}) {
+        BOOST_CHECK(!ShouldWarnOversizedDbCache(GetDefaultDBCache(total_ram), total_ram));
+    }
 
-    // 32 GiB RAM - cap is 75%
-    BOOST_CHECK(!ShouldWarnOversizedDbCache(/*dbcache=*/20_GiB, /*total_ram=*/32_GiB)); // Under cap
-    BOOST_CHECK( ShouldWarnOversizedDbCache(/*dbcache=*/30_GiB, /*total_ram=*/32_GiB)); // Over cap
+    for (const auto total_ram : {4_GiB, 8_GiB, 16_GiB, 32_GiB}) {
+        BOOST_CHECK(!ShouldWarnOversizedDbCache(GetDefaultDBCache(total_ram), total_ram));
+    }
 }
 
 BOOST_AUTO_TEST_SUITE_END()
