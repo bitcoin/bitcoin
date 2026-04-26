@@ -472,13 +472,7 @@ RPCMethod getaddressinfo()
         std::string desc_str;
         if (desc_spk_man->GetDescriptorString(desc_str, /*priv=*/false)) {
             ret.pushKV("parent_desc", desc_str);
-        }
-    }
-
-    ret.pushKV("iswatchonly", false);
-    ret.pushKV("spendable", true);
-    ret.pushKV("solvable", true);
-    ret.pushKV("has_key", true);
+     
 
     UniValue detail = DescribeWalletAddress(*pwallet, dest);
     ret.pushKVs(std::move(detail));
