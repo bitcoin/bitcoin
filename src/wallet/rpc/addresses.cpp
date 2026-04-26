@@ -476,6 +476,9 @@ RPCMethod getaddressinfo()
     }
 
     ret.pushKV("iswatchonly", false);
+    ret.pushKV("spendable", true);
+    ret.pushKV("solvable", true);
+    ret.pushKV("has_key", true);
 
     UniValue detail = DescribeWalletAddress(*pwallet, dest);
     ret.pushKVs(std::move(detail));
