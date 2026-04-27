@@ -330,6 +330,8 @@ public:
 
         m_state = TxStateInterpretSerialized({serialized_block_hash, serializedIndex});
 
+        mapValue.erase("fromaccount");
+        mapValue.erase("spent");
         for (const auto& [key, value] : mapValue) {
             if (key == "n") nOrderPos = LocaleIndependentAtoi<int64_t>(value);
             else if (key == "timesmart") nTimeSmart = LocaleIndependentAtoi<int64_t>(value);
@@ -339,10 +341,11 @@ public:
             else if (key == "to") m_comment_to = value;
             else if (key == "replaces_txid") m_replaces_txid = Txid::FromHex(value);
             else if (key == "replaced_by_txid") m_replaced_by_txid = Txid::FromHex(value);
+            else {
+                throw std::runtime_error("Unexpected value in CWalletTx strings value map");
+            }
         }
 
-        mapValue.erase("fromaccount");
-        mapValue.erase("spent");
         mapValue.erase("n");
         mapValue.erase("timesmart");
         mapValue.erase("from");
