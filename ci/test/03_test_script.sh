@@ -152,7 +152,7 @@ if [ -n "$USE_VALGRIND" ]; then
 fi
 
 if [ "$RUN_CHECK_DEPS" = "true" ]; then
-  "${BASE_ROOT_DIR}/contrib/devtools/check-deps.sh" "${BASE_BUILD_DIR}"
+  "${BASE_ROOT_DIR}/contrib/devtools/check-deps.py" "${BASE_BUILD_DIR}"
 fi
 
 if [[ "$CI_OS_NAME" == "macos" && "${GOAL}" = "install deploy" ]]; then
