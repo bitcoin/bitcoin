@@ -369,6 +369,7 @@ BASE_SCRIPTS = [
     'feature_blocksdir.py',
     'wallet_startup.py',
     'feature_remove_pruned_files_on_startup.py',
+    'feature_prune_stale_fork.py',
     'p2p_i2p_ports.py',
     'p2p_i2p_sessions.py',
     'feature_presegwit_node_upgrade.py',
