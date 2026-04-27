@@ -27,10 +27,6 @@ NM_LINE_RE = re.compile(r'^[^:]*:([^:]*):.*\s([UTBDWRV])\s+(\S+)')
 # Known violations to suppress: (consumer_obj, provider_obj, symbol) tuples.
 # Symbols are matched as prefixes to allow for ABI-tagged variants.
 SUPPRESS = {
-    ("common.cpp.o", "interface_ui.cpp.o", "_Z11InitWarningRK13bilingual_str"),
-    ("common.cpp.o", "interface_ui.cpp.o", "_Z9InitErrorRK13bilingual_str"),
-      # init/common.cpp calls InitError and InitWarning from interface_ui which
-      # is part of the node library. See https://github.com/bitcoin/bitcoin/issues/10102
     ("muhash.cpp.o", "check.cpp.o", "_Z14assertion_failRKSt15source_locationSt17basic_string_viewIcSt11char_traitsIcEE"),
       # muhash.cpp uses Assume from util/check which calls a function in Debug builds
 }
