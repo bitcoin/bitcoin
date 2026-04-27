@@ -727,34 +727,34 @@ BOOST_FIXTURE_TEST_CASE(test_crash_corrupt_wallet_abandon, TestChain100Setup)
 {
     MockableData records;
     Txid hash_cb;
-    Txid hash_hijo;
+    Txid hash_child;
 
-    // 1. Setup: Crear una wallet, poblarla con una coinbase real y un hijo minado
+    // 1. Setup: Create a wallet, populate it with a real coinbase and a mined child
     {
         auto database = std::make_unique<MockableDatabase>();
         auto wallet = std::make_shared<CWallet>(m_node.chain.get(), "", std::move(database));
         wallet->SetWalletFlag(WALLET_FLAG_DESCRIPTORS);
         AddKey(*wallet, coinbaseKey);
 
-        // Padre: Usamos la coinbase real del fixture (ya confirmada en bloque 1)
+        // Parent: Use the real coinbase from the fixture (already confirmed in block 1)
         hash_cb = m_coinbase_txns[0]->GetHash();
         TxState state_cb = TxStateConfirmed{m_node.chainman->ActiveChain()[1]->GetBlockHash(), 1, 0};
         wallet->AddToWallet(m_coinbase_txns[0], state_cb);
 
-        // Hijo: Gasta la coinbase y lo minamos en el bloque 101
-        CMutableTransaction tx_hijo_mut;
-        tx_hijo_mut.vin.push_back(CTxIn(COutPoint(hash_cb, 0)));
-        tx_hijo_mut.vout.push_back(CTxOut(49 * COIN, GetScriptForRawPubKey(coinbaseKey.GetPubKey())));
+        // Child: Spends the coinbase and we mine it in block 101
+        CMutableTransaction tx_child_mut;
+        tx_child_mut.vin.push_back(CTxIn(COutPoint(hash_cb, 0)));
+        tx_child_mut.vout.push_back(CTxOut(49 * COIN, GetScriptForRawPubKey(coinbaseKey.GetPubKey())));
         
-        CBlock block_hijo = CreateAndProcessBlock({tx_hijo_mut}, GetScriptForRawPubKey(coinbaseKey.GetPubKey()));
-        hash_hijo = tx_hijo_mut.GetHash();
-        TxState state_hijo = TxStateConfirmed{block_hijo.GetHash(), 101, 1};
-        wallet->AddToWallet(MakeTransactionRef(tx_hijo_mut), state_hijo);
+        CBlock block_child = CreateAndProcessBlock({tx_child_mut}, GetScriptForRawPubKey(coinbaseKey.GetPubKey()));
+        hash_child = tx_child_mut.GetHash();
+        TxState state_child = TxStateConfirmed{block_child.GetHash(), 101, 1};
+        wallet->AddToWallet(MakeTransactionRef(tx_child_mut), state_child);
         
         records = GetMockableDatabase(*wallet).m_records;
     }
 
-    // 2. Corrupción manual en los records: Coinbase -> Inactive
+    // 2. Manual corruption in the records: Coinbase -> Inactive
     {
         DataStream ssKey;
         ssKey << std::make_pair(std::string("tx"), hash_cb);
@@ -774,17 +774,18 @@ BOOST_FIXTURE_TEST_CASE(test_crash_corrupt_wallet_abandon, TestChain100Setup)
         records[key_data] = SerializeData{ssNewValue.begin(), ssNewValue.end()};
     }
 
-    // 3. Reload: Al cargar sin cadena, la wallet no auto-corrige el estado y dispara el bug
+    // 3. Reload: When loading without a chain, the wallet doesn't auto-correct the state and triggers the bug
     {
         auto database = std::make_unique<MockableDatabase>(records);
-        // Usamos nullptr en la cadena para preservar la corrupción del archivo
+        // Use nullptr for the chain to preserve the file corruption
         auto wallet = std::make_shared<CWallet>(nullptr, "", std::move(database));
         
         bilingual_str error;
         std::vector<bilingual_str> warnings;
         
-        // Esta llamada dispara el assert en wallet.cpp:1321
-        wallet->PopulateWalletFromDB(error, warnings);
+        // This call triggers the assert in wallet.cpp:1321
+        DBErrors dbErrors = wallet->PopulateWalletFromDB(error, warnings);
+        BOOST_CHECK_EQUAL(dbErrors, DBErrors::NEED_RESCAN);
     }
 }
 

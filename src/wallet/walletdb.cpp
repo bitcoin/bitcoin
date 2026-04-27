@@ -1039,11 +1039,34 @@ static DBErrors LoadTxRecords(CWallet* pwallet, DatabaseBatch& batch, bool& any_
     });
     result = std::max(result, order_pos_res.m_result);
 
-    // After loading all tx records, abandon any coinbase that is no longer in the active chain.
-    // This could happen during an external wallet load, or if the user replaced the chain data.
-    for (auto& [id, wtx] : pwallet->mapWallet) {
-        if (wtx.IsCoinBase() && wtx.isInactive()) {
-            pwallet->AbandonTransaction(wtx);
+    bool transactionsConsistent = true;
+    // The transactions in the wallet.db file may be inconsistent. To check internal consistency,
+    // we can check for impossible states such as parent transactions that are conflicted while child is in mempool,
+    // or child transaction in mempool and parent not confirmed/in mempool.
+    for (const auto& [id, wtx] : pwallet->mapWallet) {
+        for (const auto& txin : wtx.tx->vin) {
+            auto it = pwallet->mapWallet.find(txin.prevout.hash);
+            if (it != pwallet->mapWallet.end()) {
+                const CWalletTx& ptx = it->second;
+                if (wtx.isConfirmed() && !ptx.isConfirmed()) {
+                    result = DBErrors::NEED_RESCAN;
+                    transactionsConsistent = false;
+                } else if (wtx.InMempool() && (!ptx.isConfirmed() && !ptx.InMempool())) {
+                    result = DBErrors::NEED_RESCAN;
+                    transactionsConsistent = false;
+                }
+            }
+        }
+    }
+
+    // We can only abandon transactions if the transaction state is consistent.
+    if (transactionsConsistent) {
+        // After loading all tx records, abandon any coinbase that is no longer in the active chain.
+        // This could happen during an external wallet load, or if the user replaced the chain data.
+        for (auto& [id, wtx] : pwallet->mapWallet) {
+            if (wtx.IsCoinBase() && wtx.isInactive()) {
+                pwallet->AbandonTransaction(wtx);
+            }
         }
     }
 
