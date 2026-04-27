@@ -126,6 +126,13 @@ private:
     bool is_direct() const { return _size <= N; }
 
     void change_capacity(size_type new_capacity) {
+        // Clamp capacity to never go below size, matching the std::vector
+        // invariant that capacity >= size. This also prevents a heap buffer
+        // overflow if a caller's new_capacity arithmetic wraps around
+        // (e.g. new_size + (new_size >> 1) overflows when new_size > 0xAAAAAAAA).
+        if (new_capacity < size()) {
+            new_capacity = size();
+        }
         if (new_capacity <= N) {
             if (!is_direct()) {
                 T* indirect = indirect_ptr(0);
