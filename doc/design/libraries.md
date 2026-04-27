@@ -54,6 +54,7 @@ bitcoin-wallet[bitcoin-wallet]-->libbitcoin_wallet_tool;
 libbitcoin_cli-->libbitcoin_util;
 libbitcoin_cli-->libbitcoin_common;
 
+libbitcoin_consensus-->libbitcoin_util;
 libbitcoin_consensus-->libbitcoin_crypto;
 
 libbitcoin_common-->libbitcoin_consensus;
@@ -70,6 +71,9 @@ libbitcoin_node-->libbitcoin_kernel;
 libbitcoin_node-->libbitcoin_common;
 libbitcoin_node-->libbitcoin_util;
 
+libbitcoinqt-->libbitcoin_cli;
+libbitcoinqt-->libbitcoin_node;
+libbitcoinqt-->libbitcoin_wallet;
 libbitcoinqt-->libbitcoin_common;
 libbitcoinqt-->libbitcoin_util;
 
