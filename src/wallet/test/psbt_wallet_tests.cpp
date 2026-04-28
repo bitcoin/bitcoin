@@ -81,63 +81,85 @@ BOOST_AUTO_TEST_CASE(psbt_updater_test)
 
 BOOST_AUTO_TEST_CASE(parse_hd_keypath)
 {
+    static constexpr uint32_t H0{0x80000000U}; // 0'
+    static constexpr uint32_t H1{0x80000001U}; // 1'
+
     struct TestCase {
         bool is_valid;
         std::string keypath;
+        std::vector<uint32_t> expected;
     };
 
     const std::vector<TestCase> tests{
-        {true,  "1/1/1/1/1/1/1/1/1/1/1/1/1/1/1/1/1/1/1/1/1/1/1/1/1/1/1/1"},
-        {false, "///////////////////////////"},
-        {true,  "1/1/1/1/1/1/1/1/1/1/1/1/1/1/1/1/1/1/1/1/1/1/1/1/1/1/1'/1"},
-        {false, "//////////////////////////'/"},
-        {true,  "1/1/1/1/1/1/1/1/1/1/1/1/1/1/1/1/1/1/1/1/1/1/1/1/1/1/1/"},
-        {false, "1///////////////////////////"},
-        {true,  "1/1/1/1/1/1/1/1/1/1/1/1/1/1/1/1/1/1/1/1/1/1/1/1/1/1/1'/"},
-        {false, "1/'//////////////////////////"},
-        {true,  ""},
-        {false, " "},
-        {true,  "0"},
-        {false, "O"},
-        {true,  "0000'/0000'/0000'"},
-        {false, "0000,/0000,/0000,"},
-        {true,  "01234"},
-        {false, "0x1234"},
-        {true,  "1"},
-        {false, " 1"},
-        {true,  "42"},
-        {false, "m42"},
-        {true,  "4294967295"},  // 0xFFFFFFFF (uint32_t max)
-        {false, "4294967296"},  // 0xFFFFFFFF + 1
-        {true,  "m"},
-        {false, "n"},
-        {true,  "m/"},
-        {false, "n/"},
-        {true,  "m/0"},
-        {false, "n/0"},
-        {true,  "m/0'"},
-        {false, "m/0''"},
-        {true,  "m/0'/0'"},
-        {false, "m/'0/0'"},
-        {true,  "m/0/0"},
-        {false, "n/0/0"},
-        {true,  "m/0/0/00"},
-        {false, "m/0/0/f00"},
-        {true,  "m/0/0/000000000000000000000000000000000000000000000000000000000000000000000000000000000000"},
-        {false, "m/1/1/111111111111111111111111111111111111111111111111111111111111111111111111111111111111"},
-        {true,  "m/0/00/0"},
-        {false, "m/0'/00/'0"},
-        {true,  "m/1/"},
-        {false, "m/1//"},
-        {true,  "m/0/4294967295"},  // 0xFFFFFFFF (uint32_t max)
-        {false, "m/0/4294967296"},  // 0xFFFFFFFF + 1
-        {true,  "m/4294967295"},    // 0xFFFFFFFF (uint32_t max)
-        {false, "m/4294967296"},    // 0xFFFFFFFF + 1
+        // 28 unhardened ones, no trailing slash
+        {true,  "1/1/1/1/1/1/1/1/1/1/1/1/1/1/1/1/1/1/1/1/1/1/1/1/1/1/1/1",
+                {1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1}},
+        {false, "///////////////////////////", {}},
+        // 26 unhardened ones, then hardened 1, then unhardened 1
+        {true,  "1/1/1/1/1/1/1/1/1/1/1/1/1/1/1/1/1/1/1/1/1/1/1/1/1/1/1'/1",
+                {1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,H1,1}},
+        {false, "//////////////////////////'/", {}},
+        // 27 unhardened ones, trailing slash ignored
+        {true,  "1/1/1/1/1/1/1/1/1/1/1/1/1/1/1/1/1/1/1/1/1/1/1/1/1/1/1/",
+                {1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1}},
+        {false, "1///////////////////////////", {}},
+        // 26 unhardened ones, hardened 1, trailing slash ignored
+        {true,  "1/1/1/1/1/1/1/1/1/1/1/1/1/1/1/1/1/1/1/1/1/1/1/1/1/1/1'/",
+                {1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,H1}},
+        {false, "1/'//////////////////////////", {}},
+        {true,  "", {}},
+        {false, " ", {}},
+        {true,  "0", {0}},
+        {false, "O", {}},
+        {true,  "0000'/0000'/0000'", {H0, H0, H0}},
+        {false, "0000,/0000,/0000,", {}},
+        {true,  "01234", {1234}},
+        {false, "0x1234", {}},
+        {true,  "1", {1}},
+        {false, " 1", {}},
+        {true,  "42", {42}},
+        {false, "m42", {}},
+        {true,  "4294967295", {0xFFFFFFFF}},  // 0xFFFFFFFF (uint32_t max)
+        {false, "4294967296", {}},    // 0xFFFFFFFF + 1
+        {true,  "m", {}},
+        {false, "n", {}},
+        {true,  "m/", {}},
+        {false, "n/", {}},
+        {true,  "m/0", {0}},
+        {false, "n/0", {}},
+        {true,  "m/0'", {H0}},
+        {false, "m/0''", {}},
+        {true,  "m/0'/0'", {H0, H0}},
+        {false, "m/'0/0'", {}},
+        {true,  "m/0/0", {0, 0}},
+        {false, "n/0/0", {}},
+        {true,  "m/0/0/00", {0, 0, 0}},
+        {false, "m/0/0/f00", {}},
+        {true,  "m/0/0/000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+                {0, 0, 0}},
+        {false, "m/1/1/111111111111111111111111111111111111111111111111111111111111111111111111111111111111", {}},
+        {true,  "m/0/00/0", {0, 0, 0}},
+        {false, "m/0'/00/'0", {}},
+        {true,  "m/1/", {1}},
+        {false, "m/1//", {}},
+        {true,  "m/0/4294967295", {0, 0xFFFFFFFF}},  // 0xFFFFFFFF (uint32_t max)
+        {false, "m/0/4294967296", {}},        // 0xFFFFFFFF + 1
+        {true,  "m/4294967295",   {0xFFFFFFFF}},      // 0xFFFFFFFF (uint32_t max)
+        {false, "m/4294967296",   {}},        // 0xFFFFFFFF + 1
     };
 
-    for (const auto& [is_valid, keypath_str] : tests) {
-        std::vector<uint32_t> keypath;
-        BOOST_CHECK_EQUAL(ParseHDKeypath(keypath_str, keypath), is_valid);
+    for (const auto& [is_valid, keypath_str, expected] : tests) {
+        std::vector<uint32_t> keypath_num;
+        const bool res1{ParseHDKeypath(keypath_str, keypath_num)};
+        if (!is_valid) {
+            BOOST_CHECK_EQUAL(res1, false);
+        } else {
+            BOOST_CHECK_EQUAL(res1, true);
+            BOOST_REQUIRE_EQUAL(keypath_num.size(), expected.size());
+            for (size_t i{0}; i < keypath_num.size(); ++i) {
+                BOOST_CHECK_EQUAL(keypath_num[i], expected[i]);
+            }
+        }
     }
 }
 
