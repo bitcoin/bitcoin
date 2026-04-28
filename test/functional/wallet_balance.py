@@ -109,6 +109,15 @@ class WalletTest(BitcoinTestFramework):
             assert_equal(self.nodes[0].getbalance("*", 1, True), 500)
         assert_equal(self.nodes[1].getbalance(minconf=0, include_watchonly=True), 500)
 
+        self.log.info("Test listaddressbalances")
+        address_balances = {}
+        address_balances['yYdShjQSptFKitYLksFEUSwHe4hnbar5rf'] = Decimal('500.00000000')
+        if not self.options.descriptors:
+            address_balances['yVg3NBUHNEhgDceqwVUjsZHreC5PBHnUo9'] = Decimal('500.00000000')
+        assert_equal(address_balances, self.nodes[0].listaddressbalances())
+        assert_equal(address_balances, self.nodes[0].listaddressbalances(500))
+        assert_equal({}, self.nodes[0].listaddressbalances(501))
+
         # Send 490 BTC from 0 to 1 and 960 BTC from 1 to 0.
         txs = create_transactions(self.nodes[0], self.nodes[1].getnewaddress(), 490 , [Decimal('0.01')])
         self.nodes[0].sendrawtransaction(txs[0]['hex'])

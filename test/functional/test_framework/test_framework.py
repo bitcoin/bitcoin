@@ -144,6 +144,7 @@ class BitcoinTestFramework(metaclass=BitcoinTestMetaClass):
         self._requires_wallet = False
         # Disable ThreadOpenConnections by default, so that adding entries to
         # addrman will not result in automatic connections to them.
+        self.uses_wallet = False
         self.disable_autoconnect = True
         self.set_test_params()
         assert self.wallet_names is None or len(self.wallet_names) <= self.num_nodes
@@ -577,6 +578,7 @@ class BitcoinTestFramework(metaclass=BitcoinTestMetaClass):
                 use_valgrind=self.options.valgrind,
                 descriptors=self.options.descriptors,
                 v2transport=self.options.v2transport,
+                uses_wallet=self.uses_wallet,
             )
             self.nodes.append(test_node_i)
             if not test_node_i.version_is_at_least(160000):
@@ -955,7 +957,7 @@ class BitcoinTestFramework(metaclass=BitcoinTestMetaClass):
                     cache_node_dir,
                     chain=self.chain,
                     extra_conf=["bind=127.0.0.1"],
-                    extra_args=['-disablewallet', f"-mocktime={TIME_GENESIS_BLOCK}"],
+                    extra_args=[f"-mocktime={TIME_GENESIS_BLOCK}"],
                     extra_args_from_options=self.extra_args_from_options,
                     rpchost=None,
                     timewait=self.rpc_timeout,
@@ -966,6 +968,7 @@ class BitcoinTestFramework(metaclass=BitcoinTestMetaClass):
                     coverage_dir=None,
                     cwd=self.options.tmpdir,
                     descriptors=self.options.descriptors,
+                    uses_wallet=self.uses_wallet,
                 ))
             self.start_node(CACHE_NODE_ID)
             cache_node = self.nodes[CACHE_NODE_ID]

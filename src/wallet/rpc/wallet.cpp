@@ -42,51 +42,6 @@ bool HaveKey(const SigningProvider& wallet, const CKey& key)
     return wallet.HaveKey(key.GetPubKey().GetID()) || wallet.HaveKey(key2.GetPubKey().GetID());
 }
 
-static RPCHelpMan listaddressbalances()
-{
-    return RPCHelpMan{"listaddressbalances",
-        "\nLists addresses of this wallet and their balances\n",
-        {
-            {"minamount", RPCArg::Type::NUM, RPCArg::Default{0}, "Minimum balance in " + CURRENCY_UNIT + " an address should have to be shown in the list"},
-        },
-        RPCResult{
-            RPCResult::Type::ARR, "", "",
-            {
-                {RPCResult::Type::STR_AMOUNT, "amount", "The Dash address and the amount in " + CURRENCY_UNIT},
-            }
-        },
-        RPCExamples{
-            HelpExampleCli("listaddressbalances", "")
-    + HelpExampleCli("listaddressbalances", "10")
-    + HelpExampleRpc("listaddressbalances", "")
-    + HelpExampleRpc("listaddressbalances", "10")
-        },
-        [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
-{
-    const std::shared_ptr<const CWallet> pwallet = GetWalletForJSONRPCRequest(request);
-    if (!pwallet) return UniValue::VNULL;
-
-    LOCK(pwallet->cs_wallet);
-
-    CAmount nMinAmount = 0;
-    if (!request.params[0].isNull())
-        nMinAmount = AmountFromValue(request.params[0]);
-
-    if (nMinAmount < 0)
-        throw JSONRPCError(RPC_TYPE_ERROR, "Invalid amount");
-
-    UniValue jsonBalances(UniValue::VOBJ);
-    std::map<CTxDestination, CAmount> balances = GetAddressBalances(*pwallet);
-    for (auto& balance : balances)
-        if (balance.second >= nMinAmount)
-            jsonBalances.pushKV(EncodeDestination(balance.first), ValueFromAmount(balance.second));
-
-    return jsonBalances;
-},
-    };
-}
-
-
 static RPCHelpMan setcoinjoinrounds()
 {
     return RPCHelpMan{"setcoinjoinrounds",
@@ -1138,6 +1093,7 @@ RPCHelpMan importelectrumwallet();
 // coins
 RPCHelpMan getreceivedbyaddress();
 RPCHelpMan getreceivedbylabel();
+RPCHelpMan listaddressbalances();
 RPCHelpMan getbalance();
 RPCHelpMan getunconfirmedbalance();
 RPCHelpMan lockunspent();
