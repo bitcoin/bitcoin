@@ -30,7 +30,6 @@ enum LogFlags : CategoryMask {
     PRUNE = (CategoryMask{1} << 14),
     PROXY = (CategoryMask{1} << 15),
     MEMPOOLREJ = (CategoryMask{1} << 16),
-    LIBEVENT = (CategoryMask{1} << 17),
     COINDB = (CategoryMask{1} << 18),
     QT = (CategoryMask{1} << 19),
     LEVELDB = (CategoryMask{1} << 20),

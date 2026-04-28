@@ -194,7 +194,6 @@ static const std::map<std::string, BCLog::LogFlags, std::less<>> LOG_CATEGORIES_
     {"prune", BCLog::PRUNE},
     {"proxy", BCLog::PROXY},
     {"mempoolrej", BCLog::MEMPOOLREJ},
-    {"libevent", BCLog::LIBEVENT},
     {"coindb", BCLog::COINDB},
     {"qt", BCLog::QT},
     {"leveldb", BCLog::LEVELDB},
