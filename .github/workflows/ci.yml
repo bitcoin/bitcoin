@@ -153,6 +153,7 @@ jobs:
     env:
       DANGER_RUN_CI_ON_HOST: 1
       BASE_ROOT_DIR: ${{ github.workspace }}/repo_archive
+      CCACHE_MAXSIZE: 500M
 
     steps:
       - *ANNOTATION_PR_NUMBER
@@ -343,6 +344,7 @@ jobs:
     env:
       FILE_ENV: ${{ matrix.file-env }}
       DANGER_CI_ON_HOST_FOLDERS: 1
+      CCACHE_MAXSIZE: ${{ needs.runners.outputs.provider == 'gha' && '500M' || '2G' }}
 
     steps:
       - *ANNOTATION_PR_NUMBER
@@ -443,6 +445,7 @@ jobs:
     env:
       DANGER_CI_ON_HOST_FOLDERS: 1
       FILE_ENV: ${{ matrix.file-env }}
+      CCACHE_MAXSIZE: ${{ (matrix.provider || needs.runners.outputs.provider) == 'gha' && '500M' || '2G' }}
 
     strategy:
       fail-fast: false
