@@ -343,6 +343,22 @@ BOOST_AUTO_TEST_CASE(parse_hd_keypath)
             for (size_t i{0}; i < keypath_num.size(); ++i) {
                 BOOST_CHECK_EQUAL(keypath_num[i], expected[i]);
             }
+
+            // Round-trip test:
+            const std::string keypath_str2{FormatHDKeypath(keypath_num, /*apostrophe=*/true)};
+            // Note keypath_str2 may differ from keypath_str. Leading '/' is not parsed, it is removed
+            std::string keypath_str2_adjusted{keypath_str2};
+            if (keypath_str2_adjusted.starts_with('/')) {
+                keypath_str2_adjusted.erase(0, 1);
+            }
+            std::vector<uint32_t> keypath_num2;
+            BOOST_CHECK(ParseHDKeypath(keypath_str2_adjusted, keypath_num2));
+            BOOST_REQUIRE_EQUAL(keypath_num2.size(), keypath_num.size());
+            for (size_t i{0}; i < keypath_num2.size(); ++i) {
+                BOOST_CHECK_EQUAL(keypath_num2[i], keypath_num[i]);
+            }
+            const std::string keypath_str3{FormatHDKeypath(keypath_num2, /*apostrophe=*/true)};
+            BOOST_CHECK_EQUAL(keypath_str3, keypath_str2);
         }
     }
 }
