@@ -139,7 +139,7 @@ It is required that you have `python` and `zip` installed.
 
 There are many ways to configure Bitcoin Core, here are a few common examples:
 
-##### Wallet (only SQlite) and GUI Support:
+##### Wallet (only SQLite) and GUI Support:
 
 This enables the GUI.
 If `sqlite` or `qt` are not installed, this will throw an error.
@@ -175,7 +175,7 @@ ctest --test-dir build  # Append "-j N" for N parallel tests.
 
 ### 3. Deploy (optional)
 
-You can also create a  `.zip` containing the `.app` bundle by running the following command:
+You can also create a `.zip` containing the `.app` bundle by running the following command:
 
 ``` bash
 cmake --build build --target deploy
