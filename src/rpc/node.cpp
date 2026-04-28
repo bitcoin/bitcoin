@@ -248,25 +248,15 @@ static RPCMethod logging()
                 },
                 RPCExamples{
                     HelpExampleCli("logging", "\"[\\\"all\\\"]\" \"[\\\"http\\\"]\"")
-            + HelpExampleRpc("logging", "[\"all\"], [\"libevent\"]")
+            + HelpExampleRpc("logging", "[\"all\"], [\"leveldb\"]")
                 },
         [](const RPCMethod& self, const JSONRPCRequest& request) -> UniValue
 {
-    BCLog::CategoryMask original_log_categories = LogInstance().GetCategoryMask();
     if (request.params[0].isArray()) {
         EnableOrDisableLogCategories(request.params[0], true);
     }
     if (request.params[1].isArray()) {
         EnableOrDisableLogCategories(request.params[1], false);
-    }
-    BCLog::CategoryMask updated_log_categories = LogInstance().GetCategoryMask();
-    BCLog::CategoryMask changed_log_categories = original_log_categories ^ updated_log_categories;
-
-    // Update libevent logging if BCLog::LIBEVENT has changed.
-    if (changed_log_categories & BCLog::LIBEVENT) {
-        // Currently no modules in the codebase produce libevent log messages.
-        // To redirect libevent messages to our own logs see commit 8b2d6edaa9fbfb6344ca51edd0b3655b451cbcac
-        // in https://github.com/bitcoin/bitcoin/pull/6695
     }
 
     UniValue result(UniValue::VOBJ);

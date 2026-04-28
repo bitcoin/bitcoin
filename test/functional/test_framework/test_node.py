@@ -142,7 +142,6 @@ class TestNode():
             f"-datadir={self.datadir_path}",
             "-logtimemicros",
             "-debug",
-            "-debugexclude=libevent",
             "-debugexclude=leveldb",
             "-debugexclude=rand",
             "-uacomment=testnode%d" % i,  # required for subversion uniqueness across peers

@@ -167,7 +167,11 @@ BOOST_FIXTURE_TEST_CASE(logging_LogPrintMacros_CategoryName, LogSetup)
     for (const auto& category_name : category_names) {
         const auto trimmed_category_name = TrimString(category_name);
         const auto category{*Assert(BCLog::Logger::GetLogCategory(trimmed_category_name))};
-        expected_category_names.emplace_back(category, trimmed_category_name);
+        if (category & BCLog::LogFlags::ALL) {
+            expected_category_names.emplace_back(category, trimmed_category_name);
+        } else {
+            BOOST_CHECK(category & BCLog::LogFlags::DEPRECATED);
+        }
     }
 
     std::vector<std::string> expected;
