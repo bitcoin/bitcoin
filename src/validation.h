@@ -1029,6 +1029,20 @@ public:
     void CheckBlockIndex() const;
 
     /**
+     * Validate a block against the passed in coins without using the
+     * chainstate manager's coins.
+     *
+     * @param[in] block       The block to validate.
+     * @param[in] block_index The block index entry corresponding to the block.
+     * @param[in] coins       Contains the coins spent by the block. Its best block
+     *                        hash must be set to the block's previous hash.
+     */
+    BlockValidationState ValidateBlock(
+        const CBlock& block,
+        const CBlockIndex& block_index,
+        CCoinsViewCache& coins);
+
+    /**
      * Alias for ::cs_main.
      * Should be used in new code to make it easier to make ::cs_main a member
      * of this class.
