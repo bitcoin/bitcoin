@@ -301,13 +301,6 @@ private:
      */
     mutable std::map<uint256, MuSig2SecNonce> m_musig2_secnonces;
 
-    //! Create a new DescriptorScriptPubKeyMan from an existing descriptor (i.e. from an import)
-    DescriptorScriptPubKeyMan(WalletStorage& storage, WalletDescriptor& descriptor, int64_t keypool_size)
-        : ScriptPubKeyMan(storage),
-        m_keypool_size(keypool_size),
-        m_wallet_descriptor(descriptor)
-    {}
-
     bool AddDescriptorKeyWithDB(WalletBatch& batch, const CKey& key, const CPubKey &pubkey) EXCLUSIVE_LOCKS_REQUIRED(cs_desc_man);
 
     KeyMap GetKeys() const EXCLUSIVE_LOCKS_REQUIRED(cs_desc_man);
@@ -328,6 +321,13 @@ private:
     void SetupDescriptorGeneration(WalletBatch& batch, const CExtKey& master_key, OutputType addr_type, bool internal);
 
 protected:
+    //! Create a new DescriptorScriptPubKeyMan from an existing descriptor (i.e. from an import)
+    DescriptorScriptPubKeyMan(WalletStorage& storage, WalletDescriptor& descriptor, int64_t keypool_size)
+        : ScriptPubKeyMan(storage),
+        m_keypool_size(keypool_size),
+        m_wallet_descriptor(descriptor)
+    {}
+
     //! Create a DescriptorScriptPubKeyMan from existing data (i.e. during loading)
     DescriptorScriptPubKeyMan(WalletStorage& storage, WalletDescriptor& descriptor, int64_t keypool_size, const KeyMap& keys, const CryptedKeyMap& ckeys);
 

@@ -9,6 +9,7 @@ See also rpc_signer.py for tests without wallet context.
 """
 import os
 
+from test_framework.descriptors import descsum_create
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import (
     assert_equal,
@@ -39,6 +40,7 @@ class WalletSignerTest(BitcoinTestFramework):
 
     def run_test(self):
         self.test_valid_signer()
+        self.test_import_descriptor()
         self.test_disconnected_signer()
         self.restart_node(1, [f"-signer={self.mock_signer_path('invalid_signer.py')}", "-keypool=10"])
         self.test_invalid_signer()
@@ -224,6 +226,22 @@ class WalletSignerTest(BitcoinTestFramework):
         assert_greater_than(res["fee"], res["origfee"])
         assert_equal(res["errors"], [])
 
+    def test_import_descriptor(self):
+        self.log.info('Test using the signer for an imported descriptor, without reloading')
+
+        self.nodes[1].createwallet(wallet_name='hww_import', external_signer=True, blank=True)
+        hww_import = self.nodes[1].get_wallet_rpc('hww_import')
+        xpub = "tpubD6NzVbkrYhZ4WaWSyoBvQwbpLkojyoTZPRsgXELWz3Popb3qkjcJyJUGLnL4qHHoQvao8ESaAstxYSnhyswJ76uZPStJRJCTKvosUCJZL5B"
+        result = hww_import.importdescriptors([{
+            "desc": descsum_create(f"wpkh([00000001/84h/1h/0h]{xpub}/0/*)"),
+            "active": True,
+            "timestamp": "now",
+        }])
+        assert_equal(result[0]["success"], True)
+
+        address = hww_import.getnewaddress(address_type="bech32")
+        assert_equal(hww_import.walletdisplayaddress(address), {"address": address})
+        self.nodes[1].unloadwallet('hww_import')
 
     def test_disconnected_signer(self):
         self.log.info('Test disconnected external signer')

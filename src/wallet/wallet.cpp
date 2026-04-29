@@ -3807,7 +3807,12 @@ util::Result<std::reference_wrapper<DescriptorScriptPubKeyMan>> CWallet::AddWall
             return util::Error{util::ErrorString(spkm_res)};
         }
     } else {
-        auto new_spk_man = DescriptorScriptPubKeyMan::CreateFromImport(*this, desc, m_keypool_size, signing_provider);
+        std::unique_ptr<DescriptorScriptPubKeyMan> new_spk_man;
+        if (IsWalletFlagSet(WALLET_FLAG_EXTERNAL_SIGNER)) {
+            new_spk_man = ExternalSignerScriptPubKeyMan::CreateFromImport(*this, desc, m_keypool_size, signing_provider);
+        } else {
+            new_spk_man = DescriptorScriptPubKeyMan::CreateFromImport(*this, desc, m_keypool_size, signing_provider);
+        }
         spk_man = new_spk_man.get();
 
         // Save the descriptor to memory
