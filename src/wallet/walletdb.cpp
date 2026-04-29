@@ -608,7 +608,7 @@ static DBErrors LoadLegacyWalletRecords(CWallet* pwallet, DatabaseBatch& batch, 
                     path = keyMeta.key_origin.path;
                 } else {
                     // No key origin, have to parse the string
-                    if (!ParseHDKeypath(keyMeta.hdKeypath, path)) {
+                    if (!ParseHDKeypathLegacy(keyMeta.hdKeypath, path)) {
                         strErr = "Error reading wallet database: keymeta with invalid HD keypath";
                         return DBErrors::NONCRITICAL_ERROR;
                     }

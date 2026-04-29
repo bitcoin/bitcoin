@@ -12,7 +12,7 @@
 #include <optional>
 #include <sstream>
 
-bool ParseHDKeypath(const std::string& keypath_str, std::vector<uint32_t>& keypath)
+bool ParseHDKeypathLegacy(const std::string& keypath_str, std::vector<uint32_t>& keypath)
 {
     std::stringstream ss(keypath_str);
     std::string item;

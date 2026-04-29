@@ -153,7 +153,7 @@ BOOST_AUTO_TEST_CASE(parse_hd_keypath)
 
     for (const auto& [is_valid, keypath_str, expected] : tests) {
         std::vector<uint32_t> keypath_num;
-        const bool res1{ParseHDKeypath(keypath_str, keypath_num)};
+        const bool res1{ParseHDKeypathLegacy(keypath_str, keypath_num)};
         if (!is_valid) {
             BOOST_CHECK_EQUAL(res1, false);
         } else {
@@ -173,7 +173,7 @@ BOOST_AUTO_TEST_CASE(parse_hd_keypath)
             }
             // str2 -> num2
             std::vector<uint32_t> keypath_num2;
-            BOOST_CHECK(ParseHDKeypath(keypath_str2_adjusted, keypath_num2));
+            BOOST_CHECK(ParseHDKeypathLegacy(keypath_str2_adjusted, keypath_num2));
             BOOST_REQUIRE_EQUAL(keypath_num2.size(), keypath_num.size());
             for (size_t i{0}; i < keypath_num2.size(); ++i) {
                 BOOST_CHECK_EQUAL(keypath_num2[i], keypath_num[i]);
