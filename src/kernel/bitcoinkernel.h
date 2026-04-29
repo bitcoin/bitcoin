@@ -703,6 +703,15 @@ BITCOINKERNEL_API int btck_transaction_check(
     btck_TxValidationState* validation_state) BITCOINKERNEL_ARG_NONNULL(1, 2);
 
 /**
+ * @brief Check if this is a coinbase transaction.
+ *
+ * @param[in] transaction Non-null.
+ * @return                1 if it is coinbase, 0 if it is not.
+ */
+BITCOINKERNEL_API int btck_transaction_is_coinbase(
+    const btck_Transaction* transaction) BITCOINKERNEL_ARG_NONNULL(1);
+
+/**
  * Destroy the transaction.
  */
 BITCOINKERNEL_API void btck_transaction_destroy(btck_Transaction* transaction);

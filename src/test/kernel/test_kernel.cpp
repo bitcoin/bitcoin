@@ -397,6 +397,9 @@ BOOST_AUTO_TEST_CASE(btck_transaction_tests)
     auto tx2{Transaction{tx_data_2}};
     CheckHandle(tx, tx2);
 
+    BOOST_CHECK(!tx.IsCoinbase());
+    BOOST_CHECK(!tx2.IsCoinbase());
+
     auto invalid_data = hex_string_to_byte_vec("012300");
     BOOST_CHECK_THROW(Transaction{invalid_data}, std::runtime_error);
     auto empty_data = hex_string_to_byte_vec("");
@@ -1171,6 +1174,7 @@ BOOST_AUTO_TEST_CASE(btck_chainman_regtest_tests)
     check_equal(read_block_2.ToBytes(), hex_string_to_byte_vec(REGTEST_BLOCK_DATA[REGTEST_BLOCK_DATA.size() - 2]));
 
     Txid txid = read_block.Transactions()[0].Txid();
+    BOOST_CHECK(read_block.Transactions()[0].IsCoinbase());
     Txid txid_2 = read_block_2.Transactions()[0].Txid();
     BOOST_CHECK(txid != txid_2);
     BOOST_CHECK(txid == txid);

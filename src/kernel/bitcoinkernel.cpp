@@ -551,6 +551,11 @@ const btck_Txid* btck_transaction_get_txid(const btck_Transaction* transaction)
     return btck_Txid::ref(&btck_Transaction::get(transaction)->GetHash());
 }
 
+int btck_transaction_is_coinbase(const btck_Transaction* transaction)
+{
+    return btck_Transaction::get(transaction)->IsCoinBase() ? 1 : 0;
+}
+
 btck_Transaction* btck_transaction_copy(const btck_Transaction* transaction)
 {
     return btck_Transaction::copy(transaction);

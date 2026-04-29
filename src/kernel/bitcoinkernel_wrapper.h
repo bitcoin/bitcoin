@@ -669,6 +669,11 @@ public:
         return btck_transaction_count_outputs(impl());
     }
 
+    bool IsCoinbase() const
+    {
+        return btck_transaction_is_coinbase(impl()) != 0;
+    }
+
     size_t CountInputs() const
     {
         return btck_transaction_count_inputs(impl());
