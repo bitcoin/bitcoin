@@ -1286,6 +1286,37 @@ BITCOINKERNEL_API btck_BlockValidationState* BITCOINKERNEL_WARN_UNUSED_RESULT bt
     const btck_BlockHeader* header) BITCOINKERNEL_ARG_NONNULL(1, 2);
 
 /**
+ * @brief Validate the passed in block.
+ *
+ * This validates the block against the caller's supplied spent coins without
+ * requiring a full UTXO set or mutating the chainstate. Coins created and
+ * consumed within the same block are ignored. For duplicate entries only the
+ * first occurrence is used. BIP-30 violating transactions cannot be detected
+ * through this function.
+ *
+ * The spent_out_points and spent_coins must be matching pairs by their index.
+ * Their order is however irrelevant.
+ *
+ * @param[in] chainstate_manager      Non-null.
+ * @param[in] block                   Non-null.
+ * @param[in] block_tree_entry        Non-null. The entry must be associated with the block.
+ * @param[in] spent_out_points        Array of spent_outputs_len non-null outpoints consumed by this block.
+ * @param[in] spent_coins             Array of spent_outputs_len non-null coins spent by this block,
+ *                                    matching the spent_out_points.
+ * @param[in] spent_outputs_len       Number of entries in the spent_out_points and spent_coins arrays
+ * @param[out] block_validation_state The result of the block validation.
+ * @return                            0 if the block is valid.
+ */
+BITCOINKERNEL_API int BITCOINKERNEL_WARN_UNUSED_RESULT btck_chainstate_manager_validate_block(
+    btck_ChainstateManager* chainstate_manager,
+    const btck_Block* block,
+    const btck_BlockTreeEntry* block_tree_entry,
+    const btck_TransactionOutPoint* const* spent_out_points,
+    const btck_Coin* const* spent_coins,
+    size_t spent_outputs_len,
+    btck_BlockValidationState* block_validation_state) BITCOINKERNEL_ARG_NONNULL(1, 2, 3, 7);
+
+/**
  * @brief Triggers the start of a reindex if the wipe options were previously
  * set for the chainstate manager. Can also import an array of existing block
  * files selected by the user.

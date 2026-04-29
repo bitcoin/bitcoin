@@ -1023,6 +1023,11 @@ public:
      */
     void CheckBlockIndex() const;
 
+    BlockValidationState ValidateBlock(
+        const CBlock& block,
+        const CBlockIndex& block_index,
+        CCoinsViewCache& coins);
+
     /**
      * Alias for ::cs_main.
      * Should be used in new code to make it easier to make ::cs_main a member

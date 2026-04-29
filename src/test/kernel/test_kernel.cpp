@@ -1127,6 +1127,26 @@ BOOST_AUTO_TEST_CASE(btck_chainman_in_memory_tests)
     BOOST_CHECK(context.interrupt());
 }
 
+static std::vector<std::pair<OutPointView, CoinView>> SpentOutputsFromUndo(
+    const Block& block,
+    const BlockSpentOutputs& spent_outputs)
+{
+    std::vector<std::pair<OutPointView, CoinView>> coin_pairs;
+    size_t undo_index{0};
+    for (const auto transaction : block.Transactions()) {
+        if (transaction.IsCoinbase()) continue;
+        TransactionSpentOutputsView tx_undo{spent_outputs.GetTxSpentOutputs(undo_index)};
+        ++undo_index;
+
+        size_t input_index{0};
+        for (const auto input : transaction.Inputs()) {
+            coin_pairs.emplace_back(input.OutPoint(), tx_undo.GetCoin(input_index));
+            ++input_index;
+        }
+    }
+    return coin_pairs;
+}
+
 BOOST_AUTO_TEST_CASE(btck_chainman_regtest_tests)
 {
     auto test_directory{TestDirectory{"regtest_test_bitcoin_kernel"}};
@@ -1209,8 +1229,12 @@ BOOST_AUTO_TEST_CASE(btck_chainman_regtest_tests)
         return std::nullopt;
     };
 
+    std::vector<std::pair<Block, BlockSpentOutputs>> blocks;
+
     for (const auto block_tree_entry : chain.Entries()) {
+        if (block_tree_entry.GetHeight() == 0) continue;
         auto block{chainman->ReadBlock(block_tree_entry)};
+
         for (const auto transaction : block->Transactions()) {
             std::vector<TransactionInput> inputs;
             std::vector<TransactionOutput> spent_outputs;
@@ -1232,6 +1256,62 @@ BOOST_AUTO_TEST_CASE(btck_chainman_regtest_tests)
             for (size_t i{0}; i < inputs.size(); ++i) {
                 BOOST_CHECK(spent_outputs[i].GetScriptPubkey().Verify(spent_outputs[i].Amount(), transaction, &precomputed_txdata, i, ScriptVerificationFlags::ALL, status));
             }
+        }
+
+        BlockSpentOutputs undo{chainman->ReadBlockSpentOutputs(block_tree_entry)};
+        auto coin_pairs{SpentOutputsFromUndo(*block, undo)};
+
+        BlockValidationState state{};
+        BOOST_CHECK(chainman->ValidateBlock(*block, block_tree_entry, coin_pairs, state));
+        BOOST_CHECK_EQUAL(state.GetValidationMode(), ValidationMode::VALID);
+        BOOST_CHECK_EQUAL(state.GetBlockValidationResult(), BlockValidationResult::UNSET);
+
+        blocks.emplace_back(std::move(*block), std::move(undo));
+    }
+
+    BOOST_REQUIRE_EQUAL(blocks.size(), REGTEST_BLOCK_DATA.size());
+
+    // Validate every block with a fresh chainman by first processing its
+    // header, then validating without the UTXO set.
+    {
+        auto test_directory2{TestDirectory{"regtest_test_bitcoin_kernel_fresh"}};
+        auto notifications2{std::make_shared<TestKernelNotifications>()};
+        auto context2{create_context(notifications2, ChainType::REGTEST)};
+        auto chainman2{create_chainman(
+            test_directory2, /*reindex=*/false, /*wipe_chainstate=*/false,
+            /*block_tree_db_in_memory=*/false, /*chainstate_db_in_memory=*/false, context2)};
+
+        for (const auto& [blk, undo] : blocks) {
+            BlockValidationState header_state{chainman2->ProcessBlockHeader(blk.GetHeader())};
+            BOOST_CHECK_EQUAL(header_state.GetValidationMode(), ValidationMode::VALID);
+            BlockTreeEntry entry{*chainman2->GetBlockTreeEntry(blk.GetHash())};
+
+            auto coin_pairs{SpentOutputsFromUndo(blk, undo)};
+            BlockValidationState state;
+            BOOST_CHECK(chainman2->ValidateBlock(blk, entry, coin_pairs, state));
+            BOOST_CHECK_EQUAL(state.GetValidationMode(), ValidationMode::VALID);
+            // Validate again to ensure there is no lingering state
+            BOOST_CHECK(chainman2->ValidateBlock(blk, entry, coin_pairs, state));
+            BOOST_CHECK_EQUAL(state.GetValidationMode(), ValidationMode::VALID);
+        }
+
+        {
+            // Validate with no coins
+            BlockValidationState state;
+            BlockTreeEntry entry{*chainman2->GetBlockTreeEntry(blocks[205].first.GetHash())};
+            BOOST_CHECK(!chainman2->ValidateBlock(blocks[205].first, entry, {}, state));
+            BOOST_CHECK_EQUAL(state.GetValidationMode(), ValidationMode::INVALID);
+            BOOST_CHECK_EQUAL(state.GetBlockValidationResult(), BlockValidationResult::CONSENSUS);
+        }
+
+        {
+            // Validate with an incorrect set of coins
+            auto wrong_coins{SpentOutputsFromUndo(blocks[205].first, blocks[205].second)};
+            BlockValidationState state;
+            BlockTreeEntry entry{*chainman2->GetBlockTreeEntry(blocks[204].first.GetHash())};
+            BOOST_CHECK(!chainman2->ValidateBlock(blocks[204].first, entry, wrong_coins, state));
+            BOOST_CHECK_EQUAL(state.GetValidationMode(), ValidationMode::INVALID);
+            BOOST_CHECK_EQUAL(state.GetBlockValidationResult(), BlockValidationResult::CONSENSUS);
         }
     }
 

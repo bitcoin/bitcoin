@@ -28,10 +28,12 @@
 #include <serialize.h>
 #include <streams.h>
 #include <sync.h>
+#include <tinyformat.h>
 #include <uint256.h>
 #include <undo.h>
 #include <util/check.h>
 #include <util/fs.h>
+#include <util/hasher.h>
 #include <util/result.h>
 #include <util/signalinterrupt.h>
 #include <util/task_runner.h>
@@ -44,12 +46,14 @@
 #include <exception>
 #include <functional>
 #include <list>
+#include <map>
 #include <memory>
 #include <optional>
 #include <span>
 #include <stdexcept>
 #include <string>
 #include <tuple>
+#include <unordered_set>
 #include <utility>
 #include <vector>
 
@@ -506,6 +510,41 @@ struct btck_Txid: Handle<btck_Txid, Txid> {};
 struct btck_PrecomputedTransactionData : Handle<btck_PrecomputedTransactionData, PrecomputedTransactionData> {};
 struct btck_BlockHeader: Handle<btck_BlockHeader, CBlockHeader> {};
 struct btck_ConsensusParams: Handle<btck_ConsensusParams, Consensus::Params> {};
+
+class CoinsViewBlock : public CCoinsViewCache
+{
+private:
+    std::map<COutPoint, Coin> m_coins;
+    // Omit any queries for the BIP30 checks - we don't have enough information for them anyway.
+    std::unordered_set<Txid, SaltedTxidHasher> m_block_txids;
+
+    std::optional<Coin> FetchCoinFromBase(const COutPoint& outpoint) const override
+    {
+        if (m_block_txids.contains(outpoint.hash)) return std::nullopt;
+        if (auto it{m_coins.find(outpoint)}; it != m_coins.end()) return it->second;
+        return std::nullopt;
+    }
+
+public:
+    CoinsViewBlock(const CBlock& block,
+                   const btck_TransactionOutPoint* const* out_points,
+                   const btck_Coin* const* coins,
+                   size_t len)
+        : CCoinsViewCache(&CoinsViewEmpty::Get())
+    {
+        SetBestBlock(block.hashPrevBlock);
+
+        m_block_txids.reserve(block.vtx.size());
+        for (const auto& tx : block.vtx) m_block_txids.insert(tx->GetHash());
+
+        for (size_t i{0}; i < len; ++i) {
+            const COutPoint& outpoint{btck_TransactionOutPoint::get(out_points[i])};
+            const Coin& coin{btck_Coin::get(coins[i])};
+            if (m_block_txids.contains(outpoint.hash)) continue;
+            m_coins.try_emplace(outpoint, coin);
+        }
+    }
+};
 
 btck_Transaction* btck_transaction_create(const void* raw_transaction, size_t raw_transaction_len)
 {
@@ -1412,6 +1451,35 @@ btck_BlockValidationState* btck_chainstate_manager_process_block_header(
         LogError("Failed to process block header: %s", e.what());
         return nullptr;
     }
+}
+
+int btck_chainstate_manager_validate_block(
+    btck_ChainstateManager* chainstate_manager,
+    const btck_Block* _block,
+    const btck_BlockTreeEntry* entry,
+    const btck_TransactionOutPoint* const* spent_out_points,
+    const btck_Coin* const* spent_coins,
+    size_t spent_outputs_len,
+    btck_BlockValidationState* state)
+{
+    assert(spent_out_points != nullptr || spent_outputs_len == 0);
+    assert(spent_coins != nullptr || spent_outputs_len == 0);
+    for (size_t i{0}; i < spent_outputs_len; ++i) {
+        assert(spent_out_points[i] != nullptr);
+        assert(spent_coins[i] != nullptr);
+    }
+
+    const CBlock& block{*btck_Block::get(_block)};
+
+    try {
+        CoinsViewBlock coins{block, spent_out_points, spent_coins, spent_outputs_len};
+        auto& chainman{*btck_ChainstateManager::get(chainstate_manager).m_chainman};
+        btck_BlockValidationState::get(state) = chainman.ValidateBlock(block, btck_BlockTreeEntry::get(entry), coins);
+    } catch (const std::exception& e) {
+        LogError("Failed to validate block: %s", e.what());
+        btck_BlockValidationState::get(state).Error(strprintf("Exception in ValidateBlock: %s", e.what()));
+    }
+    return btck_BlockValidationState::get(state).IsValid() ? 0 : -1;
 }
 
 const btck_Chain* btck_chainstate_manager_get_active_chain(const btck_ChainstateManager* chainman)

@@ -1393,6 +1393,23 @@ public:
         return BlockValidationState{state};
     }
 
+    bool ValidateBlock(const Block& block,
+                       const BlockTreeEntry& entry,
+                       std::span<const std::pair<OutPointView, CoinView>> spent_outputs,
+                       BlockValidationState& state)
+    {
+        std::vector<const btck_TransactionOutPoint*> out_points;
+        std::vector<const btck_Coin*> coins;
+        out_points.reserve(spent_outputs.size());
+        coins.reserve(spent_outputs.size());
+        for (const auto& [out_point, coin] : spent_outputs) {
+            out_points.push_back(out_point.get());
+            coins.push_back(coin.get());
+        }
+
+        return btck_chainstate_manager_validate_block(get(), block.get(), entry.get(), out_points.data(), coins.data(), out_points.size(), state.get()) == 0;
+    }
+
     ChainView GetChain() const
     {
         return ChainView{btck_chainstate_manager_get_active_chain(get())};
