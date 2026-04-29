@@ -107,6 +107,7 @@ FUZZ_TARGET(connman, .init = initialize_connman)
     CSubNet random_subnet;
     std::string random_string;
     std::vector<NodeId> node_ids;
+    std::vector<std::string> node_addr_names;
 
     LIMITED_WHILE(fuzzed_data_provider.ConsumeBool(), 100) {
         CNode& p2p_node{*ConsumeNodeAsUniquePtr(fuzzed_data_provider).release()};
@@ -114,6 +115,7 @@ FUZZ_TARGET(connman, .init = initialize_connman)
         p2p_node.fSuccessfullyConnected = true;
         connman.AddTestNode(p2p_node);
         node_ids.push_back(p2p_node.GetId());
+        node_addr_names.push_back(p2p_node.m_addr_name);
     }
 
     LIMITED_WHILE(fuzzed_data_provider.ConsumeBool(), 10000) {
@@ -132,7 +134,23 @@ FUZZ_TARGET(connman, .init = initialize_connman)
                 random_string = fuzzed_data_provider.ConsumeRandomLengthString(64);
             },
             [&] {
-                connman.AddNode({random_string, fuzzed_data_provider.ConsumeBool()});
+                const std::string& node_str = (!node_addr_names.empty() && fuzzed_data_provider.ConsumeBool())
+                    ? PickValue(fuzzed_data_provider, node_addr_names)
+                    : random_string;
+                const auto added_node_info{connman.GetAddedNodeInfo(/*include_connected=*/true)};
+                const auto add_node{connman.AddNode({node_str, /*use_v2transport=*/fuzzed_data_provider.ConsumeBool()})};
+                if (add_node) {
+                    assert(!connman.AddNode({node_str, /*use_v2transport=*/fuzzed_data_provider.ConsumeBool()}));
+                    assert(added_node_info.size() < connman.GetAddedNodeInfo(/*include_connected=*/true).size());
+                    const auto remove{fuzzed_data_provider.ConsumeBool()};
+                    if (remove) {
+                        assert(connman.RemoveAddedNode(node_str));
+                        assert(added_node_info.size() == connman.GetAddedNodeInfo(/*include_connected=*/true).size());
+                    }
+                }
+            },
+            [&] {
+                (void)connman.RemoveAddedNode(random_string);
             },
             [&] {
                 connman.CheckIncomingNonce(fuzzed_data_provider.ConsumeIntegral<uint64_t>());
@@ -185,9 +203,6 @@ FUZZ_TARGET(connman, .init = initialize_connman)
                 serialized_net_msg.m_type = fuzzed_data_provider.ConsumeRandomLengthString(CMessageHeader::MESSAGE_TYPE_SIZE);
                 serialized_net_msg.data = ConsumeRandomLengthByteVector(fuzzed_data_provider);
                 connman.PushMessage(&random_node, std::move(serialized_net_msg));
-            },
-            [&] {
-                connman.RemoveAddedNode(random_string);
             },
             [&] {
                 const auto set_active{fuzzed_data_provider.ConsumeBool()};
@@ -250,7 +265,7 @@ FUZZ_TARGET(connman, .init = initialize_connman)
         (void)pnode->IsFullOutboundConn();
         (void)pnode->ConnectionTypeAsString();
     });
-    (void)connman.GetAddedNodeInfo(fuzzed_data_provider.ConsumeBool());
+    (void)connman.GetAddedNodeInfo(/*include_connected=*/false);
     (void)connman.GetExtraFullOutboundCount();
     assert(connman.GetLocalServices() == local_services);
     assert(connman.GetMaxOutboundTarget() == max_outbound_limit);
