@@ -619,10 +619,10 @@ std::optional<MigrationData> LegacyDataSPKM::MigrateToDescriptor()
     }
 
     // Handle HD keys by using the CHDChains
-    std::vector<CHDChain> chains;
-    chains.push_back(m_hd_chain);
+    std::set<CHDChain> chains;
+    chains.insert(m_hd_chain);
     for (const auto& chain_pair : m_inactive_hd_chains) {
-        chains.push_back(chain_pair.second);
+        chains.insert(chain_pair.second);
     }
 
     bool can_support_hd_split_feature = m_hd_chain.nVersion >= CHDChain::VERSION_HD_CHAIN_SPLIT;
