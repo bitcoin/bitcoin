@@ -146,15 +146,6 @@ fi
 # Codesigning tarballs SHOULD exist
 ################
 
-# Usage: outdir_for_host HOST SUFFIX
-#
-#   HOST: The current platform triple we're building for
-#
-outdir_for_host() {
-    echo "${OUTDIR_BASE}/${1}${2:+-${2}}"
-}
-
-
 codesigning_tarball_for_host() {
     case "$1" in
         *mingw*)

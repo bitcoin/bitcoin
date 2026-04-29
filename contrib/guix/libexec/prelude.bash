@@ -80,6 +80,14 @@ time-machine() {
                       -- "$@"
 }
 
+# Usage: outdir_for_host HOST [SUFFIX]
+#
+#   HOST: The current platform triple we're building for
+#   SUFFIX: Optional. If provided, appended to the directory name as "-SUFFIX"
+#
+outdir_for_host() {
+    echo "${OUTDIR_BASE}/${1}${2:+-${2}}"
+}
 
 ################
 # Set common variables
