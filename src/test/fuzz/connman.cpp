@@ -81,6 +81,13 @@ FUZZ_TARGET(connman, .init = initialize_connman)
     options.m_msgproc = &net_events;
     options.nMaxOutboundLimit = max_outbound_limit;
 
+    const auto local_services{ConsumeWeakEnum(fuzzed_data_provider, ALL_SERVICE_FLAGS)};
+    options.m_local_services = local_services;
+
+    const auto use_addrman_outgoing{fuzzed_data_provider.ConsumeBool()};
+    options.m_use_addrman_outgoing = use_addrman_outgoing;
+    options.m_max_automatic_connections = fuzzed_data_provider.ConsumeIntegralInRange<int>(0, 1000);
+
     auto consume_whitelist = [&]() {
         std::vector<NetWhitelistPermissions> result(fuzzed_data_provider.ConsumeIntegralInRange<size_t>(0, 3));
         for (auto& entry : result) {
@@ -245,7 +252,7 @@ FUZZ_TARGET(connman, .init = initialize_connman)
     });
     (void)connman.GetAddedNodeInfo(fuzzed_data_provider.ConsumeBool());
     (void)connman.GetExtraFullOutboundCount();
-    (void)connman.GetLocalServices();
+    assert(connman.GetLocalServices() == local_services);
     assert(connman.GetMaxOutboundTarget() == max_outbound_limit);
     (void)connman.GetMaxOutboundTimeframe();
     (void)connman.GetMaxOutboundTimeLeftInCycle();
@@ -255,7 +262,7 @@ FUZZ_TARGET(connman, .init = initialize_connman)
     (void)connman.GetTotalBytesRecv();
     (void)connman.GetTotalBytesSent();
     (void)connman.GetTryNewOutboundPeer();
-    (void)connman.GetUseAddrmanOutgoing();
+    assert(connman.GetUseAddrmanOutgoing() == use_addrman_outgoing);
     (void)connman.ASMapHealthCheck();
 
     connman.ClearTestNodes();
