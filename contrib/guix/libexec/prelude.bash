@@ -80,6 +80,15 @@ time-machine() {
                       -- "$@"
 }
 
+# Usage: distsrc_for_host HOST [SUFFIX]
+#
+#   HOST: The current platform triple we're building for
+#   SUFFIX: Optional. If provided, appended to the directory name as "-SUFFIX"
+#
+distsrc_for_host() {
+    echo "${DISTSRC_BASE}/distsrc-${VERSION}-${1}${2:+-${2}}"
+}
+
 # Usage: outdir_for_host HOST [SUFFIX]
 #
 #   HOST: The current platform triple we're building for
