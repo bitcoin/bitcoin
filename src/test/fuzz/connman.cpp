@@ -101,6 +101,9 @@ FUZZ_TARGET(connman, .init = initialize_connman)
 
     connman.Init(options);
 
+    const uint64_t total_bytes_recv_initial{connman.GetTotalBytesRecv()};
+    const uint64_t total_bytes_sent_initial{connman.GetTotalBytesSent()};
+
     CNetAddr random_netaddr;
     CAddress random_address;
     CNode random_node = ConsumeNode(fuzzed_data_provider);
@@ -269,13 +272,19 @@ FUZZ_TARGET(connman, .init = initialize_connman)
     (void)connman.GetExtraFullOutboundCount();
     assert(connman.GetLocalServices() == local_services);
     assert(connman.GetMaxOutboundTarget() == max_outbound_limit);
-    (void)connman.GetMaxOutboundTimeframe();
-    (void)connman.GetMaxOutboundTimeLeftInCycle();
+    const auto time_left_in_cycle{connman.GetMaxOutboundTimeLeftInCycle()};
     std::vector<CNodeStats> stats;
     connman.GetNodeStats(stats);
-    (void)connman.GetOutboundTargetBytesLeft();
-    (void)connman.GetTotalBytesRecv();
-    (void)connman.GetTotalBytesSent();
+    const auto bytes_left{connman.GetOutboundTargetBytesLeft()};
+    assert(bytes_left <= max_outbound_limit);
+    if (max_outbound_limit == 0) {
+        assert(bytes_left == 0);
+        assert(time_left_in_cycle == std::chrono::seconds{0});
+        assert(!connman.OutboundTargetReached(/*historicalBlockServingLimit=*/false));
+        assert(!connman.OutboundTargetReached(/*historicalBlockServingLimit=*/true));
+    }
+    assert(connman.GetTotalBytesRecv() >= total_bytes_recv_initial);
+    assert(connman.GetTotalBytesSent() >= total_bytes_sent_initial);
     (void)connman.GetTryNewOutboundPeer();
     assert(connman.GetUseAddrmanOutgoing() == use_addrman_outgoing);
     (void)connman.ASMapHealthCheck();
