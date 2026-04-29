@@ -216,6 +216,22 @@ FUZZ_TARGET(connman, .init = initialize_connman)
                 connman.SetTryNewOutboundPeer(fuzzed_data_provider.ConsumeBool());
             },
             [&] {
+                const auto services{ConsumeWeakEnum(fuzzed_data_provider, ALL_SERVICE_FLAGS)};
+                const auto before{connman.GetLocalServices()};
+                if (fuzzed_data_provider.ConsumeBool()) {
+                    connman.AddLocalServices(services);
+                    assert((connman.GetLocalServices() & services) == services);
+                    // Restore by clearing only the bits that weren't already set.
+                    connman.RemoveLocalServices(ServiceFlags(services & ~before));
+                } else {
+                    connman.RemoveLocalServices(services);
+                    assert((connman.GetLocalServices() & services) == 0);
+                    // Restore by re-adding only the bits that were previously set.
+                    connman.AddLocalServices(ServiceFlags(services & before));
+                }
+                assert(connman.GetLocalServices() == before);
+            },
+            [&] {
                 ConnectionType conn_type{
                     fuzzed_data_provider.PickValueInArray(ALL_CONNECTION_TYPES)};
                 if (conn_type == ConnectionType::INBOUND) { // INBOUND is not allowed
