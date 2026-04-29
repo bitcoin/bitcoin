@@ -157,6 +157,7 @@ int ecdsa_signature_parse_der_lax(secp256k1_ecdsa_signature* sig, const unsigned
     if (rlen > 32) {
         overflow = 1;
     } else {
+        assert(rlen <= 32); /* Bounds check: prevents pointer underflow in tmpsig + 32 - rlen */
         memcpy(tmpsig + 32 - rlen, input + rpos, rlen);
     }
 
@@ -169,6 +170,7 @@ int ecdsa_signature_parse_der_lax(secp256k1_ecdsa_signature* sig, const unsigned
     if (slen > 32) {
         overflow = 1;
     } else {
+        assert(slen <= 32); /* Bounds check: prevents pointer underflow in tmpsig + 64 - slen */
         memcpy(tmpsig + 64 - slen, input + spos, slen);
     }
 
