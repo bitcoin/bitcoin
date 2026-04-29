@@ -16,6 +16,7 @@ variants.
   and test the values returned."""
 
 import concurrent.futures
+import threading
 import time
 
 from test_framework.blocktools import COINBASE_MATURITY
@@ -117,6 +118,55 @@ class ImportDescriptorsTest(BitcoinTestFramework):
                              wallet=wallet)
         wallet.unloadwallet()
 
+    def test_rescan_fails_import(self):
+        xpriv = "tprv8ZgxMBicQKsPeuVhWwi6wuMQGfPKi9Li5GtX35jVNknACgqe3CY4g5xgkfDDJcmtF7o1QnxWDRYw4H5P26PXq7sbcUkEqeR4fg3Kxp2tigg"
+
+        self.log.info("Test importdescriptors fails when wallet is already rescanning")
+        wallet_name = "rescan_wallet"
+        self.nodes[0].createwallet(wallet_name=wallet_name, blank=True)
+        other_desc = descsum_create("pkh(" + get_generate_key().privkey + ")")
+
+        w_import = self.nodes[0].create_new_rpc_connection(mode="AUTHPROXY") / f"wallet/{wallet_name}"
+
+        with concurrent.futures.ThreadPoolExecutor(max_workers=2) as thread:
+            w_rescan = self.nodes[0].create_new_rpc_connection(mode="AUTHPROXY") / f"wallet/{wallet_name}"
+            w_conflict = self.nodes[0].create_new_rpc_connection(mode="AUTHPROXY") / f"wallet/{wallet_name}"
+            # Use an xprv with timestamp=0 and a large key-range to trigger a slow full rescan that stays in-flight
+            slow_desc = [{"desc": descsum_create("pkh(" + xpriv + "/0h/*h)"),
+            "timestamp": 0, "range": [0, 10000]}]
+            conflicting_desc = [{"desc": descsum_create("pkh(" + xpriv + "/1h/*h)"),
+            "timestamp": 0, "range": [0, 10000]}]
+
+            start = threading.Barrier(3)
+
+            def import_after_barrier(wallet, descriptors):
+                start.wait(timeout=10)
+                return wallet.importdescriptors(descriptors)
+
+            imports = [
+                thread.submit(import_after_barrier, w_rescan, slow_desc),
+                thread.submit(import_after_barrier, w_conflict, conflicting_desc),
+            ]
+            start.wait(timeout=10)
+
+            # One importdescriptor call must hold WalletRescanReserver while the other fails immediately.
+            num_errors = 0
+            num_success = 0
+            for future in concurrent.futures.as_completed(imports, timeout=30 * self.options.timeout_factor):
+                try:
+                    assert_equal(future.result(), [{'success': True}])
+                    num_success += 1
+                except JSONRPCException as e:
+                    assert_equal(e.error["code"], -4)
+                    assert_equal(e.error["message"], "Wallet is currently rescanning. Abort existing rescan or wait.")
+                    num_errors += 1
+
+            assert_equal(num_success, 1)
+            assert_equal(num_errors, 1)
+
+        # After the rescan finishes, any importdescriptors should succeed.
+        result = w_import.importdescriptors([{"desc": other_desc, "timestamp": "now"}])
+        assert_equal(result[0]['success'], True)
 
     def run_test(self):
         self.log.info('Setting up wallets')
@@ -882,6 +932,7 @@ class ImportDescriptorsTest(BitcoinTestFramework):
         self.test_import_unused_key()
         self.test_import_unused_key_existing()
         self.test_import_unused_noprivs()
+        self.test_rescan_fails_import()
 
 if __name__ == '__main__':
     ImportDescriptorsTest(__file__).main()
