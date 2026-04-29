@@ -762,6 +762,10 @@ class ImportDescriptorsTest(BitcoinTestFramework):
         self.nodes[0].createwallet("encrypted_wallet", blank=True, passphrase="passphrase")
         encrypted_wallet = self.nodes[0].get_wallet_rpc("encrypted_wallet")
 
+        self.log.info("Wallet must be unlocked to import a descriptor")
+        assert_raises_rpc_error(-13, "Error: Please enter the wallet passphrase with walletpassphrase first.",
+            encrypted_wallet.importdescriptors, [descriptor])
+
         descriptor["timestamp"] = 0
         descriptor["next_index"] = 0
 
