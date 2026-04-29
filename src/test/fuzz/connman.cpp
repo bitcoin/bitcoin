@@ -183,7 +183,9 @@ FUZZ_TARGET(connman, .init = initialize_connman)
                 connman.RemoveAddedNode(random_string);
             },
             [&] {
-                connman.SetNetworkActive(fuzzed_data_provider.ConsumeBool());
+                const auto set_active{fuzzed_data_provider.ConsumeBool()};
+                connman.SetNetworkActive(set_active);
+                assert(connman.GetNetworkActive() == set_active);
             },
             [&] {
                 connman.SetTryNewOutboundPeer(fuzzed_data_provider.ConsumeBool());
@@ -247,7 +249,6 @@ FUZZ_TARGET(connman, .init = initialize_connman)
     assert(connman.GetMaxOutboundTarget() == max_outbound_limit);
     (void)connman.GetMaxOutboundTimeframe();
     (void)connman.GetMaxOutboundTimeLeftInCycle();
-    (void)connman.GetNetworkActive();
     std::vector<CNodeStats> stats;
     connman.GetNodeStats(stats);
     (void)connman.GetOutboundTargetBytesLeft();
