@@ -233,8 +233,8 @@ public:
  * Hash values are process-local and must not be persisted, serialized, or compared across
  * processes.
  *
- * Having the hash noexcept lets libstdc++ recalculate it during rehash instead of storing it in
- * each node.
+ * The outpoint overload is potentially throwing so libstdc++ caches its hash in each node.
+ * The implementation does not throw.
  */
 class SaltedCoinsCacheHasher
 {
@@ -250,7 +250,7 @@ public:
     }
 
     /** Hash an outpoint as its txid jumbo block followed by the zero-extended index as one normal block. */
-    size_t operator()(const COutPoint& id) const noexcept
+    size_t operator()(const COutPoint& id) const noexcept(false)
     {
         return m_hasher.Hash(id.hash.ToUint256(), uint64_t{id.n});
     }
