@@ -20,6 +20,12 @@ static const int COINBASE_MATURITY = 100;
 
 static const int WITNESS_SCALE_FACTOR = 4;
 
+/** The minimum serialized size of a CTxIn even with an empty scriptSig
+ * (32 byte txid + 4 byte vout + 1 byte scriptSig length + 4 byte sequence) */
+static constexpr uint32_t MIN_TXIN_SERIALIZED_SIZE{41};
+/** The maximum number of possible inputs included in a block */
+static constexpr uint32_t MAX_INPUTS_PER_BLOCK{(MAX_BLOCK_WEIGHT / WITNESS_SCALE_FACTOR) / MIN_TXIN_SERIALIZED_SIZE};
+
 static const size_t MIN_TRANSACTION_WEIGHT = WITNESS_SCALE_FACTOR * 60; // 60 is the lower bound for the size of a valid serialized CTransaction
 static const size_t MIN_SERIALIZABLE_TRANSACTION_WEIGHT = WITNESS_SCALE_FACTOR * 10; // 10 is the lower bound for the size of a serialized CTransaction
 
