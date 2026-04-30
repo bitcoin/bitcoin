@@ -11,13 +11,21 @@ import http.client
 import time
 import urllib.parse
 
-# Configuration option for some test nodes
+# Configuration option for some tests
 RPCSERVERTIMEOUT = 2
 # Set in httpserver.cpp and passed to libevent evhttp_set_max_headers_size()
 MAX_HEADERS_SIZE = 8192
 # Set in serialize.h and passed to libevent evhttp_set_max_body_size()
 MAX_SIZE = 0x02000000
 
+# When a test expects a server disconnection, any of these errors are
+# acceptable. The specific event is determined by race condition and platform OS.
+NETWORK_ERRORS = (
+    BrokenPipeError,                 # write to a closed socket/pipe
+    ConnectionResetError,            # connection forcibly closed by peer
+    ConnectionAbortedError,          # connection aborted locally or by network stack
+    http.client.ResponseNotReady,    # server response not ready or connection out of sync
+)
 
 class BitcoinHTTPConnection:
     def __init__(self, node):
@@ -37,8 +45,7 @@ class BitcoinHTTPConnection:
             self.conn.request('GET', '/')
             self.conn.getresponse().read()
             return False
-        #       macos/linux           windows
-        except (ConnectionResetError, ConnectionAbortedError):
+        except NETWORK_ERRORS:
             return True
 
     def close_sock(self):
@@ -63,12 +70,15 @@ class BitcoinHTTPConnection:
     def get(self, path, connection_header=None):
         return self._request('GET', path, '', connection_header)
 
+    def send_raw(self, data):
+        self.conn.sock.sendall(data)
+
     def post_raw(self, path, data):
         data_bytes = data.encode("utf-8")
         req = f"POST {path} HTTP/1.1\r\n"
         req += f'Authorization: Basic {str_to_b64str(self.authpair)}\r\n'
         req += f'Content-Length: {len(data_bytes)}\r\n\r\n'
-        self.conn.sock.sendall(req.encode("ascii") + data_bytes)
+        self.send_raw(req.encode("ascii") + data_bytes)
 
     def recv_raw(self):
         '''
@@ -117,6 +127,16 @@ class HTTPBasicsTest (BitcoinTestFramework):
         self.check_chunked_transfer()
         self.check_idle_timeout()
         self.check_server_busy_idle_timeout()
+        self.check_auth_required()
+        self.check_wrong_credentials()
+        self.check_malformed_auth_headers()
+        self.check_disallowed_http_methods()
+        self.check_path_traversal()
+        self.check_request_smuggling_cl_te()
+        self.check_duplicate_content_length()
+        self.check_null_byte_in_uri()
+        self.check_invalid_http_version()
+        self.check_whitespace_in_headers()
 
 
     def check_default_connection(self):
@@ -220,7 +240,7 @@ class HTTPBasicsTest (BitcoinTestFramework):
             # Excessive body size is invalid
             conn.post_raw('/', f'{{"jsonrpc": "2.0", "id": "0", "method": "submitblock", "params": ["{"0" * bytes_above_limit}"]}}')
             self.log.info("Client finished sending request before connection was terminated")
-        except (BrokenPipeError, ConnectionResetError, ConnectionAbortedError):
+        except NETWORK_ERRORS:
             self.log.info("Client did not finish sending request before connection was terminated")
 
         # The server will send a 413 response and disconnect but due to a race
@@ -231,8 +251,7 @@ class HTTPBasicsTest (BitcoinTestFramework):
             assert_equal(response5.status, http.client.REQUEST_ENTITY_TOO_LARGE)
             self.log.info(f"Client got expected response status {response5.status}")
             assert conn.sock_closed()
-        #       macos/linux                   windows
-        except (http.client.ResponseNotReady, ConnectionAbortedError):
+        except NETWORK_ERRORS:
             self.log.info("Client did not read response before disconnecting")
 
 
@@ -317,7 +336,7 @@ class HTTPBasicsTest (BitcoinTestFramework):
                 headers=headers_chunked,
                 encode_chunked=True)
             self.log.info("Client finished sending request before connection was terminated")
-        except (BrokenPipeError, ConnectionResetError, ConnectionAbortedError):
+        except NETWORK_ERRORS:
             self.log.info("Client did not finish sending request before connection was terminated")
 
         # The server will send a 413 response and disconnect but due to a race
@@ -328,8 +347,7 @@ class HTTPBasicsTest (BitcoinTestFramework):
             assert_equal(response2.status, http.client.REQUEST_ENTITY_TOO_LARGE)
             self.log.info(f"Client got expected response status {response2.status}")
             assert conn.sock_closed()
-        #       macos/linux                   windows
-        except (http.client.ResponseNotReady, ConnectionAbortedError):
+        except NETWORK_ERRORS:
             self.log.info("Client did not read response before disconnecting")
 
 
@@ -345,14 +363,14 @@ class HTTPBasicsTest (BitcoinTestFramework):
         # A complete request would have an additional "\r\n" at the end.
         bad_http_request = "GET /test1 HTTP/1.1\r\nHost: somehost\r\n"
         conn = BitcoinHTTPConnection(self.node)
-        conn.conn.sock.sendall(bad_http_request.encode("ascii"))
+        conn.send_raw(bad_http_request.encode("ascii"))
 
         conn.expect_timeout(RPCSERVERTIMEOUT)
 
         # Sanity check -- complete requests don't timeout waiting for completion
         good_http_request = "GET /test2 HTTP/1.1\r\nHost: somehost\r\n\r\n"
         conn.reset_conn()
-        conn.conn.sock.sendall(good_http_request.encode("ascii"))
+        conn.send_raw(good_http_request.encode("ascii"))
         response = conn.recv_raw()
         assert response.startswith(b"HTTP/1.1 404 Not Found")
 
@@ -381,6 +399,186 @@ class HTTPBasicsTest (BitcoinTestFramework):
 
         # Now it will actually close due to idle timeout
         conn.expect_timeout(RPCSERVERTIMEOUT)
+
+
+    def check_auth_required(self):
+        self.log.info("Check that requests without credentials return 401 Unauthorized with WWW-Authenticate")
+        conn = BitcoinHTTPConnection(self.node)
+        conn.headers = {}
+        response = conn.post('/', '{"method": "getbestblockhash"}')
+        assert_equal(response.status, http.client.UNAUTHORIZED)
+        assert response.getheader('WWW-Authenticate') is not None
+
+
+    def check_wrong_credentials(self):
+        self.log.info("Check that incorrect credentials return 401 Unauthorized")
+        conn = BitcoinHTTPConnection(self.node)
+        wrong_pair = f"{conn.url.username}:wrong_password"
+        conn.headers = {"Authorization": f"Basic {str_to_b64str(wrong_pair)}"}
+        response = conn.post('/', '{"method": "getbestblockhash"}')
+        assert_equal(response.status, http.client.UNAUTHORIZED)
+        assert response.getheader('WWW-Authenticate') is not None
+
+
+    def check_malformed_auth_headers(self):
+        self.log.info("Check that malformed Authorization headers return 401 Unauthorized")
+        cases = [
+            "Bearer sometoken123",
+            'Digest username="user", realm="test"',
+            "Basic !!!notbase64!!!",
+            f"Basic {str_to_b64str('nocolon')}",
+            "Basic ",
+        ]
+        for auth_value in cases:
+            conn = BitcoinHTTPConnection(self.node)
+            conn.headers = {"Authorization": f"{auth_value}"}
+            response = conn.post('/', '{"method": "getbestblockhash"}')
+            assert_equal(response.status, http.client.UNAUTHORIZED)
+            assert response.getheader('WWW-Authenticate') is not None
+
+
+    def check_disallowed_http_methods(self):
+        self.log.info("Check that unsafe or unsupported HTTP methods are rejected")
+        for method, err in [
+            ['TRACE',   http.client.NOT_IMPLEMENTED],
+            ['CONNECT', http.client.NOT_IMPLEMENTED],
+            ['DELETE',  http.client.METHOD_NOT_ALLOWED],
+            ['PATCH',   http.client.NOT_IMPLEMENTED],
+            ['OPTIONS', http.client.NOT_IMPLEMENTED],
+            ['GET',     http.client.METHOD_NOT_ALLOWED] # RPC endpoint '/' only handles POST
+        ]:
+            conn = BitcoinHTTPConnection(self.node)
+            response = conn._request(method, '/', data=None, connection_header=None)
+            assert_equal(response.status, err)
+
+
+    def check_path_traversal(self):
+        self.log.info("Check that path traversal attempts are safely rejected")
+        traversal_paths = [
+            '/../etc/passwd',
+            '/../../etc/shadow',
+            '/%2e%2e/%2e%2e/etc/passwd',     # URL-encoded dots
+            '/..%2Fetc%2Fpasswd',            # URL-encoded slash
+            '/.%2e/.%2e/etc/passwd',         # mixed encoding
+            '/valid/../../../etc/passwd',
+        ]
+        for path in traversal_paths:
+            conn = BitcoinHTTPConnection(self.node)
+            response = conn.get(path)
+            assert_equal(response.status, http.client.NOT_FOUND)
+
+
+    def check_request_smuggling_cl_te(self):
+        self.log.info("Check request smuggling is not possible")
+        # https://www.rfc-editor.org/rfc/rfc7230#section-3.3.3
+        # Transfer-Encoding takes precedence over Content-Length.
+        # Sending both creates a smuggling vector: a front-end proxy that
+        # uses Content-Length while the back-end uses Transfer-Encoding lets an
+        # attacker prepend arbitrary bytes to the next victim's request.
+
+        # The real JSON-RPC body sent as a single chunk.
+        body = b'{"method":"getblockcount"}'
+        # Content-Length is set to the length of just the chunk-size line
+        # ("1a\r\n" = 4 bytes), not the full chunked body — the ambiguity that
+        # smuggling exploits. A server using Transfer-Encoding reads the complete
+        # chunk and responds with the block count; a server confused by the
+        # mismatch may stall, close the connection, or return an error.
+        chunk_size_line = f"{len(body):x}\r\n".encode("ascii")
+        # Signals end of body
+        empty_chunk = b'\r\n0\r\n\r\n'
+        chunk_body = chunk_size_line + body + empty_chunk
+
+        conn = BitcoinHTTPConnection(self.node)
+        raw = (
+            f"POST / HTTP/1.1\r\n"
+            f"Host: {conn.url.hostname}\r\n"
+            f"Authorization: Basic {str_to_b64str(conn.authpair)}\r\n"
+            f"Content-Length: {len(chunk_size_line)}\r\n"
+            f"Transfer-Encoding: chunked\r\n"
+            f"\r\n"
+        ).encode("ascii") + chunk_body
+        conn.send_raw(raw)
+        response = conn.recv_raw().decode()
+        assert "HTTP/1.1 200 OK" in response
+        count = self.node.getblockcount()
+        assert f'"result":{count}' in response
+
+
+    def check_duplicate_content_length(self):
+        self.log.info("Check that duplicate Content-Length headers are handled")
+        # https://www.rfc-editor.org/rfc/rfc7230#section-3.3.3
+        # Multiple Content-Length headers with differing values "MUST"
+        # result in an error, but libevent is lenient about this and
+        # only reads the first.
+        conn = BitcoinHTTPConnection(self.node)
+        body = '{"method":"getblockcount"}'
+        raw = (
+            f"POST / HTTP/1.1\r\n"
+            f"Host: {conn.url.hostname}\r\n"
+            f"Authorization: Basic {str_to_b64str(conn.authpair)}\r\n"
+            f"Content-Length: {len(body)}\r\n"
+            f"Content-Length: 999\r\n"
+            f"\r\n"
+            f"{body}"
+        ).encode("ascii")
+        conn.send_raw(raw)
+        response = conn.recv_raw().decode()
+        assert "HTTP/1.1 200 OK" in response
+        count = self.node.getblockcount()
+        assert f'"result":{count}' in response
+
+
+    def check_null_byte_in_uri(self):
+        self.log.info("Check that null bytes in the URI are safely rejected")
+        # Null-byte injection can truncate the path string in C environments,
+        # bypassing suffix/extension checks and causing unexpected file access.
+        conn = BitcoinHTTPConnection(self.node)
+        raw = (
+            "GET /safe\x00/../etc/passwd HTTP/1.1\r\n"
+            f"Host: {conn.url.hostname}\r\n"
+            f"Authorization: Basic {str_to_b64str(conn.authpair)}\r\n"
+            "\r\n"
+        ).encode("ascii")
+        conn.send_raw(raw)
+        response = conn.recv_raw().decode()
+        assert response.startswith("HTTP/1.1 400")
+
+
+    def check_invalid_http_version(self):
+        self.log.info("Check that requests with invalid HTTP versions are safely rejected")
+        cases = [
+            b"GET / \r\n\r\n",                                    # HTTP/0.9 — no version
+            b"GET / HTTP/9.9\r\nHost: localhost\r\n\r\n",         # far-future version
+            b"GET / HTTP/INVALID\r\nHost: localhost\r\n\r\n",     # non-numeric version
+            b"GET / NOTHTTP/1.1\r\nHost: localhost\r\n\r\n",      # wrong protocol name
+        ]
+        for raw in cases:
+            conn = BitcoinHTTPConnection(self.node)
+            conn.send_raw(raw)
+            response = conn.recv_raw().decode()
+            assert response.startswith("HTTP/1.1 400")
+
+
+    def check_whitespace_in_headers(self):
+        self.log.info("Check that requests with whitespace in headers are rejected")
+        # Extra whitespace before colon in header.
+        # This request should be rejected entirely but libevent handles it oddly:
+        # It allows the header and includes the trailing space in the header field-name.
+        # Authorization fails because "Authorization " != "Authorization"
+        conn = BitcoinHTTPConnection(self.node)
+        conn.headers = {"Authorization ": f"Basic {str_to_b64str(conn.authpair)}"}
+        response = conn.post('/', '{"method": "getbestblockhash"}')
+        assert_equal(response.status, http.client.UNAUTHORIZED)
+
+        # Extra whitespace at start of new line.
+        # Libevent implements "line folding" as defined in
+        # https://www.rfc-editor.org/rfc/rfc2616#section-2.2
+        # despite the practice being considered unsafe and explicitly deprecated in
+        # https://www.rfc-editor.org/rfc/rfc7230#section-3.2.4
+        conn = BitcoinHTTPConnection(self.node)
+        conn.headers = {"Authorization": f"Basic \n {str_to_b64str(conn.authpair)}"}
+        response = conn.post('/', '{"method": "getbestblockhash"}')
+        assert_equal(response.status, http.client.OK)
 
 
 if __name__ == '__main__':
