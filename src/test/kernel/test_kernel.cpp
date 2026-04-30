@@ -496,6 +496,20 @@ BOOST_AUTO_TEST_CASE(btck_transaction_output)
     CheckHandle(output, output2);
 }
 
+BOOST_AUTO_TEST_CASE(btck_coin)
+{
+    ScriptPubkey script{hex_string_to_byte_vec("76a9144bfbaf6afb76cc5771bc6404810d1cc041a6933988ac")};
+    TransactionOutput output{script, 1};
+    Coin coin{output, 0, false};
+    Coin coin2{output, 1, true};
+    CheckHandle(coin, coin2);
+
+    BOOST_CHECK(!coin.IsCoinbase());
+    BOOST_CHECK_EQUAL(coin.GetConfirmationHeight(), 0);
+    BOOST_CHECK(coin2.IsCoinbase());
+    BOOST_CHECK_EQUAL(coin2.GetConfirmationHeight(), 1);
+}
+
 BOOST_AUTO_TEST_CASE(btck_transaction_input)
 {
     Transaction tx{hex_string_to_byte_vec("020000000248c03e66fd371c7033196ce24298628e59ebefa00363026044e0f35e0325a65d000000006a473044022004893432347f39beaa280e99da595681ddb20fc45010176897e6e055d716dbfa022040a9e46648a5d10c33ef7cee5e6cf4b56bd513eae3ae044f0039824b02d0f44c012102982331a52822fd9b62e9b5d120da1d248558fac3da3a3c51cd7d9c8ad3da760efeffffffb856678c6e4c3c84e39e2ca818807049d6fba274b42af3c6d3f9d4b6513212d2000000006a473044022068bcedc7fe39c9f21ad318df2c2da62c2dc9522a89c28c8420ff9d03d2e6bf7b0220132afd752754e5cb1ea2fd0ed6a38ec666781e34b0e93dc9a08f2457842cf5660121033aeb9c079ea3e08ea03556182ab520ce5c22e6b0cb95cee6435ee17144d860cdfeffffff0260d50b00000000001976a914363cc8d55ea8d0500de728ef6d63804ddddbdc9888ac67040f00000000001976a914c303bdc5064bf9c9a8b507b5496bd0987285707988ac6acb0700")};

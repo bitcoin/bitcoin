@@ -1349,6 +1349,11 @@ const btck_Coin* btck_transaction_spent_outputs_get_coin_at(const btck_Transacti
     return btck_Coin::ref(coin);
 }
 
+btck_Coin* btck_coin_create(const btck_TransactionOutput* output, uint32_t height, int is_coinbase)
+{
+    return btck_Coin::create(btck_TransactionOutput::get(output), height, is_coinbase == 1);
+}
+
 btck_Coin* btck_coin_copy(const btck_Coin* coin)
 {
     return btck_Coin::copy(coin);
