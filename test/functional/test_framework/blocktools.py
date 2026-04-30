@@ -65,7 +65,7 @@ WITNESS_COMMITMENT_HEADER = b"\xaa\x21\xa9\xed"
 
 NULL_OUTPOINT = COutPoint(0, 0xffffffff)
 
-NORMAL_GBT_REQUEST_PARAMS = {"rules": ["segwit"]}
+NORMAL_GBT_REQUEST_PARAMS = {"rules": ["segwit", "consensuscleanup"]}
 VERSIONBITS_LAST_OLD_BLOCK_VERSION = 4
 MIN_BLOCKS_TO_KEEP = 288
 
