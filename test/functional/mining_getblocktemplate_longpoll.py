@@ -20,14 +20,33 @@ class LongpollThread(threading.Thread):
         self.longpollid = template['longpollid']
         # create a new connection to the node, we can't use the same
         # connection from two threads
-        self.node = get_rpc_proxy(node.url, 1, timeout=600, coveragedir=node.coverage_dir)
+        self.node = get_rpc_proxy(node.url, node.index, timeout=600, coveragedir=node.coverage_dir)
+        self.exception = None
 
     def run(self):
-        self.node.getblocktemplate({'longpollid': self.longpollid, 'rules': ['segwit']})
+        try:
+            self.node.getblocktemplate({'longpollid': self.longpollid, 'rules': ['segwit']})
+        except Exception as e:
+            self.exception = e
+
+
+class GetBlockTemplateThread(threading.Thread):
+    def __init__(self, node):
+        threading.Thread.__init__(self)
+        self.node = get_rpc_proxy(node.url, node.index, timeout=600, coveragedir=node.coverage_dir)
+        self.exception = None
+
+    def run(self):
+        try:
+            self.node.getblocktemplate({'rules': ['segwit']})
+        except Exception as e:
+            self.exception = e
+
 
 class GetBlockTemplateLPTest(BitcoinTestFramework):
     def set_test_params(self):
         self.num_nodes = 2
+        self.extra_args = [["-rpcthreads=2"], []]
         self.supports_cli = False
 
     def run_test(self):
@@ -53,6 +72,7 @@ class GetBlockTemplateLPTest(BitcoinTestFramework):
         # check that thread will exit now that new transaction entered mempool
         thr.join(5)  # wait 5 seconds or until thread exits
         assert not thr.is_alive()
+        assert_equal(thr.exception, None)
 
         self.log.info("Test that longpoll will terminate if we generate a block ourselves")
         thr = LongpollThread(self.nodes[0])
@@ -61,6 +81,7 @@ class GetBlockTemplateLPTest(BitcoinTestFramework):
         self.generate(self.nodes[0], 1)  # generate a block on own node
         thr.join(5)  # wait 5 seconds or until thread exits
         assert not thr.is_alive()
+        assert_equal(thr.exception, None)
 
         self.log.info("Test that introducing a new transaction into the mempool will terminate the longpoll")
         thr = LongpollThread(self.nodes[0])
@@ -71,6 +92,27 @@ class GetBlockTemplateLPTest(BitcoinTestFramework):
         # after one minute, every 10 seconds the mempool is probed, so in 80 seconds it should have returned
         thr.join(60 + 20)
         assert not thr.is_alive()
+        assert_equal(thr.exception, None)
+
+        self.log.info("Test that shutdown does not process queued getblocktemplate requests")
+        longpoll_threads = [LongpollThread(self.nodes[0]) for _ in range(2)]
+        for thr in longpoll_threads:
+            thr.start()
+        for thr in longpoll_threads:
+            thr.join(5)
+            assert thr.is_alive()
+
+        queued_gbt_thread = GetBlockTemplateThread(self.nodes[0])
+        queued_gbt_thread.start()
+        queued_gbt_thread.join(1)
+        assert queued_gbt_thread.is_alive()
+
+        self.nodes[0].process.terminate()
+        self.nodes[0].wait_until_stopped()
+        for thr in [*longpoll_threads, queued_gbt_thread]:
+            thr.join(5)
+            assert not thr.is_alive()
+        assert_equal(queued_gbt_thread.exception.error['code'], -9)
 
 if __name__ == '__main__':
     GetBlockTemplateLPTest(__file__).main()

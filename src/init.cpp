@@ -267,6 +267,7 @@ static void ShutdownNotify(const ArgsManager& args)
 
 void Interrupt(NodeContext& node)
 {
+    InterruptRPC();
 #if HAVE_SYSTEM
     ShutdownNotify(*node.args);
 #endif
@@ -274,7 +275,6 @@ void Interrupt(NodeContext& node)
     if (node.notifications) WITH_LOCK(node.notifications->m_tip_block_mutex, node.notifications->m_tip_block_cv.notify_all());
     InterruptHTTPServer();
     InterruptHTTPRPC();
-    InterruptRPC();
     InterruptREST();
     if (node.tor_controller) {
         node.tor_controller->Interrupt();
