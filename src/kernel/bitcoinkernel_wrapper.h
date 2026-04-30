@@ -1283,6 +1283,9 @@ public:
 class Coin : public Handle<btck_Coin, btck_coin_copy, btck_coin_destroy>, public CoinApi<Coin>
 {
 public:
+    Coin(const TransactionOutput& output, uint32_t confirmation_height, bool is_coinbase)
+        : Handle{btck_coin_create(output.get(), confirmation_height, is_coinbase)} {}
+
     Coin(btck_Coin* coin) : Handle{coin} {}
 
     Coin(const CoinView& view) : Handle{view} {}

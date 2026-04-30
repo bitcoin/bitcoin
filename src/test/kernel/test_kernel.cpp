@@ -15,6 +15,7 @@
 #include <charconv>
 #include <cstdint>
 #include <cstdlib>
+#include <exception>
 #include <iostream>
 #include <memory>
 #include <optional>
@@ -494,6 +495,22 @@ BOOST_AUTO_TEST_CASE(btck_transaction_output)
     TransactionOutput output{script, 1};
     TransactionOutput output2{script, 2};
     CheckHandle(output, output2);
+}
+
+BOOST_AUTO_TEST_CASE(btck_coin)
+{
+    ScriptPubkey script{hex_string_to_byte_vec("76a9144bfbaf6afb76cc5771bc6404810d1cc041a6933988ac")};
+    TransactionOutput output{script, 1};
+
+    BOOST_CHECK_EXCEPTION((Coin{output, std::numeric_limits<uint32_t>::max(), false}), std::runtime_error, HasReason{"failed to instantiate btck object"});
+    Coin coin{output, 0, false};
+    Coin coin2{output, 1, true};
+    CheckHandle(coin, coin2);
+
+    BOOST_CHECK(!coin.IsCoinbase());
+    BOOST_CHECK_EQUAL(coin.GetConfirmationHeight(), 0);
+    BOOST_CHECK(coin2.IsCoinbase());
+    BOOST_CHECK_EQUAL(coin2.GetConfirmationHeight(), 1);
 }
 
 BOOST_AUTO_TEST_CASE(btck_transaction_input)

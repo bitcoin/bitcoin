@@ -1871,6 +1871,17 @@ BITCOINKERNEL_API void btck_txid_destroy(btck_Txid* txid);
 ///@{
 
 /**
+ * @brief Create a coin.
+ *
+ * @param[in] output              Non-null.
+ * @param[in] confirmation_height The block height the coin was confirmed in. Heights are stored as 31-bit values, so it must fit in 31 bits.
+ * @param[in] is_coinbase         Set to 1 if the coin is from a coinbase output, set to 0 otherwise.
+ * @return                        The coin, or null if the height does not fit in a 31 bit value.
+ */
+BITCOINKERNEL_API btck_Coin* BITCOINKERNEL_WARN_UNUSED_RESULT btck_coin_create(
+    const btck_TransactionOutput* output, uint32_t confirmation_height, int is_coinbase) BITCOINKERNEL_ARG_NONNULL(1);
+
+/**
  * @brief Copy a coin.
  *
  * @param[in] coin Non-null.
