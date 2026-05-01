@@ -580,6 +580,8 @@ private:
 
     //! The inputs of the block which is being fetched.
     struct InputToFetch {
+        //! Workers set this after setting the coin. The main thread tests this before reading the coin.
+        std::atomic_flag ready{};
         //! The outpoint of the input to fetch.
         const COutPoint& outpoint;
         //! The coin that workers will fetch and main thread will insert into cache.
@@ -587,6 +589,14 @@ private:
         mutable std::optional<Coin> coin{std::nullopt};
 
         explicit InputToFetch(const COutPoint& o LIFETIMEBOUND) noexcept : outpoint{o} {}
+
+        //! Move ctor is required for resizing m_inputs in StartFetching. Elements will never move once parallel tasks
+        //! are started, so we can assert that coin is nullopt and ready is false.
+        InputToFetch(InputToFetch&& other) noexcept : outpoint{other.outpoint}
+        {
+            Assert(!other.coin);
+            Assert(!other.ready.test(std::memory_order_relaxed));
+        }
     };
     std::vector<InputToFetch> m_inputs{};
 
@@ -603,6 +613,9 @@ private:
 
         auto& input{m_inputs[i]};
         input.coin = base->PeekCoin(input.outpoint);
+        // Use release so writing coin above happens before the main thread acquires.
+        Assert(!input.ready.test_and_set(std::memory_order_release));
+        input.ready.notify_one();
         return true;
     }
 
@@ -621,6 +634,8 @@ private:
         if (m_input_tail < m_inputs.size() && m_inputs[m_input_tail].outpoint == outpoint) {
             // We advance the tail since the input is cached and not accessed through this method again.
             auto& input{m_inputs[m_input_tail++]};
+            // Wait until the coin is ready to be read. We need acquire so we match the worker thread's release.
+            input.ready.wait(/*old=*/false, std::memory_order_acquire);
             // We can move the coin since we won't access this input again.
             return std::move(input.coin);
         }
