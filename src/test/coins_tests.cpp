@@ -301,6 +301,25 @@ BOOST_FIXTURE_TEST_CASE(coins_cache_dbbase_simulation_test, CacheTest)
     SimulationTest(&db_base, true);
 }
 
+BOOST_AUTO_TEST_CASE(malformed_first_coin_key_cursor_invalid)
+{
+    const fs::path path{m_args.GetDataDirBase() / "malformed_first_coin_key_cursor_invalid"};
+
+    {
+        CDBWrapper dbw{{.path = path, .cache_bytes = 1_MiB, .wipe_data = true, .obfuscate = false}};
+        // Enter the DB_COIN keyspace with a key too short to deserialize as CoinEntry.
+        dbw.Write(uint8_t{'C'}, Coin{CTxOut{/*nValueIn=*/1, CScript{}}, /*nHeightIn=*/1, /*fCoinBaseIn=*/false});
+    }
+
+    CCoinsViewDB view{{.path = path, .cache_bytes = 1_MiB, .wipe_data = false, .obfuscate = false}, {}};
+    std::unique_ptr<CCoinsViewCursor> cursor{view.Cursor()};
+    BOOST_REQUIRE(cursor);
+
+    COutPoint outpoint;
+    BOOST_CHECK(!cursor->Valid());
+    BOOST_CHECK(!cursor->GetKey(outpoint));
+}
+
 BOOST_AUTO_TEST_SUITE_END()
 
 BOOST_FIXTURE_TEST_SUITE(coins_tests, BasicTestingSetup)
