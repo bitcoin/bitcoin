@@ -968,10 +968,10 @@ private:
      * Caller must set min_pow_checked=true in order to add a new header to the
      * block index (permanent memory storage), indicating that the header is
      * known to be part of a sufficiently high-work chain (anti-dos check).
+     * Can return Valid or Invalid result, but not Error.
      */
-    bool AcceptBlockHeader(
+    [[nodiscard]] BlockValidationState AcceptBlockHeader(
         const CBlockHeader& block,
-        BlockValidationState& state,
         CBlockIndex** ppindex,
         bool min_pow_checked) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
     friend Chainstate;
