@@ -12,6 +12,7 @@
 #include <memusage.h>
 #include <primitives/block.h>
 #include <primitives/transaction.h>
+#include <primitives/transaction_identifier.h>
 #include <serialize.h>
 #include <support/allocators/pool.h>
 #include <uint256.h>
@@ -27,6 +28,7 @@
 #include <optional>
 #include <ranges>
 #include <unordered_map>
+#include <unordered_set>
 #include <utility>
 #include <vector>
 
@@ -572,6 +574,8 @@ class CoinsViewOverlay : public CCoinsViewCache
 private:
     //! The latest input not yet being fetched. Workers atomically increment this when fetching.
     mutable std::atomic_uint32_t m_input_head{0};
+    //! The latest input not yet accessed by a consumer. Only the main thread increments this.
+    mutable uint32_t m_input_tail{0};
 
     //! The inputs of the block which is being fetched.
     struct InputToFetch {
@@ -605,15 +609,18 @@ private:
     {
         m_inputs.clear();
         m_input_head.store(0, std::memory_order_relaxed);
+        m_input_tail = 0;
     }
 
     std::optional<Coin> FetchCoinFromBase(const COutPoint& outpoint) const override
     {
-        // TODO: linear scan; replaced with O(1) m_input_tail lookup in a follow-up commit.
-        for (const auto i : std::views::iota(0U, m_inputs.size())) {
-            auto& input{m_inputs[i]};
-            if (input.outpoint != outpoint) continue;
-            return input.coin;
+        // This assumes ConnectBlock accesses all inputs in the same order as
+        // they are added to m_inputs in StartFetching.
+        if (m_input_tail < m_inputs.size() && m_inputs[m_input_tail].outpoint == outpoint) {
+            // We advance the tail since the input is cached and not accessed through this method again.
+            auto& input{m_inputs[m_input_tail++]};
+            // We can move the coin since we won't access this input again.
+            return std::move(input.coin);
         }
 
         // We will only get here for BIP30 checks.
@@ -635,11 +642,16 @@ public:
     {
         Assume(m_inputs.empty());
         Assume(m_input_head.load(std::memory_order_relaxed) == 0);
+        Assume(m_input_tail == 0);
         // Loop through the inputs of the block and set them in the queue.
+        // Filter txs that are spending inputs created earlier in the same block.
+        std::unordered_set<Txid, SaltedTxidHasher> txids;
+        txids.reserve(block.vtx.size());
         for (const auto& tx : block.vtx | std::views::drop(1)) {
             for (const auto& input : tx->vin) {
-                m_inputs.emplace_back(input.prevout);
+                if (!txids.contains(input.prevout.hash)) m_inputs.emplace_back(input.prevout);
             }
+            txids.emplace(tx->GetHash());
         }
         while (ProcessInput()) {}
         return CreateResetGuard();
