@@ -4842,7 +4842,7 @@ void PeerManagerImpl::ProcessMessage(Peer& peer, CNode& pfrom, const std::string
             }
         }
 
-        // If AcceptBlockHeader returned true, it set pindex
+        // If ProcessNewBlockHeaders returned valid, it set pindex
         Assert(pindex);
         if (received_new_header) {
             LogBlockHeader(*pindex, pfrom, /*via_compact_block=*/true);

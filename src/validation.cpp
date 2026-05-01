@@ -4198,7 +4198,7 @@ static bool ContextualCheckBlock(const CBlock& block, BlockValidationState& stat
     return true;
 }
 
-bool ChainstateManager::AcceptBlockHeader(const CBlockHeader& block, BlockValidationState& state, CBlockIndex** ppindex, bool min_pow_checked)
+BlockValidationState ChainstateManager::AcceptBlockHeader(const CBlockHeader& block, CBlockIndex** ppindex, bool min_pow_checked)
 {
     AssertLockHeld(cs_main);
 
@@ -4213,17 +4213,16 @@ bool ChainstateManager::AcceptBlockHeader(const CBlockHeader& block, BlockValida
                 *ppindex = pindex;
             if (pindex->nStatus & BLOCK_FAILED_VALID) {
                 LogDebug(BCLog::VALIDATION, "%s: block %s is marked invalid\n", __func__, hash.ToString());
-                return state.Invalid(BlockValidationResult::BLOCK_CACHED_INVALID, "duplicate-invalid",
-                                     strprintf("block %s was previously marked invalid", hash.ToString()));
+                return BlockValidationState::MakeInvalid(BlockValidationResult::BLOCK_CACHED_INVALID, "duplicate-invalid",
+                    strprintf("block %s was previously marked invalid", hash.ToString()));
             }
-            return true;
+            return BlockValidationState{};
         }
 
-        Assume(state.IsValid());
-        state = CheckBlockHeader(block, GetConsensus());
-        if (!state.IsValid()) {
+        if (const auto state = CheckBlockHeader(block, GetConsensus()); !state.IsValid()) {
+            assert(state.IsInvalid());
             LogDebug(BCLog::VALIDATION, "%s: Consensus::CheckBlockHeader: %s, %s\n", __func__, hash.ToString(), state.ToString());
-            return false;
+            return state;
         }
 
         // Get prev block index
@@ -4231,30 +4230,29 @@ bool ChainstateManager::AcceptBlockHeader(const CBlockHeader& block, BlockValida
         BlockMap::iterator mi{m_blockman.m_block_index.find(block.hashPrevBlock)};
         if (mi == m_blockman.m_block_index.end()) {
             LogDebug(BCLog::VALIDATION, "header %s has prev block not found: %s\n", hash.ToString(), block.hashPrevBlock.ToString());
-            return state.Invalid(BlockValidationResult::BLOCK_MISSING_PREV, "prev-blk-not-found");
+            return BlockValidationState::MakeInvalid(BlockValidationResult::BLOCK_MISSING_PREV, "prev-blk-not-found");
         }
         pindexPrev = &((*mi).second);
         if (pindexPrev->nStatus & BLOCK_FAILED_VALID) {
             LogDebug(BCLog::VALIDATION, "header %s has prev block invalid: %s\n", hash.ToString(), block.hashPrevBlock.ToString());
-            return state.Invalid(BlockValidationResult::BLOCK_INVALID_PREV, "bad-prevblk");
+            return BlockValidationState::MakeInvalid(BlockValidationResult::BLOCK_INVALID_PREV, "bad-prevblk");
         }
-        Assume(state.IsValid());
-        state = ContextualCheckBlockHeader(block, *this, pindexPrev);
-        if (!state.IsValid()) {
+        if (const auto state = ContextualCheckBlockHeader(block, *this, pindexPrev); !state.IsValid()) {
+            assert(state.IsInvalid());
             LogDebug(BCLog::VALIDATION, "%s: Consensus::ContextualCheckBlockHeader: %s, %s\n", __func__, hash.ToString(), state.ToString());
-            return false;
+            return state;
         }
     }
     if (!min_pow_checked) {
         LogDebug(BCLog::VALIDATION, "%s: not adding new block header %s, missing anti-dos proof-of-work validation\n", __func__, hash.ToString());
-        return state.Invalid(BlockValidationResult::BLOCK_HEADER_LOW_WORK, "too-little-chainwork");
+        return BlockValidationState::MakeInvalid(BlockValidationResult::BLOCK_HEADER_LOW_WORK, "too-little-chainwork");
     }
     CBlockIndex* pindex{m_blockman.AddToBlockIndex(block, m_best_header)};
 
     if (ppindex)
         *ppindex = pindex;
 
-    return true;
+    return BlockValidationState{};
 }
 
 // Exposed wrapper for AcceptBlockHeader
@@ -4265,10 +4263,11 @@ bool ChainstateManager::ProcessNewBlockHeaders(std::span<const CBlockHeader> hea
         LOCK(cs_main);
         for (const CBlockHeader& header : headers) {
             CBlockIndex *pindex = nullptr; // Use a temp pindex instead of ppindex to avoid a const_cast
-            bool accepted{AcceptBlockHeader(header, state, &pindex, min_pow_checked)};
+            Assume(state.IsValid());
+            state = AcceptBlockHeader(header, &pindex, min_pow_checked);
             CheckBlockIndex();
 
-            if (!accepted) {
+            if (!state.IsValid()) {
                 return false;
             }
             if (ppindex) {
@@ -4324,10 +4323,11 @@ bool ChainstateManager::AcceptBlock(const std::shared_ptr<const CBlock>& pblock,
     CBlockIndex *pindexDummy = nullptr;
     CBlockIndex *&pindex = ppindex ? *ppindex : pindexDummy;
 
-    bool accepted_header{AcceptBlockHeader(block, state, &pindex, min_pow_checked)};
+    Assume(state.IsValid());
+    state = AcceptBlockHeader(block, &pindex, min_pow_checked);
     CheckBlockIndex();
 
-    if (!accepted_header)
+    if (!state.IsValid())
         return false;
 
     // Check all requested blocks that we do not already have for validity and
