@@ -8,6 +8,7 @@
 
 #include <attributes.h>
 #include <compressor.h>
+#include <consensus/consensus.h>
 #include <core_memusage.h>
 #include <memusage.h>
 #include <primitives/block.h>
@@ -579,11 +580,15 @@ private:
 
     //! The inputs of the block which is being fetched.
     struct InputToFetch {
+        //! Workers set this after setting the coin. The main thread tests this before reading the coin.
+        mutable std::atomic_flag ready{};
         //! The outpoint of the input to fetch.
         const COutPoint& outpoint;
         //! The coin that workers will fetch and main thread will insert into cache.
         mutable std::optional<Coin> coin{std::nullopt};
 
+        //! The move constructor will never be used, since m_inputs will never need to reallocate.
+        InputToFetch(InputToFetch&& other) noexcept : outpoint{other.outpoint} { Assert(false); }
         explicit InputToFetch(const COutPoint& o LIFETIMEBOUND) noexcept : outpoint{o} {}
     };
     std::vector<InputToFetch> m_inputs{};
@@ -601,6 +606,9 @@ private:
 
         auto& input{m_inputs[i]};
         input.coin = base->PeekCoin(input.outpoint);
+        // Use release so writing coin above happens before the main thread acquires.
+        input.ready.test_and_set(std::memory_order_release);
+        input.ready.notify_one();
         return true;
     }
 
@@ -619,6 +627,15 @@ private:
         if (m_input_tail < m_inputs.size() && m_inputs[m_input_tail].outpoint == outpoint) {
             // We advance the tail since the input is cached and not accessed through this method again.
             auto& input{m_inputs[m_input_tail++]};
+            // Check if the coin is ready to be read. We need acquire so we match the worker thread's release.
+            while (!input.ready.test(std::memory_order_acquire)) {
+                // Work instead of waiting if the coin is not ready
+                if (!ProcessInput()) {
+                    // No more work, just wait
+                    input.ready.wait(/*old=*/false, std::memory_order_acquire);
+                    break;
+                }
+            }
             // We can move the coin since we won't access this input again.
             return std::move(input.coin);
         }
@@ -635,7 +652,12 @@ protected:
     }
 
 public:
-    using CCoinsViewCache::CCoinsViewCache;
+    explicit CoinsViewOverlay(CCoinsView* in_base, bool deterministic = false) noexcept
+        : CCoinsViewCache{in_base, deterministic}
+    {
+        // Reserve to maximum theoretical number so emplace_back in StartFetching never reallocates m_inputs.
+        m_inputs.reserve(MAX_INPUTS_PER_BLOCK);
+    }
 
     //! Start fetching inputs from block.
     [[nodiscard]] ResetGuard StartFetching(const CBlock& block LIFETIMEBOUND) noexcept
