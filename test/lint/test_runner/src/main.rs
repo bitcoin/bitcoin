@@ -180,9 +180,12 @@ fn parse_lint_args(args: &[String]) -> Vec<&'static Linter> {
 fn run_all_python_linters() -> LintResult {
     let mut good = true;
     let lint_dir = get_git_root().join("test/lint");
-    for entry in fs::read_dir(lint_dir).unwrap() {
-        let entry = entry.unwrap();
-        let entry_fn = entry.file_name().into_string().unwrap();
+    for entry in fs::read_dir(lint_dir).expect("Failed to read test/lint directory") {
+        let entry = entry.expect("Failed to read directory entry");
+        let entry_fn = entry
+            .file_name()
+            .into_string()
+            .expect("Lint script filename is not valid UTF-8");
         if entry_fn.starts_with("lint-")
             && entry_fn.ends_with(".py")
             && !Command::new("python3")
@@ -220,7 +223,7 @@ fn main() -> ExitCode {
     let mut test_failed = false;
     for linter in linters_to_run {
         // chdir to root before each lint test
-        env::set_current_dir(&git_root).unwrap();
+        env::set_current_dir(&git_root).expect("Failed to chdir to git root");
         if let Err(err) = (linter.lint_fn)() {
             println!(
                 "^^^\n{err}\n^---- ⚠️ Failure generated from lint check '{}' ({})!\n\n",

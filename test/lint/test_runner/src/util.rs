@@ -41,7 +41,10 @@ pub fn check_output(cmd: &mut Command) -> Result<String, LintError> {
 
 /// Return the git root as utf8, or panic
 pub fn get_git_root() -> PathBuf {
-    PathBuf::from(check_output(git().args(["rev-parse", "--show-toplevel"])).unwrap())
+    PathBuf::from(
+        check_output(git().args(["rev-parse", "--show-toplevel"]))
+            .expect("Failed to get git root via 'git rev-parse --show-toplevel'"),
+    )
 }
 
 /// Return the commit range, or panic

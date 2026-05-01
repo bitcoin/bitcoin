@@ -16,7 +16,7 @@ pub fn lint_includes_build_config() -> LintResult {
             .map(|line| {
                 line.split_whitespace()
                     .nth(1)
-                    .unwrap_or_else(|| panic!("Could not extract name in line: {line}"))
+                    .expect(&format!("Could not extract define name in line: {line}"))
             })
             .collect::<Vec<_>>()
             .join("|")
