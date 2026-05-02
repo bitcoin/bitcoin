@@ -605,6 +605,11 @@ if(REDUCE_EXPORTS)
   try_append_linker_flag("-Wl,-no_exported_symbols" VAR CMAKE_EXE_LINKER_FLAGS)
 endif()
 
+# Attempt to use safe identical code folding. This reduces
+# binary size.
+try_append_linker_flag("-Wl,--icf=safe_thunks" VAR CMAKE_EXE_LINKER_FLAGS)
+try_append_linker_flag("-Wl,--icf=safe" VAR CMAKE_EXE_LINKER_FLAGS)
+
 # Prefer Unix-style package components over frameworks on macOS.
 # This improves compatibility with Python version managers.
 set(Python3_FIND_FRAMEWORK LAST CACHE STRING "")
