@@ -1154,9 +1154,9 @@ int btck_block_check(const btck_Block* block, const btck_ConsensusParams* consen
     const bool check_pow    = (flags & btck_BlockCheckFlags_POW) != 0;
     const bool check_merkle = (flags & btck_BlockCheckFlags_MERKLE) != 0;
 
-    const bool result = CheckBlock(*btck_Block::get(block), state, btck_ConsensusParams::get(consensus_params), /*fCheckPOW=*/check_pow, /*fCheckMerkleRoot=*/check_merkle);
+    state = CheckBlock(*btck_Block::get(block), btck_ConsensusParams::get(consensus_params), /*fCheckPOW=*/check_pow, /*fCheckMerkleRoot=*/check_merkle);
 
-    return result ? 1 : 0;
+    return state.IsValid() ? 1 : 0;
 }
 
 size_t btck_block_count_transactions(const btck_Block* block)

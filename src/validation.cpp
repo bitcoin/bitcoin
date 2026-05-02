@@ -2329,7 +2329,8 @@ bool Chainstate::ConnectBlock(const CBlock& block, BlockValidationState& state, 
     // is enforced in ContextualCheckBlockHeader(); we wouldn't want to
     // re-enforce that rule here (at least until we make it impossible for
     // the clock to go backward).
-    if (!CheckBlock(block, state, params.GetConsensus(), !fJustCheck, !fJustCheck)) {
+    state = CheckBlock(block, params.GetConsensus(), !fJustCheck, !fJustCheck);
+    if (!state.IsValid()) {
         if (state.GetResult() == BlockValidationResult::BLOCK_MUTATED) {
             // We don't write down blocks to disk if they may have been
             // corrupted, so this should be impossible unless we're having hardware
@@ -3931,29 +3932,27 @@ static bool CheckWitnessMalleation(const CBlock& block, bool expect_witness_comm
     return true;
 }
 
-bool CheckBlock(const CBlock& block, BlockValidationState& state, const Consensus::Params& consensusParams, bool fCheckPOW, bool fCheckMerkleRoot)
+BlockValidationState CheckBlock(const CBlock& block, const Consensus::Params& consensusParams, bool fCheckPOW, bool fCheckMerkleRoot)
 {
     // These are checks that are independent of context.
 
     if (block.fChecked)
-        return true;
+        return BlockValidationState{};
 
     // Check that the header is valid (particularly PoW).  This is mostly
     // redundant with the call in AcceptBlockHeader.
-    state = CheckBlockHeader(block, consensusParams, fCheckPOW);
-    if (!state.IsValid())
-        return false;
+    if (const auto state = CheckBlockHeader(block, consensusParams, fCheckPOW); !state.IsValid())
+        return state;
 
     // Signet only: check block solution
     if (consensusParams.signet_blocks && fCheckPOW && !CheckSignetBlockSolution(block, consensusParams)) {
-        return state.Invalid(BlockValidationResult::BLOCK_CONSENSUS, "bad-signet-blksig", "signet block signature validation failure");
+        return BlockValidationState::InvalidState(BlockValidationResult::BLOCK_CONSENSUS, "bad-signet-blksig", "signet block signature validation failure");
     }
 
     // Check the merkle root.
     if (fCheckMerkleRoot) {
-        state = CheckMerkleRoot(block);
-        if (!state.IsValid()) {
-            return false;
+        if (const auto state = CheckMerkleRoot(block); !state.IsValid()) {
+            return state;
         }
     }
 
@@ -3964,15 +3963,19 @@ bool CheckBlock(const CBlock& block, BlockValidationState& state, const Consensu
     // checks that use witness data may be performed here.
 
     // Size limits
-    if (block.vtx.empty() || block.vtx.size() * WITNESS_SCALE_FACTOR > MAX_BLOCK_WEIGHT || ::GetSerializeSize(TX_NO_WITNESS(block)) * WITNESS_SCALE_FACTOR > MAX_BLOCK_WEIGHT)
-        return state.Invalid(BlockValidationResult::BLOCK_CONSENSUS, "bad-blk-length", "size limits failed");
+    if (block.vtx.empty() || block.vtx.size() * WITNESS_SCALE_FACTOR > MAX_BLOCK_WEIGHT || ::GetSerializeSize(TX_NO_WITNESS(block)) * WITNESS_SCALE_FACTOR > MAX_BLOCK_WEIGHT) {
+        return BlockValidationState::InvalidState(BlockValidationResult::BLOCK_CONSENSUS, "bad-blk-length", "size limits failed");
+    }
 
     // First transaction must be coinbase, the rest must not be
-    if (block.vtx.empty() || !block.vtx[0]->IsCoinBase())
-        return state.Invalid(BlockValidationResult::BLOCK_CONSENSUS, "bad-cb-missing", "first tx is not coinbase");
-    for (unsigned int i = 1; i < block.vtx.size(); i++)
-        if (block.vtx[i]->IsCoinBase())
-            return state.Invalid(BlockValidationResult::BLOCK_CONSENSUS, "bad-cb-multiple", "more than one coinbase");
+    if (block.vtx.empty() || !block.vtx[0]->IsCoinBase()) {
+        return BlockValidationState::InvalidState(BlockValidationResult::BLOCK_CONSENSUS, "bad-cb-missing", "first tx is not coinbase");
+    }
+    for (unsigned int i = 1; i < block.vtx.size(); i++) {
+        if (block.vtx[i]->IsCoinBase()) {
+            return BlockValidationState::InvalidState(BlockValidationResult::BLOCK_CONSENSUS, "bad-cb-multiple", "more than one coinbase");
+        }
+    }
 
     // Check transactions
     // Must check for duplicate inputs (see CVE-2018-17144)
@@ -3982,8 +3985,8 @@ bool CheckBlock(const CBlock& block, BlockValidationState& state, const Consensu
             // CheckBlock() does context-free validation checks. The only
             // possible failures are consensus failures.
             assert(tx_state.GetResult() == TxValidationResult::TX_CONSENSUS);
-            return state.Invalid(BlockValidationResult::BLOCK_CONSENSUS, tx_state.GetRejectReason(),
-                                 strprintf("Transaction check failed (tx hash %s) %s", tx->GetHash().ToString(), tx_state.GetDebugMessage()));
+            return BlockValidationState::InvalidState(BlockValidationResult::BLOCK_CONSENSUS, tx_state.GetRejectReason(),
+                strprintf("Transaction check failed (tx hash %s) %s", tx->GetHash().ToString(), tx_state.GetDebugMessage()));
         }
     }
     // This underestimates the number of sigops, because unlike ConnectBlock it
@@ -3993,13 +3996,14 @@ bool CheckBlock(const CBlock& block, BlockValidationState& state, const Consensu
     {
         nSigOps += GetLegacySigOpCount(*tx);
     }
-    if (nSigOps * WITNESS_SCALE_FACTOR > MAX_BLOCK_SIGOPS_COST)
-        return state.Invalid(BlockValidationResult::BLOCK_CONSENSUS, "bad-blk-sigops", "out-of-bounds SigOpCount");
+    if (nSigOps * WITNESS_SCALE_FACTOR > MAX_BLOCK_SIGOPS_COST) {
+        return BlockValidationState::InvalidState(BlockValidationResult::BLOCK_CONSENSUS, "bad-blk-sigops", "out-of-bounds SigOpCount");
+    }
 
     if (fCheckPOW && fCheckMerkleRoot)
         block.fChecked = true;
 
-    return true;
+    return BlockValidationState{};
 }
 
 void ChainstateManager::UpdateUncommittedBlockStructures(CBlock& block, const CBlockIndex* pindexPrev) const
@@ -4370,8 +4374,11 @@ bool ChainstateManager::AcceptBlock(const std::shared_ptr<const CBlock>& pblock,
 
     const CChainParams& params{GetParams()};
 
-    if (!CheckBlock(block, state, params.GetConsensus()) ||
-        !ContextualCheckBlock(block, state, *this, pindex->pprev)) {
+    state = CheckBlock(block, params.GetConsensus());
+    if (state.IsValid()) {
+        ContextualCheckBlock(block, state, *this, pindex->pprev);
+    }
+    if (!state.IsValid()) {
         if (Assume(state.IsInvalid())) {
             ActiveChainstate().InvalidBlockFound(pindex, state);
         }
@@ -4443,12 +4450,12 @@ bool ChainstateManager::ProcessNewBlock(const std::shared_ptr<const CBlock>& blo
         // malleability that cause CheckBlock() to fail; see e.g. CVE-2012-2459 and
         // https://lists.linuxfoundation.org/pipermail/bitcoin-dev/2019-February/016697.html.  Because CheckBlock() is
         // not very expensive, the anti-DoS benefits of caching failure (of a definitely-invalid block) are not substantial.
-        bool ret = CheckBlock(*block, state, GetConsensus());
-        if (ret) {
+        state = CheckBlock(*block, GetConsensus());
+        if (state.IsValid()) {
             // Store to disk
-            ret = AcceptBlock(block, state, &pindex, force_processing, nullptr, new_block, min_pow_checked);
+            (void)AcceptBlock(block, state, &pindex, force_processing, nullptr, new_block, min_pow_checked);
         }
-        if (!ret) {
+        if (!state.IsValid()) {
             if (m_options.signals) {
                 m_options.signals->BlockChecked(block, state);
             }
@@ -4510,10 +4517,10 @@ BlockValidationState TestBlockValidity(
     }
 
     // For signets CheckBlock() verifies the challenge iff fCheckPow is set.
-    if (!CheckBlock(block, state, chainstate.m_chainman.GetConsensus(), /*fCheckPow=*/check_pow, /*fCheckMerkleRoot=*/check_merkle_root)) {
+    state = CheckBlock(block, chainstate.m_chainman.GetConsensus(), /*fCheckPow=*/check_pow, /*fCheckMerkleRoot=*/check_merkle_root);
+    if (!state.IsValid()) {
         // This should never happen, but belt-and-suspenders don't approve the
         // block if it does.
-        if (state.IsValid()) NONFATAL_UNREACHABLE();
         return state;
     }
 
@@ -4694,10 +4701,13 @@ VerifyDBResult CVerifyDB::VerifyDB(
             return VerifyDBResult::CORRUPTED_BLOCK_DB;
         }
         // check level 1: verify block validity
-        if (nCheckLevel >= 1 && !CheckBlock(block, state, consensus_params)) {
-            LogError("Verification error: found bad block at %d, hash=%s (%s)",
-                      pindex->nHeight, pindex->GetBlockHash().ToString(), state.ToString());
-            return VerifyDBResult::CORRUPTED_BLOCK_DB;
+        if (nCheckLevel >= 1) {
+            state = CheckBlock(block, consensus_params);
+            if (!state.IsValid()) {
+                LogError("Verification error: found bad block at %d, hash=%s (%s)",
+                          pindex->nHeight, pindex->GetBlockHash().ToString(), state.ToString());
+                return VerifyDBResult::CORRUPTED_BLOCK_DB;
+            }
         }
         // check level 2: verify undo validity
         if (nCheckLevel >= 2 && pindex) {
