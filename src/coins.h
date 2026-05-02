@@ -16,6 +16,7 @@
 #include <support/allocators/pool.h>
 #include <uint256.h>
 #include <util/check.h>
+#include <util/log.h>
 #include <util/overflow.h>
 #include <util/hasher.h>
 
@@ -24,6 +25,7 @@
 
 #include <atomic>
 #include <functional>
+#include <future>
 #include <memory>
 #include <optional>
 #include <unordered_map>
@@ -496,7 +498,7 @@ public:
      * If reallocate_cache is false, the cache will retain the same memory footprint
      * after flushing and should be destroyed to deallocate.
      */
-    void Flush(bool reallocate_cache = true);
+    virtual void Flush(bool reallocate_cache = true);
 
     /**
      * Push the modifications applied to this cache to its base while retaining
@@ -598,6 +600,7 @@ private:
             Assert(!other.ready.test(std::memory_order_relaxed));
         }
     };
+    //! Must only be mutated when m_futures is empty. Elements may be mutated when m_futures is not empty.
     std::vector<InputToFetch> m_inputs{};
 
     /**
@@ -619,9 +622,21 @@ private:
         return true;
     }
 
-    //! Clear fetching data.
+    //! Stop all worker threads and clear fetching data.
+    //! Calling this is idempotent, and may safely be called if not fetching.
     void StopFetching() noexcept
     {
+        if (m_futures.empty()) {
+            Assert(m_inputs.empty());
+            Assert(m_input_head.load(std::memory_order_relaxed) == 0);
+            Assert(m_input_tail == 0);
+            return;
+        }
+        // Skip fetching the rest of the inputs by moving the head to the end.
+        m_input_head.store(m_inputs.size(), std::memory_order_relaxed);
+        // Wait for all threads to stop.
+        for (auto& future : m_futures) future.wait();
+        m_futures.clear();
         m_inputs.clear();
         m_input_head.store(0, std::memory_order_relaxed);
         m_input_tail = 0;
@@ -644,8 +659,9 @@ private:
         return base->PeekCoin(outpoint);
     }
 
-    //! Non-null.
+    //! Non-null. May have zero workers when input fetching is disabled.
     std::shared_ptr<ThreadPool> m_thread_pool;
+    std::vector<std::future<void>> m_futures{};
 
 protected:
     void Reset() noexcept override
@@ -662,8 +678,22 @@ public:
         Assert(m_thread_pool);
     }
 
+    ~CoinsViewOverlay() noexcept override { StopFetching(); }
+
     //! Start fetching inputs from block.
     [[nodiscard]] ResetGuard StartFetching(const CBlock& block LIFETIMEBOUND) noexcept;
+
+    void Flush(bool reallocate_cache = true) override
+    {
+        if (!Assume(AllInputsConsumed())) {
+            LogWarning("Block %s input prevout prefetch queue was not fully consumed; inputs were accessed out of order, so prefetching degraded to serial lookups for this block.", GetBestBlock().ToString());
+        }
+        StopFetching();
+        CCoinsViewCache::Flush(reallocate_cache);
+    }
+
+    //! Verify that all parallel fetched input prevouts have been consumed.
+    bool AllInputsConsumed() const noexcept { return m_input_tail == m_inputs.size(); }
 };
 
 //! Utility function to add all of a transaction's outputs to a cache.

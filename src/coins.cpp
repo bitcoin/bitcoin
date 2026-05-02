@@ -368,6 +368,7 @@ void CCoinsViewCache::SanityCheck() const
 
 CCoinsViewCache::ResetGuard CoinsViewOverlay::StartFetching(const CBlock& block LIFETIMEBOUND) noexcept
 {
+    Assert(m_futures.empty());
     Assert(m_inputs.empty());
     Assert(m_input_head.load(std::memory_order_relaxed) == 0);
     Assert(m_input_tail == 0);
@@ -383,9 +384,21 @@ CCoinsViewCache::ResetGuard CoinsViewOverlay::StartFetching(const CBlock& block 
             }
             earlier_txids.emplace(tx->GetHash());
         }
-        // Only process inputs if we have something to fetch.
+        // Only submit tasks if we have something to fetch.
         if (m_inputs.size()) {
-            while (ProcessInput()) {}
+            std::vector<std::function<void()>> tasks(workers_count, [this] {
+                while (ProcessInput()) {}
+            });
+            if (auto futures{m_thread_pool->Submit(std::move(tasks))}) {
+                m_futures = std::move(*futures);
+            } else {
+                // Submit can fail if a shared owner of the thread pool outside of this class calls Stop() or
+                // Interrupt() on a different thread after we call WorkersCount() above. In that case parallel
+                // fetching will not make progress, so we clear the inputs to fall back to single threaded fetching.
+                LogWarning("Failed to submit prevout fetch tasks; falling back to single-threaded fetching for this block.");
+                m_inputs.clear();
+                StopFetching(); // Assert nothing changed if we failed to start tasks.
+            }
         }
     }
     return CreateResetGuard();
