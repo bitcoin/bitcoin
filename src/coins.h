@@ -27,6 +27,7 @@
 
 #include <atomic>
 #include <functional>
+#include <future>
 #include <memory>
 #include <optional>
 #include <ranges>
@@ -593,6 +594,7 @@ private:
         InputToFetch(InputToFetch&& other) noexcept : outpoint{other.outpoint} { Assert(false); }
         explicit InputToFetch(const COutPoint& o LIFETIMEBOUND) noexcept : outpoint{o} {}
     };
+    //! Must only be mutated when m_futures is empty. Elements may be mutated when m_futures is not empty.
     std::vector<InputToFetch> m_inputs{};
 
     /**
@@ -614,9 +616,20 @@ private:
         return true;
     }
 
-    //! Clear fetching data.
+    //! Stop all worker threads and clear fetching data.
     void StopFetching() noexcept
     {
+        if (m_futures.empty()) {
+            Assume(m_inputs.empty());
+            Assume(m_input_head.load(std::memory_order_relaxed) == 0);
+            Assume(m_input_tail == 0);
+            return;
+        }
+        // Skip fetching the rest of the inputs by moving the head to the end.
+        m_input_head.store(m_inputs.size(), std::memory_order_relaxed);
+        // Wait for all threads to stop.
+        for (auto& future : m_futures) future.wait();
+        m_futures.clear();
         m_inputs.clear();
         m_input_head.store(0, std::memory_order_relaxed);
         m_input_tail = 0;
@@ -648,6 +661,7 @@ private:
 
     //! Non-null. May have zero workers when input fetching is disabled.
     std::shared_ptr<ThreadPool> m_thread_pool;
+    std::vector<std::future<void>> m_futures{};
 
 protected:
     void Reset() noexcept override
@@ -666,23 +680,36 @@ public:
         m_inputs.reserve(MAX_INPUTS_PER_BLOCK);
     }
 
-    //! Start fetching inputs from block.
+    //! Start fetching inputs from block in background.
     [[nodiscard]] ResetGuard StartFetching(const CBlock& block LIFETIMEBOUND) noexcept
     {
+        Assume(m_futures.empty());
         Assume(m_inputs.empty());
         Assume(m_input_head.load(std::memory_order_relaxed) == 0);
         Assume(m_input_tail == 0);
-        // Loop through the inputs of the block and set them in the queue.
-        // Filter txs that are spending inputs created earlier in the same block.
-        std::unordered_set<Txid, SaltedTxidHasher> txids;
-        txids.reserve(block.vtx.size());
-        for (const auto& tx : block.vtx | std::views::drop(1)) {
-            for (const auto& input : tx->vin) {
-                if (!txids.contains(input.prevout.hash)) m_inputs.emplace_back(input.prevout);
+        if (const auto workers_count{m_thread_pool->WorkersCount()}; workers_count > 0) {
+            // Loop through the inputs of the block and set them in the queue.
+            // Filter txs that are spending inputs created earlier in the same block.
+            std::unordered_set<Txid, SaltedTxidHasher> txids;
+            txids.reserve(block.vtx.size());
+            for (const auto& tx : block.vtx | std::views::drop(1)) {
+                for (const auto& input : tx->vin) {
+                    if (!txids.contains(input.prevout.hash)) m_inputs.emplace_back(input.prevout);
+                }
+                txids.emplace(tx->GetHash());
             }
-            txids.emplace(tx->GetHash());
+            // Only start threads if we have something to fetch.
+            if (!m_inputs.empty()) {
+                std::vector<std::function<void()>> tasks(workers_count, [this] {
+                    while (ProcessInput()) {}
+                });
+                if (auto futures{m_thread_pool->Submit(std::move(tasks))}; futures.has_value()) {
+                    m_futures = std::move(*futures);
+                } else {
+                    m_inputs.clear();
+                }
+            }
         }
-        while (ProcessInput()) {}
         return CreateResetGuard();
     }
 
