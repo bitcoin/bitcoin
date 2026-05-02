@@ -70,8 +70,8 @@ static void DuplicateInputs(benchmark::Bench& bench)
     block.hashMerkleRoot = BlockMerkleRoot(block);
 
     bench.run([&] {
-        BlockValidationState cvstate{};
-        assert(!CheckBlock(block, cvstate, chainparams.GetConsensus(), false, false));
+        const BlockValidationState cvstate{CheckBlock(block, chainparams.GetConsensus(), false, false)};
+        assert(!cvstate.IsValid());
         assert(cvstate.GetRejectReason() == "bad-txns-inputs-duplicate");
     });
 }
