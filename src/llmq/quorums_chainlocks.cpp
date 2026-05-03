@@ -31,6 +31,17 @@ static const std::string CLSIG_REQUESTID_PREFIX = "clsig";
 
 CChainLocksHandler* chainLocksHandler;
 
+static bool HasAggregatedChainLockStructure(const CChainLockSig& clsig)
+{
+    const auto& llmqParams = Params().GetConsensus().llmqTypeChainLocks;
+    const auto& signingActiveQuorumCount = llmqParams.signingActiveQuorumCount;
+
+    // sigChecked is shared with share verification; only threshold-shaped objects
+    // may use it as a substitute for repeated aggregate BLS verification.
+    if (clsig.signers.size() != (size_t)signingActiveQuorumCount) return false;
+    return std::count(clsig.signers.begin(), clsig.signers.end(), true) >= (signingActiveQuorumCount / 2 + 1);
+}
+
 bool CChainLockSig::IsNull() const
 {
     return nHeight == -1 && blockHash == uint256();
@@ -330,6 +341,10 @@ bool CChainLocksHandler::VerifyChainLockShare(const CChainLockSig& clsig, const 
 
 bool CChainLocksHandler::VerifyAggregatedChainLock(const CChainLockSig& clsig, const CBlockIndex* pindexScan, const uint256 &hash)
 {
+    if (!HasAggregatedChainLockStructure(clsig)) {
+        return false;
+    }
+
     {
         LOCK(cs);
         if(sigChecked.find(hash) != sigChecked.end()) {
@@ -343,14 +358,6 @@ bool CChainLocksHandler::VerifyAggregatedChainLock(const CChainLockSig& clsig, c
     std::vector<uint256> hashes;
     std::vector<CBLSPublicKey> quorumPublicKeys;
 
-    if (clsig.signers.size() != (size_t)signingActiveQuorumCount) {
-        return false;
-    }
-
-    if (std::count(clsig.signers.begin(), clsig.signers.end(), true) < (signingActiveQuorumCount / 2 + 1)) {
-        // not enough signers
-        return false;
-    }
     const auto quorums_scanned = llmq::quorumManager->ScanQuorums(pindexScan, signingActiveQuorumCount);
     if (quorums_scanned.size() != static_cast<size_t>(signingActiveQuorumCount)) {
         return false;

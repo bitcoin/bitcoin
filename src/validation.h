@@ -105,6 +105,7 @@ extern bool fRegTest;
 extern bool fSigNet;
 extern bool fNEVMConnection;
 extern std::atomic_bool fReindexGeth;
+extern RecursiveMutex cs_btcheader;
 static constexpr uint8_t NEVM_MAGIC_BYTES[4] = {'n', 'e', 'v', 'm'};
 static constexpr uint8_t BTCCHECK_MAGIC_BYTES[4] = {'b', 't', 'c', 'c'};
 static constexpr uint8_t BTCPREV_MAGIC_BYTES[4] = {'b', 't', 'c', 'p'};
