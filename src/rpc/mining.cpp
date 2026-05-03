@@ -1173,7 +1173,7 @@ static RPCHelpMan createauxblock()
                 " merge-mine it.\n",
                 {
                     {"address", RPCArg::Type::STR, RPCArg::Optional::NO, "Payout address for the coinbase transaction"},
-                    {"btcprevhash", RPCArg::Type::STR_HEX, RPCArg::Optional::OMITTED, "Optional. BTC prev-block hash commitment for BTCC sign-offset blocks (required at those heights)."},
+                    {"btcprevhash", RPCArg::Type::STR_HEX, RPCArg::Optional::OMITTED, "Optional. BTC prev-block hash commitment for BTCC sign-offset blocks. When omitted on non-mine-blocks-on-demand chains, sourced from local BTC header backend."},
                 },
                 RPCResult{
                     RPCResult::Type::OBJ, "", "",
@@ -1186,6 +1186,7 @@ static RPCHelpMan createauxblock()
                         {RPCResult::Type::STR, "bits", "compressed target of the block"},
                         {RPCResult::Type::NUM, "height", "height of the block"},
                         {RPCResult::Type::STR_HEX, "_target", "target in reversed byte order, deprecated"},
+                        {RPCResult::Type::STR_HEX, "_btcprevhash", /*optional=*/true, "BTCPREV committed into the template when required for BTCC sign-offset blocks"},
                     }},
                 RPCExamples{
                   HelpExampleCli("createauxblock", "\"address\"")

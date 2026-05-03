@@ -189,9 +189,14 @@ class AuxpowMiningTest (SyscoinTestFramework):
     submit = self.nodes[0].getauxblock
     self.test_common (create, submit)
 
-    dummy_btc_prev = "00" * 32
-    submit_with_btcprev = lambda blockhash, auxpow: self.nodes[0].getauxblock(dummy_btc_prev, blockhash, auxpow)
-    self.test_common(create, submit_with_btcprev)
+    assert_raises_rpc_error(
+      -8, "getauxblock expects 0 or 2 arguments",
+      self.nodes[0].getauxblock, "1234"
+    )
+    assert_raises_rpc_error(
+      -8, "Unknown named parameter btcprevhash",
+      lambda: self.nodes[0].getauxblock(btcprevhash="1234")
+    )
 
     # Ensure that the payout address is changed from one block to the next.
     hash1 = mineAuxpowBlockWithMethods (create, submit)
