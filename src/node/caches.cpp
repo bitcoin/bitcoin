@@ -53,7 +53,7 @@ uint64_t CalculateDbCacheBytes(const ArgsManager& args)
         if (*db_cache < 0) db_cache = 0;
         const uint64_t db_cache_bytes{SaturatingLeftShift<uint64_t>(*db_cache, 20)};
         constexpr uint64_t max_db_cache{sizeof(void*) == 4 ? MAX_32BIT_DBCACHE : std::numeric_limits<uint64_t>::max()};
-        return std::max<uint64_t>(MIN_DB_CACHE, std::min<uint64_t>(db_cache_bytes, max_db_cache));
+        return std::max<uint64_t>(MIN_DBCACHE_BYTES, std::min<uint64_t>(db_cache_bytes, max_db_cache));
     }
     return GetDefaultDBCache();
 }
