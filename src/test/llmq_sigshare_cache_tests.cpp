@@ -93,6 +93,37 @@ BOOST_AUTO_TEST_CASE(chainlock_share_cache_hit_requires_signer_context)
     BOOST_CHECK(ret.second == nullptr);
 }
 
+BOOST_AUTO_TEST_CASE(chainlock_aggregate_cache_hit_requires_aggregate_structure)
+{
+    BOOST_REQUIRE(llmq::chainLocksHandler != nullptr);
+
+    const CBlockIndex* pindex_tip = WITH_LOCK(::cs_main, return m_node.chainman->ActiveChain().Tip());
+    BOOST_REQUIRE(pindex_tip != nullptr);
+
+    const size_t signing_active_quorum_count = Params().GetConsensus().llmqTypeChainLocks.signingActiveQuorumCount;
+    BOOST_REQUIRE(signing_active_quorum_count > 1);
+
+    llmq::CChainLockSig clsig;
+    clsig.nHeight = pindex_tip->nHeight;
+    clsig.blockHash = pindex_tip->GetBlockHash();
+
+    clsig.signers.assign(signing_active_quorum_count, false);
+    uint256 hash = ::SerializeHash(clsig);
+    llmq_tests::CChainLocksHandlerTestAccess::MarkSigChecked(*llmq::chainLocksHandler, hash);
+    BOOST_CHECK(!llmq::chainLocksHandler->VerifyAggregatedChainLock(clsig, pindex_tip, hash));
+
+    clsig.signers.assign(signing_active_quorum_count, false);
+    clsig.signers.front() = true;
+    hash = ::SerializeHash(clsig);
+    llmq_tests::CChainLocksHandlerTestAccess::MarkSigChecked(*llmq::chainLocksHandler, hash);
+    BOOST_CHECK(!llmq::chainLocksHandler->VerifyAggregatedChainLock(clsig, pindex_tip, hash));
+
+    clsig.signers.assign(signing_active_quorum_count - 1, true);
+    hash = ::SerializeHash(clsig);
+    llmq_tests::CChainLocksHandlerTestAccess::MarkSigChecked(*llmq::chainLocksHandler, hash);
+    BOOST_CHECK(!llmq::chainLocksHandler->VerifyAggregatedChainLock(clsig, pindex_tip, hash));
+}
+
 BOOST_AUTO_TEST_CASE(btccheckpoint_share_cache_hit_requires_signer_context)
 {
     BOOST_REQUIRE(llmq::btcCheckpointsHandler != nullptr);
@@ -122,6 +153,37 @@ BOOST_AUTO_TEST_CASE(btccheckpoint_share_cache_hit_requires_signer_context)
     BOOST_CHECK(!ok);
     BOOST_CHECK_EQUAL(ret.first, 13);
     BOOST_CHECK(ret.second == nullptr);
+}
+
+BOOST_AUTO_TEST_CASE(btccheckpoint_aggregate_cache_hit_requires_aggregate_structure)
+{
+    BOOST_REQUIRE(llmq::btcCheckpointsHandler != nullptr);
+
+    const CBlockIndex* pindex_tip = WITH_LOCK(::cs_main, return m_node.chainman->ActiveChain().Tip());
+    BOOST_REQUIRE(pindex_tip != nullptr);
+
+    const size_t signing_active_quorum_count = Params().GetConsensus().llmqTypeChainLocks.signingActiveQuorumCount;
+    BOOST_REQUIRE(signing_active_quorum_count > 1);
+
+    llmq::CBTCCheckpointSig btcsig;
+    btcsig.nHeight = pindex_tip->nHeight;
+    btcsig.sysHash = pindex_tip->GetBlockHash();
+
+    btcsig.signers.assign(signing_active_quorum_count, false);
+    uint256 hash = ::SerializeHash(btcsig);
+    llmq_tests::CBTCCheckpointsHandlerTestAccess::MarkSigChecked(*llmq::btcCheckpointsHandler, hash);
+    BOOST_CHECK(!llmq::btcCheckpointsHandler->VerifyAggregatedBTCCheckpoint(btcsig, pindex_tip));
+
+    btcsig.signers.assign(signing_active_quorum_count, false);
+    btcsig.signers.front() = true;
+    hash = ::SerializeHash(btcsig);
+    llmq_tests::CBTCCheckpointsHandlerTestAccess::MarkSigChecked(*llmq::btcCheckpointsHandler, hash);
+    BOOST_CHECK(!llmq::btcCheckpointsHandler->VerifyAggregatedBTCCheckpoint(btcsig, pindex_tip));
+
+    btcsig.signers.assign(signing_active_quorum_count - 1, true);
+    hash = ::SerializeHash(btcsig);
+    llmq_tests::CBTCCheckpointsHandlerTestAccess::MarkSigChecked(*llmq::btcCheckpointsHandler, hash);
+    BOOST_CHECK(!llmq::btcCheckpointsHandler->VerifyAggregatedBTCCheckpoint(btcsig, pindex_tip));
 }
 
 BOOST_AUTO_TEST_SUITE_END()

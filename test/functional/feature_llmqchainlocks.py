@@ -229,6 +229,11 @@ class LLMQChainLocksTest(DashTestFramework):
             except JSONRPCException:
                 return False
         self.wait_until(node0_has_shallow_cl_header, timeout=60)
+        def node0_is_in_shallow_cl_submit_window():
+            active_height = self.nodes[0].getblockcount() - 5
+            active_height -= active_height % 5
+            return active_height == shallow_best["height"]
+        self.wait_until(node0_is_in_shallow_cl_submit_window, timeout=60)
         node_height = self.nodes[0].submitchainlock(
             shallow_best["blockhash"],
             shallow_best["signature"],

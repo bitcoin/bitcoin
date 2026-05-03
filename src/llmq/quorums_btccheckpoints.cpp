@@ -35,6 +35,17 @@ static constexpr int64_t DEFAULT_BTC_HEADER_MIN_CONFIRMATIONS{1};
 
 CBTCCheckpointsHandler* btcCheckpointsHandler{nullptr};
 
+static bool HasAggregatedBTCCheckpointStructure(const CBTCCheckpointSig& btcsig)
+{
+    const auto& llmqParams = Params().GetConsensus().llmqTypeChainLocks;
+    const auto& signingActiveQuorumCount = llmqParams.signingActiveQuorumCount;
+
+    // sigChecked is shared with share verification; only threshold-shaped objects
+    // may use it as a substitute for repeated aggregate BLS verification.
+    if (btcsig.signers.size() != (size_t)signingActiveQuorumCount) return false;
+    return std::count(btcsig.signers.begin(), btcsig.signers.end(), true) >= (signingActiveQuorumCount / 2 + 1);
+}
+
 static bool ParseHexUint256Strict(const UniValue& v, uint256& out)
 {
     if (!v.isStr()) return false;
@@ -751,8 +762,7 @@ bool CBTCCheckpointsHandler::VerifyAggregatedBTCCheckpointNoCache(const CBTCChec
     const auto& llmqParams = consensus.llmqTypeChainLocks;
     const auto& signingActiveQuorumCount = llmqParams.signingActiveQuorumCount;
 
-    if (btcsig.signers.size() != (size_t)signingActiveQuorumCount) return false;
-    if (std::count(btcsig.signers.begin(), btcsig.signers.end(), true) < (signingActiveQuorumCount / 2 + 1)) return false;
+    if (!HasAggregatedBTCCheckpointStructure(btcsig)) return false;
 
     const auto quorums_scanned = llmq::quorumManager->ScanQuorums(pindexScan, signingActiveQuorumCount);
     if (quorums_scanned.size() != static_cast<size_t>(signingActiveQuorumCount)) return false;
@@ -1534,6 +1544,8 @@ bool CBTCCheckpointsHandler::GetRecentBTCCheckpointByHeight(int32_t nHeight, CBT
 
 bool CBTCCheckpointsHandler::VerifyAggregatedBTCCheckpoint(const CBTCCheckpointSig& btcsig, const CBlockIndex* pindexScan) const
 {
+    if (!HasAggregatedBTCCheckpointStructure(btcsig)) return false;
+
     const uint256 hash = ::SerializeHash(btcsig);
     {
         LOCK(cs);
