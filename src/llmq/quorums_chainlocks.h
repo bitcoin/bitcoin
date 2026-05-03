@@ -120,7 +120,7 @@ public:
     std::map<CQuorumCPtr, CChainLockSigCPtr> GetBestChainLockShares() EXCLUSIVE_LOCKS_REQUIRED(!cs);
 
     void ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStream& vRecv) EXCLUSIVE_LOCKS_REQUIRED(!cs);
-    bool ProcessNewChainLock(NodeId from, CChainLockSig& clsig, BlockValidationState& state, const uint256& hash, const uint256& idIn = uint256()) EXCLUSIVE_LOCKS_REQUIRED(!cs);
+    bool ProcessNewChainLock(NodeId from, CChainLockSig& clsig, BlockValidationState& state, const uint256& hash, const uint256& idIn = uint256(), bool* retSigVerifyAttempted = nullptr) EXCLUSIVE_LOCKS_REQUIRED(!cs);
     void NotifyHeaderTip(const CBlockIndex* pindexNew) EXCLUSIVE_LOCKS_REQUIRED(!cs);
     void UpdatedBlockTip(const CBlockIndex* pindexNew, bool fInitialDownload);
     void CheckActiveState() EXCLUSIVE_LOCKS_REQUIRED(!cs);

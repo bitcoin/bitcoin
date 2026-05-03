@@ -459,7 +459,8 @@ void CChainLocksHandler::ProcessMessage(CNode* pfrom, const std::string& strComm
         CChainLockSig clsig;
         vRecv >> clsig;
         BlockValidationState state;
-        if (!ProcessNewChainLock(pfrom->GetId(), clsig, state, ::SerializeHash(clsig)) && state.IsInvalid()) {
+        bool sig_verify_attempted{false};
+        if (!ProcessNewChainLock(pfrom->GetId(), clsig, state, ::SerializeHash(clsig), uint256(), &sig_verify_attempted) && state.IsInvalid() && sig_verify_attempted) {
             const std::string reject_reason = state.GetRejectReason();
             if (reject_reason == "clsig-invalid-share-sig" || reject_reason == "clsig-invalid-sig") {
                 PeerRef peer = peerman.GetPeerRef(pfrom->GetId());
@@ -471,8 +472,12 @@ void CChainLocksHandler::ProcessMessage(CNode* pfrom, const std::string& strComm
     }
 }
 
-bool CChainLocksHandler::ProcessNewChainLock(const NodeId from, llmq::CChainLockSig& clsig, BlockValidationState& state, const uint256& hash, const uint256& idIn )
+bool CChainLocksHandler::ProcessNewChainLock(const NodeId from, llmq::CChainLockSig& clsig, BlockValidationState& state, const uint256& hash, const uint256& idIn, bool* retSigVerifyAttempted)
 {
+    if (retSigVerifyAttempted) {
+        *retSigVerifyAttempted = false;
+    }
+
     assert((from == -1) ^ idIn.IsNull());
     CheckActiveState();
     PeerRef peer = peerman.GetPeerRef(from);
@@ -632,6 +637,9 @@ bool CChainLocksHandler::ProcessNewChainLock(const NodeId from, llmq::CChainLock
                     peerman.ForgetTxHash(from, hash);
                 }
             }
+            if (retSigVerifyAttempted) {
+                *retSigVerifyAttempted = sig_verify_attempted;
+            }
             return state.Invalid(BlockValidationResult::BLOCK_CHAINLOCK, "clsig-invalid-share-sig");
         }
         CInv clsigAggInv;
@@ -693,6 +701,9 @@ bool CChainLocksHandler::ProcessNewChainLock(const NodeId from, llmq::CChainLock
                     LOCK(cs_main);
                     peerman.ForgetTxHash(from, hash);
                 }
+            }
+            if (retSigVerifyAttempted) {
+                *retSigVerifyAttempted = sig_verify_attempted;
             }
             return state.Invalid(BlockValidationResult::BLOCK_CHAINLOCK, "clsig-invalid-sig");
         }
