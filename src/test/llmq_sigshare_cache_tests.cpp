@@ -25,6 +25,11 @@ public:
         handler.sigChecked.emplace(hash, TicksSinceEpoch<std::chrono::milliseconds>(SystemClock::now()));
     }
 
+    static void MarkRejected(llmq::CChainLocksHandler& handler, const uint256& hash)
+    {
+        handler.MarkRejectedChainLock(hash);
+    }
+
     static bool VerifyShare(
         llmq::CChainLocksHandler& handler,
         const llmq::CChainLockSig& clsig,
@@ -44,6 +49,11 @@ public:
     {
         LOCK(handler.cs);
         handler.sigChecked.emplace(hash, TicksSinceEpoch<std::chrono::milliseconds>(SystemClock::now()));
+    }
+
+    static void MarkRejected(llmq::CBTCCheckpointsHandler& handler, const uint256& hash)
+    {
+        handler.MarkRejectedBTCCheckpointSig(hash);
     }
 
     static bool VerifyShare(
@@ -91,6 +101,17 @@ BOOST_AUTO_TEST_CASE(chainlock_share_cache_hit_requires_signer_context)
     BOOST_CHECK(!ok);
     BOOST_CHECK_EQUAL(ret.first, 11);
     BOOST_CHECK(ret.second == nullptr);
+}
+
+BOOST_AUTO_TEST_CASE(chainlock_rejected_cache_suppresses_repeated_requests)
+{
+    BOOST_REQUIRE(llmq::chainLocksHandler != nullptr);
+
+    const uint256 hash = GetRandHash();
+    BOOST_CHECK(!llmq::chainLocksHandler->AlreadyHave(hash));
+
+    llmq_tests::CChainLocksHandlerTestAccess::MarkRejected(*llmq::chainLocksHandler, hash);
+    BOOST_CHECK(llmq::chainLocksHandler->AlreadyHave(hash));
 }
 
 BOOST_AUTO_TEST_CASE(chainlock_aggregate_cache_hit_requires_aggregate_structure)
@@ -153,6 +174,17 @@ BOOST_AUTO_TEST_CASE(btccheckpoint_share_cache_hit_requires_signer_context)
     BOOST_CHECK(!ok);
     BOOST_CHECK_EQUAL(ret.first, 13);
     BOOST_CHECK(ret.second == nullptr);
+}
+
+BOOST_AUTO_TEST_CASE(btccheckpoint_rejected_cache_suppresses_repeated_requests)
+{
+    BOOST_REQUIRE(llmq::btcCheckpointsHandler != nullptr);
+
+    const uint256 hash = GetRandHash();
+    BOOST_CHECK(!llmq::btcCheckpointsHandler->AlreadyHave(hash));
+
+    llmq_tests::CBTCCheckpointsHandlerTestAccess::MarkRejected(*llmq::btcCheckpointsHandler, hash);
+    BOOST_CHECK(llmq::btcCheckpointsHandler->AlreadyHave(hash));
 }
 
 BOOST_AUTO_TEST_CASE(btccheckpoint_aggregate_cache_hit_requires_aggregate_structure)

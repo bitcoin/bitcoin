@@ -125,7 +125,7 @@ void CChainLocksHandler::Stop()
 bool CChainLocksHandler::AlreadyHave(const uint256& hash)
 {
     LOCK(cs);
-    return seenChainLocks.count(hash) != 0;
+    return seenChainLocks.count(hash) != 0 || rejectedChainLocks.count(hash) != 0;
 }
 
 bool CChainLocksHandler::GetChainLockByHash(const uint256& hash, llmq::CChainLockSig& ret)
@@ -256,8 +256,12 @@ bool CChainLocksHandler::TryUpdateBestChainLock(const CBlockIndex* pindex)
 }
 
 
-bool CChainLocksHandler::VerifyChainLockShare(const CChainLockSig& clsig, const CBlockIndex* pindexScan, const uint256& idIn, std::pair<int, CQuorumCPtr>& ret, const uint256& hash)
+bool CChainLocksHandler::VerifyChainLockShare(const CChainLockSig& clsig, const CBlockIndex* pindexScan, const uint256& idIn, std::pair<int, CQuorumCPtr>& ret, const uint256& hash, bool* retSigVerifyAttempted)
 {
+    if (retSigVerifyAttempted) {
+        *retSigVerifyAttempted = false;
+    }
+
     const auto& consensus = Params().GetConsensus();
     const auto& llmqParams = consensus.llmqTypeChainLocks;
     const auto& signingActiveQuorumCount = llmqParams.signingActiveQuorumCount;
@@ -317,6 +321,9 @@ bool CChainLocksHandler::VerifyChainLockShare(const CChainLockSig& clsig, const 
         LogPrint(BCLog::CHAINLOCKS, "CChainLocksHandler::%s -- CLSIG (%s) requestId=%s, signHash=%s\n",
                 __func__, clsig.ToString(), requestId.ToString(), signHash.ToString());
 
+        if (retSigVerifyAttempted) {
+            *retSigVerifyAttempted = true;
+        }
         if (clsig.sig.VerifyInsecure(quorum->qc->quorumPublicKey, signHash)) {
             if (idIn.IsNull() && !quorumSigningManager->HasRecoveredSigForId(requestId)) {
                 // We can reconstruct the CRecoveredSig from the clsig and pass it to the signing manager, which
@@ -339,8 +346,12 @@ bool CChainLocksHandler::VerifyChainLockShare(const CChainLockSig& clsig, const 
     return false;
 }
 
-bool CChainLocksHandler::VerifyAggregatedChainLock(const CChainLockSig& clsig, const CBlockIndex* pindexScan, const uint256 &hash)
+bool CChainLocksHandler::VerifyAggregatedChainLock(const CChainLockSig& clsig, const CBlockIndex* pindexScan, const uint256 &hash, bool* retSigVerifyAttempted)
 {
+    if (retSigVerifyAttempted) {
+        *retSigVerifyAttempted = false;
+    }
+
     if (!HasAggregatedChainLockStructure(clsig)) {
         return false;
     }
@@ -378,6 +389,9 @@ bool CChainLocksHandler::VerifyAggregatedChainLock(const CChainLockSig& clsig, c
         LogPrint(BCLog::CHAINLOCKS, "CChainLocksHandler::%s -- index %d CLSIG (%s) pindexScan=%s requestId=%s (clsig.nHeight %d, quorum->qc->quorumHash %s), signHash=%s (quorum->qc->quorumHash, requestId, clsig.blockHash)\n",
                 __func__, i, clsig.ToString(), pindexScan->GetBlockHash().ToString(), requestId.ToString(), clsig.nHeight, quorum->qc->quorumHash.ToString(), signHash.ToString());
     }
+    if (retSigVerifyAttempted) {
+        *retSigVerifyAttempted = true;
+    }
     bool result = clsig.sig.VerifyInsecureAggregated(quorumPublicKeys, hashes);
     if(result) {
         LOCK(cs);
@@ -406,6 +420,24 @@ bool CChainLocksHandler::GetRecentChainLockByHeight(int32_t nHeight, CChainLockS
     return true;
 }
 
+void CChainLocksHandler::MarkRejectedChainLock(const uint256& hash)
+{
+    const int64_t now = TicksSinceEpoch<std::chrono::milliseconds>(SystemClock::now());
+    LOCK(cs);
+    rejectedChainLocks.emplace(hash, now);
+
+    while (rejectedChainLocks.size() > REJECTED_CHAINLOCKS_MAX) {
+        auto oldest = rejectedChainLocks.end();
+        for (auto it = rejectedChainLocks.begin(); it != rejectedChainLocks.end(); ++it) {
+            if (oldest == rejectedChainLocks.end() || it->second < oldest->second) {
+                oldest = it;
+            }
+        }
+        if (oldest == rejectedChainLocks.end()) break;
+        rejectedChainLocks.erase(oldest);
+    }
+}
+
 void CChainLocksHandler::AddRecentChainLock(const CChainLockSig& clsig)
 {
     if (clsig.IsNull()) {
@@ -427,7 +459,15 @@ void CChainLocksHandler::ProcessMessage(CNode* pfrom, const std::string& strComm
         CChainLockSig clsig;
         vRecv >> clsig;
         BlockValidationState state;
-        ProcessNewChainLock(pfrom->GetId(), clsig, state, ::SerializeHash(clsig));
+        if (!ProcessNewChainLock(pfrom->GetId(), clsig, state, ::SerializeHash(clsig)) && state.IsInvalid()) {
+            const std::string reject_reason = state.GetRejectReason();
+            if (reject_reason == "clsig-invalid-share-sig" || reject_reason == "clsig-invalid-sig") {
+                PeerRef peer = peerman.GetPeerRef(pfrom->GetId());
+                if (peer) {
+                    peerman.Misbehaving(*peer, 10, reject_reason);
+                }
+            }
+        }
     }
 }
 
@@ -580,9 +620,13 @@ bool CChainLocksHandler::ProcessNewChainLock(const NodeId from, llmq::CChainLock
         // A part of a multi-quorum CLSIG signed by a single quorum
         std::pair<int, CQuorumCPtr> ret;
         clsig.signers.resize(signingActiveQuorumCount, false);
-        if (!VerifyChainLockShare(clsig, pindexScan, idIn, ret, hash)) {
+        bool sig_verify_attempted{false};
+        if (!VerifyChainLockShare(clsig, pindexScan, idIn, ret, hash, &sig_verify_attempted)) {
             LogPrint(BCLog::CHAINLOCKS, "CChainLocksHandler::%s -- invalid CLSIG (%s), peer=%d\n", __func__, clsig.ToString(), from);
             if (from != -1) {
+                if (sig_verify_attempted) {
+                    MarkRejectedChainLock(hash);
+                }
                 {
                     LOCK(cs_main);
                     peerman.ForgetTxHash(from, hash);
@@ -638,9 +682,13 @@ bool CChainLocksHandler::ProcessNewChainLock(const NodeId from, llmq::CChainLock
     } else {
         CInv clsigInv(MSG_CLSIG, hash);
         // An aggregated CLSIG
-        if (!VerifyAggregatedChainLock(clsig, pindexScan, hash)) {
+        bool sig_verify_attempted{false};
+        if (!VerifyAggregatedChainLock(clsig, pindexScan, hash, &sig_verify_attempted)) {
             LogPrint(BCLog::CHAINLOCKS, "CChainLocksHandler::%s -- invalid CLSIG (%s), peer=%d\n", __func__, clsig.ToString(), from);
             if (from != -1) {
+                if (sig_verify_attempted) {
+                    MarkRejectedChainLock(hash);
+                }
                 {
                     LOCK(cs_main);
                     peerman.ForgetTxHash(from, hash);
@@ -1065,6 +1113,13 @@ void CChainLocksHandler::Cleanup()
     for (auto it = seenChainLocks.begin(); it != seenChainLocks.end(); ) {
         if (TicksSinceEpoch<std::chrono::milliseconds>(SystemClock::now()) - it->second >= CLEANUP_SEEN_TIMEOUT) {
             it = seenChainLocks.erase(it);
+        } else {
+            ++it;
+        }
+    }
+    for (auto it = rejectedChainLocks.begin(); it != rejectedChainLocks.end(); ) {
+        if (TicksSinceEpoch<std::chrono::milliseconds>(SystemClock::now()) - it->second >= CLEANUP_SEEN_TIMEOUT) {
+            it = rejectedChainLocks.erase(it);
         } else {
             ++it;
         }

@@ -96,6 +96,7 @@ class CBTCCheckpointsHandler : public CRecoveredSigsListener
 {
     static constexpr int32_t RECENT_BTCCHECKPOINTS_MAX{256};
     static constexpr size_t PENDING_VERIFIED_BTCCSIG_MAX{256};
+    static constexpr size_t REJECTED_BTCCSIG_MAX{4096};
     static const int64_t PENDING_VERIFIED_BTCCSIG_TIMEOUT = 1000 * 60 * 10; // 10 minutes
     static const int64_t CLEANUP_INTERVAL = 1000 * 30;
     static const int64_t CLEANUP_SEEN_TIMEOUT = 24 * 60 * 60 * 1000;
@@ -109,6 +110,7 @@ private:
 
     // hashes of btccsig objects we've already processed/relayed
     std::map<uint256, int64_t> seenBTCCheckpointSigs GUARDED_BY(cs);
+    std::map<uint256, int64_t> rejectedBTCCheckpointSigs GUARDED_BY(cs);
     mutable std::map<uint256, int64_t> sigChecked GUARDED_BY(cs);
     int64_t lastCleanupTime GUARDED_BY(cs) {0};
 
@@ -161,14 +163,15 @@ public:
     bool GetRecentBTCCheckpointByHeight(int32_t nHeight, CBTCCheckpointSig& ret) const EXCLUSIVE_LOCKS_REQUIRED(!cs);
 
     // Consensus-facing verifier (BLS verify), used by specialtx and miner.
-    bool VerifyAggregatedBTCCheckpoint(const CBTCCheckpointSig& btcsig, const CBlockIndex* pindexScan) const EXCLUSIVE_LOCKS_REQUIRED(!cs);
+    bool VerifyAggregatedBTCCheckpoint(const CBTCCheckpointSig& btcsig, const CBlockIndex* pindexScan, bool* retSigVerifyAttempted = nullptr) const EXCLUSIVE_LOCKS_REQUIRED(!cs);
 
 private:
     void AddRecentBTCCheckpoint(const CBTCCheckpointSig& btcsig) EXCLUSIVE_LOCKS_REQUIRED(cs);
     bool TryUpdateBestBTCCheckpoint(const CBlockIndex* pindexScan) EXCLUSIVE_LOCKS_REQUIRED(cs);
-    bool VerifyBTCCheckpointShare(const CBTCCheckpointSig& btcsig, const CBlockIndex* pindexScan, const uint256& idIn, std::pair<int, CQuorumCPtr>& ret, const uint256& hash) const EXCLUSIVE_LOCKS_REQUIRED(!cs);
-    bool VerifyAggregatedBTCCheckpointNoCache(const CBTCCheckpointSig& btcsig, const CBlockIndex* pindexScan) const EXCLUSIVE_LOCKS_REQUIRED(!cs);
+    bool VerifyBTCCheckpointShare(const CBTCCheckpointSig& btcsig, const CBlockIndex* pindexScan, const uint256& idIn, std::pair<int, CQuorumCPtr>& ret, const uint256& hash, bool* retSigVerifyAttempted = nullptr) const EXCLUSIVE_LOCKS_REQUIRED(!cs);
+    bool VerifyAggregatedBTCCheckpointNoCache(const CBTCCheckpointSig& btcsig, const CBlockIndex* pindexScan, bool* retSigVerifyAttempted = nullptr) const EXCLUSIVE_LOCKS_REQUIRED(!cs);
     void Cleanup() EXCLUSIVE_LOCKS_REQUIRED(!cs);
+    void MarkRejectedBTCCheckpointSig(const uint256& hash) EXCLUSIVE_LOCKS_REQUIRED(!cs);
     void AddPendingVerifiedBTCCheckpointSig(const uint256& hash, const CBTCCheckpointSig& btcsig) EXCLUSIVE_LOCKS_REQUIRED(!cs);
     void AcceptVerifiedBTCCSig(const CBTCCheckpointSig& btccsig, const uint256& hash, const CBlockIndex* pindexScan) EXCLUSIVE_LOCKS_REQUIRED(!cs);
     bool RunBTCHeaderCommand(const std::vector<std::string>& method_and_args, UniValue& out, std::string& err) const EXCLUSIVE_LOCKS_REQUIRED(!cs);
