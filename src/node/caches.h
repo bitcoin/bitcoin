@@ -15,7 +15,7 @@
 class ArgsManager;
 
 //! min. -dbcache (bytes)
-static constexpr uint64_t MIN_DB_CACHE{4_MiB};
+static constexpr uint64_t MIN_DBCACHE_BYTES{4_MiB};
 //! -dbcache default (bytes)
 static constexpr uint64_t DEFAULT_DB_CACHE{DEFAULT_KERNEL_CACHE};
 //! Reserved non-dbcache memory usage.
