@@ -4252,8 +4252,8 @@ bool ChainstateManager::ProcessNewBlockHeaders(std::span<const CBlockHeader> hea
             const CBlockIndex& last_accepted{**ppindex};
             int64_t blocks_left{(NodeClock::now() - last_accepted.Time()) / GetConsensus().PowTargetSpacing()};
             blocks_left = std::max<int64_t>(0, blocks_left);
-            const double progress{100.0 * last_accepted.nHeight / (last_accepted.nHeight + blocks_left)};
-            LogInfo("Synchronizing blockheaders, height: %d (~%.2f%%)\n", last_accepted.nHeight, progress);
+            const int progress{last_accepted.nHeight ? static_cast<int>(10000LL * last_accepted.nHeight / (last_accepted.nHeight + blocks_left)) : 0};
+            LogInfo("Synchronizing blockheaders, height: %d (~%d.%02d%%)\n", last_accepted.nHeight, progress / 100, progress % 100);
         }
     }
     return true;
@@ -4279,8 +4279,8 @@ void ChainstateManager::ReportHeadersPresync(int64_t height, int64_t timestamp)
     if (initial_download) {
         int64_t blocks_left{(NodeClock::now() - NodeSeconds{std::chrono::seconds{timestamp}}) / GetConsensus().PowTargetSpacing()};
         blocks_left = std::max<int64_t>(0, blocks_left);
-        const double progress{100.0 * height / (height + blocks_left)};
-        LogInfo("Pre-synchronizing blockheaders, height: %d (~%.2f%%)\n", height, progress);
+        const int progress{height ? static_cast<int>(10000LL * height / (height + blocks_left)) : 0};
+        LogInfo("Pre-synchronizing blockheaders, height: %d (~%d.%02d%%)\n", height, progress / 100, progress % 100);
     }
 }
 
