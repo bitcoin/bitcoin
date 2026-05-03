@@ -81,8 +81,6 @@ uint256 MessageHash(const std::string& message)
 std::string SigningResultString(const SigningResult res)
 {
     switch (res) {
-        case SigningResult::OK:
-            return "No error";
         case SigningResult::PRIVATE_KEY_NOT_AVAILABLE:
             return "Private key not available";
         case SigningResult::SIGNING_FAILED:

@@ -18,6 +18,7 @@
 #include <script/signingprovider.h>
 #include <util/hasher.h>
 #include <util/log.h>
+#include <util/expected.h>
 #include <util/result.h>
 #include <util/time.h>
 #include <wallet/crypter.h>
@@ -137,7 +138,7 @@ public:
     /** Creates new signatures and adds them to the transaction. Returns whether all inputs were signed */
     virtual bool SignTransaction(CMutableTransaction& tx, const std::map<COutPoint, Coin>& coins, int sighash, std::map<int, bilingual_str>& input_errors) const { return false; }
     /** Sign a message with the given script */
-    virtual SigningResult SignMessage(const std::string& message, const PKHash& pkhash, std::string& str_sig) const { return SigningResult::SIGNING_FAILED; };
+    virtual util::Expected<void, SigningResult> SignMessage(const std::string& message, const PKHash& pkhash, std::string& str_sig) const { return util::Unexpected{SigningResult::SIGNING_FAILED}; };
     /** Adds script and derivation path information to a PSBT, and optionally signs it. */
     virtual std::optional<common::PSBTError> FillPSBT(PartiallySignedTransaction& psbt, const PrecomputedTransactionData& txdata, const common::PSBTFillOptions& options, int* n_signed = nullptr) const { return common::PSBTError::UNSUPPORTED; }
 
@@ -394,7 +395,7 @@ public:
     std::unique_ptr<FlatSigningProvider> GetSigningProvider(const CPubKey& pubkey) const;
 
     bool SignTransaction(CMutableTransaction& tx, const std::map<COutPoint, Coin>& coins, int sighash, std::map<int, bilingual_str>& input_errors) const override;
-    SigningResult SignMessage(const std::string& message, const PKHash& pkhash, std::string& str_sig) const override;
+    util::Expected<void, SigningResult> SignMessage(const std::string& message, const PKHash& pkhash, std::string& str_sig) const override;
     std::optional<common::PSBTError> FillPSBT(PartiallySignedTransaction& psbt, const PrecomputedTransactionData& txdata, const common::PSBTFillOptions& options, int* n_signed = nullptr) const override;
 
     uint256 GetID() const override;

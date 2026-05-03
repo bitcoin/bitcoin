@@ -2251,7 +2251,7 @@ std::optional<PSBTError> CWallet::FillPSBT(PartiallySignedTransaction& psbtx, co
     return {};
 }
 
-SigningResult CWallet::SignMessage(const std::string& message, const PKHash& pkhash, std::string& str_sig) const
+util::Expected<void, SigningResult> CWallet::SignMessage(const std::string& message, const PKHash& pkhash, std::string& str_sig) const
 {
     SignatureData sigdata;
     CScript script_pub_key = GetScriptForDestination(pkhash);
@@ -2261,7 +2261,7 @@ SigningResult CWallet::SignMessage(const std::string& message, const PKHash& pkh
             return spk_man_pair.second->SignMessage(message, pkhash, str_sig);
         }
     }
-    return SigningResult::PRIVATE_KEY_NOT_AVAILABLE;
+    return util::Unexpected{SigningResult::PRIVATE_KEY_NOT_AVAILABLE};
 }
 
 OutputType CWallet::TransactionChangeType(const std::optional<OutputType>& change_type, const std::vector<CRecipient>& vecSend) const

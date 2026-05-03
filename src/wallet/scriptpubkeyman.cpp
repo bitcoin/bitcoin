@@ -1329,22 +1329,22 @@ bool DescriptorScriptPubKeyMan::SignTransaction(CMutableTransaction& tx, const s
     return ::SignTransaction(tx, keys.get(), coins, {.sighash_type = sighash}, input_errors);
 }
 
-SigningResult DescriptorScriptPubKeyMan::SignMessage(const std::string& message, const PKHash& pkhash, std::string& str_sig) const
+util::Expected<void, SigningResult> DescriptorScriptPubKeyMan::SignMessage(const std::string& message, const PKHash& pkhash, std::string& str_sig) const
 {
     std::unique_ptr<FlatSigningProvider> keys = GetSigningProvider(GetScriptForDestination(pkhash), true);
     if (!keys) {
-        return SigningResult::PRIVATE_KEY_NOT_AVAILABLE;
+        return util::Unexpected{SigningResult::PRIVATE_KEY_NOT_AVAILABLE};
     }
 
     CKey key;
     if (!keys->GetKey(ToKeyID(pkhash), key)) {
-        return SigningResult::PRIVATE_KEY_NOT_AVAILABLE;
+        return util::Unexpected{SigningResult::PRIVATE_KEY_NOT_AVAILABLE};
     }
 
     if (!MessageSign(key, message, str_sig)) {
-        return SigningResult::SIGNING_FAILED;
+        return util::Unexpected{SigningResult::SIGNING_FAILED};
     }
-    return SigningResult::OK;
+    return {};
 }
 
 std::optional<PSBTError> DescriptorScriptPubKeyMan::FillPSBT(PartiallySignedTransaction& psbtx, const PrecomputedTransactionData& txdata, const common::PSBTFillOptions& options, int* n_signed) const
