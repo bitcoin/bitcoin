@@ -657,7 +657,7 @@ bool CBTCCheckpointsHandler::CheckBTCHeaderSigningPolicy(const uint256& btcHash,
 bool CBTCCheckpointsHandler::AlreadyHave(const uint256& hash) const
 {
     LOCK(cs);
-    return seenBTCCheckpointSigs.count(hash) != 0;
+    return seenBTCCheckpointSigs.count(hash) != 0 || rejectedBTCCheckpointSigs.count(hash) != 0;
 }
 
 void CBTCCheckpointsHandler::Cleanup()
@@ -678,6 +678,13 @@ void CBTCCheckpointsHandler::Cleanup()
     for (auto it = seenBTCCheckpointSigs.begin(); it != seenBTCCheckpointSigs.end(); ) {
         if (TicksSinceEpoch<std::chrono::milliseconds>(SystemClock::now()) - it->second >= CLEANUP_SEEN_TIMEOUT) {
             it = seenBTCCheckpointSigs.erase(it);
+        } else {
+            ++it;
+        }
+    }
+    for (auto it = rejectedBTCCheckpointSigs.begin(); it != rejectedBTCCheckpointSigs.end(); ) {
+        if (TicksSinceEpoch<std::chrono::milliseconds>(SystemClock::now()) - it->second >= CLEANUP_SEEN_TIMEOUT) {
+            it = rejectedBTCCheckpointSigs.erase(it);
         } else {
             ++it;
         }
@@ -756,8 +763,12 @@ bool CBTCCheckpointsHandler::GetBTCCheckpointByHash(const uint256& hash, CBTCChe
     return false;
 }
 
-bool CBTCCheckpointsHandler::VerifyAggregatedBTCCheckpointNoCache(const CBTCCheckpointSig& btcsig, const CBlockIndex* pindexScan) const
+bool CBTCCheckpointsHandler::VerifyAggregatedBTCCheckpointNoCache(const CBTCCheckpointSig& btcsig, const CBlockIndex* pindexScan, bool* retSigVerifyAttempted) const
 {
+    if (retSigVerifyAttempted) {
+        *retSigVerifyAttempted = false;
+    }
+
     const auto& consensus = Params().GetConsensus();
     const auto& llmqParams = consensus.llmqTypeChainLocks;
     const auto& signingActiveQuorumCount = llmqParams.signingActiveQuorumCount;
@@ -779,6 +790,9 @@ bool CBTCCheckpointsHandler::VerifyAggregatedBTCCheckpointNoCache(const CBTCChec
         const uint256 requestId = ::SerializeHash(std::make_tuple(BTCCHECK_REQUESTID_PREFIX, btcsig.nHeight, quorum->qc->quorumHash));
         const uint256 signHash = llmq::BuildSignHash(quorum->qc->quorumHash, requestId, msgHash);
         hashes.emplace_back(signHash);
+    }
+    if (retSigVerifyAttempted) {
+        *retSigVerifyAttempted = true;
     }
     return btcsig.sig.VerifyInsecureAggregated(quorumPublicKeys, hashes);
 }
@@ -877,7 +891,11 @@ not_older:
     if (signers_count == 1) {
         // share
         std::pair<int, CQuorumCPtr> ret;
-        if (!VerifyBTCCheckpointShare(btccsig, pindexScan, uint256(), ret, hash)) {
+        bool sig_verify_attempted{false};
+        if (!VerifyBTCCheckpointShare(btccsig, pindexScan, uint256(), ret, hash, &sig_verify_attempted)) {
+            if (sig_verify_attempted) {
+                MarkRejectedBTCCheckpointSig(hash);
+            }
             forget_tx_hash();
             return;
         }
@@ -926,7 +944,11 @@ not_older:
     }
 
     // aggregated
-    if (!VerifyAggregatedBTCCheckpoint(btccsig, pindexScan)) {
+    bool sig_verify_attempted{false};
+    if (!VerifyAggregatedBTCCheckpoint(btccsig, pindexScan, &sig_verify_attempted)) {
+        if (sig_verify_attempted) {
+            MarkRejectedBTCCheckpointSig(hash);
+        }
         forget_tx_hash();
         return;
     }
@@ -1119,8 +1141,12 @@ void CBTCCheckpointsHandler::TrySignBTCCheckpointTip()
     }
 }
 
-bool CBTCCheckpointsHandler::VerifyBTCCheckpointShare(const CBTCCheckpointSig& btcsig, const CBlockIndex* pindexScan, const uint256& idIn, std::pair<int, CQuorumCPtr>& ret, const uint256& hash) const
+bool CBTCCheckpointsHandler::VerifyBTCCheckpointShare(const CBTCCheckpointSig& btcsig, const CBlockIndex* pindexScan, const uint256& idIn, std::pair<int, CQuorumCPtr>& ret, const uint256& hash, bool* retSigVerifyAttempted) const
 {
+    if (retSigVerifyAttempted) {
+        *retSigVerifyAttempted = false;
+    }
+
     const auto& consensus = Params().GetConsensus();
     const auto& llmqParams = consensus.llmqTypeChainLocks;
     const auto& signingActiveQuorumCount = llmqParams.signingActiveQuorumCount;
@@ -1168,6 +1194,9 @@ bool CBTCCheckpointsHandler::VerifyBTCCheckpointShare(const CBTCCheckpointSig& b
         }
 
         const uint256 signHash = llmq::BuildSignHash(quorum->qc->quorumHash, requestId, msgHash);
+        if (retSigVerifyAttempted) {
+            *retSigVerifyAttempted = true;
+        }
         if (!btcsig.sig.VerifyInsecure(quorum->qc->quorumPublicKey, signHash)) {
             return false;
         }
@@ -1253,6 +1282,24 @@ void CBTCCheckpointsHandler::AddPendingVerifiedBTCCheckpointSig(const uint256& h
         }
         if (oldest == pendingVerifiedBTCCheckpointSigs.end()) break;
         pendingVerifiedBTCCheckpointSigs.erase(oldest);
+    }
+}
+
+void CBTCCheckpointsHandler::MarkRejectedBTCCheckpointSig(const uint256& hash)
+{
+    const int64_t now = TicksSinceEpoch<std::chrono::milliseconds>(SystemClock::now());
+    LOCK(cs);
+    rejectedBTCCheckpointSigs.emplace(hash, now);
+
+    while (rejectedBTCCheckpointSigs.size() > REJECTED_BTCCSIG_MAX) {
+        auto oldest = rejectedBTCCheckpointSigs.end();
+        for (auto it = rejectedBTCCheckpointSigs.begin(); it != rejectedBTCCheckpointSigs.end(); ++it) {
+            if (oldest == rejectedBTCCheckpointSigs.end() || it->second < oldest->second) {
+                oldest = it;
+            }
+        }
+        if (oldest == rejectedBTCCheckpointSigs.end()) break;
+        rejectedBTCCheckpointSigs.erase(oldest);
     }
 }
 
@@ -1542,8 +1589,12 @@ bool CBTCCheckpointsHandler::GetRecentBTCCheckpointByHeight(int32_t nHeight, CBT
     return true;
 }
 
-bool CBTCCheckpointsHandler::VerifyAggregatedBTCCheckpoint(const CBTCCheckpointSig& btcsig, const CBlockIndex* pindexScan) const
+bool CBTCCheckpointsHandler::VerifyAggregatedBTCCheckpoint(const CBTCCheckpointSig& btcsig, const CBlockIndex* pindexScan, bool* retSigVerifyAttempted) const
 {
+    if (retSigVerifyAttempted) {
+        *retSigVerifyAttempted = false;
+    }
+
     if (!HasAggregatedBTCCheckpointStructure(btcsig)) return false;
 
     const uint256 hash = ::SerializeHash(btcsig);
@@ -1553,7 +1604,7 @@ bool CBTCCheckpointsHandler::VerifyAggregatedBTCCheckpoint(const CBTCCheckpointS
             return true;
         }
     }
-    const bool ok = VerifyAggregatedBTCCheckpointNoCache(btcsig, pindexScan);
+    const bool ok = VerifyAggregatedBTCCheckpointNoCache(btcsig, pindexScan, retSigVerifyAttempted);
     if (ok) {
         LOCK(cs);
         sigChecked.emplace(hash, TicksSinceEpoch<std::chrono::milliseconds>(SystemClock::now()));

@@ -74,6 +74,7 @@ class CChainLocksHandler : public CRecoveredSigsListener
     static const int64_t CLEANUP_INTERVAL = 1000 * 30;
     static const int64_t CLEANUP_SEEN_TIMEOUT = 24 * 60 * 60 * 1000;
     static constexpr int32_t RECENT_CHAINLOCKS_MAX{256};
+    static constexpr size_t REJECTED_CHAINLOCKS_MAX{4096};
 
 
 private:
@@ -96,6 +97,7 @@ private:
 
     std::map<uint256, std::pair<int, uint256> > mapSignedRequestIds GUARDED_BY(cs);
     std::map<uint256, int64_t> seenChainLocks GUARDED_BY(cs);
+    std::map<uint256, int64_t> rejectedChainLocks GUARDED_BY(cs);
     std::map<uint256, int64_t> sigChecked GUARDED_BY(cs);
 
     int64_t lastCleanupTime GUARDED_BY(cs) {0};
@@ -118,7 +120,7 @@ public:
     std::map<CQuorumCPtr, CChainLockSigCPtr> GetBestChainLockShares() EXCLUSIVE_LOCKS_REQUIRED(!cs);
 
     void ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStream& vRecv) EXCLUSIVE_LOCKS_REQUIRED(!cs);
-    bool ProcessNewChainLock(NodeId from, CChainLockSig& clsig, BlockValidationState& state, const uint256& hash, const uint256& idIn = uint256()) EXCLUSIVE_LOCKS_REQUIRED(!cs);
+    bool ProcessNewChainLock(NodeId from, CChainLockSig& clsig, BlockValidationState& state, const uint256& hash, const uint256& idIn = uint256(), bool* retSigVerifyAttempted = nullptr) EXCLUSIVE_LOCKS_REQUIRED(!cs);
     void NotifyHeaderTip(const CBlockIndex* pindexNew) EXCLUSIVE_LOCKS_REQUIRED(!cs);
     void UpdatedBlockTip(const CBlockIndex* pindexNew, bool fInitialDownload);
     void CheckActiveState() EXCLUSIVE_LOCKS_REQUIRED(!cs);
@@ -127,7 +129,7 @@ public:
     bool GetCLSIGFromPeers();
     bool HasChainLock(int nHeight, const uint256& blockHash) EXCLUSIVE_LOCKS_REQUIRED(!cs);
     bool HasConflictingChainLock(int nHeight, const uint256& blockHash) EXCLUSIVE_LOCKS_REQUIRED(!cs);
-    bool VerifyAggregatedChainLock(const CChainLockSig& clsig, const CBlockIndex* pindexScan, const uint256& hash) EXCLUSIVE_LOCKS_REQUIRED(!cs);
+    bool VerifyAggregatedChainLock(const CChainLockSig& clsig, const CBlockIndex* pindexScan, const uint256& hash, bool* retSigVerifyAttempted = nullptr) EXCLUSIVE_LOCKS_REQUIRED(!cs);
     bool GetRecentChainLockByHeight(int32_t nHeight, CChainLockSig& ret) EXCLUSIVE_LOCKS_REQUIRED(!cs);
 private:
     // these require locks to be held already
@@ -137,7 +139,8 @@ private:
     void AddRecentChainLock(const CChainLockSig& clsig) EXCLUSIVE_LOCKS_REQUIRED(cs);
 
     bool TryUpdateBestChainLock(const CBlockIndex* pindex) EXCLUSIVE_LOCKS_REQUIRED(cs);
-    bool VerifyChainLockShare(const CChainLockSig& clsig, const CBlockIndex* pindexScan, const uint256& idIn, std::pair<int, CQuorumCPtr>& ret, const uint256& hash) EXCLUSIVE_LOCKS_REQUIRED(!cs);
+    bool VerifyChainLockShare(const CChainLockSig& clsig, const CBlockIndex* pindexScan, const uint256& idIn, std::pair<int, CQuorumCPtr>& ret, const uint256& hash, bool* retSigVerifyAttempted = nullptr) EXCLUSIVE_LOCKS_REQUIRED(!cs);
+    void MarkRejectedChainLock(const uint256& hash) EXCLUSIVE_LOCKS_REQUIRED(!cs);
     void Cleanup() EXCLUSIVE_LOCKS_REQUIRED(!cs);
 
     friend class llmq_tests::CChainLocksHandlerTestAccess;
