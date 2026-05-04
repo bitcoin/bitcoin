@@ -1,17 +1,18 @@
 name: Guix Build
 
 permissions:
-  packages: write
-  id-token: write
-  attestations: write
+  contents: read
 
 on:
-  pull_request_target:
   push:
+  workflow_dispatch:
 
 jobs:
   build-image:
     runs-on: ubuntu-24.04-arm
+    permissions:
+      contents: read
+      packages: write
     outputs:
       image-tag: ${{ steps.prepare.outputs.image-tag }}
       repo-name: ${{ steps.prepare.outputs.repo-name }}
@@ -19,9 +20,9 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
         with:
-          ref: ${{ github.event.pull_request.head.sha }}
           path: syscoin
           fetch-depth: 0
+          persist-credentials: false
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
@@ -65,20 +66,17 @@ jobs:
     needs: build-image
     # runs-on: [ "self-hosted", "linux", "x64", "ubuntu-core" ]
     runs-on: ubuntu-24.04-arm
-#    if: ${{ contains(github.event.pull_request.labels.*.name, 'guix-build') }}
+    permissions:
+      contents: read
+      packages: read
+      id-token: write
+      attestations: write
     strategy:
       matrix:
         build_target: [x86_64-linux-gnu, arm-linux-gnueabihf, aarch64-linux-gnu, riscv64-linux-gnu, powerpc64-linux-gnu, x86_64-w64-mingw32, x86_64-apple-darwin, arm64-apple-darwin]
 
     timeout-minutes: 480
     steps:
-      - name: Login to GitHub Container Registry
-        uses: docker/login-action@v3
-        with:
-          registry: ghcr.io
-          username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
-
       - name: Disable apparmor user namespace restrictions
         run: |
           sudo sysctl -w kernel.apparmor_restrict_unprivileged_userns=0
@@ -86,9 +84,9 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
         with:
-          ref: ${{ github.event.pull_request.head.sha }}
           path: syscoin
           fetch-depth: 0
+          persist-credentials: false
 
       - name: Cache depends sources
         uses: actions/cache@v4
@@ -116,6 +114,13 @@ jobs:
         if: steps.guix-cache-restore.outputs.cache-hit != 'true'
         run: mkdir -p .cache
 
+      - name: Login to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
       - name: Run Guix build
         timeout-minutes: 480
         run: |
@@ -133,6 +138,9 @@ jobs:
             echo "Guix build failed!"
             exit 1
           fi
+
+      - name: Logout from GitHub Container Registry
+        run: docker logout ghcr.io
 
       - name: Compute SHA256 checksums
         continue-on-error: true # It will complain on depending on only some hosts
