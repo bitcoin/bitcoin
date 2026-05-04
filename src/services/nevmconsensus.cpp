@@ -43,11 +43,12 @@ void CNEVMDataDB::FlushDataToCache(const PoDAMAPMemory &mapPoDA) {
         if(!val.vchNEVMData) {
             continue;
         }
+        if(Exists(key)) {
+            continue;
+        }
         auto inserted = mapCache.try_emplace(key, val.txid, val.nSize, val.nMedianTime);
-        // for duplicate blobs, allow to update txid/mediantime
         if(!inserted.second) {
-            inserted.first->second.nMedianTime = val.nMedianTime;
-            inserted.first->second.txid = val.txid;
+            continue;
         }
         if(!pnevmdatablobdb->Exists(key)) {
             batchblob.Write(key, val.vchNEVMData);
