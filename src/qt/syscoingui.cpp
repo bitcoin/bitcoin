@@ -413,79 +413,6 @@ void SyscoinGUI::createActions()
         connect(usedSendingAddressesAction, &QAction::triggered, walletFrame, &WalletFrame::usedSendingAddresses);
         connect(usedReceivingAddressesAction, &QAction::triggered, walletFrame, &WalletFrame::usedReceivingAddresses);
         connect(openAction, &QAction::triggered, this, &SyscoinGUI::openClicked);
-        connect(m_open_wallet_menu, &QMenu::aboutToShow, m_wallet_controller, [this] {
-            m_open_wallet_menu->clear();
-            for (const std::pair<const std::string, bool>& i : m_wallet_controller->listWalletDir()) {
-                const std::string& path = i.first;
-                QString name = path.empty() ? QString("["+tr("default wallet")+"]") : QString::fromStdString(path);
-                // Menu items remove single &. Single & are shown when && is in
-                // the string, but only the first occurrence. So replace only
-                // the first & with &&.
-                name.replace(name.indexOf(QChar('&')), 1, QString("&&"));
-                QAction* action = m_open_wallet_menu->addAction(name);
-
-                if (i.second) {
-                    // This wallet is already loaded
-                    action->setEnabled(false);
-                    continue;
-                }
-
-                connect(action, &QAction::triggered, m_wallet_controller, [this, path] {
-                    auto activity = new OpenWalletActivity(m_wallet_controller, this);
-                    connect(activity, &OpenWalletActivity::opened, this, &SyscoinGUI::setCurrentWallet, Qt::QueuedConnection);
-                    connect(activity, &OpenWalletActivity::opened, rpcConsole, &RPCConsole::setCurrentWallet, Qt::QueuedConnection);
-                    activity->open(path);
-                });
-            }
-            if (m_open_wallet_menu->isEmpty()) {
-                QAction* action = m_open_wallet_menu->addAction(tr("No wallets available"));
-                action->setEnabled(false);
-            }
-        });
-        connect(m_restore_wallet_action, &QAction::triggered, m_wallet_controller, [this] {
-            //: Name of the wallet data file format.
-            QString name_data_file = tr("Wallet Data");
-
-            //: The title for Restore Wallet File Windows
-            QString title_windows = tr("Load Wallet Backup");
-
-            QString backup_file = GUIUtil::getOpenFileName(this, title_windows, QString(), name_data_file + QLatin1String(" (*.dat)"), nullptr);
-            if (backup_file.isEmpty()) return;
-
-            bool wallet_name_ok;
-            /*: Title of pop-up window shown when the user is attempting to
-                restore a wallet. */
-            QString title = tr("Restore Wallet");
-            //: Label of the input field where the name of the wallet is entered.
-            QString label = tr("Wallet Name");
-            QString wallet_name = QInputDialog::getText(this, title, label, QLineEdit::Normal, "", &wallet_name_ok);
-            if (!wallet_name_ok || wallet_name.isEmpty()) return;
-
-            auto activity = new RestoreWalletActivity(m_wallet_controller, this);
-            connect(activity, &RestoreWalletActivity::restored, this, &SyscoinGUI::setCurrentWallet, Qt::QueuedConnection);
-            connect(activity, &RestoreWalletActivity::restored, rpcConsole, &RPCConsole::setCurrentWallet, Qt::QueuedConnection);
-
-            auto backup_file_path = fs::PathFromString(backup_file.toStdString());
-            activity->restore(backup_file_path, wallet_name.toStdString());
-        });
-        connect(m_close_wallet_action, &QAction::triggered, m_wallet_controller, [this] {
-            m_wallet_controller->closeWallet(walletFrame->currentWalletModel(), this);
-        });
-        // SYSCOIN (keep legacy wallet creation for now)
-        connect(m_create_wallet_action, &QAction::triggered, m_wallet_controller, [this] {
-            auto activity = new CreateWalletActivity(m_wallet_controller, this);
-            connect(activity, &CreateWalletActivity::created, this, &SyscoinGUI::setCurrentWallet);
-            connect(activity, &CreateWalletActivity::created, rpcConsole, &RPCConsole::setCurrentWallet);
-            activity->create();
-        });
-        connect(m_close_all_wallets_action, &QAction::triggered, m_wallet_controller, [this] {
-            m_wallet_controller->closeAllWallets(this);
-        });
-        connect(m_migrate_wallet_action, &QAction::triggered, m_wallet_controller, [this] {
-            auto activity = new MigrateWalletActivity(m_wallet_controller, this);
-            connect(activity, &MigrateWalletActivity::migrated, this, &SyscoinGUI::setCurrentWallet);
-            activity->migrate(walletFrame->currentWalletModel());
-        });
         connect(m_mask_values_action, &QAction::toggled, this, &SyscoinGUI::setPrivacy);
         connect(m_mask_values_action, &QAction::toggled, this, &SyscoinGUI::enableHistoryAction);
     }
@@ -722,6 +649,80 @@ void SyscoinGUI::setWalletController(WalletController* wallet_controller, bool s
     m_open_wallet_action->setEnabled(true);
     m_open_wallet_action->setMenu(m_open_wallet_menu);
     m_restore_wallet_action->setEnabled(true);
+
+    connect(m_open_wallet_menu, &QMenu::aboutToShow, wallet_controller, [this, wallet_controller] {
+        m_open_wallet_menu->clear();
+        for (const std::pair<const std::string, bool>& i : wallet_controller->listWalletDir()) {
+            const std::string& path = i.first;
+            QString name = path.empty() ? QString("["+tr("default wallet")+"]") : QString::fromStdString(path);
+            // Menu items remove single &. Single & are shown when && is in
+            // the string, but only the first occurrence. So replace only
+            // the first & with &&.
+            name.replace(name.indexOf(QChar('&')), 1, QString("&&"));
+            QAction* action = m_open_wallet_menu->addAction(name);
+
+            if (i.second) {
+                // This wallet is already loaded
+                action->setEnabled(false);
+                continue;
+            }
+
+            connect(action, &QAction::triggered, wallet_controller, [this, wallet_controller, path] {
+                auto activity = new OpenWalletActivity(wallet_controller, this);
+                connect(activity, &OpenWalletActivity::opened, this, &SyscoinGUI::setCurrentWallet, Qt::QueuedConnection);
+                connect(activity, &OpenWalletActivity::opened, rpcConsole, &RPCConsole::setCurrentWallet, Qt::QueuedConnection);
+                activity->open(path);
+            });
+        }
+        if (m_open_wallet_menu->isEmpty()) {
+            QAction* action = m_open_wallet_menu->addAction(tr("No wallets available"));
+            action->setEnabled(false);
+        }
+    });
+    connect(m_restore_wallet_action, &QAction::triggered, wallet_controller, [this, wallet_controller] {
+        //: Name of the wallet data file format.
+        QString name_data_file = tr("Wallet Data");
+
+        //: The title for Restore Wallet File Windows
+        QString title_windows = tr("Load Wallet Backup");
+
+        QString backup_file = GUIUtil::getOpenFileName(this, title_windows, QString(), name_data_file + QLatin1String(" (*.dat)"), nullptr);
+        if (backup_file.isEmpty()) return;
+
+        bool wallet_name_ok;
+        /*: Title of pop-up window shown when the user is attempting to
+            restore a wallet. */
+        QString title = tr("Restore Wallet");
+        //: Label of the input field where the name of the wallet is entered.
+        QString label = tr("Wallet Name");
+        QString wallet_name = QInputDialog::getText(this, title, label, QLineEdit::Normal, "", &wallet_name_ok);
+        if (!wallet_name_ok || wallet_name.isEmpty()) return;
+
+        auto activity = new RestoreWalletActivity(wallet_controller, this);
+        connect(activity, &RestoreWalletActivity::restored, this, &SyscoinGUI::setCurrentWallet, Qt::QueuedConnection);
+        connect(activity, &RestoreWalletActivity::restored, rpcConsole, &RPCConsole::setCurrentWallet, Qt::QueuedConnection);
+
+        auto backup_file_path = fs::PathFromString(backup_file.toStdString());
+        activity->restore(backup_file_path, wallet_name.toStdString());
+    });
+    connect(m_close_wallet_action, &QAction::triggered, wallet_controller, [this, wallet_controller] {
+        wallet_controller->closeWallet(walletFrame->currentWalletModel(), this);
+    });
+    // SYSCOIN (keep legacy wallet creation for now)
+    connect(m_create_wallet_action, &QAction::triggered, wallet_controller, [this, wallet_controller] {
+        auto activity = new CreateWalletActivity(wallet_controller, this);
+        connect(activity, &CreateWalletActivity::created, this, &SyscoinGUI::setCurrentWallet);
+        connect(activity, &CreateWalletActivity::created, rpcConsole, &RPCConsole::setCurrentWallet);
+        activity->create();
+    });
+    connect(m_close_all_wallets_action, &QAction::triggered, wallet_controller, [this, wallet_controller] {
+        wallet_controller->closeAllWallets(this);
+    });
+    connect(m_migrate_wallet_action, &QAction::triggered, wallet_controller, [this, wallet_controller] {
+        auto activity = new MigrateWalletActivity(wallet_controller, this);
+        connect(activity, &MigrateWalletActivity::migrated, this, &SyscoinGUI::setCurrentWallet);
+        activity->migrate(walletFrame->currentWalletModel());
+    });
 
     GUIUtil::ExceptionSafeConnect(wallet_controller, &WalletController::walletAdded, this, &SyscoinGUI::addWallet);
     connect(wallet_controller, &WalletController::walletRemoved, this, &SyscoinGUI::removeWallet);
