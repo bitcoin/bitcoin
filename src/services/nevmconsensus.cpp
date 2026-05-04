@@ -46,7 +46,7 @@ void CNEVMDataDB::FlushDataToCache(const PoDAMAPMemory &mapPoDA, PoDAFlushSource
         if(Exists(key)) {
             if(source == PoDAFlushSource::Block) {
                 MapPoDAPayloadMeta meta;
-                if(Read(key, meta)) {
+                if(Read(key, meta) && meta.nSize == val.nSize) {
                     auto inserted = mapCache.try_emplace(key, val.txid, meta.nSize, val.nMedianTime);
                     if(!inserted.second) {
                         inserted.first->second.nMedianTime = val.nMedianTime;
@@ -58,7 +58,7 @@ void CNEVMDataDB::FlushDataToCache(const PoDAMAPMemory &mapPoDA, PoDAFlushSource
         }
         auto inserted = mapCache.try_emplace(key, val.txid, val.nSize, val.nMedianTime);
         if(!inserted.second) {
-            if(source == PoDAFlushSource::Block) {
+            if(source == PoDAFlushSource::Block && inserted.first->second.nSize == val.nSize) {
                 inserted.first->second.nMedianTime = val.nMedianTime;
                 inserted.first->second.txid = val.txid;
             }
