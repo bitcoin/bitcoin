@@ -616,7 +616,7 @@ BOOST_FIXTURE_TEST_CASE (auxpow_miner_createAndLookupBlock, TestChain100Setup)
 
 struct AuxpowCLReceiptStartZeroSetup : TestChain100Setup {
   AuxpowCLReceiptStartZeroSetup()
-      : TestChain100Setup(ChainType::REGTEST, {"-clreceiptstartheight=0"}) {}
+      : TestChain100Setup(ChainType::REGTEST, {"-clreceiptstartheight=102"}) {}
 };
 
 BOOST_FIXTURE_TEST_CASE(auxpow_miner_regeneratesTemplateOnBTCPREVChange, AuxpowCLReceiptStartZeroSetup)
