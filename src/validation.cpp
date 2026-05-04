@@ -1259,7 +1259,7 @@ bool MemPoolAccept::Finalize(const ATMPArgs& args, Workspace& ws)
 
     // SYSCOIN
     if(pnevmdatadb)
-        pnevmdatadb->FlushDataToCache(ws.mapPoDA);
+        pnevmdatadb->FlushDataToCache(ws.mapPoDA, PoDAFlushSource::Mempool);
     // trim mempool and check if tx was trimmed
     // If we are validating a package, don't trim here because we could evict a previous transaction
     // in the package. LimitMempoolSize() should be called at the very end to make sure the mempool
@@ -2402,6 +2402,12 @@ bool FillNEVMData(CBlock &block) {
 bool EraseNEVMData(const NEVMDataVec &NEVMDataVecOut) {
     if(!NEVMDataVecOut.empty()) {
         return pnevmdatadb->FlushErase(NEVMDataVecOut);
+    }
+    return true;
+}
+bool EraseMempoolNEVMData(const std::vector<uint8_t>& vchVersionHash, const uint256& txid) {
+    if(!vchVersionHash.empty()) {
+        return pnevmdatadb->FlushMempoolErase(vchVersionHash, txid);
     }
     return true;
 }
@@ -3674,7 +3680,7 @@ bool Chainstate::ConnectTip(BlockValidationState& state, CBlockIndex* pindexNew,
     }
     // SYSCOIN
     if(pnevmdatadb)
-        pnevmdatadb->FlushDataToCache(mapPoDA);
+        pnevmdatadb->FlushDataToCache(mapPoDA, PoDAFlushSource::Block);
     if(pnevmtxmintdb)
         pnevmtxmintdb->FlushDataToCache(setMintTxs);
     if(pblockindexdb)
@@ -5244,7 +5250,7 @@ bool ChainstateManager::AcceptBlock(const std::shared_ptr<const CBlock>& pblock,
         return error("%s: %s", __func__, state.ToString());
     }
     if(pnevmdatadb)
-        pnevmdatadb->FlushDataToCache(mapPoDA);
+        pnevmdatadb->FlushDataToCache(mapPoDA, PoDAFlushSource::Block);
 
     // Header is valid/has work, merkle tree and segwit merkle tree are good...RELAY NOW
     // (but if it does not build on our best tip, let the SendMessages loop relay it)
@@ -5692,7 +5698,7 @@ bool Chainstate::ReplayBlocks()
     cache.Flush();
     // SYSCOIN
     if(pnevmdatadb) {
-        pnevmdatadb->FlushDataToCache(mapPoDAConnect);
+        pnevmdatadb->FlushDataToCache(mapPoDAConnect, PoDAFlushSource::Block);
     }
     if(pnevmtxmintdb) {
         pnevmtxmintdb->FlushDataToCache(setMintTxsConnect);

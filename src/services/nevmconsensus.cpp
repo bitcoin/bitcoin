@@ -33,7 +33,7 @@ bool DisconnectSyscoinTransaction(const CTransaction& tx, NEVMMintTxSet &setMint
     return true;       
 }
 
-void CNEVMDataDB::FlushDataToCache(const PoDAMAPMemory &mapPoDA) {
+void CNEVMDataDB::FlushDataToCache(const PoDAMAPMemory &mapPoDA, PoDAFlushSource source) {
     LOCK(cs_cache);
     if(mapPoDA.empty()) {
         return;
@@ -44,10 +44,24 @@ void CNEVMDataDB::FlushDataToCache(const PoDAMAPMemory &mapPoDA) {
             continue;
         }
         if(Exists(key)) {
+            if(source == PoDAFlushSource::Block) {
+                MapPoDAPayloadMeta meta;
+                if(Read(key, meta)) {
+                    auto inserted = mapCache.try_emplace(key, val.txid, meta.nSize, val.nMedianTime);
+                    if(!inserted.second) {
+                        inserted.first->second.nMedianTime = val.nMedianTime;
+                        inserted.first->second.txid = val.txid;
+                    }
+                }
+            }
             continue;
         }
         auto inserted = mapCache.try_emplace(key, val.txid, val.nSize, val.nMedianTime);
         if(!inserted.second) {
+            if(source == PoDAFlushSource::Block) {
+                inserted.first->second.nMedianTime = val.nMedianTime;
+                inserted.first->second.txid = val.txid;
+            }
             continue;
         }
         if(!pnevmdatablobdb->Exists(key)) {
@@ -107,6 +121,28 @@ bool CNEVMDataDB::FlushErase(const NEVMDataVec &vecDataKeys) {
     if(vecDataKeys.size() > 0)
         LogPrint(BCLog::SYS, "Flushing, erasing %d nevm blob keys\n", vecDataKeys.size());
     return WriteBatch(batch, true) && pnevmdatablobdb->FlushErase(vecDataKeys);
+}
+bool CNEVMDataDB::FlushMempoolErase(const std::vector<uint8_t>& vchVersionHash, const uint256& txid) {
+    LOCK(cs_cache);
+    if(Exists(vchVersionHash)) {
+        MapPoDAPayloadMeta meta;
+        if(Read(vchVersionHash, meta) && meta.txid == txid) {
+            CDBBatch batch(*this);
+            batch.Erase(vchVersionHash);
+            auto it = mapCache.find(vchVersionHash);
+            if(it != mapCache.end()) {
+                mapCache.erase(it);
+            }
+            return WriteBatch(batch, true) && pnevmdatablobdb->FlushErase({vchVersionHash});
+        }
+        return true;
+    }
+    auto it = mapCache.find(vchVersionHash);
+    if(it == mapCache.end() || it->second.txid != txid) {
+        return true;
+    }
+    mapCache.erase(it);
+    return pnevmdatablobdb->FlushErase({vchVersionHash});
 }
 bool CNEVMDataBlobDB::FlushErase(const NEVMDataVec &vecDataKeys) {
     CDBBatch batch(*this);    

@@ -20,6 +20,11 @@ class CDBBatch;
 namespace node {
     struct NodeContext;
 } // namespace node
+
+enum class PoDAFlushSource {
+    Mempool,
+    Block,
+};
     
 class CNEVMDataDB : public CDBWrapper {
 public:
@@ -29,8 +34,9 @@ private:
 public:
     using CDBWrapper::CDBWrapper;
     bool FlushErase(const NEVMDataVec &vecDataKeys) EXCLUSIVE_LOCKS_REQUIRED(!cs_cache);
+    bool FlushMempoolErase(const std::vector<uint8_t>& vchVersionHash, const uint256& txid) EXCLUSIVE_LOCKS_REQUIRED(!cs_cache);
     bool FlushCacheToDisk(const int64_t nMedianTime, bool fSync = true) EXCLUSIVE_LOCKS_REQUIRED(!cs_cache);
-    void FlushDataToCache(const PoDAMAPMemory &mapPoDA) EXCLUSIVE_LOCKS_REQUIRED(!cs_cache);
+    void FlushDataToCache(const PoDAMAPMemory &mapPoDA, PoDAFlushSource source) EXCLUSIVE_LOCKS_REQUIRED(!cs_cache);
     bool PruneStandalone(const int64_t nMedianTime, bool fSync = true) EXCLUSIVE_LOCKS_REQUIRED(!cs_cache);
     bool PruneToBatch(CDBBatch& batch,CDBBatch& batchblob,  const int64_t nMedianTime) EXCLUSIVE_LOCKS_REQUIRED(cs_cache);
     bool GetBlobMetaData(const std::vector<uint8_t>& vchVersionhash, MapPoDAPayloadMeta& meta) EXCLUSIVE_LOCKS_REQUIRED(!cs_cache);

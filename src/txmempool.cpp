@@ -29,7 +29,7 @@
 #include <evo/specialtx.h>
 #include <evo/providertx.h>
 #include <evo/deterministicmns.h>   
-extern bool EraseNEVMData(const NEVMDataVec&);
+extern bool EraseMempoolNEVMData(const std::vector<uint8_t>&, const uint256&);
 extern NEVMMintTxSet setMintTxsMempool;
 extern std::unordered_map<COutPoint, std::pair<CTransactionRef, CTransactionRef>, SaltedOutpointHasher> mapAssetAllocationConflicts;
 
@@ -644,11 +644,11 @@ void CTxMemPool::removeUnchecked(txiter it, MemPoolRemovalReason reason)
         if(!mintSyscoin.IsNull())
             setMintTxsMempool.erase(mintSyscoin.nTxHash);
     }
-    // completely remove data if we are expiring due to timeout or trimming mempool, any other and it may be block related where we keep around until chainlock eventually prune them
+    // Remove only mempool-owned PoDA data on expiry/trim; confirmed and duplicate blobs are chain-owned.
     else if(it->GetTx().IsNEVMData() && (reason == MemPoolRemovalReason::EXPIRY || reason == MemPoolRemovalReason::SIZELIMIT)) {
         CNEVMData nevmData(it->GetTx());
         if(!nevmData.IsNull()){
-            EraseNEVMData({nevmData.vchVersionHash});
+            EraseMempoolNEVMData(nevmData.vchVersionHash, tx_hash);
         }
     }
     cachedInnerUsage -= memusage::DynamicUsage(it->GetMemPoolParentsConst()) + memusage::DynamicUsage(it->GetMemPoolChildrenConst());
