@@ -68,18 +68,20 @@ bool CheckSyscoinMintInternal(
             continue;
         }
 
-        // Assuming rlpLog is the current event log
         const dev::RLP& rlpLogTopics = rlpLog[1];
+        // Verify topics count
+        if (!rlpLogTopics.isList() || rlpLogTopics.itemCount() < 3) {
+            return FormatSyscoinErrorMessage(state, "mint-log-invalid-topics-count", fJustCheck);
+        }
         if (rlpLogTopics[0].toBytes(dev::RLP::VeryStrict) != vchFreezeTopic) {
             continue;
-        }
-        // Verify topics count
-        if (rlpLogTopics.itemCount() < 3) {
-            return FormatSyscoinErrorMessage(state, "mint-log-invalid-topics-count", fJustCheck);
         }
 
         // Parse indexed asset guid from topics:
         dev::bytes vchAssetGuid = rlpLogTopics[1].toBytes(dev::RLP::VeryStrict);
+        if (vchAssetGuid.size() != 32) {
+            return FormatSyscoinErrorMessage(state, "mint-log-invalid-asset-guid-topic-size", fJustCheck);
+        }
         // Take the last 8 bytes (assuming assetGuid fits in 64 bits), 24 because all topics are 32 bytes
         nAssetFromLog = ReadBE64(vchAssetGuid.data() + 24);
 
