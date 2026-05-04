@@ -247,40 +247,6 @@ class NEVMDataTest(DashTestFramework):
         assert_equal(self.nodes[0].getnevmblobdata(txid, True)['data'], txidData)
         assert_equal(self.nodes[1].getnevmblobdata(vh, True)['data'], vhData)
         assert_equal(self.nodes[1].getnevmblobdata(txid, True)['data'], txidData)
-        print('Check duplicate PoDA metadata refresh rules...')
-        original_blob = self.nodes[0].getnevmblobdata(vh, True)
-        assert_equal(original_blob['data'], vhData)
-        original_txid = original_blob['txid']
-        original_mtp = original_blob['mtp']
-        original_size = original_blob['datasize']
-
-        short_data = secrets.token_hex(10)
-        short_txid = self.nodes[0].syscoincreaterawnevmblob(vh, short_data)['txid']
-        self.wait_until(lambda: short_txid in self.nodes[0].getrawmempool())
-        self.generate_helper(self.nodes[0], 1, sync_fun=self.no_op, nodes=self.nodes[0:4])
-        self.wait_until(lambda: self.sync_blocks_helper(self.nodes[0:4]))
-        short_blob = self.nodes[0].getnevmblobdata(vh, True)
-        assert_equal(short_blob['txid'], original_txid)
-        assert_equal(short_blob['mtp'], original_mtp)
-        assert_equal(short_blob['datasize'], original_size)
-        assert_equal(short_blob['data'], vhData)
-
-        same_size_data = secrets.token_hex(len(bytes.fromhex(vhData)))
-        while same_size_data == vhData:
-            same_size_data = secrets.token_hex(len(bytes.fromhex(vhData)))
-        same_size_txid = self.nodes[0].syscoincreaterawnevmblob(vh, same_size_data)['txid']
-        self.wait_until(lambda: same_size_txid in self.nodes[0].getrawmempool())
-        mempool_blob = self.nodes[0].getnevmblobdata(vh, True)
-        assert_equal(mempool_blob['txid'], original_txid)
-        assert_equal(mempool_blob['mtp'], original_mtp)
-        self.generate_helper(self.nodes[0], 1, sync_fun=self.no_op, nodes=self.nodes[0:4])
-        same_size_block = self.nodes[0].getbestblockhash()
-        self.wait_until(lambda: self.sync_blocks_helper(self.nodes[0:4]))
-        same_size_blob = self.nodes[0].getnevmblobdata(vh, True)
-        assert_equal(same_size_blob['txid'], same_size_txid)
-        assert_equal(same_size_blob['mtp'], self.nodes[0].getblockheader(same_size_block)['mediantime'])
-        assert_equal(same_size_blob['datasize'], original_size)
-        assert_equal(same_size_blob['data'], vhData)
         # test relay before block creation
         print('Create more blobs...')
         self.nodes[0].syscoincreatenevmblob(secrets.token_hex(55))

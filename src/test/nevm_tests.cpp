@@ -20,6 +20,31 @@
 #include <consensus/validation.h>
 #include <primitives/transaction.h>
 #include <services/assetconsensus.h>
+#include <services/nevmconsensus.h>
+
+namespace {
+CTransaction MakeNEVMDataTx(const std::vector<uint8_t>& version_hash, const std::vector<uint8_t>& data)
+{
+    CNEVMData nevmData;
+    nevmData.vchVersionHash = version_hash;
+    std::vector<unsigned char> payload;
+    nevmData.SerializeData(payload);
+
+    CMutableTransaction mtx;
+    mtx.nVersion = SYSCOIN_TX_VERSION_NEVM_DATA_SHA3;
+    mtx.vout.emplace_back(0, CScript() << OP_RETURN << payload);
+    mtx.vout.back().vchNEVMData = data;
+    return CTransaction{mtx};
+}
+
+MapPoDAPayloadMeta MakePoDAMeta(const uint256& txid, uint32_t size, int64_t median_time)
+{
+    MapPoDAPayloadMeta meta{txid, size, median_time};
+    meta.vchNEVMData = std::make_shared<const std::vector<uint8_t>>(size, uint8_t{0});
+    return meta;
+}
+} // namespace
+
 BOOST_FIXTURE_TEST_SUITE(nevm_tests, BasicTestingSetup)
 BOOST_AUTO_TEST_CASE(seniority_test)
 {
@@ -201,4 +226,110 @@ BOOST_AUTO_TEST_CASE(nevm_blob_versionhash_formats_and_hashes)
     BOOST_CHECK(EncodeNEVMVersionHash(keccak, NEVM_DATA_LEGACY_VERSION_BYTE) == keccak);
     BOOST_CHECK(EncodeNEVMVersionHash(blake, NEVM_DATA_BLAKE2S_VERSION_BYTE) == versioned_blake);
 }
+BOOST_AUTO_TEST_SUITE_END()
+
+BOOST_FIXTURE_TEST_SUITE(nevm_poda_validation_tests, RegTestingSetup)
+
+BOOST_AUTO_TEST_CASE(nevm_blob_sidecar_failures_are_auxiliary)
+{
+    pnevmdatadb = std::make_unique<CNEVMDataDB>(DBParams{
+        .path = "poda_meta",
+        .cache_bytes = static_cast<size_t>(1 << 20),
+        .memory_only = true,
+        .wipe_data = true});
+    pnevmdatablobdb = std::make_unique<CNEVMDataBlobDB>(DBParams{
+        .path = "poda_blob",
+        .cache_bytes = static_cast<size_t>(1 << 20),
+        .memory_only = true,
+        .wipe_data = true});
+
+    const std::vector<uint8_t> good_data{'g', 'o', 'o', 'd'};
+    const std::vector<uint8_t> bad_data{'b', 'a', 'd'};
+    const std::vector<uint8_t> version_hash = dev::sha3(good_data).asBytes();
+    PoDAMAPMemory mapPoDA;
+
+    BOOST_CHECK_EQUAL(
+        ProcessNEVMData(m_node.chainman->m_blockman, MakeNEVMDataTx(version_hash, bad_data), /*nMedianTime=*/100, /*nTimeNow=*/100, mapPoDA),
+        ProcessNEVMDataResult::AUX_DATA_INVALID);
+    BOOST_CHECK(mapPoDA.empty());
+
+    BOOST_CHECK_EQUAL(
+        ProcessNEVMData(m_node.chainman->m_blockman, MakeNEVMDataTx(version_hash, good_data), /*nMedianTime=*/100, /*nTimeNow=*/100, mapPoDA),
+        ProcessNEVMDataResult::VALID);
+    pnevmdatadb->FlushDataToCache(mapPoDA, PoDAFlushSource::Block);
+    mapPoDA.clear();
+    BOOST_CHECK(pnevmdatadb->BlobExists(version_hash));
+
+    BOOST_CHECK_EQUAL(
+        ProcessNEVMData(m_node.chainman->m_blockman, MakeNEVMDataTx(version_hash, bad_data), /*nMedianTime=*/100, /*nTimeNow=*/100, mapPoDA),
+        ProcessNEVMDataResult::VALID);
+
+    std::vector<CTransactionRef> txs;
+    txs.emplace_back(MakeTransactionRef(CMutableTransaction{}));
+    for (int i = 0; i <= MAX_DATA_BLOBS; ++i) {
+        txs.emplace_back(MakeTransactionRef(MakeNEVMDataTx(version_hash, good_data)));
+    }
+    CBlock too_many_blobs;
+    too_many_blobs.vtx = txs;
+    mapPoDA.clear();
+    BOOST_CHECK_EQUAL(
+        ProcessNEVMData(m_node.chainman->m_blockman, too_many_blobs, /*nMedianTime=*/100, /*nTimeNow=*/100, mapPoDA),
+        ProcessNEVMDataResult::CONSENSUS_INVALID);
+}
+
+BOOST_AUTO_TEST_CASE(nevm_duplicate_blob_metadata_refresh_rules)
+{
+    pnevmdatadb = std::make_unique<CNEVMDataDB>(DBParams{
+        .path = "poda_meta_duplicates",
+        .cache_bytes = static_cast<size_t>(1 << 20),
+        .memory_only = true,
+        .wipe_data = true});
+    pnevmdatablobdb = std::make_unique<CNEVMDataBlobDB>(DBParams{
+        .path = "poda_blob_duplicates",
+        .cache_bytes = static_cast<size_t>(1 << 20),
+        .memory_only = true,
+        .wipe_data = true});
+
+    const std::vector<uint8_t> version_hash = dev::sha3(std::vector<uint8_t>{'d', 'a', 't', 'a'}).asBytes();
+    const uint256 original_txid = uint256S("01");
+    const uint256 small_txid = uint256S("02");
+    const uint256 mempool_txid = uint256S("03");
+    const uint256 block_txid = uint256S("04");
+
+    PoDAMAPMemory mapPoDA;
+    mapPoDA.emplace(version_hash, MakePoDAMeta(original_txid, /*size=*/100, /*median_time=*/1000));
+    pnevmdatadb->FlushDataToCache(mapPoDA, PoDAFlushSource::Mempool);
+    BOOST_REQUIRE(pnevmdatadb->FlushCacheToDisk(/*nMedianTime=*/1000));
+
+    MapPoDAPayloadMeta meta;
+    BOOST_REQUIRE(pnevmdatadb->GetBlobMetaData(version_hash, meta));
+    BOOST_CHECK_EQUAL(meta.txid, original_txid);
+    BOOST_CHECK_EQUAL(meta.nSize, 100);
+    BOOST_CHECK_EQUAL(meta.nMedianTime, 1000);
+
+    mapPoDA.clear();
+    mapPoDA.emplace(version_hash, MakePoDAMeta(small_txid, /*size=*/10, /*median_time=*/2000));
+    pnevmdatadb->FlushDataToCache(mapPoDA, PoDAFlushSource::Block);
+    BOOST_REQUIRE(pnevmdatadb->GetBlobMetaData(version_hash, meta));
+    BOOST_CHECK_EQUAL(meta.txid, original_txid);
+    BOOST_CHECK_EQUAL(meta.nSize, 100);
+    BOOST_CHECK_EQUAL(meta.nMedianTime, 1000);
+
+    mapPoDA.clear();
+    mapPoDA.emplace(version_hash, MakePoDAMeta(mempool_txid, /*size=*/100, /*median_time=*/3000));
+    pnevmdatadb->FlushDataToCache(mapPoDA, PoDAFlushSource::Mempool);
+    BOOST_REQUIRE(pnevmdatadb->GetBlobMetaData(version_hash, meta));
+    BOOST_CHECK_EQUAL(meta.txid, original_txid);
+    BOOST_CHECK_EQUAL(meta.nSize, 100);
+    BOOST_CHECK_EQUAL(meta.nMedianTime, 1000);
+
+    mapPoDA.clear();
+    mapPoDA.emplace(version_hash, MakePoDAMeta(block_txid, /*size=*/100, /*median_time=*/4000));
+    pnevmdatadb->FlushDataToCache(mapPoDA, PoDAFlushSource::Block);
+    BOOST_REQUIRE(pnevmdatadb->GetBlobMetaData(version_hash, meta));
+    BOOST_CHECK_EQUAL(meta.txid, block_txid);
+    BOOST_CHECK_EQUAL(meta.nSize, 100);
+    BOOST_CHECK_EQUAL(meta.nMedianTime, 4000);
+}
+
 BOOST_AUTO_TEST_SUITE_END()
