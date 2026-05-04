@@ -258,6 +258,7 @@ static bool AppInit(NodeContext& node)
     return fRet;
 }
 
+/// \anchor main
 MAIN_FUNCTION
 {
     NodeContext node;

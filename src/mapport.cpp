@@ -119,6 +119,7 @@ static void ProcessPCP()
     // we rather just choose a fairly short expiry time.
 }
 
+/// \anchor mapport
 static void ThreadMapPort()
 {
     do {

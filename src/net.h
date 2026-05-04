@@ -1425,6 +1425,7 @@ private:
     bool Bind(const CService& addr, unsigned int flags, NetPermissionFlags permissions);
     bool InitBinds(const Options& options);
 
+    /// \anchor addcon
     void ThreadOpenAddedConnections() EXCLUSIVE_LOCKS_REQUIRED(!m_added_nodes_mutex,
                                                                !m_nodes_mutex,
                                                                !m_reconnections_mutex,
@@ -1436,6 +1437,7 @@ private:
                                                      !m_nodes_mutex,
                                                      !m_unused_i2p_sessions_mutex);
 
+    /// \anchor opencon
     void ThreadOpenConnections(std::vector<std::string> connect, std::span<const std::string> seed_nodes)
         EXCLUSIVE_LOCKS_REQUIRED(!m_added_nodes_mutex,
                                  !m_addr_fetches_mutex,
@@ -1443,7 +1445,9 @@ private:
                                  !m_reconnections_mutex,
                                  !m_unused_i2p_sessions_mutex);
 
+    /// \anchor msghand
     void ThreadMessageHandler() EXCLUSIVE_LOCKS_REQUIRED(!m_nodes_mutex, !mutexMsgProc);
+    /// \anchor i2paccept
     void ThreadI2PAcceptIncoming() EXCLUSIVE_LOCKS_REQUIRED(!m_nodes_mutex);
     void ThreadPrivateBroadcast() EXCLUSIVE_LOCKS_REQUIRED(!m_nodes_mutex, !m_unused_i2p_sessions_mutex);
     void AcceptConnection(const ListenSocket& hListenSocket) EXCLUSIVE_LOCKS_REQUIRED(!m_nodes_mutex);
@@ -1495,7 +1499,9 @@ private:
     void SocketHandlerListening(const Sock::EventsPerSock& events_per_sock)
         EXCLUSIVE_LOCKS_REQUIRED(!m_nodes_mutex);
 
+    /// \anchor net
     void ThreadSocketHandler() EXCLUSIVE_LOCKS_REQUIRED(!m_total_bytes_sent_mutex, !mutexMsgProc, !m_nodes_mutex, !m_reconnections_mutex);
+    /// \anchor dnsseed
     void ThreadDNSAddressSeed() EXCLUSIVE_LOCKS_REQUIRED(!m_addr_fetches_mutex, !m_nodes_mutex);
 
     uint64_t CalculateKeyedNetGroup(const CNetAddr& ad) const;

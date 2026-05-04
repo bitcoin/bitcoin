@@ -68,6 +68,7 @@ private:
     std::vector<std::thread> m_worker_threads;
     bool m_request_stop GUARDED_BY(m_mutex){false};
 
+    /// \anchor checkqueue
     /** Internal function that does bulk of the verification work. If fMaster, return the final result. */
     std::optional<R> Loop(bool fMaster) EXCLUSIVE_LOCKS_REQUIRED(!m_mutex)
     {
