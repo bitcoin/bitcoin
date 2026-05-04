@@ -62,7 +62,9 @@ CacheSizes CalculateCacheSizes(const ArgsManager& args, size_t n_indexes)
     // - txindex (10%): serves getrawtransaction RPCs with mostly unique,
     //   non-repetitive lookups across the entire blockchain.
     // - blockfilterindex (5%): serves BIP 157 light clients that repeatedly
-    //   query recent blocks, benefiting most from LevelDB cache.
+    //   query recent blocks, benefiting from LevelDB cache, but the
+    //   working set for a typical 2-week offline gap is ~200kiB, well within 5%
+    //   of the total cache.
     // - txospenderindex (5%): serves gettxspendingprevout RPCs with very
     //   specific, rarely repeated outpoint queries.
     // - coinstatsindex: intentionally not included here, since usage pattern
