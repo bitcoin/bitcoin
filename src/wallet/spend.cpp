@@ -295,7 +295,10 @@ util::Result<PreSelectedInputs> FetchSelectedInputs(const CWallet& wallet, const
 
         /* Set some defaults for depth, spendable, solvable, safe, time, and from_me as these don't matter for preset inputs since no selection is being done. */
         COutput output(outpoint, txout, /*depth=*/ 0, input_bytes, /*spendable=*/ true, /*solvable=*/ true, /*safe=*/ true, /*time=*/ 0, /*from_me=*/ false, coin_selection_params.m_effective_feerate);
-        output.ApplyBumpFee(map_of_bump_fees.at(output.outpoint));
+        // SYSCOIN
+        if (const auto it = map_of_bump_fees.find(output.outpoint); it != map_of_bump_fees.end()) {
+            output.ApplyBumpFee(it->second);
+        }
         result.Insert(output, coin_selection_params.m_subtract_fee_outputs);
     }
     return result;
@@ -457,7 +460,10 @@ CoinsResult AvailableCoins(const CWallet& wallet,
 
         for (auto& [_, outputs] : result.coins) {
             for (auto& output : outputs) {
-                output.ApplyBumpFee(map_of_bump_fees.at(output.outpoint));
+                // SYSCOIN
+                if (const auto it = map_of_bump_fees.find(output.outpoint); it != map_of_bump_fees.end()) {
+                    output.ApplyBumpFee(it->second);
+                }
             }
         }
     }
