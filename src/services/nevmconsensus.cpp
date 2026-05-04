@@ -44,7 +44,6 @@ void CNEVMDataDB::FlushDataToCache(const PoDAMAPMemory &mapPoDA) {
             continue;
         }
         auto inserted = mapCache.try_emplace(key, val.txid, val.nSize, val.nMedianTime);
-        // for duplicate blobs, allow to update txid/mediantime
         if(!inserted.second) {
             inserted.first->second.nMedianTime = val.nMedianTime;
             inserted.first->second.txid = val.txid;
