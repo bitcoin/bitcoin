@@ -649,7 +649,7 @@ void SyscoinGUI::setWalletController(WalletController* wallet_controller, bool s
     m_open_wallet_action->setEnabled(true);
     m_open_wallet_action->setMenu(m_open_wallet_menu);
     m_restore_wallet_action->setEnabled(true);
-
+    // SYSCOIN
     connect(m_open_wallet_menu, &QMenu::aboutToShow, wallet_controller, [this, wallet_controller] {
         m_open_wallet_menu->clear();
         for (const std::pair<const std::string, bool>& i : wallet_controller->listWalletDir()) {
