@@ -926,7 +926,7 @@ bool MemPoolAccept::PreChecks(ATMPArgs& args, Workspace& ws)
     }      
     
     // SYSCOIN
-    if(!ProcessNEVMData(m_active_chainstate.m_blockman, tx, m_active_chainstate.m_chain.Tip()->GetMedianTimePast(), TicksSinceEpoch<std::chrono::seconds>(m_active_chainstate.m_chainman.m_options.adjusted_time_callback()), ws.mapPoDA)) {
+    if(ProcessNEVMData(m_active_chainstate.m_blockman, tx, m_active_chainstate.m_chain.Tip()->GetMedianTimePast(), TicksSinceEpoch<std::chrono::seconds>(m_active_chainstate.m_chainman.m_options.adjusted_time_callback()), ws.mapPoDA) != ProcessNEVMDataResult::VALID) {
         return state.Invalid(TxValidationResult::TX_NOT_STANDARD, "bad-txns-poda-invalid");
     }
      if (m_pool.m_require_standard && !AreInputsStandard(tx, m_view)) {
@@ -1259,7 +1259,7 @@ bool MemPoolAccept::Finalize(const ATMPArgs& args, Workspace& ws)
 
     // SYSCOIN
     if(pnevmdatadb)
-        pnevmdatadb->FlushDataToCache(ws.mapPoDA);
+        pnevmdatadb->FlushDataToCache(ws.mapPoDA, PoDAFlushSource::Mempool);
     // trim mempool and check if tx was trimmed
     // If we are validating a package, don't trim here because we could evict a previous transaction
     // in the package. LimitMempoolSize() should be called at the very end to make sure the mempool
@@ -2393,9 +2393,9 @@ bool FillNEVMData(CBlock &block) {
     }
     return true;
 }
-bool EraseNEVMData(const NEVMDataVec &NEVMDataVecOut) {
-    if(!NEVMDataVecOut.empty()) {
-        return pnevmdatadb->FlushErase(NEVMDataVecOut);
+bool EraseMempoolNEVMData(const std::vector<uint8_t>& vchVersionHash, const uint256& txid) {
+    if(!vchVersionHash.empty()) {
+        return pnevmdatadb->FlushMempoolErase(vchVersionHash, txid);
     }
     return true;
 }
@@ -2426,7 +2426,7 @@ public:
     }
 };
 static CCheckQueue<CBlobCheck> blobcheckqueue(MAX_DATA_BLOBS);
-bool ProcessNEVMDataHelper(const BlockManager& blockman, const std::vector<CNEVMData> &vecNevmDataPayload, const int64_t &nMedianTime, const int64_t &nTimeNow, PoDAMAPMemory &mapPoDA) {
+ProcessNEVMDataResult ProcessNEVMDataHelper(const BlockManager& blockman, const std::vector<CNEVMData> &vecNevmDataPayload, const int64_t &nMedianTime, const int64_t &nTimeNow, PoDAMAPMemory &mapPoDA) {
     int64_t nMedianTimeCL = 0;
     if(llmq::chainLocksHandler) {
         const CBlockIndex* CLIndex = llmq::chainLocksHandler->GetBestChainLockIndex();
@@ -2443,12 +2443,12 @@ bool ProcessNEVMDataHelper(const BlockManager& blockman, const std::vector<CNEVM
         const bool enforceHaveData = nMedianTime >= (nTimeNow - NEVM_DATA_ENFORCE_TIME_HAVE_DATA);
         if(enforceHaveData && (!nevmDataPayload.vchNEVMData || nevmDataPayload.vchNEVMData->empty())) {
             LogPrint(BCLog::SYS, "ProcessNEVMDataHelper: Enforcing data but NEVM Data is empty nMedianTime %ld nTimeNow %ld NEVM_DATA_ENFORCE_TIME_HAVE_DATA %d\n", nMedianTime, nTimeNow, NEVM_DATA_ENFORCE_TIME_HAVE_DATA);
-            return false;
+            return ProcessNEVMDataResult::AUX_DATA_INVALID;
         } else if(enforceNotHaveData && nevmDataPayload.vchNEVMData && !nevmDataPayload.vchNEVMData->empty()) {
             LogPrint(BCLog::SYS, "ProcessNEVMDataHelper: Enforcing no data but NEVM Data is not empty nMedianTime %ld nTimeNow %ld NEVM_DATA_ENFORCE_TIME_NOT_HAVE_DATA %d\n", nMedianTime, nTimeNow, NEVM_DATA_ENFORCE_TIME_NOT_HAVE_DATA);
-            return false;
+            return ProcessNEVMDataResult::AUX_DATA_INVALID;
         }
-        if(nevmDataPayload.vchNEVMData && !nevmDataPayload.vchNEVMData->empty()){
+        if(nevmDataPayload.vchNEVMData && !nevmDataPayload.vchNEVMData->empty() && !pnevmdatadb->BlobExists(nevmDataPayload.vchVersionHash)){
             vChecks.emplace_back(CBlobCheck(&nevmDataPayload));
         }
     }
@@ -2460,7 +2460,7 @@ bool ProcessNEVMDataHelper(const BlockManager& blockman, const std::vector<CNEVM
         control.Add(std::move(vChecks));
         if (!control.Wait()){
             LogPrint(BCLog::SYS, "ProcessNEVMDataHelper: Invalid blob(s)\n");
-            return false;
+            return ProcessNEVMDataResult::AUX_DATA_INVALID;
         }
         const auto time_2{SteadyClock::now()};
         LogPrint(BCLog::BENCHMARK, "ProcessNEVMDataHelper: verified %d blobs in %.2fms (%.2fms/blob)\n", nSizeChecks, Ticks<MillisecondsDouble>(time_2 - time_1), Ticks<MillisecondsDouble>(time_2 - time_1) / nSizeChecks);
@@ -2468,10 +2468,10 @@ bool ProcessNEVMDataHelper(const BlockManager& blockman, const std::vector<CNEVM
     for (const auto &nevmDataPayload : vecNevmDataPayload) {
         mapPoDA.try_emplace(nevmDataPayload.vchVersionHash, MapPoDAPayloadMeta(nevmDataPayload, nMedianTime));
     }
-    return true;
+    return ProcessNEVMDataResult::VALID;
 }
 // when we receive blocks/txs from peers we need to strip the OPRETURN NEVM DA payload and store separately
-bool ProcessNEVMData(const BlockManager& blockman, const CBlock &block, const int64_t &nMedianTime, const int64_t& nTimeNow, PoDAMAPMemory &mapPoDA) {
+ProcessNEVMDataResult ProcessNEVMData(const BlockManager& blockman, const CBlock &block, const int64_t &nMedianTime, const int64_t& nTimeNow, PoDAMAPMemory &mapPoDA) {
     std::vector<CNEVMData> vecNevmDataPayload;
     int nCountBlobs = 0;
     for (auto &tx : block.vtx) {
@@ -2479,33 +2479,30 @@ bool ProcessNEVMData(const BlockManager& blockman, const CBlock &block, const in
             nCountBlobs++;
             if(nCountBlobs > MAX_DATA_BLOBS) {
                 LogPrintf("ProcessNEVMData nCountBlobs > MAX_DATA_BLOBS, nCountBlobs: %d\n", nCountBlobs);
-                return false;
+                return ProcessNEVMDataResult::CONSENSUS_INVALID;
             }
             const CNEVMData nevmDataPayload(*tx);
             if(nevmDataPayload.IsNull()) {
-                return false;
+                return ProcessNEVMDataResult::CONSENSUS_INVALID;
             }
             vecNevmDataPayload.emplace_back(nevmDataPayload);
         }
     }
-    if(!vecNevmDataPayload.empty() && !ProcessNEVMDataHelper(blockman, vecNevmDataPayload, nMedianTime, nTimeNow, mapPoDA)) {
-        return false;
+    if(!vecNevmDataPayload.empty()) {
+        return ProcessNEVMDataHelper(blockman, vecNevmDataPayload, nMedianTime, nTimeNow, mapPoDA);
     }
-    return true;
+    return ProcessNEVMDataResult::VALID;
 }
-bool ProcessNEVMData(const BlockManager& blockman, const CTransaction& tx, const int64_t &nMedianTime, const int64_t& nTimeNow, PoDAMAPMemory &mapPoDA) {
+ProcessNEVMDataResult ProcessNEVMData(const BlockManager& blockman, const CTransaction& tx, const int64_t &nMedianTime, const int64_t& nTimeNow, PoDAMAPMemory &mapPoDA) {
     if(!tx.IsNEVMData()) {
-        return true;
+        return ProcessNEVMDataResult::VALID;
     }
     const CNEVMData nevmDataPayload(tx);
     if(nevmDataPayload.IsNull()) {
-        return false;
+        return ProcessNEVMDataResult::CONSENSUS_INVALID;
     }
     std::vector<CNEVMData> vecPayload{nevmDataPayload};
-    if(!ProcessNEVMDataHelper(blockman, vecPayload, nMedianTime, nTimeNow, mapPoDA)) {
-        return false;
-    }
-    return true;
+    return ProcessNEVMDataHelper(blockman, vecPayload, nMedianTime, nTimeNow, mapPoDA);
 }
 /** Undo the effects of this block (with given index) on the UTXO set represented by coins.
  *  When FAILED is returned, view is left in an indeterminate state. */
@@ -3049,8 +3046,14 @@ bool Chainstate::ConnectBlock(const CBlock& block, BlockValidationState& state, 
         UpdateCoins(tx, view, i == 0 ? undoDummy : blockundo.vtxundo.back(), pindex->nHeight);
     }
     bool PODAContext = pindex->nHeight >= params.GetConsensus().nPODAStartBlock;
-    if(PODAContext && !ProcessNEVMData(m_chainman.m_blockman, block, pindex->GetMedianTimePast(), TicksSinceEpoch<std::chrono::seconds>(m_chainman.m_options.adjusted_time_callback()), mapPoDA)) {
-        return state.Invalid(BlockValidationResult::BLOCK_CONSENSUS, "poda-validation-failed");
+    if(PODAContext) {
+        const auto poda_result = ProcessNEVMData(m_chainman.m_blockman, block, pindex->GetMedianTimePast(), TicksSinceEpoch<std::chrono::seconds>(m_chainman.m_options.adjusted_time_callback()), mapPoDA);
+        if(poda_result == ProcessNEVMDataResult::CONSENSUS_INVALID) {
+            return state.Invalid(BlockValidationResult::BLOCK_CONSENSUS, "poda-validation-failed");
+        }
+        if(poda_result == ProcessNEVMDataResult::AUX_DATA_INVALID) {
+            return state.Invalid(BlockValidationResult::BLOCK_MUTATED, "poda-aux-data-invalid");
+        }
     }
 
     bool bRegTestContext = !fRegTest || (fRegTest && fNEVMConnection);
@@ -3668,7 +3671,7 @@ bool Chainstate::ConnectTip(BlockValidationState& state, CBlockIndex* pindexNew,
     }
     // SYSCOIN
     if(pnevmdatadb)
-        pnevmdatadb->FlushDataToCache(mapPoDA);
+        pnevmdatadb->FlushDataToCache(mapPoDA, PoDAFlushSource::Block);
     if(pnevmtxmintdb)
         pnevmtxmintdb->FlushDataToCache(setMintTxs);
     if(pblockindexdb)
@@ -5231,14 +5234,21 @@ bool ChainstateManager::AcceptBlock(const std::shared_ptr<const CBlock>& pblock,
     // SYSCOIN ProcessNEVMData/FlushDataToCache so we have the data from processing out-of-order blocks and it reads from disk (recreating PoDA data in block) prior to validation in ConnectTip()
     bool PODAContext = pindex->nHeight >= params.GetConsensus().nPODAStartBlock;
     PoDAMAPMemory mapPoDA;
-    if(PODAContext && !ProcessNEVMData(m_blockman, block, pindex->GetMedianTimePast(), TicksSinceEpoch<std::chrono::seconds>(this->m_options.adjusted_time_callback()), mapPoDA)) {
-        state.Invalid(BlockValidationResult::BLOCK_CONSENSUS, "poda-validation-failed");
-        pindex->nStatus |= BLOCK_FAILED_VALID;
-        m_blockman.m_dirty_blockindex.insert(pindex);
-        return error("%s: %s", __func__, state.ToString());
+    if(PODAContext) {
+        const auto poda_result = ProcessNEVMData(m_blockman, block, pindex->GetMedianTimePast(), TicksSinceEpoch<std::chrono::seconds>(this->m_options.adjusted_time_callback()), mapPoDA);
+        if(poda_result == ProcessNEVMDataResult::CONSENSUS_INVALID) {
+            state.Invalid(BlockValidationResult::BLOCK_CONSENSUS, "poda-validation-failed");
+            pindex->nStatus |= BLOCK_FAILED_VALID;
+            m_blockman.m_dirty_blockindex.insert(pindex);
+            return error("%s: %s", __func__, state.ToString());
+        }
+        if(poda_result == ProcessNEVMDataResult::AUX_DATA_INVALID) {
+            state.Invalid(BlockValidationResult::BLOCK_MUTATED, "poda-aux-data-invalid");
+            return error("%s: %s", __func__, state.ToString());
+        }
     }
     if(pnevmdatadb)
-        pnevmdatadb->FlushDataToCache(mapPoDA);
+        pnevmdatadb->FlushDataToCache(mapPoDA, PoDAFlushSource::Block);
 
     // Header is valid/has work, merkle tree and segwit merkle tree are good...RELAY NOW
     // (but if it does not build on our best tip, let the SendMessages loop relay it)
@@ -5579,7 +5589,7 @@ bool Chainstate::RollforwardBlock(const CBlockIndex* pindex, CCoinsViewCache& in
         return error("%s: ProcessSpecialTxsInBlock for block %s failed with %s", __func__,
             pindex->GetBlockHash().ToString(), state.ToString());
     }
-    if(!ProcessNEVMData(m_chainman.m_blockman, block, pindex->GetMedianTimePast(), TicksSinceEpoch<std::chrono::seconds>(m_chainman.m_options.adjusted_time_callback()), mapPoDA)) {
+    if(ProcessNEVMData(m_chainman.m_blockman, block, pindex->GetMedianTimePast(), TicksSinceEpoch<std::chrono::seconds>(m_chainman.m_options.adjusted_time_callback()), mapPoDA) != ProcessNEVMDataResult::VALID) {
         return error("ReplayBlock(): poda-validation-failed");
     }
     for (const CTransactionRef& tx : block.vtx) {
@@ -5686,7 +5696,7 @@ bool Chainstate::ReplayBlocks()
     cache.Flush();
     // SYSCOIN
     if(pnevmdatadb) {
-        pnevmdatadb->FlushDataToCache(mapPoDAConnect);
+        pnevmdatadb->FlushDataToCache(mapPoDAConnect, PoDAFlushSource::Block);
     }
     if(pnevmtxmintdb) {
         pnevmtxmintdb->FlushDataToCache(setMintTxsConnect);

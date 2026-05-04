@@ -33,7 +33,7 @@ bool DisconnectSyscoinTransaction(const CTransaction& tx, NEVMMintTxSet &setMint
     return true;       
 }
 
-void CNEVMDataDB::FlushDataToCache(const PoDAMAPMemory &mapPoDA) {
+void CNEVMDataDB::FlushDataToCache(const PoDAMAPMemory &mapPoDA, PoDAFlushSource source) {
     LOCK(cs_cache);
     if(mapPoDA.empty()) {
         return;
@@ -43,10 +43,24 @@ void CNEVMDataDB::FlushDataToCache(const PoDAMAPMemory &mapPoDA) {
         if(!val.vchNEVMData) {
             continue;
         }
+        MapPoDAPayloadMeta meta;
+        if(Read(key, meta)) {
+            if(source == PoDAFlushSource::Block && meta.nSize == val.nSize) {
+                auto inserted = mapCache.try_emplace(key, val.txid, meta.nSize, val.nMedianTime);
+                if(!inserted.second) {
+                    inserted.first->second.nMedianTime = val.nMedianTime;
+                    inserted.first->second.txid = val.txid;
+                }
+            }
+            continue;
+        }
         auto inserted = mapCache.try_emplace(key, val.txid, val.nSize, val.nMedianTime);
         if(!inserted.second) {
-            inserted.first->second.nMedianTime = val.nMedianTime;
-            inserted.first->second.txid = val.txid;
+            if(source == PoDAFlushSource::Block && inserted.first->second.nSize == val.nSize) {
+                inserted.first->second.nMedianTime = val.nMedianTime;
+                inserted.first->second.txid = val.txid;
+            }
+            continue;
         }
         if(!pnevmdatablobdb->Exists(key)) {
             batchblob.Write(key, val.vchNEVMData);
@@ -106,6 +120,32 @@ bool CNEVMDataDB::FlushErase(const NEVMDataVec &vecDataKeys) {
         LogPrint(BCLog::SYS, "Flushing, erasing %d nevm blob keys\n", vecDataKeys.size());
     return WriteBatch(batch, true) && pnevmdatablobdb->FlushErase(vecDataKeys);
 }
+bool CNEVMDataDB::FlushMempoolErase(const std::vector<uint8_t>& vchVersionHash, const uint256& txid) {
+    LOCK(cs_cache);
+    MapPoDAPayloadMeta meta;
+    if(Read(vchVersionHash, meta)) {
+        if(meta.txid == txid) {
+            CDBBatch batch(*this);
+            auto it = mapCache.find(vchVersionHash);
+            if(it != mapCache.end()) {
+                if(it->second.txid != txid) {
+                    batch.Write(vchVersionHash, it->second);
+                    return WriteBatch(batch, true);
+                }
+                mapCache.erase(it);
+            }
+            batch.Erase(vchVersionHash);
+            return WriteBatch(batch, true) && pnevmdatablobdb->FlushErase({vchVersionHash});
+        }
+        return true;
+    }
+    auto it = mapCache.find(vchVersionHash);
+    if(it == mapCache.end() || it->second.txid != txid) {
+        return true;
+    }
+    mapCache.erase(it);
+    return pnevmdatablobdb->FlushErase({vchVersionHash});
+}
 bool CNEVMDataBlobDB::FlushErase(const NEVMDataVec &vecDataKeys) {
     CDBBatch batch(*this);    
     for (const auto &key : vecDataKeys) {
@@ -124,10 +164,7 @@ bool CNEVMDataDB::GetBlobMetaData(const std::vector<uint8_t>& vchVersionHash, Ma
         meta = it->second;
         return true;
     } 
-    if(Exists(vchVersionHash)) {
-        return Read(vchVersionHash, meta);
-    }
-    return false;
+    return Read(vchVersionHash, meta);
 }
 const PoDAMAPMemory& CNEVMDataDB::GetCache() const {
     AssertLockHeld(cs_cache);
