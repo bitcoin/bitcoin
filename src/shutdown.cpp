@@ -11,12 +11,19 @@
 #include <util/signalinterrupt.h>
 
 #include <assert.h>
+#include <atomic>
 #include <system_error>
+
+namespace {
+std::atomic<bool> g_shutdown_requested{false};
+} // namespace
 
 void StartShutdown()
 {
+    g_shutdown_requested.store(true);
+    if (!kernel::g_context) return;
     try {
-        Assert(kernel::g_context)->interrupt();
+        kernel::g_context->interrupt();
     } catch (const std::system_error&) {
         LogPrintf("Sending shutdown token failed\n");
         assert(0);
@@ -25,18 +32,23 @@ void StartShutdown()
 
 void AbortShutdown()
 {
-    Assert(kernel::g_context)->interrupt.reset();
+    g_shutdown_requested.store(false);
+    if (!kernel::g_context) return;
+    kernel::g_context->interrupt.reset();
 }
 
 bool ShutdownRequested()
 {
-    return bool{Assert(kernel::g_context)->interrupt};
+    if (g_shutdown_requested.load()) return true;
+    if (!kernel::g_context) return false;
+    return bool{kernel::g_context->interrupt};
 }
 
 void WaitForShutdown()
 {
+    if (!kernel::g_context) return;
     try {
-        Assert(kernel::g_context)->interrupt.wait();
+        kernel::g_context->interrupt.wait();
     } catch (const std::system_error&) {
         LogPrintf("Reading shutdown token failed\n");
         assert(0);
