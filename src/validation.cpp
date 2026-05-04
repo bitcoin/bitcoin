@@ -2399,12 +2399,6 @@ bool FillNEVMData(CBlock &block) {
     }
     return true;
 }
-bool EraseNEVMData(const NEVMDataVec &NEVMDataVecOut) {
-    if(!NEVMDataVecOut.empty()) {
-        return pnevmdatadb->FlushErase(NEVMDataVecOut);
-    }
-    return true;
-}
 bool EraseMempoolNEVMData(const std::vector<uint8_t>& vchVersionHash, const uint256& txid) {
     if(!vchVersionHash.empty()) {
         return pnevmdatadb->FlushMempoolErase(vchVersionHash, txid);

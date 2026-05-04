@@ -1353,7 +1353,6 @@ int RPCSerializationFlags();
 bool DisconnectNEVMCommitment(ChainstateManager& chainman, BlockValidationState& state, std::vector<uint256> &vecNEVMBlocks, const CBlock& block, const uint32_t& nHeight, const uint256& nBlockHash, const CDeterministicMNListNEVMAddressDiff &diff) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
 bool GetNEVMData(BlockValidationState& state, const CBlock& block, CNEVMHeader &evmBlock, std::vector<unsigned char>* coinbase_payload = nullptr);
 bool FillNEVMData(CBlock &block);
-bool EraseNEVMData(const NEVMDataVec &NEVMDataVecOut);
 bool EraseMempoolNEVMData(const std::vector<uint8_t>& vchVersionHash, const uint256& txid);
 bool ProcessNEVMData(const node::BlockManager& blockman, const CBlock &block, const int64_t &nMedianTime, const int64_t& nTimeNow, PoDAMAPMemory &mapPoDA);
 bool ProcessNEVMData(const node::BlockManager& blockman, const CTransaction &tx, const int64_t &nMedianTime, const int64_t& nTimeNow, PoDAMAPMemory &mapPoDA);
