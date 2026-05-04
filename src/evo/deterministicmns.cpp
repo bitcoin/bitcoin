@@ -627,8 +627,18 @@ void CDeterministicMNList::BuildDiff(const CDeterministicMNList& to, CDeterminis
         };
     }
 
-    // Now convert the deduplicated map into the diff vectors.
+    // Convert the deduplicated map into a deterministic order before filling diff vectors.
+    std::vector<std::pair<uint256, NEVMDiffEntry>> orderedNEVMDiffEntries;
+    orderedNEVMDiffEntries.reserve(nevmDiffMap.size());
     for (const auto& pair : nevmDiffMap) {
+        orderedNEVMDiffEntries.emplace_back(pair.first, pair.second);
+    }
+    std::sort(orderedNEVMDiffEntries.begin(), orderedNEVMDiffEntries.end(),
+              [](const auto& a, const auto& b) {
+                  return a.first < b.first;
+              });
+
+    for (const auto& pair : orderedNEVMDiffEntries) {
         const NEVMDiffEntry& entry = pair.second;
         switch (entry.type) {
             case NEVMDiffType::Added:
