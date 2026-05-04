@@ -2454,7 +2454,7 @@ bool ProcessNEVMDataHelper(const BlockManager& blockman, const std::vector<CNEVM
             LogPrint(BCLog::SYS, "ProcessNEVMDataHelper: Enforcing no data but NEVM Data is not empty nMedianTime %ld nTimeNow %ld NEVM_DATA_ENFORCE_TIME_NOT_HAVE_DATA %d\n", nMedianTime, nTimeNow, NEVM_DATA_ENFORCE_TIME_NOT_HAVE_DATA);
             return false;
         }
-        if(nevmDataPayload.vchNEVMData && !nevmDataPayload.vchNEVMData->empty() && !pnevmdatadb->BlobExists(nevmDataPayload.vchVersionHash)){
+        if(nevmDataPayload.vchNEVMData && !nevmDataPayload.vchNEVMData->empty()){
             vChecks.emplace_back(CBlobCheck(&nevmDataPayload));
         }
     }
