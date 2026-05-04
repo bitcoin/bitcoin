@@ -2448,7 +2448,7 @@ ProcessNEVMDataResult ProcessNEVMDataHelper(const BlockManager& blockman, const 
             LogPrint(BCLog::SYS, "ProcessNEVMDataHelper: Enforcing no data but NEVM Data is not empty nMedianTime %ld nTimeNow %ld NEVM_DATA_ENFORCE_TIME_NOT_HAVE_DATA %d\n", nMedianTime, nTimeNow, NEVM_DATA_ENFORCE_TIME_NOT_HAVE_DATA);
             return ProcessNEVMDataResult::AUX_DATA_INVALID;
         }
-        if(nevmDataPayload.vchNEVMData && !nevmDataPayload.vchNEVMData->empty() && !pnevmdatadb->BlobExists(nevmDataPayload.vchVersionHash)){
+        if(nevmDataPayload.vchNEVMData && !nevmDataPayload.vchNEVMData->empty()){
             vChecks.emplace_back(CBlobCheck(&nevmDataPayload));
         }
     }

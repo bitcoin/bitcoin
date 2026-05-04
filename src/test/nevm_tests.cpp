@@ -262,7 +262,8 @@ BOOST_AUTO_TEST_CASE(nevm_blob_sidecar_failures_are_auxiliary)
 
     BOOST_CHECK_EQUAL(
         ProcessNEVMData(m_node.chainman->m_blockman, MakeNEVMDataTx(version_hash, bad_data), /*nMedianTime=*/100, /*nTimeNow=*/100, mapPoDA),
-        ProcessNEVMDataResult::VALID);
+        ProcessNEVMDataResult::AUX_DATA_INVALID);
+    BOOST_CHECK(mapPoDA.empty());
 
     std::vector<CTransactionRef> txs;
     txs.emplace_back(MakeTransactionRef(CMutableTransaction{}));
