@@ -2378,13 +2378,10 @@ bool FillNEVMData(CBlock &block) {
                 CNEVMData nevmData(tx->vout[nOut].scriptPubKey);
                 if (!nevmData.IsNull()) {
                     CMutableTransaction mutable_tx(*tx);
-                    // Read blob directly to avoid TOCTOU between existence checks and reads.
-                    // Blob pruning may race with block serving; treat missing data as non-fatal.
-                    if (pnevmdatablobdb->Read(nevmData.vchVersionHash, mutable_tx.vout[nOut].vchNEVMData)) {
-                        if(!mutable_tx.vout[nOut].vchNEVMData.empty()) {
-                            // Now create the immutable CTransaction and store its Ref
-                            block.vtx[i] = MakeTransactionRef(std::move(mutable_tx));
-                        }
+                    if(pnevmdatablobdb->Read(nevmData.vchVersionHash, mutable_tx.vout[nOut].vchNEVMData) &&
+                            !mutable_tx.vout[nOut].vchNEVMData.empty()) {
+                        // Now create the immutable CTransaction and store its Ref
+                        block.vtx[i] = MakeTransactionRef(std::move(mutable_tx));
                     }
                 } else {
                     return false;
