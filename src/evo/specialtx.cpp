@@ -235,21 +235,21 @@ bool ProcessSpecialTxsInBlock(ChainstateManager &chainman, const CBlock& block, 
     return true;
 }
 
-bool UndoSpecialTxsInBlock(const CBlock& block, const CBlockIndex* pindex, CDeterministicMNListNEVMAddressDiff& diffNEVM, bool bReverify, bool bReplay)
+bool UndoSpecialTxsInBlock(const CBlock& block, const CBlockIndex* pindex, CDeterministicMNListNEVMAddressDiff& diffNEVM, bool bUpdateSpecialTxState, bool bReplay)
 {
     try {
-        if(bReverify) {
+        if(bUpdateSpecialTxState) {
             if (!deterministicMNManager || !deterministicMNManager->UndoBlock(pindex, diffNEVM)) {
                 return false;
             }
             if (!llmq::quorumBlockProcessor->UndoBlock(block, pindex)) {
                 return false;
             }
-        }
-        // replay doesn't connect block which writes governance SB to cache again
-        if(!bReplay) {
-            if (!governance->UndoBlock(pindex)) {
-                return false;
+            // replay doesn't connect block which writes governance SB to cache again
+            if(!bReplay) {
+                if (!governance->UndoBlock(pindex)) {
+                    return false;
+                }
             }
         }
 
