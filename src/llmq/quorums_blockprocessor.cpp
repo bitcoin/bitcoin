@@ -113,7 +113,7 @@ void CQuorumBlockProcessor::ProcessMessage(CNode* pfrom, const std::string& strC
             auto it = minableCommitmentsByQuorum.find(qc.quorumHash);
             if (it != minableCommitmentsByQuorum.end()) {
                 auto jt = minableCommitments.find(it->second);
-                if (jt != minableCommitments.end() && jt->second.CountSigners() <= qc.CountSigners()) {
+                if (jt != minableCommitments.end() && jt->second.CountSigners() >= qc.CountSigners()) {
                         bReturn = true;
                 }
             }
