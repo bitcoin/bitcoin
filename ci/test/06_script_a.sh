@@ -50,10 +50,9 @@ trap 'CI_EXEC "cat ${BASE_SCRATCH_DIR}/sanitizer-output/* 2> /dev/null"' ERR
 
 if [[ ${USE_MEMORY_SANITIZER} == "true" ]]; then
   # MemorySanitizer (MSAN) does not support tracking memory initialization done by
-  # using the Linux getrandom syscall. Avoid using getrandom by undefining
-  # HAVE_SYS_GETRANDOM. See https://github.com/google/sanitizers/issues/852 for
-  # details.
-  CI_EXEC 'grep -v HAVE_SYS_GETRANDOM src/config/syscoin-config.h > src/config/syscoin-config.h.tmp && mv src/config/syscoin-config.h.tmp src/config/syscoin-config.h'
+  # using getrandom. Avoid using getrandom by undefining HAVE_GETRANDOM. See
+  # https://github.com/google/sanitizers/issues/852 for details.
+  CI_EXEC 'grep -v HAVE_GETRANDOM src/config/syscoin-config.h > src/config/syscoin-config.h.tmp && mv src/config/syscoin-config.h.tmp src/config/syscoin-config.h'
 fi
 
 if [[ "${RUN_TIDY}" == "true" ]]; then

@@ -2516,7 +2516,7 @@ bool ProcessNEVMData(const BlockManager& blockman, const CTransaction& tx, const
 /** Undo the effects of this block (with given index) on the UTXO set represented by coins.
  *  When FAILED is returned, view is left in an indeterminate state. */
 // SYSCOIN
-DisconnectResult Chainstate::DisconnectBlock(const CBlock& block, const CBlockIndex* pindex, CCoinsViewCache& view, NEVMMintTxSet &setMintTxs, std::vector<uint256> &vecNEVMBlocks, std::vector<std::pair<uint256, uint32_t> > &vecTXIDPairs, bool bReverify, bool bReplay)
+DisconnectResult Chainstate::DisconnectBlock(const CBlock& block, const CBlockIndex* pindex, CCoinsViewCache& view, NEVMMintTxSet &setMintTxs, std::vector<uint256> &vecNEVMBlocks, std::vector<std::pair<uint256, uint32_t> > &vecTXIDPairs, bool bReverify, bool bReplay, bool bUpdateSpecialTxState)
 {
     AssertLockHeld(::cs_main);
     // SYSCOIN
@@ -2534,7 +2534,7 @@ DisconnectResult Chainstate::DisconnectBlock(const CBlock& block, const CBlockIn
         return DISCONNECT_FAILED;
     }
     // SYSCOIN
-    if (!UndoSpecialTxsInBlock(block, pindex, diffNEVM, bReverify, bReplay)) {
+    if (!UndoSpecialTxsInBlock(block, pindex, diffNEVM, bUpdateSpecialTxState, bReplay)) {
         error("DisconnectBlock(): UndoSpecialTxsInBlock failed!\n");
         return DISCONNECT_FAILED;
     }
@@ -3498,7 +3498,7 @@ void Chainstate::UpdateTip(const CBlockIndex* pindexNew)
   * in any case).
   */
  // SYSCOIN
-bool Chainstate::DisconnectTip(BlockValidationState& state, DisconnectedBlockTransactions* disconnectpool, bool bReverify)
+bool Chainstate::DisconnectTip(BlockValidationState& state, DisconnectedBlockTransactions* disconnectpool, bool bReverify, bool bUpdateSpecialTxState)
 {
     AssertLockHeld(cs_main);
     if (m_mempool) AssertLockHeld(m_mempool->cs);
@@ -3521,7 +3521,7 @@ bool Chainstate::DisconnectTip(BlockValidationState& state, DisconnectedBlockTra
     {
         CCoinsViewCache view(&CoinsTip());
         assert(view.GetBestBlock() == pindexDelete->GetBlockHash());
-        if (DisconnectBlock(block, pindexDelete, view, setMintTxs, vecNEVMBlocks, vecTXIDPairs, bReverify) != DISCONNECT_OK)
+        if (DisconnectBlock(block, pindexDelete, view, setMintTxs, vecNEVMBlocks, vecTXIDPairs, bReverify, false /*bReplay*/, bUpdateSpecialTxState) != DISCONNECT_OK)
             return error("DisconnectTip(): DisconnectBlock %s failed", pindexDelete->GetBlockHash().ToString());
         bool flushed = view.Flush();
         assert(flushed);
@@ -4190,7 +4190,7 @@ void Chainstate::EnforceBlock(BlockValidationState& state, const CBlockIndex *pi
     }
 }
 // SYSCOIN
-bool Chainstate::InvalidateBlock(BlockValidationState& state, CBlockIndex *pindex, bool bReverify)
+bool Chainstate::InvalidateBlock(BlockValidationState& state, CBlockIndex *pindex, bool bReverify, bool bUpdateSpecialTxState)
 {
     AssertLockNotHeld(m_chainstate_mutex);
 
@@ -4252,7 +4252,7 @@ bool Chainstate::InvalidateBlock(BlockValidationState& state, CBlockIndex *pinde
         // ActivateBestChain considers blocks already in m_chain
         // unconditionally valid already, so force disconnect away from it.
         DisconnectedBlockTransactions disconnectpool{MAX_DISCONNECTED_TX_POOL_SIZE * 1000};
-        bool ret = DisconnectTip(state, &disconnectpool, bReverify);
+        bool ret = DisconnectTip(state, &disconnectpool, bReverify, bUpdateSpecialTxState);
         // DisconnectTip will add transactions to disconnectpool.
         // Adjust the mempool to be consistent with the new tip, adding
         // transactions back to the mempool if disconnecting was successful,
@@ -5502,7 +5502,7 @@ VerifyDBResult CVerifyDB::VerifyDB(
         if (nCheckLevel >= 3) {
             if (curr_coins_usage <= chainstate.m_coinstip_cache_size_bytes) {
                 // SYSCOIN
-                DisconnectResult res = chainstate.DisconnectBlock(block, pindex, coins, setMintTxs, vecNEVMBlocks, vecTXIDPairs, false /*bReverify*/);
+                DisconnectResult res = chainstate.DisconnectBlock(block, pindex, coins, setMintTxs, vecNEVMBlocks, vecTXIDPairs, false /*bReverify*/, false /*bReplay*/, false /*bUpdateSpecialTxState*/);
                 if (res == DISCONNECT_FAILED) {
                     LogPrintf("Verification error: irrecoverable inconsistency in block data at %d, hash=%s\n", pindex->nHeight, pindex->GetBlockHash().ToString());
                     return VerifyDBResult::CORRUPTED_BLOCK_DB;
