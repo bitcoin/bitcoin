@@ -119,6 +119,12 @@ NEVMMintTxSet setMintTxsMempool;
 std::unordered_map<COutPoint, std::pair<CTransactionRef, CTransactionRef>, SaltedOutpointHasher> mapAssetAllocationConflicts;
 std::map<uint256, int64_t> mapRejectedBlocks GUARDED_BY(cs_main);
 
+static bool IsManagedGethStarted()
+{
+    LOCK(cs_geth);
+    return gethpid > 0;
+}
+
 using kernel::CCoinsStats;
 using kernel::CoinStatsHashType;
 using kernel::ComputeUTXOStats;
@@ -1943,28 +1949,36 @@ bool ChainstateManager::IsInitialBlockDownload() const
     if (m_cached_finished_ibd.load(std::memory_order_relaxed))
         return false;
 
-    LOCK(cs_main);
-    if (m_cached_finished_ibd.load(std::memory_order_relaxed))
-        return false;
-    if (m_blockman.LoadingBlocks()) {
-        return true;
+    bool notify_nevm_startnetwork{false};
+    {
+        LOCK(cs_main);
+        if (m_cached_finished_ibd.load(std::memory_order_relaxed))
+            return false;
+        if (m_blockman.LoadingBlocks()) {
+            return true;
+        }
+        CChain& chain{ActiveChain()};
+        if (chain.Tip() == nullptr) {
+            return true;
+        }
+        if (chain.Tip()->nChainWork < MinimumChainWork()) {
+            return true;
+        }
+        if (chain.Tip()->Time() < Now<NodeSeconds>() - m_options.max_tip_age) {
+            return true;
+        }
+        if (fNEVMConnection && !fRegTest && !IsManagedGethStarted()) {
+            return true;
+        }
+        LogPrintf("Leaving InitialBlockDownload (latching to false)\n");
+        m_cached_finished_ibd.store(true, std::memory_order_relaxed);
+        notify_nevm_startnetwork = fNEVMConnection && !fRegTest;
     }
-    CChain& chain{ActiveChain()};
-    if (chain.Tip() == nullptr) {
-        return true;
-    }
-    if (chain.Tip()->nChainWork < MinimumChainWork()) {
-        return true;
-    }
-    if (chain.Tip()->Time() < Now<NodeSeconds>() - m_options.max_tip_age) {
-        return true;
-    }
-    LogPrintf("Leaving InitialBlockDownload (latching to false)\n");
-    if(fNEVMConnection && !fRegTest) {
+
+    if (notify_nevm_startnetwork) {
         bool bResponse = false;
         GetMainSignals().NotifyNEVMComms("startnetwork", bResponse);
     }
-    m_cached_finished_ibd.store(true, std::memory_order_relaxed);
     return false;
 }
 

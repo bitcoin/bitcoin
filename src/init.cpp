@@ -348,6 +348,10 @@ void Shutdown(NodeContext& node)
     // Drop transactions we were still watching, and record fee estimations.
     if (node.fee_estimator) node.fee_estimator->Flush();
 
+    if (node.chainman) {
+        node.chainman->ActiveChainstate().StopGethNode();
+    }
+
     // FlushStateToDisk generates a ChainStateFlushed callback, which we should avoid missing
     if (node.chainman) {
         const auto phase1_flush_start = std::chrono::steady_clock::now();
@@ -398,7 +402,6 @@ void Shutdown(NodeContext& node)
             LogPrint(BCLog::SYS, "Shutdown: phase 2 ForceFlushStateToDisk + ResetCoinsViews start\n");
             // SYSCOIN
             node.chainman->ActiveChainstate().StopBTCHeaderNode();
-            node.chainman->ActiveChainstate().StopGethNode();
             for (Chainstate* chainstate : node.chainman->GetAll()) {
                 if (chainstate->CanFlushToDisk()) {
                     chainstate->ForceFlushStateToDisk();
