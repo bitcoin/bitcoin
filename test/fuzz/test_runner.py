@@ -205,6 +205,7 @@ def transform_process_message_target(targets, src_dir):
             stdout=subprocess.PIPE,
             text=True,
         ).stdout.splitlines()
+        # SYSCOIN
         msg_type_names = [l.split("::", 1)[1].split(",")[0] for l in msg_type_lines if l.startswith("src/protocol.cpp-    NetMsgType::")]
         assert len(msg_type_names)
 
