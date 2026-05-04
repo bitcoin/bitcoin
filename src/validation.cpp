@@ -3052,7 +3052,7 @@ bool Chainstate::ConnectBlock(const CBlock& block, BlockValidationState& state, 
             return state.Invalid(BlockValidationResult::BLOCK_CONSENSUS, "poda-validation-failed");
         }
         if(poda_result == ProcessNEVMDataResult::AUX_DATA_INVALID) {
-            return state.Error("poda-aux-data-invalid");
+            return state.Invalid(BlockValidationResult::BLOCK_MUTATED, "poda-aux-data-invalid");
         }
     }
 
@@ -5243,7 +5243,7 @@ bool ChainstateManager::AcceptBlock(const std::shared_ptr<const CBlock>& pblock,
             return error("%s: %s", __func__, state.ToString());
         }
         if(poda_result == ProcessNEVMDataResult::AUX_DATA_INVALID) {
-            state.Error("poda-aux-data-invalid");
+            state.Invalid(BlockValidationResult::BLOCK_MUTATED, "poda-aux-data-invalid");
             return error("%s: %s", __func__, state.ToString());
         }
     }
