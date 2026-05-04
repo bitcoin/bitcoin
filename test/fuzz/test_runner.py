@@ -199,14 +199,30 @@ def transform_process_message_target(targets, src_dir):
 
     p2p_msg_target = "process_message"
     if (p2p_msg_target, {}) in targets:
-        lines = subprocess.run(
+        msg_type_lines = subprocess.run(
             ["git", "grep", "--function-context", "g_all_net_message_types{", src_dir / "src" / "protocol.cpp"],
             check=True,
             stdout=subprocess.PIPE,
             text=True,
         ).stdout.splitlines()
-        lines = [l.split("::", 1)[1].split(",")[0].lower() for l in lines if l.startswith("src/protocol.cpp-    NetMsgType::")]
-        assert len(lines)
+        # SYSCOIN
+        msg_type_names = [l.split("::", 1)[1].split(",")[0] for l in msg_type_lines if l.startswith("src/protocol.cpp-    NetMsgType::")]
+        assert len(msg_type_names)
+
+        msg_value_lines = subprocess.run(
+            ["git", "grep", r"const char \*[A-Z0-9_]*=", src_dir / "src" / "protocol.cpp"],
+            check=True,
+            stdout=subprocess.PIPE,
+            text=True,
+        ).stdout.splitlines()
+        msg_type_values = {}
+        for line in msg_value_lines:
+            _, declaration = line.split(":", 1)
+            identifier = declaration.split("*", 1)[1].split("=", 1)[0].strip()
+            value = declaration.split("\"", 1)[1].split("\"", 1)[0]
+            msg_type_values[identifier] = value
+
+        lines = [msg_type_values.get(msg_type_name, msg_type_name.lower()) for msg_type_name in msg_type_names]
         targets += [(p2p_msg_target, {"LIMIT_TO_MESSAGE_TYPE": m}) for m in lines]
     return targets
 
