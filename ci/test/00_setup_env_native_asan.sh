@@ -9,7 +9,7 @@ export LC_ALL=C.UTF-8
 # Only install BCC tracing packages in Cirrus CI.
 if [[ "${CIRRUS_CI}" == "true" ]]; then
   BPFCC_PACKAGE="bpfcc-tools linux-headers-$(uname --kernel-release)"
-  export CI_CONTAINER_CAP="--privileged -v /sys/kernel:/sys/kernel:rw"
+  export CI_CONTAINER_CAP="--cap-add SYS_PTRACE"  # If run with (ASan + LSan), the container needs access to ptrace (https://github.com/google/sanitizers/issues/764)
 else
   BPFCC_PACKAGE=""
   export CI_CONTAINER_CAP="--cap-add SYS_PTRACE"  # If run with (ASan + LSan), the container needs access to ptrace (https://github.com/google/sanitizers/issues/764)
