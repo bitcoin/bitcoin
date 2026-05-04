@@ -6167,7 +6167,7 @@ bool PeerManagerImpl::SendMessages(CNode* pto)
                         tx_relay->m_tx_inventory_known_filter.insert(hash);
                     }
                     // SYSCOIN Send non-tx/non-block inventory items
-                    while (!tx_relay->m_tx_inventory_to_send_other.empty()) {
+                    while (!tx_relay->m_tx_inventory_to_send_other.empty() && nRelayedTransactions < broadcast_max) {
                         // get inv's from other set to send
                         std::set<CInv>::const_iterator it = std::next(tx_relay->m_tx_inventory_to_send_other.end(), -1);
                         CInv inv = *it;
@@ -6179,6 +6179,7 @@ bool PeerManagerImpl::SendMessages(CNode* pto)
                         }
                         // use existing limits with tx to limit other inv sends as well
                         vInv.emplace_back(inv);
+                        nRelayedTransactions++;
                         tx_relay->m_tx_inventory_known_filter.insert(inv.hash);
                         if (vInv.size() == MAX_INV_SZ) {
                             m_connman.PushMessage(pto, msgMaker.Make(NetMsgType::INV, vInv));
