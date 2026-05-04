@@ -128,11 +128,15 @@ bool CNEVMDataDB::FlushMempoolErase(const std::vector<uint8_t>& vchVersionHash, 
         MapPoDAPayloadMeta meta;
         if(Read(vchVersionHash, meta) && meta.txid == txid) {
             CDBBatch batch(*this);
-            batch.Erase(vchVersionHash);
             auto it = mapCache.find(vchVersionHash);
             if(it != mapCache.end()) {
+                if(it->second.txid != txid) {
+                    batch.Write(vchVersionHash, it->second);
+                    return WriteBatch(batch, true);
+                }
                 mapCache.erase(it);
             }
+            batch.Erase(vchVersionHash);
             return WriteBatch(batch, true) && pnevmdatablobdb->FlushErase({vchVersionHash});
         }
         return true;

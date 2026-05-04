@@ -330,6 +330,20 @@ BOOST_AUTO_TEST_CASE(nevm_duplicate_blob_metadata_refresh_rules)
     BOOST_CHECK_EQUAL(meta.txid, block_txid);
     BOOST_CHECK_EQUAL(meta.nSize, 100);
     BOOST_CHECK_EQUAL(meta.nMedianTime, 4000);
+
+    BOOST_REQUIRE(pnevmdatadb->FlushMempoolErase(version_hash, original_txid));
+    BOOST_REQUIRE(pnevmdatadb->GetBlobMetaData(version_hash, meta));
+    BOOST_CHECK_EQUAL(meta.txid, block_txid);
+    BOOST_CHECK_EQUAL(meta.nSize, 100);
+    BOOST_CHECK_EQUAL(meta.nMedianTime, 4000);
+    BOOST_CHECK(pnevmdatadb->Exists(version_hash));
+    BOOST_CHECK(pnevmdatablobdb->Exists(version_hash));
+
+    BOOST_REQUIRE(pnevmdatadb->FlushCacheToDisk(/*nMedianTime=*/4000));
+    BOOST_REQUIRE(pnevmdatadb->GetBlobMetaData(version_hash, meta));
+    BOOST_CHECK_EQUAL(meta.txid, block_txid);
+    BOOST_CHECK_EQUAL(meta.nSize, 100);
+    BOOST_CHECK_EQUAL(meta.nMedianTime, 4000);
 }
 
 BOOST_AUTO_TEST_SUITE_END()
