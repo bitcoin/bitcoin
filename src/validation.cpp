@@ -3309,8 +3309,9 @@ bool Chainstate::FlushStateToDisk(
                 !pnevmtxrootsdb->FlushCacheToDisk(/*CHUNK_ITEMS=*/100000, sys_sync_flush)) {
                 return FatalError(m_chainman.GetNotifications(), state, "Failed to commit to nevm tx roots db");
             }
+            // Mint uniqueness is consensus-critical and has no crash-replay marker, so keep it durable.
             if (pnevmtxmintdb &&
-                !pnevmtxmintdb->FlushCacheToDisk(/*CHUNK_ITEMS=*/256, sys_sync_flush)) {
+                !pnevmtxmintdb->FlushCacheToDisk(/*CHUNK_ITEMS=*/256, /*fSync=*/true)) {
                 return FatalError(m_chainman.GetNotifications(), state, "Failed to commit to nevm tx mint db");
             }
             const bool force_dmn_maintenance =
