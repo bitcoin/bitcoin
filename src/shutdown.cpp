@@ -13,7 +13,7 @@
 #include <assert.h>
 #include <atomic>
 #include <system_error>
-
+// SYSCOIN
 namespace {
 std::atomic<bool> g_shutdown_requested{false};
 } // namespace
