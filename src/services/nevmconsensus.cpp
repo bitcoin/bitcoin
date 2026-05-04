@@ -43,15 +43,13 @@ void CNEVMDataDB::FlushDataToCache(const PoDAMAPMemory &mapPoDA, PoDAFlushSource
         if(!val.vchNEVMData) {
             continue;
         }
-        if(Exists(key)) {
-            if(source == PoDAFlushSource::Block) {
-                MapPoDAPayloadMeta meta;
-                if(Read(key, meta) && meta.nSize == val.nSize) {
-                    auto inserted = mapCache.try_emplace(key, val.txid, meta.nSize, val.nMedianTime);
-                    if(!inserted.second) {
-                        inserted.first->second.nMedianTime = val.nMedianTime;
-                        inserted.first->second.txid = val.txid;
-                    }
+        MapPoDAPayloadMeta meta;
+        if(Read(key, meta)) {
+            if(source == PoDAFlushSource::Block && meta.nSize == val.nSize) {
+                auto inserted = mapCache.try_emplace(key, val.txid, meta.nSize, val.nMedianTime);
+                if(!inserted.second) {
+                    inserted.first->second.nMedianTime = val.nMedianTime;
+                    inserted.first->second.txid = val.txid;
                 }
             }
             continue;
@@ -124,9 +122,9 @@ bool CNEVMDataDB::FlushErase(const NEVMDataVec &vecDataKeys) {
 }
 bool CNEVMDataDB::FlushMempoolErase(const std::vector<uint8_t>& vchVersionHash, const uint256& txid) {
     LOCK(cs_cache);
-    if(Exists(vchVersionHash)) {
-        MapPoDAPayloadMeta meta;
-        if(Read(vchVersionHash, meta) && meta.txid == txid) {
+    MapPoDAPayloadMeta meta;
+    if(Read(vchVersionHash, meta)) {
+        if(meta.txid == txid) {
             CDBBatch batch(*this);
             auto it = mapCache.find(vchVersionHash);
             if(it != mapCache.end()) {
@@ -166,10 +164,7 @@ bool CNEVMDataDB::GetBlobMetaData(const std::vector<uint8_t>& vchVersionHash, Ma
         meta = it->second;
         return true;
     } 
-    if(Exists(vchVersionHash)) {
-        return Read(vchVersionHash, meta);
-    }
-    return false;
+    return Read(vchVersionHash, meta);
 }
 const PoDAMAPMemory& CNEVMDataDB::GetCache() const {
     AssertLockHeld(cs_cache);
