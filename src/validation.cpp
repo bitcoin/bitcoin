@@ -119,6 +119,12 @@ NEVMMintTxSet setMintTxsMempool;
 std::unordered_map<COutPoint, std::pair<CTransactionRef, CTransactionRef>, SaltedOutpointHasher> mapAssetAllocationConflicts;
 std::map<uint256, int64_t> mapRejectedBlocks GUARDED_BY(cs_main);
 
+static bool IsManagedGethStarted()
+{
+    LOCK(cs_geth);
+    return gethpid > 0;
+}
+
 using kernel::CCoinsStats;
 using kernel::CoinStatsHashType;
 using kernel::ComputeUTXOStats;
@@ -1943,28 +1949,36 @@ bool ChainstateManager::IsInitialBlockDownload() const
     if (m_cached_finished_ibd.load(std::memory_order_relaxed))
         return false;
 
-    LOCK(cs_main);
-    if (m_cached_finished_ibd.load(std::memory_order_relaxed))
-        return false;
-    if (m_blockman.LoadingBlocks()) {
-        return true;
+    bool notify_nevm_startnetwork{false};
+    {
+        LOCK(cs_main);
+        if (m_cached_finished_ibd.load(std::memory_order_relaxed))
+            return false;
+        if (m_blockman.LoadingBlocks()) {
+            return true;
+        }
+        CChain& chain{ActiveChain()};
+        if (chain.Tip() == nullptr) {
+            return true;
+        }
+        if (chain.Tip()->nChainWork < MinimumChainWork()) {
+            return true;
+        }
+        if (chain.Tip()->Time() < Now<NodeSeconds>() - m_options.max_tip_age) {
+            return true;
+        }
+        if (fNEVMConnection && !fRegTest && !IsManagedGethStarted()) {
+            return true;
+        }
+        LogPrintf("Leaving InitialBlockDownload (latching to false)\n");
+        m_cached_finished_ibd.store(true, std::memory_order_relaxed);
+        notify_nevm_startnetwork = fNEVMConnection && !fRegTest;
     }
-    CChain& chain{ActiveChain()};
-    if (chain.Tip() == nullptr) {
-        return true;
-    }
-    if (chain.Tip()->nChainWork < MinimumChainWork()) {
-        return true;
-    }
-    if (chain.Tip()->Time() < Now<NodeSeconds>() - m_options.max_tip_age) {
-        return true;
-    }
-    LogPrintf("Leaving InitialBlockDownload (latching to false)\n");
-    if(fNEVMConnection && !fRegTest) {
+
+    if (notify_nevm_startnetwork && !m_interrupt) {
         bool bResponse = false;
         GetMainSignals().NotifyNEVMComms("startnetwork", bResponse);
     }
-    m_cached_finished_ibd.store(true, std::memory_order_relaxed);
     return false;
 }
 
@@ -2297,6 +2311,9 @@ bool Chainstate::ConnectNEVMCommitment(BlockValidationState& state, NEVMTxRootMa
     std::string stateStr;
     const bool bypass_external_notify = ShouldBypassExternalNEVMNotifyCalls(m_chainman, nHeight);
     if(fNEVMConnection && !bypass_external_notify) {
+        if (m_chainman.m_interrupt) {
+            return state.Error("shutdown");
+        }
         GetMainSignals().NotifyNEVMBlockConnect(nevmBlockHeader, block, stateStr, fJustCheck? uint256(): nBlockHash, NEVMDataVecOut, nHeight, bSkipValidation, btcPrevHashForNEVM, diff);
         if(!stateStr.empty()) {
             state.Invalid(BlockValidationResult::BLOCK_INVALID_HEADER, stateStr);
@@ -2352,6 +2369,9 @@ bool DisconnectNEVMCommitment(ChainstateManager& chainman, BlockValidationState&
         return false; // state filled by GetNEVMData
     }
     if(fNEVMConnection && !ShouldBypassExternalNEVMNotifyCalls(chainman, nHeight)) {
+        if (chainman.m_interrupt) {
+            return state.Error("shutdown");
+        }
         std::string stateStr;
         GetMainSignals().NotifyNEVMBlockDisconnect(stateStr, nBlockHash, diff);
         if(!stateStr.empty()) {
