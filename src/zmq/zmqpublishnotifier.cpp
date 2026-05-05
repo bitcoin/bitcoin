@@ -16,7 +16,6 @@
 #include <primitives/transaction.h>
 #include <rpc/server.h>
 #include <serialize.h>
-#include <shutdown.h>
 #include <streams.h>
 #include <sync.h>
 #include <uint256.h>
@@ -320,9 +319,6 @@ bool CZMQAbstractPublishNotifier::NotifyNEVMCommsCommon(const std::string &commM
 {
     LOCK(cs_nevm);
     bResponse = false;
-    if (ShutdownRequested() && commMessage != "disconnect") {
-        return false;
-    }
     if(psocketsub) {
         int timeout = 150000;
         int rc = zmq_setsockopt(psocketsub, ZMQ_RCVTIMEO, &timeout, sizeof(timeout));
@@ -368,9 +364,6 @@ bool CZMQPublishNEVMBlockConnectNotifier::NotifyNEVMBlockConnect(const CNEVMHead
 {
     LOCK(cs_nevm);
     state = "";
-    if (ShutdownRequested()) {
-        return false;
-    }
     if(bFirstTime) {
         bFirstTime = false;
         bool bResponse = false;
@@ -424,9 +417,6 @@ bool CZMQPublishNEVMBlockConnectNotifier::NotifyNEVMBlockConnect(const CNEVMHead
 bool CZMQPublishNEVMBlockDisconnectNotifier::NotifyNEVMBlockDisconnect(std::string &state, const uint256& nSYSBlockHash, const CDeterministicMNListNEVMAddressDiff &diff)
 {
     LOCK(cs_nevm);
-    if (ShutdownRequested()) {
-        return false;
-    }
     if(bFirstTime) {
         bFirstTime = false;
         bool bResponse = false;
@@ -478,10 +468,6 @@ bool CZMQPublishNEVMBlockDisconnectNotifier::NotifyNEVMBlockDisconnect(std::stri
 bool CZMQPublishNEVMBlockInfoNotifier::NotifyGetNEVMBlockInfo(uint64_t &nHeight, std::string &state)
 {
     LOCK(cs_nevm);
-    if (ShutdownRequested()) {
-        state = "shutdown";
-        return false;
-    }
     if(bFirstTime) {
         bFirstTime = false;
         bool bResponse = false;
@@ -521,10 +507,6 @@ bool CZMQPublishNEVMBlockInfoNotifier::NotifyGetNEVMBlockInfo(uint64_t &nHeight,
 bool CZMQPublishNEVMBlockNotifier::NotifyGetNEVMBlock(CNEVMBlock &evmBlock, std::string &state)
 {
     LOCK(cs_nevm);
-    if (ShutdownRequested()) {
-        state = "shutdown";
-        return false;
-    }
     if(bFirstTime) {
         bFirstTime = false;
         bool bResponse = false;

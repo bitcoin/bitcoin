@@ -47,6 +47,7 @@
 #include <script/script.h>
 #include <script/sigcache.h>
 #include <signet.h>
+#include <shutdown.h>
 #include <tinyformat.h>
 #include <txdb.h>
 #include <txmempool.h>
@@ -1975,7 +1976,7 @@ bool ChainstateManager::IsInitialBlockDownload() const
         notify_nevm_startnetwork = fNEVMConnection && !fRegTest;
     }
 
-    if (notify_nevm_startnetwork) {
+    if (notify_nevm_startnetwork && !ShutdownRequested()) {
         bool bResponse = false;
         GetMainSignals().NotifyNEVMComms("startnetwork", bResponse);
     }
@@ -2310,7 +2311,7 @@ bool Chainstate::ConnectNEVMCommitment(BlockValidationState& state, NEVMTxRootMa
     }
     std::string stateStr;
     const bool bypass_external_notify = ShouldBypassExternalNEVMNotifyCalls(m_chainman, nHeight);
-    if(fNEVMConnection && !bypass_external_notify) {
+    if(fNEVMConnection && !bypass_external_notify && !ShutdownRequested()) {
         GetMainSignals().NotifyNEVMBlockConnect(nevmBlockHeader, block, stateStr, fJustCheck? uint256(): nBlockHash, NEVMDataVecOut, nHeight, bSkipValidation, btcPrevHashForNEVM, diff);
         if(!stateStr.empty()) {
             state.Invalid(BlockValidationResult::BLOCK_INVALID_HEADER, stateStr);
@@ -2365,7 +2366,7 @@ bool DisconnectNEVMCommitment(ChainstateManager& chainman, BlockValidationState&
     if(!GetNEVMData(state, block, evmBlock)) {
         return false; // state filled by GetNEVMData
     }
-    if(fNEVMConnection && !ShouldBypassExternalNEVMNotifyCalls(chainman, nHeight)) {
+    if(fNEVMConnection && !ShouldBypassExternalNEVMNotifyCalls(chainman, nHeight) && !ShutdownRequested()) {
         std::string stateStr;
         GetMainSignals().NotifyNEVMBlockDisconnect(stateStr, nBlockHash, diff);
         if(!stateStr.empty()) {
