@@ -47,7 +47,6 @@
 #include <script/script.h>
 #include <script/sigcache.h>
 #include <signet.h>
-#include <shutdown.h>
 #include <tinyformat.h>
 #include <txdb.h>
 #include <txmempool.h>
@@ -1976,7 +1975,7 @@ bool ChainstateManager::IsInitialBlockDownload() const
         notify_nevm_startnetwork = fNEVMConnection && !fRegTest;
     }
 
-    if (notify_nevm_startnetwork && !ShutdownRequested()) {
+    if (notify_nevm_startnetwork && !m_interrupt) {
         bool bResponse = false;
         GetMainSignals().NotifyNEVMComms("startnetwork", bResponse);
     }
@@ -2312,7 +2311,7 @@ bool Chainstate::ConnectNEVMCommitment(BlockValidationState& state, NEVMTxRootMa
     std::string stateStr;
     const bool bypass_external_notify = ShouldBypassExternalNEVMNotifyCalls(m_chainman, nHeight);
     if(fNEVMConnection && !bypass_external_notify) {
-        if (ShutdownRequested()) {
+        if (m_chainman.m_interrupt) {
             return state.Error("shutdown");
         }
         GetMainSignals().NotifyNEVMBlockConnect(nevmBlockHeader, block, stateStr, fJustCheck? uint256(): nBlockHash, NEVMDataVecOut, nHeight, bSkipValidation, btcPrevHashForNEVM, diff);
@@ -2370,7 +2369,7 @@ bool DisconnectNEVMCommitment(ChainstateManager& chainman, BlockValidationState&
         return false; // state filled by GetNEVMData
     }
     if(fNEVMConnection && !ShouldBypassExternalNEVMNotifyCalls(chainman, nHeight)) {
-        if (ShutdownRequested()) {
+        if (chainman.m_interrupt) {
             return state.Error("shutdown");
         }
         std::string stateStr;
