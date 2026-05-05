@@ -459,6 +459,15 @@ bool PSBTInput::Merge(const PSBTInput& input)
     if (time_locktime == std::nullopt && input.time_locktime != std::nullopt) time_locktime = input.time_locktime;
     if (height_locktime == std::nullopt && input.height_locktime != std::nullopt) height_locktime = input.height_locktime;
 
+    // Reject if sighash types conflict; copy if only one side has it.
+    if (sighash_type != std::nullopt && input.sighash_type != std::nullopt &&
+        sighash_type != input.sighash_type) {
+        return false;
+    }
+    if (sighash_type == std::nullopt && input.sighash_type != std::nullopt) {
+        sighash_type = input.sighash_type;
+    }
+
     return true;
 }
 
