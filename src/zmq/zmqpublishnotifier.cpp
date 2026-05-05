@@ -369,7 +369,6 @@ bool CZMQPublishNEVMBlockConnectNotifier::NotifyNEVMBlockConnect(const CNEVMHead
     LOCK(cs_nevm);
     state = "";
     if (ShutdownRequested()) {
-        state = "shutdown";
         return false;
     }
     if(bFirstTime) {
@@ -426,7 +425,6 @@ bool CZMQPublishNEVMBlockDisconnectNotifier::NotifyNEVMBlockDisconnect(std::stri
 {
     LOCK(cs_nevm);
     if (ShutdownRequested()) {
-        state = "shutdown";
         return false;
     }
     if(bFirstTime) {
