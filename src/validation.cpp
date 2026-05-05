@@ -2311,7 +2311,10 @@ bool Chainstate::ConnectNEVMCommitment(BlockValidationState& state, NEVMTxRootMa
     }
     std::string stateStr;
     const bool bypass_external_notify = ShouldBypassExternalNEVMNotifyCalls(m_chainman, nHeight);
-    if(fNEVMConnection && !bypass_external_notify && !ShutdownRequested()) {
+    if(fNEVMConnection && !bypass_external_notify) {
+        if (ShutdownRequested()) {
+            return state.Error("shutdown");
+        }
         GetMainSignals().NotifyNEVMBlockConnect(nevmBlockHeader, block, stateStr, fJustCheck? uint256(): nBlockHash, NEVMDataVecOut, nHeight, bSkipValidation, btcPrevHashForNEVM, diff);
         if(!stateStr.empty()) {
             state.Invalid(BlockValidationResult::BLOCK_INVALID_HEADER, stateStr);
@@ -2366,7 +2369,10 @@ bool DisconnectNEVMCommitment(ChainstateManager& chainman, BlockValidationState&
     if(!GetNEVMData(state, block, evmBlock)) {
         return false; // state filled by GetNEVMData
     }
-    if(fNEVMConnection && !ShouldBypassExternalNEVMNotifyCalls(chainman, nHeight) && !ShutdownRequested()) {
+    if(fNEVMConnection && !ShouldBypassExternalNEVMNotifyCalls(chainman, nHeight)) {
+        if (ShutdownRequested()) {
+            return state.Error("shutdown");
+        }
         std::string stateStr;
         GetMainSignals().NotifyNEVMBlockDisconnect(stateStr, nBlockHash, diff);
         if(!stateStr.empty()) {
