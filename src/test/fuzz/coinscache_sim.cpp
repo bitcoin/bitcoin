@@ -70,7 +70,7 @@ struct PrecomputedData
                 coins[i].out.scriptPubKey[0] = OP_HASH160;
                 coins[i].out.scriptPubKey[1] = 20;
                 std::copy(hash.begin(), hash.begin() + 20, coins[i].out.scriptPubKey.begin() + 2);
-                coins[i].out.scriptPubKey[12] = OP_EQUAL;
+                coins[i].out.scriptPubKey[22] = OP_EQUAL;
                 break;
             case 2: /* P2WPKH */
                 coins[i].out.scriptPubKey.resize(22);
@@ -451,7 +451,7 @@ FUZZ_TARGET(coinscache_sim)
             }
         }
 
-        // HaveCoinInCache ignores spent coins, so GetCacheSize() may exceed it. */
+        // HaveCoinInCache ignores spent coins, so GetCacheSize() may exceed it.
         assert(cache.GetCacheSize() >= cache_size);
     }
 
