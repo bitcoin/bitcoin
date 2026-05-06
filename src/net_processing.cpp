@@ -916,7 +916,7 @@ private:
      * Request blocks for the background chainstate, if one is in use.
      * vBlocks must not contain nullptr.
      */
-    void TryDownloadingHistoricalBlocks(const Peer& peer, unsigned int count, std::vector<const CBlockIndex*>& vBlocks, const CBlockIndex* from_tip, const CBlockIndex* target_block) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
+    void TryDownloadingHistoricalBlocks(const Peer& peer, unsigned int count, std::vector<const CBlockIndex*>& vBlocks, const CBlockIndex& from_tip, const CBlockIndex& target_block) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
 
     /**
     * \brief Find next blocks to download from a peer after a starting block.
@@ -1446,11 +1446,8 @@ void PeerManagerImpl::FindNextBlocksToDownload(const Peer& peer, unsigned int co
     FindNextBlocks(vBlocks, peer, state, index_walk, count, nWindowEnd, &m_chainman.ActiveChain(), &nodeStaller);
 }
 
-void PeerManagerImpl::TryDownloadingHistoricalBlocks(const Peer& peer, unsigned int count, std::vector<const CBlockIndex*>& vBlocks, const CBlockIndex *from_tip, const CBlockIndex* target_block)
+void PeerManagerImpl::TryDownloadingHistoricalBlocks(const Peer& peer, unsigned int count, std::vector<const CBlockIndex*>& vBlocks, const CBlockIndex& from_tip, const CBlockIndex& target_block)
 {
-    Assert(from_tip);
-    Assert(target_block);
-
     if (vBlocks.size() >= count) {
         return;
     }
@@ -1458,7 +1455,7 @@ void PeerManagerImpl::TryDownloadingHistoricalBlocks(const Peer& peer, unsigned 
     vBlocks.reserve(count);
     CNodeState *state = Assert(State(peer.m_id));
 
-    if (state->pindexBestKnownBlock == nullptr || state->pindexBestKnownBlock->GetAncestor(target_block->nHeight) != target_block) {
+    if (state->pindexBestKnownBlock == nullptr || state->pindexBestKnownBlock->GetAncestor(target_block.nHeight) != &target_block) {
         // This peer can't provide us the complete series of blocks leading up to the
         // assumeutxo snapshot base.
         //
@@ -1472,7 +1469,7 @@ void PeerManagerImpl::TryDownloadingHistoricalBlocks(const Peer& peer, unsigned 
         return;
     }
 
-    FindNextBlocks(vBlocks, peer, state, *from_tip, count, std::min<int>(from_tip->nHeight + BLOCK_DOWNLOAD_WINDOW, target_block->nHeight));
+    FindNextBlocks(vBlocks, peer, state, from_tip, count, std::min<int>(from_tip.nHeight + BLOCK_DOWNLOAD_WINDOW, target_block.nHeight));
 }
 
 void PeerManagerImpl::FindNextBlocks(std::vector<const CBlockIndex*>& vBlocks, const Peer& peer, CNodeState *state, const CBlockIndex& index_walk, unsigned int count, int nWindowEnd, const CChain* activeChain, NodeId* nodeStaller)
@@ -6194,7 +6191,7 @@ bool PeerManagerImpl::SendMessages(CNode& node)
                 TryDownloadingHistoricalBlocks(
                     peer,
                     get_inflight_budget(),
-                    vToDownload, &from_tip, historical_blocks->second);
+                    vToDownload, from_tip, *historical_blocks->second);
             }
             for (const CBlockIndex *pindex : vToDownload) {
                 uint32_t nFetchFlags = GetFetchFlags(peer);
