@@ -92,8 +92,17 @@ class ImportDescriptorsTest(BitcoinTestFramework):
 
         # # Test importing of a P2PKH descriptor
         key = get_generate_key()
+        self.log.info("Import should fail if timestamp is missing and include request details in the error")
+        desc = descsum_create("pkh(" + key.pubkey + ")")
+        assert_raises_rpc_error(
+            -3,
+            f"Missing required timestamp field for import request: {{\"desc\":\"{desc}\"}}",
+            w1.importdescriptors,
+            [{"desc": desc}],
+        )
+
         self.log.info("Should import a p2pkh descriptor")
-        import_request = {"desc": descsum_create("pkh(" + key.pubkey + ")"),
+        import_request = {"desc": desc,
                  "timestamp": "now",
                  "label": "Descriptor import test"}
         self.test_importdesc(import_request, success=True)
