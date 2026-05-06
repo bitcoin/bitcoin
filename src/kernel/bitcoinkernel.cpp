@@ -979,7 +979,7 @@ bool ShouldLog(Category /*category*/, Level level)
     return GetKernelLogger().ShouldLog(level);
 }
 
-void Log(Entry entry)
+void Log(const Options& /*options*/, Entry entry)
 {
     GetKernelLogger().MaybeLog(entry);
 }
