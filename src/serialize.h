@@ -494,6 +494,7 @@ static inline Wrapper<Formatter, T&> Using(T&& t) { return Wrapper<Formatter, T&
 #define VARINT(obj) Using<VarIntFormatter<VarIntMode::DEFAULT>>(obj)
 #define COMPACTSIZE(obj) Using<CompactSizeFormatter<true>>(obj)
 #define LIMITED_STRING(obj,n) Using<LimitedStringFormatter<n>>(obj)
+#define LIMITED_VECTOR(obj,n) Using<LimitedVectorFormatter<n>>(obj)
 
 /** Serialization wrapper class for integers in VarInt format. */
 template<VarIntMode Mode>
@@ -790,6 +791,35 @@ struct DefaultFormatter
     static void Unser(Stream& s, T& t) { Unserialize(s, t); }
 };
 
+/**
+ * Limited vector formatter. Throws an error if a vector is oversized.
+ */
+
+template<size_t Limit, class Formatter = DefaultFormatter>
+struct LimitedVectorFormatter
+{
+    template<typename Stream, typename V>
+    void Unser(Stream& s, V& v)
+    {
+        Formatter formatter;
+        v.clear();
+        size_t size = ReadCompactSize(s);
+        if (size > Limit) {
+            throw std::ios_base::failure("Vector length limit exceeded");
+        }
+        v.reserve(size);
+        for (size_t i = 0; i < size; ++i) {
+            v.emplace_back();
+            formatter.Unser(s, v.back());
+        }
+    }
+
+    template<typename Stream, typename V>
+    void Ser(Stream& s, const V& v)
+    {
+        VectorFormatter<Formatter>{}.Ser(s, v);
+    }
+};
 
 
 
