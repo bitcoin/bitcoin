@@ -47,8 +47,8 @@ static bool CheckFilterLookups(BlockFilterIndex& filter_index, const CBlockIndex
 
     BOOST_CHECK(filter_index.LookupFilter(block_index, filter));
     BOOST_CHECK(filter_index.LookupFilterHeader(block_index, filter_header));
-    BOOST_CHECK(filter_index.LookupFilterRange(block_index->nHeight, block_index, filters));
-    BOOST_CHECK(filter_index.LookupFilterHashRange(block_index->nHeight, block_index,
+    BOOST_CHECK(filter_index.LookupFilterRange(block_index->nHeight, *block_index, filters));
+    BOOST_CHECK(filter_index.LookupFilterHashRange(block_index->nHeight, *block_index,
                                                    filter_hashes));
 
     BOOST_CHECK_EQUAL(filters.size(), 1U);
@@ -136,8 +136,8 @@ BOOST_FIXTURE_TEST_CASE(blockfilter_index_initial_sync, BuildChainTestingSetup)
              block_index = m_node.chainman->ActiveChain().Next(*block_index)) {
             BOOST_CHECK(!filter_index.LookupFilter(block_index, filter));
             BOOST_CHECK(!filter_index.LookupFilterHeader(block_index, filter_header));
-            BOOST_CHECK(!filter_index.LookupFilterRange(block_index->nHeight, block_index, filters));
-            BOOST_CHECK(!filter_index.LookupFilterHashRange(block_index->nHeight, block_index,
+            BOOST_CHECK(!filter_index.LookupFilterRange(block_index->nHeight, *block_index, filters));
+            BOOST_CHECK(!filter_index.LookupFilterHashRange(block_index->nHeight, *block_index,
                                                             filter_hashes));
         }
     }
@@ -257,8 +257,8 @@ BOOST_FIXTURE_TEST_CASE(blockfilter_index_initial_sync, BuildChainTestingSetup)
         LOCK(cs_main);
         tip = m_node.chainman->ActiveChain().Tip();
     }
-    BOOST_CHECK(filter_index.LookupFilterRange(0, tip, filters));
-    BOOST_CHECK(filter_index.LookupFilterHashRange(0, tip, filter_hashes));
+    BOOST_CHECK(filter_index.LookupFilterRange(0, *tip, filters));
+    BOOST_CHECK(filter_index.LookupFilterHashRange(0, *tip, filter_hashes));
 
     assert(tip->nHeight >= 0);
     BOOST_CHECK_EQUAL(filters.size(), tip->nHeight + 1U);

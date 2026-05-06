@@ -1036,6 +1036,7 @@ private:
      * @param[in]   stop_hash       The stop_hash for the request
      * @param[in]   max_height_diff The maximum number of items permitted to request, as specified in BIP 157
      * @param[out]  stop_index      The CBlockIndex for the stop_hash block, if the request can be serviced.
+     *                              Set to non-nullptr on success.
      * @param[out]  filter_index    The filter index, if the request can be serviced.
      * @return                      True if the request can be serviced.
      */
@@ -3335,7 +3336,7 @@ void PeerManagerImpl::ProcessGetCFilters(CNode& node, Peer& peer, DataStream& vR
     }
 
     std::vector<BlockFilter> filters;
-    if (!filter_index->LookupFilterRange(start_height, stop_index, filters)) {
+    if (!filter_index->LookupFilterRange(start_height, *stop_index, filters)) {
         LogDebug(BCLog::NET, "Failed to find block filter in index: filter_type=%s, start_height=%d, stop_hash=%s\n",
                      BlockFilterTypeName(filter_type), start_height, stop_hash.ToString());
         return;
@@ -3375,7 +3376,7 @@ void PeerManagerImpl::ProcessGetCFHeaders(CNode& node, Peer& peer, DataStream& v
     }
 
     std::vector<uint256> filter_hashes;
-    if (!filter_index->LookupFilterHashRange(start_height, stop_index, filter_hashes)) {
+    if (!filter_index->LookupFilterHashRange(start_height, *stop_index, filter_hashes)) {
         LogDebug(BCLog::NET, "Failed to find block filter hashes in index: filter_type=%s, start_height=%d, stop_hash=%s\n",
                      BlockFilterTypeName(filter_type), start_height, stop_hash.ToString());
         return;
