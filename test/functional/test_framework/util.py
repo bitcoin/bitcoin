@@ -759,3 +759,7 @@ def is_dir_writable(dir_path: pathlib.Path) -> bool:
         return True
     except OSError:
         return False
+
+def bitflipper(input):
+    assert isinstance(input, bytes)
+    return (int.from_bytes(input, "little") ^ (1 << random.randrange(len(input) * 8))).to_bytes(len(input), "little")
