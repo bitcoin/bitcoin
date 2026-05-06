@@ -1107,6 +1107,11 @@ class BitcoinTestFramework(metaclass=BitcoinTestMetaClass):
         if not self.is_external_signer_compiled():
             raise SkipTest("external signer support has not been compiled.")
 
+    def mock_signer_path(self, name='signer.py'):
+        """Return a command that invokes a mock external signer script under test/functional/mocks/."""
+        path = os.path.join(os.path.dirname(os.path.realpath(__file__)), '..', 'mocks', name)
+        return sys.executable + " " + os.path.realpath(path)
+
     def skip_if_running_under_valgrind(self):
         """Skip the running test if Valgrind is being used."""
         if self.options.valgrind:
