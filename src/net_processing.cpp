@@ -1423,11 +1423,11 @@ void PeerManagerImpl::FindNextBlocksToDownload(const Peer& peer, unsigned int co
     // pindexLastCommonBlock is required to be an ancestor of pindexBestKnownBlock, and will be used as a starting point.
     // It is being set to the fork point between the peer's best known block and the current tip, unless it is already set to
     // an ancestor with more work than the fork point.
-    auto fork_point = LastCommonAncestor(state->pindexBestKnownBlock, m_chainman.ActiveTip());
+    auto& fork_point = LastCommonAncestor(*state->pindexBestKnownBlock, *m_chainman.ActiveTip());
     if (state->pindexLastCommonBlock == nullptr ||
-        fork_point->nChainWork > state->pindexLastCommonBlock->nChainWork ||
+        fork_point.nChainWork > state->pindexLastCommonBlock->nChainWork ||
         state->pindexBestKnownBlock->GetAncestor(state->pindexLastCommonBlock->nHeight) != state->pindexLastCommonBlock) {
-        state->pindexLastCommonBlock = fork_point;
+        state->pindexLastCommonBlock = &fork_point;
     }
     if (state->pindexLastCommonBlock == state->pindexBestKnownBlock)
         return;
@@ -6184,11 +6184,11 @@ bool PeerManagerImpl::SendMessages(CNode& node)
             if (historical_blocks && !IsLimitedPeer(peer)) {
                 // If the first needed historical block is not an ancestor of the last,
                 // we need to start requesting blocks from their last common ancestor.
-                const CBlockIndex* from_tip = LastCommonAncestor(historical_blocks->first, historical_blocks->second);
+                const CBlockIndex& from_tip = LastCommonAncestor(*historical_blocks->first, *historical_blocks->second);
                 TryDownloadingHistoricalBlocks(
                     peer,
                     get_inflight_budget(),
-                    vToDownload, from_tip, historical_blocks->second);
+                    vToDownload, &from_tip, historical_blocks->second);
             }
             for (const CBlockIndex *pindex : vToDownload) {
                 uint32_t nFetchFlags = GetFetchFlags(peer);

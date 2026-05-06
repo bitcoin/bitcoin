@@ -149,9 +149,10 @@ int64_t GetBlockProofEquivalentTime(const CBlockIndex& to, const CBlockIndex& fr
     return sign * int64_t(r.GetLow64());
 }
 
-/** Find the last common ancestor two blocks have.
- *  Both pa and pb must be non-nullptr. */
-const CBlockIndex* LastCommonAncestor(const CBlockIndex* pa, const CBlockIndex* pb) {
+/** Find the last common ancestor two blocks have. */
+const CBlockIndex& LastCommonAncestor(const CBlockIndex& a, const CBlockIndex& b) {
+    const CBlockIndex* pa{&a};
+    const CBlockIndex* pb{&b};
     // First rewind to the last common height (the forking point cannot be past one of the two).
     if (pa->nHeight > pb->nHeight) {
         pa = pa->GetAncestor(pb->nHeight);
@@ -173,5 +174,5 @@ const CBlockIndex* LastCommonAncestor(const CBlockIndex* pa, const CBlockIndex* 
         pa = pa->pprev;
         pb = pb->pprev;
     }
-    return pa;
+    return *Assert(pa);
 }

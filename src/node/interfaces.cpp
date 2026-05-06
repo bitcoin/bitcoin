@@ -622,7 +622,7 @@ public:
         const CChain& active = chainman().ActiveChain();
         const CBlockIndex* block1 = chainman().m_blockman.LookupBlockIndex(block_hash1);
         const CBlockIndex* block2 = chainman().m_blockman.LookupBlockIndex(block_hash2);
-        const CBlockIndex* ancestor = block1 && block2 ? LastCommonAncestor(block1, block2) : nullptr;
+        const CBlockIndex* ancestor = block1 && block2 ? &LastCommonAncestor(*block1, *block2) : nullptr;
         // Using & instead of && below to avoid short circuiting and leaving
         // output uninitialized. Cast bool to int to avoid -Wbitwise-instead-of-logical
         // compiler warnings.
