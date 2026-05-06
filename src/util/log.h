@@ -88,7 +88,6 @@ enum class Level {
 struct Entry {
     Category category;
     Level level;
-    bool should_ratelimit{false}; //!< Hint for consumers if this entry should be ratelimited
     SystemClock::time_point timestamp{SystemClock::now()};
     std::chrono::seconds mocktime{GetMockTime()};
     std::string thread_name{util::ThreadGetInternalName()};
@@ -140,7 +139,7 @@ namespace hooks {
 bool ShouldLog(Category category, Level level);
 
 /// Send message to be logged.
-void Log(Entry entry);
+void Log(const Options& options, Entry entry);
 } // namespace hooks
 
 /// Internal functions used to help implement logging macros.
@@ -179,10 +178,9 @@ Context GetContext(Category category)
 template <typename Context, typename... Args>
 void Emit(Options options, SourceLocation&& source_loc, Context&& context, ConstevalFormatString<sizeof...(Args)> fmt, const Args&... args)
 {
-    hooks::Log(Entry{
+    hooks::Log(options, Entry{
         .category = context.category,
         .level = options.level,
-        .should_ratelimit = options.ratelimit,
         .source_loc = std::move(source_loc),
         .message = context.Format(fmt, args...)});
 }

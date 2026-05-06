@@ -75,10 +75,9 @@ bool BCLog::Logger::StartLogging()
     // dump buffered messages from before we opened the log
     m_buffering = false;
     if (m_buffer_lines_discarded > 0) {
-        LogPrint_({
+        LogPrint_({.level = Level::Info, .ratelimit = false}, {
             .category = BCLog::ALL,
             .level = Level::Info,
-            .should_ratelimit = false,
             .source_loc = SourceLocation{__func__},
             .message = strprintf("Early logging buffer overflowed, %d log lines discarded.", m_buffer_lines_discarded),
         });
@@ -430,14 +429,14 @@ std::string BCLog::Logger::Format(const util::log::Entry& entry) const
     return result;
 }
 
-void BCLog::Logger::LogPrint(util::log::Entry entry)
+void BCLog::Logger::LogPrint(const util::log::Options& options, util::log::Entry entry)
 {
     STDLOCK(m_cs);
-    return LogPrint_(std::move(entry));
+    return LogPrint_(options, std::move(entry));
 }
 
 // NOLINTNEXTLINE(misc-no-recursion)
-void BCLog::Logger::LogPrint_(util::log::Entry entry)
+void BCLog::Logger::LogPrint_(const util::log::Options& options, util::log::Entry entry)
 {
     if (m_buffering) {
         {
@@ -460,14 +459,14 @@ void BCLog::Logger::LogPrint_(util::log::Entry entry)
 
     std::string str_prefixed{Format(entry)};
     bool ratelimit{false};
-    if (entry.should_ratelimit && m_limiter) {
+    if (options.ratelimit && m_limiter) {
         auto status{m_limiter->Consume(entry.source_loc, str_prefixed)};
         if (status == LogRateLimiter::Status::NEWLY_SUPPRESSED) {
             // NOLINTNEXTLINE(misc-no-recursion)
-            LogPrint_({
+            LogPrint_({.level = Level::Warning, .ratelimit = false}, // with ratelimit=false, this cannot lead to infinite recursion
+            {
                 .category = LogFlags::ALL,
                 .level = Level::Warning,
-                .should_ratelimit = false, // with should_ratelimit=false, this cannot lead to infinite recursion
                 .source_loc = SourceLocation{__func__},
                 .message = strprintf(
                     "Excessive logging detected from %s:%d (%s): >%d bytes logged during "
@@ -540,10 +539,9 @@ void BCLog::Logger::ShrinkDebugFile()
         std::vector<char> vch(RECENT_DEBUG_HISTORY_SIZE, 0);
         if (fseek(file, -((long)vch.size()), SEEK_END)) {
             // LogWarning, except with m_cs held
-            LogPrint_({
+            LogPrint_({.level = Level::Warning, .ratelimit = false}, {
                 .category = BCLog::ALL,
                 .level = Level::Warning,
-                .should_ratelimit = true,
                 .source_loc = SourceLocation{__func__},
                 .message = "Failed to shrink debug log file: fseek(...) failed",
             });
@@ -620,8 +618,8 @@ bool util::log::hooks::ShouldLog(Category category, Level level)
     return logger.Enabled() && logger.WillLogCategoryLevel(static_cast<BCLog::LogFlags>(category), level);
 }
 
-void util::log::hooks::Log(Entry entry)
+void util::log::hooks::Log(const Options& options, Entry entry)
 {
     BCLog::Logger& logger{LogInstance()};
-    logger.LogPrint(std::move(entry));
+    logger.LogPrint(options, std::move(entry));
 }
