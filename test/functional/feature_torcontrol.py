@@ -256,12 +256,81 @@ class TorControlTest(BitcoinTestFramework):
 
         mock_tor.stop()
 
+    def test_hashedpassword_auth(self):
+        test_password = "testhashedpwd"
+        base_args = ["-listenonion=1", "-debug=tor"]
+
+        class HashedPasswordServer(MockTorControlServer):
+            def _get_response(self, command):
+                if command == 'PROTOCOLINFO 1':
+                    return ("250-PROTOCOLINFO 1\r\n"
+                            "250-AUTH METHODS=HASHEDPASSWORD\r\n"
+                            "250-VERSION Tor=\"0.1.2.3\"\r\n"
+                            "250 OK\r\n")
+                elif command.startswith('AUTHENTICATE '):
+                    if command == f'AUTHENTICATE "{test_password}"':
+                        return "250 OK\r\n"
+                    return "515 Bad authentication\r\n"
+                return super()._get_response(command)
+
+        self.log.info("Test that the correct password is sent as AUTHENTICATE's argument with HASHEDPASSWORD authentication")
+        mock_tor = HashedPasswordServer(self.next_port())
+        mock_tor.start()
+        self.restart_node(0, extra_args=[
+            f"-torcontrol=127.0.0.1:{mock_tor.port}",
+            f"-torpassword={test_password}",
+        ] + base_args)
+        mock_tor.conn_ready.wait(timeout=10)
+        self.wait_until(lambda: len(mock_tor.received_commands) >= 2, timeout=10)
+        # Password must be sent as a quoted string in AUTHENTICATE (Tor control spec: Section 3.5).
+        assert_equal(mock_tor.received_commands[0], "PROTOCOLINFO 1")
+        assert_equal(mock_tor.received_commands[1], f'AUTHENTICATE "{test_password}"')
+        mock_tor.stop()
+
+        self.log.info("Test that an incorrect password produces authentication failure with HASHEDPASSWORD authentication")
+        mock_tor = HashedPasswordServer(self.next_port())
+        mock_tor.start()
+        self.restart_node(0, extra_args=[
+            f"-torcontrol=127.0.0.1:{mock_tor.port}",
+            "-torpassword=wrong_password",
+        ] + base_args)
+        mock_tor.conn_ready.wait(timeout=10)
+        self.wait_until(lambda: len(mock_tor.received_commands) >= 2, timeout=10)
+        assert_equal(mock_tor.received_commands[0], "PROTOCOLINFO 1")
+        assert_equal(mock_tor.received_commands[1], 'AUTHENTICATE "wrong_password"')
+        # After auth failure, no further commands should be sent and authentication failure should be logged
+        ensure_for(duration=2, f=lambda: len(mock_tor.received_commands) == 2)
+        self.wait_until(lambda: any("Authentication failed" in line for line in self.nodes[0].debug_log_path.read_text().splitlines()), timeout=10)
+        mock_tor.stop()
+
+        self.log.info("Test that if -torpassword is absent, no AUTHENTICATE is sent with HASHEDPASSWORD authentication")
+        mock_tor = HashedPasswordServer(self.next_port())
+        self.restart_with_mock(mock_tor)
+        # No AUTHENTICATE should ever be sent because node has no password to offer.
+        ensure_for(duration=2, f=lambda: len(mock_tor.received_commands) == 1)
+        mock_tor.stop()
+
+        self.log.info("Test -torpassword ignored when Tor does not support HASHEDPASSWORD authentication")
+        mock_tor = MockTorControlServer(self.next_port())
+        mock_tor.start()
+        self.restart_node(0, extra_args=[
+            f"-torcontrol=127.0.0.1:{mock_tor.port}",
+            f"-torpassword={test_password}",
+        ] + base_args)
+        mock_tor.conn_ready.wait(timeout=10)
+        self.wait_until(lambda: len(mock_tor.received_commands) >= 1, timeout=10)
+        assert_equal(mock_tor.received_commands[0], "PROTOCOLINFO 1")
+        # Password should be ignored since HASHEDPASSWORD is not supported, so no AUTHENTICATE sent
+        ensure_for(duration=2, f=lambda: len(mock_tor.received_commands) == 1)
+        mock_tor.stop()
+
     def run_test(self):
         self.test_basic()
         self.test_partial_data()
         self.test_pow_fallback()
         self.test_oversized_line()
         self.test_overmany_lines()
+        self.test_hashedpassword_auth()
 
 
 if __name__ == '__main__':
