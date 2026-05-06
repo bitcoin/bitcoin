@@ -1575,7 +1575,7 @@ void PeerManagerImpl::PushNodeVersion(CNode& pnode, const Peer& peer)
     MakeAndPushMessage(
         pnode,
         NetMsgType::VERSION,
-        PROTOCOL_VERSION,
+        pnode.AdvertisedVersion(),
         my_services,
         my_time,
         // your_services + CNetAddr::V1(your_addr) is the pre-version-31402 serialization of your_addr (without nTime)
@@ -1589,7 +1589,7 @@ void PeerManagerImpl::PushNodeVersion(CNode& pnode, const Peer& peer)
 
     LogDebug(
         BCLog::NET, "send version message: version=%d, blocks=%d%s, txrelay=%d, peer=%d\n",
-        PROTOCOL_VERSION, my_height,
+        pnode.AdvertisedVersion(), my_height,
         fLogIPs ? strprintf(", them=%s", your_addr.ToStringAddrPort()) : "",
         my_tx_relay, pnode.GetId());
 }
@@ -3663,7 +3663,7 @@ void PeerManagerImpl::ProcessMessage(Peer& peer, CNode& pfrom, const std::string
         }
 
         // Change version
-        const int greatest_common_version = std::min(nVersion, PROTOCOL_VERSION);
+        const int greatest_common_version = std::min(nVersion, pfrom.AdvertisedVersion());
         pfrom.SetCommonVersion(greatest_common_version);
         pfrom.nVersion = nVersion;
 
