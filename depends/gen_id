@@ -28,6 +28,10 @@
     # Redirect stderr to stdout
     exec 2>&1
 
+    # Unset SOURCE_DATE_EPOCH to prevent it from leaking into tool
+    # outputs and to maximize reuse of the built package cache.
+    unset SOURCE_DATE_EPOCH
+
     echo "BEGIN ALL"
 
     # Include any ID salts supplied via command line
