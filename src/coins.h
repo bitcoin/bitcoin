@@ -258,6 +258,9 @@ private:
  */
 struct CoinsViewCacheCursor
 {
+    //! CoinsViewCacheCursor's constructor used to take a `usage` reference in exactly the same way as `dirty_count`, so to avoid a silent misuse, the tag is required
+    struct dirty_count_tag_t {};
+    static inline constexpr dirty_count_tag_t dirty_count_tag{};
     //! If will_erase is not set, iterating through the cursor will erase spent coins from the map,
     //! and other coins will be unflagged (removing them from the linked list).
     //! If will_erase is set, the underlying map and linked list will not be modified,
@@ -265,7 +268,8 @@ struct CoinsViewCacheCursor
     //! This is an optimization compared to erasing all entries as the cursor iterates them when will_erase is set.
     //! Calling CCoinsMap::clear() afterwards is faster because a CoinsCachePair cannot be coerced back into a
     //! CCoinsMap::iterator to be erased, and must therefore be looked up again by key in the CCoinsMap before being erased.
-    CoinsViewCacheCursor(size_t& dirty_count LIFETIMEBOUND,
+    CoinsViewCacheCursor(const dirty_count_tag_t,
+                         size_t& dirty_count LIFETIMEBOUND,
                          CoinsCachePair& sentinel LIFETIMEBOUND,
                          CCoinsMap& map LIFETIMEBOUND,
                          bool will_erase) noexcept

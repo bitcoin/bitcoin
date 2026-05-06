@@ -164,7 +164,7 @@ void TestCoinsView(FuzzedDataProvider& fuzzed_data_provider, CCoinsView& backend
                 }
                 bool expected_code_path = false;
                 try {
-                    auto cursor{CoinsViewCacheCursor(dirty_count, sentinel, coins_map, /*will_erase=*/true)};
+                    auto cursor{CoinsViewCacheCursor(CoinsViewCacheCursor::dirty_count_tag, dirty_count, sentinel, coins_map, /*will_erase=*/true)};
                     uint256 best_block{coins_view_cache.GetBestBlock()};
                     if (fuzzed_data_provider.ConsumeBool()) best_block = ConsumeUInt256(fuzzed_data_provider);
                     // Set best block hash to non-null to satisfy the assertion in CCoinsViewDB::BatchWrite().

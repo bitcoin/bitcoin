@@ -653,7 +653,7 @@ static void WriteCoinsViewEntry(CCoinsView& view, const MaybeCoin& cache_coin)
     CCoinsMap map{0, CCoinsMap::hasher{}, CCoinsMap::key_equal{}, &resource};
     if (cache_coin) InsertCoinsMapEntry(map, sentinel, *cache_coin);
     size_t dirty_count{cache_coin && cache_coin->IsDirty()};
-    auto cursor{CoinsViewCacheCursor(dirty_count, sentinel, map, /*will_erase=*/true)};
+    auto cursor{CoinsViewCacheCursor(CoinsViewCacheCursor::dirty_count_tag, dirty_count, sentinel, map, /*will_erase=*/true)};
     BOOST_CHECK(view.BatchWrite(cursor, {}));
     BOOST_CHECK_EQUAL(dirty_count, 0U);
 }
