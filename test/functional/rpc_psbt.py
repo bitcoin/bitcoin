@@ -40,7 +40,7 @@ from test_framework.psbt import (
     PSBT_OUT_TAP_TREE,
     PSBT_OUT_SCRIPT,
 )
-from test_framework.script import CScript, OP_TRUE, SIGHASH_ALL, SIGHASH_ANYONECANPAY
+from test_framework.script import CScript, OP_TRUE, SIGHASH_ALL, SIGHASH_ANYONECANPAY, SIGHASH_SINGLE
 from test_framework.script_util import MIN_STANDARD_TX_NONWITNESS_SIZE
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import (
@@ -293,6 +293,48 @@ class PSBTTest(BitcoinTestFramework):
         assert_equal(out_participant_pks["aggregate_pubkey"], out_fake_agg_pubkey.hex())
         assert "participant_pubkeys" in out_participant_pks
         assert_equal(out_participant_pks["participant_pubkeys"], [out_pubkey1.hex(), out_pubkey2.hex()])
+
+    def test_combine_sighash_type(self):
+        self.log.info("Test that combinepsbt handles sighash_type per BIP 174 combiner rules")
+        node = self.nodes[0]
+        wallet = node.get_wallet_rpc(self.default_wallet_name)
+
+        base_psbt = wallet.walletcreatefundedpsbt([], [{wallet.getnewaddress(): 0.1}])["psbt"]
+
+        def with_sighash(psbt_b64, sighash):
+            """Return a copy of the PSBT with every input's sighash_type set (or removed if None)."""
+            psbt = PSBT.from_base64(psbt_b64)
+            for inp in psbt.i:
+                if sighash is None:
+                    inp.map.pop(PSBT_IN_SIGHASH_TYPE, None)
+                else:
+                    inp.map[PSBT_IN_SIGHASH_TYPE] = sighash.to_bytes(4, byteorder="little")
+            return psbt.to_base64()
+
+        no_sighash     = with_sighash(base_psbt, None)
+        sighash_all    = with_sighash(base_psbt, SIGHASH_ALL)
+        sighash_single = with_sighash(base_psbt, SIGHASH_SINGLE)
+        sighash_acp    = with_sighash(base_psbt, SIGHASH_ALL | SIGHASH_ANYONECANPAY)
+
+        # Neither side has sighash_type: field must be absent in the result.
+        combined = node.combinepsbt([no_sighash, no_sighash])
+        assert "sighash" not in node.decodepsbt(combined)["inputs"][0]
+
+        # Only the second PSBT has sighash_type: field must be copied into the result.
+        combined = node.combinepsbt([no_sighash, sighash_all])
+        assert_equal(node.decodepsbt(combined)["inputs"][0]["sighash"], "ALL")
+
+        # Only the first PSBT has sighash_type: field must be preserved.
+        combined = node.combinepsbt([sighash_all, no_sighash])
+        assert_equal(node.decodepsbt(combined)["inputs"][0]["sighash"], "ALL")
+
+        # Both PSBTs have the same sighash_type: combine succeeds.
+        combined = node.combinepsbt([sighash_all, sighash_all])
+        assert_equal(node.decodepsbt(combined)["inputs"][0]["sighash"], "ALL")
+
+        # Conflicting sighash types: combinepsbt must reject (BIP 174 combiner rule).
+        assert_raises_rpc_error(-8, "PSBTs not compatible", node.combinepsbt, [sighash_all, sighash_single])
+        assert_raises_rpc_error(-8, "PSBTs not compatible", node.combinepsbt, [sighash_all, sighash_acp])
 
     def test_sighash_mismatch(self):
         self.log.info("Test sighash type mismatches")
@@ -1356,6 +1398,7 @@ class PSBTTest(BitcoinTestFramework):
         self.log.info("Test descriptorprocesspsbt raises if an invalid sighashtype is passed")
         assert_raises_rpc_error(-8, "'all' is not a valid sighash parameter.", self.nodes[2].descriptorprocesspsbt, psbt=psbt, descriptors=[descriptor], sighashtype="all")
 
+        self.test_combine_sighash_type()
         if not self.options.usecli:
             self.test_sighash_mismatch()
         self.test_sighash_adding()
