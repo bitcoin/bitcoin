@@ -184,9 +184,7 @@ BOOST_AUTO_TEST_CASE(multisig_IsStandard)
 BOOST_AUTO_TEST_CASE(multisig_pushdata_IsStandard)
 {
     // Non-minimal push encodings for the pubkey (OP_PUSHDATA1/2/4) are all
-    // accepted by IsStandard. MatchMultisig uses GetOp, which decodes every
-    // push form into the same raw bytes; it then calls CPubKey::ValidSize
-    // (prefix byte + length, no curve check), so the encoding is invisible.
+    // rejected by IsStandard.
 
     CKey key;
     key.MakeNewKey(true);
@@ -208,7 +206,7 @@ BOOST_AUTO_TEST_CASE(multisig_pushdata_IsStandard)
     nonminimal[2] = make_nonminimal({OP_PUSHDATA4, 0x21, 0x00, 0x00, 0x00});
 
     for (int i = 0; i < 3; i++) {
-        BOOST_CHECK(is_standard(nonminimal[i]));
+        BOOST_CHECK(!is_standard(nonminimal[i]));
     }
 }
 
