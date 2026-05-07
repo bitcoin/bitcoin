@@ -37,12 +37,25 @@ unsupported systems.
 Notable changes
 ===============
 
+### Validation
+
+- #35209 validation: correct lifetime of precomputed tx data
+
+### Leveldb
+
+- #61(bitcoin-core/leveldb): Disable seek compaction
+
 ### Net
 
 - #34093 netif: fix compilation warning in QueryDefaultGatewayImpl()
 
+### Wallet
+
+- #35228 wallet: use outpoint when estimating input size
+
 ### Build
 
+- #34228 depends: Unset SOURCE_DATE_EPOCH in gen_id script
 - #34848 cmake: Migrate away from deprecated SQLite3 target
 
 ### Doc
@@ -50,10 +63,13 @@ Notable changes
 - #34510 doc: fix broken bpftrace installation link
 - #34561 wallet: rpc: manpage: fix example missing `fee_rate` argument
 - #34671 doc: Update Guix install for Debian/Ubuntu
+- #35283 doc: mention -DWITH_ZMQ=ON in BSD build guides
 
 ### CI
 
 - #35202 ci: restore sockets in i686, no IPC job
+- #35378 ci: switch runners from cirrus to warpbuild
+- #35408 ci: 35378 followups
 
 ### Misc
 
@@ -64,14 +80,19 @@ Credits
 
 Thanks to everyone who directly contributed to this release:
 
+- andrewtoth
 - Cory Fields
 - Daniel Pfeifer
+- darosior
+- fanquake
 - Hennadii Stepanov
 - jayvaliya
+- junbyjun1238
 - Lőrinc
 - MarcoFalke
 - SomberNight
 - ToRyVand
+- willcl-ark
 
 As well as to everyone that helped with translations on
 [Transifex](https://explore.transifex.com/bitcoin/bitcoin/).
