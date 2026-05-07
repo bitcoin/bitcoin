@@ -1055,11 +1055,15 @@ bool CWallet::IsSpentKey(const CScript& scriptPubKey) const
     return false;
 }
 
-CWalletTx* CWallet::AddToWallet(CTransactionRef tx, const TxState& state, const UpdateWalletTxFn& update_wtx, bool rescanning_old_block)
+CWalletTx* CWallet::AddToWallet(CTransactionRef tx, const TxState& state, const UpdateWalletTxFn& update_wtx, bool rescanning_old_block, WalletBatch* batch_in)
 {
     LOCK(cs_wallet);
 
-    WalletBatch batch(GetDatabase());
+    // Reuse the caller-supplied batch when available so all writes performed
+    // within this call participate in the caller's SQLite transaction (single
+    // fsync at commit time). Fallback to an ephemeral batch otherwise.
+    std::optional<WalletBatch> local_batch;
+    WalletBatch& batch = batch_in ? *batch_in : local_batch.emplace(GetDatabase());
 
     Txid hash = tx->GetHash();
 
@@ -1224,7 +1228,7 @@ bool CWallet::LoadToWallet(const Txid& hash, const UpdateWalletTxFn& fill_wtx)
     return true;
 }
 
-bool CWallet::AddToWalletIfInvolvingMe(const CTransactionRef& ptx, const SyncTxState& state, bool fUpdate, bool rescanning_old_block)
+bool CWallet::AddToWalletIfInvolvingMe(const CTransactionRef& ptx, const SyncTxState& state, bool fUpdate, bool rescanning_old_block, WalletBatch* batch_in)
 {
     const CTransaction& tx = *ptx;
     {
@@ -1236,7 +1240,7 @@ bool CWallet::AddToWalletIfInvolvingMe(const CTransactionRef& ptx, const SyncTxS
                 while (range.first != range.second) {
                     if (range.first->second != tx.GetHash()) {
                         WalletLogPrintf("Transaction %s (in block %s) conflicts with wallet transaction %s (both spend %s:%i)\n", tx.GetHash().ToString(), conf->confirmed_block_hash.ToString(), range.first->second.ToString(), range.first->first.hash.ToString(), range.first->first.n);
-                        MarkConflicted(conf->confirmed_block_hash, conf->confirmed_block_height, range.first->second);
+                        MarkConflicted(conf->confirmed_block_hash, conf->confirmed_block_height, range.first->second, batch_in);
                     }
                     range.first++;
                 }
@@ -1269,7 +1273,14 @@ bool CWallet::AddToWalletIfInvolvingMe(const CTransactionRef& ptx, const SyncTxS
                         // (e.g. it wasn't generated on this node or we're restoring from backup)
                         // add it to the address book for proper transaction accounting
                         if (!*dest.internal && !FindAddressBookEntry(dest.dest, /* allow_change= */ false)) {
-                            SetAddressBook(dest.dest, "", AddressPurpose::RECEIVE);
+                            // If a caller-supplied batch is active (currently only blockConnected),
+                            // route the address-book write through it to share the open SQLite
+                            // transaction; otherwise use the standalone SetAddressBook path.
+                            if (batch_in) {
+                                SetAddressBookWithDB(*batch_in, dest.dest, "", AddressPurpose::RECEIVE);
+                            } else {
+                                SetAddressBook(dest.dest, "", AddressPurpose::RECEIVE);
+                            }
                         }
                     }
                 }
@@ -1278,7 +1289,7 @@ bool CWallet::AddToWalletIfInvolvingMe(const CTransactionRef& ptx, const SyncTxS
             // Block disconnection override an abandoned tx as unconfirmed
             // which means user may have to call abandontransaction again
             TxState tx_state = std::visit([](auto&& s) -> TxState { return s; }, state);
-            CWalletTx* wtx = AddToWallet(MakeTransactionRef(tx), tx_state, /*update_wtx=*/nullptr, rescanning_old_block);
+            CWalletTx* wtx = AddToWallet(MakeTransactionRef(tx), tx_state, /*update_wtx=*/nullptr, rescanning_old_block, batch_in);
             if (!wtx) {
                 // Can only be nullptr if there was a db write error (missing db, read-only db or a db engine internal writing error).
                 // As we only store arriving transaction in this process, and we don't want an inconsistent state, let's throw an error.
@@ -1362,7 +1373,7 @@ bool CWallet::AbandonTransaction(CWalletTx& tx)
     return true;
 }
 
-void CWallet::MarkConflicted(const uint256& hashBlock, int conflicting_height, const Txid& hashTx)
+void CWallet::MarkConflicted(const uint256& hashBlock, int conflicting_height, const Txid& hashTx, WalletBatch* batch_in)
 {
     LOCK(cs_wallet);
 
@@ -1388,7 +1399,11 @@ void CWallet::MarkConflicted(const uint256& hashBlock, int conflicting_height, c
     };
 
     // Iterate over all its outputs, and mark transactions in the wallet that spend them conflicted too.
-    RecursiveUpdateTxState(hashTx, try_updating_state);
+    if (batch_in) {
+        RecursiveUpdateTxState(batch_in, hashTx, try_updating_state);
+    } else {
+        RecursiveUpdateTxState(hashTx, try_updating_state);
+    }
 
 }
 
@@ -1436,9 +1451,9 @@ void CWallet::RecursiveUpdateTxState(WalletBatch* batch, const Txid& tx_hash, co
     }
 }
 
-bool CWallet::SyncTransaction(const CTransactionRef& ptx, const SyncTxState& state, bool update_tx, bool rescanning_old_block)
+bool CWallet::SyncTransaction(const CTransactionRef& ptx, const SyncTxState& state, bool update_tx, bool rescanning_old_block, WalletBatch* batch_in)
 {
-    if (!AddToWalletIfInvolvingMe(ptx, state, update_tx, rescanning_old_block))
+    if (!AddToWalletIfInvolvingMe(ptx, state, update_tx, rescanning_old_block, batch_in))
         return false; // Not one of ours
 
     // If a transaction changes 'conflicted' state, that changes the balance
@@ -1576,16 +1591,33 @@ void CWallet::blockConnected(const ChainstateRole& role, const interfaces::Block
     // Uses chain max time and twice the grace period to adjust time for block time variability.
     if (block.chain_time_max < m_birth_time.load() - (TIMESTAMP_WINDOW * 2)) return;
 
-    // Scan block
+    // Open a single SQLite transaction so all per-block writes (added/updated
+    // wallet txs and the best-block locator) commit atomically with one fsync,
+    // instead of one per individual WriteKey call. This addresses the
+    // generatetoaddress / wallet sync regression introduced in v30 (issue
+    // #33618). If TxnBegin() fails for any reason we fall back to the
+    // unbatched path; correctness is unchanged.
+    WalletBatch batch(GetDatabase());
+    const bool batched = batch.TxnBegin();
+    WalletBatch* const active_batch = batched ? &batch : nullptr;
+
     bool wallet_updated = false;
     for (size_t index = 0; index < block.data->vtx.size(); index++) {
-        wallet_updated |= SyncTransaction(block.data->vtx[index], TxStateConfirmed{block.hash, block.height, static_cast<int>(index)});
+        wallet_updated |= SyncTransaction(block.data->vtx[index], TxStateConfirmed{block.hash, block.height, static_cast<int>(index)}, /*update_tx=*/true, /*rescanning_old_block=*/false, active_batch);
         transactionRemovedFromMempool(block.data->vtx[index], MemPoolRemovalReason::BLOCK);
     }
 
     // Update on disk if this block resulted in us updating a tx, or periodically every 144 blocks (~1 day)
     if (wallet_updated || block.height % 144 == 0) {
-        WriteBestBlock();
+        WriteBestBlock(active_batch);
+    }
+
+    if (batched && !batch.TxnCommit()) {
+        LogWarning("Wallet: failed to commit batched transaction in blockConnected at height %d; aborting and relying on next sync to reconcile\n", block.height);
+        batch.TxnAbort();
+        // In-memory state already reflects the new tip; the on-disk best-block
+        // locator may now lag. The periodic 144-block sync (and chainStateFlushed
+        // callback) will rewrite it on the next opportunity.
     }
 }
 
@@ -4578,7 +4610,7 @@ std::optional<CKey> CWallet::GetKey(const CKeyID& keyid) const
     return std::nullopt;
 }
 
-void CWallet::WriteBestBlock() const
+void CWallet::WriteBestBlock(WalletBatch* batch_in) const
 {
     AssertLockHeld(cs_wallet);
 
@@ -4587,8 +4619,12 @@ void CWallet::WriteBestBlock() const
         chain().findBlock(m_last_block_processed, FoundBlock().locator(loc));
 
         if (!loc.IsNull()) {
-            WalletBatch batch(GetDatabase());
-            batch.WriteBestBlock(loc);
+            if (batch_in) {
+                batch_in->WriteBestBlock(loc);
+            } else {
+                WalletBatch batch(GetDatabase());
+                batch.WriteBestBlock(loc);
+            }
         }
     }
 }

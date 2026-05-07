@@ -357,10 +357,13 @@ private:
      * Should be called with rescanning_old_block set to true, if the transaction is
      * not discovered in real time, but during a rescan of old blocks.
      */
-    bool AddToWalletIfInvolvingMe(const CTransactionRef& tx, const SyncTxState& state, bool fUpdate, bool rescanning_old_block) EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
+    bool AddToWalletIfInvolvingMe(const CTransactionRef& tx, const SyncTxState& state, bool fUpdate, bool rescanning_old_block, WalletBatch* batch_in = nullptr) EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
 
-    /** Mark a transaction (and its in-wallet descendants) as conflicting with a particular block. */
-    void MarkConflicted(const uint256& hashBlock, int conflicting_height, const Txid& hashTx);
+    /** Mark a transaction (and its in-wallet descendants) as conflicting with a particular block.
+     *  If batch_in is provided, descendant updates are written through that batch so they
+     *  participate in any caller-controlled SQLite transaction (avoids re-acquiring the
+     *  database write semaphore on a connection that already holds it). */
+    void MarkConflicted(const uint256& hashBlock, int conflicting_height, const Txid& hashTx, WalletBatch* batch_in = nullptr);
 
     enum class TxUpdate { UNCHANGED, CHANGED, NOTIFY_CHANGED };
 
@@ -375,7 +378,7 @@ private:
 
     void SyncMetaData(std::pair<TxSpends::iterator, TxSpends::iterator>) EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
 
-    bool SyncTransaction(const CTransactionRef& tx, const SyncTxState& state, bool update_tx = true, bool rescanning_old_block = false) EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
+    bool SyncTransaction(const CTransactionRef& tx, const SyncTxState& state, bool update_tx = true, bool rescanning_old_block = false, WalletBatch* batch_in = nullptr) EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
 
     /** WalletFlags set on this wallet. */
     std::atomic<uint64_t> m_wallet_flags{0};
@@ -629,7 +632,7 @@ public:
      * Add the transaction to the wallet, wrapping it up inside a CWalletTx
      * @return the recently added wtx pointer or nullptr if there was a db write error.
      */
-    CWalletTx* AddToWallet(CTransactionRef tx, const TxState& state, const UpdateWalletTxFn& update_wtx=nullptr, bool rescanning_old_block = false);
+    CWalletTx* AddToWallet(CTransactionRef tx, const TxState& state, const UpdateWalletTxFn& update_wtx=nullptr, bool rescanning_old_block = false, WalletBatch* batch_in = nullptr);
     bool LoadToWallet(const Txid& hash, const UpdateWalletTxFn& fill_wtx) EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
     void transactionAddedToMempool(const CTransactionRef& tx) override;
     void blockConnected(const kernel::ChainstateRole& role, const interfaces::BlockInfo& block) override;
@@ -997,8 +1000,11 @@ public:
     }
     /** Set last block processed height, and write to database */
     void SetLastBlockProcessed(int block_height, uint256 block_hash) EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
-    /** Write the current best block to database */
-    void WriteBestBlock() const EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
+    /** Write the current best block to database. If batch_in is provided, the
+     *  write is performed via that batch (allowing it to participate in a
+     *  caller-controlled SQLite transaction); otherwise an ephemeral batch is
+     *  created and committed immediately. */
+    void WriteBestBlock(WalletBatch* batch_in = nullptr) const EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
 
     //! Connect the signals from ScriptPubKeyMans to the signals in CWallet
     void ConnectScriptPubKeyManNotifiers();
