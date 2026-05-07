@@ -79,6 +79,7 @@ class RPCSignerTest(BitcoinTestFramework):
         )
         assert_equal(self.nodes[1].enumeratesigners(), {"signers": [
             {"fingerprint": "00000001", "name": "trezor_t"},
+            {"fingerprint": "00000002", "name": "trezor_one"},
         ]})
         self.clear_mock_result(self.nodes[1])
 
