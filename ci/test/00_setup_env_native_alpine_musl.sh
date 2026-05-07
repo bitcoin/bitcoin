@@ -17,4 +17,5 @@ export BITCOIN_CONFIG="\
  -DREDUCE_EXPORTS=ON \
  -DCMAKE_BUILD_TYPE=Debug \
 "
+export TEST_RUNNER_EXTRA="--v2transport --usecli --extended"
 export BITCOIN_CMD="bitcoin -m" # Used in functional tests
