@@ -1786,7 +1786,16 @@ void CConnman::CreateNodeFromAcceptedSocket(std::unique_ptr<Sock>&& sock,
     {
         LOCK(m_nodes_mutex);
         for (const CNode* pnode : m_nodes) {
-            if (pnode->IsInboundConn()) nInbound++;
+            // Skip peers already marked for disconnection: they will be removed
+            // from m_nodes by the next DisconnectNodes() pass and must not count
+            // against the ceiling here. Otherwise, when CreateNodeFromAcceptedSocket
+            // is invoked from ThreadI2PAcceptIncoming (which runs independently
+            // of ThreadSocketHandler), bursts of inbound connections can push the
+            // active count past m_max_inbound: each new accept triggers an
+            // eviction that only marks fDisconnect, leaving the counter stuck at
+            // the ceiling and forcing a redundant eviction on the next iteration
+            // before the previous one is drained. See issue #27843.
+            if (pnode->IsInboundConn() && !pnode->fDisconnect) nInbound++;
         }
     }
 
