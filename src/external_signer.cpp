@@ -74,6 +74,57 @@ UniValue ExternalSigner::GetDescriptors(const int account)
     return RunCommandParseJSON(Cat(m_command, Cat(Cat({"--fingerprint", m_fingerprint}, NetworkArg()), {"getdescriptors", "--account", strprintf("%d", account)})), "");
 }
 
+static std::string CheckSignerPSBTOutputs(
+    const PartiallySignedTransaction& original,
+    const PartiallySignedTransaction& signed_psbt)
+{
+    if (original.outputs.size() != signed_psbt.outputs.size()) {
+        return strprintf("Signer modified output count: %d -> %d", original.outputs.size(), signed_psbt.outputs.size());
+    }
+    for (size_t i = 0; i < original.outputs.size(); ++i) {
+        if (original.outputs[i].amount != signed_psbt.outputs[i].amount) {
+            return strprintf("Signer modified output %d amount", i);
+        }
+        if (original.outputs[i].script != signed_psbt.outputs[i].script) {
+            return strprintf("Signer modified output %d scriptPubKey", i);
+        }
+    }
+
+    // SIGHASH_NONE (2) and SIGHASH_SINGLE (3) do not commit to all outputs.
+    // SIGHASH_DEFAULT (0, taproot implicit ALL) and SIGHASH_ALL (1) are safe.
+    // ANYONECANPAY (0x80) can be combined with ALL and remains output-binding.
+    auto is_safe_sighash = [](int sh) -> bool {
+        const int base = sh & ~SIGHASH_ANYONECANPAY;
+        return base == SIGHASH_DEFAULT || base == SIGHASH_ALL;
+    };
+
+    for (auto& input : signed_psbt.inputs) {
+        if (input.sighash_type.has_value() &&
+            !is_safe_sighash(*input.sighash_type)) {
+            return strprintf("Signer used unsafe sighash type in one of the inputs");
+        }
+        for (const auto& [_, sigpair] : input.partial_sigs) {
+            const std::vector<unsigned char>& sig = sigpair.second;
+            if (!sig.empty() && !is_safe_sighash(sig.back())) {
+                return strprintf("Signer used unsafe sighash type in one of the inputs");
+            }
+        }
+        // 64-byte taproot sig implies SIGHASH_DEFAULT (safe); 65-byte carries
+        // an explicit sighash flag in the last byte.
+        if (input.m_tap_key_sig.size() == 65 &&
+            !is_safe_sighash(input.m_tap_key_sig.back())) {
+            return strprintf("Signer used an unsafe sighash type in taproot keypath sig");
+        }
+        for (const auto& [_, sig] : input.m_tap_script_sigs) {
+            if (sig.size() == 65 && !is_safe_sighash(sig.back())) {
+                return strprintf("Signer used an unsafe sighash type in taproot scriptpath sig");
+            }
+        }
+    }
+
+    return {};
+}
+
 bool ExternalSigner::SignTransaction(PartiallySignedTransaction& psbtx, std::string& error)
 {
     // Serialize the PSBT
@@ -115,6 +166,12 @@ bool ExternalSigner::SignTransaction(PartiallySignedTransaction& psbtx, std::str
     util::Result<PartiallySignedTransaction> signer_psbtx = DecodeBase64PSBT(signer_result.find_value("psbt").get_str());
     if (!signer_psbtx) {
         error = strprintf("TX decode failed %s", util::ErrorString(signer_psbtx).original);
+        return false;
+    }
+
+    const auto invariant_error{CheckSignerPSBTOutputs(psbtx, *signer_psbtx)};
+    if (!invariant_error.empty()) {
+        error = invariant_error;
         return false;
     }
 

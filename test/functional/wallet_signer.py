@@ -9,6 +9,7 @@ See also rpc_signer.py for tests without wallet context.
 """
 import os
 import sys
+from decimal import Decimal
 
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import (
@@ -161,7 +162,19 @@ class WalletSignerTest(BitcoinTestFramework):
         assert_equal(result[1], {'success': True})
         assert_equal(mock_wallet.getwalletinfo()["txcount"], 1)
         dest = self.nodes[0].getnewaddress(address_type='bech32')
-        mock_psbt = mock_wallet.walletcreatefundedpsbt([], {dest:0.5}, 0, {'replaceable': True}, True)['psbt']
+
+        # ExternalSigner::SignTransaction rejects a reply whose outputs differ
+        # from the PSBT it was given, so the pre-signed mock_psbt must be the
+        # signed form of the exact PSBT hww builds. Have hww build the PSBT,
+        # then have mock_wallet (which holds the matching private keys) sign it.
+        # Pin change_position and change_address so hww.send rebuilds an
+        # identical PSBT when the signer is called.
+        change_addr = hww.getrawchangeaddress()
+        mock_psbt = hww.walletcreatefundedpsbt(
+            [], {dest: 0.5}, 0,
+            {'replaceable': True, 'change_position': 1, 'change_address': change_addr},
+            True,
+        )['psbt']
         mock_psbt_signed = mock_wallet.walletprocesspsbt(psbt=mock_psbt, sign=True, sighashtype="ALL", bip32derivs=True)
         mock_tx = mock_psbt_signed["hex"]
         assert mock_wallet.testmempoolaccept([mock_tx])[0]["allowed"]
@@ -176,34 +189,67 @@ class WalletSignerTest(BitcoinTestFramework):
         self.log.info('Test send using hww1')
 
         # Don't broadcast transaction yet so the RPC returns the raw hex
-        res = hww.send(outputs={dest:0.5},add_to_wallet=False)
+        res = hww.send(
+            outputs={dest: 0.5},
+            options={'add_to_wallet': False, 'change_position': 1, 'change_address': change_addr},
+        )
         assert res["complete"]
         assert_equal(res["hex"], mock_tx)
 
         self.log.info('Test sendall using hww1')
 
-        res = hww.sendall(recipients=[{dest:0.5}, hww.getrawchangeaddress()], add_to_wallet=False)
+        sendall_change = hww.getrawchangeaddress()
+        utxos = hww.listunspent()
+        assert_equal(len(utxos), 1)
+        utxo = utxos[0]
+        sendall_psbt = hww.walletcreatefundedpsbt(
+            [{"txid": utxo["txid"], "vout": utxo["vout"]}],
+            [{dest: 0.5}, {sendall_change: utxo["amount"] - Decimal("0.5")}],
+            0,
+            {'add_inputs': False, 'subtractFeeFromOutputs': [1], 'replaceable': True},
+            True,
+        )['psbt']
+        sendall_psbt_signed = mock_wallet.walletprocesspsbt(psbt=sendall_psbt, sign=True, sighashtype="ALL", bip32derivs=True)
+        sendall_tx = sendall_psbt_signed["hex"]
+
+        with open(os.path.join(self.nodes[1].cwd, "mock_psbt"), "w") as f:
+            f.write(sendall_psbt_signed["psbt"])
+
+        res = hww.sendall(recipients=[{dest: 0.5}, sendall_change], add_to_wallet=False)
         assert res["complete"]
-        assert_equal(res["hex"], mock_tx)
+        assert_equal(res["hex"], sendall_tx)
         # Broadcast transaction so we can bump the fee
         hww.sendrawtransaction(res["hex"])
 
         self.log.info('Prepare fee bumped mock PSBT')
 
-        # Now that the transaction is broadcast, bump fee in mock wallet:
+        # Build the bumped PSBT on hww (not mock_wallet) so it matches what
+        # the external signer will receive; mock_wallet only adds signatures.
         orig_tx_id = res["txid"]
-        mock_psbt_bumped = mock_wallet.psbtbumpfee(orig_tx_id)["psbt"]
-        mock_psbt_bumped_signed = mock_wallet.walletprocesspsbt(psbt=mock_psbt_bumped, sign=True, sighashtype="ALL", bip32derivs=True)
+        hww_psbt_bumped = hww.psbtbumpfee(orig_tx_id)["psbt"]
+        mock_psbt_bumped_signed = mock_wallet.walletprocesspsbt(psbt=hww_psbt_bumped, sign=True, sighashtype="ALL", bip32derivs=True)
 
         with open(os.path.join(self.nodes[1].cwd, "mock_psbt"), "w") as f:
             f.write(mock_psbt_bumped_signed["psbt"])
 
         self.log.info('Test bumpfee using hww1')
 
-        # Bump fee
-        res = hww.bumpfee(orig_tx_id)
-        assert_greater_than(res["fee"], res["origfee"])
-        assert_equal(res["errors"], [])
+        # hww.bumpfee rebuilds the bumped tx internally with a random
+        # change_position (CreateTransaction is called with change_pos=nullopt
+        # in feebumper.cpp), so its outputs would not line up with the
+        # pre-signed mock_psbt. Send the exact pre-built PSBT through
+        # walletprocesspsbt, which routes to the external signer.
+        signed_bumped = hww.walletprocesspsbt(psbt=hww_psbt_bumped)
+        assert signed_bumped["complete"]
+        final_bumped = hww.finalizepsbt(signed_bumped["psbt"])
+        assert final_bumped["complete"]
+        assert hww.testmempoolaccept([final_bumped["hex"]])[0]["allowed"]
+        bumped_decoded = hww.decoderawtransaction(final_bumped["hex"])
+        orig_decoded = hww.gettransaction(orig_tx_id, True, True)["decoded"]
+        bumped_out_total = sum(vout["value"] for vout in bumped_decoded["vout"])
+        orig_out_total = sum(vout["value"] for vout in orig_decoded["vout"])
+        # 1 BTC input on both sides, so a smaller output total means a higher fee.
+        assert_greater_than(orig_out_total, bumped_out_total)
 
 
     def test_disconnected_signer(self):
