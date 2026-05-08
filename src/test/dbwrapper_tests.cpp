@@ -10,6 +10,8 @@
 #include <util/byte_units.h>
 #include <util/string.h>
 
+#include <array>
+#include <cstddef>
 #include <memory>
 #include <ranges>
 
@@ -210,6 +212,10 @@ BOOST_AUTO_TEST_CASE(dbwrapper_iterator)
         // A failed key decode must not consume the current iterator entry.
         uint16_t key_too_large{0};
         BOOST_CHECK(!it->GetKey(key_too_large));
+
+        // A failed value decode must not consume the current iterator entry.
+        std::array<std::byte, sizeof(uint256) + 1> value_too_large{};
+        BOOST_CHECK(!it->GetValue(value_too_large));
 
         uint8_t key_res;
         uint256 val_res;

@@ -164,9 +164,14 @@ public:
 
     template<typename V> bool GetValue(V& value) {
         try {
-            DataStream ssValue{GetValueImpl()};
-            dbwrapper_private::GetObfuscation(parent)(ssValue);
-            ssValue >> value;
+            const auto& obfuscation{dbwrapper_private::GetObfuscation(parent)};
+            if (!obfuscation) {
+                SpanReader{GetValueImpl()} >> value;
+            } else {
+                DataStream ssValue{GetValueImpl()};
+                obfuscation(ssValue);
+                ssValue >> value;
+            }
         } catch (const std::exception&) {
             return false;
         }
