@@ -1256,6 +1256,40 @@ Release notes should be added to a PR-specific release note file at
 `/doc/release-notes-<PR number>.md` to avoid conflicts between multiple PRs.
 All `release-notes*` files are merged into a single `release-notes-<version>.md` file prior to the release.
 
+## Deprecating and removing user-facing features
+
+When changing a user-facing feature in a backwards-incompatible way, consider
+whether it can first be deprecated, and then removed in a later release. This
+includes RPC methods, RPC arguments or result fields, REST endpoints, ZMQ
+notifications, startup options, wallet settings, command line tools, and other
+interfaces used by external software or node operators.
+
+Deprecation pull requests should generally:
+
+- State what is deprecated and why.
+- Document the replacement, or explain why there is no replacement.
+- Add a release note describing the user-visible impact and migration path.
+- Update user-facing help, manpages, and documentation where applicable.
+- Preserve compatibility during the deprecation period when practical.
+- Add or update tests for both the replacement behavior and any temporary
+  compatibility path.
+
+Removal pull requests should generally:
+
+- Reference the original deprecation and release note.
+- Remove the deprecated behavior, help text, documentation, tests, and
+  compatibility option together.
+- Add a release note describing the removal and any remaining migration path.
+
+RPC interface changes have additional compatibility expectations. See the
+guidelines for [modifying existing RPC interfaces](#rpc-interface-guidelines).
+
+Startup options and configuration settings need particular care because users
+may keep old settings in configuration files for long periods. Prefer warning
+about deprecated options before turning them into errors, unless keeping the
+option would be unsafe or misleading. When replacing an option, document the new
+option in the help text and release notes.
+
 ## RPC interface guidelines
 
 A few guidelines for introducing and reviewing new RPC interfaces:
