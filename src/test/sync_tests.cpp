@@ -2,13 +2,16 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
+#include <semaphore_grant.h>
 #include <sync.h>
 #include <test/util/common.h>
 
 #include <boost/test/unit_test.hpp>
 
 #include <mutex>
+#include <semaphore>
 #include <stdexcept>
+#include <utility>
 
 namespace {
 template <typename MutexType>
@@ -77,6 +80,20 @@ void TestInconsistentLockOrderDetected(MutexType& mutex1, MutexType& mutex2)
 } // namespace
 
 BOOST_AUTO_TEST_SUITE(sync_tests)
+
+BOOST_AUTO_TEST_CASE(semaphore_grant_self_move)
+{
+    std::counting_semaphore<1> sem{1};
+    BinarySemaphoreGrant grant{sem};
+    BOOST_CHECK(grant);
+
+    // Use a reference to avoid -Wself-move warnings.
+    auto& self{grant};
+    grant = std::move(self);
+
+    BOOST_CHECK(grant);
+    BOOST_CHECK(!sem.try_acquire());
+}
 
 BOOST_AUTO_TEST_CASE(potential_deadlock_detected)
 {

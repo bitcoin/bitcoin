@@ -58,11 +58,13 @@ public:
 
     CountingSemaphoreGrant& operator=(CountingSemaphoreGrant&& other) noexcept
     {
-        Release();
-        sem = other.sem;
-        fHaveGrant = other.fHaveGrant;
-        other.fHaveGrant = false;
-        other.sem = nullptr;
+        if (this != &other) {
+            Release();
+            sem = other.sem;
+            fHaveGrant = other.fHaveGrant;
+            other.fHaveGrant = false;
+            other.sem = nullptr;
+        }
         return *this;
     }
 
