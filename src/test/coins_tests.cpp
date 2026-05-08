@@ -5,6 +5,7 @@
 #include <addresstype.h>
 #include <clientversion.h>
 #include <coins.h>
+#include <dbwrapper.h>
 #include <streams.h>
 #include <test/util/common.h>
 #include <test/util/poolresourcetester.h>
@@ -299,6 +300,22 @@ BOOST_FIXTURE_TEST_CASE(coins_cache_dbbase_simulation_test, CacheTest)
 {
     CCoinsViewDB db_base{{.path = "test", .cache_bytes = 8_MiB, .memory_only = true}, {}};
     SimulationTest(&db_base, true);
+}
+
+BOOST_AUTO_TEST_CASE(coins_cursor_malformed_first_key)
+{
+    const fs::path path{m_args.GetDataDirBase() / "coins_cursor_malformed_first_key"};
+    {
+        CDBWrapper db{{.path = path, .cache_bytes = 1_MiB, .wipe_data = true}};
+        // The coin DB prefix is intentionally not followed by a serialized COutPoint.
+        db.Write(uint8_t{'C'}, uint8_t{0});
+    }
+
+    CCoinsViewDB db{{.path = path, .cache_bytes = 1_MiB}, {}};
+    std::unique_ptr<CCoinsViewCursor> cursor{db.Cursor()};
+    COutPoint key;
+    BOOST_CHECK(!cursor->Valid());
+    BOOST_CHECK(!cursor->GetKey(key));
 }
 
 BOOST_AUTO_TEST_SUITE_END()
