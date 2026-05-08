@@ -1256,6 +1256,93 @@ Release notes should be added to a PR-specific release note file at
 `/doc/release-notes-<PR number>.md` to avoid conflicts between multiple PRs.
 All `release-notes*` files are merged into a single `release-notes-<version>.md` file prior to the release.
 
+## Deprecating and removing user-facing features
+
+When changing a user-facing feature in a backwards-incompatible way, consider whether
+it can first be deprecated, and then removed in a later release. This includes RPC
+methods, RPC arguments or result fields, REST endpoints, ZMQ notifications, startup
+options, wallet settings, command line tools, and other interfaces used by external
+software or node operators.
+
+Deprecation pull requests should generally:
+
+- State what is deprecated and why.
+- Document the replacement, or explain why there is no replacement.
+- Cover related user interfaces together, or explain why they are split across
+  separate changes. For example, when an RPC and startup option control the same
+  behavior, deprecating only one of them can leave the process incomplete.
+- Add a release note describing the user-visible impact and migration path.
+- Update user-facing help, manpages, and documentation where applicable.
+- Preserve compatibility during the deprecation period when practical.
+- Add or update tests for both the replacement behavior and any temporary
+  compatibility path.
+
+Removal pull requests should generally:
+
+- Reference the original deprecation and release note.
+- Remove the deprecated behavior, help text, documentation, tests, and
+  compatibility option together.
+- Add a release note describing the removal and any remaining migration path.
+
+### RPCs
+
+RPC interface changes have additional compatibility expectations. Follow the guidelines
+for [modifying existing RPC interfaces](#rpc-interface-guidelines), including adding a
+`-deprecatedrpc=` compatibility option for backward-incompatible changes when
+practical.
+
+RPC deprecations should update RPC help and `RPCResult` documentation, describe how to
+re-enable the deprecated behavior, and test both the default behavior and the temporary
+compatibility path. `test/functional/rpc_deprecated.py` can be used to assert that
+deprecated RPC methods fail without `-deprecatedrpc=`, while other functional tests
+should continue to cover the deprecated behavior with the flag enabled until the
+behavior is removed.
+
+### Startup options and configuration settings
+
+Startup options and configuration settings need particular care because users may keep
+old settings in configuration files for long periods, and may move both forward and
+backward across Bitcoin Core versions. Avoid silently changing the meaning of an
+existing option, or silently ignoring an option that a user might believe is still
+active.
+
+Prefer warning about deprecated options before turning them into errors, unless keeping
+the option would be unsafe or misleading. When replacing an option, document the new
+option in help text and release notes, and consider whether the old option should be
+accepted with a warning during the deprecation period. Removal pull requests should
+include tests for stale configuration files and command line usage, as applicable.
+
+### REST and ZMQ interfaces
+
+REST endpoints and ZMQ notifications are external interfaces. Prefer additive changes
+over changing or removing existing endpoints, topics, message formats, and configuration
+options. There is no general compatibility flag equivalent to `-deprecatedrpc=`, so any
+backwards-incompatible change should have a clear migration path in release notes and
+documentation.
+
+REST changes should update `doc/REST-interface.md` when applicable. ZMQ changes should
+update `doc/zmq.md`, startup option help, and any tests or example clients affected by
+topic, payload, or high water mark option changes.
+
+### Wallet settings
+
+Wallet settings can persist across restarts and releases, and may be present for only
+some wallets in a multi-wallet node. Deprecating wallet behavior should consider wallet
+loading, wallet creation, settings migration, and backwards compatibility with existing
+wallet files.
+
+When a wallet RPC and a wallet startup option or setting control related behavior,
+deprecate or remove them together when practical. If they are split across PRs, make the
+relationship and long-term plan clear in PR descriptions and release notes.
+
+### IPC and multiprocess interfaces
+
+Multiprocess interfaces may be used by external clients when IPC is enabled. When
+replacing an interface or method, document the replacement and client impact. If an old
+method remains temporarily available, test the compatibility behavior. If an old method
+is intentionally unsupported, make it fail with a clear error telling clients to update,
+and add or update IPC interface tests.
+
 ## RPC interface guidelines
 
 A few guidelines for introducing and reviewing new RPC interfaces:
