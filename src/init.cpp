@@ -2278,14 +2278,15 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
                     conflict->ToStringAddrPort()));
     }
 
+    const bool onion_may_become_reachable{listenonion && (!args.IsArgSet("-onlynet") || onlynet_used_with_onion)};
+    const bool onion_reachable{g_reachable_nets.Contains(NET_I2P) ||
+                               g_reachable_nets.Contains(NET_ONION) ||
+                               onion_may_become_reachable};
     if (args.GetBoolArg("-privatebroadcast", DEFAULT_PRIVATE_BROADCAST)) {
         // If -listenonion is set, then NET_ONION may not be reachable now
         // but may become reachable later, thus only error here if it is not
         // reachable and will not become reachable for sure.
-        const bool onion_may_become_reachable{listenonion && (!args.IsArgSet("-onlynet") || onlynet_used_with_onion)};
-        if (!g_reachable_nets.Contains(NET_I2P) &&
-            !g_reachable_nets.Contains(NET_ONION) &&
-            !onion_may_become_reachable) {
+        if (!onion_reachable) {
             return InitError(_("Private broadcast of own transactions requested (-privatebroadcast), "
                                "but none of Tor or I2P networks is reachable"));
         }
@@ -2303,6 +2304,10 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
                           "-proxyrandomize=1."));
         }
     }
+
+    connOptions.m_start_private_broadcast_thread =
+        args.GetBoolArg("-privatebroadcast", DEFAULT_PRIVATE_BROADCAST) ||
+        (onion_reachable && connOptions.m_use_addrman_outgoing);
 
     if (!node.connman->Start(scheduler, connOptions)) {
         return false;
