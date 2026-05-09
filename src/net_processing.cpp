@@ -199,6 +199,8 @@ static constexpr size_t MAX_ADDR_PROCESSING_TOKEN_BUCKET{MAX_ADDR_TO_SEND};
 static constexpr size_t NUM_PRIVATE_BROADCAST_PER_TX{3};
 /** Private broadcast connections must complete within this time. Disconnect the peer if it takes longer. */
 static constexpr auto PRIVATE_BROADCAST_MAX_CONNECTION_LIFETIME{3min};
+/** Average interval between private broadcast decoy attempts */
+static constexpr auto PRIVATE_BROADCAST_DECOY_INTERVAL{3h};
 
 // Internal stuff
 namespace {
@@ -566,6 +568,9 @@ private:
 
     /** Rebroadcast stale private transactions (already broadcast but not received back from the network). */
     void ReattemptPrivateBroadcast(CScheduler& scheduler);
+
+    /** Periodically open one extra private broadcast connection and send the most recent tx in the mempool */
+    void InitiatePrivateBroadcastDecoy(CScheduler& scheduler);
 
     /** Get a shared pointer to the Peer object.
      *  May return an empty shared_ptr if the Peer object can't be found. */
@@ -1093,6 +1098,11 @@ private:
 
     /// The transactions to be broadcast privately.
     PrivateBroadcast m_tx_for_private_broadcast;
+
+    /// Whether the next private broadcast connection should be a decoy
+    std::atomic_bool m_trigger_private_broadcast_decoy{false};
+    /// Decoy transaction state. Only written and accessed on msghand thread, so doesn't need synchronization.
+    std::pair<NodeId, CTransactionRef> m_private_broadcast_decoy_state{-1, nullptr};
 };
 
 const CNodeState* PeerManagerImpl::State(NodeId pnode) const
@@ -1672,6 +1682,21 @@ void PeerManagerImpl::ReattemptPrivateBroadcast(CScheduler& scheduler)
     scheduler.scheduleFromNow([&] { ReattemptPrivateBroadcast(scheduler); }, delta);
 }
 
+void PeerManagerImpl::InitiatePrivateBroadcastDecoy(CScheduler& scheduler)
+{
+    // Don't trigger a decoy if we aren't adding incoming txs to our mempool,
+    // since we won't have anything to send as a decoy.
+    // Also don't trigger if we are still waiting on the last decoy.
+    if (!m_opts.ignore_incoming_txs && !m_trigger_private_broadcast_decoy) {
+        m_trigger_private_broadcast_decoy = true;
+        m_connman.m_private_broadcast.NumToOpenAdd(1);
+    }
+
+    const auto delta{std::chrono::duration_cast<std::chrono::milliseconds>(
+        FastRandomContext().rand_exp_duration(PRIVATE_BROADCAST_DECOY_INTERVAL))};
+    scheduler.scheduleFromNow([&] { InitiatePrivateBroadcastDecoy(scheduler); }, delta);
+}
+
 void PeerManagerImpl::FinalizeNode(const CNode& node)
 {
     NodeId nodeid = node.GetId();
@@ -1740,11 +1765,16 @@ void PeerManagerImpl::FinalizeNode(const CNode& node)
         LOCK(m_headers_presync_mutex);
         m_headers_presync_stats.erase(nodeid);
     }
-    if (node.IsPrivateBroadcastConn() &&
-        !m_tx_for_private_broadcast.DidNodeConfirmReception(nodeid) &&
-        m_tx_for_private_broadcast.HavePendingTransactions()) {
+    if (node.IsPrivateBroadcastConn()) {
+        if (!m_tx_for_private_broadcast.DidNodeConfirmReception(nodeid) &&
+            m_tx_for_private_broadcast.HavePendingTransactions()) {
 
-        m_connman.m_private_broadcast.NumToOpenAdd(1);
+            m_connman.m_private_broadcast.NumToOpenAdd(1);
+        }
+        // If we didn't complete the handshake, we never reset the trigger. Do it here.
+        if (!node.fSuccessfullyConnected) {
+            m_trigger_private_broadcast_decoy = false;
+        }
     }
     LogDebug(BCLog::NET, "Cleared nodestate for peer=%d\n", nodeid);
 }
@@ -2036,6 +2066,9 @@ void PeerManagerImpl::StartScheduledTasks(CScheduler& scheduler)
     const auto delta = 10min + FastRandomContext().randrange<std::chrono::milliseconds>(5min);
     scheduler.scheduleFromNow([&] { ReattemptInitialBroadcast(scheduler); }, delta);
 
+    const auto decoy_delta{std::chrono::duration_cast<std::chrono::milliseconds>(
+        FastRandomContext().rand_exp_duration(PRIVATE_BROADCAST_DECOY_INTERVAL))};
+    scheduler.scheduleFromNow([&] { InitiatePrivateBroadcastDecoy(scheduler); }, decoy_delta);
     if (m_opts.private_broadcast) {
         scheduler.scheduleFromNow([&] { ReattemptPrivateBroadcast(scheduler); }, 0min);
     }
@@ -3556,7 +3589,19 @@ void PeerManagerImpl::PushPrivateBroadcastTx(CNode& node)
 {
     Assume(node.IsPrivateBroadcastConn());
 
-    const auto opt_tx{m_tx_for_private_broadcast.PickTxForSend(node.GetId(), CService{node.addr})};
+    std::optional<CTransactionRef> opt_tx{};
+    if (m_trigger_private_broadcast_decoy.exchange(false)) {
+        LOCK(m_mempool.cs);
+        const auto& entry_time_index{m_mempool.mapTx.get<entry_time>()};
+        const auto last_entry_inserted{entry_time_index.rbegin()};
+        if (last_entry_inserted != entry_time_index.rend()) {
+            opt_tx = last_entry_inserted->GetSharedTx();
+            m_private_broadcast_decoy_state = std::make_pair(node.GetId(), *opt_tx);
+        }
+    }
+    if (!opt_tx) {
+        opt_tx = m_tx_for_private_broadcast.PickTxForSend(node.GetId(), CService{node.addr});
+    }
     if (!opt_tx) {
         LogDebug(BCLog::PRIVBROADCAST, "Disconnecting: no more transactions for private broadcast (connected in vain), %s", node.LogPeer());
         node.fDisconnect = true;
@@ -4143,7 +4188,10 @@ void PeerManagerImpl::ProcessMessage(Peer& peer, CNode& pfrom, const std::string
         }
 
         if (pfrom.IsPrivateBroadcastConn()) {
-            const auto pushed_tx_opt{m_tx_for_private_broadcast.GetTxForNode(pfrom.GetId())};
+            auto pushed_tx_opt{m_tx_for_private_broadcast.GetTxForNode(pfrom.GetId())};
+            if (!pushed_tx_opt && m_private_broadcast_decoy_state.first == pfrom.GetId()) {
+                pushed_tx_opt = m_private_broadcast_decoy_state.second;
+            }
             if (!pushed_tx_opt) {
                 LogDebug(BCLog::PRIVBROADCAST, "Disconnecting: got GETDATA without sending an INV, %s",
                          pfrom.LogPeer());

@@ -324,6 +324,10 @@ class P2PPrivateBroadcast(BitcoinTestFramework):
             self.log.debug(f"{label}: outbound connection i={i} to {dest['requested_to']} must be a private broadcast, checking it")
             peer.wait_for_disconnect()
             # Now it is (C).
+            tx_msg = peer.last_message.get("tx")
+            if tx_msg.tx.txid_hex != tx["txid"]:
+                self.log.debug(f"{label}: outbound connection i={i} did not broadcast txid={tx['txid']} (likely a decoy), ignoring")
+                continue
             assert_equal(peer.message_count, {
                 "version": 1,
                 "verack": 1,
