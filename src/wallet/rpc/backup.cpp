@@ -387,14 +387,21 @@ RPCMethod importdescriptors()
 
         // Get all timestamps and extract the lowest timestamp
         for (const UniValue& request : requests.getValues()) {
-            // This throws an error if "timestamp" doesn't exist
-            const int64_t timestamp = std::max(GetImportTimestamp(request, now), minimum_timestamp);
-            const UniValue result = ProcessDescriptorImport(*pwallet, request, timestamp);
-            response.push_back(result);
+            UniValue result;
+            int64_t timestamp{minimum_timestamp};
+            try {
+                timestamp = std::max(GetImportTimestamp(request, now), minimum_timestamp);
+                result = ProcessDescriptorImport(*pwallet, request, timestamp);
 
-            if (lowest_timestamp > timestamp ) {
-                lowest_timestamp = timestamp;
+                if (lowest_timestamp > timestamp) {
+                    lowest_timestamp = timestamp;
+                }
+            } catch (const UniValue& e) {
+                result.setObject();
+                result.pushKV("success", UniValue(false));
+                result.pushKV("error", e);
             }
+            response.push_back(result);
 
             // If we know the chain tip, and at least one request was successful then allow rescan
             if (!rescan && result["success"].get_bool()) {
@@ -427,7 +434,7 @@ RPCMethod importdescriptors()
                 // range, or if the import result already has an error set, let
                 // the result stand unmodified. Otherwise replace the result
                 // with an error message.
-                if (scanned_time <= GetImportTimestamp(request, now) || results.at(i).exists("error")) {
+                if (results.at(i).exists("error") || scanned_time <= GetImportTimestamp(request, now)) {
                     response.push_back(results.at(i));
                 } else {
                     std::string error_msg{strprintf("Rescan failed for descriptor with timestamp %d. There "
