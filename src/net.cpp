@@ -1732,6 +1732,15 @@ bool CConnman::AttemptToEvictConnection()
                 pnode->ConnectedThroughNetwork(),
                 TicksSinceEpoch<std::chrono::seconds>(pnode->m_connected));
             pnode->fDisconnect = true;
+            // Remove accepted inbound eviction candidates immediately instead
+            // of waiting for the socket handler thread. Otherwise, accept loops
+            // outside the socket handler can temporarily exceed maxconnections.
+            if (Assume(pnode->IsInboundConn())) {
+                m_nodes.erase(remove(m_nodes.begin(), m_nodes.end(), pnode), m_nodes.end());
+                pnode->CloseSocketDisconnect();
+                pnode->Release();
+                m_nodes_disconnected.push_back(pnode);
+            }
             return true;
         }
     }
@@ -1981,12 +1990,16 @@ void CConnman::DisconnectNodes()
     }
     {
         // Delete disconnected nodes
-        std::list<CNode*> nodes_disconnected_copy = m_nodes_disconnected;
+        std::list<CNode*> nodes_disconnected_copy;
+        {
+            LOCK(m_nodes_mutex);
+            nodes_disconnected_copy = m_nodes_disconnected;
+        }
         for (CNode* pnode : nodes_disconnected_copy)
         {
             // Destroy the object only after other threads have stopped using it.
             if (pnode->GetRefCount() <= 0) {
-                m_nodes_disconnected.remove(pnode);
+                WITH_LOCK(m_nodes_mutex, m_nodes_disconnected.remove(pnode));
                 DeleteNode(pnode);
             }
         }
@@ -3701,10 +3714,11 @@ void CConnman::StopNodes()
         DeleteNode(pnode);
     }
 
-    for (CNode* pnode : m_nodes_disconnected) {
+    std::list<CNode*> disconnected_nodes;
+    WITH_LOCK(m_nodes_mutex, disconnected_nodes.swap(m_nodes_disconnected));
+    for (CNode* pnode : disconnected_nodes) {
         DeleteNode(pnode);
     }
-    m_nodes_disconnected.clear();
     WITH_LOCK(m_reconnections_mutex, m_reconnections.clear());
     vhListenSocket.clear();
     semOutbound.reset();

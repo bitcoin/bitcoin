@@ -163,4 +163,45 @@ BOOST_FIXTURE_TEST_CASE(test_addnode_getaddednodeinfo_and_connection_detection, 
     connman->ClearTestNodes();
 }
 
+BOOST_FIXTURE_TEST_CASE(inbound_eviction_removes_node_immediately, LogIPsTestingSetup)
+{
+    auto connman = std::make_unique<ConnmanTestMsg>(0x1337, 0x1337, *m_node.addrman, *m_node.netgroupman, Params());
+    auto peerman = PeerManager::make(*connman, *m_node.addrman, nullptr, *m_node.chainman, *m_node.mempool, *m_node.warnings, {});
+
+    constexpr int max_inbound{29};
+    CConnman::Options options;
+    options.m_msgproc = peerman.get();
+    options.m_max_automatic_connections = MAX_OUTBOUND_FULL_RELAY_CONNECTIONS +
+                                           MAX_BLOCK_RELAY_ONLY_CONNECTIONS +
+                                           MAX_FEELER_CONNECTIONS + max_inbound;
+    connman->Init(options);
+
+    const auto bind_addr{CAddress{ip(0x0100007f), NODE_NONE}};
+
+    for (int i{0}; i < max_inbound; ++i) {
+        connman->CreateNodeFromAcceptedSocketPublic(std::make_unique<ZeroSock>(), NetPermissionFlags::None,
+                                                    bind_addr, CAddress{ip(0x01010101 + i), NODE_NONE});
+    }
+    const std::vector<CNode*> original_nodes{connman->TestNodes()};
+    BOOST_REQUIRE_EQUAL(original_nodes.size(), static_cast<size_t>(max_inbound));
+
+    connman->CreateNodeFromAcceptedSocketPublic(std::make_unique<ZeroSock>(), NetPermissionFlags::None,
+                                                bind_addr, CAddress{ip(0x02020202), NODE_NONE});
+    const std::vector<CNode*> nodes{connman->TestNodes()};
+
+    size_t disconnected_original_nodes{0};
+    for (const CNode* node : original_nodes) {
+        if (node->fDisconnect) ++disconnected_original_nodes;
+    }
+    size_t replacement_nodes{0};
+    for (const CNode* node : nodes) {
+        if (std::ranges::find(original_nodes, node) == original_nodes.end()) ++replacement_nodes;
+    }
+    BOOST_CHECK_EQUAL(nodes.size(), static_cast<size_t>(max_inbound));
+    BOOST_CHECK_EQUAL(disconnected_original_nodes, 1U);
+    BOOST_CHECK_EQUAL(replacement_nodes, 1U);
+
+    connman->StopNodes();
+}
+
 BOOST_AUTO_TEST_SUITE_END()
