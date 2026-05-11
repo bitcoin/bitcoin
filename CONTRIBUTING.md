@@ -71,6 +71,41 @@ a patch set.
 Archives can be found on [https://gnusha.org/pi/bitcoindev/](https://gnusha.org/pi/bitcoindev/).
 
 
+AI and LLM Tools
+----------------
+
+LLMs are built and controlled by a small number of centralized corporations,
+which determine their training data and design choices. When contributors broadly
+rely on them to write code, review PRs, or shape technical discussion, influence
+over what gets merged and what direction the project takes shifts toward those
+companies rather than staying distributed across an independent contributor base.
+
+This concern grows as LLMs become more capable. A model that reviews code
+reliably will attract wider reliance, concentrating that influence further.
+Whether or not LLM output contains mistakes, routine use of shared models means
+a small number of corporations gain a consistent, structural role in shaping
+Bitcoin's development, which runs contrary to the decentralization this project
+is built on.
+
+Moreover, development in this project is intentionally conservative and slow.
+Reviewer time is the limiting factor, not code generation. LLMs make it easy to
+produce plausible-looking PRs, reviews, and comments, but each still requires a
+reviewer to read and evaluate it.
+
+Pull requests may be closed if the author cannot explain the change, has not
+tested it, or could not have written it themselves. The requirement that
+contributors must fully understand and have tested their own changes applies
+regardless of what tools were used.
+
+LLM-generated reviews are a particular concern: they can appear thorough while
+missing subtle consensus-critical bugs that only careful, contextual reading will
+catch. A review is only as useful as the understanding behind it.
+
+This applies to all forms of participation: submitting pull requests, reviewing
+code, commenting on issues, reporting test results, and participating in
+technical discussion.
+
+
 Contributor Workflow
 --------------------
 
