@@ -14,15 +14,18 @@
 #include <index/db_key.h>
 #include <interfaces/chain.h>
 #include <interfaces/types.h>
+#include <primitives/block.h>
 #include <serialize.h>
 #include <streams.h>
 #include <sync.h>
 #include <uint256.h>
+#include <undo.h>
 #include <util/check.h>
 #include <util/fs.h>
 #include <util/hasher.h>
 #include <util/log.h>
 #include <util/syserror.h>
+#include <validation.h>
 
 #include <cerrno>
 #include <exception>
@@ -58,6 +61,12 @@ constexpr unsigned int FLTR_FILE_CHUNK_SIZE{1_MiB};
  *  is big enough for a 2,000,000 length block chain, which
  *  we should be enough until ~2047. */
 constexpr size_t CF_HEADERS_CACHE_MAX_SZ{2000};
+/** Maximum distance below the active chain tip at which a missing filter may be
+ *  computed on the fly to mask the race between block connection and CustomAppend
+ *  writing the filter. Bounds the CPU work a peer can extract from a range
+ *  request that hits an unindexed block. Older missing entries signal a real
+ *  DB/indexing problem rather than a race and are not filled. */
+constexpr int ONTHEFLY_TIP_WINDOW{10};
 
 namespace {
 
@@ -249,10 +258,21 @@ std::optional<uint256> BlockFilterIndex::ReadFilterHeader(int height, const uint
 
 bool BlockFilterIndex::CustomAppend(const interfaces::BlockInfo& block)
 {
+    LOCK(m_cs_write);
+
+    // LookupFilter may have already computed and written this filter on the fly
+    // (during the window between block connection and this callback running).
+    // If so, adopt the stored header and skip re-writing.
+    DBVal existing;
+    if (index_util::LookUpOne(*m_db, {block.hash, block.height}, existing)) {
+        m_last_header = existing.header;
+        return true;
+    }
+
     BlockFilter filter(m_filter_type, *Assert(block.data), *Assert(block.undo_data));
-    const uint256& header = filter.ComputeHeader(m_last_header);
+    const uint256 header = filter.ComputeHeader(m_last_header);
     bool res = Write(filter, block.height, header);
-    if (res) m_last_header = header; // update last header
+    if (res) m_last_header = header;
     return res;
 }
 
@@ -355,24 +375,81 @@ static bool LookupRange(CDBWrapper& db, const std::string& index_name, int start
     return true;
 }
 
-bool BlockFilterIndex::LookupFilter(const CBlockIndex* block_index, BlockFilter& filter_out) const
+bool BlockFilterIndex::ComputeAndPersistFilter(const CBlockIndex* block_index, BlockFilter& filter_out)
 {
-    DBVal entry;
-    if (!index_util::LookUpOne(*m_db, {block_index->GetBlockHash(), block_index->nHeight}, entry)) {
-        return false;
+    // m_chainstate is null until Init() has been called; without it we cannot
+    // read block data from disk.
+    if (!m_chainstate) return false;
+
+    {
+        LOCK(cs_main);
+        bool have_data = (block_index->nStatus & BLOCK_HAVE_DATA) != 0;
+        bool have_undo = (block_index->nStatus & BLOCK_HAVE_UNDO) != 0;
+        if (!have_data || (block_index->nHeight > 0 && !have_undo)) return false;
     }
 
+    CBlock block;
+    if (!m_chainstate->m_blockman.ReadBlock(block, *block_index)) return false;
+
+    CBlockUndo block_undo;
+    if (block_index->nHeight > 0 &&
+        !m_chainstate->m_blockman.ReadBlockUndo(block_undo, *block_index)) return false;
+
+    BlockFilter filter(m_filter_type, block, block_undo);
+
+    // Opportunistically persist to DB so future lookups hit the fast path.
+    // Requires the previous filter header to form a complete chain entry; if it
+    // isn't available yet, skip the write — CustomAppend will persist correctly
+    // once the predecessor is indexed.
+    {
+        LOCK(m_cs_write);
+        DBVal existing;
+        // Double-check under the lock: a concurrent call (or CustomAppend) may have
+        // written it while we read from disk.
+        if (!index_util::LookUpOne(*m_db, {block_index->GetBlockHash(), block_index->nHeight}, existing)) {
+            uint256 prev_header;
+            bool have_prev = (block_index->nHeight == 0);
+            if (!have_prev) {
+                auto opt = ReadFilterHeader(block_index->nHeight - 1, block_index->pprev->GetBlockHash());
+                if (opt) {
+                    prev_header = *opt;
+                    have_prev = true;
+                }
+            }
+            if (have_prev) {
+                if (!Write(filter, block_index->nHeight, filter.ComputeHeader(prev_header))) {
+                    LogWarning("Failed to persist on-the-fly filter for block %s; "
+                               "filter will be recomputed on next request",
+                               block_index->GetBlockHash().ToString());
+                }
+            }
+        }
+    }
+
+    filter_out = std::move(filter);
+    return true;
+}
+
+bool BlockFilterIndex::LookupFilter(const CBlockIndex* block_index, BlockFilter& filter_out)
+{
+    DBVal entry;
+    if (index_util::LookUpOne(*m_db, {block_index->GetBlockHash(), block_index->nHeight}, entry)) {
+        return ReadFilterFromDisk(entry.pos, entry.hash, filter_out);
+    }
+    // Miss: fall back through EnsureRangeIndexed so any racing tip-window predecessors get
+    // filled and the chain of filter headers stays continuous.
+    if (!EnsureRangeIndexed(block_index->nHeight, block_index)) return false;
+    if (!index_util::LookUpOne(*m_db, {block_index->GetBlockHash(), block_index->nHeight}, entry)) return false;
     return ReadFilterFromDisk(entry.pos, entry.hash, filter_out);
 }
 
 bool BlockFilterIndex::LookupFilterHeader(const CBlockIndex* block_index, uint256& header_out)
 {
-    LOCK(m_cs_headers_cache);
-
-    bool is_checkpoint{block_index->nHeight % CFCHECKPT_INTERVAL == 0};
+    const bool is_checkpoint{block_index->nHeight % CFCHECKPT_INTERVAL == 0};
 
     if (is_checkpoint) {
         // Try to find the block in the headers cache if this is a checkpoint height.
+        LOCK(m_cs_headers_cache);
         auto header = m_headers_cache.find(block_index->GetBlockHash());
         if (header != m_headers_cache.end()) {
             header_out = header->second;
@@ -382,25 +459,80 @@ bool BlockFilterIndex::LookupFilterHeader(const CBlockIndex* block_index, uint25
 
     DBVal entry;
     if (!index_util::LookUpOne(*m_db, {block_index->GetBlockHash(), block_index->nHeight}, entry)) {
-        return false;
+        // Race-window fallback: fill any missing tip-subrange entries (including those
+        // ahead of this block on the chain) so the filter header for `block_index` ends
+        // up persisted, then re-read.
+        if (!EnsureRangeIndexed(block_index->nHeight, block_index)) return false;
+        if (!index_util::LookUpOne(*m_db, {block_index->GetBlockHash(), block_index->nHeight}, entry)) return false;
     }
 
-    if (is_checkpoint &&
-        m_headers_cache.size() < CF_HEADERS_CACHE_MAX_SZ) {
+    if (is_checkpoint) {
         // Add to the headers cache if this is a checkpoint height.
-        m_headers_cache.emplace(block_index->GetBlockHash(), entry.header);
+        LOCK(m_cs_headers_cache);
+        if (m_headers_cache.size() < CF_HEADERS_CACHE_MAX_SZ) {
+            m_headers_cache.try_emplace(block_index->GetBlockHash(), entry.header);
+        }
     }
 
     header_out = entry.header;
     return true;
 }
 
+bool BlockFilterIndex::EnsureRangeIndexed(int start_height, const CBlockIndex* stop_index)
+{
+    // Split [start_height, stop_index->nHeight] at the tip window. The stable subrange below
+    // the window must already be in the DB — we will not compute old filters on demand. The
+    // tip subrange may have race-induced holes which we fill from raw block data.
+    if (!m_chainstate) return false;
+    int tip_height;
+    {
+        LOCK(cs_main);
+        const CBlockIndex* tip = m_chainstate->m_chain.Tip();
+        if (!tip) return false;
+        tip_height = tip->nHeight;
+    }
+
+    const int cutoff = tip_height - ONTHEFLY_TIP_WINDOW; // inclusive upper bound of stable part
+    const int stop_height = stop_index->nHeight;
+
+    if (start_height <= cutoff) {
+        const int stable_end = std::min(stop_height, cutoff);
+        const CBlockIndex* stable_stop = (stable_end == stop_height) ? stop_index
+                                                                     : stop_index->GetAncestor(stable_end);
+        if (!stable_stop) return false;
+        std::vector<DBVal> stable_entries;
+        if (!LookupRange(*m_db, m_name, start_height, stable_stop, stable_entries)) return false;
+    }
+
+    if (stop_height <= cutoff) return true; // entire request was in the stable subrange
+
+    // Tip subrange: collect block indexes from stop_index back to cutoff+1 via pprev so we can
+    // fill missing entries in ascending height order. Walking back to cutoff+1 (rather than the
+    // caller's start_height) ensures that the first block we compute has its predecessor's
+    // filter header either in the stable subrange (already on disk) or just written by an
+    // earlier iteration — required by ComputeAndPersistFilter to chain the filter header.
+    const int fill_start = cutoff + 1;
+    std::vector<const CBlockIndex*> tip_chain;
+    for (const CBlockIndex* bi = stop_index; bi && bi->nHeight >= fill_start; bi = bi->pprev) {
+        tip_chain.push_back(bi);
+    }
+    for (auto it = tip_chain.rbegin(); it != tip_chain.rend(); ++it) {
+        DBVal existing;
+        if (index_util::LookUpOne(*m_db, {(*it)->GetBlockHash(), (*it)->nHeight}, existing)) continue;
+        BlockFilter tmp;
+        if (!ComputeAndPersistFilter(*it, tmp)) return false;
+    }
+    return true;
+}
+
 bool BlockFilterIndex::LookupFilterRange(int start_height, const CBlockIndex* stop_index,
-                                         std::vector<BlockFilter>& filters_out) const
+                                         std::vector<BlockFilter>& filters_out)
 {
     std::vector<DBVal> entries;
     if (!LookupRange(*m_db, m_name, start_height, stop_index, entries)) {
-        return false;
+        if (!EnsureRangeIndexed(start_height, stop_index)) return false;
+        entries.clear();
+        if (!LookupRange(*m_db, m_name, start_height, stop_index, entries)) return false;
     }
 
     filters_out.resize(entries.size());
@@ -411,17 +543,17 @@ bool BlockFilterIndex::LookupFilterRange(int start_height, const CBlockIndex* st
         }
         ++filter_pos_it;
     }
-
     return true;
 }
 
 bool BlockFilterIndex::LookupFilterHashRange(int start_height, const CBlockIndex* stop_index,
-                                             std::vector<uint256>& hashes_out) const
-
+                                             std::vector<uint256>& hashes_out)
 {
     std::vector<DBVal> entries;
     if (!LookupRange(*m_db, m_name, start_height, stop_index, entries)) {
-        return false;
+        if (!EnsureRangeIndexed(start_height, stop_index)) return false;
+        entries.clear();
+        if (!LookupRange(*m_db, m_name, start_height, stop_index, entries)) return false;
     }
 
     hashes_out.clear();

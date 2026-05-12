@@ -578,7 +578,7 @@ public:
     }
     std::optional<bool> blockFilterMatchesAny(BlockFilterType filter_type, const uint256& block_hash, const GCSFilter::ElementSet& filter_set) override
     {
-        const BlockFilterIndex* block_filter_index{GetBlockFilterIndex(filter_type)};
+        BlockFilterIndex* block_filter_index{GetBlockFilterIndex(filter_type)};
         if (!block_filter_index) return std::nullopt;
 
         BlockFilter filter;

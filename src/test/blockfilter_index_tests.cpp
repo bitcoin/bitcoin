@@ -118,11 +118,10 @@ bool BuildChainTestingSetup::BuildChain(const CBlockIndex* pindex,
 BOOST_FIXTURE_TEST_CASE(blockfilter_index_initial_sync, BuildChainTestingSetup)
 {
     BlockFilterIndex filter_index(interfaces::MakeChain(m_node), BlockFilterType::BASIC, 1_MiB, true);
-    BOOST_REQUIRE(filter_index.Init());
 
     uint256 last_header;
 
-    // Filter should not be found in the index before it is started.
+    // Before Init(), m_chainstate is null so no filter can be computed or found.
     {
         LOCK(cs_main);
 
@@ -142,7 +141,9 @@ BOOST_FIXTURE_TEST_CASE(blockfilter_index_initial_sync, BuildChainTestingSetup)
         }
     }
 
-    // BlockUntilSyncedToCurrentChain should return false before index is started.
+    BOOST_REQUIRE(filter_index.Init());
+
+    // BlockUntilSyncedToCurrentChain should return false before Sync() is called.
     BOOST_CHECK(!filter_index.BlockUntilSyncedToCurrentChain());
 
     filter_index.Sync();
