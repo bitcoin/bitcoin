@@ -90,6 +90,48 @@ class ImportDescriptorsTest(BitcoinTestFramework):
                              error_code=-8,
                              error_message='Descriptor not found.')
 
+        self.log.info("Import should return per-item timestamp errors")
+        valid_key = get_generate_key()
+        missing_timestamp_key = get_generate_key()
+        invalid_timestamp_key = get_generate_key()
+        later_valid_key = get_generate_key()
+        result = w1.importdescriptors([
+            {"desc": descsum_create(f"pkh({valid_key.pubkey})"), "timestamp": "now", "label": "valid 1"},
+            {"desc": descsum_create(f"pkh({missing_timestamp_key.pubkey})")},
+            {"desc": descsum_create(f"pkh({invalid_timestamp_key.pubkey})"), "timestamp": []},
+            {"desc": descsum_create(f"pkh({later_valid_key.pubkey})"), "timestamp": "now", "label": "valid 2"},
+        ])
+        assert_equal(len(result), 4)
+        assert_equal(result[0]["success"], True)
+        assert_equal(result[1]["success"], False)
+        assert_equal(result[1]["error"]["code"], -3)
+        assert_equal(result[1]["error"]["message"], "Missing required timestamp field for key")
+        assert_equal(result[2]["success"], False)
+        assert_equal(result[2]["error"]["code"], -3)
+        assert_equal(result[2]["error"]["message"], "Expected number or \"now\" timestamp value for key. got type array")
+        assert_equal(result[3]["success"], True)
+        test_address(w1, valid_key.p2pkh_addr, solvable=True, ismine=True, labels=["valid 1"])
+        test_address(w1, missing_timestamp_key.p2pkh_addr, ismine=False)
+        test_address(w1, invalid_timestamp_key.p2pkh_addr, ismine=False)
+        test_address(w1, later_valid_key.p2pkh_addr, solvable=True, ismine=True, labels=["valid 2"])
+
+        self.log.info("Import should return timestamp errors when every request is invalid")
+        missing_only_key = get_generate_key()
+        invalid_only_key = get_generate_key()
+        result = w1.importdescriptors([
+            {"desc": descsum_create(f"pkh({missing_only_key.pubkey})")},
+            {"desc": descsum_create(f"pkh({invalid_only_key.pubkey})"), "timestamp": {}},
+        ])
+        assert_equal(len(result), 2)
+        assert_equal(result[0]["success"], False)
+        assert_equal(result[0]["error"]["code"], -3)
+        assert_equal(result[0]["error"]["message"], "Missing required timestamp field for key")
+        assert_equal(result[1]["success"], False)
+        assert_equal(result[1]["error"]["code"], -3)
+        assert_equal(result[1]["error"]["message"], "Expected number or \"now\" timestamp value for key. got type object")
+        test_address(w1, missing_only_key.p2pkh_addr, ismine=False)
+        test_address(w1, invalid_only_key.p2pkh_addr, ismine=False)
+
         # # Test importing of a P2PKH descriptor
         key = get_generate_key()
         self.log.info("Should import a p2pkh descriptor")

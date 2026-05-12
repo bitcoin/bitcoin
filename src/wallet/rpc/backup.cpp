@@ -26,8 +26,10 @@
 
 #include <cstdint>
 #include <fstream>
-#include <tuple>
+#include <optional>
 #include <string>
+#include <tuple>
+#include <vector>
 
 #include <univalue.h>
 
@@ -379,6 +381,8 @@ RPCMethod importdescriptors()
     int64_t lowest_timestamp = 0;
     bool rescan = false;
     UniValue response(UniValue::VARR);
+    std::vector<std::optional<int64_t>> timestamps;
+    timestamps.reserve(requests.size());
     {
         LOCK(pwallet->cs_wallet);
         EnsureWalletIsUnlocked(*pwallet);
@@ -387,12 +391,23 @@ RPCMethod importdescriptors()
 
         // Get all timestamps and extract the lowest timestamp
         for (const UniValue& request : requests.getValues()) {
-            // This throws an error if "timestamp" doesn't exist
-            const int64_t timestamp = std::max(GetImportTimestamp(request, now), minimum_timestamp);
+            int64_t timestamp{0};
+            try {
+                timestamp = std::max(GetImportTimestamp(request, now), minimum_timestamp);
+            } catch (const UniValue& e) {
+                UniValue result(UniValue::VOBJ);
+                result.pushKV("success", UniValue(false));
+                result.pushKV("error", e);
+                response.push_back(std::move(result));
+                timestamps.push_back(std::nullopt);
+                continue;
+            }
+
+            timestamps.push_back(timestamp);
             const UniValue result = ProcessDescriptorImport(*pwallet, request, timestamp);
             response.push_back(result);
 
-            if (lowest_timestamp > timestamp ) {
+            if (lowest_timestamp > timestamp) {
                 lowest_timestamp = timestamp;
             }
 
@@ -421,20 +436,26 @@ RPCMethod importdescriptors()
 
             // Compose the response
             for (unsigned int i = 0; i < requests.size(); ++i) {
-                const UniValue& request = requests.getValues().at(i);
+                const UniValue& result = results.at(i);
 
                 // If the descriptor timestamp is within the successfully scanned
                 // range, or if the import result already has an error set, let
                 // the result stand unmodified. Otherwise replace the result
                 // with an error message.
-                if (scanned_time <= GetImportTimestamp(request, now) || results.at(i).exists("error")) {
-                    response.push_back(results.at(i));
+                if (result.exists("error")) {
+                    response.push_back(result);
+                    continue;
+                }
+
+                const int64_t timestamp{*timestamps.at(i)};
+                if (scanned_time <= timestamp) {
+                    response.push_back(result);
                 } else {
                     std::string error_msg{strprintf("Rescan failed for descriptor with timestamp %d. There "
                             "was an error reading a block from time %d, which is after or within %d seconds "
                             "of key creation, and could contain transactions pertaining to the desc. As a "
                             "result, transactions and coins using this desc may not appear in the wallet.",
-                            GetImportTimestamp(request, now), scanned_time - TIMESTAMP_WINDOW - 1, TIMESTAMP_WINDOW)};
+                            timestamp, scanned_time - TIMESTAMP_WINDOW - 1, TIMESTAMP_WINDOW)};
                     if (pwallet->chain().havePruned()) {
                         error_msg += strprintf(" This error could be caused by pruning or data corruption "
                                 "(see bitcoind log for details) and could be dealt with by downloading and "
