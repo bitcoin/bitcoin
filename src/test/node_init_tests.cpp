@@ -29,10 +29,6 @@ public:
         m_node.init = this;
     }
     std::unique_ptr<interfaces::Chain> makeChain() override { return interfaces::MakeChain(m_node); }
-    std::unique_ptr<interfaces::WalletLoader> makeWalletLoader(interfaces::Chain& chain) override
-    {
-        return MakeWalletLoader(chain, *Assert(m_node.args));
-    }
     NodeContext& m_node;
 };
 

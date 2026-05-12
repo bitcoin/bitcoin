@@ -16,7 +16,6 @@ struct UISignals {
     btcsignals::signal<CClientUIInterface::ThreadSafeMessageBoxSig, btcsignals::optional_last_value<bool>> ThreadSafeMessageBox;
     btcsignals::signal<CClientUIInterface::ThreadSafeQuestionSig, btcsignals::optional_last_value<bool>> ThreadSafeQuestion;
     btcsignals::signal<CClientUIInterface::InitMessageSig> InitMessage;
-    btcsignals::signal<CClientUIInterface::InitWalletSig> InitWallet;
     btcsignals::signal<CClientUIInterface::NotifyNumConnectionsChangedSig> NotifyNumConnectionsChanged;
     btcsignals::signal<CClientUIInterface::NotifyNetworkActiveChangedSig> NotifyNetworkActiveChanged;
     btcsignals::signal<CClientUIInterface::NotifyAlertChangedSig> NotifyAlertChanged;
@@ -36,7 +35,6 @@ static UISignals g_ui_signals;
 ADD_SIGNALS_IMPL_WRAPPER(ThreadSafeMessageBox);
 ADD_SIGNALS_IMPL_WRAPPER(ThreadSafeQuestion);
 ADD_SIGNALS_IMPL_WRAPPER(InitMessage);
-ADD_SIGNALS_IMPL_WRAPPER(InitWallet);
 ADD_SIGNALS_IMPL_WRAPPER(NotifyNumConnectionsChanged);
 ADD_SIGNALS_IMPL_WRAPPER(NotifyNetworkActiveChanged);
 ADD_SIGNALS_IMPL_WRAPPER(NotifyAlertChanged);
@@ -48,7 +46,6 @@ ADD_SIGNALS_IMPL_WRAPPER(BannedListChanged);
 bool CClientUIInterface::ThreadSafeMessageBox(const bilingual_str& message, unsigned int style) { return g_ui_signals.ThreadSafeMessageBox(message, style).value_or(false);}
 bool CClientUIInterface::ThreadSafeQuestion(const bilingual_str& message, const std::string& non_interactive_message, unsigned int style) { return g_ui_signals.ThreadSafeQuestion(message, non_interactive_message, style).value_or(false);}
 void CClientUIInterface::InitMessage(const std::string& message) { return g_ui_signals.InitMessage(message); }
-void CClientUIInterface::InitWallet() { return g_ui_signals.InitWallet(); }
 void CClientUIInterface::NotifyNumConnectionsChanged(int newNumConnections) { return g_ui_signals.NotifyNumConnectionsChanged(newNumConnections); }
 void CClientUIInterface::NotifyNetworkActiveChanged(bool networkActive) { return g_ui_signals.NotifyNetworkActiveChanged(networkActive); }
 void CClientUIInterface::NotifyAlertChanged() { return g_ui_signals.NotifyAlertChanged(); }

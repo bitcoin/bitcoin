@@ -55,15 +55,12 @@ def process_mapping(fname):
 class HelpRpcTest(BitcoinTestFramework):
     def set_test_params(self):
         self.num_nodes = 1
-        self.uses_wallet = None
 
     def run_test(self):
         self.test_client_conversion_table()
         self.test_client_string_conversion_table()
         self.test_categories()
         self.dump_help()
-        if self.is_wallet_compiled():
-            self.wallet_help()
 
     def test_client_conversion_table(self):
         file_conversion_table = os.path.join(self.config["environment"]["SRCDIR"], 'src', 'rpc', 'client.cpp')
@@ -75,8 +72,7 @@ class HelpRpcTest(BitcoinTestFramework):
         # Filter all RPCs whether they need conversion
         mapping_server_conversion = [tuple(m[:3]) for m in mapping_server if not m[3]]
 
-        # Only check if all RPC methods have been compiled (i.e. wallet is enabled)
-        if self.is_wallet_compiled() and sorted(mapping_client) != sorted(mapping_server_conversion):
+        if sorted(mapping_client) != sorted(mapping_server_conversion):
             raise AssertionError("RPC client conversion table ({}) and RPC server named arguments mismatch!\n{}".format(
                 file_conversion_table,
                 set(mapping_client).symmetric_difference(mapping_server_conversion),
@@ -93,8 +89,8 @@ class HelpRpcTest(BitcoinTestFramework):
 
         for argname, convert in converts_by_argname.items():
             if all(convert) != any(convert):
-                # Only allow dummy and psbt to fail consistency check
-                assert argname in ['dummy', "psbt"], ('WARNING: conversion mismatch for argument named %s (%s)' % (argname, list(zip(all_methods_by_argname[argname], converts_by_argname[argname]))))
+                # Only allow dummy to fail consistency check
+                assert argname in ['dummy'], ('WARNING: conversion mismatch for argument named %s (%s)' % (argname, list(zip(all_methods_by_argname[argname], converts_by_argname[argname]))))
 
     def test_client_string_conversion_table(self):
         file_conversion_table = os.path.join(self.config["environment"]["SRCDIR"], 'src', 'rpc', 'client.cpp')
@@ -102,16 +98,11 @@ class HelpRpcTest(BitcoinTestFramework):
         mapping_server = self.nodes[0].help("dump_all_command_conversions")
         server_tuples = {tuple(m[:3]) for m in mapping_server}
 
-        # Filter string parameters based on wallet compilation status
-        if self.is_wallet_compiled():
-            # Check that every entry in string parameters exists on the server
-            stale_entries = [entry for entry in string_params_client if entry not in server_tuples]
-            if stale_entries:
-                raise AssertionError(f"String parameters contains entries not present on the server: {stale_entries}")
-            filtered_string_params = string_params_client
-        else:
-            available_string_params = [entry for entry in string_params_client if entry in server_tuples]
-            filtered_string_params = available_string_params
+        # Check that every entry in string parameters exists on the server
+        stale_entries = [entry for entry in string_params_client if entry not in server_tuples]
+        if stale_entries:
+            raise AssertionError(f"String parameters contains entries not present on the server: {stale_entries}")
+        filtered_string_params = string_params_client
 
         # Validate that all entries are legitimate server parameters
         server_method_param_tuples = {(m[0], m[1], m[2]) for m in mapping_server}
@@ -137,12 +128,6 @@ class HelpRpcTest(BitcoinTestFramework):
 
         components = ['Blockchain', 'Control', 'Mining', 'Network', 'Rawtransactions', 'Util']
 
-        if self.is_wallet_compiled():
-            components.append('Wallet')
-
-        if self.is_external_signer_compiled():
-            components.append('Signer')
-
         if self.is_zmq_compiled():
             components.append('Zmq')
 
@@ -156,11 +141,6 @@ class HelpRpcTest(BitcoinTestFramework):
             with open(os.path.join(dump_dir, call), 'w') as f:
                 # Make sure the node can generate the help at runtime without crashing
                 f.write(self.nodes[0].help(call))
-
-    def wallet_help(self):
-        assert 'getnewaddress ( "label" "address_type" )' in self.nodes[0].help('getnewaddress')
-        self.restart_node(0, extra_args=['-nowallet=1'])
-        assert 'getnewaddress ( "label" "address_type" )' in self.nodes[0].help('getnewaddress')
 
 if __name__ == '__main__':
     HelpRpcTest(__file__).main()

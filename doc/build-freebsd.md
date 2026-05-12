@@ -13,14 +13,6 @@ Run the following as root to install the base dependencies for building.
 pkg install boost-libs cmake git libevent pkgconf
 ```
 
-SQLite is required for the wallet:
-
-```bash
-pkg install sqlite3
-```
-
-To build Bitcoin Core without the wallet, use `-DENABLE_WALLET=OFF`.
-
 Cap'n Proto is needed for IPC functionality (see [multiprocess.md](multiprocess.md)):
 
 ```bash
@@ -52,7 +44,7 @@ There is an included test suite that is useful for testing code changes when dev
 To run the test suite (recommended), you will need to have Python 3 installed:
 
 ```bash
-pkg install python3 databases/py-sqlite3 net/py-pyzmq
+pkg install python3 net/py-pyzmq
 ```
 ---
 
@@ -63,11 +55,6 @@ pkg install python3 databases/py-sqlite3 net/py-pyzmq
 There are many ways to configure Bitcoin Core, here are a few common examples:
 
 Run `cmake -B build -LH` to see the full list of available options.
-
-##### No Wallet
-```bash
-cmake -B build -DENABLE_WALLET=OFF
-```
 
 ### 2. Compile
 

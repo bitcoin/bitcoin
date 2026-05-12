@@ -14,8 +14,7 @@ For notes on the usage of Assumeutxo, please refer to [the usage doc](/doc/assum
   behind the ChainstateManager interface. The external presentation of the changes
   required to facilitate the use of UTXO snapshots is the understanding that there are
   now certain regions of the chain that can be temporarily assumed to be valid.
-  In certain cases, e.g. wallet rescanning, this is very similar to dealing with
-  a pruned chain.
+  In certain cases, this is very similar to dealing with a pruned chain.
 
   Logic outside ChainstateManager should try not to know about snapshots, instead
   preferring to work in terms of more general states like assumed-valid.

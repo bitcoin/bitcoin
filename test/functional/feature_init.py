@@ -34,7 +34,6 @@ class InitTest(BitcoinTestFramework):
     def set_test_params(self):
         self.setup_clean_chain = True
         self.num_nodes = 2
-        self.uses_wallet = None
 
     def check_clean_start(self, node, extra_args):
         """Ensure that node restarts successfully after various interrupts."""
@@ -85,8 +84,6 @@ class InitTest(BitcoinTestFramework):
             b'net thread start',
             b'addcon thread start',
         ]
-        if self.is_wallet_compiled():
-            lines_to_terminate_after.append(b'Verifying wallet')
 
         for terminate_line in lines_to_terminate_after:
             self.log.info(f"Starting node and will terminate after line {terminate_line}")

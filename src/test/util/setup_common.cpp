@@ -58,7 +58,6 @@
 #include <util/vector.h>
 #include <validation.h>
 #include <validationinterface.h>
-#include <walletinitinterface.h>
 
 #include <algorithm>
 #include <future>

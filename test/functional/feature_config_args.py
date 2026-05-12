@@ -25,9 +25,7 @@ class ConfArgsTest(BitcoinTestFramework):
         # when using networks other than regtest.
         self.extra_args = [["-prune=550"]]
         self.supports_cli = False
-        self.wallet_names = []
         self.disable_autoconnect = False
-        self.uses_wallet = None
 
     # Overridden to avoid attempt to sync not yet started nodes.
     def setup_network(self):
@@ -137,11 +135,6 @@ class ConfArgsTest(BitcoinTestFramework):
             conf.write('-dash=1\n')
         self.nodes[0].assert_start_raises_init_error(expected_msg='Error: Error reading configuration file: parse error on line 1: -dash=1, options in configuration file must be specified without leading -')
 
-        if self.is_wallet_compiled():
-            with open(inc_conf_file_path, 'w') as conf:
-                conf.write("wallet=foo\n")
-            self.nodes[0].assert_start_raises_init_error(expected_msg=f'Error: Config setting for -wallet only applied on {self.chain} network when in [{self.chain}] section.')
-
         main_conf_file_path = self.nodes[0].datadir_path / "bitcoin_main.conf"
         util.write_config(main_conf_file_path, n=0, chain='', extra_config=f'includeconf={inc_conf_file_path}\n')
         with open(inc_conf_file_path, 'w') as conf:
@@ -220,13 +213,6 @@ class ConfArgsTest(BitcoinTestFramework):
             expected_msg='Error: Error parsing command line arguments: Can not set -proxy with no value. Please specify value with -proxy=value.',
             extra_args=['-proxy'],
         )
-        # Provide a value different from 1 to the -wallet negated option
-        if self.is_wallet_compiled():
-            for value in [0, 'not_a_boolean']:
-                self.nodes[0].assert_start_raises_init_error(
-                    expected_msg="Error: Invalid value detected for '-wallet' or '-nowallet'. '-wallet' requires a string value, while '-nowallet' accepts only '1' to disable all wallets",
-                    extra_args=[f'-nowallet={value}'],
-                )
 
     def test_log_buffer(self):
         with self.nodes[0].assert_debug_log(expected_msgs=["[warning] Parsed potentially confusing double-negative -listen=0\n"]):

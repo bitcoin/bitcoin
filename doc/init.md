@@ -26,9 +26,7 @@ the default behaviour of using a special cookie for authentication.
 
 This password does not have to be remembered or typed as it is mostly used
 as a fixed token that bitcoind and client programs read from the configuration
-file, however it is recommended that a strong and secure password be used
-as this password is security critical to securing the wallet should the
-wallet be enabled.
+file, however it is recommended that a strong and secure password be used.
 
 If bitcoind is run with the "-server" flag (set by default), and no rpcpassword is set,
 it will use a special cookie file for authentication. The cookie is generated with random
@@ -42,8 +40,8 @@ umask of `0077`, but these can be overridden with the `-rpccookieperms` option.
 
 This allows for running bitcoind without having to do any manual configuration.
 
-`conf`, `pid`, and `wallet` accept relative paths which are interpreted as
-relative to the data directory. `wallet` *only* supports relative paths.
+`conf` and `pid` accept relative paths which are interpreted as
+relative to the data directory.
 
 To generate an example configuration file that describes the configuration settings,
 see [contrib/devtools/README.md](../contrib/devtools/README.md#gen-bitcoin-confsh).

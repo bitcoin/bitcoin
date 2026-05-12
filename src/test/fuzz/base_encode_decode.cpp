@@ -5,7 +5,6 @@
 #include <test/fuzz/fuzz.h>
 
 #include <base58.h>
-#include <psbt.h>
 #include <span.h>
 #include <test/fuzz/FuzzedDataProvider.h>
 #include <util/strencodings.h>
@@ -86,9 +85,3 @@ FUZZ_TARGET(base64_encode_decode)
     assert(decoded && std::ranges::equal(*decoded, buffer));
 }
 
-FUZZ_TARGET(psbt_base64_decode)
-{
-    const std::string random_string{buffer.begin(), buffer.end()};
-
-    util::Result<PartiallySignedTransaction> psbt = DecodeBase64PSBT(random_string);
-}

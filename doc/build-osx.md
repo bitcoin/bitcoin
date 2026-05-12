@@ -51,14 +51,6 @@ To install, run the following from your terminal:
 brew install cmake boost pkgconf libevent capnp
 ```
 
-#### Wallet Dependencies
-
-If you do not need wallet functionality, you can use `-DENABLE_WALLET=OFF` in
-the `cmake -B` step below.
-
-SQLite is required, but since macOS ships with a useable `sqlite` package, you don't need to
-install anything.
-
 #### IPC Dependencies
 
 If you do not need IPC functionality (see [multiprocess.md](multiprocess.md))
@@ -115,12 +107,6 @@ It is required that you have `python` and `zip` installed.
 
 There are many ways to configure Bitcoin Core, here are a few common examples:
 
-##### No Wallet
-
-``` bash
-cmake -B build -DENABLE_WALLET=OFF
-```
-
 ##### Further Configuration
 
 You may want to dig deeper into the configuration options to achieve your desired behavior.
@@ -159,7 +145,7 @@ be listed with `bitcoin help`.
 The first time you run `bitcoind`, it will start downloading the blockchain.
 This process could take many hours, or even days on slower than average systems.
 
-By default, blockchain and wallet data files will be stored in:
+By default, blockchain data files will be stored in:
 
 ``` bash
 /Users/${USER}/Library/Application Support/Bitcoin/

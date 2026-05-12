@@ -27,7 +27,6 @@ MAX_REPLACEMENT_LIMIT = 100
 class ReplaceByFeeTest(BitcoinTestFramework):
     def set_test_params(self):
         self.num_nodes = 2
-        self.uses_wallet = None
         self.extra_args = [["-deprecatedrpc=fullrbf", "-deprecatedrpc=bip125"], []]
 
     def run_test(self):
@@ -474,17 +473,6 @@ class ReplaceByFeeTest(BitcoinTestFramework):
         json1 = self.nodes[0].decoderawtransaction(rawtx1)
         assert_equal(json0["vin"][0]["sequence"], 4294967293)
         assert_equal(json1["vin"][0]["sequence"], 4294967295)
-
-        if self.is_wallet_compiled():
-            self.init_wallet(node=0)
-            rawtx2 = self.nodes[0].createrawtransaction([], outs)
-            frawtx2a = self.nodes[0].fundrawtransaction(rawtx2, {"replaceable": True})
-            frawtx2b = self.nodes[0].fundrawtransaction(rawtx2, {"replaceable": False})
-
-            json0 = self.nodes[0].decoderawtransaction(frawtx2a['hex'])
-            json1 = self.nodes[0].decoderawtransaction(frawtx2b['hex'])
-            assert_equal(json0["vin"][0]["sequence"], 4294967293)
-            assert_equal(json1["vin"][0]["sequence"], 4294967294)
 
     def test_replacement_relay_fee(self):
         tx = self.wallet.send_self_transfer(from_node=self.nodes[0])['tx']

@@ -28,31 +28,9 @@ _bitcoin_cli() {
     COMPREPLY=()
     _get_comp_words_by_ref -n = cur prev words cword
 
-    if ((cword > 5)); then
-        case ${words[cword-5]} in
-            sendtoaddress)
-                COMPREPLY=( $( compgen -W "true false" -- "$cur" ) )
-                return 0
-                ;;
-        esac
-    fi
-
-    if ((cword > 4)); then
-        case ${words[cword-4]} in
-            listtransactions|setban)
-                COMPREPLY=( $( compgen -W "true false" -- "$cur" ) )
-                return 0
-                ;;
-            signrawtransactionwithkey|signrawtransactionwithwallet)
-                COMPREPLY=( $( compgen -W "ALL NONE SINGLE ALL|ANYONECANPAY NONE|ANYONECANPAY SINGLE|ANYONECANPAY" -- "$cur" ) )
-                return 0
-                ;;
-        esac
-    fi
-
     if ((cword > 3)); then
         case ${words[cword-3]} in
-            getbalance|gettxout|listreceivedbyaddress|listsinceblock)
+            gettxout)
                 COMPREPLY=( $( compgen -W "true false" -- "$cur" ) )
                 return 0
                 ;;
@@ -69,7 +47,7 @@ _bitcoin_cli() {
                 COMPREPLY=( $( compgen -W "add remove" -- "$cur" ) )
                 return 0
                 ;;
-            fundrawtransaction|getblock|getblockheader|getmempoolancestors|getmempooldescendants|getrawtransaction|gettransaction|listreceivedbyaddress|sendrawtransaction)
+            getblock|getblockheader|getmempoolancestors|getmempooldescendants|getrawtransaction|sendrawtransaction)
                 COMPREPLY=( $( compgen -W "true false" -- "$cur" ) )
                 return 0
                 ;;
@@ -77,15 +55,8 @@ _bitcoin_cli() {
     fi
 
     case "$prev" in
-        backupwallet)
-            _filedir
-            return 0
-            ;;
-        getaddednodeinfo|getrawmempool|lockunspent)
+        getaddednodeinfo|getrawmempool)
             COMPREPLY=( $( compgen -W "true false" -- "$cur" ) )
-            return 0
-            ;;
-        getbalance|getnewaddress|listtransactions|sendmany)
             return 0
             ;;
     esac

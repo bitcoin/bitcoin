@@ -69,13 +69,12 @@ class PruneTest(BitcoinTestFramework):
     def set_test_params(self):
         self.setup_clean_chain = True
         self.num_nodes = 6
-        self.uses_wallet = None
 
         # Create nodes 0 and 1 to mine.
         # Create node 2 to test pruning.
         self.full_node_default_args = ["-maxreceivebuffer=20000", "-checkblocks=5"]
         # Create nodes 3 and 4 to test manual pruning (they will be re-started with manual pruning later)
-        # Create nodes 5 to test wallet in prune mode, but do not connect
+        # Create node 5 in prune mode with blockfilterindex, but do not connect
         self.extra_args = [
             self.full_node_default_args,
             self.full_node_default_args,
@@ -97,12 +96,6 @@ class PruneTest(BitcoinTestFramework):
         self.connect_nodes(0, 3)
         self.connect_nodes(0, 4)
         self.sync_blocks(self.nodes[0:5])
-
-    def setup_nodes(self):
-        self.add_nodes(self.num_nodes, self.extra_args)
-        self.start_nodes()
-        if self.is_wallet_compiled():
-            self.import_deterministic_coinbase_privkeys()
 
     def create_big_chain(self):
         # Start by creating some coinbases we can spend later
@@ -132,10 +125,6 @@ class PruneTest(BitcoinTestFramework):
             expected_msg='Error: Prune mode is incompatible with -reindex-chainstate. Use full -reindex instead.',
             extra_args=['-prune=550', '-reindex-chainstate'],
         )
-
-    def test_rescan_blockchain(self):
-        self.restart_node(0, ["-prune=550"])
-        assert_raises_rpc_error(-1, "Can't rescan beyond pruned data. Use RPC call getblockchaininfo to determine your pruned height.", self.nodes[0].rescanblockchain)
 
     def test_height_min(self):
         assert os.path.isfile(os.path.join(self.prunedir, "blk00000.dat")), "blk00000.dat is missing, pruning too early"
@@ -346,23 +335,6 @@ class PruneTest(BitcoinTestFramework):
 
         self.log.info("Success")
 
-    def test_wallet_rescan(self):
-        # check that the pruning node's wallet is still in good shape
-        self.log.info("Stop and start pruning node to trigger wallet rescan")
-        self.restart_node(2, extra_args=["-prune=550"])
-
-        wallet_info = self.nodes[2].getwalletinfo()
-        self.wait_until(lambda: wallet_info["scanning"] == False)
-        self.wait_until(lambda: wallet_info["lastprocessedblock"]["height"] == self.nodes[2].getblockcount())
-
-        # check that wallet loads successfully when restarting a pruned node after IBD.
-        # this was reported to fail in #7494.
-        self.restart_node(5, extra_args=["-prune=550", "-blockfilterindex=1"]) # restart to trigger rescan
-
-        wallet_info = self.nodes[5].getwalletinfo()
-        self.wait_until(lambda: wallet_info["scanning"] == False)
-        self.wait_until(lambda: wallet_info["lastprocessedblock"]["height"] == self.nodes[0].getblockcount())
-
     def run_test(self):
         self.log.info("Warning! This test requires 4GB of disk space")
 
@@ -472,13 +444,6 @@ class PruneTest(BitcoinTestFramework):
         self.log.info("Syncing node 5 to node 0")
         self.connect_nodes(0, 5)
         self.sync_blocks([self.nodes[0], self.nodes[5]], wait=5, timeout=300)
-
-        if self.is_wallet_compiled():
-            self.log.info("Test wallet re-scan")
-            self.test_wallet_rescan()
-
-            self.log.info("Test it's not possible to rescan beyond pruned data")
-            self.test_rescan_blockchain()
 
         self.log.info("Test invalid pruning command line options")
         self.test_invalid_command_line_options()

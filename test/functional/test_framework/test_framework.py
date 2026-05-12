@@ -33,13 +33,11 @@ from .util import (
     assert_equal,
     check_json_precision,
     export_env_build_path,
-    find_vout_for_address,
     get_binary_paths,
     get_datadir_path,
     initialize_datadir,
     p2p_port,
     wait_until_helper_internal,
-    wallet_importprivkey,
 )
 
 
@@ -111,23 +109,10 @@ class BitcoinTestFramework(metaclass=BitcoinTestMetaClass):
         self.supports_cli = True
         self.bind_to_localhost_only = True
         self.parse_args(test_file)
-        self.default_wallet_name = "default_wallet"
-        self.wallet_data_filename = "wallet.dat"
-        # Optional list of wallet names that can be set in set_test_params to
-        # create and import keys to. If unset, default is len(nodes) *
-        # [default_wallet_name]. If wallet names are None, wallet creation is
-        # skipped. If list is truncated, wallet creation is skipped and keys
-        # are not imported.
-        self.wallet_names = None
-        # By default the wallet is not required. Set to true by skip_if_no_wallet().
-        # Can also be set to None to indicate that the wallet will be used if available.
-        # When False or None, we ignore wallet_names in setup_nodes().
-        self.uses_wallet = False
         # Disable ThreadOpenConnections by default, so that adding entries to
         # addrman will not result in automatic connections to them.
         self.disable_autoconnect = True
         self.set_test_params()
-        assert self.wallet_names is None or len(self.wallet_names) <= self.num_nodes
         self.rpc_timeout = int(self.rpc_timeout * self.options.timeout_factor) # optionally, increase timeout by a factor
 
     def main(self):
@@ -383,8 +368,6 @@ class BitcoinTestFramework(metaclass=BitcoinTestMetaClass):
         """Override this method to customize test node setup"""
         self.add_nodes(self.num_nodes, self.extra_args)
         self.start_nodes()
-        if self.uses_wallet:
-            self.import_deterministic_coinbase_privkeys()
         if not self.setup_clean_chain:
             for n in self.nodes:
                 assert_equal(n.getblockchaininfo()["blocks"], 199)
@@ -398,18 +381,6 @@ class BitcoinTestFramework(metaclass=BitcoinTestMetaClass):
                 chain_info = n.getblockchaininfo()
                 assert_equal(chain_info["blocks"], 200)
                 assert_equal(chain_info["initialblockdownload"], False)
-
-    def import_deterministic_coinbase_privkeys(self):
-        for i in range(self.num_nodes):
-            self.init_wallet(node=i)
-
-    def init_wallet(self, *, node):
-        wallet_name = self.default_wallet_name if self.wallet_names is None else self.wallet_names[node] if node < len(self.wallet_names) else False
-        if wallet_name is not False:
-            n = self.nodes[node]
-            if wallet_name is not None:
-                n.createwallet(wallet_name=wallet_name, load_on_startup=True)
-            wallet_importprivkey(n.get_wallet_rpc(wallet_name), n.get_deterministic_priv_key().key, 0, label="coinbase")
 
     def run_test(self):
         """Tests must override this method to define test logic"""
@@ -483,7 +454,6 @@ class BitcoinTestFramework(metaclass=BitcoinTestMetaClass):
                 use_cli=self.options.usecli,
                 start_perf=self.options.perf,
                 v2transport=self.options.v2transport,
-                uses_wallet=self.uses_wallet,
             )
             init.update(extra_init[i])
             test_node_i = TestNode(
@@ -661,23 +631,6 @@ class BitcoinTestFramework(metaclass=BitcoinTestMetaClass):
         sync_fun() if sync_fun else self.sync_all()
         return blocks
 
-    def create_outpoints(self, node, *, outputs):
-        """Send funds to a given list of `{address: amount}` targets using the bitcoind
-        wallet and return the corresponding outpoints as a list of dictionaries
-        `[{"txid": txid, "vout": vout1}, {"txid": txid, "vout": vout2}, ...]`.
-        The result can be used to specify inputs for RPCs like `createrawtransaction`,
-        `createpsbt`, `lockunspent` etc."""
-        for output in outputs:
-            assert_equal(len(output.keys()), 1)
-        send_res = node.send(outputs)
-        assert send_res["complete"]
-        utxos = []
-        for output in outputs:
-            address = list(output.keys())[0]
-            vout = find_vout_for_address(node, send_res["txid"], address)
-            utxos.append({"txid": send_res["txid"], "vout": vout})
-        return utxos
-
     def sync_blocks(self, nodes=None, wait=1, timeout=60):
         """
         Wait until everybody has the same tip.
@@ -794,7 +747,6 @@ class BitcoinTestFramework(metaclass=BitcoinTestMetaClass):
                     binaries=self.get_binaries(),
                     coverage_dir=None,
                     cwd=self.options.tmpdir,
-                    uses_wallet=self.uses_wallet,
                 ))
             self.start_node(CACHE_NODE_ID)
             cache_node = self.nodes[CACHE_NODE_ID]
@@ -829,7 +781,6 @@ class BitcoinTestFramework(metaclass=BitcoinTestMetaClass):
             def cache_path(*paths):
                 return os.path.join(cache_node_dir, self.chain, *paths)
 
-            os.rmdir(cache_path('wallets'))  # Remove empty wallets dir
             for entry in os.listdir(cache_path()):
                 if entry not in ['chainstate', 'blocks', 'indexes']:  # Only indexes, chainstate and blocks folders
                     os.remove(cache_path(entry))
@@ -843,8 +794,8 @@ class BitcoinTestFramework(metaclass=BitcoinTestMetaClass):
     def _initialize_chain_clean(self):
         """Initialize empty blockchain for use by the test.
 
-        Create an empty blockchain and num_nodes wallets.
-        Useful if a test case wants complete control over initialization."""
+        Create an empty blockchain. Useful if a test case wants complete control
+        over initialization."""
         for i in range(self.num_nodes):
             initialize_datadir(self.options.tmpdir, i, self.chain, self.disable_autoconnect)
 
@@ -902,17 +853,6 @@ class BitcoinTestFramework(metaclass=BitcoinTestMetaClass):
         if not self.is_zmq_compiled():
             raise SkipTest("bitcoind has not been built with zmq enabled.")
 
-    def skip_if_no_wallet(self):
-        """Skip the running test if wallet has not been compiled."""
-        self.uses_wallet = True
-        if not self.is_wallet_compiled():
-            raise SkipTest("wallet has not been compiled.")
-
-    def skip_if_no_wallet_tool(self):
-        """Skip the running test if bitcoin-wallet has not been compiled."""
-        if not self.is_wallet_tool_compiled():
-            raise SkipTest("bitcoin-wallet has not been compiled")
-
     def skip_if_no_bitcoin_tx(self):
         """Skip the running test if bitcoin-tx has not been compiled."""
         if not self.is_bitcoin_tx_compiled():
@@ -956,11 +896,6 @@ class BitcoinTestFramework(metaclass=BitcoinTestMetaClass):
                                      "Previous releases binaries can be downloaded via `test/get_previous_releases.py`.")
         return self.options.prev_releases
 
-    def skip_if_no_external_signer(self):
-        """Skip the running test if external signer support has not been compiled."""
-        if not self.is_external_signer_compiled():
-            raise SkipTest("external signer support has not been compiled.")
-
     def skip_if_running_under_valgrind(self):
         """Skip the running test if Valgrind is being used."""
         if self.options.valgrind:
@@ -973,18 +908,6 @@ class BitcoinTestFramework(metaclass=BitcoinTestMetaClass):
     def is_cli_compiled(self):
         """Checks whether bitcoin-cli was compiled."""
         return self.config["components"].getboolean("ENABLE_CLI")
-
-    def is_external_signer_compiled(self):
-        """Checks whether external signer support was compiled."""
-        return self.config["components"].getboolean("ENABLE_EXTERNAL_SIGNER")
-
-    def is_wallet_compiled(self):
-        """Checks whether the wallet module was compiled."""
-        return self.config["components"].getboolean("ENABLE_WALLET")
-
-    def is_wallet_tool_compiled(self):
-        """Checks whether bitcoin-wallet was compiled."""
-        return self.config["components"].getboolean("ENABLE_WALLET_TOOL")
 
     def is_bitcoin_tx_compiled(self):
         """Checks whether bitcoin-tx was compiled."""

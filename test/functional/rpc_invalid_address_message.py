@@ -43,7 +43,6 @@ class InvalidAddressErrorMessageTest(BitcoinTestFramework):
     def set_test_params(self):
         self.setup_clean_chain = True
         self.num_nodes = 1
-        self.uses_wallet = None
 
     def check_valid(self, addr):
         info = self.nodes[0].validateaddress(addr)
@@ -104,21 +103,8 @@ class InvalidAddressErrorMessageTest(BitcoinTestFramework):
             # Explicit None is not allowed for required parameters
             assert_raises_rpc_error(-3, "JSON value of type null is not of expected type string", node.validateaddress, None)
 
-    def test_getaddressinfo(self):
-        node = self.nodes[0]
-
-        assert_raises_rpc_error(-5, "Invalid Bech32 address program size (41 bytes)", node.getaddressinfo, BECH32_INVALID_SIZE)
-        assert_raises_rpc_error(-5, "Invalid or unsupported Segwit (Bech32) or Base58 encoding.", node.getaddressinfo, BECH32_INVALID_PREFIX)
-        assert_raises_rpc_error(-5, "Invalid or unsupported Base58-encoded address.", node.getaddressinfo, BASE58_INVALID_PREFIX)
-        assert_raises_rpc_error(-5, "Invalid or unsupported Segwit (Bech32) or Base58 encoding.", node.getaddressinfo, INVALID_ADDRESS)
-        assert "isscript" not in node.getaddressinfo(BECH32_VALID_UNKNOWN_WITNESS)
-
     def run_test(self):
         self.test_validateaddress()
-
-        if self.is_wallet_compiled():
-            self.init_wallet(node=0)
-            self.test_getaddressinfo()
 
 
 if __name__ == '__main__':

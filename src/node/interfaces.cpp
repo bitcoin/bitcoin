@@ -12,7 +12,6 @@
 #include <consensus/merkle.h>
 #include <consensus/validation.h>
 #include <deploymentstatus.h>
-#include <external_signer.h>
 #include <httprpc.h>
 #include <index/blockfilterindex.h>
 #include <init.h>
@@ -22,7 +21,6 @@
 #include <interfaces/node.h>
 #include <interfaces/rpc.h>
 #include <interfaces/types.h>
-#include <interfaces/wallet.h>
 #include <kernel/chain.h>
 #include <kernel/context.h>
 #include <kernel/mempool_entry.h>
@@ -83,7 +81,6 @@ using interfaces::MakeSignalHandler;
 using interfaces::Mining;
 using interfaces::Node;
 using interfaces::Rpc;
-using interfaces::WalletLoader;
 using kernel::ChainstateRole;
 using node::BlockAssembler;
 using node::BlockWaitOptions;
@@ -94,16 +91,6 @@ namespace node {
 // All members of the classes in this namespace are intentionally public, as the
 // classes themselves are private.
 namespace {
-#ifdef ENABLE_EXTERNAL_SIGNER
-class ExternalSignerImpl : public interfaces::ExternalSigner
-{
-public:
-    ExternalSignerImpl(::ExternalSigner signer) : m_signer(std::move(signer)) {}
-    std::string getName() override { return m_signer.m_name; }
-    ::ExternalSigner m_signer;
-};
-#endif
-
 class NodeImpl : public Node
 {
 public:
@@ -259,29 +246,6 @@ public:
         }
         return false;
     }
-    std::vector<std::unique_ptr<interfaces::ExternalSigner>> listExternalSigners() override
-    {
-#ifdef ENABLE_EXTERNAL_SIGNER
-        std::vector<ExternalSigner> signers = {};
-        const std::string command = args().GetArg("-signer", "");
-        if (command == "") return {};
-        ExternalSigner::Enumerate(command, signers, Params().GetChainTypeString());
-        std::vector<std::unique_ptr<interfaces::ExternalSigner>> result;
-        result.reserve(signers.size());
-        for (auto& signer : signers) {
-            result.emplace_back(std::make_unique<ExternalSignerImpl>(std::move(signer)));
-        }
-        return result;
-#else
-        // This result is indistinguishable from a successful call that returns
-        // no signers. For the current GUI this doesn't matter, because the wallet
-        // creation dialog disables the external signer checkbox in both
-        // cases. The return type could be changed to std::optional<std::vector>
-        // (or something that also includes error messages) if this distinction
-        // becomes important.
-        return {};
-#endif // ENABLE_EXTERNAL_SIGNER
-    }
     int64_t getTotalBytesRecv() override { return m_context->connman ? m_context->connman->GetTotalBytesRecv() : 0; }
     int64_t getTotalBytesSent() override { return m_context->connman ? m_context->connman->GetTotalBytesSent() : 0; }
     size_t getMempoolSize() override { return m_context->mempool ? m_context->mempool->size() : 0; }
@@ -369,10 +333,6 @@ public:
                                     TxBroadcast::MEMPOOL_AND_BROADCAST_TO_ALL,
                                     /*wait_callback=*/false);
     }
-    WalletLoader& walletLoader() override
-    {
-        return *Assert(m_context->wallet_loader);
-    }
     std::unique_ptr<Handler> handleInitMessage(InitMessageFn fn) override
     {
         return MakeSignalHandler(::uiInterface.InitMessage_connect(fn));
@@ -388,10 +348,6 @@ public:
     std::unique_ptr<Handler> handleShowProgress(ShowProgressFn fn) override
     {
         return MakeSignalHandler(::uiInterface.ShowProgress_connect(fn));
-    }
-    std::unique_ptr<Handler> handleInitWallet(InitWalletFn fn) override
-    {
-        return MakeSignalHandler(::uiInterface.InitWallet_connect(fn));
     }
     std::unique_ptr<Handler> handleNotifyNumConnectionsChanged(NotifyNumConnectionsChangedFn fn) override
     {
@@ -512,20 +468,7 @@ public:
     {
         m_command.actor = [this](const JSONRPCRequest& request, UniValue& result, bool last_handler) {
             if (!m_wrapped_command) return false;
-            try {
-                return m_wrapped_command->actor(request, result, last_handler);
-            } catch (const UniValue& e) {
-                // If this is not the last handler and a wallet not found
-                // exception was thrown, return false so the next handler can
-                // try to handle the request. Otherwise, reraise the exception.
-                if (!last_handler) {
-                    const UniValue& code = e["code"];
-                    if (code.isNum() && code.getInt<int>() == RPC_WALLET_NOT_FOUND) {
-                        return false;
-                    }
-                }
-                throw;
-            }
+            return m_wrapped_command->actor(request, result, last_handler);
         };
         ::tableRPC.appendCommand(m_command.name, &m_command);
     }

@@ -11,7 +11,6 @@ LIBS[consensus]="libbitcoin_consensus.a"
 LIBS[crypto]="libbitcoin_crypto.a"
 LIBS[node]="libbitcoin_node.a"
 LIBS[util]="libbitcoin_util.a"
-LIBS[wallet]="libbitcoin_wallet.a"
 
 # Declare allowed dependencies "X Y" where X is allowed to depend on Y. This
 # list is taken from doc/design/libraries.md.
@@ -28,15 +27,6 @@ ALLOWED_DEPENDENCIES=(
     "node kernel"
     "node util"
     "util crypto"
-    "wallet common"
-    "wallet crypto"
-    "wallet util"
-)
-
-# Add minor dependencies omitted from doc/design/libraries.md to keep the
-# dependency diagram simple.
-ALLOWED_DEPENDENCIES+=(
-    "wallet consensus"
 )
 
 # Declare list of known errors that should be suppressed.

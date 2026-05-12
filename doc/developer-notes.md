@@ -667,15 +667,14 @@ The code is multi-threaded and uses mutexes and the
 `LOCK` and `TRY_LOCK` macros to protect data structures.
 
 Deadlocks due to inconsistent lock ordering (thread 1 locks `cs_main` and then
-`cs_wallet`, while thread 2 locks them in the opposite order: result, deadlock
+some other lock, while thread 2 locks them in the opposite order: result, deadlock
 as each waits for the other to release its lock) are a problem. Compile with
 `-DDEBUG_LOCKORDER` (or use `-DCMAKE_BUILD_TYPE=Debug`) to get lock order inconsistencies
 reported in the `debug.log` file.
 
 Re-architecting the core code so there are better-defined interfaces
 between the various components is a goal, with any necessary locking
-done by the components (e.g. see the self-contained `FillableSigningProvider` class
-and its `cs_KeyStore` lock for example).
+done by the components.
 
 ## Threads
 
@@ -700,8 +699,8 @@ and its `cs_KeyStore` lock for example).
   : One thread per indexer.
 
 - [SchedulerThread (`b-scheduler`)](https://doxygen.bitcoincore.org/class_c_scheduler.html#a14d2800815da93577858ea078aed1fba)
-  : Does asynchronous background tasks like dumping wallet contents, dumping
-  addrman and running asynchronous validationinterface callbacks.
+  : Does asynchronous background tasks like dumping addrman and running
+  asynchronous validationinterface callbacks.
 
 - [TorControlThread (`b-torcontrol`)](https://doxygen.bitcoincore.org/torcontrol_8cpp.html#a52a3efff23634500bb42c6474f306091)
   : Libevent thread for tor connections.
@@ -1323,30 +1322,10 @@ A few guidelines for introducing and reviewing new RPC interfaces:
     convert a plaintext command line to JSON. If the types don't match, the method can be unusable
     from there.
 
-- A RPC method must either be a wallet method or a non-wallet method. Do not
-  introduce new methods that differ in behavior based on the presence of a wallet.
-
-  - *Rationale*: As well as complicating the implementation and interfering
-    with the introduction of multi-wallet, wallet and non-wallet code should be
-    separated to avoid introducing circular dependencies between code units.
-
 - Try to make the RPC response a JSON object.
 
   - *Rationale*: If a RPC response is not a JSON object, then it is harder to avoid API breakage if
     new data in the response is needed.
-
-- Wallet RPCs call BlockUntilSyncedToCurrentChain to maintain consistency with
-  `getblockchaininfo`'s state immediately prior to the call's execution. Wallet
-  RPCs whose behavior does *not* depend on the current chainstate may omit this
-  call.
-
-  - *Rationale*: In previous versions of Bitcoin Core, the wallet was always
-    in-sync with the chainstate (by virtue of them all being updated in the
-    same cs_main lock). In order to maintain the behavior that wallet RPCs
-    return results as of at least the highest best-known block an RPC
-    client may be aware of prior to entering a wallet RPC call, we must block
-    until the wallet is caught up to the chainstate as of the RPC call's entry.
-    This also makes the API much easier for RPC clients to reason about.
 
 - Use *invalid* bech32 addresses (e.g. in the constant array `EXAMPLE_ADDRESS`) for
   `RPCExamples` help documentation.
@@ -1374,20 +1353,19 @@ A few guidelines for modifying existing RPC interfaces:
 ## Internal interface guidelines
 
 Internal interfaces between parts of the codebase that are meant to be
-independent (node, wallet, GUI), are defined in
+independent are defined in
 [`src/interfaces/`](../src/interfaces/). The main interface classes defined
-there are [`interfaces::Chain`](../src/interfaces/chain.h), used by wallet to
+there are [`interfaces::Chain`](../src/interfaces/chain.h), used to
 access the node's latest chain state,
-[`interfaces::Node`](../src/interfaces/node.h), used by the GUI to control the
-node, [`interfaces::Wallet`](../src/interfaces/wallet.h), used by the GUI
-to control an individual wallet and [`interfaces::Mining`](../src/interfaces/mining.h),
+[`interfaces::Node`](../src/interfaces/node.h), used to control the
+node, and [`interfaces::Mining`](../src/interfaces/mining.h),
+>>>>>>> acdcd09526 (nuke: wallet + psbt + external-signer (src, build, deps, ci, tests, docs))
 used by RPC to generate block templates. There are also more specialized interface
-types like [`interfaces::Handler`](../src/interfaces/handler.h)
-[`interfaces::ChainClient`](../src/interfaces/chain.h) passed to and from
+types like [`interfaces::Handler`](../src/interfaces/handler.h) passed to and from
 various interface methods.
 
-Interface classes are written in a particular style so node, wallet, and GUI
-code doesn't need to run in the same process, and so the class declarations
+Interface classes are written in a particular style so that components
+don't need to run in the same process, and so the class declarations
 work more easily with tools and libraries supporting interprocess
 communication:
 
@@ -1398,9 +1376,8 @@ communication:
   process, and other implementations can forward calls to remote processes.
 
 - Interface method definitions should wrap existing functionality instead of
-  implementing new functionality. Any substantial new node or wallet
-  functionality should be implemented in [`src/node/`](../src/node/) or
-  [`src/wallet/`](../src/wallet/) and just exposed in
+  implementing new functionality. Any substantial new node functionality should
+  be implemented in [`src/node/`](../src/node/) and just exposed in
   [`src/interfaces/`](../src/interfaces/) instead of being implemented there,
   so it can be more modular and accessible to unit tests.
 
@@ -1409,14 +1386,6 @@ communication:
   objects that can't be serialized or accessed from another process.
 
   Examples:
-
-  ```c++
-  // Good: takes string argument and returns interface class pointer
-  virtual unique_ptr<interfaces::Wallet> loadWallet(std::string filename) = 0;
-
-  // Bad: returns CWallet reference that can't be used from another process
-  virtual CWallet& loadWallet(std::string filename) = 0;
-  ```
 
   ```c++
   // Good: accepts and returns primitive types

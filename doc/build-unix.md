@@ -58,12 +58,6 @@ Now, you can either build from self-compiled [depends](#dependencies) or install
 
     sudo apt-get install libevent-dev libboost-dev
 
-SQLite is required for the wallet:
-
-    sudo apt install libsqlite3-dev
-
-To build Bitcoin Core without the wallet, see [*Disable-wallet mode*](#disable-wallet-mode)
-
 Cap'n Proto is needed for IPC functionality (see [multiprocess.md](multiprocess.md)):
 
     sudo apt-get install libcapnp-dev capnproto
@@ -90,12 +84,6 @@ Build requirements:
 Now, you can either build from self-compiled [depends](#dependencies) or install the required dependencies:
 
     sudo dnf install libevent-devel boost-devel
-
-SQLite is required for the wallet:
-
-    sudo dnf install sqlite-devel
-
-To build Bitcoin Core without the wallet, see [*Disable-wallet mode*](#disable-wallet-mode)
 
 ZMQ-enabled binaries are compiled with `-DWITH_ZMQ=ON` and require the following dependency:
 
@@ -124,12 +112,6 @@ Now, you can either build from self-compiled [depends](#dependencies) or install
 
     apk add libevent-dev boost-dev
 
-SQLite is required for the wallet:
-
-    apk add sqlite-dev
-
-To build Bitcoin Core without the wallet, see [*Disable-wallet mode*](#disable-wallet-mode)
-
 Cap'n Proto is needed for IPC functionality (see [multiprocess.md](multiprocess.md)):
 
     apk add capnproto capnproto-dev
@@ -148,22 +130,11 @@ See [dependencies.md](dependencies.md) for a complete overview, and
 [depends](/depends/README.md) on how to compile them yourself, if you wish to
 not use the packages of your Linux distribution.
 
-Disable-wallet mode
---------------------
-When the intention is to only run a P2P node, without a wallet, Bitcoin Core can
-be compiled in disable-wallet mode with:
-
-    cmake -B build -DENABLE_WALLET=OFF
-
-In this case there is no dependency on SQLite.
-
-Mining is also possible in disable-wallet mode using the `getblocktemplate` RPC call.
-
 Setup and Build Example: Arch Linux
 -----------------------------------
 This example lists the steps necessary to setup and build a command line only distribution of the latest changes on Arch Linux:
 
-    pacman --sync --needed capnproto cmake boost gcc git libevent make python sqlite
+    pacman --sync --needed capnproto cmake boost gcc git libevent make python
     git clone https://github.com/bitcoin/bitcoin.git
     cd bitcoin/
     cmake -B build

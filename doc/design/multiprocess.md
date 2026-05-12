@@ -6,29 +6,22 @@ _This document describes the design of the multiprocess feature. For usage infor
 
 ## Introduction
 
-The Bitcoin Core software has historically employed a monolithic architecture. The existing design has integrated functionality like P2P network operations and wallet management into a single executable. While effective, it has limitations in flexibility, security, and scalability. This project introduces changes that transition Bitcoin Core to a more modular architecture. It aims to enhance security, improve usability, and facilitate maintenance and development of the software in the long run.
+The Bitcoin Core software has historically employed a monolithic architecture. The existing design has integrated functionality like P2P network operations and indexes into a single executable. While effective, it has limitations in flexibility, security, and scalability. This project introduces changes that transition Bitcoin Core to a more modular architecture. It aims to enhance security, improve usability, and facilitate maintenance and development of the software in the long run.
 
 ## Current Architecture
 
-The current system features a primary executable `bitcoind`, which combines a Bitcoin P2P node with an integrated JSON-RPC server, wallet, and indexes. This monolithic structure, although robust, presents challenges such as limited operational flexibility and increased security risks due to the tight integration of components.
+The current system features one primary executable: `bitcoind`. `bitcoind` combines a Bitcoin P2P node with an integrated JSON-RPC server and indexes. This monolithic structure, although robust, presents challenges such as limited operational flexibility and increased security risks due to the tight integration of components.
 
 ## Proposed Architecture
 
-The new architecture divides the existing code into two specialized executables:
-
-- `bitcoin-node`: Manages the P2P node, indexes, and JSON-RPC server.
-- `bitcoin-wallet`: Handles all wallet functionality.
-
-This modular approach is designed to enhance security through component isolation and improve usability by allowing independent operation of each module. This allows for new use-cases, such as running the node on a dedicated machine and operating wallets on a separate machine with the flexibility to start and stop them as needed.
-
-This subdivision could be extended in the future. For example, indexes could be removed from the `bitcoin-node` executable and run in separate executables. And JSON-RPC servers could be added to wallet and index executables, so they can listen and respond to RPC requests on their own ports, without needing to forward RPC requests through `bitcoin-node`.
+The new architecture allows separating internal components into specialized executables, communicating over IPC. For example, indexes could be removed from the `bitcoin-node` executable and run in separate executables, listening and responding to RPC requests on their own ports, without needing to forward RPC requests through `bitcoin-node`.
 
 <table><tr><td>
 
 ```mermaid
 flowchart LR
     node[bitcoin-node] -- listens on --> socket["&lt;datadir&gt;/node.sock"]
-    wallet[bitcoin-wallet] -- connects to --> socket
+    client[external client] -- connects to --> socket
 ```
 
 </td></tr><tr><td>
@@ -40,8 +33,8 @@ Processes and socket connection.
 This section describes the major components of the Inter-Process Communication (IPC) framework covering the relevant source files, generated files, tools, and libraries.
 
 ### Abstract C++ Classes in [`src/interfaces/`](../../src/interfaces/)
-- The foundation of the IPC implementation lies in the abstract C++ classes within the [`src/interfaces/`](../../src/interfaces/) directory. These classes define pure virtual methods that code in [`src/node/`](../../src/node/) and [`src/wallet/`](../../src/wallet/) directories call to interact with each other.
-- Each abstract class in this directory represents a distinct interface that the different modules (node, wallet) implement and use for cross-process communication.
+- The foundation of the IPC implementation lies in the abstract C++ classes within the [`src/interfaces/`](../../src/interfaces/) directory. These classes define pure virtual methods that code in [`src/node/`](../../src/node/) and other modules call to interact with each other.
+- Each abstract class in this directory represents a distinct interface that the different modules implement and use for cross-process communication.
 - The classes are written following conventions described in [Internal Interface
   Guidelines](../developer-notes.md#internal-interface-guidelines) to ensure
   compatibility with Cap'n Proto.
@@ -107,7 +100,7 @@ The choice to use an RPC framework at all instead of a custom protocol was neces
 
 The IPC mechanism is deliberately isolated from the rest of the codebase so less code has to be concerned with IPC.
 
-Building Bitcoin Core with IPC support is optional, and node and wallet code can be compiled to either run in the same process or separate processes. The build system also ensures Cap’n Proto library headers can only be used within the [`src/ipc/capnp/`](../../src/ipc/capnp/) directory, not in other parts of the codebase.
+Building Bitcoin Core with IPC support is optional. The build system also ensures Cap’n Proto library headers can only be used within the [`src/ipc/capnp/`](../../src/ipc/capnp/) directory, not in other parts of the codebase.
 
 The libmultiprocess runtime is designed to place as few constraints as possible on IPC interfaces and to make IPC calls act like normal function calls. Method arguments, return values, and exceptions are automatically serialized and sent between processes. Object references and `std::function` arguments are tracked to allow invoked code to call back into invoking code at any time. And there is a 1:1 threading model where every client thread has a corresponding server thread responsible for executing incoming calls from that thread (there can be multiple calls from the same thread due to callbacks) without blocking, and holding the same thread-local variables and locks so behavior is the same whether IPC is used or not.
 
@@ -123,7 +116,7 @@ In the meantime, the developer guide [Internal interface guidelines](../develope
 
 ### Interface Stability
 
-The currently defined IPC interfaces are unstable, and can change freely with no backwards compatibility. The decision to allow this stems from the recognition that our current interfaces are still evolving and not yet ideal for external use. As these interfaces mature and become more refined, there may be an opportunity to declare them stable and use Cap’n Proto's support for protocol evolution ([Cap'n Proto - Evolving Your Protocol](https://capnproto.org/language.html#evolving-your-protocol)) to allow them to be extended while remaining backwards compatible. This could allow different versions of node and wallet binaries to interoperate, and potentially open doors for external tools to utilize these interfaces, such as creating custom indexes through a stable indexing interface. However, for now, the priority is to improve the interfaces internally. Given their current state and the advantages of using JSON-RPC for most common tasks, it's more practical to focus on internal development rather than external applicability.
+The currently defined IPC interfaces are unstable, and can change freely with no backwards compatibility. The decision to allow this stems from the recognition that our current interfaces are still evolving and not yet ideal for external use. As these interfaces mature and become more refined, there may be an opportunity to declare them stable and use Cap’n Proto's support for protocol evolution ([Cap'n Proto - Evolving Your Protocol](https://capnproto.org/language.html#evolving-your-protocol)) to allow them to be extended while remaining backwards compatible. This could potentially open doors for external tools to utilize these interfaces, such as creating custom indexes through a stable indexing interface. However, for now, the priority is to improve the interfaces internally. Given their current state and the advantages of using JSON-RPC for most common tasks, it's more practical to focus on internal development rather than external applicability.
 
 ## Security Considerations
 
@@ -133,14 +126,14 @@ The integration of [Cap’n Proto](https://capnproto.org/) and [libmultiprocess]
 
 ### Retrieving a Block Hash
 
-Let’s walk through an example where the `bitcoin-wallet` process requests the hash of a block at a specific height from the `bitcoin-node` process. This example demonstrates the practical application of the IPC mechanism, specifically the interplay between C++ method calls and Cap’n Proto-generated RPC calls.
+Let’s walk through an example where a client process requests the hash of a block at a specific height from the `bitcoin-node` process. This example demonstrates the practical application of the IPC mechanism, specifically the interplay between C++ method calls and Cap’n Proto-generated RPC calls.
 
 <table><tr><td>
 
 ```mermaid
 sequenceDiagram
-    box "bitcoin-wallet process"
-    participant WalletCode as Wallet code
+    box "client process"
+    participant ClientCode as Client code
     participant ChainClient as Generated Chain client class<br/>ProxyClient<messages::Chain>
     end
     box "bitcoin-node process"
@@ -148,36 +141,36 @@ sequenceDiagram
     participant LocalChain as Chain object<br/>node::ChainImpl
     end
 
-    WalletCode->>ChainClient: getBlockHash(height)
+    ClientCode->>ChainClient: getBlockHash(height)
     ChainClient->>ChainServer: Send RPC getBlockHash request
     ChainServer->>LocalChain: getBlockHash(height)
     LocalChain->>ChainServer: Return block hash
     ChainServer->>ChainClient: Send response with block hash
-    ChainClient->>WalletCode: Return block hash
+    ChainClient->>ClientCode: Return block hash
 ```
 
 </td></tr><tr><td>
 <code>Chain::getBlockHash</code> call diagram
 </td></tr></table>
 
-1. **Initiation in bitcoin-wallet**
-   - The wallet process calls the `getBlockHash` method on a `Chain` object. This method is defined as a virtual method in [`src/interfaces/chain.h`](../../src/interfaces/chain.h).
+1. **Initiation in the client**
+   - The client process calls the `getBlockHash` method on a `Chain` object. This method is defined as a virtual method in [`src/interfaces/chain.h`](../../src/interfaces/chain.h).
 
 2. **Translation to Cap’n Proto RPC**
    - The `Chain::getBlockHash` virtual method is overridden by the `Chain` [client subclass](#c-client-subclasses-in-generated-code) to translate the method call into a Cap’n Proto RPC call.
    - The client subclass is automatically generated by the `mpgen` tool from the [`chain.capnp`](https://github.com/ryanofsky/bitcoin/blob/pr/ipc/src/ipc/capnp/chain.capnp) file in [`src/ipc/capnp/`](../../src/ipc/capnp/).
 
 3. **Request Preparation and Dispatch**
-   - The `getBlockHash` method of the generated `Chain` client subclass in `bitcoin-wallet` populates a Cap’n Proto request with the `height` parameter, sends it to `bitcoin-node` process, and waits for a response.
+   - The `getBlockHash` method of the generated `Chain` client subclass in the client process populates a Cap’n Proto request with the `height` parameter, sends it to `bitcoin-node` process, and waits for a response.
 
 4. **Handling in bitcoin-node**
    - Upon receiving the request, the Cap'n Proto dispatching code in the `bitcoin-node` process calls the `getBlockHash` method of the `Chain` [server class](#c-server-classes-in-generated-code).
    - The server class is automatically generated by the `mpgen` tool from the [`chain.capnp`](https://github.com/ryanofsky/bitcoin/blob/pr/ipc/src/ipc/capnp/chain.capnp) file in [`src/ipc/capnp/`](../../src/ipc/capnp/).
    - The `getBlockHash` method of the generated `Chain` server subclass in `bitcoin-node` receives a Cap’n Proto request object with the `height` parameter, and calls the `getBlockHash` method on its local `Chain` object with the provided `height`.
-   - When the call returns, it encapsulates the return value in a Cap’n Proto response, which it sends back to the `bitcoin-wallet` process.
+   - When the call returns, it encapsulates the return value in a Cap’n Proto response, which it sends back to the client process.
 
 5. **Response and Return**
-   - The `getBlockHash` method of the generated `Chain` client subclass in `bitcoin-wallet` which sent the request now receives the response.
+   - The `getBlockHash` method of the generated `Chain` client subclass in the client process which sent the request now receives the response.
    - It extracts the block hash value from the response, and returns it to the original caller.
 
 ## Future Enhancements
@@ -185,7 +178,6 @@ sequenceDiagram
 Further improvements are possible such as:
 
 - Separating indexes from `bitcoin-node`, and running indexing code in separate processes (see [indexes: Stop using node internal types #24230](https://github.com/bitcoin/bitcoin/pull/24230)).
-- Enabling wallet processes to listen for JSON-RPC requests on their own ports instead of needing the node process to listen and forward requests to them.
 - Automatically generating `.capnp` files from C++ interface definitions (see [Interface Definition Maintenance](#interface-definition-maintenance)).
 - Simplifying and stabilizing interfaces (see [Interface Stability](#interface-stability)).
 - Adding sandbox features, restricting subprocess access to resources and data (see [https://eklitzke.org/multiprocess-bitcoin](https://eklitzke.org/multiprocess-bitcoin)).

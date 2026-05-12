@@ -67,10 +67,6 @@ static RPCMethod setmocktime()
     }
 
     SetMockTime(time);
-    const NodeContext& node_context{EnsureAnyNodeContext(request.context)};
-    for (const auto& chain_client : node_context.chain_clients) {
-        chain_client->setMockTime(time);
-    }
 
     return UniValue::VNULL;
 },
@@ -101,9 +97,6 @@ static RPCMethod mockscheduler()
     const NodeContext& node_context{EnsureAnyNodeContext(request.context)};
     CHECK_NONFATAL(node_context.scheduler)->MockForward(std::chrono::seconds{delta_seconds});
     CHECK_NONFATAL(node_context.validation_signals)->SyncWithValidationInterfaceQueue();
-    for (const auto& chain_client : node_context.chain_clients) {
-        chain_client->schedulerMockForward(std::chrono::seconds(delta_seconds));
-    }
 
     return UniValue::VNULL;
 },

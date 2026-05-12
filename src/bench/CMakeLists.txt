@@ -70,19 +70,4 @@ target_link_libraries(bench_bitcoin
   Boost::headers
 )
 
-if(ENABLE_WALLET)
-  target_sources(bench_bitcoin
-    PRIVATE
-      coin_selection.cpp
-      wallet_balance.cpp
-      wallet_create.cpp
-      wallet_create_tx.cpp
-      wallet_encrypt.cpp
-      wallet_loading.cpp
-      wallet_ismine.cpp
-      wallet_migration.cpp
-  )
-  target_link_libraries(bench_bitcoin bitcoin_wallet)
-endif()
-
 install_binary_component(bench_bitcoin INTERNAL)

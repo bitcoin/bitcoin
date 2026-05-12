@@ -16,7 +16,6 @@ import re
 import subprocess
 import tempfile
 import time
-import urllib.parse
 import collections
 import shlex
 import sys
@@ -108,7 +107,6 @@ class TestNode():
         start_perf=False,
         version=None,
         v2transport=False,
-        uses_wallet=False,
         ipcbind=False,
     ):
         """
@@ -151,8 +149,6 @@ class TestNode():
             "-debugexclude=rand",
             "-uacomment=testnode%d" % i,  # required for subversion uniqueness across peers
         ]
-        if uses_wallet is not None and not uses_wallet:
-            self.args.append("-disablewallet")
 
         self.ipc_tmp_dir = None
         if ipcbind:
@@ -436,14 +432,6 @@ class TestNode():
             self.mocktime = timestamp
         return self.__getattr__('setmocktime')(timestamp)
 
-    def get_wallet_rpc(self, wallet_name):
-        if self.use_cli:
-            return self.cli("-rpcwallet={}".format(wallet_name))
-        else:
-            assert self.rpc_connected and self._rpc, self._node_msg("RPC not connected")
-            wallet_path = "wallet/{}".format(urllib.parse.quote(wallet_name))
-            return self._rpc / wallet_path
-
     def version_is_at_least(self, ver):
         return self.version is None or self.version >= ver
 
@@ -455,7 +443,7 @@ class TestNode():
             "Should only call stop_node() on a running node after wait_for_rpc_connection() succeeded. "
             f"Did you forget to call the latter after start()? Not connected to process: {self.process.pid}")
         self.log.debug("Stopping node")
-        # Do not use wait argument when testing older nodes, e.g. in wallet_backwards_compatibility.py
+        # Do not use wait argument when testing older nodes.
         if self.version_is_at_least(180000):
             self.stop(wait=wait)
         else:
@@ -556,10 +544,6 @@ class TestNode():
     def read_xor_key(self) -> bytes:
         with open(self.blocks_key_path, "rb") as xor_f:
             return xor_f.read(NUM_XOR_BYTES)
-
-    @property
-    def wallets_path(self) -> Path:
-        return self.chain_path / "wallets"
 
     def debug_log_size(self, **kwargs) -> int:
         with open(self.debug_log_path, **kwargs) as dl:

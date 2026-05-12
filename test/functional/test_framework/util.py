@@ -22,7 +22,6 @@ import types
 
 from . import coverage
 from .authproxy import AuthServiceProxy, JSONRPCException
-from .descriptors import descsum_create
 from collections.abc import Callable
 from typing import Optional, Union
 
@@ -286,10 +285,6 @@ class Binaries:
         "Return argv array that should be used to invoke bitcoin-util"
         return self._argv("util", self.paths.bitcoinutil)
 
-    def wallet_argv(self):
-        "Return argv array that should be used to invoke bitcoin-wallet"
-        return self._argv("wallet", self.paths.bitcoinwallet)
-
     def chainstate_argv(self):
         "Return argv array that should be used to invoke bitcoin-chainstate"
         return self._argv("chainstate", self.paths.bitcoinchainstate)
@@ -329,7 +324,6 @@ def get_binary_paths(config):
         "bitcoin-util": "BITCOINUTIL",
         "bitcoin-tx": "BITCOINTX",
         "bitcoin-chainstate": "BITCOINCHAINSTATE",
-        "bitcoin-wallet": "BITCOINWALLET",
     }
     # Set paths to bitcoin core binaries allowing overrides with environment
     # variables.
@@ -578,8 +572,6 @@ def write_config(config_path, *, n, chain, extra_config="", disable_autoconnect=
         f.write("printtoconsole=0\n")
         f.write("natpmp=0\n")
         f.write("shrinkdebugfile=0\n")
-        # To improve SQLite wallet performance so that the tests don't timeout, use -unsafesqlitesync
-        f.write("unsafesqlitesync=1\n")
         if disable_autoconnect:
             f.write("connect=0\n")
         # Limit max connections to mitigate test failures on some systems caused by the warning:
@@ -739,16 +731,6 @@ def sync_txindex(test_framework, node):
     sync_start = int(time.time())
     test_framework.wait_until(lambda: node.getindexinfo("txindex")["txindex"]["synced"])
     test_framework.log.debug(f"Synced in {time.time() - sync_start} seconds")
-
-def wallet_importprivkey(wallet_rpc, privkey, timestamp, *, label=""):
-    desc = descsum_create("combo(" + privkey + ")")
-    req = [{
-        "desc": desc,
-        "timestamp": timestamp,
-        "label": label,
-    }]
-    import_res = wallet_rpc.importdescriptors(req)
-    assert_equal(import_res[0]["success"], True)
 
 def is_dir_writable(dir_path: pathlib.Path) -> bool:
     """Return True if we can create a file in the directory, False otherwise"""

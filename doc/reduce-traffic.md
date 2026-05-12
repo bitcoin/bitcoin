@@ -46,10 +46,8 @@ with other peers, you can disable transaction relay.
 Be reminded of the effects of this setting.
 
 - Fee estimation will no longer work.
-- It sets the flag "-walletbroadcast" to be "0", only if it is currently unset.
-  Doing so disables the automatic broadcasting of transactions from wallet. Not
-  relaying other's transactions could hurt your privacy if used while a wallet
-  is loaded or if you use the node to broadcast transactions.
+- Not relaying other's transactions could hurt your privacy if you use the node
+  to broadcast transactions.
 - If a peer has the forcerelay permission, we will still receive and relay
   their transactions.
 - It makes block propagation slower because compact block relay can only be

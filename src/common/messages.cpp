@@ -101,29 +101,6 @@ bool FeeModeFromString(std::string_view mode_string, FeeEstimateMode& fee_estima
     return false;
 }
 
-bilingual_str PSBTErrorString(PSBTError err)
-{
-    switch (err) {
-        case PSBTError::MISSING_INPUTS:
-            return Untranslated("Inputs missing or spent");
-        case PSBTError::SIGHASH_MISMATCH:
-            return Untranslated("Specified sighash value does not match value stored in PSBT");
-        case PSBTError::EXTERNAL_SIGNER_NOT_FOUND:
-            return Untranslated("External signer not found");
-        case PSBTError::EXTERNAL_SIGNER_FAILED:
-            return Untranslated("External signer failed to sign");
-        case PSBTError::UNSUPPORTED:
-            return Untranslated("Signer does not support PSBT");
-        case PSBTError::INCOMPLETE:
-            return Untranslated("Input needs additional signatures or other data");
-        case PSBTError::INVALID_TX:
-            return Untranslated("The transaction cannot be valid");
-        case PSBTError::OK:
-            return Untranslated("No errors");
-    } // no default case, so the compiler can warn about missing cases
-    assert(false);
-}
-
 bilingual_str TransactionErrorString(const TransactionError err)
 {
     switch (err) {

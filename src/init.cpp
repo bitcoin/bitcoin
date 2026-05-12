@@ -94,7 +94,6 @@
 #include <util/translation.h>
 #include <validation.h>
 #include <validationinterface.h>
-#include <walletinitinterface.h>
 
 #include <algorithm>
 #include <cerrno>
@@ -306,14 +305,6 @@ void Shutdown(NodeContext& node)
     StopREST();
     StopRPC();
     StopHTTPServer();
-    for (auto& client : node.chain_clients) {
-        try {
-            client->stop();
-        } catch (const ipc::Exception& e) {
-            LogDebug(BCLog::IPC, "Chain client did not disconnect cleanly: %s", e.what());
-            client.reset();
-        }
-    }
     StopMapPort();
 
     // Because these depend on each-other, we make sure that neither can be
@@ -404,7 +395,6 @@ void Shutdown(NodeContext& node)
     }
 #endif
 
-    node.chain_clients.clear();
     if (node.validation_signals) {
         node.validation_signals->UnregisterAllValidationInterfaces();
     }
@@ -615,8 +605,6 @@ void SetupServerArgs(ArgsManager& argsman, bool can_listen_ipc)
         "-whitebind. "
         "Additional flags \"in\" and \"out\" control whether permissions apply to incoming connections and/or manual (default: incoming only). "
         "Can be specified multiple times.", ArgsManager::ALLOW_ANY, OptionsCategory::CONNECTION);
-
-    g_wallet_init_interface.AddWalletOptions(argsman);
 
 #ifdef ENABLE_ZMQ
     argsman.AddArg("-zmqpubhashblock=<address>", "Enable publish hash block in <address>", ArgsManager::ALLOW_ANY, OptionsCategory::ZMQ);
@@ -1099,8 +1087,6 @@ bool AppInitParameterInteraction(const ArgsManager& args)
 
     nBytesPerSigOp = args.GetIntArg("-bytespersigop", nBytesPerSigOp);
 
-    if (!g_wallet_init_interface.ParameterInteraction()) return false;
-
     // Option to startup with mocktime set (used for regression testing):
     if (const auto mocktime{args.GetIntArg("-mocktime")}) {
         SetMockTime(std::chrono::seconds{*mocktime});
@@ -1497,13 +1483,6 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
     node.notifications = std::make_unique<KernelNotifications>(Assert(node.shutdown_request), node.exit_status, *Assert(node.warnings));
     ReadNotificationArgs(args, *node.notifications);
 
-    // Create client interfaces for wallets that are supposed to be loaded
-    // according to -wallet and -disablewallet options. This only constructs
-    // the interfaces, it doesn't load wallet data. Wallets actually get loaded
-    // when load() and start() interface methods are called below.
-    g_wallet_init_interface.Construct(node);
-    uiInterface.InitWallet();
-
     if (interfaces::Ipc* ipc = node.init->ipc()) {
         for (std::string address : gArgs.GetArgs("-ipcbind")) {
             try {
@@ -1519,9 +1498,6 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
      * available in the GUI RPC console even if external calls are disabled.
      */
     RegisterAllCoreRPCCommands(tableRPC);
-    for (const auto& client : node.chain_clients) {
-        client->registerRpcs();
-    }
 #ifdef ENABLE_ZMQ
     RegisterZMQRPCCommands(tableRPC);
 #endif
@@ -1564,13 +1540,6 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
         uiInterface.InitMessage_connect(SetRPCWarmupStatus);
         if (!AppInitServers(node))
             return InitError(_("Unable to start HTTP server. See debug log for details."));
-    }
-
-    // ********************************************************* Step 5: verify wallet database integrity
-    for (const auto& client : node.chain_clients) {
-        if (!client->verify()) {
-            return false;
-        }
     }
 
     // ********************************************************* Step 6: network initialization
@@ -1928,13 +1897,6 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
 
     // Init indexes
     for (auto index : node.indexes) if (!index->Init()) return false;
-
-    // ********************************************************* Step 9: load wallet
-    for (const auto& client : node.chain_clients) {
-        if (!client->load()) {
-            return false;
-        }
-    }
 
     // ********************************************************* Step 10: data directory maintenance
 
@@ -2317,10 +2279,6 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
     SetRPCWarmupFinished();
 
     uiInterface.InitMessage(_("Done loading"));
-
-    for (const auto& client : node.chain_clients) {
-        client->start(scheduler);
-    }
 
     BanMan* banman = node.banman.get();
     scheduler.scheduleEvery([banman]{

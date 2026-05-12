@@ -22,62 +22,6 @@ bool LookupHelper(const M& map, const K& key, V& value)
     return false;
 }
 
-bool HidingSigningProvider::GetCScript(const CScriptID& scriptid, CScript& script) const
-{
-    return m_provider->GetCScript(scriptid, script);
-}
-
-bool HidingSigningProvider::GetPubKey(const CKeyID& keyid, CPubKey& pubkey) const
-{
-    return m_provider->GetPubKey(keyid, pubkey);
-}
-
-bool HidingSigningProvider::GetKey(const CKeyID& keyid, CKey& key) const
-{
-    if (m_hide_secret) return false;
-    return m_provider->GetKey(keyid, key);
-}
-
-bool HidingSigningProvider::GetKeyOrigin(const CKeyID& keyid, KeyOriginInfo& info) const
-{
-    if (m_hide_origin) return false;
-    return m_provider->GetKeyOrigin(keyid, info);
-}
-
-bool HidingSigningProvider::GetTaprootSpendData(const XOnlyPubKey& output_key, TaprootSpendData& spenddata) const
-{
-    return m_provider->GetTaprootSpendData(output_key, spenddata);
-}
-bool HidingSigningProvider::GetTaprootBuilder(const XOnlyPubKey& output_key, TaprootBuilder& builder) const
-{
-    return m_provider->GetTaprootBuilder(output_key, builder);
-}
-std::vector<CPubKey> HidingSigningProvider::GetMuSig2ParticipantPubkeys(const CPubKey& pubkey) const
-{
-    if (m_hide_origin) return {};
-    return m_provider->GetMuSig2ParticipantPubkeys(pubkey);
-}
-
-std::map<CPubKey, std::vector<CPubKey>> HidingSigningProvider::GetAllMuSig2ParticipantPubkeys() const
-{
-    return m_provider->GetAllMuSig2ParticipantPubkeys();
-}
-
-void HidingSigningProvider::SetMuSig2SecNonce(const uint256& id, MuSig2SecNonce&& nonce) const
-{
-    m_provider->SetMuSig2SecNonce(id, std::move(nonce));
-}
-
-std::optional<std::reference_wrapper<MuSig2SecNonce>> HidingSigningProvider::GetMuSig2SecNonce(const uint256& session_id) const
-{
-    return m_provider->GetMuSig2SecNonce(session_id);
-}
-
-void HidingSigningProvider::DeleteMuSig2Session(const uint256& session_id) const
-{
-    m_provider->DeleteMuSig2Session(session_id);
-}
-
 bool FlatSigningProvider::GetCScript(const CScriptID& scriptid, CScript& script) const { return LookupHelper(scripts, scriptid, script); }
 bool FlatSigningProvider::GetPubKey(const CKeyID& keyid, CPubKey& pubkey) const { return LookupHelper(pubkeys, keyid, pubkey); }
 bool FlatSigningProvider::GetKeyOrigin(const CKeyID& keyid, KeyOriginInfo& info) const

@@ -22,7 +22,6 @@ def grep_boost_fixture_test_suite():
         "--",
         "src/ipc/test/**.cpp",
         "src/test/**.cpp",
-        "src/wallet/test/**.cpp",
     ]
     return subprocess.check_output(command, text=True)
 

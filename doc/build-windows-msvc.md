@@ -117,9 +117,9 @@ cmake -B build --preset vs2026-static -DVCPKG_INSTALLED_DIR="C:\path_without_spa
 ### vcpkg Manifest Default Features
 
 One can skip vcpkg manifest default features to speed up the configuration step.
-For example, the following invocation will skip all features except for "wallet" and "tests" and their dependencies:
+For example, the following invocation will skip all features except for "tests" and their dependencies:
 ```powershell
-cmake -B build --preset vs2026 -DVCPKG_MANIFEST_NO_DEFAULT_FEATURES=ON -DVCPKG_MANIFEST_FEATURES="wallet;tests" -DWITH_ZMQ=OFF
+cmake -B build --preset vs2026 -DVCPKG_MANIFEST_NO_DEFAULT_FEATURES=ON -DVCPKG_MANIFEST_FEATURES="tests" -DWITH_ZMQ=OFF
 ```
 
 Available features are listed in the [`vcpkg.json`](/vcpkg.json) file.

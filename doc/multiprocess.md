@@ -45,6 +45,4 @@ Recommended way to use multiprocess binaries is to invoke `bitcoin` CLI like `bi
 
 When the `-m` (`--multiprocess`) option is used the `bitcoin` command will execute the multiprocess binary instead of the monolithic one (`bitcoin-node` instead of `bitcoind`). The multiprocess binary can also be invoked directly, but this is not recommended as it may change or be renamed in the future, and it is not installed in the PATH.
 
-The multiprocess binary currently functions the same as the monolithic binary, except it supports an `-ipcbind` option.
-
-In the future, after [#10102](https://github.com/bitcoin/bitcoin/pull/10102) it will have other differences. Specifically `bitcoin-node` will spawn `bitcoin-wallet` to run wallet code, communicating over a socket pair. This will let node and wallet code run in separate address spaces for better isolation, and allow future improvements like being able to start and stop components independently on different machines and environments. [#19460](https://github.com/bitcoin/bitcoin/pull/19460) also adds a new `bitcoin-wallet -ipcconnect` option to allow new wallet processes to connect to an existing node process.
+The multiprocess binaries currently function the same as the monolithic binaries, except they support an `-ipcbind` option.

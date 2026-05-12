@@ -80,7 +80,6 @@ The following can be set when running make: `make FOO=bar`
 - `NO_BOOST`: Don't download/build/cache Boost
 - `NO_LIBEVENT`: Don't download/build/cache Libevent
 - `NO_ZMQ`: Don't download/build/cache packages needed for enabling ZeroMQ
-- `NO_WALLET`: Don't download/build/cache libs needed to enable the wallet (SQLite)
 - `NO_USDT`: Don't download/build/cache packages needed for enabling USDT tracepoints
 - `NO_IPC`: Don't build Cap’n Proto and libmultiprocess packages. Default on Windows.
 - `DEBUG`: Disable some optimizations and enable more runtime checking
@@ -91,8 +90,8 @@ The following can be set when running make: `make FOO=bar`
   of build error. After successful build log files are moved along with package archives
 - `LTO`: Enable options needed for LTO. Does not add `-flto` related options to *FLAGS.
 
-If some packages are not built, for example `make NO_WALLET=1`, the appropriate CMake cache
-variables will be set when generating the Bitcoin Core buildsystem. In this case, `-DENABLE_WALLET=OFF`.
+If some packages are not built (e.g. `make NO_ZMQ=1`), the appropriate CMake cache
+variables will be set when generating the Bitcoin Core buildsystem.
 
 ## Compiler Configuration
 

@@ -10,7 +10,6 @@
 #include <interfaces/mining.h>
 #include <interfaces/node.h>
 #include <interfaces/rpc.h>
-#include <interfaces/wallet.h>
 
 #include <memory>
 
@@ -22,10 +21,10 @@ namespace interfaces {
 class Ipc;
 
 //! Initial interface created when a process is first started, and used to give
-//! and get access to other interfaces (Node, Chain, Wallet, etc).
+//! and get access to other interfaces (Node, Chain, etc).
 //!
 //! There is a different Init interface implementation for each process
-//! (bitcoin-node, bitcoin-wallet, bitcoind) and each
+//! (bitcoin-node, bitcoind) and each
 //! implementation can implement the make methods for interfaces it supports.
 //! The default make methods all return null.
 class Init
@@ -35,7 +34,6 @@ public:
     virtual std::unique_ptr<Node> makeNode() { return nullptr; }
     virtual std::unique_ptr<Chain> makeChain() { return nullptr; }
     virtual std::unique_ptr<Mining> makeMining() { return nullptr; }
-    virtual std::unique_ptr<WalletLoader> makeWalletLoader(Chain& chain) { return nullptr; }
     virtual std::unique_ptr<Echo> makeEcho() { return nullptr; }
     virtual std::unique_ptr<Rpc> makeRpc() { return nullptr; }
     virtual Ipc* ipc() { return nullptr; }
@@ -51,9 +49,6 @@ public:
 //! normally and use the Init object to spawn and connect to other processes
 //! while it is running.
 std::unique_ptr<Init> MakeNodeInit(node::NodeContext& node, int argc, char* argv[], int& exit_status);
-
-//! Return implementation of Init interface for the wallet process.
-std::unique_ptr<Init> MakeWalletInit(int argc, char* argv[], int& exit_status);
 
 //! Return implementation of Init interface for a basic IPC client that doesn't
 //! provide any IPC services itself.

@@ -3,39 +3,15 @@
 The daemon `bitcoind` has the JSON-RPC API enabled by default. This can be
 changed with the `-server` option.
 
-## Endpoints
+## Endpoint
 
-There are two JSON-RPC endpoints on the server:
+The JSON-RPC server exposes a single endpoint at `/`.
 
-1. `/`
-2. `/wallet/<walletname>/`
-
-### `/` endpoint
-
-This endpoint is always active.
-It can always service non-wallet requests and can service wallet requests when
-exactly one wallet is loaded.
-
-### `/wallet/<walletname>/` endpoint
-
-This endpoint is only activated when the wallet component has been compiled in.
-It can service both wallet and non-wallet requests.
-It MUST be used for wallet requests when two or more wallets are loaded.
-
-This is the endpoint used by bitcoin-cli when a `-rpcwallet=` parameter is passed in.
-
-Best practice would dictate using the `/wallet/<walletname>/` endpoint for ALL
-requests when multiple wallets are in use.
-
-### Examples
+### Example
 
 ```sh
 # Get block count from the / endpoint when rpcuser=alice and rpcport=38332
 $ curl --user alice --data-binary '{"jsonrpc": "2.0", "id": "0", "method": "getblockcount", "params": []}' -H 'content-type: application/json' localhost:38332/
-
-# Get balance from the /wallet/walletname endpoint when rpcuser=alice, rpcport=38332 and rpcwallet=desc-wallet
-$ curl --user alice --data-binary '{"jsonrpc": "2.0", "id": "0", "method": "getbalance", "params": []}' -H 'content-type: application/json' localhost:38332/wallet/desc-wallet
-
 ```
 
 ## Parameter passing
@@ -50,14 +26,11 @@ are combined with named values.
 Examples:
 
 ```sh
-# "params": ["mywallet", false, false, "", false, false, true]
-bitcoin-cli createwallet mywallet false false "" false false true
+# "params": ["fakeaddr", 1]
+bitcoin-cli setban fakeaddr add
 
-# "params": {"wallet_name": "mywallet", "load_on_startup": true}
-bitcoin-cli -named createwallet wallet_name=mywallet load_on_startup=true
-
-# "params": {"args": ["mywallet"], "load_on_startup": true}
-bitcoin-cli -named createwallet mywallet load_on_startup=true
+# "params": {"subnet": "fakeaddr", "command": "add"}
+bitcoin-cli -named setban subnet=fakeaddr command=add
 ```
 
 `bitcoin rpc` can also be substituted for `bitcoin-cli -named`, and is a newer alternative.
@@ -93,17 +66,15 @@ protocol in v27.0 and prior releases.
 ## Security
 
 The RPC interface allows other programs to control Bitcoin Core,
-including the ability to spend funds from your wallets, affect consensus
-verification, read private data, and otherwise perform operations that
-can cause loss of money, data, or privacy.  This section suggests how
-you should use and configure Bitcoin Core to reduce the risk that its
-RPC interface will be abused.
+including the ability to affect consensus verification, read private data,
+and otherwise perform operations that can cause loss of data or privacy.
+This section suggests how you should use and configure Bitcoin Core to
+reduce the risk that its RPC interface will be abused.
 
 - **Securing the executable:** Anyone with physical or remote access to
   the computer, container, or virtual machine running Bitcoin Core can
   compromise either the whole program or just the RPC interface.  This
-  includes being able to record any passphrases you enter for unlocking
-  your encrypted wallets or changing settings so that your Bitcoin Core
+  includes being able to change settings so that your Bitcoin Core
   program tells you that certain transactions have multiple
   confirmations even when they aren't part of the best block chain.  For
   this reason, you should not use Bitcoin Core for security sensitive
@@ -125,18 +96,17 @@ RPC interface will be abused.
 - **RPC Credentials Security Boundary:** Any client with valid RPC credentials
   should be treated as having significant control over both the Bitcoin Core node
   and the filesystem resources accessible by the `bitcoind` process. RPC commands
-  can load wallet files from paths that the `bitcoind` process has permission to
-  access, specify file paths for operations, and potentially gain broader access
+  can specify file paths for operations, and potentially gain broader access
   than intended. This means that someone with RPC access can potentially compromise
   not only the Bitcoin Core node, but also the machine it is running on. Bitcoin Core
   provides the `-rpcwhitelist` option to restrict which RPC commands specific users
   can access, and `-rpcwhitelistdefault` to control the default behavior for users
-  without explicit whitelists. However, when using multiple wallets or sharing access
-  with different users, these should not be considered robust security boundaries, as
-  users with access to certain commands may still be able to exploit functionality in
-  unexpected ways. For security-sensitive operations, implement proper system-level
-  isolation (containers, virtualization, separate user accounts with restricted
-  permissions) rather than relying solely on RPC access controls.
+  without explicit whitelists. However, when sharing access with different users,
+  these should not be considered robust security boundaries, as users with access
+  to certain commands may still be able to exploit functionality in unexpected ways.
+  For security-sensitive operations, implement proper system-level isolation
+  (containers, virtualization, separate user accounts with restricted permissions)
+  rather than relying solely on RPC access controls.
 
 - **Securing remote network access:** You may optionally allow other
   computers to remotely control Bitcoin Core by setting the `rpcallowip`
@@ -179,12 +149,10 @@ RPC interface will be abused.
   although it does usually provide serialized data using a hex
   representation of the bytes. If you use RPC data in your programs or
   provide its data to other programs, you must ensure any problem strings
-  are properly escaped. For example, the `createwallet` RPC accepts
-  arguments such as `wallet_name` which is a string and could be used
-  for a path traversal attack without application level checks. Multiple
-  websites have been manipulated because they displayed decoded hex strings
-  that included HTML `<script>` tags. For this reason, and others, it is
-  recommended to display all serialized data in hex form only.
+  are properly escaped. Multiple websites have been manipulated because
+  they displayed decoded hex strings that included HTML `<script>` tags.
+  For this reason, and others, it is recommended to display all serialized
+  data in hex form only.
 
 ## RPC consistency guarantees
 
@@ -201,22 +169,6 @@ transactions that are considered mine-able by the node at the time of the RPC.
 
 The mempool state returned via an RPC reflects all effects of mempool and chain
 state related RPCs that returned prior to this call.
-
-### Wallet
-
-The wallet state returned via an RPC is consistent with itself and with the
-chain state at the time of the call.
-
-Wallet RPCs will return the latest chain state consistent with prior non-wallet
-RPCs. The effects of all blocks (and transactions in blocks) at the time of the
-call is reflected in the state of all wallet transactions. For example, if a
-block contains transactions that conflicted with mempool transactions, the
-wallet would reflect the removal of these mempool transactions in the state.
-
-However, the wallet may not be up-to-date with the current state of the mempool
-or the state of the mempool by an RPC that returned before this RPC. For
-example, a wallet transaction that was BIP-125-replaced in the mempool prior to
-this RPC may not yet be reflected as such in this RPC response.
 
 ## Limitations
 

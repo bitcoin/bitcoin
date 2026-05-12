@@ -33,7 +33,6 @@ GENERATE_OPTIONS = {
     ],
     "fuzz": [
         "-DVCPKG_MANIFEST_NO_DEFAULT_FEATURES=ON",
-        "-DVCPKG_MANIFEST_FEATURES=wallet",
         "-DWITH_ZMQ=OFF",
         "-DBUILD_FOR_FUZZING=ON",
         "-DCMAKE_COMPILE_WARNING_AS_ERROR=ON",
@@ -171,7 +170,6 @@ def run_tests(ci_type):
             "BITCOIN_BENCH": "bench_bitcoin.exe",
             "BITCOINTX": "bitcoin-tx.exe",
             "BITCOINUTIL": "bitcoin-util.exe",
-            "BITCOINWALLET": "bitcoin-wallet.exe",
             "BITCOINCHAINSTATE": "bitcoin-chainstate.exe",
         }
         for var, exe in test_envs.items():

@@ -9,7 +9,6 @@
 #include <interfaces/ipc.h>
 #include <interfaces/node.h>
 #include <interfaces/rpc.h>
-#include <interfaces/wallet.h>
 #include <node/context.h>
 #include <util/check.h>
 
@@ -32,10 +31,6 @@ public:
     std::unique_ptr<interfaces::Node> makeNode() override { return interfaces::MakeNode(m_node); }
     std::unique_ptr<interfaces::Chain> makeChain() override { return interfaces::MakeChain(m_node); }
     std::unique_ptr<interfaces::Mining> makeMining() override { return interfaces::MakeMining(m_node); }
-    std::unique_ptr<interfaces::WalletLoader> makeWalletLoader(interfaces::Chain& chain) override
-    {
-        return MakeWalletLoader(chain, *Assert(m_node.args));
-    }
     std::unique_ptr<interfaces::Echo> makeEcho() override { return interfaces::MakeEcho(); }
     std::unique_ptr<interfaces::Rpc> makeRpc() override { return interfaces::MakeRpc(m_node); }
     interfaces::Ipc* ipc() override { return m_ipc.get(); }

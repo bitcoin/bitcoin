@@ -2,21 +2,15 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include <bitcoin-build-config.h> // IWYU pragma: keep
-
 #include <common/run_command.h>
 
 #include <tinyformat.h>
 #include <univalue.h>
 #include <util/string.h>
-
-#ifdef ENABLE_EXTERNAL_SIGNER
 #include <util/subprocess.h>
-#endif // ENABLE_EXTERNAL_SIGNER
 
 UniValue RunCommandParseJSON(const std::vector<std::string>& cmd_args, const std::string& str_std_in)
 {
-#ifdef ENABLE_EXTERNAL_SIGNER
     namespace sp = subprocess;
 
     UniValue result_json;
@@ -43,7 +37,4 @@ UniValue RunCommandParseJSON(const std::vector<std::string>& cmd_args, const std
     if (!result_json.read(result)) throw std::runtime_error("Unable to parse JSON: " + result);
 
     return result_json;
-#else
-    throw std::runtime_error("Compiled without external signing support (required for external signing).");
-#endif // ENABLE_EXTERNAL_SIGNER
 }

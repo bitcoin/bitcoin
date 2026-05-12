@@ -8,7 +8,6 @@
   ],
   "default-features": [
     "tests",
-    "wallet",
     "zeromq"
   ],
   "features": {
@@ -16,12 +15,6 @@
       "description": "Build test_bitcoin.exe executable",
       "dependencies": [
         "boost-test"
-      ]
-    },
-    "wallet": {
-      "description": "Enable wallet (SQLite)",
-      "dependencies": [
-        "sqlite3"
       ]
     },
     "zeromq": {

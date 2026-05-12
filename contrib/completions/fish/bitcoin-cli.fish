@@ -40,7 +40,7 @@ function __fish_bitcoin_cli_get_commands
     end
 
     if string match -q -r '^.*error.*$' $commands[1]
-        # RPC offline or RPC wallet not loaded
+        # RPC offline
         return
     else
         for command in $commands

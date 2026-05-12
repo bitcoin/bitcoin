@@ -19,7 +19,7 @@ class TestShell:
 
     class __TestShell(BitcoinTestFramework):
         def set_test_params(self):
-            self.uses_wallet = None
+            pass
 
         def run_test(self):
             pass

@@ -92,14 +92,13 @@ that each node of the `TestShell` is initialized with a block height of 0.
 0
 ```
 
-We now let the first node generate 101 regtest blocks, and direct the coinbase
-rewards to a wallet address owned by the mining node.
+We now let the first node generate 101 regtest blocks, using `MiniWallet`
+(from `test_framework.wallet`) to provide a coinbase output script.
 
 ```
->>> test.nodes[0].createwallet('default')
-{'name': 'default'}
->>> address = test.nodes[0].getnewaddress()
->>> test.generatetoaddress(test.nodes[0], 101, address)
+>>> from test_framework.wallet import MiniWallet
+>>> miniwallet = MiniWallet(test.nodes[0])
+>>> test.generate(test.nodes[0], 101)
 ['2b98dd0044aae6f1cca7f88a0acf366a4bfe053c7f7b00da3c0d115f03d67efb', ...
 ```
 Since the two nodes are both initialized by default to establish an outbound
@@ -109,13 +108,6 @@ the mined blocks as soon as they propagate.
 ```
 >>> test.nodes[1].getblockchaininfo()["blocks"]
 101
-```
-The block rewards from the first block are now spendable by the wallet of the
-first node.
-
-```
->>> test.nodes[0].getbalance()
-Decimal('50.00000000')
 ```
 
 We can also log custom events to the logger.

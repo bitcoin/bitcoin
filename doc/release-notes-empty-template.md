@@ -38,8 +38,7 @@ installer (on Windows) or just copy over `/Applications/Bitcoin-Qt` (on macOS)
 or `bitcoind` (on Linux).
 
 Upgrading directly from a version of Bitcoin Core that has reached its EOL is
-possible, but it might take some time if the data directory needs to be migrated. Old
-wallet versions of Bitcoin Core are generally supported.
+possible, but it might take some time if the data directory needs to be migrated.
 
 Compatibility
 ==============
@@ -59,9 +58,6 @@ P2P and network changes
 Updated RPCs
 ------------
 
-
-Changes to wallet related RPCs can be found in the Wallet section below.
-
 New RPCs
 --------
 
@@ -71,17 +67,11 @@ Build System
 Updated settings
 ----------------
 
-
-Changes to wallet related settings can be found in the Wallet section below.
-
 New settings
 ------------
 
 Tools and Utilities
 -------------------
-
-Wallet
-------
 
 Low-level changes
 =================

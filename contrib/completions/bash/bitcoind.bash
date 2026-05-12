@@ -15,7 +15,7 @@ _bitcoind() {
     _get_comp_words_by_ref -n = cur prev words cword
 
     case "$cur" in
-        -conf=*|-pid=*|-loadblock=*|-rpccookiefile=*|-wallet=*)
+        -conf=*|-pid=*|-loadblock=*|-rpccookiefile=*)
             cur="${cur#*=}"
             _filedir
             return 0

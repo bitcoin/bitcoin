@@ -32,8 +32,6 @@
 #include <tuple>
 #include <utility>
 
-using common::PSBTError;
-using common::PSBTErrorString;
 using common::TransactionErrorString;
 using node::TransactionError;
 using util::Join;
@@ -376,18 +374,6 @@ unsigned int ParseConfirmTarget(const UniValue& value, unsigned int max_target)
     return unsigned_target;
 }
 
-RPCErrorCode RPCErrorFromPSBTError(PSBTError err)
-{
-    switch (err) {
-        case PSBTError::UNSUPPORTED:
-            return RPC_INVALID_PARAMETER;
-        case PSBTError::SIGHASH_MISMATCH:
-            return RPC_DESERIALIZATION_ERROR;
-        default: break;
-    }
-    return RPC_TRANSACTION_ERROR;
-}
-
 RPCErrorCode RPCErrorFromTransactionError(TransactionError terr)
 {
     switch (terr) {
@@ -398,11 +384,6 @@ RPCErrorCode RPCErrorFromTransactionError(TransactionError terr)
         default: break;
     }
     return RPC_TRANSACTION_ERROR;
-}
-
-UniValue JSONRPCPSBTError(PSBTError err)
-{
-    return JSONRPCError(RPCErrorFromPSBTError(err), PSBTErrorString(err).original);
 }
 
 UniValue JSONRPCTransactionError(TransactionError terr, const std::string& err_string)

@@ -44,7 +44,6 @@ struct NodeContext;
 namespace interfaces {
 
 class Handler;
-class Wallet;
 
 //! Helper for findBlock to selectively return pieces of block data. If block is
 //! found, data will be returned by setting specified output variables. If block
@@ -390,35 +389,6 @@ public:
     //! Get internal node context. Useful for testing, but not
     //! accessible across processes.
     virtual node::NodeContext* context() { return nullptr; }
-};
-
-//! Interface to let node manage chain clients (wallets, or maybe tools for
-//! monitoring and analysis in the future).
-class ChainClient
-{
-public:
-    virtual ~ChainClient() = default;
-
-    //! Register rpcs.
-    virtual void registerRpcs() = 0;
-
-    //! Check for errors before loading.
-    virtual bool verify() = 0;
-
-    //! Load saved state.
-    virtual bool load() = 0;
-
-    //! Start client execution and provide a scheduler.
-    virtual void start(CScheduler& scheduler) = 0;
-
-    //! Shut down client.
-    virtual void stop() = 0;
-
-    //! Set mock time.
-    virtual void setMockTime(int64_t time) = 0;
-
-    //! Mock the scheduler to fast forward in time.
-    virtual void schedulerMockForward(std::chrono::seconds delta_seconds) = 0;
 };
 
 //! Return implementation of Chain interface.

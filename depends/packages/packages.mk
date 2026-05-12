@@ -4,8 +4,6 @@ boost_packages = boost
 
 libevent_packages = libevent
 
-sqlite_packages=sqlite
-
 zmq_packages=zeromq
 
 ipc_packages = capnp

@@ -13,14 +13,6 @@ Run the following as root to install the base dependencies for building.
 pkg_add git cmake boost libevent
 ```
 
-SQLite is required for the wallet:
-
-```bash
-pkg_add sqlite3
-```
-
-To build Bitcoin Core without the wallet, use `-DENABLE_WALLET=OFF`.
-
 Cap'n Proto is needed for IPC functionality (see [multiprocess.md](multiprocess.md)):
 
 ```bash

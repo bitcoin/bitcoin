@@ -151,7 +151,6 @@ the pull request affects. Valid areas are:
   - `contrib` or `cli` for changes to the scripts and tools
   - `test`, `qa` or `ci` for changes to the unit tests, QA tests or CI code
   - `util` or `lib` for changes to the utils or libraries
-  - `wallet` for changes to the wallet code
   - `build` for changes to CMake
   - `guix` for changes to the GUIX reproducible builds
 

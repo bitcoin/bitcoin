@@ -15,7 +15,6 @@
 #include <util/fs_helpers.h>
 #include <util/strencodings.h>
 #include <util/string.h>
-#include <walletinitinterface.h>
 
 #include <algorithm>
 #include <iterator>
@@ -344,9 +343,6 @@ bool StartHTTPRPC(const std::any& context)
 
     auto handle_rpc = [context](HTTPRequest* req, const std::string&) { return HTTPReq_JSONRPC(context, req); };
     RegisterHTTPHandler("/", true, handle_rpc);
-    if (g_wallet_init_interface.HasWalletSupport()) {
-        RegisterHTTPHandler("/wallet/", false, handle_rpc);
-    }
     struct event_base* eventBase = EventBase();
     assert(eventBase);
     return true;
@@ -361,7 +357,4 @@ void StopHTTPRPC()
 {
     LogDebug(BCLog::RPC, "Stopping HTTP RPC server\n");
     UnregisterHTTPHandler("/", true);
-    if (g_wallet_init_interface.HasWalletSupport()) {
-        UnregisterHTTPHandler("/wallet/", false);
-    }
 }

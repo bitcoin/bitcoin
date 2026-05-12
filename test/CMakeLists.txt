@@ -15,18 +15,15 @@ function(create_test_config)
     endif()
   endmacro()
 
-  set_configure_variable(ENABLE_WALLET ENABLE_WALLET)
   set_configure_variable(BUILD_BENCH BUILD_BENCH)
   set_configure_variable(BUILD_CLI BUILD_BITCOIN_CLI)
   set_configure_variable(BUILD_TX BUILD_BITCOIN_TX)
   set_configure_variable(BUILD_UTIL BUILD_BITCOIN_UTIL)
   set_configure_variable(BUILD_UTIL_CHAINSTATE BUILD_BITCOIN_CHAINSTATE)
-  set_configure_variable(BUILD_WALLET_TOOL BUILD_BITCOIN_WALLET)
   set_configure_variable(BUILD_DAEMON BUILD_BITCOIND)
   set_configure_variable(BUILD_FUZZ_BINARY ENABLE_FUZZ_BINARY)
   set_configure_variable(WITH_ZMQ ENABLE_ZMQ)
   set_configure_variable(WITH_EMBEDDED_ASMAP ENABLE_EMBEDDED_ASMAP)
-  set_configure_variable(ENABLE_EXTERNAL_SIGNER ENABLE_EXTERNAL_SIGNER)
   set_configure_variable(WITH_USDT ENABLE_USDT_TRACEPOINTS)
   set_configure_variable(ENABLE_IPC ENABLE_IPC)
 
@@ -53,13 +50,6 @@ function(create_test_directory_links)
     functional/data/*.py
   )
 
-  file(MAKE_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/functional/mocks)
-  file(GLOB functional_mocks
-    LIST_DIRECTORIES FALSE
-    RELATIVE ${CMAKE_CURRENT_SOURCE_DIR}
-    functional/mocks/*.py
-  )
-
   file(MAKE_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/functional/test_framework)
   file(GLOB functional_test_framework
     LIST_DIRECTORIES FALSE
@@ -80,7 +70,6 @@ function(create_test_directory_links)
   set(files_to_link
     ${functional}
     ${functional_data}
-    ${functional_mocks}
     ${functional_test_framework}
     ${functional_test_framework_crypto}
     fuzz/test_runner.py

@@ -92,9 +92,8 @@ class ExampleTest(BitcoinTestFramework):
         # self.log.info("I've finished set_test_params")  # Oops! Can't run self.log before run_test()
 
     # Use skip_test_if_missing_module() to skip the test if your test requires certain modules to be present.
-    # This test uses generate which requires wallet to be compiled
-    def skip_test_if_missing_module(self):
-        self.skip_if_no_wallet()
+    # def skip_test_if_missing_module(self):
+    #     pass
 
     # Use add_options() to add specific command-line options for your test.
     # In practice this is not used very much, since the tests are mostly written

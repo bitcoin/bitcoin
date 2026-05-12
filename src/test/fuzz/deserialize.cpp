@@ -21,7 +21,6 @@
 #include <node/utxo_snapshot.h>
 #include <primitives/block.h>
 #include <protocol.h>
-#include <psbt.h>
 #include <pubkey.h>
 #include <script/keyorigin.h>
 #include <streams.h>
@@ -196,20 +195,9 @@ FUZZ_TARGET_DESERIALIZE(key_origin_info_deserialize, {
     DeserializeFromFuzzingInput(buffer, key_origin_info);
     AssertEqualAfterSerializeDeserialize(key_origin_info);
 })
-FUZZ_TARGET_DESERIALIZE(partially_signed_transaction_deserialize, {
-    PartiallySignedTransaction partially_signed_transaction = DeserializeConstructFromFuzzingInput<PartiallySignedTransaction>(buffer);
-})
 FUZZ_TARGET_DESERIALIZE(prefilled_transaction_deserialize, {
     PrefilledTransaction prefilled_transaction;
     DeserializeFromFuzzingInput(buffer, prefilled_transaction);
-})
-FUZZ_TARGET_DESERIALIZE(psbt_input_deserialize, {
-    PSBTInput psbt_input(0, Txid{}, 0);
-    DeserializeFromFuzzingInput(buffer, psbt_input);
-})
-FUZZ_TARGET_DESERIALIZE(psbt_output_deserialize, {
-    PSBTOutput psbt_output(0, 0, CScript());
-    DeserializeFromFuzzingInput(buffer, psbt_output);
 })
 FUZZ_TARGET_DESERIALIZE(block_deserialize, {
     CBlock block;

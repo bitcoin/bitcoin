@@ -135,12 +135,6 @@ else()
   set(WITH_ZMQ ON CACHE BOOL "")
 endif()
 
-if("@wallet_packages@" MATCHES "^[ ]*$")
-  set(ENABLE_WALLET OFF CACHE BOOL "")
-else()
-  set(ENABLE_WALLET ON CACHE BOOL "")
-endif()
-
 if("@usdt_packages@" MATCHES "^[ ]*$")
   set(WITH_USDT OFF CACHE BOOL "")
 else()

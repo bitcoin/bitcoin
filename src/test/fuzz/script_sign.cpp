@@ -4,7 +4,6 @@
 
 #include <chainparams.h>
 #include <key.h>
-#include <psbt.h>
 #include <pubkey.h>
 #include <script/keyorigin.h>
 #include <script/sign.h>
@@ -34,44 +33,6 @@ void initialize_script_sign()
 FUZZ_TARGET(script_sign, .init = initialize_script_sign)
 {
     FuzzedDataProvider fuzzed_data_provider(buffer.data(), buffer.size());
-    const std::vector<uint8_t> key = ConsumeRandomLengthByteVector(fuzzed_data_provider, 128);
-
-    {
-        DataStream random_data_stream{ConsumeDataStream(fuzzed_data_provider)};
-        std::map<CPubKey, KeyOriginInfo> hd_keypaths;
-        try {
-            DeserializeHDKeypaths(random_data_stream, key, hd_keypaths);
-        } catch (const std::ios_base::failure&) {
-        }
-        DataStream serialized{};
-        SerializeHDKeypaths(serialized, hd_keypaths, CompactSizeWriter(fuzzed_data_provider.ConsumeIntegral<uint8_t>()));
-    }
-
-    {
-        std::map<CPubKey, KeyOriginInfo> hd_keypaths;
-        LIMITED_WHILE(fuzzed_data_provider.ConsumeBool(), 10000) {
-            const std::optional<CPubKey> pub_key = ConsumeDeserializable<CPubKey>(fuzzed_data_provider);
-            if (!pub_key) {
-                break;
-            }
-            const std::optional<KeyOriginInfo> key_origin_info = ConsumeDeserializable<KeyOriginInfo>(fuzzed_data_provider);
-            if (!key_origin_info) {
-                break;
-            }
-            hd_keypaths[*pub_key] = *key_origin_info;
-        }
-        DataStream serialized{};
-        try {
-            SerializeHDKeypaths(serialized, hd_keypaths, CompactSizeWriter(fuzzed_data_provider.ConsumeIntegral<uint8_t>()));
-        } catch (const std::ios_base::failure&) {
-        }
-        std::map<CPubKey, KeyOriginInfo> deserialized_hd_keypaths;
-        try {
-            DeserializeHDKeypaths(serialized, key, hd_keypaths);
-        } catch (const std::ios_base::failure&) {
-        }
-        assert(hd_keypaths.size() >= deserialized_hd_keypaths.size());
-    }
 
     {
         SignatureData signature_data_1{ConsumeScript(fuzzed_data_provider)};

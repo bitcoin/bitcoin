@@ -10,7 +10,6 @@ class DeprecatedRpcTest(BitcoinTestFramework):
         self.num_nodes = 1
         self.setup_clean_chain = True
         self.extra_args = [[]]
-        self.uses_wallet = None
 
     def run_test(self):
         # This test should be used to verify the errors of the currently

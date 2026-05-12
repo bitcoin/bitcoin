@@ -20,7 +20,7 @@ fi
 
 export CONTAINER_NAME=ci_native_asan
 export APT_LLVM_V="22"
-export PACKAGES="systemtap-sdt-dev clang-${APT_LLVM_V} llvm-${APT_LLVM_V} libclang-rt-${APT_LLVM_V}-dev mold python3-zmq libevent-dev libboost-dev libzmq3-dev libsqlite3-dev ${BPFCC_PACKAGE} libcapnp-dev capnproto python3-pip"
+export PACKAGES="systemtap-sdt-dev clang-${APT_LLVM_V} llvm-${APT_LLVM_V} libclang-rt-${APT_LLVM_V}-dev mold python3-zmq libevent-dev libboost-dev libzmq3-dev ${BPFCC_PACKAGE} libcapnp-dev capnproto python3-pip"
 export PIP_PACKAGES="--break-system-packages pycapnp"
 export NO_DEPENDS=1
 export GOAL="install"

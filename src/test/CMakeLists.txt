@@ -81,7 +81,6 @@ add_executable(test_bitcoin
   pow_tests.cpp
   prevector_tests.cpp
   private_broadcast_tests.cpp
-  psbt_tests.cpp
   raii_event_tests.cpp
   random_tests.cpp
   rbf_tests.cpp
@@ -171,10 +170,6 @@ target_link_libraries(test_bitcoin
   libevent::extra
   $<TARGET_NAME_IF_EXISTS:USDT::headers>
 )
-
-if(ENABLE_WALLET)
-  add_subdirectory(${PROJECT_SOURCE_DIR}/src/wallet/test wallet)
-endif()
 
 if(ENABLE_IPC)
   add_subdirectory(${PROJECT_SOURCE_DIR}/src/ipc/test ipc)
