@@ -168,6 +168,7 @@ static constexpr bool DEFAULT_I2P_ACCEPT_INCOMING{true};
 extern unsigned int fRPCSerialVersion;
 static constexpr bool DEFAULT_STOPAFTERBLOCKIMPORT{false};
 static constexpr int64_t DEFAULT_GETH_STARTUP_TIMEOUT{300};
+static constexpr int64_t DEFAULT_GETH_BOOTSTRAP_STARTUP_TIMEOUT{14400};
 static constexpr int64_t DEFAULT_GETH_STARTUP_RETRY_INTERVAL_MS{2000};
 static constexpr int64_t DEFAULT_GETH_STARTUP_LOG_INTERVAL{30};
 static const char* GETH_STATE_BOOTSTRAP_STATUS_FILENAME = "state-bootstrap.status";
@@ -604,6 +605,7 @@ void SetupServerArgs(ArgsManager& argsman)
     // SYSCOIN
     argsman.AddArg("-gethcommandline=<port>", strprintf("Geth command line parameters (default: %s)", ""), ArgsManager::ALLOW_ANY, OptionsCategory::RPC);
     argsman.AddArg("-gethstartuptimeout=<n>", strprintf("Maximum seconds to wait for sysgeth to become ready during startup before NEVM is marked offline (0 = wait indefinitely, default: %d)", DEFAULT_GETH_STARTUP_TIMEOUT), ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
+    argsman.AddArg("-gethbootstrapstartuptimeout=<n>", strprintf("Maximum seconds to wait for sysgeth to become ready while state bootstrap is active (0 = wait indefinitely, default: %d)", DEFAULT_GETH_BOOTSTRAP_STARTUP_TIMEOUT), ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
     argsman.AddArg("-sporkaddr=<hex>", strprintf("Override spork address. Only useful for regtest. Using this on mainnet or testnet will ban you."), ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
     argsman.AddArg("-mnconf=<file>", strprintf("Specify masternode configuration file (default: %s)", "masternode.conf"), ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
     argsman.AddArg("-mnconflock=<n>", strprintf("Lock masternodes from masternode configuration file (default: %u)", 1), ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
@@ -1932,8 +1934,11 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
     if(fNEVMConnection && !fRegTest) {
         uiInterface.InitMessage("Loading Geth...");
         const int64_t geth_startup_timeout = std::max<int64_t>(0, args.GetIntArg("-gethstartuptimeout", DEFAULT_GETH_STARTUP_TIMEOUT));
+        const int64_t geth_bootstrap_startup_timeout = std::max<int64_t>(0, args.GetIntArg("-gethbootstrapstartuptimeout", DEFAULT_GETH_BOOTSTRAP_STARTUP_TIMEOUT));
         const auto wait_start = std::chrono::steady_clock::now();
         auto wait_deadline = wait_start + std::chrono::seconds{geth_startup_timeout};
+        auto bootstrap_wait_deadline = wait_start + std::chrono::seconds{geth_bootstrap_startup_timeout};
+        bool bootstrap_wait_started{false};
         auto next_wait_log = wait_start;
         uint64_t nHeightFromGeth{0};
         std::string stateStr;
@@ -1948,22 +1953,27 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
 
             const auto now = std::chrono::steady_clock::now();
             const std::string bootstrap_status = ReadGethStateBootstrapStatus(args.GetDataDirNet());
-            const bool bootstrap_active = !bootstrap_status.empty();
-            if (bootstrap_active && geth_startup_timeout != 0) {
-                wait_deadline = now + std::chrono::seconds{geth_startup_timeout};
+            const bool bootstrap_active = !bootstrap_status.empty() && node.chainman->ActiveChainstate().IsGethNodeRunning();
+            if (bootstrap_active && !bootstrap_wait_started) {
+                bootstrap_wait_started = true;
+                bootstrap_wait_deadline = now + std::chrono::seconds{geth_bootstrap_startup_timeout};
             }
             if (now >= next_wait_log) {
                 const std::string bootstrap_msg = bootstrap_active ? strprintf(", state bootstrap=%s", bootstrap_status) : "";
-                if (geth_startup_timeout == 0) {
+                const int64_t active_timeout = bootstrap_active ? geth_bootstrap_startup_timeout : geth_startup_timeout;
+                if (active_timeout == 0) {
                     LogPrintf("Waiting for sysgeth startup to complete before NEVM attach (%s%s)\n", stateStr, bootstrap_msg);
                 } else {
                     const auto waited = std::chrono::duration_cast<std::chrono::seconds>(now - wait_start).count();
-                    LogPrintf("Waiting for sysgeth startup to complete before NEVM attach (%s%s), elapsed=%d timeout=%d seconds\n", stateStr, bootstrap_msg, waited, geth_startup_timeout);
+                    LogPrintf("Waiting for sysgeth startup to complete before NEVM attach (%s%s), elapsed=%d timeout=%d seconds\n", stateStr, bootstrap_msg, waited, active_timeout);
                 }
                 next_wait_log = now + std::chrono::seconds{DEFAULT_GETH_STARTUP_LOG_INTERVAL};
             }
 
             if (!bootstrap_active && geth_startup_timeout != 0 && now >= wait_deadline) {
+                break;
+            }
+            if (bootstrap_active && geth_bootstrap_startup_timeout != 0 && bootstrap_wait_started && now >= bootstrap_wait_deadline) {
                 break;
             }
             for (int64_t slept_ms{0}; slept_ms < DEFAULT_GETH_STARTUP_RETRY_INTERVAL_MS && !ShutdownRequested(); slept_ms += 200) {

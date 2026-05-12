@@ -147,14 +147,14 @@ public:
 
     // Periodic signer: signs a deterministic checkpoint (activeHeight aligned to 10).
     // The carrier block at height (nHeight+5) embeds this checkpoint for a 5-block propagation buffer.
-    void TrySignBTCCheckpointTip();
-    void ProcessPendingVerifiedBTCCheckpointSigs();
+    void TrySignBTCCheckpointTip() EXCLUSIVE_LOCKS_REQUIRED(!cs);
+    void ProcessPendingVerifiedBTCCheckpointSigs() EXCLUSIVE_LOCKS_REQUIRED(!cs);
 
     void ProcessMessage(CNode* pfrom, const std::string& msg_type, CDataStream& vRecv) EXCLUSIVE_LOCKS_REQUIRED(!cs);
     bool AlreadyHave(const uint256& hash) const EXCLUSIVE_LOCKS_REQUIRED(!cs);
     bool GetBTCCheckpointByHash(const uint256& hash, CBTCCheckpointSig& ret) const EXCLUSIVE_LOCKS_REQUIRED(!cs);
 
-    void HandleNewRecoveredSig(const CRecoveredSig& recoveredSig) override;
+    void HandleNewRecoveredSig(const CRecoveredSig& recoveredSig) override EXCLUSIVE_LOCKS_REQUIRED(!cs);
 
     CBTCCheckpointSig GetMostRecentBTCCheckpoint() const EXCLUSIVE_LOCKS_REQUIRED(!cs);
     CBTCCheckpointSig GetBestBTCCheckpoint() const EXCLUSIVE_LOCKS_REQUIRED(!cs);

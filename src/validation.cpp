@@ -7618,6 +7618,46 @@ bool Chainstate::StartGethNode()
     return true;
 #endif
 }
+
+bool Chainstate::IsGethNodeRunning()
+{
+    LOCK(cs_geth);
+
+#ifdef WIN32
+    return false;
+#else
+    if (gethpid <= 0) {
+        return false;
+    }
+
+    int status = 0;
+    const pid_t result = waitpid(gethpid, &status, WNOHANG);
+    if (result == gethpid) {
+        if (WIFEXITED(status)) {
+            LogPrintf("Geth process exited with code %d while waiting for startup.\n", WEXITSTATUS(status));
+        } else if (WIFSIGNALED(status)) {
+            LogPrintf("Geth process terminated by signal %d while waiting for startup.\n", WTERMSIG(status));
+        }
+        gethpid = -1;
+        return false;
+    }
+    if (result == 0) {
+        return true;
+    }
+    if (errno == ECHILD) {
+        if (kill(gethpid, 0) == 0 || errno == EPERM) {
+            return true;
+        }
+        if (errno == ESRCH) {
+            gethpid = -1;
+            return false;
+        }
+    }
+    LogPrintf("Failed checking sysgeth pid %d while waiting for startup (errno=%d)\n", gethpid, errno);
+    return true;
+#endif
+}
+
 bool Chainstate::StopGethNode(bool bOnStart)
 {
     LOCK(cs_geth);
