@@ -32,6 +32,7 @@
 #include <validation.h>
 #include <validationinterface.h>
 
+#include <algorithm>
 #include <cstddef>
 #include <cstdint>
 #include <functional>
@@ -49,6 +50,14 @@
 using node::NodeContext;
 
 namespace {
+
+// Keep package generation focused on topology instead of large per-tx fanout.
+// The target still covers the package-count boundary, multi-input/multi-output
+// parents, and a final child that spends all in-package outputs. At that
+// boundary, the child can spend up to MAX_PACKAGE_COUNT * MAX_FUZZ_TX_OUTPUTS
+// package outputs.
+constexpr int MAX_FUZZ_TX_INPUTS{8};
+constexpr int MAX_FUZZ_TX_OUTPUTS{16};
 
 const TestingSetup* g_setup;
 std::vector<COutPoint> g_outpoints_coinbase_init_mature;
@@ -398,8 +407,8 @@ FUZZ_TARGET(tx_package_eval, .init = initialize_tx_pool)
 
         std::vector<CTransactionRef> txs;
 
-        // Make packages of 1-to-26 transactions
-        const auto num_txs = fuzzed_data_provider.ConsumeIntegralInRange<size_t>(1, 26);
+        // Make packages up to one transaction above the package-count limit.
+        const auto num_txs = fuzzed_data_provider.ConsumeIntegralInRange<size_t>(1, MAX_PACKAGE_COUNT + 1);
         std::set<COutPoint> package_outpoints;
         while (txs.size() < num_txs) {
             // Create transaction to add to the mempool
@@ -411,8 +420,13 @@ FUZZ_TARGET(tx_package_eval, .init = initialize_tx_pool)
                 // so the last transaction to be generated(in a >1 package) must spend all package-made outputs
                 // Note that this test currently only spends package outputs in last transaction.
                 bool last_tx = num_txs > 1 && txs.size() == num_txs - 1;
-                const auto num_in = last_tx ? package_outpoints.size()  : fuzzed_data_provider.ConsumeIntegralInRange<int>(1, mempool_outpoints.size());
-                auto num_out = fuzzed_data_provider.ConsumeIntegralInRange<int>(1, mempool_outpoints.size() * 2);
+                const auto num_in{last_tx ? package_outpoints.size() :
+                    std::min(
+                        fuzzed_data_provider.ConsumeIntegralInRange<int>(1, mempool_outpoints.size()),
+                        MAX_FUZZ_TX_INPUTS)};
+                auto num_out{std::min(
+                    fuzzed_data_provider.ConsumeIntegralInRange<int>(1, mempool_outpoints.size() * 2),
+                    MAX_FUZZ_TX_OUTPUTS)};
 
                 auto& outpoints = last_tx ? package_outpoints : mempool_outpoints;
 
