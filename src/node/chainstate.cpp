@@ -46,79 +46,6 @@ static ChainstateLoadResult CompleteChainstateInitialization(
     const ChainstateLoadOptions& options) EXCLUSIVE_LOCKS_REQUIRED(::cs_main)
 {
     auto& pblocktree{chainman.m_blockman.m_block_tree_db};
-    LogPrintf("Creating LLMQ databases...\n");
-    llmq::DestroyLLMQSystem();
-    auto evoDmnDbParams = DBParams{
-        .path = chainman.m_options.datadir / "evodb_dmn",
-        .cache_bytes = static_cast<size_t>(cache_sizes.evo_dmn_db),
-        .memory_only = options.block_tree_db_in_memory,
-        .wipe_data = options.fReindexGeth,
-        .options = chainman.m_options.block_tree_db};
-    deterministicMNManager.reset();
-    deterministicMNManager.reset(new CDeterministicMNManager(evoDmnDbParams));
-    governance.reset();
-    governance.reset(new CGovernanceManager(chainman));
-    sporkManager.reset();
-    sporkManager.reset(new CSporkManager());
-    netfulfilledman.reset();
-    netfulfilledman.reset(new CNetFulfilledRequestManager());
-    mmetaman.reset();
-    mmetaman.reset(new CMasternodeMetaMan());
-    auto quorumCommitmentDB = DBParams{
-        .path = chainman.m_options.datadir / "evodb_qc",
-        .cache_bytes = static_cast<size_t>(cache_sizes.evo_qc_db),
-        .memory_only = options.block_tree_db_in_memory,
-        .wipe_data = options.fReindexGeth,
-        .options = chainman.m_options.block_tree_db};
-    auto quorumVectorDB = DBParams{
-        .path = chainman.m_options.datadir / "evodb_qvvecs",
-        .cache_bytes = static_cast<size_t>(cache_sizes.evo_qvvecs_db),
-        .memory_only = options.block_tree_db_in_memory,
-        .wipe_data = options.fReindexGeth,
-        .options = chainman.m_options.block_tree_db};
-    auto quorumSkDB = DBParams{
-        .path = chainman.m_options.datadir / "evodb_qsk",
-        .cache_bytes = static_cast<size_t>(cache_sizes.evo_qsk_db),
-        .memory_only = options.block_tree_db_in_memory,
-        .wipe_data = options.fReindexGeth,
-        .options = chainman.m_options.block_tree_db};
-    llmq::InitLLMQSystem(quorumCommitmentDB, quorumVectorDB, quorumSkDB, options.block_tree_db_in_memory, *options.connman, *options.banman, *options.peerman, chainman, options.fReindexGeth);
-    pnevmtxrootsdb.reset();
-    pnevmtxrootsdb = std::make_unique<CNEVMTxRootsDB>(DBParams{
-        .path = chainman.m_options.datadir / "nevmtxroots",
-        .cache_bytes = static_cast<size_t>(cache_sizes.block_tree_db),
-        .memory_only = options.block_tree_db_in_memory,
-        .wipe_data = options.fReindexGeth,
-        .options = chainman.m_options.block_tree_db});
-    pnevmtxmintdb.reset();
-    pnevmtxmintdb = std::make_unique<CNEVMMintedTxDB>(DBParams{
-        .path = chainman.m_options.datadir / "nevmminttx",
-        .cache_bytes = static_cast<size_t>(cache_sizes.block_tree_db),
-        .memory_only = options.block_tree_db_in_memory,
-        .wipe_data = options.fReindexGeth,
-        .options = chainman.m_options.block_tree_db});
-    pblockindexdb.reset();
-    pblockindexdb = std::make_unique<CBlockIndexDB>(DBParams{
-        .path = chainman.m_options.datadir / "dbblockindex",
-        .cache_bytes = static_cast<size_t>(cache_sizes.evo_dmn_db),
-        .memory_only = options.block_tree_db_in_memory,
-        .wipe_data = options.fReindexGeth,
-        .options = chainman.m_options.block_tree_db});
-    pnevmdatadb.reset();
-    pnevmdatadb = std::make_unique<CNEVMDataDB>(DBParams{
-        .path = chainman.m_options.datadir / "nevmdata",
-        .cache_bytes = static_cast<size_t>(cache_sizes.block_tree_db),
-        .memory_only = options.block_tree_db_in_memory,
-        .wipe_data = options.fReindexGeth,
-        .options = chainman.m_options.coins_db});
-    pnevmdatablobdb.reset();  
-    // PoDA blob data cannot be deleted from disk on reindex because chain on disk does not have PoDA information to recreate it
-    pnevmdatablobdb = std::make_unique<CNEVMDataBlobDB>(DBParams{
-        .path = chainman.m_options.datadir / "nevmblobdata",
-        .cache_bytes = static_cast<size_t>(cache_sizes.evo_poda_db),
-        .memory_only = options.block_tree_db_in_memory,
-        .wipe_data = false,
-        .options = chainman.m_options.coins_db});  
     // new BlockTreeDB tries to delete the existing file, which
     // fails if it's still open from the previous loop. Close it first:
     pblocktree.reset();
@@ -137,6 +64,87 @@ static ChainstateLoadResult CompleteChainstateInitialization(
         }
     }
 
+    bool disk_reindexing{false};
+    pblocktree->ReadReindexing(disk_reindexing);
+    const bool effective_reindex_geth{options.fReindexGeth || disk_reindexing};
+    if (disk_reindexing && !options.fReindexGeth) {
+        fReindexGeth = true;
+        LogPrintf("Continuing reindex from persisted marker; forcing NEVM/LLMQ database reinitialization.\n");
+    }
+
+    LogPrintf("Creating LLMQ databases...\n");
+    llmq::DestroyLLMQSystem();
+    auto evoDmnDbParams = DBParams{
+        .path = chainman.m_options.datadir / "evodb_dmn",
+        .cache_bytes = static_cast<size_t>(cache_sizes.evo_dmn_db),
+        .memory_only = options.block_tree_db_in_memory,
+        .wipe_data = effective_reindex_geth,
+        .options = chainman.m_options.block_tree_db};
+    deterministicMNManager.reset();
+    deterministicMNManager.reset(new CDeterministicMNManager(evoDmnDbParams));
+    governance.reset();
+    governance.reset(new CGovernanceManager(chainman));
+    sporkManager.reset();
+    sporkManager.reset(new CSporkManager());
+    netfulfilledman.reset();
+    netfulfilledman.reset(new CNetFulfilledRequestManager());
+    mmetaman.reset();
+    mmetaman.reset(new CMasternodeMetaMan());
+    auto quorumCommitmentDB = DBParams{
+        .path = chainman.m_options.datadir / "evodb_qc",
+        .cache_bytes = static_cast<size_t>(cache_sizes.evo_qc_db),
+        .memory_only = options.block_tree_db_in_memory,
+        .wipe_data = effective_reindex_geth,
+        .options = chainman.m_options.block_tree_db};
+    auto quorumVectorDB = DBParams{
+        .path = chainman.m_options.datadir / "evodb_qvvecs",
+        .cache_bytes = static_cast<size_t>(cache_sizes.evo_qvvecs_db),
+        .memory_only = options.block_tree_db_in_memory,
+        .wipe_data = effective_reindex_geth,
+        .options = chainman.m_options.block_tree_db};
+    auto quorumSkDB = DBParams{
+        .path = chainman.m_options.datadir / "evodb_qsk",
+        .cache_bytes = static_cast<size_t>(cache_sizes.evo_qsk_db),
+        .memory_only = options.block_tree_db_in_memory,
+        .wipe_data = effective_reindex_geth,
+        .options = chainman.m_options.block_tree_db};
+    llmq::InitLLMQSystem(quorumCommitmentDB, quorumVectorDB, quorumSkDB, options.block_tree_db_in_memory, *options.connman, *options.banman, *options.peerman, chainman, effective_reindex_geth);
+    pnevmtxrootsdb.reset();
+    pnevmtxrootsdb = std::make_unique<CNEVMTxRootsDB>(DBParams{
+        .path = chainman.m_options.datadir / "nevmtxroots",
+        .cache_bytes = static_cast<size_t>(cache_sizes.block_tree_db),
+        .memory_only = options.block_tree_db_in_memory,
+        .wipe_data = effective_reindex_geth,
+        .options = chainman.m_options.block_tree_db});
+    pnevmtxmintdb.reset();
+    pnevmtxmintdb = std::make_unique<CNEVMMintedTxDB>(DBParams{
+        .path = chainman.m_options.datadir / "nevmminttx",
+        .cache_bytes = static_cast<size_t>(cache_sizes.block_tree_db),
+        .memory_only = options.block_tree_db_in_memory,
+        .wipe_data = effective_reindex_geth,
+        .options = chainman.m_options.block_tree_db});
+    pblockindexdb.reset();
+    pblockindexdb = std::make_unique<CBlockIndexDB>(DBParams{
+        .path = chainman.m_options.datadir / "dbblockindex",
+        .cache_bytes = static_cast<size_t>(cache_sizes.evo_dmn_db),
+        .memory_only = options.block_tree_db_in_memory,
+        .wipe_data = effective_reindex_geth,
+        .options = chainman.m_options.block_tree_db});
+    pnevmdatadb.reset();
+    pnevmdatadb = std::make_unique<CNEVMDataDB>(DBParams{
+        .path = chainman.m_options.datadir / "nevmdata",
+        .cache_bytes = static_cast<size_t>(cache_sizes.block_tree_db),
+        .memory_only = options.block_tree_db_in_memory,
+        .wipe_data = effective_reindex_geth,
+        .options = chainman.m_options.coins_db});
+    pnevmdatablobdb.reset();  
+    // PoDA blob data cannot be deleted from disk on reindex because chain on disk does not have PoDA information to recreate it
+    pnevmdatablobdb = std::make_unique<CNEVMDataBlobDB>(DBParams{
+        .path = chainman.m_options.datadir / "nevmblobdata",
+        .cache_bytes = static_cast<size_t>(cache_sizes.evo_poda_db),
+        .memory_only = options.block_tree_db_in_memory,
+        .wipe_data = false,
+        .options = chainman.m_options.coins_db});  
     if (options.check_interrupt && options.check_interrupt()) return {ChainstateLoadStatus::INTERRUPTED, {}};
 
     // LoadBlockIndex will load m_have_pruned if we've ever removed a
@@ -237,7 +245,7 @@ static ChainstateLoadResult CompleteChainstateInitialization(
         };
     }
     // if coinsview is empty we clear all SYS db's overriding anything we did before
-    if(coinsViewEmpty && !options.fReindexGeth) {
+    if(coinsViewEmpty && !effective_reindex_geth) {
         LogPrintf("coinsViewEmpty recreating LLMQ and NEVM databases\n");
         llmq::DestroyLLMQSystem();
         auto evoDmnDbParams = DBParams{

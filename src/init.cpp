@@ -167,9 +167,10 @@ static constexpr bool DEFAULT_I2P_ACCEPT_INCOMING{true};
 // SYSCOIN
 extern unsigned int fRPCSerialVersion;
 static constexpr bool DEFAULT_STOPAFTERBLOCKIMPORT{false};
-static constexpr int64_t DEFAULT_GETH_STARTUP_TIMEOUT{14400};
+static constexpr int64_t DEFAULT_GETH_STARTUP_TIMEOUT{300};
 static constexpr int64_t DEFAULT_GETH_STARTUP_RETRY_INTERVAL_MS{2000};
 static constexpr int64_t DEFAULT_GETH_STARTUP_LOG_INTERVAL{30};
+static const char* GETH_STATE_BOOTSTRAP_STATUS_FILENAME = "state-bootstrap.status";
 
 static bool HasNEVMMinerFeeRecipientConfig(const ArgsManager& args)
 {
@@ -190,6 +191,18 @@ static bool HasNEVMMinerFeeRecipientConfig(const ArgsManager& args)
         }
     }
     return false;
+}
+
+static std::string ReadGethStateBootstrapStatus(const fs::path& data_dir_net)
+{
+    const fs::path status_path = data_dir_net / "geth" / "geth" / GETH_STATE_BOOTSTRAP_STATUS_FILENAME;
+    std::ifstream status_file{status_path};
+    if (!status_file) {
+        return {};
+    }
+    std::string status;
+    std::getline(status_file, status);
+    return TrimString(status);
 }
 
 #ifdef WIN32
@@ -1920,7 +1933,7 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
         uiInterface.InitMessage("Loading Geth...");
         const int64_t geth_startup_timeout = std::max<int64_t>(0, args.GetIntArg("-gethstartuptimeout", DEFAULT_GETH_STARTUP_TIMEOUT));
         const auto wait_start = std::chrono::steady_clock::now();
-        const auto wait_deadline = wait_start + std::chrono::seconds{geth_startup_timeout};
+        auto wait_deadline = wait_start + std::chrono::seconds{geth_startup_timeout};
         auto next_wait_log = wait_start;
         uint64_t nHeightFromGeth{0};
         std::string stateStr;
@@ -1934,22 +1947,36 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
             }
 
             const auto now = std::chrono::steady_clock::now();
+            const std::string bootstrap_status = ReadGethStateBootstrapStatus(args.GetDataDirNet());
+            const bool bootstrap_active = !bootstrap_status.empty();
+            if (bootstrap_active && geth_startup_timeout != 0) {
+                wait_deadline = now + std::chrono::seconds{geth_startup_timeout};
+            }
             if (now >= next_wait_log) {
+                const std::string bootstrap_msg = bootstrap_active ? strprintf(", state bootstrap=%s", bootstrap_status) : "";
                 if (geth_startup_timeout == 0) {
-                    LogPrintf("Waiting for sysgeth startup to complete before NEVM attach (%s)\n", stateStr);
+                    LogPrintf("Waiting for sysgeth startup to complete before NEVM attach (%s%s)\n", stateStr, bootstrap_msg);
                 } else {
                     const auto waited = std::chrono::duration_cast<std::chrono::seconds>(now - wait_start).count();
-                    LogPrintf("Waiting for sysgeth startup to complete before NEVM attach (%s), elapsed=%d timeout=%d seconds\n", stateStr, waited, geth_startup_timeout);
+                    LogPrintf("Waiting for sysgeth startup to complete before NEVM attach (%s%s), elapsed=%d timeout=%d seconds\n", stateStr, bootstrap_msg, waited, geth_startup_timeout);
                 }
                 next_wait_log = now + std::chrono::seconds{DEFAULT_GETH_STARTUP_LOG_INTERVAL};
             }
 
-            if (geth_startup_timeout != 0 && now >= wait_deadline) {
+            if (!bootstrap_active && geth_startup_timeout != 0 && now >= wait_deadline) {
                 break;
             }
-            UninterruptibleSleep(std::chrono::milliseconds{DEFAULT_GETH_STARTUP_RETRY_INTERVAL_MS});
+            for (int64_t slept_ms{0}; slept_ms < DEFAULT_GETH_STARTUP_RETRY_INTERVAL_MS && !ShutdownRequested(); slept_ms += 200) {
+                UninterruptibleSleep(std::chrono::milliseconds{200});
+            }
+        }
+        if (ShutdownRequested()) {
+            LogPrintf("Shutdown requested while waiting for sysgeth startup; stopping sysgeth and exiting.\n");
+            node.chainman->ActiveChainstate().StopGethNode(true);
+            return false;
         }
         if (!geth_ready) {
+            node.chainman->ActiveChainstate().StopGethNode(true);
             fNEVMConnection = false;
             if (stateStr.empty()) {
                 LogPrintf("Could not call NotifyGetNEVMBlockInfo, setting fNEVMConnection to false...\n");

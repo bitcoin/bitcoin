@@ -62,6 +62,8 @@ static const char *MSG_RAWMEMPOOLTX  = "rawmempooltx";
 static const char *MSG_HASHGVOTE     = "hashgovernancevote";
 static const char *MSG_HASHGOBJ      = "hashgovernanceobject";
 static const char *MSG_SEQUENCE  = "sequence";
+static constexpr int NEVM_STATUS_TIMEOUT_MS{2000};
+static constexpr int NEVM_COMMS_TIMEOUT_MS{150000};
 RecursiveMutex cs_nevm;
 
 // Internal function to send multipart message
@@ -320,7 +322,7 @@ bool CZMQAbstractPublishNotifier::NotifyNEVMCommsCommon(const std::string &commM
     LOCK(cs_nevm);
     bResponse = false;
     if(psocketsub) {
-        int timeout = 150000;
+        int timeout = commMessage == "status" ? NEVM_STATUS_TIMEOUT_MS : NEVM_COMMS_TIMEOUT_MS;
         int rc = zmq_setsockopt(psocketsub, ZMQ_RCVTIMEO, &timeout, sizeof(timeout));
         if (rc != 0) {
             zmqError("Failed to set ZMQ_RCVTIMEO");

@@ -115,6 +115,7 @@ pid_t btcheaderpid = -1;
 RecursiveMutex cs_geth;
 RecursiveMutex cs_btcheader;
 std::string g_managed_btcheader_rpc_cmd;
+static const char* GETH_STATE_BOOTSTRAP_STATUS_FILENAME = "state-bootstrap.status";
 NEVMMintTxSet setMintTxsMempool;
 std::unordered_map<COutPoint, std::pair<CTransactionRef, CTransactionRef>, SaltedOutpointHasher> mapAssetAllocationConflicts;
 std::map<uint256, int64_t> mapRejectedBlocks GUARDED_BY(cs_main);
@@ -7600,6 +7601,10 @@ bool Chainstate::StartGethNode()
         return false;
     }
     const fs::path dataDir = m_chainman.m_options.datadir / "geth";
+    const fs::path bootstrap_status_path = dataDir / "geth" / GETH_STATE_BOOTSTRAP_STATUS_FILENAME;
+    if (fs::exists(bootstrap_status_path)) {
+        fs::remove(bootstrap_status_path);
+    }
     std::vector<std::string> vecCmdLineStr = SanitizeGethCmdLine(m_chainman.GethCommandLine(), binaryURL, dataDir);
     const fs::path log = m_chainman.m_options.datadir / "sysgeth.log";
     std::string spawn_error;
@@ -7621,7 +7626,7 @@ bool Chainstate::StopGethNode(bool bOnStart)
     LogPrintf("%s: SysGeth management is not supported on WIN32 builds\n", __func__);
     return false;
 #else
-    if (!fNEVMConnection || fRegTest) {
+    if (fRegTest || (!fNEVMConnection && gethpid <= 0)) {
         return false;
     }
     if(!bOnStart) {
