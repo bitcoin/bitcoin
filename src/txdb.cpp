@@ -36,7 +36,8 @@ bool CCoinsViewDB::NeedsUpgrade()
     // DB_COINS was deprecated in v0.15.0, commit
     // 1088b02f0ccd7358d2b7076bb9e122d59d502d02
     cursor->Seek(std::make_pair(DB_COINS, uint256{}));
-    return cursor->Valid();
+    std::pair<unsigned char, uint256> key;   
+    return cursor->Valid() && cursor->GetKey(key) && key.first == DB_COINS;  
 }
 
 namespace {
