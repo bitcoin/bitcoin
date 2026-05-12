@@ -19,7 +19,7 @@ class CZMQAbstractNotifier;
 class CZMQNotificationInterface final : public CValidationInterface
 {
 public:
-    virtual ~CZMQNotificationInterface();
+    ~CZMQNotificationInterface();
 
     std::list<const CZMQAbstractNotifier*> GetActiveNotifiers() const;
 
