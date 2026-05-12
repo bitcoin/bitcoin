@@ -168,7 +168,7 @@ static constexpr bool DEFAULT_I2P_ACCEPT_INCOMING{true};
 extern unsigned int fRPCSerialVersion;
 static constexpr bool DEFAULT_STOPAFTERBLOCKIMPORT{false};
 static constexpr int64_t DEFAULT_GETH_STARTUP_TIMEOUT{300};
-static constexpr int64_t DEFAULT_GETH_BOOTSTRAP_STARTUP_TIMEOUT{14400};
+static constexpr int64_t DEFAULT_GETH_BOOTSTRAP_STARTUP_TIMEOUT{7200};
 static constexpr int64_t DEFAULT_GETH_STARTUP_RETRY_INTERVAL_MS{2000};
 static constexpr int64_t DEFAULT_GETH_STARTUP_LOG_INTERVAL{30};
 static const char* GETH_STATE_BOOTSTRAP_STATUS_FILENAME = "state-bootstrap.status";
