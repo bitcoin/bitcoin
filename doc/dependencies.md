@@ -8,10 +8,12 @@ them using [depends](/depends/README.md).
 
 Bitcoin Core requires one of the following compilers.
 
-| Dependency | Minimum required |
+| Toolchain | Minimum required |
 | --- | --- |
 | [Clang](https://clang.llvm.org) | [17.0](https://github.com/bitcoin/bitcoin/pull/33555) |
 | [GCC](https://gcc.gnu.org) | [12.1](https://github.com/bitcoin/bitcoin/pull/33842) |
+| [Xcode CLT](/doc/build-osx.md) | [16.2](https://github.com/bitcoin/bitcoin/pull/33932) |
+| [MSVC](/doc/build-windows-msvc.md) | [18.3](https://github.com/bitcoin/bitcoin/pull/33861) |
 
 ## Required
 

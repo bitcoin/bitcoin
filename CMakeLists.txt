@@ -80,9 +80,6 @@ if(CMAKE_VERSION VERSION_LESS 4.2 AND CMAKE_SYSTEM_NAME STREQUAL "Darwin" AND NO
   set(CMAKE_INSTALL_NAME_TOOL "${CMAKE_COMMAND} -E true")
 endif()
 enable_language(CXX)
-set(MIN_CLANG_DOCS "doc/dependencies.md#compiler")
-set(MIN_GCC_DOCS "doc/dependencies.md#compiler")
-set(MIN_MSVC_DOCS "doc/build-windows-msvc.md")
 
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -201,11 +198,7 @@ string(APPEND CMAKE_CXX_COMPILE_OBJECT " ${APPEND_CPPFLAGS} ${APPEND_CXXFLAGS}")
 string(APPEND CMAKE_CXX_CREATE_SHARED_LIBRARY " ${APPEND_LDFLAGS}")
 string(APPEND CMAKE_CXX_LINK_EXECUTABLE " ${APPEND_LDFLAGS}")
 
-#=============================
-# C++ Feature Detection
-#=============================
-# In case the compiler is not GCC, Clang or MSVC this provides extra checks
-# which verify that some features are available in the standard library.
+# Check required C++ toolchain features early.
 include(CheckCXXFeatures)
 check_cxx_features()
 
