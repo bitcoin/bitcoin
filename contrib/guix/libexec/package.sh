@@ -8,6 +8,13 @@ set -e -o pipefail
 (
     cd "$DISTSRC"
 
+    # Perform basic security checks on installed executables.
+    echo "Checking binary security on installed executables..."
+    python3 "${DISTSRC}/contrib/guix/security-check.py" "${INSTALLPATH}/bin/"* "${INSTALLPATH}/libexec/"*
+    # Check that executables only contain allowed version symbols.
+    echo "Running symbol and dynamic library checks on installed executables..."
+    python3 "${DISTSRC}/contrib/guix/symbol-check.py" "${INSTALLPATH}/bin/"* "${INSTALLPATH}/libexec/"*
+
     (
         cd installed
 
@@ -32,7 +39,7 @@ set -e -o pipefail
         esac
 
         # copy over the example bitcoin.conf file. if contrib/devtools/gen-bitcoin-conf.sh
-        # has not been run before buildling, this file will be a stub
+        # has not been run before building, this file will be a stub
         cp "${DISTSRC}/share/examples/bitcoin.conf" "${DISTNAME}/"
 
         cp -r "${DISTSRC}/share/rpcauth" "${DISTNAME}/share/"
