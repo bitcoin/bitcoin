@@ -25,7 +25,6 @@
 
 #include <algorithm>
 #include <chrono>
-#include <fstream>
 bool fMasternodeMode = false;
 int64_t DEFAULT_MAX_RECOVERED_SIGS_AGE = 60 * 60 * 24 * 7; // keep them for a week
 
@@ -39,141 +38,6 @@ int64_t ElapsedMillis(const std::chrono::steady_clock::time_point& start)
     return std::chrono::duration_cast<std::chrono::milliseconds>(
                std::chrono::steady_clock::now() - start)
         .count();
-}
-
-fs::path RewriteBackupPath(const fs::path& db_path)
-{
-    fs::path backup_path{db_path};
-    backup_path += ".rewrite-backup";
-    return backup_path;
-}
-
-fs::path RewriteMarkerPath(const fs::path& db_path)
-{
-    fs::path marker_path{db_path};
-    marker_path += ".rewrite-in-progress";
-    return marker_path;
-}
-
-enum class RewriteMarkerState {
-    NONE,
-    PREPARED,
-    COMPLETE,
-    UNKNOWN,
-};
-
-bool WriteRewriteMarker(const fs::path& marker_path, const char* state)
-{
-    FILE* marker_file{fsbridge::fopen(marker_path, "w")};
-    if (!marker_file) {
-        return false;
-    }
-    const bool write_ok = std::fputs(state, marker_file) >= 0;
-    const bool commit_ok = write_ok && FileCommit(marker_file);
-    std::fclose(marker_file);
-    if (!commit_ok) {
-        return false;
-    }
-    DirectoryCommit(marker_path.parent_path());
-    return true;
-}
-
-RewriteMarkerState ReadRewriteMarkerState(const fs::path& marker_path)
-{
-    if (!fs::exists(marker_path)) {
-        return RewriteMarkerState::NONE;
-    }
-
-    std::ifstream marker_file(fs::PathToString(marker_path));
-    if (!marker_file.good()) {
-        return RewriteMarkerState::UNKNOWN;
-    }
-
-    std::string state;
-    marker_file >> state;
-    if (state == "prepared") {
-        return RewriteMarkerState::PREPARED;
-    }
-    if (state == "complete") {
-        return RewriteMarkerState::COMPLETE;
-    }
-    return RewriteMarkerState::UNKNOWN;
-}
-
-void RemoveRewriteMarker(const fs::path& marker_path)
-{
-    std::error_code ec;
-    fs::remove(marker_path, ec);
-}
-
-void RecoverRewriteBackupIfPresent(const DBParams& db_params)
-{
-    if (db_params.memory_only || db_params.path.empty()) {
-        return;
-    }
-
-    const fs::path backup_path{RewriteBackupPath(db_params.path)};
-    const fs::path marker_path{RewriteMarkerPath(db_params.path)};
-    const bool has_backup{fs::exists(backup_path)};
-    const RewriteMarkerState marker_state{ReadRewriteMarkerState(marker_path)};
-    const bool has_marker{marker_state != RewriteMarkerState::NONE};
-
-    if (has_backup && has_marker) {
-        if (marker_state == RewriteMarkerState::COMPLETE && fs::exists(db_params.path)) {
-            std::error_code ec;
-            fs::remove_all(backup_path, ec);
-            if (ec) {
-                LogPrint(BCLog::SYS,
-                         "CDeterministicMNManager::%s -- Failed to remove completed EvoDB rewrite backup %s: %s\n",
-                         __func__, fs::PathToString(backup_path), ec.message());
-            } else {
-                LogPrint(BCLog::SYS,
-                         "CDeterministicMNManager::%s -- Kept completed EvoDB rewrite at %s and removed stale backup %s\n",
-                         __func__, fs::PathToString(db_params.path), fs::PathToString(backup_path));
-                RemoveRewriteMarker(marker_path);
-            }
-        } else {
-            std::error_code ec;
-            fs::remove_all(db_params.path, ec);
-            ec.clear();
-            fs::rename(backup_path, db_params.path, ec);
-            if (ec) {
-                LogPrint(BCLog::SYS,
-                         "CDeterministicMNManager::%s -- Failed to recover EvoDB rewrite backup %s -> %s: %s\n",
-                         __func__, fs::PathToString(backup_path), fs::PathToString(db_params.path), ec.message());
-            } else {
-                LogPrint(BCLog::SYS,
-                         "CDeterministicMNManager::%s -- Recovered EvoDB rewrite backup %s -> %s\n",
-                         __func__, fs::PathToString(backup_path), fs::PathToString(db_params.path));
-                RemoveRewriteMarker(marker_path);
-            }
-        }
-        return;
-    }
-
-    if (has_backup) {
-        if (!fs::exists(db_params.path)) {
-            std::error_code ec;
-            fs::rename(backup_path, db_params.path, ec);
-            if (ec) {
-                LogPrint(BCLog::SYS,
-                         "CDeterministicMNManager::%s -- Failed to recover EvoDB backup without marker %s -> %s: %s\n",
-                         __func__, fs::PathToString(backup_path), fs::PathToString(db_params.path), ec.message());
-            } else {
-                LogPrint(BCLog::SYS,
-                         "CDeterministicMNManager::%s -- Recovered EvoDB backup without marker %s -> %s\n",
-                         __func__, fs::PathToString(backup_path), fs::PathToString(db_params.path));
-            }
-        } else {
-            LogPrint(BCLog::SYS,
-                     "CDeterministicMNManager::%s -- Preserving unmatched EvoDB backup %s because live DB %s also exists\n",
-                     __func__, fs::PathToString(backup_path), fs::PathToString(db_params.path));
-        }
-    }
-
-    if (has_marker) {
-        RemoveRewriteMarker(marker_path);
-    }
 }
 
 void CollectRetainedSnapshotHashes(
@@ -243,7 +107,6 @@ bool WarmReadCacheFromWindow(
 
 CDeterministicMNManager::CDeterministicMNManager(const DBParams& db_params)
 {
-    RecoverRewriteBackupIfPresent(db_params);
     m_evoDb = std::make_unique<CEvoDB<uint256, CDeterministicMNList, StaticSaltedHasher>>(db_params, LIST_CACHE_SIZE);
     if (m_evoDb->CountPersistedEntries() > 0) {
         m_persistent_window_initialized.store(true, std::memory_order_relaxed);

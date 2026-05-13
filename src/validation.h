@@ -735,6 +735,7 @@ public:
     bool RestartGethNode();
     bool DoGethStartupProcedure();
     bool StartGethNode();
+    bool IsGethNodeRunning();
     bool StopGethNode(bool bOnStart = false);
     bool RestartBTCHeaderNode(bool force_reindex = false);
     bool DoBTCHeaderStartupProcedure();

@@ -115,6 +115,7 @@ pid_t btcheaderpid = -1;
 RecursiveMutex cs_geth;
 RecursiveMutex cs_btcheader;
 std::string g_managed_btcheader_rpc_cmd;
+static const char* GETH_STATE_BOOTSTRAP_STATUS_FILENAME = "state-bootstrap.status";
 NEVMMintTxSet setMintTxsMempool;
 std::unordered_map<COutPoint, std::pair<CTransactionRef, CTransactionRef>, SaltedOutpointHasher> mapAssetAllocationConflicts;
 std::map<uint256, int64_t> mapRejectedBlocks GUARDED_BY(cs_main);
@@ -7600,6 +7601,10 @@ bool Chainstate::StartGethNode()
         return false;
     }
     const fs::path dataDir = m_chainman.m_options.datadir / "geth";
+    const fs::path bootstrap_status_path = dataDir / "geth" / GETH_STATE_BOOTSTRAP_STATUS_FILENAME;
+    if (fs::exists(bootstrap_status_path)) {
+        fs::remove(bootstrap_status_path);
+    }
     std::vector<std::string> vecCmdLineStr = SanitizeGethCmdLine(m_chainman.GethCommandLine(), binaryURL, dataDir);
     const fs::path log = m_chainman.m_options.datadir / "sysgeth.log";
     std::string spawn_error;
@@ -7613,6 +7618,46 @@ bool Chainstate::StartGethNode()
     return true;
 #endif
 }
+
+bool Chainstate::IsGethNodeRunning()
+{
+    LOCK(cs_geth);
+
+#ifdef WIN32
+    return false;
+#else
+    if (gethpid <= 0) {
+        return false;
+    }
+
+    int status = 0;
+    const pid_t result = waitpid(gethpid, &status, WNOHANG);
+    if (result == gethpid) {
+        if (WIFEXITED(status)) {
+            LogPrintf("Geth process exited with code %d while waiting for startup.\n", WEXITSTATUS(status));
+        } else if (WIFSIGNALED(status)) {
+            LogPrintf("Geth process terminated by signal %d while waiting for startup.\n", WTERMSIG(status));
+        }
+        gethpid = -1;
+        return false;
+    }
+    if (result == 0) {
+        return true;
+    }
+    if (errno == ECHILD) {
+        if (kill(gethpid, 0) == 0 || errno == EPERM) {
+            return true;
+        }
+        if (errno == ESRCH) {
+            gethpid = -1;
+            return false;
+        }
+    }
+    LogPrintf("Failed checking sysgeth pid %d while waiting for startup (errno=%d)\n", gethpid, errno);
+    return true;
+#endif
+}
+
 bool Chainstate::StopGethNode(bool bOnStart)
 {
     LOCK(cs_geth);
@@ -7621,7 +7666,7 @@ bool Chainstate::StopGethNode(bool bOnStart)
     LogPrintf("%s: SysGeth management is not supported on WIN32 builds\n", __func__);
     return false;
 #else
-    if (!fNEVMConnection || fRegTest) {
+    if (fRegTest || (!fNEVMConnection && gethpid <= 0)) {
         return false;
     }
     if(!bOnStart) {
