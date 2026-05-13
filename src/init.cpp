@@ -1898,7 +1898,6 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
     const bool enforce_btcheader_policy_ondemand = gArgs.GetBoolArg("-btcheaderpolicyondemand", DEFAULT_BTC_HEADER_POLICY_ON_DEMAND);
     const bool nevm_miner_addr_configured = HasNEVMMinerFeeRecipientConfig(args);
     const bool hrp_forces_nevm_off = args.IsArgSet("-hrp");
-    const bool require_nevm_connection = !fRegTest && !fSigNet && !hrp_forces_nevm_off;
     const bool btcheader_policy_active_chain = !Params().MineBlocksOnDemand() || enforce_btcheader_policy_ondemand;
     bool btc_header_policy_ready{true};
     bool btcheader_backend_initialized{false};
@@ -2208,8 +2207,8 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
         }
         block_notify_genesis_wait_connection.disconnect();
     }
-    if(require_nevm_connection && !fNEVMConnection) {
-        return InitError(Untranslated("You must have an NEVM connection to run on this network. You may need to reindex to ensure you get an NEVM connection properly."));
+    if(!fRegTest && !fNEVMConnection && fMasternodeMode) {
+        return InitError(Untranslated("You must have an NEVM connection on a masternode. You may need to reindex to ensure you get an NEVM connection properly."));
     }
     #if ENABLE_ZMQ
         if(!g_zmq_notification_interface && fNEVMConnection) {
