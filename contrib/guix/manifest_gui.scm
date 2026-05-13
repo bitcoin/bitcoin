@@ -7,7 +7,8 @@
              ((gnu packages python) #:select (python-minimal))
              ((gnu packages python-xyz) #:select (python-lief))
              ((guix utils) #:select (substitute-keyword-arguments))
-             ((guix packages) #:select (package package-arguments package-input-rewriting/spec)))
+             ((guix packages) #:select (package package-arguments package-input-rewriting/spec))
+             (toolchains))
 
 ;; python-lief and nsis-x86_64 transitively pull in packages whose
 ;; tests fail when building natively on riscv64:
@@ -49,6 +50,7 @@
           ((string-contains target "-linux-")
            (list bison
                  gawk
+                 (make-bitcoin-cross-toolchain target) ;; glibc 2.31 based
                  pkg-config))
           ((string-contains target "darwin")
            (list zip))
