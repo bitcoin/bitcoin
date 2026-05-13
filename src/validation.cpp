@@ -7719,15 +7719,6 @@ bool Chainstate::StopGethNode(bool bOnStart)
         return true;
     }
 
-    // Unknown pid fallback, preserve prior behavior for stale/orphaned processes.
-    #ifndef USE_SYSCALL_SANDBOX
-    #if HAVE_SYSTEM
-    std::string cmd = "pkill -9 -f sysgeth";
-    std::thread t(runCommand, cmd);
-    if (t.joinable())
-        t.join();
-    #endif
-    #endif
     gethpid = -1;
 
     return true;

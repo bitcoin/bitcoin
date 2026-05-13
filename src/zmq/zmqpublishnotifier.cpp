@@ -64,6 +64,7 @@ static const char *MSG_HASHGOBJ      = "hashgovernanceobject";
 static const char *MSG_SEQUENCE  = "sequence";
 static constexpr int NEVM_STATUS_TIMEOUT_MS{2000};
 static constexpr int NEVM_COMMS_TIMEOUT_MS{150000};
+static constexpr int NEVM_DISCONNECT_TIMEOUT_MS{30000};
 RecursiveMutex cs_nevm;
 
 // Internal function to send multipart message
@@ -107,6 +108,19 @@ static int zmq_send_multipart(void *sock, const void* data, size_t size, ...)
     }
     va_end(args);
     return 0;
+}
+
+static bool SetNEVMReceiveTimeout(void* socket, int timeout_ms)
+{
+    if (!socket) {
+        return false;
+    }
+    const int rc = zmq_setsockopt(socket, ZMQ_RCVTIMEO, &timeout_ms, sizeof(timeout_ms));
+    if (rc != 0) {
+        zmqError("Failed to set ZMQ_RCVTIMEO");
+        return false;
+    }
+    return true;
 }
 static bool IsZMQAddressIPV6(const std::string &zmq_address)
 {
@@ -162,7 +176,30 @@ bool CZMQAbstractPublishNotifier::Initialize(void *pcontext, void *pcontextsub)
                 zmqError("Failed to create socket");
                 return false;
             }
-            int rc = zmq_connect(psocketsub, addresssub.c_str());
+            int rc = 0;
+#ifdef ZMQ_REQ_RELAXED
+            int relaxed = 1;
+            rc = zmq_setsockopt(psocketsub, ZMQ_REQ_RELAXED, &relaxed, sizeof(relaxed));
+            if (rc != 0) {
+                zmqError("Failed to set ZMQ_REQ_RELAXED");
+                zmq_close(psocketsub);
+                return false;
+            }
+#endif
+#ifdef ZMQ_REQ_CORRELATE
+            int correlate = 1;
+            rc = zmq_setsockopt(psocketsub, ZMQ_REQ_CORRELATE, &correlate, sizeof(correlate));
+            if (rc != 0) {
+                zmqError("Failed to set ZMQ_REQ_CORRELATE");
+                zmq_close(psocketsub);
+                return false;
+            }
+#endif
+            {
+                LOCK(cs_nevm);
+                bFirstTime = true;
+            }
+            rc = zmq_connect(psocketsub, addresssub.c_str());
             if (rc != 0)
             {
                 zmqError("Failed to bind address for subscriber");
@@ -263,12 +300,12 @@ void CZMQAbstractPublishNotifier::Shutdown()
             zmq_setsockopt(psocket, ZMQ_LINGER, &linger, sizeof(linger));
             zmq_close(psocket);
         }
-    }
-    // SYSCOIN
-    if(psocketsub) {
-        int linger = 0;
-        zmq_setsockopt(psocketsub, ZMQ_LINGER, &linger, sizeof(linger));
-        zmq_close(psocketsub);
+        // SYSCOIN
+        if(psocketsub) {
+            int linger = 0;
+            zmq_setsockopt(psocketsub, ZMQ_LINGER, &linger, sizeof(linger));
+            zmq_close(psocketsub);
+        }
     }
     psocket = nullptr;
     // SYSCOIN
@@ -296,8 +333,10 @@ bool CZMQAbstractPublishNotifier::SendZmqMessageNEVM(const char *command, const 
     assert(psocketsub);
 
     int rc = zmq_send_multipart(psocketsub, command, strlen(command), data, size, nullptr);
-    if (rc == -1)
+    if (rc == -1) {
+        zmqError(strprintf("Failed to send NEVM ZMQ message %s", command));
         return false;
+    }
 
     return true;
 }
@@ -321,14 +360,9 @@ bool CZMQAbstractPublishNotifier::NotifyNEVMCommsCommon(const std::string &commM
 {
     LOCK(cs_nevm);
     bResponse = false;
-    if(psocketsub) {
-        int timeout = commMessage == "status" ? NEVM_STATUS_TIMEOUT_MS : NEVM_COMMS_TIMEOUT_MS;
-        int rc = zmq_setsockopt(psocketsub, ZMQ_RCVTIMEO, &timeout, sizeof(timeout));
-        if (rc != 0) {
-            zmqError("Failed to set ZMQ_RCVTIMEO");
-            zmq_close(psocketsub);
-            return false;
-        }
+    const int timeout = commMessage == "status" ? NEVM_STATUS_TIMEOUT_MS : NEVM_COMMS_TIMEOUT_MS;
+    if(!SetNEVMReceiveTimeout(psocketsub, timeout)) {
+        return false;
     }
     std::vector<std::string> parts;
     LogPrint(BCLog::ZMQ, "zmq: Publish nevm communication %s, subscriber %s\n", commMessage, this->addresssub);
@@ -375,15 +409,9 @@ bool CZMQPublishNEVMBlockConnectNotifier::NotifyNEVMBlockConnect(const CNEVMHead
             return false;
         }
     }
-    if(psocketsub) {
-        int timeout = 150000;
-        int rc = zmq_setsockopt(psocketsub, ZMQ_RCVTIMEO, &timeout, sizeof(timeout));
-        if (rc != 0) {
-            zmqError("Failed to set ZMQ_RCVTIMEO");
-            zmq_close(psocketsub);
-            state = "ZMQ_RCVTIMEO";
-            return false;
-        }
+    if(!SetNEVMReceiveTimeout(psocketsub, NEVM_COMMS_TIMEOUT_MS)) {
+        state = "ZMQ_RCVTIMEO";
+        return false;
     }
     std::vector<std::string> parts;
     uint256 hash = evmBlock.nBlockHash;
@@ -428,15 +456,9 @@ bool CZMQPublishNEVMBlockDisconnectNotifier::NotifyNEVMBlockDisconnect(std::stri
             return false;
         }
     }
-    if(psocketsub) {
-        int timeout = 30000;
-        int rc = zmq_setsockopt(psocketsub, ZMQ_RCVTIMEO, &timeout, sizeof(timeout));
-        if (rc != 0) {
-            zmqError("Failed to set ZMQ_RCVTIMEO");
-            zmq_close(psocketsub);
-            state = "ZMQ_RCVTIMEO";
-            return false;
-        }
+    if(!SetNEVMReceiveTimeout(psocketsub, NEVM_DISCONNECT_TIMEOUT_MS)) {
+        state = "ZMQ_RCVTIMEO";
+        return false;
     }
     std::vector<std::string> parts;
     LogPrint(BCLog::ZMQ, "zmq: Publish nevm block disconnect %s to %s, subscriber %s\n", nSYSBlockHash.GetHex(), this->address, this->addresssub);
@@ -480,6 +502,10 @@ bool CZMQPublishNEVMBlockInfoNotifier::NotifyGetNEVMBlockInfo(uint64_t &nHeight,
         }
     }
     LogPrint(BCLog::ZMQ, "zmq: Publish nevm block info to %s, subscriber %s\n", this->address, this->addresssub);
+    if(!SetNEVMReceiveTimeout(psocketsub, NEVM_STATUS_TIMEOUT_MS)) {
+        state = "ZMQ_RCVTIMEO";
+        return false;
+    }
     if(!SendZmqMessageNEVM(MSG_NEVMBLOCKINFO, MSG_NEVMBLOCKINFO, strlen(MSG_NEVMBLOCKINFO))) {
         state = "nevm-header-not-sent";
         return false;
@@ -519,6 +545,10 @@ bool CZMQPublishNEVMBlockNotifier::NotifyGetNEVMBlock(CNEVMBlock &evmBlock, std:
         }
     }
     LogPrint(BCLog::ZMQ, "zmq: Publish nevm block to %s, subscriber %s\n", this->address, this->addresssub);
+    if(!SetNEVMReceiveTimeout(psocketsub, NEVM_COMMS_TIMEOUT_MS)) {
+        state = "ZMQ_RCVTIMEO";
+        return false;
+    }
     if(!SendZmqMessageNEVM(MSG_NEVMBLOCK, MSG_NEVMBLOCK, strlen(MSG_NEVMBLOCK))) {
         state = "nevm-header-not-sent";
         return false;
