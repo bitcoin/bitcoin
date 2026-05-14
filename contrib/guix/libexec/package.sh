@@ -13,7 +13,10 @@ set -o errexit -o pipefail
     python3 "${DISTSRC}/contrib/guix/security-check.py" "${INSTALLPATH}/bin/"* "${INSTALLPATH}/libexec/"*
     # Check that executables only contain allowed version symbols.
     echo "Running symbol and dynamic library checks on installed executables..."
-    python3 "${DISTSRC}/contrib/guix/symbol-check.py" "${INSTALLPATH}/bin/"* "${INSTALLPATH}/libexec/"*
+    case "$HOST" in
+        x86_64-linux-gnu) SYMBOL_CHECK_STATIC="--static" ;;
+    esac
+    python3 "${DISTSRC}/contrib/guix/symbol-check.py" ${SYMBOL_CHECK_STATIC+"$SYMBOL_CHECK_STATIC"} "${INSTALLPATH}/bin/"* "${INSTALLPATH}/libexec/"*
 
     (
         cd installed
