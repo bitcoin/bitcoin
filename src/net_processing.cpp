@@ -5006,18 +5006,23 @@ void PeerManagerImpl::ProcessMessage(Peer& peer, CNode& pfrom, const std::string
     }
 
     if (msg_type == NetMsgType::NOTFOUND) {
-        std::vector<CInv> vInv;
-        vRecv >> vInv;
-        std::vector<GenTxid> tx_invs;
-        if (vInv.size() <= node::MAX_PEER_TX_ANNOUNCEMENTS + MAX_BLOCKS_IN_TRANSIT_PER_PEER) {
-            for (CInv &inv : vInv) {
+        const uint64_t n_inv{ReadCompactSize(vRecv)};
+        if (n_inv > MAX_INV_SZ) {
+            Misbehaving(peer, strprintf("notfound message size = %u", n_inv));
+            return;
+        }
+        if (n_inv <= node::MAX_PEER_TX_ANNOUNCEMENTS + MAX_BLOCKS_IN_TRANSIT_PER_PEER) {
+            std::vector<GenTxid> tx_invs;
+            for (uint64_t i = 0; i < n_inv; ++i) {
+                CInv inv;
+                vRecv >> inv;
                 if (inv.IsGenTxMsg()) {
                     tx_invs.emplace_back(ToGenTxid(inv));
                 }
             }
+            LOCK(m_tx_download_mutex);
+            m_txdownloadman.ReceivedNotFound(pfrom.GetId(), tx_invs);
         }
-        LOCK(m_tx_download_mutex);
-        m_txdownloadman.ReceivedNotFound(pfrom.GetId(), tx_invs);
         return;
     }
 

@@ -18,6 +18,7 @@ from test_framework.messages import (
     msg_getdata,
     msg_headers,
     msg_inv,
+    msg_notfound,
     msg_ping,
     msg_version,
     ser_string,
@@ -73,6 +74,7 @@ class InvalidMessagesTest(BitcoinTestFramework):
         self.test_addrv2_unrecognized_network()
         self.test_oversized_inv_msg()
         self.test_oversized_getdata_msg()
+        self.test_oversized_notfound_msg()
         self.test_oversized_headers_msg()
         self.test_invalid_pow_headers_msg()
         self.test_noncontinuous_headers_msg()
@@ -272,6 +274,10 @@ class InvalidMessagesTest(BitcoinTestFramework):
     def test_oversized_getdata_msg(self):
         size = MAX_INV_SIZE + 1
         self.test_oversized_msg(msg_getdata([CInv(MSG_TX, 1)] * size), size)
+
+    def test_oversized_notfound_msg(self):
+        size = MAX_INV_SIZE + 1
+        self.test_oversized_msg(msg_notfound([CInv(MSG_TX, 1)] * size), size)
 
     def test_oversized_headers_msg(self):
         size = MAX_HEADERS_RESULTS + 1
