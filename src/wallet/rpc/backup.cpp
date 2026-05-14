@@ -407,8 +407,16 @@ RPCMethod importdescriptors()
 
         // Get all timestamps and extract the lowest timestamp
         for (const UniValue& request : requests.getValues()) {
-            // This throws an error if "timestamp" doesn't exist
-            const int64_t timestamp = std::max(GetImportTimestamp(request, now), minimum_timestamp);
+            int64_t timestamp;
+            try {
+                timestamp = std::max(GetImportTimestamp(request, now), minimum_timestamp);
+            } catch (const UniValue& e) {
+                UniValue error_response(UniValue::VOBJ);
+                error_response.pushKV("success", false);
+                error_response.pushKV("error", e);
+                response.push_back(error_response);
+                continue;
+            }
             const UniValue result = ProcessDescriptorImport(*pwallet, request, timestamp);
             response.push_back(result);
 
@@ -447,7 +455,7 @@ RPCMethod importdescriptors()
                 // range, or if the import result already has an error set, let
                 // the result stand unmodified. Otherwise replace the result
                 // with an error message.
-                if (scanned_time <= GetImportTimestamp(request, now) || results.at(i).exists("error")) {
+                if (results.at(i).exists("error") || scanned_time <= GetImportTimestamp(request, now)) {
                     response.push_back(results.at(i));
                 } else {
                     std::string error_msg{strprintf("Rescan failed for descriptor with timestamp %d. There "
