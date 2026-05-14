@@ -158,6 +158,18 @@ std::string AddChecksum(const std::string& str) { return str + "#" + DescriptorC
 
 typedef std::vector<uint32_t> KeyPath;
 
+struct MultipathContext {
+    struct KeyEntry {
+        size_t placeholder_idx;
+        std::unordered_set<uint32_t> claimed_mn;
+    };
+
+    std::vector<std::pair<uint32_t, uint32_t>> per_key_mn;
+    mutable std::map<std::string, std::unordered_set<uint32_t>> aggregate_claimed_mn;
+    mutable std::map<std::string, KeyEntry> key_map;
+    bool IsMultipath() const { return !per_key_mn.empty(); }
+};
+
 /** Interface for public key objects in descriptors. */
 struct PubkeyProvider
 {
@@ -202,6 +214,21 @@ public:
 
     /** Get the descriptor string form. */
     virtual std::string ToString(StringType type=StringType::PUBLIC) const = 0;
+
+    /** Return the BIP-388 wallet policy placeholder for this key, or {} on failure. */
+    virtual std::string ToTemplateString(size_t& placeholder_idx, size_t& traversal_idx, const MultipathContext& ctx = {}) const
+    {
+        const std::string ret{"@" + std::to_string(placeholder_idx)};
+        ++placeholder_idx;
+        ++traversal_idx;
+        return ret;
+    }
+
+    /** Append the last non-hardened derivation index for each @N. */
+    virtual void GetDerivationIndex(std::vector<uint32_t>& out) const {}
+
+    /** Append the BIP32 origin and account-level xpub for each key. */
+    virtual void GetKeyOrigins(std::vector<std::pair<KeyOriginInfo, CExtPubKey>>& out) const {}
 
     /** Get the descriptor string form including private data (if available in arg).
      *  If the private data is not available, the output string in the "out" parameter
@@ -300,6 +327,29 @@ public:
     std::unique_ptr<PubkeyProvider> Clone() const override
     {
         return std::make_unique<OriginPubkeyProvider>(m_expr_index, m_origin, m_provider->Clone(), m_apostrophe);
+    }
+
+    std::string ToTemplateString(size_t& placeholder_idx, size_t& traversal_idx, const MultipathContext& ctx) const override
+    {
+        return m_provider->ToTemplateString(placeholder_idx, traversal_idx, ctx);
+    }
+
+    void GetDerivationIndex(std::vector<uint32_t>& out) const override
+    {
+        m_provider->GetDerivationIndex(out);
+    }
+
+    void GetKeyOrigins(std::vector<std::pair<KeyOriginInfo, CExtPubKey>>& out) const override
+    {
+        if (m_provider->IsBIP32()) {
+            std::optional<CExtPubKey> root = m_provider->GetRootExtPubKey();
+            if (root) {
+                out.emplace_back(m_origin, *root);
+                return;
+            }
+        }
+        // For musig, delegate so each participant emits its own origin.
+        m_provider->GetKeyOrigins(out);
     }
 };
 
@@ -591,6 +641,47 @@ public:
     {
         return std::make_unique<BIP32PubkeyProvider>(m_expr_index, m_root_extkey, m_path, m_derive, m_apostrophe);
     }
+    void GetDerivationIndex(std::vector<uint32_t>& out) const override
+    {
+        if (!m_path.empty() && m_derive == DeriveType::UNHARDENED_RANGED) {
+            out.push_back(m_path.back());
+        }
+    }
+    std::string ToTemplateString(size_t& placeholder_idx, size_t& traversal_idx, const MultipathContext& ctx) const override
+    {
+        const size_t t_idx{traversal_idx++};
+
+        if (!ctx.IsMultipath() || t_idx >= ctx.per_key_mn.size() || !IsRange()) {
+            const std::string ret{"@" + std::to_string(placeholder_idx)};
+            ++placeholder_idx;
+            return ret;
+        }
+
+        // BIP 388 requires exactly one unhardened derivation step after the account xpub.
+        if (m_path.size() != 1 || m_derive != DeriveType::UNHARDENED_RANGED) {
+            return {};
+        }
+
+        const auto [M, N] = ctx.per_key_mn[t_idx];
+        const std::string suffix{(M == 0 && N == 1)
+            ? "/**"
+            : "/<" + std::to_string(M) + ";" + std::to_string(N) + ">/*"};
+
+        const std::string xpub_str{EncodeExtPubKey(m_root_extkey)};
+        auto it{ctx.key_map.find(xpub_str)};
+        if (it != ctx.key_map.end()) {
+            auto& entry{it->second};
+            if (entry.claimed_mn.count(M) || entry.claimed_mn.count(N)) return {};
+            entry.claimed_mn.insert(M);
+            entry.claimed_mn.insert(N);
+            return "@" + std::to_string(entry.placeholder_idx) + suffix;
+        }
+
+        ctx.key_map[xpub_str] = {placeholder_idx, {M, N}};
+        const std::string placeholder{"@" + std::to_string(placeholder_idx)};
+        ++placeholder_idx;
+        return placeholder + suffix;
+    }
 };
 
 /** PubkeyProvider for a musig() expression */
@@ -794,6 +885,87 @@ public:
     {
         return 1 + m_participants.size();
     }
+    std::string ToTemplateString(size_t& placeholder_idx, size_t& traversal_idx, const MultipathContext& ctx) const override
+    {
+        // BIP-388 disallows derivation before aggregation:
+        //   VALID:   tr(musig(@0,@1)/<0;1>/*,...)
+        //   INVALID: tr(musig(@0/<0;1>/*,@1/<0;1>/*),...)
+        if (m_ranged_participants) return {};
+
+        const size_t first_t_idx{traversal_idx};
+        // We also want to know if multiple musig expressions in a descriptor are duplicate,
+        // if so are they disjoint?
+        std::vector<std::string> sorted_xpubs;
+        sorted_xpubs.reserve(m_participants.size());
+
+        std::string ret{"musig("};
+
+        for (size_t i{0}; i < m_participants.size(); ++i) {
+            const auto xpub{m_participants[i]->GetRootExtPubKey()};
+            if (!xpub) return {};
+
+            const std::string xpub_str{EncodeExtPubKey(*xpub)};
+            sorted_xpubs.push_back(xpub_str);
+
+            auto it{ctx.key_map.find(xpub_str)};
+
+            if (it != ctx.key_map.end()) {
+                // We have seen this participant before so reuse existing placeholder.
+                // Musig participants are arguments to the aggregate, so BIP-388 disjointness does not apply to individual participants.
+                ret += "@" + std::to_string(it->second.placeholder_idx);
+            } else {
+                ctx.key_map[xpub_str] = {placeholder_idx, {}};
+                ret += "@" + std::to_string(placeholder_idx);
+                ++placeholder_idx;
+            }
+            ++traversal_idx;
+
+            if (i < m_participants.size() - 1) ret += ',';
+        }
+        ret += ')';
+
+        std::sort(sorted_xpubs.begin(), sorted_xpubs.end());
+        const std::string aggregate_id{util::Join(sorted_xpubs, ",")};
+
+        // BIP 388 requires exactly one unhardened derivation step after the account xpub.
+        if (ctx.IsMultipath() && m_path.size() == 1
+                && m_derive == DeriveType::UNHARDENED_RANGED
+                && first_t_idx + m_participants.size() <= ctx.per_key_mn.size()) {
+            const auto [M, N] = ctx.per_key_mn[first_t_idx];
+
+            // Check if the representation of the aggregate key, same set of participants, order independent exists.
+            // If so, we enforce disjointness.
+            auto& claimed = ctx.aggregate_claimed_mn[aggregate_id];
+            if (claimed.count(M) || claimed.count(N)) return {};
+            claimed.insert(M);
+            claimed.insert(N);
+
+            const std::string suffix{(M == 0 && N == 1)
+                ? "/**"
+                : "/<" + std::to_string(M) + ";" + std::to_string(N) + ">/*"};
+            ret += suffix;
+        } else {
+            ret += FormatHDKeypath(m_path, /*apostrophe=*/false);
+            if (IsRangedDerivation()) ret += "/*";
+        }
+
+        return ret;
+    }
+    void GetDerivationIndex(std::vector<uint32_t>& out) const override
+    {
+        if (IsRangedDerivation() && !m_path.empty()
+                && m_derive == DeriveType::UNHARDENED_RANGED) {
+            for (size_t i{0}; i < m_participants.size(); ++i) {
+                out.push_back(m_path.back());
+            }
+        }
+    }
+    void GetKeyOrigins(std::vector<std::pair<KeyOriginInfo, CExtPubKey>>& out) const override
+    {
+        for (const auto& p : m_participants) {
+            p->GetKeyOrigins(out);
+        }
+    }
 };
 
 /** Base class for all Descriptor implementations. */
@@ -960,6 +1132,89 @@ public:
         return ret;
     }
 
+    std::optional<WalletPolicy> BuildWalletPolicyKeys(WalletPolicy&& policy, size_t placeholder_idx, const MultipathContext& ctx) const
+    {
+        if (ctx.IsMultipath() && !ctx.key_map.empty()) {
+            std::vector<std::string> keys(placeholder_idx);
+            std::vector<std::pair<KeyOriginInfo, CExtPubKey>> origins;
+            GetKeyOrigins(origins);
+
+            // resolve duplicates via key_map
+            for (const auto& [origin, xpub] : origins) {
+                const std::string xpub_str{EncodeExtPubKey(xpub)};
+                auto it{ctx.key_map.find(xpub_str)};
+                if (it == ctx.key_map.end()) return std::nullopt;
+                const size_t N{it->second.placeholder_idx};
+                if (keys[N].empty()) {
+                    keys[N] = "[" + HexStr(origin.fingerprint) + FormatHDKeypath(origin.path) + "]" + xpub_str;
+                }
+            }
+
+            for (const auto& k : keys) {
+                if (k.empty()) return std::nullopt;
+            }
+            policy.keys = std::move(keys);
+            return policy;
+        }
+
+        std::vector<std::pair<KeyOriginInfo, CExtPubKey>> origins;
+        GetKeyOrigins(origins);
+
+        if (origins.size() != placeholder_idx) return std::nullopt;
+
+        policy.keys.reserve(origins.size());
+        for (const auto& [origin, xpub] : origins) {
+            policy.keys.emplace_back("[" + HexStr(origin.fingerprint) + FormatHDKeypath(origin.path) + "]" + EncodeExtPubKey(xpub));
+        }
+        return policy;
+    }
+
+    // NOLINTNEXTLINE(misc-no-recursion)
+    virtual bool BuildWalletPolicyTemplate(std::string& out, size_t& placeholder_idx, size_t& traversal_idx, const MultipathContext& ctx = {}) const
+    {
+        std::string extra{ToStringExtra()};
+        size_t pos{extra.empty() ? 0U : 1U};
+        std::string ret{m_name + "(" + extra};
+
+        for (const auto& pubkey : m_pubkey_args) {
+            if (!pubkey->IsRange()) return false;
+            if (pos++) ret += ',';
+            const std::string key_str{pubkey->ToTemplateString(placeholder_idx, traversal_idx, ctx)};
+            if (key_str.empty()) return false;
+            ret += key_str;
+        }
+
+        for (const auto& sub : m_subdescriptor_args) {
+            if (pos++) ret += ',';
+            std::string sub_out;
+            if (!sub->BuildWalletPolicyTemplate(sub_out, placeholder_idx, traversal_idx, ctx)) return false;
+            ret += sub_out;
+        }
+
+        out = std::move(ret) + ")";
+        return true;
+    }
+
+    virtual std::optional<WalletPolicy> BuildWalletPolicy(const MultipathContext& ctx = {}) const
+    {
+        return std::nullopt;
+    }
+
+    /** Build a complete WalletPolicy from the descriptor template and key origins.
+     *  Returns std::nullopt on failure.
+     */
+    // NOLINTNEXTLINE(misc-no-recursion)
+    std::optional<WalletPolicy> DoBuildWalletPolicy(const MultipathContext& ctx) const
+    {
+        WalletPolicy policy;
+        size_t placeholder_idx{0};
+        size_t traversal_idx{0};
+        if (!BuildWalletPolicyTemplate(policy.descriptor_template, placeholder_idx, traversal_idx, ctx)) {
+            return std::nullopt;
+        }
+        return BuildWalletPolicyKeys(std::move(policy), placeholder_idx, ctx);
+    }
+
     // NOLINTNEXTLINE(misc-no-recursion)
     bool ExpandHelper(int pos, const SigningProvider& arg, const DescriptorCache* read_cache, std::vector<CScript>& output_scripts, FlatSigningProvider& out, DescriptorCache* write_cache) const
     {
@@ -1082,6 +1337,24 @@ public:
             }
         }
         return count;
+    }
+
+    // NOLINTNEXTLINE(misc-no-recursion)
+    void GetDerivationIndex(std::vector<uint32_t>& out) const
+    {
+        for (const auto& p : m_pubkey_args) p->GetDerivationIndex(out);
+        for (const auto& s : m_subdescriptor_args) s->GetDerivationIndex(out);
+    }
+
+    // NOLINTNEXTLINE(misc-no-recursion)
+    void GetKeyOrigins(std::vector<std::pair<KeyOriginInfo, CExtPubKey>>& out) const
+    {
+        for (const auto& p : m_pubkey_args) {
+            p->GetKeyOrigins(out);
+        }
+        for (const auto& arg : m_subdescriptor_args) {
+            arg->GetKeyOrigins(out);
+        }
     }
 };
 
@@ -1209,6 +1482,11 @@ public:
     {
         return std::make_unique<PKHDescriptor>(m_pubkey_args.at(0)->Clone());
     }
+
+    std::optional<WalletPolicy> BuildWalletPolicy(const MultipathContext& ctx) const override
+    {
+        return DoBuildWalletPolicy(ctx);
+    }
 };
 
 /** A parsed wpkh(P) descriptor. */
@@ -1241,6 +1519,11 @@ public:
     std::unique_ptr<DescriptorImpl> Clone() const override
     {
         return std::make_unique<WPKHDescriptor>(m_pubkey_args.at(0)->Clone());
+    }
+
+    std::optional<WalletPolicy> BuildWalletPolicy(const MultipathContext& ctx) const override
+    {
+        return DoBuildWalletPolicy(ctx);
     }
 };
 
@@ -1315,6 +1598,11 @@ public:
         std::transform(m_pubkey_args.begin(), m_pubkey_args.end(), std::back_inserter(providers), [](const std::unique_ptr<PubkeyProvider>& p) { return p->Clone(); });
         return std::make_unique<MultisigDescriptor>(m_threshold, std::move(providers), m_sorted);
     }
+
+    std::optional<WalletPolicy> BuildWalletPolicy(const MultipathContext& ctx) const override
+    {
+        return DoBuildWalletPolicy(ctx);
+    }
 };
 
 /** A parsed (sorted)multi_a(...) descriptor. Always uses x-only pubkeys. */
@@ -1360,6 +1648,11 @@ public:
             providers.push_back(arg->Clone());
         }
         return std::make_unique<MultiADescriptor>(m_threshold, std::move(providers), m_sorted);
+    }
+
+    std::optional<WalletPolicy> BuildWalletPolicy(const MultipathContext& ctx) const override
+    {
+        return DoBuildWalletPolicy(ctx);
     }
 };
 
@@ -1411,6 +1704,11 @@ public:
     {
         return std::make_unique<SHDescriptor>(m_subdescriptor_args.at(0)->Clone());
     }
+
+    std::optional<WalletPolicy> BuildWalletPolicy(const MultipathContext& ctx) const override
+    {
+        return DoBuildWalletPolicy(ctx);
+    }
 };
 
 /** A parsed wsh(...) descriptor. */
@@ -1451,6 +1749,11 @@ public:
     std::unique_ptr<DescriptorImpl> Clone() const override
     {
         return std::make_unique<WSHDescriptor>(m_subdescriptor_args.at(0)->Clone());
+    }
+
+    std::optional<WalletPolicy> BuildWalletPolicy(const MultipathContext& ctx) const override
+    {
+        return DoBuildWalletPolicy(ctx);
     }
 };
 
@@ -1537,6 +1840,49 @@ public:
         subdescs.reserve(m_subdescriptor_args.size());
         std::transform(m_subdescriptor_args.begin(), m_subdescriptor_args.end(), std::back_inserter(subdescs), [](const std::unique_ptr<DescriptorImpl>& d) { return d->Clone(); });
         return std::make_unique<TRDescriptor>(m_pubkey_args.at(0)->Clone(), std::move(subdescs), m_depths);
+    }
+
+    // NOLINTNEXTLINE(misc-no-recursion)
+    std::optional<WalletPolicy> BuildWalletPolicy(const MultipathContext& ctx) const override
+    {
+        // BIP-388 requires key expressions to include a derivation path
+        // suffix (/** or /<M;N>/*). Non-ranged keys have no such suffix.
+        if (!m_pubkey_args.at(0)->IsRange()) return std::nullopt;
+
+        WalletPolicy policy;
+        size_t placeholder_idx{0};
+        size_t traversal_idx{0};
+
+        const std::string internal_key{m_pubkey_args.at(0)->ToTemplateString(placeholder_idx, traversal_idx, ctx)};
+        if (internal_key.empty()) return std::nullopt;
+        std::string ret{"tr(" + internal_key};
+
+        if (!m_subdescriptor_args.empty()) {
+            std::string scripts;
+            std::vector<bool> path;
+            for (size_t i{0}; i < m_depths.size(); ++i) {
+                if (i > 0) scripts += ',';
+                while (static_cast<int>(path.size()) <= m_depths[i]) {
+                    if (path.size()) scripts += '{';
+                    path.push_back(false);
+                }
+                std::string sub_out;
+                if (!m_subdescriptor_args[i]->BuildWalletPolicyTemplate(sub_out, placeholder_idx, traversal_idx, ctx)) {
+                    return std::nullopt;
+                }
+                scripts += sub_out;
+                while (!path.empty() && path.back()) {
+                    if (path.size() > 1) scripts += '}';
+                    path.pop_back();
+                }
+                if (!path.empty()) path.back() = true;
+            }
+            ret += ',' + scripts;
+        }
+        ret += ')';
+        policy.descriptor_template = std::move(ret);
+
+        return BuildWalletPolicyKeys(std::move(policy), placeholder_idx, ctx);
     }
 };
 
@@ -1702,6 +2048,47 @@ public:
             providers.push_back(arg->Clone());
         }
         return std::make_unique<MiniscriptDescriptor>(std::move(providers), m_node.Clone());
+    }
+
+    // NOLINTNEXTLINE(misc-no-recursion)
+    bool BuildWalletPolicyTemplate(std::string& out, size_t& placeholder_idx, size_t& traversal_idx, const MultipathContext& ctx = {}) const override
+    {
+        // Mirrors StringMaker's interface for m_node.ToString
+        struct TemplateStringifier {
+            const std::vector<std::unique_ptr<PubkeyProvider>>& pubkeys;
+            size_t& placeholder_idx;
+            size_t& traversal_idx;
+            const MultipathContext& ctx;
+            mutable std::map<uint32_t, std::string> cache;
+
+            std::optional<std::string> ToString(uint32_t key, [[maybe_unused]] bool& has_priv_key) const
+            {
+                if (key >= pubkeys.size()) return std::nullopt;
+                // toString is called twice when WRAP_C contains pk(k) and pkh(k).
+                // So we endup having more keys ctx.key_map than in the descriptor itself.
+                // since the double call always uses the seme key index, we cache the result and
+                // return it on repeat calls to avoid double-incrementing
+                // traversal_idx and triggering the claimed_mn disjointness check.
+                auto it{cache.find(key)};
+                if (it != cache.end()) return it->second;
+                std::string ret{pubkeys[key]->ToTemplateString(
+                    placeholder_idx, traversal_idx, ctx)};
+                if (ret.empty()) return std::nullopt;
+                cache[key] = ret;
+                return ret;
+            }
+        };
+
+        bool has_priv_key{false};
+        auto res = m_node.ToString(TemplateStringifier{m_pubkey_args, placeholder_idx, traversal_idx, ctx, {}}, has_priv_key);
+        if (!res) return false;
+        out = *res;
+        return true;
+    }
+
+    std::optional<WalletPolicy> BuildWalletPolicy(const MultipathContext& ctx) const override
+    {
+        return DoBuildWalletPolicy(ctx);
     }
 };
 
@@ -2932,6 +3319,58 @@ std::string GetDescriptorChecksum(const std::string& descriptor)
     std::span<const char> sp{descriptor};
     if (!CheckChecksum(sp, false, error, &ret)) return "";
     return ret;
+}
+
+util::Result<DescriptorInfo> ParseDescriptorInfo(std::string_view descriptor)
+{
+    FlatSigningProvider provider;
+    std::string error;
+    auto descs = Parse(descriptor, provider, error);
+    if (descs.empty()) return util::Error{Untranslated(error)};
+
+    DescriptorInfo info;
+    info.descriptor = descs.at(0)->ToString();
+
+    if (descs.size() > 1) {
+        info.expansion.reserve(descs.size());
+        for (const auto& d : descs) {
+            info.expansion.push_back(d->ToString());
+        }
+    }
+
+    info.checksum = GetDescriptorChecksum(std::string{descriptor});
+    info.is_range = descs.at(0)->IsRange();
+    info.is_solvable = descs.at(0)->IsSolvable();
+    info.has_private_keys = !provider.keys.empty();
+
+    if (descs.size() == 2) {
+        const auto* desc_m{static_cast<const DescriptorImpl*>(descs[0].get())};
+        const auto* desc_n{static_cast<const DescriptorImpl*>(descs[1].get())};
+        Assert(desc_m && desc_n);
+
+        std::vector<uint32_t> m_idx, n_idx;
+        desc_m->GetDerivationIndex(m_idx);
+        desc_n->GetDerivationIndex(n_idx);
+
+        if (m_idx.size() == n_idx.size() && !m_idx.empty()) {
+            MultipathContext ctx;
+            bool valid{true};
+
+            for (size_t i{0}; i < m_idx.size(); ++i) {
+                const uint32_t M{m_idx[i]}, N{n_idx[i]};
+                if (M == N) {
+                    valid = false;
+                    break;
+                }
+                ctx.per_key_mn.emplace_back(M, N);
+            }
+            if (valid) {
+                info.wallet_policy = desc_m->BuildWalletPolicy(ctx);
+            }
+        }
+    }
+
+    return info;
 }
 
 std::unique_ptr<Descriptor> InferDescriptor(const CScript& script, const SigningProvider& provider)

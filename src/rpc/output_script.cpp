@@ -16,6 +16,7 @@
 #include <tinyformat.h>
 #include <univalue.h>
 #include <util/check.h>
+#include <util/result.h>
 #include <util/strencodings.h>
 
 #include <cstdint>
@@ -185,6 +186,11 @@ static RPCMethod getdescriptorinfo()
                 {RPCResult::Type::BOOL, "isrange", "Whether the descriptor is ranged"},
                 {RPCResult::Type::BOOL, "issolvable", "Whether the descriptor is solvable"},
                 {RPCResult::Type::BOOL, "hasprivatekeys", "Whether the input descriptor contained at least one private key"},
+                {RPCResult::Type::STR, "wallet_policy_template", /*optional=*/true, "BIP-388 wallet policy template with @N key placeholders. Only present if the provided descriptor is BIP-388 policy-compatible."},
+                {RPCResult::Type::ARR, "wallet_policy_keys", /*optional=*/true, "BIP-388 key information vector, one \"[fingerprint/path]xpub\" per @N placeholder in order. Only present if the provided descriptor is BIP-388 policy-compatible.",
+                {
+                    {RPCResult::Type::STR, "", ""},
+                }},
             }
         },
         RPCExamples{
@@ -194,28 +200,30 @@ static RPCMethod getdescriptorinfo()
         },
         [](const RPCMethod& self, const JSONRPCRequest& request) -> UniValue
         {
-            FlatSigningProvider provider;
-            std::string error;
-            auto descs = Parse(self.Arg<std::string_view>("descriptor"), provider, error);
-            if (descs.empty()) {
-                throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, error);
-            }
+            auto info = ParseDescriptorInfo(self.Arg<std::string_view>("descriptor"));
+            if (!info) throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, util::ErrorString(info).original);
 
             UniValue result(UniValue::VOBJ);
-            result.pushKV("descriptor", descs.at(0)->ToString());
+            result.pushKV("descriptor", info->descriptor);
 
-            if (descs.size() > 1) {
-                UniValue multipath_descs(UniValue::VARR);
-                for (const auto& d : descs) {
-                    multipath_descs.push_back(d->ToString());
-                }
-                result.pushKV("multipath_expansion", multipath_descs);
+            if (!info->expansion.empty()) {
+                UniValue arr(UniValue::VARR);
+                for (const auto& d : info->expansion) arr.push_back(d);
+                result.pushKV("multipath_expansion", arr);
             }
 
-            result.pushKV("checksum", GetDescriptorChecksum(request.params[0].get_str()));
-            result.pushKV("isrange", descs.at(0)->IsRange());
-            result.pushKV("issolvable", descs.at(0)->IsSolvable());
-            result.pushKV("hasprivatekeys", provider.keys.size() > 0);
+            result.pushKV("checksum", info->checksum);
+            result.pushKV("isrange", info->is_range);
+            result.pushKV("issolvable", info->is_solvable);
+            result.pushKV("hasprivatekeys", info->has_private_keys);
+
+            if (info->wallet_policy) {
+                result.pushKV("wallet_policy_template", info->wallet_policy->descriptor_template);
+                UniValue keys_arr(UniValue::VARR);
+                for (const auto& k : info->wallet_policy->keys) keys_arr.push_back(k);
+                result.pushKV("wallet_policy_keys", keys_arr);
+            }
+
             return result;
         },
     };
