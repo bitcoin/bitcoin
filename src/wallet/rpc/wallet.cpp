@@ -892,6 +892,10 @@ RPCMethod addhdkey()
             }
 
             LOCK(wallet->cs_wallet);
+            if (wallet->GetKey(hdkey.Neuter().pubkey.GetID())) {
+                throw JSONRPCError(RPC_WALLET_ERROR, "HD key already exists");
+            }
+
             std::string desc_str = "unused(" + EncodeExtKey(hdkey) + ")";
             FlatSigningProvider keys;
             std::string error;
