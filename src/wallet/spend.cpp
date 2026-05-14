@@ -1016,6 +1016,7 @@ void DiscourageFeeSniping(CMutableTransaction& tx, FastRandomContext& rng_fast,
     // now we ensure code won't be written that makes assumptions about
     // nLockTime that preclude a fix later.
     if (IsCurrentForAntiFeeSniping(chain, block_hash)) {
+        uint32_t previous_locktime = tx.nLockTime;
         tx.nLockTime = block_height;
 
         // Secondly occasionally randomly pick a nLockTime even further back, so
@@ -1023,7 +1024,15 @@ void DiscourageFeeSniping(CMutableTransaction& tx, FastRandomContext& rng_fast,
         // e.g. high-latency mix networks and some CoinJoin implementations, have
         // better privacy.
         if (rng_fast.randrange(10) == 0) {
-            tx.nLockTime = std::max(0, int(tx.nLockTime) - int(rng_fast.randrange(100)));
+            // If a previous lockitme is passed (like in the bump fee case), the
+            // backdating is limited betwen the current height and the previous lockitme
+            if (previous_locktime > 0){
+                // To avoid issues with the randrange, locktime_range cannot be 0
+                int locktime_range = std::max(1, std::min(100, int(block_height - previous_locktime)));
+                tx.nLockTime = std::max(int(previous_locktime), int(tx.nLockTime) - int(rng_fast.randrange(locktime_range)));
+            }else{
+                tx.nLockTime = std::max(0, int(tx.nLockTime) - int(rng_fast.randrange(100)));
+            }
         }
     } else {
         // If our chain is lagging behind, we can't discourage fee sniping nor help
@@ -1061,7 +1070,7 @@ static util::Result<CreatedTransactionResult> CreateTransactionInternal(
         const std::vector<CRecipient>& vecSend,
         std::optional<unsigned int> change_pos,
         const CCoinControl& coin_control,
-        bool sign) EXCLUSIVE_LOCKS_REQUIRED(wallet.cs_wallet)
+        bool sign, uint32_t previous_locktime) EXCLUSIVE_LOCKS_REQUIRED(wallet.cs_wallet)
 {
     AssertLockHeld(wallet.cs_wallet);
 
@@ -1321,6 +1330,13 @@ static util::Result<CreatedTransactionResult> CreateTransactionInternal(
         txNew.nLockTime = coin_control.m_locktime.value();
         // If we have a locktime set, we can't use anti-fee-sniping
         use_anti_fee_sniping = false;
+    } else {
+        // When replacing a trasnaction, if the previous locktime is
+        // time-based, we don't apply antifee sniping
+        if (previous_locktime >= LOCKTIME_THRESHOLD){
+            use_anti_fee_sniping = false;
+        }
+        txNew.nLockTime = previous_locktime;
     }
     if (use_anti_fee_sniping) {
         DiscourageFeeSniping(txNew, rng_fast, wallet.chain(), wallet.GetLastBlockHash(), wallet.GetLastBlockHeight());
@@ -1449,7 +1465,8 @@ util::Result<CreatedTransactionResult> CreateTransaction(
         const std::vector<CRecipient>& vecSend,
         std::optional<unsigned int> change_pos,
         const CCoinControl& coin_control,
-        bool sign)
+        bool sign,
+        uint32_t previous_locktime)
 {
     if (vecSend.empty()) {
         return util::Error{_("Transaction must have at least one recipient")};
@@ -1461,7 +1478,7 @@ util::Result<CreatedTransactionResult> CreateTransaction(
 
     LOCK(wallet.cs_wallet);
 
-    auto res = CreateTransactionInternal(wallet, vecSend, change_pos, coin_control, sign);
+    auto res = CreateTransactionInternal(wallet, vecSend, change_pos, coin_control, sign, previous_locktime);
     TRACEPOINT(coin_selection, normal_create_tx_internal,
            wallet.GetName().c_str(),
            bool(res),
@@ -1480,7 +1497,7 @@ util::Result<CreatedTransactionResult> CreateTransaction(
             ExtractDestination(txr_ungrouped.tx->vout[*txr_ungrouped.change_pos].scriptPubKey, tmp_cc.destChange);
         }
 
-        auto txr_grouped = CreateTransactionInternal(wallet, vecSend, change_pos, tmp_cc, sign);
+        auto txr_grouped = CreateTransactionInternal(wallet, vecSend, change_pos, tmp_cc, sign, previous_locktime);
         // if fee of this alternative one is within the range of the max fee, we use this one
         const bool use_aps{txr_grouped.has_value() ? (txr_grouped->fee <= txr_ungrouped.fee + wallet.m_max_aps_fee) : false};
         TRACEPOINT(coin_selection, aps_create_tx_internal,
