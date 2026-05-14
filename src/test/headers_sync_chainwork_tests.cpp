@@ -148,10 +148,10 @@ BOOST_AUTO_TEST_CASE(future_chain_start_mtp_bounds_commitments)
     HeadersSyncState hss{CreateState(/*commitment_period=*/1)};
 
     CHECK_RESULT(hss.ProcessNextHeaders({{FirstChain().front()}}, /*full_headers_message=*/true),
-        hss, /*exp_state=*/State::PRESYNC,
-        /*exp_success=*/true, /*exp_request_more=*/true,
+        hss, /*exp_state=*/State::FINAL,
+        /*exp_success=*/false, /*exp_request_more=*/false,
         /*exp_headers_size=*/0, /*exp_pow_validated_prev=*/std::nullopt,
-        /*exp_locator_hash=*/FirstChain().front().GetHash());
+        /*exp_locator_hash=*/std::nullopt);
 }
 
 BOOST_AUTO_TEST_CASE(sneaky_redownload)
