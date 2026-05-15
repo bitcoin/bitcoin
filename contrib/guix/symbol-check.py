@@ -279,6 +279,21 @@ def check_ELF_ABI(binary) -> bool:
     assert note.abi == lief.ELF.NoteAbi.ABI.LINUX
     return note.version == expected_abi
 
+# Static binary will have:
+# no imported, or exported symbols
+#   single 0-value dynamic symbol for x86_64
+#   aarch64 has 3 symbols
+# no library dependencies
+# no interpreter (redundant second check)
+def check_ELF_STATIC(binary) -> bool:
+    assert len(binary.dynamic_symbols) <= 3
+    assert len(binary.imported_symbols) == 0
+    assert len(binary.libraries) == 0
+    assert binary.concrete.interpreter == ""
+    assert check_ELF_ABI(binary) is True
+    assert check_RUNPATH(binary) is True
+    return True
+
 CHECKS = {
 lief.Binary.FORMATS.ELF: [
     ('IMPORTED_SYMBOLS', check_imported_symbols),
@@ -309,9 +324,21 @@ if __name__ == '__main__':
         etype = binary.format # type: ignore[union-attr]
 
         failed: list[str] = []
-        for (name, func) in CHECKS[etype]:
-            if not func(binary):
-                failed.append(name)
+
+        if etype == lief.Binary.FORMATS.ELF:
+
+            if binary.concrete.interpreter == "": # type: ignore[union-attr]
+                check_ELF_STATIC(binary)
+
+            else: # non-static
+                for (name, func) in CHECKS[etype]:
+                    if not func(binary):
+                        failed.append(name)
+
+        else: # macho / pe
+            for (name, func) in CHECKS[etype]:
+                if not func(binary):
+                    failed.append(name)
         if failed:
             print(f'{filename}: failed {" ".join(failed)}')
             retval = 1
