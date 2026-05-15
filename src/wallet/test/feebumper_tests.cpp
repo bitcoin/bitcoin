@@ -2,12 +2,17 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or https://www.opensource.org/licenses/mit-license.php.
 
+#include <consensus/amount.h>
 #include <consensus/validation.h>
 #include <policy/policy.h>
 #include <primitives/transaction.h>
 #include <script/script.h>
 #include <util/strencodings.h>
+#include <util/time.h>
+#include <validation.h>
+#include <wallet/coincontrol.h>
 #include <wallet/feebumper.h>
+#include <wallet/spend.h>
 #include <wallet/test/util.h>
 #include <wallet/test/wallet_test_fixture.h>
 
@@ -49,6 +54,41 @@ BOOST_AUTO_TEST_CASE(external_max_weight_test)
     CheckMaxWeightComputation("", {"3042021f0f8906f0394979d5b737134773e5b88bf036c7d63542301d600ab677ba5a59021f0e9fe07e62c113045fa1c1532e2914720e8854d189c4f5b8c88f57956b704401", "0359edba11ed1a0568094a6296a16c4d5ee4c8cfe2f5e2e6826871b5ecf8188f79"}, "00149961a78658030cc824af4c54fbf5294bec0cabdd", 272);
     // P2WSH HTLC
     CheckMaxWeightComputation("", {"3042021f5c4c29e6b686aae5b6d0751e90208592ea96d26bc81d78b0d3871a94a21fa8021f74dc2f971e438ccece8699c8fd15704c41df219ab37b63264f2147d15c34d801", "01", "6321024cf55e52ec8af7866617dc4e7ff8433758e98799906d80e066c6f32033f685f967029000b275210214827893e2dcbe4ad6c20bd743288edad21100404eb7f52ccd6062fd0e7808f268ac"}, "002089e84892873c679b1129edea246e484fd914c2601f776d4f2f4a001eb8059703", 318);
+}
+
+BOOST_FIXTURE_TEST_CASE(bump_transaction_fee_sniping_check, TestChain100Setup)
+{
+    // Add 1 spendable UTXO, 50 BTC each, to the wallet
+    CreateAndProcessBlock({}, GetScriptForRawPubKey(coinbaseKey.GetPubKey()));
+    auto wallet = CreateSyncedWallet(*m_node.chain, WITH_LOCK(Assert(m_node.chainman)->GetMutex(), return m_node.chainman->ActiveChain()), coinbaseKey);
+
+    LOCK(wallet->cs_wallet);
+
+    auto available_coins = AvailableCoins(*wallet);
+    std::vector<COutput> coins = available_coins.All();
+    // Preselect the first UTXO
+    CCoinControl coin_control;
+    coin_control.Select(coins[0].outpoint);
+    std::vector<CRecipient> recipients{{*Assert(wallet->GetNewDestination(OutputType::BECH32, "dummy")),
+                                        /*nAmount=*/40 * COIN, /*fSubtractFeeFromAmount=*/true}};
+
+    auto res = CreateTransaction(*wallet, recipients, /*change_pos=*/std::nullopt, coin_control);
+    BOOST_REQUIRE(res);
+    const auto& txr = *res;
+    wallet->CommitTransaction(txr.tx, {}, {});
+
+    std::vector<bilingual_str> errors;
+    CAmount old_fee;
+    CAmount new_fee;
+    CMutableTransaction mtx;
+
+    // Rate bump with a stale tip: the lcoktime is set to the previous locktime.
+    const CBlockIndex* tip{WITH_LOCK(Assert(m_node.chainman)->GetMutex(),
+                                     return m_node.chainman->ActiveChain().Tip())};
+    SetMockTime(std::chrono::seconds{tip->GetBlockTime()} + std::chrono::hours{9});
+    auto bump_res = feebumper::CreateRateBumpTransaction(*wallet, txr.tx->GetHash(), coin_control, errors, old_fee, new_fee, mtx, /*require_mine=*/false, /*outputs=*/{});
+    BOOST_REQUIRE(bump_res == feebumper::Result::OK);
+    BOOST_CHECK_EQUAL(mtx.nLockTime, txr.tx->nLockTime);
 }
 
 BOOST_AUTO_TEST_SUITE_END()
