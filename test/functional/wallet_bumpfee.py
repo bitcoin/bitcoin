@@ -106,6 +106,7 @@ class BumpFeeTest(BitcoinTestFramework):
         test_locked_wallet_fails(self, rbf_node, dest_address)
         test_change_script_match(self, rbf_node, dest_address)
         test_maxtxfee_fails(self, rbf_node, dest_address)
+        test_bumpfee_fee_sniping_check(self, rbf_node, peer_node)
         # These tests wipe out a number of utxos that are expected in other tests
         test_small_output_with_feerate_succeeds(self, rbf_node, dest_address)
         test_no_more_inputs_fails(self, rbf_node, dest_address)
@@ -829,6 +830,47 @@ def test_bumpfee_with_feerate_ignores_walletincrementalrelayfee(self, rbf_node, 
 
     # You can fee bump as long as the new fee set from fee_rate is at least (original fee + incrementalrelayfee)
     rbf_node.bumpfee(tx["txid"], {"fee_rate": 2.1})
+    self.clear_mempool()
+
+def test_bumpfee_fee_sniping_check(self, rbf_node, peer_node):
+    # Make sure there is enough balance
+    peer_node.sendtoaddress(rbf_node.getnewaddress(), 1)
+    self.generate(peer_node, 1)
+
+    locktime = rbf_node.getblockcount()
+    assert_greater_than(locktime, 100)
+
+    # Create a replaceable tx with an explicit locktime 101 blocks below the current height.
+    # Anti-fee-sniping normally sets the locktime to the current height, and occasionally
+    # (10% of the time) backdates it by a random 0-100 blocks. A locktime 101 blocks back
+    # can't be produced by either, so if the bumped tx has this locktime, we know it was
+    # copied from the original transaction rather than recomputed by anti-fee-sniping.
+    dest = rbf_node.getnewaddress()
+    res = rbf_node.send(
+        outputs=[{dest: 1}],
+        options={
+            "locktime": locktime - 101,
+            "replaceable": True,
+            "subtract_fee_from_outputs": [0],
+        },
+    )
+    txid = res["txid"]
+
+    original_locktime = rbf_node.gettransaction(txid, verbose=True)["decoded"]["locktime"]
+    assert_equal(original_locktime, locktime - 101)
+
+    # Make the tip stale.
+    tip_time = rbf_node.getblockheader(rbf_node.getbestblockhash())["time"]
+    stale_tip = 9 * 60 * 60  # 9 hours
+    rbf_node.setmocktime(tip_time + stale_tip)
+
+    # Rate bump with a stale tip: keep the original transaction's locktime.
+    bumped = rbf_node.bumpfee(txid)['txid']
+    bumped_locktime = rbf_node.gettransaction(bumped, verbose=True)["decoded"]["locktime"]
+    assert_equal(bumped_locktime, original_locktime)
+
+    # Set the mock time back to what it was
+    rbf_node.setmocktime(tip_time)
     self.clear_mempool()
 
 
