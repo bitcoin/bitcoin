@@ -394,22 +394,6 @@ other input.
      assumption may or may not result in a slightly degraded user experience,
      but it is safe to continue program execution.
 
-### Valgrind suppressions file
-
-Valgrind is a programming tool for memory debugging, memory leak detection, and
-profiling. The repo contains a Valgrind suppressions file
-([`valgrind.supp`](/test/sanitizer_suppressions/valgrind.supp))
-which includes known Valgrind warnings in our dependencies that cannot be fixed
-in-tree. Example use:
-
-```shell
-$ valgrind --suppressions=test/sanitizer_suppressions/valgrind.supp build/bin/test_bitcoin
-$ valgrind --suppressions=test/sanitizer_suppressions/valgrind.supp --leak-check=full \
-      --show-leak-kinds=all build/bin/test_bitcoin --log_level=test_suite
-$ valgrind -v --leak-check=full build/bin/bitcoind -printtoconsole
-$ ./build/test/functional/test_runner.py --valgrind
-```
-
 ### Compiling for test coverage
 
 #### Using LCOV
@@ -617,6 +601,21 @@ or using a graphical tool like [Hotspot](https://github.com/KDAB/hotspot).
 
 See the functional test documentation for how to invoke perf within tests.
 
+### Valgrind
+
+Valgrind is a programming tool for memory debugging, memory leak detection, and
+profiling. The repo contains a Valgrind suppressions file
+([`valgrind.supp`](/test/sanitizer_suppressions/valgrind.supp))
+which includes known Valgrind warnings in our dependencies that cannot be fixed
+in-tree. Example use:
+
+```shell
+$ valgrind --suppressions=test/sanitizer_suppressions/valgrind.supp build/bin/test_bitcoin
+$ valgrind --suppressions=test/sanitizer_suppressions/valgrind.supp --leak-check=full \
+      --show-leak-kinds=all build/bin/test_bitcoin --log_level=test_suite
+$ valgrind -v --leak-check=full build/bin/bitcoind -printtoconsole
+$ ./build/test/functional/test_runner.py --valgrind
+```
 
 ### Sanitizers
 
