@@ -5638,6 +5638,9 @@ void PeerManagerImpl::EvictExtraOutboundPeers(NodeClock::time_point now)
 
             // Only consider outbound-full-relay peers that are not already
             // marked for disconnection
+            // TODO: reconciliation peers are neither evicted here nor protected below, unlike every
+            // other outbound type. Pending to decide when we decide is reconciliation a full outbound peer or not.
+            // Without eviction, the overshoot flagged in ThreadOpenConnections is never corrected.
             if (!pnode->IsFullOutboundConn() || pnode->fDisconnect) return;
             CNodeState *state = State(pnode->GetId());
             if (state == nullptr) return; // shouldn't be possible, but just in case
