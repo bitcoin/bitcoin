@@ -144,6 +144,7 @@ inline constexpr NetPermissionFlags ALL_NET_PERMISSION_FLAGS[]{
 inline constexpr ConnectionType ALL_CONNECTION_TYPES[]{
     ConnectionType::INBOUND,
     ConnectionType::OUTBOUND_FULL_RELAY,
+    ConnectionType::OUTBOUND_FULL_RECONCILIATION,
     ConnectionType::MANUAL,
     ConnectionType::FEELER,
     ConnectionType::BLOCK_RELAY,
