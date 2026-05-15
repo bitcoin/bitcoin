@@ -99,6 +99,40 @@ class LoggingTest(BitcoinTestFramework):
             expected_msg="Error: Unsupported category-specific logging level -loglevel=net:info:abc.",
             match=ErrorMatch.PARTIAL_REGEX,
         )
+        self.nodes[0].assert_start_raises_init_error(
+            extra_args=["-loglevel=net:trace,debug"],
+            expected_msg="global level must be specified before any category-specific levels",
+            match=ErrorMatch.PARTIAL_REGEX,
+        )
+
+        self.log.info("Test -loglevel enables categories without -debug")
+        # -nologlevel and -nodebug clear the test framework's -loglevel=trace and -debug for a clean baseline
+        self.restart_node(0, ['-nologlevel', '-nodebug', '-loglevel=debug'])
+        logging = self.nodes[0].logging()
+        assert logging['net']
+        assert logging['http']
+
+        self.restart_node(0, ['-nologlevel', '-nodebug', '-loglevel=net:trace'])
+        logging = self.nodes[0].logging()
+        assert logging['net']
+        assert not logging['http']
+
+        self.log.info("Test -loglevel comma-separated syntax")
+        self.restart_node(0, ['-nologlevel', '-nodebug', '-loglevel=debug,net:trace'])
+        logging = self.nodes[0].logging()
+        assert logging['net']
+        assert logging['http']  # enabled by global debug
+
+        self.log.info("Test -loglevel precedence over -debug and -debugexclude")
+        # -loglevel is processed after -debug regardless of command-line order
+        self.restart_node(0, ['-loglevel=info', '-debug=net'])
+        assert not self.nodes[0].logging()['net']
+
+        # -debugexclude is processed after -loglevel regardless of command-line order
+        self.restart_node(0, ['-debugexclude=net', '-loglevel=debug'])
+        logging = self.nodes[0].logging()
+        assert not logging['net']
+        assert logging['http']
 
         self.log.info("Test that -nodebug,-debug=0,-debug=none clear previously specified debug options")
         disable_debug_options = [
@@ -108,8 +142,10 @@ class LoggingTest(BitcoinTestFramework):
         ]
 
         for disable_debug_opt in disable_debug_options:
-            # Every category before disable_debug_opt will be ignored, including the invalid 'abc'
-            self.restart_node(0, ['-debug=http', '-debug=abc', disable_debug_opt, '-debug=rpc', '-debug=net'])
+            # Every category before disable_debug_opt will be ignored, including the invalid 'abc'.
+            # -nologlevel clears the test framework's -loglevel=trace which would otherwise
+            # enable all categories and interfere with this test.
+            self.restart_node(0, ['-nologlevel', '-debug=http', '-debug=abc', disable_debug_opt, '-debug=rpc', '-debug=net'])
             logging = self.nodes[0].logging()
             assert not logging['http']
             assert 'abc' not in logging
