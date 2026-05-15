@@ -575,6 +575,9 @@ private:
      *  May return an empty shared_ptr if the Peer object can't be found. */
     PeerRef RemovePeer(NodeId id) EXCLUSIVE_LOCKS_REQUIRED(!m_peer_mutex);
 
+    /// Get all existing peers in m_peer_map.
+    std::vector<PeerRef> GetAllPeers() const EXCLUSIVE_LOCKS_REQUIRED(!m_peer_mutex);
+
     /** Mark a peer as misbehaving, which will cause it to be disconnected and its
      *  address discouraged. */
     void Misbehaving(Peer& peer, const std::string& message);
@@ -1785,6 +1788,17 @@ PeerRef PeerManagerImpl::RemovePeer(NodeId id)
     return ret;
 }
 
+std::vector<PeerRef> PeerManagerImpl::GetAllPeers() const
+{
+    std::vector<PeerRef> peers;
+    LOCK(m_peer_mutex);
+    peers.reserve(m_peer_map.size());
+    for (const auto& [_, peer] : m_peer_map) {
+        peers.push_back(peer);
+    }
+    return peers;
+}
+
 bool PeerManagerImpl::GetNodeStateStats(NodeId nodeid, CNodeStateStats& stats) const
 {
     {
@@ -2243,9 +2257,10 @@ void PeerManagerImpl::SendPings()
 
 void PeerManagerImpl::InitiateTxBroadcastToAll(const Txid& txid, const Wtxid& wtxid)
 {
-    LOCK(m_peer_mutex);
-    for(auto& it : m_peer_map) {
-        Peer& peer = *it.second;
+    for (const PeerRef& peer_ref : GetAllPeers()) {
+        if (!peer_ref) continue;
+        Peer& peer{*peer_ref};
+
         auto tx_relay = peer.GetTxRelay();
         if (!tx_relay) continue;
 
