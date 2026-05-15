@@ -671,6 +671,11 @@ Additional resources:
  * [GCC Instrumentation Options](https://gcc.gnu.org/onlinedocs/gcc/Instrumentation-Options.html)
  * [Google Sanitizers Wiki](https://github.com/google/sanitizers/wiki)
 
+# Development guidelines
+
+A few non-style-related recommendations for developers, as well as points to
+pay attention to for reviewers of Bitcoin Core code.
+
 ## Locking/mutex usage notes
 
 The code is multi-threaded and uses mutexes and the
@@ -739,11 +744,6 @@ and its `cs_KeyStore` lock for example).
 
   - [ThreadI2PAcceptIncoming (`b-i2paccept`)](https://doxygen.bitcoincore.org/class_c_connman.html#a57787b4f9ac847d24065fbb0dd6e70f8)
     : Listens for and accepts incoming I2P connections through the I2P SAM proxy.
-
-# Development guidelines
-
-A few non-style-related recommendations for developers, as well as points to
-pay attention to for reviewers of Bitcoin Core code.
 
 ## General Bitcoin Core
 
