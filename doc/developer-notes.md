@@ -199,10 +199,6 @@ To run clang-tidy on the changed source lines:
 git diff | ( cd ./src/ && clang-tidy-diff -p2 -path ../build -j $(nproc) )
 ```
 
-## Coding Style (Python)
-
-Refer to [/test/functional/README.md#style-guidelines](/test/functional/README.md#style-guidelines).
-
 ## Coding Style (Doxygen-compatible comments)
 
 Bitcoin Core uses [Doxygen](https://www.doxygen.nl/) to generate its official documentation.
@@ -305,6 +301,10 @@ Before building the `docs` target, you'll need to install these dependencies:
 Linux: `sudo apt install doxygen graphviz`
 
 MacOS: `brew install doxygen graphviz`
+
+## Coding Style (Python)
+
+Refer to [/test/functional/README.md#style-guidelines](/test/functional/README.md#style-guidelines).
 
 ## Development tips and tricks
 
