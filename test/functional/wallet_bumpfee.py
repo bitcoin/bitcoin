@@ -30,6 +30,7 @@ from test_framework.util import (
     assert_raises_rpc_error,
     get_fee,
     find_vout_for_address,
+    assert_greater_than_or_equal
 )
 from test_framework.wallet import MiniWallet
 
@@ -114,6 +115,8 @@ class BumpFeeTest(BitcoinTestFramework):
         # Context independent tests
         test_feerate_checks_replaced_outputs(self, rbf_node, peer_node)
         test_bumpfee_with_feerate_ignores_walletincrementalrelayfee(self, rbf_node, peer_node)
+        test_bumpfee_dont_backdate(self, rbf_node)
+        test_bumpfee_timebased_locktime(self, rbf_node)
 
     def test_invalid_parameters(self, rbf_node, peer_node, dest_address):
         self.log.info('Test invalid parameters')
@@ -827,6 +830,55 @@ def test_bumpfee_with_feerate_ignores_walletincrementalrelayfee(self, rbf_node, 
     # You can fee bump as long as the new fee set from fee_rate is at least (original fee + incrementalrelayfee)
     rbf_node.bumpfee(tx["txid"], {"fee_rate": 2.1})
     self.clear_mempool()
+
+def test_bumpfee_dont_backdate(self, rbf_node):
+    self.log.info('Test to check bumpfee do not backdate the locktime')
+
+    rbf_node.createwallet("backdating_rbf")
+    wallet = rbf_node.get_wallet_rpc("backdating_rbf")
+    self.generatetoaddress(rbf_node, 101, wallet.getnewaddress())
+
+    current_height = rbf_node.getblockchaininfo()["blocks"]
+    # The original tx has an older locktime so we can differentiate when the replacement backdates
+    original_locktime = current_height - 50
+    replaced_locktime = current_height
+
+    # Exti the loop when the locktime backdates
+    while current_height == replaced_locktime:
+        # Original transaction with locktime at the current height
+        tx = wallet.send(outputs={wallet.getnewaddress(): 9}, fee_rate=2, locktime=original_locktime)
+
+        # Replacement with higher fee_rate
+        change_addr = get_change_address(tx["txid"], wallet)[0]
+        bumped = wallet.bumpfee(txid=tx["txid"], options={"fee_rate":5, "outputs": [{change_addr: 10}]})
+
+        replaced_locktime = rbf_node.getrawtransaction(bumped["txid"],True)["locktime"]
+
+        # Clear mempool to create another transaction to replace
+        self.clear_mempool()
+
+    # Even when backdating, the replaced tx must always have locktime >= than the original tx
+    assert_greater_than_or_equal(replaced_locktime, original_locktime)
+
+    wallet.unloadwallet()
+
+def test_bumpfee_timebased_locktime(self, rbf_node):
+    self.log.info(f"Test to check bumpfee don't anti fee snipe if original tx had time-based locktime")
+
+    rbf_node.createwallet("rbf")
+    wallet = rbf_node.get_wallet_rpc("rbf")
+    self.generatetoaddress(rbf_node, 101, wallet.getnewaddress())
+
+    original_locktime = 500000000
+    tx = wallet.send(outputs={wallet.getnewaddress(): 9}, fee_rate=2, locktime=original_locktime)
+    hex_tx = rbf_node.getrawtransaction(tx["txid"])
+
+    # Replacement with higher fee_rate
+    change_addr = get_change_address(tx["txid"], wallet)[0]
+    bumped = wallet.bumpfee(txid=tx["txid"], options={"fee_rate":5, "outputs": [{change_addr: 10}]})
+
+    locktime = rbf_node.getrawtransaction(bumped["txid"],True)["locktime"]
+    assert_equal(original_locktime, locktime)
 
 
 if __name__ == "__main__":
