@@ -3767,14 +3767,12 @@ void PeerManagerImpl::ProcessMessage(Peer& peer, CNode& pfrom, const std::string
         if (greatest_common_version >= WTXID_RELAY_VERSION && m_txreconciliation) {
             // Per BIP-330, we announce txreconciliation support if:
             // - protocol version per the peer's VERSION message supports WTXID_RELAY;
-            // - transaction relay is supported per the peer's VERSION message
-            // - this is not a block-relay-only connection and not a feeler
-            // - this is not an addr fetch connection;
-            // - we are not in -blocksonly mode.
+            // - transaction relay is supported per the peer's VERSION message;
+            // - this is an outbound reconciliation connection;
             // - and we still have space for inbound reconciliation peers;
             const auto* tx_relay = peer.GetTxRelay();
             const bool offer_reconciliation =
-                !pfrom.IsAddrFetchConn() ||
+                pfrom.IsOutboundReconciliationConn() ||
                 (pfrom.IsInboundConn() && m_inbound_reconciliation_peers < MAX_INBOUND_RECONCILIATION_PEERS);
             if (tx_relay && WITH_LOCK(tx_relay->m_bloom_filter_mutex, return tx_relay->m_relay_txs) &&
                 offer_reconciliation && !m_opts.ignore_incoming_txs) {
