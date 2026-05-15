@@ -42,7 +42,7 @@ code.
   - Constant names are all uppercase, and use `_` to separate words.
   - Enumerator constants may be `snake_case`, `PascalCase` or `ALL_CAPS`.
     This is a more tolerant policy than the [C++ Core
-    Guidelines](https://isocpp.github.io/CppCoreGuidelines/CppCoreGuidelines#Renum-caps),
+    Guidelines](https://isocpp.github.io/CppCoreGuidelines/CppCoreGuidelines#renum-caps),
     which recommend using `snake_case`.  Please use what seems appropriate.
   - Class names, function names, and method names are UpperCamelCase
     (PascalCase). Do not prefix class names with `C`. See [Internal interface
@@ -61,7 +61,7 @@ code.
     between integer types, use functional casts such as `int(x)` or `int{x}`
     instead of `(int) x`. When casting between more complex types, use `static_cast`.
     Use `reinterpret_cast` and `const_cast` as appropriate.
-  - Prefer [`list initialization ({})`](https://isocpp.github.io/CppCoreGuidelines/CppCoreGuidelines#Res-list) where possible.
+  - Prefer [`list initialization ({})`](https://isocpp.github.io/CppCoreGuidelines/CppCoreGuidelines#res-list) where possible.
     For example `int x{0};` instead of `int x = 0;` or `int x(0);`
   - Recursion is checked by clang-tidy and thus must be made explicit. Use
     `NOLINTNEXTLINE(misc-no-recursion)` to suppress the check.
@@ -790,7 +790,7 @@ Guidelines](https://isocpp.github.io/CppCoreGuidelines/).
 Common misconceptions are clarified in those sections:
 
 - Passing (non-)fundamental types in the [C++ Core
-  Guideline](https://isocpp.github.io/CppCoreGuidelines/CppCoreGuidelines#Rf-conventional).
+  Guidelines](https://isocpp.github.io/CppCoreGuidelines/CppCoreGuidelines#rf-conventional).
 
 - If you use the `.h`, you must link the `.cpp`.
 
