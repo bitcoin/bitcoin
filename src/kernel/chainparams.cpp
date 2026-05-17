@@ -537,6 +537,7 @@ public:
         m_is_mockable_chain = true;
 
 
+
         chainTxData = ChainTxData{
             .nTime = 0,
             .tx_count = 0,

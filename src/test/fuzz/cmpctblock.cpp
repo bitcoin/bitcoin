@@ -123,7 +123,6 @@ void ResetChainmanAndMempool(TestingSetup& setup)
 
     node::BlockAssembler::Options options;
     options.coinbase_output_script = P2WSH_OP_TRUE;
-    options.include_dummy_extranonce = true;
 
     g_mature_coinbase.clear();
 
