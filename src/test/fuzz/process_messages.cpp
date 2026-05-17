@@ -37,7 +37,6 @@ void ResetChainman(TestingSetup& setup)
     setup.m_make_chainman();
     setup.LoadVerifyActivateChainstate();
     node::BlockAssembler::Options options;
-    options.include_dummy_extranonce = true;
     for (int i = 0; i < 2 * COINBASE_MATURITY; i++) {
         MineBlock(setup.m_node, options);
     }

@@ -127,6 +127,7 @@ BOOST_AUTO_TEST_CASE(signet_parse_tests)
     BOOST_CHECK(!CheckSignetBlockSolution(block, signet_params->GetConsensus()));
 }
 
+
 BOOST_AUTO_TEST_CASE(block_malleation)
 {
     // Test utilities that calls `IsBlockMutated` and then clears the validity

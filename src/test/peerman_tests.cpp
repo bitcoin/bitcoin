@@ -20,7 +20,6 @@ static void mineBlock(const node::NodeContext& node, std::chrono::seconds block_
 {
     auto curr_time = GetTime<std::chrono::seconds>();
     node::BlockAssembler::Options options;
-    options.include_dummy_extranonce = true;
     SetMockTime(block_time); // update time so the block is created with it
     CBlock block = node::BlockAssembler{node.chainman->ActiveChainstate(), nullptr, options}.CreateNewBlock()->block;
     while (!CheckProofOfWork(block.GetHash(), block.nBits, node.chainman->GetConsensus())) ++block.nNonce;
