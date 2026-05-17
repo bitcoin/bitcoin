@@ -357,6 +357,49 @@ class PSBTTest(BitcoinTestFramework):
             proprietary_entry(key=output_key_b, value=b"\xff", identifier=b"out", subtype=6),
         ])
 
+    def test_combinepsbt_preserves_unknown_fields(self):
+        self.log.info("Test that combining PSBTs preserves unknown fields")
+
+        def unknown_key(key_type, key_data):
+            return bytes([key_type]) + key_data
+
+        def unknown_fields(*entries):
+            return {key.hex(): value.hex() for key, value in entries}
+
+        unknown_key_a = unknown_key(0xf0, bytes.fromhex("010203040506070809"))
+        unknown_key_b = unknown_key(0xf0, bytes.fromhex("010203040506070810"))
+        unknown_value = bytes.fromhex("0102030405060708090a0b0c0d0e0f")
+
+        inputs = [{"txid": "ff" * 32, "vout": 0, "sequence": 0xffffffff}]
+        outputs = [{"data": "00"}]
+        for psbt_version in [0, 2]:
+            base_psbt = self.nodes[0].createpsbt(inputs=inputs, outputs=outputs, psbt_version=psbt_version)
+
+            psbt1 = PSBT.from_base64(base_psbt)
+            psbt1.g.map[unknown_key_a] = unknown_value
+            psbt1.i[0].map[unknown_key_a] = unknown_value
+            psbt1.o[0].map[unknown_key_a] = unknown_value
+
+            psbt2 = PSBT.from_base64(base_psbt)
+            psbt2.g.map[unknown_key_b] = unknown_value
+            psbt2.i[0].map[unknown_key_b] = unknown_value
+            psbt2.o[0].map[unknown_key_b] = unknown_value
+
+            decoded = self.nodes[0].decodepsbt(self.nodes[0].combinepsbt([psbt1.to_base64(), psbt2.to_base64()]))
+            assert_equal(decoded["psbt_version"], psbt_version)
+            assert_equal(decoded["unknown"], unknown_fields(
+                (unknown_key_a, unknown_value),
+                (unknown_key_b, unknown_value),
+            ))
+            assert_equal(decoded["inputs"][0]["unknown"], unknown_fields(
+                (unknown_key_a, unknown_value),
+                (unknown_key_b, unknown_value),
+            ))
+            assert_equal(decoded["outputs"][0]["unknown"], unknown_fields(
+                (unknown_key_a, unknown_value),
+                (unknown_key_b, unknown_value),
+            ))
+
     def test_sighash_mismatch(self):
         self.log.info("Test sighash type mismatches")
         self.nodes[0].createwallet("sighash_mismatch")
@@ -1345,6 +1388,8 @@ class PSBTTest(BitcoinTestFramework):
         self.test_decodepsbt_musig2_input_output_types()
 
         self.test_combinepsbt_preserves_proprietary_fields()
+
+        self.test_combinepsbt_preserves_unknown_fields()
 
         self.log.info("Test that combining PSBTs with different transactions fails")
         tx = CTransaction()
