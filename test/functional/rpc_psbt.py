@@ -470,6 +470,134 @@ class PSBTTest(BitcoinTestFramework):
             tap_script(leaf_script_b, [control_block_with_longer_path]),
         ])
 
+    def test_combinepsbt_preserves_unknown_fields(self):
+        self.log.info("Test that combining PSBTs preserves unknown fields with the same and with distinct values per map.")
+
+        def unknown_key(key_type, key_data):
+            return bytes([key_type]) + key_data
+
+        def unknown_fields(*entries):
+            return {key.hex(): value.hex() for key, value in entries}
+
+        def build_psbt(key, global_value, input_value, output_value):
+            # A value of None leaves the corresponding map without the unknown field
+            psbt = PSBT.from_base64(base_psbt)
+            if global_value is not None:
+                psbt.g.map[key] = global_value
+            if input_value is not None:
+                psbt.i[0].map[key] = input_value
+            if output_value is not None:
+                psbt.o[0].map[key] = output_value
+            return psbt
+
+        unknown_key_a = unknown_key(0xf0, bytes.fromhex("010203040506070809"))
+        unknown_key_b = unknown_key(0xf0, bytes.fromhex("010203040506070810"))
+
+        # Distinct values per (psbt, map)
+        global_value_a = bytes.fromhex("0102030405060708090a0b0c0d0e0f")
+        global_value_b = bytes.fromhex("1112131415161718191a1b1c1d1e1f")
+        input_value_a = bytes.fromhex("2122232425262728292a2b2c2d2e2f")
+        input_value_b = bytes.fromhex("3132333435363738393a3b3c3d3e3f")
+        output_value_a = bytes.fromhex("4142434445464748494a4b4c4d4e4f")
+        output_value_b = bytes.fromhex("5152535455565758595a5b5c5d5e5f")
+
+        inputs = [{"txid": "ff" * 32, "vout": 0, "sequence": 0xffffffff}]
+        outputs = [{"data": "00"}]
+        for psbt_version in [0, 2]:
+            base_psbt = self.nodes[0].createpsbt(inputs=inputs, outputs=outputs, psbt_version=psbt_version)
+
+            # Combining the PSBTs with unknown keys and fields with the same values
+            combined_duplicated_psbt = self.nodes[0].combinepsbt([
+                build_psbt(unknown_key_a, global_value_a, global_value_a, global_value_a).to_base64(),
+                build_psbt(unknown_key_a, global_value_a, global_value_a, global_value_a).to_base64(),
+            ])
+            decoded = self.nodes[0].decodepsbt(combined_duplicated_psbt)
+            assert_equal(decoded["psbt_version"], psbt_version)
+            assert_equal(decoded["unknown"], unknown_fields(
+                (unknown_key_a, global_value_a)
+            ))
+            assert_equal(decoded["inputs"][0]["unknown"], unknown_fields(
+                (unknown_key_a, global_value_a)
+            ))
+            assert_equal(decoded["outputs"][0]["unknown"], unknown_fields(
+                (unknown_key_a, global_value_a)
+            ))
+
+            # Combining PSBTs with the same unknown keys but distinct values (first PSBT wins).
+            combined_psbt_same_keys = self.nodes[0].combinepsbt([
+                build_psbt(unknown_key_a, global_value_a, global_value_a, global_value_a).to_base64(),
+                build_psbt(unknown_key_a, global_value_b, global_value_b, global_value_b).to_base64(),
+            ])
+            decoded = self.nodes[0].decodepsbt(combined_psbt_same_keys)
+            assert_equal(decoded["psbt_version"], psbt_version)
+            assert_equal(decoded["unknown"], unknown_fields(
+                (unknown_key_a, global_value_a)
+            ))
+            assert_equal(decoded["inputs"][0]["unknown"], unknown_fields(
+                (unknown_key_a, global_value_a)
+            ))
+            assert_equal(decoded["outputs"][0]["unknown"], unknown_fields(
+                (unknown_key_a, global_value_a)
+            ))
+
+            # Combining PSBTs with unknown fields with the same values
+            combined_psbt_same_fields = self.nodes[0].combinepsbt([
+                build_psbt(unknown_key_a, global_value_a, global_value_a, global_value_a).to_base64(),
+                build_psbt(unknown_key_b, global_value_a, global_value_a, global_value_a).to_base64(),
+            ])
+            decoded = self.nodes[0].decodepsbt(combined_psbt_same_fields)
+            assert_equal(decoded["psbt_version"], psbt_version)
+            assert_equal(decoded["unknown"], unknown_fields(
+                (unknown_key_a, global_value_a),
+                (unknown_key_b, global_value_a),
+            ))
+            assert_equal(decoded["inputs"][0]["unknown"], unknown_fields(
+                (unknown_key_a, global_value_a),
+                (unknown_key_b, global_value_a),
+            ))
+            assert_equal(decoded["outputs"][0]["unknown"], unknown_fields(
+                (unknown_key_a, global_value_a),
+                (unknown_key_b, global_value_a),
+            ))
+
+            # Combining PSBTs preserves unknown fields with distinct values
+            combined_psbt = self.nodes[0].combinepsbt([
+                build_psbt(unknown_key_a, global_value_a, input_value_a, output_value_a).to_base64(),
+                build_psbt(unknown_key_b, global_value_b, input_value_b, output_value_b).to_base64(),
+            ])
+            decoded = self.nodes[0].decodepsbt(combined_psbt)
+            assert_equal(decoded["psbt_version"], psbt_version)
+            assert_equal(decoded["unknown"], unknown_fields(
+                (unknown_key_a, global_value_a),
+                (unknown_key_b, global_value_b),
+            ))
+            assert_equal(decoded["inputs"][0]["unknown"], unknown_fields(
+                (unknown_key_a, input_value_a),
+                (unknown_key_b, input_value_b),
+            ))
+            assert_equal(decoded["outputs"][0]["unknown"], unknown_fields(
+                (unknown_key_a, output_value_a),
+                (unknown_key_b, output_value_b),
+            ))
+
+            # Combining PSBTs with unknown fields missing from the maps of the other PSBT
+            # The fields of each map are preserved regardless of which PSBT they come from
+            combined_psbt = self.nodes[0].combinepsbt([
+                build_psbt(unknown_key_a, global_value_a, None, None).to_base64(),
+                build_psbt(unknown_key_a, None, input_value_b, output_value_b).to_base64(),
+            ])
+            decoded = self.nodes[0].decodepsbt(combined_psbt)
+            assert_equal(decoded["psbt_version"], psbt_version)
+            assert_equal(decoded["unknown"], unknown_fields(
+                (unknown_key_a, global_value_a)
+            ))
+            assert_equal(decoded["inputs"][0]["unknown"], unknown_fields(
+                (unknown_key_a, input_value_b)
+            ))
+            assert_equal(decoded["outputs"][0]["unknown"], unknown_fields(
+                (unknown_key_a, output_value_b)
+            ))
+
     def test_sighash_mismatch(self):
         self.log.info("Test sighash type mismatches")
         self.nodes[0].createwallet("sighash_mismatch")
@@ -1568,6 +1696,8 @@ class PSBTTest(BitcoinTestFramework):
         self.test_combinepsbt_preserves_proprietary_fields()
         self.test_combinepsbt_global_xpub_origin_conflict()
         self.test_combinepsbt_tap_leaf_script_conflict()
+
+        self.test_combinepsbt_preserves_unknown_fields()
 
         self.log.info("Test that combining PSBTs with different transactions fails")
         tx = CTransaction()
