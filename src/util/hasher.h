@@ -53,9 +53,22 @@ public:
     }
 };
 
+class PresaltedXorHasher
+{
+    const uint64_t m_salt;
+
+public:
+    explicit PresaltedXorHasher(uint64_t salt) noexcept : m_salt{salt} {}
+
+    // uint64_t operator()(const uint256& val) const noexcept;
+
+    uint64_t operator()(const uint256& val, uint32_t extra) const noexcept;
+};
+
 class SaltedOutpointHasher
 {
-    const PresaltedSipHasher m_hasher;
+    // const PresaltedSipHasher m_hasher;
+    const PresaltedXorHasher m_hasher;
 
 public:
     SaltedOutpointHasher(bool deterministic = false);

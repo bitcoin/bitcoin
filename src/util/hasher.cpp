@@ -22,9 +22,24 @@ SaltedWtxidHasher::SaltedWtxidHasher() : m_hasher{
     FastRandomContext().rand64()}
 {}
 
+uint64_t PresaltedXorHasher::operator()(const uint256& val, uint32_t extra) const noexcept
+{
+    return
+        m_salt ^
+        val.GetUint64(0) ^
+        val.GetUint64(1) ^
+        val.GetUint64(2) ^
+        val.GetUint64(3) ^
+        uint64_t(extra);
+}
+
+// SaltedOutpointHasher::SaltedOutpointHasher(bool deterministic) : m_hasher{
+//     deterministic ? 0x8e819f2607a18de6 : FastRandomContext().rand64(),
+//     deterministic ? 0xf4020d2e3983b0eb : FastRandomContext().rand64()}
+// {}
+
 SaltedOutpointHasher::SaltedOutpointHasher(bool deterministic) : m_hasher{
-    deterministic ? 0x8e819f2607a18de6 : FastRandomContext().rand64(),
-    deterministic ? 0xf4020d2e3983b0eb : FastRandomContext().rand64()}
+    deterministic ? 0x8e819f2607a18de6 : FastRandomContext().rand64()}
 {}
 
 SaltedSipHasher::SaltedSipHasher() :
