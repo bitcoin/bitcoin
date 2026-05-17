@@ -17,7 +17,6 @@ RPCAUTH=@abs_top_srcdir@/share/rpcauth/rpcauth.py
 # Which components are enabled. These are commented out by cmake if they were disabled during configuration.
 @BUILD_BENCH_TRUE@BUILD_BENCH=true
 @BUILD_BITCOIN_CLI_TRUE@ENABLE_CLI=true
-@BUILD_BITCOIN_TX_TRUE@BUILD_BITCOIN_TX=true
 @BUILD_BITCOIN_CHAINSTATE_TRUE@ENABLE_BITCOIN_CHAINSTATE=true
 @BUILD_BITCOIND_TRUE@ENABLE_BITCOIND=true
 @ENABLE_FUZZ_BINARY_TRUE@ENABLE_FUZZ_BINARY=true

@@ -168,7 +168,6 @@ def run_tests(ci_type):
             "BITCOIND": "bitcoind.exe",
             "BITCOINCLI": "bitcoin-cli.exe",
             "BITCOIN_BENCH": "bench_bitcoin.exe",
-            "BITCOINTX": "bitcoin-tx.exe",
             "BITCOINUTIL": "bitcoin-util.exe",
             "BITCOINCHAINSTATE": "bitcoin-chainstate.exe",
         }

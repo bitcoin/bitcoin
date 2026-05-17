@@ -90,7 +90,6 @@ This table describes the files installed by Bitcoin Core across different platfo
 | bitcoin.conf                                               | [Generated](../contrib/devtools/gen-bitcoin-conf.sh) configuration file     |
 | bin/bitcoin                                                | Command-line tool for interacting with Bitcoin. Calls other binaries below. |
 | bin/bitcoin-cli                                            | Tool for making node RPC calls.                                             |
-| bin/bitcoin-tx                                             | Tool for creating and modifying transactions                                |
 | bin/bitcoind                                               | Bitcoin node daemon                                                         |
 | *lib/libbitcoinkernel.so*                                  | Shared library containing core consensus and validation code                |
 | *lib/pkgconfig/libbitcoinkernel.pc*                        | Pkg-config metadata for linking to `libbitcoinkernel`                       |

@@ -90,8 +90,6 @@ int main(int argc, char* argv[])
             // can override this by specifying -nonamed, but it handles parameters
             // that contain '=' characters, so -nonamed should rarely be needed.
             args.emplace_back("-named");
-        } else if (cmd.command == "tx") {
-            args.emplace_back("bitcoin-tx");
         } else if (cmd.command == "bench") {
             args.emplace_back("bench_bitcoin");
         } else if (cmd.command == "chainstate") {

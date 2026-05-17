@@ -302,21 +302,6 @@ if(BUILD_CLI)
 endif()
 
 
-if(BUILD_TX)
-  add_executable(bitcoin-tx bitcoin-tx.cpp)
-  add_windows_resources(bitcoin-tx bitcoin-tx-res.rc)
-  add_windows_application_manifest(bitcoin-tx)
-  target_link_libraries(bitcoin-tx
-    core_interface
-    bitcoin_common
-    bitcoin_util
-    univalue
-  )
-  install_binary_component(bitcoin-tx HAS_MANPAGE)
-endif()
-
-
-
 if(BUILD_KERNEL_LIB)
   add_subdirectory(kernel)
   if (BUILD_KERNEL_TEST)

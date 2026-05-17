@@ -57,10 +57,6 @@ _bitcoin() {
             _bitcoin_wrap bitcoin-cli "$offset"
             return 0
             ;;
-        tx)
-            _bitcoin_wrap bitcoin-tx "$offset"
-            return 0
-            ;;
     esac
 
     case "$cur" in
