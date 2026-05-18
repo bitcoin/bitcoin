@@ -4,14 +4,27 @@
 
 #include <addresstype.h>
 #include <bench/bench.h>
-#include <interfaces/chain.h>
-#include <kernel/cs_main.h>
-#include <script/interpreter.h>
+#include <chain.h>
+#include <coins.h>
+#include <consensus/amount.h>
+#include <consensus/validation.h>
+#include <key.h>
+#include <node/blockstorage.h>
+#include <policy/feerate.h>
+#include <primitives/block.h>
+#include <primitives/transaction.h>
+#include <pubkey.h>
+#include <script/script.h>
 #include <sync.h>
 #include <test/util/setup_common.h>
 #include <validation.h>
 
 #include <cassert>
+#include <cstddef>
+#include <memory>
+#include <optional>
+#include <string>
+#include <utility>
 #include <vector>
 
 /*

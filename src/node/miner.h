@@ -6,32 +6,32 @@
 #ifndef BITCOIN_NODE_MINER_H
 #define BITCOIN_NODE_MINER_H
 
-#include <interfaces/types.h>
-#include <node/types.h>
+#include <consensus/amount.h>
 #include <node/mining_types.h>
-#include <policy/policy.h>
 #include <primitives/block.h>
+#include <primitives/transaction.h>
+#include <threadsafety.h>
 #include <txmempool.h>
 #include <util/feefrac.h>
+#include <util/time.h>
 
 #include <cstdint>
 #include <memory>
 #include <optional>
+#include <vector>
 
-#include <boost/multi_index/identity.hpp>
-#include <boost/multi_index/indexed_by.hpp>
-#include <boost/multi_index/ordered_index.hpp>
-#include <boost/multi_index/tag.hpp>
-#include <boost/multi_index_container.hpp>
-
-class ArgsManager;
 class CBlockIndex;
 class CChainParams;
-class CScript;
 class Chainstate;
 class ChainstateManager;
 
-namespace Consensus { struct Params; };
+namespace Consensus {
+struct Params;
+} // namespace Consensus
+class uint256;
+namespace interfaces {
+struct BlockRef;
+} // namespace interfaces
 
 using interfaces::BlockRef;
 

@@ -5,8 +5,7 @@
 #ifndef BITCOIN_TEST_UTIL_MINING_H
 #define BITCOIN_TEST_UTIL_MINING_H
 
-#include <node/miner.h>
-
+#include <cstddef>
 #include <memory>
 #include <string>
 #include <vector>

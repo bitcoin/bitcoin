@@ -2,24 +2,37 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include <boost/test/unit_test.hpp>
-
+#include <chain.h>
 #include <chainparams.h>
+#include <consensus/consensus.h>
 #include <consensus/merkle.h>
 #include <consensus/validation.h>
 #include <interfaces/mining.h>
-#include <node/miner.h>
+#include <node/blockstorage.h>
 #include <pow.h>
+#include <primitives/block.h>
+#include <primitives/transaction.h>
 #include <random.h>
-#include <test/util/common.h>
-#include <test/util/random.h>
+#include <script/script.h>
+#include <sync.h>
+#include <test/util/common.h> // IWYU pragma: keep
 #include <test/util/script.h>
 #include <test/util/setup_common.h>
-#include <util/time.h>
+#include <txmempool.h>
+#include <uint256.h>
+#include <util/check.h>
 #include <validation.h>
 #include <validationinterface.h>
 
+#include <boost/test/unit_test.hpp>
+
+#include <cstddef>
+#include <cstdint>
+#include <memory>
+#include <span>
 #include <thread>
+#include <utility>
+#include <vector>
 
 using kernel::ChainstateRole;
 

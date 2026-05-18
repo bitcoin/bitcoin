@@ -2,27 +2,32 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 //
+#include <chain.h>
 #include <chainparams.h>
+#include <coins.h>
 #include <consensus/amount.h>
 #include <consensus/validation.h>
+#include <node/blockstorage.h>
 #include <node/kernel_notifications.h>
+#include <primitives/block.h>
+#include <primitives/transaction.h>
 #include <random.h>
-#include <rpc/blockchain.h>
 #include <script/script.h>
 #include <sync.h>
 #include <test/util/chainstate.h>
-#include <test/util/common.h>
+#include <test/util/common.h> // IWYU pragma: keep
 #include <test/util/coins.h>
-#include <test/util/random.h>
 #include <test/util/setup_common.h>
+#include <tinyformat.h>
 #include <uint256.h>
-#include <util/byte_units.h>
 #include <util/check.h>
 #include <validation.h>
 
-#include <vector>
-
 #include <boost/test/unit_test.hpp>
+
+#include <memory>
+#include <optional>
+#include <vector>
 
 class CTxMemPool;
 

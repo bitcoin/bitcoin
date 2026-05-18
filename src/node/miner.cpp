@@ -7,30 +7,48 @@
 
 #include <chain.h>
 #include <chainparams.h>
-#include <coins.h>
 #include <common/args.h>
 #include <consensus/amount.h>
 #include <consensus/consensus.h>
 #include <consensus/merkle.h>
+#include <consensus/params.h>
 #include <consensus/tx_verify.h>
 #include <consensus/validation.h>
-#include <deploymentstatus.h>
-#include <node/context.h>
+#include <interfaces/types.h>
+#include <node/blockstorage.h>
 #include <node/kernel_notifications.h>
 #include <node/mining_args.h>
+#include <node/mining_types.h>
 #include <policy/feerate.h>
 #include <policy/policy.h>
 #include <pow.h>
+#include <primitives/block.h>
 #include <primitives/transaction.h>
+#include <script/script.h>
+#include <sync.h>
+#include <tinyformat.h>
+#include <txgraph.h>
+#include <txmempool.h>
+#include <uint256.h>
+#include <util/check.h>
+#include <util/feefrac.h>
 #include <util/log.h>
-#include <util/moneystr.h>
+#include <util/result.h>
 #include <util/signalinterrupt.h>
 #include <util/time.h>
+#include <util/translation.h>
 #include <validation.h>
+#include <versionbits.h>
 
 #include <algorithm>
+#include <compare>
+#include <condition_variable>
+#include <cstddef>
+#include <functional>
 #include <numeric>
+#include <span>
 #include <stdexcept>
+#include <string>
 #include <utility>
 
 namespace node {

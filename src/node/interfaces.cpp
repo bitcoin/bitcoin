@@ -2,16 +2,19 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include <addrdb.h>
+#include <bitcoin-build-config.h> // IWYU pragma: keep
+
 #include <banman.h>
 #include <blockfilter.h>
 #include <btcsignals.h>
 #include <chain.h>
 #include <chainparams.h>
+#include <coins.h>
 #include <common/args.h>
+#include <common/settings.h>
+#include <consensus/amount.h>
 #include <consensus/merkle.h>
 #include <consensus/validation.h>
-#include <deploymentstatus.h>
 #include <external_signer.h>
 #include <httprpc.h>
 #include <index/blockfilterindex.h>
@@ -22,24 +25,24 @@
 #include <interfaces/node.h>
 #include <interfaces/rpc.h>
 #include <interfaces/types.h>
-#include <interfaces/wallet.h>
-#include <kernel/chain.h>
 #include <kernel/context.h>
-#include <kernel/mempool_entry.h>
+#include <key.h>
 #include <logging.h>
 #include <mapport.h>
 #include <net.h>
 #include <net_processing.h>
+#include <net_types.h>
 #include <netaddress.h>
 #include <netbase.h>
 #include <node/blockstorage.h>
 #include <node/coin.h>
 #include <node/context.h>
 #include <node/interface_ui.h>
-#include <node/mini_miner.h>
-#include <node/miner.h>
-#include <node/mining_args.h>
 #include <node/kernel_notifications.h>
+#include <node/miner.h>
+#include <node/mini_miner.h>
+#include <node/mining_args.h>
+#include <node/mining_types.h>
 #include <node/transaction.h>
 #include <node/types.h>
 #include <node/warnings.h>
@@ -47,13 +50,12 @@
 #include <policy/fees/block_policy_estimator.h>
 #include <policy/policy.h>
 #include <policy/rbf.h>
-#include <policy/settings.h>
 #include <primitives/block.h>
 #include <primitives/transaction.h>
 #include <rpc/blockchain.h>
 #include <rpc/protocol.h>
+#include <rpc/request.h>
 #include <rpc/server.h>
-#include <support/allocators/secure.h>
 #include <sync.h>
 #include <txmempool.h>
 #include <uint256.h>
@@ -62,17 +64,24 @@
 #include <util/result.h>
 #include <util/signalinterrupt.h>
 #include <util/string.h>
+#include <util/time.h>
 #include <util/translation.h>
 #include <validation.h>
 #include <validationinterface.h>
 
-#include <bitcoin-build-config.h> // IWYU pragma: keep
-
 #include <any>
+#include <atomic>
+#include <condition_variable>
+#include <cstdint>
+#include <cstdlib>
+#include <functional>
+#include <map>
 #include <memory>
 #include <optional>
-#include <stdexcept>
+#include <string>
+#include <tuple>
 #include <utility>
+#include <vector>
 
 using interfaces::BlockRef;
 using interfaces::BlockTemplate;

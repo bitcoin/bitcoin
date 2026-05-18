@@ -2,15 +2,25 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or https://www.opensource.org/licenses/mit-license.php.
 
+#include <chain.h>
 #include <chainparams.h>
+#include <consensus/params.h>
 #include <interfaces/mining.h>
-#include <node/miner.h>
 #include <net_processing.h>
 #include <pow.h>
+#include <primitives/block.h>
+#include <protocol.h>
+#include <sync.h>
 #include <test/util/setup_common.h>
+#include <util/check.h>
+#include <util/time.h>
 #include <validation.h>
+#include <validationinterface.h>
 
 #include <boost/test/unit_test.hpp>
+
+#include <cstdint>
+#include <memory>
 
 BOOST_FIXTURE_TEST_SUITE(peerman_tests, RegTestingSetup)
 

@@ -4,7 +4,7 @@
 
 #include <bench/bench.h>
 #include <consensus/consensus.h>
-#include <node/miner.h>
+#include <node/mining_types.h>
 #include <primitives/transaction.h>
 #include <random.h>
 #include <script/script.h>
@@ -18,6 +18,7 @@
 #include <cassert>
 #include <cstddef>
 #include <memory>
+#include <string>
 #include <vector>
 
 using node::BlockCreateOptions;

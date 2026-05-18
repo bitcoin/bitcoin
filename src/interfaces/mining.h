@@ -7,7 +7,6 @@
 
 #include <consensus/amount.h>
 #include <interfaces/types.h>
-#include <node/types.h>
 #include <node/mining_types.h>
 #include <primitives/block.h>
 #include <primitives/transaction.h>
@@ -17,6 +16,7 @@
 #include <cstdint>
 #include <memory>
 #include <optional>
+#include <string>
 #include <vector>
 
 namespace node {

@@ -3,21 +3,33 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <chainparams.h>
-#include <consensus/consensus.h>
+#include <consensus/amount.h>
 #include <consensus/merkle.h>
 #include <kernel/coinstats.h>
 #include <node/miner.h>
-#include <script/interpreter.h>
-#include <streams.h>
+#include <primitives/block.h>
+#include <primitives/transaction.h>
+#include <script/script.h>
+#include <sync.h>
 #include <test/fuzz/FuzzedDataProvider.h>
 #include <test/fuzz/fuzz.h>
 #include <test/fuzz/util.h>
 #include <test/util/mining.h>
+#include <test/util/random.h>
 #include <test/util/setup_common.h>
 #include <test/util/time.h>
-#include <util/chaintype.h>
-#include <util/time.h>
+#include <txdb.h>
+#include <uint256.h>
+#include <util/check.h>
 #include <validation.h>
+
+#include <cstddef>
+#include <cstdint>
+#include <functional>
+#include <memory>
+#include <optional>
+#include <utility>
+#include <vector>
 
 FUZZ_TARGET(utxo_total_supply)
 {

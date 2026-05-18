@@ -2,16 +2,19 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include <common/system.h>
+#include <chain.h>
 #include <interfaces/mining.h>
-#include <node/miner.h>
-#include <test/util/common.h>
+#include <node/mining_types.h>
+#include <primitives/block.h>
+#include <sync.h>
 #include <test/util/setup_common.h>
 #include <test/util/time.h>
 #include <util/time.h>
 #include <validation.h>
 
 #include <boost/test/unit_test.hpp>
+
+#include <memory>
 
 using interfaces::BlockTemplate;
 using interfaces::Mining;

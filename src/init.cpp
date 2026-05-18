@@ -9,6 +9,7 @@
 
 #include <kernel/checks.h>
 
+#include <addrdb.h>
 #include <addrman.h>
 #include <banman.h>
 #include <blockfilter.h>
@@ -18,13 +19,15 @@
 #include <chainparamsbase.h>
 #include <clientversion.h>
 #include <common/args.h>
+#include <common/messages.h>
 #include <common/system.h>
-#include <consensus/amount.h>
-#include <consensus/consensus.h>
-#include <deploymentstatus.h>
-#include <hash.h>
+#include <compat/compat.h>
+#include <consensus/params.h>
+#include <crypto/hex_base.h>
+#include <dbwrapper.h>
 #include <httprpc.h>
 #include <httpserver.h>
+#include <index/base.h>
 #include <index/blockfilterindex.h>
 #include <index/coinstatsindex.h>
 #include <index/txindex.h>
@@ -36,14 +39,18 @@
 #include <interfaces/mining.h>
 #include <interfaces/node.h>
 #include <ipc/exception.h>
+#include <kernel/blockmanager_opts.h>
 #include <kernel/caches.h>
+#include <kernel/chainstatemanager_opts.h>
 #include <kernel/context.h>
+#include <kernel/notifications_interface.h>
 #include <key.h>
 #include <logging.h>
 #include <mapport.h>
 #include <net.h>
 #include <net_permissions.h>
 #include <net_processing.h>
+#include <netaddress.h>
 #include <netbase.h>
 #include <netgroup.h>
 #include <node/blockmanager_args.h>
@@ -57,8 +64,8 @@
 #include <node/mempool_args.h>
 #include <node/mempool_persist.h>
 #include <node/mempool_persist_args.h>
-#include <node/miner.h>
 #include <node/mining_args.h>
+#include <node/mining_types.h>
 #include <node/peerman_args.h>
 #include <policy/feerate.h>
 #include <policy/fees/block_policy_estimator.h>
@@ -66,19 +73,20 @@
 #include <policy/policy.h>
 #include <policy/settings.h>
 #include <protocol.h>
-#include <rpc/blockchain.h>
+#include <random.h>
 #include <rpc/register.h>
 #include <rpc/server.h>
 #include <rpc/util.h>
 #include <scheduler.h>
 #include <script/sigcache.h>
 #include <sync.h>
+#include <tinyformat.h>
 #include <torcontrol.h>
-#include <txdb.h>
+#include <txgraph.h>
 #include <txmempool.h>
+#include <uint256.h>
 #include <util/asmap.h>
 #include <util/batchpriority.h>
-#include <util/byte_units.h>
 #include <util/chaintype.h>
 #include <util/check.h>
 #include <util/fs.h>
@@ -98,21 +106,31 @@
 #include <walletinitinterface.h>
 
 #include <algorithm>
+#include <any>
 #include <cerrno>
 #include <condition_variable>
 #include <cstddef>
 #include <cstdint>
-#include <cstdio>
+#include <exception>
 #include <fstream>
 #include <functional>
+#include <initializer_list>
+#include <list>
+#include <memory>
+#include <new>
+#include <optional>
 #include <set>
+#include <span>
 #include <string>
+#include <system_error>
 #include <thread>
+#include <tuple>
+#include <utility>
+#include <variant>
 #include <vector>
 
 #ifndef WIN32
 #include <csignal>
-#include <sys/stat.h>
 #endif
 
 #ifdef ENABLE_ZMQ

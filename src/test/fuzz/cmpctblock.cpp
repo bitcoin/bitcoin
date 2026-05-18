@@ -14,12 +14,13 @@
 #include <net_processing.h>
 #include <netmessagemaker.h>
 #include <node/blockstorage.h>
-#include <node/miner.h>
+#include <node/mining_types.h>
 #include <policy/truc_policy.h>
 #include <primitives/block.h>
 #include <primitives/transaction.h>
 #include <protocol.h>
 #include <script/script.h>
+#include <serialize.h>
 #include <sync.h>
 #include <test/fuzz/FuzzedDataProvider.h>
 #include <test/fuzz/fuzz.h>
@@ -43,7 +44,6 @@
 #include <validationinterface.h>
 
 #include <boost/multi_index/detail/hash_index_iterator.hpp>
-#include <boost/operators.hpp>
 
 #include <cstddef>
 #include <cstdint>
@@ -52,7 +52,6 @@
 #include <memory>
 #include <optional>
 #include <string>
-#include <string_view>
 #include <thread>
 #include <utility>
 #include <vector>

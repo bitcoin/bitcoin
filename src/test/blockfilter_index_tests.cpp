@@ -4,22 +4,43 @@
 
 #include <addresstype.h>
 #include <blockfilter.h>
-#include <chainparams.h>
+#include <chain.h>
 #include <consensus/merkle.h>
 #include <consensus/validation.h>
+#include <index/base.h>
 #include <index/blockfilterindex.h>
-#include <interfaces/mining.h>
 #include <interfaces/chain.h>
-#include <node/miner.h>
+#include <interfaces/mining.h>
+#include <key.h>
+#include <node/blockstorage.h>
 #include <pow.h>
+#include <primitives/block.h>
+#include <primitives/transaction.h>
+#include <script/script.h>
+#include <sync.h>
 #include <test/util/blockfilter.h>
-#include <test/util/common.h>
+#include <test/util/common.h> // IWYU pragma: keep
 #include <test/util/setup_common.h>
-#include <util/byte_units.h>
+#include <tinyformat.h>
+#include <uint256.h>
+#include <util/check.h>
+#include <util/fs.h>
+#include <util/time.h>
 #include <validation.h>
 
 #include <boost/test/unit_test.hpp>
+
+#include <compare>
+#include <cstddef>
+#include <cstdint>
+#include <functional>
 #include <future>
+#include <memory>
+#include <span>
+#include <string>
+#include <thread>
+#include <utility>
+#include <vector>
 
 using node::BlockManager;
 

@@ -6,26 +6,26 @@
 #define BITCOIN_TEST_UTIL_SETUP_COMMON_H
 
 #include <common/args.h> // IWYU pragma: export
+#include <consensus/amount.h>
 #include <kernel/caches.h>
-#include <kernel/context.h>
 #include <key.h>
 #include <node/caches.h>
 #include <node/context.h> // IWYU pragma: export
-#include <optional>
-#include <ostream>
 #include <primitives/transaction.h>
-#include <pubkey.h>
-#include <stdexcept>
+#include <random.h>
 #include <test/util/random.h>
 #include <util/chaintype.h> // IWYU pragma: export
-#include <util/check.h>
 #include <util/fs.h>
 #include <util/signalinterrupt.h>
-#include <util/string.h>
 #include <util/vector.h>
 
+#include <cstddef>
+#include <cstdint>
 #include <functional>
-#include <type_traits>
+#include <memory>
+#include <optional>
+#include <string>
+#include <utility>
 #include <vector>
 
 class CFeeRate;

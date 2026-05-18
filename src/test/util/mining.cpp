@@ -4,6 +4,8 @@
 
 #include <test/util/mining.h>
 
+#include <addresstype.h>
+#include <chain.h>
 #include <chainparams.h>
 #include <consensus/merkle.h>
 #include <consensus/validation.h>
@@ -11,15 +13,21 @@
 #include <key_io.h>
 #include <node/context.h>
 #include <pow.h>
+#include <primitives/block.h>
 #include <primitives/transaction.h>
+#include <script/script.h>
+#include <sync.h>
 #include <test/util/script.h>
+#include <uint256.h>
 #include <util/check.h>
 #include <validation.h>
 #include <validationinterface.h>
 #include <versionbits.h>
 
-#include <algorithm>
+#include <cstdint>
 #include <memory>
+#include <optional>
+#include <utility>
 
 using node::NodeContext;
 
