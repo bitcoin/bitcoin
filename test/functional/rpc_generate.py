@@ -6,6 +6,7 @@
 
 from concurrent.futures import ThreadPoolExecutor
 
+from test_framework.messages import COIN
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.wallet import MiniWallet
 from test_framework.util import (
@@ -75,6 +76,17 @@ class RPCGenerateTest(BitcoinTestFramework):
         block = node.getblock(hash, 1)
         assert_equal(len(block['tx']), 2)
         assert_equal(block['tx'][1], txid)
+
+        self.log.info('Generateblock does not collect transaction fees in the coinbase')
+        fee_tx = miniwallet.send_self_transfer(from_node=node)
+        hash = self.generateblock(node, address, [fee_tx['txid']])['hash']
+        block = node.getblock(hash, 2)
+        stats = node.getblockstats(hash, ['subsidy', 'totalfee'])
+        coinbase_value = sum(int(output['value'] * COIN) for output in block['tx'][0]['vout'])
+        assert_equal(len(block['tx']), 2)
+        assert_equal(block['tx'][1]['txid'], fee_tx['txid'])
+        assert_equal(stats['totalfee'], int(fee_tx['fee'] * COIN))
+        assert_equal(coinbase_value, stats['subsidy'])
 
         self.log.info('Generate block with raw tx')
         rawtx = miniwallet.create_self_transfer()['hex']

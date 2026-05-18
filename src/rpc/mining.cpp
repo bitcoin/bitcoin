@@ -306,7 +306,7 @@ static RPCMethod generateblock()
 {
     return RPCMethod{"generateblock",
         "Mine a set of ordered transactions to a specified address or descriptor and return the block hash.\n"
-        "Transaction fees are not collected in the block reward.",
+        "Transaction fees from the provided transactions are not collected in the block reward.",
         {
             {"output", RPCArg::Type::STR, RPCArg::Optional::NO, "The address or descriptor to send the newly generated bitcoin to."},
             {"transactions", RPCArg::Type::ARR, RPCArg::Optional::NO, "An array of hex strings which are either txids or raw transactions.\n"
