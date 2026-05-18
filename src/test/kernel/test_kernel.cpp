@@ -493,6 +493,21 @@ BOOST_AUTO_TEST_CASE(btck_script_pubkey)
     std::span<std::byte> empty_data{};
     ScriptPubkey empty_script{empty_data};
     CheckHandle(script, empty_script);
+
+    // Valid P2TR: OP_1 <32-byte key>
+    ScriptPubkey p2tr{hex_string_to_byte_vec("5120339ce7e165e67d93adb3fef88a6d4beed33f01fa876f05a225242b82a631abc0")};
+    BOOST_CHECK(p2tr.IsPayToTaproot());
+    BOOST_CHECK_EQUAL(btck_script_pubkey_is_p2tr(p2tr.get()), 1);
+
+    // P2PKH
+    ScriptPubkey p2pkh{hex_string_to_byte_vec("76a9144bfbaf6afb76cc5771bc6404810d1cc041a6933988ac")};
+    BOOST_CHECK(!p2pkh.IsPayToTaproot());
+    BOOST_CHECK_EQUAL(btck_script_pubkey_is_p2tr(p2pkh.get()), 0);
+
+    // 34 bytes but second byte is not 0x20 (wrong push size)
+    ScriptPubkey wrong_push{hex_string_to_byte_vec("51210000000000000000000000000000000000000000000000000000000000000000")};
+    BOOST_CHECK(!wrong_push.IsPayToTaproot());
+    BOOST_CHECK_EQUAL(btck_script_pubkey_is_p2tr(wrong_push.get()), 0);
 }
 
 BOOST_AUTO_TEST_CASE(btck_transaction_output)
