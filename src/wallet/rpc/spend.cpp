@@ -93,6 +93,13 @@ std::set<int> InterpretSubtractFeeFromOutputInstructions(const UniValue& sffo_in
     return sffo_set;
 }
 
+static const UniValue& GetSubtractFeeFromOutputsOption(const UniValue& options)
+{
+    return options.exists("subtract_fee_from_outputs") ?
+        options["subtract_fee_from_outputs"] :
+        options["subtractFeeFromOutputs"];
+}
+
 static UniValue FinishTransaction(const std::shared_ptr<CWallet> pwallet, const UniValue& options, CMutableTransaction& rawTx)
 {
     bool can_anti_fee_snipe = !options.exists("locktime");
@@ -818,7 +825,7 @@ RPCMethod fundrawtransaction()
     std::vector<std::string> dummy(destinations.size(), "dummy");
     std::vector<CRecipient> recipients = CreateRecipients(
             destinations,
-            InterpretSubtractFeeFromOutputInstructions(options["subtractFeeFromOutputs"], dummy)
+            InterpretSubtractFeeFromOutputInstructions(GetSubtractFeeFromOutputsOption(options), dummy)
     );
     CCoinControl coin_control;
     // Automatically select (additional) coins. Can be overridden by options.add_inputs.
@@ -1774,7 +1781,7 @@ RPCMethod walletcreatefundedpsbt()
     outputs = NormalizeOutputs(request.params[1]);
     std::vector<CRecipient> recipients = CreateRecipients(
             ParseOutputs(outputs),
-            InterpretSubtractFeeFromOutputInstructions(options["subtractFeeFromOutputs"], outputs.getKeys())
+            InterpretSubtractFeeFromOutputInstructions(GetSubtractFeeFromOutputsOption(options), outputs.getKeys())
     );
     // Automatically select coins, unless at least one is manually selected. Can
     // be overridden by options.add_inputs.

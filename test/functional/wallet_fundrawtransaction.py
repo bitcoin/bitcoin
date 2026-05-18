@@ -933,6 +933,27 @@ class RawTransactionsTest(BitcoinTestFramework):
         assert_equal(output[3], output[4] + result[4]['fee'])
         assert_equal(change[3] + result[3]['fee'], change[4])
 
+        snake_case_options = {"subtract_fee_from_outputs": [0], "fee_rate": self.fee_rate_sats_per_vb}
+        snake_case_result = self.nodes[3].fundrawtransaction(rawtx, snake_case_options)
+        snake_case_dec = self.nodes[3].decoderawtransaction(snake_case_result['hex'])
+        assert_equal(snake_case_dec['vout'][1 - snake_case_result['changepos']]['value'], output[2])
+
+        psbt_destination = self.nodes[2].getnewaddress()
+        psbt_amount = Decimal("1")
+        psbt_result = self.nodes[3].walletcreatefundedpsbt(
+            inputs=[],
+            outputs=[{psbt_destination: psbt_amount}],
+            options=snake_case_options,
+            psbt_version=0,
+        )
+        psbt_dec = self.nodes[3].decodepsbt(psbt_result['psbt'])['tx']
+        psbt_recipient_vouts = [
+            out for out in psbt_dec['vout']
+            if out['scriptPubKey'].get('address') == psbt_destination
+        ]
+        assert_equal(len(psbt_recipient_vouts), 1)
+        assert_equal(psbt_recipient_vouts[0]['value'] + psbt_result['fee'], psbt_amount)
+
         # Test subtract fee from outputs with fee_rate (sat/vB)
         btc_kvb_to_sat_vb = 100000  # (1e5)
         result = [self.nodes[3].fundrawtransaction(rawtx, fee_rate=self.fee_rate_sats_per_vb),  # uses self.min_relay_tx_fee (set by fee_rate in sat/vB)
