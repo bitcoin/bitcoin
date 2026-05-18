@@ -59,8 +59,8 @@ struct BlockCreateOptions {
     /**
      * Maximum block weight, defaults to -maxblockweight
      *
-     * block_reserved_weight can safely exceed block_max_weight, but the rest of
-     * the block template will be empty.
+     * Must not be lower than block_reserved_weight. Setting this equal to
+     * block_reserved_weight leaves no room for non-coinbase transactions.
      */
     std::optional<uint64_t> block_max_weight{};
     /**

@@ -29,8 +29,9 @@
 #include <validation.h>
 
 #include <algorithm>
-#include <utility>
 #include <numeric>
+#include <stdexcept>
+#include <utility>
 
 namespace node {
 
@@ -77,24 +78,18 @@ void RegenerateCommitments(CBlock& block, ChainstateManager& chainman)
     block.hashMerkleRoot = BlockMerkleRoot(block);
 }
 
-static BlockCreateOptions ClampOptions(BlockCreateOptions options)
-{
-    options = FlattenMiningOptions(std::move(options));
-    options.block_reserved_weight = std::clamp<uint64_t>(*options.block_reserved_weight, MINIMUM_BLOCK_RESERVED_WEIGHT, MAX_BLOCK_WEIGHT);
-    options.coinbase_output_max_additional_sigops = std::clamp<size_t>(options.coinbase_output_max_additional_sigops, 0, MAX_BLOCK_SIGOPS_COST);
-    // Limit weight to between block_reserved_weight and MAX_BLOCK_WEIGHT for sanity:
-    // block_reserved_weight can safely exceed -blockmaxweight, but the rest of the block template will be empty.
-    options.block_max_weight = std::clamp<uint64_t>(*options.block_max_weight, *options.block_reserved_weight, MAX_BLOCK_WEIGHT);
-    return options;
-}
-
 BlockAssembler::BlockAssembler(Chainstate& chainstate,
                                const CTxMemPool* mempool,
                                BlockCreateOptions options)
     : chainparams{chainstate.m_chainman.GetParams()},
       m_mempool{options.use_mempool ? mempool : nullptr},
       m_chainstate{chainstate},
-      m_options{ClampOptions(std::move(options))}
+      m_options{[&] {
+          if (auto result{CheckMiningOptions(options, /*use_argnames=*/false)}; !result) {
+              throw std::runtime_error(util::ErrorString(result).original);
+          }
+          return FlattenMiningOptions(std::move(options));
+      }()}
 {
 }
 

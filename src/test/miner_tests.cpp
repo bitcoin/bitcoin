@@ -764,6 +764,13 @@ BOOST_AUTO_TEST_CASE(CreateNewBlock_validity)
     // Create and check a simple template
     std::unique_ptr<BlockTemplate> block_template = mining->createNewBlock(options, /*cooldown=*/false);
     BOOST_REQUIRE(block_template);
+
+    BlockCreateOptions invalid_options{options};
+    invalid_options.block_max_weight = DEFAULT_BLOCK_RESERVED_WEIGHT - 1;
+    BOOST_CHECK_EXCEPTION(mining->createNewBlock(invalid_options, /*cooldown=*/false),
+                          std::runtime_error,
+                          HasReason("block_reserved_weight (8000) exceeds block_max_weight (7999)"));
+
     {
         CBlock block{block_template->getBlock()};
         {

@@ -21,7 +21,7 @@ static const bool DEFAULT_PRINT_MODIFIED_FEE = false;
 [[nodiscard]] util::Result<BlockCreateOptions> ReadMiningArgs(const ArgsManager& args);
 
 /** Check option values for validity. Returns an error for invalid values. */
-[[nodiscard]] util::Result<void> CheckMiningOptions(const BlockCreateOptions& options, bool use_argnames);
+[[nodiscard]] util::Result<void> CheckMiningOptions(BlockCreateOptions options, bool use_argnames);
 
 /** Replace null optional values with their hardcoded defaults. */
 [[nodiscard]] BlockCreateOptions FlattenMiningOptions(BlockCreateOptions options);

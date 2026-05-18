@@ -6,6 +6,7 @@
 #include <node/context.h>
 #include <node/mempool_args.h>
 #include <node/miner.h>
+#include <policy/policy.h>
 #include <policy/truc_policy.h>
 #include <test/fuzz/FuzzedDataProvider.h>
 #include <test/fuzz/fuzz.h>
@@ -96,7 +97,7 @@ void Finish(FuzzedDataProvider& fuzzed_data_provider, MockedTxPool& tx_pool, Cha
     {
         BlockCreateOptions options{
             .block_min_fee_rate = CFeeRate{ConsumeMoney(fuzzed_data_provider, /*max=*/COIN)},
-            .block_max_weight = fuzzed_data_provider.ConsumeIntegralInRange(0U, MAX_BLOCK_WEIGHT),
+            .block_max_weight = fuzzed_data_provider.ConsumeIntegralInRange<uint64_t>(DEFAULT_BLOCK_RESERVED_WEIGHT, MAX_BLOCK_WEIGHT),
         };
         auto assembler = BlockAssembler{chainstate, &tx_pool, options};
         auto block_template = assembler.CreateNewBlock();

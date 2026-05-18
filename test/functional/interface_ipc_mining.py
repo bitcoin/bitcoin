@@ -17,6 +17,7 @@ from test_framework.messages import (
     CTxInWitness,
     CTxOut,
     DEFAULT_BLOCK_RESERVED_WEIGHT,
+    MAX_BLOCK_SIGOPS_COST,
     MAX_BLOCK_WEIGHT,
     from_hex,
     msg_headers,
@@ -322,9 +323,27 @@ class IPCMiningTest(BitcoinTestFramework):
             self.log.debug("Enforce minimum reserved weight for IPC clients too")
             opts.blockReservedWeight = 0
             await assert_create_new_block_fails(ctx, mining, opts,
-                "block_reserved_weight (0) must be at least 2000 weight units")
+                "block_reserved_weight (0) is lower than minimum safety value of (2000)")
+
+        async def async_routine_check_max_reserved_weight():
+            self.log.debug("Enforce maximum reserved weight for IPC clients too")
+            ctx, mining = await make_mining_ctx(self)
+            opts = self.capnp_modules['mining'].BlockCreateOptions()
+            opts.blockReservedWeight = MAX_BLOCK_WEIGHT + 1
+            await assert_create_new_block_fails(ctx, mining, opts,
+                f"block_reserved_weight ({MAX_BLOCK_WEIGHT + 1}) exceeds consensus maximum block weight ({MAX_BLOCK_WEIGHT})")
+
+        async def async_routine_check_sigops_limit():
+            self.log.debug("Enforce sigops limit for IPC clients too")
+            ctx, mining = await make_mining_ctx(self)
+            opts = self.capnp_modules['mining'].BlockCreateOptions()
+            opts.coinbaseOutputMaxAdditionalSigops = MAX_BLOCK_SIGOPS_COST + 1
+            await assert_create_new_block_fails(ctx, mining, opts,
+                f"coinbase_output_max_additional_sigops ({MAX_BLOCK_SIGOPS_COST + 1}) exceeds consensus maximum block sigops cost ({MAX_BLOCK_SIGOPS_COST})")
 
         asyncio.run(capnp.run(async_routine()))
+        asyncio.run(capnp.run(async_routine_check_max_reserved_weight()))
+        asyncio.run(capnp.run(async_routine_check_sigops_limit()))
 
     def run_waitnext_mining_policy_test(self):
         """Verify that waitNext() preserves the mining policy from -blockmintxfee

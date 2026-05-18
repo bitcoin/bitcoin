@@ -374,6 +374,13 @@ class MiningTest(BitcoinTestFramework):
             expected_msg=f"Error: -blockmaxweight ({MAX_BLOCK_WEIGHT + 1}) exceeds consensus maximum block weight ({MAX_BLOCK_WEIGHT})",
         )
 
+        self.log.info("Test that node will fail to start when -blockmaxweight is lower than -blockreservedweight")
+        self.stop_node(0)
+        self.nodes[0].assert_start_raises_init_error(
+            extra_args=[f"-blockmaxweight={DEFAULT_BLOCK_RESERVED_WEIGHT - 1}"],
+            expected_msg=f"Error: -blockreservedweight ({DEFAULT_BLOCK_RESERVED_WEIGHT}) exceeds -blockmaxweight ({DEFAULT_BLOCK_RESERVED_WEIGHT - 1})",
+        )
+
     def test_height_in_locktime(self):
         self.log.info("Sanity check generated blocks have their coinbase timelocked to their height.")
         self.generate(self.nodes[0], 1, sync_fun=self.no_op)
