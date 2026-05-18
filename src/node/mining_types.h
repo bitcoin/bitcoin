@@ -12,7 +12,7 @@
 #define BITCOIN_NODE_MINING_TYPES_H
 
 #include <consensus/amount.h>
-#include <consensus/consensus.h>
+#include <policy/feerate.h>
 #include <policy/policy.h>
 #include <primitives/transaction.h>
 #include <script/script.h>
@@ -26,11 +26,26 @@
 
 namespace node {
 
+/**
+ * Block template creation options. These override node defaults, but can't
+ * exceed node limits (e.g. block_reserved_weight can't exceed max block weight).
+ */
 struct BlockCreateOptions {
     /**
      * Set false to omit mempool transactions
      */
     bool use_mempool{true};
+    /**
+     * Minimum fee rate for transactions to be included. Providing a value
+     * overrides the -blockmintxfee startup setting.
+     */
+    std::optional<CFeeRate> block_min_fee_rate{};
+    /**
+     * Whether to log the fee rate of each transaction when it is added to the
+     * block template. Providing a value overrides the -printpriority startup
+     * setting.
+     */
+    std::optional<bool> print_modified_fee{};
     /**
      * The default reserved weight for the fixed-size block header,
      * transaction count and coinbase transaction. Minimum: 2000 weight units

@@ -121,7 +121,7 @@ void ResetChainmanAndMempool(TestingSetup& setup)
     setup.m_make_chainman();
     setup.LoadVerifyActivateChainstate();
 
-    node::BlockAssembler::Options options;
+    node::BlockCreateOptions options;
     options.coinbase_output_script = P2WSH_OP_TRUE;
 
     g_mature_coinbase.clear();

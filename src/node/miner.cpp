@@ -17,6 +17,7 @@
 #include <deploymentstatus.h>
 #include <node/context.h>
 #include <node/kernel_notifications.h>
+#include <node/mining_args.h>
 #include <policy/feerate.h>
 #include <policy/policy.h>
 #include <pow.h>
@@ -76,38 +77,25 @@ void RegenerateCommitments(CBlock& block, ChainstateManager& chainman)
     block.hashMerkleRoot = BlockMerkleRoot(block);
 }
 
-static BlockAssembler::Options ClampOptions(BlockAssembler::Options options)
+static BlockCreateOptions ClampOptions(BlockCreateOptions options)
 {
-    // Apply DEFAULT_BLOCK_RESERVED_WEIGHT and DEFAULT_BLOCK_MAX_WEIGHT when the caller left it unset.
-    options.block_reserved_weight = std::clamp<uint64_t>(options.block_reserved_weight.value_or(DEFAULT_BLOCK_RESERVED_WEIGHT), MINIMUM_BLOCK_RESERVED_WEIGHT, MAX_BLOCK_WEIGHT);
+    options = FlattenMiningOptions(std::move(options));
+    options.block_reserved_weight = std::clamp<uint64_t>(*options.block_reserved_weight, MINIMUM_BLOCK_RESERVED_WEIGHT, MAX_BLOCK_WEIGHT);
     options.coinbase_output_max_additional_sigops = std::clamp<size_t>(options.coinbase_output_max_additional_sigops, 0, MAX_BLOCK_SIGOPS_COST);
     // Limit weight to between block_reserved_weight and MAX_BLOCK_WEIGHT for sanity:
     // block_reserved_weight can safely exceed -blockmaxweight, but the rest of the block template will be empty.
-    options.block_max_weight = std::clamp<uint64_t>(options.block_max_weight.value_or(DEFAULT_BLOCK_MAX_WEIGHT), *options.block_reserved_weight, MAX_BLOCK_WEIGHT);
+    options.block_max_weight = std::clamp<uint64_t>(*options.block_max_weight, *options.block_reserved_weight, MAX_BLOCK_WEIGHT);
     return options;
 }
 
-BlockAssembler::BlockAssembler(Chainstate& chainstate, const CTxMemPool* mempool, const Options& options)
+BlockAssembler::BlockAssembler(Chainstate& chainstate,
+                               const CTxMemPool* mempool,
+                               BlockCreateOptions options)
     : chainparams{chainstate.m_chainman.GetParams()},
       m_mempool{options.use_mempool ? mempool : nullptr},
       m_chainstate{chainstate},
-      m_options{ClampOptions(options)}
+      m_options{ClampOptions(std::move(options))}
 {
-}
-
-void ApplyArgsManOptions(const ArgsManager& args, BlockAssembler::Options& options)
-{
-    // Block resource limits
-    if (!options.block_max_weight) {
-        options.block_max_weight = args.GetArg<uint64_t>("-blockmaxweight");
-    }
-    if (const auto blockmintxfee{args.GetArg("-blockmintxfee")}) {
-        if (const auto parsed{ParseMoney(*blockmintxfee)}) options.blockMinFeeRate = CFeeRate{*parsed};
-    }
-    options.print_modified_fee = args.GetBoolArg("-printpriority", options.print_modified_fee);
-    if (!options.block_reserved_weight) {
-        options.block_reserved_weight = args.GetArg<uint64_t>("-blockreservedweight");
-    }
 }
 
 void BlockAssembler::resetBlock()
@@ -274,7 +262,7 @@ void BlockAssembler::AddToBlock(const CTxMemPoolEntry& entry)
     nBlockSigOpsCost += entry.GetSigOpCost();
     nFees += entry.GetFee();
 
-    if (m_options.print_modified_fee) {
+    if (*m_options.print_modified_fee) {
         LogInfo("fee rate %s txid %s\n",
                   CFeeRate(entry.GetModifiedFee(), entry.GetTxSize()).ToString(),
                   entry.GetTx().GetHash().ToString());
@@ -300,7 +288,7 @@ void BlockAssembler::addChunks()
 
     while (selected_transactions.size() > 0) {
         // Check to see if min fee rate is still respected.
-        if (ByRatio{chunk_feerate_vsize} < ByRatio{m_options.blockMinFeeRate.GetFeePerVSize()}) {
+        if (ByRatio{chunk_feerate_vsize} < ByRatio{m_options.block_min_fee_rate->GetFeePerVSize()}) {
             // Everything else we might consider has a lower feerate
             return;
         }
@@ -367,8 +355,8 @@ std::unique_ptr<CBlockTemplate> WaitAndCreateNewBlock(ChainstateManager& chainma
                                                       KernelNotifications& kernel_notifications,
                                                       CTxMemPool* mempool,
                                                       const std::unique_ptr<CBlockTemplate>& block_template,
-                                                      const BlockWaitOptions& options,
-                                                      const BlockAssembler::Options& assemble_options,
+                                                      const BlockWaitOptions& wait_options,
+                                                      const BlockCreateOptions& create_options,
                                                       bool& interrupt_wait)
 {
     // Delay calculating the current template fees, just in case a new block
@@ -378,7 +366,7 @@ std::unique_ptr<CBlockTemplate> WaitAndCreateNewBlock(ChainstateManager& chainma
     // Alternate waiting for a new tip and checking if fees have risen.
     // The latter check is expensive so we only run it once per second.
     auto now{NodeClock::now()};
-    const auto deadline = now + options.timeout;
+    const auto deadline = now + wait_options.timeout;
     const MillisecondsDouble tick{1000};
     const bool allow_min_difficulty{chainman.GetParams().GetConsensus().fPowAllowMinDifficultyBlocks};
 
@@ -425,12 +413,12 @@ std::unique_ptr<CBlockTemplate> WaitAndCreateNewBlock(ChainstateManager& chainma
          *
          * We'll also create a new template if the tip changed during this iteration.
          */
-        if (options.fee_threshold < MAX_MONEY || tip_changed) {
+        if (wait_options.fee_threshold < MAX_MONEY || tip_changed) {
             auto new_tmpl{BlockAssembler{
                 chainman.ActiveChainstate(),
                 mempool,
-                assemble_options}
-                              .CreateNewBlock()};
+                create_options
+                }.CreateNewBlock()};
 
             // If the tip changed, return the new template regardless of its fees.
             if (tip_changed) return new_tmpl;
@@ -442,8 +430,8 @@ std::unique_ptr<CBlockTemplate> WaitAndCreateNewBlock(ChainstateManager& chainma
 
             // Check if fees increased enough to return the new template
             const CAmount new_fees = std::accumulate(new_tmpl->vTxFees.begin(), new_tmpl->vTxFees.end(), CAmount{0});
-            Assume(options.fee_threshold != MAX_MONEY);
-            if (new_fees >= current_fees + options.fee_threshold) return new_tmpl;
+            Assume(wait_options.fee_threshold != MAX_MONEY);
+            if (new_fees >= current_fees + wait_options.fee_threshold) return new_tmpl;
         }
 
         now = NodeClock::now();

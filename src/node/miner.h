@@ -38,8 +38,6 @@ using interfaces::BlockRef;
 namespace node {
 class KernelNotifications;
 
-static const bool DEFAULT_PRINT_MODIFIED_FEE = false;
-
 struct CBlockTemplate
 {
     CBlock block;
@@ -79,12 +77,9 @@ private:
     Chainstate& m_chainstate;
 
 public:
-    struct Options : BlockCreateOptions {
-        CFeeRate blockMinFeeRate{DEFAULT_BLOCK_MIN_TX_FEE};
-        bool print_modified_fee{DEFAULT_PRINT_MODIFIED_FEE};
-    };
-
-    explicit BlockAssembler(Chainstate& chainstate, const CTxMemPool* mempool, const Options& options);
+    explicit BlockAssembler(Chainstate& chainstate,
+                            const CTxMemPool* mempool,
+                            BlockCreateOptions create_options);
 
     /** Construct a new block template */
     std::unique_ptr<CBlockTemplate> CreateNewBlock();
@@ -95,7 +90,7 @@ public:
     inline static std::optional<int64_t> m_last_block_weight{};
 
 private:
-    const Options m_options;
+    const BlockCreateOptions m_options;
 
     // utility functions
     /** Clear the block's state and prepare for assembling a new block */
@@ -131,9 +126,6 @@ int64_t UpdateTime(CBlockHeader* pblock, const Consensus::Params& consensusParam
 /** Update an old GenerateCoinbaseCommitment from CreateNewBlock after the block txs have changed */
 void RegenerateCommitments(CBlock& block, ChainstateManager& chainman);
 
-/** Apply -blockmintxfee and -blockmaxweight options from ArgsManager to BlockAssembler options. */
-void ApplyArgsManOptions(const ArgsManager& gArgs, BlockAssembler::Options& options);
-
 /* Compute the block's merkle root, insert or replace the coinbase transaction and the merkle root into the block */
 void AddMerkleRootAndCoinbase(CBlock& block, CTransactionRef coinbase, uint32_t version, uint32_t timestamp, uint32_t nonce);
 
@@ -148,8 +140,8 @@ std::unique_ptr<CBlockTemplate> WaitAndCreateNewBlock(ChainstateManager& chainma
                                                       KernelNotifications& kernel_notifications,
                                                       CTxMemPool* mempool,
                                                       const std::unique_ptr<CBlockTemplate>& block_template,
-                                                      const BlockWaitOptions& options,
-                                                      const BlockAssembler::Options& assemble_options,
+                                                      const BlockWaitOptions& wait_options,
+                                                      const BlockCreateOptions& create_options,
                                                       bool& interrupt_wait);
 
 /* Locks cs_main and returns the block hash and block height of the active chain if it exists; otherwise, returns nullopt.*/

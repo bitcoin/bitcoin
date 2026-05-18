@@ -22,6 +22,8 @@
 #include <net.h>
 #include <node/context.h>
 #include <node/miner.h>
+#include <node/mining_args.h>
+#include <node/mining_types.h>
 #include <node/warnings.h>
 #include <policy/ephemeral_policy.h>
 #include <pow.h>
@@ -463,7 +465,7 @@ static RPCMethod getmininginfo()
     CBlockIndex& tip{*CHECK_NONFATAL(active_chain.Tip())};
 
     UniValue obj(UniValue::VOBJ);
-    obj.pushKV("blocks",           active_chain.Height());
+    obj.pushKV("blocks", active_chain.Height());
     if (BlockAssembler::m_last_block_weight) obj.pushKV("currentblockweight", *BlockAssembler::m_last_block_weight);
     if (BlockAssembler::m_last_block_num_txs) obj.pushKV("currentblocktx", *BlockAssembler::m_last_block_num_txs);
     obj.pushKV("bits", strprintf("%08x", tip.nBits));
@@ -471,9 +473,8 @@ static RPCMethod getmininginfo()
     obj.pushKV("target", GetTarget(tip, chainman.GetConsensus().powLimit).GetHex());
     obj.pushKV("networkhashps",    getnetworkhashps().HandleRequest(request));
     obj.pushKV("pooledtx", mempool.size());
-    BlockAssembler::Options assembler_options;
-    ApplyArgsManOptions(*node.args, assembler_options);
-    obj.pushKV("blockmintxfee", ValueFromAmount(assembler_options.blockMinFeeRate.GetFeePerK()));
+    const auto options{node::FlattenMiningOptions(*Assert(node::ReadMiningArgs(*node.args)))};
+    obj.pushKV("blockmintxfee", ValueFromAmount(CHECK_NONFATAL(options.block_min_fee_rate)->GetFeePerK()));
     obj.pushKV("chain", chainman.GetParams().GetChainTypeString());
 
     UniValue next(UniValue::VOBJ);
