@@ -694,6 +694,11 @@ int btck_script_pubkey_verify(const btck_ScriptPubkey* script_pubkey,
     return result ? 1 : 0;
 }
 
+int btck_script_pubkey_is_p2tr(const btck_ScriptPubkey* script_pubkey)
+{
+    return btck_ScriptPubkey::get(script_pubkey).IsPayToTaproot() ? 1 : 0;
+}
+
 btck_TransactionInput* btck_transaction_input_copy(const btck_TransactionInput* input)
 {
     return btck_TransactionInput::copy(input);

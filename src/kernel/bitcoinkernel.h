@@ -794,6 +794,15 @@ BITCOINKERNEL_API int btck_script_pubkey_to_bytes(
     void* user_data) BITCOINKERNEL_ARG_NONNULL(1, 2);
 
 /**
+ * @brief Returns 1 if the script pubkey is a pay-to-taproot (P2TR) output, 0 otherwise.
+ *
+ * @param[in] script_pubkey Non-null.
+ * @return                  1 if P2TR, 0 otherwise.
+ */
+BITCOINKERNEL_API int btck_script_pubkey_is_p2tr(
+    const btck_ScriptPubkey* script_pubkey) BITCOINKERNEL_ARG_NONNULL(1);
+
+/**
  * Destroy the script pubkey.
  */
 BITCOINKERNEL_API void btck_script_pubkey_destroy(btck_ScriptPubkey* script_pubkey);

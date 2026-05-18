@@ -425,6 +425,11 @@ public:
     {
         return write_bytes(impl(), btck_script_pubkey_to_bytes);
     }
+
+    bool IsPayToTaproot() const
+    {
+        return btck_script_pubkey_is_p2tr(impl()) == 1;
+    }
 };
 
 class ScriptPubkeyView : public View<btck_ScriptPubkey>, public ScriptPubkeyApi<ScriptPubkeyView>
