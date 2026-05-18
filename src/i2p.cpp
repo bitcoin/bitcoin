@@ -285,7 +285,7 @@ std::string Session::Reply::Get(const std::string& key) const
     const auto& pos = keys.find(key);
     if (pos == keys.end() || !pos->second.has_value()) {
         throw std::runtime_error(
-            strprintf("Missing %s= in the reply to \"%s\": \"%s\"", key, request, full));
+            strprintf("Missing %s= in the reply to \"%s\"", key, request));
     }
     return pos->second.value();
 }
@@ -320,7 +320,7 @@ Session::Reply Session::SendRequestAndGetReply(const Sock& sock,
 
     if (check_result_ok && reply.Get("RESULT") != "OK") {
         throw std::runtime_error(
-            strprintf("Unexpected reply to \"%s\": \"%s\"", request, reply.full));
+            strprintf("Reply to \"%s\": had a RESULT not equal to OK.", reply.request));
     }
 
     return reply;
