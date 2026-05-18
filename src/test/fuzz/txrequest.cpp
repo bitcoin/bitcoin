@@ -84,13 +84,13 @@ class Tester
     uint64_t m_current_sequence{0};
 
     //! List of future 'events' (all inserted reqtimes/exptimes). This is used to implement AdvanceToEvent.
-    std::priority_queue<std::chrono::microseconds, std::vector<std::chrono::microseconds>,
-        std::greater<std::chrono::microseconds>> m_events;
+    std::priority_queue<NodeClock::time_point, std::vector<NodeClock::time_point>,
+        std::greater<NodeClock::time_point>> m_events;
 
     //! Information about a txhash/peer combination.
     struct Announcement
     {
-        std::chrono::microseconds m_time;
+        NodeClock::time_point m_time;
         uint64_t m_sequence;
         State m_state{State::NOTHING};
         bool m_preferred;
@@ -102,7 +102,7 @@ class Tester
     Announcement m_announcements[MAX_TXHASHES][MAX_PEERS];
 
     //! The current time; can move forward and backward.
-    std::chrono::microseconds m_now{244466666};
+    NodeClock::time_point m_now{244466666us};
 
     //! Delete txhashes whose only announcements are COMPLETED.
     void Cleanup(int txhash)
@@ -143,7 +143,7 @@ class Tester
 public:
     Tester() : m_tracker(true) {}
 
-    std::chrono::microseconds Now() const { return m_now; }
+    NodeClock::time_point Now() const { return m_now; }
 
     void AdvanceTime(std::chrono::microseconds offset)
     {
@@ -186,7 +186,7 @@ public:
         m_tracker.ForgetTxHash(TXHASHES[txhash]);
     }
 
-    void ReceivedInv(int peer, int txhash, bool is_wtxid, bool preferred, std::chrono::microseconds reqtime)
+    void ReceivedInv(int peer, int txhash, bool is_wtxid, bool preferred, NodeClock::time_point reqtime)
     {
         // Apply to naive structure: if no announcement for txidnum/peer combination
         // already, create a new CANDIDATE; otherwise do nothing.
@@ -208,7 +208,7 @@ public:
         m_tracker.ReceivedInv(peer, gtxid, preferred, reqtime);
     }
 
-    void RequestedTx(int peer, int txhash, std::chrono::microseconds exptime)
+    void RequestedTx(int peer, int txhash, NodeClock::time_point exptime)
     {
         // Apply to naive structure: if a CANDIDATE announcement exists for peer/txhash,
         // convert it to REQUESTED, and change any existing REQUESTED announcement for the same txhash to COMPLETED.
@@ -360,7 +360,7 @@ FUZZ_TARGET(txrequest)
             peer = it == buffer.end() ? 0 : *(it++) % MAX_PEERS;
             txidnum = it == buffer.end() ? 0 : *(it++);
             tester.ReceivedInv(peer, txidnum % MAX_TXHASHES, (txidnum / MAX_TXHASHES) & 1, cmd & 1,
-                std::chrono::microseconds::min());
+                NodeClock::time_point::min());
             break;
         case 7: // Received delayed preferred inv
         case 8: // Same, but non-preferred.

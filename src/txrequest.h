@@ -133,7 +133,7 @@ public:
      * from the specified gtxid.
      */
     void ReceivedInv(NodeId peer, const GenTxid& gtxid, bool preferred,
-                     std::chrono::microseconds reqtime);
+                     NodeClock::time_point reqtime);
 
     /** Deletes all announcements for a given peer.
      *
@@ -163,7 +163,7 @@ public:
      *    from dependent transactions being requested out of order: if multiple dependent transactions are announced
      *    simultaneously by one peer, and end up being requested from them, the requests will happen in announcement order.
      */
-    std::vector<GenTxid> GetRequestable(NodeId peer, std::chrono::microseconds now,
+    std::vector<GenTxid> GetRequestable(NodeId peer, NodeClock::time_point now,
                                         std::vector<std::pair<NodeId, GenTxid>>* expired = nullptr);
 
     /** Marks a transaction as requested, with a specified expiry.
@@ -174,7 +174,7 @@ public:
      *    was made (GetRequestable will never advise doing so). In this case it is converted to COMPLETED, as we're
      *    no longer waiting for a response to it.
      */
-    void RequestedTx(NodeId peer, const uint256& txhash, std::chrono::microseconds expiry);
+    void RequestedTx(NodeId peer, const uint256& txhash, NodeClock::time_point expiry);
 
     /** Converts a CANDIDATE or REQUESTED announcement to a COMPLETED one. If no such announcement exists for the
      *  provided peer and txhash, nothing happens.
@@ -212,7 +212,7 @@ public:
      *
      * This can only be called immediately after GetRequestable, with the same 'now' parameter.
      */
-    void PostGetRequestableSanityCheck(std::chrono::microseconds now) const;
+    void PostGetRequestableSanityCheck(NodeClock::time_point now) const;
 };
 
 #endif // BITCOIN_TXREQUEST_H

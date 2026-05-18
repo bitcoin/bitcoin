@@ -120,7 +120,7 @@ BOOST_FIXTURE_TEST_CASE(tx_rejection_types, TestChain100Setup)
     // A new TxDownloadManagerImpl is created for each tx so we can just reuse the same one.
     TxValidationState state;
     NodeId nodeid{0};
-    std::chrono::microseconds now{GetTime()};
+    const NodeClock::time_point now{NodeClock::now()};
     node::TxDownloadConnectionInfo connection_info{/*m_preferred=*/false, /*m_relay_permissions=*/false, /*m_wtxid_relay=*/true};
 
     for (const auto segwit_parent : {true, false}) {

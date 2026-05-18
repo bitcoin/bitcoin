@@ -4137,7 +4137,7 @@ void PeerManagerImpl::ProcessMessage(Peer& peer, CNode& pfrom, const std::string
 
         LOCK2(cs_main, m_tx_download_mutex);
 
-        const auto current_time{GetTime<std::chrono::microseconds>()};
+        const auto current_time{NodeClock::now()};
         uint256* best_block{nullptr};
 
         for (CInv& inv : vInv) {
@@ -6316,7 +6316,7 @@ bool PeerManagerImpl::SendMessages(CNode& node)
         //
         {
             LOCK(m_tx_download_mutex);
-            for (const GenTxid& gtxid : m_txdownloadman.GetRequestsToSend(node.GetId(), current_time)) {
+            for (const GenTxid& gtxid : m_txdownloadman.GetRequestsToSend(node.GetId(), now)) {
                 vGetData.emplace_back(gtxid.IsWtxid() ? MSG_WTX : (MSG_TX | GetFetchFlags(peer)), gtxid.ToUint256());
                 if (vGetData.size() >= MAX_GETDATA_SZ) {
                     MakeAndPushMessage(node, NetMsgType::GETDATA, vGetData);
