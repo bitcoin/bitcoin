@@ -13,10 +13,12 @@
 #include <policy/policy.h>
 #include <tinyformat.h>
 #include <util/moneystr.h>
+#include <util/result.h>
 #include <util/translation.h>
 
 #include <cstdint>
 #include <optional>
+#include <string>
 #include <utility>
 
 using common::AmountErrMsg;

@@ -26,6 +26,7 @@
 #include <node/kernel_notifications.h>
 #include <node/mempool_args.h>
 #include <node/miner.h>
+#include <node/mining_args.h>
 #include <node/peerman_args.h>
 #include <node/warnings.h>
 #include <noui.h>
@@ -65,6 +66,7 @@
 #include <future>
 #include <functional>
 #include <stdexcept>
+#include <utility>
 
 using namespace util::hex_literals;
 using node::ApplyArgsManOptions;
@@ -364,6 +366,9 @@ TestingSetup::TestingSetup(
                                                m_node.args->GetIntArg("-checkaddrman", 0));
     m_node.banman = std::make_unique<BanMan>(m_args.GetDataDirBase() / "banlist", nullptr, DEFAULT_MISBEHAVING_BANTIME);
     m_node.connman = std::make_unique<ConnmanTestMsg>(0x1337, 0x1337, *m_node.addrman, *m_node.netgroupman, Params()); // Deterministic randomness for tests.
+    auto mining_args{node::ReadMiningArgs(*m_node.args)};
+    Assert(mining_args);
+    m_node.mining_args = std::move(*mining_args);
     PeerManager::Options peerman_opts;
     ApplyArgsManOptions(*m_node.args, peerman_opts);
     peerman_opts.deterministic_rng = true;

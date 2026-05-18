@@ -988,8 +988,7 @@ public:
             // Also wait during the final catch-up moments after IBD.
             if (!CooldownIfHeadersAhead(chainman(), notifications(), *maybe_tip, m_interrupt_mining)) return {};
         }
-        const auto args_options{*Assert(ReadMiningArgs(*Assert(m_node.args)))};
-        const BlockCreateOptions create_options{MergeMiningOptions(options, args_options)};
+        const BlockCreateOptions create_options{MergeMiningOptions(options, m_node.mining_args)};
         return std::make_unique<BlockTemplateImpl>(create_options,
                                                    BlockAssembler{
                                                        chainman().ActiveChainstate(),
