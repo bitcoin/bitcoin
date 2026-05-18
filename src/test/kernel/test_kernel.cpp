@@ -1013,10 +1013,9 @@ BOOST_AUTO_TEST_CASE(btck_chainman_regtest_tests)
         for (const auto& data : REGTEST_BLOCK_DATA) {
             Block block{hex_string_to_byte_vec(data)};
             BlockHeader header = block.GetHeader();
-            BlockValidationState state{};
-            BOOST_CHECK(state.GetBlockValidationResult() == BlockValidationResult::UNSET);
-            BOOST_CHECK(chainman->ProcessBlockHeader(header, state));
+            BlockValidationState state = chainman->ProcessBlockHeader(header);
             BOOST_CHECK(state.GetValidationMode() == ValidationMode::VALID);
+            BOOST_CHECK(state.GetBlockValidationResult() == BlockValidationResult::UNSET);
             BlockTreeEntry entry{*chainman->GetBlockTreeEntry(header.Hash())};
             BOOST_CHECK(!chainman->GetChain().Contains(entry));
             BlockTreeEntry best_entry{chainman->GetBestEntry()};
