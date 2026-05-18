@@ -159,7 +159,7 @@ public:
 
     //! Get internal node context. Useful for RPC and testing,
     //! but not accessible across processes.
-    virtual node::NodeContext* context() { return nullptr; }
+    virtual const node::NodeContext* context() { return nullptr; }
 };
 
 //! Return implementation of Mining interface.
@@ -167,7 +167,7 @@ public:
 //! @param[in] wait_loaded waits for chainstate data to be loaded before
 //!                        returning. Used to prevent external clients from
 //!                        being able to crash the node during startup.
-std::unique_ptr<Mining> MakeMining(node::NodeContext& node, bool wait_loaded=true);
+std::unique_ptr<Mining> MakeMining(const node::NodeContext& node, bool wait_loaded=true);
 
 } // namespace interfaces
 

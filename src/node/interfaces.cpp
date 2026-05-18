@@ -869,9 +869,9 @@ class BlockTemplateImpl : public BlockTemplate
 public:
     explicit BlockTemplateImpl(BlockAssembler::Options assemble_options,
                                std::unique_ptr<CBlockTemplate> block_template,
-                               NodeContext& node) : m_assemble_options(std::move(assemble_options)),
-                                                    m_block_template(std::move(block_template)),
-                                                    m_node(node)
+                               const NodeContext& node) : m_assemble_options(std::move(assemble_options)),
+                                                          m_block_template(std::move(block_template)),
+                                                          m_node(node)
     {
         assert(m_block_template);
     }
@@ -931,13 +931,13 @@ public:
     bool m_interrupt_wait{false};
     ChainstateManager& chainman() { return *Assert(m_node.chainman); }
     KernelNotifications& notifications() { return *Assert(m_node.notifications); }
-    NodeContext& m_node;
+    const NodeContext& m_node;
 };
 
 class MinerImpl : public Mining
 {
 public:
-    explicit MinerImpl(NodeContext& node) : m_node(node) {}
+    explicit MinerImpl(const NodeContext& node) : m_node(node) {}
 
     bool isTestChain() override
     {
@@ -993,7 +993,7 @@ public:
 
         BlockAssembler::Options assemble_options{options};
         ApplyArgsManOptions(*Assert(m_node.args), assemble_options);
-        return std::make_unique<BlockTemplateImpl>(assemble_options, BlockAssembler{chainman().ActiveChainstate(), context()->mempool.get(), assemble_options}.CreateNewBlock(), m_node);
+        return std::make_unique<BlockTemplateImpl>(assemble_options, BlockAssembler{chainman().ActiveChainstate(), m_node.mempool.get(), assemble_options}.CreateNewBlock(), m_node);
     }
 
     void interrupt() override
@@ -1010,12 +1010,12 @@ public:
         return state.IsValid();
     }
 
-    NodeContext* context() override { return &m_node; }
+    const NodeContext* context() override { return &m_node; }
     ChainstateManager& chainman() { return *Assert(m_node.chainman); }
     KernelNotifications& notifications() { return *Assert(m_node.notifications); }
     // Treat as if guarded by notifications().m_tip_block_mutex
     bool m_interrupt_mining{false};
-    NodeContext& m_node;
+    const NodeContext& m_node;
 };
 
 class RpcImpl : public Rpc
@@ -1041,7 +1041,7 @@ public:
 namespace interfaces {
 std::unique_ptr<Node> MakeNode(node::NodeContext& context) { return std::make_unique<node::NodeImpl>(context); }
 std::unique_ptr<Chain> MakeChain(node::NodeContext& context) { return std::make_unique<node::ChainImpl>(context); }
-std::unique_ptr<Mining> MakeMining(node::NodeContext& context, bool wait_loaded)
+std::unique_ptr<Mining> MakeMining(const node::NodeContext& context, bool wait_loaded)
 {
     if (wait_loaded) {
         node::KernelNotifications& kernel_notifications(*Assert(context.notifications));
