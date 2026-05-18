@@ -2329,9 +2329,9 @@ void PeerManagerImpl::RelayAddress(NodeId originator,
     // Use deterministic randomness to send to the same nodes for 24 hours
     // at a time so the m_addr_knowns of the chosen nodes prevent repeats
     const uint64_t hash_addr{CServiceHash(0, 0)(addr)};
-    const auto current_time{GetTime<std::chrono::seconds>()};
+    const auto current_seconds{TicksSinceEpoch<std::chrono::seconds>(NodeClock::now())};
     // Adding address hash makes exact rotation time different per address, while preserving periodicity.
-    const uint64_t time_addr{(static_cast<uint64_t>(count_seconds(current_time)) + hash_addr) / count_seconds(ROTATE_ADDR_RELAY_DEST_INTERVAL)};
+    const uint64_t time_addr{(static_cast<uint64_t>(current_seconds) + hash_addr) / count_seconds(ROTATE_ADDR_RELAY_DEST_INTERVAL)};
     const CSipHasher hasher{m_connman.GetDeterministicRandomizer(RANDOMIZER_ID_ADDRESS_RELAY)
                                 .Write(hash_addr)
                                 .Write(time_addr)};
