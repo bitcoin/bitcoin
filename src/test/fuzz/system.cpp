@@ -9,6 +9,7 @@
 #include <test/util/setup_common.h>
 
 #include <cstdint>
+#include <set>
 #include <string>
 #include <vector>
 
@@ -31,6 +32,7 @@ FUZZ_TARGET(system, .init = initialize_system)
 {
     FuzzedDataProvider fuzzed_data_provider(buffer.data(), buffer.size());
     ArgsManager args_manager{};
+    std::vector<std::string> command_option_names;
 
     if (fuzzed_data_provider.ConsumeBool()) {
         SetupHelpOptions(args_manager);
@@ -59,7 +61,7 @@ FUZZ_TARGET(system, .init = initialize_system)
                 args_manager.SoftSetBoolArg(str_arg, f_value);
             },
             [&] {
-                const OptionsCategory options_category = fuzzed_data_provider.PickValueInArray<OptionsCategory>({OptionsCategory::OPTIONS, OptionsCategory::CONNECTION, OptionsCategory::WALLET, OptionsCategory::WALLET_DEBUG_TEST, OptionsCategory::ZMQ, OptionsCategory::DEBUG_TEST, OptionsCategory::CHAINPARAMS, OptionsCategory::NODE_RELAY, OptionsCategory::BLOCK_CREATION, OptionsCategory::RPC, OptionsCategory::GUI, OptionsCategory::COMMANDS, OptionsCategory::REGISTER_COMMANDS, OptionsCategory::CLI_COMMANDS, OptionsCategory::IPC, OptionsCategory::HIDDEN});
+                const OptionsCategory options_category = fuzzed_data_provider.PickValueInArray<OptionsCategory>({OptionsCategory::OPTIONS, OptionsCategory::CONNECTION, OptionsCategory::WALLET, OptionsCategory::WALLET_DEBUG_TEST, OptionsCategory::ZMQ, OptionsCategory::DEBUG_TEST, OptionsCategory::CHAINPARAMS, OptionsCategory::NODE_RELAY, OptionsCategory::BLOCK_CREATION, OptionsCategory::RPC, OptionsCategory::GUI, OptionsCategory::COMMANDS, OptionsCategory::REGISTER_COMMANDS, OptionsCategory::CLI_COMMANDS, OptionsCategory::IPC, OptionsCategory::COMMAND_OPTIONS, OptionsCategory::HIDDEN});
                 // Avoid hitting:
                 // common/args.cpp:563: void ArgsManager::AddArg(const std::string &, const std::string &, unsigned int, const OptionsCategory &): Assertion `ret.second' failed.
                 const std::string argument_name = GetArgumentName(fuzzed_data_provider.ConsumeRandomLengthString(16));
@@ -69,6 +71,22 @@ FUZZ_TARGET(system, .init = initialize_system)
                 auto help = fuzzed_data_provider.ConsumeRandomLengthString(16);
                 auto flags = fuzzed_data_provider.ConsumeIntegral<unsigned int>() & ~ArgsManager::COMMAND;
                 args_manager.AddArg(argument_name, help, flags, options_category);
+                if (options_category == OptionsCategory::COMMAND_OPTIONS) {
+                    command_option_names.push_back(argument_name);
+                }
+            },
+            [&] {
+                auto cmd = fuzzed_data_provider.ConsumeRandomLengthString(16);
+                if (cmd.empty() || cmd[0] == '-' || cmd.find('=') != std::string::npos) return;
+                if (args_manager.GetArgFlags(cmd) != std::nullopt) return;
+                auto help = fuzzed_data_provider.ConsumeRandomLengthString(16);
+                std::set<std::string> options;
+                for (const auto& opt : command_option_names) {
+                    if (fuzzed_data_provider.ConsumeBool()) {
+                        options.insert(opt);
+                    }
+                }
+                args_manager.AddCommand(cmd, help, std::move(options));
             },
             [&] {
                 // Avoid hitting:
@@ -89,6 +107,7 @@ FUZZ_TARGET(system, .init = initialize_system)
             },
             [&] {
                 args_manager.ClearArgs();
+                command_option_names.clear();
             },
             [&] {
                 const std::vector<std::string> random_arguments = ConsumeRandomLengthStringVector(fuzzed_data_provider);
@@ -120,6 +139,10 @@ FUZZ_TARGET(system, .init = initialize_system)
     } catch (const std::runtime_error&) {
     }
     (void)args_manager.GetHelpMessage();
+    const auto command = args_manager.GetCommand();
+    if (command) {
+        (void)args_manager.CheckCommandOptions(command->command);
+    }
     (void)args_manager.GetUnrecognizedSections();
     (void)args_manager.GetUnsuitableSectionOnlyArgs();
     (void)args_manager.IsArgNegated(s1);
