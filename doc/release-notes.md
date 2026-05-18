@@ -32,7 +32,7 @@ require a reindex.
 ## Bug Fixes
 
 - Kept relaying InstantSend lock inventory messages to non-masternode peers that request recovered signatures (dash#7293).
-- Reverted an improper dual-way connection attempt avoidance change that could break recovered-signature handshakes, and added coverage for the symmetric `QSENDRECSIGS` handshake under spork 21 (dash#7289).
+- Reverted an improper dual-way connection attempt avoidance change that could break recovered-signature handshakes under spork 21 (dash#7289).
 - Fixed intermittent incorrect `CheckQueue` logging for invalid blocks (dash#7312).
 - Fixed `listaddressbalances` RPC help so the documented result matches returned address balances (dash#7279).
 
