@@ -30,6 +30,20 @@ logging.basicConfig(
 
 PSBT_SIGNET_BLOCK = b"\xfc\x06signetb"    # proprietary PSBT global field holding the block being signed
 RE_MULTIMINER = re.compile(r"^(\d+)(-(\d+))?/(\d+)$")
+GRIND_TARGET_ERROR = "Could not satisfy difficulty target"
+
+def grind_cmd_failed_to_satisfy_target(exc):
+    if exc.returncode != 1:
+        return False
+    output = []
+    for stream in (exc.stdout, exc.stderr):
+        if stream is None:
+            continue
+        if isinstance(stream, bytes):
+            output.append(stream.decode("utf8", errors="replace"))
+        else:
+            output.append(stream)
+    return GRIND_TARGET_ERROR in "\n".join(output)
 
 def signet_txs(block, challenge):
     # assumes signet solution has not been added yet so does not need
@@ -81,7 +95,7 @@ def get_solution_from_psbt(psbt, emptyok=False):
         return None
     return ser_string(scriptSig) + scriptWitness
 
-def finish_block(block, signet_solution, grind_cmd):
+def finish_block(block, signet_solution, grind_cmd, *, capture_grind_stderr=False):
     if signet_solution is None:
         pass # Don't need to add a signet commitment if there's no signet signature needed
     else:
@@ -92,7 +106,10 @@ def finish_block(block, signet_solution, grind_cmd):
     else:
         headhex = CBlockHeader.serialize(block).hex()
         cmd = shlex.split(grind_cmd) + [headhex]
-        newheadhex = subprocess.run(cmd, stdout=subprocess.PIPE, input=b"", check=True).stdout.strip()
+        kwargs = {"stdout": subprocess.PIPE, "input": b"", "check": True}
+        if capture_grind_stderr:
+            kwargs["stderr"] = subprocess.PIPE
+        newheadhex = subprocess.run(cmd, **kwargs).stdout.strip()
         newhead = from_hex(CBlockHeader(), newheadhex.decode('utf8'))
         block.nNonce = newhead.nNonce
     return block
@@ -347,23 +364,32 @@ class Generate:
         return tmpl
 
     def mine(self, bcli, grind_cmd, tmpl, reward_spk):
-        block = new_block(tmpl, reward_spk, blocktime=self.mine_time, poolid=self.poolid)
+        while True:
+            block = new_block(tmpl, reward_spk, blocktime=self.mine_time, poolid=self.poolid)
 
-        signet_spk = tmpl["signet_challenge"]
-        if trivial_challenge(signet_spk):
-            signet_solution = None
-        else:
-            psbt = generate_psbt(block, signet_spk)
-            input_stream = os.linesep.join([psbt, "true", "ALL"]).encode('utf8')
-            psbt_signed = json.loads(bcli("-stdin", "walletprocesspsbt", input=input_stream))
-            if not psbt_signed.get("complete",False):
-               logging.debug("Generated PSBT: %s" % (psbt,))
-               sys.stderr.write("PSBT signing failed\n")
-               return None
-            psbt = decode_challenge_psbt(psbt_signed["psbt"])
-            signet_solution = get_solution_from_psbt(psbt)
+            signet_spk = tmpl["signet_challenge"]
+            if trivial_challenge(signet_spk):
+                signet_solution = None
+            else:
+                psbt = generate_psbt(block, signet_spk)
+                input_stream = os.linesep.join([psbt, "true", "ALL"]).encode('utf8')
+                psbt_signed = json.loads(bcli("-stdin", "walletprocesspsbt", input=input_stream))
+                if not psbt_signed.get("complete",False):
+                    logging.debug("Generated PSBT: %s" % (psbt,))
+                    sys.stderr.write("PSBT signing failed\n")
+                    return None
+                psbt = decode_challenge_psbt(psbt_signed["psbt"])
+                signet_solution = get_solution_from_psbt(psbt)
 
-        return finish_block(block, signet_solution, grind_cmd)
+            try:
+                return finish_block(block, signet_solution, grind_cmd, capture_grind_stderr=True)
+            except subprocess.CalledProcessError as e:
+                if not grind_cmd_failed_to_satisfy_target(e):
+                    if e.stderr:
+                        sys.stderr.buffer.write(e.stderr)
+                    raise
+                self.mine_time += 1
+                logging.debug("Grinder exhausted the nonce search space, retrying with block time %d", self.mine_time)
 
 def do_generate(args):
     if args.set_block_time is not None:
