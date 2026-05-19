@@ -191,7 +191,7 @@ bool TorControlConnection::ProcessBuffer()
         // Parse: <code><separator><data>
         // <status>(-|+| )<data>
         m_message.code = ToIntegral<int>(line->substr(0, 3)).value_or(0);
-        m_message.lines.push_back(line->substr(4));
+        m_message.lines.emplace_back(line->substr(4));
         char separator = (*line)[3]; // '-', '+', or ' '
 
         if (separator == ' ') {
