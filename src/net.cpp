@@ -3086,23 +3086,11 @@ bool CConnman::OpenNetworkConnection(const CAddress& addrConnect,
     return true;
 }
 
-std::optional<Network> CConnman::PrivateBroadcast::PickNetwork(std::optional<Proxy>& proxy) const
+std::optional<Network> CConnman::PrivateBroadcast::PickNetwork() const
 {
-    prevector<4, Network> nets;
-    std::optional<Proxy> clearnet_proxy;
-    proxy.reset();
+    prevector<2, Network> nets;
     if (g_reachable_nets.Contains(NET_ONION)) {
         nets.push_back(NET_ONION);
-
-        clearnet_proxy = ProxyForIPv4or6();
-        if (clearnet_proxy.has_value()) {
-            if (g_reachable_nets.Contains(NET_IPV4)) {
-                nets.push_back(NET_IPV4);
-            }
-            if (g_reachable_nets.Contains(NET_IPV6)) {
-                nets.push_back(NET_IPV6);
-            }
-        }
     }
     if (g_reachable_nets.Contains(NET_I2P)) {
         nets.push_back(NET_I2P);
@@ -3112,11 +3100,7 @@ std::optional<Network> CConnman::PrivateBroadcast::PickNetwork(std::optional<Pro
         return std::nullopt;
     }
 
-    const Network net{nets[FastRandomContext{}.randrange(nets.size())]};
-    if (net == NET_IPV4 || net == NET_IPV6) {
-        proxy = clearnet_proxy;
-    }
-    return net;
+    return nets[FastRandomContext{}.randrange(nets.size())];
 }
 
 size_t CConnman::PrivateBroadcast::NumToOpen() const
@@ -3143,16 +3127,6 @@ size_t CConnman::PrivateBroadcast::NumToOpenSub(size_t n)
 void CConnman::PrivateBroadcast::NumToOpenWait() const
 {
     m_num_to_open.wait(0);
-}
-
-std::optional<Proxy> CConnman::PrivateBroadcast::ProxyForIPv4or6() const
-{
-    if (m_outbound_tor_ok_at_least_once.load()) {
-        if (const auto tor_proxy = GetProxy(NET_ONION)) {
-            return tor_proxy;
-        }
-    }
-    return std::nullopt;
 }
 
 Mutex NetEventsInterface::g_msgproc_mutex;
@@ -3264,8 +3238,7 @@ void CConnman::ThreadPrivateBroadcast()
             break;
         }
 
-        std::optional<Proxy> proxy;
-        const std::optional<Network> net{m_private_broadcast.PickNetwork(proxy)};
+        const std::optional<Network> net{m_private_broadcast.PickNetwork()};
         if (!net.has_value()) {
             LogWarning("Unable to open -privatebroadcast connections: neither Tor nor I2P is reachable");
             m_interrupt_net->sleep_for(5s);
@@ -3284,10 +3257,7 @@ void CConnman::ThreadPrivateBroadcast()
         }
         addrman_num_bad_addresses = 0;
 
-        auto target_str{addr.ToStringAddrPort()};
-        if (proxy.has_value()) {
-            target_str += " through the proxy at " + proxy->ToString();
-        }
+        const auto target_str{addr.ToStringAddrPort()};
 
         const bool use_v2transport(addr.nServices & GetLocalServices() & NODE_P2P_V2);
 
@@ -3296,8 +3266,7 @@ void CConnman::ThreadPrivateBroadcast()
                                   std::move(conn_max_grant),
                                   /*pszDest=*/nullptr,
                                   ConnectionType::PRIVATE_BROADCAST,
-                                  use_v2transport,
-                                  proxy)) {
+                                  use_v2transport)) {
             const size_t remaining{m_private_broadcast.NumToOpenSub(1)};
             LogDebug(BCLog::PRIVBROADCAST, "Socket connected to %s; remaining connections to open: %d", target_str, remaining);
         } else {
@@ -4110,13 +4079,6 @@ void CConnman::PushMessage(CNode* pnode, CSerializedNetMsg&& msg)
     if (pnode->IsPrivateBroadcastConn() && !IsOutboundMessageAllowedInPrivateBroadcast(msg.m_type)) {
         LogDebug(BCLog::PRIVBROADCAST, "Omitting send of message '%s', %s", msg.m_type, pnode->LogPeer());
         return;
-    }
-
-    if (!m_private_broadcast.m_outbound_tor_ok_at_least_once.load() && !pnode->IsInboundConn() &&
-        pnode->addr.IsTor() && msg.m_type == NetMsgType::VERACK) {
-        // If we are sending the peer VERACK that means we successfully sent
-        // and received another message to/from that peer (VERSION).
-        m_private_broadcast.m_outbound_tor_ok_at_least_once.store(true);
     }
 
     size_t nMessageSize = msg.data.size();

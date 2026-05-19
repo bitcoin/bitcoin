@@ -84,7 +84,6 @@ void ConnmanTestMsg::Reset()
 {
     ResetAddrCache();
     ResetMaxOutboundCycle();
-    m_private_broadcast.m_outbound_tor_ok_at_least_once.store(false);
     m_private_broadcast.m_num_to_open.store(0);
 }
 

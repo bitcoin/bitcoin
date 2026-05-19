@@ -1194,31 +1194,19 @@ public:
     {
     public:
         /**
-         * Remember if we ever established at least one outbound connection to a
-         * Tor peer, including sending and receiving P2P messages. If this is
-         * true then the Tor proxy indeed works and is a proxy to the Tor network,
-         * not a misconfigured ordinary SOCKS5 proxy as -proxy or -onion. If that
-         * is the case, then we assume that connecting to an IPv4 or IPv6 address
-         * via that proxy will be done through the Tor network and a Tor exit node.
-         */
-        std::atomic_bool m_outbound_tor_ok_at_least_once{false};
-
-        /**
          * Semaphore used to guard against opening too many connections.
          * Opening private broadcast connections will be paused if this is equal to 0.
          */
         std::counting_semaphore<> m_sem_conn_max{MAX_PRIVATE_BROADCAST_CONNECTIONS};
 
         /**
-         * Choose a network to open a connection to.
-         * @param[out] proxy Optional proxy to override the normal proxy selection.
-         * Will be set if !std::nullopt is returned. Could be set to `std::nullopt`
-         * if there is no need to override the proxy that would be used for connecting
-         * to the returned network.
-         * @retval std::nullopt No network could be selected.
-         * @retval !std::nullopt The network was selected and `proxy` is set (maybe to `std::nullopt`).
+         * Choose a network to open a connection to. Private broadcast is restricted
+         * to anonymous overlay networks (Tor onion, I2P) so that the recipient peer
+         * never observes the originator's real IP address.
+         * @retval std::nullopt No reachable anonymous network is configured.
+         * @retval !std::nullopt The selected network.
          */
-        std::optional<Network> PickNetwork(std::optional<Proxy>& proxy) const;
+        std::optional<Network> PickNetwork() const;
 
         /// Get the pending number of connections to open.
         size_t NumToOpen() const;
@@ -1242,13 +1230,6 @@ public:
         void NumToOpenWait() const;
 
     protected:
-        /**
-         * Check if private broadcast can be done to IPv4 or IPv6 peers and if so via which proxy.
-         * If private broadcast connections should not be opened to IPv4 or IPv6, then this will
-         * return an empty optional.
-         */
-        std::optional<Proxy> ProxyForIPv4or6() const;
-
         /// Number of `ConnectionType::PRIVATE_BROADCAST` connections to open.
         std::atomic_size_t m_num_to_open{0};
 
