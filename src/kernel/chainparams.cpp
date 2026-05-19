@@ -362,7 +362,7 @@ public:
         consensus.vchTokenFreezeMethod = ParseHex("0b8914e27c9a6c88836bc5547f82ccf331142c761f84e9f1d36934a6a31eefad");
         consensus.nBridgeStartBlock = 1000;
         consensus.nNEVMStartBlock = 840000;
-        consensus.nCLReceiptStartBlock = std::numeric_limits<int>::max();
+        consensus.nCLReceiptStartBlock = 1746000;
         consensus.nNEVMStartTime = 1632775675;
         consensus.nPODAStartBlock = 1022500;
         consensus.nV19StartBlock = 1063000;
