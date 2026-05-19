@@ -65,6 +65,14 @@ class RPCGenerateTest(BitcoinTestFramework):
         assert_equal(len(block['tx']), 1)
         assert_equal(block['tx'][0]['vout'][0]['scriptPubKey']['address'], combo_address)
 
+        # Generate some extra mempool transactions to verify that they are mined if no txs are provided
+        for _ in range(10):
+            miniwallet.send_self_transfer(from_node=node)
+        self.log.info("Generate a block with mempool txs")
+        hash = self.generateblock(node, address)['hash']
+        block = node.getblock(hash, 1)
+        assert_equal(len(block['tx']), 11)
+
         # Generate some extra mempool transactions to verify they don't get mined
         for _ in range(10):
             miniwallet.send_self_transfer(from_node=node)
@@ -75,6 +83,23 @@ class RPCGenerateTest(BitcoinTestFramework):
         block = node.getblock(hash, 1)
         assert_equal(len(block['tx']), 2)
         assert_equal(block['tx'][1], txid)
+
+        self.log.info('Generate block with multiple txid')
+        # Generate some transactions to get mined
+        txs = []
+        for _ in range(3):
+            txs.append(miniwallet.send_self_transfer(from_node=node)['txid'])
+        #Generate some extra mempool transactions to verify they don't get mined
+        for _ in range(10):
+            miniwallet.send_self_transfer(from_node=node)
+        hash = self.generateblock(node, address, txs)['hash']
+        block = node.getblock(hash, 1)
+        assert_equal(len(block['tx']), 4)
+        for i, tx in enumerate(txs):
+            assert_equal(block['tx'][i+1], tx)
+        # Clean the mempool for next test by mining a block
+        self.generateblock(node, address)
+
 
         self.log.info('Generate block with raw tx')
         rawtx = miniwallet.create_self_transfer()['hex']
