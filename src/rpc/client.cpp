@@ -334,6 +334,7 @@ static const CRPCConvertParam vRPCConvertParams[] =
     { "psbtbumpfee", 1, "psbt_version"},
     { "logging", 0, "include" },
     { "logging", 1, "exclude" },
+    { "loglevel", 1, "categories" },
     { "disconnectnode", 1, "nodeid" },
     { "gethdkeys", 0, "active_only" },
     { "gethdkeys", 0, "options" },

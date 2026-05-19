@@ -9,6 +9,7 @@ import os
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.p2p import P2PInterface
 from test_framework.test_node import ErrorMatch
+from test_framework.util import assert_raises_rpc_error
 
 
 class LoggingTest(BitcoinTestFramework):
@@ -158,6 +159,67 @@ class LoggingTest(BitcoinTestFramework):
             p2p = self.nodes[0].add_p2p_connection(P2PInterface())
             p2p.wait_for_verack()
             self.nodes[0].disconnect_p2ps()
+
+        self.log.info("Test loglevel RPC")
+        # Start with a clean baseline: all categories at info (disabled)
+        self.restart_node(0, ['-nologlevel', '-nodebug'])
+
+        # Read-only call returns all categories with level strings
+        levels = self.nodes[0].loglevel()
+        assert isinstance(levels, dict)
+        assert 'net' in levels
+        assert 'http' in levels
+        assert all(v in ('trace', 'debug', 'info') for v in levels.values())
+
+        # All categories should be at 'info' (disabled) with our clean baseline
+        assert all(v == 'info' for v in levels.values()), f"Expected all info, got: {levels}"
+
+        # Set a single category to trace
+        result = self.nodes[0].loglevel(net='trace')
+        assert result['net'] == 'trace'
+        assert result['http'] == 'info'
+        # Cross-check with logging RPC: net should be active (trace < info), http inactive
+        assert self.nodes[0].logging()['net']
+        assert not self.nodes[0].logging()['http']
+
+        # Set a single category to debug
+        result = self.nodes[0].loglevel(net='debug')
+        assert result['net'] == 'debug'
+
+        # Set a category back to info (disable it)
+        result = self.nodes[0].loglevel(net='info')
+        assert result['net'] == 'info'
+        assert not self.nodes[0].logging()['net']
+
+        # Set all categories to debug using the positional shorthand
+        result = self.nodes[0].loglevel('debug')
+        assert all(v == 'debug' for v in result.values()), f"Expected all debug, got: {result}"
+        assert self.nodes[0].logging()['net']
+        assert self.nodes[0].logging()['http']
+
+        # "all" named argument combined with per-category override
+        result = self.nodes[0].loglevel(all='info', net='trace')
+        assert result['net'] == 'trace'
+        assert result['http'] == 'info'
+
+        # Set all categories to trace, then override net back to info
+        result = self.nodes[0].loglevel(all='trace', net='info')
+        assert result['net'] == 'info'
+        assert result['http'] == 'trace'
+
+        # Invalid category raises an error
+        assert_raises_rpc_error(-8, "Unknown named parameter notacategory", self.nodes[0].loglevel, **{'notacategory': 'debug'})
+
+        # Invalid level raises an error
+        assert_raises_rpc_error(-8, "unknown log level", self.nodes[0].loglevel, net='verbose')
+
+        # loglevel and logging RPCs stay consistent
+        self.nodes[0].loglevel(all='info', rpc='debug')
+        logging_result = self.nodes[0].logging()
+        levels_result = self.nodes[0].loglevel()
+        for cat, active in logging_result.items():
+            expected_active = levels_result[cat] != 'info'
+            assert active == expected_active, f"Inconsistency for {cat}: logging={active}, loglevel={levels_result[cat]}"
 
 if __name__ == '__main__':
     LoggingTest(__file__).main()

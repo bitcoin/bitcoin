@@ -12,3 +12,16 @@ Logging
   other logging options, with `-loglevel=debug` being a synonym for `-debug=1`,
   `-loglevel=<category>:debug` being a synonym for `-debug=<category>`, and
   `-loglevel=<category>:info` being a synonym for `-debugexclude=<category>`.
+
+- A new `loglevel` RPC has been added, which provides a superset of
+  functionality of the `logging` RPC, and allows enabling `trace` logs as well
+  as `debug` logs. Examples:
+
+  ```sh
+   bitcoin rpc loglevel                               # See current log levels
+   bitcoin rpc loglevel trace                         # Set global log level
+   bitcoin rpc loglevel debug                         # Set global log level
+   bitcoin rpc loglevel info                          # Set global log level
+   bitcoin rpc loglevel libevent=info                 # Set per-category log level
+   bitcoin rpc loglevel trace net=debug libevent=info # Set global and category levels
+  ```
