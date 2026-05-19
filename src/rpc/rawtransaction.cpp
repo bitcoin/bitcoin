@@ -1888,7 +1888,7 @@ static RPCMethod joinpsbts()
     }
 
     uint32_t best_version = 1;
-    uint32_t best_locktime = 0xffffffff;
+    uint32_t best_locktime = 0;
     for (unsigned int i = 0; i < txs.size(); ++i) {
         util::Result<PartiallySignedTransaction> psbt_res = DecodeBase64PSBT(txs[i].get_str());
         if (!psbt_res) {
@@ -1903,9 +1903,9 @@ static RPCMethod joinpsbts()
         if (psbtx.tx_version > best_version) {
             best_version = psbtx.tx_version;
         }
-        // Choose the lowest lock time
+        // Choose the highest lock time so joining cannot lower a PSBT's locktime.
         uint32_t psbt_locktime = psbtx.fallback_locktime.value_or(0);
-        if (psbt_locktime < best_locktime) {
+        if (psbt_locktime > best_locktime) {
             best_locktime = psbt_locktime;
         }
     }

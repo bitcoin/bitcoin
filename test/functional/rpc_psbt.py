@@ -5,9 +5,11 @@
 """Test the Partially Signed Transaction RPCs.
 """
 from decimal import Decimal
+from io import BytesIO
 from itertools import product
 from random import randbytes
 
+from test_framework.address import script_to_p2wsh
 from test_framework.blocktools import (
     MAX_STANDARD_TX_WEIGHT,
 )
@@ -17,6 +19,7 @@ from test_framework.messages import (
     COutPoint,
     CTransaction,
     CTxIn,
+    CTxInWitness,
     CTxOut,
     MAX_BIP125_RBF_SEQUENCE,
     WITNESS_SCALE_FACTOR,
@@ -44,7 +47,14 @@ from test_framework.psbt import (
     PSBT_OUT_TAP_TREE,
     PSBT_OUT_SCRIPT,
 )
-from test_framework.script import CScript, OP_TRUE, SIGHASH_ALL, SIGHASH_ANYONECANPAY
+from test_framework.script import (
+    CScript,
+    OP_CHECKLOCKTIMEVERIFY,
+    OP_DROP,
+    OP_TRUE,
+    SIGHASH_ALL,
+    SIGHASH_ANYONECANPAY,
+)
 from test_framework.script_util import MIN_STANDARD_TX_NONWITNESS_SIZE
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import (
@@ -531,6 +541,56 @@ class PSBTTest(BitcoinTestFramework):
         assert_raises_rpc_error(-8, "The PSBT version can only be 2 or 0", self.nodes[0].walletcreatefundedpsbt, inputs=[utxo], outputs=outputs, psbt_version=1)
         assert_raises_rpc_error(-8, "The PSBT version can only be 2 or 0", self.nodes[0].converttopsbt, hexstring=rawtx, psbt_version=1)
         assert_raises_rpc_error(-8, "The PSBT version can only be 2 or 0", self.nodes[0].psbtbumpfee, txid=tobump, psbt_version=1)
+
+    def test_joinpsbts_locktime(self):
+        self.log.info("Test that joining PSBTs preserves the higher CLTV height locktime")
+        node = self.nodes[0]
+        amount = Decimal("1.0")
+        spend_amount = Decimal("0.999")
+        sequence = 0xfffffffe
+        current_height = node.getblockcount()
+        locktimes = [current_height - 2, current_height - 1]
+
+        witness_scripts = [
+            CScript([locktime, OP_CHECKLOCKTIMEVERIFY, OP_DROP])
+            for locktime in locktimes
+        ]
+        utxos = self.create_outpoints(node, outputs=[
+            {script_to_p2wsh(witness_script): amount}
+            for witness_script in witness_scripts
+        ])
+        self.generate(node, 1)
+
+        psbts = [
+            node.createpsbt(
+                inputs=[{**utxo, "sequence": sequence}],
+                outputs=[{node.getnewaddress(): spend_amount}],
+                locktime=locktime,
+                replaceable=False,
+                psbt_version=0,
+            )
+            for utxo, locktime in zip(utxos, locktimes)
+        ]
+
+        joined = node.joinpsbts(psbts)
+        joined_psbt = PSBT.from_base64(joined)
+        joined_tx = CTransaction()
+        joined_tx.deserialize(BytesIO(joined_psbt.g.map[PSBT_GLOBAL_UNSIGNED_TX]))
+        assert_equal(joined_tx.nLockTime, max(locktimes))
+
+        # joinpsbts may reorder inputs, so attach each CLTV witness script by prevout.
+        scripts_by_prevout = {
+            (int(utxo["txid"], 16), utxo["vout"]): witness_script
+            for utxo, witness_script in zip(utxos, witness_scripts)
+        }
+        joined_tx.wit.vtxinwit = [CTxInWitness() for _ in joined_tx.vin]
+        for i, txin in enumerate(joined_tx.vin):
+            joined_tx.wit.vtxinwit[i].scriptWitness.stack = [
+                CScript([OP_TRUE]),
+                scripts_by_prevout[(txin.prevout.hash, txin.prevout.n)],
+            ]
+        test_accept = node.testmempoolaccept([joined_tx.serialize().hex()], maxfeerate=0)[0]
+        assert_equal(test_accept["allowed"], True)
 
     def run_test(self):
         # Create and fund a raw tx for sending 10 BTC
@@ -1094,6 +1154,7 @@ class PSBTTest(BitcoinTestFramework):
             if shuffled:
                 break
         assert shuffled
+        self.test_joinpsbts_locktime()
 
         # Newly created PSBT needs UTXOs and updating
         addr = self.nodes[1].getnewaddress("", "p2sh-segwit")
