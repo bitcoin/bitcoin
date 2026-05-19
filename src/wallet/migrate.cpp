@@ -567,7 +567,7 @@ void BerkeleyRODatabase::Open()
 
     // Check all Log Sequence Numbers (LSN) point to file 0 and offset 1 which indicates that the LSNs were
     // reset and that the log files are not necessary to get all of the data in the database.
-    for (uint32_t i = 0; i < outer_meta.last_page; ++i) {
+    for (uint32_t i = 0; i <= outer_meta.last_page; ++i) {
         // The LSN is composed of 2 32-bit ints, the first is a file id, the second an offset
         // It will always be the first 8 bytes of a page, so we deserialize it directly for every page
         uint32_t file;
