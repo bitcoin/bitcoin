@@ -51,7 +51,9 @@ NUM_PRIVATE_BROADCAST_PER_TX = 3
 
 # Fill addrman with these addresses. Must have enough Tor addresses, so that even
 # if all 10 default connections are opened to a Tor address (!?) there must be more
-# for private broadcast.
+# for private broadcast. The IPv4/IPv6/CJDNS entries are intentional negative
+# coverage: -privatebroadcast restricts PickNetwork() to onion/I2P, and the
+# selector must skip these regardless of what is sitting in addrman.
 ADDRMAN_ADDRESSES = [
     "20.0.0.1",
     "30.0.0.1",
@@ -354,6 +356,18 @@ class P2PPrivateBroadcast(BitcoinTestFramework):
         assert len(peers) >= NUM_PRIVATE_BROADCAST_PER_TX
         assert all("address" in p and "sent" in p for p in peers)
         assert_greater_than_or_equal(sum(1 for p in peers if "received" in p), broadcasts_to_expect)
+
+        # -privatebroadcast must restrict outbound destinations to hidden services
+        # (Tor onion). I2P picks go via the SAM session and never reach SOCKS5,
+        # so every private-broadcast entry observed by the SOCKS5 proxy must be a
+        # .onion address.
+        with self.destinations_lock:
+            for dest in self.destinations:
+                if dest["conn_type"] != "private-broadcast":
+                    continue
+                host = dest["requested_to"].rsplit(":", 1)[0].strip("[]")
+                assert host.endswith(".onion"), \
+                    f"private-broadcast destination must be a hidden service, got {host}"
 
     def run_test(self):
         tx_originator = self.nodes[0]
