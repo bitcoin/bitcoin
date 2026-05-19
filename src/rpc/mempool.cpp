@@ -1304,7 +1304,7 @@ static RPCHelpMan submitpackage()
     return RPCHelpMan{"submitpackage",
         "Submit a package of raw transactions (serialized, hex-encoded) to local node.\n"
         "The package will be validated according to consensus and mempool policy rules. If any transaction passes, it will be accepted to mempool.\n"
-        "This RPC is experimental and the interface may be unstable. Refer to doc/policy/packages.md for documentation on package policies.\n"
+        "This RPC is experimental and the interface may be unstable.\n"
         "Warning: successful submission does not mean the transactions will propagate throughout the network.\n"
         ,
         {

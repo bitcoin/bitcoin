@@ -269,8 +269,7 @@ static RPCHelpMan deriveaddresses()
          "    raw(<hex script>)                                 Outputs whose output script equals the specified hex-encoded bytes\n"
          "    tr(<pubkey>,multi_a(<n>,<pubkey>,<pubkey>,...))   P2TR-multisig outputs for the given threshold and pubkeys\n"
          "\nIn the above, <pubkey> either refers to a fixed public key in hexadecimal notation, or to an xpub/xprv optionally followed by one\n"
-         "or more path elements separated by \"/\", where \"h\" represents a hardened child key.\n"
-        "For more information on output descriptors, see the documentation in the doc/descriptors.md file.\n",
+         "or more path elements separated by \"/\", where \"h\" represents a hardened child key.\n",
         {
             {"descriptor", RPCArg::Type::STR, RPCArg::Optional::NO, "The descriptor."},
             {"range", RPCArg::Type::RANGE, RPCArg::Optional::OMITTED, "If a ranged descriptor is used, this specifies the end or the range (in [begin,end] notation) to derive."},

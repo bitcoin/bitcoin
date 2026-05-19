@@ -2312,8 +2312,7 @@ static RPCHelpMan scantxoutset()
         "\nIn the above, <pubkey> either refers to a fixed public key in hexadecimal notation, or to an xpub/xprv optionally followed by one\n"
         "or more path elements separated by \"/\", and optionally ending in \"/*\" (unhardened), or \"/*'\" or \"/*h\" (hardened) to specify all\n"
         "unhardened or hardened child keys.\n"
-        "In the latter case, a range needs to be specified by below if different from 1000.\n"
-        "For more information on output descriptors, see the documentation in the doc/descriptors.md file.\n",
+        "In the latter case, a range needs to be specified by below if different from 1000.\n",
         {
             scan_action_arg_desc,
             scan_objects_arg_desc,
@@ -3357,10 +3356,7 @@ static RPCHelpMan loadtxoutset()
         "The result is a usable bitcoind instance that is current with the network tip in a "
         "matter of minutes rather than hours. UTXO snapshot are typically obtained from "
         "third-party sources (HTTP, torrent, etc.) which is reasonable since their "
-        "contents are always checked by hash.\n\n"
-
-        "You can find more information on this process in the `assumeutxo` design "
-        "document (<https://github.com/bitcoin/bitcoin/blob/master/doc/design/assumeutxo.md>).",
+        "contents are always checked by hash.\n\n",
         {
             {"path",
                 RPCArg::Type::STR,
