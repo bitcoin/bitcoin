@@ -113,6 +113,7 @@ class RawTransactionsTest(BitcoinTestFramework):
         self.generate(self.nodes[2], 1)
         self.generate(self.nodes[0], 121)
 
+        self.test_wallet_funding_help()
         self.test_add_inputs_default_value()
         self.test_preset_inputs_selection()
         self.test_weight_calculation()
@@ -155,6 +156,15 @@ class RawTransactionsTest(BitcoinTestFramework):
         self.test_duplicate_outputs()
         self.test_watchonly_cannot_grind_r()
         self.test_cannot_cover_fees()
+
+    def test_wallet_funding_help(self):
+        self.log.info("Test wallet funding option help uses snake_case names")
+        for rpc_name in ["fundrawtransaction", "walletcreatefundedpsbt"]:
+            help_text = self.nodes[0].help(rpc_name)
+            for option_name in ["change_address", "change_position", "lock_unspents", "subtract_fee_from_outputs"]:
+                assert option_name in help_text
+            for option_name in ["changeAddress", "changePosition", "lockUnspents", "subtractFeeFromOutputs"]:
+                assert option_name not in help_text
 
     def test_duplicate_outputs(self):
         self.log.info("Test deserializing and funding a transaction with duplicate outputs")
