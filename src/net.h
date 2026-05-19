@@ -669,6 +669,7 @@ public:
 struct CNodeOptions
 {
     NetPermissionFlags permission_flags = NetPermissionFlags::None;
+    std::optional<Proxy> proxy_override = {};
     std::unique_ptr<i2p::sam::Session> i2p_sam_session = nullptr;
     bool prefer_evict = false;
     size_t recv_flood_size{DEFAULT_MAXRECEIVEBUFFER * 1000};
@@ -711,6 +712,10 @@ public:
     std::atomic<std::chrono::seconds> m_last_recv{0s};
     //! Unix epoch time at peer connection
     const std::chrono::seconds m_connected;
+
+    //! Proxy to use regardless of global proxy settings if reconnecting to this node.
+    const std::optional<Proxy> m_proxy_override;
+
     // Address of this peer
     const CAddress addr;
     // Bind address of our side of the connection
@@ -1778,6 +1783,7 @@ private:
     /** Struct for entries in m_reconnections. */
     struct ReconnectionInfo
     {
+        std::optional<Proxy> proxy_override;
         CAddress addr_connect;
         CountingSemaphoreGrant<> grant;
         std::string destination;
