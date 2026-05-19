@@ -338,9 +338,11 @@ static RPCMethod generateblock()
         "Transaction fees are not collected in the block reward.",
         {
             {"output", RPCArg::Type::STR, RPCArg::Optional::NO, "The address or descriptor to send the newly generated bitcoin to."},
-            {"transactions", RPCArg::Type::ARR, RPCArg::Optional::NO, "An array of hex strings which are either txids or raw transactions.\n"
+            {"transactions", RPCArg::Type::ARR, RPCArg::Optional::OMITTED, "An array of hex strings which are either txids or raw transactions.\n"
                 "Txids must reference transactions currently in the mempool.\n"
-                "All transactions must be valid and in valid order, otherwise the block will be rejected.",
+                "All transactions must be valid and in valid order, otherwise the block will be rejected.\n"
+                "If no transactions are provided the ones in the mempool will be used.\n"
+                "If an empty array of transactions is provided the block will be empty.",
                 {
                     {"rawtx/txid", RPCArg::Type::STR_HEX, RPCArg::Optional::OMITTED, ""},
                 },
@@ -357,6 +359,7 @@ static RPCMethod generateblock()
         RPCExamples{
             "\nGenerate a block to myaddress, with txs rawtx and mempool_txid\n"
             + HelpExampleCli("generateblock", R"("myaddress" '["rawtx", "mempool_txid"]')")
+            + HelpExampleCli("generateblock", R"("myaddress" [])")
         },
         [](const RPCMethod& self, const JSONRPCRequest& request) -> UniValue
 {
@@ -378,44 +381,44 @@ static RPCMethod generateblock()
     const CTxMemPool& mempool = EnsureMemPool(node);
 
     std::vector<CTransactionRef> txs;
-    const auto raw_txs_or_txids = request.params[1].get_array();
-    for (size_t i = 0; i < raw_txs_or_txids.size(); i++) {
-        const auto& str{raw_txs_or_txids[i].get_str()};
+    bool mine_mempool{request.params[1].isNull()};
 
-        CMutableTransaction mtx;
-        if (auto txid{Txid::FromHex(str)}) {
-            const auto tx{mempool.get(*txid)};
-            if (!tx) {
-                throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, strprintf("Transaction %s not in mempool.", str));
+    if (!mine_mempool) {
+        for (const UniValue& entry : request.params[1].get_array().getValues()) {
+            const auto& raw_tx_or_id{entry.get_str()};
+            CMutableTransaction mtx;
+            if (auto txid{Txid::FromHex(raw_tx_or_id)}) {
+                const auto tx{mempool.get(*txid)};
+                if (!tx) {
+                    throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, strprintf("Transaction %s not in mempool.", raw_tx_or_id));
+                }
+                txs.emplace_back(tx);
+            } else if (DecodeHexTx(mtx, raw_tx_or_id)) {
+                txs.push_back(MakeTransactionRef(std::move(mtx)));
+            } else {
+                throw JSONRPCError(RPC_DESERIALIZATION_ERROR, strprintf("Transaction decode failed for %s. Make sure the tx has at least one input.", raw_tx_or_id));
             }
-
-            txs.emplace_back(tx);
-
-        } else if (DecodeHexTx(mtx, str)) {
-            txs.push_back(MakeTransactionRef(std::move(mtx)));
-
-        } else {
-            throw JSONRPCError(RPC_DESERIALIZATION_ERROR, strprintf("Transaction decode failed for %s. Make sure the tx has at least one input.", str));
         }
     }
-
-    const bool process_new_block{request.params[2].isNull() ? true : request.params[2].get_bool()};
+    const bool process_new_block = self.Arg<bool>("submit");
     CBlock block;
 
     ChainstateManager& chainman = EnsureChainman(node);
     {
         LOCK(chainman.GetMutex());
         {
-            std::unique_ptr<node::CBlockTemplate> block_template{block_template_manager.CreateNewTemplate({.use_mempool = false, .coinbase_output_script = coinbase_output_script})};
+            std::unique_ptr<node::CBlockTemplate> block_template{block_template_manager.CreateNewTemplate({.use_mempool = mine_mempool, .coinbase_output_script = coinbase_output_script})};
             CHECK_NONFATAL(block_template);
 
             block = block_template->block;
         }
 
-        CHECK_NONFATAL(block.vtx.size() == 1);
+        // Add transactions if mempool is not used
+        if (!mine_mempool) {
+            CHECK_NONFATAL(block.vtx.size() == 1);
+            block.vtx.insert(block.vtx.end(), txs.begin(), txs.end());
+        }
 
-        // Add transactions
-        block.vtx.insert(block.vtx.end(), txs.begin(), txs.end());
         RegenerateCommitments(block, chainman);
 
         if (BlockValidationState state{TestBlockValidity(chainman.ActiveChainstate(), block, /*check_pow=*/false, /*check_merkle_root=*/false)}; !state.IsValid()) {
