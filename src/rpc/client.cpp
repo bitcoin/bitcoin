@@ -388,6 +388,7 @@ static const CRPCConvertParam vRPCConvertParams[] =
     { "loadtxoutset", 0, "path", ParamFormat::STRING },
     { "migratewallet", 0, "wallet_name", ParamFormat::STRING },
     { "migratewallet", 1, "passphrase", ParamFormat::STRING },
+    { "migratewallet", 2, "load_wallet"},
     { "setlabel", 1, "label", ParamFormat::STRING },
     { "signmessage", 1, "message", ParamFormat::STRING },
     { "signmessagewithprivkey", 1, "message", ParamFormat::STRING },
