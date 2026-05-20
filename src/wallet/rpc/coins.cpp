@@ -599,7 +599,11 @@ RPCMethod listunspent()
         cctl.m_include_unsafe_inputs = include_unsafe;
         filter_coins.check_version_trucness = false;
         LOCK(pwallet->cs_wallet);
-        vecOutputs = AvailableCoins(*pwallet, &cctl, /*feerate=*/std::nullopt, filter_coins).All();
+        auto available_coins{AvailableCoins(*pwallet, &cctl, /*feerate=*/std::nullopt, filter_coins)};
+        if (!available_coins) {
+            throw JSONRPCError(RPC_WALLET_ERROR, util::ErrorString(available_coins).original);
+        }
+        vecOutputs = available_coins->All();
     }
 
     LOCK(pwallet->cs_wallet);

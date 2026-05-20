@@ -409,7 +409,7 @@ public:
 
         // And fetch the wallet available coins
         if (coin_control.m_allow_other_inputs) {
-            total_amount += AvailableCoins(*m_wallet, &coin_control).GetTotalAmount();
+            total_amount += Assert(AvailableCoins(*m_wallet, &coin_control))->GetTotalAmount();
         }
 
         return total_amount;

@@ -45,6 +45,26 @@ TRACEPOINT_SEMAPHORE(coin_selection, aps_create_tx_internal);
 namespace wallet {
 static constexpr size_t OUTPUT_GROUP_MAX_ENTRIES{100};
 
+static bilingual_str BumpFeeCalculationFailed()
+{
+    return _("Failed to calculate bump fees, because unconfirmed UTXOs depend on an enormous cluster of unconfirmed transactions.");
+}
+
+static util::Result<void> CheckBumpFeeResult(const std::map<COutPoint, CAmount>& bump_fees, const std::vector<COutPoint>& outpoints)
+{
+    if (bump_fees.empty() && !outpoints.empty()) return util::Error{BumpFeeCalculationFailed()};
+    return {};
+}
+
+static util::Result<CAmount> GetBumpFee(const std::map<COutPoint, CAmount>& bump_fees, const COutPoint& outpoint)
+{
+    const auto it{bump_fees.find(outpoint)};
+    if (it == bump_fees.end()) {
+        return util::Error{strprintf(_("Failed to calculate bump fee for UTXO %s"), outpoint.ToString())};
+    }
+    return it->second;
+}
+
 /** Whether the descriptor represents, directly or not, a witness program. */
 static bool IsSegwit(const Descriptor& desc) {
     if (const auto typ = desc.GetOutputType()) return *typ != OutputType::LEGACY;
@@ -271,8 +291,10 @@ util::Result<CoinsResult> FetchSelectedInputs(const CWallet& wallet, const CCoin
 {
     CoinsResult result;
     const bool can_grind_r = wallet.CanGrindR();
-    std::map<COutPoint, CAmount> map_of_bump_fees = wallet.chain().calculateIndividualBumpFees(coin_control.ListSelected(), coin_selection_params.m_effective_feerate);
-    for (const COutPoint& outpoint : coin_control.ListSelected()) {
+    const auto selected_inputs{coin_control.ListSelected()};
+    const auto map_of_bump_fees{wallet.chain().calculateIndividualBumpFees(selected_inputs, coin_selection_params.m_effective_feerate)};
+    if (auto bump_fee_result{CheckBumpFeeResult(map_of_bump_fees, selected_inputs)}; !bump_fee_result) return util::Error{util::ErrorString(bump_fee_result)};
+    for (const COutPoint& outpoint : selected_inputs) {
         int64_t input_bytes = coin_control.GetInputWeight(outpoint).value_or(-1);
         if (input_bytes != -1) {
             input_bytes = GetVirtualTransactionSize(input_bytes, 0, 0);
@@ -311,16 +333,18 @@ util::Result<CoinsResult> FetchSelectedInputs(const CWallet& wallet, const CCoin
 
         /* Set some defaults for depth, solvable, safe, time, and from_me as these don't matter for preset inputs since no selection is being done. */
         COutput output(outpoint, txout, /*depth=*/0, input_bytes, /*solvable=*/true, /*safe=*/true, /*time=*/0, /*from_me=*/false, coin_selection_params.m_effective_feerate);
-        output.ApplyBumpFee(map_of_bump_fees.at(output.outpoint));
+        auto bump_fee{GetBumpFee(map_of_bump_fees, output.outpoint)};
+        if (!bump_fee) return util::Error{util::ErrorString(bump_fee)};
+        output.ApplyBumpFee(*bump_fee);
         result.Add(OutputType::UNKNOWN, output);
     }
     return result;
 }
 
-CoinsResult AvailableCoins(const CWallet& wallet,
-                           const CCoinControl* coinControl,
-                           std::optional<CFeeRate> feerate,
-                           const CoinFilterParams& params)
+util::Result<CoinsResult> AvailableCoins(const CWallet& wallet,
+                                         const CCoinControl* coinControl,
+                                         std::optional<CFeeRate> feerate,
+                                         const CoinFilterParams& params)
 {
     AssertLockHeld(wallet.cs_wallet);
 
@@ -513,11 +537,14 @@ CoinsResult AvailableCoins(const CWallet& wallet,
     }
 
     if (feerate.has_value()) {
-        std::map<COutPoint, CAmount> map_of_bump_fees = wallet.chain().calculateIndividualBumpFees(outpoints, feerate.value());
+        const auto map_of_bump_fees{wallet.chain().calculateIndividualBumpFees(outpoints, feerate.value())};
+        if (auto bump_fee_result{CheckBumpFeeResult(map_of_bump_fees, outpoints)}; !bump_fee_result) return util::Error{util::ErrorString(bump_fee_result)};
 
         for (auto& [_, outputs] : result.coins) {
             for (auto& output : outputs) {
-                output.ApplyBumpFee(map_of_bump_fees.at(output.outpoint));
+                auto bump_fee{GetBumpFee(map_of_bump_fees, output.outpoint)};
+                if (!bump_fee) return util::Error{util::ErrorString(bump_fee)};
+                output.ApplyBumpFee(*bump_fee);
             }
         }
     }
@@ -554,7 +581,7 @@ std::map<CTxDestination, std::vector<COutput>> ListCoins(const CWallet& wallet)
     CCoinControl coin_control;
     CoinFilterParams coins_params;
     coins_params.skip_locked = false;
-    for (const COutput& coin : AvailableCoins(wallet, &coin_control, /*feerate=*/std::nullopt, coins_params).All()) {
+    for (const COutput& coin : Assert(AvailableCoins(wallet, &coin_control, /*feerate=*/std::nullopt, coins_params))->All()) {
         CTxDestination address;
         if (!ExtractDestination(FindNonChangeParentOutput(wallet, coin.outpoint).scriptPubKey, address)) {
             // For backwards compatibility, we convert P2PK output scripts into PKHash destinations
@@ -1216,7 +1243,9 @@ static util::Result<CreatedTransactionResult> CreateTransactionInternal(
     // allowed (coins automatically selected by the wallet)
     CoinsResult available_coins;
     if (coin_control.m_allow_other_inputs) {
-        available_coins = AvailableCoins(wallet, &coin_control, coin_selection_params.m_effective_feerate);
+        auto available_coins_res{AvailableCoins(wallet, &coin_control, coin_selection_params.m_effective_feerate)};
+        if (!available_coins_res) return util::Error{util::ErrorString(available_coins_res)};
+        available_coins = std::move(*available_coins_res);
     }
 
     // Choose coins to use

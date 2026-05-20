@@ -94,10 +94,10 @@ struct CoinFilterParams {
 /**
  * Populate the CoinsResult struct with vectors of available COutputs, organized by OutputType.
  */
-CoinsResult AvailableCoins(const CWallet& wallet,
-                           const CCoinControl* coinControl = nullptr,
-                           std::optional<CFeeRate> feerate = std::nullopt,
-                           const CoinFilterParams& params = {}) EXCLUSIVE_LOCKS_REQUIRED(wallet.cs_wallet);
+util::Result<CoinsResult> AvailableCoins(const CWallet& wallet,
+                                         const CCoinControl* coinControl = nullptr,
+                                         std::optional<CFeeRate> feerate = std::nullopt,
+                                         const CoinFilterParams& params = {}) EXCLUSIVE_LOCKS_REQUIRED(wallet.cs_wallet);
 
 /**
  * Find non-change parent output.

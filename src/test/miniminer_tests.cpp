@@ -625,6 +625,14 @@ BOOST_FIXTURE_TEST_CASE(calculate_cluster, TestChain100Setup)
     TryAddToMempool(pool, entry.Fee(CENT).FromTx(tx_501));
     const auto cluster_501 = pool.GatherClusters(last_txs);
     BOOST_CHECK_EQUAL(cluster_501.size(), 0);
+    std::vector<COutPoint> outpoints;
+    for (const auto& txid : last_txs) {
+        outpoints.emplace_back(txid, 0);
+    }
+    node::MiniMiner mini_miner(pool, outpoints);
+    BOOST_CHECK(!mini_miner.IsReadyToCalculate());
+    BOOST_CHECK(mini_miner.CalculateBumpFees(CFeeRate{CENT}).empty());
+    BOOST_CHECK(!mini_miner.CalculateTotalBumpFees(CFeeRate{CENT}).has_value());
 
     /* Zig Zag cluster:
      * txp0     txp1     txp2    ...  txp30  txp31

@@ -408,7 +408,7 @@ BOOST_FIXTURE_TEST_CASE(ListCoinsTest, ListCoinsTestingSetup)
     BOOST_CHECK_EQUAL(list.begin()->second.size(), 1U);
 
     // Check initial balance from one mature coinbase transaction.
-    BOOST_CHECK_EQUAL(50 * COIN, WITH_LOCK(wallet->cs_wallet, return AvailableCoins(*wallet).GetTotalAmount()));
+    BOOST_CHECK_EQUAL(50 * COIN, WITH_LOCK(wallet->cs_wallet, return Assert(AvailableCoins(*wallet))->GetTotalAmount()));
 
     // Add a transaction creating a change address, and confirm ListCoins still
     // returns the coin associated with the change address underneath the
@@ -426,7 +426,7 @@ BOOST_FIXTURE_TEST_CASE(ListCoinsTest, ListCoinsTestingSetup)
     // Lock both coins. Confirm number of available coins drops to 0.
     {
         LOCK(wallet->cs_wallet);
-        BOOST_CHECK_EQUAL(AvailableCoins(*wallet).Size(), 2U);
+        BOOST_CHECK_EQUAL(Assert(AvailableCoins(*wallet))->Size(), 2U);
     }
     for (const auto& group : list) {
         for (const auto& coin : group.second) {
@@ -436,7 +436,7 @@ BOOST_FIXTURE_TEST_CASE(ListCoinsTest, ListCoinsTestingSetup)
     }
     {
         LOCK(wallet->cs_wallet);
-        BOOST_CHECK_EQUAL(AvailableCoins(*wallet).Size(), 0U);
+        BOOST_CHECK_EQUAL(Assert(AvailableCoins(*wallet))->Size(), 0U);
     }
     // Confirm ListCoins still returns same result as before, despite coins
     // being locked.
@@ -457,7 +457,7 @@ void TestCoinsResult(ListCoinsTest& context, OutputType out_type, CAmount amount
     CWalletTx& wtx = context.AddTx(CRecipient{*dest, amount, /*fSubtractFeeFromAmount=*/true});
     CoinFilterParams filter;
     filter.skip_locked = false;
-    CoinsResult available_coins = AvailableCoins(*context.wallet, nullptr, std::nullopt, filter);
+    CoinsResult available_coins = *Assert(AvailableCoins(*context.wallet, nullptr, std::nullopt, filter));
     // Lock outputs so they are not spent in follow-up transactions
     for (uint32_t i = 0; i < wtx.tx->vout.size(); i++) context.wallet->LockCoin({wtx.GetHash(), i}, /*persist=*/false);
     for (const auto& [type, size] : expected_coins_sizes) BOOST_CHECK_EQUAL(size, available_coins.coins[type].size());
@@ -471,7 +471,10 @@ BOOST_FIXTURE_TEST_CASE(BasicOutputTypesTest, ListCoinsTest)
     // Verify our wallet has one usable coinbase UTXO before starting
     // This UTXO is a P2PK, so it should show up in the Other bucket
     expected_coins_sizes[OutputType::UNKNOWN] = 1U;
-    CoinsResult available_coins = WITH_LOCK(wallet->cs_wallet, return AvailableCoins(*wallet));
+    CoinsResult available_coins = WITH_LOCK(wallet->cs_wallet, {
+        auto available_coins_res{AvailableCoins(*wallet)};
+        return CoinsResult{std::move(*Assert(available_coins_res))};
+    });
     BOOST_CHECK_EQUAL(available_coins.Size(), expected_coins_sizes[OutputType::UNKNOWN]);
     BOOST_CHECK_EQUAL(available_coins.coins[OutputType::UNKNOWN].size(), expected_coins_sizes[OutputType::UNKNOWN]);
 

@@ -1490,7 +1490,11 @@ RPCMethod sendall()
             } else {
                 CoinFilterParams coins_params;
                 coins_params.min_amount = 0;
-                for (const COutput& output : AvailableCoins(*pwallet, &coin_control, fee_rate, coins_params).All()) {
+                auto available_coins{AvailableCoins(*pwallet, &coin_control, fee_rate, coins_params)};
+                if (!available_coins) {
+                    throw JSONRPCError(RPC_WALLET_ERROR, util::ErrorString(available_coins).original);
+                }
+                for (const COutput& output : available_coins->All()) {
                     if (send_max && fee_rate.GetFee(output.input_bytes) > output.txout.nValue) {
                         continue;
                     }
@@ -1518,7 +1522,10 @@ RPCMethod sendall()
             }
             const CAmount fee_from_size{fee_rate.GetFee(tx_size.vsize)};
             const std::optional<CAmount> total_bump_fees{pwallet->chain().calculateCombinedBumpFee(outpoints_spent, fee_rate)};
-            CAmount effective_value = total_input_value - fee_from_size - total_bump_fees.value_or(0);
+            if (!total_bump_fees.has_value()) {
+                throw JSONRPCError(RPC_WALLET_ERROR, "Failed to calculate bump fees, because unconfirmed UTXOs depend on an enormous cluster of unconfirmed transactions.");
+            }
+            CAmount effective_value = total_input_value - fee_from_size - total_bump_fees.value();
 
             if (fee_from_size > pwallet->m_default_max_tx_fee) {
                 throw JSONRPCError(RPC_WALLET_ERROR, TransactionErrorString(TransactionError::MAX_FEE_EXCEEDED).original);
