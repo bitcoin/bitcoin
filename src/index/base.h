@@ -117,6 +117,7 @@ protected:
     std::unique_ptr<interfaces::Chain> m_chain;
     Chainstate* m_chainstate{nullptr};
     const std::string m_name;
+    const std::string m_thread_name;
 
     void BlockConnected(const kernel::ChainstateRole& role, const std::shared_ptr<const CBlock>& block, const CBlockIndex* pindex) override;
 
@@ -141,7 +142,7 @@ protected:
     void SetBestBlockIndex(const CBlockIndex* block);
 
 public:
-    BaseIndex(std::unique_ptr<interfaces::Chain> chain, std::string name);
+    BaseIndex(std::unique_ptr<interfaces::Chain> chain, std::string name, std::string thread_name);
     /// Destructor interrupts sync thread if running and blocks until it exits.
     virtual ~BaseIndex();
 

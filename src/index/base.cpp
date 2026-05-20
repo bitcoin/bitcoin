@@ -92,8 +92,8 @@ void BaseIndex::DB::WriteBestBlock(CDBBatch& batch, const CBlockLocator& locator
     batch.Write(DB_BEST_BLOCK, locator);
 }
 
-BaseIndex::BaseIndex(std::unique_ptr<interfaces::Chain> chain, std::string name)
-    : m_chain{std::move(chain)}, m_name{std::move(name)} {}
+BaseIndex::BaseIndex(std::unique_ptr<interfaces::Chain> chain, std::string name, std::string thread_name)
+    : m_chain{std::move(chain)}, m_name{std::move(name)}, m_thread_name{std::move(thread_name)} {}
 
 BaseIndex::~BaseIndex()
 {
@@ -460,7 +460,7 @@ bool BaseIndex::StartBackgroundSync()
 {
     if (!m_init) throw std::logic_error("Error: Cannot start a non-initialized index");
 
-    m_thread_sync = std::thread(&util::TraceThread, GetName(), [this] { Sync(); });
+    m_thread_sync = std::thread(&util::TraceThread, m_thread_name, [this] { Sync(); });
     return true;
 }
 

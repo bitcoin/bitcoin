@@ -3,6 +3,7 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <util/threadnames.h>
+#include <util/check.h>
 
 #include <algorithm>
 #include <cstring>
@@ -53,6 +54,7 @@ static void SetInternalName(const std::string& name)
 
 void util::ThreadRename(const std::string& name)
 {
+    Assume(name.size() <= 13); // Linux keeps 15 bytes
     SetThreadName(("b-" + name).c_str());
     SetInternalName(name);
 }

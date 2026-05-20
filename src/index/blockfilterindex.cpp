@@ -61,6 +61,15 @@ constexpr size_t CF_HEADERS_CACHE_MAX_SZ{2000};
 
 namespace {
 
+std::string BlockFilterThreadName(BlockFilterType filter_type)
+{
+    switch (filter_type) {
+    case BlockFilterType::BASIC: return "blkfltbscidx";
+    case BlockFilterType::INVALID: return "";
+    } // no default case, so the compiler can warn about missing cases
+    assert(false);
+}
+
 struct DBVal {
     uint256 hash;
     uint256 header;
@@ -75,7 +84,7 @@ static std::map<BlockFilterType, BlockFilterIndex> g_filter_indexes;
 
 BlockFilterIndex::BlockFilterIndex(std::unique_ptr<interfaces::Chain> chain, BlockFilterType filter_type,
                                    size_t n_cache_size, bool f_memory, bool f_wipe)
-    : BaseIndex(std::move(chain), BlockFilterTypeName(filter_type) + " block filter index")
+    : BaseIndex(std::move(chain), BlockFilterTypeName(filter_type) + " block filter index", BlockFilterThreadName(filter_type))
     , m_filter_type(filter_type)
 {
     const std::string& filter_name = BlockFilterTypeName(filter_type);
