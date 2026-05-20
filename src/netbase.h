@@ -11,6 +11,7 @@
 #include <util/sock.h>
 #include <util/threadinterrupt.h>
 
+#include <chrono>
 #include <cstdint>
 #include <functional>
 #include <memory>
@@ -304,6 +305,11 @@ extern std::function<std::unique_ptr<Sock>(int, int, int)> CreateSock;
  * @returns the connected socket if the operation succeeded, empty unique_ptr otherwise
  */
 std::unique_ptr<Sock> ConnectDirectly(const CService& dest, bool manual_connection);
+
+/** Create a socket and try to connect to the specified service, using the provided timeout. */
+std::unique_ptr<Sock> ConnectDirectly(const CService& dest,
+                                      bool manual_connection,
+                                      std::chrono::milliseconds timeout);
 
 /**
  * Connect to a specified destination service through a SOCKS5 proxy by first
