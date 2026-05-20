@@ -76,6 +76,9 @@ class ErrorMatch(Enum):
     PARTIAL_REGEX = 3
 
 
+RPCConnectionType = Enum("RPCConnectionType", ["AUTO", "AUTHPROXY", "CLI"])
+
+
 class TestNode():
     """A class for representing a bitcoind node under test.
 
@@ -301,16 +304,23 @@ class TestNode():
         if self.start_perf:
             self._start_perf()
 
-    def create_new_rpc_connection(self):
+    def create_new_rpc_connection(self, *, mode="AUTO", client_timeout=None):
         """Create an additional RPC connection, likely to be used in a new thread."""
-        rpc = get_rpc_proxy(
-            rpc_url(self.datadir_path, self.index, self.chain, self.rpchost),
-            self.index,
-            timeout=self.rpc_timeout // 2,  # Shorter timeout to allow for one retry in case of ETIMEDOUT
-            coveragedir=self.coverage_dir,
-        )
-        rpc.auth_service_proxy_instance.reuse_http_connections = self.reuse_http_connections
-        return rpc
+        mode = RPCConnectionType[mode]
+        if mode == RPCConnectionType.AUTO:
+            mode = RPCConnectionType.CLI if self.use_cli else RPCConnectionType.AUTHPROXY
+        client_timeout = client_timeout or (self.rpc_timeout // 2)  # Shorter timeout to allow for one retry in case of ETIMEDOUT
+        if mode == RPCConnectionType.AUTHPROXY:
+            rpc = get_rpc_proxy(
+                rpc_url(self.datadir_path, self.index, self.chain, self.rpchost),
+                self.index,
+                timeout=client_timeout,
+                coveragedir=self.coverage_dir,
+            )
+            rpc.auth_service_proxy_instance.reuse_http_connections = self.reuse_http_connections
+            return rpc
+        else:  # mode==CLI
+            return self.cli(f"-rpcclienttimeout={client_timeout}")
 
     def wait_for_rpc_connection(self, *, wait_for_import=True):
         """Sets up an RPC connection to the bitcoind process. Returns False if unable to connect."""
@@ -333,7 +343,7 @@ class TestNode():
                 raise FailedToStartError(self._node_msg(
                     f'bitcoind exited with status {self.process.returncode} during initialization. {str_error}'))
             try:
-                rpc = self.create_new_rpc_connection()
+                rpc = self.create_new_rpc_connection(mode="AUTHPROXY")
                 rpc.getblockcount()
                 # If the call to getblockcount() succeeds then the RPC connection is up
                 if self.version_is_at_least(190000) and wait_for_import:
