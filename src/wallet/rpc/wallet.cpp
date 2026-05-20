@@ -625,11 +625,11 @@ static RPCMethod migratewallet()
 
             UniValue r{UniValue::VOBJ};
             r.pushKV("wallet_name", res->wallet_name);
-            if (res->watchonly_wallet) {
-                r.pushKV("watchonly_name", res->watchonly_wallet->GetName());
+            if (res->watchonly_wallet_name.has_value()) {
+                r.pushKV("watchonly_name", res->watchonly_wallet_name.value());
             }
-            if (res->solvables_wallet) {
-                r.pushKV("solvables_name", res->solvables_wallet->GetName());
+            if (res->solvables_wallet_name.has_value()) {
+                r.pushKV("solvables_name", res->solvables_wallet_name.value());
             }
             r.pushKV("backup_path", res->backup_path.utf8string());
 

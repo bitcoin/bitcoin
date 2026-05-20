@@ -1134,6 +1134,8 @@ bool RemoveWalletSetting(interfaces::Chain& chain, const std::string& wallet_nam
 
 struct MigrationResult {
     std::string wallet_name;
+    std::optional<std::string> watchonly_wallet_name;
+    std::optional<std::string> solvables_wallet_name;
     std::shared_ptr<CWallet> wallet;
     std::shared_ptr<CWallet> watchonly_wallet;
     std::shared_ptr<CWallet> solvables_wallet;
