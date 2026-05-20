@@ -112,7 +112,7 @@ public:
         // Create workers
         m_workers.reserve(num_workers);
         for (int i = 0; i < num_workers; i++) {
-            m_workers.emplace_back(&util::TraceThread, strprintf("%s_pool_%d", m_name, i), [this] { WorkerThread(); });
+            m_workers.emplace_back(&util::TraceThread, strprintf("%s.%d", m_name, i), [this] { WorkerThread(); });
         }
     }
 

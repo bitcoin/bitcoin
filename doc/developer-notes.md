@@ -705,7 +705,7 @@ and its `cs_KeyStore` lock for example).
 - [ThreadHTTP (`b-http`)](https://doxygen.bitcoincore.org/httpserver_8cpp.html#http)
   : Libevent thread to listen for RPC and REST connections.
 
-- [HTTP worker threads (`b-http_pool_x`)](https://doxygen.bitcoincore.org/httpserver_8cpp.html#http_pool)
+- [HTTP worker threads (`b-http.x`)](https://doxygen.bitcoincore.org/httpserver_8cpp.html#http_pool)
   : Threads to service RPC and REST requests.
 
 - [Indexer threads (`b-txindex`, etc)](https://doxygen.bitcoincore.org/class_base_index.html#index_sync)
