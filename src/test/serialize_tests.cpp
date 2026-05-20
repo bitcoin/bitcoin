@@ -332,18 +332,6 @@ static CBlock BuildCoinbaseOnlyBlockWithPayload(const std::vector<unsigned char>
     return block;
 }
 
-static std::vector<bool> BitsetFromBytesLE(const std::vector<uint8_t>& bytes)
-{
-    std::vector<bool> bits;
-    bits.reserve(bytes.size() * 8);
-    for (const uint8_t b : bytes) {
-        for (int bit = 0; bit < 8; ++bit) {
-            bits.push_back(((b >> bit) & 0x01) != 0);
-        }
-    }
-    return bits;
-}
-
 BOOST_AUTO_TEST_CASE(extract_btcprev_ignores_embedded_magic_in_hash_tail)
 {
     static constexpr std::array<uint8_t, 4> BTCP_MAGIC{{'b', 't', 'c', 'p'}};
@@ -376,10 +364,9 @@ BOOST_AUTO_TEST_CASE(extract_btcc_ignores_embedded_magic_inside_receipt_payload)
     static constexpr std::array<uint8_t, 4> BTCC_MAGIC{{'b', 't', 'c', 'c'}};
 
     llmq::CBTCCheckpointSig expected{};
-    expected.nHeight = 123;
+    expected.nHeight = 0x63637462; // little-endian serialized bytes are "btcc"
     expected.sysHash = uint256S("00000000000000000000000000000000000000000000000000000000000000ab");
-    expected.signers = BitsetFromBytesLE(
-        std::vector<uint8_t>{BTCC_MAGIC[0], BTCC_MAGIC[1], BTCC_MAGIC[2], BTCC_MAGIC[3]});
+    expected.signers = {true, false, true, false};
 
     DataStream receipt_stream;
     receipt_stream << expected;
