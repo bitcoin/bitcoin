@@ -1219,15 +1219,15 @@ BOOST_AUTO_TEST_CASE(btck_chainman_regtest_tests)
     // Validate coin properties
     TransactionOutputView output = coin.GetOutput();
     uint32_t coin_height = coin.GetConfirmationHeight();
-    BOOST_CHECK_EQUAL(coin_height, 205);
-    BOOST_CHECK_EQUAL(output.Amount(), 100000000);
+    BOOST_CHECK_EQUAL(coin_height, 143);
+    BOOST_CHECK_EQUAL(output.Amount(), 3949990974);
 
     // Test script pubkey serialization
     auto script_pubkey = output.GetScriptPubkey();
     auto script_pubkey_bytes{script_pubkey.ToBytes()};
-    BOOST_CHECK_EQUAL(script_pubkey_bytes.size(), 22);
+    BOOST_CHECK_EQUAL(script_pubkey_bytes.size(), 34);
     auto round_trip_script_pubkey{ScriptPubkey(script_pubkey_bytes)};
-    BOOST_CHECK_EQUAL(round_trip_script_pubkey.ToBytes().size(), 22);
+    BOOST_CHECK_EQUAL(round_trip_script_pubkey.ToBytes().size(), 34);
 
     for (const auto tx_spent_outputs : block_spent_outputs.TxsSpentOutputs()) {
         for (const auto coins : tx_spent_outputs.Coins()) {
