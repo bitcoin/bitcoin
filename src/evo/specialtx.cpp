@@ -11,6 +11,7 @@
 
 #include <algorithm>
 #include <iterator>
+#include <limits>
 
 #include <evo/deterministicmns.h>
 #include <evo/specialtx.h>
@@ -25,36 +26,58 @@
 class CCoinsViewCache;
 
 namespace {
+size_t CompactSizeLen(uint64_t n)
+{
+    if (n < 253) return 1;
+    if (n <= std::numeric_limits<uint16_t>::max()) return 3;
+    if (n <= std::numeric_limits<uint32_t>::max()) return 5;
+    return 9;
+}
+
+size_t MaxSerializedBTCCReceiptSize()
+{
+    const auto& llmq_params = Params().GetConsensus().llmqTypeChainLocks;
+    const size_t max_signers = static_cast<size_t>(llmq_params.signingActiveQuorumCount);
+    return sizeof(int32_t) + uint256::size() + CBLSSignature::SerSize +
+           CompactSizeLen(max_signers) + ((max_signers + 7) / 8);
+}
+
 template <typename T, typename ParseFn>
 bool ExtractUniqueTaggedTailObject(const std::vector<unsigned char>& vchData,
                                    const uint8_t (&magic)[4],
+                                   size_t max_payload_size,
                                    T& out,
                                    ParseFn&& parse_fn)
 {
+    if (vchData.size() < sizeof(magic)) {
+        return false;
+    }
+
+    const size_t search_start_offset = vchData.size() > sizeof(magic) + max_payload_size ?
+                                       vchData.size() - sizeof(magic) - max_payload_size :
+                                       0;
+    const auto search_begin = vchData.begin() + search_start_offset;
+    auto search_end = vchData.end();
     bool found{false};
     T parsed{};
-    for (auto it = vchData.begin(); it != vchData.end();) {
-        it = std::search(it, vchData.end(), std::begin(magic), std::end(magic));
-        if (it == vchData.end()) {
-            break;
-        }
-
+    while (search_begin != search_end) {
+        const auto it = std::find_end(search_begin, search_end, std::begin(magic), std::end(magic));
+        if (it == search_end) break;
         const auto payload_begin = std::next(it, sizeof(magic));
+        const size_t payload_size = std::distance(payload_begin, vchData.end());
+        if (payload_size > max_payload_size) return false;
+
+        const Span<const unsigned char> payload{vchData.data() + std::distance(vchData.begin(), payload_begin), payload_size};
         T candidate{};
-        if (parse_fn(payload_begin, vchData.end(), candidate)) {
+        if (parse_fn(payload, candidate)) {
             // Multiple decodable tails are ambiguous and thus invalid.
-            if (found) {
-                return false;
-            }
+            if (found) return false;
             parsed = std::move(candidate);
             found = true;
         }
-        ++it;
+        search_end = it;
     }
-
-    if (!found) {
-        return false;
-    }
+    if (!found) return false;
     out = std::move(parsed);
     return true;
 }
@@ -63,10 +86,11 @@ bool ExtractUniqueTaggedTailObject(const std::vector<unsigned char>& vchData,
 
 bool ExtractBTCCReceipt(const std::vector<unsigned char>& vchData, llmq::CBTCCheckpointSig& receipt)
 {
-    return ExtractUniqueTaggedTailObject(vchData, BTCCHECK_MAGIC_BYTES, receipt,
-                                         [](auto begin, auto end, llmq::CBTCCheckpointSig& candidate) {
+    return ExtractUniqueTaggedTailObject(vchData, BTCCHECK_MAGIC_BYTES,
+                                         MaxSerializedBTCCReceiptSize(), receipt,
+                                         [](Span<const unsigned char> payload, llmq::CBTCCheckpointSig& candidate) {
                                              try {
-                                                 CDataStream ds(std::vector<unsigned char>(begin, end), SER_NETWORK, PROTOCOL_VERSION);
+                                                 SpanReader ds(SER_NETWORK, PROTOCOL_VERSION, payload);
                                                  ds >> candidate;
                                                  return ds.empty();
                                              } catch (const std::exception&) {
@@ -91,13 +115,12 @@ bool ExtractBTCPREVCommitment(const CBlock& block, uint256& btcPrevHash)
     int nOut{-1};
     if (!GetSyscoinData(*block.vtx[0], vchData, nOut)) return false;
     constexpr size_t BTCPREV_PAYLOAD_SIZE{32};
-    return ExtractUniqueTaggedTailObject(vchData, BTCPREV_MAGIC_BYTES, btcPrevHash,
-                                         [](auto begin, auto end, uint256& candidate) {
-                                             if (static_cast<size_t>(std::distance(begin, end)) != BTCPREV_PAYLOAD_SIZE) {
-                                                 return false;
-                                             }
+    return ExtractUniqueTaggedTailObject(vchData, BTCPREV_MAGIC_BYTES,
+                                         BTCPREV_PAYLOAD_SIZE, btcPrevHash,
+                                         [](Span<const unsigned char> payload, uint256& candidate) {
+                                             if (payload.size() != BTCPREV_PAYLOAD_SIZE) return false;
                                              try {
-                                                 CDataStream ds(std::vector<unsigned char>(begin, end), SER_NETWORK, PROTOCOL_VERSION);
+                                                 SpanReader ds(SER_NETWORK, PROTOCOL_VERSION, payload);
                                                  ds >> candidate;
                                                  return ds.empty();
                                              } catch (const std::exception&) {

@@ -399,6 +399,30 @@ BOOST_AUTO_TEST_CASE(extract_btcc_ignores_embedded_magic_inside_receipt_payload)
     BOOST_CHECK(extracted.signers == expected.signers);
 }
 
+BOOST_AUTO_TEST_CASE(extract_btcc_ignores_false_markers_before_tail_receipt)
+{
+    static constexpr std::array<uint8_t, 4> BTCC_MAGIC{{'b', 't', 'c', 'c'}};
+
+    std::vector<unsigned char> payload;
+    for (int i = 0; i < 4096; ++i) {
+        payload.insert(payload.end(), BTCC_MAGIC.begin(), BTCC_MAGIC.end());
+        payload.push_back(0xff);
+    }
+
+    llmq::CBTCCheckpointSig expected{};
+    DataStream receipt_stream;
+    receipt_stream << expected;
+    const std::string receipt_bytes = receipt_stream.str();
+    payload.insert(payload.end(), BTCC_MAGIC.begin(), BTCC_MAGIC.end());
+    payload.insert(payload.end(), receipt_bytes.begin(), receipt_bytes.end());
+
+    const CBlock block = BuildCoinbaseOnlyBlockWithPayload(payload);
+
+    llmq::CBTCCheckpointSig extracted{};
+    BOOST_CHECK(ExtractBTCCReceipt(block, extracted));
+    BOOST_CHECK(extracted.IsNull());
+}
+
 enum class BaseFormat {
     RAW,
     HEX,
