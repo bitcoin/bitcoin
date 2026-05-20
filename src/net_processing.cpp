@@ -404,7 +404,7 @@ struct Peer {
     std::atomic<bool> m_sent_sendheaders{false};
 
     /** When to potentially disconnect peer for stalling headers download */
-    std::chrono::microseconds m_headers_sync_timeout GUARDED_BY(NetEventsInterface::g_msgproc_mutex){0us};
+    NodeClock::time_point m_headers_sync_timeout GUARDED_BY(NetEventsInterface::g_msgproc_mutex){NodeClock::epoch};
 
     /** Whether this peer wants invs or headers (when possible) for block announcements */
     bool m_prefers_headers GUARDED_BY(NetEventsInterface::g_msgproc_mutex){false};
@@ -5818,11 +5818,9 @@ bool PeerManagerImpl::SendMessages(CNode& node)
                     LogDebug(BCLog::NET, "initial getheaders (%d) to peer=%d", pindexStart->nHeight, node.GetId());
 
                     state.fSyncStarted = true;
-                    peer.m_headers_sync_timeout = current_time + HEADERS_DOWNLOAD_TIMEOUT_BASE +
+                    peer.m_headers_sync_timeout = now + HEADERS_DOWNLOAD_TIMEOUT_BASE +
                         (
-                         // Convert HEADERS_DOWNLOAD_TIMEOUT_PER_HEADER to microseconds before scaling
-                         // to maintain precision
-                         std::chrono::microseconds{HEADERS_DOWNLOAD_TIMEOUT_PER_HEADER} *
+                         HEADERS_DOWNLOAD_TIMEOUT_PER_HEADER *
                          Ticks<std::chrono::seconds>(NodeClock::now() - m_chainman.m_best_header->Time()) / consensusParams.nPowTargetSpacing
                         );
                     nSyncStarted++;
@@ -6129,10 +6127,10 @@ bool PeerManagerImpl::SendMessages(CNode& node)
             }
         }
         // Check for headers sync timeouts
-        if (state.fSyncStarted && peer.m_headers_sync_timeout < std::chrono::microseconds::max()) {
+        if (state.fSyncStarted && peer.m_headers_sync_timeout != NodeClock::time_point::max()) {
             // Detect whether this is a stalling initial-headers-sync peer
             if (m_chainman.m_best_header->Time() <= NodeClock::now() - 24h) {
-                if (current_time > peer.m_headers_sync_timeout && nSyncStarted == 1 && (m_num_preferred_download_peers - state.fPreferredDownload >= 1)) {
+                if (now > peer.m_headers_sync_timeout && nSyncStarted == 1 && (m_num_preferred_download_peers - state.fPreferredDownload >= 1)) {
                     // Disconnect a peer (without NetPermissionFlags::NoBan permission) if it is our only sync peer,
                     // and we have others we could be using instead.
                     // Note: If all our peers are inbound, then we won't
@@ -6151,13 +6149,13 @@ bool PeerManagerImpl::SendMessages(CNode& node)
                         // this peer (eventually).
                         state.fSyncStarted = false;
                         nSyncStarted--;
-                        peer.m_headers_sync_timeout = 0us;
+                        peer.m_headers_sync_timeout = NodeClock::epoch;
                     }
                 }
             } else {
                 // After we've caught up once, reset the timeout so we can't trigger
                 // disconnect later.
-                peer.m_headers_sync_timeout = std::chrono::microseconds::max();
+                peer.m_headers_sync_timeout = NodeClock::time_point::max();
             }
         }
 
