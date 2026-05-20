@@ -44,6 +44,10 @@ This release fixes an issue where the chainstate database would repeatedly
 rewrite large portions of itself, causing excessive disk reads and writes
 during normal operation.
 
+- BIP 9 bits 5 to 28 inclusive are now ignored for soft fork signaling, as per
+  BIP 323. We won't warn about unknown deployments when receiving blocks that
+  set any of those bits in their version. (#34779)
+
 ### Validation
 
 - #35209 validation: correct lifetime of precomputed tx data
