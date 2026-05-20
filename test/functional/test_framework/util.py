@@ -517,19 +517,6 @@ def tor_port(n):
     return p2p_port(n) + PORT_RANGE * 2
 
 
-def rpc_url(datadir, i, chain, rpchost):
-    rpc_u, rpc_p = get_auth_cookie(datadir, chain)
-    host = '127.0.0.1'
-    port = rpc_port(i)
-    if rpchost:
-        parts = rpchost.split(':')
-        if len(parts) == 2:
-            host, port = parts
-        else:
-            host = rpchost
-    return "http://%s:%s@%s:%d" % (rpc_u, rpc_p, host, int(port))
-
-
 # Node functions
 ################
 

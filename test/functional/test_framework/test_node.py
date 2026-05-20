@@ -37,7 +37,7 @@ from .util import (
     delete_cookie_file,
     get_auth_cookie,
     get_rpc_proxy,
-    rpc_url,
+    rpc_port,
     wait_until_helper_internal,
     p2p_port,
     tor_port,
@@ -310,9 +310,18 @@ class TestNode():
         if mode == RPCConnectionType.AUTO:
             mode = RPCConnectionType.CLI if self.use_cli else RPCConnectionType.AUTHPROXY
         client_timeout = client_timeout or (self.rpc_timeout // 2)  # Shorter timeout to allow for one retry in case of ETIMEDOUT
+        host = "127.0.0.1"
+        port = rpc_port(self.index)
+        if self.rpchost:
+            parts = self.rpchost.split(":")
+            if len(parts) == 2:
+                host, port = parts
+            else:
+                host = self.rpchost
         if mode == RPCConnectionType.AUTHPROXY:
+            rpc_u, rpc_p = get_auth_cookie(self.datadir_path, self.chain)
             rpc = get_rpc_proxy(
-                rpc_url(self.datadir_path, self.index, self.chain, self.rpchost),
+                f"http://{rpc_u}:{rpc_p}@{host}:{port}",
                 self.index,
                 timeout=client_timeout,
                 coveragedir=self.coverage_dir,
@@ -320,7 +329,7 @@ class TestNode():
             rpc.auth_service_proxy_instance.reuse_http_connections = self.reuse_http_connections
             return rpc
         else:  # mode==CLI
-            return self.cli(f"-rpcclienttimeout={client_timeout}")
+            return self.cli(f"-rpcclienttimeout={client_timeout}", f"-rpcconnect={host}", f"-rpcport={port}")
 
     def wait_for_rpc_connection(self, *, wait_for_import=True):
         """Sets up an RPC connection to the bitcoind process. Returns False if unable to connect."""
