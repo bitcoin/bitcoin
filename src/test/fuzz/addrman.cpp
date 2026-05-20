@@ -17,6 +17,7 @@
 #include <test/util/time.h>
 #include <util/asmap.h>
 #include <util/chaintype.h>
+#include <util/readwritefile.h>
 
 #include <cassert>
 #include <cstdint>
@@ -214,4 +215,80 @@ FUZZ_TARGET(addrman_serdeser, .init = initialize_addrman)
     data_stream << addr_man1;
     data_stream >> addr_man2;
     assert(addr_man1 == addr_man2);
+}
+
+FUZZ_TARGET(addrdb, .init = initialize_addrman)
+{
+    SeedRandomStateForTest(SeedRand::ZEROS);
+    FuzzedDataProvider fuzzed_data_provider(buffer.data(), buffer.size());
+    NodeClockContext clock_ctx{ConsumeTime(fuzzed_data_provider)};
+
+    const fs::path peers_path = gArgs.GetDataDirNet() / "peers.dat";
+    const fs::path peers_bak_path = peers_path + ".bak";
+    const fs::path anchors_path = gArgs.GetDataDirNet() / "anchors.dat";
+
+    const auto cleanup = [&] {
+        fs::remove(peers_path);
+        fs::remove(peers_bak_path);
+        fs::remove(anchors_path);
+    };
+    cleanup();
+
+    NetGroupManager netgroupman{ConsumeNetGroupManager(fuzzed_data_provider)};
+
+    LIMITED_WHILE(fuzzed_data_provider.remaining_bytes() > 0 && fuzzed_data_provider.ConsumeBool(), 32)
+    {
+        CallOneOf(
+            fuzzed_data_provider,
+            [&] {
+                const auto file_data = ConsumeRandomLengthByteVector(fuzzed_data_provider);
+                if (file_data.empty()) {
+                    fs::remove(peers_path);
+                } else {
+                    WriteBinaryFile(peers_path, {file_data.begin(), file_data.end()});
+                }
+                (void)LoadAddrman(netgroupman, *g_setup->m_node.args);
+                cleanup();
+            },
+            [&] {
+                AddrManDeterministic addr_man{netgroupman, fuzzed_data_provider, GetCheckRatio()};
+                FillAddrman(addr_man, fuzzed_data_provider);
+                if (DumpPeerAddresses(*g_setup->m_node.args, addr_man)) {
+                    (void)LoadAddrman(netgroupman, *g_setup->m_node.args);
+                }
+                cleanup();
+            },
+            [&] {
+                const auto file_data = ConsumeRandomLengthByteVector(fuzzed_data_provider);
+                if (!file_data.empty()) {
+                    WriteBinaryFile(anchors_path, {file_data.begin(), file_data.end()});
+                    (void)ReadAnchors(anchors_path);
+                }
+            },
+            [&] {
+                std::vector<CAddress> anchors;
+                LIMITED_WHILE(fuzzed_data_provider.ConsumeBool(), 256) {
+                    anchors.push_back(ConsumeAddress(fuzzed_data_provider));
+                }
+                DumpAnchors(anchors_path, anchors);
+                (void)ReadAnchors(anchors_path);
+            },
+            [&] {
+                AddrManDeterministic addr_man{netgroupman, fuzzed_data_provider, GetCheckRatio()};
+                FillAddrman(addr_man, fuzzed_data_provider);
+                if (!DumpPeerAddresses(*g_setup->m_node.args, addr_man)) {
+                    return;
+                }
+                (void)LoadAddrman(netgroupman, *g_setup->m_node.args);
+
+                std::vector<CAddress> anchors;
+                LIMITED_WHILE(fuzzed_data_provider.ConsumeBool(), 64) {
+                    anchors.push_back(ConsumeAddress(fuzzed_data_provider));
+                }
+                DumpAnchors(anchors_path, anchors);
+                (void)ReadAnchors(anchors_path);
+                cleanup();
+            });
+    }
+    cleanup();
 }
