@@ -414,6 +414,8 @@ BOOST_AUTO_TEST_CASE(btck_transaction_tests)
 
     BOOST_CHECK_EQUAL(tx.CountOutputs(), 2);
     BOOST_CHECK_EQUAL(tx.CountInputs(), 1);
+    BOOST_CHECK(btck_transaction_get_output_at(tx.get(), tx.CountOutputs()) == nullptr);
+    BOOST_CHECK(btck_transaction_get_input_at(tx.get(), tx.CountInputs()) == nullptr);
     BOOST_CHECK_EQUAL(tx.GetLocktime(), 510826);
     auto broken_tx_data{std::span<std::byte>{tx_data.begin(), tx_data.begin() + 10}};
     BOOST_CHECK_THROW(Transaction{broken_tx_data}, std::runtime_error);
@@ -529,6 +531,18 @@ BOOST_AUTO_TEST_CASE(btck_precomputed_txdata) {
         /*spent_outputs=*/{},
     }};
     CheckHandle(precomputed_txdata, precomputed_txdata_2);
+
+    ScriptPubkey script{hex_string_to_byte_vec("76a9144bfbaf6afb76cc5771bc6404810d1cc041a6933988ac")};
+    TransactionOutput output{script, 1};
+    TransactionOutput output2{script, 2};
+    const btck_TransactionOutput* too_many_spent_outputs[]{output.get(), output2.get()};
+    BOOST_CHECK(btck_precomputed_transaction_data_create(
+                    tx.get(), too_many_spent_outputs, 2) == nullptr);
+    BOOST_CHECK(btck_precomputed_transaction_data_create(tx.get(), nullptr, 1) == nullptr);
+
+    const btck_TransactionOutput* null_spent_outputs[]{nullptr};
+    BOOST_CHECK(btck_precomputed_transaction_data_create(
+                    tx.get(), null_spent_outputs, 1) == nullptr);
 }
 
 BOOST_AUTO_TEST_CASE(btck_script_verify_tests)
@@ -543,6 +557,62 @@ BOOST_AUTO_TEST_CASE(btck_script_verify_tests)
         /*amount=*/0,
         /*input_index=*/0,
         /*taproot=*/false);
+
+    btck_ScriptVerifyStatus status{btck_ScriptVerifyStatus_OK};
+    BOOST_CHECK_EQUAL(btck_script_pubkey_verify(
+                          legacy_spent_script_pubkey.get(),
+                          /*amount=*/0,
+                          legacy_spending_tx.get(),
+                          /*precomputed_txdata=*/nullptr,
+                          /*input_index=*/0,
+                          btck_ScriptVerificationFlags_ALL | (1U << 31),
+                          &status),
+        0);
+    BOOST_CHECK(status == btck_ScriptVerifyStatus_ERROR_INVALID_FLAGS);
+
+    BOOST_CHECK_EQUAL(btck_script_pubkey_verify(
+                          legacy_spent_script_pubkey.get(),
+                          /*amount=*/0,
+                          legacy_spending_tx.get(),
+                          /*precomputed_txdata=*/nullptr,
+                          /*input_index=*/0,
+                          btck_ScriptVerificationFlags_ALL | (1U << 31),
+                          /*status=*/nullptr),
+        0);
+
+    status = btck_ScriptVerifyStatus_OK;
+    BOOST_CHECK_EQUAL(btck_script_pubkey_verify(
+                          legacy_spent_script_pubkey.get(),
+                          /*amount=*/0,
+                          legacy_spending_tx.get(),
+                          /*precomputed_txdata=*/nullptr,
+                          /*input_index=*/0,
+                          btck_ScriptVerificationFlags_WITNESS,
+                          &status),
+        0);
+    BOOST_CHECK(status == btck_ScriptVerifyStatus_ERROR_INVALID_FLAGS_COMBINATION);
+
+    status = btck_ScriptVerifyStatus_OK;
+    BOOST_CHECK_EQUAL(btck_script_pubkey_verify(
+                          legacy_spent_script_pubkey.get(),
+                          /*amount=*/0,
+                          legacy_spending_tx.get(),
+                          /*precomputed_txdata=*/nullptr,
+                          /*input_index=*/legacy_spending_tx.CountInputs(),
+                          btck_ScriptVerificationFlags_NONE,
+                          &status),
+        0);
+    BOOST_CHECK(status == btck_ScriptVerifyStatus_ERROR_INPUT_INDEX_OUT_OF_RANGE);
+
+    BOOST_CHECK_EQUAL(btck_script_pubkey_verify(
+                          legacy_spent_script_pubkey.get(),
+                          /*amount=*/0,
+                          legacy_spending_tx.get(),
+                          /*precomputed_txdata=*/nullptr,
+                          /*input_index=*/legacy_spending_tx.CountInputs(),
+                          btck_ScriptVerificationFlags_NONE,
+                          /*status=*/nullptr),
+        0);
 
     // Legacy transaction aca326a724eda9a461c10a876534ecd5ae7b27f10f26c3862fb996f80ea2d45d with precomputed_txdata
     auto legacy_precomputed_txdata{PrecomputedTransactionData{
@@ -724,6 +794,7 @@ BOOST_AUTO_TEST_CASE(btck_block)
     CheckHandle(block, block_100);
     Block block_tx{hex_string_to_byte_vec(REGTEST_BLOCK_DATA[205])};
     CheckRange(block_tx.Transactions(), block_tx.CountTransactions());
+    BOOST_CHECK(btck_block_get_transaction_at(block_tx.get(), block_tx.CountTransactions()) == nullptr);
     auto invalid_data = hex_string_to_byte_vec("012300");
     BOOST_CHECK_THROW(Block{invalid_data}, std::runtime_error);
     auto empty_data = hex_string_to_byte_vec("");
@@ -1201,6 +1272,8 @@ BOOST_AUTO_TEST_CASE(btck_chainman_regtest_tests)
     CheckHandle(block_spent_outputs, block_spent_outputs_prev);
     CheckRange(block_spent_outputs_prev.TxsSpentOutputs(), block_spent_outputs_prev.Count());
     BOOST_CHECK_EQUAL(block_spent_outputs.Count(), 1);
+    BOOST_CHECK(btck_block_spent_outputs_get_transaction_spent_outputs_at(
+                    block_spent_outputs.get(), block_spent_outputs.Count()) == nullptr);
 
     // Get transaction spent outputs from the last transaction in the two blocks
     TransactionSpentOutputsView transaction_spent_outputs{block_spent_outputs.GetTxSpentOutputs(block_spent_outputs.Count() - 1)};
@@ -1208,6 +1281,8 @@ BOOST_AUTO_TEST_CASE(btck_chainman_regtest_tests)
     TransactionSpentOutputs owned_transaction_spent_outputs_prev{block_spent_outputs_prev.GetTxSpentOutputs(block_spent_outputs_prev.Count() - 1)};
     CheckHandle(owned_transaction_spent_outputs, owned_transaction_spent_outputs_prev);
     CheckRange(transaction_spent_outputs.Coins(), transaction_spent_outputs.Count());
+    BOOST_CHECK(btck_transaction_spent_outputs_get_coin_at(
+                    transaction_spent_outputs.get(), transaction_spent_outputs.Count()) == nullptr);
 
     // Get the last coin from the transaction spent outputs
     CoinView coin{transaction_spent_outputs.GetCoin(transaction_spent_outputs.Count() - 1)};
