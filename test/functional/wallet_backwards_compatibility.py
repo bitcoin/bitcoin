@@ -28,6 +28,7 @@ from test_framework.util import (
     assert_greater_than,
     assert_raises_rpc_error,
 )
+from test_framework.wallet_util import WALLETRBF_DEPRECATION_WARNING
 
 LAST_KEYPOOL_INDEX = 9 # Index of the last derived address with the keypool size of 10
 
@@ -349,9 +350,7 @@ class BackwardsCompatibilityTest(BitcoinTestFramework):
 
             # Restore the wallet to master
             load_res = node_master.restorewallet(wallet_name, backup_path)
-
-            # There should be no warnings
-            assert "warnings" not in load_res
+            assert_equal(load_res["warnings"], [WALLETRBF_DEPRECATION_WARNING[9:]])
 
             wallet = node_master.get_wallet_rpc(wallet_name)
             info = wallet.getaddressinfo(address)

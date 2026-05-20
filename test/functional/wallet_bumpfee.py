@@ -32,6 +32,7 @@ from test_framework.util import (
     find_vout_for_address,
 )
 from test_framework.wallet import MiniWallet
+from test_framework.wallet_util import WALLETRBF_DEPRECATION_WARNING
 
 
 WALLET_PASSPHRASE = "test"
@@ -115,6 +116,8 @@ class BumpFeeTest(BitcoinTestFramework):
         # Context independent tests
         test_feerate_checks_replaced_outputs(self, rbf_node, peer_node)
         test_bumpfee_with_feerate_ignores_walletincrementalrelayfee(self, rbf_node, peer_node)
+
+        self.restart_node(1, [], expected_stderr=WALLETRBF_DEPRECATION_WARNING)
 
     def test_invalid_parameters(self, rbf_node, peer_node, dest_address):
         self.log.info('Test invalid parameters')
@@ -460,7 +463,7 @@ def test_bumpfee_with_abandoned_descendant_succeeds(self, rbf_node, rbf_node_add
     assert bumped_result['txid'] in rbf_node.getrawmempool()
     assert parent_id not in rbf_node.getrawmempool()
     # Cleanup
-    self.restart_node(1, self.extra_args[1])
+    self.restart_node(1, self.extra_args[1], expected_stderr=WALLETRBF_DEPRECATION_WARNING)
     rbf_node.walletpassphrase(WALLET_PASSPHRASE, WALLET_PASSPHRASE_TIMEOUT)
     self.connect_nodes(1, 0)
     self.clear_mempool()
@@ -535,11 +538,11 @@ def test_maxtxfee_fails(self, rbf_node, dest_address):
     # size of bumped transaction (p2wpkh, 1 input, 2 outputs): 141 vbytes
     # expected bump fee of 141 vbytes * 0.00200000 BTC / 1000 vbytes = 0.00002820 BTC
     # which exceeds maxtxfee and is expected to raise
-    self.restart_node(1, ['-maxtxfee=0.000025'] + self.extra_args[1])
+    self.restart_node(1, ['-maxtxfee=0.000025'] + self.extra_args[1], expected_stderr=WALLETRBF_DEPRECATION_WARNING)
     rbf_node.walletpassphrase(WALLET_PASSPHRASE, WALLET_PASSPHRASE_TIMEOUT)
     rbfid = spend_one_input(rbf_node, dest_address)
     assert_raises_rpc_error(-4, "Unable to create transaction. Fee exceeds maximum configured by user (e.g. -maxtxfee, maxfeerate)", rbf_node.bumpfee, rbfid)
-    self.restart_node(1, self.extra_args[1])
+    self.restart_node(1, self.extra_args[1], expected_stderr=WALLETRBF_DEPRECATION_WARNING)
     rbf_node.walletpassphrase(WALLET_PASSPHRASE, WALLET_PASSPHRASE_TIMEOUT)
     self.connect_nodes(1, 0)
     self.clear_mempool()

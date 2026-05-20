@@ -3102,7 +3102,11 @@ bool CWallet::LoadWalletArgs(std::shared_ptr<CWallet> wallet, const WalletContex
 
     wallet->m_confirm_target = args.GetIntArg("-txconfirmtarget", DEFAULT_TX_CONFIRM_TARGET);
     wallet->m_spend_zero_conf_change = args.GetBoolArg("-spendzeroconfchange", DEFAULT_SPEND_ZEROCONF_CHANGE);
-    wallet->m_signal_rbf = args.GetBoolArg("-walletrbf", DEFAULT_WALLET_RBF);
+    wallet->m_signal_rbf = DEFAULT_WALLET_RBF;
+    if (args.IsArgSet("-walletrbf")) {
+        warnings.push_back(_("-walletrbf is deprecated and will be fully removed in the next release."));
+        wallet->m_signal_rbf = args.GetBoolArg("-walletrbf").value();
+    }
 
     wallet->m_keypool_size = std::max(args.GetIntArg("-keypool", DEFAULT_KEYPOOL_SIZE), int64_t{1});
     wallet->m_notify_tx_changed_script = args.GetArg("-walletnotify", "");
