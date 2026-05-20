@@ -72,7 +72,8 @@ struct BIP9GBTStatus {
 };
 
 /** BIP 9 allows multiple softforks to be deployed in parallel. We cache
- *  per-period state for every one of them. */
+ *  per-period state for every one we implement and warning state for each
+ *  BIP 323 allowed bit. */
 class VersionBitsCache
 {
 private:
