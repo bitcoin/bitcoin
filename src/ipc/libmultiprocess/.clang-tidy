@@ -1,0 +1,40 @@
+Checks: '
+-*,
+bugprone-argument-comment,
+bugprone-move-forwarding-reference,
+bugprone-string-constructor,
+bugprone-use-after-move,
+bugprone-lambda-function-name,
+bugprone-unhandled-self-assignment,
+misc-unused-using-decls,
+misc-no-recursion,
+modernize-deprecated-headers,
+modernize-use-default-member-init,
+modernize-use-emplace,
+modernize-use-equals-default,
+modernize-use-noexcept,
+modernize-use-nullptr,
+modernize-use-starts-ends-with,
+performance-*,
+-performance-avoid-endl,
+-performance-enum-size,
+-performance-inefficient-string-concatenation,
+-performance-no-int-to-ptr,
+-performance-noexcept-move-constructor,
+-performance-unnecessary-value-param,
+readability-const-return-type,
+readability-redundant-declaration,
+readability-redundant-string-init,
+clang-analyzer-core.*,
+-clang-analyzer-core.UndefinedBinaryOperatorResult,
+clang-analyzer-optin.core.*,
+'
+HeaderFilterRegex: '.'
+WarningsAsErrors: '*'
+CheckOptions:
+ - key: modernize-deprecated-headers.CheckHeaderFile
+   value: false
+ - key: performance-move-const-arg.CheckTriviallyCopyableMove
+   value: false
+ - key: bugprone-unhandled-self-assignment.WarnOnlyIfThisHasSuspiciousField
+   value: false

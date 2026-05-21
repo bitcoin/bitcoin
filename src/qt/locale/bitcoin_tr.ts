@@ -3,7 +3,7 @@
     <name>AddressBookPage</name>
     <message>
         <source>Right-click to edit address or label</source>
-        <translation type="unfinished">Adresi veya etiketi düzenlemek için sağ tıklayın</translation>
+        <translation type="unfinished">Adresi veya etiketi düzenlemek için sağ butona tıklayın</translation>
     </message>
     <message>
         <source>Create a new address</source>
@@ -12,10 +12,6 @@
     <message>
         <source>&amp;New</source>
         <translation type="unfinished">&amp;Yeni</translation>
-    </message>
-    <message>
-        <source>Copy the currently selected address to the system clipboard</source>
-        <translation type="unfinished">Seçili adresi panoya kopyalayın</translation>
     </message>
     <message>
         <source>&amp;Copy</source>
@@ -185,6 +181,14 @@ Cüzdan kilidini aç.</translation>
         <translation type="unfinished">Cüzdanınızın eski ve yeni parolasını giriniz.</translation>
     </message>
     <message>
+        <source>Continue</source>
+        <translation type="unfinished">Devam</translation>
+    </message>
+    <message>
+        <source>Back</source>
+        <translation type="unfinished">Geri</translation>
+    </message>
+    <message>
         <source>Remember that encrypting your wallet cannot fully protect your bitcoins from being stolen by malware infecting your computer.</source>
         <translation type="unfinished">Cüzdanınızı şifrelemenin bilgisayarınıza bulaşan kötü amaçlı yazılımlar tarafından bitcoinlerinizin çalınmasına karşı tamamen koruyamayacağını unutmayın.</translation>
     </message>
@@ -225,6 +229,10 @@ Cüzdan kilidini aç.</translation>
         <translation type="unfinished">Cüzdan parolasının kaldırılması için girilen parola yanlış.</translation>
     </message>
     <message>
+        <source>The passphrase entered for the wallet decryption is incorrect. It contains a null character (ie - a zero byte). If the passphrase was set with a version of this software prior to 25.0, please try again with only the characters up to — but not including — the first null character. If this is successful, please set a new passphrase to avoid this issue in the future.</source>
+        <translation type="unfinished">The passphrase entered for the wallet decryption is incorrect. It contains a null character (ie - a zero byte). If the passphrase was set with a version of this software prior to 25.0, please try again with only the characters up to — but not including — the first null character. If this is successful, please set a new passphrase to avoid this issue in the future</translation>
+    </message>
+    <message>
         <source>Wallet passphrase was successfully changed.</source>
         <translation type="unfinished">Cüzdan parolası başarılı bir şekilde değiştirildi</translation>
     </message>
@@ -259,10 +267,18 @@ Cüzdan kilidini aç.</translation>
         <translation type="unfinished">Sızıntı istisnası</translation>
     </message>
     <message>
+        <source>A fatal error occurred. %1 can no longer continue safely and will quit.</source>
+        <translation type="unfinished">Önemli bir hata oluştu. %1 artık güvenli bir şekilde devam edemeyecek ve çıkacak.</translation>
+    </message>
+    <message>
         <source>Internal error</source>
         <translation type="unfinished">İç hata</translation>
     </message>
-    </context>
+    <message>
+        <source>An internal error occurred. %1 will attempt to continue safely. This is an unexpected bug which can be reported as described below.</source>
+        <translation type="unfinished">Bir iç hata oluştu. %1 güvenli bir şekilde devam etmeye çalışacak. Bu, aşağıda açıklandığı gibi rapor edilebilecek beklenmedik bir hatadır.</translation>
+    </message>
+</context>
 <context>
     <name>QObject</name>
     <message>
@@ -286,6 +302,18 @@ Cüzdan kilidini aç.</translation>
     <message>
         <source>unknown</source>
         <translation type="unfinished">bilinmeyen</translation>
+    </message>
+    <message>
+        <source>Embedded "%1"</source>
+        <translation type="unfinished">Yerleştir "%1"</translation>
+    </message>
+    <message>
+        <source>Default system font "%1"</source>
+        <translation type="unfinished">Varsayılan sistem fontu "%1"</translation>
+    </message>
+    <message>
+        <source>Custom…</source>
+        <translation type="unfinished">Özel…</translation>
     </message>
     <message>
         <source>Amount</source>
@@ -380,7 +408,11 @@ Cüzdan kilidini aç.</translation>
             <numerusform>%n yıl</numerusform>
         </translation>
     </message>
-    </context>
+    <message>
+        <source>default wallet</source>
+        <translation type="unfinished">varsayılan cüzdan</translation>
+    </message>
+</context>
 <context>
     <name>BitcoinGUI</name>
     <message>
@@ -661,16 +693,24 @@ Cüzdan kilidini aç.</translation>
         <translation type="unfinished">Tüm cüzdanları kapat</translation>
     </message>
     <message>
+        <source>Migrate Wallet</source>
+        <translation type="unfinished">Cüzdanı Taşı</translation>
+    </message>
+    <message>
+        <source>Migrate a wallet</source>
+        <translation type="unfinished">Bir Cüzdanı Taşı</translation>
+    </message>
+    <message>
+        <source>Show the %1 help message to get a list with possible Bitcoin command-line options</source>
+        <translation type="unfinished">Olası Bitcoin komut satırı seçeneklerinin listesini almak için %1 yardım mesajını gösterin</translation>
+    </message>
+    <message>
         <source>&amp;Mask values</source>
         <translation type="unfinished">&amp; Değerleri maskele</translation>
     </message>
     <message>
         <source>Mask the values in the Overview tab</source>
         <translation type="unfinished">Genel Bakış sekmesindeki değerleri maskeleyin</translation>
-    </message>
-    <message>
-        <source>default wallet</source>
-        <translation type="unfinished">varsayılan cüzdan</translation>
     </message>
     <message>
         <source>No wallets available</source>
@@ -731,11 +771,6 @@ Cüzdan kilidini aç.</translation>
         <source>Click for more actions.</source>
         <extracomment>A substring of the tooltip. "More actions" are available via the context menu.</extracomment>
         <translation type="unfinished">daha fazla seçenek için tıklayın.</translation>
-    </message>
-    <message>
-        <source>Show Peers tab</source>
-        <extracomment>A context menu item. The "Peers tab" is an element of the "Node window".</extracomment>
-        <translation type="unfinished">Eşler sekmesini göster</translation>
     </message>
     <message>
         <source>Disable network activity</source>
@@ -805,11 +840,11 @@ Cüzdan kilidini aç.</translation>
     </message>
     <message>
         <source>HD key generation is &lt;b&gt;enabled&lt;/b&gt;</source>
-        <translation type="unfinished">HD anahtar üreticiler kullanilabilir</translation>
+        <translation type="unfinished">HD anahtar üreticiler &lt;b&gt;kullanilabilir&lt;/b&gt;</translation>
     </message>
     <message>
         <source>HD key generation is &lt;b&gt;disabled&lt;/b&gt;</source>
-        <translation type="unfinished">HD anahtar üreticiler kullanılamaz</translation>
+        <translation type="unfinished">HD anahtar üreticiler &lt;b&gt;kullanılamaz&lt;/b&gt;</translation>
     </message>
     <message>
         <source>Private key &lt;b&gt;disabled&lt;/b&gt;</source>
@@ -817,11 +852,11 @@ Cüzdan kilidini aç.</translation>
     </message>
     <message>
         <source>Wallet is &lt;b&gt;encrypted&lt;/b&gt; and currently &lt;b&gt;unlocked&lt;/b&gt;</source>
-        <translation type="unfinished">Cüzdan &lt;b&gt;şifrelenmiş&lt;/b&gt; ve şu anda &lt;b&gt;kilitli değil</translation>
+        <translation type="unfinished">Cüzdan &lt;b&gt;şifrelenmiş&lt;/b&gt; ve şu anda &lt;b&gt;kilitli değil&lt;/b&gt;</translation>
     </message>
     <message>
         <source>Wallet is &lt;b&gt;encrypted&lt;/b&gt; and currently &lt;b&gt;locked&lt;/b&gt;</source>
-        <translation type="unfinished">Cüzdan &lt;b&gt;şifrelenmiş&lt;/b&gt; ve şu anda &lt;b&gt;kilitlidir</translation>
+        <translation type="unfinished">Cüzdan &lt;b&gt;şifrelenmiş&lt;/b&gt; ve şu anda &lt;b&gt;kilitlidir&lt;/b&gt;</translation>
     </message>
     <message>
         <source>Original message:</source>
@@ -979,10 +1014,6 @@ Cüzdan kilidini aç.</translation>
         <translation type="unfinished">Cüzdan oluşturma uyarısı</translation>
     </message>
     <message>
-        <source>Can't list signers</source>
-        <translation type="unfinished">İmzalayanlar listelenmiyor</translation>
-    </message>
-    <message>
         <source>Too many external signers found</source>
         <translation type="unfinished">Çok fazla harici imzalayan bulundu</translation>
     </message>
@@ -1001,6 +1032,67 @@ Cüzdan kilidini aç.</translation>
     </message>
 </context>
 <context>
+    <name>MigrateWalletActivity</name>
+    <message>
+        <source>Migrate wallet</source>
+        <translation type="unfinished">Cüzdanı taşı</translation>
+    </message>
+    <message>
+        <source>Are you sure you wish to migrate the wallet &lt;i&gt;%1&lt;/i&gt;?</source>
+        <translation type="unfinished">Cüzdanı taşımak istediğine emin misin &lt;i&gt;%1&lt;/i&gt;?</translation>
+    </message>
+    <message>
+        <source>Migrating the wallet will convert this wallet to one or more descriptor wallets. A new wallet backup will need to be made.
+If this wallet contains any watchonly scripts, a new wallet will be created which contains those watchonly scripts.
+If this wallet contains any solvable but not watched scripts, a different and new wallet will be created which contains those scripts.
+
+The migration process will create a backup of the wallet before migrating. This backup file will be named &lt;wallet name&gt;-&lt;timestamp&gt;.legacy.bak and can be found in the directory for this wallet. In the event of an incorrect migration, the backup can be restored with the "Restore Wallet" functionality.</source>
+        <translation type="unfinished">Cüzdanı taşımak, bu cüzdanı bir veya daha fazla descriptor cüzdana dönüştürecektir. Yeni bir cüzdan yedeği oluşturulması gerekecektir.
+Eğer bu cüzdan yalnızca izlenen scriptler içeriyorsa, bu scriptleri içeren yeni bir cüzdan oluşturulacaktır.
+Eğer bu cüzdan çözülebilir ama izlenmeyen scriptler içeriyorsa, bu scriptleri içeren farklı ve yeni bir cüzdan oluşturulacaktır.
+
+Taşıma işlemi, taşıma işleminden önce cüzdanın bir yedeğini oluşturacaktır. Bu yedek dosya &lt;wallet name&gt;-&lt;timestamp&gt;.legacy.bak olarak adlandırılacak ve bu cüzdanın bulunduğu dizinde bulunacaktır. Yanlış bir taşıma durumunda, yedek "Cüzdanı Geri Yükle" işlevi ile geri yüklenebilir.</translation>
+    </message>
+    <message>
+        <source>Migrate Wallet</source>
+        <translation type="unfinished">Cüzdanı Taşı</translation>
+    </message>
+    <message>
+        <source>Migrating Wallet &lt;b&gt;%1&lt;/b&gt;…</source>
+        <translation type="unfinished">Cüzdan Taşınıyor &lt;b&gt;%1&lt;/b&gt;...</translation>
+    </message>
+    <message>
+        <source>The wallet '%1' was migrated successfully.</source>
+        <translation type="unfinished">Cüzdan '%1' başarıyla taşındı.</translation>
+    </message>
+    <message>
+        <source>Watchonly scripts have been migrated to a new wallet named '%1'.</source>
+        <translation type="unfinished">Yalnızca izlenen scriptler yeni bir cüzdana taşındı, adı '%1'.</translation>
+    </message>
+    <message>
+        <source>Solvable but not watched scripts have been migrated to a new wallet named '%1'.</source>
+        <translation type="unfinished">Çözülebilir ama izlenmeyen scriptler yeni bir cüzdana taşındı, adı '%1'.</translation>
+    </message>
+    <message>
+        <source>Restore Wallet</source>
+        <extracomment>Title of progress window which is displayed when wallets are being restored.</extracomment>
+        <translation type="unfinished">Cüzdanı Geri Yükle</translation>
+    </message>
+    <message>
+        <source>Restoring Wallet &lt;b&gt;%1&lt;/b&gt;…</source>
+        <extracomment>Descriptive text of the restore wallets progress window which indicates to the user that wallets are currently being restored.</extracomment>
+        <translation type="unfinished">Cüzdan Onarılıyor&lt;b&gt;%1&lt;/b&gt;</translation>
+    </message>
+    <message>
+        <source>Migration failed</source>
+        <translation type="unfinished">Taşıma başarısız oldu</translation>
+    </message>
+    <message>
+        <source>Migration Successful</source>
+        <translation type="unfinished">Taşıma Başarılı</translation>
+    </message>
+</context>
+<context>
     <name>OpenWalletActivity</name>
     <message>
         <source>Open wallet failed</source>
@@ -1009,10 +1101,6 @@ Cüzdan kilidini aç.</translation>
     <message>
         <source>Open wallet warning</source>
         <translation type="unfinished">Açık cüzdan uyarısı</translation>
-    </message>
-    <message>
-        <source>default wallet</source>
-        <translation type="unfinished">varsayılan cüzdan</translation>
     </message>
     <message>
         <source>Open Wallet</source>
@@ -1083,6 +1171,14 @@ Cüzdan kilidini aç.</translation>
         <translation type="unfinished">Cüzdan Oluştur</translation>
     </message>
     <message>
+        <source>You are one step away from creating your new wallet!</source>
+        <translation type="unfinished">Yeni cüzdanını yaratmaktan bir adım uzaktasın!</translation>
+    </message>
+    <message>
+        <source>Please provide a name and, if desired, enable any advanced options</source>
+        <translation type="unfinished">Lütfen bir isim sağla ve, isteğe bağlı olarak, gelişmiş seçenekleri etkinleştir.</translation>
+    </message>
+    <message>
         <source>Wallet Name</source>
         <translation type="unfinished">Cüzdan İsmi</translation>
     </message>
@@ -1109,10 +1205,6 @@ Cüzdan kilidini aç.</translation>
     <message>
         <source>Disable Private Keys</source>
         <translation type="unfinished">Özel Kilidi (Private Key) kaldır</translation>
-    </message>
-    <message>
-        <source>Make a blank wallet. Blank wallets do not initially have private keys or scripts. Private keys and addresses can be imported, or an HD seed can be set, at a later time.</source>
-        <translation type="unfinished">Boş bir cüzdan yapın. Boş cüzdanlar başlangıçta özel anahtarlara veya komut dosyalarına sahip değildir. Özel anahtarlar ve adresler içe aktarılabilir veya daha sonra bir HD tohum ayarlanabilir.</translation>
     </message>
     <message>
         <source>Make Blank Wallet</source>
@@ -1170,6 +1262,14 @@ Cüzdan kilidini aç.</translation>
         <translation type="unfinished">Girilen "%1" adresi geçerli bir Bitcoin adresi değildir.</translation>
     </message>
     <message>
+        <source>Address "%1" already exists as a receiving address with label "%2" and so cannot be added as a sending address.</source>
+        <translation type="unfinished">"%1" adresi, "%2" etiketli bir alıcı adresi olarak zaten mevcut ve bu nedenle gönderen adresi olarak eklenemez.</translation>
+    </message>
+    <message>
+        <source>The entered address "%1" is already in the address book with label "%2".</source>
+        <translation type="unfinished">Girilen "%1" adresi zaten adres defterinde ''%2" etiketli olarak bulunuyor.</translation>
+    </message>
+    <message>
         <source>Could not unlock wallet.</source>
         <translation type="unfinished">Cüzdanın kilidi açılamadı.</translation>
     </message>
@@ -1189,6 +1289,10 @@ Cüzdan kilidini aç.</translation>
         <translation type="unfinished">isim</translation>
     </message>
     <message>
+        <source>Directory already exists. Add %1 if you intend to create a new directory here.</source>
+        <translation type="unfinished">Klasör zaten var. Burada yeni bir klasör oluşturmak istiyorsanız %1 ekleyin.</translation>
+    </message>
+    <message>
         <source>Path already exists, and is not a directory.</source>
         <translation type="unfinished">Halihazırda bir yol var ve bu bir klasör değildir.</translation>
     </message>
@@ -1198,7 +1302,69 @@ Cüzdan kilidini aç.</translation>
     </message>
 </context>
 <context>
+    <name>HelpMessageDialog</name>
+    <message>
+        <source>version</source>
+        <translation type="unfinished">sürüm</translation>
+    </message>
+    <message>
+        <source>About %1</source>
+        <translation type="unfinished">%1 Hakkında</translation>
+    </message>
+    <message>
+        <source>Command-line options</source>
+        <translation type="unfinished">Komut-satırı seçenekleri</translation>
+    </message>
+</context>
+<context>
+    <name>ShutdownWindow</name>
+    <message>
+        <source>%1 is shutting down…</source>
+        <translation type="unfinished">%1 kapanıyor…</translation>
+    </message>
+    <message>
+        <source>Do not shut down the computer until this window disappears.</source>
+        <translation type="unfinished">Bu pencere kapanıncaya dek bilgisayarı kapatmayınız.</translation>
+    </message>
+</context>
+<context>
     <name>Intro</name>
+    <message>
+        <source>Welcome</source>
+        <translation type="unfinished">Hoş geldiniz </translation>
+    </message>
+    <message>
+        <source>Welcome to %1.</source>
+        <translation type="unfinished">%1'e hoşgeldiniz.</translation>
+    </message>
+    <message>
+        <source>As this is the first time the program is launched, you can choose where %1 will store its data.</source>
+        <translation type="unfinished">Bu programın ilk kez başlatılmasından dolayı %1 yazılımının verilerini nerede saklayacağını seçebilirsiniz.</translation>
+    </message>
+    <message>
+        <source>Reverting this setting requires re-downloading the entire blockchain. It is faster to download the full chain first and prune it later. Disables some advanced features.</source>
+        <translation type="unfinished">Bu ayarın geri döndürülmesi, tüm blok zincirinin yeniden indirilmesini gerektirir. Önce tüm zinciri indirmek ve daha sonra veri budamak daha hızlıdır. Bazı gelişmiş özellikleri devre dışı bırakır.</translation>
+    </message>
+    <message>
+        <source>This initial synchronisation is very demanding, and may expose hardware problems with your computer that had previously gone unnoticed. Each time you run %1, it will continue downloading where it left off.</source>
+        <translation type="unfinished">Bu başlangıç senkronizasyonu çok zorlayıcıdır ve bilgisayarınızdaki daha önce fark edilmemiş olan donanım sorunlarını ortaya çıkarabilir. %1'i her çalıştırdığınızda, kaldığı yerden devam edecektir.</translation>
+    </message>
+    <message>
+        <source>When you click OK, %1 will begin to download and process the full %4 block chain (%2 GB) starting with the earliest transactions in %3 when %4 initially launched.</source>
+        <translation type="unfinished">Tamam'ı tıklattığınızda, %1, %4 ilk başlatıldığında %3'teki en eski işlemlerden başlayarak tam %4 blok zincirini (%2 GB) indirmeye ve işlemeye başlayacak.</translation>
+    </message>
+    <message>
+        <source>If you have chosen to limit block chain storage (pruning), the historical data must still be downloaded and processed, but will be deleted afterward to keep your disk usage low.</source>
+        <translation type="unfinished">Blok zinciri depolamayı (veri budama) sınırlamayı seçtiyseniz, geçmiş veriler yine de indirilmeli ve işlenmelidir, ancak disk kullanımınızı düşük tutmak için daha sonra silinecektir.</translation>
+    </message>
+    <message>
+        <source>Use the default data directory</source>
+        <translation type="unfinished">Varsayılan veri klasörünü kullan</translation>
+    </message>
+    <message>
+        <source>Use a custom data directory:</source>
+        <translation type="unfinished">Özel bir veri klasörü kullan:</translation>
+    </message>
     <message numerus="yes">
         <source>%n GB of space available</source>
         <translation type="unfinished">
@@ -1252,64 +1418,6 @@ Cüzdan kilidini aç.</translation>
         <source>Error</source>
         <translation type="unfinished">Hata</translation>
     </message>
-    <message>
-        <source>Welcome</source>
-        <translation type="unfinished">Hoş geldiniz </translation>
-    </message>
-    <message>
-        <source>Welcome to %1.</source>
-        <translation type="unfinished">%1'e hoşgeldiniz.</translation>
-    </message>
-    <message>
-        <source>As this is the first time the program is launched, you can choose where %1 will store its data.</source>
-        <translation type="unfinished">Bu programın ilk kez başlatılmasından dolayı %1 yazılımının verilerini nerede saklayacağını seçebilirsiniz.</translation>
-    </message>
-    <message>
-        <source>Reverting this setting requires re-downloading the entire blockchain. It is faster to download the full chain first and prune it later. Disables some advanced features.</source>
-        <translation type="unfinished">Bu ayarın geri döndürülmesi, tüm blok zincirinin yeniden indirilmesini gerektirir. Önce tüm zinciri indirmek ve daha sonra veri budamak daha hızlıdır. Bazı gelişmiş özellikleri devre dışı bırakır.</translation>
-    </message>
-    <message>
-        <source>When you click OK, %1 will begin to download and process the full %4 block chain (%2 GB) starting with the earliest transactions in %3 when %4 initially launched.</source>
-        <translation type="unfinished">Tamam'ı tıklattığınızda, %1, %4 ilk başlatıldığında %3'teki en eski işlemlerden başlayarak tam %4 blok zincirini (%2 GB) indirmeye ve işlemeye başlayacak.</translation>
-    </message>
-    <message>
-        <source>If you have chosen to limit block chain storage (pruning), the historical data must still be downloaded and processed, but will be deleted afterward to keep your disk usage low.</source>
-        <translation type="unfinished">Blok zinciri depolamayı (veri budama) sınırlamayı seçtiyseniz, geçmiş veriler yine de indirilmeli ve işlenmelidir, ancak disk kullanımınızı düşük tutmak için daha sonra silinecektir.</translation>
-    </message>
-    <message>
-        <source>Use the default data directory</source>
-        <translation type="unfinished">Varsayılan veri klasörünü kullan</translation>
-    </message>
-    <message>
-        <source>Use a custom data directory:</source>
-        <translation type="unfinished">Özel bir veri klasörü kullan:</translation>
-    </message>
-</context>
-<context>
-    <name>HelpMessageDialog</name>
-    <message>
-        <source>version</source>
-        <translation type="unfinished">sürüm</translation>
-    </message>
-    <message>
-        <source>About %1</source>
-        <translation type="unfinished">%1 Hakkında</translation>
-    </message>
-    <message>
-        <source>Command-line options</source>
-        <translation type="unfinished">Komut-satırı seçenekleri</translation>
-    </message>
-</context>
-<context>
-    <name>ShutdownWindow</name>
-    <message>
-        <source>%1 is shutting down…</source>
-        <translation type="unfinished">%1 kapanıyor…</translation>
-    </message>
-    <message>
-        <source>Do not shut down the computer until this window disappears.</source>
-        <translation type="unfinished">Bu pencere kapanıncaya dek bilgisayarı kapatmayınız.</translation>
-    </message>
 </context>
 <context>
     <name>ModalOverlay</name>
@@ -1354,6 +1462,10 @@ Cüzdan kilidini aç.</translation>
         <translation type="unfinished">Gizle</translation>
     </message>
     <message>
+        <source>%1 is currently syncing.  It will download headers and blocks from peers and validate them until reaching the tip of the block chain.</source>
+        <translation type="unfinished">%1 şu anda senkronize ediliyor. Eşlerden başlıkları ve blokları indirecek ve blok zincirinin ucuna ulaşıncaya kadar bunları doğrulayacaktır.</translation>
+    </message>
+    <message>
         <source>Unknown. Pre-syncing Headers (%1, %2%)…</source>
         <translation type="unfinished">Bilinmeyen. Ön eşitleme Başlıkları (%1,%2 %)…</translation>
     </message>
@@ -1389,12 +1501,25 @@ Cüzdan kilidini aç.</translation>
         <translation type="unfinished">&amp;Açılışta %1 açılsın</translation>
     </message>
     <message>
+        <source>Maximum database cache size. Make sure you have enough RAM. A larger cache can contribute to faster sync, after which the benefit is less pronounced for most use cases. Lowering the cache size will reduce memory usage. Unused mempool memory is shared for this cache.</source>
+        <extracomment>Tooltip text for Options window setting that sets the size of the database cache. Explains the corresponding effects of increasing/decreasing this value.</extracomment>
+        <translation type="unfinished">Maksimum veritabanı önbellek boyutu. Yeterince RAM'iniz olduğundan emin olun. Daha geniş bir önbellek daha hızlı eşitleme sağlayabilir, bir aşamadan sonra fayda daha az hissedilir. Önbellek boyutunu düşürmek hafıza kullanımını azaltacaktır. Kullanılmayan mempool hafızası bu önbellek ile paylaşılır.</translation>
+    </message>
+    <message>
         <source>Size of &amp;database cache</source>
         <translation type="unfinished">&amp;veritabanı önbellek boyutu</translation>
     </message>
     <message>
         <source>Number of script &amp;verification threads</source>
         <translation type="unfinished">Betik &amp;doğrulama iş parçacığı sayısı</translation>
+    </message>
+    <message>
+        <source>Automatically open the Bitcoin client port on the router. This only works when your router supports PCP or NAT-PMP and it is enabled. The external port could be random.</source>
+        <translation type="unfinished">Yönlendiricideki Bitcoin istemcisini otomatik olarak aç. Bu özellik yalnızca yönlendiriciniz PCP veya NAT-PMP desteğine sahipse ve aktif edilmişse çalışır. Harici port rastgele olabilir.</translation>
+    </message>
+    <message>
+        <source>Map port using PCP or NA&amp;T-PMP</source>
+        <translation type="unfinished">PCP veya NA&amp;T-PMP kullanarak bağlantı noktasını eşleyin</translation>
     </message>
     <message>
         <source>IP address of the proxy (e.g. IPv4: 127.0.0.1 / IPv6: ::1)</source>
@@ -1407,6 +1532,10 @@ Cüzdan kilidini aç.</translation>
     <message>
         <source>Minimize instead of exit the application when the window is closed. When this option is enabled, the application will be closed only after selecting Exit in the menu.</source>
         <translation type="unfinished">Pencere kapatıldığında uygulamadan çıkmak yerine uygulamayı küçültür. Bu seçenek etkinleştirildiğinde, uygulama sadece menüden çıkış seçildiğinde kapanacaktır.</translation>
+    </message>
+    <message>
+        <source>Font in the Overview tab: </source>
+        <translation type="unfinished">Genel Bakış sekmesindeki yazı tipi:</translation>
     </message>
     <message>
         <source>Options set in this dialog are overridden by the command line:</source>
@@ -1439,11 +1568,6 @@ Cüzdan kilidini aç.</translation>
     <message>
         <source>Reverting this setting requires re-downloading the entire blockchain.</source>
         <translation type="unfinished">Bu ayarın geri alınması, tüm blok zincirinin yeniden indirilmesini gerektirir.</translation>
-    </message>
-    <message>
-        <source>Maximum database cache size. A larger cache can contribute to faster sync, after which the benefit is less pronounced for most use cases. Lowering the cache size will reduce memory usage. Unused mempool memory is shared for this cache.</source>
-        <extracomment>Tooltip text for Options window setting that sets the size of the database cache. Explains the corresponding effects of increasing/decreasing this value.</extracomment>
-        <translation type="unfinished">Maksimum veritabanı önbellek boyutu. Daha büyük bir önbellek daha hızlı eşitlemeye katkıda bulunabilir, bundan sonra çoğu kullanım durumu için fayda daha az belirgindir. Önbellek boyutunu düşürmek bellek kullanımını azaltır. Bu önbellek için kullanılmayan mempool belleği paylaşılır.</translation>
     </message>
     <message>
         <source>Set the number of script verification threads. Negative values correspond to the number of cores you want to leave free to the system.</source>
@@ -1503,14 +1627,6 @@ Cüzdan kilidini aç.</translation>
         <source>Whether to show PSBT controls.</source>
         <extracomment>Tooltip text for options window setting that enables PSBT controls.</extracomment>
         <translation type="unfinished">PSBT kontrollerinin gösterilip gösterilmeyeceği.</translation>
-    </message>
-    <message>
-        <source>Automatically open the Bitcoin client port on the router. This only works when your router supports UPnP and it is enabled.</source>
-        <translation type="unfinished">Yönlendiricide Bitcoin istemci portlarını otomatik olarak açar. Bu, sadece yönlendiricinizin UPnP desteği bulunuyorsa ve etkinse çalışabilir.</translation>
-    </message>
-    <message>
-        <source>Map port using &amp;UPnP</source>
-        <translation type="unfinished">Portları &amp;UPnP kullanarak haritala</translation>
     </message>
     <message>
         <source>Accept connections from outside.</source>
@@ -1681,10 +1797,6 @@ Cüzdan kilidini aç.</translation>
         <translation type="unfinished">Görüntülenen bilgiler güncel olmayabilir. Bağlantı kurulduğunda cüzdanınız otomatik olarak Bitcoin ağı ile senkronize olur ancak bu işlem henüz tamamlanmamıştır.</translation>
     </message>
     <message>
-        <source>Watch-only:</source>
-        <translation type="unfinished">Sadece-izlenen:</translation>
-    </message>
-    <message>
         <source>Available:</source>
         <translation type="unfinished">Mevcut:</translation>
     </message>
@@ -1721,28 +1833,8 @@ Cüzdan kilidini aç.</translation>
         <translation type="unfinished">Güncel toplam bakiyeniz</translation>
     </message>
     <message>
-        <source>Your current balance in watch-only addresses</source>
-        <translation type="unfinished">Sadece izlenen adreslerdeki güncel bakiyeniz</translation>
-    </message>
-    <message>
-        <source>Spendable:</source>
-        <translation type="unfinished">Harcanabilir</translation>
-    </message>
-    <message>
         <source>Recent transactions</source>
         <translation type="unfinished">Yakın zamandaki işlemler</translation>
-    </message>
-    <message>
-        <source>Unconfirmed transactions to watch-only addresses</source>
-        <translation type="unfinished">Sadece izlenen adreslere gelen doğrulanmamış işlemler</translation>
-    </message>
-    <message>
-        <source>Mined balance in watch-only addresses that has not yet matured</source>
-        <translation type="unfinished">Sadece izlenen adreslerin henüz olgunlaşmamış oluşturulan bakiyeleri</translation>
-    </message>
-    <message>
-        <source>Current total balance in watch-only addresses</source>
-        <translation type="unfinished">Sadece izlenen adreslerdeki güncel toplam bakiye</translation>
     </message>
     </context>
 <context>
@@ -1787,6 +1879,12 @@ Cüzdan kilidini aç.</translation>
         <source>Could not sign any more inputs.</source>
         <translation type="unfinished">Daha fazla girdi imzalanamıyor.</translation>
     </message>
+    <message numerus="yes">
+        <source>Signed %n input(s), but more signatures are still required.</source>
+        <translation type="unfinished">
+            <numerusform />
+        </translation>
+    </message>
     <message>
         <source>Signed transaction successfully. Transaction is ready to broadcast.</source>
         <translation type="unfinished">İşlem imzalandı ve ağa duyurulmaya hazır.</translation>
@@ -1812,6 +1910,10 @@ Cüzdan kilidini aç.</translation>
         <translation type="unfinished">PSBT diske kaydedildi.</translation>
     </message>
     <message>
+        <source>Sends %1 to %2</source>
+        <translation type="unfinished">Gönderiler %1 ile %2</translation>
+    </message>
+    <message>
         <source>own address</source>
         <translation type="unfinished">kendi adresiniz</translation>
     </message>
@@ -1826,6 +1928,12 @@ Cüzdan kilidini aç.</translation>
     <message>
         <source>or</source>
         <translation type="unfinished">veya</translation>
+    </message>
+    <message numerus="yes">
+        <source>Transaction has %n unsigned input(s).</source>
+        <translation type="unfinished">
+            <numerusform />
+        </translation>
     </message>
     <message>
         <source>Transaction is missing some information about inputs.</source>
@@ -2008,6 +2116,14 @@ Cüzdan kilidini aç.</translation>
         <translation type="unfinished">Bağlantı sayısı</translation>
     </message>
     <message>
+        <source>Local Addresses</source>
+        <translation type="unfinished">Yerel adresler</translation>
+    </message>
+    <message>
+        <source>Network addresses that your Bitcoin node is currently using to communicate with other nodes.</source>
+        <translation type="unfinished">Bitcoin düğümünüzün diğer düğümlerle iletişim için kullandığı internet adresleri.</translation>
+    </message>
+    <message>
         <source>Block chain</source>
         <translation type="unfinished">Blok zinciri</translation>
     </message>
@@ -2056,8 +2172,20 @@ Cüzdan kilidini aç.</translation>
         <translation type="unfinished">Ayrıntılı bilgi görmek için bir eş seçin.</translation>
     </message>
     <message>
+        <source>Hide Peers Detail</source>
+        <translation type="unfinished">Eş ayrıntılarını gizle</translation>
+    </message>
+    <message>
+        <source>The transport layer version: %1</source>
+        <translation type="unfinished">Taşıma katmanı versiyonu: %1</translation>
+    </message>
+    <message>
         <source>Transport</source>
         <translation type="unfinished">Aktar</translation>
+    </message>
+    <message>
+        <source>Session ID</source>
+        <translation type="unfinished">Oturum ID</translation>
     </message>
     <message>
         <source>Version</source>
@@ -2066,10 +2194,6 @@ Cüzdan kilidini aç.</translation>
     <message>
         <source>Transaction Relay</source>
         <translation type="unfinished">İşlem Aktarımı</translation>
-    </message>
-    <message>
-        <source>Starting Block</source>
-        <translation type="unfinished">Başlangıç Bloku</translation>
     </message>
     <message>
         <source>Synced Headers</source>
@@ -2144,6 +2268,10 @@ Cüzdan kilidini aç.</translation>
     <message>
         <source>Direction/Type</source>
         <translation type="unfinished">Yön/Tür</translation>
+    </message>
+    <message>
+        <source>The BIP324 session ID string in hex.</source>
+        <translation type="unfinished">BIP324 oturum kimliği ID dizesi onaltılık ( hex ) biçimde</translation>
     </message>
     <message>
         <source>The network protocol this peer is connected through: IPv4, IPv6, Onion, I2P, or CJDNS.</source>
@@ -2226,6 +2354,21 @@ Cüzdan kilidini aç.</translation>
         <translation type="unfinished">Dışarı:</translation>
     </message>
     <message>
+        <source>detecting: peer could be v1 or v2</source>
+        <extracomment>Explanatory text for "detecting" transport type.</extracomment>
+        <translation type="unfinished">keşfediliyor: eş v1 veya v2 olabilir</translation>
+    </message>
+    <message>
+        <source>v1: unencrypted, plaintext transport protocol</source>
+        <extracomment>Explanatory text for v1 transport type.</extracomment>
+        <translation type="unfinished">v1: şifrelenmemiş, açık metin taşıma protokolü</translation>
+    </message>
+    <message>
+        <source>v2: BIP324 encrypted transport protocol</source>
+        <extracomment>Explanatory text for v2 transport type.</extracomment>
+        <translation type="unfinished">v2: BIP324 şifrelenmiş taşıma protokolü</translation>
+    </message>
+    <message>
         <source>&amp;Copy address</source>
         <extracomment>Context menu action to copy the address of a peer.</extracomment>
         <translation type="unfinished">&amp;Adresi kopyala</translation>
@@ -2264,8 +2407,16 @@ Cüzdan kilidini aç.</translation>
         <translation type="unfinished">Ağ etkinliği devre dışı bırakıldı</translation>
     </message>
     <message>
+        <source>None</source>
+        <translation type="unfinished">Boş</translation>
+    </message>
+    <message>
         <source>Executing command without any wallet</source>
         <translation type="unfinished">Komut cüzdan olmadan çalıştırılıyor.</translation>
+    </message>
+    <message>
+        <source>Node window - [%1]</source>
+        <translation type="unfinished">Bağlanan pencere - [%1]</translation>
     </message>
     <message>
         <source>Executing command using "%1" wallet</source>
@@ -2645,6 +2796,10 @@ Cüzdan kilidini aç.</translation>
         <translation type="unfinished">veya</translation>
     </message>
     <message>
+        <source>%1 from wallet '%2'</source>
+        <translation type="unfinished">%1 Cüzdandan '%2'</translation>
+    </message>
+    <message>
         <source>Do you want to create this transaction?</source>
         <extracomment>Message displayed when attempting to create a transaction. Cautionary text to prompt the user to verify that the displayed transaction details represent the transaction the user intends to create.</extracomment>
         <translation type="unfinished">Bu işlemi oluşturmak ister misiniz?</translation>
@@ -2662,6 +2817,10 @@ Cüzdan kilidini aç.</translation>
     <message>
         <source>Transaction fee</source>
         <translation type="unfinished">İşlem ücreti</translation>
+    </message>
+    <message>
+        <source>Total Amount</source>
+        <translation type="unfinished">Toplam Tutar</translation>
     </message>
     <message>
         <source>Unsigned Transaction</source>
@@ -2688,10 +2847,6 @@ Cüzdan kilidini aç.</translation>
     <message>
         <source>The amount exceeds your balance.</source>
         <translation type="unfinished">Tutar bakiyenizden yüksektir.</translation>
-    </message>
-    <message>
-        <source>The total exceeds your balance when the %1 transaction fee is included.</source>
-        <translation type="unfinished">Toplam, %1 işlem ücreti eklendiğinde bakiyenizi geçmektedir.</translation>
     </message>
     <message>
         <source>Duplicate address found: addresses should only be used once each.</source>
@@ -2809,8 +2964,8 @@ Cüzdan kilidini aç.</translation>
         <translation type="unfinished">İleti &amp;imzala</translation>
     </message>
     <message>
-        <source>You can sign messages/agreements with your addresses to prove you can receive bitcoins sent to them. Be careful not to sign anything vague or random, as phishing attacks may try to trick you into signing your identity over to them. Only sign fully-detailed statements you agree to.</source>
-        <translation type="unfinished">Adreslerinize yollanan bitcoinleri alabileceğiniz ispatlamak için adreslerinizle iletiler/anlaşmalar imzalayabilirsiniz. Oltalama saldırılarının kimliğinizi imzanızla elde etmeyi deneyebilecekleri için belirsiz ya da rastgele hiçbir şey imzalamamaya dikkat ediniz. Sadece ayrıntılı açıklaması olan ve tümüne katıldığınız ifadeleri imzalayınız.</translation>
+        <source>You can sign messages/agreements with your legacy (P2PKH) addresses to prove you can receive bitcoins sent to them. Be careful not to sign anything vague or random, as phishing attacks may try to trick you into signing your identity over to them. Only sign fully-detailed statements you agree to.</source>
+        <translation type="unfinished">Eski (P2PKH) adreslerinizle mesajları/anlaşmaları imzalayarak bu adreslere gönderilen Bitcoin'leri alabileceğinizi unutmayın. Belirsiz veya rastgele şeyleri imzalamaktan kaçının, çünkü kimlik bilgilerinizi çalmak isteyen oltalama saldırıları sizi kandırmaya çalışabilir. Sadece tamamen ayrıntılı ve onayladığınız beyanları imzalayın.</translation>
     </message>
     <message>
         <source>The Bitcoin address to sign the message with</source>
@@ -2831,10 +2986,6 @@ Cüzdan kilidini aç.</translation>
     <message>
         <source>Signature</source>
         <translation type="unfinished">İmza</translation>
-    </message>
-    <message>
-        <source>Copy the current signature to the system clipboard</source>
-        <translation type="unfinished">Güncel imzayı sistem panosuna kopyala</translation>
     </message>
     <message>
         <source>Sign the message to prove you own this Bitcoin address</source>
@@ -2893,8 +3044,8 @@ Cüzdan kilidini aç.</translation>
         <translation type="unfinished">Lütfen adresi kontrol edip tekrar deneyiniz.</translation>
     </message>
     <message>
-        <source>The entered address does not refer to a key.</source>
-        <translation type="unfinished">Girilen adres herhangi bir anahtara işaret etmemektedir.</translation>
+        <source>The entered address does not refer to a legacy (P2PKH) key. Message signing for SegWit and other non-P2PKH address types is not supported in this version of %1. Please check the address and try again.</source>
+        <translation type="unfinished">Girilen adres, eski (P2PKH) bir anahtarı belirtmiyor. Bu sürümde SegWit ve diğer P2PKH olmayan %1 versiyon adres türleri için mesajla imzalama desteklenmiyor. Lütfen adresi kontrol edin ve tekrar deneyin.</translation>
     </message>
     <message>
         <source>Wallet unlock was cancelled.</source>
@@ -3013,10 +3164,6 @@ Cüzdan kilidini aç.</translation>
         <translation type="unfinished">kendi adresiniz</translation>
     </message>
     <message>
-        <source>watch-only</source>
-        <translation type="unfinished">sadece-izlenen</translation>
-    </message>
-    <message>
         <source>label</source>
         <translation type="unfinished">etiket</translation>
     </message>
@@ -3077,6 +3224,10 @@ Cüzdan kilidini aç.</translation>
     <message>
         <source>Output index</source>
         <translation type="unfinished">Çıktı indeksi</translation>
+    </message>
+    <message>
+        <source>%1 (Certificate was not verified)</source>
+        <translation type="unfinished">%1 (Sertifika doğrulanmadı)</translation>
     </message>
     <message>
         <source>Merchant</source>
@@ -3181,10 +3332,6 @@ Cüzdan kilidini aç.</translation>
         <translation type="unfinished">Madenden</translation>
     </message>
     <message>
-        <source>watch-only</source>
-        <translation type="unfinished">sadece-izlenen</translation>
-    </message>
-    <message>
         <source>(n/a)</source>
         <translation type="unfinished">(mevcut değil)</translation>
     </message>
@@ -3203,10 +3350,6 @@ Cüzdan kilidini aç.</translation>
     <message>
         <source>Type of transaction.</source>
         <translation type="unfinished">İşlemin türü.</translation>
-    </message>
-    <message>
-        <source>Whether or not a watch-only address is involved in this transaction.</source>
-        <translation type="unfinished">Bu işleme sadece-izlenen bir adresin dahil edilip, edilmediği.</translation>
     </message>
     <message>
         <source>User-defined intent/purpose of the transaction.</source>
@@ -3302,10 +3445,6 @@ Cüzdan kilidini aç.</translation>
         <translation type="unfinished">Doğrulandı</translation>
     </message>
     <message>
-        <source>Watch-only</source>
-        <translation type="unfinished">Sadece izlenen</translation>
-    </message>
-    <message>
         <source>Date</source>
         <translation type="unfinished">Tarih</translation>
     </message>
@@ -3397,9 +3536,8 @@ Cüzdan kilidini aç.</translation>
         <translation type="unfinished">PSBT kopyalandı</translation>
     </message>
     <message>
-        <source>Copied to clipboard</source>
-        <comment>Fee-bump PSBT saved</comment>
-        <translation type="unfinished">Panoya kopyalandı</translation>
+        <source>Fee-bump PSBT copied to clipboard</source>
+        <translation type="unfinished">Ücret artırma PSBT'si panoya kopyalandı</translation>
     </message>
     <message>
         <source>Can't sign transaction.</source>
@@ -3410,10 +3548,10 @@ Cüzdan kilidini aç.</translation>
         <translation type="unfinished">Alışveriş taahüt edilemedi.</translation>
     </message>
     <message>
-        <source>default wallet</source>
-        <translation type="unfinished">varsayılan cüzdan</translation>
+        <source>Signer error</source>
+        <translation type="unfinished">imzalayıcı hatası</translation>
     </message>
-</context>
+    </context>
 <context>
     <name>WalletView</name>
     <message>
@@ -3461,8 +3599,8 @@ Cüzdan kilidini aç.</translation>
         <translation type="unfinished">%s geliştiricileri</translation>
     </message>
     <message>
-        <source>Cannot obtain a lock on data directory %s. %s is probably already running.</source>
-        <translation type="unfinished">%s veri dizininde kilit elde edilemedi. %s muhtemelen hâlihazırda çalışmaktadır.</translation>
+        <source>%s failed to validate the -assumeutxo snapshot state. This indicates a hardware problem, or a bug in the software, or a bad software modification that allowed an invalid snapshot to be loaded. As a result of this, the node will shut down and stop using any state that was built on the snapshot, resetting the chain height from %d to %d. On the next restart, the node will resume syncing from %d without using any snapshot data. Please report this incident to %s, including how you obtained the snapshot. The invalid snapshot chainstate will be left on disk in case it is helpful in diagnosing the issue that caused this error.</source>
+        <translation type="unfinished">%s -assumeutxo anlık görüntü durumunu doğrulamada başarısız oldu. Bu, bir donanım sorunu, yazılımda bir hata veya geçersiz bir anlık görüntünün yüklenmesine izin veren kötü bir yazılım değişikliği olduğunu gösterir. Bu nedenle, düğüm kapanacak ve anlık görüntüye dayanan herhangi bir durumu kullanmayı bırakacak, zincir yüksekliğini %d'den %d'e sıfırlayacaktır. Bir sonraki yeniden başlatmada, düğüm herhangi bir anlık görüntü verisi kullanmadan %d'den senkronizasyona devam edecektir. Bu olayı %s'ye bildiriniz ve anlık görüntüyü nasıl elde ettiğinizi de ekleyiniz. Geçersiz anlık görüntü zincir durumu, bu hatanın nedenini teşhis etmekte yardımcı olabilir diye diskte bırakılacaktır.</translation>
     </message>
     <message>
         <source>Distributed under the MIT software license, see the accompanying file %s or %s</source>
@@ -3473,12 +3611,16 @@ Cüzdan kilidini aç.</translation>
         <translation type="unfinished">%s okuma hatası! İşlem verileri eksik veya yanlış olabilir. Cüzdan yeniden taranıyor.</translation>
     </message>
     <message>
+        <source>Error starting/committing db txn for wallet transactions removal process</source>
+        <translation type="unfinished">Cüzdan hareketleri kaldırma işlemi için veritabanı işlemi başlatılırken/işlenirken hata oluştu</translation>
+    </message>
+    <message>
         <source>Invalid or corrupt peers.dat (%s). If you believe this is a bug, please report it to %s. As a workaround, you can move the file (%s) out of the way (rename, move, or delete) to have a new one created on the next start.</source>
         <translation type="unfinished">Geçersiz veya bozuk peers.dat (%s). Bunun bir hata olduğunu düşünüyorsanız, lütfen %s'e bildirin. Geçici bir çözüm olarak, bir sonraki başlangıçta yeni bir dosya oluşturmak için dosyayı (%s) yoldan çekebilirsiniz (yeniden adlandırabilir, taşıyabilir veya silebilirsiniz).</translation>
     </message>
     <message>
-        <source>Please check that your computer's date and time are correct! If your clock is wrong, %s will not work properly.</source>
-        <translation type="unfinished">Lütfen bilgisayarınızın tarih ve saatinin doğruluğunu kontrol edin. Hata varsa %s doğru çalışmayacaktır.</translation>
+        <source>Invalid value detected for '-wallet' or '-nowallet'. '-wallet' requires a string value, while '-nowallet' accepts only '1' to disable all wallets</source>
+        <translation type="unfinished">'-wallet' veya '-nowallet' için geçersiz değer algılandı. '-wallet' bir dize değeri gerektirirken, '-nowallet' tüm cüzdanları devre dışı bırakmak için yalnızca '1' kabul eder</translation>
     </message>
     <message>
         <source>Please contribute if you find %s useful. Visit %s for further information about the software.</source>
@@ -3493,8 +3635,8 @@ Cüzdan kilidini aç.</translation>
         <translation type="unfinished">Prune modu -reindex-chainstate ile uyumlu değil. Bunun yerine tam -reindex kullanın.</translation>
     </message>
     <message>
-        <source>Prune: last wallet synchronisation goes beyond pruned data. You need to -reindex (download the whole blockchain again in case of pruned node)</source>
-        <translation type="unfinished">Budama: son cüzdan eşleşmesi budanmış verilerin ötesine gitmektedir. -reindex kullanmanız gerekmektedir (Budanmış düğüm ise tüm blok zincirini tekrar indirmeniz gerekir.)</translation>
+        <source>Rename of '%s' -&gt; '%s' failed. You should resolve this by manually moving or deleting the invalid snapshot directory %s, otherwise you will encounter the same error again on the next startup.</source>
+        <translation type="unfinished">'%s' -&gt; '%s' yeniden adlandırması başarısız oldu. Bunu,  %s geçersiz anlık görüntü dizinini manuel olarak taşıyarak veya silerek çözmelisiniz; aksi takdirde, bir sonraki başlatmada aynı hata ile karşılaşabilirsiniz."</translation>
     </message>
     <message>
         <source>The block database contains a block which appears to be from the future. This may be due to your computer's date and time being set incorrectly. Only rebuild the block database if you are sure that your computer's date and time are correct</source>
@@ -3503,10 +3645,6 @@ Cüzdan kilidini aç.</translation>
     <message>
         <source>The transaction amount is too small to send after the fee has been deducted</source>
         <translation type="unfinished">Bu işlem, tutar düşüldükten sonra göndermek için çok düşük</translation>
-    </message>
-    <message>
-        <source>This error could occur if this wallet was not shutdown cleanly and was last loaded using a build with a newer version of Berkeley DB. If so, please use the software that last loaded this wallet</source>
-        <translation type="unfinished">Bu hata, bu cüzdan düzgün bir şekilde kapatılmadıysa ve en son Berkeley DB'nin daha yeni bir sürümü kullanılarak yüklendiyse oluşabilir. Öyleyse, lütfen bu cüzdanı en son sürümünü kullanın.</translation>
     </message>
     <message>
         <source>This is a pre-release test build - use at your own risk - do not use for mining or merchant applications</source>
@@ -3521,8 +3659,12 @@ Cüzdan kilidini aç.</translation>
         <translation type="unfinished">Ağ sürümü zincirinin toplam boyutu (%i) en yüksek boyutu geçmektedir (%i). Kullanıcı aracı açıklamasının sayısı veya boyutunu azaltınız.</translation>
     </message>
     <message>
-        <source>Warning: We do not appear to fully agree with our peers! You may need to upgrade, or other nodes may need to upgrade.</source>
-        <translation type="unfinished">Uyarı: Ağ eşlerimizle tamamen anlaşamamışız gibi görünüyor! Güncelleme yapmanız gerekebilir ya da diğer düğümlerin güncelleme yapmaları gerekebilir.</translation>
+        <source>Unsupported category-specific logging level %1$s=%2$s. Expected %1$s=&lt;category&gt;:&lt;loglevel&gt;. Valid categories: %3$s. Valid loglevels: %4$s.</source>
+        <translation type="unfinished">Desteklenmeyen kategoriye özgü günlükleme seviyesi %1$s=%2$s. Beklenen: %1$s=&lt;category&gt;:&lt;loglevel&gt;. Geçerli kategoriler: %3$s. Geçerli günlükleme seviyeleri: %4$s.</translation>
+    </message>
+    <message>
+        <source>Warning: Private keys detected in wallet {%s} with disabled private keys</source>
+        <translation type="unfinished">Uyarı: {%s} cüzdanında özel anahtarlarla devre dışı bırakılmış özel anahtarlar algılandı</translation>
     </message>
     <message>
         <source>You need to rebuild the database using -reindex to go back to unpruned mode.  This will redownload the entire blockchain</source>
@@ -3537,6 +3679,10 @@ Cüzdan kilidini aç.</translation>
         <translation type="unfinished">-maxmempool en az %d MB olmalıdır</translation>
     </message>
     <message>
+        <source>Cannot obtain a lock on directory %s. %s is probably already running.</source>
+        <translation type="unfinished">%sDizin kilitlenemiyor. %s muhtemelen halihazırda çalışıyor.</translation>
+    </message>
+    <message>
         <source>Cannot resolve -%s address: '%s'</source>
         <translation type="unfinished">Çözümlenemedi - %s adres: '%s'</translation>
     </message>
@@ -3545,8 +3691,8 @@ Cüzdan kilidini aç.</translation>
         <translation type="unfinished">-dnsseed false olarak ayarlanırken -forcednsseed true olarak ayarlanamıyor.</translation>
     </message>
     <message>
-        <source>Cannot write to data directory '%s'; check permissions.</source>
-        <translation type="unfinished">Veriler '%s' klasörüne yazılamıyor ; yetkilendirmeyi kontrol edin.</translation>
+        <source>Cannot set -peerblockfilters without -blockfilterindex.</source>
+        <translation type="unfinished">-blockfilterindex olmadan -peerblockfilters ayarlanamıyor.</translation>
     </message>
     <message>
         <source>Cannot provide specific connections and have addrman find outgoing connections at the same time.</source>
@@ -3557,8 +3703,54 @@ Cüzdan kilidini aç.</translation>
         <translation type="unfinished">%s yüklenirken hata oluştu: Harici imzalayan cüzdanı derlenmiş harici imzalayan desteği olmadan yükleniyor</translation>
     </message>
     <message>
+        <source>Error reading %s! All keys read correctly, but transaction data or address metadata may be missing or incorrect.</source>
+        <translation type="unfinished">Okumada Hata %s! Tüm anahtarlar doğru okundu, ancak işlem verileri veya adres metadata verileri eksik veya hatalı olabilir.</translation>
+    </message>
+    <message>
+        <source>Failed to remove snapshot chainstate dir (%s). Manually remove it before restarting.
+</source>
+        <translation type="unfinished">Anlık görüntü zincir durumu dizini (%s) kaldırılamadı. Yeniden başlatmadan önce manuel olarak silin.
+</translation>
+    </message>
+    <message>
         <source>Failed to rename invalid peers.dat file. Please move or delete it and try again.</source>
         <translation type="unfinished">Geçersiz peers.dat dosyası yeniden adlandırılamadı. Lütfen taşıyın veya silin ve tekrar deneyin.</translation>
+    </message>
+    <message>
+        <source>Flushing block file to disk failed. This is likely the result of an I/O error.</source>
+        <translation type="unfinished">Blok dosyasını diske yazma başarısız oldu. Bu muhtemelen bir G/Ç hatasının sonucudur.</translation>
+    </message>
+    <message>
+        <source>Flushing undo file to disk failed. This is likely the result of an I/O error.</source>
+        <translation type="unfinished">Geri alma dosyasını diske yazma başarısız oldu. Bu muhtemelen bir G/Ç hatasının sonucudur.</translation>
+    </message>
+    <message>
+        <source>Maximum transaction weight is less than transaction weight without inputs</source>
+        <translation type="unfinished">Maksimum işlem ağırlığı, işlem girdi ağırlığından daha küçük olmalıdır.</translation>
+    </message>
+    <message>
+        <source>Maximum transaction weight is too low, can not accommodate change output</source>
+        <translation type="unfinished">Maksimum işlem ağırlığı çok düşük, değişim çıktısını barındıramaz.</translation>
+    </message>
+    <message>
+        <source>Rename of '%s' -&gt; '%s' failed. Cannot clean up the background chainstate leveldb directory.</source>
+        <translation type="unfinished">'%s' -&gt; '%s' yeniden adlandırması başarısız oldu. Arka plan zincir durumu leveldb dizinini temizleyemiyor.</translation>
+    </message>
+    <message>
+        <source>Specified -blockreservedweight (%d) exceeds consensus maximum block weight (%d)</source>
+        <translation type="unfinished">Belirtilen -blockreservedweight değeri (%d), konsensüs maksimum blok ağırlığını (%d) aşıyor.</translation>
+    </message>
+    <message>
+        <source>Specified -blockreservedweight (%d) is lower than minimum safety value of (%d)</source>
+        <translation type="unfinished">Belirtilen -blockreservedweight (%d), minimum güvenlik değeri olan (%d)' dan daha düşük.</translation>
+    </message>
+    <message>
+        <source>The combination of the pre-selected inputs and the wallet automatic inputs selection exceeds the transaction maximum weight. Please try sending a smaller amount or manually consolidating your wallet's UTXOs</source>
+        <translation type="unfinished">Önceden seçilmiş girişlerin ve cüzdanın otomatik giriş seçiminin kombinasyonu, işlemin maksimum ağırlığını aşıyor. Lütfen daha küçük bir miktar göndermeyi deneyin veya cüzdanınızdaki UTXO'ları manuel olarak birleştirin.</translation>
+    </message>
+    <message>
+        <source>Your computer's date and time appear to be more than %d minutes out of sync with the network, this may lead to consensus failure. After you've confirmed your computer's clock, this message should no longer appear when you restart your node. Without a restart, it should stop showing automatically after you've connected to a sufficient number of new outbound peers, which may take some time. You can inspect the `timeoffset` field of the `getpeerinfo` and `getnetworkinfo` RPC methods to get more info.</source>
+        <translation type="unfinished">Bilgisayarınızın tarihi ve saati, ağla %d dakikadan fazla senkronizasyon görünmüyor; bu başarısız işlem hatasına yol açabilir. Bilgisayarınızın saatini düzenledikten sonra, bu mesaj tekrar görünmemelidir. Düğümünüzü yeniden başlattığınızda mesaj kaybolmalıdır. Yeniden başlatma olmadan, yeterli sayıda yeni çıkış bağlantısı sağladıktan sonra otomatik olarak kaybolmalıdır, bu biraz zaman alabilir. Daha fazla bilgi almak için `getpeerinfo` ve `getnetworkinfo` RPC yöntemlerinin `timeoffset` alanını kontrol edebilirsiniz.</translation>
     </message>
     <message>
         <source>
@@ -3567,8 +3759,32 @@ Unable to restore backup of wallet.</source>
 Cüzdan yedeği geri yüklenemiyor.</translation>
     </message>
     <message>
+        <source>default wallet</source>
+        <translation type="unfinished">varsayılan cüzdan</translation>
+    </message>
+    <message>
+        <source>whitebind may only be used for incoming connections ("out" was passed)</source>
+        <translation type="unfinished">whitebind yalnızca gelen bağlantılar için kullanılabilir ('out' parametresi pas geçildi)</translation>
+    </message>
+    <message>
+        <source>A fatal internal error occurred, see debug.log for details: </source>
+        <translation type="unfinished">Kritik bir iç hata oluştu, detaylar için debug.log dosyasına bakın:</translation>
+    </message>
+    <message>
+        <source>Assumeutxo data not found for the given blockhash '%s'.</source>
+        <translation type="unfinished">Verilen blok hash '%s' için AssumeUTXO verisi bulunamadı.</translation>
+    </message>
+    <message>
+        <source>Cannot write to directory '%s'; check permissions.</source>
+        <translation type="unfinished">'%s' dizinine yazılamıyor; izinleri kontrol et.</translation>
+    </message>
+    <message>
         <source>Copyright (C) %i-%i</source>
         <translation type="unfinished">Telif Hakkı (C) %i-%i</translation>
+    </message>
+    <message>
+        <source>Corrupt block found indicating potential hardware failure.</source>
+        <translation type="unfinished">Bozuk bir blok bulundu, bu donanım arızası kaynaklı olabilir.</translation>
     </message>
     <message>
         <source>Corrupted block database detected</source>
@@ -3579,20 +3795,16 @@ Cüzdan yedeği geri yüklenemiyor.</translation>
         <translation type="unfinished">Disk alanı çok düşük!</translation>
     </message>
     <message>
-        <source>Do you want to rebuild the block database now?</source>
-        <translation type="unfinished">Blok veritabanını şimdi yeniden inşa etmek istiyor musunuz?</translation>
-    </message>
-    <message>
         <source>Done loading</source>
         <translation type="unfinished">Yükleme tamamlandı</translation>
     </message>
     <message>
-        <source>Error initializing block database</source>
-        <translation type="unfinished">Blok veritabanını başlatılırken bir hata meydana geldi</translation>
+        <source>Elliptic curve cryptography sanity check failure. %s is shutting down.</source>
+        <translation type="unfinished">Eliptik eğri kriptografisi sistem sağlığı kontrolü başarısız oldu. %s kapatılıyor.</translation>
     </message>
     <message>
-        <source>Error initializing wallet database environment %s!</source>
-        <translation type="unfinished">%s cüzdan veritabanı ortamının başlatılmasında hata meydana geldi!</translation>
+        <source>Error initializing block database</source>
+        <translation type="unfinished">Blok veritabanını başlatılırken bir hata meydana geldi</translation>
     </message>
     <message>
         <source>Error loading %s</source>
@@ -3611,8 +3823,16 @@ Cüzdan yedeği geri yüklenemiyor.</translation>
         <translation type="unfinished">Blok veritabanının yüklenmesinde hata</translation>
     </message>
     <message>
+        <source>Error loading databases</source>
+        <translation type="unfinished">Veri tabanları yüklenirken hata oluştu</translation>
+    </message>
+    <message>
         <source>Error opening block database</source>
         <translation type="unfinished">Blok veritabanının açılışı sırasında hata</translation>
+    </message>
+    <message>
+        <source>Error opening coins database</source>
+        <translation type="unfinished">Coin veritabanı açılırken hata oluştu.</translation>
     </message>
     <message>
         <source>Error reading from database, shutting down.</source>
@@ -3627,8 +3847,36 @@ Cüzdan yedeği geri yüklenemiyor.</translation>
         <translation type="unfinished">Hata: Bu cüzdan zaten SQLite kullanıyor</translation>
     </message>
     <message>
+        <source>Error: Unable to read wallet's best block locator record</source>
+        <translation type="unfinished">Hata: Cüzdan okunamadı en iyi blok bulucu kaydı </translation>
+    </message>
+    <message>
+        <source>Error: Unable to write data to disk for wallet %s</source>
+        <translation type="unfinished">Hata: Cüzdan %s için  diske veri yazılamıyor</translation>
+    </message>
+    <message>
+        <source>Error: Unable to write solvable wallet best block locator record</source>
+        <translation type="unfinished">Hata: Cüzdana yazılamadı en iyi blok bulucu kaydı </translation>
+    </message>
+    <message>
+        <source>Error: Unable to write watchonly wallet best block locator record</source>
+        <translation type="unfinished">Hata: Yalnızca izlenen cüzdanın en iyi blok bulucu kaydını yazmak mümkün değil</translation>
+    </message>
+    <message>
+        <source>Error: database transaction cannot be executed for wallet %s</source>
+        <translation type="unfinished">Hata: %sCüzdan için veri tabanında işlem yapılamaz</translation>
+    </message>
+    <message>
+        <source>Failed to disconnect block.</source>
+        <translation type="unfinished">Bloğun bağlantısı kesilemedi.</translation>
+    </message>
+    <message>
         <source>Failed to listen on any port. Use -listen=0 if you want this.</source>
         <translation type="unfinished">Herhangi bir portun dinlenmesi başarısız oldu. Bunu istiyorsanız -listen=0 seçeneğini kullanınız.</translation>
+    </message>
+    <message>
+        <source>Failed to read block.</source>
+        <translation type="unfinished">Bloğu okuma başarısız oldu.</translation>
     </message>
     <message>
         <source>Failed to rescan the wallet during initialization</source>
@@ -3639,8 +3887,16 @@ Cüzdan yedeği geri yüklenemiyor.</translation>
         <translation type="unfinished">Veritabanı doğrulanamadı</translation>
     </message>
     <message>
-        <source>Importing…</source>
-        <translation type="unfinished">İçe aktarılıyor...</translation>
+        <source>Failed to write block.</source>
+        <translation type="unfinished">Bloğa yazma başarısız oldu.</translation>
+    </message>
+    <message>
+        <source>Failed to write undo data.</source>
+        <translation type="unfinished">Eski verilere yazma başarısız oldu.</translation>
+    </message>
+    <message>
+        <source>Failure removing transaction: %s</source>
+        <translation type="unfinished">işlemi: %s silme başarısız oldu.</translation>
     </message>
     <message>
         <source>Incorrect or no genesis block found. Wrong datadir for network?</source>
@@ -3668,7 +3924,7 @@ Cüzdan yedeği geri yüklenemiyor.</translation>
     </message>
     <message>
         <source>Invalid amount for -%s=&lt;amount&gt;: '%s'</source>
-        <translation type="unfinished">-%s=&lt;tutar&gt; için geçersiz tutar: '%s'</translation>
+        <translation type="unfinished">Geçersiz tutar için -%s=&lt;amount&gt;: '%s'</translation>
     </message>
     <message>
         <source>Invalid netmask specified in -whitelist: '%s'</source>
@@ -3691,6 +3947,10 @@ Cüzdan yedeği geri yüklenemiyor.</translation>
         <translation type="unfinished">Cüzdan yükleniyor...</translation>
     </message>
     <message>
+        <source>Maximum transaction weight must be between %d and %d</source>
+        <translation type="unfinished">Maksimum işlem yükü %d ile %d arasında olmalıdır</translation>
+    </message>
+    <message>
         <source>Missing amount</source>
         <translation type="unfinished">Eksik tutar</translation>
     </message>
@@ -3707,8 +3967,8 @@ Cüzdan yedeği geri yüklenemiyor.</translation>
         <translation type="unfinished">Erişilebilir adres yok</translation>
     </message>
     <message>
-        <source>Not enough file descriptors available.</source>
-        <translation type="unfinished">Kafi derecede dosya tanımlayıcıları mevcut değil.</translation>
+        <source>Only direction was set, no permissions: '%s'</source>
+        <translation type="unfinished">'%s' için izin yok. Sadece hedef ayarlandı.</translation>
     </message>
     <message>
         <source>Prune cannot be configured with a negative value.</source>
@@ -3727,6 +3987,18 @@ Cüzdan yedeği geri yüklenemiyor.</translation>
         <translation type="unfinished">Yeniden taranıyor...</translation>
     </message>
     <message>
+        <source>Signer did not echo address</source>
+        <translation type="unfinished">İmzalayıcı adresi belirtilmedi.</translation>
+    </message>
+    <message>
+        <source>Signer echoed unexpected address %s</source>
+        <translation type="unfinished">İstenmeyen %s adrese imzalama yapıldı.</translation>
+    </message>
+    <message>
+        <source>Signer returned error: %s</source>
+        <translation type="unfinished">%s İmzayıcı hatası tekrarı.</translation>
+    </message>
+    <message>
         <source>Signing transaction failed</source>
         <translation type="unfinished">İşlemin imzalanması başarısız oldu</translation>
     </message>
@@ -3743,6 +4015,18 @@ Cüzdan yedeği geri yüklenemiyor.</translation>
         <translation type="unfinished">Belirtilen -walletdir "%s" bir dizin değildir</translation>
     </message>
     <message>
+        <source>System error while flushing: %s</source>
+        <translation type="unfinished">Temizleme esnasında sistem hatası: %s</translation>
+    </message>
+    <message>
+        <source>System error while loading external block file: %s</source>
+        <translation type="unfinished">%s : Harici blok dosyası yüklenirken sistem hatası.</translation>
+    </message>
+    <message>
+        <source>System error while saving block to disk: %s</source>
+        <translation type="unfinished">%s Bloğu diske kaydederken sistem hatası oluştu.</translation>
+    </message>
+    <message>
         <source>The source code is available from %s.</source>
         <translation type="unfinished">%s'in kaynak kodu ulaşılabilir.</translation>
     </message>
@@ -3751,8 +4035,16 @@ Cüzdan yedeği geri yüklenemiyor.</translation>
         <translation type="unfinished">İşlemdeki bitcoin tutarı ücreti ödemek için çok düşük</translation>
     </message>
     <message>
+        <source>The transactions removal process can only be executed within a db txn</source>
+        <translation type="unfinished">Hareketleri kaldırma işlemi yalnızca bir veritabanı işlemi içinde gerçekleştirilebilir</translation>
+    </message>
+    <message>
         <source>The wallet will avoid paying less than the minimum relay fee.</source>
         <translation type="unfinished">Cüzdan en az aktarma ücretinden daha az ödeme yapmaktan sakınacaktır.</translation>
+    </message>
+    <message>
+        <source>There is no ScriptPubKeyManager for this address</source>
+        <translation type="unfinished">Bu adres için bir ScriptPubKeyManager bulunmuyor</translation>
     </message>
     <message>
         <source>This is experimental software.</source>
@@ -3763,8 +4055,8 @@ Cüzdan yedeği geri yüklenemiyor.</translation>
         <translation type="unfinished">Bu her işlemde ödeceğiniz en düşük işlem ücretidir.</translation>
     </message>
     <message>
-        <source>This is the transaction fee you will pay if you send a transaction.</source>
-        <translation type="unfinished">-paytxfee çok yüksek bir değere ayarlanmış! Bu, işlemi gönderirseniz ödeyeceğiniz işlem ücretidir.</translation>
+        <source>Transaction %s does not belong to this wallet</source>
+        <translation type="unfinished">%s İşlem bu cüzdana ait değil.</translation>
     </message>
     <message>
         <source>Transaction amount too small</source>
@@ -3791,10 +4083,6 @@ Cüzdan yedeği geri yüklenemiyor.</translation>
         <translation type="unfinished">İşlem çok büyük</translation>
     </message>
     <message>
-        <source>Unable to allocate memory for -maxsigcachesize: '%s' MiB</source>
-        <translation type="unfinished">-maxsigcachesize: ' %s' MiB için bellek konumlandırılamıyor.</translation>
-    </message>
-    <message>
         <source>Unable to bind to %s on this computer (bind returned error %s)</source>
         <translation type="unfinished">Bu bilgisayarda %s ögesine bağlanılamadı (bağlanma %s hatasını verdi)</translation>
     </message>
@@ -3805,14 +4093,6 @@ Cüzdan yedeği geri yüklenemiyor.</translation>
     <message>
         <source>Unable to find UTXO for external input</source>
         <translation type="unfinished">Harici giriş için UTXO bulunamıyor.</translation>
-    </message>
-    <message>
-        <source>Unable to generate initial keys</source>
-        <translation type="unfinished">Başlangıç anahtarları üretilemiyor</translation>
-    </message>
-    <message>
-        <source>Unable to generate keys</source>
-        <translation type="unfinished">Anahtarlar oluşturulamıyor</translation>
     </message>
     <message>
         <source>Unable to parse -maxuploadtarget: '%s'</source>
@@ -3831,8 +4111,48 @@ Cüzdan yedeği geri yüklenemiyor.</translation>
         <translation type="unfinished">-onlynet için bilinmeyen bir ağ belirtildi: '%s'</translation>
     </message>
     <message>
+        <source>Unrecognised option "%s" provided in -test=&lt;option&gt;.</source>
+        <translation type="unfinished">Tanınmayan seçenek "%s" sağlanan -test=&lt;option&gt;.</translation>
+    </message>
+    <message>
+        <source>Unsupported global logging level %s=%s. Valid values: %s.</source>
+        <translation type="unfinished">Desteklenmeyen global günlük seviyesi %s=%s. Geçerli değer:%s.</translation>
+    </message>
+    <message>
+        <source>Wallet file creation failed: %s</source>
+        <translation type="unfinished">%s Cüzdan dosyaları oluşturulamadı.</translation>
+    </message>
+    <message>
+        <source>acceptstalefeeestimates is not supported on %s chain.</source>
+        <translation type="unfinished">acceptstalefeeestimates %s blok zincirinde desteklenmiyor.</translation>
+    </message>
+    <message>
         <source>Unsupported logging category %s=%s.</source>
         <translation type="unfinished">Desteklenmeyen günlük kategorisi %s=%s.</translation>
+    </message>
+    <message>
+        <source>Do you want to rebuild the databases now?</source>
+        <translation type="unfinished">Veritabanlarını şimdi yeniden inşa etmek istiyor musunuz?</translation>
+    </message>
+    <message>
+        <source>Error: Could not add watchonly tx %s to watchonly wallet</source>
+        <translation type="unfinished">Hata: Sadece izleme %s cüzdanı. tx izleme cüzdanına eklenemedi</translation>
+    </message>
+    <message>
+        <source>Error: Could not delete watchonly transactions. </source>
+        <translation type="unfinished">Hata: Yalnızca izlenen işlemler silinemedi.</translation>
+    </message>
+    <message>
+        <source>Error: Wallet does not exist</source>
+        <translation type="unfinished">Hata: Böyle bir cüzdan yok</translation>
+    </message>
+    <message>
+        <source>Error: cannot remove legacy wallet records</source>
+        <translation type="unfinished">Hata: Eski cüzdan kayıtları silinemiyor</translation>
+    </message>
+    <message>
+        <source>Not enough file descriptors available. %d available, %d required.</source>
+        <translation type="unfinished">Yeterince dosya açıklayıcısı mevcut değil. Mevcut %d, gereken %d.</translation>
     </message>
     <message>
         <source>User Agent comment (%s) contains unsafe characters.</source>

@@ -87,17 +87,15 @@ static void secp256k1_ecmult_const_odd_multiples_table_globalz(secp256k1_ge *pre
     secp256k1_fe neg_y; \
     VERIFY_CHECK((n) < (1U << ECMULT_CONST_GROUP_SIZE)); \
     VERIFY_CHECK(index < (1U << (ECMULT_CONST_GROUP_SIZE - 1))); \
-    /* Unconditionally set r->x = (pre)[m].x. r->y = (pre)[m].y. because it's either the correct one
+    /* Unconditionally set r->x = (pre)[m].x and r->y = (pre)[m].y because it's either the correct one
      * or will get replaced in the later iterations, this is needed to make sure `r` is initialized. */ \
-    (r)->x = (pre)[m].x; \
-    (r)->y = (pre)[m].y; \
+    secp256k1_ge_set_xy((r), &(pre)[m].x, &(pre)[m].y); \
     for (m = 1; m < ECMULT_CONST_TABLE_SIZE; m++) { \
         /* This loop is used to avoid secret data in array indices. See
          * the comment in ecmult_gen_impl.h for rationale. */ \
         secp256k1_fe_cmov(&(r)->x, &(pre)[m].x, m == index); \
         secp256k1_fe_cmov(&(r)->y, &(pre)[m].y, m == index); \
     } \
-    (r)->infinity = 0; \
     secp256k1_fe_negate(&neg_y, &(r)->y, 1); \
     secp256k1_fe_cmov(&(r)->y, &neg_y, negative); \
 } while(0)
@@ -214,8 +212,8 @@ static void secp256k1_ecmult_const(secp256k1_gej *r, const secp256k1_ge *a, cons
 #ifdef VERIFY
     /* Verify that v1 and v2 are in range [0, 2^129-1]. */
     for (i = 129; i < 256; ++i) {
-        VERIFY_CHECK(secp256k1_scalar_get_bits(&v1, i, 1) == 0);
-        VERIFY_CHECK(secp256k1_scalar_get_bits(&v2, i, 1) == 0);
+        VERIFY_CHECK(secp256k1_scalar_get_bits_limb32(&v1, i, 1) == 0);
+        VERIFY_CHECK(secp256k1_scalar_get_bits_limb32(&v2, i, 1) == 0);
     }
 #endif
 
@@ -373,11 +371,16 @@ static int secp256k1_ecmult_const_xonly(secp256k1_fe* r, const secp256k1_fe *n, 
         }
     }
 
-    /* Compute base point P = (n*g, g^2), the effective affine version of (n*g, g^2, v), which has
-     * corresponding affine X coordinate n/d. */
-    secp256k1_fe_mul(&p.x, &g, n);
-    secp256k1_fe_sqr(&p.y, &g);
-    p.infinity = 0;
+    SECP256K1_FE_VERIFY_MAGNITUDE(&g, 2);
+
+    /* Compute base point P = (n*g, g^2), the effective affine version of
+     * (n*g, g^2, v), which has corresponding affine X coordinate n/d. */
+    {
+        secp256k1_fe x, y;
+        secp256k1_fe_mul(&x, &g, n);
+        secp256k1_fe_sqr(&y, &g);
+        secp256k1_ge_set_xy(&p, &x, &y);
+    }
 
     /* Perform x-only EC multiplication of P with q. */
     VERIFY_CHECK(!secp256k1_scalar_is_zero(q));

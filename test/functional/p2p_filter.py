@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (c) 2020-2021 The Bitcoin Core developers
+# Copyright (c) 2020-present The Bitcoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """
@@ -62,7 +62,7 @@ class P2PBloomFilter(P2PInterface):
             else:
                 want.inv.append(i)
         if len(want.inv):
-            self.send_message(want)
+            self.send_without_ping(want)
 
     def on_merkleblock(self, message):
         self._merkleblock_received = True
@@ -146,11 +146,11 @@ class FilterTest(BitcoinTestFramework):
         self.log.info("Send a mempool msg after connecting and check that the relevant tx is announced")
         self.nodes[0].add_p2p_connection(filter_peer)
         filter_peer.send_and_ping(filter_peer.watch_filter_init)
-        filter_peer.send_message(msg_mempool())
+        filter_peer.send_without_ping(msg_mempool())
         filter_peer.wait_for_tx(rel_txid)
 
         self.log.info("Request the irrelevant transaction even though it was not announced")
-        filter_peer.send_message(msg_getdata([CInv(t=MSG_WTX, h=int(irr_wtxid, 16))]))
+        filter_peer.send_without_ping(msg_getdata([CInv(t=MSG_WTX, h=int(irr_wtxid, 16))]))
         self.log.info("We should get it anyway because it was in the mempool on connection to peer")
         filter_peer.wait_for_tx(irr_txid)
 
@@ -242,7 +242,7 @@ class FilterTest(BitcoinTestFramework):
         version_without_fRelay.strSubVer = P2P_SUBVERSION
         version_without_fRelay.nServices = P2P_SERVICES
         version_without_fRelay.relay = 0
-        filter_peer_without_nrelay.send_message(version_without_fRelay)
+        filter_peer_without_nrelay.send_without_ping(version_without_fRelay)
         filter_peer_without_nrelay.wait_for_verack()
         assert not self.nodes[0].getpeerinfo()[0]['relaytxes']
         self.test_frelay_false(filter_peer_without_nrelay)
@@ -252,4 +252,4 @@ class FilterTest(BitcoinTestFramework):
 
 
 if __name__ == '__main__':
-    FilterTest().main()
+    FilterTest(__file__).main()

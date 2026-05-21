@@ -1,4 +1,4 @@
-// Copyright (c) 2020 The Bitcoin Core developers
+// Copyright (c) 2020-present The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -26,6 +26,5 @@ FUZZ_TARGET(random)
     (void)fast_random_context();
 
     std::vector<int64_t> integrals = ConsumeRandomLengthIntegralVector<int64_t>(fuzzed_data_provider);
-    Shuffle(integrals.begin(), integrals.end(), fast_random_context);
     std::shuffle(integrals.begin(), integrals.end(), fast_random_context);
 }

@@ -368,6 +368,12 @@ if(CRC32C_BUILD_TESTS)
   # Warnings as errors in Visual Studio for this project's targets.
   if(CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
     set_property(TARGET crc32c_capi_tests APPEND PROPERTY COMPILE_OPTIONS "/WX")
+
+    # The Windows SDK version currently on CI produces warnings when some
+    # headers are #included using C99 compatibility mode or above. This
+    # workaround can be removed once the Windows SDK on our CI is upgraded.
+    set_property(TARGET crc32c_capi_tests
+        APPEND PROPERTY COMPILE_OPTIONS "/wd5105")
   endif(CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
 
   add_test(NAME crc32c_capi_tests COMMAND crc32c_capi_tests)

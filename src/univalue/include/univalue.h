@@ -70,6 +70,8 @@ public:
 
     size_t size() const { return values.size(); }
 
+    void reserve(size_t new_cap);
+
     void getObjMap(std::map<std::string,UniValue>& kv) const;
     bool checkObject(const std::map<std::string,UniValue::VType>& memberTypes) const;
     const UniValue& operator[](const std::string& key) const;
@@ -137,7 +139,7 @@ void UniValue::push_backV(It first, It last)
 template <typename Int>
 Int UniValue::getInt() const
 {
-    static_assert(std::is_integral<Int>::value);
+    static_assert(std::is_integral_v<Int>);
     checkType(VNUM);
     Int result;
     const auto [first_nonmatching, error_condition] = std::from_chars(val.data(), val.data() + val.size(), result);

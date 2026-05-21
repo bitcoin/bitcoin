@@ -31,7 +31,7 @@
 
 struct LogIPsTestingSetup : public TestingSetup {
     LogIPsTestingSetup()
-        : TestingSetup{ChainType::MAIN, /*extra_args=*/{"-logips"}} {}
+        : TestingSetup{ChainType::MAIN, {.extra_args = {"-logips"}}} {}
 };
 
 BOOST_FIXTURE_TEST_SUITE(net_peer_connection_tests, LogIPsTestingSetup)
@@ -43,20 +43,21 @@ static CService ip(uint32_t i)
     return CService{CNetAddr{s}, Params().GetDefaultPort()};
 }
 
+struct PeerTest : LogIPsTestingSetup {
 /** Create a peer and connect to it. If the optional `address` (IP/CJDNS only) isn't passed, a random address is created. */
-static void AddPeer(NodeId& id, std::vector<CNode*>& nodes, PeerManager& peerman, ConnmanTestMsg& connman, ConnectionType conn_type, bool onion_peer = false, std::optional<std::string> address = std::nullopt)
+void AddPeer(NodeId& id, std::vector<CNode*>& nodes, PeerManager& peerman, ConnmanTestMsg& connman, ConnectionType conn_type, bool onion_peer = false, std::optional<std::string> address = std::nullopt)
 {
     CAddress addr{};
 
     if (address.has_value()) {
         addr = CAddress{MaybeFlipIPv6toCJDNS(LookupNumeric(address.value(), Params().GetDefaultPort())), NODE_NONE};
     } else if (onion_peer) {
-        auto tor_addr{g_insecure_rand_ctx.randbytes(ADDR_TORV3_SIZE)};
+        auto tor_addr{m_rng.randbytes(ADDR_TORV3_SIZE)};
         BOOST_REQUIRE(addr.SetSpecial(OnionToString(tor_addr)));
     }
 
     while (!addr.IsLocal() && !addr.IsRoutable()) {
-        addr = CAddress{ip(g_insecure_rand_ctx.randbits(32)), NODE_NONE};
+        addr = CAddress{ip(m_rng.randbits(32)), NODE_NONE};
     }
 
     BOOST_REQUIRE(addr.IsValid());
@@ -71,7 +72,8 @@ static void AddPeer(NodeId& id, std::vector<CNode*>& nodes, PeerManager& peerman
                                  CAddress{},
                                  /*addrNameIn=*/"",
                                  conn_type,
-                                 /*inbound_onion=*/inbound_onion});
+                                 /*inbound_onion=*/inbound_onion,
+                                 /*network_key=*/0});
     CNode& node = *nodes.back();
     node.SetCommonVersion(PROTOCOL_VERSION);
 
@@ -80,11 +82,12 @@ static void AddPeer(NodeId& id, std::vector<CNode*>& nodes, PeerManager& peerman
 
     connman.AddTestNode(node);
 }
+}; // struct PeerTest
 
-BOOST_AUTO_TEST_CASE(test_addnode_getaddednodeinfo_and_connection_detection)
+BOOST_FIXTURE_TEST_CASE(test_addnode_getaddednodeinfo_and_connection_detection, PeerTest)
 {
     auto connman = std::make_unique<ConnmanTestMsg>(0x1337, 0x1337, *m_node.addrman, *m_node.netgroupman, Params());
-    auto peerman = PeerManager::make(*connman, *m_node.addrman, nullptr, *m_node.chainman, *m_node.mempool, {});
+    auto peerman = PeerManager::make(*connman, *m_node.addrman, nullptr, *m_node.chainman, *m_node.mempool, *m_node.warnings, {});
     NodeId id{0};
     std::vector<CNode*> nodes;
 
@@ -107,6 +110,12 @@ BOOST_AUTO_TEST_CASE(test_addnode_getaddednodeinfo_and_connection_detection)
     AddPeer(id, nodes, *peerman, *connman, ConnectionType::OUTBOUND_FULL_RELAY);
     AddPeer(id, nodes, *peerman, *connman, ConnectionType::BLOCK_RELAY, /*onion_peer=*/true);
     AddPeer(id, nodes, *peerman, *connman, ConnectionType::INBOUND);
+
+    // Add a CJDNS peer connection.
+    AddPeer(id, nodes, *peerman, *connman, ConnectionType::INBOUND, /*onion_peer=*/false,
+            /*address=*/"[fc00:3344:5566:7788:9900:aabb:ccdd:eeff]:1234");
+    BOOST_CHECK(nodes.back()->IsInboundConn());
+    BOOST_CHECK_EQUAL(nodes.back()->ConnectedThroughNetwork(), Network::NET_CJDNS);
 
     BOOST_TEST_MESSAGE("Call AddNode() for all the peers");
     for (auto node : connman->TestNodes()) {
@@ -143,8 +152,8 @@ BOOST_AUTO_TEST_CASE(test_addnode_getaddednodeinfo_and_connection_detection)
     }
 
     BOOST_TEST_MESSAGE("\nCheck that all connected peers are correctly detected as connected");
-    for (auto node : connman->TestNodes()) {
-        BOOST_CHECK(connman->AlreadyConnectedPublic(node->addr));
+    for (const auto& node : connman->TestNodes()) {
+        BOOST_CHECK(connman->AlreadyConnectedToAddressPublic(node->addr));
     }
 
     // Clean up

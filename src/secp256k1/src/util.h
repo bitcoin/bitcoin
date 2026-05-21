@@ -8,11 +8,17 @@
 #define SECP256K1_UTIL_H
 
 #include "../include/secp256k1.h"
+#include "checkmem.h"
 
+#include <string.h>
 #include <stdlib.h>
 #include <stdint.h>
 #include <stdio.h>
 #include <limits.h>
+#if defined(_MSC_VER)
+/* For SecureZeroMemory */
+#include <Windows.h>
+#endif
 
 #define STR_(x) #x
 #define STR(x) STR_(x)
@@ -170,7 +176,12 @@ static SECP256K1_INLINE void *checked_malloc(const secp256k1_callback* cb, size_
 #define ALIGNMENT 16
 #endif
 
-#define ROUND_TO_ALIGN(size) ((((size) + ALIGNMENT - 1) / ALIGNMENT) * ALIGNMENT)
+/* ceil(x/y) for integers x > 0 and y > 0. Here, / denotes rational division. */
+#define CEIL_DIV(x, y) (1 + ((x) - 1) / (y))
+
+#define ROUND_TO_ALIGN(size) (CEIL_DIV(size, ALIGNMENT) * ALIGNMENT)
+
+#define ARRAY_SIZE(arr) (sizeof(arr) / sizeof((arr)[0]))
 
 /* Macro for restrict, when available and not in a VERIFY build. */
 #if defined(SECP256K1_BUILD) && defined(VERIFY)
@@ -189,14 +200,6 @@ static SECP256K1_INLINE void *checked_malloc(const secp256k1_callback* cb, size_
 # endif
 #endif
 
-#if defined(_WIN32)
-# define I64FORMAT "I64d"
-# define I64uFORMAT "I64u"
-#else
-# define I64FORMAT "lld"
-# define I64uFORMAT "llu"
-#endif
-
 #if defined(__GNUC__)
 # define SECP256K1_GNUC_EXT __extension__
 #else
@@ -211,11 +214,53 @@ static SECP256K1_INLINE void secp256k1_memczero(void *s, size_t len, int flag) {
        take only be 0 or 1, which leads to variable time code. */
     volatile int vflag = flag;
     unsigned char mask = -(unsigned char) vflag;
+    VERIFY_CHECK(flag == 0 || flag == 1);
     while (len) {
         *p &= ~mask;
         p++;
         len--;
     }
+}
+
+/* Zeroes memory to prevent leaking sensitive info. Won't be optimized out. */
+static SECP256K1_INLINE void secp256k1_memzero_explicit(void *ptr, size_t len) {
+#if defined(_MSC_VER)
+    /* SecureZeroMemory is guaranteed not to be optimized out by MSVC. */
+    SecureZeroMemory(ptr, len);
+#elif defined(__GNUC__)
+    /* We use a memory barrier that scares the compiler away from optimizing out the memset.
+     *
+     * Quoting Adam Langley <agl@google.com> in commit ad1907fe73334d6c696c8539646c21b11178f20f
+     * in BoringSSL (ISC License):
+     *    As best as we can tell, this is sufficient to break any optimisations that
+     *    might try to eliminate "superfluous" memsets.
+     * This method is used in memzero_explicit() the Linux kernel, too. Its advantage is that it
+     * is pretty efficient, because the compiler can still implement the memset() efficiently,
+     * just not remove it entirely. See "Dead Store Elimination (Still) Considered Harmful" by
+     * Yang et al. (USENIX Security 2017) for more background.
+     */
+    memset(ptr, 0, len);
+    __asm__ __volatile__("" : : "r"(ptr) : "memory");
+#else
+    void *(*volatile const volatile_memset)(void *, int, size_t) = memset;
+    volatile_memset(ptr, 0, len);
+#endif
+}
+
+/* Cleanses memory to prevent leaking sensitive info. Won't be optimized out.
+ * The state of the memory after this call is unspecified so callers must not
+ * make any assumptions about its contents.
+ *
+ * In VERIFY builds, it has the side effect of marking the memory as undefined.
+ * This helps to detect use-after-clear bugs where code incorrectly reads from
+ * cleansed memory during testing.
+ */
+static SECP256K1_INLINE void secp256k1_memclear_explicit(void *ptr, size_t len) {
+    /* The current implementation zeroes, but callers must not rely on this */
+    secp256k1_memzero_explicit(ptr, len);
+#ifdef VERIFY
+    SECP256K1_CHECKMEM_UNDEFINE(ptr, len);
+#endif
 }
 
 /** Semantics like memcmp. Variable-time.
@@ -236,7 +281,24 @@ static SECP256K1_INLINE int secp256k1_memcmp_var(const void *s1, const void *s2,
     return 0;
 }
 
-/** If flag is true, set *r equal to *a; otherwise leave it. Constant-time.  Both *r and *a must be initialized and non-negative.*/
+/* Return 1 if all elements of array s are 0 and otherwise return 0.
+ * Constant-time. */
+static SECP256K1_INLINE int secp256k1_is_zero_array(const unsigned char *s, size_t len) {
+    unsigned char acc = 0;
+    int ret;
+    size_t i;
+
+    for (i = 0; i < len; i++) {
+        acc |= s[i];
+    }
+    ret = (acc == 0);
+    /* acc may contain secret values. Try to explicitly clear it. */
+    secp256k1_memclear_explicit(&acc, sizeof(acc));
+    return ret;
+}
+
+/** If flag is 1, set *r equal to *a; if flag is 0, leave it. Constant-time.
+ * Both *r and *a must be initialized and non-negative. Flag must be 0 or 1. */
 static SECP256K1_INLINE void secp256k1_int_cmov(int *r, const int *a, int flag) {
     unsigned int mask0, mask1, r_masked, a_masked;
     /* Access flag with a volatile-qualified lvalue.
@@ -244,6 +306,7 @@ static SECP256K1_INLINE void secp256k1_int_cmov(int *r, const int *a, int flag) 
        take only be 0 or 1, which leads to variable time code. */
     volatile int vflag = flag;
 
+    VERIFY_CHECK(flag == 0 || flag == 1);
     /* Casting a negative int to unsigned and back to int is implementation defined behavior */
     VERIFY_CHECK(*r >= 0 && *a >= 0);
 
@@ -389,6 +452,18 @@ SECP256K1_INLINE static void secp256k1_write_be64(unsigned char* p, uint64_t x) 
     p[2] = x >> 40;
     p[1] = x >> 48;
     p[0] = x >> 56;
+}
+
+/* Rotate a uint32_t to the right. */
+SECP256K1_INLINE static uint32_t secp256k1_rotr32(const uint32_t x, const unsigned int by) {
+#if defined(_MSC_VER)
+    return _rotr(x, by);  /* needs <stdlib.h> */
+#else
+    /* Reduce rotation amount to avoid UB when shifting. */
+    const unsigned int mask = CHAR_BIT * sizeof(x) - 1;
+    /* Turned into a rot instruction by GCC and clang. */
+    return (x >> (by & mask)) | (x << ((-by) & mask));
+#endif
 }
 
 #endif /* SECP256K1_UTIL_H */

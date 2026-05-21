@@ -1,4 +1,4 @@
-// Copyright (c) 2019-2021 The Bitcoin Core developers
+// Copyright (c) 2019-present The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -61,12 +61,10 @@ public:
 
     //! Returns all wallet names in the wallet dir mapped to whether the wallet
     //! is loaded.
-    std::map<std::string, bool> listWalletDir() const;
+    std::map<std::string, std::pair<bool, std::string>> listWalletDir() const;
 
     void closeWallet(WalletModel* wallet_model, QWidget* parent = nullptr);
     void closeAllWallets(QWidget* parent = nullptr);
-
-    void migrateWallet(WalletModel* wallet_model, QWidget* parent = nullptr);
 
 Q_SIGNALS:
     void walletAdded(WalletModel* wallet_model);
@@ -87,6 +85,9 @@ private:
 
     friend class WalletControllerActivity;
     friend class MigrateWalletActivity;
+
+    //! Starts the wallet closure procedure
+    void removeWallet(WalletModel* wallet_model);
 };
 
 class WalletControllerActivity : public QObject
@@ -186,7 +187,8 @@ class MigrateWalletActivity : public WalletControllerActivity
 public:
     MigrateWalletActivity(WalletController* wallet_controller, QWidget* parent) : WalletControllerActivity(wallet_controller, parent) {}
 
-    void migrate(WalletModel* wallet_model);
+    void restore_and_migrate(const fs::path& path, const std::string& wallet_name);
+    void migrate(const std::string& path);
 
 Q_SIGNALS:
     void migrated(WalletModel* wallet_model);
@@ -194,6 +196,7 @@ Q_SIGNALS:
 private:
     QString m_success_message;
 
+    void do_migrate(const std::string& name);
     void finish();
 };
 

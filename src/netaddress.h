@@ -1,4 +1,4 @@
-// Copyright (c) 2009-2022 The Bitcoin Core developers
+// Copyright (c) 2009-present The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -18,6 +18,7 @@
 #include <cstdint>
 #include <ios>
 #include <string>
+#include <string_view>
 #include <vector>
 
 /**
@@ -103,7 +104,7 @@ static constexpr size_t ADDR_INTERNAL_SIZE = 10;
 /// SAM 3.1 and earlier do not support specifying ports and force the port to 0.
 static constexpr uint16_t I2P_SAM31_PORT{0};
 
-std::string OnionToString(Span<const uint8_t> addr);
+std::string OnionToString(std::span<const uint8_t> addr);
 
 /**
  * Network address.
@@ -139,7 +140,7 @@ public:
      * (e.g. IPv4) disguised as IPv6. This encoding is used in the legacy
      * `addr` encoding.
      */
-    void SetLegacyIPv6(Span<const uint8_t> ipv6);
+    void SetLegacyIPv6(std::span<const uint8_t> ipv6);
 
     bool SetInternal(const std::string& name);
 
@@ -151,7 +152,7 @@ public:
      * @returns Whether the operation was successful.
      * @see CNetAddr::IsTor(), CNetAddr::IsI2P()
      */
-    bool SetSpecial(const std::string& addr);
+    bool SetSpecial(std::string_view addr);
 
     bool IsBindAny() const; // INADDR_ANY equivalent
     [[nodiscard]] bool IsIPv4() const { return m_net == NET_IPV4; } // IPv4 mapped address (::FFFF:0:0/96, 0.0.0.0/0)
@@ -205,11 +206,10 @@ public:
     std::vector<unsigned char> GetAddrBytes() const;
     int GetReachabilityFrom(const CNetAddr& paddrPartner) const;
 
-    explicit CNetAddr(const struct in6_addr& pipv6Addr, const uint32_t scope = 0);
+    explicit CNetAddr(const struct in6_addr& pipv6Addr, uint32_t scope = 0);
     bool GetIn6Addr(struct in6_addr* pipv6Addr) const;
 
     friend bool operator==(const CNetAddr& a, const CNetAddr& b);
-    friend bool operator!=(const CNetAddr& a, const CNetAddr& b) { return !(a == b); }
     friend bool operator<(const CNetAddr& a, const CNetAddr& b);
 
     /**
@@ -237,7 +237,7 @@ public:
     template <typename Stream>
     void Serialize(Stream& s) const
     {
-        if (s.GetParams().enc == Encoding::V2) {
+        if (s.template GetParams<SerParams>().enc == Encoding::V2) {
             SerializeV2Stream(s);
         } else {
             SerializeV1Stream(s);
@@ -250,7 +250,7 @@ public:
     template <typename Stream>
     void Unserialize(Stream& s)
     {
-        if (s.GetParams().enc == Encoding::V2) {
+        if (s.template GetParams<SerParams>().enc == Encoding::V2) {
             UnserializeV2Stream(s);
         } else {
             UnserializeV1Stream(s);
@@ -279,7 +279,7 @@ private:
      * @returns Whether the operation was successful.
      * @see CNetAddr::IsTor()
      */
-    bool SetTor(const std::string& addr);
+    bool SetTor(std::string_view addr);
 
     /**
      * Parse an I2P address and set this object to it.
@@ -288,7 +288,7 @@ private:
      * @returns Whether the operation was successful.
      * @see CNetAddr::IsI2P()
      */
-    bool SetI2P(const std::string& addr);
+    bool SetI2P(std::string_view addr);
 
     /**
      * Size of CNetAddr when serialized as ADDRv1 (pre-BIP155) (in bytes).
@@ -437,7 +437,7 @@ private:
 
         if (SetNetFromBIP155Network(bip155_net, address_size)) {
             m_addr.resize(address_size);
-            s >> Span{m_addr};
+            s >> std::span{m_addr};
 
             if (m_net != NET_IPV6) {
                 return;
@@ -448,7 +448,7 @@ private:
             // Recognize NET_INTERNAL embedded in IPv6, such addresses are not
             // gossiped but could be coming from addrman, when unserializing from
             // disk.
-            if (HasPrefix(m_addr, INTERNAL_IN_IPV6_PREFIX)) {
+            if (util::HasPrefix(m_addr, INTERNAL_IN_IPV6_PREFIX)) {
                 m_net = NET_INTERNAL;
                 memmove(m_addr.data(), m_addr.data() + INTERNAL_IN_IPV6_PREFIX.size(),
                         ADDR_INTERNAL_SIZE);
@@ -456,8 +456,8 @@ private:
                 return;
             }
 
-            if (!HasPrefix(m_addr, IPV4_IN_IPV6_PREFIX) &&
-                !HasPrefix(m_addr, TORV2_IN_IPV6_PREFIX)) {
+            if (!util::HasPrefix(m_addr, IPV4_IN_IPV6_PREFIX) &&
+                !util::HasPrefix(m_addr, TORV2_IN_IPV6_PREFIX)) {
                 return;
             }
 
@@ -522,7 +522,6 @@ public:
     bool IsValid() const;
 
     friend bool operator==(const CSubNet& a, const CSubNet& b);
-    friend bool operator!=(const CSubNet& a, const CSubNet& b) { return !(a == b); }
     friend bool operator<(const CSubNet& a, const CSubNet& b);
 };
 
@@ -539,14 +538,20 @@ public:
     explicit CService(const struct sockaddr_in& addr);
     uint16_t GetPort() const;
     bool GetSockAddr(struct sockaddr* paddr, socklen_t* addrlen) const;
-    bool SetSockAddr(const struct sockaddr* paddr);
+    /**
+     * Set CService from a network sockaddr.
+     * @param[in] paddr Pointer to sockaddr structure
+     * @param[in] addrlen Length of sockaddr structure in bytes. This will be checked to exactly match the length of
+     * a socket address of the provided family, unless std::nullopt is passed
+     * @returns true on success
+     */
+    bool SetSockAddr(const struct sockaddr* paddr, socklen_t addrlen);
     /**
      * Get the address family
      * @returns AF_UNSPEC if unspecified
      */
     [[nodiscard]] sa_family_t GetSAFamily() const;
     friend bool operator==(const CService& a, const CService& b);
-    friend bool operator!=(const CService& a, const CService& b) { return !(a == b); }
     friend bool operator<(const CService& a, const CService& b);
     std::vector<unsigned char> GetKey() const;
     std::string ToStringAddrPort() const;
@@ -567,8 +572,8 @@ class CServiceHash
 {
 public:
     CServiceHash()
-        : m_salt_k0{GetRand<uint64_t>()},
-          m_salt_k1{GetRand<uint64_t>()}
+        : m_salt_k0{FastRandomContext().rand64()},
+          m_salt_k1{FastRandomContext().rand64()}
     {
     }
 

@@ -1,4 +1,4 @@
-// Copyright (c) 2021-2022 The Bitcoin Core developers
+// Copyright (c) 2021-present The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -8,8 +8,8 @@
 #include <streams.h>
 #include <test/util/logging.h>
 #include <test/util/setup_common.h>
+#include <test/util/time.h>
 #include <util/readwritefile.h>
-
 
 #include <boost/test/unit_test.hpp>
 
@@ -17,7 +17,7 @@ BOOST_FIXTURE_TEST_SUITE(banman_tests, BasicTestingSetup)
 
 BOOST_AUTO_TEST_CASE(file)
 {
-    SetMockTime(777s);
+    NodeClockContext clock_ctx{777s};
     const fs::path banlist_path{m_args.GetDataDirBase() / "banlist_test"};
     {
         const std::string entries_write{

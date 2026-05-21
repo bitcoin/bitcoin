@@ -1,11 +1,13 @@
-// Copyright (c) 2016-2022 The Bitcoin Core developers
+// Copyright (c) 2016-present The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <bench/bench.h>
-
 #include <support/lockedpool.h>
 
+#include <cstddef>
+#include <cstdint>
+#include <util/byte_units.h>
 #include <vector>
 
 #define ASIZE 2048
@@ -14,7 +16,7 @@
 static void BenchLockedPool(benchmark::Bench& bench)
 {
     void *synth_base = reinterpret_cast<void*>(0x08000000);
-    const size_t synth_size = 1024*1024;
+    const size_t synth_size{1_MiB};
     Arena b(synth_base, synth_size, 16);
 
     std::vector<void*> addr{ASIZE, nullptr};
@@ -37,4 +39,4 @@ static void BenchLockedPool(benchmark::Bench& bench)
     addr.clear();
 }
 
-BENCHMARK(BenchLockedPool, benchmark::PriorityLevel::HIGH);
+BENCHMARK(BenchLockedPool);

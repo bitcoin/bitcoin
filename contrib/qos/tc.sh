@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 #
-# Copyright (c) 2017-2021 The Bitcoin Core developers
+# Copyright (c) 2017-present The Bitcoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -34,9 +34,9 @@ tc filter add dev ${IF} parent 1: protocol ip prio 1 handle 1 fw classid 1:10
 tc filter add dev ${IF} parent 1: protocol ip prio 2 handle 2 fw classid 1:11
 
 if [ -n "${LOCALNET_V6}" ] ; then
-	# v6 cannot have the same priority value as v4
-	tc filter add dev ${IF} parent 1: protocol ipv6 prio 3 handle 1 fw classid 1:10
-	tc filter add dev ${IF} parent 1: protocol ipv6 prio 4 handle 2 fw classid 1:11
+  # v6 cannot have the same priority value as v4
+  tc filter add dev ${IF} parent 1: protocol ipv6 prio 3 handle 1 fw classid 1:10
+  tc filter add dev ${IF} parent 1: protocol ipv6 prio 4 handle 2 fw classid 1:11
 fi
 
 #delete any existing rules
@@ -57,6 +57,6 @@ iptables -t mangle -A OUTPUT -p tcp -m tcp --dport 8333 ! -d ${LOCALNET_V4} -j M
 iptables -t mangle -A OUTPUT -p tcp -m tcp --sport 8333 ! -d ${LOCALNET_V4} -j MARK --set-mark 0x2
 
 if [ -n "${LOCALNET_V6}" ] ; then
-	ip6tables -t mangle -A OUTPUT -p tcp -m tcp --dport 8333 ! -d ${LOCALNET_V6} -j MARK --set-mark 0x4
-	ip6tables -t mangle -A OUTPUT -p tcp -m tcp --sport 8333 ! -d ${LOCALNET_V6} -j MARK --set-mark 0x4
+  ip6tables -t mangle -A OUTPUT -p tcp -m tcp --dport 8333 ! -d ${LOCALNET_V6} -j MARK --set-mark 0x4
+  ip6tables -t mangle -A OUTPUT -p tcp -m tcp --sport 8333 ! -d ${LOCALNET_V6} -j MARK --set-mark 0x4
 fi

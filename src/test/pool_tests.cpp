@@ -1,4 +1,4 @@
-// Copyright (c) 2022 The Bitcoin Core developers
+// Copyright (c) 2022-present The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -90,7 +90,7 @@ BOOST_AUTO_TEST_CASE(allocate_any_byte)
 
     uint8_t num_allocs = 200;
 
-    auto data = std::vector<Span<uint8_t>>();
+    auto data = std::vector<std::span<uint8_t>>();
 
     // allocate an increasing number of bytes
     for (uint8_t num_bytes = 0; num_bytes < num_allocs; ++num_bytes) {
@@ -129,17 +129,17 @@ BOOST_AUTO_TEST_CASE(random_allocations)
     std::vector<PtrSizeAlignment> ptr_size_alignment{};
     for (size_t i = 0; i < 1000; ++i) {
         // make it a bit more likely to allocate than deallocate
-        if (ptr_size_alignment.empty() || 0 != InsecureRandRange(4)) {
+        if (ptr_size_alignment.empty() || 0 != m_rng.randrange(4)) {
             // allocate a random item
-            std::size_t alignment = std::size_t{1} << InsecureRandRange(8);          // 1, 2, ..., 128
-            std::size_t size = (InsecureRandRange(200) / alignment + 1) * alignment; // multiple of alignment
+            std::size_t alignment = std::size_t{1} << m_rng.randrange(8);          // 1, 2, ..., 128
+            std::size_t size = (m_rng.randrange(200) / alignment + 1) * alignment; // multiple of alignment
             void* ptr = resource.Allocate(size, alignment);
             BOOST_TEST(ptr != nullptr);
             BOOST_TEST((reinterpret_cast<uintptr_t>(ptr) & (alignment - 1)) == 0);
             ptr_size_alignment.push_back({ptr, size, alignment});
         } else {
             // deallocate a random item
-            auto& x = ptr_size_alignment[InsecureRandRange(ptr_size_alignment.size())];
+            auto& x = ptr_size_alignment[m_rng.randrange(ptr_size_alignment.size())];
             resource.Deallocate(x.ptr, x.bytes, x.alignment);
             x = ptr_size_alignment.back();
             ptr_size_alignment.pop_back();

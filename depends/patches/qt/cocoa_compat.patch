@@ -1,0 +1,23 @@
+Disable macOS 15 features in QCocoaCursor
+
+Bypasses an undefined reference to ___isPlatformVersionAtLeast
+for the @available(macOS 15, *) check.
+
+Can be dropped once OSX_MIN_VERSION is updated to 15.0+.
+
+The disabled code was introduced in 4aeb27fbacfade7106b19c460deb5414143a5e53.
+The referenced QTBUG-126240, in turn, refers to the NSCursor API for window
+resize cursors.
+
+
+--- a/qtbase/src/plugins/platforms/cocoa/qcocoacursor.mm
++++ b/qtbase/src/plugins/platforms/cocoa/qcocoacursor.mm
+@@ -138,7 +138,7 @@ NSCursor *QCocoaCursor::convertCursor(QCursor *cursor)
+     case Qt::SizeHorCursor:
+     case Qt::SizeBDiagCursor:
+     case Qt::SizeFDiagCursor: {
+-#if QT_MACOS_PLATFORM_SDK_EQUAL_OR_ABOVE(150000)
++#if 0
+         if (@available(macOS 15, *)) {
+             auto position = [newShape]{
+                 switch (newShape) {

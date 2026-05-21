@@ -1,13 +1,15 @@
-// Copyright (c) 2019-2022 The Bitcoin Core developers
+// Copyright (c) 2019-present The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include <tinyformat.h>
 #include <util/bip32.h>
+
+#include <tinyformat.h>
 #include <util/strencodings.h>
 
 #include <cstdint>
 #include <cstdio>
+#include <optional>
 #include <sstream>
 
 bool ParseHDKeypath(const std::string& keypath_str, std::vector<uint32_t>& keypath)
@@ -36,14 +38,11 @@ bool ParseHDKeypath(const std::string& keypath_str, std::vector<uint32_t>& keypa
         }
 
         // Ensure this is only numbers
-        if (item.find_first_not_of( "0123456789" ) != std::string::npos) {
+        const auto number{ToIntegral<uint32_t>(item)};
+        if (!number) {
             return false;
         }
-        uint32_t number;
-        if (!ParseUInt32(item, &number)) {
-            return false;
-        }
-        path |= number;
+        path |= *number;
 
         keypath.push_back(path);
         first = false;

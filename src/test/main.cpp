@@ -1,4 +1,4 @@
-// Copyright (c) 2011-2022 The Bitcoin Core developers
+// Copyright (c) 2011-present The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -13,18 +13,6 @@
 
 #include <functional>
 #include <iostream>
-
-/** Redirect debug log to unit_test.log files */
-const std::function<void(const std::string&)> G_TEST_LOG_FUN = [](const std::string& s) {
-    static const bool should_log{std::any_of(
-        &boost::unit_test::framework::master_test_suite().argv[1],
-        &boost::unit_test::framework::master_test_suite().argv[boost::unit_test::framework::master_test_suite().argc],
-        [](const char* arg) {
-            return std::string{"DEBUG_LOG_OUT"} == arg;
-        })};
-    if (!should_log) return;
-    std::cout << s;
-};
 
 /**
  * Retrieve the command line arguments from boost.

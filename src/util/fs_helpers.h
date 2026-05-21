@@ -1,5 +1,5 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
-// Copyright (c) 2009-2023 The Bitcoin Core developers
+// Copyright (c) 2009-present The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -12,6 +12,25 @@
 #include <cstdio>
 #include <iosfwd>
 #include <limits>
+#include <optional>
+#include <string>
+
+#ifdef __APPLE__
+enum class FSType {
+    EXFAT,
+    OTHER,
+    ERROR
+};
+
+/**
+ * Detect filesystem type for a given path.
+ * Currently identifies exFAT filesystems which cause issues on macOS.
+ *
+ * @param[in] path The directory path to check
+ * @return FSType enum indicating the filesystem type
+ */
+FSType GetFilesystemType(const fs::path& path);
+#endif
 
 /**
  * Ensure file contents are fully committed to disk, using a platform-specific
@@ -61,6 +80,27 @@ void ReleaseDirectoryLocks();
 
 bool TryCreateDirectories(const fs::path& p);
 fs::path GetDefaultDataDir();
+
+/** Convert fs::perms to symbolic string of the form 'rwxrwxrwx'
+ *
+ * @param[in] p the perms to be converted
+ * @return Symbolic permissions string
+ */
+std::string PermsToSymbolicString(fs::perms p);
+/** Interpret a custom permissions level string as fs::perms
+ *
+ * @param[in] s Permission level string
+ * @return Permissions as fs::perms
+ */
+std::optional<fs::perms> InterpretPermString(const std::string& s);
+
+/** Check if a directory is writable by creating a temporary file on it.
+ *
+ * @param[in] dir_path Path of the directory to test
+ * @return true if a temporary file could be created and removed, false otherwise.
+ * @throw std::runtime_error if dir_path is not a directory.
+ */
+bool IsDirWritable(const fs::path& dir_path);
 
 #ifdef WIN32
 fs::path GetSpecialFolderPath(int nFolder, bool fCreate = true);

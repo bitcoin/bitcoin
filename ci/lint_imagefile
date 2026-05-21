@@ -4,21 +4,20 @@
 
 # See test/lint/README.md for usage.
 
-FROM debian:bookworm
+FROM mirror.gcr.io/ubuntu:24.04
 
-ENV DEBIAN_FRONTEND=noninteractive
-ENV LC_ALL=C.UTF-8
+# Pin uv and ruff to minor version to avoid breaking changes
+# https://docs.astral.sh/uv/reference/policies/versioning/
+# https://docs.astral.sh/ruff/versioning/
+COPY --from=ghcr.io/astral-sh/uv:0.10 /uv /uvx /bin/
+COPY --from=ghcr.io/astral-sh/ruff:0.15 /ruff /bin/
 
+COPY ./ci/retry/retry /ci_retry
 COPY ./.python-version /.python-version
-COPY ./ci/lint/container-entrypoint.sh /entrypoint.sh
-COPY ./ci/lint/04_install.sh /install.sh
-COPY ./test/lint/test_runner /test/lint/test_runner
+COPY ./ci/lint/requirements.txt /ci/lint/requirements.txt
+COPY ./ci/lint/01_install.sh /install.sh
 
 RUN /install.sh && \
-  echo 'alias lint="./ci/lint/06_script.sh"' >> ~/.bashrc && \
-  chmod 755 /entrypoint.sh && \
   rm -rf /var/lib/apt/lists/*
 
-
 WORKDIR /bitcoin
-ENTRYPOINT ["/entrypoint.sh"]

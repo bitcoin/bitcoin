@@ -1,4 +1,4 @@
-// Copyright (c) 2011-2022 The Bitcoin Core developers
+// Copyright (c) 2011-present The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -8,11 +8,12 @@
 #include <cstdint>
 #include <qt/bitcoinunits.h>
 #include <qt/guiconstants.h>
+#include <util/byte_units.h>
 
 #include <QAbstractListModel>
 #include <QFont>
 
-#include <assert.h>
+#include <cassert>
 #include <variant>
 
 struct bilingual_str;
@@ -26,12 +27,12 @@ static constexpr uint16_t DEFAULT_GUI_PROXY_PORT = 9050;
 /**
  * Convert configured prune target MiB to displayed GB. Round up to avoid underestimating max disk usage.
  */
-static inline int PruneMiBtoGB(int64_t mib) { return (mib * 1024 * 1024 + GB_BYTES - 1) / GB_BYTES; }
+static inline int PruneMiBtoGB(int64_t mib) { return (mib * 1_MiB + GB_BYTES - 1) / GB_BYTES; }
 
 /**
  * Convert displayed prune target GB to configured MiB. Round down so roundtrip GB -> MiB -> GB conversion is stable.
  */
-static inline int64_t PruneGBtoMiB(int gb) { return gb * GB_BYTES / 1024 / 1024; }
+static inline int64_t PruneGBtoMiB(int gb) { return gb * GB_BYTES / 1_MiB; }
 
 /** Interface from Qt to configuration data structure for Bitcoin client.
    To Qt, the options are presented as a list with the different options
@@ -50,7 +51,6 @@ public:
         StartAtStartup,         // bool
         ShowTrayIcon,           // bool
         MinimizeToTray,         // bool
-        MapPortUPnP,            // bool
         MapPortNatpmp,          // bool
         MinimizeOnClose,        // bool
         ProxyUse,               // bool

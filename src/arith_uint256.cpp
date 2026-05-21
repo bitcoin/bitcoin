@@ -1,12 +1,13 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
-// Copyright (c) 2009-2022 The Bitcoin Core developers
+// Copyright (c) 2009-present The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <arith_uint256.h>
 
-#include <uint256.h>
 #include <crypto/common.h>
+#include <uint256.h>
+#include <util/overflow.h>
 
 #include <cassert>
 
@@ -194,7 +195,7 @@ arith_uint256& arith_uint256::SetCompact(uint32_t nCompact, bool* pfNegative, bo
 
 uint32_t arith_uint256::GetCompact(bool fNegative) const
 {
-    int nSize = (bits() + 7) / 8;
+    int nSize = CeilDiv(bits(), 8u);
     uint32_t nCompact = 0;
     if (nSize <= 3) {
         nCompact = GetLow64() << 8 * (3 - nSize);
@@ -229,3 +230,7 @@ arith_uint256 UintToArith256(const uint256 &a)
         b.pn[x] = ReadLE32(a.begin() + x*4);
     return b;
 }
+
+// Explicit instantiations for base_uint<6144> (used in test/fuzz/muhash.cpp).
+template base_uint<6144>& base_uint<6144>::operator*=(const base_uint<6144>& b);
+template base_uint<6144>& base_uint<6144>::operator/=(const base_uint<6144>& b);

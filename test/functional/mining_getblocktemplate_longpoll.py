@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (c) 2014-2021 The Bitcoin Core developers
+# Copyright (c) 2014-present The Bitcoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test longpolling with getblocktemplate."""
@@ -8,7 +8,7 @@ import random
 import threading
 
 from test_framework.test_framework import BitcoinTestFramework
-from test_framework.util import get_rpc_proxy
+from test_framework.util import assert_equal, get_rpc_proxy
 from test_framework.wallet import MiniWallet
 
 
@@ -37,7 +37,7 @@ class GetBlockTemplateLPTest(BitcoinTestFramework):
         template = self.nodes[0].getblocktemplate({'rules': ['segwit']})
         longpollid = template['longpollid']
         template2 = self.nodes[0].getblocktemplate({'rules': ['segwit']})
-        assert template2['longpollid'] == longpollid
+        assert_equal(template2['longpollid'], longpollid)
 
         self.log.info("Test that longpoll waits if we do nothing")
         thr = LongpollThread(self.nodes[0])
@@ -73,4 +73,4 @@ class GetBlockTemplateLPTest(BitcoinTestFramework):
         assert not thr.is_alive()
 
 if __name__ == '__main__':
-    GetBlockTemplateLPTest().main()
+    GetBlockTemplateLPTest(__file__).main()

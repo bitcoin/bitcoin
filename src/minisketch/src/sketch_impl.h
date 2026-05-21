@@ -92,7 +92,8 @@ template<typename F>
 void Sqr(std::vector<typename F::Elem>& poly, const F& field) {
     if (poly.size() == 0) return;
     poly.resize(poly.size() * 2 - 1);
-    for (int x = poly.size() - 1; x >= 0; --x) {
+    for (size_t i = 0; i < poly.size(); ++i) {
+        auto x = poly.size() - i - 1;
         poly[x] = (x & 1) ? 0 : field.Sqr(poly[x / 2]);
     }
 }
@@ -217,7 +218,7 @@ bool RecFindRoots(std::vector<std::vector<typename F::Elem>>& stack, size_t pos,
         }
 
         if (fully_factorizable) {
-            // Every succesful iteration of this algorithm splits the input
+            // Every successful iteration of this algorithm splits the input
             // polynomial further into buckets, each corresponding to a subset
             // of 2^(BITS-depth) roots. If after depth splits the degree of
             // the polynomial is >= 2^(BITS-depth), something is wrong.
@@ -297,7 +298,7 @@ std::vector<typename F::Elem> BerlekampMassey(const std::vector<typename F::Elem
         auto discrepancy = syndromes[n];
         for (size_t i = 1; i < current.size(); ++i) discrepancy ^= table[n - i](current[i]);
         if (discrepancy != 0) {
-            int x = n + 1 - (current.size() - 1) - (prev.size() - 1);
+            int x = static_cast<int>(n + 1 - (current.size() - 1) - (prev.size() - 1));
             if (!b_have_inv) {
                 b_inv = field.Inv(b);
                 b_have_inv = true;
@@ -366,7 +367,7 @@ public:
     }
 
     size_t Syndromes() const override { return m_syndromes.size(); }
-    void Init(int count) override { m_syndromes.assign(count, 0); }
+    void Init(size_t count) override { m_syndromes.assign(count, 0); }
 
     void Add(uint64_t val) override
     {
@@ -405,7 +406,7 @@ public:
         for (const auto& root : roots) {
             *(out++) = m_field.ToUint64(root);
         }
-        return roots.size();
+        return static_cast<int>(roots.size());
     }
 
     size_t Merge(const Sketch* other_sketch) override

@@ -1,13 +1,15 @@
 #!/usr/bin/env python3
-# Copyright (c) 2017-2022 The Bitcoin Core developers
+# Copyright (c) 2017-present The Bitcoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test bitcoin-cli"""
 
 from decimal import Decimal
 import re
+import subprocess
 
 from test_framework.blocktools import COINBASE_MATURITY
+from test_framework.netutil import test_ipv6_local
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import (
     assert_equal,
@@ -15,6 +17,7 @@ from test_framework.util import (
     assert_raises_process_error,
     assert_raises_rpc_error,
     get_auth_cookie,
+    rpc_port,
 )
 import time
 
@@ -28,7 +31,12 @@ JSON_PARSING_ERROR = 'error: Error parsing JSON: foo'
 BLOCKS_VALUE_OF_ZERO = 'error: the first argument (number of blocks to generate, default: 1) must be an integer value greater than zero'
 TOO_MANY_ARGS = 'error: too many arguments (maximum 2 for nblocks and maxtries)'
 WALLET_NOT_LOADED = 'Requested wallet does not exist or is not loaded'
-WALLET_NOT_SPECIFIED = 'Wallet file not specified'
+WALLET_NOT_SPECIFIED = (
+    "Multiple wallets are loaded. Please select which wallet to use by requesting the RPC "
+    "through the /wallet/<walletname> URI path. Or for the CLI, specify the \"-rpcwallet=<walletname>\" "
+    "option before the command (run \"bitcoin-cli -h\" for help or \"bitcoin-cli listwallets\" to see "
+    "which wallets are currently loaded)."
+)
 
 
 def cli_get_info_string_to_dict(cli_get_info_string):
@@ -66,18 +74,51 @@ def cli_get_info_string_to_dict(cli_get_info_string):
 
 
 class TestBitcoinCli(BitcoinTestFramework):
-    def add_options(self, parser):
-        self.add_wallet_options(parser)
-
     def set_test_params(self):
         self.setup_clean_chain = True
         self.num_nodes = 1
+        self.uses_wallet = None
 
     def skip_test_if_missing_module(self):
         self.skip_if_no_cli()
 
+    def test_netinfo(self):
+        """Test -netinfo output format."""
+        self.log.info("Test -netinfo header and separate local services line")
+        out = self.nodes[0].cli('-netinfo').send_cli().splitlines()
+        assert out[0].startswith(f"{self.config['environment']['CLIENT_NAME']} client ")
+        assert any(re.match(r"^Local services:.+network", line) for line in out)
+
+        self.log.info("Test -netinfo local services are moved to header if details are requested")
+        det = self.nodes[0].cli('-netinfo', '1').send_cli().splitlines()
+        self.log.debug(f"Test -netinfo 1 header output: {det[0]}")
+        assert re.match(rf"^{re.escape(self.config['environment']['CLIENT_NAME'])} client.+services nwl2?$", det[0])
+        assert not any(line.startswith("Local services:") for line in det)
+
+    def test_echojson_positional_equals(self):
+        """Test JSON parameter parsing containing '=' with -named echojson"""
+        self.log.info("Test JSON parameter parsing containing '=' is handled correctly with -named")
+
+        # This should be treated as a positional JSON argument, not as a named
+        result = self.nodes[0].cli("-named", "echojson", '["key=value"]').send_cli()
+        assert_equal(result, [["key=value"]])
+
+        result = self.nodes[0].cli("-named", "echojson", '["key=value", "another=test"]').send_cli()
+        assert_equal(result, [["key=value", "another=test"]])
+
+        result = self.nodes[0].cli("-named", "echojson", '["data=test"]', "42").send_cli()
+        expected = [["data=test"], 42]
+        assert_equal(result, expected)
+
+        # This should be treated as a named parameter, as arg0 and arg1 are valid parameter names
+        result = self.nodes[0].cli("-named", "echojson", 'arg0=["data=test"]', 'arg1=42').send_cli()
+        expected = [["data=test"], 42]
+        assert_equal(result, expected)
+
     def run_test(self):
         """Main test logic"""
+        self.test_echojson_positional_equals()
+
         self.generate(self.nodes[0], BLOCKS)
 
         self.log.info("Compare responses from getblockchaininfo RPC and `bitcoin-cli getblockchaininfo`")
@@ -98,17 +139,74 @@ class TestBitcoinCli(BitcoinTestFramework):
 
         self.log.info("Test -stdinrpcpass option")
         assert_equal(BLOCKS, self.nodes[0].cli(f'-rpcuser={user}', '-stdinrpcpass', input=password).getblockcount())
-        assert_raises_process_error(1, 'Incorrect rpcuser or rpcpassword', self.nodes[0].cli(f'-rpcuser={user}', '-stdinrpcpass', input='foo').echo)
+        assert_raises_process_error(1, 'Incorrect rpcuser or rpcpassword were specified', self.nodes[0].cli(f'-rpcuser={user}', '-stdinrpcpass', input='foo').echo)
 
         self.log.info("Test -stdin and -stdinrpcpass")
         assert_equal(['foo', 'bar'], self.nodes[0].cli(f'-rpcuser={user}', '-stdin', '-stdinrpcpass', input=f'{password}\nfoo\nbar').echo())
-        assert_raises_process_error(1, 'Incorrect rpcuser or rpcpassword', self.nodes[0].cli(f'-rpcuser={user}', '-stdin', '-stdinrpcpass', input='foo').echo)
+        assert_raises_process_error(1, 'Incorrect rpcuser or rpcpassword were specified', self.nodes[0].cli(f'-rpcuser={user}', '-stdin', '-stdinrpcpass', input='foo').echo)
 
         self.log.info("Test connecting to a non-existing server")
         assert_raises_process_error(1, "Could not connect to the server", self.nodes[0].cli('-rpcport=1').echo)
 
+        self.log.info("Test handling of invalid ports in rpcconnect")
+        assert_raises_process_error(1, "Invalid port provided in -rpcconnect: 127.0.0.1:notaport", self.nodes[0].cli("-rpcconnect=127.0.0.1:notaport").echo)
+        assert_raises_process_error(1, "Invalid port provided in -rpcconnect: 127.0.0.1:-1", self.nodes[0].cli("-rpcconnect=127.0.0.1:-1").echo)
+        assert_raises_process_error(1, "Invalid port provided in -rpcconnect: 127.0.0.1:0", self.nodes[0].cli("-rpcconnect=127.0.0.1:0").echo)
+        assert_raises_process_error(1, "Invalid port provided in -rpcconnect: 127.0.0.1:65536", self.nodes[0].cli("-rpcconnect=127.0.0.1:65536").echo)
+
+        self.log.info("Checking for IPv6")
+        have_ipv6 = test_ipv6_local()
+        if not have_ipv6:
+            self.log.info("Skipping IPv6 tests")
+
+        if have_ipv6:
+            assert_raises_process_error(1, "Invalid port provided in -rpcconnect: [::1]:notaport", self.nodes[0].cli("-rpcconnect=[::1]:notaport").echo)
+            assert_raises_process_error(1, "Invalid port provided in -rpcconnect: [::1]:-1", self.nodes[0].cli("-rpcconnect=[::1]:-1").echo)
+            assert_raises_process_error(1, "Invalid port provided in -rpcconnect: [::1]:0", self.nodes[0].cli("-rpcconnect=[::1]:0").echo)
+            assert_raises_process_error(1, "Invalid port provided in -rpcconnect: [::1]:65536", self.nodes[0].cli("-rpcconnect=[::1]:65536").echo)
+
+        self.log.info("Test handling of invalid ports in rpcport")
+        assert_raises_process_error(1, "Invalid port provided in -rpcport: notaport", self.nodes[0].cli("-rpcport=notaport").echo)
+        assert_raises_process_error(1, "Invalid port provided in -rpcport: -1", self.nodes[0].cli("-rpcport=-1").echo)
+        assert_raises_process_error(1, "Invalid port provided in -rpcport: 0", self.nodes[0].cli("-rpcport=0").echo)
+        assert_raises_process_error(1, "Invalid port provided in -rpcport: 65536", self.nodes[0].cli("-rpcport=65536").echo)
+
+        self.log.info("Test port usage preferences")
+        node_rpc_port = rpc_port(self.nodes[0].index)
+        # Prevent bitcoin-cli from using existing rpcport in conf
+        conf_rpcport = "rpcport=" + str(node_rpc_port)
+        self.nodes[0].replace_in_config([(conf_rpcport, "#" + conf_rpcport)])
+        # prefer rpcport over rpcconnect
+        assert_raises_process_error(1, "Could not connect to the server 127.0.0.1:1", self.nodes[0].cli(f"-rpcconnect=127.0.0.1:{node_rpc_port}", "-rpcport=1").echo)
+        if have_ipv6:
+            assert_raises_process_error(1, "Could not connect to the server ::1:1", self.nodes[0].cli(f"-rpcconnect=[::1]:{node_rpc_port}", "-rpcport=1").echo)
+
+        assert_equal(BLOCKS, self.nodes[0].cli("-rpcconnect=127.0.0.1:18999", f'-rpcport={node_rpc_port}').getblockcount())
+        if have_ipv6:
+            assert_equal(BLOCKS, self.nodes[0].cli("-rpcconnect=[::1]:18999", f'-rpcport={node_rpc_port}').getblockcount())
+
+        # prefer rpcconnect port over default
+        assert_equal(BLOCKS, self.nodes[0].cli(f"-rpcconnect=127.0.0.1:{node_rpc_port}").getblockcount())
+        if have_ipv6:
+            assert_equal(BLOCKS, self.nodes[0].cli(f"-rpcconnect=[::1]:{node_rpc_port}").getblockcount())
+
+        # prefer rpcport over default
+        assert_equal(BLOCKS, self.nodes[0].cli(f'-rpcport={node_rpc_port}').getblockcount())
+        # Re-enable rpcport in conf if present
+        self.nodes[0].replace_in_config([("#" + conf_rpcport, conf_rpcport)])
+
         self.log.info("Test connecting with non-existing RPC cookie file")
-        assert_raises_process_error(1, "Could not locate RPC credentials", self.nodes[0].cli('-rpccookiefile=does-not-exist', '-rpcpassword=').echo)
+        assert_raises_process_error(1, "Failed to read cookie file and no rpcpassword was specified.", self.nodes[0].cli('-rpccookiefile=does-not-exist', '-rpcpassword=').echo)
+
+        self.log.info("Test connecting with neither cookie file, nor password")
+        assert_raises_process_error(1, "Cookie file was disabled via -norpccookiefile and no rpcpassword was specified.", self.nodes[0].cli("-norpccookiefile").echo)
+        assert_raises_process_error(1, "Cookie file was disabled via -norpccookiefile and no rpcpassword was specified.", self.nodes[0].cli("-norpccookiefile", "-rpcpassword=").echo)
+
+        self.log.info("Test connecting with invalid cookie file")
+        assert_raises_process_error(1, "Cookie file credentials were invalid and no rpcpassword was specified.", self.nodes[0].cli(f"-rpccookiefile={self.nodes[0].datadir_path / 'bitcoin.conf'}").echo)
+
+        self.log.info("Test connecting without RPC cookie file and with password arg")
+        assert_equal(BLOCKS, self.nodes[0].cli('-norpccookiefile', f'-rpcuser={user}', f'-rpcpassword={password}').getblockcount())
 
         self.log.info("Test -getinfo with arguments fails")
         assert_raises_process_error(1, "-getinfo takes no arguments", self.nodes[0].cli('-getinfo').help)
@@ -123,7 +221,7 @@ class TestBitcoinCli(BitcoinTestFramework):
         assert_raises_process_error(1, "Invalid value for -color option. Valid values: always, auto, never.", self.nodes[0].cli('-getinfo', '-color=foo').send_cli)
 
         self.log.info("Test -getinfo returns expected network and blockchain info")
-        if self.is_specified_wallet_compiled():
+        if self.is_wallet_compiled():
             self.import_deterministic_coinbase_privkeys()
             self.nodes[0].encryptwallet(password)
         cli_get_info_string = self.nodes[0].cli('-getinfo').send_cli()
@@ -149,7 +247,7 @@ class TestBitcoinCli(BitcoinTestFramework):
         cli_get_info = cli_get_info_string_to_dict(cli_get_info_string)
         assert_equal(cli_get_info["Proxies"], "127.0.0.1:9050 (ipv4, ipv6, onion, cjdns), 127.0.0.1:7656 (i2p)")
 
-        if self.is_specified_wallet_compiled():
+        if self.is_wallet_compiled():
             self.log.info("Test -getinfo and bitcoin-cli getwalletinfo return expected wallet info")
             # Explicitly set the output type in order to have consistent tx vsize / fees
             # for both legacy and descriptor wallets (disables the change address type detection algorithm)
@@ -159,7 +257,6 @@ class TestBitcoinCli(BitcoinTestFramework):
             wallet_info = self.nodes[0].getwalletinfo()
             assert_equal(int(cli_get_info['Keypool size']), wallet_info['keypoolsize'])
             assert_equal(int(cli_get_info['Unlocked until']), wallet_info['unlocked_until'])
-            assert_equal(Decimal(cli_get_info['Transaction fee rate (-paytxfee) (BTC/kvB)']), wallet_info['paytxfee'])
             assert_equal(Decimal(cli_get_info['Min tx relay fee rate (BTC/kvB)']), network_info['relayfee'])
             assert_equal(self.nodes[0].cli.getwalletinfo(), wallet_info)
 
@@ -222,6 +319,10 @@ class TestBitcoinCli(BitcoinTestFramework):
             assert_equal(cli_get_info['Wallet'], wallets[1])
             assert_equal(Decimal(cli_get_info['Balance']), amounts[1])
 
+            self.log.info("Test -getinfo -norpcwallet returns the same as -getinfo")
+            # Previously there was a bug where -norpcwallet was treated like -rpcwallet=0
+            assert_equal(self.nodes[0].cli('-getinfo', "-norpcwallet").send_cli(), cli_get_info_string)
+
             self.log.info("Test -getinfo with -rpcwallet=remaining-non-default-wallet returns only its balance")
             cli_get_info_string = self.nodes[0].cli('-getinfo', rpcwallet2).send_cli()
             cli_get_info = cli_get_info_string_to_dict(cli_get_info_string)
@@ -282,6 +383,10 @@ class TestBitcoinCli(BitcoinTestFramework):
             n4 = 10
             blocks = self.nodes[0].getblockcount()
 
+            self.log.info('Test -generate -rpcwallet=<filename> raise RPC error')
+            wallet2_path = f'-rpcwallet={self.nodes[0].wallets_path / wallets[2] / self.wallet_data_filename}'
+            assert_raises_rpc_error(-18, WALLET_NOT_LOADED, self.nodes[0].cli(wallet2_path, '-generate').echo)
+
             self.log.info('Test -generate -rpcwallet with no args')
             generate = self.nodes[0].cli(rpcwallet2, '-generate').send_cli()
             assert_equal(set(generate.keys()), {'address', 'blocks'})
@@ -314,10 +419,24 @@ class TestBitcoinCli(BitcoinTestFramework):
             self.log.info("*** Wallet not compiled; cli getwalletinfo and -getinfo wallet tests skipped")
             self.generate(self.nodes[0], 25)  # maintain block parity with the wallet_compiled conditional branch
 
+        self.test_netinfo()
+
+        self.log.info("Test -rpcid option sets custom JSON-RPC request ID")
+        with self.nodes[0].assert_debug_log(expected_msgs=['id=myrpcid']):
+            self.nodes[0].cli('-rpcid=myrpcid').getblockcount()
+
+        self.log.info("Test default request logs default id=1")
+        with self.nodes[0].assert_debug_log(expected_msgs=["ThreadRPCServer method=getblockcount", "id=1"]):
+            self.nodes[0].cli.getblockcount()
+
+        self.log.info("Test that request ids with unsafe characters are sanitized in the log")
+        with self.nodes[0].assert_debug_log(expected_msgs=["ThreadRPCServer method=getblockcount", "id=abcdef"]):
+            self.nodes[0].cli('-rpcid=abc<\n>def').getblockcount()
+
         self.log.info("Test -version with node stopped")
         self.stop_node(0)
         cli_response = self.nodes[0].cli('-version').send_cli()
-        assert f"{self.config['environment']['PACKAGE_NAME']} RPC client version" in cli_response
+        assert f"{self.config['environment']['CLIENT_NAME']} RPC client version" in cli_response
 
         self.log.info("Test -rpcwait option successfully waits for RPC connection")
         self.nodes[0].start()  # start node without RPC connection
@@ -332,6 +451,19 @@ class TestBitcoinCli(BitcoinTestFramework):
         assert_raises_process_error(1, "Could not connect to the server", self.nodes[0].cli('-rpcwait', '-rpcwaittimeout=5').echo)
         assert_greater_than_or_equal(time.time(), start_time + 5)
 
+        self.log.info("Test that only one of -addrinfo, -generate, -getinfo, -netinfo may be specified at a time")
+        assert_raises_process_error(1, "Only one of -getinfo, -netinfo may be specified", self.nodes[0].cli('-getinfo', '-netinfo').send_cli)
+
+        if not self.is_ipc_compiled():
+            # This tests behavior when ENABLE_IPC is off. When it is on,
+            # behavior is checked by the interface_ipc_cli.py test.
+            self.log.info("Test bitcoin-cli -ipcconnect triggers error if not built with IPC support")
+            args = [self.binary_paths.bitcoincli, "-ipcconnect=unix", "-getinfo"]
+            result = subprocess.run(args, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True)
+            assert_equal(result.stdout, "error: bitcoin-cli was not built with IPC support\n")
+            assert_equal(result.stderr, None)
+            assert_equal(result.returncode, 1)
+
 
 if __name__ == '__main__':
-    TestBitcoinCli().main()
+    TestBitcoinCli(__file__).main()

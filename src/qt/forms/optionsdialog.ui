@@ -105,7 +105,7 @@
          <item>
           <widget class="QLabel" name="databaseCacheLabel">
            <property name="toolTip">
-            <string extracomment="Tooltip text for Options window setting that sets the size of the database cache. Explains the corresponding effects of increasing/decreasing this value.">Maximum database cache size. A larger cache can contribute to faster sync, after which the benefit is less pronounced for most use cases. Lowering the cache size will reduce memory usage. Unused mempool memory is shared for this cache.</string>
+            <string extracomment="Tooltip text for Options window setting that sets the size of the database cache. Explains the corresponding effects of increasing/decreasing this value.">Maximum database cache size. Make sure you have enough RAM. A larger cache can contribute to faster sync, after which the benefit is less pronounced for most use cases. Lowering the cache size will reduce memory usage. Unused mempool memory is shared for this cache.</string>
            </property>
            <property name="text">
             <string>Size of &amp;database cache</string>
@@ -316,22 +316,12 @@
       </attribute>
       <layout class="QVBoxLayout" name="verticalLayout_Network">
        <item>
-        <widget class="QCheckBox" name="mapPortUpnp">
-         <property name="toolTip">
-          <string>Automatically open the Bitcoin client port on the router. This only works when your router supports UPnP and it is enabled.</string>
-         </property>
-         <property name="text">
-          <string>Map port using &amp;UPnP</string>
-         </property>
-        </widget>
-       </item>
-       <item>
         <widget class="QCheckBox" name="mapPortNatpmp">
          <property name="toolTip">
-          <string>Automatically open the Bitcoin client port on the router. This only works when your router supports NAT-PMP and it is enabled. The external port could be random.</string>
+          <string>Automatically open the Bitcoin client port on the router. This only works when your router supports PCP or NAT-PMP and it is enabled. The external port could be random.</string>
          </property>
          <property name="text">
-          <string>Map port using NA&amp;T-PMP</string>
+          <string>Map port using PCP or NA&amp;T-PMP</string>
          </property>
         </widget>
        </item>

@@ -1,47 +1,6 @@
-# assumeutxo
+# Assumeutxo Design
 
-Assumeutxo is a feature that allows fast bootstrapping of a validating bitcoind
-instance.
-
-## Loading a snapshot
-
-There is currently no canonical source for snapshots, but any downloaded snapshot
-will be checked against a hash that's been hardcoded in source code.
-
-Once you've obtained the snapshot, you can use the RPC command `loadtxoutset` to
-load it.
-
-### Pruning
-
-A pruned node can load a snapshot. To save space, it's possible to delete the
-snapshot file as soon as `loadtxoutset` finishes.
-
-The minimum `-prune` setting is 550 MiB, but this functionality ignores that
-minimum and uses at least 1100 MiB.
-
-As the background sync continues there will be temporarily two chainstate
-directories, each multiple gigabytes in size (likely growing larger than the
-downloaded snapshot).
-
-### Indexes
-
-Indexes work but don't take advantage of this feature. They always start building
-from the genesis block. Once the background validation reaches the snapshot block,
-indexes will continue to build all the way to the tip.
-
-For indexes that support pruning, note that no pruning will take place between
-the snapshot and the tip, until the background sync has completed - after which
-everything is pruned. Depending on how old the snapshot is, this may temporarily
-use a significant amount of disk space.
-
-## Generating a snapshot
-
-The RPC command `dumptxoutset` can be used to generate a snapshot. This can be used
-to create a snapshot on one node that you wish to load on another node.
-It can also be used to verify the hardcoded snapshot hash in the source code.
-
-The utility script
-`./contrib/devtools/utxo_snapshot.sh` may be of use.
+For notes on the usage of Assumeutxo, please refer to [the usage doc](/doc/assumeutxo.md).
 
 ## General background
 
@@ -79,7 +38,7 @@ data.
 ### "Normal" operation via initial block download
 
 `ChainstateManager` manages a single Chainstate object, for which
-`m_snapshot_blockhash` is null. This chainstate is (maybe obviously)
+`m_from_snapshot_blockhash` is `std::nullopt`. This chainstate is (maybe obviously)
 considered active. This is the "traditional" mode of operation for bitcoind.
 
 |    |    |
@@ -104,7 +63,7 @@ chainstate and a sync to tip begins. A new chainstate directory is created in th
 datadir for the snapshot chainstate called `chainstate_snapshot`.
 
 When this directory is present in the datadir, the snapshot chainstate will be detected
-and loaded as active on node startup (via `DetectSnapshotChainstate()`).
+and loaded as active on node startup (via `LoadAssumeutxoChainstate()`).
 
 A special file is created within that directory, `base_blockhash`, which contains the
 serialized `uint256` of the base block of the snapshot. This is used to reinitialize
@@ -138,14 +97,13 @@ sequentially.
 ### Background chainstate hits snapshot base block
 
 Once the tip of the background chainstate hits the base block of the snapshot
-chainstate, we stop use of the background chainstate by setting `m_disabled`, in
-`MaybeCompleteSnapshotValidation()`, which is checked in `ActivateBestChain()`). We hash the
+chainstate, we hash the
 background chainstate's UTXO set contents and ensure it matches the compiled value in
 `CMainParams::m_assumeutxo_data`.
 
 |    |    |
 | ---------- | ----------- |
-| number of chainstates | 2 (ibd has `m_disabled=true`) |
+| number of chainstates | 2 |
 | active chainstate | snapshot |
 
 The background chainstate data lingers on disk until the program is restarted.

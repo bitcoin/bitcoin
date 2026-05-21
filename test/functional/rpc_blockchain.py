@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (c) 2014-2022 The Bitcoin Core developers
+# Copyright (c) 2014-present The Bitcoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test RPCs related to blockchainstate.
@@ -9,6 +9,7 @@ Test the following RPCs:
     - getdeploymentinfo
     - getchaintxstats
     - gettxoutsetinfo
+    - gettxout
     - getblockheader
     - getdifficulty
     - getnetworkhashps
@@ -30,18 +31,25 @@ import textwrap
 from test_framework.blocktools import (
     MAX_FUTURE_BLOCK_TIME,
     TIME_GENESIS_BLOCK,
+    REGTEST_N_BITS,
+    REGTEST_TARGET,
     create_block,
     create_coinbase,
+    create_tx_with_script,
+    nbits_str,
+    target_str,
 )
 from test_framework.messages import (
     CBlockHeader,
+    COIN,
     from_hex,
     msg_block,
 )
 from test_framework.p2p import P2PInterface
-from test_framework.script import hash256
+from test_framework.script import hash256, OP_TRUE
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import (
+    assert_not_equal,
     assert_equal,
     assert_greater_than,
     assert_greater_than_or_equal,
@@ -58,7 +66,7 @@ TIME_RANGE_STEP = 600  # ten-minute steps
 TIME_RANGE_MTP = TIME_GENESIS_BLOCK + (HEIGHT - 6) * TIME_RANGE_STEP
 TIME_RANGE_TIP = TIME_GENESIS_BLOCK + (HEIGHT - 1) * TIME_RANGE_STEP
 TIME_RANGE_END = TIME_GENESIS_BLOCK + HEIGHT * TIME_RANGE_STEP
-DIFFICULTY_ADJUSTMENT_INTERVAL = 2016
+DIFFICULTY_ADJUSTMENT_INTERVAL = 144
 
 
 class BlockchainTest(BitcoinTestFramework):
@@ -84,13 +92,16 @@ class BlockchainTest(BitcoinTestFramework):
         self._test_getblockchaininfo()
         self._test_getchaintxstats()
         self._test_gettxoutsetinfo()
+        self._test_gettxout()
         self._test_getblockheader()
         self._test_getdifficulty()
         self._test_getnetworkhashps()
         self._test_stopatheight()
+        self._test_waitforblock() # also tests waitfornewblock
         self._test_waitforblockheight()
         self._test_getblock()
         self._test_getdeploymentinfo()
+        self._test_verificationprogress()
         self._test_y2106()
         assert self.nodes[0].verifychain(4, 0)
 
@@ -113,7 +124,7 @@ class BlockchainTest(BitcoinTestFramework):
         self.log.info("A block tip of more than MAX_FUTURE_BLOCK_TIME in the future raises an error")
         self.nodes[0].assert_start_raises_init_error(
             extra_args=[f"-mocktime={TIME_RANGE_TIP - MAX_FUTURE_BLOCK_TIME - 1}"],
-            expected_msg=": The block database contains a block which appears to be from the future."
+            expected_msg="The block database contains a block which appears to be from the future."
             " This may be due to your computer's date and time being set incorrectly."
             f" Only rebuild the block database if you are sure that your computer's date and time are correct.{os.linesep}"
             "Please restart with -reindex or -reindex-chainstate to recover.",
@@ -126,6 +137,7 @@ class BlockchainTest(BitcoinTestFramework):
 
         keys = [
             'bestblockhash',
+            'bits',
             'blocks',
             'chain',
             'chainwork',
@@ -135,6 +147,7 @@ class BlockchainTest(BitcoinTestFramework):
             'mediantime',
             'pruned',
             'size_on_disk',
+            'target',
             'time',
             'verificationprogress',
             'warnings',
@@ -156,6 +169,9 @@ class BlockchainTest(BitcoinTestFramework):
         # check other pruning fields given that prune=1
         assert res['pruned']
         assert not res['automatic_pruning']
+
+        # check background validation is not present when we are not using assumeutxo
+        assert "backgroundvalidation" not in res.keys()
 
         self.restart_node(0, ['-stopatheight=207'])
         res = self.nodes[0].getblockchaininfo()
@@ -191,12 +207,16 @@ class BlockchainTest(BitcoinTestFramework):
         assert_equal(res['prune_target_size'], 576716800)
         assert_greater_than(res['size_on_disk'], 0)
 
+        assert_equal(res['bits'], nbits_str(REGTEST_N_BITS))
+        assert_equal(res['target'], target_str(REGTEST_TARGET))
+
     def check_signalling_deploymentinfo_result(self, gdi_result, height, blockhash, status_next):
         assert height >= 144 and height <= 287
 
         assert_equal(gdi_result, {
           "hash": blockhash,
           "height": height,
+          "script_flags": ["CHECKLOCKTIMEVERIFY","CHECKSEQUENCEVERIFY","DERSIG","NULLDUMMY","P2SH","TAPROOT","WITNESS"],
           "deployments": {
             'bip34': {'type': 'buried', 'active': True, 'height': 2},
             'bip66': {'type': 'buried', 'active': True, 'height': 3},
@@ -224,19 +244,6 @@ class BlockchainTest(BitcoinTestFramework):
                 },
                 'active': False
             },
-            'taproot': {
-                'type': 'bip9',
-                'bip9': {
-                    'start_time': -1,
-                    'timeout': 9223372036854775807,
-                    'min_activation_height': 0,
-                    'status': 'active',
-                    'status_next': 'active',
-                    'since': 0,
-                },
-                'height': 0,
-                'active': True
-            }
           }
         })
 
@@ -264,6 +271,20 @@ class BlockchainTest(BitcoinTestFramework):
 
         # calling with an explicit hash works
         self.check_signalling_deploymentinfo_result(self.nodes[0].getdeploymentinfo(gbci207["bestblockhash"]), gbci207["blocks"], gbci207["bestblockhash"], "started")
+
+    def _test_verificationprogress(self):
+        self.log.info("Check that verificationprogress is less than 1 when the block tip is old")
+        future = 2 * 60 * 60
+        self.nodes[0].setmocktime(self.nodes[0].getblockchaininfo()["time"] + future + 1)
+        assert_greater_than(1, self.nodes[0].getblockchaininfo()["verificationprogress"])
+
+        self.log.info("Check that verificationprogress is exactly 1 for a recent block tip")
+        self.nodes[0].setmocktime(self.nodes[0].getblockchaininfo()["time"] + future)
+        assert_equal(1, self.nodes[0].getblockchaininfo()["verificationprogress"])
+
+        self.log.info("Check that verificationprogress is less than 1 as soon as a new header comes in")
+        self.nodes[0].submitheader(self.generateblock(self.nodes[0], output="raw(55)", transactions=[], submit=False, sync_fun=self.no_op)["hex"])
+        assert_greater_than(1, self.nodes[0].getblockchaininfo()["verificationprogress"])
 
     def _test_y2106(self):
         self.log.info("Check that block timestamps work until year 2106")
@@ -379,7 +400,7 @@ class BlockchainTest(BitcoinTestFramework):
         # hash_type muhash should return a different UTXO set hash.
         res6 = node.gettxoutsetinfo(hash_type='muhash')
         assert 'muhash' in res6
-        assert res['hash_serialized_3'] != res6['muhash']
+        assert_not_equal(res['hash_serialized_3'], res6['muhash'])
 
         # muhash should not be returned unless requested.
         for r in [res, res2, res3, res4, res5]:
@@ -387,6 +408,33 @@ class BlockchainTest(BitcoinTestFramework):
 
         # Unknown hash_type raises an error
         assert_raises_rpc_error(-8, "'foo hash' is not a valid hash_type", node.gettxoutsetinfo, "foo hash")
+
+    def _test_gettxout(self):
+        self.log.info("Validating gettxout RPC response")
+        node = self.nodes[0]
+
+        # Get the best block hash and the block, which
+        # should only include the coinbase transaction.
+        best_block_hash = node.getbestblockhash()
+        block = node.getblock(best_block_hash)
+        assert_equal(block['nTx'], 1)
+
+        # Get the transaction ID of the coinbase tx and
+        # the transaction output.
+        txid = block['tx'][0]
+        txout = node.gettxout(txid, 0)
+
+        # Validate the gettxout response
+        assert_equal(txout['bestblock'], best_block_hash)
+        assert_equal(txout['confirmations'], 1)
+        assert_equal(txout['value'], 25)
+        assert_equal(txout['scriptPubKey']['address'], self.wallet.get_address())
+        assert_equal(txout['scriptPubKey']['hex'], self.wallet.get_output_script().hex())
+        decoded_script = node.decodescript(self.wallet.get_output_script().hex())
+        assert_equal(txout['scriptPubKey']['asm'], decoded_script['asm'])
+        assert_equal(txout['scriptPubKey']['desc'], decoded_script['desc'])
+        assert_equal(txout['scriptPubKey']['type'], decoded_script['type'])
+        assert_equal(txout['coinbase'], True)
 
     def _test_getblockheader(self):
         self.log.info("Test getblockheader")
@@ -409,7 +457,8 @@ class BlockchainTest(BitcoinTestFramework):
         assert_is_hash_string(header['hash'])
         assert_is_hash_string(header['previousblockhash'])
         assert_is_hash_string(header['merkleroot'])
-        assert_is_hash_string(header['bits'], length=None)
+        assert_equal(header['bits'], nbits_str(REGTEST_N_BITS))
+        assert_equal(header['target'], target_str(REGTEST_TARGET))
         assert isinstance(header['time'], int)
         assert_equal(header['mediantime'], TIME_RANGE_MTP)
         assert isinstance(header['nonce'], int)
@@ -422,8 +471,7 @@ class BlockchainTest(BitcoinTestFramework):
         assert_is_hex_string(header_hex)
 
         header = from_hex(CBlockHeader(), header_hex)
-        header.calc_sha256()
-        assert_equal(header.hash, besthash)
+        assert_equal(header.hash_hex, besthash)
 
         assert 'previousblockhash' not in node.getblockheader(node.getblockhash(0))
         assert 'nextblockhash' not in node.getblockheader(node.getbestblockhash())
@@ -505,6 +553,41 @@ class BlockchainTest(BitcoinTestFramework):
         self.start_node(0)
         assert_equal(self.nodes[0].getblockcount(), HEIGHT + 7)
 
+    def _test_waitforblock(self):
+        self.log.info("Test waitforblock and waitfornewblock")
+        node = self.nodes[0]
+
+        current_height = node.getblock(node.getbestblockhash())['height']
+        current_hash = node.getblock(node.getbestblockhash())['hash']
+
+        self.log.debug("Roll the chain back a few blocks and then reconsider it")
+        rollback_height = current_height - 100
+        rollback_hash = node.getblockhash(rollback_height)
+        rollback_header = node.getblockheader(rollback_hash)
+
+        node.invalidateblock(rollback_hash)
+        assert_equal(node.getblockcount(), rollback_height - 1)
+
+        self.log.debug("waitforblock should return the same block after its timeout")
+        assert_equal(node.waitforblock(blockhash=current_hash, timeout=1)['hash'], rollback_header['previousblockhash'])
+        assert_raises_rpc_error(-1, "Negative timeout", node.waitforblock, current_hash, -1)
+
+        node.reconsiderblock(rollback_hash)
+        # The chain has probably already been restored by the time reconsiderblock returns,
+        # but poll anyway.
+        self.wait_until(lambda: node.waitforblock(blockhash=current_hash, timeout=100)['hash'] == current_hash)
+
+        # roll back again
+        node.invalidateblock(rollback_hash)
+        assert_equal(node.getblockcount(), rollback_height - 1)
+
+        node.reconsiderblock(rollback_hash)
+        # The chain has probably already been restored by the time reconsiderblock returns,
+        # but poll anyway.
+        self.wait_until(lambda: node.waitfornewblock(current_tip=rollback_header['previousblockhash'])['hash'] == current_hash)
+
+        assert_raises_rpc_error(-1, "Negative timeout", node.waitfornewblock, -1)
+
     def _test_waitforblockheight(self):
         self.log.info("Test waitforblockheight")
         node = self.nodes[0]
@@ -524,15 +607,15 @@ class BlockchainTest(BitcoinTestFramework):
         fork_block = node.getblock(fork_hash)
 
         def solve_and_send_block(prevhash, height, time):
-            b = create_block(prevhash, create_coinbase(height), time)
+            b = create_block(prevhash, height=height, ntime=time)
             b.solve()
             peer.send_and_ping(msg_block(b))
             return b
 
         b1 = solve_and_send_block(int(fork_hash, 16), fork_height+1, fork_block['time'] + 1)
-        b2 = solve_and_send_block(b1.sha256, fork_height+2, b1.nTime + 1)
+        b2 = solve_and_send_block(b1.hash_int, fork_height+2, b1.nTime + 1)
 
-        node.invalidateblock(b2.hash)
+        node.invalidateblock(b2.hash_hex)
 
         def assert_waitforheight(height, timeout=2):
             assert_equal(
@@ -543,6 +626,7 @@ class BlockchainTest(BitcoinTestFramework):
         assert_waitforheight(current_height - 1)
         assert_waitforheight(current_height)
         assert_waitforheight(current_height + 1)
+        assert_raises_rpc_error(-1, "Negative timeout", node.waitforblockheight, current_height, -1)
 
     def _test_getblock(self):
         node = self.nodes[0]
@@ -552,16 +636,36 @@ class BlockchainTest(BitcoinTestFramework):
         self.wallet.send_self_transfer(fee_rate=fee_per_kb, from_node=node)
         blockhash = self.generate(node, 1)[0]
 
+        def assert_coinbase_metadata(hash, verbosity):
+            block = node.getblock(hash, verbosity)
+            coinbase_tx = node.getblock(hash, 2)["tx"][0]
+
+            expected_keys = {"version", "locktime", "sequence", "coinbase"}
+            if "txinwitness" in coinbase_tx["vin"][0]:
+                expected_keys.add("witness")
+            assert_equal(set(block["coinbase_tx"].keys()), expected_keys)
+
+            assert_equal(block["coinbase_tx"]["version"], coinbase_tx["version"])
+            assert_equal(block["coinbase_tx"]["locktime"], coinbase_tx["locktime"])
+            assert_equal(block["coinbase_tx"]["sequence"], coinbase_tx["vin"][0]["sequence"])
+            assert_equal(block["coinbase_tx"]["coinbase"], coinbase_tx["vin"][0]["coinbase"])
+
+            witness_stack = coinbase_tx["vin"][0].get("txinwitness")
+            if witness_stack is None:
+                assert "witness" not in block["coinbase_tx"]
+            else:
+                assert_equal(block["coinbase_tx"]["witness"], witness_stack[0])
+
         def assert_hexblock_hashes(verbosity):
             block = node.getblock(blockhash, verbosity)
             assert_equal(blockhash, hash256(bytes.fromhex(block[:160]))[::-1].hex())
 
-        def assert_fee_not_in_block(verbosity):
-            block = node.getblock(blockhash, verbosity)
+        def assert_fee_not_in_block(hash, verbosity):
+            block = node.getblock(hash, verbosity)
             assert 'fee' not in block['tx'][1]
 
-        def assert_fee_in_block(verbosity):
-            block = node.getblock(blockhash, verbosity)
+        def assert_fee_in_block(hash, verbosity):
+            block = node.getblock(hash, verbosity)
             tx = block['tx'][1]
             assert 'fee' in tx
             assert_equal(tx['fee'], tx['vsize'] * fee_per_byte)
@@ -580,8 +684,8 @@ class BlockchainTest(BitcoinTestFramework):
                 total_vout += vout["value"]
             assert_equal(total_vin, total_vout + tx["fee"])
 
-        def assert_vin_does_not_contain_prevout(verbosity):
-            block = node.getblock(blockhash, verbosity)
+        def assert_vin_does_not_contain_prevout(hash, verbosity):
+            block = node.getblock(hash, verbosity)
             tx = block["tx"][1]
             if isinstance(tx, str):
                 # In verbosity level 1, only the transaction hashes are written
@@ -595,16 +699,19 @@ class BlockchainTest(BitcoinTestFramework):
         assert_hexblock_hashes(False)
 
         self.log.info("Test that getblock with verbosity 1 doesn't include fee")
-        assert_fee_not_in_block(1)
-        assert_fee_not_in_block(True)
+        assert_fee_not_in_block(blockhash, 1)
+        assert_fee_not_in_block(blockhash, True)
+
+        self.log.info("Test getblock coinbase metadata fields")
+        assert_coinbase_metadata(blockhash, 1)
 
         self.log.info('Test that getblock with verbosity 2 and 3 includes expected fee')
-        assert_fee_in_block(2)
-        assert_fee_in_block(3)
+        assert_fee_in_block(blockhash, 2)
+        assert_fee_in_block(blockhash, 3)
 
         self.log.info("Test that getblock with verbosity 1 and 2 does not include prevout")
-        assert_vin_does_not_contain_prevout(1)
-        assert_vin_does_not_contain_prevout(2)
+        assert_vin_does_not_contain_prevout(blockhash, 1)
+        assert_vin_does_not_contain_prevout(blockhash, 2)
 
         self.log.info("Test that getblock with verbosity 3 includes prevout")
         assert_vin_contains_prevout(3)
@@ -612,7 +719,7 @@ class BlockchainTest(BitcoinTestFramework):
         self.log.info("Test getblock with invalid verbosity type returns proper error message")
         assert_raises_rpc_error(-3, "JSON value of type string is not of expected type number", node.getblock, blockhash, "2")
 
-        self.log.info("Test that getblock with verbosity 2 and 3 still works with pruned Undo data")
+        self.log.info("Test that getblock doesn't work with deleted Undo data")
 
         def move_block_file(old, new):
             old_path = self.nodes[0].blocks_path / old
@@ -622,10 +729,8 @@ class BlockchainTest(BitcoinTestFramework):
         # Move instead of deleting so we can restore chain state afterwards
         move_block_file('rev00000.dat', 'rev_wrong')
 
-        assert_fee_not_in_block(2)
-        assert_fee_not_in_block(3)
-        assert_vin_does_not_contain_prevout(2)
-        assert_vin_does_not_contain_prevout(3)
+        assert_raises_rpc_error(-32603, "Undo data expected but can't be read. This could be due to disk corruption or a conflict with a pruning event.", lambda: node.getblock(blockhash, 2))
+        assert_raises_rpc_error(-32603, "Undo data expected but can't be read. This could be due to disk corruption or a conflict with a pruning event.", lambda: node.getblock(blockhash, 3))
 
         # Restore chain state
         move_block_file('rev_wrong', 'rev00000.dat')
@@ -633,6 +738,31 @@ class BlockchainTest(BitcoinTestFramework):
         assert 'previousblockhash' not in node.getblock(node.getblockhash(0))
         assert 'nextblockhash' not in node.getblock(node.getbestblockhash())
 
+        self.log.info("Test getblock when only header is known")
+        current_height = node.getblock(node.getbestblockhash())['height']
+        block_time = node.getblock(node.getbestblockhash())['time'] + 1
+        block = create_block(int(blockhash, 16), create_coinbase(current_height + 1, nValue=100), ntime=block_time)
+        block.solve()
+        node.submitheader(block.serialize().hex())
+        assert_raises_rpc_error(-1, "Block not available (not fully downloaded)", lambda: node.getblock(block.hash_hex))
+
+        self.log.info("Test getblock when block data is available but undo data isn't")
+        # Submits a block building on the header-only block, so it can't be connected and has no undo data
+        tx = create_tx_with_script(block.vtx[0], 0, script_sig=bytes([OP_TRUE]), amount=50 * COIN)
+        block_noundo = create_block(block.hash_int, create_coinbase(current_height + 2, nValue=100), ntime=block_time + 1, txlist=[tx])
+        block_noundo.solve()
+        node.submitblock(block_noundo.serialize().hex())
+
+        assert_fee_not_in_block(block_noundo.hash_hex, 2)
+        assert_fee_not_in_block(block_noundo.hash_hex, 3)
+        assert_vin_does_not_contain_prevout(block_noundo.hash_hex, 2)
+        assert_vin_does_not_contain_prevout(block_noundo.hash_hex, 3)
+
+        self.log.info("Test getblock when block is missing")
+        move_block_file('blk00000.dat', 'blk00000.dat.bak')
+        assert_raises_rpc_error(-1, "Block not found on disk", node.getblock, blockhash)
+        move_block_file('blk00000.dat.bak', 'blk00000.dat')
+
 
 if __name__ == '__main__':
-    BlockchainTest().main()
+    BlockchainTest(__file__).main()

@@ -1,4 +1,4 @@
-// Copyright (c) 2017-2022 The Bitcoin Core developers
+// Copyright (c) 2017-present The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -6,8 +6,8 @@
 #include <chainparams.h>
 #include <index/txindex.h>
 #include <interfaces/chain.h>
-#include <test/util/index.h>
 #include <test/util/setup_common.h>
+#include <util/byte_units.h>
 #include <validation.h>
 
 #include <boost/test/unit_test.hpp>
@@ -16,7 +16,7 @@ BOOST_AUTO_TEST_SUITE(txindex_tests)
 
 BOOST_FIXTURE_TEST_CASE(txindex_initial_sync, TestChain100Setup)
 {
-    TxIndex txindex(interfaces::MakeChain(m_node), 1 << 20, true);
+    TxIndex txindex(interfaces::MakeChain(m_node), 1_MiB, true);
     BOOST_REQUIRE(txindex.Init());
 
     CTransactionRef tx_disk;
@@ -30,10 +30,7 @@ BOOST_FIXTURE_TEST_CASE(txindex_initial_sync, TestChain100Setup)
     // BlockUntilSyncedToCurrentChain should return false before txindex is started.
     BOOST_CHECK(!txindex.BlockUntilSyncedToCurrentChain());
 
-    BOOST_REQUIRE(txindex.StartBackgroundSync());
-
-    // Allow tx index to catch up with the block index.
-    IndexWaitSynced(txindex, *Assert(m_node.shutdown));
+    txindex.Sync();
 
     // Check that txindex excludes genesis block transactions.
     const CBlock& genesis_block = Params().GenesisBlock();
@@ -64,14 +61,6 @@ BOOST_FIXTURE_TEST_CASE(txindex_initial_sync, TestChain100Setup)
             BOOST_ERROR("Read incorrect tx");
         }
     }
-
-    // It is not safe to stop and destroy the index until it finishes handling
-    // the last BlockConnected notification. The BlockUntilSyncedToCurrentChain()
-    // call above is sufficient to ensure this, but the
-    // SyncWithValidationInterfaceQueue() call below is also needed to ensure
-    // TSAN always sees the test thread waiting for the notification thread, and
-    // avoid potential false positive reports.
-    m_node.validation_signals->SyncWithValidationInterfaceQueue();
 
     // shutdown sequence (c.f. Shutdown() in init.cpp)
     txindex.Stop();

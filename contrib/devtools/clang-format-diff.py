@@ -164,12 +164,12 @@ def main():
                 'Failed to run "%s" - %s"' % (" ".join(command), e.strerror)
             )
 
-        stdout, stderr = p.communicate()
+        stdout, _stderr = p.communicate()
         if p.returncode != 0:
             sys.exit(p.returncode)
 
         if not args.i:
-            with open(filename, encoding="utf8") as f:
+            with open(filename) as f:
                 code = f.readlines()
             formatted_code = StringIO(stdout).readlines()
             diff = difflib.unified_diff(

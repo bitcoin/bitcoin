@@ -1,3 +1,8 @@
+// Copyright 2014 BitPay Inc.
+// Copyright (c) 2017-present The Bitcoin Core developers
+// Distributed under the MIT software license, see the accompanying
+// file COPYING or https://opensource.org/license/mit.
+
 // Test program that can be called by the JSON test suite at
 // https://github.com/nst/JSONTestSuite.
 //

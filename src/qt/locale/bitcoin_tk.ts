@@ -14,10 +14,6 @@
         <translation type="unfinished">&amp;Täze</translation>
     </message>
     <message>
-        <source>Copy the currently selected address to the system clipboard</source>
-        <translation type="unfinished">Häzir saýlanan salgyny ulgamyň alyş-çalyş paneline göçür</translation>
-    </message>
-    <message>
         <source>&amp;Copy</source>
         <translation type="unfinished">&amp;Göçür</translation>
     </message>
@@ -174,6 +170,10 @@ Diňe "miras" görnüşli salgylar bilen gol çekmek mümkin.</translation>
     <message>
         <source>Enter the old passphrase and new passphrase for the wallet.</source>
         <translation type="unfinished">Gapjyk üçin öňki we täze parol sözlemiňi ýaz.</translation>
+    </message>
+    <message>
+        <source>Continue</source>
+        <translation type="unfinished">Dowam et</translation>
     </message>
     <message>
         <source>Remember that encrypting your wallet cannot fully protect your bitcoins from being stolen by malware infecting your computer.</source>
@@ -399,7 +399,11 @@ Diňe "miras" görnüşli salgylar bilen gol çekmek mümkin.</translation>
             <numerusform>%n ýyl</numerusform>
         </translation>
     </message>
-    </context>
+    <message>
+        <source>default wallet</source>
+        <translation type="unfinished">deslapky bellenen gapjyk</translation>
+    </message>
+</context>
 <context>
     <name>BitcoinGUI</name>
     <message>
@@ -636,7 +640,7 @@ Diňe "miras" görnüşli salgylar bilen gol çekmek mümkin.</translation>
     </message>
     <message>
         <source>Load Partially Signed Bitcoin Transaction</source>
-        <translation type="unfinished">Bölekleýýin gol çekilen bitkoin amalyny (BGÇBA) ýükle</translation>
+        <translation type="unfinished">Bölekleýýin gol çekilen bitkoin geleşigini ýükle</translation>
     </message>
     <message>
         <source>Load PSBT from &amp;clipboard…</source>
@@ -644,7 +648,7 @@ Diňe "miras" görnüşli salgylar bilen gol çekmek mümkin.</translation>
     </message>
     <message>
         <source>Load Partially Signed Bitcoin Transaction from clipboard</source>
-        <translation type="unfinished">Bölekleýin gol çekilen bitkoin amalyny alyş-çalyş panelinden ýükle</translation>
+        <translation type="unfinished">Bölekleýin gol çekilen bitkoin geleşigini alyş-çalyş panelinden ýükle</translation>
     </message>
     <message>
         <source>Node window</source>
@@ -703,10 +707,6 @@ Diňe "miras" görnüşli salgylar bilen gol çekmek mümkin.</translation>
     <message>
         <source>Mask the values in the Overview tab</source>
         <translation type="unfinished">Gözden geçir bölüminde sanlaryň üstüni ört</translation>
-    </message>
-    <message>
-        <source>default wallet</source>
-        <translation type="unfinished">deslapky bellenen gapjyk</translation>
     </message>
     <message>
         <source>No wallets available</source>
@@ -1050,6 +1050,19 @@ Diňe "miras" görnüşli salgylar bilen gol çekmek mümkin.</translation>
     </message>
 </context>
 <context>
+    <name>MigrateWalletActivity</name>
+    <message>
+        <source>Restore Wallet</source>
+        <extracomment>Title of progress window which is displayed when wallets are being restored.</extracomment>
+        <translation type="unfinished">Gapjygy düzeltmek</translation>
+    </message>
+    <message>
+        <source>Restoring Wallet &lt;b&gt;%1&lt;/b&gt;…</source>
+        <extracomment>Descriptive text of the restore wallets progress window which indicates to the user that wallets are currently being restored.</extracomment>
+        <translation type="unfinished">&lt;b&gt;%1&lt;/b&gt; Gapjyk düzeltilýär…</translation>
+    </message>
+    </context>
+<context>
     <name>OpenWalletActivity</name>
     <message>
         <source>Open wallet failed</source>
@@ -1058,10 +1071,6 @@ Diňe "miras" görnüşli salgylar bilen gol çekmek mümkin.</translation>
     <message>
         <source>Open wallet warning</source>
         <translation type="unfinished">Gapjyk açmak duýduryşy</translation>
-    </message>
-    <message>
-        <source>default wallet</source>
-        <translation type="unfinished">deslapky bellenen gapjyk</translation>
     </message>
     <message>
         <source>Open Wallet</source>
@@ -1158,10 +1167,6 @@ Diňe "miras" görnüşli salgylar bilen gol çekmek mümkin.</translation>
     <message>
         <source>Disable Private Keys</source>
         <translation type="unfinished">Hususy açarlary öçür</translation>
-    </message>
-    <message>
-        <source>Make a blank wallet. Blank wallets do not initially have private keys or scripts. Private keys and addresses can be imported, or an HD seed can be set, at a later time.</source>
-        <translation type="unfinished">Boş gapjyk emele getir. Boş gapjyklaryň başda hususy açary ýa-da skripti bolmaýar. Soňra hususy açarlar ýa-da salgylar import edilip bilner ýa-da HD esasy açar bellenip bilner.</translation>
     </message>
     <message>
         <source>Make Blank Wallet</source>
@@ -1264,7 +1269,77 @@ Diňe "miras" görnüşli salgylar bilen gol çekmek mümkin.</translation>
     </message>
 </context>
 <context>
+    <name>HelpMessageDialog</name>
+    <message>
+        <source>version</source>
+        <translation type="unfinished">wersiýa</translation>
+    </message>
+    <message>
+        <source>About %1</source>
+        <translation type="unfinished">%1 barada</translation>
+    </message>
+    <message>
+        <source>Command-line options</source>
+        <translation type="unfinished">Buýruk setiri opsiýalary</translation>
+    </message>
+</context>
+<context>
+    <name>ShutdownWindow</name>
+    <message>
+        <source>%1 is shutting down…</source>
+        <translation type="unfinished">%1 ýapylýar...</translation>
+    </message>
+    <message>
+        <source>Do not shut down the computer until this window disappears.</source>
+        <translation type="unfinished">Bu penjire ýitýänçä kompýuteri ýapmaň.</translation>
+    </message>
+</context>
+<context>
     <name>Intro</name>
+    <message>
+        <source>Welcome</source>
+        <translation type="unfinished">Hoş geldiňiz</translation>
+    </message>
+    <message>
+        <source>Welcome to %1.</source>
+        <translation type="unfinished">%1-a hoş geldiňiz.</translation>
+    </message>
+    <message>
+        <source>As this is the first time the program is launched, you can choose where %1 will store its data.</source>
+        <translation type="unfinished">Bu programma ilkinji gezek başlandygy sebäpli, %1-nyň öz maglumatlaryny nirä saklajakdygyny saýlap bilersiň.</translation>
+    </message>
+    <message>
+        <source>Limit block chain storage to</source>
+        <translation type="unfinished">Blok zynjyrynyň saklanmagyny çäklendir</translation>
+    </message>
+    <message>
+        <source>Reverting this setting requires re-downloading the entire blockchain. It is faster to download the full chain first and prune it later. Disables some advanced features.</source>
+        <translation type="unfinished">Bu sazlamany yzyna gaýtarmaklyk tutuş blok zynjyryny gaýtadan ýükläp almak zerur. Ilki bilen tutuş zynjyry ýükläp almak we soň ony kesmek has çalt bolar. Käbir giňişleýin aýratynlyklary öçürer.</translation>
+    </message>
+    <message>
+        <source> GB</source>
+        <translation type="unfinished">GB</translation>
+    </message>
+    <message>
+        <source>This initial synchronisation is very demanding, and may expose hardware problems with your computer that had previously gone unnoticed. Each time you run %1, it will continue downloading where it left off.</source>
+        <translation type="unfinished">Bu başdaky utgaşdyrma örän çylşyrymlydyr we kompýuteriňiziň ozal üns berilmedik enjam näsazlyklaryny ýüze çykaryp biler. Her sapar %1 işledeniňizde ol säginen ýerinden ýükläp almaga dowam eder.</translation>
+    </message>
+    <message>
+        <source>When you click OK, %1 will begin to download and process the full %4 block chain (%2 GB) starting with the earliest transactions in %3 when %4 initially launched.</source>
+        <translation type="unfinished">OK basanyňyzda, %1%4 başda işledilende %3-däki iň irki amallardan başlap doly %4blok zynjyryny (%2 GB) ýükläp we işläp başlar.</translation>
+    </message>
+    <message>
+        <source>If you have chosen to limit block chain storage (pruning), the historical data must still be downloaded and processed, but will be deleted afterward to keep your disk usage low.</source>
+        <translation type="unfinished">Blok zynjyrynyň saklanyşyny çäklendirmegi (kesip aýyrmagy) saýlan bolsaňyz, geçmiş maglumatlary ýene-de ýüklenip alynmaly we işlenmelidir, emma diskiňiziň ulanylyşyny azaltmak üçin soňundan pozular. </translation>
+    </message>
+    <message>
+        <source>Use the default data directory</source>
+        <translation type="unfinished">Deslapky bellenen maglumat sanawyny ulan</translation>
+    </message>
+    <message>
+        <source>Use a custom data directory:</source>
+        <translation type="unfinished">Aýratyn maglumat sanawyny ulan:</translation>
+    </message>
     <message>
         <source>Bitcoin</source>
         <translation type="unfinished">Bitkoin</translation>
@@ -1325,76 +1400,6 @@ Diňe "miras" görnüşli salgylar bilen gol çekmek mümkin.</translation>
     <message>
         <source>Error</source>
         <translation type="unfinished">Ýalňyşlyk</translation>
-    </message>
-    <message>
-        <source>Welcome</source>
-        <translation type="unfinished">Hoş geldiňiz</translation>
-    </message>
-    <message>
-        <source>Welcome to %1.</source>
-        <translation type="unfinished">%1-a hoş geldiňiz.</translation>
-    </message>
-    <message>
-        <source>As this is the first time the program is launched, you can choose where %1 will store its data.</source>
-        <translation type="unfinished">Bu programma ilkinji gezek başlandygy sebäpli, %1-nyň öz maglumatlaryny nirä saklajakdygyny saýlap bilersiň.</translation>
-    </message>
-    <message>
-        <source>Limit block chain storage to</source>
-        <translation type="unfinished">Blok zynjyrynyň saklanmagyny çäklendir</translation>
-    </message>
-    <message>
-        <source>Reverting this setting requires re-downloading the entire blockchain. It is faster to download the full chain first and prune it later. Disables some advanced features.</source>
-        <translation type="unfinished">Bu sazlamany yzyna gaýtarmaklyk tutuş blok zynjyryny gaýtadan ýükläp almak zerur. Ilki bilen tutuş zynjyry ýükläp almak we soň ony kesmek has çalt bolar. Käbir giňişleýin aýratynlyklary öçürer.</translation>
-    </message>
-    <message>
-        <source> GB</source>
-        <translation type="unfinished">GB</translation>
-    </message>
-    <message>
-        <source>This initial synchronisation is very demanding, and may expose hardware problems with your computer that had previously gone unnoticed. Each time you run %1, it will continue downloading where it left off.</source>
-        <translation type="unfinished">Bu başdaky utgaşdyrma örän çylşyrymlydyr we kompýuteriňiziň ozal üns berilmedik enjam näsazlyklaryny ýüze çykaryp biler. Her sapar %1 işledeniňizde ol säginen ýerinden ýükläp almaga dowam eder.</translation>
-    </message>
-    <message>
-        <source>When you click OK, %1 will begin to download and process the full %4 block chain (%2 GB) starting with the earliest transactions in %3 when %4 initially launched.</source>
-        <translation type="unfinished">OK basanyňyzda, %1%4 başda işledilende %3-däki iň irki amallardan başlap doly %4blok zynjyryny (%2 GB) ýükläp we işläp başlar.</translation>
-    </message>
-    <message>
-        <source>If you have chosen to limit block chain storage (pruning), the historical data must still be downloaded and processed, but will be deleted afterward to keep your disk usage low.</source>
-        <translation type="unfinished">Blok zynjyrynyň saklanyşyny çäklendirmegi (kesip aýyrmagy) saýlan bolsaňyz, geçmiş maglumatlary ýene-de ýüklenip alynmaly we işlenmelidir, emma diskiňiziň ulanylyşyny azaltmak üçin soňundan pozular. </translation>
-    </message>
-    <message>
-        <source>Use the default data directory</source>
-        <translation type="unfinished">Deslapky bellenen maglumat sanawyny ulan</translation>
-    </message>
-    <message>
-        <source>Use a custom data directory:</source>
-        <translation type="unfinished">Aýratyn maglumat sanawyny ulan:</translation>
-    </message>
-</context>
-<context>
-    <name>HelpMessageDialog</name>
-    <message>
-        <source>version</source>
-        <translation type="unfinished">wersiýa</translation>
-    </message>
-    <message>
-        <source>About %1</source>
-        <translation type="unfinished">%1 barada</translation>
-    </message>
-    <message>
-        <source>Command-line options</source>
-        <translation type="unfinished">Buýruk setiri opsiýalary</translation>
-    </message>
-</context>
-<context>
-    <name>ShutdownWindow</name>
-    <message>
-        <source>%1 is shutting down…</source>
-        <translation type="unfinished">%1 ýapylýar...</translation>
-    </message>
-    <message>
-        <source>Do not shut down the computer until this window disappears.</source>
-        <translation type="unfinished">Bu penjire ýitýänçä kompýuteri ýapmaň.</translation>
     </message>
 </context>
 <context>
@@ -1551,11 +1556,6 @@ Diňe "miras" görnüşli salgylar bilen gol çekmek mümkin.</translation>
         <translation type="unfinished">Bu sazlama gaýdyp barmak üçin tutuş blok zynjyryny gaýtadan ýükläp almak zerur.</translation>
     </message>
     <message>
-        <source>Maximum database cache size. A larger cache can contribute to faster sync, after which the benefit is less pronounced for most use cases. Lowering the cache size will reduce memory usage. Unused mempool memory is shared for this cache.</source>
-        <extracomment>Tooltip text for Options window setting that sets the size of the database cache. Explains the corresponding effects of increasing/decreasing this value.</extracomment>
-        <translation type="unfinished">Maksimum maglumat binýadynyň keş göwrümi. Keş näçe uly boldugyça sinhronlaşdyrma şonça çalt bolmagyna goşant goşular, ondan soň peýdasy köplenç köp bildirmeýär. Keş göwrümini azaltmak ýadyň ulanylyşyny azaldar. Ulanylmaýan umumy ýat howuzy bu keş üçin paýlaşylýar.  </translation>
-    </message>
-    <message>
         <source>Set the number of script verification threads. Negative values correspond to the number of cores you want to leave free to the system.</source>
         <extracomment>Tooltip text for Options window setting that sets the number of script verification threads. Explains that negative values mean to leave these many cores free to the system.</extracomment>
         <translation type="unfinished">Skript tassyklama akymlarynyň sanyny belläň. Otrisatel sanlar ulgam üçin boş galdyryljak ýadrolaryň sanyna gabat gelýär.</translation>
@@ -1621,22 +1621,6 @@ Diňe "miras" görnüşli salgylar bilen gol çekmek mümkin.</translation>
     <message>
         <source>&amp;External signer script path</source>
         <translation type="unfinished">&amp;Daşyndan gol çekijiniň skript ýoly</translation>
-    </message>
-    <message>
-        <source>Automatically open the Bitcoin client port on the router. This only works when your router supports UPnP and it is enabled.</source>
-        <translation type="unfinished">Bitkoin müşderi portuny routerde awtomatik usulda aç. Bu diňe routeriňiz UPnP goldaýan bolsa we ol işjeň bolsa işleýär.</translation>
-    </message>
-    <message>
-        <source>Map port using &amp;UPnP</source>
-        <translation type="unfinished">&amp;UPnP ulanyp porty aşyryň</translation>
-    </message>
-    <message>
-        <source>Automatically open the Bitcoin client port on the router. This only works when your router supports NAT-PMP and it is enabled. The external port could be random.</source>
-        <translation type="unfinished">Bitkoin müşderi portuny routerde awtomatik usulda açýar. Bu diňe routeriňiz NAT-PMP goldaýan we ol işjeňleşdirilen bolsa işleýär. Daşarky router tötänleýin bolup biler.</translation>
-    </message>
-    <message>
-        <source>Map port using NA&amp;T-PMP</source>
-        <translation type="unfinished">NA&amp;T-PMP ulanýan porty aşyryň</translation>
     </message>
     <message>
         <source>Accept connections from outside.</source>
@@ -1820,10 +1804,6 @@ Diňe "miras" görnüşli salgylar bilen gol çekmek mümkin.</translation>
         <translation type="unfinished">Görkezilýän maglumat könelen bolup biler. birikme ýerine ýetirilenden soň siziň gapjygyňyz awtomatiki usulda Bitkoin tory bilen sinhronlaşar, ýöne bu iş entäk gutarmady.</translation>
     </message>
     <message>
-        <source>Watch-only:</source>
-        <translation type="unfinished">Diňe syn edip bolýar:</translation>
-    </message>
-    <message>
         <source>Available:</source>
         <translation type="unfinished">Elýeter:</translation>
     </message>
@@ -1860,28 +1840,8 @@ Diňe "miras" görnüşli salgylar bilen gol çekmek mümkin.</translation>
         <translation type="unfinished">Siziň häzirki jemi balansyňyz</translation>
     </message>
     <message>
-        <source>Your current balance in watch-only addresses</source>
-        <translation type="unfinished">Diňe syn edip bolýan salgylardaky häzirki balansyňyz</translation>
-    </message>
-    <message>
-        <source>Spendable:</source>
-        <translation type="unfinished">Sowup bolýar:</translation>
-    </message>
-    <message>
         <source>Recent transactions</source>
         <translation type="unfinished">Soňky amallar</translation>
-    </message>
-    <message>
-        <source>Unconfirmed transactions to watch-only addresses</source>
-        <translation type="unfinished">Diňe syn edip bolýan salgylara tassyklanmadyk amallar</translation>
-    </message>
-    <message>
-        <source>Mined balance in watch-only addresses that has not yet matured</source>
-        <translation type="unfinished">Diňe syn edip bolýan salgylarda gazanylan, ýöne entek kemala gelmedik balans</translation>
-    </message>
-    <message>
-        <source>Current total balance in watch-only addresses</source>
-        <translation type="unfinished">Diňe syn edip bolýan salgylarda häzirki jemi balans</translation>
     </message>
     <message>
         <source>Privacy mode activated for the Overview tab. To unmask the values, uncheck Settings-&gt;Mask values.</source>
@@ -1930,9 +1890,12 @@ Diňe "miras" görnüşli salgylar bilen gol çekmek mümkin.</translation>
         <source>Could not sign any more inputs.</source>
         <translation type="unfinished">Başga hiç-hili girizilenlere gol çekip bolanok.</translation>
     </message>
-    <message>
-        <source>Signed %1 inputs, but more signatures are still required.</source>
-        <translation type="unfinished">%1 girizilene gol çekildi, ýöne entegem has köp gol zerur.</translation>
+    <message numerus="yes">
+        <source>Signed %n input(s), but more signatures are still required.</source>
+        <translation type="unfinished">
+            <numerusform />
+            <numerusform />
+        </translation>
     </message>
     <message>
         <source>Signed transaction successfully. Transaction is ready to broadcast.</source>
@@ -1983,9 +1946,12 @@ Diňe "miras" görnüşli salgylar bilen gol çekmek mümkin.</translation>
         <source>or</source>
         <translation type="unfinished">ýa-da</translation>
     </message>
-    <message>
-        <source>Transaction has %1 unsigned inputs.</source>
-        <translation type="unfinished">Amalyň %1 gol çekilmedik girizileni bar.</translation>
+    <message numerus="yes">
+        <source>Transaction has %n unsigned input(s).</source>
+        <translation type="unfinished">
+            <numerusform />
+            <numerusform />
+        </translation>
     </message>
     <message>
         <source>Transaction is missing some information about inputs.</source>
@@ -2252,10 +2218,6 @@ Size bu ýalňyşlyk gelýän bolsa, siz täjirden BIP21-e gabat gelýän URI-ni
         <translation type="unfinished">Amal ýaýlyma beriji</translation>
     </message>
     <message>
-        <source>Starting Block</source>
-        <translation type="unfinished">Blogy başlamak</translation>
-    </message>
-    <message>
         <source>Synced Headers</source>
         <translation type="unfinished">Sinhronlaşdyrylan baş atlar</translation>
     </message>
@@ -2325,6 +2287,10 @@ Size bu ýalňyşlyk gelýän bolsa, siz täjirden BIP21-e gabat gelýän URI-ni
         <source>&amp;Copy address</source>
         <extracomment>Context menu action to copy the address of a peer.</extracomment>
         <translation type="unfinished">&amp;Salgyny göçür</translation>
+    </message>
+    <message>
+        <source>None</source>
+        <translation type="unfinished">ýok</translation>
     </message>
     </context>
 <context>
@@ -2582,13 +2548,6 @@ Size bu ýalňyşlyk gelýän bolsa, siz täjirden BIP21-e gabat gelýän URI-ni
     </message>
     </context>
 <context>
-    <name>WalletModel</name>
-    <message>
-        <source>default wallet</source>
-        <translation type="unfinished">deslapky bellenen gapjyk</translation>
-    </message>
-</context>
-<context>
     <name>WalletView</name>
     <message>
         <source>&amp;Export</source>
@@ -2610,6 +2569,10 @@ Size bu ýalňyşlyk gelýän bolsa, siz täjirden BIP21-e gabat gelýän URI-ni
 </context>
 <context>
     <name>bitcoin-core</name>
+    <message>
+        <source>default wallet</source>
+        <translation type="unfinished">deslapky bellenen gapjyk</translation>
+    </message>
     <message>
         <source>Settings file could not be read</source>
         <translation type="unfinished">Sazlamalar faýlyny okap bolanok</translation>

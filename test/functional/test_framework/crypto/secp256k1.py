@@ -1,4 +1,4 @@
-# Copyright (c) 2022-2023 The Bitcoin Core developers
+# Copyright (c) 2022-present The Bitcoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -15,6 +15,9 @@ Exports:
 * G: the secp256k1 generator point
 """
 
+import unittest
+from hashlib import sha256
+from test_framework.util import assert_equal, assert_not_equal
 
 class FE:
     """Objects of this class represent elements of the field GF(2**256 - 2**32 - 977).
@@ -38,7 +41,7 @@ class FE:
             num = (num * b._den) % FE.SIZE
         else:
             den = (den * b) % FE.SIZE
-        assert den != 0
+        assert_not_equal(den, 0)
         if num == 0:
             den = 1
         self._num = num
@@ -176,7 +179,7 @@ class GE:
             # Initialize as point on the curve (and check that it is).
             fx = FE(x)
             fy = FE(y)
-            assert fy**2 == fx**3 + 7
+            assert_equal(fy**2, fx**3 + 7)
             self.infinity = False
             self.x = fx
             self.y = fy
@@ -191,7 +194,7 @@ class GE:
         if self.x == a.x:
             if self.y != a.y:
                 # A point added to its own negation is infinity.
-                assert self.y + a.y == 0
+                assert_equal(self.y + a.y, 0)
                 return GE()
             else:
                 # For identical inputs, use the tangent (doubling formula).
@@ -289,7 +292,7 @@ class GE:
     @staticmethod
     def from_bytes_xonly(b):
         """Convert a point given in xonly encoding to a group element."""
-        assert len(b) == 32
+        assert_equal(len(b), 32)
         x = FE.from_bytes(b)
         if x is None:
             return None
@@ -344,3 +347,9 @@ class FastGEMul:
 
 # Precomputed table with multiples of G for fast multiplication
 FAST_G = FastGEMul(G)
+
+class TestFrameworkSecp256k1(unittest.TestCase):
+    def test_H(self):
+        H = sha256(G.to_bytes_uncompressed()).digest()
+        assert GE.lift_x(FE.from_bytes(H)) is not None
+        self.assertEqual(H.hex(), "50929b74c1a04954b78b4b6035e97a5e078a5a0f28ec96d547bfee9ace803ac0")

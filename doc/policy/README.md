@@ -9,7 +9,7 @@ contents. Policy is *not* applied to transactions in blocks.
 
 This documentation is not an exhaustive list of all policy rules.
 
-- [Mempool Limits](mempool-limits.md)
+- [Mempool Design and Limits](mempool-design.md)
 - [Mempool Replacements](mempool-replacements.md)
 - [Packages](packages.md)
 

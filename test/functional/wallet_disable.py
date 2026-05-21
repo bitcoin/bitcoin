@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (c) 2015-2022 The Bitcoin Core developers
+# Copyright (c) 2015-present The Bitcoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test a node with the -disablewallet option.
@@ -9,7 +9,7 @@
 """
 
 from test_framework.test_framework import BitcoinTestFramework
-from test_framework.util import assert_raises_rpc_error
+from test_framework.util import assert_raises_rpc_error, assert_equal
 
 class DisableWalletTest (BitcoinTestFramework):
     def set_test_params(self):
@@ -22,10 +22,10 @@ class DisableWalletTest (BitcoinTestFramework):
         # Make sure wallet is really disabled
         assert_raises_rpc_error(-32601, 'Method not found', self.nodes[0].getwalletinfo)
         x = self.nodes[0].validateaddress('3J98t1WpEZ73CNmQviecrnyiWrnqRhWNLy')
-        assert x['isvalid'] == False
+        assert_equal(x['isvalid'], False)
         x = self.nodes[0].validateaddress('mneYUmWYsuk7kySiURxCi3AGxrAqZxLgPZ')
-        assert x['isvalid'] == True
+        assert_equal(x['isvalid'], True)
 
 
 if __name__ == '__main__':
-    DisableWalletTest().main()
+    DisableWalletTest(__file__).main()

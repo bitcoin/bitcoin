@@ -70,6 +70,12 @@ fi
 mkdir -p "$VERSION_BASE"
 
 ################
+# SOURCE_DATE_EPOCH should not unintentionally be set
+################
+
+check_source_date_epoch
+
+################
 # Build directories should not exist
 ################
 
@@ -361,6 +367,10 @@ INFO: Building ${VERSION:?not set} for platform triple ${HOST:?not set}:
           ...bind-mounted in container to: '$(DISTSRC_BASE=/distsrc-base && distsrc_for_host "$HOST")'
       ...outputting in: '$(outdir_for_host "$HOST")'
           ...bind-mounted in container to: '$(OUTDIR_BASE=/outdir-base && outdir_for_host "$HOST")'
+      ADDITIONAL FLAGS (if set)
+          ADDITIONAL_GUIX_COMMON_FLAGS: ${ADDITIONAL_GUIX_COMMON_FLAGS}
+          ADDITIONAL_GUIX_ENVIRONMENT_FLAGS: ${ADDITIONAL_GUIX_ENVIRONMENT_FLAGS}
+          ADDITIONAL_GUIX_TIMEMACHINE_FLAGS: ${ADDITIONAL_GUIX_TIMEMACHINE_FLAGS}
 EOF
 
         # Run the build script 'contrib/guix/libexec/build.sh' in the build
@@ -372,6 +382,8 @@ EOF
         #
         #     Running in an isolated container minimizes build-time differences
         #     between machines and improves reproducibility
+        #
+        #   --writable-root    make the root filesystem writable
         #
         #   --pure             unset existing environment variables
         #
@@ -431,6 +443,7 @@ EOF
         # shellcheck disable=SC2086,SC2031
         time-machine shell --manifest="${PWD}/contrib/guix/manifest.scm" \
                                  --container \
+                                 --writable-root \
                                  --pure \
                                  --no-cwd \
                                  --share="$PWD"=/bitcoin \

@@ -1,9 +1,10 @@
-// Copyright (c) 2018-2022 The Bitcoin Core developers
+// Copyright (c) 2018-present The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <mutex>
 #include <set>
+#include <string_view>
 
 #include <blockfilter.h>
 #include <crypto/siphash.h>
@@ -15,6 +16,8 @@
 #include <undo.h>
 #include <util/golombrice.h>
 #include <util/string.h>
+
+using util::Join;
 
 static const std::map<BlockFilterType, std::string> g_filter_types = {
     {BlockFilterType::BASIC, "basic"},
@@ -149,7 +152,8 @@ const std::string& BlockFilterTypeName(BlockFilterType filter_type)
     return it != g_filter_types.end() ? it->second : unknown_retval;
 }
 
-bool BlockFilterTypeByName(const std::string& name, BlockFilterType& filter_type) {
+bool BlockFilterTypeByName(std::string_view name, BlockFilterType& filter_type)
+{
     for (const auto& entry : g_filter_types) {
         if (entry.second == name) {
             filter_type = entry.first;

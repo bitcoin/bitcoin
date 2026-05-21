@@ -1,0 +1,68 @@
+From 3312e89b47f8c2ea0b4263b39841c25b83a37332 Mon Sep 17 00:00:00 2001
+From: Giuseppe D'Angelo <giuseppe.dangelo@kdab.com>
+Date: Fri, 16 Jan 2026 21:54:45 +0100
+Subject: [PATCH] QStringView: fix benign ODR violation for
+ count(QRegularExpression)
+
+QRegularExpression is only forward declared in qstringview.h.
+QStringView::count(const QRegularExpression &re) simply calls
+`QtPrivate::count(*this, re)`. The problem is that this latter
+count is overloaded, and there's a `QtPrivate::count(QStringView,
+QStringView)` overload available.
+
+This overload is not viable because there is no conversion from
+QRegularExpression to QStringView. To determine this, the compiler
+instantiates the QStringView(const Container &) constructor template,
+with Container = QRegularExpression. This function template is
+constrained via SFINAE, and it will fail the constraint checks
+_because QRegularExpression is incomplete_ (in particular std::data
+itself has SFINAE, and it fails in there).
+
+GCC doesn't like the idea that at a later time we complete
+QRegularExpression, because it fears that the prior result might
+have been different had QRegularExpression been complete.
+
+We know it's not different, but still, silence the warning by
+moving the call to QtPrivate::count where QRegularExpression
+is complete.
+
+Pick-to: 6.11
+Change-Id: I294c5ccb7c4ab3d52e518182c159e690575cbb00
+Reviewed-by: Thiago Macieira <thiago.macieira@intel.com>
+---
+ src/corelib/text/qregularexpression.h | 5 +++++
+ src/corelib/text/qstringview.h        | 5 +----
+ 2 files changed, 6 insertions(+), 4 deletions(-)
+
+diff --git a/qtbase/src/corelib/text/qregularexpression.h b/qtbase/src/corelib/text/qregularexpression.h
+index 462786179cb5..ece094ca768f 100644
+--- a/qtbase/src/corelib/text/qregularexpression.h
++++ b/qtbase/src/corelib/text/qregularexpression.h
+@@ -191,6 +191,11 @@ Q_CORE_EXPORT QDebug operator<<(QDebug debug, const QRegularExpression &re);
+ Q_CORE_EXPORT QDebug operator<<(QDebug debug, QRegularExpression::PatternOptions patternOptions);
+ #endif
+
++[[nodiscard]] inline qsizetype QStringView::count(const QRegularExpression &re) const
++{
++    return QtPrivate::count(*this, re);
++}
++
+ struct QRegularExpressionMatchPrivate;
+ QT_DECLARE_QESDP_SPECIALIZATION_DTOR_WITH_EXPORT(QRegularExpressionMatchPrivate, Q_CORE_EXPORT)
+
+diff --git a/qtbase/src/corelib/text/qstringview.h b/qtbase/src/corelib/text/qstringview.h
+index d586620c8b09..6d5edfc06d7d 100644
+--- a/qtbase/src/corelib/text/qstringview.h
++++ b/qtbase/src/corelib/text/qstringview.h
+@@ -329,10 +329,7 @@ class QStringView
+     {
+         return QtPrivate::contains(*this, re, rmatch);
+     }
+-    [[nodiscard]] qsizetype count(const QRegularExpression &re) const
+-    {
+-        return QtPrivate::count(*this, re);
+-    }
++    [[nodiscard]] qsizetype count(const QRegularExpression &re) const; // defined in qregularexpression.h
+ #endif
+
+     [[nodiscard]] bool isRightToLeft() const noexcept

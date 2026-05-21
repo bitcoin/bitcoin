@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (c) 2020-2021 The Bitcoin Core developers
+# Copyright (c) 2020-present The Bitcoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Script for verifying Bitcoin Core release binaries.
@@ -39,8 +39,6 @@ import sys
 import shutil
 import tempfile
 import textwrap
-import urllib.request
-import urllib.error
 import enum
 from hashlib import sha256
 from pathlib import PurePath, Path
@@ -97,41 +95,23 @@ def bool_from_env(key, default=False) -> bool:
 
 
 VERSION_FORMAT = "<major>.<minor>[.<patch>][-rc[0-9]][-platform]"
-VERSION_EXAMPLE = "22.0-x86_64 or 23.1-rc1-darwin"
+VERSION_EXAMPLE = "22.0 or 23.1-rc1-darwin.dmg or 27.0-x86_64-linux-gnu"
 
 def parse_version_string(version_str):
-    parts = version_str.split('-')
-    version_base = parts[0]
-    version_rc = ""
-    version_os = ""
-    if len(parts) == 2:  # "<version>-rcN" or "version-platform"
-        if "rc" in parts[1]:
-            version_rc = parts[1]
-        else:
-            version_os = parts[1]
-    elif len(parts) == 3:  # "<version>-rcN-platform"
-        version_rc = parts[1]
-        version_os = parts[2]
+    # "<version>[-rcN][-platform]"
+    version_base, _, platform = version_str.partition('-')
+    rc = ""
+    if platform.startswith("rc"): # "<version>-rcN[-platform]"
+        rc, _, platform = platform.partition('-')
+    # else "<version>" or "<version>-platform"
 
-    return version_base, version_rc, version_os
+    return version_base, rc, platform
 
 
 def download_with_wget(remote_file, local_file):
     result = subprocess.run(['wget', '-O', local_file, remote_file],
                             stderr=subprocess.STDOUT, stdout=subprocess.PIPE)
     return result.returncode == 0, result.stdout.decode().rstrip()
-
-
-def download_lines_with_urllib(url) -> tuple[bool, list[str]]:
-    """Get (success, text lines of a file) over HTTP."""
-    try:
-        return (True, [
-            line.strip().decode() for line in urllib.request.urlopen(url).readlines()])
-    except urllib.error.HTTPError as e:
-        log.warning(f"HTTP request to {url} failed (HTTPError): {e}")
-    except Exception as e:
-        log.warning(f"HTTP request to {url} failed ({e})")
-    return (False, [])
 
 
 def verify_with_gpg(
@@ -152,11 +132,6 @@ def verify_with_gpg(
     log.debug(f'Result from GPG ({result.returncode}): {result.stdout.decode()}')
     log.debug(f"{gpg_data}")
     return result.returncode, gpg_data
-
-
-def remove_files(filenames):
-    for filename in filenames:
-        os.remove(filename)
 
 
 class SigData:
@@ -252,8 +227,8 @@ def files_are_equal(filename1, filename2):
     eq = contents1 == contents2
 
     if not eq:
-        with open(filename1, 'r', encoding='utf-8') as f1, \
-                open(filename2, 'r', encoding='utf-8') as f2:
+        with open(filename1, 'r') as f1, \
+                open(filename2, 'r') as f2:
             f1lines = f1.readlines()
             f2lines = f2.readlines()
 
@@ -432,7 +407,7 @@ def verify_shasums_signature(
 def parse_sums_file(sums_file_path: str, filename_filter: list[str]) -> list[list[str]]:
     # extract hashes/filenames of binaries to verify from hash file;
     # each line has the following format: "<hash> <binary_filename>"
-    with open(sums_file_path, 'r', encoding='utf8') as hash_file:
+    with open(sums_file_path, 'r') as hash_file:
         return [line.split()[:2] for line in hash_file if len(filename_filter) == 0 or any(f in line for f in filename_filter)]
 
 
@@ -514,7 +489,9 @@ def verify_published_handler(args: argparse.Namespace) -> ReturnCode:
     # Extract hashes and filenames
     hashes_to_verify = parse_sums_file(SUMS_FILENAME, [os_filter])
     if not hashes_to_verify:
-        log.error("no files matched the platform specified")
+        available_versions = ["-".join(line[1].split("-")[2:]) for line in parse_sums_file(SUMS_FILENAME, [])]
+        closest_match = difflib.get_close_matches(os_filter, available_versions, cutoff=0, n=1)[0]
+        log.error(f"No files matched the platform specified. Did you mean: {closest_match}")
         return ReturnCode.NO_BINARIES_MATCH
 
     # remove binaries that are known not to be hosted by bitcoincore.org

@@ -1,4 +1,4 @@
-// Copyright (c) 2020-2021 The Bitcoin Core developers
+// Copyright (c) 2020-present The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -9,6 +9,7 @@
 #include <test/util/setup_common.h>
 
 #include <cstdint>
+#include <set>
 #include <string>
 #include <vector>
 
@@ -31,6 +32,7 @@ FUZZ_TARGET(system, .init = initialize_system)
 {
     FuzzedDataProvider fuzzed_data_provider(buffer.data(), buffer.size());
     ArgsManager args_manager{};
+    std::vector<std::string> command_option_names;
 
     if (fuzzed_data_provider.ConsumeBool()) {
         SetupHelpOptions(args_manager);
@@ -44,23 +46,47 @@ FUZZ_TARGET(system, .init = initialize_system)
                 args_manager.SelectConfigNetwork(fuzzed_data_provider.ConsumeRandomLengthString(16));
             },
             [&] {
-                args_manager.SoftSetArg(fuzzed_data_provider.ConsumeRandomLengthString(16), fuzzed_data_provider.ConsumeRandomLengthString(16));
+                auto str_arg = fuzzed_data_provider.ConsumeRandomLengthString(16);
+                auto str_value = fuzzed_data_provider.ConsumeRandomLengthString(16);
+                args_manager.SoftSetArg(str_arg, str_value);
             },
             [&] {
-                args_manager.ForceSetArg(fuzzed_data_provider.ConsumeRandomLengthString(16), fuzzed_data_provider.ConsumeRandomLengthString(16));
+                auto str_arg = fuzzed_data_provider.ConsumeRandomLengthString(16);
+                auto str_value = fuzzed_data_provider.ConsumeRandomLengthString(16);
+                args_manager.ForceSetArg(str_arg, str_value);
             },
             [&] {
-                args_manager.SoftSetBoolArg(fuzzed_data_provider.ConsumeRandomLengthString(16), fuzzed_data_provider.ConsumeBool());
+                auto str_arg = fuzzed_data_provider.ConsumeRandomLengthString(16);
+                auto f_value = fuzzed_data_provider.ConsumeBool();
+                args_manager.SoftSetBoolArg(str_arg, f_value);
             },
             [&] {
-                const OptionsCategory options_category = fuzzed_data_provider.PickValueInArray<OptionsCategory>({OptionsCategory::OPTIONS, OptionsCategory::CONNECTION, OptionsCategory::WALLET, OptionsCategory::WALLET_DEBUG_TEST, OptionsCategory::ZMQ, OptionsCategory::DEBUG_TEST, OptionsCategory::CHAINPARAMS, OptionsCategory::NODE_RELAY, OptionsCategory::BLOCK_CREATION, OptionsCategory::RPC, OptionsCategory::GUI, OptionsCategory::COMMANDS, OptionsCategory::REGISTER_COMMANDS, OptionsCategory::HIDDEN});
+                const OptionsCategory options_category = fuzzed_data_provider.PickValueInArray<OptionsCategory>({OptionsCategory::OPTIONS, OptionsCategory::CONNECTION, OptionsCategory::WALLET, OptionsCategory::WALLET_DEBUG_TEST, OptionsCategory::ZMQ, OptionsCategory::DEBUG_TEST, OptionsCategory::CHAINPARAMS, OptionsCategory::NODE_RELAY, OptionsCategory::BLOCK_CREATION, OptionsCategory::RPC, OptionsCategory::GUI, OptionsCategory::COMMANDS, OptionsCategory::REGISTER_COMMANDS, OptionsCategory::CLI_COMMANDS, OptionsCategory::IPC, OptionsCategory::COMMAND_OPTIONS, OptionsCategory::HIDDEN});
                 // Avoid hitting:
                 // common/args.cpp:563: void ArgsManager::AddArg(const std::string &, const std::string &, unsigned int, const OptionsCategory &): Assertion `ret.second' failed.
                 const std::string argument_name = GetArgumentName(fuzzed_data_provider.ConsumeRandomLengthString(16));
                 if (args_manager.GetArgFlags(argument_name) != std::nullopt) {
                     return;
                 }
-                args_manager.AddArg(argument_name, fuzzed_data_provider.ConsumeRandomLengthString(16), fuzzed_data_provider.ConsumeIntegral<unsigned int>() & ~ArgsManager::COMMAND, options_category);
+                auto help = fuzzed_data_provider.ConsumeRandomLengthString(16);
+                auto flags = fuzzed_data_provider.ConsumeIntegral<unsigned int>() & ~ArgsManager::COMMAND;
+                args_manager.AddArg(argument_name, help, flags, options_category);
+                if (options_category == OptionsCategory::COMMAND_OPTIONS) {
+                    command_option_names.push_back(argument_name);
+                }
+            },
+            [&] {
+                auto cmd = fuzzed_data_provider.ConsumeRandomLengthString(16);
+                if (cmd.empty() || cmd[0] == '-' || cmd.find('=') != std::string::npos) return;
+                if (args_manager.GetArgFlags(cmd) != std::nullopt) return;
+                auto help = fuzzed_data_provider.ConsumeRandomLengthString(16);
+                std::set<std::string> options;
+                for (const auto& opt : command_option_names) {
+                    if (fuzzed_data_provider.ConsumeBool()) {
+                        options.insert(opt);
+                    }
+                }
+                args_manager.AddCommand(cmd, help, std::move(options));
             },
             [&] {
                 // Avoid hitting:
@@ -81,6 +107,7 @@ FUZZ_TARGET(system, .init = initialize_system)
             },
             [&] {
                 args_manager.ClearArgs();
+                command_option_names.clear();
             },
             [&] {
                 const std::vector<std::string> random_arguments = ConsumeRandomLengthStringVector(fuzzed_data_provider);
@@ -112,6 +139,10 @@ FUZZ_TARGET(system, .init = initialize_system)
     } catch (const std::runtime_error&) {
     }
     (void)args_manager.GetHelpMessage();
+    const auto command = args_manager.GetCommand();
+    if (command) {
+        (void)args_manager.CheckCommandOptions(command->command);
+    }
     (void)args_manager.GetUnrecognizedSections();
     (void)args_manager.GetUnsuitableSectionOnlyArgs();
     (void)args_manager.IsArgNegated(s1);

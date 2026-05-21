@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (c) 2022 The Bitcoin Core developers
+# Copyright (c) 2022-present The Bitcoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """
@@ -7,7 +7,6 @@ Test encrypted v2 p2p proposed in BIP 324
 """
 from test_framework.blocktools import (
     create_block,
-    create_coinbase,
 )
 from test_framework.p2p import (
     P2PDataStore,
@@ -38,16 +37,16 @@ class P2PEncrypted(BitcoinTestFramework):
         last_block_time = node.getblock(last_block)['time']
         for _ in range(number):
             # Create some blocks
-            block = create_block(tip, create_coinbase(tipheight + 1), last_block_time + 1)
+            block = create_block(tip, height=tipheight + 1, ntime=last_block_time + 1)
             block.solve()
             test_blocks.append(block)
-            tip = block.sha256
+            tip = block.hash_int
             tipheight += 1
             last_block_time += 1
         return test_blocks
 
     def create_test_block(self, txs):
-        block = create_block(self.tip, create_coinbase(self.tipheight + 1), self.last_block_time + 600, txlist=txs)
+        block = create_block(self.tip, height=self.tipheight + 1, ntime=self.last_block_time + 600, txlist=txs)
         block.solve()
         return block
 
@@ -131,4 +130,4 @@ class P2PEncrypted(BitcoinTestFramework):
 
 
 if __name__ == '__main__':
-    P2PEncrypted().main()
+    P2PEncrypted(__file__).main()

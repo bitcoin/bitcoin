@@ -1,29 +1,30 @@
-// Copyright (c) 2015-2022 The Bitcoin Core developers
+// Copyright (c) 2015-present The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <bench/bench.h>
-
-#include <clientversion.h>
 #include <common/args.h>
 #include <crypto/sha256.h>
+#include <tinyformat.h>
 #include <util/fs.h>
-#include <util/strencodings.h>
+#include <util/string.h>
+#include <test/util/setup_common.h>
 
 #include <chrono>
 #include <cstdint>
+#include <cstdlib>
+#include <exception>
 #include <iostream>
 #include <sstream>
 #include <vector>
 
 static const char* DEFAULT_BENCH_FILTER = ".*";
 static constexpr int64_t DEFAULT_MIN_TIME_MS{10};
-/** Priority level default value, run "all" priority levels */
-static const std::string DEFAULT_PRIORITY{"all"};
 
 static void SetupBenchArgs(ArgsManager& argsman)
 {
     SetupHelpOptions(argsman);
+    SetupCommonTestArgs(argsman);
 
     argsman.AddArg("-asymptote=<n1,n2,n3,...>", "Test asymptotic growth of the runtime of an algorithm, if supported by the benchmark", ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
     argsman.AddArg("-filter=<regex>", strprintf("Regular expression filter to select benchmark by name (default: %s)", DEFAULT_BENCH_FILTER), ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
@@ -32,8 +33,6 @@ static void SetupBenchArgs(ArgsManager& argsman)
     argsman.AddArg("-output-csv=<output.csv>", "Generate CSV file with the most important benchmark results", ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
     argsman.AddArg("-output-json=<output.json>", "Generate JSON file with all benchmark results", ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
     argsman.AddArg("-sanity-check", "Run benchmarks for only one iteration with no output", ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
-    argsman.AddArg("-priority-level=<l1,l2,l3>", strprintf("Run benchmarks of one or multiple priority level(s) (%s), default: '%s'",
-                                                           benchmark::ListPriorities(), DEFAULT_PRIORITY), ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
 }
 
 // parses a comma separated list like "10,20,30,50"
@@ -49,12 +48,16 @@ static std::vector<double> parseAsymptote(const std::string& str) {
     return numbers;
 }
 
-static uint8_t parsePriorityLevel(const std::string& str) {
-    uint8_t levels{0};
-    for (const auto& level: SplitString(str, ',')) {
-        levels |= benchmark::StringToPriority(level);
+static std::vector<std::string> parseTestSetupArgs(const ArgsManager& argsman)
+{
+    // Parses unit test framework arguments supported by the benchmark framework.
+    std::vector<std::string> args;
+    static std::vector<std::string> AVAILABLE_ARGS = {"-testdatadir"};
+    for (const std::string& arg_name : AVAILABLE_ARGS) {
+        auto op_arg = argsman.GetArg(arg_name);
+        if (op_arg) args.emplace_back(strprintf("%s=%s", arg_name, *op_arg));
     }
-    return levels;
+    return args;
 }
 
 int main(int argc, char** argv)
@@ -127,7 +130,7 @@ int main(int argc, char** argv)
         args.output_json = argsman.GetPathArg("-output-json");
         args.regex_filter = argsman.GetArg("-filter", DEFAULT_BENCH_FILTER);
         args.sanity_check = argsman.GetBoolArg("-sanity-check", false);
-        args.priority = parsePriorityLevel(argsman.GetArg("-priority-level", DEFAULT_PRIORITY));
+        args.setup_args = parseTestSetupArgs(argsman);
 
         benchmark::BenchRunner::RunAll(args);
 

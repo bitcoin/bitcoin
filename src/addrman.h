@@ -1,5 +1,5 @@
 // Copyright (c) 2012 Pieter Wuille
-// Copyright (c) 2012-2022 The Bitcoin Core developers
+// Copyright (c) 2012-present The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -15,8 +15,30 @@
 #include <cstdint>
 #include <memory>
 #include <optional>
+#include <unordered_set>
 #include <utility>
 #include <vector>
+
+/** Over how many buckets entries with tried addresses from a single group (/16 for IPv4) are spread */
+static constexpr uint32_t ADDRMAN_TRIED_BUCKETS_PER_GROUP{8};
+/** Over how many buckets entries with new addresses originating from a single group are spread */
+static constexpr uint32_t ADDRMAN_NEW_BUCKETS_PER_SOURCE_GROUP{64};
+/** Maximum number of times an address can occur in the new table */
+static constexpr int32_t ADDRMAN_NEW_BUCKETS_PER_ADDRESS{8};
+/** How old addresses can maximally be */
+static constexpr auto ADDRMAN_HORIZON{30 * 24h};
+/** After how many failed attempts we give up on a new node */
+static constexpr int32_t ADDRMAN_RETRIES{3};
+/** How many successive failures are allowed ... */
+static constexpr int32_t ADDRMAN_MAX_FAILURES{10};
+/** ... in at least this duration */
+static constexpr auto ADDRMAN_MIN_FAIL{7 * 24h};
+/** How recent a successful connection should be before we allow an address to be evicted from tried */
+static constexpr auto ADDRMAN_REPLACEMENT{4h};
+/** The maximum number of tried addr collisions to store */
+static constexpr size_t ADDRMAN_SET_TRIED_COLLISION_SIZE{10};
+/** The maximum time we'll spend trying to resolve a tried table collision */
+static constexpr auto ADDRMAN_TEST_WINDOW{40min};
 
 class InvalidAddrManVersionError : public std::ios_base::failure
 {
@@ -154,24 +176,24 @@ public:
      *                     an address from the new table or an empty pair. Passing `false` will return an
      *                     empty pair or an address from either the new or tried table (it does not
      *                     guarantee a tried entry).
-     * @param[in] network  Select only addresses of this network (nullopt = all). Passing a network may
+     * @param[in] networks Select only addresses of these networks (empty = all). Passing networks may
      *                     slow down the search.
      * @return    CAddress The record for the selected peer.
      *            seconds  The last time we attempted to connect to that peer.
      */
-    std::pair<CAddress, NodeSeconds> Select(bool new_only = false, std::optional<Network> network = std::nullopt) const;
+    std::pair<CAddress, NodeSeconds> Select(bool new_only = false, const std::unordered_set<Network>& networks = {}) const;
 
     /**
      * Return all or many randomly selected addresses, optionally by network.
      *
      * @param[in] max_addresses  Maximum number of addresses to return (0 = all).
-     * @param[in] max_pct        Maximum percentage of addresses to return (0 = all).
+     * @param[in] max_pct        Maximum percentage of addresses to return (0 = all). Value must be from 0 to 100.
      * @param[in] network        Select only addresses of this network (nullopt = all).
      * @param[in] filtered       Select only addresses that are considered good quality (false = all).
      *
      * @return                   A vector of randomly selected addresses from vRandom.
      */
-    std::vector<CAddress> GetAddr(size_t max_addresses, size_t max_pct, std::optional<Network> network, const bool filtered = true) const;
+    std::vector<CAddress> GetAddr(size_t max_addresses, size_t max_pct, std::optional<Network> network, bool filtered = true) const;
 
     /**
      * Returns an information-location pair for all addresses in the selected addrman table.

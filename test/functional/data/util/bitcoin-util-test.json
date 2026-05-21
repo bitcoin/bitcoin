@@ -1,0 +1,775 @@
+[
+  { "exec": "./bitcoin-util",
+    "args": ["foo"],
+    "return_code": 1,
+    "error_txt": "Error parsing command line arguments: Invalid command 'foo'",
+    "description": ""
+  },
+  { "exec": "./bitcoin-util",
+    "args": ["help"],
+    "return_code": 1,
+    "error_txt": "Error parsing command line arguments: Invalid command 'help'",
+    "description": "`help` raises an error. Use `-help`"
+  },
+  { "exec": "./bitcoin-util",
+    "args": ["grind"],
+    "return_code": 1,
+    "error_txt": "Must specify block header to grind",
+    "description": ""
+  },
+  { "exec": "./bitcoin-util",
+    "args": ["grind", "1", "2"],
+    "return_code": 1,
+    "error_txt": "Must specify block header to grind",
+    "description": ""
+  },
+  { "exec": "./bitcoin-util",
+    "args": ["grind", "aa"],
+    "return_code": 1,
+    "error_txt": "Could not decode block header",
+    "description": ""
+  },
+  { "exec": "./bitcoin-tx",
+    "args": ["-create", "nversion=1"],
+    "output_cmp": "blanktxv1.hex",
+    "description": "Creates a blank v1 transaction"
+  },
+  { "exec": "./bitcoin-tx",
+    "args": ["-json","-create", "nversion=1"],
+    "output_cmp": "blanktxv1.json",
+    "description": "Creates a blank v1 transaction (output in json)"
+  },
+  { "exec": "./bitcoin-tx",
+    "args": ["-"],
+    "input": "blanktxv2.hex",
+    "output_cmp": "blanktxv2.hex",
+    "description": "Creates a blank transaction when nothing is piped into bitcoin-tx"
+  },
+  { "exec": "./bitcoin-tx",
+    "args": ["-json","-create"],
+    "output_cmp": "blanktxv2.json",
+    "description": "Creates a blank transaction (output in json)"
+  },
+  { "exec": "./bitcoin-tx",
+    "args": ["-json","-"],
+    "input": "blanktxv2.hex",
+    "output_cmp": "blanktxv2.json",
+    "description": "Creates a blank transaction when nothing is piped into bitcoin-tx (output in json)"
+  },
+  { "exec": "./bitcoin-tx",
+    "args": ["-create", "nversion=+1"],
+    "return_code": 1,
+    "error_txt": "error: Invalid TX version requested",
+    "description": "Tests the check for invalid nversion value"
+  },
+  { "exec": "./bitcoin-tx",
+    "args": ["-create", "nversion=1foo"],
+    "return_code": 1,
+    "error_txt": "error: Invalid TX version requested",
+    "description": "Tests the check for invalid nversion value"
+  },
+  { "exec": "./bitcoin-tx",
+    "args": ["-", "delin=1"],
+    "input": "tx394b54bb.hex",
+    "output_cmp": "tt-delin1-out.hex",
+    "description": "Deletes a single input from a transaction"
+  },
+  { "exec": "./bitcoin-tx",
+    "args": ["-json", "-", "delin=1"],
+    "input": "tx394b54bb.hex",
+    "output_cmp": "tt-delin1-out.json",
+    "description": "Deletes a single input from a transaction (output in json)"
+  },
+  { "exec": "./bitcoin-tx",
+    "args": ["-", "delin=31"],
+    "input": "tx394b54bb.hex",
+    "return_code": 1,
+    "error_txt": "error: Invalid TX input index '31'",
+    "description": "Attempts to delete an input with a bad index from a transaction. Expected to fail."
+  },
+  { "exec": "./bitcoin-tx",
+    "args": ["-", "delin=1foo"],
+    "input": "tx394b54bb.hex",
+    "return_code": 1,
+    "error_txt": "error: Invalid TX input index",
+    "description": "Tests the check for an invalid input index with delin"
+  },
+  { "exec": "./bitcoin-tx",
+    "args": ["-", "delout=1"],
+    "input": "tx394b54bb.hex",
+    "output_cmp": "tt-delout1-out.hex",
+    "description": "Deletes a single output from a transaction"
+  },
+  { "exec": "./bitcoin-tx",
+    "args": ["-json", "-", "delout=1"],
+    "input": "tx394b54bb.hex",
+    "output_cmp": "tt-delout1-out.json",
+    "description": "Deletes a single output from a transaction (output in json)"
+  },
+  { "exec": "./bitcoin-tx",
+    "args": ["-", "delout=2"],
+    "input": "tx394b54bb.hex",
+    "return_code": 1,
+    "error_txt": "error: Invalid TX output index '2'",
+    "description": "Attempts to delete an output with a bad index from a transaction. Expected to fail."
+  },
+  { "exec": "./bitcoin-tx",
+    "args": ["-", "delout=1foo"],
+    "input": "tx394b54bb.hex",
+    "return_code": 1,
+    "error_txt": "error: Invalid TX output index",
+    "description": "Tests the check for an invalid output index with delout"
+  },
+  { "exec": "./bitcoin-tx",
+    "args": ["-", "locktime=317000"],
+    "input": "tx394b54bb.hex",
+    "output_cmp": "tt-locktime317000-out.hex",
+    "description": "Adds an nlocktime to a transaction"
+  },
+  { "exec": "./bitcoin-tx",
+    "args": ["-json", "-", "locktime=317000"],
+    "input": "tx394b54bb.hex",
+    "output_cmp": "tt-locktime317000-out.json",
+    "description": "Adds an nlocktime to a transaction (output in json)"
+  },
+  { "exec": "./bitcoin-tx",
+    "args": ["-create", "locktime=+317"],
+    "return_code": 1,
+    "error_txt": "error: Invalid TX locktime requested",
+    "description": "Tests the check for invalid locktime value"
+  },
+  { "exec": "./bitcoin-tx",
+    "args": ["-create", "locktime=317000foo"],
+    "return_code": 1,
+    "error_txt": "error: Invalid TX locktime requested",
+    "description": "Tests the check for invalid locktime value"
+  },
+  { "exec": "./bitcoin-tx",
+    "args":
+    ["-create",
+     "in=Z897de6bd6027a475eadd57019d4e6872c396d0716c4875a5f1a6fcfdf385c1f:0"],
+    "return_code": 1,
+    "error_txt": "error: invalid TX input txid",
+    "description": "Tests the check for an invalid txid invalid hex"
+  },
+  { "exec": "./bitcoin-tx",
+    "args":
+    ["-create",
+     "in=5897de6bd6:0"],
+    "return_code": 1,
+    "error_txt": "error: invalid TX input txid",
+    "description": "Tests the check for an invalid txid valid hex but too short"
+  },
+  { "exec": "./bitcoin-tx",
+    "args":
+    ["-create",
+     "in=5897de6bd6027a475eadd57019d4e6872c396d0716c4875a5f1a6fcfdf385c1f12:0"],
+    "return_code": 1,
+    "error_txt": "error: invalid TX input txid",
+    "description": "Tests the check for an invalid txid valid hex but too long"
+  },
+  { "exec": "./bitcoin-tx",
+    "args":
+    ["-create",
+     "in=5897de6bd6027a475eadd57019d4e6872c396d0716c4875a5f1a6fcfdf385c1f:0",
+     "replaceable=0foo"],
+    "return_code": 1,
+    "error_txt": "error: Invalid TX input index",
+    "description": "Tests the check for an invalid string input index with replaceable"
+  },
+  { "exec": "./bitcoin-tx",
+    "args":
+    ["-create",
+     "in=5897de6bd6027a475eadd57019d4e6872c396d0716c4875a5f1a6fcfdf385c1f:0",
+     "replaceable=+0"],
+    "return_code": 1,
+    "error_txt": "error: Invalid TX input index",
+    "description": "Tests the check for an invalid string input index with replaceable"
+  },
+  {
+    "exec": "./bitcoin-tx",
+    "args":
+    ["-create",
+     "in=5897de6bd6027a475eadd57019d4e6872c396d0716c4875a5f1a6fcfdf385c1f:0",
+     "replaceable=-1"],
+    "return_code": 1,
+    "error_txt": "error: Invalid TX input index",
+    "description": "Tests the check for an invalid negative input index with replaceable"
+  },
+  {
+    "exec": "./bitcoin-tx",
+    "args":
+    ["-create",
+     "in=5897de6bd6027a475eadd57019d4e6872c396d0716c4875a5f1a6fcfdf385c1f:0",
+     "replaceable=1"],
+    "return_code": 1,
+    "error_txt": "error: Invalid TX input index",
+    "description": "Tests the check for an invalid positive out-of-bounds input index with replaceable"
+  },
+  {
+    "exec": "./bitcoin-tx",
+    "args":
+    ["-create",
+     "in=5897de6bd6027a475eadd57019d4e6872c396d0716c4875a5f1a6fcfdf385c1f:0",
+     "replaceable=0"],
+    "output_cmp": "txreplacesingleinput.hex",
+    "description": "Tests that the 'SEQUENCE' value for a single input is set to fdffffff for single input"
+  },
+  {
+    "exec": "./bitcoin-tx",
+    "args":
+    ["-create",
+     "in=5897de6bd6027a475eadd57019d4e6872c396d0716c4875a5f1a6fcfdf385c1f:0",
+     "replaceable="],
+    "output_cmp": "txreplacesingleinput.hex",
+    "description": "Tests that the 'SEQUENCE' value for a single input is set to fdffffff when N omitted"
+  },
+  {
+    "exec": "./bitcoin-tx",
+    "args":
+    ["-create",
+     "in=5897de6bd6027a475eadd57019d4e6872c396d0716c4875a5f1a6fcfdf385c1f:0",
+     "in=bf829c6bcf84579331337659d31f89dfd138f7f7785802d5501c92333145ca7c:18",
+     "in=22a6f904655d53ae2ff70e701a0bbd90aa3975c0f40bfc6cc996a9049e31cdfc:1",
+     "replaceable=1"],
+    "output_cmp": "txreplace1.hex",
+    "description": "Tests that only the 'SEQUENCE' value of input[1] is set to fdffffff"
+  },
+  {
+    "exec": "./bitcoin-tx",
+    "args":
+    ["-create",
+     "in=5897de6bd6027a475eadd57019d4e6872c396d0716c4875a5f1a6fcfdf385c1f:0",
+     "in=bf829c6bcf84579331337659d31f89dfd138f7f7785802d5501c92333145ca7c:18",
+     "in=22a6f904655d53ae2ff70e701a0bbd90aa3975c0f40bfc6cc996a9049e31cdfc:1",
+     "replaceable="],
+    "output_cmp": "txreplaceomittedn.hex",
+    "description": "Tests that the 'SEQUENCE' value for each input is set to fdffffff when N omitted"
+  },
+  {
+    "exec": "./bitcoin-tx",
+    "args":
+    ["-create",
+     "replaceable="],
+    "output_cmp": "txreplacenoinputs.hex",
+    "description": "Tests behavior when no inputs are provided in the transaction"
+  },
+  {
+    "exec": "./bitcoin-tx",
+    "args":
+    ["-create",
+     "in=5897de6bd6027a475eadd57019d4e6872c396d0716c4875a5f1a6fcfdf385c1f:0:abcdef00",
+     "replaceable="],
+    "return_code": 1,
+    "error_txt": "error: invalid TX sequence id 'abcdef00'",
+    "description": "Try to make invalid input replaceable"
+  },
+  { "exec": "./bitcoin-tx",
+    "args":
+    ["-create",
+     "in=5897de6bd6027a475eadd57019d4e6872c396d0716c4875a5f1a6fcfdf385c1f:+0"],
+    "return_code": 1,
+    "error_txt": "error: invalid TX input vout",
+    "description": "Tests the check for an invalid vout value when adding an input"
+  },
+  { "exec": "./bitcoin-tx",
+    "args":
+    ["-create",
+     "in=5897de6bd6027a475eadd57019d4e6872c396d0716c4875a5f1a6fcfdf385c1f:0x"],
+    "return_code": 1,
+    "error_txt": "error: invalid TX input vout",
+    "description": "Tests the check for an invalid vout value when adding an input"
+  },
+  { "exec": "./bitcoin-tx",
+    "args":
+    ["-create",
+     "outaddr=1"],
+    "return_code": 1,
+    "error_txt": "error: TX output missing or too many separators",
+    "description": "Malformed outaddr argument (no address specified). Expected to fail."
+  },
+  { "exec": "./bitcoin-tx",
+    "args":
+    ["-create",
+     "outaddr=1:13tuJJDR2RgArmgfv6JScSdreahzgc4T6o:garbage"],
+    "return_code": 1,
+    "error_txt": "error: TX output missing or too many separators",
+    "description": "Malformed outaddr argument (too many separators). Expected to fail."
+  },
+  { "exec": "./bitcoin-tx",
+    "args":
+    ["-create",
+     "outpubkey=0"],
+    "return_code": 1,
+    "error_txt": "error: TX output missing or too many separators",
+    "description": "Malformed outpubkey argument (no pubkey specified). Expected to fail."
+  },
+  { "exec": "./bitcoin-tx",
+    "args":
+    ["-create",
+     "outpubkey=0:02a5613bd857b7048924264d1e70e08fb2a7e6527d32b7ab1bb993ac59964ff397:W:non53nse"],
+    "return_code": 1,
+    "error_txt": "error: TX output missing or too many separators",
+    "description": "Malformed outpubkey argument (too many separators). Expected to fail."
+  },
+  { "exec": "./bitcoin-tx",
+    "args":
+    ["-create",
+     "in=5897de6bd6027a475eadd57019d4e6872c396d0716c4875a5f1a6fcfdf385c1f:0",
+     "in=bf829c6bcf84579331337659d31f89dfd138f7f7785802d5501c92333145ca7c:18",
+     "in=22a6f904655d53ae2ff70e701a0bbd90aa3975c0f40bfc6cc996a9049e31cdfc:1",
+     "outaddr=0.18:13tuJJDR2RgArmgfv6JScSdreahzgc4T6o",
+     "outaddr=4:1P8yWvZW8jVihP1bzHeqfE4aoXNX8AVa46"],
+    "output_cmp": "txcreate1.hex",
+    "description": "Creates a new transaction with three inputs and two outputs"
+  },
+  { "exec": "./bitcoin-tx",
+    "args":
+    ["-json",
+     "-create",
+     "in=5897de6bd6027a475eadd57019d4e6872c396d0716c4875a5f1a6fcfdf385c1f:0",
+     "in=bf829c6bcf84579331337659d31f89dfd138f7f7785802d5501c92333145ca7c:18",
+     "in=22a6f904655d53ae2ff70e701a0bbd90aa3975c0f40bfc6cc996a9049e31cdfc:1",
+     "outaddr=0.18:13tuJJDR2RgArmgfv6JScSdreahzgc4T6o",
+     "outaddr=4:1P8yWvZW8jVihP1bzHeqfE4aoXNX8AVa46"],
+    "output_cmp": "txcreate1.json",
+    "description": "Creates a new transaction with three inputs and two outputs (output in json)"
+  },
+  { "exec": "./bitcoin-tx",
+    "args": ["-create", "outscript=0:"],
+    "output_cmp": "txcreate2.hex",
+    "description": "Creates a new transaction with a single empty output script"
+  },
+  { "exec": "./bitcoin-tx",
+    "args": ["-json", "-create", "outscript=0:"],
+    "output_cmp": "txcreate2.json",
+    "description": "Creates a new transaction with a single empty output script (output in json)"
+  },
+  { "exec": "./bitcoin-tx",
+    "args": ["02000000000100000000000000000000000000"],
+    "output_cmp": "txcreate2.hex",
+    "description": "Parses a transaction with no inputs and a single output script"
+  },
+  { "exec": "./bitcoin-tx",
+    "args": ["-json", "02000000000100000000000000000000000000"],
+    "output_cmp": "txcreate2.json",
+    "description": "Parses a transaction with no inputs and a single output script (output in json)"
+  },
+  { "exec": "./bitcoin-tx",
+    "args": ["-create", "outscript=0:123badscript"],
+    "return_code": 1,
+    "error_txt": "error: script parse error: unknown opcode",
+    "description": "Create a new transaction with an invalid output script"
+  },
+  { "exec": "./bitcoin-tx",
+    "args": ["-create", "outscript=0:OP_DROP", "nversion=1"],
+    "output_cmp": "txcreatescript1.hex",
+    "description": "Create a new transaction with a single output script (OP_DROP)"
+  },
+  { "exec": "./bitcoin-tx",
+    "args": ["-json", "-create", "outscript=0:OP_DROP", "nversion=1"],
+    "output_cmp": "txcreatescript1.json",
+    "description": "Create a new transaction with a single output script (OP_DROP) (output as json)"
+  },
+  { "exec": "./bitcoin-tx",
+    "args": ["-create", "outscript=0:OP_DROP:S", "nversion=1"],
+    "output_cmp": "txcreatescript2.hex",
+    "description": "Create a new transaction with a single output script (OP_DROP) in a P2SH"
+  },
+  { "exec": "./bitcoin-tx",
+    "args": ["-json", "-create", "outscript=0:OP_DROP:S", "nversion=1"],
+    "output_cmp": "txcreatescript2.json",
+    "description": "Create a new transaction with a single output script (OP_DROP) in a P2SH (output as json)"
+  },
+  { "exec": "./bitcoin-tx",
+    "args": ["-create", "outscript=0:OP_DROP:W", "nversion=1"],
+    "output_cmp": "txcreatescript3.hex",
+    "description": "Create a new transaction with a single output script (OP_DROP) in a P2WSH"
+  },
+  { "exec": "./bitcoin-tx",
+    "args": ["-json", "-create", "outscript=0:OP_DROP:W", "nversion=1"],
+    "output_cmp": "txcreatescript3.json",
+    "description": "Create a new transaction with a single output script (OP_DROP) in a P2WSH (output as json)"
+  },
+  { "exec": "./bitcoin-tx",
+    "args": ["-create", "outscript=0:OP_DROP:WS", "nversion=1"],
+    "output_cmp": "txcreatescript4.hex",
+    "description": "Create a new transaction with a single output script (OP_DROP) in a P2WSH, wrapped in a P2SH"
+  },
+  { "exec": "./bitcoin-tx",
+    "args": ["-json", "-create", "outscript=0:OP_DROP:WS", "nversion=1"],
+    "output_cmp": "txcreatescript4.json",
+    "description": "Create a new transaction with a single output script (OP_DROP) in a P2SH, wrapped in a P2SH (output as json)"
+  },
+  { "exec": "./bitcoin-tx",
+    "args": ["-create", "outscript=0:999999999999999999999999999999"],
+    "return_code": 1,
+    "error_txt": "error: script parse error: decimal numeric value only allowed in the range -0xFFFFFFFF...0xFFFFFFFF",
+    "description": "Try to parse an output script with a decimal number above the allowed range"
+  },
+  { "exec": "./bitcoin-tx",
+    "args": ["-create", "outscript=0:9999999999"],
+    "return_code": 1,
+    "error_txt": "error: script parse error: decimal numeric value only allowed in the range -0xFFFFFFFF...0xFFFFFFFF",
+    "description": "Try to parse an output script with a decimal number above the allowed range"
+  },
+  { "exec": "./bitcoin-tx",
+    "args": ["-create", "outscript=0:4294967296"],
+    "return_code": 1,
+    "error_txt": "error: script parse error: decimal numeric value only allowed in the range -0xFFFFFFFF...0xFFFFFFFF",
+    "description": "Try to parse an output script with a decimal number just above the allowed range"
+  },
+  { "exec": "./bitcoin-tx",
+    "args": ["-create", "outscript=0:4294967295"],
+    "output_cmp": "txcreatescript5.hex",
+    "description": "Try to parse an output script with a decimal number at the upper limit of the allowed range"
+  },
+  { "exec": "./bitcoin-tx",
+    "args": ["-create", "outscript=0:-9999999999"],
+    "return_code": 1,
+    "error_txt": "error: script parse error: decimal numeric value only allowed in the range -0xFFFFFFFF...0xFFFFFFFF",
+    "description": "Try to parse an output script with a decimal number below the allowed range"
+  },
+  { "exec": "./bitcoin-tx",
+    "args": ["-create", "outscript=0:-4294967296"],
+    "return_code": 1,
+    "error_txt": "error: script parse error: decimal numeric value only allowed in the range -0xFFFFFFFF...0xFFFFFFFF",
+    "description": "Try to parse an output script with a decimal number just below the allowed range"
+  },
+  { "exec": "./bitcoin-tx",
+    "args": ["-create", "outscript=0:-4294967295"],
+    "output_cmp": "txcreatescript6.hex",
+    "description": "Try to parse an output script with a decimal number at the lower limit of the allowed range"
+  },
+  { "exec": "./bitcoin-tx",
+    "args":
+    ["-create", "nversion=1",
+     "in=4d49a71ec9da436f71ec4ee231d04f292a29cd316f598bb7068feccabdc59485:0",
+     "set=privatekeys:[\"5HpHagT65TZzG1PH3CSu63k8DbpvD8s5ip4nEB3kEsreAnchuDf\"]",
+     "set=prevtxs:[{\"txid\":\"4d49a71ec9da436f71ec4ee231d04f292a29cd316f598bb7068feccabdc59485\",\"vout\":0,\"scriptPubKey\":\"76a91491b24bf9f5288532960ac687abb035127b1d28a588ac\"}]",
+     "sign=ALL",
+     "outaddr=0.001:193P6LtvS4nCnkDvM9uXn1gsSRqh4aDAz7"],
+    "output_cmp": "txcreatesignv1.hex",
+    "description": "Creates a new v1 transaction with a single input and a single output, and then signs the transaction"
+  },
+  { "exec": "./bitcoin-tx",
+    "args":
+    ["-json",
+     "-create", "nversion=1",
+     "in=4d49a71ec9da436f71ec4ee231d04f292a29cd316f598bb7068feccabdc59485:0",
+     "set=privatekeys:[\"5HpHagT65TZzG1PH3CSu63k8DbpvD8s5ip4nEB3kEsreAnchuDf\"]",
+     "set=prevtxs:[{\"txid\":\"4d49a71ec9da436f71ec4ee231d04f292a29cd316f598bb7068feccabdc59485\",\"vout\":0,\"scriptPubKey\":\"76a91491b24bf9f5288532960ac687abb035127b1d28a588ac\"}]",
+     "sign=ALL",
+     "outaddr=0.001:193P6LtvS4nCnkDvM9uXn1gsSRqh4aDAz7"],
+    "output_cmp": "txcreatesignv1.json",
+    "description": "Creates a new v1 transaction with a single input and a single output, and then signs the transaction (output in json)"
+  },
+  { "exec": "./bitcoin-tx",
+    "args":
+    ["-create",
+      "in=4d49a71ec9da436f71ec4ee231d04f292a29cd316f598bb7068feccabdc59485:0",
+      "set=privatekeys:[\"5HpHagT65TZzG1PH3CSu63k8DbpvD8s5ip4nEB3kEsreAnchuDf\"]",
+      "set=prevtxs:[{\"txid\":\"4d49a71ec9da436f71ec4ee231d04f292a29cd316f598bb7068feccabdc59485\",\"vout\":0,\"scriptPubKey\":\"76a91491b24bf9f5288532960ac687abb035127b1d28a588ac\"}]",
+      "sign=ALL",
+      "outaddr=0.001:193P6LtvS4nCnkDvM9uXn1gsSRqh4aDAz7"],
+    "output_cmp": "txcreatesignv2.hex",
+    "description": "Creates a new transaction with a single input and a single output, and then signs the transaction"
+  },
+  { "exec": "./bitcoin-tx",
+    "args":
+    ["-create",
+      "in=4d49a71ec9da436f71ec4ee231d04f292a29cd316f598bb7068feccabdc59485:0",
+      "set=privatekeys:[\"5HpHagT65TZzG1PH3CSu63k8DbpvD8s5ip4nEB3kEsreAnchuDf\"]",
+      "set=prevtxs:[{\"txid\":\"4d49a71ec9da436f71ec4ee231d04f292a29cd316f598bb7068feccabdc59485\",\"vout\":\"0foo\",\"scriptPubKey\":\"76a91491b24bf9f5288532960ac687abb035127b1d28a588ac\"}]",
+      "sign=ALL",
+      "outaddr=0.001:193P6LtvS4nCnkDvM9uXn1gsSRqh4aDAz7"],
+    "return_code": 1,
+    "error_txt": "error: prevtxs internal object typecheck fail",
+    "description": "Tests the check for invalid vout index in prevtxs for sign"
+  },
+  { "exec": "./bitcoin-tx",
+    "args":
+    ["-create",
+      "in=4d49a71ec9da436f71ec4ee231d04f292a29cd316f598bb7068feccabdc59485:0",
+      "set=privatekeys:[\"5HpHagT65TZzG1PH3CSu63k8DbpvD8s5ip4nEB3kEsreAnchuDf\"]",
+      "set=prevtxs:[{\"txid\":\"Zd49a71ec9da436f71ec4ee231d04f292a29cd316f598bb7068feccabdc59412\",\"vout\":0,\"scriptPubKey\":\"76a91491b24bf9f5288532960ac687abb035127b1d28a588ac\"}]",
+      "sign=ALL",
+      "outaddr=0.001:193P6LtvS4nCnkDvM9uXn1gsSRqh4aDAz7"],
+    "return_code": 1,
+    "error_txt": "error: txid must be hexadecimal string (not 'Zd49a71ec9da436f71ec4ee231d04f292a29cd316f598bb7068feccabdc59412')",
+    "description": "Tests the check for invalid txid due to invalid hex"
+  },
+  { "exec": "./bitcoin-tx",
+    "args":
+    ["-create",
+      "in=4d49a71ec9da436f71ec4ee231d04f292a29cd316f598bb7068feccabdc59485:0",
+      "set=privatekeys:[\"5HpHagT65TZzG1PH3CSu63k8DbpvD8s5ip4nEB3kEsreAnchuDf\"]",
+      "set=prevtxs:[{\"txid\":\"4d49a71ec9da436f71ec4ee231d04f292a29cd316f598bb7068feccabdc594\",\"vout\":0,\"scriptPubKey\":\"76a91491b24bf9f5288532960ac687abb035127b1d28a588ac\"}]",
+      "sign=ALL",
+      "outaddr=0.001:193P6LtvS4nCnkDvM9uXn1gsSRqh4aDAz7"],
+    "return_code": 1,
+    "error_txt": "error: txid must be hexadecimal string (not '4d49a71ec9da436f71ec4ee231d04f292a29cd316f598bb7068feccabdc594')",
+    "description": "Tests the check for invalid txid valid hex, but too short"
+  },
+  { "exec": "./bitcoin-tx",
+    "args":
+    ["-create",
+      "in=4d49a71ec9da436f71ec4ee231d04f292a29cd316f598bb7068feccabdc59485:0",
+      "set=privatekeys:[\"5HpHagT65TZzG1PH3CSu63k8DbpvD8s5ip4nEB3kEsreAnchuDf\"]",
+      "set=prevtxs:[{\"txid\":\"4d49a71ec9da436f71ec4ee231d04f292a29cd316f598bb7068feccabdc5948512\",\"vout\":0,\"scriptPubKey\":\"76a91491b24bf9f5288532960ac687abb035127b1d28a588ac\"}]",
+      "sign=ALL",
+      "outaddr=0.001:193P6LtvS4nCnkDvM9uXn1gsSRqh4aDAz7"],
+    "return_code": 1,
+    "error_txt": "error: txid must be hexadecimal string (not '4d49a71ec9da436f71ec4ee231d04f292a29cd316f598bb7068feccabdc5948512')",
+    "description": "Tests the check for invalid txid valid hex, but too long"
+  },
+  { "exec": "./bitcoin-tx",
+    "args":
+    ["-create",
+      "in=00112233445566778899aabbccddeeff00112233445566778899aabbccddeeff:0",
+      "set=privatekeys:[\"KwDiBf89QgGbjEhKnhXJuH7LrciVrZi3qYjgd9M7rFU73sVHnoWn\"]",
+      "set=prevtxs:[{\"txid\":\"00112233445566778899aabbccddeeff00112233445566778899aabbccddeeff\",\"vout\":0,\"amount\":\"0\", \"scriptPubKey\":\"0014751e76e8199196d454941c45d1b3a323f1433bd6\"}]",
+      "sign=ALL",
+      "outaddr=0.001:193P6LtvS4nCnkDvM9uXn1gsSRqh4aDAz7"],
+    "output_cmp": "txcreatesignsegwit1.hex",
+    "description": "Creates a new transaction with a single witness input and a single output, and then signs the transaction"
+  },
+  { "exec": "./bitcoin-tx",
+    "args":
+    ["-create",
+      "in=00112233445566778899aabbccddeeff00112233445566778899aabbccddeeff:0",
+      "set=privatekeys:[\"KwDiBf89QgGbjEhKnhXJuH7LrciVrZi3qYjgd9M7rFU73sVHnoWn\"]",
+      "set=prevtxs:[{\"txid\":\"00112233445566778899aabbccddeeff00112233445566778899aabbccddeeff\",\"vout\":0,\"scriptPubKey\":\"0014751e76e8199196d454941c45d1b3a323f1433bd6\"}]",
+      "sign=ALL",
+      "outaddr=0.001:193P6LtvS4nCnkDvM9uXn1gsSRqh4aDAz7"],
+    "return_code": 1,
+    "error_txt": "Missing amount for CTxOut with scriptPubKey=0014751e76e8199196d454941c45d1b3a323f1433bd6",
+    "description": "Tests the check for missing input amount for witness transactions"
+  },
+  { "exec": "./bitcoin-tx",
+    "args":
+    ["-create", "outpubkey=0:02a5613bd857b7048924264d1e70e08fb2a7e6527d32b7ab1bb993ac59964ff397", "nversion=1"],
+    "output_cmp": "txcreateoutpubkey1.hex",
+    "description": "Creates a new transaction with a single pay-to-pubkey output"
+  },
+  { "exec": "./bitcoin-tx",
+    "args":
+    ["-json", "-create", "outpubkey=0:02a5613bd857b7048924264d1e70e08fb2a7e6527d32b7ab1bb993ac59964ff397", "nversion=1"],
+    "output_cmp": "txcreateoutpubkey1.json",
+    "description": "Creates a new transaction with a single pay-to-pubkey output (output as json)"
+  },
+  { "exec": "./bitcoin-tx",
+    "args":
+    ["-create", "outpubkey=0:02a5613bd857b7048924264d1e70e08fb2a7e6527d32b7ab1bb993ac59964ff397:W", "nversion=1"],
+    "output_cmp": "txcreateoutpubkey2.hex",
+    "description": "Creates a new transaction with a single pay-to-witness-pubkey output"
+  },
+  { "exec": "./bitcoin-tx",
+    "args":
+    ["-json", "-create", "outpubkey=0:02a5613bd857b7048924264d1e70e08fb2a7e6527d32b7ab1bb993ac59964ff397:W", "nversion=1"],
+    "output_cmp": "txcreateoutpubkey2.json",
+    "description": "Creates a new transaction with a single pay-to-witness-pubkey output (output as json)"
+  },
+  { "exec": "./bitcoin-tx",
+    "args":
+    ["-create", "outpubkey=0:02a5613bd857b7048924264d1e70e08fb2a7e6527d32b7ab1bb993ac59964ff397:WS", "nversion=1"],
+    "output_cmp": "txcreateoutpubkey3.hex",
+    "description": "Creates a new transaction with a single pay-to-witness-pubkey, wrapped in P2SH output"
+  },
+  { "exec": "./bitcoin-tx",
+    "args":
+    ["-json", "-create", "outpubkey=0:02a5613bd857b7048924264d1e70e08fb2a7e6527d32b7ab1bb993ac59964ff397:WS", "nversion=1"],
+    "output_cmp": "txcreateoutpubkey3.json",
+    "description": "Creates a new transaction with a single pay-to-pub-key output, wrapped in P2SH (output as json)"
+  },
+  { "exec": "./bitcoin-tx",
+    "args":
+    ["-json", "-create", "outpubkey=0:047d1368ba7ae01c94bc32293efd70bd7e3be7aa7912d07d0b1c659c1008d179b8642f5fb90f47580feb29f045e216ff5a4716d3a0fed36da414d332046303c44a:WS", "nversion=1"],
+    "return_code": 1,
+    "error_txt": "error: Uncompressed pubkeys are not useable for SegWit outputs",
+    "description": "Creates a new transaction with a single pay-to-pub-key output, wrapped in P2SH (output as json)"
+  },
+  { "exec": "./bitcoin-tx",
+    "args":
+    ["-create",
+     "in=5897de6bd6027a475eadd57019d4e6872c396d0716c4875a5f1a6fcfdf385c1f:0",
+     "outdata=4:badhexdata"],
+    "return_code": 1,
+    "error_txt": "error: invalid TX output data",
+    "description": "Attempts to create a new transaction with one input and an output with malformed hex data. Expected to fail"
+  },
+  { "exec": "./bitcoin-tx",
+    "args":
+    ["-create",
+     "in=5897de6bd6027a475eadd57019d4e6872c396d0716c4875a5f1a6fcfdf385c1f:0",
+     "outdata=badhexdata"],
+    "return_code": 1,
+    "error_txt": "error: invalid TX output data",
+    "description": "Attempts to create a new transaction with one input and an output with no value and malformed hex data. Expected to fail"
+  },
+  { "exec": "./bitcoin-tx",
+    "args":
+    ["-create",
+     "in=5897de6bd6027a475eadd57019d4e6872c396d0716c4875a5f1a6fcfdf385c1f:0",
+     "outaddr=0.18:13tuJJDR2RgArmgfv6JScSdreahzgc4T6o",
+     "outdata=4:54686973204f505f52455455524e207472616e73616374696f6e206f7574707574207761732063726561746564206279206d6f646966696564206372656174657261777472616e73616374696f6e2e"],
+    "output_cmp": "txcreatedata1.hex",
+    "description": "Creates a new transaction with one input, one address output and one data output"
+  },
+  { "exec": "./bitcoin-tx",
+    "args":
+    ["-json",
+     "-create", "nversion=1",
+     "in=5897de6bd6027a475eadd57019d4e6872c396d0716c4875a5f1a6fcfdf385c1f:0",
+     "outaddr=0.18:13tuJJDR2RgArmgfv6JScSdreahzgc4T6o",
+     "outdata=4:54686973204f505f52455455524e207472616e73616374696f6e206f7574707574207761732063726561746564206279206d6f646966696564206372656174657261777472616e73616374696f6e2e"],
+    "output_cmp": "txcreatedata1.json",
+    "description": "Creates a new v1 transaction with one input, one address output and one data output (output in json)"
+  },
+  { "exec": "./bitcoin-tx",
+    "args":
+    ["-create",
+     "in=5897de6bd6027a475eadd57019d4e6872c396d0716c4875a5f1a6fcfdf385c1f:0",
+     "outaddr=0.18:13tuJJDR2RgArmgfv6JScSdreahzgc4T6o",
+     "outdata=54686973204f505f52455455524e207472616e73616374696f6e206f7574707574207761732063726561746564206279206d6f646966696564206372656174657261777472616e73616374696f6e2e"],
+    "output_cmp": "txcreatedata2.hex",
+    "description": "Creates a new transaction with one input, one address output and one data (zero value) output"
+  },
+  { "exec": "./bitcoin-tx",
+    "args":
+    ["-json",
+     "-create",
+     "in=5897de6bd6027a475eadd57019d4e6872c396d0716c4875a5f1a6fcfdf385c1f:0",
+     "outaddr=0.18:13tuJJDR2RgArmgfv6JScSdreahzgc4T6o",
+     "outdata=54686973204f505f52455455524e207472616e73616374696f6e206f7574707574207761732063726561746564206279206d6f646966696564206372656174657261777472616e73616374696f6e2e"],
+    "output_cmp": "txcreatedata2.json",
+    "description": "Creates a new transaction with one input, one address output and one data (zero value) output (output in json)"
+  },
+  { "exec": "./bitcoin-tx",
+    "args":
+    ["-create",
+     "in=5897de6bd6027a475eadd57019d4e6872c396d0716c4875a5f1a6fcfdf385c1f:0:11aa"],
+    "return_code": 1,
+    "error_txt": "error: invalid TX sequence id '11aa'",
+    "description": "Try to parse a sequence number outside the allowed range"
+  },
+  { "exec": "./bitcoin-tx",
+    "args":
+    ["-create",
+     "in=5897de6bd6027a475eadd57019d4e6872c396d0716c4875a5f1a6fcfdf385c1f:0:-1"],
+    "return_code": 1,
+    "error_txt": "error: invalid TX sequence id '-1'",
+    "description": "Try to parse a sequence number outside the allowed range"
+  },
+  { "exec": "./bitcoin-tx",
+    "args":
+    ["-create",
+     "in=5897de6bd6027a475eadd57019d4e6872c396d0716c4875a5f1a6fcfdf385c1f:0:4294967296"],
+    "return_code": 1,
+    "error_txt": "error: invalid TX sequence id '4294967296'",
+    "description": "Try to parse a sequence number outside the allowed range"
+  },
+  { "exec": "./bitcoin-tx",
+    "args":
+    ["-create",
+     "in=5897de6bd6027a475eadd57019d4e6872c396d0716c4875a5f1a6fcfdf385c1f:0:4294967293",
+     "outaddr=0.18:13tuJJDR2RgArmgfv6JScSdreahzgc4T6o"],
+    "output_cmp": "txcreatedata_seq0.hex",
+    "description": "Creates a new transaction with one input with sequence number and one address output"
+  },
+  { "exec": "./bitcoin-tx",
+    "args":
+    ["-create",
+     "in=5897de6bd6027a475eadd57019d4e6872c396d0716c4875a5f1a6fcfdf385c1f:0: 4294967293 ",
+     "outaddr=0.18:13tuJJDR2RgArmgfv6JScSdreahzgc4T6o"],
+    "output_cmp": "txcreatedata_seq0.hex",
+    "description": "Creates a new transaction with one input with sequence number (+whitespace) and one address output"
+  },
+  { "exec": "./bitcoin-tx",
+    "args":
+    ["-json",
+     "-create",
+     "in=5897de6bd6027a475eadd57019d4e6872c396d0716c4875a5f1a6fcfdf385c1f:0:4294967293",
+     "outaddr=0.18:13tuJJDR2RgArmgfv6JScSdreahzgc4T6o"],
+    "output_cmp": "txcreatedata_seq0.json",
+    "description": "Creates a new transaction with one input with sequence number and one address output (output in json)"
+  },
+  { "exec": "./bitcoin-tx",
+    "args":
+    ["01000000011f5c38dfcf6f1a5f5a87c416076d392c87e6d41970d5ad5e477a02d66bde97580000000000fdffffff0180a81201000000001976a9141fc11f39be1729bf973a7ab6a615ca4729d6457488ac00000000",
+     "in=5897de6bd6027a475eadd57019d4e6872c396d0716c4875a5f1a6fcfdf385c1f:0:1"],
+    "output_cmp": "txcreatedata_seq1.hex",
+    "description": "Adds a new input with sequence number to a transaction"
+  },
+  { "exec": "./bitcoin-tx",
+    "args":
+    ["-json",
+     "01000000011f5c38dfcf6f1a5f5a87c416076d392c87e6d41970d5ad5e477a02d66bde97580000000000fdffffff0180a81201000000001976a9141fc11f39be1729bf973a7ab6a615ca4729d6457488ac00000000",
+     "in=5897de6bd6027a475eadd57019d4e6872c396d0716c4875a5f1a6fcfdf385c1f:0:1"],
+    "output_cmp": "txcreatedata_seq1.json",
+    "description": "Adds a new input with sequence number to a transaction (output in json)"
+  },
+  { "exec": "./bitcoin-tx",
+    "args": ["-create", "outmultisig=1:-2:3:02a5:021:02df", "nversion=1"],
+    "return_code": 1,
+    "error_txt": "error: invalid multisig required number '-2'",
+    "description": "Try to parse a multisig number outside the allowed range"
+  },
+  { "exec": "./bitcoin-tx",
+    "args": ["-create", "outmultisig=1:2:3a:02a5:021:02df", "nversion=1"],
+    "return_code": 1,
+    "error_txt": "error: invalid multisig total number '3a'",
+    "description": "Try to parse a multisig number outside the allowed range"
+  },
+  { "exec": "./bitcoin-tx",
+    "args": ["-create", "outmultisig=1:2:3:02a5613bd857b7048924264d1e70e08fb2a7e6527d32b7ab1bb993ac59964ff397:021ac43c7ff740014c3b33737ede99c967e4764553d1b2b83db77c83b8715fa72d:02df2089105c77f266fa11a9d33f05c735234075f2e8780824c6b709415f9fb485", "nversion=1"],
+    "output_cmp": "txcreatemultisig1.hex",
+    "description": "Creates a new transaction with a single 2-of-3 multisig output"
+  },
+  { "exec": "./bitcoin-tx",
+    "args": ["-json", "-create", "outmultisig=1: 2 : 3 :02a5613bd857b7048924264d1e70e08fb2a7e6527d32b7ab1bb993ac59964ff397:021ac43c7ff740014c3b33737ede99c967e4764553d1b2b83db77c83b8715fa72d:02df2089105c77f266fa11a9d33f05c735234075f2e8780824c6b709415f9fb485", "nversion=1"],
+    "output_cmp": "txcreatemultisig1.json",
+    "description": "Creates a new transaction with a single 2-of-3 multisig output (with whitespace, output in json)"
+  },
+  { "exec": "./bitcoin-tx",
+    "args": ["-create", "outmultisig=1:2:3:02a5613bd857b7048924264d1e70e08fb2a7e6527d32b7ab1bb993ac59964ff397:021ac43c7ff740014c3b33737ede99c967e4764553d1b2b83db77c83b8715fa72d:02df2089105c77f266fa11a9d33f05c735234075f2e8780824c6b709415f9fb485:S", "nversion=1"],
+    "output_cmp": "txcreatemultisig2.hex",
+    "description": "Creates a new transaction with a single 2-of-3 multisig in a P2SH output"
+  },
+  { "exec": "./bitcoin-tx",
+    "args": ["-json", "-create", "outmultisig=1:2:3:02a5613bd857b7048924264d1e70e08fb2a7e6527d32b7ab1bb993ac59964ff397:021ac43c7ff740014c3b33737ede99c967e4764553d1b2b83db77c83b8715fa72d:02df2089105c77f266fa11a9d33f05c735234075f2e8780824c6b709415f9fb485:S", "nversion=1"],
+    "output_cmp": "txcreatemultisig2.json",
+    "description": "Creates a new transaction with a single 2-of-3 multisig in a P2SH output (output in json)"
+  },
+  { "exec": "./bitcoin-tx",
+    "args": ["-create", "outmultisig=1:2:3:02a5613bd857b7048924264d1e70e08fb2a7e6527d32b7ab1bb993ac59964ff397:021ac43c7ff740014c3b33737ede99c967e4764553d1b2b83db77c83b8715fa72d:02df2089105c77f266fa11a9d33f05c735234075f2e8780824c6b709415f9fb485:W", "nversion=1"],
+    "output_cmp": "txcreatemultisig3.hex",
+    "description": "Creates a new transaction with a single 2-of-3 multisig in a P2WSH output"
+  },
+  { "exec": "./bitcoin-tx",
+    "args": ["-json", "-create", "outmultisig=1:2:3:02a5613bd857b7048924264d1e70e08fb2a7e6527d32b7ab1bb993ac59964ff397:021ac43c7ff740014c3b33737ede99c967e4764553d1b2b83db77c83b8715fa72d:02df2089105c77f266fa11a9d33f05c735234075f2e8780824c6b709415f9fb485:W", "nversion=1"],
+    "output_cmp": "txcreatemultisig3.json",
+    "description": "Creates a new transaction with a single 2-of-3 multisig in a P2WSH output (output in json)"
+  },
+  { "exec": "./bitcoin-tx",
+    "args": ["-create", "outmultisig=1:2:3:02a5613bd857b7048924264d1e70e08fb2a7e6527d32b7ab1bb993ac59964ff397:021ac43c7ff740014c3b33737ede99c967e4764553d1b2b83db77c83b8715fa72d:02df2089105c77f266fa11a9d33f05c735234075f2e8780824c6b709415f9fb485:WS", "nversion=1"],
+    "output_cmp": "txcreatemultisig4.hex",
+    "description": "Creates a new transaction with a single 2-of-3 multisig in a P2WSH output, wrapped in P2SH"
+  },
+  { "exec": "./bitcoin-tx",
+    "args": ["-json", "-create", "outmultisig=1:2:3:02a5613bd857b7048924264d1e70e08fb2a7e6527d32b7ab1bb993ac59964ff397:021ac43c7ff740014c3b33737ede99c967e4764553d1b2b83db77c83b8715fa72d:02df2089105c77f266fa11a9d33f05c735234075f2e8780824c6b709415f9fb485:WS", "nversion=1"],
+    "output_cmp": "txcreatemultisig4.json",
+    "description": "Creates a new transaction with a single 2-of-3 multisig in a P2WSH output, wrapped in P2SH (output in json)"
+  },
+  { "exec": "./bitcoin-tx",
+    "args": ["-json", "-create", "outmultisig=1:2:3:02a5613bd857b7048924264d1e70e08fb2a7e6527d32b7ab1bb993ac59964ff397:021ac43c7ff740014c3b33737ede99c967e4764553d1b2b83db77c83b8715fa72d:047d1368ba7ae01c94bc32293efd70bd7e3be7aa7912d07d0b1c659c1008d179b8642f5fb90f47580feb29f045e216ff5a4716d3a0fed36da414d332046303c44a:S"],
+    "output_cmp": "txcreatemultisig5.json",
+    "description": "Uncompressed pubkeys should work just fine for non-witness outputs"
+  },
+  { "exec": "./bitcoin-tx",
+    "args": ["-json", "-create", "outmultisig=1:2:3:02a5613bd857b7048924264d1e70e08fb2a7e6527d32b7ab1bb993ac59964ff397:021ac43c7ff740014c3b33737ede99c967e4764553d1b2b83db77c83b8715fa72d:047d1368ba7ae01c94bc32293efd70bd7e3be7aa7912d07d0b1c659c1008d179b8642f5fb90f47580feb29f045e216ff5a4716d3a0fed36da414d332046303c44a:WS"],
+    "return_code": 1,
+    "error_txt": "error: Uncompressed pubkeys are not useable for SegWit outputs",
+    "description": "Ensure adding witness outputs with uncompressed pubkeys fails"
+  }
+]

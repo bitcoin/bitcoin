@@ -1,10 +1,10 @@
-// Copyright (c) 2017-2019 The Bitcoin Core developers
+// Copyright (c) 2017-present The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #ifdef ENABLE_AVX2
 
-#include <stdint.h>
+#include <cstdint>
 #include <immintrin.h>
 
 #include <attributes.h>

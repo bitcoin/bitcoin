@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (c) 2019-2021 The Bitcoin Core developers
+# Copyright (c) 2019-present The Bitcoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test bitcoind aborts if can't disconnect a block.
@@ -42,4 +42,4 @@ class AbortNodeTest(BitcoinTestFramework):
 
 
 if __name__ == '__main__':
-    AbortNodeTest().main()
+    AbortNodeTest(__file__).main()

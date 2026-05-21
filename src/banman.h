@@ -1,5 +1,5 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
-// Copyright (c) 2009-2022 The Bitcoin Core developers
+// Copyright (c) 2009-present The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 #ifndef BITCOIN_BANMAN_H
@@ -7,7 +7,7 @@
 
 #include <addrdb.h>
 #include <common/bloom.h>
-#include <net_types.h> // For banmap_t
+#include <net_types.h>
 #include <sync.h>
 #include <util/fs.h>
 
@@ -34,7 +34,7 @@ class CSubNet;
 // disk on shutdown and reloaded on startup. Banning can be used to
 // prevent connections with spy nodes or other griefers.
 //
-// 2. Discouragement. If a peer misbehaves enough (see Misbehaving() in
+// 2. Discouragement. If a peer misbehaves (see Misbehaving() in
 // net_processing.cpp), we'll mark that address as discouraged. We still allow
 // incoming connections from them, but they're preferred for eviction when
 // we receive new incoming connections. We never make outgoing connections to
@@ -54,6 +54,11 @@ class CSubNet;
 // transaction that fails a policy check and a future version changes the
 // policy check so the transaction is accepted, then that transaction could
 // cause the network to split between old nodes and new nodes.
+//
+// NOTE: previously a misbehaving peer would get banned instead of discouraged.
+// This meant a peer could unboundedly grow our in-memory map of banned ips. When
+// receiving an ADDR message we would also compare every address received to every
+// item in the map. See https://bitcoincore.org/en/2024/07/03/disclose-unbounded-banlist.
 
 class BanMan
 {

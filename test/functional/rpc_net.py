@@ -38,7 +38,7 @@ def assert_net_servicesnames(servicesflag, servicenames):
     servicesflag_generated = 0
     for servicename in servicenames:
         servicesflag_generated |= getattr(test_framework.messages, 'NODE_' + servicename)
-    assert servicesflag_generated == servicesflag
+    assert_equal(servicesflag_generated, servicesflag)
 
 
 def seed_addrman(node):
@@ -62,7 +62,13 @@ def seed_addrman(node):
 class NetTest(BitcoinTestFramework):
     def set_test_params(self):
         self.num_nodes = 2
-        self.extra_args = [["-minrelaytxfee=0.00001000"], ["-minrelaytxfee=0.00000500"]]
+        self.extra_args = [
+            ["-minrelaytxfee=0.00001000"],
+            ["-minrelaytxfee=0.00000500"],
+        ]
+        # Specify a non-working proxy to make sure no actual connections to public IPs are attempted
+        for args in self.extra_args:
+            args.append("-proxy=127.0.0.1:1")
         self.supports_cli = False
 
     def run_test(self):
@@ -163,10 +169,11 @@ class NetTest(BitcoinTestFramework):
                 "permissions": [],
                 "presynced_headers": -1,
                 "relaytxes": False,
+                "inv_to_send": 0,
+                "last_inv_sequence": 0,
                 "services": "0000000000000000",
                 "servicesnames": [],
                 "session_id": "" if not self.options.v2transport else no_version_peer.v2_state.peer['session_id'].hex(),
-                "startingheight": -1,
                 "subver": "",
                 "synced_blocks": -1,
                 "synced_headers": -1,
@@ -237,28 +244,35 @@ class NetTest(BitcoinTestFramework):
     def test_addnode_getaddednodeinfo(self):
         self.log.info("Test addnode and getaddednodeinfo")
         assert_equal(self.nodes[0].getaddednodeinfo(), [])
-        # add a node (node2) to node0
+        self.log.info("Add a node (node2) to node0")
         ip_port = "127.0.0.1:{}".format(p2p_port(2))
         self.nodes[0].addnode(node=ip_port, command='add')
-        # try to add an equivalent ip
-        # (note that OpenBSD doesn't support the IPv4 shorthand notation with omitted zero-bytes)
+        self.log.info("Try to add an equivalent ip and check it fails")
+        self.log.debug("(note that OpenBSD doesn't support the IPv4 shorthand notation with omitted zero-bytes)")
         if platform.system() != "OpenBSD":
             ip_port2 = "127.1:{}".format(p2p_port(2))
             assert_raises_rpc_error(-23, "Node already added", self.nodes[0].addnode, node=ip_port2, command='add')
-        # check that the node has indeed been added
+        self.log.info("Check that the node has indeed been added")
         added_nodes = self.nodes[0].getaddednodeinfo()
         assert_equal(len(added_nodes), 1)
         assert_equal(added_nodes[0]['addednode'], ip_port)
-        # check that node cannot be added again
+        self.log.info("Check that filtering by node works")
+        self.nodes[0].addnode(node="11.22.33.44", command='add')
+        first_added_node = self.nodes[0].getaddednodeinfo(node=ip_port)
+        assert_equal(added_nodes, first_added_node)
+        assert_equal(len(self.nodes[0].getaddednodeinfo()), 2)
+        self.log.info("Check that node cannot be added again")
         assert_raises_rpc_error(-23, "Node already added", self.nodes[0].addnode, node=ip_port, command='add')
-        # check that node can be removed
+        self.log.info("Check that node can be removed")
         self.nodes[0].addnode(node=ip_port, command='remove')
-        assert_equal(self.nodes[0].getaddednodeinfo(), [])
-        # check that an invalid command returns an error
+        added_nodes = self.nodes[0].getaddednodeinfo()
+        assert_equal(len(added_nodes), 1)
+        assert_equal(added_nodes[0]['addednode'], "11.22.33.44")
+        self.log.info("Check that an invalid command returns an error")
         assert_raises_rpc_error(-1, 'addnode "node" "command"', self.nodes[0].addnode, node=ip_port, command='abc')
-        # check that trying to remove the node again returns an error
+        self.log.info("Check that trying to remove the node again returns an error")
         assert_raises_rpc_error(-24, "Node could not be removed", self.nodes[0].addnode, node=ip_port, command='remove')
-        # check that a non-existent node returns an error
+        self.log.info("Check that a non-existent node returns an error")
         assert_raises_rpc_error(-24, "Node has not been added", self.nodes[0].getaddednodeinfo, '1.1.1.1')
 
     def test_service_flags(self):
@@ -334,8 +348,11 @@ class NetTest(BitcoinTestFramework):
         assert "unknown command: addpeeraddress" not in node.help("addpeeraddress")
 
         self.log.debug("Test that adding an empty address fails")
-        assert_equal(node.addpeeraddress(address="", port=8333), {"success": False})
+        assert_raises_rpc_error(-30, "Invalid IP address", node.addpeeraddress, address="", port=8333)
         assert_equal(node.getnodeaddresses(count=0), [])
+
+        self.log.debug("Test that adding a non-IP/hostname fails (no DNS lookup allowed)")
+        assert_raises_rpc_error(-30, "Invalid IP address", node.addpeeraddress, address="not_an_ip", port=8333)
 
         self.log.debug("Test that non-bool tried fails")
         assert_raises_rpc_error(-3, "JSON value of type string is not of expected type bool", self.nodes[0].addpeeraddress, address="1.2.3.4", tried="True", port=1234)
@@ -400,8 +417,12 @@ class NetTest(BitcoinTestFramework):
 
         self.log.info("Test sendmsgtopeer")
         self.log.debug("Send a valid message")
+        msg_bytes_before = node.getpeerinfo()[0]["bytesrecv_per_msg"]["pong"]
+
         with self.nodes[1].assert_debug_log(expected_msgs=["received: addr"]):
             node.sendmsgtopeer(peer_id=0, msg_type="addr", msg="FFFFFF")
+            node.ping()
+            self.wait_until(lambda: node.getpeerinfo()[0]["bytesrecv_per_msg"]["pong"] > msg_bytes_before)
 
         self.log.debug("Test error for sending to non-existing peer")
         assert_raises_rpc_error(-1, "Error: Could not send message to peer", node.sendmsgtopeer, peer_id=100, msg_type="addr", msg="FF")
@@ -479,7 +500,7 @@ class NetTest(BitcoinTestFramework):
                 for bucket_position in getrawaddrman[table_name].keys():
                     entry = getrawaddrman[table_name][bucket_position]
                     expected_entry = list(filter(lambda e: e["address"] == entry["address"], table_info))[0]
-                    assert bucket_position == expected_entry["bucket_position"]
+                    assert_equal(bucket_position, expected_entry["bucket_position"])
                     check_addr_information(entry, expected_entry)
 
         # we expect 4 new and 4 tried table entries in the addrman which were added using seed_addrman()
@@ -567,4 +588,4 @@ class NetTest(BitcoinTestFramework):
 
 
 if __name__ == '__main__':
-    NetTest().main()
+    NetTest(__file__).main()

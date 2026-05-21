@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (c) 2022 The Bitcoin Core developers
+# Copyright (c) 2022-present The Bitcoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test logic for setting -maxtipage on command line.
@@ -43,6 +43,10 @@ class MaxTipAgeTest(BitcoinTestFramework):
         self.generate(node_miner, 1)
         assert_equal(node_ibd.getblockchaininfo()['initialblockdownload'], False)
 
+        # reset time to system time so we don't have a time offset with the ibd node the next
+        # time we connect to it, ensuring TimeOffsets::WarnIfOutOfSync() doesn't output to stderr
+        node_miner.setmocktime(0)
+
     def run_test(self):
         self.log.info("Test IBD with maximum tip age of 24 hours (default).")
         self.test_maxtipage(DEFAULT_MAX_TIP_AGE, set_parameter=False)
@@ -58,4 +62,4 @@ class MaxTipAgeTest(BitcoinTestFramework):
 
 
 if __name__ == '__main__':
-    MaxTipAgeTest().main()
+    MaxTipAgeTest(__file__).main()

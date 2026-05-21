@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (c) 2022 The Bitcoin Core developers
+# Copyright (c) 2022-present The Bitcoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test Miniscript descriptors integration in the wallet."""
@@ -203,21 +203,17 @@ DESCS_PRIV = [
 
 
 class WalletMiniscriptTest(BitcoinTestFramework):
-    def add_options(self, parser):
-        self.add_wallet_options(parser, legacy=False)
-
     def set_test_params(self):
         self.num_nodes = 1
         self.rpc_timeout = 180
 
     def skip_test_if_missing_module(self):
         self.skip_if_no_wallet()
-        self.skip_if_no_sqlite()
 
     def watchonly_test(self, desc):
         self.log.info(f"Importing descriptor '{desc}'")
         desc = descsum_create(f"{desc}")
-        assert self.ms_wo_wallet.importdescriptors(
+        assert_equal(self.ms_wo_wallet.importdescriptors(
             [
                 {
                     "desc": desc,
@@ -227,7 +223,7 @@ class WalletMiniscriptTest(BitcoinTestFramework):
                     "timestamp": "now",
                 }
             ]
-        )[0]["success"]
+        )[0]["success"], True)
 
         self.log.info("Testing we derive new addresses for it")
         addr_type = "bech32m" if desc.startswith("tr(") else "bech32"
@@ -247,7 +243,8 @@ class WalletMiniscriptTest(BitcoinTestFramework):
             lambda: len(self.ms_wo_wallet.listunspent(minconf=0, addresses=[addr])) == 1
         )
         utxo = self.ms_wo_wallet.listunspent(minconf=0, addresses=[addr])[0]
-        assert utxo["txid"] == txid and utxo["solvable"]
+        assert_equal(utxo["txid"], txid)
+        assert_equal(utxo["solvable"], True)
 
     def signing_test(
         self, desc, sequence, locktime, sigs_count, stack_size, sha256_preimages
@@ -275,7 +272,8 @@ class WalletMiniscriptTest(BitcoinTestFramework):
         self.wait_until(lambda: txid in self.funder.getrawmempool())
         self.funder.generatetoaddress(1, self.funder.getnewaddress())
         utxo = self.ms_sig_wallet.listunspent(addresses=[addr])[0]
-        assert txid == utxo["txid"] and utxo["solvable"]
+        assert_equal(txid, utxo["txid"])
+        assert_equal(utxo["solvable"], True)
 
         self.log.info("Creating a transaction spending these funds")
         dest_addr = self.funder.getnewaddress()
@@ -301,14 +299,14 @@ class WalletMiniscriptTest(BitcoinTestFramework):
                 psbt.i[0].map[k] = bytes.fromhex(preimage)
             psbt = psbt.to_base64()
         res = self.ms_sig_wallet.walletprocesspsbt(psbt=psbt, finalize=False)
-        psbtin = self.nodes[0].rpc.decodepsbt(res["psbt"])["inputs"][0]
+        psbtin = self.nodes[0].decodepsbt(res["psbt"])["inputs"][0]
         sigs_field_name = "taproot_script_path_sigs" if is_taproot else "partial_signatures"
-        assert len(psbtin[sigs_field_name]) == sigs_count
+        assert_equal(len(psbtin[sigs_field_name]), sigs_count)
         res = self.ms_sig_wallet.finalizepsbt(res["psbt"])
-        assert res["complete"] == (stack_size is not None)
+        assert_equal(res["complete"], stack_size is not None)
 
         if stack_size is not None:
-            txin = self.nodes[0].rpc.decoderawtransaction(res["hex"])["vin"][0]
+            txin = self.nodes[0].decoderawtransaction(res["hex"])["vin"][0]
             assert len(txin["txinwitness"]) == stack_size, txin["txinwitness"]
             self.log.info("Broadcasting the transaction.")
             # If necessary, satisfy a relative timelock
@@ -326,10 +324,10 @@ class WalletMiniscriptTest(BitcoinTestFramework):
         self.log.info("Making a descriptor wallet")
         self.funder = self.nodes[0].get_wallet_rpc(self.default_wallet_name)
         self.nodes[0].createwallet(
-            wallet_name="ms_wo", descriptors=True, disable_private_keys=True
+            wallet_name="ms_wo", disable_private_keys=True
         )
         self.ms_wo_wallet = self.nodes[0].get_wallet_rpc("ms_wo")
-        self.nodes[0].createwallet(wallet_name="ms_sig", descriptors=True)
+        self.nodes[0].createwallet(wallet_name="ms_sig")
         self.ms_sig_wallet = self.nodes[0].get_wallet_rpc("ms_sig")
 
         # Sanity check we wouldn't let an insane Miniscript descriptor in
@@ -344,7 +342,7 @@ class WalletMiniscriptTest(BitcoinTestFramework):
                 }
             ]
         )[0]
-        assert not res["success"]
+        assert_equal(res["success"], False)
         assert "is not sane: witnesses without signature exist" in res["error"]["message"]
 
         # Sanity check we wouldn't let an unspendable Miniscript descriptor in
@@ -396,9 +394,9 @@ class WalletMiniscriptTest(BitcoinTestFramework):
                 }
             ]
         )[0]
-        assert not res["success"]
+        assert_equal(res["success"], False)
         assert "is not a valid descriptor function" in res["error"]["message"]
 
 
 if __name__ == "__main__":
-    WalletMiniscriptTest().main()
+    WalletMiniscriptTest(__file__).main()

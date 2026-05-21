@@ -1,4 +1,4 @@
-// Copyright (c) 2020-2022 The Bitcoin Core developers
+// Copyright (c) 2020-present The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -6,13 +6,16 @@
 #define BITCOIN_UTIL_SOCK_H
 
 #include <compat/compat.h>
-#include <util/threadinterrupt.h>
 #include <util/time.h>
 
-#include <chrono>
+#include <cstdint>
+#include <limits>
 #include <memory>
+#include <span>
 #include <string>
 #include <unordered_map>
+
+class CThreadInterrupt;
 
 /**
  * Maximum time to wait for I/O readiness.
@@ -228,14 +231,14 @@ public:
      * @throws std::runtime_error if the operation cannot be completed. In this case only some of
      * the data will be written to the socket.
      */
-    virtual void SendComplete(Span<const unsigned char> data,
+    virtual void SendComplete(std::span<const unsigned char> data,
                               std::chrono::milliseconds timeout,
                               CThreadInterrupt& interrupt) const;
 
     /**
      * Convenience method, equivalent to `SendComplete(MakeUCharSpan(data), timeout, interrupt)`.
      */
-    virtual void SendComplete(Span<const char> data,
+    virtual void SendComplete(std::span<const char> data,
                               std::chrono::milliseconds timeout,
                               CThreadInterrupt& interrupt) const;
 

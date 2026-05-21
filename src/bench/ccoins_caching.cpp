@@ -1,13 +1,18 @@
-// Copyright (c) 2016-2022 The Bitcoin Core developers
+// Copyright (c) 2016-present The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <bench/bench.h>
 #include <coins.h>
+#include <consensus/amount.h>
+#include <key.h>
 #include <policy/policy.h>
+#include <primitives/transaction.h>
+#include <script/script.h>
 #include <script/signingprovider.h>
 #include <test/util/transaction_utils.h>
 
+#include <cassert>
 #include <vector>
 
 // Microbenchmark for simple accesses to a CCoinsViewCache database. Note from
@@ -18,11 +23,10 @@
 // (https://github.com/bitcoin/bitcoin/issues/7883#issuecomment-224807484)
 static void CCoinsCaching(benchmark::Bench& bench)
 {
-    ECC_Start();
+    ECC_Context ecc_context{};
 
     FillableSigningProvider keystore;
-    CCoinsView coinsDummy;
-    CCoinsViewCache coins(&coinsDummy);
+    CCoinsViewCache coins{&CoinsViewEmpty::Get()};
     std::vector<CMutableTransaction> dummyTransactions =
         SetupDummyInputs(keystore, coins, {11 * COIN, 50 * COIN, 21 * COIN, 22 * COIN});
 
@@ -44,10 +48,8 @@ static void CCoinsCaching(benchmark::Bench& bench)
     // Benchmark.
     const CTransaction tx_1(t1);
     bench.run([&] {
-        bool success{AreInputsStandard(tx_1, coins)};
-        assert(success);
+        assert(ValidateInputsStandardness(tx_1, coins).IsValid());
     });
-    ECC_Stop();
 }
 
-BENCHMARK(CCoinsCaching, benchmark::PriorityLevel::HIGH);
+BENCHMARK(CCoinsCaching);

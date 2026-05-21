@@ -18,6 +18,7 @@
 #include <climits>
 #include <cstddef>
 #include <cstdint>
+#include <cstdlib>
 #include <cstring>
 #include <initializer_list>
 #include <limits>
@@ -202,7 +203,7 @@ template <typename T> T FuzzedDataProvider::ConsumeIntegral() {
 // be less than or equal to |max|.
 template <typename T>
 T FuzzedDataProvider::ConsumeIntegralInRange(T min, T max) {
-  static_assert(std::is_integral<T>::value, "An integral type is required.");
+  static_assert(std::is_integral_v<T>, "An integral type is required.");
   static_assert(sizeof(T) <= sizeof(uint64_t), "Unsupported integral type.");
 
   if (min > max)
@@ -270,14 +271,14 @@ T FuzzedDataProvider::ConsumeFloatingPointInRange(T min, T max) {
 // Returns a floating point number in the range [0.0, 1.0]. If there's no
 // input data left, always returns 0.
 template <typename T> T FuzzedDataProvider::ConsumeProbability() {
-  static_assert(std::is_floating_point<T>::value,
+  static_assert(std::is_floating_point_v<T>,
                 "A floating point type is required.");
 
   // Use different integral types for different floating point types in order
   // to provide better density of the resulting values.
   using IntegralType =
-      typename std::conditional<(sizeof(T) <= sizeof(uint32_t)), uint32_t,
-                                uint64_t>::type;
+      typename std::conditional_t<(sizeof(T) <= sizeof(uint32_t)), uint32_t,
+                                  uint64_t>;
 
   T result = static_cast<T>(ConsumeIntegral<IntegralType>());
   result /= static_cast<T>(std::numeric_limits<IntegralType>::max());
@@ -293,7 +294,7 @@ inline bool FuzzedDataProvider::ConsumeBool() {
 // also contain |kMaxValue| aliased to its largest (inclusive) value. Such as:
 // enum class Foo { SomeValue, OtherValue, kMaxValue = OtherValue };
 template <typename T> T FuzzedDataProvider::ConsumeEnum() {
-  static_assert(std::is_enum<T>::value, "|T| must be an enum type.");
+  static_assert(std::is_enum_v<T>, "|T| must be an enum type.");
   return static_cast<T>(
       ConsumeIntegralInRange<uint32_t>(0, static_cast<uint32_t>(T::kMaxValue)));
 }
@@ -313,7 +314,6 @@ T FuzzedDataProvider::PickValueInArray(const std::array<T, size> &array) {
 
 template <typename T>
 T FuzzedDataProvider::PickValueInArray(std::initializer_list<const T> list) {
-  // TODO(Dor1s): switch to static_assert once C++14 is allowed.
   if (!list.size())
     abort();
 
@@ -380,13 +380,13 @@ TS FuzzedDataProvider::ConvertUnsignedToSigned(TU value) {
   static_assert(!std::numeric_limits<TU>::is_signed,
                 "Source type must be unsigned.");
 
-  // TODO(Dor1s): change to `if constexpr` once C++17 becomes mainstream.
-  if (std::numeric_limits<TS>::is_modulo)
+  if constexpr (std::numeric_limits<TS>::is_modulo)
     return static_cast<TS>(value);
 
   // Avoid using implementation-defined unsigned to signed conversions.
   // To learn more, see https://stackoverflow.com/questions/13150449.
-  if (value <= std::numeric_limits<TS>::max()) {
+  constexpr auto TS_max = static_cast<TU>(std::numeric_limits<TS>::max());
+  if (value <= TS_max) {
     return static_cast<TS>(value);
   } else {
     constexpr auto TS_min = std::numeric_limits<TS>::min();

@@ -49,6 +49,7 @@ In addition, libsecp256k1 tries to maintain the following coding conventions:
 * Operations involving secret data should be tested for being constant time with respect to the secrets (see [src/ctime_tests.c](src/ctime_tests.c)).
 * Local variables containing secret data should be cleared explicitly to try to delete secrets from memory.
 * Use `secp256k1_memcmp_var` instead of `memcmp` (see [#823](https://github.com/bitcoin-core/secp256k1/issues/823)).
+* As a rule of thumb, the default values for configuration options should target standard desktop machines and align with Bitcoin Core's defaults, and the tests should mostly exercise the default configuration (see [#1549](https://github.com/bitcoin-core/secp256k1/issues/1549#issuecomment-2200559257)).
 
 #### Style conventions
 
@@ -73,6 +74,7 @@ In addition, libsecp256k1 tries to maintain the following coding conventions:
 * User-facing comment lines in headers should be limited to 80 chars if possible.
 * All identifiers in file scope should start with `secp256k1_`.
 * Avoid trailing whitespace.
+* Use the constants `EXIT_SUCCESS`/`EXIT_FAILURE` (defined in `stdlib.h`) to indicate program execution status for examples and other binaries.
 
 ### Tests
 
@@ -90,12 +92,14 @@ Run the tests:
 
 To create a report, `gcovr` is recommended, as it includes branch coverage reporting:
 
-    $ gcovr --exclude 'src/bench*' --print-summary
+    $ gcovr --gcov-ignore-parse-errors=all --merge-mode-functions=separate --exclude 'src/bench*' --exclude 'src/modules/.*/bench_impl.h' --print-summary
 
 To create a HTML report with coloured and annotated source code:
 
     $ mkdir -p coverage
-    $ gcovr --exclude 'src/bench*' --html --html-details -o coverage/coverage.html
+    $ gcovr --gcov-ignore-parse-errors=all --merge-mode-functions=separate --exclude 'src/bench*' --exclude 'src/modules/.*/bench_impl.h' --html --html-details -o coverage/coverage.html
+
+On `gcovr` >=8.3, `--gcov-ignore-parse-errors=all` can be replaced with `--gcov-suspicious-hits-threshold=140737488355330`.
 
 #### Exhaustive tests
 

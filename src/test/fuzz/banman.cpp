@@ -1,4 +1,4 @@
-// Copyright (c) 2020-2022 The Bitcoin Core developers
+// Copyright (c) 2020-present The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -10,6 +10,7 @@
 #include <test/fuzz/util.h>
 #include <test/fuzz/util/net.h>
 #include <test/util/setup_common.h>
+#include <test/util/time.h>
 #include <util/fs.h>
 #include <util/readwritefile.h>
 
@@ -42,8 +43,9 @@ static bool operator==(const CBanEntry& lhs, const CBanEntry& rhs)
 
 FUZZ_TARGET(banman, .init = initialize_banman)
 {
+    SeedRandomStateForTest(SeedRand::ZEROS);
     FuzzedDataProvider fuzzed_data_provider{buffer.data(), buffer.size()};
-    SetMockTime(ConsumeTime(fuzzed_data_provider));
+    NodeClockContext clock_ctx{ConsumeTime(fuzzed_data_provider)};
     fs::path banlist_file = gArgs.GetDataDirNet() / "fuzzed_banlist";
 
     const bool start_with_corrupted_banlist{fuzzed_data_provider.ConsumeBool()};
@@ -78,7 +80,9 @@ FUZZ_TARGET(banman, .init = initialize_banman)
                             contains_invalid = true;
                         }
                     }
-                    ban_man.Ban(net_addr, ConsumeBanTimeOffset(fuzzed_data_provider), fuzzed_data_provider.ConsumeBool());
+                    auto ban_time_offset = ConsumeBanTimeOffset(fuzzed_data_provider);
+                    auto since_unix_epoch = fuzzed_data_provider.ConsumeBool();
+                    ban_man.Ban(net_addr, ban_time_offset, since_unix_epoch);
                 },
                 [&] {
                     CSubNet subnet{ConsumeSubNet(fuzzed_data_provider)};
@@ -86,7 +90,9 @@ FUZZ_TARGET(banman, .init = initialize_banman)
                     if (!subnet.IsValid()) {
                         contains_invalid = true;
                     }
-                    ban_man.Ban(subnet, ConsumeBanTimeOffset(fuzzed_data_provider), fuzzed_data_provider.ConsumeBool());
+                    auto ban_time_offset = ConsumeBanTimeOffset(fuzzed_data_provider);
+                    auto since_unix_epoch = fuzzed_data_provider.ConsumeBool();
+                    ban_man.Ban(subnet, ban_time_offset, since_unix_epoch);
                 },
                 [&] {
                     ban_man.ClearBanned();
@@ -112,11 +118,14 @@ FUZZ_TARGET(banman, .init = initialize_banman)
                 },
                 [&] {
                     ban_man.Discourage(ConsumeNetAddr(fuzzed_data_provider));
+                },
+                [&] {
+                    ban_man.IsDiscouraged(ConsumeNetAddr(fuzzed_data_provider));
                 });
         }
         if (!force_read_and_write_to_err) {
             ban_man.DumpBanlist();
-            SetMockTime(ConsumeTime(fuzzed_data_provider));
+            clock_ctx.set(ConsumeTime(fuzzed_data_provider));
             banmap_t banmap;
             ban_man.GetBanned(banmap);
             BanMan ban_man_read{banlist_file, /*client_interface=*/nullptr, /*default_ban_time=*/0};

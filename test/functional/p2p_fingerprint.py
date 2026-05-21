@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (c) 2017-2021 The Bitcoin Core developers
+# Copyright (c) 2017-present The Bitcoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test various fingerprinting protections.
@@ -10,7 +10,7 @@ the node should pretend that it does not have it to avoid fingerprinting.
 
 import time
 
-from test_framework.blocktools import (create_block, create_coinbase)
+from test_framework.blocktools import create_block
 from test_framework.messages import CInv, MSG_BLOCK
 from test_framework.p2p import (
     P2PInterface,
@@ -35,28 +35,26 @@ class P2PFingerprintTest(BitcoinTestFramework):
     def build_chain(self, nblocks, prev_hash, prev_height, prev_median_time):
         blocks = []
         for _ in range(nblocks):
-            coinbase = create_coinbase(prev_height + 1)
-            block_time = prev_median_time + 1
-            block = create_block(int(prev_hash, 16), coinbase, block_time)
+            block = create_block(int(prev_hash, 16), height=prev_height + 1, ntime=prev_median_time + 1)
             block.solve()
 
             blocks.append(block)
-            prev_hash = block.hash
+            prev_hash = block.hash_hex
             prev_height += 1
-            prev_median_time = block_time
+            prev_median_time += 1
         return blocks
 
     # Send a getdata request for a given block hash
     def send_block_request(self, block_hash, node):
         msg = msg_getdata()
         msg.inv.append(CInv(MSG_BLOCK, block_hash))
-        node.send_message(msg)
+        node.send_without_ping(msg)
 
     # Send a getheaders request for a given single block hash
     def send_header_request(self, block_hash, node):
         msg = msg_getheaders()
         msg.hashstop = block_hash
-        node.send_message(msg)
+        node.send_without_ping(msg)
 
     # Checks that stale blocks timestamped more than a month ago are not served
     # by the node while recent stale blocks and old active chain blocks are.
@@ -78,8 +76,8 @@ class P2PFingerprintTest(BitcoinTestFramework):
         new_blocks = self.build_chain(5, block_hash, height, block_time)
 
         # Force reorg to a longer chain
-        node0.send_message(msg_headers(new_blocks))
-        node0.wait_for_getdata([x.sha256 for x in new_blocks])
+        node0.send_without_ping(msg_headers(new_blocks))
+        node0.wait_for_getdata([x.hash_int for x in new_blocks])
         for block in new_blocks:
             node0.send_and_ping(msg_block(block))
 
@@ -130,4 +128,4 @@ class P2PFingerprintTest(BitcoinTestFramework):
 
 
 if __name__ == '__main__':
-    P2PFingerprintTest().main()
+    P2PFingerprintTest(__file__).main()

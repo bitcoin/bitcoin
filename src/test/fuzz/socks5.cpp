@@ -1,4 +1,4 @@
-// Copyright (c) 2020-2022 The Bitcoin Core developers
+// Copyright (c) 2020-present The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -9,6 +9,8 @@
 #include <test/fuzz/util.h>
 #include <test/fuzz/util/net.h>
 #include <test/util/setup_common.h>
+#include <test/util/time.h>
+#include <util/time.h>
 
 #include <cstdint>
 #include <string>
@@ -29,6 +31,7 @@ void initialize_socks5()
 FUZZ_TARGET(socks5, .init = initialize_socks5)
 {
     FuzzedDataProvider fuzzed_data_provider{buffer.data(), buffer.size()};
+    NodeClockContext clock_ctx{ConsumeTime(fuzzed_data_provider)};
     ProxyCredentials proxy_credentials;
     proxy_credentials.username = fuzzed_data_provider.ConsumeRandomLengthString(512);
     proxy_credentials.password = fuzzed_data_provider.ConsumeRandomLengthString(512);
@@ -41,8 +44,8 @@ FUZZ_TARGET(socks5, .init = initialize_socks5)
     FuzzedSock fuzzed_sock = ConsumeSock(fuzzed_data_provider);
     // This Socks5(...) fuzzing harness would have caught CVE-2017-18350 within
     // a few seconds of fuzzing.
-    (void)Socks5(fuzzed_data_provider.ConsumeRandomLengthString(512),
-                 fuzzed_data_provider.ConsumeIntegral<uint16_t>(),
-                 fuzzed_data_provider.ConsumeBool() ? &proxy_credentials : nullptr,
-                 fuzzed_sock);
+    auto str_dest = fuzzed_data_provider.ConsumeRandomLengthString(512);
+    auto port = fuzzed_data_provider.ConsumeIntegral<uint16_t>();
+    auto* auth = fuzzed_data_provider.ConsumeBool() ? &proxy_credentials : nullptr;
+    (void)Socks5(str_dest, port, auth, fuzzed_sock);
 }

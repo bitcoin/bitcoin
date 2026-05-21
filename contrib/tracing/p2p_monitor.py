@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (c) 2021 The Bitcoin Core developers
+# Copyright (c) 2021-present The Bitcoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -14,8 +14,9 @@
 # outbound P2P messages. The eBPF program submits the P2P messages to
 # this script via a BPF ring buffer.
 
-import sys
 import curses
+import os
+import sys
 from curses import wrapper, panel
 from bcc import BPF, USDT
 
@@ -46,11 +47,15 @@ BPF_PERF_OUTPUT(outbound_messages);
 
 int trace_inbound_message(struct pt_regs *ctx) {
     struct p2p_message msg = {};
+    void *paddr = NULL, *pconn_type = NULL, *pmsg_type = NULL;
 
     bpf_usdt_readarg(1, ctx, &msg.peer_id);
-    bpf_usdt_readarg_p(2, ctx, &msg.peer_addr, MAX_PEER_ADDR_LENGTH);
-    bpf_usdt_readarg_p(3, ctx, &msg.peer_conn_type, MAX_PEER_CONN_TYPE_LENGTH);
-    bpf_usdt_readarg_p(4, ctx, &msg.msg_type, MAX_MSG_TYPE_LENGTH);
+    bpf_usdt_readarg(2, ctx, &paddr);
+    bpf_probe_read_user_str(&msg.peer_addr, sizeof(msg.peer_addr), paddr);
+    bpf_usdt_readarg(3, ctx, &pconn_type);
+    bpf_probe_read_user_str(&msg.peer_conn_type, sizeof(msg.peer_conn_type), pconn_type);
+    bpf_usdt_readarg(4, ctx, &pmsg_type);
+    bpf_probe_read_user_str(&msg.msg_type, sizeof(msg.msg_type), pmsg_type);
     bpf_usdt_readarg(5, ctx, &msg.msg_size);
 
     inbound_messages.perf_submit(ctx, &msg, sizeof(msg));
@@ -59,11 +64,15 @@ int trace_inbound_message(struct pt_regs *ctx) {
 
 int trace_outbound_message(struct pt_regs *ctx) {
     struct p2p_message msg = {};
+    void *paddr = NULL, *pconn_type = NULL, *pmsg_type = NULL;
 
     bpf_usdt_readarg(1, ctx, &msg.peer_id);
-    bpf_usdt_readarg_p(2, ctx, &msg.peer_addr, MAX_PEER_ADDR_LENGTH);
-    bpf_usdt_readarg_p(3, ctx, &msg.peer_conn_type, MAX_PEER_CONN_TYPE_LENGTH);
-    bpf_usdt_readarg_p(4, ctx, &msg.msg_type, MAX_MSG_TYPE_LENGTH);
+    bpf_usdt_readarg(2, ctx, &paddr);
+    bpf_probe_read_user_str(&msg.peer_addr, sizeof(msg.peer_addr), paddr);
+    bpf_usdt_readarg(3, ctx, &pconn_type);
+    bpf_probe_read_user_str(&msg.peer_conn_type, sizeof(msg.peer_conn_type), pconn_type);
+    bpf_usdt_readarg(4, ctx, &pmsg_type);
+    bpf_probe_read_user_str(&msg.msg_type, sizeof(msg.msg_type), pmsg_type);
     bpf_usdt_readarg(5, ctx, &msg.msg_size);
 
     outbound_messages.perf_submit(ctx, &msg, sizeof(msg));
@@ -115,10 +124,10 @@ class Peer:
             self.total_outbound_msgs += 1
 
 
-def main(bitcoind_path):
+def main(pid):
     peers = dict()
-
-    bitcoind_with_usdts = USDT(path=str(bitcoind_path))
+    print(f"Hooking into bitcoind with pid {pid}")
+    bitcoind_with_usdts = USDT(pid=int(pid))
 
     # attaching the trace functions defined in the BPF program to the tracepoints
     bitcoind_with_usdts.enable_probe(
@@ -170,7 +179,7 @@ def loop(screen, bpf, peers):
     info_panel = panel.new_panel(win)
     info_panel.hide()
 
-    ROWS_AVALIABLE_FOR_LIST = curses.LINES - 5
+    ROWS_AVAILABLE_FOR_LIST = curses.LINES - 5
     scroll = 0
 
     while True:
@@ -182,7 +191,7 @@ def loop(screen, bpf, peers):
             if (ch == curses.KEY_DOWN or ch == ord("j")) and cur_list_pos < len(
                     peers.keys()) -1 and info_panel.hidden():
                 cur_list_pos += 1
-                if cur_list_pos >= ROWS_AVALIABLE_FOR_LIST:
+                if cur_list_pos >= ROWS_AVAILABLE_FOR_LIST:
                     scroll += 1
             if (ch == curses.KEY_UP or ch == ord("k")) and cur_list_pos > 0 and info_panel.hidden():
                 cur_list_pos -= 1
@@ -194,14 +203,14 @@ def loop(screen, bpf, peers):
                 else:
                     info_panel.hide()
             screen.erase()
-            render(screen, peers, cur_list_pos, scroll, ROWS_AVALIABLE_FOR_LIST, info_panel)
+            render(screen, peers, cur_list_pos, scroll, ROWS_AVAILABLE_FOR_LIST, info_panel)
             curses.panel.update_panels()
             screen.refresh()
         except KeyboardInterrupt:
             exit()
 
 
-def render(screen, peers, cur_list_pos, scroll, ROWS_AVALIABLE_FOR_LIST, info_panel):
+def render(screen, peers, cur_list_pos, scroll, ROWS_AVAILABLE_FOR_LIST, info_panel):
     """ renders the list of peers and details panel
 
     This code is unrelated to USDT, BCC and BPF.
@@ -214,7 +223,7 @@ def render(screen, peers, cur_list_pos, scroll, ROWS_AVALIABLE_FOR_LIST, info_pa
         1, 0, (" Navigate with UP/DOWN or J/K and select a peer with ENTER or SPACE to see individual P2P messages"), curses.A_NORMAL)
     screen.addstr(3, 0,
                   header_format % ("PEER", "OUTBOUND", "INBOUND", "TYPE", "ADDR"), curses.A_BOLD | curses.A_UNDERLINE)
-    peer_list = sorted(peers.keys())[scroll:ROWS_AVALIABLE_FOR_LIST+scroll]
+    peer_list = sorted(peers.keys())[scroll:ROWS_AVAILABLE_FOR_LIST+scroll]
     for i, peer_id in enumerate(peer_list):
         peer = peers[peer_id]
         screen.addstr(i + 4, 0,
@@ -245,9 +254,14 @@ def render(screen, peers, cur_list_pos, scroll, ROWS_AVALIABLE_FOR_LIST, info_pa
                         (msg.msg_type, msg.size), curses.A_NORMAL)
 
 
+def running_as_root():
+    return os.getuid() == 0
+
 if __name__ == "__main__":
-    if len(sys.argv) < 2:
-        print("USAGE:", sys.argv[0], "path/to/bitcoind")
+    if len(sys.argv) != 2:
+        print("USAGE:", sys.argv[0], "<pid of bitcoind>")
         exit()
-    path = sys.argv[1]
-    main(path)
+    if not running_as_root():
+        print("You might not have the privileges required to hook into the tracepoints!")
+    pid = sys.argv[1]
+    main(pid)

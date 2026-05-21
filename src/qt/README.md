@@ -1,17 +1,17 @@
 This directory contains the source code for the Bitcoin Core graphical user interface (GUI). It uses the [Qt](https://www1.qt.io/developers/) cross-platform framework.
 
-The current precise version for Qt 5 is specified in [qt.mk](/depends/packages/qt.mk).
+The current precise version for Qt is specified in [qt_details.mk](/depends/packages/qt_details.mk).
 
 ## Compile and run
 
-See build instructions: [Unix](/doc/build-unix.md), [macOS](/doc/build-osx.md), [Windows](/doc/build-windows.md), [FreeBSD](/doc/build-freebsd.md), [NetBSD](/doc/build-netbsd.md), [OpenBSD](/doc/build-openbsd.md)
+See build instructions: [Unix](/doc/build-unix.md), [macOS](/doc/build-osx.md), [Windows](/doc/build-windows-msvc.md), [FreeBSD](/doc/build-freebsd.md), [NetBSD](/doc/build-netbsd.md), [OpenBSD](/doc/build-openbsd.md)
 
 When following your systems build instructions, make sure to install the `Qt` dependencies.
 
 To run:
 
 ```sh
-./src/qt/bitcoin-qt
+./build/bin/bitcoin-qt
 ```
 
 ## Files and Directories
@@ -99,7 +99,7 @@ sudo apt-get install qtcreator
 #### Setup Qt Creator
 
 1. Make sure you've installed all dependencies specified in your systems build instructions
-2. Follow the compile instructions for your system, run `./configure` with the `--enable-debug` flag
+2. Follow the compile instructions for your system, adding the `-DCMAKE_BUILD_TYPE=Debug` build flag
 3. Start Qt Creator. At the start page, do: `New` -> `Import Project` -> `Import Existing Project`
 4. Enter `bitcoin-qt` as the Project Name and enter the absolute path to `src/qt` as Location
 5. Check over the file selection, you may need to select the `forms` directory (necessary if you intend to edit *.ui files)
@@ -120,5 +120,5 @@ sudo apt-get install qtcreator
  - Under `Debuggers`: select `"GDB"` as debugger
 
 8. While in the `Projects` tab, ensure that you have the `bitcoin-qt` executable specified under `Run`
- - If the executable is not specified: click `"Choose..."`, navigate to `src/qt`, and select `bitcoin-qt`
+ - If the executable is not specified: click `"Choose..."`, navigate to `build/bin`, and select `bitcoin-qt`
 9. You're all set! Start developing, building, and debugging the Bitcoin Core GUI

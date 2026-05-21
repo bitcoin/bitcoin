@@ -1,4 +1,4 @@
-// Copyright (c) 2009-2022 The Bitcoin Core developers
+// Copyright (c) 2009-present The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -11,9 +11,10 @@
 #include <util/sock.h>
 #include <util/threadinterrupt.h>
 
+#include <cstdint>
 #include <functional>
 #include <memory>
-#include <stdint.h>
+#include <optional>
 #include <string>
 #include <type_traits>
 #include <unordered_set>
@@ -37,12 +38,12 @@ enum class ConnectionDirection {
     Both = (In | Out),
 };
 static inline ConnectionDirection& operator|=(ConnectionDirection& a, ConnectionDirection b) {
-    using underlying = typename std::underlying_type<ConnectionDirection>::type;
+    using underlying = std::underlying_type_t<ConnectionDirection>;
     a = ConnectionDirection(underlying(a) | underlying(b));
     return a;
 }
 static inline bool operator&(ConnectionDirection a, ConnectionDirection b) {
-    using underlying = typename std::underlying_type<ConnectionDirection>::type;
+    using underlying = std::underlying_type_t<ConnectionDirection>;
     return (underlying(a) & underlying(b));
 }
 
@@ -58,14 +59,15 @@ bool IsUnixSocketPath(const std::string& name);
 class Proxy
 {
 public:
-    Proxy() : m_is_unix_socket(false), m_randomize_credentials(false) {}
-    explicit Proxy(const CService& _proxy, bool _randomize_credentials = false) : proxy(_proxy), m_is_unix_socket(false), m_randomize_credentials(_randomize_credentials) {}
-    explicit Proxy(const std::string path, bool _randomize_credentials = false) : m_unix_socket_path(path), m_is_unix_socket(true), m_randomize_credentials(_randomize_credentials) {}
+    Proxy() : m_is_unix_socket(false), m_tor_stream_isolation(false) {}
+    explicit Proxy(const CService& _proxy, bool tor_stream_isolation = false) : proxy(_proxy), m_is_unix_socket(false), m_tor_stream_isolation(tor_stream_isolation) {}
+    explicit Proxy(std::string path, bool tor_stream_isolation = false)
+        : m_unix_socket_path(std::move(path)), m_is_unix_socket(true), m_tor_stream_isolation(tor_stream_isolation) {}
 
     CService proxy;
     std::string m_unix_socket_path;
     bool m_is_unix_socket;
-    bool m_randomize_credentials;
+    bool m_tor_stream_isolation;
 
     bool IsValid() const
     {
@@ -121,11 +123,18 @@ public:
         m_reachable.clear();
     }
 
+    void Reset() EXCLUSIVE_LOCKS_REQUIRED(!m_mutex)
+    {
+        AssertLockNotHeld(m_mutex);
+        LOCK(m_mutex);
+        m_reachable = DefaultNets();
+    }
+
     [[nodiscard]] bool Contains(Network net) const EXCLUSIVE_LOCKS_REQUIRED(!m_mutex)
     {
         AssertLockNotHeld(m_mutex);
         LOCK(m_mutex);
-        return m_reachable.count(net) > 0;
+        return m_reachable.contains(net);
     }
 
     [[nodiscard]] bool Contains(const CNetAddr& addr) const EXCLUSIVE_LOCKS_REQUIRED(!m_mutex)
@@ -134,18 +143,29 @@ public:
         return Contains(addr.GetNetwork());
     }
 
-private:
-    mutable Mutex m_mutex;
+    [[nodiscard]] std::unordered_set<Network> All() const EXCLUSIVE_LOCKS_REQUIRED(!m_mutex)
+    {
+        AssertLockNotHeld(m_mutex);
+        LOCK(m_mutex);
+        return m_reachable;
+    }
 
-    std::unordered_set<Network> m_reachable GUARDED_BY(m_mutex){
-        NET_UNROUTABLE,
-        NET_IPV4,
-        NET_IPV6,
-        NET_ONION,
-        NET_I2P,
-        NET_CJDNS,
-        NET_INTERNAL
+private:
+    static std::unordered_set<Network> DefaultNets()
+    {
+        return {
+            NET_UNROUTABLE,
+            NET_IPV4,
+            NET_IPV6,
+            NET_ONION,
+            NET_I2P,
+            NET_CJDNS,
+            NET_INTERNAL
+        };
     };
+
+    mutable Mutex m_mutex;
+    std::unordered_set<Network> m_reachable GUARDED_BY(m_mutex){DefaultNets()};
 };
 
 extern ReachableNets g_reachable_nets;
@@ -160,7 +180,7 @@ std::string GetNetworkName(enum Network net);
 /** Return a vector of publicly routable Network names; optionally append NET_UNROUTABLE. */
 std::vector<std::string> GetNetworkNames(bool append_unroutable = false);
 bool SetProxy(enum Network net, const Proxy &addrProxy);
-bool GetProxy(enum Network net, Proxy &proxyInfoOut);
+std::optional<Proxy> GetProxy(enum Network net);
 bool IsProxy(const CNetAddr &addr);
 /**
  * Set the name proxy to use for all connections to nodes specified by a
@@ -180,7 +200,7 @@ bool IsProxy(const CNetAddr &addr);
  */
 bool SetNameProxy(const Proxy &addrProxy);
 bool HaveNameProxy();
-bool GetNameProxy(Proxy &nameProxyOut);
+std::optional<Proxy> GetNameProxy();
 
 using DNSLookupFn = std::function<std::vector<CNetAddr>(const std::string&, bool)>;
 extern DNSLookupFn g_dns_lookup;
@@ -262,16 +282,18 @@ CService LookupNumeric(const std::string& name, uint16_t portDefault = 0, DNSLoo
 CSubNet LookupSubNet(const std::string& subnet_str);
 
 /**
- * Create a TCP or UNIX socket in the given address family.
- * @param[in] address_family to use for the socket.
+ * Create a real socket from the operating system.
+ * @param[in] domain Communications domain, first argument to the socket(2) syscall.
+ * @param[in] type Type of the socket, second argument to the socket(2) syscall.
+ * @param[in] protocol The particular protocol to be used with the socket, third argument to the socket(2) syscall.
  * @return pointer to the created Sock object or unique_ptr that owns nothing in case of failure
  */
-std::unique_ptr<Sock> CreateSockOS(sa_family_t address_family);
+std::unique_ptr<Sock> CreateSockOS(int domain, int type, int protocol);
 
 /**
  * Socket factory. Defaults to `CreateSockOS()`, but can be overridden by unit tests.
  */
-extern std::function<std::unique_ptr<Sock>(const sa_family_t&)> CreateSock;
+extern std::function<std::unique_ptr<Sock>(int, int, int)> CreateSock;
 
 /**
  * Create a socket and try to connect to the specified service.
@@ -341,5 +363,8 @@ bool IsBadPort(uint16_t port);
  * @return a copy of `service` either unmodified or changed to CJDNS.
  */
 CService MaybeFlipIPv6toCJDNS(const CService& service);
+
+/** Get the bind address for a socket as CService. */
+CService GetBindAddress(const Sock& sock);
 
 #endif // BITCOIN_NETBASE_H

@@ -1,4 +1,4 @@
-// Copyright (c) 2014-2021 The Bitcoin Core developers
+// Copyright (c) 2014-present The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -19,7 +19,7 @@
 
 #include <boost/test/unit_test.hpp>
 
-BOOST_FIXTURE_TEST_SUITE(validation_tests, TestingSetup)
+BOOST_FIXTURE_TEST_SUITE(validation_tests, BasicTestingSetup)
 
 static void TestBlockSubsidyHalvings(const Consensus::Params& consensusParams)
 {
@@ -142,12 +142,12 @@ BOOST_AUTO_TEST_CASE(test_assumeutxo)
     }
 
     const auto out110 = *params->AssumeutxoForHeight(110);
-    BOOST_CHECK_EQUAL(out110.hash_serialized.ToString(), "6657b736d4fe4db0cbc796789e812d5dba7f5c143764b1b6905612f1830609d1");
-    BOOST_CHECK_EQUAL(out110.nChainTx, 111U);
+    BOOST_CHECK_EQUAL(out110.hash_serialized.ToString(), "86e9a1205b418b16dde3a18a78c730e30137e28466bda5dbf6b33ab8fc05447c");
+    BOOST_CHECK_EQUAL(out110.m_chain_tx_count, 111U);
 
-    const auto out110_2 = *params->AssumeutxoForBlockhash(uint256S("0x696e92821f65549c7ee134edceeeeaaa4105647a3c4fd9f298c0aec0ab50425c"));
-    BOOST_CHECK_EQUAL(out110_2.hash_serialized.ToString(), "6657b736d4fe4db0cbc796789e812d5dba7f5c143764b1b6905612f1830609d1");
-    BOOST_CHECK_EQUAL(out110_2.nChainTx, 111U);
+    const auto out110_2 = *params->AssumeutxoForBlockhash(uint256{"135eec25a6fb277884e5824e7aa7d052c4868161c99a5122170b5266f86c273d"});
+    BOOST_CHECK_EQUAL(out110_2.hash_serialized.ToString(), "86e9a1205b418b16dde3a18a78c730e30137e28466bda5dbf6b33ab8fc05447c");
+    BOOST_CHECK_EQUAL(out110_2.m_chain_tx_count, 111U);
 }
 
 BOOST_AUTO_TEST_CASE(block_malleation)
@@ -214,9 +214,9 @@ BOOST_AUTO_TEST_CASE(block_malleation)
         // Block with a single coinbase tx is mutated if the merkle root is not
         // equal to the coinbase tx's hash.
         block.vtx.push_back(create_coinbase_tx());
-        BOOST_CHECK(block.vtx[0]->GetHash() != block.hashMerkleRoot);
+        BOOST_CHECK(block.vtx[0]->GetHash().ToUint256() != block.hashMerkleRoot);
         BOOST_CHECK(is_mutated(block, /*check_witness_root=*/false));
-        block.hashMerkleRoot = block.vtx[0]->GetHash();
+        block.hashMerkleRoot = block.vtx[0]->GetHash().ToUint256();
         BOOST_CHECK(is_not_mutated(block, /*check_witness_root=*/false));
 
         // Block with two transactions is mutated if the merkle root does not
@@ -248,7 +248,7 @@ BOOST_AUTO_TEST_CASE(block_malleation)
             mtx.vout.resize(1);
             mtx.vout[0].scriptPubKey.resize(4);
             block.vtx.push_back(MakeTransactionRef(mtx));
-            block.hashMerkleRoot = block.vtx.back()->GetHash();
+            block.hashMerkleRoot = block.vtx.back()->GetHash().ToUint256();
             assert(block.vtx.back()->IsCoinBase());
             assert(GetSerializeSize(TX_NO_WITNESS(block.vtx.back())) == 64);
         }
@@ -285,7 +285,7 @@ BOOST_AUTO_TEST_CASE(block_malleation)
             HashWriter hasher;
             hasher.write(tx1.GetHash());
             hasher.write(tx2.GetHash());
-            assert(hasher.GetHash() == tx3.GetHash());
+            assert(hasher.GetHash() == tx3.GetHash().ToUint256());
             // Verify that tx3 is 64 bytes in size (without witness).
             assert(GetSerializeSize(TX_NO_WITNESS(tx3)) == 64);
         }

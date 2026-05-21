@@ -1,9 +1,9 @@
-// Copyright (c) 2019-2022 The Bitcoin Core developers
+// Copyright (c) 2019-present The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <bench/bench.h>
-
+#include <test/util/time.h>
 #include <util/time.h>
 
 static void BenchTimeDeprecated(benchmark::Bench& bench)
@@ -15,11 +15,10 @@ static void BenchTimeDeprecated(benchmark::Bench& bench)
 
 static void BenchTimeMock(benchmark::Bench& bench)
 {
-    SetMockTime(111);
+    NodeClockContext clock_ctx{111s};
     bench.run([&] {
         (void)GetTime<std::chrono::seconds>();
     });
-    SetMockTime(0);
 }
 
 static void BenchTimeMillis(benchmark::Bench& bench)
@@ -36,7 +35,7 @@ static void BenchTimeMillisSys(benchmark::Bench& bench)
     });
 }
 
-BENCHMARK(BenchTimeDeprecated, benchmark::PriorityLevel::HIGH);
-BENCHMARK(BenchTimeMillis, benchmark::PriorityLevel::HIGH);
-BENCHMARK(BenchTimeMillisSys, benchmark::PriorityLevel::HIGH);
-BENCHMARK(BenchTimeMock, benchmark::PriorityLevel::HIGH);
+BENCHMARK(BenchTimeDeprecated);
+BENCHMARK(BenchTimeMillis);
+BENCHMARK(BenchTimeMillisSys);
+BENCHMARK(BenchTimeMock);

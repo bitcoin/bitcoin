@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (c) 2014-2022 The Bitcoin Core developers
+# Copyright (c) 2014-present The Bitcoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test the abandontransaction RPC.
@@ -21,9 +21,6 @@ from test_framework.util import (
 
 
 class AbandonConflictTest(BitcoinTestFramework):
-    def add_options(self, parser):
-        self.add_wallet_options(parser)
-
     def set_test_params(self):
         self.num_nodes = 2
         self.extra_args = [["-minrelaytxfee=0.00001"], []]
@@ -45,6 +42,10 @@ class AbandonConflictTest(BitcoinTestFramework):
         txB = alice.sendtoaddress(alice.getnewaddress(), Decimal("10"))
         txC = alice.sendtoaddress(alice.getnewaddress(), Decimal("10"))
         self.sync_mempools()
+
+        # Can not abandon transaction in mempool
+        assert_raises_rpc_error(-5, 'Transaction not eligible for abandonment', lambda: alice.abandontransaction(txid=txA))
+
         self.generate(self.nodes[1], 1)
 
         # Can not abandon non-wallet transaction
@@ -114,12 +115,11 @@ class AbandonConflictTest(BitcoinTestFramework):
         # inputs are still spent, but change not received
         newbalance = alice.getbalance()
         assert_equal(newbalance, balance - signed3_change)
-        # Unconfirmed received funds that are not in mempool, also shouldn't show
-        # up in unconfirmed balance
+        # Unconfirmed received funds that are not in mempool
         balances = alice.getbalances()['mine']
-        assert_equal(balances['untrusted_pending'] + balances['trusted'], newbalance)
+        assert_equal(balances['untrusted_pending'] + balances['trusted'] + balances['nonmempool'], newbalance)
         # Also shouldn't show up in listunspent
-        assert not txABC2 in [utxo["txid"] for utxo in alice.listunspent(0)]
+        assert txABC2 not in [utxo["txid"] for utxo in alice.listunspent(0)]
         balance = newbalance
 
         # Abandon original transaction and verify inputs are available again
@@ -241,4 +241,4 @@ class AbandonConflictTest(BitcoinTestFramework):
         assert_equal(newbalance, balance - Decimal("20"))
 
 if __name__ == '__main__':
-    AbandonConflictTest().main()
+    AbandonConflictTest(__file__).main()

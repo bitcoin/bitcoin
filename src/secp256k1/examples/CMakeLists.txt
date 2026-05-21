@@ -8,15 +8,10 @@ function(add_example name)
     secp256k1
     $<$<PLATFORM_ID:Windows>:bcrypt>
   )
-  set(test_name ${name}_example)
-  add_test(NAME ${test_name} COMMAND ${target_name})
-  if(BUILD_SHARED_LIBS AND MSVC)
-    # The DLL must reside either in the same folder where the executable is
-    # or somewhere in PATH. Using the latter option.
-    set_tests_properties(${test_name} PROPERTIES
-      ENVIRONMENT "PATH=$<TARGET_FILE_DIR:secp256k1>;$ENV{PATH}"
-    )
-  endif()
+  add_test(NAME secp256k1.example.${name} COMMAND ${target_name})
+  set_tests_properties(secp256k1.example.${name} PROPERTIES
+    LABELS secp256k1_example
+  )
 endfunction()
 
 add_example(ecdsa)
@@ -27,4 +22,12 @@ endif()
 
 if(SECP256K1_ENABLE_MODULE_SCHNORRSIG)
   add_example(schnorr)
+endif()
+
+if(SECP256K1_ENABLE_MODULE_ELLSWIFT)
+  add_example(ellswift)
+endif()
+
+if(SECP256K1_ENABLE_MODULE_MUSIG)
+  add_example(musig)
 endif()

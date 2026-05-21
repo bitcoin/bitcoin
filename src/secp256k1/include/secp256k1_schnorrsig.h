@@ -79,7 +79,7 @@ SECP256K1_API const secp256k1_nonce_function_hardened secp256k1_nonce_function_b
  *             secp256k1_nonce_function_bip340 is used, then ndata must be a
  *             pointer to 32-byte auxiliary randomness as per BIP-340.
  */
-typedef struct {
+typedef struct secp256k1_schnorrsig_extraparams {
     unsigned char magic[4];
     secp256k1_nonce_function_hardened noncefp;
     void *ndata;

@@ -49,7 +49,7 @@ mkdir build
 cd build
 cmake -G "Visual Studio 15" ..
 ```
-The default default will build for x86. For 64-bit run:
+The default will build for x86. For 64-bit run:
 
 ```cmd
 cmake -G "Visual Studio 15 Win64" ..

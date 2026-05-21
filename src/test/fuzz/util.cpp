@@ -1,4 +1,4 @@
-// Copyright (c) 2021-2022 The Bitcoin Core developers
+// Copyright (c) 2021-present The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -13,7 +13,7 @@
 
 #include <memory>
 
-std::vector<uint8_t> ConstructPubKeyBytes(FuzzedDataProvider& fuzzed_data_provider, Span<const uint8_t> byte_data, const bool compressed) noexcept
+std::vector<uint8_t> ConstructPubKeyBytes(FuzzedDataProvider& fuzzed_data_provider, std::span<const uint8_t> byte_data, const bool compressed) noexcept
 {
     uint8_t pk_type;
     if (compressed) {
@@ -31,21 +31,21 @@ CAmount ConsumeMoney(FuzzedDataProvider& fuzzed_data_provider, const std::option
     return fuzzed_data_provider.ConsumeIntegralInRange<CAmount>(0, max.value_or(MAX_MONEY));
 }
 
-int64_t ConsumeTime(FuzzedDataProvider& fuzzed_data_provider, const std::optional<int64_t>& min, const std::optional<int64_t>& max) noexcept
+NodeSeconds ConsumeTime(FuzzedDataProvider& fuzzed_data_provider, const std::optional<int64_t>& min, const std::optional<int64_t>& max) noexcept
 {
     // Avoid t=0 (1970-01-01T00:00:00Z) since SetMockTime(0) disables mocktime.
-    static const int64_t time_min{946684801}; // 2000-01-01T00:00:01Z
-    static const int64_t time_max{4133980799}; // 2100-12-31T23:59:59Z
-    return fuzzed_data_provider.ConsumeIntegralInRange<int64_t>(min.value_or(time_min), max.value_or(time_max));
+    static const int64_t time_min{ParseISO8601DateTime("2000-01-01T00:00:01Z").value()};
+    static const int64_t time_max{ParseISO8601DateTime("2100-12-31T23:59:59Z").value()};
+    return NodeSeconds{ConsumeDuration<std::chrono::seconds>(fuzzed_data_provider, min.value_or(time_min) * 1s, max.value_or(time_max) * 1s)};
 }
 
 CMutableTransaction ConsumeTransaction(FuzzedDataProvider& fuzzed_data_provider, const std::optional<std::vector<Txid>>& prevout_txids, const int max_num_in, const int max_num_out) noexcept
 {
     CMutableTransaction tx_mut;
     const auto p2wsh_op_true = fuzzed_data_provider.ConsumeBool();
-    tx_mut.nVersion = fuzzed_data_provider.ConsumeBool() ?
+    tx_mut.version = fuzzed_data_provider.ConsumeBool() ?
                           CTransaction::CURRENT_VERSION :
-                          fuzzed_data_provider.ConsumeIntegral<int32_t>();
+                          fuzzed_data_provider.ConsumeIntegral<uint32_t>();
     tx_mut.nLockTime = fuzzed_data_provider.ConsumeIntegral<uint32_t>();
     const auto num_in = fuzzed_data_provider.ConsumeIntegralInRange<int>(0, max_num_in);
     const auto num_out = fuzzed_data_provider.ConsumeIntegralInRange<int>(0, max_num_out);
@@ -212,6 +212,9 @@ CTxDestination ConsumeTxDestination(FuzzedDataProvider& fuzzed_data_provider) no
         },
         [&] {
             tx_destination = WitnessV1Taproot{XOnlyPubKey{ConsumeUInt256(fuzzed_data_provider)}};
+        },
+        [&] {
+            tx_destination = PayToAnchor{};
         },
         [&] {
             std::vector<unsigned char> program{ConsumeRandomLengthByteVector(fuzzed_data_provider, /*max_length=*/40)};

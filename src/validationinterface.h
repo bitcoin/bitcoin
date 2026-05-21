@@ -1,14 +1,13 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
-// Copyright (c) 2009-2022 The Bitcoin Core developers
+// Copyright (c) 2009-present The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #ifndef BITCOIN_VALIDATIONINTERFACE_H
 #define BITCOIN_VALIDATIONINTERFACE_H
 
-#include <kernel/chain.h>
 #include <kernel/cs_main.h>
-#include <primitives/transaction.h> // CTransaction(Ref)
+#include <primitives/transaction.h>
 #include <sync.h>
 
 #include <cstddef>
@@ -17,6 +16,9 @@
 #include <memory>
 #include <vector>
 
+namespace kernel {
+struct ChainstateRole;
+} // namespace kernel
 namespace util {
 class TaskRunnerInterface;
 } // namespace util
@@ -61,6 +63,10 @@ protected:
      * Called on a background thread. Only called for the active chainstate.
      */
     virtual void UpdatedBlockTip(const CBlockIndex *pindexNew, const CBlockIndex *pindexFork, bool fInitialDownload) {}
+    /**
+     * Notifies listeners any time the block chain tip changes, synchronously.
+     */
+    virtual void ActiveTipChange(const CBlockIndex& new_tip, bool is_ibd) {};
     /**
      * Notifies listeners of a transaction having been added to mempool.
      *
@@ -111,11 +117,10 @@ protected:
     virtual void MempoolTransactionsRemovedForBlock(const std::vector<RemovedMempoolTransactionInfo>& txs_removed_for_block, unsigned int nBlockHeight) {}
     /**
      * Notifies listeners of a block being connected.
-     * Provides a vector of transactions evicted from the mempool as a result.
      *
      * Called on a background thread.
      */
-    virtual void BlockConnected(ChainstateRole role, const std::shared_ptr<const CBlock> &block, const CBlockIndex *pindex) {}
+    virtual void BlockConnected(const kernel::ChainstateRole& role, const std::shared_ptr<const CBlock>& block, const CBlockIndex* pindex) {}
     /**
      * Notifies listeners of a block being disconnected
      * Provides the block that was disconnected.
@@ -140,14 +145,14 @@ protected:
      *
      * Called on a background thread.
      */
-    virtual void ChainStateFlushed(ChainstateRole role, const CBlockLocator &locator) {}
+    virtual void ChainStateFlushed(const kernel::ChainstateRole& role, const CBlockLocator& locator) {}
     /**
      * Notifies listeners of a block validation result.
      * If the provided BlockValidationState IsValid, the provided block
      * is guaranteed to be the current best block at the time the
      * callback was generated (not necessarily now).
      */
-    virtual void BlockChecked(const CBlock&, const BlockValidationState&) {}
+    virtual void BlockChecked(const std::shared_ptr<const CBlock>&, const BlockValidationState&) {}
     /**
      * Notifies listeners that a block which builds directly on our current tip
      * has been received and connected to the headers tree, though not validated yet.
@@ -214,13 +219,14 @@ public:
     void SyncWithValidationInterfaceQueue() LOCKS_EXCLUDED(cs_main);
 
     void UpdatedBlockTip(const CBlockIndex *, const CBlockIndex *, bool fInitialDownload);
+    void ActiveTipChange(const CBlockIndex&, bool);
     void TransactionAddedToMempool(const NewMempoolTransactionInfo&, uint64_t mempool_sequence);
     void TransactionRemovedFromMempool(const CTransactionRef&, MemPoolRemovalReason, uint64_t mempool_sequence);
     void MempoolTransactionsRemovedForBlock(const std::vector<RemovedMempoolTransactionInfo>&, unsigned int nBlockHeight);
-    void BlockConnected(ChainstateRole, const std::shared_ptr<const CBlock> &, const CBlockIndex *pindex);
-    void BlockDisconnected(const std::shared_ptr<const CBlock> &, const CBlockIndex* pindex);
-    void ChainStateFlushed(ChainstateRole, const CBlockLocator &);
-    void BlockChecked(const CBlock&, const BlockValidationState&);
+    void BlockConnected(const kernel::ChainstateRole&, std::shared_ptr<const CBlock>, const CBlockIndex* pindex);
+    void BlockDisconnected(std::shared_ptr<const CBlock>, const CBlockIndex* pindex);
+    void ChainStateFlushed(const kernel::ChainstateRole&, const CBlockLocator&);
+    void BlockChecked(const std::shared_ptr<const CBlock>&, const BlockValidationState&);
     void NewPoWValidBlock(const CBlockIndex *, const std::shared_ptr<const CBlock>&);
 };
 

@@ -1,20 +1,21 @@
-// Copyright (c) 2011-2022 The Bitcoin Core developers
+// Copyright (c) 2011-present The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
+#include <common/signmessage.h>
 #include <key_io.h>
 #include <rpc/util.h>
-#include <util/message.h>
 #include <wallet/rpc/util.h>
 #include <wallet/wallet.h>
 
 #include <univalue.h>
 
 namespace wallet {
-RPCHelpMan signmessage()
+RPCMethod signmessage()
 {
-    return RPCHelpMan{"signmessage",
-        "\nSign a message with the private key of an address" +
+    return RPCMethod{
+        "signmessage",
+        "Sign a message with the private key of an address" +
           HELP_REQUIRING_PASSPHRASE,
         {
             {"address", RPCArg::Type::STR, RPCArg::Optional::NO, "The bitcoin address to use for the private key."},
@@ -33,7 +34,7 @@ RPCHelpMan signmessage()
             "\nAs a JSON-RPC call\n"
             + HelpExampleRpc("signmessage", "\"1D1ZrZNe3JUo7ZycKEYQQiQAWd9y54F4XX\", \"my message\"")
         },
-        [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
+        [](const RPCMethod& self, const JSONRPCRequest& request) -> UniValue
         {
             const std::shared_ptr<const CWallet> pwallet = GetWalletForJSONRPCRequest(request);
             if (!pwallet) return UniValue::VNULL;

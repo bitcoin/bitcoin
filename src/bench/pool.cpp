@@ -1,11 +1,15 @@
-// Copyright (c) 2022 The Bitcoin Core developers
+// Copyright (c) 2022-present The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <bench/bench.h>
 #include <support/allocators/pool.h>
 
+#include <cstddef>
+#include <cstdint>
+#include <functional>
 #include <unordered_map>
+#include <utility>
 
 template <typename Map>
 void BenchFillClearMap(benchmark::Bench& bench, Map& map)
@@ -45,5 +49,5 @@ static void PoolAllocator_StdUnorderedMapWithPoolResource(benchmark::Bench& benc
     BenchFillClearMap(bench, map);
 }
 
-BENCHMARK(PoolAllocator_StdUnorderedMap, benchmark::PriorityLevel::HIGH);
-BENCHMARK(PoolAllocator_StdUnorderedMapWithPoolResource, benchmark::PriorityLevel::HIGH);
+BENCHMARK(PoolAllocator_StdUnorderedMap);
+BENCHMARK(PoolAllocator_StdUnorderedMapWithPoolResource);

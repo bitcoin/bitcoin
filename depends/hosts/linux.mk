@@ -1,5 +1,5 @@
-linux_CFLAGS=-pipe -std=$(C_STANDARD)
-linux_CXXFLAGS=-pipe -std=$(CXX_STANDARD)
+linux_CFLAGS=
+linux_CXXFLAGS=
 
 ifneq ($(LTO),)
 linux_AR = $(host_toolchain)gcc-ar
@@ -39,4 +39,7 @@ i686_linux_CXX=$(default_host_CXX) -m32
 x86_64_linux_CC=$(default_host_CC) -m64
 x86_64_linux_CXX=$(default_host_CXX) -m64
 endif
-linux_cmake_system=Linux
+
+linux_cmake_system_name=Linux
+# Refer to doc/dependencies.md for the minimum required kernel.
+linux_cmake_system_version=3.17.0

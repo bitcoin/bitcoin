@@ -1,4 +1,4 @@
-// Copyright (c) 2023 The Bitcoin Core developers
+// Copyright (c) 2023-present The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or https://www.opensource.org/licenses/mit-license.php.
 
@@ -85,6 +85,10 @@ bool ExtractDestination(const CScript& scriptPubKey, CTxDestination& addressRet)
         WitnessV1Taproot tap;
         std::copy(vSolutions[0].begin(), vSolutions[0].end(), tap.begin());
         addressRet = tap;
+        return true;
+    }
+    case TxoutType::ANCHOR: {
+        addressRet = PayToAnchor();
         return true;
     }
     case TxoutType::WITNESS_UNKNOWN: {

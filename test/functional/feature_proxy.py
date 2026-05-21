@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (c) 2015-2022 The Bitcoin Core developers
+# Copyright (c) 2015-present The Bitcoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test bitcoind with different proxy configuration.
@@ -46,10 +46,7 @@ import tempfile
 
 from test_framework.socks5 import Socks5Configuration, Socks5Command, Socks5Server, AddressType
 from test_framework.test_framework import BitcoinTestFramework
-from test_framework.util import (
-    assert_equal,
-    p2p_port,
-)
+from test_framework.util import assert_equal
 from test_framework.netutil import test_ipv6_local, test_unix_socket
 
 # Networks returned by RPC getpeerinfo.
@@ -74,22 +71,24 @@ class ProxyTest(BitcoinTestFramework):
     def setup_nodes(self):
         self.have_ipv6 = test_ipv6_local()
         self.have_unix_sockets = test_unix_socket()
-        # Create two proxies on different ports
+        # Create two proxies on different ports.
+        # Use port=0 to let the OS assign available ports, avoiding
+        # "address already in use" errors from concurrent tests.
         # ... one unauthenticated
         self.conf1 = Socks5Configuration()
-        self.conf1.addr = ('127.0.0.1', p2p_port(self.num_nodes))
+        self.conf1.addr = ('127.0.0.1', 0)
         self.conf1.unauth = True
         self.conf1.auth = False
         # ... one supporting authenticated and unauthenticated (Tor)
         self.conf2 = Socks5Configuration()
-        self.conf2.addr = ('127.0.0.1', p2p_port(self.num_nodes + 1))
+        self.conf2.addr = ('127.0.0.1', 0)
         self.conf2.unauth = True
         self.conf2.auth = True
         if self.have_ipv6:
             # ... one on IPv6 with similar configuration
             self.conf3 = Socks5Configuration()
             self.conf3.af = socket.AF_INET6
-            self.conf3.addr = ('::1', p2p_port(self.num_nodes + 2))
+            self.conf3.addr = ('::1', 0)
             self.conf3.unauth = True
             self.conf3.auth = True
         else:
@@ -148,7 +147,8 @@ class ProxyTest(BitcoinTestFramework):
         rv = []
         addr = "15.61.23.23:1234"
         self.log.debug(f"Test: outgoing IPv4 connection through node {node.index} for address {addr}")
-        node.addnode(addr, "onetry")
+        # v2transport=False is used to avoid reconnections with v1 being scheduled. These could interfere with later checks.
+        node.addnode(addr, "onetry", v2transport=False)
         cmd = proxies[0].queue.get()
         assert isinstance(cmd, Socks5Command)
         # Note: bitcoind's SOCKS5 implementation only sends atyp DOMAINNAME, even if connecting directly to IPv4/IPv6
@@ -164,7 +164,7 @@ class ProxyTest(BitcoinTestFramework):
         if self.have_ipv6:
             addr = "[1233:3432:2434:2343:3234:2345:6546:4534]:5443"
             self.log.debug(f"Test: outgoing IPv6 connection through node {node.index} for address {addr}")
-            node.addnode(addr, "onetry")
+            node.addnode(addr, "onetry", v2transport=False)
             cmd = proxies[1].queue.get()
             assert isinstance(cmd, Socks5Command)
             # Note: bitcoind's SOCKS5 implementation only sends atyp DOMAINNAME, even if connecting directly to IPv4/IPv6
@@ -180,7 +180,7 @@ class ProxyTest(BitcoinTestFramework):
         if test_onion:
             addr = "pg6mmjiyjmcrsslvykfwnntlaru7p5svn6y2ymmju6nubxndf4pscryd.onion:8333"
             self.log.debug(f"Test: outgoing onion connection through node {node.index} for address {addr}")
-            node.addnode(addr, "onetry")
+            node.addnode(addr, "onetry", v2transport=False)
             cmd = proxies[2].queue.get()
             assert isinstance(cmd, Socks5Command)
             assert_equal(cmd.atyp, AddressType.DOMAINNAME)
@@ -195,7 +195,7 @@ class ProxyTest(BitcoinTestFramework):
         if test_cjdns:
             addr = "[fc00:1:2:3:4:5:6:7]:8888"
             self.log.debug(f"Test: outgoing CJDNS connection through node {node.index} for address {addr}")
-            node.addnode(addr, "onetry")
+            node.addnode(addr, "onetry", v2transport=False)
             cmd = proxies[1].queue.get()
             assert isinstance(cmd, Socks5Command)
             assert_equal(cmd.atyp, AddressType.DOMAINNAME)
@@ -209,7 +209,7 @@ class ProxyTest(BitcoinTestFramework):
 
         addr = "node.noumenon:8333"
         self.log.debug(f"Test: outgoing DNS name connection through node {node.index} for address {addr}")
-        node.addnode(addr, "onetry")
+        node.addnode(addr, "onetry", v2transport=False)
         cmd = proxies[3].queue.get()
         assert isinstance(cmd, Socks5Command)
         assert_equal(cmd.atyp, AddressType.DOMAINNAME)
@@ -443,6 +443,47 @@ class ProxyTest(BitcoinTestFramework):
         msg = "Error: Unknown network specified in -onlynet: 'abc'"
         self.nodes[1].assert_start_raises_init_error(expected_msg=msg)
 
+        self.log.info("Test passing trailing '=' raises expected init error")
+        self.nodes[1].extra_args = ["-proxy=127.0.0.1:9050="]
+        msg = "Error: Invalid -proxy address or hostname, ends with '=': '127.0.0.1:9050='"
+        self.nodes[1].assert_start_raises_init_error(expected_msg=msg)
+
+        self.log.info("Test passing unrecognized network raises expected init error")
+        self.nodes[1].extra_args = ["-proxy=127.0.0.1:9050=foo"]
+        msg = "Error: Unrecognized network in -proxy='127.0.0.1:9050=foo': 'foo'"
+        self.nodes[1].assert_start_raises_init_error(expected_msg=msg)
+
+        self.log.info("Test passing proxy only for IPv6")
+        self.start_node(1, extra_args=["-proxy=127.6.6.6:6666=ipv6"])
+        nets = networks_dict(self.nodes[1].getnetworkinfo())
+        assert_equal(nets["ipv4"]["proxy"], "")
+        assert_equal(nets["ipv6"]["proxy"], "127.6.6.6:6666")
+        self.stop_node(1)
+
+        self.log.info("Test passing separate proxy for IPv4 and IPv6")
+        self.start_node(1, extra_args=["-proxy=127.4.4.4:4444=ipv4", "-proxy=127.6.6.6:6666=ipv6"])
+        nets = networks_dict(self.nodes[1].getnetworkinfo())
+        assert_equal(nets["ipv4"]["proxy"], "127.4.4.4:4444")
+        assert_equal(nets["ipv6"]["proxy"], "127.6.6.6:6666")
+        self.stop_node(1)
+
+        self.log.info("Test overriding the Onion proxy")
+        self.start_node(1, extra_args=["-proxy=127.1.1.1:1111", "-proxy=127.2.2.2:2222=onion"])
+        nets = networks_dict(self.nodes[1].getnetworkinfo())
+        assert_equal(nets["ipv4"]["proxy"], "127.1.1.1:1111")
+        assert_equal(nets["ipv6"]["proxy"], "127.1.1.1:1111")
+        assert_equal(nets["onion"]["proxy"], "127.2.2.2:2222")
+        self.stop_node(1)
+
+        self.log.info("Test removing CJDNS proxy")
+        self.start_node(1, extra_args=["-proxy=127.1.1.1:1111", "-proxy=0=cjdns"])
+        nets = networks_dict(self.nodes[1].getnetworkinfo())
+        assert_equal(nets["ipv4"]["proxy"], "127.1.1.1:1111")
+        assert_equal(nets["ipv6"]["proxy"], "127.1.1.1:1111")
+        assert_equal(nets["onion"]["proxy"], "127.1.1.1:1111")
+        assert_equal(nets["cjdns"]["proxy"], "")
+        self.stop_node(1)
+
         self.log.info("Test passing too-long unix path to -proxy raises init error")
         self.nodes[1].extra_args = [f"-proxy=unix:{'x' * 1000}"]
         if self.have_unix_sockets:
@@ -457,4 +498,4 @@ class ProxyTest(BitcoinTestFramework):
             os.unlink(socket_path)
 
 if __name__ == '__main__':
-    ProxyTest().main()
+    ProxyTest(__file__).main()

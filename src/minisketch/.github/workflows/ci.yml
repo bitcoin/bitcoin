@@ -1,0 +1,69 @@
+name: CI
+on:
+  pull_request:
+  push:
+    branches:
+      - '**'
+    tags-ignore:
+      - '**'
+
+concurrency:
+  group: ${{ github.event_name != 'pull_request' && github.run_id || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  windows-native:
+    name: ${{ matrix.configuration.job_name }}
+    # See: https://github.com/actions/runner-images#available-images.
+    runs-on: windows-2025
+
+    strategy:
+      fail-fast: false
+      matrix:
+        configuration:
+          - job_name: 'x64 (MSVC): Windows (VS 2022)'
+            build_configuration: 'Release'
+          - job_name: 'x64 (MSVC): Windows (VS 2022, fields=32)'
+            cmake_options: '-DMINISKETCH_FIELDS=32'
+            build_configuration: 'Release'
+          - job_name: 'x64 (MSVC): Windows (VS 2022, debug)'
+            build_configuration: 'Debug'
+            # TODO: Resolve the issue and re-enable benchmark.
+            # See: https://github.com/bitcoin-core/minisketch/pull/96.
+            skip_benchmark: true
+          - job_name: 'x64 (MSVC): Windows (VS 2022, shared)'
+            cmake_options: '-DBUILD_SHARED_LIBS=ON'
+            build_configuration: 'Release'
+          - job_name: 'x64 (clang-cl): Windows (VS 2022)'
+            cmake_options: '-T ClangCL'
+            build_configuration: 'Release'
+            # TODO: Resolve the issue and re-enable benchmark.
+            # See: https://github.com/bitcoin-core/minisketch/pull/96.
+            skip_benchmark: true
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Generate buildsystem
+        env:
+          CXXFLAGS: '/WX'
+        run: cmake -B build -DMINISKETCH_BUILD_BENCHMARK=ON ${{ matrix.configuration.cmake_options }}
+
+      - name: Build
+        run: cmake --build build --config ${{ matrix.configuration.build_configuration }}
+
+      - name: Binaries info
+        shell: bash
+        run: |
+          cd build/bin/${{ matrix.configuration.build_configuration }}
+          file * | grep "\.exe\|\.dll"
+
+      - name: Check
+        working-directory: build
+        run: ctest --output-on-failure -j $env:NUMBER_OF_PROCESSORS -C ${{ matrix.configuration.build_configuration }}
+
+      - name: Benchmark
+        if: ${{ ! matrix.configuration.skip_benchmark }}
+        working-directory: build
+        run: bin\${{ matrix.configuration.build_configuration }}\bench.exe

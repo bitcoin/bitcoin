@@ -10,7 +10,8 @@ that file and modify to fit your needs.
 
 #### Coverage
 
-Running `test/functional/test_runner.py` with the `--coverage` argument tracks which RPCs are
+Assuming the build directory is `build`,
+running `build/test/functional/test_runner.py` with the `--coverage` argument tracks which RPCs are
 called by the tests and prints a report of uncovered RPCs in the summary. This
 can be used (along with the `--extended` argument) to find out which RPCs we
 don't have test cases for.
@@ -182,7 +183,7 @@ way is the use the `profile_with_perf` context manager, e.g.
 with node.profile_with_perf("send-big-msgs"):
     # Perform activity on the node you're interested in profiling, e.g.:
     for _ in range(10000):
-        node.p2ps[0].send_message(some_large_message)
+        node.p2ps[0].send_without_ping(some_large_message)
 ```
 
 To see useful textual output, run

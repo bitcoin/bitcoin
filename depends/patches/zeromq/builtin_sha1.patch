@@ -1,0 +1,17 @@
+Don't use builtin sha1 if not using ws
+
+The builtin SHA1 (ZMQ_USE_BUILTIN_SHA1) is only used in the websocket
+engine (ws_engine.cpp).
+Upstreamed in https://github.com/zeromq/libzmq/pull/4670.
+
+--- a/CMakeLists.txt
++++ b/CMakeLists.txt
+@@ -234,7 +234,7 @@ if(NOT ZMQ_USE_GNUTLS)
+       endif()
+     endif()
+   endif()
+-  if(NOT ZMQ_USE_NSS)
++  if(ENABLE_WS AND NOT ZMQ_USE_NSS)
+     list(APPEND sources ${CMAKE_CURRENT_SOURCE_DIR}/external/sha1/sha1.c
+          ${CMAKE_CURRENT_SOURCE_DIR}/external/sha1/sha1.h)
+     message(STATUS "Using builtin sha1")

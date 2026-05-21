@@ -15,10 +15,6 @@ Right-click to edit address or label</translation>
         <translation type="unfinished">&amp;Hou</translation>
     </message>
     <message>
-        <source>Copy the currently selected address to the system clipboard</source>
-        <translation type="unfinished">Whakakopi te whiriwhiri i te wāhitau kua whiriwhirihia ki te papatohu rorohiko</translation>
-    </message>
-    <message>
         <source>&amp;Copy</source>
         <translation type="unfinished">&amp;Kape</translation>
     </message>
@@ -244,7 +240,7 @@ Ko te whakakī i ēnei whakaaronga e taea ana anake ki ngā whakararuraru o te m
     </message>
     <message>
         <source>Runaway exception</source>
-        <translation type="unfinished">&lt;text_to_translate&gt;Tūkino whakawhiti&lt;/text_to_translate&gt;</translation>
+        <translation type="unfinished">Tūkino whakawhiti</translation>
     </message>
     <message>
         <source>A fatal error occurred. %1 can no longer continue safely and will quit.</source>
@@ -367,6 +363,25 @@ Ko te whakakī i ēnei whakaaronga e taea ana anake ki ngā whakararuraru o te m
     </message>
     </context>
 <context>
+    <name>PSBTOperationsDialog</name>
+    <message numerus="yes">
+        <source>Signed %n input(s), but more signatures are still required.</source>
+        <translation type="unfinished">
+            <numerusform />
+            <numerusform />
+            <numerusform />
+        </translation>
+    </message>
+    <message numerus="yes">
+        <source>Transaction has %n unsigned input(s).</source>
+        <translation type="unfinished">
+            <numerusform />
+            <numerusform />
+            <numerusform />
+        </translation>
+    </message>
+    </context>
+<context>
     <name>PeerTableModel</name>
     <message>
         <source>Address</source>
@@ -472,10 +487,6 @@ Ko te whakakī i ēnei whakaaronga e taea ana anake ki ngā whakararuraru o te m
         <translation type="unfinished">Invalid P2P whakaaetanga: '%s'</translation>
     </message>
     <message>
-        <source>Invalid amount for %s=&lt;amount&gt;: '%s' (must be at least %s)</source>
-        <translation type="unfinished">He whakararuraru te whiwhinga mō %s = &lt;amount&gt;: '%s' (me whakarite i te mea atu i te %s)</translation>
-    </message>
-    <message>
         <source>Invalid amount for %s=&lt;amount&gt;: '%s'</source>
         <translation type="unfinished">Kore whiwhinga mō te %s=&lt;amount&gt;: '%s'</translation>
     </message>
@@ -490,10 +501,6 @@ Ko te whakakī i ēnei whakaaronga e taea ana anake ki ngā whakararuraru o te m
     <message>
         <source>Invalid port specified in %s: '%s'</source>
         <translation type="unfinished">Kua whakapātaitia te pōti korewhiwhi i roto i %s: '%s'</translation>
-    </message>
-    <message>
-        <source>Invalid pre-selected input %s</source>
-        <translation type="unfinished">Kāore i te tika te kōwhiri i tātari i te urupare %s</translation>
     </message>
     <message>
         <source>Listening for incoming connections failed (listen returned error %s)</source>
@@ -604,10 +611,6 @@ Ko te whakakī i ēnei whakaaronga e taea ana anake ki ngā whakararuraru o te m
         <translation type="unfinished">Ko tēnei te utu whakaritenga iti rawa ka whiwhi koe i ia whakaritenga.</translation>
     </message>
     <message>
-        <source>This is the transaction fee you will pay if you send a transaction.</source>
-        <translation type="unfinished">Ko te utu whakawhiti tāuta tēnei ka utu e whiwhi ana koe ki te tuku i tētahi tāuta.</translation>
-    </message>
-    <message>
         <source>Transaction amount too small</source>
         <translation type="unfinished">He iti rawa te moni whakaritenga</translation>
     </message>
@@ -632,10 +635,6 @@ Ko te whakakī i ēnei whakaaronga e taea ana anake ki ngā whakararuraru o te m
         <translation type="unfinished">He whakawhitiwhitinga nui rawa te whakapau kaha</translation>
     </message>
     <message>
-        <source>Unable to allocate memory for -maxsigcachesize: '%s' MiB</source>
-        <translation type="unfinished">Kāore e taea te whakararuraru i te mahere mō te -maxsigcachesize: '%s' MiB</translation>
-    </message>
-    <message>
         <source>Unable to bind to %s on this computer (bind returned error %s)</source>
         <translation type="unfinished">Kāore e taea te whakakōtuitui ki %s i tēnei rorohiko (kua whakahoki te whakakōtuitui i te hapa %s)</translation>
     </message>
@@ -652,14 +651,6 @@ Ko te whakakī i ēnei whakaaronga e taea ana anake ki ngā whakararuraru o te m
         <translation type="unfinished">Kāore i te kite i te UTXO mō te whakauru ā-waho</translation>
     </message>
     <message>
-        <source>Unable to generate initial keys</source>
-        <translation type="unfinished">Kāore e taea te whakaputa i ngā kī tīmatanga</translation>
-    </message>
-    <message>
-        <source>Unable to generate keys</source>
-        <translation type="unfinished">Kāore e taea te whakaputa i ngā kī</translation>
-    </message>
-    <message>
         <source>Unable to open %s for writing</source>
         <translation type="unfinished">Kāore e taea te whakatuwhera i %s hei tuhi</translation>
     </message>
@@ -670,10 +661,6 @@ Ko te whakakī i ēnei whakaaronga e taea ana anake ki ngā whakararuraru o te m
     <message>
         <source>Unable to start HTTP server. See debug log for details.</source>
         <translation type="unfinished">Kāore e taea te whakahohe i te tūmau HTTP. Tirohia te rārangi whakararuraru mō ngā whakamārama.</translation>
-    </message>
-    <message>
-        <source>Unable to unload the wallet before migrating</source>
-        <translation type="unfinished">Kāore e taea te whakakore i te whareparakore i mua i te whakawhiti.</translation>
     </message>
     <message>
         <source>Unknown -blockfilterindex value %s.</source>

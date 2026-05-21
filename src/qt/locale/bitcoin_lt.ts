@@ -3,7 +3,7 @@
     <name>AddressBookPage</name>
     <message>
         <source>Right-click to edit address or label</source>
-        <translation type="unfinished">Spustelėkite dešinįjį pelės klavišą norint keisti adresą arba etiketę </translation>
+        <translation type="unfinished">Spauskite dešinįjį pelės klavišą norint keisti adresą arba etiketę </translation>
     </message>
     <message>
         <source>Create a new address</source>
@@ -12,10 +12,6 @@
     <message>
         <source>&amp;New</source>
         <translation type="unfinished">&amp;Naujas</translation>
-    </message>
-    <message>
-        <source>Copy the currently selected address to the system clipboard</source>
-        <translation type="unfinished">Kopijuoti esamą adresą į mainų atmintį</translation>
     </message>
     <message>
         <source>&amp;Copy</source>
@@ -94,6 +90,14 @@ Pasirašymas galimas tik su 'legacy' tipo adresais.</translation>
         <translation type="unfinished">Bandant išsaugoti adresų sąrašą - įvyko klaida keliant į %1. Prašome bandyti dar kartą.</translation>
     </message>
     <message>
+        <source>Sending addresses - %1</source>
+        <translation type="unfinished">Siuntimo adresai -%1</translation>
+    </message>
+    <message>
+        <source>Receiving addresses - %1</source>
+        <translation type="unfinished">Gaunami adresai - %1</translation>
+    </message>
+    <message>
         <source>Exporting Failed</source>
         <translation type="unfinished">Eksportavimas nepavyko</translation>
     </message>
@@ -168,8 +172,16 @@ Pasirašymas galimas tik su 'legacy' tipo adresais.</translation>
         <translation type="unfinished">Piniginė užšifruota</translation>
     </message>
     <message>
+        <source>Enter the new passphrase for the wallet.&lt;br/&gt;Please use a passphrase of &lt;b&gt;ten or more random characters&lt;/b&gt;, or &lt;b&gt;eight or more words&lt;/b&gt;.</source>
+        <translation type="unfinished">Įveskite naują piniginės slaptafrazę. &lt;br/&gt; Naudokite &lt;b&gt; 10 ar daugiau atsitiktinių simbolių &lt;/b&gt;, arba &lt;b&gt; 8 ar daugiau žodžių slaptafrazę&lt;/b&gt;.</translation>
+    </message>
+    <message>
         <source>Enter the old passphrase and new passphrase for the wallet.</source>
         <translation type="unfinished">Įveskite seną ir naują slaptažodį.</translation>
+    </message>
+    <message>
+        <source>Remember that encrypting your wallet cannot fully protect your bitcoins from being stolen by malware infecting your computer.</source>
+        <translation type="unfinished">Atminkite kad piniginės užšifravimas neužtrikrina kad jūsų bitkoinai negali būti pavogti dėl kenkėjiškų programų užkrėtusių jūsų kompiuterį.</translation>
     </message>
     <message>
         <source>Wallet to be encrypted</source>
@@ -335,7 +347,11 @@ Pasirašymas galimas tik su 'legacy' tipo adresais.</translation>
             <numerusform />
         </translation>
     </message>
-    </context>
+    <message>
+        <source>default wallet</source>
+        <translation type="unfinished">numatyta piniginė</translation>
+    </message>
+</context>
 <context>
     <name>BitcoinGUI</name>
     <message>
@@ -426,6 +442,10 @@ Pasirašymas galimas tik su 'legacy' tipo adresais.</translation>
     <message>
         <source>&amp;Options…</source>
         <translation type="unfinished">&amp;Nustatymai</translation>
+    </message>
+    <message>
+        <source>&amp;Encrypt Wallet…</source>
+        <translation type="unfinished">&amp; Užšifruoti piniginę</translation>
     </message>
     <message>
         <source>Encrypt the private keys that belong to your wallet</source>
@@ -546,10 +566,6 @@ Pasirašymas galimas tik su 'legacy' tipo adresais.</translation>
     <message>
         <source>Show the %1 help message to get a list with possible Bitcoin command-line options</source>
         <translation type="unfinished">Rodyti %1 pagalbos žinutę su Bitcoin pasirinkimo komandomis</translation>
-    </message>
-    <message>
-        <source>default wallet</source>
-        <translation type="unfinished">numatyta piniginė</translation>
     </message>
     <message>
         <source>No wallets available</source>
@@ -822,10 +838,6 @@ Pasirašymas galimas tik su 'legacy' tipo adresais.</translation>
         <translation type="unfinished">Piniginės atidarymo įspėjimas</translation>
     </message>
     <message>
-        <source>default wallet</source>
-        <translation type="unfinished">numatyta piniginė</translation>
-    </message>
-    <message>
         <source>Open Wallet</source>
         <extracomment>Title of window indicating the progress of opening of a wallet.</extracomment>
         <translation type="unfinished">Atidaryti Piniginę</translation>
@@ -969,7 +981,61 @@ Pasirašymas galimas tik su 'legacy' tipo adresais.</translation>
     </message>
 </context>
 <context>
+    <name>HelpMessageDialog</name>
+    <message>
+        <source>version</source>
+        <translation type="unfinished">versija</translation>
+    </message>
+    <message>
+        <source>About %1</source>
+        <translation type="unfinished">&amp;Apie %1</translation>
+    </message>
+    <message>
+        <source>Command-line options</source>
+        <translation type="unfinished">Komandinės eilutės parametrai</translation>
+    </message>
+</context>
+<context>
+    <name>ShutdownWindow</name>
+    <message>
+        <source>Do not shut down the computer until this window disappears.</source>
+        <translation type="unfinished">Neišjunkite kompiuterio tol, kol šis langas neišnyks.</translation>
+    </message>
+</context>
+<context>
     <name>Intro</name>
+    <message>
+        <source>Welcome</source>
+        <translation type="unfinished">Sveiki</translation>
+    </message>
+    <message>
+        <source>Welcome to %1.</source>
+        <translation type="unfinished">Sveiki atvykę į %1.</translation>
+    </message>
+    <message>
+        <source>As this is the first time the program is launched, you can choose where %1 will store its data.</source>
+        <translation type="unfinished">Kadangi tai yra pirmas kartas, kai programa paleidžiama, galite pasirinkti, kur %1 išsaugos savo duomenis.</translation>
+    </message>
+    <message>
+        <source> GB</source>
+        <translation type="unfinished">GB</translation>
+    </message>
+    <message>
+        <source>This initial synchronisation is very demanding, and may expose hardware problems with your computer that had previously gone unnoticed. Each time you run %1, it will continue downloading where it left off.</source>
+        <translation type="unfinished">Ši pradinė sinchronizacija yra labai sudėtinga ir gali sukelti kompiuterio techninės įrangos problemas, kurios anksčiau buvo nepastebėtos. Kiekvieną kartą, kai paleidžiate %1, jis tęs parsisiuntimą ten, kur jis buvo išjungtas.</translation>
+    </message>
+    <message>
+        <source>If you have chosen to limit block chain storage (pruning), the historical data must still be downloaded and processed, but will be deleted afterward to keep your disk usage low.</source>
+        <translation type="unfinished">Jei pasirinkote apriboti blokavimo grandinės saugojimą (genėjimas), istoriniai duomenys vis tiek turi būti atsisiunčiami ir apdorojami, bet vėliau bus ištrinti, kad diskų naudojimas būtų mažas.</translation>
+    </message>
+    <message>
+        <source>Use the default data directory</source>
+        <translation type="unfinished">Naudoti numatytajį duomenų katalogą</translation>
+    </message>
+    <message>
+        <source>Use a custom data directory:</source>
+        <translation type="unfinished">Naudoti kitą duomenų katalogą:</translation>
+    </message>
     <message numerus="yes">
         <source>%n GB of space available</source>
         <translation type="unfinished">
@@ -1026,60 +1092,6 @@ Pasirašymas galimas tik su 'legacy' tipo adresais.</translation>
     <message>
         <source>Error</source>
         <translation type="unfinished">Klaida</translation>
-    </message>
-    <message>
-        <source>Welcome</source>
-        <translation type="unfinished">Sveiki</translation>
-    </message>
-    <message>
-        <source>Welcome to %1.</source>
-        <translation type="unfinished">Sveiki atvykę į %1.</translation>
-    </message>
-    <message>
-        <source>As this is the first time the program is launched, you can choose where %1 will store its data.</source>
-        <translation type="unfinished">Kadangi tai yra pirmas kartas, kai programa paleidžiama, galite pasirinkti, kur %1 išsaugos savo duomenis.</translation>
-    </message>
-    <message>
-        <source> GB</source>
-        <translation type="unfinished">GB</translation>
-    </message>
-    <message>
-        <source>This initial synchronisation is very demanding, and may expose hardware problems with your computer that had previously gone unnoticed. Each time you run %1, it will continue downloading where it left off.</source>
-        <translation type="unfinished">Ši pradinė sinchronizacija yra labai sudėtinga ir gali sukelti kompiuterio techninės įrangos problemas, kurios anksčiau buvo nepastebėtos. Kiekvieną kartą, kai paleidžiate %1, jis tęs parsisiuntimą ten, kur jis buvo išjungtas.</translation>
-    </message>
-    <message>
-        <source>If you have chosen to limit block chain storage (pruning), the historical data must still be downloaded and processed, but will be deleted afterward to keep your disk usage low.</source>
-        <translation type="unfinished">Jei pasirinkote apriboti blokavimo grandinės saugojimą (genėjimas), istoriniai duomenys vis tiek turi būti atsisiunčiami ir apdorojami, bet vėliau bus ištrinti, kad diskų naudojimas būtų mažas.</translation>
-    </message>
-    <message>
-        <source>Use the default data directory</source>
-        <translation type="unfinished">Naudoti numatytajį duomenų katalogą</translation>
-    </message>
-    <message>
-        <source>Use a custom data directory:</source>
-        <translation type="unfinished">Naudoti kitą duomenų katalogą:</translation>
-    </message>
-</context>
-<context>
-    <name>HelpMessageDialog</name>
-    <message>
-        <source>version</source>
-        <translation type="unfinished">versija</translation>
-    </message>
-    <message>
-        <source>About %1</source>
-        <translation type="unfinished">&amp;Apie %1</translation>
-    </message>
-    <message>
-        <source>Command-line options</source>
-        <translation type="unfinished">Komandinės eilutės parametrai</translation>
-    </message>
-</context>
-<context>
-    <name>ShutdownWindow</name>
-    <message>
-        <source>Do not shut down the computer until this window disappears.</source>
-        <translation type="unfinished">Neišjunkite kompiuterio tol, kol šis langas neišnyks.</translation>
     </message>
 </context>
 <context>
@@ -1228,14 +1240,6 @@ Pasirašymas galimas tik su 'legacy' tipo adresais.</translation>
         <translation type="unfinished">&amp;Išleiskite nepatvirtintus pakeitimus</translation>
     </message>
     <message>
-        <source>Automatically open the Bitcoin client port on the router. This only works when your router supports UPnP and it is enabled.</source>
-        <translation type="unfinished">Automatiškai atidaryti Bitcoin kliento prievadą maršrutizatoriuje. Tai veikia tik tada, kai jūsų maršrutizatorius palaiko UPnP ir ji įjungta.</translation>
-    </message>
-    <message>
-        <source>Map port using &amp;UPnP</source>
-        <translation type="unfinished">Persiųsti prievadą naudojant &amp;UPnP</translation>
-    </message>
-    <message>
         <source>Accept connections from outside.</source>
         <translation type="unfinished">Priimti ryšius iš išorės.</translation>
     </message>
@@ -1380,10 +1384,6 @@ Pasirašymas galimas tik su 'legacy' tipo adresais.</translation>
         <translation type="unfinished">Rodoma informacija gali būti pasenusi. Piniginė automatiškai sinchronizuojasi su „Bitcoin“ tinklu po ryšio užmezgimo, tačiau šis procesas dar nebaigtas.</translation>
     </message>
     <message>
-        <source>Watch-only:</source>
-        <translation type="unfinished">Tik stebėti</translation>
-    </message>
-    <message>
         <source>Available:</source>
         <translation type="unfinished">Galimi:</translation>
     </message>
@@ -1420,28 +1420,8 @@ Pasirašymas galimas tik su 'legacy' tipo adresais.</translation>
         <translation type="unfinished">Jūsų balansas</translation>
     </message>
     <message>
-        <source>Your current balance in watch-only addresses</source>
-        <translation type="unfinished">Jūsų dabartinis balansas tik stebimų adresų</translation>
-    </message>
-    <message>
-        <source>Spendable:</source>
-        <translation type="unfinished">Išleidžiamas:</translation>
-    </message>
-    <message>
         <source>Recent transactions</source>
         <translation type="unfinished">Naujausi sandoriai</translation>
-    </message>
-    <message>
-        <source>Unconfirmed transactions to watch-only addresses</source>
-        <translation type="unfinished">Nepatvirtinti sandoriai stebimų adresų</translation>
-    </message>
-    <message>
-        <source>Mined balance in watch-only addresses that has not yet matured</source>
-        <translation type="unfinished">Kasybos balansas skirtas tik stebimiems adresams, kurie dar nera subrendę</translation>
-    </message>
-    <message>
-        <source>Current total balance in watch-only addresses</source>
-        <translation type="unfinished">Dabartinis visas balansas tik stebimų adresų</translation>
     </message>
     </context>
 <context>
@@ -1454,6 +1434,14 @@ Pasirašymas galimas tik su 'legacy' tipo adresais.</translation>
         <source>Close</source>
         <translation type="unfinished">Uždaryti</translation>
     </message>
+    <message numerus="yes">
+        <source>Signed %n input(s), but more signatures are still required.</source>
+        <translation type="unfinished">
+            <numerusform />
+            <numerusform />
+            <numerusform />
+        </translation>
+    </message>
     <message>
         <source>own address</source>
         <translation type="unfinished">savo adresas</translation>
@@ -1465,6 +1453,14 @@ Pasirašymas galimas tik su 'legacy' tipo adresais.</translation>
     <message>
         <source>or</source>
         <translation type="unfinished">ar</translation>
+    </message>
+    <message numerus="yes">
+        <source>Transaction has %n unsigned input(s).</source>
+        <translation type="unfinished">
+            <numerusform />
+            <numerusform />
+            <numerusform />
+        </translation>
     </message>
     </context>
 <context>
@@ -1653,10 +1649,6 @@ Pasirašymas galimas tik su 'legacy' tipo adresais.</translation>
         <translation type="unfinished">Versija</translation>
     </message>
     <message>
-        <source>Starting Block</source>
-        <translation type="unfinished">Pradinis blokas</translation>
-    </message>
-    <message>
         <source>Synced Headers</source>
         <translation type="unfinished">Sinchronizuotos antraštės</translation>
     </message>
@@ -1791,6 +1783,10 @@ Pasirašymas galimas tik su 'legacy' tipo adresais.</translation>
     <message>
         <source>Network activity disabled</source>
         <translation type="unfinished">Tinklo veikla išjungta</translation>
+    </message>
+    <message>
+        <source>None</source>
+        <translation type="unfinished">Nė vienas</translation>
     </message>
     <message>
         <source>Executing command without any wallet</source>
@@ -2166,10 +2162,6 @@ Pasirašymas galimas tik su 'legacy' tipo adresais.</translation>
         <translation type="unfinished">Ši suma viršija jūsų balansą.</translation>
     </message>
     <message>
-        <source>The total exceeds your balance when the %1 transaction fee is included.</source>
-        <translation type="unfinished">Bendra suma viršija jūsų balansą, kai įtraukiamas %1 sandorio mokestis.</translation>
-    </message>
-    <message>
         <source>Duplicate address found: addresses should only be used once each.</source>
         <translation type="unfinished">Rastas dublikatas: adresai turėtų būti naudojami tik vieną kartą.</translation>
     </message>
@@ -2303,10 +2295,6 @@ Pasirašymas galimas tik su 'legacy' tipo adresais.</translation>
         <translation type="unfinished">Parašas</translation>
     </message>
     <message>
-        <source>Copy the current signature to the system clipboard</source>
-        <translation type="unfinished">Nukopijuokite dabartinį parašą į sistemos iškarpinę</translation>
-    </message>
-    <message>
         <source>Sign the message to prove you own this Bitcoin address</source>
         <translation type="unfinished">Registruotis žinute įrodymuii, kad turite šį adresą</translation>
     </message>
@@ -2353,10 +2341,6 @@ Pasirašymas galimas tik su 'legacy' tipo adresais.</translation>
     <message>
         <source>Please check the address and try again.</source>
         <translation type="unfinished">Patikrinkite adresą ir bandykite dar kartą.</translation>
-    </message>
-    <message>
-        <source>The entered address does not refer to a key.</source>
-        <translation type="unfinished">Įvestas adresas nėra susijęs su raktu.</translation>
     </message>
     <message>
         <source>Wallet unlock was cancelled.</source>
@@ -2448,10 +2432,6 @@ Pasirašymas galimas tik su 'legacy' tipo adresais.</translation>
     <message>
         <source>own address</source>
         <translation type="unfinished">savo adresas</translation>
-    </message>
-    <message>
-        <source>watch-only</source>
-        <translation type="unfinished">Tik stebėti</translation>
     </message>
     <message>
         <source>label</source>
@@ -2608,10 +2588,6 @@ Pasirašymas galimas tik su 'legacy' tipo adresais.</translation>
         <translation type="unfinished">Išgauta</translation>
     </message>
     <message>
-        <source>watch-only</source>
-        <translation type="unfinished">Tik stebėti</translation>
-    </message>
-    <message>
         <source>(n/a)</source>
         <translation type="unfinished">nepasiekiama</translation>
     </message>
@@ -2702,10 +2678,6 @@ Pasirašymas galimas tik su 'legacy' tipo adresais.</translation>
     <message>
         <source>Confirmed</source>
         <translation type="unfinished">Patvirtinta</translation>
-    </message>
-    <message>
-        <source>Watch-only</source>
-        <translation type="unfinished">Tik stebėti</translation>
     </message>
     <message>
         <source>Date</source>
@@ -2802,11 +2774,7 @@ Pasirašymas galimas tik su 'legacy' tipo adresais.</translation>
         <source>Could not commit transaction</source>
         <translation type="unfinished">Nepavyko įvykdyti sandorio</translation>
     </message>
-    <message>
-        <source>default wallet</source>
-        <translation type="unfinished">numatyta piniginė</translation>
-    </message>
-</context>
+    </context>
 <context>
     <name>WalletView</name>
     <message>
@@ -2861,6 +2829,10 @@ Pasirašymas galimas tik su 'legacy' tipo adresais.</translation>
         <translation type="unfinished">Negalima išspręsti -%s adreso: „%s“</translation>
     </message>
     <message>
+        <source>default wallet</source>
+        <translation type="unfinished">numatyta piniginė</translation>
+    </message>
+    <message>
         <source>Config setting for %s only applied on %s network when in [%s] section.</source>
         <translation type="unfinished">%s konfigūravimo nustatymas taikomas tik %s tinkle, kai yra [%s] skiltyje.</translation>
     </message>
@@ -2873,10 +2845,6 @@ Pasirašymas galimas tik su 'legacy' tipo adresais.</translation>
         <translation type="unfinished">Nustatyta sugadinta blokų duomenų bazė</translation>
     </message>
     <message>
-        <source>Do you want to rebuild the block database now?</source>
-        <translation type="unfinished">Ar norite dabar atstatyti blokų duomenų bazę?</translation>
-    </message>
-    <message>
         <source>Done loading</source>
         <translation type="unfinished">Įkėlimas baigtas</translation>
     </message>
@@ -2885,16 +2853,8 @@ Pasirašymas galimas tik su 'legacy' tipo adresais.</translation>
         <translation type="unfinished">Klaida inicijuojant blokų duomenų bazę</translation>
     </message>
     <message>
-        <source>Error initializing wallet database environment %s!</source>
-        <translation type="unfinished">Klaida inicijuojant piniginės duomenų bazės aplinką %s!</translation>
-    </message>
-    <message>
         <source>Error loading %s</source>
         <translation type="unfinished">Klaida įkeliant %s</translation>
-    </message>
-    <message>
-        <source>Error loading %s: Private keys can only be disabled during creation</source>
-        <translation type="unfinished">Klaida įkeliant %s: Privatūs raktai gali būti išjungti tik kūrimo metu</translation>
     </message>
     <message>
         <source>Error loading %s: Wallet corrupted</source>
@@ -2917,10 +2877,6 @@ Pasirašymas galimas tik su 'legacy' tipo adresais.</translation>
         <translation type="unfinished">Nepakanka lėšų</translation>
     </message>
     <message>
-        <source>Not enough file descriptors available.</source>
-        <translation type="unfinished">Nėra pakankamai failų aprašų.</translation>
-    </message>
-    <message>
         <source>Signing transaction failed</source>
         <translation type="unfinished">Transakcijos pasirašymas nepavyko</translation>
     </message>
@@ -2941,10 +2897,6 @@ Pasirašymas galimas tik su 'legacy' tipo adresais.</translation>
         <translation type="unfinished">Tai yra minimalus transakcijos mokestis, kurį jūs mokate kiekvieną transakciją.</translation>
     </message>
     <message>
-        <source>This is the transaction fee you will pay if you send a transaction.</source>
-        <translation type="unfinished">Tai yra sandorio mokestis, kurį mokėsite, jei siunčiate sandorį.</translation>
-    </message>
-    <message>
         <source>Transaction amount too small</source>
         <translation type="unfinished">Transakcijos suma per maža</translation>
     </message>
@@ -2959,14 +2911,6 @@ Pasirašymas galimas tik su 'legacy' tipo adresais.</translation>
     <message>
         <source>Transaction too large</source>
         <translation type="unfinished">Sandoris yra per didelis</translation>
-    </message>
-    <message>
-        <source>Unable to generate initial keys</source>
-        <translation type="unfinished">Nepavyko generuoti pradinių raktų</translation>
-    </message>
-    <message>
-        <source>Unable to generate keys</source>
-        <translation type="unfinished">Nepavyko generuoti raktų</translation>
     </message>
     <message>
         <source>Unable to open %s for writing</source>

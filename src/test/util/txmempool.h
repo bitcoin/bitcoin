@@ -1,4 +1,4 @@
-// Copyright (c) 2022 The Bitcoin Core developers
+// Copyright (c) 2022-present The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -47,13 +47,37 @@ std::optional<std::string>  CheckPackageMempoolAcceptResult(const Package& txns,
                                                             bool expect_valid,
                                                             const CTxMemPool* mempool);
 
-/** For every transaction in tx_pool, check v3 invariants:
- * - a v3 tx's ancestor count must be within V3_ANCESTOR_LIMIT
- * - a v3 tx's descendant count must be within V3_DESCENDANT_LIMIT
- * - if a v3 tx has ancestors, its sigop-adjusted vsize must be within V3_CHILD_MAX_VSIZE
- * - any non-v3 tx must only have non-v3 parents
- * - any v3 tx must only have v3 parents
+/** Check that we never get into a state where an ephemeral dust
+ *  transaction would be mined without the spend of the dust
+ *  also being mined. This assumes standardness checks are being
+ *  enforced.
+*/
+void CheckMempoolEphemeralInvariants(const CTxMemPool& tx_pool);
+
+/** For every transaction in tx_pool, check TRUC invariants:
+ * - a TRUC tx's ancestor count must be within TRUC_ANCESTOR_LIMIT
+ * - a TRUC tx's descendant count must be within TRUC_DESCENDANT_LIMIT
+ * - if a TRUC tx has ancestors, its sigop-adjusted vsize must be within TRUC_CHILD_MAX_VSIZE
+ * - any non-TRUC tx must only have non-TRUC parents
+ * - any TRUC tx must only have TRUC parents
  *   */
-void CheckMempoolV3Invariants(const CTxMemPool& tx_pool);
+void CheckMempoolTRUCInvariants(const CTxMemPool& tx_pool);
+
+/** One-line wrapper for creating a mempool changeset with a single transaction
+ *  and applying it if the policy limits are respected. */
+void TryAddToMempool(CTxMemPool& tx_pool, const CTxMemPoolEntry& entry);
+
+/** Mock the mempool minimum feerate by adding a transaction and calling TrimToSize(0),
+ * simulating the mempool "reaching capacity" and evicting by descendant feerate.  Note that
+ * this clears the mempool, and the new minimum feerate will depend on the maximum feerate of
+ * transactions removed, so this must be called while the mempool is empty.
+ *
+ * @param target_feerate    The new mempool minimum feerate after this function returns.
+ *                          Must be above max(incremental feerate, min relay feerate),
+ *                          or 1sat/vB with default settings.
+ * @param mempool           The mempool to mock the minimum feerate for. Must be empty
+ *                          when called.
+ */
+void MockMempoolMinFee(const CFeeRate& target_feerate, CTxMemPool& mempool);
 
 #endif // BITCOIN_TEST_UTIL_TXMEMPOOL_H

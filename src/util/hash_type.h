@@ -1,4 +1,4 @@
-// Copyright (c) 2020-2021 The Bitcoin Core developers
+// Copyright (c) 2020-present The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -48,11 +48,6 @@ public:
     bool operator==(const BaseHash<HashType>& other) const noexcept
     {
         return m_hash == other.m_hash;
-    }
-
-    bool operator!=(const BaseHash<HashType>& other) const noexcept
-    {
-        return !(m_hash == other.m_hash);
     }
 
     bool operator<(const BaseHash<HashType>& other) const noexcept

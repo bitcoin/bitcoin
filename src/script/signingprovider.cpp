@@ -1,5 +1,5 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
-// Copyright (c) 2009-2022 The Bitcoin Core developers
+// Copyright (c) 2009-present The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -52,6 +52,31 @@ bool HidingSigningProvider::GetTaprootBuilder(const XOnlyPubKey& output_key, Tap
 {
     return m_provider->GetTaprootBuilder(output_key, builder);
 }
+std::vector<CPubKey> HidingSigningProvider::GetMuSig2ParticipantPubkeys(const CPubKey& pubkey) const
+{
+    if (m_hide_origin) return {};
+    return m_provider->GetMuSig2ParticipantPubkeys(pubkey);
+}
+
+std::map<CPubKey, std::vector<CPubKey>> HidingSigningProvider::GetAllMuSig2ParticipantPubkeys() const
+{
+    return m_provider->GetAllMuSig2ParticipantPubkeys();
+}
+
+void HidingSigningProvider::SetMuSig2SecNonce(const uint256& id, MuSig2SecNonce&& nonce) const
+{
+    m_provider->SetMuSig2SecNonce(id, std::move(nonce));
+}
+
+std::optional<std::reference_wrapper<MuSig2SecNonce>> HidingSigningProvider::GetMuSig2SecNonce(const uint256& session_id) const
+{
+    return m_provider->GetMuSig2SecNonce(session_id);
+}
+
+void HidingSigningProvider::DeleteMuSig2Session(const uint256& session_id) const
+{
+    m_provider->DeleteMuSig2Session(session_id);
+}
 
 bool FlatSigningProvider::GetCScript(const CScriptID& scriptid, CScript& script) const { return LookupHelper(scripts, scriptid, script); }
 bool FlatSigningProvider::GetPubKey(const CKeyID& keyid, CPubKey& pubkey) const { return LookupHelper(pubkeys, keyid, pubkey); }
@@ -61,6 +86,11 @@ bool FlatSigningProvider::GetKeyOrigin(const CKeyID& keyid, KeyOriginInfo& info)
     bool ret = LookupHelper(origins, keyid, out);
     if (ret) info = std::move(out.second);
     return ret;
+}
+bool FlatSigningProvider::HaveKey(const CKeyID &keyid) const
+{
+    CKey key;
+    return LookupHelper(keys, keyid, key);
 }
 bool FlatSigningProvider::GetKey(const CKeyID& keyid, CKey& key) const { return LookupHelper(keys, keyid, key); }
 bool FlatSigningProvider::GetTaprootSpendData(const XOnlyPubKey& output_key, TaprootSpendData& spenddata) const
@@ -77,6 +107,40 @@ bool FlatSigningProvider::GetTaprootBuilder(const XOnlyPubKey& output_key, Tapro
     return LookupHelper(tr_trees, output_key, builder);
 }
 
+std::vector<CPubKey> FlatSigningProvider::GetMuSig2ParticipantPubkeys(const CPubKey& pubkey) const
+{
+    std::vector<CPubKey> participant_pubkeys;
+    LookupHelper(aggregate_pubkeys, pubkey, participant_pubkeys);
+    return participant_pubkeys;
+}
+
+std::map<CPubKey, std::vector<CPubKey>> FlatSigningProvider::GetAllMuSig2ParticipantPubkeys() const
+{
+    return aggregate_pubkeys;
+}
+
+void FlatSigningProvider::SetMuSig2SecNonce(const uint256& session_id, MuSig2SecNonce&& nonce) const
+{
+    if (!Assume(musig2_secnonces)) return;
+    auto [it, inserted] = musig2_secnonces->try_emplace(session_id, std::move(nonce));
+    // No secnonce should exist for this session yet.
+    Assert(inserted);
+}
+
+std::optional<std::reference_wrapper<MuSig2SecNonce>> FlatSigningProvider::GetMuSig2SecNonce(const uint256& session_id) const
+{
+    if (!Assume(musig2_secnonces)) return std::nullopt;
+    const auto& it = musig2_secnonces->find(session_id);
+    if (it == musig2_secnonces->end()) return std::nullopt;
+    return it->second;
+}
+
+void FlatSigningProvider::DeleteMuSig2Session(const uint256& session_id) const
+{
+    if (!Assume(musig2_secnonces)) return;
+    musig2_secnonces->erase(session_id);
+}
+
 FlatSigningProvider& FlatSigningProvider::Merge(FlatSigningProvider&& b)
 {
     scripts.merge(b.scripts);
@@ -84,6 +148,9 @@ FlatSigningProvider& FlatSigningProvider::Merge(FlatSigningProvider&& b)
     keys.merge(b.keys);
     origins.merge(b.origins);
     tr_trees.merge(b.tr_trees);
+    aggregate_pubkeys.merge(b.aggregate_pubkeys);
+    // We shouldn't be merging 2 different sessions, just overwrite with b's sessions.
+    if (!musig2_secnonces) musig2_secnonces = b.musig2_secnonces;
     return *this;
 }
 
@@ -131,7 +198,7 @@ bool FillableSigningProvider::AddKeyPubKey(const CKey& key, const CPubKey &pubke
 bool FillableSigningProvider::HaveKey(const CKeyID &address) const
 {
     LOCK(cs_KeyStore);
-    return mapKeys.count(address) > 0;
+    return mapKeys.contains(address);
 }
 
 std::set<CKeyID> FillableSigningProvider::GetKeys() const
@@ -170,7 +237,7 @@ bool FillableSigningProvider::AddCScript(const CScript& redeemScript)
 bool FillableSigningProvider::HaveCScript(const CScriptID& hash) const
 {
     LOCK(cs_KeyStore);
-    return mapScripts.count(hash) > 0;
+    return mapScripts.contains(hash);
 }
 
 std::set<CScriptID> FillableSigningProvider::GetCScripts() const
@@ -363,7 +430,7 @@ void TaprootBuilder::Insert(TaprootBuilder::NodeInfo&& node, int depth)
     return branch.size() == 0 || (branch.size() == 1 && branch[0]);
 }
 
-TaprootBuilder& TaprootBuilder::Add(int depth, Span<const unsigned char> script, int leaf_version, bool track)
+TaprootBuilder& TaprootBuilder::Add(int depth, std::span<const unsigned char> script, int leaf_version, bool track)
 {
     assert((leaf_version & ~TAPROOT_LEAF_MASK) == 0);
     if (!IsValid()) return *this;

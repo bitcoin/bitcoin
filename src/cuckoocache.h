@@ -6,15 +6,15 @@
 #define BITCOIN_CUCKOOCACHE_H
 
 #include <util/fastrange.h>
+#include <util/overflow.h>
 
-#include <algorithm> // std::find
+#include <algorithm>
 #include <array>
 #include <atomic>
 #include <cmath>
 #include <cstring>
 #include <limits>
 #include <memory>
-#include <optional>
 #include <utility>
 #include <vector>
 
@@ -64,7 +64,7 @@ public:
     explicit bit_packed_atomic_flags(uint32_t size)
     {
         // pad out the size if needed
-        size = (size + 7) / 8;
+        size = CeilDiv(size, 8u);
         mem.reset(new std::atomic<uint8_t>[size]);
         for (uint32_t i = 0; i < size; ++i)
             mem[i].store(0xFF);
@@ -360,16 +360,15 @@ public:
      * structure
      * @returns A pair of the maximum number of elements storable (see setup()
      * documentation for more detail) and the approximate total size of these
-     * elements in bytes or std::nullopt if the size requested is too large.
+     * elements in bytes.
      */
-    std::optional<std::pair<uint32_t, size_t>> setup_bytes(size_t bytes)
+    std::pair<uint32_t, size_t> setup_bytes(size_t bytes)
     {
-        size_t requested_num_elems = bytes / sizeof(Element);
-        if (std::numeric_limits<uint32_t>::max() < requested_num_elems) {
-            return std::nullopt;
-        }
+        uint32_t requested_num_elems(std::min<size_t>(
+            bytes / sizeof(Element),
+            std::numeric_limits<uint32_t>::max()));
 
-        auto num_elems = setup(bytes/sizeof(Element));
+        auto num_elems = setup(requested_num_elems);
 
         size_t approx_size_bytes = num_elems * sizeof(Element);
         return std::make_pair(num_elems, approx_size_bytes);

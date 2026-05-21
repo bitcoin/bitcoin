@@ -1,5 +1,5 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
-// Copyright (c) 2009-2022 The Bitcoin Core developers
+// Copyright (c) 2009-present The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -22,7 +22,7 @@
 /**
  * Encode a byte span as a base58-encoded string
  */
-std::string EncodeBase58(Span<const unsigned char> input);
+std::string EncodeBase58(std::span<const unsigned char> input);
 
 /**
  * Decode a base58-encoded string (str) into a byte vector (vchRet).
@@ -33,7 +33,7 @@ std::string EncodeBase58(Span<const unsigned char> input);
 /**
  * Encode a byte span into a base58-encoded string, including checksum
  */
-std::string EncodeBase58Check(Span<const unsigned char> input);
+std::string EncodeBase58Check(std::span<const unsigned char> input);
 
 /**
  * Decode a base58-encoded string (str) that includes a checksum into a byte

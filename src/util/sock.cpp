@@ -1,19 +1,26 @@
-// Copyright (c) 2020-2022 The Bitcoin Core developers
+// Copyright (c) 2020-present The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include <common/system.h>
-#include <compat/compat.h>
-#include <logging.h>
-#include <tinyformat.h>
 #include <util/sock.h>
+
+#include <compat/compat.h>
+#include <span.h>
+#include <tinyformat.h>
+#include <util/check.h>
+#include <util/log.h>
 #include <util/syserror.h>
 #include <util/threadinterrupt.h>
 #include <util/time.h>
 
+#include <algorithm>
+#include <compare>
+#include <exception>
 #include <memory>
 #include <stdexcept>
 #include <string>
+#include <utility>
+#include <vector>
 
 #ifdef USE_POLL
 #include <poll.h>
@@ -138,10 +145,12 @@ bool Sock::IsSelectable() const
 
 bool Sock::Wait(std::chrono::milliseconds timeout, Event requested, Event* occurred) const
 {
-    // We need a `shared_ptr` owning `this` for `WaitMany()`, but don't want
+    // We need a `shared_ptr` holding `this` for `WaitMany()`, but don't want
     // `this` to be destroyed when the `shared_ptr` goes out of scope at the
-    // end of this function. Create it with a custom noop deleter.
-    std::shared_ptr<const Sock> shared{this, [](const Sock*) {}};
+    // end of this function.
+    // Create it with an aliasing shared_ptr that points to `this` without
+    // owning it.
+    std::shared_ptr<const Sock> shared{std::shared_ptr<const Sock>{}, this};
 
     EventsPerSock events_per_sock{std::make_pair(shared, Events{requested})};
 
@@ -242,7 +251,7 @@ bool Sock::WaitMany(std::chrono::milliseconds timeout, EventsPerSock& events_per
 #endif /* USE_POLL */
 }
 
-void Sock::SendComplete(Span<const unsigned char> data,
+void Sock::SendComplete(std::span<const unsigned char> data,
                         std::chrono::milliseconds timeout,
                         CThreadInterrupt& interrupt) const
 {
@@ -283,7 +292,7 @@ void Sock::SendComplete(Span<const unsigned char> data,
     }
 }
 
-void Sock::SendComplete(Span<const char> data,
+void Sock::SendComplete(std::span<const char> data,
                         std::chrono::milliseconds timeout,
                         CThreadInterrupt& interrupt) const
 {
@@ -409,7 +418,7 @@ void Sock::Close()
     int ret = close(m_socket);
 #endif
     if (ret) {
-        LogPrintf("Error closing socket %d: %s\n", m_socket, NetworkErrorString(WSAGetLastError()));
+        LogWarning("Error closing socket %d: %s", m_socket, NetworkErrorString(WSAGetLastError()));
     }
     m_socket = INVALID_SOCKET;
 }

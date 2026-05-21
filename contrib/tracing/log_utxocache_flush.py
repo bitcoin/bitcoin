@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (c) 2021-2022 The Bitcoin Core developers
+# Copyright (c) 2021-present The Bitcoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -10,7 +10,7 @@ from bcc import BPF, USDT
 """Example logging Bitcoin Core utxo set cache flushes utilizing
     the utxocache:flush tracepoint."""
 
-# USAGE:  ./contrib/tracing/log_utxocache_flush.py path/to/bitcoind
+# USAGE:  ./contrib/tracing/log_utxocache_flush.py <pid of bitcoind>
 
 # BCC: The C program to be compiled to an eBPF program (by BCC) and loaded into
 # a sandboxed Linux kernel VM.
@@ -45,7 +45,8 @@ FLUSH_MODES = [
     'NONE',
     'IF_NEEDED',
     'PERIODIC',
-    'ALWAYS'
+    'FORCE_FLUSH',
+    'FORCE_SYNC',
 ]
 
 
@@ -61,7 +62,7 @@ class Data(ctypes.Structure):
 
 
 def print_event(event):
-    print("%-15d %-10s %-15d %-15s %-8s" % (
+    print("%-15d %-12s %-15d %-15s %-8s" % (
         event.duration,
         FLUSH_MODES[event.mode],
         event.coins_count,
@@ -70,8 +71,9 @@ def print_event(event):
     ))
 
 
-def main(bitcoind_path):
-    bitcoind_with_usdts = USDT(path=str(bitcoind_path))
+def main(pid):
+    print(f"Hooking into bitcoind with pid {pid}")
+    bitcoind_with_usdts = USDT(pid=int(pid))
 
     # attaching the trace functions defined in the BPF program
     # to the tracepoints
@@ -87,7 +89,7 @@ def main(bitcoind_path):
 
     b["flush"].open_perf_buffer(handle_flush)
     print("Logging utxocache flushes. Ctrl-C to end...")
-    print("%-15s %-10s %-15s %-15s %-8s" % ("Duration (µs)", "Mode",
+    print("%-15s %-12s %-15s %-15s %-8s" % ("Duration (µs)", "Mode",
                                             "Coins Count", "Memory Usage",
                                             "Flush for Prune"))
 
@@ -99,9 +101,9 @@ def main(bitcoind_path):
 
 
 if __name__ == "__main__":
-    if len(sys.argv) < 2:
-        print("USAGE: ", sys.argv[0], "path/to/bitcoind")
+    if len(sys.argv) != 2:
+        print("USAGE: ", sys.argv[0], "<pid of bitcoind>")
         exit(1)
 
-    path = sys.argv[1]
-    main(path)
+    pid = sys.argv[1]
+    main(pid)

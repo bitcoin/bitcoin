@@ -4,19 +4,20 @@
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test for assumeutxo wallet related behavior.
 See feature_assumeutxo.py for background.
-
-## Possible test improvements
-
-- TODO: test import descriptors while background sync is in progress
-- TODO: test loading a wallet (backup) on a pruned node
-
 """
+from test_framework.address import address_to_scriptpubkey
+from test_framework.descriptors import descsum_create
 from test_framework.test_framework import BitcoinTestFramework
+from test_framework.messages import COIN
 from test_framework.util import (
     assert_equal,
+    assert_greater_than,
     assert_raises_rpc_error,
+    dumb_sync_blocks,
+    ensure_for,
 )
 from test_framework.wallet import MiniWallet
+from test_framework.wallet_util import get_generate_key
 
 START_HEIGHT = 199
 SNAPSHOT_BASE_HEIGHT = 299
@@ -27,34 +28,97 @@ class AssumeutxoTest(BitcoinTestFramework):
     def skip_test_if_missing_module(self):
         self.skip_if_no_wallet()
 
-    def add_options(self, parser):
-        self.add_wallet_options(parser, legacy=False)
-
     def set_test_params(self):
         """Use the pregenerated, deterministic chain up to height 199."""
-        self.num_nodes = 2
+        self.num_nodes = 4
         self.rpc_timeout = 120
         self.extra_args = [
             [],
             [],
+            [],
+            ["-fastprune", "-prune=1"],
         ]
 
     def setup_network(self):
         """Start with the nodes disconnected so that one can generate a snapshot
         including blocks the other hasn't yet seen."""
-        self.add_nodes(2)
-        self.start_nodes(extra_args=self.extra_args)
+        self.add_nodes(self.num_nodes, self.extra_args)
+        self.start_nodes()
+
+    def import_descriptor(self, node, wallet_name, key, timestamp):
+        import_request = [{"desc": descsum_create("pkh(" + key.pubkey + ")"),
+                           "timestamp": timestamp,
+                           "label": "Descriptor import test"}]
+        wrpc = node.get_wallet_rpc(wallet_name)
+        return wrpc.importdescriptors(import_request)
+
+    def validate_snapshot_import(self, node, loaded, base_hash):
+        assert_equal(loaded['coins_loaded'], SNAPSHOT_BASE_HEIGHT)
+        assert_equal(loaded['base_height'], SNAPSHOT_BASE_HEIGHT)
+
+        normal, snapshot = node.getchainstates()["chainstates"]
+        assert_equal(normal['blocks'], START_HEIGHT)
+        assert 'snapshot_blockhash' not in normal
+        assert_equal(normal['validated'], True)
+        assert_equal(snapshot['blocks'], SNAPSHOT_BASE_HEIGHT)
+        assert_equal(snapshot['snapshot_blockhash'], base_hash)
+        assert_equal(snapshot['validated'], False)
+
+        assert_equal(node.getblockchaininfo()["blocks"], SNAPSHOT_BASE_HEIGHT)
+
+    def complete_background_validation(self, node):
+        self.connect_nodes(0, node.index)
+
+        # Ensuring snapshot chain syncs to tip
+        self.wait_until(lambda: node.getchainstates()['chainstates'][-1]['blocks'] == FINAL_HEIGHT)
+        self.sync_blocks(nodes=(self.nodes[0], node))
+
+        # Ensuring background validation completes
+        self.wait_until(lambda: len(node.getchainstates()['chainstates']) == 1)
+
+    def test_backup_during_background_sync_pruned_node(self, n3, dump_output, expected_error_message):
+        self.log.info("Backup from the snapshot height can be loaded during background sync (pruned node)")
+        loaded = n3.loadtxoutset(dump_output['path'])
+        assert_greater_than(n3.pruneblockchain(START_HEIGHT), 0)
+        self.validate_snapshot_import(n3, loaded, dump_output['base_hash'])
+        n3.restorewallet("w", "backup_w.dat")
+        # Balance of w wallet is still 0 because n3 has not synced yet
+        assert_equal(n3.getbalance(), 0)
+
+        n3.unloadwallet("w")
+        self.log.info("Backup from before the snapshot height can't be loaded during background sync (pruned node)")
+        assert_raises_rpc_error(-4, expected_error_message, n3.restorewallet, "w2", "backup_w2.dat")
+
+    def test_restore_wallet_pruneheight(self, n3):
+        self.log.info("Ensuring wallet can't be restored from a backup that was created before the pruneheight (pruned node)")
+        self.complete_background_validation(n3)
+        # After background sync, pruneheight is reset to 0, so mine 200 blocks
+        # and prune the chain again
+        self.generate(n3, nblocks=200, sync_fun=self.no_op)
+        assert_equal(n3.pruneblockchain(FINAL_HEIGHT), 298)  # 298 is the height of the last block pruned (pruneheight 299)
+        error_message = "Wallet loading failed. Prune: last wallet synchronisation goes beyond pruned data. You need to -reindex (download the whole blockchain again in case of a pruned node)"
+        # This backup (backup_w2.dat) was created at height 199, so it can't be restored in a node with a pruneheight of 299
+        assert_raises_rpc_error(-4, error_message, n3.restorewallet, "w2_pruneheight", "backup_w2.dat")
+
+        self.log.info("Ensuring wallet can be restored from a backup that was created at the pruneheight (pruned node)")
+        # This backup (backup_w.dat) was created at height 299, so it can be restored in a node with a pruneheight of 299
+        n3.restorewallet("w_alt", "backup_w.dat")
+        # Check balance of w_alt wallet
+        w_alt = n3.get_wallet_rpc("w_alt")
+        assert_equal(w_alt.getbalance(), 34)
 
     def run_test(self):
         """
-        Bring up two (disconnected) nodes, mine some new blocks on the first,
-        and generate a UTXO snapshot.
-
-        Load the snapshot into the second, ensure it syncs to tip and completes
-        background validation when connected to the first.
+        Bring up four (disconnected) nodes:
+        - n0: mine some blocks and create a UTXO snapshot
+        - n1: load the snapshot and test loading a wallet backup and descriptors during and after background sync
+        - n2: load the snapshot and check the wallet balance during background sync
+        - n3: load the snapshot, prune the chain, and test loading a wallet backup during and after background sync
         """
         n0 = self.nodes[0]
         n1 = self.nodes[1]
+        n2 = self.nodes[2]
+        n3 = self.nodes[3]
 
         self.mini_wallet = MiniWallet(n0)
 
@@ -62,8 +126,16 @@ class AssumeutxoTest(BitcoinTestFramework):
         for n in self.nodes:
             n.setmocktime(n.getblockheader(n.getbestblockhash())['time'])
 
+        # Create a wallet that we will create a backup for later (at snapshot height)
         n0.createwallet('w')
         w = n0.get_wallet_rpc("w")
+        w_address = w.getnewaddress()
+
+        # Create another wallet and backup now (before snapshot height)
+        n0.createwallet('w2')
+        w2 = n0.get_wallet_rpc("w2")
+        w2_address = w2.getnewaddress()
+        w2.backupwallet("backup_w2.dat")
 
         # Generate a series of blocks that `n0` will have in the snapshot,
         # but that n1 doesn't yet see. In order for the snapshot to activate,
@@ -78,12 +150,15 @@ class AssumeutxoTest(BitcoinTestFramework):
 
             # make n1 aware of the new header, but don't give it the block.
             n1.submitheader(newblock)
-
+            n2.submitheader(newblock)
+            n3.submitheader(newblock)
         # Ensure everyone is seeing the same headers.
         for n in self.nodes:
             assert_equal(n.getblockchaininfo()[
                          "headers"], SNAPSHOT_BASE_HEIGHT)
 
+        # This backup is created at the snapshot height, so it's
+        # not part of the background sync anymore
         w.backupwallet("backup_w.dat")
 
         self.log.info("-- Testing assumeutxo")
@@ -93,75 +168,115 @@ class AssumeutxoTest(BitcoinTestFramework):
 
         self.log.info(
             f"Creating a UTXO snapshot at height {SNAPSHOT_BASE_HEIGHT}")
-        dump_output = n0.dumptxoutset('utxos.dat')
+        dump_output = n0.dumptxoutset('utxos.dat', "latest")
 
         assert_equal(
             dump_output['txoutset_hash'],
-            "a4bf3407ccb2cc0145c49ebba8fa91199f8a3903daf0883875941497d2493c27")
+            "106b2c56233e378a824cf0d5ff2be42ed32c72f1605c9be288d00942908a40ac")
         assert_equal(dump_output["nchaintx"], 334)
         assert_equal(n0.getblockchaininfo()["blocks"], SNAPSHOT_BASE_HEIGHT)
 
         # Mine more blocks on top of the snapshot that n1 hasn't yet seen. This
         # will allow us to test n1's sync-to-tip on top of a snapshot.
-        self.generate(n0, nblocks=100, sync_fun=self.no_op)
+        w_skp = address_to_scriptpubkey(w_address)
+        w2_skp = address_to_scriptpubkey(w2_address)
+        for i in range(100):
+            if i % 3 == 0:
+                self.mini_wallet.send_to(from_node=n0, scriptPubKey=w_skp, amount=1 * COIN)
+                self.mini_wallet.send_to(from_node=n0, scriptPubKey=w2_skp, amount=10 * COIN)
+            self.generate(n0, nblocks=1, sync_fun=self.no_op)
 
         assert_equal(n0.getblockcount(), FINAL_HEIGHT)
         assert_equal(n1.getblockcount(), START_HEIGHT)
+        assert_equal(n2.getblockcount(), START_HEIGHT)
 
         assert_equal(n0.getblockchaininfo()["blocks"], FINAL_HEIGHT)
 
         self.log.info(
             f"Loading snapshot into second node from {dump_output['path']}")
         loaded = n1.loadtxoutset(dump_output['path'])
-        assert_equal(loaded['coins_loaded'], SNAPSHOT_BASE_HEIGHT)
-        assert_equal(loaded['base_height'], SNAPSHOT_BASE_HEIGHT)
+        self.validate_snapshot_import(n1, loaded, dump_output['base_hash'])
 
-        normal, snapshot = n1.getchainstates()["chainstates"]
-        assert_equal(normal['blocks'], START_HEIGHT)
-        assert_equal(normal.get('snapshot_blockhash'), None)
-        assert_equal(normal['validated'], True)
-        assert_equal(snapshot['blocks'], SNAPSHOT_BASE_HEIGHT)
-        assert_equal(snapshot['snapshot_blockhash'], dump_output['base_hash'])
-        assert_equal(snapshot['validated'], False)
+        self.log.info("Backup from the snapshot height can be loaded during background sync")
+        n1.restorewallet("w", "backup_w.dat")
+        # Balance of w wallet is still 0 because n1 has not synced yet
+        assert_equal(n1.getbalance(), 0)
 
-        assert_equal(n1.getblockchaininfo()["blocks"], SNAPSHOT_BASE_HEIGHT)
+        self.log.info("Backup from before the snapshot height can't be loaded during background sync")
+        # Error message for wallets that need blocks before the snapshot height.
+        def loading_error(height):
+            return f"Wallet loading failed. Error loading wallet. Wallet requires blocks to be downloaded, and software does not currently support loading wallets while blocks are being downloaded out of order when using assumeutxo snapshots. Wallet should be able to load successfully after node sync reaches height {height}"
+        # The target height is SNAPSHOT_BASE_HEIGHT because that's when background sync completes.
+        assert_raises_rpc_error(-4, loading_error(SNAPSHOT_BASE_HEIGHT), n1.restorewallet, "w2", "backup_w2.dat")
 
-        self.log.info("Backup can't be loaded during background sync")
-        assert_raises_rpc_error(-4, "Wallet loading failed. Error loading wallet. Wallet requires blocks to be downloaded, and software does not currently support loading wallets while blocks are being downloaded out of order when using assumeutxo snapshots. Wallet should be able to load successfully after node sync reaches height 299", n1.restorewallet, "w", "backup_w.dat")
+        self.test_backup_during_background_sync_pruned_node(n3, dump_output, loading_error(SNAPSHOT_BASE_HEIGHT))
+
+        self.log.info("Test loading descriptors during background sync")
+        wallet_name = "w1"
+        n1.createwallet(wallet_name, disable_private_keys=True)
+        key = get_generate_key()
+        time = n1.getblockchaininfo()['time']
+        timestamp = 0
+        expected_error_message = f"Rescan failed for descriptor with timestamp {timestamp}. There was an error reading a block from time {time}, which is after or within 7200 seconds of key creation, and could contain transactions pertaining to the desc. As a result, transactions and coins using this desc may not appear in the wallet. This error is likely caused by an in-progress assumeutxo background sync. Check logs or getchainstates RPC for assumeutxo background sync progress and try again later."
+        result = self.import_descriptor(n1, wallet_name, key, timestamp)
+        assert_equal(result[0]['error']['code'], -1)
+        assert_equal(result[0]['error']['message'], expected_error_message)
+
+        self.log.info("Test that rescanning blocks from before the snapshot fails when blocks are not available from the background sync yet")
+        w1 = n1.get_wallet_rpc(wallet_name)
+        assert_raises_rpc_error(-1, "Failed to rescan unavailable blocks likely due to an in-progress assumeutxo background sync. Check logs or getchainstates RPC for assumeutxo background sync progress and try again later.", w1.rescanblockchain, 100)
 
         PAUSE_HEIGHT = FINAL_HEIGHT - 40
 
-        self.log.info("Restarting node to stop at height %d", PAUSE_HEIGHT)
-        self.restart_node(1, extra_args=[
-            f"-stopatheight={PAUSE_HEIGHT}", *self.extra_args[1]])
+        self.log.info(f"Unload wallets and sync node up to height {PAUSE_HEIGHT}")
+        n1.unloadwallet("w")
+        n1.unloadwallet(wallet_name)
+        dumb_sync_blocks(src=n0, dst=n1, height=PAUSE_HEIGHT)
 
-        # Finally connect the nodes and let them sync.
-        #
-        # Set `wait_for_connect=False` to avoid a race between performing connection
-        # assertions and the -stopatheight tripping.
-        self.connect_nodes(0, 1, wait_for_connect=False)
+        self.log.info("Verify node state during background sync")
+        # Verify there are still two chainstates (background validation not complete)
+        chainstates = n1.getchainstates()['chainstates']
+        assert_equal(len(chainstates), 2)
+        # The background chainstate should still be at START_HEIGHT
+        assert_equal(chainstates[0]['blocks'], START_HEIGHT)
+        assert_equal(chainstates[1]["blocks"], PAUSE_HEIGHT)
 
-        n1.wait_until_stopped(timeout=5)
+        # After restart, wallets that existed before cannot be loaded because
+        # the wallet loading code checks if required blocks are available for
+        # rescanning. During assumeutxo background sync, blocks before the
+        # snapshot are not available, so wallet loading fails.
+        # After restart, the required height is SNAPSHOT_BASE_HEIGHT + 1 for all wallets.
+        assert_raises_rpc_error(-4, loading_error(SNAPSHOT_BASE_HEIGHT + 1), n1.loadwallet, "w")
+        assert_raises_rpc_error(-4, loading_error(SNAPSHOT_BASE_HEIGHT + 1), n1.loadwallet, wallet_name)
 
-        self.log.info(
-            "Restarted node before snapshot validation completed, reloading...")
-        self.restart_node(1, extra_args=self.extra_args[1])
+        # Verify backup from before snapshot height still can't be restored
+        assert_raises_rpc_error(-4, loading_error(SNAPSHOT_BASE_HEIGHT + 1), n1.restorewallet, "w2_test", "backup_w2.dat")
 
-        # TODO: inspect state of e.g. the wallet before reconnecting
-        self.connect_nodes(0, 1)
+        self.complete_background_validation(n1)
 
-        self.log.info(
-            f"Ensuring snapshot chain syncs to tip. ({FINAL_HEIGHT})")
-        self.wait_until(lambda: n1.getchainstates()[
-                        'chainstates'][-1]['blocks'] == FINAL_HEIGHT)
-        self.sync_blocks(nodes=(n0, n1))
+        self.log.info("Ensuring wallet can be restored from a backup that was created before the snapshot height")
+        n1.restorewallet("w2", "backup_w2.dat")
+        # Check balance of w2 wallet
+        assert_equal(n1.getbalance(), 340)
 
-        self.log.info("Ensuring background validation completes")
-        self.wait_until(lambda: len(n1.getchainstates()['chainstates']) == 1)
+        # Check balance of w wallet after node is synced
+        n1.loadwallet("w")
+        w = n1.get_wallet_rpc("w")
+        assert_equal(w.getbalance(), 34)
 
-        self.log.info("Ensuring wallet can be restored from backup")
-        n1.restorewallet("w", "backup_w.dat")
+        self.log.info("Check balance of a wallet that is active during snapshot completion")
+        n2.restorewallet("w", "backup_w.dat")
+        loaded = n2.loadtxoutset(dump_output['path'])
+        self.connect_nodes(0, 2)
+        self.wait_until(lambda: len(n2.getchainstates()['chainstates']) == 1)
+        ensure_for(duration=1, f=lambda: (n2.getbalance() == 34))
 
+        self.log.info("Ensuring descriptors can be loaded after background sync")
+        n1.loadwallet(wallet_name)
+        result = self.import_descriptor(n1, wallet_name, key, timestamp)
+        assert_equal(result[0]['success'], True)
+
+        self.test_restore_wallet_pruneheight(n3)
 
 if __name__ == '__main__':
-    AssumeutxoTest().main()
+    AssumeutxoTest(__file__).main()

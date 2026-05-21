@@ -1,4 +1,4 @@
-// Copyright (c) 2020-2021 The Bitcoin Core developers
+// Copyright (c) 2020-present The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -48,6 +48,7 @@ FUZZ_TARGET(script_ops)
     (void)script.GetSigOpCount(script);
     (void)script.HasValidOps();
     (void)script.IsPayToScriptHash();
+    (void)script.IsPayToAnchor();
     (void)script.IsPayToWitnessScriptHash();
     (void)script.IsPushOnly();
     (void)script.IsUnspendable();

@@ -1,0 +1,34 @@
+name: "Print logs"
+description: "Print the log files produced by ci/ci.sh"
+runs:
+  using: "composite"
+  steps:
+    - shell: bash
+      run: |
+        # Print the log files produced by ci/ci.sh
+
+        # Helper functions
+        group() {
+            title=$1
+            echo "::group::$title"
+        }
+        endgroup() {
+            echo "::endgroup::"
+        }
+        cat_file() {
+            file=$1
+            group "$file"
+            cat "$file"
+            endgroup
+        }
+
+        # Print all *.log files
+        shopt -s nullglob
+        for file in *.log; do
+            cat_file "$file"
+        done
+
+        # Print environment
+        group "CI env"
+        env
+        endgroup

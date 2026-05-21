@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (c) 2017-2021 The Bitcoin Core developers
+# Copyright (c) 2017-present The Bitcoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test loadblock option
@@ -41,18 +41,18 @@ class LoadblockTest(BitcoinTestFramework):
         hash_list = tempfile.NamedTemporaryFile(dir=data_dir,
                                                 mode='w',
                                                 delete=False,
-                                                encoding="utf-8")
+        )
 
         self.log.info("Create linearization config file")
-        with open(cfg_file, "a", encoding="utf-8") as cfg:
+        with open(cfg_file, "a") as cfg:
             cfg.write(f"datadir={data_dir}\n")
             cfg.write(f"rpcuser={node_url.username}\n")
             cfg.write(f"rpcpassword={node_url.password}\n")
             cfg.write(f"port={node_url.port}\n")
             cfg.write(f"host={node_url.hostname}\n")
             cfg.write(f"output_file={bootstrap_file}\n")
-            cfg.write(f"max_height=100\n")
-            cfg.write(f"netmagic=fabfb5da\n")
+            cfg.write("max_height=100\n")
+            cfg.write("netmagic=fabfb5da\n")
             cfg.write(f"input={blocks_dir}\n")
             cfg.write(f"genesis={genesis_block}\n")
             cfg.write(f"hashlist={hash_list.name}\n")
@@ -80,4 +80,4 @@ class LoadblockTest(BitcoinTestFramework):
 
 
 if __name__ == '__main__':
-    LoadblockTest().main()
+    LoadblockTest(__file__).main()

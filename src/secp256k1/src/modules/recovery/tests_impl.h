@@ -7,6 +7,8 @@
 #ifndef SECP256K1_MODULE_RECOVERY_TESTS_H
 #define SECP256K1_MODULE_RECOVERY_TESTS_H
 
+#include "../../unit_test.h"
+
 static int recovery_test_nonce_function(unsigned char *nonce32, const unsigned char *msg32, const unsigned char *key32, const unsigned char *algo16, void *data, unsigned int counter) {
     (void) msg32;
     (void) key32;
@@ -25,10 +27,10 @@ static int recovery_test_nonce_function(unsigned char *nonce32, const unsigned c
     }
     /* On the next run, return a valid nonce, but flip a coin as to whether or not to fail signing. */
     memset(nonce32, 1, 32);
-    return secp256k1_testrand_bits(1);
+    return testrand_bits(1);
 }
 
-static void test_ecdsa_recovery_api(void) {
+static void test_ecdsa_recovery_api_internal(void) {
     /* Setup contexts that just count errors */
     secp256k1_pubkey pubkey;
     secp256k1_pubkey recpubkey;
@@ -92,7 +94,7 @@ static void test_ecdsa_recovery_api(void) {
     CHECK(secp256k1_ecdsa_recoverable_signature_parse_compact(CTX, &recsig, sig, recid) == 0);
 }
 
-static void test_ecdsa_recovery_end_to_end(void) {
+static void test_ecdsa_recovery_end_to_end_internal(void) {
     unsigned char extra[32] = {0x00};
     unsigned char privkey[32];
     unsigned char message[32];
@@ -106,8 +108,8 @@ static void test_ecdsa_recovery_end_to_end(void) {
     /* Generate a random key and message. */
     {
         secp256k1_scalar msg, key;
-        random_scalar_order_test(&msg);
-        random_scalar_order_test(&key);
+        testutil_random_scalar_order_test(&msg);
+        testutil_random_scalar_order_test(&key);
         secp256k1_scalar_get_b32(privkey, &key);
         secp256k1_scalar_get_b32(message, &msg);
     }
@@ -141,7 +143,7 @@ static void test_ecdsa_recovery_end_to_end(void) {
     CHECK(secp256k1_memcmp_var(&pubkey, &recpubkey, sizeof(pubkey)) == 0);
     /* Serialize/destroy/parse signature and verify again. */
     CHECK(secp256k1_ecdsa_recoverable_signature_serialize_compact(CTX, sig, &recid, &rsignature[4]) == 1);
-    sig[secp256k1_testrand_bits(6)] += 1 + secp256k1_testrand_int(255);
+    sig[testrand_bits(6)] += 1 + testrand_int(255);
     CHECK(secp256k1_ecdsa_recoverable_signature_parse_compact(CTX, &rsignature[4], sig, recid) == 1);
     CHECK(secp256k1_ecdsa_recoverable_signature_convert(CTX, &signature[4], &rsignature[4]) == 1);
     CHECK(secp256k1_ecdsa_verify(CTX, &signature[4], message, &pubkey) == 0);
@@ -324,15 +326,14 @@ static void test_ecdsa_recovery_edge_cases(void) {
     }
 }
 
-static void run_recovery_tests(void) {
-    int i;
-    for (i = 0; i < COUNT; i++) {
-        test_ecdsa_recovery_api();
-    }
-    for (i = 0; i < 64*COUNT; i++) {
-        test_ecdsa_recovery_end_to_end();
-    }
-    test_ecdsa_recovery_edge_cases();
-}
+/* --- Test registry --- */
+REPEAT_TEST(test_ecdsa_recovery_api)
+REPEAT_TEST_MULT(test_ecdsa_recovery_end_to_end, 64)
+
+static const struct tf_test_entry tests_recovery[] = {
+    CASE1(test_ecdsa_recovery_api),
+    CASE1(test_ecdsa_recovery_end_to_end),
+    CASE1(test_ecdsa_recovery_edge_cases)
+};
 
 #endif /* SECP256K1_MODULE_RECOVERY_TESTS_H */

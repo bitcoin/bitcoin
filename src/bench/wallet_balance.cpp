@@ -1,19 +1,28 @@
-// Copyright (c) 2012-2022 The Bitcoin Core developers
+// Copyright (c) 2012-present The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <bench/bench.h>
 #include <interfaces/chain.h>
-#include <node/chainstate.h>
-#include <node/context.h>
+#include <kernel/chainparams.h>
+#include <primitives/block.h>
+#include <primitives/transaction.h>
+#include <sync.h>
 #include <test/util/mining.h>
 #include <test/util/setup_common.h>
-#include <wallet/test/util.h>
-#include <validationinterface.h>
+#include <test/util/time.h>
+#include <uint256.h>
+#include <util/time.h>
+#include <validation.h>
 #include <wallet/receive.h>
+#include <wallet/test/util.h>
 #include <wallet/wallet.h>
+#include <wallet/walletutil.h>
 
+#include <cassert>
+#include <memory>
 #include <optional>
+#include <string>
 
 namespace wallet {
 static void WalletBalance(benchmark::Bench& bench, const bool set_dirty, const bool add_mine)
@@ -24,7 +33,7 @@ static void WalletBalance(benchmark::Bench& bench, const bool set_dirty, const b
 
     // Set clock to genesis block, so the descriptors/keys creation time don't interfere with the blocks scanning process.
     // The reason is 'generatetoaddress', which creates a chain with deterministic timestamps in the past.
-    SetMockTime(test_setup->m_node.chainman->GetParams().GenesisBlock().nTime);
+    NodeClockContext clock_ctx{test_setup->m_node.chainman->GetParams().GenesisBlock().Time()};
     CWallet wallet{test_setup->m_node.chain.get(), "", CreateMockableWalletDatabase()};
     {
         LOCK(wallet.cs_wallet);
@@ -44,20 +53,21 @@ static void WalletBalance(benchmark::Bench& bench, const bool set_dirty, const b
 
     auto bal = GetBalance(wallet); // Cache
 
-    bench.run([&] {
-        if (set_dirty) wallet.MarkDirty();
-        bal = GetBalance(wallet);
-        if (add_mine) assert(bal.m_mine_trusted > 0);
-    });
+    bench.setup([&] {
+            if (set_dirty) wallet.MarkDirty();
+        })
+        .run([&] {
+            bal = GetBalance(wallet);
+            ankerl::nanobench::doNotOptimizeAway(bal);
+            assert(add_mine == (bal.m_mine_trusted > 0));
+        });
 }
 
 static void WalletBalanceDirty(benchmark::Bench& bench) { WalletBalance(bench, /*set_dirty=*/true, /*add_mine=*/true); }
 static void WalletBalanceClean(benchmark::Bench& bench) { WalletBalance(bench, /*set_dirty=*/false, /*add_mine=*/true); }
-static void WalletBalanceMine(benchmark::Bench& bench) { WalletBalance(bench, /*set_dirty=*/false, /*add_mine=*/true); }
 static void WalletBalanceWatch(benchmark::Bench& bench) { WalletBalance(bench, /*set_dirty=*/false, /*add_mine=*/false); }
 
-BENCHMARK(WalletBalanceDirty, benchmark::PriorityLevel::HIGH);
-BENCHMARK(WalletBalanceClean, benchmark::PriorityLevel::HIGH);
-BENCHMARK(WalletBalanceMine, benchmark::PriorityLevel::HIGH);
-BENCHMARK(WalletBalanceWatch, benchmark::PriorityLevel::HIGH);
+BENCHMARK(WalletBalanceDirty);
+BENCHMARK(WalletBalanceClean);
+BENCHMARK(WalletBalanceWatch);
 } // namespace wallet

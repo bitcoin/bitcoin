@@ -1,8 +1,8 @@
-// Copyright (c) 2023 The Bitcoin Core developers
+// Copyright (c) 2023-present The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include <stdint.h>
+#include <cstdint>
 
 #include <vector>
 
@@ -12,15 +12,29 @@
 #include <test/fuzz/fuzz.h>
 #include <test/fuzz/util.h>
 
-#include <assert.h>
+#include <cassert>
 
 namespace {
+
+/** Takes the pre-computed and topologically-valid chunks and generates a fee diagram which starts at FeeFrac of (0, 0) */
+std::vector<FeeFrac> BuildDiagramFromChunks(const std::span<const FeeFrac> chunks)
+{
+    std::vector<FeeFrac> diagram;
+    diagram.reserve(chunks.size() + 1);
+
+    diagram.emplace_back(0, 0);
+    for (auto& chunk : chunks) {
+        diagram.emplace_back(diagram.back() + chunk);
+    }
+    return diagram;
+}
+
 
 /** Evaluate a diagram at a specific size, returning the fee as a fraction.
  *
  * Fees in diagram cannot exceed 2^32, as the returned evaluation could overflow
  * the FeeFrac::fee field in the result. */
-FeeFrac EvaluateDiagram(int32_t size, Span<const FeeFrac> diagram)
+FeeFrac EvaluateDiagram(int32_t size, std::span<const FeeFrac> diagram)
 {
     assert(diagram.size() > 0);
     unsigned not_above = 0;
@@ -49,12 +63,12 @@ FeeFrac EvaluateDiagram(int32_t size, Span<const FeeFrac> diagram)
     return {point_a.fee * dir_coef.size + dir_coef.fee * (size - point_a.size), dir_coef.size};
 }
 
-std::weak_ordering CompareFeeFracWithDiagram(const FeeFrac& ff, Span<const FeeFrac> diagram)
+std::strong_ordering CompareFeeFracWithDiagram(const FeeFrac& ff, std::span<const FeeFrac> diagram)
 {
-    return FeeRateCompare(FeeFrac{ff.fee, 1}, EvaluateDiagram(ff.size, diagram));
+    return ByRatio{FeeFrac{ff.fee, 1}} <=> ByRatio{EvaluateDiagram(ff.size, diagram)};
 }
 
-std::partial_ordering CompareDiagrams(Span<const FeeFrac> dia1, Span<const FeeFrac> dia2)
+std::partial_ordering CompareDiagrams(std::span<const FeeFrac> dia1, std::span<const FeeFrac> dia2)
 {
     bool all_ge = true;
     bool all_le = true;
@@ -103,7 +117,7 @@ FUZZ_TARGET(build_and_compare_feerate_diagram)
     assert(diagram1.front() == empty);
     assert(diagram2.front() == empty);
 
-    auto real = CompareFeerateDiagram(diagram1, diagram2);
+    auto real = CompareChunks(chunks1, chunks2);
     auto sim = CompareDiagrams(diagram1, diagram2);
     assert(real == sim);
 
@@ -112,7 +126,7 @@ FUZZ_TARGET(build_and_compare_feerate_diagram)
         int32_t size = fuzzed_data_provider.ConsumeIntegralInRange<int32_t>(0, diagram2.back().size);
         auto eval1 = EvaluateDiagram(size, diagram1);
         auto eval2 = EvaluateDiagram(size, diagram2);
-        auto cmp = FeeRateCompare(eval1, eval2);
+        auto cmp = ByRatio{eval1} <=> ByRatio{eval2};
         if (std::is_lt(cmp)) assert(!std::is_gt(real));
         if (std::is_gt(cmp)) assert(!std::is_lt(real));
     }

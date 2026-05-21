@@ -1,0 +1,44 @@
+commit a76004f16fdc43e1b7af83bfdf3f1a613491b234
+Author: Paul Wicking <paul.wicking@qt.io>
+Date:   Thu Mar 26 07:09:43 2026 +0100
+
+    qyieldcpu: Fix compilation with macOS 26.4 SDK
+    
+    After updating to the macOS 26.4 SDK, qtbase fails to compile on
+    Apple Silicon with an implicit function declaration error for
+    __yield() in qyieldcpu.h. It appears that the SDK's Clang now
+    reports __has_builtin(__yield) as true, but __yield() requires
+    <arm_acle.h> for its declaration.
+    
+    The compiler's own __builtin_arm_yield intrinsic was already checked
+    further down in the cascade. Moving it above the __yield check resolves
+    the build failure, without unnecessarily pulling in the header.
+    
+    Fixes: QTBUG-145239
+    Change-Id: I94b4d8f72385a4944c272ed7a66d249537a82e7d
+    Reviewed-by: Tor Arne Vestbø <tor.arne.vestbo@qt.io>
+    Reviewed-by: Fabian Kosmale <fabian.kosmale@qt.io>
+
+--- a/qtbase/src/corelib/thread/qyieldcpu.h
++++ b/qtbase/src/corelib/thread/qyieldcpu.h
+@@ -31,7 +31,9 @@ void qYieldCpu(void)
+     noexcept
+ #endif
+ {
+-#if __has_builtin(__yield)
++#if __has_builtin(__builtin_arm_yield)
++    __builtin_arm_yield();
++#elif __has_builtin(__yield)
+     __yield();              // Generic
+ #elif defined(_YIELD_PROCESSOR) && defined(Q_CC_MSVC)
+     _YIELD_PROCESSOR();     // Generic; MSVC's <atomic>
+@@ -45,9 +47,6 @@ void qYieldCpu(void)
+     _mm_pause();
+ #elif defined(Q_PROCESSOR_X86)
+     __asm__("pause");           // hopefully asm() works in this compiler
+-
+-#elif __has_builtin(__builtin_arm_yield)
+-    __builtin_arm_yield();
+ #elif defined(Q_PROCESSOR_ARM) && Q_PROCESSOR_ARM >= 7 && defined(Q_CC_GNU)
+     __asm__("yield");           // this works everywhere
+ 

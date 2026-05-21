@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (c) 2020-2021 The Bitcoin Core developers
+# Copyright (c) 2020-present The Bitcoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test add_outbound_p2p_connection test framework functionality"""
@@ -10,6 +10,14 @@ from test_framework.util import (
     assert_equal,
     check_node_connections,
 )
+
+
+class VersionSender(P2PInterface):
+    def on_open(self):
+        assert self.on_connection_send_msg is not None
+        self.send_version()
+        assert self.on_connection_send_msg is None
+
 
 class P2PFeelerReceiver(P2PInterface):
     def on_version(self, message):
@@ -106,5 +114,19 @@ class P2PAddConnections(BitcoinTestFramework):
         # Feeler connections do not request tx relay
         assert_equal(feeler_conn.last_message["version"].relay, 0)
 
+        self.log.info("Send version message early to node")
+        # Normally the test framework would be shy and send the version message
+        # only after it received one. See the on_version method. Check that
+        # bitcoind behaves properly when a version is sent unexpectedly (but
+        # tolerably) early.
+        #
+        # This checks that bitcoind sends its own version prior to processing
+        # the remote version (and replying with a verack). Otherwise it would
+        # be violating its own rules, such as "non-version message before
+        # version handshake".
+        ver_conn = self.nodes[0].add_outbound_p2p_connection(VersionSender(), p2p_idx=6, connection_type="outbound-full-relay", supports_v2_p2p=False, advertise_v2_p2p=False)
+        ver_conn.sync_with_ping()
+
+
 if __name__ == '__main__':
-    P2PAddConnections().main()
+    P2PAddConnections(__file__).main()

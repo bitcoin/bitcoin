@@ -79,14 +79,14 @@ one of the networks has issues.
 ## Persistent vs transient I2P addresses
 
 The first time Bitcoin Core connects to the I2P router, it automatically
-generates a persistent I2P address and its corresponding private key by default
-or if `-i2pacceptincoming=1` is set.  The private key is saved in a file named
+generates a persistent I2P address and its corresponding private key by default,
+unless `-i2pacceptincoming=0` is set.  The private key is saved in a file named
 `i2p_private_key` in the Bitcoin Core data directory.  The persistent I2P
 address is used for making outbound connections and accepting inbound
 connections.
 
 In the I2P network, the receiver of an inbound connection sees the address of
-the initiator.  This is unlike the Tor network, where the recipient does not
+the initiator. This is unlike the Tor network, where the recipient does not
 know who is connecting to it.
 
 If your node is configured by setting `-i2pacceptincoming=0` to not accept
@@ -166,3 +166,13 @@ In most cases, the default router settings should work fine.
 
 Please see the "General Guidance for Developers" section in https://geti2p.net/en/docs/api/samv3
 if you are developing a downstream application that may be bundling I2P with Bitcoin.
+
+## Privacy recommendations
+
+- Operating a node that listens on multiple networks (e.g. IPv4 and I2P) can help
+  strengthen the Bitcoin network, as nodes in this configuration (i.e. bridge nodes) increase
+  the cost and complexity of launching eclipse and partition attacks. However, under certain
+  conditions, an adversary that can connect to your node on multiple networks may be
+  able to correlate those identities by observing shared runtime characteristics. It
+  is not recommended to expose your node over multiple networks if you require
+  unlinkability across those identities.

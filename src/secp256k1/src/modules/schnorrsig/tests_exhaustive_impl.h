@@ -56,7 +56,7 @@ static const unsigned char invalid_pubkey_bytes[][32] = {
     }
 };
 
-#define NUM_INVALID_KEYS (sizeof(invalid_pubkey_bytes) / sizeof(invalid_pubkey_bytes[0]))
+#define NUM_INVALID_KEYS (ARRAY_SIZE(invalid_pubkey_bytes))
 
 static int secp256k1_hardened_nonce_function_smallint(unsigned char *nonce32, const unsigned char *msg,
                                                       size_t msglen,
@@ -104,8 +104,8 @@ static void test_exhaustive_schnorrsig_verify(const secp256k1_context *ctx, cons
             while (e_count_done < EXHAUSTIVE_TEST_ORDER) {
                 secp256k1_scalar e;
                 unsigned char msg32[32];
-                secp256k1_testrand256(msg32);
-                secp256k1_schnorrsig_challenge(&e, sig64, msg32, sizeof(msg32), pk32);
+                testrand256(msg32);
+                secp256k1_schnorrsig_challenge(secp256k1_get_hash_context(ctx), &e, sig64, msg32, sizeof(msg32), pk32);
                 /* Only do work if we hit a challenge we haven't tried before. */
                 if (!e_done[e]) {
                     /* Iterate over the possible valid last 32 bytes in the signature.
@@ -120,7 +120,7 @@ static void test_exhaustive_schnorrsig_verify(const secp256k1_context *ctx, cons
                             expect_valid = actual_k != -1 && s != EXHAUSTIVE_TEST_ORDER &&
                                            (s == (actual_k + actual_d * e) % EXHAUSTIVE_TEST_ORDER);
                         } else {
-                            secp256k1_testrand256(sig64 + 32);
+                            testrand256(sig64 + 32);
                             expect_valid = 0;
                         }
                         valid = secp256k1_schnorrsig_verify(ctx, sig64, msg32, sizeof(msg32), &pubkeys[d - 1]);
@@ -161,8 +161,8 @@ static void test_exhaustive_schnorrsig_sign(const secp256k1_context *ctx, unsign
             /* Generate random messages until all challenges have been tried. */
             while (e_count_done < EXHAUSTIVE_TEST_ORDER) {
                 secp256k1_scalar e;
-                secp256k1_testrand256(msg32);
-                secp256k1_schnorrsig_challenge(&e, xonly_pubkey_bytes[k - 1], msg32, sizeof(msg32), xonly_pubkey_bytes[d - 1]);
+                testrand256(msg32);
+                secp256k1_schnorrsig_challenge(secp256k1_get_hash_context(ctx), &e, xonly_pubkey_bytes[k - 1], msg32, sizeof(msg32), xonly_pubkey_bytes[d - 1]);
                 /* Only do work if we hit a challenge we haven't tried before. */
                 if (!e_done[e]) {
                     secp256k1_scalar expected_s = (actual_k + e * actual_d) % EXHAUSTIVE_TEST_ORDER;

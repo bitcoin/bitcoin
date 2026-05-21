@@ -1,12 +1,12 @@
-// Copyright (c) 2022 The Bitcoin Core developers
+// Copyright (c) 2022-present The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #ifndef BITCOIN_NODE_CONNECTION_TYPES_H
 #define BITCOIN_NODE_CONNECTION_TYPES_H
 
+#include <cstdint>
 #include <string>
-#include <stdint.h>
 
 /** Different types of connections to a peer. This enum encapsulates the
  * information we have available at the time of opening or accepting the
@@ -75,6 +75,13 @@ enum class ConnectionType {
      * AddrMan is empty.
      */
     ADDR_FETCH,
+
+    /**
+     * Private broadcast connections are short-lived and only opened to
+     * privacy networks (Tor, I2P) for relaying privacy-sensitive data (like
+     * our own transactions) and closed afterwards.
+     */
+    PRIVATE_BROADCAST,
 };
 
 /** Convert ConnectionType enum to a string value */

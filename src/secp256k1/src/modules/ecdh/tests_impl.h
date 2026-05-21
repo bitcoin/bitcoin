@@ -7,6 +7,16 @@
 #ifndef SECP256K1_MODULE_ECDH_TESTS_H
 #define SECP256K1_MODULE_ECDH_TESTS_H
 
+#include "../../unit_test.h"
+#include "../../testutil.h"
+
+static int ecdh_hash_function_test_xpassthru(unsigned char *output, const unsigned char *x, const unsigned char *y, void *data) {
+    (void)y;
+    (void)data;
+    memcpy(output, x, 32);
+    return 1;
+}
+
 static int ecdh_hash_function_test_fail(unsigned char *output, const unsigned char *x, const unsigned char *y, void *data) {
     (void)output;
     (void)x;
@@ -56,7 +66,7 @@ static void test_ecdh_generator_basepoint(void) {
         size_t point_ser_len = sizeof(point_ser);
         secp256k1_scalar s;
 
-        random_scalar_order(&s);
+        testutil_random_scalar_order(&s);
         secp256k1_scalar_get_b32(s_b32, &s);
 
         CHECK(secp256k1_ec_pubkey_create(CTX, &point[0], s_one) == 1);
@@ -74,32 +84,52 @@ static void test_ecdh_generator_basepoint(void) {
         /* compute "explicitly" */
         CHECK(secp256k1_ec_pubkey_serialize(CTX, point_ser, &point_ser_len, &point[1], SECP256K1_EC_COMPRESSED) == 1);
         secp256k1_sha256_initialize(&sha);
-        secp256k1_sha256_write(&sha, point_ser, point_ser_len);
-        secp256k1_sha256_finalize(&sha, output_ser);
+        secp256k1_sha256_write(secp256k1_get_hash_context(CTX), &sha, point_ser, point_ser_len);
+        secp256k1_sha256_finalize(secp256k1_get_hash_context(CTX), &sha, output_ser);
         /* compare */
         CHECK(secp256k1_memcmp_var(output_ecdh, output_ser, 32) == 0);
     }
 }
 
+DEFINE_SHA256_TRANSFORM_PROBE(sha256_ecdh)
+static void test_ecdh_ctx_sha256(void) {
+    /* Check ctx-provided SHA256 compression override takes effect */
+    secp256k1_context *ctx = secp256k1_context_clone(CTX);
+    unsigned char out_default[65], out_custom[65];
+    const unsigned char sk[32] = {1};
+    secp256k1_pubkey pubkey;
+    CHECK(secp256k1_ec_pubkey_create(ctx, &pubkey, sk) == 1);
+
+    /* Default behavior */
+    CHECK(secp256k1_ecdh(ctx, out_default, &pubkey, sk, NULL, NULL) == 1);
+    CHECK(!sha256_ecdh_called);
+
+    /* Override SHA256 compression directly, bypassing the ctx setter sanity checks */
+    ctx->hash_ctx.fn_sha256_compression = sha256_ecdh;
+    CHECK(secp256k1_ecdh(ctx, out_custom, &pubkey, sk, NULL, NULL) == 1);
+
+    /* Outputs must differ if custom compression was used */
+    CHECK(secp256k1_memcmp_var(out_default, out_custom, 32) != 0);
+    CHECK(sha256_ecdh_called);
+
+    secp256k1_context_destroy(ctx);
+}
+
 static void test_bad_scalar(void) {
     unsigned char s_zero[32] = { 0 };
-    unsigned char s_overflow[32] = {
-        0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff,
-        0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xfe,
-        0xba, 0xae, 0xdc, 0xe6, 0xaf, 0x48, 0xa0, 0x3b,
-        0xbf, 0xd2, 0x5e, 0x8c, 0xd0, 0x36, 0x41, 0x41
-    };
+    unsigned char s_overflow[32] = { 0 };
     unsigned char s_rand[32] = { 0 };
     unsigned char output[32];
     secp256k1_scalar rand;
     secp256k1_pubkey point;
 
     /* Create random point */
-    random_scalar_order(&rand);
+    testutil_random_scalar_order(&rand);
     secp256k1_scalar_get_b32(s_rand, &rand);
     CHECK(secp256k1_ec_pubkey_create(CTX, &point, s_rand) == 1);
 
     /* Try to multiply it by bad values */
+    memcpy(s_overflow, secp256k1_group_order_bytes, 32);
     CHECK(secp256k1_ecdh(CTX, output, &point, s_zero, NULL, NULL) == 0);
     CHECK(secp256k1_ecdh(CTX, output, &point, s_overflow, NULL, NULL) == 0);
     /* ...and a good one */
@@ -127,7 +157,7 @@ static void test_result_basepoint(void) {
     CHECK(secp256k1_ecdh(CTX, out_base, &point, s_one, NULL, NULL) == 1);
 
     for (i = 0; i < 2 * COUNT; i++) {
-        random_scalar_order(&rand);
+        testutil_random_scalar_order(&rand);
         secp256k1_scalar_get_b32(s, &rand);
         secp256k1_scalar_inverse(&rand, &rand);
         secp256k1_scalar_get_b32(s_inv, &rand);
@@ -142,11 +172,47 @@ static void test_result_basepoint(void) {
     }
 }
 
-static void run_ecdh_tests(void) {
-    test_ecdh_api();
-    test_ecdh_generator_basepoint();
-    test_bad_scalar();
-    test_result_basepoint();
+static void test_ecdh_wycheproof(void) {
+#include "../../wycheproof/ecdh_secp256k1_test.h"
+    int t;
+    for (t = 0; t < SECP256K1_ECDH_WYCHEPROOF_NUMBER_TESTVECTORS; t++) {
+        int parsed_ok;
+        secp256k1_pubkey point;
+        const unsigned char *pk;
+        const unsigned char *sk;
+        const unsigned char *expected_shared_secret;
+        unsigned char output_ecdh[65] = { 0 };
+
+        int expected_result;
+
+        memset(&point, 0, sizeof(point));
+        pk = &wycheproof_ecdh_public_keys[testvectors[t].pk_offset];
+        parsed_ok = secp256k1_ec_pubkey_parse(CTX, &point, pk, testvectors[t].pk_len);
+
+        expected_result = testvectors[t].expected_result;
+        CHECK(parsed_ok == expected_result);
+        if (!parsed_ok) {
+            continue;
+        }
+
+        sk = &wycheproof_ecdh_private_keys[testvectors[t].sk_offset];
+        CHECK(testvectors[t].sk_len == 32);
+
+        CHECK(secp256k1_ecdh(CTX, output_ecdh, &point, sk, ecdh_hash_function_test_xpassthru, NULL) == 1);
+        expected_shared_secret = &wycheproof_ecdh_shared_secrets[testvectors[t].shared_offset];
+
+        CHECK(secp256k1_memcmp_var(output_ecdh, expected_shared_secret, testvectors[t].shared_len) == 0);
+    }
 }
+
+/* --- Test registry --- */
+static const struct tf_test_entry tests_ecdh[] = {
+    CASE1(test_ecdh_api),
+    CASE1(test_ecdh_generator_basepoint),
+    CASE1(test_bad_scalar),
+    CASE1(test_result_basepoint),
+    CASE1(test_ecdh_wycheproof),
+    CASE1(test_ecdh_ctx_sha256),
+};
 
 #endif /* SECP256K1_MODULE_ECDH_TESTS_H */

@@ -1,13 +1,9 @@
-// Copyright (c) 2022 The Bitcoin Core developers
+// Copyright (c) 2022-present The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #ifndef BITCOIN_KERNEL_CONTEXT_H
 #define BITCOIN_KERNEL_CONTEXT_H
-
-#include <util/signalinterrupt.h>
-
-#include <memory>
 
 namespace kernel {
 //! Context struct holding the kernel library's logically global state, and
@@ -19,7 +15,6 @@ namespace kernel {
 //! should be stored to std::unique_ptr members pointing to opaque types.
 struct Context {
     Context();
-    ~Context();
 };
 } // namespace kernel
 

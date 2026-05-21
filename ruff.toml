@@ -1,0 +1,18 @@
+[lint]
+select = [
+    "B006", # mutable-argument-default
+    "B008", # function-call-in-default-argument
+    "E", # pycodestyle errors
+    "F", # pyflakes errors
+    "PLE",  # Pylint errors
+    "RUF001", # ambiguous-unicode-character-string
+    "RUF002", # ambiguous-unicode-character-docstring
+    "RUF003", # ambiguous-unicode-character-comment
+    "W", # pycodestyle warnings
+]
+ignore = [
+    "E501", # line too long
+    "E712", # true-false comparison
+    "E731", # lambda assignment
+    "E741", # ambiguous-variable-name
+]

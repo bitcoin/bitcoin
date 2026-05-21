@@ -25,7 +25,7 @@ def descsum_expand(s):
     groups = []
     symbols = []
     for c in s:
-        if not c in INPUT_CHARSET:
+        if c not in INPUT_CHARSET:
             return None
         v = INPUT_CHARSET.find(c)
         symbols.append(v & 31)
@@ -47,7 +47,7 @@ def descsum_create(s):
 
 def descsum_check(s, require=True):
     """Verify that the checksum is correct in a descriptor"""
-    if not '#' in s:
+    if '#' not in s:
         return not require
     if s[-9] != '#':
         return False

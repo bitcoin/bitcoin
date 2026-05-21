@@ -1,11 +1,10 @@
 #!/usr/bin/env python3
-# Copyright (c) 2018-2021 The Bitcoin Core developers
+# Copyright (c) 2018-present The Bitcoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test the blocksdir option.
 """
 
-import shutil
 from pathlib import Path
 
 from test_framework.test_framework import BitcoinTestFramework, initialize_datadir
@@ -20,7 +19,7 @@ class BlocksdirTest(BitcoinTestFramework):
         self.stop_node(0)
         assert self.nodes[0].blocks_path.is_dir()
         assert not (self.nodes[0].datadir_path / "blocks").is_dir()
-        shutil.rmtree(self.nodes[0].datadir_path)
+        self.cleanup_folder(self.nodes[0].datadir_path)
         initialize_datadir(self.options.tmpdir, 0, self.chain)
         self.log.info("Starting with nonexistent blocksdir ...")
         blocksdir_path = Path(self.options.tmpdir) / 'blocksdir'
@@ -35,4 +34,4 @@ class BlocksdirTest(BitcoinTestFramework):
 
 
 if __name__ == '__main__':
-    BlocksdirTest().main()
+    BlocksdirTest(__file__).main()

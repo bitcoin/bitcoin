@@ -19,27 +19,27 @@ SECP256K1_INLINE static int secp256k1_scalar_is_even(const secp256k1_scalar *a) 
     return !(*a & 1);
 }
 
-SECP256K1_INLINE static void secp256k1_scalar_clear(secp256k1_scalar *r) { *r = 0; }
-
 SECP256K1_INLINE static void secp256k1_scalar_set_int(secp256k1_scalar *r, unsigned int v) {
     *r = v % EXHAUSTIVE_TEST_ORDER;
 
     SECP256K1_SCALAR_VERIFY(r);
 }
 
-SECP256K1_INLINE static unsigned int secp256k1_scalar_get_bits(const secp256k1_scalar *a, unsigned int offset, unsigned int count) {
+SECP256K1_INLINE static uint32_t secp256k1_scalar_get_bits_limb32(const secp256k1_scalar *a, unsigned int offset, unsigned int count) {
     SECP256K1_SCALAR_VERIFY(a);
 
-    if (offset < 32)
-        return ((*a >> offset) & ((((uint32_t)1) << count) - 1));
-    else
+    VERIFY_CHECK(count > 0 && count <= 32);
+    if (offset < 32) {
+        return (*a >> offset) & (0xFFFFFFFF >> (32 - count));
+    } else {
         return 0;
+    }
 }
 
-SECP256K1_INLINE static unsigned int secp256k1_scalar_get_bits_var(const secp256k1_scalar *a, unsigned int offset, unsigned int count) {
+SECP256K1_INLINE static uint32_t secp256k1_scalar_get_bits_var(const secp256k1_scalar *a, unsigned int offset, unsigned int count) {
     SECP256K1_SCALAR_VERIFY(a);
 
-    return secp256k1_scalar_get_bits(a, offset, count);
+    return secp256k1_scalar_get_bits_limb32(a, offset, count);
 }
 
 SECP256K1_INLINE static int secp256k1_scalar_check_overflow(const secp256k1_scalar *a) { return *a >= EXHAUSTIVE_TEST_ORDER; }
@@ -56,6 +56,7 @@ static int secp256k1_scalar_add(secp256k1_scalar *r, const secp256k1_scalar *a, 
 
 static void secp256k1_scalar_cadd_bit(secp256k1_scalar *r, unsigned int bit, int flag) {
     SECP256K1_SCALAR_VERIFY(r);
+    VERIFY_CHECK(flag == 0 || flag == 1);
 
     if (flag && bit < 32)
         *r += ((uint32_t)1 << bit);
@@ -121,6 +122,7 @@ static int secp256k1_scalar_is_high(const secp256k1_scalar *a) {
 
 static int secp256k1_scalar_cond_negate(secp256k1_scalar *r, int flag) {
     SECP256K1_SCALAR_VERIFY(r);
+    VERIFY_CHECK(flag == 0 || flag == 1);
 
     if (flag) secp256k1_scalar_negate(r, r);
 
@@ -157,6 +159,7 @@ SECP256K1_INLINE static int secp256k1_scalar_eq(const secp256k1_scalar *a, const
 static SECP256K1_INLINE void secp256k1_scalar_cmov(secp256k1_scalar *r, const secp256k1_scalar *a, int flag) {
     uint32_t mask0, mask1;
     volatile int vflag = flag;
+    VERIFY_CHECK(flag == 0 || flag == 1);
     SECP256K1_SCALAR_VERIFY(a);
     SECP256K1_CHECKMEM_CHECK_VERIFY(r, sizeof(*r));
 
@@ -169,17 +172,22 @@ static SECP256K1_INLINE void secp256k1_scalar_cmov(secp256k1_scalar *r, const se
 
 static void secp256k1_scalar_inverse(secp256k1_scalar *r, const secp256k1_scalar *x) {
     int i;
-    *r = 0;
+    uint32_t res = 0;
     SECP256K1_SCALAR_VERIFY(x);
 
-    for (i = 0; i < EXHAUSTIVE_TEST_ORDER; i++)
-        if ((i * *x) % EXHAUSTIVE_TEST_ORDER == 1)
-            *r = i;
+    for (i = 0; i < EXHAUSTIVE_TEST_ORDER; i++) {
+        if ((i * *x) % EXHAUSTIVE_TEST_ORDER == 1) {
+            res = i;
+            break;
+        }
+    }
 
-    SECP256K1_SCALAR_VERIFY(r);
     /* If this VERIFY_CHECK triggers we were given a noninvertible scalar (and thus
      * have a composite group order; fix it in exhaustive_tests.c). */
-    VERIFY_CHECK(*r != 0);
+    VERIFY_CHECK(res != 0);
+    *r = res;
+
+    SECP256K1_SCALAR_VERIFY(r);
 }
 
 static void secp256k1_scalar_inverse_var(secp256k1_scalar *r, const secp256k1_scalar *x) {

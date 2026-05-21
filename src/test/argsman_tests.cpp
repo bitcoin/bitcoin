@@ -1,4 +1,4 @@
-// Copyright (c) 2011-2022 The Bitcoin Core developers
+// Copyright (c) 2011-present The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -19,6 +19,8 @@
 #include <vector>
 
 #include <boost/test/unit_test.hpp>
+
+using util::ToString;
 
 BOOST_FIXTURE_TEST_SUITE(argsman_tests, BasicTestingSetup)
 
@@ -49,22 +51,9 @@ BOOST_AUTO_TEST_CASE(util_datadir)
 
 struct TestArgsManager : public ArgsManager
 {
-    TestArgsManager() { m_network_only_args.clear(); }
-    void ReadConfigString(const std::string str_config)
+    void ReadConfigString(const std::string& str_config)
     {
-        std::istringstream streamConfig(str_config);
-        {
-            LOCK(cs_args);
-            m_settings.ro_config.clear();
-            m_config_sections.clear();
-        }
-        std::string error;
-        BOOST_REQUIRE(ReadConfigStream(streamConfig, "", error));
-    }
-    void SetNetworkOnlyArg(const std::string arg)
-    {
-        LOCK(cs_args);
-        m_network_only_args.insert(arg);
+        BOOST_REQUIRE(ArgsManager::ReadConfigString(str_config));
     }
     void SetupArgs(const std::vector<std::pair<std::string, unsigned int>>& args)
     {
@@ -72,12 +61,9 @@ struct TestArgsManager : public ArgsManager
             AddArg(arg.first, "", arg.second, OptionsCategory::OPTIONS);
         }
     }
-    using ArgsManager::GetSetting;
-    using ArgsManager::GetSettingsList;
+
+    // make protected methods available for testing
     using ArgsManager::ReadConfigStream;
-    using ArgsManager::cs_args;
-    using ArgsManager::m_network;
-    using ArgsManager::m_settings;
 };
 
 //! Test GetSetting and GetArg type coercion, negation, and default value handling.
@@ -215,29 +201,34 @@ BOOST_AUTO_TEST_CASE(util_ParseParameters)
     const char *argv_test[] = {"-ignored", "-a", "-b", "-ccc=argument", "-ccc=multiple", "f", "-d=e"};
 
     std::string error;
-    LOCK(testArgs.cs_args);
     testArgs.SetupArgs({a, b, ccc, d});
     BOOST_CHECK(testArgs.ParseParameters(0, argv_test, error));
-    BOOST_CHECK(testArgs.m_settings.command_line_options.empty() && testArgs.m_settings.ro_config.empty());
+    testArgs.LockSettings([&](const common::Settings& s) {
+        BOOST_CHECK(s.command_line_options.empty() && s.ro_config.empty());
+    });
 
     BOOST_CHECK(testArgs.ParseParameters(1, argv_test, error));
-    BOOST_CHECK(testArgs.m_settings.command_line_options.empty() && testArgs.m_settings.ro_config.empty());
+    testArgs.LockSettings([&](const common::Settings& s) {
+        BOOST_CHECK(s.command_line_options.empty() && s.ro_config.empty());
+    });
 
     BOOST_CHECK(testArgs.ParseParameters(7, argv_test, error));
     // expectation: -ignored is ignored (program name argument),
     // -a, -b and -ccc end up in map, -d ignored because it is after
     // a non-option argument (non-GNU option parsing)
-    BOOST_CHECK(testArgs.m_settings.command_line_options.size() == 3 && testArgs.m_settings.ro_config.empty());
     BOOST_CHECK(testArgs.IsArgSet("-a") && testArgs.IsArgSet("-b") && testArgs.IsArgSet("-ccc")
                 && !testArgs.IsArgSet("f") && !testArgs.IsArgSet("-d"));
-    BOOST_CHECK(testArgs.m_settings.command_line_options.count("a") && testArgs.m_settings.command_line_options.count("b") && testArgs.m_settings.command_line_options.count("ccc")
-                && !testArgs.m_settings.command_line_options.count("f") && !testArgs.m_settings.command_line_options.count("d"));
+    testArgs.LockSettings([&](const common::Settings& s) {
+        BOOST_CHECK(s.command_line_options.size() == 3 && s.ro_config.empty());
+        BOOST_CHECK(s.command_line_options.contains("a") && s.command_line_options.contains("b") && s.command_line_options.contains("ccc")
+                    && !s.command_line_options.contains("f") && !s.command_line_options.contains("d"));
 
-    BOOST_CHECK(testArgs.m_settings.command_line_options["a"].size() == 1);
-    BOOST_CHECK(testArgs.m_settings.command_line_options["a"].front().get_str() == "");
-    BOOST_CHECK(testArgs.m_settings.command_line_options["ccc"].size() == 2);
-    BOOST_CHECK(testArgs.m_settings.command_line_options["ccc"].front().get_str() == "argument");
-    BOOST_CHECK(testArgs.m_settings.command_line_options["ccc"].back().get_str() == "multiple");
+        BOOST_CHECK(s.command_line_options.at("a").size() == 1);
+        BOOST_CHECK(s.command_line_options.at("a").front().get_str() == "");
+        BOOST_CHECK(s.command_line_options.at("ccc").size() == 2);
+        BOOST_CHECK(s.command_line_options.at("ccc").front().get_str() == "argument");
+        BOOST_CHECK(s.command_line_options.at("ccc").back().get_str() == "multiple");
+    });
     BOOST_CHECK(testArgs.GetArgs("-ccc").size() == 2);
 }
 
@@ -329,7 +320,6 @@ BOOST_AUTO_TEST_CASE(util_GetBoolArg)
     const char *argv_test[] = {
         "ignored", "-a", "-nob", "-c=0", "-d=1", "-e=false", "-f=true"};
     std::string error;
-    LOCK(testArgs.cs_args);
     testArgs.SetupArgs({a, b, c, d, e, f});
     BOOST_CHECK(testArgs.ParseParameters(7, argv_test, error));
 
@@ -338,8 +328,9 @@ BOOST_AUTO_TEST_CASE(util_GetBoolArg)
         BOOST_CHECK(testArgs.IsArgSet({'-', opt}) || !opt);
 
     // Nothing else should be in the map
-    BOOST_CHECK(testArgs.m_settings.command_line_options.size() == 6 &&
-                testArgs.m_settings.ro_config.empty());
+    testArgs.LockSettings([&](const common::Settings& s) {
+        BOOST_CHECK(s.command_line_options.size() == 6 && s.ro_config.empty());
+    });
 
     // The -no prefix should get stripped on the way in.
     BOOST_CHECK(!testArgs.IsArgSet("-nob"));
@@ -435,7 +426,6 @@ BOOST_AUTO_TEST_CASE(util_ReadConfigStream)
        "iii=2\n";
 
     TestArgsManager test_args;
-    LOCK(test_args.cs_args);
     const auto a = std::make_pair("-a", ArgsManager::ALLOW_ANY);
     const auto b = std::make_pair("-b", ArgsManager::ALLOW_ANY);
     const auto ccc = std::make_pair("-ccc", ArgsManager::ALLOW_ANY);
@@ -452,24 +442,26 @@ BOOST_AUTO_TEST_CASE(util_ReadConfigStream)
     // expectation: a, b, ccc, d, fff, ggg, h, i end up in map
     // so do sec1.ccc, sec1.d, sec1.h, sec2.ccc, sec2.iii
 
-    BOOST_CHECK(test_args.m_settings.command_line_options.empty());
-    BOOST_CHECK(test_args.m_settings.ro_config.size() == 3);
-    BOOST_CHECK(test_args.m_settings.ro_config[""].size() == 8);
-    BOOST_CHECK(test_args.m_settings.ro_config["sec1"].size() == 3);
-    BOOST_CHECK(test_args.m_settings.ro_config["sec2"].size() == 2);
+    test_args.LockSettings([&](const common::Settings& s) {
+        BOOST_CHECK(s.command_line_options.empty());
+        BOOST_CHECK(s.ro_config.size() == 3);
+        BOOST_CHECK(s.ro_config.at("").size() == 8);
+        BOOST_CHECK(s.ro_config.at("sec1").size() == 3);
+        BOOST_CHECK(s.ro_config.at("sec2").size() == 2);
 
-    BOOST_CHECK(test_args.m_settings.ro_config[""].count("a"));
-    BOOST_CHECK(test_args.m_settings.ro_config[""].count("b"));
-    BOOST_CHECK(test_args.m_settings.ro_config[""].count("ccc"));
-    BOOST_CHECK(test_args.m_settings.ro_config[""].count("d"));
-    BOOST_CHECK(test_args.m_settings.ro_config[""].count("fff"));
-    BOOST_CHECK(test_args.m_settings.ro_config[""].count("ggg"));
-    BOOST_CHECK(test_args.m_settings.ro_config[""].count("h"));
-    BOOST_CHECK(test_args.m_settings.ro_config[""].count("i"));
-    BOOST_CHECK(test_args.m_settings.ro_config["sec1"].count("ccc"));
-    BOOST_CHECK(test_args.m_settings.ro_config["sec1"].count("h"));
-    BOOST_CHECK(test_args.m_settings.ro_config["sec2"].count("ccc"));
-    BOOST_CHECK(test_args.m_settings.ro_config["sec2"].count("iii"));
+        BOOST_CHECK(s.ro_config.at("").contains("a"));
+        BOOST_CHECK(s.ro_config.at("").contains("b"));
+        BOOST_CHECK(s.ro_config.at("").contains("ccc"));
+        BOOST_CHECK(s.ro_config.at("").contains("d"));
+        BOOST_CHECK(s.ro_config.at("").contains("fff"));
+        BOOST_CHECK(s.ro_config.at("").contains("ggg"));
+        BOOST_CHECK(s.ro_config.at("").contains("h"));
+        BOOST_CHECK(s.ro_config.at("").contains("i"));
+        BOOST_CHECK(s.ro_config.at("sec1").contains("ccc"));
+        BOOST_CHECK(s.ro_config.at("sec1").contains("h"));
+        BOOST_CHECK(s.ro_config.at("sec2").contains("ccc"));
+        BOOST_CHECK(s.ro_config.at("sec2").contains("iii"));
+    });
 
     BOOST_CHECK(test_args.IsArgSet("-a"));
     BOOST_CHECK(test_args.IsArgSet("-b"));
@@ -577,9 +569,12 @@ BOOST_AUTO_TEST_CASE(util_ReadConfigStream)
 
     // Test section only options
 
-    test_args.SetNetworkOnlyArg("-d");
-    test_args.SetNetworkOnlyArg("-ccc");
-    test_args.SetNetworkOnlyArg("-h");
+    const auto ccc2 = std::make_pair("-ccc", ArgsManager::ALLOW_ANY | ArgsManager::NETWORK_ONLY);
+    const auto d2 = std::make_pair("-d", ArgsManager::ALLOW_ANY | ArgsManager::NETWORK_ONLY);
+    const auto h2 = std::make_pair("-h", ArgsManager::ALLOW_ANY | ArgsManager::NETWORK_ONLY);
+    test_args.ClearArgs();
+    test_args.SetupArgs({a, b, ccc2, d2, e, fff, ggg, h2, i, iii});
+    test_args.ReadConfigString(str_config);
 
     test_args.SelectConfigNetwork(ChainTypeToString(ChainType::MAIN));
     BOOST_CHECK(test_args.GetArg("-d", "xxx") == "e");
@@ -602,25 +597,26 @@ BOOST_AUTO_TEST_CASE(util_ReadConfigStream)
 BOOST_AUTO_TEST_CASE(util_GetArg)
 {
     TestArgsManager testArgs;
-    LOCK(testArgs.cs_args);
-    testArgs.m_settings.command_line_options.clear();
-    testArgs.m_settings.command_line_options["strtest1"] = {"string..."};
-    // strtest2 undefined on purpose
-    testArgs.m_settings.command_line_options["inttest1"] = {"12345"};
-    testArgs.m_settings.command_line_options["inttest2"] = {"81985529216486895"};
-    // inttest3 undefined on purpose
-    testArgs.m_settings.command_line_options["booltest1"] = {""};
-    // booltest2 undefined on purpose
-    testArgs.m_settings.command_line_options["booltest3"] = {"0"};
-    testArgs.m_settings.command_line_options["booltest4"] = {"1"};
+    testArgs.LockSettings([&](common::Settings& s) {
+        s.command_line_options.clear();
+        s.command_line_options["strtest1"] = {"string..."};
+        // strtest2 undefined on purpose
+        s.command_line_options["inttest1"] = {"12345"};
+        s.command_line_options["inttest2"] = {"81985529216486895"};
+        // inttest3 undefined on purpose
+        s.command_line_options["booltest1"] = {""};
+        // booltest2 undefined on purpose
+        s.command_line_options["booltest3"] = {"0"};
+        s.command_line_options["booltest4"] = {"1"};
 
-    // priorities
-    testArgs.m_settings.command_line_options["pritest1"] = {"a", "b"};
-    testArgs.m_settings.ro_config[""]["pritest2"] = {"a", "b"};
-    testArgs.m_settings.command_line_options["pritest3"] = {"a"};
-    testArgs.m_settings.ro_config[""]["pritest3"] = {"b"};
-    testArgs.m_settings.command_line_options["pritest4"] = {"a","b"};
-    testArgs.m_settings.ro_config[""]["pritest4"] = {"c","d"};
+        // priorities
+        s.command_line_options["pritest1"] = {"a", "b"};
+        s.ro_config[""]["pritest2"] = {"a", "b"};
+        s.command_line_options["pritest3"] = {"a"};
+        s.ro_config[""]["pritest3"] = {"b"};
+        s.command_line_options["pritest4"] = {"a","b"};
+        s.ro_config[""]["pritest4"] = {"c","d"};
+    });
 
     BOOST_CHECK_EQUAL(testArgs.GetArg("strtest1", "default"), "string...");
     BOOST_CHECK_EQUAL(testArgs.GetArg("strtest2", "default"), "default");
@@ -638,45 +634,124 @@ BOOST_AUTO_TEST_CASE(util_GetArg)
     BOOST_CHECK_EQUAL(testArgs.GetArg("pritest4", "default"), "b");
 }
 
+BOOST_AUTO_TEST_CASE(util_AddCommand)
+{
+    enum TestFail { SUCCESS,
+                    PARSE_FAIL,
+                    PARSE_ERROR,
+                    NO_COMMAND,
+                    COMMAND_OPTS_BAD_DETAILS,
+                    COMMAND_OPTS };
+
+    auto testfn = [&](const auto& argv) -> TestFail {
+        TestArgsManager test_args;
+        test_args.AddArg("-opt1=<file name>", "Opt 1", ArgsManager::ALLOW_ANY | ArgsManager::DISALLOW_NEGATION, OptionsCategory::COMMAND_OPTIONS);
+        test_args.AddArg("-opt2=<file name>", "Opt 2", ArgsManager::ALLOW_ANY | ArgsManager::DISALLOW_NEGATION, OptionsCategory::COMMAND_OPTIONS);
+        test_args.AddArg("-opt3=<file name>", "Opt 3", ArgsManager::ALLOW_ANY | ArgsManager::DISALLOW_NEGATION, OptionsCategory::OPTIONS);
+
+        test_args.AddCommand("cmd1", "No specific options");
+        test_args.AddCommand("cmd2", "Opt 1", {"-opt1"});
+        test_args.AddCommand("cmd3", "Opt 1 or 2", {"-opt1", "-opt2"});
+
+        std::string error;
+        if (!test_args.ParseParameters(argv.size(), argv.data(), error)) return PARSE_FAIL;
+        if (!error.empty()) return PARSE_ERROR;
+        const auto command = test_args.GetCommand();
+        if (!command) return NO_COMMAND;
+        std::vector<std::string> details;
+        if (!test_args.CheckCommandOptions(command->command, &details)) {
+            if (details.empty()) return COMMAND_OPTS_BAD_DETAILS;
+            return COMMAND_OPTS;
+        } else if (!details.empty()) {
+            return COMMAND_OPTS_BAD_DETAILS;
+        }
+        return SUCCESS;
+    };
+
+    BOOST_CHECK_EQUAL(COMMAND_OPTS, testfn(std::array{"x", "-opt1=foo", "cmd1"}));
+    BOOST_CHECK_EQUAL(SUCCESS, testfn(std::array{"x", "cmd1", "-opt1=foo"})); // things after the command are "args" and left unparsed, not options
+
+    BOOST_CHECK_EQUAL(SUCCESS, testfn(std::array{"x", "-opt1=foo", "cmd2"}));
+    BOOST_CHECK_EQUAL(SUCCESS, testfn(std::array{"x", "-opt1=foo", "cmd3"}));
+    BOOST_CHECK_EQUAL(COMMAND_OPTS, testfn(std::array{"x", "-opt2=foo", "cmd1"}));
+    BOOST_CHECK_EQUAL(COMMAND_OPTS, testfn(std::array{"x", "-opt2=foo", "cmd2"}));
+    BOOST_CHECK_EQUAL(SUCCESS, testfn(std::array{"x", "-opt2=foo", "cmd3"}));
+    BOOST_CHECK_EQUAL(SUCCESS, testfn(std::array{"x", "-opt3=foo", "cmd1"}));
+    BOOST_CHECK_EQUAL(SUCCESS, testfn(std::array{"x", "-opt3=foo", "cmd2"}));
+    BOOST_CHECK_EQUAL(SUCCESS, testfn(std::array{"x", "-opt3=foo", "cmd3"}));
+
+    BOOST_CHECK_EQUAL(COMMAND_OPTS, testfn(std::array{"x", "-opt1=foo", "-opt3=bar", "-opt2=baz", "cmd1"}));
+    BOOST_CHECK_EQUAL(COMMAND_OPTS, testfn(std::array{"x", "-opt1=foo", "-opt3=bar", "-opt2=baz", "cmd2"}));
+    BOOST_CHECK_EQUAL(SUCCESS, testfn(std::array{"x", "-opt1=foo", "-opt3=bar", "-opt2=baz", "cmd3"}));
+
+    BOOST_CHECK_EQUAL(PARSE_FAIL, testfn(std::array{"x", "cmd4"}));
+    BOOST_CHECK_EQUAL(NO_COMMAND, testfn(std::array{"x", "-opt3=foo"}));
+    BOOST_CHECK_EQUAL(PARSE_FAIL, testfn(std::array{"x", "-opt4=foo"}));
+}
+
+BOOST_AUTO_TEST_CASE(util_AddCommand_clearargs_replaces_command_options)
+{
+    const auto add_command{[&](TestArgsManager& test_args, const std::string& option) {
+            test_args.AddArg(option, "option", ArgsManager::ALLOW_ANY, OptionsCategory::COMMAND_OPTIONS);
+            test_args.AddCommand("cmd", "cmd", {option});
+    }};
+
+    TestArgsManager test_args;
+    add_command(test_args, "-opt1");
+    test_args.ClearArgs();
+    add_command(test_args, "-opt2");
+
+    const auto help{test_args.GetHelpMessage()};
+    BOOST_CHECK(help.find("-opt2") != std::string::npos);
+
+    test_args.ForceSetArg("-opt2", "1");
+    std::vector<std::string> details;
+    BOOST_CHECK(test_args.CheckCommandOptions("cmd", &details));
+    BOOST_CHECK(details.empty());
+}
+
 BOOST_AUTO_TEST_CASE(util_GetChainTypeString)
 {
     TestArgsManager test_args;
     const auto testnet = std::make_pair("-testnet", ArgsManager::ALLOW_ANY);
+    const auto testnet4 = std::make_pair("-testnet4", ArgsManager::ALLOW_ANY);
     const auto regtest = std::make_pair("-regtest", ArgsManager::ALLOW_ANY);
-    test_args.SetupArgs({testnet, regtest});
+    test_args.SetupArgs({testnet, testnet4, regtest});
 
-    const char* argv_testnet[] = {"cmd", "-testnet"};
+    const char* argv_testnet4[] = {"cmd", "-testnet4"};
     const char* argv_regtest[] = {"cmd", "-regtest"};
-    const char* argv_test_no_reg[] = {"cmd", "-testnet", "-noregtest"};
-    const char* argv_both[] = {"cmd", "-testnet", "-regtest"};
+    const char* argv_test_no_reg[] = {"cmd", "-testnet4", "-noregtest"};
+    const char* argv_both[] = {"cmd", "-testnet4", "-regtest"};
 
-    // equivalent to "-testnet"
-    // regtest in testnet section is ignored
-    const char* testnetconf = "testnet=1\nregtest=0\n[test]\nregtest=1";
+    // regtest in test network section is ignored
+    const char* testnetconf = "testnet4=1\nregtest=0\n[testnet4]\nregtest=1";
     std::string error;
 
-    BOOST_CHECK(test_args.ParseParameters(0, argv_testnet, error));
+    BOOST_CHECK(test_args.ParseParameters(0, argv_testnet4, error));
     BOOST_CHECK_EQUAL(test_args.GetChainTypeString(), "main");
 
-    BOOST_CHECK(test_args.ParseParameters(2, argv_testnet, error));
-    BOOST_CHECK_EQUAL(test_args.GetChainTypeString(), "test");
+    BOOST_CHECK(test_args.ParseParameters(0, argv_testnet4, error));
+    BOOST_CHECK_EQUAL(test_args.GetChainTypeString(), "main");
+
+    BOOST_CHECK(test_args.ParseParameters(2, argv_testnet4, error));
+    BOOST_CHECK_EQUAL(test_args.GetChainTypeString(), "testnet4");
 
     BOOST_CHECK(test_args.ParseParameters(2, argv_regtest, error));
     BOOST_CHECK_EQUAL(test_args.GetChainTypeString(), "regtest");
 
     BOOST_CHECK(test_args.ParseParameters(3, argv_test_no_reg, error));
-    BOOST_CHECK_EQUAL(test_args.GetChainTypeString(), "test");
+    BOOST_CHECK_EQUAL(test_args.GetChainTypeString(), "testnet4");
 
     BOOST_CHECK(test_args.ParseParameters(3, argv_both, error));
     BOOST_CHECK_THROW(test_args.GetChainTypeString(), std::runtime_error);
 
-    BOOST_CHECK(test_args.ParseParameters(0, argv_testnet, error));
+    BOOST_CHECK(test_args.ParseParameters(0, argv_testnet4, error));
     test_args.ReadConfigString(testnetconf);
-    BOOST_CHECK_EQUAL(test_args.GetChainTypeString(), "test");
+    BOOST_CHECK_EQUAL(test_args.GetChainTypeString(), "testnet4");
 
-    BOOST_CHECK(test_args.ParseParameters(2, argv_testnet, error));
+    BOOST_CHECK(test_args.ParseParameters(2, argv_testnet4, error));
     test_args.ReadConfigString(testnetconf);
-    BOOST_CHECK_EQUAL(test_args.GetChainTypeString(), "test");
+    BOOST_CHECK_EQUAL(test_args.GetChainTypeString(), "testnet4");
 
     BOOST_CHECK(test_args.ParseParameters(2, argv_regtest, error));
     test_args.ReadConfigString(testnetconf);
@@ -684,23 +759,23 @@ BOOST_AUTO_TEST_CASE(util_GetChainTypeString)
 
     BOOST_CHECK(test_args.ParseParameters(3, argv_test_no_reg, error));
     test_args.ReadConfigString(testnetconf);
-    BOOST_CHECK_EQUAL(test_args.GetChainTypeString(), "test");
+    BOOST_CHECK_EQUAL(test_args.GetChainTypeString(), "testnet4");
 
     BOOST_CHECK(test_args.ParseParameters(3, argv_both, error));
     test_args.ReadConfigString(testnetconf);
     BOOST_CHECK_THROW(test_args.GetChainTypeString(), std::runtime_error);
 
-    // check setting the network to test (and thus making
-    // [test] regtest=1 potentially relevant) doesn't break things
-    test_args.SelectConfigNetwork("test");
+    // check setting the network to testnet4 (and thus making
+    // [testnet4] regtest=1 potentially relevant) doesn't break things
+    test_args.SelectConfigNetwork("testnet4");
 
-    BOOST_CHECK(test_args.ParseParameters(0, argv_testnet, error));
+    BOOST_CHECK(test_args.ParseParameters(0, argv_testnet4, error));
     test_args.ReadConfigString(testnetconf);
-    BOOST_CHECK_EQUAL(test_args.GetChainTypeString(), "test");
+    BOOST_CHECK_EQUAL(test_args.GetChainTypeString(), "testnet4");
 
-    BOOST_CHECK(test_args.ParseParameters(2, argv_testnet, error));
+    BOOST_CHECK(test_args.ParseParameters(2, argv_testnet4, error));
     test_args.ReadConfigString(testnetconf);
-    BOOST_CHECK_EQUAL(test_args.GetChainTypeString(), "test");
+    BOOST_CHECK_EQUAL(test_args.GetChainTypeString(), "testnet4");
 
     BOOST_CHECK(test_args.ParseParameters(2, argv_regtest, error));
     test_args.ReadConfigString(testnetconf);
@@ -708,7 +783,7 @@ BOOST_AUTO_TEST_CASE(util_GetChainTypeString)
 
     BOOST_CHECK(test_args.ParseParameters(2, argv_test_no_reg, error));
     test_args.ReadConfigString(testnetconf);
-    BOOST_CHECK_EQUAL(test_args.GetChainTypeString(), "test");
+    BOOST_CHECK_EQUAL(test_args.GetChainTypeString(), "testnet4");
 
     BOOST_CHECK(test_args.ParseParameters(3, argv_both, error));
     test_args.ReadConfigString(testnetconf);
@@ -729,7 +804,7 @@ BOOST_AUTO_TEST_CASE(util_GetChainTypeString)
 //
 // - Combining SoftSet and ForceSet calls.
 //
-// - Testing "main" and "test" network values to make sure settings from network
+// - Testing "main" and "testnet4" network values to make sure settings from network
 //   sections are applied and to check for mainnet-specific behaviors like
 //   inheriting settings from the default section.
 //
@@ -756,8 +831,8 @@ struct ArgsMergeTestingSetup : public BasicTestingSetup {
             ForEachNoDup(conf_actions, SET, SECTION_NEGATE, [&] {
                 for (bool soft_set : {false, true}) {
                     for (bool force_set : {false, true}) {
-                        for (const std::string& section : {ChainTypeToString(ChainType::MAIN), ChainTypeToString(ChainType::TESTNET), ChainTypeToString(ChainType::SIGNET)}) {
-                            for (const std::string& network : {ChainTypeToString(ChainType::MAIN), ChainTypeToString(ChainType::TESTNET), ChainTypeToString(ChainType::SIGNET)}) {
+                        for (const std::string& section : {ChainTypeToString(ChainType::MAIN), ChainTypeToString(ChainType::TESTNET), ChainTypeToString(ChainType::TESTNET4), ChainTypeToString(ChainType::SIGNET)}) {
+                            for (const std::string& network : {ChainTypeToString(ChainType::MAIN), ChainTypeToString(ChainType::TESTNET), ChainTypeToString(ChainType::TESTNET4), ChainTypeToString(ChainType::SIGNET)}) {
                                 for (bool net_specific : {false, true}) {
                                     fn(arg_actions, conf_actions, soft_set, force_set, section, network, net_specific);
                                 }
@@ -810,16 +885,16 @@ BOOST_FIXTURE_TEST_CASE(util_ArgsMerge, ArgsMergeTestingSetup)
     ForEachMergeSetup([&](const ActionList& arg_actions, const ActionList& conf_actions, bool soft_set, bool force_set,
                           const std::string& section, const std::string& network, bool net_specific) {
         TestArgsManager parser;
-        LOCK(parser.cs_args);
 
         std::string desc = "net=";
         desc += network;
-        parser.m_network = network;
+        parser.SelectConfigNetwork(network);
 
         const std::string& name = net_specific ? "wallet" : "server";
         const std::string key = "-" + name;
-        parser.AddArg(key, name, ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
-        if (net_specific) parser.SetNetworkOnlyArg(key);
+        unsigned int flags = ArgsManager::ALLOW_ANY;
+        if (net_specific) flags |= ArgsManager::NETWORK_ONLY;
+        parser.AddArg(key, name, flags, OptionsCategory::OPTIONS);
 
         auto args = GetValues(arg_actions, section, name, "a");
         std::vector<const char*> argv = {"ignored"};
@@ -911,7 +986,7 @@ BOOST_FIXTURE_TEST_CASE(util_ArgsMerge, ArgsMergeTestingSetup)
     // Results file is formatted like:
     //
     //   <input> || <IsArgSet/IsArgNegated/GetArg output> | <GetArgs output> | <GetUnsuitable output>
-    BOOST_CHECK_EQUAL(out_sha_hex, "d1e436c1cd510d0ec44d5205d4b4e3bee6387d316e0075c58206cb16603f3d82");
+    BOOST_CHECK_EQUAL(out_sha_hex, "f1ee5ab094cc43d16a6086fa7f2c10389e0f99902616b31bbf29189972ad1473");
 }
 
 // Similar test as above, but for ArgsManager::GetChainTypeString function.
@@ -944,13 +1019,12 @@ BOOST_FIXTURE_TEST_CASE(util_ChainMerge, ChainMergeTestingSetup)
 
     ForEachMergeSetup([&](const ActionList& arg_actions, const ActionList& conf_actions) {
         TestArgsManager parser;
-        LOCK(parser.cs_args);
         parser.AddArg("-regtest", "regtest", ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
-        parser.AddArg("-testnet", "testnet", ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
+        parser.AddArg("-testnet4", "testnet4", ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
 
-        auto arg = [](Action action) { return action == ENABLE_TEST  ? "-testnet=1"   :
-                                              action == DISABLE_TEST ? "-testnet=0"   :
-                                              action == NEGATE_TEST  ? "-notestnet=1" :
+        auto arg = [](Action action) { return action == ENABLE_TEST  ? "-testnet4=1"   :
+                                              action == DISABLE_TEST ? "-testnet4=0"   :
+                                              action == NEGATE_TEST  ? "-notestnet4=1" :
                                               action == ENABLE_REG   ? "-regtest=1"   :
                                               action == DISABLE_REG  ? "-regtest=0"   :
                                               action == NEGATE_REG   ? "-noregtest=1" : nullptr; };
@@ -1014,7 +1088,7 @@ BOOST_FIXTURE_TEST_CASE(util_ChainMerge, ChainMergeTestingSetup)
     // Results file is formatted like:
     //
     //   <input> || <output>
-    BOOST_CHECK_EQUAL(out_sha_hex, "f263493e300023b6509963887444c41386f44b63bc30047eb8402e8c1144854c");
+    BOOST_CHECK_EQUAL(out_sha_hex, "c0e33aab0c74e040ddcee9edad59e8148d8e1cacb3cccd9ea1a1f485cb6bad21");
 }
 
 BOOST_AUTO_TEST_CASE(util_ReadWriteSettings)
@@ -1022,14 +1096,14 @@ BOOST_AUTO_TEST_CASE(util_ReadWriteSettings)
     // Test writing setting.
     TestArgsManager args1;
     args1.ForceSetArg("-datadir", fs::PathToString(m_path_root));
-    args1.LockSettings([&](common::Settings& settings) { settings.rw_settings["name"] = "value"; });
+    args1.LockSettings([&](common::Settings& s) { s.rw_settings["name"] = "value"; });
     args1.WriteSettingsFile();
 
     // Test reading setting.
     TestArgsManager args2;
     args2.ForceSetArg("-datadir", fs::PathToString(m_path_root));
     args2.ReadSettingsFile();
-    args2.LockSettings([&](common::Settings& settings) { BOOST_CHECK_EQUAL(settings.rw_settings["name"].get_str(), "value"); });
+    args2.LockSettings([&](common::Settings& s) { BOOST_CHECK_EQUAL(s.rw_settings["name"].get_str(), "value"); });
 
     // Test error logging, and remove previously written setting.
     {

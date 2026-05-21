@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (c) 2020-2021 The Bitcoin Core developers
+# Copyright (c) 2020-present The Bitcoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """
@@ -78,18 +78,13 @@ class AddrTest(BitcoinTestFramework):
     def run_test(self):
         self.log.info('Check disconnection when sending sendaddrv2 after verack')
         conn = self.nodes[0].add_p2p_connection(P2PInterface())
-        with self.nodes[0].assert_debug_log(['sendaddrv2 received after verack from peer=0; disconnecting']):
-            conn.send_message(msg_sendaddrv2())
+        with self.nodes[0].assert_debug_log(['sendaddrv2 received after verack, disconnecting peer=0']):
+            conn.send_without_ping(msg_sendaddrv2())
             conn.wait_for_disconnect()
 
         self.log.info('Create connection that sends addrv2 messages')
         addr_source = self.nodes[0].add_p2p_connection(P2PInterface())
         msg = msg_addrv2()
-
-        self.log.info('Send too-large addrv2 message')
-        msg.addrs = ADDRS * 101
-        with self.nodes[0].assert_debug_log(['addrv2 message size = 1010']):
-            addr_source.send_and_ping(msg)
 
         self.log.info('Check that addrv2 message content is relayed and added to addrman')
         addr_receiver = self.nodes[0].add_p2p_connection(AddrReceiver())
@@ -106,6 +101,13 @@ class AddrTest(BitcoinTestFramework):
         assert addr_receiver.addrv2_received_and_checked
         assert_equal(len(self.nodes[0].getnodeaddresses(count=0, network="i2p")), 0)
 
+        self.log.info('Send too-large addrv2 message')
+        msg.addrs = ADDRS * 101
+        with self.nodes[0].assert_debug_log(['addrv2 message size = 1010']):
+            addr_source.send_without_ping(msg)
+            addr_source.wait_for_disconnect()
+
+
 
 if __name__ == '__main__':
-    AddrTest().main()
+    AddrTest(__file__).main()

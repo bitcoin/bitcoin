@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (c) 2017-2021 The Bitcoin Core developers
+# Copyright (c) 2017-present The Bitcoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Tests NODE_NETWORK_LIMITED.
@@ -28,19 +28,13 @@ from test_framework.util import (
 NODE_NETWORK_LIMITED_MIN_BLOCKS = 288
 
 class P2PIgnoreInv(P2PInterface):
-    firstAddrnServices = 0
     def on_inv(self, message):
         # The node will send us invs for other blocks. Ignore them.
         pass
-    def on_addr(self, message):
-        self.firstAddrnServices = message.addrs[0].nServices
-    def wait_for_addr(self, timeout=5):
-        test_function = lambda: self.last_message.get("addr")
-        self.wait_until(test_function, timeout=timeout)
     def send_getdata_for_block(self, blockhash):
         getdata_request = msg_getdata()
         getdata_request.inv.append(CInv(MSG_BLOCK, int(blockhash, 16)))
-        self.send_message(getdata_request)
+        self.send_without_ping(getdata_request)
 
 class NodeNetworkLimitedTest(BitcoinTestFramework):
     def set_test_params(self):
@@ -102,10 +96,10 @@ class NodeNetworkLimitedTest(BitcoinTestFramework):
         tip_height = pruned_node.getblockcount()
         limit_buffer = 2
         # Prevent races by waiting for the tip to arrive first
-        self.wait_until(lambda: not try_rpc(-1, "Block not found", full_node.getblock, pruned_node.getbestblockhash()))
+        self.wait_until(lambda: not try_rpc(-1, "Block not available (not fully downloaded)", full_node.getblock, pruned_node.getbestblockhash()))
         for height in range(start_height_full_node + 1, tip_height + 1):
             if height <= tip_height - (NODE_NETWORK_LIMITED_MIN_BLOCKS - limit_buffer):
-                assert_raises_rpc_error(-1, "Block not found on disk", full_node.getblock, pruned_node.getblockhash(height))
+                assert_raises_rpc_error(-1, "Block not available (not fully downloaded)", full_node.getblock, pruned_node.getblockhash(height))
             else:
                 full_node.getblock(pruned_node.getblockhash(height))  # just assert it does not throw an exception
 
@@ -172,4 +166,4 @@ class NodeNetworkLimitedTest(BitcoinTestFramework):
         self.test_avoid_requesting_historical_blocks()
 
 if __name__ == '__main__':
-    NodeNetworkLimitedTest().main()
+    NodeNetworkLimitedTest(__file__).main()

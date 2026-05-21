@@ -1,4 +1,4 @@
-// Copyright (c) 2020-2021 The Bitcoin Core developers
+// Copyright (c) 2020-present The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -12,28 +12,6 @@
 #include <string>
 #include <vector>
 
-class DummyTorControlConnection : public TorControlConnection
-{
-public:
-    DummyTorControlConnection() : TorControlConnection{nullptr}
-    {
-    }
-
-    bool Connect(const std::string&, const ConnectionCB&, const ConnectionCB&)
-    {
-        return true;
-    }
-
-    void Disconnect()
-    {
-    }
-
-    bool Command(const std::string&, const ReplyHandlerCB&)
-    {
-        return true;
-    }
-};
-
 void initialize_torcontrol()
 {
     static const auto testing_setup = MakeNoLogFileContext<>();
@@ -44,37 +22,46 @@ FUZZ_TARGET(torcontrol, .init = initialize_torcontrol)
     FuzzedDataProvider fuzzed_data_provider{buffer.data(), buffer.size()};
 
     TorController tor_controller;
+    CThreadInterrupt interrupt;
+    TorControlConnection conn{interrupt};
+
     LIMITED_WHILE(fuzzed_data_provider.ConsumeBool(), 10000) {
         TorControlReply tor_control_reply;
         CallOneOf(
             fuzzed_data_provider,
             [&] {
-                tor_control_reply.code = 250;
+                tor_control_reply.code = TOR_REPLY_OK;
             },
             [&] {
-                tor_control_reply.code = 510;
+                tor_control_reply.code = TOR_REPLY_UNRECOGNIZED;
+            },
+            [&] {
+                tor_control_reply.code = TOR_REPLY_SYNTAX_ERROR;
             },
             [&] {
                 tor_control_reply.code = fuzzed_data_provider.ConsumeIntegral<int>();
             });
         tor_control_reply.lines = ConsumeRandomLengthStringVector(fuzzed_data_provider);
-        if (tor_control_reply.lines.empty()) {
-            break;
-        }
-        DummyTorControlConnection dummy_tor_control_connection;
+
         CallOneOf(
             fuzzed_data_provider,
             [&] {
-                tor_controller.add_onion_cb(dummy_tor_control_connection, tor_control_reply);
+                tor_controller.add_onion_cb(conn, tor_control_reply, /*pow_was_enabled=*/true);
             },
             [&] {
-                tor_controller.auth_cb(dummy_tor_control_connection, tor_control_reply);
+                tor_controller.add_onion_cb(conn, tor_control_reply, /*pow_was_enabled=*/false);
             },
             [&] {
-                tor_controller.authchallenge_cb(dummy_tor_control_connection, tor_control_reply);
+                tor_controller.auth_cb(conn, tor_control_reply);
             },
             [&] {
-                tor_controller.protocolinfo_cb(dummy_tor_control_connection, tor_control_reply);
+                tor_controller.authchallenge_cb(conn, tor_control_reply);
+            },
+            [&] {
+                tor_controller.protocolinfo_cb(conn, tor_control_reply);
+            },
+            [&] {
+                tor_controller.get_socks_cb(conn, tor_control_reply);
             });
     }
 }

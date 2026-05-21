@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (c) 2022 The Bitcoin Core developers
+# Copyright (c) 2022-present The Bitcoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test-only Elligator Swift implementation
@@ -13,6 +13,7 @@ import random
 import unittest
 
 from test_framework.crypto.secp256k1 import FE, G, GE
+from test_framework.util import assert_equal
 
 # Precomputed constant square root of -3 (mod p).
 MINUS_3_SQRT = FE(-3).sqrt()
@@ -104,7 +105,7 @@ class TestFrameworkEllSwift(unittest.TestCase):
             (FE(42), FE(0)),  # t = 0
             (FE(5), FE(-132).sqrt()),  # u^3 + t^2 + 7 = 0
         ]
-        assert undefined_inputs[-1][0]**3 + undefined_inputs[-1][1]**2 + 7 == 0
+        assert_equal(undefined_inputs[-1][0]**3 + undefined_inputs[-1][1]**2 + 7, 0)
         for u, t in undefined_inputs:
             x = xswiftec(u, t)
             self.assertTrue(GE.is_valid_x(x))
@@ -134,7 +135,7 @@ class TestFrameworkEllSwift(unittest.TestCase):
     def test_elligator_encode_testvectors(self):
         """Implement the BIP324 test vectors for ellswift encoding (read from xswiftec_inv_test_vectors.csv)."""
         vectors_file = os.path.join(os.path.dirname(os.path.realpath(__file__)), 'xswiftec_inv_test_vectors.csv')
-        with open(vectors_file, newline='', encoding='utf8') as csvfile:
+        with open(vectors_file, newline='') as csvfile:
             reader = csv.DictReader(csvfile)
             for row in reader:
                 u = FE.from_bytes(bytes.fromhex(row['u']))
@@ -150,11 +151,11 @@ class TestFrameworkEllSwift(unittest.TestCase):
     def test_elligator_decode_testvectors(self):
         """Implement the BIP324 test vectors for ellswift decoding (read from ellswift_decode_test_vectors.csv)."""
         vectors_file = os.path.join(os.path.dirname(os.path.realpath(__file__)), 'ellswift_decode_test_vectors.csv')
-        with open(vectors_file, newline='', encoding='utf8') as csvfile:
+        with open(vectors_file, newline='') as csvfile:
             reader = csv.DictReader(csvfile)
             for row in reader:
                 encoding = bytes.fromhex(row['ellswift'])
-                assert len(encoding) == 64
+                assert_equal(len(encoding), 64)
                 expected_x = FE(int(row['x'], 16))
                 u = FE(int.from_bytes(encoding[:32], 'big'))
                 t = FE(int.from_bytes(encoding[32:], 'big'))

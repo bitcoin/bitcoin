@@ -159,7 +159,7 @@ static inline int CountBits(I val, int max) {
     }
     if (!ret) return 0;
     return index + 1;
-#elif HAVE_CLZ
+#elif defined(HAVE_CLZ)
     (void)max;
     if (val == 0) return 0;
     if (std::numeric_limits<unsigned>::digits >= std::numeric_limits<I>::digits) {
@@ -210,7 +210,7 @@ public:
     static constexpr inline int TopBits(I val) {
         static_assert(Count > 0, "BitsInt::TopBits needs Count > 0");
         static_assert(Count <= BITS, "BitsInt::TopBits needs Offset <= BITS");
-        return val >> (BITS - Count);
+        return static_cast<int>(val >> (BITS - Count));
     }
 
     static inline constexpr I CondXorWith(I val, bool cond, I v) {

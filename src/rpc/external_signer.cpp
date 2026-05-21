@@ -1,10 +1,8 @@
-// Copyright (c) 2018-2022 The Bitcoin Core developers
+// Copyright (c) 2018-present The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#if defined(HAVE_CONFIG_H)
-#include <config/bitcoin-config.h>
-#endif
+#include <bitcoin-build-config.h> // IWYU pragma: keep
 
 #include <common/args.h>
 #include <common/system.h>
@@ -19,9 +17,9 @@
 
 #ifdef ENABLE_EXTERNAL_SIGNER
 
-static RPCHelpMan enumeratesigners()
+static RPCMethod enumeratesigners()
 {
-    return RPCHelpMan{"enumeratesigners",
+    return RPCMethod{"enumeratesigners",
         "Returns a list of external signers from -signer.",
         {},
         RPCResult{
@@ -42,7 +40,7 @@ static RPCHelpMan enumeratesigners()
             HelpExampleCli("enumeratesigners", "")
             + HelpExampleRpc("enumeratesigners", "")
         },
-        [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
+        [](const RPCMethod& self, const JSONRPCRequest& request) -> UniValue
         {
             const std::string command = gArgs.GetArg("-signer", "");
             if (command == "") throw JSONRPCError(RPC_MISC_ERROR, "Error: restart bitcoind with -signer=<cmd>");
@@ -55,13 +53,13 @@ static RPCHelpMan enumeratesigners()
                     UniValue signer_res = UniValue::VOBJ;
                     signer_res.pushKV("fingerprint", signer.m_fingerprint);
                     signer_res.pushKV("name", signer.m_name);
-                    signers_res.push_back(signer_res);
+                    signers_res.push_back(std::move(signer_res));
                 }
             } catch (const std::exception& e) {
                 throw JSONRPCError(RPC_MISC_ERROR, e.what());
             }
             UniValue result(UniValue::VOBJ);
-            result.pushKV("signers", signers_res);
+            result.pushKV("signers", std::move(signers_res));
             return result;
         }
     };

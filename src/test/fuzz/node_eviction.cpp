@@ -1,4 +1,4 @@
-// Copyright (c) 2020-2022 The Bitcoin Core developers
+// Copyright (c) 2020-present The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -19,13 +19,14 @@ FUZZ_TARGET(node_eviction)
 {
     FuzzedDataProvider fuzzed_data_provider{buffer.data(), buffer.size()};
     std::vector<NodeEvictionCandidate> eviction_candidates;
-    LIMITED_WHILE(fuzzed_data_provider.ConsumeBool(), 10000) {
+    LIMITED_WHILE(fuzzed_data_provider.ConsumeBool(), 10000)
+    {
         eviction_candidates.push_back({
             /*id=*/fuzzed_data_provider.ConsumeIntegral<NodeId>(),
-            /*m_connected=*/std::chrono::seconds{fuzzed_data_provider.ConsumeIntegral<int64_t>()},
-            /*m_min_ping_time=*/std::chrono::microseconds{fuzzed_data_provider.ConsumeIntegral<int64_t>()},
-            /*m_last_block_time=*/std::chrono::seconds{fuzzed_data_provider.ConsumeIntegral<int64_t>()},
-            /*m_last_tx_time=*/std::chrono::seconds{fuzzed_data_provider.ConsumeIntegral<int64_t>()},
+            /*m_connected=*/ConsumeTime(fuzzed_data_provider),
+            /*m_min_ping_time=*/ConsumeDuration<decltype(NodeEvictionCandidate::m_min_ping_time)>(fuzzed_data_provider, /*min=*/std::chrono::years{-1}, /*max=*/decltype(CNode::m_min_ping_time.load())::max()),
+            /*m_last_block_time=*/ConsumeTime(fuzzed_data_provider).time_since_epoch(),
+            /*m_last_tx_time=*/ConsumeTime(fuzzed_data_provider).time_since_epoch(),
             /*fRelevantServices=*/fuzzed_data_provider.ConsumeBool(),
             /*m_relay_txs=*/fuzzed_data_provider.ConsumeBool(),
             /*fBloomFilter=*/fuzzed_data_provider.ConsumeBool(),

@@ -8,7 +8,7 @@
 
   This script requires a 'bitcoind' binary compiled with eBPF support and the
   'utxocache' tracepoints. By default, it's assumed that 'bitcoind' is
-  located in './src/bitcoind'. This can be modified in the script below.
+  located in './build/bin/bitcoind'. This can be modified in the script below.
 
   NOTE: requires bpftrace v0.12.0 or above.
 */
@@ -22,7 +22,7 @@ BEGIN
 /*
   Attaches to the 'utxocache:add' tracepoint and prints additions to the UTXO set cache.
 */
-usdt:./src/bitcoind:utxocache:add
+usdt:./build/bin/bitcoind:utxocache:add
 {
   $txid = arg0;
   $index = (uint32)arg1;
@@ -44,7 +44,7 @@ usdt:./src/bitcoind:utxocache:add
 /*
   Attaches to the 'utxocache:spent' tracepoint and prints spents from the UTXO set cache.
 */
-usdt:./src/bitcoind:utxocache:spent
+usdt:./build/bin/bitcoind:utxocache:spent
 {
   $txid = arg0;
   $index = (uint32)arg1;
@@ -66,7 +66,7 @@ usdt:./src/bitcoind:utxocache:spent
 /*
   Attaches to the 'utxocache:uncache' tracepoint and uncache UTXOs from the UTXO set cache.
 */
-usdt:./src/bitcoind:utxocache:uncache
+usdt:./build/bin/bitcoind:utxocache:uncache
 {
   $txid = arg0;
   $index = (uint32)arg1;

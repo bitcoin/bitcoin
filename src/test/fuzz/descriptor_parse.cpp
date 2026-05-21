@@ -1,4 +1,4 @@
-// Copyright (c) 2009-2021 The Bitcoin Core developers
+// Copyright (c) 2009-present The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -15,13 +15,23 @@
 MockedDescriptorConverter MOCKED_DESC_CONVERTER;
 
 /** Test a successfully parsed descriptor. */
-static void TestDescriptor(const Descriptor& desc, FlatSigningProvider& sig_provider, std::string& dummy)
+static void TestDescriptor(const Descriptor& desc, FlatSigningProvider& sig_provider, std::string& dummy, std::optional<bool>& is_ranged, std::optional<bool>& is_solvable)
 {
     // Trivial helpers.
     (void)desc.IsRange();
-    const bool is_solvable{desc.IsSolvable()};
     (void)desc.IsSingleType();
     (void)desc.GetOutputType();
+
+    if (is_ranged.has_value()) {
+        assert(desc.IsRange() == *is_ranged);
+    } else {
+        is_ranged = desc.IsRange();
+    }
+    if (is_solvable.has_value()) {
+        assert(desc.IsSolvable() == *is_solvable);
+    } else {
+        is_solvable = desc.IsSolvable();
+    }
 
     // Serialization to string representation.
     (void)desc.ToString();
@@ -48,14 +58,18 @@ static void TestDescriptor(const Descriptor& desc, FlatSigningProvider& sig_prov
     const auto max_sat_nonmaxsig{desc.MaxSatisfactionWeight(true)};
     const auto max_elems{desc.MaxSatisfactionElems()};
     // We must be able to estimate the max satisfaction size for any solvable descriptor (but combo).
-    const bool is_nontop_or_nonsolvable{!is_solvable || !desc.GetOutputType()};
+    const bool is_nontop_or_nonsolvable{!*is_solvable || !desc.GetOutputType()};
     const bool is_input_size_info_set{max_sat_maxsig && max_sat_nonmaxsig && max_elems};
     assert(is_input_size_info_set || is_nontop_or_nonsolvable);
+
+    auto max_key_expr = desc.GetMaxKeyExpr();
+    auto key_count = desc.GetKeyCount();
+    assert((max_key_expr == 0 && key_count == 0) || max_key_expr + 1 == key_count);
 }
 
 void initialize_descriptor_parse()
 {
-    ECC_Start();
+    static ECC_Context ecc_context{};
     SelectParams(ChainType::MAIN);
 }
 
@@ -67,30 +81,35 @@ void initialize_mocked_descriptor_parse()
 
 FUZZ_TARGET(mocked_descriptor_parse, .init = initialize_mocked_descriptor_parse)
 {
-    // Key derivation is expensive. Deriving deep derivation paths take a lot of compute and we'd
-    // rather spend time elsewhere in this target, like on the actual descriptor syntax. So rule
-    // out strings which could correspond to a descriptor containing a too large derivation path.
-    if (HasDeepDerivPath(buffer)) return;
-
     const std::string mocked_descriptor{buffer.begin(), buffer.end()};
     if (const auto descriptor = MOCKED_DESC_CONVERTER.GetDescriptor(mocked_descriptor)) {
+        if (IsTooExpensive(MakeUCharSpan(*descriptor))) return;
         FlatSigningProvider signing_provider;
         std::string error;
         const auto desc = Parse(*descriptor, signing_provider, error);
-        if (desc) TestDescriptor(*desc, signing_provider, error);
+        std::optional<bool> is_ranged;
+        std::optional<bool> is_solvable;
+        for (const auto& d : desc) {
+            assert(d);
+            TestDescriptor(*d, signing_provider, error, is_ranged, is_solvable);
+        }
     }
 }
 
 FUZZ_TARGET(descriptor_parse, .init = initialize_descriptor_parse)
 {
-    // See comment above for rationale.
-    if (HasDeepDerivPath(buffer)) return;
+    if (IsTooExpensive(buffer)) return;
 
     const std::string descriptor(buffer.begin(), buffer.end());
     FlatSigningProvider signing_provider;
     std::string error;
     for (const bool require_checksum : {true, false}) {
         const auto desc = Parse(descriptor, signing_provider, error, require_checksum);
-        if (desc) TestDescriptor(*desc, signing_provider, error);
+        std::optional<bool> is_ranged;
+        std::optional<bool> is_solvable;
+        for (const auto& d : desc) {
+            assert(d);
+            TestDescriptor(*d, signing_provider, error, is_ranged, is_solvable);
+        }
     }
 }

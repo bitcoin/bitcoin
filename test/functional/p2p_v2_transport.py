@@ -10,6 +10,7 @@ import socket
 from test_framework.messages import MAGIC_BYTES, NODE_P2P_V2
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import (
+    assert_not_equal,
     assert_equal,
     p2p_port,
     assert_raises_rpc_error
@@ -70,7 +71,7 @@ class V2TransportTest(BitcoinTestFramework):
             self.connect_nodes(2, 3, peer_advertises_v2=False)
         self.generate(self.nodes[2], 8, sync_fun=lambda: self.sync_all(self.nodes[2:4]))
         assert_equal(self.nodes[3].getblockcount(), 8)
-        assert self.nodes[0].getbestblockhash() != self.nodes[2].getbestblockhash()
+        assert_not_equal(self.nodes[0].getbestblockhash(), self.nodes[2].getbestblockhash())
         # verify there is a v1 connection between node 2 and 3
         node_2_info = self.nodes[2].getpeerinfo()
         node_3_info = self.nodes[3].getpeerinfo()
@@ -89,7 +90,7 @@ class V2TransportTest(BitcoinTestFramework):
             self.connect_nodes(2, 1, peer_advertises_v2=False) # cannot enable v2 on v1 node
         self.sync_all(self.nodes[1:3])
         assert_equal(self.nodes[1].getblockcount(), 8)
-        assert self.nodes[0].getbestblockhash() != self.nodes[1].getbestblockhash()
+        assert_not_equal(self.nodes[0].getbestblockhash(), self.nodes[1].getbestblockhash())
         # verify there is a v1 connection between node 1 and 2
         node_1_info = self.nodes[1].getpeerinfo()
         node_2_info = self.nodes[2].getpeerinfo()
@@ -150,7 +151,7 @@ class V2TransportTest(BitcoinTestFramework):
         with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
             with self.nodes[0].wait_for_new_peer():
                 s.connect(("127.0.0.1", p2p_port(0)))
-            with self.nodes[0].assert_debug_log(["V2 transport error: V1 peer with wrong MessageStart"]):
+            with self.nodes[0].assert_debug_log(["V2 transport error: V1 peer with wrong MessageStart"], timeout=2):
                 s.sendall(wrong_network_magic_prefix + b"somepayload")
 
         # Check detection of missing garbage terminator (hits after fixed amount of data if terminator never matches garbage)
@@ -164,8 +165,8 @@ class V2TransportTest(BitcoinTestFramework):
                 peer_id = self.nodes[0].getpeerinfo()[-1]["id"]
                 s.sendall(b'\x00')  # send out last byte
                 # should disconnect immediately
-                self.wait_until(lambda: not peer_id in [p["id"] for p in self.nodes[0].getpeerinfo()])
+                self.wait_until(lambda: peer_id not in [p["id"] for p in self.nodes[0].getpeerinfo()])
 
 
 if __name__ == '__main__':
-    V2TransportTest().main()
+    V2TransportTest(__file__).main()

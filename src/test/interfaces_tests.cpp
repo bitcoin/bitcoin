@@ -1,10 +1,11 @@
-// Copyright (c) 2020-2022 The Bitcoin Core developers
+// Copyright (c) 2020-present The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <chainparams.h>
 #include <consensus/validation.h>
 #include <interfaces/chain.h>
+#include <test/util/common.h>
 #include <test/util/setup_common.h>
 #include <script/solver.h>
 #include <validation.h>
@@ -13,9 +14,9 @@
 
 using interfaces::FoundBlock;
 
-BOOST_FIXTURE_TEST_SUITE(interfaces_tests, TestChain100Setup)
+BOOST_AUTO_TEST_SUITE(interfaces_tests)
 
-BOOST_AUTO_TEST_CASE(findBlock)
+BOOST_FIXTURE_TEST_CASE(findBlock, TestChain100Setup)
 {
     LOCK(Assert(m_node.chainman)->GetMutex());
     auto& chain = m_node.chain;
@@ -60,7 +61,7 @@ BOOST_AUTO_TEST_CASE(findBlock)
     BOOST_CHECK(!chain->findBlock({}, FoundBlock()));
 }
 
-BOOST_AUTO_TEST_CASE(findFirstBlockWithTimeAndHeight)
+BOOST_FIXTURE_TEST_CASE(findFirstBlockWithTimeAndHeight, TestChain100Setup)
 {
     LOCK(Assert(m_node.chainman)->GetMutex());
     auto& chain = m_node.chain;
@@ -73,7 +74,7 @@ BOOST_AUTO_TEST_CASE(findFirstBlockWithTimeAndHeight)
     BOOST_CHECK(!chain->findFirstBlockWithTimeAndHeight(/* min_time= */ active.Tip()->GetBlockTimeMax() + 1, /* min_height= */ 0));
 }
 
-BOOST_AUTO_TEST_CASE(findAncestorByHeight)
+BOOST_FIXTURE_TEST_CASE(findAncestorByHeight, TestChain100Setup)
 {
     LOCK(Assert(m_node.chainman)->GetMutex());
     auto& chain = m_node.chain;
@@ -84,7 +85,7 @@ BOOST_AUTO_TEST_CASE(findAncestorByHeight)
     BOOST_CHECK(!chain->findAncestorByHeight(active[10]->GetBlockHash(), 20));
 }
 
-BOOST_AUTO_TEST_CASE(findAncestorByHash)
+BOOST_FIXTURE_TEST_CASE(findAncestorByHash, TestChain100Setup)
 {
     LOCK(Assert(m_node.chainman)->GetMutex());
     auto& chain = m_node.chain;
@@ -95,7 +96,7 @@ BOOST_AUTO_TEST_CASE(findAncestorByHash)
     BOOST_CHECK(!chain->findAncestorByHash(active[10]->GetBlockHash(), active[20]->GetBlockHash()));
 }
 
-BOOST_AUTO_TEST_CASE(findCommonAncestor)
+BOOST_FIXTURE_TEST_CASE(findCommonAncestor, TestChain100Setup)
 {
     auto& chain = m_node.chain;
     const CChain& active{*WITH_LOCK(Assert(m_node.chainman)->GetMutex(), return &Assert(m_node.chainman)->ActiveChain())};
@@ -125,7 +126,7 @@ BOOST_AUTO_TEST_CASE(findCommonAncestor)
     BOOST_CHECK_EQUAL(orig_hash, orig_tip->GetBlockHash());
 }
 
-BOOST_AUTO_TEST_CASE(hasBlocks)
+BOOST_FIXTURE_TEST_CASE(hasBlocks, TestChain100Setup)
 {
     LOCK(::cs_main);
     auto& chain = m_node.chain;

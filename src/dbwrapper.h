@@ -1,4 +1,4 @@
-// Copyright (c) 2012-2022 The Bitcoin Core developers
+// Copyright (c) 2012-present The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -9,6 +9,7 @@
 #include <serialize.h>
 #include <span.h>
 #include <streams.h>
+#include <util/byte_units.h>
 #include <util/check.h>
 #include <util/fs.h>
 
@@ -18,10 +19,14 @@
 #include <optional>
 #include <stdexcept>
 #include <string>
-#include <vector>
+
+namespace leveldb {
+class Env;
+} // namespace leveldb
 
 static const size_t DBWRAPPER_PREALLOC_KEY_SIZE = 64;
 static const size_t DBWRAPPER_PREALLOC_VALUE_SIZE = 1024;
+static const size_t DBWRAPPER_MAX_FILE_SIZE{32_MiB};
 
 //! User-controlled performance and debug options.
 struct DBOptions {
@@ -44,6 +49,12 @@ struct DBParams {
     bool obfuscate = false;
     //! Passed-through options.
     DBOptions options{};
+    //! If non-null, use this as the leveldb::Env instead of the default.
+    //! Caller retains ownership.
+    leveldb::Env* testing_env = nullptr;
+    //! Maximum LevelDB SST file size. Larger values reduce the frequency
+    //! of compactions but increase their duration.
+    size_t max_file_size = DBWRAPPER_MAX_FILE_SIZE;
 };
 
 class dbwrapper_error : public std::runtime_error
@@ -62,8 +73,7 @@ namespace dbwrapper_private {
  * Database obfuscation should be considered an implementation detail of the
  * specific database.
  */
-const std::vector<unsigned char>& GetObfuscateKey(const CDBWrapper &w);
-
+const Obfuscation& GetObfuscation(const CDBWrapper&);
 }; // namespace dbwrapper_private
 
 bool DestroyDB(const std::string& path_str);
@@ -79,13 +89,11 @@ private:
     struct WriteBatchImpl;
     const std::unique_ptr<WriteBatchImpl> m_impl_batch;
 
-    DataStream ssKey{};
-    DataStream ssValue{};
+    DataStream m_key_scratch{};
+    DataStream m_value_scratch{};
 
-    size_t size_estimate{0};
-
-    void WriteImpl(Span<const std::byte> key, DataStream& ssValue);
-    void EraseImpl(Span<const std::byte> key);
+    void WriteImpl(std::span<const std::byte> key, DataStream& value);
+    void EraseImpl(std::span<const std::byte> key);
 
 public:
     /**
@@ -98,25 +106,21 @@ public:
     template <typename K, typename V>
     void Write(const K& key, const V& value)
     {
-        ssKey.reserve(DBWRAPPER_PREALLOC_KEY_SIZE);
-        ssValue.reserve(DBWRAPPER_PREALLOC_VALUE_SIZE);
-        ssKey << key;
-        ssValue << value;
-        WriteImpl(ssKey, ssValue);
-        ssKey.clear();
-        ssValue.clear();
+        ScopedDataStreamUsage scoped_key{m_key_scratch}, scoped_value{m_value_scratch};
+        m_key_scratch << key;
+        m_value_scratch << value;
+        WriteImpl(m_key_scratch, m_value_scratch);
     }
 
     template <typename K>
     void Erase(const K& key)
     {
-        ssKey.reserve(DBWRAPPER_PREALLOC_KEY_SIZE);
-        ssKey << key;
-        EraseImpl(ssKey);
-        ssKey.clear();
+        ScopedDataStreamUsage scoped_key{m_key_scratch};
+        m_key_scratch << key;
+        EraseImpl(m_key_scratch);
     }
 
-    size_t SizeEstimate() const { return size_estimate; }
+    size_t ApproximateSize() const;
 };
 
 class CDBIterator
@@ -127,10 +131,11 @@ public:
 private:
     const CDBWrapper &parent;
     const std::unique_ptr<IteratorImpl> m_impl_iter;
+    DataStream m_scratch{};
 
-    void SeekImpl(Span<const std::byte> key);
-    Span<const std::byte> GetKeyImpl() const;
-    Span<const std::byte> GetValueImpl() const;
+    void SeekImpl(std::span<const std::byte> key);
+    std::span<const std::byte> GetKeyImpl() const;
+    std::span<const std::byte> GetValueImpl() const;
 
 public:
 
@@ -146,17 +151,16 @@ public:
     void SeekToFirst();
 
     template<typename K> void Seek(const K& key) {
-        DataStream ssKey{};
-        ssKey.reserve(DBWRAPPER_PREALLOC_KEY_SIZE);
-        ssKey << key;
-        SeekImpl(ssKey);
+        ScopedDataStreamUsage scoped_scratch{m_scratch};
+        m_scratch << key;
+        SeekImpl(m_scratch);
     }
 
     void Next();
 
     template<typename K> bool GetKey(K& key) {
         try {
-            DataStream ssKey{GetKeyImpl()};
+            SpanReader ssKey{GetKeyImpl()};
             ssKey >> key;
         } catch (const std::exception&) {
             return false;
@@ -166,9 +170,10 @@ public:
 
     template<typename V> bool GetValue(V& value) {
         try {
-            DataStream ssValue{GetValueImpl()};
-            ssValue.Xor(dbwrapper_private::GetObfuscateKey(parent));
-            ssValue >> value;
+            ScopedDataStreamUsage scoped_scratch{m_scratch};
+            m_scratch.write(GetValueImpl());
+            dbwrapper_private::GetObfuscation(parent)(m_scratch);
+            m_scratch >> value;
         } catch (const std::exception&) {
             return false;
         }
@@ -180,7 +185,7 @@ struct LevelDBContext;
 
 class CDBWrapper
 {
-    friend const std::vector<unsigned char>& dbwrapper_private::GetObfuscateKey(const CDBWrapper &w);
+    friend const Obfuscation& dbwrapper_private::GetObfuscation(const CDBWrapper&);
 private:
     //! holds all leveldb-specific fields of this class
     std::unique_ptr<LevelDBContext> m_db_context;
@@ -188,26 +193,15 @@ private:
     //! the name of this database
     std::string m_name;
 
-    //! a key used for optional XOR-obfuscation of the database
-    std::vector<unsigned char> obfuscate_key;
+    //! optional XOR-obfuscation of the database
+    Obfuscation m_obfuscation;
 
-    //! the key under which the obfuscation key is stored
-    static const std::string OBFUSCATE_KEY_KEY;
+    //! obfuscation key storage key, null-prefixed to avoid collisions
+    inline static const std::string OBFUSCATION_KEY{"\000obfuscate_key", 14}; // explicit size to avoid truncation at leading \0
 
-    //! the length of the obfuscate key in number of bytes
-    static const unsigned int OBFUSCATE_KEY_NUM_BYTES;
-
-    std::vector<unsigned char> CreateObfuscateKey() const;
-
-    //! path to filesystem storage
-    const fs::path m_path;
-
-    //! whether or not the database resides in memory
-    bool m_is_memory;
-
-    std::optional<std::string> ReadImpl(Span<const std::byte> key) const;
-    bool ExistsImpl(Span<const std::byte> key) const;
-    size_t EstimateSizeImpl(Span<const std::byte> key1, Span<const std::byte> key2) const;
+    std::optional<std::string> ReadImpl(std::span<const std::byte> key) const;
+    bool ExistsImpl(std::span<const std::byte> key) const;
+    size_t EstimateSizeImpl(std::span<const std::byte> key1, std::span<const std::byte> key2) const;
     auto& DBContext() const LIFETIMEBOUND { return *Assert(m_db_context); }
 
 public:
@@ -228,9 +222,9 @@ public:
             return false;
         }
         try {
-            DataStream ssValue{MakeByteSpan(*strValue)};
-            ssValue.Xor(obfuscate_key);
-            ssValue >> value;
+            std::span ssValue{MakeWritableByteSpan(*strValue)};
+            m_obfuscation(ssValue);
+            SpanReader{ssValue} >> value;
         } catch (const std::exception&) {
             return false;
         }
@@ -238,19 +232,11 @@ public:
     }
 
     template <typename K, typename V>
-    bool Write(const K& key, const V& value, bool fSync = false)
+    void Write(const K& key, const V& value, bool fSync = false)
     {
         CDBBatch batch(*this);
         batch.Write(key, value);
-        return WriteBatch(batch, fSync);
-    }
-
-    //! @returns filesystem path to the on-disk data.
-    std::optional<fs::path> StoragePath() {
-        if (m_is_memory) {
-            return {};
-        }
-        return m_path;
+        WriteBatch(batch, fSync);
     }
 
     template <typename K>
@@ -263,14 +249,14 @@ public:
     }
 
     template <typename K>
-    bool Erase(const K& key, bool fSync = false)
+    void Erase(const K& key, bool fSync = false)
     {
         CDBBatch batch(*this);
         batch.Erase(key);
-        return WriteBatch(batch, fSync);
+        WriteBatch(batch, fSync);
     }
 
-    bool WriteBatch(CDBBatch& batch, bool fSync = false);
+    void WriteBatch(CDBBatch& batch, bool fSync = false);
 
     // Get an estimate of LevelDB memory usage (in bytes).
     size_t DynamicMemoryUsage() const;

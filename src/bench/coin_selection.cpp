@@ -1,32 +1,36 @@
-// Copyright (c) 2012-2022 The Bitcoin Core developers
+// Copyright (c) 2012-present The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <bench/bench.h>
+#include <consensus/amount.h>
 #include <interfaces/chain.h>
 #include <node/context.h>
+#include <outputtype.h>
+#include <policy/feerate.h>
 #include <policy/policy.h>
+#include <primitives/transaction.h>
+#include <random.h>
+#include <sync.h>
+#include <test/util/setup_common.h>
+#include <util/result.h>
 #include <wallet/coinselection.h>
+#include <wallet/context.h>
 #include <wallet/spend.h>
-#include <wallet/wallet.h>
 #include <wallet/test/util.h>
+#include <wallet/transaction.h>
+#include <wallet/wallet.h>
 
+#include <cassert>
+#include <map>
+#include <memory>
+#include <optional>
 #include <set>
+#include <utility>
+#include <vector>
 
-using node::NodeContext;
-using wallet::AttemptSelection;
-using wallet::CHANGE_LOWER;
-using wallet::COutput;
-using wallet::CWallet;
-using wallet::CWalletTx;
-using wallet::CoinEligibilityFilter;
-using wallet::CoinSelectionParams;
-using wallet::CreateMockableWalletDatabase;
-using wallet::OutputGroup;
-using wallet::SelectCoinsBnB;
-using wallet::TxStateInactive;
-
-static void addCoin(const CAmount& nValue, const CWallet& wallet, std::vector<std::unique_ptr<CWalletTx>>& wtxs)
+namespace wallet {
+static void addCoin(const CAmount& nValue, std::vector<std::unique_ptr<CWalletTx>>& wtxs)
 {
     static int nextLockTime = 0;
     CMutableTransaction tx;
@@ -36,67 +40,113 @@ static void addCoin(const CAmount& nValue, const CWallet& wallet, std::vector<st
     wtxs.push_back(std::make_unique<CWalletTx>(MakeTransactionRef(std::move(tx)), TxStateInactive{}));
 }
 
-// Simple benchmark for wallet coin selection. Note that it maybe be necessary
-// to build up more complicated scenarios in order to get meaningful
-// measurements of performance. From laanwj, "Wallet coin selection is probably
-// the hardest, as you need a wider selection of scenarios, just testing the
-// same one over and over isn't too useful. Generating random isn't useful
-// either for measurements."
-// (https://github.com/bitcoin/bitcoin/issues/7883#issuecomment-224807484)
+// This benchmark is based on a large diverse UTXO pool. The UTXOs are
+// pseudorandomly generated and assigned one of the four relevant output types
+// P2PKH, P2SH-P2WPKH, P2WPKH, and P2TR UTXOs.
+// Smaller amounts are more likely to be generated than larger amounts. This
+// UTXO pool is used to run coin selection for pseudorandom selection targets.
+// Altogether, this gives us a deterministic benchmark with a somewhat
+// representative coin selection scenario.
 static void CoinSelection(benchmark::Bench& bench)
 {
-    NodeContext node;
-    auto chain = interfaces::MakeChain(node);
-    CWallet wallet(chain.get(), "", CreateMockableWalletDatabase());
+    const auto test_setup = MakeNoLogFileContext<TestingSetup>();
+    CWallet wallet(test_setup->m_node.chain.get(), "", CreateMockableWalletDatabase());
     std::vector<std::unique_ptr<CWalletTx>> wtxs;
     LOCK(wallet.cs_wallet);
 
-    // Add coins.
-    for (int i = 0; i < 1000; ++i) {
-        addCoin(1000 * COIN, wallet, wtxs);
-    }
-    addCoin(3 * COIN, wallet, wtxs);
+    // Keep selection deterministic for benchmark stability
+    FastRandomContext det_rand{/*fDeterministic=*/true};
 
-    // Create coins
+    // Generate coin amounts biased towards smaller amounts
+    for (int i = 0; i < 400; ++i) {
+        CAmount amount;
+        int p{det_rand.randrange(100)};
+        if (p < 50) {
+            amount = 10'000 + det_rand.randrange(90'000);
+        } else if (p < 75) {
+            amount = 100'000 + det_rand.randrange(900'000);
+        } else if (p < 95) {
+            amount = 1'000'000 + det_rand.randrange(9'000'000);
+        } else {
+            amount = 10'000'000 + det_rand.randrange(90'000'000);
+        }
+        addCoin(amount, wtxs);
+    }
+
+    // Create coins from the amounts assigning them various output types
     wallet::CoinsResult available_coins;
     for (const auto& wtx : wtxs) {
         const auto txout = wtx->tx->vout.at(0);
-        available_coins.coins[OutputType::BECH32].emplace_back(COutPoint(wtx->GetHash(), 0), txout, /*depth=*/6 * 24, CalculateMaximumSignedInputSize(txout, &wallet, /*coin_control=*/nullptr), /*spendable=*/true, /*solvable=*/true, /*safe=*/true, wtx->GetTxTime(), /*from_me=*/true, /*fees=*/ 0);
+        OutputType outtype;
+        int input_bytes;
+        int y{det_rand.randrange(100)};
+        if (y < 35) {
+            outtype = OutputType::LEGACY;
+            input_bytes = 148;
+        } else if (y < 55) {
+            outtype = OutputType::P2SH_SEGWIT;
+            input_bytes = 91;
+        } else if (y < 90) {
+            outtype = OutputType::BECH32;
+            input_bytes = 68;
+        } else {
+            outtype = OutputType::BECH32M;
+            input_bytes = 58;
+        }
+        CAmount fees = 20 * input_bytes;
+        available_coins.coins[outtype].emplace_back(COutPoint(wtx->GetHash(), 0), txout, /*depth=*/6 * 24, /*input_bytes=*/input_bytes, /*solvable=*/true, /*safe=*/true, wtx->GetTxTime(), /*from_me=*/true, /*fees=*/fees);
     }
 
-    const CoinEligibilityFilter filter_standard(1, 6, 0);
-    FastRandomContext rand{};
-    const CoinSelectionParams coin_selection_params{
-        rand,
-        /*change_output_size=*/ 34,
-        /*change_spend_size=*/ 148,
-        /*min_change_target=*/ CHANGE_LOWER,
-        /*effective_feerate=*/ CFeeRate(0),
-        /*long_term_feerate=*/ CFeeRate(0),
-        /*discard_feerate=*/ CFeeRate(0),
-        /*tx_noinputs_size=*/ 0,
-        /*avoid_partial=*/ false,
-    };
-    auto group = wallet::GroupOutputs(wallet, available_coins, coin_selection_params, {{filter_standard}})[filter_standard];
-    bench.run([&] {
-        auto result = AttemptSelection(wallet.chain(), 1003 * COIN, group, coin_selection_params, /*allow_mixed_output_types=*/true);
-        assert(result);
-        assert(result->GetSelectedValue() == 1003 * COIN);
-        assert(result->GetInputSet().size() == 2);
-    });
+    const CoinEligibilityFilter filter_standard(/*conf_mine=*/1, /*conf_theirs=*/6, /*max_ancestors=*/0);
+
+    constexpr size_t NUM_TARGETS{10};
+    std::vector<CAmount> targets;
+    targets.reserve(NUM_TARGETS);
+    for (size_t i{0}; i < NUM_TARGETS; ++i) {
+        targets.push_back(10'000'000 + det_rand.randrange(90'000'000));
+    }
+
+    std::optional<FastRandomContext> rng;
+    std::optional<CoinSelectionParams> params;
+    std::vector<wallet::OutputGroupTypeMap> groups;
+    bench.batch(NUM_TARGETS).unit("selection").epochIterations(1)
+        .setup([&] {
+            rng.emplace(/*fDeterministic=*/true);
+            params.emplace(*rng);
+
+            params->change_output_size = 31;
+            params->change_spend_size = 68;
+            params->m_min_change_target = CHANGE_LOWER;
+            params->m_effective_feerate = CFeeRate{20'000};
+            params->m_long_term_feerate = CFeeRate{10'000};
+            params->m_discard_feerate = CFeeRate{3000};
+            params->tx_noinputs_size = 72;
+            params->m_avoid_partial_spends = false;
+
+            params->m_change_fee = params->m_effective_feerate.GetFee(params->change_output_size);
+            params->min_viable_change = params->m_discard_feerate.GetFee(params->change_spend_size);
+            params->m_cost_of_change = params->min_viable_change + params->m_change_fee;
+
+            groups.assign(NUM_TARGETS, wallet::GroupOutputs(wallet, available_coins, *params, {{filter_standard}})[filter_standard]);
+        })
+        .run([&] {
+            for (size_t i{0}; i < NUM_TARGETS; ++i) {
+                auto result{AttemptSelection(wallet.chain(), targets[i], groups[i], *params, /*allow_mixed_output_types=*/true)};
+                assert(result && result->GetSelectedValue() >= targets[i]);
+            }
+        });
 }
 
-// Copied from src/wallet/test/coinselector_tests.cpp
-static void add_coin(const CAmount& nValue, int nInput, std::vector<OutputGroup>& set)
+static void add_coin(const CAmount& nValue, uint32_t nInput, std::vector<OutputGroup>& set)
 {
     CMutableTransaction tx;
     tx.vout.resize(nInput + 1);
     tx.vout[nInput].nValue = nValue;
-    COutput output(COutPoint(tx.GetHash(), nInput), tx.vout.at(nInput), /*depth=*/ 0, /*input_bytes=*/ -1, /*spendable=*/ true, /*solvable=*/ true, /*safe=*/ true, /*time=*/ 0, /*from_me=*/ true, /*fees=*/ 0);
+    COutput output(COutPoint(tx.GetHash(), nInput), tx.vout.at(nInput), /*depth=*/0, /*input_bytes=*/-1, /*solvable=*/true, /*safe=*/true, /*time=*/0, /*from_me=*/true, /*fees=*/0);
     set.emplace_back();
-    set.back().Insert(std::make_shared<COutput>(output), /*ancestors=*/ 0, /*descendants=*/ 0);
+    set.back().Insert(std::make_shared<COutput>(output), /*ancestors=*/0, /*cluster_count=*/0);
 }
-// Copied from src/wallet/test/coinselector_tests.cpp
+
 static CAmount make_hard_case(int utxos, std::vector<OutputGroup>& utxo_pool)
 {
     utxo_pool.clear();
@@ -111,18 +161,15 @@ static CAmount make_hard_case(int utxos, std::vector<OutputGroup>& utxo_pool)
 
 static void BnBExhaustion(benchmark::Bench& bench)
 {
-    // Setup
     std::vector<OutputGroup> utxo_pool;
-
-    bench.run([&] {
-        // Benchmark
-        CAmount target = make_hard_case(17, utxo_pool);
-        SelectCoinsBnB(utxo_pool, target, 0, MAX_STANDARD_TX_WEIGHT); // Should exhaust
-
-        // Cleanup
-        utxo_pool.clear();
-    });
+    CAmount target;
+    bench.setup([&] { target = make_hard_case(17, utxo_pool); })
+        .run([&] {
+            auto res{SelectCoinsBnB(utxo_pool, target, /*cost_of_change=*/0, MAX_STANDARD_TX_WEIGHT)}; // Should exhaust
+            ankerl::nanobench::doNotOptimizeAway(res);
+        });
 }
 
-BENCHMARK(CoinSelection, benchmark::PriorityLevel::HIGH);
-BENCHMARK(BnBExhaustion, benchmark::PriorityLevel::HIGH);
+BENCHMARK(CoinSelection);
+BENCHMARK(BnBExhaustion);
+}; // namespace wallet

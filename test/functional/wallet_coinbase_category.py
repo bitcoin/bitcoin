@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (c) 2014-2022 The Bitcoin Core developers
+# Copyright (c) 2014-present The Bitcoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test coinbase transactions return the correct categories.
@@ -13,9 +13,6 @@ from test_framework.util import (
 )
 
 class CoinbaseCategoryTest(BitcoinTestFramework):
-    def add_options(self, parser):
-        self.add_wallet_options(parser)
-
     def set_test_params(self):
         self.num_nodes = 1
         self.setup_clean_chain = True
@@ -60,4 +57,4 @@ class CoinbaseCategoryTest(BitcoinTestFramework):
         self.assert_category("orphan", address, txid, 100)
 
 if __name__ == '__main__':
-    CoinbaseCategoryTest().main()
+    CoinbaseCategoryTest(__file__).main()

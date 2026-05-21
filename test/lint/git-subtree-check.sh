@@ -1,5 +1,5 @@
 #!/bin/sh
-# Copyright (c) 2015-2021 The Bitcoin Core developers
+# Copyright (c) 2015-present The Bitcoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -47,33 +47,33 @@ fi
 # Taken from git-subtree (Copyright (C) 2009 Avery Pennarun <apenwarr@gmail.com>)
 find_latest_squash()
 {
-	dir="$1"
-	sq=
-	main=
-	sub=
-	git log --grep="^git-subtree-dir: $dir/*\$" \
-		--pretty=format:'START %H%n%s%n%n%b%nEND%n' "$COMMIT" |
-	while read a b _; do
-		case "$a" in
-			START) sq="$b" ;;
-			git-subtree-mainline:) main="$b" ;;
-			git-subtree-split:) sub="$b" ;;
-			END)
-				if [ -n "$sub" ]; then
-					if [ -n "$main" ]; then
-						# a rejoin commit?
-						# Pretend its sub was a squash.
-						sq="$sub"
-					fi
-					echo "$sq" "$sub"
-					break
-				fi
-				sq=
-				main=
-				sub=
-				;;
-		esac
-	done
+    dir="$1"
+    sq=
+    main=
+    sub=
+    git log --grep="^git-subtree-dir: $dir/*\$" \
+        --pretty=format:'START %H%n%s%n%n%b%nEND%n' "$COMMIT" |
+    while read a b _; do
+        case "$a" in
+            START) sq="$b" ;;
+            git-subtree-mainline:) main="$b" ;;
+            git-subtree-split:) sub="$b" ;;
+            END)
+                if [ -n "$sub" ]; then
+                    if [ -n "$main" ]; then
+                        # a rejoin commit?
+                        # Pretend its sub was a squash.
+                        sq="$sub"
+                    fi
+                    echo "$sq" "$sub"
+                    break
+                fi
+                sq=
+                main=
+                sub=
+                ;;
+        esac
+    done
 }
 
 # find latest subtree update

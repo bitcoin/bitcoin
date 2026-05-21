@@ -1,19 +1,47 @@
-// Copyright (c) 2022 The Bitcoin Core developers
+// Copyright (c) 2022-present The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or https://www.opensource.org/licenses/mit-license.php.
 
+#include <addresstype.h>
 #include <bench/bench.h>
+#include <chain.h>
 #include <chainparams.h>
-#include <wallet/coincontrol.h>
+#include <consensus/amount.h>
+#include <consensus/consensus.h>
 #include <consensus/merkle.h>
+#include <interfaces/chain.h>
 #include <kernel/chain.h>
-#include <node/context.h>
+#include <kernel/types.h>
+#include <node/blockstorage.h>
+#include <outputtype.h>
+#include <policy/feerate.h>
+#include <primitives/block.h>
+#include <primitives/transaction.h>
+#include <script/script.h>
+#include <sync.h>
 #include <test/util/setup_common.h>
+#include <test/util/time.h>
+#include <uint256.h>
+#include <util/result.h>
+#include <util/time.h>
 #include <validation.h>
+#include <versionbits.h>
+#include <wallet/coincontrol.h>
+#include <wallet/coinselection.h>
 #include <wallet/spend.h>
 #include <wallet/test/util.h>
 #include <wallet/wallet.h>
+#include <wallet/walletutil.h>
 
+#include <cassert>
+#include <cstdint>
+#include <map>
+#include <memory>
+#include <optional>
+#include <utility>
+#include <vector>
+
+using kernel::ChainstateRole;
 using wallet::CWallet;
 using wallet::CreateMockableWalletDatabase;
 using wallet::WALLET_FLAG_DESCRIPTORS;
@@ -46,10 +74,17 @@ void generateFakeBlock(const CChainParams& params,
     coinbase_tx.vin[0].prevout.SetNull();
     coinbase_tx.vout.resize(2);
     coinbase_tx.vout[0].scriptPubKey = coinbase_out_script;
-    coinbase_tx.vout[0].nValue = 49 * COIN;
+    coinbase_tx.vout[0].nValue = 48 * COIN;
     coinbase_tx.vin[0].scriptSig = CScript() << ++tip.tip_height << OP_0;
     coinbase_tx.vout[1].scriptPubKey = coinbase_out_script; // extra output
     coinbase_tx.vout[1].nValue = 1 * COIN;
+
+    // Fill the coinbase with outputs that don't belong to the wallet in order to benchmark
+    // AvailableCoins' behavior with unnecessary TXOs
+    for (int i = 0; i < 50; ++i) {
+        coinbase_tx.vout.emplace_back(1 * COIN / 50, CScript(OP_TRUE));
+    }
+
     block.vtx = {MakeTransactionRef(std::move(coinbase_tx))};
 
     block.nVersion = VERSIONBITS_LAST_OLD_BLOCK_VERSION;
@@ -69,7 +104,7 @@ void generateFakeBlock(const CChainParams& params,
 
     // notify wallet
     const auto& pindex = WITH_LOCK(::cs_main, return context.chainman->ActiveChain().Tip());
-    wallet.blockConnected(ChainstateRole::NORMAL, kernel::MakeBlockInfo(pindex, &block));
+    wallet.blockConnected(ChainstateRole{}, kernel::MakeBlockInfo(pindex, &block));
 }
 
 struct PreSelectInputs {
@@ -83,7 +118,7 @@ static void WalletCreateTx(benchmark::Bench& bench, const OutputType output_type
     const auto test_setup = MakeNoLogFileContext<const TestingSetup>();
 
     // Set clock to genesis block, so the descriptors/keys creation time don't interfere with the blocks scanning process.
-    SetMockTime(test_setup->m_node.chainman->GetParams().GenesisBlock().nTime);
+    NodeClockContext clock_ctx{test_setup->m_node.chainman->GetParams().GenesisBlock().Time()};
     CWallet wallet{test_setup->m_node.chain.get(), "", CreateMockableWalletDatabase()};
     {
         LOCK(wallet.cs_wallet);
@@ -104,14 +139,14 @@ static void WalletCreateTx(benchmark::Bench& bench, const OutputType output_type
 
     // Check available balance
     auto bal = WITH_LOCK(wallet.cs_wallet, return wallet::AvailableCoins(wallet).GetTotalAmount()); // Cache
-    assert(bal == 50 * COIN * (chain_size - COINBASE_MATURITY));
+    assert(bal == 49 * COIN * (chain_size - COINBASE_MATURITY));
 
     wallet::CCoinControl coin_control;
     coin_control.m_allow_other_inputs = allow_other_inputs;
 
     CAmount target = 0;
     if (preset_inputs) {
-        // Select inputs, each has 49 BTC
+        // Select inputs, each has 48 BTC
         wallet::CoinFilterParams filter_coins;
         filter_coins.max_count = preset_inputs->num_of_internal_inputs;
         const auto& res = WITH_LOCK(wallet.cs_wallet,
@@ -127,7 +162,7 @@ static void WalletCreateTx(benchmark::Bench& bench, const OutputType output_type
     if (coin_control.m_allow_other_inputs) target += 50 * COIN;
     std::vector<wallet::CRecipient> recipients = {{dest, target, true}};
 
-    bench.epochIterations(5).run([&] {
+    bench.run([&] {
         LOCK(wallet.cs_wallet);
         const auto& tx_res = CreateTransaction(wallet, recipients, /*change_pos=*/std::nullopt, coin_control);
         assert(tx_res);
@@ -138,7 +173,7 @@ static void AvailableCoins(benchmark::Bench& bench, const std::vector<OutputType
 {
     const auto test_setup = MakeNoLogFileContext<const TestingSetup>();
     // Set clock to genesis block, so the descriptors/keys creation time don't interfere with the blocks scanning process.
-    SetMockTime(test_setup->m_node.chainman->GetParams().GenesisBlock().nTime);
+    NodeClockContext clock_ctx{test_setup->m_node.chainman->GetParams().GenesisBlock().Time()};
     CWallet wallet{test_setup->m_node.chain.get(), "", CreateMockableWalletDatabase()};
     {
         LOCK(wallet.cs_wallet);
@@ -164,9 +199,9 @@ static void AvailableCoins(benchmark::Bench& bench, const std::vector<OutputType
 
     // Check available balance
     auto bal = WITH_LOCK(wallet.cs_wallet, return wallet::AvailableCoins(wallet).GetTotalAmount()); // Cache
-    assert(bal == 50 * COIN * (chain_size - COINBASE_MATURITY));
+    assert(bal == 49 * COIN * (chain_size - COINBASE_MATURITY));
 
-    bench.epochIterations(2).run([&] {
+    bench.run([&] {
         LOCK(wallet.cs_wallet);
         const auto& res = wallet::AvailableCoins(wallet);
         assert(res.All().size() == (chain_size - COINBASE_MATURITY) * 2);
@@ -181,6 +216,6 @@ static void WalletCreateTxUsePresetInputsAndCoinSelection(benchmark::Bench& benc
 
 static void WalletAvailableCoins(benchmark::Bench& bench) { AvailableCoins(bench, {OutputType::BECH32M}); }
 
-BENCHMARK(WalletCreateTxUseOnlyPresetInputs, benchmark::PriorityLevel::LOW)
-BENCHMARK(WalletCreateTxUsePresetInputsAndCoinSelection, benchmark::PriorityLevel::LOW)
-BENCHMARK(WalletAvailableCoins, benchmark::PriorityLevel::LOW);
+BENCHMARK(WalletCreateTxUseOnlyPresetInputs);
+BENCHMARK(WalletCreateTxUsePresetInputsAndCoinSelection);
+BENCHMARK(WalletAvailableCoins);

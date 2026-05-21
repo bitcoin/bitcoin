@@ -4,6 +4,7 @@
  * file COPYING or https://www.opensource.org/licenses/mit-license.php.*
  ***********************************************************************/
 #include <stdio.h>
+#include <stdlib.h>
 
 #include "secp256k1.c"
 #include "../include/secp256k1.h"
@@ -18,10 +19,13 @@
 
 #define POINTS 32768
 
-static void help(char **argv) {
+static void help(const char *executable_path, int default_iters) {
     printf("Benchmark EC multiplication algorithms\n");
     printf("\n");
-    printf("Usage: %s <help|pippenger_wnaf|strauss_wnaf|simple>\n", argv[0]);
+    printf("The default number of iterations for each benchmark is %d. This can be\n", default_iters);
+    printf("customized using the SECP256K1_BENCH_ITERS environment variable.\n");
+    printf("\n");
+    printf("Usage: %s [args]\n", executable_path);
     printf("The output shows the number of multiplied and summed points right after the\n");
     printf("function name. The letter 'g' indicates that one of the points is the generator.\n");
     printf("The benchmarks are divided by the number of points.\n");
@@ -55,6 +59,7 @@ typedef struct {
 
     /* Benchmark output. */
     secp256k1_gej* output;
+    secp256k1_fe* output_xonly;
 } bench_data;
 
 /* Hashes x into [0, POINTS) twice and store the result in offset1 and offset2. */
@@ -71,7 +76,7 @@ static void bench_ecmult_teardown_helper(bench_data* data, size_t* seckey_offset
     secp256k1_scalar sum_scalars;
 
     secp256k1_gej_set_infinity(&sum_output);
-    secp256k1_scalar_clear(&sum_scalars);
+    secp256k1_scalar_set_int(&sum_scalars, 0);
     for (i = 0; i < iters; ++i) {
         secp256k1_gej_add_var(&sum_output, &sum_output, &data->output[i], NULL);
         if (scalar_gen_offset != NULL) {
@@ -122,6 +127,32 @@ static void bench_ecmult_const_teardown(void* arg, int iters) {
     bench_ecmult_teardown_helper(data, &data->offset1, &data->offset2, NULL, iters);
 }
 
+static void bench_ecmult_const_xonly(void* arg, int iters) {
+    bench_data* data = (bench_data*)arg;
+    int i;
+
+    for (i = 0; i < iters; ++i) {
+        const secp256k1_ge* pubkey = &data->pubkeys[(data->offset1+i) % POINTS];
+        const secp256k1_scalar* scalar = &data->scalars[(data->offset2+i) % POINTS];
+        int known_on_curve = 1;
+        secp256k1_ecmult_const_xonly(&data->output_xonly[i], &pubkey->x, NULL, scalar, known_on_curve);
+    }
+}
+
+static void bench_ecmult_const_xonly_teardown(void* arg, int iters) {
+    bench_data* data = (bench_data*)arg;
+    int i;
+
+    /* verify by comparing with x coordinate of regular ecmult result */
+    for (i = 0; i < iters; ++i) {
+        const secp256k1_gej* pubkey_gej = &data->pubkeys_gej[(data->offset1+i) % POINTS];
+        const secp256k1_scalar* scalar = &data->scalars[(data->offset2+i) % POINTS];
+        secp256k1_gej expected_gej;
+        secp256k1_ecmult(&expected_gej, pubkey_gej, scalar, NULL);
+        CHECK(secp256k1_gej_eq_x_var(&data->output_xonly[i], &expected_gej));
+    }
+}
+
 static void bench_ecmult_1p(void* arg, int iters) {
     bench_data* data = (bench_data*)arg;
     int i;
@@ -170,6 +201,8 @@ static void run_ecmult_bench(bench_data* data, int iters) {
     run_benchmark(str, bench_ecmult_gen, bench_ecmult_setup, bench_ecmult_gen_teardown, data, 10, iters);
     sprintf(str, "ecmult_const");
     run_benchmark(str, bench_ecmult_const, bench_ecmult_setup, bench_ecmult_const_teardown, data, 10, iters);
+    sprintf(str, "ecmult_const_xonly");
+    run_benchmark(str, bench_ecmult_const_xonly, bench_ecmult_setup, bench_ecmult_const_xonly_teardown, data, 10, iters);
     /* ecmult with non generator point */
     sprintf(str, "ecmult_1p");
     run_benchmark(str, bench_ecmult_1p, bench_ecmult_setup, bench_ecmult_1p_teardown, data, 10, iters);
@@ -226,7 +259,7 @@ static void bench_ecmult_multi_teardown(void* arg, int iters) {
     }
 }
 
-static void generate_scalar(uint32_t num, secp256k1_scalar* scalar) {
+static void generate_scalar(const secp256k1_context *ctx, uint32_t num, secp256k1_scalar* scalar) {
     secp256k1_sha256 sha256;
     unsigned char c[10] = {'e', 'c', 'm', 'u', 'l', 't', 0, 0, 0, 0};
     unsigned char buf[32];
@@ -236,8 +269,8 @@ static void generate_scalar(uint32_t num, secp256k1_scalar* scalar) {
     c[8] = num >> 16;
     c[9] = num >> 24;
     secp256k1_sha256_initialize(&sha256);
-    secp256k1_sha256_write(&sha256, c, sizeof(c));
-    secp256k1_sha256_finalize(&sha256, buf);
+    secp256k1_sha256_write(secp256k1_get_hash_context(ctx), &sha256, c, sizeof(c));
+    secp256k1_sha256_finalize(secp256k1_get_hash_context(ctx), &sha256, buf);
     secp256k1_scalar_set_b32(scalar, buf, &overflow);
     CHECK(!overflow);
 }
@@ -278,7 +311,12 @@ int main(int argc, char **argv) {
     int i, p;
     size_t scratch_size;
 
-    int iters = get_iters(10000);
+    int default_iters = 10000;
+    int iters = get_iters(default_iters);
+    if (iters == 0) {
+        help(argv[0], default_iters);
+        return EXIT_FAILURE;
+    }
 
     data.ecmult_multi = secp256k1_ecmult_multi_var;
 
@@ -286,8 +324,8 @@ int main(int argc, char **argv) {
         if(have_flag(argc, argv, "-h")
            || have_flag(argc, argv, "--help")
            || have_flag(argc, argv, "help")) {
-            help(argv);
-            return 0;
+            help(argv[0], default_iters);
+            return EXIT_SUCCESS;
         } else if(have_flag(argc, argv, "pippenger_wnaf")) {
             printf("Using pippenger_wnaf:\n");
             data.ecmult_multi = secp256k1_ecmult_pippenger_batch_single;
@@ -298,13 +336,13 @@ int main(int argc, char **argv) {
             printf("Using simple algorithm:\n");
         } else {
             fprintf(stderr, "%s: unrecognized argument '%s'.\n\n", argv[0], argv[1]);
-            help(argv);
-            return 1;
+            help(argv[0], default_iters);
+            return EXIT_FAILURE;
         }
     }
 
     data.ctx = secp256k1_context_create(SECP256K1_CONTEXT_NONE);
-    scratch_size = secp256k1_strauss_scratch_size(POINTS) + STRAUSS_SCRATCH_OBJECTS*16;
+    scratch_size = secp256k1_strauss_scratch_size(POINTS) + STRAUSS_SCRATCH_OBJECTS*ALIGNMENT;
     if (!have_flag(argc, argv, "simple")) {
         data.scratch = secp256k1_scratch_space_create(data.ctx, scratch_size);
     } else {
@@ -318,12 +356,13 @@ int main(int argc, char **argv) {
     data.pubkeys_gej = malloc(sizeof(secp256k1_gej) * POINTS);
     data.expected_output = malloc(sizeof(secp256k1_gej) * (iters + 1));
     data.output = malloc(sizeof(secp256k1_gej) * (iters + 1));
+    data.output_xonly = malloc(sizeof(secp256k1_fe) * (iters + 1));
 
     /* Generate a set of scalars, and private/public keypairs. */
     secp256k1_gej_set_ge(&data.pubkeys_gej[0], &secp256k1_ge_const_g);
     secp256k1_scalar_set_int(&data.seckeys[0], 1);
     for (i = 0; i < POINTS; ++i) {
-        generate_scalar(i, &data.scalars[i]);
+        generate_scalar(data.ctx, i, &data.scalars[i]);
         if (i) {
             secp256k1_gej_double_var(&data.pubkeys_gej[i], &data.pubkeys_gej[i - 1], NULL);
             secp256k1_scalar_add(&data.seckeys[i], &data.seckeys[i - 1], &data.seckeys[i - 1]);
@@ -350,6 +389,8 @@ int main(int argc, char **argv) {
                 run_ecmult_multi_bench(&data, i << p, 1, iters);
             }
         }
+    } else {
+        printf("Skipping some benchmarks due to SECP256K1_BENCH_ITERS <= 2\n");
     }
 
     if (data.scratch != NULL) {
@@ -360,8 +401,9 @@ int main(int argc, char **argv) {
     free(data.pubkeys);
     free(data.pubkeys_gej);
     free(data.seckeys);
+    free(data.output_xonly);
     free(data.output);
     free(data.expected_output);
 
-    return(0);
+    return EXIT_SUCCESS;
 }

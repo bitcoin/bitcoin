@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (c) 2019-2021 The Bitcoin Core developers
+# Copyright (c) 2019-present The Bitcoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -16,7 +16,6 @@ import time
 
 from test_framework.blocktools import (
     create_block,
-    create_coinbase,
 )
 from test_framework.messages import (
     msg_pong,
@@ -34,13 +33,13 @@ from test_framework.wallet import MiniWallet
 class SlowP2PDataStore(P2PDataStore):
     def on_ping(self, message):
         time.sleep(0.1)
-        self.send_message(msg_pong(message.nonce))
+        self.send_without_ping(msg_pong(message.nonce))
 
 
 class SlowP2PInterface(P2PInterface):
     def on_ping(self, message):
         time.sleep(0.1)
-        self.send_message(msg_pong(message.nonce))
+        self.send_without_ping(msg_pong(message.nonce))
 
 
 class P2PEvict(BitcoinTestFramework):
@@ -65,7 +64,7 @@ class P2PEvict(BitcoinTestFramework):
             best_block = node.getbestblockhash()
             tip = int(best_block, 16)
             best_block_time = node.getblock(best_block)['time']
-            block = create_block(tip, create_coinbase(node.getblockcount() + 1), best_block_time + 1)
+            block = create_block(tip, height=node.getblockcount() + 1, ntime=best_block_time + 1)
             block.solve()
             block_peer.send_blocks_and_test([block], node, success=True)
             protected_peers.add(current_peer)
@@ -82,7 +81,7 @@ class P2PEvict(BitcoinTestFramework):
             txpeer.sync_with_ping()
 
             tx = self.wallet.create_self_transfer()['tx']
-            txpeer.send_message(msg_tx(tx))
+            txpeer.send_without_ping(msg_tx(tx))
             protected_peers.add(current_peer)
 
         self.log.info("Create 8 peers and protect them from eviction by having faster pings")
@@ -124,4 +123,4 @@ class P2PEvict(BitcoinTestFramework):
 
 
 if __name__ == '__main__':
-    P2PEvict().main()
+    P2PEvict(__file__).main()

@@ -1,4 +1,4 @@
-// Copyright (c) 2011-2021 The Bitcoin Core developers
+// Copyright (c) 2011-present The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -7,6 +7,7 @@
 
 #include <qt/guiutil.h>
 
+#include <primitives/transaction_identifier.h>
 #include <uint256.h>
 
 #include <QWidget>
@@ -54,7 +55,6 @@ public:
 
     enum ColumnWidths {
         STATUS_COLUMN_WIDTH = 30,
-        WATCHONLY_COLUMN_WIDTH = 23,
         DATE_COLUMN_WIDTH = 120,
         TYPE_COLUMN_WIDTH = 113,
         AMOUNT_MINIMUM_COLUMN_WIDTH = 120,
@@ -71,7 +71,6 @@ private:
 
     QComboBox *dateWidget;
     QComboBox *typeWidget;
-    QComboBox *watchOnlyWidget;
     QLineEdit *search_widget;
     QLineEdit *amountWidget;
 
@@ -105,7 +104,6 @@ private Q_SLOTS:
     void copyTxHex();
     void copyTxPlainText();
     void openThirdPartyTxUrl(QString url);
-    void updateWatchOnlyColumn(bool fHaveWatchOnly);
     void abandonTx();
     void bumpFee(bool checked);
 
@@ -115,18 +113,17 @@ Q_SIGNALS:
     /**  Fired when a message should be reported to the user */
     void message(const QString &title, const QString &message, unsigned int style);
 
-    void bumpedFee(const uint256& txid);
+    void bumpedFee(const Txid& txid);
 
 public Q_SLOTS:
     void chooseDate(int idx);
     void chooseType(int idx);
-    void chooseWatchonly(int idx);
     void changedAmount();
     void changedSearch();
     void exportClicked();
     void closeOpenedDialogs();
     void focusTransaction(const QModelIndex&);
-    void focusTransaction(const uint256& txid);
+    void focusTransaction(const Txid& txid);
 };
 
 #endif // BITCOIN_QT_TRANSACTIONVIEW_H

@@ -1,11 +1,9 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
-// Copyright (c) 2009-2022 The Bitcoin Core developers
+// Copyright (c) 2009-present The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#if defined(HAVE_CONFIG_H)
-#include <config/bitcoin-config.h>
-#endif
+#include <bitcoin-build-config.h> // IWYU pragma: keep
 
 #include <randomenv.h>
 
@@ -15,6 +13,7 @@
 #include <crypto/sha512.h>
 #include <span.h>
 #include <support/cleanse.h>
+#include <util/byte_units.h>
 #include <util/time.h>
 
 #include <algorithm>
@@ -30,7 +29,6 @@
 
 #ifdef WIN32
 #include <windows.h>
-#include <winreg.h>
 #else
 #include <fcntl.h>
 #include <netinet/in.h>
@@ -41,18 +39,18 @@
 #include <sys/utsname.h>
 #include <unistd.h>
 #endif
-#if HAVE_DECL_GETIFADDRS && HAVE_DECL_FREEIFADDRS
+#ifdef HAVE_IFADDRS
 #include <ifaddrs.h>
 #endif
-#if HAVE_SYSCTL
+#ifdef HAVE_SYSCTL
 #include <sys/sysctl.h>
-#if HAVE_VM_VM_PARAM_H
+#if __has_include(<vm/vm_param.h>)
 #include <vm/vm_param.h>
 #endif
-#if HAVE_SYS_RESOURCES_H
+#if __has_include(<sys/resources.h>)
 #include <sys/resources.h>
 #endif
-#if HAVE_SYS_VMMETER_H
+#if __has_include(<sys/vmmeter.h>)
 #include <sys/vmmeter.h>
 #endif
 #endif
@@ -60,48 +58,15 @@
 #include <sys/auxv.h>
 #endif
 
-extern char** environ; // NOLINT(readability-redundant-declaration): Necessary on some platforms
+#if defined(__APPLE__) || \
+    defined(__FreeBSD__) || \
+    defined(__NetBSD__) || \
+    defined(__OpenBSD__) || \
+    defined(__illumos__)
+extern char** environ; // Necessary on the above platforms
+#endif
 
 namespace {
-
-void RandAddSeedPerfmon(CSHA512& hasher)
-{
-#ifdef WIN32
-    // Seed with the entire set of perfmon data
-
-    // This can take up to 2 seconds, so only do it every 10 minutes.
-    // Initialize last_perfmon to 0 seconds, we don't skip the first call.
-    static std::atomic<std::chrono::seconds> last_perfmon{0s};
-    auto last_time = last_perfmon.load();
-    auto current_time = GetTime<std::chrono::seconds>();
-    if (current_time < last_time + std::chrono::minutes{10}) return;
-    last_perfmon = current_time;
-
-    std::vector<unsigned char> vData(250000, 0);
-    long ret = 0;
-    unsigned long nSize = 0;
-    const size_t nMaxSize = 10000000; // Bail out at more than 10MB of performance data
-    while (true) {
-        nSize = vData.size();
-        ret = RegQueryValueExA(HKEY_PERFORMANCE_DATA, "Global", nullptr, nullptr, vData.data(), &nSize);
-        if (ret != ERROR_MORE_DATA || vData.size() >= nMaxSize)
-            break;
-        vData.resize(std::min((vData.size() * 3) / 2, nMaxSize)); // Grow size of buffer exponentially
-    }
-    RegCloseKey(HKEY_PERFORMANCE_DATA);
-    if (ret == ERROR_SUCCESS) {
-        hasher.Write(vData.data(), nSize);
-        memory_cleanse(vData.data(), nSize);
-    } else {
-        // Performance data is only a best-effort attempt at improving the
-        // situation when the OS randomness (and other sources) aren't
-        // adequate. As a result, failure to read it is isn't considered critical,
-        // so we don't call RandFailure().
-        // TODO: Add logging when the logger is made functional before global
-        // constructors have been invoked.
-    }
-#endif
-}
 
 /** Helper to easily feed data into a CSHA512.
  *
@@ -110,10 +75,10 @@ void RandAddSeedPerfmon(CSHA512& hasher)
  */
 template<typename T>
 CSHA512& operator<<(CSHA512& hasher, const T& data) {
-    static_assert(!std::is_same<typename std::decay<T>::type, char*>::value, "Calling operator<<(CSHA512, char*) is probably not what you want");
-    static_assert(!std::is_same<typename std::decay<T>::type, unsigned char*>::value, "Calling operator<<(CSHA512, unsigned char*) is probably not what you want");
-    static_assert(!std::is_same<typename std::decay<T>::type, const char*>::value, "Calling operator<<(CSHA512, const char*) is probably not what you want");
-    static_assert(!std::is_same<typename std::decay<T>::type, const unsigned char*>::value, "Calling operator<<(CSHA512, const unsigned char*) is probably not what you want");
+    static_assert(!std::is_same_v<std::decay_t<T>, char*>, "Calling operator<<(CSHA512, char*) is probably not what you want");
+    static_assert(!std::is_same_v<std::decay_t<T>, unsigned char*>, "Calling operator<<(CSHA512, unsigned char*) is probably not what you want");
+    static_assert(!std::is_same_v<std::decay_t<T>, const char*>, "Calling operator<<(CSHA512, const char*) is probably not what you want");
+    static_assert(!std::is_same_v<std::decay_t<T>, const unsigned char*>, "Calling operator<<(CSHA512, const unsigned char*) is probably not what you want");
     hasher.Write((const unsigned char*)&data, sizeof(data));
     return hasher;
 }
@@ -149,7 +114,7 @@ void AddFile(CSHA512& hasher, const char *path)
             if (n > 0) hasher.Write(fbuf, n);
             total += n;
             /* not bothering with EINTR handling. */
-        } while (n == sizeof(fbuf) && total < 1048576); // Read only the first 1 Mbyte
+        } while (n == sizeof(fbuf) && total < 1_MiB); // Read only the first 1 Mbyte
         close(f);
     }
 }
@@ -164,7 +129,7 @@ void AddPath(CSHA512& hasher, const char *path)
 }
 #endif
 
-#if HAVE_SYSCTL
+#ifdef HAVE_SYSCTL
 template<int... S>
 void AddSysctl(CSHA512& hasher)
 {
@@ -227,8 +192,6 @@ void AddAllCPUID(CSHA512& hasher)
 
 void RandAddDynamicEnv(CSHA512& hasher)
 {
-    RandAddSeedPerfmon(hasher);
-
     // Various clocks
 #ifdef WIN32
     FILETIME ftime;
@@ -276,7 +239,7 @@ void RandAddDynamicEnv(CSHA512& hasher)
     AddFile(hasher, "/proc/self/status");
 #endif
 
-#if HAVE_SYSCTL
+#ifdef HAVE_SYSCTL
 #  ifdef CTL_KERN
 #    if defined(KERN_PROC) && defined(KERN_PROC_ALL)
     AddSysctl<CTL_KERN, KERN_PROC, KERN_PROC_ALL>(hasher);
@@ -372,7 +335,7 @@ void RandAddStaticEnv(CSHA512& hasher)
     }
 #endif
 
-#if HAVE_DECL_GETIFADDRS && HAVE_DECL_FREEIFADDRS
+#ifdef HAVE_IFADDRS
     // Network interfaces
     struct ifaddrs *ifad = nullptr;
     getifaddrs(&ifad);
@@ -421,7 +384,7 @@ void RandAddStaticEnv(CSHA512& hasher)
 
     // For MacOS/BSDs, gather data through sysctl instead of /proc. Not all of these
     // will exist on every system.
-#if HAVE_SYSCTL
+#ifdef HAVE_SYSCTL
 #  ifdef CTL_HW
 #    ifdef HW_MACHINE
     AddSysctl<CTL_HW, HW_MACHINE>(hasher);

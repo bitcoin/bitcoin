@@ -1,4 +1,4 @@
-// Copyright (c) 2020-2021 The Bitcoin Core developers
+// Copyright (c) 2020-present The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -14,7 +14,7 @@
 
 void initialize_key_io()
 {
-    ECC_Start();
+    static ECC_Context ecc_context{};
     SelectParams(ChainType::MAIN);
 }
 

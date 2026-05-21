@@ -1,17 +1,21 @@
-// Copyright (c) 2019-2022 The Bitcoin Core developers
+// Copyright (c) 2019-present The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 
 #include <bench/bench.h>
 #include <crypto/poly1305.h>
-
 #include <span.h>
+#include <util/byte_units.h>
+
+#include <cstddef>
+#include <cstdint>
+#include <vector>
 
 /* Number of bytes to process per iteration */
 static constexpr uint64_t BUFFER_SIZE_TINY  = 64;
 static constexpr uint64_t BUFFER_SIZE_SMALL = 256;
-static constexpr uint64_t BUFFER_SIZE_LARGE = 1024*1024;
+static constexpr uint64_t BUFFER_SIZE_LARGE{1_MiB};
 
 static void POLY1305(benchmark::Bench& bench, size_t buffersize)
 {
@@ -38,6 +42,6 @@ static void POLY1305_1MB(benchmark::Bench& bench)
     POLY1305(bench, BUFFER_SIZE_LARGE);
 }
 
-BENCHMARK(POLY1305_64BYTES, benchmark::PriorityLevel::HIGH);
-BENCHMARK(POLY1305_256BYTES, benchmark::PriorityLevel::HIGH);
-BENCHMARK(POLY1305_1MB, benchmark::PriorityLevel::HIGH);
+BENCHMARK(POLY1305_64BYTES);
+BENCHMARK(POLY1305_256BYTES);
+BENCHMARK(POLY1305_1MB);

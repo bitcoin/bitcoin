@@ -1,4 +1,4 @@
-// Copyright (c) 2022 The Bitcoin Core developers
+// Copyright (c) 2022-present The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -13,6 +13,9 @@
 #include <new>
 #include <type_traits>
 #include <utility>
+
+#include <util/check.h>
+#include <util/overflow.h>
 
 /**
  * A memory resource similar to std::pmr::unsynchronized_pool_resource, but
@@ -125,7 +128,7 @@ class PoolResource final
      */
     [[nodiscard]] static constexpr std::size_t NumElemAlignBytes(std::size_t bytes)
     {
-        return (bytes + ELEM_ALIGN_BYTES - 1) / ELEM_ALIGN_BYTES + (bytes == 0);
+        return CeilDiv(bytes, ELEM_ALIGN_BYTES) + (bytes == 0);
     }
 
     /**
@@ -153,14 +156,17 @@ class PoolResource final
     void AllocateChunk()
     {
         // if there is still any available memory left, put it into the freelist.
-        size_t remaining_available_bytes = std::distance(m_available_memory_it, m_available_memory_end);
+        size_t remaining_available_bytes = m_available_memory_end - m_available_memory_it;
         if (0 != remaining_available_bytes) {
+            ASAN_UNPOISON_MEMORY_REGION(m_available_memory_it, sizeof(ListNode));
             PlacementAddToList(m_available_memory_it, m_free_lists[remaining_available_bytes / ELEM_ALIGN_BYTES]);
+            ASAN_POISON_MEMORY_REGION(m_available_memory_it, sizeof(ListNode));
         }
 
         void* storage = ::operator new (m_chunk_size_bytes, std::align_val_t{ELEM_ALIGN_BYTES});
         m_available_memory_it = new (storage) std::byte[m_chunk_size_bytes];
         m_available_memory_end = m_available_memory_it + m_chunk_size_bytes;
+        ASAN_POISON_MEMORY_REGION(m_available_memory_it, m_chunk_size_bytes);
         m_allocated_chunks.emplace_back(m_available_memory_it);
     }
 
@@ -202,6 +208,7 @@ public:
         for (std::byte* chunk : m_allocated_chunks) {
             std::destroy(chunk, chunk + m_chunk_size_bytes);
             ::operator delete ((void*)chunk, std::align_val_t{ELEM_ALIGN_BYTES});
+            ASAN_UNPOISON_MEMORY_REGION(chunk, m_chunk_size_bytes);
         }
     }
 
@@ -217,7 +224,11 @@ public:
                 // we've already got data in the pool's freelist, unlink one element and return the pointer
                 // to the unlinked memory. Since FreeList is trivially destructible we can just treat it as
                 // uninitialized memory.
-                return std::exchange(m_free_lists[num_alignments], m_free_lists[num_alignments]->m_next);
+                ASAN_UNPOISON_MEMORY_REGION(m_free_lists[num_alignments], sizeof(ListNode));
+                auto* next{m_free_lists[num_alignments]->m_next};
+                ASAN_POISON_MEMORY_REGION(m_free_lists[num_alignments], sizeof(ListNode));
+                ASAN_UNPOISON_MEMORY_REGION(m_free_lists[num_alignments], bytes);
+                return std::exchange(m_free_lists[num_alignments], next);
             }
 
             // freelist is empty: get one allocation from allocated chunk memory.
@@ -228,6 +239,7 @@ public:
             }
 
             // Make sure we use the right amount of bytes for that freelist (might be rounded up),
+            ASAN_UNPOISON_MEMORY_REGION(m_available_memory_it, round_bytes);
             return std::exchange(m_available_memory_it, m_available_memory_it + round_bytes);
         }
 
@@ -244,7 +256,9 @@ public:
             const std::size_t num_alignments = NumElemAlignBytes(bytes);
             // put the memory block into the linked list. We can placement construct the FreeList
             // into the memory since we can be sure the alignment is correct.
+            ASAN_UNPOISON_MEMORY_REGION(p, sizeof(ListNode));
             PlacementAddToList(p, m_free_lists[num_alignments]);
+            ASAN_POISON_MEMORY_REGION(p, std::max(bytes, sizeof(ListNode)));
         } else {
             // Can't use the pool => forward deallocation to ::operator delete().
             ::operator delete (p, std::align_val_t{alignment});
@@ -337,13 +351,6 @@ bool operator==(const PoolAllocator<T1, MAX_BLOCK_SIZE_BYTES, ALIGN_BYTES>& a,
                 const PoolAllocator<T2, MAX_BLOCK_SIZE_BYTES, ALIGN_BYTES>& b) noexcept
 {
     return a.resource() == b.resource();
-}
-
-template <class T1, class T2, std::size_t MAX_BLOCK_SIZE_BYTES, std::size_t ALIGN_BYTES>
-bool operator!=(const PoolAllocator<T1, MAX_BLOCK_SIZE_BYTES, ALIGN_BYTES>& a,
-                const PoolAllocator<T2, MAX_BLOCK_SIZE_BYTES, ALIGN_BYTES>& b) noexcept
-{
-    return !(a == b);
 }
 
 #endif // BITCOIN_SUPPORT_ALLOCATORS_POOL_H
