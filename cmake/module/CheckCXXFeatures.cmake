@@ -4,7 +4,7 @@
 
 include_guard(GLOBAL)
 
-#Checks for C++ features required to compile Bitcoin Core.
+# Checks for C++ features required to compile Bitcoin Core.
 
 include(CheckCXXSourceCompiles)
 
@@ -33,10 +33,8 @@ function(check_cxx_features)
       "Compiler lacks Class Template Argument Deduction (CTAD) for aggregates.\n"
       "This C++ feature is required for src/util/overloaded.h.\n"
       "You are probably using an old compiler version\n"
-      "The recommended compiler versions can be checked in:\n"
-      "  - GCC -> ${MIN_GCC_DOCS}\n"
-      "  - Clang -> ${MIN_CLANG_DOCS}\n"
-      "  - MSVC -> ${MIN_MSVC_DOCS}\n"
+      "The recommended compiler versions can be checked in\n"
+      "doc/dependencies.md#compiler.\n"
     )
   endif()
 
