@@ -285,9 +285,10 @@ jobs:
         # Only save cache from the 'standard' job, as it includes the necessary downloads for other jobs in the matrix. If the matrix is modified, this may need amending.
         if: github.event_name != 'pull_request' && github.ref_name == github.event.repository.default_branch && steps.vcpkg-binary-cache.outputs.cache-hit != 'true' && steps.vcpkg-downloads-cache.outputs.cache-hit != 'true' && matrix.job-type == 'standard'
         with:
+          # Cache the tools once as archives, but not redundantly in extracted form.
           path: |
             ~/AppData/Local/vcpkg/downloads/*
-            !~/AppData/Local/vcpkg/downloads/tools  # Cache the tools once as archives, but not redundantly in extracted form.
+            !~/AppData/Local/vcpkg/downloads/tools
           key: ${{ steps.vcpkg-downloads-cache.outputs.cache-primary-key }}
 
       - name: Build
