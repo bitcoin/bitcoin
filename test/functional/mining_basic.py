@@ -235,7 +235,7 @@ class MiningTest(BitcoinTestFramework):
         assert_equal(node.getblocktemplate(template_request={
             'data': block.serialize().hex(),
             'mode': 'proposal',
-            'rules': ['segwit'],
+            **NORMAL_GBT_REQUEST_PARAMS,
         }), None)
 
         bad_block = copy.deepcopy(block)
