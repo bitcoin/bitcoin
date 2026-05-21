@@ -2781,7 +2781,7 @@ bool Chainstate::FlushStateToDisk(
                 // First make sure all block and undo data is flushed to disk.
                 // TODO: Handle return error, or add detailed comment why it is
                 // safe to not return an error upon failure.
-                if (!m_blockman.FlushChainstateBlockFile(m_chain.Height())) {
+                if (!m_blockman.FlushChainstateBlockFile(m_chain.Height(), /*snapshot_chainstate=*/m_from_snapshot_blockhash.has_value())) {
                     LogWarning("%s: Failed to flush block file.\n", __func__);
                 }
             }
@@ -4672,6 +4672,12 @@ VerifyDBResult CVerifyDB::VerifyDB(
         size_t curr_coins_usage = coins.DynamicMemoryUsage() + chainstate.CoinsTip().DynamicMemoryUsage();
 
         if (nCheckLevel >= 3) {
+            // A snapshot chainstate cannot disconnect its base block because
+            // the ancestor UTXO data needed by DisconnectBlock is not present
+            // in the snapshot database. Stop the disconnect walk here.
+            if (is_snapshot_cs && pindex == chainstate.SnapshotBase()) {
+                break;
+            }
             if (curr_coins_usage <= chainstate.m_coinstip_cache_size_bytes) {
                 assert(coins.GetBestBlock() == pindex->GetBlockHash());
                 DisconnectResult res = chainstate.DisconnectBlock(block, pindex, coins);
@@ -4878,13 +4884,18 @@ void Chainstate::PopulateBlockIndexCandidates()
 {
     AssertLockHeld(::cs_main);
 
+    const CBlockIndex* target_block{TargetBlock()};
     for (CBlockIndex* pindex : m_blockman.GetAllBlockIndices()) {
         // With assumeutxo, the snapshot block is a candidate for the tip, but it
         // may not have BLOCK_VALID_TRANSACTIONS (e.g. if we haven't yet downloaded
         // the block), so we special-case it here.
+        // A historical chainstate can target the snapshot base, but must still
+        // wait until the target's parents have been processed.
+        const bool target_parent_unprocessed{pindex == target_block && pindex->pprev && !pindex->pprev->HaveNumChainTxs()};
         if (pindex == SnapshotBase() ||
                 (pindex->IsValid(BLOCK_VALID_TRANSACTIONS) &&
-                 (pindex->HaveNumChainTxs() || pindex->pprev == nullptr))) {
+                 (pindex->HaveNumChainTxs() || pindex->pprev == nullptr) &&
+                 !target_parent_unprocessed)) {
             TryAddBlockIndexCandidate(pindex);
         }
     }
