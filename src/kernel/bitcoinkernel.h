@@ -1178,6 +1178,8 @@ BITCOINKERNEL_API void btck_chainstate_manager_options_set_worker_threads_num(
  * @param[in] wipe_block_tree_db         Set wipe block tree db. Should only be 1 if wipe_chainstate_db is 1 too.
  * @param[in] wipe_chainstate_db         Set wipe chainstate db.
  * @return                               0 if the set was successful, non-zero if the set failed.
+ * @note                                 When a wipe is set, the caller must invoke @ref btck_chainstate_manager_import_blocks
+ *                                       on the resulting chainstate manager before using it for anything else.
  */
 BITCOINKERNEL_API int BITCOINKERNEL_WARN_UNUSED_RESULT btck_chainstate_manager_options_set_wipe_dbs(
     btck_ChainstateManagerOptions* chainstate_manager_options,
@@ -1232,7 +1234,7 @@ BITCOINKERNEL_API btck_ChainstateManager* BITCOINKERNEL_WARN_UNUSED_RESULT btck_
  * known cumulative proof of work.
  *
  * @param[in] chainstate_manager Non-null.
- * @return                       The btck_BlockTreeEntry.
+ * @return                       The btck_BlockTreeEntry, or null if no block headers have been loaded.
  */
 BITCOINKERNEL_API const btck_BlockTreeEntry* BITCOINKERNEL_WARN_UNUSED_RESULT btck_chainstate_manager_get_best_entry(
     const btck_ChainstateManager* chainstate_manager) BITCOINKERNEL_ARG_NONNULL(1);
