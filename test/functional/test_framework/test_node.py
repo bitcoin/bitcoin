@@ -189,11 +189,7 @@ class TestNode():
                 self.args.append("-v2transport=0")
         # if v2transport is requested via global flag but not supported for node version, ignore it
 
-        self.cli = TestNodeCLI(
-            binaries,
-            self.datadir_path,
-            self.rpc_timeout // 2,  # timeout identical to the one used in self._rpc
-        )
+        self.cli = None
         self.use_cli = use_cli
         self.start_perf = start_perf
 
@@ -328,7 +324,12 @@ class TestNode():
             rpc.auth_service_proxy_instance.reuse_http_connections = self.reuse_http_connections
             return rpc
         else:  # mode==CLI
-            return self.cli(f"-rpcclienttimeout={client_timeout}", f"-rpcconnect={host}", f"-rpcport={port}")
+            return TestNodeCLI(self.binaries)(
+                f"-datadir={self.datadir_path}",
+                f"-rpcclienttimeout={client_timeout}",
+                f"-rpcconnect={host}",
+                f"-rpcport={port}",
+            )
 
     def wait_for_rpc_connection(self, *, wait_for_import=True):
         """Sets up an RPC connection to the bitcoind process. Returns False if unable to connect."""
@@ -378,6 +379,7 @@ class TestNode():
                 self.log.debug("RPC successfully started")
                 # Set rpc_connected even if we are in use_cli mode so that we know we can call self.stop() if needed.
                 self.rpc_connected = True
+                self.cli = self.create_new_rpc_connection(mode="CLI")
                 if self.use_cli:
                     return
                 self._rpc = rpc
@@ -977,18 +979,16 @@ def arg_to_cli(arg):
 
 class TestNodeCLI():
     """Interface to bitcoin-cli for an individual node"""
-    def __init__(self, binaries, datadir, rpc_timeout):
+    def __init__(self, binaries):
         self.options = []
         self.binaries = binaries
-        self.datadir = datadir
-        self.rpc_timeout = rpc_timeout
         self.input = None
         self.log = logging.getLogger('TestFramework.bitcoincli')
 
     def __call__(self, *options, input=None):
         # TestNodeCLI is callable with bitcoin-cli command-line options
-        cli = TestNodeCLI(self.binaries, self.datadir, self.rpc_timeout)
-        cli.options = [str(o) for o in options]
+        cli = TestNodeCLI(self.binaries)
+        cli.options = self.options + [str(o) for o in options]
         cli.input = input
         return cli
 
@@ -1008,10 +1008,7 @@ class TestNodeCLI():
         """Run bitcoin-cli command. Deserializes returned string as python object."""
         pos_args = [arg_to_cli(arg) for arg in args]
         named_args = [key + "=" + arg_to_cli(value) for (key, value) in kwargs.items() if value is not None]
-        p_args = self.binaries.rpc_argv() + [
-            f"-datadir={self.datadir}",
-            f"-rpcclienttimeout={int(self.rpc_timeout)}",
-        ] + self.options
+        p_args = self.binaries.rpc_argv() + self.options
         if named_args:
             p_args += ["-named"]
         base_arg_pos = len(p_args)

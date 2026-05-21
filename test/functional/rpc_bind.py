@@ -39,7 +39,6 @@ class RPCBindTest(BitcoinTestFramework):
             base_args += ['-rpcallowip=' + x for x in allow_ips]
         binds = ['-rpcbind='+addr for addr in addresses]
         self.nodes[0].rpchost = connect_to
-        self.nodes[0].cli = self.nodes[0].create_new_rpc_connection(mode="CLI")  # Pass `connect_to` to cli.
         self.start_node(0, base_args + binds)
         pid = self.nodes[0].process.pid
         assert_equal(set(get_bind_addrs(pid)), set(expected))
