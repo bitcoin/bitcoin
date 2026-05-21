@@ -63,6 +63,7 @@ public:
                 return;
             }
             char buffer[500];
+            std::unique_ptr<char[]> heap_buffer;
             for (int iter = 0; iter < 2; iter++) {
                 char* base;
                 int bufsize;
@@ -72,7 +73,8 @@ public:
                 }
                 else {
                     bufsize = 30000;
-                    base = new char[bufsize];
+                    heap_buffer = std::make_unique<char[]>(bufsize);
+                    base = heap_buffer.get();
                 }
                 char* p = base;
                 char* limit = base + bufsize;
@@ -82,8 +84,12 @@ public:
                     va_list backup_ap;
                     va_copy(backup_ap, ap);
                     // Do not use vsnprintf elsewhere in bitcoin source code, see above.
-                    p += vsnprintf(p, limit - p, format, backup_ap);
+                    const int written = vsnprintf(p, limit - p, format, backup_ap);
                     va_end(backup_ap);
+                    // vsnprintf can return a negative value on encoding error;
+                    // clamp to 0 so that the rest of this function does not
+                    // perform negative pointer arithmetic on `base`.
+                    if (written > 0) p += written;
                 }
 
                 // Truncate to available space if necessary
@@ -104,9 +110,6 @@ public:
                 assert(p <= limit);
                 base[std::min(bufsize - 1, (int)(p - base))] = '\0';
                 LogDebug(BCLog::LEVELDB, "%s\n", util::RemoveSuffixView(base, "\n"));
-                if (base != buffer) {
-                    delete[] base;
-                }
                 break;
             }
     }
