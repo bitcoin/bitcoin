@@ -880,7 +880,9 @@ bool CWallet::EncryptWallet(const SecureString& strWalletPassphrase)
                 encrypted_batch = nullptr;
                 // We now probably have half of our keys encrypted in memory, and half not...
                 // die and let the user reload the unencrypted wallet.
-                assert(false);
+                mapMasterKeys.erase(nMasterKeyMaxID);
+                --nMasterKeyMaxID;
+                CHECK_NONFATAL(false);
             }
         }
 
@@ -889,7 +891,9 @@ bool CWallet::EncryptWallet(const SecureString& strWalletPassphrase)
             encrypted_batch = nullptr;
             // We now have keys encrypted in memory, but not on disk...
             // die to avoid confusion and let the user reload the unencrypted wallet.
-            assert(false);
+            mapMasterKeys.erase(nMasterKeyMaxID);
+            --nMasterKeyMaxID;
+            CHECK_NONFATAL(false);
         }
 
         delete encrypted_batch;
