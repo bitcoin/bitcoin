@@ -33,6 +33,15 @@ class P2PConnectionLimits(BitcoinTestFramework):
         no_txrelay_version_msg.relay = 0
         return no_txrelay_version_msg
 
+    def create_no_services_blocks_only_version(self):
+        """VERSION with relay=0 and nServices=0 to avoid block-relay eviction protection."""
+        version_msg = msg_version()
+        version_msg.nVersion = P2P_VERSION
+        version_msg.strSubVer = P2P_SUBVERSION
+        version_msg.nServices = 0
+        version_msg.relay = 0
+        return version_msg
+
     def test_inbound_limits(self):
         node = self.nodes[0]
 
@@ -81,6 +90,18 @@ class P2PConnectionLimits(BitcoinTestFramework):
         node.add_p2p_connection(P2PInterface())
         self.wait_until(lambda: len(node.getpeerinfo()) == 2)
 
+        self.log.info('Test that EvictTxPeerIfFull only evicts tx-relaying peers')
+        NUM_BLOCK_RELAY_PEERS = 21
+        self.restart_node(0, ['-maxconnections=33', '-inboundrelaypercent=0'])
+        for _ in range(NUM_BLOCK_RELAY_PEERS):
+            p = self.nodes[0].add_p2p_connection(P2PInterface(), send_version=False, wait_for_verack=False)
+            p.send_without_ping(self.create_no_services_blocks_only_version())
+            p.wait_for_verack()
+        self.wait_until(lambda: len(node.getpeerinfo()) == NUM_BLOCK_RELAY_PEERS)
+
+        with node.assert_debug_log(['failed to find a tx-relaying eviction candidate - connection dropped'], timeout=5):
+            self.nodes[0].add_p2p_connection(P2PInterface(), expect_success=False, wait_for_verack=False)
+        self.wait_until(lambda: len(node.getpeerinfo()) == NUM_BLOCK_RELAY_PEERS)
 
 if __name__ == '__main__':
     P2PConnectionLimits(__file__).main()
