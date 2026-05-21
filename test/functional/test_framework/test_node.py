@@ -378,9 +378,13 @@ class TestNode():
                     # doesn't specify errno.
                     elif isinstance(e, ConnectionResetError):
                         error_num = errno.ECONNRESET
+                    # Windows can raise this while bitcoind shuts down during startup.
+                    elif isinstance(e, ConnectionAbortedError):
+                        error_num = errno.ECONNABORTED
 
                 # Suppress similarly to the above JSONRPCException errors.
                 if error_num not in [
+                    errno.ECONNABORTED, # Treat identical to ECONNRESET
                     errno.ECONNRESET,   # This might happen when the RPC server is in warmup,
                                         # but shut down before the call to getblockcount succeeds.
                     errno.ETIMEDOUT,    # Treat identical to ECONNRESET
