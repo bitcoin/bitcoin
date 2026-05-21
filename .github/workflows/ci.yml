@@ -348,8 +348,6 @@ jobs:
 
       - name: Configure Docker
         uses: ./.github/actions/configure-docker
-        with:
-          cache-provider: ${{ needs.runners.outputs.provider }}
 
       - name: CI script
         run: ./ci/test_run_all.sh
@@ -537,8 +535,6 @@ jobs:
 
       - name: Configure Docker
         uses: ./.github/actions/configure-docker
-        with:
-          cache-provider: ${{ matrix.provider || needs.runners.outputs.provider }}
 
       - name: Enable bpfcc script
         if: ${{ env.CONTAINER_NAME == 'ci_native_asan' }}
@@ -574,8 +570,6 @@ jobs:
 
       - name: Configure Docker
         uses: ./.github/actions/configure-docker
-        with:
-          cache-provider: ${{ needs.runners.outputs.provider }}
 
       - name: CI script
         run: |
