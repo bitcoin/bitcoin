@@ -529,7 +529,7 @@ class MinOutputGroupComparator
 public:
     int operator() (const OutputGroup& group1, const OutputGroup& group2) const
     {
-        return group1.GetSelectionAmount() > group2.GetSelectionAmount();
+        return descending_effval_weight(group1, group2);
     }
 };
 
