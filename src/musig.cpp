@@ -18,6 +18,10 @@ constexpr uint256 MUSIG_CHAINCODE{
 
 static bool GetMuSig2KeyAggCache(const std::vector<CPubKey>& pubkeys, secp256k1_musig_keyagg_cache& keyagg_cache)
 {
+    if (pubkeys.empty()) {
+        return false;
+    }
+
     // Parse the pubkeys
     std::vector<secp256k1_pubkey> secp_pubkeys;
     std::vector<const secp256k1_pubkey*> pubkey_ptrs;
