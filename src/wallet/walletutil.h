@@ -5,6 +5,7 @@
 #ifndef BITCOIN_WALLET_WALLETUTIL_H
 #define BITCOIN_WALLET_WALLETUTIL_H
 
+#include <common/bip352.h>
 #include <script/descriptor.h>
 #include <util/fs.h>
 
@@ -54,6 +55,9 @@ enum WalletFlags : uint64_t {
 
     //! Indicates that the wallet needs an external signer
     WALLET_FLAG_EXTERNAL_SIGNER = (1ULL << 35),
+
+    //! Indicate that this wallet supports and has a SilentPaymentDescriptorScriptPubKeyMan
+    WALLET_FLAG_SILENT_PAYMENTS = (1ULL << 36),
 };
 
 //! Get the path of the wallet directory.
@@ -98,7 +102,9 @@ public:
     WalletDescriptor(std::shared_ptr<Descriptor> descriptor, uint64_t creation_time, int32_t range_start, int32_t range_end, int32_t next_index) : descriptor(descriptor), id(DescriptorID(*descriptor)), creation_time(creation_time), range_start(range_start), range_end(range_end), next_index(next_index) { }
 };
 
-WalletDescriptor GenerateWalletDescriptor(const CExtPubKey& master_key, const OutputType& output_type, bool internal);
+WalletDescriptor GenerateWalletDescriptor(const CExtKey& master_key, const OutputType& output_type, bool internal);
+
+std::optional<std::pair<std::vector<XOnlyPubKey>, bip352::PrevoutsSummary>> GetSilentPaymentsData(const CTransaction& tx, const std::map<COutPoint, Coin>& spent_coins);
 } // namespace wallet
 
 #endif // BITCOIN_WALLET_WALLETUTIL_H

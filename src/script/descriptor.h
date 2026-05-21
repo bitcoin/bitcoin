@@ -192,6 +192,15 @@ struct Descriptor {
     virtual size_t GetKeyCount() const = 0;
 };
 
+/** Interface for parsed Silent Payments Descriptor objects.
+ *
+ */
+struct SpDescriptor {
+    /** Return the scankey for this descriptor.
+     */
+    virtual CKey GetScanKey() const = 0;
+};
+
 /** Parse a `descriptor` string. Included private keys are put in `out`.
  *
  * If the descriptor has a checksum, it must be valid. If `require_checksum`
