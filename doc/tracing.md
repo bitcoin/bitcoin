@@ -108,6 +108,24 @@ Arguments passed:
 3. Whether the header was received as part of a `cmpctblock` message as `bool`
 4. Block Header Hash as `pointer to unsigned chars` (i.e. 32 bytes in little-endian)
 
+#### Tracepoint `net:compact_block_reconstructed`
+
+Is called after a compact block was successfully reconstructed. This is called
+before the reconstructed block is submitted for validation.
+
+Arguments passed:
+1. Peer ID of the peer that supplied the compact block data as `int64`
+2. Prefilled transaction count as `uint32`
+3. Transaction count from the mempool, excluding the extra transaction pool, as `uint32`
+4. Transaction count from the extra transaction pool as `uint32`
+5. Requested transaction count as `uint32`
+6. Requested transaction bytes as `uint32`
+7. Block Header Hash as `pointer to unsigned chars` (i.e. 32 bytes in little-endian)
+
+The mempool and extra transaction pool counts are disjoint.
+The binary hash is passed last so the first six arguments remain scalar fields
+available to `bpftrace` users.
+
 #### Tracepoint `net:inbound_connection`
 
 Is called when a new inbound connection is opened to us. Passes information about

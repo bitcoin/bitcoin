@@ -341,6 +341,13 @@ BOOST_AUTO_TEST_CASE(ReceiveWithExtraTransactions) {
         BOOST_CHECK( partial_block.IsTxAvailable(0));
         BOOST_CHECK(!partial_block.IsTxAvailable(1));
         BOOST_CHECK( partial_block.IsTxAvailable(2));
+        const std::vector<CTransactionRef> missing_from_mempool{block.vtx[1]};
+        const auto stats{partial_block.GetReconstructionStats(missing_from_mempool)};
+        BOOST_CHECK_EQUAL(stats.prefilled_txn_count, 1);
+        BOOST_CHECK_EQUAL(stats.mempool_txn_count, 1);
+        BOOST_CHECK_EQUAL(stats.extra_pool_txn_count, 0);
+        BOOST_CHECK_EQUAL(stats.requested_txn_count, 1);
+        BOOST_CHECK_EQUAL(stats.requested_txn_bytes, block.vtx[1]->ComputeTotalSize());
 
         // Add an unrelated tx to extra_txn:
         extra_txn[0] = {non_block_tx->GetWitnessHash(), non_block_tx};
@@ -352,6 +359,12 @@ BOOST_AUTO_TEST_CASE(ReceiveWithExtraTransactions) {
         // This transaction is now available via extra_txn:
         BOOST_CHECK(partial_block_with_extra.IsTxAvailable(1));
         BOOST_CHECK(partial_block_with_extra.IsTxAvailable(2));
+        const auto stats_with_extra{partial_block_with_extra.GetReconstructionStats({})};
+        BOOST_CHECK_EQUAL(stats_with_extra.prefilled_txn_count, 1);
+        BOOST_CHECK_EQUAL(stats_with_extra.mempool_txn_count, 1);
+        BOOST_CHECK_EQUAL(stats_with_extra.extra_pool_txn_count, 1);
+        BOOST_CHECK_EQUAL(stats_with_extra.requested_txn_count, 0);
+        BOOST_CHECK_EQUAL(stats_with_extra.requested_txn_bytes, 0);
     }
 }
 

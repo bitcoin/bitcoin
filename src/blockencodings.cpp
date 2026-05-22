@@ -186,6 +186,19 @@ bool PartiallyDownloadedBlock::IsTxAvailable(size_t index) const
     return txn_available[index] != nullptr;
 }
 
+CompactBlockReconstructionStats PartiallyDownloadedBlock::GetReconstructionStats(const std::vector<CTransactionRef>& vtx_missing) const
+{
+    uint32_t requested_txn_bytes{0};
+    for (const auto& tx : vtx_missing) requested_txn_bytes += tx->ComputeTotalSize();
+    return {
+        static_cast<uint32_t>(prefilled_count),
+        static_cast<uint32_t>(mempool_count - extra_count),
+        static_cast<uint32_t>(extra_count),
+        static_cast<uint32_t>(vtx_missing.size()),
+        requested_txn_bytes,
+    };
+}
+
 ReadStatus PartiallyDownloadedBlock::FillBlock(CBlock& block, const std::vector<CTransactionRef>& vtx_missing, bool segwit_active)
 {
     if (header.IsNull()) return READ_STATUS_INVALID;
@@ -221,9 +234,8 @@ ReadStatus PartiallyDownloadedBlock::FillBlock(CBlock& block, const std::vector<
 
     if (util::log::ShouldDebugLog(BCLog::CMPCTBLOCK)) {
         const uint256 hash{block.GetHash()};
-        uint32_t tx_missing_size{0};
-        for (const auto& tx : vtx_missing) tx_missing_size += tx->ComputeTotalSize();
-        LogDebug(BCLog::CMPCTBLOCK, "Successfully reconstructed block %s with %u txn prefilled, %u txn from mempool (incl at least %u from extra pool) and %u txn (%u bytes) requested\n", hash.ToString(), prefilled_count, mempool_count, extra_count, vtx_missing.size(), tx_missing_size);
+        const auto stats{GetReconstructionStats(vtx_missing)};
+        LogDebug(BCLog::CMPCTBLOCK, "Successfully reconstructed block %s with %u txn prefilled, %u txn from mempool (incl at least %u from extra pool) and %u txn (%u bytes) requested\n", hash.ToString(), stats.prefilled_txn_count, stats.mempool_txn_count + stats.extra_pool_txn_count, stats.extra_pool_txn_count, stats.requested_txn_count, stats.requested_txn_bytes);
         if (vtx_missing.size() < 5) {
             for (const auto& tx : vtx_missing) {
                 LogDebug(BCLog::CMPCTBLOCK, "Reconstructed block %s required tx %s\n", hash.ToString(), tx->GetHash().ToString());

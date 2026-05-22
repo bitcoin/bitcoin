@@ -3,6 +3,8 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
+#include <bitcoin-build-config.h> // IWYU pragma: keep
+
 #include <net_processing.h>
 
 #include <addrman.h>
@@ -90,6 +92,7 @@ using kernel::ChainstateRole;
 using namespace util::hex_literals;
 
 TRACEPOINT_SEMAPHORE(net, block_header);
+TRACEPOINT_SEMAPHORE(net, compact_block_reconstructed);
 TRACEPOINT_SEMAPHORE(net, inbound_message);
 TRACEPOINT_SEMAPHORE(net, misbehaving_connection);
 
@@ -210,6 +213,34 @@ struct QueuedBlock {
     /** Optional, used for CMPCTBLOCK downloads */
     std::unique_ptr<PartiallyDownloadedBlock> partialBlock;
 };
+
+void TraceCompactBlockReconstructed(
+    const CBlock& block,
+    const CNode& peer,
+    const PartiallyDownloadedBlock& partial_block,
+    const std::vector<CTransactionRef>& vtx_missing)
+{
+#ifdef ENABLE_TRACING
+    if (!TRACEPOINT_ACTIVE(net, compact_block_reconstructed)) return;
+
+    const uint256 hash{block.GetHash()};
+    const auto stats{partial_block.GetReconstructionStats(vtx_missing)};
+    TRACEPOINT(net, compact_block_reconstructed,
+        peer.GetId(),
+        stats.prefilled_txn_count,
+        stats.mempool_txn_count,
+        stats.extra_pool_txn_count,
+        stats.requested_txn_count,
+        stats.requested_txn_bytes,
+        hash.data()
+    );
+#else
+    (void)block;
+    (void)peer;
+    (void)partial_block;
+    (void)vtx_missing;
+#endif
+}
 
 /**
  * Data structure for an individual peer. This struct is not protected by
@@ -3505,6 +3536,7 @@ void PeerManagerImpl::ProcessCompactBlockTxns(CNode& pfrom, Peer& peer, const Bl
             }
         } else {
             // Block is okay for further processing
+            TraceCompactBlockReconstructed(*pblock, pfrom, partialBlock, block_transactions.txn);
             RemoveBlockRequest(block_transactions.blockhash, pfrom.GetId()); // it is now an empty pointer
             fBlockRead = true;
             // mapBlockSource is used for potentially punishing peers and
@@ -4659,6 +4691,7 @@ void PeerManagerImpl::ProcessMessage(Peer& peer, CNode& pfrom, const std::string
                 status = tempBlock.FillBlock(*pblock, dummy,
                                              /*segwit_active=*/DeploymentActiveAfter(prev_block, m_chainman, Consensus::DEPLOYMENT_SEGWIT));
                 if (status == READ_STATUS_OK) {
+                    TraceCompactBlockReconstructed(*pblock, pfrom, tempBlock, dummy);
                     fBlockReconstructed = true;
                 }
             }
