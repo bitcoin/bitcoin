@@ -379,11 +379,11 @@ class TestNode():
                 self.log.debug("RPC successfully started")
                 # Set rpc_connected even if we are in use_cli mode so that we know we can call self.stop() if needed.
                 self.rpc_connected = True
+                self.url = rpc.rpc_url
                 self.cli = self.create_new_rpc_connection(mode="CLI")
                 if self.use_cli:
                     return
                 self._rpc = rpc
-                self.url = self._rpc.rpc_url
                 return
             except JSONRPCException as e:
                 # Suppress these as they are expected during initialization.
