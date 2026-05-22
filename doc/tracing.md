@@ -96,6 +96,18 @@ to user-space in full. Messages longer than 32kb might be cut off. This can
 be detected in tracing scripts by comparing the message size to the length of
 the passed message.
 
+#### Tracepoint `net:block_header`
+
+Is called after a new valid block header is received from a peer. The header
+may have been announced through a `headers` message or as part of a
+`cmpctblock` message.
+
+Arguments passed:
+1. Block Height as `int32`
+2. Peer ID as `int64`
+3. Whether the header was received as part of a `cmpctblock` message as `bool`
+4. Block Header Hash as `pointer to unsigned chars` (i.e. 32 bytes in little-endian)
+
 #### Tracepoint `net:inbound_connection`
 
 Is called when a new inbound connection is opened to us. Passes information about

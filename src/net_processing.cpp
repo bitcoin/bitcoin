@@ -89,6 +89,7 @@
 using kernel::ChainstateRole;
 using namespace util::hex_literals;
 
+TRACEPOINT_SEMAPHORE(net, block_header);
 TRACEPOINT_SEMAPHORE(net, inbound_message);
 TRACEPOINT_SEMAPHORE(net, misbehaving_connection);
 
@@ -3538,10 +3539,17 @@ void PeerManagerImpl::LogBlockHeader(const CBlockIndex& index, const CNode& peer
     // don't followup with a complete and valid (compact) block.
     // Having this log by default when not in IBD ensures broad availability of
     // this data in case investigation is merited.
+    const uint256 block_hash{index.GetBlockHash()};
+    TRACEPOINT(net, block_header,
+        index.nHeight,
+        peer.GetId(),
+        via_compact_block,
+        block_hash.data()
+    );
     const auto msg = strprintf(
         "Saw new %sheader hash=%s height=%d %s",
         via_compact_block ? "cmpctblock " : "",
-        index.GetBlockHash().ToString(),
+        block_hash.ToString(),
         index.nHeight,
         peer.LogPeer()
     );
