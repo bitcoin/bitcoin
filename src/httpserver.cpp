@@ -129,13 +129,19 @@ std::string_view RequestMethodString(HTTPRequestMethod m)
     assert(false);
 }
 
+static void WriteNoStoreErrorReply(HTTPRequest& req, HTTPStatusCode status, std::string_view reply = {})
+{
+    req.WriteHeader("Cache-Control", "no-store");
+    req.WriteReply(status, reply);
+}
+
 static void MaybeDispatchRequestToWorker(std::shared_ptr<HTTPRequest> hreq)
 {
     // Early reject unknown HTTP methods
     if (hreq->GetRequestMethod() == HTTPRequestMethod::UNKNOWN) {
         LogDebug(BCLog::HTTP, "HTTP request from %s rejected: Unknown HTTP request method\n",
                  hreq->GetPeer().ToStringAddrPort());
-        hreq->WriteReply(HTTP_BAD_METHOD);
+        WriteNoStoreErrorReply(*hreq, HTTP_BAD_METHOD);
         return;
     }
 
@@ -161,7 +167,7 @@ static void MaybeDispatchRequestToWorker(std::shared_ptr<HTTPRequest> hreq)
     if (i != iend) {
         if (static_cast<int>(g_threadpool_http.WorkQueueSize()) >= g_max_queue_depth) {
             LogWarning("Request rejected because http work queue depth exceeded, it can be increased with the -rpcworkqueue= setting");
-            hreq->WriteReply(HTTP_SERVICE_UNAVAILABLE, "Work queue depth exceeded");
+            WriteNoStoreErrorReply(*hreq, HTTP_SERVICE_UNAVAILABLE, "Work queue depth exceeded");
             return;
         }
 
@@ -180,25 +186,25 @@ static void MaybeDispatchRequestToWorker(std::shared_ptr<HTTPRequest> hreq)
             // Reply so the client doesn't hang waiting for the response.
             req->WriteHeader("Connection", "close");
             // TODO: Implement specific error formatting for the REST and JSON-RPC servers responses.
-            req->WriteReply(HTTP_INTERNAL_SERVER_ERROR, err_msg);
+            WriteNoStoreErrorReply(*req, HTTP_INTERNAL_SERVER_ERROR, err_msg);
         };
 
         if (auto res = g_threadpool_http.Submit(std::move(item)); !res.has_value()) {
             Assume(hreq.use_count() == 1); // ensure request will be deleted
             // Both SubmitError::Inactive and SubmitError::Interrupted mean shutdown
             LogWarning("HTTP request rejected during server shutdown: '%s'", SubmitErrorString(res.error()));
-            hreq->WriteReply(HTTP_SERVICE_UNAVAILABLE, "Request rejected during server shutdown");
+            WriteNoStoreErrorReply(*hreq, HTTP_SERVICE_UNAVAILABLE, "Request rejected during server shutdown");
             return;
         }
     } else {
-        hreq->WriteReply(HTTP_NOT_FOUND);
+        WriteNoStoreErrorReply(*hreq, HTTP_NOT_FOUND);
     }
 }
 
 static void RejectRequest(std::unique_ptr<http_bitcoin::HTTPRequest> hreq)
 {
     LogDebug(BCLog::HTTP, "Rejecting request while shutting down");
-    hreq->WriteReply(HTTP_SERVICE_UNAVAILABLE);
+    WriteNoStoreErrorReply(*hreq, HTTP_SERVICE_UNAVAILABLE);
 }
 
 static std::vector<std::pair<std::string, uint16_t>> GetBindAddresses()
@@ -1005,7 +1011,7 @@ void HTTPServer::MaybeDispatchRequestsFromClient(const std::shared_ptr<HTTPRemot
                 client->m_id,
                 e.what());
 
-            req->WriteReply(HTTP_CONTENT_TOO_LARGE);
+            WriteNoStoreErrorReply(*req, HTTP_CONTENT_TOO_LARGE);
             client->m_disconnect = true;
             return;
         } catch (const std::runtime_error& e) {
@@ -1017,7 +1023,7 @@ void HTTPServer::MaybeDispatchRequestsFromClient(const std::shared_ptr<HTTPRemot
                 e.what());
 
             // We failed to read a complete request from the buffer
-            req->WriteReply(HTTP_BAD_REQUEST);
+            WriteNoStoreErrorReply(*req, HTTP_BAD_REQUEST);
             client->m_disconnect = true;
             return;
         }
