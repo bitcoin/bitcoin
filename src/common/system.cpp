@@ -7,7 +7,7 @@
 
 #include <common/system.h>
 
-#include <logging.h>
+#include <util/log.h>
 #include <util/string.h>
 #include <util/time.h>
 

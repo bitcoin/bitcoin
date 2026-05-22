@@ -6,9 +6,9 @@
 
 #include <common/netif.h>
 
-#include <logging.h>
 #include <netbase.h>
 #include <util/check.h>
+#include <util/log.h>
 #include <util/sock.h>
 #include <util/syserror.h>
 

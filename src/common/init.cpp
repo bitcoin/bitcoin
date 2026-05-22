@@ -5,9 +5,9 @@
 #include <chainparams.h>
 #include <common/args.h>
 #include <common/init.h>
-#include <logging.h>
 #include <tinyformat.h>
 #include <util/fs.h>
+#include <util/log.h>
 #include <util/translation.h>
 
 #include <algorithm>

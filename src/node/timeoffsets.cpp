@@ -2,11 +2,11 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include <logging.h>
 #include <node/timeoffsets.h>
 #include <node/warnings.h>
 #include <sync.h>
 #include <tinyformat.h>
+#include <util/log.h>
 #include <util/time.h>
 #include <util/translation.h>
 

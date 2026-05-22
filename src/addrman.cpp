@@ -9,7 +9,6 @@
 #include <addrman_impl.h>
 
 #include <hash.h>
-#include <logging.h>
 #include <logging/timer.h>
 #include <netaddress.h>
 #include <protocol.h>
@@ -19,6 +18,7 @@
 #include <tinyformat.h>
 #include <uint256.h>
 #include <util/check.h>
+#include <util/log.h>
 #include <util/time.h>
 
 #include <cmath>

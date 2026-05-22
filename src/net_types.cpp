@@ -4,10 +4,10 @@
 
 #include <net_types.h>
 
-#include <logging.h>
 #include <netaddress.h>
 #include <netbase.h>
 #include <univalue.h>
+#include <util/log.h>
 
 static const char* BANMAN_JSON_VERSION_KEY{"version"};
 

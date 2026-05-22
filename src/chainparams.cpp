@@ -9,9 +9,9 @@
 #include <common/args.h>
 #include <consensus/params.h>
 #include <deploymentinfo.h>
-#include <logging.h>
 #include <tinyformat.h>
 #include <util/chaintype.h>
+#include <util/log.h>
 #include <util/strencodings.h>
 #include <util/string.h>
 

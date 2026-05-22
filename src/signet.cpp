@@ -13,7 +13,6 @@
 #include <script/script.h>
 #include <streams.h>
 #include <uint256.h>
-#include <util/check.h>
 #include <util/log.h>
 
 #include <algorithm>

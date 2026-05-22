@@ -7,7 +7,6 @@
 
 #include <chainparamsbase.h>
 #include <common/settings.h>
-#include <logging.h>
 #include <sync.h>
 #include <tinyformat.h>
 #include <univalue.h>
@@ -15,6 +14,7 @@
 #include <util/check.h>
 #include <util/fs.h>
 #include <util/fs_helpers.h>
+#include <util/log.h>
 #include <util/strencodings.h>
 #include <util/string.h>
 

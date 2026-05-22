@@ -14,8 +14,8 @@
 #include <interfaces/node.h>
 #include <interfaces/wallet.h>
 #include <key_io.h>
-#include <logging.h>
 #include <policy/policy.h>
+#include <util/log.h>
 #include <validation.h>
 
 #include <cstdint>

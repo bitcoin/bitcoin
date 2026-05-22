@@ -10,10 +10,10 @@
 #include <ipc/exception.h>
 #include <ipc/protocol.h>
 #include <kj/async.h>
-#include <logging.h>
 #include <mp/proxy-io.h>
 #include <mp/proxy-types.h>
 #include <mp/util.h>
+#include <util/log.h>
 #include <util/threadnames.h>
 
 #include <cassert>
@@ -33,8 +33,8 @@ namespace {
 
 mp::Log GetRequestedIPCLogLevel()
 {
-    if (LogAcceptCategory(BCLog::IPC, BCLog::Level::Trace)) return mp::Log::Trace;
-    if (LogAcceptCategory(BCLog::IPC, BCLog::Level::Debug)) return mp::Log::Debug;
+    if (util::log::ShouldTraceLog(BCLog::IPC)) return mp::Log::Trace;
+    if (util::log::ShouldDebugLog(BCLog::IPC)) return mp::Log::Debug;
 
     // Info, Warning, and Error are logged unconditionally
     return mp::Log::Info;
