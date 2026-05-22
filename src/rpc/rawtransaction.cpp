@@ -42,6 +42,7 @@
 #include <validation.h>
 #include <validationinterface.h>
 
+#include <algorithm>
 #include <cstdint>
 #include <numeric>
 
@@ -1864,7 +1865,9 @@ static RPCMethod joinpsbts()
     return RPCMethod{
         "joinpsbts",
         "Joins multiple distinct version 0 PSBTs with different inputs and outputs into one version 0 PSBT with inputs and outputs from all of the PSBTs\n"
-            "No input in any of the PSBTs can be in more than one of the PSBTs.\n",
+            "No input in any of the PSBTs can be in more than one of the PSBTs.\n"
+            "The merged PSBT's transaction uses the highest nLockTime among constraining input PSBTs with the same locktime type.\n"
+            "A PSBT constrains the locktime only when it has at least one input with nSequence not equal to SEQUENCE_FINAL and a non-zero nLockTime.\n",
             {
                 {"txs", RPCArg::Type::ARR, RPCArg::Optional::NO, "The base64 strings of partially signed transactions",
                     {
@@ -1888,7 +1891,7 @@ static RPCMethod joinpsbts()
     }
 
     uint32_t best_version = 1;
-    uint32_t best_locktime = 0xffffffff;
+    std::optional<uint32_t> max_locktime = std::nullopt;
     for (unsigned int i = 0; i < txs.size(); ++i) {
         util::Result<PartiallySignedTransaction> psbt_res = DecodeBase64PSBT(txs[i].get_str());
         if (!psbt_res) {
@@ -1903,17 +1906,29 @@ static RPCMethod joinpsbts()
         if (psbtx.tx_version > best_version) {
             best_version = psbtx.tx_version;
         }
-        // Choose the lowest lock time
-        uint32_t psbt_locktime = psbtx.fallback_locktime.value_or(0);
-        if (psbt_locktime < best_locktime) {
-            best_locktime = psbt_locktime;
+        // Choose the highest nLockTime among PSBTs that constrain it. nLockTime is
+        // ignored when every input has nSequence == SEQUENCE_FINAL or nLockTime is 0.
+        const bool is_locktime_enabled = std::any_of(psbtx.inputs.begin(), psbtx.inputs.end(), [](const PSBTInput& input) {
+            return input.sequence && *input.sequence != CTxIn::SEQUENCE_FINAL;
+        });
+        const auto psbt_locktime{psbtx.fallback_locktime.value_or(0)};
+        if (is_locktime_enabled && psbt_locktime != 0) {
+            const bool is_time_locktime{psbt_locktime >= LOCKTIME_THRESHOLD};
+            if (max_locktime.has_value() && (*max_locktime >= LOCKTIME_THRESHOLD) != is_time_locktime) {
+                throw JSONRPCError(RPC_INVALID_PARAMETER, "Cannot join PSBTs with mixed height-based and time-based locktimes");
+            }
+            if (!max_locktime.has_value()) {
+                max_locktime = psbt_locktime;
+            } else {
+                max_locktime = std::max(*max_locktime, psbt_locktime);
+            }
         }
     }
 
     // Create a blank psbt where everything will be added
     CMutableTransaction tx;
     tx.version = best_version;
-    tx.nLockTime = best_locktime;
+    tx.nLockTime = max_locktime.value_or(0);
     PartiallySignedTransaction merged_psbt(tx, psbtxs.at(0).GetVersion());
 
     // Merge
