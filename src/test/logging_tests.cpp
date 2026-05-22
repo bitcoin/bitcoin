@@ -180,7 +180,7 @@ BOOST_FIXTURE_TEST_CASE(logging_SeverityLevels, LogSetup)
 {
     LogInstance().EnableCategory(BCLog::LogFlags::ALL);
 
-    LogInstance().SetCategoryLogLevel(/*category_str=*/"net", /*level_str=*/"info");
+    LogInstance().SetCategoryLogLevel(BCLog::NET, BCLog::Level::Info);
 
     // Global log level
     LogInfo("info_%s", 1);
