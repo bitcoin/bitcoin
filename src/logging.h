@@ -128,11 +128,35 @@ namespace BCLog {
     class Logger
     {
     private:
+        /** Log categories bitfield. */
+        std::atomic<CategoryMask> m_categories{BCLog::NONE};
+        /** Tracing-enabled categories bitfield. */
+        std::atomic<CategoryMask> m_trace_categories{BCLog::NONE};
+
+        // Internal atomics affecting Enabled()
+        std::atomic<bool> m_buffering = true; //!< Buffer messages before logging can be started.
+        std::atomic<bool> m_any_print_callbacks{false};
+
+    public:
+        // Configurable atomics affecting Enabled()
+        std::atomic<bool> m_print_to_console = false;
+        std::atomic<bool> m_print_to_file = false;
+
+        // Other configurable logging options
+        std::atomic<bool> m_log_timestamps = DEFAULT_LOGTIMESTAMPS;
+        std::atomic<bool> m_log_time_micros = DEFAULT_LOGTIMEMICROS;
+        std::atomic<bool> m_log_threadnames = DEFAULT_LOGTHREADNAMES;
+        std::atomic<bool> m_log_sourcelocations = DEFAULT_LOGSOURCELOCATIONS;
+        std::atomic<bool> m_always_print_category_level = DEFAULT_LOGLEVELALWAYS;
+        std::atomic<bool> m_reopen_file{false};
+
+    private:
+        // Non-atomic internal data
+
         mutable StdMutex m_cs; // Can not use Mutex from sync.h because in debug mode it would cause a deadlock when a potential deadlock was detected
 
         FILE* m_fileout GUARDED_BY(m_cs) = nullptr;
         std::list<util::log::Entry> m_msgs_before_open GUARDED_BY(m_cs);
-        std::atomic<bool> m_buffering = true; //!< Buffer messages before logging can be started.
         size_t m_max_buffer_memusage GUARDED_BY(m_cs){DEFAULT_MAX_LOG_BUFFER};
         size_t m_cur_buffer_memusage GUARDED_BY(m_cs){0};
         size_t m_buffer_lines_discarded GUARDED_BY(m_cs){0};
@@ -140,38 +164,24 @@ namespace BCLog {
         //! Manages the rate limiting of each log location.
         std::shared_ptr<LogRateLimiter> m_limiter GUARDED_BY(m_cs);
 
-        /** Log categories bitfield. */
-        std::atomic<CategoryMask> m_categories{BCLog::NONE};
-        /** Tracing-enabled categories bitfield. */
-        std::atomic<CategoryMask> m_trace_categories{BCLog::NONE};
+        /** Slots that connect to the print signal */
+        std::list<std::function<void(const std::string&)>> m_print_callbacks GUARDED_BY(m_cs){};
+
+        fs::path m_file_path GUARDED_BY(m_cs);
+
+    private:
+        // Internal methods
 
         std::string Format(const util::log::Entry& entry) const;
 
         std::string LogTimestampStr(SystemClock::time_point now, std::chrono::seconds mocktime) const;
-
-        /** Slots that connect to the print signal */
-        std::list<std::function<void(const std::string&)>> m_print_callbacks GUARDED_BY(m_cs){};
-        std::atomic<bool> m_any_print_callbacks{false};
 
         /** Send an entry to the log output (internal) */
         void LogPrint_(util::log::Entry log_entry) EXCLUSIVE_LOCKS_REQUIRED(m_cs);
 
         std::string GetLogPrefix(LogFlags category, Level level) const;
 
-        fs::path m_file_path GUARDED_BY(m_cs);
-
     public:
-        std::atomic<bool> m_print_to_console = false;
-        std::atomic<bool> m_print_to_file = false;
-
-        std::atomic<bool> m_log_timestamps = DEFAULT_LOGTIMESTAMPS;
-        std::atomic<bool> m_log_time_micros = DEFAULT_LOGTIMEMICROS;
-        std::atomic<bool> m_log_threadnames = DEFAULT_LOGTHREADNAMES;
-        std::atomic<bool> m_log_sourcelocations = DEFAULT_LOGSOURCELOCATIONS;
-        std::atomic<bool> m_always_print_category_level = DEFAULT_LOGLEVELALWAYS;
-
-        std::atomic<bool> m_reopen_file{false};
-
         fs::path GetFilePath() const EXCLUSIVE_LOCKS_REQUIRED(!m_cs)
         {
             STDLOCK(m_cs);
