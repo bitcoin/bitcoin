@@ -19,8 +19,7 @@ concurrency:
 
 env:
   CI_FAILFAST_TEST_LEAVE_DANGLING: 1  # GHA does not care about dangling processes and setting this variable avoids killing the CI script itself on error
-  CIRRUS_CACHE_HOST: http://127.0.0.1:12321/ # When using Cirrus Runners this host can be used by the docker `gha` build cache type.
-  REPO_USE_CIRRUS_RUNNERS: 'bitcoin/bitcoin' # Use cirrus runners and cache for this repo, instead of falling back to the slow GHA runners
+  REPO_USE_CIRRUS_RUNNERS: 'bitcoin/bitcoin' # Use cirrus runners for this repo, instead of falling back to the slow GHA runners
 
 defaults:
   run:
@@ -60,7 +59,7 @@ jobs:
     needs: runners
     runs-on: ${{ needs.runners.outputs.provider == 'cirrus' && 'ghcr.io/cirruslabs/ubuntu-runner-amd64:24.04-md' || 'ubuntu-24.04' }}
     env:
-      TEST_RUNNER_PORT_MIN: "14000"  # Use a larger port, to avoid colliding with CIRRUS_CACHE_HOST port 12321.
+      TEST_RUNNER_PORT_MIN: "14000"  # Use a larger port range to avoid colliding with other CI services.
     if: github.event_name == 'pull_request' && github.event.pull_request.commits != 1
     timeout-minutes: 360  # Use maximum time, see https://docs.github.com/en/actions/writing-workflows/workflow-syntax-for-github-actions#jobsjob_idtimeout-minutes.
     steps:
@@ -362,8 +361,6 @@ jobs:
 
       - name: Configure Docker
         uses: ./.github/actions/configure-docker
-        with:
-          cache-provider: ${{ needs.runners.outputs.provider }}
 
       - name: CI script
         run: ./ci/test_run_all.sh
@@ -554,8 +551,6 @@ jobs:
 
       - name: Configure Docker
         uses: ./.github/actions/configure-docker
-        with:
-          cache-provider: ${{ matrix.provider || needs.runners.outputs.provider }}
 
       - name: Clear unnecessary files
         if: ${{ needs.runners.outputs.provider == 'gha' && true || false }} # Only needed on GHA runners
@@ -597,8 +592,6 @@ jobs:
 
       - name: Configure Docker
         uses: ./.github/actions/configure-docker
-        with:
-          cache-provider: ${{ needs.runners.outputs.provider }}
 
       - name: CI script
         run: |
