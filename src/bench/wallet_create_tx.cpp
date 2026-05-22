@@ -4,34 +4,25 @@
 
 #include <addresstype.h>
 #include <bench/bench.h>
-#include <chain.h>
+#include <bench/wallet_bench_util.h>
 #include <chainparams.h>
 #include <consensus/amount.h>
 #include <consensus/consensus.h>
-#include <consensus/merkle.h>
 #include <interfaces/chain.h>
-#include <kernel/chain.h>
-#include <kernel/types.h>
-#include <node/blockstorage.h>
 #include <outputtype.h>
 #include <policy/feerate.h>
-#include <primitives/block.h>
 #include <primitives/transaction.h>
 #include <script/script.h>
 #include <sync.h>
 #include <test/util/setup_common.h>
 #include <test/util/time.h>
-#include <uint256.h>
 #include <util/result.h>
 #include <util/time.h>
-#include <validation.h>
-#include <versionbits.h>
 #include <wallet/coincontrol.h>
 #include <wallet/coinselection.h>
 #include <wallet/spend.h>
 #include <wallet/test/util.h>
 #include <wallet/wallet.h>
-#include <wallet/walletutil.h>
 
 #include <cassert>
 #include <cstdint>
@@ -41,70 +32,28 @@
 #include <utility>
 #include <vector>
 
-using kernel::ChainstateRole;
 using wallet::CWallet;
 using wallet::CreateMockableWalletDatabase;
 using wallet::WALLET_FLAG_DESCRIPTORS;
-
-struct TipBlock
-{
-    uint256 prev_block_hash;
-    int64_t prev_block_time;
-    int tip_height;
-};
-
-TipBlock getTip(const CChainParams& params, const node::NodeContext& context)
-{
-    auto tip = WITH_LOCK(::cs_main, return context.chainman->ActiveTip());
-    return (tip) ? TipBlock{tip->GetBlockHash(), tip->GetBlockTime(), tip->nHeight} :
-           TipBlock{params.GenesisBlock().GetHash(), params.GenesisBlock().GetBlockTime(), 0};
-}
 
 void generateFakeBlock(const CChainParams& params,
                        const node::NodeContext& context,
                        CWallet& wallet,
                        const CScript& coinbase_out_script)
 {
-    TipBlock tip{getTip(params, context)};
-
-    // Create block
-    CBlock block;
-    CMutableTransaction coinbase_tx;
-    coinbase_tx.vin.resize(1);
-    coinbase_tx.vin[0].prevout.SetNull();
-    coinbase_tx.vout.resize(2);
-    coinbase_tx.vout[0].scriptPubKey = coinbase_out_script;
-    coinbase_tx.vout[0].nValue = 48 * COIN;
-    coinbase_tx.vin[0].scriptSig = CScript() << ++tip.tip_height << OP_0;
-    coinbase_tx.vout[1].scriptPubKey = coinbase_out_script; // extra output
-    coinbase_tx.vout[1].nValue = 1 * COIN;
+    constexpr int NON_WALLET_OUTPUTS{50};
+    std::vector<CTxOut> coinbase_outputs;
+    coinbase_outputs.reserve(2 + NON_WALLET_OUTPUTS);
+    coinbase_outputs.emplace_back(48 * COIN, coinbase_out_script);
+    coinbase_outputs.emplace_back(1 * COIN, coinbase_out_script);
 
     // Fill the coinbase with outputs that don't belong to the wallet in order to benchmark
     // AvailableCoins' behavior with unnecessary TXOs
-    for (int i = 0; i < 50; ++i) {
-        coinbase_tx.vout.emplace_back(1 * COIN / 50, CScript(OP_TRUE));
+    for (int i{0}; i < NON_WALLET_OUTPUTS; ++i) {
+        coinbase_outputs.emplace_back(1 * COIN / NON_WALLET_OUTPUTS, CScript(OP_TRUE));
     }
 
-    block.vtx = {MakeTransactionRef(std::move(coinbase_tx))};
-
-    block.nVersion = VERSIONBITS_LAST_OLD_BLOCK_VERSION;
-    block.hashPrevBlock = tip.prev_block_hash;
-    block.hashMerkleRoot = BlockMerkleRoot(block);
-    block.nTime = ++tip.prev_block_time;
-    block.nBits = params.GenesisBlock().nBits;
-    block.nNonce = 0;
-
-    {
-        LOCK(::cs_main);
-        // Add it to the index
-        CBlockIndex* pindex{context.chainman->m_blockman.AddToBlockIndex(block, context.chainman->m_best_header)};
-        // add it to the chain
-        context.chainman->ActiveChain().SetTip(*pindex);
-    }
-
-    // notify wallet
-    const auto& pindex = WITH_LOCK(::cs_main, return context.chainman->ActiveChain().Tip());
-    wallet.blockConnected(ChainstateRole{}, kernel::MakeBlockInfo(pindex, &block));
+    wallet::GenerateFakeBlock(params, context, wallet, coinbase_outputs);
 }
 
 struct PreSelectInputs {
