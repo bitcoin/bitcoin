@@ -651,6 +651,13 @@ BOOST_AUTO_TEST_CASE(logging_tests)
     Logger logger{std::make_unique<TestLog>()};
 }
 
+BOOST_AUTO_TEST_CASE(btck_chainparams_tests)
+{
+    ChainParams params_signet{ChainType::SIGNET};
+    ChainParams params_signet_challenge{hex_string_to_byte_vec("51")};
+    CheckHandle(params_signet, params_signet_challenge);
+}
+
 BOOST_AUTO_TEST_CASE(btck_context_tests)
 {
     { // test default context
