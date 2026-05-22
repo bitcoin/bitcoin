@@ -125,14 +125,9 @@ namespace BCLog {
         bool SuppressionsActive() const { return m_suppression_active; }
     };
 
-    class Logger
+    class Logger : private util::log::Logger
     {
     private:
-        /** Log categories bitfield. */
-        std::atomic<CategoryMask> m_categories{BCLog::NONE};
-        /** Tracing-enabled categories bitfield. */
-        std::atomic<CategoryMask> m_trace_categories{BCLog::NONE};
-
         // Internal atomics affecting Enabled()
         std::atomic<bool> m_buffering = true; //!< Buffer messages before logging can be started.
         std::atomic<bool> m_any_print_callbacks{false};
@@ -243,27 +238,18 @@ namespace BCLog {
 
         void ShrinkDebugFile() EXCLUSIVE_LOCKS_REQUIRED(!m_cs);
 
-        void SetCategoryLogLevel(LogFlags flag, Level level);
-        bool SetCategoryLogLevel(std::string_view flag, Level level);
+        static void SetCategoryLogLevel(LogFlags flag, Level level);
+        static bool SetCategoryLogLevel(std::string_view flag, Level level);
 
-        CategoryMask GetCategoryMask() const { return m_categories.load(); }
-        CategoryMask GetCategoryTraceMask() const { return m_trace_categories.load(); }
-        void ResetLogLevels(CategoryMask catmask, CategoryMask tracemask) {
-            m_categories = (catmask | tracemask);
+        static CategoryMask GetCategoryMask() { return m_debug_categories.load(); }
+        static CategoryMask GetCategoryTraceMask() { return m_trace_categories.load(); }
+        static void ResetLogLevels(CategoryMask catmask, CategoryMask tracemask) {
+            m_debug_categories = (catmask | tracemask);
             m_trace_categories = tracemask;
         }
 
-        bool ShouldDebugLog(LogFlags category) const
-        {
-            return (m_categories.load(std::memory_order_relaxed) & category) != 0;
-        }
-        bool ShouldTraceLog(LogFlags category) const
-        {
-            return (m_trace_categories.load(std::memory_order_relaxed) & category) != 0;
-        }
-
         /** Returns a vector of the log categories in alphabetical order. */
-        std::vector<CategoryInfo> LogCategoriesInfo() const;
+        static std::vector<CategoryInfo> LogCategoriesInfo();
         /** Returns a string with the log categories in alphabetical order. */
         static std::string LogCategoriesString();
 

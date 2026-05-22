@@ -497,7 +497,7 @@ using UserData = std::unique_ptr<void, UserDataDeleter>;
 
 //! Holds state for kernel logging subscribers: the registered callbacks and the minimum level.
 //! Shared by all btck_LoggingConnection instances.
-class KernelLogger
+class KernelLogger : private util::log::Logger
 {
     //! A registered btck_LogCallback. Owns user_data.
     struct Callback {
@@ -545,6 +545,29 @@ public:
     void SetMinLevel(btck_LogLevel level)
     {
         m_min_level.store(to_util(level), std::memory_order_relaxed);
+        UpdateLoggerMasks();
+    }
+    //! Bump the util::log::Logger masks to match our configuration.
+    void UpdateLoggerMasks()
+    {
+        util::log::Level level{util::log::Level::Info};
+        if (m_callback_count.load(std::memory_order_relaxed) > 0) {
+            level = m_min_level.load(std::memory_order_relaxed);
+        }
+        switch (level) {
+        case util::log::Level::Trace:
+            m_debug_categories = BCLog::ALL;
+            m_trace_categories = BCLog::ALL;
+            break;
+        case util::log::Level::Debug:
+            m_debug_categories = BCLog::ALL;
+            m_trace_categories = BCLog::NONE;
+            break;
+        default:
+            m_debug_categories = BCLog::NONE;
+            m_trace_categories = BCLog::NONE;
+            break;
+        }
     }
 
     //! True if level is not below minimum level and at least one callback is registered.
@@ -572,6 +595,7 @@ KernelLogger::CallbackHandle KernelLogger::RegisterCallback(btck_LogCallback fn,
     STDLOCK(m_mutex);
     m_callbacks.push_back(std::move(cb));
     m_callback_count.fetch_add(1, std::memory_order_relaxed);
+    UpdateLoggerMasks();
     return {*this, std::prev(m_callbacks.end())};
 }
 
@@ -583,6 +607,7 @@ void KernelLogger::UnregisterCallback(std::list<Callback>::iterator it)
         STDLOCK(m_mutex);
         dying.splice(dying.begin(), m_callbacks, it);
         m_callback_count.fetch_sub(1, std::memory_order_relaxed);
+        UpdateLoggerMasks();
     }
 }
 
@@ -972,17 +997,9 @@ KernelLogger& GetKernelLogger()
 } // namespace
 
 namespace util::log {
-// Kernel filters on level only. The category is delivered as part of the entry, so consumers can
-// filter on it in their callback.
-bool ShouldDebugLog(Category /*category*/)
-{
-    return GetKernelLogger().ShouldLog(Level::Debug);
-}
 
-bool ShouldTraceLog(Category /*category*/)
-{
-    return GetKernelLogger().ShouldLog(Level::Trace);
-}
+constinit std::atomic<BCLog::CategoryMask> Logger::m_debug_categories{BCLog::NONE};
+constinit std::atomic<BCLog::CategoryMask> Logger::m_trace_categories{BCLog::NONE};
 
 void Log(Entry entry)
 {

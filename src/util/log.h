@@ -69,14 +69,6 @@ struct Entry {
     std::string message;
 };
 
-/// Return whether messages with specified category should be debug logged.
-/// Applications using the logging library need to provide this.
-bool ShouldDebugLog(Category category);
-
-/// Return whether messages with specified category should be trace logged.
-/// Applications using the logging library need to provide this.
-bool ShouldTraceLog(Category category);
-
 /** Send message to be logged. Applications using the logging library need to provide this. */
 void Log(Entry entry);
 
@@ -122,6 +114,48 @@ inline void LogWithSrcLoc(SourceLocation&& source_loc, BCLog::LogFlags flag, uti
     return LogWithSrcLoc(/*should_ratelimit=*/false, std::move(source_loc), flag, level, fmt, args...);
 }
 } // namespace util::log::detail
+
+/**
+ * Holds the global "is this category enabled?" state used by the
+ * @ref ShouldDebugLog and @ref ShouldTraceLog fast paths.
+ *
+ * The two bitmasks are `constinit` atomics, so they are initialized
+ * before any logging functions can be called (even from
+ * static-initialization-time code). Reads are lock-free relaxed loads,
+ * cheap enough to inline at every `LogDebug`/`LogTrace` call site.
+ *
+ * This class is never instantiated. It exists only to scope the
+ * atomics and grant friendship to the inline accessors below;
+ * mutation is performed through `BCLog::Logger`, which inherits
+ * privately to gain access.
+ *
+ * The util::log::Log() provider should use a subclass of
+ * util::log::Logger in order to be able to access and update
+ * the enabled categories.
+ */
+class Logger
+{
+protected:
+    /** Debug-enabled categories bitfield. */
+    static constinit std::atomic<BCLog::CategoryMask> m_debug_categories;
+    /** Tracing-enabled categories bitfield. */
+    static constinit std::atomic<BCLog::CategoryMask> m_trace_categories;
+
+    friend inline bool ShouldDebugLog(Category category);
+    friend inline bool ShouldTraceLog(Category category);
+};
+
+/// Return whether messages in @p category should be debug logged.
+inline bool ShouldDebugLog(Category category)
+{
+    return (Logger::m_debug_categories.load(std::memory_order_relaxed) & category) != 0;
+}
+
+/// Return whether messages in @p category should be trace logged.
+inline bool ShouldTraceLog(Category category)
+{
+    return (Logger::m_trace_categories.load(std::memory_order_relaxed) & category) != 0;
+}
 } // namespace util::log
 
 namespace BCLog {

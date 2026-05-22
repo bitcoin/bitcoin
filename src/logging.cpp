@@ -129,7 +129,7 @@ void BCLog::Logger::DisableLogging()
 
 bool BCLog::Logger::DefaultShrinkDebugFile() const
 {
-    return m_categories == BCLog::NONE;
+    return m_debug_categories == BCLog::NONE;
 }
 
 static const std::map<std::string, BCLog::LogFlags, std::less<>> LOG_CATEGORIES_BY_STR{
@@ -223,11 +223,11 @@ static std::string LogCategoryToStr(BCLog::LogFlags category)
     return it->second;
 }
 
-std::vector<BCLog::CategoryInfo> BCLog::Logger::LogCategoriesInfo() const
+std::vector<BCLog::CategoryInfo> BCLog::Logger::LogCategoriesInfo()
 {
     std::vector<CategoryInfo> ret;
     ret.reserve(LOG_CATEGORIES_BY_STR.size());
-    CategoryMask debug{m_categories.load()};
+    CategoryMask debug{m_debug_categories.load()};
     CategoryMask trace{m_trace_categories.load()};
 
     for (const auto& [category, flag] : LOG_CATEGORIES_BY_STR) {
@@ -556,14 +556,14 @@ void BCLog::Logger::SetCategoryLogLevel(BCLog::LogFlags flag, BCLog::Level level
     case BCLog::Level::Warning:
     case BCLog::Level::Info:
         m_trace_categories &= ~flag;
-        m_categories &= ~flag;
+        m_debug_categories &= ~flag;
         break;
     case BCLog::Level::Debug:
-        m_categories |= flag;
+        m_debug_categories |= flag;
         m_trace_categories &= ~flag;
         break;
     case BCLog::Level::Trace:
-        m_categories |= flag;
+        m_debug_categories |= flag;
         m_trace_categories |= flag;
         break;
     }
@@ -578,15 +578,10 @@ bool BCLog::Logger::SetCategoryLogLevel(std::string_view str, BCLog::Level level
     return false;
 }
 
-bool util::log::ShouldDebugLog(Category category)
-{
-    return LogInstance().ShouldDebugLog(static_cast<BCLog::LogFlags>(category));
-}
+// util::log implementation
 
-bool util::log::ShouldTraceLog(Category category)
-{
-    return LogInstance().ShouldTraceLog(static_cast<BCLog::LogFlags>(category));
-}
+constinit std::atomic<BCLog::CategoryMask> util::log::Logger::m_debug_categories{BCLog::NONE};
+constinit std::atomic<BCLog::CategoryMask> util::log::Logger::m_trace_categories{BCLog::NONE};
 
 void util::log::Log(util::log::Entry entry)
 {
