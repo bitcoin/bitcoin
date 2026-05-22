@@ -10,11 +10,13 @@
 #include <common/args.h>
 #include <common/license_info.h>
 #include <common/system.h>
+#include <common/url.h>
 #include <compat/compat.h>
 #include <compat/stdin.h>
 #include <interfaces/init.h>
 #include <interfaces/ipc.h>
 #include <interfaces/rpc.h>
+#include <netbase.h>
 #include <policy/feerate.h>
 #include <rpc/client.h>
 #include <rpc/mining.h>
@@ -24,7 +26,9 @@
 #include <univalue.h>
 #include <util/chaintype.h>
 #include <util/exception.h>
+#include <util/sock.h>
 #include <util/strencodings.h>
+#include <util/string.h>
 #include <util/time.h>
 #include <util/translation.h>
 
@@ -33,18 +37,18 @@
 #include <cmath>
 #include <cstdio>
 #include <functional>
+#include <limits>
 #include <memory>
 #include <optional>
+#include <span>
 #include <string>
+#include <string_view>
+#include <thread>
 #include <tuple>
 
 #ifndef WIN32
 #include <unistd.h>
 #endif
-
-#include <event2/buffer.h>
-#include <event2/keyvalq_struct.h>
-#include <support/events.h>
 
 using util::Join;
 using util::ToString;
@@ -74,6 +78,65 @@ static const std::string DEFAULT_NBLOCKS = "1";
 
 /** Default -color setting. */
 static const std::string DEFAULT_COLOR_SETTING{"auto"};
+
+struct HTTPError : std::runtime_error {
+    explicit inline HTTPError(const std::string& msg) : std::runtime_error(msg) {}
+};
+
+/** Parses the headers of an HTTP response.
+ *
+ * May be replaced by the corresponding methods in HTTPHeaders from
+ * https://github.com/bitcoin/bitcoin/pull/35182 once that class is in a
+ * shared location.
+ */
+class HTTPResponseHeaders
+{
+    std::vector<std::pair<std::string, std::string>> m_headers;
+
+public:
+    void Read(util::LineReader& reader);
+    std::optional<std::string> FindFirst(std::string_view key) const;
+};
+
+// Named Read() in HTTPHeaders (see PR #35182).
+void HTTPResponseHeaders::Read(util::LineReader& reader)
+{
+    // Headers https://httpwg.org/specs/rfc9110.html#rfc.section.6.3
+    // A sequence of Field Lines https://httpwg.org/specs/rfc9110.html#rfc.section.5.2
+    while (auto maybe_line = reader.ReadLine()) {
+        const std::string& line = *maybe_line;
+
+        // An empty line indicates end of the headers section https://www.rfc-editor.org/rfc/rfc2616#section-4
+        if (line.empty()) return;
+
+        // Header line must have at least one ":"
+        // keys are not allowed to have delimiters like ":" but values are
+        // https://httpwg.org/specs/rfc9110.html#rfc.section.5.6.2
+        const size_t pos{line.find(':')};
+        if (pos == std::string::npos) throw HTTPError{"Header missing colon (:)"};
+
+        // Whitespace is optional
+        std::string key = util::TrimString(std::string_view(line).substr(0, pos));
+        std::string value = util::TrimString(std::string_view(line).substr(pos + 1));
+
+        // Header keys are Field Names: https://httpwg.org/specs/rfc9110.html#fields.names
+        // which consist of "tokens": https://httpwg.org/specs/rfc9110.html#rfc.section.5.6.2
+        // that can not be empty.
+        if (key.empty()) throw HTTPError{"Empty header name"};
+
+        m_headers.emplace_back(std::move(key), std::move(value));
+    }
+}
+
+std::optional<std::string> HTTPResponseHeaders::FindFirst(std::string_view key) const
+{
+    for (const auto& item : m_headers) {
+        if (CaseInsensitiveEqual(key, item.first)) {
+            return item.second;
+        }
+    }
+    return std::nullopt;
+}
 
 static void SetupCliArgs(ArgsManager& argsman)
 {
@@ -122,15 +185,6 @@ std::optional<std::string> RpcWalletName(const ArgsManager& args)
     // Check IsArgNegated to return nullopt instead of "0" if -norpcwallet is specified
     if (args.IsArgNegated("-rpcwallet")) return std::nullopt;
     return args.GetArg("-rpcwallet");
-}
-
-/** libevent event log callback */
-static void libevent_log_cb(int severity, const char *msg)
-{
-    // Ignore everything other than errors
-    if (severity >= EVENT_LOG_ERR) {
-        throw std::runtime_error(strprintf("libevent error: %s", msg));
-    }
 }
 
 //
@@ -200,67 +254,11 @@ static int AppInitRPC(int argc, char* argv[])
     return CONTINUE_EXECUTION;
 }
 
-
-/** Reply structure for request_done to fill in */
-struct HTTPReply
+struct HTTPResponse
 {
-    HTTPReply() = default;
-
     int status{0};
-    int error{-1};
     std::string body;
 };
-
-static std::string http_errorstring(int code)
-{
-    switch(code) {
-    case EVREQ_HTTP_TIMEOUT:
-        return "timeout reached";
-    case EVREQ_HTTP_EOF:
-        return "EOF reached";
-    case EVREQ_HTTP_INVALID_HEADER:
-        return "error while reading header, or invalid header";
-    case EVREQ_HTTP_BUFFER_ERROR:
-        return "error encountered while reading or writing";
-    case EVREQ_HTTP_REQUEST_CANCEL:
-        return "request was canceled";
-    case EVREQ_HTTP_DATA_TOO_LONG:
-        return "response body is larger than allowed";
-    default:
-        return "unknown";
-    }
-}
-
-static void http_request_done(struct evhttp_request *req, void *ctx)
-{
-    HTTPReply *reply = static_cast<HTTPReply*>(ctx);
-
-    if (req == nullptr) {
-        /* If req is nullptr, it means an error occurred while connecting: the
-         * error code will have been passed to http_error_cb.
-         */
-        reply->status = 0;
-        return;
-    }
-
-    reply->status = evhttp_request_get_response_code(req);
-
-    struct evbuffer *buf = evhttp_request_get_input_buffer(req);
-    if (buf)
-    {
-        size_t size = evbuffer_get_length(buf);
-        const char *data = (const char*)evbuffer_pullup(buf, size);
-        if (data)
-            reply->body = std::string(data, size);
-        evbuffer_drain(buf, size);
-    }
-}
-
-static void http_error_cb(enum evhttp_request_error err, void *ctx)
-{
-    HTTPReply *reply = static_cast<HTTPReply*>(ctx);
-    reply->error = err;
-}
 
 static int8_t NetworkStringToId(const std::string& str)
 {
@@ -832,6 +830,328 @@ static std::optional<UniValue> CallIPC(BaseRequestHandler* rh, const std::string
     return rh->ProcessReply(reply);
 }
 
+/**
+ * Simple synchronous HTTP client using Sock class.
+ */
+class HTTPClient
+{
+public:
+    static HTTPClient Connect(const std::string& host, uint16_t port, std::chrono::seconds timeout);
+
+    HTTPResponse Post(const std::string& endpoint,
+                      std::span<const std::pair<std::string, std::string>> headers,
+                      const std::string& body);
+
+private:
+    // Signal that the peer closed the connection cleanly. Used in the read-until-close fallback.
+    struct RecvEOF : CConnectionFailed { using CConnectionFailed::CConnectionFailed; };
+
+    std::unique_ptr<Sock> m_socket;
+    std::string m_host;
+    std::chrono::seconds m_timeout;
+
+    HTTPClient(std::unique_ptr<Sock>&& socket, const std::string& host, std::chrono::seconds timeout)
+        : m_socket(std::move(socket)), m_host(host), m_timeout(timeout) {}
+    bool SendRequest(std::string_view request);
+    HTTPResponse ReadResponse();
+    std::optional<std::string> Recv(std::chrono::time_point<std::chrono::steady_clock> deadline);
+};
+
+HTTPClient HTTPClient::Connect(const std::string& host, uint16_t port, std::chrono::seconds timeout)
+{
+    std::vector<CService> services = Lookup(host, port, /*fAllowLookup=*/true, /*nMaxSolutions=*/256);
+    if (services.empty()) {
+        throw CConnectionFailed(strprintf("Could not resolve host: %s", host));
+    }
+
+    const auto deadline{std::chrono::steady_clock::now() + timeout};
+    for (const CService& service : services) {
+        const auto time_left{std::chrono::duration_cast<std::chrono::milliseconds>(deadline - std::chrono::steady_clock::now())};
+        if (time_left.count() <= 0) break;
+
+        auto sock = ConnectDirectly(service, /*manual_connection=*/true, time_left);
+        if (sock) return HTTPClient{std::move(sock), host, timeout};
+    }
+
+    throw CConnectionFailed{"Could not connect to the server"};
+}
+
+HTTPResponse HTTPClient::Post(const std::string& endpoint,
+                              std::span<const std::pair<std::string, std::string>> headers,
+                              const std::string& body)
+{
+    try {
+        // Build HTTP request
+        std::string request = strprintf("POST %s HTTP/1.1\r\n"
+                                        "Host: %s\r\n"
+                                        "Connection: close\r\n"
+                                        "Content-Length: %d\r\n",
+                                        endpoint, m_host, body.size());
+
+        for (const auto& [name, value] : headers) {
+            request += strprintf("%s: %s\r\n", name, value);
+        }
+        request += "\r\n";
+        request += body;
+
+        if (!SendRequest(request)) {
+            throw CConnectionFailed("Failed to send HTTP request");
+        }
+
+        return ReadResponse();
+    } catch (const HTTPError& e) {
+        throw CConnectionFailed(strprintf("HTTP error: %s", e.what()));
+    }
+}
+
+bool HTTPClient::SendRequest(std::string_view request)
+{
+    const auto deadline{std::chrono::steady_clock::now() + m_timeout};
+
+    while (!request.empty()) {
+        Sock::Event event{0};
+        auto time_left = std::chrono::duration_cast<std::chrono::milliseconds>(
+            deadline - std::chrono::steady_clock::now());
+        if (time_left.count() <= 0 || !m_socket->Wait(time_left, Sock::SEND, &event)) {
+            return false;
+        }
+
+        if (!(event & Sock::SEND)) {
+            continue;
+        }
+
+        ssize_t sent = m_socket->Send(request.data(), request.size(), MSG_NOSIGNAL);
+        if (sent < 0) {
+            int err = WSAGetLastError();
+            if (!IOErrorIsPermanent(err)) {
+                std::this_thread::yield();
+                continue;
+            }
+            return false;
+        }
+        request.remove_prefix(sent);
+    }
+    return true;
+}
+
+HTTPResponse HTTPClient::ReadResponse()
+{
+    HTTPResponse response;
+    std::string buffer;
+    const auto deadline{std::chrono::steady_clock::now() + m_timeout};
+
+    // Read data until we have complete headers
+    size_t headers_end = 0;
+
+    while (headers_end == 0) {
+        if (auto result{Recv(deadline)}) {
+            buffer.append(*result);
+        } else {
+            std::this_thread::yield();
+            continue;
+        }
+
+        // Check for header terminator
+        size_t pos = buffer.find("\r\n\r\n");
+        if (pos != std::string::npos) {
+            headers_end = pos + 4;
+        }
+    }
+
+    // Parse http status
+    util::LineReader reader(std::string_view{buffer.data(), headers_end}, headers_end);
+    auto status_line = reader.ReadLine();
+    if (!status_line) {
+        throw HTTPError{"Failed to read status line"};
+    }
+
+    const std::string& status_str = *status_line;
+    // Minimum status line is "HTTP/X.Y NNN" (e.g. "HTTP/1.1 200"), 12 characters.
+    if (status_str.size() < 12 || !status_str.starts_with("HTTP/")) {
+        throw HTTPError{"Invalid status line"};
+    }
+
+    size_t space1 = status_str.find(' ');
+    if (space1 == std::string::npos || space1 + 4 > status_str.size()) {
+        throw HTTPError{"Invalid status line format"};
+    }
+
+    std::string status_code_str = status_str.substr(space1 + 1, 3);
+    auto status_code = ToIntegral<int>(status_code_str);
+    if (!status_code) {
+        throw HTTPError{"Invalid status code"};
+    }
+    response.status = *status_code;
+
+    HTTPResponseHeaders headers;
+    headers.Read(reader);
+
+    // Determine body length
+    size_t content_length = 0;
+    bool chunked = false;
+
+    // RFC 9112 §6.3 says responses with both Transfer-Encoding and Content-Length
+    // must be rejected. We are more lenient: Transfer-Encoding takes precedence
+    // and Content-Length is ignored.
+    auto transfer_encoding = headers.FindFirst("transfer-encoding");
+    if (transfer_encoding && ToLower(*transfer_encoding).find("chunked") != std::string::npos) {
+        chunked = true;
+    } else {
+        auto content_length_header = headers.FindFirst("content-length");
+        if (content_length_header) {
+            auto maybe_len = ToIntegral<size_t>(*content_length_header);
+            if (!maybe_len) {
+                throw HTTPError{"Invalid Content-Length"};
+            }
+            content_length = *maybe_len;
+        }
+    }
+
+    // Remove headers data from buffer, so only initial body data remains
+    buffer.erase(0, headers_end);
+
+    // Read remaining body
+    if (chunked) {
+        // Handle chunked transfer encoding
+        std::string body;
+
+        while (true) {
+            // Try to parse a chunk from current buffer
+            std::string_view chunk_data{buffer};
+            size_t line_end = chunk_data.find("\r\n");
+
+            if (line_end != std::string::npos) {
+                // Parse chunk size
+                std::string_view size_str = chunk_data.substr(0, line_end);
+                // Ignore chunk extensions
+                size_t semi = size_str.find(';');
+                if (semi != std::string::npos) {
+                    size_str = size_str.substr(0, semi);
+                }
+
+                const auto chunk_size{ToIntegral<uint64_t>(util::TrimStringView(size_str), /*base=*/16)};
+                if (!chunk_size) {
+                    throw HTTPError{"Invalid chunk size"};
+                }
+
+                if (*chunk_size == 0) {
+                    // Allow (but ignore) Chunked Trailer section, by
+                    // reading CRLF-terminated lines until we read an empty line,
+                    // which indicates the end of this response.
+                    // See https://httpwg.org/specs/rfc9112.html#rfc.section.7.1.2
+                    buffer.erase(0, line_end + 2);
+                    while (true) {
+                        size_t crlf_pos = buffer.find("\r\n");
+                        if (crlf_pos == std::string::npos) {
+                            // Need more data
+                            if (auto result{Recv(deadline)}) {
+                                buffer.append(*result);
+                            } else {
+                                std::this_thread::yield();
+                            }
+                            continue;
+                        }
+                        buffer.erase(0, crlf_pos + 2);
+                        if (crlf_pos == 0) break;
+                    }
+                    break;
+                }
+
+                // Check if we have the full chunk
+                size_t chunk_start = line_end + 2;
+                if (*chunk_size > std::numeric_limits<size_t>::max() - chunk_start - 2) {
+                    throw HTTPError{"Chunk size too large"};
+                }
+                size_t chunk_end = chunk_start + *chunk_size + 2; // +2 for trailing CRLF
+
+                if (buffer.size() >= chunk_end) {
+                    // Extract chunk data
+                    body.append(buffer, chunk_start, *chunk_size);
+
+                    // Remove processed data
+                    buffer.erase(0, chunk_end);
+                    continue;
+                }
+            }
+
+            // Need more data
+            while (true) {
+                if (auto result{Recv(deadline)}) {
+                    buffer.append(*result);
+                    break;
+                } else {
+                    std::this_thread::yield();
+                }
+            }
+        }
+
+        response.body = std::move(body);
+    } else if (content_length > 0) {
+        // Fixed content length
+        while (buffer.size() < content_length) {
+            if (auto result{Recv(deadline)}) {
+                buffer.append(*result);
+            } else {
+                std::this_thread::yield();
+            }
+        }
+
+        // Possibly shrink buffer in case we got a larger response than
+        // originally specified.
+        buffer.resize(content_length);
+        response.body = std::move(buffer);
+    } else {
+        // No Content-Length and not chunked: read until the peer closes the
+        // connection (RFC 9112 §6.3, HTTP/1.0 fallback).
+        try {
+            while (true) {
+                if (auto result{Recv(deadline)}) {
+                    buffer.append(*result);
+                } else {
+                    std::this_thread::yield();
+                }
+            }
+        } catch (const RecvEOF&) {}
+        response.body = std::move(buffer);
+    }
+
+    return response;
+}
+
+std::optional<std::string> HTTPClient::Recv(const std::chrono::time_point<std::chrono::steady_clock> deadline)
+{
+    auto wait_for_readable{[this](std::chrono::milliseconds timeout) -> bool {
+        Sock::Event event{0};
+        if (!m_socket->Wait(timeout, Sock::RECV, &event)) {
+            return false;
+        }
+        return (event & Sock::RECV) != 0;
+    }};
+
+    auto time_left = std::chrono::duration_cast<std::chrono::milliseconds>(
+        deadline - std::chrono::steady_clock::now());
+    if (time_left.count() <= 0 || !wait_for_readable(time_left)) {
+        throw CConnectionFailed{"timeout"};
+    }
+
+    char recv_buf[4096];
+    ssize_t nrecv = m_socket->Recv(recv_buf, sizeof(recv_buf), /*flags=*/0);
+
+    if (nrecv < 0) {
+        int err = WSAGetLastError();
+        if (!IOErrorIsPermanent(err)) {
+            return std::nullopt;
+        }
+        throw CConnectionFailed{strprintf("Read error: %s", NetworkErrorString(err))};
+    }
+
+    if (nrecv == 0) {
+        throw RecvEOF{"EOF"};
+    }
+
+    return std::string{recv_buf, static_cast<size_t>(nrecv)};
+}
+
 static UniValue CallRPC(BaseRequestHandler* rh, const std::string& strMethod, const std::vector<std::string>& args, const std::string& endpoint, const std::string& username)
 {
     std::string host;
@@ -876,33 +1196,15 @@ static UniValue CallRPC(BaseRequestHandler* rh, const std::string& strMethod, co
         }
     }
 
-    // Obtain event base
-    raii_event_base base = obtain_event_base();
-
-    // Synchronously look up hostname
-    raii_evhttp_connection evcon = obtain_evhttp_connection_base(base.get(), host, port);
-
     // Set connection timeout
-    {
-        const int timeout = gArgs.GetIntArg("-rpcclienttimeout", DEFAULT_HTTP_CLIENT_TIMEOUT);
-        if (timeout > 0) {
-            evhttp_connection_set_timeout(evcon.get(), timeout);
-        } else {
-            // Indefinite request timeouts are not possible in libevent-http, so we
-            // set the timeout to a very long time period instead.
-
-            constexpr int YEAR_IN_SECONDS = 31556952; // Average length of year in Gregorian calendar
-            evhttp_connection_set_timeout(evcon.get(), 5 * YEAR_IN_SECONDS);
-        }
+    const int timeout = gArgs.GetIntArg("-rpcclienttimeout", DEFAULT_HTTP_CLIENT_TIMEOUT);
+    std::chrono::seconds timeout_duration;
+    if (timeout > 0) {
+        timeout_duration = std::chrono::seconds(timeout);
+    } else {
+        // Use 5 year timeout for "indefinite"
+        timeout_duration = std::chrono::years(5);
     }
-
-    HTTPReply response;
-    raii_evhttp_request req = obtain_evhttp_request(http_request_done, (void*)&response);
-    if (req == nullptr) {
-        throw std::runtime_error("create http request failed");
-    }
-
-    evhttp_request_set_error_cb(req.get(), http_error_cb);
 
     // Get credentials
     std::string rpc_credentials;
@@ -914,36 +1216,25 @@ static UniValue CallRPC(BaseRequestHandler* rh, const std::string& strMethod, co
         rpc_credentials = username + ":" + gArgs.GetArg("-rpcpassword", "");
     }
 
-    struct evkeyvalq* output_headers = evhttp_request_get_output_headers(req.get());
-    assert(output_headers);
-    evhttp_add_header(output_headers, "Host", host.c_str());
-    evhttp_add_header(output_headers, "Connection", "close");
-    evhttp_add_header(output_headers, "Content-Type", "application/json");
-    evhttp_add_header(output_headers, "Authorization", (std::string("Basic ") + EncodeBase64(rpc_credentials)).c_str());
-
-    // Attach request data
+    const std::pair<std::string, std::string> headers[]{
+        {"Content-Type", "application/json"},
+        {"Authorization", "Basic " + EncodeBase64(rpc_credentials)},
+    };
     std::string strRequest = rh->PrepareRequest(strMethod, args).write() + "\n";
-    struct evbuffer* output_buffer = evhttp_request_get_output_buffer(req.get());
-    assert(output_buffer);
-    evbuffer_add(output_buffer, strRequest.data(), strRequest.size());
 
-    int r = evhttp_make_request(evcon.get(), req.release(), EVHTTP_REQ_POST, endpoint.c_str());
-    if (r != 0) {
-        throw CConnectionFailed("send http request failed");
-    }
-
-    event_base_dispatch(base.get());
-
-    if (response.status == 0) {
-        std::string responseErrorMessage;
-        if (response.error != -1) {
-            responseErrorMessage = strprintf(" (error code %d - \"%s\")", response.error, http_errorstring(response.error));
-        }
-        throw CConnectionFailed(strprintf("Could not connect to the server %s:%d%s\n\n"
+    HTTPResponse response;
+    try {
+        HTTPClient client{HTTPClient::Connect(host, port, timeout_duration)};
+        response = client.Post(endpoint, headers, strRequest);
+    } catch (const CConnectionFailed& e) {
+        const std::string formatted_error{*e.what() ? strprintf(" (%s)", e.what()) : ""};
+        throw CConnectionFailed(strprintf("Error while attempting to communicate with server %s:%d%s\n\n"
                     "Make sure the bitcoind server is running and that you are connecting to the correct RPC port.\n"
                     "Use \"bitcoin-cli -help\" for more info.",
-                    host, port, responseErrorMessage));
-    } else if (response.status == HTTP_UNAUTHORIZED) {
+                    host, port, formatted_error));
+    }
+
+    if (response.status == HTTP_UNAUTHORIZED) {
         std::string error{"Authorization failed: "};
         if (auth_cookie_result.has_value()) {
             switch (*auth_cookie_result) {
@@ -1000,13 +1291,7 @@ static UniValue ConnectAndCallRPC(BaseRequestHandler* rh, const std::string& str
     // check if we should use a special wallet endpoint
     std::string endpoint = "/";
     if (rpcwallet) {
-        char* encodedURI = evhttp_uriencode(rpcwallet->data(), rpcwallet->size(), false);
-        if (encodedURI) {
-            endpoint = "/wallet/" + std::string(encodedURI);
-            free(encodedURI);
-        } else {
-            throw CConnectionFailed("uri-encode failed");
-        }
+        endpoint = "/wallet/" + UrlEncode(*rpcwallet);
     }
 
     std::string username{gArgs.GetArg("-rpcuser", "")};
@@ -1027,8 +1312,10 @@ static UniValue ConnectAndCallRPC(BaseRequestHandler* rh, const std::string& str
         } catch (const CConnectionFailed& e) {
             if (fWait && (timeout <= 0 || std::chrono::steady_clock::now() < deadline)) {
                 UninterruptibleSleep(1s);
-            } else {
+            } else if (fWait) {
                 throw CConnectionFailed(strprintf("timeout on transient error: %s", e.what()));
+            } else {
+                throw;
             }
         }
     } while (fWait);
@@ -1387,7 +1674,6 @@ MAIN_FUNCTION
         tfm::format(std::cerr, "Error: Initializing networking failed\n");
         return EXIT_FAILURE;
     }
-    event_set_log_callback(&libevent_log_cb);
 
     try {
         int ret = AppInitRPC(argc, argv);
