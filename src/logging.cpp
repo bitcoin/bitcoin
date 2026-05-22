@@ -22,7 +22,6 @@ using util::RemovePrefixView;
 using util::RemoveSuffixView;
 
 const char * const DEFAULT_DEBUGLOGFILE = "debug.log";
-constexpr auto MAX_USER_SETABLE_SEVERITY_LEVEL{BCLog::Level::Info};
 
 BCLog::Logger& LogInstance()
 {
@@ -222,23 +221,6 @@ static std::string LogCategoryToStr(BCLog::LogFlags category)
     auto it = LOG_CATEGORIES_BY_FLAG.find(category);
     assert(it != LOG_CATEGORIES_BY_FLAG.end());
     return it->second;
-}
-
-static std::optional<BCLog::Level> GetLogLevel(std::string_view level_str)
-{
-    if (level_str == "trace") {
-        return BCLog::Level::Trace;
-    } else if (level_str == "debug") {
-        return BCLog::Level::Debug;
-    } else if (level_str == "info") {
-        return BCLog::Level::Info;
-    } else if (level_str == "warning") {
-        return BCLog::Level::Warning;
-    } else if (level_str == "error") {
-        return BCLog::Level::Error;
-    } else {
-        return std::nullopt;
-    }
 }
 
 std::vector<BCLog::CategoryInfo> BCLog::Logger::LogCategoriesInfo() const
@@ -585,19 +567,6 @@ void BCLog::Logger::SetCategoryLogLevel(BCLog::LogFlags flag, BCLog::Level level
         m_trace_categories |= flag;
         break;
     }
-}
-
-bool BCLog::Logger::SetCategoryLogLevel(std::string_view category_str, std::string_view level_str)
-{
-    const auto flag{GetLogCategory(category_str)};
-    if (!flag) return false;
-
-    const auto level = GetLogLevel(level_str);
-    if (!level.has_value() || level.value() > MAX_USER_SETABLE_SEVERITY_LEVEL) return false;
-    if (*flag == BCLog::NONE) return true;
-
-    SetCategoryLogLevel(*flag, level.value());
-    return true;
 }
 
 bool BCLog::Logger::SetCategoryLogLevel(std::string_view str, BCLog::Level level)
