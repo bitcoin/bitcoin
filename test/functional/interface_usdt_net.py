@@ -14,6 +14,7 @@ try:
     from bcc import BPF, USDT  # type: ignore[import]
 except ImportError:
     pass
+from test_framework.blocktools import NORMAL_GBT_REQUEST_PARAMS, create_block
 from test_framework.messages import CBlockHeader, MAX_HEADERS_RESULTS, msg_headers, msg_version
 from test_framework.p2p import P2PInterface
 from test_framework.test_framework import BitcoinTestFramework
@@ -28,8 +29,9 @@ MAX_PEER_ADDR_LENGTH = 68
 MAX_PEER_CONN_TYPE_LENGTH = 20
 MAX_MSG_TYPE_LENGTH = 20
 MAX_MISBEHAVING_MESSAGE_LENGTH = 128
+BLOCK_HASH_LENGTH = 32
 # We won't process messages larger than 150 byte in this test. For reading
-# larger messanges see contrib/tracing/log_raw_p2p_msgs.py
+# larger messages see contrib/tracing/log_raw_p2p_msgs.py
 MAX_MSG_DATA_LENGTH = 150
 
 # from net_address.h
@@ -46,15 +48,19 @@ net_tracepoints_program = """
 #define MAX_MSG_TYPE_LENGTH {}
 #define MAX_MSG_DATA_LENGTH {}
 #define MAX_MISBEHAVING_MESSAGE_LENGTH {}
+#define BLOCK_HASH_LENGTH {}
 """.format(
     MAX_PEER_ADDR_LENGTH,
     MAX_PEER_CONN_TYPE_LENGTH,
     MAX_MSG_TYPE_LENGTH,
     MAX_MSG_DATA_LENGTH,
     MAX_MISBEHAVING_MESSAGE_LENGTH,
+    BLOCK_HASH_LENGTH,
 ) + """
 // A min() macro. Prefixed with _TRACEPOINT_TEST to avoid collision with other MIN macros.
 #define _TRACEPOINT_TEST_MIN(a,b) ({ __typeof__ (a) _a = (a); __typeof__ (b) _b = (b); _a < _b ? _a : _b; })
+
+typedef signed long long i64;
 
 struct p2p_message
 {
@@ -91,6 +97,27 @@ struct MisbehavingConnection
     u64     id;
     char    message[MAX_MISBEHAVING_MESSAGE_LENGTH];
 };
+
+struct BlockHeader
+{
+    int     height;
+    i64     peer_id;
+    bool    via_compact_block;
+    u8      hash[BLOCK_HASH_LENGTH];
+};
+
+BPF_PERF_OUTPUT(block_headers);
+int trace_block_header(struct pt_regs *ctx) {
+    struct BlockHeader header = {};
+    void *hash_pointer = NULL;
+    bpf_usdt_readarg(1, ctx, &header.height);
+    bpf_usdt_readarg(2, ctx, &header.peer_id);
+    bpf_usdt_readarg(3, ctx, &header.via_compact_block);
+    bpf_usdt_readarg(4, ctx, &hash_pointer);
+    bpf_probe_read_user(&header.hash, sizeof(header.hash), hash_pointer);
+    block_headers.perf_submit(ctx, &header, sizeof(header));
+    return 0;
+}
 
 BPF_PERF_OUTPUT(inbound_messages);
 int trace_inbound_message(struct pt_regs *ctx) {
@@ -244,6 +271,18 @@ class MisbehavingConnection(ctypes.Structure):
         return f"MisbehavingConnection(id={self.id}, message={self.message})"
 
 
+class BlockHeader(ctypes.Structure):
+    _fields_ = [
+        ("height", ctypes.c_int32),
+        ("peer_id", ctypes.c_int64),
+        ("via_compact_block", ctypes.c_bool),
+        ("hash", ctypes.c_ubyte * BLOCK_HASH_LENGTH),
+    ]
+
+    def __repr__(self):
+        return f"BlockHeader(hash={bytes(self.hash[::-1]).hex()}, height={self.height}, peer_id={self.peer_id}, via_compact_block={self.via_compact_block})"
+
+
 class NetTracepointTest(BitcoinTestFramework):
     def set_test_params(self):
         self.num_nodes = 1
@@ -257,12 +296,71 @@ class NetTracepointTest(BitcoinTestFramework):
         self.skip_if_running_under_valgrind()
 
     def run_test(self):
+        self.block_header_tracepoint_test()
         self.p2p_message_tracepoint_test()
         self.inbound_conn_tracepoint_test()
         self.outbound_conn_tracepoint_test()
         self.evicted_inbound_conn_tracepoint_test()
         self.misbehaving_conn_tracepoint_test()
         self.closed_conn_tracepoint_test()
+
+    def block_header_tracepoint_test(self):
+        self.log.info("hook into the net:block_header tracepoint")
+        ctx = USDT(pid=self.nodes[0].process.pid)
+        ctx.enable_probe(probe="net:block_header",
+                         fn_name="trace_block_header")
+        bpf = BPF(text=net_tracepoints_program, usdt_contexts=[ctx], debug=0, cflags=bpf_cflags())
+
+        block_headers = []
+
+        def handle_block_header(_, data, __):
+            event = ctypes.cast(data, ctypes.POINTER(BlockHeader)).contents
+            self.log.info(f"handle_block_header(): {event}")
+            block_headers.append(event)
+
+        bpf["block_headers"].open_perf_buffer(handle_block_header)
+
+        self.log.info("send a new header from a P2P test node to bitcoind")
+        test_node = P2PInterface()
+        self.nodes[0].add_p2p_connection(test_node)
+        peer_id = self.nodes[0].getpeerinfo()[0]["id"]
+        expected_height = self.nodes[0].getblockcount() + 1
+        block = create_block(tmpl=self.nodes[0].getblocktemplate(NORMAL_GBT_REQUEST_PARAMS))
+        block.solve()
+        test_node.send_and_ping(msg_headers([CBlockHeader(block)]))
+        bpf.perf_buffer_poll(timeout=400)
+
+        matching_headers = [event for event in block_headers if bytes(event.hash[::-1]).hex() == block.hash_hex]
+        assert_equal(1, len(matching_headers))
+        event = matching_headers[0]
+        assert_equal(expected_height, event.height)
+        assert_equal(peer_id, event.peer_id)
+        assert_equal(False, bool(event.via_compact_block))
+
+        self.log.info("send a cmpctblock with a new header to bitcoind")
+        # Build a distinct block at the same height (the previous header has no
+        # body, so the chain tip has not advanced). Bumping nTime gives it a
+        # different hash so it is treated as a new header.
+        cmpct_block = create_block(
+            tmpl=self.nodes[0].getblocktemplate(NORMAL_GBT_REQUEST_PARAMS),
+            ntime=block.nTime + 1,
+        )
+        cmpct_block.solve()
+        compact_block = HeaderAndShortIDs()
+        compact_block.initialize_from_block(cmpct_block)
+        test_node.send_and_ping(msg_cmpctblock(compact_block.to_p2p()))
+        bpf.perf_buffer_poll(timeout=400)
+
+        matching_headers = [event for event in block_headers if bytes(event.hash[::-1]).hex() == cmpct_block.hash_hex]
+        assert_equal(1, len(matching_headers))
+        event = matching_headers[0]
+        assert_equal(expected_height, event.height)
+        assert_equal(peer_id, event.peer_id)
+        assert_equal(True, bool(event.via_compact_block))
+
+        bpf.cleanup()
+        test_node.peer_disconnect()
+        self.wait_until(lambda: len(self.nodes[0].getpeerinfo()) == 0)
 
     def p2p_message_tracepoint_test(self):
         # Tests the net:inbound_message and net:outbound_message tracepoints
