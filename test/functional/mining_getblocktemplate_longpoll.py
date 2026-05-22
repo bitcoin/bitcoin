@@ -9,7 +9,7 @@ import threading
 
 from test_framework.blocktools import NORMAL_GBT_REQUEST_PARAMS
 from test_framework.test_framework import BitcoinTestFramework
-from test_framework.util import assert_equal, get_rpc_proxy
+from test_framework.util import assert_equal
 from test_framework.wallet import MiniWallet
 
 
@@ -19,9 +19,8 @@ class LongpollThread(threading.Thread):
         # query current longpollid
         template = node.getblocktemplate(NORMAL_GBT_REQUEST_PARAMS)
         self.longpollid = template['longpollid']
-        # create a new connection to the node, we can't use the same
-        # connection from two threads
-        self.node = get_rpc_proxy(node.url, 1, timeout=600, coveragedir=node.coverage_dir)
+        # create a new connection to the node for this thread
+        self.node = node.create_new_rpc_connection(client_timeout=600)
 
     def run(self):
         self.node.getblocktemplate({'longpollid': self.longpollid, **NORMAL_GBT_REQUEST_PARAMS})
@@ -29,7 +28,6 @@ class LongpollThread(threading.Thread):
 class GetBlockTemplateLPTest(BitcoinTestFramework):
     def set_test_params(self):
         self.num_nodes = 2
-        self.supports_cli = False
 
     def run_test(self):
         self.log.info("Warning: this test will take about 70 seconds in the best case. Be patient.")

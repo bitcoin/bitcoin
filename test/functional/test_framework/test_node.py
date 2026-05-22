@@ -24,9 +24,11 @@ from collections.abc import Iterable
 from pathlib import Path
 
 from .authproxy import (
+    AuthServiceProxy,
     JSONRPCException,
     serialization_fallback,
 )
+from . import coverage
 from .messages import NODE_P2P_V2
 from .p2p import P2P_SERVICES, P2P_SUBVERSION
 from .util import (
@@ -36,8 +38,7 @@ from .util import (
     append_config,
     delete_cookie_file,
     get_auth_cookie,
-    get_rpc_proxy,
-    rpc_url,
+    rpc_port,
     wait_until_helper_internal,
     p2p_port,
     tor_port,
@@ -74,6 +75,9 @@ class ErrorMatch(Enum):
     FULL_TEXT = 1
     FULL_REGEX = 2
     PARTIAL_REGEX = 3
+
+
+RPCConnectionType = Enum("RPCConnectionType", ["AUTO", "AUTHPROXY", "CLI"])
 
 
 class TestNode():
@@ -185,11 +189,7 @@ class TestNode():
                 self.args.append("-v2transport=0")
         # if v2transport is requested via global flag but not supported for node version, ignore it
 
-        self.cli = TestNodeCLI(
-            binaries,
-            self.datadir_path,
-            self.rpc_timeout // 2,  # timeout identical to the one used in self._rpc
-        )
+        self.cli = None
         self.use_cli = use_cli
         self.start_perf = start_perf
 
@@ -197,7 +197,7 @@ class TestNode():
         self.process = None
         self.rpc_connected = False
         self._rpc = None # Should usually not be accessed directly in tests to allow for --usecli mode
-        self.reuse_http_connections = True # Must be set before calling get_rpc_proxy() i.e. before restarting node
+        self.reuse_http_connections = True # Must be set before create_new_rpc_connection(), i.e. before restarting node
         self.url = None
         self.log = logging.getLogger('TestFramework.node%d' % i)
         # Cache perf subprocesses here by their data output filename.
@@ -301,6 +301,36 @@ class TestNode():
         if self.start_perf:
             self._start_perf()
 
+    def create_new_rpc_connection(self, *, mode="AUTO", client_timeout=None):
+        """Create an additional RPC connection, likely to be used in a new thread."""
+        mode = RPCConnectionType[mode]
+        if mode == RPCConnectionType.AUTO:
+            mode = RPCConnectionType.CLI if self.use_cli else RPCConnectionType.AUTHPROXY
+        client_timeout = client_timeout or (self.rpc_timeout // 2)  # Shorter timeout to allow for one retry in case of ETIMEDOUT
+        host = "127.0.0.1"
+        port = rpc_port(self.index)
+        if self.rpchost:
+            parts = self.rpchost.split(":")
+            if len(parts) == 2:
+                host, port = parts
+            else:
+                host = self.rpchost
+        if mode == RPCConnectionType.AUTHPROXY:
+            rpc_u, rpc_p = get_auth_cookie(self.datadir_path, self.chain)
+            url = f"http://{rpc_u}:{rpc_p}@{host}:{port}"
+            proxy = AuthServiceProxy(url, timeout=int(client_timeout))
+            coverage_logfile = coverage.get_filename(self.coverage_dir, self.index) if self.coverage_dir else None
+            rpc = coverage.AuthServiceProxyWrapper(proxy, url, coverage_logfile)
+            rpc.auth_service_proxy_instance.reuse_http_connections = self.reuse_http_connections
+            return rpc
+        else:  # mode==CLI
+            return TestNodeCLI(self.binaries)(
+                f"-datadir={self.datadir_path}",
+                f"-rpcclienttimeout={client_timeout}",
+                f"-rpcconnect={host}",
+                f"-rpcport={port}",
+            )
+
     def wait_for_rpc_connection(self, *, wait_for_import=True):
         """Sets up an RPC connection to the bitcoind process. Returns False if unable to connect."""
         # Poll at a rate of four times per second
@@ -322,13 +352,7 @@ class TestNode():
                 raise FailedToStartError(self._node_msg(
                     f'bitcoind exited with status {self.process.returncode} during initialization. {str_error}'))
             try:
-                rpc = get_rpc_proxy(
-                    rpc_url(self.datadir_path, self.index, self.chain, self.rpchost),
-                    self.index,
-                    timeout=self.rpc_timeout // 2,  # Shorter timeout to allow for one retry in case of ETIMEDOUT
-                    coveragedir=self.coverage_dir,
-                )
-                rpc.auth_service_proxy_instance.reuse_http_connections = self.reuse_http_connections
+                rpc = self.create_new_rpc_connection(mode="AUTHPROXY")
                 rpc.getblockcount()
                 # If the call to getblockcount() succeeds then the RPC connection is up
                 if self.version_is_at_least(190000) and wait_for_import:
@@ -355,6 +379,7 @@ class TestNode():
                 self.log.debug("RPC successfully started")
                 # Set rpc_connected even if we are in use_cli mode so that we know we can call self.stop() if needed.
                 self.rpc_connected = True
+                self.cli = self.create_new_rpc_connection(mode="CLI")
                 if self.use_cli:
                     return
                 self._rpc = rpc
@@ -958,18 +983,16 @@ def arg_to_cli(arg):
 
 class TestNodeCLI():
     """Interface to bitcoin-cli for an individual node"""
-    def __init__(self, binaries, datadir, rpc_timeout):
+    def __init__(self, binaries):
         self.options = []
         self.binaries = binaries
-        self.datadir = datadir
-        self.rpc_timeout = rpc_timeout
         self.input = None
         self.log = logging.getLogger('TestFramework.bitcoincli')
 
     def __call__(self, *options, input=None):
         # TestNodeCLI is callable with bitcoin-cli command-line options
-        cli = TestNodeCLI(self.binaries, self.datadir, self.rpc_timeout)
-        cli.options = [str(o) for o in options]
+        cli = TestNodeCLI(self.binaries)
+        cli.options = self.options + [str(o) for o in options]
         cli.input = input
         return cli
 
@@ -989,10 +1012,7 @@ class TestNodeCLI():
         """Run bitcoin-cli command. Deserializes returned string as python object."""
         pos_args = [arg_to_cli(arg) for arg in args]
         named_args = [key + "=" + arg_to_cli(value) for (key, value) in kwargs.items() if value is not None]
-        p_args = self.binaries.rpc_argv() + [
-            f"-datadir={self.datadir}",
-            f"-rpcclienttimeout={int(self.rpc_timeout)}",
-        ] + self.options
+        p_args = self.binaries.rpc_argv() + self.options
         if named_args:
             p_args += ["-named"]
         base_arg_pos = len(p_args)
