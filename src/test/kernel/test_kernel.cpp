@@ -120,16 +120,6 @@ public:
         BOOST_CHECK_GT(timestamp, 0);
     }
 
-    void WarningSetHandler(Warning warning, std::string_view message) override
-    {
-        std::cout << "Kernel warning is set: " << message << std::endl;
-    }
-
-    void WarningUnsetHandler(Warning warning) override
-    {
-        std::cout << "Kernel warning was unset." << std::endl;
-    }
-
     void FlushErrorHandler(std::string_view error) override
     {
         std::cout << error << std::endl;
