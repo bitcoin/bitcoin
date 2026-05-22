@@ -116,17 +116,23 @@ class TxDownloadTest(BitcoinTestFramework):
         self.nodes[0].sendrawtransaction(tx['hex'])
 
         # Since node 1 is connected outbound to an honest peer (node 0), it
-        # should get the tx within a timeout. (Assuming that node 0
-        # announced the tx within the timeout)
+        # should get the tx within a timeout.
+        # However, node 0 sees the same connection as inbound, so it may not
+        # announce the tx within the timeout.
         # The timeout is the sum of
         # * the worst case until the tx is first requested from an inbound
         #   peer, plus
         # * the first time it is re-requested from the outbound peer, plus
         # * 2 seconds to avoid races
+        assert_equal(self.nodes[0].getpeerinfo()[0]["inbound"], True)
+        assert_equal(self.nodes[0].getpeerinfo()[0]["inv_to_send"], 1)
         assert_equal(self.nodes[1].getpeerinfo()[0]['inbound'], False)
         timeout = 2 + NONPREF_PEER_TX_DELAY + GETDATA_TX_INTERVAL
         self.log.info("Tx should be received at node 1 after {} seconds".format(timeout))
         self.nodes[0].bumpmocktime(timeout)
+        # Use an unrelated peer to ensure node 0 calls `SendMessages` at least once
+        self.nodes[0].p2ps[0].sync_with_ping()
+        assert_equal(self.nodes[0].getpeerinfo()[0]['inv_to_send'], 0)  # May fail rarely, retry the test
         self.sync_mempools()
 
         self.nodes[0].setmocktime(0)
@@ -263,7 +269,7 @@ class TxDownloadTest(BitcoinTestFramework):
         self.nodes[0].bumpmocktime(NONPREF_PEER_TX_DELAY)
         with p2p_lock:
             for peer in non_pref_peers:
-                    assert_equal(peer.tx_getdata_count, 0)
+                assert_equal(peer.tx_getdata_count, 0)
 
         # Now add another outbound (preferred) which is immediately ready for consideration
         # upon advertisement
