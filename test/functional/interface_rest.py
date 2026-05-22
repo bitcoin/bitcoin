@@ -611,6 +611,9 @@ class RESTTest (BitcoinTestFramework):
         assert_cache_control("/blockhashbyheight/999999999", no_store, status=404)
         assert_cache_control(f"/block/{UNKNOWN_PARAM}", no_store, status=404)
         assert_cache_control(f"/tx/{'f' * 64}", no_store, status=404)
+        assert_cache_control("", no_store, status=404, query_params={"x": 1}, req_type=None)
+        assert_cache_control("/tx", no_store, status=404, req_type=None)
+        assert_cache_control("/does-not-exist", no_store, status=404, req_type=None)
         assert_cache_control("/mempool/not-a-valid-path", no_store, status=400)
         assert_cache_control(f"/deploymentinfo/{non_existing_blockhash}", no_store, status=400)
 

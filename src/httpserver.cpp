@@ -284,6 +284,7 @@ static void http_request_cb(struct evhttp_request* req, void* arg)
             return;
         }
     } else {
+        hreq->WriteHeader("Cache-Control", "no-store");
         hreq->WriteReply(HTTP_NOT_FOUND);
     }
 }
