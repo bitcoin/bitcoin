@@ -1356,6 +1356,46 @@ A few guidelines for modifying existing RPC interfaces:
 
   - *Rationale*: Changes in RPC JSON structure can break downstream application compatibility. Implementation of `deprecatedrpc` provides a grace period for downstream applications to migrate. Release notes provide notification to downstream users.
 
+## Feature deprecation and removal process
+
+Bitcoin Core uses a structured process for deprecating and removing features to give
+downstream users and applications time to migrate.
+
+### General principles
+
+- The minimum deprecation **grace period** for a feature that is going to be removed is one
+  major release.
+- Any deprecation or removal must come with a release note.
+
+### RPC methods and fields
+
+- To deprecate an entire RPC method, gate the old behavior behind `-deprecatedrpc=<feature>`.
+  Deprecated features should remain accessible via this flag during the grace period so
+  downstream users are not immediately broken.
+- The RPC help text must mention the deprecation and the `-deprecatedrpc=<feature>` flag
+  that re-enables it. For example:
+  ```
+  "\nDeprecated in v25.0, use the `newfoo` RPC instead. Start bitcoind with"
+  " `-deprecatedrpc=foo` to continue using this RPC.\n"
+  ```
+
+### Startup options
+
+- To deprecate a startup option, emit a warning via `LogWarning` or `InitWarning` when the
+  option is used, so users are notified at startup.
+- Update the option's help text to indicate it is deprecated and, if applicable, will be
+  removed in a future release.
+
+### REST interface
+
+- Deprecated REST endpoints or behaviors should be documented in `doc/REST-interface.md`
+  with the version they were deprecated.
+
+### ZMQ
+
+- Deprecated ZMQ topics or behaviors should be documented in `doc/zmq.md` with the version
+  they were deprecated.
+
 ## Internal interface guidelines
 
 Internal interfaces between parts of the codebase that are meant to be
