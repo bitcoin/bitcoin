@@ -532,6 +532,49 @@ class PSBTTest(BitcoinTestFramework):
         assert_raises_rpc_error(-8, "The PSBT version can only be 2 or 0", self.nodes[0].converttopsbt, hexstring=rawtx, psbt_version=1)
         assert_raises_rpc_error(-8, "The PSBT version can only be 2 or 0", self.nodes[0].psbtbumpfee, txid=tobump, psbt_version=1)
 
+    def test_joinpsbts(self):
+        self.log.info("Test joinpsbts")
+        addr1 = self.nodes[1].getnewaddress("", "bech32m")
+        addr2 = self.nodes[1].getnewaddress("", "legacy")
+        addr3 = self.nodes[1].getnewaddress("", "p2sh-segwit")
+        utxo1, utxo2, utxo3 = self.create_outpoints(self.nodes[1], outputs=[{addr1: 11}, {addr2: 11}, {addr3: 11}])
+        self.sync_all()
+
+        # Cannot join PSBTv2s
+        psbt1 = self.nodes[1].createpsbt(inputs=[utxo1], outputs={self.nodes[0].getnewaddress(): Decimal('10.999')}, psbt_version=0)
+        psbt2 = self.nodes[1].createpsbt(inputs=[utxo1], outputs={self.nodes[0].getnewaddress(): Decimal('10.999')}, psbt_version=2)
+        assert_raises_rpc_error(-8, "joinpsbts only operates on version 0 PSBTs", self.nodes[1].joinpsbts, [psbt1, psbt2])
+
+        # Two PSBTs with a common input should not be joinable
+        psbt2 = self.nodes[1].createpsbt([utxo1], {self.nodes[0].getnewaddress(): Decimal('10.999')}, psbt_version=0)
+        assert_raises_rpc_error(-8, "exists in multiple PSBTs", self.nodes[1].joinpsbts, [psbt1, psbt2])
+
+        # Join two distinct PSBTs
+        psbt1 = self.nodes[1].createpsbt(inputs=[utxo1, utxo2, utxo3], outputs={self.nodes[0].getnewaddress(): 32.999}, psbt_version=0)
+        addr4 = self.nodes[1].getnewaddress("", "p2sh-segwit")
+        utxo4 = self.create_outpoints(self.nodes[0], outputs=[{addr4: 5}])[0]
+        self.generate(self.nodes[0], 6)
+        psbt2 = self.nodes[1].createpsbt([utxo4], {self.nodes[0].getnewaddress(): Decimal('4.999')}, psbt_version=0)
+        psbt2 = self.nodes[1].walletprocesspsbt(psbt2)['psbt']
+        psbt2_decoded = self.nodes[0].decodepsbt(psbt2)
+        assert "final_scriptwitness" in psbt2_decoded['inputs'][0] and "final_scriptSig" in psbt2_decoded['inputs'][0]
+        joined = self.nodes[0].joinpsbts([psbt1, psbt2])
+        joined_decoded = self.nodes[0].decodepsbt(joined)
+        assert_equal(len(joined_decoded['inputs']), 4)
+        assert_equal(len(joined_decoded['outputs']), 2)
+        assert "final_scriptwitness" not in joined_decoded['inputs'][3]
+        assert "final_scriptSig" not in joined_decoded['inputs'][3]
+
+        # Check that joining shuffles the inputs and outputs
+        # 10 attempts should be enough to get a shuffled join
+        shuffled = False
+        for _ in range(10):
+            shuffled_joined = self.nodes[0].joinpsbts([psbt1, psbt2])
+            shuffled |= joined != shuffled_joined
+            if shuffled:
+                break
+        assert shuffled
+
     def run_test(self):
         # Create and fund a raw tx for sending 10 BTC
         psbtx1 = self.nodes[0].walletcreatefundedpsbt([], {self.nodes[2].getnewaddress():10})['psbt']
@@ -1060,40 +1103,7 @@ class PSBTTest(BitcoinTestFramework):
         test_psbt_input_keys(decoded['inputs'][1], psbt_v2_required_keys + ['non_witness_utxo', 'bip32_derivs'])
         test_psbt_input_keys(decoded['inputs'][2], psbt_v2_required_keys + ['non_witness_utxo', 'witness_utxo', 'bip32_derivs', 'redeem_script'])
 
-        # Cannot join PSBTv2s
-        psbt1 = self.nodes[1].createpsbt(inputs=[utxo1], outputs={self.nodes[0].getnewaddress():Decimal('10.999')}, psbt_version=0)
-        psbt2 = self.nodes[1].createpsbt(inputs=[utxo1], outputs={self.nodes[0].getnewaddress():Decimal('10.999')}, psbt_version=2)
-        assert_raises_rpc_error(-8, "joinpsbts only operates on version 0 PSBTs", self.nodes[1].joinpsbts, [psbt1, psbt2])
-
-        # Two PSBTs with a common input should not be joinable
-        psbt2 = self.nodes[1].createpsbt([utxo1], {self.nodes[0].getnewaddress():Decimal('10.999')}, psbt_version=0)
-        assert_raises_rpc_error(-8, "exists in multiple PSBTs", self.nodes[1].joinpsbts, [psbt1, psbt2])
-
-        # Join two distinct PSBTs
-        psbt1 = self.nodes[1].createpsbt(inputs=[utxo1, utxo2, utxo3], outputs={self.nodes[0].getnewaddress():32.999}, psbt_version=0)
-        addr4 = self.nodes[1].getnewaddress("", "p2sh-segwit")
-        utxo4 = self.create_outpoints(self.nodes[0], outputs=[{addr4: 5}])[0]
-        self.generate(self.nodes[0], 6)
-        psbt2 = self.nodes[1].createpsbt([utxo4], {self.nodes[0].getnewaddress():Decimal('4.999')}, psbt_version=0)
-        psbt2 = self.nodes[1].walletprocesspsbt(psbt2)['psbt']
-        psbt2_decoded = self.nodes[0].decodepsbt(psbt2)
-        assert "final_scriptwitness" in psbt2_decoded['inputs'][0] and "final_scriptSig" in psbt2_decoded['inputs'][0]
-        joined = self.nodes[0].joinpsbts([psbt1, psbt2])
-        joined_decoded = self.nodes[0].decodepsbt(joined)
-        assert_equal(len(joined_decoded['inputs']), 4)
-        assert_equal(len(joined_decoded['outputs']), 2)
-        assert "final_scriptwitness" not in joined_decoded['inputs'][3]
-        assert "final_scriptSig" not in joined_decoded['inputs'][3]
-
-        # Check that joining shuffles the inputs and outputs
-        # 10 attempts should be enough to get a shuffled join
-        shuffled = False
-        for _ in range(10):
-            shuffled_joined = self.nodes[0].joinpsbts([psbt1, psbt2])
-            shuffled |= joined != shuffled_joined
-            if shuffled:
-                break
-        assert shuffled
+        self.test_joinpsbts()
 
         # Newly created PSBT needs UTXOs and updating
         addr = self.nodes[1].getnewaddress("", "p2sh-segwit")
