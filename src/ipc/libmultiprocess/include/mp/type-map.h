@@ -17,7 +17,7 @@ void CustomBuildField(TypeList<std::map<KeyLocalType, ValueLocalType>>,
     Value&& value,
     Output&& output)
 {
-    // FIXME dededup with vector handler above
+    // FIXME dedup with vector handler above
     auto list = output.init(value.size());
     size_t i = 0;
     for (const auto& elem : value) {
