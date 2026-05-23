@@ -19,6 +19,7 @@ from test_framework.messages import (
     CTxIn,
     CTxOut,
     MAX_BIP125_RBF_SEQUENCE,
+    SEQUENCE_FINAL,
     WITNESS_SCALE_FACTOR,
     ser_compact_size,
 )
@@ -44,7 +45,13 @@ from test_framework.psbt import (
     PSBT_OUT_TAP_TREE,
     PSBT_OUT_SCRIPT,
 )
-from test_framework.script import CScript, OP_TRUE, SIGHASH_ALL, SIGHASH_ANYONECANPAY
+from test_framework.script import (
+    CScript,
+    LOCKTIME_THRESHOLD,
+    OP_TRUE,
+    SIGHASH_ALL,
+    SIGHASH_ANYONECANPAY,
+)
 from test_framework.script_util import MIN_STANDARD_TX_NONWITNESS_SIZE
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import (
@@ -574,6 +581,53 @@ class PSBTTest(BitcoinTestFramework):
             if shuffled:
                 break
         assert shuffled
+
+        def make_locktime_psbt(locktime, sequence=0):
+            tx = CTransaction()
+            tx.vin = [CTxIn(outpoint=COutPoint(hash=locktime, n=0), scriptSig=b"", nSequence=sequence)]
+            tx.vout = [CTxOut(nValue=0, scriptPubKey=b"")]
+            tx.nLockTime = locktime
+            return PSBT(
+                g=PSBTMap({PSBT_GLOBAL_UNSIGNED_TX: tx.serialize()}),
+                i=[PSBTMap()],
+                o=[PSBTMap()],
+            ).to_base64()
+
+        def assert_joined_locktime(psbts, expected_locktime):
+            for psbts_order in [psbts, list(reversed(psbts))]:
+                joined_lt = self.nodes[0].joinpsbts(psbts_order)
+                joined_lt_decoded = self.nodes[0].decodepsbt(joined_lt)
+                assert_equal(joined_lt_decoded['tx']['locktime'], expected_locktime)
+
+        psbt_0 = make_locktime_psbt(0)
+        psbt_150 = make_locktime_psbt(150)
+        psbt_200 = make_locktime_psbt(200)
+        psbt_250_seq_final = make_locktime_psbt(250, sequence=SEQUENCE_FINAL)
+        psbt_300_seq_final = make_locktime_psbt(300, sequence=SEQUENCE_FINAL)
+        psbt_time = make_locktime_psbt(LOCKTIME_THRESHOLD)
+        psbt_later_time = make_locktime_psbt(LOCKTIME_THRESHOLD + 1)
+
+        # joinpsbts uses the maximum height-based locktime
+        assert_joined_locktime([psbt_150, psbt_200], expected_locktime=200)
+
+        # joinpsbts ignores height-based locktimes from PSBTs whose inputs all use SEQUENCE_FINAL
+        assert_joined_locktime([psbt_200, psbt_250_seq_final], expected_locktime=200)
+
+        # joinpsbts uses zero locktime when no PSBT constrains the locktime
+        assert_joined_locktime([psbt_250_seq_final, psbt_300_seq_final], expected_locktime=0)
+
+        # joinpsbts uses the maximum time-based locktime
+        assert_joined_locktime([psbt_time, psbt_later_time], expected_locktime=LOCKTIME_THRESHOLD + 1)
+
+        # joinpsbts ignores zero locktime even when nSequence is non-final
+        assert_joined_locktime([psbt_0, psbt_time], expected_locktime=LOCKTIME_THRESHOLD)
+
+        # joinpsbts ignores SEQUENCE_FINAL locktimes before rejecting mixed locktime types
+        assert_joined_locktime([psbt_250_seq_final, psbt_time], expected_locktime=LOCKTIME_THRESHOLD)
+
+        # joinpsbts rejects mixed height-based and time-based locktimes
+        assert_raises_rpc_error(-8, "Cannot join PSBTs with mixed height-based and time-based locktimes", self.nodes[0].joinpsbts, [psbt_150, psbt_time])
+        assert_raises_rpc_error(-8, "Cannot join PSBTs with mixed height-based and time-based locktimes", self.nodes[0].joinpsbts, [psbt_time, psbt_150])
 
     def run_test(self):
         # Create and fund a raw tx for sending 10 BTC
