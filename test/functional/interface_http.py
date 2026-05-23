@@ -5,6 +5,7 @@
 """Test the HTTP server basics."""
 
 from test_framework.test_framework import BitcoinTestFramework
+from test_framework.netutil import NETWORK_ERRORS
 from test_framework.util import assert_equal, str_to_b64str
 
 import http.client
@@ -16,15 +17,6 @@ RPCSERVERTIMEOUT = 2
 # Set in httpserver.h
 MAX_HEADERS_SIZE = 8192
 MAX_BODY_SIZE = 32 * 1024 * 1024
-
-# When a test expects a server disconnection, any of these errors are
-# acceptable. The specific event is determined by race condition and platform OS.
-NETWORK_ERRORS = (
-    BrokenPipeError,                 # write to a closed socket/pipe
-    ConnectionResetError,            # connection forcibly closed by peer
-    ConnectionAbortedError,          # connection aborted locally or by network stack
-    http.client.ResponseNotReady,    # server response not ready or connection out of sync
-)
 
 class BitcoinHTTPConnection:
     def __init__(self, node):
