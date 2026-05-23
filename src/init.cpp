@@ -569,6 +569,7 @@ void SetupServerArgs(ArgsManager& argsman, bool can_listen_ipc)
                 ), ArgsManager::ALLOW_ANY, OptionsCategory::CONNECTION);
     argsman.AddArg("-bantime=<n>", strprintf("Default duration (in seconds) of manually configured bans (default: %u)", DEFAULT_MISBEHAVING_BANTIME), ArgsManager::ALLOW_ANY, OptionsCategory::CONNECTION);
     argsman.AddArg("-bind=<addr>[:<port>][=onion]", strprintf("Bind to given address and always listen on it (default: 0.0.0.0). Use [host]:port notation for IPv6. Append =onion to tag any incoming connections to that address and port as incoming Tor connections (default: 127.0.0.1:%u=onion, testnet3: 127.0.0.1:%u=onion, testnet4: 127.0.0.1:%u=onion, signet: 127.0.0.1:%u=onion, regtest: 127.0.0.1:%u=onion)", defaultChainParams->GetDefaultPort() + 1, testnetChainParams->GetDefaultPort() + 1, testnet4ChainParams->GetDefaultPort() + 1, signetChainParams->GetDefaultPort() + 1, regtestChainParams->GetDefaultPort() + 1), ArgsManager::ALLOW_ANY | ArgsManager::NETWORK_ONLY, OptionsCategory::CONNECTION);
+    argsman.AddArg("-outboundbind=<addr>", "Bind outgoing connections to the given local address (one per address family). The address must be on a local interface; outgoing connections will use it as their source IP. Use [host] notation for IPv6.", ArgsManager::ALLOW_ANY | ArgsManager::NETWORK_ONLY, OptionsCategory::CONNECTION);
     argsman.AddArg("-cjdnsreachable", "If set, then this host is configured for CJDNS (connecting to fc00::/8 addresses would lead us to the CJDNS network, see doc/cjdns.md) (default: 0)", ArgsManager::ALLOW_ANY, OptionsCategory::CONNECTION);
     argsman.AddArg("-connect=<ip>", "Connect only to the specified node; -noconnect disables automatic connections (the rules for this peer are the same as for -addnode). This option can be specified multiple times to connect to multiple nodes.", ArgsManager::ALLOW_ANY | ArgsManager::NETWORK_ONLY, OptionsCategory::CONNECTION);
     argsman.AddArg("-discover", "Discover own IP addresses (default: 1 when listening and no -externalip or -proxy)", ArgsManager::ALLOW_ANY, OptionsCategory::CONNECTION);
@@ -2168,6 +2169,18 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
             }
         }
         return InitError(ResolveErrMsg("bind", bind_arg));
+    }
+
+    for (const std::string& bind_arg : args.GetArgs("-outboundbind")) {
+        std::optional<CService> bind_addr = Lookup(bind_arg, /*portDefault=*/0, /*fAllowLookup=*/false);
+        if (!bind_addr.has_value()) {
+            return InitError(ResolveErrMsg("outboundbind", bind_arg));
+        }
+        bilingual_str error;
+        if (!IsAddrBindable(*bind_addr, error)) {
+            return InitError(error);
+        }
+        connOptions.vOutboundBinds.push_back(bind_addr.value());
     }
 
     for (const std::string& strBind : args.GetArgs("-whitebind")) {
