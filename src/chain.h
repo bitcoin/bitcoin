@@ -382,7 +382,7 @@ public:
 class CChain
 {
 private:
-    std::vector<CBlockIndex*> vChain;  // Pointers, never nullptr
+    std::vector<std::reference_wrapper<CBlockIndex>> vChain;
 
 public:
     CChain() = default;
@@ -392,13 +392,13 @@ public:
     /** Returns the index entry for the genesis block of this chain, or nullptr if none. */
     CBlockIndex* Genesis() const
     {
-        return vChain.size() > 0 ? vChain[0] : nullptr;
+        return vChain.size() > 0 ? &(vChain[0].get()) : nullptr;
     }
 
     /** Returns the index entry for the tip of this chain, or nullptr if none. */
     CBlockIndex* Tip() const
     {
-        return vChain.size() > 0 ? vChain[vChain.size() - 1] : nullptr;
+        return vChain.size() > 0 ? &(vChain[vChain.size() - 1].get()) : nullptr;
     }
 
     /** Returns the index entry at a particular height in this chain, or nullptr if no such height exists. */
@@ -406,7 +406,7 @@ public:
     {
         if (nHeight < 0 || nHeight >= (int)vChain.size())
             return nullptr;
-        return vChain[nHeight];
+        return &(vChain[nHeight].get());
     }
 
     /** Efficiently check whether a block is present in this chain. */
