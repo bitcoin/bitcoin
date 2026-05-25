@@ -487,8 +487,11 @@ CNode* CConnman::ConnectNode(CAddress addrConnect,
                 LogDebug(BCLog::PROXY, "Using proxy: %s to connect to %s\n", proxy.ToString(), target_addr.ToStringAddrPort());
                 sock = ConnectThroughProxy(proxy, target_addr.ToStringAddr(), target_addr.GetPort(), proxyConnectionFailed);
             } else {
-                // no proxy needed (none set for target network)
-                sock = ConnectDirectly(target_addr, conn_type == ConnectionType::MANUAL);
+                // No proxy needed (none set for target network). Private broadcast connections
+                // must always use a proxy, otherwise they would leak the originator's IP address.
+                if (Assume(conn_type != ConnectionType::PRIVATE_BROADCAST)) {
+                    sock = ConnectDirectly(target_addr, conn_type == ConnectionType::MANUAL);
+                }
             }
             if (!proxyConnectionFailed) {
                 // If a connection to the node was attempted, and failure (if any) is not caused by a problem connecting to
