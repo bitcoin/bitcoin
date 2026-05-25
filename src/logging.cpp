@@ -574,7 +574,7 @@ void BCLog::LogRateLimiter::Reset()
     }
     for (const auto& [source_loc, stats] : source_locations) {
         if (stats.m_dropped_bytes == 0) continue;
-        LogWarning(util::log::NO_RATE_LIMIT,
+        LOG_EMIT((.level = Level::Warning, .ratelimit = false),
             "Restarting logging from %s:%d (%s): %d bytes were dropped during the last %ss.",
             source_loc.file_name(), source_loc.line(), source_loc.function_name_short(),
             stats.m_dropped_bytes, Ticks<std::chrono::seconds>(m_reset_window));
@@ -614,20 +614,14 @@ bool BCLog::Logger::SetCategoryLogLevel(std::string_view category_str, std::stri
     return true;
 }
 
-bool util::log::ShouldDebugLog(Category category)
-{
-    return LogInstance().WillLogCategoryLevel(static_cast<BCLog::LogFlags>(category), util::log::Level::Debug);
-}
-
-bool util::log::ShouldTraceLog(Category category)
-{
-    return LogInstance().WillLogCategoryLevel(static_cast<BCLog::LogFlags>(category), util::log::Level::Trace);
-}
-
-void util::log::Log(util::log::Entry entry)
+bool util::log::hooks::ShouldLog(Category category, Level level)
 {
     BCLog::Logger& logger{LogInstance()};
-    if (logger.Enabled()) {
-        logger.LogPrint(std::move(entry));
-    }
+    return logger.Enabled() && logger.WillLogCategoryLevel(static_cast<BCLog::LogFlags>(category), level);
+}
+
+void util::log::hooks::Log(Entry entry)
+{
+    BCLog::Logger& logger{LogInstance()};
+    logger.LogPrint(std::move(entry));
 }
