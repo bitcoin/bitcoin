@@ -373,9 +373,15 @@ std::string BCLog::Logger::GetLogPrefix(BCLog::LogFlags category, BCLog::Level l
 
 static size_t MemUsage(const util::log::Entry& log)
 {
-    return memusage::DynamicUsage(log.message) +
-           memusage::DynamicUsage(log.thread_name) +
-           memusage::MallocUsage(sizeof(memusage::list_node<util::log::Entry>));
+    size_t usage{memusage::DynamicUsage(log.message) +
+                 memusage::DynamicUsage(log.thread_name) +
+                 memusage::DynamicUsage(log.fields) +
+                 memusage::MallocUsage(sizeof(memusage::list_node<util::log::Entry>))};
+    for (const auto& field : log.fields) {
+        usage += memusage::DynamicUsage(field.key);
+        usage += memusage::DynamicUsage(field.value);
+    }
+    return usage;
 }
 
 BCLog::LogRateLimiter::LogRateLimiter(uint64_t max_bytes, std::chrono::seconds reset_window)

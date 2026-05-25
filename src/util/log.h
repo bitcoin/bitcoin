@@ -17,6 +17,8 @@
 #include <source_location>
 #include <string>
 #include <string_view>
+#include <utility>
+#include <vector>
 
 /// Like std::source_location, but allowing to override the function name.
 class SourceLocation
@@ -57,6 +59,16 @@ enum class Level {
     Error,
 };
 
+struct KeyValue {
+    std::string key;
+    std::string value;
+};
+
+inline KeyValue KV(std::string key, std::string value)
+{
+    return KeyValue{std::move(key), std::move(value)};
+}
+
 struct Entry {
     Category category;
     Level level;
@@ -66,6 +78,7 @@ struct Entry {
     std::string thread_name{util::ThreadGetInternalName()};
     SourceLocation source_loc;
     std::string message;
+    std::vector<KeyValue> fields;
 };
 
 /// Return whether messages with specified category should be debug logged.
