@@ -168,7 +168,9 @@ public:
     };
 
     static std::unique_ptr<const CChainParams> RegTest(const RegTestOptions& options);
+    static std::unique_ptr<const CChainParams> RegTest() { const RegTestOptions opts{}; return RegTest(opts); }
     static std::unique_ptr<const CChainParams> SigNet(const SigNetOptions& options);
+    static std::unique_ptr<const CChainParams> SigNet() { const SigNetOptions opts{}; return SigNet(opts); }
     static std::unique_ptr<const CChainParams> Main(const MainNetOptions& options);
     static std::unique_ptr<const CChainParams> Main() { const MainNetOptions opts{}; return Main(opts); }
     static std::unique_ptr<const CChainParams> TestNet(const TestNetOptions& options);
