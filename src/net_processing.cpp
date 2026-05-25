@@ -1001,6 +1001,7 @@ private:
     /** Update tracking information about which blocks a peer is assumed to have. */
     void UpdateBlockAvailability(NodeId nodeid, const uint256& hash) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
     bool CanDirectFetch() EXCLUSIVE_LOCKS_REQUIRED(cs_main);
+    bool CanUseCompactBlockAnnouncements() EXCLUSIVE_LOCKS_REQUIRED(cs_main);
 
     /**
      * Estimates the distance, in blocks, between the best-known block and the network chain tip.
@@ -1346,6 +1347,16 @@ int64_t PeerManagerImpl::ApproximateBestBlockDepth() const
 bool PeerManagerImpl::CanDirectFetch()
 {
     return m_chainman.ActiveChain().Tip()->Time() > NodeClock::now() - m_chainparams.GetConsensus().PowTargetSpacing() * 20;
+}
+
+bool PeerManagerImpl::CanUseCompactBlockAnnouncements()
+{
+    if (!m_chainman.IsInitialBlockDownload()) return true;
+
+    const Chainstate& current_chainstate{m_chainman.CurrentChainstate()};
+    return current_chainstate.SnapshotBase() &&
+           current_chainstate.m_assumeutxo == Assumeutxo::UNVALIDATED &&
+           CanDirectFetch();
 }
 
 static bool PeerHasHeader(CNodeState *state, const CBlockIndex *pindex) EXCLUSIVE_LOCKS_REQUIRED(cs_main)
@@ -2210,12 +2221,12 @@ void PeerManagerImpl::BlockChecked(const std::shared_ptr<const CBlock>& block, c
     }
     // Check that:
     // 1. The block is valid
-    // 2. We're not in initial block download
+    // 2. We can use compact block announcements
     // 3. This is currently the best block we're aware of. We haven't updated
     //    the tip yet so we have no way to check this directly here. Instead we
     //    just check that there are currently no other blocks in flight.
     else if (state.IsValid() &&
-             !m_chainman.IsInitialBlockDownload() &&
+             CanUseCompactBlockAnnouncements() &&
              mapBlocksInFlight.count(hash) == mapBlocksInFlight.size()) {
         if (it != mapBlockSource.end()) {
             MaybeSetPeerAsAnnouncingHeaderAndIDs(it->second.first);
