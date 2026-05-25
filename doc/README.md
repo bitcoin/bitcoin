@@ -48,6 +48,7 @@ The following are developer notes on how to build Bitcoin Core on your native pl
 - [FreeBSD Build Notes](build-freebsd.md)
 - [OpenBSD Build Notes](build-openbsd.md)
 - [NetBSD Build Notes](build-netbsd.md)
+- [Nix Build Notes](build-nix.md)
 
 Development
 ---------------------
