@@ -585,6 +585,113 @@ jobs:
         with:
           provider: ${{ matrix.provider || needs.runners.outputs.provider }}
 
+  coverage:
+    name: 'coverage'
+    needs: runners
+    runs-on: ${{ needs.runners.outputs.provider == 'cirrus' && 'ghcr.io/cirruslabs/ubuntu-runner-amd64:24.04-md' || 'ubuntu-24.04' }}
+    if: ${{ vars.SKIP_BRANCH_PUSH != 'true' || github.event_name == 'pull_request' }}
+    timeout-minutes: 240
+    permissions:
+      contents: read
+      issues: write
+      pull-requests: write
+
+    env:
+      DANGER_CI_ON_HOST_FOLDERS: 1
+      FILE_ENV: './ci/test/00_setup_env_native_coverage.sh'
+      TEST_RUNNER_PORT_MIN: "14000"
+
+    steps:
+      - *ANNOTATION_PR_NUMBER
+
+      - name: Checkout
+        uses: actions/checkout@v6
+        with:
+          ref: *CHECKOUT_REF_TMPL
+          fetch-depth: 0
+
+      - name: Configure environment
+        uses: ./.github/actions/configure-environment
+
+      - name: Restore caches
+        id: restore-cache
+        uses: ./.github/actions/restore-caches
+
+      - name: Configure Docker
+        uses: ./.github/actions/configure-docker
+
+      - name: Clear unnecessary files
+        if: ${{ needs.runners.outputs.provider == 'gha' && true || false }} # Only needed on GHA runners
+        uses: ./.github/actions/clear-files
+
+      - name: CI script
+        run: ./ci/test_run_all.sh
+
+      - name: Upload coverage report
+        uses: actions/upload-artifact@v7
+        with:
+          name: coverage-report-${{ github.run_id }}
+          path: |
+            ${{ env.BASE_BUILD_DIR }}/coverage_report
+            ${{ env.BASE_BUILD_DIR }}/coverage.json
+          if-no-files-found: error
+
+      - name: Fetch PR base
+        if: github.event_name == 'pull_request'
+        run: git fetch origin "${GITHUB_BASE_REF}"
+
+      - name: Diff coverage
+        if: github.event_name == 'pull_request'
+        run: |
+          python3 ./contrib/devtools/diff_coverage.py \
+            --coverage-json "${BASE_BUILD_DIR}/coverage.json" \
+            --base "origin/${GITHUB_BASE_REF}" \
+            --path-prefix-from "${RUNNER_TEMP}" \
+            --path-prefix-to "${GITHUB_WORKSPACE}" \
+            --comment-file "${BASE_BUILD_DIR}/diff_coverage_comment.md"
+
+      - name: Comment diff coverage
+        if: github.event_name == 'pull_request'
+        uses: actions/github-script@v8
+        with:
+          script: |
+            const fs = require('fs');
+            const body = fs.readFileSync(process.env.DIFF_COVERAGE_COMMENT_FILE, 'utf8');
+            const marker = '<!-- diff-coverage -->';
+            const { owner, repo } = context.repo;
+            const issue_number = context.issue.number;
+
+            const comments = await github.paginate(github.rest.issues.listComments, {
+              owner,
+              repo,
+              issue_number,
+              per_page: 100,
+            });
+
+            const existingComments = comments.filter(comment =>
+              comment.user?.type === 'Bot' && comment.body?.includes(marker)
+            );
+
+            for (const comment of existingComments) {
+              await github.rest.issues.deleteComment({
+                owner,
+                repo,
+                comment_id: comment.id,
+              });
+            }
+
+            await github.rest.issues.createComment({
+              owner,
+              repo,
+              issue_number,
+              body,
+            });
+        env:
+          DIFF_COVERAGE_COMMENT_FILE: ${{ env.BASE_BUILD_DIR }}/diff_coverage_comment.md
+
+      - name: Save caches
+        uses: ./.github/actions/save-caches
+
   lint:
     name: 'lint'
     needs: runners

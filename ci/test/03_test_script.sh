@@ -183,6 +183,11 @@ if [[ "$CI_OS_NAME" == "macos" && "${GOAL}" = "install deploy" ]]; then
   fi
 fi
 
+if [ "$RUN_COVERAGE" = "true" ]; then
+  mkdir -p "${BASE_BUILD_DIR}/raw_profile_data"
+  export LLVM_PROFILE_FILE="${BASE_BUILD_DIR}/raw_profile_data/%m_%p.profraw"
+fi
+
 if [ "$RUN_UNIT_TESTS" = "true" ]; then
   DIR_UNIT_TEST_DATA="${DIR_UNIT_TEST_DATA}" \
   LD_LIBRARY_PATH="${DEPENDS_DIR}/${HOST}/lib" \
@@ -206,6 +211,39 @@ if [ "$RUN_FUNCTIONAL_TESTS" = "true" ]; then
     "${TEST_RUNNER_EXTRA[@]}" \
     --quiet \
     --failfast
+fi
+
+if [ "$RUN_COVERAGE" = "true" ]; then
+  LLVM_PROFDATA_BIN=llvm-profdata
+  LLVM_COV_BIN=llvm-cov
+  LLVM_CXXFILT_BIN=llvm-cxxfilt
+  if [ -n "${APT_LLVM_V}" ]; then
+    LLVM_PROFDATA_BIN="llvm-profdata-${APT_LLVM_V}"
+    LLVM_COV_BIN="llvm-cov-${APT_LLVM_V}"
+    LLVM_CXXFILT_BIN="llvm-cxxfilt-${APT_LLVM_V}"
+  fi
+  find "${BASE_BUILD_DIR}/raw_profile_data" -name "*.profraw" > "${BASE_BUILD_DIR}/raw_profile_data_files.txt"
+  "${LLVM_PROFDATA_BIN}" merge -f "${BASE_BUILD_DIR}/raw_profile_data_files.txt" -o "${BASE_BUILD_DIR}/coverage.profdata"
+  "${LLVM_COV_BIN}" show \
+    --object="${BASE_BUILD_DIR}/bin/test_bitcoin" \
+    --object="${BASE_BUILD_DIR}/bin/bitcoind" \
+    -Xdemangler="${LLVM_CXXFILT_BIN}" \
+    --instr-profile="${BASE_BUILD_DIR}/coverage.profdata" \
+    --ignore-filename-regex="src/crc32c/|src/leveldb/|src/minisketch/|src/secp256k1/|src/test/" \
+    --format=html \
+    --show-instantiation-summary \
+    --show-line-counts-or-regions \
+    --show-expansions \
+    --output-dir="${BASE_BUILD_DIR}/coverage_report" \
+    --project-title="Bitcoin Core Coverage Report"
+  "${LLVM_COV_BIN}" export \
+    --object="${BASE_BUILD_DIR}/bin/test_bitcoin" \
+    --object="${BASE_BUILD_DIR}/bin/bitcoind" \
+    -Xdemangler="${LLVM_CXXFILT_BIN}" \
+    --instr-profile="${BASE_BUILD_DIR}/coverage.profdata" \
+    > "${BASE_BUILD_DIR}/coverage.json"
+  chmod -R a+rX "${BASE_BUILD_DIR}/coverage_report"
+  chmod a+r "${BASE_BUILD_DIR}/coverage.json"
 fi
 
 if [ "${RUN_TIDY}" = "true" ]; then
