@@ -96,6 +96,7 @@ ImportDescriptorResult ImportDescriptor(CWallet& wallet, const ImportDescriptorR
         return result;
     }
 
+    std::pair<std::map<CExtPubKey, CExtKey>, std::map<CPubKey, CKey>> wallet_keys = wallet.GetKnownKeys();
     for (size_t j = 0; j < parsed_descs.size(); ++j) {
         auto parsed_desc = std::move(parsed_descs[j]);
         if (parsed_descs.size() == 2) {
@@ -103,6 +104,29 @@ ImportDescriptorResult ImportDescriptor(CWallet& wallet, const ImportDescriptorR
         } else if (parsed_descs.size() > 2) {
             CHECK_NONFATAL(!desc_internal);
         }
+
+        // Substitute any xpubs with xprvs if known to the wallet
+        parsed_desc->SubstituteMasterExtPubs(wallet_keys.first);
+
+        // Insert into keys any private keys that the wallet already knows
+        // This needs to be done after xpubs have been substituted
+        // Only do this for the first descriptor in the multipath expansion as all substitutions will be for the same key
+        if (j == 0) {
+            std::set<CExtPubKey> desc_xpubs;
+            std::set<CPubKey> desc_pubs;
+            parsed_desc->GetPubKeys(desc_pubs, desc_xpubs);
+            for (const CExtPubKey& xpub : desc_xpubs) {
+                const auto& it = wallet_keys.first.find(xpub);
+                if (it == wallet_keys.first.end()) continue;
+                keys.keys.emplace(it->first.pubkey.GetID(), it->second.key);
+            }
+            for (const CPubKey& pub : desc_pubs) {
+                const auto& it = wallet_keys.second.find(pub);
+                if (it == wallet_keys.second.end()) continue;
+                keys.keys.emplace(it->first.GetID(), it->second);
+            }
+        }
+
         // Need to ExpandPrivate to check if private keys are available for all pubkeys
         FlatSigningProvider expand_keys;
         std::vector<CScript> scripts;

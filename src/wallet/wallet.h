@@ -1072,6 +1072,9 @@ public:
     //! Retrieve the xpubs in use by the active descriptors
     std::set<CExtPubKey> GetActiveHDPubKeys() const EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
 
+    //! Retrieve the xprvs and individual privkeys known by this wallet
+    std::pair<std::map<CExtPubKey, CExtKey>, std::map<CPubKey, CKey>> GetKnownKeys() const EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
+
     //! Find the private key for the given key id from the wallet's descriptors, if available
     //! Returns nullopt when no descriptor has the key or if the wallet is locked.
     std::optional<CKey> GetKey(const CKeyID& keyid) const;

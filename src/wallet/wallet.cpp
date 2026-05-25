@@ -4562,6 +4562,37 @@ std::set<CExtPubKey> CWallet::GetActiveHDPubKeys() const
     return active_xpubs;
 }
 
+std::pair<std::map<CExtPubKey, CExtKey>, std::map<CPubKey, CKey>> CWallet::GetKnownKeys() const
+{
+    AssertLockHeld(cs_wallet);
+
+    Assert(IsWalletFlagSet(WALLET_FLAG_DESCRIPTORS));
+
+    std::map<CExtPubKey, CExtKey> xprvs;
+    std::map<CPubKey, CKey> keys;
+    for (const auto& spkm : GetAllScriptPubKeyMans()) {
+        const DescriptorScriptPubKeyMan* desc_spkm = dynamic_cast<DescriptorScriptPubKeyMan*>(spkm);
+        assert(desc_spkm);
+        LOCK(desc_spkm->cs_desc_man);
+        WalletDescriptor w_desc = desc_spkm->GetWalletDescriptor();
+
+        std::set<CPubKey> desc_pubkeys;
+        std::set<CExtPubKey> desc_xpubs;
+        w_desc.descriptor->GetPubKeys(desc_pubkeys, desc_xpubs);
+        for (const auto& pub : desc_pubkeys) {
+            std::optional<CKey> key = desc_spkm->GetKey(pub.GetID());
+            if (!key) continue;
+            keys.emplace(pub, *key);
+        }
+        for (const auto& xpub : desc_xpubs) {
+            std::optional<CKey> key = desc_spkm->GetKey(xpub.pubkey.GetID());
+            if (!key) continue;
+            xprvs.emplace(xpub, CExtKey(xpub, *key));
+        }
+    }
+    return std::make_pair(xprvs, keys);
+}
+
 std::optional<CKey> CWallet::GetKey(const CKeyID& keyid) const
 {
     Assert(IsWalletFlagSet(WALLET_FLAG_DESCRIPTORS));
