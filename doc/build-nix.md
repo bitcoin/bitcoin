@@ -1,9 +1,9 @@
 # What is Nix
 
 [Nix](https://nix.dev/) is a declarative package manager that simplifies
-dependency management. It is used by the [NixOS](https://nixos.org/), a Linux
-distribution, but Nix itself can be installed on other Linux distributions,
-macOS, and Windows (with WSL).
+dependency management. It is used by the [NixOS](https://nixos.org/) project, a
+Linux distribution, but Nix itself can be installed on other Linux
+distributions, macOS, and Windows (with WSL).
 
 Several things make Nix interesting. It's a lazy functional programming
 language, which is used to write package recipes. Builds specified via package
