@@ -12,6 +12,7 @@
 
 #include <cstddef>
 #include <cstdint>
+#include <map>
 #include <memory>
 #include <optional>
 #include <set>
@@ -20,6 +21,7 @@
 #include <unordered_map>
 #include <vector>
 
+struct CExtKey;
 class CScript;
 class SigningProvider;
 struct FlatSigningProvider;
@@ -204,6 +206,9 @@ struct Descriptor {
 
     /** Get the number of key expressions in this descriptor. Used only for tests */
     virtual size_t GetKeyCount() const = 0;
+
+    /** Substitute all pubkeys with their corresponding private keys provided by the caller */
+    virtual void SubstituteMasterExtPubs(std::map<CExtPubKey, CExtKey> xprvs) = 0;
 };
 
 /** Validate the numeric bounds of a descriptor key-expression range
