@@ -131,8 +131,8 @@ BOOST_FIXTURE_TEST_CASE(logging_LogPrint, LogSetup)
 
 BOOST_FIXTURE_TEST_CASE(logging_LogPrintMacros, LogSetup)
 {
-    LogInstance().EnableCategory(BCLog::NET);
-    LogTrace(BCLog::NET, "foo6: %s", "bar6"); // not logged
+    LogInstance().SetCategoryLogLevel(BCLog::NET, BCLog::Level::Debug);
+    LogTrace(BCLog::NET, "foo6: %s", "bar6"); // not logged (NET is at Debug, not Trace)
     LogDebug(BCLog::NET, "foo7: %s", "bar7");
     LogInfo("foo8: %s", "bar8");
     LogWarning("foo9: %s", "bar9");
@@ -149,7 +149,7 @@ BOOST_FIXTURE_TEST_CASE(logging_LogPrintMacros, LogSetup)
 
 BOOST_FIXTURE_TEST_CASE(logging_LogPrintMacros_CategoryName, LogSetup)
 {
-    LogInstance().EnableCategory(BCLog::LogFlags::ALL);
+    LogInstance().SetCategoryLogLevel(BCLog::LogFlags::ALL, BCLog::Level::Debug);
     const auto concatenated_category_names = LogInstance().LogCategoriesString();
     std::vector<std::pair<BCLog::LogFlags, std::string>> expected_category_names;
     const auto category_names = SplitString(concatenated_category_names, ',');
@@ -174,13 +174,12 @@ BOOST_FIXTURE_TEST_CASE(logging_LogPrintMacros_CategoryName, LogSetup)
 
 BOOST_FIXTURE_TEST_CASE(logging_SeverityLevels, LogSetup)
 {
-    LogInstance().SetLogLevel(BCLog::Level::Debug);
-    LogInstance().EnableCategory(BCLog::LogFlags::ALL);
+    LogInstance().SetCategoryLogLevel(BCLog::LogFlags::ALL, BCLog::Level::Debug);
     LogInstance().SetCategoryLogLevel(/*category_str=*/"net", /*level_str=*/"info");
 
-    // Global log level
+    // All categories at Debug level
     LogInfo("info_%s", 1);
-    LogTrace(BCLog::HTTP, "trace_%s. This log level is lower than the global one.", 2);
+    LogTrace(BCLog::HTTP, "trace_%s. This log level is below the HTTP category threshold.", 2);
     LogDebug(BCLog::HTTP, "debug_%s", 3);
     LogWarning("warn_%s", 4);
     LogError("err_%s", 5);
@@ -278,7 +277,7 @@ BOOST_FIXTURE_TEST_CASE(logging_Conf, LogSetup)
 
         // Test that enabling a category at runtime (e.g., via the `logging` RPC) always
         // sets debug log level.
-        LogInstance().EnableCategory(BCLog::NET);
+        LogInstance().SetCategoryLogLevel(BCLog::NET, BCLog::Level::Debug);
         BOOST_CHECK(!LogInstance().WillLogCategoryLevel(BCLog::NET, BCLog::Level::Trace));
         BOOST_CHECK(LogInstance().WillLogCategoryLevel(BCLog::NET, BCLog::Level::Debug));
     }
@@ -301,7 +300,7 @@ BOOST_FIXTURE_TEST_CASE(logging_Conf, LogSetup)
 
         // Test that enabling a category at runtime (e.g., via the `logging` RPC) always
         // sets debug log level.
-        LogInstance().EnableCategory(BCLog::NET);
+        LogInstance().SetCategoryLogLevel(BCLog::NET, BCLog::Level::Debug);
         BOOST_CHECK(!LogInstance().WillLogCategoryLevel(BCLog::NET, BCLog::Level::Trace));
         BOOST_CHECK(LogInstance().WillLogCategoryLevel(BCLog::NET, BCLog::Level::Debug));
     }
@@ -466,7 +465,7 @@ BOOST_FIXTURE_TEST_CASE(logging_filesize_rate_limit, LogSetup)
     LogInstance().m_log_timestamps = false;
     LogInstance().m_log_sourcelocations = false;
     LogInstance().m_log_threadnames = false;
-    LogInstance().EnableCategory(BCLog::LogFlags::HTTP);
+    LogInstance().SetCategoryLogLevel(BCLog::LogFlags::HTTP, BCLog::Level::Debug);
 
     constexpr int64_t line_length{1024};
     constexpr int64_t num_lines{10};
