@@ -586,6 +586,11 @@ public:
     {
         return btck_transaction_input_get_sequence(impl());
     }
+
+    std::vector<std::byte> GetScriptSig() const
+    {
+        return write_bytes(impl(), btck_transaction_input_get_script_sig);
+    }
 };
 
 class TransactionInputView : public View<btck_TransactionInput>, public TransactionInputApi<TransactionInputView>
