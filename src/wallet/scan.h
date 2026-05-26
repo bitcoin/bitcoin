@@ -63,6 +63,10 @@ private:
     std::atomic<SteadyClock::time_point> m_scanning_start{SteadyClock::time_point{}};
     std::atomic<double> m_scanning_progress{0};
 
+    //! Locate block_hash in the chain, queueing its active-chain successor
+    //! into next_block if it exists and is within the scan range. Returns
+    //! whether the block itself is still in the active chain.
+    bool QueueNextBlock(const uint256& block_hash, int block_height, std::optional<std::pair<uint256, int>>& next_block, std::optional<int> max_height);
     bool ScanBlock(const uint256& block_hash, int block_height, bool save_progress);
 
     //! Only WalletRescanReserver may reserve and release scans, so that
