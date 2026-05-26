@@ -1805,36 +1805,6 @@ void CWallet::MaybeUpdateBirthTime(int64_t time)
     }
 }
 
-/**
- * Scan active chain for relevant transactions after importing keys. This should
- * be called whenever new keys are added to the wallet, with the oldest key
- * creation time.
- *
- * @return Earliest timestamp that could be successfully scanned from. Timestamp
- * returned will be higher than startTime if relevant blocks could not be read.
- */
-int64_t CWallet::RescanFromTime(int64_t startTime, const WalletRescanReserver& reserver)
-{
-    // Find starting block. May be null if nCreateTime is greater than the
-    // highest blockchain timestamp, in which case there is nothing that needs
-    // to be scanned.
-    int start_height = 0;
-    uint256 start_block;
-    bool start = chain().findFirstBlockWithTimeAndHeight(startTime - TIMESTAMP_WINDOW, 0, FoundBlock().hash(start_block).height(start_height));
-    WalletLogPrintf("%s: Rescanning last %i blocks\n", __func__, start ? WITH_LOCK(cs_wallet, return GetLastBlockHeight()) - start_height + 1 : 0);
-
-    if (start) {
-        // TODO: this should take into account failure by ScanResult::USER_ABORT
-        ScanResult result = Scanner().Scan(start_block, start_height, /*max_height=*/{}, reserver, /*save_progress=*/false);
-        if (result.status == ScanResult::FAILURE) {
-            int64_t time_max;
-            CHECK_NONFATAL(chain().findBlock(result.last_failed_block, FoundBlock().maxTime(time_max)));
-            return time_max + TIMESTAMP_WINDOW + 1;
-        }
-    }
-    return startTime;
-}
-
 bool CWallet::SubmitTxMemoryPoolAndRelay(CWalletTx& wtx,
                                          std::string& err_string,
                                          node::TxBroadcast broadcast_method) const

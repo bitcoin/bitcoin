@@ -517,7 +517,7 @@ BOOST_FIXTURE_TEST_CASE(rescan_from_time, TestChain100Setup)
     // is moved past the last unreadable block, telling the caller from when
     // the rescan is actually complete.
     const int64_t genesis_time{WITH_LOCK(::cs_main, return m_node.chainman->ActiveChain().Genesis()->GetBlockTime())};
-    BOOST_CHECK_EQUAL(wallet.RescanFromTime(genesis_time, reserver),
+    BOOST_CHECK_EQUAL(wallet.Scanner().ScanFromTime(genesis_time, reserver),
                       WITH_LOCK(::cs_main, return old_tip->GetBlockTimeMax()) + TIMESTAMP_WINDOW + 1);
 
     bool scan_logged{false};
@@ -528,7 +528,7 @@ BOOST_FIXTURE_TEST_CASE(rescan_from_time, TestChain100Setup)
     // A timestamp past the tip requires no scanning and is returned unchanged.
     const int64_t future_time{WITH_LOCK(::cs_main, return new_tip->GetBlockTimeMax()) + TIMESTAMP_WINDOW + 1};
     BOOST_CHECK(!scan_logged);
-    BOOST_CHECK_EQUAL(wallet.RescanFromTime(future_time, reserver), future_time);
+    BOOST_CHECK_EQUAL(wallet.Scanner().ScanFromTime(future_time, reserver), future_time);
 }
 
 BOOST_FIXTURE_TEST_CASE(scan_for_wallet_transactions_missing_filter, TestChain100Setup)
