@@ -1980,11 +1980,8 @@ bool PeerManagerImpl::MaybePunishNodeForTx(NodeId nodeid, const TxValidationStat
         break;
     // The node is providing invalid data:
     case TxValidationResult::TX_CONSENSUS:
-        {
-            LOCK(cs_main);
-            Misbehaving(nodeid, 100);
-            return true;
-        }
+        Misbehaving(nodeid, 100);
+        return true;
     // Conflicting (but not necessarily invalid) data or different policy:
     case TxValidationResult::TX_RECENT_CONSENSUS_CHANGE:
     case TxValidationResult::TX_INPUTS_NOT_STANDARD:
