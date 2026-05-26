@@ -34,6 +34,7 @@ BOOST_FIXTURE_TEST_SUITE(logging_tests, BasicTestingSetup)
 
 static void ResetLogger()
 {
+    LogInstance().DisableCategory(BCLog::LogFlags::ALL);
     LogInstance().SetLogLevel(BCLog::DEFAULT_LOG_LEVEL);
     LogInstance().SetCategoryLogLevel({});
 }
@@ -215,28 +216,38 @@ BOOST_FIXTURE_TEST_CASE(logging_Conf, LogSetup)
     {
         ResetLogger();
         ArgsManager args;
+        args.AddArg("-debug", "...", ArgsManager::ALLOW_ANY, OptionsCategory::DEBUG_TEST); // -loglevel has no effect without -debug
         args.AddArg("-loglevel", "...", ArgsManager::ALLOW_ANY, OptionsCategory::DEBUG_TEST);
-        const char* argv_test[] = {"bitcoind", "-loglevel=debug"};
+        std::array argv_test{"bitcoind", "-debug", "-loglevel=trace"};
         std::string err;
-        BOOST_REQUIRE(args.ParseParameters(2, argv_test, err));
+        BOOST_REQUIRE(args.ParseParameters(argv_test.size(), argv_test.data(), err));
 
-        auto result = init::SetLoggingLevel(args);
-        BOOST_REQUIRE(result);
-        BOOST_CHECK_EQUAL(LogInstance().LogLevel(), BCLog::Level::Debug);
+        BOOST_REQUIRE(init::SetLoggingCategories(args));
+        BOOST_REQUIRE(init::SetLoggingLevel(args));
+        BOOST_CHECK_EQUAL(LogInstance().LogLevel(), BCLog::Level::Trace);
+        BOOST_CHECK(LogInstance().WillLogCategoryLevel(BCLog::LogFlags::NET, BCLog::Level::Trace));
+        BOOST_CHECK(LogInstance().WillLogCategoryLevel(BCLog::LogFlags::NET, BCLog::Level::Debug));
+        BOOST_CHECK(LogInstance().WillLogCategoryLevel(BCLog::LogFlags::HTTP, BCLog::Level::Trace));
+        BOOST_CHECK(LogInstance().WillLogCategoryLevel(BCLog::LogFlags::HTTP, BCLog::Level::Debug));
     }
 
     // Set category-specific log level
     {
         ResetLogger();
         ArgsManager args;
+        args.AddArg("-debug", "...", ArgsManager::ALLOW_ANY, OptionsCategory::DEBUG_TEST); // -loglevel has no effect without -debug
         args.AddArg("-loglevel", "...", ArgsManager::ALLOW_ANY, OptionsCategory::DEBUG_TEST);
-        const char* argv_test[] = {"bitcoind", "-loglevel=net:trace"};
+        std::array argv_test = {"bitcoind", "-debug", "-loglevel=net:trace"};
         std::string err;
-        BOOST_REQUIRE(args.ParseParameters(2, argv_test, err));
+        BOOST_REQUIRE(args.ParseParameters(argv_test.size(), argv_test.data(), err));
 
-        auto result = init::SetLoggingLevel(args);
-        BOOST_REQUIRE(result);
+        BOOST_REQUIRE(init::SetLoggingCategories(args));
+        BOOST_REQUIRE(init::SetLoggingLevel(args));
         BOOST_CHECK_EQUAL(LogInstance().LogLevel(), BCLog::DEFAULT_LOG_LEVEL);
+        BOOST_CHECK(LogInstance().WillLogCategoryLevel(BCLog::LogFlags::NET, BCLog::Level::Trace));
+        BOOST_CHECK(LogInstance().WillLogCategoryLevel(BCLog::LogFlags::NET, BCLog::Level::Debug));
+        BOOST_CHECK(!LogInstance().WillLogCategoryLevel(BCLog::LogFlags::HTTP, BCLog::Level::Trace));
+        BOOST_CHECK(LogInstance().WillLogCategoryLevel(BCLog::LogFlags::HTTP, BCLog::Level::Debug));
 
         const auto& category_levels{LogInstance().CategoryLevels()};
         const auto net_it{category_levels.find(BCLog::LogFlags::NET)};
@@ -248,21 +259,26 @@ BOOST_FIXTURE_TEST_CASE(logging_Conf, LogSetup)
     {
         ResetLogger();
         ArgsManager args;
+        args.AddArg("-debug", "...", ArgsManager::ALLOW_ANY, OptionsCategory::DEBUG_TEST); // -loglevel has no effect without -debug
         args.AddArg("-loglevel", "...", ArgsManager::ALLOW_ANY, OptionsCategory::DEBUG_TEST);
-        const char* argv_test[] = {"bitcoind", "-loglevel=debug", "-loglevel=net:trace", "-loglevel=http:info"};
+        std::array argv_test = {"bitcoind", "-debug", "-loglevel=trace", "-loglevel=net:debug", "-loglevel=http:info"};
         std::string err;
-        BOOST_REQUIRE(args.ParseParameters(4, argv_test, err));
+        BOOST_REQUIRE(args.ParseParameters(argv_test.size(), argv_test.data(), err));
 
-        auto result = init::SetLoggingLevel(args);
-        BOOST_REQUIRE(result);
-        BOOST_CHECK_EQUAL(LogInstance().LogLevel(), BCLog::Level::Debug);
+        BOOST_REQUIRE(init::SetLoggingCategories(args));
+        BOOST_REQUIRE(init::SetLoggingLevel(args));
+        BOOST_CHECK_EQUAL(LogInstance().LogLevel(), BCLog::Level::Trace);
+        BOOST_CHECK(!LogInstance().WillLogCategoryLevel(BCLog::LogFlags::NET, BCLog::Level::Trace));
+        BOOST_CHECK(LogInstance().WillLogCategoryLevel(BCLog::LogFlags::NET, BCLog::Level::Debug));
+        BOOST_CHECK(!LogInstance().WillLogCategoryLevel(BCLog::LogFlags::HTTP, BCLog::Level::Trace));
+        BOOST_CHECK(!LogInstance().WillLogCategoryLevel(BCLog::LogFlags::HTTP, BCLog::Level::Debug));
 
         const auto& category_levels{LogInstance().CategoryLevels()};
         BOOST_CHECK_EQUAL(category_levels.size(), 2);
 
         const auto net_it{category_levels.find(BCLog::LogFlags::NET)};
         BOOST_CHECK(net_it != category_levels.end());
-        BOOST_CHECK_EQUAL(net_it->second, BCLog::Level::Trace);
+        BOOST_CHECK_EQUAL(net_it->second, BCLog::Level::Debug);
 
         const auto http_it{category_levels.find(BCLog::LogFlags::HTTP)};
         BOOST_CHECK(http_it != category_levels.end());
@@ -274,6 +290,54 @@ BOOST_FIXTURE_TEST_CASE(logging_Conf, LogSetup)
         ResetLogger();
         BOOST_CHECK(LogInstance().SetCategoryLogLevel(/*category_str=*/"libevent", /*level_str=*/"trace"));
         BOOST_CHECK(LogInstance().CategoryLevels().empty());
+    }
+
+    // Set global -loglevel without -debug (has no effect because no categories are enabled)
+    {
+        ResetLogger();
+        ArgsManager args;
+        args.AddArg("-loglevel", "...", ArgsManager::ALLOW_ANY, OptionsCategory::DEBUG_TEST);
+        std::array argv_test{"bitcoind", "-loglevel=trace"};
+        std::string err;
+        BOOST_REQUIRE(args.ParseParameters(argv_test.size(), argv_test.data(), err));
+
+        BOOST_REQUIRE(init::SetLoggingCategories(args));
+        BOOST_REQUIRE(init::SetLoggingLevel(args));
+        BOOST_CHECK(!LogInstance().WillLogCategoryLevel(BCLog::LogFlags::NET, BCLog::Level::Trace));
+        BOOST_CHECK(!LogInstance().WillLogCategoryLevel(BCLog::LogFlags::NET, BCLog::Level::Debug));
+        BOOST_CHECK(!LogInstance().WillLogCategoryLevel(BCLog::LogFlags::HTTP, BCLog::Level::Trace));
+        BOOST_CHECK(!LogInstance().WillLogCategoryLevel(BCLog::LogFlags::HTTP, BCLog::Level::Debug));
+
+        // Test that enabling a category at runtime (e.g., via the `logging` RPC) uses the
+        // currently-configured log level.
+        LogInstance().EnableCategory(BCLog::NET);
+        // NET inherits the global trace level: both debug and trace messages are logged.
+        BOOST_CHECK(LogInstance().WillLogCategoryLevel(BCLog::NET, BCLog::Level::Trace));
+        BOOST_CHECK(LogInstance().WillLogCategoryLevel(BCLog::NET, BCLog::Level::Debug));
+    }
+
+    // Set category-specific -loglevel without -debug (has no effect because no categories are enabled)
+    {
+        ResetLogger();
+        ArgsManager args;
+        args.AddArg("-loglevel", "...", ArgsManager::ALLOW_ANY, OptionsCategory::DEBUG_TEST);
+        std::array argv_test = {"bitcoind", "-loglevel=net:trace"};
+        std::string err;
+        BOOST_REQUIRE(args.ParseParameters(argv_test.size(), argv_test.data(), err));
+
+        BOOST_REQUIRE(init::SetLoggingCategories(args));
+        BOOST_REQUIRE(init::SetLoggingLevel(args));
+        BOOST_CHECK(!LogInstance().WillLogCategoryLevel(BCLog::LogFlags::NET, BCLog::Level::Trace));
+        BOOST_CHECK(!LogInstance().WillLogCategoryLevel(BCLog::LogFlags::NET, BCLog::Level::Debug));
+        BOOST_CHECK(!LogInstance().WillLogCategoryLevel(BCLog::LogFlags::HTTP, BCLog::Level::Trace));
+        BOOST_CHECK(!LogInstance().WillLogCategoryLevel(BCLog::LogFlags::HTTP, BCLog::Level::Debug));
+
+        // Test that enabling a category at runtime (e.g., via the `logging` RPC) uses the
+        // currently-configured log level.
+        LogInstance().EnableCategory(BCLog::NET);
+        // NET uses the specified trace level: both debug and trace messages are logged.
+        BOOST_CHECK(LogInstance().WillLogCategoryLevel(BCLog::NET, BCLog::Level::Trace));
+        BOOST_CHECK(LogInstance().WillLogCategoryLevel(BCLog::NET, BCLog::Level::Debug));
     }
 }
 
