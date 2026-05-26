@@ -260,7 +260,7 @@ BOOST_FIXTURE_TEST_CASE(logging_LogWarnThenDebug, LogSetup)
 
 BOOST_FIXTURE_TEST_CASE(logging_Conf, LogSetup)
 {
-    // Set global log level
+    // Set global log level (updates all currently-enabled categories).
     {
         ResetLogger();
         ArgsManager args;
@@ -272,7 +272,7 @@ BOOST_FIXTURE_TEST_CASE(logging_Conf, LogSetup)
 
         BOOST_REQUIRE(init::SetLoggingCategories(args));
         BOOST_REQUIRE(init::SetLoggingLevel(args));
-        BOOST_CHECK_EQUAL(LogInstance().LogLevel(), BCLog::Level::Trace);
+        BOOST_CHECK_EQUAL(LogInstance().LogLevel(), BCLog::Level::Trace); // Lowest currently enabled severity level is Trace
         BOOST_CHECK(LogInstance().WillLogCategoryLevel(BCLog::LogFlags::NET, BCLog::Level::Trace));
         BOOST_CHECK(LogInstance().WillLogCategoryLevel(BCLog::LogFlags::NET, BCLog::Level::Debug));
         BOOST_CHECK(LogInstance().WillLogCategoryLevel(BCLog::LogFlags::HTTP, BCLog::Level::Trace));
@@ -291,7 +291,7 @@ BOOST_FIXTURE_TEST_CASE(logging_Conf, LogSetup)
 
         BOOST_REQUIRE(init::SetLoggingCategories(args));
         BOOST_REQUIRE(init::SetLoggingLevel(args));
-        BOOST_CHECK_EQUAL(LogInstance().LogLevel(), BCLog::DEFAULT_LOG_LEVEL);
+        BOOST_CHECK_EQUAL(LogInstance().LogLevel(), BCLog::Level::Trace); // Lowest currently enabled severity level is Trace
         BOOST_CHECK(LogInstance().WillLogCategoryLevel(BCLog::LogFlags::NET, BCLog::Level::Trace));
         BOOST_CHECK(LogInstance().WillLogCategoryLevel(BCLog::LogFlags::NET, BCLog::Level::Debug));
         BOOST_CHECK(!LogInstance().WillLogCategoryLevel(BCLog::LogFlags::HTTP, BCLog::Level::Trace));
@@ -315,22 +315,21 @@ BOOST_FIXTURE_TEST_CASE(logging_Conf, LogSetup)
 
         BOOST_REQUIRE(init::SetLoggingCategories(args));
         BOOST_REQUIRE(init::SetLoggingLevel(args));
-        BOOST_CHECK_EQUAL(LogInstance().LogLevel(), BCLog::Level::Trace);
+        BOOST_CHECK_EQUAL(LogInstance().LogLevel(), BCLog::Level::Trace); // Lowest currently enabled severity level is Trace
         BOOST_CHECK(!LogInstance().WillLogCategoryLevel(BCLog::LogFlags::NET, BCLog::Level::Trace));
         BOOST_CHECK(LogInstance().WillLogCategoryLevel(BCLog::LogFlags::NET, BCLog::Level::Debug));
         BOOST_CHECK(!LogInstance().WillLogCategoryLevel(BCLog::LogFlags::HTTP, BCLog::Level::Trace));
         BOOST_CHECK(!LogInstance().WillLogCategoryLevel(BCLog::LogFlags::HTTP, BCLog::Level::Debug));
 
         const auto& category_levels{LogInstance().CategoryLevels()};
-        BOOST_CHECK_EQUAL(category_levels.size(), 2);
+        BOOST_CHECK_EQUAL(category_levels.size(), LogInstance().LogCategoriesList().size() - 1); // All categories except HTTP are enabled at Debug or Trace levels
 
         const auto net_it{category_levels.find(BCLog::LogFlags::NET)};
         BOOST_CHECK(net_it != category_levels.end());
         BOOST_CHECK_EQUAL(net_it->second, BCLog::Level::Debug);
 
         const auto http_it{category_levels.find(BCLog::LogFlags::HTTP)};
-        BOOST_CHECK(http_it != category_levels.end());
-        BOOST_CHECK_EQUAL(http_it->second, BCLog::Level::Info);
+        BOOST_CHECK(http_it == category_levels.end()); // HTTP category is omitted because it is at Info level
     }
 
     // Removed categories (like "libevent") should not store a category-specific level
@@ -356,11 +355,10 @@ BOOST_FIXTURE_TEST_CASE(logging_Conf, LogSetup)
         BOOST_CHECK(!LogInstance().WillLogCategoryLevel(BCLog::LogFlags::HTTP, BCLog::Level::Trace));
         BOOST_CHECK(!LogInstance().WillLogCategoryLevel(BCLog::LogFlags::HTTP, BCLog::Level::Debug));
 
-        // Test that enabling a category at runtime (e.g., via the `logging` RPC) uses the
-        // currently-configured log level.
+        // Test that enabling a category at runtime (e.g., via the `logging` RPC) always
+        // sets debug log level.
         LogInstance().EnableCategory(BCLog::NET);
-        // NET inherits the global trace level: both debug and trace messages are logged.
-        BOOST_CHECK(LogInstance().WillLogCategoryLevel(BCLog::NET, BCLog::Level::Trace));
+        BOOST_CHECK(!LogInstance().WillLogCategoryLevel(BCLog::NET, BCLog::Level::Trace));
         BOOST_CHECK(LogInstance().WillLogCategoryLevel(BCLog::NET, BCLog::Level::Debug));
     }
 
@@ -380,11 +378,10 @@ BOOST_FIXTURE_TEST_CASE(logging_Conf, LogSetup)
         BOOST_CHECK(!LogInstance().WillLogCategoryLevel(BCLog::LogFlags::HTTP, BCLog::Level::Trace));
         BOOST_CHECK(!LogInstance().WillLogCategoryLevel(BCLog::LogFlags::HTTP, BCLog::Level::Debug));
 
-        // Test that enabling a category at runtime (e.g., via the `logging` RPC) uses the
-        // currently-configured log level.
+        // Test that enabling a category at runtime (e.g., via the `logging` RPC) always
+        // sets debug log level.
         LogInstance().EnableCategory(BCLog::NET);
-        // NET uses the specified trace level: both debug and trace messages are logged.
-        BOOST_CHECK(LogInstance().WillLogCategoryLevel(BCLog::NET, BCLog::Level::Trace));
+        BOOST_CHECK(!LogInstance().WillLogCategoryLevel(BCLog::NET, BCLog::Level::Trace));
         BOOST_CHECK(LogInstance().WillLogCategoryLevel(BCLog::NET, BCLog::Level::Debug));
     }
 }
