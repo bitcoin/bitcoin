@@ -278,7 +278,7 @@ specific moment in time, whitelisting and revocation checks.")
       (license license:expat))))
 
 (define-public python-signapple
-  (let ((commit "85bfcecc33d2773bc09bc318cec0614af2c8e287"))
+  (let ((commit "3fab3bb57f227f0dd31007b417683035f5204838"))
     (package
       (name "python-signapple")
       (version (git-version "0.2.0" "1" commit))
@@ -291,7 +291,7 @@ specific moment in time, whitelisting and revocation checks.")
          (file-name (git-file-name name commit))
          (sha256
           (base32
-           "17yqjll8nw83q6dhgqhkl7w502z5vy9sln8m6mlx0f1c10isg8yg"))))
+           "0qpr78bs50rw79dbihr9ifjq19y6819ih5pn9jd2rbjyifimzf7p"))))
       (build-system pyproject-build-system)
       (propagated-inputs
         (list python-asn1crypto
@@ -299,9 +299,19 @@ specific moment in time, whitelisting and revocation checks.")
               python-certvalidator
               python-elfesteem))
       (native-inputs (list python-poetry-core))
-      ;; There are no tests, but attempting to run python setup.py test leads to
-      ;; problems, just disable the test
-      (arguments '(#:tests? #f))
+      (arguments
+       ;; There are no tests, but attempting to run python setup.py test leads to
+       ;; problems, just disable the test
+       (list #:tests? #f
+             #:phases
+             #~(modify-phases %standard-phases
+                 ;; Add a phase to inject OpenSSL paths for oscrypto.
+                 (add-after 'wrap 'wrap-openssl-paths
+                   (lambda* (#:key inputs #:allow-other-keys)
+                     (let ((openssl (assoc-ref inputs "openssl")))
+                       (wrap-program (string-append #$output "/bin/signapple")
+                         `("SIGNAPPLE_OSCRYPTO_SSL_PATHS" =
+                           (,(string-append openssl "/lib/libcrypto.so" "," openssl "/lib/libssl.so"))))))))))
       (home-page "https://github.com/achow101/signapple")
       (synopsis "Mach-O binary signature tool")
       (description "signapple is a Python tool for creating, verifying, and
