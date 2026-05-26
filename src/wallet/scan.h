@@ -58,6 +58,12 @@ public:
     SteadyClock::duration ScanningDuration() const { return m_scanning ? SteadyClock::now() - m_scanning_start.load() : SteadyClock::duration{}; }
     double ScanningProgress() const { return m_scanning ? m_scanning_progress.load() : 0; }
 
+    /** Scan active chain for relevant transactions after importing keys. Should
+     * be called whenever new keys are added to the wallet, with the oldest key
+     * creation time.
+     * @return Earliest timestamp that could be successfully scanned from. Timestamp
+     * returned will be higher than startTime if relevant blocks could not be read. */
+    int64_t ScanFromTime(int64_t startTime, const WalletRescanReserver& reserver);
     ScanResult Scan(const uint256& start_block, int start_height, std::optional<int> max_height,
                     const WalletRescanReserver& reserver, bool save_progress);
 

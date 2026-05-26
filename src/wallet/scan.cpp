@@ -2,16 +2,40 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
+#include <chain.h>
 #include <interfaces/chain.h>
 #include <logging.h>
 #include <primitives/block.h>
 #include <sync.h>
+#include <util/check.h>
 #include <wallet/scan.h>
 #include <wallet/wallet.h>
 
 using interfaces::FoundBlock;
 
 namespace wallet {
+
+int64_t ChainScanner::ScanFromTime(int64_t startTime, const WalletRescanReserver& reserver)
+{
+    // Find starting block. May be null if nCreateTime is greater than the
+    // highest blockchain timestamp, in which case there is nothing that needs
+    // to be scanned.
+    int start_height = 0;
+    uint256 start_block;
+    bool start = m_wallet.chain().findFirstBlockWithTimeAndHeight(startTime - TIMESTAMP_WINDOW, 0, FoundBlock().hash(start_block).height(start_height));
+    m_wallet.WalletLogPrintf("%s: Rescanning last %i blocks\n", __func__, start ? WITH_LOCK(m_wallet.cs_wallet, return m_wallet.GetLastBlockHeight()) - start_height + 1 : 0);
+
+    if (start) {
+        // TODO: this should take into account failure by ScanResult::USER_ABORT
+        ScanResult result = Scan(start_block, start_height, /*max_height=*/{}, reserver, /*save_progress=*/false);
+        if (result.status == ScanResult::FAILURE) {
+            int64_t time_max;
+            CHECK_NONFATAL(m_wallet.chain().findBlock(result.last_failed_block, FoundBlock().maxTime(time_max)));
+            return time_max + TIMESTAMP_WINDOW + 1;
+        }
+    }
+    return startTime;
+}
 
 bool ChainScanner::TryReserve(bool with_passphrase) {
     if (m_scanning.exchange(true)) return false;
