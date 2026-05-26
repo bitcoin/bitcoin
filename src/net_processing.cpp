@@ -1185,6 +1185,16 @@ static uint16_t GetHeadersLimit(const CNode& pfrom, bool compressed)
     return MAX_HEADERS_UNCOMPRESSED_RESULT;
 }
 
+// Returns true when peer is a verified masternode that has opted in to receive recsigs.
+// Such peers participate in the signing flow that populates creatingInstantSendLocks, so
+// they can reconstruct an ISDLOCK locally from the recsig and don't need the ISDLOCK inv.
+// Non-MN peers (e.g. nodes running with -watchquorums) also opt in to recsigs via
+// QSENDRECSIGS but still need ISDLOCK invs because they don't run the signing flow.
+static bool PeerReconstructsISLockFromRecsig(const CNode& pnode, const Peer& peer)
+{
+    return peer.m_wants_recsigs && !pnode.GetVerifiedProRegTxHash().IsNull();
+}
+
 static void PushInv(Peer& peer, const CInv& inv)
 {
     auto inv_relay = peer.GetInvRelay();
@@ -1193,13 +1203,6 @@ static void PushInv(Peer& peer, const CInv& inv)
     ASSERT_IF_DEBUG(inv.type != MSG_BLOCK);
     if (inv.type == MSG_BLOCK) {
         LogPrintf("%s -- WARNING: using PushInv for BLOCK inv, peer=%d\n", __func__, peer.m_id);
-        return;
-    }
-
-    // Skip ISDLOCK inv announcements for peers that want recsigs, as they can reconstruct
-    // the islock from the recsig
-    if (inv.type == MSG_ISDLOCK && peer.m_wants_recsigs) {
-        LogPrint(BCLog::NET, "%s -- skipping ISDLOCK inv (peer wants recsigs): %s peer=%d\n", __func__, inv.ToString(), peer.m_id);
         return;
     }
 
@@ -2518,6 +2521,11 @@ void PeerManagerImpl::RelayInvFiltered(const CInv& inv, const CTransaction& rela
                 return;
             }
         } // LOCK(tx_relay->m_bloom_filter_mutex)
+        if (inv.type == MSG_ISDLOCK && PeerReconstructsISLockFromRecsig(*pnode, *peer)) {
+            LogPrint(BCLog::NET, "%s -- skipping ISDLOCK inv (peer wants recsigs): %s peer=%d\n",
+                     __func__, inv.ToString(), peer->m_id);
+            return;
+        }
         PushInv(*peer, inv);
     });
 }
@@ -2543,6 +2551,11 @@ void PeerManagerImpl::RelayInvFiltered(const CInv& inv, const uint256& relatedTx
                 return;
             }
         } // LOCK(tx_relay->m_bloom_filter_mutex)
+        if (inv.type == MSG_ISDLOCK && PeerReconstructsISLockFromRecsig(*pnode, *peer)) {
+            LogPrint(BCLog::NET, "%s -- skipping ISDLOCK inv (peer wants recsigs): %s peer=%d\n",
+                     __func__, inv.ToString(), peer->m_id);
+            return;
+        }
         PushInv(*peer, inv);
     });
 }
@@ -6317,9 +6330,7 @@ bool PeerManagerImpl::SendMessages(CNode* pto)
                     if (islock == nullptr) continue;
                     uint256 isLockHash{::SerializeHash(*islock)};
                     tx_relay->m_tx_inventory_known_filter.insert(isLockHash);
-                    // Skip ISDLOCK inv announcements for peers that want recsigs, as they can reconstruct
-                    // the islock from the recsig
-                    if (!peer->m_wants_recsigs) {
+                    if (!PeerReconstructsISLockFromRecsig(*pto, *peer)) {
                         queueAndMaybePushInv(CInv(MSG_ISDLOCK, isLockHash));
                     }
                 }

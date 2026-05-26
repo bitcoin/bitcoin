@@ -69,7 +69,7 @@ class TestNode():
     To make things easier for the test writer, any unrecognised messages will
     be dispatched to the RPC connection."""
 
-    def __init__(self, i, datadir, extra_args_from_options, *, chain, rpchost, timewait, timeout_factor, bitcoind, bitcoin_cli, mocktime, coverage_dir, cwd, extra_conf=None, extra_args=None, use_cli=False, start_perf=False, use_valgrind=False, version=None, descriptors=False, v2transport=False):
+    def __init__(self, i, datadir, extra_args_from_options, *, chain, rpchost, timewait, timeout_factor, bitcoind, bitcoin_cli, mocktime, coverage_dir, cwd, extra_conf=None, extra_args=None, use_cli=False, start_perf=False, use_valgrind=False, version=None, descriptors=False, v2transport=False, uses_wallet=False):
         """
         Kwargs:
             start_perf (bool): If True, begin profiling the node with `perf` as soon as
@@ -114,7 +114,7 @@ class TestNode():
         if self.mocktime != 0:
             self.args.append(f"-mocktime={mocktime}")
 
-        if self.descriptors is None:
+        if uses_wallet is not None and not uses_wallet and self.descriptors is None:
             self.args.append("-disablewallet")
 
         # Use valgrind, expect for previous release binaries

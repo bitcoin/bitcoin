@@ -218,8 +218,8 @@ public:
         consensus.vDeployments[Consensus::DEPLOYMENT_V24].nFalloffCoeff = 5;          // this corresponds to 10 periods
         consensus.vDeployments[Consensus::DEPLOYMENT_V24].useEHF = true;
 
-        consensus.nMinimumChainWork = uint256S("0x00000000000000000000000000000000000000000000b567e2d53a06de194061"); // 2429859
-        consensus.defaultAssumeValid = uint256S("0x00000000000000018fb7d55a2d7ab5f3d1369cf0d7eef25db727bf8c9ca7d4b2"); // 2429859
+        consensus.nMinimumChainWork = uint256S("0x00000000000000000000000000000000000000000000b9040746437784aaec47"); // 2471728
+        consensus.defaultAssumeValid = uint256S("0x000000000000001a19ad7270422a00f86123ea94e0b295a3a796d6861bd7b032"); // 2471728
 
         /**
          * The message start string is designed to be unlikely to occur in normal data.
@@ -332,6 +332,7 @@ public:
                 {2216986, uint256S("0x0000000000000010b1135dc743f27f6fc8a138c6420a9d963fc676f96c2048f4")},
                 {2361500, uint256S("0x0000000000000009ba1e8f47851d036bb618a4f6565eb3c32d1f647d450ff195")},
                 {2421800, uint256S("0x000000000000000718ed026ebd644a8b70b42d4cbd7b25304c066c9bf15f85b7")},
+                {2471728, uint256S("0x000000000000001a19ad7270422a00f86123ea94e0b295a3a796d6861bd7b032")},
             }
         };
 
@@ -339,12 +340,12 @@ public:
          // TODO to be specified in a future patch.
         };
 
-        // getchaintxstats 17280 000000000000000718ed026ebd644a8b70b42d4cbd7b25304c066c9bf15f85b7
+        // getchaintxstats 17280 000000000000001a19ad7270422a00f86123ea94e0b295a3a796d6861bd7b032
         chainTxData = ChainTxData{
-                1770962602, // * UNIX timestamp of last known number of transactions (Block 2421800)
-                64859329,   // * total number of transactions between genesis and that timestamp
+                1778832687, // * UNIX timestamp of last known number of transactions (Block 2471728)
+                69379403,   // * total number of transactions between genesis and that timestamp
                             //   (the tx=... number in the ChainStateFlushed debug.log lines)
-                0.9523581589072819,      // * estimated number of transactions per second after that timestamp
+                0.1476929741159368,      // * estimated number of transactions per second after that timestamp
         };
     }
 };
