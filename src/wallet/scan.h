@@ -9,11 +9,11 @@
 #include <util/time.h>
 
 #include <atomic>
+#include <functional>
 #include <optional>
 
 namespace wallet {
 class CWallet;
-class WalletRescanReserver;
 
 /** Result of a wallet scan */
 struct ScanResult {
@@ -30,6 +30,27 @@ struct ScanResult {
     //! status is SUCCESS, and may or may not be set if status is
     //! USER_ABORT.
     uint256 last_failed_block;
+};
+
+/** RAII object to check and reserve a wallet rescan */
+class WalletRescanReserver
+{
+private:
+    using Clock = std::chrono::steady_clock;
+    using NowFn = std::function<Clock::time_point()>;
+    CWallet& m_wallet;
+    bool m_could_reserve{false};
+    NowFn m_now;
+public:
+    explicit WalletRescanReserver(CWallet& w) : m_wallet(w) {}
+
+    bool reserve(bool with_passphrase = false);
+    bool isReserved() const;
+
+    Clock::time_point now() const { return m_now ? m_now() : Clock::now(); }
+    void setNow(NowFn now) { m_now = std::move(now); }
+
+    ~WalletRescanReserver();
 };
 
 class ChainScanner {
