@@ -496,25 +496,6 @@ CWallet::~CWallet()
 ChainScanner& CWallet::Scanner() { return *m_scanner; }
 const ChainScanner& CWallet::Scanner() const { return *m_scanner; }
 
-bool WalletRescanReserver::reserve(bool with_passphrase) {
-    assert(!m_could_reserve);
-    if (!m_wallet.Scanner().TryReserve(with_passphrase)) {
-        return false;
-    }
-    m_could_reserve = true;
-    return true;
-}
-
-bool WalletRescanReserver::isReserved() const {
-    return (m_could_reserve && m_wallet.Scanner().IsScanning());
-}
-
-WalletRescanReserver::~WalletRescanReserver() {
-    if (m_could_reserve) {
-        m_wallet.Scanner().Release();
-    }
-}
-
 /** @defgroup mapWallet
  *
  * @{
