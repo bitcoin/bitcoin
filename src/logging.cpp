@@ -179,12 +179,6 @@ bool BCLog::Logger::WillLogCategoryLevel(BCLog::LogFlags category, BCLog::Level 
     return (m_levels[static_cast<size_t>(level)].load(std::memory_order_relaxed) & category) != 0;
 }
 
-// Backwards-compatible wrapper. Removed in subsequent commit.
-bool BCLog::Logger::DefaultShrinkDebugFile() const
-{
-    return !WillLogCategoryLevel(BCLog::ALL, BCLog::Level::Debug);
-}
-
 static const std::map<std::string, BCLog::LogFlags, std::less<>> LOG_CATEGORIES_BY_STR{
     {"net", BCLog::NET},
     {"tor", BCLog::TOR},
