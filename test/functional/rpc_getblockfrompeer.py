@@ -4,7 +4,6 @@
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test the getblockfrompeer RPC."""
 
-from test_framework.authproxy import JSONRPCException
 from test_framework.messages import (
     CBlock,
     from_hex,
@@ -19,6 +18,7 @@ from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import (
     assert_equal,
     assert_raises_rpc_error,
+    JSONRPCException,
 )
 
 

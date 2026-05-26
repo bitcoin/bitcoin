@@ -6,7 +6,6 @@
 
 from decimal import Decimal, getcontext
 
-from test_framework.authproxy import JSONRPCException
 from test_framework.messages import (
     COIN,
     CTransaction,
@@ -28,6 +27,7 @@ from test_framework.util import (
     assert_equal,
     assert_greater_than,
     assert_raises_rpc_error,
+    JSONRPCException,
 )
 
 from test_framework.mempool_util import (
