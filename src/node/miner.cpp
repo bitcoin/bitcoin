@@ -28,6 +28,7 @@
 #include <validation.h>
 
 #include <algorithm>
+#include <limits>
 #include <utility>
 #include <numeric>
 
@@ -46,11 +47,23 @@ int64_t GetMinimumTime(const CBlockIndex* pindexPrev, const int64_t difficulty_a
     return min_time;
 }
 
+int64_t GetMaximumTime(const CBlockIndex* pindexPrev, const Consensus::Params& consensusParams)
+{
+    const int height{pindexPrev->nHeight + 1};
+    if (consensusParams.min_difficulty_blocks_fix_height > 0 &&
+        height >= consensusParams.min_difficulty_blocks_fix_height &&
+        height % consensusParams.DifficultyAdjustmentInterval() != 0) {
+        return pindexPrev->GetBlockTime() + consensusParams.nPowTargetSpacing * 2;
+    }
+    return std::numeric_limits<int64_t>::max();
+}
+
 int64_t UpdateTime(CBlockHeader* pblock, const Consensus::Params& consensusParams, const CBlockIndex* pindexPrev)
 {
     int64_t nOldTime = pblock->nTime;
     int64_t nNewTime{std::max<int64_t>(GetMinimumTime(pindexPrev, consensusParams.DifficultyAdjustmentInterval()),
                                        TicksSinceEpoch<std::chrono::seconds>(NodeClock::now()))};
+    nNewTime = std::min<int64_t>(nNewTime, GetMaximumTime(pindexPrev, consensusParams));
 
     if (nOldTime < nNewTime) {
         pblock->nTime = nNewTime;
@@ -144,7 +157,8 @@ std::unique_ptr<CBlockTemplate> BlockAssembler::CreateNewBlock()
         pblock->nVersion = gArgs.GetIntArg("-blockversion", pblock->nVersion);
     }
 
-    pblock->nTime = TicksSinceEpoch<std::chrono::seconds>(NodeClock::now());
+    pblock->nTime = std::min<int64_t>(TicksSinceEpoch<std::chrono::seconds>(NodeClock::now()),
+                                      GetMaximumTime(pindexPrev, chainparams.GetConsensus()));
     m_lock_time_cutoff = pindexPrev->GetMedianTimePast();
 
     if (m_mempool) {
