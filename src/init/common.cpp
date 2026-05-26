@@ -62,9 +62,12 @@ util::Result<void> SetLoggingLevel(const ArgsManager& args)
         for (const std::string& level_str : args.GetArgs("-loglevel")) {
             if (level_str.find_first_of(':', 3) == std::string::npos) {
                 // user passed a global log level, i.e. -loglevel=<level>
-                if (!LogInstance().SetLogLevel(level_str)) {
+                const auto level{BCLog::Logger::GetLogLevel(level_str)};
+                if (!level || *level >  BCLog::Level::Info) {
                     return util::Error{strprintf(_("Unsupported global logging level %s=%s. Valid values: %s."), "-loglevel", level_str, LogInstance().LogLevelsString())};
                 }
+                // Set log level of categories previously enabled by -debug.
+                LogInstance().SetCategoryLogLevel(LogInstance().GetLogLevels().back(), *level);
             } else {
                 // user passed a category-specific log level, i.e. -loglevel=<category>:<level>
                 const auto& toks = SplitString(level_str, ':');

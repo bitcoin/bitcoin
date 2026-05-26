@@ -251,6 +251,8 @@ namespace BCLog {
         //! Returns a string with all user-selectable log levels.
         std::string LogLevelsString() const;
 
+        //! Returns the log level corresponding to a string, or nullopt if unrecognized.
+        static std::optional<BCLog::Level> GetLogLevel(std::string_view str);
         //! Returns the string representation of a log level.
         static std::string LogLevelToStr(BCLog::Level level);
 
@@ -261,8 +263,6 @@ namespace BCLog {
         CategoryMask GetCategoryMask() const;
         bool SetCategoryLogLevel(std::string_view category_str, std::string_view level_str);
         Level LogLevel() const;
-        void SetLogLevel(Level level);
-        bool SetLogLevel(std::string_view level);
     };
 } // namespace BCLog
 
