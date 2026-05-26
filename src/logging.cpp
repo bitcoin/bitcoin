@@ -15,6 +15,7 @@
 #include <cstring>
 #include <map>
 #include <optional>
+#include <unordered_map>
 #include <utility>
 
 using util::Join;
@@ -125,11 +126,13 @@ void BCLog::Logger::DisableLogging()
     StartLogging();
 }
 
+// Backwards-compatible wrapper. Removed in subsequent commit.
 void BCLog::Logger::EnableCategory(BCLog::LogFlags flag)
 {
-    m_categories |= flag;
+    SetCategoryLogLevel(flag, BCLog::Level::Debug);
 }
 
+// Backwards-compatible wrapper. Removed in subsequent commit.
 bool BCLog::Logger::EnableCategory(std::string_view str)
 {
     if (const auto flag{GetLogCategory(str)}) {
@@ -139,11 +142,13 @@ bool BCLog::Logger::EnableCategory(std::string_view str)
     return false;
 }
 
+// Backwards-compatible wrapper. Removed in subsequent commit.
 void BCLog::Logger::DisableCategory(BCLog::LogFlags flag)
 {
-    m_categories &= ~flag;
+    SetCategoryLogLevel(flag, BCLog::Level::Info);
 }
 
+// Backwards-compatible wrapper. Removed in subsequent commit.
 bool BCLog::Logger::DisableCategory(std::string_view str)
 {
     if (const auto flag{GetLogCategory(str)}) {
@@ -153,27 +158,37 @@ bool BCLog::Logger::DisableCategory(std::string_view str)
     return false;
 }
 
+// Backwards-compatible wrapper. Removed in subsequent commit.
 bool BCLog::Logger::WillLogCategory(BCLog::LogFlags category) const
 {
-    return (m_categories.load(std::memory_order_relaxed) & category) != 0;
+    return WillLogCategoryLevel(category, BCLog::Level::Debug);
+}
+
+void BCLog::Logger::SetCategoryLogLevel(CategoryMask category, BCLog::Level level)
+{
+    // Enable the category at the requested level and all more-severe levels,
+    // and disable it at less-severe levels.
+    for (size_t i = 0; i < m_levels.size(); ++i) {
+        if (i >= static_cast<size_t>(level)) {
+            m_levels[i].fetch_or(category, std::memory_order_relaxed);
+        } else {
+            m_levels[i].fetch_and(~category, std::memory_order_relaxed);
+        }
+    }
 }
 
 bool BCLog::Logger::WillLogCategoryLevel(BCLog::LogFlags category, BCLog::Level level) const
 {
-    // Log messages at Info, Warning and Error level unconditionally, so that
-    // important troubleshooting information doesn't get lost.
-    if (level >= BCLog::Level::Info) return true;
-
-    if (!WillLogCategory(category)) return false;
-
-    STDLOCK(m_cs);
-    const auto it{m_category_log_levels.find(category)};
-    return level >= (it == m_category_log_levels.end() ? LogLevel() : it->second);
+    // Log if the category is enabled at the requested severity level, or if the
+    // severity is higher than the number of configurable levels.
+    if (static_cast<size_t>(level) >= m_levels.size()) return true;
+    return (m_levels[static_cast<size_t>(level)].load(std::memory_order_relaxed) & category) != 0;
 }
 
+// Backwards-compatible wrapper. Removed in subsequent commit.
 bool BCLog::Logger::DefaultShrinkDebugFile() const
 {
-    return m_categories == BCLog::NONE;
+    return !WillLogCategoryLevel(BCLog::ALL, BCLog::Level::Debug);
 }
 
 static const std::map<std::string, BCLog::LogFlags, std::less<>> LOG_CATEGORIES_BY_STR{
@@ -594,14 +609,16 @@ bool BCLog::LogRateLimiter::Stats::Consume(uint64_t bytes)
     return true;
 }
 
+// Backwards-compatible wrapper. Removed in subsequent commit.
 bool BCLog::Logger::SetLogLevel(std::string_view level_str)
 {
     const auto level = GetLogLevel(level_str);
     if (!level.has_value() || level.value() > MAX_USER_SETABLE_SEVERITY_LEVEL) return false;
-    m_log_level = level.value();
+    SetLogLevel(level.value());
     return true;
 }
 
+// Backwards-compatible wrapper. Removed in subsequent commit.
 bool BCLog::Logger::SetCategoryLogLevel(std::string_view category_str, std::string_view level_str)
 {
     const auto flag{GetLogCategory(category_str)};
@@ -611,9 +628,59 @@ bool BCLog::Logger::SetCategoryLogLevel(std::string_view category_str, std::stri
     if (!level.has_value() || level.value() > MAX_USER_SETABLE_SEVERITY_LEVEL) return false;
     if (*flag == BCLog::NONE) return true;
 
-    STDLOCK(m_cs);
-    m_category_log_levels[*flag] = level.value();
+    SetCategoryLogLevel(GetCategoryMask() & *flag, level.value());
     return true;
+}
+
+// Backwards-compatible wrapper. Removed in subsequent commit.
+std::unordered_map<BCLog::LogFlags, BCLog::Level> BCLog::Logger::CategoryLevels() const
+{
+    // Return representation of m_levels as map of category -> log level.
+    std::unordered_map<BCLog::LogFlags, BCLog::Level> result;
+    for (const auto& [str, flag] : LOG_CATEGORIES_BY_STR) {
+        for (size_t i = 0; i < m_levels.size(); ++i) {
+            if (flag & m_levels[i].load(std::memory_order_relaxed)) {
+                result[flag] = static_cast<BCLog::Level>(i);
+                break;
+            }
+        }
+    }
+    return result;
+}
+
+// Backwards-compatible wrapper. Removed in subsequent commit.
+void BCLog::Logger::SetCategoryLogLevel(const std::unordered_map<BCLog::LogFlags, BCLog::Level>& levels)
+{
+    for (const auto& [flag, level] : levels) {
+        SetCategoryLogLevel(flag, level);
+    }
+}
+
+// Backwards-compatible wrapper. Removed in subsequent commit.
+BCLog::CategoryMask BCLog::Logger::GetCategoryMask() const
+{
+    return m_levels[static_cast<size_t>(BCLog::Level::Debug)].load(std::memory_order_relaxed);
+}
+
+// Backwards-compatible wrapper. Removed in subsequent commit.
+void BCLog::Logger::AddCategoryLogLevel(BCLog::LogFlags category, BCLog::Level level)
+{
+    SetCategoryLogLevel(category, level);
+}
+
+// Backwards-compatible wrapper. Removed in subsequent commit.
+BCLog::Level BCLog::Logger::LogLevel() const
+{
+    // Return lowest currently-enabled severity level.
+    size_t i = 0;
+    for (; i < m_levels.size() && !m_levels[i].load(std::memory_order_relaxed); ++i);
+    return static_cast<BCLog::Level>(i);
+}
+
+// Backwards-compatible wrapper. Removed in subsequent commit.
+void BCLog::Logger::SetLogLevel(BCLog::Level level)
+{
+    SetCategoryLogLevel(GetCategoryMask(), level);
 }
 
 bool util::log::ShouldDebugLog(Category category)
