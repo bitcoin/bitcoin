@@ -63,6 +63,8 @@ private:
     std::atomic<SteadyClock::time_point> m_scanning_start{SteadyClock::time_point{}};
     std::atomic<double> m_scanning_progress{0};
 
+    bool ScanBlock(const uint256& block_hash, int block_height, bool save_progress);
+
     //! Only WalletRescanReserver may reserve and release scans, so that
     //! reservations are always managed RAII-style.
     friend class WalletRescanReserver;
