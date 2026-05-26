@@ -28,6 +28,7 @@
 import errno
 import http.client
 import random
+import subprocess
 import time
 
 from test_framework.blocktools import COINBASE_MATURITY
@@ -49,7 +50,6 @@ class ChainstateWriteCrashTest(BitcoinTestFramework):
     def set_test_params(self):
         self.num_nodes = 4
         self.rpc_timeout = 480
-        self.supports_cli = False
 
         # Set -maxmempool=0 to turn off mempool memory sharing with dbcache
         self.base_args = [
@@ -112,6 +112,9 @@ class ChainstateWriteCrashTest(BitcoinTestFramework):
             return True
         except (http.client.CannotSendRequest, http.client.RemoteDisconnected) as e:
             self.log.debug(f"node {node_index} submitblock raised exception: {e}")
+            return False
+        except subprocess.CalledProcessError as e:
+            self.log.debug(f"node {node_index} submitblock raised CalledProcessError: {e}")
             return False
         except OSError as e:
             self.log.debug(f"node {node_index} submitblock raised OSError exception: errno={e.errno}")
