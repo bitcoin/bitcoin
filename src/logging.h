@@ -25,7 +25,6 @@
 #include <memory>
 #include <optional>
 #include <string>
-#include <unordered_map>
 #include <vector>
 
 static const bool DEFAULT_LOGTIMEMICROS = false;
@@ -234,6 +233,13 @@ namespace BCLog {
         //! Returns true if a message at the given category and level would be logged.
         bool WillLogCategoryLevel(LogFlags category, Level level) const;
 
+        //! Snapshot type for the per-level category bitmask array (non-atomic, for save/restore).
+        using LogLevels = std::array<CategoryMask, NUM_CONFIGURABLE_LEVELS>;
+        //! Returns a snapshot of the current per-level category bitmasks.
+        LogLevels GetLogLevels() const;
+        //! Restores the per-level category bitmasks from a previous GetLogLevels() snapshot.
+        void SetLogLevels(const LogLevels& levels);
+
         /** Returns a vector of the log categories in alphabetical order. */
         std::vector<LogCategory> LogCategoriesList() const;
         /** Returns a string with the log categories in alphabetical order. */
@@ -257,8 +263,6 @@ namespace BCLog {
         void DisableCategory(LogFlags flag);
         bool DisableCategory(std::string_view str);
         CategoryMask GetCategoryMask() const;
-        std::unordered_map<LogFlags, Level> CategoryLevels() const;
-        void SetCategoryLogLevel(const std::unordered_map<LogFlags, Level>& levels) EXCLUSIVE_LOCKS_REQUIRED(!m_cs);
         bool SetCategoryLogLevel(std::string_view category_str, std::string_view level_str);
         void AddCategoryLogLevel(LogFlags category, Level level) EXCLUSIVE_LOCKS_REQUIRED(!m_cs);
         Level LogLevel() const;
