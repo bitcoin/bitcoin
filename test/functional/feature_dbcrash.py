@@ -25,10 +25,7 @@
          - restart until recovery succeeds
          - check that utxo matches node3 using gettxoutsetinfo"""
 
-import errno
-import http.client
 import random
-import subprocess
 import time
 
 from test_framework.blocktools import COINBASE_MATURITY
@@ -90,7 +87,7 @@ class ChainstateWriteCrashTest(BitcoinTestFramework):
             except Exception:
                 # An exception here should mean the node is about to crash.
                 # If bitcoind exits, then try again.  wait_for_node_exit()
-                # should raise an exception if bitcoind doesn't exit.
+                # enforces that bitcoind crashed.
                 self.wait_for_node_exit(node_index, timeout=10)
             self.crashed_on_restart += 1
 
@@ -105,25 +102,15 @@ class ChainstateWriteCrashTest(BitcoinTestFramework):
         """Try submitting a block to the given node.
 
         Catch any exceptions that indicate the node has crashed.
+        The caller will check that a crash happened.
         Returns true if the block was submitted successfully; false otherwise."""
 
         try:
             self.nodes[node_index].submitblock(block)
             return True
-        except (http.client.CannotSendRequest, http.client.RemoteDisconnected) as e:
+        except Exception as e:
             self.log.debug(f"node {node_index} submitblock raised exception: {e}")
             return False
-        except subprocess.CalledProcessError as e:
-            self.log.debug(f"node {node_index} submitblock raised CalledProcessError: {e}")
-            return False
-        except OSError as e:
-            self.log.debug(f"node {node_index} submitblock raised OSError exception: errno={e.errno}")
-            if e.errno in [errno.EPIPE, errno.ECONNREFUSED, errno.ECONNRESET]:
-                # The node has likely crashed
-                return False
-            else:
-                # Unexpected exception, raise
-                raise
 
     def sync_node3blocks(self, block_hashes):
         """Use submitblock to sync node3's chain with the other nodes
@@ -149,6 +136,7 @@ class ChainstateWriteCrashTest(BitcoinTestFramework):
                 if not self.submit_block_catch_error(i, block):
                     # TODO: more carefully check that the crash is due to -dbcrashratio
                     # (change the exit code perhaps, and check that here?)
+                    # wait_for_node_exit() enforces that bitcoind crashed.
                     self.wait_for_node_exit(i, timeout=30)
                     self.log.debug(f"Restarting node {i} after block hash {block_hash}")
                     nodei_utxo_hash = self.restart_node(i, block_hash)
