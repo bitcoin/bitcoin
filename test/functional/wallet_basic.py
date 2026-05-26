@@ -510,7 +510,7 @@ class WalletTest(BitcoinTestFramework):
         # Try with walletrejectlongchains
         # Double chain limit but require combining inputs, so we pass AttemptSelection
         self.stop_node(0)
-        extra_args = ["-walletrejectlongchains", "-limitclustercount=" + str(2 * chainlimit), "-limitancestorcount=" + str(2*chainlimit)]
+        extra_args = ["-deprecatedrpc=bip125", "-walletrejectlongchains", "-limitclustercount=" + str(2 * chainlimit), "-limitancestorcount=" + str(2*chainlimit)]
         self.start_node(0, extra_args=extra_args)
 
         # wait until the wallet has submitted all transactions to the mempool

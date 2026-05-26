@@ -24,6 +24,8 @@ from test_framework.script_util import (
     script_to_p2sh_script,
 )
 
+WALLETRBF_DEPRECATION_WARNING = "Warning: -walletrbf is deprecated and will be fully removed in the next release."
+
 Key = namedtuple('Key', ['privkey',
                          'pubkey',
                          'p2pkh_script',

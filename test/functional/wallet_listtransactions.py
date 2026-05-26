@@ -23,7 +23,7 @@ from test_framework.util import (
     assert_raises_rpc_error,
     find_vout_for_address,
 )
-from test_framework.wallet_util import get_generate_key
+from test_framework.wallet_util import get_generate_key, WALLETRBF_DEPRECATION_WARNING
 
 
 class ListTransactionsTest(BitcoinTestFramework):
@@ -31,7 +31,7 @@ class ListTransactionsTest(BitcoinTestFramework):
         self.num_nodes = 3
         # whitelist peers to speed up tx relay / mempool sync
         self.noban_tx_relay = True
-        self.extra_args = [["-walletrbf=0"]] * self.num_nodes
+        self.extra_args = [["-walletrbf=0", "-deprecatedrpc=bip125"]] * self.num_nodes
 
     def skip_test_if_missing_module(self):
         self.skip_if_no_wallet()
@@ -103,6 +103,9 @@ class ListTransactionsTest(BitcoinTestFramework):
         self.run_invalid_parameters_test()
         self.test_op_return()
         self.test_from_me_status_change()
+
+        for index, _ in enumerate(self.nodes):
+            self.stop_node(index, expected_stderr=WALLETRBF_DEPRECATION_WARNING)
 
     def run_rbf_opt_in_test(self):
         """Test the opt-in-rbf flag for sent and received transactions."""

@@ -44,7 +44,7 @@ class WalletMigrationTest(BitcoinTestFramework):
         self.setup_clean_chain = True
         self.num_nodes = 2
         self.supports_cli = False
-        self.extra_args = [[], ["-deprecatedrpc=create_bdb"]]
+        self.extra_args = [["-deprecatedrpc=bip125"], ["-deprecatedrpc=create_bdb"]]
 
     def skip_test_if_missing_module(self):
         self.skip_if_no_wallet()
