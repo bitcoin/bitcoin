@@ -179,6 +179,22 @@ bool BCLog::Logger::WillLogCategoryLevel(BCLog::LogFlags category, BCLog::Level 
     return (m_levels[static_cast<size_t>(level)].load(std::memory_order_relaxed) & category) != 0;
 }
 
+BCLog::Logger::LogLevels BCLog::Logger::GetLogLevels() const
+{
+    LogLevels snapshot;
+    for (size_t i = 0; i < m_levels.size(); ++i) {
+        snapshot[i] = m_levels[i].load(std::memory_order_relaxed);
+    }
+    return snapshot;
+}
+
+void BCLog::Logger::SetLogLevels(const LogLevels& levels)
+{
+    for (size_t i = 0; i < m_levels.size(); ++i) {
+        m_levels[i].store(levels[i], std::memory_order_relaxed);
+    }
+}
+
 static const std::map<std::string, BCLog::LogFlags, std::less<>> LOG_CATEGORIES_BY_STR{
     {"net", BCLog::NET},
     {"tor", BCLog::TOR},
@@ -618,30 +634,6 @@ bool BCLog::Logger::SetCategoryLogLevel(std::string_view category_str, std::stri
 
     SetCategoryLogLevel(GetCategoryMask() & *flag, level.value());
     return true;
-}
-
-// Backwards-compatible wrapper. Removed in subsequent commit.
-std::unordered_map<BCLog::LogFlags, BCLog::Level> BCLog::Logger::CategoryLevels() const
-{
-    // Return representation of m_levels as map of category -> log level.
-    std::unordered_map<BCLog::LogFlags, BCLog::Level> result;
-    for (const auto& [str, flag] : LOG_CATEGORIES_BY_STR) {
-        for (size_t i = 0; i < m_levels.size(); ++i) {
-            if (flag & m_levels[i].load(std::memory_order_relaxed)) {
-                result[flag] = static_cast<BCLog::Level>(i);
-                break;
-            }
-        }
-    }
-    return result;
-}
-
-// Backwards-compatible wrapper. Removed in subsequent commit.
-void BCLog::Logger::SetCategoryLogLevel(const std::unordered_map<BCLog::LogFlags, BCLog::Level>& levels)
-{
-    for (const auto& [flag, level] : levels) {
-        SetCategoryLogLevel(flag, level);
-    }
 }
 
 // Backwards-compatible wrapper. Removed in subsequent commit.
