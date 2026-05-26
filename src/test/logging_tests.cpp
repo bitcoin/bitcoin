@@ -24,7 +24,6 @@
 #include <source_location>
 #include <string>
 #include <type_traits>
-#include <unordered_map>
 #include <utility>
 #include <vector>
 
@@ -46,9 +45,7 @@ BOOST_FIXTURE_TEST_SUITE(logging_tests, BasicTestingSetup)
 
 static void ResetLogger()
 {
-    LogInstance().DisableCategory(BCLog::LogFlags::ALL);
-    LogInstance().SetLogLevel(BCLog::DEFAULT_LOG_LEVEL);
-    LogInstance().SetCategoryLogLevel({});
+    LogInstance().SetCategoryLogLevel(BCLog::LogFlags::ALL, BCLog::Level::Info);
 }
 
 static std::vector<std::string> ReadDebugLogLines()
@@ -69,9 +66,7 @@ struct LogSetup : public BasicTestingSetup {
     bool prev_log_timestamps;
     bool prev_log_threadnames;
     bool prev_log_sourcelocations;
-    std::unordered_map<BCLog::LogFlags, BCLog::Level> prev_category_levels;
-    BCLog::Level prev_log_level;
-    BCLog::CategoryMask prev_category_mask;
+    BCLog::Logger::LogLevels prev_levels;
 
     LogSetup() : prev_log_path{LogInstance().m_file_path},
                  tmp_log_path{m_args.GetDataDirBase() / "tmp_debug.log"},
@@ -80,9 +75,7 @@ struct LogSetup : public BasicTestingSetup {
                  prev_log_timestamps{LogInstance().m_log_timestamps},
                  prev_log_threadnames{LogInstance().m_log_threadnames},
                  prev_log_sourcelocations{LogInstance().m_log_sourcelocations},
-                 prev_category_levels{LogInstance().CategoryLevels()},
-                 prev_log_level{LogInstance().LogLevel()},
-                 prev_category_mask{LogInstance().GetCategoryMask()}
+                 prev_levels{LogInstance().GetLogLevels()}
     {
         LogInstance().m_file_path = tmp_log_path;
         LogInstance().m_reopen_file = true;
@@ -93,9 +86,7 @@ struct LogSetup : public BasicTestingSetup {
         // Prevent tests from failing when the line number of the logs changes.
         LogInstance().m_log_sourcelocations = false;
 
-        LogInstance().SetLogLevel(BCLog::Level::Debug);
-        LogInstance().DisableCategory(BCLog::LogFlags::ALL);
-        LogInstance().SetCategoryLogLevel({});
+        LogInstance().SetCategoryLogLevel(BCLog::LogFlags::ALL, BCLog::Level::Info);
         LogInstance().SetRateLimiting(nullptr);
     }
 
@@ -108,11 +99,8 @@ struct LogSetup : public BasicTestingSetup {
         LogInstance().m_log_timestamps = prev_log_timestamps;
         LogInstance().m_log_threadnames = prev_log_threadnames;
         LogInstance().m_log_sourcelocations = prev_log_sourcelocations;
-        LogInstance().SetLogLevel(prev_log_level);
-        LogInstance().SetCategoryLogLevel(prev_category_levels);
+        LogInstance().SetLogLevels(prev_levels);
         LogInstance().SetRateLimiting(nullptr);
-        LogInstance().DisableCategory(BCLog::LogFlags::ALL);
-        LogInstance().EnableCategory(BCLog::LogFlags{prev_category_mask});
     }
 };
 
@@ -296,11 +284,6 @@ BOOST_FIXTURE_TEST_CASE(logging_Conf, LogSetup)
         BOOST_CHECK(LogInstance().WillLogCategoryLevel(BCLog::LogFlags::NET, BCLog::Level::Debug));
         BOOST_CHECK(!LogInstance().WillLogCategoryLevel(BCLog::LogFlags::HTTP, BCLog::Level::Trace));
         BOOST_CHECK(LogInstance().WillLogCategoryLevel(BCLog::LogFlags::HTTP, BCLog::Level::Debug));
-
-        const auto& category_levels{LogInstance().CategoryLevels()};
-        const auto net_it{category_levels.find(BCLog::LogFlags::NET)};
-        BOOST_REQUIRE(net_it != category_levels.end());
-        BOOST_CHECK_EQUAL(net_it->second, BCLog::Level::Trace);
     }
 
     // Set both global log level and category-specific log level
@@ -321,22 +304,8 @@ BOOST_FIXTURE_TEST_CASE(logging_Conf, LogSetup)
         BOOST_CHECK(!LogInstance().WillLogCategoryLevel(BCLog::LogFlags::HTTP, BCLog::Level::Trace));
         BOOST_CHECK(!LogInstance().WillLogCategoryLevel(BCLog::LogFlags::HTTP, BCLog::Level::Debug));
 
-        const auto& category_levels{LogInstance().CategoryLevels()};
-        BOOST_CHECK_EQUAL(category_levels.size(), LogInstance().LogCategoriesList().size() - 1); // All categories except HTTP are enabled at Debug or Trace levels
-
-        const auto net_it{category_levels.find(BCLog::LogFlags::NET)};
-        BOOST_CHECK(net_it != category_levels.end());
-        BOOST_CHECK_EQUAL(net_it->second, BCLog::Level::Debug);
-
-        const auto http_it{category_levels.find(BCLog::LogFlags::HTTP)};
-        BOOST_CHECK(http_it == category_levels.end()); // HTTP category is omitted because it is at Info level
-    }
-
-    // Removed categories (like "libevent") should not store a category-specific level
-    {
-        ResetLogger();
-        BOOST_CHECK(LogInstance().SetCategoryLogLevel(/*category_str=*/"libevent", /*level_str=*/"trace"));
-        BOOST_CHECK(LogInstance().CategoryLevels().empty());
+        const auto& category_levels{LogInstance().GetLogLevels()};
+        BOOST_CHECK_EQUAL(category_levels.back(), BCLog::LogFlags::ALL & ~BCLog::LogFlags::HTTP); // All categories except HTTP are enabled at Debug or Trace levels
     }
 
     // Set global -loglevel without -debug (has no effect because no categories are enabled)
