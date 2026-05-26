@@ -42,7 +42,7 @@ code.
   - Constant names are all uppercase, and use `_` to separate words.
   - Enumerator constants may be `snake_case`, `PascalCase` or `ALL_CAPS`.
     This is a more tolerant policy than the [C++ Core
-    Guidelines](https://isocpp.github.io/CppCoreGuidelines/CppCoreGuidelines#Renum-caps),
+    Guidelines](https://isocpp.github.io/CppCoreGuidelines/CppCoreGuidelines#renum-caps),
     which recommend using `snake_case`.  Please use what seems appropriate.
   - Class names, function names, and method names are UpperCamelCase
     (PascalCase). Do not prefix class names with `C`. See [Internal interface
@@ -55,16 +55,13 @@ code.
 
 - **Miscellaneous**
   - `++i` is preferred over `i++`.
-  - `nullptr` is preferred over `NULL` or `(void*)0`.
   - `static_assert` is preferred over `assert` where possible. Generally; compile-time checking is preferred over run-time checking.
   - Use a named cast or functional cast, not a C-Style cast. When casting
     between integer types, use functional casts such as `int(x)` or `int{x}`
     instead of `(int) x`. When casting between more complex types, use `static_cast`.
     Use `reinterpret_cast` and `const_cast` as appropriate.
-  - Prefer [`list initialization ({})`](https://isocpp.github.io/CppCoreGuidelines/CppCoreGuidelines#Res-list) where possible.
+  - Prefer [`list initialization ({})`](https://isocpp.github.io/CppCoreGuidelines/CppCoreGuidelines#res-list) where possible.
     For example `int x{0};` instead of `int x = 0;` or `int x(0);`
-  - Recursion is checked by clang-tidy and thus must be made explicit. Use
-    `NOLINTNEXTLINE(misc-no-recursion)` to suppress the check.
 
 For function calls a namespace should be specified explicitly, unless such functions have been declared within it.
 Otherwise, [argument-dependent lookup](https://en.cppreference.com/w/cpp/language/adl), also known as ADL, could be
@@ -140,7 +137,18 @@ public:
   non-optional in-out and output parameters should usually be references, as
   they cannot be null.
 
-### Coding Style (C++ named arguments)
+### Coding Style (clang-tidy rules)
+
+The clang-tidy tool is used to check some rules. Please refer to the [upstream
+documentation](https://clang.llvm.org/extra/clang-tidy/checks/list.html) about
+the details and rationale for each rule.
+
+#### C++ Recursive Functions
+
+Recursion is checked by clang-tidy and thus must be made explicit. Use
+`NOLINTNEXTLINE(misc-no-recursion)` to suppress the check.
+
+#### C++ named arguments
 
 When passing named arguments, use a format that clang-tidy understands. The
 argument names can otherwise not be verified by clang-tidy.
@@ -156,7 +164,7 @@ int main()
 }
 ```
 
-### Running clang-tidy
+#### Running clang-tidy
 
 To run clang-tidy on Ubuntu/Debian, install the dependencies:
 
@@ -190,10 +198,6 @@ To run clang-tidy on the changed source lines:
 ```sh
 git diff | ( cd ./src/ && clang-tidy-diff -p2 -path ../build -j $(nproc) )
 ```
-
-## Coding Style (Python)
-
-Refer to [/test/functional/README.md#style-guidelines](/test/functional/README.md#style-guidelines).
 
 ## Coding Style (Doxygen-compatible comments)
 
@@ -298,6 +302,10 @@ Linux: `sudo apt install doxygen graphviz`
 
 MacOS: `brew install doxygen graphviz`
 
+## Coding Style (Python)
+
+Refer to [/test/functional/README.md#style-guidelines](/test/functional/README.md#style-guidelines).
+
 ## Development tips and tricks
 
 ### Compiling for debugging
@@ -385,22 +393,6 @@ other input.
      but a failed assumption does not result in a fatal bug. A failed
      assumption may or may not result in a slightly degraded user experience,
      but it is safe to continue program execution.
-
-### Valgrind suppressions file
-
-Valgrind is a programming tool for memory debugging, memory leak detection, and
-profiling. The repo contains a Valgrind suppressions file
-([`valgrind.supp`](/test/sanitizer_suppressions/valgrind.supp))
-which includes known Valgrind warnings in our dependencies that cannot be fixed
-in-tree. Example use:
-
-```shell
-$ valgrind --suppressions=test/sanitizer_suppressions/valgrind.supp build/bin/test_bitcoin
-$ valgrind --suppressions=test/sanitizer_suppressions/valgrind.supp --leak-check=full \
-      --show-leak-kinds=all build/bin/test_bitcoin --log_level=test_suite
-$ valgrind -v --leak-check=full build/bin/bitcoind -printtoconsole
-$ ./build/test/functional/test_runner.py --valgrind
-```
 
 ### Compiling for test coverage
 
@@ -609,6 +601,21 @@ or using a graphical tool like [Hotspot](https://github.com/KDAB/hotspot).
 
 See the functional test documentation for how to invoke perf within tests.
 
+### Valgrind
+
+Valgrind is a programming tool for memory debugging, memory leak detection, and
+profiling. The repo contains a Valgrind suppressions file
+([`valgrind.supp`](/test/sanitizer_suppressions/valgrind.supp))
+which includes known Valgrind warnings in our dependencies that cannot be fixed
+in-tree. Example use:
+
+```shell
+$ valgrind --suppressions=test/sanitizer_suppressions/valgrind.supp build/bin/test_bitcoin
+$ valgrind --suppressions=test/sanitizer_suppressions/valgrind.supp --leak-check=full \
+      --show-leak-kinds=all build/bin/test_bitcoin --log_level=test_suite
+$ valgrind -v --leak-check=full build/bin/bitcoind -printtoconsole
+$ ./build/test/functional/test_runner.py --valgrind
+```
 
 ### Sanitizers
 
@@ -663,6 +670,11 @@ Additional resources:
  * [UndefinedBehaviorSanitizer](https://clang.llvm.org/docs/UndefinedBehaviorSanitizer.html)
  * [GCC Instrumentation Options](https://gcc.gnu.org/onlinedocs/gcc/Instrumentation-Options.html)
  * [Google Sanitizers Wiki](https://github.com/google/sanitizers/wiki)
+
+# Development guidelines
+
+A few non-style-related recommendations for developers, as well as points to
+pay attention to for reviewers of Bitcoin Core code.
 
 ## Locking/mutex usage notes
 
@@ -733,11 +745,6 @@ and its `cs_KeyStore` lock for example).
   - [ThreadI2PAcceptIncoming (`b-i2paccept`)](https://doxygen.bitcoincore.org/class_c_connman.html#a57787b4f9ac847d24065fbb0dd6e70f8)
     : Listens for and accepts incoming I2P connections through the I2P SAM proxy.
 
-# Development guidelines
-
-A few non-style-related recommendations for developers, as well as points to
-pay attention to for reviewers of Bitcoin Core code.
-
 ## General Bitcoin Core
 
 - New features should be exposed on RPC first, then can be made available in the GUI.
@@ -796,7 +803,7 @@ Guidelines](https://isocpp.github.io/CppCoreGuidelines/).
 Common misconceptions are clarified in those sections:
 
 - Passing (non-)fundamental types in the [C++ Core
-  Guideline](https://isocpp.github.io/CppCoreGuidelines/CppCoreGuidelines#Rf-conventional).
+  Guidelines](https://isocpp.github.io/CppCoreGuidelines/CppCoreGuidelines#rf-conventional).
 
 - If you use the `.h`, you must link the `.cpp`.
 
