@@ -37,6 +37,25 @@ int64_t ChainScanner::ScanFromTime(int64_t startTime, const WalletRescanReserver
     return startTime;
 }
 
+bool WalletRescanReserver::reserve(bool with_passphrase) {
+    assert(!m_could_reserve);
+    if (!m_wallet.Scanner().TryReserve(with_passphrase)) {
+        return false;
+    }
+    m_could_reserve = true;
+    return true;
+}
+
+bool WalletRescanReserver::isReserved() const {
+    return m_could_reserve && m_wallet.Scanner().IsScanning();
+}
+
+WalletRescanReserver::~WalletRescanReserver() {
+    if (m_could_reserve) {
+        m_wallet.Scanner().Release();
+    }
+}
+
 bool ChainScanner::TryReserve(bool with_passphrase) {
     if (m_scanning.exchange(true)) return false;
     // Discard any abort request left over from previous reservation, so
