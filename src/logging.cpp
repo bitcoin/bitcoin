@@ -643,12 +643,6 @@ BCLog::CategoryMask BCLog::Logger::GetCategoryMask() const
 }
 
 // Backwards-compatible wrapper. Removed in subsequent commit.
-void BCLog::Logger::AddCategoryLogLevel(BCLog::LogFlags category, BCLog::Level level)
-{
-    SetCategoryLogLevel(category, level);
-}
-
-// Backwards-compatible wrapper. Removed in subsequent commit.
 BCLog::Level BCLog::Logger::LogLevel() const
 {
     // Return lowest currently-enabled severity level.
