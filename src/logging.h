@@ -260,8 +260,6 @@ namespace BCLog {
         static std::optional<BCLog::LogFlags> GetLogCategory(std::string_view str);
 
         // Backward-compatible wrappers for old API; to be removed in subsequent commits.
-        CategoryMask GetCategoryMask() const;
-        bool SetCategoryLogLevel(std::string_view category_str, std::string_view level_str);
         Level LogLevel() const;
     };
 } // namespace BCLog
