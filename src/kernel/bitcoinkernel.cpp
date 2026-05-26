@@ -779,7 +779,7 @@ void btck_logging_enable_category(btck_LogCategory category)
 
 void btck_logging_disable_category(btck_LogCategory category)
 {
-    LogInstance().DisableCategory(get_bclog_flag(category));
+    LogInstance().SetCategoryLogLevel(get_bclog_flag(category), BCLog::Level::Info);
 }
 
 void btck_logging_disable()
