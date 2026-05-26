@@ -4,6 +4,7 @@
 
 #include <test/util/block_validity.h>
 
+#include <pow.h>
 #include <test/util/mining.h>
 #include <util/check.h>
 
@@ -42,4 +43,26 @@ COutPoint ValidationBlockValidityTestingSetup::AddCoin(const CScript& script_pub
     }
     BOOST_REQUIRE_MESSAGE(false, "AddCoin: failed to find an unused outpoint");
     return {};
+}
+
+void ValidationBlockValidityTestingSetup::SolveBlockPoW(CBlock& block)
+{
+    ResetBlock(block);
+    const uint32_t start_nonce{block.nNonce};
+    while (!CheckProofOfWork(block.GetHash(), block.nBits, m_params)) {
+        ++block.nNonce;
+        BOOST_REQUIRE_MESSAGE(block.nNonce != start_nonce, "SolvePoW: exhausted all nonces without finding valid PoW");
+    }
+}
+
+BlockValidationState ValidationBlockValidityTestingSetup::ProcessNewBlock(CBlock& block, bool force_processing, bool min_pow_checked)
+{
+    ResetBlock(block);
+    bool new_block{false};
+    m_node.chainman->ProcessNewBlock(std::make_shared<const CBlock>(block), force_processing, min_pow_checked, &new_block);
+    m_node.validation_signals->SyncWithValidationInterfaceQueue();
+    Assert(m_subscriber.m_checked_block_states.size() == 1);
+    BlockValidationState state{m_subscriber.m_checked_block_states.front()};
+    m_subscriber.ClearCheckedBlockStates();
+    return state;
 }

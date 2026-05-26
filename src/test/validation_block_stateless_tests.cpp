@@ -22,6 +22,8 @@ BOOST_AUTO_TEST_CASE(tbv_bad_merkle_root)
     const auto reason = "bad-txnmrklroot";
     const auto debug = "hashMerkleRoot mismatch";
     CheckBlockInvalid(TestValidity(block), BlockValidationResult::BLOCK_MUTATED, reason, debug);
+    SolveBlockPoW(block);
+    CheckBlockInvalid(ProcessNewBlock(block), BlockValidationResult::BLOCK_MUTATED, reason, debug);
 }
 
 BOOST_AUTO_TEST_CASE(tbv_duplicate_txs_CVE_2012_2459)
@@ -33,6 +35,8 @@ BOOST_AUTO_TEST_CASE(tbv_duplicate_txs_CVE_2012_2459)
     const auto reason = "bad-txns-duplicate";
     const auto debug = "duplicate transaction";
     CheckBlockInvalid(TestValidity(block), BlockValidationResult::BLOCK_MUTATED, reason, debug);
+    SolveBlockPoW(block);
+    CheckBlockInvalid(ProcessNewBlock(block), BlockValidationResult::BLOCK_MUTATED, reason, debug);
 }
 
 BOOST_AUTO_TEST_CASE(tbv_no_transactions)
@@ -44,6 +48,8 @@ BOOST_AUTO_TEST_CASE(tbv_no_transactions)
     const auto reason = "bad-blk-length";
     const auto debug = "size limits failed";
     CheckBlockInvalid(TestValidity(block), BlockValidationResult::BLOCK_CONSENSUS, reason, debug);
+    SolveBlockPoW(block);
+    CheckBlockInvalid(ProcessNewBlock(block), BlockValidationResult::BLOCK_CONSENSUS, reason, debug);
 }
 
 BOOST_AUTO_TEST_CASE(tbv_bad_cb_missing)
@@ -63,6 +69,8 @@ BOOST_AUTO_TEST_CASE(tbv_bad_cb_missing)
     const auto reason = "bad-cb-missing";
     const auto debug = "first tx is not coinbase";
     CheckBlockInvalid(TestValidity(block), BlockValidationResult::BLOCK_CONSENSUS, reason, debug);
+    SolveBlockPoW(block);
+    CheckBlockInvalid(ProcessNewBlock(block), BlockValidationResult::BLOCK_CONSENSUS, reason, debug);
 }
 
 BOOST_AUTO_TEST_CASE(tbv_bad_cb_multiple)
@@ -82,6 +90,8 @@ BOOST_AUTO_TEST_CASE(tbv_bad_cb_multiple)
     const auto reason = "bad-cb-multiple";
     const auto debug = "more than one coinbase";
     CheckBlockInvalid(TestValidity(block), BlockValidationResult::BLOCK_CONSENSUS, reason, debug);
+    SolveBlockPoW(block);
+    CheckBlockInvalid(ProcessNewBlock(block), BlockValidationResult::BLOCK_CONSENSUS, reason, debug);
 }
 
 BOOST_AUTO_TEST_CASE(tbv_bad_cb_length)
@@ -94,6 +104,8 @@ BOOST_AUTO_TEST_CASE(tbv_bad_cb_length)
     block.hashMerkleRoot = BlockMerkleRoot(block);
     const auto reason = "bad-cb-length";
     CheckTxViolation(TestValidity(block), block, reason);
+    SolveBlockPoW(block);
+    CheckTxViolation(ProcessNewBlock(block), block, reason);
 }
 
 BOOST_AUTO_TEST_CASE(tbv_bad_txns_vin_empty)
@@ -108,6 +120,8 @@ BOOST_AUTO_TEST_CASE(tbv_bad_txns_vin_empty)
     block.hashMerkleRoot = BlockMerkleRoot(block);
     const auto reason = "bad-txns-vin-empty";
     CheckTxViolation(TestValidity(block), block, reason);
+    SolveBlockPoW(block);
+    CheckTxViolation(ProcessNewBlock(block), block, reason);
 }
 
 BOOST_AUTO_TEST_CASE(tbv_bad_txns_vout_empty)
@@ -127,6 +141,8 @@ BOOST_AUTO_TEST_CASE(tbv_bad_txns_vout_empty)
     block.hashMerkleRoot = BlockMerkleRoot(block);
     const auto reason = "bad-txns-vout-empty";
     CheckTxViolation(TestValidity(block), block, reason);
+    SolveBlockPoW(block);
+    CheckTxViolation(ProcessNewBlock(block), block, reason);
 }
 
 BOOST_AUTO_TEST_CASE(tbv_bad_txns_vout_negative)
@@ -146,6 +162,8 @@ BOOST_AUTO_TEST_CASE(tbv_bad_txns_vout_negative)
     block.hashMerkleRoot = BlockMerkleRoot(block);
     const auto reason = "bad-txns-vout-negative";
     CheckTxViolation(TestValidity(block), block, reason);
+    SolveBlockPoW(block);
+    CheckTxViolation(ProcessNewBlock(block), block, reason);
 }
 
 BOOST_AUTO_TEST_CASE(tbv_bad_txns_vout_toolarge)
@@ -165,6 +183,8 @@ BOOST_AUTO_TEST_CASE(tbv_bad_txns_vout_toolarge)
     block.hashMerkleRoot = BlockMerkleRoot(block);
     const auto reason = "bad-txns-vout-toolarge";
     CheckTxViolation(TestValidity(block), block, reason);
+    SolveBlockPoW(block);
+    CheckTxViolation(ProcessNewBlock(block), block, reason);
 }
 
 BOOST_AUTO_TEST_CASE(tbv_bad_txns_txouttotal_toolarge)
@@ -183,6 +203,8 @@ BOOST_AUTO_TEST_CASE(tbv_bad_txns_txouttotal_toolarge)
     block.hashMerkleRoot = BlockMerkleRoot(block);
     const auto reason = "bad-txns-txouttotal-toolarge";
     CheckTxViolation(TestValidity(block), block, reason);
+    SolveBlockPoW(block);
+    CheckTxViolation(ProcessNewBlock(block), block, reason);
 }
 
 BOOST_AUTO_TEST_CASE(tbv_bad_txns_inputs_duplicate)
@@ -198,6 +220,8 @@ BOOST_AUTO_TEST_CASE(tbv_bad_txns_inputs_duplicate)
     block.hashMerkleRoot = BlockMerkleRoot(block);
     const auto reason = "bad-txns-inputs-duplicate";
     CheckTxViolation(TestValidity(block), block, reason);
+    SolveBlockPoW(block);
+    CheckTxViolation(ProcessNewBlock(block), block, reason);
 }
 
 BOOST_AUTO_TEST_CASE(tbv_bad_txns_prevout_null)
@@ -218,6 +242,8 @@ BOOST_AUTO_TEST_CASE(tbv_bad_txns_prevout_null)
     block.hashMerkleRoot = BlockMerkleRoot(block);
     const auto reason = "bad-txns-prevout-null";
     CheckTxViolation(TestValidity(block), block, reason);
+    SolveBlockPoW(block);
+    CheckTxViolation(ProcessNewBlock(block), block, reason);
 }
 
 BOOST_AUTO_TEST_CASE(tbv_bad_witness_nonce_size)
@@ -235,6 +261,8 @@ BOOST_AUTO_TEST_CASE(tbv_bad_witness_nonce_size)
     const auto reason = "bad-witness-nonce-size";
     const auto debug = "CheckWitnessMalleation : invalid witness reserved value size";
     CheckBlockInvalid(TestValidity(block), BlockValidationResult::BLOCK_MUTATED, reason, debug);
+    SolveBlockPoW(block);
+    CheckBlockInvalid(ProcessNewBlock(block), BlockValidationResult::BLOCK_MUTATED, reason, debug);
 }
 
 BOOST_AUTO_TEST_CASE(tbv_bad_witness_merkle_match)
@@ -253,6 +281,8 @@ BOOST_AUTO_TEST_CASE(tbv_bad_witness_merkle_match)
     const auto reason = "bad-witness-merkle-match";
     const auto debug = "CheckWitnessMalleation : witness merkle commitment mismatch";
     CheckBlockInvalid(TestValidity(block), BlockValidationResult::BLOCK_MUTATED, reason, debug);
+    SolveBlockPoW(block);
+    CheckBlockInvalid(ProcessNewBlock(block), BlockValidationResult::BLOCK_MUTATED, reason, debug);
 }
 
 BOOST_AUTO_TEST_CASE(tbv_unexpected_witness)
@@ -278,6 +308,8 @@ BOOST_AUTO_TEST_CASE(tbv_unexpected_witness)
     const auto reason = "unexpected-witness";
     const auto debug = "CheckWitnessMalleation : unexpected witness data found";
     CheckBlockInvalid(TestValidity(block), BlockValidationResult::BLOCK_MUTATED, reason, debug);
+    SolveBlockPoW(block);
+    CheckBlockInvalid(ProcessNewBlock(block), BlockValidationResult::BLOCK_MUTATED, reason, debug);
 }
 
 BOOST_AUTO_TEST_SUITE_END()
