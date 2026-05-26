@@ -87,16 +87,20 @@ util::Result<void> SetLoggingCategories(const ArgsManager& args)
     const auto categories_to_process = (last_negated == categories.rend()) ? categories : std::ranges::subrange(last_negated.base(), categories.end());
 
     for (const auto& cat : categories_to_process) {
-        if (!LogInstance().EnableCategory(cat)) {
+        const auto flag{BCLog::Logger::GetLogCategory(cat)};
+        if (!flag) {
             return util::Error{strprintf(_("Unsupported logging category %s=%s."), "-debug", cat)};
         }
+        LogInstance().SetCategoryLogLevel(*flag, BCLog::Level::Debug);
     }
 
     // Now remove the logging categories which were explicitly excluded
     for (const std::string& cat : args.GetArgs("-debugexclude")) {
-        if (!LogInstance().DisableCategory(cat)) {
+        const auto flag{BCLog::Logger::GetLogCategory(cat)};
+        if (!flag) {
             return util::Error{strprintf(_("Unsupported logging category %s=%s."), "-debugexclude", cat)};
         }
+        LogInstance().SetCategoryLogLevel(*flag, BCLog::Level::Info);
     }
 
     LogInfo("Log output may contain privacy-sensitive information. Be cautious when sharing logs.");
