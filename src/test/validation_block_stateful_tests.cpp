@@ -39,6 +39,7 @@ BOOST_AUTO_TEST_CASE(tbv_bad_txns_accumulated_fee_outofrange)
     const auto reason = "bad-txns-accumulated-fee-outofrange";
     const auto debug = "accumulated fee in the block out of range";
     CheckBlockInvalid(TestValidity(block), BlockValidationResult::BLOCK_CONSENSUS, reason, debug);
+    CheckBlockInvalid(ConnectBlock(block), BlockValidationResult::BLOCK_CONSENSUS, reason, debug);
     SolveBlockPoW(block);
     CheckBlockInvalid(ProcessNewBlock(block), BlockValidationResult::BLOCK_CONSENSUS, reason, debug);
 }
@@ -57,6 +58,7 @@ BOOST_AUTO_TEST_CASE(tbv_bad_txns_inputs_missingorspent)
     const auto reason = "bad-txns-inputs-missingorspent";
     const auto debug = strprintf("CheckTxInputs: inputs missing/spent in transaction %s", block.vtx.back()->GetHash().ToString());
     CheckBlockInvalid(TestValidity(block), BlockValidationResult::BLOCK_CONSENSUS, reason, debug);
+    CheckBlockInvalid(ConnectBlock(block), BlockValidationResult::BLOCK_CONSENSUS, reason, debug);
     SolveBlockPoW(block);
     CheckBlockInvalid(ProcessNewBlock(block), BlockValidationResult::BLOCK_CONSENSUS, reason, debug);
 }
@@ -77,6 +79,7 @@ BOOST_AUTO_TEST_CASE(tbv_bad_txns_inputvalues_outofrange)
     const auto reason = "bad-txns-inputvalues-outofrange";
     const auto debug = strprintf(" in transaction %s", block.vtx.back()->GetHash().ToString());
     CheckBlockInvalid(TestValidity(block), BlockValidationResult::BLOCK_CONSENSUS, reason, debug);
+    CheckBlockInvalid(ConnectBlock(block), BlockValidationResult::BLOCK_CONSENSUS, reason, debug);
     SolveBlockPoW(block);
     CheckBlockInvalid(ProcessNewBlock(block), BlockValidationResult::BLOCK_CONSENSUS, reason, debug);
 }
@@ -99,6 +102,7 @@ BOOST_AUTO_TEST_CASE(tbv_bad_txns_in_belowout)
                                  FormatMoney(mtx.vout[0].nValue),
                                  block.vtx.back()->GetHash().ToString());
     CheckBlockInvalid(TestValidity(block), BlockValidationResult::BLOCK_CONSENSUS, reason, debug);
+    CheckBlockInvalid(ConnectBlock(block), BlockValidationResult::BLOCK_CONSENSUS, reason, debug);
     SolveBlockPoW(block);
     CheckBlockInvalid(ProcessNewBlock(block), BlockValidationResult::BLOCK_CONSENSUS, reason, debug);
 }
@@ -121,6 +125,7 @@ BOOST_AUTO_TEST_CASE(tbv_bad_txns_inputs_sum_overflow)
     const auto reason = "bad-txns-inputvalues-outofrange";
     const auto debug = strprintf(" in transaction %s", block.vtx.back()->GetHash().ToString());
     CheckBlockInvalid(TestValidity(block), BlockValidationResult::BLOCK_CONSENSUS, reason, debug);
+    CheckBlockInvalid(ConnectBlock(block), BlockValidationResult::BLOCK_CONSENSUS, reason, debug);
     SolveBlockPoW(block);
     CheckBlockInvalid(ProcessNewBlock(block), BlockValidationResult::BLOCK_CONSENSUS, reason, debug);
 }
@@ -141,6 +146,7 @@ BOOST_AUTO_TEST_CASE(tbv_block_script_verify_flag_failed)
     RegenerateCommitments(block, *m_node.chainman);
     const auto reason = "block-script-verify-flag-failed (Script evaluated without error but finished with a false/empty top stack element)";
     CheckScriptViolation(TestValidity(block), block, outpoint, reason);
+    CheckScriptViolation(ConnectBlock(block), block, outpoint, reason);
     SolveBlockPoW(block);
     CheckScriptViolation(ProcessNewBlock(block), block, outpoint, reason);
 }
@@ -165,6 +171,7 @@ BOOST_AUTO_TEST_CASE(tbv_bip147_null_dummy)
     RegenerateCommitments(block, *m_node.chainman);
     const auto reason = "block-script-verify-flag-failed (Dummy CHECKMULTISIG argument must be zero)";
     CheckScriptViolation(TestValidity(block), block, outpoint, reason);
+    CheckScriptViolation(ConnectBlock(block), block, outpoint, reason);
     SolveBlockPoW(block);
     CheckScriptViolation(ProcessNewBlock(block), block, outpoint, reason);
 }
@@ -191,6 +198,7 @@ BOOST_AUTO_TEST_CASE(tbv_bip66_non_der_sig)
     RegenerateCommitments(block, *m_node.chainman);
     const auto reason = "block-script-verify-flag-failed (Non-canonical DER signature)";
     CheckScriptViolation(TestValidity(block), block, outpoint, reason);
+    CheckScriptViolation(ConnectBlock(block), block, outpoint, reason);
     SolveBlockPoW(block);
     CheckScriptViolation(ProcessNewBlock(block), block, outpoint, reason);
 }
@@ -216,6 +224,7 @@ BOOST_AUTO_TEST_CASE(tbv_bip65_cltv_violation)
     RegenerateCommitments(block, *m_node.chainman);
     const auto reason = "block-script-verify-flag-failed (Locktime requirement not satisfied)";
     CheckScriptViolation(TestValidity(block), block, outpoint, reason);
+    CheckScriptViolation(ConnectBlock(block), block, outpoint, reason);
     SolveBlockPoW(block);
     CheckScriptViolation(ProcessNewBlock(block), block, outpoint, reason);
 }
@@ -249,6 +258,7 @@ BOOST_AUTO_TEST_CASE(tbv_taproot_invalid_sig)
     RegenerateCommitments(block, *m_node.chainman);
     const auto reason = "block-script-verify-flag-failed (Invalid Schnorr signature)";
     CheckScriptViolation(TestValidity(block), block, outpoint, reason);
+    CheckScriptViolation(ConnectBlock(block), block, outpoint, reason);
     SolveBlockPoW(block);
     CheckScriptViolation(ProcessNewBlock(block), block, outpoint, reason);
 }
@@ -272,6 +282,7 @@ BOOST_AUTO_TEST_CASE(tbv_bip112_csv_violation)
     RegenerateCommitments(block, *m_node.chainman);
     const auto reason = "block-script-verify-flag-failed (Locktime requirement not satisfied)";
     CheckScriptViolation(TestValidity(block), block, outpoint, reason);
+    CheckScriptViolation(ConnectBlock(block), block, outpoint, reason);
     SolveBlockPoW(block);
     CheckScriptViolation(ProcessNewBlock(block), block, outpoint, reason);
 }
@@ -294,6 +305,7 @@ BOOST_AUTO_TEST_CASE(tbv_bip16_p2sh_invalid_redeem_script)
     RegenerateCommitments(block, *m_node.chainman);
     const auto reason = "block-script-verify-flag-failed (Script evaluated without error but finished with a false/empty top stack element)";
     CheckScriptViolation(TestValidity(block), block, outpoint, reason);
+    CheckScriptViolation(ConnectBlock(block), block, outpoint, reason);
     SolveBlockPoW(block);
     CheckScriptViolation(ProcessNewBlock(block), block, outpoint, reason);
 }
@@ -317,6 +329,7 @@ BOOST_AUTO_TEST_CASE(tbv_segwit_v0_invalid_witness_script)
     RegenerateCommitments(block, *m_node.chainman);
     const auto reason = "block-script-verify-flag-failed (Script evaluated without error but finished with a false/empty top stack element)";
     CheckScriptViolation(TestValidity(block), block, outpoint, reason);
+    CheckScriptViolation(ConnectBlock(block), block, outpoint, reason);
     SolveBlockPoW(block);
     CheckScriptViolation(ProcessNewBlock(block), block, outpoint, reason);
 }
@@ -352,6 +365,7 @@ BOOST_AUTO_TEST_CASE(tbv_tapscript_invalid_script_path)
     RegenerateCommitments(block, *m_node.chainman);
     const auto reason = "block-script-verify-flag-failed (Script evaluated without error but finished with a false/empty top stack element)";
     CheckScriptViolation(TestValidity(block), block, outpoint, reason);
+    CheckScriptViolation(ConnectBlock(block), block, outpoint, reason);
     SolveBlockPoW(block);
     CheckScriptViolation(ProcessNewBlock(block), block, outpoint, reason);
 }
@@ -382,6 +396,7 @@ BOOST_AUTO_TEST_CASE(tbv_bip143_wrong_amount_in_sighash)
     RegenerateCommitments(block, *m_node.chainman);
     const auto reason = "block-script-verify-flag-failed (Script evaluated without error but finished with a false/empty top stack element)";
     CheckScriptViolation(TestValidity(block), block, outpoint, reason);
+    CheckScriptViolation(ConnectBlock(block), block, outpoint, reason);
     SolveBlockPoW(block);
     CheckScriptViolation(ProcessNewBlock(block), block, outpoint, reason);
 }
@@ -400,6 +415,7 @@ BOOST_AUTO_TEST_CASE(tbv_empty_scriptsig)
     block.vtx.emplace_back(MakeTransactionRef(std::move(mtx)));
     RegenerateCommitments(block, *m_node.chainman);
     CheckBlockValid(TestValidity(block));
+    CheckBlockValid(ConnectBlock(block));
     SolveBlockPoW(block);
     CheckBlockValid(ProcessNewBlock(block));
 }
@@ -418,6 +434,7 @@ BOOST_AUTO_TEST_CASE(tbv_scriptsig_non_push)
     block.vtx.emplace_back(MakeTransactionRef(std::move(mtx)));
     RegenerateCommitments(block, *m_node.chainman);
     CheckBlockValid(TestValidity(block));
+    CheckBlockValid(ConnectBlock(block));
     SolveBlockPoW(block);
     CheckBlockValid(ProcessNewBlock(block));
 }
@@ -440,6 +457,7 @@ BOOST_AUTO_TEST_CASE(tbv_double_spend_same_block)
     const auto reason = "bad-txns-inputs-missingorspent";
     const auto debug = strprintf("CheckTxInputs: inputs missing/spent in transaction %s", block.vtx.back()->GetHash().ToString());
     CheckBlockInvalid(TestValidity(block), BlockValidationResult::BLOCK_CONSENSUS, reason, debug);
+    CheckBlockInvalid(ConnectBlock(block), BlockValidationResult::BLOCK_CONSENSUS, reason, debug);
     SolveBlockPoW(block);
     CheckBlockInvalid(ProcessNewBlock(block), BlockValidationResult::BLOCK_CONSENSUS, reason, debug);
 }
@@ -459,6 +477,7 @@ BOOST_AUTO_TEST_CASE(tbv_zero_value_output)
     block.vtx.emplace_back(MakeTransactionRef(std::move(mtx)));
     RegenerateCommitments(block, *m_node.chainman);
     CheckBlockValid(TestValidity(block));
+    CheckBlockValid(ConnectBlock(block));
     SolveBlockPoW(block);
     CheckBlockValid(ProcessNewBlock(block));
 }

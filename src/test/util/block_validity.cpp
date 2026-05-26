@@ -55,6 +55,23 @@ void ValidationBlockValidityTestingSetup::SolveBlockPoW(CBlock& block)
     }
 }
 
+BlockValidationState ValidationBlockValidityTestingSetup::ConnectBlock(CBlock& block)
+{
+    ResetBlock(block);
+    LOCK(cs_main);
+    BlockValidationState state;
+    CBlockIndex* tip = m_chainstate.m_chain.Tip();
+    Assert(tip);
+    CBlockIndex index_dummy{block};
+    const uint256 block_hash{block.GetHash()};
+    index_dummy.pprev = tip;
+    index_dummy.nHeight = tip->nHeight + 1;
+    index_dummy.phashBlock = &block_hash;
+    CCoinsViewCache view_dummy{&m_chainstate.CoinsTip()};
+    m_chainstate.ConnectBlock(block, state, &index_dummy, view_dummy, /*fJustCheck=*/true);
+    return state;
+}
+
 BlockValidationState ValidationBlockValidityTestingSetup::ProcessNewBlock(CBlock& block, bool force_processing, bool min_pow_checked)
 {
     ResetBlock(block);

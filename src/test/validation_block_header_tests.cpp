@@ -21,6 +21,7 @@ BOOST_AUTO_TEST_CASE(tbv_valid_block)
     CBlock block = MakeBlock();
     const int current_height = WITH_LOCK(cs_main, return m_chainstate.m_chain.Height());
     CheckBlockValid(TestValidity(block));
+    CheckBlockValid(ConnectBlock(block));
     BOOST_CHECK_MESSAGE(WITH_LOCK(cs_main, return m_chainstate.m_chain.Height()) == current_height, "Chain tip advanced unexpectedly");
     SolveBlockPoW(block);
     CheckBlockValid(ProcessNewBlock(block));
@@ -35,6 +36,8 @@ BOOST_AUTO_TEST_CASE(tbv_wrong_prev)
     block.hashPrevBlock = uint256::ONE;
     const auto reason = "inconclusive-not-best-prevblk";
     CheckBlockInvalid(TestValidity(block), BlockValidationResult::BLOCK_RESULT_UNSET, reason, "");
+    // ConnectBlock builds on the current tip via a dummy index regardless of the block's hashPrevBlock field.
+    CheckBlockValid(ConnectBlock(block));
     SolveBlockPoW(block);
     CheckBlockInvalid(ProcessNewBlock(block), BlockValidationResult::BLOCK_MISSING_PREV, "prev-blk-not-found", "");
 }
@@ -52,6 +55,8 @@ BOOST_AUTO_TEST_CASE(tbv_high_hash)
     const auto reason = "high-hash";
     const auto debug = "proof of work failed";
     CheckBlockInvalid(TestValidity(block, true), BlockValidationResult::BLOCK_INVALID_HEADER, reason, debug);
+    // ConnectBlock calls CheckBlock with fCheckPOW=false, so PoW is not verified.
+    CheckBlockValid(ConnectBlock(block));
     CheckBlockInvalid(ProcessNewBlock(block), BlockValidationResult::BLOCK_INVALID_HEADER, reason, debug);
 }
 
@@ -65,6 +70,8 @@ BOOST_AUTO_TEST_CASE(tbv_bad_diffbits)
     const auto reason = "bad-diffbits";
     const auto debug = "incorrect proof of work";
     CheckBlockInvalid(TestValidity(block), BlockValidationResult::BLOCK_INVALID_HEADER, reason, debug);
+    // ConnectBlock does not call ContextualCheckBlockHeader, so nBits is not validated.
+    CheckBlockValid(ConnectBlock(block));
     SolveBlockPoW(block);
     CheckBlockInvalid(ProcessNewBlock(block), BlockValidationResult::BLOCK_INVALID_HEADER, reason, debug);
 }
@@ -77,6 +84,8 @@ BOOST_AUTO_TEST_CASE(tbv_time_too_old)
     const auto reason = "time-too-old";
     const auto debug = "block's timestamp is too early";
     CheckBlockInvalid(TestValidity(block), BlockValidationResult::BLOCK_INVALID_HEADER, reason, debug);
+    // ConnectBlock does not call ContextualCheckBlockHeader, so the timestamp is not validated.
+    CheckBlockValid(ConnectBlock(block));
     SolveBlockPoW(block);
     CheckBlockInvalid(ProcessNewBlock(block), BlockValidationResult::BLOCK_INVALID_HEADER, reason, debug);
 }
@@ -89,6 +98,8 @@ BOOST_AUTO_TEST_CASE(tbv_time_too_new)
     const auto reason = "time-too-new";
     const auto debug = "block timestamp too far in the future";
     CheckBlockInvalid(TestValidity(block), BlockValidationResult::BLOCK_TIME_FUTURE, reason, debug);
+    // ConnectBlock does not call ContextualCheckBlockHeader, so the timestamp is not validated.
+    CheckBlockValid(ConnectBlock(block));
     SolveBlockPoW(block);
     CheckBlockInvalid(ProcessNewBlock(block), BlockValidationResult::BLOCK_TIME_FUTURE, reason, debug);
 }
@@ -101,6 +112,8 @@ BOOST_AUTO_TEST_CASE(tbv_bad_version)
     const auto reason = strprintf("bad-version(0x%08x)", block.nVersion);
     const auto debug = strprintf("rejected nVersion=0x%08x block", block.nVersion);
     CheckBlockInvalid(TestValidity(block), BlockValidationResult::BLOCK_INVALID_HEADER, reason, debug);
+    // ConnectBlock does not call ContextualCheckBlockHeader, so the block version is not validated.
+    CheckBlockValid(ConnectBlock(block));
     SolveBlockPoW(block);
     CheckBlockInvalid(ProcessNewBlock(block), BlockValidationResult::BLOCK_INVALID_HEADER, reason, debug);
 }
@@ -120,6 +133,8 @@ BOOST_AUTO_TEST_CASE(tbv_bad_prevblk)
     CBlock block = MakeBlock();
     block.hashPrevBlock = invalidated_hash;
     CheckBlockInvalid(TestValidity(block), BlockValidationResult::BLOCK_RESULT_UNSET, "inconclusive-not-best-prevblk", "");
+    // ConnectBlock does not consult the block index, so it does not detect an invalid prev block.
+    CheckBlockValid(ConnectBlock(block));
     SolveBlockPoW(block);
     CheckBlockInvalid(ProcessNewBlock(block), BlockValidationResult::BLOCK_INVALID_PREV, "bad-prevblk", "");
 }

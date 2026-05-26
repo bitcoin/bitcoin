@@ -54,6 +54,11 @@ struct ValidationBlockValidityTestingSetup : public TestChain100Setup {
 
     /** Verify a block's validity using TestBlockValidity. */
     BlockValidationState TestValidity(CBlock& block, bool check_pow = false, bool check_merkle = true);
+    /**
+     * Validate a block against the UTXO set via ConnectBlock (fJustCheck=true).
+     * Does not modify chain state. Only catches errors in UTXO/script validation.
+     */
+    BlockValidationState ConnectBlock(CBlock& block);
 
     /** Helper to add a spendable coin to the UTXO set for testing. */
     COutPoint AddCoin(const CScript& script_pub_key = CScript() << OP_TRUE, CAmount amount = 1 * COIN);

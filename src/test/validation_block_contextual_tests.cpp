@@ -29,6 +29,7 @@ BOOST_AUTO_TEST_CASE(tbv_immature_coinbase)
     const auto reason = "bad-txns-premature-spend-of-coinbase";
     const auto debug = strprintf("tried to spend coinbase at depth 1 in transaction %s", block.vtx.back()->GetHash().ToString());
     CheckBlockInvalid(TestValidity(block), BlockValidationResult::BLOCK_CONSENSUS, reason, debug);
+    CheckBlockInvalid(ConnectBlock(block), BlockValidationResult::BLOCK_CONSENSUS, reason, debug);
     SolveBlockPoW(block);
     CheckBlockInvalid(ProcessNewBlock(block), BlockValidationResult::BLOCK_CONSENSUS, reason, debug);
 }
@@ -44,6 +45,7 @@ BOOST_AUTO_TEST_CASE(tbv_bad_cb_amount)
     const auto reason = "bad-cb-amount";
     const auto debug = strprintf("coinbase pays too much (actual=%d vs limit=%d)", block.vtx[0]->GetValueOut(), 50 * COIN);
     CheckBlockInvalid(TestValidity(block), BlockValidationResult::BLOCK_CONSENSUS, reason, debug);
+    CheckBlockInvalid(ConnectBlock(block), BlockValidationResult::BLOCK_CONSENSUS, reason, debug);
     SolveBlockPoW(block);
     CheckBlockInvalid(ProcessNewBlock(block), BlockValidationResult::BLOCK_CONSENSUS, reason, debug);
 }
