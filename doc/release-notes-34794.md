@@ -1,0 +1,8 @@
+REST API
+--------
+
+- REST responses now include `Cache-Control` headers to guide intermediary
+  caches. Immutable responses such as block binary and hex data, block parts,
+  block filters, spent transaction outputs, and block-specific deployment info
+  are marked cacheable for one day. Responses that can change with active chain
+  or node state, as well as errors, are marked `no-store`. (#34794)
