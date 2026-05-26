@@ -55,7 +55,6 @@ class RESTTest (BitcoinTestFramework):
         self.extra_args = [["-rest", "-blockfilterindex=1"], []]
         # whitelist peers to speed up tx relay / mempool sync
         self.noban_tx_relay = True
-        self.supports_cli = False
 
     def test_rest_request(
             self,
