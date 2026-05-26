@@ -256,7 +256,6 @@ namespace BCLog {
         bool EnableCategory(std::string_view str);
         void DisableCategory(LogFlags flag);
         bool DisableCategory(std::string_view str);
-        bool WillLogCategory(LogFlags category) const;
         CategoryMask GetCategoryMask() const;
         std::unordered_map<LogFlags, Level> CategoryLevels() const;
         void SetCategoryLogLevel(const std::unordered_map<LogFlags, Level>& levels) EXCLUSIVE_LOCKS_REQUIRED(!m_cs);

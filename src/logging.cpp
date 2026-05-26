@@ -158,12 +158,6 @@ bool BCLog::Logger::DisableCategory(std::string_view str)
     return false;
 }
 
-// Backwards-compatible wrapper. Removed in subsequent commit.
-bool BCLog::Logger::WillLogCategory(BCLog::LogFlags category) const
-{
-    return WillLogCategoryLevel(category, BCLog::Level::Debug);
-}
-
 void BCLog::Logger::SetCategoryLogLevel(CategoryMask category, BCLog::Level level)
 {
     // Enable the category at the requested level and all more-severe levels,
@@ -303,7 +297,7 @@ std::vector<LogCategory> BCLog::Logger::LogCategoriesList() const
     std::vector<LogCategory> ret;
     ret.reserve(LOG_CATEGORIES_BY_STR.size());
     for (const auto& [category, flag] : LOG_CATEGORIES_BY_STR) {
-        ret.push_back(LogCategory{.category = category, .active = WillLogCategory(flag)});
+        ret.push_back(LogCategory{.category = category, .active = WillLogCategoryLevel(flag, BCLog::Level::Debug)});
     }
     return ret;
 }
