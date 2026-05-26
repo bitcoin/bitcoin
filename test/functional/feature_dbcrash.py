@@ -196,12 +196,12 @@ class ChainstateWriteCrashTest(BitcoinTestFramework):
                 # Sanity check -- if we chose inputs that are too small, skip
                 continue
 
-            self.wallet.send_self_transfer_multi(
-                from_node=node,
+            tx = self.wallet.create_self_transfer_multi(
                 utxos_to_spend=utxos_to_spend,
                 num_outputs=3,
                 fee_per_output=FEE // 3,
             )
+            node.sendrawtransaction(hexstring=tx["hex"], maxfeerate=0)
             num_transactions += 1
 
     def run_test(self):
