@@ -253,7 +253,7 @@ static std::string LogCategoryToStr(BCLog::LogFlags category)
     return it->second;
 }
 
-static std::optional<BCLog::Level> GetLogLevel(std::string_view level_str)
+std::optional<BCLog::Level> BCLog::Logger::GetLogLevel(std::string_view level_str)
 {
     if (level_str == "trace") {
         return BCLog::Level::Trace;
@@ -582,15 +582,6 @@ bool BCLog::LogRateLimiter::Stats::Consume(uint64_t bytes)
 }
 
 // Backwards-compatible wrapper. Removed in subsequent commit.
-bool BCLog::Logger::SetLogLevel(std::string_view level_str)
-{
-    const auto level = GetLogLevel(level_str);
-    if (!level.has_value() || level.value() > MAX_USER_SETABLE_SEVERITY_LEVEL) return false;
-    SetLogLevel(level.value());
-    return true;
-}
-
-// Backwards-compatible wrapper. Removed in subsequent commit.
 bool BCLog::Logger::SetCategoryLogLevel(std::string_view category_str, std::string_view level_str)
 {
     const auto flag{GetLogCategory(category_str)};
@@ -617,12 +608,6 @@ BCLog::Level BCLog::Logger::LogLevel() const
     size_t i = 0;
     for (; i < m_levels.size() && !m_levels[i].load(std::memory_order_relaxed); ++i);
     return static_cast<BCLog::Level>(i);
-}
-
-// Backwards-compatible wrapper. Removed in subsequent commit.
-void BCLog::Logger::SetLogLevel(BCLog::Level level)
-{
-    SetCategoryLogLevel(GetCategoryMask(), level);
 }
 
 bool util::log::ShouldDebugLog(Category category)
