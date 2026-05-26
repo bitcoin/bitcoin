@@ -580,14 +580,6 @@ bool BCLog::LogRateLimiter::Stats::Consume(uint64_t bytes)
     return true;
 }
 
-BCLog::Level BCLog::Logger::LogLevel() const
-{
-    // Return lowest currently-enabled severity level.
-    size_t i = 0;
-    for (; i < m_levels.size() && !m_levels[i].load(std::memory_order_relaxed); ++i);
-    return static_cast<BCLog::Level>(i);
-}
-
 bool util::log::ShouldDebugLog(Category category)
 {
     return LogInstance().WillLogCategoryLevel(static_cast<BCLog::LogFlags>(category), util::log::Level::Debug);
