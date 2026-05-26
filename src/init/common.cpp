@@ -71,7 +71,14 @@ util::Result<void> SetLoggingLevel(const ArgsManager& args)
             } else {
                 // user passed a category-specific log level, i.e. -loglevel=<category>:<level>
                 const auto& toks = SplitString(level_str, ':');
-                if (!(toks.size() == 2 && LogInstance().SetCategoryLogLevel(toks[0], toks[1]))) {
+                bool ok = toks.size() == 2;
+                if (ok) {
+                    const auto flag{BCLog::Logger::GetLogCategory(toks[0])};
+                    const auto level = BCLog::Logger::GetLogLevel(toks[1]);
+                    ok = flag && level && *level <= BCLog::Level::Info;
+                    if (ok) LogInstance().SetCategoryLogLevel(LogInstance().GetLogLevels().back() & *flag, *level);
+                }
+                if (!ok) {
                     return util::Error{strprintf(_("Unsupported category-specific logging level %1$s=%2$s. Expected %1$s=<category>:<loglevel>. Valid categories: %3$s. Valid loglevels: %4$s."), "-loglevel", level_str, LogInstance().LogCategoriesString(), LogInstance().LogLevelsString())};
                 }
             }
