@@ -9,6 +9,7 @@
 
 #include <kernel/checks.h>
 
+#include <addrdb.h>
 #include <addrman.h>
 #include <banman.h>
 #include <blockfilter.h>
@@ -18,13 +19,15 @@
 #include <chainparamsbase.h>
 #include <clientversion.h>
 #include <common/args.h>
+#include <common/messages.h>
 #include <common/system.h>
-#include <consensus/amount.h>
-#include <consensus/consensus.h>
-#include <deploymentstatus.h>
-#include <hash.h>
+#include <compat/compat.h>
+#include <consensus/params.h>
+#include <crypto/hex_base.h>
+#include <dbwrapper.h>
 #include <httprpc.h>
 #include <httpserver.h>
+#include <index/base.h>
 #include <index/blockfilterindex.h>
 #include <index/coinstatsindex.h>
 #include <index/txindex.h>
@@ -36,14 +39,18 @@
 #include <interfaces/mining.h>
 #include <interfaces/node.h>
 #include <ipc/exception.h>
+#include <kernel/blockmanager_opts.h>
 #include <kernel/caches.h>
+#include <kernel/chainstatemanager_opts.h>
 #include <kernel/context.h>
+#include <kernel/notifications_interface.h>
 #include <key.h>
 #include <logging.h>
 #include <mapport.h>
 #include <net.h>
 #include <net_permissions.h>
 #include <net_processing.h>
+#include <netaddress.h>
 #include <netbase.h>
 #include <netgroup.h>
 #include <node/blockmanager_args.h>
@@ -57,7 +64,8 @@
 #include <node/mempool_args.h>
 #include <node/mempool_persist.h>
 #include <node/mempool_persist_args.h>
-#include <node/miner.h>
+#include <node/mining_args.h>
+#include <node/mining_types.h>
 #include <node/peerman_args.h>
 #include <policy/feerate.h>
 #include <policy/fees/block_policy_estimator.h>
@@ -65,19 +73,20 @@
 #include <policy/policy.h>
 #include <policy/settings.h>
 #include <protocol.h>
-#include <rpc/blockchain.h>
+#include <random.h>
 #include <rpc/register.h>
 #include <rpc/server.h>
 #include <rpc/util.h>
 #include <scheduler.h>
 #include <script/sigcache.h>
 #include <sync.h>
+#include <tinyformat.h>
 #include <torcontrol.h>
-#include <txdb.h>
+#include <txgraph.h>
 #include <txmempool.h>
+#include <uint256.h>
 #include <util/asmap.h>
 #include <util/batchpriority.h>
-#include <util/byte_units.h>
 #include <util/chaintype.h>
 #include <util/check.h>
 #include <util/fs.h>
@@ -97,21 +106,31 @@
 #include <walletinitinterface.h>
 
 #include <algorithm>
+#include <any>
 #include <cerrno>
 #include <condition_variable>
 #include <cstddef>
 #include <cstdint>
-#include <cstdio>
+#include <exception>
 #include <fstream>
 #include <functional>
+#include <initializer_list>
+#include <list>
+#include <memory>
+#include <new>
+#include <optional>
 #include <set>
+#include <span>
 #include <string>
+#include <system_error>
 #include <thread>
+#include <tuple>
+#include <utility>
+#include <variant>
 #include <vector>
 
 #ifndef WIN32
 #include <csignal>
-#include <sys/stat.h>
 #endif
 
 #ifdef ENABLE_ZMQ
@@ -124,7 +143,6 @@
 #include <node/data/ip_asn.dat.h>
 #endif
 
-using common::AmountErrMsg;
 using common::InvalidPortErrMsg;
 using common::ResolveErrMsg;
 
@@ -1074,27 +1092,9 @@ bool AppInitParameterInteraction(const ArgsManager& args)
         return InitError(Untranslated("peertimeout must be a positive integer."));
     }
 
-    if (const auto arg{args.GetArg("-blockmintxfee")}) {
-        if (!ParseMoney(*arg)) {
-            return InitError(AmountErrMsg("blockmintxfee", *arg));
-        }
-    }
-
-    {
-        const auto max_block_weight = args.GetIntArg("-blockmaxweight", DEFAULT_BLOCK_MAX_WEIGHT);
-        if (max_block_weight > MAX_BLOCK_WEIGHT) {
-            return InitError(strprintf(_("Specified -blockmaxweight (%d) exceeds consensus maximum block weight (%d)"), max_block_weight, MAX_BLOCK_WEIGHT));
-        }
-    }
-
-    {
-        const auto block_reserved_weight = args.GetIntArg("-blockreservedweight", DEFAULT_BLOCK_RESERVED_WEIGHT);
-        if (block_reserved_weight > MAX_BLOCK_WEIGHT) {
-            return InitError(strprintf(_("Specified -blockreservedweight (%d) exceeds consensus maximum block weight (%d)"), block_reserved_weight, MAX_BLOCK_WEIGHT));
-        }
-        if (block_reserved_weight < MINIMUM_BLOCK_RESERVED_WEIGHT) {
-            return InitError(strprintf(_("Specified -blockreservedweight (%d) is lower than minimum safety value of (%d)"), block_reserved_weight, MINIMUM_BLOCK_RESERVED_WEIGHT));
-        }
+    auto mining_result{node::ReadMiningArgs(args)};
+    if (!mining_result) {
+        return InitError(util::ErrorString(mining_result));
     }
 
     nBytesPerSigOp = args.GetIntArg("-bytespersigop", nBytesPerSigOp);
@@ -1328,6 +1328,9 @@ static ChainstateLoadResult InitAndLoadChainstate(
     if (!mempool_error.empty()) {
         return {ChainstateLoadStatus::FAILURE_FATAL, mempool_error};
     }
+    auto mining_args{node::ReadMiningArgs(args)};
+    Assert(mining_args); // no error can happen, already checked in AppInitParameterInteraction
+    node.mining_args = std::move(*mining_args);
     LogInfo("* Using %.1f MiB for in-memory UTXO set (plus up to %.1f MiB of unused mempool space)",
             cache_sizes.coins / double(1_MiB),
             mempool_opts.max_size_bytes / double(1_MiB));

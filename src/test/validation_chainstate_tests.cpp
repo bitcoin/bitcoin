@@ -2,27 +2,34 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 //
+#include <chain.h>
 #include <chainparams.h>
+#include <coins.h>
 #include <consensus/amount.h>
 #include <consensus/validation.h>
+#include <node/blockstorage.h>
 #include <node/kernel_notifications.h>
+#include <primitives/block.h>
+#include <primitives/transaction.h>
 #include <random.h>
-#include <rpc/blockchain.h>
 #include <script/script.h>
 #include <sync.h>
 #include <test/util/chainstate.h>
-#include <test/util/common.h>
+#include <test/util/common.h> // IWYU pragma: keep
 #include <test/util/coins.h>
-#include <test/util/random.h>
 #include <test/util/setup_common.h>
+#include <tinyformat.h>
 #include <uint256.h>
-#include <util/byte_units.h>
 #include <util/check.h>
 #include <validation.h>
 
+#include <boost/test/unit_test.hpp>
+
+#include <memory>
+#include <optional>
 #include <vector>
 
-#include <boost/test/unit_test.hpp>
+class CTxMemPool;
 
 BOOST_FIXTURE_TEST_SUITE(validation_chainstate_tests, ChainTestingSetup)
 
@@ -83,7 +90,7 @@ BOOST_FIXTURE_TEST_CASE(connect_tip_does_not_cache_inputs_on_failed_connect, Tes
     tx.vout.emplace_back(MAX_MONEY, CScript{} << OP_TRUE);
 
     const auto tip{WITH_LOCK(cs_main, return chainstate.m_chain.Tip()->GetBlockHash())};
-    const CBlock block{CreateBlock({tx}, CScript{} << OP_TRUE, chainstate)};
+    const CBlock block{CreateBlock({tx}, CScript{} << OP_TRUE)};
     BOOST_CHECK(Assert(m_node.chainman)->ProcessNewBlock(std::make_shared<CBlock>(block), true, true, nullptr));
 
     LOCK(cs_main);

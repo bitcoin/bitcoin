@@ -6,38 +6,42 @@
 import asyncio
 import time
 from contextlib import AsyncExitStack
+from decimal import Decimal
 from io import BytesIO
 from test_framework.blocktools import NULL_OUTPOINT, script_BIP34_coinbase_height
 from test_framework.messages import (
-    MAX_BLOCK_WEIGHT,
     CBlockHeader,
+    COIN,
     CTransaction,
     CTxIn,
-    CTxOut,
     CTxInWitness,
-    ser_uint256,
-    COIN,
+    CTxOut,
+    DEFAULT_BLOCK_RESERVED_WEIGHT,
+    MAX_BLOCK_SIGOPS_COST,
+    MAX_BLOCK_WEIGHT,
     from_hex,
     msg_headers,
+    ser_uint256,
 )
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import (
     assert_equal,
     assert_greater_than_or_equal,
-    assert_not_equal
+    assert_not_equal,
 )
 from test_framework.wallet import MiniWallet
 from test_framework.p2p import P2PInterface
 from test_framework.ipc_util import (
+    assert_capnp_failed,
+    assert_create_new_block_fails,
     destroying,
-    mining_create_block_template,
     load_capnp_modules,
+    make_mining_ctx,
+    mining_create_block_template,
     mining_get_block,
     mining_get_coinbase_tx,
     mining_wait_next_template,
     wait_and_do,
-    make_mining_ctx,
-    assert_capnp_failed
 )
 
 # Test may be skipped and not have capnp installed
@@ -291,8 +295,9 @@ class IPCMiningTest(BitcoinTestFramework):
 
     def run_ipc_option_override_test(self):
         self.log.info("Running IPC option override test")
-        # Set an absurd reserved weight. `-blockreservedweight` is RPC-only, so
-        # with this setting RPC templates would be empty. IPC clients set
+        # Confirm that BlockCreateOptions.blockReservedWeight takes precedence
+        # over -blockreservedweight. Set an absurdly high -blockreservedweight
+        # value that would result in empty blocks to verify this. IPC clients set
         # blockReservedWeight per template request and are unaffected; later in
         # the test the IPC template includes a mempool transaction.
         self.restart_node(0, extra_args=[f"-blockreservedweight={MAX_BLOCK_WEIGHT}"])
@@ -317,11 +322,136 @@ class IPCMiningTest(BitcoinTestFramework):
 
             self.log.debug("Enforce minimum reserved weight for IPC clients too")
             opts.blockReservedWeight = 0
-            try:
-                await mining.createNewBlock(ctx, opts)
-                raise AssertionError("createNewBlock unexpectedly succeeded")
-            except capnp.lib.capnp.KjException as e:
-                assert_capnp_failed(e, "remote exception: std::exception: block_reserved_weight (0) must be at least 2000 weight units")
+            await assert_create_new_block_fails(ctx, mining, opts,
+                "block_reserved_weight (0) is lower than minimum safety value of (2000)")
+
+        async def async_routine_check_max_reserved_weight():
+            self.log.debug("Enforce maximum reserved weight for IPC clients too")
+            ctx, mining = await make_mining_ctx(self)
+            opts = self.capnp_modules['mining'].BlockCreateOptions()
+            opts.blockReservedWeight = MAX_BLOCK_WEIGHT + 1
+            await assert_create_new_block_fails(ctx, mining, opts,
+                f"block_reserved_weight ({MAX_BLOCK_WEIGHT + 1}) exceeds consensus maximum block weight ({MAX_BLOCK_WEIGHT})")
+
+        async def async_routine_check_sigops_limit():
+            self.log.debug("Enforce sigops limit for IPC clients too")
+            ctx, mining = await make_mining_ctx(self)
+            opts = self.capnp_modules['mining'].BlockCreateOptions()
+            opts.coinbaseOutputMaxAdditionalSigops = MAX_BLOCK_SIGOPS_COST + 1
+            await assert_create_new_block_fails(ctx, mining, opts,
+                f"coinbase_output_max_additional_sigops ({MAX_BLOCK_SIGOPS_COST + 1}) exceeds consensus maximum block sigops cost ({MAX_BLOCK_SIGOPS_COST})")
+
+        asyncio.run(capnp.run(async_routine()))
+        asyncio.run(capnp.run(async_routine_check_max_reserved_weight()))
+        asyncio.run(capnp.run(async_routine_check_sigops_limit()))
+
+    def run_waitnext_mining_policy_test(self):
+        """Verify that waitNext() preserves the mining policy from -blockmintxfee
+        instead of falling back to defaults."""
+        self.log.info("Running waitNext mining policy test")
+        block_min_tx_fee = Decimal("0.00002000")
+        below_block_min_tx_fee = Decimal("0.00001000")
+        above_block_min_tx_fee = Decimal("0.00003000")
+
+        self.restart_node(0, extra_args=[
+            f"-blockmintxfee={block_min_tx_fee:.8f}",
+            "-minrelaytxfee=0",
+            "-persistmempool=0",
+        ])
+
+        async def async_routine():
+            ctx, mining = await make_mining_ctx(self)
+
+            self.log.debug("Create a below -blockmintxfee transaction")
+            low_fee_tx = self.miniwallet.send_self_transfer(
+                fee_rate=below_block_min_tx_fee,
+                from_node=self.nodes[0],
+                confirmed_only=True,
+            )
+            assert low_fee_tx["txid"] in self.nodes[0].getrawmempool()
+
+            async with AsyncExitStack() as stack:
+                self.log.debug("createNewBlock should respect -blockmintxfee")
+                template = await mining_create_block_template(mining, stack, ctx, self.default_block_create_options)
+                assert template is not None
+                block = await mining_get_block(template, ctx)
+                assert low_fee_tx["txid"] not in {tx.txid_hex for tx in block.vtx[1:]}
+
+                self.log.debug("waitNext should preserve the same mining policy")
+                high_fee_tx = self.miniwallet.send_self_transfer(
+                    fee_rate=above_block_min_tx_fee,
+                    from_node=self.nodes[0],
+                    confirmed_only=True,
+                )
+                mempool_txids = self.nodes[0].getrawmempool()
+                assert high_fee_tx["txid"] in mempool_txids
+                assert low_fee_tx["txid"] in mempool_txids
+                template_next = await mining_wait_next_template(template, stack, ctx, self.default_block_wait_options)
+                assert template_next is not None
+
+                block_next = await mining_get_block(template_next, ctx)
+                block_next_txids = {tx.txid_hex for tx in block_next.vtx[1:]}
+                assert high_fee_tx["txid"] in block_next_txids
+                assert low_fee_tx["txid"] not in block_next_txids
+
+        asyncio.run(capnp.run(async_routine()))
+
+    def run_block_max_weight_test(self):
+        """Verify IPC createNewBlock() and waitNext() preserve the -blockmaxweight policy."""
+        self.log.info("Running block_max_weight test")
+
+        # Cap that leaves room for only a handful of mempool transactions
+        # above DEFAULT_BLOCK_RESERVED_WEIGHT (8000). Well below MAX_BLOCK_WEIGHT
+        # (4_000_000), so any truncation observed here is attributable to the
+        # cap, not to consensus limits or wallet chain limits.
+        small_cap = DEFAULT_BLOCK_RESERVED_WEIGHT + 4000
+        NUM_TXS = 20
+
+        self.restart_node(0, extra_args=[
+            f"-blockmaxweight={small_cap}",
+            "-minrelaytxfee=0",
+            "-persistmempool=0",
+        ])
+        # Refresh miniwallet's UTXO view from the chain after restart.
+        self.miniwallet.rescan_utxos()
+
+        # Fill the mempool enough that the configured block weight cap forces
+        # template truncation.
+        for _ in range(NUM_TXS):
+            self.miniwallet.send_self_transfer(from_node=self.nodes[0], confirmed_only=True)
+        assert_equal(self.nodes[0].getmempoolinfo()["size"], NUM_TXS)
+
+        async def async_routine():
+            ctx, mining = await make_mining_ctx(self)
+            async with AsyncExitStack() as stack:
+                template = await mining_create_block_template(mining, stack, ctx, self.default_block_create_options)
+                assert template is not None
+                block = await mining_get_block(template, ctx)
+                assert_greater_than_or_equal(small_cap, block.get_weight())
+                # Exclude the coinbase; the cap must have forced truncation.
+                initial_included = len(block.vtx) - 1
+                assert initial_included < NUM_TXS, (
+                    f"Expected -blockmaxweight={small_cap} to truncate; "
+                    f"included {initial_included}/{NUM_TXS} mempool txs"
+                )
+
+                self.log.debug("waitNext should preserve -blockmaxweight")
+                high_fee_tx = self.miniwallet.send_self_transfer(
+                    from_node=self.nodes[0],
+                    confirmed_only=True,
+                    fee_rate=10,
+                )
+                template_next = await mining_wait_next_template(template, stack, ctx, self.default_block_wait_options)
+                assert template_next is not None
+
+                block_next = await mining_get_block(template_next, ctx)
+                assert_greater_than_or_equal(small_cap, block_next.get_weight())
+                assert high_fee_tx["txid"] in {tx.txid_hex for tx in block_next.vtx[1:]}
+                next_included = len(block_next.vtx) - 1
+                assert next_included < NUM_TXS + 1, (
+                    f"Expected -blockmaxweight={small_cap} to remain capped after waitNext; "
+                    f"included {next_included}/{NUM_TXS + 1} mempool txs"
+                )
 
         asyncio.run(capnp.run(async_routine()))
 
@@ -421,8 +551,6 @@ class IPCMiningTest(BitcoinTestFramework):
         node.wait_for_rpc_connection()
         assert_equal(node.getblockcount(), 0)
 
-        miniwallet = MiniWallet(node)
-
         async def async_routine():
             ctx, mining = await make_mining_ctx(self)
             opts = self.capnp_modules['mining'].BlockCreateOptions()
@@ -437,7 +565,7 @@ class IPCMiningTest(BitcoinTestFramework):
                     block = await mining_get_block(template, ctx)
                     # Heights <= 16 need extra nonce padding.
                     extra_nonce = b'\xaa\xbb\xcc\xdd' if height <= 16 else b""
-                    coinbase = await self.build_coinbase_test(template, ctx, miniwallet, extra_nonce=extra_nonce)
+                    coinbase = await self.build_coinbase_test(template, ctx, self.miniwallet, extra_nonce=extra_nonce)
                     block.vtx[0] = coinbase
                     block.hashMerkleRoot = block.calc_merkle_root()
                     block.solve()
@@ -450,10 +578,15 @@ class IPCMiningTest(BitcoinTestFramework):
     def run_test(self):
         self.miniwallet = MiniWallet(self.nodes[0])
         self.default_block_create_options = self.capnp_modules['mining'].BlockCreateOptions()
+        self.default_block_wait_options = self.capnp_modules['mining'].BlockWaitOptions()
+        self.default_block_wait_options.timeout = 1000.0 * self.options.timeout_factor
+        self.default_block_wait_options.feeThreshold = 1
         self.run_mining_interface_test()
         self.run_early_startup_test()
         self.run_block_template_test()
         self.run_coinbase_and_submission_test()
+        self.run_waitnext_mining_policy_test()
+        self.run_block_max_weight_test()
         self.run_ipc_option_override_test()
 
         # Needs to run last because it resets the chain.

@@ -2,26 +2,39 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or https://www.opensource.org/licenses/mit-license.php.
 
+#include <chain.h>
 #include <chainparams.h>
-#include <node/miner.h>
+#include <consensus/params.h>
+#include <interfaces/mining.h>
 #include <net_processing.h>
 #include <pow.h>
+#include <primitives/block.h>
+#include <protocol.h>
+#include <sync.h>
 #include <test/util/setup_common.h>
+#include <util/check.h>
+#include <util/time.h>
 #include <validation.h>
+#include <validationinterface.h>
 
 #include <boost/test/unit_test.hpp>
+
+#include <cstdint>
+#include <memory>
 
 BOOST_FIXTURE_TEST_SUITE(peerman_tests, RegTestingSetup)
 
 /** Window, in blocks, for connecting to NODE_NETWORK_LIMITED peers */
 static constexpr int64_t NODE_NETWORK_LIMITED_ALLOW_CONN_BLOCKS = 144;
 
-static void mineBlock(const node::NodeContext& node, std::chrono::seconds block_time)
+static void mineBlock(node::NodeContext& node, std::chrono::seconds block_time)
 {
     auto curr_time = GetTime<std::chrono::seconds>();
-    node::BlockAssembler::Options options;
     SetMockTime(block_time); // update time so the block is created with it
-    CBlock block = node::BlockAssembler{node.chainman->ActiveChainstate(), nullptr, options}.CreateNewBlock()->block;
+    auto mining{interfaces::MakeMining(node)};
+    auto block_template{mining->createNewBlock({}, /*cooldown=*/false)};
+    BOOST_REQUIRE(block_template);
+    CBlock block{block_template->getBlock()};
     while (!CheckProofOfWork(block.GetHash(), block.nBits, node.chainman->GetConsensus())) ++block.nNonce;
     block.fChecked = true; // little speedup
     SetMockTime(curr_time); // process block at current time

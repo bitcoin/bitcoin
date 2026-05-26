@@ -162,3 +162,12 @@ async def make_mining_ctx(self):
 def assert_capnp_failed(e, description_prefix):
     assert e.description.startswith(description_prefix), f"Expected description starting with '{description_prefix}', got '{e.description}'"
     assert_equal(e.type, "FAILED")
+
+
+async def assert_create_new_block_fails(ctx, mining, opts, expected_msg):
+    """Assert that mining.createNewBlock fails with the expected remote exception."""
+    try:
+        await mining.createNewBlock(ctx, opts)
+        raise AssertionError("createNewBlock unexpectedly succeeded")
+    except capnp.lib.capnp.KjException as e:
+        assert_capnp_failed(e, f"remote exception: std::exception: {expected_msg}")

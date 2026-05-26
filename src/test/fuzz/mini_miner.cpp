@@ -2,27 +2,35 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
+#include <node/mini_miner.h>
+
+#include <consensus/amount.h>
+#include <kernel/cs_main.h>
+#include <policy/feerate.h>
+#include <primitives/transaction.h>
+#include <script/script.h>
+#include <sync.h>
 #include <test/fuzz/FuzzedDataProvider.h>
 #include <test/fuzz/fuzz.h>
 #include <test/fuzz/util.h>
-#include <test/fuzz/util/mempool.h>
-#include <test/util/mining.h>
 #include <test/util/script.h>
+#include <test/util/random.h>
 #include <test/util/setup_common.h>
 #include <test/util/time.h>
 #include <test/util/txmempool.h>
-
-#include <node/miner.h>
-#include <node/mini_miner.h>
-#include <node/types.h>
-#include <primitives/transaction.h>
-#include <random.h>
 #include <txmempool.h>
+#include <uint256.h>
 #include <util/check.h>
-#include <util/time.h>
 #include <util/translation.h>
 
+#include <algorithm>
+#include <cstddef>
+#include <cstdint>
 #include <deque>
+#include <functional>
+#include <map>
+#include <optional>
+#include <utility>
 #include <vector>
 
 namespace {

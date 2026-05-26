@@ -5,46 +5,77 @@
 
 #include <bitcoin-build-config.h> // IWYU pragma: keep
 
+#include <interfaces/mining.h>
+
+#include <addresstype.h>
+#include <arith_uint256.h>
 #include <chain.h>
 #include <chainparams.h>
 #include <chainparamsbase.h>
-#include <common/system.h>
 #include <consensus/amount.h>
 #include <consensus/consensus.h>
 #include <consensus/merkle.h>
 #include <consensus/params.h>
 #include <consensus/validation.h>
 #include <core_io.h>
-#include <deploymentinfo.h>
-#include <deploymentstatus.h>
-#include <interfaces/mining.h>
+#include <crypto/hex_base.h>
+#include <interfaces/types.h>
 #include <key_io.h>
 #include <net.h>
+#include <netbase.h>
+#include <node/blockstorage.h>
 #include <node/context.h>
 #include <node/miner.h>
+#include <node/mining_args.h>
+#include <node/mining_types.h>
 #include <node/warnings.h>
-#include <policy/ephemeral_policy.h>
+#include <policy/feerate.h>
+#include <policy/policy.h>
 #include <pow.h>
+#include <primitives/block.h>
+#include <primitives/transaction.h>
 #include <rpc/blockchain.h>
 #include <rpc/mining.h>
+#include <rpc/protocol.h>
+#include <rpc/request.h>
 #include <rpc/server.h>
 #include <rpc/server_util.h>
 #include <rpc/util.h>
 #include <script/descriptor.h>
 #include <script/script.h>
 #include <script/signingprovider.h>
+#include <serialize.h>
+#include <streams.h>
+#include <sync.h>
+#include <tinyformat.h>
 #include <txmempool.h>
+#include <uint256.h>
 #include <univalue.h>
+#include <util/chaintype.h>
+#include <util/check.h>
 #include <util/signalinterrupt.h>
 #include <util/strencodings.h>
 #include <util/string.h>
 #include <util/time.h>
-#include <util/translation.h>
 #include <validation.h>
 #include <validationinterface.h>
+#include <versionbits.h>
 
+#include <algorithm>
+#include <cstddef>
 #include <cstdint>
+#include <functional>
+#include <initializer_list>
+#include <limits>
+#include <map>
 #include <memory>
+#include <optional>
+#include <set>
+#include <span>
+#include <string>
+#include <string_view>
+#include <utility>
+#include <vector>
 
 using interfaces::BlockRef;
 using interfaces::BlockTemplate;
@@ -463,7 +494,7 @@ static RPCMethod getmininginfo()
     CBlockIndex& tip{*CHECK_NONFATAL(active_chain.Tip())};
 
     UniValue obj(UniValue::VOBJ);
-    obj.pushKV("blocks",           active_chain.Height());
+    obj.pushKV("blocks", active_chain.Height());
     if (BlockAssembler::m_last_block_weight) obj.pushKV("currentblockweight", *BlockAssembler::m_last_block_weight);
     if (BlockAssembler::m_last_block_num_txs) obj.pushKV("currentblocktx", *BlockAssembler::m_last_block_num_txs);
     obj.pushKV("bits", strprintf("%08x", tip.nBits));
@@ -471,9 +502,8 @@ static RPCMethod getmininginfo()
     obj.pushKV("target", GetTarget(tip, chainman.GetConsensus().powLimit).GetHex());
     obj.pushKV("networkhashps",    getnetworkhashps().HandleRequest(request));
     obj.pushKV("pooledtx", mempool.size());
-    BlockAssembler::Options assembler_options;
-    ApplyArgsManOptions(*node.args, assembler_options);
-    obj.pushKV("blockmintxfee", ValueFromAmount(assembler_options.blockMinFeeRate.GetFeePerK()));
+    const auto mining_options{node::FlattenMiningOptions(node.mining_args)};
+    obj.pushKV("blockmintxfee", ValueFromAmount(CHECK_NONFATAL(mining_options.block_min_fee_rate)->GetFeePerK()));
     obj.pushKV("chain", chainman.GetParams().GetChainTypeString());
 
     UniValue next(UniValue::VOBJ);
