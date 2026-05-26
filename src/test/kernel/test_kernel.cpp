@@ -629,20 +629,20 @@ BOOST_AUTO_TEST_CASE(logging_tests)
 
     logging_set_options(logging_options);
 
-    // Behavior: logging_set_level_category does NOT enable the category; logging_enable_category
-    // is required separately. Enabling a category uses the previously-assigned level.
+    // Behavior: setting the level is sufficient to enable logging. No need for a separate enable call.
     logging_set_level_category(LogCategory::BENCH, LogLevel::TRACE_LEVEL);
-    BOOST_CHECK(!LogInstance().WillLogCategoryLevel(BCLog::BENCH, BCLog::Level::Debug)); // not yet enabled
+    BOOST_CHECK(LogInstance().WillLogCategoryLevel(BCLog::BENCH, BCLog::Level::Trace)); // enabled at Trace
     logging_disable_category(LogCategory::BENCH);
     logging_enable_category(LogCategory::VALIDATION);
     logging_disable_category(LogCategory::VALIDATION);
 
     // Check that connecting, connecting another, and then disconnecting and connecting a logger again works.
     {
-        // Set level first, then enable: the category is enabled at the previously-assigned level (Trace).
+        // Set level first, then enable. Enabling is equivalent to setting debug level.
         logging_set_level_category(LogCategory::KERNEL, LogLevel::TRACE_LEVEL);
         logging_enable_category(LogCategory::KERNEL);
-        BOOST_CHECK(LogInstance().WillLogCategoryLevel(BCLog::KERNEL, BCLog::Level::Trace));
+        BOOST_CHECK(!LogInstance().WillLogCategoryLevel(BCLog::KERNEL, BCLog::Level::Trace));
+        BOOST_CHECK(LogInstance().WillLogCategoryLevel(BCLog::KERNEL, BCLog::Level::Debug));
         Logger logger{std::make_unique<TestLog>()};
         Logger logger_2{std::make_unique<TestLog>()};
     }
