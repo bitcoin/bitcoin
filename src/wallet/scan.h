@@ -63,11 +63,23 @@ private:
     std::atomic<SteadyClock::time_point> m_scanning_start{SteadyClock::time_point{}};
     std::atomic<double> m_scanning_progress{0};
 
+    //! Progress window and tip tracked across Scan loop iterations. The
+    //! current block's progress is a plain local in Scan; only the window
+    //! bounds are shared with the helpers, and UpdateTipIfChanged is the
+    //! sole mutator.
+    struct LoopState {
+        double progress_begin{0};
+        double progress_end{0};
+        uint256 tip_hash;
+    };
+
     //! Locate block_hash in the chain, queueing its active-chain successor
     //! into next_block if it exists and is within the scan range. Returns
     //! whether the block itself is still in the active chain.
     bool QueueNextBlock(const uint256& block_hash, int block_height, std::optional<std::pair<uint256, int>>& next_block, std::optional<int> max_height);
     bool ScanBlock(const uint256& block_hash, int block_height, bool save_progress);
+    void UpdateProgress(const LoopState& state, double progress_current, int block_height);
+    void UpdateTipIfChanged(LoopState& state);
 
     //! Only WalletRescanReserver may reserve and release scans, so that
     //! reservations are always managed RAII-style.
