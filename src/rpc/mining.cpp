@@ -927,7 +927,7 @@ static RPCMethod getblocktemplate()
     UniValue transactions(UniValue::VARR);
     std::map<Txid, int64_t> setTxIndex;
     std::vector<CAmount> tx_fees{block_template->getTxFees()};
-    std::vector<CAmount> tx_sigops{block_template->getTxSigops()};
+    std::vector<int64_t> tx_sigops{block_template->getTxSigops()};
 
     int i = 0;
     for (const auto& it : block.vtx) {
