@@ -168,7 +168,7 @@ if [ -n "${CI_LIMIT_STACK_SIZE}" ]; then
 fi
 
 if [ -n "$USE_VALGRIND" ]; then
-  "${BASE_ROOT_DIR}/ci/test/wrap-valgrind.sh"
+  "${BASE_ROOT_DIR}/ci/test/wrap-valgrind.py"
 fi
 
 if [ "$RUN_CHECK_DEPS" = "true" ]; then
