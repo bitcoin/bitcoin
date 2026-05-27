@@ -905,7 +905,7 @@ void TestFlushBehavior(
     COutPoint outp = COutPoint(txid, 0);
     Coin coin = MakeCoin();
     // Ensure the coins views haven't seen this coin before.
-    BOOST_CHECK(!base.HaveCoin(outp));
+    BOOST_CHECK(!base.GetCoin(outp));
     BOOST_CHECK(!view->HaveCoin(outp));
 
     // --- 1. Adding a random coin to the child cache
@@ -916,7 +916,7 @@ void TestFlushBehavior(
     cache_size = view->map().size();
 
     // `base` shouldn't have coin (no flush yet) but `view` should have cached it.
-    BOOST_CHECK(!base.HaveCoin(outp));
+    BOOST_CHECK(!base.GetCoin(outp));
     BOOST_CHECK(view->HaveCoin(outp));
 
     BOOST_CHECK_EQUAL(GetCoinsMapEntry(view->map(), outp), CoinEntry(coin.out.nValue, CoinEntry::State::DIRTY_FRESH));
@@ -934,7 +934,7 @@ void TestFlushBehavior(
     BOOST_CHECK_EQUAL(GetCoinsMapEntry(view->map(), outp), CoinEntry(coin.out.nValue, CoinEntry::State::CLEAN)); // State should have been wiped.
 
     // Both views should now have the coin.
-    BOOST_CHECK(base.HaveCoin(outp));
+    BOOST_CHECK(base.GetCoin(outp));
     BOOST_CHECK(view->HaveCoin(outp));
 
     if (do_erasing_flush) {
@@ -967,13 +967,13 @@ void TestFlushBehavior(
     // The coin should be in the cache, but spent and marked dirty.
     BOOST_CHECK_EQUAL(GetCoinsMapEntry(view->map(), outp), SPENT_DIRTY);
     BOOST_CHECK(!view->HaveCoin(outp)); // Coin should be considered spent in `view`.
-    BOOST_CHECK(base.HaveCoin(outp));  // But coin should still be unspent in `base`.
+    BOOST_CHECK(base.GetCoin(outp));    // But coin should still be unspent in `base`.
 
     flush_all(/*erase=*/ false);
 
     // Coin should be considered spent in both views.
     BOOST_CHECK(!view->HaveCoin(outp));
-    BOOST_CHECK(!base.HaveCoin(outp));
+    BOOST_CHECK(!base.GetCoin(outp));
 
     // Spent coin should not be spendable.
     BOOST_CHECK(!view->SpendCoin(outp));
@@ -984,19 +984,19 @@ void TestFlushBehavior(
     txid = Txid::FromUint256(m_rng.rand256());
     outp = COutPoint(txid, 0);
     coin = MakeCoin();
-    BOOST_CHECK(!base.HaveCoin(outp));
+    BOOST_CHECK(!base.GetCoin(outp));
     BOOST_CHECK(!all_caches[0]->HaveCoin(outp));
     BOOST_CHECK(!all_caches[1]->HaveCoin(outp));
 
     all_caches[0]->AddCoin(outp, std::move(coin), false);
     all_caches[0]->Sync();
-    BOOST_CHECK(base.HaveCoin(outp));
+    BOOST_CHECK(base.GetCoin(outp));
     BOOST_CHECK(all_caches[0]->HaveCoin(outp));
     BOOST_CHECK(!all_caches[1]->HaveCoinInCache(outp));
 
     BOOST_CHECK(all_caches[1]->SpendCoin(outp));
     flush_all(/*erase=*/ false);
-    BOOST_CHECK(!base.HaveCoin(outp));
+    BOOST_CHECK(!base.GetCoin(outp));
     BOOST_CHECK(!all_caches[0]->HaveCoin(outp));
     BOOST_CHECK(!all_caches[1]->HaveCoin(outp));
 
@@ -1008,7 +1008,7 @@ void TestFlushBehavior(
     outp = COutPoint(txid, 0);
     coin = MakeCoin();
     CAmount coin_val = coin.out.nValue;
-    BOOST_CHECK(!base.HaveCoin(outp));
+    BOOST_CHECK(!base.GetCoin(outp));
     BOOST_CHECK(!all_caches[0]->HaveCoin(outp));
     BOOST_CHECK(!all_caches[1]->HaveCoin(outp));
 
@@ -1018,7 +1018,7 @@ void TestFlushBehavior(
     // Coin should be FRESH in the cache.
     BOOST_CHECK_EQUAL(GetCoinsMapEntry(all_caches[0]->map(), outp), CoinEntry(coin_val, CoinEntry::State::DIRTY_FRESH));
     // Base shouldn't have seen coin.
-    BOOST_CHECK(!base.HaveCoin(outp));
+    BOOST_CHECK(!base.GetCoin(outp));
 
     BOOST_CHECK(all_caches[0]->SpendCoin(outp));
     all_caches[0]->Sync();
@@ -1026,7 +1026,7 @@ void TestFlushBehavior(
     // Ensure there is no sign of the coin after spend/flush.
     BOOST_CHECK(!GetCoinsMapEntry(all_caches[0]->map(), outp));
     BOOST_CHECK(!all_caches[0]->HaveCoinInCache(outp));
-    BOOST_CHECK(!base.HaveCoin(outp));
+    BOOST_CHECK(!base.GetCoin(outp));
 }
 }; // struct FlushTest
 
@@ -1083,13 +1083,6 @@ BOOST_AUTO_TEST_CASE(ccoins_cache_behavior)
             BOOST_CHECK(out == expected);
             ++getcoin_calls;
             return Coin{CTxOut{1, CScript{}}, 1, false};
-        }
-
-        bool HaveCoin(const COutPoint& out) const override
-        {
-            BOOST_CHECK(out == expected);
-            BOOST_FAIL("Base HaveCoin should never be called");
-            return false;
         }
     };
 
