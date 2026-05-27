@@ -1068,6 +1068,44 @@ BOOST_FIXTURE_TEST_CASE(coins_db_leveldb_layout, FlushTest)
     BOOST_CHECK_EQUAL(base.GetBestBlock(), block_hash);
 }
 
+BOOST_FIXTURE_TEST_CASE(ccoins_cache_have_inputs, FlushTest)
+{
+    struct CCoinsViewSpy final : CoinsViewEmpty {
+        const Coin coin;
+        mutable int getcoin_calls{0};
+
+        explicit CCoinsViewSpy(const Coin& coin_in) : coin{coin_in} {}
+
+        std::optional<Coin> GetCoin(const COutPoint&) const noexcept override
+        {
+            ++getcoin_calls;
+            return coin;
+        }
+    };
+
+    for (bool prefilled : {false, true}) {
+        const COutPoint outpoint{Txid::FromUint256(m_rng.rand256()), 0};
+        const Coin coin{MakeCoin()};
+        CCoinsViewSpy base{coin};
+        CCoinsViewCache cache{&base};
+        if (prefilled) cache.AddCoin(outpoint, Coin{coin}, /*possible_overwrite=*/false);
+
+        CMutableTransaction mtx;
+        mtx.vin.emplace_back(outpoint);
+        const CTransaction tx{mtx};
+
+        BOOST_CHECK(cache.HaveInputs(tx));
+        BOOST_CHECK(cache.HaveInputs(tx));
+        BOOST_CHECK(cache.GetCoin(outpoint));
+        BOOST_CHECK(!cache.AccessCoin(outpoint).IsSpent());
+        BOOST_CHECK(cache.HaveCoin(outpoint));
+        BOOST_CHECK(cache.HaveCoinInCache(outpoint));
+        BOOST_CHECK(cache.SpendCoin(outpoint));
+        BOOST_CHECK(!cache.HaveCoinInCache(outpoint));
+        BOOST_CHECK_EQUAL(base.getcoin_calls, prefilled ? 0 : 1);
+    }
+}
+
 BOOST_AUTO_TEST_CASE(coins_resource_is_used)
 {
     CCoinsMapMemoryResource resource;
