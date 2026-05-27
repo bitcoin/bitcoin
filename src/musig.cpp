@@ -100,7 +100,6 @@ public:
 
     secp256k1_musig_secnonce* Get() const { return m_nonce.get(); }
     void Invalidate() { m_nonce.reset(); }
-    bool IsValid() { return m_nonce != nullptr; }
 };
 
 MuSig2SecNonce::MuSig2SecNonce() : m_impl{std::make_unique<MuSig2SecNonceImpl>()} {}
@@ -117,12 +116,8 @@ secp256k1_musig_secnonce* MuSig2SecNonce::Get() const
 
 void MuSig2SecNonce::Invalidate()
 {
-    return m_impl->Invalidate();
-}
-
-bool MuSig2SecNonce::IsValid()
-{
-    return m_impl->IsValid();
+    m_has_nonce = false;
+    m_impl->Invalidate();
 }
 
 uint256 MuSig2SessionID(const CPubKey& script_pubkey, const CPubKey& part_pubkey, const uint256& sighash)
@@ -162,6 +157,7 @@ std::vector<uint8_t> CreateMuSig2Nonce(MuSig2SecNonce& secnonce, const uint256& 
         return {};
     }
 
+    secnonce.m_has_nonce = true;
     return out;
 }
 

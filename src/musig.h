@@ -39,8 +39,11 @@ CExtPubKey CreateMuSig2SyntheticXpub(const CPubKey& pubkey);
 */
 class MuSig2SecNonce
 {
+    friend std::vector<uint8_t> CreateMuSig2Nonce(MuSig2SecNonce& secnonce, const uint256& sighash, const CKey& our_seckey, const CPubKey& aggregate_pubkey, const std::vector<CPubKey>& pubkeys);
+
 private:
     std::unique_ptr<MuSig2SecNonceImpl> m_impl;
+    bool m_has_nonce{false};
 
 public:
     MuSig2SecNonce();
@@ -54,7 +57,8 @@ public:
 
     secp256k1_musig_secnonce* Get() const;
     void Invalidate();
-    bool IsValid();
+    //! True after a successful CreateMuSig2Nonce until Invalidate().
+    bool HasNonce() const { return m_has_nonce; }
 };
 
 uint256 MuSig2SessionID(const CPubKey& script_pubkey, const CPubKey& part_pubkey, const uint256& sighash);

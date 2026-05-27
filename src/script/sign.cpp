@@ -172,15 +172,15 @@ bool MutableTransactionSignatureCreator::CreateMuSig2PartialSig(const SigningPro
     // Retrieve the secnonce
     uint256 session_id = MuSig2SessionID(script_pubkey, part_pubkey, *sighash);
     std::optional<std::reference_wrapper<MuSig2SecNonce>> secnonce = provider.GetMuSig2SecNonce(session_id);
-    if (!secnonce || !secnonce->get().IsValid()) return false;
+    if (!secnonce || !secnonce->get().HasNonce()) return false;
 
     // Compute the sig
     std::optional<uint256> sig = ::CreateMuSig2PartialSig(*sighash, key, aggregate_pubkey, pubkeys, pubnonces, *secnonce, tweaks);
     if (!sig) return false;
     partial_sig = std::move(*sig);
 
-    // Delete the secnonce now that we're done with it
-    assert(!secnonce->get().IsValid());
+    // Delete the MuSig2 session from the provider now that the secnonce is invalidated
+    assert(!secnonce->get().HasNonce());
     provider.DeleteMuSig2Session(session_id);
 
     return true;
