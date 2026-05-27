@@ -451,6 +451,7 @@ CBlock TestChain100Setup::CreateBlock(
     auto block_template{mining->createNewBlock({
         .use_mempool = false,
         .coinbase_output_script = scriptPubKey,
+        .always_add_coinbase_commitment = true,
     }, /*cooldown=*/false)};
     Assert(block_template);
     CBlock block{block_template->getBlock()};

@@ -58,6 +58,7 @@ FUZZ_TARGET(utxo_total_supply)
         // Use OP_FALSE to avoid BIP30 check from hitting early
         auto block = PrepareBlock(node, {
             .coinbase_output_script = CScript() << OP_FALSE,
+            .always_add_coinbase_commitment = true,
         });
         // Replace OP_FALSE with OP_TRUE
         {

@@ -84,6 +84,11 @@ struct BlockCreateOptions {
      * coinbase_max_additional_weight and coinbase_output_max_additional_sigops.
      */
     CScript coinbase_output_script{CScript() << OP_TRUE};
+    /*
+     * Whether blocks without SegWit transactions (e.g. empty blocks) should
+     * have a SegWit commitment, i.e. the coinbase witness and OP_RETURN.
+     */
+    bool always_add_coinbase_commitment{false};
     /**
      * Whether to call TestBlockValidity() at the end of CreateNewBlock().
      * Should only be used for tests / benchmarks.

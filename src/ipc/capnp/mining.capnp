@@ -44,6 +44,7 @@ struct BlockCreateOptions $Proxy.wrap("node::BlockCreateOptions") {
     useMempool @0 :Bool = true $Proxy.name("use_mempool");
     blockReservedWeight @1 :UInt64 = .defaultBlockReservedWeight $Proxy.name("block_reserved_weight");
     coinbaseOutputMaxAdditionalSigops @2 :UInt64 = .defaultCoinbaseOutputMaxAdditionalSigops $Proxy.name("coinbase_output_max_additional_sigops");
+    alwaysAddCoinbaseCommitment @3 :Bool = false $Proxy.name("always_add_coinbase_commitment");
 }
 
 struct BlockWaitOptions $Proxy.wrap("node::BlockWaitOptions") {

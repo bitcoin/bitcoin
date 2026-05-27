@@ -204,7 +204,12 @@ std::unique_ptr<CBlockTemplate> BlockAssembler::CreateNewBlock()
     coinbase_tx.lock_time = coinbaseTx.nLockTime;
 
     pblock->vtx[0] = MakeTransactionRef(std::move(coinbaseTx));
-    m_chainstate.m_chainman.GenerateCoinbaseCommitment(*pblock, pindexPrev);
+    if (m_options.always_add_coinbase_commitment || std::any_of(
+        pblock->vtx.begin(), pblock->vtx.end(),
+        [](const CTransactionRef& tx) { return tx->HasWitness(); }
+    )) {
+        m_chainstate.m_chainman.GenerateCoinbaseCommitment(*pblock, pindexPrev);
+    }
 
     const CTransactionRef& final_coinbase{pblock->vtx[0]};
     if (final_coinbase->HasWitness()) {
