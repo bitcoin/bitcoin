@@ -6,9 +6,9 @@
 
 #include <chain.h>
 #include <crc32c/include/crc32c/crc32c.h>
+#include <crypto/common.h>
 #include <kernel/cs_main.h>
 #include <logging.h>
-#include <node/blockstorage.h>
 #include <pow.h>
 #include <serialize.h>
 #include <span.h>
@@ -23,6 +23,7 @@
 #include <util/time.h>
 
 #include <array>
+#include <compare>
 #include <cstddef>
 #include <cstdio>
 #include <exception>
@@ -116,6 +117,11 @@ WriterLock::WriterLock(const fs::path& dir) : m_dir{dir}
 }
 
 WriterLock::~WriterLock() { UnlockDirectory(m_dir, WRITER_LOCK_NAME); }
+
+std::string CBlockFileInfo::ToString() const
+{
+    return strprintf("CBlockFileInfo(blocks=%u, size=%u, heights=%u...%u, time=%s...%s)", nBlocks, nSize, nHeightFirst, nHeightLast, FormatISO8601Date(nTimeFirst), FormatISO8601Date(nTimeLast));
+}
 
 static FilePosition CalculateBlockFileInfoPosition(int file_index)
 {
