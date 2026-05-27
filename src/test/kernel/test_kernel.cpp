@@ -4,6 +4,7 @@
 
 #include <kernel/bitcoinkernel.h>
 #include <kernel/bitcoinkernel_wrapper.h>
+#include <logging.h>
 #include <util/fs.h>
 
 #define BOOST_TEST_MODULE Bitcoin Kernel Test Suite
@@ -617,6 +618,7 @@ BOOST_AUTO_TEST_CASE(btck_script_verify_tests)
 
 BOOST_AUTO_TEST_CASE(logging_tests)
 {
+    using btck::LogCategory; // Avoid ambiguity with LogCategory struct from logging.h
     btck_LoggingOptions logging_options = {
         .log_timestamps = true,
         .log_time_micros = true,
@@ -626,15 +628,21 @@ BOOST_AUTO_TEST_CASE(logging_tests)
     };
 
     logging_set_options(logging_options);
+
+    // Behavior: logging_set_level_category does NOT enable the category; logging_enable_category
+    // is required separately. Enabling a category uses the previously-assigned level.
     logging_set_level_category(LogCategory::BENCH, LogLevel::TRACE_LEVEL);
+    BOOST_CHECK(!LogInstance().WillLogCategoryLevel(BCLog::BENCH, BCLog::Level::Debug)); // not yet enabled
     logging_disable_category(LogCategory::BENCH);
     logging_enable_category(LogCategory::VALIDATION);
     logging_disable_category(LogCategory::VALIDATION);
 
     // Check that connecting, connecting another, and then disconnecting and connecting a logger again works.
     {
+        // Set level first, then enable: the category is enabled at the previously-assigned level (Trace).
         logging_set_level_category(LogCategory::KERNEL, LogLevel::TRACE_LEVEL);
         logging_enable_category(LogCategory::KERNEL);
+        BOOST_CHECK(LogInstance().WillLogCategoryLevel(BCLog::KERNEL, BCLog::Level::Trace));
         Logger logger{std::make_unique<TestLog>()};
         Logger logger_2{std::make_unique<TestLog>()};
     }
