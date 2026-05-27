@@ -37,6 +37,17 @@ The output will look similar to:
 ...
 ```
 
+In many cases, comparing benchmarks across commits is useful to see if any
+regressions occur. For example, to run benchmarks against the master branch,
+filtering on benchmarks that contain the string `MemPool`:
+
+    BASE=$(git merge-base master HEAD) && \
+    git checkout --detach --quiet "$BASE" && \
+    cmake --build build && \
+    build/bin/bench_bitcoin -filter='.*MemPool.*' && \
+    git checkout --quiet - && \
+    git rebase -i --exec "cmake --build build && build/bin/bench_bitcoin -filter='.*MemPool.*'" "$BASE"
+
 Help
 ---------------------
 
