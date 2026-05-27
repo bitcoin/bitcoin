@@ -11,6 +11,7 @@
 #include <util/strencodings.h>
 #include <crypto/hex_base.h>
 
+#include <map>
 #include <string>
 #include <vector>
 
@@ -113,6 +114,32 @@ BOOST_AUTO_TEST_CASE(invalid_key)
     // Aggregate public keys
     std::optional<CPubKey> m_aggregate_pubkey = MuSig2AggregatePubkeys(pubkeys);
     BOOST_CHECK_MESSAGE(!m_aggregate_pubkey.has_value(), "Aggregate key with an invalid public key is null");
+}
+
+BOOST_AUTO_TEST_CASE(partial_sig_requires_generated_secnonce)
+{
+    const std::vector<std::string> hex_pubkeys{
+        "03935F972DA013F80AE011890FA89B67A27B7BE6CCB24D3274D18B2D4067F261A9",
+        "02F9308A019258C31049344F85F89D5229B531C845836F99B08601F113BCE036F9",
+    };
+    std::vector<CPubKey> pubkeys;
+    for (const auto& hex_pubkey : hex_pubkeys) {
+        const std::vector<unsigned char> data{ParseHex(hex_pubkey)};
+        pubkeys.emplace_back(data.begin(), data.end());
+    }
+
+    const std::optional<CPubKey> aggregate{MuSig2AggregatePubkeys(pubkeys)};
+    BOOST_REQUIRE(aggregate.has_value());
+
+    CKey key;
+    key.MakeNewKey(true);
+
+    MuSig2SecNonce secnonce;
+    BOOST_CHECK(!secnonce.HasNonce());
+    const std::map<CPubKey, std::vector<uint8_t>> pubnonces;
+    const std::optional<uint256> partial_sig{CreateMuSig2PartialSig(
+        uint256::ZERO, key, *aggregate, pubkeys, pubnonces, secnonce, {})};
+    BOOST_CHECK(!partial_sig.has_value());
 }
 
 BOOST_AUTO_TEST_SUITE_END()
