@@ -163,6 +163,10 @@ std::vector<uint8_t> CreateMuSig2Nonce(MuSig2SecNonce& secnonce, const uint256& 
 
 std::optional<uint256> CreateMuSig2PartialSig(const uint256& sighash, const CKey& our_seckey, const CPubKey& aggregate_pubkey, const std::vector<CPubKey>& pubkeys, const std::map<CPubKey, std::vector<uint8_t>>& pubnonces, MuSig2SecNonce& secnonce, const std::vector<std::pair<uint256, bool>>& tweaks)
 {
+    if (!secnonce.HasNonce()) {
+        return std::nullopt;
+    }
+
     secp256k1_keypair keypair;
     if (!secp256k1_keypair_create(GetSecp256k1SignContext(), &keypair, UCharCast(our_seckey.begin()))) return std::nullopt;
 
