@@ -6,7 +6,7 @@
 #include <consensus/amount.h>
 #include <consensus/consensus.h>
 #include <consensus/validation.h>
-#include <node/mining_types.h> // IWYU pragma: keep
+#include <node/mining_types.h>
 #include <policy/feerate.h>
 #include <policy/packages.h>
 #include <policy/policy.h>
