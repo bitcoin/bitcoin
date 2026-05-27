@@ -89,6 +89,14 @@ For example, in PowerShell:
 $env:PYTHONUTF8 = 1
 ```
 
+#### Other dependencies
+
+##### `lsof`
+
+Required for some network tests.
+
+The availability of the `lsof` command depends on your operating system.
+
 ### Running the tests
 
 Individual tests can be run by directly calling the test script, e.g.:
