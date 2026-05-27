@@ -151,7 +151,8 @@ private:
     std::vector<uint8_t> m_cookie;
     /** ClientNonce for SAFECOOKIE auth */
     std::vector<uint8_t> m_client_nonce;
-    /** Main control thread */
+
+    /// \anchor torcontrol
     void ThreadControl();
 
 public:

@@ -74,6 +74,7 @@ static GlobalMutex g_httppathhandlers_mutex;
 static std::vector<HTTPPathHandler> pathHandlers GUARDED_BY(g_httppathhandlers_mutex);
 //! Bound listening sockets
 static std::vector<evhttp_bound_socket *> boundSockets;
+/// \anchor http_pool
 //! Http thread pool - future: encapsulate in HttpContext
 static ThreadPool g_threadpool_http("http");
 static int g_max_queue_depth{100};
@@ -295,6 +296,7 @@ static void http_reject_request_cb(struct evhttp_request* req, void*)
     evhttp_send_error(req, HTTP_SERVUNAVAIL, nullptr);
 }
 
+/// \anchor http
 /** Event dispatcher thread */
 static void ThreadHTTP(struct event_base* base)
 {
