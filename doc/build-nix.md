@@ -1,8 +1,7 @@
 # Getting Nix
 
-[Nix](https://nix.dev) is a declarative package manager from the
-[NixOS](https://nixos.org) project. [Download Nix](https://nixos.org/download)
-and follow the [manual](https://nix.dev/manual/nix/latest) to install it.
+Nix is a declarative package manager from the NixOS project. Download Nix and
+follow the manual to install it.
 
 # Development environment
 
