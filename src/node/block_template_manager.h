@@ -15,16 +15,23 @@ class CTxMemPool;
 namespace node {
 struct CBlockTemplate;
 
-/** Creates block templates. */
+/** Creates block templates.
+ *  Owns the init-time block creation args.
+ */
 class BlockTemplateManager
 {
 private:
     CTxMemPool& m_mempool;
     ChainstateManager& m_chainman;
+    const BlockCreateOptions m_block_create_args;
 
 public:
     explicit BlockTemplateManager(CTxMemPool& mempool,
-                                  ChainstateManager& chainman);
+                                  ChainstateManager& chainman,
+                                  BlockCreateOptions block_create_args = {});
+
+    /** @return the block creation args set during node init. */
+    const BlockCreateOptions& BlockCreateArgs() const { return m_block_create_args; }
 
     /** Create a fresh block template. */
     std::unique_ptr<CBlockTemplate> CreateNewTemplate(const BlockCreateOptions& options);
