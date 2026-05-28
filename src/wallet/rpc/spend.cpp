@@ -1498,7 +1498,7 @@ RPCMethod sendall()
                     if (output.depth == 0 && coin_control.m_version == TRUC_VERSION) {
                         coin_control.m_max_tx_weight = TRUC_CHILD_MAX_WEIGHT;
                     }
-                    CTxIn input(output.outpoint.hash, output.outpoint.n, CScript(), rbf ? MAX_BIP125_RBF_SEQUENCE : CTxIn::SEQUENCE_FINAL);
+                    CTxIn input(output.outpoint.hash, output.outpoint.n, CScript(), rbf ? MAX_BIP125_RBF_SEQUENCE : CTxIn::MAX_SEQUENCE_NONFINAL);
                     rawTx.vin.push_back(input);
                     total_input_value += output.txout.nValue;
                 }
