@@ -291,7 +291,6 @@ void MasternodeList::on_checkBoxOwned_stateChanged(int state)
 void MasternodeList::on_checkBoxHideBanned_stateChanged(int state)
 {
     const bool hide_banned{state == Qt::Checked};
-    ui->tableViewMasternodes->setColumnHidden(MasternodeModel::POSE, hide_banned);
     m_proxy_model->setHideBanned(hide_banned);
     m_proxy_model->forceInvalidateFilter();
     updateFilteredCount();
