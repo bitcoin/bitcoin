@@ -168,6 +168,7 @@ class PSBT:
                 PSBT_GLOBAL_INPUT_COUNT: self.g.map[PSBT_GLOBAL_INPUT_COUNT],
                 PSBT_GLOBAL_OUTPUT_COUNT: self.g.map[PSBT_GLOBAL_OUTPUT_COUNT],
                 PSBT_GLOBAL_VERSION: self.g.map[PSBT_GLOBAL_VERSION],
+                PSBT_GLOBAL_FALLBACK_LOCKTIME: self.g.map[PSBT_GLOBAL_FALLBACK_LOCKTIME],
             })
 
             new_i = []
