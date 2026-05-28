@@ -37,4 +37,9 @@ if(BUILD_TESTING AND TARGET CapnProto::kj-test)
 
   add_dependencies(mptests mptest)
   add_test(NAME mptest COMMAND mptest)
+
+  # Exclude from compilation database because test includes generated .capnp.h
+  # files that don't exist at CMake configure time, causing IWYU to fail.
+  set_target_properties(mptest
+      PROPERTIES EXPORT_COMPILE_COMMANDS OFF)
 endif()
