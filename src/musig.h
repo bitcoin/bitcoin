@@ -33,10 +33,16 @@ CExtPubKey CreateMuSig2SyntheticXpub(const CPubKey& pubkey);
  * The secret nonce must be kept a secret, otherwise the private key may be leaked.
  * As such, it needs to be treated in the same way that CKeys are treated.
  * So this class handles the secure allocation of the secp256k1_musig_secnonce object
- * that libsecp256k1 uses, and only gives out references to this object to avoid
- * any possibility of copies being made. Furthermore, objects of this class are not
- * copyable to avoid nonce reuse.
-*/
+ * that libsecp256k1 uses. Furthermore, objects of this class are not copyable to
+ * avoid nonce reuse.
+ *
+ * Use CreateMuSig2Nonce and CreateMuSig2PartialSig for signing. Get() exposes the
+ * underlying libsecp256k1 object and must not be used for signing outside those
+ * helpers.
+ *
+ * HasNonce() is true only after a successful CreateMuSig2Nonce on this object, and
+ * false after Invalidate() (e.g. following CreateMuSig2PartialSig).
+ */
 class MuSig2SecNonce
 {
     friend std::vector<uint8_t> CreateMuSig2Nonce(MuSig2SecNonce& secnonce, const uint256& sighash, const CKey& our_seckey, const CPubKey& aggregate_pubkey, const std::vector<CPubKey>& pubkeys);
