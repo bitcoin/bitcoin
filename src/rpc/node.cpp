@@ -383,7 +383,7 @@ static RPCMethod getindexinfo()
                     HelpExampleCli("getindexinfo", "")
                   + HelpExampleRpc("getindexinfo", "")
                   + HelpExampleCli("getindexinfo", "txindex")
-                  + HelpExampleRpc("getindexinfo", "txindex")
+                  + HelpExampleRpc("getindexinfo", "\"txindex\"")
                 },
                 [](const RPCMethod& self, const JSONRPCRequest& request) -> UniValue
 {

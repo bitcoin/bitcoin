@@ -15,6 +15,7 @@
 #include <util/time.h>
 
 #include <any>
+#include <string>
 #include <string_view>
 
 #include <boost/test/unit_test.hpp>
@@ -133,6 +134,31 @@ BOOST_AUTO_TEST_CASE(rpc_namedonlyparams)
     // Make sure options object specified through args array conflicts.
     BOOST_CHECK_EXCEPTION(TransformParams(JSON(R"({"args": [1, 2, {"opt1": 10}], "opt2": 20})"), arg_names), UniValue,
                           HasJSON(R"({"code":-8,"message":"Parameter options specified twice both as positional and named argument"})"));
+}
+
+BOOST_AUTO_TEST_CASE(rpc_help_examples_parse)
+{
+    const std::string marker{"--data-binary '"};
+    const std::string suffix{"' -H 'content-type:"};
+    JSONRPCRequest request;
+    request.context = &m_node;
+
+    for (const auto& command : tableRPC.listCommands()) {
+        const std::string help{tableRPC.help(command, request)};
+        size_t search_pos{0};
+        while (true) {
+            const size_t marker_pos{help.find(marker, search_pos)};
+            if (marker_pos == std::string::npos) break;
+            const size_t json_begin{marker_pos + marker.size()};
+            const size_t json_end{help.find(suffix, json_begin)};
+            BOOST_REQUIRE_MESSAGE(json_end != std::string::npos, command);
+
+            const std::string json{help.substr(json_begin, json_end - json_begin)};
+            UniValue value;
+            BOOST_CHECK_MESSAGE(value.read(json), command + ": " + json);
+            search_pos = json_end + suffix.size();
+        }
+    }
 }
 
 BOOST_AUTO_TEST_CASE(rpc_rawparams)
