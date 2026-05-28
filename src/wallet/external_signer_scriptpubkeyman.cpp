@@ -21,28 +21,35 @@
 using common::PSBTError;
 
 namespace wallet {
-bool ExternalSignerScriptPubKeyMan::SetupDescriptor(WalletBatch& batch, std::unique_ptr<Descriptor> desc)
+std::unique_ptr<ExternalSignerScriptPubKeyMan> ExternalSignerScriptPubKeyMan::LoadFromStorage(WalletStorage& storage, WalletDescriptor& descriptor, int64_t keypool_size, const KeyMap& keys, const CryptedKeyMap& ckeys)
 {
-    LOCK(cs_desc_man);
-    assert(m_storage.IsWalletFlagSet(WALLET_FLAG_DESCRIPTORS));
-    assert(m_storage.IsWalletFlagSet(WALLET_FLAG_EXTERNAL_SIGNER));
+    return std::unique_ptr<ExternalSignerScriptPubKeyMan>(new ExternalSignerScriptPubKeyMan(storage, descriptor, keypool_size, keys, ckeys));
+}
+
+std::unique_ptr<ExternalSignerScriptPubKeyMan> ExternalSignerScriptPubKeyMan::CreateNew(WalletStorage& storage, WalletBatch& batch, int64_t keypool_size, std::unique_ptr<Descriptor> desc)
+{
+    auto spkm = std::unique_ptr<ExternalSignerScriptPubKeyMan>(new ExternalSignerScriptPubKeyMan(storage, keypool_size));
+
+    LOCK(spkm->cs_desc_man);
+    assert(storage.IsWalletFlagSet(WALLET_FLAG_DESCRIPTORS));
+    assert(storage.IsWalletFlagSet(WALLET_FLAG_EXTERNAL_SIGNER));
 
     int64_t creation_time = GetTime();
 
     // Make the descriptor
     WalletDescriptor w_desc(std::move(desc), creation_time, 0, 0, 0);
-    m_wallet_descriptor = w_desc;
+    spkm->m_wallet_descriptor = w_desc;
 
     // Store the descriptor
-    if (!batch.WriteDescriptor(GetID(), m_wallet_descriptor)) {
+    if (!batch.WriteDescriptor(spkm->GetID(), spkm->m_wallet_descriptor)) {
         throw std::runtime_error(std::string(__func__) + ": writing descriptor failed");
     }
 
     // TopUp
-    TopUpWithDB(batch);
+    spkm->TopUpWithDB(batch);
 
-    m_storage.UnsetBlankWalletFlag(batch);
-    return true;
+    storage.UnsetBlankWalletFlag(batch);
+    return spkm;
 }
 
  util::Result<ExternalSigner> ExternalSignerScriptPubKeyMan::GetExternalSigner() {

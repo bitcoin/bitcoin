@@ -70,6 +70,13 @@ static std::optional<std::pair<WalletDescriptor, FlatSigningProvider>> CreateWal
     std::vector<std::unique_ptr<Descriptor>> parsed_descs = Parse(desc_str.value(), keys, error, false);
     if (parsed_descs.empty()) return std::nullopt;
 
+    // Verify expand succeeds before making WalletDescriptor
+    // Expansion results are not needed
+    FlatSigningProvider out_keys;
+    std::vector<CScript> scripts_temp;
+    DescriptorCache temp_cache;
+    if (!parsed_descs.at(0)->Expand(0, keys, scripts_temp, out_keys, &temp_cache)) return std::nullopt;
+
     WalletDescriptor w_desc{std::move(parsed_descs.at(0)), /*creation_time=*/0, /*range_start=*/0, /*range_end=*/1, /*next_index=*/1};
     return std::make_pair(w_desc, keys);
 }
@@ -235,6 +242,7 @@ FUZZ_TARGET(spkm_migration, .init = initialize_spkm_migration)
         if (legacy_data.LoadKey(key, pub_key) && std::find(keys.begin(), keys.end(), key) == keys.end()) keys.push_back(key);
     }
 
+    size_t added_chains = 0;
     bool add_hd_chain{fuzzed_data_provider.ConsumeBool() && !keys.empty()};
     CHDChain hd_chain;
     auto version{fuzzed_data_provider.ConsumeBool() ? CHDChain::VERSION_HD_CHAIN_SPLIT : CHDChain::VERSION_HD_BASE};
@@ -244,14 +252,17 @@ FUZZ_TARGET(spkm_migration, .init = initialize_spkm_migration)
         hd_chain.nVersion = version;
         hd_chain.seed_id = hd_key.GetPubKey().GetID();
         legacy_data.LoadHDChain(hd_chain);
+        added_chains++;
     }
 
     bool add_inactive_hd_chain{fuzzed_data_provider.ConsumeBool() && !keys.empty()};
     if (add_inactive_hd_chain) {
         hd_key = PickValue(fuzzed_data_provider, keys);
         hd_chain.nVersion = fuzzed_data_provider.ConsumeBool() ? CHDChain::VERSION_HD_CHAIN_SPLIT : CHDChain::VERSION_HD_BASE;
+        bool dup_chain = hd_chain.seed_id == hd_key.GetPubKey().GetID();
         hd_chain.seed_id = hd_key.GetPubKey().GetID();
         legacy_data.AddInactiveHDChain(hd_chain);
+        if (!dup_chain) added_chains++;
     }
 
     bool watch_only = false;
@@ -329,7 +340,6 @@ FUZZ_TARGET(spkm_migration, .init = initialize_spkm_migration)
 
     auto result{legacy_data.MigrateToDescriptor()};
     assert(result);
-    size_t added_chains{static_cast<size_t>(add_hd_chain) + static_cast<size_t>(add_inactive_hd_chain)};
     if ((add_hd_chain && version >= CHDChain::VERSION_HD_CHAIN_SPLIT) || (!add_hd_chain && add_inactive_hd_chain)) {
         added_chains *= 2;
     }
