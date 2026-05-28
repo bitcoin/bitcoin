@@ -111,10 +111,15 @@ class IPCMiningTest(BitcoinTestFramework):
         coinbase_tx.nLockTime = coinbase_res.lockTime
         return coinbase_tx
 
-    async def build_candidate_block(self, template, ctx):
-        """Build a complete block from a remote BlockTemplate."""
+    async def build_candidate_block(self, template, ctx, extra_nonce=b""):
+        """Build a complete block from a remote BlockTemplate.
+
+        The returned block replaces the dummy coinbase from CreateNewBlock()
+        with one constructed from getCoinbaseTx().
+        """
         block = await mining_get_block(template, ctx)
-        coinbase = await self.build_coinbase_test(template, ctx, self.miniwallet)
+        coinbase = await self.build_coinbase_test(
+            template, ctx, self.miniwallet, extra_nonce=extra_nonce)
         # Reduce payout for balance comparison simplicity.
         coinbase.vout[0].nValue = COIN
         block.vtx[0] = coinbase
@@ -621,6 +626,31 @@ class IPCMiningTest(BitcoinTestFramework):
                 self.log.debug("submitSolution should accept the duplicate block")
                 submitted = (await template2.submitSolution(ctx2, duplicate_block.nVersion, duplicate_block.nTime, duplicate_block.nNonce, duplicate_coinbase.serialize())).result
                 assert_equal(submitted, True)
+            self.sync_all()
+
+            self.log.debug("submitBlock should report inconclusive for a valid stale block")
+            async with AsyncExitStack() as stack:
+                active_template = await mining_create_block_template(
+                    mining2, stack, ctx2, self.default_block_create_options)
+                submit_block_template = await mining_create_block_template(
+                    mining2, stack, ctx2, self.default_block_create_options)
+                assert active_template is not None
+                assert submit_block_template is not None
+
+                active_block = await self.build_candidate_block(
+                    active_template, ctx2, extra_nonce=b"\x01")
+                submit_block = await self.build_candidate_block(
+                    submit_block_template, ctx2, extra_nonce=b"\x02")
+                active_block.solve()
+                submit_block.solve()
+
+                # Both templates share a parent. The first block becomes active,
+                # so the remaining valid block is accepted as stale.
+                await self.assert_submit_block(
+                    mining2, ctx2, active_block, result=True)
+
+                await self.assert_submit_block(
+                    mining2, ctx2, submit_block, result=False, reason="inconclusive")
             self.sync_all()
 
             self.log.debug("Submit the same invalid block twice")

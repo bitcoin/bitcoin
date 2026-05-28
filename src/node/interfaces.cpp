@@ -1031,7 +1031,9 @@ public:
         // ProcessNewBlock() can accept and store a block before it is checked
         // for validity. Treat duplicates as errors for mining clients, and only
         // return success when validation completed without setting a reason.
-        return accepted && new_block && reason.empty();
+        const bool result{accepted && new_block && reason.empty()};
+        CHECK_NONFATAL(result == reason.empty());
+        return result;
     }
 
     const NodeContext* context() override { return &m_node; }
