@@ -998,8 +998,9 @@ public:
             // Also wait during the final catch-up moments after IBD.
             if (!CooldownIfHeadersAhead(chainman(), notifications(), *maybe_tip, m_interrupt_mining)) return {};
         }
-        const BlockCreateOptions create_options{MergeMiningOptions(options, m_node.mining_args)};
-        auto new_template = Assert(m_node.block_template_cache)->GetBlockTemplate(create_options, std::nullopt);
+        auto& cache = *Assert(m_node.block_template_cache);
+        const BlockCreateOptions create_options{MergeMiningOptions(options, cache.GetInitBlockCreateOptions())};
+        auto new_template = cache.GetBlockTemplate(create_options, std::nullopt);
         return std::make_unique<BlockTemplateImpl>(create_options, std::move(new_template), m_node);
     }
 

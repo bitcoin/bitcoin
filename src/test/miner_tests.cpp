@@ -204,7 +204,7 @@ void MinerTestingSetup::TestPackageSelection(const CScript& scriptPubKey, const 
     const auto block_package_feerates = BlockAssembler{
         m_node.chainman->ActiveChainstate(),
         &tx_mempool,
-        m_node.mining_args,
+        m_node.block_template_cache->GetInitBlockCreateOptions(),
     }.CreateNewBlock()->m_package_feerates;
     BOOST_CHECK(block_package_feerates.size() == 2);
 
@@ -986,7 +986,7 @@ BOOST_AUTO_TEST_CASE(blocktemplate_cache)
     check_cache(/*expect_hit=*/false, opts_6, 2ms);
     template_cache->SanityCheck();
     // Exceeding the cache size limit evicts the oldest template.
-    node::BlockTemplateCache fifo_cache{*m_node.mempool, *m_node.chainman, /*block_template_cache_limit=*/2};
+    node::BlockTemplateCache fifo_cache{*m_node.mempool, *m_node.chainman, {}, /*block_template_cache_limit=*/2};
     const auto max_age{MillisecondsDouble::max()};
     const auto template_time = [](const node::BlockTemplateRef& block_template) {
         return block_template->m_creation_time;

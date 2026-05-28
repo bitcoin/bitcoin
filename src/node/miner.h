@@ -166,6 +166,7 @@ class BlockTemplateCache : public CValidationInterface
 private:
     CTxMemPool& m_mempool;
     ChainstateManager& m_chainman;
+    const BlockCreateOptions m_init_block_create_options;
     const size_t m_block_template_cache_limit;
     mutable Mutex m_mutex;
     // FIFO cache; at most one template per BlockCreateOptions.
@@ -174,8 +175,12 @@ private:
 public:
     explicit BlockTemplateCache(CTxMemPool& mempool,
                                 ChainstateManager& chainman,
+                                BlockCreateOptions init_block_create_options = {},
                                 size_t block_template_cache_limit = DEFAULT_BLOCK_TEMPLATE_CACHE_LIMIT);
     virtual ~BlockTemplateCache() = default;
+    /** Return a copy of the block create options set during node init. */
+    BlockCreateOptions GetInitBlockCreateOptions() const { return m_init_block_create_options; }
+
     /**
      * Get a block template from the cache or create a new one.
      *

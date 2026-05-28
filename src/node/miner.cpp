@@ -355,8 +355,12 @@ static bool AgeWithinLimit(
     return true;
 }
 
-BlockTemplateCache::BlockTemplateCache(CTxMemPool& mempool, ChainstateManager& chainman, size_t block_template_cache_limit)
-    : m_mempool(mempool), m_chainman(chainman), m_block_template_cache_limit(block_template_cache_limit)
+BlockTemplateCache::BlockTemplateCache(CTxMemPool& mempool, ChainstateManager& chainman,
+                                       BlockCreateOptions init_block_create_options,
+                                       size_t block_template_cache_limit)
+    : m_mempool(mempool), m_chainman(chainman),
+      m_init_block_create_options(std::move(init_block_create_options)),
+      m_block_template_cache_limit(block_template_cache_limit)
 {
 }
 

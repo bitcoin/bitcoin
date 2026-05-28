@@ -1335,9 +1335,6 @@ static ChainstateLoadResult InitAndLoadChainstate(
     if (!mempool_error.empty()) {
         return {ChainstateLoadStatus::FAILURE_FATAL, mempool_error};
     }
-    auto mining_args{node::ReadMiningArgs(args)};
-    Assert(mining_args); // no error can happen, already checked in AppInitParameterInteraction
-    node.mining_args = std::move(*mining_args);
     LogInfo("* Using %.1f MiB for in-memory UTXO set (plus up to %.1f MiB of unused mempool space)",
             cache_sizes.coins / double(1_MiB),
             mempool_opts.max_size_bytes / double(1_MiB));
@@ -1906,8 +1903,9 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
 
     ChainstateManager& chainman = *Assert(node.chainman);
     auto& kernel_notifications{*Assert(node.notifications)};
-
-    node.block_template_cache = std::make_unique<node::BlockTemplateCache>(*node.mempool, chainman);
+    auto mining_args{node::ReadMiningArgs(args)};
+    Assert(mining_args); // no error can happen, already checked in AppInitParameterInteraction
+    node.block_template_cache = std::make_unique<node::BlockTemplateCache>(*node.mempool, chainman, std::move(*mining_args));
     validation_signals.RegisterValidationInterface(node.block_template_cache.get());
 
     assert(!node.peerman);

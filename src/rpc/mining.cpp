@@ -502,7 +502,7 @@ static RPCMethod getmininginfo()
     obj.pushKV("target", GetTarget(tip, chainman.GetConsensus().powLimit).GetHex());
     obj.pushKV("networkhashps",    getnetworkhashps().HandleRequest(request));
     obj.pushKV("pooledtx", mempool.size());
-    const auto mining_options{node::FlattenMiningOptions(node.mining_args)};
+    const auto mining_options{node::FlattenMiningOptions(CHECK_NONFATAL(node.block_template_cache)->GetInitBlockCreateOptions())};
     obj.pushKV("blockmintxfee", ValueFromAmount(CHECK_NONFATAL(mining_options.block_min_fee_rate)->GetFeePerK()));
     obj.pushKV("chain", chainman.GetParams().GetChainTypeString());
 

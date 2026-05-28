@@ -8,6 +8,7 @@
 #include <kernel/chain.h>
 #include <kernel/types.h>
 #include <node/context.h>
+#include <primitives/block.h>
 #include <test/util/mining.h>
 #include <test/util/setup_common.h>
 #include <wallet/context.h>
