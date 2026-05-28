@@ -324,6 +324,7 @@ class IPCMiningTest(BitcoinTestFramework):
         # blockReservedWeight per template request and are unaffected; later in
         # the test the IPC template includes a mempool transaction.
         self.restart_node(0, extra_args=[f"-blockreservedweight={MAX_BLOCK_WEIGHT}"])
+        self.miniwallet.rescan_utxos()
 
         async def async_routine():
             ctx, mining = await make_mining_ctx(self)
