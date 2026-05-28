@@ -33,6 +33,7 @@
 #include <net_types.h>
 #include <netaddress.h>
 #include <netbase.h>
+#include <node/block_template_manager.h>
 #include <node/blockstorage.h>
 #include <node/coin.h>
 #include <node/context.h>
@@ -1000,7 +1001,8 @@ public:
             // Also wait during the final catch-up moments after IBD.
             if (!CooldownIfHeadersAhead(chainman(), notifications(), *maybe_tip, m_interrupt_mining)) return {};
         }
-        const BlockCreateOptions create_options{MergeMiningOptions(options, m_node.mining_args)};
+        auto& block_template_manager = *Assert(m_node.block_template_manager);
+        const BlockCreateOptions create_options{MergeMiningOptions(options, block_template_manager.GetInitBlockCreateOptions())};
         return std::make_unique<BlockTemplateImpl>(create_options,
                                                    BlockAssembler{
                                                        chainman().ActiveChainstate(),

@@ -21,10 +21,15 @@ class BlockTemplateManager
 private:
     CTxMemPool& m_mempool;
     ChainstateManager& m_chainman;
+    const BlockCreateOptions m_init_block_create_options;
 
 public:
     explicit BlockTemplateManager(CTxMemPool& mempool,
-                                  ChainstateManager& chainman);
+                                  ChainstateManager& chainman,
+                                  BlockCreateOptions init_block_create_options = {});
+
+    /** @return a copy of the block create options set during node init. */
+    BlockCreateOptions GetInitBlockCreateOptions() const { return m_init_block_create_options; }
 
     /** Create a fresh block template. */
     std::unique_ptr<CBlockTemplate> CreateNewTemplate(const BlockCreateOptions& options);

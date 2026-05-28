@@ -334,7 +334,9 @@ ChainTestingSetup::ChainTestingSetup(const ChainType chainType, TestOpts opts)
 
 void ChainTestingSetup::CreateBlockTemplateManager()
 {
-    m_node.block_template_manager = std::make_unique<node::BlockTemplateManager>(*m_node.mempool, *m_node.chainman);
+    auto mining_args{node::ReadMiningArgs(*Assert(m_node.args))};
+    Assert(mining_args);
+    m_node.block_template_manager = std::make_unique<node::BlockTemplateManager>(*m_node.mempool, *m_node.chainman, std::move(*mining_args));
 }
 
 ChainTestingSetup::~ChainTestingSetup()
@@ -400,9 +402,6 @@ TestingSetup::TestingSetup(
                                                m_node.args->GetIntArg("-checkaddrman", 0));
     m_node.banman = std::make_unique<BanMan>(m_args.GetDataDirBase() / "banlist", nullptr, DEFAULT_MISBEHAVING_BANTIME);
     m_node.connman = std::make_unique<ConnmanTestMsg>(0x1337, 0x1337, *m_node.addrman, *m_node.netgroupman, Params()); // Deterministic randomness for tests.
-    auto mining_args{node::ReadMiningArgs(*m_node.args)};
-    Assert(mining_args);
-    m_node.mining_args = std::move(*mining_args);
     PeerManager::Options peerman_opts;
     ApplyArgsManOptions(*m_node.args, peerman_opts);
     peerman_opts.deterministic_rng = true;
