@@ -60,6 +60,9 @@ static RPCMethod sendrawtransaction()
         "dedicated, short-lived connections to Tor or I2P peers or IPv4/IPv6 peers\n"
         "via the Tor network. This conceals the transaction's origin. The transaction\n"
         "will only enter the local mempool when it is received back from the network.\n"
+        "The private broadcast queue is bounded: when it is full, this RPC fails and\n"
+        "the transaction is not scheduled, until an existing one completes or is\n"
+        "aborted. Use getprivatebroadcastinfo to inspect the queue and abortprivatebroadcast to abort.\n"
 
         "\nA specific exception, RPC_TRANSACTION_ALREADY_IN_UTXO_SET, may throw if the transaction cannot be added to the mempool.\n"
 

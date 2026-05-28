@@ -38,7 +38,8 @@ FUZZ_TARGET(private_broadcast)
     FuzzedDataProvider fdp(buffer.data(), buffer.size());
     FakeNodeClock clock_ctx{ConsumeTime(fdp)};
 
-    PrivateBroadcast pb;
+    const size_t cap{fdp.ConsumeIntegralInRange<size_t>(1, 12)};
+    PrivateBroadcast pb{cap};
 
     // Random transaction that the test generated and passed to Add(). Trimmed when Remove() is called.
     // The values are the number of times a transaction was picked for sending.
@@ -64,15 +65,20 @@ FUZZ_TARGET(private_broadcast)
             fdp,
             [&] { // Add()
                 CTransactionRef tx;
-                bool from_transactions{false};
                 if (transactions.empty() || fdp.ConsumeBool()) {
                     tx = MakeTransactionRef(ConsumeTransaction(fdp, std::nullopt));
                 } else {
                     tx = PickIterator(fdp, transactions)->first;
-                    from_transactions = true;
                 }
-                if (pb.Add(tx)) {
-                    Assert(!from_transactions);
+
+                const bool present_before{transactions.contains(tx)};
+                const auto res{pb.Add(tx)};
+                if (present_before) {
+                    Assert(res == PrivateBroadcast::AddResult::AlreadyPresent);
+                } else if (transactions.size() >= cap) {
+                    Assert(res == PrivateBroadcast::AddResult::QueueFull);
+                } else {
+                    Assert(res == PrivateBroadcast::AddResult::Added);
                     transactions.emplace(tx, 0);
                 }
             },
