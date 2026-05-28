@@ -381,7 +381,7 @@ protected:
 };
 } // namespace
 
-bool SubmitBlock(ChainstateManager& chainman, const std::shared_ptr<const CBlock>& block, bool* new_block, std::string& reason, std::string& debug)
+bool SubmitBlock(ChainstateManager& chainman, const std::shared_ptr<const CBlock>& block, std::string& reason, std::string& debug)
 {
     reason.clear();
     debug.clear();
@@ -391,16 +391,16 @@ bool SubmitBlock(ChainstateManager& chainman, const std::shared_ptr<const CBlock
     // point decodes hex, formats BIP22/JSONRPC results, and calls
     // UpdateUncommittedBlockStructures() for legacy witness handling. IPC
     // callers submit already-formed blocks and need bool + reason/debug
-    // results, while submitSolution() preserves its duplicate-as-success
-    // behavior.
+    // results.
     auto sc = std::make_shared<SubmitBlockStateCatcher>(block->GetHash());
     CHECK_NONFATAL(chainman.m_options.signals)->RegisterSharedValidationInterface(sc);
-    bool accepted = chainman.ProcessNewBlock(block, /*force_processing=*/true, /*min_pow_checked=*/true, /*new_block=*/new_block);
+    bool new_block;
+    bool accepted = chainman.ProcessNewBlock(block, /*force_processing=*/true, /*min_pow_checked=*/true, /*new_block=*/&new_block);
     // No queue drain is needed. The BlockChecked notification used above is
     // emitted synchronously by ProcessNewBlock, unlike most validation signals.
     CHECK_NONFATAL(chainman.m_options.signals)->UnregisterSharedValidationInterface(sc);
 
-    if (new_block && !*new_block && accepted) {
+    if (!new_block && accepted) {
         reason = "duplicate";
     } else if (!accepted && (!sc->m_found || sc->m_state.IsValid())) {
         // ProcessNewBlock can fail without a validation result, for example
@@ -416,7 +416,9 @@ bool SubmitBlock(ChainstateManager& chainman, const std::shared_ptr<const CBlock
         reason = sc->m_state.GetRejectReason();
         debug = sc->m_state.GetDebugMessage();
     }
-    return accepted;
+    const bool result{accepted && new_block && reason.empty()};
+    CHECK_NONFATAL(result == reason.empty());
+    return result;
 }
 
 void InterruptWait(KernelNotifications& kernel_notifications, bool& interrupt_wait)
