@@ -270,7 +270,6 @@ if(BUILD_GUI)
   unset(qt_components)
   if(WITH_QRENCODE)
     find_package(QRencode MODULE REQUIRED)
-    set(USE_QRCODE TRUE)
   endif()
 endif()
 
