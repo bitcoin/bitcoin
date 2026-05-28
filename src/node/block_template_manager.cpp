@@ -5,12 +5,16 @@
 #include <node/block_template_manager.h>
 
 #include <node/miner.h>
+#include <node/mining_args.h>
 #include <validation.h>
+
+#include <utility>
 
 namespace node {
 
-BlockTemplateManager::BlockTemplateManager(CTxMemPool& mempool, ChainstateManager& chainman)
-    : m_mempool(mempool), m_chainman(chainman)
+BlockTemplateManager::BlockTemplateManager(CTxMemPool& mempool, ChainstateManager& chainman,
+                                           BlockCreateOptions block_create_args)
+    : m_mempool(mempool), m_chainman(chainman), m_block_create_args(std::move(block_create_args))
 {
 }
 
