@@ -29,9 +29,6 @@
 /* Copyright year */
 #define COPYRIGHT_YEAR @COPYRIGHT_YEAR@
 
-/* Define if external signer support is enabled */
-#cmakedefine ENABLE_EXTERNAL_SIGNER 1
-
 /* Define to 1 if you have the declaration of `fork', and to 0 if you don't.
    */
 #cmakedefine01 HAVE_DECL_FORK
