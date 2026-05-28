@@ -86,7 +86,7 @@ struct BlockCreateOptions {
     CScript coinbase_output_script{CScript() << OP_TRUE};
     /**
      * Whether to call TestBlockValidity() at the end of CreateNewBlock().
-     * Should only be used for tests / benchmarks.
+     * Should only be disabled for tests / benchmarks.
      */
     bool test_block_validity{true};
 };
