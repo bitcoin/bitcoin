@@ -29,8 +29,7 @@ from test_framework.netutil import (
 )
 from test_framework.script_util import build_malleated_tx_package
 from test_framework.socks5 import (
-    Socks5Configuration,
-    Socks5Server,
+    start_socks5_server,
 )
 from test_framework.test_framework import (
     BitcoinTestFramework,
@@ -40,7 +39,6 @@ from test_framework.util import (
     assert_greater_than_or_equal,
     assert_not_equal,
     assert_raises_rpc_error,
-    p2p_port,
     tor_port,
 )
 from test_framework.wallet import (
@@ -166,18 +164,6 @@ class P2PPrivateBroadcast(BitcoinTestFramework):
         self.num_nodes = 2
 
     def setup_nodes(self):
-        # Start a SOCKS5 proxy server.
-        socks5_server_config = Socks5Configuration()
-        # self.nodes[0] listens on p2p_port(0),
-        # self.nodes[1] listens on p2p_port(1),
-        # thus we tell the SOCKS5 server to listen on p2p_port(self.num_nodes) (self.num_nodes is 2)
-        socks5_server_config.addr = ("127.0.0.1", p2p_port(self.num_nodes))
-        socks5_server_config.unauth = True
-        socks5_server_config.auth = True
-
-        self.socks5_server = Socks5Server(socks5_server_config)
-        self.socks5_server.start()
-
         self.destinations = []
 
         self.destinations_lock = threading.Lock()
@@ -268,7 +254,7 @@ class P2PPrivateBroadcast(BitcoinTestFramework):
                     "actual_to_port": actual_to_port,
                 }
 
-        self.socks5_server.conf.destinations_factory = destinations_factory
+        self.socks5_server = start_socks5_server(destinations_factory)
 
         self.extra_args = [
             [
@@ -279,7 +265,7 @@ class P2PPrivateBroadcast(BitcoinTestFramework):
                 "-v2transport=0",
                 "-test=addrman",
                 "-privatebroadcast",
-                f"-proxy={socks5_server_config.addr[0]}:{socks5_server_config.addr[1]}",
+                f"-proxy={self.socks5_server.conf.addr[0]}:{self.socks5_server.conf.addr[1]}",
                 # To increase coverage, make it think that the I2P network is reachable so that it
                 # selects such addresses as well. Pick a proxy address where nobody is listening
                 # and connection attempts fail quickly.
