@@ -152,11 +152,11 @@ public:
 
     /**
      * Initiate a transaction broadcast to eligible peers.
-     * Queue the witness transaction id to `Peer::TxRelay::m_tx_inventory_to_send`
-     * for each peer. Later, depending on `Peer::TxRelay::m_next_inv_send_time` and if
+     * Queue the witness transaction id to the inbound and outbound inv backlogs.
+     * Later, depending on `-txsendrate`, `Peer::TxRelay::m_next_inv_send_time` and if
      * the transaction is in the mempool, an `INV` about it may be sent to the peer.
      */
-    virtual void InitiateTxBroadcastToAll(const Txid& txid, const Wtxid& wtxid) = 0;
+    virtual void InitiateTxBroadcastToAll(const Wtxid& wtxid) = 0;
 
     /**
      * Initiate a private transaction broadcast. This is done
