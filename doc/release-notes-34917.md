@@ -1,4 +1,4 @@
-RPC and Startup Option
+Wallet RPC and Startup Option
 ------------
 The `bip125-replaceable` key in the wallet transaction RPCs such
 as `listtransactions`, `listsinceblock`, and `gettransaction` is
@@ -7,3 +7,8 @@ key by passing the `-deprecatedrpc=bip125` startup option. Also,
 the `-walletrbf` startup option has been marked as deprecated and
 will be fully removed in the next release. Using this option emits
 a warning in the logs.
+
+Moreover, the default value of -walletrbf has been changed to 0
+in PR #35405 because signalling for RBF is not necessary for
+replacing transactions due to nodes being fullrbf and the wallet
+doesn't need to opt into it by default.
