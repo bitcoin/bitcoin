@@ -211,6 +211,9 @@ def main():
         print("Stop and remove CI container by ID")
         run(["docker", "container", "kill", container_id])
 
+        print("Remove CI container networks")
+        run(["docker", "network", "rm", network_name], check=False)
+
 
 if __name__ == "__main__":
     main()
