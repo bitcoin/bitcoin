@@ -80,8 +80,9 @@ public:
     /**
      * Attempts to forget txreconciliation-related state of the peer (if we previously stored any).
      * After this, we won't be able to reconcile transactions with the peer.
+     * Returns whether state was erased (i.e. the peer had been (pre-)registered before).
      */
-    void ForgetPeer(NodeId peer_id);
+    bool ForgetPeer(NodeId peer_id);
 };
 } // namespace node
 #endif // BITCOIN_NODE_TXRECONCILIATION_IMPL_H

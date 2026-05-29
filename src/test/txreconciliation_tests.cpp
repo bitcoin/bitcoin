@@ -64,7 +64,7 @@ BOOST_AUTO_TEST_CASE(IsPeerRegisteredTest)
     BOOST_REQUIRE(tracker.IsPeerRegistered(peer_id0));
 
     // Forgotten peers do not count either.
-    tracker.ForgetPeer(peer_id0);
+    BOOST_REQUIRE(tracker.ForgetPeer(peer_id0));
     BOOST_REQUIRE(!tracker.IsPeerRegistered(peer_id0));
 }
 
@@ -76,7 +76,7 @@ BOOST_AUTO_TEST_CASE(ForgetPeerTest)
     // Removing peer after pre-registering works and does not let to register the peer.
     BOOST_REQUIRE(!tracker.IsPeerRegistered(peer_id0));
     tracker.PreRegisterPeer(peer_id0);
-    tracker.ForgetPeer(peer_id0);
+    BOOST_REQUIRE(tracker.ForgetPeer(peer_id0));
     BOOST_REQUIRE_EQUAL(tracker.RegisterPeer(peer_id0, /*is_peer_inbound=*/true, TXRECONCILIATION_VERSION, 1).value(), ReconciliationError::NOT_FOUND);
 
     // Removing peer after it is registered works.
@@ -84,13 +84,13 @@ BOOST_AUTO_TEST_CASE(ForgetPeerTest)
     BOOST_REQUIRE(!tracker.IsPeerRegistered(peer_id0));
     BOOST_REQUIRE(!tracker.RegisterPeer(peer_id0, /*is_peer_inbound=*/true, TXRECONCILIATION_VERSION, 1).has_value());
     BOOST_REQUIRE(tracker.IsPeerRegistered(peer_id0));
-    tracker.ForgetPeer(peer_id0);
+    BOOST_REQUIRE(tracker.ForgetPeer(peer_id0));
     BOOST_REQUIRE(!tracker.IsPeerRegistered(peer_id0));
 
     // Removing a non-existing peer does nothing
     NodeId not_a_peer_id = 1;
     BOOST_REQUIRE(!tracker.IsPeerRegistered(not_a_peer_id));
-    tracker.ForgetPeer(not_a_peer_id);
+    BOOST_REQUIRE(!tracker.ForgetPeer(not_a_peer_id));
 }
 
 BOOST_AUTO_TEST_SUITE_END()

@@ -85,13 +85,15 @@ public:
                 std::holds_alternative<TxReconciliationState>(peer_state->second));
     }
 
-    void ForgetPeer(NodeId peer_id) EXCLUSIVE_LOCKS_REQUIRED(!m_txreconciliation_mutex)
+    bool ForgetPeer(NodeId peer_id) EXCLUSIVE_LOCKS_REQUIRED(!m_txreconciliation_mutex)
     {
         AssertLockNotHeld(m_txreconciliation_mutex);
         LOCK(m_txreconciliation_mutex);
         if (m_states.erase(peer_id)) {
             LogDebug(BCLog::TXRECONCILIATION, "Forget txreconciliation state of peer=%d.\n", peer_id);
+            return true;
         }
+        return false;
     }
 };
 
@@ -114,8 +116,8 @@ bool TxReconciliationTracker::IsPeerRegistered(NodeId peer_id) const
     return m_impl->IsPeerRegistered(peer_id);
 }
 
-void TxReconciliationTracker::ForgetPeer(NodeId peer_id)
+bool TxReconciliationTracker::ForgetPeer(NodeId peer_id)
 {
-    m_impl->ForgetPeer(peer_id);
+    return m_impl->ForgetPeer(peer_id);
 }
 } // namespace node
