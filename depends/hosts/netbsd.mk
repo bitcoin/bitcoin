@@ -1,5 +1,6 @@
 netbsd_CFLAGS=
 netbsd_CXXFLAGS=
+netbsd_LDFLAGS=
 
 ifneq ($(LTO),)
 netbsd_AR = $(host_toolchain)gcc-ar
