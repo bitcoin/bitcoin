@@ -15,15 +15,38 @@ from test_framework.util import (
     assert_raises_rpc_error,
 )
 
-# Decorator to reset activewallet to zero utxos
-def cleanup(func):
-    def wrapper(self):
-        func(self)
+# Decorator that runs the test once for each address in self.remainder_targets,
+# setting self.remainder_target and self.target_is_sp before each run.
+# Between runs it drains activewallet, unloads, and deletes any wallets the test
+# created, leaving a clean slate for the next address type.
+# Use @for_each_target(allow_sp=False) to skip silent payments addresses.
+def for_each_target(_func=None, *, allow_sp=True):
+    def decorator(func):
+        def wrapper(self):
+            targets = [t for t in self.remainder_targets if allow_sp or not t.startswith("sp")]
+            base_wallets = {e["name"] for e in self.nodes[0].listwalletdir()["wallets"]}
+            for remainder_target in targets:
+                self.remainder_target = remainder_target
+                self.target_is_sp = False
+                if remainder_target.startswith("sp"):
+                    self.target_is_sp = True
 
-        if 0 < self.wallet.getbalances()["mine"]["trusted"]:
-            self.wallet.sendall([self.remainder_target])
-        assert_equal(0, self.wallet.getbalances()["mine"]["trusted"]) # wallet is empty
-    return wrapper
+                func(self)
+                self.log.info(f"  remainder_target={remainder_target}")
+
+                if 0 < self.wallet.getbalances()["mine"]["trusted"]:
+                    self.wallet.sendall([self.remainder_target])
+                assert_equal(0, self.wallet.getbalances()["mine"]["trusted"]) # wallet is empty
+                for name in list(self.nodes[0].listwallets()):
+                    if name not in base_wallets:
+                        self.nodes[0].unloadwallet(name)
+                for entry in self.nodes[0].listwalletdir()["wallets"]:
+                    if entry["name"] not in base_wallets:
+                        self.cleanup_folder(self.nodes[0].wallets_path / entry["name"])
+        return wrapper
+    if _func is not None:
+        return decorator(_func)
+    return decorator
 
 class SendallTest(BitcoinTestFramework):
     def skip_test_if_missing_module(self):
@@ -67,7 +90,7 @@ class SendallTest(BitcoinTestFramework):
         assert_equal(sendall_tx_receipt["complete"], True)
         return self.wallet.gettransaction(txid = sendall_tx_receipt["txid"], verbose = True)
 
-    @cleanup
+    @for_each_target
     def gen_and_clean(self):
         self.add_utxos([15, 2, 4])
 
@@ -77,7 +100,7 @@ class SendallTest(BitcoinTestFramework):
         assert_equal(0, self.wallet.getbalances()["mine"]["trusted"]) # wallet is empty
 
     # Actual tests
-    @cleanup
+    @for_each_target
     def sendall_two_utxos(self):
         self.log.info("Testing basic sendall case without specific amounts")
         pre_sendall_balance = self.add_utxos([10,11])
@@ -90,7 +113,7 @@ class SendallTest(BitcoinTestFramework):
         )
         self.assert_balance_swept_completely(tx_from_wallet, pre_sendall_balance)
 
-    @cleanup
+    @for_each_target
     def sendall_split(self):
         self.log.info("Testing sendall where two recipients have unspecified amount")
         pre_sendall_balance = self.add_utxos([1, 2, 3, 15])
@@ -105,7 +128,7 @@ class SendallTest(BitcoinTestFramework):
         )
         self.assert_balance_swept_completely(tx_from_wallet, pre_sendall_balance)
 
-    @cleanup
+    @for_each_target
     def sendall_and_spend(self):
         self.log.info("Testing sendall in combination with paying specified amount to recipient")
         pre_sendall_balance = self.add_utxos([8, 13])
@@ -119,7 +142,7 @@ class SendallTest(BitcoinTestFramework):
         )
         self.assert_balance_swept_completely(tx_from_wallet, pre_sendall_balance)
 
-    @cleanup
+    @for_each_target
     def sendall_invalid_recipient_addresses(self):
         self.log.info("Test having only recipient with specified amount, missing recipient with unspecified amount")
         self.add_utxos([12, 9])
@@ -131,7 +154,7 @@ class SendallTest(BitcoinTestFramework):
                 [{self.recipient: 5}]
             )
 
-    @cleanup
+    @for_each_target
     def sendall_duplicate_recipient(self):
         self.log.info("Test duplicate destination")
         self.add_utxos([1, 8, 3, 9])
@@ -143,7 +166,7 @@ class SendallTest(BitcoinTestFramework):
                 [self.remainder_target, self.remainder_target]
             )
 
-    @cleanup
+    @for_each_target
     def sendall_invalid_amounts(self):
         self.log.info("Test sending more than balance")
         pre_sendall_balance = self.add_utxos([7, 14])
@@ -163,10 +186,10 @@ class SendallTest(BitcoinTestFramework):
         assert_raises_rpc_error(-6, "Dynamically assigned remainder results in dust output.", self.wallet.sendall,
                 [{self.recipient: pre_sendall_balance - fee - Decimal(0.00000010)}, self.remainder_target])
 
-    # @cleanup not needed because different wallet used
+    @for_each_target
     def sendall_negative_effective_value(self):
         self.log.info("Test that sendall fails if all UTXOs have negative effective value")
-        # Use dedicated wallet for dust amounts and unload wallet at end
+        # Use dedicated wallet for dust amounts; @for_each_target deletes it between iterations
         self.nodes[0].createwallet("dustwallet")
         dust_wallet = self.nodes[0].get_wallet_rpc("dustwallet")
 
@@ -179,9 +202,7 @@ class SendallTest(BitcoinTestFramework):
                 + " Try using lower feerate or excluding uneconomic UTXOs with 'send_max' option.",
                 dust_wallet.sendall, recipients=[self.remainder_target], fee_rate=300)
 
-        dust_wallet.unloadwallet()
-
-    @cleanup
+    @for_each_target
     def sendall_with_send_max(self):
         self.log.info("Check that `send_max` option causes negative value UTXOs to be left behind")
         self.add_utxos([0.00000400, 0.00000300, 1])
@@ -197,7 +218,7 @@ class SendallTest(BitcoinTestFramework):
         self.def_wallet.sendtoaddress(self.wallet.getnewaddress(), 1)
         self.generate(self.nodes[0], 1)
 
-    @cleanup
+    @for_each_target(allow_sp=False)
     def sendall_specific_inputs(self):
         self.log.info("Test sendall with a subset of UTXO pool")
         self.add_utxos([17, 4])
@@ -214,7 +235,7 @@ class SendallTest(BitcoinTestFramework):
         self.generate(self.nodes[0], 1)
         assert_greater_than(self.wallet.getbalances()["mine"]["trusted"], 0)
 
-    @cleanup
+    @for_each_target
     def sendall_fails_on_missing_input(self):
         # fails because UTXO was previously spent, and wallet is empty
         self.log.info("Test sendall fails because specified UTXO is not available")
@@ -245,7 +266,7 @@ class SendallTest(BitcoinTestFramework):
             foreign_utxo["vout"]), self.wallet.sendall, recipients=[self.remainder_target],
             inputs=[foreign_utxo])
 
-    @cleanup
+    @for_each_target
     def sendall_fails_on_no_address(self):
         self.log.info("Test sendall fails because no address is provided")
         self.add_utxos([19, 2])
@@ -257,7 +278,7 @@ class SendallTest(BitcoinTestFramework):
                 []
             )
 
-    @cleanup
+    @for_each_target
     def sendall_fails_on_specific_inputs_with_send_max(self):
         self.log.info("Test sendall fails because send_max is used while specific inputs are provided")
         self.add_utxos([15, 6])
@@ -269,7 +290,7 @@ class SendallTest(BitcoinTestFramework):
             recipients=[self.remainder_target],
             inputs=[utxo], send_max=True)
 
-    @cleanup
+    @for_each_target
     def sendall_fails_on_high_fee(self):
         self.log.info("Test sendall fails if the transaction fee exceeds the maxtxfee")
         self.add_utxos([21])
@@ -281,13 +302,13 @@ class SendallTest(BitcoinTestFramework):
                 recipients=[self.remainder_target],
                 fee_rate=100000)
 
-    @cleanup
+    @for_each_target
     def sendall_fails_on_low_fee(self):
         self.log.info("Test sendall fails if the transaction fee is lower than the minimum fee rate setting")
         assert_raises_rpc_error(-8, "Fee rate (0.999 sat/vB) is lower than the minimum fee rate setting (1.000 sat/vB)",
         self.wallet.sendall, recipients=[self.recipient], fee_rate=0.999)
 
-    @cleanup
+    @for_each_target(allow_sp=False)
     def sendall_watchonly_specific_inputs(self):
         self.log.info("Test sendall with a subset of UTXO pool in a watchonly wallet")
         self.add_utxos([17, 4])
@@ -311,7 +332,7 @@ class SendallTest(BitcoinTestFramework):
         assert_equal(decoded["inputs"][0]["previous_vout"], utxo["vout"])
         assert_equal(decoded["outputs"][0]["script"]["address"], self.remainder_target)
 
-    @cleanup
+    @for_each_target
     def sendall_with_minconf(self):
         # utxo of 17 bicoin has 6 confirmations, utxo of 4 has 3
         self.add_utxos([17])
@@ -337,11 +358,18 @@ class SendallTest(BitcoinTestFramework):
 
         self.log.info("Test sendall fails because there are no utxos with enough confirmations specified by minconf")
 
-        assert_raises_rpc_error(-6,
-            "Total value of UTXO pool too low to pay for transaction. Try using lower feerate or excluding uneconomic UTXOs with 'send_max' option.",
-            self.wallet.sendall,
-            recipients=[self.remainder_target],
-            options={"minconf": 7})
+        if self.target_is_sp:
+            assert_raises_rpc_error(-4,
+                "No silent payment eligible inputs were found.",
+                self.wallet.sendall,
+                recipients=[self.remainder_target],
+                options={"minconf": 7})
+        else:
+            assert_raises_rpc_error(-6,
+                "Total value of UTXO pool too low to pay for transaction. Try using lower feerate or excluding uneconomic UTXOs with 'send_max' option.",
+                self.wallet.sendall,
+                recipients=[self.remainder_target],
+                options={"minconf": 7})
 
         self.log.info("Test sendall only spends utxos with a specified number of confirmations when minconf is used")
         self.wallet.sendall(recipients=[self.remainder_target], fee_rate=300, options={"minconf": 6})
@@ -353,7 +381,7 @@ class SendallTest(BitcoinTestFramework):
         self.wallet.sendall(recipients=[self.remainder_target], fee_rate=300, options={"minconf": 3})
         assert_equal(self.wallet.getbalance(), 0)
 
-    @cleanup
+    @for_each_target
     def sendall_with_maxconf(self):
         # utxo of 17 bicoin has 6 confirmations, utxo of 4 has 3
         self.add_utxos([17])
@@ -362,18 +390,25 @@ class SendallTest(BitcoinTestFramework):
         self.generate(self.nodes[0], 2)
 
         self.log.info("Test sendall fails because there are no utxos with enough confirmations specified by maxconf")
-        assert_raises_rpc_error(-6,
-            "Total value of UTXO pool too low to pay for transaction. Try using lower feerate or excluding uneconomic UTXOs with 'send_max' option.",
-            self.wallet.sendall,
-            recipients=[self.remainder_target],
-            options={"maxconf": 1})
+        if self.target_is_sp:
+            assert_raises_rpc_error(-4,
+                "No silent payment eligible inputs were found.",
+                self.wallet.sendall,
+                recipients=[self.remainder_target],
+                options={"maxconf": 1})
+        else:
+            assert_raises_rpc_error(-6,
+                "Total value of UTXO pool too low to pay for transaction. Try using lower feerate or excluding uneconomic UTXOs with 'send_max' option.",
+                self.wallet.sendall,
+                recipients=[self.remainder_target],
+                options={"maxconf": 1})
 
         self.log.info("Test sendall only spends utxos with a specified number of confirmations when maxconf is used")
         self.wallet.sendall(recipients=[self.remainder_target], fee_rate=300, options={"maxconf":4})
         assert_equal(len(self.wallet.listunspent()), 1)
         assert_equal(self.wallet.listunspent()[0]['confirmations'], 6)
 
-    @cleanup
+    @for_each_target
     def sendall_spends_unconfirmed_change(self):
         self.log.info("Test that sendall spends unconfirmed change")
         self.add_utxos([17])
@@ -383,7 +418,7 @@ class SendallTest(BitcoinTestFramework):
 
         assert_equal(self.wallet.getbalance(), 0)
 
-    @cleanup
+    @for_each_target
     def sendall_spends_unconfirmed_inputs_if_specified(self):
         self.log.info("Test that sendall spends specified unconfirmed inputs")
         self.def_wallet.sendtoaddress(self.wallet.getnewaddress(), 17)
@@ -394,7 +429,7 @@ class SendallTest(BitcoinTestFramework):
         self.wallet.sendall(recipients=[self.remainder_target], inputs=[unspent])
         assert_equal(self.wallet.getbalance(), 0)
 
-    @cleanup
+    @for_each_target
     def sendall_does_ancestor_aware_funding(self):
         self.log.info("Test that sendall does ancestor aware funding for unconfirmed inputs")
 
@@ -431,7 +466,11 @@ class SendallTest(BitcoinTestFramework):
 
         assert_greater_than(higher_parent_feerate_amount, lower_parent_feerate_amount)
 
-    @cleanup
+        # Confirm the pending UTXOs and unlock them so @for_each_target can drain the wallet between iterations
+        self.generate(self.nodes[0], 1)
+        self.wallet.lockunspent(True, self.wallet.listlockunspent())
+
+    @for_each_target
     def sendall_anti_fee_sniping(self):
         self.log.info("Testing sendall does anti-fee-sniping when locktime is not specified")
         self.add_utxos([10,11])
@@ -453,23 +492,24 @@ class SendallTest(BitcoinTestFramework):
         txid = self.wallet.sendall(recipients=[self.remainder_target], inputs=utxos)["txid"]
         assert_equal(self.wallet.gettransaction(txid=txid, verbose=True)["decoded"]["locktime"], 0)
 
-    # This tests needs to be the last one otherwise @cleanup will fail with "Transaction too large" error
+    # This tests needs to be the last one otherwise @for_each_target will fail with "Transaction too large" error
     def sendall_fails_with_transaction_too_large(self):
-        self.log.info("Test that sendall fails if resulting transaction is too large")
+        for self.remainder_target in self.remainder_targets:
+            self.log.info("Test that sendall fails if resulting transaction is too large")
 
-        # Force the wallet to bulk-generate the addresses we'll need
-        self.wallet.keypoolrefill(1600)
+            # Force the wallet to bulk-generate the addresses we'll need
+            self.wallet.keypoolrefill(1600)
 
-        # create many inputs
-        outputs = {self.wallet.getnewaddress(): 0.000025 for _ in range(1600)}
-        self.def_wallet.sendmany(amounts=outputs)
-        self.generate(self.nodes[0], 1)
+            # create many inputs
+            outputs = {self.wallet.getnewaddress(): 0.000025 for _ in range(1600)}
+            self.def_wallet.sendmany(amounts=outputs)
+            self.generate(self.nodes[0], 1)
 
-        assert_raises_rpc_error(
-                -4,
-                "Transaction too large.",
-                self.wallet.sendall,
-                recipients=[self.remainder_target])
+            assert_raises_rpc_error(
+                    -4,
+                    "Transaction too large.",
+                    self.wallet.sendall,
+                    recipients=[self.remainder_target])
 
     def run_test(self):
         self.nodes[0].createwallet("activewallet")
@@ -477,7 +517,10 @@ class SendallTest(BitcoinTestFramework):
         self.def_wallet = self.nodes[0].get_wallet_rpc(self.default_wallet_name)
         self.generate(self.nodes[0], 101)
         self.recipient = self.def_wallet.getnewaddress() # payee for a specific amount
-        self.remainder_target = self.def_wallet.getnewaddress() # address that receives everything left after payments and fees
+        self.remainder_targets = [
+            self.def_wallet.getnewaddress(),
+            "sprt1qqtzwfsu4f34wejks0nxwzed3zq6vh53cg2rnxj9w6ncyrmy95dxx7qnvd47fskn470t9tl4z8a8nul5k3fztquqp4fjrarl7d5lphu7rk52s4hsp"
+        ]
         self.split_target = self.def_wallet.getnewaddress() # 2nd target when splitting rest
 
         # Test cleanup
