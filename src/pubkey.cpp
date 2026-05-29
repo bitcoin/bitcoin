@@ -156,7 +156,7 @@ int ecdsa_signature_parse_der_lax(secp256k1_ecdsa_signature* sig, const unsigned
     /* Copy R value */
     if (rlen > 32) {
         overflow = 1;
-    } else {
+    } else if (rlen > 0) {
         memcpy(tmpsig + 32 - rlen, input + rpos, rlen);
     }
 
@@ -168,7 +168,7 @@ int ecdsa_signature_parse_der_lax(secp256k1_ecdsa_signature* sig, const unsigned
     /* Copy S value */
     if (slen > 32) {
         overflow = 1;
-    } else {
+    } else if (slen > 0) {
         memcpy(tmpsig + 64 - slen, input + spos, slen);
     }
 
